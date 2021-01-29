@@ -1,4 +1,4 @@
-from typing import Iterator, Sequence, Iterable, Optional, Dict, Callable, List
+from typing import Sequence, Iterable, Optional, Dict, Callable, List
 from thinc.api import Model, set_dropout_rate, Optimizer, Config
 from itertools import islice
 
@@ -8,8 +8,6 @@ from ..tokens import Doc
 from ..vocab import Vocab
 from ..language import Language
 from ..errors import Errors
-from ..util import minibatch
-
 
 default_model_config = """
 [model]
@@ -98,36 +96,6 @@ class Tok2Vec(TrainablePipe):
             for node in component.model.walk():
                 if isinstance(node, Tok2VecListener) and node.upstream_name in names:
                     self.add_listener(node, component.name)
-
-    def __call__(self, doc: Doc) -> Doc:
-        """Add context-sensitive embeddings to the Doc.tensor attribute, allowing
-        them to be used as features by downstream components.
-
-        docs (Doc): The Doc to process.
-        RETURNS (Doc): The processed Doc.
-
-        DOCS: https://nightly.spacy.io/api/tok2vec#call
-        """
-        tokvecses = self.predict([doc])
-        self.set_annotations([doc], tokvecses)
-        return doc
-
-    def pipe(self, stream: Iterator[Doc], *, batch_size: int = 128) -> Iterator[Doc]:
-        """Apply the pipe to a stream of documents. This usually happens under
-        the hood when the nlp object is called on a text and all components are
-        applied to the Doc.
-
-        stream (Iterable[Doc]): A stream of documents.
-        batch_size (int): The number of documents to buffer.
-        YIELDS (Doc): Processed documents in order.
-
-        DOCS: https://nightly.spacy.io/api/tok2vec#pipe
-        """
-        for docs in minibatch(stream, batch_size):
-            docs = list(docs)
-            tokvecses = self.predict(docs)
-            self.set_annotations(docs, tokvecses)
-            yield from docs
 
     def predict(self, docs: Iterable[Doc]):
         """Apply the pipeline's model to a batch of docs, without modifying them.

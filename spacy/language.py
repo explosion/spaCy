@@ -8,7 +8,7 @@ from contextlib import contextmanager
 from copy import deepcopy
 from pathlib import Path
 import warnings
-from thinc.api import Model, get_current_ops, Config, Optimizer
+from thinc.api import get_current_ops, Config, Optimizer
 import srsly
 import multiprocessing as mp
 from itertools import chain, cycle
@@ -20,7 +20,7 @@ from .pipe_analysis import validate_attrs, analyze_pipes, print_pipe_analysis
 from .training import Example, validate_examples
 from .training.initialize import init_vocab, init_tok2vec
 from .scorer import Scorer
-from .util import registry, SimpleFrozenList, _pipe
+from .util import registry, SimpleFrozenList, _pipe, raise_error
 from .util import SimpleFrozenDict, combine_score_weights, CONFIG_SECTION_ORDER
 from .lang.tokenizer_exceptions import URL_MATCH, BASE_EXCEPTIONS
 from .lang.punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
@@ -176,6 +176,7 @@ class Language:
             create_tokenizer = registry.resolve(tokenizer_cfg)["tokenizer"]
         self.tokenizer = create_tokenizer(self)
         self.batch_size = batch_size
+        self.default_error_handler = raise_error
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
@@ -981,11 +982,16 @@ class Language:
                 continue
             if not hasattr(proc, "__call__"):
                 raise ValueError(Errors.E003.format(component=type(proc), name=name))
+            error_handler = self.default_error_handler
+            if hasattr(proc, "get_error_handler"):
+                error_handler = proc.get_error_handler()
             try:
                 doc = proc(doc, **component_cfg.get(name, {}))
             except KeyError as e:
                 # This typically happens if a component is not initialized
                 raise ValueError(Errors.E109.format(name=name)) from e
+            except Exception as e:
+                error_handler(name, proc, [doc], e)
             if doc is None:
                 raise ValueError(Errors.E005.format(name=name))
         return doc
@@ -1274,6 +1280,26 @@ class Language:
             self._optimizer = self.create_optimizer()
         return self._optimizer
 
+    def set_error_handler(
+        self,
+        error_handler: Callable[
+            [str, Callable[[Doc], Doc], List[Doc], Exception], None
+        ],
+    ):
+        """Set an error handler object for all the components in the pipeline that implement
+        a set_error_handler function.
+
+        error_handler (Callable[[str, Callable[[Doc], Doc], List[Doc], Exception], None]):
+            Function that deals with a failing batch of documents. This callable function should take in
+            the component's name, the component itself, the offending batch of documents, and the exception
+            that was thrown.
+        DOCS: https://nightly.spacy.io/api/language#set_error_handler
+        """
+        self.default_error_handler = error_handler
+        for name, pipe in self.pipeline:
+            if hasattr(pipe, "set_error_handler"):
+                pipe.set_error_handler(error_handler)
+
     def evaluate(
         self,
         examples: Iterable[Example],
@@ -1293,6 +1319,7 @@ class Language:
             arguments for specific components.
         scorer_cfg (dict): An optional dictionary with extra keyword arguments
             for the scorer.
+
         RETURNS (Scorer): The scorer containing the evaluation results.
 
         DOCS: https://nightly.spacy.io/api/language#evaluate
@@ -1317,7 +1344,14 @@ class Language:
             kwargs = component_cfg.get(name, {})
             kwargs.setdefault("batch_size", batch_size)
             for doc, eg in zip(
-                _pipe((eg.predicted for eg in examples), pipe, kwargs), examples
+                _pipe(
+                    (eg.predicted for eg in examples),
+                    proc=pipe,
+                    name=name,
+                    default_error_handler=self.default_error_handler,
+                    kwargs=kwargs,
+                ),
+                examples,
             ):
                 eg.predicted = doc
         end_time = timer()
@@ -1422,7 +1456,13 @@ class Language:
             kwargs = component_cfg.get(name, {})
             # Allow component_cfg to overwrite the top-level kwargs.
             kwargs.setdefault("batch_size", batch_size)
-            f = functools.partial(_pipe, proc=proc, kwargs=kwargs)
+            f = functools.partial(
+                _pipe,
+                proc=proc,
+                name=name,
+                kwargs=kwargs,
+                default_error_handler=self.default_error_handler,
+            )
             pipes.append(f)
 
         if n_process != 1:

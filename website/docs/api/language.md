@@ -203,6 +203,28 @@ more efficient than processing texts one-by-one.
 | `n_process` <Tag variant="new">2.2.2</Tag> | Number of processors to use. Defaults to `1`. ~~int~~                                                                                                               |
 | **YIELDS**                                 | Documents in the order of the original text. ~~Doc~~                                                                                                                |
 
+## Language.set_error_handler {#set_error_handler tag="method"}
+
+Define a callback that will be invoked when an error is thrown during processing
+of one or more documents. Specifically, this function will call
+[`set_error_handler`](/api/pipe#set_error_handler) on all the pipeline
+components that define that function. The error handler will be invoked with the
+original component's name, the component itself, the list of documents that was
+being processed, and the original error.
+
+> #### Example
+>
+> ```python
+> def warn_error(proc_name, proc, docs, e):
+>     print(f"An error occurred when applying component {proc_name}.")
+>
+> nlp.set_error_handler(warn_error)
+> ```
+
+| Name            | Description                                                                                                    |
+| --------------- | -------------------------------------------------------------------------------------------------------------- |
+| `error_handler` | A function that performs custom error handling. ~~Callable[[str, Callable[[Doc], Doc], List[Doc], Exception]~~ |
+
 ## Language.initialize {#initialize tag="method" new="3"}
 
 Initialize the pipeline for training and return an

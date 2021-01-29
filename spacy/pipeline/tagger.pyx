@@ -1,5 +1,4 @@
 # cython: infer_types=True, profile=True, binding=True
-from typing import List
 import numpy
 import srsly
 from thinc.api import Model, set_dropout_rate, SequenceCategoricalCrossentropy, Config
@@ -94,34 +93,6 @@ class Tagger(TrainablePipe):
     def label_data(self):
         """Data about the labels currently added to the component."""
         return tuple(self.cfg["labels"])
-
-    def __call__(self, doc):
-        """Apply the pipe to a Doc.
-
-        doc (Doc): The document to process.
-        RETURNS (Doc): The processed Doc.
-
-        DOCS: https://nightly.spacy.io/api/tagger#call
-        """
-        tags = self.predict([doc])
-        self.set_annotations([doc], tags)
-        return doc
-
-    def pipe(self, stream, *, batch_size=128):
-        """Apply the pipe to a stream of documents. This usually happens under
-        the hood when the nlp object is called on a text and all components are
-        applied to the Doc.
-
-        stream (Iterable[Doc]): A stream of documents.
-        batch_size (int): The number of documents to buffer.
-        YIELDS (Doc): Processed documents in order.
-
-        DOCS: https://nightly.spacy.io/api/tagger#pipe
-        """
-        for docs in util.minibatch(stream, size=batch_size):
-            tag_ids = self.predict(docs)
-            self.set_annotations(docs, tag_ids)
-            yield from docs
 
     def predict(self, docs):
         """Apply the pipeline's model to a batch of docs, without modifying them.

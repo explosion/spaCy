@@ -135,12 +135,25 @@ class EntityRuler(Pipe):
 
         DOCS: https://nightly.spacy.io/api/entityruler#call
         """
+        error_handler = self.get_error_handler()
+        try:
+            matches = self.match(doc)
+            self.set_annotations(doc, matches)
+            return doc
+        except Exception as e:
+            error_handler(self.name, self, [doc], e)
+
+    def match(self, doc: Doc):
         matches = list(self.matcher(doc)) + list(self.phrase_matcher(doc))
         matches = set(
             [(m_id, start, end) for m_id, start, end in matches if start != end]
         )
         get_sort_key = lambda m: (m[2] - m[1], -m[1])
         matches = sorted(matches, key=get_sort_key, reverse=True)
+        return matches
+
+    def set_annotations(self, doc, matches):
+        """Modify the document in place"""
         entities = list(doc.ents)
         new_entities = []
         seen_tokens = set()
@@ -163,7 +176,6 @@ class EntityRuler(Pipe):
                 ]
                 seen_tokens.update(range(start, end))
         doc.ents = entities + new_entities
-        return doc
 
     @property
     def labels(self) -> Tuple[str, ...]:
