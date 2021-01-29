@@ -7,10 +7,10 @@ Cython. It's built on the very latest research, and was designed from day one to
 be used in real products.
 
 spaCy comes with
-[pretrained pipelines](https://spacy.io/models) and vectors, and
-currently supports tokenization for **60+ languages**. It features
-state-of-the-art speed, convolutional **neural network models** for tagging,
-parsing, **named entity recognition**, **text classification** and more, multi-task learning with pretrained **transformers** like BERT, as well as a production-ready training system and easy model packaging, deployment and workflow management.
+[pretrained pipelines](https://spacy.io/models) and embeddings, and
+currently supports tokenization and training for **60+ languages**. It features
+state-of-the-art speed and **neural network models** for tagging,
+parsing, **named entity recognition**, **text classification** and more, multi-task learning with pretrained **transformers** like BERT, as well as a production-ready [training system](https://spacy.io/usage/training) and easy model packaging, deployment and workflow management.
 spaCy is commercial open-source software, released under the MIT license.
 
 💫 **Version 3.0 (nightly) out now!**
@@ -21,10 +21,10 @@ spaCy is commercial open-source software, released under the MIT license.
 [![pypi Version](https://img.shields.io/pypi/v/spacy.svg?style=flat-square&logo=pypi&logoColor=white)](https://pypi.org/project/spacy/)
 [![conda Version](https://img.shields.io/conda/vn/conda-forge/spacy.svg?style=flat-square&logo=conda-forge&logoColor=white)](https://anaconda.org/conda-forge/spacy)
 [![Python wheels](https://img.shields.io/badge/wheels-%E2%9C%93-4c1.svg?longCache=true&style=flat-square&logo=python&logoColor=white)](https://github.com/explosion/wheelwright/releases)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg?style=flat-square)](https://github.com/ambv/black)
 [![PyPi downloads](https://img.shields.io/pypi/dm/spacy?style=flat-square&logo=pypi&logoColor=white)](https://pypi.org/project/spacy/)
 [![Conda downloads](https://img.shields.io/conda/dn/conda-forge/spacy?style=flat-square&logo=conda-forge&logoColor=white)](https://anaconda.org/conda-forge/spacy)
 [![Model downloads](https://img.shields.io/github/downloads/explosion/spacy-models/total?style=flat-square&label=model+downloads)](https://github.com/explosion/spacy-models/releases)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg?style=flat-square)](https://github.com/ambv/black)
 [![spaCy on Twitter](https://img.shields.io/twitter/follow/spacy_io.svg?style=social&label=Follow)](https://twitter.com/spacy_io)
 
 ## 📖 Documentation
@@ -74,9 +74,9 @@ it.
 ## Features
 
 - Support for **60+ languages**
-- **Trained pipelines**
+- **Trained pipelines** for different languages and tasks
 - Multi-task learning with pretrained **transformers** like BERT
-- Pretrained **word vectors**
+- Support for pretrained **word vectors** and embedings
 - State-of-the-art speed
 - Production-ready **training system**
 - Linguistically-motivated **tokenization**
