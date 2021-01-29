@@ -175,7 +175,7 @@ def test_tok2vec_listener_callback():
     assert nlp.pipe_names == ["tok2vec", "tagger"]
     tagger = nlp.get_pipe("tagger")
     tok2vec = nlp.get_pipe("tok2vec")
-    nlp._link_components()
+    nlp.link_components()
     docs = [nlp.make_doc("A random sentence")]
     tok2vec.model.initialize(X=docs)
     gold_array = [[1.0 for tag in ["V", "Z"]] for word in docs]

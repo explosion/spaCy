@@ -1190,6 +1190,7 @@ class Language:
         get_examples: Optional[Callable[[], Iterable[Example]]] = None,
         *,
         sgd: Optional[Optimizer] = None,
+        link_components: bool = True,
     ) -> Optimizer:
         """Initialize the pipe for training, using data examples if available.
 
@@ -1197,6 +1198,8 @@ class Language:
             returns gold-standard Example objects.
         sgd (Optional[Optimizer]): An optimizer to use for updates. If not
             provided, will be created using the .create_optimizer() method.
+        link_components (bool): Link listener components automatically or not
+            (default True)
         RETURNS (thinc.api.Optimizer): The optimizer.
 
         DOCS: https://nightly.spacy.io/api/language#initialize
@@ -1244,7 +1247,8 @@ class Language:
                     proc.initialize, p_settings, section="components", name=name
                 )
                 proc.initialize(get_examples, nlp=self, **p_settings)
-        self._link_components()
+        if link_components:
+            self.link_components()
         self._optimizer = sgd
         if sgd is not None:
             self._optimizer = sgd
@@ -1524,11 +1528,11 @@ class Language:
             for proc in procs:
                 proc.terminate()
 
-    def _link_components(self) -> None:
+    def link_components(self) -> None:
         """Register 'listeners' within pipeline components, to allow them to
         effectively share weights.
         """
-        # I had though, "Why do we do this inside the Language object? Shouldn't
+        # I had thought, "Why do we do this inside the Language object? Shouldn't
         # it be the tok2vec/transformer/etc's job?
         # The problem is we need to do it during deserialization...And the
         # components don't receive the pipeline then. So this does have to be
@@ -1847,7 +1851,7 @@ class Language:
             exclude = list(exclude) + ["vocab"]
         util.from_disk(path, deserializers, exclude)
         self._path = path
-        self._link_components()
+        self.link_components()
         return self
 
     def to_bytes(self, *, exclude: Iterable[str] = SimpleFrozenList()) -> bytes:
@@ -1908,7 +1912,7 @@ class Language:
                 b, exclude=["vocab"]
             )
         util.from_bytes(bytes_data, deserializers, exclude)
-        self._link_components()
+        self.link_components()
         return self
 
 
