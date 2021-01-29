@@ -204,19 +204,40 @@ drop-in replacements that let you achieve **higher accuracy** in exchange for
 > downloaded: 3GB CUDA runtime, 800MB PyTorch, 400MB CuPy, 500MB weights, 200MB
 > spaCy and dependencies.
 
-Once you have CUDA installed, you'll need to install two pip packages,
-[`cupy`](https://docs.cupy.dev/en/stable/install.html) and
-[`spacy-transformers`](https://github.com/explosion/spacy-transformers). `cupy`
-is just like `numpy`, but for GPU. The best way to install it is to choose a
-wheel that matches the version of CUDA you're using. You may also need to set
-the `CUDA_PATH` environment variable if your CUDA runtime is installed in a
-non-standard location. Putting it all together, if you had installed CUDA 10.2
-in `/opt/nvidia/cuda`, you would run:
+Once you have CUDA installed, we recommend installing PyTorch separately
+following the
+[PyTorch installation guidelines](https://pytorch.org/get-started/locally/) for
+your package manager and CUDA version. If you skip this step, pip will install
+PyTorch as a dependency below, but it may not find the best version for your
+setup.
+
+```bash
+### Example: Install PyTorch 1.7.1 for CUDA 10.1 with pip
+$ pip install torch==1.7.1+cu101 torchvision==0.8.2+cu101 torchaudio==0.7.2 -f https://download.pytorch.org/whl/torch_stable.html
+```
+
+Next, install spaCy with the extras for your CUDA version and transformers. The
+CUDA extra (e.g., `cuda92`, `cuda102`, `cuda111`) installs the correct version
+of [`cupy`](https://docs.cupy.dev/en/stable/install.html#installing-cupy), which
+is just like `numpy`, but for GPU. You may also need to set the `CUDA_PATH`
+environment variable if your CUDA runtime is installed in a non-standard
+location. Putting it all together, if you had installed CUDA 10.2 in
+`/opt/nvidia/cuda`, you would run:
 
 ```bash
 ### Installation with CUDA
 $ export CUDA_PATH="/opt/nvidia/cuda"
 $ pip install -U %%SPACY_PKG_NAME[cuda102,transformers]%%SPACY_PKG_FLAGS
+```
+
+For [`transformers`](https://huggingface.co/transformers/) v4.0.0+ and models
+that require [`SentencePiece`](https://github.com/google/sentencepiece) (e.g.,
+ALBERT, CamemBERT, XLNet, Marian, and T5), install the additional dependencies
+with:
+
+```bash
+### Install sentencepiece
+$ pip install transformers[sentencepiece]
 ```
 
 ### Runtime usage {#transformers-runtime}
