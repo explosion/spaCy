@@ -1,4 +1,4 @@
-from typing import Union, Dict, Optional, Any, List, IO, TYPE_CHECKING
+from typing import Union, Dict, Optional, Any, IO, TYPE_CHECKING
 from thinc.api import Config, fix_random_seed, set_gpu_allocator
 from thinc.api import ConfigValidationError
 from pathlib import Path
@@ -14,7 +14,8 @@ from ..vectors import Vectors
 from ..errors import Errors, Warnings
 from ..schemas import ConfigSchemaTraining
 from ..util import registry, load_model_from_config, resolve_dot_names, logger
-from ..util import load_model, ensure_path, OOV_RANK, DEFAULT_OOV_PROB
+from ..util import load_model, ensure_path, get_sourced_components
+from ..util import OOV_RANK, DEFAULT_OOV_PROB
 
 if TYPE_CHECKING:
     from ..language import Language  # noqa: F401
@@ -33,7 +34,7 @@ def init_nlp(config: Config, *, use_gpu: int = -1) -> "Language":
     if use_gpu >= 0 and allocator:
         set_gpu_allocator(allocator)
     # Use original config here before it's resolved to functions
-    sourced_components = get_sourced_components(config)
+    sourced = get_sourced_components(config)
     nlp = load_model_from_config(raw_config, auto_fill=True)
     logger.info("Set up nlp object from config")
     config = nlp.config.interpolate()
@@ -57,7 +58,7 @@ def init_nlp(config: Config, *, use_gpu: int = -1) -> "Language":
     # Components that shouldn't be updated during training
     frozen_components = T["frozen_components"]
     # Sourced components that require resume_training
-    resume_components = [p for p in sourced_components if p not in frozen_components]
+    resume_components = [p for p in sourced if p not in frozen_components]
     logger.info(f"Pipeline: {nlp.pipe_names}")
     if resume_components:
         with nlp.select_pipes(enable=resume_components):
@@ -68,10 +69,11 @@ def init_nlp(config: Config, *, use_gpu: int = -1) -> "Language":
         logger.info(f"Initialized pipeline components: {nlp.pipe_names}")
     # Detect components with listeners that are not frozen consistently
     for name, proc in nlp.pipeline:
-        if getattr(proc, "listening_components", None):
+        if getattr(proc, "listening_components", None):  # e.g. tok2vec/transformer
             for listener in proc.listening_components:
                 if listener in frozen_components and name not in frozen_components:
                     logger.warning(Warnings.W087.format(name=name, listener=listener))
+                # We always check this regardless, in case user freezes tok2vec
                 if listener not in frozen_components and name in frozen_components:
                     logger.warning(Warnings.W086.format(name=name, listener=listener))
     return nlp
@@ -171,18 +173,6 @@ def init_tok2vec(
         layer.from_bytes(weights_data)
         return True
     return False
-
-
-def get_sourced_components(config: Union[Dict[str, Any], Config]) -> List[str]:
-    """RETURNS (List[str]): All sourced components in the original config,
-    e.g. {"source": "en_core_web_sm"}. If the config contains a key
-    "factory", we assume it refers to a component factory.
-    """
-    return [
-        name
-        for name, cfg in config.get("components", {}).items()
-        if "factory" not in cfg and "source" in cfg
-    ]
 
 
 def convert_vectors(
