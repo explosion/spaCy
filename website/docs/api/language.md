@@ -203,7 +203,7 @@ more efficient than processing texts one-by-one.
 | `n_process` <Tag variant="new">2.2.2</Tag> | Number of processors to use. Defaults to `1`. ~~int~~                                                                                                               |
 | **YIELDS**                                 | Documents in the order of the original text. ~~Doc~~                                                                                                                |
 
-## Language.set_error_handler {#set_error_handler tag="method"}
+## Language.set_error_handler {#set_error_handler tag="method" new="3"}
 
 Define a callback that will be invoked when an error is thrown during processing
 of one or more documents. Specifically, this function will call
