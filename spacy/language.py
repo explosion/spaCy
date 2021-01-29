@@ -1248,7 +1248,7 @@ class Language:
                 )
                 proc.initialize(get_examples, nlp=self, **p_settings)
         if link_components:
-            self.link_components()
+            self._link_components()
         self._optimizer = sgd
         if sgd is not None:
             self._optimizer = sgd
@@ -1851,7 +1851,7 @@ class Language:
             exclude = list(exclude) + ["vocab"]
         util.from_disk(path, deserializers, exclude)
         self._path = path
-        self.link_components()
+        self._link_components()
         return self
 
     def to_bytes(self, *, exclude: Iterable[str] = SimpleFrozenList()) -> bytes:
@@ -1912,7 +1912,7 @@ class Language:
                 b, exclude=["vocab"]
             )
         util.from_bytes(bytes_data, deserializers, exclude)
-        self.link_components()
+        self._link_components()
         return self
 
 
