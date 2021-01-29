@@ -8,7 +8,7 @@ from contextlib import contextmanager
 from copy import deepcopy
 from pathlib import Path
 import warnings
-from thinc.api import Model, get_current_ops, Config, Optimizer
+from thinc.api import get_current_ops, Config, Optimizer
 import srsly
 import multiprocessing as mp
 from itertools import chain, cycle
@@ -669,6 +669,47 @@ class Language:
             filled = filled.merge(raw_config)
         self._pipe_configs[name] = filled
         return resolved[factory_name]
+
+    def replace_listeners(
+        self,
+        tok2vec_name: str,
+        pipe_name: str,
+        listeners: Iterable[str] = SimpleFrozenList(),
+    ):
+        if tok2vec_name not in self.pipe_names:
+            raise ValueError  # TODO:
+        if pipe_name not in self.pipe_names:
+            raise ValueError  # TODO:
+        tok2vec = self.get_pipe(tok2vec_name)
+        tok2vec_cfg = self.get_pipe_config(tok2vec_name)
+        if (
+            not hasattr(tok2vec, "model")
+            or not hasattr(tok2vec, "listener_map")
+            or "model" not in tok2vec_cfg
+        ):
+            raise ValueError  # TODO: likely bug in spaCy if this happens
+        pipe_listeners = tok2vec.listener_map.get(pipe_name, [])
+        pipe_cfg = self._pipe_configs[pipe_name]
+        if listeners:
+            util.logger.debug(f"Replacing listeners of component '{pipe_name}'")
+            if len(listeners) != len(pipe_listeners):
+                # The number of listeners defined in the component model doesn't
+                # match the listeners to replace, so we won't be able to update
+                # the nodes and generate a matching config
+                raise ValueError(f"{listeners}, {pipe_listeners}")  # TODO:
+            pipe = self.get_pipe(pipe_name)
+            # Go over the listener layers and replace them
+            for listener in pipe_listeners:
+                util.replace_model_node(pipe.model, listener, tok2vec.model.copy())
+            # Update the config accordingly by coping the tok2vec model to all
+            # sections defined in the listener paths
+            for listener_path in listeners:
+                # Check if the path actually exists in the config
+                try:
+                    util.dot_to_object(pipe_cfg, listener_path)
+                except KeyError:
+                    raise ValueError  # TODO:
+                util.set_dot_to_object(pipe_cfg, listener_path, tok2vec_cfg["model"])
 
     def create_pipe_from_source(
         self, source_name: str, source: "Language", *, name: str

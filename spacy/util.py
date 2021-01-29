@@ -8,7 +8,7 @@ import re
 from pathlib import Path
 import thinc
 from thinc.api import NumpyOps, get_current_ops, Adam, Config, Optimizer
-from thinc.api import ConfigValidationError
+from thinc.api import ConfigValidationError, Model
 import functools
 import itertools
 import numpy.random
@@ -738,6 +738,24 @@ def get_package_path(name: str) -> Path:
     return Path(pkg.__file__).parent
 
 
+def replace_model_node(model: Model, target: Model, replacement: Model) -> None:
+    """Replace a node within a model with a new one, updating refs.
+
+    model (Model): The parent model.
+    target (Model): The target node.
+    replacement (Model): The node to replace the target with.
+    """
+    # Place the node into the sublayers
+    for node in model.walk():
+        if target in node.layers:
+            node.layers[node.layers.index(target)] = replacement
+    # Now fix any node references
+    for node in model.walk():
+        for ref_name in node.ref_names:
+            if node.maybe_get_ref(ref_name) is target:
+                node.set_ref(ref_name, replacement)
+
+
 def split_command(command: str) -> List[str]:
     """Split a string command using shlex. Handles platform compatibility.
 
@@ -1277,6 +1295,25 @@ def dot_to_object(config: Config, section: str):
         except (KeyError, TypeError):
             raise KeyError(Errors.E952.format(name=section)) from None
     return component
+
+
+def set_dot_to_object(config: Config, section: str, value: Any) -> None:
+    """Update a config at a given position from a dot notation.
+
+    config (Config): The config.
+    section (str): The dot notation of the section in the config.
+    value (Any): The value to set in the config.
+    """
+    component = config
+    parts = section.split(".")
+    for i, item in enumerate(parts):
+        try:
+            if i == len(parts) - 1:
+                component[item] = value
+            else:
+                component = component[item]
+        except (KeyError, TypeError):
+            raise KeyError(Errors.E952.format(name=section)) from None
 
 
 def walk_dict(

@@ -205,6 +205,25 @@ def test_dot_to_dict(dot_notation, expected):
     assert util.dict_to_dot(result) == dot_notation
 
 
+def test_set_dot_to_object():
+    config = {"foo": {"bar": 1, "baz": {"x": "y"}}, "test": {"a": {"b": "c"}}}
+    with pytest.raises(KeyError):
+        util.set_dot_to_object(config, "foo.bar.baz", 100)
+    with pytest.raises(KeyError):
+        util.set_dot_to_object(config, "hello.world", 100)
+    with pytest.raises(KeyError):
+        util.set_dot_to_object(config, "test.a.b.c", 100)
+    util.set_dot_to_object(config, "foo.bar", 100)
+    assert config["foo"]["bar"] == 100
+    util.set_dot_to_object(config, "foo.baz.x", {"hello": "world"})
+    assert config["foo"]["baz"]["x"]["hello"] == "world"
+    assert config["test"]["a"]["b"] == "c"
+    util.set_dot_to_object(config, "foo", 123)
+    assert config["foo"] == 123
+    util.set_dot_to_object(config, "test", "hello")
+    assert dict(config) == {"foo": 123, "test": "hello"}
+
+
 @pytest.mark.parametrize(
     "doc_sizes, expected_batches",
     [
