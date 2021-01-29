@@ -100,7 +100,7 @@ applied to the `Doc` in order. Both [`__call__`](/api/pipe#call) and
 | `batch_size`   | The number of documents to buffer. Defaults to `128`. ~~int~~ |
 | **YIELDS**     | The processed documents in order. ~~Doc~~                     |
 
-## TrainablePipe.set_error_handler {#set_error_handler tag="method"}
+## TrainablePipe.set_error_handler {#set_error_handler tag="method" new="3"}
 
 Define a callback that will be invoked when an error is thrown during processing
 of one or more documents with either [`__call__`](/api/pipe#call) or
@@ -122,7 +122,7 @@ processed, and the original error.
 | --------------- | -------------------------------------------------------------------------------------------------------------- |
 | `error_handler` | A function that performs custom error handling. ~~Callable[[str, Callable[[Doc], Doc], List[Doc], Exception]~~ |
 
-## TrainablePipe.get_error_handler {#get_error_handler tag="method"}
+## TrainablePipe.get_error_handler {#get_error_handler tag="method" new="3"}
 
 Retrieve the callback that performs error handling for this component's
 [`__call__`](/api/pipe#call) and [`pipe`](/api/pipe#pipe) methods. If no custom
