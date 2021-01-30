@@ -3,7 +3,6 @@ redirects = [
     {from = "https://spacy.netlify.com/*", to="https://spacy.io/:splat", force = true },
     # Subdomain for branches
     {from = "https://nightly.spacy.io/*", to="https://spacy.io/:splat", force = true},
-    # TODO: update this with the v2 branch build once v3 is live (status = 200)
     {from = "https://v2.spacy.io/*", to="https://v2-spacy-io.spacy.io/:splat", force = true, status = 200},
     # Old subdomains
     {from = "https://survey.spacy.io/*", to = "https://spacy.io", force = true},
