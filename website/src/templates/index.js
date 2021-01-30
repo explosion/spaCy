@@ -82,7 +82,7 @@ const scopeComponents = {
     IntegrationLogo,
 }
 
-const AlertSpace = ({ nightly }) => {
+const AlertSpace = ({ nightly, legacy }) => {
     const isOnline = useOnlineStatus()
     return (
         <>
@@ -97,6 +97,16 @@ const AlertSpace = ({ nightly }) => {
                         <InlineCode>spacy-nightly</InlineCode>
                     </Link>
                     , not the latest <Link to="https://spacy.io">stable version</Link>.
+                </Alert>
+            )}
+            {legacy && (
+                <Alert
+                    title="You're viewing the old documentation"
+                    icon="warning"
+                    closeOnClick={false}
+                >
+                    The page reflects an older version of spaCy, not the latest{' '}
+                    <Link to="https://spacy.io">stable release</Link>.
                 </Alert>
             )}
             {!isOnline && (
@@ -158,7 +168,7 @@ class Layout extends React.Component {
         const mdx = file ? file.childMdx : null
         const meta = site.siteMetadata || {}
         const { title, section, sectionTitle, teaser, theme = 'blue', searchExclude } = pageContext
-        const uiTheme = meta.nightly ? 'nightly' : theme
+        const uiTheme = meta.nightly ? 'nightly' : meta.legacy ? 'legacy' : theme
         const bodyClass = classNames(`theme-${uiTheme}`, { 'search-exclude': !!searchExclude })
         const isDocs = ['usage', 'models', 'api', 'styleguide'].includes(section)
         const content = !mdx ? null : (
@@ -177,13 +187,13 @@ class Layout extends React.Component {
                     bodyClass={bodyClass}
                     nightly={meta.nightly}
                 />
-                <AlertSpace nightly={meta.nightly} />
+                <AlertSpace nightly={meta.nightly} legacy={meta.legacy} />
                 <Navigation
                     title={meta.title}
                     items={meta.navigation}
                     section={section}
                     search={<Search settings={meta.docSearch} />}
-                    alert={navAlert}
+                    alert={meta.nightly ? null : navAlert}
                 >
                     <Progress key={location.href} />
                 </Navigation>
@@ -214,6 +224,7 @@ export const pageQuery = graphql`
         site {
             siteMetadata {
                 nightly
+                legacy
                 title
                 description
                 navigation {

@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { StaticQuery, graphql } from 'gatsby'
 
 import { Quickstart, QS } from '../components/quickstart'
-import { repo } from '../components/util'
+import { repo, DEFAULT_BRANCH } from '../components/util'
 
 const DEFAULT_MODELS = ['en']
 const DEFAULT_OPT = 'efficiency'
@@ -166,7 +166,7 @@ const QuickstartInstall = ({ id, title }) => {
                         </QS>
                         <QS package="source">
                             git clone https://github.com/{repo}
-                            {nightly ? ` --branch develop` : ''}
+                            {nightly ? ` --branch ${DEFAULT_BRANCH}` : ''}
                         </QS>
                         <QS package="source">cd spaCy</QS>
                         <QS package="source" os="linux">

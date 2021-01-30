@@ -7,10 +7,12 @@ import socialImageDefault from '../images/social_default.jpg'
 import socialImageApi from '../images/social_api.jpg'
 import socialImageUniverse from '../images/social_universe.jpg'
 import socialImageNightly from '../images/social_nightly.jpg'
+import socialImageLegacy from '../images/social_legacy.jpg'
 
-function getPageTitle(title, sitename, slogan, sectionTitle, nightly) {
+function getPageTitle(title, sitename, slogan, sectionTitle, nightly, legacy) {
     if (sectionTitle && title) {
-        return `${title} · ${sitename} ${sectionTitle}${nightly ? ' (nightly)' : ''}`
+        const suffix = nightly ? ' (nightly)' : legacy ? ' (legacy)' : ''
+        return `${title} · ${sitename} ${sectionTitle}${suffix}`
     }
     if (title) {
         return `${title} · ${sitename}`
@@ -18,8 +20,9 @@ function getPageTitle(title, sitename, slogan, sectionTitle, nightly) {
     return `${sitename} · ${slogan}`
 }
 
-function getImage(section, nightly) {
+function getImage(section, nightly, legacy) {
     if (nightly) return socialImageNightly
+    if (legacy) return socialImageLegacy
     if (section === 'api') return socialImageApi
     if (section === 'universe') return socialImageUniverse
     return socialImageDefault
@@ -33,6 +36,7 @@ export default function SEO({
     sectionTitle,
     bodyClass,
     nightly,
+    legacy,
 }) {
     return (
         <StaticQuery
@@ -45,9 +49,10 @@ export default function SEO({
                     siteMetadata.title,
                     siteMetadata.slogan,
                     sectionTitle,
-                    nightly
+                    nightly,
+                    legacy
                 )
-                const socialImage = siteMetadata.siteUrl + getImage(section, nightly)
+                const socialImage = siteMetadata.siteUrl + getImage(section, nightly, legacy)
                 const meta = [
                     {
                         name: 'description',

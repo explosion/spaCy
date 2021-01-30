@@ -19,11 +19,11 @@ const universe = require('./meta/universe.json')
 
 const DEFAULT_TEMPLATE = path.resolve('./src/templates/index.js')
 
-const isNightly = !!+process.env.SPACY_NIGHTLY || site.nightlyBranches.includes(process.env.BRANCH)
-const favicon = isNightly ? `src/images/icon_nightly.png` : `src/images/icon.png`
-const binderBranch = isNightly ? 'nightly' : site.binderBranch
-const siteUrl = isNightly ? site.siteUrlNightly : site.siteUrl
-const domain = isNightly ? site.domainNightly : site.domain
+const domain = process.env.BRANCH || site.domain
+const siteUrl = `https://${domain}`
+const isNightly = site.nightlyBranches.includes(domain)
+const isLegacy = site.legacy || !!+process.env.SPACY_LEGACY
+const favicon = `src/images/icon${isNightly ? '_nightly' : isLegacy ? '_legacy' : ''}.png`
 const branch = isNightly ? 'develop' : 'master'
 
 // Those variables are going to be replaced in the Markdown, e.g. %%GITHUB_SPACY
@@ -53,7 +53,8 @@ module.exports = {
         counts: getCounts(models.languages),
         universe,
         nightly: isNightly,
-        binderBranch,
+        legacy: isLegacy,
+        binderBranch: domain,
         siteUrl,
     },
 

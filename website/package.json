@@ -57,6 +57,7 @@
         "build": "npm run python:install && npm run python:setup && gatsby build",
         "dev": "npm run python:setup && gatsby develop",
         "dev:nightly": "BRANCH=nightly.spacy.io npm run dev",
+        "dev:legacy": "SPACY_LEGACY=1 npm run dev",
         "lint": "eslint **",
         "clear": "rm -rf .cache",
         "test": "echo \"Write tests! -> https://gatsby.app/unit-testing\"",

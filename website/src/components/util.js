@@ -6,8 +6,8 @@ import siteMetadata from '../../meta/site.json'
 
 const htmlToReactParser = new HtmlToReactParser()
 
-// TODO: update this
-const DEFAULT_BRANCH = 'develop'
+const isNightly = siteMetadata.nightlyBranches.includes(siteMetadata.domain)
+export const DEFAULT_BRANCH = isNightly ? 'develop' : 'master'
 export const repo = siteMetadata.repo
 export const modelsRepo = siteMetadata.modelsRepo
 export const projectsRepo = siteMetadata.projectsRepo

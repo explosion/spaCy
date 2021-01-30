@@ -302,8 +302,8 @@ const Universe = ({ pageContext, location, mdxComponents }) => (
     <StaticQuery
         query={query}
         render={data => {
-            const { universe, nightly } = data.site.siteMetadata
-            const theme = nightly ? 'nightly' : pageContext.theme
+            const { universe, nightly, legacy } = data.site.siteMetadata
+            const theme = nightly ? 'nightly' : legacy ? 'legacy' : pageContext.theme
             return (
                 <UniverseContent
                     content={universe.resources}
@@ -325,6 +325,7 @@ const query = graphql`
         site {
             siteMetadata {
                 nightly
+                legacy
                 universe {
                     resources {
                         type

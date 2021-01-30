@@ -56,11 +56,11 @@ for entity in doc.ents:
 }
 
 const Landing = ({ data }) => {
-    const { nightly } = data
+    const { nightly, legacy } = data
     const codeExample = getCodeExample(nightly)
     return (
         <>
-            <LandingHeader nightly={data.nightly}>
+            <LandingHeader nightly={nightly} legacy={legacy}>
                 <LandingTitle>
                     Industrial-Strength
                     <br />
@@ -274,6 +274,7 @@ const landingQuery = graphql`
         site {
             siteMetadata {
                 nightly
+                legacy
                 repo
             }
         }

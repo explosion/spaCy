@@ -7,11 +7,11 @@ import { LandingHeader, LandingTitle } from '../components/landing'
 import Button from '../components/button'
 
 export default ({ data, location }) => {
-    const { nightly } = data.site.siteMetadata
+    const { nightly, legacy } = data.site.siteMetadata
     const pageContext = { title: '404 Error', searchExclude: true, isIndex: false }
     return (
         <Template data={data} pageContext={pageContext} location={location}>
-            <LandingHeader style={{ minHeight: 400 }} nightly={nightly}>
+            <LandingHeader style={{ minHeight: 400 }} nightly={nightly} legacy={legacy}>
                 <LandingTitle>
                     Ooops, this page
                     <br />
@@ -31,6 +31,7 @@ export const pageQuery = graphql`
         site {
             siteMetadata {
                 nightly
+                legacy
                 title
                 description
                 navigation {
