@@ -6,9 +6,6 @@ from .._util import project_cli, Arg, Opt, PROJECT_FILE, load_project_config
 
 
 DOCS_URL = "https://spacy.io"
-INTRO = f"""> ⚠️ This project template uses the new [**spaCy v3.0**]({DOCS_URL}), which
-> is currently available as a nightly pre-release. You can install it from pip as `spacy-nightly`:
-> `pip install spacy-nightly`. Make sure to use a fresh virtual environment."""
 INTRO_PROJECT = f"""The [`{PROJECT_FILE}`]({PROJECT_FILE}) defines the data assets required by the
 project, as well as the available commands and workflows. For details, see the
 [spaCy projects documentation]({DOCS_URL}/usage/projects)."""
@@ -59,7 +56,6 @@ def project_document(
     title = config.get("title")
     description = config.get("description")
     md.add(md.title(1, f"spaCy Project{f': {title}' if title else ''}", "🪐"))
-    md.add(INTRO)
     if description:
         md.add(description)
     md.add(md.title(2, PROJECT_FILE, "📋"))
