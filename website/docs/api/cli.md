@@ -28,7 +28,9 @@ available arguments and usage.
 Download [trained pipelines](/usage/models) for spaCy. The downloader finds the
 best-matching compatible version and uses `pip install` to download the Python
 package. Direct downloads don't perform any compatibility checks and require the
-pipeline name to be specified with its version (e.g. `en_core_web_sm-2.2.0`).
+pipeline name to be specified with its version (e.g. `en_core_web_sm-3.0.0`).
+Setting the `--wheel` flag will download a binary wheel file instead of an
+archive, which can be faster and more memory efficient.
 
 > #### Downloading best practices
 >
@@ -42,16 +44,17 @@ pipeline name to be specified with its version (e.g. `en_core_web_sm-2.2.0`).
 > project.
 
 ```cli
-$ python -m spacy download [model] [--direct] [pip_args]
+$ python -m spacy download [model] [--wheel] [--direct] [pip_args]
 ```
 
-| Name                                  | Description                                                                                                                                                                                                                               |
-| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `model`                               | Pipeline package name, e.g. [`en_core_web_sm`](/models/en#en_core_web_sm). ~~str (positional)~~                                                                                                                                           |
-| `--direct`, `-d`                      | Force direct download of exact package version. ~~bool (flag)~~                                                                                                                                                                           |
-| `--help`, `-h`                        | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                                                                |
-| pip args <Tag variant="new">2.1</Tag> | Additional installation options to be passed to `pip install` when installing the pipeline package. For example, `--user` to install to the user home directory or `--no-deps` to not install package dependencies. ~~Any (option/flag)~~ |
-| **CREATES**                           | The installed pipeline package in your `site-packages` directory.                                                                                                                                                                         |
+| Name                                       | Description                                                                                                                                                                                                                               |
+| ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `model`                                    | Pipeline package name, e.g. [`en_core_web_sm`](/models/en#en_core_web_sm). ~~str (positional)~~                                                                                                                                           |
+| `--wheel`, `-W` <Tag variant="new">3</Tag> | Download binary wheel package instead of `.tar.gz` archive. Can make download and installation faster and more memory efficient. ~~bool (flag)~~                                                                                          |
+| `--direct`, `-D`                           | Force direct download of exact package version. ~~bool (flag)~~                                                                                                                                                                           |
+| `--help`, `-h`                             | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                                                                |
+| pip args <Tag variant="new">2.1</Tag>      | Additional installation options to be passed to `pip install` when installing the pipeline package. For example, `--user` to install to the user home directory or `--no-deps` to not install package dependencies. ~~Any (option/flag)~~ |
+| **CREATES**                                | The installed pipeline package in your `site-packages` directory.                                                                                                                                                                         |
 
 ## info {#info tag="command"}
 
