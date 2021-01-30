@@ -1,133 +1,110 @@
-# coding: utf8
-from __future__ import unicode_literals
-
-import plac
+from typing import Optional, Sequence
 import requests
-import os
-import subprocess
 import sys
 from wasabi import msg
+import typer
 
-from .link import link
-from ..util import get_package_path
+from ._util import app, Arg, Opt, WHEEL_SUFFIX, SDIST_SUFFIX
 from .. import about
+from ..util import is_package, get_base_version, run_command
+from ..errors import OLD_MODEL_SHORTCUTS
 
 
-@plac.annotations(
-    model=("Model to download (shortcut or name)", "positional", None, str),
-    direct=("Force direct download of name + version", "flag", "d", bool),
-    pip_args=("Additional arguments to be passed to `pip install` on model install"),
+@app.command(
+    "download",
+    context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
 )
-def download(model, direct=False, *pip_args):
+def download_cli(
+    # fmt: off
+    ctx: typer.Context,
+    model: str = Arg(..., help="Name of pipeline package to download"),
+    direct: bool = Opt(False, "--direct", "-d", "-D", help="Force direct download of name + version"),
+    wheel: bool = Opt(False, "--wheel", "-W", help="Download binary wheel")
+    # fmt: on
+):
     """
-    Download compatible model from default download path using pip. Model
-    can be shortcut, model name or, if --direct flag is set, full model name
-    with version. For direct downloads, the compatibility check will be skipped.
+    Download compatible trained pipeline from the default download path using
+    pip. If --direct flag is set, the command expects the full package name with
+    version. For direct downloads, the compatibility check will be skipped. All
+    additional arguments provided to this command will be passed to `pip install`
+    on package installation.
+
+    DOCS: https://spacy.io/api/cli#download
+    AVAILABLE PACKAGES: https://spacy.io/models
     """
-    if not require_package("spacy") and "--no-deps" not in pip_args:
+    download(model, direct, wheel, *ctx.args)
+
+
+def download(model: str, direct: bool = False, wheel: bool = False, *pip_args) -> None:
+    if (
+        not (is_package("spacy") or is_package("spacy-nightly"))
+        and "--no-deps" not in pip_args
+    ):
         msg.warn(
-            "Skipping model package dependencies and setting `--no-deps`. "
+            "Skipping pipeline package dependencies and setting `--no-deps`. "
             "You don't seem to have the spaCy package itself installed "
             "(maybe because you've built from source?), so installing the "
-            "model dependencies would cause spaCy to be downloaded, which "
-            "probably isn't what you want. If the model package has other "
+            "package dependencies would cause spaCy to be downloaded, which "
+            "probably isn't what you want. If the pipeline package has other "
             "dependencies, you'll have to install them manually."
         )
         pip_args = pip_args + ("--no-deps",)
-    dl_tpl = "{m}-{v}/{m}-{v}.tar.gz#egg={m}=={v}"
+    suffix = WHEEL_SUFFIX if wheel else SDIST_SUFFIX
+    dl_tpl = "{m}-{v}/{m}-{v}{s}#egg={m}=={v}"
     if direct:
         components = model.split("-")
         model_name = "".join(components[:-1])
         version = components[-1]
-        dl = download_model(dl_tpl.format(m=model_name, v=version), pip_args)
+        download_model(dl_tpl.format(m=model_name, v=version, s=suffix), pip_args)
     else:
-        shortcuts = get_json(about.__shortcuts__, "available shortcuts")
-        model_name = shortcuts.get(model, model)
+        model_name = model
+        if model in OLD_MODEL_SHORTCUTS:
+            msg.warn(
+                f"As of spaCy v3.0, shortcuts like '{model}' are deprecated. Please"
+                f"use the full pipeline package name '{OLD_MODEL_SHORTCUTS[model]}' instead."
+            )
+            model_name = OLD_MODEL_SHORTCUTS[model]
         compatibility = get_compatibility()
         version = get_version(model_name, compatibility)
-        dl = download_model(dl_tpl.format(m=model_name, v=version), pip_args)
-        if dl != 0:  # if download subprocess doesn't return 0, exit
-            sys.exit(dl)
-        msg.good(
-            "Download and installation successful",
-            "You can now load the model via spacy.load('{}')".format(model_name),
-        )
-        # Only create symlink if the model is installed via a shortcut like 'en'.
-        # There's no real advantage over an additional symlink for en_core_web_sm
-        # and if anything, it's more error prone and causes more confusion.
-        if model in shortcuts:
-            try:
-                # Get package path here because link uses
-                # pip.get_installed_distributions() to check if model is a
-                # package, which fails if model was just installed via
-                # subprocess
-                package_path = get_package_path(model_name)
-                link(model_name, model, force=True, model_path=package_path)
-            except:  # noqa: E722
-                # Dirty, but since spacy.download and the auto-linking is
-                # mostly a convenience wrapper, it's best to show a success
-                # message and loading instructions, even if linking fails.
-                msg.warn(
-                    "Download successful but linking failed",
-                    "Creating a shortcut link for '{}' didn't work (maybe you "
-                    "don't have admin permissions?), but you can still load "
-                    "the model via its full package name: "
-                    "nlp = spacy.load('{}')".format(model, model_name),
-                )
-        # If a model is downloaded and then loaded within the same process, our
-        # is_package check currently fails, because pkg_resources.working_set
-        # is not refreshed automatically (see #3923). We're trying to work
-        # around this here be requiring the package explicitly.
-        require_package(model_name)
+        download_model(dl_tpl.format(m=model_name, v=version, s=suffix), pip_args)
+    msg.good(
+        "Download and installation successful",
+        f"You can now load the package via spacy.load('{model_name}')",
+    )
 
 
-def require_package(name):
-    try:
-        import pkg_resources
-
-        pkg_resources.working_set.require(name)
-        return True
-    except:  # noqa: E722
-        return False
-
-
-def get_json(url, desc):
-    r = requests.get(url)
+def get_compatibility() -> dict:
+    version = get_base_version(about.__version__)
+    r = requests.get(about.__compatibility__)
     if r.status_code != 200:
         msg.fail(
-            "Server error ({})".format(r.status_code),
-            "Couldn't fetch {}. Please find a model for your spaCy "
-            "installation (v{}), and download it manually. For more "
-            "details, see the documentation: "
-            "https://spacy.io/usage/models".format(desc, about.__version__),
+            f"Server error ({r.status_code})",
+            f"Couldn't fetch compatibility table. Please find a package for your spaCy "
+            f"installation (v{about.__version__}), and download it manually. "
+            f"For more details, see the documentation: "
+            f"https://spacy.io/usage/models",
             exits=1,
         )
-    return r.json()
-
-
-def get_compatibility():
-    version = about.__version__
-    version = version.rsplit(".dev", 1)[0]
-    comp_table = get_json(about.__compatibility__, "compatibility table")
+    comp_table = r.json()
     comp = comp_table["spacy"]
     if version not in comp:
-        msg.fail("No compatible models found for v{} of spaCy".format(version), exits=1)
+        msg.fail(f"No compatible packages found for v{version} of spaCy", exits=1)
     return comp[version]
 
 
-def get_version(model, comp):
-    model = model.rsplit(".dev", 1)[0]
+def get_version(model: str, comp: dict) -> str:
     if model not in comp:
         msg.fail(
-            "No compatible model found for '{}' "
-            "(spaCy v{}).".format(model, about.__version__),
+            f"No compatible package found for '{model}' (spaCy v{about.__version__})",
             exits=1,
         )
     return comp[model][0]
 
 
-def download_model(filename, user_pip_args=None):
+def download_model(
+    filename: str, user_pip_args: Optional[Sequence[str]] = None
+) -> None:
     download_url = about.__download_url__ + "/" + filename
     pip_args = user_pip_args if user_pip_args is not None else []
     cmd = [sys.executable, "-m", "pip", "install"] + pip_args + [download_url]
-    return subprocess.call(cmd, env=os.environ.copy())
+    run_command(cmd)

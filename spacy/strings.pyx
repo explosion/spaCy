@@ -1,18 +1,16 @@
 # cython: infer_types=True
-# coding: utf8
-from __future__ import unicode_literals, absolute_import
-
 cimport cython
 from libc.string cimport memcpy
 from libcpp.set cimport set
 from libc.stdint cimport uint32_t
 from murmurhash.mrmr cimport hash64, hash32
+
 import srsly
 
-from .compat import basestring_
+from .typedefs cimport hash_t
+
 from .symbols import IDS as SYMBOLS_BY_STR
 from .symbols import NAMES as SYMBOLS_BY_INT
-from .typedefs cimport hash_t
 from .errors import Errors
 from . import util
 
@@ -24,7 +22,7 @@ def get_string_id(key):
     This function optimises for convenience over performance, so shouldn't be
     used in tight loops.
     """
-    if not isinstance(key, basestring_):
+    if not isinstance(key, str):
         return key
     elif key in SYMBOLS_BY_STR:
         return SYMBOLS_BY_STR[key]
@@ -99,7 +97,6 @@ cdef class StringStore:
         """Create the StringStore.
 
         strings (iterable): A sequence of unicode strings to add to the store.
-        RETURNS (StringStore): The newly constructed object.
         """
         self.mem = Pool()
         self._map = PreshMap()
@@ -111,7 +108,7 @@ cdef class StringStore:
         """Retrieve a string from a given hash, or vice versa.
 
         string_or_id (bytes, unicode or uint64): The value to encode.
-        Returns (unicode or uint64): The value to be retrieved.
+        Returns (str / uint64): The value to be retrieved.
         """
         if isinstance(string_or_id, basestring) and len(string_or_id) == 0:
             return 0
@@ -130,7 +127,6 @@ cdef class StringStore:
             return SYMBOLS_BY_INT[string_or_id]
         else:
             key = string_or_id
-            self.hits.insert(key)
             utf8str = <Utf8Str*>self._map.get(key)
             if utf8str is NULL:
                 raise KeyError(Errors.E018.format(hash_value=string_or_id))
@@ -150,11 +146,11 @@ cdef class StringStore:
             return key
         else:
             return self[key]
- 
+
     def add(self, string):
         """Add a string to the StringStore.
 
-        string (unicode): The string to add.
+        string (str): The string to add.
         RETURNS (uint64): The string's hash value.
         """
         if isinstance(string, unicode):
@@ -181,7 +177,7 @@ cdef class StringStore:
     def __contains__(self, string not None):
         """Check whether a string is in the store.
 
-        string (unicode): The string to check.
+        string (str): The string to check.
         RETURNS (bool): Whether the store contains the string.
         """
         cdef hash_t key
@@ -201,19 +197,17 @@ cdef class StringStore:
         if key < len(SYMBOLS_BY_INT):
             return True
         else:
-            self.hits.insert(key)
             return self._map.get(key) is not NULL
 
     def __iter__(self):
         """Iterate over the strings in the store, in order.
 
-        YIELDS (unicode): A string in the store.
+        YIELDS (str): A string in the store.
         """
         cdef int i
         cdef hash_t key
         for i in range(self.keys.size()):
             key = self.keys[i]
-            self.hits.insert(key)
             utf8str = <Utf8Str*>self._map.get(key)
             yield decode_Utf8Str(utf8str)
         # TODO: Iterate OOV here?
@@ -225,7 +219,7 @@ cdef class StringStore:
     def to_disk(self, path):
         """Save the current state to a directory.
 
-        path (unicode or Path): A path to a directory, which will be created if
+        path (str / Path): A path to a directory, which will be created if
             it doesn't exist. Paths may be either strings or Path-like objects.
         """
         path = util.ensure_path(path)
@@ -236,7 +230,7 @@ cdef class StringStore:
         """Loads state from a directory. Modifies the object in place and
         returns it.
 
-        path (unicode or Path): A path to a directory. Paths may be either
+        path (str / Path): A path to a directory. Paths may be either
             strings or `Path`-like objects.
         RETURNS (StringStore): The modified `StringStore` object.
         """
@@ -272,40 +266,8 @@ cdef class StringStore:
         self.mem = Pool()
         self._map = PreshMap()
         self.keys.clear()
-        self.hits.clear()
         for string in strings:
             self.add(string)
-
-    def _cleanup_stale_strings(self, excepted):
-        """
-        excepted (list): Strings that should not be removed.
-        RETURNS (keys, strings): Dropped strings and keys that can be dropped from other places
-        """
-        if self.hits.size() == 0:
-            # If we don't have any hits, just skip cleanup
-            return
-
-        cdef vector[hash_t] tmp
-        dropped_strings = []
-        dropped_keys = []
-        for i in range(self.keys.size()):
-            key = self.keys[i]
-            # Here we cannot use __getitem__ because it also set hit.
-            utf8str = <Utf8Str*>self._map.get(key)
-            value = decode_Utf8Str(utf8str)
-            if self.hits.count(key) != 0 or value in excepted:
-                tmp.push_back(key)
-            else:
-                dropped_keys.append(key)
-                dropped_strings.append(value)
-
-        self.keys.swap(tmp)
-        strings = list(self)
-        self._reset_and_load(strings)
-        # Here we have strings but hits to it should be reseted
-        self.hits.clear()
-
-        return dropped_keys, dropped_strings
 
     cdef const Utf8Str* intern_unicode(self, unicode py_string):
         # 0 means missing, but we don't bother offsetting the index.
@@ -322,6 +284,5 @@ cdef class StringStore:
             return value
         value = _allocate(self.mem, <unsigned char*>utf8_string, length)
         self._map.set(key, value)
-        self.hits.insert(key)
         self.keys.push_back(key)
         return value

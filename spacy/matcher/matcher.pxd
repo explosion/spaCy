@@ -64,9 +64,10 @@ cdef class Matcher:
     cdef Pool mem
     cdef vector[TokenPatternC*] patterns
     cdef readonly Vocab vocab
-    cdef public object validator
+    cdef public object validate
     cdef public object _patterns
     cdef public object _callbacks
+    cdef public object _filter
     cdef public object _extensions
     cdef public object _extra_predicates
     cdef public object _seen_attrs

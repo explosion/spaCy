@@ -1,17 +1,13 @@
-# coding: utf8
-from __future__ import unicode_literals
-
-from ...symbols import ORTH, LEMMA, NORM, PRON_LEMMA
+from ...symbols import ORTH, NORM
 
 
 _exc = {}
 
 
 for exc_data in [
-    {ORTH: "ት/ቤት", LEMMA: "ትምህርት ቤት"},    
-    {ORTH: "ወ/ሮ", LEMMA: PRON_LEMMA, NORM: "ወይዘሮ"},
-    {ORTH: "ወ/ሪ", LEMMA: PRON_LEMMA, NORM: "ወይዘሪት"},
-
+    {ORTH: "ት/ቤት"},
+    {ORTH: "ወ/ሮ", NORM: "ወይዘሮ"},
+    {ORTH: "ወ/ሪ", NORM: "ወይዘሪት"},
 ]:
     _exc[exc_data[ORTH]] = [exc_data]
 

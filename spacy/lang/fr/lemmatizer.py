@@ -1,10 +1,7 @@
-# coding: utf8
-from __future__ import unicode_literals
+from typing import List, Tuple
 
-from ...lemmatizer import Lemmatizer
-from ...symbols import POS, NOUN, VERB, ADJ, ADV, PRON, DET, AUX, PUNCT, ADP
-from ...symbols import SCONJ, CCONJ
-from ...symbols import VerbForm_inf, VerbForm_none, Number_sing, Degree_pos
+from ...pipeline import Lemmatizer
+from ...tokens import Token
 
 
 class FrenchLemmatizer(Lemmatizer):
@@ -17,69 +14,48 @@ class FrenchLemmatizer(Lemmatizer):
     the lookup table.
     """
 
-    def __call__(self, string, univ_pos, morphology=None):
-        lookup_table = self.lookups.get_table("lemma_lookup", {})
-        if "lemma_rules" not in self.lookups:
-            return [lookup_table.get(string, string)]
-        if univ_pos in (NOUN, "NOUN", "noun"):
-            univ_pos = "noun"
-        elif univ_pos in (VERB, "VERB", "verb"):
-            univ_pos = "verb"
-        elif univ_pos in (ADJ, "ADJ", "adj"):
-            univ_pos = "adj"
-        elif univ_pos in (ADP, "ADP", "adp"):
-            univ_pos = "adp"
-        elif univ_pos in (ADV, "ADV", "adv"):
-            univ_pos = "adv"
-        elif univ_pos in (AUX, "AUX", "aux"):
-            univ_pos = "aux"
-        elif univ_pos in (CCONJ, "CCONJ", "cconj"):
-            univ_pos = "cconj"
-        elif univ_pos in (DET, "DET", "det"):
-            univ_pos = "det"
-        elif univ_pos in (PRON, "PRON", "pron"):
-            univ_pos = "pron"
-        elif univ_pos in (PUNCT, "PUNCT", "punct"):
-            univ_pos = "punct"
-        elif univ_pos in (SCONJ, "SCONJ", "sconj"):
-            univ_pos = "sconj"
+    @classmethod
+    def get_lookups_config(cls, mode: str) -> Tuple[List[str], List[str]]:
+        if mode == "rule":
+            required = ["lemma_lookup", "lemma_rules", "lemma_exc", "lemma_index"]
+            return (required, [])
         else:
-            return [self.lookup(string)]
+            return super().get_lookups_config(mode)
+
+    def rule_lemmatize(self, token: Token) -> List[str]:
+        cache_key = (token.orth, token.pos)
+        if cache_key in self.cache:
+            return self.cache[cache_key]
+        string = token.text
+        univ_pos = token.pos_.lower()
+        if univ_pos in ("", "eol", "space"):
+            return [string.lower()]
+        elif "lemma_rules" not in self.lookups or univ_pos not in (
+            "noun",
+            "verb",
+            "adj",
+            "adp",
+            "adv",
+            "aux",
+            "cconj",
+            "det",
+            "pron",
+            "punct",
+            "sconj",
+        ):
+            return self.lookup_lemmatize(token)
         index_table = self.lookups.get_table("lemma_index", {})
         exc_table = self.lookups.get_table("lemma_exc", {})
         rules_table = self.lookups.get_table("lemma_rules", {})
-        lemmas = self.lemmatize(
-            string,
-            index_table.get(univ_pos, {}),
-            exc_table.get(univ_pos, {}),
-            rules_table.get(univ_pos, []),
-        )
-        return lemmas
-
-    def noun(self, string, morphology=None):
-        return self(string, "noun", morphology)
-
-    def verb(self, string, morphology=None):
-        return self(string, "verb", morphology)
-
-    def adj(self, string, morphology=None):
-        return self(string, "adj", morphology)
-
-    def punct(self, string, morphology=None):
-        return self(string, "punct", morphology)
-
-    def lookup(self, string, orth=None):
         lookup_table = self.lookups.get_table("lemma_lookup", {})
-        if orth is not None and orth in lookup_table:
-            return lookup_table[orth][0]
-        return string
-
-    def lemmatize(self, string, index, exceptions, rules):
-        lookup_table = self.lookups.get_table("lemma_lookup", {})
+        index = index_table.get(univ_pos, {})
+        exceptions = exc_table.get(univ_pos, {})
+        rules = rules_table.get(univ_pos, [])
         string = string.lower()
         forms = []
         if string in index:
             forms.append(string)
+            self.cache[cache_key] = forms
             return forms
         forms.extend(exceptions.get(string, []))
         oov_forms = []
@@ -96,7 +72,9 @@ class FrenchLemmatizer(Lemmatizer):
         if not forms:
             forms.extend(oov_forms)
         if not forms and string in lookup_table.keys():
-            forms.append(lookup_table[string][0])
+            forms.append(self.lookup_lemmatize(token)[0])
         if not forms:
             forms.append(string)
-        return list(set(forms))
+        forms = list(set(forms))
+        self.cache[cache_key] = forms
+        return forms

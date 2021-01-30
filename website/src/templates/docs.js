@@ -30,8 +30,9 @@ const Docs = ({ pageContext, children }) => (
                 menu,
                 theme,
                 version,
+                apiDetails,
             } = pageContext
-            const { sidebars = [], modelsRepo, languages, legacy } = site.siteMetadata
+            const { sidebars = [], modelsRepo, languages, nightly, legacy } = site.siteMetadata
             const isModels = section === 'models'
             const sidebar = pageContext.sidebar
                 ? { items: pageContext.sidebar }
@@ -41,22 +42,12 @@ const Docs = ({ pageContext, children }) => (
             if (isModels) {
                 sidebar.items[1].items = languages
                     .filter(({ models }) => models && models.length)
+                    .sort((a, b) => a.name.localeCompare(b.name))
                     .map(lang => ({
                         text: lang.name,
                         url: `/models/${lang.code}`,
                         isActive: id === lang.code,
                         menu: lang.models.map(model => ({
-                            text: model,
-                            id: model,
-                        })),
-                    }))
-                sidebar.items[2].items = languages
-                    .filter(({ starters }) => starters && starters.length)
-                    .map(lang => ({
-                        text: lang.name,
-                        url: `/models/${lang.code}-starters`,
-                        isActive: id === `${lang.code}-starters`,
-                        menu: lang.starters.map(model => ({
                             text: model,
                             id: model,
                         })),
@@ -83,7 +74,7 @@ const Docs = ({ pageContext, children }) => (
                     {sidebar && <Sidebar items={sidebar.items} pageMenu={pageMenu} slug={slug} />}
                     <Main
                         section={section}
-                        theme={legacy ? 'legacy' : theme}
+                        theme={nightly ? 'nightly' : legacy ? 'legacy' : theme}
                         sidebar
                         asides
                         wrapContent
@@ -102,6 +93,7 @@ const Docs = ({ pageContext, children }) => (
                                     tag={tag}
                                     version={version}
                                     id="_title"
+                                    apiDetails={apiDetails}
                                 />
                                 {children}
                                 {subFooter}
@@ -140,13 +132,13 @@ const query = graphql`
             siteMetadata {
                 repo
                 modelsRepo
-                legacy
                 languages {
                     code
                     name
                     models
-                    starters
                 }
+                nightly
+                legacy
                 sidebars {
                     section
                     items {
@@ -154,6 +146,7 @@ const query = graphql`
                         items {
                             text
                             url
+                            tag
                         }
                     }
                 }

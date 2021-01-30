@@ -14,6 +14,10 @@ function getNodeTitle({ childMdx }) {
     return (frontmatter.title || '').replace("'", '’')
 }
 
+function findNode(pages, slug) {
+    return slug ? pages.find(({ node }) => node.fields.slug === slug) : null
+}
+
 exports.createPages = ({ graphql, actions }) => {
     const { createPage } = actions
 
@@ -33,7 +37,6 @@ exports.createPages = ({ graphql, actions }) => {
                                     code
                                     name
                                     models
-                                    starters
                                     example
                                     has_examples
                                 }
@@ -70,6 +73,9 @@ exports.createPages = ({ graphql, actions }) => {
                                             title
                                             teaser
                                             source
+                                            api_base_class
+                                            api_string_name
+                                            api_trainable
                                             tag
                                             new
                                             next
@@ -115,10 +121,18 @@ exports.createPages = ({ graphql, actions }) => {
                         const section = frontmatter.section || page.node.relativeDirectory
                         const sectionMeta = sections[section] || {}
                         const title = getNodeTitle(page.node)
-                        const next = frontmatter.next
-                            ? pages.find(({ node }) => node.fields.slug === frontmatter.next)
-                            : null
-
+                        const next = findNode(pages, frontmatter.next)
+                        const baseClass = findNode(pages, frontmatter.api_base_class)
+                        const apiDetails = {
+                            stringName: frontmatter.api_string_name,
+                            baseClass: baseClass
+                                ? {
+                                      title: getNodeTitle(baseClass.node),
+                                      slug: frontmatter.api_base_class,
+                                  }
+                                : null,
+                            trainable: frontmatter.api_trainable,
+                        }
                         createPage({
                             path: replacePath(page.node.fields.slug),
                             component: DEFAULT_TEMPLATE,
@@ -131,6 +145,7 @@ exports.createPages = ({ graphql, actions }) => {
                                 sectionTitle: sectionMeta.title,
                                 menu: frontmatter.menu || [],
                                 teaser: frontmatter.teaser,
+                                apiDetails,
                                 source: frontmatter.source,
                                 sidebar: frontmatter.sidebar,
                                 tag: frontmatter.tag,
@@ -211,8 +226,6 @@ exports.createPages = ({ graphql, actions }) => {
 
                 const langs = result.data.site.siteMetadata.languages
                 const modelLangs = langs.filter(({ models }) => models && models.length)
-                const starterLangs = langs.filter(({ starters }) => starters && starters.length)
-
                 modelLangs.forEach(({ code, name, models, example, has_examples }, i) => {
                     const slug = `/models/${code}`
                     const next = i < modelLangs.length - 1 ? modelLangs[i + 1] : null
@@ -229,28 +242,6 @@ exports.createPages = ({ graphql, actions }) => {
                             theme: sections.models.theme,
                             next: next ? { title: next.name, slug: `/models/${next.code}` } : null,
                             meta: { models, example, hasExamples: has_examples },
-                        },
-                    })
-                })
-
-                starterLangs.forEach(({ code, name, starters }, i) => {
-                    const slug = `/models/${code}-starters`
-                    const next = i < starterLangs.length - 1 ? starterLangs[i + 1] : null
-                    createPage({
-                        path: slug,
-                        component: DEFAULT_TEMPLATE,
-                        context: {
-                            id: `${code}-starters`,
-                            slug: slug,
-                            isIndex: false,
-                            title: name,
-                            section: 'models',
-                            sectionTitle: sections.models.title,
-                            theme: sections.models.theme,
-                            next: next
-                                ? { title: next.name, slug: `/models/${next.code}-starters` }
-                                : null,
-                            meta: { models: starters, isStarters: true },
                         },
                     })
                 })

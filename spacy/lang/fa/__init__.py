@@ -1,36 +1,38 @@
-# coding: utf8
-from __future__ import unicode_literals
-
-from ...language import Language
-from ...attrs import LANG, NORM
-from ...util import update_exc, add_lookups
-from ..norm_exceptions import BASE_NORMS
+from typing import Optional
+from thinc.api import Model
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
-from .tag_map import TAG_MAP
 from .punctuation import TOKENIZER_SUFFIXES
 from .syntax_iterators import SYNTAX_ITERATORS
+from ...language import Language
+from ...pipeline import Lemmatizer
 
 
 class PersianDefaults(Language.Defaults):
-    lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-    lex_attr_getters.update(LEX_ATTRS)
-    lex_attr_getters[NORM] = add_lookups(
-        Language.Defaults.lex_attr_getters[NORM], BASE_NORMS
-    )
-    lex_attr_getters[LANG] = lambda text: "fa"
-    tokenizer_exceptions = update_exc(TOKENIZER_EXCEPTIONS)
-    stop_words = STOP_WORDS
-    tag_map = TAG_MAP
+    tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     suffixes = TOKENIZER_SUFFIXES
-    writing_system = {"direction": "rtl", "has_case": False, "has_letters": True}
+    lex_attr_getters = LEX_ATTRS
     syntax_iterators = SYNTAX_ITERATORS
+    stop_words = STOP_WORDS
+    writing_system = {"direction": "rtl", "has_case": False, "has_letters": True}
 
 
 class Persian(Language):
     lang = "fa"
     Defaults = PersianDefaults
+
+
+@Persian.factory(
+    "lemmatizer",
+    assigns=["token.lemma"],
+    default_config={"model": None, "mode": "rule", "overwrite": False},
+    default_score_weights={"lemma_acc": 1.0},
+)
+def make_lemmatizer(
+    nlp: Language, model: Optional[Model], name: str, mode: str, overwrite: bool
+):
+    return Lemmatizer(nlp.vocab, model, name, mode=mode, overwrite=overwrite)
 
 
 __all__ = ["Persian"]

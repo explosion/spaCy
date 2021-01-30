@@ -5,5 +5,5 @@ from ..structs cimport MorphAnalysisC
 
 cdef class MorphAnalysis:
     cdef readonly Vocab vocab
-    cdef hash_t key
+    cdef readonly hash_t key
     cdef MorphAnalysisC c

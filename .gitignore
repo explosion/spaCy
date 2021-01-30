@@ -43,12 +43,15 @@ __pycache__/
 .env*
 .~env/
 .venv
+env3.6/
 venv/
 env3.*/
 .dev
 .denv
 .pypyenv
 .pytest_cache/
+.mypy_cache/
+.hypothesis/
 
 # Distribution / packaging
 env/
@@ -118,3 +121,6 @@ Desktop.ini
 
 # Pycharm project files
 *.idea
+
+# IPython
+.ipynb_checkpoints/

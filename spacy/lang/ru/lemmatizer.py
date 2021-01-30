@@ -1,37 +1,49 @@
-# coding: utf8
-from __future__ import unicode_literals
+from typing import Optional, List, Dict, Tuple
 
-from ...symbols import ADJ, DET, NOUN, NUM, PRON, PROPN, PUNCT, VERB, POS
-from ...lemmatizer import Lemmatizer
-from ...compat import unicode_
+from thinc.api import Model
+
+from ...pipeline import Lemmatizer
+from ...symbols import POS
+from ...tokens import Token
+from ...vocab import Vocab
+
+
+PUNCT_RULES = {"«": '"', "»": '"'}
 
 
 class RussianLemmatizer(Lemmatizer):
     _morph = None
 
-    def __init__(self, lookups=None):
-        super(RussianLemmatizer, self).__init__(lookups)
+    def __init__(
+        self,
+        vocab: Vocab,
+        model: Optional[Model],
+        name: str = "lemmatizer",
+        *,
+        mode: str = "pymorphy2",
+        overwrite: bool = False,
+    ) -> None:
+        super().__init__(vocab, model, name, mode=mode, overwrite=overwrite)
+
         try:
             from pymorphy2 import MorphAnalyzer
         except ImportError:
             raise ImportError(
                 "The Russian lemmatizer requires the pymorphy2 library: "
-                'try to fix it with "pip install pymorphy2==0.8" '
-                'or "pip install git+https://github.com/kmike/pymorphy2.git pymorphy2-dicts-uk"'
-                "if you need Ukrainian too"
-            )
+                'try to fix it with "pip install pymorphy2"'
+            ) from None
         if RussianLemmatizer._morph is None:
             RussianLemmatizer._morph = MorphAnalyzer()
 
-    def __call__(self, string, univ_pos, morphology=None):
-        univ_pos = self.normalize_univ_pos(univ_pos)
+    def pymorphy2_lemmatize(self, token: Token) -> List[str]:
+        string = token.text
+        univ_pos = token.pos_
+        morphology = token.morph.to_dict()
         if univ_pos == "PUNCT":
             return [PUNCT_RULES.get(string, string)]
-
         if univ_pos not in ("ADJ", "DET", "NOUN", "NUM", "PRON", "PROPN", "VERB"):
             # Skip unchangeable pos
             return [string.lower()]
-
         analyses = self._morph.parse(string)
         filtered_analyses = []
         for analysis in analyses:
@@ -43,12 +55,10 @@ class RussianLemmatizer(Lemmatizer):
                 analysis_pos in ("NOUN", "PROPN") and univ_pos in ("NOUN", "PROPN")
             ):
                 filtered_analyses.append(analysis)
-
         if not len(filtered_analyses):
             return [string.lower()]
         if morphology is None or (len(morphology) == 1 and POS in morphology):
             return list(set([analysis.normal_form for analysis in filtered_analyses]))
-
         if univ_pos in ("ADJ", "DET", "NOUN", "PROPN"):
             features_to_compare = ["Case", "Number", "Gender"]
         elif univ_pos == "NUM":
@@ -65,7 +75,6 @@ class RussianLemmatizer(Lemmatizer):
                 "VerbForm",
                 "Voice",
             ]
-
         analyses, filtered_analyses = filtered_analyses, []
         for analysis in analyses:
             _, analysis_morph = oc2ud(str(analysis.tag))
@@ -78,38 +87,19 @@ class RussianLemmatizer(Lemmatizer):
                     break
             else:
                 filtered_analyses.append(analysis)
-
         if not len(filtered_analyses):
             return [string.lower()]
         return list(set([analysis.normal_form for analysis in filtered_analyses]))
 
-    @staticmethod
-    def normalize_univ_pos(univ_pos):
-        if isinstance(univ_pos, unicode_):
-            return univ_pos.upper()
-
-        symbols_to_str = {
-            ADJ: "ADJ",
-            DET: "DET",
-            NOUN: "NOUN",
-            NUM: "NUM",
-            PRON: "PRON",
-            PROPN: "PROPN",
-            PUNCT: "PUNCT",
-            VERB: "VERB",
-        }
-        if univ_pos in symbols_to_str:
-            return symbols_to_str[univ_pos]
-        return None
-
-    def lookup(self, string, orth=None):
+    def lookup_lemmatize(self, token: Token) -> List[str]:
+        string = token.text
         analyses = self._morph.parse(string)
         if len(analyses) == 1:
             return analyses[0].normal_form
         return string
 
 
-def oc2ud(oc_tag):
+def oc2ud(oc_tag: str) -> Tuple[str, Dict[str, str]]:
     gram_map = {
         "_POS": {
             "ADJF": "ADJ",
@@ -164,11 +154,9 @@ def oc2ud(oc_tag):
         "Voice": {"actv": "Act", "pssv": "Pass"},
         "Abbr": {"Abbr": "Yes"},
     }
-
     pos = "X"
     morphology = dict()
     unmatched = set()
-
     grams = oc_tag.replace(" ", ",").split(",")
     for gram in grams:
         match = False
@@ -181,7 +169,6 @@ def oc2ud(oc_tag):
                     morphology[categ] = gmap[gram]
         if not match:
             unmatched.add(gram)
-
     while len(unmatched) > 0:
         gram = unmatched.pop()
         if gram in ("Name", "Patr", "Surn", "Geox", "Orgn"):
@@ -190,8 +177,4 @@ def oc2ud(oc_tag):
             pos = "AUX"
         elif gram == "Pltm":
             morphology["Number"] = "Ptan"
-
     return pos, morphology
-
-
-PUNCT_RULES = {"«": '"', "»": '"'}

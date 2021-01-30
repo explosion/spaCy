@@ -1,78 +1,101 @@
 #!/usr/bin/env python
-from __future__ import print_function
-import io
-import os
-import subprocess
+from setuptools import Extension, setup, find_packages
 import sys
-import contextlib
+import platform
 import numpy
 from distutils.command.build_ext import build_ext
 from distutils.sysconfig import get_python_inc
-import distutils.util
-from distutils import ccompiler, msvccompiler
-from setuptools import Extension, setup, find_packages
+from pathlib import Path
+import shutil
+from Cython.Build import cythonize
+from Cython.Compiler import Options
+import os
+import subprocess
 
 
-def is_new_osx():
-    """Check whether we're on OSX >= 10.10"""
-    name = distutils.util.get_platform()
-    if sys.platform != "darwin":
-        return False
-    elif name.startswith("macosx-10"):
-        minor_version = int(name.split("-")[1].split(".")[1])
-        if minor_version >= 7:
-            return True
-        else:
-            return False
-    else:
-        return False
+ROOT = Path(__file__).parent
+PACKAGE_ROOT = ROOT / "spacy"
 
+
+# Preserve `__doc__` on functions and classes
+# http://docs.cython.org/en/latest/src/userguide/source_files_and_compilation.html#compiler-options
+Options.docstrings = True
 
 PACKAGES = find_packages()
-
-
 MOD_NAMES = [
+    "spacy.training.example",
     "spacy.parts_of_speech",
     "spacy.strings",
     "spacy.lexeme",
     "spacy.vocab",
     "spacy.attrs",
     "spacy.kb",
+    "spacy.ml.parser_model",
     "spacy.morphology",
-    "spacy.pipeline.pipes",
+    "spacy.pipeline.dep_parser",
     "spacy.pipeline.morphologizer",
-    "spacy.syntax.stateclass",
-    "spacy.syntax._state",
+    "spacy.pipeline.multitask",
+    "spacy.pipeline.ner",
+    "spacy.pipeline.pipe",
+    "spacy.pipeline.trainable_pipe",
+    "spacy.pipeline.sentencizer",
+    "spacy.pipeline.senter",
+    "spacy.pipeline.tagger",
+    "spacy.pipeline.transition_parser",
+    "spacy.pipeline._parser_internals.arc_eager",
+    "spacy.pipeline._parser_internals.ner",
+    "spacy.pipeline._parser_internals.nonproj",
+    "spacy.pipeline._parser_internals._state",
+    "spacy.pipeline._parser_internals.stateclass",
+    "spacy.pipeline._parser_internals.transition_system",
+    "spacy.pipeline._parser_internals._beam_utils",
     "spacy.tokenizer",
-    "spacy.syntax.nn_parser",
-    "spacy.syntax._parser_model",
-    "spacy.syntax._beam_utils",
-    "spacy.syntax.nonproj",
-    "spacy.syntax.transition_system",
-    "spacy.syntax.arc_eager",
-    "spacy.gold",
+    "spacy.training.align",
+    "spacy.training.gold_io",
     "spacy.tokens.doc",
     "spacy.tokens.span",
     "spacy.tokens.token",
+    "spacy.tokens.span_group",
+    "spacy.tokens.graph",
     "spacy.tokens.morphanalysis",
     "spacy.tokens._retokenize",
     "spacy.matcher.matcher",
     "spacy.matcher.phrasematcher",
     "spacy.matcher.dependencymatcher",
-    "spacy.syntax.ner",
     "spacy.symbols",
     "spacy.vectors",
 ]
-
-
 COMPILE_OPTIONS = {
     "msvc": ["/Ox", "/EHsc"],
     "mingw32": ["-O2", "-Wno-strict-prototypes", "-Wno-unused-function"],
     "other": ["-O2", "-Wno-strict-prototypes", "-Wno-unused-function"],
 }
+LINK_OPTIONS = {"msvc": ["-std=c++11"], "mingw32": ["-std=c++11"], "other": []}
+COMPILER_DIRECTIVES = {
+    "language_level": -3,
+    "embedsignature": True,
+    "annotation_typing": False,
+}
+# Files to copy into the package that are otherwise not included
+COPY_FILES = {
+    ROOT / "setup.cfg": PACKAGE_ROOT / "tests" / "package",
+    ROOT / "pyproject.toml": PACKAGE_ROOT / "tests" / "package",
+    ROOT / "requirements.txt": PACKAGE_ROOT / "tests" / "package",
+}
 
 
-LINK_OPTIONS = {"msvc": [], "mingw32": [], "other": []}
+def is_new_osx():
+    """Check whether we're on OSX >= 10.7"""
+    if sys.platform != "darwin":
+        return False
+    mac_ver = platform.mac_ver()[0]
+    if mac_ver.startswith("10"):
+        minor_version = int(mac_ver.split(".")[1])
+        if minor_version >= 7:
+            return True
+        else:
+            return False
+    return False
 
 
 if is_new_osx():
@@ -105,20 +128,6 @@ class build_ext_subclass(build_ext, build_ext_options):
         build_ext.build_extensions(self)
 
 
-def generate_cython(root, source):
-    print("Cythonizing sources")
-    p = subprocess.call(
-        [sys.executable, os.path.join(root, "bin", "cythonize.py"), source],
-        env=os.environ,
-    )
-    if p != 0:
-        raise RuntimeError("Running cythonize failed")
-
-
-def is_source_release(path):
-    return os.path.exists(os.path.join(path, "PKG-INFO"))
-
-
 # Include the git version in the build (adapted from NumPy)
 # Copyright (c) 2005-2020, NumPy Developers.
 # BSD 3-Clause license, see licenses/3rd_party_licenses.txt
@@ -138,19 +147,19 @@ def write_git_info_py(filename="spacy/git_info.py"):
         return out
 
     git_version = "Unknown"
-    if os.path.exists(".git"):
+    if Path(".git").exists():
         try:
             out = _minimal_ext_cmd(["git", "rev-parse", "--short", "HEAD"])
             git_version = out.strip().decode("ascii")
-        except:
+        except Exception:
             pass
-    elif os.path.exists(filename):
+    elif Path(filename).exists():
         # must be a source distribution, use existing version file
         try:
             a = open(filename, "r")
             lines = a.readlines()
             git_version = lines[-1].split('"')[1]
-        except:
+        except Exception:
             pass
         finally:
             a.close()
@@ -161,91 +170,55 @@ GIT_VERSION = "%(git_version)s"
 """
     a = open(filename, "w")
     try:
-        a.write(
-            text % {"git_version": git_version,}
-        )
+        a.write(text % {"git_version": git_version})
     finally:
         a.close()
 
 
 def clean(path):
-    for name in MOD_NAMES:
-        name = name.replace(".", "/")
-        for ext in [".so", ".html", ".cpp", ".c"]:
-            file_path = os.path.join(path, name + ext)
-            if os.path.exists(file_path):
-                os.unlink(file_path)
-
-
-@contextlib.contextmanager
-def chdir(new_dir):
-    old_dir = os.getcwd()
-    try:
-        os.chdir(new_dir)
-        sys.path.insert(0, new_dir)
-        yield
-    finally:
-        del sys.path[0]
-        os.chdir(old_dir)
+    for path in path.glob("**/*"):
+        if path.is_file() and path.suffix in (".so", ".cpp", ".html"):
+            print(f"Deleting {path.name}")
+            path.unlink()
 
 
 def setup_package():
     write_git_info_py()
+    if len(sys.argv) > 1 and sys.argv[1] == "clean":
+        return clean(PACKAGE_ROOT)
 
-    root = os.path.abspath(os.path.dirname(__file__))
+    with (PACKAGE_ROOT / "about.py").open("r") as f:
+        about = {}
+        exec(f.read(), about)
 
-    if hasattr(sys, "argv") and len(sys.argv) > 1 and sys.argv[1] == "clean":
-        return clean(root)
+    for copy_file, target_dir in COPY_FILES.items():
+        if copy_file.exists():
+            shutil.copy(str(copy_file), str(target_dir))
+            print(f"Copied {copy_file} -> {target_dir}")
 
-    with chdir(root):
-        with io.open(os.path.join(root, "spacy", "about.py"), encoding="utf8") as f:
-            about = {}
-            exec(f.read(), about)
-
-        include_dirs = [
-            numpy.get_include(),
-            get_python_inc(plat_specific=True),
-            os.path.join(root, "include"),
-        ]
-
-        if (
-            ccompiler.new_compiler().compiler_type == "msvc"
-            and msvccompiler.get_build_version() == 9
-        ):
-            include_dirs.append(os.path.join(root, "include", "msvc9"))
-
-        ext_modules = []
-        for mod_name in MOD_NAMES:
-            mod_path = mod_name.replace(".", "/") + ".cpp"
-            extra_link_args = []
-            # ???
-            # Imported from patch from @mikepb
-            # See Issue #267. Running blind here...
-            if sys.platform == "darwin":
-                dylib_path = [".." for _ in range(mod_name.count("."))]
-                dylib_path = "/".join(dylib_path)
-                dylib_path = "@loader_path/%s/spacy/platform/darwin/lib" % dylib_path
-                extra_link_args.append("-Wl,-rpath,%s" % dylib_path)
-            ext_modules.append(
-                Extension(
-                    mod_name,
-                    [mod_path],
-                    language="c++",
-                    include_dirs=include_dirs,
-                    extra_link_args=extra_link_args,
-                )
-            )
-
-        if not is_source_release(root):
-            generate_cython(root, "spacy")
-
-        setup(
-            name="spacy",
-            packages=PACKAGES,
-            version=about["__version__"],
-            ext_modules=ext_modules,
-            cmdclass={"build_ext": build_ext_subclass},
+    include_dirs = [
+        numpy.get_include(),
+        get_python_inc(plat_specific=True),
+    ]
+    ext_modules = []
+    for name in MOD_NAMES:
+        mod_path = name.replace(".", "/") + ".pyx"
+        ext = Extension(
+            name, [mod_path], language="c++", extra_compile_args=["-std=c++11"]
         )
+        ext_modules.append(ext)
+    print("Cythonizing sources")
+    ext_modules = cythonize(ext_modules, compiler_directives=COMPILER_DIRECTIVES)
+
+    setup(
+        name="spacy",
+        packages=PACKAGES,
+        version=about["__version__"],
+        ext_modules=ext_modules,
+        cmdclass={"build_ext": build_ext_subclass},
+        include_dirs=include_dirs,
+        package_data={"": ["*.pyx", "*.pxd", "*.pxi"]},
+    )
 
 
 if __name__ == "__main__":

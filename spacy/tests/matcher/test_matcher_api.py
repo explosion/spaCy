@@ -1,13 +1,9 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import pytest
-import re
 from mock import Mock
-from spacy.matcher import Matcher, DependencyMatcher
-from spacy.tokens import Doc, Token
+from spacy.matcher import Matcher
+from spacy.tokens import Doc, Token, Span
+
 from ..doc.test_underscore import clean_underscore  # noqa: F401
-from ..util import get_doc
 
 
 @pytest.fixture
@@ -67,18 +63,11 @@ def test_matcher_len_contains(matcher):
     assert "TEST2" not in matcher
 
 
-def test_matcher_add_new_old_api(en_vocab):
+def test_matcher_add_new_api(en_vocab):
     doc = Doc(en_vocab, words=["a", "b"])
     patterns = [[{"TEXT": "a"}], [{"TEXT": "a"}, {"TEXT": "b"}]]
     matcher = Matcher(en_vocab)
-    matcher.add("OLD_API", None, *patterns)
-    assert len(matcher(doc)) == 2
-    matcher = Matcher(en_vocab)
     on_match = Mock()
-    matcher.add("OLD_API_CALLBACK", on_match, *patterns)
-    assert len(matcher(doc)) == 2
-    assert on_match.call_count == 2
-    # New API: add(key: str, patterns: List[List[dict]], on_match: Callable)
     matcher = Matcher(en_vocab)
     matcher.add("NEW_API", patterns)
     assert len(matcher(doc)) == 2
@@ -180,11 +169,11 @@ def test_matcher_match_zero_plus(matcher):
 
 def test_matcher_match_one_plus(matcher):
     control = Matcher(matcher.vocab)
-    control.add("BasicPhilippe", None, [{"ORTH": "Philippe"}])
+    control.add("BasicPhilippe", [[{"ORTH": "Philippe"}]])
     doc = Doc(control.vocab, words=["Philippe", "Philippe"])
     m = control(doc)
     assert len(m) == 2
-    pattern = [{"ORTH": "Philippe", "OP": "1"}, {"ORTH": "Philippe", "OP": "+"}]
+    pattern = [{"ORTH": "Philippe"}, {"ORTH": "Philippe", "OP": "+"}]
     matcher.add("KleenePhilippe", [pattern])
     m = matcher(doc)
     assert len(m) == 1
@@ -239,6 +228,106 @@ def test_matcher_set_value_operator(en_vocab):
     doc = Doc(en_vocab, words=["my", "house"])
     matches = matcher(doc)
     assert len(matches) == 1
+
+
+def test_matcher_subset_value_operator(en_vocab):
+    matcher = Matcher(en_vocab)
+    pattern = [{"MORPH": {"IS_SUBSET": ["Feat=Val", "Feat2=Val2"]}}]
+    matcher.add("M", [pattern])
+    doc = Doc(en_vocab, words=["a", "b", "c"])
+    assert len(matcher(doc)) == 3
+    doc[0].set_morph("Feat=Val")
+    assert len(matcher(doc)) == 3
+    doc[0].set_morph("Feat=Val|Feat2=Val2")
+    assert len(matcher(doc)) == 3
+    doc[0].set_morph("Feat=Val|Feat2=Val2|Feat3=Val3")
+    assert len(matcher(doc)) == 2
+    doc[0].set_morph("Feat=Val|Feat2=Val2|Feat3=Val3|Feat4=Val4")
+    assert len(matcher(doc)) == 2
+
+    # IS_SUBSET acts like "IN" for attrs other than MORPH
+    matcher = Matcher(en_vocab)
+    pattern = [{"TAG": {"IS_SUBSET": ["A", "B"]}}]
+    matcher.add("M", [pattern])
+    doc = Doc(en_vocab, words=["a", "b", "c"])
+    doc[0].tag_ = "A"
+    assert len(matcher(doc)) == 1
+
+    # IS_SUBSET with an empty list matches nothing
+    matcher = Matcher(en_vocab)
+    pattern = [{"TAG": {"IS_SUBSET": []}}]
+    matcher.add("M", [pattern])
+    doc = Doc(en_vocab, words=["a", "b", "c"])
+    doc[0].tag_ = "A"
+    assert len(matcher(doc)) == 0
+
+
+def test_matcher_superset_value_operator(en_vocab):
+    matcher = Matcher(en_vocab)
+    pattern = [{"MORPH": {"IS_SUPERSET": ["Feat=Val", "Feat2=Val2", "Feat3=Val3"]}}]
+    matcher.add("M", [pattern])
+    doc = Doc(en_vocab, words=["a", "b", "c"])
+    assert len(matcher(doc)) == 0
+    doc[0].set_morph("Feat=Val|Feat2=Val2")
+    assert len(matcher(doc)) == 0
+    doc[0].set_morph("Feat=Val|Feat2=Val2|Feat3=Val3")
+    assert len(matcher(doc)) == 1
+    doc[0].set_morph("Feat=Val|Feat2=Val2|Feat3=Val3|Feat4=Val4")
+    assert len(matcher(doc)) == 1
+
+    # IS_SUPERSET with more than one value only matches for MORPH
+    matcher = Matcher(en_vocab)
+    pattern = [{"TAG": {"IS_SUPERSET": ["A", "B"]}}]
+    matcher.add("M", [pattern])
+    doc = Doc(en_vocab, words=["a", "b", "c"])
+    doc[0].tag_ = "A"
+    assert len(matcher(doc)) == 0
+
+    # IS_SUPERSET with one value is the same as ==
+    matcher = Matcher(en_vocab)
+    pattern = [{"TAG": {"IS_SUPERSET": ["A"]}}]
+    matcher.add("M", [pattern])
+    doc = Doc(en_vocab, words=["a", "b", "c"])
+    doc[0].tag_ = "A"
+    assert len(matcher(doc)) == 1
+
+    # IS_SUPERSET with an empty value matches everything
+    matcher = Matcher(en_vocab)
+    pattern = [{"TAG": {"IS_SUPERSET": []}}]
+    matcher.add("M", [pattern])
+    doc = Doc(en_vocab, words=["a", "b", "c"])
+    doc[0].tag_ = "A"
+    assert len(matcher(doc)) == 3
+
+
+def test_matcher_morph_handling(en_vocab):
+    # order of features in pattern doesn't matter
+    matcher = Matcher(en_vocab)
+    pattern1 = [{"MORPH": {"IN": ["Feat1=Val1|Feat2=Val2"]}}]
+    pattern2 = [{"MORPH": {"IN": ["Feat2=Val2|Feat1=Val1"]}}]
+    matcher.add("M", [pattern1])
+    matcher.add("N", [pattern2])
+    doc = Doc(en_vocab, words=["a", "b", "c"])
+    assert len(matcher(doc)) == 0
+
+    doc[0].set_morph("Feat2=Val2|Feat1=Val1")
+    assert len(matcher(doc)) == 2
+    doc[0].set_morph("Feat1=Val1|Feat2=Val2")
+    assert len(matcher(doc)) == 2
+
+    # multiple values are split
+    matcher = Matcher(en_vocab)
+    pattern1 = [{"MORPH": {"IS_SUPERSET": ["Feat1=Val1", "Feat2=Val2"]}}]
+    pattern2 = [{"MORPH": {"IS_SUPERSET": ["Feat1=Val1", "Feat1=Val3", "Feat2=Val2"]}}]
+    matcher.add("M", [pattern1])
+    matcher.add("N", [pattern2])
+    doc = Doc(en_vocab, words=["a", "b", "c"])
+    assert len(matcher(doc)) == 0
+
+    doc[0].set_morph("Feat2=Val2,Val3|Feat1=Val1")
+    assert len(matcher(doc)) == 1
+    doc[0].set_morph("Feat1=Val1,Val3|Feat2=Val2")
+    assert len(matcher(doc)) == 2
 
 
 def test_matcher_regex(en_vocab):
@@ -302,84 +391,6 @@ def test_matcher_extension_set_membership(en_vocab):
     assert len(matches) == 0
 
 
-def dependency_matcher(en_vocab):
-    def is_brown_yellow(text):
-        return bool(re.compile(r"brown|yellow|over").match(text))
-
-    IS_BROWN_YELLOW = en_vocab.add_flag(is_brown_yellow)
-
-    pattern1 = [
-        {"SPEC": {"NODE_NAME": "fox"}, "PATTERN": {"ORTH": "fox"}},
-        {
-            "SPEC": {"NODE_NAME": "q", "NBOR_RELOP": ">", "NBOR_NAME": "fox"},
-            "PATTERN": {"ORTH": "quick", "DEP": "amod"},
-        },
-        {
-            "SPEC": {"NODE_NAME": "r", "NBOR_RELOP": ">", "NBOR_NAME": "fox"},
-            "PATTERN": {IS_BROWN_YELLOW: True},
-        },
-    ]
-
-    pattern2 = [
-        {"SPEC": {"NODE_NAME": "jumped"}, "PATTERN": {"ORTH": "jumped"}},
-        {
-            "SPEC": {"NODE_NAME": "fox", "NBOR_RELOP": ">", "NBOR_NAME": "jumped"},
-            "PATTERN": {"ORTH": "fox"},
-        },
-        {
-            "SPEC": {"NODE_NAME": "quick", "NBOR_RELOP": ".", "NBOR_NAME": "jumped"},
-            "PATTERN": {"ORTH": "fox"},
-        },
-    ]
-
-    pattern3 = [
-        {"SPEC": {"NODE_NAME": "jumped"}, "PATTERN": {"ORTH": "jumped"}},
-        {
-            "SPEC": {"NODE_NAME": "fox", "NBOR_RELOP": ">", "NBOR_NAME": "jumped"},
-            "PATTERN": {"ORTH": "fox"},
-        },
-        {
-            "SPEC": {"NODE_NAME": "r", "NBOR_RELOP": ">>", "NBOR_NAME": "fox"},
-            "PATTERN": {"ORTH": "brown"},
-        },
-    ]
-
-    # pattern that doesn't match
-    pattern4 = [
-        {"SPEC": {"NODE_NAME": "jumped"}, "PATTERN": {"ORTH": "NOMATCH"}},
-        {
-            "SPEC": {"NODE_NAME": "fox", "NBOR_RELOP": ">", "NBOR_NAME": "jumped"},
-            "PATTERN": {"ORTH": "fox"},
-        },
-        {
-            "SPEC": {"NODE_NAME": "r", "NBOR_RELOP": ">>", "NBOR_NAME": "fox"},
-            "PATTERN": {"ORTH": "brown"},
-        },
-    ]
-
-    matcher = DependencyMatcher(en_vocab)
-    on_match = Mock()
-    matcher.add("pattern1", [pattern1], on_match=on_match)
-    matcher.add("pattern2", [pattern2], on_match=on_match)
-    matcher.add("pattern3", [pattern3], on_match=on_match)
-    matcher.add("pattern4", [pattern4], on_match=on_match)
-
-    assert len(dependency_matcher) == 4
-
-    text = "The quick brown fox jumped over the lazy fox"
-    heads = [3, 2, 1, 1, 0, -1, 2, 1, -3]
-    deps = ["det", "amod", "amod", "nsubj", "ROOT", "prep", "pobj", "det", "amod"]
-
-    doc = get_doc(dependency_matcher.vocab, text.split(), heads=heads, deps=deps)
-    matches = dependency_matcher(doc)
-
-    assert len(matches) == 3
-    assert matches[0][1] == [[3, 1, 2]]
-    assert matches[1][1] == [[4, 3, 3]]
-    assert matches[2][1] == [[4, 3, 2]]
-    assert on_match.call_count == 3
-
-
 def test_matcher_basic_check(en_vocab):
     matcher = Matcher(en_vocab)
     # Potential mistake: pass in pattern instead of list of patterns
@@ -390,11 +401,14 @@ def test_matcher_basic_check(en_vocab):
 
 def test_attr_pipeline_checks(en_vocab):
     doc1 = Doc(en_vocab, words=["Test"])
-    doc1.is_parsed = True
+    doc1[0].dep_ = "ROOT"
     doc2 = Doc(en_vocab, words=["Test"])
-    doc2.is_tagged = True
+    doc2[0].tag_ = "TAG"
+    doc2[0].pos_ = "X"
+    doc2[0].set_morph("Feat=Val")
+    doc2[0].lemma_ = "LEMMA"
     doc3 = Doc(en_vocab, words=["Test"])
-    # DEP requires is_parsed
+    # DEP requires DEP
     matcher = Matcher(en_vocab)
     matcher.add("TEST", [[{"DEP": "a"}]])
     matcher(doc1)
@@ -402,7 +416,10 @@ def test_attr_pipeline_checks(en_vocab):
         matcher(doc2)
     with pytest.raises(ValueError):
         matcher(doc3)
-    # TAG, POS, LEMMA require is_tagged
+    # errors can be suppressed if desired
+    matcher(doc2, allow_missing=True)
+    matcher(doc3, allow_missing=True)
+    # TAG, POS, LEMMA require those values
     for attr in ("TAG", "POS", "LEMMA"):
         matcher = Matcher(en_vocab)
         matcher.add("TEST", [[{attr: "a"}]])
@@ -483,6 +500,29 @@ def test_matcher_span(matcher):
     assert len(matcher(span_java)) == 1
 
 
+def test_matcher_as_spans(matcher):
+    """Test the new as_spans=True API."""
+    text = "JavaScript is good but Java is better"
+    doc = Doc(matcher.vocab, words=text.split())
+    matches = matcher(doc, as_spans=True)
+    assert len(matches) == 2
+    assert isinstance(matches[0], Span)
+    assert matches[0].text == "JavaScript"
+    assert matches[0].label_ == "JS"
+    assert isinstance(matches[1], Span)
+    assert matches[1].text == "Java"
+    assert matches[1].label_ == "Java"
+
+
+def test_matcher_deprecated(matcher):
+    doc = Doc(matcher.vocab, words=["hello", "world"])
+    with pytest.warns(DeprecationWarning) as record:
+        for _ in matcher.pipe([doc]):
+            pass
+        assert record.list
+        assert "spaCy v3.0" in str(record.list[0].message)
+
+
 def test_matcher_remove_zero_operator(en_vocab):
     matcher = Matcher(en_vocab)
     pattern = [{"OP": "!"}]
@@ -496,10 +536,7 @@ def test_matcher_remove_zero_operator(en_vocab):
 
 
 def test_matcher_no_zero_length(en_vocab):
-    doc = Doc(en_vocab, words=["a", "b"])
-    doc[0].tag_ = "A"
-    doc[1].tag_ = "B"
-    doc.is_tagged = True
+    doc = Doc(en_vocab, words=["a", "b"], tags=["A", "B"])
     matcher = Matcher(en_vocab)
     matcher.add("TEST", [[{"TAG": "C", "OP": "?"}]])
     assert len(matcher(doc)) == 0

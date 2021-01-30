@@ -35,3 +35,13 @@
         counter-increment: li
         box-sizing: content-box
         vertical-align: top
+
+.li-icon
+    text-indent: calc(-20px - 0.55em)
+
+    &:before
+        content: ""
+
+    .ul .ul &
+        text-indent: initial
+        margin-left: -20px

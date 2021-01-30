@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 from ...attrs import LIKE_NUM
 
 # Source http://mylanguages.org/basque_numbers.php

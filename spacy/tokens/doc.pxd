@@ -2,7 +2,7 @@ from cymem.cymem cimport Pool
 cimport numpy as np
 
 from ..vocab cimport Vocab
-from ..structs cimport TokenC, LexemeC
+from ..structs cimport TokenC, LexemeC, SpanC
 from ..typedefs cimport attr_t
 from ..attrs cimport attr_id_t
 
@@ -19,10 +19,10 @@ ctypedef fused LexemeOrToken:
     const_TokenC_ptr
 
 
-cdef int set_children_from_heads(TokenC* tokens, int length) except -1
+cdef int set_children_from_heads(TokenC* tokens, int start, int end) except -1
 
 
-cdef int _set_lr_kids_and_edges(TokenC* tokens, int length, int loop_count) except -1
+cdef int _set_lr_kids_and_edges(TokenC* tokens, int start, int end, int loop_count) except -1
 
 
 cdef int token_by_start(const TokenC* tokens, int length, int start_char) except -2
@@ -31,10 +31,8 @@ cdef int token_by_start(const TokenC* tokens, int length, int start_char) except
 cdef int token_by_end(const TokenC* tokens, int length, int end_char) except -2
 
 
-cdef int set_children_from_heads(TokenC* tokens, int length) except -1
-
-
 cdef int [:,:] _get_lca_matrix(Doc, int start, int end)
+
 
 cdef class Doc:
     cdef readonly Pool mem
@@ -46,11 +44,9 @@ cdef class Doc:
     cdef public object tensor
     cdef public object cats
     cdef public object user_data
+    cdef readonly object spans
 
     cdef TokenC* c
-
-    cdef public bint is_tagged
-    cdef public bint is_parsed
 
     cdef public float sentiment
 
@@ -58,10 +54,13 @@ cdef class Doc:
     cdef public dict user_token_hooks
     cdef public dict user_span_hooks
 
+    cdef public bint has_unknown_spaces
+
     cdef public list _py_tokens
 
     cdef int length
     cdef int max_length
+
 
     cdef public object noun_chunks_iterator
 
@@ -70,5 +69,3 @@ cdef class Doc:
     cdef int push_back(self, LexemeOrToken lex_or_tok, bint has_space) except -1
 
     cpdef np.ndarray to_array(self, object features)
-
-    cdef void set_parse(self, const TokenC* parsed) nogil

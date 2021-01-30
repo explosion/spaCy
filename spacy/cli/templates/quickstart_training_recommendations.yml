@@ -1,0 +1,265 @@
+# Recommended settings and available resources for each language, if available.
+# Not all languages have recommended word vectors or transformers and for some,
+# the recommended transformer for efficiency and accuracy may be the same.
+__default__:
+  word_vectors: null
+  transformer:
+    efficiency:
+      name: bert-base-multilingual-uncased
+      size_factor: 3
+    accuracy:
+      name: bert-base-multilingual-uncased
+      size_factor: 3
+ar:
+  word_vectors: null
+  transformer:
+    efficiency:
+      name: asafaya/bert-base-arabic
+      size_factor: 3
+    accuracy:
+      name: asafaya/bert-base-arabic
+      size_factor: 3
+bg:
+  word_vectors: null
+  transformer:
+  efficiency:
+    name: iarfmoose/roberta-base-bulgarian
+    size_factor: 3
+  accuracy:
+    name: iarfmoose/roberta-base-bulgarian
+    size_factor: 3
+da:
+  word_vectors: da_core_news_lg
+  transformer:
+    efficiency:
+      name: DJSammy/bert-base-danish-uncased_BotXO,ai
+      size_factor: 3
+    accuracy:
+      name: DJSammy/bert-base-danish-uncased_BotXO,ai
+      size_factor: 3
+de:
+  word_vectors: de_core_news_lg
+  transformer:
+    efficiency:
+      name: bert-base-german-cased
+      size_factor: 3
+    accuracy:
+      name: bert-base-german-cased
+      size_factor: 3
+el:
+  word_vectors: el_core_news_lg
+  transformer:
+    efficiency:
+      name: nlpaueb/bert-base-greek-uncased-v1
+      size_factor: 3
+    accuracy:
+      name: nlpaueb/bert-base-greek-uncased-v1
+      size_factor: 3
+en:
+  word_vectors: en_core_web_lg
+  transformer:
+    efficiency:
+      name: roberta-base
+      size_factor: 3
+    accuracy:
+      name: roberta-base
+      size_factor: 3
+es:
+  word_vectors: es_core_news_lg
+  transformer:
+    efficiency:
+      name: dccuchile/bert-base-spanish-wwm-cased
+      size_factor: 3
+    accuracy:
+      name: dccuchile/bert-base-spanish-wwm-cased
+      size_factor: 3
+eu:
+  word_vectors: null
+  transformer:
+    efficiency:
+      name: mrm8488/RoBasquERTa
+      size_factor: 3
+    accuracy:
+      name: mrm8488/RoBasquERTa
+      size_factor: 3
+fi:
+  word_vectors: null
+  transformer:
+    efficiency:
+      name: TurkuNLP/bert-base-finnish-cased-v1
+      size_factor: 3
+    accuracy:
+      name: TurkuNLP/bert-base-finnish-cased-v1
+      size_factor: 3
+fr:
+  word_vectors: fr_core_news_lg
+  transformer:
+    efficiency:
+      name: camembert-base
+      size_factor: 3
+    accuracy:
+      name: camembert-base
+      size_factor: 3
+hi:
+  word_vectors: null
+  transformer:
+    efficiency:
+      name: monsoon-nlp/hindi-tpu-electra
+      size_factor: 3
+    accuracy:
+      name: monsoon-nlp/hindi-tpu-electra
+      size_factor: 3
+id:
+  word_vectors: null
+  transformer:
+    efficiency:
+      name: indolem/indobert-base-uncased
+      size_factor: 3
+    accuracy:
+      name: indolem/indobert-base-uncased
+      size_factor: 3
+it:
+  word_vectors: it_core_news_lg
+  transformer: null
+ja:
+  word_vectors: ja_core_news_lg
+  transformer: null
+lt:
+  word_vectors: lt_core_news_lg
+  transformer: null
+mk:
+  word_vectors: null
+  transformer:
+    efficiency:
+      name: anon-submission-mk/bert-base-macedonian-cased
+      size_factor: 3
+    accuracy:
+      name: anon-submission-mk/bert-base-macedonian-cased
+      size_factor: 3
+nb:
+  word_vectors: nb_core_news_lg
+  transformer:
+    efficiency:
+      name: NbAiLab/nb-bert-base
+      size_factor: 3
+    accuracy:
+      name: NbAiLab/nb-bert-base
+      size_factor: 3
+nl:
+  word_vectors: nl_core_news_lg
+  transformer:
+    efficiency:
+      name: pdelobelle/robbert-v2-dutch-base
+      size_factor: 3
+    accuracy:
+      name: pdelobelle/robbert-v2-dutch-base
+      size_factor: 3
+pl:
+  word_vectors: pl_core_news_lg
+  transformer:
+    efficiency:
+      name: dkleczek/bert-base-polish-cased-v1
+      size_factor: 3
+    accuracy:
+      name: dkleczek/bert-base-polish-cased-v1
+      size_factor: 3
+pt:
+  word_vectors: pt_core_news_lg
+  transformer:
+    efficiency:
+      name: neuralmind/bert-base-portuguese-cased
+      size_factor: 3
+    accuracy:
+      name: neuralmind/bert-base-portuguese-cased
+      size_factor: 3
+ro:
+  word_vectors: ro_core_news_lg
+  transformer:
+    efficiency:
+      name: dumitrescustefan/bert-base-romanian-cased-v1
+      size_factor: 3
+    accuracy:
+      name: dumitrescustefan/bert-base-romanian-cased-v1
+      size_factor: 3
+si:
+  word_vectors: null
+  transformer:
+    efficiency:
+      name: keshan/SinhalaBERTo
+      size_factor: 3
+    accuracy:
+      name: keshan/SinhalaBERTo
+      size_factor: 3
+sv:
+  word_vectors: null
+  transformer:
+    efficiency:
+      name: KB/bert-base-swedish-cased
+      size_factor: 3
+    accuracy:
+      name: KB/bert-base-swedish-cased
+      size_factor: 3
+ta:
+  word_vectors: null
+  transformer:
+    efficiency:
+      name: monsoon-nlp/tamillion
+      size_factor: 3
+    accuracy:
+      name: monsoon-nlp/tamillion
+      size_factor: 3
+te:
+  word_vectors: null
+  transformer:
+    efficiency:
+      name: kuppuluri/telugu_bertu
+      size_factor: 3
+    accuracy:
+      name: kuppuluri/telugu_bertu
+      size_factor: 3
+th:
+  word_vectors: null
+  transformer:
+    efficiency:
+      name: monsoon-nlp/bert-base-thai
+      size_factor: 3
+    accuracy:
+      name: monsoon-nlp/bert-base-thai
+      size_factor: 3
+tr:
+  word_vectors: null
+  transformer:
+    efficiency:
+      name: dbmdz/bert-base-turkish-cased
+      size_factor: 3
+    accuracy:
+      name: dbmdz/bert-base-turkish-cased
+      size_factor: 3
+uk:
+  word_vectors: null
+  transformer:
+    efficiency:
+      name: youscan/ukr-roberta-base
+      size_factor: 3
+    accuracy:
+      name: youscan/ukr-roberta-base
+      size_factor: 3
+ur:
+  word_vectors: null
+  transformer:
+    efficiency:
+      name: urduhack/roberta-urdu-small
+      size_factor: 3
+    accuracy:
+      name: urduhack/roberta-urdu-small
+      size_factor: 3
+zh:
+  word_vectors: zh_core_web_lg
+  transformer:
+    efficiency:
+      name: bert-base-chinese
+      size_factor: 3
+    accuracy:
+      name: bert-base-chinese
+      size_factor: 3
+  has_letters: false

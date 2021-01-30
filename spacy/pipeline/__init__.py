@@ -1,26 +1,36 @@
-# coding: utf8
-from __future__ import unicode_literals
-
-from .pipes import Tagger, DependencyParser, EntityRecognizer, EntityLinker
-from .pipes import TextCategorizer, Tensorizer, Pipe, Sentencizer
-from .morphologizer import Morphologizer
+from .attributeruler import AttributeRuler
+from .dep_parser import DependencyParser
+from .entity_linker import EntityLinker
+from .ner import EntityRecognizer
 from .entityruler import EntityRuler
-from .hooks import SentenceSegmenter, SimilarityHook
+from .lemmatizer import Lemmatizer
+from .morphologizer import Morphologizer
+from .pipe import Pipe
+from .trainable_pipe import TrainablePipe
+from .senter import SentenceRecognizer
+from .sentencizer import Sentencizer
+from .tagger import Tagger
+from .textcat import TextCategorizer
+from .textcat_multilabel import MultiLabel_TextCategorizer
+from .tok2vec import Tok2Vec
 from .functions import merge_entities, merge_noun_chunks, merge_subtokens
 
 __all__ = [
-    "Tagger",
+    "AttributeRuler",
     "DependencyParser",
-    "EntityRecognizer",
     "EntityLinker",
-    "TextCategorizer",
-    "Tensorizer",
-    "Pipe",
-    "Morphologizer",
+    "EntityRecognizer",
     "EntityRuler",
+    "Morphologizer",
+    "Lemmatizer",
+    "MultiLabel_TextCategorizer",
+    "Pipe",
+    "SentenceRecognizer",
     "Sentencizer",
-    "SentenceSegmenter",
-    "SimilarityHook",
+    "Tagger",
+    "TextCategorizer",
+    "Tok2Vec",
+    "TrainablePipe",
     "merge_entities",
     "merge_noun_chunks",
     "merge_subtokens",

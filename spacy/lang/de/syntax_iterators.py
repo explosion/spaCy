@@ -1,42 +1,26 @@
-# coding: utf8
-from __future__ import unicode_literals
+from typing import Union, Iterator
 
 from ...symbols import NOUN, PROPN, PRON
 from ...errors import Errors
+from ...tokens import Doc, Span
 
 
-def noun_chunks(doclike):
-    """
-    Detect base noun phrases from a dependency parse. Works on both Doc and Span.
-    """
+def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Span]:
+    """Detect base noun phrases from a dependency parse. Works on Doc and Span."""
     # this iterator extracts spans headed by NOUNs starting from the left-most
     # syntactic dependent until the NOUN itself for close apposition and
     # measurement construction, the span is sometimes extended to the right of
     # the NOUN. Example: "eine Tasse Tee" (a cup (of) tea) returns "eine Tasse Tee"
     # and not just "eine Tasse", same for "das Thema Familie".
-    labels = [
-        "sb",
-        "oa",
-        "da",
-        "nk",
-        "mo",
-        "ag",
-        "ROOT",
-        "root",
-        "cj",
-        "pd",
-        "og",
-        "app",
-    ]
+    # fmt: off
+    labels = ["sb", "oa", "da", "nk", "mo", "ag", "ROOT", "root", "cj", "pd", "og", "app"]
+    # fmt: on
     doc = doclike.doc  # Ensure works on both Doc and Span.
-
-    if not doc.is_parsed:
+    if not doc.has_annotation("DEP"):
         raise ValueError(Errors.E029)
-
     np_label = doc.vocab.strings.add("NP")
     np_deps = set(doc.vocab.strings.add(label) for label in labels)
     close_app = doc.vocab.strings.add("nk")
-
     rbracket = 0
     prev_end = -1
     for i, word in enumerate(doclike):

@@ -3,7 +3,7 @@ import PropTypes from 'prop-types'
 
 import classes from '../styles/newsletter.module.sass'
 
-const Newsletter = ({ user, id, list }) => {
+export default function Newsletter({ user, id, list }) {
     const action = `//${user}.list-manage.com/subscribe/post?u=${id}&amp;id=${list}`
     return (
         <form
@@ -46,5 +46,3 @@ Newsletter.propTypes = {
     id: PropTypes.string.isRequired,
     list: PropTypes.string.isRequired,
 }
-
-export default Newsletter

@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 # This list was created by taking the top 2000 words from a Wikipedia dump and
 # filtering out everything that wasn't hiragana. ー (one) was also added.
 # Considered keeping some non-hiragana words but too many place names were

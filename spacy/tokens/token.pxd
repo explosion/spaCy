@@ -6,8 +6,10 @@ from ..typedefs cimport attr_t, flags_t
 from ..parts_of_speech cimport univ_pos_t
 from .doc cimport Doc
 from ..lexeme cimport Lexeme
+
 from ..errors import Errors
 
+cdef int MISSING_DEP = 0
 
 cdef class Token:
     cdef readonly Vocab vocab
@@ -43,6 +45,8 @@ cdef class Token:
             return token.pos
         elif feat_name == TAG:
             return token.tag
+        elif feat_name == MORPH:
+            return token.morph
         elif feat_name == DEP:
             return token.dep
         elif feat_name == HEAD:
@@ -73,6 +77,8 @@ cdef class Token:
             token.pos = <univ_pos_t>value
         elif feat_name == TAG:
             token.tag = value
+        elif feat_name == MORPH:
+            token.morph = value
         elif feat_name == DEP:
             token.dep = value
         elif feat_name == HEAD:
@@ -89,3 +95,13 @@ cdef class Token:
             token.ent_kb_id = value
         elif feat_name == SENT_START:
             token.sent_start = value
+
+
+    @staticmethod
+    cdef inline int missing_dep(const TokenC* token) nogil:
+        return token.dep == MISSING_DEP
+
+
+    @staticmethod
+    cdef inline int missing_head(const TokenC* token) nogil:
+        return Token.missing_dep(token)

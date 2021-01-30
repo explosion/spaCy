@@ -1,48 +1,96 @@
 ---
 title: DependencyParser
 tag: class
-source: spacy/pipeline/pipes.pyx
+source: spacy/pipeline/dep_parser.pyx
+teaser: 'Pipeline component for syntactic dependency parsing'
+api_base_class: /api/pipe
+api_string_name: parser
+api_trainable: true
 ---
 
-This class is a subclass of `Pipe` and follows the same API. The pipeline
-component is available in the [processing pipeline](/usage/processing-pipelines)
-via the ID `"parser"`.
+A transition-based dependency parser component. The dependency parser jointly
+learns sentence segmentation and labelled dependency parsing, and can optionally
+learn to merge tokens that had been over-segmented by the tokenizer. The parser
+uses a variant of the **non-monotonic arc-eager transition-system** described by
+[Honnibal and Johnson (2014)](https://www.aclweb.org/anthology/D15-1162/), with
+the addition of a "break" transition to perform the sentence segmentation.
+[Nivre (2005)](https://www.aclweb.org/anthology/P05-1013/)'s **pseudo-projective
+dependency transformation** is used to allow the parser to predict
+non-projective parses.
 
-## DependencyParser.Model {#model tag="classmethod"}
+The parser is trained using an **imitation learning objective**. It follows the
+actions predicted by the current weights, and at each state, determines which
+actions are compatible with the optimal parse that could be reached from the
+current state. The weights are updated such that the scores assigned to the set
+of optimal actions is increased, while scores assigned to other actions are
+decreased. Note that more than one action may be optimal for a given state.
 
-Initialize a model for the pipe. The model should implement the
-`thinc.neural.Model` API. Wrappers are under development for most major machine
-learning libraries.
+## Config and implementation {#config}
 
-| Name        | Type   | Description                           |
-| ----------- | ------ | ------------------------------------- |
-| `**kwargs`  | -      | Parameters for initializing the model |
-| **RETURNS** | object | The initialized model.                |
-
-## DependencyParser.\_\_init\_\_ {#init tag="method"}
-
-Create a new pipeline instance. In your application, you would normally use a
-shortcut for this and instantiate the component using its string name and
-[`nlp.create_pipe`](/api/language#create_pipe).
+The default config is defined by the pipeline component factory and describes
+how the component should be configured. You can override its settings via the
+`config` argument on [`nlp.add_pipe`](/api/language#add_pipe) or in your
+[`config.cfg` for training](/usage/training#config). See the
+[model architectures](/api/architectures) documentation for details on the
+architectures and their arguments and hyperparameters.
 
 > #### Example
 >
 > ```python
-> # Construction via create_pipe
-> parser = nlp.create_pipe("parser")
+> from spacy.pipeline.dep_parser import DEFAULT_PARSER_MODEL
+> config = {
+>    "moves": None,
+>    "update_with_oracle_cut_size": 100,
+>    "learn_tokens": False,
+>    "min_action_freq": 30,
+>    "model": DEFAULT_PARSER_MODEL,
+> }
+> nlp.add_pipe("parser", config=config)
+> ```
+
+| Setting                       | Description                                                                                                                                                                                                                                                                                                           |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `moves`                       | A list of transition names. Inferred from the data if not provided. Defaults to `None`. ~~Optional[List[str]]~~                                                                                                                                                                                                       |
+| `update_with_oracle_cut_size` | During training, cut long sequences into shorter segments by creating intermediate states based on the gold-standard history. The model is not very sensitive to this parameter, so you usually won't need to change it. Defaults to `100`. ~~int~~                                                                   |
+| `learn_tokens`                | Whether to learn to merge subtokens that are split relative to the gold standard. Experimental. Defaults to `False`. ~~bool~~                                                                                                                                                                                         |
+| `min_action_freq`             | The minimum frequency of labelled actions to retain. Rarer labelled actions have their label backed-off to "dep". While this primarily affects the label accuracy, it can also affect the attachment structure, as the labels are used to represent the pseudo-projectivity transformation. Defaults to `30`. ~~int~~ |
+| `model`                       | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. Defaults to [TransitionBasedParser](/api/architectures#TransitionBasedParser). ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                   |
+
+```python
+%%GITHUB_SPACY/spacy/pipeline/dep_parser.pyx
+```
+
+## DependencyParser.\_\_init\_\_ {#init tag="method"}
+
+> #### Example
+>
+> ```python
+> # Construction via add_pipe with default model
+> parser = nlp.add_pipe("parser")
+>
+> # Construction via add_pipe with custom model
+> config = {"model": {"@architectures": "my_parser"}}
+> parser = nlp.add_pipe("parser", config=config)
 >
 > # Construction from class
 > from spacy.pipeline import DependencyParser
-> parser = DependencyParser(nlp.vocab)
-> parser.from_disk("/path/to/model")
+> parser = DependencyParser(nlp.vocab, model)
 > ```
 
-| Name        | Type                          | Description                                                                                                                                           |
-| ----------- | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `vocab`     | `Vocab`                       | The shared vocabulary.                                                                                                                                |
-| `model`     | `thinc.neural.Model` / `True` | The model powering the pipeline component. If no model is supplied, the model is created when you call `begin_training`, `from_disk` or `from_bytes`. |
-| `**cfg`     | -                             | Configuration parameters.                                                                                                                             |
-| **RETURNS** | `DependencyParser`            | The newly constructed object.                                                                                                                         |
+Create a new pipeline instance. In your application, you would normally use a
+shortcut for this and instantiate the component using its string name and
+[`nlp.add_pipe`](/api/language#add_pipe).
+
+| Name                          | Description                                                                                                                                                                                                                                                                                         |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vocab`                       | The shared vocabulary. ~~Vocab~~                                                                                                                                                                                                                                                                    |
+| `model`                       | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                                                                                |
+| `name`                        | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~                                                                                                                                                                                                 |
+| `moves`                       | A list of transition names. Inferred from the data if not provided. ~~Optional[List[str]]~~                                                                                                                                                                                                         |
+| _keyword-only_                |                                                                                                                                                                                                                                                                                                     |
+| `update_with_oracle_cut_size` | During training, cut long sequences into shorter segments by creating intermediate states based on the gold-standard history. The model is not very sensitive to this parameter, so you usually won't need to change it. `100` is a good default. ~~int~~                                           |
+| `learn_tokens`                | Whether to learn to merge subtokens that are split relative to the gold standard. Experimental. ~~bool~~                                                                                                                                                                                            |
+| `min_action_freq`             | The minimum frequency of labelled actions to retain. Rarer labelled actions have their label backed-off to "dep". While this primarily affects the label accuracy, it can also affect the attachment structure, as the labels are used to represent the pseudo-projectivity transformation. ~~int~~ |
 
 ## DependencyParser.\_\_call\_\_ {#call tag="method"}
 
@@ -57,16 +105,16 @@ and all pipeline components are applied to the `Doc` in order. Both
 > #### Example
 >
 > ```python
-> parser = DependencyParser(nlp.vocab)
 > doc = nlp("This is a sentence.")
+> parser = nlp.add_pipe("parser")
 > # This usually happens under the hood
 > processed = parser(doc)
 > ```
 
-| Name        | Type  | Description              |
-| ----------- | ----- | ------------------------ |
-| `doc`       | `Doc` | The document to process. |
-| **RETURNS** | `Doc` | The processed document.  |
+| Name        | Description                      |
+| ----------- | -------------------------------- |
+| `doc`       | The document to process. ~~Doc~~ |
+| **RETURNS** | The processed document. ~~Doc~~  |
 
 ## DependencyParser.pipe {#pipe tag="method"}
 
@@ -80,72 +128,117 @@ applied to the `Doc` in order. Both [`__call__`](/api/dependencyparser#call) and
 > #### Example
 >
 > ```python
-> parser = DependencyParser(nlp.vocab)
+> parser = nlp.add_pipe("parser")
 > for doc in parser.pipe(docs, batch_size=50):
 >     pass
 > ```
 
-| Name         | Type     | Description                                            |
-| ------------ | -------- | ------------------------------------------------------ |
-| `stream`     | iterable | A stream of documents.                                 |
-| `batch_size` | int      | The number of texts to buffer. Defaults to `128`.      |
-| **YIELDS**   | `Doc`    | Processed documents in the order of the original text. |
+| Name           | Description                                                   |
+| -------------- | ------------------------------------------------------------- |
+| `docs`         | A stream of documents. ~~Iterable[Doc]~~                      |
+| _keyword-only_ |                                                               |
+| `batch_size`   | The number of documents to buffer. Defaults to `128`. ~~int~~ |
+| **YIELDS**     | The processed documents in order. ~~Doc~~                     |
+
+## DependencyParser.initialize {#initialize tag="method" new="3"}
+
+Initialize the component for training. `get_examples` should be a function that
+returns an iterable of [`Example`](/api/example) objects. The data examples are
+used to **initialize the model** of the component and can either be the full
+training data or a representative sample. Initialization includes validating the
+network,
+[inferring missing shapes](https://thinc.ai/docs/usage-models#validation) and
+setting up the label scheme based on the data. This method is typically called
+by [`Language.initialize`](/api/language#initialize) and lets you customize
+arguments it receives via the
+[`[initialize.components]`](/api/data-formats#config-initialize) block in the
+config.
+
+<Infobox variant="warning" title="Changed in v3.0" id="begin_training">
+
+This method was previously called `begin_training`.
+
+</Infobox>
+
+> #### Example
+>
+> ```python
+> parser = nlp.add_pipe("parser")
+> parser.initialize(lambda: [], nlp=nlp)
+> ```
+>
+> ```ini
+> ### config.cfg
+> [initialize.components.parser]
+>
+> [initialize.components.parser.labels]
+> @readers = "spacy.read_labels.v1"
+> path = "corpus/labels/parser.json
+> ```
+
+| Name           | Description                                                                                                                                                                                                                                                                                                                                                                                                            |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `get_examples` | Function that returns gold-standard annotations in the form of [`Example`](/api/example) objects. ~~Callable[[], Iterable[Example]]~~                                                                                                                                                                                                                                                                                  |
+| _keyword-only_ |                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `nlp`          | The current `nlp` object. Defaults to `None`. ~~Optional[Language]~~                                                                                                                                                                                                                                                                                                                                                   |
+| `labels`       | The label information to add to the component, as provided by the [`label_data`](#label_data) property after initialization. To generate a reusable JSON file from your data, you should run the [`init labels`](/api/cli#init-labels) command. If no labels are provided, the `get_examples` callback is used to extract the labels from the data, which may be a lot slower. ~~Optional[Dict[str, Dict[str, int]]]~~ |
 
 ## DependencyParser.predict {#predict tag="method"}
 
-Apply the pipeline's model to a batch of docs, without modifying them.
+Apply the component's model to a batch of [`Doc`](/api/doc) objects, without
+modifying them.
 
 > #### Example
 >
 > ```python
-> parser = DependencyParser(nlp.vocab)
+> parser = nlp.add_pipe("parser")
 > scores = parser.predict([doc1, doc2])
 > ```
 
-| Name        | Type                | Description                                    |
-| ----------- | ------------------- | ---------------------------------------------- |
-| `docs`      | iterable            | The documents to predict.                      |
-| **RETURNS** | `syntax.StateClass` | A helper class for the parse state (internal). |
+| Name        | Description                                                   |
+| ----------- | ------------------------------------------------------------- |
+| `docs`      | The documents to predict. ~~Iterable[Doc]~~                   |
+| **RETURNS** | A helper class for the parse state (internal). ~~StateClass~~ |
 
 ## DependencyParser.set_annotations {#set_annotations tag="method"}
 
-Modify a batch of documents, using pre-computed scores.
+Modify a batch of [`Doc`](/api/doc) objects, using pre-computed scores.
 
 > #### Example
 >
 > ```python
-> parser = DependencyParser(nlp.vocab)
+> parser = nlp.add_pipe("parser")
 > scores = parser.predict([doc1, doc2])
 > parser.set_annotations([doc1, doc2], scores)
 > ```
 
-| Name     | Type     | Description                                                |
-| -------- | -------- | ---------------------------------------------------------- |
-| `docs`   | iterable | The documents to modify.                                   |
-| `scores` | -        | The scores to set, produced by `DependencyParser.predict`. |
+| Name     | Description                                                                                                                           |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `docs`   | The documents to modify. ~~Iterable[Doc]~~                                                                                            |
+| `scores` | The scores to set, produced by `DependencyParser.predict`. Returns an internal helper class for the parse state. ~~List[StateClass]~~ |
 
 ## DependencyParser.update {#update tag="method"}
 
-Learn from a batch of documents and gold-standard information, updating the
-pipe's model. Delegates to [`predict`](/api/dependencyparser#predict) and
+Learn from a batch of [`Example`](/api/example) objects, updating the pipe's
+model. Delegates to [`predict`](/api/dependencyparser#predict) and
 [`get_loss`](/api/dependencyparser#get_loss).
 
 > #### Example
 >
 > ```python
-> parser = DependencyParser(nlp.vocab)
-> losses = {}
-> optimizer = nlp.begin_training()
-> parser.update([doc1, doc2], [gold1, gold2], losses=losses, sgd=optimizer)
+> parser = nlp.add_pipe("parser")
+> optimizer = nlp.initialize()
+> losses = parser.update(examples, sgd=optimizer)
 > ```
 
-| Name     | Type     | Description                                                                                  |
-| -------- | -------- | -------------------------------------------------------------------------------------------- |
-| `docs`   | iterable | A batch of documents to learn from.                                                          |
-| `golds`  | iterable | The gold-standard data. Must have the same length as `docs`.                                 |
-| `drop`   | float    | The dropout rate.                                                                            |
-| `sgd`    | callable | The optimizer. Should take two arguments `weights` and `gradient`, and an optional ID.       |
-| `losses` | dict     | Optional record of the loss during training. The value keyed by the model's name is updated. |
+| Name              | Description                                                                                                                        |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `examples`        | A batch of [`Example`](/api/example) objects to learn from. ~~Iterable[Example]~~                                                  |
+| _keyword-only_    |                                                                                                                                    |
+| `drop`            | The dropout rate. ~~float~~                                                                                                        |
+| `sgd`             | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~                      |
+| `losses`          | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~           |
+| **RETURNS**       | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                              |
 
 ## DependencyParser.get_loss {#get_loss tag="method"}
 
@@ -155,83 +248,103 @@ predicted scores.
 > #### Example
 >
 > ```python
-> parser = DependencyParser(nlp.vocab)
-> scores = parser.predict([doc1, doc2])
-> loss, d_loss = parser.get_loss([doc1, doc2], [gold1, gold2], scores)
+> parser = nlp.add_pipe("parser")
+> scores = parser.predict([eg.predicted for eg in examples])
+> loss, d_loss = parser.get_loss(examples, scores)
 > ```
 
-| Name        | Type     | Description                                                  |
-| ----------- | -------- | ------------------------------------------------------------ |
-| `docs`      | iterable | The batch of documents.                                      |
-| `golds`     | iterable | The gold-standard data. Must have the same length as `docs`. |
-| `scores`    | -        | Scores representing the model's predictions.                 |
-| **RETURNS** | tuple    | The loss and the gradient, i.e. `(loss, gradient)`.          |
+| Name        | Description                                                                 |
+| ----------- | --------------------------------------------------------------------------- |
+| `examples`  | The batch of examples. ~~Iterable[Example]~~                                |
+| `scores`    | Scores representing the model's predictions. ~~StateClass~~                 |
+| **RETURNS** | The loss and the gradient, i.e. `(loss, gradient)`. ~~Tuple[float, float]~~ |
 
-## DependencyParser.begin_training {#begin_training tag="method"}
+## DependencyParser.score {#score tag="method" new="3"}
 
-Initialize the pipe for training, using data examples if available. If no model
-has been initialized yet, the model is added.
+Score a batch of examples.
 
 > #### Example
 >
 > ```python
-> parser = DependencyParser(nlp.vocab)
-> nlp.pipeline.append(parser)
-> optimizer = parser.begin_training(pipeline=nlp.pipeline)
+> scores = parser.score(examples)
 > ```
 
-| Name          | Type     | Description                                                                                                                                                                                 |
-| ------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `gold_tuples` | iterable | Optional gold-standard annotations from which to construct [`GoldParse`](/api/goldparse) objects.                                                                                           |
-| `pipeline`    | list     | Optional list of pipeline components that this component is part of.                                                                                                                        |
-| `sgd`         | callable | An optional optimizer. Should take two arguments `weights` and `gradient`, and an optional ID. Will be created via [`DependencyParser`](/api/dependencyparser#create_optimizer) if not set. |
-| **RETURNS**   | callable | An optimizer.                                                                                                                                                                               |
+| Name        | Description                                                                                                                                                              |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `examples`  | The examples to score. ~~Iterable[Example]~~                                                                                                                             |
+| **RETURNS** | The scores, produced by [`Scorer.score_spans`](/api/scorer#score_spans) and [`Scorer.score_deps`](/api/scorer#score_deps). ~~Dict[str, Union[float, Dict[str, float]]]~~ |
 
 ## DependencyParser.create_optimizer {#create_optimizer tag="method"}
 
-Create an optimizer for the pipeline component.
+Create an [`Optimizer`](https://thinc.ai/docs/api-optimizers) for the pipeline
+component.
 
 > #### Example
 >
 > ```python
-> parser = DependencyParser(nlp.vocab)
+> parser = nlp.add_pipe("parser")
 > optimizer = parser.create_optimizer()
 > ```
 
-| Name        | Type     | Description    |
-| ----------- | -------- | -------------- |
-| **RETURNS** | callable | The optimizer. |
+| Name        | Description                  |
+| ----------- | ---------------------------- |
+| **RETURNS** | The optimizer. ~~Optimizer~~ |
 
 ## DependencyParser.use_params {#use_params tag="method, contextmanager"}
 
-Modify the pipe's model, to use the given parameter values.
+Modify the pipe's model, to use the given parameter values. At the end of the
+context, the original parameters are restored.
 
 > #### Example
 >
 > ```python
 > parser = DependencyParser(nlp.vocab)
-> with parser.use_params():
+> with parser.use_params(optimizer.averages):
 >     parser.to_disk("/best_model")
 > ```
 
-| Name     | Type | Description                                                                                                |
-| -------- | ---- | ---------------------------------------------------------------------------------------------------------- |
-| `params` | -    | The parameter values to use in the model. At the end of the context, the original parameters are restored. |
+| Name     | Description                                        |
+| -------- | -------------------------------------------------- |
+| `params` | The parameter values to use in the model. ~~dict~~ |
 
 ## DependencyParser.add_label {#add_label tag="method"}
 
-Add a new label to the pipe.
+Add a new label to the pipe. Note that you don't have to call this method if you
+provide a **representative data sample** to the [`initialize`](#initialize)
+method. In this case, all labels found in the sample will be automatically added
+to the model, and the output dimension will be
+[inferred](/usage/layers-architectures#thinc-shape-inference) automatically.
 
 > #### Example
 >
 > ```python
-> parser = DependencyParser(nlp.vocab)
+> parser = nlp.add_pipe("parser")
 > parser.add_label("MY_LABEL")
 > ```
 
-| Name    | Type    | Description       |
-| ------- | ------- | ----------------- |
-| `label` | unicode | The label to add. |
+| Name        | Description                                                 |
+| ----------- | ----------------------------------------------------------- |
+| `label`     | The label to add. ~~str~~                                   |
+| **RETURNS** | `0` if the label is already present, otherwise `1`. ~~int~~ |
+
+## DependencyParser.set_output {#set_output tag="method"}
+
+Change the output dimension of the component's model by calling the model's
+attribute `resize_output`. This is a function that takes the original model and
+the new output dimension `nO`, and changes the model in place. When resizing an
+already trained model, care should be taken to avoid the "catastrophic
+forgetting" problem.
+
+> #### Example
+>
+> ```python
+> parser = nlp.add_pipe("parser")
+> parser.set_output(512)
+> ```
+
+| Name | Description                       |
+| ---- | --------------------------------- |
+| `nO` | The new output dimension. ~~int~~ |
 
 ## DependencyParser.to_disk {#to_disk tag="method"}
 
@@ -240,14 +353,15 @@ Serialize the pipe to disk.
 > #### Example
 >
 > ```python
-> parser = DependencyParser(nlp.vocab)
+> parser = nlp.add_pipe("parser")
 > parser.to_disk("/path/to/parser")
 > ```
 
-| Name      | Type             | Description                                                                                                           |
-| --------- | ---------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `path`    | unicode / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
-| `exclude` | list             | String names of [serialization fields](#serialization-fields) to exclude.                                             |
+| Name           | Description                                                                                                                                |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `path`         | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
+| _keyword-only_ |                                                                                                                                            |
+| `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~                                                |
 
 ## DependencyParser.from_disk {#from_disk tag="method"}
 
@@ -256,31 +370,33 @@ Load the pipe from disk. Modifies the object in place and returns it.
 > #### Example
 >
 > ```python
-> parser = DependencyParser(nlp.vocab)
+> parser = nlp.add_pipe("parser")
 > parser.from_disk("/path/to/parser")
 > ```
 
-| Name        | Type               | Description                                                                |
-| ----------- | ------------------ | -------------------------------------------------------------------------- |
-| `path`      | unicode / `Path`   | A path to a directory. Paths may be either strings or `Path`-like objects. |
-| `exclude`   | list               | String names of [serialization fields](#serialization-fields) to exclude.  |
-| **RETURNS** | `DependencyParser` | The modified `DependencyParser` object.                                    |
+| Name           | Description                                                                                     |
+| -------------- | ----------------------------------------------------------------------------------------------- |
+| `path`         | A path to a directory. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
+| _keyword-only_ |                                                                                                 |
+| `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~     |
+| **RETURNS**    | The modified `DependencyParser` object. ~~DependencyParser~~                                    |
 
 ## DependencyParser.to_bytes {#to_bytes tag="method"}
 
 > #### Example
 >
 > ```python
-> parser = DependencyParser(nlp.vocab)
+> parser = nlp.add_pipe("parser")
 > parser_bytes = parser.to_bytes()
 > ```
 
 Serialize the pipe to a bytestring.
 
-| Name        | Type  | Description                                                               |
-| ----------- | ----- | ------------------------------------------------------------------------- |
-| `exclude`   | list  | String names of [serialization fields](#serialization-fields) to exclude. |
-| **RETURNS** | bytes | The serialized form of the `DependencyParser` object.                     |
+| Name           | Description                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------------- |
+| _keyword-only_ |                                                                                             |
+| `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
+| **RETURNS**    | The serialized form of the `DependencyParser` object. ~~bytes~~                             |
 
 ## DependencyParser.from_bytes {#from_bytes tag="method"}
 
@@ -290,15 +406,16 @@ Load the pipe from a bytestring. Modifies the object in place and returns it.
 >
 > ```python
 > parser_bytes = parser.to_bytes()
-> parser = DependencyParser(nlp.vocab)
+> parser = nlp.add_pipe("parser")
 > parser.from_bytes(parser_bytes)
 > ```
 
-| Name         | Type               | Description                                                               |
-| ------------ | ------------------ | ------------------------------------------------------------------------- |
-| `bytes_data` | bytes              | The data to load from.                                                    |
-| `exclude`    | list               | String names of [serialization fields](#serialization-fields) to exclude. |
-| **RETURNS**  | `DependencyParser` | The `DependencyParser` object.                                            |
+| Name           | Description                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------------- |
+| `bytes_data`   | The data to load from. ~~bytes~~                                                            |
+| _keyword-only_ |                                                                                             |
+| `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
+| **RETURNS**    | The `DependencyParser` object. ~~DependencyParser~~                                         |
 
 ## DependencyParser.labels {#labels tag="property"}
 
@@ -311,9 +428,27 @@ The labels currently added to the component.
 > assert "MY_LABEL" in parser.labels
 > ```
 
-| Name        | Type  | Description                        |
-| ----------- | ----- | ---------------------------------- |
-| **RETURNS** | tuple | The labels added to the component. |
+| Name        | Description                                            |
+| ----------- | ------------------------------------------------------ |
+| **RETURNS** | The labels added to the component. ~~Tuple[str, ...]~~ |
+
+## DependencyParser.label_data {#label_data tag="property" new="3"}
+
+The labels currently added to the component and their internal meta information.
+This is the data generated by [`init labels`](/api/cli#init-labels) and used by
+[`DependencyParser.initialize`](/api/dependencyparser#initialize) to initialize
+the model with a pre-defined label set.
+
+> #### Example
+>
+> ```python
+> labels = parser.label_data
+> parser.initialize(lambda: [], nlp=nlp, labels=labels)
+> ```
+
+| Name        | Description                                                                     |
+| ----------- | ------------------------------------------------------------------------------- |
+| **RETURNS** | The label data added to the component. ~~Dict[str, Dict[str, Dict[str, int]]]~~ |
 
 ## Serialization fields {#serialization-fields}
 

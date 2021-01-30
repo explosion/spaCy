@@ -1,24 +1,29 @@
-import React, { Fragment } from 'react'
+import React from 'react'
 import classNames from 'classnames'
 
 import patternDefault from '../images/pattern_blue.jpg'
-import overlayDefault from '../images/pattern_landing.jpg'
+import patternNightly from '../images/pattern_nightly.jpg'
 import patternLegacy from '../images/pattern_legacy.jpg'
+import overlayDefault from '../images/pattern_landing.jpg'
+import overlayNightly from '../images/pattern_landing_nightly.jpg'
 import overlayLegacy from '../images/pattern_landing_legacy.jpg'
-import logoSvgs from '../images/logos'
 
 import Grid from './grid'
 import { Content } from './main'
 import Button from './button'
 import CodeBlock from './code'
-import { H1, H2, H3, Label, InlineList } from './typography'
+import { H1, H2, H3 } from './typography'
 import Link from './link'
-import { chunkArray } from './util'
 import classes from '../styles/landing.module.sass'
 
-export const LandingHeader = ({ style = {}, children, legacy }) => {
-    const pattern = legacy ? patternLegacy : patternDefault
-    const overlay = legacy ? overlayLegacy : overlayDefault
+function getPattern(nightly, legacy) {
+    if (nightly) return { pattern: patternNightly, overlay: overlayNightly }
+    if (legacy) return { pattern: patternLegacy, overlay: overlayLegacy }
+    return { pattern: patternDefault, overlay: overlayDefault }
+}
+
+export const LandingHeader = ({ nightly, legacy, style = {}, children }) => {
+    const { pattern, overlay } = getPattern(nightly, legacy)
     const wrapperStyle = { backgroundImage: `url(${pattern})` }
     const contentStyle = { backgroundImage: `url(${overlay})`, ...style }
     return (
@@ -40,9 +45,9 @@ export const LandingSubtitle = ({ children }) => (
     </h2>
 )
 
-export const LandingGrid = ({ cols = 3, blocks = false, children }) => (
+export const LandingGrid = ({ cols = 3, blocks = false, style, children }) => (
     <Content className={classNames({ [classes.blocks]: blocks })}>
-        <Grid cols={cols} narrow={blocks} className={classes.grid}>
+        <Grid cols={cols} narrow={blocks} className={classes.grid} style={style}>
             {children}
         </Grid>
     </Content>
@@ -112,16 +117,18 @@ export const LandingBanner = ({
     return (
         <div className={classes.banner} style={style}>
             <Grid cols={small ? null : 3} narrow className={contentClassNames}>
-                <Heading Component="h3" className={classes.bannerTitle}>
-                    {label && (
-                        <div className={classes.bannerLabel}>
-                            <span className={classes.label}>{label}</span>
-                        </div>
-                    )}
-                    <Link to={to} hidden>
-                        {title}
-                    </Link>
-                </Heading>
+                {(title || label) && (
+                    <Heading Component="h3" className={classes.bannerTitle}>
+                        {label && (
+                            <div className={classes.bannerLabel}>
+                                <span className={classes.label}>{label}</span>
+                            </div>
+                        )}
+                        <Link to={to} hidden>
+                            {title}
+                        </Link>
+                    </Heading>
+                )}
                 <div className={textClassNames}>
                     <p>{children}</p>
 
@@ -143,33 +150,3 @@ export const LandingBannerButton = ({ to, small, children }) => (
         </Button>
     </div>
 )
-
-export const LandingLogos = ({ logos = [], title, maxRow = 4, children }) => {
-    const rows = chunkArray(logos, maxRow)
-    return (
-        <Content className={classes.logos}>
-            {title && <Label>{title}</Label>}
-            {rows.map((logos, i) => (
-                <Fragment key={i}>
-                    <InlineList className={classes.logosContent}>
-                        {logos.map(({ id, url }, j) => {
-                            const Component = logoSvgs[id]
-                            return !Component ? null : (
-                                <Link
-                                    to={url}
-                                    key={j}
-                                    aria-label={id}
-                                    hidden
-                                    className={classes.logo}
-                                >
-                                    <Component />
-                                </Link>
-                            )
-                        })}
-                        {i === rows.length - 1 && children}
-                    </InlineList>
-                </Fragment>
-            ))}
-        </Content>
-    )
-}

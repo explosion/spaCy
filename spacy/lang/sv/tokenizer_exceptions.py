@@ -1,7 +1,6 @@
-# coding: utf8
-from __future__ import unicode_literals
-
-from ...symbols import LEMMA, NORM, ORTH, PRON_LEMMA
+from ..tokenizer_exceptions import BASE_EXCEPTIONS
+from ...symbols import NORM, ORTH
+from ...util import update_exc
 
 _exc = {}
 
@@ -11,61 +10,58 @@ _exc = {}
 for verb_data in [
     {ORTH: "driver"},
     {ORTH: "kör"},
-    {ORTH: "hörr", LEMMA: "hör"},
+    {ORTH: "hörr"},
     {ORTH: "fattar"},
-    {ORTH: "hajar", LEMMA: "förstår"},
+    {ORTH: "hajar"},
     {ORTH: "lever"},
-    {ORTH: "serr", LEMMA: "ser"},
+    {ORTH: "serr"},
     {ORTH: "fixar"},
 ]:
     verb_data_tc = dict(verb_data)
     verb_data_tc[ORTH] = verb_data_tc[ORTH].title()
     for data in [verb_data, verb_data_tc]:
-        _exc[data[ORTH] + "u"] = [
-            dict(data),
-            {ORTH: "u", LEMMA: PRON_LEMMA, NORM: "du"},
-        ]
+        _exc[data[ORTH] + "u"] = [data, {ORTH: "u", NORM: "du"}]
 
 # Abbreviations for weekdays "sön." (for "söndag" / "söner")
 # are left out because they are ambiguous. The same is the case
 # for abbreviations "jul." and "Jul." ("juli" / "jul").
 for exc_data in [
-    {ORTH: "jan.", LEMMA: "januari"},
-    {ORTH: "febr.", LEMMA: "februari"},
-    {ORTH: "feb.", LEMMA: "februari"},
-    {ORTH: "apr.", LEMMA: "april"},
-    {ORTH: "jun.", LEMMA: "juni"},
-    {ORTH: "aug.", LEMMA: "augusti"},
-    {ORTH: "sept.", LEMMA: "september"},
-    {ORTH: "sep.", LEMMA: "september"},
-    {ORTH: "okt.", LEMMA: "oktober"},
-    {ORTH: "nov.", LEMMA: "november"},
-    {ORTH: "dec.", LEMMA: "december"},
-    {ORTH: "mån.", LEMMA: "måndag"},
-    {ORTH: "tis.", LEMMA: "tisdag"},
-    {ORTH: "ons.", LEMMA: "onsdag"},
-    {ORTH: "tors.", LEMMA: "torsdag"},
-    {ORTH: "fre.", LEMMA: "fredag"},
-    {ORTH: "lör.", LEMMA: "lördag"},
-    {ORTH: "Jan.", LEMMA: "Januari"},
-    {ORTH: "Febr.", LEMMA: "Februari"},
-    {ORTH: "Feb.", LEMMA: "Februari"},
-    {ORTH: "Apr.", LEMMA: "April"},
-    {ORTH: "Jun.", LEMMA: "Juni"},
-    {ORTH: "Aug.", LEMMA: "Augusti"},
-    {ORTH: "Sept.", LEMMA: "September"},
-    {ORTH: "Sep.", LEMMA: "September"},
-    {ORTH: "Okt.", LEMMA: "Oktober"},
-    {ORTH: "Nov.", LEMMA: "November"},
-    {ORTH: "Dec.", LEMMA: "December"},
-    {ORTH: "Mån.", LEMMA: "Måndag"},
-    {ORTH: "Tis.", LEMMA: "Tisdag"},
-    {ORTH: "Ons.", LEMMA: "Onsdag"},
-    {ORTH: "Tors.", LEMMA: "Torsdag"},
-    {ORTH: "Fre.", LEMMA: "Fredag"},
-    {ORTH: "Lör.", LEMMA: "Lördag"},
-    {ORTH: "sthlm", LEMMA: "Stockholm"},
-    {ORTH: "gbg", LEMMA: "Göteborg"},
+    {ORTH: "jan.", NORM: "januari"},
+    {ORTH: "febr.", NORM: "februari"},
+    {ORTH: "feb.", NORM: "februari"},
+    {ORTH: "apr.", NORM: "april"},
+    {ORTH: "jun.", NORM: "juni"},
+    {ORTH: "aug.", NORM: "augusti"},
+    {ORTH: "sept.", NORM: "september"},
+    {ORTH: "sep.", NORM: "september"},
+    {ORTH: "okt.", NORM: "oktober"},
+    {ORTH: "nov.", NORM: "november"},
+    {ORTH: "dec.", NORM: "december"},
+    {ORTH: "mån.", NORM: "måndag"},
+    {ORTH: "tis.", NORM: "tisdag"},
+    {ORTH: "ons.", NORM: "onsdag"},
+    {ORTH: "tors.", NORM: "torsdag"},
+    {ORTH: "fre.", NORM: "fredag"},
+    {ORTH: "lör.", NORM: "lördag"},
+    {ORTH: "Jan.", NORM: "Januari"},
+    {ORTH: "Febr.", NORM: "Februari"},
+    {ORTH: "Feb.", NORM: "Februari"},
+    {ORTH: "Apr.", NORM: "April"},
+    {ORTH: "Jun.", NORM: "Juni"},
+    {ORTH: "Aug.", NORM: "Augusti"},
+    {ORTH: "Sept.", NORM: "September"},
+    {ORTH: "Sep.", NORM: "September"},
+    {ORTH: "Okt.", NORM: "Oktober"},
+    {ORTH: "Nov.", NORM: "November"},
+    {ORTH: "Dec.", NORM: "December"},
+    {ORTH: "Mån.", NORM: "Måndag"},
+    {ORTH: "Tis.", NORM: "Tisdag"},
+    {ORTH: "Ons.", NORM: "Onsdag"},
+    {ORTH: "Tors.", NORM: "Torsdag"},
+    {ORTH: "Fre.", NORM: "Fredag"},
+    {ORTH: "Lör.", NORM: "Lördag"},
+    {ORTH: "sthlm", NORM: "Stockholm"},
+    {ORTH: "gbg", NORM: "Göteborg"},
 ]:
     _exc[exc_data[ORTH]] = [exc_data]
 
@@ -155,6 +151,6 @@ for orth in ABBREVIATIONS:
 # Sentences ending in "i." (as in "... peka i."), "m." (as in "...än 2000 m."),
 # should be tokenized as two separate tokens.
 for orth in ["i", "m"]:
-    _exc[orth + "."] = [{ORTH: orth, LEMMA: orth, NORM: orth}, {ORTH: "."}]
+    _exc[orth + "."] = [{ORTH: orth, NORM: orth}, {ORTH: "."}]
 
-TOKENIZER_EXCEPTIONS = _exc
+TOKENIZER_EXCEPTIONS = update_exc(BASE_EXCEPTIONS, _exc)

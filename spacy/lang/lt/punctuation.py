@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 from ..char_classes import LIST_ICONS, LIST_ELLIPSES
 from ..char_classes import CONCAT_QUOTES, ALPHA_LOWER, ALPHA_UPPER, ALPHA
 from ..char_classes import HYPHENS
@@ -22,7 +19,7 @@ _infixes = (
 )
 
 
-_suffixes = ["\."] + list(TOKENIZER_SUFFIXES)
+_suffixes = [r"\."] + list(TOKENIZER_SUFFIXES)
 
 
 TOKENIZER_INFIXES = _infixes
