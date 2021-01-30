@@ -22,6 +22,7 @@ def package_cli(
     name: Optional[str] = Opt(None, "--name", "-n", help="Package name to override meta"),
     version: Optional[str] = Opt(None, "--version", "-v", help="Package version to override meta"),
     no_sdist: bool = Opt(False, "--no-sdist", "-NS", help="Don't build .tar.gz sdist, can be set if you want to run this step manually"),
+    wheel: bool = Opt(False, "--wheel", "-W", help="Build a binary .whl instead of a .tar.gz archive for more efficient installation (requires wheel to be installed)"),
     force: bool = Opt(False, "--force", "-f", "-F", help="Force overwriting existing data in output directory"),
     # fmt: on
 ):
@@ -53,7 +54,8 @@ def package_cli(
         name=name,
         version=version,
         create_meta=create_meta,
-        create_sdist=not no_sdist,
+        create_sdist=not no_sdist and not wheel,
+        create_wheel=wheel,
         force=force,
         silent=False,
     )
@@ -68,6 +70,7 @@ def package(
     version: Optional[str] = None,
     create_meta: bool = False,
     create_sdist: bool = True,
+    create_wheel: bool = False,
     force: bool = False,
     silent: bool = True,
 ) -> None:
@@ -75,6 +78,9 @@ def package(
     input_path = util.ensure_path(input_dir)
     output_path = util.ensure_path(output_dir)
     meta_path = util.ensure_path(meta_path)
+    if create_wheel and not has_wheel():
+        err = "Generating a binary .whl file requires wheel to be installed"
+        msg.fail(err, "pip install wheel", exits=1)
     if not input_path or not input_path.exists():
         msg.fail("Can't locate pipeline data", input_path, exits=1)
     if not output_path or not output_path.exists():
@@ -143,6 +149,20 @@ def package(
             util.run_command([sys.executable, "setup.py", "sdist"], capture=False)
         zip_file = main_path / "dist" / f"{model_name_v}.tar.gz"
         msg.good(f"Successfully created zipped Python package", zip_file)
+    if create_wheel:
+        with util.working_dir(main_path):
+            util.run_command([sys.executable, "setup.py", "bdist_wheel"], capture=False)
+        wheel = main_path / "dist" / f"{model_name_v}-py3-none-any.whl"
+        msg.good(f"Successfully created binary wheel", wheel)
+
+
+def has_wheel() -> bool:
+    try:
+        import wheel  # noqa: F401
+
+        return True
+    except ImportError:
+        return False
 
 
 def create_file(file_path: Path, contents: str) -> None:

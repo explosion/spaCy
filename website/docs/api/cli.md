@@ -901,7 +901,8 @@ copied into the package and imported in the `__init__.py`. If the path to a
 [`meta.json`](/api/data-formats#meta) is supplied, or a `meta.json` is found in
 the input directory, this file is used. Otherwise, the data can be entered
 directly from the command line. spaCy will then create a `.tar.gz` archive file
-that you can distribute and install with `pip install`.
+that you can distribute and install with `pip install`. Alternatively, you can
+also set `--wheel` to build a binary `.whl` file instead.
 
 <Infobox title="New in v3.0" variant="warning">
 
@@ -930,7 +931,8 @@ $ python -m spacy package [input_dir] [output_dir] [--code] [--meta-path] [--cre
 | `--code`, `-c` <Tag variant="new">3</Tag>        | Comma-separated paths to Python files to be included in the package and imported in its `__init__.py`. This allows including [registering functions](/usage/training#custom-functions) and [custom components](/usage/processing-pipelines#custom-components). ~~Optional[str] \(option)~~ |
 | `--meta-path`, `-m` <Tag variant="new">2</Tag>   | Path to [`meta.json`](/api/data-formats#meta) file (optional). ~~Optional[Path] \(option)~~                                                                                                                                                                                                |
 | `--create-meta`, `-C` <Tag variant="new">2</Tag> | Create a `meta.json` file on the command line, even if one already exists in the directory. If an existing file is found, its entries will be shown as the defaults in the command line prompt. ~~bool (flag)~~                                                                            |
-| `--no-sdist`, `-NS`,                             | Don't build the `.tar.gz` sdist automatically. Can be set if you want to run this step manually. ~~bool (flag)~~                                                                                                                                                                           |
+| `--no-sdist`, `-NS` <Tag variant="new">3</Tag>   | Don't build the `.tar.gz` sdist automatically. Can be set if you want to run this step manually. ~~bool (flag)~~                                                                                                                                                                           |
+| `--wheel`, `-W` <Tag variant="new">3</Tag>       | Build a binary wheel instead of the sdist for more efficient installation. Requires the [`wheel`](https://pypi.org/project/wheel/) extension for `setuptools` to be installed. ~~bool (flag)~~                                                                                             |
 | `--name`, `-n` <Tag variant="new">3</Tag>        | Package name to override in meta. ~~Optional[str] \(option)~~                                                                                                                                                                                                                              |
 | `--version`, `-v` <Tag variant="new">3</Tag>     | Package version to override in meta. Useful when training new versions, as it doesn't require editing the meta template. ~~Optional[str] \(option)~~                                                                                                                                       |
 | `--force`, `-f`                                  | Force overwriting of existing folder in output directory. ~~bool (flag)~~                                                                                                                                                                                                                  |
