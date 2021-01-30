@@ -1686,7 +1686,10 @@ class Language:
         return nlp
 
     def replace_listeners(
-        self, tok2vec_name: str, pipe_name: str, listeners: Iterable[str],
+        self,
+        tok2vec_name: str,
+        pipe_name: str,
+        listeners: Iterable[str],
     ) -> None:
         """Find listener layers (connecting to a token-to-vector embedding
         component) of a given pipeline component model and replace

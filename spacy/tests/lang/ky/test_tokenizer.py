@@ -18,9 +18,7 @@ PUNC_INSIDE_WORDS_TESTS = [
     ('То"кой', 'То " кой'.split()),
 ]
 
-MIXED_ORDINAL_NUMS_TESTS = [
-    ("Эртең 22-январь...", "Эртең 22 - январь ...".split())
-]
+MIXED_ORDINAL_NUMS_TESTS = [("Эртең 22-январь...", "Эртең 22 - январь ...".split())]
 
 ABBREV_TESTS = [
     ("Маселе б-ча эртең келет", "Маселе б-ча эртең келет".split()),

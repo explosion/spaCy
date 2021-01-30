@@ -1,10 +1,9 @@
-import srsly
-from thinc.api import Config
 from typing import Dict, Any
+import srsly
+
 from ..language import Language
 from ..matcher import Matcher
 from ..tokens import Doc
-from ..util import filter_spans
 from .. import util
 
 
@@ -64,7 +63,7 @@ def merge_subtokens(doc: Doc, label: str = "subtok") -> Doc:
     merger = Matcher(doc.vocab)
     merger.add("SUBTOK", [[{"DEP": label, "op": "+"}]])
     matches = merger(doc)
-    spans = filter_spans([doc[start : end + 1] for _, start, end in matches])
+    spans = util.filter_spans([doc[start : end + 1] for _, start, end in matches])
     with doc.retokenize() as retokenizer:
         for span in spans:
             retokenizer.merge(span)
@@ -77,15 +76,9 @@ def merge_subtokens(doc: Doc, label: str = "subtok") -> Doc:
     retokenizes=True,
 )
 def make_token_splitter(
-    nlp: Language,
-    name: str,
-    *,
-    min_length=0,
-    split_length=0,
+    nlp: Language, name: str, *, min_length=0, split_length=0,
 ):
-    return TokenSplitter(
-        min_length=min_length, split_length=split_length
-    )
+    return TokenSplitter(min_length=min_length, split_length=split_length)
 
 
 class TokenSplitter:

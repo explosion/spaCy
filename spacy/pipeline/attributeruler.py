@@ -135,7 +135,6 @@ class AttributeRuler(Pipe):
                 ) from None
             set_token_attrs(span[index], attrs)
 
-
     def load_from_tag_map(
         self, tag_map: Dict[str, Dict[Union[int, str], Union[int, str]]]
     ) -> None:

@@ -1,5 +1,4 @@
-from typing import Optional, List, Dict, Any, Callable, Iterable, Iterator, Union
-from typing import Tuple
+from typing import Optional, List, Dict, Any, Callable, Iterable, Union, Tuple
 from thinc.api import Model
 from pathlib import Path
 

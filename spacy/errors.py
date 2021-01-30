@@ -78,7 +78,7 @@ class Warnings:
     W035 = ('Discarding subpattern "{pattern}" due to an unrecognized '
             "attribute or operator.")
 
-    # TODO: fix numbering after merging develop into master
+    # New warnings added in v3.x
     W086 = ("Component '{listener}' will be (re)trained, but it needs the component "
             "'{name}' which is frozen. You can either freeze both, or neither "
             "of the two. If you're sourcing the component from "
@@ -483,8 +483,9 @@ class Errors:
     E199 = ("Unable to merge 0-length span at `doc[{start}:{end}]`.")
     E200 = ("Can't yet set {attr} from Span. Vote for this feature on the "
             "issue tracker: http://github.com/explosion/spaCy/issues")
+    E202 = ("Unsupported alignment mode '{mode}'. Supported modes: {modes}.")
 
-    # TODO: fix numbering after merging develop into master
+    # New errors added in v3.x
     E886 = ("Can't replace {name} -> {tok2vec} listeners: path '{path}' not "
             "found in config for component '{name}'.")
     E887 = ("Can't replace {name} -> {tok2vec} listeners: the paths to replace "

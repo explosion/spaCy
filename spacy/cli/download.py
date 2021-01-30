@@ -105,8 +105,6 @@ def download_model(
     filename: str, user_pip_args: Optional[Sequence[str]] = None
 ) -> None:
     download_url = about.__download_url__ + "/" + filename
-    pip_args = ["--no-cache-dir"]
-    if user_pip_args:
-        pip_args.extend(user_pip_args)
+    pip_args = user_pip_args if user_pip_args is not None else []
     cmd = [sys.executable, "-m", "pip", "install"] + pip_args + [download_url]
     run_command(cmd)

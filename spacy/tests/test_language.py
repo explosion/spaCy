@@ -186,6 +186,7 @@ def test_language_pipe_error_handler():
 
 def test_language_pipe_error_handler_custom(en_vocab):
     """Test the error handling of a custom component that has no pipe method"""
+
     @Language.component("my_evil_component")
     def evil_component(doc):
         if "2" in doc.text:
@@ -194,6 +195,7 @@ def test_language_pipe_error_handler_custom(en_vocab):
 
     def warn_error(proc_name, proc, docs, e):
         from spacy.util import logger
+
         logger.warning(f"Trouble with component {proc_name}.")
 
     nlp = English()
@@ -217,6 +219,7 @@ def test_language_pipe_error_handler_custom(en_vocab):
 
 def test_language_pipe_error_handler_pipe(en_vocab):
     """Test the error handling of a component's pipe method"""
+
     @Language.component("my_sentences")
     def perhaps_set_sentences(doc):
         if not doc.text.startswith("4"):

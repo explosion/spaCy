@@ -2,7 +2,6 @@ import pytest
 import pickle
 import re
 import copy
-import logging
 from mock import Mock
 from spacy.matcher import DependencyMatcher
 from spacy.tokens import Doc
@@ -343,6 +342,5 @@ def test_dependency_matcher_long_matches(en_vocab, doc):
     ]
 
     matcher = DependencyMatcher(en_vocab)
-    logger = logging.getLogger("spacy")
     with pytest.raises(ValueError):
         matcher.add("pattern", [pattern])
