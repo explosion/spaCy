@@ -483,6 +483,7 @@ class Errors:
     E199 = ("Unable to merge 0-length span at `doc[{start}:{end}]`.")
     E200 = ("Can't yet set {attr} from Span. Vote for this feature on the "
             "issue tracker: http://github.com/explosion/spaCy/issues")
+    E202 = ("Unsupported alignment mode '{mode}'. Supported modes: {modes}.")
 
     # TODO: fix numbering after merging develop into master
     E886 = ("Can't replace {name} -> {tok2vec} listeners: path '{path}' not "

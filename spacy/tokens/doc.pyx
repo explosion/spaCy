@@ -525,8 +525,9 @@ cdef class Doc:
             label = self.vocab.strings.add(label)
         if not isinstance(kb_id, int):
             kb_id = self.vocab.strings.add(kb_id)
-        if alignment_mode not in ("strict", "contract", "expand"):
-            alignment_mode = "strict"
+        alignment_modes = ("strict", "contract", "expand")
+        if alignment_mode not in alignment_modes:
+            raise ValueError(Errors.E202.format(mode=alignment_mode, modes=", ".join(alignment_modes)))
         cdef int start = token_by_char(self.c, self.length, start_idx)
         if start < 0 or (alignment_mode == "strict" and start_idx != self[start].idx):
             return None
