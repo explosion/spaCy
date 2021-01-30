@@ -5,6 +5,8 @@ trigger:
       - "*"
     exclude:
       - "spacy.io"
+      - "nightly.spacy.io"
+      - "v2.spacy.io"
   paths:
     exclude:
       - "website/*"
