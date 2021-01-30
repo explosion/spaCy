@@ -900,19 +900,21 @@ registered functions like
 copied into the package and imported in the `__init__.py`. If the path to a
 [`meta.json`](/api/data-formats#meta) is supplied, or a `meta.json` is found in
 the input directory, this file is used. Otherwise, the data can be entered
-directly from the command line. spaCy will then create a `.tar.gz` archive file
-that you can distribute and install with `pip install`.
+directly from the command line. spaCy will then create a build artifact that you
+can distribute and install with `pip install`.
 
 <Infobox title="New in v3.0" variant="warning">
 
 The `spacy package` command now also builds the `.tar.gz` archive automatically,
 so you don't have to run `python setup.py sdist` separately anymore. To disable
-this, you can set the `--no-sdist` flag.
+this, you can set `--build none`. You can also choose to build a binary wheel
+(which installs more efficiently) by setting `--build wheel`, or to build both
+the sdist and wheel by setting `--build sdist,wheel`.
 
 </Infobox>
 
 ```cli
-$ python -m spacy package [input_dir] [output_dir] [--code] [--meta-path] [--create-meta] [--no-sdist] [--name] [--version] [--force]
+$ python -m spacy package [input_dir] [output_dir] [--code] [--meta-path] [--create-meta] [--build] [--name] [--version] [--force]
 ```
 
 > #### Example
@@ -923,19 +925,19 @@ $ python -m spacy package [input_dir] [output_dir] [--code] [--meta-path] [--cre
 > $ pip install dist/en_pipeline-0.0.0.tar.gz
 > ```
 
-| Name                                             | Description                                                                                                                                                                                                                                                                                |
-| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `input_dir`                                      | Path to directory containing pipeline data. ~~Path (positional)~~                                                                                                                                                                                                                          |
-| `output_dir`                                     | Directory to create package folder in. ~~Path (positional)~~                                                                                                                                                                                                                               |
-| `--code`, `-c` <Tag variant="new">3</Tag>        | Comma-separated paths to Python files to be included in the package and imported in its `__init__.py`. This allows including [registering functions](/usage/training#custom-functions) and [custom components](/usage/processing-pipelines#custom-components). ~~Optional[str] \(option)~~ |
-| `--meta-path`, `-m` <Tag variant="new">2</Tag>   | Path to [`meta.json`](/api/data-formats#meta) file (optional). ~~Optional[Path] \(option)~~                                                                                                                                                                                                |
-| `--create-meta`, `-C` <Tag variant="new">2</Tag> | Create a `meta.json` file on the command line, even if one already exists in the directory. If an existing file is found, its entries will be shown as the defaults in the command line prompt. ~~bool (flag)~~                                                                            |
-| `--no-sdist`, `-NS`,                             | Don't build the `.tar.gz` sdist automatically. Can be set if you want to run this step manually. ~~bool (flag)~~                                                                                                                                                                           |
-| `--name`, `-n` <Tag variant="new">3</Tag>        | Package name to override in meta. ~~Optional[str] \(option)~~                                                                                                                                                                                                                              |
-| `--version`, `-v` <Tag variant="new">3</Tag>     | Package version to override in meta. Useful when training new versions, as it doesn't require editing the meta template. ~~Optional[str] \(option)~~                                                                                                                                       |
-| `--force`, `-f`                                  | Force overwriting of existing folder in output directory. ~~bool (flag)~~                                                                                                                                                                                                                  |
-| `--help`, `-h`                                   | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                                                                                                                 |
-| **CREATES**                                      | A Python package containing the spaCy pipeline.                                                                                                                                                                                                                                            |
+| Name                                             | Description                                                                                                                                                                                                                                                                      |
+| ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `input_dir`                                      | Path to directory containing pipeline data. ~~Path (positional)~~                                                                                                                                                                                                                |
+| `output_dir`                                     | Directory to create package folder in. ~~Path (positional)~~                                                                                                                                                                                                                     |
+| `--code`, `-c` <Tag variant="new">3</Tag>        | Comma-separated paths to Python files to be included in the package and imported in its `__init__.py`. This allows including [registering functions](/usage/training#custom-functions) and [custom components](/usage/processing-pipelines#custom-components). ~~str (option)~~  |
+| `--meta-path`, `-m` <Tag variant="new">2</Tag>   | Path to [`meta.json`](/api/data-formats#meta) file (optional). ~~Optional[Path] \(option)~~                                                                                                                                                                                      |
+| `--create-meta`, `-C` <Tag variant="new">2</Tag> | Create a `meta.json` file on the command line, even if one already exists in the directory. If an existing file is found, its entries will be shown as the defaults in the command line prompt. ~~bool (flag)~~                                                                  |
+| `--build`, `-b` <Tag variant="new">3</Tag>       | Comma-separated artifact formats to build. Can be `sdist` (for a `.tar.gz` archive) and/or `wheel` (for a binary `.whl` file), or `none` if you want to run this step manually. The generated artifacts can be installed by `pip install`. Defaults to `sdist`. ~~str (option)~~ |
+| `--name`, `-n` <Tag variant="new">3</Tag>        | Package name to override in meta. ~~Optional[str] \(option)~~                                                                                                                                                                                                                    |
+| `--version`, `-v` <Tag variant="new">3</Tag>     | Package version to override in meta. Useful when training new versions, as it doesn't require editing the meta template. ~~Optional[str] \(option)~~                                                                                                                             |
+| `--force`, `-f`                                  | Force overwriting of existing folder in output directory. ~~bool (flag)~~                                                                                                                                                                                                        |
+| `--help`, `-h`                                   | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                                                                                                       |
+| **CREATES**                                      | A Python package containing the spaCy pipeline.                                                                                                                                                                                                                                  |
 
 ## project {#project new="3"}
 

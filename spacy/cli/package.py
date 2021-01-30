@@ -1,11 +1,11 @@
-from typing import Optional, Union, Any, Dict, List
+from typing import Optional, Union, Any, Dict, List, Tuple
 import shutil
 from pathlib import Path
 from wasabi import Printer, get_raw_input
 import srsly
 import sys
 
-from ._util import app, Arg, Opt
+from ._util import app, Arg, Opt, string_to_list
 from ..schemas import validate, ModelMetaSchema
 from .. import util
 from .. import about
@@ -16,12 +16,12 @@ def package_cli(
     # fmt: off
     input_dir: Path = Arg(..., help="Directory with pipeline data", exists=True, file_okay=False),
     output_dir: Path = Arg(..., help="Output parent directory", exists=True, file_okay=False),
-    code_paths: Optional[str] = Opt(None, "--code", "-c", help="Comma-separated paths to Python file with additional code (registered functions) to be included in the package"),
+    code_paths: str = Opt("", "--code", "-c", help="Comma-separated paths to Python file with additional code (registered functions) to be included in the package"),
     meta_path: Optional[Path] = Opt(None, "--meta-path", "--meta", "-m", help="Path to meta.json", exists=True, dir_okay=False),
     create_meta: bool = Opt(False, "--create-meta", "-c", "-C", help="Create meta.json, even if one exists"),
     name: Optional[str] = Opt(None, "--name", "-n", help="Package name to override meta"),
     version: Optional[str] = Opt(None, "--version", "-v", help="Package version to override meta"),
-    no_sdist: bool = Opt(False, "--no-sdist", "-NS", help="Don't build .tar.gz sdist, can be set if you want to run this step manually"),
+    build: str = Opt("sdist", "--build", "-b", help="Comma-separated formats to build: sdist and/or wheel, or none."),
     force: bool = Opt(False, "--force", "-f", "-F", help="Force overwriting existing data in output directory"),
     # fmt: on
 ):
@@ -40,11 +40,8 @@ def package_cli(
 
     DOCS: https://nightly.spacy.io/api/cli#package
     """
-    code_paths = (
-        [Path(p.strip()) for p in code_paths.split(",")]
-        if code_paths is not None
-        else []
-    )
+    create_sdist, create_wheel = get_build_formats(string_to_list(build))
+    code_paths = [Path(p.strip()) for p in string_to_list(code_paths)]
     package(
         input_dir,
         output_dir,
@@ -53,7 +50,8 @@ def package_cli(
         name=name,
         version=version,
         create_meta=create_meta,
-        create_sdist=not no_sdist,
+        create_sdist=create_sdist,
+        create_wheel=create_wheel,
         force=force,
         silent=False,
     )
@@ -68,6 +66,7 @@ def package(
     version: Optional[str] = None,
     create_meta: bool = False,
     create_sdist: bool = True,
+    create_wheel: bool = False,
     force: bool = False,
     silent: bool = True,
 ) -> None:
@@ -75,10 +74,16 @@ def package(
     input_path = util.ensure_path(input_dir)
     output_path = util.ensure_path(output_dir)
     meta_path = util.ensure_path(meta_path)
+    if create_wheel and not has_wheel():
+        err = "Generating a binary .whl file requires wheel to be installed"
+        msg.fail(err, "pip install wheel", exits=1)
     if not input_path or not input_path.exists():
         msg.fail("Can't locate pipeline data", input_path, exits=1)
     if not output_path or not output_path.exists():
         msg.fail("Output directory not found", output_path, exits=1)
+    if create_sdist or create_wheel:
+        opts = ["sdist" if create_sdist else "", "wheel" if create_wheel else ""]
+        msg.info(f"Building package artifacts: {', '.join(opt for opt in opts if opt)}")
     for code_path in code_paths:
         if not code_path.exists():
             msg.fail("Can't find code file", code_path, exits=1)
@@ -143,6 +148,32 @@ def package(
             util.run_command([sys.executable, "setup.py", "sdist"], capture=False)
         zip_file = main_path / "dist" / f"{model_name_v}.tar.gz"
         msg.good(f"Successfully created zipped Python package", zip_file)
+    if create_wheel:
+        with util.working_dir(main_path):
+            util.run_command([sys.executable, "setup.py", "bdist_wheel"], capture=False)
+        wheel = main_path / "dist" / f"{model_name_v}-py3-none-any.whl"
+        msg.good(f"Successfully created binary wheel", wheel)
+
+
+def has_wheel() -> bool:
+    try:
+        import wheel  # noqa: F401
+
+        return True
+    except ImportError:
+        return False
+
+
+def get_build_formats(formats: List[str]) -> Tuple[bool, bool]:
+    supported = ["sdist", "wheel", "none"]
+    for form in formats:
+        if form not in supported:
+            msg = Printer()
+            err = f"Unknown build format: {form}. Supported: {', '.join(supported)}"
+            msg.fail(err, exits=1)
+    if not formats or "none" in formats:
+        return (False, False)
+    return ("sdist" in formats, "wheel" in formats)
 
 
 def create_file(file_path: Path, contents: str) -> None:
