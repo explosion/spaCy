@@ -4,7 +4,7 @@
     "slogan": "Industrial-strength Natural Language Processing in Python",
     "siteUrl": "https://spacy.io",
     "domain": "spacy.io",
-    "legacy": false,
+    "legacy": true,
     "email": "contact@explosion.ai",
     "company": "Explosion AI",
     "companyUrl": "https://explosion.ai",
