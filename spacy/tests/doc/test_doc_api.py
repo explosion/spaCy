@@ -641,7 +641,8 @@ def test_doc_noun_chunks_not_implemented():
     nlp = MultiLanguage()
     doc = nlp(text)
     with pytest.raises(NotImplementedError):
-        chunks = list(doc.noun_chunks)
+        _ = list(doc.noun_chunks)  # noqa: F841
+
 
 def test_span_groups(en_tokenizer):
     doc = en_tokenizer("Some text about Colombia and the Czech Republic")

@@ -217,7 +217,6 @@ class EntityLinker(TrainablePipe):
             return losses
         validate_examples(examples, "EntityLinker.update")
         sentence_docs = []
-        docs = [eg.predicted for eg in examples]
         for eg in examples:
             sentences = [s for s in eg.reference.sents]
             kb_ids = eg.get_aligned("ENT_KB_ID", as_string=True)

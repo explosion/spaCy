@@ -47,6 +47,7 @@ for exc_data in [  # "etc." abbreviations
     {ORTH: "көч.", NORM: "көчөсү"},
     {ORTH: "м-н", NORM: "менен"},
     {ORTH: "б-ча", NORM: "боюнча"},
-]:    _exc[exc_data[ORTH]] = [exc_data]
+]:
+    _exc[exc_data[ORTH]] = [exc_data]
 
 TOKENIZER_EXCEPTIONS = update_exc(BASE_EXCEPTIONS, _exc)

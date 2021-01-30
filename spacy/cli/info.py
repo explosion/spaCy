@@ -105,12 +105,15 @@ def info_model(model: str, *, silent: bool = True) -> Dict[str, Any]:
 
 
 def get_markdown(
-    data: Dict[str, Any], title: Optional[str] = None, exclude: Optional[List[str]] = None
+    data: Dict[str, Any],
+    title: Optional[str] = None,
+    exclude: Optional[List[str]] = None,
 ) -> str:
     """Get data in GitHub-flavoured Markdown format for issues etc.
 
-    data (dict or list of tuples): Label/value pairs.
-    title (str / None): Title, will be rendered as headline 2.
+    data (Dict[str, Any]): Label/value pairs.
+    title (str): Optional title, will be rendered as headline 2.
+    exclude (List[str]): Names of keys to exclude.
     RETURNS (str): The Markdown string.
     """
     md = MarkdownRenderer()

@@ -322,4 +322,4 @@ def test_phrase_matcher_deprecated(en_vocab):
 
 @pytest.mark.parametrize("attr", ["SENT_START", "IS_SENT_START"])
 def test_phrase_matcher_sent_start(en_vocab, attr):
-    matcher = PhraseMatcher(en_vocab, attr=attr)
+    _ = PhraseMatcher(en_vocab, attr=attr)  # noqa: F841
