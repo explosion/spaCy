@@ -13,13 +13,6 @@ spaCy is compatible with **64-bit CPython 2.7 / 3.5+** and runs on
 available over [pip](https://pypi.python.org/pypi/spacy) and
 [conda](https://anaconda.org/conda-forge/spacy).
 
-> #### 📖 Looking for the old docs?
->
-> To help you make the transition from v1.x to v2.0, we've uploaded the old
-> website to [**legacy.spacy.io**](https://legacy.spacy.io/docs). Wherever
-> possible, the new docs also include notes on features that have changed in
-> v2.0, and features that were introduced in the new version.
-
 ## Quickstart {hidden="true"}
 
 import QuickstartInstall from 'widgets/quickstart-install.js'

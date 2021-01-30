@@ -31,7 +31,7 @@ const Docs = ({ pageContext, children }) => (
                 theme,
                 version,
             } = pageContext
-            const { sidebars = [], modelsRepo, languages } = site.siteMetadata
+            const { sidebars = [], modelsRepo, languages, legacy } = site.siteMetadata
             const isModels = section === 'models'
             const sidebar = pageContext.sidebar
                 ? { items: pageContext.sidebar }
@@ -83,7 +83,7 @@ const Docs = ({ pageContext, children }) => (
                     {sidebar && <Sidebar items={sidebar.items} pageMenu={pageMenu} slug={slug} />}
                     <Main
                         section={section}
-                        theme={theme}
+                        theme={legacy ? 'legacy' : theme}
                         sidebar
                         asides
                         wrapContent
@@ -140,6 +140,7 @@ const query = graphql`
             siteMetadata {
                 repo
                 modelsRepo
+                legacy
                 languages {
                     code
                     name
