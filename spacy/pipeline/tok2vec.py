@@ -55,7 +55,7 @@ class Tok2Vec(TrainablePipe):
             a list of Doc objects as input, and output a list of 2d float arrays.
         name (str): The component instance name.
 
-        DOCS: https://nightly.spacy.io/api/tok2vec#init
+        DOCS: https://spacy.io/api/tok2vec#init
         """
         self.vocab = vocab
         self.model = model
@@ -115,7 +115,7 @@ class Tok2Vec(TrainablePipe):
         docs (Iterable[Doc]): The documents to predict.
         RETURNS: Vector representations for each token in the documents.
 
-        DOCS: https://nightly.spacy.io/api/tok2vec#predict
+        DOCS: https://spacy.io/api/tok2vec#predict
         """
         tokvecs = self.model.predict(docs)
         batch_id = Tok2VecListener.get_batch_id(docs)
@@ -129,7 +129,7 @@ class Tok2Vec(TrainablePipe):
         docs (Iterable[Doc]): The documents to modify.
         tokvecses: The tensors to set, produced by Tok2Vec.predict.
 
-        DOCS: https://nightly.spacy.io/api/tok2vec#set_annotations
+        DOCS: https://spacy.io/api/tok2vec#set_annotations
         """
         for doc, tokvecs in zip(docs, tokvecses):
             assert tokvecs.shape[0] == len(doc)
@@ -153,7 +153,7 @@ class Tok2Vec(TrainablePipe):
             Updated using the component name as the key.
         RETURNS (Dict[str, float]): The updated losses dictionary.
 
-        DOCS: https://nightly.spacy.io/api/tok2vec#update
+        DOCS: https://spacy.io/api/tok2vec#update
         """
         if losses is None:
             losses = {}
@@ -204,7 +204,7 @@ class Tok2Vec(TrainablePipe):
             returns a representative sample of gold-standard Example objects.
         nlp (Language): The current nlp object the component is part of.
 
-        DOCS: https://nightly.spacy.io/api/tok2vec#initialize
+        DOCS: https://spacy.io/api/tok2vec#initialize
         """
         validate_get_examples(get_examples, "Tok2Vec.initialize")
         doc_sample = []

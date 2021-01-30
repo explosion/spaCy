@@ -22,7 +22,7 @@ def project_assets_cli(
     provided in the project.yml, the file is only downloaded if no local file
     with the same checksum exists.
 
-    DOCS: https://nightly.spacy.io/api/cli#project-assets
+    DOCS: https://spacy.io/api/cli#project-assets
     """
     project_assets(project_dir, sparse_checkout=sparse_checkout)
 

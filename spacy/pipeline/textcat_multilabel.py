@@ -104,7 +104,7 @@ def make_multilabel_textcat(
 class MultiLabel_TextCategorizer(TextCategorizer):
     """Pipeline component for multi-label text classification.
 
-    DOCS: https://nightly.spacy.io/api/multilabel_textcategorizer
+    DOCS: https://spacy.io/api/multilabel_textcategorizer
     """
 
     def __init__(
@@ -123,7 +123,7 @@ class MultiLabel_TextCategorizer(TextCategorizer):
             losses during training.
         threshold (float): Cutoff to consider a prediction "positive".
 
-        DOCS: https://nightly.spacy.io/api/multilabel_textcategorizer#init
+        DOCS: https://spacy.io/api/multilabel_textcategorizer#init
         """
         self.vocab = vocab
         self.model = model
@@ -149,7 +149,7 @@ class MultiLabel_TextCategorizer(TextCategorizer):
             `init labels` command. If no labels are provided, the get_examples
             callback is used to extract the labels from the data.
 
-        DOCS: https://nightly.spacy.io/api/multilabel_textcategorizer#initialize
+        DOCS: https://spacy.io/api/multilabel_textcategorizer#initialize
         """
         validate_get_examples(get_examples, "MultiLabel_TextCategorizer.initialize")
         if labels is None:
@@ -173,7 +173,7 @@ class MultiLabel_TextCategorizer(TextCategorizer):
         examples (Iterable[Example]): The examples to score.
         RETURNS (Dict[str, Any]): The scores, produced by Scorer.score_cats.
 
-        DOCS: https://nightly.spacy.io/api/multilabel_textcategorizer#score
+        DOCS: https://spacy.io/api/multilabel_textcategorizer#score
         """
         validate_examples(examples, "MultiLabel_TextCategorizer.score")
         return Scorer.score_cats(

@@ -75,7 +75,7 @@ class Morphologizer(Tagger):
         name (str): The component instance name, used to add entries to the
             losses during training.
 
-        DOCS: https://nightly.spacy.io/api/morphologizer#init
+        DOCS: https://spacy.io/api/morphologizer#init
         """
         self.vocab = vocab
         self.model = model
@@ -104,7 +104,7 @@ class Morphologizer(Tagger):
         label (str): The label to add.
         RETURNS (int): 0 if label is already present, otherwise 1.
 
-        DOCS: https://nightly.spacy.io/api/morphologizer#add_label
+        DOCS: https://spacy.io/api/morphologizer#add_label
         """
         if not isinstance(label, str):
             raise ValueError(Errors.E187)
@@ -134,7 +134,7 @@ class Morphologizer(Tagger):
             returns a representative sample of gold-standard Example objects.
         nlp (Language): The current nlp object the component is part of.
 
-        DOCS: https://nightly.spacy.io/api/morphologizer#initialize
+        DOCS: https://spacy.io/api/morphologizer#initialize
         """
         validate_get_examples(get_examples, "Morphologizer.initialize")
         if labels is not None:
@@ -185,7 +185,7 @@ class Morphologizer(Tagger):
         docs (Iterable[Doc]): The documents to modify.
         batch_tag_ids: The IDs to set, produced by Morphologizer.predict.
 
-        DOCS: https://nightly.spacy.io/api/morphologizer#set_annotations
+        DOCS: https://spacy.io/api/morphologizer#set_annotations
         """
         if isinstance(docs, Doc):
             docs = [docs]
@@ -208,7 +208,7 @@ class Morphologizer(Tagger):
         scores: Scores representing the model's predictions.
         RETURNS (Tuple[float, float]): The loss and the gradient.
 
-        DOCS: https://nightly.spacy.io/api/morphologizer#get_loss
+        DOCS: https://spacy.io/api/morphologizer#get_loss
         """
         validate_examples(examples, "Morphologizer.get_loss")
         loss_func = SequenceCategoricalCrossentropy(names=self.labels, normalize=False)
@@ -254,7 +254,7 @@ class Morphologizer(Tagger):
             Scorer.score_token_attr for the attributes "pos" and "morph" and
             Scorer.score_token_attr_per_feat for the attribute "morph".
 
-        DOCS: https://nightly.spacy.io/api/morphologizer#score
+        DOCS: https://spacy.io/api/morphologizer#score
         """
         def morph_key_getter(token, attr):
             return getattr(token, attr).key

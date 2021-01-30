@@ -97,7 +97,7 @@ class Corpus:
     augment (Callable[Example, Iterable[Example]]): Optional data augmentation
         function, to extrapolate additional examples from your annotations.
 
-    DOCS: https://nightly.spacy.io/api/corpus
+    DOCS: https://spacy.io/api/corpus
     """
 
     def __init__(
@@ -121,7 +121,7 @@ class Corpus:
         nlp (Language): The current nlp object.
         YIELDS (Example): The examples.
 
-        DOCS: https://nightly.spacy.io/api/corpus#call
+        DOCS: https://spacy.io/api/corpus#call
         """
         ref_docs = self.read_docbin(nlp.vocab, walk_corpus(self.path, FILE_TYPE))
         if self.gold_preproc:
@@ -206,7 +206,7 @@ class JsonlCorpus:
     limit (int): Limit corpus to a subset of examples, e.g. for debugging.
         Defaults to 0, which indicates no limit.
 
-    DOCS: https://nightly.spacy.io/api/corpus#jsonlcorpus
+    DOCS: https://spacy.io/api/corpus#jsonlcorpus
     """
 
     file_type = "jsonl"
@@ -230,7 +230,7 @@ class JsonlCorpus:
         nlp (Language): The current nlp object.
         YIELDS (Example): The example objects.
 
-        DOCS: https://nightly.spacy.io/api/corpus#jsonlcorpus-call
+        DOCS: https://spacy.io/api/corpus#jsonlcorpus-call
         """
         for loc in walk_corpus(self.path, ".jsonl"):
             records = srsly.read_jsonl(loc)

@@ -41,7 +41,7 @@ def init_config_cli(
     optimal settings for your use case. This includes the choice of architecture,
     pretrained weights and related hyperparameters.
 
-    DOCS: https://nightly.spacy.io/api/cli#init-config
+    DOCS: https://spacy.io/api/cli#init-config
     """
     if isinstance(optimize, Optimizations):  # instance of enum from the CLI
         optimize = optimize.value
@@ -78,9 +78,9 @@ def init_fill_config_cli(
     from the default config and will create all objects, check the registered
     functions for their default values and update the base config. This command
     can be used with a config generated via the training quickstart widget:
-    https://nightly.spacy.io/usage/training#quickstart
+    https://spacy.io/usage/training#quickstart
 
-    DOCS: https://nightly.spacy.io/api/cli#init-fill-config
+    DOCS: https://spacy.io/api/cli#init-fill-config
     """
     fill_config(output_file, base_path, pretraining=pretraining, diff=diff)
 

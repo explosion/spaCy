@@ -24,7 +24,7 @@ from .underscore import Underscore, get_ext_args
 cdef class Span:
     """A slice from a Doc object.
 
-    DOCS: https://nightly.spacy.io/api/span
+    DOCS: https://spacy.io/api/span
     """
     @classmethod
     def set_extension(cls, name, **kwargs):
@@ -37,8 +37,8 @@ cdef class Span:
         method (callable): Optional method for method extension.
         force (bool): Force overwriting existing attribute.
 
-        DOCS: https://nightly.spacy.io/api/span#set_extension
-        USAGE: https://nightly.spacy.io/usage/processing-pipelines#custom-components-attributes
+        DOCS: https://spacy.io/api/span#set_extension
+        USAGE: https://spacy.io/usage/processing-pipelines#custom-components-attributes
         """
         if cls.has_extension(name) and not kwargs.get("force", False):
             raise ValueError(Errors.E090.format(name=name, obj="Span"))
@@ -51,7 +51,7 @@ cdef class Span:
         name (str): Name of the extension.
         RETURNS (tuple): A `(default, method, getter, setter)` tuple.
 
-        DOCS: https://nightly.spacy.io/api/span#get_extension
+        DOCS: https://spacy.io/api/span#get_extension
         """
         return Underscore.span_extensions.get(name)
 
@@ -62,7 +62,7 @@ cdef class Span:
         name (str): Name of the extension.
         RETURNS (bool): Whether the extension has been registered.
 
-        DOCS: https://nightly.spacy.io/api/span#has_extension
+        DOCS: https://spacy.io/api/span#has_extension
         """
         return name in Underscore.span_extensions
 
@@ -74,7 +74,7 @@ cdef class Span:
         RETURNS (tuple): A `(default, method, getter, setter)` tuple of the
             removed extension.
 
-        DOCS: https://nightly.spacy.io/api/span#remove_extension
+        DOCS: https://spacy.io/api/span#remove_extension
         """
         if not cls.has_extension(name):
             raise ValueError(Errors.E046.format(name=name))
@@ -92,7 +92,7 @@ cdef class Span:
         vector (ndarray[ndim=1, dtype='float32']): A meaning representation
             of the span.
 
-        DOCS: https://nightly.spacy.io/api/span#init
+        DOCS: https://spacy.io/api/span#init
         """
         if not (0 <= start <= end <= len(doc)):
             raise IndexError(Errors.E035.format(start=start, end=end, length=len(doc)))
@@ -162,7 +162,7 @@ cdef class Span:
 
         RETURNS (int): The number of tokens in the span.
 
-        DOCS: https://nightly.spacy.io/api/span#len
+        DOCS: https://spacy.io/api/span#len
         """
         if self.c.end < self.c.start:
             return 0
@@ -178,7 +178,7 @@ cdef class Span:
             the span to get.
         RETURNS (Token or Span): The token at `span[i]`.
 
-        DOCS: https://nightly.spacy.io/api/span#getitem
+        DOCS: https://spacy.io/api/span#getitem
         """
         if isinstance(i, slice):
             start, end = normalize_slice(len(self), i.start, i.stop, i.step)
@@ -198,7 +198,7 @@ cdef class Span:
 
         YIELDS (Token): A `Token` object.
 
-        DOCS: https://nightly.spacy.io/api/span#iter
+        DOCS: https://spacy.io/api/span#iter
         """
         for i in range(self.c.start, self.c.end):
             yield self.doc[i]
@@ -218,7 +218,7 @@ cdef class Span:
         copy_user_data (bool): Whether or not to copy the original doc's user data.
         RETURNS (Doc): The `Doc` copy of the span.
 
-        DOCS: https://nightly.spacy.io/api/span#as_doc
+        DOCS: https://spacy.io/api/span#as_doc
         """
         words = [t.text for t in self]
         spaces = [bool(t.whitespace_) for t in self]
@@ -291,7 +291,7 @@ cdef class Span:
         RETURNS (np.array[ndim=2, dtype=numpy.int32]): LCA matrix with shape
             (n, n), where n = len(self).
 
-        DOCS: https://nightly.spacy.io/api/span#get_lca_matrix
+        DOCS: https://spacy.io/api/span#get_lca_matrix
         """
         return numpy.asarray(_get_lca_matrix(self.doc, self.c.start, self.c.end))
 
@@ -303,7 +303,7 @@ cdef class Span:
             `Span`, `Token` and `Lexeme` objects.
         RETURNS (float): A scalar similarity score. Higher is more similar.
 
-        DOCS: https://nightly.spacy.io/api/span#similarity
+        DOCS: https://spacy.io/api/span#similarity
         """
         if "similarity" in self.doc.user_span_hooks:
             return self.doc.user_span_hooks["similarity"](self, other)
@@ -385,7 +385,7 @@ cdef class Span:
 
         RETURNS (tuple): Entities in the span, one `Span` per entity.
 
-        DOCS: https://nightly.spacy.io/api/span#ents
+        DOCS: https://spacy.io/api/span#ents
         """
         cdef Span ent
         ents = []
@@ -404,7 +404,7 @@ cdef class Span:
 
         RETURNS (bool): Whether a word vector is associated with the object.
 
-        DOCS: https://nightly.spacy.io/api/span#has_vector
+        DOCS: https://spacy.io/api/span#has_vector
         """
         if "has_vector" in self.doc.user_span_hooks:
             return self.doc.user_span_hooks["has_vector"](self)
@@ -423,7 +423,7 @@ cdef class Span:
         RETURNS (numpy.ndarray[ndim=1, dtype='float32']): A 1D numpy array
             representing the span's semantics.
 
-        DOCS: https://nightly.spacy.io/api/span#vector
+        DOCS: https://spacy.io/api/span#vector
         """
         if "vector" in self.doc.user_span_hooks:
             return self.doc.user_span_hooks["vector"](self)
@@ -437,7 +437,7 @@ cdef class Span:
 
         RETURNS (float): The L2 norm of the vector representation.
 
-        DOCS: https://nightly.spacy.io/api/span#vector_norm
+        DOCS: https://spacy.io/api/span#vector_norm
         """
         if "vector_norm" in self.doc.user_span_hooks:
             return self.doc.user_span_hooks["vector"](self)
@@ -501,7 +501,7 @@ cdef class Span:
 
         YIELDS (Span): Noun chunks in the span.
 
-        DOCS: https://nightly.spacy.io/api/span#noun_chunks
+        DOCS: https://spacy.io/api/span#noun_chunks
         """
         for span in self.doc.noun_chunks:
             if span.start >= self.start and span.end <= self.end:
@@ -515,7 +515,7 @@ cdef class Span:
 
         RETURNS (Token): The root token.
 
-        DOCS: https://nightly.spacy.io/api/span#root
+        DOCS: https://spacy.io/api/span#root
         """
         if "root" in self.doc.user_span_hooks:
             return self.doc.user_span_hooks["root"](self)
@@ -571,7 +571,7 @@ cdef class Span:
 
         RETURNS (tuple): A tuple of Token objects.
 
-        DOCS: https://nightly.spacy.io/api/span#lefts
+        DOCS: https://spacy.io/api/span#lefts
         """
         return self.root.conjuncts
 
@@ -582,7 +582,7 @@ cdef class Span:
 
         YIELDS (Token):A left-child of a token of the span.
 
-        DOCS: https://nightly.spacy.io/api/span#lefts
+        DOCS: https://spacy.io/api/span#lefts
         """
         for token in reversed(self):  # Reverse, so we get tokens in order
             for left in token.lefts:
@@ -596,7 +596,7 @@ cdef class Span:
 
         YIELDS (Token): A right-child of a token of the span.
 
-        DOCS: https://nightly.spacy.io/api/span#rights
+        DOCS: https://spacy.io/api/span#rights
         """
         for token in self:
             for right in token.rights:
@@ -611,7 +611,7 @@ cdef class Span:
         RETURNS (int): The number of leftward immediate children of the
             span, in the syntactic dependency parse.
 
-        DOCS: https://nightly.spacy.io/api/span#n_lefts
+        DOCS: https://spacy.io/api/span#n_lefts
         """
         return len(list(self.lefts))
 
@@ -623,7 +623,7 @@ cdef class Span:
         RETURNS (int): The number of rightward immediate children of the
             span, in the syntactic dependency parse.
 
-        DOCS: https://nightly.spacy.io/api/span#n_rights
+        DOCS: https://spacy.io/api/span#n_rights
         """
         return len(list(self.rights))
 
@@ -633,7 +633,7 @@ cdef class Span:
 
         YIELDS (Token): A token within the span, or a descendant from it.
 
-        DOCS: https://nightly.spacy.io/api/span#subtree
+        DOCS: https://spacy.io/api/span#subtree
         """
         for word in self.lefts:
             yield from word.subtree

@@ -50,7 +50,7 @@ def debug_data_cli(
     useful stats, and can help you find problems like invalid entity annotations,
     cyclic dependencies, low data labels and more.
 
-    DOCS: https://nightly.spacy.io/api/cli#debug-data
+    DOCS: https://spacy.io/api/cli#debug-data
     """
     if ctx.command.name == "debug-data":
         msg.warn(

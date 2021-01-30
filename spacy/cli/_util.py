@@ -29,7 +29,7 @@ COMMAND = "python -m spacy"
 NAME = "spacy"
 HELP = """spaCy Command-line Interface
 
-DOCS: https://nightly.spacy.io/api/cli
+DOCS: https://spacy.io/api/cli
 """
 PROJECT_HELP = f"""Command-line interface for spaCy projects and templates.
 You'd typically start by cloning a project template to a local directory and

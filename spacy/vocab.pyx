@@ -47,7 +47,7 @@ cdef class Vocab:
     instance also provides access to the `StringStore`, and owns underlying
     C-data that is shared between `Doc` objects.
 
-    DOCS: https://nightly.spacy.io/api/vocab
+    DOCS: https://spacy.io/api/vocab
     """
     def __init__(self, lex_attr_getters=None, strings=tuple(), lookups=None,
                  oov_prob=-20., vectors_name=None, writing_system={},
@@ -110,7 +110,7 @@ cdef class Vocab:
             available bit will be chosen.
         RETURNS (int): The integer ID by which the flag value can be checked.
 
-        DOCS: https://nightly.spacy.io/api/vocab#add_flag
+        DOCS: https://spacy.io/api/vocab#add_flag
         """
         if flag_id == -1:
             for bit in range(1, 64):
@@ -202,7 +202,7 @@ cdef class Vocab:
         string (unicode): The ID string.
         RETURNS (bool) Whether the string has an entry in the vocabulary.
 
-        DOCS: https://nightly.spacy.io/api/vocab#contains
+        DOCS: https://spacy.io/api/vocab#contains
         """
         cdef hash_t int_key
         if isinstance(key, bytes):
@@ -219,7 +219,7 @@ cdef class Vocab:
 
         YIELDS (Lexeme): An entry in the vocabulary.
 
-        DOCS: https://nightly.spacy.io/api/vocab#iter
+        DOCS: https://spacy.io/api/vocab#iter
         """
         cdef attr_t key
         cdef size_t addr
@@ -242,7 +242,7 @@ cdef class Vocab:
             >>> apple = nlp.vocab.strings["apple"]
             >>> assert nlp.vocab[apple] == nlp.vocab[u"apple"]
 
-        DOCS: https://nightly.spacy.io/api/vocab#getitem
+        DOCS: https://spacy.io/api/vocab#getitem
         """
         cdef attr_t orth
         if isinstance(id_or_string, unicode):
@@ -310,7 +310,7 @@ cdef class Vocab:
             word was mapped to, and `score` the similarity score between the
             two words.
 
-        DOCS: https://nightly.spacy.io/api/vocab#prune_vectors
+        DOCS: https://spacy.io/api/vocab#prune_vectors
         """
         xp = get_array_module(self.vectors.data)
         # Make sure all vectors are in the vocab
@@ -353,7 +353,7 @@ cdef class Vocab:
             and shape determined by the `vocab.vectors` instance. Usually, a
             numpy ndarray of shape (300,) and dtype float32.
 
-        DOCS: https://nightly.spacy.io/api/vocab#get_vector
+        DOCS: https://spacy.io/api/vocab#get_vector
         """
         if isinstance(orth, str):
             orth = self.strings.add(orth)
@@ -400,7 +400,7 @@ cdef class Vocab:
         orth (int / unicode): The word.
         vector (numpy.ndarray[ndim=1, dtype='float32']): The vector to set.
 
-        DOCS: https://nightly.spacy.io/api/vocab#set_vector
+        DOCS: https://spacy.io/api/vocab#set_vector
         """
         if isinstance(orth, str):
             orth = self.strings.add(orth)
@@ -422,7 +422,7 @@ cdef class Vocab:
         orth (int / unicode): The word.
         RETURNS (bool): Whether the word has a vector.
 
-        DOCS: https://nightly.spacy.io/api/vocab#has_vector
+        DOCS: https://spacy.io/api/vocab#has_vector
         """
         if isinstance(orth, str):
             orth = self.strings.add(orth)
@@ -448,7 +448,7 @@ cdef class Vocab:
             it doesn't exist.
         exclude (list): String names of serialization fields to exclude.
 
-        DOCS: https://nightly.spacy.io/api/vocab#to_disk
+        DOCS: https://spacy.io/api/vocab#to_disk
         """
         path = util.ensure_path(path)
         if not path.exists():
@@ -469,7 +469,7 @@ cdef class Vocab:
         exclude (list): String names of serialization fields to exclude.
         RETURNS (Vocab): The modified `Vocab` object.
 
-        DOCS: https://nightly.spacy.io/api/vocab#to_disk
+        DOCS: https://spacy.io/api/vocab#to_disk
         """
         path = util.ensure_path(path)
         getters = ["strings", "vectors"]
@@ -494,7 +494,7 @@ cdef class Vocab:
         exclude (list): String names of serialization fields to exclude.
         RETURNS (bytes): The serialized form of the `Vocab` object.
 
-        DOCS: https://nightly.spacy.io/api/vocab#to_bytes
+        DOCS: https://spacy.io/api/vocab#to_bytes
         """
         def deserialize_vectors():
             if self.vectors is None:
@@ -516,7 +516,7 @@ cdef class Vocab:
         exclude (list): String names of serialization fields to exclude.
         RETURNS (Vocab): The `Vocab` object.
 
-        DOCS: https://nightly.spacy.io/api/vocab#from_bytes
+        DOCS: https://spacy.io/api/vocab#from_bytes
         """
         def serialize_vectors(b):
             if self.vectors is None:

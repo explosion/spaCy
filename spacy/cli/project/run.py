@@ -28,7 +28,7 @@ def project_run_cli(
     commands define dependencies and/or outputs, they will only be re-run if
     state has changed.
 
-    DOCS: https://nightly.spacy.io/api/cli#project-run
+    DOCS: https://spacy.io/api/cli#project-run
     """
     if show_help or not subcommand:
         print_run_help(project_dir, subcommand)

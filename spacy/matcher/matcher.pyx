@@ -32,8 +32,8 @@ DEF PADDING = 5
 cdef class Matcher:
     """Match sequences of tokens, based on pattern rules.
 
-    DOCS: https://nightly.spacy.io/api/matcher
-    USAGE: https://nightly.spacy.io/usage/rule-based-matching
+    DOCS: https://spacy.io/api/matcher
+    USAGE: https://spacy.io/usage/rule-based-matching
     """
 
     def __init__(self, vocab, validate=True):

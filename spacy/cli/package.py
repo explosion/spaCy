@@ -38,7 +38,7 @@ def package_cli(
     registered functions like pipeline components), they are copied into the
     package and imported in the __init__.py.
 
-    DOCS: https://nightly.spacy.io/api/cli#package
+    DOCS: https://spacy.io/api/cli#package
     """
     create_sdist, create_wheel = get_build_formats(string_to_list(build))
     code_paths = [Path(p.strip()) for p in string_to_list(code_paths)]

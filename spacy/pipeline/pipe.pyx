@@ -16,7 +16,7 @@ cdef class Pipe:
     Trainable pipeline components like the EntityRecognizer or TextCategorizer
     should inherit from the subclass 'TrainablePipe'.
 
-    DOCS: https://nightly.spacy.io/api/pipe
+    DOCS: https://spacy.io/api/pipe
     """
 
     @classmethod
@@ -34,7 +34,7 @@ cdef class Pipe:
         docs (Doc): The Doc to process.
         RETURNS (Doc): The processed Doc.
 
-        DOCS: https://nightly.spacy.io/api/pipe#call
+        DOCS: https://spacy.io/api/pipe#call
         """
         raise NotImplementedError(Errors.E931.format(parent="Pipe", method="__call__", name=self.name))
 
@@ -47,7 +47,7 @@ cdef class Pipe:
         batch_size (int): The number of documents to buffer.
         YIELDS (Doc): Processed documents in order.
 
-        DOCS: https://nightly.spacy.io/api/pipe#pipe
+        DOCS: https://spacy.io/api/pipe#pipe
         """
         error_handler = self.get_error_handler()
         for doc in stream:
@@ -69,7 +69,7 @@ cdef class Pipe:
             returns a representative sample of gold-standard Example objects.
         nlp (Language): The current nlp object the component is part of.
 
-        DOCS: https://nightly.spacy.io/api/pipe#initialize
+        DOCS: https://spacy.io/api/pipe#initialize
         """
         pass
 
@@ -79,7 +79,7 @@ cdef class Pipe:
         examples (Iterable[Example]): The examples to score.
         RETURNS (Dict[str, Any]): The scores.
 
-        DOCS: https://nightly.spacy.io/api/pipe#score
+        DOCS: https://spacy.io/api/pipe#score
         """
         return {}
 
@@ -111,7 +111,7 @@ cdef class Pipe:
             the component's name, the component itself, the offending batch of documents, and the exception
             that was thrown.
 
-        DOCS: https://nightly.spacy.io/api/pipe#set_error_handler
+        DOCS: https://spacy.io/api/pipe#set_error_handler
         """
         self.error_handler = error_handler
 
@@ -120,7 +120,7 @@ cdef class Pipe:
 
         RETURNS (Callable): The error handler, or if it's not set a default function that just reraises.
 
-        DOCS: https://nightly.spacy.io/api/pipe#get_error_handler
+        DOCS: https://spacy.io/api/pipe#get_error_handler
         """
         if hasattr(self, "error_handler"):
             return self.error_handler

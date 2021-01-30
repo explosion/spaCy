@@ -40,7 +40,7 @@ def debug_model_cli(
     Analyze a Thinc model implementation. Includes checks for internal structure
     and activations during training.
 
-    DOCS: https://nightly.spacy.io/api/cli#debug-model
+    DOCS: https://spacy.io/api/cli#debug-model
     """
     setup_gpu(use_gpu)
     layers = string_to_list(layers, intify=True)

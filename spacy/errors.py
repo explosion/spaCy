@@ -20,7 +20,7 @@ class Warnings:
             "generate a dependency visualization for it. Make sure the Doc "
             "was processed with a model that supports dependency parsing, and "
             "not just a language class like `English()`. For more info, see "
-            "the docs:\nhttps://nightly.spacy.io/usage/models")
+            "the docs:\nhttps://spacy.io/usage/models")
     W006 = ("No entities to visualize found in Doc object. If this is "
             "surprising to you, make sure the Doc was processed using a model "
             "that supports named entity recognition, and check the `doc.ents` "
@@ -86,7 +86,7 @@ class Warnings:
             "the config block to replace its token-to-vector listener with a copy "
             "and make it independent. For example, `replace_listeners = "
             "[\"model.tok2vec\"]` See the documentation for details: "
-            "https://nightly.spacy.io/usage/training#config-components-listeners")
+            "https://spacy.io/usage/training#config-components-listeners")
     W087 = ("Component '{name}' will be (re)trained, but the component '{listener}' "
             "depends on it via a listener and is frozen. This means that the "
             "performance of '{listener}' will be degraded. You can either freeze "
@@ -95,12 +95,12 @@ class Warnings:
             "the config block to replace its token-to-vector listener with a copy "
             "and make it independent. For example, `replace_listeners = "
             "[\"model.tok2vec\"]` See the documentation for details: "
-            "https://nightly.spacy.io/usage/training#config-components-listeners")
+            "https://spacy.io/usage/training#config-components-listeners")
     W088 = ("The pipeline component {name} implements a `begin_training` "
             "method, which won't be called by spaCy. As of v3.0, `begin_training` "
             "has been renamed to `initialize`, so you likely want to rename the "
             "component method. See the documentation for details: "
-            "https://nightly.spacy.io/api/language#initialize")
+            "https://spacy.io/api/language#initialize")
     W089 = ("As of spaCy v3.0, the `nlp.begin_training` method has been renamed "
             "to `nlp.initialize`.")
     W090 = ("Could not locate any {format} files in path '{path}'.")
@@ -180,7 +180,7 @@ class Errors:
     E010 = ("Word vectors set to length 0. This may be because you don't have "
             "a model installed or loaded, or because your model doesn't "
             "include word vectors. For more info, see the docs:\n"
-            "https://nightly.spacy.io/usage/models")
+            "https://spacy.io/usage/models")
     E011 = ("Unknown operator: '{op}'. Options: {opts}")
     E012 = ("Cannot add pattern for zero tokens to matcher.\nKey: {key}")
     E016 = ("MultitaskObjective target should be function or one of: dep, "
@@ -211,7 +211,7 @@ class Errors:
     E028 = ("`words` expects a list of unicode strings, but got bytes instance: {value}")
     E029 = ("`noun_chunks` requires the dependency parse, which requires a "
             "statistical model to be installed and loaded. For more info, see "
-            "the documentation:\nhttps://nightly.spacy.io/usage/models")
+            "the documentation:\nhttps://spacy.io/usage/models")
     E030 = ("Sentence boundaries unset. You can add the 'sentencizer' "
             "component to the pipeline with: `nlp.add_pipe('sentencizer')`. "
             "Alternatively, add the dependency parser or sentence recognizer, "
@@ -318,7 +318,7 @@ class Errors:
     E102 = ("Can't merge non-disjoint spans. '{token}' is already part of "
             "tokens to merge. If you want to find the longest non-overlapping "
             "spans, you can use the util.filter_spans helper:\n"
-            "https://nightly.spacy.io/api/top-level#util.filter_spans")
+            "https://spacy.io/api/top-level#util.filter_spans")
     E103 = ("Trying to set conflicting doc.ents: '{span1}' and '{span2}'. A "
             "token can only be part of one entity, so make sure the entities "
             "you're setting don't overlap.")
@@ -536,9 +536,9 @@ class Errors:
             "solve this, remove the existing directories in the output directory.")
     E902 = ("The sentence-per-line IOB/IOB2 file is not formatted correctly. "
             "Try checking whitespace and delimiters. See "
-            "https://nightly.spacy.io/api/cli#convert")
+            "https://spacy.io/api/cli#convert")
     E903 = ("The token-per-line NER file is not formatted correctly. Try checking "
-            "whitespace and delimiters. See https://nightly.spacy.io/api/cli#convert")
+            "whitespace and delimiters. See https://spacy.io/api/cli#convert")
     E904 = ("Cannot initialize StaticVectors layer: nO dimension unset. This "
             "dimension refers to the output width, after the linear projection "
             "has been applied.")

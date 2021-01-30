@@ -44,7 +44,7 @@ cdef class Vectors:
     the table need to be assigned - so len(list(vectors.keys())) may be
     greater or smaller than vectors.shape[0].
 
-    DOCS: https://nightly.spacy.io/api/vectors
+    DOCS: https://spacy.io/api/vectors
     """
     cdef public object name
     cdef public object data
@@ -59,7 +59,7 @@ cdef class Vectors:
         keys (iterable): A sequence of keys, aligned with the data.
         name (str): A name to identify the vectors table.
 
-        DOCS: https://nightly.spacy.io/api/vectors#init
+        DOCS: https://spacy.io/api/vectors#init
         """
         self.name = name
         if data is None:
@@ -83,7 +83,7 @@ cdef class Vectors:
 
         RETURNS (tuple): A `(rows, dims)` pair.
 
-        DOCS: https://nightly.spacy.io/api/vectors#shape
+        DOCS: https://spacy.io/api/vectors#shape
         """
         return self.data.shape
 
@@ -93,7 +93,7 @@ cdef class Vectors:
 
         RETURNS (int): The vector size.
 
-        DOCS: https://nightly.spacy.io/api/vectors#size
+        DOCS: https://spacy.io/api/vectors#size
         """
         return self.data.shape[0] * self.data.shape[1]
 
@@ -103,7 +103,7 @@ cdef class Vectors:
 
         RETURNS (bool): `True` if no slots are available for new keys.
 
-        DOCS: https://nightly.spacy.io/api/vectors#is_full
+        DOCS: https://spacy.io/api/vectors#is_full
         """
         return self._unset.size() == 0
 
@@ -114,7 +114,7 @@ cdef class Vectors:
 
         RETURNS (int): The number of keys in the table.
 
-        DOCS: https://nightly.spacy.io/api/vectors#n_keys
+        DOCS: https://spacy.io/api/vectors#n_keys
         """
         return len(self.key2row)
 
@@ -127,7 +127,7 @@ cdef class Vectors:
         key (int): The key to get the vector for.
         RETURNS (ndarray): The vector for the key.
 
-        DOCS: https://nightly.spacy.io/api/vectors#getitem
+        DOCS: https://spacy.io/api/vectors#getitem
         """
         i = self.key2row[key]
         if i is None:
@@ -141,7 +141,7 @@ cdef class Vectors:
         key (int): The key to set the vector for.
         vector (ndarray): The vector to set.
 
-        DOCS: https://nightly.spacy.io/api/vectors#setitem
+        DOCS: https://spacy.io/api/vectors#setitem
         """
         i = self.key2row[key]
         self.data[i] = vector
@@ -153,7 +153,7 @@ cdef class Vectors:
 
         YIELDS (int): A key in the table.
 
-        DOCS: https://nightly.spacy.io/api/vectors#iter
+        DOCS: https://spacy.io/api/vectors#iter
         """
         yield from self.key2row
 
@@ -162,7 +162,7 @@ cdef class Vectors:
 
         RETURNS (int): The number of vectors in the data.
 
-        DOCS: https://nightly.spacy.io/api/vectors#len
+        DOCS: https://spacy.io/api/vectors#len
         """
         return self.data.shape[0]
 
@@ -172,7 +172,7 @@ cdef class Vectors:
         key (int): The key to check.
         RETURNS (bool): Whether the key has a vector entry.
 
-        DOCS: https://nightly.spacy.io/api/vectors#contains
+        DOCS: https://spacy.io/api/vectors#contains
         """
         return key in self.key2row
 
@@ -189,7 +189,7 @@ cdef class Vectors:
         inplace (bool): Reallocate the memory.
         RETURNS (list): The removed items as a list of `(key, row)` tuples.
 
-        DOCS: https://nightly.spacy.io/api/vectors#resize
+        DOCS: https://spacy.io/api/vectors#resize
         """
         xp = get_array_module(self.data)
         if inplace:
@@ -224,7 +224,7 @@ cdef class Vectors:
 
         YIELDS (ndarray): A vector in the table.
 
-        DOCS: https://nightly.spacy.io/api/vectors#values
+        DOCS: https://spacy.io/api/vectors#values
         """
         for row, vector in enumerate(range(self.data.shape[0])):
             if not self._unset.count(row):
@@ -235,7 +235,7 @@ cdef class Vectors:
 
         YIELDS (tuple): A key/vector pair.
 
-        DOCS: https://nightly.spacy.io/api/vectors#items
+        DOCS: https://spacy.io/api/vectors#items
         """
         for key, row in self.key2row.items():
             yield key, self.data[row]
@@ -281,7 +281,7 @@ cdef class Vectors:
         row (int / None): The row number of a vector to map the key to.
         RETURNS (int): The row the vector was added to.
 
-        DOCS: https://nightly.spacy.io/api/vectors#add
+        DOCS: https://spacy.io/api/vectors#add
         """
         # use int for all keys and rows in key2row for more efficient access
         # and serialization
@@ -368,7 +368,7 @@ cdef class Vectors:
         path (str / Path): A path to a directory, which will be created if
             it doesn't exists.
 
-        DOCS: https://nightly.spacy.io/api/vectors#to_disk
+        DOCS: https://spacy.io/api/vectors#to_disk
         """
         xp = get_array_module(self.data)
         if xp is numpy:
@@ -396,7 +396,7 @@ cdef class Vectors:
         path (str / Path): Directory path, string or Path-like object.
         RETURNS (Vectors): The modified object.
 
-        DOCS: https://nightly.spacy.io/api/vectors#from_disk
+        DOCS: https://spacy.io/api/vectors#from_disk
         """
         def load_key2row(path):
             if path.exists():
@@ -432,7 +432,7 @@ cdef class Vectors:
         exclude (list): String names of serialization fields to exclude.
         RETURNS (bytes): The serialized form of the `Vectors` object.
 
-        DOCS: https://nightly.spacy.io/api/vectors#to_bytes
+        DOCS: https://spacy.io/api/vectors#to_bytes
         """
         def serialize_weights():
             if hasattr(self.data, "to_bytes"):
@@ -453,7 +453,7 @@ cdef class Vectors:
         exclude (list): String names of serialization fields to exclude.
         RETURNS (Vectors): The `Vectors` object.
 
-        DOCS: https://nightly.spacy.io/api/vectors#from_bytes
+        DOCS: https://spacy.io/api/vectors#from_bytes
         """
         def deserialize_weights(b):
             if hasattr(self.data, "from_bytes"):

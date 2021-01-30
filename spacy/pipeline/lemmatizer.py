@@ -32,7 +32,7 @@ class Lemmatizer(Pipe):
     The Lemmatizer supports simple part-of-speech-sensitive suffix rules and
     lookup tables.
 
-    DOCS: https://nightly.spacy.io/api/lemmatizer
+    DOCS: https://spacy.io/api/lemmatizer
     """
 
     @classmethod
@@ -68,7 +68,7 @@ class Lemmatizer(Pipe):
         overwrite (bool): Whether to overwrite existing lemmas. Defaults to
             `False`.
 
-        DOCS: https://nightly.spacy.io/api/lemmatizer#init
+        DOCS: https://spacy.io/api/lemmatizer#init
         """
         self.vocab = vocab
         self.model = model
@@ -98,7 +98,7 @@ class Lemmatizer(Pipe):
         doc (Doc): The Doc to process.
         RETURNS (Doc): The processed Doc.
 
-        DOCS: https://nightly.spacy.io/api/lemmatizer#call
+        DOCS: https://spacy.io/api/lemmatizer#call
         """
         if not self._validated:
             self._validate_tables(Errors.E1004)
@@ -159,7 +159,7 @@ class Lemmatizer(Pipe):
         token (Token): The token to lemmatize.
         RETURNS (list): The available lemmas for the string.
 
-        DOCS: https://nightly.spacy.io/api/lemmatizer#lookup_lemmatize
+        DOCS: https://spacy.io/api/lemmatizer#lookup_lemmatize
         """
         lookup_table = self.lookups.get_table("lemma_lookup", {})
         result = lookup_table.get(token.text, token.text)
@@ -173,7 +173,7 @@ class Lemmatizer(Pipe):
         token (Token): The token to lemmatize.
         RETURNS (list): The available lemmas for the string.
 
-        DOCS: https://nightly.spacy.io/api/lemmatizer#rule_lemmatize
+        DOCS: https://spacy.io/api/lemmatizer#rule_lemmatize
         """
         cache_key = (token.orth, token.pos, token.morph)
         if cache_key in self.cache:
@@ -241,7 +241,7 @@ class Lemmatizer(Pipe):
         token (Token): The token.
         RETURNS (bool): Whether the token is a base form.
 
-        DOCS: https://nightly.spacy.io/api/lemmatizer#is_base_form
+        DOCS: https://spacy.io/api/lemmatizer#is_base_form
         """
         return False
 
@@ -251,7 +251,7 @@ class Lemmatizer(Pipe):
         examples (Iterable[Example]): The examples to score.
         RETURNS (Dict[str, Any]): The scores.
 
-        DOCS: https://nightly.spacy.io/api/lemmatizer#score
+        DOCS: https://spacy.io/api/lemmatizer#score
         """
         validate_examples(examples, "Lemmatizer.score")
         return Scorer.score_token_attr(examples, "lemma", **kwargs)
@@ -264,7 +264,7 @@ class Lemmatizer(Pipe):
         path (str / Path): Path to a directory.
         exclude (Iterable[str]): String names of serialization fields to exclude.
 
-        DOCS: https://nightly.spacy.io/api/lemmatizer#to_disk
+        DOCS: https://spacy.io/api/lemmatizer#to_disk
         """
         serialize = {}
         serialize["vocab"] = lambda p: self.vocab.to_disk(p)
@@ -280,7 +280,7 @@ class Lemmatizer(Pipe):
         exclude (Iterable[str]): String names of serialization fields to exclude.
         RETURNS (Lemmatizer): The modified Lemmatizer object.
 
-        DOCS: https://nightly.spacy.io/api/lemmatizer#from_disk
+        DOCS: https://spacy.io/api/lemmatizer#from_disk
         """
         deserialize = {}
         deserialize["vocab"] = lambda p: self.vocab.from_disk(p)
@@ -295,7 +295,7 @@ class Lemmatizer(Pipe):
         exclude (Iterable[str]): String names of serialization fields to exclude.
         RETURNS (bytes): The serialized object.
 
-        DOCS: https://nightly.spacy.io/api/lemmatizer#to_bytes
+        DOCS: https://spacy.io/api/lemmatizer#to_bytes
         """
         serialize = {}
         serialize["vocab"] = self.vocab.to_bytes
@@ -311,7 +311,7 @@ class Lemmatizer(Pipe):
         exclude (Iterable[str]): String names of serialization fields to exclude.
         RETURNS (Lemmatizer): The loaded Lemmatizer.
 
-        DOCS: https://nightly.spacy.io/api/lemmatizer#from_bytes
+        DOCS: https://spacy.io/api/lemmatizer#from_bytes
         """
         deserialize = {}
         deserialize["vocab"] = lambda b: self.vocab.from_bytes(b)

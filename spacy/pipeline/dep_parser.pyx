@@ -202,7 +202,7 @@ def make_beam_parser(
 cdef class DependencyParser(Parser):
     """Pipeline component for dependency parsing.
 
-    DOCS: https://nightly.spacy.io/api/dependencyparser
+    DOCS: https://spacy.io/api/dependencyparser
     """
     TransitionSystem = ArcEager
 
@@ -243,7 +243,7 @@ cdef class DependencyParser(Parser):
         RETURNS (Dict[str, Any]): The scores, produced by Scorer.score_spans
             and Scorer.score_deps.
 
-        DOCS: https://nightly.spacy.io/api/dependencyparser#score
+        DOCS: https://spacy.io/api/dependencyparser#score
         """
         def has_sents(doc):
             return doc.has_annotation("SENT_START")

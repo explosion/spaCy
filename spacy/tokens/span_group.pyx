@@ -27,7 +27,7 @@ cdef class SpanGroup:
         >>> doc.spans["errors"] = [doc[0:1], doc[2:4]]
         >>> assert isinstance(doc.spans["errors"], SpanGroup)
 
-    DOCS: https://nightly.spacy.io/api/spangroup
+    DOCS: https://spacy.io/api/spangroup
     """
     def __init__(self, doc, *, name="", attrs={}, spans=[]):
         """Create a SpanGroup.
@@ -37,7 +37,7 @@ cdef class SpanGroup:
         attrs (Dict[str, Any]): Optional JSON-serializable attributes to attach.
         spans (Iterable[Span]): The spans to add to the group.
 
-        DOCS: https://nightly.spacy.io/api/spangroup#init
+        DOCS: https://spacy.io/api/spangroup#init
         """
         # We need to make this a weak reference, so that the Doc object can
         # own the SpanGroup without circular references. We do want to get
@@ -56,7 +56,7 @@ cdef class SpanGroup:
     def doc(self):
         """RETURNS (Doc): The reference document.
 
-        DOCS: https://nightly.spacy.io/api/spangroup#doc
+        DOCS: https://spacy.io/api/spangroup#doc
         """
         return self._doc_ref()
 
@@ -64,7 +64,7 @@ cdef class SpanGroup:
     def has_overlap(self):
         """RETURNS (bool): Whether the group contains overlapping spans.
 
-        DOCS: https://nightly.spacy.io/api/spangroup#has_overlap
+        DOCS: https://spacy.io/api/spangroup#has_overlap
         """
         if not len(self):
             return False
@@ -79,7 +79,7 @@ cdef class SpanGroup:
     def __len__(self):
         """RETURNS (int): The number of spans in the group.
 
-        DOCS: https://nightly.spacy.io/api/spangroup#len
+        DOCS: https://spacy.io/api/spangroup#len
         """
         return self.c.size()
 
@@ -89,7 +89,7 @@ cdef class SpanGroup:
 
         span (Span): The span to append.
 
-        DOCS: https://nightly.spacy.io/api/spangroup#append
+        DOCS: https://spacy.io/api/spangroup#append
         """
         if span.doc is not self.doc:
             raise ValueError("Cannot add span to group: refers to different Doc.")
@@ -101,7 +101,7 @@ cdef class SpanGroup:
 
         spans (Iterable[Span]): The spans to add.
 
-        DOCS: https://nightly.spacy.io/api/spangroup#extend
+        DOCS: https://spacy.io/api/spangroup#extend
         """
         cdef Span span
         for span in spans:
@@ -113,7 +113,7 @@ cdef class SpanGroup:
         i (int): The item index.
         RETURNS (Span): The span at the given index.
 
-        DOCS: https://nightly.spacy.io/api/spangroup#getitem
+        DOCS: https://spacy.io/api/spangroup#getitem
         """
         cdef int size = self.c.size()
         if i < -size or i >= size:
@@ -127,7 +127,7 @@ cdef class SpanGroup:
 
         RETURNS (bytes): The serialized span group.
 
-        DOCS: https://nightly.spacy.io/api/spangroup#to_bytes
+        DOCS: https://spacy.io/api/spangroup#to_bytes
         """
         output = {"name": self.name, "attrs": self.attrs, "spans": []}
         for i in range(self.c.size()):
@@ -159,7 +159,7 @@ cdef class SpanGroup:
         bytes_data (bytes): The span group to load.
         RETURNS (SpanGroup): The deserialized span group.
 
-        DOCS: https://nightly.spacy.io/api/spangroup#from_bytes
+        DOCS: https://spacy.io/api/spangroup#from_bytes
         """
         msg = srsly.msgpack_loads(bytes_data)
         self.name = msg["name"]

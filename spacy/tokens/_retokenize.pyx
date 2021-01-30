@@ -24,8 +24,8 @@ from ..strings import get_string_id
 cdef class Retokenizer:
     """Helper class for doc.retokenize() context manager.
 
-    DOCS: https://nightly.spacy.io/api/doc#retokenize
-    USAGE: https://nightly.spacy.io/usage/linguistic-features#retokenization
+    DOCS: https://spacy.io/api/doc#retokenize
+    USAGE: https://spacy.io/usage/linguistic-features#retokenization
     """
     cdef Doc doc
     cdef list merges
@@ -47,7 +47,7 @@ cdef class Retokenizer:
         span (Span): The span to merge.
         attrs (dict): Attributes to set on the merged token.
 
-        DOCS: https://nightly.spacy.io/api/doc#retokenizer.merge
+        DOCS: https://spacy.io/api/doc#retokenizer.merge
         """
         if (span.start, span.end) in self._spans_to_merge:
             return
@@ -73,7 +73,7 @@ cdef class Retokenizer:
         attrs (dict): Attributes to set on all split tokens. Attribute names
             mapped to list of per-token attribute values.
 
-        DOCS: https://nightly.spacy.io/api/doc#retokenizer.split
+        DOCS: https://spacy.io/api/doc#retokenizer.split
         """
         if ''.join(orths) != token.text:
             raise ValueError(Errors.E117.format(new=''.join(orths), old=token.text))

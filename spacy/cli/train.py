@@ -37,7 +37,7 @@ def train_cli(
     used to register custom functions and architectures that can then be
     referenced in the config.
 
-    DOCS: https://nightly.spacy.io/api/cli#train
+    DOCS: https://spacy.io/api/cli#train
     """
     util.logger.setLevel(logging.DEBUG if verbose else logging.INFO)
     # Make sure all files and paths exists if they are needed

@@ -20,8 +20,8 @@ cdef class PhraseMatcher:
     sequences based on lists of token descriptions, the `PhraseMatcher` accepts
     match patterns in the form of `Doc` objects.
 
-    DOCS: https://nightly.spacy.io/api/phrasematcher
-    USAGE: https://nightly.spacy.io/usage/rule-based-matching#phrasematcher
+    DOCS: https://spacy.io/api/phrasematcher
+    USAGE: https://spacy.io/usage/rule-based-matching#phrasematcher
 
     Adapted from FlashText: https://github.com/vi3k6i5/flashtext
     MIT License (see `LICENSE`)
@@ -35,7 +35,7 @@ cdef class PhraseMatcher:
         attr (int / str): Token attribute to match on.
         validate (bool): Perform additional validation when patterns are added.
 
-        DOCS: https://nightly.spacy.io/api/phrasematcher#init
+        DOCS: https://spacy.io/api/phrasematcher#init
         """
         self.vocab = vocab
         self._callbacks = {}
@@ -64,7 +64,7 @@ cdef class PhraseMatcher:
 
         RETURNS (int): The number of rules.
 
-        DOCS: https://nightly.spacy.io/api/phrasematcher#len
+        DOCS: https://spacy.io/api/phrasematcher#len
         """
         return len(self._callbacks)
 
@@ -74,7 +74,7 @@ cdef class PhraseMatcher:
         key (str): The match ID.
         RETURNS (bool): Whether the matcher contains rules for this match ID.
 
-        DOCS: https://nightly.spacy.io/api/phrasematcher#contains
+        DOCS: https://spacy.io/api/phrasematcher#contains
         """
         return key in self._callbacks
 
@@ -88,7 +88,7 @@ cdef class PhraseMatcher:
 
         key (str): The match ID.
 
-        DOCS: https://nightly.spacy.io/api/phrasematcher#remove
+        DOCS: https://spacy.io/api/phrasematcher#remove
         """
         if key not in self._docs:
             raise KeyError(key)
@@ -167,7 +167,7 @@ cdef class PhraseMatcher:
             as variable arguments. Will be ignored if a list of patterns is
             provided as the second argument.
 
-        DOCS: https://nightly.spacy.io/api/phrasematcher#add
+        DOCS: https://spacy.io/api/phrasematcher#add
         """
         if docs is None or hasattr(docs, "__call__"):  # old API
             on_match = docs
@@ -241,7 +241,7 @@ cdef class PhraseMatcher:
             `doc[start:end]`. The `match_id` is an integer. If as_spans is set
             to True, a list of Span objects is returned.
 
-        DOCS: https://nightly.spacy.io/api/phrasematcher#call
+        DOCS: https://spacy.io/api/phrasematcher#call
         """
         matches = []
         if doc is None or len(doc) == 0:

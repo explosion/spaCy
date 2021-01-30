@@ -23,7 +23,7 @@ def info_cli(
     print its meta information. Flag --markdown prints details in Markdown for easy
     copy-pasting to GitHub issues.
 
-    DOCS: https://nightly.spacy.io/api/cli#info
+    DOCS: https://spacy.io/api/cli#info
     """
     exclude = string_to_list(exclude)
     info(model, markdown=markdown, silent=silent, exclude=exclude)

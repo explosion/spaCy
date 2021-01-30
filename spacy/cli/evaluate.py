@@ -36,7 +36,7 @@ def evaluate_cli(
     dependency parses in a HTML file, set as output directory as the
     displacy_path argument.
 
-    DOCS: https://nightly.spacy.io/api/cli#evaluate
+    DOCS: https://spacy.io/api/cli#evaluate
     """
     import_code(code_path)
     evaluate(

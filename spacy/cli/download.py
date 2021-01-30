@@ -28,7 +28,7 @@ def download_cli(
     additional arguments provided to this command will be passed to `pip install`
     on package installation.
 
-    DOCS: https://nightly.spacy.io/api/cli#download
+    DOCS: https://spacy.io/api/cli#download
     AVAILABLE PACKAGES: https://spacy.io/models
     """
     download(model, direct, *ctx.args)
@@ -80,7 +80,7 @@ def get_compatibility() -> dict:
             f"Couldn't fetch compatibility table. Please find a package for your spaCy "
             f"installation (v{about.__version__}), and download it manually. "
             f"For more details, see the documentation: "
-            f"https://nightly.spacy.io/usage/models",
+            f"https://spacy.io/usage/models",
             exits=1,
         )
     comp_table = r.json()

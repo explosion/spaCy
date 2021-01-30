@@ -64,7 +64,7 @@ def convert_cli(
     is written to stdout, so you can pipe them forward to a JSON file:
     $ spacy convert some_file.conllu --file-type json > some_file.json
 
-    DOCS: https://nightly.spacy.io/api/cli#convert
+    DOCS: https://spacy.io/api/cli#convert
     """
     if isinstance(file_type, FileTypes):
         # We get an instance of the FileTypes from the CLI so we need its string value
@@ -268,6 +268,6 @@ def _get_converter(msg, converter, input_path):
             msg.warn(
                 "Can't automatically detect NER format. "
                 "Conversion may not succeed. "
-                "See https://nightly.spacy.io/api/cli#convert"
+                "See https://spacy.io/api/cli#convert"
             )
     return converter

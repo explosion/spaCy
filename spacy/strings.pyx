@@ -91,7 +91,7 @@ cdef Utf8Str* _allocate(Pool mem, const unsigned char* chars, uint32_t length) e
 cdef class StringStore:
     """Look up strings by 64-bit hashes.
 
-    DOCS: https://nightly.spacy.io/api/stringstore
+    DOCS: https://spacy.io/api/stringstore
     """
     def __init__(self, strings=None, freeze=False):
         """Create the StringStore.

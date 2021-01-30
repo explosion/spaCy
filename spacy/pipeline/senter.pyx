@@ -44,7 +44,7 @@ def make_senter(nlp: Language, name: str, model: Model):
 class SentenceRecognizer(Tagger):
     """Pipeline component for sentence segmentation.
 
-    DOCS: https://nightly.spacy.io/api/sentencerecognizer
+    DOCS: https://spacy.io/api/sentencerecognizer
     """
     def __init__(self, vocab, model, name="senter"):
         """Initialize a sentence recognizer.
@@ -54,7 +54,7 @@ class SentenceRecognizer(Tagger):
         name (str): The component instance name, used to add entries to the
             losses during training.
 
-        DOCS: https://nightly.spacy.io/api/sentencerecognizer#init
+        DOCS: https://spacy.io/api/sentencerecognizer#init
         """
         self.vocab = vocab
         self.model = model
@@ -80,7 +80,7 @@ class SentenceRecognizer(Tagger):
         docs (Iterable[Doc]): The documents to modify.
         batch_tag_ids: The IDs to set, produced by SentenceRecognizer.predict.
 
-        DOCS: https://nightly.spacy.io/api/sentencerecognizer#set_annotations
+        DOCS: https://spacy.io/api/sentencerecognizer#set_annotations
         """
         if isinstance(docs, Doc):
             docs = [docs]
@@ -105,7 +105,7 @@ class SentenceRecognizer(Tagger):
         scores: Scores representing the model's predictions.
         RETURNS (Tuple[float, float]): The loss and the gradient.
 
-        DOCS: https://nightly.spacy.io/api/sentencerecognizer#get_loss
+        DOCS: https://spacy.io/api/sentencerecognizer#get_loss
         """
         validate_examples(examples, "SentenceRecognizer.get_loss")
         labels = self.labels
@@ -135,7 +135,7 @@ class SentenceRecognizer(Tagger):
             returns a representative sample of gold-standard Example objects.
         nlp (Language): The current nlp object the component is part of.
 
-        DOCS: https://nightly.spacy.io/api/sentencerecognizer#initialize
+        DOCS: https://spacy.io/api/sentencerecognizer#initialize
         """
         validate_get_examples(get_examples, "SentenceRecognizer.initialize")
         doc_sample = []
@@ -158,7 +158,7 @@ class SentenceRecognizer(Tagger):
 
         examples (Iterable[Example]): The examples to score.
         RETURNS (Dict[str, Any]): The scores, produced by Scorer.score_spans.
-        DOCS: https://nightly.spacy.io/api/sentencerecognizer#score
+        DOCS: https://spacy.io/api/sentencerecognizer#score
         """
         def has_sents(doc):
             return doc.has_annotation("SENT_START")

@@ -44,7 +44,7 @@ def pretrain_cli(
     all settings are the same between pretraining and training. Ideally,
     this is done by using the same config file for both commands.
 
-    DOCS: https://nightly.spacy.io/api/cli#pretrain
+    DOCS: https://spacy.io/api/cli#pretrain
     """
     config_overrides = parse_config_overrides(ctx.args)
     import_code(code_path)
