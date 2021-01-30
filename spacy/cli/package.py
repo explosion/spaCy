@@ -5,7 +5,7 @@ from wasabi import Printer, get_raw_input
 import srsly
 import sys
 
-from ._util import app, Arg, Opt, string_to_list
+from ._util import app, Arg, Opt, string_to_list, WHEEL_SUFFIX, SDIST_SUFFIX
 from ..schemas import validate, ModelMetaSchema
 from .. import util
 from .. import about
@@ -146,12 +146,12 @@ def package(
     if create_sdist:
         with util.working_dir(main_path):
             util.run_command([sys.executable, "setup.py", "sdist"], capture=False)
-        zip_file = main_path / "dist" / f"{model_name_v}.tar.gz"
+        zip_file = main_path / "dist" / f"{model_name_v}{SDIST_SUFFIX}"
         msg.good(f"Successfully created zipped Python package", zip_file)
     if create_wheel:
         with util.working_dir(main_path):
             util.run_command([sys.executable, "setup.py", "bdist_wheel"], capture=False)
-        wheel = main_path / "dist" / f"{model_name_v}-py3-none-any.whl"
+        wheel = main_path / "dist" / f"{model_name_v}{WHEEL_SUFFIX}"
         msg.good(f"Successfully created binary wheel", wheel)
 
 

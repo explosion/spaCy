@@ -4,7 +4,7 @@ import sys
 from wasabi import msg
 import typer
 
-from ._util import app, Arg, Opt
+from ._util import app, Arg, Opt, WHEEL_SUFFIX, SDIST_SUFFIX
 from .. import about
 from ..util import is_package, get_base_version, run_command
 from ..errors import OLD_MODEL_SHORTCUTS
@@ -19,6 +19,7 @@ def download_cli(
     ctx: typer.Context,
     model: str = Arg(..., help="Name of pipeline package to download"),
     direct: bool = Opt(False, "--direct", "-d", "-D", help="Force direct download of name + version"),
+    wheel: bool = Opt(False, "--wheel", "-W", help="Download binary wheel")
     # fmt: on
 ):
     """
@@ -31,10 +32,10 @@ def download_cli(
     DOCS: https://nightly.spacy.io/api/cli#download
     AVAILABLE PACKAGES: https://spacy.io/models
     """
-    download(model, direct, *ctx.args)
+    download(model, direct, wheel, *ctx.args)
 
 
-def download(model: str, direct: bool = False, *pip_args) -> None:
+def download(model: str, direct: bool = False, wheel: bool = False, *pip_args) -> None:
     if (
         not (is_package("spacy") or is_package("spacy-nightly"))
         and "--no-deps" not in pip_args
@@ -48,12 +49,13 @@ def download(model: str, direct: bool = False, *pip_args) -> None:
             "dependencies, you'll have to install them manually."
         )
         pip_args = pip_args + ("--no-deps",)
-    dl_tpl = "{m}-{v}/{m}-{v}.tar.gz#egg={m}=={v}"
+    suffix = WHEEL_SUFFIX if wheel else SDIST_SUFFIX
+    dl_tpl = "{m}-{v}/{m}-{v}{s}#egg={m}=={v}"
     if direct:
         components = model.split("-")
         model_name = "".join(components[:-1])
         version = components[-1]
-        download_model(dl_tpl.format(m=model_name, v=version), pip_args)
+        download_model(dl_tpl.format(m=model_name, v=version, s=suffix), pip_args)
     else:
         model_name = model
         if model in OLD_MODEL_SHORTCUTS:
@@ -64,7 +66,7 @@ def download(model: str, direct: bool = False, *pip_args) -> None:
             model_name = OLD_MODEL_SHORTCUTS[model]
         compatibility = get_compatibility()
         version = get_version(model_name, compatibility)
-        download_model(dl_tpl.format(m=model_name, v=version), pip_args)
+        download_model(dl_tpl.format(m=model_name, v=version, s=suffix), pip_args)
     msg.good(
         "Download and installation successful",
         f"You can now load the package via spacy.load('{model_name}')",
