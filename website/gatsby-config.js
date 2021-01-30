@@ -129,7 +129,7 @@ module.exports = {
                 background_color: site.theme,
                 theme_color: site.theme,
                 display: `minimal-ui`,
-                icon: legacy ? `src/images/icon.png` : `src/images/icon_legacy.png`,
+                icon: legacy ? `src/images/icon_legacy.png` : `src/images/icon.png`,
             },
         },
         {
