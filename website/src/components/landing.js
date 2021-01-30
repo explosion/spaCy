@@ -1,10 +1,12 @@
 import React from 'react'
 import classNames from 'classnames'
 
-import pattern from '../images/pattern_blue.jpg'
+import patternDefault from '../images/pattern_blue.jpg'
 import patternNightly from '../images/pattern_nightly.jpg'
-import patternOverlay from '../images/pattern_landing.jpg'
-import patternOverlayNightly from '../images/pattern_landing_nightly.jpg'
+import patternLegacy from '../images/pattern_legacy.jpg'
+import overlayDefault from '../images/pattern_landing.jpg'
+import overlayNightly from '../images/pattern_landing_nightly.jpg'
+import overlayLegacy from '../images/pattern_landing_legacy.jpg'
 
 import Grid from './grid'
 import { Content } from './main'
@@ -14,9 +16,15 @@ import { H1, H2, H3 } from './typography'
 import Link from './link'
 import classes from '../styles/landing.module.sass'
 
-export const LandingHeader = ({ nightly, style = {}, children }) => {
-    const overlay = nightly ? patternOverlayNightly : patternOverlay
-    const wrapperStyle = { backgroundImage: `url(${nightly ? patternNightly : pattern})` }
+function getPattern(nightly, legacy) {
+    if (nightly) return { pattern: patternNightly, overlay: overlayNightly }
+    if (legacy) return { pattern: patternLegacy, overlay: overlayLegacy }
+    return { pattern: patternDefault, overlay: overlayDefault }
+}
+
+export const LandingHeader = ({ nightly, legacy, style = {}, children }) => {
+    const { pattern, overlay } = getPattern(nightly, legacy)
+    const wrapperStyle = { backgroundImage: `url(${pattern})` }
     const contentStyle = { backgroundImage: `url(${overlay})`, ...style }
     return (
         <header className={classes.header}>
@@ -109,16 +117,18 @@ export const LandingBanner = ({
     return (
         <div className={classes.banner} style={style}>
             <Grid cols={small ? null : 3} narrow className={contentClassNames}>
-                <Heading Component="h3" className={classes.bannerTitle}>
-                    {label && (
-                        <div className={classes.bannerLabel}>
-                            <span className={classes.label}>{label}</span>
-                        </div>
-                    )}
-                    <Link to={to} hidden>
-                        {title}
-                    </Link>
-                </Heading>
+                {(title || label) && (
+                    <Heading Component="h3" className={classes.bannerTitle}>
+                        {label && (
+                            <div className={classes.bannerLabel}>
+                                <span className={classes.label}>{label}</span>
+                            </div>
+                        )}
+                        <Link to={to} hidden>
+                            {title}
+                        </Link>
+                    </Heading>
+                )}
                 <div className={textClassNames}>
                     <p>{children}</p>
 

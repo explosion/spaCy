@@ -8,8 +8,8 @@ import { markdownToReact } from './util'
 
 import classes from '../styles/embed.module.sass'
 
-const YouTube = ({ id, ratio = '16x9' }) => {
-    const embedClassNames = classNames(classes.root, classes.responsive, {
+const YouTube = ({ id, ratio = '16x9', className }) => {
+    const embedClassNames = classNames(classes.root, classes.responsive, className, {
         [classes.ratio16x9]: ratio === '16x9',
         [classes.ratio4x3]: ratio === '4x3',
     })

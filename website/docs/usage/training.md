@@ -193,6 +193,8 @@ available for the different architectures are documented with the
 
 </Infobox>
 
+<YouTube id="BWhh3r6W-qE"></YouTube>
+
 ### Config lifecycle at runtime and training {#config-lifecycle}
 
 A pipeline's `config.cfg` is considered the "single source of truth", both at
