@@ -52,6 +52,7 @@ const MODEL_META = {
     tag_acc: 'Part-of-speech tags (fine grained tags, Token.tag)',
     tag: 'Part-of-speech tags (fine grained tags, Token.tag)',
     pos: 'Part-of-speech tags (coarse grained tags, Token.pos)',
+    pos_acc: 'Part-of-speech tags (coarse grained tags, Token.pos)',
     ents_f: 'Named entities (F-score)',
     ents_p: 'Named entities (precision)',
     ents_r: 'Named entities (recall)',
