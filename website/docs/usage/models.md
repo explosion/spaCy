@@ -33,7 +33,9 @@ spaCy currently provides support for the following languages. You can help by
 improving the existing [language data](/usage/linguistic-features#language-data)
 and extending the tokenization patterns.
 [See here](https://github.com/explosion/spaCy/issues/3056) for details on how to
-contribute to development.
+contribute to development. Also see the
+[training documentation](/usage/training) for how to train your own pipelines on
+your data.
 
 > #### Usage note
 >
@@ -281,6 +283,9 @@ $ python -m spacy download en_core_web_sm
 
 # Download exact package version
 $ python -m spacy download en_core_web_sm-3.0.0 --direct
+
+# Download binary wheel (can be more efficient)
+$ python -m spacy download en_core_web_sm --wheel
 ```
 
 The download command will [install the package](/usage/models#download-pip) via
@@ -433,8 +438,8 @@ URLs.
 
 ```text
 ### requirements.txt
-spacy>=2.2.0,<3.0.0
-https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-2.2.0/en_core_web_sm-2.2.0.tar.gz#egg=en_core_web_sm
+spacy>=3.0.0,<4.0.0
+https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.0.0/en_core_web_sm-3.0.0.tar.gz#egg=en_core_web_sm
 ```
 
 Specifying `#egg=` with the package name tells pip which package to expect from

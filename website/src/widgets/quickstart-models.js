@@ -51,16 +51,25 @@ const data = [
         id: 'config',
         title: 'Options',
         multiple: true,
-        options: [{ id: 'example', title: 'Show text example' }],
+        options: [
+            {
+                id: 'wheel',
+                title: 'Download binary wheel',
+                help: 'Can make download and installation more efficient',
+            },
+            { id: 'example', title: 'Show text example' },
+        ],
     },
 ]
 
 const QuickstartInstall = ({ id, title, description, children }) => {
     const [lang, setLang] = useState(DEFAULT_LANG)
+    const [wheel, setWheel] = useState(false)
     const [efficiency, setEfficiency] = useState(DEFAULT_OPT === 'efficiency')
     const setters = {
         lang: setLang,
         optimize: v => setEfficiency(v.includes('efficiency')),
+        config: v => setWheel(v.includes('wheel')),
     }
     return (
         <StaticQuery
@@ -87,7 +96,10 @@ const QuickstartInstall = ({ id, title, description, children }) => {
                             const exampleText = example || 'No text available yet'
                             return lang !== code ? null : (
                                 <Fragment key={code}>
-                                    <QS>python -m spacy download {pkg}</QS>
+                                    <QS>
+                                        python -m spacy download {pkg}
+                                        {wheel ? ' --wheel' : ''}
+                                    </QS>
                                     <QS divider />
                                     <QS load="spacy" prompt="python">
                                         import spacy
