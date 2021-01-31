@@ -7,11 +7,14 @@ Cython. It's built on the very latest research, and was designed from day one to
 be used in real products.
 
 spaCy comes with
-[pretrained pipelines](https://spacy.io/models), and
+[pretrained pipelines](https://spacy.io/models) and
 currently supports tokenization and training for **60+ languages**. It features
 state-of-the-art speed and **neural network models** for tagging,
-parsing, **named entity recognition**, **text classification** and more, multi-task learning with pretrained **transformers** like BERT, as well as a production-ready [training system](https://spacy.io/usage/training) and easy model packaging, deployment and workflow management.
-spaCy is commercial open-source software, released under the MIT license.
+parsing, **named entity recognition**, **text classification** and more,
+multi-task learning with pretrained **transformers** like BERT, as well as a
+production-ready [**training system**](https://spacy.io/usage/training) and easy
+model packaging, deployment and workflow management. spaCy is commercial
+open-source software, released under the MIT license.
 
 💫 **Version 3.0 out now!**
 [Check out the release notes here.](https://github.com/explosion/spaCy/releases)
@@ -25,7 +28,6 @@ spaCy is commercial open-source software, released under the MIT license.
 <br />
 [![PyPi downloads](https://img.shields.io/pypi/dm/spacy?style=flat-square&logo=pypi&logoColor=white)](https://pypi.org/project/spacy/)
 [![Conda downloads](https://img.shields.io/conda/dn/conda-forge/spacy?style=flat-square&logo=conda-forge&logoColor=white)](https://anaconda.org/conda-forge/spacy)
-[![Model downloads](https://img.shields.io/github/downloads/explosion/spacy-models/total?style=flat-square&label=model+downloads)](https://github.com/explosion/spacy-models/releases)
 [![spaCy on Twitter](https://img.shields.io/twitter/follow/spacy_io.svg?style=social&label=Follow)](https://twitter.com/spacy_io)
 
 ## 📖 Documentation
@@ -81,7 +83,7 @@ it.
 - Support for **60+ languages**
 - **Trained pipelines** for different languages and tasks
 - Multi-task learning with pretrained **transformers** like BERT
-- Support for pretrained **word vectors** and embedings
+- Support for pretrained **word vectors** and embeddings
 - State-of-the-art speed
 - Production-ready **training system**
 - Linguistically-motivated **tokenization**
@@ -95,7 +97,7 @@ it.
 📖 **For more details, see the
 [facts, figures and benchmarks](https://spacy.io/usage/facts-figures).**
 
-## Install spaCy
+## ⏳ Install spaCy
 
 For detailed installation instructions, see the
 [documentation](https://spacy.io/usage).
@@ -110,8 +112,8 @@ For detailed installation instructions, see the
 
 ### pip
 
-Using pip, spaCy releases are available as source packages and binary wheels (as
-of `v2.0.13`). Before you install spaCy and its dependencies, make sure that
+Using pip, spaCy releases are available as source packages and binary wheels.
+Before you install spaCy and its dependencies, make sure that
 your `pip`, `setuptools` and `wheel` are up to date.
 
 ```bash
@@ -119,13 +121,12 @@ pip install -U pip setuptools wheel
 pip install spacy
 ```
 
-To install additional data tables for lemmatization and normalization in
-**spaCy v2.2+** you can run `pip install spacy[lookups]` or install
+To install additional data tables for lemmatization and normalization you can
+run `pip install spacy[lookups]` or install
 [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data)
 separately. The lookups package is needed to create blank models with
-lemmatization data for v2.2+ plus normalization data for v2.3+, and to
-lemmatize in languages that don't yet come with pretrained models and aren't
-powered by third-party libraries.
+lemmatization data, and to lemmatize in languages that don't yet come with
+pretrained models and aren't powered by third-party libraries.
 
 When using pip it is generally recommended to install packages in a virtual
 environment to avoid modifying system state:
@@ -139,16 +140,13 @@ pip install spacy
 
 ### conda
 
-Thanks to our great community, we've finally re-added conda support. You can now
-install spaCy via `conda-forge`:
+You can also install spaCy from `conda` via the `conda-forge` channel. For the
+feedstock including the build recipe and configuration, check out
+[this repository](https://github.com/conda-forge/spacy-feedstock).
 
 ```bash
 conda install -c conda-forge spacy
 ```
-
-For the feedstock including the build recipe and configuration, check out
-[this repository](https://github.com/conda-forge/spacy-feedstock). Improvements
-and pull requests to the recipe and setup are always appreciated.
 
 ### Updating spaCy
 
@@ -169,34 +167,36 @@ with the new version.
 📖 **For details on upgrading from spaCy 2.x to spaCy 3.x, see the
 [migration guide](https://spacy.io/usage/v3#migrating).**
 
-## Download models
+## 📦 Download model packages
 
 Trained pipelines for spaCy can be installed as **Python packages**. This
 means that they're a component of your application, just like any other module.
-Models can be installed using spaCy's `download` command, or manually by
-pointing pip to a path or URL.
+Models can be installed using spaCy's [`download`](https://spacy.io/api/cli#download)
+command, or manually by pointing pip to a path or URL.
 
-| Documentation          |                                                                  |
-| ---------------------- | ---------------------------------------------------------------- |
-| [Available Pipelines]  | Detailed pipeline descriptions, accuracy figures and benchmarks. |
-| [Models Documentation] | Detailed usage instructions.                                     |
+| Documentation              |                                                                  |
+| -------------------------- | ---------------------------------------------------------------- |
+| **[Available Pipelines]**  | Detailed pipeline descriptions, accuracy figures and benchmarks. |
+| **[Models Documentation]** | Detailed usage and installation instructions.                    |
+| **[Training]**             | How to train your own pipelines on your data.                    |
 
 [available pipelines]: https://spacy.io/models
-[models documentation]: https://spacy.io/docs/usage/models
+[models documentation]: https://spacy.io/usage/models
+[training]: https://spacy.io/usage/training
 
 ```bash
 # Download best-matching version of specific model for your spaCy installation
 python -m spacy download en_core_web_sm
 
 # pip install .tar.gz archive from path or URL
-pip install /Users/you/en_core_web_sm-2.2.0.tar.gz
-pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-2.2.0/en_core_web_sm-2.2.0.tar.gz
+pip install /Users/you/en_core_web_sm-3.0.0.tar.gz
+pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.0.0/en_core_web_sm-3.0.0.tar.gz
 ```
 
 ### Loading and using models
 
-To load a model, use `spacy.load()` with the model name or a
-path to the model data directory.
+To load a model, use [`spacy.load()`](https://spacy.io/api/top-level#spacy.load)
+with the model name or a path to the model data directory.
 
 ```python
 import spacy
@@ -218,7 +218,7 @@ doc = nlp("This is a sentence.")
 📖 **For more info and examples, check out the
 [models documentation](https://spacy.io/docs/usage/models).**
 
-## Compile from source
+## ⚒ Compile from source
 
 The other way to install spaCy is to clone its
 [GitHub repository](https://github.com/explosion/spaCy) and build it from
@@ -228,8 +228,19 @@ Python distribution including header files, a compiler,
 [pip](https://pip.pypa.io/en/latest/installing/),
 [virtualenv](https://virtualenv.pypa.io/en/latest/) and
 [git](https://git-scm.com) installed. The compiler part is the trickiest. How to
-do that depends on your system. See notes on Ubuntu, OS X and Windows for
-details.
+do that depends on your system.
+
+| Platform      |                                                                                                                                                                                                                                                                     |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 🐧 **Ubuntu** | Install system-level dependencies via `apt-get`: `sudo apt-get install build-essential python-dev git` .                                                                                                                                                            |
+| 🍎 **Mac**    | Install a recent version of [XCode](https://developer.apple.com/xcode/), including the so-called "Command Line Tools". macOS and OS X ship with Python and git preinstalled.                                                                                        |
+| 🖼 **Windows** | Install a version of the [Visual C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) or [Visual Studio Express](https://visualstudio.microsoft.com/vs/express/) that matches the version that was used to compile your Python interpreter. |
+
+For more details
+and instructions, see the documentation on
+[compiling spaCy from source](https://spacy.io/usage#source) and the
+[quickstart widget](https://spacy.io/usage#section-quickstart) to get the right
+commands for your platform and Python version.
 
 ```bash
 git clone https://github.com/explosion/spaCy
@@ -250,55 +261,25 @@ To install with extras:
 pip install .[lookups,cuda102]
 ```
 
-To install all dependencies required for development:
+To install all dependencies required for development, use the [`requirements.txt`](requirements.txt). Compared to regular install via pip, it
+additionally installs developer dependencies such as Cython.
 
 ```bash
 pip install -r requirements.txt
 ```
 
-Compared to regular install via pip, [requirements.txt](requirements.txt)
-additionally installs developer dependencies such as Cython. For more details
-and instructions, see the documentation on
-[compiling spaCy from source](https://spacy.io/usage#source) and the
-[quickstart widget](https://spacy.io/usage#section-quickstart) to get the right
-commands for your platform and Python version.
-
-### Ubuntu
-
-Install system-level dependencies via `apt-get`:
-
-```bash
-sudo apt-get install build-essential python-dev git
-```
-
-### macOS / OS X
-
-Install a recent version of [XCode](https://developer.apple.com/xcode/),
-including the so-called "Command Line Tools". macOS and OS X ship with Python
-and git preinstalled.
-
-### Windows
-
-Install a version of the
-[Visual C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
-or [Visual Studio Express](https://visualstudio.microsoft.com/vs/express/) that
-matches the version that was used to compile your Python interpreter.
-
-## Run tests
+## 🚦 Run tests
 
 spaCy comes with an [extensive test suite](spacy/tests). In order to run the
 tests, you'll usually want to clone the repository and build spaCy from source.
 This will also install the required development dependencies and test utilities
-defined in the `requirements.txt`.
+defined in the [`requirements.txt`](requirements.txt).
 
 Alternatively, you can run `pytest` on the tests from within the installed
 `spacy` package. Don't forget to also install the test utilities via spaCy's
-`requirements.txt`:
+[`requirements.txt`](requirements.txt):
 
 ```bash
 pip install -r requirements.txt
 python -m pytest --pyargs spacy
 ```
-
-See [the documentation](https://spacy.io/usage#tests) for more details and
-examples.
