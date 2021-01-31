@@ -230,11 +230,11 @@ Python distribution including header files, a compiler,
 [git](https://git-scm.com) installed. The compiler part is the trickiest. How to
 do that depends on your system.
 
-| Platform      |                                                                                                                                                                                                                                                                     |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 🐧 **Ubuntu** | Install system-level dependencies via `apt-get`: `sudo apt-get install build-essential python-dev git` .                                                                                                                                                            |
-| 🍎 **Mac**    | Install a recent version of [XCode](https://developer.apple.com/xcode/), including the so-called "Command Line Tools". macOS and OS X ship with Python and git preinstalled.                                                                                        |
-| 🖼 **Windows** | Install a version of the [Visual C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) or [Visual Studio Express](https://visualstudio.microsoft.com/vs/express/) that matches the version that was used to compile your Python interpreter. |
+| Platform    |                                                                                                                                                                                                                                                                     |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Ubuntu**  | Install system-level dependencies via `apt-get`: `sudo apt-get install build-essential python-dev git` .                                                                                                                                                            |
+| **Mac**     | Install a recent version of [XCode](https://developer.apple.com/xcode/), including the so-called "Command Line Tools". macOS and OS X ship with Python and git preinstalled.                                                                                        |
+| **Windows** | Install a version of the [Visual C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) or [Visual Studio Express](https://visualstudio.microsoft.com/vs/express/) that matches the version that was used to compile your Python interpreter. |
 
 For more details
 and instructions, see the documentation on
