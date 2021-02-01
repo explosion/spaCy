@@ -372,7 +372,11 @@ def git_checkout(
         cmd = f"git -C {tmp_dir} clone {repo} . -b {branch}"
         run_command(cmd, capture=True)
         # We need Path(name) to make sure we also support subdirectories
-        shutil.copytree(str(tmp_dir / Path(subpath)), str(dest))
+        try:
+            shutil.copytree(str(tmp_dir / Path(subpath)), str(dest))
+        except FileNotFoundError:
+            err = f"Can't clone {subpath}. Make sure the directory exists in the repo (branch '{branch}')"
+            msg.fail(err, repo, exits=1)
 
 
 def git_sparse_checkout(repo, subpath, dest, branch):
