@@ -283,9 +283,6 @@ $ python -m spacy download en_core_web_sm
 
 # Download exact package version
 $ python -m spacy download en_core_web_sm-3.0.0 --direct
-
-# Download binary wheel (can be more efficient)
-$ python -m spacy download en_core_web_sm --wheel
 ```
 
 The download command will [install the package](/usage/models#download-pip) via
@@ -306,15 +303,18 @@ doc = nlp("This is a sentence.")
 
 To download a trained pipeline directly using
 [pip](https://pypi.python.org/pypi/pip), point `pip install` to the URL or local
-path of the archive file. To find the direct link to a package, head over to the
+path of the wheel file or archive. Installing the wheel is usually more
+efficient. To find the direct link to a package, head over to the
 [releases](https://github.com/explosion/spacy-models/releases), right click on
 the archive link and copy it to your clipboard.
 
 ```bash
 # With external URL
+$ pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.0.0/en_core_web_sm-3.0.0-py3-none-any.whl
 $ pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.0.0/en_core_web_sm-3.0.0.tar.gz
 
 # With local file
+$ pip install /Users/you/en_core_web_sm-3.0.0-py3-none-any.whl
 $ pip install /Users/you/en_core_web_sm-3.0.0.tar.gz
 ```
 

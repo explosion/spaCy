@@ -19,7 +19,7 @@ def download_cli(
     ctx: typer.Context,
     model: str = Arg(..., help="Name of pipeline package to download"),
     direct: bool = Opt(False, "--direct", "-d", "-D", help="Force direct download of name + version"),
-    wheel: bool = Opt(False, "--wheel", "-W", help="Download binary wheel")
+    sdist: bool = Opt(False, "--sdist", "-S", help="Download sdist (.tar.gz) archive instead of pre-built binary wheel")
     # fmt: on
 ):
     """
@@ -32,10 +32,10 @@ def download_cli(
     DOCS: https://spacy.io/api/cli#download
     AVAILABLE PACKAGES: https://spacy.io/models
     """
-    download(model, direct, wheel, *ctx.args)
+    download(model, direct, sdist, *ctx.args)
 
 
-def download(model: str, direct: bool = False, wheel: bool = False, *pip_args) -> None:
+def download(model: str, direct: bool = False, sdist: bool = False, *pip_args) -> None:
     if (
         not (is_package("spacy") or is_package("spacy-nightly"))
         and "--no-deps" not in pip_args
@@ -49,7 +49,7 @@ def download(model: str, direct: bool = False, wheel: bool = False, *pip_args) -
             "dependencies, you'll have to install them manually."
         )
         pip_args = pip_args + ("--no-deps",)
-    suffix = WHEEL_SUFFIX if wheel else SDIST_SUFFIX
+    suffix = SDIST_SUFFIX if sdist else WHEEL_SUFFIX
     dl_tpl = "{m}-{v}/{m}-{v}{s}#egg={m}=={v}"
     if direct:
         components = model.split("-")

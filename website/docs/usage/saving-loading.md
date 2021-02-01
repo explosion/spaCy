@@ -658,8 +658,9 @@ $ python -m spacy package ./en_example_pipeline ./packages
 ```
 
 This command will create a pipeline package directory and will run
-`python setup.py sdist` in that directory to create `.tar.gz` archive of your
-package that can be installed using `pip install`.
+`python setup.py sdist` in that directory to create a binary `.whl` file or
+`.tar.gz` archive of your package that can be installed using `pip install`.
+Installing the binary wheel is usually more efficient.
 
 ```yaml
 ### Directory structure
