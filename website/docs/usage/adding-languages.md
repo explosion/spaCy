@@ -15,8 +15,8 @@ the specific workflows for each component.
 >
 > To add a new language to spaCy, you'll need to **modify the library's code**.
 > The easiest way to do this is to clone the
-> [repository](https://github.com/explosion/spaCy/tree/master/) and **build
-> spaCy from source**. For more information on this, see the
+> [repository](https://github.com/explosion/spacy/tree/v2.x/) and **build spaCy
+> from source**. For more information on this, see the
 > [installation guide](/usage). Unlike spaCy's core, which is mostly written in
 > Cython, all language data is stored in regular Python files. This means that
 > you won't have to rebuild anything in between – you can simply make edits and
@@ -88,7 +88,7 @@ language and training a language model.
 > #### Should I ever update the global data?
 >
 > Reusable language data is collected as atomic pieces in the root of the
-> [`spacy.lang`](https://github.com/explosion/spaCy/tree/master/spacy/lang)
+> [`spacy.lang`](https://github.com/explosion/spacy/tree/v2.x/spacy/lang)
 > module. Often, when a new language is added, you'll find a pattern or symbol
 > that's missing. Even if it isn't common in other languages, it might be best
 > to add it to the shared language data, unless it has some conflicting
@@ -102,7 +102,7 @@ In order for the tokenizer to split suffixes, prefixes and infixes, spaCy needs
 to know the language's character set. If the language you're adding uses
 non-latin characters, you might need to define the required character classes in
 the global
-[`char_classes.py`](https://github.com/explosion/spaCy/tree/master/spacy/lang/char_classes.py).
+[`char_classes.py`](https://github.com/explosion/spacy/tree/v2.x/spacy/lang/char_classes.py).
 For efficiency, spaCy uses hard-coded unicode ranges to define character
 classes, the definitions of which can be found on
 [Wikipedia](https://en.wikipedia.org/wiki/Unicode_block). If the language
@@ -120,7 +120,7 @@ code and resources specific to Spanish are placed into a directory
 `spacy/lang/es`, which can be imported as `spacy.lang.es`.
 
 To get started, you can check out the
-[existing languages](https://github.com/explosion/spacy/tree/master/spacy/lang).
+[existing languages](https://github.com/explosion/spacy/tree/v2.x/spacy/lang).
 Here's what the class could look like:
 
 ```python
@@ -291,14 +291,14 @@ weren't common in the training data, but are equivalent to other words – for
 example, "realise" and "realize", or "thx" and "thanks".
 
 Similarly, spaCy also includes
-[global base norms](https://github.com/explosion/spaCy/tree/master/spacy/lang/norm_exceptions.py)
+[global base norms](https://github.com/explosion/spacy/tree/v2.x/spacy/lang/norm_exceptions.py)
 for normalizing different styles of quotation marks and currency symbols. Even
 though `$` and `€` are very different, spaCy normalizes them both to `$`. This
 way, they'll always be seen as similar, no matter how common they were in the
 training data.
 
-As of spaCy v2.3, language-specific norm exceptions are provided as a
-JSON dictionary in the package
+As of spaCy v2.3, language-specific norm exceptions are provided as a JSON
+dictionary in the package
 [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data) rather
 than in the main library. For a full example, see
 [`en_lexeme_norm.json`](https://github.com/explosion/spacy-lookups-data/blob/master/spacy_lookups_data/data/en_lexeme_norm.json).
@@ -378,7 +378,7 @@ number words), requires some customization.
 > of possible number words).
 
 Here's an example from the English
-[`lex_attrs.py`](https://github.com/explosion/spaCy/tree/master/spacy/lang/en/lex_attrs.py):
+[`lex_attrs.py`](https://github.com/explosion/spacy/tree/v2.x/spacy/lang/en/lex_attrs.py):
 
 ```python
 ### lex_attrs.py
@@ -430,17 +430,17 @@ iterators:
 > assert chunks[1].text == "another phrase"
 > ```
 
-| Language         | Code | Source                                                                                                            |
-| ---------------- | ---- | ----------------------------------------------------------------------------------------------------------------- |
-| English          | `en` | [`lang/en/syntax_iterators.py`](https://github.com/explosion/spaCy/tree/master/spacy/lang/en/syntax_iterators.py) |
-| German           | `de` | [`lang/de/syntax_iterators.py`](https://github.com/explosion/spaCy/tree/master/spacy/lang/de/syntax_iterators.py) |
-| French           | `fr` | [`lang/fr/syntax_iterators.py`](https://github.com/explosion/spaCy/tree/master/spacy/lang/fr/syntax_iterators.py) |
-| Spanish          | `es` | [`lang/es/syntax_iterators.py`](https://github.com/explosion/spaCy/tree/master/spacy/lang/es/syntax_iterators.py) |
-| Greek            | `el` | [`lang/el/syntax_iterators.py`](https://github.com/explosion/spaCy/tree/master/spacy/lang/el/syntax_iterators.py) |
-| Norwegian Bokmål | `nb` | [`lang/nb/syntax_iterators.py`](https://github.com/explosion/spaCy/tree/master/spacy/lang/nb/syntax_iterators.py) |
-| Swedish          | `sv` | [`lang/sv/syntax_iterators.py`](https://github.com/explosion/spaCy/tree/master/spacy/lang/sv/syntax_iterators.py) |
-| Indonesian       | `id` | [`lang/id/syntax_iterators.py`](https://github.com/explosion/spaCy/tree/master/spacy/lang/id/syntax_iterators.py) |
-| Persian          | `fa` | [`lang/fa/syntax_iterators.py`](https://github.com/explosion/spaCy/tree/master/spacy/lang/fa/syntax_iterators.py) |
+| Language         | Code | Source                                                                                                          |
+| ---------------- | ---- | --------------------------------------------------------------------------------------------------------------- |
+| English          | `en` | [`lang/en/syntax_iterators.py`](https://github.com/explosion/spacy/tree/v2.x/spacy/lang/en/syntax_iterators.py) |
+| German           | `de` | [`lang/de/syntax_iterators.py`](https://github.com/explosion/spacy/tree/v2.x/spacy/lang/de/syntax_iterators.py) |
+| French           | `fr` | [`lang/fr/syntax_iterators.py`](https://github.com/explosion/spacy/tree/v2.x/spacy/lang/fr/syntax_iterators.py) |
+| Spanish          | `es` | [`lang/es/syntax_iterators.py`](https://github.com/explosion/spacy/tree/v2.x/spacy/lang/es/syntax_iterators.py) |
+| Greek            | `el` | [`lang/el/syntax_iterators.py`](https://github.com/explosion/spacy/tree/v2.x/spacy/lang/el/syntax_iterators.py) |
+| Norwegian Bokmål | `nb` | [`lang/nb/syntax_iterators.py`](https://github.com/explosion/spacy/tree/v2.x/spacy/lang/nb/syntax_iterators.py) |
+| Swedish          | `sv` | [`lang/sv/syntax_iterators.py`](https://github.com/explosion/spacy/tree/v2.x/spacy/lang/sv/syntax_iterators.py) |
+| Indonesian       | `id` | [`lang/id/syntax_iterators.py`](https://github.com/explosion/spacy/tree/v2.x/spacy/lang/id/syntax_iterators.py) |
+| Persian          | `fa` | [`lang/fa/syntax_iterators.py`](https://github.com/explosion/spacy/tree/v2.x/spacy/lang/fa/syntax_iterators.py) |
 
 ### Lemmatizer {#lemmatizer new="2"}
 
@@ -561,7 +561,7 @@ be causing regressions.
 spaCy uses the [pytest framework](https://docs.pytest.org/en/latest/) for
 testing. For more details on how the tests are structured and best practices for
 writing your own tests, see our
-[tests documentation](https://github.com/explosion/spaCy/tree/master/spacy/tests).
+[tests documentation](https://github.com/explosion/spacy/tree/v2.x/spacy/tests).
 
 </Infobox>
 
@@ -569,10 +569,10 @@ writing your own tests, see our
 
 It's recommended to always add at least some tests with examples specific to the
 language. Language tests should be located in
-[`tests/lang`](https://github.com/explosion/spaCy/tree/master/spacy/tests/lang)
-in a directory named after the language ID. You'll also need to create a fixture
+[`tests/lang`](https://github.com/explosion/spacy/tree/v2.x/spacy/tests/lang) in
+a directory named after the language ID. You'll also need to create a fixture
 for your tokenizer in the
-[`conftest.py`](https://github.com/explosion/spaCy/tree/master/spacy/tests/conftest.py).
+[`conftest.py`](https://github.com/explosion/spacy/tree/v2.x/spacy/tests/conftest.py).
 Always use the [`get_lang_class`](/api/top-level#util.get_lang_class) helper
 function within the fixture, instead of importing the class at the top of the
 file. This will load the language data only when it's needed. (Otherwise, _all
@@ -585,7 +585,7 @@ def en_tokenizer():
 ```
 
 When adding test cases, always
-[`parametrize`](https://github.com/explosion/spaCy/tree/master/spacy/tests#parameters)
+[`parametrize`](https://github.com/explosion/spacy/tree/v2.x/spacy/tests#parameters)
 them – this will make it easier for others to add more test cases without having
 to modify the test itself. You can also add parameter tuples, for example, a
 test sentence and its expected length, or a list of expected tokens. Here's an
@@ -630,13 +630,13 @@ of using deep learning for NLP with limited labeled data. The vectors are also
 useful by themselves – they power the `.similarity` methods in spaCy. For best
 results, you should pre-process the text with spaCy before training the Word2vec
 model. This ensures your tokenization will match. You can use our
-[word vectors training script](https://github.com/explosion/spacy/tree/master/bin/train_word_vectors.py),
+[word vectors training script](https://github.com/explosion/spacy/tree/v2.x/bin/train_word_vectors.py),
 which pre-processes the text with your language-specific tokenizer and trains
 the model using [Gensim](https://radimrehurek.com/gensim/). The `vectors.bin`
 file should consist of one word and vector per line.
 
 ```python
-https://github.com/explosion/spacy/tree/master/bin/train_word_vectors.py
+https://github.com/explosion/spacy/tree/v2.x/bin/train_word_vectors.py
 ```
 
 If you don't have a large sample of text available, you can also convert word

@@ -75,13 +75,23 @@ const scopeComponents = {
     InlineCode,
 }
 
-const AlertSpace = () => {
+const AlertSpace = ({ legacy }) => {
     const isOnline = useOnlineStatus()
     return (
         <>
             {!isOnline && (
                 <Alert title="Looks like you're offline." icon="offline" variant="warning">
                     But don't worry, your visited pages should be saved for you.
+                </Alert>
+            )}
+            {legacy && (
+                <Alert
+                    title="You're viewing the legacy documentation."
+                    icon="warning"
+                    closeOnClick={false}
+                >
+                    This page reflects an older version of spaCy, not the latest{' '}
+                    <Link to="https://spacy.io">stable release</Link>.
                 </Alert>
             )}
         </>
@@ -131,8 +141,9 @@ class Layout extends React.Component {
         const { file, site = {} } = data || {}
         const mdx = file ? file.childMdx : null
         const { title, section, sectionTitle, teaser, theme = 'blue', searchExclude } = pageContext
-        const bodyClass = classNames(`theme-${theme}`, { 'search-exclude': !!searchExclude })
         const meta = site.siteMetadata || {}
+        const uiTheme = meta.legacy ? 'legacy' : theme
+        const bodyClass = classNames(`theme-${uiTheme}`, { 'search-exclude': !!searchExclude })
         const isDocs = ['usage', 'models', 'api', 'styleguide'].includes(section)
         const content = !mdx ? null : (
             <MDXProvider components={mdxComponents}>
@@ -149,12 +160,12 @@ class Layout extends React.Component {
                     sectionTitle={sectionTitle}
                     bodyClass={bodyClass}
                 />
-                <AlertSpace />
+                <AlertSpace legacy={meta.legacy} />
                 <Navigation
                     title={meta.title}
                     items={meta.navigation}
                     section={section}
-                    search={<Search settings={meta.docSearch} />}
+                    search={meta.legacy ? null : <Search settings={meta.docSearch} />}
                 >
                     <Progress key={location.href} />
                 </Navigation>
@@ -186,6 +197,7 @@ export const pageQuery = graphql`
             siteMetadata {
                 title
                 description
+                legacy
                 navigation {
                     text
                     url

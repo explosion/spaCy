@@ -290,3 +290,8 @@ def test_phrase_matcher_pickle(en_vocab):
     # clunky way to vaguely check that callback is unpickled
     (vocab, docs, callbacks, attr) = matcher_unpickled.__reduce__()[1]
     assert isinstance(callbacks.get("TEST2"), Mock)
+
+
+@pytest.mark.parametrize("attr", ["SENT_START", "IS_SENT_START"])
+def test_phrase_matcher_sent_start(en_vocab, attr):
+    matcher = PhraseMatcher(en_vocab, attr=attr)

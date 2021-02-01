@@ -14,7 +14,7 @@ Create a `GoldCorpus`. IF the input data is an iterable, each item should be a
 `(text, paragraphs)` tuple, where each paragraph is a tuple
 `(sentences, brackets)`, and each sentence is a tuple
 `(ids, words, tags, heads, ner)`. See the implementation of
-[`gold.read_json_file`](https://github.com/explosion/spaCy/tree/master/spacy/gold.pyx)
+[`gold.read_json_file`](https://github.com/explosion/spaCy/tree/v2.x/spacy/gold.pyx)
 for further details.
 
 | Name        | Type                        | Description                                                  |

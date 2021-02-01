@@ -489,7 +489,7 @@ When you call `nlp` on a text, the custom pipeline component is applied to the
 `Doc`.
 
 ```python
-https://github.com/explosion/spaCy/tree/master/examples/pipeline/custom_component_entities.py
+https://github.com/explosion/spacy/tree/v2.x/examples/pipeline/custom_component_entities.py
 ```
 
 Wrapping this functionality in a pipeline component allows you to reuse the
@@ -650,7 +650,7 @@ attributes on the `Doc`, `Span` and `Token` – for example, the capital,
 latitude/longitude coordinates and even the country flag.
 
 ```python
-https://github.com/explosion/spaCy/tree/master/examples/pipeline/custom_component_countries_api.py
+https://github.com/explosion/spacy/tree/v2.x/examples/pipeline/custom_component_countries_api.py
 ```
 
 In this case, all data can be fetched on initialization in one request. However,

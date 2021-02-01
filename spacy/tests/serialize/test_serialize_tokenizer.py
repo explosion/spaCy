@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 import pytest
+import re
 from spacy.util import get_lang_class
 from spacy.tokenizer import Tokenizer
 
@@ -21,6 +22,17 @@ def test_serialize_custom_tokenizer(en_vocab, en_tokenizer):
     tokenizer = Tokenizer(en_vocab, suffix_search=en_tokenizer.suffix_search)
     tokenizer_bytes = tokenizer.to_bytes()
     Tokenizer(en_vocab).from_bytes(tokenizer_bytes)
+
+    # test that empty/unset values are set correctly on deserialization
+    tokenizer = get_lang_class("en").Defaults.create_tokenizer()
+    tokenizer.token_match = re.compile("test").match
+    assert tokenizer.rules != {}
+    assert tokenizer.token_match is not None
+    assert tokenizer.url_match is not None
+    tokenizer.from_bytes(tokenizer_bytes)
+    assert tokenizer.rules == {}
+    assert tokenizer.token_match is None
+    assert tokenizer.url_match is None
 
     tokenizer = Tokenizer(en_vocab, rules={"ABC.": [{"ORTH": "ABC"}, {"ORTH": "."}]})
     tokenizer.rules = {}

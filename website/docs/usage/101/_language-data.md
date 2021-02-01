@@ -2,7 +2,7 @@ Every language is different – and usually full of **exceptions and special
 cases**, especially amongst the most common words. Some of these exceptions are
 shared across languages, while others are **entirely specific** – usually so
 specific that they need to be hard-coded. The
-[`lang`](https://github.com/explosion/spaCy/tree/master/spacy/lang) module
+[`lang`](https://github.com/explosion/spacy/tree/v2.x/spacy/lang) module
 contains all language-specific data, organized in simple Python files. This
 makes the data easy to update and extend.
 
@@ -39,21 +39,21 @@ together all components and creating the `Language` subclass – for example,
 | **Lemmatizer**<br />[`spacy-lookups-data`][spacy-lookups-data]                     | Lemmatization rules or a lookup-based lemmatization table to assign base forms, for example "be" for "was".                                              |
 
 [stop_words.py]:
-  https://github.com/explosion/spaCy/tree/master/spacy/lang/en/stop_words.py
+  https://github.com/explosion/spacy/tree/v2.x/spacy/lang/en/stop_words.py
 [tokenizer_exceptions.py]:
-  https://github.com/explosion/spaCy/tree/master/spacy/lang/de/tokenizer_exceptions.py
+  https://github.com/explosion/spacy/tree/v2.x/spacy/lang/de/tokenizer_exceptions.py
 [norm_exceptions.py]:
-  https://github.com/explosion/spaCy/tree/master/spacy/lang/norm_exceptions.py
+  https://github.com/explosion/spacy/tree/v2.x/spacy/lang/norm_exceptions.py
 [punctuation.py]:
-  https://github.com/explosion/spaCy/tree/master/spacy/lang/punctuation.py
+  https://github.com/explosion/spacy/tree/v2.x/spacy/lang/punctuation.py
 [char_classes.py]:
-  https://github.com/explosion/spaCy/tree/master/spacy/lang/char_classes.py
+  https://github.com/explosion/spacy/tree/v2.x/spacy/lang/char_classes.py
 [lex_attrs.py]:
-  https://github.com/explosion/spaCy/tree/master/spacy/lang/en/lex_attrs.py
+  https://github.com/explosion/spacy/tree/v2.x/spacy/lang/en/lex_attrs.py
 [syntax_iterators.py]:
-  https://github.com/explosion/spaCy/tree/master/spacy/lang/en/syntax_iterators.py
+  https://github.com/explosion/spacy/tree/v2.x/spacy/lang/en/syntax_iterators.py
 [tag_map.py]:
-  https://github.com/explosion/spaCy/tree/master/spacy/lang/en/tag_map.py
+  https://github.com/explosion/spacy/tree/v2.x/spacy/lang/en/tag_map.py
 [morph_rules.py]:
-  https://github.com/explosion/spaCy/tree/master/spacy/lang/en/morph_rules.py
+  https://github.com/explosion/spacy/tree/v2.x/spacy/lang/en/morph_rules.py
 [spacy-lookups-data]: https://github.com/explosion/spacy-lookups-data

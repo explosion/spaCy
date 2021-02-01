@@ -14,10 +14,12 @@ const models = require('./meta/languages.json')
 const universe = require('./meta/universe.json')
 
 const DEFAULT_TEMPLATE = path.resolve('./src/templates/index.js')
+const legacy = site.legacy || !!+process.env.SPACY_LEGACY
 
 module.exports = {
     siteMetadata: {
         ...site,
+        legacy,
         ...logos,
         sidebars,
         ...models,
@@ -127,13 +129,33 @@ module.exports = {
                 background_color: site.theme,
                 theme_color: site.theme,
                 display: `minimal-ui`,
-                icon: `src/images/icon.png`,
+                icon: legacy ? `src/images/icon_legacy.png` : `src/images/icon.png`,
             },
         },
         {
             resolve: `gatsby-plugin-plausible`,
             options: {
                 domain: site.domain,
+            },
+        },
+        {
+            resolve: 'gatsby-plugin-robots-txt',
+            options: {
+                host: site.siteUrl,
+                sitemap: `${site.siteUrl}/sitemap.xml`,
+                // If we're in a special state prevent indexing
+                resolveEnv: () => (legacy ? 'development' : 'production'),
+                env: {
+                    production: {
+                        policy: [{ userAgent: '*', allow: '/' }],
+                    },
+                    development: {
+                        policy: [
+                            { userAgent: '*', disallow: ['/'] },
+                            { userAgent: 'Twitterbot', allow: '/' },
+                        ],
+                    },
+                },
             },
         },
         `gatsby-plugin-offline`,

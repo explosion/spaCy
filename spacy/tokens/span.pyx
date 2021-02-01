@@ -500,7 +500,7 @@ cdef class Span:
     def text(self):
         """RETURNS (unicode): The original verbatim text of the span."""
         text = self.text_with_ws
-        if self[-1].whitespace_:
+        if len(self) > 0 and self[-1].whitespace_:
             text = text[:-1]
         return text
 

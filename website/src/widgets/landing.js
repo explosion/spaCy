@@ -69,7 +69,7 @@ const Landing = ({ data }) => {
     const counts = getCounts(data.languages)
     return (
         <>
-            <LandingHeader>
+            <LandingHeader legacy={data.legacy}>
                 <LandingTitle>
                     Industrial-Strength
                     <br />
@@ -150,12 +150,10 @@ const Landing = ({ data }) => {
 
             <LandingBannerGrid>
                 <LandingBanner
-                    title="spaCy v3.0 nightly: Transformer-based pipelines, new training system, project templates &amp; more"
-                    label="Try the pre-release"
-                    to="https://nightly.spacy.io"
+                    title="spaCy v3.0: Transformer-based pipelines, new training system, project templates &amp; more"
+                    label="Out now"
+                    to="https://spacy.io"
                     button="See what's new"
-                    background="#8758fe"
-                    color="#ffffff"
                     small
                 >
                     spaCy v3.0 features all new <strong>transformer-based pipelines</strong> that
@@ -300,6 +298,7 @@ const landingQuery = graphql`
     query LandingQuery {
         site {
             siteMetadata {
+                legacy
                 repo
                 languages {
                     models

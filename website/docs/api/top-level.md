@@ -107,7 +107,7 @@ meta data as a dictionary instead, you can use the `meta` attribute on your
 
 Get a description for a given POS tag, dependency label or entity type. For a
 list of available terms, see
-[`glossary.py`](https://github.com/explosion/spaCy/tree/master/spacy/glossary.py).
+[`glossary.py`](https://github.com/explosion/spaCy/tree/v2.x/spacy/glossary.py).
 
 > #### Example
 >
@@ -279,7 +279,7 @@ to add custom labels and their colors automatically.
 ## Utility functions {#util source="spacy/util.py"}
 
 spaCy comes with a small collection of utility functions located in
-[`spacy/util.py`](https://github.com/explosion/spaCy/tree/master/spacy/util.py).
+[`spacy/util.py`](https://github.com/explosion/spaCy/tree/v2.x/spacy/util.py).
 Because utility functions are mostly intended for **internal use within spaCy**,
 their behavior may change with future releases. The functions documented on this
 page should be safe to use and we'll try to ensure backwards compatibility.
@@ -538,10 +538,10 @@ Compile a sequence of prefix rules into a regex object.
 > nlp.tokenizer.prefix_search = prefix_regex.search
 > ```
 
-| Name        | Type                                                          | Description                                                                                                                               |
-| ----------- | ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `entries`   | tuple                                                         | The prefix rules, e.g. [`lang.punctuation.TOKENIZER_PREFIXES`](https://github.com/explosion/spaCy/tree/master/spacy/lang/punctuation.py). |
-| **RETURNS** | [regex](https://docs.python.org/3/library/re.html#re-objects) | The regex object. to be used for [`Tokenizer.prefix_search`](/api/tokenizer#attributes).                                                  |
+| Name        | Type                                                          | Description                                                                                                                             |
+| ----------- | ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `entries`   | tuple                                                         | The prefix rules, e.g. [`lang.punctuation.TOKENIZER_PREFIXES`](https://github.com/explosion/spaCy/tree/v2.x/spacy/lang/punctuation.py). |
+| **RETURNS** | [regex](https://docs.python.org/3/library/re.html#re-objects) | The regex object. to be used for [`Tokenizer.prefix_search`](/api/tokenizer#attributes).                                                |
 
 ### util.compile_suffix_regex {#util.compile_suffix_regex tag="function"}
 
@@ -555,10 +555,10 @@ Compile a sequence of suffix rules into a regex object.
 > nlp.tokenizer.suffix_search = suffix_regex.search
 > ```
 
-| Name        | Type                                                          | Description                                                                                                                               |
-| ----------- | ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `entries`   | tuple                                                         | The suffix rules, e.g. [`lang.punctuation.TOKENIZER_SUFFIXES`](https://github.com/explosion/spaCy/tree/master/spacy/lang/punctuation.py). |
-| **RETURNS** | [regex](https://docs.python.org/3/library/re.html#re-objects) | The regex object. to be used for [`Tokenizer.suffix_search`](/api/tokenizer#attributes).                                                  |
+| Name        | Type                                                          | Description                                                                                                                             |
+| ----------- | ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `entries`   | tuple                                                         | The suffix rules, e.g. [`lang.punctuation.TOKENIZER_SUFFIXES`](https://github.com/explosion/spaCy/tree/v2.x/spacy/lang/punctuation.py). |
+| **RETURNS** | [regex](https://docs.python.org/3/library/re.html#re-objects) | The regex object. to be used for [`Tokenizer.suffix_search`](/api/tokenizer#attributes).                                                |
 
 ### util.compile_infix_regex {#util.compile_infix_regex tag="function"}
 
@@ -572,10 +572,10 @@ Compile a sequence of infix rules into a regex object.
 > nlp.tokenizer.infix_finditer = infix_regex.finditer
 > ```
 
-| Name        | Type                                                          | Description                                                                                                                             |
-| ----------- | ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `entries`   | tuple                                                         | The infix rules, e.g. [`lang.punctuation.TOKENIZER_INFIXES`](https://github.com/explosion/spaCy/tree/master/spacy/lang/punctuation.py). |
-| **RETURNS** | [regex](https://docs.python.org/3/library/re.html#re-objects) | The regex object. to be used for [`Tokenizer.infix_finditer`](/api/tokenizer#attributes).                                               |
+| Name        | Type                                                          | Description                                                                                                                           |
+| ----------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `entries`   | tuple                                                         | The infix rules, e.g. [`lang.punctuation.TOKENIZER_INFIXES`](https://github.com/explosion/spaCy/tree/v2.x/spacy/lang/punctuation.py). |
+| **RETURNS** | [regex](https://docs.python.org/3/library/re.html#re-objects) | The regex object. to be used for [`Tokenizer.infix_finditer`](/api/tokenizer#attributes).                                             |
 
 ### util.minibatch {#util.minibatch tag="function" new="2"}
 

@@ -13,13 +13,6 @@ spaCy is compatible with **64-bit CPython 2.7 / 3.5+** and runs on
 available over [pip](https://pypi.python.org/pypi/spacy) and
 [conda](https://anaconda.org/conda-forge/spacy).
 
-> #### 📖 Looking for the old docs?
->
-> To help you make the transition from v1.x to v2.0, we've uploaded the old
-> website to [**legacy.spacy.io**](https://legacy.spacy.io/docs). Wherever
-> possible, the new docs also include notes on features that have changed in
-> v2.0, and features that were introduced in the new version.
-
 ## Quickstart {hidden="true"}
 
 import QuickstartInstall from 'widgets/quickstart-install.js'
@@ -183,7 +176,7 @@ pip install -r requirements.txt
 ```
 
 Compared to regular install via pip, the
-[`requirements.txt`](https://github.com/explosion/spaCy/tree/master/requirements.txt)
+[`requirements.txt`](https://github.com/explosion/spacy/tree/v2.x/requirements.txt)
 additionally installs developer dependencies such as Cython. See the the
 [quickstart widget](#quickstart) to get the right commands for your platform and
 Python version.
@@ -250,14 +243,14 @@ source code and recompiling frequently.
 ### Run tests {#run-tests}
 
 spaCy comes with an
-[extensive test suite](https://github.com/explosion/spaCy/tree/master/spacy/tests).
+[extensive test suite](https://github.com/explosion/spacy/tree/v2.x/spacy/tests).
 In order to run the tests, you'll usually want to clone the
-[repository](https://github.com/explosion/spaCy/tree/master/) and
+[repository](https://github.com/explosion/spacy/tree/v2.x/) and
 [build spaCy from source](#source). This will also install the required
 development dependencies and test utilities defined in the `requirements.txt`.
 
 Alternatively, you can run `pytest` on the tests packaged with the install
-`spacy package. Don't forget to also install the test utilities via spaCy's [`requirements.txt`](https://github.com/explosion/spaCy/tree/master/requirements.txt):
+`spacy package. Don't forget to also install the test utilities via spaCy's [`requirements.txt`](https://github.com/explosion/spacy/tree/v2.x/requirements.txt):
 
 ```bash
 pip install -r requirements.txt

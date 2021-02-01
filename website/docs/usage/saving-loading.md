@@ -194,7 +194,7 @@ add to that data and saves and loads the data to and from a JSON file.
 >
 > To see custom serialization methods in action, check out the new
 > [`EntityRuler`](/api/entityruler) component and its
-> [source](https://github.com/explosion/spaCy/tree/master/spacy/pipeline/entityruler.py).
+> [source](https://github.com/explosion/spacy/tree/v2.x/spacy/pipeline/entityruler.py).
 > Patterns added to the component will be saved to a `.jsonl` file if the
 > pipeline is serialized to disk, and to a bytestring if the pipeline is
 > serialized to bytes. This allows saving out a model with a rule-based entity

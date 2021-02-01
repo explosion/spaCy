@@ -6,10 +6,12 @@ import { StaticQuery, graphql } from 'gatsby'
 import socialImageDefault from '../images/social_default.jpg'
 import socialImageApi from '../images/social_api.jpg'
 import socialImageUniverse from '../images/social_universe.jpg'
+import socialImageLegacy from '../images/social_legacy.jpg'
 
-function getPageTitle(title, sitename, slogan, sectionTitle) {
+function getPageTitle(title, sitename, slogan, sectionTitle, legacy) {
     if (sectionTitle && title) {
-        return `${title} · ${sitename} ${sectionTitle}`
+        const suffix = legacy ? ' (legacy)' : ''
+        return `${title} · ${sitename} ${sectionTitle}${suffix}`
     }
     if (title) {
         return `${title} · ${sitename}`
@@ -17,7 +19,8 @@ function getPageTitle(title, sitename, slogan, sectionTitle) {
     return `${sitename} · ${slogan}`
 }
 
-function getImage(section) {
+function getImage(section, legacy) {
+    if (legacy) return socialImageLegacy
     if (section === 'api') return socialImageApi
     if (section === 'universe') return socialImageUniverse
     return socialImageDefault
@@ -29,13 +32,15 @@ const SEO = ({ description, lang, title, section, sectionTitle, bodyClass }) => 
         render={data => {
             const siteMetadata = data.site.siteMetadata
             const metaDescription = description || siteMetadata.description
+            const legacy = siteMetadata.legacy
             const pageTitle = getPageTitle(
                 title,
                 siteMetadata.title,
                 siteMetadata.slogan,
-                sectionTitle
+                sectionTitle,
+                legacy
             )
-            const socialImage = siteMetadata.siteUrl + getImage(section)
+            const socialImage = siteMetadata.siteUrl + getImage(section, legacy)
             const meta = [
                 {
                     name: 'description',
@@ -125,6 +130,7 @@ const query = graphql`
         site {
             siteMetadata {
                 title
+                legacy
                 description
                 slogan
                 siteUrl

@@ -25,6 +25,7 @@
         "gatsby-plugin-plausible": "0.0.6",
         "gatsby-plugin-react-helmet": "^3.0.6",
         "gatsby-plugin-react-svg": "^2.1.2",
+        "gatsby-plugin-robots-txt": "^1.5.5",
         "gatsby-plugin-sass": "^2.0.10",
         "gatsby-plugin-sharp": "^2.0.20",
         "gatsby-plugin-sitemap": "^2.0.5",
@@ -52,6 +53,7 @@
     "scripts": {
         "build": "gatsby build",
         "dev": "gatsby develop",
+        "dev:legacy": "SPACY_LEGACY=1 npm run dev",
         "lint": "eslint **",
         "clear": "rm -rf .cache",
         "test": "echo \"Write tests! -> https://gatsby.app/unit-testing\""

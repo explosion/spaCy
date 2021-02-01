@@ -313,7 +313,8 @@ cdef find_matches(TokenPatternC** patterns, int n, object doclike, int length, e
         # We need to deduplicate, because we could otherwise arrive at the same
         # match through two paths, e.g. .?.? matching 'a'. Are we matching the
         # first .?, or the second .? -- it doesn't matter, it's just one match.
-        if match not in seen:
+        # Skip 0-length matches. (TODO: fix algorithm)
+        if match not in seen and matches[i].length > 0:
             output.append(match)
             seen.add(match)
     return output

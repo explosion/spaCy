@@ -193,7 +193,7 @@ computed properties can't be accessed.
 
 The uppercase attribute names like `LOWER` or `IS_PUNCT` refer to symbols from
 the
-[`spacy.attrs`](https://github.com/explosion/spaCy/tree/master/spacy/attrs.pyx)
+[`spacy.attrs`](https://github.com/explosion/spacy/tree/v2.x/spacy/attrs.pyx)
 enum table. They're passed into a function that essentially is a big case/switch
 statement, to figure out which struct field to return. The same attribute
 identifiers are used in [`Doc.to_array`](/api/doc#to_array), and a few other
