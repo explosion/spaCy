@@ -915,9 +915,9 @@ via the following platforms:
   questions** and everything related to problems with your specific code. The
   Stack Overflow community is much larger than ours, so if your problem can be
   solved by others, you'll receive help much quicker.
-- [GitHub discussions](https://github.com/explosion/spaCy/discussions): **General 
-  discussion**, **project ideas** and **usage questions**. Meet other community 
-  members to get help with a specific code implementation, discuss ideas for new 
+- [GitHub discussions](https://github.com/explosion/spaCy/discussions): **General
+  discussion**, **project ideas** and **usage questions**. Meet other community
+  members to get help with a specific code implementation, discuss ideas for new
   projects/plugins, support more languages, and share best practices.
 - [GitHub issue tracker](https://github.com/explosion/spaCy/issues): **Bug
   reports** and **improvement suggestions**, i.e. everything that's likely
@@ -959,7 +959,7 @@ regressions to the parts of the library that you care about the most.
 
 **For more details on the types of contributions we're looking for, the code
 conventions and other useful tips, make sure to check out the
-[contributing guidelines](https://github.com/explosion/spaCy/tree/master/CONTRIBUTING.md).**
+[contributing guidelines](https://github.com/explosion/spacy/tree/v2.x/CONTRIBUTING.md).**
 
 <Infobox title="Code of Conduct" variant="warning">
 

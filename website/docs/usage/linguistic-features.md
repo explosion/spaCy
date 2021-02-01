@@ -540,7 +540,7 @@ gold = GoldParse(doc, entities=["U-ANIMAL", "O", "O", "O"])
 
 For more details on **training and updating** the named entity recognizer, see
 the usage guides on [training](/usage/training) or check out the runnable
-[training script](https://github.com/explosion/spaCy/tree/master/examples/training/train_ner.py)
+[training script](https://github.com/explosion/spacy/tree/v2.x/examples/training/train_ner.py)
 on GitHub.
 
 </Infobox>
@@ -646,7 +646,7 @@ import Tokenization101 from 'usage/101/\_tokenization.md'
 
 **Global** and **language-specific** tokenizer data is supplied via the language
 data in
-[`spacy/lang`](https://github.com/explosion/spaCy/tree/master/spacy/lang). The
+[`spacy/lang`](https://github.com/explosion/spacy/tree/v2.x/spacy/lang). The
 tokenizer exceptions define special cases like "don't" in English, which needs
 to be split into two tokens: `{ORTH: "do"}` and `{ORTH: "n't", NORM: "not"}`.
 The prefixes, suffixes and infixes mostly define punctuation rules – for
@@ -666,7 +666,7 @@ For more details on the language-specific data, see the usage guide on
 
 Tokenization rules that are specific to one language, but can be **generalized
 across that language** should ideally live in the language data in
-[`spacy/lang`](https://github.com/explosion/spaCy/tree/master/spacy/lang) – we
+[`spacy/lang`](https://github.com/explosion/spacy/tree/v2.x/spacy/lang) – we
 always appreciate pull requests! Anything that's specific to a domain or text
 type – like financial trading abbreviations, or Bavarian youth slang – should be
 added as a special case rule to your tokenizer instance. If you're dealing with
@@ -843,7 +843,7 @@ domain. There are six things you may need to define:
    be split, overriding the infix rules. Useful for things like numbers.
 6. An optional boolean function `url_match`, which is similar to `token_match`
    except that prefixes and suffixes are removed before applying the match.
- 
+
 <Infobox title="Important note: token match in spaCy v2.2" variant="warning">
 
 In spaCy v2.2.2-v2.2.4, the `token_match` was equivalent to the `url_match`

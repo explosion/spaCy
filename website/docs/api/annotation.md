@@ -250,7 +250,7 @@ POS tag set.
 <Infobox title="Annotation schemes for other models">
 
 For the label schemes used by the other models, see the respective `tag_map.py`
-in [`spacy/lang`](https://github.com/explosion/spaCy/tree/master/spacy/lang).
+in [`spacy/lang`](https://github.com/explosion/spaCy/tree/v2.x/spacy/lang).
 
 </Infobox>
 
@@ -564,7 +564,7 @@ Here's an example of dependencies, part-of-speech tags and names entities, taken
 from the English Wall Street Journal portion of the Penn Treebank:
 
 ```json
-https://github.com/explosion/spaCy/tree/master/examples/training/training-data.json
+https://github.com/explosion/spaCy/tree/v2.x/examples/training/training-data.json
 ```
 
 ### Lexical data for vocabulary {#vocab-jsonl new="2"}
@@ -619,5 +619,5 @@ data.
 Here's an example of the 20 most frequent lexemes in the English training data:
 
 ```json
-https://github.com/explosion/spaCy/tree/master/examples/training/vocab-data.jsonl
+https://github.com/explosion/spaCy/tree/v2.x/examples/training/vocab-data.jsonl
 ```

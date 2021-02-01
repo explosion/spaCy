@@ -352,7 +352,7 @@ a blank `Language` class. To do this, you'll need **example texts** and the
 **character offsets** and **labels** of each entity contained in the texts.
 
 ```python
-https://github.com/explosion/spaCy/tree/master/examples/training/train_ner.py
+https://github.com/explosion/spacy/tree/v2.x/examples/training/train_ner.py
 ```
 
 #### Step by step guide {#step-by-step-ner}
@@ -384,7 +384,7 @@ entity recognizer over unlabelled sentences, and adding their annotations to the
 training set.
 
 ```python
-https://github.com/explosion/spaCy/tree/master/examples/training/train_new_entity_type.py
+https://github.com/explosion/spacy/tree/v2.x/examples/training/train_new_entity_type.py
 ```
 
 <Infobox title="Important note" variant="warning">
@@ -426,7 +426,7 @@ the respective **heads** and **dependency label** for each token of the example
 texts.
 
 ```python
-https://github.com/explosion/spaCy/tree/master/examples/training/train_parser.py
+https://github.com/explosion/spacy/tree/v2.x/examples/training/train_parser.py
 ```
 
 #### Step by step guide {#step-by-step-parser}
@@ -460,7 +460,7 @@ those tags to the
 [Universal Dependencies scheme](http://universaldependencies.github.io/docs/u/pos/index.html).
 
 ```python
-https://github.com/explosion/spaCy/tree/master/examples/training/train_tagger.py
+https://github.com/explosion/spacy/tree/v2.x/examples/training/train_tagger.py
 ```
 
 #### Step by step guide {#step-by-step-tagger}
@@ -528,7 +528,7 @@ message semantics will have the following types of relations: `ROOT`, `PLACE`,
 `QUALITY`, `ATTRIBUTE`, `TIME` and `LOCATION`.
 
 ```python
-https://github.com/explosion/spaCy/tree/master/examples/training/train_intent_parser.py
+https://github.com/explosion/spacy/tree/v2.x/examples/training/train_intent_parser.py
 ```
 
 #### Step by step guide {#step-by-step-parser-custom}
@@ -567,7 +567,7 @@ automatically via Thinc's built-in dataset loader. Predictions are available via
 [`Doc.cats`](/api/doc#attributes).
 
 ```python
-https://github.com/explosion/spaCy/tree/master/examples/training/train_textcat.py
+https://github.com/explosion/spacy/tree/v2.x/examples/training/train_textcat.py
 ```
 
 #### Step by step guide {#step-by-step-textcat}
@@ -614,7 +614,7 @@ pretrained word vectors to obtain an encoding of an entity's description as its
 vector.
 
 ```python
-https://github.com/explosion/spaCy/tree/master/examples/training/create_kb.py
+https://github.com/explosion/spacy/tree/v2.x/examples/training/create_kb.py
 ```
 
 #### Step by step guide {#step-by-step-kb}
@@ -639,7 +639,7 @@ offsets** and **knowledge base identifiers** of each entity contained in the
 texts.
 
 ```python
-https://github.com/explosion/spaCy/tree/master/examples/training/train_entity_linker.py
+https://github.com/explosion/spacy/tree/v2.x/examples/training/train_entity_linker.py
 ```
 
 #### Step by step guide {#step-by-step-entity-linker}

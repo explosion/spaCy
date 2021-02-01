@@ -17,7 +17,7 @@ This example shows how to use the new [`PhraseMatcher`](/api/phrasematcher) to
 efficiently find entities from a large terminology list.
 
 ```python
-https://github.com/explosion/spaCy/tree/master/examples/information_extraction/phrase_matcher.py
+https://github.com/explosion/spacy/tree/v2.x/examples/information_extraction/phrase_matcher.py
 ```
 
 ### Extracting entity relations {#entity-relations}
@@ -29,7 +29,7 @@ tree to find the noun phrase they are referring to – for example:
 `"$9.4 million"` → `"Net income"`.
 
 ```python
-https://github.com/explosion/spaCy/tree/master/examples/information_extraction/entity_relations.py
+https://github.com/explosion/spacy/tree/v2.x/examples/information_extraction/entity_relations.py
 ```
 
 ### Navigating the parse tree and subtrees {#subtrees}
@@ -38,7 +38,7 @@ This example shows how to navigate the parse tree including subtrees attached to
 a word.
 
 ```python
-https://github.com/explosion/spaCy/tree/master/examples/information_extraction/parse_subtrees.py
+https://github.com/explosion/spacy/tree/v2.x/examples/information_extraction/parse_subtrees.py
 ```
 
 ## Pipeline {#pipeline hidden="true"}
@@ -51,7 +51,7 @@ entities into one token and sets custom attributes on the `Doc`, `Span` and
 `Token`.
 
 ```python
-https://github.com/explosion/spaCy/tree/master/examples/pipeline/custom_component_entities.py
+https://github.com/explosion/spacy/tree/v2.x/examples/pipeline/custom_component_entities.py
 ```
 
 ### Custom pipeline components and attribute extensions via a REST API {#custom-components-api new="2"}
@@ -63,7 +63,7 @@ attributes on the `Doc`, `Span` and `Token` – for example, the capital,
 latitude/longitude coordinates and the country flag.
 
 ```python
-https://github.com/explosion/spaCy/tree/master/examples/pipeline/custom_component_countries_api.py
+https://github.com/explosion/spacy/tree/v2.x/examples/pipeline/custom_component_countries_api.py
 ```
 
 ### Custom method extensions {#custom-components-attr-methods new="2"}
@@ -72,7 +72,7 @@ A collection of snippets showing examples of extensions adding custom methods to
 the `Doc`, `Token` and `Span`.
 
 ```python
-https://github.com/explosion/spaCy/tree/master/examples/pipeline/custom_attr_methods.py
+https://github.com/explosion/spacy/tree/v2.x/examples/pipeline/custom_attr_methods.py
 ```
 
 ### Multi-processing with Joblib {#multi-processing}
@@ -85,7 +85,7 @@ IMDB movie reviews dataset and will be loaded automatically via Thinc's built-in
 dataset loader.
 
 ```python
-https://github.com/explosion/spaCy/tree/master/examples/pipeline/multi_processing.py
+https://github.com/explosion/spacy/tree/v2.x/examples/pipeline/multi_processing.py
 ```
 
 ## Training {#training hidden="true"}
@@ -93,11 +93,11 @@ https://github.com/explosion/spaCy/tree/master/examples/pipeline/multi_processin
 ### Training spaCy's Named Entity Recognizer {#training-ner}
 
 This example shows how to update spaCy's entity recognizer with your own
-examples, starting off with an existing, pretrained model, or from scratch
-using a blank `Language` class.
+examples, starting off with an existing, pretrained model, or from scratch using
+a blank `Language` class.
 
 ```python
-https://github.com/explosion/spaCy/tree/master/examples/training/train_ner.py
+https://github.com/explosion/spacy/tree/v2.x/examples/training/train_ner.py
 ```
 
 ### Training an additional entity type {#new-entity-type}
@@ -108,28 +108,28 @@ examples. In practice, you'll need many more — a few hundred would be a good
 start.
 
 ```python
-https://github.com/explosion/spaCy/tree/master/examples/training/train_new_entity_type.py
+https://github.com/explosion/spacy/tree/v2.x/examples/training/train_new_entity_type.py
 ```
 
 ### Creating a Knowledge Base for Named Entity Linking {#kb}
 
-This example shows how to create a knowledge base in spaCy,
-which is needed to implement entity linking functionality.
-It requires as input a spaCy model with pretrained word vectors,
-and it stores the KB to file (if an `output_dir` is provided).
+This example shows how to create a knowledge base in spaCy, which is needed to
+implement entity linking functionality. It requires as input a spaCy model with
+pretrained word vectors, and it stores the KB to file (if an `output_dir` is
+provided).
 
 ```python
-https://github.com/explosion/spaCy/tree/master/examples/training/create_kb.py
+https://github.com/explosion/spacy/tree/v2.x/examples/training/create_kb.py
 ```
 
 ### Training spaCy's Named Entity Linker {#nel}
 
 This example shows how to train spaCy's entity linker with your own custom
-examples, starting off with a predefined knowledge base and its vocab, 
-and using a blank `English` class.
+examples, starting off with a predefined knowledge base and its vocab, and using
+a blank `English` class.
 
 ```python
-https://github.com/explosion/spaCy/tree/master/examples/training/train_entity_linker.py
+https://github.com/explosion/spacy/tree/v2.x/examples/training/train_entity_linker.py
 ```
 
 ### Training spaCy's Dependency Parser {#parser}
@@ -138,7 +138,7 @@ This example shows how to update spaCy's dependency parser, starting off with an
 existing, pretrained model, or from scratch using a blank `Language` class.
 
 ```python
-https://github.com/explosion/spaCy/tree/master/examples/training/train_parser.py
+https://github.com/explosion/spacy/tree/v2.x/examples/training/train_parser.py
 ```
 
 ### Training spaCy's Part-of-speech Tagger {#tagger}
@@ -148,7 +148,7 @@ map, mapping our own tags to the mapping those tags to the
 [Universal Dependencies scheme](http://universaldependencies.github.io/docs/u/pos/index.html).
 
 ```python
-https://github.com/explosion/spaCy/tree/master/examples/training/train_tagger.py
+https://github.com/explosion/spacy/tree/v2.x/examples/training/train_tagger.py
 ```
 
 ### Training a custom parser for chat intent semantics {#intent-parser}
@@ -162,7 +162,7 @@ following types of relations: `ROOT`, `PLACE`, `QUALITY`, `ATTRIBUTE`, `TIME`
 and `LOCATION`.
 
 ```python
-https://github.com/explosion/spaCy/tree/master/examples/training/train_intent_parser.py
+https://github.com/explosion/spacy/tree/v2.x/examples/training/train_intent_parser.py
 ```
 
 ### Training spaCy's text classifier {#textcat new="2"}
@@ -174,7 +174,7 @@ automatically via Thinc's built-in dataset loader. Predictions are available via
 [`Doc.cats`](/api/doc#attributes).
 
 ```python
-https://github.com/explosion/spaCy/tree/master/examples/training/train_textcat.py
+https://github.com/explosion/spacy/tree/v2.x/examples/training/train_textcat.py
 ```
 
 ## Vectors {#vectors hidden="true"}
@@ -186,7 +186,7 @@ This script lets you load any spaCy model containing word vectors into
 [embedding visualization](https://github.com/tensorflow/tensorboard/blob/master/docs/tensorboard_projector_plugin.ipynb).
 
 ```python
-https://github.com/explosion/spaCy/tree/master/examples/vectors_tensorboard.py
+https://github.com/explosion/spacy/tree/v2.x/examples/vectors_tensorboard.py
 ```
 
 ## Deep Learning {#deep-learning hidden="true"}
@@ -203,5 +203,5 @@ documents so that they're a fixed size. This hurts review accuracy a lot,
 because people often summarize their rating in the final sentence.
 
 ```python
-https://github.com/explosion/spaCy/tree/master/examples/deep_learning_keras.py
+https://github.com/explosion/spacy/tree/v2.x/examples/deep_learning_keras.py
 ```

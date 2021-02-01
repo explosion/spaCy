@@ -176,7 +176,7 @@ pip install -r requirements.txt
 ```
 
 Compared to regular install via pip, the
-[`requirements.txt`](https://github.com/explosion/spaCy/tree/master/requirements.txt)
+[`requirements.txt`](https://github.com/explosion/spacy/tree/v2.x/requirements.txt)
 additionally installs developer dependencies such as Cython. See the the
 [quickstart widget](#quickstart) to get the right commands for your platform and
 Python version.
@@ -243,14 +243,14 @@ source code and recompiling frequently.
 ### Run tests {#run-tests}
 
 spaCy comes with an
-[extensive test suite](https://github.com/explosion/spaCy/tree/master/spacy/tests).
+[extensive test suite](https://github.com/explosion/spacy/tree/v2.x/spacy/tests).
 In order to run the tests, you'll usually want to clone the
-[repository](https://github.com/explosion/spaCy/tree/master/) and
+[repository](https://github.com/explosion/spacy/tree/v2.x/) and
 [build spaCy from source](#source). This will also install the required
 development dependencies and test utilities defined in the `requirements.txt`.
 
 Alternatively, you can run `pytest` on the tests packaged with the install
-`spacy package. Don't forget to also install the test utilities via spaCy's [`requirements.txt`](https://github.com/explosion/spaCy/tree/master/requirements.txt):
+`spacy package. Don't forget to also install the test utilities via spaCy's [`requirements.txt`](https://github.com/explosion/spacy/tree/v2.x/requirements.txt):
 
 ```bash
 pip install -r requirements.txt

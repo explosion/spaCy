@@ -6,6 +6,7 @@ import siteMetadata from '../../meta/site.json'
 
 const htmlToReactParser = new HtmlToReactParser()
 
+export const defaultBranch = siteMetadata.codeBranch
 export const repo = siteMetadata.repo
 export const modelsRepo = siteMetadata.modelsRepo
 
@@ -18,11 +19,11 @@ export const headingTextClassName = 'heading-text'
 /**
  * Create a link to the spaCy repository on GitHub
  * @param {string} filepath - The file path relative to the root of the repo.
- * @param {string} [branch] - Optional branch. Defaults to master.
+ * @param {string} [branch] - Optional branch.
  * @returns {string} - URL to the file on GitHub.
  */
-export function github(filepath, branch = 'master') {
-    const path = filepath ? '/tree/' + (branch || 'master') + '/' + filepath : ''
+export function github(filepath, branch = defaultBranch) {
+    const path = filepath ? '/tree/' + (branch || defaultBranch) + '/' + filepath : ''
     return `https://github.com/${repo}${path}`
 }
 
@@ -30,9 +31,9 @@ export function github(filepath, branch = 'master') {
  * Get the source of a file in the documentation based on its slug
  * @param {string} slug - The slug, e.g. /api/doc.
  * @param {boolean} [isIndex] - Whether the page is an index, e.g. /api/index.md
- * @param {string} [branch] - Optional branch on GitHub. Defaults to master.
+ * @param {string} [branch] - Optional branch on GitHub.
  */
-export function getCurrentSource(slug, isIndex = false, branch = 'master') {
+export function getCurrentSource(slug, isIndex = false, branch = defaultBranch) {
     const ext = isIndex ? '/index.md' : '.md'
     return github(`website/docs${slug}${ext}`, branch)
 }
