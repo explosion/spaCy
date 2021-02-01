@@ -37,7 +37,12 @@ def project_run_cli(
 
 
 def project_run(
-    project_dir: Path, subcommand: str, *, force: bool = False, dry: bool = False
+    project_dir: Path,
+    subcommand: str,
+    *,
+    force: bool = False,
+    dry: bool = False,
+    capture: bool = False,
 ) -> None:
     """Run a named script defined in the project.yml. If the script is part
     of the default pipeline (defined in the "run" section), DVC is used to
@@ -48,6 +53,11 @@ def project_run(
     subcommand (str): Name of command to run.
     force (bool): Force re-running, even if nothing changed.
     dry (bool): Perform a dry run and don't execute commands.
+    capture (bool): Whether to capture the output and errors of individual commands.
+        If False, the stdout and stderr will not be redirected, and if there's an error,
+        sys.exit will be called with the return code. You should use capture=False
+        when you want to turn over execution to the command, and capture=True
+        when you want to run the command more like a function.
     """
     config = load_project_config(project_dir)
     commands = {cmd["name"]: cmd for cmd in config.get("commands", [])}
@@ -72,7 +82,7 @@ def project_run(
             if not rerun and not force:
                 msg.info(f"Skipping '{cmd['name']}': nothing changed")
             else:
-                run_commands(cmd["script"], dry=dry)
+                run_commands(cmd["script"], dry=dry, capture=capture)
                 if not dry:
                     update_lockfile(current_dir, cmd)
 
@@ -126,12 +136,18 @@ def run_commands(
     commands: Iterable[str] = SimpleFrozenList(),
     silent: bool = False,
     dry: bool = False,
+    capture: bool = False,
 ) -> None:
     """Run a sequence of commands in a subprocess, in order.
 
     commands (List[str]): The string commands.
     silent (bool): Don't print the commands.
     dry (bool): Perform a dry run and don't execut anything.
+    capture (bool): Whether to capture the output and errors of individual commands.
+        If False, the stdout and stderr will not be redirected, and if there's an error,
+        sys.exit will be called with the return code. You should use capture=False
+        when you want to turn over execution to the command, and capture=True
+        when you want to run the command more like a function.
     """
     for command in commands:
         command = split_command(command)
@@ -149,7 +165,7 @@ def run_commands(
         if not silent:
             print(f"Running command: {join_command(command)}")
         if not dry:
-            run_command(command, capture=False)
+            run_command(command, capture=capture)
 
 
 def validate_subcommand(

@@ -803,7 +803,7 @@ def run_command(
     stdin (Optional[Any]): stdin to read from or None.
     capture (bool): Whether to capture the output and errors. If False,
         the stdout and stderr will not be redirected, and if there's an error,
-        sys.exit will be called with the returncode. You should use capture=False
+        sys.exit will be called with the return code. You should use capture=False
         when you want to turn over execution to the command, and capture=True
         when you want to run the command more like a function.
     RETURNS (Optional[CompletedProcess]): The process object.
