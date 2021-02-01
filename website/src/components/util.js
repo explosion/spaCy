@@ -6,9 +6,11 @@ import siteMetadata from '../../meta/site.json'
 
 const htmlToReactParser = new HtmlToReactParser()
 
-export const defaultBranch = siteMetadata.codeBranch
+const isNightly = siteMetadata.nightlyBranches.includes(siteMetadata.domain)
+export const DEFAULT_BRANCH = isNightly ? 'develop' : 'master'
 export const repo = siteMetadata.repo
 export const modelsRepo = siteMetadata.modelsRepo
+export const projectsRepo = siteMetadata.projectsRepo
 
 /**
  * This is used to provide selectors for headings so they can be crawled by
@@ -19,11 +21,12 @@ export const headingTextClassName = 'heading-text'
 /**
  * Create a link to the spaCy repository on GitHub
  * @param {string} filepath - The file path relative to the root of the repo.
- * @param {string} [branch] - Optional branch.
+ * @param {string} [branch] - Optional branch. Defaults to master.
  * @returns {string} - URL to the file on GitHub.
  */
-export function github(filepath, branch = defaultBranch) {
-    const path = filepath ? '/tree/' + (branch || defaultBranch) + '/' + filepath : ''
+export function github(filepath, branch = DEFAULT_BRANCH) {
+    if (filepath && filepath.startsWith('github.com')) return `https://${filepath}`
+    const path = filepath ? '/tree/' + (branch || 'master') + '/' + filepath : ''
     return `https://github.com/${repo}${path}`
 }
 
@@ -31,9 +34,9 @@ export function github(filepath, branch = defaultBranch) {
  * Get the source of a file in the documentation based on its slug
  * @param {string} slug - The slug, e.g. /api/doc.
  * @param {boolean} [isIndex] - Whether the page is an index, e.g. /api/index.md
- * @param {string} [branch] - Optional branch on GitHub.
+ * @param {string} [branch] - Optional branch on GitHub. Defaults to master.
  */
-export function getCurrentSource(slug, isIndex = false, branch = defaultBranch) {
+export function getCurrentSource(slug, isIndex = false, branch = DEFAULT_BRANCH) {
     const ext = isIndex ? '/index.md' : '.md'
     return github(`website/docs${slug}${ext}`, branch)
 }
@@ -44,6 +47,17 @@ export function getCurrentSource(slug, isIndex = false, branch = defaultBranch) 
  */
 export function isString(obj) {
     return typeof obj === 'string' || obj instanceof String
+}
+
+/**
+ * @param obj - The object to check.
+ * @returns {boolean} – Whether the object is an image
+ */
+export function isImage(obj) {
+    if (!obj || !React.isValidElement(obj)) {
+        return false
+    }
+    return obj.props.name == 'img' || obj.props.className == 'gatsby-resp-image-wrapper'
 }
 
 /**

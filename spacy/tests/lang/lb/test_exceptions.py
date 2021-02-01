@@ -1,6 +1,3 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import pytest
 
 
@@ -21,4 +18,3 @@ def test_lb_tokenizer_handles_exc_in_text(lb_tokenizer):
     tokens = lb_tokenizer(text)
     assert len(tokens) == 9
     assert tokens[1].text == "'t"
-    assert tokens[1].lemma_ == "et"

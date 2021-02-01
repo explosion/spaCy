@@ -1,7 +1,3 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
-
 def test_en_simple_punct(en_tokenizer):
     text = "to walk, do foo"
     tokens = en_tokenizer(text)

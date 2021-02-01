@@ -1,17 +1,14 @@
-# coding: utf8
 """
 spaCy's built in visualization suite for dependencies and named entities.
 
 DOCS: https://spacy.io/api/top-level#displacy
 USAGE: https://spacy.io/usage/visualizers
 """
-from __future__ import unicode_literals
-
+from typing import Union, Iterable, Optional, Dict, Any, Callable
 import warnings
 
 from .render import DependencyRenderer, EntityRenderer
 from ..tokens import Doc, Span
-from ..compat import b_to_str
 from ..errors import Errors, Warnings
 from ..util import is_in_jupyter
 
@@ -21,18 +18,24 @@ RENDER_WRAPPER = None
 
 
 def render(
-    docs, style="dep", page=False, minify=False, jupyter=None, options={}, manual=False
-):
+    docs: Union[Iterable[Union[Doc, Span]], Doc, Span],
+    style: str = "dep",
+    page: bool = False,
+    minify: bool = False,
+    jupyter: Optional[bool] = None,
+    options: Dict[str, Any] = {},
+    manual: bool = False,
+) -> str:
     """Render displaCy visualisation.
 
-    docs (list or Doc): Document(s) to visualise.
-    style (unicode): Visualisation style, 'dep' or 'ent'.
+    docs (Union[Iterable[Doc], Doc]): Document(s) to visualise.
+    style (str): Visualisation style, 'dep' or 'ent'.
     page (bool): Render markup as full HTML page.
     minify (bool): Minify HTML markup.
     jupyter (bool): Override Jupyter auto-detection.
     options (dict): Visualiser-specific options, e.g. colors.
     manual (bool): Don't parse `Doc` and instead expect a dict/list of dicts.
-    RETURNS (unicode): Rendered HTML markup.
+    RETURNS (str): Rendered HTML markup.
 
     DOCS: https://spacy.io/api/top-level#displacy.render
     USAGE: https://spacy.io/usage/visualizers
@@ -48,8 +51,8 @@ def render(
     docs = [obj if not isinstance(obj, Span) else obj.as_doc() for obj in docs]
     if not all(isinstance(obj, (Doc, Span, dict)) for obj in docs):
         raise ValueError(Errors.E096)
-    renderer, converter = factories[style]
-    renderer = renderer(options=options)
+    renderer_func, converter = factories[style]
+    renderer = renderer_func(options=options)
     parsed = [converter(doc, options) for doc in docs] if not manual else docs
     _html["parsed"] = renderer.render(parsed, page=page, minify=minify).strip()
     html = _html["parsed"]
@@ -65,25 +68,25 @@ def render(
 
 
 def serve(
-    docs,
-    style="dep",
-    page=True,
-    minify=False,
-    options={},
-    manual=False,
-    port=5000,
-    host="0.0.0.0",
-):
+    docs: Union[Iterable[Doc], Doc],
+    style: str = "dep",
+    page: bool = True,
+    minify: bool = False,
+    options: Dict[str, Any] = {},
+    manual: bool = False,
+    port: int = 5000,
+    host: str = "0.0.0.0",
+) -> None:
     """Serve displaCy visualisation.
 
     docs (list or Doc): Document(s) to visualise.
-    style (unicode): Visualisation style, 'dep' or 'ent'.
+    style (str): Visualisation style, 'dep' or 'ent'.
     page (bool): Render markup as full HTML page.
     minify (bool): Minify HTML markup.
     options (dict): Visualiser-specific options, e.g. colors.
     manual (bool): Don't parse `Doc` and instead expect a dict/list of dicts.
     port (int): Port to serve visualisation.
-    host (unicode): Host to serve visualisation.
+    host (str): Host to serve visualisation.
 
     DOCS: https://spacy.io/api/top-level#displacy.serve
     USAGE: https://spacy.io/usage/visualizers
@@ -92,35 +95,33 @@ def serve(
 
     if is_in_jupyter():
         warnings.warn(Warnings.W011)
-
     render(docs, style=style, page=page, minify=minify, options=options, manual=manual)
     httpd = simple_server.make_server(host, port, app)
-    print("\nUsing the '{}' visualizer".format(style))
-    print("Serving on http://{}:{} ...\n".format(host, port))
+    print(f"\nUsing the '{style}' visualizer")
+    print(f"Serving on http://{host}:{port} ...\n")
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
-        print("Shutting down server on port {}.".format(port))
+        print(f"Shutting down server on port {port}.")
     finally:
         httpd.server_close()
 
 
 def app(environ, start_response):
-    # Headers and status need to be bytes in Python 2, see #1227
-    headers = [(b_to_str(b"Content-type"), b_to_str(b"text/html; charset=utf-8"))]
-    start_response(b_to_str(b"200 OK"), headers)
+    headers = [("Content-type", "text/html; charset=utf-8")]
+    start_response("200 OK", headers)
     res = _html["parsed"].encode(encoding="utf-8")
     return [res]
 
 
-def parse_deps(orig_doc, options={}):
+def parse_deps(orig_doc: Doc, options: Dict[str, Any] = {}) -> Dict[str, Any]:
     """Generate dependency parse in {'words': [], 'arcs': []} format.
 
     doc (Doc): Document do parse.
     RETURNS (dict): Generated dependency parse keyed by words and arcs.
     """
     doc = Doc(orig_doc.vocab).from_bytes(orig_doc.to_bytes(exclude=["user_data"]))
-    if not doc.is_parsed:
+    if not doc.has_annotation("DEP"):
         warnings.warn(Warnings.W005)
     if options.get("collapse_phrases", False):
         with doc.retokenize() as retokenizer:
@@ -156,7 +157,6 @@ def parse_deps(orig_doc, options={}):
         }
         for w in doc
     ]
-
     arcs = []
     for word in doc:
         if word.i < word.head.i:
@@ -175,7 +175,7 @@ def parse_deps(orig_doc, options={}):
     return {"words": words, "arcs": arcs, "settings": get_doc_settings(orig_doc)}
 
 
-def parse_ents(doc, options={}):
+def parse_ents(doc: Doc, options: Dict[str, Any] = {}) -> Dict[str, Any]:
     """Generate named entities in [{start: i, end: i, label: 'label'}] format.
 
     doc (Doc): Document do parse.
@@ -192,7 +192,7 @@ def parse_ents(doc, options={}):
     return {"text": doc.text, "ents": ents, "title": title, "settings": settings}
 
 
-def set_render_wrapper(func):
+def set_render_wrapper(func: Callable[[str], str]) -> None:
     """Set an optional wrapper function that is called around the generated
     HTML markup on displacy.render. This can be used to allow integration into
     other platforms, similar to Jupyter Notebooks that require functions to be
@@ -209,7 +209,7 @@ def set_render_wrapper(func):
     RENDER_WRAPPER = func
 
 
-def get_doc_settings(doc):
+def get_doc_settings(doc: Doc) -> Dict[str, Any]:
     return {
         "lang": doc.lang_,
         "direction": doc.vocab.writing_system.get("direction", "ltr"),

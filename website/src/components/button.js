@@ -6,7 +6,15 @@ import Link from './link'
 import Icon from './icon'
 import classes from '../styles/button.module.sass'
 
-const Button = ({ to, variant, large, icon, className, children, ...props }) => {
+export default function Button({
+    to,
+    variant = 'secondary',
+    large = false,
+    icon,
+    className,
+    children,
+    ...props
+}) {
     const buttonClassNames = classNames(classes.root, className, {
         [classes.large]: large,
         [classes.primary]: variant === 'primary',
@@ -21,17 +29,10 @@ const Button = ({ to, variant, large, icon, className, children, ...props }) => 
     )
 }
 
-Button.defaultProps = {
-    variant: 'secondary',
-    large: false,
-}
-
 Button.propTypes = {
-    to: PropTypes.string.isRequired,
+    to: PropTypes.string,
     variant: PropTypes.oneOf(['primary', 'secondary', 'tertiary']),
     large: PropTypes.bool,
     icon: PropTypes.string,
     className: PropTypes.string,
 }
-
-export default Button

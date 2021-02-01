@@ -1,9 +1,9 @@
 If you've been modifying the pipeline, vocabulary, vectors and entities, or made
-updates to the model, you'll eventually want to **save your progress** – for
-example, everything that's in your `nlp` object. This means you'll have to
-translate its contents and structure into a format that can be saved, like a
-file or a byte string. This process is called serialization. spaCy comes with
-**built-in serialization methods** and supports the
+updates to the component models, you'll eventually want to **save your
+progress** – for example, everything that's in your `nlp` object. This means
+you'll have to translate its contents and structure into a format that can be
+saved, like a file or a byte string. This process is called serialization. spaCy
+comes with **built-in serialization methods** and supports the
 [Pickle protocol](https://www.diveinto.org/python3/serializing.html#dump).
 
 > #### What's pickle?

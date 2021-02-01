@@ -1,6 +1,11 @@
 const autoprefixer = require('autoprefixer')
 const path = require('path')
 
+// https://florian.ec/blog/gatsby-build-netlify-segmentation-fault/
+const sharp = require('sharp')
+sharp.cache(false)
+sharp.simd(false)
+
 // Markdown plugins
 const wrapSectionPlugin = require('./src/plugins/remark-wrap-section.js')
 const customAttrsPlugin = require('./src/plugins/remark-custom-attrs.js')
@@ -8,22 +13,49 @@ const codeBlocksPlugin = require('./src/plugins/remark-code-blocks.js')
 
 // Import metadata
 const site = require('./meta/site.json')
-const logos = require('./meta/logos.json')
 const sidebars = require('./meta/sidebars.json')
 const models = require('./meta/languages.json')
 const universe = require('./meta/universe.json')
 
 const DEFAULT_TEMPLATE = path.resolve('./src/templates/index.js')
-const legacy = site.legacy || !!+process.env.SPACY_LEGACY
+
+const domain = process.env.BRANCH || site.domain
+const siteUrl = `https://${domain}`
+const isNightly = site.nightlyBranches.includes(domain)
+const isLegacy = site.legacy || !!+process.env.SPACY_LEGACY
+const favicon = `src/images/icon${isNightly ? '_nightly' : isLegacy ? '_legacy' : ''}.png`
+const branch = isNightly ? 'develop' : 'master'
+
+// Those variables are going to be replaced in the Markdown, e.g. %%GITHUB_SPACY
+const replacements = {
+    GITHUB_SPACY: `https://github.com/explosion/spaCy/tree/${branch}`,
+    GITHUB_PROJECTS: `https://github.com/${site.projectsRepo}`,
+    SPACY_PKG_NAME: isNightly ? 'spacy-nightly' : 'spacy',
+    SPACY_PKG_FLAGS: isNightly ? ' --pre' : '',
+}
+
+/**
+ * Compute the overall total counts of models and languages
+ */
+function getCounts(langs = []) {
+    return {
+        langs: langs.length,
+        modelLangs: langs.filter(({ models }) => models && !!models.length).length,
+        models: langs.map(({ models }) => (models ? models.length : 0)).reduce((a, b) => a + b, 0),
+    }
+}
 
 module.exports = {
     siteMetadata: {
         ...site,
-        legacy,
-        ...logos,
         sidebars,
         ...models,
+        counts: getCounts(models.languages),
         universe,
+        nightly: isNightly,
+        legacy: isLegacy,
+        binderBranch: domain,
+        siteUrl,
     },
 
     plugins: [
@@ -113,6 +145,13 @@ module.exports = {
                     {
                         resolve: `gatsby-remark-copy-linked-files`,
                     },
+                    {
+                        resolve: 'gatsby-remark-find-replace',
+                        options: {
+                            replacements,
+                            prefix: '%%',
+                        },
+                    },
                 ],
             },
         },
@@ -129,22 +168,20 @@ module.exports = {
                 background_color: site.theme,
                 theme_color: site.theme,
                 display: `minimal-ui`,
-                icon: legacy ? `src/images/icon_legacy.png` : `src/images/icon.png`,
+                icon: favicon,
             },
         },
         {
             resolve: `gatsby-plugin-plausible`,
-            options: {
-                domain: site.domain,
-            },
+            options: { domain },
         },
         {
             resolve: 'gatsby-plugin-robots-txt',
             options: {
-                host: site.siteUrl,
-                sitemap: `${site.siteUrl}/sitemap.xml`,
-                // If we're in a special state prevent indexing
-                resolveEnv: () => (legacy ? 'development' : 'production'),
+                host: siteUrl,
+                sitemap: `${siteUrl}/sitemap.xml`,
+                // If we're in a special state (nightly, legacy) prevent indexing
+                resolveEnv: () => (isNightly ? 'development' : 'production'),
                 env: {
                     production: {
                         policy: [{ userAgent: '*', allow: '/' }],

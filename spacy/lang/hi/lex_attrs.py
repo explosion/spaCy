@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 from ..norm_exceptions import BASE_NORMS
 from ...attrs import NORM, LIKE_NUM
 
@@ -77,7 +74,7 @@ _eleven_to_beyond = [
     "बावन",
     "तिरपन", "तिरेपन",
     "चौवन", "चउवन",
-    "पचपन", 
+    "पचपन",
     "छप्पन",
     "सतावन", "सत्तावन",
     "अठावन",
@@ -94,7 +91,7 @@ _eleven_to_beyond = [
     "उनहत्तर",
     "सत्तर",
     "इकहत्तर"
-    "बहत्तर", 
+    "बहत्तर",
     "तिहत्तर",
     "चौहत्तर",
     "पचहत्तर",
@@ -147,6 +144,7 @@ _ordinal_words_one_to_ten = [
 _ordinal_suffix = "वाँ"
 # fmt: on
 
+
 def norm(string):
     # normalise base exceptions,  e.g. punctuation or currency symbols
     if string in BASE_NORMS:
@@ -183,7 +181,7 @@ def like_num(text):
     if text in _ordinal_words_one_to_ten:
         return True
     if text.endswith(_ordinal_suffix):
-        if text[:-len(_ordinal_suffix)] in _eleven_to_beyond:
+        if text[: -len(_ordinal_suffix)] in _eleven_to_beyond:
             return True
     return False
 

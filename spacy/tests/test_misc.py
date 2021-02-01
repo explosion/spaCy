@@ -1,43 +1,23 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import pytest
 import os
 import ctypes
-import srsly
 from pathlib import Path
+from spacy.about import __version__ as spacy_version
 from spacy import util
-from spacy import prefer_gpu, require_gpu
-from spacy.compat import symlink_to, symlink_remove, path2str, is_windows
-from spacy._ml import PrecomputableAffine
-from subprocess import CalledProcessError
-from .util import make_tempdir
+from spacy import prefer_gpu, require_gpu, require_cpu
+from spacy.ml._precomputable_affine import PrecomputableAffine
+from spacy.ml._precomputable_affine import _backprop_precomputable_affine_padding
+from spacy.util import dot_to_object, SimpleFrozenList
+from thinc.api import Config, Optimizer, ConfigValidationError
+from spacy.training.batchers import minibatch_by_words
+from spacy.lang.en import English
+from spacy.lang.nl import Dutch
+from spacy.language import DEFAULT_CONFIG_PATH
+from spacy.schemas import ConfigSchemaTraining
 
+from thinc.api import get_current_ops, NumpyOps, CupyOps
 
-@pytest.fixture
-def symlink_target():
-    return Path("./foo-target")
-
-
-@pytest.fixture
-def symlink():
-    return Path("./foo-symlink")
-
-
-@pytest.fixture(scope="function")
-def symlink_setup_target(request, symlink_target, symlink):
-    if not symlink_target.exists():
-        os.mkdir(path2str(symlink_target))
-    # yield -- need to cleanup even if assertion fails
-    # https://github.com/pytest-dev/pytest/issues/2508#issuecomment-309934240
-
-    def cleanup():
-        # Remove symlink only if it was created
-        if symlink.exists():
-            symlink_remove(symlink)
-        os.rmdir(path2str(symlink_target))
-
-    request.addfinalizer(cleanup)
+from .util import get_random_doc
 
 
 @pytest.fixture
@@ -57,10 +37,12 @@ def test_util_ensure_path_succeeds(text):
     assert isinstance(path, Path)
 
 
-@pytest.mark.parametrize("package", ["numpy"])
-def test_util_is_package(package):
+@pytest.mark.parametrize(
+    "package,result", [("numpy", True), ("sfkodskfosdkfpsdpofkspdof", False)]
+)
+def test_util_is_package(package, result):
     """Test that an installed package via pip is recognised by util.is_package."""
-    assert util.is_package(package)
+    assert util.is_package(package) is result
 
 
 @pytest.mark.parametrize("package", ["thinc"])
@@ -71,34 +53,39 @@ def test_util_get_package_path(package):
 
 
 def test_PrecomputableAffine(nO=4, nI=5, nF=3, nP=2):
-    model = PrecomputableAffine(nO=nO, nI=nI, nF=nF, nP=nP)
-    assert model.W.shape == (nF, nO, nP, nI)
-    tensor = model.ops.allocate((10, nI))
+    model = PrecomputableAffine(nO=nO, nI=nI, nF=nF, nP=nP).initialize()
+    assert model.get_param("W").shape == (nF, nO, nP, nI)
+    tensor = model.ops.alloc((10, nI))
     Y, get_dX = model.begin_update(tensor)
     assert Y.shape == (tensor.shape[0] + 1, nF, nO, nP)
-    assert model.d_pad.shape == (1, nF, nO, nP)
-    dY = model.ops.allocate((15, nO, nP))
-    ids = model.ops.allocate((15, nF))
+    dY = model.ops.alloc((15, nO, nP))
+    ids = model.ops.alloc((15, nF))
     ids[1, 2] = -1
     dY[1] = 1
-    assert model.d_pad[0, 2, 0, 0] == 0.0
-    model._backprop_padding(dY, ids)
-    assert model.d_pad[0, 2, 0, 0] == 1.0
-    model.d_pad.fill(0.0)
+    assert not model.has_grad("pad")
+    d_pad = _backprop_precomputable_affine_padding(model, dY, ids)
+    assert d_pad[0, 2, 0, 0] == 1.0
     ids.fill(0.0)
     dY.fill(0.0)
-    ids[1, 2] = -1
+    dY[0] = 0
+    ids[1, 2] = 0
     ids[1, 1] = -1
     ids[1, 0] = -1
     dY[1] = 1
-    assert model.d_pad[0, 2, 0, 0] == 0.0
-    model._backprop_padding(dY, ids)
-    assert model.d_pad[0, 2, 0, 0] == 3.0
+    ids[2, 0] = -1
+    dY[2] = 5
+    d_pad = _backprop_precomputable_affine_padding(model, dY, ids)
+    assert d_pad[0, 0, 0, 0] == 6
+    assert d_pad[0, 1, 0, 0] == 1
+    assert d_pad[0, 2, 0, 0] == 0
 
 
 def test_prefer_gpu():
     try:
         import cupy  # noqa: F401
+
+        prefer_gpu()
+        assert isinstance(get_current_ops(), CupyOps)
     except ImportError:
         assert not prefer_gpu()
 
@@ -106,28 +93,26 @@ def test_prefer_gpu():
 def test_require_gpu():
     try:
         import cupy  # noqa: F401
+
+        require_gpu()
+        assert isinstance(get_current_ops(), CupyOps)
     except ImportError:
         with pytest.raises(ValueError):
             require_gpu()
 
 
-def test_create_symlink_windows(
-    symlink_setup_target, symlink_target, symlink, is_admin
-):
-    """Test the creation of symlinks on windows. If run as admin or not on windows it should succeed, otherwise a CalledProcessError should be raised."""
-    assert symlink_target.exists()
+def test_require_cpu():
+    require_cpu()
+    assert isinstance(get_current_ops(), NumpyOps)
+    try:
+        import cupy  # noqa: F401
 
-    if is_admin or not is_windows:
-        try:
-            symlink_to(symlink, symlink_target)
-            assert symlink.exists()
-        except CalledProcessError as e:
-            pytest.fail(e)
-    else:
-        with pytest.raises(CalledProcessError):
-            symlink_to(symlink, symlink_target)
-
-        assert not symlink.exists()
+        require_gpu()
+        assert isinstance(get_current_ops(), CupyOps)
+    except ImportError:
+        pass
+    require_cpu()
+    assert isinstance(get_current_ops(), NumpyOps)
 
 
 def test_ascii_filenames():
@@ -150,31 +135,215 @@ def test_load_model_blank_shortcut():
         util.load_model("blank:fjsfijsdof")
 
 
-def test_load_model_version_compat():
-    """Test warnings for various spacy_version specifications in meta. Since
-    this is more of a hack for v2, manually specify the current major.minor
-    version to simplify test creation."""
-    nlp = util.load_model("blank:en")
-    assert nlp.meta["spacy_version"].startswith(">=2.3")
-    with make_tempdir() as d:
-        # no change: compatible
-        nlp.to_disk(d)
-        meta_path = Path(d / "meta.json")
-        util.get_model_meta(d)
+@pytest.mark.parametrize(
+    "version,constraint,compatible",
+    [
+        (spacy_version, spacy_version, True),
+        (spacy_version, f">={spacy_version}", True),
+        ("3.0.0", "2.0.0", False),
+        ("3.2.1", ">=2.0.0", True),
+        ("2.2.10a1", ">=1.0.0,<2.1.1", False),
+        ("3.0.0.dev3", ">=1.2.3,<4.5.6", True),
+        ("n/a", ">=1.2.3,<4.5.6", None),
+        ("1.2.3", "n/a", None),
+        ("n/a", "n/a", None),
+    ],
+)
+def test_is_compatible_version(version, constraint, compatible):
+    assert util.is_compatible_version(version, constraint) is compatible
 
-        # additional compatible upper pin
-        nlp.meta["spacy_version"] = ">=2.3.0,<2.4.0"
-        srsly.write_json(meta_path, nlp.meta)
-        util.get_model_meta(d)
 
-        # incompatible older version
-        nlp.meta["spacy_version"] = ">=2.2.5"
-        srsly.write_json(meta_path, nlp.meta)
-        with pytest.warns(UserWarning):
-            util.get_model_meta(d)
+@pytest.mark.parametrize(
+    "constraint,expected",
+    [
+        ("3.0.0", False),
+        ("==3.0.0", False),
+        (">=2.3.0", True),
+        (">2.0.0", True),
+        ("<=2.0.0", True),
+        (">2.0.0,<3.0.0", False),
+        (">=2.0.0,<3.0.0", False),
+        ("!=1.1,>=1.0,~=1.0", True),
+        ("n/a", None),
+    ],
+)
+def test_is_unconstrained_version(constraint, expected):
+    assert util.is_unconstrained_version(constraint) is expected
 
-        # invalid version specification
-        nlp.meta["spacy_version"] = ">@#$%_invalid_version"
-        srsly.write_json(meta_path, nlp.meta)
-        with pytest.warns(UserWarning):
-            util.get_model_meta(d)
+
+@pytest.mark.parametrize(
+    "a1,a2,b1,b2,is_match",
+    [
+        ("3.0.0", "3.0", "3.0.1", "3.0", True),
+        ("3.1.0", "3.1", "3.2.1", "3.2", False),
+        ("xxx", None, "1.2.3.dev0", "1.2", False),
+    ],
+)
+def test_minor_version(a1, a2, b1, b2, is_match):
+    assert util.get_minor_version(a1) == a2
+    assert util.get_minor_version(b1) == b2
+    assert util.is_minor_version_match(a1, b1) is is_match
+    assert util.is_minor_version_match(a2, b2) is is_match
+
+
+@pytest.mark.parametrize(
+    "dot_notation,expected",
+    [
+        (
+            {"token.pos": True, "token._.xyz": True},
+            {"token": {"pos": True, "_": {"xyz": True}}},
+        ),
+        (
+            {"training.batch_size": 128, "training.optimizer.learn_rate": 0.01},
+            {"training": {"batch_size": 128, "optimizer": {"learn_rate": 0.01}}},
+        ),
+    ],
+)
+def test_dot_to_dict(dot_notation, expected):
+    result = util.dot_to_dict(dot_notation)
+    assert result == expected
+    assert util.dict_to_dot(result) == dot_notation
+
+
+def test_set_dot_to_object():
+    config = {"foo": {"bar": 1, "baz": {"x": "y"}}, "test": {"a": {"b": "c"}}}
+    with pytest.raises(KeyError):
+        util.set_dot_to_object(config, "foo.bar.baz", 100)
+    with pytest.raises(KeyError):
+        util.set_dot_to_object(config, "hello.world", 100)
+    with pytest.raises(KeyError):
+        util.set_dot_to_object(config, "test.a.b.c", 100)
+    util.set_dot_to_object(config, "foo.bar", 100)
+    assert config["foo"]["bar"] == 100
+    util.set_dot_to_object(config, "foo.baz.x", {"hello": "world"})
+    assert config["foo"]["baz"]["x"]["hello"] == "world"
+    assert config["test"]["a"]["b"] == "c"
+    util.set_dot_to_object(config, "foo", 123)
+    assert config["foo"] == 123
+    util.set_dot_to_object(config, "test", "hello")
+    assert dict(config) == {"foo": 123, "test": "hello"}
+
+
+@pytest.mark.parametrize(
+    "doc_sizes, expected_batches",
+    [
+        ([400, 400, 199], [3]),
+        ([400, 400, 199, 3], [4]),
+        ([400, 400, 199, 3, 200], [3, 2]),
+        ([400, 400, 199, 3, 1], [5]),
+        ([400, 400, 199, 3, 1, 1500], [5]),  # 1500 will be discarded
+        ([400, 400, 199, 3, 1, 200], [3, 3]),
+        ([400, 400, 199, 3, 1, 999], [3, 3]),
+        ([400, 400, 199, 3, 1, 999, 999], [3, 2, 1, 1]),
+        ([1, 2, 999], [3]),
+        ([1, 2, 999, 1], [4]),
+        ([1, 200, 999, 1], [2, 2]),
+        ([1, 999, 200, 1], [2, 2]),
+    ],
+)
+def test_util_minibatch(doc_sizes, expected_batches):
+    docs = [get_random_doc(doc_size) for doc_size in doc_sizes]
+    tol = 0.2
+    batch_size = 1000
+    batches = list(
+        minibatch_by_words(docs, size=batch_size, tolerance=tol, discard_oversize=True)
+    )
+    assert [len(batch) for batch in batches] == expected_batches
+
+    max_size = batch_size + batch_size * tol
+    for batch in batches:
+        assert sum([len(doc) for doc in batch]) < max_size
+
+
+@pytest.mark.parametrize(
+    "doc_sizes, expected_batches",
+    [
+        ([400, 4000, 199], [1, 2]),
+        ([400, 400, 199, 3000, 200], [1, 4]),
+        ([400, 400, 199, 3, 1, 1500], [1, 5]),
+        ([400, 400, 199, 3000, 2000, 200, 200], [1, 1, 3, 2]),
+        ([1, 2, 9999], [1, 2]),
+        ([2000, 1, 2000, 1, 1, 1, 2000], [1, 1, 1, 4]),
+    ],
+)
+def test_util_minibatch_oversize(doc_sizes, expected_batches):
+    """ Test that oversized documents are returned in their own batch"""
+    docs = [get_random_doc(doc_size) for doc_size in doc_sizes]
+    tol = 0.2
+    batch_size = 1000
+    batches = list(
+        minibatch_by_words(docs, size=batch_size, tolerance=tol, discard_oversize=False)
+    )
+    assert [len(batch) for batch in batches] == expected_batches
+
+
+def test_util_dot_section():
+    cfg_string = """
+    [nlp]
+    lang = "en"
+    pipeline = ["textcat"]
+
+    [components]
+
+    [components.textcat]
+    factory = "textcat"
+
+    [components.textcat.model]
+    @architectures = "spacy.TextCatBOW.v1"
+    exclusive_classes = true
+    ngram_size = 1
+    no_output_layer = false
+    """
+    nlp_config = Config().from_str(cfg_string)
+    en_nlp = util.load_model_from_config(nlp_config, auto_fill=True)
+    default_config = Config().from_disk(DEFAULT_CONFIG_PATH)
+    default_config["nlp"]["lang"] = "nl"
+    nl_nlp = util.load_model_from_config(default_config, auto_fill=True)
+    # Test that creation went OK
+    assert isinstance(en_nlp, English)
+    assert isinstance(nl_nlp, Dutch)
+    assert nl_nlp.pipe_names == []
+    assert en_nlp.pipe_names == ["textcat"]
+    # not exclusive_classes
+    assert en_nlp.get_pipe("textcat").model.attrs["multi_label"] is False
+    # Test that default values got overwritten
+    assert en_nlp.config["nlp"]["pipeline"] == ["textcat"]
+    assert nl_nlp.config["nlp"]["pipeline"] == []  # default value []
+    # Test proper functioning of 'dot_to_object'
+    with pytest.raises(KeyError):
+        dot_to_object(en_nlp.config, "nlp.pipeline.tagger")
+    with pytest.raises(KeyError):
+        dot_to_object(en_nlp.config, "nlp.unknownattribute")
+    T = util.registry.resolve(nl_nlp.config["training"], schema=ConfigSchemaTraining)
+    assert isinstance(dot_to_object({"training": T}, "training.optimizer"), Optimizer)
+
+
+def test_simple_frozen_list():
+    t = SimpleFrozenList(["foo", "bar"])
+    assert t == ["foo", "bar"]
+    assert t.index("bar") == 1  # okay method
+    with pytest.raises(NotImplementedError):
+        t.append("baz")
+    with pytest.raises(NotImplementedError):
+        t.sort()
+    with pytest.raises(NotImplementedError):
+        t.extend(["baz"])
+    with pytest.raises(NotImplementedError):
+        t.pop()
+    t = SimpleFrozenList(["foo", "bar"], error="Error!")
+    with pytest.raises(NotImplementedError):
+        t.append("baz")
+
+
+def test_resolve_dot_names():
+    config = {
+        "training": {"optimizer": {"@optimizers": "Adam.v1"}},
+        "foo": {"bar": "training.optimizer", "baz": "training.xyz"},
+    }
+    result = util.resolve_dot_names(config, ["training.optimizer"])
+    assert isinstance(result[0], Optimizer)
+    with pytest.raises(ConfigValidationError) as e:
+        util.resolve_dot_names(config, ["training.xyz", "training.optimizer"])
+    errors = e.value.errors
+    assert len(errors) == 1
+    assert errors[0]["loc"] == ["training", "xyz"]

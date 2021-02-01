@@ -13,7 +13,7 @@ Please use the link below to view the example. If you've come across
 a broken link, we always appreciate a pull request to the repository,
 or a report on the issue tracker. Thanks!`
 
-const GitHubCode = ({ url, lang, errorMsg, className }) => {
+const GitHubCode = ({ url, lang, errorMsg = defaultErrorMsg, className }) => {
     const [initialized, setInitialized] = useState(false)
     const [code, setCode] = useState(errorMsg)
     const codeClassNames = classNames(classes.code, classes.maxHeight, className)
@@ -54,10 +54,6 @@ const GitHubCode = ({ url, lang, errorMsg, className }) => {
             <code className={codeClassNames} dangerouslySetInnerHTML={{ __html: highlighted }} />
         </>
     )
-}
-
-GitHubCode.defaultProps = {
-    errorMsg: defaultErrorMsg,
 }
 
 GitHubCode.propTypes = {

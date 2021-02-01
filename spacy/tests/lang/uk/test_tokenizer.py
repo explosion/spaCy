@@ -1,6 +1,3 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import pytest
 
 
@@ -92,7 +89,6 @@ def test_uk_tokenizer_splits_open_appostrophe(uk_tokenizer, text):
     assert tokens[0].text == "'"
 
 
-@pytest.mark.xfail(reason="See #3327")
 @pytest.mark.parametrize("text", ["Тест''"])
 def test_uk_tokenizer_splits_double_end_quote(uk_tokenizer, text):
     tokens = uk_tokenizer(text)

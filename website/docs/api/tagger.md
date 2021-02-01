@@ -1,48 +1,64 @@
 ---
 title: Tagger
 tag: class
-source: spacy/pipeline/pipes.pyx
+source: spacy/pipeline/tagger.pyx
+teaser: 'Pipeline component for part-of-speech tagging'
+api_base_class: /api/pipe
+api_string_name: tagger
+api_trainable: true
 ---
 
-This class is a subclass of `Pipe` and follows the same API. The pipeline
-component is available in the [processing pipeline](/usage/processing-pipelines)
-via the ID `"tagger"`.
+## Config and implementation {#config}
 
-## Tagger.Model {#model tag="classmethod"}
-
-Initialize a model for the pipe. The model should implement the
-`thinc.neural.Model` API. Wrappers are under development for most major machine
-learning libraries.
-
-| Name        | Type   | Description                           |
-| ----------- | ------ | ------------------------------------- |
-| `**kwargs`  | -      | Parameters for initializing the model |
-| **RETURNS** | object | The initialized model.                |
-
-## Tagger.\_\_init\_\_ {#init tag="method"}
-
-Create a new pipeline instance. In your application, you would normally use a
-shortcut for this and instantiate the component using its string name and
-[`nlp.create_pipe`](/api/language#create_pipe).
+The default config is defined by the pipeline component factory and describes
+how the component should be configured. You can override its settings via the
+`config` argument on [`nlp.add_pipe`](/api/language#add_pipe) or in your
+[`config.cfg` for training](/usage/training#config). See the
+[model architectures](/api/architectures) documentation for details on the
+architectures and their arguments and hyperparameters.
 
 > #### Example
 >
 > ```python
-> # Construction via create_pipe
-> tagger = nlp.create_pipe("tagger")
+> from spacy.pipeline.tagger import DEFAULT_TAGGER_MODEL
+> config = {"model": DEFAULT_TAGGER_MODEL}
+> nlp.add_pipe("tagger", config=config)
+> ```
+
+| Setting          | Description                                                                                                                                                                                                                                                                                            |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `model`          | A model instance that predicts the tag probabilities. The output vectors should match the number of tags in size, and be normalized as probabilities (all scores between 0 and 1, with the rows summing to `1`). Defaults to [Tagger](/api/architectures#Tagger). ~~Model[List[Doc], List[Floats2d]]~~ |
+
+```python
+%%GITHUB_SPACY/spacy/pipeline/tagger.pyx
+```
+
+## Tagger.\_\_init\_\_ {#init tag="method"}
+
+> #### Example
+>
+> ```python
+> # Construction via add_pipe with default model
+> tagger = nlp.add_pipe("tagger")
+>
+> # Construction via create_pipe with custom model
+> config = {"model": {"@architectures": "my_tagger"}}
+> tagger = nlp.add_pipe("tagger", config=config)
 >
 > # Construction from class
 > from spacy.pipeline import Tagger
-> tagger = Tagger(nlp.vocab)
-> tagger.from_disk("/path/to/model")
+> tagger = Tagger(nlp.vocab, model)
 > ```
 
-| Name        | Type                          | Description                                                                                                                                           |
-| ----------- | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `vocab`     | `Vocab`                       | The shared vocabulary.                                                                                                                                |
-| `model`     | `thinc.neural.Model` / `True` | The model powering the pipeline component. If no model is supplied, the model is created when you call `begin_training`, `from_disk` or `from_bytes`. |
-| `**cfg`     | -                             | Configuration parameters.                                                                                                                             |
-| **RETURNS** | `Tagger`                      | The newly constructed object.                                                                                                                         |
+Create a new pipeline instance. In your application, you would normally use a
+shortcut for this and instantiate the component using its string name and
+[`nlp.add_pipe`](/api/language#add_pipe).
+
+| Name             | Description                                                                                                                                                                                                                                           |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vocab`          | The shared vocabulary. ~~Vocab~~                                                                                                                                                                                                                      |
+| `model`          | A model instance that predicts the tag probabilities. The output vectors should match the number of tags in size, and be normalized as probabilities (all scores between 0 and 1, with the rows summing to `1`). ~~Model[List[Doc], List[Floats2d]]~~ |
+| `name`           | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~                                                                                                                                                   |
 
 ## Tagger.\_\_call\_\_ {#call tag="method"}
 
@@ -56,16 +72,16 @@ and all pipeline components are applied to the `Doc` in order. Both
 > #### Example
 >
 > ```python
-> tagger = Tagger(nlp.vocab)
 > doc = nlp("This is a sentence.")
+> tagger = nlp.add_pipe("tagger")
 > # This usually happens under the hood
 > processed = tagger(doc)
 > ```
 
-| Name        | Type  | Description              |
-| ----------- | ----- | ------------------------ |
-| `doc`       | `Doc` | The document to process. |
-| **RETURNS** | `Doc` | The processed document.  |
+| Name        | Description                      |
+| ----------- | -------------------------------- |
+| `doc`       | The document to process. ~~Doc~~ |
+| **RETURNS** | The processed document. ~~Doc~~  |
 
 ## Tagger.pipe {#pipe tag="method"}
 
@@ -78,73 +94,141 @@ applied to the `Doc` in order. Both [`__call__`](/api/tagger#call) and
 > #### Example
 >
 > ```python
-> tagger = Tagger(nlp.vocab)
+> tagger = nlp.add_pipe("tagger")
 > for doc in tagger.pipe(docs, batch_size=50):
 >     pass
 > ```
 
-| Name         | Type     | Description                                            |
-| ------------ | -------- | ------------------------------------------------------ |
-| `stream`     | iterable | A stream of documents.                                 |
-| `batch_size` | int      | The number of texts to buffer. Defaults to `128`.      |
-| **YIELDS**   | `Doc`    | Processed documents in the order of the original text. |
+| Name           | Description                                                   |
+| -------------- | ------------------------------------------------------------- |
+| `stream`       | A stream of documents. ~~Iterable[Doc]~~                      |
+| _keyword-only_ |                                                               |
+| `batch_size`   | The number of documents to buffer. Defaults to `128`. ~~int~~ |
+| **YIELDS**     | The processed documents in order. ~~Doc~~                     |
+
+## Tagger.initialize {#initialize tag="method" new="3"}
+
+Initialize the component for training. `get_examples` should be a function that
+returns an iterable of [`Example`](/api/example) objects. The data examples are
+used to **initialize the model** of the component and can either be the full
+training data or a representative sample. Initialization includes validating the
+network,
+[inferring missing shapes](https://thinc.ai/docs/usage-models#validation) and
+setting up the label scheme based on the data. This method is typically called
+by [`Language.initialize`](/api/language#initialize) and lets you customize
+arguments it receives via the
+[`[initialize.components]`](/api/data-formats#config-initialize) block in the
+config.
+
+<Infobox variant="warning" title="Changed in v3.0" id="begin_training">
+
+This method was previously called `begin_training`.
+
+</Infobox>
+
+> #### Example
+>
+> ```python
+> tagger = nlp.add_pipe("tagger")
+> tagger.initialize(lambda: [], nlp=nlp)
+> ```
+>
+> ```ini
+> ### config.cfg
+> [initialize.components.tagger]
+>
+> [initialize.components.tagger.labels]
+> @readers = "spacy.read_labels.v1"
+> path = "corpus/labels/tagger.json
+> ```
+
+| Name           | Description                                                                                                                                                                                                                                                                                                                                                                                                |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `get_examples` | Function that returns gold-standard annotations in the form of [`Example`](/api/example) objects. ~~Callable[[], Iterable[Example]]~~                                                                                                                                                                                                                                                                      |
+| _keyword-only_ |                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `nlp`          | The current `nlp` object. Defaults to `None`. ~~Optional[Language]~~                                                                                                                                                                                                                                                                                                                                       |
+| `labels`       | The label information to add to the component, as provided by the [`label_data`](#label_data) property after initialization. To generate a reusable JSON file from your data, you should run the [`init labels`](/api/cli#init-labels) command. If no labels are provided, the `get_examples` callback is used to extract the labels from the data, which may be a lot slower. ~~Optional[Iterable[str]]~~ |
 
 ## Tagger.predict {#predict tag="method"}
 
-Apply the pipeline's model to a batch of docs, without modifying them.
+Apply the component's model to a batch of [`Doc`](/api/doc) objects, without
+modifying them.
 
 > #### Example
 >
 > ```python
-> tagger = Tagger(nlp.vocab)
-> scores, tensors = tagger.predict([doc1, doc2])
+> tagger = nlp.add_pipe("tagger")
+> scores = tagger.predict([doc1, doc2])
 > ```
 
-| Name        | Type     | Description                                                                                                                                                                                                                        |
-| ----------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `docs`      | iterable | The documents to predict.                                                                                                                                                                                                          |
-| **RETURNS** | tuple    | A `(scores, tensors)` tuple where `scores` is the model's prediction for each document and `tensors` is the token representations used to predict the scores. Each tensor is an array with one row for each token in the document. |
+| Name        | Description                                 |
+| ----------- | ------------------------------------------- |
+| `docs`      | The documents to predict. ~~Iterable[Doc]~~ |
+| **RETURNS** | The model's prediction for each document.   |
 
 ## Tagger.set_annotations {#set_annotations tag="method"}
 
-Modify a batch of documents, using pre-computed scores.
+Modify a batch of [`Doc`](/api/doc) objects, using pre-computed scores.
 
 > #### Example
 >
 > ```python
-> tagger = Tagger(nlp.vocab)
-> scores, tensors = tagger.predict([doc1, doc2])
-> tagger.set_annotations([doc1, doc2], scores, tensors)
+> tagger = nlp.add_pipe("tagger")
+> scores = tagger.predict([doc1, doc2])
+> tagger.set_annotations([doc1, doc2], scores)
 > ```
 
-| Name      | Type     | Description                                           |
-| --------- | -------- | ----------------------------------------------------- |
-| `docs`    | iterable | The documents to modify.                              |
-| `scores`  | -        | The scores to set, produced by `Tagger.predict`.      |
-| `tensors` | iterable | The token representations used to predict the scores. |
+| Name     | Description                                      |
+| -------- | ------------------------------------------------ |
+| `docs`   | The documents to modify. ~~Iterable[Doc]~~       |
+| `scores` | The scores to set, produced by `Tagger.predict`. |
 
 ## Tagger.update {#update tag="method"}
 
-Learn from a batch of documents and gold-standard information, updating the
-pipe's model. Delegates to [`predict`](/api/tagger#predict) and
+Learn from a batch of [`Example`](/api/example) objects containing the
+predictions and gold-standard annotations, and update the component's model.
+Delegates to [`predict`](/api/tagger#predict) and
 [`get_loss`](/api/tagger#get_loss).
 
 > #### Example
 >
 > ```python
-> tagger = Tagger(nlp.vocab)
-> losses = {}
-> optimizer = nlp.begin_training()
-> tagger.update([doc1, doc2], [gold1, gold2], losses=losses, sgd=optimizer)
+> tagger = nlp.add_pipe("tagger")
+> optimizer = nlp.initialize()
+> losses = tagger.update(examples, sgd=optimizer)
 > ```
 
-| Name     | Type     | Description                                                                                  |
-| -------- | -------- | -------------------------------------------------------------------------------------------- |
-| `docs`   | iterable | A batch of documents to learn from.                                                          |
-| `golds`  | iterable | The gold-standard data. Must have the same length as `docs`.                                 |
-| `drop`   | float    | The dropout rate.                                                                            |
-| `sgd`    | callable | The optimizer. Should take two arguments `weights` and `gradient`, and an optional ID.       |
-| `losses` | dict     | Optional record of the loss during training. The value keyed by the model's name is updated. |
+| Name              | Description                                                                                                                        |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `examples`        | A batch of [`Example`](/api/example) objects to learn from. ~~Iterable[Example]~~                                                  |
+| _keyword-only_    |                                                                                                                                    |
+| `drop`            | The dropout rate. ~~float~~                                                                                                        |
+| `sgd`             | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~                      |
+| `losses`          | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~           |
+| **RETURNS**       | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                              |
+
+## Tagger.rehearse {#rehearse tag="method,experimental" new="3"}
+
+Perform a "rehearsal" update from a batch of data. Rehearsal updates teach the
+current model to make predictions similar to an initial model, to try to address
+the "catastrophic forgetting" problem. This feature is experimental.
+
+> #### Example
+>
+> ```python
+> tagger = nlp.add_pipe("tagger")
+> optimizer = nlp.resume_training()
+> losses = tagger.rehearse(examples, sgd=optimizer)
+> ```
+
+| Name           | Description                                                                                                              |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `examples`     | A batch of [`Example`](/api/example) objects to learn from. ~~Iterable[Example]~~                                        |
+| _keyword-only_ |                                                                                                                          |
+| `drop`         | The dropout rate. ~~float~~                                                                                              |
+| `sgd`          | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~            |
+| `losses`       | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~ |
+| **RETURNS**    | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                    |
 
 ## Tagger.get_loss {#get_loss tag="method"}
 
@@ -154,37 +238,31 @@ predicted scores.
 > #### Example
 >
 > ```python
-> tagger = Tagger(nlp.vocab)
-> scores = tagger.predict([doc1, doc2])
-> loss, d_loss = tagger.get_loss([doc1, doc2], [gold1, gold2], scores)
+> tagger = nlp.add_pipe("tagger")
+> scores = tagger.predict([eg.predicted for eg in examples])
+> loss, d_loss = tagger.get_loss(examples, scores)
 > ```
 
-| Name        | Type     | Description                                                  |
-| ----------- | -------- | ------------------------------------------------------------ |
-| `docs`      | iterable | The batch of documents.                                      |
-| `golds`     | iterable | The gold-standard data. Must have the same length as `docs`. |
-| `scores`    | -        | Scores representing the model's predictions.                 |
-| **RETURNS** | tuple    | The loss and the gradient, i.e. `(loss, gradient)`.          |
+| Name        | Description                                                                 |
+| ----------- | --------------------------------------------------------------------------- |
+| `examples`  | The batch of examples. ~~Iterable[Example]~~                                |
+| `scores`    | Scores representing the model's predictions.                                |
+| **RETURNS** | The loss and the gradient, i.e. `(loss, gradient)`. ~~Tuple[float, float]~~ |
 
-## Tagger.begin_training {#begin_training tag="method"}
+## Tagger.score {#score tag="method" new="3"}
 
-Initialize the pipe for training, using data examples if available. If no model
-has been initialized yet, the model is added.
+Score a batch of examples.
 
 > #### Example
 >
 > ```python
-> tagger = Tagger(nlp.vocab)
-> nlp.pipeline.append(tagger)
-> optimizer = tagger.begin_training(pipeline=nlp.pipeline)
+> scores = tagger.score(examples)
 > ```
 
-| Name          | Type     | Description                                                                                                                                                             |
-| ------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `gold_tuples` | iterable | Optional gold-standard annotations from which to construct [`GoldParse`](/api/goldparse) objects.                                                                       |
-| `pipeline`    | list     | Optional list of pipeline components that this component is part of.                                                                                                    |
-| `sgd`         | callable | An optional optimizer. Should take two arguments `weights` and `gradient`, and an optional ID. Will be created via [`Tagger`](/api/tagger#create_optimizer) if not set. |
-| **RETURNS**   | callable | An optimizer.                                                                                                                                                           |
+| Name        | Description                                                                                                                       |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `examples`  | The examples to score. ~~Iterable[Example]~~                                                                                      |
+| **RETURNS** | The scores, produced by [`Scorer.score_token_attr`](/api/scorer#score_token_attr) for the attribute `"tag"`. ~~Dict[str, float]~~ |
 
 ## Tagger.create_optimizer {#create_optimizer tag="method"}
 
@@ -193,46 +271,52 @@ Create an optimizer for the pipeline component.
 > #### Example
 >
 > ```python
-> tagger = Tagger(nlp.vocab)
+> tagger = nlp.add_pipe("tagger")
 > optimizer = tagger.create_optimizer()
 > ```
 
-| Name        | Type     | Description    |
-| ----------- | -------- | -------------- |
-| **RETURNS** | callable | The optimizer. |
+| Name        | Description                  |
+| ----------- | ---------------------------- |
+| **RETURNS** | The optimizer. ~~Optimizer~~ |
 
 ## Tagger.use_params {#use_params tag="method, contextmanager"}
 
-Modify the pipe's model, to use the given parameter values.
+Modify the pipe's model, to use the given parameter values. At the end of the
+context, the original parameters are restored.
 
 > #### Example
 >
 > ```python
-> tagger = Tagger(nlp.vocab)
-> with tagger.use_params():
+> tagger = nlp.add_pipe("tagger")
+> with tagger.use_params(optimizer.averages):
 >     tagger.to_disk("/best_model")
 > ```
 
-| Name     | Type | Description                                                                                                |
-| -------- | ---- | ---------------------------------------------------------------------------------------------------------- |
-| `params` | -    | The parameter values to use in the model. At the end of the context, the original parameters are restored. |
+| Name     | Description                                        |
+| -------- | -------------------------------------------------- |
+| `params` | The parameter values to use in the model. ~~dict~~ |
 
 ## Tagger.add_label {#add_label tag="method"}
 
-Add a new label to the pipe.
+Add a new label to the pipe. Raises an error if the output dimension is already
+set, or if the model has already been fully [initialized](#initialize). Note
+that you don't have to call this method if you provide a **representative data
+sample** to the [`initialize`](#initialize) method. In this case, all labels
+found in the sample will be automatically added to the model, and the output
+dimension will be [inferred](/usage/layers-architectures#thinc-shape-inference)
+automatically.
 
 > #### Example
 >
 > ```python
-> from spacy.symbols import POS
-> tagger = Tagger(nlp.vocab)
-> tagger.add_label("MY_LABEL", {POS: 'NOUN'})
+> tagger = nlp.add_pipe("tagger")
+> tagger.add_label("MY_LABEL")
 > ```
 
-| Name     | Type    | Description                                                     |
-| -------- | ------- | --------------------------------------------------------------- |
-| `label`  | unicode | The label to add.                                               |
-| `values` | dict    | Optional values to map to the label, e.g. a tag map dictionary. |
+| Name        | Description                                                 |
+| ----------- | ----------------------------------------------------------- |
+| `label`     | The label to add. ~~str~~                                   |
+| **RETURNS** | `0` if the label is already present, otherwise `1`. ~~int~~ |
 
 ## Tagger.to_disk {#to_disk tag="method"}
 
@@ -241,14 +325,15 @@ Serialize the pipe to disk.
 > #### Example
 >
 > ```python
-> tagger = Tagger(nlp.vocab)
+> tagger = nlp.add_pipe("tagger")
 > tagger.to_disk("/path/to/tagger")
 > ```
 
-| Name      | Type             | Description                                                                                                           |
-| --------- | ---------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `path`    | unicode / `Path` | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. |
-| `exclude` | list             | String names of [serialization fields](#serialization-fields) to exclude.                                             |
+| Name           | Description                                                                                                                                |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `path`         | A path to a directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
+| _keyword-only_ |                                                                                                                                            |
+| `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~                                                |
 
 ## Tagger.from_disk {#from_disk tag="method"}
 
@@ -257,31 +342,33 @@ Load the pipe from disk. Modifies the object in place and returns it.
 > #### Example
 >
 > ```python
-> tagger = Tagger(nlp.vocab)
+> tagger = nlp.add_pipe("tagger")
 > tagger.from_disk("/path/to/tagger")
 > ```
 
-| Name        | Type             | Description                                                                |
-| ----------- | ---------------- | -------------------------------------------------------------------------- |
-| `path`      | unicode / `Path` | A path to a directory. Paths may be either strings or `Path`-like objects. |
-| `exclude`   | list             | String names of [serialization fields](#serialization-fields) to exclude.  |
-| **RETURNS** | `Tagger`         | The modified `Tagger` object.                                              |
+| Name           | Description                                                                                     |
+| -------------- | ----------------------------------------------------------------------------------------------- |
+| `path`         | A path to a directory. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
+| _keyword-only_ |                                                                                                 |
+| `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~     |
+| **RETURNS**    | The modified `Tagger` object. ~~Tagger~~                                                        |
 
 ## Tagger.to_bytes {#to_bytes tag="method"}
 
 > #### Example
 >
 > ```python
-> tagger = Tagger(nlp.vocab)
+> tagger = nlp.add_pipe("tagger")
 > tagger_bytes = tagger.to_bytes()
 > ```
 
 Serialize the pipe to a bytestring.
 
-| Name        | Type  | Description                                                               |
-| ----------- | ----- | ------------------------------------------------------------------------- |
-| `exclude`   | list  | String names of [serialization fields](#serialization-fields) to exclude. |
-| **RETURNS** | bytes | The serialized form of the `Tagger` object.                               |
+| Name           | Description                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------------- |
+| _keyword-only_ |                                                                                             |
+| `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
+| **RETURNS**    | The serialized form of the `Tagger` object. ~~bytes~~                                       |
 
 ## Tagger.from_bytes {#from_bytes tag="method"}
 
@@ -291,21 +378,20 @@ Load the pipe from a bytestring. Modifies the object in place and returns it.
 >
 > ```python
 > tagger_bytes = tagger.to_bytes()
-> tagger = Tagger(nlp.vocab)
+> tagger = nlp.add_pipe("tagger")
 > tagger.from_bytes(tagger_bytes)
 > ```
 
-| Name         | Type     | Description                                                               |
-| ------------ | -------- | ------------------------------------------------------------------------- |
-| `bytes_data` | bytes    | The data to load from.                                                    |
-| `exclude`    | list     | String names of [serialization fields](#serialization-fields) to exclude. |
-| **RETURNS**  | `Tagger` | The `Tagger` object.                                                      |
+| Name           | Description                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------------- |
+| `bytes_data`   | The data to load from. ~~bytes~~                                                            |
+| _keyword-only_ |                                                                                             |
+| `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
+| **RETURNS**    | The `Tagger` object. ~~Tagger~~                                                             |
 
 ## Tagger.labels {#labels tag="property"}
 
-The labels currently added to the component. Note that even for a blank
-component, this will always include the built-in coarse-grained part-of-speech
-tags by default, e.g. `VERB`, `NOUN` and so on.
+The labels currently added to the component.
 
 > #### Example
 >
@@ -314,9 +400,27 @@ tags by default, e.g. `VERB`, `NOUN` and so on.
 > assert "MY_LABEL" in tagger.labels
 > ```
 
-| Name        | Type  | Description                        |
-| ----------- | ----- | ---------------------------------- |
-| **RETURNS** | tuple | The labels added to the component. |
+| Name        | Description                                            |
+| ----------- | ------------------------------------------------------ |
+| **RETURNS** | The labels added to the component. ~~Tuple[str, ...]~~ |
+
+## Tagger.label_data {#label_data tag="property" new="3"}
+
+The labels currently added to the component and their internal meta information.
+This is the data generated by [`init labels`](/api/cli#init-labels) and used by
+[`Tagger.initialize`](/api/tagger#initialize) to initialize the model with a
+pre-defined label set.
+
+> #### Example
+>
+> ```python
+> labels = tagger.label_data
+> tagger.initialize(lambda: [], nlp=nlp, labels=labels)
+> ```
+
+| Name        | Description                                                |
+| ----------- | ---------------------------------------------------------- |
+| **RETURNS** | The label data added to the component. ~~Tuple[str, ...]~~ |
 
 ## Serialization fields {#serialization-fields}
 
@@ -330,9 +434,8 @@ serialization by passing in the string names via the `exclude` argument.
 > data = tagger.to_disk("/path", exclude=["vocab"])
 > ```
 
-| Name      | Description                                                                                |
-| --------- | ------------------------------------------------------------------------------------------ |
-| `vocab`   | The shared [`Vocab`](/api/vocab).                                                          |
-| `cfg`     | The config file. You usually don't want to exclude this.                                   |
-| `model`   | The binary model data. You usually don't want to exclude this.                             |
-| `tag_map` | The [tag map](/usage/adding-languages#tag-map) mapping fine-grained to coarse-grained tag. |
+| Name    | Description                                                    |
+| ------- | -------------------------------------------------------------- |
+| `vocab` | The shared [`Vocab`](/api/vocab).                              |
+| `cfg`   | The config file. You usually don't want to exclude this.       |
+| `model` | The binary model data. You usually don't want to exclude this. |

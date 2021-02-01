@@ -1,8 +1,6 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import pytest
 import re
+
 from spacy.language import Language
 from spacy.tokenizer import Tokenizer
 
@@ -59,12 +57,8 @@ def test_serialize_language_exclude(meta_data):
     nlp = Language(meta=meta_data)
     assert nlp.meta["name"] == name
     new_nlp = Language().from_bytes(nlp.to_bytes())
-    assert nlp.meta["name"] == name
+    assert new_nlp.meta["name"] == name
     new_nlp = Language().from_bytes(nlp.to_bytes(), exclude=["meta"])
     assert not new_nlp.meta["name"] == name
     new_nlp = Language().from_bytes(nlp.to_bytes(exclude=["meta"]))
     assert not new_nlp.meta["name"] == name
-    with pytest.raises(ValueError):
-        nlp.to_bytes(meta=False)
-    with pytest.raises(ValueError):
-        Language().from_bytes(nlp.to_bytes(), meta=False)

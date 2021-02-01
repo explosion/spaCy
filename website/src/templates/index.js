@@ -19,8 +19,8 @@ import Footer from '../components/footer'
 import SEO from '../components/seo'
 import Link from '../components/link'
 import Section, { Hr } from '../components/section'
-import { Table, Tr, Th, Td } from '../components/table'
-import { Pre, Code, InlineCode } from '../components/code'
+import { Table, Tr, Th, Tx, Td } from '../components/table'
+import { Pre, Code, InlineCode, TypeAnnotation } from '../components/code'
 import { Ol, Ul, Li } from '../components/list'
 import { H2, H3, H4, H5, P, Abbr, Help } from '../components/typography'
 import Accordion from '../components/accordion'
@@ -32,6 +32,8 @@ import Grid from '../components/grid'
 import { YouTube, SoundCloud, Iframe, Image } from '../components/embed'
 import Alert from '../components/alert'
 import Search from '../components/search'
+import Project from '../widgets/project'
+import { Integration, IntegrationLogo } from '../widgets/integration'
 
 const mdxComponents = {
     a: Link,
@@ -39,6 +41,7 @@ const mdxComponents = {
     pre: Pre,
     code: Code,
     inlineCode: InlineCode,
+    del: TypeAnnotation,
     table: Table,
     img: Image,
     tr: Tr,
@@ -61,6 +64,7 @@ const scopeComponents = {
     Infobox,
     Table,
     Tr,
+    Tx,
     Th,
     Td,
     Help,
@@ -73,30 +77,52 @@ const scopeComponents = {
     Accordion,
     Grid,
     InlineCode,
+    Project,
+    Integration,
+    IntegrationLogo,
 }
 
-const AlertSpace = ({ legacy }) => {
+const AlertSpace = ({ nightly, legacy }) => {
     const isOnline = useOnlineStatus()
     return (
         <>
+            {nightly && (
+                <Alert
+                    title="You're viewing the pre-release docs."
+                    icon="moon"
+                    closeOnClick={false}
+                >
+                    The page reflects{' '}
+                    <Link to="https://pypi.org/project/spacy-nightly/">
+                        <InlineCode>spacy-nightly</InlineCode>
+                    </Link>
+                    , not the latest <Link to="https://spacy.io">stable version</Link>.
+                </Alert>
+            )}
+            {legacy && (
+                <Alert
+                    title="You're viewing the old documentation"
+                    icon="warning"
+                    closeOnClick={false}
+                >
+                    The page reflects an older version of spaCy, not the latest{' '}
+                    <Link to="https://spacy.io">stable release</Link>.
+                </Alert>
+            )}
             {!isOnline && (
                 <Alert title="Looks like you're offline." icon="offline" variant="warning">
                     But don't worry, your visited pages should be saved for you.
                 </Alert>
             )}
-            {legacy && (
-                <Alert
-                    title="You're viewing the legacy documentation."
-                    icon="warning"
-                    closeOnClick={false}
-                >
-                    This page reflects an older version of spaCy, not the latest{' '}
-                    <Link to="https://spacy.io">stable release</Link>.
-                </Alert>
-            )}
         </>
     )
 }
+
+const navAlert = (
+    <Link to="/usage/v3" hidden>
+        <strong>💥 Out now:</strong> spaCy v3.0
+    </Link>
+)
 
 class Layout extends React.Component {
     static defaultProps = {
@@ -140,9 +166,9 @@ class Layout extends React.Component {
         const { data, pageContext, location, children } = this.props
         const { file, site = {} } = data || {}
         const mdx = file ? file.childMdx : null
-        const { title, section, sectionTitle, teaser, theme = 'blue', searchExclude } = pageContext
         const meta = site.siteMetadata || {}
-        const uiTheme = meta.legacy ? 'legacy' : theme
+        const { title, section, sectionTitle, teaser, theme = 'blue', searchExclude } = pageContext
+        const uiTheme = meta.nightly ? 'nightly' : meta.legacy ? 'legacy' : theme
         const bodyClass = classNames(`theme-${uiTheme}`, { 'search-exclude': !!searchExclude })
         const isDocs = ['usage', 'models', 'api', 'styleguide'].includes(section)
         const content = !mdx ? null : (
@@ -159,13 +185,15 @@ class Layout extends React.Component {
                     section={section}
                     sectionTitle={sectionTitle}
                     bodyClass={bodyClass}
+                    nightly={meta.nightly}
                 />
-                <AlertSpace legacy={meta.legacy} />
+                <AlertSpace nightly={meta.nightly} legacy={meta.legacy} />
                 <Navigation
                     title={meta.title}
                     items={meta.navigation}
                     section={section}
-                    search={meta.legacy ? null : <Search settings={meta.docSearch} />}
+                    search={<Search settings={meta.docSearch} />}
+                    alert={meta.nightly ? null : navAlert}
                 >
                     <Progress key={location.href} />
                 </Navigation>
@@ -178,11 +206,11 @@ class Layout extends React.Component {
                         mdxComponents={mdxComponents}
                     />
                 ) : (
-                    <>
+                    <div>
                         {children}
                         {content}
                         <Footer wide />
-                    </>
+                    </div>
                 )}
             </>
         )
@@ -195,9 +223,10 @@ export const pageQuery = graphql`
     query($slug: String!) {
         site {
             siteMetadata {
+                nightly
+                legacy
                 title
                 description
-                legacy
                 navigation {
                     text
                     url

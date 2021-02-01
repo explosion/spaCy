@@ -36,21 +36,36 @@
 
 .label
     cursor: pointer
-    border: 1px solid var(--color-subtle)
-    border-radius: var(--border-radius)
     display: inline-block
-    padding: 0.65rem 1.25rem
-    margin: 0 0.5rem 0.75rem 0
+    padding: 0.35rem 0.5rem 0.25rem 0
+    margin: 0 1rem 0.5rem 0
     font-size: var(--font-size-xs)
     font-weight: bold
-    background: var(--color-back)
 
     &:hover
         background: var(--color-subtle-light)
 
-    .input:focus + &
+    .input:focus +
         border: 1px solid var(--color-theme)
         outline: none
+
+    .radio + &
+        margin: 0 0 0.75rem 0
+        border-radius: 0
+        border-width: 1px 0 1px 1px
+        border-style: solid
+        border-color: var(--color-subtle)
+        background: var(--color-back)
+        padding: 0.65rem 1.25rem
+
+        &:nth-child(2)  // first child is checkbox
+            border-top-left-radius: var(--border-radius)
+            border-bottom-left-radius: var(--border-radius)
+
+        &:nth-last-child(2)  // last child is additional container
+            border-top-right-radius: var(--border-radius)
+            border-bottom-right-radius: var(--border-radius)
+            border-right-width: 1px
 
     .radio:checked + &
         color: var(--color-back)
@@ -58,21 +73,28 @@
         background: var(--color-theme)
 
     .checkbox + &:before
+        $size: 18px
         content: ""
         display: inline-block
-        width: 20px
-        height: 20px
+        width: $size
+        height: $size
         border: 1px solid var(--color-subtle)
         vertical-align: middle
-        margin-right: 1rem
+        margin-right: 0.5rem
         cursor: pointer
-        border-radius: var(--border-radius)
+        border-radius: $size / 4
+        background: var(--color-back)
+        position: relative
+        top: -1px
 
     .checkbox:checked + &:before
         // Embed "check" icon here for simplicity
         background: var(--color-theme) url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij4gICAgPHBhdGggZmlsbD0iI2ZmZiIgZD0iTTkgMTYuMTcybDEwLjU5NC0xMC41OTQgMS40MDYgMS40MDYtMTIgMTItNS41NzgtNS41NzggMS40MDYtMS40MDZ6Ii8+PC9zdmc+);
         background-size: contain
         border-color: var(--color-theme)
+
+.field-extra:not(:empty):not(:first-child)
+    margin-left: 1rem
 
 .legend
     color: var(--color-dark)
@@ -82,6 +104,27 @@
 
 .fields
     flex: 100%
+
+.select
+    cursor: pointer
+    border: 1px solid var(--color-subtle)
+    border-radius: var(--border-radius)
+    display: inline-block
+    padding: 0.35rem 1.25rem
+    margin: 0 1rem 0.75rem 0
+    font-size: var(--font-size-sm)
+    background: var(--color-back)
+
+.select-hidden
+    display: none
+
+.text-input
+    border: 1px solid var(--color-subtle)
+    border-radius: var(--border-radius)
+    display: inline-block
+    padding: 0.35rem 0.75rem
+    font-size: var(--font-size-sm)
+    background: var(--color-back)
 
 .code
     background: var(--color-front)
@@ -95,6 +138,7 @@
     border-bottom-right-radius: var(--border-radius)
     -webkit-font-smoothing: subpixel-antialiased
     -moz-osx-font-smoothing: auto
+    position: relative
 
 .results
     display: block
@@ -104,6 +148,19 @@
 
     & > span
         display: block
+
+.small
+    font-size: var(--font-size-code)
+    line-height: 1.65
+    white-space: pre-wrap
+    max-height: 400px
+    overflow-y: auto
+
+    & > span
+        display: inline
+
+.hide-prompts .prompt:before
+    content: initial !important
 
 .prompt:before
     color: var(--color-theme)
@@ -115,6 +172,9 @@
 .python:before
     content: ">>>"
 
+.comment
+    color: var(--syntax-comment)
+
 .divider
     padding: 1.5rem 0
 
@@ -123,3 +183,29 @@
 
     .input:checked + .label &
         color: inherit
+
+.copy-area
+    width: 1px
+    height: 1px
+    opacity: 0
+    position: absolute
+
+.menu
+    color: var(--color-subtle)
+    padding-right: 1.5rem
+    display: inline-block
+    position: absolute
+    bottom: var(--spacing-xs)
+    right: 0
+
+.icon-button
+    display: inline-block
+    color: inherit
+    cursor: pointer
+    transition: transform 0.05s ease
+
+    &:not(:last-child)
+        margin-right: 1.5rem
+
+    &:hover
+        transform: scale(1.1)

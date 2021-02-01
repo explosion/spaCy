@@ -1,0 +1,3 @@
+# These are used to compile the training quickstart config
+jinja2
+srsly

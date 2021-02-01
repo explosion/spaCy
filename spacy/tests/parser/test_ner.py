@@ -1,16 +1,24 @@
-# coding: utf-8
-from __future__ import unicode_literals
-
 import pytest
-from spacy.lang.en import English
+from numpy.testing import assert_equal
+from spacy.attrs import ENT_IOB
 
+from spacy import util
+from spacy.lang.en import English
 from spacy.language import Language
 from spacy.lookups import Lookups
-from spacy.pipeline import EntityRecognizer, EntityRuler
-from spacy.vocab import Vocab
-from spacy.syntax.ner import BiluoPushDown
-from spacy.gold import GoldParse, minibatch
+from spacy.pipeline._parser_internals.ner import BiluoPushDown
+from spacy.training import Example
 from spacy.tokens import Doc
+from spacy.vocab import Vocab
+import logging
+
+from ..util import make_tempdir
+
+
+TRAIN_DATA = [
+    ("Who is Shaka Khan?", {"entities": [(7, 17, "PERSON")]}),
+    ("I like London and Berlin.", {"entities": [(7, 13, "LOC"), (18, 24, "LOC")]}),
+]
 
 
 @pytest.fixture
@@ -45,51 +53,56 @@ def tsys(vocab, entity_types):
 
 
 def test_get_oracle_moves(tsys, doc, entity_annots):
-    gold = GoldParse(doc, entities=entity_annots)
-    tsys.preprocess_gold(gold)
-    act_classes = tsys.get_oracle_sequence(doc, gold)
+    example = Example.from_dict(doc, {"entities": entity_annots})
+    act_classes = tsys.get_oracle_sequence(example, _debug=False)
     names = [tsys.get_class_name(act) for act in act_classes]
     assert names == ["U-PERSON", "O", "O", "B-GPE", "L-GPE", "O"]
 
 
+@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_get_oracle_moves_negative_entities(tsys, doc, entity_annots):
     entity_annots = [(s, e, "!" + label) for s, e, label in entity_annots]
-    gold = GoldParse(doc, entities=entity_annots)
-    for i, tag in enumerate(gold.ner):
+    example = Example.from_dict(doc, {"entities": entity_annots})
+    ex_dict = example.to_dict()
+
+    for i, tag in enumerate(ex_dict["doc_annotation"]["entities"]):
         if tag == "L-!GPE":
-            gold.ner[i] = "-"
-    tsys.preprocess_gold(gold)
-    act_classes = tsys.get_oracle_sequence(doc, gold)
+            ex_dict["doc_annotation"]["entities"][i] = "-"
+    example = Example.from_dict(doc, ex_dict)
+
+    act_classes = tsys.get_oracle_sequence(example)
     names = [tsys.get_class_name(act) for act in act_classes]
     assert names
 
 
 def test_get_oracle_moves_negative_entities2(tsys, vocab):
     doc = Doc(vocab, words=["A", "B", "C", "D"])
-    gold = GoldParse(doc, entities=[])
-    gold.ner = ["B-!PERSON", "L-!PERSON", "B-!PERSON", "L-!PERSON"]
-    tsys.preprocess_gold(gold)
-    act_classes = tsys.get_oracle_sequence(doc, gold)
+    entity_annots = ["B-!PERSON", "L-!PERSON", "B-!PERSON", "L-!PERSON"]
+    example = Example.from_dict(doc, {"entities": entity_annots})
+    act_classes = tsys.get_oracle_sequence(example)
     names = [tsys.get_class_name(act) for act in act_classes]
     assert names
 
 
+@pytest.mark.skip(reason="Maybe outdated? Unsure")
 def test_get_oracle_moves_negative_O(tsys, vocab):
     doc = Doc(vocab, words=["A", "B", "C", "D"])
-    gold = GoldParse(doc, entities=[])
-    gold.ner = ["O", "!O", "O", "!O"]
-    tsys.preprocess_gold(gold)
-    act_classes = tsys.get_oracle_sequence(doc, gold)
+    entity_annots = ["O", "!O", "O", "!O"]
+    example = Example.from_dict(doc, {"entities": entity_annots})
+    act_classes = tsys.get_oracle_sequence(example)
     names = [tsys.get_class_name(act) for act in act_classes]
     assert names
 
 
+# We can't easily represent this on a Doc object. Not sure what the best solution
+# would be, but I don't think it's an important use case?
+@pytest.mark.skip(reason="No longer supported")
 def test_oracle_moves_missing_B(en_vocab):
     words = ["B", "52", "Bomber"]
     biluo_tags = [None, None, "L-PRODUCT"]
 
     doc = Doc(en_vocab, words=words)
-    gold = GoldParse(doc, words=words, entities=biluo_tags)
+    example = Example.from_dict(doc, {"words": words, "entities": biluo_tags})
 
     moves = BiluoPushDown(en_vocab.strings)
     move_types = ("M", "B", "I", "L", "U", "O")
@@ -104,16 +117,18 @@ def test_oracle_moves_missing_B(en_vocab):
             moves.add_action(move_types.index("I"), label)
             moves.add_action(move_types.index("L"), label)
             moves.add_action(move_types.index("U"), label)
-    moves.preprocess_gold(gold)
-    moves.get_oracle_sequence(doc, gold)
+    moves.get_oracle_sequence(example)
 
 
+# We can't easily represent this on a Doc object. Not sure what the best solution
+# would be, but I don't think it's an important use case?
+@pytest.mark.skip(reason="No longer supported")
 def test_oracle_moves_whitespace(en_vocab):
     words = ["production", "\n", "of", "Northrop", "\n", "Corp.", "\n", "'s", "radar"]
     biluo_tags = ["O", "O", "O", "B-ORG", None, "I-ORG", "L-ORG", "O", "O"]
 
     doc = Doc(en_vocab, words=words)
-    gold = GoldParse(doc, words=words, entities=biluo_tags)
+    example = Example.from_dict(doc, {"entities": biluo_tags})
 
     moves = BiluoPushDown(en_vocab.strings)
     move_types = ("M", "B", "I", "L", "U", "O")
@@ -125,8 +140,7 @@ def test_oracle_moves_whitespace(en_vocab):
         else:
             action, label = tag.split("-")
             moves.add_action(move_types.index(action), label)
-    moves.preprocess_gold(gold)
-    moves.get_oracle_sequence(doc, gold)
+    moves.get_oracle_sequence(example)
 
 
 def test_accept_blocked_token():
@@ -134,7 +148,8 @@ def test_accept_blocked_token():
     # 1. test normal behaviour
     nlp1 = English()
     doc1 = nlp1("I live in New York")
-    ner1 = EntityRecognizer(doc1.vocab)
+    config = {}
+    ner1 = nlp1.create_pipe("ner", config=config)
     assert [token.ent_iob_ for token in doc1] == ["", "", "", "", ""]
     assert [token.ent_type_ for token in doc1] == ["", "", "", "", ""]
 
@@ -152,10 +167,11 @@ def test_accept_blocked_token():
     # 2. test blocking behaviour
     nlp2 = English()
     doc2 = nlp2("I live in New York")
-    ner2 = EntityRecognizer(doc2.vocab)
+    config = {}
+    ner2 = nlp2.create_pipe("ner", config=config)
 
     # set "New York" to a blocked entity
-    doc2.ents = [(0, 3, 5)]
+    doc2.set_ents([], blocked=[doc2[3:5]], default="unmodified")
     assert [token.ent_iob_ for token in doc2] == ["", "", "", "B", "B"]
     assert [token.ent_type_ for token in doc2] == ["", "", "", "", ""]
 
@@ -184,36 +200,30 @@ def test_train_empty():
     ]
 
     nlp = English()
-    ner = nlp.create_pipe("ner")
+    train_examples = []
+    for t in train_data:
+        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
+    ner = nlp.add_pipe("ner", last=True)
     ner.add_label("PERSON")
-    nlp.add_pipe(ner, last=True)
-
-    nlp.begin_training()
+    nlp.initialize()
     for itn in range(2):
         losses = {}
-        batches = minibatch(train_data)
+        batches = util.minibatch(train_examples, size=8)
         for batch in batches:
-            texts, annotations = zip(*batch)
-            nlp.update(
-                texts,  # batch of texts
-                annotations,  # batch of annotations
-                losses=losses,
-            )
+            nlp.update(batch, losses=losses)
 
 
 def test_overwrite_token():
     nlp = English()
-    ner1 = nlp.create_pipe("ner")
-    nlp.add_pipe(ner1, name="ner")
-    nlp.begin_training()
-
+    nlp.add_pipe("ner")
+    nlp.initialize()
     # The untrained NER will predict O for each token
     doc = nlp("I live in New York")
     assert [token.ent_iob_ for token in doc] == ["O", "O", "O", "O", "O"]
     assert [token.ent_type_ for token in doc] == ["", "", "", "", ""]
-
     # Check that a new ner can overwrite O
-    ner2 = EntityRecognizer(doc.vocab)
+    config = {}
+    ner2 = nlp.create_pipe("ner", config=config)
     ner2.moves.add_action(5, "")
     ner2.add_label("GPE")
     state = ner2.moves.init_batch([doc])[0]
@@ -224,22 +234,30 @@ def test_overwrite_token():
     assert ner2.moves.is_valid(state, "L-GPE")
 
 
+def test_empty_ner():
+    nlp = English()
+    ner = nlp.add_pipe("ner")
+    ner.add_label("MY_LABEL")
+    nlp.initialize()
+    doc = nlp("John is watching the news about Croatia's elections")
+    # if this goes wrong, the initialization of the parser's upper layer is probably broken
+    result = ["O", "O", "O", "O", "O", "O", "O", "O", "O"]
+    assert [token.ent_iob_ for token in doc] == result
+
+
 def test_ruler_before_ner():
     """ Test that an NER works after an entity_ruler: the second can add annotations """
     nlp = English()
 
     # 1 : Entity Ruler - should set "this" to B and everything else to empty
-    ruler = EntityRuler(nlp)
     patterns = [{"label": "THING", "pattern": "This"}]
+    ruler = nlp.add_pipe("entity_ruler")
     ruler.add_patterns(patterns)
-    nlp.add_pipe(ruler)
 
     # 2: untrained NER - should set everything else to O
-    untrained_ner = nlp.create_pipe("ner")
+    untrained_ner = nlp.add_pipe("ner")
     untrained_ner.add_label("MY_LABEL")
-    nlp.add_pipe(untrained_ner)
-    nlp.begin_training()
-
+    nlp.initialize()
     doc = nlp("This is Antti Korhonen speaking in Finland")
     expected_iobs = ["B", "O", "O", "O", "O", "O", "O"]
     expected_types = ["THING", "", "", "", "", "", ""]
@@ -252,16 +270,14 @@ def test_ner_before_ruler():
     nlp = English()
 
     # 1: untrained NER - should set everything to O
-    untrained_ner = nlp.create_pipe("ner")
+    untrained_ner = nlp.add_pipe("ner", name="uner")
     untrained_ner.add_label("MY_LABEL")
-    nlp.add_pipe(untrained_ner, name="uner")
-    nlp.begin_training()
+    nlp.initialize()
 
     # 2 : Entity Ruler - should set "this" to B and keep everything else O
-    ruler = EntityRuler(nlp)
     patterns = [{"label": "THING", "pattern": "This"}]
+    ruler = nlp.add_pipe("entity_ruler")
     ruler.add_patterns(patterns)
-    nlp.add_pipe(ruler)
 
     doc = nlp("This is Antti Korhonen speaking in Finland")
     expected_iobs = ["B", "O", "O", "O", "O", "O", "O"]
@@ -274,11 +290,10 @@ def test_block_ner():
     """ Test functionality for blocking tokens so they can't be in a named entity """
     # block "Antti L Korhonen" from being a named entity
     nlp = English()
-    nlp.add_pipe(BlockerComponent1(2, 5))
-    untrained_ner = nlp.create_pipe("ner")
+    nlp.add_pipe("blocker", config={"start": 2, "end": 5})
+    untrained_ner = nlp.add_pipe("ner")
     untrained_ner.add_label("MY_LABEL")
-    nlp.add_pipe(untrained_ner, name="uner")
-    nlp.begin_training()
+    nlp.initialize()
     doc = nlp("This is Antti L Korhonen speaking in Finland")
     expected_iobs = ["O", "O", "B", "B", "B", "O", "O", "O"]
     expected_types = ["", "", "", "", "", "", "", ""]
@@ -286,49 +301,166 @@ def test_block_ner():
     assert [token.ent_type_ for token in doc] == expected_types
 
 
-def test_change_number_features():
-    # Test the default number features
+@pytest.mark.parametrize("use_upper", [True, False])
+def test_overfitting_IO(use_upper):
+    # Simple test to try and quickly overfit the NER component
     nlp = English()
-    ner = nlp.create_pipe("ner")
-    nlp.add_pipe(ner)
-    ner.add_label("PERSON")
-    nlp.begin_training()
-    assert ner.model.lower.nF == ner.nr_feature
-    # Test we can change it
-    nlp = English()
-    ner = nlp.create_pipe("ner")
-    nlp.add_pipe(ner)
-    ner.add_label("PERSON")
-    nlp.begin_training(
-        component_cfg={"ner": {"nr_feature_tokens": 3, "token_vector_width": 128}}
-    )
-    assert ner.model.lower.nF == 3
-    # Test the model runs
-    nlp("hello world")
+    ner = nlp.add_pipe("ner", config={"model": {"use_upper": use_upper}})
+    train_examples = []
+    for text, annotations in TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
+        for ent in annotations.get("entities"):
+            ner.add_label(ent[2])
+    optimizer = nlp.initialize()
+
+    for i in range(50):
+        losses = {}
+        nlp.update(train_examples, sgd=optimizer, losses=losses)
+    assert losses["ner"] < 0.00001
+
+    # test the trained model
+    test_text = "I like London."
+    doc = nlp(test_text)
+    ents = doc.ents
+    assert len(ents) == 1
+    assert ents[0].text == "London"
+    assert ents[0].label_ == "LOC"
+
+    # Also test the results are still the same after IO
+    with make_tempdir() as tmp_dir:
+        nlp.to_disk(tmp_dir)
+        nlp2 = util.load_model_from_path(tmp_dir)
+        doc2 = nlp2(test_text)
+        ents2 = doc2.ents
+        assert len(ents2) == 1
+        assert ents2[0].text == "London"
+        assert ents2[0].label_ == "LOC"
+        # Ensure that the predictions are still the same, even after adding a new label
+        ner2 = nlp2.get_pipe("ner")
+        assert ner2.model.attrs["has_upper"] == use_upper
+        ner2.add_label("RANDOM_NEW_LABEL")
+        doc3 = nlp2(test_text)
+        ents3 = doc3.ents
+        assert len(ents3) == 1
+        assert ents3[0].text == "London"
+        assert ents3[0].label_ == "LOC"
+
+    # Make sure that running pipe twice, or comparing to call, always amounts to the same predictions
+    texts = [
+        "Just a sentence.",
+        "Then one more sentence about London.",
+        "Here is another one.",
+        "I like London.",
+    ]
+    batch_deps_1 = [doc.to_array([ENT_IOB]) for doc in nlp.pipe(texts)]
+    batch_deps_2 = [doc.to_array([ENT_IOB]) for doc in nlp.pipe(texts)]
+    no_batch_deps = [doc.to_array([ENT_IOB]) for doc in [nlp(text) for text in texts]]
+    assert_equal(batch_deps_1, batch_deps_2)
+    assert_equal(batch_deps_1, no_batch_deps)
 
 
-def test_ner_warns_no_lookups():
-    nlp = Language()
+def test_beam_ner_scores():
+    # Test that we can get confidence values out of the beam_ner pipe
+    beam_width = 16
+    beam_density = 0.0001
+    nlp = English()
+    config = {
+        "beam_width": beam_width,
+        "beam_density": beam_density,
+    }
+    ner = nlp.add_pipe("beam_ner", config=config)
+    train_examples = []
+    for text, annotations in TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
+        for ent in annotations.get("entities"):
+            ner.add_label(ent[2])
+    optimizer = nlp.initialize()
+
+    # update once
+    losses = {}
+    nlp.update(train_examples, sgd=optimizer, losses=losses)
+
+    # test the scores from the beam
+    test_text = "I like London."
+    doc = nlp.make_doc(test_text)
+    docs = [doc]
+    beams = ner.predict(docs)
+    entity_scores = ner.scored_ents(beams)[0]
+
+    for j in range(len(doc)):
+        for label in ner.labels:
+            score = entity_scores[(j, j + 1, label)]
+            eps = 0.00001
+            assert 0 - eps <= score <= 1 + eps
+
+
+def test_beam_overfitting_IO():
+    # Simple test to try and quickly overfit the Beam NER component
+    nlp = English()
+    beam_width = 16
+    beam_density = 0.0001
+    config = {
+        "beam_width": beam_width,
+        "beam_density": beam_density,
+    }
+    ner = nlp.add_pipe("beam_ner", config=config)
+    train_examples = []
+    for text, annotations in TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
+        for ent in annotations.get("entities"):
+            ner.add_label(ent[2])
+    optimizer = nlp.initialize()
+
+    # run overfitting
+    for i in range(50):
+        losses = {}
+        nlp.update(train_examples, sgd=optimizer, losses=losses)
+    assert losses["beam_ner"] < 0.0001
+
+    # test the scores from the beam
+    test_text = "I like London."
+    docs = [nlp.make_doc(test_text)]
+    beams = ner.predict(docs)
+    entity_scores = ner.scored_ents(beams)[0]
+    assert entity_scores[(2, 3, "LOC")] == 1.0
+    assert entity_scores[(2, 3, "PERSON")] == 0.0
+
+    # Also test the results are still the same after IO
+    with make_tempdir() as tmp_dir:
+        nlp.to_disk(tmp_dir)
+        nlp2 = util.load_model_from_path(tmp_dir)
+        docs2 = [nlp2.make_doc(test_text)]
+        ner2 = nlp2.get_pipe("beam_ner")
+        beams2 = ner2.predict(docs2)
+        entity_scores2 = ner2.scored_ents(beams2)[0]
+        assert entity_scores2[(2, 3, "LOC")] == 1.0
+        assert entity_scores2[(2, 3, "PERSON")] == 0.0
+
+
+def test_ner_warns_no_lookups(caplog):
+    nlp = English()
+    assert nlp.lang in util.LEXEME_NORM_LANGS
     nlp.vocab.lookups = Lookups()
     assert not len(nlp.vocab.lookups)
-    ner = nlp.create_pipe("ner")
-    nlp.add_pipe(ner)
-    with pytest.warns(UserWarning):
-        nlp.begin_training()
+    nlp.add_pipe("ner")
+    with caplog.at_level(logging.DEBUG):
+        nlp.initialize()
+        assert "W033" in caplog.text
+    caplog.clear()
     nlp.vocab.lookups.add_table("lexeme_norm")
     nlp.vocab.lookups.get_table("lexeme_norm")["a"] = "A"
-    with pytest.warns(None) as record:
-        nlp.begin_training()
-        assert not record.list
+    with caplog.at_level(logging.DEBUG):
+        nlp.initialize()
+        assert "W033" not in caplog.text
 
 
-class BlockerComponent1(object):
-    name = "my_blocker"
-
-    def __init__(self, start, end):
+@Language.factory("blocker")
+class BlockerComponent1:
+    def __init__(self, nlp, start, end, name="my_blocker"):
         self.start = start
         self.end = end
+        self.name = name
 
     def __call__(self, doc):
-        doc.ents = [(0, self.start, self.end)]
+        doc.set_ents([], blocked=[doc[self.start : self.end]], default="unmodified")
         return doc

@@ -1,7 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
-
 STOP_WORDS = set(
     """
 a à â abord afin ah ai aie ainsi ait allaient allons

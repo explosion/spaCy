@@ -1,11 +1,12 @@
-import React, { Fragment, useState, useEffect } from 'react'
+import React, { Fragment, useState, useEffect, useRef } from 'react'
 import PropTypes from 'prop-types'
 import classNames from 'classnames'
-import { window } from 'browser-monads'
+import { window, document } from 'browser-monads'
 
 import Section from './section'
 import Icon from './icon'
 import { H2 } from './typography'
+import { copyToClipboard } from './copy'
 import classes from '../styles/quickstart.module.sass'
 
 function getNewChecked(optionId, checkedForId, multiple) {
@@ -14,10 +15,47 @@ function getNewChecked(optionId, checkedForId, multiple) {
     return [...checkedForId, optionId]
 }
 
-const Quickstart = ({ data, title, description, id, children }) => {
+const Quickstart = ({
+    data = [],
+    title,
+    description,
+    copy = true,
+    download,
+    rawContent = null,
+    id = 'quickstart',
+    setters = {},
+    showDropdown = {},
+    hidePrompts,
+    small,
+    codeLang,
+    Container = Section,
+    children,
+}) => {
+    const contentRef = useRef()
+    const copyAreaRef = useRef()
+    const isClient = typeof window !== 'undefined'
+    const supportsCopy = isClient && document.queryCommandSupported('copy')
+    const showCopy = supportsCopy && copy
     const [styles, setStyles] = useState({})
     const [checked, setChecked] = useState({})
     const [initialized, setInitialized] = useState(false)
+    const [copySuccess, setCopySuccess] = useState(false)
+    const [otherState, setOtherState] = useState({})
+    const setOther = (id, value) => setOtherState({ ...otherState, [id]: value })
+    const getRawContent = ref => {
+        if (rawContent !== null) return rawContent
+        if (ref.current && ref.current.childNodes) {
+            // Select all currently visible nodes (spans and text nodes)
+            const result = [...ref.current.childNodes].filter(el => el.offsetParent !== null)
+            return result.map(el => el.textContent).join('\n')
+        }
+        return ''
+    }
+
+    const onClickCopy = () => {
+        copyAreaRef.current.value = getRawContent(contentRef)
+        copyToClipboard(copyAreaRef, setCopySuccess)
+    }
 
     const getCss = (id, checkedOptions) => {
         const checkedForId = checkedOptions[id] || []
@@ -32,7 +70,7 @@ const Quickstart = ({ data, title, description, id, children }) => {
         if (!initialized) {
             const initialChecked = Object.assign(
                 {},
-                ...data.map(({ id, options }) => ({
+                ...data.map(({ id, options = [] }) => ({
                     [id]: options.filter(option => option.checked).map(({ id }) => id),
                 }))
             )
@@ -47,8 +85,8 @@ const Quickstart = ({ data, title, description, id, children }) => {
     }, [data, initialized])
 
     return !data.length ? null : (
-        <Section id={id}>
-            <div className={classes.root}>
+        <Container id={id}>
+            <div className={classNames(classes.root, { [classes.hidePrompts]: !!hidePrompts })}>
                 {title && (
                     <H2 className={classes.title} name={id}>
                         <a href={`#${id}`}>{title}</a>
@@ -57,90 +95,175 @@ const Quickstart = ({ data, title, description, id, children }) => {
 
                 {description && <p className={classes.description}>{description}</p>}
 
-                {data.map(({ id, title, options = [], multiple, help }) => (
-                    <div key={id} data-quickstart-group={id} className={classes.group}>
-                        <style data-quickstart-style={id}>
-                            {styles[id] ||
-                                `[data-quickstart-results]>[data-quickstart-${id}] { display: none }`}
-                        </style>
-                        <div className={classes.legend}>
-                            {title}
-                            {help && (
-                                <span data-tooltip={help} className={classes.help}>
-                                    {' '}
-                                    <Icon name="help" width={16} spaced />
-                                </span>
-                            )}
-                        </div>
-                        <div className={classes.fields}>
-                            {options.map(option => {
-                                const optionType = multiple ? 'checkbox' : 'radio'
-                                const checkedForId = checked[id] || []
-                                return (
-                                    <Fragment key={option.id}>
-                                        <input
-                                            onChange={() => {
-                                                const newChecked = {
-                                                    ...checked,
-                                                    [id]: getNewChecked(
-                                                        option.id,
-                                                        checkedForId,
-                                                        multiple
-                                                    ),
-                                                }
-                                                setChecked(newChecked)
-                                                setStyles({
-                                                    ...styles,
-                                                    [id]: getCss(id, newChecked),
-                                                })
-                                            }}
-                                            type={optionType}
-                                            className={classNames(
-                                                classes.input,
-                                                classes[optionType]
-                                            )}
-                                            name={id}
-                                            id={`quickstart-${option.id}`}
-                                            value={option.id}
-                                            checked={checkedForId.includes(option.id)}
-                                        />
-                                        <label
-                                            className={classes.label}
-                                            htmlFor={`quickstart-${option.id}`}
-                                        >
-                                            {option.title}
-                                            {option.meta && (
-                                                <span className={classes.meta}>{option.meta}</span>
-                                            )}
-                                            {option.help && (
-                                                <span
-                                                    data-tooltip={option.help}
-                                                    className={classes.help}
+                {data.map(
+                    ({
+                        id,
+                        title,
+                        options = [],
+                        dropdown = [],
+                        defaultValue,
+                        multiple,
+                        other,
+                        help,
+                    }) => {
+                        // Optional function that's called with the value
+                        const setterFunc = setters[id] || (() => {})
+                        // Check if dropdown should be shown
+                        const dropdownGetter = showDropdown[id] || (() => true)
+                        return (
+                            <div key={id} data-quickstart-group={id} className={classes.group}>
+                                <style data-quickstart-style={id} scoped>
+                                    {styles[id] ||
+                                        `[data-quickstart-results]>[data-quickstart-${id}] { display: none }`}
+                                </style>
+                                <div className={classes.legend}>
+                                    {title}
+                                    {help && (
+                                        <span data-tooltip={help} className={classes.help}>
+                                            {' '}
+                                            <Icon name="help" width={16} />
+                                        </span>
+                                    )}
+                                </div>
+                                <div className={classes.fields}>
+                                    {options.map(option => {
+                                        const optionType = multiple ? 'checkbox' : 'radio'
+                                        const checkedForId = checked[id] || []
+                                        return (
+                                            <Fragment key={option.id}>
+                                                <input
+                                                    onChange={() => {
+                                                        const newChecked = {
+                                                            ...checked,
+                                                            [id]: getNewChecked(
+                                                                option.id,
+                                                                checkedForId,
+                                                                multiple
+                                                            ),
+                                                        }
+                                                        setChecked(newChecked)
+                                                        setStyles({
+                                                            ...styles,
+                                                            [id]: getCss(id, newChecked),
+                                                        })
+                                                        setterFunc(newChecked[id])
+                                                    }}
+                                                    type={optionType}
+                                                    className={classNames(
+                                                        classes.input,
+                                                        classes[optionType],
+                                                        {
+                                                            [classes.long]: options.length >= 4,
+                                                        }
+                                                    )}
+                                                    name={id}
+                                                    id={`quickstart-${option.id}`}
+                                                    value={option.id}
+                                                    checked={checkedForId.includes(option.id)}
+                                                />
+                                                <label
+                                                    className={classes.label}
+                                                    htmlFor={`quickstart-${option.id}`}
                                                 >
-                                                    {' '}
-                                                    <Icon name="help" width={16} spaced />
-                                                </span>
-                                            )}
-                                        </label>
-                                    </Fragment>
-                                )
-                            })}
-                        </div>
-                    </div>
-                ))}
+                                                    {option.title}
+                                                    {option.meta && (
+                                                        <span className={classes.meta}>
+                                                            {option.meta}
+                                                        </span>
+                                                    )}
+                                                    {option.help && (
+                                                        <span
+                                                            data-tooltip={option.help}
+                                                            className={classes.help}
+                                                        >
+                                                            {' '}
+                                                            <Icon name="help" width={16} />
+                                                        </span>
+                                                    )}
+                                                </label>
+                                            </Fragment>
+                                        )
+                                    })}
+                                    <span className={classes.fieldExtra}>
+                                        {!!dropdown.length && (
+                                            <select
+                                                defaultValue={defaultValue}
+                                                className={classNames(classes.select, {
+                                                    [classes.selectHidden]: !dropdownGetter(),
+                                                })}
+                                                onChange={({ target }) => {
+                                                    const value = target.value
+                                                    if (value != other) {
+                                                        setterFunc(value)
+                                                        setOther(id, false)
+                                                    } else {
+                                                        setterFunc('')
+                                                        setOther(id, true)
+                                                    }
+                                                }}
+                                            >
+                                                {dropdown.map(({ id, title }) => (
+                                                    <option key={id} value={id}>
+                                                        {title}
+                                                    </option>
+                                                ))}
+                                                {other && <option value={other}>{other}</option>}
+                                            </select>
+                                        )}
+                                        {other && otherState[id] && (
+                                            <input
+                                                type="text"
+                                                className={classes.textInput}
+                                                placeholder="Type here..."
+                                                onChange={({ target }) => setterFunc(target.value)}
+                                            />
+                                        )}
+                                    </span>
+                                </div>
+                            </div>
+                        )
+                    }
+                )}
                 <pre className={classes.code}>
-                    <code className={classes.results} data-quickstart-results="">
+                    <code
+                        className={classNames(classes.results, {
+                            [classes.small]: !!small,
+                            [`language-${codeLang}`]: !!codeLang,
+                        })}
+                        data-quickstart-results=""
+                        ref={contentRef}
+                    >
                         {children}
                     </code>
-                </pre>
-            </div>
-        </Section>
-    )
-}
 
-Quickstart.defaultProps = {
-    data: [],
-    id: 'quickstart',
+                    <menu className={classes.menu}>
+                        {showCopy && (
+                            <button
+                                title="Copy to clipboard"
+                                onClick={onClickCopy}
+                                className={classes.iconButton}
+                            >
+                                <Icon width={18} name={copySuccess ? 'accept' : 'clipboard'} />
+                            </button>
+                        )}
+                        {download && (
+                            <a
+                                href={`data:application/octet-stream,${encodeURIComponent(
+                                    getRawContent(contentRef)
+                                )}`}
+                                title="Download file"
+                                download={download}
+                                className={classes.iconButton}
+                            >
+                                <Icon width={18} name="download" />
+                            </a>
+                        )}
+                    </menu>
+                </pre>
+                {showCopy && <textarea ref={copyAreaRef} className={classes.copyArea} rows={1} />}
+            </div>
+        </Container>
+    )
 }
 
 Quickstart.propTypes = {
@@ -164,12 +287,13 @@ Quickstart.propTypes = {
     ),
 }
 
-const QS = ({ children, prompt = 'bash', divider = false, ...props }) => {
+const QS = ({ children, prompt = 'bash', divider = false, comment = false, ...props }) => {
     const qsClassNames = classNames({
         [classes.prompt]: !!prompt && !divider,
         [classes.bash]: prompt === 'bash' && !divider,
         [classes.python]: prompt === 'python' && !divider,
         [classes.divider]: !!divider,
+        [classes.comment]: !!comment,
     })
     const attrs = Object.assign(
         {},

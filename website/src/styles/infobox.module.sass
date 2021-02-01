@@ -5,7 +5,7 @@
     padding: 1.5rem 2rem 0.75rem 1.5rem
     border-radius: var(--border-radius)
     color: var(--color-dark)
-    border-left: 0.75rem solid var(--color-theme)
+    border-left: 0.75rem solid var(--color-subtle-light)
 
     p, pre, ul, ol
         margin-bottom: var(--spacing-xs)
@@ -14,6 +14,21 @@
         font-size: inherit
         line-height: inherit
 
+    ul li
+        padding-left: 0.75em
+
+.list ul li
+    font-size: var(--font-size-sm)
+    list-style: none
+    padding: 0
+    margin: 0 0 0.35rem 0
+
+    &:before
+        all: initial
+
+    a, a span
+        border-bottom: 0 !important
+
 .title
     font-weight: bold
     color: var(--color-theme)
@@ -21,11 +36,18 @@
     margin-bottom: var(--spacing-xs)
     font-size: var(--font-size-md)
 
+    code
+        font-weight: normal
+        color: inherit
+
 .icon
     color: var(--color-theme)
     vertical-align: baseline
     position: relative
     bottom: -2px
+
+.emoji
+    margin-right: 0.65em
 
 .warning
     --color-theme: var(--color-yellow-dark)

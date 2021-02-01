@@ -1,20 +1,17 @@
-# cython: infer_types=True
-# cython: profile=True
-from __future__ import unicode_literals
-
+# cython: infer_types=True, profile=True
 from libc.stdint cimport uintptr_t
-
 from preshed.maps cimport map_init, map_set, map_get, map_clear, map_iter
 
 import warnings
 
+from ..attrs cimport ORTH, POS, TAG, DEP, LEMMA, MORPH
 from ..attrs import IDS
-from ..attrs cimport ORTH, POS, TAG, DEP, LEMMA
 from ..structs cimport TokenC
 from ..tokens.token cimport Token
+from ..tokens.span cimport Span
 from ..typedefs cimport attr_t
 
-from ._schemas import TOKEN_PATTERN_SCHEMA
+from ..schemas import TokenPattern
 from ..errors import Errors, Warnings
 
 
@@ -31,18 +28,15 @@ cdef class PhraseMatcher:
     Copyright (c) 2017 Vikash Singh (vikash.duliajan@gmail.com)
     """
 
-    def __init__(self, Vocab vocab, max_length=0, attr="ORTH", validate=False):
+    def __init__(self, Vocab vocab, attr="ORTH", validate=False):
         """Initialize the PhraseMatcher.
 
         vocab (Vocab): The shared vocabulary.
-        attr (int / unicode): Token attribute to match on.
+        attr (int / str): Token attribute to match on.
         validate (bool): Perform additional validation when patterns are added.
-        RETURNS (PhraseMatcher): The newly constructed object.
 
         DOCS: https://spacy.io/api/phrasematcher#init
         """
-        if max_length != 0:
-            warnings.warn(Warnings.W010, DeprecationWarning)
         self.vocab = vocab
         self._callbacks = {}
         self._docs = {}
@@ -61,7 +55,7 @@ cdef class PhraseMatcher:
                 attr = "ORTH"
             if attr == "IS_SENT_START":
                 attr = "SENT_START"
-            if attr not in TOKEN_PATTERN_SCHEMA["items"]["properties"]:
+            if attr.lower() not in TokenPattern().dict():
                 raise ValueError(Errors.E152.format(attr=attr))
             self.attr = IDS.get(attr)
 
@@ -77,7 +71,7 @@ cdef class PhraseMatcher:
     def __contains__(self, key):
         """Check whether the matcher contains rules for a match ID.
 
-        key (unicode): The match ID.
+        key (str): The match ID.
         RETURNS (bool): Whether the matcher contains rules for this match ID.
 
         DOCS: https://spacy.io/api/phrasematcher#contains
@@ -92,7 +86,7 @@ cdef class PhraseMatcher:
         """Remove a rule from the matcher by match ID. A KeyError is raised if
         the key does not exist.
 
-        key (unicode): The match ID.
+        key (str): The match ID.
 
         DOCS: https://spacy.io/api/phrasematcher#remove
         """
@@ -166,7 +160,7 @@ cdef class PhraseMatcher:
         number of arguments). The on_match callback becomes an optional keyword
         argument.
 
-        key (unicode): The match ID.
+        key (str): The match ID.
         docs (list): List of `Doc` objects representing match patterns.
         on_match (callable): Callback executed on match.
         *_docs (Doc): For backwards compatibility: list of patterns to add
@@ -193,12 +187,22 @@ cdef class PhraseMatcher:
             if len(doc) == 0:
                 continue
             if isinstance(doc, Doc):
-                if self.attr in (POS, TAG, LEMMA) and not doc.is_tagged:
-                    raise ValueError(Errors.E155.format())
-                if self.attr == DEP and not doc.is_parsed:
-                    raise ValueError(Errors.E156.format())
-                if self._validate and (doc.is_tagged or doc.is_parsed) \
-                  and self.attr not in (DEP, POS, TAG, LEMMA):
+                attrs = (TAG, POS, MORPH, LEMMA, DEP)
+                has_annotation = {attr: doc.has_annotation(attr) for attr in attrs}
+                for attr in attrs:
+                    if self.attr == attr and not has_annotation[attr]:
+                        if attr == TAG:
+                            pipe = "tagger"
+                        elif attr in (POS, MORPH):
+                            pipe = "morphologizer"
+                        elif attr == LEMMA:
+                            pipe = "lemmatizer"
+                        elif attr == DEP:
+                            pipe = "parser"
+                        error_msg = Errors.E155.format(pipe=pipe, attr=self.vocab.strings.as_string(attr))
+                        raise ValueError(error_msg)
+                if self._validate and any(has_annotation.values()) \
+                        and self.attr not in attrs:
                     string_attr = self.vocab.strings[self.attr]
                     warnings.warn(Warnings.W012.format(key=key, attr=string_attr))
                 keyword = self._convert_to_array(doc)
@@ -226,13 +230,16 @@ cdef class PhraseMatcher:
                 result = internal_node
             map_set(self.mem, <MapStruct*>result, self.vocab.strings[key], NULL)
 
-    def __call__(self, doc):
+    def __call__(self, doc, *, as_spans=False):
         """Find all sequences matching the supplied patterns on the `Doc`.
 
         doc (Doc): The document to match over.
-        RETURNS (list): A list of `(key, start, end)` tuples,
+        as_spans (bool): Return Span objects with labels instead of (match_id,
+            start, end) tuples.
+        RETURNS (list): A list of `(match_id, start, end)` tuples,
             describing the matches. A match tuple describes a span
-            `doc[start:end]`. The `label_id` and `key` are both integers.
+            `doc[start:end]`. The `match_id` is an integer. If as_spans is set
+            to True, a list of Span objects is returned.
 
         DOCS: https://spacy.io/api/phrasematcher#call
         """
@@ -249,7 +256,10 @@ cdef class PhraseMatcher:
             on_match = self._callbacks.get(self.vocab.strings[ent_id])
             if on_match is not None:
                 on_match(self, doc, i, matches)
-        return matches
+        if as_spans:
+            return [Span(doc, start, end, label=key) for key, start, end in matches]
+        else:
+            return matches
 
     cdef void find_matches(self, Doc doc, vector[SpanC] *matches) nogil:
         cdef MapStruct* current_node = self.c_map
@@ -294,24 +304,11 @@ cdef class PhraseMatcher:
             current_node = self.c_map
             idx += 1
 
-    def pipe(self, stream, batch_size=1000, n_threads=-1, return_matches=False,
-             as_tuples=False):
-        """Match a stream of documents, yielding them in turn.
-
-        docs (iterable): A stream of documents.
-        batch_size (int): Number of documents to accumulate into a working set.
-        return_matches (bool): Yield the match lists along with the docs, making
-            results (doc, matches) tuples.
-        as_tuples (bool): Interpret the input stream as (doc, context) tuples,
-            and yield (result, context) tuples out.
-            If both return_matches and as_tuples are True, the output will
-            be a sequence of ((doc, matches), context) tuples.
-        YIELDS (Doc): Documents, in order.
-
-        DOCS: https://spacy.io/api/phrasematcher#pipe
+    def pipe(self, stream, batch_size=1000, return_matches=False, as_tuples=False):
+        """Match a stream of documents, yielding them in turn. Deprecated as of
+        spaCy v3.0.
         """
-        if n_threads != -1:
-            warnings.warn(Warnings.W016, DeprecationWarning)
+        warnings.warn(Warnings.W105.format(matcher="PhraseMatcher"), DeprecationWarning)
         if as_tuples:
             for doc, context in stream:
                 matches = self(doc)

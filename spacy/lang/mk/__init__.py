@@ -1,12 +1,10 @@
-# coding: utf8
-from __future__ import unicode_literals
-
+from typing import Optional
+from thinc.api import Model
 from .lemmatizer import MacedonianLemmatizer
 from .stop_words import STOP_WORDS
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .lex_attrs import LEX_ATTRS
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
-from .morph_rules import MORPH_RULES
 
 from ...language import Language
 from ...attrs import LANG
@@ -24,7 +22,6 @@ class MacedonianDefaults(Language.Defaults):
     # Merge base exceptions and custom tokenizer exceptions
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
     stop_words = STOP_WORDS
-    morph_rules = MORPH_RULES
 
     @classmethod
     def create_lemmatizer(cls, nlp=None, lookups=None):
@@ -36,6 +33,18 @@ class MacedonianDefaults(Language.Defaults):
 class Macedonian(Language):
     lang = "mk"
     Defaults = MacedonianDefaults
+
+
+@Macedonian.factory(
+    "lemmatizer",
+    assigns=["token.lemma"],
+    default_config={"model": None, "mode": "rule", "overwrite": False},
+    default_score_weights={"lemma_acc": 1.0},
+)
+def make_lemmatizer(
+    nlp: Language, model: Optional[Model], name: str, mode: str, overwrite: bool
+):
+    return MacedonianLemmatizer(nlp.vocab, model, name, mode=mode, overwrite=overwrite)
 
 
 __all__ = ["Macedonian"]

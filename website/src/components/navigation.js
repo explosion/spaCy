@@ -9,7 +9,7 @@ import { github } from './util'
 import Logo from '-!svg-react-loader!../images/logo.svg'
 import classes from '../styles/navigation.module.sass'
 
-const NavigationDropdown = ({ items, section }) => {
+const NavigationDropdown = ({ items = [], section }) => {
     const active = items.find(({ text }) => text.toLowerCase() === section)
     const defaultValue = active ? active.url : 'title'
     return (
@@ -26,13 +26,23 @@ const NavigationDropdown = ({ items, section }) => {
     )
 }
 
-const Navigation = ({ title, items, section, search, children }) => {
+export default function Navigation({ title, items = [], section, search, alert, children }) {
+    const logo = (
+        <Link to="/" aria-label={title} hidden>
+            <h1 className={classes.title}>{title}</h1>
+            <Logo className={classes.logo} width={300} height={96} />
+        </Link>
+    )
+
     return (
         <nav className={classes.root}>
-            <Link to="/" aria-label={title} hidden>
-                <h1 className={classes.title}>{title}</h1>
-                <Logo className={classes.logo} width={300} height={96} />
-            </Link>
+            {!alert ? (
+                logo
+            ) : (
+                <span className={classes.hasAlert}>
+                    {logo} <span className={classes.alert}>{alert}</span>
+                </span>
+            )}
 
             <div className={classes.menu}>
                 <NavigationDropdown items={items} section={section} />
@@ -64,10 +74,6 @@ const Navigation = ({ title, items, section, search, children }) => {
     )
 }
 
-Navigation.defaultProps = {
-    items: [],
-}
-
 Navigation.propTypes = {
     title: PropTypes.string.isRequired,
     items: PropTypes.arrayOf(
@@ -79,5 +85,3 @@ Navigation.propTypes = {
     section: PropTypes.string,
     search: PropTypes.node,
 }
-
-export default Navigation

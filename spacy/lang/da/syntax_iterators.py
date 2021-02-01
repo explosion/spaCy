@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 from ...symbols import NOUN, PROPN, PRON, VERB, AUX
 from ...errors import Errors
 
@@ -37,7 +34,7 @@ def noun_chunks(doclike):
 
     doc = doclike.doc
 
-    if not doc.is_parsed:
+    if not doc.has_annotation("DEP"):
         raise ValueError(Errors.E029)
 
     if not len(doc):

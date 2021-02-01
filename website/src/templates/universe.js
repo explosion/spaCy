@@ -30,7 +30,7 @@ function filterResources(resources, data) {
     return sorted.filter(res => (res.category || []).includes(data.id))
 }
 
-const UniverseContent = ({ content = [], categories, pageContext, mdxComponents, theme }) => {
+const UniverseContent = ({ content = [], categories, theme, pageContext, mdxComponents }) => {
     const { data = {} } = pageContext
     const filteredResources = filterResources(content, data)
     const activeData = data ? content.find(({ id }) => id === data.id) : null
@@ -302,13 +302,12 @@ const Universe = ({ pageContext, location, mdxComponents }) => (
     <StaticQuery
         query={query}
         render={data => {
-            const content = data.site.siteMetadata.universe.resources
-            const categories = data.site.siteMetadata.universe.categories
-            const theme = data.site.siteMetadata.legacy ? 'legacy' : pageContext.theme
+            const { universe, nightly, legacy } = data.site.siteMetadata
+            const theme = nightly ? 'nightly' : legacy ? 'legacy' : pageContext.theme
             return (
                 <UniverseContent
-                    content={content}
-                    categories={categories}
+                    content={universe.resources}
+                    categories={universe.categories}
                     pageContext={pageContext}
                     location={location}
                     mdxComponents={mdxComponents}
@@ -325,6 +324,7 @@ const query = graphql`
     query UniverseQuery {
         site {
             siteMetadata {
+                nightly
                 legacy
                 universe {
                     resources {

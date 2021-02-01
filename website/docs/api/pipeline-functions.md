@@ -6,13 +6,13 @@ menu:
   - ['merge_noun_chunks', 'merge_noun_chunks']
   - ['merge_entities', 'merge_entities']
   - ['merge_subtokens', 'merge_subtokens']
+  - ['token_splitter', 'token_splitter']
 ---
 
 ## merge_noun_chunks {#merge_noun_chunks tag="function"}
 
 Merge noun chunks into a single token. Also available via the string name
-`"merge_noun_chunks"`. After initialization, the component is typically added to
-the processing pipeline using [`nlp.add_pipe`](/api/language#add_pipe).
+`"merge_noun_chunks"`.
 
 > #### Example
 >
@@ -20,9 +20,7 @@ the processing pipeline using [`nlp.add_pipe`](/api/language#add_pipe).
 > texts = [t.text for t in nlp("I have a blue car")]
 > assert texts == ["I", "have", "a", "blue", "car"]
 >
-> merge_nps = nlp.create_pipe("merge_noun_chunks")
-> nlp.add_pipe(merge_nps)
->
+> nlp.add_pipe("merge_noun_chunks")
 > texts = [t.text for t in nlp("I have a blue car")]
 > assert texts == ["I", "have", "a blue car"]
 > ```
@@ -36,16 +34,15 @@ all other components.
 
 </Infobox>
 
-| Name        | Type  | Description                                                  |
-| ----------- | ----- | ------------------------------------------------------------ |
-| `doc`       | `Doc` | The `Doc` object to process, e.g. the `Doc` in the pipeline. |
-| **RETURNS** | `Doc` | The modified `Doc` with merged noun chunks.                  |
+| Name        | Description                                                          |
+| ----------- | -------------------------------------------------------------------- |
+| `doc`       | The `Doc` object to process, e.g. the `Doc` in the pipeline. ~~Doc~~ |
+| **RETURNS** | The modified `Doc` with merged noun chunks. ~~Doc~~                  |
 
 ## merge_entities {#merge_entities tag="function"}
 
 Merge named entities into a single token. Also available via the string name
-`"merge_entities"`. After initialization, the component is typically added to
-the processing pipeline using [`nlp.add_pipe`](/api/language#add_pipe).
+`"merge_entities"`.
 
 > #### Example
 >
@@ -53,8 +50,7 @@ the processing pipeline using [`nlp.add_pipe`](/api/language#add_pipe).
 > texts = [t.text for t in nlp("I like David Bowie")]
 > assert texts == ["I", "like", "David", "Bowie"]
 >
-> merge_ents = nlp.create_pipe("merge_entities")
-> nlp.add_pipe(merge_ents)
+> nlp.add_pipe("merge_entities")
 >
 > texts = [t.text for t in nlp("I like David Bowie")]
 > assert texts == ["I", "like", "David Bowie"]
@@ -68,20 +64,17 @@ components to the end of the pipeline and after all other components.
 
 </Infobox>
 
-| Name        | Type  | Description                                                  |
-| ----------- | ----- | ------------------------------------------------------------ |
-| `doc`       | `Doc` | The `Doc` object to process, e.g. the `Doc` in the pipeline. |
-| **RETURNS** | `Doc` | The modified `Doc` with merged entities.                     |
+| Name        | Description                                                          |
+| ----------- | -------------------------------------------------------------------- |
+| `doc`       | The `Doc` object to process, e.g. the `Doc` in the pipeline. ~~Doc~~ |
+| **RETURNS** | The modified `Doc` with merged entities. ~~Doc~~                     |
 
 ## merge_subtokens {#merge_subtokens tag="function" new="2.1"}
 
 Merge subtokens into a single token. Also available via the string name
-`"merge_subtokens"`. After initialization, the component is typically added to
-the processing pipeline using [`nlp.add_pipe`](/api/language#add_pipe).
-
-As of v2.1, the parser is able to predict "subtokens" that should be merged into
-one single token later on. This is especially relevant for languages like
-Chinese, Japanese or Korean, where a "word" isn't defined as a
+`"merge_subtokens"`. As of v2.1, the parser is able to predict "subtokens" that
+should be merged into one single token later on. This is especially relevant for
+languages like Chinese, Japanese or Korean, where a "word" isn't defined as a
 whitespace-delimited sequence of characters. Under the hood, this component uses
 the [`Matcher`](/api/matcher) to find sequences of tokens with the dependency
 label `"subtok"` and then merges them into a single token.
@@ -96,9 +89,7 @@ label `"subtok"` and then merges them into a single token.
 > print([(token.text, token.dep_) for token in doc])
 > # [('拜', 'subtok'), ('托', 'subtok')]
 >
-> merge_subtok = nlp.create_pipe("merge_subtokens")
-> nlp.add_pipe(merge_subtok)
->
+> nlp.add_pipe("merge_subtokens")
 > doc = nlp("拜托")
 > print([token.text for token in doc])
 > # ['拜托']
@@ -112,8 +103,30 @@ end of the pipeline and after all other components.
 
 </Infobox>
 
-| Name        | Type    | Description                                                  |
-| ----------- | ------- | ------------------------------------------------------------ |
-| `doc`       | `Doc`   | The `Doc` object to process, e.g. the `Doc` in the pipeline. |
-| `label`     | unicode | The subtoken dependency label. Defaults to `"subtok"`.       |
-| **RETURNS** | `Doc`   | The modified `Doc` with merged subtokens.                    |
+| Name        | Description                                                          |
+| ----------- | -------------------------------------------------------------------- |
+| `doc`       | The `Doc` object to process, e.g. the `Doc` in the pipeline. ~~Doc~~ |
+| `label`     | The subtoken dependency label. Defaults to `"subtok"`. ~~str~~       |
+| **RETURNS** | The modified `Doc` with merged subtokens. ~~Doc~~                    |
+
+## token_splitter {#token_splitter tag="function" new="3.0"}
+
+Split tokens longer than a minimum length into shorter tokens. Intended for use
+with transformer pipelines where long spaCy tokens lead to input text that
+exceed the transformer model max length.
+
+> #### Example
+>
+> ```python
+> config = {"min_length": 20, "split_length": 5}
+> nlp.add_pipe("token_splitter", config=config, first=True)
+> doc = nlp("aaaaabbbbbcccccdddddee")
+> print([token.text for token in doc])
+> # ['aaaaa', 'bbbbb', 'ccccc', 'ddddd', 'ee']
+> ```
+
+| Setting        | Description                                                           |
+| -------------- | --------------------------------------------------------------------- |
+| `min_length`   | The minimum length for a token to be split. Defaults to `25`. ~~int~~ |
+| `split_length` | The length of the split tokens. Defaults to `5`. ~~int~~              |
+| **RETURNS**    | The modified `Doc` with the split tokens. ~~Doc~~                     |

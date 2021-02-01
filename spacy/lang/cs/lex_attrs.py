@@ -1,6 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
 from ...attrs import LIKE_NUM
 
 _num_words = [
@@ -43,7 +40,7 @@ _num_words = [
     "kvadrilion",
     "kvadriliarda",
     "kvintilion",
-    ]
+]
 
 
 def like_num(text):

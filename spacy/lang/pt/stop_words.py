@@ -1,7 +1,3 @@
-# coding: utf8
-from __future__ import unicode_literals
-
-
 STOP_WORDS = set(
     """
 a à às área acerca ademais adeus agora ainda algo algumas alguns ali além ambas ambos antes
@@ -63,8 +59,8 @@ tudo tão têm
 um uma umas uns usa usar último
 
 vai vais valor veja vem vens ver vez vezes vinda vindo vinte você vocês vos vossa
-vossas vosso vossos vários vão vêm vós 
+vossas vosso vossos vários vão vêm vós
 
 zero
 """.split()
-) 
+)

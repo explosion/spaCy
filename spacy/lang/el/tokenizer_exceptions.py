@@ -1,132 +1,128 @@
-# coding: utf8
-from __future__ import unicode_literals
-
-from ...symbols import ORTH, LEMMA, NORM
-
+from ..tokenizer_exceptions import BASE_EXCEPTIONS
+from ...symbols import ORTH, NORM
+from ...util import update_exc
 
 _exc = {}
 
 for token in ["Απ'", "ΑΠ'", "αφ'", "Αφ'"]:
-    _exc[token] = [{ORTH: token, LEMMA: "από", NORM: "από"}]
+    _exc[token] = [{ORTH: token, NORM: "από"}]
 
 for token in ["Αλλ'", "αλλ'"]:
-    _exc[token] = [{ORTH: token, LEMMA: "αλλά", NORM: "αλλά"}]
+    _exc[token] = [{ORTH: token, NORM: "αλλά"}]
 
 for token in ["παρ'", "Παρ'", "ΠΑΡ'"]:
-    _exc[token] = [{ORTH: token, LEMMA: "παρά", NORM: "παρά"}]
+    _exc[token] = [{ORTH: token, NORM: "παρά"}]
 
 for token in ["καθ'", "Καθ'"]:
-    _exc[token] = [{ORTH: token, LEMMA: "κάθε", NORM: "κάθε"}]
+    _exc[token] = [{ORTH: token, NORM: "κάθε"}]
 
 for token in ["κατ'", "Κατ'"]:
-    _exc[token] = [{ORTH: token, LEMMA: "κατά", NORM: "κατά"}]
+    _exc[token] = [{ORTH: token, NORM: "κατά"}]
 
 for token in ["'ΣΟΥΝ", "'ναι", "'ταν", "'τανε", "'μαστε", "'μουνα", "'μουν"]:
-    _exc[token] = [{ORTH: token, LEMMA: "είμαι", NORM: "είμαι"}]
+    _exc[token] = [{ORTH: token, NORM: "είμαι"}]
 
 for token in ["Επ'", "επ'", "εφ'", "Εφ'"]:
-    _exc[token] = [{ORTH: token, LEMMA: "επί", NORM: "επί"}]
+    _exc[token] = [{ORTH: token, NORM: "επί"}]
 
 for token in ["Δι'", "δι'"]:
-    _exc[token] = [{ORTH: token, LEMMA: "δια", NORM: "δια"}]
+    _exc[token] = [{ORTH: token, NORM: "δια"}]
 
 for token in ["'χουν", "'χουμε", "'χαμε", "'χα", "'χε", "'χεις", "'χει"]:
-    _exc[token] = [{ORTH: token, LEMMA: "έχω", NORM: "έχω"}]
+    _exc[token] = [{ORTH: token, NORM: "έχω"}]
 
 for token in ["υπ'", "Υπ'"]:
-    _exc[token] = [{ORTH: token, LEMMA: "υπό", NORM: "υπό"}]
+    _exc[token] = [{ORTH: token, NORM: "υπό"}]
 
 for token in ["Μετ'", "ΜΕΤ'", "'μετ"]:
-    _exc[token] = [{ORTH: token, LEMMA: "μετά", NORM: "μετά"}]
+    _exc[token] = [{ORTH: token, NORM: "μετά"}]
 
 for token in ["Μ'", "μ'"]:
-    _exc[token] = [{ORTH: token, LEMMA: "με", NORM: "με"}]
+    _exc[token] = [{ORTH: token, NORM: "με"}]
 
 for token in ["Γι'", "ΓΙ'", "γι'"]:
-    _exc[token] = [{ORTH: token, LEMMA: "για", NORM: "για"}]
+    _exc[token] = [{ORTH: token, NORM: "για"}]
 
 for token in ["Σ'", "σ'"]:
-    _exc[token] = [{ORTH: token, LEMMA: "σε", NORM: "σε"}]
+    _exc[token] = [{ORTH: token, NORM: "σε"}]
 
 for token in ["Θ'", "θ'"]:
-    _exc[token] = [{ORTH: token, LEMMA: "θα", NORM: "θα"}]
+    _exc[token] = [{ORTH: token, NORM: "θα"}]
 
 for token in ["Ν'", "ν'"]:
-    _exc[token] = [{ORTH: token, LEMMA: "να", NORM: "να"}]
+    _exc[token] = [{ORTH: token, NORM: "να"}]
 
 for token in ["Τ'", "τ'"]:
-    _exc[token] = [{ORTH: token, LEMMA: "να", NORM: "να"}]
+    _exc[token] = [{ORTH: token, NORM: "να"}]
 
 for token in ["'γω", "'σένα", "'μεις"]:
-    _exc[token] = [{ORTH: token, LEMMA: "εγώ", NORM: "εγώ"}]
+    _exc[token] = [{ORTH: token, NORM: "εγώ"}]
 
 for token in ["Τ'", "τ'"]:
-    _exc[token] = [{ORTH: token, LEMMA: "το", NORM: "το"}]
+    _exc[token] = [{ORTH: token, NORM: "το"}]
 
 for token in ["Φέρ'", "Φερ'", "φέρ'", "φερ'"]:
-    _exc[token] = [{ORTH: token, LEMMA: "φέρνω", NORM: "φέρνω"}]
+    _exc[token] = [{ORTH: token, NORM: "φέρνω"}]
 
 for token in ["'ρθούνε", "'ρθουν", "'ρθει", "'ρθεί", "'ρθε", "'ρχεται"]:
-    _exc[token] = [{ORTH: token, LEMMA: "έρχομαι", NORM: "έρχομαι"}]
+    _exc[token] = [{ORTH: token, NORM: "έρχομαι"}]
 
 for token in ["'πανε", "'λεγε", "'λεγαν", "'πε", "'λεγα"]:
-    _exc[token] = [{ORTH: token, LEMMA: "λέγω", NORM: "λέγω"}]
+    _exc[token] = [{ORTH: token, NORM: "λέγω"}]
 
 for token in ["Πάρ'", "πάρ'"]:
-    _exc[token] = [{ORTH: token, LEMMA: "παίρνω", NORM: "παίρνω"}]
+    _exc[token] = [{ORTH: token, NORM: "παίρνω"}]
 
 for token in ["μέσ'", "Μέσ'", "μεσ'"]:
-    _exc[token] = [{ORTH: token, LEMMA: "μέσα", NORM: "μέσα"}]
+    _exc[token] = [{ORTH: token, NORM: "μέσα"}]
 
 for token in ["Δέσ'", "Δεσ'", "δεσ'"]:
-    _exc[token] = [{ORTH: token, LEMMA: "δένω", NORM: "δένω"}]
+    _exc[token] = [{ORTH: token, NORM: "δένω"}]
 
 for token in ["'κανε", "Κάν'"]:
-    _exc[token] = [{ORTH: token, LEMMA: "κάνω", NORM: "κάνω"}]
+    _exc[token] = [{ORTH: token, NORM: "κάνω"}]
 
 _other_exc = {
-    "κι": [{ORTH: "κι", LEMMA: "και", NORM: "και"}],
-    "Παίξ'": [{ORTH: "Παίξ'", LEMMA: "παίζω", NORM: "παίζω"}],
-    "Αντ'": [{ORTH: "Αντ'", LEMMA: "αντί", NORM: "αντί"}],
-    "ολ'": [{ORTH: "ολ'", LEMMA: "όλος", NORM: "όλος"}],
-    "ύστερ'": [{ORTH: "ύστερ'", LEMMA: "ύστερα", NORM: "ύστερα"}],
-    "'πρεπε": [{ORTH: "'πρεπε", LEMMA: "πρέπει", NORM: "πρέπει"}],
-    "Δύσκολ'": [{ORTH: "Δύσκολ'", LEMMA: "δύσκολος", NORM: "δύσκολος"}],
-    "'θελα": [{ORTH: "'θελα", LEMMA: "θέλω", NORM: "θέλω"}],
-    "'γραφα": [{ORTH: "'γραφα", LEMMA: "γράφω", NORM: "γράφω"}],
-    "'παιρνα": [{ORTH: "'παιρνα", LEMMA: "παίρνω", NORM: "παίρνω"}],
-    "'δειξε": [{ORTH: "'δειξε", LEMMA: "δείχνω", NORM: "δείχνω"}],
-    "όμουρφ'": [{ORTH: "όμουρφ'", LEMMA: "όμορφος", NORM: "όμορφος"}],
-    "κ'τσή": [{ORTH: "κ'τσή", LEMMA: "κουτσός", NORM: "κουτσός"}],
-    "μηδ'": [{ORTH: "μηδ'", LEMMA: "μήδε", NORM: "μήδε"}],
-    "'ξομολογήθηκε": [
-        {ORTH: "'ξομολογήθηκε", LEMMA: "εξομολογούμαι", NORM: "εξομολογούμαι"}
-    ],
-    "'μας": [{ORTH: "'μας", LEMMA: "εμάς", NORM: "εμάς"}],
-    "'ξερες": [{ORTH: "'ξερες", LEMMA: "ξέρω", NORM: "ξέρω"}],
-    "έφθασ'": [{ORTH: "έφθασ'", LEMMA: "φθάνω", NORM: "φθάνω"}],
-    "εξ'": [{ORTH: "εξ'", LEMMA: "εκ", NORM: "εκ"}],
-    "δώσ'": [{ORTH: "δώσ'", LEMMA: "δίνω", NORM: "δίνω"}],
-    "τίποτ'": [{ORTH: "τίποτ'", LEMMA: "τίποτα", NORM: "τίποτα"}],
-    "Λήξ'": [{ORTH: "Λήξ'", LEMMA: "λήγω", NORM: "λήγω"}],
-    "άσ'": [{ORTH: "άσ'", LEMMA: "αφήνω", NORM: "αφήνω"}],
-    "Στ'": [{ORTH: "Στ'", LEMMA: "στο", NORM: "στο"}],
-    "Δωσ'": [{ORTH: "Δωσ'", LEMMA: "δίνω", NORM: "δίνω"}],
-    "Βάψ'": [{ORTH: "Βάψ'", LEMMA: "βάφω", NORM: "βάφω"}],
-    "Αλλ'": [{ORTH: "Αλλ'", LEMMA: "αλλά", NORM: "αλλά"}],
-    "Αμ'": [{ORTH: "Αμ'", LEMMA: "άμα", NORM: "άμα"}],
-    "Αγόρασ'": [{ORTH: "Αγόρασ'", LEMMA: "αγοράζω", NORM: "αγοράζω"}],
-    "'φύγε": [{ORTH: "'φύγε", LEMMA: "φεύγω", NORM: "φεύγω"}],
-    "'φερε": [{ORTH: "'φερε", LEMMA: "φέρνω", NORM: "φέρνω"}],
-    "'φαγε": [{ORTH: "'φαγε", LEMMA: "τρώω", NORM: "τρώω"}],
-    "'σπαγαν": [{ORTH: "'σπαγαν", LEMMA: "σπάω", NORM: "σπάω"}],
-    "'σκασε": [{ORTH: "'σκασε", LEMMA: "σκάω", NORM: "σκάω"}],
-    "'σβηνε": [{ORTH: "'σβηνε", LEMMA: "σβήνω", NORM: "σβήνω"}],
-    "'ριξε": [{ORTH: "'ριξε", LEMMA: "ρίχνω", NORM: "ρίχνω"}],
-    "'κλεβε": [{ORTH: "'κλεβε", LEMMA: "κλέβω", NORM: "κλέβω"}],
-    "'κει": [{ORTH: "'κει", LEMMA: "εκεί", NORM: "εκεί"}],
-    "'βλεπε": [{ORTH: "'βλεπε", LEMMA: "βλέπω", NORM: "βλέπω"}],
-    "'βγαινε": [{ORTH: "'βγαινε", LEMMA: "βγαίνω", NORM: "βγαίνω"}],
+    "κι": [{ORTH: "κι", NORM: "και"}],
+    "Παίξ'": [{ORTH: "Παίξ'", NORM: "παίζω"}],
+    "Αντ'": [{ORTH: "Αντ'", NORM: "αντί"}],
+    "ολ'": [{ORTH: "ολ'", NORM: "όλος"}],
+    "ύστερ'": [{ORTH: "ύστερ'", NORM: "ύστερα"}],
+    "'πρεπε": [{ORTH: "'πρεπε", NORM: "πρέπει"}],
+    "Δύσκολ'": [{ORTH: "Δύσκολ'", NORM: "δύσκολος"}],
+    "'θελα": [{ORTH: "'θελα", NORM: "θέλω"}],
+    "'γραφα": [{ORTH: "'γραφα", NORM: "γράφω"}],
+    "'παιρνα": [{ORTH: "'παιρνα", NORM: "παίρνω"}],
+    "'δειξε": [{ORTH: "'δειξε", NORM: "δείχνω"}],
+    "όμουρφ'": [{ORTH: "όμουρφ'", NORM: "όμορφος"}],
+    "κ'τσή": [{ORTH: "κ'τσή", NORM: "κουτσός"}],
+    "μηδ'": [{ORTH: "μηδ'", NORM: "μήδε"}],
+    "'ξομολογήθηκε": [{ORTH: "'ξομολογήθηκε", NORM: "εξομολογούμαι"}],
+    "'μας": [{ORTH: "'μας", NORM: "εμάς"}],
+    "'ξερες": [{ORTH: "'ξερες", NORM: "ξέρω"}],
+    "έφθασ'": [{ORTH: "έφθασ'", NORM: "φθάνω"}],
+    "εξ'": [{ORTH: "εξ'", NORM: "εκ"}],
+    "δώσ'": [{ORTH: "δώσ'", NORM: "δίνω"}],
+    "τίποτ'": [{ORTH: "τίποτ'", NORM: "τίποτα"}],
+    "Λήξ'": [{ORTH: "Λήξ'", NORM: "λήγω"}],
+    "άσ'": [{ORTH: "άσ'", NORM: "αφήνω"}],
+    "Στ'": [{ORTH: "Στ'", NORM: "στο"}],
+    "Δωσ'": [{ORTH: "Δωσ'", NORM: "δίνω"}],
+    "Βάψ'": [{ORTH: "Βάψ'", NORM: "βάφω"}],
+    "Αλλ'": [{ORTH: "Αλλ'", NORM: "αλλά"}],
+    "Αμ'": [{ORTH: "Αμ'", NORM: "άμα"}],
+    "Αγόρασ'": [{ORTH: "Αγόρασ'", NORM: "αγοράζω"}],
+    "'φύγε": [{ORTH: "'φύγε", NORM: "φεύγω"}],
+    "'φερε": [{ORTH: "'φερε", NORM: "φέρνω"}],
+    "'φαγε": [{ORTH: "'φαγε", NORM: "τρώω"}],
+    "'σπαγαν": [{ORTH: "'σπαγαν", NORM: "σπάω"}],
+    "'σκασε": [{ORTH: "'σκασε", NORM: "σκάω"}],
+    "'σβηνε": [{ORTH: "'σβηνε", NORM: "σβήνω"}],
+    "'ριξε": [{ORTH: "'ριξε", NORM: "ρίχνω"}],
+    "'κλεβε": [{ORTH: "'κλεβε", NORM: "κλέβω"}],
+    "'κει": [{ORTH: "'κει", NORM: "εκεί"}],
+    "'βλεπε": [{ORTH: "'βλεπε", NORM: "βλέπω"}],
+    "'βγαινε": [{ORTH: "'βγαινε", NORM: "βγαίνω"}],
 }
 
 _exc.update(_other_exc)
@@ -134,37 +130,37 @@ _exc.update(_other_exc)
 for h in range(1, 12 + 1):
 
     for period in ["π.μ.", "πμ"]:
-        _exc["%d%s" % (h, period)] = [
-            {ORTH: "%d" % h},
-            {ORTH: period, LEMMA: "π.μ.", NORM: "π.μ."},
+        _exc[f"{h}{period}"] = [
+            {ORTH: f"{h}"},
+            {ORTH: period, NORM: "π.μ."},
         ]
 
     for period in ["μ.μ.", "μμ"]:
-        _exc["%d%s" % (h, period)] = [
-            {ORTH: "%d" % h},
-            {ORTH: period, LEMMA: "μ.μ.", NORM: "μ.μ."},
+        _exc[f"{h}{period}"] = [
+            {ORTH: f"{h}"},
+            {ORTH: period, NORM: "μ.μ."},
         ]
 
 for exc_data in [
-    {ORTH: "ΑΓΡ.", LEMMA: "Αγροτικός", NORM: "Αγροτικός"},
-    {ORTH: "Αγ. Γρ.", LEMMA: "Αγία Γραφή", NORM: "Αγία Γραφή"},
-    {ORTH: "Αθ.", LEMMA: "Αθανάσιος", NORM: "Αθανάσιος"},
-    {ORTH: "Αλεξ.", LEMMA: "Αλέξανδρος", NORM: "Αλέξανδρος"},
-    {ORTH: "Απρ.", LEMMA: "Απρίλιος", NORM: "Απρίλιος"},
-    {ORTH: "Αύγ.", LEMMA: "Αύγουστος", NORM: "Αύγουστος"},
-    {ORTH: "Δεκ.", LEMMA: "Δεκέμβριος", NORM: "Δεκέμβριος"},
-    {ORTH: "Δημ.", LEMMA: "Δήμος", NORM: "Δήμος"},
-    {ORTH: "Ιαν.", LEMMA: "Ιανουάριος", NORM: "Ιανουάριος"},
-    {ORTH: "Ιούλ.", LEMMA: "Ιούλιος", NORM: "Ιούλιος"},
-    {ORTH: "Ιούν.", LEMMA: "Ιούνιος", NORM: "Ιούνιος"},
-    {ORTH: "Ιωαν.", LEMMA: "Ιωάννης", NORM: "Ιωάννης"},
-    {ORTH: "Μ. Ασία", LEMMA: "Μικρά Ασία", NORM: "Μικρά Ασία"},
-    {ORTH: "Μάρτ.", LEMMA: "Μάρτιος", NORM: "Μάρτιος"},
-    {ORTH: "Μάρτ'", LEMMA: "Μάρτιος", NORM: "Μάρτιος"},
-    {ORTH: "Νοέμβρ.", LEMMA: "Νοέμβριος", NORM: "Νοέμβριος"},
-    {ORTH: "Οκτ.", LEMMA: "Οκτώβριος", NORM: "Οκτώβριος"},
-    {ORTH: "Σεπτ.", LEMMA: "Σεπτέμβριος", NORM: "Σεπτέμβριος"},
-    {ORTH: "Φεβρ.", LEMMA: "Φεβρουάριος", NORM: "Φεβρουάριος"},
+    {ORTH: "ΑΓΡ.", NORM: "Αγροτικός"},
+    {ORTH: "Αγ. Γρ.", NORM: "Αγία Γραφή"},
+    {ORTH: "Αθ.", NORM: "Αθανάσιος"},
+    {ORTH: "Αλεξ.", NORM: "Αλέξανδρος"},
+    {ORTH: "Απρ.", NORM: "Απρίλιος"},
+    {ORTH: "Αύγ.", NORM: "Αύγουστος"},
+    {ORTH: "Δεκ.", NORM: "Δεκέμβριος"},
+    {ORTH: "Δημ.", NORM: "Δήμος"},
+    {ORTH: "Ιαν.", NORM: "Ιανουάριος"},
+    {ORTH: "Ιούλ.", NORM: "Ιούλιος"},
+    {ORTH: "Ιούν.", NORM: "Ιούνιος"},
+    {ORTH: "Ιωαν.", NORM: "Ιωάννης"},
+    {ORTH: "Μ. Ασία", NORM: "Μικρά Ασία"},
+    {ORTH: "Μάρτ.", NORM: "Μάρτιος"},
+    {ORTH: "Μάρτ'", NORM: "Μάρτιος"},
+    {ORTH: "Νοέμβρ.", NORM: "Νοέμβριος"},
+    {ORTH: "Οκτ.", NORM: "Οκτώβριος"},
+    {ORTH: "Σεπτ.", NORM: "Σεπτέμβριος"},
+    {ORTH: "Φεβρ.", NORM: "Φεβρουάριος"},
 ]:
     _exc[exc_data[ORTH]] = [exc_data]
 
@@ -395,4 +391,4 @@ for orth in [
 ]:
     _exc[orth] = [{ORTH: orth}]
 
-TOKENIZER_EXCEPTIONS = _exc
+TOKENIZER_EXCEPTIONS = update_exc(BASE_EXCEPTIONS, _exc)

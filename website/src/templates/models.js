@@ -11,12 +11,23 @@ import { Table, Tr, Td, Th } from '../components/table'
 import Tag from '../components/tag'
 import { H2, Label } from '../components/typography'
 import Icon from '../components/icon'
-import Link from '../components/link'
-import Grid from '../components/grid'
+import Link, { OptionalLink } from '../components/link'
 import Infobox from '../components/infobox'
 import Accordion from '../components/accordion'
 import { join, arrayToObj, abbrNum, markdownToReact } from '../components/util'
 import { isString, isEmptyObj } from '../components/util'
+
+const COMPONENT_LINKS = {
+    tok2vec: '/api/tok2vec',
+    transformer: '/api/transformer',
+    tagger: '/api/tagger',
+    parser: '/api/dependencyparser',
+    ner: '/api/entityrecognizer',
+    lemmatizer: '/api/lemmatizer',
+    attribute_ruler: '/api/attributeruler',
+    senter: '/api/sentencerecognizer',
+    morphologizer: '/api/morphologizer',
+}
 
 const MODEL_META = {
     core: 'Vocabulary, syntax, entities, vectors',
@@ -31,20 +42,37 @@ const MODEL_META = {
     wiki: 'Wikipedia',
     uas: 'Unlabelled dependencies',
     las: 'Labelled dependencies',
+    dep_uas: 'Unlabelled dependencies',
+    dep_las: 'Labelled dependencies',
+    token_acc: 'Tokenization',
+    tok: 'Tokenization',
+    lemma: 'Lemmatization',
+    morph: 'Morphological analysis',
     tags_acc: 'Part-of-speech tags (fine grained tags, Token.tag)',
-    ents_f: 'Entities (F-score)',
-    ents_p: 'Entities (precision)',
-    ents_r: 'Entities (recall)',
+    tag_acc: 'Part-of-speech tags (fine grained tags, Token.tag)',
+    tag: 'Part-of-speech tags (fine grained tags, Token.tag)',
+    pos: 'Part-of-speech tags (coarse grained tags, Token.pos)',
+    pos_acc: 'Part-of-speech tags (coarse grained tags, Token.pos)',
+    ents_f: 'Named entities (F-score)',
+    ents_p: 'Named entities (precision)',
+    ents_r: 'Named entities (recall)',
+    ner_f: 'Named entities (F-score)',
+    ner_p: 'Named entities (precision)',
+    ner_r: 'Named entities (recall)',
+    sents_f: 'Sentence segmentation (F-score)',
+    sents_p: 'Sentence segmentation (precision)',
+    sents_r: 'Sentence segmentation (recall)',
     cpu: 'words per second on CPU',
     gpu: 'words per second on GPU',
-    pipeline: 'Processing pipeline components in order',
+    pipeline: 'Active processing pipeline components in order',
+    components: 'All processing pipeline components (including disabled components)',
     sources: 'Sources of training data',
     vecs:
-        'Word vectors included in the model. Models that only support context vectors compute similarity via the tensors shared with the pipeline.',
+        'Word vectors included in the package. Packages that only support context vectors compute similarity via the tensors shared with the pipeline.',
     benchmark_parser: 'Syntax accuracy',
     benchmark_ner: 'NER accuracy',
     benchmark_speed: 'Speed',
-    compat: 'Latest compatible model version for your spaCy installation',
+    compat: 'Latest compatible package version for your spaCy installation',
 }
 
 const LABEL_SCHEME_META = {
@@ -66,12 +94,12 @@ function isStableVersion(v) {
     return !v.includes('a') && !v.includes('b') && !v.includes('dev') && !v.includes('rc')
 }
 
-function getLatestVersion(modelId, compatibility) {
+function getLatestVersion(modelId, compatibility, prereleases) {
     for (let [version, models] of Object.entries(compatibility)) {
         if (isStableVersion(version) && models[modelId]) {
             const modelVersions = models[modelId]
             for (let modelVersion of modelVersions) {
-                if (isStableVersion(modelVersion)) {
+                if (isStableVersion(modelVersion) || prereleases) {
                     return modelVersion
                 }
             }
@@ -87,25 +115,20 @@ function formatVectors(data) {
 }
 
 function formatAccuracy(data) {
-    if (!data) return null
-    const labels = {
-        las: 'LAS',
-        uas: 'UAS',
-        tags_acc: 'TAG',
-        ents_f: 'NER F',
-        ents_p: 'NER P',
-        ents_r: 'NER R',
-    }
-    const isSyntax = key => ['tags_acc', 'las', 'uas'].includes(key)
-    const isNer = key => key.startsWith('ents_')
+    const exclude = ['speed']
+    if (!data) return []
     return Object.keys(data)
-        .filter(key => labels[key])
-        .map(key => ({
-            label: labels[key],
-            value: data[key].toFixed(2),
-            help: MODEL_META[key],
-            type: isNer(key) ? 'ner' : isSyntax(key) ? 'syntax' : null,
-        }))
+        .map(label => {
+            const value = data[label]
+            return isNaN(value) || exclude.includes(label)
+                ? null
+                : {
+                      label,
+                      value: value.toFixed(2),
+                      help: MODEL_META[label],
+                  }
+        })
+        .filter(item => item)
 }
 
 function formatModelMeta(data) {
@@ -114,6 +137,7 @@ function formatModelMeta(data) {
         version: data.version,
         sizeFull: data.size,
         pipeline: data.pipeline,
+        components: data.components,
         notes: data.notes,
         description: data.description,
         sources: data.sources,
@@ -122,7 +146,8 @@ function formatModelMeta(data) {
         license: data.license,
         labels: isEmptyObj(data.labels) ? null : data.labels,
         vectors: formatVectors(data.vectors),
-        accuracy: formatAccuracy(data.accuracy),
+        // TODO: remove accuracy fallback
+        accuracy: formatAccuracy(data.accuracy || data.performance),
     }
 }
 
@@ -137,18 +162,44 @@ function formatSources(data = []) {
     ))
 }
 
+function linkComponents(components = []) {
+    return join(
+        components.map(c => (
+            <Fragment key={c}>
+                <OptionalLink to={COMPONENT_LINKS[c]} hideIcon>
+                    <InlineCode>{c}</InlineCode>
+                </OptionalLink>
+            </Fragment>
+        ))
+    )
+}
+
 const Help = ({ children }) => (
     <span data-tooltip={children}>
         <Icon name="help2" width={16} variant="subtle" inline />
     </span>
 )
 
-const Model = ({ name, langId, langName, baseUrl, repo, compatibility, hasExamples, licenses }) => {
+const Model = ({
+    name,
+    langId,
+    langName,
+    baseUrl,
+    repo,
+    compatibility,
+    hasExamples,
+    licenses,
+    prereleases,
+}) => {
     const [initialized, setInitialized] = useState(false)
     const [isError, setIsError] = useState(true)
     const [meta, setMeta] = useState({})
     const { type, genre, size } = getModelComponents(name)
-    const version = useMemo(() => getLatestVersion(name, compatibility), [name, compatibility])
+    const version = useMemo(() => getLatestVersion(name, compatibility, prereleases), [
+        name,
+        compatibility,
+        prereleases,
+    ])
 
     useEffect(() => {
         window.dispatchEvent(new Event('resize')) // scroll position for progress
@@ -169,8 +220,8 @@ const Model = ({ name, langId, langName, baseUrl, repo, compatibility, hasExampl
 
     const releaseTag = meta.fullName ? `/tag/${meta.fullName}` : ''
     const releaseUrl = `https://github.com/${repo}/releases/${releaseTag}`
-    const pipeline =
-        meta.pipeline && join(meta.pipeline.map(p => <InlineCode key={p}>{p}</InlineCode>))
+    const pipeline = linkComponents(meta.pipeline)
+    const components = linkComponents(meta.components)
     const sources = formatSources(meta.sources)
     const author = !meta.url ? meta.author : <Link to={meta.url}>{meta.author}</Link>
     const licenseUrl = licenses[meta.license] ? licenses[meta.license].url : null
@@ -183,21 +234,12 @@ const Model = ({ name, langId, langName, baseUrl, repo, compatibility, hasExampl
         { label: 'Type', tag: type, content: MODEL_META[type] },
         { label: 'Genre', tag: genre, content: MODEL_META[genre] },
         { label: 'Size', tag: size, content: meta.sizeFull },
+        { label: 'Components', content: components, help: MODEL_META.components },
         { label: 'Pipeline', content: pipeline, help: MODEL_META.pipeline },
         { label: 'Vectors', content: meta.vectors, help: MODEL_META.vecs },
         { label: 'Sources', content: sources, help: MODEL_META.sources },
         { label: 'Author', content: author },
         { label: 'License', content: license },
-    ]
-    const accuracy = [
-        {
-            label: 'Syntax Accuracy',
-            items: meta.accuracy ? meta.accuracy.filter(a => a.type === 'syntax') : null,
-        },
-        {
-            label: 'NER Accuracy',
-            items: meta.accuracy ? meta.accuracy.filter(a => a.type === 'ner') : null,
-        },
     ]
 
     const error = (
@@ -210,7 +252,6 @@ const Model = ({ name, langId, langName, baseUrl, repo, compatibility, hasExampl
             </p>
         </Infobox>
     )
-
     return (
         <Section id={name}>
             <H2
@@ -229,7 +270,7 @@ const Model = ({ name, langId, langName, baseUrl, repo, compatibility, hasExampl
                 {name}
             </H2>
             <Aside title="Installation">
-                <CodeBlock lang="bash" prompt="$">
+                <CodeBlock lang="cli" prompt="$">
                     python -m spacy download {name}
                 </CodeBlock>
             </Aside>
@@ -255,33 +296,6 @@ const Model = ({ name, langId, langName, baseUrl, repo, compatibility, hasExampl
                     )}
                 </tbody>
             </Table>
-            <Grid cols={2} gutterBottom={hasInteractiveCode || !!labels}>
-                {accuracy &&
-                    accuracy.map(({ label, items }, i) =>
-                        !items ? null : (
-                            <Table fixed key={i}>
-                                <thead>
-                                    <Tr>
-                                        <Th colSpan={2}>{label}</Th>
-                                    </Tr>
-                                </thead>
-                                <tbody>
-                                    {items.map((item, i) => (
-                                        <Tr key={i}>
-                                            <Td>
-                                                <Label>
-                                                    {item.label}{' '}
-                                                    {item.help && <Help>{item.help}</Help>}
-                                                </Label>
-                                            </Td>
-                                            <Td num>{item.value}</Td>
-                                        </Tr>
-                                    ))}
-                                </tbody>
-                            </Table>
-                        )
-                    )}
-            </Grid>
             {meta.notes && markdownToReact(meta.notes, MARKDOWN_COMPONENTS)}
             {hasInteractiveCode && (
                 <CodeBlock title="Try out the model" lang="python" executable={true}>
@@ -289,13 +303,32 @@ const Model = ({ name, langId, langName, baseUrl, repo, compatibility, hasExampl
                         `import spacy`,
                         `from spacy.lang.${langId}.examples import sentences `,
                         ``,
-                        `nlp = spacy.load('${name}')`,
+                        `nlp = spacy.load("${name}")`,
                         `doc = nlp(sentences[0])`,
                         `print(doc.text)`,
                         `for token in doc:`,
                         `    print(token.text, token.pos_, token.dep_)`,
                     ].join('\n')}
                 </CodeBlock>
+            )}
+            {meta.accuracy && (
+                <Accordion id={`${name}-accuracy`} title="Accuracy Evaluation">
+                    <Table>
+                        <tbody>
+                            {meta.accuracy.map(({ label, value, help }) => (
+                                <Tr key={`${name}-${label}`}>
+                                    <Td nowrap>
+                                        <InlineCode>{label.toUpperCase()}</InlineCode>
+                                    </Td>
+                                    <Td>{help}</Td>
+                                    <Td num style={{ textAlign: 'right' }}>
+                                        {value}
+                                    </Td>
+                                </Tr>
+                            ))}
+                        </tbody>
+                    </Table>
+                </Accordion>
             )}
             {labels && (
                 <Accordion id={`${name}-labels`} title="Label Scheme">
@@ -314,7 +347,7 @@ const Model = ({ name, langId, langName, baseUrl, repo, compatibility, hasExampl
                                 const labelNames = labels[pipe] || []
                                 const help = LABEL_SCHEME_META[pipe]
                                 return (
-                                    <Tr key={pipe} evenodd={false} key={pipe}>
+                                    <Tr key={`${name}-${pipe}`} evenodd={false} key={pipe}>
                                         <Td style={{ width: '20%' }}>
                                             <Label>
                                                 {pipe} {help && <Help>{help}</Help>}
@@ -345,7 +378,7 @@ const Models = ({ pageContext, repo, children }) => {
     const [initialized, setInitialized] = useState(false)
     const [compatibility, setCompatibility] = useState({})
     const { id, title, meta } = pageContext
-    const { models, isStarters } = meta
+    const { models } = meta
     const baseUrl = `https://raw.githubusercontent.com/${repo}/master`
 
     useEffect(() => {
@@ -359,27 +392,9 @@ const Models = ({ pageContext, repo, children }) => {
         }
     }, [initialized, baseUrl])
 
-    const modelTitle = title
-    const modelTeaser = `Available pretrained statistical models for ${title}`
-
-    const starterTitle = `${title} starters`
-    const starterTeaser = `Available transfer learning starter packs for ${title}`
-
     return (
         <>
-            <Title
-                title={isStarters ? starterTitle : modelTitle}
-                teaser={isStarters ? starterTeaser : modelTeaser}
-            />
-            {isStarters && (
-                <Section>
-                    <p>
-                        Starter packs are pretrained weights you can initialize your models with to
-                        achieve better accuracy. They can include word vectors (which will be used
-                        as features during training) or other pretrained representations like BERT.
-                    </p>
-                </Section>
-            )}
+            <Title title={title} teaser={`Available trained pipelines for ${title}`} />
             <StaticQuery
                 query={query}
                 render={({ site }) =>
@@ -393,6 +408,8 @@ const Models = ({ pageContext, repo, children }) => {
                             baseUrl={baseUrl}
                             repo={repo}
                             licenses={arrayToObj(site.siteMetadata.licenses, 'id')}
+                            hasExamples={meta.hasExamples}
+                            prereleases={site.siteMetadata.nightly}
                         />
                     ))
                 }
@@ -409,6 +426,7 @@ const query = graphql`
     query ModelsQuery {
         site {
             siteMetadata {
+                nightly
                 licenses {
                     id
                     url

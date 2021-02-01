@@ -1,6 +1,6 @@
 {
     "resources": [
-        {
+    	{
             "id": "spacy-textblob",
             "title": "spaCyTextBlob",
             "slogan": "Easy sentiment analysis for spaCy using TextBlob",
@@ -30,6 +30,17 @@
             },
             "category": ["pipeline"],
             "tags": ["sentiment", "textblob"]
+	    },
+        {
+            "id": "spacy-ray",
+            "title": "spacy-ray",
+            "slogan": "Parallel and distributed training with spaCy and Ray",
+            "description": "[Ray](https://ray.io/) is a fast and simple framework for building and running **distributed applications**. This very lightweight extension package lets you use Ray for parallel and distributed training with spaCy. If `spacy-ray` is installed in the same environment as spaCy, it will automatically add `spacy ray` commands to your spaCy CLI.",
+            "github": "explosion/spacy-ray",
+            "pip": "spacy-ray",
+            "category": ["training"],
+            "author": "Explosion / Anyscale",
+            "thumb": "https://i.imgur.com/7so6ZpS.png"
         },
         {
             "id": "spacy-sentence-bert",
@@ -501,15 +512,16 @@
                 "from spacy_lookup import Entity",
                 "",
                 "nlp = spacy.load('en')",
-                "entity = Entity(keywords_list=['python', 'java platform'])",
+                "entity = Entity(keywords_list=['python', 'product manager', 'java platform'])",
                 "nlp.add_pipe(entity, last=True)",
                 "",
                 "doc = nlp(\"I am a product manager for a java and python.\")",
                 "assert doc._.has_entities == True",
-                "assert doc[2:5]._.has_entities == True",
                 "assert doc[0]._.is_entity == False",
+                "assert doc[3]._.entity_desc == 'product manager'",
                 "assert doc[3]._.is_entity == True",
-                "print(doc._.entities)"
+                "",
+                "print([(token.text, token._.canonical) for token in doc if token._.is_entity])"
             ],
             "author": "Marc Puig",
             "author_links": {
@@ -2100,10 +2112,8 @@
             "code_example": [
                 "import spacy",
                 "",
-                "nlp = spacy.load(\"en_trf_bertbaseuncased_lg\")",
-                "doc = nlp(\"Apple shares rose on the news. Apple pie is delicious.\")",
-                "print(doc[0].similarity(doc[7]))",
-                "print(doc._.trf_last_hidden_state.shape)"
+                "nlp = spacy.load(\"en_core_web_trf\")",
+                "doc = nlp(\"Apple shares rose on the news. Apple pie is delicious.\")"
             ],
             "author": "Explosion",
             "author_links": {
@@ -2129,7 +2139,7 @@
                 "from negspacy.negation import Negex",
                 "",
                 "nlp = spacy.load(\"en_core_web_sm\")",
-                "negex = Negex(nlp, ent_types=[\"PERSON\",\"ORG\"])",
+                "negex = Negex(nlp, ent_types=[\"PERSON','ORG\"])",
                 "nlp.add_pipe(negex, last=True)",
                 "",
                 "doc = nlp(\"She does not like Steve Jobs but likes Apple products.\")",
@@ -2609,14 +2619,14 @@
                 "github": "medspacy"
             }
         },
-          {
+	      {
             "id": "rita-dsl",
             "title": "RITA DSL",
             "slogan": "Domain Specific Language for creating language rules",
             "github": "zaibacu/rita-dsl",
             "description": "A Domain Specific Language (DSL) for building language patterns. These can be later compiled into spaCy patterns, pure regex, or any other format",
             "pip": "rita-dsl",
-              "thumb": "https://raw.githubusercontent.com/zaibacu/rita-dsl/master/docs/assets/logo-100px.png",
+	          "thumb": "https://raw.githubusercontent.com/zaibacu/rita-dsl/master/docs/assets/logo-100px.png",
             "code_language": "python",
             "code_example": [
                 "import spacy",

@@ -1,38 +1,38 @@
-# coding: utf8
-from __future__ import unicode_literals
-
+from typing import Optional
+from thinc.api import Model
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
-from .tag_map import TAG_MAP
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
+from .lemmatizer import SpanishLemmatizer
 from .syntax_iterators import SYNTAX_ITERATORS
 from .punctuation import TOKENIZER_INFIXES, TOKENIZER_SUFFIXES
-
-from ..tokenizer_exceptions import BASE_EXCEPTIONS
-from ..norm_exceptions import BASE_NORMS
 from ...language import Language
-from ...attrs import LANG, NORM
-from ...util import update_exc, add_lookups
 
 
 class SpanishDefaults(Language.Defaults):
-    lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-    lex_attr_getters.update(LEX_ATTRS)
-    lex_attr_getters[LANG] = lambda text: "es"
-    lex_attr_getters[NORM] = add_lookups(
-        Language.Defaults.lex_attr_getters[NORM], BASE_NORMS
-    )
-    tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
-    tag_map = TAG_MAP
+    tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     infixes = TOKENIZER_INFIXES
     suffixes = TOKENIZER_SUFFIXES
-    stop_words = STOP_WORDS
+    lex_attr_getters = LEX_ATTRS
     syntax_iterators = SYNTAX_ITERATORS
+    stop_words = STOP_WORDS
 
 
 class Spanish(Language):
     lang = "es"
     Defaults = SpanishDefaults
+
+
+@Spanish.factory(
+    "lemmatizer",
+    assigns=["token.lemma"],
+    default_config={"model": None, "mode": "rule", "overwrite": False},
+    default_score_weights={"lemma_acc": 1.0},
+)
+def make_lemmatizer(
+    nlp: Language, model: Optional[Model], name: str, mode: str, overwrite: bool
+):
+    return SpanishLemmatizer(nlp.vocab, model, name, mode=mode, overwrite=overwrite)
 
 
 __all__ = ["Spanish"]
