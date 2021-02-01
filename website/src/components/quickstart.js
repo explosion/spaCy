@@ -248,7 +248,9 @@ const Quickstart = ({
                         )}
                         {download && (
                             <a
-                                href={`data:application/octet-stream,${getRawContent(contentRef)}`}
+                                href={`data:application/octet-stream,${encodeURIComponent(
+                                    getRawContent(contentRef)
+                                )}`}
                                 title="Download file"
                                 download={download}
                                 className={classes.iconButton}
