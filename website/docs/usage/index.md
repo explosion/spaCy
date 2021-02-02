@@ -170,26 +170,17 @@ $ git clone https://github.com/explosion/spaCy  # clone spaCy
 $ cd spaCy                                      # navigate into dir
 $ python -m venv .env                           # create environment in .env
 $ source .env/bin/activate                      # activate virtual env
-$ pip install .                                 # compile and install spaCy
+$ pip install -r requirements.txt               # install requirements
+$ pip install --no-build-isolation --editable . # compile and install spaCy
 ```
 
 To install with extras:
 
 ```bash
-$ pip install .[lookups,cuda102]                # install spaCy with extras
+$ pip install --no-build-isolation --editable .[lookups,cuda102]
 ```
 
-To install all dependencies required for development:
-
-```bash
-$ pip install -r requirements.txt
-```
-
-Compared to a regular install via pip, the
-[`requirements.txt`](%%GITHUB_SPACY/requirements.txt) additionally includes
-developer dependencies such as Cython and the libraries required to run the test
-suite. See the [quickstart widget](#quickstart) to get the right commands for
-your platform and Python version.
+How to install compilers and related build tools:
 
 <a id="source-ubuntu"></a><a id="source-osx"></a><a id="source-windows"></a>
 
@@ -227,7 +218,7 @@ source code and recompiling frequently.
   ```bash
   $ pip install -r requirements.txt
   $ python setup.py build_ext --inplace -j N
-  $ pip install --no-build-isolation --editable .
+  $ python setup.py develop
   ```
 
 ### Building an executable {#executable}
