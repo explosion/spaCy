@@ -269,7 +269,7 @@ best-matching package compatible with your spaCy installation.
 >
 > ```diff
 > - python -m spacy download en
-> + python -m spacy dowmload en_core_web_sm
+> + python -m spacy download en_core_web_sm
 > ```
 >
 > ```diff
