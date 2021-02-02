@@ -264,36 +264,6 @@ You can configure the build process with the following environment variables:
 | `PYVER`        | The Python version to build against. This version needs to be available on your build and runtime machines. Defaults to `3.6`.                                                                              |
 | `WHEELHOUSE`   | Directory to store the wheel files during compilation. Defaults to `./wheelhouse`.                                                                                                                          |
 
-#### Additional options for developers {#source-developers}
-
-Some additional options may be useful for spaCy developers who are editing the
-source code and recompiling frequently.
-
-- Install in editable mode. Changes to `.py` files will be reflected as soon as
-  the files are saved, but edits to Cython files (`.pxd`, `.pyx`) will require
-  the `pip install` or `python setup.py build_ext` command below to be run
-  again. Before installing in editable mode, be sure you have removed any
-  previous installs with `pip uninstall spacy`, which you may need to run
-  multiple times to remove all traces of earlier installs.
-
-  ```diff
-    pip install -U pip setuptools wheel
-  - pip install .
-  + pip install -r requirements.txt
-  + pip install --no-build-isolation --editable .
-  ```
-
-- Build in parallel using `N` CPUs to speed up compilation and then install in
-  editable mode:
-
-  ```diff
-    pip install -U pip setuptools wheel
-  - pip install .
-  + pip install -r requirements.txt
-  + python setup.py build_ext --inplace -j N
-  + python setup.py develop
-  ```
-
 ### Run tests {#run-tests}
 
 spaCy comes with an [extensive test suite](%%GITHUB_SPACY/spacy/tests). In order
