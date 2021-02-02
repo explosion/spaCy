@@ -1,6 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import classNames from 'classnames'
+import GitHubButton from 'react-github-btn'
 
 import Link from './link'
 import Icon from './icon'
@@ -61,10 +62,13 @@ export default function Navigation({ title, items = [], section, search, alert, 
                             </li>
                         )
                     })}
-                    <li className={classes.item}>
-                        <Link to={github()} aria-label="GitHub" hidden>
-                            <Icon name="github" />
-                        </Link>
+                    <li className={classNames(classes.item, classes.github)}>
+                        <GitHubButton
+                            href={github()}
+                            data-size="large"
+                            data-show-count="true"
+                            aria-label="Star spaCy on GitHub"
+                        />
                     </li>
                 </ul>
                 {search && <div className={classes.search}>{search}</div>}
