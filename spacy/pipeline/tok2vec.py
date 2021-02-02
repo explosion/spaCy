@@ -80,7 +80,8 @@ class Tok2Vec(TrainablePipe):
     def add_listener(self, listener: "Tok2VecListener", component_name: str) -> None:
         """Add a listener for a downstream component. Usually internals."""
         self.listener_map.setdefault(component_name, [])
-        self.listener_map[component_name].append(listener)
+        if listener not in self.listener_map[component_name]:
+            self.listener_map[component_name].append(listener)
 
     def remove_listener(self, listener: "Tok2VecListener", component_name: str) -> bool:
         """Remove a listener for a downstream component. Usually internals."""
