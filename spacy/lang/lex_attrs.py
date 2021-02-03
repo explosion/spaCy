@@ -64,13 +64,13 @@ def is_quote(text: str) -> bool:
 
 def is_left_punct(text: str) -> bool:
     # fmt: off
-    left_punct = ("(", "[", "{", "<", '"', "'", "«", "‘", "‚", "‛", "“", "„", "‟", "‹", "❮", "``")
+    left_punct = ("(", "[", "{", "<", '"', "'", "«", "‘", "‚", "‛", "“", "„", "‟", "‹", "❮", "``", "¿", "¡")
     # fmt: on
     return text in left_punct
 
 
 def is_right_punct(text: str) -> bool:
-    right_punct = (")", "]", "}", ">", '"', "'", "»", "’", "”", "›", "❯", "''")
+    right_punct = (")", "]", "}", ">", '"', "'", "»", "’", "”", "›", "❯", "''", "?", "!")
     return text in right_punct
 
 
