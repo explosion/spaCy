@@ -96,7 +96,7 @@ def test_textcat_initialize_labels_validation(component_name):
         config_str = TEXTCAT_WITH_LABELS_ARRAY_CONFIG.replace(
             "TEXTCAT_PLACEHOLDER", component_name
         )
-        config_str = config_str.replace("TRAIN_PLACEHOLDER", str(train_path))
+        config_str = config_str.replace("TRAIN_PLACEHOLDER", train_path.as_posix())
 
         config = util.load_config_from_str(config_str)
         init_nlp(config)
