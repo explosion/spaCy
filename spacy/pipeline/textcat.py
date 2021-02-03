@@ -308,7 +308,7 @@ class TextCategorizer(TrainablePipe):
         get_examples: Callable[[], Iterable[Example]],
         *,
         nlp: Optional[Language] = None,
-        labels: Optional[Dict] = None,
+        labels: Optional[Iterable[str]] = None,
         positive_label: Optional[str] = None,
     ) -> None:
         """Initialize the pipe for training, using a representative set

@@ -137,7 +137,7 @@ class MultiLabel_TextCategorizer(TextCategorizer):
         get_examples: Callable[[], Iterable[Example]],
         *,
         nlp: Optional[Language] = None,
-        labels: Optional[Dict] = None,
+        labels: Optional[Iterable[str]] = None,
     ):
         """Initialize the pipe for training, using a representative set
         of data examples.
