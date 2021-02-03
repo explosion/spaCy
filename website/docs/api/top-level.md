@@ -544,7 +544,7 @@ label sets.
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `path`      | The path to the labels file generated with [`init labels`](/api/cli#init-labels). ~~Path~~                                                                                                                                |
 | `require`   | Whether to require the file to exist. If set to `False` and the labels file doesn't exist, the loader will return `None` and the `initialize` method will extract the labels from the data. Defaults to `False`. ~~bool~~ |
-| **CREATES** | The list of labels                                                                                                                                                                                                        |
+| **CREATES** | The list of labels. ~~List[str]~~                                                                                                                                                                                         |
 
 ### Corpus readers {#corpus-readers source="spacy/training/corpus.py" new="3"}
 
