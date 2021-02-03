@@ -7,6 +7,8 @@ from spacy.schemas import ConfigSchemaInit
 
 from spacy.training.initialize import init_nlp
 
+from ..util import make_tempdir
+
 TEXTCAT_WITH_LABELS_ARRAY_CONFIG = """
 [paths]
 train = "TRAIN_PLACEHOLDER"
@@ -75,7 +77,7 @@ labels = ['label1', 'label2']
     "component_name",
     ["textcat", "textcat_multilabel"],
 )
-def test_textcat_initialize_labels_validation(tmp_path, component_name):
+def test_textcat_initialize_labels_validation(component_name):
     """Test intializing textcat with labels in a list"""
 
     def create_data(out_file):
@@ -87,13 +89,14 @@ def test_textcat_initialize_labels_validation(tmp_path, component_name):
         with out_file.open("wb") as file_:
             file_.write(out_data)
 
-    train_path = tmp_path / "train.spacy"
-    create_data(train_path)
+    with make_tempdir() as tmp_path:
+        train_path = tmp_path / "train.spacy"
+        create_data(train_path)
 
-    config_str = TEXTCAT_WITH_LABELS_ARRAY_CONFIG.replace(
-        "TEXTCAT_PLACEHOLDER", component_name
-    )
-    config_str = config_str.replace("TRAIN_PLACEHOLDER", str(train_path))
+        config_str = TEXTCAT_WITH_LABELS_ARRAY_CONFIG.replace(
+            "TEXTCAT_PLACEHOLDER", component_name
+        )
+        config_str = config_str.replace("TRAIN_PLACEHOLDER", str(train_path))
 
-    config = util.load_config_from_str(config_str)
-    init_nlp(config)
+        config = util.load_config_from_str(config_str)
+        init_nlp(config)
