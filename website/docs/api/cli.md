@@ -237,11 +237,11 @@ $ python -m spacy init labels [config_path] [output_path] [--code] [--verbose] [
 | `config_path`     | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters. If `-`, the data will be [read from stdin](/usage/training#config-stdin). ~~Union[Path, str] \(positional)~~ |
 | `output_path`     | Output directory for the label files. Will create one JSON file per component. ~~Path (positional)~~                                                                                                               |
 | `--code`, `-c`    | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-functions) for new architectures. ~~Optional[Path] \(option)~~                               |
-| `--verbose`, `-V` | Show more detailed messages during training. ~~bool (flag)~~                                                                                                                                                       |
+| `--verbose`, `-V` | Show more detailed messages for debugging purposes. ~~bool (flag)~~                                                                                                                                                |
 | `--gpu-id`, `-g`  | GPU ID or `-1` for CPU. Defaults to `-1`. ~~int (option)~~                                                                                                                                                         |
 | `--help`, `-h`    | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                                         |
 | overrides         | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--paths.train ./train.spacy`. ~~Any (option/flag)~~                         |
-| **CREATES**       | The best trained pipeline and the final checkpoint (if training is terminated).                                                                                                                                    |
+| **CREATES**       | The label files.                                                                                                                                                                                                   |
 
 ## convert {#convert tag="command"}
 
