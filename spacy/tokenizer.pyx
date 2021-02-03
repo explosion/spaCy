@@ -245,7 +245,9 @@ cdef class Tokenizer:
         cdef int offset
         cdef int modified_doc_length
         # Find matches for special cases
-        self._special_matcher.find_matches(doc, &c_matches)
+        start_idx = 0
+        end_idx = len(doc)
+        self._special_matcher.find_matches(doc, start_idx, end_idx, &c_matches)
         # Skip processing if no matches
         if c_matches.size() == 0:
             return True
