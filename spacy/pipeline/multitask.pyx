@@ -197,7 +197,7 @@ class ClozeMultitask(TrainablePipe):
         target = vectors[ids]
         gradient = self.distance.get_grad(prediction, target)
         loss = self.distance.get_loss(prediction, target)
-        return loss, gradient
+        return float(loss), gradient
 
     def update(self, examples, *, drop=0., sgd=None, losses=None):
         pass

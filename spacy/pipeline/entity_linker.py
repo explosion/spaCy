@@ -273,7 +273,7 @@ class EntityLinker(TrainablePipe):
         gradients = self.distance.get_grad(sentence_encodings, entity_encodings)
         loss = self.distance.get_loss(sentence_encodings, entity_encodings)
         loss = loss / len(entity_encodings)
-        return loss, gradients
+        return float(loss), gradients
 
     def predict(self, docs: Iterable[Doc]) -> List[str]:
         """Apply the pipeline's model to a batch of docs, without modifying them.
