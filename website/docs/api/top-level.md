@@ -727,7 +727,7 @@ capitalization by including a mix of capitalized and lowercase examples. See the
 
 Create a data augmentation callback that uses orth-variant replacement. The
 callback can be added to a corpus or other data iterator during training. It's
-is especially useful for punctuation and case replacement, to help generalize
+especially useful for punctuation and case replacement, to help generalize
 beyond corpora that don't have smart quotes, or only have smart quotes etc.
 
 | Name            | Description                                                                                                                                                                                                                                                                                               |
