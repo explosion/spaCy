@@ -253,20 +253,14 @@ source .env/bin/activate
 # make sure you are using the latest pip
 python -m pip install -U pip setuptools wheel
 
-pip install .
+pip install -r requirements.txt
+pip install --no-build-isolation --editable .
 ```
 
 To install with extras:
 
 ```bash
-pip install .[lookups,cuda102]
-```
-
-To install all dependencies required for development, use the [`requirements.txt`](requirements.txt). Compared to regular install via pip, it
-additionally installs developer dependencies such as Cython.
-
-```bash
-pip install -r requirements.txt
+pip install --no-build-isolation --editable .[lookups,cuda102]
 ```
 
 ## 🚦 Run tests
