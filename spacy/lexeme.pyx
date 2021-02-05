@@ -451,7 +451,7 @@ cdef class Lexeme:
             Lexeme.c_set_flag(self.c, IS_QUOTE, x)
 
     property is_left_punct:
-        """RETURNS (bool): Whether the lexeme is left punctuation, e.g. )."""
+        """RETURNS (bool): Whether the lexeme is left punctuation, e.g. (."""
         def __get__(self):
             return Lexeme.c_check_flag(self.c, IS_LEFT_PUNCT)
 

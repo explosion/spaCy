@@ -215,8 +215,7 @@ def convert_vectors(
 
 
 def read_vectors(vectors_loc: Path, truncate_vectors: int):
-    f = open_file(vectors_loc)
-    f = ensure_shape(f)
+    f = ensure_shape(vectors_loc)
     shape = tuple(int(size) for size in next(f).split())
     if truncate_vectors >= 1:
         shape = (truncate_vectors, shape[1])
@@ -251,11 +250,12 @@ def open_file(loc: Union[str, Path]) -> IO:
         return loc.open("r", encoding="utf8")
 
 
-def ensure_shape(lines):
+def ensure_shape(vectors_loc):
     """Ensure that the first line of the data is the vectors shape.
     If it's not, we read in the data and output the shape as the first result,
     so that the reader doesn't have to deal with the problem.
     """
+    lines = open_file(vectors_loc)
     first_line = next(lines)
     try:
         shape = tuple(int(size) for size in first_line.split())
@@ -269,7 +269,11 @@ def ensure_shape(lines):
         # Figure out the shape, make it the first value, and then give the
         # rest of the data.
         width = len(first_line.split()) - 1
-        captured = [first_line] + list(lines)
-        length = len(captured)
+        length = 1
+        for _ in lines:
+            length += 1
         yield f"{length} {width}"
-        yield from captured
+        # Reading the lines in again from file. This to avoid having to
+        # store all the results in a list in memory
+        lines2 = open_file(vectors_loc)
+        yield from lines2
