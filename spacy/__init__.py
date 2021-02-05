@@ -65,4 +65,4 @@ def blank(
     LangClass = util.get_lang_class(name)
     # We should accept both dot notation and nested dict here for consistency
     config = util.dot_to_dict(config)
-    return LangClass.from_config(config, meta=meta)
+    return LangClass.from_config(config, vocab=vocab, meta=meta)
