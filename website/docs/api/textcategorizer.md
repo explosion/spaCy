@@ -10,8 +10,17 @@ api_trainable: true
 ---
 
 The text categorizer predicts **categories over a whole document**. It can learn
-one or more labels, and the labels are mutually exclusive - there is exactly one 
-true label per document. 
+one or more labels, and the labels are mutually exclusive - there is exactly one
+true label per document.
+
+<Infobox title="Important note on multi-label classification" variant="warning">
+
+In version 2, the `textcat` component could also perform **multi-label
+classification**, and even used this setting as default. Since version 3.0, the
+component `textcat_multilabel` should be used for multi-label classification
+instead. The `textcat` is now used for single-label classification only.
+
+</Infobox>
 
 ## Config and implementation {#config}
 
@@ -212,14 +221,14 @@ Delegates to [`predict`](/api/textcategorizer#predict) and
 > losses = textcat.update(examples, sgd=optimizer)
 > ```
 
-| Name              | Description                                                                                                                        |
-| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `examples`        | A batch of [`Example`](/api/example) objects to learn from. ~~Iterable[Example]~~                                                  |
-| _keyword-only_    |                                                                                                                                    |
-| `drop`            | The dropout rate. ~~float~~                                                                                                        |
-| `sgd`             | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~                      |
-| `losses`          | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~           |
-| **RETURNS**       | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                              |
+| Name           | Description                                                                                                              |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `examples`     | A batch of [`Example`](/api/example) objects to learn from. ~~Iterable[Example]~~                                        |
+| _keyword-only_ |                                                                                                                          |
+| `drop`         | The dropout rate. ~~float~~                                                                                              |
+| `sgd`          | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~            |
+| `losses`       | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~ |
+| **RETURNS**    | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                    |
 
 ## TextCategorizer.rehearse {#rehearse tag="method,experimental" new="3"}
 
@@ -273,11 +282,11 @@ Score a batch of examples.
 > scores = textcat.score(examples)
 > ```
 
-| Name             | Description                                                                                                          |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `examples`       | The examples to score. ~~Iterable[Example]~~                                                                         |
-| _keyword-only_   |                                                                                                                      |
-| **RETURNS**      | The scores, produced by [`Scorer.score_cats`](/api/scorer#score_cats). ~~Dict[str, Union[float, Dict[str, float]]]~~ |
+| Name           | Description                                                                                                          |
+| -------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `examples`     | The examples to score. ~~Iterable[Example]~~                                                                         |
+| _keyword-only_ |                                                                                                                      |
+| **RETURNS**    | The scores, produced by [`Scorer.score_cats`](/api/scorer#score_cats). ~~Dict[str, Union[float, Dict[str, float]]]~~ |
 
 ## TextCategorizer.create_optimizer {#create_optimizer tag="method"}
 
