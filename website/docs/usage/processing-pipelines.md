@@ -223,21 +223,22 @@ available pipeline components and component functions.
 > ruler = nlp.add_pipe("entity_ruler")
 > ```
 
-| String name       | Component                                       | Description                                                                               |
-| ----------------- | ----------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| `tagger`          | [`Tagger`](/api/tagger)                         | Assign part-of-speech-tags.                                                               |
-| `parser`          | [`DependencyParser`](/api/dependencyparser)     | Assign dependency labels.                                                                 |
-| `ner`             | [`EntityRecognizer`](/api/entityrecognizer)     | Assign named entities.                                                                    |
-| `entity_linker`   | [`EntityLinker`](/api/entitylinker)             | Assign knowledge base IDs to named entities. Should be added after the entity recognizer. |
-| `entity_ruler`    | [`EntityRuler`](/api/entityruler)               | Assign named entities based on pattern rules and dictionaries.                            |
-| `textcat`         | [`TextCategorizer`](/api/textcategorizer)       | Assign text categories.                                                                   |
-| `lemmatizer`      | [`Lemmatizer`](/api/lemmatizer)                 | Assign base forms to words.                                                               |
-| `morphologizer`   | [`Morphologizer`](/api/morphologizer)           | Assign morphological features and coarse-grained POS tags.                                |
-| `attribute_ruler` | [`AttributeRuler`](/api/attributeruler)         | Assign token attribute mappings and rule-based exceptions.                                |
-| `senter`          | [`SentenceRecognizer`](/api/sentencerecognizer) | Assign sentence boundaries.                                                               |
-| `sentencizer`     | [`Sentencizer`](/api/sentencizer)               | Add rule-based sentence segmentation without the dependency parse.                        |
-| `tok2vec`         | [`Tok2Vec`](/api/tok2vec)                       | Assign token-to-vector embeddings.                                                        |
-| `transformer`     | [`Transformer`](/api/transformer)               | Assign the tokens and outputs of a transformer model.                                     |
+| String name          | Component                                                       | Description                                                                               |
+| -------------------- | --------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `tagger`             | [`Tagger`](/api/tagger)                                         | Assign part-of-speech-tags.                                                               |
+| `parser`             | [`DependencyParser`](/api/dependencyparser)                     | Assign dependency labels.                                                                 |
+| `ner`                | [`EntityRecognizer`](/api/entityrecognizer)                     | Assign named entities.                                                                    |
+| `entity_linker`      | [`EntityLinker`](/api/entitylinker)                             | Assign knowledge base IDs to named entities. Should be added after the entity recognizer. |
+| `entity_ruler`       | [`EntityRuler`](/api/entityruler)                               | Assign named entities based on pattern rules and dictionaries.                            |
+| `textcat`            | [`TextCategorizer`](/api/textcategorizer)                       | Assign text categories: exactly one category is predicted per document.                   |
+| `textcat_multilabel` | [`MultiLabel_TextCategorizer`](/api/multilabel_textcategorizer) | Assign text categories in a multi-label setting: zero, one or more labels per document.   |
+| `lemmatizer`         | [`Lemmatizer`](/api/lemmatizer)                                 | Assign base forms to words.                                                               |
+| `morphologizer`      | [`Morphologizer`](/api/morphologizer)                           | Assign morphological features and coarse-grained POS tags.                                |
+| `attribute_ruler`    | [`AttributeRuler`](/api/attributeruler)                         | Assign token attribute mappings and rule-based exceptions.                                |
+| `senter`             | [`SentenceRecognizer`](/api/sentencerecognizer)                 | Assign sentence boundaries.                                                               |
+| `sentencizer`        | [`Sentencizer`](/api/sentencizer)                               | Add rule-based sentence segmentation without the dependency parse.                        |
+| `tok2vec`            | [`Tok2Vec`](/api/tok2vec)                                       | Assign token-to-vector embeddings.                                                        |
+| `transformer`        | [`Transformer`](/api/transformer)                               | Assign the tokens and outputs of a transformer model.                                     |
 
 ### Disabling, excluding and modifying components {#disabling}
 
@@ -400,8 +401,8 @@ vectors available – otherwise, it won't be able to make the same predictions.
 > ```
 >
 > By default, sourced components will be updated with your data during training.
-> If you want to preserve the component as-is, you can "freeze" it if the pipeline 
-> is not using a shared `Tok2Vec` layer:
+> If you want to preserve the component as-is, you can "freeze" it if the
+> pipeline is not using a shared `Tok2Vec` layer:
 >
 > ```ini
 > [training]
@@ -1244,7 +1245,7 @@ labels = []
 # the argument "model"
 [components.textcat.model]
 @architectures = "spacy.TextCatBOW.v1"
-exclusive_classes = false
+exclusive_classes = true
 ngram_size = 1
 no_output_layer = false
 
