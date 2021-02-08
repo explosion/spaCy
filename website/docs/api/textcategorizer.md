@@ -16,7 +16,7 @@ true label per document.
 <Infobox title="Important note on multi-label classification" variant="warning">
 
 In spaCy v2, the `textcat` component could also perform **multi-label
-classification**, and even used this setting as default. Since v3.0, the
+classification**, and even used this setting by default. Since v3.0, the
 component [`textcat_multilabel`](/api/multilabel_textcategorizer) should be used
 for multi-label classification instead. The `textcat` component is now used for
 mutually exclusive classes only.
