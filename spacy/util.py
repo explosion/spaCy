@@ -930,7 +930,7 @@ def is_same_func(func1: Callable, func2: Callable) -> bool:
     """
     if not callable(func1) or not callable(func2):
         return False
-    if not hasattr(func1,"__qualname__") or not hasattr(func2,"__qualname__"):
+    if not hasattr(func1, "__qualname__") or not hasattr(func2, "__qualname__"):
         return False
     same_name = func1.__qualname__ == func2.__qualname__
     same_file = inspect.getfile(func1) == inspect.getfile(func2)
