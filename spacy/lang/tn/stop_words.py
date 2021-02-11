@@ -1,8 +1,3 @@
-coding: utf8
-
-from __future__ import unicode_literals
-
-
 # Stop words
 STOP_WORDS = set("""
 ke gareng ga selekanyo tlhwatlhwa yo mongwe se 
@@ -21,4 +16,3 @@ bonala e tshwanang bogolo tsenya tsweetswee karolo
 sepe tlhalosa dirwa robedi robongwe lesomenngwe gaisa 
 tlhano lesometlhano botlalo lekgolo           
 """.split())
-print(STOP_WORDS)
