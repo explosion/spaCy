@@ -137,3 +137,47 @@ def wandb_logger(project_name: str, remove_config_values: List[str] = []):
         return log_step, finalize
 
     return setup_logger
+
+
+@registry.loggers("spacy.CometLogger.v1")
+def comet_logger(project_name: str, remove_config_values: List[str] = []):
+    import comet_ml
+
+    console = console_logger(progress_bar=False)
+
+    def setup_logger(
+        nlp: "Language", stdout: IO = sys.stdout, stderr: IO = sys.stderr
+    ) -> Tuple[Callable[[Dict[str, Any]], None], Callable[[], None]]:
+
+        experiment = comet_ml.Experiment()
+
+        # Get the config, removing items if necessary:
+        config = nlp.config.interpolate()
+        config_dot = util.dict_to_dot(config)
+        for field in remove_config_values:
+            del config_dot[field]
+        config = util.dot_to_dict(config_dot)
+
+        # Get methods for step console processing:
+        console_log_step, console_finalize = console(nlp, stdout, stderr)
+
+        def log_step(info: Optional[Dict[str, Any]]):
+            console_log_step(info)
+            if info is not None:
+                # Log items:
+                score = info["score"]
+                other_scores = info["other_scores"]
+                losses = info["losses"]
+                experiment.log_metric("score", score)
+                if losses:
+                    experiment.log_metrics({f"loss_{k}": v for k, v in losses.items()})
+                if isinstance(other_scores, dict):
+                    experiment.log_metrics(other_scores)
+
+        def finalize() -> None:
+            console_finalize()
+            experiment.end()
+
+        return log_step, finalize
+
+    return setup_logger
