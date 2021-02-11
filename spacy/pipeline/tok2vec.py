@@ -291,7 +291,7 @@ def forward(model: Tok2VecListener, inputs, is_train: bool):
         # of data.
         # When the components batch differently, we don't receive a matching
         # prediction from the upstream, so we can't predict.
-        if not all(doc.tensor.size for doc in inputs):
+        if not any(doc.tensor.size for doc in inputs):
             # But we do need to do *something* if the tensor hasn't been set.
             # The compromise is to at least return data of the right shape,
             # so the output is valid.
