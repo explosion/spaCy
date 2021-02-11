@@ -30,9 +30,6 @@ depth = 4
 window_size = 1
 maxout_pieces = 3
 
-[components.ner]
-factory = "ner"
-
 [components.tagger]
 factory = "tagger"
 
