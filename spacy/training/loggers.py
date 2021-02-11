@@ -149,7 +149,11 @@ def comet_logger(project_name: str, remove_config_values: List[str] = []):
         nlp: "Language", stdout: IO = sys.stdout, stderr: IO = sys.stderr
     ) -> Tuple[Callable[[Dict[str, Any]], None], Callable[[], None]]:
 
-        experiment = comet_ml.Experiment()
+        try:
+            experiment = comet_ml.Experiment(project_name=project_name)
+        except Exception:
+            experiment = None
+            print("You need to configure Comet, and run appropriately: see: https://comet.ml/docs/python-sdk/spacy/")
 
         # Get the config, removing items if necessary:
         config = nlp.config.interpolate()
@@ -158,25 +162,48 @@ def comet_logger(project_name: str, remove_config_values: List[str] = []):
             del config_dot[field]
         config = util.dot_to_dict(config_dot)
 
+        if experiment is not None:
+            experiment.log_asset_data(config, "spacy-config.cfg")
+
         # Get methods for step console processing:
         console_log_step, console_finalize = console(nlp, stdout, stderr)
 
+        def flatten_dictionary(prefix, dictionary, results):
+            """
+            Recursively construct key/value pair.
+            """
+            for key, value in dictionary.items():
+                if isinstance(value, dict):
+                    if prefix:
+                        flatten_dictionary(prefix + "/" + key, value, results)
+                    else:
+                        flatten_dictionary(key, value, results)
+                else:
+                    if prefix:
+                        results[prefix + "/" + key] = value
+                    else:
+                        results[key] = value
+
         def log_step(info: Optional[Dict[str, Any]]):
             console_log_step(info)
-            if info is not None:
-                # Log items:
-                score = info["score"]
-                other_scores = info["other_scores"]
-                losses = info["losses"]
-                experiment.log_metric("score", score)
-                if losses:
-                    experiment.log_metrics({f"loss_{k}": v for k, v in losses.items()})
-                if isinstance(other_scores, dict):
-                    experiment.log_metrics(other_scores)
+            if experiment is not None:
+                if info is not None:
+                    # Log items:
+                    epoch = info.get("epoch", None)
+                    step = info.get("step", None)
+                    if "score" in info:
+                        experiment.log_metric("score", info["score"], step=step, epoch=epoch)
+                    if "other_scores" in info:
+                        results = {}
+                        flatten_dictionary("", info["other_scores"], results)
+                        experiment.log_metrics(results, step=step, epoch=epoch)
+                    if "losses" in info:
+                        experiment.log_metrics({"loss_%s" % k: v for (k, v) in info["losses"].items()}, step=step, epoch=epoch)
 
         def finalize() -> None:
+            if experiment is not None:
+                experiment.end()
             console_finalize()
-            experiment.end()
 
         return log_step, finalize
 
