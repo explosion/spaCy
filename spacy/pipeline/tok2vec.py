@@ -121,7 +121,7 @@ class Tok2Vec(TrainablePipe):
         tokvecs = self.model.predict(docs)
         batch_id = Tok2VecListener.get_batch_id(docs)
         for listener in self.listeners:
-            listener.receive(batch_id, tokvecs, lambda dX: [])
+            listener.receive(batch_id, tokvecs, _empty_backprop)
         return tokvecs
 
     def set_annotations(self, docs: Sequence[Doc], tokvecses) -> None:
@@ -300,3 +300,7 @@ def forward(model: Tok2VecListener, inputs, is_train: bool):
         else:
             outputs = [doc.tensor for doc in inputs]
         return outputs, lambda dX: []
+
+
+def _empty_backprop(dX):  # for pickling
+    return []
