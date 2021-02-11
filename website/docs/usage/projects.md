@@ -69,9 +69,9 @@ python -m spacy project clone pipelines/tagger_parser_ud
 
 By default, the project will be cloned into the current working directory. You
 can specify an optional second argument to define the output directory. The
-`--repo` option lets you define a custom repo to clone from if you don't want
-to use the spaCy [`projects`](https://github.com/explosion/projects) repo. You
-can also use any private repo you have access to with Git.
+`--repo` option lets you define a custom repo to clone from if you don't want to
+use the spaCy [`projects`](https://github.com/explosion/projects) repo. You can
+also use any private repo you have access to with Git.
 
 ### 2. Fetch the project assets {#assets}
 
@@ -221,6 +221,7 @@ pipelines.
 | `title`         | An optional project title used in `--help` message and [auto-generated docs](#custom-docs).                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | `description`   | An optional project description used in [auto-generated docs](#custom-docs).                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | `vars`          | A dictionary of variables that can be referenced in paths, URLs and scripts, just like [`config.cfg` variables](/usage/training#config-interpolation). For example, `${vars.name}` will use the value of the variable `name`. Variables need to be defined in the section `vars`, but can be a nested dict, so you're able to reference `${vars.model.name}`.                                                                                                                                                |
+| `env`           | A dictionary of variables, mapped to the names of environment variables that will be read in when running the project. For example, `${env.name}` will use the value of the environment variable defined as `name`.                                                                                                                                                                                                                                                                                          |
 | `directories`   | An optional list of [directories](#project-files) that should be created in the project for assets, training outputs, metrics etc. spaCy will make sure that these directories always exist.                                                                                                                                                                                                                                                                                                                 |
 | `assets`        | A list of assets that can be fetched with the [`project assets`](/api/cli#project-assets) command. `url` defines a URL or local path, `dest` is the destination file relative to the project directory, and an optional `checksum` ensures that an error is raised if the file's checksum doesn't match. Instead of `url`, you can also provide a `git` block with the keys `repo`, `branch` and `path`, to download from a Git repo.                                                                        |
 | `workflows`     | A dictionary of workflow names, mapped to a list of command names, to execute in order. Workflows can be run with the [`project run`](/api/cli#project-run) command.                                                                                                                                                                                                                                                                                                                                         |
@@ -310,8 +311,8 @@ company-internal and not available over the internet. In that case, you can
 specify the destination paths and a checksum, and leave out the URL. When your
 teammates clone and run your project, they can place the files in the respective
 directory themselves. The [`project assets`](/api/cli#project-assets) command
-will alert you about missing files and mismatched checksums, so you can ensure that
-others are running your project with the same data.
+will alert you about missing files and mismatched checksums, so you can ensure
+that others are running your project with the same data.
 
 ### Dependencies and outputs {#deps-outputs}
 
@@ -358,9 +359,10 @@ graphs based on the dependencies and outputs, and won't re-run previous steps
 automatically. For instance, if you only run the command `train` that depends on
 data created by `preprocess` and those files are missing, spaCy will show an
 error – it won't just re-run `preprocess`. If you're looking for more advanced
-data management, check out the [Data Version Control (DVC) integration](#dvc). If you're planning on integrating your spaCy project with DVC, you
-can also use `outputs_no_cache` instead of `outputs` to define outputs that
-won't be cached or tracked.
+data management, check out the [Data Version Control (DVC) integration](#dvc).
+If you're planning on integrating your spaCy project with DVC, you can also use
+`outputs_no_cache` instead of `outputs` to define outputs that won't be cached
+or tracked.
 
 ### Files and directory structure {#project-files}
 
@@ -467,7 +469,9 @@ In your `project.yml`, you can then run the script by calling
 `python scripts/custom_evaluation.py` with the function arguments. You can also
 use the `vars` section to define reusable variables that will be substituted in
 commands, paths and URLs. In this example, the batch size is defined as a
-variable will be added in place of `${vars.batch_size}` in the script.
+variable will be added in place of `${vars.batch_size}` in the script. Just like
+in the [training config](/usage/training##config-overrides), you can also
+override settings on the command line – for example using `--vars.batch_size`.
 
 > #### Calling into Python
 >
@@ -489,6 +493,29 @@ commands:
     deps:
       - 'training/model-best'
       - 'corpus/eval.json'
+```
+
+You can also use the `env` section to reference **environment variables** and
+make their values available to the commands. This can be useful for overriding
+settings on the command line and passing through system-level settings.
+
+> #### Usage example
+>
+> ```bash
+> export GPU_ID=1
+> BATCH_SIZE=128 python -m spacy project run evaluate
+> ```
+
+```yaml
+### project.yml
+env:
+  batch_size: BATCH_SIZE
+  gpu_id: GPU_ID
+
+commands:
+  - name: evaluate
+    script:
+      - 'python scripts/custom_evaluation.py ${env.batch_size}'
 ```
 
 ### Documenting your project {#custom-docs}

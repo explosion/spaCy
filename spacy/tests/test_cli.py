@@ -325,6 +325,23 @@ def test_project_config_interpolation():
         substitute_project_variables(project)
 
 
+def test_project_config_interpolation_env():
+    variables = {"a": 10}
+    env_var = "SPACY_TEST_FOO"
+    env_vars = {"foo": env_var}
+    commands = [{"name": "x", "script": ["hello ${vars.a} ${env.foo}"]}]
+    project = {"commands": commands, "vars": variables, "env": env_vars}
+    with make_tempdir() as d:
+        srsly.write_yaml(d / "project.yml", project)
+        cfg = load_project_config(d)
+    assert cfg["commands"][0]["script"][0] == "hello 10 "
+    os.environ[env_var] = "123"
+    with make_tempdir() as d:
+        srsly.write_yaml(d / "project.yml", project)
+        cfg = load_project_config(d)
+    assert cfg["commands"][0]["script"][0] == "hello 10 123"
+
+
 @pytest.mark.parametrize(
     "args,expected",
     [
