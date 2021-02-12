@@ -61,7 +61,7 @@ def test_issue7029():
     for i in range(50):
         losses = {}
         nlp.update(train_examples, sgd=optimizer, losses=losses)
-    texts = ["first", "second", "thrid", "fourth", "and", "then", "some", ""]
+    texts = ["first", "second", "third", "fourth", "and", "then", "some", ""]
     nlp.select_pipes(enable=["tok2vec", "tagger"])
     docs1 = list(nlp.pipe(texts, batch_size=1))
     docs2 = list(nlp.pipe(texts, batch_size=4))
