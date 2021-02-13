@@ -51,8 +51,7 @@ TRAIN_DATA = [
 
 
 def test_issue7029():
-    """Test that an empty document doesn't mess up an entire batch.
-    """
+    """Test that an empty document doesn't mess up an entire batch."""
     nlp = English.from_config(load_config_from_str(CONFIG))
     train_examples = []
     for t in TRAIN_DATA:

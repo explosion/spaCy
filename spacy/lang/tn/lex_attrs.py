@@ -78,6 +78,7 @@ _ordinal_words = [
     "bazillione",
 ]
 
+
 def like_num(text):
     if text.startswith(("+", "-", "±", "~")):
         text = text[1:]
@@ -98,7 +99,7 @@ def like_num(text):
         return True
     if text_lower.endswith("th"):
         if text_lower[:-2].isdigit():
-            return True 
+            return True
 
     return False
 
