@@ -5,8 +5,7 @@ from ...language import Language
 
 
 class SetswanaDefaults(Language.Defaults):
-    suffixes = TOKENIZER_SUFFIXES
-    infixes = TOKENIZER_INFIXES    
+    infixes = TOKENIZER_INFIXES
     stop_words = STOP_WORDS
     lex_attr_getters = LEX_ATTRS
 
