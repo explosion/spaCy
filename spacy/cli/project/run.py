@@ -3,19 +3,23 @@ from pathlib import Path
 from wasabi import msg
 import sys
 import srsly
+import typer
 
 from ... import about
 from ...git_info import GIT_VERSION
 from ...util import working_dir, run_command, split_command, is_cwd, join_command
 from ...util import SimpleFrozenList, is_minor_version_match, ENV_VARS
-from ...util import check_bool_env_var
+from ...util import check_bool_env_var, SimpleFrozenDict
 from .._util import PROJECT_FILE, PROJECT_LOCK, load_project_config, get_hash
-from .._util import get_checksum, project_cli, Arg, Opt, COMMAND
+from .._util import get_checksum, project_cli, Arg, Opt, COMMAND, parse_config_overrides
 
 
-@project_cli.command("run")
+@project_cli.command(
+    "run", context_settings={"allow_extra_args": True, "ignore_unknown_options": True}
+)
 def project_run_cli(
     # fmt: off
+    ctx: typer.Context,  # This is only used to read additional arguments
     subcommand: str = Arg(None, help=f"Name of command defined in the {PROJECT_FILE}"),
     project_dir: Path = Arg(Path.cwd(), help="Location of project directory. Defaults to current working directory.", exists=True, file_okay=False),
     force: bool = Opt(False, "--force", "-F", help="Force re-running steps, even if nothing changed"),
@@ -33,13 +37,15 @@ def project_run_cli(
     if show_help or not subcommand:
         print_run_help(project_dir, subcommand)
     else:
-        project_run(project_dir, subcommand, force=force, dry=dry)
+        overrides = parse_config_overrides(ctx.args)
+        project_run(project_dir, subcommand, overrides=overrides, force=force, dry=dry)
 
 
 def project_run(
     project_dir: Path,
     subcommand: str,
     *,
+    overrides: Dict[str, Any] = SimpleFrozenDict(),
     force: bool = False,
     dry: bool = False,
     capture: bool = False,
@@ -59,7 +65,7 @@ def project_run(
         when you want to turn over execution to the command, and capture=True
         when you want to run the command more like a function.
     """
-    config = load_project_config(project_dir)
+    config = load_project_config(project_dir, overrides=overrides)
     commands = {cmd["name"]: cmd for cmd in config.get("commands", [])}
     workflows = config.get("workflows", {})
     validate_subcommand(commands.keys(), workflows.keys(), subcommand)

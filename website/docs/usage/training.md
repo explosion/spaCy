@@ -185,7 +185,7 @@ sections of a config file are:
 
 For a full overview of spaCy's config format and settings, see the
 [data format documentation](/api/data-formats#config) and
-[Thinc's config system docs](https://thinc.ai/usage/config). The settings
+[Thinc's config system docs](https://thinc.ai/docs/usage-config). The settings
 available for the different architectures are documented with the
 [model architectures API](/api/architectures). See the Thinc documentation for
 [optimizers](https://thinc.ai/docs/api-optimizers) and

@@ -121,7 +121,7 @@ class Tok2Vec(TrainablePipe):
         tokvecs = self.model.predict(docs)
         batch_id = Tok2VecListener.get_batch_id(docs)
         for listener in self.listeners:
-            listener.receive(batch_id, tokvecs, lambda dX: [])
+            listener.receive(batch_id, tokvecs, _empty_backprop)
         return tokvecs
 
     def set_annotations(self, docs: Sequence[Doc], tokvecses) -> None:
@@ -291,12 +291,18 @@ def forward(model: Tok2VecListener, inputs, is_train: bool):
         # of data.
         # When the components batch differently, we don't receive a matching
         # prediction from the upstream, so we can't predict.
-        if not all(doc.tensor.size for doc in inputs):
-            # But we do need to do *something* if the tensor hasn't been set.
-            # The compromise is to at least return data of the right shape,
-            # so the output is valid.
-            width = model.get_dim("nO")
-            outputs = [model.ops.alloc2f(len(doc), width) for doc in inputs]
-        else:
-            outputs = [doc.tensor for doc in inputs]
+        outputs = []
+        width = model.get_dim("nO")
+        for doc in inputs:
+            if doc.tensor.size == 0:
+                # But we do need to do *something* if the tensor hasn't been set.
+                # The compromise is to at least return data of the right shape,
+                # so the output is valid.
+                outputs.append(model.ops.alloc2f(len(doc), width))
+            else:
+                outputs.append(doc.tensor)
         return outputs, lambda dX: []
+
+
+def _empty_backprop(dX):  # for pickling
+    return []
