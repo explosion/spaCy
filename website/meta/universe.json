@@ -1,6 +1,34 @@
 {
     "resources": [
-    	{
+        {
+            "id": "spacy-dbpedia-spotlight",
+            "title": "DBpedia Spotlight for SpaCy",
+            "slogan": "Use DBpedia Spotlight to link entities inside SpaCy",
+            "description": "This library links SpaCy with [DBpedia Spotlight](https://www.dbpedia-spotlight.org/). You can easily get the DBpedia entities from your documents, using the public web service or by using your own instance of DBpedia Spotlight. The `doc.ents` are populated with the entities and all their details (URI, type, ...).",
+            "github": "MartinoMensio/spacy-dbpedia-spotlight",
+            "pip": "spacy-dbpedia-spotlight",
+            "code_example": [
+                "import spacy_dbpedia_spotlight",
+                "# load your model as usual",
+                "nlp = spacy.load('en_core_web_lg')",
+                "# add the pipeline stage",
+                "nlp.add_pipe('dbpedia_spotlight')",
+                "# get the document",
+                "doc = nlp('The president of USA is calling Boris Johnson to decide what to do about coronavirus')",
+                "# see the entities",
+                "print('Entities', [(ent.text, ent.label_, ent.kb_id_) for ent in doc.ents])",
+                "# inspect the raw data from DBpedia spotlight",
+                "print(doc.ents[0]._.dbpedia_raw_result)"
+            ],
+            "category": ["models", "pipeline"],
+            "author": "Martino Mensio",
+            "author_links": {
+                "twitter": "MartinoMensio",
+                "github": "MartinoMensio",
+                "website": "https://martinomensio.github.io"
+            }
+        },
+        {
             "id": "spacy-textblob",
             "title": "spaCyTextBlob",
             "slogan": "Easy sentiment analysis for spaCy using TextBlob",
