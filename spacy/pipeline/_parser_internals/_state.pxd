@@ -213,7 +213,7 @@ cdef cppclass StateC:
         return this._stack.size() == 0
 
     bint eol() nogil const:
-        return this.buffer_length() == 0 and this._rebuffer.size() == 0
+        return this.buffer_length() == 0
 
     bint is_final() nogil const:
         return this.stack_depth() <= 0 and this.eol()
