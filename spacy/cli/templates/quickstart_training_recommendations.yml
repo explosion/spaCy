@@ -158,10 +158,10 @@ nl:
   word_vectors: nl_core_news_lg
   transformer:
     efficiency:
-      name: pdelobelle/robbert-v2-dutch-base
+      name: GroNLP/bert-base-dutch-cased
       size_factor: 3
     accuracy:
-      name: pdelobelle/robbert-v2-dutch-base
+      name: GroNLP/bert-base-dutch-cased
       size_factor: 3
 pl:
   word_vectors: pl_core_news_lg
