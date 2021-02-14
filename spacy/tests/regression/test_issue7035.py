@@ -24,4 +24,4 @@ def test_issue7035():
     ae.apply_transition(state, "D")
     ae.apply_transition(state, "D")
     ae.apply_transition(state, "D")
-    assert not state.is_final()
+    assert not state.eol()
