@@ -2762,7 +2762,35 @@
                 "github": "AMArostegui"
             },
             "category": ["nonpython"]
-        }
+        },
+	{
+	    "id": "ruts",
+	    "title": "ruTS",
+	    "slogan": "A library for statistics extraction from texts in Russian",
+	    "description": "The library allows extracting the following statistics from a text: basic statistics, readability metrics, lexical diversity metrics, morphological statistics",
+	    "github": "SergeyShk/ruTS",
+	    "pip": "ruts",
+	    "code_example": [
+		"import spacy",
+		"import ruts",
+		"",
+		"nlp = spacy.load('ru_core_news_sm')",
+		"nlp.add_pipe('basic', last=True)",
+		"doc = nlp('мама мыла раму')",
+		"doc._.basic.get_stats()"
+	    ],
+	    "code_language": "python",
+	    "url": "https://example.com",
+	    "thumb": "https://habrastorage.org/webt/6z/le/fz/6zlefzjavzoqw_wymz7v3pwgfp4.png",
+	    "image": "https://clipartart.com/images/free-tree-roots-clipart-black-and-white-2.png",
+	    "author": "Sergey Shkarin",
+	    "author_links": {
+		"twitter": "shk_sergey",
+		"github": "SergeyShk"
+	    },
+	    "category": ["pipeline", "standalone"],
+	    "tags": ["Text Analytics", "Russian"]
+	}
     ],
 
     "categories": [
