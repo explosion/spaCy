@@ -20,7 +20,7 @@ from .pipe_analysis import validate_attrs, analyze_pipes, print_pipe_analysis
 from .training import Example, validate_examples
 from .training.initialize import init_vocab, init_tok2vec
 from .scorer import Scorer
-from .util import registry, SimpleFrozenList, _pipe, raise_error
+from .util import registry, SimpleFrozenList, _pipe, raise_error, is_in_jupyter
 from .util import SimpleFrozenDict, combine_score_weights, CONFIG_SECTION_ORDER
 from .lang.tokenizer_exceptions import URL_MATCH, BASE_EXCEPTIONS
 from .lang.punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
@@ -1615,6 +1615,11 @@ class Language:
                 or lang_cls is not cls
             ):
                 raise ValueError(Errors.E943.format(value=type(lang_cls)))
+        # Warn about require_gpu if a jupyter notebook + cupy is detected
+        if is_in_jupyter():
+            from thinc.backends.cupy_ops import CupyOps
+            if CupyOps.xp is not None:
+                warnings.warn(Warnings.W111)
         # Note that we don't load vectors here, instead they get loaded explicitly
         # inside stuff like the spacy train function. If we loaded them here,
         # then we would load them twice at runtime: once when we make from config,
