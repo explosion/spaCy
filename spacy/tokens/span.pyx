@@ -357,7 +357,7 @@ cdef class Span:
 
     @property
     def sent(self):
-        """Obtain the sentence that embeds this span. If the given span
+        """Obtain the sentence that contains this span. If the given span
         crosses sentence boundaries, return only the first sentence
         to which it belongs.
 
