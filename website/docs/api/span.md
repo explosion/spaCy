@@ -490,14 +490,14 @@ when [sentence boundaries](/usage/linguistic-features#sbd) have been set on the
 document by the `parser`, `senter`, `sentencizer` or some custom function. It
 will raise an error otherwise.
 
-If the span happens to cross sentence boundaries, then only the first sentence
-will be returned. If your application requires that the sentence always includes
-the full entity, you can adjust the result as such:
+If the span happens to cross sentence boundaries, only the first sentence will
+be returned. If it is required that the sentence always includes the
+full span, the result can be adjusted as such:
 
-> ```python
-> sent = span.sent
-> sent = doc[sent.start : max(sent.end, span.end)]
-> ```
+```python
+sent = span.sent
+sent = doc[sent.start : max(sent.end, span.end)]
+```
 
 > #### Example
 >
