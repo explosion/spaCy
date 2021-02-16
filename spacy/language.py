@@ -1615,11 +1615,15 @@ class Language:
                 or lang_cls is not cls
             ):
                 raise ValueError(Errors.E943.format(value=type(lang_cls)))
-        # Warn about require_gpu if a jupyter notebook + cupy is detected
+        # Warn about require_gpu if a jupyter notebook + cupy + mismatched
+        # contextvars vs. thread ops are detected
         if is_in_jupyter():
             from thinc.backends.cupy_ops import CupyOps
             if CupyOps.xp is not None:
-                warnings.warn(Warnings.W111)
+                from thinc.backends import contextvars_eq_thread_ops
+                if not contextvars_eq_thread_ops():
+                    warnings.warn(Warnings.W111)
+
         # Note that we don't load vectors here, instead they get loaded explicitly
         # inside stuff like the spacy train function. If we loaded them here,
         # then we would load them twice at runtime: once when we make from config,
