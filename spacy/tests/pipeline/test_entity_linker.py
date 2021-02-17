@@ -250,6 +250,14 @@ def test_el_pipe_configuration(nlp):
     assert doc[2].ent_kb_id_ == "Q2"
 
 
+def test_nel_nsents(nlp):
+    """Test that n_sents can be set through the configuration"""
+    entity_linker = nlp.add_pipe("entity_linker", config={})
+    assert entity_linker.n_sents == 0
+    entity_linker = nlp.replace_pipe("entity_linker", "entity_linker", config={"n_sents": 2})
+    assert entity_linker.n_sents == 2
+
+
 def test_vocab_serialization(nlp):
     """Test that string information is retained across storage"""
     mykb = KnowledgeBase(nlp.vocab, entity_vector_length=1)
