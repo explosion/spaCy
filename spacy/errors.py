@@ -486,6 +486,10 @@ class Errors:
     E202 = ("Unsupported alignment mode '{mode}'. Supported modes: {modes}.")
 
     # New errors added in v3.x
+    E885 = ("The pipeline could not be initialized because the vectors "
+            "could not be found at '{vectors}'. If your pipeline was already "
+            "initialized/trained before, call 'resume_training' instead of 'initialize', "
+            "or initialize only the components that are new.")
     E886 = ("Can't replace {name} -> {tok2vec} listeners: path '{path}' not "
             "found in config for component '{name}'.")
     E887 = ("Can't replace {name} -> {tok2vec} listeners: the paths to replace "
