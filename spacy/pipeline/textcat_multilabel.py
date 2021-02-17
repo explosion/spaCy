@@ -127,8 +127,9 @@ class MultiLabel_TextCategorizer(TextCategorizer):
         self.vocab = vocab
         self.model = model
         self.name = name
+        self.threshold = threshold
         self._rehearsal_model = None
-        cfg = {"labels": [], "threshold": threshold}
+        cfg = {"labels": []}
         self.cfg = dict(cfg)
 
     def initialize(
@@ -175,12 +176,12 @@ class MultiLabel_TextCategorizer(TextCategorizer):
         DOCS: https://spacy.io/api/textcategorizer#score
         """
         validate_examples(examples, "MultiLabel_TextCategorizer.score")
+        kwargs.setdefault("threshold", self.threshold)
         return Scorer.score_cats(
             examples,
             "cats",
             labels=self.labels,
             multi_label=True,
-            threshold=self.cfg["threshold"],
             **kwargs,
         )
 
