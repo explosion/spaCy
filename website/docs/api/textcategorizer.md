@@ -9,11 +9,12 @@ api_string_name: textcat
 api_trainable: true
 ---
 
-The text categorizer predicts **categories over a whole document**. and comes in two flavours: 
-`textcat` and `textcat_multilabel`. When you need to predict exactly one true label 
-per document, use the `textcat` which has mutually exclusive labels.
-If you want to perform multi-label classification and predict zero, one or more 
-labels per document, use the `textcat_multilabel` component instead.
+The text categorizer predicts **categories over a whole document**. and comes in
+two flavours: `textcat` and `textcat_multilabel`. When you need to predict
+exactly one true label per document, use the `textcat` which has mutually
+exclusive labels. If you want to perform multi-label classification and predict
+zero, one or more labels per document, use the `textcat_multilabel` component
+instead.
 
 Both components are documented on this page.
 
@@ -23,7 +24,7 @@ In spaCy v2, the `textcat` component could also perform **multi-label
 classification**, and even used this setting by default. Since v3.0, the
 component `textcat_multilabel` should be used for multi-label classification
 instead. The `textcat` component is now used for mutually exclusive classes
-only. 
+only.
 
 </Infobox>
 
@@ -58,7 +59,6 @@ architectures and their arguments and hyperparameters.
 > nlp.add_pipe("textcat_multilabel", config=config)
 > ```
 
-
 | Setting     | Description                                                                                                                                                      |
 | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `threshold` | Cutoff to consider a prediction "positive", relevant when printing accuracy results. ~~float~~                                                                   |
@@ -86,7 +86,6 @@ architectures and their arguments and hyperparameters.
 > from spacy.pipeline import TextCategorizer
 > textcat = TextCategorizer(nlp.vocab, model, threshold=0.5)
 > ```
-
 
 Create a new pipeline instance. In your application, you would normally use a
 shortcut for this and instantiate the component using its string name and
@@ -190,7 +189,7 @@ This method was previously called `begin_training`.
 | _keyword-only_   |                                                                                                                                                                                                                                                                                                                                                                                                            |
 | `nlp`            | The current `nlp` object. Defaults to `None`. ~~Optional[Language]~~                                                                                                                                                                                                                                                                                                                                       |
 | `labels`         | The label information to add to the component, as provided by the [`label_data`](#label_data) property after initialization. To generate a reusable JSON file from your data, you should run the [`init labels`](/api/cli#init-labels) command. If no labels are provided, the `get_examples` callback is used to extract the labels from the data, which may be a lot slower. ~~Optional[Iterable[str]]~~ |
-| `positive_label` | The positive label for a binary task with exclusive classes, None otherwise and by default. ~~Optional[str]~~                                                                                                                                                                                                                                                                                              |
+| `positive_label` | The positive label for a binary task with exclusive classes, `None` otherwise and by default. This parameter is not available when using the `textcat_multilabel` component. ~~Optional[str]~~                                                                                                                                                                                                             |
 
 ## TextCategorizer.predict {#predict tag="method"}
 
