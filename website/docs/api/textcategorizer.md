@@ -3,23 +3,27 @@ title: TextCategorizer
 tag: class
 source: spacy/pipeline/textcat.py
 new: 2
-teaser: 'Pipeline component for single-label text classification'
+teaser: 'Pipeline component for text classification'
 api_base_class: /api/pipe
 api_string_name: textcat
 api_trainable: true
 ---
 
-The text categorizer predicts **categories over a whole document**. It can learn
-one or more labels, and the labels are mutually exclusive - there is exactly one
-true label per document.
+The text categorizer predicts **categories over a whole document**. and comes in two flavours: 
+`textcat` and `textcat_multilabel`. When you need to predict exactly one true label 
+per document, use the `textcat` which has mutually exclusive labels.
+If you want to perform multi-label classification and predict zero, one or more 
+labels per document, use the `textcat_multilabel` component instead.
 
-<Infobox title="Important note on multi-label classification" variant="warning">
+Both components are documented on this page.
+
+<Infobox title="Migration from v2" variant="warning">
 
 In spaCy v2, the `textcat` component could also perform **multi-label
 classification**, and even used this setting by default. Since v3.0, the
-component [`textcat_multilabel`](/api/multilabel_textcategorizer) should be used
-for multi-label classification instead. The `textcat` component is now used for
-mutually exclusive classes only.
+component `textcat_multilabel` should be used for multi-label classification
+instead. The `textcat` component is now used for mutually exclusive classes
+only. 
 
 </Infobox>
 
@@ -41,6 +45,13 @@ architectures and their arguments and hyperparameters.
 >    "model": DEFAULT_SINGLE_TEXTCAT_MODEL,
 > }
 > nlp.add_pipe("textcat", config=config)
+> 
+> from spacy.pipeline.textcat_multilabel import DEFAULT_MULTI_TEXTCAT_MODEL
+> config = {
+>    "threshold": 0.5,
+>    "model": DEFAULT_MULTI_TEXTCAT_MODEL,
+> }
+> nlp.add_pipe("textcat_multilabel", config=config)
 > ```
 
 | Setting     | Description                                                                                                                                                      |
@@ -58,6 +69,7 @@ architectures and their arguments and hyperparameters.
 >
 > ```python
 > # Construction via add_pipe with default model
+> # Use 'textcat_multilabel' instead of 'textcat' when doing multi-label classification
 > textcat = nlp.add_pipe("textcat")
 >
 > # Construction via add_pipe with custom model
@@ -65,6 +77,7 @@ architectures and their arguments and hyperparameters.
 > parser = nlp.add_pipe("textcat", config=config)
 >
 > # Construction from class
+> # Use 'MultiLabel_TextCategorizer' instead of 'TextCategorizer' when doing multi-label classification
 > from spacy.pipeline import TextCategorizer
 > textcat = TextCategorizer(nlp.vocab, model, threshold=0.5)
 > ```

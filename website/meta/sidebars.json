@@ -91,7 +91,6 @@
                     { "text": "EntityRuler", "url": "/api/entityruler" },
                     { "text": "Lemmatizer", "url": "/api/lemmatizer" },
                     { "text": "Morphologizer", "url": "/api/morphologizer" },
-                    { "text": "Multi-label TextCategorizer", "url": "/api/multilabel_textcategorizer" },
                     { "text": "SentenceRecognizer", "url": "/api/sentencerecognizer" },
                     { "text": "Sentencizer", "url": "/api/sentencizer" },
                     { "text": "Tagger", "url": "/api/tagger" },

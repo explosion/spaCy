@@ -588,10 +588,10 @@ specific data and challenge.
 
 When the architecture for a text classification challenge contains a setting for
 `exclusive_classes`, it is important to use the correct value for the correct
-pipeline component. The [`textcat`](/api/textcategorizer) component should
-always be used for single-label use-cases where `exclusive_classes = true`,
-while the [`textcat_multilabel`](/api/multilabel_textcategorizer) should be used
-for multi-label settings with `exclusive_classes = false`.
+pipeline component. The `textcat` component should always be used for
+single-label use-cases where `exclusive_classes = true`, while the
+`textcat_multilabel` should be used for multi-label settings with
+`exclusive_classes = false`.
 
 </Infobox>
 
