@@ -36,7 +36,7 @@ how the component should be configured. You can override its settings via the
 [model architectures](/api/architectures) documentation for details on the
 architectures and their arguments and hyperparameters.
 
-> #### Example
+> #### Example (textcat)
 >
 > ```python
 > from spacy.pipeline.textcat import DEFAULT_SINGLE_TEXTCAT_MODEL
@@ -45,7 +45,11 @@ architectures and their arguments and hyperparameters.
 >    "model": DEFAULT_SINGLE_TEXTCAT_MODEL,
 > }
 > nlp.add_pipe("textcat", config=config)
-> 
+> ```
+
+> #### Example (textcat_multilabel)
+>
+> ```python
 > from spacy.pipeline.textcat_multilabel import DEFAULT_MULTI_TEXTCAT_MODEL
 > config = {
 >    "threshold": 0.5,
@@ -53,6 +57,7 @@ architectures and their arguments and hyperparameters.
 > }
 > nlp.add_pipe("textcat_multilabel", config=config)
 > ```
+
 
 | Setting     | Description                                                                                                                                                      |
 | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -69,7 +74,7 @@ architectures and their arguments and hyperparameters.
 >
 > ```python
 > # Construction via add_pipe with default model
-> # Use 'textcat_multilabel' instead of 'textcat' when doing multi-label classification
+> # Use 'textcat_multilabel' for multi-label classification
 > textcat = nlp.add_pipe("textcat")
 >
 > # Construction via add_pipe with custom model
@@ -77,10 +82,11 @@ architectures and their arguments and hyperparameters.
 > parser = nlp.add_pipe("textcat", config=config)
 >
 > # Construction from class
-> # Use 'MultiLabel_TextCategorizer' instead of 'TextCategorizer' when doing multi-label classification
+> # Use 'MultiLabel_TextCategorizer' for multi-label classification
 > from spacy.pipeline import TextCategorizer
 > textcat = TextCategorizer(nlp.vocab, model, threshold=0.5)
 > ```
+
 
 Create a new pipeline instance. In your application, you would normally use a
 shortcut for this and instantiate the component using its string name and
