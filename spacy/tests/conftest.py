@@ -43,6 +43,7 @@ def ar_tokenizer():
 def bg_tokenizer():
     return get_lang_class("bg")().tokenizer
 
+
 @pytest.fixture(scope="session")
 def bn_tokenizer():
     return get_lang_class("bn")().tokenizer
