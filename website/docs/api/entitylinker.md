@@ -154,7 +154,7 @@ with the current vocab.
 >     kb.add_alias(...)
 >     return kb
 > entity_linker = nlp.add_pipe("entity_linker")
-> entity_linker.set_kb(lambda: [], nlp=nlp, kb_loader=create_kb)
+> entity_linker.set_kb(create_kb)
 > ```
 
 | Name        | Description                                                                                                      |
