@@ -21,11 +21,11 @@ dev = null
 [corpora]
 
 [corpora.train]
-@readers = "spacy.Corpus.v1"
+@readers = "spacy.Corpus.v2"
 path = ${paths.train}
 
 [corpora.dev]
-@readers = "spacy.Corpus.v1"
+@readers = "spacy.Corpus.v2"
 path = ${paths.dev}
 
 [training]
@@ -72,11 +72,11 @@ dev = null
 [corpora]
 
 [corpora.train]
-@readers = "spacy.Corpus.v1"
+@readers = "spacy.Corpus.v2"
 path = ${paths.train}
 
 [corpora.dev]
-@readers = "spacy.Corpus.v1"
+@readers = "spacy.Corpus.v2"
 path = ${paths.dev}
 
 [training]
