@@ -486,6 +486,9 @@ class Errors:
     E202 = ("Unsupported alignment mode '{mode}'. Supported modes: {modes}.")
 
     # New errors added in v3.x
+
+    E885 = ("entity_linker.set_kb received an invalid 'kb_loader' argument: expected "
+            "a callable function, but got: {arg_type}")
     E886 = ("Can't replace {name} -> {tok2vec} listeners: path '{path}' not "
             "found in config for component '{name}'.")
     E887 = ("Can't replace {name} -> {tok2vec} listeners: the paths to replace "

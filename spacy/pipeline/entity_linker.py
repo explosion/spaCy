@@ -146,6 +146,9 @@ class EntityLinker(TrainablePipe):
     def set_kb(self, kb_loader: Callable[[Vocab], KnowledgeBase]):
         """Define the KB of this pipe by providing a function that will
         create it using this object's vocab."""
+        if not callable(kb_loader):
+            raise ValueError(Errors.E885.format(arg_type=type(kb_loader)))
+
         self.kb = kb_loader(self.vocab)
         self.cfg["entity_vector_length"] = self.kb.entity_vector_length
 
