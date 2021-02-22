@@ -531,27 +531,28 @@ class Scorer:
                 gold_span = gold_ent_by_offset.get(
                     (pred_ent.start_char, pred_ent.end_char), None
                 )
-                label = gold_span.label_
-                if label not in f_per_type:
-                    f_per_type[label] = PRFScore()
-                gold = gold_span.kb_id_
-                # only evaluating entities that overlap between gold and pred,
-                # to disentangle the performance of the NEL from the NER
-                if gold is not None:
-                    pred = pred_ent.kb_id_
-                    if gold in negative_labels and pred in negative_labels:
-                        # ignore true negatives
-                        pass
-                    elif gold == pred:
-                        f_per_type[label].tp += 1
-                    elif gold in negative_labels:
-                        f_per_type[label].fp += 1
-                    elif pred in negative_labels:
-                        f_per_type[label].fn += 1
-                    else:
-                        # a wrong prediction (e.g. Q42 != Q3) counts as both a FP as well as a FN
-                        f_per_type[label].fp += 1
-                        f_per_type[label].fn += 1
+                if gold_span is not None:
+                    label = gold_span.label_
+                    if label not in f_per_type:
+                        f_per_type[label] = PRFScore()
+                    gold = gold_span.kb_id_
+                    # only evaluating entities that overlap between gold and pred,
+                    # to disentangle the performance of the NEL from the NER
+                    if gold is not None:
+                        pred = pred_ent.kb_id_
+                        if gold in negative_labels and pred in negative_labels:
+                            # ignore true negatives
+                            pass
+                        elif gold == pred:
+                            f_per_type[label].tp += 1
+                        elif gold in negative_labels:
+                            f_per_type[label].fp += 1
+                        elif pred in negative_labels:
+                            f_per_type[label].fn += 1
+                        else:
+                            # a wrong prediction (e.g. Q42 != Q3) counts as both a FP as well as a FN
+                            f_per_type[label].fp += 1
+                            f_per_type[label].fn += 1
         micro_prf = PRFScore()
         for label_prf in f_per_type.values():
             micro_prf.tp += label_prf.tp
