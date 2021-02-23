@@ -11,7 +11,8 @@ from ..util import ensure_path, to_disk, from_disk, SimpleFrozenList
 
 
 DEFAULT_MENTIONS = "coref_mentions"
-DEFAULT_MATCHER_POS = ["PROPN", "PRON"]
+DEFAULT_MATCHER_KEY = "POS"
+DEFAULT_MATCHER_VALUES = ["PROPN", "PRON"]
 
 
 @Language.factory(
@@ -20,7 +21,8 @@ DEFAULT_MATCHER_POS = ["PROPN", "PRON"]
     requires=["doc.ents", "token.ent_iob", "token.ent_type", "token.pos"],
     default_config={
         "span_mentions": DEFAULT_MENTIONS,
-        "matcher_pos": DEFAULT_MATCHER_POS,
+        "matcher_key": DEFAULT_MATCHER_KEY,
+        "matcher_values": DEFAULT_MATCHER_VALUES,
     },
     default_score_weights={
         "coref_mentions_f": 1.0,
@@ -28,9 +30,9 @@ DEFAULT_MATCHER_POS = ["PROPN", "PRON"]
         "coref_mentions_r": 0.0,
     },
 )
-def make_coref_er(nlp: Language, name: str, span_mentions: str, matcher_pos: List[str]):
+def make_coref_er(nlp: Language, name: str, span_mentions: str, matcher_key: str, matcher_values: List[str]):
     return CorefEntityRecognizer(
-        nlp, name, span_mentions=span_mentions, matcher_pos=matcher_pos
+        nlp, name, span_mentions=span_mentions, matcher_key=matcher_key, matcher_values=matcher_values
     )
 
 
@@ -47,7 +49,8 @@ class CorefEntityRecognizer(Pipe):
         name: str = "coref_er",
         *,
         span_mentions: str = DEFAULT_MENTIONS,
-        matcher_pos: List[str] = DEFAULT_MATCHER_POS,
+        matcher_key: str = DEFAULT_MATCHER_KEY,
+        matcher_values: List[str] = DEFAULT_MATCHER_VALUES,
     ) -> None:
         """Initialize the entity recognizer for coreference mentions. TODO
 
@@ -56,7 +59,8 @@ class CorefEntityRecognizer(Pipe):
             passed in automatically from the factory when the component is
             added.
         span_mentions (str): Key in doc.spans to store the mentions in.
-        matcher_pos (List[str]): POS tags to match token sequences as
+        matcher_key (List[str]): Field for the matcher to work on (e.g. "POS" or "TAG")
+        matcher_values (List[str]): Values to match token sequences as
             plausible coref mentions
 
         DOCS: https://spacy.io/api/coref_er#init (TODO)
@@ -64,12 +68,13 @@ class CorefEntityRecognizer(Pipe):
         self.nlp = nlp
         self.name = name
         self.span_mentions = span_mentions
-        self.matcher_pos = matcher_pos
+        self.matcher_key = matcher_key
+        self.matcher_values = matcher_values
         self.matcher = Matcher(nlp.vocab)
         # TODO: allow to specify any matcher patterns instead?
-        for pos in matcher_pos:
+        for value in matcher_values:
             self.matcher.add(
-                f"{pos}_SEQ", [[{"POS": pos, "OP": "+"}]], greedy="LONGEST"
+                f"{value}_SEQ", [[{matcher_key: value, "OP": "+"}]], greedy="LONGEST"
             )
 
     def __call__(self, doc: Doc) -> Doc:
@@ -84,22 +89,28 @@ class CorefEntityRecognizer(Pipe):
         error_handler = self.get_error_handler()
         try:
             # Add NER
-            # TODO: NER might not be available
             spans = list(doc.ents)
             offsets = set()
             offsets.update([self._string_offset(e) for e in doc.ents])
 
             # pronouns and proper nouns
-            matches = self.matcher(doc, as_spans=True)
+            try:
+                matches = self.matcher(doc, as_spans=True)
+            except ValueError:
+                raise ValueError(f"Could not run the matcher for 'coref_er'. If {self.matcher_key} tags "
+                                 "are not available, change the 'matcher_key' in the config, "
+                                 "or set matcher_values to an empty list.")
             spans.extend([m for m in matches if self._string_offset(m) not in offsets])
             offsets.update([self._string_offset(m) for m in matches])
 
             # noun_chunks
-            # TODO: noun_chunks is not always defined
-            spans.extend(
-                [nc for nc in doc.noun_chunks if self._string_offset(nc) not in offsets]
-            )
-            offsets.update([self._string_offset(nc) for nc in doc.noun_chunks])
+            try:
+                spans.extend(
+                    [nc for nc in doc.noun_chunks if self._string_offset(nc) not in offsets]
+                )
+                offsets.update([self._string_offset(nc) for nc in doc.noun_chunks])
+            except NotImplementedError:
+                pass
 
             self.set_annotations(doc, spans)
             return doc
@@ -144,7 +155,8 @@ class CorefEntityRecognizer(Pipe):
         """
         cfg = srsly.msgpack_loads(bytes_data)
         self.span_mentions = cfg.get("span_mentions", DEFAULT_MENTIONS)
-        self.matcher_pos = cfg.get("matcher_pos", DEFAULT_MATCHER_POS)
+        self.matcher_key = cfg.get("matcher_key", DEFAULT_MATCHER_KEY)
+        self.matcher_values = cfg.get("matcher_values", DEFAULT_MATCHER_VALUES)
         return self
 
     def to_bytes(self, *, exclude: Iterable[str] = SimpleFrozenList()) -> bytes:
@@ -172,7 +184,8 @@ class CorefEntityRecognizer(Pipe):
         deserializers_cfg = {"cfg": lambda p: cfg.update(srsly.read_json(p))}
         from_disk(path, deserializers_cfg, {})
         self.span_mentions = cfg.get("span_mentions", DEFAULT_MENTIONS)
-        self.matcher_pos = cfg.get("matcher_pos", DEFAULT_MATCHER_POS)
+        self.matcher_key = cfg.get("matcher_key", DEFAULT_MATCHER_KEY)
+        self.matcher_values = cfg.get("matcher_values", DEFAULT_MATCHER_VALUES)
         return self
 
     def to_disk(
