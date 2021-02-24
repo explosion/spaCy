@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 # Why inherit from UserDict instead of dict here?
 # Well, the 'dict' class doesn't necessarily delegate everything nicely,
-# for performance reasons. The UserDict is slower by better behaved.
+# for performance reasons. The UserDict is slower but better behaved.
 # See https://treyhunner.com/2019/04/why-you-shouldnt-inherit-from-list-and-dict-in-python/0ww
 class SpanGroups(UserDict):
     """A dict-like proxy held by the Doc, to control access to span groups."""

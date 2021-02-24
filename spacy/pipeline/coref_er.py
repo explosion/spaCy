@@ -17,7 +17,7 @@ DEFAULT_MATCHER_VALUES = ["PROPN", "PRON"]
 
 @Language.factory(
     "coref_er",
-    # TODO? assigns=[f"doc.spans['coref_mentions']"],
+    assigns=[f"doc.spans"],
     requires=["doc.ents", "token.ent_iob", "token.ent_type", "token.pos"],
     default_config={
         "span_mentions": DEFAULT_MENTIONS,
@@ -25,9 +25,9 @@ DEFAULT_MATCHER_VALUES = ["PROPN", "PRON"]
         "matcher_values": DEFAULT_MATCHER_VALUES,
     },
     default_score_weights={
-        "coref_mentions_f": 1.0,
-        "coref_mentions_p": 0.0,
-        "coref_mentions_r": 0.0,
+        "coref_mentions_f": None,
+        "coref_mentions_p": None,
+        "coref_mentions_r": 1.0,  # the mentions data needs to be consistently annotated for precision rates to make sense
     },
 )
 def make_coref_er(nlp: Language, name: str, span_mentions: str, matcher_key: str, matcher_values: List[str]):
@@ -48,9 +48,9 @@ class CorefEntityRecognizer(Pipe):
         nlp: Language,
         name: str = "coref_er",
         *,
-        span_mentions: str = DEFAULT_MENTIONS,
-        matcher_key: str = DEFAULT_MATCHER_KEY,
-        matcher_values: List[str] = DEFAULT_MATCHER_VALUES,
+        span_mentions: str,
+        matcher_key: str,
+        matcher_values: List[str],
     ) -> None:
         """Initialize the entity recognizer for coreference mentions. TODO
 
@@ -58,7 +58,7 @@ class CorefEntityRecognizer(Pipe):
         name (str): Instance name of the current pipeline component. Typically
             passed in automatically from the factory when the component is
             added.
-        span_mentions (str): Key in doc.spans to store the mentions in.
+        span_mentions (str): Key in doc.spans to store the coref mentions in.
         matcher_key (List[str]): Field for the matcher to work on (e.g. "POS" or "TAG")
         matcher_values (List[str]): Values to match token sequences as
             plausible coref mentions
@@ -76,6 +76,10 @@ class CorefEntityRecognizer(Pipe):
             self.matcher.add(
                 f"{value}_SEQ", [[{matcher_key: value, "OP": "+"}]], greedy="LONGEST"
             )
+
+    @staticmethod
+    def _string_offset(span: Span):
+        return f"{span.start}-{span.end}"
 
     def __call__(self, doc: Doc) -> Doc:
         """Find relevant coref mentions in the document and add them
@@ -117,14 +121,12 @@ class CorefEntityRecognizer(Pipe):
         except Exception as e:
             error_handler(self.name, self, [doc], e)
 
-    @staticmethod
-    def _string_offset(span: Span):
-        return f"{span.start}-{span.end}"
-
     def set_annotations(self, doc, spans):
         """Modify the document in place"""
         group = SpanGroup(doc, name=self.span_mentions, spans=spans)
-        # TODO: throw error if this entry already exists in doc.spans
+        if self.span_mentions in doc.spans:
+            raise ValueError(f"Couldn't store the results of {self.name}, as the key "
+                             f"{self.span_mentions} already exists in 'doc.spans'.")
         doc.spans[self.span_mentions] = group
 
     def initialize(
