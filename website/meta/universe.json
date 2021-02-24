@@ -36,29 +36,29 @@
             "github": "SamEdwardes/spaCyTextBlob",
             "pip": "spacytextblob",
             "code_example": [
-            "import spacy",
-            "from spacytextblob.spacytextblob import SpacyTextBlob",
-            "",
-            "nlp = spacy.load('en_core_web_sm')",
-            "spacy_text_blob = SpacyTextBlob()",
-            "nlp.add_pipe(spacy_text_blob)",
-            "text = 'I had a really horrible day. It was the worst day ever! But every now and then I have a really good day that makes me happy.'",
-            "doc = nlp(text)",
-            "doc._.sentiment.polarity      # Polarity: -0.125",
-            "doc._.sentiment.subjectivity  # Sujectivity: 0.9",
-            "doc._.sentiment.assessments   # Assessments: [(['really', 'horrible'], -1.0, 1.0, None), (['worst', '!'], -1.0, 1.0, None), (['really', 'good'], 0.7, 0.6000000000000001, None), (['happy'], 0.8, 1.0, None)]"
+                "import spacy",
+                "from spacytextblob.spacytextblob import SpacyTextBlob",
+                "",
+                "nlp = spacy.load('en_core_web_sm')",
+                "spacy_text_blob = SpacyTextBlob()",
+                "nlp.add_pipe(spacy_text_blob)",
+                "text = 'I had a really horrible day. It was the worst day ever! But every now and then I have a really good day that makes me happy.'",
+                "doc = nlp(text)",
+                "doc._.sentiment.polarity      # Polarity: -0.125",
+                "doc._.sentiment.subjectivity  # Sujectivity: 0.9",
+                "doc._.sentiment.assessments   # Assessments: [(['really', 'horrible'], -1.0, 1.0, None), (['worst', '!'], -1.0, 1.0, None), (['really', 'good'], 0.7, 0.6000000000000001, None), (['happy'], 0.8, 1.0, None)]"
             ],
             "code_language": "python",
             "url": "https://spacytextblob.netlify.app/",
             "author": "Sam Edwardes",
             "author_links": {
-            "twitter": "TheReaLSamlam",
-            "github": "SamEdwardes",
-            "website": "https://samedwardes.com"
+                "twitter": "TheReaLSamlam",
+                "github": "SamEdwardes",
+                "website": "https://samedwardes.com"
             },
             "category": ["pipeline"],
             "tags": ["sentiment", "textblob"]
-	    },
+        },
         {
             "id": "spacy-ray",
             "title": "spacy-ray",
@@ -2602,14 +2602,14 @@
             "description": "A spaCy rule-based pipeline for identifying positive cases of COVID-19 from clinical text. A version of this system was deployed as part of the US Department of Veterans Affairs biosurveillance response to COVID-19.",
             "pip": "cov-bsv",
             "code_example": [
-              "import cov_bsv",
-              "",
-              "nlp = cov_bsv.load()",
-              "doc = nlp('Pt tested for COVID-19. His wife was recently diagnosed with novel coronavirus. SARS-COV-2: Detected')",
-              "",
-              "print(doc.ents)",
-              "print(doc._.cov_classification)",
-              "cov_bsv.visualize_doc(doc)"
+                "import cov_bsv",
+                "",
+                "nlp = cov_bsv.load()",
+                "doc = nlp('Pt tested for COVID-19. His wife was recently diagnosed with novel coronavirus. SARS-COV-2: Detected')",
+                "",
+                "print(doc.ents)",
+                "print(doc._.cov_classification)",
+                "cov_bsv.visualize_doc(doc)"
             ],
             "category": ["pipeline", "standalone", "biomedical", "scientific"],
             "tags": ["clinical", "epidemiology", "covid-19", "surveillance"],
@@ -2627,18 +2627,18 @@
             "description": "A toolkit for clinical NLP with spaCy. Features include sentence splitting, section detection, and asserting negation, family history, and uncertainty.",
             "pip": "medspacy",
             "code_example": [
-              "import medspacy",
-              "from medspacy.ner import TargetRule",
-              "",
-              "nlp = medspacy.load()",
-              "print(nlp.pipe_names)",
-              "",
-              "nlp.get_pipe('target_matcher').add([TargetRule('stroke', 'CONDITION'), TargetRule('diabetes', 'CONDITION'), TargetRule('pna', 'CONDITION')])",
-              "doc = nlp('Patient has hx of stroke. Mother diagnosed with diabetes. No evidence of pna.')",
-              "",
-              "for ent in doc.ents:",
-              "    print(ent, ent._.is_negated, ent._.is_family, ent._.is_historical)",
-              "medspacy.visualization.visualize_ent(doc)"
+                "import medspacy",
+                "from medspacy.ner import TargetRule",
+                "",
+                "nlp = medspacy.load()",
+                "print(nlp.pipe_names)",
+                "",
+                "nlp.get_pipe('target_matcher').add([TargetRule('stroke', 'CONDITION'), TargetRule('diabetes', 'CONDITION'), TargetRule('pna', 'CONDITION')])",
+                "doc = nlp('Patient has hx of stroke. Mother diagnosed with diabetes. No evidence of pna.')",
+                "",
+                "for ent in doc.ents:",
+                "    print(ent, ent._.is_negated, ent._.is_family, ent._.is_historical)",
+                "medspacy.visualization.visualize_ent(doc)"
             ],
             "category": ["biomedical", "scientific", "research"],
             "tags": ["clinical"],
@@ -2647,14 +2647,14 @@
                 "github": "medspacy"
             }
         },
-	      {
+        {
             "id": "rita-dsl",
             "title": "RITA DSL",
             "slogan": "Domain Specific Language for creating language rules",
             "github": "zaibacu/rita-dsl",
             "description": "A Domain Specific Language (DSL) for building language patterns. These can be later compiled into spaCy patterns, pure regex, or any other format",
             "pip": "rita-dsl",
-	          "thumb": "https://raw.githubusercontent.com/zaibacu/rita-dsl/master/docs/assets/logo-100px.png",
+            "thumb": "https://raw.githubusercontent.com/zaibacu/rita-dsl/master/docs/assets/logo-100px.png",
             "code_language": "python",
             "code_example": [
                 "import spacy",
@@ -2754,8 +2754,8 @@
                 "{",
                 "    var lexeme = doc.Vocab[word.Text];",
                 "    Console.WriteLine($@\"{lexeme.Text} {lexeme.Orth} {lexeme.Shape} {lexeme.Prefix} {lexeme.Suffix} {lexeme.IsAlpha} {lexeme.IsDigit} {lexeme.IsTitle} {lexeme.Lang}\");",
-                "}"                
-            ],    
+                "}"
+            ],
             "code_language": "csharp",
             "author": "Antonio Miras",
             "author_links": {
@@ -2763,33 +2763,33 @@
             },
             "category": ["nonpython"]
         },
-	{
-	    "id": "ruts",
-	    "title": "ruTS",
-	    "slogan": "A library for statistics extraction from texts in Russian",
-	    "description": "The library allows extracting the following statistics from a text: basic statistics, readability metrics, lexical diversity metrics, morphological statistics",
-	    "github": "SergeyShk/ruTS",
-	    "pip": "ruts",
-	    "code_example": [
-		"import spacy",
-		"import ruts",
-		"",
-		"nlp = spacy.load('ru_core_news_sm')",
-		"nlp.add_pipe('basic', last=True)",
-		"doc = nlp('мама мыла раму')",
-		"doc._.basic.get_stats()"
-	    ],
-	    "code_language": "python",
-	    "thumb": "https://habrastorage.org/webt/6z/le/fz/6zlefzjavzoqw_wymz7v3pwgfp4.png",
-	    "image": "https://clipartart.com/images/free-tree-roots-clipart-black-and-white-2.png",
-	    "author": "Sergey Shkarin",
-	    "author_links": {
-		"twitter": "shk_sergey",
-		"github": "SergeyShk"
-	    },
-	    "category": ["pipeline", "standalone"],
-	    "tags": ["Text Analytics", "Russian"]
-	}
+        {
+            "id": "ruts",
+            "title": "ruTS",
+            "slogan": "A library for statistics extraction from texts in Russian",
+            "description": "The library allows extracting the following statistics from a text: basic statistics, readability metrics, lexical diversity metrics, morphological statistics",
+            "github": "SergeyShk/ruTS",
+            "pip": "ruts",
+            "code_example": [
+                "import spacy",
+                "import ruts",
+                "",
+                "nlp = spacy.load('ru_core_news_sm')",
+                "nlp.add_pipe('basic', last=True)",
+                "doc = nlp('мама мыла раму')",
+                "doc._.basic.get_stats()"
+            ],
+            "code_language": "python",
+            "thumb": "https://habrastorage.org/webt/6z/le/fz/6zlefzjavzoqw_wymz7v3pwgfp4.png",
+            "image": "https://clipartart.com/images/free-tree-roots-clipart-black-and-white-2.png",
+            "author": "Sergey Shkarin",
+            "author_links": {
+                "twitter": "shk_sergey",
+                "github": "SergeyShk"
+            },
+            "category": ["pipeline", "standalone"],
+            "tags": ["Text Analytics", "Russian"]
+        }
     ],
 
     "categories": [
