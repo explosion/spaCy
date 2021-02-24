@@ -585,7 +585,7 @@ print(ent_francisco)  # ['Francisco', 'I', 'GPE']
 To ensure that the sequence of token annotations remains consistent, you have to
 set entity annotations **at the document level**. However, you can't write
 directly to the `token.ent_iob` or `token.ent_type` attributes, so the easiest
-way to set entities is to assign to the [`doc.ents`](/api/doc#ents) attribute
+way to set entities is to use the [`doc.set_ents`](/api/doc#set_ents) function
 and create the new entity as a [`Span`](/api/span).
 
 ```python

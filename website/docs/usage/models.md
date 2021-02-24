@@ -476,6 +476,6 @@ logic around spaCy's loader, you can use
 [pytest](http://pytest.readthedocs.io/en/latest/)'s
 [`importorskip()`](https://docs.pytest.org/en/latest/builtin.html#_pytest.outcomes.importorskip)
 method to only run a test if a specific pipeline package or version is
-installed. Each pipeline package package exposes a `__version__` attribute which
+installed. Each pipeline package exposes a `__version__` attribute which
 you can also use to perform your own version compatibility checks before loading
 it.

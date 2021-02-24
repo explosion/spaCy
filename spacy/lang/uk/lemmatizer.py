@@ -7,6 +7,8 @@ from ...vocab import Vocab
 
 
 class UkrainianLemmatizer(RussianLemmatizer):
+    _morph = None
+
     def __init__(
         self,
         vocab: Vocab,
@@ -16,7 +18,6 @@ class UkrainianLemmatizer(RussianLemmatizer):
         mode: str = "pymorphy2",
         overwrite: bool = False,
     ) -> None:
-        super().__init__(vocab, model, name, mode=mode, overwrite=overwrite)
         try:
             from pymorphy2 import MorphAnalyzer
         except ImportError:
@@ -27,3 +28,4 @@ class UkrainianLemmatizer(RussianLemmatizer):
             ) from None
         if UkrainianLemmatizer._morph is None:
             UkrainianLemmatizer._morph = MorphAnalyzer(lang="uk")
+        super().__init__(vocab, model, name, mode=mode, overwrite=overwrite)

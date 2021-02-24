@@ -22,7 +22,7 @@ from ..training.converters import conllu_to_docs
 CONVERTERS = {
     "conllubio": conllu_to_docs,
     "conllu": conllu_to_docs,
-    "conll": conllu_to_docs,
+    "conll": conll_ner_to_docs,
     "ner": conll_ner_to_docs,
     "iob": iob_to_docs,
     "json": json_to_docs,

@@ -61,7 +61,6 @@ def test_issue7029():
         losses = {}
         nlp.update(train_examples, sgd=optimizer, losses=losses)
     texts = ["first", "second", "third", "fourth", "and", "then", "some", ""]
-    nlp.select_pipes(enable=["tok2vec", "tagger"])
     docs1 = list(nlp.pipe(texts, batch_size=1))
     docs2 = list(nlp.pipe(texts, batch_size=4))
     assert [doc[0].tag_ for doc in docs1[:-1]] == [doc[0].tag_ for doc in docs2[:-1]]

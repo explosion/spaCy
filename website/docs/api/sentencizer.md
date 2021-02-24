@@ -24,7 +24,7 @@ how the component should be configured. You can override its settings via the
 >
 > ```python
 > config = {"punct_chars": None}
-> nlp.add_pipe("entity_ruler", config=config)
+> nlp.add_pipe("sentencizer", config=config)
 > ```
 
 | Setting       | Description                                                                                                                                            |
