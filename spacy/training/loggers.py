@@ -141,7 +141,10 @@ def wandb_logger(project_name: str, remove_config_values: List[str] = []):
 
 @registry.loggers("spacy.CometLogger.v1")
 def comet_logger(project_name: str, remove_config_values: List[str] = []):
-    import comet_ml
+    try:
+        import comet_ml
+    except ImportError:
+        print("You need to install `comet_ml` to use the CometLogger: see: https://comet.ml/docs/python-sdk/spacy/")
 
     console = console_logger(progress_bar=False)
 
