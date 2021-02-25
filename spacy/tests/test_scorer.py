@@ -444,7 +444,7 @@ def test_score_spans():
     assert f"{key}_per_type" in scores
 
     # Discard labels from the evaluation
-    scores = Scorer.score_spans([eg], attr=key, getter=span_getter, allow_overlap=True, consider_label=False)
+    scores = Scorer.score_spans([eg], attr=key, getter=span_getter, allow_overlap=True, include_label=False)
     assert scores[f"{key}_p"] == 1.0
     assert scores[f"{key}_r"] == 1.0
     assert f"{key}_per_type" not in scores
