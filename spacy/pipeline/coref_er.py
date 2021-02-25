@@ -215,8 +215,9 @@ class CorefEntityRecognizer(Pipe):
         """
         def mentions_getter(doc, span_key):
             return doc.spans[span_key]
+        # This will work better once PR 7209 is merged
         kwargs.setdefault("getter", mentions_getter)
         kwargs.setdefault("attr", self.span_mentions)
-        kwargs.setdefault("consider_label", False)
+        kwargs.setdefault("include_label", False)
         kwargs.setdefault("allow_overlap", True)
         return Scorer.score_spans(examples, **kwargs)
