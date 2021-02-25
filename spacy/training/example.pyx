@@ -211,18 +211,19 @@ cdef class Example:
         else:
             return [None] * len(self.x)
 
-    def get_aligned_spans_x2y(self, x_spans):
-        return self._get_aligned_spans(self.y, x_spans, self.alignment.x2y)
+    def get_aligned_spans_x2y(self, x_spans, allow_overlap=False):
+        return self._get_aligned_spans(self.y, x_spans, self.alignment.x2y, allow_overlap)
 
-    def get_aligned_spans_y2x(self, y_spans):
-        return self._get_aligned_spans(self.x, y_spans, self.alignment.y2x)
+    def get_aligned_spans_y2x(self, y_spans, allow_overlap=False):
+        return self._get_aligned_spans(self.x, y_spans, self.alignment.y2x, allow_overlap)
 
-    def _get_aligned_spans(self, doc, spans, align):
+    def _get_aligned_spans(self, doc, spans, align, allow_overlap):
         seen = set()
         output = []
         for span in spans:
             indices = align[span.start : span.end].data.ravel()
-            indices = [idx for idx in indices if idx not in seen]
+            if not allow_overlap:
+                indices = [idx for idx in indices if idx not in seen]
             if len(indices) >= 1:
                 aligned_span = Span(doc, indices[0], indices[-1] + 1, label=span.label)
                 target_text = span.text.lower().strip().replace(" ", "")

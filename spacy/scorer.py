@@ -305,6 +305,8 @@ class Scorer:
         *,
         getter: Callable[[Doc, str], Iterable[Span]] = getattr,
         has_annotation: Optional[Callable[[Doc], bool]] = None,
+        consider_label: bool = True,
+        allow_overlap: bool = False,
         **cfg,
     ) -> Dict[str, Any]:
         """Returns PRF scores for labeled spans.
@@ -314,6 +316,11 @@ class Scorer:
         getter (Callable[[Doc, str], Iterable[Span]]): Defaults to getattr. If
             provided, getter(doc, attr) should return the spans for the
             individual doc.
+        consider_label (bool): Whether or not to include label information in
+            the evaluation. If set to 'False', two spans will be considered
+            equal if their start and end match, irrespective of their label.
+        allow_overlap (bool): Whether or not to allow overlapping spans.
+            If set to 'False', the alignment will automatically resolve conflicts.
         RETURNS (Dict[str, Any]): A dictionary containing the PRF scores under
             the keys attr_p/r/f and the per-type PRF scores under attr_per_type.
 
@@ -343,32 +350,39 @@ class Scorer:
             pred_spans = set()
             for span in getter(gold_doc, attr):
                 gold_span = (span.label_, span.start, span.end - 1)
+                if not consider_label:
+                    gold_span = (span.start, span.end - 1)
                 gold_spans.add(gold_span)
-                gold_per_type[span.label_].add((span.label_, span.start, span.end - 1))
+                gold_per_type[span.label_].add(gold_span)
             pred_per_type = {label: set() for label in labels}
-            for span in example.get_aligned_spans_x2y(getter(pred_doc, attr)):
-                pred_spans.add((span.label_, span.start, span.end - 1))
-                pred_per_type[span.label_].add((span.label_, span.start, span.end - 1))
+            for span in example.get_aligned_spans_x2y(getter(pred_doc, attr), allow_overlap):
+                pred_span = (span.label_, span.start, span.end - 1)
+                if not consider_label:
+                    pred_span = (span.start, span.end - 1)
+                pred_spans.add(pred_span)
+                pred_per_type[span.label_].add(pred_span)
             # Scores per label
-            for k, v in score_per_type.items():
-                if k in pred_per_type:
-                    v.score_set(pred_per_type[k], gold_per_type[k])
+            if consider_label:
+                for k, v in score_per_type.items():
+                    if k in pred_per_type:
+                        v.score_set(pred_per_type[k], gold_per_type[k])
             # Score for all labels
             score.score_set(pred_spans, gold_spans)
-        if len(score) > 0:
-            return {
-                f"{attr}_p": score.precision,
-                f"{attr}_r": score.recall,
-                f"{attr}_f": score.fscore,
-                f"{attr}_per_type": {k: v.to_dict() for k, v in score_per_type.items()},
-            }
-        else:
-            return {
+        # Assemble final result
+        final_scores = {
                 f"{attr}_p": None,
                 f"{attr}_r": None,
                 f"{attr}_f": None,
-                f"{attr}_per_type": None,
             }
+        if consider_label:
+            final_scores[f"{attr}_per_type"] = None
+        if len(score) > 0:
+            final_scores[f"{attr}_p"] = score.precision
+            final_scores[f"{attr}_r"] = score.recall
+            final_scores[f"{attr}_f"] = score.fscore
+            if consider_label:
+                final_scores[f"{attr}_per_type"] = {k: v.to_dict() for k, v in score_per_type.items()}
+        return final_scores
 
     @staticmethod
     def score_cats(
