@@ -483,13 +483,40 @@ The L2 norm of the span's vector representation.
 | ----------- | --------------------------------------------------- |
 | **RETURNS** | The L2 norm of the vector representation. ~~float~~ |
 
+## Span.sent {#sent tag="property" model="sentences"}
+
+The sentence span that this span is a part of. This property is only available
+when [sentence boundaries](/usage/linguistic-features#sbd) have been set on the
+document by the `parser`, `senter`, `sentencizer` or some custom function. It
+will raise an error otherwise.
+
+If the span happens to cross sentence boundaries, only the first sentence will
+be returned. If it is required that the sentence always includes the
+full span, the result can be adjusted as such:
+
+```python
+sent = span.sent
+sent = doc[sent.start : max(sent.end, span.end)]
+```
+
+> #### Example
+>
+> ```python
+> doc = nlp("Give it back! He pleaded.")
+> span = doc[1:3]
+> assert span.sent.text == "Give it back!"
+> ```
+
+| Name        | Description                                             |
+| ----------- | ------------------------------------------------------- |
+| **RETURNS** | The sentence span that this span is a part of. ~~Span~~ |
+
 ## Attributes {#attributes}
 
 | Name                                    | Description                                                                                                                   |
 | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | `doc`                                   | The parent document. ~~Doc~~                                                                                                  |
 | `tensor` <Tag variant="new">2.1.7</Tag> | The span's slice of the parent `Doc`'s tensor. ~~numpy.ndarray~~                                                              |
-| `sent`                                  | The sentence span that this span is a part of. ~~Span~~                                                                       |
 | `start`                                 | The token offset for the start of the span. ~~int~~                                                                           |
 | `end`                                   | The token offset for the end of the span. ~~int~~                                                                             |
 | `start_char`                            | The character offset for the start of the span. ~~int~~                                                                       |

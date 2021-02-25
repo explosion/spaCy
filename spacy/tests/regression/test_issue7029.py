@@ -1,7 +1,6 @@
 from spacy.lang.en import English
 from spacy.training import Example
 from spacy.util import load_config_from_str
-import pickle
 
 
 CONFIG = """
@@ -31,9 +30,6 @@ depth = 4
 window_size = 1
 maxout_pieces = 3
 
-[components.ner]
-factory = "ner"
-
 [components.tagger]
 factory = "tagger"
 
@@ -48,12 +44,23 @@ upstream = "*"
 """
 
 
-def test_issue6950():
-    """Test that the nlp object with initialized tok2vec with listeners pickles
-    correctly (and doesn't have lambdas).
-    """
+TRAIN_DATA = [
+    ("I like green eggs", {"tags": ["N", "V", "J", "N"]}),
+    ("Eat blue ham", {"tags": ["V", "J", "N"]}),
+]
+
+
+def test_issue7029():
+    """Test that an empty document doesn't mess up an entire batch."""
     nlp = English.from_config(load_config_from_str(CONFIG))
-    nlp.initialize(lambda: [Example.from_dict(nlp.make_doc("hello"), {"tags": ["V"]})])
-    pickle.dumps(nlp)
-    nlp("hello")
-    pickle.dumps(nlp)
+    train_examples = []
+    for t in TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
+    optimizer = nlp.initialize(get_examples=lambda: train_examples)
+    for i in range(50):
+        losses = {}
+        nlp.update(train_examples, sgd=optimizer, losses=losses)
+    texts = ["first", "second", "third", "fourth", "and", "then", "some", ""]
+    docs1 = list(nlp.pipe(texts, batch_size=1))
+    docs2 = list(nlp.pipe(texts, batch_size=4))
+    assert [doc[0].tag_ for doc in docs1[:-1]] == [doc[0].tag_ for doc in docs2[:-1]]

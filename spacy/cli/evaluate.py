@@ -132,7 +132,7 @@ def evaluate(
 
     if displacy_path:
         factory_names = [nlp.get_pipe_meta(pipe).factory for pipe in nlp.pipe_names]
-        docs = [ex.predicted for ex in dev_dataset]
+        docs = list(nlp.pipe(ex.reference.text for ex in dev_dataset[:displacy_limit]))
         render_deps = "parser" in factory_names
         render_ents = "ner" in factory_names
         render_parses(

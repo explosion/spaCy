@@ -28,6 +28,15 @@ bg:
   accuracy:
     name: iarfmoose/roberta-base-bulgarian
     size_factor: 3
+bn:
+  word_vectors: null
+  transformer:
+  efficiency:
+    name: sagorsarker/bangla-bert-base
+    size_factor: 3
+  accuracy:
+    name: sagorsarker/bangla-bert-base
+    size_factor: 3
 da:
   word_vectors: da_core_news_lg
   transformer:
@@ -104,10 +113,10 @@ hi:
   word_vectors: null
   transformer:
     efficiency:
-      name: monsoon-nlp/hindi-tpu-electra
+      name: ai4bharat/indic-bert
       size_factor: 3
     accuracy:
-      name: monsoon-nlp/hindi-tpu-electra
+      name: ai4bharat/indic-bert
       size_factor: 3
 id:
   word_vectors: null
@@ -149,10 +158,10 @@ nl:
   word_vectors: nl_core_news_lg
   transformer:
     efficiency:
-      name: pdelobelle/robbert-v2-dutch-base
+      name: GroNLP/bert-base-dutch-cased
       size_factor: 3
     accuracy:
-      name: pdelobelle/robbert-v2-dutch-base
+      name: GroNLP/bert-base-dutch-cased
       size_factor: 3
 pl:
   word_vectors: pl_core_news_lg
@@ -185,10 +194,10 @@ si:
   word_vectors: null
   transformer:
     efficiency:
-      name: keshan/SinhalaBERTo
+      name: setu4993/LaBSE
       size_factor: 3
     accuracy:
-      name: keshan/SinhalaBERTo
+      name: setu4993/LaBSE
       size_factor: 3
 sv:
   word_vectors: null
@@ -203,10 +212,10 @@ ta:
   word_vectors: null
   transformer:
     efficiency:
-      name: monsoon-nlp/tamillion
+      name: ai4bharat/indic-bert
       size_factor: 3
     accuracy:
-      name: monsoon-nlp/tamillion
+      name: ai4bharat/indic-bert
       size_factor: 3
 te:
   word_vectors: null
