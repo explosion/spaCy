@@ -61,6 +61,8 @@ cdef class Vocab:
         lookups (Lookups): Container for large lookup tables and dictionaries.
         oov_prob (float): Default OOV probability.
         vectors_name (unicode): Optional name to identify the vectors table.
+        get_noun_chunks (Optional[Callable[[Union[Doc, Span], Iterator[Span]]]]):
+            A function that yields base noun phrases used for Doc.noun_chunks.
         """
         lex_attr_getters = lex_attr_getters if lex_attr_getters is not None else {}
         if lookups in (None, True, False):
