@@ -44,6 +44,7 @@ for orth in [
     "dniem.",
     "dosł.",
     "dr",
+    "ds.",
     "dubrow.",
     "ekaw.",
     "est.",
