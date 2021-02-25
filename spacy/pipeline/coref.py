@@ -109,7 +109,7 @@ class CorefResolution(TrainablePipe):
 
     def predict(self, docs: Iterable[Doc]):
         """Apply the pipeline's model to a batch of docs, without modifying them.
-        TODO: write actual clustering algorithm
+        TODO: write actual algorithm
 
         docs (Iterable[Doc]): The documents to predict.
         RETURNS: The models prediction for each document.

@@ -1,8 +1,9 @@
-from typing import Optional, Union, Iterable, Callable, List
+from typing import Optional, Union, Iterable, Callable, List, Dict, Any
 from pathlib import Path
 import srsly
 
 from .pipe import Pipe
+from ..scorer import Scorer
 from ..training import Example
 from ..language import Language
 from ..tokens import Doc, Span, SpanGroup
@@ -203,3 +204,19 @@ class CorefEntityRecognizer(Pipe):
         cfg = {"span_mentions": self.span_mentions}
         serializers = {"cfg": lambda p: srsly.write_json(p, cfg)}
         to_disk(path, serializers, {})
+
+    def score(self, examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
+        """Score a batch of examples.
+
+        examples (Iterable[Example]): The examples to score.
+        RETURNS (Dict[str, Any]): The scores, produced by Scorer.score_coref.
+
+        DOCS: https://spacy.io/api/coref_er#score (TODO)
+        """
+        def mentions_getter(doc, span_key):
+            return doc.spans[span_key]
+        kwargs.setdefault("getter", mentions_getter)
+        kwargs.setdefault("attr", self.span_mentions)
+        kwargs.setdefault("consider_label", False)
+        kwargs.setdefault("allow_overlap", True)
+        return Scorer.score_spans(examples, **kwargs)
