@@ -236,7 +236,7 @@ cdef class Example:
     def get_aligned_ner(self):
         if not self.y.has_annotation("ENT_IOB"):
             return [None] * len(self.x)  # should this be 'missing' instead of 'None' ?
-        x_ents = self.get_aligned_spans_y2x(self.y.ents)
+        x_ents = self.get_aligned_spans_y2x(self.y.ents, allow_overlap=False)
         # Default to 'None' for missing values
         x_tags = offsets_to_biluo_tags(
             self.x,

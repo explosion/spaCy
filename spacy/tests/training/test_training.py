@@ -426,6 +426,29 @@ def test_aligned_spans_x2y(en_vocab, en_tokenizer):
     assert [(ent.start, ent.end) for ent in ents_x2y] == [(0, 2), (4, 6)]
 
 
+def test_aligned_spans_y2x_overlap(en_vocab, en_tokenizer):
+    text = "I flew to San Francisco Valley"
+    nlp = English()
+    doc = nlp(text)
+    # the reference doc has overlapping spans
+    gold_doc = nlp.make_doc(text)
+    spans = []
+    prefix = "I flew to "
+    spans.append(gold_doc.char_span(len(prefix), len(prefix + "San Francisco"), label="CITY"))
+    spans.append(gold_doc.char_span(len(prefix), len(prefix + "San Francisco Valley"), label="VALLEY"))
+    spans_key = "overlap_ents"
+    gold_doc.spans[spans_key] = spans
+    example = Example(doc, gold_doc)
+    spans_gold = example.reference.spans[spans_key]
+    assert [(ent.start, ent.end) for ent in spans_gold] == [(3, 5), (3, 6)]
+
+    # Ensure that 'get_aligned_spans_y2x' has the aligned entities correct
+    spans_y2x_no_overlap = example.get_aligned_spans_y2x(spans_gold, allow_overlap=False)
+    assert [(ent.start, ent.end) for ent in spans_y2x_no_overlap] == [(3, 5)]
+    spans_y2x_overlap = example.get_aligned_spans_y2x(spans_gold, allow_overlap=True)
+    assert [(ent.start, ent.end) for ent in spans_y2x_overlap] == [(3, 5), (3, 6)]
+
+
 def test_gold_ner_missing_tags(en_tokenizer):
     doc = en_tokenizer("I flew to Silicon Valley via London.")
     biluo_tags = [None, "O", "O", "B-LOC", "L-LOC", "O", "U-GPE", "O"]
