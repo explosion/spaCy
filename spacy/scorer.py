@@ -349,15 +349,17 @@ class Scorer:
             gold_spans = set()
             pred_spans = set()
             for span in getter(gold_doc, attr):
-                gold_span = (span.label_, span.start, span.end - 1)
-                if not include_label:
+                if include_label:
+                    gold_span = (span.label_, span.start, span.end - 1)
+                else:
                     gold_span = (span.start, span.end - 1)
                 gold_spans.add(gold_span)
                 gold_per_type[span.label_].add(gold_span)
             pred_per_type = {label: set() for label in labels}
             for span in example.get_aligned_spans_x2y(getter(pred_doc, attr), allow_overlap):
-                pred_span = (span.label_, span.start, span.end - 1)
-                if not include_label:
+                if include_label:
+                    pred_span = (span.label_, span.start, span.end - 1)
+                else:
                     pred_span = (span.start, span.end - 1)
                 pred_spans.add(pred_span)
                 pred_per_type[span.label_].add(pred_span)
