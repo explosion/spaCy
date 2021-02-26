@@ -201,7 +201,7 @@ class CorefEntityRecognizer(Pipe):
         DOCS: https://spacy.io/api/coref_er#to_disk (TODO)
         """
         path = ensure_path(path)
-        cfg = {"span_mentions": self.span_mentions}
+        cfg = {}
         serializers = {"cfg": lambda p: srsly.write_json(p, cfg)}
         to_disk(path, serializers, {})
 

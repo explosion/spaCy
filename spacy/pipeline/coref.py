@@ -36,7 +36,7 @@ depth = 2
 """
 DEFAULT_MODEL = Config().from_str(default_config)["model"]
 
-DEFAULT_CLUSTERS_PREFIX = "coref_cluster"
+DEFAULT_CLUSTERS_PREFIX = "coref_clusters"
 
 
 @Language.factory(
