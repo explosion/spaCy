@@ -397,7 +397,7 @@ class Scorer:
         RETURNS (Dict[str, Any]): A dictionary containing the PRF scores under
             the keys attr_p/r/f and the per-type PRF scores under attr_per_type.
 
-        DOCS: https://spacy.io/api/scorer#score_clusters
+        DOCS: https://spacy.io/api/scorer#score_clusters (TODO)
         """
         # Note: the current implementation just scores binary pairs on whether they
         # are in the same cluster or not.

@@ -36,7 +36,7 @@ depth = 2
 """
 DEFAULT_MODEL = Config().from_str(default_config)["model"]
 
-DEFAULT_CLUSTERS_PREFIX = "coref_cluster_"
+DEFAULT_CLUSTERS_PREFIX = "coref_cluster"
 
 
 @Language.factory(
@@ -279,5 +279,10 @@ class CorefResolution(TrainablePipe):
 
         DOCS: https://spacy.io/api/coref#score (TODO)
         """
+        def clusters_getter(doc, span_key):
+            return [spans for name, spans in doc.spans.items() if name.startswith(span_key)]
         validate_examples(examples, "CorefResolution.score")
-        return Scorer.score_coref(examples, **kwargs)
+        kwargs.setdefault("getter", clusters_getter)
+        kwargs.setdefault("attr", self.span_cluster_prefix)
+        kwargs.setdefault("include_label", False)
+        return Scorer.score_clusters(examples, **kwargs)
