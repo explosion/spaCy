@@ -338,7 +338,7 @@ class Scorer:
             for label in labels:
                 if label not in score_per_type:
                     score_per_type[label] = PRFScore()
-            # Find all predidate labels, for all and per type
+            # Find all instances, for all and per type
             gold_spans = set()
             pred_spans = set()
             for span in getter(gold_doc, attr):
@@ -363,6 +363,113 @@ class Scorer:
                 f"{attr}_per_type": {k: v.to_dict() for k, v in score_per_type.items()},
             }
         else:
+            return {
+                f"{attr}_p": None,
+                f"{attr}_r": None,
+                f"{attr}_f": None,
+                f"{attr}_per_type": None,
+            }
+
+    @staticmethod
+    def score_clusters(
+        examples: Iterable[Example],
+        attr: str,
+        *,
+        getter: Callable[[Doc, str], Iterable[Iterable[Span]]] = getattr,
+        has_annotation: Optional[Callable[[Doc], bool]] = None,
+        include_label: bool = True,
+        **cfg,
+    ) -> Dict[str, Any]:
+        """Returns PRF scores for clustered spans.
+
+        examples (Iterable[Example]): Examples to score
+        attr (str): The attribute to score.
+        getter (Callable[[Doc, str], Iterable[Iterable[Span]]]): Defaults to getattr.
+            If provided, getter(doc, attr) should return the lists of spans for the
+            individual doc.
+        has_annotation (Optional[Callable[[Doc], bool]]) should return whether a `Doc`
+            has annotation for this `attr`. Docs without annotation are skipped for
+            scoring purposes.
+        include_label (bool): Whether or not to include label information in
+            the evaluation. If set to 'False', two spans will be considered
+            equal if their start and end match, irrespective of their label.
+
+        RETURNS (Dict[str, Any]): A dictionary containing the PRF scores under
+            the keys attr_p/r/f and the per-type PRF scores under attr_per_type.
+
+        DOCS: https://spacy.io/api/scorer#score_clusters
+        """
+        # Note: the current implementation just scores binary pairs on whether they
+        # are in the same cluster or not.
+        # TODO: look at different cluster/coreference scoring techniques.
+        score = PRFScore()
+        score_per_type = dict()
+        for example in examples:
+            pred_doc = example.predicted
+            gold_doc = example.reference
+            # Option to handle docs without sents
+            if has_annotation is not None:
+                if not has_annotation(gold_doc):
+                    continue
+            # Find all labels in gold and doc
+            gold_clusters = list(getter(gold_doc, attr))
+            pred_clusters = list(getter(pred_doc, attr))
+            labels = set(
+                [span.label_ for span_list in gold_clusters for span in span_list]
+                + [span.label_ for span_list in pred_clusters for span in span_list]
+            )
+            # Set up all labels for per type scoring and prepare gold per type
+            for label in labels:
+                if label not in score_per_type:
+                    score_per_type[label] = PRFScore()
+            # Find all instances, for all and per type
+            gold_instances = set()
+            gold_per_type = {label: set() for label in labels}
+            for gold_cluster in gold_clusters:
+                for span1 in gold_cluster:
+                    for span2 in gold_cluster:
+                        # only record pairs where span1 comes before span2
+                        if (span1.start < span2.start) or (span1.start == span2.start and span1.end < span2.end):
+                            if include_label:
+                                gold_rel = (span1.label_, span1.start, span1.end - 1, span2.label_, span2.start, span2.end - 1)
+                            else:
+                                gold_rel = (span1.start, span1.end - 1, span2.start, span2.end - 1)
+                            gold_instances.add(gold_rel)
+                            if span1.label_ == span2.label_:
+                                gold_per_type[span1.label_].add(gold_rel)
+            pred_instances = set()
+            pred_per_type = {label: set() for label in labels}
+            for pred_cluster in pred_clusters:
+                for span1 in pred_cluster:
+                    for span2 in pred_cluster:
+                        if (span1.start < span2.start) or (span1.start == span2.start and span1.end < span2.end):
+                            if include_label:
+                                pred_rel = (span1.label_, span1.start, span1.end - 1, span2.label_, span2.start, span2.end - 1)
+                            else:
+                                pred_rel = (span1.start, span1.end - 1, span2.start, span2.end - 1)
+                            pred_instances.add(pred_rel)
+                            if span1.label_ == span2.label_:
+                                pred_per_type[span1.label_].add(pred_rel)
+            # Scores per label
+            if include_label:
+                for k, v in score_per_type.items():
+                    if k in pred_per_type:
+                        v.score_set(pred_per_type[k], gold_per_type[k])
+            # Score for all labels
+            score.score_set(pred_instances, gold_instances)
+        # Assemble final result
+        final_scores = {
+            f"{attr}_p": None,
+            f"{attr}_r": None,
+            f"{attr}_f": None,
+
+        }
+        if include_label:
+            final_scores[f"{attr}_per_type"] = None
+        if len(score) > 0:
+            final_scores[f"{attr}_p"] = score.precision
+            final_scores[f"{attr}_r"] = score.recall
+            final_scores[f"{attr}_f"] = score.fscore
             return {
                 f"{attr}_p": None,
                 f"{attr}_r": None,
@@ -719,12 +826,7 @@ def get_ner_prf(examples: Iterable[Example]) -> Dict[str, Any]:
             "ents_per_type": {k: v.to_dict() for k, v in score_per_type.items()},
         }
     else:
-        return {
-            "ents_p": None,
-            "ents_r": None,
-            "ents_f": None,
-            "ents_per_type": None,
-        }
+        return {"ents_p": None, "ents_r": None, "ents_f": None, "ents_per_type": None}
 
 
 # The following implementation of roc_auc_score() is adapted from
