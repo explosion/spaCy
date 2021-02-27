@@ -176,11 +176,11 @@ class CorefResolution(TrainablePipe):
         set_dropout_rate(self.model, drop)
         scores, bp_scores = self.model.begin_update([eg.predicted for eg in examples])
         # TODO below
-        loss, d_scores = self.get_loss(examples, scores)
-        bp_scores(d_scores)
+        # loss, d_scores = self.get_loss(examples, scores)
+        # bp_scores(d_scores)
         if sgd is not None:
             self.finish_update(sgd)
-        losses[self.name] += loss
+        # losses[self.name] += loss
         return losses
 
     def rehearse(
@@ -248,7 +248,7 @@ class CorefResolution(TrainablePipe):
         """
         validate_examples(examples, "CorefResolution.get_loss")
         # TODO
-        return float(3.42), float(0.0)
+        return None
 
     def initialize(
         self,
