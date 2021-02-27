@@ -33,7 +33,7 @@ class SpanGroups(UserDict):
     def _make_span_group(self, name: str, spans: Iterable["Span"]) -> SpanGroup:
         return SpanGroup(self.doc_ref(), name=name, spans=spans)
 
-    def copy(self, doc=None) -> "SpanGroups":
+    def copy(self, doc: "Doc" = None) -> "SpanGroups":
         if doc is None:
             doc = self.doc_ref()
         return SpanGroups(doc).from_bytes(self.to_bytes())
