@@ -816,9 +816,12 @@ disk.
 During training, the results of each step are passed to a logger function. By
 default, these results are written to the console with the
 [`ConsoleLogger`](/api/top-level#ConsoleLogger). There is also built-in support
-for writing the log files to [Weights & Biases](https://www.wandb.com/) with the
-[`WandbLogger`](/api/top-level#WandbLogger). On each step, the logger function
-receives a **dictionary** with the following keys:
+for logging items to the following loggers:
+
+* [Weights & Biases](https://www.wandb.com/) with the [`WandbLogger`](/api/top-level#WandbLogger)
+* [Comet.ML](https://www.comet.ml/) with the [`CometLogger`](/api/top-level#CometLogger)
+
+On each step, the logger function receives a **dictionary** with the following keys:
 
 | Key            | Value                                                                                                 |
 | -------------- | ----------------------------------------------------------------------------------------------------- |

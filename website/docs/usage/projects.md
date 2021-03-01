@@ -43,11 +43,12 @@ and experiments, iterate on demos and prototypes and ship your models into
 production.
 
 <Grid narrow cols={3}>
+<Integration title="Comet" logo="comet" url="#comet">Manage your experiments and models</Integration>
 <Integration title="DVC" logo="dvc" url="#dvc">Manage and version your data</Integration>
-<Integration title="Prodigy" logo="prodigy" url="#prodigy">Create labelled training data</Integration>
-<Integration title="Streamlit" logo="streamlit" url="#streamlit">Visualize and demo your pipelines</Integration>
 <Integration title="FastAPI" logo="fastapi" url="#fastapi">Serve your models and host APIs</Integration>
+<Integration title="Prodigy" logo="prodigy" url="#prodigy">Create labelled training data</Integration>
 <Integration title="Ray" logo="ray" url="#ray">Distributed and parallel training</Integration>
+<Integration title="Streamlit" logo="streamlit" url="#streamlit">Visualize and demo your pipelines</Integration>
 <Integration title="Weights &amp; Biases" logo="wandb" url="#wandb">Track your experiments and results</Integration>
 </Grid>
 
@@ -227,6 +228,37 @@ pipelines.
 | `workflows`     | A dictionary of workflow names, mapped to a list of command names, to execute in order. Workflows can be run with the [`project run`](/api/cli#project-run) command.                                                                                                                                                                                                                                                                                                                                         |
 | `commands`      | A list of named commands. A command can define an optional help message (shown in the CLI when the user adds `--help`) and the `script`, a list of commands to run. The `deps` and `outputs` let you define the created file the command depends on and produces, respectively. This lets spaCy determine whether a command needs to be re-run because its dependencies or outputs changed. Commands can be run as part of a workflow, or separately with the [`project run`](/api/cli#project-run) command. |
 | `spacy_version` | Optional spaCy version range like `>=3.0.0,<3.1.0` that the project is compatible with. If it's loaded with an incompatible version, an error is raised when the project is loaded.                                                                                                                                                                                                                                                                                                                          |
+### Comet.ML {#comet} <IntegrationLogo name="comet" width={175} height="auto" align="right" />
+
+[Comet.ML](https://www.comet.ml/), like spaCy itself, is out of this
+world. Comet enables teams to track, explain, and optimize spaCy experiments
+and models. You can enable Comet integration with the
+[`CometLogger`](/api/top-level#CometLogger) added in the `[training.logger]`
+block of your training [config](/usage/training#config). All of your training metrics,
+hyperparameters, and config settings will be logged to the server where they
+can be fully monitored, plotted, and diffed.
+
+> #### Example config
+>
+> ```ini
+> [training.logger]
+> @loggers = "spacy.CometLogger.v1"
+> project_name = "mnist_training"
+> remove_config_values = ["paths.train", "paths.dev"]
+> ```
+
+![Screenshot: Track Metrics](../images/comet1.png)
+![Screenshot: Confusion Matrix and Panels](../images/comet2.png)
+
+<Project id="integrations/comet">
+
+Get started with tracking your spaCy training runs in Weights & Biases using our
+project template. It trains on the IMDB Movie Review Dataset and includes a
+simple config with the built-in `WandbLogger`, as well as a custom example of
+creating variants of the config for a simple hyperparameter grid search and
+logging the results.
+
+</Project>
 
 ### Data assets {#data-assets}
 

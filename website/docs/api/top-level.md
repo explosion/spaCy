@@ -384,11 +384,14 @@ finished. To log each training step, a
 [`spacy train`](/api/cli#train), including information such as the training loss
 and the accuracy scores on the development set.
 
-There are two built-in logging functions: a logger printing results to the
-console in tabular format (which is the default), and one that also sends the
-results to a [Weights & Biases](https://www.wandb.com/) dashboard. Instead of
-using one of the built-in loggers listed here, you can also
-[implement your own](/usage/training#custom-logging).
+There are three built-in logging functions:
+
+1. a logger that prints results to the console in tabular format (the default)
+2. a logger that sends the results to a [Weights & Biases](https://www.wandb.com/) dashboard
+3. a logger that sends the results to a [Comet.ML](https://www.comet.ml/)
+
+In addition to using one of the built-in loggers listed here, you
+can also [implement your own](/usage/training#custom-logging).
 
 #### spacy.ConsoleLogger.v1 {#ConsoleLogger tag="registered function"}
 
@@ -485,6 +488,47 @@ project template. It trains on the IMDB Movie Review Dataset and includes a
 simple config with the built-in `WandbLogger`, as well as a custom example of
 creating variants of the config for a simple hyperparameter grid search and
 logging the results.
+
+</Project>
+
+#### spacy.CometLogger.v1 {#CometLogger tag="registered function"}
+
+> #### Installation
+>
+> ```bash
+> $ pip install comet_ml
+> ```
+
+The `CometLogger` is built into spaCy and can track all of the useful
+information about your experiment and the environment it was created
+in. This includes training and evaluation metrics and parameters, but
+also details on the Python and OS environment, output, and system usage
+metrics. You can manage running experiments, see `diffs` with other
+experiments, and share analyses through custom visualizations with
+your team at [Comet.ML](https://www.comet.ml/) . Of course, you can
+control exactly which items are logged, or not, through configuration
+settings. To create your Comet.ML API key, visit:
+[www.comet.ml/docs/python-sdk/spacy](https://www.comet.ml/docs/python-sdk/spacy/)
+
+> #### Example config
+>
+> ```ini
+> [training.logger]
+> @loggers = "spacy.CometLogger.v1"
+> project_name = "monitor_spacy_training"
+> remove_config_values = ["paths.train", "paths.dev"]
+> ```
+
+| Name                   | Description                                                                                                                           |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `project_name`         | The name of the project in your Comet.ML workspace. The project will be created automatically if it doesn't exist yet. ~~str~~ |
+| `remove_config_values` | A list of values to remove from the config before it is logged to Comet.ML (default: empty). ~~List[str]~~                              |
+
+<Project id="integrations/comet">
+
+To quickly see how easy it is to track your spaCy training runs in
+Comet.ML try our project template. It trains on the IMDB Movie Review
+Dataset and includes a simple config with the built-in `CometLogger`.
 
 </Project>
 

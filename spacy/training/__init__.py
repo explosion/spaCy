@@ -7,4 +7,4 @@ from .iob_utils import offsets_to_biluo_tags, biluo_tags_to_offsets  # noqa: F40
 from .iob_utils import biluo_tags_to_spans, tags_to_entities  # noqa: F401
 from .gold_io import docs_to_json, read_json_file  # noqa: F401
 from .batchers import minibatch_by_padded_size, minibatch_by_words  # noqa: F401
-from .loggers import console_logger, wandb_logger  # noqa: F401
+from .loggers import console_logger, wandb_logger, comet_logger  # noqa: F401
