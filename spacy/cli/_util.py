@@ -510,6 +510,6 @@ def setup_gpu(use_gpu: int) -> None:
         msg.info(f"Using GPU: {use_gpu}")
         require_gpu(use_gpu)
     else:
-        msg.info("Using CPU.")
+        msg.info("Using CPU")
         if has_cupy and gpu_is_available():
             msg.info("To switch to GPU 0, use the option: --gpu-id 0")
