@@ -7,7 +7,7 @@ from spacy import util
 from spacy import prefer_gpu, require_gpu, require_cpu
 from spacy.ml._precomputable_affine import PrecomputableAffine
 from spacy.ml._precomputable_affine import _backprop_precomputable_affine_padding
-from spacy.util import dot_to_object, SimpleFrozenList
+from spacy.util import dot_to_object, SimpleFrozenList, import_file
 from thinc.api import Config, Optimizer, ConfigValidationError
 from spacy.training.batchers import minibatch_by_words
 from spacy.lang.en import English
@@ -17,7 +17,7 @@ from spacy.schemas import ConfigSchemaTraining
 
 from thinc.api import get_current_ops, NumpyOps, CupyOps
 
-from .util import get_random_doc
+from .util import get_random_doc, make_named_tempfile
 
 
 @pytest.fixture
@@ -347,3 +347,34 @@ def test_resolve_dot_names():
     errors = e.value.errors
     assert len(errors) == 1
     assert errors[0]["loc"] == ["training", "xyz"]
+
+
+def test_import_code():
+    code_str = """
+from spacy import Language
+
+class DummyComponent:
+    def __init__(self, vocab, name):
+        pass
+
+    def initialize(self, get_examples, *, nlp, dummy_param: int):
+        pass
+
+@Language.factory(
+    "dummy_component",
+)
+def make_dummy_component(
+    nlp: Language, name: str
+):
+    return DummyComponent(nlp.vocab, name)
+"""
+
+    with make_named_tempfile(mode="w", suffix=".py") as fileh:
+        fileh.write(code_str)
+        fileh.flush()
+
+        import_file("python_code", fileh.name)
+        config = {"initialize": {"components": {"dummy_component": {"dummy_param": 1}}}}
+        nlp = English.from_config(config)
+        nlp.add_pipe("dummy_component")
+        nlp.initialize()
