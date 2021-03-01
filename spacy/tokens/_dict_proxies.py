@@ -33,8 +33,10 @@ class SpanGroups(UserDict):
     def _make_span_group(self, name: str, spans: Iterable["Span"]) -> SpanGroup:
         return SpanGroup(self.doc_ref(), name=name, spans=spans)
 
-    def copy(self) -> "SpanGroups":
-        return SpanGroups(self.doc_ref()).from_bytes(self.to_bytes())
+    def copy(self, doc: "Doc" = None) -> "SpanGroups":
+        if doc is None:
+            doc = self.doc_ref()
+        return SpanGroups(doc).from_bytes(self.to_bytes())
 
     def to_bytes(self) -> bytes:
         # We don't need to serialize this as a dict, because the groups
