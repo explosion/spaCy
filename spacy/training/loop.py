@@ -74,11 +74,21 @@ def train(
 
     # Components that shouldn't be updated during training
     frozen_components = T["frozen_components"]
+    # If train corpus should be loaded once in memory and shuffled while
+    # batching
+    if T["shuffle_train_corpus_in_memory"]:
+        train_batcher = create_train_batches_with_shuffling(
+            train_corpus(nlp), batcher, T["max_epochs"]
+        )
+    else:
+        train_batcher = create_train_batches_without_shuffling(
+            nlp, train_corpus, batcher, T["max_epochs"]
+        )
     # Create iterator, which yields out info after each optimization step.
     training_step_iterator = train_while_improving(
         nlp,
         optimizer,
-        create_train_batches(train_corpus(nlp), batcher, T["max_epochs"]),
+        train_batcher,
         create_evaluation_callback(nlp, dev_corpus, score_weights),
         dropout=T["dropout"],
         accumulate_gradient=T["accumulate_gradient"],
@@ -285,26 +295,33 @@ def create_evaluation_callback(
     return evaluate
 
 
-def create_train_batches(
+def create_train_batches_with_shuffling(
     iterator: Iterator[Example],
     batcher: Callable[[Iterable[Example]], Iterable[Example]],
     max_epochs: int,
 ):
     epoch = 0
-    examples = []
-    # Stream the first epoch, so we start training faster and support
-    # infinite streams.
-    for batch in batcher(iterator):
-        yield epoch, batch
-        if max_epochs != 1:
-            examples.extend(batch)
+    examples = list(iterator)
     if not examples:
         # Raise error if no data
         raise ValueError(Errors.E986)
-    epoch = 1
     while max_epochs < 1 or epoch != max_epochs:
         random.shuffle(examples)
         for batch in batcher(examples):
+            yield epoch, batch
+        epoch += 1
+
+
+def create_train_batches_without_shuffling(
+    nlp: "Language",
+    corpus: Callable[["Language"], Iterable[Example]],
+    batcher: Callable[[Iterable[Example]], Iterable[Example]],
+    max_epochs: int,
+):
+    epoch = 0
+    while max_epochs < 1 or epoch != max_epochs:
+        iterator = corpus(nlp)
+        for batch in batcher(iterator):
             yield epoch, batch
         epoch += 1
 

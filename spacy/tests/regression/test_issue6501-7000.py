@@ -116,11 +116,11 @@ factory = "TEXTCAT_PLACEHOLDER"
 [corpora]
 
 [corpora.train]
-@readers = "spacy.Corpus.v2"
+@readers = "spacy.Corpus.v1"
 path = ${paths:train}
 
 [corpora.dev]
-@readers = "spacy.Corpus.v2"
+@readers = "spacy.Corpus.v1"
 path = ${paths:train}
 
 

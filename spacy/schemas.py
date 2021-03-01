@@ -313,6 +313,7 @@ class ConfigSchemaTraining(BaseModel):
     optimizer: Optimizer = Field(..., title="The optimizer to use")
     logger: Logger = Field(..., title="The logger to track training progress")
     frozen_components: List[str] = Field(..., title="Pipeline components that shouldn't be updated during training")
+    shuffle_train_corpus_in_memory: bool = Field(..., title="Whether the train corpus is loaded and shuffled in memory")
     before_to_disk: Optional[Callable[["Language"], "Language"]] = Field(..., title="Optional callback to modify nlp object after training, before it's saved to disk")
     # fmt: on
 
