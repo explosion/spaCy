@@ -353,14 +353,14 @@ def _annot2array(vocab, tok_annot, doc_annot):
 
 def _add_spans_to_doc(doc, spans_data):
     if not isinstance(spans_data, dict):
-        raise ValueError(Errors.E884)
+        raise ValueError(Errors.E879)
     for key, span_list in spans_data.items():
         spans = []
         if not isinstance(span_list, list):
-            raise ValueError(Errors.E884)
+            raise ValueError(Errors.E879)
         for span_tuple in span_list:
             if not isinstance(span_tuple, (list, tuple)) or len(span_tuple) < 2:
-                raise ValueError(Errors.E884)
+                raise ValueError(Errors.E879)
             start_char = span_tuple[0]
             end_char = span_tuple[1]
             label = 0
