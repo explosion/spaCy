@@ -486,6 +486,10 @@ class Errors:
     E202 = ("Unsupported alignment mode '{mode}'. Supported modes: {modes}.")
 
     # New errors added in v3.x
+
+    E880 = ("The 'wandb' library could not be found - did you install it? "
+            "Alternatively, specify the 'ConsoleLogger' in the 'training.logger' "
+            "config section, instead of the 'WandbLogger'.")
     E884 = ("The pipeline could not be initialized because the vectors "
             "could not be found at '{vectors}'. If your pipeline was already "
             "initialized/trained before, call 'resume_training' instead of 'initialize', "

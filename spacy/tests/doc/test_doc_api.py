@@ -1,3 +1,5 @@
+import weakref
+
 import pytest
 import numpy
 import logging
@@ -663,3 +665,10 @@ def test_span_groups(en_tokenizer):
     assert doc.spans["hi"].has_overlap
     del doc.spans["hi"]
     assert "hi" not in doc.spans
+
+
+def test_doc_spans_copy(en_tokenizer):
+    doc1 = en_tokenizer("Some text about Colombia and the Czech Republic")
+    assert weakref.ref(doc1) == doc1.spans.doc_ref
+    doc2 = doc1.copy()
+    assert weakref.ref(doc2) == doc2.spans.doc_ref
