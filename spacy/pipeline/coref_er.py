@@ -108,13 +108,13 @@ class CorefEntityRecognizer(Pipe):
             spans.extend([m for m in matches if self._string_offset(m) not in offsets])
             offsets.update([self._string_offset(m) for m in matches])
 
-            # noun_chunks
+            # noun_chunks - only if implemented and parsing information is available
             try:
                 spans.extend(
                     [nc for nc in doc.noun_chunks if self._string_offset(nc) not in offsets]
                 )
                 offsets.update([self._string_offset(nc) for nc in doc.noun_chunks])
-            except NotImplementedError:
+            except (NotImplementedError, ValueError):
                 pass
 
             self.set_annotations(doc, spans)
@@ -201,7 +201,11 @@ class CorefEntityRecognizer(Pipe):
         DOCS: https://spacy.io/api/coref_er#to_disk (TODO)
         """
         path = ensure_path(path)
-        cfg = {}
+        cfg = {
+            "span_mentions": self.span_mentions,
+            "matcher_key": self.matcher_key,
+            "matcher_values": self.matcher_values,
+        }
         serializers = {"cfg": lambda p: srsly.write_json(p, cfg)}
         to_disk(path, serializers, {})
 

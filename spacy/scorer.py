@@ -479,6 +479,7 @@ class Scorer:
                 f"{attr}_f": None,
                 f"{attr}_per_type": None,
             }
+        return final_scores
 
     @staticmethod
     def score_cats(

@@ -56,7 +56,7 @@ def make_coref(
     model,
     span_mentions: str,
     span_cluster_prefix: str,
-) -> "CorefResolution":
+) -> "CoreferenceResolver":
     """Create a CoreferenceResolver component. TODO
 
     model (Model[List[Doc], List[Floats2d]]): A model instance that predicts ...
@@ -92,7 +92,7 @@ class CoreferenceResolver(TrainablePipe):
         model (thinc.api.Model): The Thinc Model powering the pipeline component.
         name (str): The component instance name, used to add entries to the
             losses during training.
-        span_mentions (str): Key in doc.spans whereh the candidate coref mentions
+        span_mentions (str): Key in doc.spans where the candidate coref mentions
             are stored in.
         span_cluster_prefix (str): Prefix for the key in doc.spans to store the
             coref clusters in.
