@@ -17,7 +17,7 @@ from spacy.schemas import ConfigSchemaTraining
 
 from thinc.api import get_current_ops, NumpyOps, CupyOps
 
-from .util import get_random_doc, make_named_tempfile
+from .util import get_random_doc, make_tempdir
 
 
 @pytest.fixture
@@ -369,11 +369,12 @@ def make_dummy_component(
     return DummyComponent(nlp.vocab, name)
 """
 
-    with make_named_tempfile(mode="w", suffix=".py") as fileh:
-        fileh.write(code_str)
-        fileh.flush()
+    with make_tempdir() as temp_dir:
+        code_path = os.path.join(temp_dir, "code.py")
+        with open(code_path, "w") as fileh:
+            fileh.write(code_str)
 
-        import_file("python_code", fileh.name)
+        import_file("python_code", code_path)
         config = {"initialize": {"components": {"dummy_component": {"dummy_param": 1}}}}
         nlp = English.from_config(config)
         nlp.add_pipe("dummy_component")

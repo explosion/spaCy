@@ -14,13 +14,6 @@ def make_tempfile(mode="r"):
     f.close()
 
 
-@contextlib.contextmanager
-def make_named_tempfile(mode="r", suffix=None):
-    f = tempfile.NamedTemporaryFile(mode=mode, suffix=suffix)
-    yield f
-    f.close()
-
-
 def get_batch(batch_size):
     vocab = Vocab()
     docs = []
