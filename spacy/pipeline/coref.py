@@ -57,12 +57,12 @@ def make_coref(
     span_mentions: str,
     span_cluster_prefix: str,
 ) -> "CorefResolution":
-    """Create a CorefResolution component. TODO
+    """Create a CoreferenceResolver component. TODO
 
     model (Model[List[Doc], List[Floats2d]]): A model instance that predicts ...
     threshold (float): Cutoff to consider a prediction "positive".
     """
-    return CorefResolution(
+    return CoreferenceResolver(
         nlp.vocab,
         model,
         name,
@@ -71,7 +71,7 @@ def make_coref(
     )
 
 
-class CorefResolution(TrainablePipe):
+class CoreferenceResolver(TrainablePipe):
     """Pipeline component for coreference resolution.
 
     DOCS: https://spacy.io/api/coref (TODO)
@@ -128,7 +128,7 @@ class CorefResolution(TrainablePipe):
         """Modify a batch of Doc objects, using pre-computed scores.
 
         docs (Iterable[Doc]): The documents to modify.
-        clusters: The span clusters, produced by CorefResolution.predict.
+        clusters: The span clusters, produced by CoreferenceResolver.predict.
 
         DOCS: https://spacy.io/api/coref#set_annotations (TODO)
         """
@@ -169,7 +169,7 @@ class CorefResolution(TrainablePipe):
         if losses is None:
             losses = {}
         losses.setdefault(self.name, 0.0)
-        validate_examples(examples, "CorefResolution.update")
+        validate_examples(examples, "CoreferenceResolver.update")
         if not any(len(eg.predicted) if eg.predicted else 0 for eg in examples):
             # Handle cases where there are no tokens in any docs.
             return losses
@@ -209,7 +209,7 @@ class CorefResolution(TrainablePipe):
             losses.setdefault(self.name, 0.0)
         if self._rehearsal_model is None:
             return losses
-        validate_examples(examples, "CorefResolution.rehearse")
+        validate_examples(examples, "CoreferenceResolver.rehearse")
         docs = [eg.predicted for eg in examples]
         if not any(len(doc) for doc in docs):
             # Handle cases where there are no tokens in any docs.
@@ -232,7 +232,7 @@ class CorefResolution(TrainablePipe):
         """
         raise NotImplementedError(
             Errors.E931.format(
-                parent="CorefResolution", method="add_label", name=self.name
+                parent="CoreferenceResolver", method="add_label", name=self.name
             )
         )
 
@@ -246,7 +246,7 @@ class CorefResolution(TrainablePipe):
 
         DOCS: https://spacy.io/api/coref#get_loss (TODO)
         """
-        validate_examples(examples, "CorefResolution.get_loss")
+        validate_examples(examples, "CoreferenceResolver.get_loss")
         # TODO
         return None
 
@@ -265,7 +265,7 @@ class CorefResolution(TrainablePipe):
 
         DOCS: https://spacy.io/api/coref#initialize (TODO)
         """
-        validate_get_examples(get_examples, "CorefResolution.initialize")
+        validate_get_examples(get_examples, "CoreferenceResolver.initialize")
         subbatch = list(islice(get_examples(), 10))
         doc_sample = [eg.reference for eg in subbatch]
         assert len(doc_sample) > 0, Errors.E923.format(name=self.name)
@@ -281,7 +281,7 @@ class CorefResolution(TrainablePipe):
         """
         def clusters_getter(doc, span_key):
             return [spans for name, spans in doc.spans.items() if name.startswith(span_key)]
-        validate_examples(examples, "CorefResolution.score")
+        validate_examples(examples, "CoreferenceResolver.score")
         kwargs.setdefault("getter", clusters_getter)
         kwargs.setdefault("attr", self.span_cluster_prefix)
         kwargs.setdefault("include_label", False)
