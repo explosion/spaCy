@@ -487,6 +487,9 @@ class Errors:
 
     # New errors added in v3.x
 
+    E880 = ("The 'wandb' library could not be found - did you install it? "
+            "Alternatively, specify the 'ConsoleLogger' in the 'training.logger' "
+            "config section, instead of the 'WandbLogger'.")
     E885 = ("entity_linker.set_kb received an invalid 'kb_loader' argument: expected "
             "a callable function, but got: {arg_type}")
     E886 = ("Can't replace {name} -> {tok2vec} listeners: path '{path}' not "
