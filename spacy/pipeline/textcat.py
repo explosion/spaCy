@@ -323,9 +323,9 @@ class TextCategorizer(TrainablePipe):
 
         DOCS: https://spacy.io/api/textcategorizer#initialize
         """
-        validate_get_examples(get_examples, "TextCategorizer.initialize")
-        self._validate_categories(get_examples())
         if labels is None:
+            validate_get_examples(get_examples, "TextCategorizer.initialize")
+            self._validate_categories(get_examples())
             for example in get_examples():
                 for cat in example.y.cats:
                     self.add_label(cat)

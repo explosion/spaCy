@@ -151,8 +151,8 @@ class MultiLabel_TextCategorizer(TextCategorizer):
 
         DOCS: https://spacy.io/api/multilabel_textcategorizer#initialize
         """
-        validate_get_examples(get_examples, "MultiLabel_TextCategorizer.initialize")
         if labels is None:
+            validate_get_examples(get_examples, "MultiLabel_TextCategorizer.initialize")
             for example in get_examples():
                 for cat in example.y.cats:
                     self.add_label(cat)
