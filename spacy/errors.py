@@ -321,7 +321,8 @@ class Errors:
             "https://spacy.io/api/top-level#util.filter_spans")
     E103 = ("Trying to set conflicting doc.ents: '{span1}' and '{span2}'. A "
             "token can only be part of one entity, so make sure the entities "
-            "you're setting don't overlap.")
+            "you're setting don't overlap. To work with overlapping entities, "
+            "consider using doc.spans instead.")
     E106 = ("Can't find `doc._.{attr}` attribute specified in the underscore "
             "settings: {opts}")
     E107 = ("Value of `doc._.{attr}` is not JSON-serializable: {value}")
@@ -487,6 +488,9 @@ class Errors:
 
     # New errors added in v3.x
 
+    E879 = ("Unexpected type for 'spans' data. Provide a dictionary mapping keys to "
+            "a list of spans, with each span represented by a tuple (start_char, end_char). "
+            "The tuple can be optionally extended with a label and a KB ID.")
     E880 = ("The 'wandb' library could not be found - did you install it? "
             "Alternatively, specify the 'ConsoleLogger' in the 'training.logger' "
             "config section, instead of the 'WandbLogger'.")
