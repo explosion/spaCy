@@ -314,6 +314,9 @@ class Scorer:
         getter (Callable[[Doc, str], Iterable[Span]]): Defaults to getattr. If
             provided, getter(doc, attr) should return the spans for the
             individual doc.
+        has_annotation (Optional[Callable[[Doc], bool]]) should return whether a `Doc`
+            has annotation for this `attr`. Docs without annotation are skipped for
+            scoring purposes.
         RETURNS (Dict[str, Any]): A dictionary containing the PRF scores under
             the keys attr_p/r/f and the per-type PRF scores under attr_per_type.
 
@@ -324,7 +327,7 @@ class Scorer:
         for example in examples:
             pred_doc = example.predicted
             gold_doc = example.reference
-            # Option to handle docs without sents
+            # Option to handle docs without annotation for this attribute
             if has_annotation is not None:
                 if not has_annotation(gold_doc):
                     continue

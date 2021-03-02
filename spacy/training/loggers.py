@@ -103,7 +103,11 @@ def console_logger(progress_bar: bool = False):
 
 @registry.loggers("spacy.WandbLogger.v1")
 def wandb_logger(project_name: str, remove_config_values: List[str] = []):
-    import wandb
+    try:
+        import wandb
+        from wandb import init, log, join  # test that these are available
+    except ImportError:
+        raise ImportError(Errors.E880)
 
     console = console_logger(progress_bar=False)
 

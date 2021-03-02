@@ -22,21 +22,21 @@ ar:
 bg:
   word_vectors: null
   transformer:
-  efficiency:
-    name: iarfmoose/roberta-base-bulgarian
-    size_factor: 3
-  accuracy:
-    name: iarfmoose/roberta-base-bulgarian
-    size_factor: 3
+    efficiency:
+      name: iarfmoose/roberta-base-bulgarian
+      size_factor: 3
+    accuracy:
+      name: iarfmoose/roberta-base-bulgarian
+      size_factor: 3
 bn:
   word_vectors: null
   transformer:
-  efficiency:
-    name: sagorsarker/bangla-bert-base
-    size_factor: 3
-  accuracy:
-    name: sagorsarker/bangla-bert-base
-    size_factor: 3
+    efficiency:
+      name: sagorsarker/bangla-bert-base
+      size_factor: 3
+    accuracy:
+      name: sagorsarker/bangla-bert-base
+      size_factor: 3
 da:
   word_vectors: da_core_news_lg
   transformer:

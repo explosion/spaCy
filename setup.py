@@ -204,7 +204,7 @@ def setup_package():
     for name in MOD_NAMES:
         mod_path = name.replace(".", "/") + ".pyx"
         ext = Extension(
-            name, [mod_path], language="c++", extra_compile_args=["-std=c++11"]
+            name, [mod_path], language="c++", include_dirs=include_dirs, extra_compile_args=["-std=c++11"]
         )
         ext_modules.append(ext)
     print("Cythonizing sources")
@@ -216,7 +216,6 @@ def setup_package():
         version=about["__version__"],
         ext_modules=ext_modules,
         cmdclass={"build_ext": build_ext_subclass},
-        include_dirs=include_dirs,
         package_data={"": ["*.pyx", "*.pxd", "*.pxi"]},
     )
 
