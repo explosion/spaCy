@@ -3,7 +3,7 @@ from wasabi import Printer
 import tqdm
 import sys
 
-from ..util import registry
+from ..util import registry, flatten_dictionary
 from .. import util
 from ..errors import Errors
 
@@ -175,22 +175,6 @@ def comet_logger(project_name: str, remove_config_values: List[str] = []):
 
         # Get methods for step console processing:
         console_log_step, console_finalize = console(nlp, stdout, stderr)
-
-        def flatten_dictionary(prefix, dictionary, results):
-            """
-            Recursively construct key/value pair.
-            """
-            for key, value in dictionary.items():
-                if isinstance(value, dict):
-                    if prefix:
-                        flatten_dictionary(prefix + "/" + key, value, results)
-                    else:
-                        flatten_dictionary(key, value, results)
-                else:
-                    if prefix:
-                        results[prefix + "/" + key] = value
-                    else:
-                        results[key] = value
 
         def log_step(info: Optional[Dict[str, Any]]):
             console_log_step(info)

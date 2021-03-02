@@ -1474,6 +1474,28 @@ def check_bool_env_var(env_var: str) -> bool:
     return bool(value)
 
 
+def flatten_dictionary(prefix: str, dictionary: Dict[Any, Any],
+                       results: Dict[str, Any]):
+    """Recursively construct "prefix/key", value pairs and
+    add them to the results dictionary.
+
+    prefix (str): prefix of higher-level keys
+    dictionary (dict): the current dictionary to flatten
+    results (dict): where the flattened key/values go
+    """
+    for key, value in dictionary.items():
+        if isinstance(value, dict):
+            if prefix:
+                flatten_dictionary(prefix + "/" + key, value, results)
+            else:
+                flatten_dictionary(key, value, results)
+        else:
+            if prefix:
+                results[prefix + "/" + key] = value
+            else:
+                results[key] = value
+
+
 def _pipe(docs, proc, name, default_error_handler, kwargs):
     if hasattr(proc, "pipe"):
         yield from proc.pipe(docs, **kwargs)
