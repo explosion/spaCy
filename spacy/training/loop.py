@@ -234,7 +234,7 @@ def train_while_improving(
         # same score, i.e. (1.0, 100) is chosen over (1.0, 200)
         best_score, neg_best_step = max((r_score, -r_step) for r_score, r_step in results)
         if patience and (step + neg_best_step) >= patience:
-            print(patience, step, neg_best_step, results)
+            break
         # Stop if we've exhausted our max steps (if specified)
         if max_steps and step >= max_steps:
             break
