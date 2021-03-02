@@ -387,8 +387,8 @@ and the accuracy scores on the development set.
 There are three built-in logging functions:
 
 1. a logger that prints results to the console in tabular format (the default)
-2. a logger that sends the results to a [Weights & Biases](https://www.wandb.com/) dashboard
-3. a logger that sends the results to a [Comet.ML](https://www.comet.ml/)
+2. a logger that sends the results to a [Comet.ML](https://www.comet.ml/)
+3. a logger that sends the results to a [Weights & Biases](https://www.wandb.com/) dashboard
 
 In addition to using one of the built-in loggers listed here, you
 can also [implement your own](/usage/training#custom-logging).
