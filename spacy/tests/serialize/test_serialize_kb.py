@@ -108,7 +108,7 @@ def test_serialize_subclassed_kb():
             super().__init__(vocab, entity_vector_length)
             self.custom_field = custom_field
 
-    @registry.misc.register("spacy.CustomKB.v1")
+    @registry.misc("spacy.CustomKB.v1")
     def custom_kb(
         entity_vector_length: int, custom_field: int
     ) -> Callable[["Vocab"], KnowledgeBase]:
