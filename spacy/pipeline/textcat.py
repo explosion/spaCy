@@ -121,9 +121,8 @@ class TextCategorizer(TrainablePipe):
         self.vocab = vocab
         self.model = model
         self.name = name
-        self.threshold = threshold
         self._rehearsal_model = None
-        cfg = {"labels": [], "positive_label": None}
+        cfg = {"labels": [], "threshold": threshold, "positive_label": None}
         self.cfg = dict(cfg)
 
     @property
@@ -359,7 +358,7 @@ class TextCategorizer(TrainablePipe):
         """
         validate_examples(examples, "TextCategorizer.score")
         self._validate_categories(examples)
-        kwargs.setdefault("threshold", self.threshold)
+        kwargs.setdefault("threshold", self.cfg["threshold"])
         kwargs.setdefault("positive_label", self.cfg["positive_label"])
         return Scorer.score_cats(
             examples,
