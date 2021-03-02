@@ -230,9 +230,11 @@ def train_while_improving(
         if is_best_checkpoint is not None:
             losses = {}
         # Stop if no improvement in `patience` updates (if specified)
-        best_score, best_step = max(results)
-        if patience and (step - best_step) >= patience:
-            break
+        # Negate step value so that the earliest best step is chosen for the
+        # same score, i.e. (1.0, 100) is chosen over (1.0, 200)
+        best_score, neg_best_step = max((r_score, -r_step) for r_score, r_step in results)
+        if patience and (step + neg_best_step) >= patience:
+            print(patience, step, neg_best_step, results)
         # Stop if we've exhausted our max steps (if specified)
         if max_steps and step >= max_steps:
             break
