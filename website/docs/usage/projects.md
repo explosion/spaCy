@@ -1007,13 +1007,13 @@ your results.
 
 ### Comet {#comet} <IntegrationLogo name="comet" width={175} height="auto" align="right" />
 
-[Comet.ML](https://www.comet.ml/), like spaCy itself, is out of this
-world. Comet enables teams to track, explain, and optimize spaCy experiments
-and models. You can enable Comet integration with the
-[`CometLogger`](/api/top-level#CometLogger) added in the `[training.logger]`
-block of your training [config](/usage/training#config). All of your training metrics,
-hyperparameters, and config settings will be logged to the server where they
-can be fully monitored, plotted, and diffed.
+[Comet.ML](https://www.comet.ml/) enables teams to track, explain, and
+optimize spaCy experiments and models. You can enable Comet
+integration with the [`CometLogger`](/api/top-level#CometLogger) added
+in the `[training.logger]` block of your training
+[config](/usage/training#config). All of your training metrics,
+hyperparameters, and config settings will be logged to the server
+where they can be fully monitored, plotted, and diffed.
 
 > #### Example config
 >
