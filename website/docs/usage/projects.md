@@ -1005,7 +1005,7 @@ your results.
 
 ![Screenshot: Parameter importance using config values](../images/wandb2.jpg 'Parameter importance using config values')
 
-</Project>
+<Project id="integrations/wandb">
 
 Get started with tracking your spaCy training runs in Weights & Biases using our
 project template. It trains on the IMDB Movie Review Dataset and includes a
