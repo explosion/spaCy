@@ -1496,6 +1496,22 @@ def flatten_dictionary(prefix: str, dictionary: Dict[Any, Any],
                 results[key] = value
 
 
+def get_filtered_config(nlp: "Language", remove_config_values: List[str]):
+    """Get the nlp config, and remove list of dotted names.
+
+    nlp (Language): the loaded NLP object
+    remove_config_values (List[str]): list of dotted-names to remove
+        from config.
+
+    Returns the config with names removed.
+    """
+    config = nlp.config.interpolate()
+    config_dot = dict_to_dot(config)
+    for field in remove_config_values:
+        del config_dot[field]
+    return dot_to_dict(config_dot)
+
+
 def _pipe(docs, proc, name, default_error_handler, kwargs):
     if hasattr(proc, "pipe"):
         yield from proc.pipe(docs, **kwargs)

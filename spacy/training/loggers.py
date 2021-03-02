@@ -3,7 +3,7 @@ from wasabi import Printer
 import tqdm
 import sys
 
-from ..util import registry, flatten_dictionary
+from ..util import registry, flatten_dictionary, get_filtered_config
 from .. import util
 from ..errors import Errors
 
@@ -114,11 +114,9 @@ def wandb_logger(project_name: str, remove_config_values: List[str] = []):
     def setup_logger(
         nlp: "Language", stdout: IO = sys.stdout, stderr: IO = sys.stderr
     ) -> Tuple[Callable[[Dict[str, Any]], None], Callable[[], None]]:
-        config = nlp.config.interpolate()
-        config_dot = util.dict_to_dot(config)
-        for field in remove_config_values:
-            del config_dot[field]
-        config = util.dot_to_dict(config_dot)
+
+        config = get_filtered_config(nlp, remove_config_values)
+
         wandb.init(project=project_name, config=config, reinit=True)
         console_log_step, console_finalize = console(nlp, stdout, stderr)
 
@@ -163,12 +161,7 @@ def comet_logger(project_name: str, remove_config_values: List[str] = []):
             raise ValueError(errors.E881.format(
                 library="Comet", url="https://comet.ml/docs/python-sdk/spacy/")) from None
 
-        # Get the config, removing items if necessary:
-        config = nlp.config.interpolate()
-        config_dot = util.dict_to_dot(config)
-        for field in remove_config_values:
-            del config_dot[field]
-        config = util.dot_to_dict(config_dot)
+        config = get_filtered_config(nlp, remove_config_values)
 
         if experiment is not None:
             experiment.log_asset_data(config, "spacy-config.cfg")
