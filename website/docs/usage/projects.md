@@ -1005,6 +1005,16 @@ your results.
 
 ![Screenshot: Parameter importance using config values](../images/wandb2.jpg 'Parameter importance using config values')
 
+</Project>
+
+Get started with tracking your spaCy training runs in Weights & Biases using our
+project template. It trains on the IMDB Movie Review Dataset and includes a
+simple config with the built-in `WandbLogger`, as well as a custom example of
+creating variants of the config for a simple hyperparameter grid search and
+logging the results.
+
+</Project>
+
 ### Comet {#comet} <IntegrationLogo name="comet" width={175} height="auto" align="right" />
 
 [Comet.ML](https://www.comet.ml/) enables teams to track, explain, and
