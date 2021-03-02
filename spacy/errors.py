@@ -491,9 +491,10 @@ class Errors:
     E879 = ("Unexpected type for 'spans' data. Provide a dictionary mapping keys to "
             "a list of spans, with each span represented by a tuple (start_char, end_char). "
             "The tuple can be optionally extended with a label and a KB ID.")
-    E880 = ("The 'wandb' library could not be found - did you install it? "
+    E880 = ("The '{library}' library could not be found - did you install it? "
             "Alternatively, specify the 'ConsoleLogger' in the 'training.logger' "
-            "config section, instead of the 'WandbLogger'.")
+            "config section, instead of the '{logger}'.")
+    E881 = ("You need to configure {library}, and run appropriately: see: {url}")
     E885 = ("entity_linker.set_kb received an invalid 'kb_loader' argument: expected "
             "a callable function, but got: {arg_type}")
     E886 = ("Can't replace {name} -> {tok2vec} listeners: path '{path}' not "

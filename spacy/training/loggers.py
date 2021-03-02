@@ -107,7 +107,7 @@ def wandb_logger(project_name: str, remove_config_values: List[str] = []):
         import wandb
         from wandb import init, log, join  # test that these are available
     except ImportError:
-        raise ImportError(Errors.E880)
+        raise ImportError(errors.E880.format(library="wandb", logger="WandbLogger")) from None
 
     console = console_logger(progress_bar=False)
 
@@ -148,7 +148,7 @@ def comet_logger(project_name: str, remove_config_values: List[str] = []):
     try:
         import comet_ml
     except ImportError:
-        print("You need to install `comet_ml` to use the CometLogger: see: https://comet.ml/docs/python-sdk/spacy/")
+        raise ImportError(errors.E880.format(library="comet_ml", logger="CometLogger")) from None
 
     console = console_logger(progress_bar=False)
 
@@ -160,7 +160,8 @@ def comet_logger(project_name: str, remove_config_values: List[str] = []):
             experiment = comet_ml.Experiment(project_name=project_name)
         except Exception:
             experiment = None
-            print("You need to configure Comet, and run appropriately: see: https://comet.ml/docs/python-sdk/spacy/")
+            raise ValueError(errors.E881.format(
+                library="Comet", url="https://comet.ml/docs/python-sdk/spacy/")) from None
 
         # Get the config, removing items if necessary:
         config = nlp.config.interpolate()
