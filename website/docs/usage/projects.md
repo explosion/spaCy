@@ -252,7 +252,7 @@ can be fully monitored, plotted, and diffed.
 
 <Project id="integrations/comet">
 
-Get started with tracking your spaCy training runs in Weights & Biases using our
+Get started with tracking your spaCy training runs in Comet.ML using our
 project template. It trains on the IMDB Movie Review Dataset and includes a
 simple config with the built-in `CometLogger`, as well as a custom example of
 creating variants of the config for a simple hyperparameter grid search and
