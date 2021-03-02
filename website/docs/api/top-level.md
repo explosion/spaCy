@@ -505,8 +505,8 @@ in. This includes training and evaluation metrics and parameters, but
 also details on the Python and OS environment, output, and system usage
 metrics. You can manage running experiments, see `diffs` with other
 experiments, and share analyses through custom visualizations with
-your team at [Comet.ML](https://www.comet.ml/) . Of course, you can
-control exactly which items are logged, or not, through configuration
+your team at [Comet.ML](https://www.comet.ml/). You can
+control which items are logged through configuration
 settings. To create your Comet.ML API key, visit:
 [www.comet.ml/docs/python-sdk/spacy](https://www.comet.ml/docs/python-sdk/spacy/)
 
