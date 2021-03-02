@@ -70,7 +70,7 @@ CONFIG_SECTION_ORDER = ["paths", "variables", "system", "nlp", "components", "co
 
 logger = logging.getLogger("spacy")
 logger_stream_handler = logging.StreamHandler()
-logger_stream_handler.setFormatter(logging.Formatter("%(message)s"))
+logger_stream_handler.setFormatter(logging.Formatter("[%(asctime)s] [%(levelname)s] %(message)s"))
 logger.addHandler(logger_stream_handler)
 
 
@@ -930,6 +930,8 @@ def is_same_func(func1: Callable, func2: Callable) -> bool:
     """
     if not callable(func1) or not callable(func2):
         return False
+    if not hasattr(func1, "__qualname__") or not hasattr(func2, "__qualname__"):
+        return False
     same_name = func1.__qualname__ == func2.__qualname__
     same_file = inspect.getfile(func1) == inspect.getfile(func2)
     same_code = inspect.getsourcelines(func1) == inspect.getsourcelines(func2)
@@ -1452,9 +1454,10 @@ def is_cython_func(func: Callable) -> bool:
     if hasattr(func, attr):  # function or class instance
         return True
     # https://stackoverflow.com/a/55767059
-    if hasattr(func, "__qualname__") and hasattr(func, "__module__"):  # method
-        cls_func = vars(sys.modules[func.__module__])[func.__qualname__.split(".")[0]]
-        return hasattr(cls_func, attr)
+    if hasattr(func, "__qualname__") and hasattr(func, "__module__") \
+        and func.__module__ in sys.modules:  # method
+            cls_func = vars(sys.modules[func.__module__])[func.__qualname__.split(".")[0]]
+            return hasattr(cls_func, attr)
     return False
 
 

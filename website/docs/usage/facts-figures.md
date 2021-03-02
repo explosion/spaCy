@@ -77,7 +77,7 @@ import Benchmarks from 'usage/\_benchmarks-models.md'
 
 | Dependency Parsing System                                                      |  UAS |  LAS |
 | ------------------------------------------------------------------------------ | ---: | ---: |
-| spaCy RoBERTa (2020)                                                           | 95.5 | 94.3 |
+| spaCy RoBERTa (2020)                                                           | 95.1 | 93.7 |
 | [Mrini et al.](https://khalilmrini.github.io/Label_Attention_Layer.pdf) (2019) | 97.4 | 96.3 |
 | [Zhou and Zhao](https://www.aclweb.org/anthology/P19-1230/) (2019)             | 97.2 | 95.7 |
 

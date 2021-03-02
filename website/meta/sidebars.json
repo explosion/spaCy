@@ -37,7 +37,8 @@
             {
                 "label": "Resources",
                 "items": [
-                    { "text": "Project Templates", "url": "https://github.com/explosion/projects" }
+                    { "text": "Project Templates", "url": "https://github.com/explosion/projects" },
+                    { "text": "v2.x Documentation", "url": "https://v2.spacy.io" }
                 ]
             }
         ]

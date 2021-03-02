@@ -132,7 +132,7 @@ def evaluate(
 
     if displacy_path:
         factory_names = [nlp.get_pipe_meta(pipe).factory for pipe in nlp.pipe_names]
-        docs = [ex.predicted for ex in dev_dataset]
+        docs = list(nlp.pipe(ex.reference.text for ex in dev_dataset[:displacy_limit]))
         render_deps = "parser" in factory_names
         render_ents = "ner" in factory_names
         render_parses(
@@ -175,10 +175,13 @@ def render_parses(
 def print_prf_per_type(
     msg: Printer, scores: Dict[str, Dict[str, float]], name: str, type: str
 ) -> None:
-    data = [
-        (k, f"{v['p']*100:.2f}", f"{v['r']*100:.2f}", f"{v['f']*100:.2f}")
-        for k, v in scores.items()
-    ]
+    data = []
+    for key, value in scores.items():
+        row = [key]
+        for k in ("p", "r", "f"):
+            v = value[k]
+            row.append(f"{v * 100:.2f}" if isinstance(v, (int, float)) else v)
+        data.append(row)
     msg.table(
         data,
         header=("", "P", "R", "F"),
@@ -191,7 +194,10 @@ def print_textcats_auc_per_cat(
     msg: Printer, scores: Dict[str, Dict[str, float]]
 ) -> None:
     msg.table(
-        [(k, f"{v:.2f}") for k, v in scores.items()],
+        [
+            (k, f"{v:.2f}" if isinstance(v, (float, int)) else v)
+            for k, v in scores.items()
+        ],
         header=("", "ROC AUC"),
         aligns=("l", "r"),
         title="Textcat ROC AUC (per label)",

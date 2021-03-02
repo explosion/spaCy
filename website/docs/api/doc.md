@@ -219,7 +219,7 @@ alignment mode `"strict".
 | `alignment_mode`                     | How character indices snap to token boundaries. Options: `"strict"` (no snapping), `"contract"` (span of all tokens completely within the character span), `"expand"` (span of all tokens at least partially covered by the character span). Defaults to `"strict"`. ~~str~~ |
 | **RETURNS**                          | The newly constructed object or `None`. ~~Optional[Span]~~                                                                                                                                                                                                                   |
 
-## Doc.set_ents {#ents tag="method" new="3"}
+## Doc.set_ents {#set_ents tag="method" new="3"}
 
 Set the named entities in the document.
 
@@ -616,8 +616,10 @@ phrase, or "NP chunk", is a noun phrase that does not permit other NPs to be
 nested within it – so no NP-level coordination, no prepositional phrases, and no
 relative clauses.
 
-If the `noun_chunk` [syntax iterator](/usage/adding-languages#language-data) has
-not been implemeted for the given language, a `NotImplementedError` is raised.
+To customize the noun chunk iterator in a loaded pipeline, modify
+[`nlp.vocab.get_noun_chunks`](/api/vocab#attributes). If the `noun_chunk`
+[syntax iterator](/usage/adding-languages#language-data) has not been
+implemented for the given language, a `NotImplementedError` is raised.
 
 > #### Example
 >
@@ -633,12 +635,14 @@ not been implemeted for the given language, a `NotImplementedError` is raised.
 | ---------- | ------------------------------------- |
 | **YIELDS** | Noun chunks in the document. ~~Span~~ |
 
-## Doc.sents {#sents tag="property" model="parser"}
+## Doc.sents {#sents tag="property" model="sentences"}
 
-Iterate over the sentences in the document. Sentence spans have no label. To
-improve accuracy on informal texts, spaCy calculates sentence boundaries from
-the syntactic dependency parse. If the parser is disabled, the `sents` iterator
-will be unavailable.
+Iterate over the sentences in the document. Sentence spans have no label.
+
+This property is only available when
+[sentence boundaries](/usage/linguistic-features#sbd) have been set on the
+document by the `parser`, `senter`, `sentencizer` or some custom function. It
+will raise an error otherwise.
 
 > #### Example
 >

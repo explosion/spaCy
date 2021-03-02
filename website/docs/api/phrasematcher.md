@@ -44,7 +44,7 @@ be shown.
 
 ## PhraseMatcher.\_\_call\_\_ {#call tag="method"}
 
-Find all token sequences matching the supplied patterns on the `Doc`.
+Find all token sequences matching the supplied patterns on the `Doc` or `Span`.
 
 > #### Example
 >
@@ -59,7 +59,7 @@ Find all token sequences matching the supplied patterns on the `Doc`.
 
 | Name                                  | Description                                                                                                                                                                                                                                                                                              |
 | ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `doc`                                 | The document to match over. ~~Doc~~                                                                                                                                                                                                                                                                      |
+| `doclike`                             | The `Doc` or `Span` to match over. ~~Union[Doc, Span]~~                                                                                                                                                                                                                                                                      |
 | _keyword-only_                        |                                                                                                                                                                                                                                                                                                          |
 | `as_spans` <Tag variant="new">3</Tag> | Instead of tuples, return a list of [`Span`](/api/span) objects of the matches, with the `match_id` assigned as the span label. Defaults to `False`. ~~bool~~                                                                                                                                            |
 | **RETURNS**                           | A list of `(match_id, start, end)` tuples, describing the matches. A match tuple describes a span `doc[start:end`]. The `match_id` is the ID of the added match pattern. If `as_spans` is set to `True`, a list of `Span` objects is returned instead. ~~Union[List[Tuple[int, int, int]], List[Span]]~~ |

@@ -67,7 +67,7 @@ data format used by the lookup and rule-based lemmatizers, see
 > lemmatizer = nlp.add_pipe("lemmatizer")
 >
 > # Construction via add_pipe with custom settings
-> config = {"mode": "rule", overwrite=True}
+> config = {"mode": "rule", "overwrite": True}
 > lemmatizer = nlp.add_pipe("lemmatizer", config=config)
 > ```
 

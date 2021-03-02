@@ -198,6 +198,7 @@
             "has_examples": true
         },
         { "code": "tl", "name": "Tagalog" },
+        { "code": "tn", "name": "Setswana", "has_examples": true },
         { "code": "tr", "name": "Turkish", "example": "Bu bir cümledir.", "has_examples": true },
         { "code": "tt", "name": "Tatar", "has_examples": true },
         {

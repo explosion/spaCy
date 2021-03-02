@@ -278,7 +278,7 @@ cdef cppclass StateC:
         return this._stack.size()
 
     int buffer_length() nogil const:
-        return this.length - this._b_i
+        return (this.length - this._b_i) + this._rebuffer.size()
 
     void push() nogil:
         b0 = this.B(0)

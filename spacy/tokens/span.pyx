@@ -357,7 +357,12 @@ cdef class Span:
 
     @property
     def sent(self):
-        """RETURNS (Span): The sentence span that the span is a part of."""
+        """Obtain the sentence that contains this span. If the given span
+        crosses sentence boundaries, return only the first sentence
+        to which it belongs.
+
+        RETURNS (Span): The sentence span that the span is a part of.
+        """
         if "sent" in self.doc.user_span_hooks:
             return self.doc.user_span_hooks["sent"](self)
         # Use `sent_start` token attribute to find sentence boundaries
@@ -367,8 +372,8 @@ cdef class Span:
             start = self.start
             while self.doc.c[start].sent_start != 1 and start > 0:
                 start += -1
-            # Find end of the sentence
-            end = self.end
+            # Find end of the sentence - can be within the entity
+            end = self.start + 1
             while end < self.doc.length and self.doc.c[end].sent_start != 1:
                 end += 1
                 n += 1
