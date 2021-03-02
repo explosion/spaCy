@@ -508,7 +508,7 @@ experiments, and share analyses through custom visualizations with
 your team at [Comet.ML](https://www.comet.ml/). You can
 control which items are logged through configuration
 settings. To create your Comet.ML API key, visit:
-[www.comet.ml/docs/python-sdk/spacy](https://www.comet.ml/docs/python-sdk/spacy/)
+[www.comet.ml/docs/python-sdk/spacy](https://www.comet.ml/docs/python-sdk/spacy/).
 
 > #### Example config
 >
