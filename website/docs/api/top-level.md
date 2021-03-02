@@ -481,16 +481,6 @@ remain in the config file stored on your local system.
 | `project_name`         | The name of the project in the Weights & Biases interface. The project will be created automatically if it doesn't exist yet. ~~str~~ |
 | `remove_config_values` | A list of values to include from the config before it is uploaded to W&B (default: empty). ~~List[str]~~                              |
 
-<Project id="integrations/wandb">
-
-Get started with tracking your spaCy training runs in Weights & Biases using our
-project template. It trains on the IMDB Movie Review Dataset and includes a
-simple config with the built-in `WandbLogger`, as well as a custom example of
-creating variants of the config for a simple hyperparameter grid search and
-logging the results.
-
-</Project>
-
 #### spacy.CometLogger.v1 {#CometLogger tag="registered function"}
 
 > #### Installation
@@ -523,14 +513,6 @@ settings. To create your Comet.ML API key, visit:
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | `project_name`         | The name of the project in your Comet.ML workspace. The project will be created automatically if it doesn't exist yet. ~~str~~ |
 | `remove_config_values` | A list of values to remove from the config before it is logged to Comet.ML (default: empty). ~~List[str]~~                              |
-
-<Project id="integrations/comet">
-
-To quickly see how easy it is to track your spaCy training runs in
-Comet.ML try our project template. It trains on the IMDB Movie Review
-Dataset and includes a simple config with the built-in `CometLogger`.
-
-</Project>
 
 ## Readers {#readers}
 
