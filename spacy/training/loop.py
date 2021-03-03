@@ -232,8 +232,9 @@ def train_while_improving(
         # Stop if no improvement in `patience` updates (if specified)
         # Negate step value so that the earliest best step is chosen for the
         # same score, i.e. (1.0, 100) is chosen over (1.0, 200)
-        best_score, neg_best_step = max((r_score, -r_step) for r_score, r_step in results)
-        if patience and (step + neg_best_step) >= patience:
+        best_result = max((r_score, -r_step) for r_score, r_step in results)
+        best_step = -best_result[1]
+        if patience and (step - best_step) >= patience:
             break
         # Stop if we've exhausted our max steps (if specified)
         if max_steps and step >= max_steps:
