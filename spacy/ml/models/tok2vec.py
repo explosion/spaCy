@@ -14,7 +14,7 @@ from ...pipeline.tok2vec import Tok2VecListener
 from ...attrs import intify_attr
 
 
-@registry.architectures.register("spacy.Tok2VecListener.v1")
+@registry.architectures("spacy.Tok2VecListener.v1")
 def tok2vec_listener_v1(width: int, upstream: str = "*"):
     tok2vec = Tok2VecListener(upstream_name=upstream, width=width)
     return tok2vec
@@ -31,7 +31,7 @@ def get_tok2vec_width(model: Model):
     return nO
 
 
-@registry.architectures.register("spacy.HashEmbedCNN.v1")
+@registry.architectures("spacy.HashEmbedCNN.v1")
 def build_hash_embed_cnn_tok2vec(
     *,
     width: int,
@@ -87,7 +87,7 @@ def build_hash_embed_cnn_tok2vec(
     )
 
 
-@registry.architectures.register("spacy.Tok2Vec.v2")
+@registry.architectures("spacy.Tok2Vec.v2")
 def build_Tok2Vec_model(
     embed: Model[List[Doc], List[Floats2d]],
     encode: Model[List[Floats2d], List[Floats2d]],
@@ -108,7 +108,7 @@ def build_Tok2Vec_model(
     return tok2vec
 
 
-@registry.architectures.register("spacy.MultiHashEmbed.v1")
+@registry.architectures("spacy.MultiHashEmbed.v1")
 def MultiHashEmbed(
     width: int,
     attrs: List[Union[str, int]],
@@ -182,7 +182,7 @@ def MultiHashEmbed(
     return model
 
 
-@registry.architectures.register("spacy.CharacterEmbed.v1")
+@registry.architectures("spacy.CharacterEmbed.v1")
 def CharacterEmbed(
     width: int,
     rows: int,
@@ -255,7 +255,7 @@ def CharacterEmbed(
     return model
 
 
-@registry.architectures.register("spacy.MaxoutWindowEncoder.v2")
+@registry.architectures("spacy.MaxoutWindowEncoder.v2")
 def MaxoutWindowEncoder(
     width: int, window_size: int, maxout_pieces: int, depth: int
 ) -> Model[List[Floats2d], List[Floats2d]]:
@@ -287,7 +287,7 @@ def MaxoutWindowEncoder(
     return with_array(model, pad=receptive_field)
 
 
-@registry.architectures.register("spacy.MishWindowEncoder.v2")
+@registry.architectures("spacy.MishWindowEncoder.v2")
 def MishWindowEncoder(
     width: int, window_size: int, depth: int
 ) -> Model[List[Floats2d], List[Floats2d]]:
@@ -310,7 +310,7 @@ def MishWindowEncoder(
     return with_array(model)
 
 
-@registry.architectures.register("spacy.TorchBiLSTMEncoder.v1")
+@registry.architectures("spacy.TorchBiLSTMEncoder.v1")
 def BiLSTMEncoder(
     width: int, depth: int, dropout: float
 ) -> Model[List[Floats2d], List[Floats2d]]:

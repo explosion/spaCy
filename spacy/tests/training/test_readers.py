@@ -27,7 +27,7 @@ def test_readers():
     factory = "textcat"
     """
 
-    @registry.readers.register("myreader.v1")
+    @registry.readers("myreader.v1")
     def myreader() -> Dict[str, Callable[[Language, str], Iterable[Example]]]:
         annots = {"cats": {"POS": 1.0, "NEG": 0.0}}
 
