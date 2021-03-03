@@ -314,6 +314,9 @@ class Scorer:
         getter (Callable[[Doc, str], Iterable[Span]]): Defaults to getattr. If
             provided, getter(doc, attr) should return the spans for the
             individual doc.
+        has_annotation (Optional[Callable[[Doc], bool]]) should return whether a `Doc`
+            has annotation for this `attr`. Docs without annotation are skipped for
+            scoring purposes.
         RETURNS (Dict[str, Any]): A dictionary containing the PRF scores under
             the keys attr_p/r/f and the per-type PRF scores under attr_per_type.
 
@@ -324,7 +327,7 @@ class Scorer:
         for example in examples:
             pred_doc = example.predicted
             gold_doc = example.reference
-            # Option to handle docs without sents
+            # Option to handle docs without annotation for this attribute
             if has_annotation is not None:
                 if not has_annotation(gold_doc):
                     continue
@@ -531,27 +534,28 @@ class Scorer:
                 gold_span = gold_ent_by_offset.get(
                     (pred_ent.start_char, pred_ent.end_char), None
                 )
-                label = gold_span.label_
-                if label not in f_per_type:
-                    f_per_type[label] = PRFScore()
-                gold = gold_span.kb_id_
-                # only evaluating entities that overlap between gold and pred,
-                # to disentangle the performance of the NEL from the NER
-                if gold is not None:
-                    pred = pred_ent.kb_id_
-                    if gold in negative_labels and pred in negative_labels:
-                        # ignore true negatives
-                        pass
-                    elif gold == pred:
-                        f_per_type[label].tp += 1
-                    elif gold in negative_labels:
-                        f_per_type[label].fp += 1
-                    elif pred in negative_labels:
-                        f_per_type[label].fn += 1
-                    else:
-                        # a wrong prediction (e.g. Q42 != Q3) counts as both a FP as well as a FN
-                        f_per_type[label].fp += 1
-                        f_per_type[label].fn += 1
+                if gold_span is not None:
+                    label = gold_span.label_
+                    if label not in f_per_type:
+                        f_per_type[label] = PRFScore()
+                    gold = gold_span.kb_id_
+                    # only evaluating entities that overlap between gold and pred,
+                    # to disentangle the performance of the NEL from the NER
+                    if gold is not None:
+                        pred = pred_ent.kb_id_
+                        if gold in negative_labels and pred in negative_labels:
+                            # ignore true negatives
+                            pass
+                        elif gold == pred:
+                            f_per_type[label].tp += 1
+                        elif gold in negative_labels:
+                            f_per_type[label].fp += 1
+                        elif pred in negative_labels:
+                            f_per_type[label].fn += 1
+                        else:
+                            # a wrong prediction (e.g. Q42 != Q3) counts as both a FP as well as a FN
+                            f_per_type[label].fp += 1
+                            f_per_type[label].fn += 1
         micro_prf = PRFScore()
         for label_prf in f_per_type.values():
             micro_prf.tp += label_prf.tp

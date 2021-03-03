@@ -58,7 +58,7 @@
             },
             "category": ["pipeline"],
             "tags": ["sentiment", "textblob"]
-	    },
+        },
         {
             "id": "spacy-ray",
             "title": "spacy-ray",
@@ -2647,14 +2647,14 @@
                 "github": "medspacy"
             }
         },
-	      {
+        {
             "id": "rita-dsl",
             "title": "RITA DSL",
             "slogan": "Domain Specific Language for creating language rules",
             "github": "zaibacu/rita-dsl",
             "description": "A Domain Specific Language (DSL) for building language patterns. These can be later compiled into spaCy patterns, pure regex, or any other format",
             "pip": "rita-dsl",
-	          "thumb": "https://raw.githubusercontent.com/zaibacu/rita-dsl/master/docs/assets/logo-100px.png",
+            "thumb": "https://raw.githubusercontent.com/zaibacu/rita-dsl/master/docs/assets/logo-100px.png",
             "code_language": "python",
             "code_example": [
                 "import spacy",
@@ -2754,14 +2754,41 @@
                 "{",
                 "    var lexeme = doc.Vocab[word.Text];",
                 "    Console.WriteLine($@\"{lexeme.Text} {lexeme.Orth} {lexeme.Shape} {lexeme.Prefix} {lexeme.Suffix} {lexeme.IsAlpha} {lexeme.IsDigit} {lexeme.IsTitle} {lexeme.Lang}\");",
-                "}"                
-            ],    
+                "}"
+            ],
             "code_language": "csharp",
             "author": "Antonio Miras",
             "author_links": {
                 "github": "AMArostegui"
             },
             "category": ["nonpython"]
+        },
+        {
+            "id": "ruts",
+            "title": "ruTS",
+            "slogan": "A library for statistics extraction from texts in Russian",
+            "description": "The library allows extracting the following statistics from a text: basic statistics, readability metrics, lexical diversity metrics, morphological statistics",
+            "github": "SergeyShk/ruTS",
+            "pip": "ruts",
+            "code_example": [
+                "import spacy",
+                "import ruts",
+                "",
+                "nlp = spacy.load('ru_core_news_sm')",
+                "nlp.add_pipe('basic', last=True)",
+                "doc = nlp('мама мыла раму')",
+                "doc._.basic.get_stats()"
+            ],
+            "code_language": "python",
+            "thumb": "https://habrastorage.org/webt/6z/le/fz/6zlefzjavzoqw_wymz7v3pwgfp4.png",
+            "image": "https://clipartart.com/images/free-tree-roots-clipart-black-and-white-2.png",
+            "author": "Sergey Shkarin",
+            "author_links": {
+                "twitter": "shk_sergey",
+                "github": "SergeyShk"
+            },
+            "category": ["pipeline", "standalone"],
+            "tags": ["Text Analytics", "Russian"]
         }
     ],
 

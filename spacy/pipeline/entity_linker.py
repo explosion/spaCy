@@ -45,6 +45,7 @@ DEFAULT_NEL_MODEL = Config().from_str(default_model_config)["model"]
     default_config={
         "model": DEFAULT_NEL_MODEL,
         "labels_discard": [],
+        "n_sents": 0,
         "incl_prior": True,
         "incl_context": True,
         "entity_vector_length": 64,
@@ -62,6 +63,7 @@ def make_entity_linker(
     model: Model,
     *,
     labels_discard: Iterable[str],
+    n_sents: int,
     incl_prior: bool,
     incl_context: bool,
     entity_vector_length: int,
@@ -73,6 +75,7 @@ def make_entity_linker(
         representations. Given a batch of Doc objects, it should return a single
         array, with one row per item in the batch.
     labels_discard (Iterable[str]): NER labels that will automatically get a "NIL" prediction.
+    n_sents (int): The number of neighbouring sentences to take into account.
     incl_prior (bool): Whether or not to include prior probabilities from the KB in the model.
     incl_context (bool): Whether or not to include the local context in the model.
     entity_vector_length (int): Size of encoding vectors in the KB.
@@ -84,6 +87,7 @@ def make_entity_linker(
         model,
         name,
         labels_discard=labels_discard,
+        n_sents=n_sents,
         incl_prior=incl_prior,
         incl_context=incl_context,
         entity_vector_length=entity_vector_length,
@@ -106,6 +110,7 @@ class EntityLinker(TrainablePipe):
         name: str = "entity_linker",
         *,
         labels_discard: Iterable[str],
+        n_sents: int,
         incl_prior: bool,
         incl_context: bool,
         entity_vector_length: int,
@@ -118,6 +123,7 @@ class EntityLinker(TrainablePipe):
         name (str): The component instance name, used to add entries to the
             losses during training.
         labels_discard (Iterable[str]): NER labels that will automatically get a "NIL" prediction.
+        n_sents (int): The number of neighbouring sentences to take into account.
         incl_prior (bool): Whether or not to include prior probabilities from the KB in the model.
         incl_context (bool): Whether or not to include the local context in the model.
         entity_vector_length (int): Size of encoding vectors in the KB.
@@ -129,25 +135,24 @@ class EntityLinker(TrainablePipe):
         self.vocab = vocab
         self.model = model
         self.name = name
-        cfg = {
-            "labels_discard": list(labels_discard),
-            "incl_prior": incl_prior,
-            "incl_context": incl_context,
-            "entity_vector_length": entity_vector_length,
-        }
+        self.labels_discard = list(labels_discard)
+        self.n_sents = n_sents
+        self.incl_prior = incl_prior
+        self.incl_context = incl_context
         self.get_candidates = get_candidates
-        self.cfg = dict(cfg)
+        self.cfg = {}
         self.distance = CosineDistance(normalize=False)
         # how many neightbour sentences to take into account
-        self.n_sents = cfg.get("n_sents", 0)
         # create an empty KB by default. If you want to load a predefined one, specify it in 'initialize'.
         self.kb = empty_kb(entity_vector_length)(self.vocab)
 
     def set_kb(self, kb_loader: Callable[[Vocab], KnowledgeBase]):
         """Define the KB of this pipe by providing a function that will
         create it using this object's vocab."""
+        if not callable(kb_loader):
+            raise ValueError(Errors.E885.format(arg_type=type(kb_loader)))
+
         self.kb = kb_loader(self.vocab)
-        self.cfg["entity_vector_length"] = self.kb.entity_vector_length
 
     def validate_kb(self) -> None:
         # Raise an error if the knowledge base is not initialized.
@@ -309,14 +314,13 @@ class EntityLinker(TrainablePipe):
                         sent_doc = doc[start_token:end_token].as_doc()
                         # currently, the context is the same for each entity in a sentence (should be refined)
                         xp = self.model.ops.xp
-                        if self.cfg.get("incl_context"):
+                        if self.incl_context:
                             sentence_encoding = self.model.predict([sent_doc])[0]
                             sentence_encoding_t = sentence_encoding.T
                             sentence_norm = xp.linalg.norm(sentence_encoding_t)
                         for ent in sent.ents:
                             entity_count += 1
-                            to_discard = self.cfg.get("labels_discard", [])
-                            if to_discard and ent.label_ in to_discard:
+                            if ent.label_ in self.labels_discard:
                                 # ignoring this entity - setting to NIL
                                 final_kb_ids.append(self.NIL)
                             else:
@@ -334,13 +338,13 @@ class EntityLinker(TrainablePipe):
                                     prior_probs = xp.asarray(
                                         [c.prior_prob for c in candidates]
                                     )
-                                    if not self.cfg.get("incl_prior"):
+                                    if not self.incl_prior:
                                         prior_probs = xp.asarray(
                                             [0.0 for _ in candidates]
                                         )
                                     scores = prior_probs
                                     # add in similarity from the context
-                                    if self.cfg.get("incl_context"):
+                                    if self.incl_context:
                                         entity_encodings = xp.asarray(
                                             [c.entity_vector for c in candidates]
                                         )

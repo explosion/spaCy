@@ -160,7 +160,7 @@ subword_features = false
 """
 
 
-@registry.architectures.register("my_test_parser")
+@registry.architectures("my_test_parser")
 def my_parser():
     tok2vec = build_Tok2Vec_model(
         MultiHashEmbed(

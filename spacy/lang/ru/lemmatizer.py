@@ -23,8 +23,6 @@ class RussianLemmatizer(Lemmatizer):
         mode: str = "pymorphy2",
         overwrite: bool = False,
     ) -> None:
-        super().__init__(vocab, model, name, mode=mode, overwrite=overwrite)
-
         try:
             from pymorphy2 import MorphAnalyzer
         except ImportError:
@@ -34,6 +32,7 @@ class RussianLemmatizer(Lemmatizer):
             ) from None
         if RussianLemmatizer._morph is None:
             RussianLemmatizer._morph = MorphAnalyzer()
+        super().__init__(vocab, model, name, mode=mode, overwrite=overwrite)
 
     def pymorphy2_lemmatize(self, token: Token) -> List[str]:
         string = token.text
