@@ -1,4 +1,6 @@
 from .attributeruler import AttributeRuler
+from .coref import CoreferenceResolver
+from .coref_er import CorefEntityRecognizer
 from .dep_parser import DependencyParser
 from .entity_linker import EntityLinker
 from .ner import EntityRecognizer
