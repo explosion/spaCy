@@ -262,16 +262,6 @@
         },
         {
             "code": "mk",
-            "name": "Macedonian",
-            "has_examples": false,
-            "models": [
-                "mk_core_news_sm",
-                "mk_core_news_md",
-                "mk_core_news_lg"
-            ]
-        },
-        {
-            "code": "mk",
             "name": "Macedonian"
         },
         {
