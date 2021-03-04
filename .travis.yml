@@ -17,7 +17,7 @@ install:
   - "python -m pip install --no-build-isolation blis"
   - "python -m pip install --no-build-isolation thinc"
   - "python -m pip install --no-build-isolation -r requirements.txt"
-  - "python -m pip install --no-build-isolation ."
+  - "python -m pip install --no-build-isolation --editable ."
 script:
   - "cat /proc/cpuinfo | grep flags | head -n 1"
   - "python -m pytest --tb=native spacy"
