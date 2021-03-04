@@ -7,22 +7,17 @@ jobs:
   include:
     - os: linux
       arch: arm64
-      env:
-        - BLIS_ARCH="generic"
     - os: linux
       arch: ppc64le
-      env:
-        - BLIS_ARCH="generic"
 install:
-  - "python -m pip install -U pip setuptools"
-  - "pip install cython numpy"
-  - "pip install --no-build-isolation cymem murmurhash"
-  - "pip install --no-build-isolation preshed"
-  - "pip install --no-build-isolation blis"
-  - "pip install --no-build-isolation thinc --pre"
-  - "pip install --no-build-isolation -r requirements.txt"
-  - "python setup.py build_ext --inplace"
-  - "python setup.py install"
+  - "python -m pip install -U pip setuptools wheel"
+  - "python -m pip install cython numpy"
+  - "python -m pip install --no-build-isolation cymem murmurhash"
+  - "python -m pip install --no-build-isolation preshed"
+  - "python -m pip install --no-build-isolation blis"
+  - "python -m pip install --no-build-isolation thinc"
+  - "python -m pip install --no-build-isolation -r requirements.txt"
+  - "python -m pip install ."
 script:
   - "cat /proc/cpuinfo | grep flags | head -n 1"
   - "python -m pytest --tb=native spacy"
