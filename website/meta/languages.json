@@ -290,11 +290,6 @@
             "has_examples": true
         },
         {
-            "code": "ne",
-            "name": "Nepali",
-            "has_examples": true
-        },
-        {
             "code": "nl",
             "name": "Dutch",
             "models": [
