@@ -53,7 +53,6 @@
             "has_examples": true
         },
         { "code": "ga", "name": "Irish" },
-        { "code": "gu", "name": "Gujarati", "has_examples": true },
         { "code": "he", "name": "Hebrew", "example": "זהו משפט.", "has_examples": true },
         { "code": "hi", "name": "Hindi", "example": "यह एक वाक्य है।", "has_examples": true },
         { "code": "hr", "name": "Croatian", "has_examples": true },
@@ -110,12 +109,6 @@
             "has_examples": true
         },
         { "code": "lb", "name": "Luxembourgish", "has_examples": true },
-        {
-            "code": "lij",
-            "name": "Ligurian",
-            "example": "Sta chì a l'é unna fraxe.",
-            "has_examples": true
-        },
         {
             "code": "lt",
             "name": "Lithuanian",
@@ -220,18 +213,8 @@
             "has_examples": true
         },
         {
-            "code": "hy",
-            "name": "Armenian",
-            "has_examples": true
-        },
-        {
             "code": "gu",
             "name": "Gujarati",
-            "has_examples": true
-        },
-        {
-            "code": "ml",
-            "name": "Malayalam",
             "has_examples": true
         },
         {
