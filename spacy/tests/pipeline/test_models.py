@@ -104,4 +104,4 @@ def util_batch_unbatch_docs_ragged(
         Y_not_batched = []
         for u in in_data:
             Y_not_batched.extend(model.predict([u]).data.tolist())
-        assert_almost_equal(Y_batched.data, Y_not_batched, decimal=4)
+        assert_almost_equal(Y_batched, Y_not_batched, decimal=4)
