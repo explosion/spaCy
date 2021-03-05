@@ -81,7 +81,6 @@ jobs:
         parameters:
           python_version: '$(python.version)'
           architecture: 'x64'
-          gpu: false
 
   - job: "TestGPU"
     dependsOn: "Validate"
@@ -97,3 +96,4 @@ jobs:
           python_version: '$(python.version)'
           architecture: 'x64'
           gpu: true
+          num_build_jobs: 24
