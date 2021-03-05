@@ -8,8 +8,8 @@ from spacy.tokens import Doc
 from spacy.training import Example
 from spacy import util
 from spacy.lang.en import English
-from thinc.api import Config
-from numpy.testing import assert_equal
+from thinc.api import Config, get_current_ops
+from numpy.testing import assert_array_equal
 
 from ..util import get_batch, make_tempdir
 
@@ -160,7 +160,8 @@ def test_tok2vec_listener():
 
     doc = nlp("Running the pipeline as a whole.")
     doc_tensor = tagger_tok2vec.predict([doc])[0]
-    assert_equal(doc.tensor, doc_tensor)
+    ops = get_current_ops()
+    assert_array_equal(ops.to_numpy(doc.tensor), ops.to_numpy(doc_tensor))
 
     # TODO: should this warn or error?
     nlp.select_pipes(disable="tok2vec")
