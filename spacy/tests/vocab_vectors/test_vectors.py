@@ -1,6 +1,7 @@
 import pytest
 import numpy
 from numpy.testing import assert_allclose, assert_equal
+from thinc.api import get_current_ops
 from spacy.vocab import Vocab
 from spacy.vectors import Vectors
 from spacy.tokenizer import Tokenizer
@@ -341,19 +342,20 @@ def test_vectors_serialize():
     b = v.to_bytes()
     v_r = Vectors()
     v_r.from_bytes(b)
-    assert_equal(v.data, v_r.data)
+    ops = get_current_ops()
+    assert_equal(ops.to_numpy(v.data), ops.to_numpy(v_r.data))
     assert v.key2row == v_r.key2row
     v.resize((5, 4))
     v_r.resize((5, 4))
     row = v.add("D", vector=numpy.asarray([1, 2, 3, 4], dtype="f"))
     row_r = v_r.add("D", vector=numpy.asarray([1, 2, 3, 4], dtype="f"))
     assert row == row_r
-    assert_equal(v.data, v_r.data)
+    assert_equal(ops.to_numpy(v.data), ops.to_numpy(v_r.data))
     assert v.is_full == v_r.is_full
     with make_tempdir() as d:
         v.to_disk(d)
         v_r.from_disk(d)
-        assert_equal(v.data, v_r.data)
+        assert_equal(ops.to_numpy(v.data), ops.to_numpy(v_r.data))
         assert v.key2row == v_r.key2row
         v.resize((5, 4))
         v_r.resize((5, 4))

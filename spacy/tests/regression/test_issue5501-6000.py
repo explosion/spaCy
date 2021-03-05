@@ -1,4 +1,5 @@
 import pytest
+from numpy.testing import assert_almost_equal
 from thinc.api import Config, fix_random_seed
 
 from spacy.lang.en import English
@@ -47,8 +48,8 @@ def test_issue5551(textcat_config):
         results.append(list(result[0]))
     # All results should be the same because of the fixed seed
     assert len(results) == 3
-    assert results[0] == results[1]
-    assert results[0] == results[2]
+    assert_almost_equal(results[0], results[1])
+    assert_almost_equal(results[0], results[2])
 
 
 def test_issue5838():
