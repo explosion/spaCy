@@ -8,7 +8,8 @@ from spacy import prefer_gpu, require_gpu, require_cpu
 from spacy.ml._precomputable_affine import PrecomputableAffine
 from spacy.ml._precomputable_affine import _backprop_precomputable_affine_padding
 from spacy.util import dot_to_object, SimpleFrozenList, import_file
-from thinc.api import Config, Optimizer, ConfigValidationError
+from thinc.api import Config, Optimizer, ConfigValidationError, get_current_ops
+from thinc.api import set_current_ops
 from spacy.training.batchers import minibatch_by_words
 from spacy.lang.en import English
 from spacy.lang.nl import Dutch
@@ -81,6 +82,7 @@ def test_PrecomputableAffine(nO=4, nI=5, nF=3, nP=2):
 
 
 def test_prefer_gpu():
+    current_ops = get_current_ops()
     try:
         import cupy  # noqa: F401
 
@@ -88,9 +90,11 @@ def test_prefer_gpu():
         assert isinstance(get_current_ops(), CupyOps)
     except ImportError:
         assert not prefer_gpu()
+    set_current_ops(current_ops)
 
 
 def test_require_gpu():
+    current_ops = get_current_ops()
     try:
         import cupy  # noqa: F401
 
@@ -99,9 +103,11 @@ def test_require_gpu():
     except ImportError:
         with pytest.raises(ValueError):
             require_gpu()
+    set_current_ops(current_ops)
 
 
 def test_require_cpu():
+    current_ops = get_current_ops()
     require_cpu()
     assert isinstance(get_current_ops(), NumpyOps)
     try:
@@ -113,6 +119,7 @@ def test_require_cpu():
         pass
     require_cpu()
     assert isinstance(get_current_ops(), NumpyOps)
+    set_current_ops(current_ops)
 
 
 def test_ascii_filenames():
