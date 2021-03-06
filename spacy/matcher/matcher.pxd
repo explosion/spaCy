@@ -36,7 +36,7 @@ cdef struct AttrValueC:
 cdef struct IndexValueC:
     int32_t index
     attr_t value
-
+    
 cdef struct TokenPatternC:
     AttrValueC* attrs
     int32_t* py_predicates
@@ -46,18 +46,24 @@ cdef struct TokenPatternC:
     int32_t nr_py
     quantifier_t quantifier
     hash_t key
+    int32_t token_idx
 
-
+cdef struct MatchAlignmentC:
+    int32_t token_idx
+    int32_t length
+    
 cdef struct PatternStateC:
     TokenPatternC* pattern
     int32_t start
     int32_t length
+    vector[MatchAlignmentC] alignments
 
 
 cdef struct MatchC:
     attr_t pattern_id
     int32_t start
     int32_t length
+    vector[MatchAlignmentC] alignments
 
 
 cdef class Matcher:
