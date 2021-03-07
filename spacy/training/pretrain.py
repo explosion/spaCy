@@ -10,8 +10,8 @@ from wasabi import Printer
 
 from .example import Example
 from ..tokens import Doc
-from ..schemas import ConfigSchemaPretrain
-from ..util import registry, load_model_from_config, dot_to_object
+from ..schemas import ConfigSchemaPretrain, ConfigSchemaTraining
+from ..util import registry, load_model_from_config, dot_to_object, resolve_dot_names
 
 
 def pretrain(
@@ -30,10 +30,13 @@ def pretrain(
         set_gpu_allocator(allocator)
     nlp = load_model_from_config(config)
     _config = nlp.config.interpolate()
+    T = registry.resolve(config["training"], schema=ConfigSchemaTraining)
+    train_corpus = resolve_dot_names(config, [T["train_corpus"]])[0]
     P = registry.resolve(_config["pretraining"], schema=ConfigSchemaPretrain)
     corpus = dot_to_object(_config, P["corpus"])
     corpus = registry.resolve({"corpus": corpus})["corpus"]
     batcher = P["batcher"]
+    nlp.initialize(lambda: train_corpus(nlp))
     model = create_pretraining_model(nlp, P)
     optimizer = P["optimizer"]
     # Load in pretrained weights to resume from
@@ -133,7 +136,6 @@ def create_pretraining_model(nlp, pretrain_config):
     The actual tok2vec layer is stored as a reference, and only this bit will be
     serialized to file and read back in when calling the 'train' command.
     """
-    nlp.initialize()
     component = nlp.get_pipe(pretrain_config["component"])
     if pretrain_config.get("layer"):
         tok2vec = component.model.get_ref(pretrain_config["layer"])
