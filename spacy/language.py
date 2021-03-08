@@ -1592,6 +1592,7 @@ class Language:
         # using the nlp.config with all defaults.
         config = util.copy_config(config)
         orig_pipeline = config.pop("components", {})
+        orig_pretraining = config.pop("pretraining", None)
         config["components"] = {}
         if auto_fill:
             filled = registry.fill(config, validate=validate, schema=ConfigSchema)
@@ -1599,6 +1600,9 @@ class Language:
             filled = config
         filled["components"] = orig_pipeline
         config["components"] = orig_pipeline
+        if orig_pretraining is not None:
+            filled["pretraining"] = orig_pretraining
+            config["pretraining"] = orig_pretraining
         resolved_nlp = registry.resolve(
             filled["nlp"], validate=validate, schema=ConfigSchemaNlp
         )

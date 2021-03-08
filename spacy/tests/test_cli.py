@@ -4,7 +4,7 @@ from spacy.training import docs_to_json, offsets_to_biluo_tags
 from spacy.training.converters import iob_to_docs, conll_ner_to_docs, conllu_to_docs
 from spacy.schemas import ProjectConfigSchema, RecommendationSchema, validate
 from spacy.lang.nl import Dutch
-from spacy.util import ENV_VARS
+from spacy.util import ENV_VARS, load_model_from_config
 from spacy.cli import info
 from spacy.cli.init_config import init_config, RECOMMENDATIONS
 from spacy.cli._util import validate_project_commands, parse_config_overrides
@@ -402,6 +402,9 @@ def test_init_config(lang, pipeline, optimize, pretraining):
     # TODO: add more tests and also check for GPU with transformers
     config = init_config(lang=lang, pipeline=pipeline, optimize=optimize, pretraining=pretraining, gpu=False)
     assert isinstance(config, Config)
+    if pretraining:
+        config["paths"]["raw_text"] = "my_data.jsonl"
+    nlp = load_model_from_config(config, auto_fill=True)
 
 
 def test_model_recommendations():
