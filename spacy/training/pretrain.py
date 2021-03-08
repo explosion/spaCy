@@ -135,8 +135,10 @@ def create_pretraining_model(nlp, pretrain_config):
     The actual tok2vec layer is stored as a reference, and only this bit will be
     serialized to file and read back in when calling the 'train' command.
     """
+    with nlp.select_pipes(enable=[]):
+        nlp.initialize()
     tok2vec = get_tok2vec_ref(nlp, pretrain_config)
-    # If the config refered to a Tok2VecListener, grab the original model instead
+    # If the config referred to a Tok2VecListener, grab the original model instead
     if type(tok2vec).__name__ == "Tok2VecListener":
         original_tok2vec = (
             tok2vec.upstream_name if tok2vec.upstream_name is not "*" else "tok2vec"
