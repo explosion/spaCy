@@ -6,6 +6,8 @@ from collections import Counter
 import srsly
 import time
 import re
+
+from thinc.config import ConfigValidationError
 from wasabi import Printer
 
 from .example import Example
@@ -30,13 +32,10 @@ def pretrain(
         set_gpu_allocator(allocator)
     nlp = load_model_from_config(config)
     _config = nlp.config.interpolate()
-    T = registry.resolve(config["training"], schema=ConfigSchemaTraining)
-    train_corpus = resolve_dot_names(config, [T["train_corpus"]])[0]
     P = registry.resolve(_config["pretraining"], schema=ConfigSchemaPretrain)
     corpus = dot_to_object(_config, P["corpus"])
     corpus = registry.resolve({"corpus": corpus})["corpus"]
     batcher = P["batcher"]
-    nlp.initialize(lambda: train_corpus(nlp))
     model = create_pretraining_model(nlp, P)
     optimizer = P["optimizer"]
     # Load in pretrained weights to resume from
@@ -136,17 +135,43 @@ def create_pretraining_model(nlp, pretrain_config):
     The actual tok2vec layer is stored as a reference, and only this bit will be
     serialized to file and read back in when calling the 'train' command.
     """
-    component = nlp.get_pipe(pretrain_config["component"])
-    if pretrain_config.get("layer"):
-        tok2vec = component.model.get_ref(pretrain_config["layer"])
-    else:
-        tok2vec = component.model
+    tok2vec = get_tok2vec_ref(nlp, pretrain_config)
+    # If the config refered to a Tok2VecListener, grab the original model instead
+    if type(tok2vec).__name__ == "Tok2VecListener":
+        original_tok2vec = tok2vec.upstream_name if tok2vec.upstream_name is not "*" else "tok2vec"
+        tok2vec = nlp.get_pipe(original_tok2vec).model
+    try:
+        tok2vec.initialize(X=[nlp.make_doc("Give it a doc to infer shapes")])
+    except ValueError:
+        component = pretrain_config["component"]
+        layer = pretrain_config["layer"]
+        raise ValueError(f"Could not initialize the tok2vec model from component "
+                         f"'{component}' and layer '{layer}'.")
 
     create_function = pretrain_config["objective"]
     model = create_function(nlp.vocab, tok2vec)
     model.initialize(X=[nlp.make_doc("Give it a doc to infer shapes")])
     set_dropout_rate(model, pretrain_config["dropout"])
     return model
+
+
+def get_tok2vec_ref(nlp, pretrain_config):
+    tok2vec_component = pretrain_config["component"]
+    if tok2vec_component is None:
+        desc = (
+            f"To use pretrained tok2vec weights, [pretraining.component] "
+            f"needs to specify the component that should load them."
+        )
+        err = "component can't be null"
+        errors = [{"loc": ["pretraining", "component"], "msg": err}]
+        raise ConfigValidationError(
+            config=nlp.config["pretraining"], errors=errors, desc=desc
+        )
+    layer = nlp.get_pipe(tok2vec_component).model
+    if pretrain_config["layer"]:
+        layer = layer.get_ref(pretrain_config["layer"])
+    return layer
+
 
 
 class ProgressTracker:

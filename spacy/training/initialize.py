@@ -9,6 +9,7 @@ import gzip
 import zipfile
 import tqdm
 
+from .pretrain import get_tok2vec_ref
 from ..lookups import Lookups
 from ..vectors import Vectors
 from ..errors import Errors, Warnings
@@ -158,20 +159,7 @@ def init_tok2vec(
         with init_tok2vec.open("rb") as file_:
             weights_data = file_.read()
     if weights_data is not None:
-        tok2vec_component = P["component"]
-        if tok2vec_component is None:
-            desc = (
-                f"To use pretrained tok2vec weights, [pretraining.component] "
-                f"needs to specify the component that should load them."
-            )
-            err = "component can't be null"
-            errors = [{"loc": ["pretraining", "component"], "msg": err}]
-            raise ConfigValidationError(
-                config=nlp.config["pretraining"], errors=errors, desc=desc
-            )
-        layer = nlp.get_pipe(tok2vec_component).model
-        if P["layer"]:
-            layer = layer.get_ref(P["layer"])
+        layer = get_tok2vec_ref(nlp, P)
         layer.from_bytes(weights_data)
         return True
     return False
