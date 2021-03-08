@@ -38,18 +38,58 @@ def doc(nlp):
 
 
 @pytest.mark.filterwarnings("ignore::UserWarning")
-def test_make_orth_variants(nlp, doc):
+def test_make_orth_variants(nlp):
     single = [
         {"tags": ["NFP"], "variants": ["…", "..."]},
         {"tags": [":"], "variants": ["-", "—", "–", "--", "---", "——"]},
     ]
+    # fmt: off
+    words = ["\n\n", "A", "\t", "B", "a", "b", "…", "...", "-", "—", "–", "--", "---", "——"]
+    tags = ["_SP", "NN", "\t", "NN", "NN", "NN", "NFP", "NFP", ":", ":", ":", ":", ":", ":"]
+    # fmt: on
+    spaces = [True] * len(words)
+    spaces[0] = False
+    spaces[2] = False
+    doc = Doc(nlp.vocab, words=words, spaces=spaces, tags=tags)
     augmenter = create_orth_variants_augmenter(
         level=0.2, lower=0.5, orth_variants={"single": single}
     )
-    with make_docbin([doc]) as output_file:
+    with make_docbin([doc] * 10) as output_file:
         reader = Corpus(output_file, augmenter=augmenter)
-        # Due to randomness, only test that it works without errors for now
+        # Due to randomness, only test that it works without errors
         list(reader(nlp))
+
+    # check that the following settings lowercase everything
+    augmenter = create_orth_variants_augmenter(
+        level=1.0, lower=1.0, orth_variants={"single": single}
+    )
+    with make_docbin([doc] * 10) as output_file:
+        reader = Corpus(output_file, augmenter=augmenter)
+        for example in reader(nlp):
+            for token in example.reference:
+                assert token.text == token.text.lower()
+
+    # check that lowercasing is applied without tags
+    doc = Doc(nlp.vocab, words=words, spaces=[True] * len(words))
+    augmenter = create_orth_variants_augmenter(
+        level=1.0, lower=1.0, orth_variants={"single": single}
+    )
+    with make_docbin([doc] * 10) as output_file:
+        reader = Corpus(output_file, augmenter=augmenter)
+        for example in reader(nlp):
+            for ex_token, doc_token in zip(example.reference, doc):
+                assert ex_token.text == doc_token.text.lower()
+
+    # check that no lowercasing is applied with lower=0.0
+    doc = Doc(nlp.vocab, words=words, spaces=[True] * len(words))
+    augmenter = create_orth_variants_augmenter(
+        level=1.0, lower=0.0, orth_variants={"single": single}
+    )
+    with make_docbin([doc] * 10) as output_file:
+        reader = Corpus(output_file, augmenter=augmenter)
+        for example in reader(nlp):
+            for ex_token, doc_token in zip(example.reference, doc):
+                assert ex_token.text == doc_token.text
 
 
 def test_lowercase_augmenter(nlp, doc):
@@ -65,6 +105,21 @@ def test_lowercase_augmenter(nlp, doc):
     for ref_ent, orig_ent in zip(eg.reference.ents, doc.ents):
         assert ref_ent.text == orig_ent.text.lower()
     assert [t.pos_ for t in eg.reference] == [t.pos_ for t in doc]
+
+    # check that augmentation works when lowercasing leads to different
+    # predicted tokenization
+    words = ["A", "B", "CCC."]
+    doc = Doc(nlp.vocab, words=words)
+    with make_docbin([doc]) as output_file:
+        reader = Corpus(output_file, augmenter=augmenter)
+        corpus = list(reader(nlp))
+    eg = corpus[0]
+    assert eg.reference.text == doc.text.lower()
+    assert eg.predicted.text == doc.text.lower()
+    assert [t.text for t in eg.reference] == [t.lower() for t in words]
+    assert [t.text for t in eg.predicted] == [
+        t.text for t in nlp.make_doc(doc.text.lower())
+    ]
 
 
 @pytest.mark.filterwarnings("ignore::UserWarning")
