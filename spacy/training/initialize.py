@@ -157,6 +157,7 @@ def init_tok2vec(
     if weights_data is not None:
         layer = get_tok2vec_ref(nlp, P)
         layer.from_bytes(weights_data)
+        logger.info(f"Loaded pretrained weights from {init_tok2vec}")
         return True
     return False
 
