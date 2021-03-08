@@ -111,10 +111,44 @@ subword_features = true
 max_epochs = 10
 """
 
+OBJECTIVES = [
+    {"@architectures": "spacy.PretrainCharacters.v1"},  # default configuration
+    {
+        "@architectures": "spacy.PretrainCharacters.v1",
+        "maxout_pieces": 5,
+        "hidden_size": 42,
+        "n_characters": 2,
+    },
+    {
+        "@architectures": "spacy.PretrainVectors.v1",
+        "maxout_pieces": 3,
+        "hidden_size": 300,
+        "loss": "cosine",
+    },
+    {
+        "@architectures": "spacy.PretrainVectors.v1",
+        "maxout_pieces": 3,
+        "hidden_size": 300,
+        "loss": "L2",
+    },
+]
 
-def test_pretraining_tok2vec_layer():
-    """Test that pretraining works for the tok2vec component"""
+
+def test_pretraining_default():
+    """Test that pretraining defaults to a character objective"""
+    config = Config().from_str(pretrain_string_internal)
+    nlp = util.load_model_from_config(config, auto_fill=True, validate=False)
+    filled = nlp.config
+    pretrain_config = util.load_config(DEFAULT_CONFIG_PRETRAIN_PATH)
+    filled = pretrain_config.merge(filled)
+    assert "PretrainCharacters" in filled["pretraining"]["objective"]["@architectures"]
+
+
+@pytest.mark.parametrize("objective", OBJECTIVES)
+def test_pretraining_tok2vec_objectives(objective):
+    """Test that pretraining works for the tok2vec component with different objectives"""
     config = Config().from_str(pretrain_string_listener)
+    config["pretraining"]["objective"] = objective
     nlp = util.load_model_from_config(config, auto_fill=True, validate=False)
     filled = nlp.config
     pretrain_config = util.load_config(DEFAULT_CONFIG_PRETRAIN_PATH)
