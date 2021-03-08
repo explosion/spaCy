@@ -11,6 +11,7 @@ from thinc.config import ConfigValidationError
 from wasabi import Printer
 
 from .example import Example
+from ..errors import Errors
 from ..tokens import Doc
 from ..schemas import ConfigSchemaPretrain
 from ..util import registry, load_model_from_config, dot_to_object
@@ -149,10 +150,7 @@ def create_pretraining_model(nlp, pretrain_config):
     except ValueError:
         component = pretrain_config["component"]
         layer = pretrain_config["layer"]
-        raise ValueError(
-            f"Could not initialize the tok2vec model from component "
-            f"'{component}' and layer '{layer}'."
-        )
+        raise ValueError(Errors.E874.format(component=component, layer=layer))
 
     create_function = pretrain_config["objective"]
     model = create_function(nlp.vocab, tok2vec)

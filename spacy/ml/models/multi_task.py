@@ -22,9 +22,7 @@ def create_pretrain_vectors(
 ) -> Callable[["Vocab", Model], Model]:
     def create_vectors_objective(vocab: "Vocab", tok2vec: Model) -> Model:
         if vocab.vectors.data.shape[1] == 0:
-            raise ValueError("To use the PretrainVectors objective, make sure that "
-                             "static vectors are loaded. In the config, these are "
-                             "defined by the initialize.vectors setting.")
+            raise ValueError(Errors.E875)
         model = build_cloze_multi_task_model(
             vocab, tok2vec, hidden_size=hidden_size, maxout_pieces=maxout_pieces
         )
