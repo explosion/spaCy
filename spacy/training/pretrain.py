@@ -138,15 +138,19 @@ def create_pretraining_model(nlp, pretrain_config):
     tok2vec = get_tok2vec_ref(nlp, pretrain_config)
     # If the config refered to a Tok2VecListener, grab the original model instead
     if type(tok2vec).__name__ == "Tok2VecListener":
-        original_tok2vec = tok2vec.upstream_name if tok2vec.upstream_name is not "*" else "tok2vec"
+        original_tok2vec = (
+            tok2vec.upstream_name if tok2vec.upstream_name is not "*" else "tok2vec"
+        )
         tok2vec = nlp.get_pipe(original_tok2vec).model
     try:
         tok2vec.initialize(X=[nlp.make_doc("Give it a doc to infer shapes")])
     except ValueError:
         component = pretrain_config["component"]
         layer = pretrain_config["layer"]
-        raise ValueError(f"Could not initialize the tok2vec model from component "
-                         f"'{component}' and layer '{layer}'.")
+        raise ValueError(
+            f"Could not initialize the tok2vec model from component "
+            f"'{component}' and layer '{layer}'."
+        )
 
     create_function = pretrain_config["objective"]
     model = create_function(nlp.vocab, tok2vec)
@@ -171,7 +175,6 @@ def get_tok2vec_ref(nlp, pretrain_config):
     if pretrain_config["layer"]:
         layer = layer.get_ref(pretrain_config["layer"])
     return layer
-
 
 
 class ProgressTracker:
