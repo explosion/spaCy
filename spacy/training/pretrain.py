@@ -12,8 +12,8 @@ from wasabi import Printer
 
 from .example import Example
 from ..tokens import Doc
-from ..schemas import ConfigSchemaPretrain, ConfigSchemaTraining
-from ..util import registry, load_model_from_config, dot_to_object, resolve_dot_names
+from ..schemas import ConfigSchemaPretrain
+from ..util import registry, load_model_from_config, dot_to_object
 
 
 def pretrain(
