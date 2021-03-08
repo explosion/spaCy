@@ -134,7 +134,7 @@ def build_cloze_characters_multi_task_model(
 ) -> Model:
     output_layer = chain(
         list2array(),
-        Maxout(hidden_size, nP=maxout_pieces),
+        Maxout(nO=hidden_size, nP=maxout_pieces),
         LayerNorm(nI=hidden_size),
         MultiSoftmax([256] * nr_char, nI=hidden_size),
     )
