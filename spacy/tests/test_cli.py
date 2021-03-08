@@ -397,9 +397,10 @@ def test_parse_cli_overrides():
     "pipeline", [["tagger", "parser", "ner"], [], ["ner", "textcat", "sentencizer"]]
 )
 @pytest.mark.parametrize("optimize", ["efficiency", "accuracy"])
-def test_init_config(lang, pipeline, optimize):
+@pytest.mark.parametrize("pretraining", [True, False])
+def test_init_config(lang, pipeline, optimize, pretraining):
     # TODO: add more tests and also check for GPU with transformers
-    config = init_config(lang=lang, pipeline=pipeline, optimize=optimize, gpu=False)
+    config = init_config(lang=lang, pipeline=pipeline, optimize=optimize, pretraining=pretraining, gpu=False)
     assert isinstance(config, Config)
 
 
