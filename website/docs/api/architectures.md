@@ -447,6 +447,9 @@ For more information, see the section on
 > ```ini
 > [pretraining]
 > component = "tok2vec"
+> 
+> [initialize]
+> vectors = "en_core_web_lg"
 > ...
 >
 > [pretraining.objective]
@@ -457,7 +460,9 @@ For more information, see the section on
 > ```
 
 Predict the word's vector from a static embeddings table as pretraining
-objective for a Tok2Vec layer.
+objective for a Tok2Vec layer. To use this objective, make sure that the 
+`initialize.vectors` section in the config refers to a model with static 
+vectors.
 
 | Name            | Description                                                                                                                                               |
 | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
