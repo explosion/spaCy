@@ -11,6 +11,7 @@ from click.parser import split_arg_string
 from typer.main import get_command
 from contextlib import contextmanager
 from thinc.api import Config, ConfigValidationError, require_gpu
+from thinc.util import has_cupy, gpu_is_available
 from configparser import InterpolationError
 import os
 
@@ -510,3 +511,5 @@ def setup_gpu(use_gpu: int) -> None:
         require_gpu(use_gpu)
     else:
         msg.info("Using CPU")
+        if has_cupy and gpu_is_available():
+            msg.info("To switch to GPU 0, use the option: --gpu-id 0")

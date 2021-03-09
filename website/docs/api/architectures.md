@@ -19,7 +19,7 @@ spaCy's built-in architectures that are used for different NLP tasks. All
 trainable [built-in components](/api#architecture-pipeline) expect a `model`
 argument defined in the config and document their the default architecture.
 Custom architectures can be registered using the
-[`@spacy.registry.architectures`](/api/top-level#regsitry) decorator and used as
+[`@spacy.registry.architectures`](/api/top-level#registry) decorator and used as
 part of the [training config](/usage/training#custom-functions). Also see the
 usage documentation on
 [layers and model architectures](/usage/layers-architectures).
@@ -447,6 +447,9 @@ For more information, see the section on
 > ```ini
 > [pretraining]
 > component = "tok2vec"
+> 
+> [initialize]
+> vectors = "en_core_web_lg"
 > ...
 >
 > [pretraining.objective]
@@ -457,7 +460,9 @@ For more information, see the section on
 > ```
 
 Predict the word's vector from a static embeddings table as pretraining
-objective for a Tok2Vec layer.
+objective for a Tok2Vec layer. To use this objective, make sure that the 
+`initialize.vectors` section in the config refers to a model with static 
+vectors.
 
 | Name            | Description                                                                                                                                               |
 | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |

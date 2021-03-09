@@ -160,7 +160,7 @@ subword_features = false
 """
 
 
-@registry.architectures.register("my_test_parser")
+@registry.architectures("my_test_parser")
 def my_parser():
     tok2vec = build_Tok2Vec_model(
         MultiHashEmbed(
@@ -293,7 +293,7 @@ def test_serialize_parser(parser_config_string):
 
 
 def test_config_nlp_roundtrip():
-    """Test that a config prduced by the nlp object passes training config
+    """Test that a config produced by the nlp object passes training config
     validation."""
     nlp = English()
     nlp.add_pipe("entity_ruler")

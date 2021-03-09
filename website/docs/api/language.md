@@ -364,7 +364,7 @@ Evaluate a pipeline's components.
 
 <Infobox variant="warning" title="Changed in v3.0">
 
-The `Language.update` method now takes a batch of [`Example`](/api/example)
+The `Language.evaluate` method now takes a batch of [`Example`](/api/example)
 objects instead of tuples of `Doc` and `GoldParse` objects.
 
 </Infobox>
