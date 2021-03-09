@@ -1499,3 +1499,15 @@ def raise_error(proc_name, proc, docs, e):
 
 def ignore_error(proc_name, proc, docs, e):
     pass
+
+
+def warn_if_jupyter_cupy():
+    """Warn about require_gpu if a jupyter notebook + cupy + mismatched
+    contextvars vs. thread ops are detected
+    """
+    if is_in_jupyter():
+        from thinc.backends.cupy_ops import CupyOps
+        if CupyOps.xp is not None:
+            from thinc.backends import contextvars_eq_thread_ops
+            if not contextvars_eq_thread_ops():
+                warnings.warn(Warnings.W111)
