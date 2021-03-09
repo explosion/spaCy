@@ -22,6 +22,7 @@ from .training.initialize import init_vocab, init_tok2vec
 from .scorer import Scorer
 from .util import registry, SimpleFrozenList, _pipe, raise_error
 from .util import SimpleFrozenDict, combine_score_weights, CONFIG_SECTION_ORDER
+from .util import warn_if_jupyter_cupy
 from .lang.tokenizer_exceptions import URL_MATCH, BASE_EXCEPTIONS
 from .lang.punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
 from .lang.punctuation import TOKENIZER_INFIXES
@@ -1622,6 +1623,10 @@ class Language:
                 or lang_cls is not cls
             ):
                 raise ValueError(Errors.E943.format(value=type(lang_cls)))
+
+        # Warn about require_gpu usage in jupyter notebook
+        warn_if_jupyter_cupy()
+
         # Note that we don't load vectors here, instead they get loaded explicitly
         # inside stuff like the spacy train function. If we loaded them here,
         # then we would load them twice at runtime: once when we make from config,
