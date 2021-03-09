@@ -1222,10 +1222,6 @@ class Language:
         init_vocab(
             self, data=I["vocab_data"], lookups=I["lookups"], vectors=I["vectors"]
         )
-        pretrain_cfg = config.get("pretraining")
-        if pretrain_cfg:
-            P = registry.resolve(pretrain_cfg, schema=ConfigSchemaPretrain)
-            init_tok2vec(self, P, I)
         if self.vocab.vectors.data.shape[1] >= 1:
             ops = get_current_ops()
             self.vocab.vectors.data = ops.asarray(self.vocab.vectors.data)
@@ -1244,6 +1240,10 @@ class Language:
                     proc.initialize, p_settings, section="components", name=name
                 )
                 proc.initialize(get_examples, nlp=self, **p_settings)
+        pretrain_cfg = config.get("pretraining")
+        if pretrain_cfg:
+            P = registry.resolve(pretrain_cfg, schema=ConfigSchemaPretrain)
+            init_tok2vec(self, P, I)
         self._link_components()
         self._optimizer = sgd
         if sgd is not None:
@@ -1592,6 +1592,7 @@ class Language:
         # using the nlp.config with all defaults.
         config = util.copy_config(config)
         orig_pipeline = config.pop("components", {})
+        orig_pretraining = config.pop("pretraining", None)
         config["components"] = {}
         if auto_fill:
             filled = registry.fill(config, validate=validate, schema=ConfigSchema)
@@ -1599,6 +1600,9 @@ class Language:
             filled = config
         filled["components"] = orig_pipeline
         config["components"] = orig_pipeline
+        if orig_pretraining is not None:
+            filled["pretraining"] = orig_pretraining
+            config["pretraining"] = orig_pretraining
         resolved_nlp = registry.resolve(
             filled["nlp"], validate=validate, schema=ConfigSchemaNlp
         )

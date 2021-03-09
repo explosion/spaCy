@@ -9,6 +9,7 @@ import gzip
 import zipfile
 import tqdm
 
+from .pretrain import get_tok2vec_ref
 from ..lookups import Lookups
 from ..vectors import Vectors
 from ..errors import Errors, Warnings
@@ -147,10 +148,6 @@ def init_tok2vec(
     weights_data = None
     init_tok2vec = ensure_path(I["init_tok2vec"])
     if init_tok2vec is not None:
-        if P["objective"].get("type") == "vectors" and not I["vectors"]:
-            err = 'need initialize.vectors if pretraining.objective.type is "vectors"'
-            errors = [{"loc": ["initialize"], "msg": err}]
-            raise ConfigValidationError(config=nlp.config, errors=errors)
         if not init_tok2vec.exists():
             err = f"can't find pretrained tok2vec: {init_tok2vec}"
             errors = [{"loc": ["initialize", "init_tok2vec"], "msg": err}]
@@ -158,21 +155,9 @@ def init_tok2vec(
         with init_tok2vec.open("rb") as file_:
             weights_data = file_.read()
     if weights_data is not None:
-        tok2vec_component = P["component"]
-        if tok2vec_component is None:
-            desc = (
-                f"To use pretrained tok2vec weights, [pretraining.component] "
-                f"needs to specify the component that should load them."
-            )
-            err = "component can't be null"
-            errors = [{"loc": ["pretraining", "component"], "msg": err}]
-            raise ConfigValidationError(
-                config=nlp.config["pretraining"], errors=errors, desc=desc
-            )
-        layer = nlp.get_pipe(tok2vec_component).model
-        if P["layer"]:
-            layer = layer.get_ref(P["layer"])
+        layer = get_tok2vec_ref(nlp, P)
         layer.from_bytes(weights_data)
+        logger.info(f"Loaded pretrained weights from {init_tok2vec}")
         return True
     return False
 
