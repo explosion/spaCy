@@ -589,6 +589,17 @@ several different built-in architectures. It is recommended to experiment with
 different architectures and settings to determine what works best on your
 specific data and challenge.
 
+<Infobox title="Single-label vs. multi-label classification" variant="warning">
+
+When the architecture for a text classification challenge contains a setting for
+`exclusive_classes`, it is important to use the correct value for the correct
+pipeline component. The `textcat` component should always be used for
+single-label use-cases where `exclusive_classes = true`, while the
+`textcat_multilabel` should be used for multi-label settings with
+`exclusive_classes = false`.
+
+</Infobox>
+
 ### spacy.TextCatEnsemble.v2 {#TextCatEnsemble}
 
 > #### Example Config

@@ -60,7 +60,7 @@ def download(model: str, direct: bool = False, sdist: bool = False, *pip_args) -
         model_name = model
         if model in OLD_MODEL_SHORTCUTS:
             msg.warn(
-                f"As of spaCy v3.0, shortcuts like '{model}' are deprecated. Please"
+                f"As of spaCy v3.0, shortcuts like '{model}' are deprecated. Please "
                 f"use the full pipeline package name '{OLD_MODEL_SHORTCUTS[model]}' instead."
             )
             model_name = OLD_MODEL_SHORTCUTS[model]
