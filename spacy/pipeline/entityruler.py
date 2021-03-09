@@ -195,7 +195,7 @@ class EntityRuler(Pipe):
                 all_labels.add(label)
             else:
                 all_labels.add(l)
-        return tuple(all_labels)
+        return tuple(sorted(all_labels))
 
     def initialize(
         self,
