@@ -1219,9 +1219,12 @@ class Language:
         before_init = I["before_init"]
         if before_init is not None:
             before_init(self)
-        init_vocab(
-            self, data=I["vocab_data"], lookups=I["lookups"], vectors=I["vectors"]
-        )
+        try:
+            init_vocab(
+                self, data=I["vocab_data"], lookups=I["lookups"], vectors=I["vectors"]
+            )
+        except IOError:
+            raise IOError(Errors.E884.format(vectors=I["vectors"]))
         if self.vocab.vectors.data.shape[1] >= 1:
             ops = get_current_ops()
             self.vocab.vectors.data = ops.asarray(self.vocab.vectors.data)
