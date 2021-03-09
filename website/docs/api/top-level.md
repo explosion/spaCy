@@ -141,7 +141,8 @@ pipelines.
 <Infobox variant="warning" title="Jupyter notebook usage">
 
 In a Jupyter notebook, run `prefer_gpu()` in the same cell as `spacy.load()`
-to ensure that the model is loaded on the correct device.
+to ensure that the model is loaded on the correct device. See [more
+details](/usage/v3#jupyter-notebook-gpu).
 
 </Infobox>
 
@@ -168,7 +169,8 @@ and _before_ loading any pipelines.
 <Infobox variant="warning" title="Jupyter notebook usage">
 
 In a Jupyter notebook, run `require_gpu()` in the same cell as `spacy.load()`
-to ensure that the model is loaded on the correct device.
+to ensure that the model is loaded on the correct device. See [more
+details](/usage/v3#jupyter-notebook-gpu).
 
 </Infobox>
 
@@ -194,7 +196,8 @@ after importing spaCy and _before_ loading any pipelines.
 <Infobox variant="warning" title="Jupyter notebook usage">
 
 In a Jupyter notebook, run `require_cpu()` in the same cell as `spacy.load()`
-to ensure that the model is loaded on the correct device.
+to ensure that the model is loaded on the correct device. See [more
+details](/usage/v3#jupyter-notebook-gpu).
 
 </Infobox>
 
