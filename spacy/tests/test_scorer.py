@@ -3,7 +3,7 @@ import pytest
 from pytest import approx
 from spacy.training import Example
 from spacy.training.iob_utils import offsets_to_biluo_tags
-from spacy.scorer import Scorer, ROCAUCScore
+from spacy.scorer import Scorer, ROCAUCScore, PRFScore
 from spacy.scorer import _roc_auc_score, _roc_curve
 from spacy.lang.en import English
 from spacy.tokens import Doc
@@ -403,3 +403,23 @@ def test_roc_auc_score():
     score.score_set(0.75, 1)
     with pytest.raises(ValueError):
         _ = score.score  # noqa: F841
+
+
+def test_prf_score():
+    cand = {"hi", "ho"}
+    gold1 = {"yo", "hi"}
+    gold2 = set()
+
+    a = PRFScore()
+    a.score_set(cand=cand, gold=gold1)
+    assert (a.precision, a.recall, a.fscore) == approx((0.5, 0.5, 0.5))
+
+    b = PRFScore()
+    b.score_set(cand=cand, gold=gold2)
+    assert (b.precision, b.recall, b.fscore) == approx((0.0, 0.0, 0.0))
+
+    c = a + b
+    assert (c.precision, c.recall, c.fscore) == approx((0.25, 0.5, 0.33333333))
+
+    a += b
+    assert (a.precision, a.recall, a.fscore) == approx((c.precision, c.recall, c.fscore))
