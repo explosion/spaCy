@@ -147,6 +147,11 @@ class Warnings:
             "will be included in the results. For better results, token "
             "patterns should return matches that are each exactly one token "
             "long.")
+    W111 = ("Jupyter notebook detected: if using `prefer_gpu()` or "
+            "`require_gpu()`, include it in the same cell right before "
+            "`spacy.load()` to ensure that the model is loaded on the correct "
+            "device. More information: "
+            "http://spacy.io/usage/v3#jupyter-notebook-gpu")
 
 
 @add_codes
@@ -487,13 +492,20 @@ class Errors:
     E202 = ("Unsupported alignment mode '{mode}'. Supported modes: {modes}.")
 
     # New errors added in v3.x
-
+    E874 = ("Could not initialize the tok2vec model from component "
+            "'{component}' and layer '{layer}'.")
+    E875 = ("To use the PretrainVectors objective, make sure that static vectors are loaded. "
+            "In the config, these are defined by the initialize.vectors setting.")
     E879 = ("Unexpected type for 'spans' data. Provide a dictionary mapping keys to "
             "a list of spans, with each span represented by a tuple (start_char, end_char). "
             "The tuple can be optionally extended with a label and a KB ID.")
     E880 = ("The 'wandb' library could not be found - did you install it? "
             "Alternatively, specify the 'ConsoleLogger' in the 'training.logger' "
             "config section, instead of the 'WandbLogger'.")
+    E884 = ("The pipeline could not be initialized because the vectors "
+            "could not be found at '{vectors}'. If your pipeline was already "
+            "initialized/trained before, call 'resume_training' instead of 'initialize', "
+            "or initialize only the components that are new.")
     E885 = ("entity_linker.set_kb received an invalid 'kb_loader' argument: expected "
             "a callable function, but got: {arg_type}")
     E886 = ("Can't replace {name} -> {tok2vec} listeners: path '{path}' not "

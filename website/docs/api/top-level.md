@@ -138,6 +138,14 @@ data has already been allocated on CPU, it will not be moved. Ideally, this
 function should be called right after importing spaCy and _before_ loading any
 pipelines.
 
+<Infobox variant="warning" title="Jupyter notebook usage">
+
+In a Jupyter notebook, run `prefer_gpu()` in the same cell as `spacy.load()`
+to ensure that the model is loaded on the correct device. See [more
+details](/usage/v3#jupyter-notebook-gpu).
+
+</Infobox>
+
 > #### Example
 >
 > ```python
@@ -158,6 +166,14 @@ if no GPU is available. If data has already been allocated on CPU, it will not
 be moved. Ideally, this function should be called right after importing spaCy
 and _before_ loading any pipelines.
 
+<Infobox variant="warning" title="Jupyter notebook usage">
+
+In a Jupyter notebook, run `require_gpu()` in the same cell as `spacy.load()`
+to ensure that the model is loaded on the correct device. See [more
+details](/usage/v3#jupyter-notebook-gpu).
+
+</Infobox>
+
 > #### Example
 >
 > ```python
@@ -176,6 +192,14 @@ and _before_ loading any pipelines.
 Allocate data and perform operations on CPU. If data has already been allocated
 on GPU, it will not be moved. Ideally, this function should be called right
 after importing spaCy and _before_ loading any pipelines.
+
+<Infobox variant="warning" title="Jupyter notebook usage">
+
+In a Jupyter notebook, run `require_cpu()` in the same cell as `spacy.load()`
+to ensure that the model is loaded on the correct device. See [more
+details](/usage/v3#jupyter-notebook-gpu).
+
+</Infobox>
 
 > #### Example
 >
