@@ -140,9 +140,9 @@ pipelines.
 
 <Infobox variant="warning" title="Jupyter notebook usage">
 
-In a Jupyter notebook, run `prefer_gpu()` in the same cell as `spacy.load()`
-to ensure that the model is loaded on the correct device. See [more
-details](/usage/v3#jupyter-notebook-gpu).
+In a Jupyter notebook, run `prefer_gpu()` in the same cell as `spacy.load()` to
+ensure that the model is loaded on the correct device. See
+[more details](/usage/v3#jupyter-notebook-gpu).
 
 </Infobox>
 
@@ -168,9 +168,9 @@ and _before_ loading any pipelines.
 
 <Infobox variant="warning" title="Jupyter notebook usage">
 
-In a Jupyter notebook, run `require_gpu()` in the same cell as `spacy.load()`
-to ensure that the model is loaded on the correct device. See [more
-details](/usage/v3#jupyter-notebook-gpu).
+In a Jupyter notebook, run `require_gpu()` in the same cell as `spacy.load()` to
+ensure that the model is loaded on the correct device. See
+[more details](/usage/v3#jupyter-notebook-gpu).
 
 </Infobox>
 
@@ -195,9 +195,9 @@ after importing spaCy and _before_ loading any pipelines.
 
 <Infobox variant="warning" title="Jupyter notebook usage">
 
-In a Jupyter notebook, run `require_cpu()` in the same cell as `spacy.load()`
-to ensure that the model is loaded on the correct device. See [more
-details](/usage/v3#jupyter-notebook-gpu).
+In a Jupyter notebook, run `require_cpu()` in the same cell as `spacy.load()` to
+ensure that the model is loaded on the correct device. See
+[more details](/usage/v3#jupyter-notebook-gpu).
 
 </Infobox>
 
@@ -945,7 +945,8 @@ and create a `Language` object. The model data will then be loaded in via
 | Name                                 | Description                                                                                                                                                                                                                                      |
 | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `name`                               | Package name or path. ~~str~~                                                                                                                                                                                                                    |
-| `vocab` <Tag variant="new">3</Tag>   | Optional shared vocab to pass in on initialization. If `True` (default), a new `Vocab` object will be created. ~~Union[Vocab, bool]~~.                                                                                                           |
+| _keyword-only_                       |                                                                                                                                                                                                                                                  |
+| `vocab` <Tag variant="new">3</Tag>   | Optional shared vocab to pass in on initialization. If `True` (default), a new `Vocab` object will be created. ~~Union[Vocab, bool]~~                                                                                                            |
 | `disable`                            | Names of pipeline components to [disable](/usage/processing-pipelines#disabling). Disabled pipes will be loaded but they won't be run unless you explicitly enable them by calling [`nlp.enable_pipe`](/api/language#enable_pipe). ~~List[str]~~ |
 | `exclude` <Tag variant="new">3</Tag> | Names of pipeline components to [exclude](/usage/processing-pipelines#disabling). Excluded components won't be loaded. ~~List[str]~~                                                                                                             |
 | `config` <Tag variant="new">3</Tag>  | Config overrides as nested dict or flat dict keyed by section values in dot notation, e.g. `"nlp.pipeline"`. ~~Union[Dict[str, Any], Config]~~                                                                                                   |
@@ -968,6 +969,7 @@ A helper function to use in the `load()` method of a pipeline package's
 | Name                                 | Description                                                                                                                                                                                                                                    |
 | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `init_file`                          | Path to package's `__init__.py`, i.e. `__file__`. ~~Union[str, Path]~~                                                                                                                                                                         |
+| _keyword-only_                       |                                                                                                                                                                                                                                                |
 | `vocab` <Tag variant="new">3</Tag>   | Optional shared vocab to pass in on initialization. If `True` (default), a new `Vocab` object will be created. ~~Union[Vocab, bool]~~.                                                                                                         |
 | `disable`                            | Names of pipeline components to [disable](/usage/processing-pipelines#disabling). Disabled pipes will be loaded but they won't be run unless you explicitly enable them by calling [nlp.enable_pipe](/api/language#enable_pipe). ~~List[str]~~ |
 | `exclude` <Tag variant="new">3</Tag> | Names of pipeline components to [exclude](/usage/processing-pipelines#disabling). Excluded components won't be loaded. ~~List[str]~~                                                                                                           |
