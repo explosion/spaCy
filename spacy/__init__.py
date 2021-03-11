@@ -28,6 +28,7 @@ if sys.maxunicode == 65535:
 
 def load(
     name: Union[str, Path],
+    *,
     disable: Iterable[str] = util.SimpleFrozenList(),
     exclude: Iterable[str] = util.SimpleFrozenList(),
     config: Union[Dict[str, Any], Config] = util.SimpleFrozenDict(),
