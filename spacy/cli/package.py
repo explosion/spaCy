@@ -294,7 +294,8 @@ def setup_package():
 
 if __name__ == '__main__':
     setup_package()
-""".strip()
+
+"""
 
 
 TEMPLATE_MANIFEST = """
@@ -314,4 +315,5 @@ __version__ = get_model_meta(Path(__file__).parent)['version']
 
 def load(**overrides):
     return load_model_from_init_py(__file__, **overrides)
-""".strip()
+    
+"""
