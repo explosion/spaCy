@@ -112,7 +112,9 @@ def package(
         msg.fail("Invalid pipeline meta.json")
         print("\n".join(errors))
         sys.exit(1)
-    model_name = meta["lang"] + "_" + meta["name"]
+    model_name = meta["name"]
+    if not model_name.startswith(meta['lang']):
+        model_name = f"{meta['lang']}_{model_name}"
     model_name_v = model_name + "-" + meta["version"]
     main_path = output_dir / model_name_v
     package_path = main_path / model_name
