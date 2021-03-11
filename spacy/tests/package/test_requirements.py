@@ -11,6 +11,7 @@ def test_build_dependencies():
         "pytest-timeout",
         "mock",
         "flake8",
+        "hypothesis",
     ]
     # ignore language-specific packages that shouldn't be installed by all
     libs_ignore_setup = [
