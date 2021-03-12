@@ -281,7 +281,8 @@ def _merge(Doc doc, merges):
     for i in range(doc.length):
         doc.c[i].head -= i
     # Set the left/right children, left/right edges
-    set_children_from_heads(doc.c, 0, doc.length)
+    if doc.has_annotation("DEP"):
+        set_children_from_heads(doc.c, 0, doc.length)
     # Make sure ent_iob remains consistent
     make_iob_consistent(doc.c, doc.length)
     # Return the merged Python object
@@ -392,7 +393,8 @@ def _split(Doc doc, int token_index, orths, heads, attrs):
     for i in range(doc.length):
         doc.c[i].head -= i
     # set children from head
-    set_children_from_heads(doc.c, 0, doc.length)
+    if doc.has_annotation("DEP"):
+        set_children_from_heads(doc.c, 0, doc.length)
 
 
 def _validate_extensions(extensions):
