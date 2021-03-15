@@ -90,12 +90,12 @@ class RussianLemmatizer(Lemmatizer):
             return [string.lower()]
         return list(set([analysis.normal_form for analysis in filtered_analyses]))
 
-    def lookup_lemmatize(self, token: Token) -> List[str]:
+    def pymorphy2_lookup_lemmatize(self, token: Token) -> List[str]:
         string = token.text
         analyses = self._morph.parse(string)
         if len(analyses) == 1:
-            return analyses[0].normal_form
-        return string
+            return [analyses[0].normal_form]
+        return [string]
 
 
 def oc2ud(oc_tag: str) -> Tuple[str, Dict[str, str]]:
