@@ -10,7 +10,7 @@ any other information.
 Training is an iterative process in which the model's predictions are compared
 against the reference annotations in order to estimate the **gradient of the
 loss**. The gradient of the loss is then used to calculate the gradient of the
-weights through [backpropagation](https://thinc.ai/backprop101). The gradients
+weights through [backpropagation](https://thinc.ai/docs/backprop101). The gradients
 indicate how the weight values should be changed so that the model's predictions
 become more similar to the reference labels over time.
 
