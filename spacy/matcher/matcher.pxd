@@ -19,7 +19,6 @@ cdef enum action_t:
     MATCH_REJECT = 2000
     MATCH_DOUBLE = 3000
 
-
 cdef enum quantifier_t:
     ZERO
     ZERO_ONE
@@ -27,7 +26,6 @@ cdef enum quantifier_t:
     ONE
     ONE_PLUS
     FINAL_ID
-
 
 cdef struct AttrValueC:
     attr_id_t attr
@@ -56,15 +54,11 @@ cdef struct PatternStateC:
     TokenPatternC* pattern
     int32_t start
     int32_t length
-    vector[MatchAlignmentC] alignments
-
 
 cdef struct MatchC:
     attr_t pattern_id
     int32_t start
     int32_t length
-    vector[MatchAlignmentC] alignments
-
 
 cdef class Matcher:
     cdef Pool mem

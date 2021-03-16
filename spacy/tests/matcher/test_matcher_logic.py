@@ -207,7 +207,7 @@ def test_matcher_remove():
 
         
         
-def test_matcher_match_alignments_greedy_longest(en_vocab):
+def test_matcher_with_alignments_greedy_longest(en_vocab):
     cases = [
         ("aaab", "a* b", [0, 0, 0, 1]),
         ("baab", "b a* b", [0, 1, 1, 2]),
@@ -242,7 +242,7 @@ def test_matcher_match_alignments_greedy_longest(en_vocab):
             else:
                 pattern.append({"ORTH": part})
         matcher.add("PATTERN", [pattern], greedy="LONGEST")
-        matches = matcher(doc, match_alignments=True)
+        matches = matcher(doc, with_alignments=True)
         n_matches = len(matches)
         
         _, s, e, expected = matches[0]
@@ -250,7 +250,7 @@ def test_matcher_match_alignments_greedy_longest(en_vocab):
         assert expected == result, (string, pattern_str, s, e, n_matches)
         
 
-def test_matcher_match_alignments_nongreedy(en_vocab):
+def test_matcher_with_alignments_nongreedy(en_vocab):
     cases = [
         (0, "aaab", "a* b", [[0, 1], [0, 0, 1], [0, 0, 0, 1], [1]]),
         (1, "baab", "b a* b", [[0, 1, 1, 2]]),
@@ -286,7 +286,7 @@ def test_matcher_match_alignments_nongreedy(en_vocab):
                 pattern.append({"ORTH": part})
         
         matcher.add("PATTERN", [pattern])
-        matches = matcher(doc, match_alignments=True)
+        matches = matcher(doc, with_alignments=True)
         n_matches = len(matches)
         
         for _, s, e, expected in matches:

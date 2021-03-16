@@ -196,20 +196,20 @@ cdef class Matcher:
                 else:
                     yield doc
 
-    def __call__(self, object doclike, *, as_spans=False, allow_missing=False, match_alignments=False):
+    def __call__(self, object doclike, *, as_spans=False, allow_missing=False, with_alignments=False):
         """Find all token sequences matching the supplied pattern.
 
         doclike (Doc or Span): The document to match over.
         as_spans (bool): Return Span objects with labels instead of (match_id,
             start, end) tuples.
-        match_alignments (bool): Return match alignment information, which is `List[int]` with length of matched span.
+        with_alignments (bool): Return match alignment information, which is `List[int]` with length of matched span.
             Each entry denotes the corresponding index of token pattern. If as_spans is set to True, this setting is ignored.
         RETURNS (list): A list of `(match_id, start, end)` tuples,
             describing the matches. A match tuple describes a span
             `doc[start:end]`. The `match_id` is an integer. If as_spans is set
             to True, a list of Span objects is returned. 
-            If match_alignments is set to True and as_spans is set to False, 
-            A list of `(match_id, start, end, match_alignments)` tuples is returned. 
+            If with_alignments is set to True and as_spans is set to False, 
+            A list of `(match_id, start, end, alignments)` tuples is returned. 
             
         """
         if isinstance(doclike, Doc):
@@ -220,6 +220,11 @@ cdef class Matcher:
             length = doclike.end - doclike.start
         else:
             raise ValueError(Errors.E195.format(good="Doc or Span", got=type(doclike).__name__))
+        if not isinstance(with_alignments, bool):
+            raise ValueError(Errors.E1017.format(arg_type=type(with_alignments)))
+        else:
+            # this bool variable `with_alignments` is integer from now on till the end.
+            with_alignments = int(with_alignments)
         cdef Pool tmp_pool = Pool()
         if not allow_missing:
             for attr in (TAG, POS, MORPH, LEMMA, DEP):
@@ -235,18 +240,19 @@ cdef class Matcher:
                     error_msg = Errors.E155.format(pipe=pipe, attr=self.vocab.strings.as_string(attr))
                     raise ValueError(error_msg)
         matches = find_matches(&self.patterns[0], self.patterns.size(), doclike, length,
-                                extensions=self._extensions, predicates=self._extra_predicates)
-        final_matches_with_alignments = []
+                                extensions=self._extensions, predicates=self._extra_predicates, with_alignments=with_alignments)
+        final_matches = []
         pairs_by_id = {}
         # For each key, either add all matches, or only the filtered, non-overlapping ones
-        for (key, start, end, alignments) in matches:
+        # this `match` can be either (start, end) or (start, end, alignments) depending on `with_alignments=` option. 
+        for key, *match in matches:
             span_filter = self._filter.get(key)
             if span_filter is not None:
                 pairs = pairs_by_id.get(key, [])
-                pairs.append((start,end,alignments))
+                pairs.append(match)
                 pairs_by_id[key] = pairs
             else:
-                final_matches_with_alignments.append((key, start, end, alignments))
+                final_matches.append((key, *match))
         matched = <char*>tmp_pool.alloc(length, sizeof(char))
         empty = <char*>tmp_pool.alloc(length, sizeof(char))
         for key, pairs in pairs_by_id.items():
@@ -258,16 +264,18 @@ cdef class Matcher:
                 sorted_pairs = sorted(pairs, key=lambda x: (x[1]-x[0], -x[0]), reverse=True) # reverse sort by length
             else:
                 raise ValueError(Errors.E947.format(expected=["FIRST", "LONGEST"], arg=span_filter))
-            for (start, end, alignments) in sorted_pairs:
+            for match in sorted_pairs:
+                start, end = match[:2]
                 assert 0 <= start < end  # Defend against segfaults
                 span_len = end-start
                 # If no tokens in the span have matched
                 if memcmp(&matched[start], &empty[start], span_len * sizeof(matched[0])) == 0:
-                    final_matches_with_alignments.append((key, start, end, alignments))
+                    final_matches.append((key, *match))
                     # Mark tokens that have matched
                     memset(&matched[start], 1, span_len * sizeof(matched[0]))
-         
-        final_matches = [(key, start, end) for key, start, end, alignments in final_matches_with_alignments]
+        if with_alignments != 0:
+            final_matches_with_alignments = final_matches
+            final_matches = [(key, start, end) for key, start, end, alignments in final_matches]
         # perform the callbacks on the filtered set of results
         for i, (key, start, end) in enumerate(final_matches):
             on_match = self._callbacks.get(key, None)
@@ -275,23 +283,23 @@ cdef class Matcher:
                 on_match(self, doc, i, final_matches)
         if as_spans:
             return [Span(doc, start, end, label=key) for key, start, end in final_matches]
-        elif match_alignments:
+        elif with_alignments:
             # convert alignments List[Dict[str, int]] --> List[int]
             final_matches = []
             # when multiple alignment (belongs to the same length) is found,
             # keeps the alignment that has largest token_idx
             for key, start, end, alignments in final_matches_with_alignments:
                 sorted_alignments = sorted(alignments, key=lambda x: (x['length'], x['token_idx']), reverse=False)
-                match_alignments = [0] * (end-start)
+                alignments = [0] * (end-start)
                 
                 for align in sorted_alignments:
                     if align['length'] >= end-start:
                         continue
                     # Since alignments are sorted in order of (length, token_idx)
                     # this overwrites smaller token_idx when they have same length.
-                    match_alignments[align['length']] = align['token_idx']
+                    alignments[align['length']] = align['token_idx']
                     
-                final_matches.append((key, start, end, match_alignments))
+                final_matches.append((key, start, end, alignments))
                 
             return final_matches
         else:
@@ -312,9 +320,9 @@ def unpickle_matcher(vocab, patterns, callbacks):
     return matcher
 
 
-cdef find_matches(TokenPatternC** patterns, int n, object doclike, int length, extensions=None, predicates=tuple()):
+cdef find_matches(TokenPatternC** patterns, int n, object doclike, int length, extensions=None, predicates=tuple(), int with_alignments=0):
     """Find matches in a doc, with a compiled array of patterns. Matches are
-    returned as a list of (id, start, end) tuples.
+    returned as a list of (id, start, end) tuples or (id, start, end, alignments) tuples (if with_alignments != 0)
 
     To augment the compiled patterns, we optionally also take two Python lists.
 
@@ -326,6 +334,8 @@ cdef find_matches(TokenPatternC** patterns, int n, object doclike, int length, e
     """
     cdef vector[PatternStateC] states
     cdef vector[MatchC] matches
+    cdef vector[vector[MatchAlignmentC]] align_states
+    cdef vector[vector[MatchAlignmentC]] align_matches
     cdef PatternStateC state
     cdef int i, j, nr_extra_attr
     cdef Pool mem = Pool()
@@ -352,12 +362,14 @@ cdef find_matches(TokenPatternC** patterns, int n, object doclike, int length, e
     for i in range(length):
         for j in range(n):
             states.push_back(PatternStateC(patterns[j], i, 0))
-        transition_states(states, matches, predicate_cache,
-            doclike[i], extra_attr_values, predicates)
+        if with_alignments != 0:
+            align_states.resize(states.size())
+        transition_states(states, matches, align_states, align_matches, predicate_cache,
+            doclike[i], extra_attr_values, predicates, with_alignments)
         extra_attr_values += nr_extra_attr
         predicate_cache += len(predicates)
     # Handle matches that end in 0-width patterns
-    finish_states(matches, states)
+    finish_states(matches, states, align_matches, align_states, with_alignments)
     seen = set()
     for i in range(matches.size()):
         match = (
@@ -370,17 +382,22 @@ cdef find_matches(TokenPatternC** patterns, int n, object doclike, int length, e
         # first .?, or the second .? -- it doesn't matter, it's just one match.
         # Skip 0-length matches. (TODO: fix algorithm)
         if match not in seen and matches[i].length > 0:
-            # matches.alignments has no need to be used in deduplicate process.
-            output.append(match + (matches[i].alignments,))
+            if with_alignments != 0:
+                # since the length of align_matches equals to that of match, we can share same 'i'
+                output.append(match + (align_matches[i],))
+            else:
+                output.append(match)
             seen.add(match)
     return output
 
 
-cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& matches,
+cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& matches, 
+                            vector[vector[MatchAlignmentC]]& align_states, vector[vector[MatchAlignmentC]]& align_matches,
                             int8_t* cached_py_predicates,
-        Token token, const attr_t* extra_attrs, py_predicates) except *:
+        Token token, const attr_t* extra_attrs, py_predicates, int with_alignments) except *:
     cdef int q = 0
     cdef vector[PatternStateC] new_states
+    cdef vector[vector[MatchAlignmentC]] align_new_states
     cdef int nr_predicate = len(py_predicates)
     for i in range(states.size()):
         if states[i].pattern.nr_py >= 1:
@@ -389,8 +406,6 @@ cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& match
         action = get_action(states[i], token.c, extra_attrs,
                             cached_py_predicates)
         
-        
-        
         if action == REJECT:
             continue
         # Keep only a subset of states (the active ones). Index q is the
@@ -398,24 +413,32 @@ cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& match
         # it in the states list, because q doesn't advance.
         state = states[i]
         states[q] = state
-        
-        
+        # Separate from states, performance is guaranteed for users who only need basic options (without alignments).
+        # `align_states` always corresponds to `states` 1:1.
+        if with_alignments != 0:
+            align_state = align_states[i]
+            align_states[q] = align_state
         
         while action in (RETRY, RETRY_ADVANCE, RETRY_EXTEND):
             # Update alignment before the transition of current state
-            # 'MatchAlignmentC' maps 'original token index of current pattern' to 'current matching length' 
-            states[q].alignments.push_back(MatchAlignmentC(states[q].pattern.token_idx, states[q].length))
+            # 'MatchAlignmentC' maps 'original token index of current pattern' to 'current matching length'
+            if with_alignments != 0:
+                align_states[q].push_back(MatchAlignmentC(states[q].pattern.token_idx, states[q].length))
             
             if action == RETRY_EXTEND:
                 # This handles the 'extend'
                 new_states.push_back(
                     PatternStateC(pattern=states[q].pattern, start=state.start,
-                                  length=state.length+1, alignments=states[q].alignments))
+                                  length=state.length+1))
+                if with_alignments != 0:
+                    align_new_states.push_back(align_states[q])
             if action == RETRY_ADVANCE:
                 # This handles the 'advance'
                 new_states.push_back(
                     PatternStateC(pattern=states[q].pattern+1, start=state.start,
-                                  length=state.length+1, alignments=states[q].alignments))
+                                  length=state.length+1))
+                if with_alignments != 0:
+                    align_new_states.push_back(align_states[q])
             
             states[q].pattern += 1
             
@@ -427,8 +450,8 @@ cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& match
             
             
         # Update alignment before the transition of current state
-        states[q].alignments.push_back(MatchAlignmentC(states[q].pattern.token_idx, states[q].length))
-        
+        if with_alignments != 0:
+            align_states[q].push_back(MatchAlignmentC(states[q].pattern.token_idx, states[q].length))
             
         if action == REJECT:
             pass
@@ -441,30 +464,51 @@ cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& match
             if action == MATCH:
                 matches.push_back(
                     MatchC(pattern_id=ent_id, start=state.start,
-                            length=state.length+1, alignments=states[q].alignments))
+                            length=state.length+1))
+                # `align_matches` always corresponds to `matches` 1:1
+                if with_alignments != 0:
+                    align_matches.push_back(align_states[q])
             elif action == MATCH_DOUBLE:
                 # push match without last token if length > 0
                 if state.length > 0:
                     matches.push_back(
                         MatchC(pattern_id=ent_id, start=state.start,
-                                length=state.length, alignments=states[q].alignments))
+                                length=state.length))
+                    # MATCH_DOUBLE emit matches twice, 
+                    # add one more to align_matches in order to keep 1:1 relationship
+                    if with_alignments != 0:
+                        align_matches.push_back(align_states[q])
                 # push match with last token
                 matches.push_back(
                     MatchC(pattern_id=ent_id, start=state.start,
-                            length=state.length+1, alignments=states[q].alignments))
+                            length=state.length+1))
+                # `align_matches` always corresponds to `matches` 1:1
+                if with_alignments != 0:
+                    align_matches.push_back(align_states[q])
             elif action == MATCH_REJECT:
                 matches.push_back(
                     MatchC(pattern_id=ent_id, start=state.start,
-                            length=state.length, alignments=states[q].alignments))
+                            length=state.length))
+                # `align_matches` always corresponds to `matches` 1:1
+                if with_alignments != 0:
+                    align_matches.push_back(align_states[q])
             elif action == MATCH_EXTEND:
                 matches.push_back(
                     MatchC(pattern_id=ent_id, start=state.start,
-                           length=state.length, alignments=states[q].alignments))
+                           length=state.length))
+                # `align_matches` always corresponds to `matches` 1:1
+                if with_alignments != 0:
+                    align_matches.push_back(align_states[q])
                 states[q].length += 1
                 q += 1
     states.resize(q)
     for i in range(new_states.size()):
         states.push_back(new_states[i])
+        
+    if with_alignments != 0:
+        align_states.resize(q)
+        for i in range(align_new_states.size()):
+            align_states.push_back(align_new_states[i])
 
 
 cdef int update_predicate_cache(int8_t* cache,
@@ -487,19 +531,28 @@ cdef int update_predicate_cache(int8_t* cache,
                 raise ValueError(Errors.E125.format(value=result))
 
 
-cdef void finish_states(vector[MatchC]& matches, vector[PatternStateC]& states) except *:
+cdef void finish_states(vector[MatchC]& matches, vector[PatternStateC]& states, 
+                        vector[vector[MatchAlignmentC]]& align_matches, vector[vector[MatchAlignmentC]]& align_states,
+                       int with_alignments) except *:
     """Handle states that end in zero-width patterns."""
     cdef PatternStateC state
+    cdef vector[MatchAlignmentC] align_state
     for i in range(states.size()):
         state = states[i]
+        if with_alignments != 0:
+            align_state = align_states[i]
         while get_quantifier(state) in (ZERO_PLUS, ZERO_ONE):
             # Update alignment before the transition of current state
-            state.alignments.push_back(MatchAlignmentC(state.pattern.token_idx, state.length))
+            if with_alignments != 0:
+                align_state.push_back(MatchAlignmentC(state.pattern.token_idx, state.length))
             is_final = get_is_final(state)
             if is_final:
                 ent_id = get_ent_id(state.pattern)
+                # `align_matches` always corresponds to `matches` 1:1
+                if with_alignments != 0:
+                    align_matches.push_back(align_state)
                 matches.push_back(
-                    MatchC(pattern_id=ent_id, start=state.start, length=state.length, alignments=state.alignments))
+                    MatchC(pattern_id=ent_id, start=state.start, length=state.length))
                 break
             else:
                 state.pattern += 1
