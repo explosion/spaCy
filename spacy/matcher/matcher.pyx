@@ -221,6 +221,9 @@ cdef class Matcher:
             length = doclike.end - doclike.start
         else:
             raise ValueError(Errors.E195.format(good="Doc or Span", got=type(doclike).__name__))
+        # Skip alignments calculations if as_spans is set
+        if as_spans:
+            with_alignments = False
         cdef Pool tmp_pool = Pool()
         if not allow_missing:
             for attr in (TAG, POS, MORPH, LEMMA, DEP):
