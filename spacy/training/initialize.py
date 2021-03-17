@@ -72,17 +72,16 @@ def init_nlp(config: Config, *, use_gpu: int = -1) -> "Language":
         logger.info(f"Initialized pipeline components: {nlp.pipe_names}")
     # Detect components with listeners that are not frozen consistently
     for name, proc in nlp.pipeline:
-        if getattr(proc, "listening_components", None):  # e.g. tok2vec/transformer
-            for listener in proc.listening_components:
-                # Don't warn about components not in the pipeline
-                if listener not in nlp.pipeline:
-                    continue
+        for listener in getattr(proc, "listening_components", []):  # e.g. tok2vec/transformer
+            # Don't warn about components not in the pipeline
+            if listener not in nlp.pipe_names:
+                continue
 
-                if listener in frozen_components and name not in frozen_components:
-                    logger.warning(Warnings.W087.format(name=name, listener=listener))
-                # We always check this regardless, in case user freezes tok2vec
-                if listener not in frozen_components and name in frozen_components:
-                    logger.warning(Warnings.W086.format(name=name, listener=listener))
+            if listener in frozen_components and name not in frozen_components:
+                logger.warning(Warnings.W087.format(name=name, listener=listener))
+            # We always check this regardless, in case user freezes tok2vec
+            if listener not in frozen_components and name in frozen_components:
+                logger.warning(Warnings.W086.format(name=name, listener=listener))
     return nlp
 
 
