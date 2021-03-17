@@ -91,6 +91,55 @@ have to call `list()` on it first:
 
 </Infobox>
 
+### Multiprocessing
+
+spaCy includes built-in support for multiprocessing with
+[`nlp.pipe`](/api/language#pipe) using the `n_process` option:
+
+```python
+# Multiprocessing with 4 processes
+docs = nlp.pipe(texts, n_process=4)
+
+# With as many processes as CPUs (use with caution!)
+docs = nlp.pipe(texts, n_process=-1)
+```
+
+Depending on your platform, starting many processes with multiprocessing can
+add a lot of overhead. In particular, the default start method `spawn` used in
+macOS/OS X (as of Python 3.8) and in Windows can be slow for larger models
+because the model data is copied in memory for each new process. See the
+[Python docs on
+multiprocessing](https://docs.python.org/3/library/multiprocessing.html#contexts-and-start-methods)
+for further details.
+
+For shorter tasks and in particular with `spawn`, it can be faster to use a
+smaller number of processes with a larger batch size. The optimal `batch_size`
+setting will depend on the pipeline components, the length of your documents,
+the number of processes and how much memory is available.
+
+```python
+# Default batch size is `nlp.batch_size` (typically 1000)
+docs = nlp.pipe(texts, n_process=2, batch_size=2000)
+```
+
+<Infobox title="Multiprocessing on GPU" variant="warning">
+
+Multiprocessing is not generally recommended on GPU because RAM is too limited.
+If you want to try it out, be aware that it is only possible using `spawn` due
+to limitations in CUDA.
+
+</Infobox>
+
+<Infobox title="Multiprocessing with transformer models" variant="warning">
+
+In Linux, transformer models may hang or deadlock with multiprocessing due to an
+[issue in PyTorch](https://github.com/pytorch/pytorch/issues/17199). One
+suggested workaround is to use `spawn` instead of `fork` and another is to
+limit the number of threads before loading any models using
+`torch.set_num_threads(1)`.
+
+</Infobox>
+
 ## Pipelines and built-in components {#pipelines}
 
 spaCy makes it very easy to create your own pipelines consisting of reusable
