@@ -202,8 +202,10 @@ cdef class Matcher:
         doclike (Doc or Span): The document to match over.
         as_spans (bool): Return Span objects with labels instead of (match_id,
             start, end) tuples.
-        with_alignments (bool): Return match alignment information, which is `List[int]` with length of matched span.
-            Each entry denotes the corresponding index of token pattern. If as_spans is set to True, this setting is ignored.
+        with_alignments (bool): Return match alignment information, which is
+            `List[int]` with length of matched span. Each entry denotes the
+            corresponding index of token pattern. If as_spans is set to True,
+            this setting is ignored.
         RETURNS (list): A list of `(match_id, start, end)` tuples,
             describing the matches. A match tuple describes a span
             `doc[start:end]`. The `match_id` is an integer. If as_spans is set
@@ -237,8 +239,9 @@ cdef class Matcher:
                                 extensions=self._extensions, predicates=self._extra_predicates, with_alignments=with_alignments)
         final_matches = []
         pairs_by_id = {}
-        # For each key, either add all matches, or only the filtered, non-overlapping ones
-        # this `match` can be either (start, end) or (start, end, alignments) depending on `with_alignments=` option.
+        # For each key, either add all matches, or only the filtered,
+        # non-overlapping ones this `match` can be either (start, end) or
+        # (start, end, alignments) depending on `with_alignments=` option.
         for key, *match in matches:
             span_filter = self._filter.get(key)
             if span_filter is not None:
@@ -457,7 +460,7 @@ cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& match
                     matches.push_back(
                         MatchC(pattern_id=ent_id, start=state.start,
                                 length=state.length))
-                    # MATCH_DOUBLE emit matches twice,
+                    # MATCH_DOUBLE emits matches twice,
                     # add one more to align_matches in order to keep 1:1 relationship
                     if with_alignments != 0:
                         align_matches.push_back(align_states[q])
@@ -515,8 +518,9 @@ cdef int update_predicate_cache(int8_t* cache,
 
 
 cdef void finish_states(vector[MatchC]& matches, vector[PatternStateC]& states,
-                        vector[vector[MatchAlignmentC]]& align_matches, vector[vector[MatchAlignmentC]]& align_states,
-                       bint with_alignments) except *:
+                        vector[vector[MatchAlignmentC]]& align_matches,
+                        vector[vector[MatchAlignmentC]]& align_states,
+                        bint with_alignments) except *:
     """Handle states that end in zero-width patterns."""
     cdef PatternStateC state
     cdef vector[MatchAlignmentC] align_state
