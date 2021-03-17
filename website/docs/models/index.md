@@ -63,7 +63,7 @@ it's easy to swap out or disable the lemmatizer. The pipelines are designed to
 be efficient in terms of speed and size and work well when the pipeline is run
 in full.
 
-When modifying a pretrained v3 pipeline, it's important to understand how the
+When modifying a pretrained pipeline, it's important to understand how the
 components **depend on** each other. Unlike spaCy v2, where the `tagger`,
 `parser` and `ner` components were all independent, some v3 components depend on
 earlier components in the pipeline. As a result, disabling or reordering
@@ -175,8 +175,8 @@ disable everything else:
 nlp = spacy.load("en_core_web_sm", disable=["tok2vec", "tagger", "parser", "attribute_ruler", "lemmatizer"])
 ```
 
-In the transformer models, `ner` listens to the `transformer` layer, so you can
-disable all components related tagging, parsing, and lemmatization.
+In the transformer models, `ner` listens to the `transformer` compoinent, so you
+can disable all components related tagging, parsing, and lemmatization.
 
 ```python
 nlp = spacy.load("en_core_web_trf", disable=["tagger", "parser", "attribute_ruler", "lemmatizer"])
