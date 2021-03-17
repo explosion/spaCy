@@ -62,6 +62,8 @@ access the named entity predictions:
 >
 > 1. Also disable the `"ner"` component. You'll see that the `doc.ents` are now
 >    empty, because the entity recognizer didn't run.
+>    
+> 2. You can save metadata to a doc [`attribute`](/api/language#attributes) when calling [`nlp.pipe`](/api/language#pipe)
 
 ```python
 ### {executable="true"}
