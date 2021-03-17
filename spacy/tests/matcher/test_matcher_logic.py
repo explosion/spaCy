@@ -205,8 +205,7 @@ def test_matcher_remove():
     with pytest.raises(ValueError):
         matcher.remove("Rule")
 
-        
-        
+
 def test_matcher_with_alignments_greedy_longest(en_vocab):
     cases = [
         ("aaab", "a* b", [0, 0, 0, 1]),
@@ -244,11 +243,11 @@ def test_matcher_with_alignments_greedy_longest(en_vocab):
         matcher.add("PATTERN", [pattern], greedy="LONGEST")
         matches = matcher(doc, with_alignments=True)
         n_matches = len(matches)
-        
+
         _, s, e, expected = matches[0]
-        
+
         assert expected == result, (string, pattern_str, s, e, n_matches)
-        
+
 
 def test_matcher_with_alignments_nongreedy(en_vocab):
     cases = [
@@ -284,12 +283,11 @@ def test_matcher_with_alignments_nongreedy(en_vocab):
                 pattern.append({"ORTH": part[0], "OP": "?"})
             else:
                 pattern.append({"ORTH": part})
-        
+
         matcher.add("PATTERN", [pattern])
         matches = matcher(doc, with_alignments=True)
         n_matches = len(matches)
-        
+
         for _, s, e, expected in matches:
             assert expected in results, (case_id, string, pattern_str, s, e, n_matches)
             assert len(expected) == e - s
-        

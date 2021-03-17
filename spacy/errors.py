@@ -793,8 +793,6 @@ class Errors:
              "DependencyMatcher token patterns. The token pattern in "
              "RIGHT_ATTR should return matches that are each exactly one token "
              "long. Invalid pattern:\n{node}")
-    E1017 = ("Matcher.__call__ received invalid 'with_alignments' argument: expected "
-             "bool, but got: {arg_type}")
 
 
 # Deprecated model shortcuts, only used in errors and warnings

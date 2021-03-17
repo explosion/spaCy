@@ -540,12 +540,3 @@ def test_matcher_no_zero_length(en_vocab):
     matcher = Matcher(en_vocab)
     matcher.add("TEST", [[{"TAG": "C", "OP": "?"}]])
     assert len(matcher(doc)) == 0
-
-
-def test_matcher_valid_with_alignments(en_vocab):
-    """Test that with_alignments can only be bool."""
-    matcher = Matcher(en_vocab)
-    doc = Doc(en_vocab, words=["a", "b"], tags=["A", "B"])
-    with pytest.raises(ValueError):
-        matcher(doc, with_alignments=0)
-        matcher(doc, with_alignments='TRUE')

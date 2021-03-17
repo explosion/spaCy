@@ -19,6 +19,7 @@ cdef enum action_t:
     MATCH_REJECT = 2000
     MATCH_DOUBLE = 3000
 
+
 cdef enum quantifier_t:
     ZERO
     ZERO_ONE
@@ -27,6 +28,7 @@ cdef enum quantifier_t:
     ONE_PLUS
     FINAL_ID
 
+
 cdef struct AttrValueC:
     attr_id_t attr
     attr_t value
@@ -34,7 +36,7 @@ cdef struct AttrValueC:
 cdef struct IndexValueC:
     int32_t index
     attr_t value
-    
+
 cdef struct TokenPatternC:
     AttrValueC* attrs
     int32_t* py_predicates
@@ -46,19 +48,23 @@ cdef struct TokenPatternC:
     hash_t key
     int32_t token_idx
 
+
 cdef struct MatchAlignmentC:
     int32_t token_idx
     int32_t length
-    
+
+
 cdef struct PatternStateC:
     TokenPatternC* pattern
     int32_t start
     int32_t length
 
+
 cdef struct MatchC:
     attr_t pattern_id
     int32_t start
     int32_t length
+
 
 cdef class Matcher:
     cdef Pool mem
