@@ -54,9 +54,8 @@ texts = ["This is a text", "These are lots of texts", "..."]
 In this example, we're using [`nlp.pipe`](/api/language#pipe) to process a
 (potentially very large) iterable of texts as a stream. Because we're only
 accessing the named entities in `doc.ents` (set by the `ner` component), we'll
-disable all other statistical components (the `tagger` and `parser`) during
-processing. `nlp.pipe` yields `Doc` objects, so we can iterate over them and
-access the named entity predictions:
+disable all other components during processing. `nlp.pipe` yields `Doc`
+objects, so we can iterate over them and access the named entity predictions:
 
 > #### ✏️ Things to try
 >
@@ -73,7 +72,7 @@ texts = [
 ]
 
 nlp = spacy.load("en_core_web_sm")
-for doc in nlp.pipe(texts, disable=["tagger", "parser"]):
+for doc in nlp.pipe(texts, disable=["tok2vec", "tagger", "parser", "attribute_ruler", "lemmatizer"]):
     # Do something with the doc here
     print([(ent.text, ent.label_) for ent in doc.ents])
 ```
@@ -144,10 +143,12 @@ nlp = spacy.load("en_core_web_sm")
 ```
 
 ... the pipeline's `config.cfg` tells spaCy to use the language `"en"` and the
-pipeline `["tok2vec", "tagger", "parser", "ner"]`. spaCy will then initialize
-`spacy.lang.en.English`, and create each pipeline component and add it to the
-processing pipeline. It'll then load in the model data from the data directory
-and return the modified `Language` class for you to use as the `nlp` object.
+pipeline
+`["tok2vec", "tagger", "parser", "ner", "attribute_ruler", "lemmatizer"]`. spaCy
+will then initialize `spacy.lang.en.English`, and create each pipeline component
+and add it to the processing pipeline. It'll then load in the model data from
+the data directory and return the modified `Language` class for you to use as
+the `nlp` object.
 
 <Infobox title="Changed in v3.0" variant="warning">
 
@@ -171,7 +172,7 @@ the binary data:
 ```python
 ### spacy.load under the hood
 lang = "en"
-pipeline = ["tok2vec", "tagger", "parser", "ner"]
+pipeline = ["tok2vec", "tagger", "parser", "ner", "attribute_ruler", "lemmatizer"]
 data_path = "path/to/en_core_web_sm/en_core_web_sm-3.0.0"
 
 cls = spacy.util.get_lang_class(lang)  # 1. Get Language class, e.g. English
@@ -186,7 +187,7 @@ component** on the `Doc`, in order. Since the model data is loaded, the
 components can access it to assign annotations to the `Doc` object, and
 subsequently to the `Token` and `Span` which are only views of the `Doc`, and
 don't own any data themselves. All components return the modified document,
-which is then processed by the component next in the pipeline.
+which is then processed by the next component in the pipeline.
 
 ```python
 ### The pipeline under the hood
@@ -201,9 +202,9 @@ list of human-readable component names.
 
 ```python
 print(nlp.pipeline)
-# [('tok2vec', <spacy.pipeline.Tok2Vec>), ('tagger', <spacy.pipeline.Tagger>), ('parser', <spacy.pipeline.DependencyParser>), ('ner', <spacy.pipeline.EntityRecognizer>)]
+# [('tok2vec', <spacy.pipeline.Tok2Vec>), ('tagger', <spacy.pipeline.Tagger>), ('parser', <spacy.pipeline.DependencyParser>), ('ner', <spacy.pipeline.EntityRecognizer>), ('attribute_ruler', <spacy.pipeline.AttributeRuler>), ('lemmatizer', <spacy.lang.en.lemmatizer.EnglishLemmatizer>)]
 print(nlp.pipe_names)
-# ['tok2vec', 'tagger', 'parser', 'ner']
+# ['tok2vec', 'tagger', 'parser', 'ner', 'attribute_ruler', 'lemmatizer']
 ```
 
 ### Built-in pipeline components {#built-in}
@@ -300,7 +301,7 @@ blocks.
 ```python
 ### Disable for block
 # 1. Use as a context manager
-with nlp.select_pipes(disable=["tagger", "parser"]):
+with nlp.select_pipes(disable=["tagger", "parser", "lemmatizer"]):
     doc = nlp("I won't be tagged and parsed")
 doc = nlp("I will be tagged and parsed")
 
@@ -324,7 +325,7 @@ The [`nlp.pipe`](/api/language#pipe) method also supports a `disable` keyword
 argument if you only want to disable components during processing:
 
 ```python
-for doc in nlp.pipe(texts, disable=["tagger", "parser"]):
+for doc in nlp.pipe(texts, disable=["tagger", "parser", "lemmatizer"]):
     # Do something with the doc here
 ```
 
