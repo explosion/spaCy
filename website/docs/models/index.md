@@ -175,7 +175,7 @@ disable everything else:
 nlp = spacy.load("en_core_web_sm", disable=["tok2vec", "tagger", "parser", "attribute_ruler", "lemmatizer"])
 ```
 
-In the transformer models, `ner` listens to the `transformer` compoinent, so you
+In the transformer models, `ner` listens to the `transformer` component, so you
 can disable all components related tagging, parsing, and lemmatization.
 
 ```python
