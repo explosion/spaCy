@@ -63,7 +63,7 @@ access the named entity predictions:
 > 1. Also disable the `"ner"` component. You'll see that the `doc.ents` are now
 >    empty, because the entity recognizer didn't run.
 >    
-> 2. You can save metadata to a doc [`attribute`](/api/language#attributes) when calling [`nlp.pipe`](/api/language#pipe)
+> 2. You can save metadata to a doc [attribute](processing-pipelines#custom-components-attributes) when calling [`nlp.pipe`](/api/language#pipe)
 
 ```python
 ### {executable="true"}
@@ -1325,6 +1325,35 @@ There are three main types of extensions, which can be defined using the
 [`Doc.set_extension`](/api/doc#set_extension),
 [`Span.set_extension`](/api/span#set_extension) and
 [`Token.set_extension`](/api/token#set_extension) methods.
+## Description
+
+> #### ✏️ Things to try
+>
+> 1. The pipeline can process metadata as a (text, metadata) tuple.
+>
+> 2. This metadata can be saved as a custom attribute extension on the doc.
+> 
+> ```
+> data = [
+>   ("Some text to process", {"meta": "foo"}),
+>   ("And more text...", {"meta": "bar"})
+> ]
+> 
+> for doc, context in nlp.pipe(data, as_tuples=True):
+>     # Let's assume you have a "meta" extension registered on the Doc
+>     doc._.meta = context["meta"]
+> ```
+
+
+### Types of change
+Update the docs.
+
+## Checklist
+<!--- Before you submit the PR, go over this checklist and make sure you can
+tick off all the boxes. [] -> [x] -->
+- [x] I have submitted the spaCy Contributor Agreement.
+- [x] I ran the tests, and all new and existing tests passed.
+- [x] My changes don't require a change to the documentation, or if they do, I've added all required information.
 
 1. **Attribute extensions.** Set a default value for an attribute, which can be
    overwritten manually at any time. Attribute extensions work like "normal"
