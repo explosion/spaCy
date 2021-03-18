@@ -54,8 +54,8 @@ texts = ["This is a text", "These are lots of texts", "..."]
 In this example, we're using [`nlp.pipe`](/api/language#pipe) to process a
 (potentially very large) iterable of texts as a stream. Because we're only
 accessing the named entities in `doc.ents` (set by the `ner` component), we'll
-disable all other components during processing. `nlp.pipe` yields `Doc`
-objects, so we can iterate over them and access the named entity predictions:
+disable all other components during processing. `nlp.pipe` yields `Doc` objects,
+so we can iterate over them and access the named entity predictions:
 
 > #### ✏️ Things to try
 >
@@ -104,12 +104,11 @@ docs = nlp.pipe(texts, n_process=4)
 docs = nlp.pipe(texts, n_process=-1)
 ```
 
-Depending on your platform, starting many processes with multiprocessing can
-add a lot of overhead. In particular, the default start method `spawn` used in
+Depending on your platform, starting many processes with multiprocessing can add
+a lot of overhead. In particular, the default start method `spawn` used in
 macOS/OS X (as of Python 3.8) and in Windows can be slow for larger models
 because the model data is copied in memory for each new process. See the
-[Python docs on
-multiprocessing](https://docs.python.org/3/library/multiprocessing.html#contexts-and-start-methods)
+[Python docs on multiprocessing](https://docs.python.org/3/library/multiprocessing.html#contexts-and-start-methods)
 for further details.
 
 For shorter tasks and in particular with `spawn`, it can be faster to use a
@@ -134,8 +133,8 @@ to limitations in CUDA.
 
 In Linux, transformer models may hang or deadlock with multiprocessing due to an
 [issue in PyTorch](https://github.com/pytorch/pytorch/issues/17199). One
-suggested workaround is to use `spawn` instead of `fork` and another is to
-limit the number of threads before loading any models using
+suggested workaround is to use `spawn` instead of `fork` and another is to limit
+the number of threads before loading any models using
 `torch.set_num_threads(1)`.
 
 </Infobox>
@@ -1547,7 +1546,7 @@ to `Doc.user_span_hooks` and `Doc.user_token_hooks`.
 
 | Name               | Customizes                                                                                                                                                                                                              |
 | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `user_hooks`       | [`Doc.similarity`](/api/doc#similarity), [`Doc.vector`](/api/doc#vector), [`Doc.has_vector`](/api/doc#has_vector), [`Doc.vector_norm`](/api/doc#vector_norm), [`Doc.sents`](/api/doc#sents)                                                                      |
+| `user_hooks`       | [`Doc.similarity`](/api/doc#similarity), [`Doc.vector`](/api/doc#vector), [`Doc.has_vector`](/api/doc#has_vector), [`Doc.vector_norm`](/api/doc#vector_norm), [`Doc.sents`](/api/doc#sents)                             |
 | `user_token_hooks` | [`Token.similarity`](/api/token#similarity), [`Token.vector`](/api/token#vector), [`Token.has_vector`](/api/token#has_vector), [`Token.vector_norm`](/api/token#vector_norm), [`Token.conjuncts`](/api/token#conjuncts) |
 | `user_span_hooks`  | [`Span.similarity`](/api/span#similarity), [`Span.vector`](/api/span#vector), [`Span.has_vector`](/api/span#has_vector), [`Span.vector_norm`](/api/span#vector_norm), [`Span.root`](/api/span#root)                     |
 
