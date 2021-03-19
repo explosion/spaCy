@@ -352,6 +352,9 @@ def test_doc_api_from_docs(en_tokenizer, de_tokenizer):
     en_texts_without_empty = [t for t in en_texts if len(t)]
     de_text = "Wie war die Frage?"
     en_docs = [en_tokenizer(text) for text in en_texts]
+    en_docs[0].spans["group"] = [en_docs[0][1:4]]
+    en_docs[2].spans["group"] = [en_docs[2][1:4]]
+    span_group_texts = sorted([en_docs[0][1:4].text, en_docs[2][1:4].text])
     docs_idx = en_texts[0].index("docs")
     de_doc = de_tokenizer(de_text)
     expected = (True, None, None, None)
@@ -377,6 +380,8 @@ def test_doc_api_from_docs(en_tokenizer, de_tokenizer):
         # not callable, because it was not set via set_extension
         m_doc[2]._.is_ambiguous
     assert len(m_doc.user_data) == len(en_docs[0].user_data)  # but it's there
+    assert "group" in m_doc.spans
+    assert span_group_texts == sorted([s.text for s in m_doc.spans["group"]])
 
     m_doc = Doc.from_docs(en_docs, ensure_whitespace=False)
     assert len(en_texts_without_empty) == len(list(m_doc.sents))
@@ -388,6 +393,8 @@ def test_doc_api_from_docs(en_tokenizer, de_tokenizer):
     assert len(m_doc) == len(en_docs_tokens)
     think_idx = len(en_texts[0]) + 0 + en_texts[2].index("think")
     assert m_doc[9].idx == think_idx
+    assert "group" in m_doc.spans
+    assert span_group_texts == sorted([s.text for s in m_doc.spans["group"]])
 
     m_doc = Doc.from_docs(en_docs, attrs=["lemma", "length", "pos"])
     assert len(str(m_doc)) > len(en_texts[0]) + len(en_texts[1])
@@ -399,6 +406,8 @@ def test_doc_api_from_docs(en_tokenizer, de_tokenizer):
     assert len(m_doc) == len(en_docs_tokens)
     think_idx = len(en_texts[0]) + 1 + en_texts[2].index("think")
     assert m_doc[9].idx == think_idx
+    assert "group" in m_doc.spans
+    assert span_group_texts == sorted([s.text for s in m_doc.spans["group"]])
 
 
 def test_doc_api_from_docs_ents(en_tokenizer):
