@@ -91,7 +91,7 @@ have to call `list()` on it first:
 
 </Infobox>
 
-### Multiprocessing
+### Multiprocessing {#multiprocessing}
 
 spaCy includes built-in support for multiprocessing with
 [`nlp.pipe`](/api/language#pipe) using the `n_process` option:
