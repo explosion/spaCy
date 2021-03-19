@@ -10,7 +10,8 @@ from jinja2 import Template
 from .. import util
 from ..language import DEFAULT_CONFIG_PRETRAIN_PATH
 from ..schemas import RecommendationSchema
-from ._util import init_cli, Arg, Opt, show_validation_error, COMMAND, string_to_list
+from ._util import init_cli, Arg, Opt, show_validation_error, COMMAND
+from ._util import string_to_list, import_code
 
 
 ROOT = Path(__file__).parent / "templates"
@@ -70,7 +71,8 @@ def init_fill_config_cli(
     base_path: Path = Arg(..., help="Base config to fill", exists=True, dir_okay=False),
     output_file: Path = Arg("-", help="File to save config.cfg to (or - for stdout)", allow_dash=True),
     pretraining: bool = Opt(False, "--pretraining", "-pt", help="Include config for pretraining (with 'spacy pretrain')"),
-    diff: bool = Opt(False, "--diff", "-D", help="Print a visual diff highlighting the changes")
+    diff: bool = Opt(False, "--diff", "-D", help="Print a visual diff highlighting the changes"),
+    code_path: Optional[Path] = Opt(None, "--code-path", "--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
     # fmt: on
 ):
     """
@@ -82,6 +84,7 @@ def init_fill_config_cli(
 
     DOCS: https://spacy.io/api/cli#init-fill-config
     """
+    import_code(code_path)
     fill_config(output_file, base_path, pretraining=pretraining, diff=diff)
 
 
