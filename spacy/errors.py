@@ -152,6 +152,11 @@ class Warnings:
             "`spacy.load()` to ensure that the model is loaded on the correct "
             "device. More information: "
             "http://spacy.io/usage/v3#jupyter-notebook-gpu")
+    W112 = ("Sourced component '{name}' may not work as expected: source "
+            "language '{source_lang}' does not match current pipeline language "
+            "'{curr_lang}'.")
+    W113 = ("Sourced component '{name}' may not work as expected: source "
+            "vectors are not identical to current pipeline vectors.")
 
 
 @add_codes
@@ -641,8 +646,8 @@ class Errors:
             "returned the initialized nlp object instead?")
     E944 = ("Can't copy pipeline component '{name}' from source '{model}': "
             "not found in pipeline. Available components: {opts}")
-    E945 = ("Can't copy pipeline component '{name}' from source. Expected loaded "
-            "nlp object, but got: {source}")
+    E945 = ("Can't copy pipeline component '{name}' from source. Expected "
+            "loaded nlp object, but got: {source}")
     E947 = ("`Matcher.add` received invalid `greedy` argument: expected "
             "a string value from {expected} but got: '{arg}'")
     E948 = ("`Matcher.add` received invalid 'patterns' argument: expected "

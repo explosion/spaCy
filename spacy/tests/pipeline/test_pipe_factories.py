@@ -402,6 +402,36 @@ def test_pipe_factories_from_source():
         nlp.add_pipe("custom", source=source_nlp)
 
 
+def test_pipe_factories_from_source_language_subclass():
+    class CustomEnglishDefaults(English.Defaults):
+        stop_words = set(["custom", "stop"])
+
+    @registry.languages("custom_en")
+    class CustomEnglish(English):
+        lang = "custom_en"
+        Defaults = CustomEnglishDefaults
+
+    source_nlp = English()
+    source_nlp.add_pipe("tagger")
+
+    # custom subclass
+    nlp = CustomEnglish()
+    nlp.add_pipe("tagger", source=source_nlp)
+    assert "tagger" in nlp.pipe_names
+
+    # non-subclass
+    nlp = German()
+    with pytest.warns(UserWarning):
+        nlp.add_pipe("tagger", source=source_nlp)
+
+    # mismatched vectors
+    nlp = English()
+    nlp.vocab.vectors.resize((1, 4))
+    nlp.vocab.vectors.add("cat", vector=[1, 2, 3, 4])
+    with pytest.warns(UserWarning):
+        nlp.add_pipe("tagger", source=source_nlp)
+
+
 def test_pipe_factories_from_source_custom():
     """Test adding components from a source model with custom components."""
     name = "test_pipe_factories_from_source_custom"
