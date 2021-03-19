@@ -88,7 +88,7 @@ class registry(thinc.registry):
     displacy_colors = catalogue.create("spacy", "displacy_colors", entry_points=True)
     misc = catalogue.create("spacy", "misc", entry_points=True)
     # Callback functions used to manipulate nlp object etc.
-    callbacks = catalogue.create("spacy", "callbacks")
+    callbacks = catalogue.create("spacy", "callbacks", entry_points=True)
     batchers = catalogue.create("spacy", "batchers", entry_points=True)
     readers = catalogue.create("spacy", "readers", entry_points=True)
     augmenters = catalogue.create("spacy", "augmenters", entry_points=True)
