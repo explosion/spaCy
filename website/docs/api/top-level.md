@@ -461,7 +461,7 @@ start decreasing across epochs.
 
  </Accordion>
 
-#### spacy.WandbLogger.v1 {#WandbLogger tag="registered function"}
+#### spacy.WandbLogger.v2 {#WandbLogger tag="registered function"}
 
 > #### Installation
 >
@@ -493,7 +493,7 @@ remain in the config file stored on your local system.
 >
 > ```ini
 > [training.logger]
-> @loggers = "spacy.WandbLogger.v1"
+> @loggers = "spacy.WandbLogger.v2"
 > project_name = "monitor_spacy_training"
 > remove_config_values = ["paths.train", "paths.dev", "corpora.train.path", "corpora.dev.path"]
 > log_dataset_dir = "corpus"

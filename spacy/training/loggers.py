@@ -101,7 +101,7 @@ def console_logger(progress_bar: bool = False):
     return setup_printer
 
 
-@registry.loggers("spacy.WandbLogger.v1")
+@registry.loggers("spacy.WandbLogger.v2")
 def wandb_logger(
     project_name: str,
     remove_config_values: List[str] = [],
