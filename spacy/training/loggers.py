@@ -139,7 +139,7 @@ def wandb_logger(
             wandb.log_artifact(dataset_artifact, aliases=aliases)
 
         if log_dataset_dir:
-            log_dir_artifact(log_dataset_dir, "dataset", "dataset")
+            log_dir_artifact(path=log_dataset_dir, name="dataset", type="dataset")
 
         def log_step(info: Optional[Dict[str, Any]]):
             console_log_step(info)
