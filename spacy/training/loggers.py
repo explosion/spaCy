@@ -160,7 +160,7 @@ def wandb_logger(
                             type="checkpoint",
                             metadata=info,
                             aliases=[
-                                "epoch {} step {}".format(info["epoch"], info["step"]),
+                                f"epoch {info['epoch']} step {info['step']}",
                                 "latest",
                                 "best"
                                 if info["score"] == max(info["checkpoints"])[0]
