@@ -6,6 +6,8 @@ from mock import Mock
 from spacy.matcher import DependencyMatcher
 from spacy.tokens import Doc, Token
 
+from ..doc.test_underscore import clean_underscore  # noqa: F401
+
 
 @pytest.fixture
 def doc(en_vocab):
@@ -346,6 +348,7 @@ def test_dependency_matcher_long_matches(en_vocab, doc):
         matcher.add("pattern", [pattern])
 
 
+@pytest.mark.usefixtures("clean_underscore")
 def test_dependency_matcher_span_user_data(en_tokenizer):
     doc = en_tokenizer("a b c d e")
     for token in doc:
