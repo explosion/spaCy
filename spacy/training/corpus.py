@@ -155,7 +155,7 @@ class Corpus:
                 continue
             elif self.max_length == 0 or len(reference) < self.max_length:
                 yield self._make_example(nlp, reference, False)
-            elif reference.is_sentenced:
+            elif reference.has_annotation("SENT_START"):
                 for ref_sent in reference.sents:
                     if len(ref_sent) == 0:
                         continue
@@ -166,7 +166,7 @@ class Corpus:
         self, nlp: "Language", reference_docs: Iterable[Doc]
     ) -> Iterator[Example]:
         for reference in reference_docs:
-            if reference.is_sentenced:
+            if reference.has_annotation("SENT_START"):
                 ref_sents = [sent.as_doc() for sent in reference.sents]
             else:
                 ref_sents = [reference]

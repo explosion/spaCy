@@ -202,6 +202,8 @@ cdef class Matcher:
         doclike (Doc or Span): The document to match over.
         as_spans (bool): Return Span objects with labels instead of (match_id,
             start, end) tuples.
+        allow_missing (bool): Whether to skip checks for missing annotation for
+            attributes included in patterns. Defaults to False.
         RETURNS (list): A list of `(match_id, start, end)` tuples,
             describing the matches. A match tuple describes a span
             `doc[start:end]`. The `match_id` is an integer. If as_spans is set
@@ -222,7 +224,7 @@ cdef class Matcher:
                     if attr == TAG:
                         pipe = "tagger"
                     elif attr in (POS, MORPH):
-                        pipe = "morphologizer"
+                        pipe = "morphologizer or tagger+attribute_ruler"
                     elif attr == LEMMA:
                         pipe = "lemmatizer"
                     elif attr == DEP:

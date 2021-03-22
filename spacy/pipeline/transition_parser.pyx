@@ -493,10 +493,7 @@ cdef class Parser(TrainablePipe):
 
     def initialize(self, get_examples, nlp=None, labels=None):
         validate_get_examples(get_examples, "Parser.initialize")
-        lexeme_norms = self.vocab.lookups.get_table("lexeme_norm", {})
-        if len(lexeme_norms) == 0 and self.vocab.lang in util.LEXEME_NORM_LANGS:
-            langs = ", ".join(util.LEXEME_NORM_LANGS)
-            util.logger.debug(Warnings.W033.format(model="parser or NER", langs=langs))
+        util.check_lexeme_norms(self.vocab, "parser or NER")
         if labels is not None:
             actions = dict(labels)
         else:

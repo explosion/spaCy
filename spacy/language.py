@@ -1686,15 +1686,21 @@ class Language:
                 )
         # Detect components with listeners that are not frozen consistently
         for name, proc in nlp.pipeline:
-            if getattr(proc, "listening_components", None):  # e.g. tok2vec/transformer
-                for listener in proc.listening_components:
-                    # If it's a component sourced from another pipeline, we check if
-                    # the tok2vec listeners should be replaced with standalone tok2vec
-                    # models (e.g. so component can be frozen without its performance
-                    # degrading when other components/tok2vec are updated)
-                    paths = sourced.get(listener, {}).get("replace_listeners", [])
-                    if paths:
-                        nlp.replace_listeners(name, listener, paths)
+            # Remove listeners not in the pipeline
+            listener_names = getattr(proc, "listening_components", [])
+            unused_listener_names = [ll for ll in listener_names if ll not in nlp.pipe_names]
+            for listener_name in unused_listener_names:
+                for listener in proc.listener_map.get(listener_name, []):
+                    proc.remove_listener(listener, listener_name)
+
+            for listener in getattr(proc, "listening_components", []):  # e.g. tok2vec/transformer
+                # If it's a component sourced from another pipeline, we check if
+                # the tok2vec listeners should be replaced with standalone tok2vec
+                # models (e.g. so component can be frozen without its performance
+                # degrading when other components/tok2vec are updated)
+                paths = sourced.get(listener, {}).get("replace_listeners", [])
+                if paths:
+                    nlp.replace_listeners(name, listener, paths)
         return nlp
 
     def replace_listeners(
