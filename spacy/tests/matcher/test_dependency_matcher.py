@@ -4,7 +4,7 @@ import re
 import copy
 from mock import Mock
 from spacy.matcher import DependencyMatcher
-from spacy.tokens import Doc
+from spacy.tokens import Doc, Token
 
 
 @pytest.fixture
@@ -344,3 +344,20 @@ def test_dependency_matcher_long_matches(en_vocab, doc):
     matcher = DependencyMatcher(en_vocab)
     with pytest.raises(ValueError):
         matcher.add("pattern", [pattern])
+
+
+def test_dependency_matcher_span_user_data(en_tokenizer):
+    doc = en_tokenizer("a b c d e")
+    for token in doc:
+        token.head = doc[0]
+        token.dep_ = "a"
+    get_is_c = lambda token: token.text in ("c",)
+    Token.set_extension("is_c", getter=get_is_c, force=True)
+    pattern = [
+        {"RIGHT_ID": "c", "RIGHT_ATTRS": {"_": {"is_c": True}}},
+    ]
+    matcher = DependencyMatcher(en_tokenizer.vocab)
+    matcher.add("C", [pattern])
+    doc_matches = matcher(doc)
+    span_matches = matcher(doc[1:])
+    assert len(doc_matches) == len(span_matches)
