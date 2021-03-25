@@ -22,6 +22,8 @@ cpdef Doc annotations_to_doc(vocab, tok_annot, doc_annot):
     output = Doc(vocab, words=tok_annot["ORTH"], spaces=tok_annot["SPACY"])
     if "entities" in doc_annot:
        _add_entities_to_doc(output, doc_annot["entities"])
+    if "spans" in doc_annot:
+       _add_spans_to_doc(output, doc_annot["spans"])
     if array.size:
         output = output.from_array(attrs, array)
     # links are currently added with ENT_KB_ID on the token level
@@ -314,13 +316,11 @@ def _annot2array(vocab, tok_annot, doc_annot):
 
     for key, value in doc_annot.items():
         if value:
-            if key == "entities":
+            if key in ["entities", "cats", "spans"]:
                 pass
             elif key == "links":
                 ent_kb_ids = _parse_links(vocab, tok_annot["ORTH"], tok_annot["SPACY"], value)
                 tok_annot["ENT_KB_ID"] = ent_kb_ids
-            elif key == "cats":
-                pass
             else:
                 raise ValueError(Errors.E974.format(obj="doc", key=key))
 
@@ -349,6 +349,29 @@ def _annot2array(vocab, tok_annot, doc_annot):
             values.append([vocab.strings.add(v) for v in value])
     array = numpy.asarray(values, dtype="uint64")
     return attrs, array.T
+
+
+def _add_spans_to_doc(doc, spans_data):
+    if not isinstance(spans_data, dict):
+        raise ValueError(Errors.E879)
+    for key, span_list in spans_data.items():
+        spans = []
+        if not isinstance(span_list, list):
+            raise ValueError(Errors.E879)
+        for span_tuple in span_list:
+            if not isinstance(span_tuple, (list, tuple)) or len(span_tuple) < 2:
+                raise ValueError(Errors.E879)
+            start_char = span_tuple[0]
+            end_char = span_tuple[1]
+            label = 0
+            kb_id = 0
+            if len(span_tuple) > 2:
+                label = span_tuple[2]
+            if len(span_tuple) > 3:
+                kb_id = span_tuple[3]
+            span = doc.char_span(start_char, end_char, label=label, kb_id=kb_id)
+            spans.append(span)
+        doc.spans[key] = spans
 
 
 def _add_entities_to_doc(doc, ner_data):
@@ -397,7 +420,7 @@ def _fix_legacy_dict_data(example_dict):
                 pass
             elif key == "ids":
                 pass
-            elif key in ("cats", "links"):
+            elif key in ("cats", "links", "spans"):
                 doc_dict[key] = value
             elif key in ("ner", "entities"):
                 doc_dict["entities"] = value

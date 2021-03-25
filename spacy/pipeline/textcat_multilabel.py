@@ -88,11 +88,10 @@ subword_features = true
 def make_multilabel_textcat(
     nlp: Language, name: str, model: Model[List[Doc], List[Floats2d]], threshold: float
 ) -> "TextCategorizer":
-    """Create a TextCategorizer compoment. The text categorizer predicts categories
-    over a whole document. It can learn one or more labels, and the labels can
-    be mutually exclusive (i.e. one true label per doc) or non-mutually exclusive
-    (i.e. zero or more labels may be true per doc). The multi-label setting is
-    controlled by the model instance that's provided.
+    """Create a TextCategorizer component. The text categorizer predicts categories
+    over a whole document. It can learn one or more labels, and the labels are considered
+    to be non-mutually exclusive, which means that there can be zero or more labels
+    per doc).
 
     model (Model[List[Doc], List[Floats2d]]): A model instance that predicts
         scores for each category.
@@ -104,7 +103,7 @@ def make_multilabel_textcat(
 class MultiLabel_TextCategorizer(TextCategorizer):
     """Pipeline component for multi-label text classification.
 
-    DOCS: https://spacy.io/api/multilabel_textcategorizer
+    DOCS: https://spacy.io/api/textcategorizer
     """
 
     def __init__(
@@ -123,7 +122,7 @@ class MultiLabel_TextCategorizer(TextCategorizer):
             losses during training.
         threshold (float): Cutoff to consider a prediction "positive".
 
-        DOCS: https://spacy.io/api/multilabel_textcategorizer#init
+        DOCS: https://spacy.io/api/textcategorizer#init
         """
         self.vocab = vocab
         self.model = model
@@ -149,7 +148,7 @@ class MultiLabel_TextCategorizer(TextCategorizer):
             `init labels` command. If no labels are provided, the get_examples
             callback is used to extract the labels from the data.
 
-        DOCS: https://spacy.io/api/multilabel_textcategorizer#initialize
+        DOCS: https://spacy.io/api/textcategorizer#initialize
         """
         if labels is None:
             validate_get_examples(get_examples, "MultiLabel_TextCategorizer.initialize")
@@ -173,15 +172,15 @@ class MultiLabel_TextCategorizer(TextCategorizer):
         examples (Iterable[Example]): The examples to score.
         RETURNS (Dict[str, Any]): The scores, produced by Scorer.score_cats.
 
-        DOCS: https://spacy.io/api/multilabel_textcategorizer#score
+        DOCS: https://spacy.io/api/textcategorizer#score
         """
         validate_examples(examples, "MultiLabel_TextCategorizer.score")
+        kwargs.setdefault("threshold", self.cfg["threshold"])
         return Scorer.score_cats(
             examples,
             "cats",
             labels=self.labels,
             multi_label=True,
-            threshold=self.cfg["threshold"],
             **kwargs,
         )
 

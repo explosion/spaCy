@@ -616,8 +616,10 @@ phrase, or "NP chunk", is a noun phrase that does not permit other NPs to be
 nested within it – so no NP-level coordination, no prepositional phrases, and no
 relative clauses.
 
-If the `noun_chunk` [syntax iterator](/usage/adding-languages#language-data) has
-not been implemeted for the given language, a `NotImplementedError` is raised.
+To customize the noun chunk iterator in a loaded pipeline, modify
+[`nlp.vocab.get_noun_chunks`](/api/vocab#attributes). If the `noun_chunk`
+[syntax iterator](/usage/adding-languages#language-data) has not been
+implemented for the given language, a `NotImplementedError` is raised.
 
 > #### Example
 >

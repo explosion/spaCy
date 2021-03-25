@@ -3,15 +3,30 @@ title: TextCategorizer
 tag: class
 source: spacy/pipeline/textcat.py
 new: 2
-teaser: 'Pipeline component for single-label text classification'
+teaser: 'Pipeline component for text classification'
 api_base_class: /api/pipe
 api_string_name: textcat
 api_trainable: true
 ---
 
-The text categorizer predicts **categories over a whole document**. It can learn
-one or more labels, and the labels are mutually exclusive - there is exactly one 
-true label per document. 
+The text categorizer predicts **categories over a whole document**. and comes in
+two flavours: `textcat` and `textcat_multilabel`. When you need to predict
+exactly one true label per document, use the `textcat` which has mutually
+exclusive labels. If you want to perform multi-label classification and predict
+zero, one or more labels per document, use the `textcat_multilabel` component
+instead.
+
+Both components are documented on this page.
+
+<Infobox title="Migration from v2" variant="warning">
+
+In spaCy v2, the `textcat` component could also perform **multi-label
+classification**, and even used this setting by default. Since v3.0, the
+component `textcat_multilabel` should be used for multi-label classification
+instead. The `textcat` component is now used for mutually exclusive classes
+only.
+
+</Infobox>
 
 ## Config and implementation {#config}
 
@@ -22,7 +37,7 @@ how the component should be configured. You can override its settings via the
 [model architectures](/api/architectures) documentation for details on the
 architectures and their arguments and hyperparameters.
 
-> #### Example
+> #### Example (textcat)
 >
 > ```python
 > from spacy.pipeline.textcat import DEFAULT_SINGLE_TEXTCAT_MODEL
@@ -31,6 +46,17 @@ architectures and their arguments and hyperparameters.
 >    "model": DEFAULT_SINGLE_TEXTCAT_MODEL,
 > }
 > nlp.add_pipe("textcat", config=config)
+> ```
+
+> #### Example (textcat_multilabel)
+>
+> ```python
+> from spacy.pipeline.textcat_multilabel import DEFAULT_MULTI_TEXTCAT_MODEL
+> config = {
+>    "threshold": 0.5,
+>    "model": DEFAULT_MULTI_TEXTCAT_MODEL,
+> }
+> nlp.add_pipe("textcat_multilabel", config=config)
 > ```
 
 | Setting     | Description                                                                                                                                                      |
@@ -48,6 +74,7 @@ architectures and their arguments and hyperparameters.
 >
 > ```python
 > # Construction via add_pipe with default model
+> # Use 'textcat_multilabel' for multi-label classification
 > textcat = nlp.add_pipe("textcat")
 >
 > # Construction via add_pipe with custom model
@@ -55,6 +82,7 @@ architectures and their arguments and hyperparameters.
 > parser = nlp.add_pipe("textcat", config=config)
 >
 > # Construction from class
+> # Use 'MultiLabel_TextCategorizer' for multi-label classification
 > from spacy.pipeline import TextCategorizer
 > textcat = TextCategorizer(nlp.vocab, model, threshold=0.5)
 > ```
@@ -161,7 +189,7 @@ This method was previously called `begin_training`.
 | _keyword-only_   |                                                                                                                                                                                                                                                                                                                                                                                                            |
 | `nlp`            | The current `nlp` object. Defaults to `None`. ~~Optional[Language]~~                                                                                                                                                                                                                                                                                                                                       |
 | `labels`         | The label information to add to the component, as provided by the [`label_data`](#label_data) property after initialization. To generate a reusable JSON file from your data, you should run the [`init labels`](/api/cli#init-labels) command. If no labels are provided, the `get_examples` callback is used to extract the labels from the data, which may be a lot slower. ~~Optional[Iterable[str]]~~ |
-| `positive_label` | The positive label for a binary task with exclusive classes, None otherwise and by default. ~~Optional[str]~~                                                                                                                                                                                                                                                                                              |
+| `positive_label` | The positive label for a binary task with exclusive classes, `None` otherwise and by default. This parameter is not available when using the `textcat_multilabel` component. ~~Optional[str]~~                                                                                                                                                                                                             |
 
 ## TextCategorizer.predict {#predict tag="method"}
 
@@ -212,14 +240,14 @@ Delegates to [`predict`](/api/textcategorizer#predict) and
 > losses = textcat.update(examples, sgd=optimizer)
 > ```
 
-| Name              | Description                                                                                                                        |
-| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `examples`        | A batch of [`Example`](/api/example) objects to learn from. ~~Iterable[Example]~~                                                  |
-| _keyword-only_    |                                                                                                                                    |
-| `drop`            | The dropout rate. ~~float~~                                                                                                        |
-| `sgd`             | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~                      |
-| `losses`          | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~           |
-| **RETURNS**       | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                              |
+| Name           | Description                                                                                                              |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `examples`     | A batch of [`Example`](/api/example) objects to learn from. ~~Iterable[Example]~~                                        |
+| _keyword-only_ |                                                                                                                          |
+| `drop`         | The dropout rate. ~~float~~                                                                                              |
+| `sgd`          | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~            |
+| `losses`       | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~ |
+| **RETURNS**    | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                    |
 
 ## TextCategorizer.rehearse {#rehearse tag="method,experimental" new="3"}
 
@@ -273,11 +301,11 @@ Score a batch of examples.
 > scores = textcat.score(examples)
 > ```
 
-| Name             | Description                                                                                                          |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `examples`       | The examples to score. ~~Iterable[Example]~~                                                                         |
-| _keyword-only_   |                                                                                                                      |
-| **RETURNS**      | The scores, produced by [`Scorer.score_cats`](/api/scorer#score_cats). ~~Dict[str, Union[float, Dict[str, float]]]~~ |
+| Name           | Description                                                                                                          |
+| -------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `examples`     | The examples to score. ~~Iterable[Example]~~                                                                         |
+| _keyword-only_ |                                                                                                                      |
+| **RETURNS**    | The scores, produced by [`Scorer.score_cats`](/api/scorer#score_cats). ~~Dict[str, Union[float, Dict[str, float]]]~~ |
 
 ## TextCategorizer.create_optimizer {#create_optimizer tag="method"}
 

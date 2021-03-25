@@ -28,6 +28,8 @@ if sys.maxunicode == 65535:
 
 def load(
     name: Union[str, Path],
+    *,
+    vocab: Union[Vocab, bool] = True,
     disable: Iterable[str] = util.SimpleFrozenList(),
     exclude: Iterable[str] = util.SimpleFrozenList(),
     config: Union[Dict[str, Any], Config] = util.SimpleFrozenDict(),
@@ -35,6 +37,7 @@ def load(
     """Load a spaCy model from an installed package or a local path.
 
     name (str): Package name or model path.
+    vocab (Vocab): A Vocab object. If True, a vocab is created.
     disable (Iterable[str]): Names of pipeline components to disable. Disabled
         pipes will be loaded but they won't be run unless you explicitly
         enable them by calling nlp.enable_pipe.
@@ -44,7 +47,9 @@ def load(
         keyed by section values in dot notation.
     RETURNS (Language): The loaded nlp object.
     """
-    return util.load_model(name, disable=disable, exclude=exclude, config=config)
+    return util.load_model(
+        name, vocab=vocab, disable=disable, exclude=exclude, config=config
+    )
 
 
 def blank(
@@ -52,7 +57,7 @@ def blank(
     *,
     vocab: Union[Vocab, bool] = True,
     config: Union[Dict[str, Any], Config] = util.SimpleFrozenDict(),
-    meta: Dict[str, Any] = util.SimpleFrozenDict()
+    meta: Dict[str, Any] = util.SimpleFrozenDict(),
 ) -> Language:
     """Create a blank nlp object for a given language code.
 

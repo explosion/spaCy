@@ -198,7 +198,6 @@ more efficient than processing texts one-by-one.
 | `as_tuples`                                | If set to `True`, inputs should be a sequence of `(text, context)` tuples. Output will then be a sequence of `(doc, context)` tuples. Defaults to `False`. ~~bool~~ |
 | `batch_size`                               | The number of texts to buffer. ~~Optional[int]~~                                                                                                                    |
 | `disable`                                  | Names of pipeline components to [disable](/usage/processing-pipelines#disabling). ~~List[str]~~                                                                     |
-| `cleanup`                                  | If `True`, unneeded strings are freed to control memory use. Experimental. ~~bool~~                                                                                 |
 | `component_cfg`                            | Optional dictionary of keyword arguments for components, keyed by component names. Defaults to `None`. ~~Optional[Dict[str, Dict[str, Any]]]~~                      |
 | `n_process` <Tag variant="new">2.2.2</Tag> | Number of processors to use. Defaults to `1`. ~~int~~                                                                                                               |
 | **YIELDS**                                 | Documents in the order of the original text. ~~Doc~~                                                                                                                |
@@ -364,7 +363,7 @@ Evaluate a pipeline's components.
 
 <Infobox variant="warning" title="Changed in v3.0">
 
-The `Language.update` method now takes a batch of [`Example`](/api/example)
+The `Language.evaluate` method now takes a batch of [`Example`](/api/example)
 objects instead of tuples of `Doc` and `GoldParse` objects.
 
 </Infobox>
@@ -872,10 +871,10 @@ when loading a config with
 > replace_listeners = ["model.tok2vec"]
 > ```
 
-| Name           | Description                                                                                                                                                                                                                                                                                                                                                                                                    |
-| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `tok2vec_name` | Name of the token-to-vector component, typically `"tok2vec"` or `"transformer"`.~~str~~                                                                                                                                                                                                                                                                                                                        |
-| `pipe_name`    | Name of pipeline component to replace listeners for. ~~str~~                                                                                                                                                                                                                                                                                                                                                   |
+| Name           | Description                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tok2vec_name` | Name of the token-to-vector component, typically `"tok2vec"` or `"transformer"`.~~str~~                                                                                                                                                                                                                                                                                                                                                |
+| `pipe_name`    | Name of pipeline component to replace listeners for. ~~str~~                                                                                                                                                                                                                                                                                                                                                                           |
 | `listeners`    | The paths to the listeners, relative to the component config, e.g. `["model.tok2vec"]`. Typically, implementations will only connect to one tok2vec component, `model.tok2vec`, but in theory, custom models can use multiple listeners. The value here can either be an empty list to not replace any listeners, or a _complete_ list of the paths to all listener layers used by the model that should be replaced.~~Iterable[str]~~ |
 
 ## Language.meta {#meta tag="property"}
