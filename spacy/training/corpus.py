@@ -39,27 +39,6 @@ def create_docbin_reader(
     )
 
 
-@util.registry.readers("spacy.ShuffledCorpus.v1")
-def create_docbin_reader_with_shuffling(
-    path: Optional[Path],
-    gold_preproc: bool,
-    max_length: int = 0,
-    limit: int = 0,
-    augmenter: Optional[Callable] = None,
-) -> Callable[["Language"], Iterable[Example]]:
-    if path is None:
-        raise ValueError(Errors.E913)
-    util.logger.debug(f"Loading corpus from path: {path}")
-    return Corpus(
-        path,
-        gold_preproc=gold_preproc,
-        max_length=max_length,
-        limit=limit,
-        augmenter=augmenter,
-        shuffle=True,
-    )
-
-
 @util.registry.readers("spacy.JsonlCorpus.v1")
 def create_jsonl_reader(
     path: Path, min_length: int = 0, max_length: int = 0, limit: int = 0
