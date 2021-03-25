@@ -235,7 +235,7 @@
             "id": "tokenwiser",
             "title": "tokenwiser",
             "slogan": "Connect vowpal-wabbit & scikit-learn models to spaCy to run simple classification benchmarks. Comes with many utility functions for spaCy pipelines.",
-            "github": "rasahq/tokenwiser",
+            "github": "koaning/tokenwiser",
             "pip": "tokenwiser",
             "thumb": "https://koaning.github.io/tokenwiser/token.png",
             "image": "https://koaning.github.io/tokenwiser/logo-tokw.png",
