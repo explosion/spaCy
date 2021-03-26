@@ -1126,7 +1126,7 @@ cdef class Doc:
             concat_spaces.extend(bool(t.whitespace_) for t in doc)
 
             for key, value in doc.user_data.items():
-                if isinstance(key, tuple) and len(key) == 4:
+                if isinstance(key, tuple) and len(key) == 4 and key[0] == "._.":
                     data_type, name, start, end = key
                     if start is not None or end is not None:
                         start += char_offset
@@ -1138,7 +1138,7 @@ cdef class Doc:
                 else:
                     warnings.warn(Warnings.W102.format(key=key, value=value))
             char_offset += len(doc.text)
-            if ensure_whitespace and not (len(doc) > 0 and doc[-1].is_space):
+            if len(doc) > 0 and ensure_whitespace and not doc[-1].is_space:
                 char_offset += 1
 
         arrays = [doc.to_array(attrs) for doc in docs]
