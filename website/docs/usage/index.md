@@ -130,7 +130,7 @@ which provides a numpy-compatible interface for GPU arrays.
 
 spaCy can be installed on GPU by specifying `spacy[cuda]`, `spacy[cuda90]`,
 `spacy[cuda91]`, `spacy[cuda92]`, `spacy[cuda100]`, `spacy[cuda101]`,
-`spacy[cuda102]`, `spacy[cuda110]` or `spacy[cuda111]`. If you know your cuda
+`spacy[cuda102]`, `spacy[cuda110]`, `spacy[cuda111]` or `spacy[cuda112]`. If you know your cuda
 version, using the more explicit specifier allows cupy to be installed via
 wheel, saving some compilation time. The specifiers should install
 [`cupy`](https://cupy.chainer.org).
