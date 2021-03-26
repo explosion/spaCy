@@ -207,6 +207,7 @@ class Tok2Vec(TrainablePipe):
 
         DOCS: https://spacy.io/api/tok2vec#initialize
         """
+        validate_get_examples(get_examples, "Tok2Vec.initialize")
         doc_sample = []
         for example in islice(get_examples(), 10):
             doc_sample.append(example.x)

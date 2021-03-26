@@ -142,7 +142,6 @@ class Morphologizer(Tagger):
             self.cfg["labels_morph"] = labels["morph"]
             self.cfg["labels_pos"] = labels["pos"]
         else:
-            validate_get_examples(get_examples, "Morphologizer.initialize")
             # First, fetch all labels from the data
             for example in get_examples():
                 for i, token in enumerate(example.reference):

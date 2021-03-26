@@ -492,11 +492,11 @@ cdef class Parser(TrainablePipe):
         self.model.attrs["resize_output"](self.model, nO)
 
     def initialize(self, get_examples, nlp=None, labels=None):
+        validate_get_examples(get_examples, "Parser.initialize")
         util.check_lexeme_norms(self.vocab, "parser or NER")
         if labels is not None:
             actions = dict(labels)
         else:
-            validate_get_examples(get_examples, "Parser.initialize")
             actions = self.moves.get_actions(
                 examples=get_examples(),
                 min_freq=self.cfg['min_action_freq'],

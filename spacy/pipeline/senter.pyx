@@ -137,6 +137,7 @@ class SentenceRecognizer(Tagger):
 
         DOCS: https://spacy.io/api/sentencerecognizer#initialize
         """
+        validate_get_examples(get_examples, "SentenceRecognizer.initialize")
         util.check_lexeme_norms(self.vocab, "senter")
         doc_sample = []
         label_sample = []

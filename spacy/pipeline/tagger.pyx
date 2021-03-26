@@ -248,12 +248,12 @@ class Tagger(TrainablePipe):
 
         DOCS: https://spacy.io/api/tagger#initialize
         """
+        validate_get_examples(get_examples, "Tagger.initialize")
         util.check_lexeme_norms(self.vocab, "tagger")
         if labels is not None:
             for tag in labels:
                 self.add_label(tag)
         else:
-            validate_get_examples(get_examples, "Tagger.initialize")
             tags = set()
             for example in get_examples():
                 for token in example.y:
