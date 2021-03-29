@@ -124,7 +124,7 @@ class DocBin:
 
         DOCS: https://spacy.io/api/docbin#get_docs
         """
-        for string in self.strings:
+        for string in sorted(self.strings):
             vocab[string]
         orth_col = self.attrs.index(ORTH)
         for i in range(len(self.tokens)):
