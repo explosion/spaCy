@@ -202,6 +202,8 @@ cdef class Matcher:
         doclike (Doc or Span): The document to match over.
         as_spans (bool): Return Span objects with labels instead of (match_id,
             start, end) tuples.
+        allow_missing (bool): Whether to skip checks for missing annotation for
+            attributes included in patterns. Defaults to False.
         with_alignments (bool): Return match alignment information, which is
             `List[int]` with length of matched span. Each entry denotes the
             corresponding index of token pattern. If as_spans is set to True,
@@ -231,7 +233,7 @@ cdef class Matcher:
                     if attr == TAG:
                         pipe = "tagger"
                     elif attr in (POS, MORPH):
-                        pipe = "morphologizer"
+                        pipe = "morphologizer or tagger+attribute_ruler"
                     elif attr == LEMMA:
                         pipe = "lemmatizer"
                     elif attr == DEP:

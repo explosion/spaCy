@@ -370,3 +370,51 @@ def test_textcat_evaluation():
 
     assert scores["cats_micro_p"] == 4 / 5
     assert scores["cats_micro_r"] == 4 / 6
+
+
+def test_textcat_threshold():
+    # Ensure the scorer can be called with a different threshold
+    nlp = English()
+    nlp.add_pipe("textcat")
+
+    train_examples = []
+    for text, annotations in TRAIN_DATA_SINGLE_LABEL:
+        train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
+    nlp.initialize(get_examples=lambda: train_examples)
+
+    # score the model (it's not actually trained but that doesn't matter)
+    scores = nlp.evaluate(train_examples)
+    assert 0 <= scores["cats_score"] <= 1
+
+    scores = nlp.evaluate(train_examples, scorer_cfg={"threshold": 1.0})
+    assert scores["cats_f_per_type"]["POSITIVE"]["r"] == 0
+
+    scores = nlp.evaluate(train_examples, scorer_cfg={"threshold": 0})
+    macro_f = scores["cats_score"]
+    assert scores["cats_f_per_type"]["POSITIVE"]["r"] == 1.0
+
+    scores = nlp.evaluate(train_examples, scorer_cfg={"threshold": 0, "positive_label": "POSITIVE"})
+    pos_f = scores["cats_score"]
+    assert scores["cats_f_per_type"]["POSITIVE"]["r"] == 1.0
+    assert pos_f > macro_f
+
+
+def test_textcat_multi_threshold():
+    # Ensure the scorer can be called with a different threshold
+    nlp = English()
+    nlp.add_pipe("textcat_multilabel")
+
+    train_examples = []
+    for text, annotations in TRAIN_DATA_SINGLE_LABEL:
+        train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
+    nlp.initialize(get_examples=lambda: train_examples)
+
+    # score the model (it's not actually trained but that doesn't matter)
+    scores = nlp.evaluate(train_examples)
+    assert 0 <= scores["cats_score"] <= 1
+
+    scores = nlp.evaluate(train_examples, scorer_cfg={"threshold": 1.0})
+    assert scores["cats_f_per_type"]["POSITIVE"]["r"] == 0
+
+    scores = nlp.evaluate(train_examples, scorer_cfg={"threshold": 0})
+    assert scores["cats_f_per_type"]["POSITIVE"]["r"] == 1.0

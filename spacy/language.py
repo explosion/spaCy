@@ -22,6 +22,7 @@ from .training.initialize import init_vocab, init_tok2vec
 from .scorer import Scorer
 from .util import registry, SimpleFrozenList, _pipe, raise_error
 from .util import SimpleFrozenDict, combine_score_weights, CONFIG_SECTION_ORDER
+from .util import warn_if_jupyter_cupy
 from .lang.tokenizer_exceptions import URL_MATCH, BASE_EXCEPTIONS
 from .lang.punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
 from .lang.punctuation import TOKENIZER_INFIXES
@@ -1219,13 +1220,12 @@ class Language:
         before_init = I["before_init"]
         if before_init is not None:
             before_init(self)
-        init_vocab(
-            self, data=I["vocab_data"], lookups=I["lookups"], vectors=I["vectors"]
-        )
-        pretrain_cfg = config.get("pretraining")
-        if pretrain_cfg:
-            P = registry.resolve(pretrain_cfg, schema=ConfigSchemaPretrain)
-            init_tok2vec(self, P, I)
+        try:
+            init_vocab(
+                self, data=I["vocab_data"], lookups=I["lookups"], vectors=I["vectors"]
+            )
+        except IOError:
+            raise IOError(Errors.E884.format(vectors=I["vectors"]))
         if self.vocab.vectors.data.shape[1] >= 1:
             ops = get_current_ops()
             self.vocab.vectors.data = ops.asarray(self.vocab.vectors.data)
@@ -1244,6 +1244,10 @@ class Language:
                     proc.initialize, p_settings, section="components", name=name
                 )
                 proc.initialize(get_examples, nlp=self, **p_settings)
+        pretrain_cfg = config.get("pretraining")
+        if pretrain_cfg:
+            P = registry.resolve(pretrain_cfg, schema=ConfigSchemaPretrain)
+            init_tok2vec(self, P, I)
         self._link_components()
         self._optimizer = sgd
         if sgd is not None:
@@ -1592,6 +1596,7 @@ class Language:
         # using the nlp.config with all defaults.
         config = util.copy_config(config)
         orig_pipeline = config.pop("components", {})
+        orig_pretraining = config.pop("pretraining", None)
         config["components"] = {}
         if auto_fill:
             filled = registry.fill(config, validate=validate, schema=ConfigSchema)
@@ -1599,6 +1604,9 @@ class Language:
             filled = config
         filled["components"] = orig_pipeline
         config["components"] = orig_pipeline
+        if orig_pretraining is not None:
+            filled["pretraining"] = orig_pretraining
+            config["pretraining"] = orig_pretraining
         resolved_nlp = registry.resolve(
             filled["nlp"], validate=validate, schema=ConfigSchemaNlp
         )
@@ -1615,6 +1623,10 @@ class Language:
                 or lang_cls is not cls
             ):
                 raise ValueError(Errors.E943.format(value=type(lang_cls)))
+
+        # Warn about require_gpu usage in jupyter notebook
+        warn_if_jupyter_cupy()
+
         # Note that we don't load vectors here, instead they get loaded explicitly
         # inside stuff like the spacy train function. If we loaded them here,
         # then we would load them twice at runtime: once when we make from config,
@@ -1674,15 +1686,21 @@ class Language:
                 )
         # Detect components with listeners that are not frozen consistently
         for name, proc in nlp.pipeline:
-            if getattr(proc, "listening_components", None):  # e.g. tok2vec/transformer
-                for listener in proc.listening_components:
-                    # If it's a component sourced from another pipeline, we check if
-                    # the tok2vec listeners should be replaced with standalone tok2vec
-                    # models (e.g. so component can be frozen without its performance
-                    # degrading when other components/tok2vec are updated)
-                    paths = sourced.get(listener, {}).get("replace_listeners", [])
-                    if paths:
-                        nlp.replace_listeners(name, listener, paths)
+            # Remove listeners not in the pipeline
+            listener_names = getattr(proc, "listening_components", [])
+            unused_listener_names = [ll for ll in listener_names if ll not in nlp.pipe_names]
+            for listener_name in unused_listener_names:
+                for listener in proc.listener_map.get(listener_name, []):
+                    proc.remove_listener(listener, listener_name)
+
+            for listener in getattr(proc, "listening_components", []):  # e.g. tok2vec/transformer
+                # If it's a component sourced from another pipeline, we check if
+                # the tok2vec listeners should be replaced with standalone tok2vec
+                # models (e.g. so component can be frozen without its performance
+                # degrading when other components/tok2vec are updated)
+                paths = sourced.get(listener, {}).get("replace_listeners", [])
+                if paths:
+                    nlp.replace_listeners(name, listener, paths)
         return nlp
 
     def replace_listeners(

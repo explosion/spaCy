@@ -48,6 +48,7 @@ specified separately using the new `exclude` keyword argument.
 | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `name`                               | Pipeline to load, i.e. package name or path. ~~Union[str, Path]~~                                                                                                                                                                              |
 | _keyword-only_                       |                                                                                                                                                                                                                                                |
+| `vocab`                              | Optional shared vocab to pass in on initialization. If `True` (default), a new `Vocab` object will be created. ~~Union[Vocab, bool]~~                                                                                                          |
 | `disable`                            | Names of pipeline components to [disable](/usage/processing-pipelines#disabling). Disabled pipes will be loaded but they won't be run unless you explicitly enable them by calling [nlp.enable_pipe](/api/language#enable_pipe). ~~List[str]~~ |
 | `exclude` <Tag variant="new">3</Tag> | Names of pipeline components to [exclude](/usage/processing-pipelines#disabling). Excluded components won't be loaded. ~~List[str]~~                                                                                                           |
 | `config` <Tag variant="new">3</Tag>  | Optional config overrides, either as nested dict or dict keyed by section value in dot notation, e.g. `"components.name.value"`. ~~Union[Dict[str, Any], Config]~~                                                                             |
@@ -83,9 +84,9 @@ Create a blank pipeline of a given language class. This function is the twin of
 | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `name`                              | [ISO code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) of the language class to load. ~~str~~                                                           |
 | _keyword-only_                      |                                                                                                                                                                    |
-| `vocab` <Tag variant="new">3</Tag>  | Optional shared vocab to pass in on initialization. If `True` (default), a new `Vocab` object will be created. ~~Union[Vocab, bool]~~.                             |
+| `vocab`                             | Optional shared vocab to pass in on initialization. If `True` (default), a new `Vocab` object will be created. ~~Union[Vocab, bool]~~                              |
 | `config` <Tag variant="new">3</Tag> | Optional config overrides, either as nested dict or dict keyed by section value in dot notation, e.g. `"components.name.value"`. ~~Union[Dict[str, Any], Config]~~ |
-| `meta` <Tag variant="new">3</Tag>   | Optional meta overrides for [`nlp.meta`](/api/language#meta). ~~Dict[str, Any]~~                                                                                   |
+| `meta`                              | Optional meta overrides for [`nlp.meta`](/api/language#meta). ~~Dict[str, Any]~~                                                                                   |
 | **RETURNS**                         | An empty `Language` object of the appropriate subclass. ~~Language~~                                                                                               |
 
 ### spacy.info {#spacy.info tag="function"}
@@ -138,6 +139,14 @@ data has already been allocated on CPU, it will not be moved. Ideally, this
 function should be called right after importing spaCy and _before_ loading any
 pipelines.
 
+<Infobox variant="warning" title="Jupyter notebook usage">
+
+In a Jupyter notebook, run `prefer_gpu()` in the same cell as `spacy.load()` to
+ensure that the model is loaded on the correct device. See
+[more details](/usage/v3#jupyter-notebook-gpu).
+
+</Infobox>
+
 > #### Example
 >
 > ```python
@@ -158,6 +167,14 @@ if no GPU is available. If data has already been allocated on CPU, it will not
 be moved. Ideally, this function should be called right after importing spaCy
 and _before_ loading any pipelines.
 
+<Infobox variant="warning" title="Jupyter notebook usage">
+
+In a Jupyter notebook, run `require_gpu()` in the same cell as `spacy.load()` to
+ensure that the model is loaded on the correct device. See
+[more details](/usage/v3#jupyter-notebook-gpu).
+
+</Infobox>
+
 > #### Example
 >
 > ```python
@@ -176,6 +193,14 @@ and _before_ loading any pipelines.
 Allocate data and perform operations on CPU. If data has already been allocated
 on GPU, it will not be moved. Ideally, this function should be called right
 after importing spaCy and _before_ loading any pipelines.
+
+<Infobox variant="warning" title="Jupyter notebook usage">
+
+In a Jupyter notebook, run `require_cpu()` in the same cell as `spacy.load()` to
+ensure that the model is loaded on the correct device. See
+[more details](/usage/v3#jupyter-notebook-gpu).
+
+</Infobox>
 
 > #### Example
 >
@@ -921,7 +946,8 @@ and create a `Language` object. The model data will then be loaded in via
 | Name                                 | Description                                                                                                                                                                                                                                      |
 | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `name`                               | Package name or path. ~~str~~                                                                                                                                                                                                                    |
-| `vocab` <Tag variant="new">3</Tag>   | Optional shared vocab to pass in on initialization. If `True` (default), a new `Vocab` object will be created. ~~Union[Vocab, bool]~~.                                                                                                           |
+| _keyword-only_                       |                                                                                                                                                                                                                                                  |
+| `vocab`                              | Optional shared vocab to pass in on initialization. If `True` (default), a new `Vocab` object will be created. ~~Union[Vocab, bool]~~                                                                                                            |
 | `disable`                            | Names of pipeline components to [disable](/usage/processing-pipelines#disabling). Disabled pipes will be loaded but they won't be run unless you explicitly enable them by calling [`nlp.enable_pipe`](/api/language#enable_pipe). ~~List[str]~~ |
 | `exclude` <Tag variant="new">3</Tag> | Names of pipeline components to [exclude](/usage/processing-pipelines#disabling). Excluded components won't be loaded. ~~List[str]~~                                                                                                             |
 | `config` <Tag variant="new">3</Tag>  | Config overrides as nested dict or flat dict keyed by section values in dot notation, e.g. `"nlp.pipeline"`. ~~Union[Dict[str, Any], Config]~~                                                                                                   |
@@ -944,7 +970,8 @@ A helper function to use in the `load()` method of a pipeline package's
 | Name                                 | Description                                                                                                                                                                                                                                    |
 | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `init_file`                          | Path to package's `__init__.py`, i.e. `__file__`. ~~Union[str, Path]~~                                                                                                                                                                         |
-| `vocab` <Tag variant="new">3</Tag>   | Optional shared vocab to pass in on initialization. If `True` (default), a new `Vocab` object will be created. ~~Union[Vocab, bool]~~.                                                                                                         |
+| _keyword-only_                       |                                                                                                                                                                                                                                                |
+| `vocab` <Tag variant="new">3</Tag>   | Optional shared vocab to pass in on initialization. If `True` (default), a new `Vocab` object will be created. ~~Union[Vocab, bool]~~                                                                                                          |
 | `disable`                            | Names of pipeline components to [disable](/usage/processing-pipelines#disabling). Disabled pipes will be loaded but they won't be run unless you explicitly enable them by calling [nlp.enable_pipe](/api/language#enable_pipe). ~~List[str]~~ |
 | `exclude` <Tag variant="new">3</Tag> | Names of pipeline components to [exclude](/usage/processing-pipelines#disabling). Excluded components won't be loaded. ~~List[str]~~                                                                                                           |
 | `config` <Tag variant="new">3</Tag>  | Config overrides as nested dict or flat dict keyed by section values in dot notation, e.g. `"nlp.pipeline"`. ~~Union[Dict[str, Any], Config]~~                                                                                                 |
@@ -1123,11 +1150,11 @@ vary on each step.
 >     nlp.update(batch)
 > ```
 
-| Name       | Description                              |
-| ---------- | ---------------------------------------- |
-| `items`    | The items to batch up. ~~Iterable[Any]~~ |
-| `size`     | int / iterable                           | The batch size(s). ~~Union[int, Sequence[int]]~~ |
-| **YIELDS** | The batches.                             |
+| Name       | Description                                      |
+| ---------- | ------------------------------------------------ |
+| `items`    | The items to batch up. ~~Iterable[Any]~~         |
+| `size`     | The batch size(s). ~~Union[int, Sequence[int]]~~ |
+| **YIELDS** | The batches.                                     |
 
 ### util.filter_spans {#util.filter_spans tag="function" new="2.1.4"}
 
