@@ -122,7 +122,8 @@
                     { "text": "Scorer", "url": "/api/scorer" },
                     { "text": "StringStore", "url": "/api/stringstore" },
                     { "text": "Vectors", "url": "/api/vectors" },
-                    { "text": "Vocab", "url": "/api/vocab" }
+                    { "text": "Vocab", "url": "/api/vocab" },
+                    { "text": "Legacy", "url": "/api/legacy" }
                 ]
             },
             {
