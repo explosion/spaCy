@@ -15,7 +15,7 @@ You can find the detailed documentation of each such legacy function on this pag
 
 These functions are available from `@spacy.registry.architectures`.
 
-### spacy.Tok2Vec.v1 {#Tok2Vec}
+### spacy.Tok2Vec.v1 {#Tok2Vec_v1}
 
 The `spacy.Tok2Vec.v1` architecture was expecting an `encode` model of type 
 `Model[Floats2D, Floats2D]` such as `spacy.MaxoutWindowEncoder.v1` or 
@@ -44,10 +44,10 @@ blog post for background.
 | Name        | Description                                                                                                                                                                                                                      |
 | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `embed`     | Embed tokens into context-independent word vector representations. For example, [CharacterEmbed](/api/architectures#CharacterEmbed) or [MultiHashEmbed](/api/architectures#MultiHashEmbed). ~~Model[List[Doc], List[Floats2d]]~~ |
-| `encode`    | Encode context into the embeddings, using an architecture such as a CNN, BiLSTM or transformer. For example, [MaxoutWindowEncoder.v1](/api/legacy#MaxoutWindowEncoder). ~~Model[Floats2d, Floats2d]~~                            |
+| `encode`    | Encode context into the embeddings, using an architecture such as a CNN, BiLSTM or transformer. For example, [MaxoutWindowEncoder.v1](/api/legacy#MaxoutWindowEncoder_v1). ~~Model[Floats2d, Floats2d]~~                            |
 | **CREATES** | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                                                           |
 
-### spacy.MaxoutWindowEncoder.v1 {#MaxoutWindowEncoder}
+### spacy.MaxoutWindowEncoder.v1 {#MaxoutWindowEncoder_v1}
 
 The `spacy.MaxoutWindowEncoder.v1` architecture was producing a model of type 
 `Model[Floats2D, Floats2D]`. Since `spacy.MaxoutWindowEncoder.v2`, this has been changed to output 
@@ -76,7 +76,7 @@ and residual connections.
 | `depth`         | The number of convolutional layers. Recommended value is `4`. ~~int~~                                                                                                                                          |
 | **CREATES**     | The model using the architecture. ~~Model[Floats2d, Floats2d]~~                                                                                                                                                |
 
-### spacy.MishWindowEncoder.v1 {#MishWindowEncoder}
+### spacy.MishWindowEncoder.v1 {#MishWindowEncoder_v1}
 
 The `spacy.MishWindowEncoder.v1` architecture was producing a model of type 
 `Model[Floats2D, Floats2D]`. Since `spacy.MishWindowEncoder.v2`, this has been changed to output 
@@ -102,3 +102,42 @@ and residual connections.
 | `window_size` | The number of words to concatenate around each token to construct the convolution. Recommended value is `1`. ~~int~~                                                                                           |
 | `depth`       | The number of convolutional layers. Recommended value is `4`. ~~int~~                                                                                                                                          |
 | **CREATES**   | The model using the architecture. ~~Model[Floats2d, Floats2d]~~                                                                                                                                                |
+
+
+### spacy.TextCatEnsemble.v1 {#TextCatEnsemble_v1}
+
+The `spacy.TextCatEnsemble.v1` architecture built an internal `tok2vec` and `linear_model`. 
+Since `spacy.TextCatEnsemble.v2`, this has been refactored so that the `TextCatEnsemble` takes these 
+two sublayers as input.
+
+> #### Example Config
+>
+> ```ini
+> [model]
+> @architectures = "spacy.TextCatEnsemble.v1"
+> exclusive_classes = false
+> pretrained_vectors = null
+> width = 64
+> embed_size = 2000
+> conv_depth = 2
+> window_size = 1
+> ngram_size = 1
+> dropout = null
+> nO = null
+> ```
+
+Stacked ensemble of a bag-of-words model and a neural network model. The neural
+network has an internal CNN Tok2Vec layer and uses attention.
+
+| Name                 | Description                                                                                                                                                                                    |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `exclusive_classes`  | Whether or not categories are mutually exclusive. ~~bool~~                                                                                                                                     |
+| `pretrained_vectors` | Whether or not pretrained vectors will be used in addition to the feature vectors. ~~bool~~                                                                                                    |
+| `width`              | Output dimension of the feature encoding step. ~~int~~                                                                                                                                         |
+| `embed_size`         | Input dimension of the feature encoding step. ~~int~~                                                                                                                                          |
+| `conv_depth`         | Depth of the tok2vec layer. ~~int~~                                                                                                                                                            |
+| `window_size`        | The number of contextual vectors to [concatenate](https://thinc.ai/docs/api-layers#expand_window) from the left and from the right. ~~int~~                                                    |
+| `ngram_size`         | Determines the maximum length of the n-grams in the BOW model. For instance, `ngram_size=3`would give unigram, trigram and bigram features. ~~int~~                                            |
+| `dropout`            | The dropout rate. ~~float~~                                                                                                                                                                    |
+| `nO`                 | Output dimension, determined by the number of different labels. If not set, the [`TextCategorizer`](/api/textcategorizer) component will set it when `initialize` is called. ~~Optional[int]~~ |
+| **CREATES**          | The model using the architecture. ~~Model[List[Doc], Floats2d]~~                                                                                                                               |
