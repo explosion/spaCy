@@ -962,7 +962,7 @@ domain. There are six things you may need to define:
    quotes, open brackets, etc.
 3. A function `suffix_search`, to handle **succeeding punctuation**, such as
    commas, periods, close quotes, etc.
-4. A function `infixes_finditer`, to handle non-whitespace separators, such as
+4. A function `infix_finditer`, to handle non-whitespace separators, such as
    hyphens etc.
 5. An optional boolean function `token_match` matching strings that should never
    be split, overriding the infix rules. Useful for things like numbers.
