@@ -17,6 +17,8 @@ const CUDA = {
     '10.1': 'cuda101',
     '10.2': 'cuda102',
     '11.0': 'cuda110',
+    '11.1': 'cuda111',
+    '11.2': 'cuda112',
 }
 const LANG_EXTRAS = ['ja'] // only for languages with models
 
