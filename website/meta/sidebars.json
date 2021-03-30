@@ -122,8 +122,7 @@
                     { "text": "Scorer", "url": "/api/scorer" },
                     { "text": "StringStore", "url": "/api/stringstore" },
                     { "text": "Vectors", "url": "/api/vectors" },
-                    { "text": "Vocab", "url": "/api/vocab" },
-                    { "text": "Legacy", "url": "/api/legacy" }
+                    { "text": "Vocab", "url": "/api/vocab" }
                 ]
             },
             {
@@ -132,6 +131,12 @@
                     { "text": "Architecture", "url": "/api/cython" },
                     { "text": "Classes", "url": "/api/cython-classes" },
                     { "text": "Structs", "url": "/api/cython-structs" }
+                ]
+            },
+            {
+                "label": "Legacy",
+                "items": [
+                    { "text": "Legacy functions", "url": "/api/legacy" }
                 ]
             }
         ]
