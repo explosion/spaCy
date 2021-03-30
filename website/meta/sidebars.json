@@ -132,6 +132,12 @@
                     { "text": "Classes", "url": "/api/cython-classes" },
                     { "text": "Structs", "url": "/api/cython-structs" }
                 ]
+            },
+            {
+                "label": "Legacy",
+                "items": [
+                    { "text": "Legacy functions", "url": "/api/legacy" }
+                ]
             }
         ]
     }
