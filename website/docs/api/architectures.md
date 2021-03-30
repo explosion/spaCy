@@ -647,8 +647,8 @@ from the linear model, where it is stored in `model.attrs["multi_label"]`.
 
 <Accordion title="spacy.TextCatEnsemble.v1 definition" spaced>
 
-The v1 was functionally similar, but used an internal `tok2vec` instead of
-taking it as argument.
+[TextCatEnsemble.v1](/api/legacy#TextCatEnsemble_v1) was functionally similar, but used an internal `tok2vec` instead of
+taking it as argument:
 
 | Name                 | Description                                                                                                                                                                                    |
 | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
