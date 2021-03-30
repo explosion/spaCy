@@ -28,7 +28,6 @@ for orth in [
     "Avv."
     "by-pass",
     "c.d.",
-    "cc",
     "c/c",
     "C.so",
     "centro-sinistra",
