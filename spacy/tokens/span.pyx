@@ -6,6 +6,7 @@ from libc.math cimport sqrt
 import numpy
 from thinc.api import get_array_module
 import warnings
+import copy
 
 from .doc cimport token_by_start, token_by_end, get_token_attr, _get_lca_matrix
 from ..structs cimport TokenC, LexemeC
@@ -241,7 +242,19 @@ cdef class Span:
                 if cat_start == self.start_char and cat_end == self.end_char:
                     doc.cats[cat_label] = value
         if copy_user_data:
-            doc.user_data = self.doc.user_data
+            user_data = {}
+            char_offset = self.start_char
+            for key, value in self.doc.user_data.items():
+                if isinstance(key, tuple) and len(key) == 4 and key[0] == "._.":
+                    data_type, name, start, end = key
+                    if start is not None or end is not None:
+                        start -= char_offset
+                        if end is not None:
+                            end -= char_offset
+                        user_data[(data_type, name, start, end)] = copy.copy(value)
+                else:
+                    user_data[key] = copy.copy(value)
+            doc.user_data = user_data
         return doc
 
     def _fix_dep_copy(self, attrs, array):
