@@ -332,8 +332,8 @@ cdef class Vocab:
         remap = {}
         for i, key in enumerate(keys[nr_row:]):
             self.vectors.add(key, row=syn_rows[i][0])
-            word = self.strings[key]
-            synonym = self.strings[syn_keys[i][0]]
+            word = self.strings[int(key)]
+            synonym = self.strings[int(syn_keys[i][0])]
             score = scores[i][0]
             remap[word] = (synonym, score)
         return remap
