@@ -5,6 +5,7 @@ import srsly
 from spacy.tokens import Doc
 from spacy.vocab import Vocab
 from spacy.util import make_tempdir  # noqa: F401
+from thinc.api import get_current_ops
 
 
 @contextlib.contextmanager
@@ -58,7 +59,10 @@ def add_vecs_to_vocab(vocab, vectors):
 
 def get_cosine(vec1, vec2):
     """Get cosine for two given vectors"""
-    return numpy.dot(vec1, vec2) / (numpy.linalg.norm(vec1) * numpy.linalg.norm(vec2))
+    OPS = get_current_ops()
+    v1 = OPS.to_numpy(OPS.asarray(vec1))
+    v2 = OPS.to_numpy(OPS.asarray(vec2))
+    return numpy.dot(v1, v2) / (numpy.linalg.norm(v1) * numpy.linalg.norm(v2))
 
 
 def assert_docs_equal(doc1, doc2):
