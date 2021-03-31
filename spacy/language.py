@@ -1673,7 +1673,16 @@ class Language:
                         # model with the same vocab as the current nlp object
                         source_nlps[model] = util.load_model(model, vocab=nlp.vocab)
                     source_name = pipe_cfg.get("component", pipe_name)
+                    listeners_replaced = False
+                    if "replace_listeners" in pipe_cfg:
+                        for name, proc in source_nlps[model].pipeline:
+                            if source_name in getattr(proc, "listening_components", []):
+                                source_nlps[model].replace_listeners(name, source_name, pipe_cfg["replace_listeners"])
+                                listeners_replaced = True
                     nlp.add_pipe(source_name, source=source_nlps[model], name=pipe_name)
+                    # Delete from cache if listeners were replaced
+                    if listeners_replaced:
+                        del source_nlps[model]
         disabled_pipes = [*config["nlp"]["disabled"], *disable]
         nlp._disabled = set(p for p in disabled_pipes if p not in exclude)
         nlp.batch_size = config["nlp"]["batch_size"]
