@@ -301,6 +301,8 @@ cdef class Vectors:
         else:
             raise ValueError(Errors.E197.format(row=row, key=key))
         if vector is not None:
+            xp = get_array_module(self.data)
+            vector = xp.asarray(vector)
             self.data[row] = vector
         if self._unset.count(row):
             self._unset.erase(self._unset.find(row))
