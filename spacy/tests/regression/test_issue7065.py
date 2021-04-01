@@ -58,9 +58,6 @@ def test_issue7065_b():
 
     # train the NEL pipe
     optimizer = nlp.initialize(get_examples=lambda: train_examples)
-    assert entity_linker.model.get_dim("nO") == vector_length
-    assert entity_linker.model.get_dim("nO") == entity_linker.kb.entity_vector_length
-
     for i in range(2):
         losses = {}
         nlp.update(train_examples, sgd=optimizer, losses=losses)
