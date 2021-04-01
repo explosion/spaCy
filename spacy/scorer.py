@@ -305,7 +305,7 @@ class Scorer:
         *,
         getter: Callable[[Doc, str], Iterable[Span]] = getattr,
         has_annotation: Optional[Callable[[Doc], bool]] = None,
-        include_label: bool = True,
+        labeled: bool = True,
         allow_overlap: bool = False,
         **cfg,
     ) -> Dict[str, Any]:
@@ -319,7 +319,7 @@ class Scorer:
         has_annotation (Optional[Callable[[Doc], bool]]) should return whether a `Doc`
             has annotation for this `attr`. Docs without annotation are skipped for
             scoring purposes.
-        include_label (bool): Whether or not to include label information in
+        labeled (bool): Whether or not to include label information in
             the evaluation. If set to 'False', two spans will be considered
             equal if their start and end match, irrespective of their label.
         allow_overlap (bool): Whether or not to allow overlapping spans.
@@ -352,7 +352,7 @@ class Scorer:
             gold_spans = set()
             pred_spans = set()
             for span in getter(gold_doc, attr):
-                if include_label:
+                if labeled:
                     gold_span = (span.label_, span.start, span.end - 1)
                 else:
                     gold_span = (span.start, span.end - 1)
@@ -360,14 +360,14 @@ class Scorer:
                 gold_per_type[span.label_].add(gold_span)
             pred_per_type = {label: set() for label in labels}
             for span in example.get_aligned_spans_x2y(getter(pred_doc, attr), allow_overlap):
-                if include_label:
+                if labeled:
                     pred_span = (span.label_, span.start, span.end - 1)
                 else:
                     pred_span = (span.start, span.end - 1)
                 pred_spans.add(pred_span)
                 pred_per_type[span.label_].add(pred_span)
             # Scores per label
-            if include_label:
+            if labeled:
                 for k, v in score_per_type.items():
                     if k in pred_per_type:
                         v.score_set(pred_per_type[k], gold_per_type[k])
@@ -379,13 +379,13 @@ class Scorer:
                 f"{attr}_r": None,
                 f"{attr}_f": None,
             }
-        if include_label:
+        if labeled:
             final_scores[f"{attr}_per_type"] = None
         if len(score) > 0:
             final_scores[f"{attr}_p"] = score.precision
             final_scores[f"{attr}_r"] = score.recall
             final_scores[f"{attr}_f"] = score.fscore
-            if include_label:
+            if labeled:
                 final_scores[f"{attr}_per_type"] = {k: v.to_dict() for k, v in score_per_type.items()}
         return final_scores
 
