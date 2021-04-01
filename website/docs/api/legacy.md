@@ -141,3 +141,26 @@ network has an internal CNN Tok2Vec layer and uses attention.
 | `dropout`            | The dropout rate. ~~float~~                                                                                                                                                                    |
 | `nO`                 | Output dimension, determined by the number of different labels. If not set, the [`TextCategorizer`](/api/textcategorizer) component will set it when `initialize` is called. ~~Optional[int]~~ |
 | **CREATES**          | The model using the architecture. ~~Model[List[Doc], Floats2d]~~                                                                                                                               |
+
+
+## Loggers {#loggers}
+
+These functions are available from `@spacy.registry.loggers`.
+
+### spacy.WandbLogger.v1 {#WandbLogger_v1}
+
+The first version of the [`WandbLogger`](/api/top-level#WandbLogger) did not yet 
+support the `log_dataset_dir` and `model_log_interval` arguments.
+
+> #### Example config
+>
+> ```ini
+> [training.logger]
+> @loggers = "spacy.WandbLogger.v1"
+> project_name = "monitor_spacy_training"
+> remove_config_values = ["paths.train", "paths.dev", "corpora.train.path", "corpora.dev.path"]
+> ```
+| Name                   | Description                                                                                                                           |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `project_name`         | The name of the project in the Weights & Biases interface. The project will be created automatically if it doesn't exist yet. ~~str~~ |
+| `remove_config_values` | A list of values to include from the config before it is uploaded to W&B (default: empty). ~~List[str]~~                              |
