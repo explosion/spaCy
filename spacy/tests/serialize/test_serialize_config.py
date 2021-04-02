@@ -4,7 +4,7 @@ import spacy
 from spacy.lang.en import English
 from spacy.lang.de import German
 from spacy.language import Language, DEFAULT_CONFIG, DEFAULT_CONFIG_PRETRAIN_PATH
-from spacy.util import registry, load_model_from_config, load_config
+from spacy.util import registry, load_model_from_config, load_config, load_config_from_str
 from spacy.ml.models import build_Tok2Vec_model, build_tb_parser_model
 from spacy.ml.models import MultiHashEmbed, MaxoutWindowEncoder
 from spacy.schemas import ConfigSchema, ConfigSchemaPretrain
@@ -465,3 +465,32 @@ def test_config_only_resolve_relevant_blocks():
         nlp.initialize()
     nlp.config["initialize"]["lookups"] = None
     nlp.initialize()
+
+
+def test_hyphen_in_config():
+    hyphen_config_str = """
+    [nlp]
+    lang = "en"
+    pipeline = ["my_punctual_component"]
+
+    [components]
+
+    [components.my_punctual_component]
+    factory = "my_punctual_component"
+    punctuation = ["?","-"]
+    """
+
+    @spacy.Language.factory("my_punctual_component")
+    class MyPunctualComponent(object):
+        name = "my_punctual_component"
+
+        def __init__(
+            self,
+            nlp,
+            name,
+            punctuation,
+        ):
+            self.punctuation = punctuation
+
+    nlp = English.from_config(load_config_from_str(hyphen_config_str))
+    assert nlp.get_pipe("my_punctual_component").punctuation == ['?', '-']
