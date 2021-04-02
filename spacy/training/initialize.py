@@ -133,6 +133,10 @@ def load_vectors_into_model(
         )
         err = ConfigValidationError.from_error(e, title=title, desc=desc)
         raise err from None
+
+    if len(vectors_nlp.vocab.vectors.keys()) == 0:
+        logger.warning(Warnings.W112.format(name=name))
+
     nlp.vocab.vectors = vectors_nlp.vocab.vectors
     if add_strings:
         # I guess we should add the strings from the vectors_nlp model?
