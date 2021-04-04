@@ -157,6 +157,8 @@ class Warnings:
             "`spacy.load()` to ensure that the model is loaded on the correct "
             "device. More information: "
             "http://spacy.io/usage/v3#jupyter-notebook-gpu")
+    W112 = ("The model specified to use for initial vectors ({name}) has no "
+            "vectors. This is almost certainly a mistake.")
 
 
 @add_codes
