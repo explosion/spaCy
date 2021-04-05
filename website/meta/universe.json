@@ -1,5 +1,27 @@
 {
     "resources": [
+	{
+	    "id": "numerizer",
+	    "title": "numerizer",
+	    "slogan": "Convert natural language numerics into ints and floats.",
+	    "description": "A SpaCy extension for Docs, Spans and Tokens that converts numerical words and quantitative named entities into numeric strings.",
+	    "github": "jaidevd/numerizer",
+	    "pip": "numerizer",
+	    "code_example": [
+		"from spacy import load",
+		"import numerizer",
+		"nlp = load('en_core_web_sm') # or any other model",
+		"doc = nlp('The Hogwarts Express is at platform nine and three quarters')",
+		"doc._.numerize()",
+		"# {nine and three quarters: '9.75'}"
+	    ],
+	    "author": "Jaidev Deshpande",
+	    "author_links": {
+		"github": "jaidevd",
+		"twitter": "jaidevd"
+	    },
+	    "category": ["standalone"]
+	},
         {
             "id": "spikex",
             "title": "SpikeX - SpaCy Pipes for Knowledge Extraction",
