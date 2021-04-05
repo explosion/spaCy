@@ -23,13 +23,13 @@ class PRFScore:
     def __init__(
         self,
         *,
-        tp: Optional[int] = None,
-        fp: Optional[int] = None,
-        fn: Optional[int] = None,
+        tp: int = 0,
+        fp: int = 0,
+        fn: int = 0,
     ) -> None:
-        self.tp = 0 if tp is None else tp
-        self.fp = 0 if fp is None else fp
-        self.fn = 0 if fn is None else fn
+        self.tp = tp
+        self.fp = fp
+        self.fn = fn
 
     def __len__(self) -> int:
         return self.tp + self.fp + self.fn
