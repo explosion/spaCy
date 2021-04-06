@@ -82,7 +82,7 @@ Main changes from spaCy v2 models:
 - The lemmatizer tables and processing move from the vocab and tagger to a
   separate `lemmatizer` component.
 
-### CNN/CPU pipeline design
+### CNN/CPU pipeline design {#design-cnn}
 
 ![Components and their dependencies in the CNN pipelines](../images/pipeline-design.svg)
 
@@ -101,7 +101,7 @@ In the `sm`/`md`/`lg` models:
   `tagger`+`attribute_ruler` or `morphologizer`.
 - The `ner` component is independent with its own internal tok2vec layer.
 
-### Transformer pipeline design
+### Transformer pipeline design {#design-trf}
 
 In the transformer (`trf`) models, the `tagger`, `parser` and `ner` (if present)
 all listen to the `transformer` component. The `attribute_ruler` and
@@ -109,7 +109,7 @@ all listen to the `transformer` component. The `attribute_ruler` and
 
 <!-- TODO: pretty diagram -->
 
-### Modifying the default pipeline
+### Modifying the default pipeline {#design-modify}
 
 For faster processing, you may only want to run a subset of the components in a
 trained pipeline. The `disable` and `exclude` arguments to
