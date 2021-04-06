@@ -43,7 +43,7 @@ def forward(
         [doc.vocab.vectors.find(keys=doc.to_array(key_attr)) for doc in docs]
     )
     try:
-        vectors_data = model.ops.gemm(model.ops.as_contig(V[rows]), W, trans2=True)
+        vectors_data = model.ops.gemm(model.ops.as_contig(V[rows]) * (rows>=0).T[:, None], W, trans2=True)
     except ValueError:
         raise RuntimeError(Errors.E896)
     output = Ragged(
