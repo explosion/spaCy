@@ -218,9 +218,9 @@ def debug_data(
         missing_labels = model_labels - labels
         if missing_labels:
             msg.warn(
-                "Some model labels are not present in train data. The model "
-                "performance may be degraded for these labels after training: "
-                f"{_format_labels(missing_labels)}."
+                "Some model labels are not present in the train data. The "
+                "model performance may be degraded for these labels after "
+                f"training: {_format_labels(missing_labels)}."
             )
         if gold_train_data["ws_ents"]:
             msg.fail(f"{gold_train_data['ws_ents']} invalid whitespace entity spans")
@@ -289,9 +289,9 @@ def debug_data(
         missing_labels = labels - set(gold_train_data["cats"].keys())
         if missing_labels:
             msg.warn(
-                "Some model labels are not present in train data. The model "
-                "performance may be degraded for these labels after training: "
-                f"{_format_labels(missing_labels)}."
+                "Some model labels are not present in the train data. The "
+                "model performance may be degraded for these labels after "
+                f"training: {_format_labels(missing_labels)}."
             )
         if gold_train_data["n_cats_multilabel"] > 0:
             # Note: you should never get here because you run into E895 on
@@ -320,9 +320,9 @@ def debug_data(
         missing_labels = labels - set(gold_train_data["cats"].keys())
         if missing_labels:
             msg.warn(
-                "Some model labels are not present in train data. The model "
-                "performance may be degraded for these labels after training: "
-                f"{_format_labels(missing_labels)}."
+                "Some model labels are not present in the train data. The "
+                "model performance may be degraded for these labels after "
+                f"training: {_format_labels(missing_labels)}."
             )
         if set(gold_train_data["cats"]) != set(gold_dev_data["cats"]):
             msg.fail(
@@ -358,9 +358,9 @@ def debug_data(
         missing_labels = model_labels - set(labels)
         if missing_labels:
             msg.warn(
-                "Some model labels are not present in train data. The model "
-                "performance may be degraded for these labels after training: "
-                f"{_format_labels(missing_labels)}."
+                "Some model labels are not present in the train data. The "
+                "model performance may be degraded for these labels after "
+                f"training: {_format_labels(missing_labels)}."
             )
         labels_with_counts = _format_labels(
             gold_train_data["tags"].most_common(), counts=True
@@ -375,9 +375,9 @@ def debug_data(
         missing_labels = model_labels - set(labels)
         if missing_labels:
             msg.warn(
-                "Some model labels are not present in train data. The model "
-                "performance may be degraded for these labels after training: "
-                f"{_format_labels(missing_labels)}."
+                "Some model labels are not present in the train data. The "
+                "model performance may be degraded for these labels after "
+                f"training: {_format_labels(missing_labels)}."
             )
         labels_with_counts = _format_labels(
             gold_train_data["morphs"].most_common(), counts=True
