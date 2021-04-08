@@ -152,9 +152,6 @@ class Warnings:
             "`spacy.load()` to ensure that the model is loaded on the correct "
             "device. More information: "
             "http://spacy.io/usage/v3#jupyter-notebook-gpu")
-    W112 = ("Sourced component '{name}' may not work as expected: source "
-            "language '{source_lang}' does not match current pipeline language "
-            "'{curr_lang}'.")
     W113 = ("Sourced component '{name}' may not work as expected: source "
             "vectors are not identical to current pipeline vectors.")
 
