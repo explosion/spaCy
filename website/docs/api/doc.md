@@ -234,14 +234,14 @@ Set the named entities in the document.
 > assert ents[0].text == "Mr. Best"
 > ```
 
-| Name           | Description                                                                                                                                                                               |
-| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| entities       | Spans with labels to set as entities. ~~List[Span]~~                                                                                                                                      |
-| _keyword-only_ |                                                                                                                                                                                           |
-| blocked        | Spans to set as "blocked" (never an entity) for spacy's built-in NER component. Other components may ignore this setting. ~~Optional[List[Span]]~~                                        |
-| missing        | Spans with missing/unknown entity information. ~~Optional[List[Span]]~~                                                                                                                   |
-| outside        | Spans outside of entities (O in IOB). ~~Optional[List[Span]]~~                                                                                                                            |
-| default        | How to set entity annotation for tokens outside of any provided spans. Options: "blocked", "missing", "outside" and "unmodified" (preserve current state). Defaults to "outside". ~~str~~ |
+| Name           | Description                                                                                                                                                                                         |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `entities`     | Spans with labels to set as entities. ~~List[Span]~~                                                                                                                                                |
+| _keyword-only_ |                                                                                                                                                                                                     |
+| `blocked`      | Spans to set as "blocked" (never an entity) for spacy's built-in NER component. Other components may ignore this setting. ~~Optional[List[Span]]~~                                                  |
+| `missing`      | Spans with missing/unknown entity information. ~~Optional[List[Span]]~~                                                                                                                             |
+| `outside`      | Spans outside of entities (O in IOB). ~~Optional[List[Span]]~~                                                                                                                                      |
+| `default`      | How to set entity annotation for tokens outside of any provided spans. Options: `"blocked"`, `"missing"`, `"outside"` and `"unmodified"` (preserve current state). Defaults to `"outside"`. ~~str~~ |
 
 ## Doc.similarity {#similarity tag="method" model="vectors"}
 

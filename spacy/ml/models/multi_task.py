@@ -16,11 +16,13 @@ if TYPE_CHECKING:
     from ...tokens import Doc  # noqa: F401
 
 
-@registry.architectures.register("spacy.PretrainVectors.v1")
+@registry.architectures("spacy.PretrainVectors.v1")
 def create_pretrain_vectors(
     maxout_pieces: int, hidden_size: int, loss: str
 ) -> Callable[["Vocab", Model], Model]:
     def create_vectors_objective(vocab: "Vocab", tok2vec: Model) -> Model:
+        if vocab.vectors.data.shape[1] == 0:
+            raise ValueError(Errors.E875)
         model = build_cloze_multi_task_model(
             vocab, tok2vec, hidden_size=hidden_size, maxout_pieces=maxout_pieces
         )
@@ -40,7 +42,7 @@ def create_pretrain_vectors(
     return create_vectors_objective
 
 
-@registry.architectures.register("spacy.PretrainCharacters.v1")
+@registry.architectures("spacy.PretrainCharacters.v1")
 def create_pretrain_characters(
     maxout_pieces: int, hidden_size: int, n_characters: int
 ) -> Callable[["Vocab", Model], Model]:
@@ -134,7 +136,7 @@ def build_cloze_characters_multi_task_model(
 ) -> Model:
     output_layer = chain(
         list2array(),
-        Maxout(hidden_size, nP=maxout_pieces),
+        Maxout(nO=hidden_size, nP=maxout_pieces),
         LayerNorm(nI=hidden_size),
         MultiSoftmax([256] * nr_char, nI=hidden_size),
     )

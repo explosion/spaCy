@@ -1,5 +1,58 @@
 {
     "resources": [
+	{
+	    "id": "numerizer",
+	    "title": "numerizer",
+	    "slogan": "Convert natural language numerics into ints and floats.",
+	    "description": "A SpaCy extension for Docs, Spans and Tokens that converts numerical words and quantitative named entities into numeric strings.",
+	    "github": "jaidevd/numerizer",
+	    "pip": "numerizer",
+	    "code_example": [
+		"from spacy import load",
+		"import numerizer",
+		"nlp = load('en_core_web_sm') # or any other model",
+		"doc = nlp('The Hogwarts Express is at platform nine and three quarters')",
+		"doc._.numerize()",
+		"# {nine and three quarters: '9.75'}"
+	    ],
+	    "author": "Jaidev Deshpande",
+	    "author_links": {
+		"github": "jaidevd",
+		"twitter": "jaidevd"
+	    },
+	    "category": ["standalone"]
+	},
+        {
+            "id": "spikex",
+            "title": "SpikeX - SpaCy Pipes for Knowledge Extraction",
+            "slogan": "Use SpikeX to build knowledge extraction tools with almost-zero effort",
+            "description": "SpikeX is a collection of pipes ready to be plugged in a spaCy pipeline. It aims to help in building knowledge extraction tools with almost-zero effort.",
+            "github": "erre-quadro/spikex",
+            "pip": "spikex",
+            "code_example": [
+                "from spacy import load as spacy_load",
+                "from spikex.wikigraph import load as wg_load",
+                "from spikex.pipes import WikiPageX",
+                "",
+                "# load a spacy model and get a doc",
+                "nlp = spacy_load('en_core_web_sm')",
+                "doc = nlp('An apple a day keeps the doctor away')",
+                "# load a WikiGraph",
+                "wg = wg_load('simplewiki_core')",
+                "# get a WikiPageX and extract all pages",
+                "wikipagex = WikiPageX(wg)",
+                "doc = wikipagex(doc)",
+                "# see all pages extracted from the doc",
+                "for span in doc._.wiki_spans:",
+                "   print(span._.wiki_pages)"
+            ],
+            "category": ["pipeline", "standalone"],
+            "author": "Erre Quadro",
+            "author_links": {
+                "github": "erre-quadro",
+                "website": "https://www.errequadrosrl.com"
+            }
+        },
         {
             "id": "spacy-dbpedia-spotlight",
             "title": "DBpedia Spotlight for SpaCy",
@@ -31,8 +84,8 @@
         {
             "id": "spacy-textblob",
             "title": "spaCyTextBlob",
-            "slogan": "Easy sentiment analysis for spaCy using TextBlob",
-            "description": "spaCyTextBlob is a pipeline component that enables sentiment analysis using the [TextBlob](https://github.com/sloria/TextBlob) library. It will add the additional extenstion `._.sentiment` to `Doc`, `Span`, and `Token` objects.",
+            "slogan": "Easy sentiment analysis for spaCy using TextBlob. Now supports spaCy 3.0!",
+            "description": "spaCyTextBlob is a pipeline component that enables sentiment analysis using the [TextBlob](https://github.com/sloria/TextBlob) library. It will add the additional extensions `._.polarity`, `._.subjectivity`, and `._.assessments` to `Doc`, `Span`, and `Token` objects. For spaCy 2 please use `pip install pip install spacytextblob==0.1.7`",
             "github": "SamEdwardes/spaCyTextBlob",
             "pip": "spacytextblob",
             "code_example": [
@@ -40,13 +93,12 @@
                 "from spacytextblob.spacytextblob import SpacyTextBlob",
                 "",
                 "nlp = spacy.load('en_core_web_sm')",
-                "spacy_text_blob = SpacyTextBlob()",
-                "nlp.add_pipe(spacy_text_blob)",
+                "nlp.add_pipe('spacytextblob')",
                 "text = 'I had a really horrible day. It was the worst day ever! But every now and then I have a really good day that makes me happy.'",
                 "doc = nlp(text)",
-                "doc._.sentiment.polarity      # Polarity: -0.125",
-                "doc._.sentiment.subjectivity  # Sujectivity: 0.9",
-                "doc._.sentiment.assessments   # Assessments: [(['really', 'horrible'], -1.0, 1.0, None), (['worst', '!'], -1.0, 1.0, None), (['really', 'good'], 0.7, 0.6000000000000001, None), (['happy'], 0.8, 1.0, None)]"
+                "doc._.polarity      # Polarity: -0.125",
+                "doc._.subjectivity  # Sujectivity: 0.9",
+                "doc._.assessments   # Assessments: [(['really', 'horrible'], -1.0, 1.0, None), (['worst', '!'], -1.0, 1.0, None), (['really', 'good'], 0.7, 0.6000000000000001, None), (['happy'], 0.8, 1.0, None)]"
             ],
             "code_language": "python",
             "url": "https://spacytextblob.netlify.app/",
@@ -193,6 +245,49 @@
                 "emb.plot_interactive(x_axis='man', y_axis='woman')"
             ],
             "category": ["visualizers", "research"],
+            "author": "Vincent D. Warmerdam",
+            "author_links": {
+                "twitter": "fishnets88",
+                "github": "koaning",
+                "website": "https://koaning.io"
+            }
+        },
+        {
+            "id": "tokenwiser",
+            "title": "tokenwiser",
+            "slogan": "Connect vowpal-wabbit & scikit-learn models to spaCy to run simple classification benchmarks. Comes with many utility functions for spaCy pipelines.",
+            "github": "koaning/tokenwiser",
+            "pip": "tokenwiser",
+            "thumb": "https://koaning.github.io/tokenwiser/token.png",
+            "image": "https://koaning.github.io/tokenwiser/logo-tokw.png",
+            "code_example": [
+                "import spacy",
+                "",
+                "from sklearn.pipeline import make_pipeline",
+                "from sklearn.feature_extraction.text import CountVectorizer",
+                "from sklearn.linear_model import LogisticRegression",
+                "",
+                "from tokenwiser.component import attach_sklearn_categoriser",
+                "",
+                "X = [",
+                "    'i really like this post',",
+                "    'thanks for that comment',",
+                "    'i enjoy this friendly forum',",
+                "    'this is a bad post',",
+                "    'i dislike this article',",
+                "    'this is not well written'",
+                "]",
+                "",
+                "y = ['pos', 'pos', 'pos', 'neg', 'neg', 'neg']",
+                "",
+                "# Note that we're training a pipeline here via a single-batch `.fit()` method",
+                "pipe = make_pipeline(CountVectorizer(), LogisticRegression()).fit(X, y)",
+                "",
+                "nlp = spacy.load('en_core_web_sm')",
+                "# This is where we attach our pre-trained model as a pipeline step.",
+                "attach_sklearn_categoriser(nlp, pipe_name='silly_sentiment', estimator=pipe)"
+            ],
+            "category": ["pipeline", "training"],
             "author": "Vincent D. Warmerdam",
             "author_links": {
                 "twitter": "fishnets88",

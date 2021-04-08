@@ -8,7 +8,9 @@ import tarfile
 import gzip
 import zipfile
 import tqdm
+from itertools import islice
 
+from .pretrain import get_tok2vec_ref
 from ..lookups import Lookups
 from ..vectors import Vectors
 from ..errors import Errors, Warnings
@@ -67,17 +69,24 @@ def init_nlp(config: Config, *, use_gpu: int = -1) -> "Language":
     # Make sure that listeners are defined before initializing further
     nlp._link_components()
     with nlp.select_pipes(disable=[*frozen_components, *resume_components]):
-        nlp.initialize(lambda: train_corpus(nlp), sgd=optimizer)
+        if T["max_epochs"] == -1:
+            logger.debug("Due to streamed train corpus, using only first 100 examples for initialization. If necessary, provide all labels in [initialize]. More info: https://spacy.io/api/cli#init_labels")
+            nlp.initialize(lambda: islice(train_corpus(nlp), 100), sgd=optimizer)
+        else:
+            nlp.initialize(lambda: train_corpus(nlp), sgd=optimizer)
         logger.info(f"Initialized pipeline components: {nlp.pipe_names}")
     # Detect components with listeners that are not frozen consistently
     for name, proc in nlp.pipeline:
-        if getattr(proc, "listening_components", None):  # e.g. tok2vec/transformer
-            for listener in proc.listening_components:
-                if listener in frozen_components and name not in frozen_components:
-                    logger.warning(Warnings.W087.format(name=name, listener=listener))
-                # We always check this regardless, in case user freezes tok2vec
-                if listener not in frozen_components and name in frozen_components:
-                    logger.warning(Warnings.W086.format(name=name, listener=listener))
+        for listener in getattr(proc, "listening_components", []):  # e.g. tok2vec/transformer
+            # Don't warn about components not in the pipeline
+            if listener not in nlp.pipe_names:
+                continue
+
+            if listener in frozen_components and name not in frozen_components:
+                logger.warning(Warnings.W087.format(name=name, listener=listener))
+            # We always check this regardless, in case user freezes tok2vec
+            if listener not in frozen_components and name in frozen_components:
+                logger.warning(Warnings.W086.format(name=name, listener=listener))
     return nlp
 
 
@@ -129,6 +138,10 @@ def load_vectors_into_model(
         )
         err = ConfigValidationError.from_error(e, title=title, desc=desc)
         raise err from None
+
+    if len(vectors_nlp.vocab.vectors.keys()) == 0:
+        logger.warning(Warnings.W112.format(name=name))
+
     nlp.vocab.vectors = vectors_nlp.vocab.vectors
     if add_strings:
         # I guess we should add the strings from the vectors_nlp model?
@@ -147,10 +160,6 @@ def init_tok2vec(
     weights_data = None
     init_tok2vec = ensure_path(I["init_tok2vec"])
     if init_tok2vec is not None:
-        if P["objective"].get("type") == "vectors" and not I["vectors"]:
-            err = 'need initialize.vectors if pretraining.objective.type is "vectors"'
-            errors = [{"loc": ["initialize"], "msg": err}]
-            raise ConfigValidationError(config=nlp.config, errors=errors)
         if not init_tok2vec.exists():
             err = f"can't find pretrained tok2vec: {init_tok2vec}"
             errors = [{"loc": ["initialize", "init_tok2vec"], "msg": err}]
@@ -158,21 +167,9 @@ def init_tok2vec(
         with init_tok2vec.open("rb") as file_:
             weights_data = file_.read()
     if weights_data is not None:
-        tok2vec_component = P["component"]
-        if tok2vec_component is None:
-            desc = (
-                f"To use pretrained tok2vec weights, [pretraining.component] "
-                f"needs to specify the component that should load them."
-            )
-            err = "component can't be null"
-            errors = [{"loc": ["pretraining", "component"], "msg": err}]
-            raise ConfigValidationError(
-                config=nlp.config["pretraining"], errors=errors, desc=desc
-            )
-        layer = nlp.get_pipe(tok2vec_component).model
-        if P["layer"]:
-            layer = layer.get_ref(P["layer"])
+        layer = get_tok2vec_ref(nlp, P)
         layer.from_bytes(weights_data)
+        logger.info(f"Loaded pretrained weights from {init_tok2vec}")
         return True
     return False
 
