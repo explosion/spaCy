@@ -73,8 +73,13 @@ class Warnings:
             "degree. If this is intentional or the language you're using "
             "doesn't have a normalization table, please ignore this warning. "
             "If this is surprising, make sure you have the spacy-lookups-data "
-            "package installed. The languages with lexeme normalization tables "
-            "are currently: {langs}")
+            "package installed and load the table in your config. The "
+            "languages with lexeme normalization tables are currently: "
+            "{langs}\n\nLoad the table in your config with:\n\n"
+            "[initialize.lookups]\n"
+            "@misc = \"spacy.LookupsDataLoader.v1\"\n"
+            "lang = ${{nlp.lang}}\n"
+            "tables = [\"lexeme_norm\"]\n")
     W035 = ('Discarding subpattern "{pattern}" due to an unrecognized '
             "attribute or operator.")
 
@@ -152,9 +157,10 @@ class Warnings:
             "`spacy.load()` to ensure that the model is loaded on the correct "
             "device. More information: "
             "http://spacy.io/usage/v3#jupyter-notebook-gpu")
+    W112 = ("The model specified to use for initial vectors ({name}) has no "
+            "vectors. This is almost certainly a mistake.")
     W113 = ("Sourced component '{name}' may not work as expected: source "
             "vectors are not identical to current pipeline vectors.")
-
 
 @add_codes
 class Errors:
@@ -494,6 +500,9 @@ class Errors:
     E202 = ("Unsupported alignment mode '{mode}'. Supported modes: {modes}.")
 
     # New errors added in v3.x
+    E873 = ("Unable to merge a span from doc.spans with key '{key}' and text "
+            "'{text}'. This is likely a bug in spaCy, so feel free to open an "
+            "issue: https://github.com/explosion/spaCy/issues")
     E874 = ("Could not initialize the tok2vec model from component "
             "'{component}' and layer '{layer}'.")
     E875 = ("To use the PretrainVectors objective, make sure that static vectors are loaded. "

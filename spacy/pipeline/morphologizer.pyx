@@ -137,6 +137,7 @@ class Morphologizer(Tagger):
         DOCS: https://spacy.io/api/morphologizer#initialize
         """
         validate_get_examples(get_examples, "Morphologizer.initialize")
+        util.check_lexeme_norms(self.vocab, "morphologizer")
         if labels is not None:
             self.cfg["labels_morph"] = labels["morph"]
             self.cfg["labels_pos"] = labels["pos"]
