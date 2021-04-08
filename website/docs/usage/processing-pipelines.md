@@ -97,7 +97,6 @@ You can also add metadata to Docs when using [`nlp.pipe`](/api/language#pipe). T
 ```python
 ### {executable="true"}
 import spacy
-
 from spacy.tokens import Doc
 
 if not Doc.has_extension('textid'):
