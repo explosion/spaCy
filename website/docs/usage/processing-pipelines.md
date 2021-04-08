@@ -92,7 +92,7 @@ have to call `list()` on it first:
 
 </Infobox>
 
-spaCy includes a method for adding metadata to Docs when using [`nlp.pipe`](/api/language#pipe). The metadata is attached to a [custom attribute](processing-pipelines#custom-components-attributes).
+You can also add metadata to Docs when using [`nlp.pipe`](/api/language#pipe). The metadata is attached to a [custom attribute](#custom-components-attributes).
 
 ```python
 ### {executable="true"}
