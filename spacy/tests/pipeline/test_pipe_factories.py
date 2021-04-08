@@ -1,4 +1,6 @@
 import pytest
+import mock
+import logging
 from spacy.language import Language
 from spacy.lang.en import English
 from spacy.lang.de import German
@@ -428,8 +430,10 @@ def test_pipe_factories_from_source_language_subclass():
     nlp = English()
     nlp.vocab.vectors.resize((1, 4))
     nlp.vocab.vectors.add("cat", vector=[1, 2, 3, 4])
-    with pytest.warns(UserWarning):
+    logger = logging.getLogger("spacy")
+    with mock.patch.object(logger, "warning") as mock_warning:
         nlp.add_pipe("tagger", source=source_nlp)
+        mock_warning.assert_called()
 
 
 def test_pipe_factories_from_source_custom():

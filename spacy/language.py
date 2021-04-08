@@ -689,7 +689,7 @@ class Language:
         if self.vocab.vectors.shape != source.vocab.vectors.shape or \
                 self.vocab.vectors.key2row != source.vocab.vectors.key2row or \
                 self.vocab.vectors.to_bytes() != source.vocab.vectors.to_bytes():
-            warnings.warn(Warnings.W113.format(name=source_name))
+            util.logger.warning(Warnings.W113.format(name=source_name))
         if not source_name in source.component_names:
             raise KeyError(
                 Errors.E944.format(
