@@ -62,8 +62,6 @@ access the named entity predictions:
 >
 > 1. Also disable the `"ner"` component. You'll see that the `doc.ents` are now
 >    empty, because the entity recognizer didn't run.
->    
-> 2. You can save metadata to a doc's [custom attribute](processing-pipelines#custom-components-attributes) when calling [`nlp.pipe`](/api/language#pipe).
 
 ```python
 ### {executable="true"}
@@ -93,6 +91,27 @@ have to call `list()` on it first:
 ```
 
 </Infobox>
+
+spaCy includes a method for adding metadata to Docs when using [`nlp.pipe`](/api/language#pipe). The metadata is attached to a [custom attribute](processing-pipelines#custom-components-attributes).
+
+```python
+### {executable="true"}
+import spacy
+
+from spacy.tokens import Doc
+
+if not Doc.has_extension('textid'):
+  Doc.set_extension('textid', default=None)
+
+texts = [
+  ("This is the first text.", {"textid": "text1"}),
+  ("This is the second text.", {"textid": "text2"})
+]
+
+nlp = spacy.load('en_core_web_sm')
+for doc, metadata in nlp.pipe(texts, as_tuples=True):
+    doc._.textid = metadata["textid"]
+```
 
 ## Pipelines and built-in components {#pipelines}
 
@@ -1325,24 +1344,8 @@ There are three main types of extensions, which can be defined using the
 [`Doc.set_extension`](/api/doc#set_extension),
 [`Span.set_extension`](/api/span#set_extension) and
 [`Token.set_extension`](/api/token#set_extension) methods.
-## Description
 
-> #### ✏️ Things to try
->
-> 1. The pipeline can process metadata as a (text, metadata) tuple.
->
-> 2. This metadata can be saved as a custom attribute extension on the doc.
-> 
-> ```
-> data = [
->   ("Some text to process", {"meta": "foo"}),
->   ("And more text...", {"meta": "bar"})
-> ]
-> 
-> for doc, context in nlp.pipe(data, as_tuples=True):
->     # Let's assume you have a "meta" extension registered on the Doc
->     doc._.meta = context["meta"]
-> ```
+## Description
 
 1. **Attribute extensions.** Set a default value for an attribute, which can be
    overwritten manually at any time. Attribute extensions work like "normal"
