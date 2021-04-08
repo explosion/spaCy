@@ -2,6 +2,7 @@ import warnings
 from typing import Union, List, Iterable, Iterator, TYPE_CHECKING, Callable
 from typing import Optional
 from pathlib import Path
+import random
 import srsly
 
 from .. import util
@@ -96,6 +97,7 @@ class Corpus:
         Defaults to 0, which indicates no limit.
     augment (Callable[Example, Iterable[Example]]): Optional data augmentation
         function, to extrapolate additional examples from your annotations.
+    shuffle (bool): Whether to shuffle the examples.
 
     DOCS: https://spacy.io/api/corpus
     """
@@ -108,12 +110,14 @@ class Corpus:
         gold_preproc: bool = False,
         max_length: int = 0,
         augmenter: Optional[Callable] = None,
+        shuffle: bool = False,
     ) -> None:
         self.path = util.ensure_path(path)
         self.gold_preproc = gold_preproc
         self.max_length = max_length
         self.limit = limit
         self.augmenter = augmenter if augmenter is not None else dont_augment
+        self.shuffle = shuffle
 
     def __call__(self, nlp: "Language") -> Iterator[Example]:
         """Yield examples from the data.
@@ -124,6 +128,10 @@ class Corpus:
         DOCS: https://spacy.io/api/corpus#call
         """
         ref_docs = self.read_docbin(nlp.vocab, walk_corpus(self.path, FILE_TYPE))
+        if self.shuffle:
+            ref_docs = list(ref_docs)
+            random.shuffle(ref_docs)
+
         if self.gold_preproc:
             examples = self.make_examples_gold_preproc(nlp, ref_docs)
         else:
