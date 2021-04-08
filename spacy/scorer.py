@@ -20,10 +20,16 @@ MISSING_VALUES = frozenset([None, 0, ""])
 class PRFScore:
     """A precision / recall / F score."""
 
-    def __init__(self) -> None:
-        self.tp = 0
-        self.fp = 0
-        self.fn = 0
+    def __init__(
+        self,
+        *,
+        tp: int = 0,
+        fp: int = 0,
+        fn: int = 0,
+    ) -> None:
+        self.tp = tp
+        self.fp = fp
+        self.fn = fn
 
     def __len__(self) -> int:
         return self.tp + self.fp + self.fn
