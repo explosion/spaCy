@@ -421,8 +421,8 @@ def test_pipe_factories_from_source_language_subclass():
 
     # non-subclass
     nlp = German()
-    with pytest.warns(UserWarning):
-        nlp.add_pipe("tagger", source=source_nlp)
+    nlp.add_pipe("tagger", source=source_nlp)
+    assert "tagger" in nlp.pipe_names
 
     # mismatched vectors
     nlp = English()
