@@ -162,6 +162,7 @@ class Warnings:
     W113 = ("Sourced component '{name}' may not work as expected: source "
             "vectors are not identical to current pipeline vectors.")
 
+
 @add_codes
 class Errors:
     E001 = ("No component '{name}' found in pipeline. Available names: {opts}")
