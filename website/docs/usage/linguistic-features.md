@@ -606,7 +606,7 @@ fb_ent = Span(doc, 0, 1, label="ORG")
 doc.set_ents([fb_ent], default="unmodified")
 
 # Option 2: Assign a complete list of ents to doc.ents
-doc.ents = list(doc.ents) + [fb_ent]
+# doc.ents = list(doc.ents) + [fb_ent]    # Comment Option 1 before uncommenting this
 
 ents = [(e.text, e.start, e.end, e.label_) for e in doc.ents]
 print('After', ents)
