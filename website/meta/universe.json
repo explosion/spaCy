@@ -2884,6 +2884,39 @@
             },
             "category": ["pipeline", "standalone"],
             "tags": ["Text Analytics", "Russian"]
+        },
+        {
+            "id": "trunajod",
+            "title": "TRUNAJOD",
+            "slogan": "A text complexity library for text analysis built on spaCy",
+            "description": "With all the basic NLP capabilities provided by spaCy (dependency parsing, POS tagging, tokenizing), `TRUNAJOD` focuses on extracting measurements from texts that might be interesting for different applications and use cases.",
+            "github": "dpalmasan/TRUNAJOD2.0",
+            "pip": "trunajod",
+            "code_example": [
+                "import spacy",
+                "from TRUNAJOD.entity_grid import EntityGrid",
+                "",
+                "nlp = spacy.load('es_core_news_sm', disable=['ner', 'textcat'])",
+                "example_text = (",
+                "    'El espectáculo del cielo nocturno cautiva la mirada y suscita preguntas'",
+                "    'sobre el universo, su origen y su funcionamiento. No es sorprendente que '",
+                "    'todas las civilizaciones y culturas hayan formado sus propias '",
+                "    'cosmologías. Unas relatan, por ejemplo, que el universo ha'",
+                "    'sido siempre tal como es, con ciclos que inmutablemente se repiten; '",
+                "    'otras explican que este universo ha tenido un principio, '",
+                "    'que ha aparecido por obra creadora de una divinidad.'",
+                ")",
+                "doc = nlp(example_text)",
+                "egrid = EntityGrid(doc)",
+                "print(egrid.get_egrid())"
+            ],
+            "code_language": "python",
+            "author": "Diego Palma",
+            "author_links": {
+                "github": "dpalmasan"
+            },
+            "category": ["research", "standalone", "scientific"],
+            "tags": ["Text Analytics", "Coherence", "Cohesion"]
         }
     ],
 
