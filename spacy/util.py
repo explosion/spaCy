@@ -1526,3 +1526,22 @@ def check_lexeme_norms(vocab, component_name):
     if len(lexeme_norms) == 0 and vocab.lang in LEXEME_NORM_LANGS:
         langs = ", ".join(LEXEME_NORM_LANGS)
         logger.debug(Warnings.W033.format(model=component_name, langs=langs))
+
+
+@registry.callbacks("spacy.copy_from_base_model.v1")
+def create_copy_from_base_model(
+    base_model: str,
+    tokenizer: bool = True,
+    vocab: bool = True,
+) -> "Language":
+    def copy_from_base_model(nlp):
+        base_nlp = load_model(base_model)
+        if tokenizer:
+            if nlp.config["nlp"]["tokenizer"] == base_nlp.config["nlp"]["tokenizer"]:
+                nlp.tokenizer.from_bytes(base_nlp.tokenizer.to_bytes())
+            else:
+                raise ValueError(Errors.E872.format(curr_config=nlp.config["nlp"]["tokenizer"], base_config=base_nlp.config["nlp"]["tokenizer"]))
+        if vocab:
+            nlp.vocab.from_bytes(base_nlp.vocab.to_bytes())
+
+    return copy_from_base_model
