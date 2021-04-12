@@ -29,9 +29,9 @@ from .project.document import project_document  # noqa: F401
 
 @app.command("link", no_args_is_help=True, deprecated=True, hidden=True)
 def link(*args, **kwargs):
-    """As of spaCy v3.0, symlinks like "en" are deprecated. You can load trained
+    """As of spaCy v3.0, symlinks like "en" are not supported anymore. You can load trained
     pipeline packages using their full names or from a directory path."""
     msg.warn(
-        "As of spaCy v3.0, model symlinks are deprecated. You can load trained "
+        "As of spaCy v3.0, model symlinks are not supported anymore. You can load trained "
         "pipeline packages using their full names or from a directory path."
     )
