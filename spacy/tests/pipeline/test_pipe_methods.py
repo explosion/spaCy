@@ -1,7 +1,9 @@
 import pytest
 from spacy.language import Language
 from spacy.pipeline import TrainablePipe
+from spacy.training import Example
 from spacy.util import SimpleFrozenList, get_arg_names
+from spacy.lang.en import English
 
 
 @pytest.fixture
@@ -417,3 +419,41 @@ def test_pipe_methods_initialize():
     assert "test" in nlp.config["initialize"]["components"]
     nlp.remove_pipe("test")
     assert "test" not in nlp.config["initialize"]["components"]
+
+
+def test_update_with_set_annotations():
+    name = "test_set_annotations_on_update"
+    results = {}
+
+    def make_component(name):
+        results[name] = ""
+
+        def component(doc):
+            nonlocal results
+            results[name] += doc.text
+            return doc
+
+        return component
+
+    c1 = Language.component(f"{name}1", func=make_component(f"{name}1"))
+    c2 = Language.component(f"{name}2", func=make_component(f"{name}2"))
+
+    components = set([f"{name}1", f"{name}2"])
+
+    nlp = English()
+    texts = ["a", "bb", "ccc"]
+    examples = []
+    for text in texts:
+        examples.append(Example(nlp.make_doc(text), nlp.make_doc(text)))
+
+    for components_to_set in [[], [f"{name}1"], [f"{name}1", f"{name}2"], [f"{name}2", f"{name}1"]]:
+        for key in results:
+            results[key] = ""
+        nlp = English(vocab=nlp.vocab)
+        nlp.add_pipe(f"{name}1")
+        nlp.add_pipe(f"{name}2")
+        nlp.update(examples, set_annotations_on_update=components_to_set)
+        for component in components_to_set:
+            assert results[component] == "".join(eg.predicted.text for eg in examples)
+        for component in components - set(components_to_set):
+            assert results[component] == ""
