@@ -91,24 +91,35 @@ have to call `list()` on it first:
 
 </Infobox>
 
-You can also add metadata to Docs when using [`nlp.pipe`](/api/language#pipe). The metadata is attached to a [custom attribute](#custom-components-attributes).
+You can use the `as_tuples` option to pass additional context along with each
+doc when using [`nlp.pipe`](/api/language#pipe). If `as_tuples` is `True`, then
+the input should be a sequence of `(text, context)` tuples and the output will
+be a sequence of `(doc, context)` tuples. For example, you can pass metadata in
+the context and save it in a [custom attribute](#custom-components-attributes):
 
 ```python
 ### {executable="true"}
 import spacy
 from spacy.tokens import Doc
 
-if not Doc.has_extension('textid'):
-  Doc.set_extension('textid', default=None)
+if not Doc.has_extension("text_id"):
+    Doc.set_extension("text_id", default=None)
 
-texts = [
-  ("This is the first text.", {"textid": "text1"}),
-  ("This is the second text.", {"textid": "text2"})
+text_tuples = [
+    ("This is the first text.", {"text_id": "text1"}),
+    ("This is the second text.", {"text_id": "text2"})
 ]
 
-nlp = spacy.load('en_core_web_sm')
-for doc, metadata in nlp.pipe(texts, as_tuples=True):
-    doc._.textid = metadata["textid"]
+nlp = spacy.load("en_core_web_sm")
+doc_tuples = nlp.pipe(text_tuples, as_tuples=True)
+
+docs = []
+for doc, context in doc_tuples:
+    doc._.text_id = context["text_id"]
+    docs.append(doc)
+
+for doc in docs:
+    print(f"{doc._.text_id}: {doc.text}")
 ```
 
 ### Multiprocessing {#multiprocessing}
