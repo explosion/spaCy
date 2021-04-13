@@ -142,7 +142,7 @@ def create_pretraining_model(nlp, pretrain_config):
     # If the config referred to a Tok2VecListener, grab the original model instead
     if type(tok2vec).__name__ == "Tok2VecListener":
         original_tok2vec = (
-            tok2vec.upstream_name if tok2vec.upstream_name is not "*" else "tok2vec"
+            tok2vec.upstream_name if tok2vec.upstream_name != "*" else "tok2vec"
         )
         tok2vec = nlp.get_pipe(original_tok2vec).model
     try:

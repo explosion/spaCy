@@ -1,6 +1,7 @@
 import pytest
 import logging
 import mock
+import pickle
 from spacy import util, registry
 from spacy.lang.en import English
 from spacy.lookups import Lookups
@@ -106,6 +107,9 @@ def test_lemmatizer_serialize(nlp):
     doc2 = nlp2.make_doc("coping")
     doc2[0].pos_ = "VERB"
     assert doc2[0].lemma_ == ""
-    doc2 = lemmatizer(doc2)
+    doc2 = lemmatizer2(doc2)
     assert doc2[0].text == "coping"
     assert doc2[0].lemma_ == "cope"
+
+    # Make sure that lemmatizer cache can be pickled
+    b = pickle.dumps(lemmatizer2)

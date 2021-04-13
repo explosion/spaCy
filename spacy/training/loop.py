@@ -78,7 +78,7 @@ def train(
     training_step_iterator = train_while_improving(
         nlp,
         optimizer,
-        create_train_batches(train_corpus(nlp), batcher, T["max_epochs"]),
+        create_train_batches(nlp, train_corpus, batcher, T["max_epochs"]),
         create_evaluation_callback(nlp, dev_corpus, score_weights),
         dropout=T["dropout"],
         accumulate_gradient=T["accumulate_gradient"],
@@ -96,12 +96,13 @@ def train(
         log_step, finalize_logger = train_logger(nlp, stdout, stderr)
     try:
         for batch, info, is_best_checkpoint in training_step_iterator:
-            log_step(info if is_best_checkpoint is not None else None)
             if is_best_checkpoint is not None:
                 with nlp.select_pipes(disable=frozen_components):
                     update_meta(T, nlp, info)
                 if output_path is not None:
                     save_checkpoint(is_best_checkpoint)
+                    info["output_path"] = str(output_path / DIR_MODEL_LAST)
+            log_step(info if is_best_checkpoint is not None else None)
     except Exception as e:
         if output_path is not None:
             stdout.write(
@@ -289,17 +290,22 @@ def create_evaluation_callback(
 
 
 def create_train_batches(
-    iterator: Iterator[Example],
+    nlp: "Language",
+    corpus: Callable[["Language"], Iterable[Example]],
     batcher: Callable[[Iterable[Example]], Iterable[Example]],
     max_epochs: int,
 ):
     epoch = 0
-    examples = list(iterator)
-    if not examples:
-        # Raise error if no data
-        raise ValueError(Errors.E986)
+    if max_epochs >= 0:
+        examples = list(corpus(nlp))
+        if not examples:
+            # Raise error if no data
+            raise ValueError(Errors.E986)
     while max_epochs < 1 or epoch != max_epochs:
-        random.shuffle(examples)
+        if max_epochs >= 0:
+            random.shuffle(examples)
+        else:
+            examples = corpus(nlp)
         for batch in batcher(examples):
             yield epoch, batch
         epoch += 1

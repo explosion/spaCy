@@ -175,7 +175,7 @@ class Lemmatizer(Pipe):
 
         DOCS: https://spacy.io/api/lemmatizer#rule_lemmatize
         """
-        cache_key = (token.orth, token.pos, token.morph)
+        cache_key = (token.orth, token.pos, token.morph.key)
         if cache_key in self.cache:
             return self.cache[cache_key]
         string = token.text

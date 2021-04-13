@@ -6,7 +6,7 @@ from libc.math cimport sqrt
 from libc.stdint cimport int32_t, uint64_t
 
 import copy
-from collections import Counter
+from collections import Counter, defaultdict
 from enum import Enum
 import itertools
 import numpy
@@ -1120,13 +1120,14 @@ cdef class Doc:
         concat_words = []
         concat_spaces = []
         concat_user_data = {}
+        concat_spans = defaultdict(list)
         char_offset = 0
         for doc in docs:
             concat_words.extend(t.text for t in doc)
             concat_spaces.extend(bool(t.whitespace_) for t in doc)
 
             for key, value in doc.user_data.items():
-                if isinstance(key, tuple) and len(key) == 4:
+                if isinstance(key, tuple) and len(key) == 4 and key[0] == "._.":
                     data_type, name, start, end = key
                     if start is not None or end is not None:
                         start += char_offset
@@ -1137,8 +1138,17 @@ cdef class Doc:
                         warnings.warn(Warnings.W101.format(name=name))
                 else:
                     warnings.warn(Warnings.W102.format(key=key, value=value))
+            for key in doc.spans:
+                for span in doc.spans[key]:
+                    concat_spans[key].append((
+                        span.start_char + char_offset,
+                        span.end_char + char_offset,
+                        span.label,
+                        span.kb_id,
+                        span.text, # included as a check
+                    ))
             char_offset += len(doc.text)
-            if ensure_whitespace and not (len(doc) > 0 and doc[-1].is_space):
+            if len(doc) > 0 and ensure_whitespace and not doc[-1].is_space:
                 char_offset += 1
 
         arrays = [doc.to_array(attrs) for doc in docs]
@@ -1159,6 +1169,22 @@ cdef class Doc:
         concat_doc = Doc(vocab, words=concat_words, spaces=concat_spaces, user_data=concat_user_data)
 
         concat_doc.from_array(attrs, concat_array)
+
+        for key in concat_spans:
+            if key not in concat_doc.spans:
+                concat_doc.spans[key] = []
+            for span_tuple in concat_spans[key]:
+                span = concat_doc.char_span(
+                        span_tuple[0],
+                        span_tuple[1],
+                        label=span_tuple[2],
+                        kb_id=span_tuple[3],
+                )
+                text = span_tuple[4]
+                if span is not None and span.text == text:
+                    concat_doc.spans[key].append(span)
+                else:
+                    raise ValueError(Errors.E873.format(key=key, text=text))
 
         return concat_doc
 

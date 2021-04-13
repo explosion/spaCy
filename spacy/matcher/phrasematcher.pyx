@@ -194,7 +194,7 @@ cdef class PhraseMatcher:
                         if attr == TAG:
                             pipe = "tagger"
                         elif attr in (POS, MORPH):
-                            pipe = "morphologizer"
+                            pipe = "morphologizer or tagger+attribute_ruler"
                         elif attr == LEMMA:
                             pipe = "lemmatizer"
                         elif attr == DEP:

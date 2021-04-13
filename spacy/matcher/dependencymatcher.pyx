@@ -299,7 +299,7 @@ cdef class DependencyMatcher:
         if isinstance(doclike, Doc):
             doc = doclike
         elif isinstance(doclike, Span):
-            doc = doclike.as_doc()
+            doc = doclike.as_doc(copy_user_data=True)
         else:
             raise ValueError(Errors.E195.format(good="Doc or Span", got=type(doclike).__name__))
 
