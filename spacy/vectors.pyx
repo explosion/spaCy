@@ -361,8 +361,10 @@ cdef class Vectors:
         # Account for numerical error we want to return in range -1, 1
         scores = xp.clip(scores, a_min=-1, a_max=1, out=scores)
         row2key = {row: key for key, row in self.key2row.items()}
+
+        numpy_rows = get_current_ops().to_numpy(best_rows)
         keys = xp.asarray(
-            [[row2key[int(row)] for row in best_rows[i] if int(row) in row2key]
+            [[row2key[row] for row in numpy_rows[i] if row in row2key]
                     for i in range(len(queries)) ], dtype="uint64")
         return (keys, best_rows, scores)
 
