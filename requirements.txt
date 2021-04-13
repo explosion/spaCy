@@ -20,7 +20,7 @@ jinja2
 # Official Python utilities
 setuptools
 packaging>=20.0
-importlib_metadata>=0.20; python_version < "3.8"
+importlib_metadata>=0.20,<3.3.0; python_version < "3.8"
 typing_extensions>=3.7.4.1,<4.0.0.0; python_version < "3.8"
 # Development dependencies
 cython>=0.25
