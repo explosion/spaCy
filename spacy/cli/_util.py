@@ -1,4 +1,4 @@
-from typing import Dict, Any, Union, List, Optional, Tuple, Iterable, TYPE_CHECKING
+from typing import Dict, Any, Union, List, Optional, Tuple, Iterable, TYPE_CHECKING, Callable
 import sys
 import shutil
 from pathlib import Path
@@ -19,6 +19,7 @@ from ..schemas import ProjectConfigSchema, validate
 from ..util import import_file, run_command, make_tempdir, registry, logger
 from ..util import is_compatible_version, SimpleFrozenDict, ENV_VARS
 from .. import about
+from ..errors import Errors
 
 if TYPE_CHECKING:
     from pathy import Pathy  # noqa: F401
@@ -513,3 +514,20 @@ def setup_gpu(use_gpu: int) -> None:
         msg.info("Using CPU")
         if has_cupy and gpu_is_available():
             msg.info("To switch to GPU 0, use the option: --gpu-id 0")
+
+
+def create_before_to_disk_callback(
+    callback: Optional[Callable[["Language"], "Language"]]
+) -> Callable[["Language"], "Language"]:
+    from ..language import Language  # noqa: F811
+
+    def before_to_disk(nlp: Language) -> Language:
+        if not callback:
+            return nlp
+        modified_nlp = callback(nlp)
+        if not isinstance(modified_nlp, Language):
+            err = Errors.E914.format(name="before_to_disk", value=type(modified_nlp))
+            raise ValueError(err)
+        return modified_nlp
+
+    return before_to_disk

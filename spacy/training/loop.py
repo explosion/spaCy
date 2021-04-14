@@ -9,6 +9,7 @@ import sys
 import shutil
 
 from .example import Example
+from ..cli._util import create_before_to_disk_callback
 from ..schemas import ConfigSchemaTraining
 from ..errors import Errors
 from ..util import resolve_dot_names, registry, logger
@@ -321,23 +322,6 @@ def update_meta(
     for pipe_name in nlp.pipe_names:
         if pipe_name in info["losses"]:
             nlp.meta["performance"][f"{pipe_name}_loss"] = info["losses"][pipe_name]
-
-
-def create_before_to_disk_callback(
-    callback: Optional[Callable[["Language"], "Language"]]
-) -> Callable[["Language"], "Language"]:
-    from ..language import Language  # noqa: F811
-
-    def before_to_disk(nlp: Language) -> Language:
-        if not callback:
-            return nlp
-        modified_nlp = callback(nlp)
-        if not isinstance(modified_nlp, Language):
-            err = Errors.E914.format(name="before_to_disk", value=type(modified_nlp))
-            raise ValueError(err)
-        return modified_nlp
-
-    return before_to_disk
 
 
 def clean_output_dir(path: Union[str, Path]) -> None:
