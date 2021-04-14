@@ -1,4 +1,4 @@
-from typing import Dict, Any, Union, List, Optional, Tuple, Iterable, TYPE_CHECKING, Callable
+from typing import Dict, Any, Union, List, Optional, Tuple, Iterable, TYPE_CHECKING
 import sys
 import shutil
 from pathlib import Path
@@ -19,7 +19,6 @@ from ..schemas import ProjectConfigSchema, validate
 from ..util import import_file, run_command, make_tempdir, registry, logger
 from ..util import is_compatible_version, SimpleFrozenDict, ENV_VARS
 from .. import about
-from ..errors import Errors
 
 if TYPE_CHECKING:
     from pathy import Pathy  # noqa: F401
@@ -514,6 +513,3 @@ def setup_gpu(use_gpu: int) -> None:
         msg.info("Using CPU")
         if has_cupy and gpu_is_available():
             msg.info("To switch to GPU 0, use the option: --gpu-id 0")
-
-
-
