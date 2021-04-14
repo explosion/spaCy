@@ -4,12 +4,11 @@ from wasabi import msg
 import typer
 import logging
 
-from ._util import app, Arg, Opt, parse_config_overrides, show_validation_error, create_before_to_disk_callback
+from ._util import app, Arg, Opt, parse_config_overrides, show_validation_error
 from ._util import import_code
 from ..training.initialize import init_nlp
 from .. import util
-from ..util import registry
-from ..schemas import ConfigSchemaTraining
+from ..util import get_sourced_components, load_model_from_config
 
 
 @app.command(
@@ -39,19 +38,21 @@ def assemble_cli(
     # Make sure all files and paths exists if they are needed
     if not config_path or (str(config_path) != "-" and not config_path.exists()):
         msg.fail("Config file not found", config_path, exits=1)
-    if output_path is not None and not output_path.exists():
-        output_path.mkdir(parents=True)
-        msg.good(f"Created output directory: {output_path}")
     overrides = parse_config_overrides(ctx.args)
     import_code(code_path)
     with show_validation_error(config_path):
         config = util.load_config(config_path, overrides=overrides, interpolate=False)
     msg.divider("Initializing pipeline")
-    with show_validation_error(config_path, hint_fill=False):
-        nlp = init_nlp(config)
+    nlp = load_model_from_config(config, auto_fill=True)
+    config = config.interpolate()
+    sourced = get_sourced_components(config)
+    # Make sure that listeners are defined before initializing further
+    nlp._link_components()
+    with nlp.select_pipes(disable=[*sourced]):
+        nlp.initialize()
     msg.good("Initialized pipeline")
     msg.divider("Serializing to disk")
-    config = nlp.config.interpolate()
-    T = registry.resolve(config["training"], schema=ConfigSchemaTraining)
-    before_to_disk = create_before_to_disk_callback(T["before_to_disk"])
-    before_to_disk(nlp).to_disk(output_path)
+    if output_path is not None and not output_path.exists():
+        output_path.mkdir(parents=True)
+        msg.good(f"Created output directory: {output_path}")
+    nlp.to_disk(output_path)
