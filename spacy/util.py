@@ -1372,14 +1372,7 @@ def combine_score_weights(
     # We divide each weight by the total weight sum.
     # We first need to extract all None/null values for score weights that
     # shouldn't be shown in the table *or* be weighted
-    result = {}
-    for w_dict in weights:
-        for key, value in w_dict.items():
-            value = overrides.get(key, value)
-            if value is None:
-                result[key] = None
-            else:
-                result[key] = value
+    result = {key: overrides.get(key, value) for w_dict in weights for (key, value) in w_dict.items()}
     weight_sum = sum([v if v else 0.0 for v in result.values()])
     for key, value in result.items():
         if value and weight_sum > 0:
