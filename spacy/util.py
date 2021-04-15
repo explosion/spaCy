@@ -1369,33 +1369,23 @@ def combine_score_weights(
         should be preserved.
     RETURNS (Dict[str, float]): The combined and normalized weights.
     """
+    # We divide each weight by the total weight sum.
     # We first need to extract all None/null values for score weights that
     # shouldn't be shown in the table *or* be weighted
     result = {}
-    all_weights = []
     for w_dict in weights:
-        filtered_weights = {}
         for key, value in w_dict.items():
             value = overrides.get(key, value)
             if value is None:
                 result[key] = None
             else:
-                filtered_weights[key] = value
-        all_weights.append(filtered_weights)
-    total_weighed_components = len([wd for wd in all_weights if sum(wd.values()) > 0])
-    for w_dict in all_weights:
-        # We need to account for weights that don't sum to 1.0 and normalize
-        # the score weights accordingly, then divide score by the number of
-        # components that are being weighed.
-        total = sum(w_dict.values())
-        for key, value in w_dict.items():
-            if total == 0:
-                weight = 0.0
-            else:
-                weight = round(value / total / total_weighed_components, 2)
-            prev_weight = result.get(key, 0.0)
-            prev_weight = 0.0 if prev_weight is None else prev_weight
-            result[key] = prev_weight + weight
+                result[key] = value
+    weight_sum = sum([v if v else 0.0 for v in result.values()])
+    for key, value in result.items():
+        if weight_sum == 0.0:
+            result[key] = 0.0
+        elif value:
+            result[key] = round(value / weight_sum, 2)
     return result
 
 
