@@ -308,7 +308,7 @@ def test_project_config_validation2(config, n_errors):
 
 
 @pytest.mark.parametrize(
-    "int_value", [10, "10"],
+    "int_value", [10, pytest.param("10", marks=pytest.mark.xfail)],
 )
 def test_project_config_interpolation(int_value):
     variables = {"a": int_value, "b": {"c": "foo", "d": True}}
@@ -320,8 +320,6 @@ def test_project_config_interpolation(int_value):
     with make_tempdir() as d:
         srsly.write_yaml(d / "project.yml", project)
         cfg = load_project_config(d)
-    # TODO: remove debug line
-    print(cfg)
     assert type(cfg) == dict
     assert type(cfg["commands"]) == list
     assert cfg["commands"][0]["script"][0] == "hello 10 foo"
@@ -333,7 +331,7 @@ def test_project_config_interpolation(int_value):
 
 
 @pytest.mark.parametrize(
-    "greeting", [342, "everyone", "tout le monde", "42"],
+    "greeting", [342, "everyone", "tout le monde", pytest.param("42", marks=pytest.mark.xfail)],
 )
 def test_project_config_interpolation_override(greeting):
     variables = {"a": "world"}
@@ -345,8 +343,6 @@ def test_project_config_interpolation_override(greeting):
     with make_tempdir() as d:
         srsly.write_yaml(d / "project.yml", project)
         cfg = load_project_config(d, overrides=overrides)
-    # TODO remove debug line
-    print(cfg)
     assert type(cfg) == dict
     assert type(cfg["commands"]) == list
     assert cfg["commands"][0]["script"][0] == f"hello {greeting}"
