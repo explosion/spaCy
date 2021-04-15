@@ -1382,9 +1382,7 @@ def combine_score_weights(
                 result[key] = value
     weight_sum = sum([v if v else 0.0 for v in result.values()])
     for key, value in result.items():
-        if weight_sum == 0.0:
-            result[key] = 0.0
-        elif value:
+        if value and weight_sum > 0:
             result[key] = round(value / weight_sum, 2)
     return result
 
