@@ -80,8 +80,9 @@ class Warnings:
             "@misc = \"spacy.LookupsDataLoader.v1\"\n"
             "lang = ${{nlp.lang}}\n"
             "tables = [\"lexeme_norm\"]\n")
-    W035 = ('Discarding subpattern "{pattern}" due to an unrecognized '
+    W035 = ("Discarding subpattern '{pattern}' due to an unrecognized "
             "attribute or operator.")
+    W036 = ("EntityRuler '{name}' does not have any patterns defined.")
 
     # New warnings added in v3.x
     W086 = ("Component '{listener}' will be (re)trained, but it needs the component "
