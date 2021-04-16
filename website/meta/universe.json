@@ -2911,6 +2911,8 @@
                 "print(egrid.get_egrid())"
             ],
             "code_language": "python",
+            "thumb": "https://raw.githubusercontent.com/dpalmasan/TRUNAJOD2.0/master/imgs/trunajod_thumb.png",
+            "image": "https://raw.githubusercontent.com/dpalmasan/TRUNAJOD2.0/master/imgs/trunajod_logo.png",
             "author": "Diego Palma",
             "author_links": {
                 "github": "dpalmasan"
