@@ -639,8 +639,14 @@ cdef class Tokenizer:
         DOCS: https://spacy.io/api/tokenizer#explain
         """
         prefix_search = self.prefix_search
+        if prefix_search is None:
+            prefix_search = re.compile("a^").search
         suffix_search = self.suffix_search
+        if suffix_search is None:
+            suffix_search = re.compile("a^").search
         infix_finditer = self.infix_finditer
+        if infix_finditer is None:
+            infix_finditer = re.compile("a^").finditer
         token_match = self.token_match
         if token_match is None:
             token_match = re.compile("a^").match
