@@ -20,11 +20,12 @@ from .attrs import intify_attrs
 from .symbols import ORTH, NORM
 from .errors import Errors, Warnings
 from . import util
-from .util import registry
+from .util import registry, get_words_and_spaces
 from .attrs import intify_attrs
 from .symbols import ORTH
 from .scorer import Scorer
 from .training import validate_examples
+from .tokens import Span
 
 
 cdef class Tokenizer:
@@ -638,8 +639,14 @@ cdef class Tokenizer:
         DOCS: https://spacy.io/api/tokenizer#explain
         """
         prefix_search = self.prefix_search
+        if prefix_search is None:
+            prefix_search = re.compile("a^").search
         suffix_search = self.suffix_search
+        if suffix_search is None:
+            suffix_search = re.compile("a^").search
         infix_finditer = self.infix_finditer
+        if infix_finditer is None:
+            infix_finditer = re.compile("a^").finditer
         token_match = self.token_match
         if token_match is None:
             token_match = re.compile("a^").match
@@ -687,7 +694,7 @@ cdef class Tokenizer:
                     tokens.append(("URL_MATCH", substring))
                     substring = ''
                 elif substring in special_cases:
-                    tokens.extend(("SPECIAL-" + str(i + 1), self.vocab.strings[e[ORTH]]) for i, e in enumerate(special_cases[substring]))
+                    tokens.extend((f"SPECIAL-{i + 1}", self.vocab.strings[e[ORTH]]) for i, e in enumerate(special_cases[substring]))
                     substring = ''
                 elif list(infix_finditer(substring)):
                     infixes = infix_finditer(substring)
@@ -705,7 +712,33 @@ cdef class Tokenizer:
                     tokens.append(("TOKEN", substring))
                     substring = ''
             tokens.extend(reversed(suffixes))
-        return tokens
+        # Find matches for special cases handled by special matcher
+        words, spaces = get_words_and_spaces([t[1] for t in tokens], text)
+        t_words = []
+        t_spaces = []
+        for word, space in zip(words, spaces):
+            if not word.isspace():
+                t_words.append(word)
+                t_spaces.append(space)
+        doc = Doc(self.vocab, words=t_words, spaces=t_spaces)
+        matches = self._special_matcher(doc)
+        spans = [Span(doc, s, e, label=m_id) for m_id, s, e in matches]
+        spans = util.filter_spans(spans)
+        # Replace matched tokens with their exceptions
+        i = 0
+        final_tokens = []
+        spans_by_start = {s.start: s for s in spans}
+        while i < len(tokens):
+            if i in spans_by_start:
+                span = spans_by_start[i]
+                exc = [d[ORTH] for d in special_cases[span.label_]]
+                for j, orth in enumerate(exc):
+                    final_tokens.append((f"SPECIAL-{j + 1}", self.vocab.strings[orth]))
+                i += len(span)
+            else:
+                final_tokens.append(tokens[i])
+                i += 1
+        return final_tokens
 
     def score(self, examples, **kwargs):
         validate_examples(examples, "Tokenizer.score")
