@@ -2224,6 +2224,39 @@
             }
         },
         {
+            "id": "coreferee",
+            "title": "Coreferee",
+            "slogan": "Coreference resolution for multiple languages",
+            "github": "msg-systems/coreferee",
+            "url": "https://github.com/msg-systems/coreferee",
+            "description": "Coreferee is a pipeline plugin that performs coreference resolution for English, German and Polish. It is designed so that it is easy to add support for new languages and optimised for limited training data. It uses a mixture of neural networks and programmed rules. Please note you will need to [install models](https://github.com/msg-systems/coreferee#getting-started) before running the code example.",
+            "pip": "coreferee",
+            "category": ["pipeline", "models", "standalone"],
+            "tags": ["coreference-resolution", "anaphora"],
+            "code_example": [
+                "import coreferee, spacy",
+                "nlp = spacy.load('en_core_web_trf')",
+                "nlp.add_pipe('coreferee')",
+                "doc = nlp('Although he was very busy with his work, Peter had had enough of it. He and his wife decided they needed a holiday. They travelled to Spain because they loved the country very much.')",
+                "doc._.coref_chains.print()",
+                "# Output:",
+                "#",
+                "# 0: he(1), his(6), Peter(9), He(16), his(18)",
+                "# 1: work(7), it(14)",
+                "# 2: [He(16); wife(19)], they(21), They(26), they(31)",
+                "# 3: Spain(29), country(34)",
+                "#",
+                "print(doc._.coref_chains.resolve(doc[31]))",
+                "# Output:",
+                "#",
+                "# [Peter, wife]"
+            ],
+            "author": "Richard Paul Hudson",
+            "author_links": {
+                "github": "richardpaulhudson"
+            }
+        },
+        {
             "id": "spacy-transformers",
             "title": "spacy-transformers",
             "slogan": "spaCy pipelines for pretrained BERT, XLNet and GPT-2",
