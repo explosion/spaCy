@@ -21,7 +21,7 @@ single_label_default_config = """
 @architectures = "spacy.Tok2Vec.v2"
 
 [model.tok2vec.embed]
-@architectures = "spacy.MultiHashEmbed.v1"
+@architectures = "spacy.MultiHashEmbed.v2"
 width = 64
 rows = [2000, 2000, 1000, 1000, 1000, 1000]
 attrs = ["ORTH", "LOWER", "PREFIX", "SUFFIX", "SHAPE", "ID"]
@@ -56,7 +56,7 @@ single_label_cnn_config = """
 exclusive_classes = true
 
 [model.tok2vec]
-@architectures = "spacy.HashEmbedCNN.v1"
+@architectures = "spacy.HashEmbedCNN.v2"
 pretrained_vectors = null
 width = 96
 depth = 4

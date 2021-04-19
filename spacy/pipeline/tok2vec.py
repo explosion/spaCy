@@ -11,7 +11,7 @@ from ..errors import Errors
 
 default_model_config = """
 [model]
-@architectures = "spacy.HashEmbedCNN.v1"
+@architectures = "spacy.HashEmbedCNN.v2"
 pretrained_vectors = null
 width = 96
 depth = 4

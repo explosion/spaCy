@@ -22,7 +22,7 @@ maxout_pieces = 3
 token_vector_width = 96
 
 [model.tok2vec]
-@architectures = "spacy.HashEmbedCNN.v1"
+@architectures = "spacy.HashEmbedCNN.v2"
 pretrained_vectors = null
 width = 96
 depth = 4
