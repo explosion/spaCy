@@ -82,7 +82,7 @@ class Warnings:
             "tables = [\"lexeme_norm\"]\n")
     W035 = ("Discarding subpattern '{pattern}' due to an unrecognized "
             "attribute or operator.")
-    W036 = ("EntityRuler '{name}' does not have any patterns defined.")
+    W036 = ("The component '{name}' does not have any patterns defined.")
 
     # New warnings added in v3.x
     W086 = ("Component '{listener}' will be (re)trained, but it needs the component "
