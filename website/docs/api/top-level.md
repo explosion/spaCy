@@ -8,6 +8,7 @@ menu:
   - ['Readers', 'readers']
   - ['Batchers', 'batchers']
   - ['Augmenters', 'augmenters']
+  - ['Callbacks', 'callbacks']
   - ['Training & Alignment', 'gold']
   - ['Utility Functions', 'util']
 ---
@@ -784,6 +785,36 @@ useful for making the model less sensitive to capitalization.
 | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `level`     | The percentage of texts that will be augmented. ~~float~~                                                                                                                    |
 | **CREATES** | A function that takes the current `nlp` object and an [`Example`](/api/example) and yields augmented `Example` objects. ~~Callable[[Language, Example], Iterator[Example]]~~ |
+
+## Callbacks {#callbacks source="spacy/training/callbacks.py" new="3"}
+
+The config supports [callbacks](/usage/training#custom-code-nlp-callbacks) at
+several points in the lifecycle that can be used modify the `nlp` object.
+
+### spacy.copy_from_base_model.v1 {#copy_from_base_model tag="registered function"}
+
+> #### Example config
+>
+> ```ini
+> [initialize.before_init]
+> @callbacks = "spacy.copy_from_base_model.v1"
+> base_model = "en_core_sci_md"
+> tokenizer = true
+> vocab = true
+> ```
+
+Copy the tokenizer and/or vocab from the specified model. It's similar to the v2
+[base model](https://v2.spacy.io/api/cli#train) option and useful in combination
+with [sourced components](/usage/processing-pipelines#sourced-components) when
+fine-tuning an existing pipeline. The vocab includes the lookups and the vectors
+from the specified model. Intended for use in `[initialize.before_init]`.
+
+| Name         | Description                                                                                                             |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------- |
+| `base_model` | The pipeline to copy from. ~~str~~                                                                                      |
+| `tokenizer`  | Whether to copy the tokenizer. Defaults to `False`. ~~bool~~                                                            |
+| `vocab`      | Whether to copy the vocab, which includes lookups and vectors. Defaults to `False`. ~~bool~~                            |
+| **CREATES**  | A function that takes the current `nlp` object and modifies its `tokenizer` and `vocab`. ~~Callable[[Language], None]~~ |
 
 ## Training data and alignment {#gold source="spacy/training"}
 
