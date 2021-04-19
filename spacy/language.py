@@ -682,9 +682,14 @@ class Language:
         name (str): Optional alternative name to use in current pipeline.
         RETURNS (Tuple[Callable, str]): The component and its factory name.
         """
-        # TODO: handle errors and mismatches (vectors etc.)
-        if not isinstance(source, self.__class__):
+        # Check source type
+        if not isinstance(source, Language):
             raise ValueError(Errors.E945.format(name=source_name, source=type(source)))
+        # Check vectors, with faster checks first
+        if self.vocab.vectors.shape != source.vocab.vectors.shape or \
+                self.vocab.vectors.key2row != source.vocab.vectors.key2row or \
+                self.vocab.vectors.to_bytes() != source.vocab.vectors.to_bytes():
+            util.logger.warning(Warnings.W113.format(name=source_name))
         if not source_name in source.component_names:
             raise KeyError(
                 Errors.E944.format(

@@ -1,4 +1,6 @@
 import pytest
+import mock
+import logging
 from spacy.language import Language
 from spacy.lang.en import English
 from spacy.lang.de import German
@@ -400,6 +402,38 @@ def test_pipe_factories_from_source():
     assert "my_tagger" in nlp.pipe_names
     with pytest.raises(KeyError):
         nlp.add_pipe("custom", source=source_nlp)
+
+
+def test_pipe_factories_from_source_language_subclass():
+    class CustomEnglishDefaults(English.Defaults):
+        stop_words = set(["custom", "stop"])
+
+    @registry.languages("custom_en")
+    class CustomEnglish(English):
+        lang = "custom_en"
+        Defaults = CustomEnglishDefaults
+
+    source_nlp = English()
+    source_nlp.add_pipe("tagger")
+
+    # custom subclass
+    nlp = CustomEnglish()
+    nlp.add_pipe("tagger", source=source_nlp)
+    assert "tagger" in nlp.pipe_names
+
+    # non-subclass
+    nlp = German()
+    nlp.add_pipe("tagger", source=source_nlp)
+    assert "tagger" in nlp.pipe_names
+
+    # mismatched vectors
+    nlp = English()
+    nlp.vocab.vectors.resize((1, 4))
+    nlp.vocab.vectors.add("cat", vector=[1, 2, 3, 4])
+    logger = logging.getLogger("spacy")
+    with mock.patch.object(logger, "warning") as mock_warning:
+        nlp.add_pipe("tagger", source=source_nlp)
+        mock_warning.assert_called()
 
 
 def test_pipe_factories_from_source_custom():
