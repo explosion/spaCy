@@ -198,3 +198,20 @@ def test_tokenizer_flush_cache(en_vocab):
     assert [t.text for t in tokenizer("a.")] == ["a", "."]
     tokenizer.suffix_search = None
     assert [t.text for t in tokenizer("a.")] == ["a."]
+
+
+def test_tokenizer_flush_specials(en_vocab):
+    suffix_re = re.compile(r"[\.]$")
+    rules = {"a a": [{"ORTH": "a a"}]}
+    tokenizer1 = Tokenizer(
+        en_vocab,
+        suffix_search=suffix_re.search,
+        rules=rules,
+    )
+    tokenizer2 = Tokenizer(
+        en_vocab,
+        suffix_search=suffix_re.search,
+    )
+    assert [t.text for t in tokenizer1("a a.")] == ["a a", "."]
+    tokenizer1.rules = {}
+    assert [t.text for t in tokenizer1("a a.")] == ["a", "a", "."]
