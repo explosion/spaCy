@@ -414,11 +414,11 @@ as-is. They are also excluded when calling
 > #### Note on frozen components
 >
 > Even though frozen components are not **updated** during training, they will
-> still **run** during training and evaluation. This is very important, because
-> they may still impact your model's performance – for instance, a sentence
-> boundary detector can impact what the parser or entity recognizer considers a
-> valid parse. So the evaluation results should always reflect what your
-> pipeline will produce at runtime.
+> still **run** during evaluation. This is very important, because they may
+> still impact your model's performance – for instance, a sentence boundary
+> detector can impact what the parser or entity recognizer considers a valid
+> parse. So the evaluation results should always reflect what your pipeline will
+> produce at runtime.
 
 ```ini
 [nlp]
@@ -452,6 +452,64 @@ frozen_components = ["tagger"]
 source = "en_core_web_sm"
 replace_listeners = ["model.tok2vec"]
 ```
+
+</Infobox>
+
+### Using predictions from preceding components {#annotating-components new="3.1"}
+
+By default, components are updated in isolation during training, which means
+that they don't see the predictions of any earlier components in the pipeline. A
+component receives [`Example.predicted`](/api/example) as input and compares its
+predictions to [`Example.reference`](/api/example) without saving its
+annotations in the `predicted` doc.
+
+Instead, if certain components should **set their annotations** during training,
+use the setting `annotating_components` in the `[training]` block to specify a
+list of components. For example, the feature `DEP` from the parser could be used
+as a tagger feature by including `DEP` in the tok2vec `attrs` and including
+`parser` in `annotating_components`:
+
+```ini
+### config.cfg (excerpt) {highlight="7,12"}
+[nlp]
+pipeline = ["parser", "tagger"]
+
+[components.tagger.model.tok2vec.embed]
+@architectures = "spacy.MultiHashEmbed.v1"
+width = ${components.tagger.model.tok2vec.encode.width}
+attrs = ["NORM","DEP"]
+rows = [5000,2500]
+include_static_vectors = false
+
+[training]
+annotating_components = ["parser"]
+```
+
+Any component in the pipeline can be included as an annotating component,
+including frozen components. Frozen components can set annotations during
+training just as they would set annotations during evaluation or when the final
+pipeline is run. The config excerpt below shows how a frozen `ner` component and
+a `sentencizer` can provide the required `doc.sents` and `doc.ents` for the
+entity linker during training:
+
+```ini
+### config.cfg (excerpt)
+[nlp]
+pipeline = ["sentencizer", "ner", "entity_linker"]
+
+[components.ner]
+source = "en_core_web_sm"
+
+[training]
+frozen_components = ["ner"]
+annotating_components = ["sentencizer", "ner"]
+```
+
+<Infobox variant="warning" title="Training speed with annotating components" id="annotating-components-speed">
+
+Be aware that non-frozen annotating components with statistical models will
+**run twice** on each batch, once to update the model and once to apply the
+now-updated model to the predicted docs.
 
 </Infobox>
 
