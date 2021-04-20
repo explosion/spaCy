@@ -421,8 +421,8 @@ def test_pipe_methods_initialize():
     assert "test" not in nlp.config["initialize"]["components"]
 
 
-def test_update_with_set_annotations():
-    name = "test_set_annotations_on_update"
+def test_update_with_annotates():
+    name = "test_with_annotates"
     results = {}
 
     def make_component(name):
@@ -446,14 +446,14 @@ def test_update_with_set_annotations():
     for text in texts:
         examples.append(Example(nlp.make_doc(text), nlp.make_doc(text)))
 
-    for components_to_set in [[], [f"{name}1"], [f"{name}1", f"{name}2"], [f"{name}2", f"{name}1"]]:
+    for components_to_annotate in [[], [f"{name}1"], [f"{name}1", f"{name}2"], [f"{name}2", f"{name}1"]]:
         for key in results:
             results[key] = ""
         nlp = English(vocab=nlp.vocab)
         nlp.add_pipe(f"{name}1")
         nlp.add_pipe(f"{name}2")
-        nlp.update(examples, set_annotations_on_update=components_to_set)
-        for component in components_to_set:
+        nlp.update(examples, annotates=components_to_annotate)
+        for component in components_to_annotate:
             assert results[component] == "".join(eg.predicted.text for eg in examples)
-        for component in components - set(components_to_set):
+        for component in components - set(components_to_annotate):
             assert results[component] == ""
