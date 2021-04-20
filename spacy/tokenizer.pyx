@@ -559,7 +559,6 @@ cdef class Tokenizer:
         """Add special-case tokenization rules."""
         if special_cases is not None:
             for chunk, substrings in sorted(special_cases.items()):
-                self._validate_special_case(chunk, substrings)
                 self.add_special_case(chunk, substrings)
 
     def _validate_special_case(self, chunk, substrings):
