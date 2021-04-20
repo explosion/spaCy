@@ -1,4 +1,5 @@
 import pytest
+import re
 from spacy.vocab import Vocab
 from spacy.tokenizer import Tokenizer
 from spacy.util import ensure_path
@@ -186,3 +187,14 @@ def test_tokenizer_special_cases_spaces(tokenizer):
     assert [t.text for t in tokenizer("a b c")] == ["a", "b", "c"]
     tokenizer.add_special_case("a b c", [{"ORTH": "a b c"}])
     assert [t.text for t in tokenizer("a b c")] == ["a b c"]
+
+
+def test_tokenizer_flush_cache(en_vocab):
+    suffix_re = re.compile(r"[\.]$")
+    tokenizer = Tokenizer(
+        en_vocab,
+        suffix_search=suffix_re.search,
+    )
+    assert [t.text for t in tokenizer("a.")] == ["a", "."]
+    tokenizer.suffix_search = None
+    assert [t.text for t in tokenizer("a.")] == ["a."]

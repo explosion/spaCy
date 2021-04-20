@@ -60,6 +60,9 @@ cdef class Tokenizer:
         self.mem = Pool()
         self._cache = PreshMap()
         self._specials = PreshMap()
+        # temporarily using _property_init_count as a boolean to store whether
+        # init is complete
+        self._property_init_count = 0
         self.token_match = token_match
         self.url_match = url_match
         self.prefix_search = prefix_search
@@ -69,8 +72,7 @@ cdef class Tokenizer:
         self._rules = {}
         self._special_matcher = PhraseMatcher(self.vocab)
         self._load_special_cases(rules)
-        self._property_init_count = 0
-        self._property_init_max = 4
+        self._property_init_count = 1
 
     property token_match:
         def __get__(self):
@@ -79,8 +81,6 @@ cdef class Tokenizer:
         def __set__(self, token_match):
             self._token_match = token_match
             self._reload_special_cases()
-            if self._property_init_count <= self._property_init_max:
-                self._property_init_count += 1
 
     property url_match:
         def __get__(self):
@@ -88,7 +88,7 @@ cdef class Tokenizer:
 
         def __set__(self, url_match):
             self._url_match = url_match
-            self._flush_cache()
+            self._reload_special_cases()
 
     property prefix_search:
         def __get__(self):
@@ -97,8 +97,6 @@ cdef class Tokenizer:
         def __set__(self, prefix_search):
             self._prefix_search = prefix_search
             self._reload_special_cases()
-            if self._property_init_count <= self._property_init_max:
-                self._property_init_count += 1
 
     property suffix_search:
         def __get__(self):
@@ -107,8 +105,6 @@ cdef class Tokenizer:
         def __set__(self, suffix_search):
             self._suffix_search = suffix_search
             self._reload_special_cases()
-            if self._property_init_count <= self._property_init_max:
-                self._property_init_count += 1
 
     property infix_finditer:
         def __get__(self):
@@ -117,8 +113,6 @@ cdef class Tokenizer:
         def __set__(self, infix_finditer):
             self._infix_finditer = infix_finditer
             self._reload_special_cases()
-            if self._property_init_count <= self._property_init_max:
-                self._property_init_count += 1
 
     property rules:
         def __get__(self):
@@ -616,13 +610,9 @@ cdef class Tokenizer:
             self._special_matcher.add(string, None, self._tokenize_affixes(string, False))
 
     def _reload_special_cases(self):
-        try:
-            self._property_init_count
-        except AttributeError:
-            return
-        # only reload if all 4 of prefix, suffix, infix, token_match have
-        # have been initialized
-        if self.vocab is not None and self._property_init_count >= self._property_init_max:
+        # only reload if initialization is complete to avoid unnecessary
+        # reloading on init
+        if self._property_init_count > 0:
             self._flush_cache()
             self._flush_specials()
             self._load_special_cases(self._rules)
