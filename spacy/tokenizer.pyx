@@ -216,6 +216,7 @@ cdef class Tokenizer:
                 self.mem.free(cached)
 
     def _flush_specials(self):
+        self._special_matcher = PhraseMatcher(self.vocab)
         for k in self._specials:
             cached = <_Cached*>self._specials.get(k)
             del self._specials[k]
