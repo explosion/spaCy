@@ -60,9 +60,6 @@ cdef class Tokenizer:
         self.mem = Pool()
         self._cache = PreshMap()
         self._specials = PreshMap()
-        # temporarily using _property_init_count as a boolean to store whether
-        # init is complete
-        self._property_init_count = 0
         self.token_match = token_match
         self.url_match = url_match
         self.prefix_search = prefix_search
@@ -72,7 +69,6 @@ cdef class Tokenizer:
         self._rules = {}
         self._special_matcher = PhraseMatcher(self.vocab)
         self._load_special_cases(rules)
-        self._property_init_count = 1
 
     property token_match:
         def __get__(self):
@@ -120,7 +116,7 @@ cdef class Tokenizer:
 
         def __set__(self, rules):
             self._rules = {}
-            self._reset_cache([key for key in self._cache])
+            self._flush_cache()
             self._flush_specials()
             self._cache = PreshMap()
             self._specials = PreshMap()
@@ -610,12 +606,9 @@ cdef class Tokenizer:
             self._special_matcher.add(string, None, self._tokenize_affixes(string, False))
 
     def _reload_special_cases(self):
-        # only reload if initialization is complete to avoid unnecessary
-        # reloading on init
-        if self._property_init_count > 0:
-            self._flush_cache()
-            self._flush_specials()
-            self._load_special_cases(self._rules)
+        self._flush_cache()
+        self._flush_specials()
+        self._load_special_cases(self._rules)
 
     def explain(self, text):
         """A debugging tokenizer that provides information about which
@@ -801,6 +794,15 @@ cdef class Tokenizer:
             "url_match": lambda b: data.setdefault("url_match", b),
             "exceptions": lambda b: data.setdefault("rules", b)
         }
+        # reset all properties and flush all caches (through rules),
+        # reset rules first so that _reload_special_cases is trivial/fast as
+        # the other properties are reset
+        self.rules = {}
+        self.prefix_search = None
+        self.suffix_search = None
+        self.infix_finditer = None
+        self.token_match = None
+        self.url_match = None
         msg = util.from_bytes(bytes_data, deserializers, exclude)
         if "prefix_search" in data and isinstance(data["prefix_search"], str):
             self.prefix_search = re.compile(data["prefix_search"]).search
@@ -808,22 +810,12 @@ cdef class Tokenizer:
             self.suffix_search = re.compile(data["suffix_search"]).search
         if "infix_finditer" in data and isinstance(data["infix_finditer"], str):
             self.infix_finditer = re.compile(data["infix_finditer"]).finditer
-        # for token_match and url_match, set to None to override the language
-        # defaults if no regex is provided
         if "token_match" in data and isinstance(data["token_match"], str):
             self.token_match = re.compile(data["token_match"]).match
-        else:
-            self.token_match = None
         if "url_match" in data and isinstance(data["url_match"], str):
             self.url_match = re.compile(data["url_match"]).match
-        else:
-            self.url_match = None
         if "rules" in data and isinstance(data["rules"], dict):
-            # make sure to hard reset the cache to remove data from the default exceptions
-            self._rules = {}
-            self._flush_cache()
-            self._flush_specials()
-            self._load_special_cases(data["rules"])
+            self.rules = data["rules"]
         return self
 
 
