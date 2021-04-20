@@ -455,7 +455,7 @@ example = Example.from_dict(doc, gold_dict)
 doc = nlp("Russ Cochran his reprints include EC Comics.")
 gold_dict = {"entities": [(0, 12, "PERSON")],
              "links": {(0, 12): {"Q7381115": 1.0, "Q2146908": 0.0}},
-             "sent_starts": [1, -1, 0, 0, 0, 0, 0, 0]})}
+             "sent_starts": [1, -1, 0, 0, 0, 0, 0, 0]}
 example = Example.from_dict(doc, gold_dict)
 ```
 
