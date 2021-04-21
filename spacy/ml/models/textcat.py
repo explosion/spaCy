@@ -93,26 +93,18 @@ def _resize_layer(model, new_nO, layer, nI=None):
         layer.set_param("b", larger_b)
 
     if layer.has_param("W"):
-        if not nI or nI == layer.get_dim("nI"):
-            nI = layer.get_dim("nI")
-            larger_W = layer.ops.alloc2f(new_nO, nI)
-            smaller_W = layer.get_param("W")
-            # Weights are stored in (nr_out, nr_in) format, so we're basically
-            # just adding rows here.
-            larger_W[:old_nO] = smaller_W
-            layer.set_param("W", larger_W)
-            layer.set_dim("nO", new_nO, force=True)
-        else:
-            new_nI = nI
-            old_nI = layer.get_dim("nI")
-            assert new_nI > old_nI
-            larger_W = layer.ops.alloc2f(new_nO, new_nI)
-            smaller_W = layer.get_param("W")
-            # Copy the old weights into the new weight tensor
-            larger_W[:old_nO, :old_nI] = smaller_W
-            layer.set_param("W", larger_W)
-            layer.set_dim("nO", new_nO, force=True)
-            layer.set_dim("nI", nI, force=True)
+        old_nI = layer.get_dim("nI")
+        new_nI = nI
+        if not new_nI:
+            new_nI = layer.get_dim("nI")
+        assert new_nI >= old_nI
+        larger_W = layer.ops.alloc2f(new_nO, new_nI)
+        smaller_W = layer.get_param("W")
+        # Copy the old weights into the new weight tensor
+        larger_W[:old_nO, :old_nI] = smaller_W
+        layer.set_param("W", larger_W)
+        layer.set_dim("nO", new_nO, force=True)
+        layer.set_dim("nI", nI, force=True)
     if model:
         model.set_dim("nO", new_nO, force=True)
     return model
