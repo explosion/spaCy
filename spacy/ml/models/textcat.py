@@ -54,20 +54,17 @@ def build_simple_cnn_text_classifier(
     is applied instead, so that outputs are in the range [0, 1].
     """
     cnn = chain(tok2vec, list2ragged(), reduce_mean())
+    nI = tok2vec.maybe_get_dim("nO")
     if exclusive_classes:
-        output_layer = _create_output_cnn_excl(nO=nO, nI=tok2vec.maybe_get_dim("nO"))
+        output_layer = Softmax(nO=nO, nI=nI)
         model = chain(cnn, output_layer)
         model.set_ref("output_layer", output_layer)
-        model.attrs["resize_output"] = partial(_resize_cnn,
-                                               create_output=_create_output_cnn_excl,
-                                               index=-1)
+        model.attrs["resize_output"] = partial(_resize_layer, layer=output_layer)
     else:
-        linear_layer = _create_output_cnn_not_excl(nO=nO, nI=tok2vec.maybe_get_dim("nO"))
+        linear_layer = Linear(nO=nO, nI=tok2vec.maybe_get_dim("nO"))
         model = chain(cnn, linear_layer, Logistic())
         model.set_ref("output_layer", linear_layer)
-        model.attrs["resize_output"] = partial(_resize_cnn,
-                                               create_output=_create_output_cnn_not_excl,
-                                               index=-2)
+        model.attrs["resize_output"] = partial(_resize_layer, layer=linear_layer)
 
     model.set_ref("tok2vec", tok2vec)
     model.set_dim("nO", nO)
@@ -75,46 +72,48 @@ def build_simple_cnn_text_classifier(
     return model
 
 
-def _create_output_cnn_excl(nO, nI):
-    return Softmax(nO=nO, nI=nI)
-
-
-def _create_output_cnn_not_excl(nO, nI):
-    return Linear(nO=nO, nI=nI)
-
-
-def _resize_cnn(model, new_nO, create_output, index):
-    output_layer = model.get_ref("output_layer")
-    if output_layer.has_dim("nO") is None:
+def _resize_layer(model, new_nO, layer, nI=None):
+    """ Resize a typical layer with 2D W and 1D b parameters"""
+    if layer.has_dim("nO") is None:
         # the output layer had not been initialized/trained yet
-        output_layer.set_dim("nO", new_nO)
+        layer.set_dim("nO", new_nO)
         return model
-    elif new_nO == output_layer.get_dim("nO"):
+    elif new_nO == layer.get_dim("nO"):
         # the dimensions didn't change
         return model
 
-    # create a new, larger output layer and copy the weights over from the smaller one
-    smaller = output_layer
-    nI = model.get_ref("tok2vec").maybe_get_dim("nO")
-    larger = create_output(nO=new_nO, nI=nI)
-    assert larger.get_dim("nO") > smaller.get_dim("nO")
+    old_nO = layer.get_dim("nO")
+    assert new_nO > old_nO
 
     # it could be that the model is not initialized yet, then skip this bit
-    if smaller.has_param("W"):
-        larger_W = larger.ops.alloc2f(new_nO, nI)
-        larger_b = larger.ops.alloc1f(new_nO)
-        smaller_W = smaller.get_param("W")
-        smaller_b = smaller.get_param("b")
-        # Weights are stored in (nr_out, nr_in) format, so we're basically
-        # just adding rows here.
-        old_nO = smaller.get_dim("nO")
-        larger_W[:old_nO] = smaller_W
+    if layer.has_param("B"):
+        larger_b = layer.ops.alloc1f(new_nO)
+        smaller_b = layer.get_param("b")
         larger_b[:old_nO] = smaller_b
-        larger.set_param("W", larger_W)
-        larger.set_param("b", larger_b)
-    model._layers[index] = larger
-    model.set_ref("output_layer", larger)
-    if model.has_dim("nO"):
+        layer.set_param("b", larger_b)
+
+    if layer.has_param("W"):
+        if not nI or nI == layer.get_dim("nI"):
+            nI = layer.get_dim("nI")
+            larger_W = layer.ops.alloc2f(new_nO, nI)
+            smaller_W = layer.get_param("W")
+            # Weights are stored in (nr_out, nr_in) format, so we're basically
+            # just adding rows here.
+            larger_W[:old_nO] = smaller_W
+            layer.set_param("W", larger_W)
+            layer.set_dim("nO", new_nO, force=True)
+        else:
+            new_nI = nI
+            old_nI = layer.get_dim("nI")
+            assert new_nI > old_nI
+            larger_W = layer.ops.alloc2f(new_nO, new_nI)
+            smaller_W = layer.get_param("W")
+            # Copy the old weights into the new weight tensor
+            larger_W[:old_nO, :old_nI] = smaller_W
+            layer.set_param("W", larger_W)
+            layer.set_dim("nO", new_nO, force=True)
+            layer.set_dim("nI", nI, force=True)
+    if model:
         model.set_dim("nO", new_nO, force=True)
     return model
 
@@ -139,6 +138,56 @@ def build_bow_text_classifier(
     return model
 
 
+@registry.architectures("spacy.TextCatBOW.v2")
+def build_bow_text_classifier(
+    exclusive_classes: bool,
+    ngram_size: int,
+    no_output_layer: bool,
+    nO: Optional[int] = None,
+) -> Model[List[Doc], Floats2d]:
+    with Model.define_operators({">>": chain}):
+        sparse_linear = SparseLinear(nO)
+        model = extract_ngrams(ngram_size, attr=ORTH) >> sparse_linear
+        model = with_cpu(model, model.ops)
+        if not no_output_layer:
+            output_layer = softmax_activation() if exclusive_classes else Logistic()
+            model = model >> with_cpu(output_layer, output_layer.ops)
+    model.set_dim("nO", nO)
+    model.set_ref("output_layer", sparse_linear)
+    model.attrs["multi_label"] = not exclusive_classes
+    model.attrs["resize_output"] = partial(_resize_bow, layer=sparse_linear)
+    return model
+
+
+def _resize_bow(model, new_nO, layer):
+    """ Resize a BOW output layer (using SparseLinear) in-place"""
+    if layer.has_dim("nO") is None:
+        # the output layer had not been initialized/trained yet
+        layer.set_dim("nO", new_nO)
+        return model
+    elif new_nO == layer.get_dim("nO"):
+        # the dimensions didn't change
+        return model
+
+    length = layer.get_dim("length")
+    old_nO = layer.get_dim("nO")
+    assert new_nO > old_nO
+
+    # it could be that the model is not initialized yet, then skip this bit
+    if layer.has_param("W"):
+        larger_W = layer.ops.alloc1f(new_nO*length)
+        larger_b = layer.ops.alloc1f(new_nO)
+        smaller_W = layer.get_param("W")
+        smaller_b = layer.get_param("b")
+        larger_W[:old_nO*length] = smaller_W
+        larger_b[:old_nO] = smaller_b
+        layer.set_param("W", larger_W)
+        layer.set_param("b", larger_b)
+        layer.set_dim("nO", new_nO, force=True)
+    model.set_dim("nO", new_nO, force=True)
+    return model
+
+
 @registry.architectures("spacy.TextCatEnsemble.v2")
 def build_text_classifier_v2(
     tok2vec: Model[List[Doc], List[Floats2d]],
@@ -148,9 +197,7 @@ def build_text_classifier_v2(
     exclusive_classes = not linear_model.attrs["multi_label"]
     with Model.define_operators({">>": chain, "|": concatenate}):
         width = tok2vec.maybe_get_dim("nO")
-        attention_layer = ParametricAttention(
-            width
-        )  # TODO: benchmark performance difference of this layer
+        attention_layer = ParametricAttention(width)
         maxout_layer = Maxout(nO=width, nI=width)
         norm_layer = LayerNorm(nI=width)
         cnn_model = (
@@ -175,9 +222,68 @@ def build_text_classifier_v2(
     model.set_ref("maxout_layer", maxout_layer)
     model.set_ref("norm_layer", norm_layer)
     model.attrs["multi_label"] = not exclusive_classes
-
     model.init = init_ensemble_textcat
     return model
+
+
+@registry.architectures("spacy.TextCatEnsemble.v3")
+def build_text_classifier_v3(
+    tok2vec: Model[List[Doc], List[Floats2d]],
+    linear_model: Model[List[Doc], Floats2d],
+    nO: Optional[int] = None,
+) -> Model[List[Doc], Floats2d]:
+    exclusive_classes = not linear_model.attrs["multi_label"]
+    with Model.define_operators({">>": chain, "|": concatenate}):
+        width = tok2vec.maybe_get_dim("nO")
+        attention_layer = ParametricAttention(width)
+        maxout_layer = Maxout(nO=width, nI=width)
+        norm_layer = LayerNorm(nI=width)
+        cnn_output_layer = Linear(nO=nO, nI=width)
+        cnn_model = (
+            tok2vec
+            >> list2ragged()
+            >> attention_layer
+            >> reduce_sum()
+            >> residual(maxout_layer >> norm_layer >> Dropout(0.0))
+            >> cnn_output_layer
+        )
+
+        nO_double = nO * 2 if nO else None
+        if exclusive_classes:
+            output_layer = Softmax(nO=nO, nI=nO_double)
+            model = (linear_model | cnn_model) >> output_layer
+        else:
+            output_layer = Linear(nO=nO, nI=nO_double)
+            model = (linear_model | cnn_model) >> output_layer >> Logistic()
+        model.set_ref("tok2vec", tok2vec)
+    if model.has_dim("nO") is not False:
+        model.set_dim("nO", nO)
+    model.set_ref("output_layer", linear_model.get_ref("output_layer"))
+    model.set_ref("attention_layer", attention_layer)
+    model.set_ref("maxout_layer", maxout_layer)
+    model.set_ref("norm_layer", norm_layer)
+    model.attrs["multi_label"] = not exclusive_classes
+    linear_output_layer = linear_model.get_ref("output_layer")
+    model.attrs["resize_output"] = partial(_resize_ensemble, layer=output_layer, linear_input=linear_output_layer, cnn_input=cnn_output_layer)
+    model.init = init_ensemble_textcat
+    return model
+
+
+def _resize_ensemble(model, new_nO, layer, linear_input, cnn_input):
+    """ Resize an ensemble layer and its two input layer in-place"""
+    if layer.has_dim("nO") is None:
+        # the output layer had not been initialized/trained yet
+        layer.set_dim("nO", new_nO)
+        return model
+    elif new_nO == layer.get_dim("nO"):
+        # the dimensions didn't change
+        return model
+
+    # resize the two input layers and the new output layer
+    _resize_bow(linear_input, new_nO, linear_input)
+    _resize_layer(cnn_input, new_nO, cnn_input)
+
+    return _resize_layer(model, new_nO, layer, nI = new_nO*2)
 
 
 def init_ensemble_textcat(model, X, Y) -> Model:
