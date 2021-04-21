@@ -601,12 +601,13 @@ print('Before', ents)
 
 # Create a span for the new entity
 fb_ent = Span(doc, 0, 1, label="ORG")
+orig_ents = list(doc.ents)
 
 # Option 1: Modify the provided entity spans, leaving the rest unmodified
 doc.set_ents([fb_ent], default="unmodified")
 
 # Option 2: Assign a complete list of ents to doc.ents
-# doc.ents = list(doc.ents) + [fb_ent]    # Comment Option 1 before uncommenting this
+doc.ents = orig_ents + [fb_ent]
 
 ents = [(e.text, e.start, e.end, e.label_) for e in doc.ents]
 print('After', ents)
