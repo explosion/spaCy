@@ -337,8 +337,18 @@ def _annot2array(vocab, tok_annot, doc_annot):
             attrs.append(key)
             values.append([vocab.strings.add(h) if h is not None else MISSING_DEP for h in value])
         elif key == "SENT_START":
+            norm_value = []
+            for v in value:
+                if v is True:
+                    norm_value.append(1)
+                elif v is None:
+                    norm_value.append(0)
+                elif v is False:
+                    norm_value.append(-1)
+                else:
+                    norm_value.append(v)
             attrs.append(key)
-            values.append(value)
+            values.append(norm_value)
         elif key == "MORPH":
             attrs.append(key)
             values.append([vocab.morphology.add(v) for v in value])
