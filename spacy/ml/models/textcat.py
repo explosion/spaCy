@@ -15,6 +15,8 @@ from ..staticvectors import StaticVectors
 from ...tokens import Doc
 from .tok2vec import get_tok2vec_width
 
+NEG_VALUE = -5000
+
 
 # TODO: to legacy
 @registry.architectures("spacy.TextCatCNN.v1")
@@ -86,11 +88,15 @@ def _resize_layer(model, new_nO, layer, nI=None):
     assert new_nO > old_nO
 
     # it could be that the model is not initialized yet, then skip this bit
-    if layer.has_param("B"):
+    if layer.has_param("b"):
         larger_b = layer.ops.alloc1f(new_nO)
         smaller_b = layer.get_param("b")
         larger_b[:old_nO] = smaller_b
         layer.set_param("b", larger_b)
+        print()
+        print("RESIZED LAYER", layer.name)
+        print("smaller_b", smaller_b, smaller_b.shape)
+        print("larger_b", larger_b, larger_b.shape)
 
     if layer.has_param("W"):
         old_nI = layer.get_dim("nI")
@@ -103,8 +109,11 @@ def _resize_layer(model, new_nO, layer, nI=None):
         # Copy the old weights into the new weight tensor
         larger_W[:old_nO, :old_nI] = smaller_W
         layer.set_param("W", larger_W)
-        layer.set_dim("nO", new_nO, force=True)
-        layer.set_dim("nI", nI, force=True)
+        layer.set_dim("nI", new_nI, force=True)
+        print("smaller_W", smaller_W.shape)
+        print("larger W", larger_W.shape)
+
+    layer.set_dim("nO", new_nO, force=True)
     if model:
         model.set_dim("nO", new_nO, force=True)
     return model
@@ -147,11 +156,12 @@ def build_bow_text_classifier(
     model.set_dim("nO", nO)
     model.set_ref("output_layer", sparse_linear)
     model.attrs["multi_label"] = not exclusive_classes
-    model.attrs["resize_output"] = partial(_resize_bow, layer=sparse_linear)
+    softmax = exclusive_classes and not no_output_layer
+    model.attrs["resize_output"] = partial(_resize_bow, layer=sparse_linear, softmax=softmax)
     return model
 
 
-def _resize_bow(model, new_nO, layer):
+def _resize_bow(model, new_nO, layer, softmax=False):
     """ Resize a BOW output layer (using SparseLinear) in-place"""
     if layer.has_dim("nO") is None:
         # the output layer had not been initialized/trained yet
@@ -173,9 +183,12 @@ def _resize_bow(model, new_nO, layer):
         smaller_b = layer.get_param("b")
         larger_W[:old_nO*length] = smaller_W
         larger_b[:old_nO] = smaller_b
+        if softmax:
+            # ensure little influence on the softmax activation
+            larger_b[old_nO:] = NEG_VALUE
         layer.set_param("W", larger_W)
         layer.set_param("b", larger_b)
-        layer.set_dim("nO", new_nO, force=True)
+    layer.set_dim("nO", new_nO, force=True)
     model.set_dim("nO", new_nO, force=True)
     return model
 

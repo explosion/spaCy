@@ -147,6 +147,7 @@ def test_implicit_label(name, get_examples):
     ],
 )
 def test_no_resize(name, textcat_config):
+    """The old textcat architectures weren't resizable"""
     nlp = Language()
     pipe_config = {"model": textcat_config}
     textcat = nlp.add_pipe(name, config=pipe_config)
@@ -162,19 +163,20 @@ def test_no_resize(name, textcat_config):
 @pytest.mark.parametrize(
     "name,textcat_config",
     [
-        ("textcat_multilabel", {"@architectures": "spacy.TextCatBOW.v2", "exclusive_classes": True, "no_output_layer": False, "ngram_size": 3}),
-        ("textcat_multilabel", {"@architectures": "spacy.TextCatBOW.v2", "exclusive_classes": True, "no_output_layer": True, "ngram_size": 3}),
+        ("textcat", {"@architectures": "spacy.TextCatBOW.v2", "exclusive_classes": True, "no_output_layer": False, "ngram_size": 3}),
+        ("textcat", {"@architectures": "spacy.TextCatBOW.v2", "exclusive_classes": True, "no_output_layer": True, "ngram_size": 3}),
         ("textcat_multilabel", {"@architectures": "spacy.TextCatBOW.v2", "exclusive_classes": False, "no_output_layer": False, "ngram_size": 3}),
         ("textcat_multilabel", {"@architectures": "spacy.TextCatBOW.v2", "exclusive_classes": False, "no_output_layer": True, "ngram_size": 3}),
         ("textcat_multilabel", {"@architectures": "spacy.TextCatEnsemble.v3", "tok2vec": DEFAULT_TOK2VEC_MODEL, "linear_model": {"@architectures": "spacy.TextCatBOW.v2", "exclusive_classes": False, "no_output_layer": False, "ngram_size": 3}}),
-        ("textcat_multilabel", {"@architectures": "spacy.TextCatEnsemble.v3", "tok2vec": DEFAULT_TOK2VEC_MODEL, "linear_model": {"@architectures": "spacy.TextCatBOW.v2", "exclusive_classes": True, "no_output_layer": False, "ngram_size": 3}}),
+        ("textcat", {"@architectures": "spacy.TextCatEnsemble.v3", "tok2vec": DEFAULT_TOK2VEC_MODEL, "linear_model": {"@architectures": "spacy.TextCatBOW.v2", "exclusive_classes": True, "no_output_layer": False, "ngram_size": 3}}),
         ("textcat_multilabel", {"@architectures": "spacy.TextCatEnsemble.v3", "tok2vec": DEFAULT_TOK2VEC_MODEL, "linear_model": {"@architectures": "spacy.TextCatBOW.v2", "exclusive_classes": False, "no_output_layer": True, "ngram_size": 3}}),
-        ("textcat_multilabel", {"@architectures": "spacy.TextCatEnsemble.v3", "tok2vec": DEFAULT_TOK2VEC_MODEL, "linear_model": {"@architectures": "spacy.TextCatBOW.v2", "exclusive_classes": True, "no_output_layer": True, "ngram_size": 3}}),
-        ("textcat_multilabel", {"@architectures": "spacy.TextCatCNN.v2", "tok2vec": DEFAULT_TOK2VEC_MODEL, "exclusive_classes": True}),
+        ("textcat", {"@architectures": "spacy.TextCatEnsemble.v3", "tok2vec": DEFAULT_TOK2VEC_MODEL, "linear_model": {"@architectures": "spacy.TextCatBOW.v2", "exclusive_classes": True, "no_output_layer": True, "ngram_size": 3}}),
+        ("textcat", {"@architectures": "spacy.TextCatCNN.v2", "tok2vec": DEFAULT_TOK2VEC_MODEL, "exclusive_classes": True}),
         ("textcat_multilabel", {"@architectures": "spacy.TextCatCNN.v2", "tok2vec": DEFAULT_TOK2VEC_MODEL, "exclusive_classes": False}),
     ],
 )
 def test_resize(name, textcat_config):
+    """The new textcat architectures are resizable"""
     nlp = Language()
     pipe_config = {"model": textcat_config}
     textcat = nlp.add_pipe(name, config=pipe_config)
@@ -185,6 +187,52 @@ def test_resize(name, textcat_config):
     assert textcat.model.maybe_get_dim("nO") in [2, None]
     textcat.add_label("NEUTRAL")
     assert textcat.model.maybe_get_dim("nO") in [3, None]
+
+
+@pytest.mark.parametrize(
+    "name,textcat_config",
+    [
+        ("textcat", {"@architectures": "spacy.TextCatBOW.v2", "exclusive_classes": True, "no_output_layer": False, "ngram_size": 3}),
+        ("textcat", {"@architectures": "spacy.TextCatBOW.v2", "exclusive_classes": True, "no_output_layer": True, "ngram_size": 3}),
+        ("textcat_multilabel", {"@architectures": "spacy.TextCatBOW.v2", "exclusive_classes": False, "no_output_layer": False, "ngram_size": 3}),
+        ("textcat_multilabel", {"@architectures": "spacy.TextCatBOW.v2", "exclusive_classes": False, "no_output_layer": True, "ngram_size": 3}),
+        ("textcat_multilabel", {"@architectures": "spacy.TextCatEnsemble.v3", "tok2vec": DEFAULT_TOK2VEC_MODEL, "linear_model": {"@architectures": "spacy.TextCatBOW.v2", "exclusive_classes": False, "no_output_layer": False, "ngram_size": 3}}),
+        ("textcat", {"@architectures": "spacy.TextCatEnsemble.v3", "tok2vec": DEFAULT_TOK2VEC_MODEL, "linear_model": {"@architectures": "spacy.TextCatBOW.v2", "exclusive_classes": True, "no_output_layer": False, "ngram_size": 3}}),
+        ("textcat_multilabel", {"@architectures": "spacy.TextCatEnsemble.v3", "tok2vec": DEFAULT_TOK2VEC_MODEL, "linear_model": {"@architectures": "spacy.TextCatBOW.v2", "exclusive_classes": False, "no_output_layer": True, "ngram_size": 3}}),
+        ("textcat", {"@architectures": "spacy.TextCatEnsemble.v3", "tok2vec": DEFAULT_TOK2VEC_MODEL, "linear_model": {"@architectures": "spacy.TextCatBOW.v2", "exclusive_classes": True, "no_output_layer": True, "ngram_size": 3}}),
+        ("textcat", {"@architectures": "spacy.TextCatCNN.v2", "tok2vec": DEFAULT_TOK2VEC_MODEL, "exclusive_classes": True}),
+        ("textcat_multilabel", {"@architectures": "spacy.TextCatCNN.v2", "tok2vec": DEFAULT_TOK2VEC_MODEL, "exclusive_classes": False}),
+    ],
+)
+def test_resize_overfitting(name, textcat_config):
+    # Ensure that the resized textcat classifiers still produce the same results for old labels
+    fix_random_seed(0)
+    nlp = English()
+    pipe_config = {"model": textcat_config}
+    textcat = nlp.add_pipe(name, config=pipe_config)
+
+    train_examples = []
+    for text, annotations in TRAIN_DATA_SINGLE_LABEL:
+        train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
+    optimizer = nlp.initialize(get_examples=lambda: train_examples)
+    assert textcat.model.maybe_get_dim("nO") in [2, None]
+
+    for i in range(50):
+        losses = {}
+        nlp.update(train_examples, sgd=optimizer, losses=losses)
+    print(losses[name])
+
+    # test the trained model before resizing
+    test_text = "I am happy."
+    doc = nlp(test_text)
+    print("BEFORE", doc.cats)
+    pos_pred = doc.cats["POSITIVE"]
+
+    # test the trained model again after resizing
+    textcat.add_label("NEUTRAL")
+    doc = nlp(test_text)
+    print("AFTER", doc.cats)
+    assert pos_pred == doc.cats["POSITIVE"]
 
 
 def test_error_with_multi_labels():
