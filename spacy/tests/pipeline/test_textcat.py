@@ -131,17 +131,59 @@ def test_implicit_label(name, get_examples):
     nlp.initialize(get_examples=get_examples(nlp))
 
 
-@pytest.mark.parametrize("name", ["textcat", "textcat_multilabel"])
-def test_no_resize(name):
+@pytest.mark.parametrize(
+    "name,textcat_config",
+    [
+        ("textcat_multilabel", {"@architectures": "spacy.TextCatBOW.v1", "exclusive_classes": True, "no_output_layer": False, "ngram_size": 3}),
+        ("textcat_multilabel", {"@architectures": "spacy.TextCatBOW.v1", "exclusive_classes": True, "no_output_layer": True, "ngram_size": 3}),
+        ("textcat_multilabel", {"@architectures": "spacy.TextCatBOW.v1", "exclusive_classes": False, "no_output_layer": False, "ngram_size": 3}),
+        ("textcat_multilabel", {"@architectures": "spacy.TextCatBOW.v1", "exclusive_classes": False, "no_output_layer": True, "ngram_size": 3}),
+        ("textcat_multilabel", {"@architectures": "spacy.TextCatEnsemble.v2", "tok2vec": DEFAULT_TOK2VEC_MODEL, "linear_model": {"@architectures": "spacy.TextCatBOW.v1", "exclusive_classes": False, "no_output_layer": False}}),
+        ("textcat_multilabel", {"@architectures": "spacy.TextCatEnsemble.v2", "tok2vec": DEFAULT_TOK2VEC_MODEL, "linear_model": {"@architectures": "spacy.TextCatBOW.v1", "exclusive_classes": True, "no_output_layer": False}}),
+        ("textcat_multilabel", {"@architectures": "spacy.TextCatEnsemble.v2", "tok2vec": DEFAULT_TOK2VEC_MODEL, "linear_model": {"@architectures": "spacy.TextCatBOW.v1", "exclusive_classes": False, "no_output_layer": True}}),
+        ("textcat_multilabel", {"@architectures": "spacy.TextCatEnsemble.v2", "tok2vec": DEFAULT_TOK2VEC_MODEL, "linear_model": {"@architectures": "spacy.TextCatBOW.v1", "exclusive_classes": True, "no_output_layer": True}}),
+        ("textcat_multilabel", {"@architectures": "spacy.TextCatCNN.v1", "tok2vec": DEFAULT_TOK2VEC_MODEL, "exclusive_classes": True}),
+        ("textcat_multilabel", {"@architectures": "spacy.TextCatCNN.v1", "tok2vec": DEFAULT_TOK2VEC_MODEL, "exclusive_classes": False}),
+    ],
+)
+def test_no_resize(name, textcat_config):
     nlp = Language()
-    textcat = nlp.add_pipe(name)
+    pipe_config = {"model": textcat_config}
+    textcat = nlp.add_pipe(name, config=pipe_config)
     textcat.add_label("POSITIVE")
     textcat.add_label("NEGATIVE")
     nlp.initialize()
-    assert textcat.model.get_dim("nO") >= 2
+    assert textcat.model.maybe_get_dim("nO") in [2, None]
     # this throws an error because the textcat can't be resized after initialization
     with pytest.raises(ValueError):
         textcat.add_label("NEUTRAL")
+
+
+@pytest.mark.parametrize(
+    "name,textcat_config",
+    [
+        ("textcat_multilabel", {"@architectures": "spacy.TextCatBOW.v2", "exclusive_classes": True, "no_output_layer": False, "ngram_size": 3}),
+        ("textcat_multilabel", {"@architectures": "spacy.TextCatBOW.v2", "exclusive_classes": True, "no_output_layer": True, "ngram_size": 3}),
+        ("textcat_multilabel", {"@architectures": "spacy.TextCatBOW.v2", "exclusive_classes": False, "no_output_layer": False, "ngram_size": 3}),
+        ("textcat_multilabel", {"@architectures": "spacy.TextCatBOW.v2", "exclusive_classes": False, "no_output_layer": True, "ngram_size": 3}),
+        ("textcat_multilabel", {"@architectures": "spacy.TextCatEnsemble.v3", "tok2vec": DEFAULT_TOK2VEC_MODEL, "linear_model": {"@architectures": "spacy.TextCatBOW.v1", "exclusive_classes": False, "no_output_layer": False}}),
+        ("textcat_multilabel", {"@architectures": "spacy.TextCatEnsemble.v3", "tok2vec": DEFAULT_TOK2VEC_MODEL, "linear_model": {"@architectures": "spacy.TextCatBOW.v1", "exclusive_classes": True, "no_output_layer": False}}),
+        ("textcat_multilabel", {"@architectures": "spacy.TextCatEnsemble.v3", "tok2vec": DEFAULT_TOK2VEC_MODEL, "linear_model": {"@architectures": "spacy.TextCatBOW.v1", "exclusive_classes": False, "no_output_layer": True}}),
+        ("textcat_multilabel", {"@architectures": "spacy.TextCatEnsemble.v3", "tok2vec": DEFAULT_TOK2VEC_MODEL, "linear_model": {"@architectures": "spacy.TextCatBOW.v1", "exclusive_classes": True, "no_output_layer": True}}),
+        ("textcat_multilabel", {"@architectures": "spacy.TextCatCNN.v2", "tok2vec": DEFAULT_TOK2VEC_MODEL, "exclusive_classes": True}),
+        ("textcat_multilabel", {"@architectures": "spacy.TextCatCNN.v2", "tok2vec": DEFAULT_TOK2VEC_MODEL, "exclusive_classes": False}),
+    ],
+)
+def test_resize(name, textcat_config):
+    nlp = Language()
+    pipe_config = {"model": textcat_config}
+    textcat = nlp.add_pipe(name, config=pipe_config)
+    textcat.add_label("POSITIVE")
+    textcat.add_label("NEGATIVE")
+    nlp.initialize()
+    assert textcat.model.maybe_get_dim("nO") in [2, None]
+    textcat.add_label("NEUTRAL")
+    assert textcat.model.maybe_get_dim("nO") in [3, None]
 
 
 def test_error_with_multi_labels():
