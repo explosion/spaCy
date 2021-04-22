@@ -6,6 +6,7 @@ from spacy.language import Language
 from spacy.lang.en.syntax_iterators import noun_chunks
 from spacy.vocab import Vocab
 import spacy
+from thinc.api import get_current_ops
 import pytest
 
 from ...util import make_tempdir
@@ -54,16 +55,17 @@ def test_issue5082():
     ruler.add_patterns(patterns)
     parsed_vectors_1 = [t.vector for t in nlp(text)]
     assert len(parsed_vectors_1) == 4
-    numpy.testing.assert_array_equal(parsed_vectors_1[0], array1)
-    numpy.testing.assert_array_equal(parsed_vectors_1[1], array2)
-    numpy.testing.assert_array_equal(parsed_vectors_1[2], array3)
-    numpy.testing.assert_array_equal(parsed_vectors_1[3], array4)
+    ops = get_current_ops()
+    numpy.testing.assert_array_equal(ops.to_numpy(parsed_vectors_1[0]), array1)
+    numpy.testing.assert_array_equal(ops.to_numpy(parsed_vectors_1[1]), array2)
+    numpy.testing.assert_array_equal(ops.to_numpy(parsed_vectors_1[2]), array3)
+    numpy.testing.assert_array_equal(ops.to_numpy(parsed_vectors_1[3]), array4)
     nlp.add_pipe("merge_entities")
     parsed_vectors_2 = [t.vector for t in nlp(text)]
     assert len(parsed_vectors_2) == 3
-    numpy.testing.assert_array_equal(parsed_vectors_2[0], array1)
-    numpy.testing.assert_array_equal(parsed_vectors_2[1], array2)
-    numpy.testing.assert_array_equal(parsed_vectors_2[2], array34)
+    numpy.testing.assert_array_equal(ops.to_numpy(parsed_vectors_2[0]), array1)
+    numpy.testing.assert_array_equal(ops.to_numpy(parsed_vectors_2[1]), array2)
+    numpy.testing.assert_array_equal(ops.to_numpy(parsed_vectors_2[2]), array34)
 
 
 def test_issue5137():
