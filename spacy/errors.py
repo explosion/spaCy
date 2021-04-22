@@ -501,6 +501,9 @@ class Errors:
     E202 = ("Unsupported alignment mode '{mode}'. Supported modes: {modes}.")
 
     # New errors added in v3.x
+    E872 = ("Unable to copy tokenizer from base model due to different "
+            'tokenizer settings: current tokenizer config "{curr_config}" '
+            'vs. base model "{base_config}"')
     E873 = ("Unable to merge a span from doc.spans with key '{key}' and text "
             "'{text}'. This is likely a bug in spaCy, so feel free to open an "
             "issue: https://github.com/explosion/spaCy/issues")
