@@ -798,23 +798,22 @@ several points in the lifecycle that can be used modify the `nlp` object.
 > ```ini
 > [initialize.before_init]
 > @callbacks = "spacy.copy_from_base_model.v1"
-> base_model = "en_core_sci_md"
-> tokenizer = true
-> vocab = true
+> tokenizer = "en_core_sci_md"
+> vocab = "en_core_sci_md"
 > ```
 
-Copy the tokenizer and/or vocab from the specified model. It's similar to the v2
-[base model](https://v2.spacy.io/api/cli#train) option and useful in combination
-with [sourced components](/usage/processing-pipelines#sourced-components) when
+Copy the tokenizer and/or vocab from the specified models. It's similar to the
+v2 [base model](https://v2.spacy.io/api/cli#train) option and useful in
+combination with
+[sourced components](/usage/processing-pipelines#sourced-components) when
 fine-tuning an existing pipeline. The vocab includes the lookups and the vectors
 from the specified model. Intended for use in `[initialize.before_init]`.
 
-| Name         | Description                                                                                                             |
-| ------------ | ----------------------------------------------------------------------------------------------------------------------- |
-| `base_model` | The pipeline to copy from. ~~str~~                                                                                      |
-| `tokenizer`  | Whether to copy the tokenizer. Defaults to `False`. ~~bool~~                                                            |
-| `vocab`      | Whether to copy the vocab, which includes lookups and vectors. Defaults to `False`. ~~bool~~                            |
-| **CREATES**  | A function that takes the current `nlp` object and modifies its `tokenizer` and `vocab`. ~~Callable[[Language], None]~~ |
+| Name        | Description                                                                                                             |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `tokenizer` | The pipeline to copy the tokenizer from. Defaults to `None`. ~~Optional[str]~~                                          |
+| `vocab`     | The pipeline to copy the vocab from. The vocab includes the lookups and vectors. Defaults to `None`. ~~Optional[str]~~  |
+| **CREATES** | A function that takes the current `nlp` object and modifies its `tokenizer` and `vocab`. ~~Callable[[Language], None]~~ |
 
 ## Training data and alignment {#gold source="spacy/training"}
 
