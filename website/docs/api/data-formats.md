@@ -390,7 +390,7 @@ file to keep track of your settings and hyperparameters and your own
 >    "tags": List[str],
 >    "pos": List[str],
 >    "morphs": List[str],
->    "sent_starts": List[bool],
+>    "sent_starts": List[Optional[bool]],
 >    "deps": List[string],
 >    "heads": List[int],
 >    "entities": List[str],
