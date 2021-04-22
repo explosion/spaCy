@@ -140,7 +140,7 @@ factory = "textcat"
 
 {% if optimize == "accuracy" %}
 [components.textcat.model]
-@architectures = "spacy.TextCatEnsemble.v2"
+@architectures = "spacy.TextCatEnsemble.v3"
 nO = null
 
 [components.textcat.model.tok2vec]
@@ -151,14 +151,14 @@ grad_factor = 1.0
 @layers = "reduce_mean.v1"
 
 [components.textcat.model.linear_model]
-@architectures = "spacy.TextCatBOW.v1"
+@architectures = "spacy.TextCatBOW.v2"
 exclusive_classes = true
 ngram_size = 1
 no_output_layer = false
 
 {% else -%}
 [components.textcat.model]
-@architectures = "spacy.TextCatBOW.v1"
+@architectures = "spacy.TextCatBOW.v2"
 exclusive_classes = true
 ngram_size = 1
 no_output_layer = false
@@ -171,7 +171,7 @@ factory = "textcat_multilabel"
 
 {% if optimize == "accuracy" %}
 [components.textcat_multilabel.model]
-@architectures = "spacy.TextCatEnsemble.v2"
+@architectures = "spacy.TextCatEnsemble.v3"
 nO = null
 
 [components.textcat_multilabel.model.tok2vec]
@@ -182,14 +182,14 @@ grad_factor = 1.0
 @layers = "reduce_mean.v1"
 
 [components.textcat_multilabel.model.linear_model]
-@architectures = "spacy.TextCatBOW.v1"
+@architectures = "spacy.TextCatBOW.v2"
 exclusive_classes = false
 ngram_size = 1
 no_output_layer = false
 
 {% else -%}
 [components.textcat_multilabel.model]
-@architectures = "spacy.TextCatBOW.v1"
+@architectures = "spacy.TextCatBOW.v2"
 exclusive_classes = false
 ngram_size = 1
 no_output_layer = false
@@ -308,7 +308,7 @@ factory = "textcat"
 
 {% if optimize == "accuracy" %}
 [components.textcat.model]
-@architectures = "spacy.TextCatEnsemble.v2"
+@architectures = "spacy.TextCatEnsemble.v3"
 nO = null
 
 [components.textcat.model.tok2vec]
@@ -316,14 +316,14 @@ nO = null
 width = ${components.tok2vec.model.encode.width}
 
 [components.textcat.model.linear_model]
-@architectures = "spacy.TextCatBOW.v1"
+@architectures = "spacy.TextCatBOW.v2"
 exclusive_classes = true
 ngram_size = 1
 no_output_layer = false
 
 {% else -%}
 [components.textcat.model]
-@architectures = "spacy.TextCatBOW.v1"
+@architectures = "spacy.TextCatBOW.v2"
 exclusive_classes = true
 ngram_size = 1
 no_output_layer = false
@@ -336,7 +336,7 @@ factory = "textcat_multilabel"
 
 {% if optimize == "accuracy" %}
 [components.textcat_multilabel.model]
-@architectures = "spacy.TextCatEnsemble.v2"
+@architectures = "spacy.TextCatEnsemble.v3"
 nO = null
 
 [components.textcat_multilabel.model.tok2vec]
@@ -344,14 +344,14 @@ nO = null
 width = ${components.tok2vec.model.encode.width}
 
 [components.textcat_multilabel.model.linear_model]
-@architectures = "spacy.TextCatBOW.v1"
+@architectures = "spacy.TextCatBOW.v2"
 exclusive_classes = false
 ngram_size = 1
 no_output_layer = false
 
 {% else -%}
 [components.textcat_multilabel.model]
-@architectures = "spacy.TextCatBOW.v1"
+@architectures = "spacy.TextCatBOW.v2"
 exclusive_classes = false
 ngram_size = 1
 no_output_layer = false

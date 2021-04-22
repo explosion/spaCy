@@ -130,7 +130,7 @@ factory = "textcat"
 labels = []
 
 [components.textcat.model]
-@architectures = "spacy.TextCatEnsemble.v2"
+@architectures = "spacy.TextCatEnsemble.v3"
 nO = null
 
 [components.textcat.model.tok2vec]
@@ -151,7 +151,7 @@ maxout_pieces = 3
 depth = 2
 
 [components.textcat.model.linear_model]
-@architectures = "spacy.TextCatBOW.v1"
+@architectures = "spacy.TextCatBOW.v2"
 exclusive_classes = true
 ngram_size = 1
 no_output_layer = false
@@ -169,7 +169,7 @@ factory = "textcat"
 labels = []
 
 [components.textcat.model]
-@architectures = "spacy.TextCatBOW.v1"
+@architectures = "spacy.TextCatBOW.v2"
 exclusive_classes = true
 ngram_size = 1
 no_output_layer = false

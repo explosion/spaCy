@@ -15,7 +15,7 @@ from .textcat import TextCategorizer
 
 multi_label_default_config = """
 [model]
-@architectures = "spacy.TextCatEnsemble.v2"
+@architectures = "spacy.TextCatEnsemble.v3"
 
 [model.tok2vec]
 @architectures = "spacy.Tok2Vec.v1"
@@ -35,7 +35,7 @@ maxout_pieces = 3
 depth = 2
 
 [model.linear_model]
-@architectures = "spacy.TextCatBOW.v1"
+@architectures = "spacy.TextCatBOW.v2"
 exclusive_classes = false
 ngram_size = 1
 no_output_layer = false
@@ -44,7 +44,7 @@ DEFAULT_MULTI_TEXTCAT_MODEL = Config().from_str(multi_label_default_config)["mod
 
 multi_label_bow_config = """
 [model]
-@architectures = "spacy.TextCatBOW.v1"
+@architectures = "spacy.TextCatBOW.v2"
 exclusive_classes = false
 ngram_size = 1
 no_output_layer = false
@@ -52,7 +52,7 @@ no_output_layer = false
 
 multi_label_cnn_config = """
 [model]
-@architectures = "spacy.TextCatCNN.v1"
+@architectures = "spacy.TextCatCNN.v2"
 exclusive_classes = false
 
 [model.tok2vec]
