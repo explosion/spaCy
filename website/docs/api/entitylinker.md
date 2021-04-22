@@ -142,7 +142,7 @@ applied to the `Doc` in order. Both [`__call__`](/api/entitylinker#call) and
 | `batch_size`   | The number of documents to buffer. Defaults to `128`. ~~int~~ |
 | **YIELDS**     | The processed documents in order. ~~Doc~~                     |
 
-## EntityLinker.set_kb {#initialize tag="method" new="3"}
+## EntityLinker.set_kb {#set_kb tag="method" new="3"}
 
 The `kb_loader` should be a function that takes a `Vocab` instance and creates
 the `KnowledgeBase`, ensuring that the strings of the knowledge base are synced
