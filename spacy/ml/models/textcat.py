@@ -196,7 +196,7 @@ def _resize_layer(model, new_nO, layer):
 
 
 def _resize_ensemble(model, new_nO, layer, linear_model, linear_input, cnn_model, cnn_input):
-    """ Resize an ensemble layer and its two input layer in-place"""
+    """ Resize an ensemble layer and its two input layers in-place"""
     if not _to_resize(new_nO, layer):
         return model
     # resize the two input layers and the new output layer
