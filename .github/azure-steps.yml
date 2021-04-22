@@ -42,21 +42,16 @@ steps:
 
   - script: |
       ${{ parameters.prefix }} python -m pip install -U cupy-cuda110
+      ${{ parameters.prefix }} python -m pip install "torch==1.7.1+cu110" -f https://download.pytorch.org/whl/torch_stable.html
     displayName: "Install GPU requirements"
     condition: eq(${{ parameters.gpu }}, true)
 
   - script: |
       ${{ parameters.prefix }} python -m pytest --pyargs spacy
-    displayName: "Run tests CPU"
+    displayName: "Run CPU tests"
     condition: eq(${{ parameters.gpu }}, false)
 
   - script: |
-      ${{ parameters.prefix }} python -m pip install "torch==1.7.1+cu110" -f https://download.pytorch.org/whl/torch_stable.html
-      ${{ parameters.prefix }} python -m pip install cupy-cuda110
-    displayName: "Install test deps GPU"
-    condition: eq(${{ parameters.gpu }}, true)
-
-  - script: |
       ${{ parameters.prefix }} python -m pytest --pyargs spacy -p spacy.tests.enable_gpu
-    displayName: "Run tests GPU"
+    displayName: "Run GPU tests"
     condition: eq(${{ parameters.gpu }}, true)
