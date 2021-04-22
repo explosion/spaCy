@@ -28,24 +28,25 @@ def build_simple_cnn_text_classifier(
     outputs sum to 1. If exclusive_classes=False, a logistic non-linearity
     is applied instead, so that outputs are in the range [0, 1].
     """
-    cnn = chain(tok2vec, list2ragged(), reduce_mean())
-    nI = tok2vec.maybe_get_dim("nO")
-    if exclusive_classes:
-        output_layer = Softmax(nO=nO, nI=nI)
-        model = chain(cnn, output_layer)
-        model.set_ref("output_layer", output_layer)
-        model.attrs["activation"] = "softmax"
-        model.attrs["resize_output"] = partial(
-            _resize_layer, layer=output_layer
-        )
-    else:
-        linear_layer = Linear(nO=nO, nI=tok2vec.maybe_get_dim("nO"))
-        model = chain(cnn, linear_layer, Logistic())
-        model.set_ref("output_layer", linear_layer)
-        model.attrs["activation"] = "linear"
-        model.attrs["resize_output"] = partial(
-            _resize_layer, layer=linear_layer
-        )
+    with Model.define_operators({">>": chain}):
+        cnn = tok2vec >> list2ragged() >> reduce_mean()
+        nI = tok2vec.maybe_get_dim("nO")
+        if exclusive_classes:
+            output_layer = Softmax(nO=nO, nI=nI)
+            model = cnn >> output_layer
+            model.set_ref("output_layer", output_layer)
+            model.attrs["activation"] = "softmax"
+            model.attrs["resize_output"] = partial(
+                _resize_layer, layer=output_layer
+            )
+        else:
+            linear_layer = Linear(nO=nO, nI=tok2vec.maybe_get_dim("nO"))
+            model = cnn >> linear_layer >> Logistic()
+            model.set_ref("output_layer", linear_layer)
+            model.attrs["activation"] = "linear"
+            model.attrs["resize_output"] = partial(
+                _resize_layer, layer=linear_layer
+            )
 
     model.set_ref("tok2vec", tok2vec)
     model.set_dim("nO", nO)
