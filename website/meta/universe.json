@@ -8,13 +8,13 @@
             "github": "meghanabhange/denomme",
             "pip": "denomme",
             "code_example": [
-            "from spacy.lang.xx import MultiLanguage",
-            "from denomme.name import person_name_component",
-            "nlp = MultiLanguage()",
-            "nlp.add_pipe('denomme')",
-            "doc = nlp('Hi my name is Meghana S.R Bhange and I want to talk Asha')",
-            "print(doc._.person_name)",
-            "# ['Meghana S.R Bhange', 'Asha']"
+                "from spacy.lang.xx import MultiLanguage",
+                "from denomme.name import person_name_component",
+                "nlp = MultiLanguage()",
+                "nlp.add_pipe('denomme')",
+                "doc = nlp('Hi my name is Meghana S.R Bhange and I want to talk Asha')",
+                "print(doc._.person_name)",
+                "# ['Meghana S.R Bhange', 'Asha']"
             ],
             "author": "Meghana Bhange",
             "author_links": {
@@ -24,28 +24,81 @@
             "category": ["standalone"],
             "tags": ["person-name-detection"]
         },
-	{
-	    "id": "numerizer",
-	    "title": "numerizer",
-	    "slogan": "Convert natural language numerics into ints and floats.",
-	    "description": "A SpaCy extension for Docs, Spans and Tokens that converts numerical words and quantitative named entities into numeric strings.",
-	    "github": "jaidevd/numerizer",
-	    "pip": "numerizer",
-	    "code_example": [
-		"from spacy import load",
-		"import numerizer",
-		"nlp = load('en_core_web_sm') # or any other model",
-		"doc = nlp('The Hogwarts Express is at platform nine and three quarters')",
-		"doc._.numerize()",
-		"# {nine and three quarters: '9.75'}"
-	    ],
-	    "author": "Jaidev Deshpande",
-	    "author_links": {
-		"github": "jaidevd",
-		"twitter": "jaidevd"
-	    },
-	    "category": ["standalone"]
-	},
+	      {
+            "id": "skweak",
+            "title": "skweak",
+            "slogan": "Weak supervision for NLP",
+            "description": "`skweak` brings the power of weak supervision to NLP tasks, and in particular sequence labelling and text classification. Instead of annotating documents by hand, `skweak` allows you to define *labelling functions* to automatically label your documents, and then aggregate their results using a statistical model that estimates the accuracy and confusions of each labelling function.",
+            "github": "https://github.com/NorskRegnesentral/skweak",
+            "pip": "skweak",
+            "code_example": [
+                "import spacy, re",
+                "from skweak import heuristics, gazetteers, aggregation, utils",
+                "",
+                "# LF 1: heuristic to detect occurrences of MONEY entities",
+                "def money_detector(doc):",
+                "   for tok in doc[1:]:",
+                "      if tok.text[0].isdigit() and tok.nbor(-1).is_currency:",
+                "          yield tok.i-1, tok.i+1, 'MONEY'",
+                "lf1 = heuristics.FunctionAnnotator('money', money_detector)",
+                "",
+                "# LF 2: detection of years with a regex",
+                "lf2= heuristics.TokenConstraintAnnotator ('years', lambda tok: re.match('(19|20)\\d{2}$', tok.text), 'DATE')",
+                "",
+                "# LF 3: a gazetteer with a few names",
+                "NAMES = [('Barack', 'Obama'), ('Donald', 'Trump'), ('Joe', 'Biden')]",
+                "trie = gazetteers.Trie(NAMES)",
+                "lf3 = gazetteers.GazetteerAnnotator('presidents', {'PERSON':trie})",
+                "",
+                "# We create a corpus (here with a single text)",
+                "nlp = spacy.load('en_core_web_sm')",
+                "doc = nlp('Donald Trump paid $750 in federal income taxes in 2016')",
+                "",
+                "# apply the labelling functions",
+                "doc = lf3(lf2(lf1(doc)))",
+                "",
+                "# and aggregate them",
+                "hmm = aggregation.HMM('hmm', ['PERSON', 'DATE', 'MONEY'])",
+                "hmm.fit_and_aggregate([doc])",
+                "",
+                "# we can then visualise the final result (in Jupyter)",
+                "utils.display_entities(doc, 'hmm')"
+            ],
+            "code_language": "python",
+            "url": "https://github.com/NorskRegnesentral/skweak",
+            "thumb": "https://raw.githubusercontent.com/NorskRegnesentral/skweak/main/data/skweak_logo_thumbnail.jpg",
+            "image": "https://raw.githubusercontent.com/NorskRegnesentral/skweak/main/data/skweak_logo.jpg",
+            "author": "Pierre Lison",
+            "author_links": {
+                "twitter": "plison2",
+                "github": "plison",
+                "website": "https://www.nr.no/~plison"
+            },
+            "category": ["pipeline", "standalone", "research", "training"],
+            "tags": []
+        },
+        {
+            "id": "numerizer",
+            "title": "numerizer",
+            "slogan": "Convert natural language numerics into ints and floats.",
+            "description": "A SpaCy extension for Docs, Spans and Tokens that converts numerical words and quantitative named entities into numeric strings.",
+            "github": "jaidevd/numerizer",
+            "pip": "numerizer",
+            "code_example": [
+                "from spacy import load",
+                "import numerizer",
+                "nlp = load('en_core_web_sm') # or any other model",
+                "doc = nlp('The Hogwarts Express is at platform nine and three quarters')",
+                "doc._.numerize()",
+                "# {nine and three quarters: '9.75'}"
+            ],
+            "author": "Jaidev Deshpande",
+            "author_links": {
+                "github": "jaidevd",
+                "twitter": "jaidevd"
+            },
+            "category": ["standalone"]
+        },
         {
             "id": "spikex",
             "title": "SpikeX - SpaCy Pipes for Knowledge Extraction",
@@ -109,6 +162,7 @@
             "id": "spacy-textblob",
             "title": "spaCyTextBlob",
             "slogan": "Easy sentiment analysis for spaCy using TextBlob. Now supports spaCy 3.0!",
+            "thumb": "https://github.com/SamEdwardes/spaCyTextBlob/raw/main/website/static/img/logo-thumb-square-250x250.png",
             "description": "spaCyTextBlob is a pipeline component that enables sentiment analysis using the [TextBlob](https://github.com/sloria/TextBlob) library. It will add the additional extensions `._.polarity`, `._.subjectivity`, and `._.assessments` to `Doc`, `Span`, and `Token` objects. For spaCy 2 please use `pip install pip install spacytextblob==0.1.7`",
             "github": "SamEdwardes/spaCyTextBlob",
             "pip": "spacytextblob",
@@ -2941,6 +2995,41 @@
             },
             "category": ["pipeline", "standalone"],
             "tags": ["Text Analytics", "Russian"]
+        },
+        {
+            "id": "trunajod",
+            "title": "TRUNAJOD",
+            "slogan": "A text complexity library for text analysis built on spaCy",
+            "description": "With all the basic NLP capabilities provided by spaCy (dependency parsing, POS tagging, tokenizing), `TRUNAJOD` focuses on extracting measurements from texts that might be interesting for different applications and use cases.",
+            "github": "dpalmasan/TRUNAJOD2.0",
+            "pip": "trunajod",
+            "code_example": [
+                "import spacy",
+                "from TRUNAJOD.entity_grid import EntityGrid",
+                "",
+                "nlp = spacy.load('es_core_news_sm', disable=['ner', 'textcat'])",
+                "example_text = (",
+                "    'El espectáculo del cielo nocturno cautiva la mirada y suscita preguntas'",
+                "    'sobre el universo, su origen y su funcionamiento. No es sorprendente que '",
+                "    'todas las civilizaciones y culturas hayan formado sus propias '",
+                "    'cosmologías. Unas relatan, por ejemplo, que el universo ha'",
+                "    'sido siempre tal como es, con ciclos que inmutablemente se repiten; '",
+                "    'otras explican que este universo ha tenido un principio, '",
+                "    'que ha aparecido por obra creadora de una divinidad.'",
+                ")",
+                "doc = nlp(example_text)",
+                "egrid = EntityGrid(doc)",
+                "print(egrid.get_egrid())"
+            ],
+            "code_language": "python",
+            "thumb": "https://raw.githubusercontent.com/dpalmasan/TRUNAJOD2.0/master/imgs/trunajod_thumb.png",
+            "image": "https://raw.githubusercontent.com/dpalmasan/TRUNAJOD2.0/master/imgs/trunajod_logo.png",
+            "author": "Diego Palma",
+            "author_links": {
+                "github": "dpalmasan"
+            },
+            "category": ["research", "standalone", "scientific"],
+            "tags": ["Text Analytics", "Coherence", "Cohesion"]
         }
     ],
 
