@@ -61,12 +61,16 @@ def build_simple_cnn_text_classifier(
         output_layer = Softmax(nO=nO, nI=nI)
         model = chain(cnn, output_layer)
         model.set_ref("output_layer", output_layer)
-        model.attrs["resize_output"] = partial(_resize_layer, layer=output_layer, softmax=True)
+        model.attrs["resize_output"] = partial(
+            _resize_layer, layer=output_layer, softmax=True
+        )
     else:
         linear_layer = Linear(nO=nO, nI=tok2vec.maybe_get_dim("nO"))
         model = chain(cnn, linear_layer, Logistic())
         model.set_ref("output_layer", linear_layer)
-        model.attrs["resize_output"] = partial(_resize_layer, layer=linear_layer, softmax=False)
+        model.attrs["resize_output"] = partial(
+            _resize_layer, layer=linear_layer, softmax=False
+        )
 
     model.set_ref("tok2vec", tok2vec)
     model.set_dim("nO", nO)
@@ -159,12 +163,12 @@ def build_bow_text_classifier(
     model.set_dim("nO", nO)
     model.set_ref("output_layer", sparse_linear)
     model.attrs["multi_label"] = not exclusive_classes
-    softmax = exclusive_classes and not no_output_layer
-    model.attrs["resize_output"] = partial(_resize_bow, layer=sparse_linear, softmax=softmax)
+    model.attrs["contains_softmax"] = exclusive_classes and not no_output_layer
+    model.attrs["resize_output"] = partial(_resize_bow, layer=sparse_linear)
     return model
 
 
-def _resize_bow(model, new_nO, layer, softmax=False):
+def _resize_bow(model, new_nO, layer):
     """ Resize a BOW output layer (using SparseLinear) in-place"""
     if layer.has_dim("nO") is None:
         # the output layer had not been initialized/trained yet
@@ -180,13 +184,13 @@ def _resize_bow(model, new_nO, layer, softmax=False):
 
     # it could be that the model is not initialized yet, then skip this bit
     if layer.has_param("W"):
-        larger_W = layer.ops.alloc1f(new_nO*length)
+        larger_W = layer.ops.alloc1f(new_nO * length)
         larger_b = layer.ops.alloc1f(new_nO)
         smaller_W = layer.get_param("W")
         smaller_b = layer.get_param("b")
         larger_W[:old_nO*length] = smaller_W
         larger_b[:old_nO] = smaller_b
-        if softmax:
+        if "contains_softmax" in model.attrs and model.attrs["contains_softmax"]:
             # ensure little influence on the softmax activation
             larger_b[old_nO:] = NEG_VALUE
         layer.set_param("W", larger_W)
@@ -272,12 +276,19 @@ def build_text_classifier_v3(
     model.set_ref("norm_layer", norm_layer)
     model.attrs["multi_label"] = not exclusive_classes
     linear_output_layer = linear_model.get_ref("output_layer")
-    model.attrs["resize_output"] = partial(_resize_ensemble, layer=output_layer, linear_input=linear_output_layer, cnn_input=cnn_output_layer)
+    model.attrs["resize_output"] = partial(
+        _resize_ensemble,
+        layer=output_layer,
+        linear_model=linear_model,
+        linear_input=linear_output_layer,
+        cnn_model=cnn_model,
+        cnn_input=cnn_output_layer,
+    )
     model.init = init_ensemble_textcat
     return model
 
 
-def _resize_ensemble(model, new_nO, layer, linear_input, cnn_input):
+def _resize_ensemble(model, new_nO, layer, linear_model, linear_input, cnn_model, cnn_input):
     """ Resize an ensemble layer and its two input layer in-place"""
     if layer.has_dim("nO") is None:
         # the output layer had not been initialized/trained yet
@@ -288,10 +299,9 @@ def _resize_ensemble(model, new_nO, layer, linear_input, cnn_input):
         return model
 
     # resize the two input layers and the new output layer
-    _resize_bow(linear_input, new_nO, linear_input)
-    _resize_layer(cnn_input, new_nO, cnn_input)
-
-    return _resize_layer(model, new_nO, layer, nI = new_nO*2)
+    _resize_bow(linear_model, new_nO, linear_input)
+    _resize_layer(cnn_model, new_nO, cnn_input)
+    return _resize_layer(model, new_nO, layer, nI=new_nO * 2)
 
 
 def init_ensemble_textcat(model, X, Y) -> Model:
