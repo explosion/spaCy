@@ -13,7 +13,7 @@ from .iob_utils import biluo_tags_to_spans
 from ..errors import Errors, Warnings
 from ..pipeline._parser_internals import nonproj
 from ..tokens.token cimport MISSING_DEP
-from ..util import logger
+from ..util import logger, to_ternary_int
 
 
 cpdef Doc annotations_to_doc(vocab, tok_annot, doc_annot):
@@ -337,18 +337,8 @@ def _annot2array(vocab, tok_annot, doc_annot):
             attrs.append(key)
             values.append([vocab.strings.add(h) if h is not None else MISSING_DEP for h in value])
         elif key == "SENT_START":
-            norm_value = []
-            for v in value:
-                if v is True:
-                    norm_value.append(1)
-                elif v is None:
-                    norm_value.append(0)
-                elif v is False:
-                    norm_value.append(-1)
-                else:
-                    norm_value.append(v)
             attrs.append(key)
-            values.append(norm_value)
+            values.append([to_ternary_int(v) for v in value])
         elif key == "MORPH":
             attrs.append(key)
             values.append([vocab.morphology.add(v) for v in value])
