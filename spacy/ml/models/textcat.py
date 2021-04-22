@@ -61,12 +61,12 @@ def build_simple_cnn_text_classifier(
         output_layer = Softmax(nO=nO, nI=nI)
         model = chain(cnn, output_layer)
         model.set_ref("output_layer", output_layer)
-        model.attrs["resize_output"] = partial(_resize_layer, layer=output_layer)
+        model.attrs["resize_output"] = partial(_resize_layer, layer=output_layer, softmax=True)
     else:
         linear_layer = Linear(nO=nO, nI=tok2vec.maybe_get_dim("nO"))
         model = chain(cnn, linear_layer, Logistic())
         model.set_ref("output_layer", linear_layer)
-        model.attrs["resize_output"] = partial(_resize_layer, layer=linear_layer)
+        model.attrs["resize_output"] = partial(_resize_layer, layer=linear_layer, softmax=False)
 
     model.set_ref("tok2vec", tok2vec)
     model.set_dim("nO", nO)
@@ -74,7 +74,7 @@ def build_simple_cnn_text_classifier(
     return model
 
 
-def _resize_layer(model, new_nO, layer, nI=None):
+def _resize_layer(model, new_nO, layer, nI=None, softmax=False):
     """ Resize a typical layer with 2D W and 1D b parameters"""
     if layer.has_dim("nO") is None:
         # the output layer had not been initialized/trained yet
@@ -92,6 +92,9 @@ def _resize_layer(model, new_nO, layer, nI=None):
         larger_b = layer.ops.alloc1f(new_nO)
         smaller_b = layer.get_param("b")
         larger_b[:old_nO] = smaller_b
+        if softmax:
+            # ensure little influence on the softmax activation
+            larger_b[old_nO:] = NEG_VALUE
         layer.set_param("b", larger_b)
         print()
         print("RESIZED LAYER", layer.name)
