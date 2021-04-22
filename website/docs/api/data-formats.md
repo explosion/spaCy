@@ -29,8 +29,8 @@ recommended settings for your use case, check out the
 >
 > The `@` syntax lets you refer to function names registered in the
 > [function registry](/api/top-level#registry). For example,
-> `@architectures = "spacy.HashEmbedCNN.v1"` refers to a registered function of
-> the name [spacy.HashEmbedCNN.v1](/api/architectures#HashEmbedCNN) and all
+> `@architectures = "spacy.HashEmbedCNN.v2"` refers to a registered function of
+> the name [spacy.HashEmbedCNN.v2](/api/architectures#HashEmbedCNN) and all
 > other values defined in its block will be passed into that function as
 > arguments. Those arguments depend on the registered function. See the usage
 > guide on [registered functions](/usage/training#config-functions) for details.

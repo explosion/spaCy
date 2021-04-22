@@ -8,7 +8,7 @@ from ..tokens import Doc
 from ..errors import Errors
 
 
-@registry.layers("spacy.StaticVectors.v1")
+@registry.layers("spacy.StaticVectors.v2")
 def StaticVectors(
     nO: Optional[int] = None,
     nM: Optional[int] = None,
@@ -46,6 +46,8 @@ def forward(
         vectors_data = model.ops.gemm(model.ops.as_contig(V[rows]), W, trans2=True)
     except ValueError:
         raise RuntimeError(Errors.E896)
+    # Convert negative indices to 0-vectors (TODO: more options for UNK tokens)
+    vectors_data[rows < 0] = 0
     output = Ragged(
         vectors_data, model.ops.asarray([len(doc) for doc in docs], dtype="i")
     )

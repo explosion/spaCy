@@ -4,12 +4,13 @@ teaser: Archived implementations available through spacy-legacy
 source: spacy/legacy
 ---
 
-The [`spacy-legacy`](https://github.com/explosion/spacy-legacy) package includes 
-outdated registered functions and architectures. It is installed automatically as 
-a dependency of spaCy, and provides backwards compatibility for archived functions 
-that may still be used in projects.
+The [`spacy-legacy`](https://github.com/explosion/spacy-legacy) package includes
+outdated registered functions and architectures. It is installed automatically
+as a dependency of spaCy, and provides backwards compatibility for archived
+functions that may still be used in projects.
 
-You can find the detailed documentation of each such legacy function on this page.
+You can find the detailed documentation of each such legacy function on this
+page.
 
 ## Architectures {#architectures}
 
@@ -17,8 +18,8 @@ These functions are available from `@spacy.registry.architectures`.
 
 ### spacy.Tok2Vec.v1 {#Tok2Vec_v1}
 
-The `spacy.Tok2Vec.v1` architecture was expecting an `encode` model of type 
-`Model[Floats2D, Floats2D]` such as `spacy.MaxoutWindowEncoder.v1` or 
+The `spacy.Tok2Vec.v1` architecture was expecting an `encode` model of type
+`Model[Floats2D, Floats2D]` such as `spacy.MaxoutWindowEncoder.v1` or
 `spacy.MishWindowEncoder.v1`.
 
 > #### Example config
@@ -44,15 +45,14 @@ blog post for background.
 | Name        | Description                                                                                                                                                                                                                      |
 | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `embed`     | Embed tokens into context-independent word vector representations. For example, [CharacterEmbed](/api/architectures#CharacterEmbed) or [MultiHashEmbed](/api/architectures#MultiHashEmbed). ~~Model[List[Doc], List[Floats2d]]~~ |
-| `encode`    | Encode context into the embeddings, using an architecture such as a CNN, BiLSTM or transformer. For example, [MaxoutWindowEncoder.v1](/api/legacy#MaxoutWindowEncoder_v1). ~~Model[Floats2d, Floats2d]~~                            |
+| `encode`    | Encode context into the embeddings, using an architecture such as a CNN, BiLSTM or transformer. For example, [MaxoutWindowEncoder.v1](/api/legacy#MaxoutWindowEncoder_v1). ~~Model[Floats2d, Floats2d]~~                         |
 | **CREATES** | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                                                           |
 
 ### spacy.MaxoutWindowEncoder.v1 {#MaxoutWindowEncoder_v1}
 
-The `spacy.MaxoutWindowEncoder.v1` architecture was producing a model of type 
-`Model[Floats2D, Floats2D]`. Since `spacy.MaxoutWindowEncoder.v2`, this has been changed to output 
-type `Model[List[Floats2d], List[Floats2d]]`.
-
+The `spacy.MaxoutWindowEncoder.v1` architecture was producing a model of type
+`Model[Floats2D, Floats2D]`. Since `spacy.MaxoutWindowEncoder.v2`, this has been
+changed to output type `Model[List[Floats2d], List[Floats2d]]`.
 
 > #### Example config
 >
@@ -78,9 +78,9 @@ and residual connections.
 
 ### spacy.MishWindowEncoder.v1 {#MishWindowEncoder_v1}
 
-The `spacy.MishWindowEncoder.v1` architecture was producing a model of type 
-`Model[Floats2D, Floats2D]`. Since `spacy.MishWindowEncoder.v2`, this has been changed to output 
-type `Model[List[Floats2d], List[Floats2d]]`.
+The `spacy.MishWindowEncoder.v1` architecture was producing a model of type
+`Model[Floats2D, Floats2D]`. Since `spacy.MishWindowEncoder.v2`, this has been
+changed to output type `Model[List[Floats2d], List[Floats2d]]`.
 
 > #### Example config
 >
@@ -103,12 +103,11 @@ and residual connections.
 | `depth`       | The number of convolutional layers. Recommended value is `4`. ~~int~~                                                                                                                                          |
 | **CREATES**   | The model using the architecture. ~~Model[Floats2d, Floats2d]~~                                                                                                                                                |
 
-
 ### spacy.TextCatEnsemble.v1 {#TextCatEnsemble_v1}
 
-The `spacy.TextCatEnsemble.v1` architecture built an internal `tok2vec` and `linear_model`. 
-Since `spacy.TextCatEnsemble.v2`, this has been refactored so that the `TextCatEnsemble` takes these 
-two sublayers as input.
+The `spacy.TextCatEnsemble.v1` architecture built an internal `tok2vec` and
+`linear_model`. Since `spacy.TextCatEnsemble.v2`, this has been refactored so
+that the `TextCatEnsemble` takes these two sublayers as input.
 
 > #### Example Config
 >
@@ -142,6 +141,40 @@ network has an internal CNN Tok2Vec layer and uses attention.
 | `nO`                 | Output dimension, determined by the number of different labels. If not set, the [`TextCategorizer`](/api/textcategorizer) component will set it when `initialize` is called. ~~Optional[int]~~ |
 | **CREATES**          | The model using the architecture. ~~Model[List[Doc], Floats2d]~~                                                                                                                               |
 
+### spacy.HashEmbedCNN.v1 {#HashEmbedCNN_v1}
+
+Identical to [`spacy.HashEmbedCNN.v2`](/api/architectures#HashEmbedCNN) except
+using [`spacy.StaticVectors.v1`](#StaticVectors_v1) if vectors are included.
+
+### spacy.MultiHashEmbed.v1 {#MultiHashEmbed_v1}
+
+Identical to [`spacy.MultiHashEmbed.v2`](/api/architectures#MultiHashEmbed)
+except with [`spacy.StaticVectors.v1`](#StaticVectors_v1) if vectors are
+included.
+
+### spacy.CharacterEmbed.v1 {#CharacterEmbed_v1}
+
+Identical to [`spacy.CharacterEmbed.v2`](/api/architectures#CharacterEmbed)
+except using [`spacy.StaticVectors.v1`](#StaticVectors_v1) if vectors are
+included.
+
+## Layers {#layers}
+
+These functions are available from `@spacy.registry.layers`.
+
+### spacy.StaticVectors.v1 {#StaticVectors_v1}
+
+Identical to [`spacy.StaticVectors.v2`](/api/architectures#StaticVectors) except
+for the handling of tokens without vectors.
+
+<Infobox title="Bugs for tokens without vectors" variant="warning">
+
+`spacy.StaticVectors.v1` maps tokens without vectors to the final row in the
+vectors table, which causes the model predictions to change if new vectors are
+added to an existing vectors table. See more details in
+[issue #7662](https://github.com/explosion/spaCy/issues/7662#issuecomment-813925655).
+
+</Infobox>
 
 ## Loggers {#loggers}
 
@@ -149,7 +182,7 @@ These functions are available from `@spacy.registry.loggers`.
 
 ### spacy.WandbLogger.v1 {#WandbLogger_v1}
 
-The first version of the [`WandbLogger`](/api/top-level#WandbLogger) did not yet 
+The first version of the [`WandbLogger`](/api/top-level#WandbLogger) did not yet
 support the `log_dataset_dir` and `model_log_interval` arguments.
 
 > #### Example config
@@ -160,7 +193,8 @@ support the `log_dataset_dir` and `model_log_interval` arguments.
 > project_name = "monitor_spacy_training"
 > remove_config_values = ["paths.train", "paths.dev", "corpora.train.path", "corpora.dev.path"]
 > ```
-| Name                   | Description                                                                                                                           |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `project_name`         | The name of the project in the Weights & Biases interface. The project will be created automatically if it doesn't exist yet. ~~str~~ |
-| `remove_config_values` | A list of values to include from the config before it is uploaded to W&B (default: empty). ~~List[str]~~                              |
+>
+> | Name                   | Description                                                                                                                           |
+> | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+> | `project_name`         | The name of the project in the Weights & Biases interface. The project will be created automatically if it doesn't exist yet. ~~str~~ |
+> | `remove_config_values` | A list of values to include from the config before it is uploaded to W&B (default: empty). ~~List[str]~~                              |
