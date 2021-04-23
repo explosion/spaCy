@@ -1,5 +1,5 @@
 # Our libraries
-spacy-legacy>=3.0.3,<3.1.0
+spacy-legacy>=3.0.4,<3.1.0
 cymem>=2.0.2,<2.1.0
 preshed>=3.0.2,<3.1.0
 thinc>=8.0.3,<8.1.0
