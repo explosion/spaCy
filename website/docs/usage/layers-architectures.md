@@ -137,7 +137,7 @@ nO = null
 @architectures = "spacy.Tok2Vec.v2"
 
 [components.textcat.model.tok2vec.embed]
-@architectures = "spacy.MultiHashEmbed.v1"
+@architectures = "spacy.MultiHashEmbed.v2"
 width = 64
 rows = [2000, 2000, 1000, 1000, 1000, 1000]
 attrs = ["ORTH", "LOWER", "PREFIX", "SUFFIX", "SHAPE", "ID"]
@@ -204,7 +204,7 @@ factory = "tok2vec"
 @architectures = "spacy.Tok2Vec.v2"
 
 [components.tok2vec.model.embed]
-@architectures = "spacy.MultiHashEmbed.v1"
+@architectures = "spacy.MultiHashEmbed.v2"
 # ...
 
 [components.tok2vec.model.encode]
@@ -220,7 +220,7 @@ architecture:
 ```ini
 ### config.cfg (excerpt)
 [components.tok2vec.model.embed]
-@architectures = "spacy.CharacterEmbed.v1"
+@architectures = "spacy.CharacterEmbed.v2"
 # ...
 
 [components.tok2vec.model.encode]
@@ -638,7 +638,7 @@ that has the full implementation.
 > @architectures = "rel_instance_tensor.v1"
 >
 > [model.create_instance_tensor.tok2vec]
-> @architectures = "spacy.HashEmbedCNN.v1"
+> @architectures = "spacy.HashEmbedCNN.v2"
 > # ...
 >
 > [model.create_instance_tensor.pooling]

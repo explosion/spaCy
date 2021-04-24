@@ -33,8 +33,8 @@ both documents.
 
 | Name           | Description                                                                                                              |
 | -------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `predicted`    | The document containing (partial) predictions. Cannot be `None`. ~~Doc~~                                                |
-| `reference`    | The document containing gold-standard annotations. Cannot be `None`. ~~Doc~~                                            |
+| `predicted`    | The document containing (partial) predictions. Cannot be `None`. ~~Doc~~                                                 |
+| `reference`    | The document containing gold-standard annotations. Cannot be `None`. ~~Doc~~                                             |
 | _keyword-only_ |                                                                                                                          |
 | `alignment`    | An object holding the alignment between the tokens of the `predicted` and `reference` documents. ~~Optional[Alignment]~~ |
 
@@ -56,11 +56,11 @@ see the [training format documentation](/api/data-formats#dict-input).
 > example = Example.from_dict(predicted, {"words": token_ref, "tags": tags_ref})
 > ```
 
-| Name           | Description                                                               |
-| -------------- | ------------------------------------------------------------------------- |
-| `predicted`    | The document containing (partial) predictions. Cannot be `None`. ~~Doc~~ |
-| `example_dict` | `Dict[str, obj]`                                                          | The gold-standard annotations as a dictionary. Cannot be `None`. ~~Dict[str, Any]~~ |
-| **RETURNS**    | The newly constructed object. ~~Example~~                                 |
+| Name           | Description                                                                         |
+| -------------- | ----------------------------------------------------------------------------------- |
+| `predicted`    | The document containing (partial) predictions. Cannot be `None`. ~~Doc~~            |
+| `example_dict` | The gold-standard annotations as a dictionary. Cannot be `None`. ~~Dict[str, Any]~~ |
+| **RETURNS**    | The newly constructed object. ~~Example~~                                           |
 
 ## Example.text {#text tag="property"}
 
@@ -211,10 +211,11 @@ align to the tokenization in [`Example.predicted`](/api/example#predicted).
 > assert [(ent.start, ent.end) for ent in ents_y2x] == [(0, 1)]
 > ```
 
-| Name        | Description                                                                   |
-| ----------- | ----------------------------------------------------------------------------- |
-| `y_spans`   | `Span` objects aligned to the tokenization of `reference`. ~~Iterable[Span]~~ |
-| **RETURNS** | `Span` objects aligned to the tokenization of `predicted`. ~~List[Span]~~     |
+| Name            | Description                                                                                  |
+| --------------- | -------------------------------------------------------------------------------------------- |
+| `y_spans`       | `Span` objects aligned to the tokenization of `reference`. ~~Iterable[Span]~~                |
+| `allow_overlap` | Whether the resulting `Span` objects may overlap or not. Set to `False` by default. ~~bool~~ |
+| **RETURNS**     | `Span` objects aligned to the tokenization of `predicted`. ~~List[Span]~~                    |
 
 ## Example.get_aligned_spans_x2y {#get_aligned_spans_x2y tag="method"}
 
@@ -238,10 +239,11 @@ against the original gold-standard annotation.
 > assert [(ent.start, ent.end) for ent in ents_x2y] == [(0, 2)]
 > ```
 
-| Name        | Description                                                                   |
-| ----------- | ----------------------------------------------------------------------------- |
-| `x_spans`   | `Span` objects aligned to the tokenization of `predicted`. ~~Iterable[Span]~~ |
-| **RETURNS** | `Span` objects aligned to the tokenization of `reference`. ~~List[Span]~~     |
+| Name            | Description                                                                                  |
+| --------------- | -------------------------------------------------------------------------------------------- |
+| `x_spans`       | `Span` objects aligned to the tokenization of `predicted`. ~~Iterable[Span]~~                |
+| `allow_overlap` | Whether the resulting `Span` objects may overlap or not. Set to `False` by default. ~~bool~~ |
+| **RETURNS**     | `Span` objects aligned to the tokenization of `reference`. ~~List[Span]~~                    |
 
 ## Example.to_dict {#to_dict tag="method"}
 

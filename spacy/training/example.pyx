@@ -13,7 +13,7 @@ from .iob_utils import biluo_tags_to_spans
 from ..errors import Errors, Warnings
 from ..pipeline._parser_internals import nonproj
 from ..tokens.token cimport MISSING_DEP
-from ..util import logger
+from ..util import logger, to_ternary_int
 
 
 cpdef Doc annotations_to_doc(vocab, tok_annot, doc_annot):
@@ -213,18 +213,19 @@ cdef class Example:
         else:
             return [None] * len(self.x)
 
-    def get_aligned_spans_x2y(self, x_spans):
-        return self._get_aligned_spans(self.y, x_spans, self.alignment.x2y)
+    def get_aligned_spans_x2y(self, x_spans, allow_overlap=False):
+        return self._get_aligned_spans(self.y, x_spans, self.alignment.x2y, allow_overlap)
 
-    def get_aligned_spans_y2x(self, y_spans):
-        return self._get_aligned_spans(self.x, y_spans, self.alignment.y2x)
+    def get_aligned_spans_y2x(self, y_spans, allow_overlap=False):
+        return self._get_aligned_spans(self.x, y_spans, self.alignment.y2x, allow_overlap)
 
-    def _get_aligned_spans(self, doc, spans, align):
+    def _get_aligned_spans(self, doc, spans, align, allow_overlap):
         seen = set()
         output = []
         for span in spans:
             indices = align[span.start : span.end].data.ravel()
-            indices = [idx for idx in indices if idx not in seen]
+            if not allow_overlap:
+                indices = [idx for idx in indices if idx not in seen]
             if len(indices) >= 1:
                 aligned_span = Span(doc, indices[0], indices[-1] + 1, label=span.label)
                 target_text = span.text.lower().strip().replace(" ", "")
@@ -237,7 +238,7 @@ cdef class Example:
     def get_aligned_ner(self):
         if not self.y.has_annotation("ENT_IOB"):
             return [None] * len(self.x)  # should this be 'missing' instead of 'None' ?
-        x_ents = self.get_aligned_spans_y2x(self.y.ents)
+        x_ents = self.get_aligned_spans_y2x(self.y.ents, allow_overlap=False)
         # Default to 'None' for missing values
         x_tags = offsets_to_biluo_tags(
             self.x,
@@ -337,7 +338,7 @@ def _annot2array(vocab, tok_annot, doc_annot):
             values.append([vocab.strings.add(h) if h is not None else MISSING_DEP for h in value])
         elif key == "SENT_START":
             attrs.append(key)
-            values.append(value)
+            values.append([to_ternary_int(v) for v in value])
         elif key == "MORPH":
             attrs.append(key)
             values.append([vocab.morphology.add(v) for v in value])

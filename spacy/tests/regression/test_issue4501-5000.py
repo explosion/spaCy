@@ -9,6 +9,7 @@ from spacy.language import Language
 from spacy.util import ensure_path, load_model_from_path
 import numpy
 import pickle
+from thinc.api import NumpyOps, get_current_ops
 
 from ..util import make_tempdir
 
@@ -169,21 +170,22 @@ def test_issue4725_1():
 
 
 def test_issue4725_2():
-    # ensures that this runs correctly and doesn't hang or crash because of the global vectors
-    # if it does crash, it's usually because of calling 'spawn' for multiprocessing (e.g. on Windows),
-    # or because of issues with pickling the NER (cf test_issue4725_1)
-    vocab = Vocab(vectors_name="test_vocab_add_vector")
-    data = numpy.ndarray((5, 3), dtype="f")
-    data[0] = 1.0
-    data[1] = 2.0
-    vocab.set_vector("cat", data[0])
-    vocab.set_vector("dog", data[1])
-    nlp = English(vocab=vocab)
-    nlp.add_pipe("ner")
-    nlp.initialize()
-    docs = ["Kurt is in London."] * 10
-    for _ in nlp.pipe(docs, batch_size=2, n_process=2):
-        pass
+    if isinstance(get_current_ops, NumpyOps):
+        # ensures that this runs correctly and doesn't hang or crash because of the global vectors
+        # if it does crash, it's usually because of calling 'spawn' for multiprocessing (e.g. on Windows),
+        # or because of issues with pickling the NER (cf test_issue4725_1)
+        vocab = Vocab(vectors_name="test_vocab_add_vector")
+        data = numpy.ndarray((5, 3), dtype="f")
+        data[0] = 1.0
+        data[1] = 2.0
+        vocab.set_vector("cat", data[0])
+        vocab.set_vector("dog", data[1])
+        nlp = English(vocab=vocab)
+        nlp.add_pipe("ner")
+        nlp.initialize()
+        docs = ["Kurt is in London."] * 10
+        for _ in nlp.pipe(docs, batch_size=2, n_process=2):
+            pass
 
 
 def test_issue4849():
@@ -204,10 +206,11 @@ def test_issue4849():
         count_ents += len([ent for ent in doc.ents if ent.ent_id > 0])
     assert count_ents == 2
     # USING 2 PROCESSES
-    count_ents = 0
-    for doc in nlp.pipe([text], n_process=2):
-        count_ents += len([ent for ent in doc.ents if ent.ent_id > 0])
-    assert count_ents == 2
+    if isinstance(get_current_ops, NumpyOps):
+        count_ents = 0
+        for doc in nlp.pipe([text], n_process=2):
+            count_ents += len([ent for ent in doc.ents if ent.ent_id > 0])
+        assert count_ents == 2
 
 
 @Language.factory("my_pipe")
@@ -239,10 +242,11 @@ def test_issue4903():
     nlp.add_pipe("sentencizer")
     nlp.add_pipe("my_pipe", after="sentencizer")
     text = ["I like bananas.", "Do you like them?", "No, I prefer wasabi."]
-    docs = list(nlp.pipe(text, n_process=2))
-    assert docs[0].text == "I like bananas."
-    assert docs[1].text == "Do you like them?"
-    assert docs[2].text == "No, I prefer wasabi."
+    if isinstance(get_current_ops(), NumpyOps):
+        docs = list(nlp.pipe(text, n_process=2))
+        assert docs[0].text == "I like bananas."
+        assert docs[1].text == "Do you like them?"
+        assert docs[2].text == "No, I prefer wasabi."
 
 
 def test_issue4924():

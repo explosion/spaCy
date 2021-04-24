@@ -223,7 +223,7 @@ cdef class StringStore:
             it doesn't exist. Paths may be either strings or Path-like objects.
         """
         path = util.ensure_path(path)
-        strings = list(self)
+        strings = sorted(self)
         srsly.write_json(path, strings)
 
     def from_disk(self, path):
@@ -247,7 +247,7 @@ cdef class StringStore:
 
         RETURNS (bytes): The serialized form of the `StringStore` object.
         """
-        return srsly.json_dumps(list(self))
+        return srsly.json_dumps(sorted(self))
 
     def from_bytes(self, bytes_data, **kwargs):
         """Load state from a binary string.

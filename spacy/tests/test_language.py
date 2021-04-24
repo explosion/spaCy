@@ -10,6 +10,7 @@ from spacy.lang.en import English
 from spacy.lang.de import German
 from spacy.util import registry, ignore_error, raise_error
 import spacy
+from thinc.api import NumpyOps, get_current_ops
 
 from .util import add_vecs_to_vocab, assert_docs_equal
 
@@ -142,25 +143,29 @@ def texts():
 
 @pytest.mark.parametrize("n_process", [1, 2])
 def test_language_pipe(nlp2, n_process, texts):
-    texts = texts * 10
-    expecteds = [nlp2(text) for text in texts]
-    docs = nlp2.pipe(texts, n_process=n_process, batch_size=2)
+    ops = get_current_ops()
+    if isinstance(ops, NumpyOps) or n_process < 2:
+        texts = texts * 10
+        expecteds = [nlp2(text) for text in texts]
+        docs = nlp2.pipe(texts, n_process=n_process, batch_size=2)
 
-    for doc, expected_doc in zip(docs, expecteds):
-        assert_docs_equal(doc, expected_doc)
+        for doc, expected_doc in zip(docs, expecteds):
+            assert_docs_equal(doc, expected_doc)
 
 
 @pytest.mark.parametrize("n_process", [1, 2])
 def test_language_pipe_stream(nlp2, n_process, texts):
-    # check if nlp.pipe can handle infinite length iterator properly.
-    stream_texts = itertools.cycle(texts)
-    texts0, texts1 = itertools.tee(stream_texts)
-    expecteds = (nlp2(text) for text in texts0)
-    docs = nlp2.pipe(texts1, n_process=n_process, batch_size=2)
+    ops = get_current_ops()
+    if isinstance(ops, NumpyOps) or n_process < 2:
+        # check if nlp.pipe can handle infinite length iterator properly.
+        stream_texts = itertools.cycle(texts)
+        texts0, texts1 = itertools.tee(stream_texts)
+        expecteds = (nlp2(text) for text in texts0)
+        docs = nlp2.pipe(texts1, n_process=n_process, batch_size=2)
 
-    n_fetch = 20
-    for doc, expected_doc in itertools.islice(zip(docs, expecteds), n_fetch):
-        assert_docs_equal(doc, expected_doc)
+        n_fetch = 20
+        for doc, expected_doc in itertools.islice(zip(docs, expecteds), n_fetch):
+            assert_docs_equal(doc, expected_doc)
 
 
 def test_language_pipe_error_handler():

@@ -1,7 +1,7 @@
 import pytest
 import random
 import numpy.random
-from numpy.testing import assert_equal
+from numpy.testing import assert_almost_equal
 from thinc.api import fix_random_seed
 from spacy import util
 from spacy.lang.en import English
@@ -222,8 +222,12 @@ def test_overfitting_IO():
     batch_cats_1 = [doc.cats for doc in nlp.pipe(texts)]
     batch_cats_2 = [doc.cats for doc in nlp.pipe(texts)]
     no_batch_cats = [doc.cats for doc in [nlp(text) for text in texts]]
-    assert_equal(batch_cats_1, batch_cats_2)
-    assert_equal(batch_cats_1, no_batch_cats)
+    for cats_1, cats_2 in zip(batch_cats_1, batch_cats_2):
+        for cat in cats_1:
+            assert_almost_equal(cats_1[cat], cats_2[cat], decimal=5)
+    for cats_1, cats_2 in zip(batch_cats_1, no_batch_cats):
+        for cat in cats_1:
+            assert_almost_equal(cats_1[cat], cats_2[cat], decimal=5)
 
 
 def test_overfitting_IO_multi():
@@ -270,8 +274,12 @@ def test_overfitting_IO_multi():
     batch_deps_1 = [doc.cats for doc in nlp.pipe(texts)]
     batch_deps_2 = [doc.cats for doc in nlp.pipe(texts)]
     no_batch_deps = [doc.cats for doc in [nlp(text) for text in texts]]
-    assert_equal(batch_deps_1, batch_deps_2)
-    assert_equal(batch_deps_1, no_batch_deps)
+    for cats_1, cats_2 in zip(batch_deps_1, batch_deps_2):
+        for cat in cats_1:
+            assert_almost_equal(cats_1[cat], cats_2[cat], decimal=5)
+    for cats_1, cats_2 in zip(batch_deps_1, no_batch_deps):
+        for cat in cats_1:
+            assert_almost_equal(cats_1[cat], cats_2[cat], decimal=5)
 
 
 # fmt: off

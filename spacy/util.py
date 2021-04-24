@@ -36,7 +36,7 @@ except ImportError:
 try:  # Python 3.8
     import importlib.metadata as importlib_metadata
 except ImportError:
-    import importlib_metadata
+    from catalogue import _importlib_metadata as importlib_metadata
 
 # These are functions that were previously (v2.x) available from spacy.util
 # and have since moved to Thinc. We're importing them here so people's code
@@ -1526,3 +1526,18 @@ def check_lexeme_norms(vocab, component_name):
     if len(lexeme_norms) == 0 and vocab.lang in LEXEME_NORM_LANGS:
         langs = ", ".join(LEXEME_NORM_LANGS)
         logger.debug(Warnings.W033.format(model=component_name, langs=langs))
+
+
+def to_ternary_int(val) -> int:
+    """Convert a value to the ternary 1/0/-1 int used for True/None/False in
+    attributes such as SENT_START: True/1/1.0 is 1 (True), None/0/0.0 is 0
+    (None), any other values are -1 (False).
+    """
+    if isinstance(val, float):
+        val = int(val)
+    if val is True or val is 1:
+        return 1
+    elif val is None or val is 0:
+        return 0
+    else:
+        return -1

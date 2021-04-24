@@ -31,7 +31,7 @@ def get_tok2vec_width(model: Model):
     return nO
 
 
-@registry.architectures("spacy.HashEmbedCNN.v1")
+@registry.architectures("spacy.HashEmbedCNN.v2")
 def build_hash_embed_cnn_tok2vec(
     *,
     width: int,
@@ -108,7 +108,7 @@ def build_Tok2Vec_model(
     return tok2vec
 
 
-@registry.architectures("spacy.MultiHashEmbed.v1")
+@registry.architectures("spacy.MultiHashEmbed.v2")
 def MultiHashEmbed(
     width: int,
     attrs: List[Union[str, int]],
@@ -182,7 +182,7 @@ def MultiHashEmbed(
     return model
 
 
-@registry.architectures("spacy.CharacterEmbed.v1")
+@registry.architectures("spacy.CharacterEmbed.v2")
 def CharacterEmbed(
     width: int,
     rows: int,

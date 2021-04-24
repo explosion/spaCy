@@ -29,8 +29,8 @@ recommended settings for your use case, check out the
 >
 > The `@` syntax lets you refer to function names registered in the
 > [function registry](/api/top-level#registry). For example,
-> `@architectures = "spacy.HashEmbedCNN.v1"` refers to a registered function of
-> the name [spacy.HashEmbedCNN.v1](/api/architectures#HashEmbedCNN) and all
+> `@architectures = "spacy.HashEmbedCNN.v2"` refers to a registered function of
+> the name [spacy.HashEmbedCNN.v2](/api/architectures#HashEmbedCNN) and all
 > other values defined in its block will be passed into that function as
 > arguments. Those arguments depend on the registered function. See the usage
 > guide on [registered functions](/usage/training#config-functions) for details.
@@ -193,10 +193,10 @@ process that are used when you run [`spacy train`](/api/cli#train).
 | `frozen_components`   | Pipeline component names that are "frozen" and shouldn't be initialized or updated during training. See [here](/usage/training#config-components) for details. Defaults to `[]`. ~~List[str]~~                                                                                                                                      |
 | `gpu_allocator`       | Library for cupy to route GPU memory allocation to. Can be `"pytorch"` or `"tensorflow"`. Defaults to variable `${system.gpu_allocator}`. ~~str~~                                                                                                                                                                                   |
 | `logger`              | Callable that takes the `nlp` and stdout and stderr `IO` objects, sets up the logger, and returns two new callables to log a training step and to finalize the logger. Defaults to [`ConsoleLogger`](/api/top-level#ConsoleLogger). ~~Callable[[Language, IO, IO], [Tuple[Callable[[Dict[str, Any]], None], Callable[[], None]]]]~~ |
-| `max_epochs`          | Maximum number of epochs to train for. Defaults to `0`. ~~int~~                                                                                                                                                                                                                                                                     |
-| `max_steps`           | Maximum number of update steps to train for. Defaults to `20000`. ~~int~~                                                                                                                                                                                                                                                           |
+| `max_epochs`          | Maximum number of epochs to train for. `0` means an unlimited number of epochs. `-1` means that the train corpus should be streamed rather than loaded into memory with no shuffling within the training loop. Defaults to `0`. ~~int~~                                                                                             |
+| `max_steps`           | Maximum number of update steps to train for. `0` means an unlimited number of steps. Defaults to `20000`. ~~int~~                                                                                                                                                                                                                   |
 | `optimizer`           | The optimizer. The learning rate schedule and other settings can be configured as part of the optimizer. Defaults to [`Adam`](https://thinc.ai/docs/api-optimizers#adam). ~~Optimizer~~                                                                                                                                             |
-| `patience`            | How many steps to continue without improvement in evaluation score. Defaults to `1600`. ~~int~~                                                                                                                                                                                                                                     |
+| `patience`            | How many steps to continue without improvement in evaluation score. `0` disables early stopping. Defaults to `1600`. ~~int~~                                                                                                                                                                                                        |
 | `score_weights`       | Score names shown in metrics mapped to their weight towards the final weighted score. See [here](/usage/training#metrics) for details. Defaults to `{}`. ~~Dict[str, float]~~                                                                                                                                                       |
 | `seed`                | The random seed. Defaults to variable `${system.seed}`. ~~int~~                                                                                                                                                                                                                                                                     |
 | `train_corpus`        | Dot notation of the config location defining the train corpus. Defaults to `corpora.train`. ~~str~~                                                                                                                                                                                                                                 |
@@ -390,7 +390,7 @@ file to keep track of your settings and hyperparameters and your own
 >    "tags": List[str],
 >    "pos": List[str],
 >    "morphs": List[str],
->    "sent_starts": List[bool],
+>    "sent_starts": List[Optional[bool]],
 >    "deps": List[string],
 >    "heads": List[int],
 >    "entities": List[str],

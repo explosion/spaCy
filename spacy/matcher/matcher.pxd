@@ -46,6 +46,12 @@ cdef struct TokenPatternC:
     int32_t nr_py
     quantifier_t quantifier
     hash_t key
+    int32_t token_idx
+
+
+cdef struct MatchAlignmentC:
+    int32_t token_idx
+    int32_t length
 
 
 cdef struct PatternStateC:

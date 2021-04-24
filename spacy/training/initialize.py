@@ -8,6 +8,7 @@ import tarfile
 import gzip
 import zipfile
 import tqdm
+from itertools import islice
 
 from .pretrain import get_tok2vec_ref
 from ..lookups import Lookups
@@ -68,7 +69,11 @@ def init_nlp(config: Config, *, use_gpu: int = -1) -> "Language":
     # Make sure that listeners are defined before initializing further
     nlp._link_components()
     with nlp.select_pipes(disable=[*frozen_components, *resume_components]):
-        nlp.initialize(lambda: train_corpus(nlp), sgd=optimizer)
+        if T["max_epochs"] == -1:
+            logger.debug("Due to streamed train corpus, using only first 100 examples for initialization. If necessary, provide all labels in [initialize]. More info: https://spacy.io/api/cli#init_labels")
+            nlp.initialize(lambda: islice(train_corpus(nlp), 100), sgd=optimizer)
+        else:
+            nlp.initialize(lambda: train_corpus(nlp), sgd=optimizer)
         logger.info(f"Initialized pipeline components: {nlp.pipe_names}")
     # Detect components with listeners that are not frozen consistently
     for name, proc in nlp.pipeline:
@@ -133,6 +138,10 @@ def load_vectors_into_model(
         )
         err = ConfigValidationError.from_error(e, title=title, desc=desc)
         raise err from None
+
+    if len(vectors_nlp.vocab.vectors.keys()) == 0:
+        logger.warning(Warnings.W112.format(name=name))
+
     nlp.vocab.vectors = vectors_nlp.vocab.vectors
     if add_strings:
         # I guess we should add the strings from the vectors_nlp model?

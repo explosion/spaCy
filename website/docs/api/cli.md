@@ -12,6 +12,7 @@ menu:
   - ['train', 'train']
   - ['pretrain', 'pretrain']
   - ['evaluate', 'evaluate']
+  - ['assemble', 'assemble']
   - ['package', 'package']
   - ['project', 'project']
   - ['ray', 'ray']
@@ -891,6 +892,34 @@ $ python -m spacy evaluate [model] [data_path] [--output] [--code] [--gold-prepr
 | `--displacy-limit`, `-dl`                 | Number of parses to generate per file. Defaults to `25`. Keep in mind that a significantly higher number might cause the `.html` files to render slowly. ~~int (option)~~            |
 | `--help`, `-h`                            | Show help message and available arguments. ~~bool (flag)~~                                                                                                                           |
 | **CREATES**                               | Training results and optional metrics and visualizations.                                                                                                                            |
+
+## assemble {#assemble tag="command"}
+
+Assemble a pipeline from a config file without additional training. Expects a
+[config file](/api/data-formats#config) with all settings and hyperparameters.
+The `--code` argument can be used to import a Python file that lets you register
+[custom functions](/usage/training#custom-functions) and refer to them in your
+config.
+
+> #### Example
+>
+> ```cli
+> $ python -m spacy assemble config.cfg ./output
+> ```
+
+```cli
+$ python -m spacy assemble [config_path] [output_dir] [--code] [--verbose] [overrides]
+```
+
+| Name              | Description                                                                                                                                                                                                   |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `config_path`     | Path to the [config](/api/data-formats#config) file containing all settings and hyperparameters. If `-`, the data will be [read from stdin](/usage/training#config-stdin). ~~Union[Path, str] \(positional)~~ |
+| `output_dir`      | Directory to store the final pipeline in. Will be created if it doesn't exist. ~~Optional[Path] \(option)~~                                                                                                   |
+| `--code`, `-c`    | Path to Python file with additional code to be imported. Allows [registering custom functions](/usage/training#custom-functions). ~~Optional[Path] \(option)~~                                                |
+| `--verbose`, `-V` | Show more detailed messages during processing. ~~bool (flag)~~                                                                                                                                                |
+| `--help`, `-h`    | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                                    |
+| overrides         | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--paths.data ./data`. ~~Any (option/flag)~~                            |
+| **CREATES**       | The final assembled pipeline.                                                                                                                                                                                 |
 
 ## package {#package tag="command"}
 

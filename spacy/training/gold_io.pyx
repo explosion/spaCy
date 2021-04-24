@@ -121,7 +121,7 @@ def json_to_annotations(doc):
                 if i == 0:
                     sent_starts.append(1)
                 else:
-                    sent_starts.append(0)
+                    sent_starts.append(-1)
             if "brackets" in sent:
                 brackets.extend((b["first"] + sent_start_i,
                                  b["last"] + sent_start_i, b["label"])

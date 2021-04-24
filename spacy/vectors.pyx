@@ -55,7 +55,7 @@ cdef class Vectors:
         """Create a new vector store.
 
         shape (tuple): Size of the table, as (# entries, # columns)
-        data (numpy.ndarray): The vector data.
+        data (numpy.ndarray or cupy.ndarray): The vector data.
         keys (iterable): A sequence of keys, aligned with the data.
         name (str): A name to identify the vectors table.
 
@@ -65,7 +65,8 @@ cdef class Vectors:
         if data is None:
             if shape is None:
                 shape = (0,0)
-            data = numpy.zeros(shape, dtype="f")
+            ops = get_current_ops()
+            data = ops.xp.zeros(shape, dtype="f")
         self.data = data
         self.key2row = {}
         if self.data is not None:
@@ -300,6 +301,8 @@ cdef class Vectors:
         else:
             raise ValueError(Errors.E197.format(row=row, key=key))
         if vector is not None:
+            xp = get_array_module(self.data)
+            vector = xp.asarray(vector)
             self.data[row] = vector
         if self._unset.count(row):
             self._unset.erase(self._unset.find(row))
@@ -321,10 +324,11 @@ cdef class Vectors:
         RETURNS (tuple): The most similar entries as a `(keys, best_rows, scores)`
             tuple.
         """
+        xp = get_array_module(self.data)
         filled = sorted(list({row for row in self.key2row.values()}))
         if len(filled) < n:
             raise ValueError(Errors.E198.format(n=n, n_rows=len(filled)))
-        xp = get_array_module(self.data)
+        filled = xp.asarray(filled)
 
         norms = xp.linalg.norm(self.data[filled], axis=1, keepdims=True)
         norms[norms == 0] = 1
@@ -357,8 +361,10 @@ cdef class Vectors:
         # Account for numerical error we want to return in range -1, 1
         scores = xp.clip(scores, a_min=-1, a_max=1, out=scores)
         row2key = {row: key for key, row in self.key2row.items()}
+
+        numpy_rows = get_current_ops().to_numpy(best_rows)
         keys = xp.asarray(
-            [[row2key[row] for row in best_rows[i] if row in row2key]
+            [[row2key[row] for row in numpy_rows[i] if row in row2key]
                     for i in range(len(queries)) ], dtype="uint64")
         return (keys, best_rows, scores)
 
@@ -459,7 +465,8 @@ cdef class Vectors:
             if hasattr(self.data, "from_bytes"):
                 self.data.from_bytes()
             else:
-                self.data = srsly.msgpack_loads(b)
+                xp = get_array_module(self.data)
+                self.data = xp.asarray(srsly.msgpack_loads(b))
 
         deserializers = {
             "key2row": lambda b: self.key2row.update(srsly.msgpack_loads(b)),
