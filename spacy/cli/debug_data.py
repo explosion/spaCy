@@ -171,7 +171,7 @@ def debug_data(
         )
         n_missing_vectors = sum(gold_train_data["words_missing_vectors"].values())
         msg.warn(
-            "{} words in training data without vectors ({:0.2f}%)".format(
+            "{} words in training data without vectors ({:.0f}%)".format(
                 n_missing_vectors, 100 * (n_missing_vectors / gold_train_data["n_words"])
             ),
         )
