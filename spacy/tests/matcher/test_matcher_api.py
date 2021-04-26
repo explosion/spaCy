@@ -42,6 +42,19 @@ def test_matcher_empty_patterns_warns(en_vocab):
     assert len(doc.ents) == 0
 
 
+def test_matcher_empty_patterns_warns_once(en_vocab):
+    matcher = Matcher(en_vocab)
+    assert len(matcher) == 0
+    doc = Doc(en_vocab, words=["This", "is", "quite", "something"])
+    with pytest.warns(UserWarning) as record:
+        matcher(doc)
+        matcher(doc)
+        matcher(doc)
+    assert len(doc.ents) == 0
+    # TODO: restrict to warning just once
+    assert len(record) == 3
+
+
 def test_matcher_from_usage_docs(en_vocab):
     text = "Wow 😀 This is really cool! 😂 😂"
     doc = Doc(en_vocab, words=text.split(" "))
