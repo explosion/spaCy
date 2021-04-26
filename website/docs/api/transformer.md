@@ -245,14 +245,14 @@ and call the optimizer, while the others simply increment the gradients.
 > losses = trf.update(examples, sgd=optimizer)
 > ```
 
-| Name              | Description                                                                                                                                                                      |
-| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `examples`        | A batch of [`Example`](/api/example) objects. Only the [`Example.predicted`](/api/example#predicted) `Doc` object is used, the reference `Doc` is ignored. ~~Iterable[Example]~~ |
-| _keyword-only_    |                                                                                                                                                                                  |
-| `drop`            | The dropout rate. ~~float~~                                                                                                                                                      |
-| `sgd`             | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~                                                                    |
-| `losses`          | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~                                                         |
-| **RETURNS**       | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                                                                            |
+| Name           | Description                                                                                                                                                                      |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `examples`     | A batch of [`Example`](/api/example) objects. Only the [`Example.predicted`](/api/example#predicted) `Doc` object is used, the reference `Doc` is ignored. ~~Iterable[Example]~~ |
+| _keyword-only_ |                                                                                                                                                                                  |
+| `drop`         | The dropout rate. ~~float~~                                                                                                                                                      |
+| `sgd`          | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~                                                                    |
+| `losses`       | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~                                                         |
+| **RETURNS**    | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                                                                            |
 
 ## Transformer.create_optimizer {#create_optimizer tag="method"}
 
@@ -492,6 +492,11 @@ This requires sentence boundaries to be set (e.g. by the
 [`Sentencizer`](/api/sentencizer)), and may result in somewhat uneven batches,
 depending on the sentence lengths. However, it does provide the transformer with
 more meaningful windows to attend over.
+
+To set sentence boundaries with the `sentencizer` during training, add a
+`sentencizer` to the beginning of the pipeline and include it in
+[`[training.annotating_components]`](/usage/training#annotating-components) to
+have it set the sentence boundaries before the `transformer` component runs.
 
 ### strided_spans.v1 {#strided_spans tag="registered function"}
 
