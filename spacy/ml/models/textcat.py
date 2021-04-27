@@ -5,9 +5,8 @@ from thinc.types import Floats2d
 from thinc.api import Model, reduce_mean, Linear, list2ragged, Logistic
 from thinc.api import chain, concatenate, clone, Dropout, ParametricAttention
 from thinc.api import SparseLinear, Softmax, softmax_activation, Maxout, reduce_sum
-from thinc.api import with_cpu, Relu, residual, LayerNorm, resizable
+from thinc.api import with_cpu, Relu, residual, LayerNorm
 from thinc.layers.chain import init as init_chain
-from thinc.layers.resizable import resize
 
 from ...attrs import ORTH
 from ...util import registry
@@ -33,18 +32,15 @@ def build_simple_cnn_text_classifier(
         cnn = tok2vec >> list2ragged() >> reduce_mean()
         nI = tok2vec.maybe_get_dim("nO")
         if exclusive_classes:
-            output_layer_creation = partial(Softmax, nO=nO, nI=nI)
-            output_layer = resizable(output_layer_creation)
+            output_layer = Softmax(nO=nO, nI=nI)
             model = cnn >> output_layer
             model.attrs["activation"] = "softmax"
         else:
-            output_layer_creation = partial(Linear, nO=nO, nI=nI)
-            output_layer = resizable(output_layer_creation)
+            output_layer = Linear(nO=nO, nI=nI)
             model = cnn >> output_layer >> Logistic()
             model.attrs["activation"] = "linear"
         model.set_ref("output_layer", output_layer)
-        model.attrs["activation"] = "softmax"
-        model.attrs["resize_output"] = partial(resize, resizable_layer=output_layer)
+        model.attrs["resize_output"] = partial(resize_layer, layer=output_layer)
     model.set_ref("tok2vec", tok2vec)
     model.set_dim("nO", nO)
     model.attrs["multi_label"] = not exclusive_classes
@@ -59,8 +55,7 @@ def build_bow_text_classifier(
     nO: Optional[int] = None,
 ) -> Model[List[Doc], Floats2d]:
     with Model.define_operators({">>": chain}):
-        output_layer_creation = partial(SparseLinear, nO=nO)
-        sparse_linear = resizable(output_layer_creation)
+        sparse_linear = SparseLinear(nO=nO)
         model = extract_ngrams(ngram_size, attr=ORTH) >> sparse_linear
         model = with_cpu(model, model.ops)
         activation = "linear"
@@ -76,7 +71,7 @@ def build_bow_text_classifier(
     model.set_ref("output_layer", sparse_linear)
     model.attrs["multi_label"] = not exclusive_classes
     model.attrs["activation"] = activation
-    model.attrs["resize_output"] = partial(resize, resizable_layer=sparse_linear)
+    model.attrs["resize_output"] = partial(resize_layer, layer=sparse_linear)
     return model
 
 
@@ -127,6 +122,40 @@ def init_ensemble_textcat(model, X, Y) -> Model:
     model.get_ref("norm_layer").set_dim("nI", tok2vec_width)
     model.get_ref("norm_layer").set_dim("nO", tok2vec_width)
     init_chain(model, X, Y)
+    return model
+
+
+def resize_layer(model, new_nO, layer):
+    if layer.has_dim("nO") is None:
+        # the output layer had not been initialized/trained yet
+        layer.set_dim("nO", new_nO)
+        return model
+    elif new_nO == layer.get_dim("nO"):
+        # the output dimension didn't change
+        return model
+
+    if layer.has_param("W"):
+        smaller_W = layer.get_param("W")
+        smaller_b = layer.get_param("b")
+        larger_W_shape = list(smaller_W.shape)
+        larger_W_shape[0] = new_nO * layer.get_dim("length") if layer.has_dim("length") else new_nO
+        larger_b_shape = list(smaller_b.shape)
+        larger_b_shape[0] = new_nO
+        larger_W = layer.ops.alloc(tuple(larger_W_shape), dtype="f")
+        larger_b = layer.ops.alloc(tuple(larger_b_shape), dtype="f")
+        larger_W[: len(smaller_W)] = smaller_W
+        larger_b[: len(smaller_b)] = smaller_b
+        # TODO: RELU instead
+        if "activation" in model.attrs and model.attrs["activation"] in [
+            "softmax",
+            "logistic",
+        ]:
+            # ensure little influence on the softmax/logistic activation
+            larger_b[len(smaller_b):] = NEG_VALUE
+        layer.set_param("W", larger_W)
+        layer.set_param("b", larger_b)
+    layer.set_dim("nO", new_nO, force=True)
+    model.set_dim("nO", new_nO, force=True)
     return model
 
 
