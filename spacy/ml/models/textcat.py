@@ -5,8 +5,9 @@ from thinc.types import Floats2d
 from thinc.api import Model, reduce_mean, Linear, list2ragged, Logistic
 from thinc.api import chain, concatenate, clone, Dropout, ParametricAttention
 from thinc.api import SparseLinear, Softmax, softmax_activation, Maxout, reduce_sum
-from thinc.api import with_cpu, Relu, residual, LayerNorm
+from thinc.api import with_cpu, Relu, residual, LayerNorm, resizable
 from thinc.layers.chain import init as init_chain
+from thinc.layers.resizable import resize
 
 from ...attrs import ORTH
 from ...util import registry
@@ -32,22 +33,18 @@ def build_simple_cnn_text_classifier(
         cnn = tok2vec >> list2ragged() >> reduce_mean()
         nI = tok2vec.maybe_get_dim("nO")
         if exclusive_classes:
-            output_layer = Softmax(nO=nO, nI=nI)
+            output_layer_creation = partial(Softmax, nO=nO, nI=nI)
+            output_layer = resizable(output_layer_creation)
             model = cnn >> output_layer
-            model.set_ref("output_layer", output_layer)
             model.attrs["activation"] = "softmax"
-            model.attrs["resize_output"] = partial(
-                _resize_layer, layer=output_layer
-            )
         else:
-            linear_layer = Linear(nO=nO, nI=tok2vec.maybe_get_dim("nO"))
-            model = cnn >> linear_layer >> Logistic()
-            model.set_ref("output_layer", linear_layer)
+            output_layer_creation = partial(Linear, nO=nO, nI=nI)
+            output_layer = resizable(output_layer_creation)
+            model = cnn >> output_layer >> Logistic()
             model.attrs["activation"] = "linear"
-            model.attrs["resize_output"] = partial(
-                _resize_layer, layer=linear_layer
-            )
-
+        model.set_ref("output_layer", output_layer)
+        model.attrs["activation"] = "softmax"
+        model.attrs["resize_output"] = partial(resize, resizable_layer=output_layer)
     model.set_ref("tok2vec", tok2vec)
     model.set_dim("nO", nO)
     model.attrs["multi_label"] = not exclusive_classes
@@ -62,7 +59,8 @@ def build_bow_text_classifier(
     nO: Optional[int] = None,
 ) -> Model[List[Doc], Floats2d]:
     with Model.define_operators({">>": chain}):
-        sparse_linear = SparseLinear(nO)
+        output_layer_creation = partial(SparseLinear, nO=nO)
+        sparse_linear = resizable(output_layer_creation)
         model = extract_ngrams(ngram_size, attr=ORTH) >> sparse_linear
         model = with_cpu(model, model.ops)
         activation = "linear"
@@ -78,7 +76,7 @@ def build_bow_text_classifier(
     model.set_ref("output_layer", sparse_linear)
     model.attrs["multi_label"] = not exclusive_classes
     model.attrs["activation"] = activation
-    model.attrs["resize_output"] = partial(_resize_bow, layer=sparse_linear)
+    model.attrs["resize_output"] = partial(resize, resizable_layer=sparse_linear)
     return model
 
 
@@ -95,11 +93,11 @@ def build_text_classifier_v2(
         maxout_layer = Maxout(nO=width, nI=width)
         norm_layer = LayerNorm(nI=width)
         cnn_model = (
-                tok2vec
-                >> list2ragged()
-                >> attention_layer
-                >> reduce_sum()
-                >> residual(maxout_layer >> norm_layer >> Dropout(0.0))
+            tok2vec
+            >> list2ragged()
+            >> attention_layer
+            >> reduce_sum()
+            >> residual(maxout_layer >> norm_layer >> Dropout(0.0))
         )
 
         nO_double = nO * 2 if nO else None
@@ -118,113 +116,6 @@ def build_text_classifier_v2(
     model.attrs["multi_label"] = not exclusive_classes
 
     model.init = init_ensemble_textcat
-    return model
-
-
-def _to_resize(new_nO, layer):
-    if layer.has_dim("nO") is None:
-        # the output layer had not been initialized/trained yet
-        layer.set_dim("nO", new_nO)
-        return False
-    elif new_nO == layer.get_dim("nO"):
-        # the output dimension didn't change
-        return False
-    return True
-
-
-def _resize_bow(model, new_nO, layer):
-    """ Resize a BOW output layer (using SparseLinear) in-place"""
-    if not _to_resize(new_nO, layer):
-        return model
-    length = layer.get_dim("length")
-    old_nO = layer.get_dim("nO")
-    assert new_nO > old_nO
-    if layer.has_param("W"):
-        larger_W = layer.ops.alloc1f(new_nO * length)
-        larger_b = layer.ops.alloc1f(new_nO)
-        smaller_W = layer.get_param("W")
-        smaller_b = layer.get_param("b")
-        larger_W[:old_nO*length] = smaller_W
-        larger_b[:old_nO] = smaller_b
-        if "activation" in model.attrs and model.attrs["activation"] in ["softmax", "logistic"]:
-            # ensure little influence on the softmax/logistic activation
-            larger_b[old_nO:] = NEG_VALUE
-        layer.set_param("W", larger_W)
-        layer.set_param("b", larger_b)
-    layer.set_dim("nO", new_nO, force=True)
-    model.set_dim("nO", new_nO, force=True)
-    return model
-
-
-def _resize_layer(model, new_nO, layer):
-    """ Resize a typical layer with 2D W and 1D b parameters"""
-    if not _to_resize(new_nO, layer):
-        return model
-    old_nO = layer.get_dim("nO")
-    assert new_nO > old_nO
-    if layer.has_param("b"):
-        larger_b = layer.ops.alloc1f(new_nO)
-        smaller_b = layer.get_param("b")
-        larger_b[:old_nO] = smaller_b
-        if "activation" in model.attrs and model.attrs["activation"] in ["softmax", "logistic"]:
-            # ensure little influence on the softmax/logistic activation
-            larger_b[old_nO:] = NEG_VALUE
-        layer.set_param("b", larger_b)
-    if layer.has_param("W"):
-        larger_W = layer.ops.alloc2f(new_nO, layer.get_dim("nI"))
-        smaller_W = layer.get_param("W")
-        # Copy the old weights into the new weight tensor
-        larger_W[:old_nO] = smaller_W
-        layer.set_param("W", larger_W)
-    layer.set_dim("nO", new_nO, force=True)
-    model.set_dim("nO", new_nO, force=True)
-    return model
-
-
-def _resize_ensemble(model, new_nO, layer, linear_model, linear_input, cnn_model, cnn_input):
-    """ Resize an ensemble layer and its two input layers in-place"""
-    if not _to_resize(new_nO, layer):
-        return model
-    # resize the two input layers and the new output layer
-    _resize_bow(linear_model, new_nO, linear_input)
-    _resize_layer(cnn_model, new_nO, cnn_input)
-    return _resize_concatting_layer(model, new_nO, layer, input_layers=2)
-
-
-def _resize_concatting_layer(model, new_nO, layer, input_layers):
-    """ Resize a concatting layer with 2D W and 1D b parameters"""
-    if not _to_resize(new_nO, layer):
-        return model
-    old_nO = layer.get_dim("nO")
-    assert new_nO > old_nO
-    if layer.has_param("b"):
-        larger_b = layer.ops.alloc1f(new_nO)
-        smaller_b = layer.get_param("b")
-        larger_b[:old_nO] = smaller_b
-        if "activation" in model.attrs and model.attrs["activation"] in ["softmax", "logistic"]:
-            # ensure little influence on the softmax/logistic activation
-            larger_b[old_nO:] = NEG_VALUE
-        layer.set_param("b", larger_b)
-
-    if layer.has_param("W"):
-        old_nI = layer.get_dim("nI")
-        new_nI = new_nO * input_layers
-        old_input_nI = int(old_nI / input_layers)
-        new_input_nI = int(new_nI / input_layers)
-        assert new_nI >= old_nI
-        larger_W = layer.ops.alloc2f(new_nO, new_nI)
-        smaller_W = layer.get_param("W")
-        # Copy the old weights into the new weight tensor, block by block
-        input_offset = 0
-        output_offset = 0
-        for _ in range(input_layers):
-            larger_W[0:old_nO,output_offset:output_offset+old_input_nI] = smaller_W[:,input_offset:input_offset+old_input_nI]
-            input_offset += old_input_nI
-            output_offset += new_input_nI
-        layer.set_param("W", larger_W)
-        layer.set_dim("nI", new_nI, force=True)
-    layer.set_dim("nO", new_nO, force=True)
-    model.set_dim("nO", new_nO, force=True)
     return model
 
 
