@@ -82,8 +82,8 @@ def build_bow_text_classifier(
     return model
 
 
-@registry.architectures("spacy.TextCatEnsemble.v3")
-def build_text_classifier_v3(
+@registry.architectures("spacy.TextCatEnsemble.v2")
+def build_text_classifier_v2(
     tok2vec: Model[List[Doc], List[Floats2d]],
     linear_model: Model[List[Doc], Floats2d],
     nO: Optional[int] = None,
@@ -94,26 +94,20 @@ def build_text_classifier_v3(
         attention_layer = ParametricAttention(width)
         maxout_layer = Maxout(nO=width, nI=width)
         norm_layer = LayerNorm(nI=width)
-        cnn_output_layer = Linear(nO=nO, nI=width)
         cnn_model = (
-            tok2vec
-            >> list2ragged()
-            >> attention_layer
-            >> reduce_sum()
-            >> residual(maxout_layer >> norm_layer >> Dropout(0.0))
-            >> cnn_output_layer
+                tok2vec
+                >> list2ragged()
+                >> attention_layer
+                >> reduce_sum()
+                >> residual(maxout_layer >> norm_layer >> Dropout(0.0))
         )
-        cnn_model.attrs["activation"] = "linear"
 
         nO_double = nO * 2 if nO else None
         if exclusive_classes:
             output_layer = Softmax(nO=nO, nI=nO_double)
-            model = (linear_model | cnn_model) >> output_layer
-            model.attrs["activation"] = "softmax"
         else:
-            output_layer = Linear(nO=nO, nI=nO_double)
-            model = (linear_model | cnn_model) >> output_layer >> Logistic()
-            model.attrs["activation"] = "logistic"
+            output_layer = Linear(nO=nO, nI=nO_double) >> Logistic()
+        model = (linear_model | cnn_model) >> output_layer
         model.set_ref("tok2vec", tok2vec)
     if model.has_dim("nO") is not False:
         model.set_dim("nO", nO)
@@ -122,15 +116,7 @@ def build_text_classifier_v3(
     model.set_ref("maxout_layer", maxout_layer)
     model.set_ref("norm_layer", norm_layer)
     model.attrs["multi_label"] = not exclusive_classes
-    linear_output_layer = linear_model.get_ref("output_layer")
-    model.attrs["resize_output"] = partial(
-        _resize_ensemble,
-        layer=output_layer,
-        linear_model=linear_model,
-        linear_input=linear_output_layer,
-        cnn_model=cnn_model,
-        cnn_input=cnn_output_layer,
-    )
+
     model.init = init_ensemble_textcat
     return model
 

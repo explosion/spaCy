@@ -600,13 +600,13 @@ single-label use-cases where `exclusive_classes = true`, while the
 
 </Infobox>
 
-### spacy.TextCatEnsemble.v3 {#TextCatEnsemble}
+### spacy.TextCatEnsemble.v2 {#TextCatEnsemble}
 
 > #### Example Config
 >
 > ```ini
 > [model]
-> @architectures = "spacy.TextCatEnsemble.v3"
+> @architectures = "spacy.TextCatEnsemble.v2"
 > nO = null
 >
 > [model.linear_model]
@@ -644,13 +644,6 @@ from the linear model, where it is stored in `model.attrs["multi_label"]`.
 | `tok2vec`      | The `tok2vec` layer to build the neural network upon. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                     |
 | `nO`           | Output dimension, determined by the number of different labels. If not set, the [`TextCategorizer`](/api/textcategorizer) component will set it when `initialize` is called. ~~Optional[int]~~ |
 | **CREATES**    | The model using the architecture. ~~Model[List[Doc], Floats2d]~~                                                                                                                               |
-
-<Accordion title="spacy.TextCatEnsemble.v2 definition" spaced>
-
-[TextCatEnsemble.v2](/api/legacy#TextCatEnsemble_v2) had the exact same signature, but was not yet resizable. 
-Since v3, new labels can be added to this component, even after training.
-
-</Accordion>
 
 <Accordion title="spacy.TextCatEnsemble.v1 definition" spaced>
 

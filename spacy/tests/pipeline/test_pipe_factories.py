@@ -159,7 +159,7 @@ def test_pipe_class_component_model():
     name = "test_class_component_model"
     default_config = {
         "model": {
-            "@architectures": "spacy.TextCatEnsemble.v3",
+            "@architectures": "spacy.TextCatEnsemble.v2",
             "tok2vec": DEFAULT_TOK2VEC_MODEL,
             "linear_model": {
                 "@architectures": "spacy.TextCatBOW.v2",

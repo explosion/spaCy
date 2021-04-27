@@ -130,7 +130,7 @@ factory = "textcat"
 labels = []
 
 [components.textcat.model]
-@architectures = "spacy.TextCatEnsemble.v3"
+@architectures = "spacy.TextCatEnsemble.v2"
 nO = null
 
 [components.textcat.model.tok2vec]

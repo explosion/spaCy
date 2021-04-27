@@ -15,7 +15,7 @@ from ..vocab import Vocab
 
 single_label_default_config = """
 [model]
-@architectures = "spacy.TextCatEnsemble.v3"
+@architectures = "spacy.TextCatEnsemble.v2"
 
 [model.tok2vec]
 @architectures = "spacy.Tok2Vec.v2"
