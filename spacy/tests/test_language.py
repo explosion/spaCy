@@ -168,8 +168,10 @@ def test_language_pipe_stream(nlp2, n_process, texts):
             assert_docs_equal(doc, expected_doc)
 
 
-def test_language_pipe_error_handler():
-    """Test that the error handling of nlp.pipe works well"""
+@pytest.mark.timeout(30)
+@pytest.mark.parametrize("n_process", [1, 2])
+def test_language_pipe_error_handler(n_process):
+    """Test that the error handling of nlp.pipe works well with and without multiprocessing"""
     nlp = English()
     nlp.add_pipe("merge_subtokens")
     nlp.initialize()
@@ -179,12 +181,15 @@ def test_language_pipe_error_handler():
         nlp(texts[0])
     with pytest.raises(ValueError):
         list(nlp.pipe(texts))
+        list(nlp.pipe(texts, n_process=n_process))
     nlp.set_error_handler(raise_error)
     with pytest.raises(ValueError):
         list(nlp.pipe(texts))
+        list(nlp.pipe(texts, n_process=n_process))
     # set explicitely to ignoring
     nlp.set_error_handler(ignore_error)
     docs = list(nlp.pipe(texts))
+    docs = list(nlp.pipe(texts, n_process=n_process))
     assert len(docs) == 0
     nlp(texts[0])
 
