@@ -1535,9 +1535,9 @@ def to_ternary_int(val) -> int:
     """
     if isinstance(val, float):
         val = int(val)
-    if val is True or val is 1:
+    if val is True or val == 1:
         return 1
-    elif val is None or val is 0:
+    elif val is None or val == 0:
         return 0
     else:
         return -1
