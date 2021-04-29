@@ -1533,11 +1533,15 @@ def to_ternary_int(val) -> int:
     attributes such as SENT_START: True/1/1.0 is 1 (True), None/0/0.0 is 0
     (None), any other values are -1 (False).
     """
-    if isinstance(val, float):
-        val = int(val)
-    if val is True or val is 1:
+    if val is True:
         return 1
-    elif val is None or val is 0:
+    elif val is None:
+        return 0
+    elif val is False:
+        return -1
+    elif val == 1:
+        return 1
+    elif val == 0:
         return 0
     else:
         return -1
