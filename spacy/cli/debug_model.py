@@ -1,5 +1,6 @@
 from typing import Dict, Any, Optional, Iterable
 from pathlib import Path
+import itertools
 
 from spacy.training import Example
 from spacy.util import resolve_dot_names
@@ -73,23 +74,24 @@ def debug_model_cli(
         msg.info(f"Fixing random seed: {seed}")
         fix_random_seed(seed)
     pipe = nlp.get_pipe(component)
-    if not hasattr(pipe, "model"):
-        msg.fail(
-            f"The component '{component}' does not specify an object that holds a Model.",
-            exits=1,
-        )
-    model = pipe.model
-    debug_model(config, T, nlp, model, print_settings=print_settings)
+
+    debug_model(config, T, nlp, pipe, print_settings=print_settings)
 
 
 def debug_model(
     config,
     resolved_train_config,
     nlp,
-    model: Model,
+    pipe,
     *,
     print_settings: Optional[Dict[str, Any]] = None,
 ):
+    if not hasattr(pipe, "model"):
+        msg.fail(
+            f"The component '{pipe}' does not specify an object that holds a Model.",
+            exits=1,
+        )
+    model = pipe.model
     if not isinstance(model, Model):
         msg.fail(
             f"Requires a Thinc Model to be analysed, but found {type(model)} instead.",
@@ -105,8 +107,6 @@ def debug_model(
         _print_model(model, print_settings)
 
     # STEP 1: Initializing the model and printing again
-    X = _get_docs()
-    # The output vector might differ from the official type of the output layer
     with data_validation(False):
         try:
             dot_names = [resolved_train_config["train_corpus"]]
@@ -114,15 +114,17 @@ def debug_model(
                 (train_corpus,) = resolve_dot_names(config, dot_names)
                 nlp.initialize(lambda: train_corpus(nlp))
             msg.info("Initialized the model with the training corpus.")
+            examples = list(itertools.islice(train_corpus(nlp), 5))
         except ValueError:
             try:
                 _set_output_dim(nO=7, model=model)
                 with show_validation_error():
-                    nlp.initialize(lambda: [Example.from_dict(x, {}) for x in X])
+                    examples = [Example.from_dict(x, {}) for x in _get_docs()]
+                    nlp.initialize(lambda: examples)
                 msg.info("Initialized the model with dummy data.")
             except Exception:
                 msg.fail(
-                    "Could not initialize the model: you'll have to provide a valid train_corpus argument in the config file.",
+                    "Could not initialize the model: you'll have to provide a valid 'train_corpus' argument in the config file.",
                     exits=1,
                 )
 
@@ -142,40 +144,19 @@ def debug_model(
     goldY = None
     for e in range(3):
         if upstream_component:
-            upstream_component.update([Example.from_dict(x, {}) for x in X])
-        Y, get_dX = model.begin_update(X)
-        if goldY is None:
-            goldY = _simulate_gold(Y)
-        dY = get_gradient(goldY, Y, model.ops)
-        get_dX(dY)
-        model.finish_update(optimizer)
+            upstream_component.update(examples)
+        pipe.update(examples)
     if print_settings.get("print_after_training"):
         msg.divider(f"STEP 2 - after training")
         _print_model(model, print_settings)
 
     # STEP 3: the final prediction
-    prediction = model.predict(X)
+    prediction = model.predict([ex.predicted for ex in examples])
     if print_settings.get("print_prediction"):
         msg.divider(f"STEP 3 - prediction")
         msg.info(str(prediction))
 
     msg.good(f"Succesfully ended analysis - model looks good.")
-
-
-def get_gradient(goldY, Y, ops):
-    # print("Y", type(Y), type(ops.asarray(Y, dtype="f")))
-    # print("goldY", type(goldY), type(ops.asarray(goldY, dtype="f")))
-    # return ops.asarray(Y, dtype="f") - ops.asarray(goldY, dtype="f")
-    return ops.asarray(Y) - ops.asarray(goldY)
-
-
-def _simulate_gold(element, counter=1):
-    if isinstance(element, Iterable):
-        for i in range(len(element)):
-            element[i] = _simulate_gold(element[i], counter + i)
-        return element
-    else:
-        return 1 / counter
 
 
 def _sentences():
