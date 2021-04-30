@@ -410,9 +410,10 @@ finished. To log each training step, a
 [`spacy train`](/api/cli#train), including information such as the training loss
 and the accuracy scores on the development set.
 
-There are two built-in logging functions: a logger printing results to the
-console in tabular format (which is the default), and one that also sends the
-results to a [Weights & Biases](https://www.wandb.com/) dashboard. Instead of
+There are three built-in logging functions: a logger printing results to the
+console in tabular format (which is the default), one that also sends the
+results to a [Weights & Biases](https://www.wandb.com/) dashboard, and one that
+sends results to a [MLflow](https://www.mlflow.org/) tracking server. Instead of
 using one of the built-in loggers listed here, you can also
 [implement your own](/usage/training#custom-logging).
 
@@ -517,6 +518,46 @@ creating variants of the config for a simple hyperparameter grid search and
 logging the results.
 
 </Project>
+
+#### spacy.MLflowLogger.v1 {#MLflowLogger tag="registered function"}
+
+> #### Installation
+>
+> ```bash
+> $ pip install mlflow
+> $ export MLFLOW_TRACKING_URI=<URL_TO_YOUR_TRACKING_SERVER>
+> ```
+
+Built-in logger that sends the results of each training step to the 
+[MLflow](https://www.mlflow.org/) tracking server. To use this logger, MLflow
+should be installed, and you should know MLflow tracking server URL. The logger
+will send the losses, other scores, model artifacts, datasets (optional) 
+to the tracking server.
+
+> #### Example config
+>
+> ```ini
+> [training.logger]
+> @loggers = "spacy.MLflowLogger.v1"
+> experiment_name = "monitor_spacy_training"
+> log_scores = true
+> log_losses = true
+> log_other_scores = true
+> model_artifact_path = "spacy.models"
+> dataset_source_path = "corpus"
+> dataset_artifact_path = "corpus"
+> ```
+
+| Name                   | Description                                                                                                                           |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `experiment_name`      | The name of the experiment against which you wish to track runs. ~~str~~                                                              |
+| `log_scores`           | Flag indicating whether you wish to log scores (default: True). ~~Optional[bool]~~                                                    |
+| `log_losses`           | Flag indicating whether you wish to log losses (default: True). ~~Optional[bool]~~                                                    |
+| `log_other_scores`     | Flag indicating whether you wish to log other scores (default: True). ~~Optional[bool]~~                                              |
+| `model_artifact_path`  | Relative directory within the run artifacts where you wish to save your models (default: None). ~~Optional[str]~~                     |
+| `dataset_source_path`  | Directory where your dataset files reside (default: None). ~~Optional[int]~~                                                          |
+| `dataset_artifact_path`| Relative directory within the run artifacts where you wish for dataset files to reside. (default: None). ~~Optional[str]~~            |
+
 
 ## Readers {#readers}
 

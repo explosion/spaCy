@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING, Dict, Any, Tuple, Callable, List, Optional, IO
 from wasabi import Printer
 import tqdm
 import sys
+import os
 
 from ..util import registry
 from .. import util
@@ -171,6 +172,71 @@ def wandb_logger(
         def finalize() -> None:
             console_finalize()
             wandb.join()
+
+        return log_step, finalize
+
+    return setup_logger
+
+
+@registry.loggers("spacy.MLflowLogger.v1")
+def mlflow_logger(
+        experiment_name: str,
+        log_scores: Optional[bool] = True,
+        log_losses: Optional[bool] = True,
+        log_other_scores: Optional[bool] = True,
+        model_artifact_path: Optional[str] = None,
+        dataset_source_path: Optional[str] = None,
+        dataset_artifact_path: Optional[str] = None
+):
+    try:
+        from mlflow import get_experiment_by_name, set_experiment, start_run, end_run
+        from mlflow import log_metric, log_metrics, log_dict, log_artifacts
+        from mlflow.spacy import log_model
+    except ImportError:
+        raise ImportError(Errors.E881)
+
+    console = console_logger(progress_bar=False)
+
+    def setup_logger(
+            nlp: "Language", stdout: IO = sys.stdout, stderr: IO = sys.stderr
+    ) -> Tuple[Callable[[Dict[str, Any]], None], Callable[[], None]]:
+        set_experiment(experiment_name)
+        experiment = get_experiment_by_name(experiment_name)
+        _ = start_run(experiment_id=experiment.experiment_id, nested=True)
+
+        console_log_step, console_finalize = console(nlp, stdout, stderr)
+
+        def log_step(info: Optional[Dict[str, Any]]):
+            console_log_step(info)
+            if info is not None:
+                step = info["step"]
+                score = info["score"]
+                other_scores = info["other_scores"]
+                losses = info["losses"]
+                is_best_checkpoint = info["score"] == max(info["checkpoints"])[0]
+
+                log_metric("is_best_checkpoint", int(is_best_checkpoint), step=step)
+                if log_scores:
+                    log_metric("score", score, step=step)
+
+                if log_losses and losses:
+                    log_metrics({f"loss_{k}": v for k, v in losses.items()}, step=step)
+
+                if log_other_scores and isinstance(other_scores, dict):
+                    log_dict(other_scores, artifact_file='scores_{}.json'.format(step))
+
+                if model_artifact_path:
+                    from spacy import load
+                    model_path = info["output_path"]
+                    model = load(model_path)
+                    log_model(model, artifact_path=os.path.join(model_artifact_path, str(step)))
+
+                if dataset_source_path:
+                    log_artifacts(dataset_source_path, artifact_path=dataset_artifact_path)
+
+        def finalize() -> None:
+            console_finalize()
+            end_run()
 
         return log_step, finalize
 

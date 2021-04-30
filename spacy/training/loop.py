@@ -122,9 +122,9 @@ def train(
             )
         raise e
     finally:
-        finalize_logger()
         if output_path is not None:
             save_checkpoint(False)
+        finalize_logger()
     # This will only run if we did't hit an error
     if optimizer.averages:
         nlp.use_params(optimizer.averages)
