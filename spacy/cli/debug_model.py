@@ -133,14 +133,16 @@ def debug_model(
     # STEP 2: Updating the model and printing again
     optimizer = Adam(0.001)
     set_dropout_rate(model, 0.2)
-    # ugly hack to deal with Tok2Vec listeners
-    tok2vec = None
-    if model.has_ref("tok2vec") and model.get_ref("tok2vec").name == "tok2vec-listener":
-        tok2vec = nlp.get_pipe("tok2vec")
+    # ugly hack to deal with Tok2Vec/Transformer listeners
+    upstream_component = None
+    if model.has_ref("tok2vec") and "tok2vec-listener" in model.get_ref("tok2vec").name:
+        upstream_component = nlp.get_pipe("tok2vec")
+    if model.has_ref("tok2vec") and "transformer-listener" in model.get_ref("tok2vec").name:
+        upstream_component = nlp.get_pipe("transformer")
     goldY = None
     for e in range(3):
-        if tok2vec:
-            tok2vec.update([Example.from_dict(x, {}) for x in X])
+        if upstream_component:
+            upstream_component.update([Example.from_dict(x, {}) for x in X])
         Y, get_dX = model.begin_update(X)
         if goldY is None:
             goldY = _simulate_gold(Y)
@@ -161,6 +163,9 @@ def debug_model(
 
 
 def get_gradient(goldY, Y, ops):
+    # print("Y", type(Y), type(ops.asarray(Y, dtype="f")))
+    # print("goldY", type(goldY), type(ops.asarray(goldY, dtype="f")))
+    # return ops.asarray(Y, dtype="f") - ops.asarray(goldY, dtype="f")
     return ops.asarray(Y) - ops.asarray(goldY)
 
 
@@ -209,11 +214,7 @@ def _print_model(model, print_settings):
 
             if dimensions:
                 for name in node.dim_names:
-                    if node.has_dim(name):
-                        msg.info(f" - dim {name}: {node.get_dim(name)}")
-                    else:
-                        msg.info(f" - dim {name}: {node.has_dim(name)}")
-
+                    msg.info(f" - dim {name}: {node.maybe_get_dim(name)}")
             if parameters:
                 for name in node.param_names:
                     if node.has_param(name):
