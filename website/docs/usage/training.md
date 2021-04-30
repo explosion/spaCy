@@ -54,6 +54,9 @@ specific use case. It's also available in spaCy as the
 >    config.
 > 4. Run [`train`](/api/cli#train) with your config and data.
 >
+> **Note:** the widget currently supports **spaCy v3.0.6+**. For earlier
+> versions, follow the CLI instructions.
+>
 > #### Instructions: CLI
 >
 > 1. Run the [`init config`](/api/cli#init-config) command and specify your
