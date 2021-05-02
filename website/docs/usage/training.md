@@ -45,6 +45,14 @@ you generate a starter config with the **recommended settings** for your
 specific use case. It's also available in spaCy as the
 [`init config`](/api/cli#init-config) command.
 
+<Infobox variant="warning">
+
+Upgrade to the [latest version of spaCy](/usage) to use the quickstart widget.
+For earlier releases, follow the CLI instructions to generate a compatible
+config.
+
+</Infobox>
+
 > #### Instructions: widget
 >
 > 1. Select your requirements and settings.
@@ -53,9 +61,6 @@ specific use case. It's also available in spaCy as the
 > 3. Run [`init fill-config`](/api/cli#init-fill-config) to create a full
 >    config.
 > 4. Run [`train`](/api/cli#train) with your config and data.
->
-> **Note:** the widget currently supports **spaCy v3.0.6+**. For earlier
-> versions, follow the CLI instructions.
 >
 > #### Instructions: CLI
 >
