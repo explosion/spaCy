@@ -115,7 +115,9 @@ export default function QuickstartTraining({ id, title, download = 'base_config.
                     }))
                     .sort((a, b) => a.title.localeCompare(b.title))
                 if (!_components.includes('textcat')) {
-                    data = data.filter(({ id }) => id !== 'textcat')
+                    data = data.map(field =>
+                        field.id === 'textcat' ? { ...field, hidden: true } : field
+                    )
                 }
                 return (
                     <Quickstart
