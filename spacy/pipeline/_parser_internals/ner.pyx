@@ -243,9 +243,39 @@ cdef class BiluoPushDown(TransitionSystem):
 
     def set_annotations(self, StateClass state, Doc doc):
         cdef int i
+        cdef const TokenC* token
+        cdef int start = -1
+        cdef attr_t label = 0
+        # Find the starts and ends of all existing entity annotations. Note
+        # that skipping existing ents based on (start, end) and relying on
+        # default="unmodified" to preserve existing annotation is dependent on
+        # the fact that the NER component does not clobber any ents.
+        orig_ents = set()
+        for i in range(doc.length):
+            token = &doc.c[i]
+            if token.ent_iob == 1:
+                if start == -1:
+                    seq = [f"{t.text}|{t.ent_iob_}" for t in doc[i-5:i+5]]
+                    raise ValueError(Errors.E093.format(seq=" ".join(seq)))
+            elif token.ent_iob == 2 or token.ent_iob == 0 or \
+                    (token.ent_iob == 3 and token.ent_type == 0):
+                if start != -1 and label > 0:
+                    orig_ents.add((start, i))
+                start = -1
+                label = 0
+            elif token.ent_iob == 3:
+                if start != -1 and label > 0:
+                    orig_ents.add((start, i))
+                start = i
+                label = token.ent_type
+        if start != -1 and label > 0:
+            orig_ents.append((start, doc.length))
         ents = []
         for i in range(state.c._ents.size()):
             ent = state.c._ents.at(i)
+            # Skip existing ents to leave kb_id annotation intact
+            if (ent.start, ent.end) in orig_ents:
+                continue
             if ent.start != -1 and ent.end != -1:
                 ents.append(Span(doc, ent.start, ent.end, label=ent.label))
         doc.set_ents(ents, default="unmodified")
