@@ -206,7 +206,7 @@ factory = "tok2vec"
 @architectures = "spacy.Tok2Vec.v2"
 
 [components.tok2vec.model.embed]
-@architectures = "spacy.MultiHashEmbed.v1"
+@architectures = "spacy.MultiHashEmbed.v2"
 width = ${components.tok2vec.model.encode.width}
 {% if has_letters -%}
 attrs = ["NORM", "PREFIX", "SUFFIX", "SHAPE"]

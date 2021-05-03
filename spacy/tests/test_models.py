@@ -1,7 +1,7 @@
 from typing import List
 import pytest
 from thinc.api import fix_random_seed, Adam, set_dropout_rate
-from numpy.testing import assert_array_equal
+from numpy.testing import assert_array_equal, assert_array_almost_equal
 import numpy
 from spacy.ml.models import build_Tok2Vec_model, MultiHashEmbed, MaxoutWindowEncoder
 from spacy.ml.models import build_bow_text_classifier, build_simple_cnn_text_classifier
@@ -109,7 +109,7 @@ def test_models_initialize_consistently(seed, model_func, kwargs):
     model2.initialize()
     params1 = get_all_params(model1)
     params2 = get_all_params(model2)
-    assert_array_equal(params1, params2)
+    assert_array_equal(model1.ops.to_numpy(params1), model2.ops.to_numpy(params2))
 
 
 @pytest.mark.parametrize(
@@ -134,14 +134,25 @@ def test_models_predict_consistently(seed, model_func, kwargs, get_X):
         for i in range(len(tok2vec1)):
             for j in range(len(tok2vec1[i])):
                 assert_array_equal(
-                    numpy.asarray(tok2vec1[i][j]), numpy.asarray(tok2vec2[i][j])
+                    numpy.asarray(model1.ops.to_numpy(tok2vec1[i][j])),
+                    numpy.asarray(model2.ops.to_numpy(tok2vec2[i][j])),
                 )
 
+    try:
+        Y1 = model1.ops.to_numpy(Y1)
+        Y2 = model2.ops.to_numpy(Y2)
+    except Exception:
+        pass
     if isinstance(Y1, numpy.ndarray):
         assert_array_equal(Y1, Y2)
     elif isinstance(Y1, List):
         assert len(Y1) == len(Y2)
         for y1, y2 in zip(Y1, Y2):
+            try:
+                y1 = model1.ops.to_numpy(y1)
+                y2 = model2.ops.to_numpy(y2)
+            except Exception:
+                pass
             assert_array_equal(y1, y2)
     else:
         raise ValueError(f"Could not compare type {type(Y1)}")
@@ -169,12 +180,17 @@ def test_models_update_consistently(seed, dropout, model_func, kwargs, get_X):
             model.finish_update(optimizer)
         updated_params = get_all_params(model)
         with pytest.raises(AssertionError):
-            assert_array_equal(initial_params, updated_params)
+            assert_array_equal(
+                model.ops.to_numpy(initial_params), model.ops.to_numpy(updated_params)
+            )
         return model
 
     model1 = get_updated_model()
     model2 = get_updated_model()
-    assert_array_equal(get_all_params(model1), get_all_params(model2))
+    assert_array_almost_equal(
+        model1.ops.to_numpy(get_all_params(model1)),
+        model2.ops.to_numpy(get_all_params(model2)),
+    )
 
 
 @pytest.mark.parametrize("model_func,kwargs", [(StaticVectors, {"nO": 128, "nM": 300})])

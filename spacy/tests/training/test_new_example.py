@@ -2,6 +2,7 @@ import pytest
 from spacy.training.example import Example
 from spacy.tokens import Doc
 from spacy.vocab import Vocab
+from spacy.util import to_ternary_int
 
 
 def test_Example_init_requires_doc_objects():
@@ -121,7 +122,7 @@ def test_Example_from_dict_with_morphology(annots):
     [
         {
             "words": ["This", "is", "one", "sentence", "this", "is", "another"],
-            "sent_starts": [1, 0, 0, 0, 1, 0, 0],
+            "sent_starts": [1, False, 0, None, True, -1, -5.7],
         }
     ],
 )
@@ -131,7 +132,12 @@ def test_Example_from_dict_with_sent_start(annots):
     example = Example.from_dict(predicted, annots)
     assert len(list(example.reference.sents)) == 2
     for i, token in enumerate(example.reference):
-        assert bool(token.is_sent_start) == bool(annots["sent_starts"][i])
+        if to_ternary_int(annots["sent_starts"][i]) == 1:
+            assert token.is_sent_start is True
+        elif to_ternary_int(annots["sent_starts"][i]) == 0:
+            assert token.is_sent_start is None
+        else:
+            assert token.is_sent_start is False
 
 
 @pytest.mark.parametrize(

@@ -26,10 +26,14 @@ def test_serialize_custom_tokenizer(en_vocab, en_tokenizer):
     assert tokenizer.rules != {}
     assert tokenizer.token_match is not None
     assert tokenizer.url_match is not None
+    assert tokenizer.prefix_search is not None
+    assert tokenizer.infix_finditer is not None
     tokenizer.from_bytes(tokenizer_bytes)
     assert tokenizer.rules == {}
     assert tokenizer.token_match is None
     assert tokenizer.url_match is None
+    assert tokenizer.prefix_search is None
+    assert tokenizer.infix_finditer is None
 
     tokenizer = Tokenizer(en_vocab, rules={"ABC.": [{"ORTH": "ABC"}, {"ORTH": "."}]})
     tokenizer.rules = {}
