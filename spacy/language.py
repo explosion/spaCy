@@ -433,9 +433,9 @@ class Language:
         default_config (Dict[str, Any]): Default configuration, describing the
             default values of the factory arguments.
         assigns (Iterable[str]): Doc/Token attributes assigned by this component,
-            e.g. "token.ent_id". Used for pipeline analyis.
+            e.g. "token.ent_id". Used for pipeline analysis.
         requires (Iterable[str]): Doc/Token attributes required by this component,
-            e.g. "token.ent_id". Used for pipeline analyis.
+            e.g. "token.ent_id". Used for pipeline analysis.
         retokenizes (bool): Whether the component changes the tokenization.
             Used for pipeline analysis.
         default_score_weights (Dict[str, float]): The scores to report during
@@ -518,9 +518,9 @@ class Language:
 
         name (str): The name of the component factory.
         assigns (Iterable[str]): Doc/Token attributes assigned by this component,
-            e.g. "token.ent_id". Used for pipeline analyis.
+            e.g. "token.ent_id". Used for pipeline analysis.
         requires (Iterable[str]): Doc/Token attributes required by this component,
-            e.g. "token.ent_id". Used for pipeline analyis.
+            e.g. "token.ent_id". Used for pipeline analysis.
         retokenizes (bool): Whether the component changes the tokenization.
             Used for pipeline analysis.
         func (Optional[Callable]): Factory function if not used as a decorator.
