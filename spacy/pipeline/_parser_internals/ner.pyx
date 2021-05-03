@@ -9,7 +9,7 @@ from ...tokens.span import Span
 from ...typedefs cimport weight_t, attr_t
 from ...lexeme cimport Lexeme
 from ...attrs cimport IS_SPACE
-from ...structs cimport TokenC
+from ...structs cimport TokenC, SpanC
 from ...training.example cimport Example
 from .stateclass cimport StateClass
 from ._state cimport StateC
@@ -243,11 +243,16 @@ cdef class BiluoPushDown(TransitionSystem):
 
     def set_annotations(self, StateClass state, Doc doc):
         cdef int i
+        cdef SpanC ent
+        cdef attr_t kb_id
         ents = []
         for i in range(state.c._ents.size()):
             ent = state.c._ents.at(i)
             if ent.start != -1 and ent.end != -1:
-                ents.append(Span(doc, ent.start, ent.end, label=ent.label))
+                kb_id = 0
+                if doc.c[ent.start].ent_kb_id > 0:
+                    kb_id = doc.c[ent.start].ent_kb_id
+                ents.append(Span(doc, ent.start, ent.end, label=ent.label, kb_id=kb_id))
         doc.set_ents(ents, default="unmodified")
         # Set non-blocked tokens to O
         for i in range(doc.length):
