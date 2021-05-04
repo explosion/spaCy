@@ -29,6 +29,12 @@ def perhaps_set_sentences(doc):
     return doc
 
 
+@Language.component("assert_sents")
+def assert_sents(doc):
+    assert doc.has_annotation("SENT_START")
+    return doc
+
+
 def warn_error(proc_name, proc, docs, e):
     from spacy.util import logger
 
@@ -246,11 +252,10 @@ def test_language_pipe_error_handler_pipe(en_vocab, n_process):
         texts = [f"{str(i)} is enough. Done" for i in range(100)]
         nlp = English()
         nlp.add_pipe("my_perhaps_sentences")
-        entity_linker = nlp.add_pipe("entity_linker", config={"entity_vector_length": 3})
-        entity_linker.kb.add_entity(entity="Q1", freq=12, entity_vector=[1, 2, 3])
+        nlp.add_pipe("assert_sents")
         nlp.initialize()
         with pytest.raises(ValueError):
-            # the entity linker requires sentence boundaries, will throw an error otherwise
+            # assert_sents requires sentence boundaries, will throw an error otherwise
             docs = list(nlp.pipe(texts, n_process=n_process, batch_size=10))
         nlp.set_error_handler(ignore_error)
         docs = list(nlp.pipe(texts, n_process=n_process, batch_size=10))
