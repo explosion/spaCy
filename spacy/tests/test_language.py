@@ -29,6 +29,12 @@ def perhaps_set_sentences(doc):
     return doc
 
 
+def warn_error(proc_name, proc, docs, e):
+    from spacy.util import logger
+
+    logger.warning(f"Trouble with component {proc_name}.")
+
+
 @pytest.fixture
 def nlp():
     nlp = Language(Vocab())
@@ -209,11 +215,6 @@ def test_language_pipe_error_handler(n_process):
 @pytest.mark.parametrize("n_process", [1, 2])
 def test_language_pipe_error_handler_custom(en_vocab, n_process):
     """Test the error handling of a custom component that has no pipe method"""
-
-    def warn_error(proc_name, proc, docs, e):
-        from spacy.util import logger
-
-        logger.warning(f"Trouble with component {proc_name}.")
 
     ops = get_current_ops()
     if isinstance(ops, NumpyOps) or n_process < 2:
