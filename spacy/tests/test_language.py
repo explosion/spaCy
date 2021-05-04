@@ -15,6 +15,20 @@ from thinc.api import NumpyOps, get_current_ops
 from .util import add_vecs_to_vocab, assert_docs_equal
 
 
+@Language.component("my_evil_component")
+def evil_component(doc):
+    if "2" in doc.text:
+        raise ValueError("no dice")
+    return doc
+
+
+@Language.component("my_perhaps_sentences")
+def perhaps_set_sentences(doc):
+    if not doc.text.startswith("4"):
+        doc[-1].is_sent_start = True
+    return doc
+
+
 @pytest.fixture
 def nlp():
     nlp = Language(Vocab())
@@ -196,12 +210,6 @@ def test_language_pipe_error_handler(n_process):
 def test_language_pipe_error_handler_custom(en_vocab, n_process):
     """Test the error handling of a custom component that has no pipe method"""
 
-    @Language.component("my_evil_component")
-    def evil_component(doc):
-        if "2" in doc.text:
-            raise ValueError("no dice")
-        return doc
-
     def warn_error(proc_name, proc, docs, e):
         from spacy.util import logger
 
@@ -232,17 +240,11 @@ def test_language_pipe_error_handler_custom(en_vocab, n_process):
 def test_language_pipe_error_handler_pipe(en_vocab, n_process):
     """Test the error handling of a component's pipe method"""
 
-    @Language.component("my_sentences")
-    def perhaps_set_sentences(doc):
-        if not doc.text.startswith("4"):
-            doc[-1].is_sent_start = True
-        return doc
-
     ops = get_current_ops()
     if isinstance(ops, NumpyOps) or n_process < 2:
         texts = [f"{str(i)} is enough. Done" for i in range(100)]
         nlp = English()
-        nlp.add_pipe("my_sentences")
+        nlp.add_pipe("my_perhaps_sentences")
         entity_linker = nlp.add_pipe("entity_linker", config={"entity_vector_length": 3})
         entity_linker.kb.add_entity(entity="Q1", freq=12, entity_vector=[1, 2, 3])
         nlp.initialize()
