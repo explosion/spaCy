@@ -29,9 +29,10 @@ def perhaps_set_sentences(doc):
     return doc
 
 
-@Language.component("assert_sents")
-def assert_sents(doc):
-    assert doc.has_annotation("SENT_START")
+@Language.component("assert_sents_error")
+def assert_sents_error(doc):
+    if not doc.has_annotation("SENT_START"):
+        raise ValueError("no sents")
     return doc
 
 
@@ -252,10 +253,10 @@ def test_language_pipe_error_handler_pipe(en_vocab, n_process):
         texts = [f"{str(i)} is enough. Done" for i in range(100)]
         nlp = English()
         nlp.add_pipe("my_perhaps_sentences")
-        nlp.add_pipe("assert_sents")
+        nlp.add_pipe("assert_sents_error")
         nlp.initialize()
         with pytest.raises(ValueError):
-            # assert_sents requires sentence boundaries, will throw an error otherwise
+            # assert_sents_error requires sentence boundaries, will throw an error otherwise
             docs = list(nlp.pipe(texts, n_process=n_process, batch_size=10))
         nlp.set_error_handler(ignore_error)
         docs = list(nlp.pipe(texts, n_process=n_process, batch_size=10))
