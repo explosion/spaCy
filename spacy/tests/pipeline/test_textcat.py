@@ -239,7 +239,6 @@ def test_resize_same_results(name, textcat_config):
     assert len(doc.cats) == 3
     assert doc.cats["POSITIVE"] == pos_pred
     assert doc.cats["NEGATIVE"] == neg_pred
-    assert doc.cats["NEUTRAL"] in [0.0, 0.5]  # both are sensible defaults, depending on the textcat arch
 
 
 def test_error_with_multi_labels():

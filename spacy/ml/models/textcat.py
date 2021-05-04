@@ -5,8 +5,9 @@ from thinc.types import Floats2d
 from thinc.api import Model, reduce_mean, Linear, list2ragged, Logistic
 from thinc.api import chain, concatenate, clone, Dropout, ParametricAttention
 from thinc.api import SparseLinear, Softmax, softmax_activation, Maxout, reduce_sum
-from thinc.api import with_cpu, Relu, residual, LayerNorm
+from thinc.api import with_cpu, Relu, residual, LayerNorm, resizable
 from thinc.layers.chain import init as init_chain
+from thinc.layers.resizable import resize
 
 from ...attrs import ORTH
 from ...util import registry
@@ -32,18 +33,27 @@ def build_simple_cnn_text_classifier(
         cnn = tok2vec >> list2ragged() >> reduce_mean()
         nI = tok2vec.maybe_get_dim("nO")
         if exclusive_classes:
-            output_layer = Softmax(nO=nO, nI=nI)
-            model = cnn >> output_layer
+            output_layer_creation = partial(Softmax, nO=nO, nI=nI)
+            resizable_layer = resizable(output_layer_creation)
+            model = cnn >> resizable_layer
             model.attrs["activation"] = "softmax"
         else:
-            output_layer = Linear(nO=nO, nI=nI)
-            model = cnn >> output_layer >> Logistic()
+            output_layer_creation = partial(Linear, nO=nO, nI=nI)
+            resizable_layer = resizable(output_layer_creation)
+            model = cnn >> resizable_layer >> Logistic()
             model.attrs["activation"] = "linear"
-        model.set_ref("output_layer", output_layer)
-        model.attrs["resize_output"] = partial(resize_layer, layer=output_layer)
+        model.set_ref("output_layer", resizable_layer.layers[0])
+        model.attrs["resize_output"] = partial(resize_and_set_ref, resizable_layer=resizable_layer)
     model.set_ref("tok2vec", tok2vec)
     model.set_dim("nO", nO)
     model.attrs["multi_label"] = not exclusive_classes
+    return model
+
+
+def resize_and_set_ref(model, new_nO, resizable_layer):
+    model = resize(model, new_nO, resizable_layer)
+    model.set_ref("output_layer", resizable_layer.layers[0])
+    model.set_dim("nO", new_nO, force=True)
     return model
 
 
@@ -55,8 +65,9 @@ def build_bow_text_classifier(
     nO: Optional[int] = None,
 ) -> Model[List[Doc], Floats2d]:
     with Model.define_operators({">>": chain}):
-        sparse_linear = SparseLinear(nO=nO)
-        model = extract_ngrams(ngram_size, attr=ORTH) >> sparse_linear
+        output_layer_creation = partial(SparseLinear, nO=nO)
+        resizable_layer = resizable(output_layer_creation)
+        model = extract_ngrams(ngram_size, attr=ORTH) >> resizable_layer
         model = with_cpu(model, model.ops)
         activation = "linear"
         if not no_output_layer:
@@ -68,10 +79,10 @@ def build_bow_text_classifier(
                 activation = "logistic"
             model = model >> with_cpu(output_layer, output_layer.ops)
     model.set_dim("nO", nO)
-    model.set_ref("output_layer", sparse_linear)
+    model.set_ref("output_layer", resizable_layer.layers[0])
     model.attrs["multi_label"] = not exclusive_classes
     model.attrs["activation"] = activation
-    model.attrs["resize_output"] = partial(resize_layer, layer=sparse_linear)
+    model.attrs["resize_output"] = partial(resize_and_set_ref, resizable_layer=resizable_layer)
     return model
 
 
