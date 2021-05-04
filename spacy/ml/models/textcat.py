@@ -16,8 +16,6 @@ from ..staticvectors import StaticVectors
 from ...tokens import Doc
 from .tok2vec import get_tok2vec_width
 
-NEG_VALUE = -5000
-
 
 @registry.architectures("spacy.TextCatCNN.v2")
 def build_simple_cnn_text_classifier(
@@ -133,40 +131,6 @@ def init_ensemble_textcat(model, X, Y) -> Model:
     model.get_ref("norm_layer").set_dim("nI", tok2vec_width)
     model.get_ref("norm_layer").set_dim("nO", tok2vec_width)
     init_chain(model, X, Y)
-    return model
-
-
-def resize_layer(model, new_nO, layer):
-    if layer.has_dim("nO") is None:
-        # the output layer had not been initialized/trained yet
-        layer.set_dim("nO", new_nO)
-        return model
-    elif new_nO == layer.get_dim("nO"):
-        # the output dimension didn't change
-        return model
-
-    if layer.has_param("W"):
-        smaller_W = layer.get_param("W")
-        smaller_b = layer.get_param("b")
-        larger_W_shape = list(smaller_W.shape)
-        larger_W_shape[0] = new_nO * layer.get_dim("length") if layer.has_dim("length") else new_nO
-        larger_b_shape = list(smaller_b.shape)
-        larger_b_shape[0] = new_nO
-        larger_W = layer.ops.alloc(tuple(larger_W_shape), dtype="f")
-        larger_b = layer.ops.alloc(tuple(larger_b_shape), dtype="f")
-        larger_W[: len(smaller_W)] = smaller_W
-        larger_b[: len(smaller_b)] = smaller_b
-        # TODO: RELU instead
-        if "activation" in model.attrs and model.attrs["activation"] in [
-            "softmax",
-            "logistic",
-        ]:
-            # ensure little influence on the softmax/logistic activation
-            larger_b[len(smaller_b):] = NEG_VALUE
-        layer.set_param("W", larger_W)
-        layer.set_param("b", larger_b)
-    layer.set_dim("nO", new_nO, force=True)
-    model.set_dim("nO", new_nO, force=True)
     return model
 
 
