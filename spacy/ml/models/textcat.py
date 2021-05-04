@@ -19,6 +19,7 @@ from .tok2vec import get_tok2vec_width
 
 NEG_VALUE = -5000
 
+
 @registry.architectures("spacy.TextCatCNN.v2")
 def build_simple_cnn_text_classifier(
     tok2vec: Model, exclusive_classes: bool, nO: Optional[int] = None
@@ -29,6 +30,7 @@ def build_simple_cnn_text_classifier(
     outputs sum to 1. If exclusive_classes=False, a logistic non-linearity
     is applied instead, so that outputs are in the range [0, 1].
     """
+    fill_defaults = {"b": 0, "W": 0}
     with Model.define_operators({">>": chain}):
         cnn = tok2vec >> list2ragged() >> reduce_mean()
         nI = tok2vec.maybe_get_dim("nO")
@@ -36,22 +38,25 @@ def build_simple_cnn_text_classifier(
             output_layer_creation = partial(Softmax, nO=nO, nI=nI)
             resizable_layer = resizable(output_layer_creation)
             model = cnn >> resizable_layer
-            fill_b = NEG_VALUE
+            fill_defaults["b"] = NEG_VALUE
         else:
             output_layer_creation = partial(Linear, nO=nO, nI=nI)
             resizable_layer = resizable(output_layer_creation)
             model = cnn >> resizable_layer >> Logistic()
-            fill_b = 0
         model.set_ref("output_layer", resizable_layer.layers[0])
-        model.attrs["resize_output"] = partial(resize_and_set_ref, resizable_layer=resizable_layer, fill_b=fill_b)
+        model.attrs["resize_output"] = partial(
+            resize_and_set_ref,
+            resizable_layer=resizable_layer,
+            fill_defaults=fill_defaults,
+        )
     model.set_ref("tok2vec", tok2vec)
     model.set_dim("nO", nO)
     model.attrs["multi_label"] = not exclusive_classes
     return model
 
 
-def resize_and_set_ref(model, new_nO, resizable_layer, *, fill_b=0):
-    model = resize(model, new_nO, resizable_layer, fill_b=fill_b)
+def resize_and_set_ref(model, new_nO, resizable_layer, *, fill_defaults=None):
+    model = resize(model, new_nO, resizable_layer, fill_defaults=fill_defaults)
     model.set_ref("output_layer", resizable_layer.layers[0])
     model.set_dim("nO", new_nO, force=True)
     return model
@@ -64,20 +69,22 @@ def build_bow_text_classifier(
     no_output_layer: bool,
     nO: Optional[int] = None,
 ) -> Model[List[Doc], Floats2d]:
+    fill_defaults = {"b": 0, "W": 0}
     with Model.define_operators({">>": chain}):
         output_layer_creation = partial(SparseLinear, nO=nO)
         resizable_layer = resizable(output_layer_creation)
         model = extract_ngrams(ngram_size, attr=ORTH) >> resizable_layer
         model = with_cpu(model, model.ops)
-        fill_b = 0
         if not no_output_layer:
-            fill_b = NEG_VALUE
+            fill_defaults["b"] = NEG_VALUE
             output_layer = softmax_activation() if exclusive_classes else Logistic()
             model = model >> with_cpu(output_layer, output_layer.ops)
     model.set_dim("nO", nO)
     model.set_ref("output_layer", resizable_layer.layers[0])
     model.attrs["multi_label"] = not exclusive_classes
-    model.attrs["resize_output"] = partial(resize_and_set_ref, resizable_layer=resizable_layer, fill_b=fill_b)
+    model.attrs["resize_output"] = partial(
+        resize_and_set_ref, resizable_layer=resizable_layer, fill_defaults=fill_defaults
+    )
     return model
 
 
