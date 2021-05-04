@@ -17,6 +17,8 @@ from ...tokens import Doc
 from .tok2vec import get_tok2vec_width
 
 
+NEG_VALUE = -5000
+
 @registry.architectures("spacy.TextCatCNN.v2")
 def build_simple_cnn_text_classifier(
     tok2vec: Model, exclusive_classes: bool, nO: Optional[int] = None
@@ -34,22 +36,22 @@ def build_simple_cnn_text_classifier(
             output_layer_creation = partial(Softmax, nO=nO, nI=nI)
             resizable_layer = resizable(output_layer_creation)
             model = cnn >> resizable_layer
-            model.attrs["activation"] = "softmax"
+            fill_b = NEG_VALUE
         else:
             output_layer_creation = partial(Linear, nO=nO, nI=nI)
             resizable_layer = resizable(output_layer_creation)
             model = cnn >> resizable_layer >> Logistic()
-            model.attrs["activation"] = "linear"
+            fill_b = 0
         model.set_ref("output_layer", resizable_layer.layers[0])
-        model.attrs["resize_output"] = partial(resize_and_set_ref, resizable_layer=resizable_layer)
+        model.attrs["resize_output"] = partial(resize_and_set_ref, resizable_layer=resizable_layer, fill_b=fill_b)
     model.set_ref("tok2vec", tok2vec)
     model.set_dim("nO", nO)
     model.attrs["multi_label"] = not exclusive_classes
     return model
 
 
-def resize_and_set_ref(model, new_nO, resizable_layer):
-    model = resize(model, new_nO, resizable_layer)
+def resize_and_set_ref(model, new_nO, resizable_layer, *, fill_b=0):
+    model = resize(model, new_nO, resizable_layer, fill_b=fill_b)
     model.set_ref("output_layer", resizable_layer.layers[0])
     model.set_dim("nO", new_nO, force=True)
     return model
@@ -67,20 +69,15 @@ def build_bow_text_classifier(
         resizable_layer = resizable(output_layer_creation)
         model = extract_ngrams(ngram_size, attr=ORTH) >> resizable_layer
         model = with_cpu(model, model.ops)
-        activation = "linear"
+        fill_b = 0
         if not no_output_layer:
-            if exclusive_classes:
-                output_layer = softmax_activation()
-                activation = "softmax"
-            else:
-                output_layer = Logistic()
-                activation = "logistic"
+            fill_b = NEG_VALUE
+            output_layer = softmax_activation() if exclusive_classes else Logistic()
             model = model >> with_cpu(output_layer, output_layer.ops)
     model.set_dim("nO", nO)
     model.set_ref("output_layer", resizable_layer.layers[0])
     model.attrs["multi_label"] = not exclusive_classes
-    model.attrs["activation"] = activation
-    model.attrs["resize_output"] = partial(resize_and_set_ref, resizable_layer=resizable_layer)
+    model.attrs["resize_output"] = partial(resize_and_set_ref, resizable_layer=resizable_layer, fill_b=fill_b)
     return model
 
 
