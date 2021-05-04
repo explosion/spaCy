@@ -239,6 +239,19 @@ def test_resize_same_results(name, textcat_config):
     assert len(doc.cats) == 3
     assert doc.cats["POSITIVE"] == pos_pred
     assert doc.cats["NEGATIVE"] == neg_pred
+    assert doc.cats["NEUTRAL"] <= 1
+
+    for i in range(5):
+        losses = {}
+        nlp.update(train_examples, sgd=optimizer, losses=losses)
+
+    # test the trained model again after training further with new label
+    doc = nlp(test_text)
+    assert len(doc.cats) == 3
+    assert doc.cats["POSITIVE"] != pos_pred
+    assert doc.cats["NEGATIVE"] != neg_pred
+    for cat in doc.cats:
+        assert doc.cats[cat] <= 1
 
 
 def test_error_with_multi_labels():
