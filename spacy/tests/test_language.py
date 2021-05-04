@@ -260,8 +260,8 @@ def test_language_pipe_error_handler_pipe(en_vocab, n_process):
             docs = list(nlp.pipe(texts, n_process=n_process, batch_size=10))
         nlp.set_error_handler(ignore_error)
         docs = list(nlp.pipe(texts, n_process=n_process, batch_size=10))
-        # we lose/ignore the failing 0-9 and 40-49 batches
-        assert len(docs) == 80
+        # we lose/ignore the failing 40-49 batches
+        assert len(docs) == 89
 
 
 @pytest.mark.parametrize("n_process", [1, 2])
