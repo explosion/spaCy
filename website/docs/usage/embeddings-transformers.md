@@ -732,7 +732,7 @@ component = "textcat"
 layer = "tok2vec"
 ```
 
-#### Pretraining objectives {#pretraining-details}
+#### Pretraining objectives {#pretraining-objectives}
 
 > ```ini
 > ### Characters objective
