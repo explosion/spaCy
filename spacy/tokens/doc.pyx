@@ -1158,11 +1158,12 @@ cdef class Doc:
             for i, array in enumerate(arrays[:-1]):
                 if len(array) > 0 and not docs[i][-1].is_space:
                     array[-1][spacy_index] = 1
-            token_offset = -1
-            for doc in docs[:-1]:
-                token_offset += len(doc)
-                if not (len(doc) > 0 and doc[-1].is_space):
-                    concat_spaces[token_offset] = True
+            if len(concat_spaces) > 0:
+                token_offset = -1
+                for doc in docs[:-1]:
+                    token_offset += len(doc)
+                    if not (len(doc) > 0 and doc[-1].is_space):
+                        concat_spaces[token_offset] = True
 
         concat_array = numpy.concatenate(arrays)
 
