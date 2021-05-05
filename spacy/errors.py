@@ -1,3 +1,6 @@
+import warnings
+
+
 def add_codes(err_cls):
     """Add error codes to string messages via class attribute names."""
 
@@ -10,6 +13,22 @@ def add_codes(err_cls):
                 return "[{code}] {msg}".format(code=code, msg=msg)
 
     return ErrorsWithCodes()
+
+
+def customize_warnings():
+    # ignore certain numpy warnings
+    warnings.filterwarnings("ignore", message="numpy.dtype size changed")  # noqa
+    warnings.filterwarnings("ignore", message="numpy.ufunc size changed")  # noqa
+
+    # warn about entity_ruler & matcher having no patterns only once
+    for pipe in ["matcher", "entity_ruler"]:
+        msg = Warnings.W036.format(name=pipe)
+        warnings.filterwarnings("once", message=_escape_warning_msg(msg))
+
+
+def _escape_warning_msg(msg):
+    """To filter with warnings.filterwarnings, the [] brackets need to be escaped"""
+    return msg.replace("[", "\\[").replace("]", "\\]")
 
 
 # fmt: off
