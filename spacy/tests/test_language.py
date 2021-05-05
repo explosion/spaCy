@@ -8,7 +8,7 @@ from spacy.vocab import Vocab
 from spacy.training import Example
 from spacy.lang.en import English
 from spacy.lang.de import German
-from spacy.util import registry, ignore_error, raise_error
+from spacy.util import registry, ignore_error, raise_error, logger
 import spacy
 from thinc.api import NumpyOps, get_current_ops
 
@@ -37,8 +37,7 @@ def assert_sents_error(doc):
 
 
 def warn_error(proc_name, proc, docs, e):
-    from spacy.util import logger
-
+    logger = logging.getLogger("spacy")
     logger.warning(f"Trouble with component {proc_name}.")
 
 
@@ -227,7 +226,6 @@ def test_language_pipe_error_handler_custom(en_vocab, n_process):
     if isinstance(ops, NumpyOps) or n_process < 2:
         nlp = English()
         nlp.add_pipe("my_evil_component")
-        nlp.initialize()
         texts = ["TEXT 111", "TEXT 222", "TEXT 333", "TEXT 342", "TEXT 666"]
         with pytest.raises(ValueError):
             # the evil custom component throws an error
@@ -236,11 +234,15 @@ def test_language_pipe_error_handler_custom(en_vocab, n_process):
         nlp.set_error_handler(warn_error)
         logger = logging.getLogger("spacy")
         with mock.patch.object(logger, "warning") as mock_warning:
-            # the errors by the evil custom component raise a warning for each bad batch
+            # the errors by the evil custom component raise a warning for each
+            # bad doc
             docs = list(nlp.pipe(texts, n_process=n_process))
-            mock_warning.assert_called()
-            assert mock_warning.call_count == 2
-            assert len(docs) + mock_warning.call_count == len(texts)
+            # HACK/TODO? the warnings in child processes don't seem to be
+            # detected by the mock logger
+            if n_process == 1:
+                mock_warning.assert_called()
+                assert mock_warning.call_count == 2
+                assert len(docs) + mock_warning.call_count == len(texts)
             assert [doc.text for doc in docs] == ["TEXT 111", "TEXT 333", "TEXT 666"]
 
 
@@ -260,7 +262,7 @@ def test_language_pipe_error_handler_pipe(en_vocab, n_process):
             docs = list(nlp.pipe(texts, n_process=n_process, batch_size=10))
         nlp.set_error_handler(ignore_error)
         docs = list(nlp.pipe(texts, n_process=n_process, batch_size=10))
-        # we lose/ignore the failing 40-49 batches
+        # we lose/ignore the failing 4,40-49 docs
         assert len(docs) == 89
 
 

@@ -1528,10 +1528,8 @@ class Language:
                 if byte_doc is not None:
                     doc = Doc(self.vocab).from_bytes(byte_doc)
                     yield doc
-                else:
-                    error = ""
-                    if byte_error is not None:
-                        error = srsly.msgpack_loads(byte_error)
+                elif byte_error is not None:
+                    error = srsly.msgpack_loads(byte_error)
                     self.default_error_handler(None, None, None, ValueError(Errors.E871.format(error=error)))
                 if i % batch_size == 0:
                     # tell `sender` that one batch was consumed.
