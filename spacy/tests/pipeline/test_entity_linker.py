@@ -1,3 +1,4 @@
+import pickle
 from typing import Callable, Iterable
 import pytest
 from numpy.testing import assert_equal
@@ -11,7 +12,7 @@ from spacy.ml import load_kb
 from spacy.scorer import Scorer
 from spacy.training import Example
 from spacy.lang.en import English
-from spacy.tests.util import make_tempdir
+from spacy.tests.util import make_tempdir, make_tempfile
 from spacy.tokens import Span
 
 
@@ -544,6 +545,21 @@ def test_kb_serialization():
         entity_linker.set_kb(load_kb(kb_dir))
         assert "Q2146908" in nlp2.vocab.strings
         assert "RandomWord" in nlp2.vocab.strings
+
+
+def test_kb_pickle():
+    # Test that the KB can be pickled
+    with make_tempfile() as tmp_file:
+        nlp = English()
+        kb_1 = KnowledgeBase(nlp.vocab, entity_vector_length=3)
+        kb_1.add_entity(entity="Q2146908", freq=12, entity_vector=[6, -4, 3])
+        assert not kb_1.contains_alias("Russ Cochran")
+        kb_1.add_alias(alias="Russ Cochran", entities=["Q2146908"], probabilities=[0.8])
+        assert kb_1.contains_alias("Russ Cochran")
+        pickle.dump(kb_1, tmp_file)
+        kb_2 = pickle.load(tmp_file)
+        assert kb_2.contains_alias("Russ Cochran")
+
 
 
 def test_scorer_links():
