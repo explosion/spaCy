@@ -3,7 +3,7 @@ from pathlib import Path
 import sys
 
 # set library-specific custom warning handling before doing anything else
-from .errors import Errors, MatchPatternError, Warnings, customize_warnings
+from .errors import customize_warnings
 customize_warnings()
 
 # These are imported as part of the API
@@ -16,6 +16,7 @@ from .glossary import explain  # noqa: F401
 from .about import __version__  # noqa: F401
 from .util import registry, logger  # noqa: F401
 
+from .errors import Errors
 from .language import Language
 from .vocab import Vocab
 from . import util
