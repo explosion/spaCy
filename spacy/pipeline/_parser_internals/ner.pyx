@@ -9,7 +9,7 @@ from ...tokens.span import Span
 from ...typedefs cimport weight_t, attr_t
 from ...lexeme cimport Lexeme
 from ...attrs cimport IS_SPACE
-from ...structs cimport TokenC, SpanC
+from ...structs cimport TokenC
 from ...training.example cimport Example
 from .stateclass cimport StateClass
 from ._state cimport StateC
@@ -243,8 +243,6 @@ cdef class BiluoPushDown(TransitionSystem):
 
     def set_annotations(self, StateClass state, Doc doc):
         cdef int i
-        cdef SpanC ent
-        cdef attr_t kb_id
         ents = []
         for i in range(state.c._ents.size()):
             ent = state.c._ents.at(i)
