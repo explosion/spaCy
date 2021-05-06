@@ -678,7 +678,7 @@ The following defaults are used for the `[pretraining]` block and merged into
 your existing config when you run [`init config`](/api/cli#init-config) or
 [`init fill-config`](/api/cli#init-fill-config) with `--pretraining`. If needed,
 you can [configure](#pretraining-configure) the settings and hyperparameters or
-change the [objective](#pretraining-details).
+change the [objective](#pretraining-objectives).
 
 ```ini
 %%GITHUB_SPACY/spacy/default_config_pretraining.cfg
