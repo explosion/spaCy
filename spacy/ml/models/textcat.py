@@ -37,11 +37,21 @@ def build_simple_cnn_text_classifier(
         if exclusive_classes:
             output_layer = Softmax(nO=nO, nI=nI)
             fill_defaults["b"] = NEG_VALUE
-            resizable_layer = resizable(output_layer, resize_layer=partial(resize_linear_weighted, fill_defaults=fill_defaults))
+            resizable_layer = resizable(
+                output_layer,
+                resize_layer=partial(
+                    resize_linear_weighted, fill_defaults=fill_defaults
+                ),
+            )
             model = cnn >> resizable_layer
         else:
             output_layer = Linear(nO=nO, nI=nI)
-            resizable_layer = resizable(output_layer, resize_layer=partial(resize_linear_weighted, fill_defaults=fill_defaults))
+            resizable_layer = resizable(
+                output_layer,
+                resize_layer=partial(
+                    resize_linear_weighted, fill_defaults=fill_defaults
+                ),
+            )
             model = cnn >> resizable_layer >> Logistic()
         model.set_ref("output_layer", output_layer)
         model.attrs["resize_output"] = partial(
@@ -75,7 +85,10 @@ def build_bow_text_classifier(
         if not no_output_layer:
             fill_defaults["b"] = NEG_VALUE
             output_layer = softmax_activation() if exclusive_classes else Logistic()
-        resizable_layer = resizable(sparse_linear, resize_layer=partial(resize_linear_weighted, fill_defaults=fill_defaults))
+        resizable_layer = resizable(
+            sparse_linear,
+            resize_layer=partial(resize_linear_weighted, fill_defaults=fill_defaults),
+        )
         model = extract_ngrams(ngram_size, attr=ORTH) >> resizable_layer
         model = with_cpu(model, model.ops)
         if output_layer:
