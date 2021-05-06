@@ -15,15 +15,23 @@ def add_codes(err_cls):
     return ErrorsWithCodes()
 
 
-def customize_warnings():
+def setup_default_warnings():
     # ignore certain numpy warnings
-    warnings.filterwarnings("ignore", message="numpy.dtype size changed")  # noqa
-    warnings.filterwarnings("ignore", message="numpy.ufunc size changed")  # noqa
+    filter_warning("ignore", error_msg="numpy.dtype size changed")  # noqa
+    filter_warning("ignore", error_msg="numpy.ufunc size changed")  # noqa
 
     # warn about entity_ruler & matcher having no patterns only once
     for pipe in ["matcher", "entity_ruler"]:
-        msg = Warnings.W036.format(name=pipe)
-        warnings.filterwarnings("once", message=_escape_warning_msg(msg))
+        filter_warning("once", error_msg=Warnings.W036.format(name=pipe))
+
+
+def filter_warning(action: str, error_msg: str):
+    """Customize how spaCy should handle a certain warning.
+
+    error_msg (str): e.g. "W006", or a full error message
+    action (str): "default", "error", "ignore", "always", "module" or "once"
+    """
+    warnings.filterwarnings(action, message=_escape_warning_msg(error_msg))
 
 
 def _escape_warning_msg(msg):
