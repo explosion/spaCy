@@ -364,15 +364,15 @@ cdef class Vocab:
         word = self[orth].orth_
         if orth in self.vectors.key2row:
             return self.vectors[orth]
-        # Assign default ngram limits to minn and maxn which is the length of the word.
-        if minn is None:
-            minn = len(word)
-        if maxn is None:
-            maxn = len(word)
         xp = get_array_module(self.vectors.data)
         vectors = xp.zeros((self.vectors_length,), dtype="f")
+        if minn is None:
+            return vectors
         # Fasttext's ngram computation taken from
         # https://github.com/facebookresearch/fastText
+        # Assign default ngram limit to maxn which is the length of the word.
+        if maxn is None:
+            maxn = len(word)
         ngrams_size = 0;
         for i in range(len(word)):
             ngram = ""
