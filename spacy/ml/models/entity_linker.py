@@ -11,7 +11,7 @@ from ...vocab import Vocab
 @registry.architectures("spacy.EntityLinker.v1")
 def build_nel_encoder(tok2vec: Model, nO: Optional[int] = None) -> Model:
     with Model.define_operators({">>": chain, "**": clone}):
-        token_width = tok2vec.get_dim("nO")
+        token_width = tok2vec.maybe_get_dim("nO")
         output_layer = Linear(nO=nO, nI=token_width)
         model = (
             tok2vec

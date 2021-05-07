@@ -768,6 +768,7 @@ $ python -m spacy debug model ./config.cfg tagger -l "5,15" -DIM -PAR -P0 -P1 -P
 | `--print-step3`, `-P3`  | Print final predictions. ~~bool (flag)~~                                                                                                                                                                           |
 | `--gpu-id`, `-g`        | GPU ID or `-1` for CPU. Defaults to `-1`. ~~int (option)~~                                                                                                                                                         |
 | `--help`, `-h`          | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                                         |
+| overrides               | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--paths.train ./train.spacy`. ~~Any (option/flag)~~                         |
 | **PRINTS**              | Debugging information.                                                                                                                                                                                             |
 
 ## train {#train tag="command"}

@@ -41,7 +41,7 @@ steps:
     displayName: "Install test requirements"
 
   - script: |
-      ${{ parameters.prefix }} python -m pip install -U cupy-cuda110
+      ${{ parameters.prefix }} python -m pip install -U cupy-cuda110 -f https://github.com/cupy/cupy/releases/v9.0.0
       ${{ parameters.prefix }} python -m pip install "torch==1.7.1+cu110" -f https://download.pytorch.org/whl/torch_stable.html
     displayName: "Install GPU requirements"
     condition: eq(${{ parameters.gpu }}, true)
