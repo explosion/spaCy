@@ -228,7 +228,25 @@ cdef class Span:
         array = self.doc.to_array(array_head)
         array = array[self.start : self.end]
         self._fix_dep_copy(array_head, array)
+        # Fix initial IOB so the entities are valid for doc.ents below.
+        if ENT_IOB in array_head:
+            ent_iob_col = array_head.index(ENT_IOB)
+            if array[0][ent_iob_col] == 1:
+                array[0][ent_iob_col] = 3
         doc.from_array(array_head, array)
+        # Set partial entities at the beginning or end of the span to have
+        # missing entity annotation. Note: the initial partial entity could be
+        # detected from the IOB annotation but the final partial entity can't,
+        # so detect and remove both in the same way by checking self.ents.
+        span_ents = {(ent.start, ent.end) for ent in self.ents}
+        doc_ents = doc.ents
+        if len(doc_ents) > 0:
+            # Remove initial partial ent
+            if (doc_ents[0].start + self.start, doc_ents[0].end + self.start) not in span_ents:
+                doc.set_ents([], missing=[doc_ents[0]], default="unmodified")
+            # Remove final partial ent
+            if (doc_ents[-1].start + self.start, doc_ents[-1].end + self.start) not in span_ents:
+                doc.set_ents([], missing=[doc_ents[-1]], default="unmodified")
         doc.noun_chunks_iterator = self.doc.noun_chunks_iterator
         doc.user_hooks = self.doc.user_hooks
         doc.user_span_hooks = self.doc.user_span_hooks
