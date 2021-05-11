@@ -290,6 +290,9 @@ def test_vocab_serialization(nlp):
         assert candidates[0].alias == adam_hash
         assert candidates[0].alias_ == "adam"
 
+        assert kb_new_vocab.get_vector("Q2") == [2]
+        assert_almost_equal(kb_new_vocab.get_prior_prob("Q2", "douglas"), 0.4)
+
 
 def test_append_alias(nlp):
     """Test that we can append additional alias-entity pairs"""
@@ -568,14 +571,70 @@ def test_nel_pickle():
         return kb
 
     nlp_1 = English()
+    nlp_1.add_pipe("ner")
     entity_linker_1 = nlp_1.add_pipe("entity_linker", last=True)
     entity_linker_1.set_kb(create_kb)
+    assert nlp_1.pipe_names == ["ner", "entity_linker"]
     assert entity_linker_1.kb.contains_alias("Russ Cochran")
 
     data = pickle.dumps(nlp_1)
     nlp_2 = pickle.loads(data)
+    assert nlp_2.pipe_names == ["ner", "entity_linker"]
     entity_linker_2 = nlp_2.get_pipe("entity_linker")
     assert entity_linker_2.kb.contains_alias("Russ Cochran")
+
+
+def test_kb_to_bytes():
+    # Test that the KB's to_bytes method works correctly
+    nlp = English()
+    kb_1 = KnowledgeBase(nlp.vocab, entity_vector_length=3)
+    kb_1.add_entity(entity="Q2146908", freq=12, entity_vector=[6, -4, 3])
+    kb_1.add_entity(entity="Q66", freq=9, entity_vector=[1, 2, 3])
+    kb_1.add_alias(alias="Russ Cochran", entities=["Q2146908"], probabilities=[0.8])
+    kb_1.add_alias(alias="Boeing", entities=["Q66"], probabilities=[0.5])
+    kb_1.add_alias(alias="Randomness", entities=["Q66", "Q2146908"], probabilities=[0.1, 0.2])
+    assert kb_1.contains_alias("Russ Cochran")
+    kb_bytes = kb_1.to_bytes()
+    kb_2 = KnowledgeBase(nlp.vocab, entity_vector_length=3)
+    assert not kb_2.contains_alias("Russ Cochran")
+    kb_2 = kb_2.from_bytes(kb_bytes)
+    # check that both KBs are exactly the same
+    assert kb_1.get_size_entities() == kb_2.get_size_entities()
+    assert kb_1.entity_vector_length == kb_2.entity_vector_length
+    assert kb_1.get_entity_strings() == kb_2.get_entity_strings()
+    assert kb_1.get_vector("Q2146908") == kb_2.get_vector("Q2146908")
+    assert kb_1.get_vector("Q66") == kb_2.get_vector("Q66")
+    print(kb_2.get_alias_strings())
+    assert kb_2.contains_alias("Russ Cochran")
+    assert kb_1.get_size_aliases() == kb_2.get_size_aliases()
+    assert kb_1.get_alias_strings() == kb_2.get_alias_strings()
+    assert len(kb_1.get_alias_candidates("Russ Cochran")) == len(kb_2.get_alias_candidates("Russ Cochran"))
+    assert len(kb_1.get_alias_candidates("Randomness")) == len(kb_2.get_alias_candidates("Randomness"))
+
+
+def test_nel_to_bytes():
+    # Test that a pipeline with an EL component can be converted to bytes
+    def create_kb(vocab):
+        kb = KnowledgeBase(vocab, entity_vector_length=3)
+        kb.add_entity(entity="Q2146908", freq=12, entity_vector=[6, -4, 3])
+        kb.add_alias(alias="Russ Cochran", entities=["Q2146908"], probabilities=[0.8])
+        return kb
+
+    nlp_1 = English()
+    nlp_1.add_pipe("ner")
+    entity_linker_1 = nlp_1.add_pipe("entity_linker", last=True)
+    entity_linker_1.set_kb(create_kb)
+    assert entity_linker_1.kb.contains_alias("Russ Cochran")
+    assert nlp_1.pipe_names == ["ner", "entity_linker"]
+
+    nlp_bytes = nlp_1.to_bytes()
+    nlp_2 = English()
+    nlp_2.add_pipe("ner")
+    nlp_2.add_pipe("entity_linker", last=True)
+    assert nlp_2.pipe_names == ["ner", "entity_linker"]
+    assert not nlp_2.get_pipe("entity_linker").kb.contains_alias("Russ Cochran")
+    nlp_2 = nlp_2.from_bytes(nlp_bytes)
+    assert nlp_2.get_pipe("entity_linker").kb.contains_alias("Russ Cochran")
 
 
 def test_scorer_links():
