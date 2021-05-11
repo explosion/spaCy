@@ -243,8 +243,12 @@ class DocBin:
         DOCS: https://spacy.io/api/docbin#to_disk
         """
         path = ensure_path(path)
+        bytes_data = self.to_bytes()
         with path.open("wb") as file_:
-            file_.write(self.to_bytes())
+            try:
+                file_.write(bytes_data)
+            except ValueError:
+                raise ValueError(Errors.E871)
 
     def from_disk(self, path: Union[str, Path]) -> "DocBin":
         """Load the DocBin from a file (typically called .spacy).
