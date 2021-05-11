@@ -243,10 +243,9 @@ class DocBin:
         DOCS: https://spacy.io/api/docbin#to_disk
         """
         path = ensure_path(path)
-        bytes_data = self.to_bytes()
         with path.open("wb") as file_:
             try:
-                file_.write(bytes_data)
+                file_.write(self.to_bytes())
             except ValueError:
                 raise ValueError(Errors.E871)
 
