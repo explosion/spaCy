@@ -253,16 +253,10 @@ def test_span_string_label_kb_id(doc):
     assert span.kb_id == doc.vocab.strings["Q342"]
 
 
-def test_span_label_readonly(doc):
+def test_span_attrs_writable(doc):
     span = Span(doc, 0, 1)
-    with pytest.raises(NotImplementedError):
-        span.label_ = "hello"
-
-
-def test_span_kb_id_readonly(doc):
-    span = Span(doc, 0, 1)
-    with pytest.raises(NotImplementedError):
-        span.kb_id_ = "Q342"
+    span.label_ = "label"
+    span.kb_id_ = "kb_id"
 
 
 def test_span_ents_property(doc):

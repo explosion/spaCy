@@ -722,7 +722,7 @@ cdef class Span:
         def __get__(self):
             return self.root.ent_id_
 
-        def __set__(self, hash_t key):
+        def __set__(self, unicode key):
             raise NotImplementedError(Errors.E200.format(attr="ent_id_"))
 
     @property
@@ -744,9 +744,7 @@ cdef class Span:
             return self.doc.vocab.strings[self.label]
 
         def __set__(self, unicode label_):
-            if not label_:
-                label_ = ''
-            raise NotImplementedError(Errors.E129.format(start=self.start, end=self.end, label=label_))
+            self.label = self.doc.vocab.strings.add(label_)
 
     property kb_id_:
         """RETURNS (str): The named entity's KB ID."""
@@ -754,13 +752,7 @@ cdef class Span:
             return self.doc.vocab.strings[self.kb_id]
 
         def __set__(self, unicode kb_id_):
-            if not kb_id_:
-                kb_id_ = ''
-            current_label = self.label_
-            if not current_label:
-                current_label = ''
-            raise NotImplementedError(Errors.E131.format(start=self.start, end=self.end,
-                                                         label=current_label, kb_id=kb_id_))
+            self.kb_id = self.doc.vocab.strings.add(kb_id_)
 
 
 cdef int _count_words_to_root(const TokenC* token, int sent_length) except -1:
