@@ -634,7 +634,10 @@ def test_nel_to_bytes():
     assert nlp_2.pipe_names == ["ner", "entity_linker"]
     assert not nlp_2.get_pipe("entity_linker").kb.contains_alias("Russ Cochran")
     nlp_2 = nlp_2.from_bytes(nlp_bytes)
-    assert nlp_2.get_pipe("entity_linker").kb.contains_alias("Russ Cochran")
+    kb_2 = nlp_2.get_pipe("entity_linker").kb
+    assert kb_2.contains_alias("Russ Cochran")
+    assert kb_2.get_vector("Q2146908") == [6, -4, 3]
+    assert_almost_equal(kb_2.get_prior_prob(entity="Q2146908", alias="Russ Cochran"), 0.8)
 
 
 def test_scorer_links():
