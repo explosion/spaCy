@@ -229,7 +229,7 @@ cdef class Span:
         array = array[self.start : self.end]
         self._fix_dep_copy(array_head, array)
         # Fix initial IOB so the entities are valid for doc.ents below.
-        if ENT_IOB in array_head:
+        if len(array) > 0 and ENT_IOB in array_head:
             ent_iob_col = array_head.index(ENT_IOB)
             if array[0][ent_iob_col] == 1:
                 array[0][ent_iob_col] = 3
