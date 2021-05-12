@@ -218,6 +218,13 @@ def test_replace_listeners():
         nlp.replace_listeners("tok2vec", "tagger", ["model.yolo"])
     with pytest.raises(ValueError):
         nlp.replace_listeners("tok2vec", "tagger", ["model.tok2vec", "model.yolo"])
+    # attempt training with the new pipeline
+    optimizer = nlp.initialize(lambda: examples)
+    for i in range(2):
+        losses = {}
+        nlp.update(examples, sgd=optimizer, losses=losses)
+        assert losses["tok2vec"] == 0.0
+        assert losses["tagger"] > 0.0
 
 
 cfg_string_multi = """
