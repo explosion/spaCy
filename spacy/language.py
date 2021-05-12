@@ -1801,7 +1801,10 @@ class Language:
                 util.set_dot_to_object(pipe_cfg, listener_path, tok2vec_cfg["model"])
             # Go over the listener layers and replace them
             for listener in pipe_listeners:
-                util.replace_model_node(pipe.model, listener, tok2vec.model.copy())
+                new_model = tok2vec.model.copy()
+                if "replace_listener" in new_model.attrs:
+                    new_model = new_model.attrs["replace_listener"](new_model)
+                util.replace_model_node(pipe.model, listener, new_model)
                 tok2vec.remove_listener(listener, pipe_name)
 
     def to_disk(
