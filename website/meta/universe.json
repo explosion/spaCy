@@ -30,7 +30,7 @@
             "id": "eMFDscore",
             "title": "eMFDscore : Extended Moral Foundation Dictionary Scoring for Python",
             "slogan": "Extended Moral Foundation Dictionary Scoring for Python",
-            "description": "eMFDscore is a library for the fast and flexible extraction of various moral information metrics from textual input data. eMFDscore is build on spaCy for faster execution and performs minimal preprocessing consisting of tokenization, syntactic dependency parsing, lower-casing, and stopword/punctuation/whitespace removal. eMFDscore lets users score documents with multiple Moral Foundations Dictionaries, provides various metrics for analyzing moral information, and extracts moral patient, agent, and attribute words related to entities.",
+            "description": "eMFDscore is a library for the fast and flexible extraction of various moral information metrics from textual input data. eMFDscore is built on spaCy for faster execution and performs minimal preprocessing consisting of tokenization, syntactic dependency parsing, lower-casing, and stopword/punctuation/whitespace removal. eMFDscore lets users score documents with multiple Moral Foundations Dictionaries, provides various metrics for analyzing moral information, and extracts moral patient, agent, and attribute words related to entities.",
             "github": "https://github.com/medianeuroscience/emfdscore",
             "code_example": [
                 "from emfdscore.scoring import score_docs",
