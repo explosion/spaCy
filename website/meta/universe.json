@@ -3036,11 +3036,11 @@
             "id": "hmrb",
             "title": "Hammurabi",
             "slogan": "Python Rule Processing Engine 🏺",
-            "description": "Hammurabi works as a rule engine to parse input using a defined set of rules. It uses a simple and readable syntax to define complex rules to handle phrase matching. The syntax supports logic, reusable variables and callback functions to modularize your rules. For more information check the documentation on [ReadTheDocs](https://hmrb.readthedocs.io/en/latest/).",
+            "description": "Hammurabi works as a rule engine to parse input using a defined set of rules. It uses a simple and readable syntax to define complex rules to handle phrase matching. The syntax supports logic, reusable variables and callback functions to modularize your rules. The latest version works with both spaCy 2.X and 3.X. For more information check the documentation on [ReadTheDocs](https://hmrb.readthedocs.io/en/latest/).",
             "github": "babylonhealth/hmrb",
             "pip": "hmrb",
             "code_example": [
-                "import spacy",
+                "import spacy # __version__ 3.0+",
                 "from hmrb.core import SpacyCore",
                 "",
                 "grammar = \"\"\"",
