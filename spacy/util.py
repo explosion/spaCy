@@ -59,7 +59,21 @@ if TYPE_CHECKING:
 
 OOV_RANK = numpy.iinfo(numpy.uint64).max
 DEFAULT_OOV_PROB = -20
-LEXEME_NORM_LANGS = ["cs", "da", "de", "el", "en", "id", "lb", "mk", "pt", "ru", "sr", "ta", "th"]
+LEXEME_NORM_LANGS = [
+    "cs",
+    "da",
+    "de",
+    "el",
+    "en",
+    "id",
+    "lb",
+    "mk",
+    "pt",
+    "ru",
+    "sr",
+    "ta",
+    "th",
+]
 
 # Default order of sections in the config.cfg. Not all sections needs to exist,
 # and additional sections are added at the end, in alphabetical order.
@@ -1092,17 +1106,17 @@ def normalize_slice(
     return start, stop
 
 
-def filter_spans(spans: Iterable["Span"]) -> List["Span"]:
+def filter_spans(spans: Iterable["Span"], longest: bool = True) -> List["Span"]:
     """Filter a sequence of spans and remove duplicates or overlaps. Useful for
     creating named entities (where one token can only be part of one entity) or
-    when merging spans with `Retokenizer.merge`. When spans overlap, the (first)
-    longest span is preferred over shorter spans.
+    when merging spans with `Retokenizer.merge`.
 
     spans (Iterable[Span]): The spans to filter.
+    longest (bool): True will remove smallest spans, False will remove longest spans.
     RETURNS (List[Span]): The filtered spans.
     """
     get_sort_key = lambda span: (span.end - span.start, -span.start)
-    sorted_spans = sorted(spans, key=get_sort_key, reverse=True)
+    sorted_spans = sorted(spans, key=get_sort_key, reverse=longest)
     result = []
     seen_tokens = set()
     for span in sorted_spans:
