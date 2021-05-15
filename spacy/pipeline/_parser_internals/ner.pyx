@@ -26,7 +26,6 @@ cdef enum:
     LAST
     UNIT
     OUT
-    ISNT
     N_MOVES
 
 
@@ -37,7 +36,6 @@ MOVE_NAMES[IN] = 'I'
 MOVE_NAMES[LAST] = 'L'
 MOVE_NAMES[UNIT] = 'U'
 MOVE_NAMES[OUT] = 'O'
-MOVE_NAMES[ISNT] = 'x'
 
 
 cdef struct GoldNERStateC:
@@ -174,8 +172,6 @@ cdef class BiluoPushDown(TransitionSystem):
         cdef attr_t label
         if name == '-' or name == '' or name is None:
             return Transition(clas=0, move=MISSING, label=0, score=0)
-        elif name == '!O':
-            return Transition(clas=0, move=ISNT, label=0, score=0)
         elif '-' in name:
             move_str, label_str = name.split('-', 1)
             # Hacky way to denote 'not this entity'
@@ -187,8 +183,6 @@ cdef class BiluoPushDown(TransitionSystem):
             move_str = name
             label = 0
         move = MOVE_NAMES.index(move_str)
-        if move == ISNT:
-            return Transition(clas=0, move=ISNT, label=label, score=0)
         for i in range(self.n_moves):
             if self.c[i].move == move and self.c[i].label == label:
                 return self.c[i]
@@ -238,7 +232,7 @@ cdef class BiluoPushDown(TransitionSystem):
             label_id = label_name
         if action == OUT and label_id != 0:
             return None
-        if action == MISSING or action == ISNT:
+        if action == MISSING:
             return None
         # Check we're not creating a move we already have, so that this is
         # idempotent
@@ -415,9 +409,6 @@ cdef class Begin:
         elif g_act == BEGIN:
             # B, Gold B --> Label match
             cost += label != g_tag
-        # Support partial supervision in the form of "not this label"
-        elif g_act == ISNT:
-            cost += label == g_tag
         else:
             # B, Gold I --> False (P)
             # B, Gold L --> False (P)
@@ -506,9 +497,6 @@ cdef class In:
         elif g_act == UNIT:
             # I, Gold U --> True iff next tag == O
             return next_act != OUT
-        # Support partial supervision in the form of "not this label"
-        elif g_act == ISNT:
-            return 0
         else:
             return 1
 
@@ -572,9 +560,6 @@ cdef class Last:
             pass
         elif g_act == UNIT:
             # L, Gold U --> True
-            pass
-        # Support partial supervision in the form of "not this label"
-        elif g_act == ISNT:
             pass
         else:
             cost += 1
@@ -678,9 +663,7 @@ cdef class Out:
         cdef int g_act = gold.ner[s.B(0)].move
         cdef attr_t g_tag = gold.ner[s.B(0)].label
 
-        if g_act == ISNT and g_tag == 0:
-            return 1
-        elif g_act == MISSING or g_act == ISNT:
+        if g_act == MISSING:
             return 0
         elif g_act == BEGIN:
             # O, Gold B --> False
