@@ -6,10 +6,11 @@ from thinc.extra.search cimport Beam
 
 from ...tokens.doc cimport Doc
 from ...tokens.span import Span
+from ...tokens.span cimport Span
 from ...typedefs cimport weight_t, attr_t
 from ...lexeme cimport Lexeme
 from ...attrs cimport IS_SPACE
-from ...structs cimport TokenC
+from ...structs cimport TokenC, SpanC
 from ...training.example cimport Example
 from .stateclass cimport StateClass
 from ._state cimport StateC
@@ -273,6 +274,14 @@ cdef class BiluoPushDown(TransitionSystem):
         return BiluoGold(self, state, example)
 
     def has_gold(self, Example eg, start=0, end=None):
+        # We get x and y referring to X, we want to check relative to Y,
+        # the reference
+        y_spans = eg.get_aligned_spans_x2y([eg.x[start:end]])
+        if not y_spans:
+            y_spans = [eg.y[:]]
+        y_span = y_spans[0]
+        start = y_span.start
+        end = y_span.end
         for word in eg.y[start:end]:
             if word.ent_iob != 0:
                 return True
