@@ -112,6 +112,9 @@ def make_parser(
         beam_width=1,
         beam_density=0.0,
         beam_update_prob=0.0,
+        # At some point in the future we can try to implement support for
+        # partial annotations, perhaps only in the beam objective.
+        negative_samples_key=None
     )
 
 @Language.factory(
@@ -195,7 +198,10 @@ def make_beam_parser(
         beam_update_prob=beam_update_prob,
         multitasks=[],
         learn_tokens=learn_tokens,
-        min_action_freq=min_action_freq
+        min_action_freq=min_action_freq,
+        # At some point in the future we can try to implement support for
+        # partial annotations, perhaps only in the beam objective.
+        negative_samples_key=None
     )
 
 
