@@ -48,6 +48,7 @@ cdef class Parser(TrainablePipe):
         beam_density=0.0,
         beam_update_prob=0.0,
         multitasks=tuple(),
+        negative_samples_key=None
     ):
         """Create a Parser.
 
@@ -68,11 +69,15 @@ cdef class Parser(TrainablePipe):
             "learn_tokens": learn_tokens,
             "beam_width": beam_width,
             "beam_density": beam_density,
-            "beam_update_prob": beam_update_prob
+            "beam_update_prob": beam_update_prob,
+            "negative_samples_key": negative_samples_key
         }
         if moves is None:
             # defined by EntityRecognizer as a BiluoPushDown
-            moves = self.TransitionSystem(self.vocab.strings)
+            moves = self.TransitionSystem(
+                self.vocab.strings,
+                negative_samples_key=negative_samples_key
+            )
         self.moves = moves
         self.model = model
         if self.moves.n_moves != 0:
@@ -326,7 +331,6 @@ cdef class Parser(TrainablePipe):
         )
         for multitask in self._multitasks:
             multitask.update(examples, drop=drop, sgd=sgd)
-    
         n_examples = len([eg for eg in examples if self.moves.has_gold(eg)])
         if n_examples == 0:
             return losses
