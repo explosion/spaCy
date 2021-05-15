@@ -63,31 +63,6 @@ def test_get_oracle_moves(tsys, doc, entity_annots):
     assert names == ["U-PERSON", "O", "O", "B-GPE", "L-GPE", "O"]
 
 
-@pytest.mark.filterwarnings("ignore::UserWarning")
-def test_get_oracle_moves_negative_entities(tsys, doc, entity_annots):
-    entity_annots = [(s, e, "!" + label) for s, e, label in entity_annots]
-    example = Example.from_dict(doc, {"entities": entity_annots})
-    ex_dict = example.to_dict()
-
-    for i, tag in enumerate(ex_dict["doc_annotation"]["entities"]):
-        if tag == "L-!GPE":
-            ex_dict["doc_annotation"]["entities"][i] = "-"
-    example = Example.from_dict(doc, ex_dict)
-
-    act_classes = tsys.get_oracle_sequence(example)
-    names = [tsys.get_class_name(act) for act in act_classes]
-    assert names
-
-
-def test_get_oracle_moves_negative_entities2(tsys, vocab):
-    doc = Doc(vocab, words=["A", "B", "C", "D"])
-    entity_annots = ["B-!PERSON", "L-!PERSON", "B-!PERSON", "L-!PERSON"]
-    example = Example.from_dict(doc, {"entities": entity_annots})
-    act_classes = tsys.get_oracle_sequence(example)
-    names = [tsys.get_class_name(act) for act in act_classes]
-    assert names
-
-
 def test_negative_samples_two_word_input(tsys, vocab, neg_key):
     """Test that we don't get stuck in a two word input when we have a negative
     span. This could happen if we don't have the right check on the B action.
@@ -158,12 +133,6 @@ def test_negative_sample_key_is_in_config(vocab, entity_types):
         negative_samples_key="non_entities"
     )
     assert tsys.cfg["neg_key"] == "non_entities"
-    #doc = Doc(vocab, words=["A", "B", "C", "D"])
-    #entity_annots = ["O", "!O", "O", "!O"]
-    #example = Example.from_dict(doc, {"entities": entity_annots})
-    #act_classes = tsys.get_oracle_sequence(example)
-    #names = [tsys.get_class_name(act) for act in act_classes]
-    #assert names
 
 
 # We can't easily represent this on a Doc object. Not sure what the best solution
