@@ -23,8 +23,8 @@ cdef class Tokenizer:
     cdef object _infix_finditer
     cdef object _rules
     cdef PhraseMatcher _special_matcher
-    cdef int _property_init_count
-    cdef int _property_init_max
+    cdef int _property_init_count  # TODO: unused, remove in v3.1
+    cdef int _property_init_max    # TODO: unused, remove in v3.1
 
     cdef Doc _tokenize_affixes(self, unicode string, bint with_special_cases)
     cdef int _apply_special_cases(self, Doc doc) except -1

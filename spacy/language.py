@@ -22,6 +22,7 @@ from .training.initialize import init_vocab, init_tok2vec
 from .scorer import Scorer
 from .util import registry, SimpleFrozenList, _pipe, raise_error
 from .util import SimpleFrozenDict, combine_score_weights, CONFIG_SECTION_ORDER
+from .util import warn_if_jupyter_cupy
 from .lang.tokenizer_exceptions import URL_MATCH, BASE_EXCEPTIONS
 from .lang.punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
 from .lang.punctuation import TOKENIZER_INFIXES
@@ -432,9 +433,9 @@ class Language:
         default_config (Dict[str, Any]): Default configuration, describing the
             default values of the factory arguments.
         assigns (Iterable[str]): Doc/Token attributes assigned by this component,
-            e.g. "token.ent_id". Used for pipeline analyis.
+            e.g. "token.ent_id". Used for pipeline analysis.
         requires (Iterable[str]): Doc/Token attributes required by this component,
-            e.g. "token.ent_id". Used for pipeline analyis.
+            e.g. "token.ent_id". Used for pipeline analysis.
         retokenizes (bool): Whether the component changes the tokenization.
             Used for pipeline analysis.
         default_score_weights (Dict[str, float]): The scores to report during
@@ -517,9 +518,9 @@ class Language:
 
         name (str): The name of the component factory.
         assigns (Iterable[str]): Doc/Token attributes assigned by this component,
-            e.g. "token.ent_id". Used for pipeline analyis.
+            e.g. "token.ent_id". Used for pipeline analysis.
         requires (Iterable[str]): Doc/Token attributes required by this component,
-            e.g. "token.ent_id". Used for pipeline analyis.
+            e.g. "token.ent_id". Used for pipeline analysis.
         retokenizes (bool): Whether the component changes the tokenization.
             Used for pipeline analysis.
         func (Optional[Callable]): Factory function if not used as a decorator.
@@ -681,9 +682,14 @@ class Language:
         name (str): Optional alternative name to use in current pipeline.
         RETURNS (Tuple[Callable, str]): The component and its factory name.
         """
-        # TODO: handle errors and mismatches (vectors etc.)
-        if not isinstance(source, self.__class__):
+        # Check source type
+        if not isinstance(source, Language):
             raise ValueError(Errors.E945.format(name=source_name, source=type(source)))
+        # Check vectors, with faster checks first
+        if self.vocab.vectors.shape != source.vocab.vectors.shape or \
+                self.vocab.vectors.key2row != source.vocab.vectors.key2row or \
+                self.vocab.vectors.to_bytes() != source.vocab.vectors.to_bytes():
+            util.logger.warning(Warnings.W113.format(name=source_name))
         if not source_name in source.component_names:
             raise KeyError(
                 Errors.E944.format(
@@ -1219,13 +1225,12 @@ class Language:
         before_init = I["before_init"]
         if before_init is not None:
             before_init(self)
-        init_vocab(
-            self, data=I["vocab_data"], lookups=I["lookups"], vectors=I["vectors"]
-        )
-        pretrain_cfg = config.get("pretraining")
-        if pretrain_cfg:
-            P = registry.resolve(pretrain_cfg, schema=ConfigSchemaPretrain)
-            init_tok2vec(self, P, I)
+        try:
+            init_vocab(
+                self, data=I["vocab_data"], lookups=I["lookups"], vectors=I["vectors"]
+            )
+        except IOError:
+            raise IOError(Errors.E884.format(vectors=I["vectors"]))
         if self.vocab.vectors.data.shape[1] >= 1:
             ops = get_current_ops()
             self.vocab.vectors.data = ops.asarray(self.vocab.vectors.data)
@@ -1244,6 +1249,10 @@ class Language:
                     proc.initialize, p_settings, section="components", name=name
                 )
                 proc.initialize(get_examples, nlp=self, **p_settings)
+        pretrain_cfg = config.get("pretraining")
+        if pretrain_cfg:
+            P = registry.resolve(pretrain_cfg, schema=ConfigSchemaPretrain)
+            init_tok2vec(self, P, I)
         self._link_components()
         self._optimizer = sgd
         if sgd is not None:
@@ -1592,6 +1601,7 @@ class Language:
         # using the nlp.config with all defaults.
         config = util.copy_config(config)
         orig_pipeline = config.pop("components", {})
+        orig_pretraining = config.pop("pretraining", None)
         config["components"] = {}
         if auto_fill:
             filled = registry.fill(config, validate=validate, schema=ConfigSchema)
@@ -1599,6 +1609,9 @@ class Language:
             filled = config
         filled["components"] = orig_pipeline
         config["components"] = orig_pipeline
+        if orig_pretraining is not None:
+            filled["pretraining"] = orig_pretraining
+            config["pretraining"] = orig_pretraining
         resolved_nlp = registry.resolve(
             filled["nlp"], validate=validate, schema=ConfigSchemaNlp
         )
@@ -1615,6 +1628,10 @@ class Language:
                 or lang_cls is not cls
             ):
                 raise ValueError(Errors.E943.format(value=type(lang_cls)))
+
+        # Warn about require_gpu usage in jupyter notebook
+        warn_if_jupyter_cupy()
+
         # Note that we don't load vectors here, instead they get loaded explicitly
         # inside stuff like the spacy train function. If we loaded them here,
         # then we would load them twice at runtime: once when we make from config,
@@ -1661,7 +1678,16 @@ class Language:
                         # model with the same vocab as the current nlp object
                         source_nlps[model] = util.load_model(model, vocab=nlp.vocab)
                     source_name = pipe_cfg.get("component", pipe_name)
+                    listeners_replaced = False
+                    if "replace_listeners" in pipe_cfg:
+                        for name, proc in source_nlps[model].pipeline:
+                            if source_name in getattr(proc, "listening_components", []):
+                                source_nlps[model].replace_listeners(name, source_name, pipe_cfg["replace_listeners"])
+                                listeners_replaced = True
                     nlp.add_pipe(source_name, source=source_nlps[model], name=pipe_name)
+                    # Delete from cache if listeners were replaced
+                    if listeners_replaced:
+                        del source_nlps[model]
         disabled_pipes = [*config["nlp"]["disabled"], *disable]
         nlp._disabled = set(p for p in disabled_pipes if p not in exclude)
         nlp.batch_size = config["nlp"]["batch_size"]
@@ -1674,15 +1700,21 @@ class Language:
                 )
         # Detect components with listeners that are not frozen consistently
         for name, proc in nlp.pipeline:
-            if getattr(proc, "listening_components", None):  # e.g. tok2vec/transformer
-                for listener in proc.listening_components:
-                    # If it's a component sourced from another pipeline, we check if
-                    # the tok2vec listeners should be replaced with standalone tok2vec
-                    # models (e.g. so component can be frozen without its performance
-                    # degrading when other components/tok2vec are updated)
-                    paths = sourced.get(listener, {}).get("replace_listeners", [])
-                    if paths:
-                        nlp.replace_listeners(name, listener, paths)
+            # Remove listeners not in the pipeline
+            listener_names = getattr(proc, "listening_components", [])
+            unused_listener_names = [ll for ll in listener_names if ll not in nlp.pipe_names]
+            for listener_name in unused_listener_names:
+                for listener in proc.listener_map.get(listener_name, []):
+                    proc.remove_listener(listener, listener_name)
+
+            for listener in getattr(proc, "listening_components", []):  # e.g. tok2vec/transformer
+                # If it's a component sourced from another pipeline, we check if
+                # the tok2vec listeners should be replaced with standalone tok2vec
+                # models (e.g. so component can be frozen without its performance
+                # degrading when other components/tok2vec are updated)
+                paths = sourced.get(listener, {}).get("replace_listeners", [])
+                if paths:
+                    nlp.replace_listeners(name, listener, paths)
         return nlp
 
     def replace_listeners(

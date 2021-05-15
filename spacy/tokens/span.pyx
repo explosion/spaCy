@@ -6,6 +6,7 @@ from libc.math cimport sqrt
 import numpy
 from thinc.api import get_array_module
 import warnings
+import copy
 
 from .doc cimport token_by_start, token_by_end, get_token_attr, _get_lca_matrix
 from ..structs cimport TokenC, LexemeC
@@ -227,7 +228,25 @@ cdef class Span:
         array = self.doc.to_array(array_head)
         array = array[self.start : self.end]
         self._fix_dep_copy(array_head, array)
+        # Fix initial IOB so the entities are valid for doc.ents below.
+        if len(array) > 0 and ENT_IOB in array_head:
+            ent_iob_col = array_head.index(ENT_IOB)
+            if array[0][ent_iob_col] == 1:
+                array[0][ent_iob_col] = 3
         doc.from_array(array_head, array)
+        # Set partial entities at the beginning or end of the span to have
+        # missing entity annotation. Note: the initial partial entity could be
+        # detected from the IOB annotation but the final partial entity can't,
+        # so detect and remove both in the same way by checking self.ents.
+        span_ents = {(ent.start, ent.end) for ent in self.ents}
+        doc_ents = doc.ents
+        if len(doc_ents) > 0:
+            # Remove initial partial ent
+            if (doc_ents[0].start + self.start, doc_ents[0].end + self.start) not in span_ents:
+                doc.set_ents([], missing=[doc_ents[0]], default="unmodified")
+            # Remove final partial ent
+            if (doc_ents[-1].start + self.start, doc_ents[-1].end + self.start) not in span_ents:
+                doc.set_ents([], missing=[doc_ents[-1]], default="unmodified")
         doc.noun_chunks_iterator = self.doc.noun_chunks_iterator
         doc.user_hooks = self.doc.user_hooks
         doc.user_span_hooks = self.doc.user_span_hooks
@@ -241,7 +260,19 @@ cdef class Span:
                 if cat_start == self.start_char and cat_end == self.end_char:
                     doc.cats[cat_label] = value
         if copy_user_data:
-            doc.user_data = self.doc.user_data
+            user_data = {}
+            char_offset = self.start_char
+            for key, value in self.doc.user_data.items():
+                if isinstance(key, tuple) and len(key) == 4 and key[0] == "._.":
+                    data_type, name, start, end = key
+                    if start is not None or end is not None:
+                        start -= char_offset
+                        if end is not None:
+                            end -= char_offset
+                        user_data[(data_type, name, start, end)] = copy.copy(value)
+                else:
+                    user_data[key] = copy.copy(value)
+            doc.user_data = user_data
         return doc
 
     def _fix_dep_copy(self, attrs, array):

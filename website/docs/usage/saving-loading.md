@@ -19,9 +19,8 @@ import Serialization101 from 'usage/101/\_serialization.md'
 When serializing the pipeline, keep in mind that this will only save out the
 **binary data for the individual components** to allow spaCy to restore them –
 not the entire objects. This is a good thing, because it makes serialization
-safe. But it also means that you have to take care of storing the language name
-and pipeline component names as well, and restoring them separately before you
-can load in the data.
+safe. But it also means that you have to take care of storing the config, which
+contains the pipeline configuration and all the relevant settings.
 
 > #### Saving the meta and config
 >
@@ -33,24 +32,21 @@ can load in the data.
 
 ```python
 ### Serialize
+config = nlp.config
 bytes_data = nlp.to_bytes()
-lang = nlp.config["nlp"]["lang"]  # "en"
-pipeline = nlp.config["nlp"]["pipeline"]  # ["tagger", "parser", "ner"]
 ```
 
 ```python
 ### Deserialize
-nlp = spacy.blank(lang)
-for pipe_name in pipeline:
-    nlp.add_pipe(pipe_name)
+lang_cls = spacy.util.get_lang_class(config["nlp"]["lang"])
+nlp = lang_cls.from_config(config)
 nlp.from_bytes(bytes_data)
 ```
 
 This is also how spaCy does it under the hood when loading a pipeline: it loads
 the `config.cfg` containing the language and pipeline information, initializes
-the language class, creates and adds the pipeline components based on the
-defined [factories](/usage/processing-pipeline#custom-components-factories) and
-_then_ loads in the binary data. You can read more about this process
+the language class, creates and adds the pipeline components based on the config
+and _then_ loads in the binary data. You can read more about this process
 [here](/usage/processing-pipelines#pipelines).
 
 ## Serializing Doc objects efficiently {#docs new="2.2"}

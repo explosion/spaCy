@@ -10,7 +10,7 @@ from ..tb_framework import TransitionModel
 from ...tokens import Doc
 
 
-@registry.architectures.register("spacy.TransitionBasedParser.v1")
+@registry.architectures("spacy.TransitionBasedParser.v1")
 def transition_parser_v1(
     tok2vec: Model[List[Doc], List[Floats2d]],
     state_type: Literal["parser", "ner"],
@@ -31,7 +31,7 @@ def transition_parser_v1(
     )
 
 
-@registry.architectures.register("spacy.TransitionBasedParser.v2")
+@registry.architectures("spacy.TransitionBasedParser.v2")
 def transition_parser_v2(
     tok2vec: Model[List[Doc], List[Floats2d]],
     state_type: Literal["parser", "ner"],

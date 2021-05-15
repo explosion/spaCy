@@ -1,8 +1,10 @@
 import pytest
 from spacy.attrs import ORTH, LENGTH
-from spacy.tokens import Doc, Span
+from spacy.tokens import Doc, Span, Token
 from spacy.vocab import Vocab
 from spacy.util import filter_spans
+
+from .test_underscore import clean_underscore  # noqa: F401
 
 
 @pytest.fixture
@@ -12,9 +14,11 @@ def doc(en_tokenizer):
     heads = [1, 1, 3, 1, 1, 6, 6, 8, 6, 6, 12, 12, 12, 12]
     deps = ["nsubj", "ROOT", "det", "attr", "punct", "nsubj", "ROOT", "det",
             "attr", "punct", "ROOT", "det", "npadvmod", "punct"]
+    ents = ["O", "O", "B-ENT", "I-ENT", "I-ENT", "I-ENT", "I-ENT", "O", "O",
+            "O", "O", "O", "O", "O"]
     # fmt: on
     tokens = en_tokenizer(text)
-    return Doc(tokens.vocab, words=[t.text for t in tokens], heads=heads, deps=deps)
+    return Doc(tokens.vocab, words=[t.text for t in tokens], heads=heads, deps=deps, ents=ents)
 
 
 @pytest.fixture
@@ -218,12 +222,26 @@ def test_span_as_doc(doc):
     assert span_doc is not doc
     assert span_doc[0].idx == 0
 
+    # partial initial entity is removed
+    assert len(span_doc.ents) == 0
 
+    # full entity is preserved
+    span_doc = doc[2:10].as_doc()
+    assert len(span_doc.ents) == 1
+
+    # partial final entity is removed
+    span_doc = doc[0:5].as_doc()
+    assert len(span_doc.ents) == 0
+
+
+@pytest.mark.usefixtures("clean_underscore")
 def test_span_as_doc_user_data(doc):
     """Test that the user_data can be preserved (but not by default). """
     my_key = "my_info"
     my_value = 342
     doc.user_data[my_key] = my_value
+    Token.set_extension("is_x", default=False)
+    doc[7]._.is_x = True
 
     span = doc[4:10]
     span_doc_with = span.as_doc(copy_user_data=True)
@@ -232,6 +250,12 @@ def test_span_as_doc_user_data(doc):
     assert doc.user_data.get(my_key, None) is my_value
     assert span_doc_with.user_data.get(my_key, None) is my_value
     assert span_doc_without.user_data.get(my_key, None) is None
+    for i in range(len(span_doc_with)):
+        if i != 3:
+            assert span_doc_with[i]._.is_x is False
+        else:
+            assert span_doc_with[i]._.is_x is True
+    assert not any([t._.is_x for t in span_doc_without])
 
 
 def test_span_string_label_kb_id(doc):

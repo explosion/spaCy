@@ -1,6 +1,7 @@
 import pytest
 import numpy
 from numpy.testing import assert_allclose, assert_equal
+from thinc.api import get_current_ops
 from spacy.vocab import Vocab
 from spacy.vectors import Vectors
 from spacy.tokenizer import Tokenizer
@@ -9,6 +10,7 @@ from spacy.tokens import Doc
 
 from ..util import add_vecs_to_vocab, get_cosine, make_tempdir
 
+OPS = get_current_ops()
 
 @pytest.fixture
 def strings():
@@ -18,21 +20,21 @@ def strings():
 @pytest.fixture
 def vectors():
     return [
-        ("apple", [1, 2, 3]),
-        ("orange", [-1, -2, -3]),
-        ("and", [-1, -1, -1]),
-        ("juice", [5, 5, 10]),
-        ("pie", [7, 6.3, 8.9]),
+        ("apple", OPS.asarray([1, 2, 3])),
+        ("orange", OPS.asarray([-1, -2, -3])),
+        ("and", OPS.asarray([-1, -1, -1])),
+        ("juice", OPS.asarray([5, 5, 10])),
+        ("pie", OPS.asarray([7, 6.3, 8.9])),
     ]
 
 
 @pytest.fixture
 def ngrams_vectors():
     return [
-        ("apple", [1, 2, 3]),
-        ("app", [-0.1, -0.2, -0.3]),
-        ("ppl", [-0.2, -0.3, -0.4]),
-        ("pl", [0.7, 0.8, 0.9]),
+        ("apple", OPS.asarray([1, 2, 3])),
+        ("app", OPS.asarray([-0.1, -0.2, -0.3])),
+        ("ppl", OPS.asarray([-0.2, -0.3, -0.4])),
+        ("pl", OPS.asarray([0.7, 0.8, 0.9])),
     ]
 
 
@@ -171,8 +173,10 @@ def test_vectors_most_similar_identical():
 @pytest.mark.parametrize("text", ["apple and orange"])
 def test_vectors_token_vector(tokenizer_v, vectors, text):
     doc = tokenizer_v(text)
-    assert vectors[0] == (doc[0].text, list(doc[0].vector))
-    assert vectors[1] == (doc[2].text, list(doc[2].vector))
+    assert vectors[0][0] == doc[0].text
+    assert all([a == b for a, b in zip(vectors[0][1], doc[0].vector)])
+    assert vectors[1][0] == doc[2].text
+    assert all([a == b for a, b in zip(vectors[1][1], doc[2].vector)])
 
 
 @pytest.mark.parametrize("text", ["apple"])
@@ -301,7 +305,7 @@ def test_vectors_doc_doc_similarity(vocab, text1, text2):
 
 def test_vocab_add_vector():
     vocab = Vocab(vectors_name="test_vocab_add_vector")
-    data = numpy.ndarray((5, 3), dtype="f")
+    data = OPS.xp.ndarray((5, 3), dtype="f")
     data[0] = 1.0
     data[1] = 2.0
     vocab.set_vector("cat", data[0])
@@ -320,10 +324,10 @@ def test_vocab_prune_vectors():
     _ = vocab["cat"]  # noqa: F841
     _ = vocab["dog"]  # noqa: F841
     _ = vocab["kitten"]  # noqa: F841
-    data = numpy.ndarray((5, 3), dtype="f")
-    data[0] = [1.0, 1.2, 1.1]
-    data[1] = [0.3, 1.3, 1.0]
-    data[2] = [0.9, 1.22, 1.05]
+    data = OPS.xp.ndarray((5, 3), dtype="f")
+    data[0] = OPS.asarray([1.0, 1.2, 1.1])
+    data[1] = OPS.asarray([0.3, 1.3, 1.0])
+    data[2] = OPS.asarray([0.9, 1.22, 1.05])
     vocab.set_vector("cat", data[0])
     vocab.set_vector("dog", data[1])
     vocab.set_vector("kitten", data[2])
@@ -332,40 +336,41 @@ def test_vocab_prune_vectors():
     assert list(remap.keys()) == ["kitten"]
     neighbour, similarity = list(remap.values())[0]
     assert neighbour == "cat", remap
-    assert_allclose(similarity, get_cosine(data[0], data[2]), atol=1e-4, rtol=1e-3)
+    cosine = get_cosine(data[0], data[2])
+    assert_allclose(float(similarity), cosine, atol=1e-4, rtol=1e-3)
 
 
 def test_vectors_serialize():
-    data = numpy.asarray([[4, 2, 2, 2], [4, 2, 2, 2], [1, 1, 1, 1]], dtype="f")
+    data = OPS.asarray([[4, 2, 2, 2], [4, 2, 2, 2], [1, 1, 1, 1]], dtype="f")
     v = Vectors(data=data, keys=["A", "B", "C"])
     b = v.to_bytes()
     v_r = Vectors()
     v_r.from_bytes(b)
-    assert_equal(v.data, v_r.data)
+    assert_equal(OPS.to_numpy(v.data), OPS.to_numpy(v_r.data))
     assert v.key2row == v_r.key2row
     v.resize((5, 4))
     v_r.resize((5, 4))
-    row = v.add("D", vector=numpy.asarray([1, 2, 3, 4], dtype="f"))
-    row_r = v_r.add("D", vector=numpy.asarray([1, 2, 3, 4], dtype="f"))
+    row = v.add("D", vector=OPS.asarray([1, 2, 3, 4], dtype="f"))
+    row_r = v_r.add("D", vector=OPS.asarray([1, 2, 3, 4], dtype="f"))
     assert row == row_r
-    assert_equal(v.data, v_r.data)
+    assert_equal(OPS.to_numpy(v.data), OPS.to_numpy(v_r.data))
     assert v.is_full == v_r.is_full
     with make_tempdir() as d:
         v.to_disk(d)
         v_r.from_disk(d)
-        assert_equal(v.data, v_r.data)
+        assert_equal(OPS.to_numpy(v.data), OPS.to_numpy(v_r.data))
         assert v.key2row == v_r.key2row
         v.resize((5, 4))
         v_r.resize((5, 4))
-        row = v.add("D", vector=numpy.asarray([10, 20, 30, 40], dtype="f"))
-        row_r = v_r.add("D", vector=numpy.asarray([10, 20, 30, 40], dtype="f"))
+        row = v.add("D", vector=OPS.asarray([10, 20, 30, 40], dtype="f"))
+        row_r = v_r.add("D", vector=OPS.asarray([10, 20, 30, 40], dtype="f"))
         assert row == row_r
-        assert_equal(v.data, v_r.data)
+        assert_equal(OPS.to_numpy(v.data), OPS.to_numpy(v_r.data))
 
 
 def test_vector_is_oov():
     vocab = Vocab(vectors_name="test_vocab_is_oov")
-    data = numpy.ndarray((5, 3), dtype="f")
+    data = OPS.xp.ndarray((5, 3), dtype="f")
     data[0] = 1.0
     data[1] = 2.0
     vocab.set_vector("cat", data[0])

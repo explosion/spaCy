@@ -15,7 +15,7 @@ from ...tokens import Doc
 from .tok2vec import get_tok2vec_width
 
 
-@registry.architectures.register("spacy.TextCatCNN.v1")
+@registry.architectures("spacy.TextCatCNN.v1")
 def build_simple_cnn_text_classifier(
     tok2vec: Model, exclusive_classes: bool, nO: Optional[int] = None
 ) -> Model[List[Doc], Floats2d]:
@@ -41,7 +41,7 @@ def build_simple_cnn_text_classifier(
     return model
 
 
-@registry.architectures.register("spacy.TextCatBOW.v1")
+@registry.architectures("spacy.TextCatBOW.v1")
 def build_bow_text_classifier(
     exclusive_classes: bool,
     ngram_size: int,
@@ -60,7 +60,7 @@ def build_bow_text_classifier(
     return model
 
 
-@registry.architectures.register("spacy.TextCatEnsemble.v2")
+@registry.architectures("spacy.TextCatEnsemble.v2")
 def build_text_classifier_v2(
     tok2vec: Model[List[Doc], List[Floats2d]],
     linear_model: Model[List[Doc], Floats2d],
@@ -112,7 +112,7 @@ def init_ensemble_textcat(model, X, Y) -> Model:
     return model
 
 
-@registry.architectures.register("spacy.TextCatLowData.v1")
+@registry.architectures("spacy.TextCatLowData.v1")
 def build_text_classifier_lowdata(
     width: int, dropout: Optional[float], nO: Optional[int] = None
 ) -> Model[List[Doc], Floats2d]:

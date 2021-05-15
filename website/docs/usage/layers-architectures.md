@@ -15,7 +15,7 @@ next: /usage/projects
 > ```python
 > from thinc.api import Model, chain
 >
-> @spacy.registry.architectures.register("model.v1")
+> @spacy.registry.architectures("model.v1")
 > def build_model(width: int, classes: int) -> Model:
 >     tok2vec = build_tok2vec(width)
 >     output_layer = build_output_layer(width, classes)
@@ -137,7 +137,7 @@ nO = null
 @architectures = "spacy.Tok2Vec.v2"
 
 [components.textcat.model.tok2vec.embed]
-@architectures = "spacy.MultiHashEmbed.v1"
+@architectures = "spacy.MultiHashEmbed.v2"
 width = 64
 rows = [2000, 2000, 1000, 1000, 1000, 1000]
 attrs = ["ORTH", "LOWER", "PREFIX", "SUFFIX", "SHAPE", "ID"]
@@ -204,7 +204,7 @@ factory = "tok2vec"
 @architectures = "spacy.Tok2Vec.v2"
 
 [components.tok2vec.model.embed]
-@architectures = "spacy.MultiHashEmbed.v1"
+@architectures = "spacy.MultiHashEmbed.v2"
 # ...
 
 [components.tok2vec.model.encode]
@@ -220,7 +220,7 @@ architecture:
 ```ini
 ### config.cfg (excerpt)
 [components.tok2vec.model.embed]
-@architectures = "spacy.CharacterEmbed.v1"
+@architectures = "spacy.CharacterEmbed.v2"
 # ...
 
 [components.tok2vec.model.encode]
@@ -563,7 +563,7 @@ matrix** (~~Floats2d~~) of predictions:
 
 ```python
 ### The model architecture
-@spacy.registry.architectures.register("rel_model.v1")
+@spacy.registry.architectures("rel_model.v1")
 def create_relation_model(...) -> Model[List[Doc], Floats2d]:
     model = ...  # 👈 model will go here
     return model
@@ -589,7 +589,7 @@ transforms the instance tensor into a final tensor holding the predictions:
 
 ```python
 ### The model architecture {highlight="6"}
-@spacy.registry.architectures.register("rel_model.v1")
+@spacy.registry.architectures("rel_model.v1")
 def create_relation_model(
     create_instance_tensor: Model[List[Doc], Floats2d],
     classification_layer: Model[Floats2d, Floats2d],
@@ -613,7 +613,7 @@ The `classification_layer` could be something like a
 
 ```python
 ### The classification layer
-@spacy.registry.architectures.register("rel_classification_layer.v1")
+@spacy.registry.architectures("rel_classification_layer.v1")
 def create_classification_layer(
     nO: int = None, nI: int = None
 ) -> Model[Floats2d, Floats2d]:
@@ -638,7 +638,7 @@ that has the full implementation.
 > @architectures = "rel_instance_tensor.v1"
 >
 > [model.create_instance_tensor.tok2vec]
-> @architectures = "spacy.HashEmbedCNN.v1"
+> @architectures = "spacy.HashEmbedCNN.v2"
 > # ...
 >
 > [model.create_instance_tensor.pooling]
@@ -650,7 +650,7 @@ that has the full implementation.
 
 ```python
 ### The layer that creates the instance tensor
-@spacy.registry.architectures.register("rel_instance_tensor.v1")
+@spacy.registry.architectures("rel_instance_tensor.v1")
 def create_tensors(
     tok2vec: Model[List[Doc], List[Floats2d]],
     pooling: Model[Ragged, Floats2d],
@@ -731,7 +731,7 @@ are within a **maximum distance** (in number of tokens) of each other:
 
 ```python
 ### Candidate generation
-@spacy.registry.misc.register("rel_instance_generator.v1")
+@spacy.registry.misc("rel_instance_generator.v1")
 def create_instances(max_length: int) -> Callable[[Doc], List[Tuple[Span, Span]]]:
     def get_candidates(doc: "Doc") -> List[Tuple[Span, Span]]:
         candidates = []

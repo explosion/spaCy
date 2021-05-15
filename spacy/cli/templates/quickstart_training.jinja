@@ -16,7 +16,11 @@ gpu_allocator = null
 
 [nlp]
 lang = "{{ lang }}"
+{%- if "tagger" in components or "morphologizer" in components or "parser" in components or "ner" in components or "entity_linker" in components or (("textcat" in components or "textcat_multilabel" in components) and optimize == "accuracy") -%}
 {%- set full_pipeline = ["transformer" if use_transformer else "tok2vec"] + components %}
+{%- else -%}
+{%- set full_pipeline = components %}
+{%- endif %}
 pipeline = {{ full_pipeline|pprint()|replace("'", '"')|safe }}
 batch_size = {{ 128 if hardware == "gpu" else 1000 }}
 
@@ -202,7 +206,7 @@ factory = "tok2vec"
 @architectures = "spacy.Tok2Vec.v2"
 
 [components.tok2vec.model.embed]
-@architectures = "spacy.MultiHashEmbed.v1"
+@architectures = "spacy.MultiHashEmbed.v2"
 width = ${components.tok2vec.model.encode.width}
 {% if has_letters -%}
 attrs = ["NORM", "PREFIX", "SUFFIX", "SHAPE"]

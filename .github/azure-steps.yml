@@ -1,0 +1,57 @@
+parameters:
+  python_version: ''
+  architecture: ''
+  prefix: ''
+  gpu: false
+  num_build_jobs: 1
+
+steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: ${{ parameters.python_version }}
+      architecture: ${{ parameters.architecture }}
+
+  - script: |
+      ${{ parameters.prefix }} python -m pip install -U pip setuptools
+      ${{ parameters.prefix }} python -m pip install -U -r requirements.txt
+    displayName: "Install dependencies"
+
+  - script: |
+      ${{ parameters.prefix }} python setup.py build_ext --inplace -j ${{ parameters.num_build_jobs }}
+      ${{ parameters.prefix }} python setup.py sdist --formats=gztar
+    displayName: "Compile and build sdist"
+
+  - task: DeleteFiles@1
+    inputs:
+      contents: "spacy"
+    displayName: "Delete source directory"
+
+  - script: |
+      ${{ parameters.prefix }} python -m pip freeze --exclude torch --exclude cupy-cuda110 > installed.txt
+      ${{ parameters.prefix }} python -m pip uninstall -y -r installed.txt
+    displayName: "Uninstall all packages"
+
+  - bash: |
+      ${{ parameters.prefix }} SDIST=$(python -c "import os;print(os.listdir('./dist')[-1])" 2>&1)
+      ${{ parameters.prefix }} python -m pip install dist/$SDIST
+    displayName: "Install from sdist"
+
+  - script: |
+      ${{ parameters.prefix }} python -m pip install -U -r requirements.txt
+    displayName: "Install test requirements"
+
+  - script: |
+      ${{ parameters.prefix }} python -m pip install -U cupy-cuda110 -f https://github.com/cupy/cupy/releases/v9.0.0
+      ${{ parameters.prefix }} python -m pip install "torch==1.7.1+cu110" -f https://download.pytorch.org/whl/torch_stable.html
+    displayName: "Install GPU requirements"
+    condition: eq(${{ parameters.gpu }}, true)
+
+  - script: |
+      ${{ parameters.prefix }} python -m pytest --pyargs spacy
+    displayName: "Run CPU tests"
+    condition: eq(${{ parameters.gpu }}, false)
+
+  - script: |
+      ${{ parameters.prefix }} python -m pytest --pyargs spacy -p spacy.tests.enable_gpu
+    displayName: "Run GPU tests"
+    condition: eq(${{ parameters.gpu }}, true)

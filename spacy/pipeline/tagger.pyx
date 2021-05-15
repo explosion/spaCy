@@ -26,7 +26,7 @@ default_model_config = """
 @architectures = "spacy.Tagger.v1"
 
 [model.tok2vec]
-@architectures = "spacy.HashEmbedCNN.v1"
+@architectures = "spacy.HashEmbedCNN.v2"
 pretrained_vectors = null
 width = 96
 depth = 4
@@ -249,6 +249,7 @@ class Tagger(TrainablePipe):
         DOCS: https://spacy.io/api/tagger#initialize
         """
         validate_get_examples(get_examples, "Tagger.initialize")
+        util.check_lexeme_norms(self.vocab, "tagger")
         if labels is not None:
             for tag in labels:
                 self.add_label(tag)

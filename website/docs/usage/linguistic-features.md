@@ -599,18 +599,28 @@ ents = [(e.text, e.start_char, e.end_char, e.label_) for e in doc.ents]
 print('Before', ents)
 # The model didn't recognize "fb" as an entity :(
 
-fb_ent = Span(doc, 0, 1, label="ORG") # create a Span for the new entity
-doc.ents = list(doc.ents) + [fb_ent]
+# Create a span for the new entity
+fb_ent = Span(doc, 0, 1, label="ORG")
+orig_ents = list(doc.ents)
 
-ents = [(e.text, e.start_char, e.end_char, e.label_) for e in doc.ents]
+# Option 1: Modify the provided entity spans, leaving the rest unmodified
+doc.set_ents([fb_ent], default="unmodified")
+
+# Option 2: Assign a complete list of ents to doc.ents
+doc.ents = orig_ents + [fb_ent]
+
+ents = [(e.text, e.start, e.end, e.label_) for e in doc.ents]
 print('After', ents)
-# [('fb', 0, 2, 'ORG')] 🎉
+# [('fb', 0, 1, 'ORG')] 🎉
 ```
 
-Keep in mind that you need to create a `Span` with the start and end index of
-the **token**, not the start and end index of the entity in the document. In
-this case, "fb" is token `(0, 1)` – but at the document level, the entity will
-have the start and end indices `(0, 2)`.
+Keep in mind that `Span` is initialized with the start and end **token**
+indices, not the character offsets. To create a span from character offsets, use
+[`Doc.char_span`](/api/doc#char_span):
+
+```python
+fb_ent = doc.char_span(0, 2, label="ORG")
+```
 
 #### Setting entity annotations from array {#setting-from-array}
 
@@ -645,9 +655,10 @@ write efficient native code.
 
 ```python
 # cython: infer_types=True
+from spacy.typedefs cimport attr_t
 from spacy.tokens.doc cimport Doc
 
-cpdef set_entity(Doc doc, int start, int end, int ent_type):
+cpdef set_entity(Doc doc, int start, int end, attr_t ent_type):
     for i in range(start, end):
         doc.c[i].ent_type = ent_type
     doc.c[start].ent_iob = 3
@@ -776,6 +787,7 @@ rather than performance:
 
 ```python
 def tokenizer_pseudo_code(
+    text,
     special_cases,
     prefix_search,
     suffix_search,
@@ -829,12 +841,14 @@ def tokenizer_pseudo_code(
                 tokens.append(substring)
                 substring = ""
         tokens.extend(reversed(suffixes))
+    for match in matcher(special_cases, text):
+        tokens.replace(match, special_cases[match])
     return tokens
 ```
 
 The algorithm can be summarized as follows:
 
-1. Iterate over whitespace-separated substrings.
+1. Iterate over space-separated substrings.
 2. Look for a token match. If there is a match, stop processing and keep this
    token.
 3. Check whether we have an explicitly defined special case for this substring.
@@ -848,6 +862,8 @@ The algorithm can be summarized as follows:
 8. Look for "infixes" – stuff like hyphens etc. and split the substring into
    tokens on all infixes.
 9. Once we can't consume any more of the string, handle it as a single token.
+10. Make a final pass over the text to check for special cases that include
+    spaces or that were missed due to the incremental processing of affixes.
 
 </Accordion>
 
@@ -952,7 +968,7 @@ domain. There are six things you may need to define:
    quotes, open brackets, etc.
 3. A function `suffix_search`, to handle **succeeding punctuation**, such as
    commas, periods, close quotes, etc.
-4. A function `infixes_finditer`, to handle non-whitespace separators, such as
+4. A function `infix_finditer`, to handle non-whitespace separators, such as
    hyphens etc.
 5. An optional boolean function `token_match` matching strings that should never
    be split, overriding the infix rules. Useful for things like numbers.

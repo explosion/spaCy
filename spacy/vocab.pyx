@@ -2,7 +2,7 @@
 from libc.string cimport memcpy
 
 import srsly
-from thinc.api import get_array_module
+from thinc.api import get_array_module, get_current_ops
 import functools
 
 from .lexeme cimport EMPTY_LEXEME, OOV_RANK
@@ -293,7 +293,7 @@ cdef class Vocab:
         among those remaining.
 
         For example, suppose the original table had vectors for the words:
-        ['sat', 'cat', 'feline', 'reclined']. If we prune the vector table to,
+        ['sat', 'cat', 'feline', 'reclined']. If we prune the vector table to
         two rows, we would discard the vectors for 'feline' and 'reclined'.
         These words would then be remapped to the closest remaining vector
         -- so "feline" would have the same vector as "cat", and "reclined"
@@ -314,6 +314,7 @@ cdef class Vocab:
 
         DOCS: https://spacy.io/api/vocab#prune_vectors
         """
+        ops = get_current_ops()
         xp = get_array_module(self.vectors.data)
         # Make sure all vectors are in the vocab
         for orth in self.vectors:
@@ -329,8 +330,9 @@ cdef class Vocab:
         toss = xp.ascontiguousarray(self.vectors.data[indices[nr_row:]])
         self.vectors = Vectors(data=keep, keys=keys[:nr_row], name=self.vectors.name)
         syn_keys, syn_rows, scores = self.vectors.most_similar(toss, batch_size=batch_size)
+        syn_keys = ops.to_numpy(syn_keys)
         remap = {}
-        for i, key in enumerate(keys[nr_row:]):
+        for i, key in enumerate(ops.to_numpy(keys[nr_row:])):
             self.vectors.add(key, row=syn_rows[i][0])
             word = self.strings[key]
             synonym = self.strings[syn_keys[i][0]]
@@ -351,7 +353,7 @@ cdef class Vocab:
             Defaults to the length of `orth`.
         maxn (int): Maximum n-gram length used for Fasttext's ngram computation.
             Defaults to the length of `orth`.
-        RETURNS (numpy.ndarray): A word vector. Size
+        RETURNS (numpy.ndarray or cupy.ndarray): A word vector. Size
             and shape determined by the `vocab.vectors` instance. Usually, a
             numpy ndarray of shape (300,) and dtype float32.
 
@@ -362,15 +364,15 @@ cdef class Vocab:
         word = self[orth].orth_
         if orth in self.vectors.key2row:
             return self.vectors[orth]
-        # Assign default ngram limits to minn and maxn which is the length of the word.
-        if minn is None:
-            minn = len(word)
-        if maxn is None:
-            maxn = len(word)
         xp = get_array_module(self.vectors.data)
         vectors = xp.zeros((self.vectors_length,), dtype="f")
+        if minn is None:
+            return vectors
         # Fasttext's ngram computation taken from
         # https://github.com/facebookresearch/fastText
+        # Assign default ngram limit to maxn which is the length of the word.
+        if maxn is None:
+            maxn = len(word)
         ngrams_size = 0;
         for i in range(len(word)):
             ngram = ""
@@ -400,7 +402,7 @@ cdef class Vocab:
         by string or int ID.
 
         orth (int / unicode): The word.
-        vector (numpy.ndarray[ndim=1, dtype='float32']): The vector to set.
+        vector (numpy.ndarray or cupy.nadarry[ndim=1, dtype='float32']): The vector to set.
 
         DOCS: https://spacy.io/api/vocab#set_vector
         """

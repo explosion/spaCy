@@ -98,9 +98,9 @@ mark both statements:
 
 | Field                          | Entry                |
 |------------------------------- | -------------------- |
-| Name                           |  Shantam             |
+| Name                           |  Shantam Raj         |
 | Company name (if applicable)   |                      |
 | Title or role (if applicable)  |                      |
-| Date                           |   21/5/2018          |
+| Date                           |   10/4/2021          |
 | GitHub username                |     armsp            |
-| Website (optional)             |                      |
+| Website (optional)             |https://shantamraj.com|

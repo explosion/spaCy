@@ -230,7 +230,7 @@ def test_el_pipe_configuration(nlp):
     def get_lowercased_candidates(kb, span):
         return kb.get_alias_candidates(span.text.lower())
 
-    @registry.misc.register("spacy.LowercaseCandidateGenerator.v1")
+    @registry.misc("spacy.LowercaseCandidateGenerator.v1")
     def create_candidates() -> Callable[[KnowledgeBase, "Span"], Iterable[Candidate]]:
         return get_lowercased_candidates
 

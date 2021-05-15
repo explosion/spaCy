@@ -36,7 +36,7 @@ except ImportError:
 try:  # Python 3.8
     import importlib.metadata as importlib_metadata
 except ImportError:
-    import importlib_metadata
+    from catalogue import _importlib_metadata as importlib_metadata
 
 # These are functions that were previously (v2.x) available from spacy.util
 # and have since moved to Thinc. We're importing them here so people's code
@@ -59,7 +59,7 @@ if TYPE_CHECKING:
 
 OOV_RANK = numpy.iinfo(numpy.uint64).max
 DEFAULT_OOV_PROB = -20
-LEXEME_NORM_LANGS = ["da", "de", "el", "en", "id", "lb", "pt", "ru", "sr", "ta", "th"]
+LEXEME_NORM_LANGS = ["cs", "da", "de", "el", "en", "id", "lb", "mk", "pt", "ru", "sr", "ta", "th"]
 
 # Default order of sections in the config.cfg. Not all sections needs to exist,
 # and additional sections are added at the end, in alphabetical order.
@@ -70,7 +70,9 @@ CONFIG_SECTION_ORDER = ["paths", "variables", "system", "nlp", "components", "co
 
 logger = logging.getLogger("spacy")
 logger_stream_handler = logging.StreamHandler()
-logger_stream_handler.setFormatter(logging.Formatter("[%(asctime)s] [%(levelname)s] %(message)s"))
+logger_stream_handler.setFormatter(
+    logging.Formatter("[%(asctime)s] [%(levelname)s] %(message)s")
+)
 logger.addHandler(logger_stream_handler)
 
 
@@ -88,7 +90,7 @@ class registry(thinc.registry):
     displacy_colors = catalogue.create("spacy", "displacy_colors", entry_points=True)
     misc = catalogue.create("spacy", "misc", entry_points=True)
     # Callback functions used to manipulate nlp object etc.
-    callbacks = catalogue.create("spacy", "callbacks")
+    callbacks = catalogue.create("spacy", "callbacks", entry_points=True)
     batchers = catalogue.create("spacy", "batchers", entry_points=True)
     readers = catalogue.create("spacy", "readers", entry_points=True)
     augmenters = catalogue.create("spacy", "augmenters", entry_points=True)
@@ -1454,7 +1456,11 @@ def is_cython_func(func: Callable) -> bool:
     if hasattr(func, attr):  # function or class instance
         return True
     # https://stackoverflow.com/a/55767059
-    if hasattr(func, "__qualname__") and hasattr(func, "__module__"):  # method
+    if (
+        hasattr(func, "__qualname__")
+        and hasattr(func, "__module__")
+        and func.__module__ in sys.modules
+    ):  # method
         cls_func = vars(sys.modules[func.__module__])[func.__qualname__.split(".")[0]]
         return hasattr(cls_func, attr)
     return False
@@ -1499,3 +1505,43 @@ def raise_error(proc_name, proc, docs, e):
 
 def ignore_error(proc_name, proc, docs, e):
     pass
+
+
+def warn_if_jupyter_cupy():
+    """Warn about require_gpu if a jupyter notebook + cupy + mismatched
+    contextvars vs. thread ops are detected
+    """
+    if is_in_jupyter():
+        from thinc.backends.cupy_ops import CupyOps
+
+        if CupyOps.xp is not None:
+            from thinc.backends import contextvars_eq_thread_ops
+
+            if not contextvars_eq_thread_ops():
+                warnings.warn(Warnings.W111)
+
+
+def check_lexeme_norms(vocab, component_name):
+    lexeme_norms = vocab.lookups.get_table("lexeme_norm", {})
+    if len(lexeme_norms) == 0 and vocab.lang in LEXEME_NORM_LANGS:
+        langs = ", ".join(LEXEME_NORM_LANGS)
+        logger.debug(Warnings.W033.format(model=component_name, langs=langs))
+
+
+def to_ternary_int(val) -> int:
+    """Convert a value to the ternary 1/0/-1 int used for True/None/False in
+    attributes such as SENT_START: True/1/1.0 is 1 (True), None/0/0.0 is 0
+    (None), any other values are -1 (False).
+    """
+    if val is True:
+        return 1
+    elif val is None:
+        return 0
+    elif val is False:
+        return -1
+    elif val == 1:
+        return 1
+    elif val == 0:
+        return 0
+    else:
+        return -1

@@ -20,11 +20,12 @@ from .attrs import intify_attrs
 from .symbols import ORTH, NORM
 from .errors import Errors, Warnings
 from . import util
-from .util import registry
+from .util import registry, get_words_and_spaces
 from .attrs import intify_attrs
 from .symbols import ORTH
 from .scorer import Scorer
 from .training import validate_examples
+from .tokens import Span
 
 
 cdef class Tokenizer:
@@ -68,8 +69,6 @@ cdef class Tokenizer:
         self._rules = {}
         self._special_matcher = PhraseMatcher(self.vocab)
         self._load_special_cases(rules)
-        self._property_init_count = 0
-        self._property_init_max = 4
 
     property token_match:
         def __get__(self):
@@ -78,8 +77,6 @@ cdef class Tokenizer:
         def __set__(self, token_match):
             self._token_match = token_match
             self._reload_special_cases()
-            if self._property_init_count <= self._property_init_max:
-                self._property_init_count += 1
 
     property url_match:
         def __get__(self):
@@ -87,7 +84,7 @@ cdef class Tokenizer:
 
         def __set__(self, url_match):
             self._url_match = url_match
-            self._flush_cache()
+            self._reload_special_cases()
 
     property prefix_search:
         def __get__(self):
@@ -96,8 +93,6 @@ cdef class Tokenizer:
         def __set__(self, prefix_search):
             self._prefix_search = prefix_search
             self._reload_special_cases()
-            if self._property_init_count <= self._property_init_max:
-                self._property_init_count += 1
 
     property suffix_search:
         def __get__(self):
@@ -106,8 +101,6 @@ cdef class Tokenizer:
         def __set__(self, suffix_search):
             self._suffix_search = suffix_search
             self._reload_special_cases()
-            if self._property_init_count <= self._property_init_max:
-                self._property_init_count += 1
 
     property infix_finditer:
         def __get__(self):
@@ -116,8 +109,6 @@ cdef class Tokenizer:
         def __set__(self, infix_finditer):
             self._infix_finditer = infix_finditer
             self._reload_special_cases()
-            if self._property_init_count <= self._property_init_max:
-                self._property_init_count += 1
 
     property rules:
         def __get__(self):
@@ -125,7 +116,7 @@ cdef class Tokenizer:
 
         def __set__(self, rules):
             self._rules = {}
-            self._reset_cache([key for key in self._cache])
+            self._flush_cache()
             self._flush_specials()
             self._cache = PreshMap()
             self._specials = PreshMap()
@@ -225,6 +216,7 @@ cdef class Tokenizer:
                 self.mem.free(cached)
 
     def _flush_specials(self):
+        self._special_matcher = PhraseMatcher(self.vocab)
         for k in self._specials:
             cached = <_Cached*>self._specials.get(k)
             del self._specials[k]
@@ -567,7 +559,6 @@ cdef class Tokenizer:
         """Add special-case tokenization rules."""
         if special_cases is not None:
             for chunk, substrings in sorted(special_cases.items()):
-                self._validate_special_case(chunk, substrings)
                 self.add_special_case(chunk, substrings)
 
     def _validate_special_case(self, chunk, substrings):
@@ -615,16 +606,9 @@ cdef class Tokenizer:
             self._special_matcher.add(string, None, self._tokenize_affixes(string, False))
 
     def _reload_special_cases(self):
-        try:
-            self._property_init_count
-        except AttributeError:
-            return
-        # only reload if all 4 of prefix, suffix, infix, token_match have
-        # have been initialized
-        if self.vocab is not None and self._property_init_count >= self._property_init_max:
-            self._flush_cache()
-            self._flush_specials()
-            self._load_special_cases(self._rules)
+        self._flush_cache()
+        self._flush_specials()
+        self._load_special_cases(self._rules)
 
     def explain(self, text):
         """A debugging tokenizer that provides information about which
@@ -638,8 +622,14 @@ cdef class Tokenizer:
         DOCS: https://spacy.io/api/tokenizer#explain
         """
         prefix_search = self.prefix_search
+        if prefix_search is None:
+            prefix_search = re.compile("a^").search
         suffix_search = self.suffix_search
+        if suffix_search is None:
+            suffix_search = re.compile("a^").search
         infix_finditer = self.infix_finditer
+        if infix_finditer is None:
+            infix_finditer = re.compile("a^").finditer
         token_match = self.token_match
         if token_match is None:
             token_match = re.compile("a^").match
@@ -687,7 +677,7 @@ cdef class Tokenizer:
                     tokens.append(("URL_MATCH", substring))
                     substring = ''
                 elif substring in special_cases:
-                    tokens.extend(("SPECIAL-" + str(i + 1), self.vocab.strings[e[ORTH]]) for i, e in enumerate(special_cases[substring]))
+                    tokens.extend((f"SPECIAL-{i + 1}", self.vocab.strings[e[ORTH]]) for i, e in enumerate(special_cases[substring]))
                     substring = ''
                 elif list(infix_finditer(substring)):
                     infixes = infix_finditer(substring)
@@ -705,7 +695,33 @@ cdef class Tokenizer:
                     tokens.append(("TOKEN", substring))
                     substring = ''
             tokens.extend(reversed(suffixes))
-        return tokens
+        # Find matches for special cases handled by special matcher
+        words, spaces = get_words_and_spaces([t[1] for t in tokens], text)
+        t_words = []
+        t_spaces = []
+        for word, space in zip(words, spaces):
+            if not word.isspace():
+                t_words.append(word)
+                t_spaces.append(space)
+        doc = Doc(self.vocab, words=t_words, spaces=t_spaces)
+        matches = self._special_matcher(doc)
+        spans = [Span(doc, s, e, label=m_id) for m_id, s, e in matches]
+        spans = util.filter_spans(spans)
+        # Replace matched tokens with their exceptions
+        i = 0
+        final_tokens = []
+        spans_by_start = {s.start: s for s in spans}
+        while i < len(tokens):
+            if i in spans_by_start:
+                span = spans_by_start[i]
+                exc = [d[ORTH] for d in special_cases[span.label_]]
+                for j, orth in enumerate(exc):
+                    final_tokens.append((f"SPECIAL-{j + 1}", self.vocab.strings[orth]))
+                i += len(span)
+            else:
+                final_tokens.append(tokens[i])
+                i += 1
+        return final_tokens
 
     def score(self, examples, **kwargs):
         validate_examples(examples, "Tokenizer.score")
@@ -778,6 +794,15 @@ cdef class Tokenizer:
             "url_match": lambda b: data.setdefault("url_match", b),
             "exceptions": lambda b: data.setdefault("rules", b)
         }
+        # reset all properties and flush all caches (through rules),
+        # reset rules first so that _reload_special_cases is trivial/fast as
+        # the other properties are reset
+        self.rules = {}
+        self.prefix_search = None
+        self.suffix_search = None
+        self.infix_finditer = None
+        self.token_match = None
+        self.url_match = None
         msg = util.from_bytes(bytes_data, deserializers, exclude)
         if "prefix_search" in data and isinstance(data["prefix_search"], str):
             self.prefix_search = re.compile(data["prefix_search"]).search
@@ -785,22 +810,12 @@ cdef class Tokenizer:
             self.suffix_search = re.compile(data["suffix_search"]).search
         if "infix_finditer" in data and isinstance(data["infix_finditer"], str):
             self.infix_finditer = re.compile(data["infix_finditer"]).finditer
-        # for token_match and url_match, set to None to override the language
-        # defaults if no regex is provided
         if "token_match" in data and isinstance(data["token_match"], str):
             self.token_match = re.compile(data["token_match"]).match
-        else:
-            self.token_match = None
         if "url_match" in data and isinstance(data["url_match"], str):
             self.url_match = re.compile(data["url_match"]).match
-        else:
-            self.url_match = None
         if "rules" in data and isinstance(data["rules"], dict):
-            # make sure to hard reset the cache to remove data from the default exceptions
-            self._rules = {}
-            self._flush_cache()
-            self._flush_specials()
-            self._load_special_cases(data["rules"])
+            self.rules = data["rules"]
         return self
 
 

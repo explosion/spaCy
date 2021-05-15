@@ -364,7 +364,7 @@ unknown. Defaults to `True` for the first token in the `Doc`.
 
 | Name        | Description                                   |
 | ----------- | --------------------------------------------- |
-| **RETURNS** | Whether the token starts a sentence. ~~bool~~ |
+| **RETURNS** | Whether the token starts a sentence. ~~Optional[bool]~~ |
 
 ## Token.has_vector {#has_vector tag="property" model="vectors"}
 

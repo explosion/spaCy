@@ -1,5 +1,6 @@
 import pytest
-from thinc.api import Config, fix_random_seed
+from numpy.testing import assert_almost_equal
+from thinc.api import Config, fix_random_seed, get_current_ops
 
 from spacy.lang.en import English
 from spacy.pipeline.textcat import single_label_default_config, single_label_bow_config
@@ -44,11 +45,12 @@ def test_issue5551(textcat_config):
         nlp.update([Example.from_dict(doc, annots)])
         # Store the result of each iteration
         result = pipe.model.predict([doc])
-        results.append(list(result[0]))
+        results.append(result[0])
     # All results should be the same because of the fixed seed
     assert len(results) == 3
-    assert results[0] == results[1]
-    assert results[0] == results[2]
+    ops = get_current_ops()
+    assert_almost_equal(ops.to_numpy(results[0]), ops.to_numpy(results[1]))
+    assert_almost_equal(ops.to_numpy(results[0]), ops.to_numpy(results[2]))
 
 
 def test_issue5838():
