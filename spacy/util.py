@@ -1101,7 +1101,7 @@ def filter_spans(spans: Iterable["Span"], longest: bool = True) -> List["Span"]:
     longest (bool): True will remove smallest spans, False will remove longest spans.
     RETURNS (List[Span]): The filtered spans.
     """
-    get_sort_key = lambda span: (span.end - span.start, -span.start)
+    get_sort_key = lambda span: (span.end - span.start, -span.start if longest else span.start)
     sorted_spans = sorted(spans, key=get_sort_key, reverse=longest)
     result = []
     seen_tokens = set()
