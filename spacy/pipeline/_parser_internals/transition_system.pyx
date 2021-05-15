@@ -40,7 +40,7 @@ cdef class TransitionSystem:
         min_freq=None,
         negative_samples_key=None
     ):
-        self.cfg = {"negative_samples_key": negative_samples_key}
+        self.cfg = {"neg_key": negative_samples_key}
         self.mem = Pool()
         self.strings = string_table
         self.n_moves = 0
