@@ -33,7 +33,14 @@ cdef int _del_state(Pool mem, void* state, void* x) except -1:
 
 
 cdef class TransitionSystem:
-    def __init__(self, StringStore string_table, labels_by_action=None, min_freq=None):
+    def __init__(
+        self,
+        StringStore string_table,
+        labels_by_action=None,
+        min_freq=None,
+        negative_samples_key=None
+    ):
+        self.cfg = {"negative_samples_key": negative_samples_key}
         self.mem = Pool()
         self.strings = string_table
         self.n_moves = 0
@@ -49,7 +56,12 @@ cdef class TransitionSystem:
         self.del_beam_state = _del_state
 
     def __reduce__(self):
+        # TODO: This loses the 'cfg'
         return (self.__class__, (self.strings, self.labels), None, None)
+
+    @property
+    def neg_key(self):
+        return self.cfg.get("neg_key")
 
     def init_batch(self, docs):
         cdef StateClass state
@@ -220,16 +232,21 @@ cdef class TransitionSystem:
         transitions = []
         serializers = {
             'moves': lambda: srsly.json_dumps(self.labels),
-            'strings': lambda: self.strings.to_bytes()
+            'strings': lambda: self.strings.to_bytes(),
+            'cfg': lambda: self.cfg
         }
         return util.to_bytes(serializers, exclude)
 
     def from_bytes(self, bytes_data, exclude=tuple()):
+        # We're adding a new field, 'cfg', here and we don't want to break
+        # previous models that don't have it.
+        msg = srsly.msgpack_loads(bytes_data)
         labels = {}
-        deserializers = {
-            'moves': lambda b: labels.update(srsly.json_loads(b)),
-            'strings': lambda b: self.strings.from_bytes(b)
-        }
-        msg = util.from_bytes(bytes_data, deserializers, exclude)
+        if 'moves' not in exclude:
+            labels.update(srsly.json_loads(msg['moves']))
+        if 'strings' not in exclude:
+            self.strings.from_bytes(msg['strings'])
+        if 'cfg' not in exclude and 'cfg' in msg:
+            self.cfg.update(msg['cfg'])
         self.initialize_actions(labels)
         return self
