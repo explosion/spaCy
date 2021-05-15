@@ -20,6 +20,10 @@ TRAIN_DATA = [
     ("I like London and Berlin.", {"entities": [(7, 13, "LOC"), (18, 24, "LOC")]}),
 ]
 
+@pytest.fixture
+def neg_key():
+    return "non_entities"
+
 
 @pytest.fixture
 def vocab():
@@ -84,14 +88,82 @@ def test_get_oracle_moves_negative_entities2(tsys, vocab):
     assert names
 
 
-@pytest.mark.skip(reason="Maybe outdated? Unsure")
-def test_get_oracle_moves_negative_O(tsys, vocab):
-    doc = Doc(vocab, words=["A", "B", "C", "D"])
-    entity_annots = ["O", "!O", "O", "!O"]
+def test_negative_samples_two_word_input(tsys, vocab, neg_key):
+    """Test that we don't get stuck in a two word input when we have a negative
+    span. This could happen if we don't have the right check on the B action.
+    """
+    tsys.cfg["neg_key"] = neg_key
+    doc = Doc(vocab, words=["A", "B"])
+    entity_annots = [None, None]
     example = Example.from_dict(doc, {"entities": entity_annots})
+    # These mean that the oracle sequence shouldn't have O for the first
+    # word, and it shouldn't analyse it as B-PERSON, L-PERSON
+    example.y.spans[neg_key] = [
+        Span(example.y, 0, 1, label="O"),
+        Span(example.y, 0, 2, label="PERSON"),
+    ]
     act_classes = tsys.get_oracle_sequence(example)
     names = [tsys.get_class_name(act) for act in act_classes]
     assert names
+    assert names[0] != "O"
+    assert names[0] != "B-PERSON"
+    assert names[1] != "L-PERSON"
+
+
+def test_negative_samples_three_word_input(tsys, vocab, neg_key):
+    """Test that we exclude a 2-word entity correctly using a negative example.
+    """
+    tsys.cfg["neg_key"] = neg_key
+    doc = Doc(vocab, words=["A", "B", "C"])
+    entity_annots = [None, None, None]
+    example = Example.from_dict(doc, {"entities": entity_annots})
+    # These mean that the oracle sequence shouldn't have O for the first
+    # word, and it shouldn't analyse it as B-PERSON, L-PERSON
+    example.y.spans[neg_key] = [
+        Span(example.y, 0, 1, label="O"),
+        Span(example.y, 0, 2, label="PERSON"),
+    ]
+    act_classes = tsys.get_oracle_sequence(example)
+    names = [tsys.get_class_name(act) for act in act_classes]
+    assert names
+    assert names[0] != "O"
+    assert names[1] != "B-PERSON"
+
+
+def test_negative_samples_U_entity(tsys, vocab, neg_key):
+    """Test that we exclude a 2-word entity correctly using a negative example.
+    """
+    tsys.cfg["neg_key"] = neg_key
+    doc = Doc(vocab, words=["A"])
+    entity_annots = [None]
+    example = Example.from_dict(doc, {"entities": entity_annots})
+    # These mean that the oracle sequence shouldn't have O for the first
+    # word, and it shouldn't analyse it as B-PERSON, L-PERSON
+    example.y.spans[neg_key] = [
+        Span(example.y, 0, 1, label="O"),
+        Span(example.y, 0, 1, label="PERSON"),
+    ]
+    act_classes = tsys.get_oracle_sequence(example)
+    names = [tsys.get_class_name(act) for act in act_classes]
+    assert names
+    assert names[0] != "O"
+    assert names[0] != "U-PERSON"
+
+
+def test_negative_sample_key_is_in_config(vocab, entity_types):
+    actions = BiluoPushDown.get_actions(entity_types=entity_types)
+    tsys = BiluoPushDown(
+        vocab.strings,
+        actions,
+        negative_samples_key="non_entities"
+    )
+    assert tsys.cfg["neg_key"] == "non_entities"
+    #doc = Doc(vocab, words=["A", "B", "C", "D"])
+    #entity_annots = ["O", "!O", "O", "!O"]
+    #example = Example.from_dict(doc, {"entities": entity_annots})
+    #act_classes = tsys.get_oracle_sequence(example)
+    #names = [tsys.get_class_name(act) for act in act_classes]
+    #assert names
 
 
 # We can't easily represent this on a Doc object. Not sure what the best solution
