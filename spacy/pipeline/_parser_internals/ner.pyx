@@ -405,23 +405,35 @@ cdef class Begin:
     @staticmethod
     cdef weight_t cost(const StateC* s, const void* _gold, attr_t label) nogil:
         gold = <GoldNERStateC*>_gold
-        cdef int g_act = gold.ner[s.B(0)].move
-        cdef attr_t g_tag = gold.ner[s.B(0)].label
+        b0 = s.B(0)
+        cdef int cost = 0
+        cdef int g_act = gold.ner[b0].move
+        cdef attr_t g_tag = gold.ner[b0].label
 
         if g_act == MISSING:
-            return 0
+            pass
         elif g_act == BEGIN:
             # B, Gold B --> Label match
-            return label != g_tag
+            cost += label != g_tag
         # Support partial supervision in the form of "not this label"
         elif g_act == ISNT:
-            return label == g_tag
+            cost += label == g_tag
         else:
             # B, Gold I --> False (P)
             # B, Gold L --> False (P)
             # B, Gold O --> False (P)
             # B, Gold U --> False (P)
-            return 1
+            cost += 1
+        if s.buffer_length() < 3:
+            # Handle negatives. In general we can't really do much to block
+            # B, because we don't know whether the whole entity is going to
+            # be correct or not. However, we can at least tell whether we're
+            # going to be opening an entity where there's only one possible
+            # L.
+            for span in gold.negs[:gold.nr_neg]:
+                if span.label == label and span.start == b0:
+                    cost += 1
+        return cost
 
 
 cdef class In:
@@ -536,32 +548,44 @@ cdef class Last:
     cdef weight_t cost(const StateC* s, const void* _gold, attr_t label) nogil:
         gold = <GoldNERStateC*>_gold
         move = LAST
+        b0 = s.B(0)
+        ent_start = s.E(0)
 
-        cdef int g_act = gold.ner[s.B(0)].move
-        cdef attr_t g_tag = gold.ner[s.B(0)].label
+        cdef int g_act = gold.ner[b0].move
+        cdef attr_t g_tag = gold.ner[b0].label
+
+        cdef int cost = 0
 
         if g_act == MISSING:
-            return 0
+            pass
         elif g_act == BEGIN:
             # L, Gold B --> True
-            return 0
+            pass
         elif g_act == IN:
             # L, Gold I --> True iff this entity sunk
-            return not _entity_is_sunk(s, gold.ner)
+            cost += not _entity_is_sunk(s, gold.ner)
         elif g_act == LAST:
             # L, Gold L --> True
-            return 0
+            pass
         elif g_act == OUT:
             # L, Gold O --> True
-            return 0
+            pass
         elif g_act == UNIT:
             # L, Gold U --> True
-            return 0
+            pass
         # Support partial supervision in the form of "not this label"
         elif g_act == ISNT:
-            return 0
+            pass
         else:
-            return 1
+            cost += 1
+        # If we have negative-example entities, integrate them into the objective,
+        # by marking actions that close an entity that we know is incorrect
+        # as costly.
+        for span in gold.negs[:gold.nr_neg]:
+            if span.label == label and (span.end-1) == b0 and span.start == ent_start:
+                cost += 1
+                break
+        return cost
 
 
 cdef class Unit:
@@ -605,21 +629,29 @@ cdef class Unit:
         gold = <GoldNERStateC*>_gold
         cdef int g_act = gold.ner[s.B(0)].move
         cdef attr_t g_tag = gold.ner[s.B(0)].label
+        cdef int cost = 0
 
         if g_act == MISSING:
-            return 0
+            pass
         elif g_act == UNIT:
             # U, Gold U --> True iff tag match
-            return label != g_tag
-        # Support partial supervision in the form of "not this label"
-        elif g_act == ISNT:
-            return label == g_tag
+            cost += label != g_tag
         else:
             # U, Gold B --> False
             # U, Gold I --> False
             # U, Gold L --> False
             # U, Gold O --> False
-            return 1
+            cost += 1
+        # If we have negative-example entities, integrate them into the objective.
+        # This is fairly straight-forward for U- entities, as we have a single
+        # action
+        cdef int b0 = s.B(0)
+        for span in gold.negs[:gold.nr_neg]:
+            if span.label == label and span.start == b0 and span.end == (b0+1):
+                cost += 1
+                break
+        return cost
+ 
 
 
 cdef class Out:
