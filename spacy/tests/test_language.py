@@ -15,21 +15,18 @@ from thinc.api import NumpyOps, get_current_ops
 from .util import add_vecs_to_vocab, assert_docs_equal
 
 
-@Language.component("my_evil_component")
 def evil_component(doc):
     if "2" in doc.text:
         raise ValueError("no dice")
     return doc
 
 
-@Language.component("my_perhaps_sentences")
 def perhaps_set_sentences(doc):
     if not doc.text.startswith("4"):
         doc[-1].is_sent_start = True
     return doc
 
 
-@Language.component("assert_sents_error")
 def assert_sents_error(doc):
     if not doc.has_annotation("SENT_START"):
         raise ValueError("no sents")
@@ -119,19 +116,16 @@ def test_evaluate_no_pipe(nlp):
     nlp.evaluate([Example.from_dict(doc, annots)])
 
 
-@Language.component("test_language_vector_modification_pipe")
 def vector_modification_pipe(doc):
     doc.vector += 1
     return doc
 
 
-@Language.component("test_language_userdata_pipe")
 def userdata_pipe(doc):
     doc.user_data["foo"] = "bar"
     return doc
 
 
-@Language.component("test_language_ner_pipe")
 def ner_pipe(doc):
     span = Span(doc, 0, 1, label="FIRST")
     doc.ents += (span,)
@@ -149,6 +143,9 @@ def sample_vectors():
 
 @pytest.fixture
 def nlp2(nlp, sample_vectors):
+    Language.component("test_language_vector_modification_pipe", func=vector_modification_pipe)
+    Language.component("test_language_userdata_pipe", func=userdata_pipe)
+    Language.component("test_language_ner_pipe", func=ner_pipe)
     add_vecs_to_vocab(nlp.vocab, sample_vectors)
     nlp.add_pipe("test_language_vector_modification_pipe")
     nlp.add_pipe("test_language_ner_pipe")
@@ -221,7 +218,7 @@ def test_language_pipe_error_handler(n_process):
 @pytest.mark.parametrize("n_process", [1, 2])
 def test_language_pipe_error_handler_custom(en_vocab, n_process):
     """Test the error handling of a custom component that has no pipe method"""
-
+    Language.component("my_evil_component", func=evil_component)
     ops = get_current_ops()
     if isinstance(ops, NumpyOps) or n_process < 2:
         nlp = English()
@@ -249,7 +246,8 @@ def test_language_pipe_error_handler_custom(en_vocab, n_process):
 @pytest.mark.parametrize("n_process", [1, 2])
 def test_language_pipe_error_handler_pipe(en_vocab, n_process):
     """Test the error handling of a component's pipe method"""
-
+    Language.component("my_perhaps_sentences", func=perhaps_set_sentences)
+    Language.component("assert_sents_error", func=assert_sents_error)
     ops = get_current_ops()
     if isinstance(ops, NumpyOps) or n_process < 2:
         texts = [f"{str(i)} is enough. Done" for i in range(100)]
