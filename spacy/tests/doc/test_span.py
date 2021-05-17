@@ -124,8 +124,11 @@ def test_spans_lca_matrix(en_tokenizer):
 
     # example from Span API docs
     tokens = en_tokenizer("I like New York in Autumn")
-    doc = get_doc(
-        tokens.vocab, words=[t.text for t in tokens], heads=[1, 0, 1, -2, -1, -1]
+    doc = Doc(
+        tokens.vocab,
+        words=[t.text for t in tokens],
+        heads=[1, 1, 3, 1, 3, 4],
+        deps=["dep"] * len(tokens),
     )
     lca = doc[1:4].get_lca_matrix()
     assert_array_equal(lca, numpy.asarray([[0, 0, 0], [0, 1, 2], [0, 2, 2]]))
