@@ -86,13 +86,14 @@ export default function QuickstartTraining({ id, title, download = 'base_config.
             updateComponents(_components, isExclusive)
         },
     }
-    const reco = GENERATOR_DATA[lang] || GENERATOR_DATA.__default__
+    const defaultData = GENERATOR_DATA.__default__
+    const reco = GENERATOR_DATA[lang] || defaultData
     const content = generator({
         lang,
         components,
         optimize,
         hardware,
-        transformer_data: reco.transformer,
+        transformer_data: reco.transformer || defaultData.transformer,
         word_vectors: reco.word_vectors,
         has_letters: reco.has_letters,
     })

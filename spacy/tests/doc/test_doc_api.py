@@ -411,6 +411,9 @@ def test_doc_api_from_docs(en_tokenizer, de_tokenizer):
     assert "group" in m_doc.spans
     assert span_group_texts == sorted([s.text for s in m_doc.spans["group"]])
 
+    # can merge empty docs
+    doc = Doc.from_docs([en_tokenizer("")] * 10)
+
 
 def test_doc_api_from_docs_ents(en_tokenizer):
     texts = ["Merging the docs is fun.", "They don't think alike."]

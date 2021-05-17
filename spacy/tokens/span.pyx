@@ -228,7 +228,25 @@ cdef class Span:
         array = self.doc.to_array(array_head)
         array = array[self.start : self.end]
         self._fix_dep_copy(array_head, array)
+        # Fix initial IOB so the entities are valid for doc.ents below.
+        if len(array) > 0 and ENT_IOB in array_head:
+            ent_iob_col = array_head.index(ENT_IOB)
+            if array[0][ent_iob_col] == 1:
+                array[0][ent_iob_col] = 3
         doc.from_array(array_head, array)
+        # Set partial entities at the beginning or end of the span to have
+        # missing entity annotation. Note: the initial partial entity could be
+        # detected from the IOB annotation but the final partial entity can't,
+        # so detect and remove both in the same way by checking self.ents.
+        span_ents = {(ent.start, ent.end) for ent in self.ents}
+        doc_ents = doc.ents
+        if len(doc_ents) > 0:
+            # Remove initial partial ent
+            if (doc_ents[0].start + self.start, doc_ents[0].end + self.start) not in span_ents:
+                doc.set_ents([], missing=[doc_ents[0]], default="unmodified")
+            # Remove final partial ent
+            if (doc_ents[-1].start + self.start, doc_ents[-1].end + self.start) not in span_ents:
+                doc.set_ents([], missing=[doc_ents[-1]], default="unmodified")
         doc.noun_chunks_iterator = self.doc.noun_chunks_iterator
         doc.user_hooks = self.doc.user_hooks
         doc.user_span_hooks = self.doc.user_span_hooks
@@ -722,7 +740,7 @@ cdef class Span:
         def __get__(self):
             return self.root.ent_id_
 
-        def __set__(self, hash_t key):
+        def __set__(self, unicode key):
             raise NotImplementedError(Errors.E200.format(attr="ent_id_"))
 
     @property
@@ -744,9 +762,7 @@ cdef class Span:
             return self.doc.vocab.strings[self.label]
 
         def __set__(self, unicode label_):
-            if not label_:
-                label_ = ''
-            raise NotImplementedError(Errors.E129.format(start=self.start, end=self.end, label=label_))
+            self.label = self.doc.vocab.strings.add(label_)
 
     property kb_id_:
         """RETURNS (str): The named entity's KB ID."""
@@ -754,13 +770,7 @@ cdef class Span:
             return self.doc.vocab.strings[self.kb_id]
 
         def __set__(self, unicode kb_id_):
-            if not kb_id_:
-                kb_id_ = ''
-            current_label = self.label_
-            if not current_label:
-                current_label = ''
-            raise NotImplementedError(Errors.E131.format(start=self.start, end=self.end,
-                                                         label=current_label, kb_id=kb_id_))
+            self.kb_id = self.doc.vocab.strings.add(kb_id_)
 
 
 cdef int _count_words_to_root(const TokenC* token, int sent_length) except -1:
