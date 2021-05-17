@@ -414,7 +414,7 @@ class EntityLinker(TrainablePipe):
         exclude (Iterable[str]): String names of serialization fields to exclude.
         RETURNS (bytes): The serialized object.
 
-        DOCS: https://spacy.io/api/pipe#to_bytes
+        DOCS: https://spacy.io/api/entitylinker#to_bytes
         """
         self._validate_serialization_attrs()
         serialize = {}
@@ -431,7 +431,7 @@ class EntityLinker(TrainablePipe):
         exclude (Iterable[str]): String names of serialization fields to exclude.
         RETURNS (TrainablePipe): The loaded object.
 
-        DOCS: https://spacy.io/api/pipe#from_bytes
+        DOCS: https://spacy.io/api/entitylinker#from_bytes
         """
         self._validate_serialization_attrs()
 
