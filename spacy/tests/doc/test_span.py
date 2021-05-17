@@ -1,4 +1,6 @@
 import pytest
+import numpy
+from numpy.testing import assert_array_equal
 from spacy.attrs import ORTH, LENGTH
 from spacy.tokens import Doc, Span, Token
 from spacy.vocab import Vocab
@@ -119,6 +121,17 @@ def test_spans_lca_matrix(en_tokenizer):
     assert lca[0, 1] == 1  # dog & slept -> slept
     assert lca[1, 0] == 1  # slept & dog -> slept
     assert lca[1, 1] == 1  # slept & slept -> slept
+
+    # example from Span API docs
+    tokens = en_tokenizer("I like New York in Autumn")
+    doc = Doc(
+        tokens.vocab,
+        words=[t.text for t in tokens],
+        heads=[1, 1, 3, 1, 3, 4],
+        deps=["dep"] * len(tokens),
+    )
+    lca = doc[1:4].get_lca_matrix()
+    assert_array_equal(lca, numpy.asarray([[0, 0, 0], [0, 1, 2], [0, 2, 2]]))
 
 
 def test_span_similarity_match():
