@@ -3,15 +3,13 @@ from typing import List, Dict, Tuple
 from ...pipeline import Lemmatizer
 from ...tokens import Token
 
-""" This lemmatizer was adapted from the Polish one (version of April 2021).
-    It implements lookup lemmatization based on the morphological lexicon morph-it (Baroni and Zanchetta).
-    The lookup tables were built using the ItalianLemmatizerLookupsBuilder class
-    defined in the file lemmatizer_lookups_builder.py (see example code in that same file).
-    The table lemma_lookup_legacy contains entries from the previous non-POS-aware lookup table
-    that haven't been replaced by those derived from morph-it. """
 
 
 class ItalianLemmatizer(Lemmatizer):
+    """This lemmatizer was adapted from the Polish one (version of April 2021).
+    It implements lookup lemmatization based on the morphological lexicon
+    morph-it (Baroni and Zanchetta). The table lemma_lookup with non-POS-aware
+    entries is used as a backup for words that aren't handled by morph-it."""
     @classmethod
     def get_lookups_config(cls, mode: str) -> Tuple[List[str], List[str]]:
         if mode == "pos_lookup":
@@ -26,7 +24,7 @@ class ItalianLemmatizer(Lemmatizer):
                 "lemma_lookup_aux",
                 "lemma_lookup_adv",
                 "lemma_lookup_other",
-                "lemma_lookup_legacy",
+                "lemma_lookup",
             ]
             return (required, [])
         else:
@@ -62,7 +60,7 @@ class ItalianLemmatizer(Lemmatizer):
             lemma = lookup_table.get(string, "")
         if not lemma:
             lookup_table = self.lookups.get_table(
-                "lemma_lookup_legacy"
+                "lemma_lookup"
             )  # "legacy" lookup table
             lemma = lookup_table.get(string, string.lower())
         return [lemma]
