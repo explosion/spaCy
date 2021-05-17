@@ -10,15 +10,23 @@ from ...tokens import Token
     The table lemma_lookup_legacy contains entries from the previous non-POS-aware lookup table
     that haven't been replaced by those derived from morph-it. """
 
-class ItalianLemmatizer(Lemmatizer):
 
+class ItalianLemmatizer(Lemmatizer):
     @classmethod
     def get_lookups_config(cls, mode: str) -> Tuple[List[str], List[str]]:
         if mode == "pos_lookup":
-            required = [ 
-                "lemma_lookup_num", "lemma_lookup_det", "lemma_lookup_adp", "lemma_lookup_adj",
-                "lemma_lookup_noun", "lemma_lookup_pron", "lemma_lookup_verb", "lemma_lookup_aux", 
-                "lemma_lookup_adv", "lemma_lookup_other", "lemma_lookup_legacy",
+            required = [
+                "lemma_lookup_num",
+                "lemma_lookup_det",
+                "lemma_lookup_adp",
+                "lemma_lookup_adj",
+                "lemma_lookup_noun",
+                "lemma_lookup_pron",
+                "lemma_lookup_verb",
+                "lemma_lookup_aux",
+                "lemma_lookup_adv",
+                "lemma_lookup_other",
+                "lemma_lookup_legacy",
             ]
             return (required, [])
         else:
@@ -48,53 +56,68 @@ class ItalianLemmatizer(Lemmatizer):
             elif univ_pos == "ADJ":
                 return self.lemmatize_adj(string, morphology, lookup_table)
             else:
-                lemma = lookup_table.get(string, '')
+                lemma = lookup_table.get(string, "")
         if not lemma:
             lookup_table = self.lookups.get_table("lemma_lookup_other")
-            lemma = lookup_table.get(string, '')
+            lemma = lookup_table.get(string, "")
         if not lemma:
-            lookup_table = self.lookups.get_table("lemma_lookup_legacy") # "legacy" lookup table
+            lookup_table = self.lookups.get_table(
+                "lemma_lookup_legacy"
+            )  # "legacy" lookup table
             lemma = lookup_table.get(string, string.lower())
         return [lemma]
 
     def lemmatize_det(
         self, string: str, morphology: dict, lookup_table: Dict[str, str]
     ) -> List[str]:
-        if string in ["l'", 'lo', 'la', 'i', 'gli', 'le',]:
-            return ['il']
-        if string in ["un'", 'un', 'una']:
-            return ['uno']
+        if string in [
+            "l'",
+            "lo",
+            "la",
+            "i",
+            "gli",
+            "le",
+        ]:
+            return ["il"]
+        if string in ["un'", "un", "una"]:
+            return ["uno"]
         return [lookup_table.get(string, string)]
 
     def lemmatize_pron(
         self, string: str, morphology: dict, lookup_table: Dict[str, str]
     ) -> List[str]:
-        if string in ["l'", 'li', 'la', 'gli', 'le',]:
-            return ['lo']
-        if string in ["un'", 'un', 'una']:
-            return ['uno']
+        if string in [
+            "l'",
+            "li",
+            "la",
+            "gli",
+            "le",
+        ]:
+            return ["lo"]
+        if string in ["un'", "un", "una"]:
+            return ["uno"]
         lemma = lookup_table.get(string, string)
-        if lemma == 'alcun':
-            lemma = 'alcuno'
-        elif lemma == 'qualcun':
-            lemma = 'qualcuno'
+        if lemma == "alcun":
+            lemma = "alcuno"
+        elif lemma == "qualcun":
+            lemma = "qualcuno"
         return [lemma]
 
     def lemmatize_adp(
         self, string: str, morphology: dict, lookup_table: Dict[str, str]
     ) -> List[str]:
         if string == "d'":
-            return ['di']
+            return ["di"]
         return [lookup_table.get(string, string)]
-            
+
     def lemmatize_adj(
         self, string: str, morphology: dict, lookup_table: Dict[str, str]
     ) -> List[str]:
         lemma = lookup_table.get(string, string)
-        if lemma == 'alcun':
-            lemma = 'alcuno'
-        elif lemma == 'qualcun':
-            lemma = 'qualcuno'
+        if lemma == "alcun":
+            lemma = "alcuno"
+        elif lemma == "qualcun":
+            lemma = "qualcuno"
         return [lemma]
 
     def lemmatize_noun(

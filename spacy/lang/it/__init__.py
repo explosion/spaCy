@@ -1,7 +1,11 @@
+from typing import Optional
+from thinc.api import Model
+
 from .stop_words import STOP_WORDS
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .punctuation import TOKENIZER_PREFIXES, TOKENIZER_INFIXES
 from ...language import Language
+from .lemmatizer import ItalianLemmatizer
 
 
 class ItalianDefaults(Language.Defaults):
@@ -14,6 +18,7 @@ class ItalianDefaults(Language.Defaults):
 class Italian(Language):
     lang = "it"
     Defaults = ItalianDefaults
+
 
 @Italian.factory(
     "lemmatizer",
