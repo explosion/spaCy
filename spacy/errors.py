@@ -501,11 +501,11 @@ class Errors:
     E202 = ("Unsupported alignment mode '{mode}'. Supported modes: {modes}.")
 
     # New errors added in v3.x
-    E871 = ("Could not serialize the 'doc_bin' because it is too large. "
-            "Consider splitting up your documents into several doc bins "
-            "and serializing each separately. "
-            "These files can be read by spacy.Corpus.v1 if you provide a "
-            "directory instead of a file name as argument.")
+    E871 = ("Could not serialize the DocBin because it is too large. Consider "
+            "splitting up your documents into several doc bins and serializing "
+            "each separately. spacy.Corpus.v1 will search recursively for all "
+            "*.spacy files if you provide a directory instead of a filename as "
+            "the 'path'.")
     E872 = ("Unable to copy tokenizer from base model due to different "
             'tokenizer settings: current tokenizer config "{curr_config}" '
             'vs. base model "{base_config}"')
