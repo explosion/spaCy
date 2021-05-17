@@ -606,7 +606,6 @@ def test_kb_to_bytes():
     assert kb_1.get_entity_strings() == kb_2.get_entity_strings()
     assert kb_1.get_vector("Q2146908") == kb_2.get_vector("Q2146908")
     assert kb_1.get_vector("Q66") == kb_2.get_vector("Q66")
-    print(kb_2.get_alias_strings())
     assert kb_2.contains_alias("Russ Cochran")
     assert kb_1.get_size_aliases() == kb_2.get_size_aliases()
     assert kb_1.get_alias_strings() == kb_2.get_alias_strings()
