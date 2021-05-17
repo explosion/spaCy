@@ -31,7 +31,9 @@ max_span_width = 20
 mention_limit = 3900
 dropout = 0.3
 hidden = 1000
-@get_mentions = "spacy.CorefCandidateGenerator.v0"
+
+[model.get_mentions]
+@misc = "spacy.CorefCandidateGenerator.v0"
 
 [model.tok2vec]
 @architectures = "spacy.Tok2Vec.v2"

@@ -143,6 +143,11 @@ def get_candidate_mentions(
     return (begins, ends)
 
 
+@registry.misc("spacy.CorefCandidateGenerator.v0")
+def create_mention_generator() -> Callable:
+    return get_candidate_mentions
+
+
 def select_non_crossing_spans(
     idxs: List[int], starts: List[int], ends: List[int], limit: int
 ) -> List[int]:
