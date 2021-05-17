@@ -73,7 +73,7 @@ def make_coref(
 ) -> "CoreferenceResolver":
     """Create a CoreferenceResolver component."""
 
-    return CoreferenceResolver(nlp.vocab, model, name, span_cluster_prefix)
+    return CoreferenceResolver(nlp.vocab, model, name, span_cluster_prefix=span_cluster_prefix)
 
 
 class CoreferenceResolver(TrainablePipe):
@@ -88,7 +88,7 @@ class CoreferenceResolver(TrainablePipe):
         model: Model,
         name: str = "coref",
         *,
-        span_mentions: str,
+        span_mentions: str = "coref_mentions",
         span_cluster_prefix: str,
     ) -> None:
         """Initialize a coreference resolution component.
