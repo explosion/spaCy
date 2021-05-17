@@ -249,7 +249,7 @@ class DocBin:
             try:
                 file_.write(self.to_bytes())
             except ValueError:
-                raise ValueError(Errors.E871)
+                raise ValueError(Errors.E870)
 
     def from_disk(self, path: Union[str, Path]) -> "DocBin":
         """Load the DocBin from a file (typically called .spacy).
