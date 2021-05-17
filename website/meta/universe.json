@@ -1,6 +1,32 @@
 {
     "resources": [
         {
+            "id": "nlpcloud",
+            "title": "NLPCloud.io",
+            "slogan": "Production-ready API for spaCy models in production",
+            "description": "A highly-available hosted API to easily deploy and use spaCy models in production. Supports NER, POS tagging, dependency parsing, and tokenization.",
+            "github": "nlpcloud",
+            "pip": "nlpcloud",
+            "code_example": [
+                "import nlpcloud",
+                "",
+                "client = nlpcloud.Client('en_core_web_lg', '4eC39HqLyjWDarjtT1zdp7dc')",
+                "client.entities('John Doe is a Go Developer at Google')",
+                "# [{'end': 8, 'start': 0, 'text': 'John Doe', 'type': 'PERSON'}, {'end': 25, 'start': 13, 'text': 'Go Developer', 'type': 'POSITION'}, {'end': 35,'start': 30, 'text': 'Google', 'type': 'ORG'}]"
+            ],
+            "thumb":"https://avatars.githubusercontent.com/u/77671902",
+            "image":"https://nlpcloud.io/assets/images/logo.svg",
+            "code_language": "python",
+            "author": "NLPCloud.io",
+            "author_links": {
+            "github": "nlpcloud",
+            "twitter": "cloud_nlp",
+            "website": "https://nlpcloud.io"   
+            },
+            "category": ["apis", "nonpython", "standalone"],
+            "tags": ["api", "deploy", "production"]
+        },
+        {
             "id": "denomme",
             "title": "denomme : Multilingual Name Detector",
             "slogan": "Multilingual Name Detection",
