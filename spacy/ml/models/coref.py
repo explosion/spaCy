@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from thinc.api import Model, Linear, Relu, Dropout, chain, noop
 from thinc.types import Floats2d, Floats1d, Ints2d, Ragged
-from typing import List, Callable, Tuple
+from typing import List, Callable, Tuple, Any, Generator
 from ...tokens import Doc
 from ...util import registry
 
@@ -20,7 +20,7 @@ from .coref_util import (
 @registry.architectures("spacy.Coref.v0")
 def build_coref(
     tok2vec: Model[List[Doc], List[Floats2d]],
-    get_mentions: Callable = get_candidate_mentions,
+    get_mentions: Any = get_candidate_mentions,
     hidden: int = 1000,
     dropout: float = 0.3,
     mention_limit: int = 3900,
