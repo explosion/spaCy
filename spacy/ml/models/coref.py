@@ -145,6 +145,7 @@ def span_embeddings_forward(
 
     tokvecs, docs = inputs
 
+    #TODO fix this
     dim = tokvecs[0].shape[1]
 
     get_mentions = model.attrs["get_mentions"]

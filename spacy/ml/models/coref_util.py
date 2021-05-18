@@ -1,6 +1,6 @@
 from thinc.types import Ints2d
 from spacy.tokens import Doc
-from typing import List, Tuple, Callable
+from typing import List, Tuple, Callable, Any
 from ...util import registry
 
 # type alias to make writing this less tedious
@@ -109,13 +109,18 @@ def get_predicted_clusters(
 def get_sentence_map(doc: Doc):
     """For the given span, return a list of sentence indexes."""
 
-    si = 0
-    out = []
-    for sent in doc.sents:
-        for tok in sent:
-            out.append(si)
-        si += 1
-    return out
+    try:
+        si = 0
+        out = []
+        for sent in doc.sents:
+            for tok in sent:
+                out.append(si)
+            si += 1
+        return out
+    except ValueError:
+        # If there are no sents then just return dummy values.
+        # Shouldn't happen in general training, but typical in init.
+        return [0] * len(doc)
 
 
 def get_candidate_mentions(
@@ -144,7 +149,7 @@ def get_candidate_mentions(
 
 
 @registry.misc("spacy.CorefCandidateGenerator.v0")
-def create_mention_generator() -> Callable:
+def create_mention_generator() -> Any:
     return get_candidate_mentions
 
 
