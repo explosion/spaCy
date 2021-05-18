@@ -28,7 +28,7 @@ cdef class Candidate:
 
 cdef class KnowledgeBase:
     cdef Pool mem
-    cpdef readonly Vocab vocab
+    cdef readonly Vocab vocab
     cdef int64_t entity_vector_length
 
     # This maps 64bit keys (hash of unique entity string)
