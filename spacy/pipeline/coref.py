@@ -210,7 +210,7 @@ class CoreferenceResolver(TrainablePipe):
         preds, backprop = self.model.begin_update(inputs)
         score_matrix, mention_idx = preds
         loss, d_scores = self.get_loss(examples, score_matrix, mention_idx)
-        backprop(d_scores)
+        backprop((d_scores, mention_idx))
 
         if sgd is not None:
             self.finish_update(sgd)
