@@ -62,6 +62,7 @@ def tuplify(layer1: Model, layer2: Model, *layers) -> Model:
     return Model(
         "tuple(" + ", ".join(names) + ")",
         tuplify_forward,
+        init=tuplify_init,
         layers=layers,
     )
 
@@ -83,6 +84,17 @@ def tuplify_forward(model, X, is_train):
 
     return tuple(Ys), backprop_tuplify
 
+#TODO make more robust, see chain
+def tuplify_init(model, X, Y) -> Model:
+    if X is None and Y is None:
+        for layer in model.layers:
+            layer.initialize()
+
+        return model
+
+    for layer in model.layers:
+        layer.initialize(X=X)
+    return model
 
 @dataclass
 class SpanEmbeddings:
