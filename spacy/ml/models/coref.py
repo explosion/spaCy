@@ -391,6 +391,7 @@ def ant_scorer_forward(
     vecshape = vecs.data.shape
     veclens = vecs.lengths
     scoreshape = mscores.shape
+    idxes = sembeds.indices
 
     def backprop(
         dYs: Tuple[List[Tuple[Floats2d, Ints2d]], Ints2d]
@@ -417,7 +418,7 @@ def ant_scorer_forward(
             offset += ll
         # make it fit back into the linear
         dXscores = xp.expand_dims(dXscores, 1)
-        return (dXscores, SpanEmbeddings(sembeds.indices, dXembeds))
+        return (dXscores, SpanEmbeddings(idxes, dXembeds))
 
     return (out, sembeds.indices), backprop
 
