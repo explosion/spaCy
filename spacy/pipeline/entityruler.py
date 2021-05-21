@@ -301,7 +301,7 @@ class EntityRuler(Pipe):
                 self.nlp.pipe(phrase_pattern_texts),
                 phrase_pattern_ids,
             ):
-                phrase_pattern = {"label": label, "pattern": pattern, "id": ent_id}
+                phrase_pattern = {"label": label, "pattern": pattern}
                 if ent_id:
                     phrase_pattern["id"] = ent_id
                 phrase_patterns.append(phrase_pattern)
