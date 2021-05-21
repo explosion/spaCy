@@ -24,6 +24,7 @@ from ..ml.models.coref_util import (
     doc2clusters,
 )
 
+from ..coref_scorer import Evaluator, get_cluster_info, b_cubed
 
 default_config = """
 [model]
@@ -352,7 +353,7 @@ class CoreferenceResolver(TrainablePipe):
         assert len(X) > 0, Errors.E923.format(name=self.name)
         self.model.initialize(X=X, Y=Y)
 
-    def score(self, examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
+    def alt_score(self, examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
         """Score a batch of examples.
 
         examples (Iterable[Example]): The examples to score.
@@ -373,26 +374,28 @@ class CoreferenceResolver(TrainablePipe):
         return Scorer.score_clusters(examples, **kwargs)
 
 
-# from ..coref_scorer import Evaluator, get_cluster_info, b_cubed
-# TODO consider whether to use this
-#    def score(self, examples, **kwargs):
-#        """Score a batch of examples."""
-#
-#        #TODO traditionally coref uses the average of b_cubed, muc, and ceaf.
-#        # we need to handle the average ourselves.
-#        evaluator = Evaluator(b_cubed)
-#
-#        for ex in examples:
-#            p_clusters = doc2clusters(ex.predicted, self.span_cluster_prefix)
-#            g_clusters = doc2clusters(ex.reference, self.span_cluster_prefix)
-#
-#            cluster_info = get_cluster_info(p_clusters, g_clusters)
-#
-#            evaluator.update(cluster_info)
-#
-#        scores ={
-#                "coref_f": evaluator.get_f1(),
-#                "coref_p": evaluator.get_precision(),
-#                "coref_r": evaluator.get_recall(),
-#                }
-#        return scores
+    # TODO consider whether to use this. It's pretty fast, but it'll be slower if 
+    # we use all three methods like the original evaluator does. Also the current
+    # implementation, borrowed from the coval project, uses scipy, which we would
+    # want to avoid. (If that's the only issue we can probably work around it.)
+    def score(self, examples, **kwargs):
+        """Score a batch of examples."""
+
+        #TODO traditionally coref uses the average of b_cubed, muc, and ceaf.
+        # we need to handle the average ourselves.
+        evaluator = Evaluator(b_cubed)
+
+        for ex in examples:
+            p_clusters = doc2clusters(ex.predicted, self.span_cluster_prefix)
+            g_clusters = doc2clusters(ex.reference, self.span_cluster_prefix)
+
+            cluster_info = get_cluster_info(p_clusters, g_clusters)
+
+            evaluator.update(cluster_info)
+
+        scores ={
+                "coref_f": evaluator.get_f1(),
+                "coref_p": evaluator.get_precision(),
+                "coref_r": evaluator.get_recall(),
+                }
+        return scores
