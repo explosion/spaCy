@@ -322,7 +322,7 @@ class CoreferenceResolver(TrainablePipe):
 
             # scalar loss
             # loss += xp.sum(log_norm - log_marg)
-            loss += self.loss.get_loss(cscores, top_gscores)
+            loss += float(self.loss.get_loss(cscores, top_gscores))
             offset += ll
         return loss, gradients
 
