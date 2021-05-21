@@ -26,12 +26,6 @@ from .project.push import project_push  # noqa: F401
 from .project.pull import project_pull  # noqa: F401
 from .project.document import project_document  # noqa: F401
 
-# ensure 'spacy ray' is available (otherwise only 'python -m spacy ray' works)
-try:
-    from spacy_ray.train_cli import ray_train_cli
-except ImportError:
-    pass
-
 
 @app.command("link", no_args_is_help=True, deprecated=True, hidden=True)
 def link(*args, **kwargs):
