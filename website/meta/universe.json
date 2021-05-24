@@ -83,7 +83,7 @@
             "title": "skweak",
             "slogan": "Weak supervision for NLP",
             "description": "`skweak` brings the power of weak supervision to NLP tasks, and in particular sequence labelling and text classification. Instead of annotating documents by hand, `skweak` allows you to define *labelling functions* to automatically label your documents, and then aggregate their results using a statistical model that estimates the accuracy and confusions of each labelling function.",
-            "github": "https://github.com/NorskRegnesentral/skweak",
+            "github": "NorskRegnesentral/skweak",
             "pip": "skweak",
             "code_example": [
                 "import spacy, re",
