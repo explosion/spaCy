@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from thinc.api import Model, Linear, Relu, Dropout, chain, noop
 from thinc.types import Floats2d, Floats1d, Ints2d, Ragged
-from typing import List, Callable, Tuple, Any, Generator
+from typing import List, Callable, Tuple, Any 
 from ...tokens import Doc
 from ...util import registry
 
@@ -70,10 +70,6 @@ def tuplify(layer1: Model, layer2: Model, *layers) -> Model:
 def tuplify_forward(model, X, is_train):
     Ys = []
     backprops = []
-    # If the input is a generator we need to unroll it.
-    # The type check is necessary because arrays etc. are also OK.
-    if isinstance(X, Generator):
-        X = list(X)
     for layer in model.layers:
         Y, backprop = layer(X, is_train)
         Ys.append(Y)

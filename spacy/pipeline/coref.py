@@ -207,7 +207,7 @@ class CoreferenceResolver(TrainablePipe):
             return losses
         set_dropout_rate(self.model, drop)
 
-        inputs = (example.predicted for example in examples)
+        inputs = [example.predicted for example in examples]
         preds, backprop = self.model.begin_update(inputs)
         score_matrix, mention_idx = preds
         loss, d_scores = self.get_loss(examples, score_matrix, mention_idx)
