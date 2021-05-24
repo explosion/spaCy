@@ -6,7 +6,6 @@ from thinc.api import set_dropout_rate
 from itertools import islice
 
 from .trainable_pipe import TrainablePipe
-from .coref_er import DEFAULT_MENTIONS
 from ..language import Language
 from ..training import Example, validate_examples, validate_get_examples
 from ..errors import Errors
