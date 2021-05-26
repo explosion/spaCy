@@ -123,6 +123,10 @@ cdef class Parser(TrainablePipe):
         # Available for subclasses, e.g. to deprojectivize
         return []
 
+    @property
+    def negative_samples_key(self):
+        return self.cfg["negative_samples_key"]
+
     def add_label(self, label):
         resized = False
         for action in self.moves.action_types:
