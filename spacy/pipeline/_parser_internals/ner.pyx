@@ -423,6 +423,7 @@ cdef class Begin:
             for span in gold.negs[:gold.nr_neg]:
                 if span.label == label and span.start == b0:
                     cost += 1
+                    break
         return cost
 
 
