@@ -476,7 +476,7 @@ def test_beam_ner_scores():
             assert 0 - eps <= score <= 1 + eps
 
 
-def test_beam_overfitting_IO():
+def test_beam_overfitting_IO(neg_key):
     # Simple test to try and quickly overfit the Beam NER component
     nlp = English()
     beam_width = 16
@@ -484,6 +484,7 @@ def test_beam_overfitting_IO():
     config = {
         "beam_width": beam_width,
         "beam_density": beam_density,
+        "negative_samples_key": neg_key,
     }
     ner = nlp.add_pipe("beam_ner", config=config)
     train_examples = []
@@ -500,12 +501,13 @@ def test_beam_overfitting_IO():
     assert losses["beam_ner"] < 0.0001
 
     # test the scores from the beam
-    test_text = "I like London."
+    test_text = "I like London"
     docs = [nlp.make_doc(test_text)]
     beams = ner.predict(docs)
     entity_scores = ner.scored_ents(beams)[0]
     assert entity_scores[(2, 3, "LOC")] == 1.0
     assert entity_scores[(2, 3, "PERSON")] == 0.0
+    assert len(nlp(test_text).ents) == 1
 
     # Also test the results are still the same after IO
     with make_tempdir() as tmp_dir:
@@ -517,6 +519,19 @@ def test_beam_overfitting_IO():
         entity_scores2 = ner2.scored_ents(beams2)[0]
         assert entity_scores2[(2, 3, "LOC")] == 1.0
         assert entity_scores2[(2, 3, "PERSON")] == 0.0
+
+    # Try to unlearn the entity by using negative annotations
+    neg_doc = nlp.make_doc(test_text)
+    neg_ex = Example(neg_doc, neg_doc)
+    neg_ex.reference.spans[neg_key] = [Span(neg_doc, 2, 3, "LOC")]
+    neg_train_examples = [neg_ex]
+
+    for i in range(20):
+        losses = {}
+        nlp.update(neg_train_examples, sgd=optimizer, losses=losses)
+
+    # test the "untrained" model
+    assert len(nlp(test_text).ents) == 0
 
 
 def test_ner_warns_no_lookups(caplog):
