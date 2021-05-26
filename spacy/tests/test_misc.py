@@ -8,6 +8,7 @@ from spacy import prefer_gpu, require_gpu, require_cpu
 from spacy.ml._precomputable_affine import PrecomputableAffine
 from spacy.ml._precomputable_affine import _backprop_precomputable_affine_padding
 from spacy.util import dot_to_object, SimpleFrozenList, import_file
+from spacy.util import to_ternary_int
 from thinc.api import Config, Optimizer, ConfigValidationError, get_current_ops
 from thinc.api import set_current_ops
 from spacy.training.batchers import minibatch_by_words
@@ -386,3 +387,18 @@ def make_dummy_component(
         nlp = English.from_config(config)
         nlp.add_pipe("dummy_component")
         nlp.initialize()
+
+
+def test_to_ternary_int():
+    assert to_ternary_int(True) == 1
+    assert to_ternary_int(None) == 0
+    assert to_ternary_int(False) == -1
+    assert to_ternary_int(1) == 1
+    assert to_ternary_int(1.0) == 1
+    assert to_ternary_int(0) == 0
+    assert to_ternary_int(0.0) == 0
+    assert to_ternary_int(-1) == -1
+    assert to_ternary_int(5) == -1
+    assert to_ternary_int(-10) == -1
+    assert to_ternary_int("string") == -1
+    assert to_ternary_int([0, "string"]) == -1

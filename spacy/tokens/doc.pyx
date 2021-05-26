@@ -1158,11 +1158,12 @@ cdef class Doc:
             for i, array in enumerate(arrays[:-1]):
                 if len(array) > 0 and not docs[i][-1].is_space:
                     array[-1][spacy_index] = 1
-            token_offset = -1
-            for doc in docs[:-1]:
-                token_offset += len(doc)
-                if not (len(doc) > 0 and doc[-1].is_space):
-                    concat_spaces[token_offset] = True
+            if len(concat_spaces) > 0:
+                token_offset = -1
+                for doc in docs[:-1]:
+                    token_offset += len(doc)
+                    if not (len(doc) > 0 and doc[-1].is_space):
+                        concat_spaces[token_offset] = True
 
         concat_array = numpy.concatenate(arrays)
 
@@ -1672,7 +1673,7 @@ cdef int [:,:] _get_lca_matrix(Doc doc, int start, int end):
         j_idx_in_sent = start + j - sent_start
         n_missing_tokens_in_sent = len(sent) - j_idx_in_sent
         # make sure we do not go past `end`, in cases where `end` < sent.end
-        max_range = min(j + n_missing_tokens_in_sent, end)
+        max_range = min(j + n_missing_tokens_in_sent, end - start)
         for k in range(j + 1, max_range):
             lca = _get_tokens_lca(token_j, doc[start + k])
             # if lca is outside of span, we set it to -1

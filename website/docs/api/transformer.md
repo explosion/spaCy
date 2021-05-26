@@ -175,7 +175,7 @@ by [`Language.initialize`](/api/language#initialize).
 >
 > ```python
 > trf = nlp.add_pipe("transformer")
-> trf.initialize(lambda: [], nlp=nlp)
+> trf.initialize(lambda: iter([]), nlp=nlp)
 > ```
 
 | Name           | Description                                                                                                                           |

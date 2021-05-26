@@ -284,7 +284,13 @@ cdef class Matcher:
             if on_match is not None:
                 on_match(self, doc, i, final_matches)
         if as_spans:
-            return [Span(doc, start, end, label=key) for key, start, end in final_matches]
+            spans = []
+            for key, start, end in final_matches:
+                if isinstance(doclike, Span):
+                    start += doclike.start
+                    end += doclike.start
+                spans.append(Span(doc, start, end, label=key))
+            return spans
         elif with_alignments:
             # convert alignments List[Dict[str, int]] --> List[int]
             final_matches = []

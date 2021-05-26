@@ -1,4 +1,6 @@
 import pytest
+import numpy
+from numpy.testing import assert_array_equal
 from spacy.attrs import ORTH, LENGTH
 from spacy.tokens import Doc, Span, Token
 from spacy.vocab import Vocab
@@ -14,9 +16,11 @@ def doc(en_tokenizer):
     heads = [1, 1, 3, 1, 1, 6, 6, 8, 6, 6, 12, 12, 12, 12]
     deps = ["nsubj", "ROOT", "det", "attr", "punct", "nsubj", "ROOT", "det",
             "attr", "punct", "ROOT", "det", "npadvmod", "punct"]
+    ents = ["O", "O", "B-ENT", "I-ENT", "I-ENT", "I-ENT", "I-ENT", "O", "O",
+            "O", "O", "O", "O", "O"]
     # fmt: on
     tokens = en_tokenizer(text)
-    return Doc(tokens.vocab, words=[t.text for t in tokens], heads=heads, deps=deps)
+    return Doc(tokens.vocab, words=[t.text for t in tokens], heads=heads, deps=deps, ents=ents)
 
 
 @pytest.fixture
@@ -117,6 +121,17 @@ def test_spans_lca_matrix(en_tokenizer):
     assert lca[0, 1] == 1  # dog & slept -> slept
     assert lca[1, 0] == 1  # slept & dog -> slept
     assert lca[1, 1] == 1  # slept & slept -> slept
+
+    # example from Span API docs
+    tokens = en_tokenizer("I like New York in Autumn")
+    doc = Doc(
+        tokens.vocab,
+        words=[t.text for t in tokens],
+        heads=[1, 1, 3, 1, 3, 4],
+        deps=["dep"] * len(tokens),
+    )
+    lca = doc[1:4].get_lca_matrix()
+    assert_array_equal(lca, numpy.asarray([[0, 0, 0], [0, 1, 2], [0, 2, 2]]))
 
 
 def test_span_similarity_match():
@@ -220,6 +235,17 @@ def test_span_as_doc(doc):
     assert span_doc is not doc
     assert span_doc[0].idx == 0
 
+    # partial initial entity is removed
+    assert len(span_doc.ents) == 0
+
+    # full entity is preserved
+    span_doc = doc[2:10].as_doc()
+    assert len(span_doc.ents) == 1
+
+    # partial final entity is removed
+    span_doc = doc[0:5].as_doc()
+    assert len(span_doc.ents) == 0
+
 
 @pytest.mark.usefixtures("clean_underscore")
 def test_span_as_doc_user_data(doc):
@@ -253,16 +279,10 @@ def test_span_string_label_kb_id(doc):
     assert span.kb_id == doc.vocab.strings["Q342"]
 
 
-def test_span_label_readonly(doc):
+def test_span_attrs_writable(doc):
     span = Span(doc, 0, 1)
-    with pytest.raises(NotImplementedError):
-        span.label_ = "hello"
-
-
-def test_span_kb_id_readonly(doc):
-    span = Span(doc, 0, 1)
-    with pytest.raises(NotImplementedError):
-        span.kb_id_ = "Q342"
+    span.label_ = "label"
+    span.kb_id_ = "kb_id"
 
 
 def test_span_ents_property(doc):

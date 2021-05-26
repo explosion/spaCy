@@ -13,6 +13,7 @@ import srsly
 import multiprocessing as mp
 from itertools import chain, cycle
 from timeit import default_timer as timer
+import traceback
 
 from .tokens.underscore import Underscore
 from .vocab import Vocab, create_vocab
@@ -433,9 +434,9 @@ class Language:
         default_config (Dict[str, Any]): Default configuration, describing the
             default values of the factory arguments.
         assigns (Iterable[str]): Doc/Token attributes assigned by this component,
-            e.g. "token.ent_id". Used for pipeline analyis.
+            e.g. "token.ent_id". Used for pipeline analysis.
         requires (Iterable[str]): Doc/Token attributes required by this component,
-            e.g. "token.ent_id". Used for pipeline analyis.
+            e.g. "token.ent_id". Used for pipeline analysis.
         retokenizes (bool): Whether the component changes the tokenization.
             Used for pipeline analysis.
         default_score_weights (Dict[str, float]): The scores to report during
@@ -518,9 +519,9 @@ class Language:
 
         name (str): The name of the component factory.
         assigns (Iterable[str]): Doc/Token attributes assigned by this component,
-            e.g. "token.ent_id". Used for pipeline analyis.
+            e.g. "token.ent_id". Used for pipeline analysis.
         requires (Iterable[str]): Doc/Token attributes required by this component,
-            e.g. "token.ent_id". Used for pipeline analyis.
+            e.g. "token.ent_id". Used for pipeline analysis.
         retokenizes (bool): Whether the component changes the tokenization.
             Used for pipeline analysis.
         func (Optional[Callable]): Factory function if not used as a decorator.
@@ -1538,11 +1539,15 @@ class Language:
 
         # Cycle channels not to break the order of docs.
         # The received object is a batch of byte-encoded docs, so flatten them with chain.from_iterable.
-        byte_docs = chain.from_iterable(recv.recv() for recv in cycle(bytedocs_recv_ch))
-        docs = (Doc(self.vocab).from_bytes(byte_doc) for byte_doc in byte_docs)
+        byte_tuples = chain.from_iterable(recv.recv() for recv in cycle(bytedocs_recv_ch))
         try:
-            for i, (_, doc) in enumerate(zip(raw_texts, docs), 1):
-                yield doc
+            for i, (_, (byte_doc, byte_error)) in enumerate(zip(raw_texts, byte_tuples), 1):
+                if byte_doc is not None:
+                    doc = Doc(self.vocab).from_bytes(byte_doc)
+                    yield doc
+                elif byte_error is not None:
+                    error = srsly.msgpack_loads(byte_error)
+                    self.default_error_handler(None, None, None, ValueError(Errors.E871.format(error=error)))
                 if i % batch_size == 0:
                     # tell `sender` that one batch was consumed.
                     sender.step()
@@ -2037,12 +2042,19 @@ def _apply_pipes(
     """
     Underscore.load_state(underscore_state)
     while True:
-        texts = receiver.get()
-        docs = (make_doc(text) for text in texts)
-        for pipe in pipes:
-            docs = pipe(docs)
-        # Connection does not accept unpickable objects, so send list.
-        sender.send([doc.to_bytes() for doc in docs])
+        try:
+            texts = receiver.get()
+            docs = (make_doc(text) for text in texts)
+            for pipe in pipes:
+                docs = pipe(docs)
+            # Connection does not accept unpickable objects, so send list.
+            byte_docs = [(doc.to_bytes(), None) for doc in docs]
+            padding = [(None, None)] * (len(texts) - len(byte_docs))
+            sender.send(byte_docs + padding)
+        except Exception:
+            error_msg = [(None, srsly.msgpack_dumps(traceback.format_exc()))]
+            padding = [(None, None)] * (len(texts) - 1)
+            sender.send(error_msg + padding)
 
 
 class _Sender:

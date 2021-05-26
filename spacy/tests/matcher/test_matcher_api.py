@@ -513,6 +513,12 @@ def test_matcher_as_spans(matcher):
     assert matches[1].text == "Java"
     assert matches[1].label_ == "Java"
 
+    matches = matcher(doc[1:], as_spans=True)
+    assert len(matches) == 1
+    assert isinstance(matches[0], Span)
+    assert matches[0].text == "Java"
+    assert matches[0].label_ == "Java"
+
 
 def test_matcher_deprecated(matcher):
     doc = Doc(matcher.vocab, words=["hello", "world"])

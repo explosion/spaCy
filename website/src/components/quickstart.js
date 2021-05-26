@@ -105,12 +105,13 @@ const Quickstart = ({
                         multiple,
                         other,
                         help,
+                        hidden,
                     }) => {
                         // Optional function that's called with the value
                         const setterFunc = setters[id] || (() => {})
                         // Check if dropdown should be shown
                         const dropdownGetter = showDropdown[id] || (() => true)
-                        return (
+                        return hidden ? null : (
                             <div key={id} data-quickstart-group={id} className={classes.group}>
                                 <style data-quickstart-style={id} scoped>
                                     {styles[id] ||
