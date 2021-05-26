@@ -490,6 +490,10 @@ class Errors:
     E202 = ("Unsupported alignment mode '{mode}'. Supported modes: {modes}.")
 
     # New errors added in v3.x
+    E869 = ("The notation '{label}' is not supported anymore. To annotate "
+            "negative NER samples, use `doc.spans[key]` instead, and "
+            "specify the key as 'negative_samples_key' when constructing "
+            "the NER component.")
     E870 = ("Could not serialize the DocBin because it is too large. Consider "
             "splitting up your documents into several doc bins and serializing "
             "each separately. spacy.Corpus.v1 will search recursively for all "

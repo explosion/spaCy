@@ -254,6 +254,27 @@ def test_train_empty():
             nlp.update(batch, losses=losses)
 
 
+def test_train_negative_deprecated():
+    """Test that the deprecated negative entity format raises a custom error."""
+    train_data = [
+        ("Who is Shaka Khan?", {"entities": [(7, 17, "!PERSON")]}),
+    ]
+
+    nlp = English()
+    train_examples = []
+    for t in train_data:
+        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
+    ner = nlp.add_pipe("ner", last=True)
+    ner.add_label("PERSON")
+    nlp.initialize()
+    for itn in range(2):
+        losses = {}
+        batches = util.minibatch(train_examples, size=8)
+        for batch in batches:
+            with pytest.raises(ValueError):
+                nlp.update(batch, losses=losses)
+
+
 def test_overwrite_token():
     nlp = English()
     nlp.add_pipe("ner")
