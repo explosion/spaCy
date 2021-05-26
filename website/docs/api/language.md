@@ -426,7 +426,8 @@ component, adds it to the pipeline and returns it.
 > ```python
 > @Language.component("component")
 > def component_func(doc):
->     # modify Doc and return it return doc
+>     # modify Doc and return it
+>     return doc
 >
 > nlp.add_pipe("component", before="ner")
 > component = nlp.add_pipe("component", name="custom_name", last=True)
