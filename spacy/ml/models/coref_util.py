@@ -44,6 +44,7 @@ def topk(xp, arr, k, axis=None):
 def logsumexp(xp, arr, axis=None):
     """Emulate torch.logsumexp by returning the log of summed exponentials
     along each row in the given dimension.
+    TODO: currently not used?
 
     Reduces a 2d array to 1d."""
     # from slide 5 here:
@@ -217,6 +218,7 @@ def get_clusters_from_doc(doc) -> List[List[Tuple[int, int]]]:
 def make_clean_doc(nlp, doc):
     """Return a doc with raw data but not span annotations."""
     # Surely there is a better way to do this?
+    # TODO: currently not used?
 
     sents = [tok.is_sent_start for tok in doc]
     words = [tok.text for tok in doc]

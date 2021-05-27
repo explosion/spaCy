@@ -17,7 +17,6 @@ from ..ml.models.coref_util import (
     create_gold_scores,
     MentionClusters,
     get_clusters_from_doc,
-    logsumexp,
     get_predicted_clusters,
     DEFAULT_CLUSTER_PREFIX,
     doc2clusters,

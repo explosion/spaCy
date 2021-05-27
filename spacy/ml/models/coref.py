@@ -2,19 +2,11 @@ from dataclasses import dataclass
 
 from thinc.api import Model, Linear, Relu, Dropout, chain, noop
 from thinc.types import Floats2d, Floats1d, Ints2d, Ragged
-from typing import List, Callable, Tuple, Any 
+from typing import List, Callable, Tuple, Any
 from ...tokens import Doc
 from ...util import registry
 
-from .coref_util import (
-    get_predicted_clusters,
-    get_candidate_mentions,
-    select_non_crossing_spans,
-    make_clean_doc,
-    create_gold_scores,
-    logsumexp,
-    topk,
-)
+from .coref_util import get_candidate_mentions, select_non_crossing_spans, topk
 
 
 @registry.architectures("spacy.Coref.v1")
@@ -172,8 +164,8 @@ def span_embeddings_forward(
 
     # first and last token embeds
     # XXX probably would be faster to get these at once
-    #starts = [tokvecs[ii] for ii in mentions[:, 0]]
-    #ends = [tokvecs[jj] for jj in mentions[:, 1]]
+    # starts = [tokvecs[ii] for ii in mentions[:, 0]]
+    # ends = [tokvecs[jj] for jj in mentions[:, 1]]
     starts, ends = zip(*[(tokvecs[ii], tokvecs[jj]) for ii, jj in mentions])
 
     starts = ops.asarray2f(starts)
