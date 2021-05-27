@@ -408,6 +408,48 @@ class EntityLinker(TrainablePipe):
         validate_examples(examples, "EntityLinker.score")
         return Scorer.score_links(examples, negative_labels=[self.NIL])
 
+    def to_bytes(self, *, exclude=tuple()):
+        """Serialize the pipe to a bytestring.
+
+        exclude (Iterable[str]): String names of serialization fields to exclude.
+        RETURNS (bytes): The serialized object.
+
+        DOCS: https://spacy.io/api/entitylinker#to_bytes
+        """
+        self._validate_serialization_attrs()
+        serialize = {}
+        if hasattr(self, "cfg") and self.cfg is not None:
+            serialize["cfg"] = lambda: srsly.json_dumps(self.cfg)
+        serialize["vocab"] = self.vocab.to_bytes
+        serialize["kb"] = self.kb.to_bytes
+        serialize["model"] = self.model.to_bytes
+        return util.to_bytes(serialize, exclude)
+
+    def from_bytes(self, bytes_data, *, exclude=tuple()):
+        """Load the pipe from a bytestring.
+
+        exclude (Iterable[str]): String names of serialization fields to exclude.
+        RETURNS (TrainablePipe): The loaded object.
+
+        DOCS: https://spacy.io/api/entitylinker#from_bytes
+        """
+        self._validate_serialization_attrs()
+
+        def load_model(b):
+            try:
+                self.model.from_bytes(b)
+            except AttributeError:
+                raise ValueError(Errors.E149) from None
+
+        deserialize = {}
+        if hasattr(self, "cfg") and self.cfg is not None:
+            deserialize["cfg"] = lambda b: self.cfg.update(srsly.json_loads(b))
+        deserialize["vocab"] = lambda b: self.vocab.from_bytes(b)
+        deserialize["kb"] = lambda b: self.kb.from_bytes(b)
+        deserialize["model"] = load_model
+        util.from_bytes(bytes_data, deserialize, exclude)
+        return self
+
     def to_disk(
         self, path: Union[str, Path], *, exclude: Iterable[str] = SimpleFrozenList()
     ) -> None:

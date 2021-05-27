@@ -375,21 +375,10 @@ class Errors:
     E125 = ("Unexpected value: {value}")
     E126 = ("Unexpected matcher predicate: '{bad}'. Expected one of: {good}. "
             "This is likely a bug in spaCy, so feel free to open an issue.")
-    E129 = ("Cannot write the label of an existing Span object because a Span "
-            "is a read-only view of the underlying Token objects stored in the "
-            "Doc. Instead, create a new Span object and specify the `label` "
-            "keyword argument, for example:\nfrom spacy.tokens import Span\n"
-            "span = Span(doc, start={start}, end={end}, label='{label}')")
     E130 = ("You are running a narrow unicode build, which is incompatible "
             "with spacy >= 2.1.0. To fix this, reinstall Python and use a wide "
             "unicode build instead. You can also rebuild Python and set the "
             "`--enable-unicode=ucs4 flag`.")
-    E131 = ("Cannot write the kb_id of an existing Span object because a Span "
-            "is a read-only view of the underlying Token objects stored in "
-            "the Doc. Instead, create a new Span object and specify the "
-            "`kb_id` keyword argument, for example:\nfrom spacy.tokens "
-            "import Span\nspan = Span(doc, start={start}, end={end}, "
-            "label='{label}', kb_id='{kb_id}')")
     E132 = ("The vectors for entities and probabilities for alias '{alias}' "
             "should have equal length, but found {entities_length} and "
             "{probabilities_length} respectively.")
@@ -501,6 +490,12 @@ class Errors:
     E202 = ("Unsupported alignment mode '{mode}'. Supported modes: {modes}.")
 
     # New errors added in v3.x
+    E870 = ("Could not serialize the DocBin because it is too large. Consider "
+            "splitting up your documents into several doc bins and serializing "
+            "each separately. spacy.Corpus.v1 will search recursively for all "
+            "*.spacy files if you provide a directory instead of a filename as "
+            "the 'path'.")
+    E871 = ("Error encountered in nlp.pipe with multiprocessing:\n\n{error}")
     E872 = ("Unable to copy tokenizer from base model due to different "
             'tokenizer settings: current tokenizer config "{curr_config}" '
             'vs. base model "{base_config}"')
