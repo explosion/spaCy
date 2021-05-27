@@ -17,7 +17,7 @@ from .coref_util import (
 )
 
 
-@registry.architectures("spacy.Coref.v0")
+@registry.architectures("spacy.Coref.v1")
 def build_coref(
     tok2vec: Model[List[Doc], List[Floats2d]],
     get_mentions: Any = get_candidate_mentions,

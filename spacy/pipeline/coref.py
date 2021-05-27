@@ -27,14 +27,14 @@ from ..coref_scorer import Evaluator, get_cluster_info, b_cubed
 
 default_config = """
 [model]
-@architectures = "spacy.Coref.v0"
+@architectures = "spacy.Coref.v1"
 max_span_width = 20
 mention_limit = 3900
 dropout = 0.3
 hidden = 1000
 
 [model.get_mentions]
-@misc = "spacy.CorefCandidateGenerator.v0"
+@misc = "spacy.CorefCandidateGenerator.v1"
 
 [model.tok2vec]
 @architectures = "spacy.Tok2Vec.v2"

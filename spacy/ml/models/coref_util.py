@@ -148,7 +148,7 @@ def get_candidate_mentions(
     return (begins, ends)
 
 
-@registry.misc("spacy.CorefCandidateGenerator.v0")
+@registry.misc("spacy.CorefCandidateGenerator.v1")
 def create_mention_generator() -> Any:
     return get_candidate_mentions
 
