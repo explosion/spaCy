@@ -344,7 +344,7 @@ def test_gold_biluo_4791(en_vocab, en_tokenizer):
         doc, {"words": gold_words, "spaces": gold_spaces, "entities": entities}
     )
     ner_tags = example.get_aligned_ner()
-    assert ner_tags == ["O", "O", "O", "O", "U-MONEY", "O"]
+    assert ner_tags == ["O", "O", "O", "O", "B-MONEY", "L-MONEY", "O"]
 
     doc = en_tokenizer("I'll return the $54 amount")
     gold_words = ["I", "'ll", "return", "the", "$", "54", "amount"]
