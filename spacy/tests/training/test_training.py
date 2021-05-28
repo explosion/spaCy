@@ -336,15 +336,15 @@ def test_gold_biluo_additional_whitespace(en_vocab, en_tokenizer):
 
 
 def test_gold_biluo_4791(en_vocab, en_tokenizer):
-    doc = en_tokenizer("I'll return the ₹54 amount")
-    gold_words = ["I", "'ll", "return", "the", "₹", "54", "amount"]
+    doc = en_tokenizer("I'll return the A54 amount")
+    gold_words = ["I", "'ll", "return", "the", "A", "54", "amount"]
     gold_spaces = [False, True, True, True, False, True, False]
     entities = [(16, 19, "MONEY")]
     example = Example.from_dict(
         doc, {"words": gold_words, "spaces": gold_spaces, "entities": entities}
     )
     ner_tags = example.get_aligned_ner()
-    assert ner_tags == ["O", "O", "O", "O", "B-MONEY", "L-MONEY", "O"]
+    assert ner_tags == ["O", "O", "O", "O", "U-MONEY", "O"]
 
     doc = en_tokenizer("I'll return the $54 amount")
     gold_words = ["I", "'ll", "return", "the", "$", "54", "amount"]
