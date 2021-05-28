@@ -1,4 +1,6 @@
 import pytest
+import spacy
+
 from spacy import util
 from spacy.training import Example
 from spacy.lang.en import English
@@ -50,8 +52,9 @@ def test_initialized(nlp):
     assert nlp.pipe_names == ["coref"]
     text = "She gave me her pen."
     doc = nlp(text)
-    # TODO: The results of this are weird & non-deterministic
-    print(doc.spans)
+    for k, v in doc.spans.items():
+        # Ensure there are no "She, She, She, She, She, ..." problems
+        assert len(v) <= 15
 
 
 def test_initialized_short(nlp):
@@ -73,6 +76,28 @@ def test_initialized_2(nlp):
     print(nlp(text).spans)
 
 
+def test_coref_serialization(nlp):
+    # Test that the coref component can be serialized
+    nlp.add_pipe("coref", last=True)
+    nlp.initialize()
+    assert nlp.pipe_names == ["coref"]
+    text = "She gave me her pen."
+    doc = nlp(text)
+    spans_result = doc.spans
+
+    with make_tempdir() as tmp_dir:
+        nlp.to_disk(tmp_dir)
+        nlp2 = spacy.load(tmp_dir)
+        assert nlp2.pipe_names == ["coref"]
+        doc2 = nlp2(text)
+        spans_result2 = doc2.spans
+        print(1, [(k, len(v)) for k, v in spans_result.items()])
+        print(2, [(k, len(v)) for k, v in spans_result2.items()])
+        for k, v in spans_result.items():
+            assert spans_result[k] == spans_result2[k]
+        # assert spans_result == spans_result2
+
+
 def test_overfitting_IO(nlp):
     # Simple test to try and quickly overfit the senter - ensuring the ML models work correctly
     train_examples = []
@@ -90,7 +115,7 @@ def test_overfitting_IO(nlp):
         nlp.update(train_examples, sgd=optimizer, losses=losses)
         doc = nlp(test_text)
         print(i, doc.spans)
-    print(losses["coref"]) # < 0.001
+    print(losses["coref"])  # < 0.001
 
     # test the trained model
     doc = nlp(test_text)

@@ -109,16 +109,15 @@ def get_predicted_clusters(
 
 def get_sentence_map(doc: Doc):
     """For the given span, return a list of sentence indexes."""
-
-    try:
+    if doc.is_sentenced:
         si = 0
         out = []
         for sent in doc.sents:
-            for tok in sent:
+            for _ in sent:
                 out.append(si)
             si += 1
         return out
-    except ValueError:
+    else:
         # If there are no sents then just return dummy values.
         # Shouldn't happen in general training, but typical in init.
         return [0] * len(doc)
@@ -198,8 +197,9 @@ def select_non_crossing_spans(
 
     # sort idxs by order in doc
     selected = sorted(selected, key=lambda idx: (starts[idx], ends[idx]))
-    while len(selected) < limit:
-        selected.append(selected[0])  # this seems a bit weird?
+    # This was causing many repetitive entities in the output - removed for now
+    # while len(selected) < limit:
+    #     selected.append(selected[0])  # this seems a bit weird?
     return selected
 
 

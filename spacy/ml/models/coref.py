@@ -379,7 +379,7 @@ def ant_scorer_forward(
 
         scores = pw_prod + pw_sum + mask
 
-        top_scores, top_scores_idx = topk(xp, scores, ant_limit)
+        top_scores, top_scores_idx = topk(xp, scores, min(ant_limit, len(scores)))
         out.append((top_scores, top_scores_idx))
 
         # In the full model these scores can be further refined. In the current
