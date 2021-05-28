@@ -50,7 +50,17 @@ def test_initialized(nlp):
     assert nlp.pipe_names == ["coref"]
     text = "She gave me her pen."
     doc = nlp(text)
-    # The results of this are weird & non-deterministic
+    # TODO: The results of this are weird & non-deterministic
+    print(doc.spans)
+
+
+def test_initialized_short(nlp):
+    nlp.add_pipe("coref")
+    nlp.initialize()
+    assert nlp.pipe_names == ["coref"]
+    text = "Hi there"
+    # TODO: this crashes with an IndexError: too many indices
+    doc = nlp(text)
     print(doc.spans)
 
 
@@ -59,8 +69,7 @@ def test_initialized_2(nlp):
     nlp.initialize()
     assert nlp.pipe_names == ["coref"]
     text = "She gave me her pen."
-    doc = nlp(text)
-    # TODO: THIS CRASHES
+    # TODO: This crashes though it works when using intermediate var 'doc' !
     print(nlp(text).spans)
 
 
