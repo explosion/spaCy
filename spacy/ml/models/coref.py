@@ -59,6 +59,7 @@ def tuplify(layer1: Model, layer2: Model, *layers) -> Model:
     )
 
 
+# TODO replace this with thinc version once PR is in
 def tuplify_forward(model, X, is_train):
     Ys = []
     backprops = []
@@ -77,16 +78,27 @@ def tuplify_forward(model, X, is_train):
     return tuple(Ys), backprop_tuplify
 
 
-# TODO make more robust, see chain
+# TODO replace this with thinc version once PR is in
 def tuplify_init(model, X, Y) -> Model:
     if X is None and Y is None:
         for layer in model.layers:
             layer.initialize()
-
+        if model.layers[0].has_dim("nI"):
+            model.set_dim("nI", model.layers[0].get_dim("nI"))
         return model
 
-    for layer in model.layers:
-        layer.initialize(X=X)
+    # Try to set nO on each layer, where available.
+    # All layers have the same input, and the output should map directly from the
+    # given Y, if provided.
+    for ii, layer in enumerate(model.layers):
+        if Y is not None and layer.has_dim("nO") is None:
+            layer.initialize(X=X, Y=Y[ii])
+        else:
+            layer.initialize(X=X)
+
+    if model.layers[0].has_dim("nI"):
+        model.set_dim("nI", model.layers[0].get_dim("nI"))
+    # this model can have an input dimension, but can't have an output dimension
     return model
 
 
