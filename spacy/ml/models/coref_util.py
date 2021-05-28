@@ -44,11 +44,13 @@ def topk(xp, arr, k, axis=None):
 def logsumexp(xp, arr, axis=None):
     """Emulate torch.logsumexp by returning the log of summed exponentials
     along each row in the given dimension.
-    TODO: currently not used?
 
     Reduces a 2d array to 1d."""
     # from slide 5 here:
     # https://www.slideshare.net/ryokuta/cupy
+
+    # Note: this was added to reproduce loss calculation in coref-hoi. If loss
+    # can be calculated using another method this is not necessary.
     hi = arr.max(axis=axis)
     hi = xp.expand_dims(hi, 1)
     return hi.squeeze() + xp.log(xp.exp(arr - hi).sum(axis=axis))
@@ -212,17 +214,6 @@ def get_clusters_from_doc(doc) -> List[List[Tuple[int, int]]]:
             # TODO check that there isn't an off-by-one error here
             cluster.append((span.start, span.end))
         out.append(cluster)
-    return out
-
-
-def make_clean_doc(nlp, doc):
-    """Return a doc with raw data but not span annotations."""
-    # Surely there is a better way to do this?
-    # TODO: currently not used?
-
-    sents = [tok.is_sent_start for tok in doc]
-    words = [tok.text for tok in doc]
-    out = Doc(nlp.vocab, words=words, sent_starts=sents)
     return out
 
 
