@@ -387,9 +387,10 @@ def load_model_from_path(
     if not meta:
         meta = get_model_meta(model_path)
     config_path = model_path / "config.cfg"
-    config = load_config(config_path, overrides=dict_to_dot(config))
+    overrides = dict_to_dot(config)
+    config = load_config(config_path, overrides=overrides)
     nlp = load_model_from_config(config, vocab=vocab, disable=disable, exclude=exclude)
-    return nlp.from_disk(model_path, exclude=exclude)
+    return nlp.from_disk(model_path, exclude=exclude, overrides=overrides)
 
 
 def load_model_from_config(

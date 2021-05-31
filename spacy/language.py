@@ -1846,7 +1846,8 @@ class Language:
         util.to_disk(path, serializers, exclude)
 
     def from_disk(
-        self, path: Union[str, Path], *, exclude: Iterable[str] = SimpleFrozenList()
+        self, path: Union[str, Path], *, exclude: Iterable[str] = SimpleFrozenList(),
+            overrides: Dict[str, Any] = SimpleFrozenDict(),
     ) -> "Language":
         """Loads state from a directory. Modifies the object in place and
         returns it. If the saved `Language` object contains a model, the
@@ -1875,7 +1876,7 @@ class Language:
         deserializers = {}
         if Path(path / "config.cfg").exists():
             deserializers["config.cfg"] = lambda p: self.config.from_disk(
-                p, interpolate=False
+                p, interpolate=False, overrides=overrides
             )
         deserializers["meta.json"] = deserialize_meta
         deserializers["vocab"] = deserialize_vocab
