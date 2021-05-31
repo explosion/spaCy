@@ -20,13 +20,25 @@ from .. import util
 @Language.factory(
     "lemmatizer",
     assigns=["token.lemma"],
-    default_config={"model": None, "mode": "lookup", "overwrite": False},
+    default_config={
+        "model": None,
+        "mode": "lookup",
+        "overwrite": False,
+        "scorer": None,
+    },
     default_score_weights={"lemma_acc": 1.0},
 )
 def make_lemmatizer(
-    nlp: Language, model: Optional[Model], name: str, mode: str, overwrite: bool = False
+    nlp: Language,
+    model: Optional[Model],
+    name: str,
+    mode: str,
+    overwrite: bool,
+    scorer: Optional[Callable],
 ):
-    return Lemmatizer(nlp.vocab, model, name, mode=mode, overwrite=overwrite)
+    return Lemmatizer(
+        nlp.vocab, model, name, mode=mode, overwrite=overwrite, scorer=scorer
+    )
 
 
 class Lemmatizer(Pipe):
@@ -60,6 +72,7 @@ class Lemmatizer(Pipe):
         *,
         mode: str = "lookup",
         overwrite: bool = False,
+        scorer: Optional[Callable] = None,
     ) -> None:
         """Initialize a Lemmatizer.
 
@@ -89,6 +102,7 @@ class Lemmatizer(Pipe):
                 raise ValueError(Errors.E1003.format(mode=mode))
             self.lemmatize = getattr(self, mode_attr)
         self.cache = {}
+        self.scorer = scorer
 
     @property
     def mode(self):
@@ -256,6 +270,8 @@ class Lemmatizer(Pipe):
         DOCS: https://spacy.io/api/lemmatizer#score
         """
         validate_examples(examples, "Lemmatizer.score")
+        if self.scorer is not None:
+            return self.scorer(examples, **kwargs)
         return Scorer.score_token_attr(examples, "lemma", **kwargs)
 
     def to_disk(

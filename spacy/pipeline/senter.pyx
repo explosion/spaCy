@@ -1,5 +1,6 @@
 # cython: infer_types=True, profile=True, binding=True
 from itertools import islice
+from typing import Optional, Callable
 
 import srsly
 from thinc.api import Model, SequenceCategoricalCrossentropy, Config
@@ -34,11 +35,11 @@ DEFAULT_SENTER_MODEL = Config().from_str(default_model_config)["model"]
 @Language.factory(
     "senter",
     assigns=["token.is_sent_start"],
-    default_config={"model": DEFAULT_SENTER_MODEL},
+    default_config={"model": DEFAULT_SENTER_MODEL, "scorer": None},
     default_score_weights={"sents_f": 1.0, "sents_p": 0.0, "sents_r": 0.0},
 )
-def make_senter(nlp: Language, name: str, model: Model):
-    return SentenceRecognizer(nlp.vocab, model, name)
+def make_senter(nlp: Language, name: str, model: Model, scorer: Optional[Callable]):
+    return SentenceRecognizer(nlp.vocab, model, name, scorer=scorer)
 
 
 class SentenceRecognizer(Tagger):
@@ -46,7 +47,7 @@ class SentenceRecognizer(Tagger):
 
     DOCS: https://spacy.io/api/sentencerecognizer
     """
-    def __init__(self, vocab, model, name="senter"):
+    def __init__(self, vocab, model, name="senter", *, scorer=None):
         """Initialize a sentence recognizer.
 
         vocab (Vocab): The shared vocabulary.
@@ -61,6 +62,7 @@ class SentenceRecognizer(Tagger):
         self.name = name
         self._rehearsal_model = None
         self.cfg = {}
+        self.scorer = scorer
 
     @property
     def labels(self):
@@ -161,10 +163,13 @@ class SentenceRecognizer(Tagger):
         RETURNS (Dict[str, Any]): The scores, produced by Scorer.score_spans.
         DOCS: https://spacy.io/api/sentencerecognizer#score
         """
+        validate_examples(examples, "SentenceRecognizer.score")
+        if self.scorer is not None:
+            return self.scorer(examples, **kwargs)
+
         def has_sents(doc):
             return doc.has_annotation("SENT_START")
 
-        validate_examples(examples, "SentenceRecognizer.score")
         results = Scorer.score_spans(examples, "sents", has_annotation=has_sents, **kwargs)
         del results["sents_per_type"]
         return results

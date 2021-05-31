@@ -1,5 +1,5 @@
 # cython: infer_types=True, profile=True, binding=True
-from typing import Optional, Union, Dict
+from typing import Optional, Union, Dict, Callable
 import srsly
 from thinc.api import SequenceCategoricalCrossentropy, Model, Config
 from itertools import islice
@@ -48,15 +48,16 @@ DEFAULT_MORPH_MODEL = Config().from_str(default_model_config)["model"]
 @Language.factory(
     "morphologizer",
     assigns=["token.morph", "token.pos"],
-    default_config={"model": DEFAULT_MORPH_MODEL},
+    default_config={"model": DEFAULT_MORPH_MODEL, "scorer": None},
     default_score_weights={"pos_acc": 0.5, "morph_acc": 0.5, "morph_per_feat": None},
 )
 def make_morphologizer(
     nlp: Language,
     model: Model,
     name: str,
+    scorer: Optional[Callable],
 ):
-    return Morphologizer(nlp.vocab, model, name)
+    return Morphologizer(nlp.vocab, model, name, scorer=scorer)
 
 
 class Morphologizer(Tagger):
@@ -67,6 +68,8 @@ class Morphologizer(Tagger):
         vocab: Vocab,
         model: Model,
         name: str = "morphologizer",
+        *,
+        scorer: Optional[Callable] = None,
     ):
         """Initialize a morphologizer.
 
@@ -87,6 +90,7 @@ class Morphologizer(Tagger):
         # 2) labels_pos stores a mapping from morph+POS->POS
         cfg = {"labels_morph": {}, "labels_pos": {}}
         self.cfg = dict(sorted(cfg.items()))
+        self.scorer = scorer
 
     @property
     def labels(self):
@@ -257,10 +261,13 @@ class Morphologizer(Tagger):
 
         DOCS: https://spacy.io/api/morphologizer#score
         """
+        validate_examples(examples, "Morphologizer.score")
+        if self.scorer is not None:
+            return self.scorer(examples, **kwargs)
+
         def morph_key_getter(token, attr):
             return getattr(token, attr).key
 
-        validate_examples(examples, "Morphologizer.score")
         results = {}
         results.update(Scorer.score_token_attr(examples, "pos", **kwargs))
         results.update(Scorer.score_token_attr(examples, "morph", getter=morph_key_getter, **kwargs))

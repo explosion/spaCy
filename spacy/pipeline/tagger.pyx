@@ -1,4 +1,5 @@
 # cython: infer_types=True, profile=True, binding=True
+from typing import Callable, Optional
 import numpy
 import srsly
 from thinc.api import Model, set_dropout_rate, SequenceCategoricalCrossentropy, Config
@@ -41,10 +42,10 @@ DEFAULT_TAGGER_MODEL = Config().from_str(default_model_config)["model"]
 @Language.factory(
     "tagger",
     assigns=["token.tag"],
-    default_config={"model": DEFAULT_TAGGER_MODEL},
+    default_config={"model": DEFAULT_TAGGER_MODEL, "scorer": None},
     default_score_weights={"tag_acc": 1.0},
 )
-def make_tagger(nlp: Language, name: str, model: Model):
+def make_tagger(nlp: Language, name: str, model: Model, scorer: Optional[Callable]):
     """Construct a part-of-speech tagger component.
 
     model (Model[List[Doc], List[Floats2d]]): A model instance that predicts
@@ -52,7 +53,7 @@ def make_tagger(nlp: Language, name: str, model: Model):
         in size, and be normalized as probabilities (all scores between 0 and 1,
         with the rows summing to 1).
     """
-    return Tagger(nlp.vocab, model, name)
+    return Tagger(nlp.vocab, model, name, scorer=scorer)
 
 
 class Tagger(TrainablePipe):
@@ -60,7 +61,7 @@ class Tagger(TrainablePipe):
 
     DOCS: https://spacy.io/api/tagger
     """
-    def __init__(self, vocab, model, name="tagger"):
+    def __init__(self, vocab, model, name="tagger", *, scorer=None):
         """Initialize a part-of-speech tagger.
 
         vocab (Vocab): The shared vocabulary.
@@ -76,6 +77,7 @@ class Tagger(TrainablePipe):
         self._rehearsal_model = None
         cfg = {"labels": []}
         self.cfg = dict(sorted(cfg.items()))
+        self.scorer = scorer
 
     @property
     def labels(self):
@@ -300,4 +302,6 @@ class Tagger(TrainablePipe):
         DOCS: https://spacy.io/api/tagger#score
         """
         validate_examples(examples, "Tagger.score")
+        if self.scorer:
+            return self.scorer(examples, **kwargs)
         return Scorer.score_token_attr(examples, "tag", **kwargs)

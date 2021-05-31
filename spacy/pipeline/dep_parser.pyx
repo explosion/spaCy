@@ -1,6 +1,6 @@
 # cython: infer_types=True, profile=True, binding=True
 from collections import defaultdict
-from typing import Optional, Iterable
+from typing import Optional, Iterable, Callable
 from thinc.api import Model, Config
 
 from ._parser_internals.transition_system import TransitionSystem
@@ -46,6 +46,7 @@ DEFAULT_PARSER_MODEL = Config().from_str(default_model_config)["model"]
         "learn_tokens": False,
         "min_action_freq": 30,
         "model": DEFAULT_PARSER_MODEL,
+        "scorer": None,
     },
     default_score_weights={
         "dep_uas": 0.5,
@@ -63,7 +64,8 @@ def make_parser(
     moves: Optional[TransitionSystem],
     update_with_oracle_cut_size: int,
     learn_tokens: bool,
-    min_action_freq: int
+    min_action_freq: int,
+    scorer: Optional[Callable],
 ):
     """Create a transition-based DependencyParser component. The dependency parser
     jointly learns sentence segmentation and labelled dependency parsing, and can
@@ -115,7 +117,8 @@ def make_parser(
         beam_update_prob=0.0,
         # At some point in the future we can try to implement support for
         # partial annotations, perhaps only in the beam objective.
-        incorrect_spans_key=None
+        incorrect_spans_key=None,
+        scorer=scorer,
     )
 
 @Language.factory(
@@ -130,6 +133,7 @@ def make_parser(
         "learn_tokens": False,
         "min_action_freq": 30,
         "model": DEFAULT_PARSER_MODEL,
+        "scorer": None,
     },
     default_score_weights={
         "dep_uas": 0.5,
@@ -151,6 +155,7 @@ def make_beam_parser(
     beam_width: int,
     beam_density: float,
     beam_update_prob: float,
+    scorer: Optional[Callable],
 ):
     """Create a transition-based DependencyParser component that uses beam-search.
     The dependency parser jointly learns sentence segmentation and labelled
@@ -207,7 +212,8 @@ def make_beam_parser(
         min_action_freq=min_action_freq,
         # At some point in the future we can try to implement support for
         # partial annotations, perhaps only in the beam objective.
-        incorrect_spans_key=None
+        incorrect_spans_key=None,
+        scorer=scorer,
     )
 
 
@@ -233,6 +239,7 @@ cdef class DependencyParser(Parser):
         beam_update_prob=0.0,
         multitasks=tuple(),
         incorrect_spans_key=None,
+        scorer=None,
     ):
         """Create a DependencyParser.
         """
@@ -290,10 +297,13 @@ cdef class DependencyParser(Parser):
 
         DOCS: https://spacy.io/api/dependencyparser#score
         """
+        validate_examples(examples, "DependencyParser.score")
+        if self.scorer:
+            return self.scorer(examples, **kwargs)
+
         def has_sents(doc):
             return doc.has_annotation("SENT_START")
 
-        validate_examples(examples, "DependencyParser.score")
         def dep_getter(token, attr):
             dep = getattr(token, attr)
             dep = token.vocab.strings.as_string(dep).lower()

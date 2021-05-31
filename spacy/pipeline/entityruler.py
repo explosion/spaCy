@@ -27,6 +27,7 @@ PatternType = Dict[str, Union[str, List[Dict[str, Any]]]]
         "validate": False,
         "overwrite_ents": False,
         "ent_id_sep": DEFAULT_ENT_ID_SEP,
+        "scorer": None,
     },
     default_score_weights={
         "ents_f": 1.0,
@@ -42,6 +43,7 @@ def make_entity_ruler(
     validate: bool,
     overwrite_ents: bool,
     ent_id_sep: str,
+    scorer: Optional[Callable],
 ):
     return EntityRuler(
         nlp,
@@ -50,6 +52,7 @@ def make_entity_ruler(
         validate=validate,
         overwrite_ents=overwrite_ents,
         ent_id_sep=ent_id_sep,
+        scorer=scorer,
     )
 
 
@@ -74,6 +77,7 @@ class EntityRuler(Pipe):
         overwrite_ents: bool = False,
         ent_id_sep: str = DEFAULT_ENT_ID_SEP,
         patterns: Optional[List[PatternType]] = None,
+        scorer: Optional[Callable] = None,
     ) -> None:
         """Initialize the entity ruler. If patterns are supplied here, they
         need to be a list of dictionaries with a `"label"` and `"pattern"`
@@ -112,6 +116,7 @@ class EntityRuler(Pipe):
         self._ent_ids = defaultdict(dict)
         if patterns is not None:
             self.add_patterns(patterns)
+        self.scorer = scorer
 
     def __len__(self) -> int:
         """The number of all patterns added to the entity ruler."""
@@ -360,6 +365,8 @@ class EntityRuler(Pipe):
 
     def score(self, examples, **kwargs):
         validate_examples(examples, "EntityRuler.score")
+        if self.scorer is not None:
+            return self.scorer(examples, **kwargs)
         return get_ner_prf(examples)
 
     def from_bytes(

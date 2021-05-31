@@ -49,7 +49,8 @@ cdef class Parser(TrainablePipe):
         beam_density=0.0,
         beam_update_prob=0.0,
         multitasks=tuple(),
-        incorrect_spans_key=None
+        incorrect_spans_key=None,
+        scorer=None,
     ):
         """Create a Parser.
 
@@ -117,6 +118,7 @@ cdef class Parser(TrainablePipe):
             self.add_multitask_objective(multitask)
 
         self._rehearsal_model = None
+        self.scorer = scorer
 
     def __getnewargs_ex__(self):
         """This allows pickling the Parser and its keyword-only init arguments"""

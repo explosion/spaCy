@@ -50,6 +50,7 @@ DEFAULT_NEL_MODEL = Config().from_str(default_model_config)["model"]
         "incl_context": True,
         "entity_vector_length": 64,
         "get_candidates": {"@misc": "spacy.CandidateGenerator.v1"},
+        "scorer": None,
     },
     default_score_weights={
         "nel_micro_f": 1.0,
@@ -68,6 +69,7 @@ def make_entity_linker(
     incl_context: bool,
     entity_vector_length: int,
     get_candidates: Callable[[KnowledgeBase, Span], Iterable[Candidate]],
+    scorer: Optional[Callable],
 ):
     """Construct an EntityLinker component.
 
@@ -92,6 +94,7 @@ def make_entity_linker(
         incl_context=incl_context,
         entity_vector_length=entity_vector_length,
         get_candidates=get_candidates,
+        scorer=scorer,
     )
 
 
@@ -115,6 +118,7 @@ class EntityLinker(TrainablePipe):
         incl_context: bool,
         entity_vector_length: int,
         get_candidates: Callable[[KnowledgeBase, Span], Iterable[Candidate]],
+        scorer: Optional[Callable] = None,
     ) -> None:
         """Initialize an entity linker.
 
@@ -145,6 +149,7 @@ class EntityLinker(TrainablePipe):
         # how many neighbour sentences to take into account
         # create an empty KB by default. If you want to load a predefined one, specify it in 'initialize'.
         self.kb = empty_kb(entity_vector_length)(self.vocab)
+        self.scorer = scorer
 
     def set_kb(self, kb_loader: Callable[[Vocab], KnowledgeBase]):
         """Define the KB of this pipe by providing a function that will
@@ -398,6 +403,8 @@ class EntityLinker(TrainablePipe):
         DOCS TODO: https://spacy.io/api/entity_linker#score
         """
         validate_examples(examples, "EntityLinker.score")
+        if self.scorer is not None:
+            return self.scorer(examples, **kwargs)
         return Scorer.score_links(examples, negative_labels=[self.NIL])
 
     def to_bytes(self, *, exclude=tuple()):
