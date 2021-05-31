@@ -23,9 +23,11 @@ TagMapType = Dict[str, Dict[Union[int, str], Union[int, str]]]
 MorphRulesType = Dict[str, Dict[str, Dict[Union[int, str], Union[int, str]]]]
 
 
-@Language.factory("attribute_ruler", default_config={"validate": False})
-def make_attribute_ruler(nlp: Language, name: str, validate: bool):
-    return AttributeRuler(nlp.vocab, name, validate=validate)
+@Language.factory("attribute_ruler", default_config={"validate": False, "scorer": None})
+def make_attribute_ruler(
+    nlp: Language, name: str, validate: bool, scorer: Optional[Callable]
+):
+    return AttributeRuler(nlp.vocab, name, validate=validate, scorer=scorer)
 
 
 class AttributeRuler(Pipe):
@@ -36,7 +38,12 @@ class AttributeRuler(Pipe):
     """
 
     def __init__(
-        self, vocab: Vocab, name: str = "attribute_ruler", *, validate: bool = False
+        self,
+        vocab: Vocab,
+        name: str = "attribute_ruler",
+        *,
+        validate: bool = False,
+        scorer: Optional[Callable] = None,
     ) -> None:
         """Create the AttributeRuler. After creation, you can add patterns
         with the `.initialize()` or `.add_patterns()` methods, or load patterns
@@ -57,6 +64,7 @@ class AttributeRuler(Pipe):
         self.attrs = []
         self._attrs_unnormed = []  # store for reference
         self.indices = []
+        self.scorer = scorer
 
     def clear(self) -> None:
         """Reset all patterns."""
@@ -239,10 +247,13 @@ class AttributeRuler(Pipe):
         DOCS: https://spacy.io/api/tagger#score
         """
 
+        validate_examples(examples, "AttributeRuler.score")
+        if self.scorer is not None:
+            return self.scorer(examples, **kwargs)
+
         def morph_key_getter(token, attr):
             return getattr(token, attr).key
 
-        validate_examples(examples, "AttributeRuler.score")
         results = {}
         attrs = set()
         for token_attrs in self.attrs:

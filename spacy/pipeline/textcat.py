@@ -70,7 +70,11 @@ subword_features = true
 @Language.factory(
     "textcat",
     assigns=["doc.cats"],
-    default_config={"threshold": 0.5, "model": DEFAULT_SINGLE_TEXTCAT_MODEL},
+    default_config={
+        "threshold": 0.5,
+        "model": DEFAULT_SINGLE_TEXTCAT_MODEL,
+        "scorer": None,
+    },
     default_score_weights={
         "cats_score": 1.0,
         "cats_score_desc": None,
@@ -86,7 +90,11 @@ subword_features = true
     },
 )
 def make_textcat(
-    nlp: Language, name: str, model: Model[List[Doc], List[Floats2d]], threshold: float
+    nlp: Language,
+    name: str,
+    model: Model[List[Doc], List[Floats2d]],
+    threshold: float,
+    scorer: Optional[Callable],
 ) -> "TextCategorizer":
     """Create a TextCategorizer component. The text categorizer predicts categories
     over a whole document. It can learn one or more labels, and the labels are considered
@@ -96,7 +104,7 @@ def make_textcat(
         scores for each category.
     threshold (float): Cutoff to consider a prediction "positive".
     """
-    return TextCategorizer(nlp.vocab, model, name, threshold=threshold)
+    return TextCategorizer(nlp.vocab, model, name, threshold=threshold, scorer=scorer)
 
 
 class TextCategorizer(TrainablePipe):
@@ -106,7 +114,13 @@ class TextCategorizer(TrainablePipe):
     """
 
     def __init__(
-        self, vocab: Vocab, model: Model, name: str = "textcat", *, threshold: float
+        self,
+        vocab: Vocab,
+        model: Model,
+        name: str = "textcat",
+        *,
+        threshold: float,
+        scorer: Optional[Callable] = None,
     ) -> None:
         """Initialize a text categorizer for single-label classification.
 
@@ -124,6 +138,7 @@ class TextCategorizer(TrainablePipe):
         self._rehearsal_model = None
         cfg = {"labels": [], "threshold": threshold, "positive_label": None}
         self.cfg = dict(cfg)
+        self.scorer = scorer
 
     @property
     def labels(self) -> Tuple[str]:
@@ -357,6 +372,8 @@ class TextCategorizer(TrainablePipe):
         DOCS: https://spacy.io/api/textcategorizer#score
         """
         validate_examples(examples, "TextCategorizer.score")
+        if self.scorer is not None:
+            self.scorer(examples, **kwargs)
         self._validate_categories(examples)
         kwargs.setdefault("threshold", self.cfg["threshold"])
         kwargs.setdefault("positive_label", self.cfg["positive_label"])

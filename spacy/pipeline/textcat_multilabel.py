@@ -70,7 +70,11 @@ subword_features = true
 @Language.factory(
     "textcat_multilabel",
     assigns=["doc.cats"],
-    default_config={"threshold": 0.5, "model": DEFAULT_MULTI_TEXTCAT_MODEL},
+    default_config={
+        "threshold": 0.5,
+        "model": DEFAULT_MULTI_TEXTCAT_MODEL,
+        "scorer": None,
+    },
     default_score_weights={
         "cats_score": 1.0,
         "cats_score_desc": None,
@@ -86,7 +90,11 @@ subword_features = true
     },
 )
 def make_multilabel_textcat(
-    nlp: Language, name: str, model: Model[List[Doc], List[Floats2d]], threshold: float
+    nlp: Language,
+    name: str,
+    model: Model[List[Doc], List[Floats2d]],
+    threshold: float,
+    scorer: Optional[Callable],
 ) -> "TextCategorizer":
     """Create a TextCategorizer component. The text categorizer predicts categories
     over a whole document. It can learn one or more labels, and the labels are considered
@@ -97,7 +105,9 @@ def make_multilabel_textcat(
         scores for each category.
     threshold (float): Cutoff to consider a prediction "positive".
     """
-    return MultiLabel_TextCategorizer(nlp.vocab, model, name, threshold=threshold)
+    return MultiLabel_TextCategorizer(
+        nlp.vocab, model, name, threshold=threshold, scorer=scorer
+    )
 
 
 class MultiLabel_TextCategorizer(TextCategorizer):
@@ -113,6 +123,7 @@ class MultiLabel_TextCategorizer(TextCategorizer):
         name: str = "textcat_multilabel",
         *,
         threshold: float,
+        scorer: Optional[Callable] = None,
     ) -> None:
         """Initialize a text categorizer for multi-label classification.
 
@@ -130,6 +141,7 @@ class MultiLabel_TextCategorizer(TextCategorizer):
         self._rehearsal_model = None
         cfg = {"labels": [], "threshold": threshold}
         self.cfg = dict(cfg)
+        self.scorer = scorer
 
     def initialize(
         self,
@@ -175,6 +187,8 @@ class MultiLabel_TextCategorizer(TextCategorizer):
         DOCS: https://spacy.io/api/textcategorizer#score
         """
         validate_examples(examples, "MultiLabel_TextCategorizer.score")
+        if self.scorer is not None:
+            return self.scorer(examples, **kwargs)
         kwargs.setdefault("threshold", self.cfg["threshold"])
         return Scorer.score_cats(
             examples,

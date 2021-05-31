@@ -50,6 +50,7 @@ DEFAULT_NEL_MODEL = Config().from_str(default_model_config)["model"]
         "incl_context": True,
         "entity_vector_length": 64,
         "get_candidates": {"@misc": "spacy.CandidateGenerator.v1"},
+        "scorer": None,
     },
     default_score_weights={
         "nel_micro_f": 1.0,
@@ -68,6 +69,7 @@ def make_entity_linker(
     incl_context: bool,
     entity_vector_length: int,
     get_candidates: Callable[[KnowledgeBase, "Span"], Iterable[Candidate]],
+    scorer: Optional[Callable],
 ):
     """Construct an EntityLinker component.
 
@@ -92,6 +94,7 @@ def make_entity_linker(
         incl_context=incl_context,
         entity_vector_length=entity_vector_length,
         get_candidates=get_candidates,
+        scorer=scorer,
     )
 
 
@@ -115,6 +118,7 @@ class EntityLinker(TrainablePipe):
         incl_context: bool,
         entity_vector_length: int,
         get_candidates: Callable[[KnowledgeBase, "Span"], Iterable[Candidate]],
+        scorer: Optional[Callable] = None,
     ) -> None:
         """Initialize an entity linker.
 
@@ -145,6 +149,7 @@ class EntityLinker(TrainablePipe):
         # how many neightbour sentences to take into account
         # create an empty KB by default. If you want to load a predefined one, specify it in 'initialize'.
         self.kb = empty_kb(entity_vector_length)(self.vocab)
+        self.scorer = scorer
 
     def set_kb(self, kb_loader: Callable[[Vocab], KnowledgeBase]):
         """Define the KB of this pipe by providing a function that will
@@ -307,9 +312,7 @@ class EntityLinker(TrainablePipe):
                     assert sent_index >= 0
                     # get n_neightbour sentences, clipped to the length of the document
                     start_sentence = max(0, sent_index - self.n_sents)
-                    end_sentence = min(
-                        len(sentences) - 1, sent_index + self.n_sents
-                    )
+                    end_sentence = min(len(sentences) - 1, sent_index + self.n_sents)
                     start_token = sentences[start_sentence].start
                     end_token = sentences[end_sentence].end
                     sent_doc = doc[start_token:end_token].as_doc()
@@ -335,22 +338,16 @@ class EntityLinker(TrainablePipe):
                         else:
                             random.shuffle(candidates)
                             # set all prior probabilities to 0 if incl_prior=False
-                            prior_probs = xp.asarray(
-                                [c.prior_prob for c in candidates]
-                            )
+                            prior_probs = xp.asarray([c.prior_prob for c in candidates])
                             if not self.incl_prior:
-                                prior_probs = xp.asarray(
-                                    [0.0 for _ in candidates]
-                                )
+                                prior_probs = xp.asarray([0.0 for _ in candidates])
                             scores = prior_probs
                             # add in similarity from the context
                             if self.incl_context:
                                 entity_encodings = xp.asarray(
                                     [c.entity_vector for c in candidates]
                                 )
-                                entity_norm = xp.linalg.norm(
-                                    entity_encodings, axis=1
-                                )
+                                entity_norm = xp.linalg.norm(entity_encodings, axis=1)
                                 if len(entity_encodings) != len(prior_probs):
                                     raise RuntimeError(
                                         Errors.E147.format(
@@ -359,14 +356,12 @@ class EntityLinker(TrainablePipe):
                                         )
                                     )
                                 # cosine similarity
-                                sims = xp.dot(
-                                    entity_encodings, sentence_encoding_t
-                                ) / (sentence_norm * entity_norm)
+                                sims = xp.dot(entity_encodings, sentence_encoding_t) / (
+                                    sentence_norm * entity_norm
+                                )
                                 if sims.shape != prior_probs.shape:
                                     raise ValueError(Errors.E161)
-                                scores = (
-                                    prior_probs + sims - (prior_probs * sims)
-                                )
+                                scores = prior_probs + sims - (prior_probs * sims)
                             # TODO: thresholding
                             best_index = scores.argmax().item()
                             best_candidate = candidates[best_index]
@@ -406,6 +401,8 @@ class EntityLinker(TrainablePipe):
         DOCS TODO: https://spacy.io/api/entity_linker#score
         """
         validate_examples(examples, "EntityLinker.score")
+        if self.scorer is not None:
+            return self.scorer(examples, **kwargs)
         return Scorer.score_links(examples, negative_labels=[self.NIL])
 
     def to_disk(

@@ -1,6 +1,6 @@
 # cython: infer_types=True, profile=True, binding=True
 from collections import defaultdict
-from typing import Optional, Iterable
+from typing import Optional, Iterable, Callable
 from thinc.api import Model, Config
 
 from .transition_parser cimport Parser
@@ -40,6 +40,7 @@ DEFAULT_NER_MODEL = Config().from_str(default_model_config)["model"]
         "moves": None,
         "update_with_oracle_cut_size": 100,
         "model": DEFAULT_NER_MODEL,
+        "scorer": None,
     },
     default_score_weights={"ents_f": 1.0, "ents_p": 0.0, "ents_r": 0.0, "ents_per_type": None},
 
@@ -50,6 +51,7 @@ def make_ner(
     model: Model,
     moves: Optional[list],
     update_with_oracle_cut_size: int,
+    scorer: Optional[Callable],
 ):
     """Create a transition-based EntityRecognizer component. The entity recognizer
     identifies non-overlapping labelled spans of tokens.
@@ -87,6 +89,7 @@ def make_ner(
         beam_width=1,
         beam_density=0.0,
         beam_update_prob=0.0,
+        scorer=scorer,
     )
 
 @Language.factory(
@@ -98,7 +101,8 @@ def make_ner(
         "model": DEFAULT_NER_MODEL,
         "beam_density": 0.01,
         "beam_update_prob": 0.5,
-        "beam_width": 32
+        "beam_width": 32,
+        "scorer": None,
     },
     default_score_weights={"ents_f": 1.0, "ents_p": 0.0, "ents_r": 0.0, "ents_per_type": None},
 )
@@ -111,6 +115,7 @@ def make_beam_ner(
     beam_width: int,
     beam_density: float,
     beam_update_prob: float,
+    scorer: Optional[Callable],
 ):
     """Create a transition-based EntityRecognizer component that uses beam-search.
     The entity recognizer identifies non-overlapping labelled spans of tokens.
@@ -157,6 +162,7 @@ def make_beam_ner(
         beam_width=beam_width,
         beam_density=beam_density,
         beam_update_prob=beam_update_prob,
+        scorer=scorer,
     )
 
 
@@ -197,6 +203,8 @@ cdef class EntityRecognizer(Parser):
         DOCS: https://spacy.io/api/entityrecognizer#score
         """
         validate_examples(examples, "EntityRecognizer.score")
+        if self.scorer is not None:
+            return self.scorer(examples, **kwargs)
         return get_ner_prf(examples)
 
     def scored_ents(self, beams):
