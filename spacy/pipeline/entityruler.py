@@ -315,14 +315,12 @@ class EntityRuler(Pipe):
                 pattern = entry["pattern"]
                 if isinstance(pattern, Doc):
                     self.phrase_patterns[label].append(pattern)
+                    self.phrase_matcher.add(label, [pattern])
                 elif isinstance(pattern, list):
                     self.token_patterns[label].append(pattern)
+                    self.matcher.add(label, [pattern])
                 else:
                     raise ValueError(Errors.E097.format(pattern=pattern))
-            for label, patterns in self.token_patterns.items():
-                self.matcher.add(label, patterns)
-            for label, patterns in self.phrase_patterns.items():
-                self.phrase_matcher.add(label, patterns)
 
     def clear(self) -> None:
         """Reset all patterns."""
