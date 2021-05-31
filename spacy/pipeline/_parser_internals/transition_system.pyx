@@ -38,9 +38,9 @@ cdef class TransitionSystem:
         StringStore string_table,
         labels_by_action=None,
         min_freq=None,
-        negative_samples_key=None
+        incorrect_spans_key=None
     ):
-        self.cfg = {"neg_key": negative_samples_key}
+        self.cfg = {"neg_key": incorrect_spans_key}
         self.mem = Pool()
         self.strings = string_table
         self.n_moves = 0

@@ -130,7 +130,7 @@ def test_negative_sample_key_is_in_config(vocab, entity_types):
     tsys = BiluoPushDown(
         vocab.strings,
         actions,
-        negative_samples_key="non_entities"
+        incorrect_spans_key="non_entities"
     )
     assert tsys.cfg["neg_key"] == "non_entities"
 
@@ -484,7 +484,7 @@ def test_beam_overfitting_IO(neg_key):
     config = {
         "beam_width": beam_width,
         "beam_density": beam_density,
-        "negative_samples_key": neg_key,
+        "incorrect_spans_key": neg_key,
     }
     ner = nlp.add_pipe("beam_ner", config=config)
     train_examples = []

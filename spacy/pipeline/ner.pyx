@@ -40,7 +40,7 @@ DEFAULT_NER_MODEL = Config().from_str(default_model_config)["model"]
         "moves": None,
         "update_with_oracle_cut_size": 100,
         "model": DEFAULT_NER_MODEL,
-        "negative_samples_key": None
+        "incorrect_spans_key": None
     },
     default_score_weights={"ents_f": 1.0, "ents_p": 0.0, "ents_r": 0.0, "ents_per_type": None},
 
@@ -51,7 +51,7 @@ def make_ner(
     model: Model,
     moves: Optional[list],
     update_with_oracle_cut_size: int,
-    negative_samples_key: Optional[str]=None
+    incorrect_spans_key: Optional[str]=None
 ):
     """Create a transition-based EntityRecognizer component. The entity recognizer
     identifies non-overlapping labelled spans of tokens.
@@ -76,7 +76,7 @@ def make_ner(
         intermediate states based on the gold-standard history. The model is
         not very sensitive to this parameter, so you usually won't need to change
         it. 100 is a good default.
-    negative_samples_key (Optional[str]): Identifies spans that are known
+    incorrect_spans_key (Optional[str]): Identifies spans that are known
         to be incorrect entity annotations. The incorrect entity annotations
         can be stored in the span group, under this key.
     """
@@ -86,7 +86,7 @@ def make_ner(
         name,
         moves=moves,
         update_with_oracle_cut_size=update_with_oracle_cut_size,
-        negative_samples_key=negative_samples_key,
+        incorrect_spans_key=incorrect_spans_key,
         multitasks=[],
         min_action_freq=1,
         learn_tokens=False,
@@ -105,7 +105,7 @@ def make_ner(
         "beam_density": 0.01,
         "beam_update_prob": 0.5,
         "beam_width": 32,
-        "negative_samples_key": None
+        "incorrect_spans_key": None
     },
     default_score_weights={"ents_f": 1.0, "ents_p": 0.0, "ents_r": 0.0, "ents_per_type": None},
 )
@@ -118,7 +118,7 @@ def make_beam_ner(
     beam_width: int,
     beam_density: float,
     beam_update_prob: float,
-    negative_samples_key: Optional[str]=None
+    incorrect_spans_key: Optional[str]=None
 ):
     """Create a transition-based EntityRecognizer component that uses beam-search.
     The entity recognizer identifies non-overlapping labelled spans of tokens.
@@ -152,7 +152,7 @@ def make_beam_ner(
     beam_update_prob (float): The chance of making a beam update, instead of a
         greedy update. Greedy updates are an approximation for the beam updates,
         and are faster to compute.
-    negative_samples_key (Optional[str]): Optional key into span groups of
+    incorrect_spans_key (Optional[str]): Optional key into span groups of
         entities known to be non-entities.
     """
     return EntityRecognizer(
@@ -167,7 +167,7 @@ def make_beam_ner(
         beam_width=beam_width,
         beam_density=beam_density,
         beam_update_prob=beam_update_prob,
-        negative_samples_key=negative_samples_key
+        incorrect_spans_key=incorrect_spans_key
     )
 
 

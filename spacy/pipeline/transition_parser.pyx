@@ -48,7 +48,7 @@ cdef class Parser(TrainablePipe):
         beam_density=0.0,
         beam_update_prob=0.0,
         multitasks=tuple(),
-        negative_samples_key=None
+        incorrect_spans_key=None
     ):
         """Create a Parser.
 
@@ -70,13 +70,13 @@ cdef class Parser(TrainablePipe):
             "beam_width": beam_width,
             "beam_density": beam_density,
             "beam_update_prob": beam_update_prob,
-            "negative_samples_key": negative_samples_key
+            "incorrect_spans_key": incorrect_spans_key
         }
         if moves is None:
             # defined by EntityRecognizer as a BiluoPushDown
             moves = self.TransitionSystem(
                 self.vocab.strings,
-                negative_samples_key=negative_samples_key
+                incorrect_spans_key=incorrect_spans_key
             )
         self.moves = moves
         self.model = model
@@ -124,8 +124,8 @@ cdef class Parser(TrainablePipe):
         return []
 
     @property
-    def negative_samples_key(self):
-        return self.cfg["negative_samples_key"]
+    def incorrect_spans_key(self):
+        return self.cfg["incorrect_spans_key"]
 
     def add_label(self, label):
         resized = False
