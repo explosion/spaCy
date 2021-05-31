@@ -3,6 +3,7 @@ from collections import defaultdict
 from typing import Optional, Iterable
 from thinc.api import Model, Config
 
+from ._parser_internals.transition_system import TransitionSystem
 from .transition_parser cimport Parser
 from ._parser_internals.ner cimport BiluoPushDown
 
@@ -49,7 +50,7 @@ def make_ner(
     nlp: Language,
     name: str,
     model: Model,
-    moves: Optional[list],
+    moves: Optional[TransitionSystem],
     update_with_oracle_cut_size: int,
     incorrect_spans_key: Optional[str]=None
 ):
@@ -69,13 +70,13 @@ def make_ner(
     model (Model): The model for the transition-based parser. The model needs
         to have a specific substructure of named components --- see the
         spacy.ml.tb_framework.TransitionModel for details.
-    moves (list[str]): A list of transition names. Inferred from the data if not
-        provided.
-    update_with_oracle_cut_size (int):
-        During training, cut long sequences into shorter segments by creating
-        intermediate states based on the gold-standard history. The model is
-        not very sensitive to this parameter, so you usually won't need to change
-        it. 100 is a good default.
+    moves (Optional[TransitionSystem]): This defines how the parse-state is created,
+        updated and evaluated. If 'moves' is None, a new instance is
+        created with `self.TransitionSystem()`. Defaults to `None`.
+    update_with_oracle_cut_size (int): During training, cut long sequences into
+        shorter segments by creating intermediate states based on the gold-standard
+        history. The model is not very sensitive to this parameter, so you usually
+        won't need to change it. 100 is a good default.
     incorrect_spans_key (Optional[str]): Identifies spans that are known
         to be incorrect entity annotations. The incorrect entity annotations
         can be stored in the span group, under this key.
@@ -113,7 +114,7 @@ def make_beam_ner(
     nlp: Language,
     name: str,
     model: Model,
-    moves: Optional[list],
+    moves: Optional[TransitionSystem],
     update_with_oracle_cut_size: int,
     beam_width: int,
     beam_density: float,
@@ -136,13 +137,13 @@ def make_beam_ner(
     model (Model): The model for the transition-based parser. The model needs
         to have a specific substructure of named components --- see the
         spacy.ml.tb_framework.TransitionModel for details.
-    moves (list[str]): A list of transition names. Inferred from the data if not
-        provided.
-    update_with_oracle_cut_size (int):
-        During training, cut long sequences into shorter segments by creating
-        intermediate states based on the gold-standard history. The model is
-        not very sensitive to this parameter, so you usually won't need to change
-        it. 100 is a good default.
+    moves (Optional[TransitionSystem]): This defines how the parse-state is created,
+        updated and evaluated. If 'moves' is None, a new instance is
+        created with `self.TransitionSystem()`. Defaults to `None`.
+    update_with_oracle_cut_size (int): During training, cut long sequences into
+        shorter segments by creating intermediate states based on the gold-standard
+        history. The model is not very sensitive to this parameter, so you usually
+        won't need to change it. 100 is a good default.
     beam_width (int): The number of candidate analyses to maintain.
     beam_density (float): The minimum ratio between the scores of the first and
         last candidates in the beam. This allows the parser to avoid exploring
