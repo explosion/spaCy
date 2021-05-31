@@ -174,10 +174,9 @@ cdef class BiluoPushDown(TransitionSystem):
             return Transition(clas=0, move=MISSING, label=0, score=0)
         elif '-' in name:
             move_str, label_str = name.split('-', 1)
-            # Hacky way to denote 'not this entity'
+            # Deprecated, hacky way to denote 'not this entity'
             if label_str.startswith('!'):
-                label_str = label_str[1:]
-                move_str = 'x'
+                raise ValueError(Errors.E869.format(label=name))
             label = self.strings.add(label_str)
         else:
             move_str = name
@@ -424,6 +423,7 @@ cdef class Begin:
             for span in gold.negs[:gold.nr_neg]:
                 if span.label == label and span.start == b0:
                     cost += 1
+                    break
         return cost
 
 
