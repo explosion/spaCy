@@ -9,11 +9,12 @@ from spacy.lookups import Lookups
 from spacy.pipeline._parser_internals.ner import BiluoPushDown
 from spacy.training import Example
 from spacy.tokens import Doc, Span
-from spacy.vocab import Vocab
+from spacy.vocab import Vocab, registry
 import logging
 
 from ..util import make_tempdir
-
+from ...pipeline import EntityRecognizer
+from ...pipeline.ner import DEFAULT_NER_MODEL
 
 TRAIN_DATA = [
     ("Who is Shaka Khan?", {"entities": [(7, 17, "PERSON")]}),
@@ -325,6 +326,16 @@ def test_ruler_before_ner():
     expected_types = ["THING", "", "", "", "", "", ""]
     assert [token.ent_iob_ for token in doc] == expected_iobs
     assert [token.ent_type_ for token in doc] == expected_types
+
+
+def test_ner_constructor(en_vocab):
+    config = {
+        "update_with_oracle_cut_size": 100,
+    }
+    cfg = {"model": DEFAULT_NER_MODEL}
+    model = registry.resolve(cfg, validate=True)["model"]
+    ner_1 = EntityRecognizer(en_vocab, model, **config)
+    ner_2 = EntityRecognizer(en_vocab, model)
 
 
 def test_ner_before_ruler():

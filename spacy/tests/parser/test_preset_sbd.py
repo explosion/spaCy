@@ -23,14 +23,9 @@ def _parser_example(parser):
 @pytest.fixture
 def parser(vocab):
     vocab.strings.add("ROOT")
-    config = {
-        "learn_tokens": False,
-        "min_action_freq": 30,
-        "update_with_oracle_cut_size": 100,
-    }
     cfg = {"model": DEFAULT_PARSER_MODEL}
     model = registry.resolve(cfg, validate=True)["model"]
-    parser = DependencyParser(vocab, model, **config)
+    parser = DependencyParser(vocab, model)
     parser.cfg["token_vector_width"] = 4
     parser.cfg["hidden_width"] = 32
     # parser.add_label('right')

@@ -89,8 +89,6 @@ def make_ner(
         update_with_oracle_cut_size=update_with_oracle_cut_size,
         incorrect_spans_key=incorrect_spans_key,
         multitasks=[],
-        min_action_freq=1,
-        learn_tokens=False,
         beam_width=1,
         beam_density=0.0,
         beam_update_prob=0.0,
@@ -163,8 +161,6 @@ def make_beam_ner(
         moves=moves,
         update_with_oracle_cut_size=update_with_oracle_cut_size,
         multitasks=[],
-        min_action_freq=1,
-        learn_tokens=False,
         beam_width=beam_width,
         beam_density=beam_density,
         beam_update_prob=beam_update_prob,
@@ -178,6 +174,37 @@ cdef class EntityRecognizer(Parser):
     DOCS: https://spacy.io/api/entityrecognizer
     """
     TransitionSystem = BiluoPushDown
+
+    def __init__(
+        self,
+        vocab,
+        model,
+        name="ner",
+        moves=None,
+        *,
+        update_with_oracle_cut_size=100,
+        beam_width=1,
+        beam_density=0.0,
+        beam_update_prob=0.0,
+        multitasks=tuple(),
+        incorrect_spans_key=None,
+    ):
+        """Create an EntityRecognizer.
+        """
+        super().__init__(
+            vocab,
+            model,
+            name,
+            moves,
+            update_with_oracle_cut_size=update_with_oracle_cut_size,
+            min_action_freq=1,   # not relevant for NER
+            learn_tokens=False,  # not relevant for NER
+            beam_width=beam_width,
+            beam_density=beam_density,
+            beam_update_prob=beam_update_prob,
+            multitasks=multitasks,
+            incorrect_spans_key=incorrect_spans_key,
+        )
 
     def add_multitask_objective(self, mt_component):
         """Register another component as a multi-task objective. Experimental."""

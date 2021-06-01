@@ -259,8 +259,6 @@ def test_issue3830_no_subtok():
     """Test that the parser doesn't have subtok label if not learn_tokens"""
     config = {
         "learn_tokens": False,
-        "min_action_freq": 30,
-        "update_with_oracle_cut_size": 100,
     }
     model = registry.resolve({"model": DEFAULT_PARSER_MODEL}, validate=True)["model"]
     parser = DependencyParser(Vocab(), model, **config)
@@ -274,8 +272,6 @@ def test_issue3830_with_subtok():
     """Test that the parser does have subtok label if learn_tokens=True."""
     config = {
         "learn_tokens": True,
-        "min_action_freq": 30,
-        "update_with_oracle_cut_size": 100,
     }
     model = registry.resolve({"model": DEFAULT_PARSER_MODEL}, validate=True)["model"]
     parser = DependencyParser(Vocab(), model, **config)
