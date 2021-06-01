@@ -322,6 +322,10 @@ class EntityRuler(Pipe):
         self.token_patterns = defaultdict(list)
         self.phrase_patterns = defaultdict(list)
         self._ent_ids = defaultdict(dict)
+        self.matcher = Matcher(self.nlp.vocab, validate=self.validate)
+        self.phrase_matcher = PhraseMatcher(
+            self.nlp.vocab, attr=self.phrase_matcher_attr, validate=self.validate
+        )
 
     def _split_label(self, label: str) -> Tuple[str, str]:
         """Split Entity label into ent_label and ent_id if it contains self.ent_id_sep
