@@ -101,17 +101,12 @@ class EntityRuler(Pipe):
         self.overwrite = overwrite_ents
         self.token_patterns = defaultdict(list)
         self.phrase_patterns = defaultdict(list)
+        self.validate = validate
         self.matcher = Matcher(nlp.vocab, validate=validate)
-        if phrase_matcher_attr is not None:
-            if phrase_matcher_attr.upper() == "TEXT":
-                phrase_matcher_attr = "ORTH"
-            self.phrase_matcher_attr = phrase_matcher_attr
-            self.phrase_matcher = PhraseMatcher(
-                nlp.vocab, attr=self.phrase_matcher_attr, validate=validate
-            )
-        else:
-            self.phrase_matcher_attr = None
-            self.phrase_matcher = PhraseMatcher(nlp.vocab, validate=validate)
+        self.phrase_matcher_attr = phrase_matcher_attr
+        self.phrase_matcher = PhraseMatcher(
+            nlp.vocab, attr=self.phrase_matcher_attr, validate=validate
+        )
         self.ent_id_sep = ent_id_sep
         self._ent_ids = defaultdict(dict)
         if patterns is not None:
