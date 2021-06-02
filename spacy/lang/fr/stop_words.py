@@ -3,7 +3,7 @@ STOP_WORDS = set(
 a à â abord afin ah ai aie ainsi ait allaient allons
 alors anterieur anterieure anterieures antérieur antérieure antérieures
 apres après as assez attendu au
-aucun aucune aucuns aujourd aujourd'hui aujourd’hui aupres auquel aura auraient aurait auront
+aupres auquel aura auraient aurait auront
 aussi autre autrement autres autrui aux auxquelles auxquels avaient
 avais avait avant avec avoir avons ayant
 
