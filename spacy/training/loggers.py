@@ -225,7 +225,7 @@ def mlflow_logger(
                 if log_other_scores and isinstance(other_scores, dict):
                     log_dict(other_scores, artifact_file='scores_{}.json'.format(step))
 
-                if model_artifact_path:
+                if model_artifact_path and info.get("output_path"):
                     from spacy import load
                     model_path = info["output_path"]
                     model = load(model_path)
