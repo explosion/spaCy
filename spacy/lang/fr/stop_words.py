@@ -23,7 +23,7 @@ douze douzième du duquel durant dès déja déjà désormais
 
 effet egalement eh elle elle-meme elle-même elles elles-memes elles-mêmes en encore
 enfin entre envers environ es ès est et etaient étaient etais étais etait était
-etant étant etc ete été etre être eu eux eux-mêmes exactement excepté également
+etant étant etc etre être eu eux eux-mêmes exactement excepté également
 
 fais faisaient faisant fait facon façon feront font
 
