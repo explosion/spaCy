@@ -13,7 +13,7 @@ from functools import partial
 if TYPE_CHECKING:
     # This lets us add type hints for mypy etc. without causing circular imports
     from ...vocab import Vocab  # noqa: F401
-    from ...tokens import Doc  # noqa: F401
+    from ...tokens.doc import Doc  # noqa: F401
 
 
 @registry.architectures("spacy.PretrainVectors.v1")
@@ -205,7 +205,7 @@ def _apply_mask(
     docs: Iterable["Doc"], random_words: _RandomWords, mask_prob: float = 0.15
 ) -> Tuple[numpy.ndarray, List["Doc"]]:
     # This needs to be here to avoid circular imports
-    from ...tokens import Doc  # noqa: F811
+    from ...tokens.doc import Doc  # noqa: F811
 
     N = sum(len(doc) for doc in docs)
     mask = numpy.random.uniform(0.0, 1.0, (N,))
