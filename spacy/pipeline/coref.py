@@ -315,13 +315,11 @@ class CoreferenceResolver(TrainablePipe):
             # do softmax to cscores
             cscores = ops.softmax(cscores, axis=1)
 
-            diff = self.loss.get_grad(cscores, top_gscores)
+            diff = self.loss.get_grad(cscores.T, top_gscores.T).T
             diff = diff[:, 1:]
             gradients.append((diff, cidx))
 
-            # scalar loss
-            # loss += xp.sum(log_norm - log_marg)
-            loss += float(self.loss.get_loss(cscores, top_gscores))
+            loss += float(self.loss.get_loss(cscores.T, top_gscores.T))
             offset += ll
         return loss, gradients
 
