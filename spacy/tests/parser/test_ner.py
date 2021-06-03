@@ -252,12 +252,12 @@ def test_ruler_before_ner():
     # 1 : Entity Ruler - should set "this" to B and everything else to empty
     patterns = [{"label": "THING", "pattern": "This"}]
     ruler = nlp.add_pipe("entity_ruler")
-    ruler.add_patterns(patterns)
 
     # 2: untrained NER - should set everything else to O
     untrained_ner = nlp.add_pipe("ner")
     untrained_ner.add_label("MY_LABEL")
     nlp.initialize()
+    ruler.add_patterns(patterns)
     doc = nlp("This is Antti Korhonen speaking in Finland")
     expected_iobs = ["B", "O", "O", "O", "O", "O", "O"]
     expected_types = ["THING", "", "", "", "", "", ""]

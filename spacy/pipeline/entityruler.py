@@ -101,17 +101,12 @@ class EntityRuler(Pipe):
         self.overwrite = overwrite_ents
         self.token_patterns = defaultdict(list)
         self.phrase_patterns = defaultdict(list)
+        self._validate = validate
         self.matcher = Matcher(nlp.vocab, validate=validate)
-        if phrase_matcher_attr is not None:
-            if phrase_matcher_attr.upper() == "TEXT":
-                phrase_matcher_attr = "ORTH"
-            self.phrase_matcher_attr = phrase_matcher_attr
-            self.phrase_matcher = PhraseMatcher(
-                nlp.vocab, attr=self.phrase_matcher_attr, validate=validate
-            )
-        else:
-            self.phrase_matcher_attr = None
-            self.phrase_matcher = PhraseMatcher(nlp.vocab, validate=validate)
+        self.phrase_matcher_attr = phrase_matcher_attr
+        self.phrase_matcher = PhraseMatcher(
+            nlp.vocab, attr=self.phrase_matcher_attr, validate=validate
+        )
         self.ent_id_sep = ent_id_sep
         self._ent_ids = defaultdict(dict)
         if patterns is not None:
@@ -315,20 +310,22 @@ class EntityRuler(Pipe):
                 pattern = entry["pattern"]
                 if isinstance(pattern, Doc):
                     self.phrase_patterns[label].append(pattern)
+                    self.phrase_matcher.add(label, [pattern])
                 elif isinstance(pattern, list):
                     self.token_patterns[label].append(pattern)
+                    self.matcher.add(label, [pattern])
                 else:
                     raise ValueError(Errors.E097.format(pattern=pattern))
-            for label, patterns in self.token_patterns.items():
-                self.matcher.add(label, patterns)
-            for label, patterns in self.phrase_patterns.items():
-                self.phrase_matcher.add(label, patterns)
 
     def clear(self) -> None:
         """Reset all patterns."""
         self.token_patterns = defaultdict(list)
         self.phrase_patterns = defaultdict(list)
         self._ent_ids = defaultdict(dict)
+        self.matcher = Matcher(self.nlp.vocab, validate=self._validate)
+        self.phrase_matcher = PhraseMatcher(
+            self.nlp.vocab, attr=self.phrase_matcher_attr, validate=self._validate
+        )
 
     def _split_label(self, label: str) -> Tuple[str, str]:
         """Split Entity label into ent_label and ent_id if it contains self.ent_id_sep
@@ -374,10 +371,9 @@ class EntityRuler(Pipe):
             self.add_patterns(cfg.get("patterns", cfg))
             self.overwrite = cfg.get("overwrite", False)
             self.phrase_matcher_attr = cfg.get("phrase_matcher_attr", None)
-            if self.phrase_matcher_attr is not None:
-                self.phrase_matcher = PhraseMatcher(
-                    self.nlp.vocab, attr=self.phrase_matcher_attr
-                )
+            self.phrase_matcher = PhraseMatcher(
+                self.nlp.vocab, attr=self.phrase_matcher_attr
+            )
             self.ent_id_sep = cfg.get("ent_id_sep", DEFAULT_ENT_ID_SEP)
         else:
             self.add_patterns(cfg)
@@ -428,10 +424,9 @@ class EntityRuler(Pipe):
             self.phrase_matcher_attr = cfg.get("phrase_matcher_attr")
             self.ent_id_sep = cfg.get("ent_id_sep", DEFAULT_ENT_ID_SEP)
 
-            if self.phrase_matcher_attr is not None:
-                self.phrase_matcher = PhraseMatcher(
-                    self.nlp.vocab, attr=self.phrase_matcher_attr
-                )
+            self.phrase_matcher = PhraseMatcher(
+                self.nlp.vocab, attr=self.phrase_matcher_attr
+            )
             from_disk(path, deserializers_patterns, {})
         return self
 
