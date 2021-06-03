@@ -176,8 +176,6 @@ def span_embeddings_forward(
 
     # first and last token embeds
     # XXX probably would be faster to get these at once
-    # starts = [tokvecs[ii] for ii in mentions[:, 0]]
-    # ends = [tokvecs[jj] for jj in mentions[:, 1]]
     starts, ends = zip(*[(tokvecs[ii], tokvecs[jj]) for ii, jj in mentions])
 
     starts = ops.asarray2f(starts)
