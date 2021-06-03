@@ -91,17 +91,6 @@ def test_entity_ruler_clear(nlp, patterns):
     assert len(doc.ents) == 0
 
 
-def test_entity_ruler_fix8216(nlp, patterns):
-    """Test that patterns don't get added excessively."""
-    ruler = nlp.add_pipe("entity_ruler", config={"validate": True})
-    ruler.add_patterns(patterns)
-    pattern_count = sum(len(mm) for mm in ruler.matcher._patterns.values())
-    assert pattern_count > 0
-    ruler.add_patterns([])
-    after_count = sum(len(mm) for mm in ruler.matcher._patterns.values())
-    assert after_count == pattern_count
-
-
 def test_entity_ruler_existing(nlp, patterns):
     ruler = nlp.add_pipe("entity_ruler")
     ruler.add_patterns(patterns)
