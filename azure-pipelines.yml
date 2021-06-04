@@ -21,7 +21,7 @@ jobs:
 # defined in .flake8 and overwrites the selected codes.
 - job: 'Validate'
   pool:
-    vmImage: 'ubuntu-16.04'
+    vmImage: 'ubuntu-18.04'
   steps:
   - task: UsePythonVersion@0
     inputs:
@@ -36,7 +36,7 @@ jobs:
   strategy:
     matrix:
       Python35Linux:
-        imageName: 'ubuntu-16.04'
+        imageName: 'ubuntu-18.04'
         python.version: '3.5'
         os: linux
       Python35Windows:
@@ -44,7 +44,7 @@ jobs:
         python.version: '3.5'
 # Test on one OS per python 3.6/3.7/3.8 to speed up CI
       Python36Linux:
-        imageName: 'ubuntu-16.04'
+        imageName: 'ubuntu-18.04'
         python.version: '3.6'
 #      Python36Windows:
 #        imageName: 'vs2017-win2016'
@@ -53,7 +53,7 @@ jobs:
 #        imageName: 'macos-10.14'
 #        python.version: '3.6'
 #      Python37Linux:
-#        imageName: 'ubuntu-16.04'
+#        imageName: 'ubuntu-18.04'
 #        python.version: '3.7'
       Python37Windows:
         imageName: 'vs2017-win2016'
@@ -62,7 +62,7 @@ jobs:
 #        imageName: 'macos-10.14'
 #        python.version: '3.7'
 #      Python38Linux:
-#        imageName: 'ubuntu-16.04'
+#        imageName: 'ubuntu-18.04'
 #        python.version: '3.8'
 #      Python38Windows:
 #        imageName: 'vs2017-win2016'
@@ -71,7 +71,7 @@ jobs:
         imageName: 'macos-10.14'
         python.version: '3.8'
       Python39Linux:
-        imageName: 'ubuntu-16.04'
+        imageName: 'ubuntu-18.04'
         python.version: '3.9'
       Python39Windows:
         imageName: 'vs2017-win2016'
