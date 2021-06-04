@@ -4,6 +4,7 @@ from pathlib import Path
 from wasabi import Printer, get_raw_input
 import srsly
 import sys
+import glob
 
 from ._util import app, Arg, Opt, string_to_list, WHEEL_SUFFIX, SDIST_SUFFIX
 from ..schemas import validate, ModelMetaSchema
@@ -113,7 +114,7 @@ def package(
         print("\n".join(errors))
         sys.exit(1)
     model_name = meta["name"]
-    if not model_name.startswith(meta['lang'] + "_"):
+    if not model_name.startswith(meta["lang"] + "_"):
         model_name = f"{meta['lang']}_{model_name}"
     model_name_v = model_name + "-" + meta["version"]
     main_path = output_dir / model_name_v
@@ -130,9 +131,10 @@ def package(
             )
     Path.mkdir(package_path, parents=True)
     shutil.copytree(str(input_dir), str(package_path / model_name_v))
-    license_path = package_path / model_name_v / "LICENSE"
-    if license_path.exists():
-        shutil.move(str(license_path), str(main_path))
+    for file_name in glob.glob(
+        str(package_path / model_name_v) + "/README*"
+    ) + glob.glob(str(package_path / model_name_v) + "/LICENSE*"):
+        shutil.move(file_name, str(main_path))
     imports = []
     for code_path in code_paths:
         imports.append(code_path.stem)
