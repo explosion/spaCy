@@ -24,6 +24,9 @@ def setup_default_warnings():
     for pipe in ["matcher", "entity_ruler"]:
         filter_warning("once", error_msg=Warnings.W036.format(name=pipe))
 
+    # warn once about lemmatizer without required POS
+    filter_warning("once", error_msg="[W108]")
+
 
 def filter_warning(action: str, error_msg: str):
     """Customize how spaCy should handle a certain warning.
