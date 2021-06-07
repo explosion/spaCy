@@ -113,7 +113,7 @@ def package(
         print("\n".join(errors))
         sys.exit(1)
     model_name = meta["name"]
-    if not model_name.startswith(meta['lang'] + "_"):
+    if not model_name.startswith(meta["lang"] + "_"):
         model_name = f"{meta['lang']}_{model_name}"
     model_name_v = model_name + "-" + meta["version"]
     main_path = output_dir / model_name_v
@@ -130,9 +130,10 @@ def package(
             )
     Path.mkdir(package_path, parents=True)
     shutil.copytree(str(input_dir), str(package_path / model_name_v))
-    license_path = package_path / model_name_v / "LICENSE"
-    if license_path.exists():
-        shutil.move(str(license_path), str(main_path))
+    for file_name in FILENAMES_DOCS:
+        file_path = package_path / model_name_v / file_name
+        if file_path.exists():
+            shutil.move(str(file_path), str(main_path))
     imports = []
     for code_path in code_paths:
         imports.append(code_path.stem)
@@ -317,3 +318,6 @@ __version__ = get_model_meta(Path(__file__).parent)['version']
 def load(**overrides):
     return load_model_from_init_py(__file__, **overrides)
 """.lstrip()
+
+
+FILENAMES_DOCS = ["LICENSE", "LICENSES_SOURCES", "README.md"]
