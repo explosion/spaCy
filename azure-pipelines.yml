@@ -136,3 +136,4 @@ jobs:
       python -m spacy download en_core_web_sm
       python -c "import spacy; nlp=spacy.load('en_core_web_sm'); doc=nlp('test')"
     displayName: 'Test download CLI'
+    condition: and(eq(variables['python.version'], '3.9'), eq(variables['imageName'], 'ubuntu-18.04'))
