@@ -55,3 +55,9 @@ steps:
       ${{ parameters.prefix }} python -m pytest --pyargs spacy -p spacy.tests.enable_gpu
     displayName: "Run GPU tests"
     condition: eq(${{ parameters.gpu }}, true)
+
+  - script: |
+      python -m spacy download en_core_web_sm
+      python -c "import spacy; nlp=spacy.load('en_core_web_sm'); doc=nlp('test')"
+    displayName: 'Test download CLI'
+    condition: eq({{ $parameters.python_version }}, '3.8')
