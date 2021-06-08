@@ -18,7 +18,7 @@ def test_ca_tokenizer_handles_long_text(ca_tokenizer):
 @pytest.mark.parametrize(
     "text,length",
     [
-        ("Perquè va anar-hi?", 6),
+        ("Perquè va anar-hi?", 4),
         ("“Ah no?”", 5),
         ("""Sí! "Anem", va contestar el Joan Carles""", 11),
         ("Van córrer aprox. 10km", 5),
