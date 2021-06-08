@@ -21,6 +21,7 @@ TRAIN_DATA = [
     ("I like London and Berlin.", {"entities": [(7, 13, "LOC"), (18, 24, "LOC")]}),
 ]
 
+
 @pytest.fixture
 def neg_key():
     return "non_entities"
@@ -87,8 +88,7 @@ def test_negative_samples_two_word_input(tsys, vocab, neg_key):
 
 
 def test_negative_samples_three_word_input(tsys, vocab, neg_key):
-    """Test that we exclude a 2-word entity correctly using a negative example.
-    """
+    """Test that we exclude a 2-word entity correctly using a negative example."""
     tsys.cfg["neg_key"] = neg_key
     doc = Doc(vocab, words=["A", "B", "C"])
     entity_annots = [None, None, None]
@@ -107,8 +107,7 @@ def test_negative_samples_three_word_input(tsys, vocab, neg_key):
 
 
 def test_negative_samples_U_entity(tsys, vocab, neg_key):
-    """Test that we exclude a 2-word entity correctly using a negative example.
-    """
+    """Test that we exclude a 2-word entity correctly using a negative example."""
     tsys.cfg["neg_key"] = neg_key
     doc = Doc(vocab, words=["A"])
     entity_annots = [None]
@@ -128,11 +127,7 @@ def test_negative_samples_U_entity(tsys, vocab, neg_key):
 
 def test_negative_sample_key_is_in_config(vocab, entity_types):
     actions = BiluoPushDown.get_actions(entity_types=entity_types)
-    tsys = BiluoPushDown(
-        vocab.strings,
-        actions,
-        incorrect_spans_key="non_entities"
-    )
+    tsys = BiluoPushDown(vocab.strings, actions, incorrect_spans_key="non_entities")
     assert tsys.cfg["neg_key"] == "non_entities"
 
 
@@ -543,6 +538,37 @@ def test_beam_overfitting_IO(neg_key):
 
     # test the "untrained" model
     assert len(nlp(test_text).ents) == 0
+
+
+#@pytest.mark.skip(reason="Flaky test - TODO")
+def test_beam_valid_parse(neg_key):
+    """This test should just run, but every once in a while it gets a ValueError
+    because no valid gold parse was found"""
+    nlp = English()
+    beam_width = 16
+    beam_density = 0.0001
+    config = {
+        "beam_width": beam_width,
+        "beam_density": beam_density,
+        "incorrect_spans_key": neg_key,
+    }
+    nlp.add_pipe("beam_ner", config=config)
+    # fmt: off
+    tokens = ['FEDERAL', 'NATIONAL', 'MORTGAGE', 'ASSOCIATION', '(', 'Fannie', 'Mae', '):', 'Posted', 'yields', 'on', '30', 'year', 'mortgage', 'commitments', 'for', 'delivery', 'within', '30', 'days', '(', 'priced', 'at', 'par', ')', '9.75', '%', ',', 'standard', 'conventional', 'fixed', '-', 'rate', 'mortgages', ';', '8.70', '%', ',', '6/2', 'rate', 'capped', 'one', '-', 'year', 'adjustable', 'rate', 'mortgages', '.', 'Source', ':', 'Telerate', 'Systems', 'Inc.']
+    iob = ['B-ORG', 'I-ORG', 'I-ORG', 'L-ORG', 'O', 'B-ORG', 'L-ORG', 'O', 'O', 'O', 'O', 'B-DATE', 'L-DATE', 'O', 'O', 'O', 'O', 'O', 'B-DATE', 'L-DATE', 'O', 'O', 'O', 'O', 'O', 'B-PERCENT', 'L-PERCENT', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'B-PERCENT', 'L-PERCENT', 'O', 'U-CARDINAL', 'O', 'O', 'B-DATE', 'I-DATE', 'L-DATE', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O']
+    # fmt: on
+
+    doc = Doc(nlp.vocab, words=tokens)
+    example = Example.from_dict(doc, {"ner": iob})
+    neg_span = Span(doc, 50, 53, "ORG")
+    example.reference.spans[neg_key] = [neg_span]
+
+    optimizer = nlp.initialize()
+
+    for i in range(5):
+        losses = {}
+        nlp.update([example], sgd=optimizer, losses=losses)
+    assert "beam_ner" in losses
 
 
 def test_ner_warns_no_lookups(caplog):

@@ -332,7 +332,7 @@ cdef class BiluoPushDown(TransitionSystem):
             else:
                 costs[i] = 9000
         if n_gold < 1:
-            raise ValueError
+            raise ValueError("Could not find a valid gold parse") # TODO proper Error
 
 
 cdef class Missing:
