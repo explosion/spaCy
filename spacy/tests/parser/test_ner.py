@@ -540,10 +540,8 @@ def test_beam_overfitting_IO(neg_key):
     assert len(nlp(test_text).ents) == 0
 
 
-#@pytest.mark.skip(reason="Flaky test - TODO")
 def test_beam_valid_parse(neg_key):
-    """This test should just run, but every once in a while it gets a ValueError
-    because no valid gold parse was found"""
+    """Regression test for previously flakey behaviour"""
     nlp = English()
     beam_width = 16
     beam_density = 0.0001
