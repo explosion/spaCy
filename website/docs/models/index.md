@@ -27,28 +27,29 @@ of `[lang]\_[name]`. For spaCy's pipelines, we also chose to divide the name
 into three components:
 
 1. **Type:** Capabilities (e.g. `core` for general-purpose pipeline with
-   vocabulary, syntax, entities and word vectors, or `dep` for only vocab and
-   syntax).
+   tagging, parsing, lemmatization and named entity recognition, or `dep` for
+   only tagging, parsing and lemmatization).
 2. **Genre:** Type of text the pipeline is trained on, e.g. `web` or `news`.
-3. **Size:** Package size indicator, `sm`, `md` or `lg`.
+3. **Size:** Package size indicator, `sm`, `md`, `lg` or `trf` (`sm`: no word
+   vectors, `md`: reduced word vector table with 20k unique vectors for ~500k
+   words, `lg`: large word vector table with ~500k entries, `trf`: transformer
+   pipeline without static word vectors)
 
 For example, [`en_core_web_sm`](/models/en#en_core_web_sm) is a small English
 pipeline trained on written web text (blogs, news, comments), that includes
-vocabulary, vectors, syntax and entities.
+vocabulary, syntax and entities.
 
 ### Package versioning {#model-versioning}
 
 Additionally, the pipeline package versioning reflects both the compatibility
-with spaCy, as well as the major and minor version. A package version `a.b.c`
-translates to:
+with spaCy, as well as the model version. A package version `a.b.c` translates
+to:
 
 - `a`: **spaCy major version**. For example, `2` for spaCy v2.x.
-- `b`: **Package major version**. Pipelines with a different major version can't
-  be loaded by the same code. For example, changing the width of the model,
-  adding hidden layers or changing the activation changes the major version.
-- `c`: **Package minor version**. Same pipeline structure, but different
-  parameter values, e.g. from being trained on different data, for different
-  numbers of iterations, etc.
+- `b`: **spaCy minor version**. For example, `3` for spaCy v2.3.x.
+- `c`: **Model version**. Different model config: e.g. from being trained on
+  different data, with different parameters, for different numbers of
+  iterations, with different vectors, etc.
 
 For a detailed compatibility overview, see the
 [`compatibility.json`](https://github.com/explosion/spacy-models/tree/master/compatibility.json).
@@ -96,9 +97,9 @@ In the `sm`/`md`/`lg` models:
   tagger. For English, the attribute ruler can improve its mapping from
   `token.tag` to `token.pos` if dependency parses from a `parser` are present,
   but the parser is not required.
-- The rule-based `lemmatizer` (Dutch, English, French, Greek, Macedonian,
-  Norwegian and Spanish) requires `token.pos` annotation from either
-  `tagger`+`attribute_ruler` or `morphologizer`.
+- The `lemmatizer` component for many languages (Dutch, English, French, Greek,
+  Macedonian, Norwegian, Polish and Spanish) requires `token.pos` annotation
+  from either `tagger`+`attribute_ruler` or `morphologizer`.
 - The `ner` component is independent with its own internal tok2vec layer.
 
 ### Transformer pipeline design {#design-trf}
@@ -106,8 +107,6 @@ In the `sm`/`md`/`lg` models:
 In the transformer (`trf`) models, the `tagger`, `parser` and `ner` (if present)
 all listen to the `transformer` component. The `attribute_ruler` and
 `lemmatizer` have the same configuration as in the CNN models.
-
-<!-- TODO: pretty diagram -->
 
 ### Modifying the default pipeline {#design-modify}
 
@@ -130,12 +129,13 @@ nlp = spacy.load("en_core_web_sm", disable=["tagger", "attribute_ruler", "lemmat
 nlp = spacy.load("en_core_web_trf", disable=["tagger", "attribute_ruler", "lemmatizer"])
 ```
 
-<Infobox variant="warning" title="Rule-based lemmatizers require Token.pos">
+<Infobox variant="warning" title="Rule-based and POS-lookup lemmatizers require
+Token.pos">
 
 The lemmatizer depends on `tagger`+`attribute_ruler` or `morphologizer` for
-Dutch, English, French, Greek, Macedonian, Norwegian and Spanish. If you disable
-any of these components, you'll see lemmatizer warnings unless the lemmatizer is
-also disabled.
+Dutch, English, French, Greek, Macedonian, Norwegian, Polish and Spanish. If you
+disable any of these components, you'll see lemmatizer warnings unless the
+lemmatizer is also disabled.
 
 </Infobox>
 
