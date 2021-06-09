@@ -2088,7 +2088,7 @@
                 "# Load an spacy model (supported models are \"es\" and \"en\") ",
                 "nlp = spacy.load('en')",
 		"# Spacy 3.x",
-		"nlp.add_pipe("spacy_wordnet", after='tagger', config={'lang': nlp.lang})",
+		"nlp.add_pipe(\"spacy_wordnet\", after='tagger', config={'lang': nlp.lang})",
 		"# Spacy 2.x",
                 "# nlp.add_pipe(WordnetAnnotator(nlp.lang), after='tagger')",
                 "token = nlp('prices')[0]",
