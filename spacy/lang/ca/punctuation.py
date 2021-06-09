@@ -8,9 +8,6 @@ from ..char_classes import merge_chars, _units
 ELISION = " ' ’ ".strip().replace(" ", "").replace("\n", "")
 
 
-_prefixes = TOKENIZER_PREFIXES + ([r"[DdLl]'(?=[0-9-])"])
-
-
 _infixes = (
     LIST_ELLIPSES
     + LIST_ICONS
@@ -21,7 +18,7 @@ _infixes = (
         ),
         r"(?<=[{a}]),(?=[{a}])".format(a=ALPHA),
         r"(?<=[{a}0-9])[:<>=/](?=[{a}])".format(a=ALPHA),
-        r"(?<=[{a}][{el}])(?=[{a}])".format(a=ALPHA, el=ELISION),
+        r"(?<=[{a}][{el}])(?=[{a}0-9])".format(a=ALPHA, el=ELISION),
     ]
 )
 
@@ -46,6 +43,5 @@ _suffixes = (
     ]
 )
 
-TOKENIZER_PREFIXES = _prefixes
 TOKENIZER_INFIXES = _infixes
 TOKENIZER_SUFFIXES = _suffixes
