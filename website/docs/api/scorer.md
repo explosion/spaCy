@@ -46,7 +46,9 @@ attribute being scored:
 - `tag_acc`, `pos_acc`, `morph_acc`, `morph_per_feat`, `lemma_acc`
 - `dep_uas`, `dep_las`, `dep_las_per_type`
 - `ents_p`, `ents_r` `ents_f`, `ents_per_type`
-- `textcat_macro_auc`, `textcat_macro_f`
+- `cats_score`, `cats_score_desc`, `cats_micro_p`, `cats_micro_r`,
+  `cats_micro_f`, `cats_macro_p`, `cats_macro_r`, `cats_macro_f`,
+  `cats_macro_auc`, `cats_f_per_type`, `cats_auc_per_type`
 
 > #### Example
 >
@@ -77,7 +79,7 @@ Docs with `has_unknown_spaces` are skipped during scoring.
 > ```
 
 | Name        | Description                                                                                                         |
-| ----------- | ------------------------------------------------------------------------------------------------------------------- |
+| ----------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
 | `examples`  | The `Example` objects holding both the predictions and the correct gold-standard annotations. ~~Iterable[Example]~~ |
 | **RETURNS** | `Dict`                                                                                                              | A dictionary containing the scores `token_acc`, `token_p`, `token_r`, `token_f`. ~~Dict[str, float]]~~ |
 
