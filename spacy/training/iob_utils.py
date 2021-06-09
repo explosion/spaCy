@@ -71,6 +71,8 @@ def offsets_to_biluo_tags(
     entities (iterable): A sequence of `(start, end, label)` triples. `start`
         and `end` should be character-offset integers denoting the slice into
         the original string.
+    missing (str): The label used for missing values, e.g. if tokenization
+        doesn't align with the entity offsets. Defaults to `"O"`.
     RETURNS (list): A list of unicode strings, describing the tags. Each tag
         string will be of the form either "", "O" or "{action}-{label}", where
         action is one of "B", "I", "L", "U". The missing label is used where the
