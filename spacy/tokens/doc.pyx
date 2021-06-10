@@ -276,7 +276,7 @@ cdef class Doc:
         if deps and not heads:
             heads = [0] * len(deps)
         if heads and not deps:
-            deps = [''] * len(heads)
+            deps = ['dep'] * len(heads)
         if sent_starts is not None:
             for i in range(len(sent_starts)):
                 if sent_starts[i] is True:
