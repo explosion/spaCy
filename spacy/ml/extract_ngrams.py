@@ -1,6 +1,6 @@
 from thinc.api import Model
 
-from .. import registry
+from ..util import registry
 from ..attrs import LOWER
 
 
