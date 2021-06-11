@@ -1,5 +1,5 @@
 import pytest
-from spacy.attrs import LEMMA, ORTH, PROB, IS_ALPHA
+from spacy.attrs import LEMMA, ORTH, IS_ALPHA
 from spacy.parts_of_speech import NOUN, VERB
 
 
@@ -30,7 +30,6 @@ def test_vocab_api_shape_attr(en_vocab, text):
         ("VERB", VERB),
         ("LEMMA", LEMMA),
         ("ORTH", ORTH),
-        ("PROB", PROB),
     ],
 )
 def test_vocab_api_symbols(en_vocab, string, symbol):

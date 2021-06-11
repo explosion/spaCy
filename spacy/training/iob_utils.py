@@ -72,7 +72,7 @@ def offsets_to_biluo_tags(
         and `end` should be character-offset integers denoting the slice into
         the original string.
     missing (str): The label used for missing values, e.g. if tokenization
-        doesn't align with the entity offsets. Defaults to `"O"`.
+        doesn’t align with the entity offsets. Defaults to "O".
     RETURNS (list): A list of unicode strings, describing the tags. Each tag
         string will be of the form either "", "O" or "{action}-{label}", where
         action is one of "B", "I", "L", "U". The missing label is used where the
@@ -152,7 +152,7 @@ def biluo_tags_to_spans(doc: Doc, tags: Iterable[str]) -> List[Span]:
     to overwrite the doc.ents.
 
     doc (Doc): The document that the BILUO tags refer to.
-    entities (iterable): A sequence of BILUO tags with each tag describing one
+    tags (iterable): A sequence of BILUO tags with each tag describing one
         token. Each tag string will be of the form of either "", "O" or
         "{action}-{label}", where action is one of "B", "I", "L", "U".
     RETURNS (list): A sequence of Span objects. Each token with a missing IOB
@@ -172,7 +172,7 @@ def biluo_tags_to_offsets(
     """Encode per-token tags following the BILUO scheme into entity offsets.
 
     doc (Doc): The document that the BILUO tags refer to.
-    entities (iterable): A sequence of BILUO tags with each tag describing one
+    tags (iterable): A sequence of BILUO tags with each tag describing one
         token. Each tags string will be of the form of either "", "O" or
         "{action}-{label}", where action is one of "B", "I", "L", "U".
     RETURNS (list): A sequence of `(start, end, label)` triples. `start` and
