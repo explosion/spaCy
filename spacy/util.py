@@ -387,9 +387,10 @@ def load_model_from_path(
     if not meta:
         meta = get_model_meta(model_path)
     config_path = model_path / "config.cfg"
-    config = load_config(config_path, overrides=dict_to_dot(config))
+    overrides = dict_to_dot(config)
+    config = load_config(config_path, overrides=overrides)
     nlp = load_model_from_config(config, vocab=vocab, disable=disable, exclude=exclude)
-    return nlp.from_disk(model_path, exclude=exclude)
+    return nlp.from_disk(model_path, exclude=exclude, overrides=overrides)
 
 
 def load_model_from_config(
@@ -1526,3 +1527,22 @@ def check_lexeme_norms(vocab, component_name):
     if len(lexeme_norms) == 0 and vocab.lang in LEXEME_NORM_LANGS:
         langs = ", ".join(LEXEME_NORM_LANGS)
         logger.debug(Warnings.W033.format(model=component_name, langs=langs))
+
+
+def to_ternary_int(val) -> int:
+    """Convert a value to the ternary 1/0/-1 int used for True/None/False in
+    attributes such as SENT_START: True/1/1.0 is 1 (True), None/0/0.0 is 0
+    (None), any other values are -1 (False).
+    """
+    if val is True:
+        return 1
+    elif val is None:
+        return 0
+    elif val is False:
+        return -1
+    elif val == 1:
+        return 1
+    elif val == 0:
+        return 0
+    else:
+        return -1

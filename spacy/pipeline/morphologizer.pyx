@@ -27,7 +27,7 @@ default_model_config = """
 @architectures = "spacy.Tok2Vec.v2"
 
 [model.tok2vec.embed]
-@architectures = "spacy.CharacterEmbed.v1"
+@architectures = "spacy.CharacterEmbed.v2"
 width = 128
 rows = 7000
 nM = 64

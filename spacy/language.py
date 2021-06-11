@@ -13,6 +13,7 @@ import srsly
 import multiprocessing as mp
 from itertools import chain, cycle
 from timeit import default_timer as timer
+import traceback
 
 from .tokens.underscore import Underscore
 from .vocab import Vocab, create_vocab
@@ -433,9 +434,9 @@ class Language:
         default_config (Dict[str, Any]): Default configuration, describing the
             default values of the factory arguments.
         assigns (Iterable[str]): Doc/Token attributes assigned by this component,
-            e.g. "token.ent_id". Used for pipeline analyis.
+            e.g. "token.ent_id". Used for pipeline analysis.
         requires (Iterable[str]): Doc/Token attributes required by this component,
-            e.g. "token.ent_id". Used for pipeline analyis.
+            e.g. "token.ent_id". Used for pipeline analysis.
         retokenizes (bool): Whether the component changes the tokenization.
             Used for pipeline analysis.
         default_score_weights (Dict[str, float]): The scores to report during
@@ -518,9 +519,9 @@ class Language:
 
         name (str): The name of the component factory.
         assigns (Iterable[str]): Doc/Token attributes assigned by this component,
-            e.g. "token.ent_id". Used for pipeline analyis.
+            e.g. "token.ent_id". Used for pipeline analysis.
         requires (Iterable[str]): Doc/Token attributes required by this component,
-            e.g. "token.ent_id". Used for pipeline analyis.
+            e.g. "token.ent_id". Used for pipeline analysis.
         retokenizes (bool): Whether the component changes the tokenization.
             Used for pipeline analysis.
         func (Optional[Callable]): Factory function if not used as a decorator.
@@ -1521,11 +1522,15 @@ class Language:
 
         # Cycle channels not to break the order of docs.
         # The received object is a batch of byte-encoded docs, so flatten them with chain.from_iterable.
-        byte_docs = chain.from_iterable(recv.recv() for recv in cycle(bytedocs_recv_ch))
-        docs = (Doc(self.vocab).from_bytes(byte_doc) for byte_doc in byte_docs)
+        byte_tuples = chain.from_iterable(recv.recv() for recv in cycle(bytedocs_recv_ch))
         try:
-            for i, (_, doc) in enumerate(zip(raw_texts, docs), 1):
-                yield doc
+            for i, (_, (byte_doc, byte_error)) in enumerate(zip(raw_texts, byte_tuples), 1):
+                if byte_doc is not None:
+                    doc = Doc(self.vocab).from_bytes(byte_doc)
+                    yield doc
+                elif byte_error is not None:
+                    error = srsly.msgpack_loads(byte_error)
+                    self.default_error_handler(None, None, None, ValueError(Errors.E871.format(error=error)))
                 if i % batch_size == 0:
                     # tell `sender` that one batch was consumed.
                     sender.step()
@@ -1764,6 +1769,7 @@ class Language:
             raise ValueError(err)
         tok2vec = self.get_pipe(tok2vec_name)
         tok2vec_cfg = self.get_pipe_config(tok2vec_name)
+        tok2vec_model = tok2vec.model
         if (
             not hasattr(tok2vec, "model")
             or not hasattr(tok2vec, "listener_map")
@@ -1772,6 +1778,7 @@ class Language:
         ):
             raise ValueError(Errors.E888.format(name=tok2vec_name, pipe=type(tok2vec)))
         pipe_listeners = tok2vec.listener_map.get(pipe_name, [])
+        pipe = self.get_pipe(pipe_name)
         pipe_cfg = self._pipe_configs[pipe_name]
         if listeners:
             util.logger.debug(f"Replacing listeners of component '{pipe_name}'")
@@ -1786,7 +1793,6 @@ class Language:
                     n_listeners=len(pipe_listeners),
                 )
                 raise ValueError(err)
-            pipe = self.get_pipe(pipe_name)
             # Update the config accordingly by copying the tok2vec model to all
             # sections defined in the listener paths
             for listener_path in listeners:
@@ -1798,10 +1804,17 @@ class Language:
                         name=pipe_name, tok2vec=tok2vec_name, path=listener_path
                     )
                     raise ValueError(err)
-                util.set_dot_to_object(pipe_cfg, listener_path, tok2vec_cfg["model"])
+                new_config = tok2vec_cfg["model"]
+                if "replace_listener_cfg" in tok2vec_model.attrs:
+                    replace_func = tok2vec_model.attrs["replace_listener_cfg"]
+                    new_config = replace_func(tok2vec_cfg["model"], pipe_cfg["model"]["tok2vec"])
+                util.set_dot_to_object(pipe_cfg, listener_path, new_config)
             # Go over the listener layers and replace them
             for listener in pipe_listeners:
-                util.replace_model_node(pipe.model, listener, tok2vec.model.copy())
+                new_model = tok2vec_model.copy()
+                if "replace_listener" in tok2vec_model.attrs:
+                    new_model = tok2vec_model.attrs["replace_listener"](new_model)
+                util.replace_model_node(pipe.model, listener, new_model)
                 tok2vec.remove_listener(listener, pipe_name)
 
     def to_disk(
@@ -1833,7 +1846,8 @@ class Language:
         util.to_disk(path, serializers, exclude)
 
     def from_disk(
-        self, path: Union[str, Path], *, exclude: Iterable[str] = SimpleFrozenList()
+        self, path: Union[str, Path], *, exclude: Iterable[str] = SimpleFrozenList(),
+            overrides: Dict[str, Any] = SimpleFrozenDict(),
     ) -> "Language":
         """Loads state from a directory. Modifies the object in place and
         returns it. If the saved `Language` object contains a model, the
@@ -1862,7 +1876,7 @@ class Language:
         deserializers = {}
         if Path(path / "config.cfg").exists():
             deserializers["config.cfg"] = lambda p: self.config.from_disk(
-                p, interpolate=False
+                p, interpolate=False, overrides=overrides
             )
         deserializers["meta.json"] = deserialize_meta
         deserializers["vocab"] = deserialize_vocab
@@ -2019,12 +2033,19 @@ def _apply_pipes(
     """
     Underscore.load_state(underscore_state)
     while True:
-        texts = receiver.get()
-        docs = (make_doc(text) for text in texts)
-        for pipe in pipes:
-            docs = pipe(docs)
-        # Connection does not accept unpickable objects, so send list.
-        sender.send([doc.to_bytes() for doc in docs])
+        try:
+            texts = receiver.get()
+            docs = (make_doc(text) for text in texts)
+            for pipe in pipes:
+                docs = pipe(docs)
+            # Connection does not accept unpickable objects, so send list.
+            byte_docs = [(doc.to_bytes(), None) for doc in docs]
+            padding = [(None, None)] * (len(texts) - len(byte_docs))
+            sender.send(byte_docs + padding)
+        except Exception:
+            error_msg = [(None, srsly.msgpack_dumps(traceback.format_exc()))]
+            padding = [(None, None)] * (len(texts) - 1)
+            sender.send(error_msg + padding)
 
 
 class _Sender:

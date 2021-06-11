@@ -11,7 +11,7 @@ from ..errors import Errors
 
 default_model_config = """
 [model]
-@architectures = "spacy.HashEmbedCNN.v1"
+@architectures = "spacy.HashEmbedCNN.v2"
 pretrained_vectors = null
 width = 96
 depth = 4
@@ -173,6 +173,7 @@ class Tok2Vec(TrainablePipe):
             for i in range(len(one_d_tokvecs)):
                 d_tokvecs[i] += one_d_tokvecs[i]
                 losses[self.name] += float((one_d_tokvecs[i] ** 2).sum())
+            return [self.model.ops.alloc2f(*t2v.shape) for t2v in tokvecs]
 
         def backprop(one_d_tokvecs):
             """Callback to actually do the backprop. Passed to last listener."""

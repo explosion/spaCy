@@ -29,8 +29,8 @@ recommended settings for your use case, check out the
 >
 > The `@` syntax lets you refer to function names registered in the
 > [function registry](/api/top-level#registry). For example,
-> `@architectures = "spacy.HashEmbedCNN.v1"` refers to a registered function of
-> the name [spacy.HashEmbedCNN.v1](/api/architectures#HashEmbedCNN) and all
+> `@architectures = "spacy.HashEmbedCNN.v2"` refers to a registered function of
+> the name [spacy.HashEmbedCNN.v2](/api/architectures#HashEmbedCNN) and all
 > other values defined in its block will be passed into that function as
 > arguments. Those arguments depend on the registered function. See the usage
 > guide on [registered functions](/usage/training#config-functions) for details.
@@ -390,7 +390,7 @@ file to keep track of your settings and hyperparameters and your own
 >    "tags": List[str],
 >    "pos": List[str],
 >    "morphs": List[str],
->    "sent_starts": List[bool],
+>    "sent_starts": List[Optional[bool]],
 >    "deps": List[string],
 >    "heads": List[int],
 >    "entities": List[str],
@@ -451,9 +451,11 @@ doc = nlp("I'm pretty happy about that!")
 gold_dict = {"cats": {"POSITIVE": 1.0, "NEGATIVE": 0.0}}
 example = Example.from_dict(doc, gold_dict)
 
-# Training data for an Entity Linking component
+# Training data for an Entity Linking component (also requires entities & sentences)
 doc = nlp("Russ Cochran his reprints include EC Comics.")
-gold_dict = {"links": {(0, 12): {"Q7381115": 1.0, "Q2146908": 0.0}}}
+gold_dict = {"entities": [(0, 12, "PERSON")],
+             "links": {(0, 12): {"Q7381115": 1.0, "Q2146908": 0.0}},
+             "sent_starts": [1, -1, -1, -1, -1, -1, -1, -1]}
 example = Example.from_dict(doc, gold_dict)
 ```
 

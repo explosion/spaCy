@@ -4,7 +4,7 @@ import numpy
 import pytest
 from numpy.testing import assert_almost_equal
 from spacy.vocab import Vocab
-from thinc.api import NumpyOps, Model, data_validation
+from thinc.api import Model, data_validation, get_current_ops
 from thinc.types import Array2d, Ragged
 
 from spacy.lang.en import English
@@ -13,7 +13,7 @@ from spacy.ml._character_embed import CharacterEmbed
 from spacy.tokens import Doc
 
 
-OPS = NumpyOps()
+OPS = get_current_ops()
 
 texts = ["These are 4 words", "Here just three"]
 l0 = [[1, 2], [3, 4], [5, 6], [7, 8]]
@@ -82,7 +82,7 @@ def util_batch_unbatch_docs_list(
         Y_batched = model.predict(in_data)
         Y_not_batched = [model.predict([u])[0] for u in in_data]
         for i in range(len(Y_batched)):
-            assert_almost_equal(Y_batched[i], Y_not_batched[i], decimal=4)
+            assert_almost_equal(OPS.to_numpy(Y_batched[i]), OPS.to_numpy(Y_not_batched[i]), decimal=4)
 
 
 def util_batch_unbatch_docs_array(
@@ -91,7 +91,7 @@ def util_batch_unbatch_docs_array(
     with data_validation(True):
         model.initialize(in_data, out_data)
         Y_batched = model.predict(in_data).tolist()
-        Y_not_batched = [model.predict([u])[0] for u in in_data]
+        Y_not_batched = [model.predict([u])[0].tolist() for u in in_data]
         assert_almost_equal(Y_batched, Y_not_batched, decimal=4)
 
 
@@ -100,8 +100,8 @@ def util_batch_unbatch_docs_ragged(
 ):
     with data_validation(True):
         model.initialize(in_data, out_data)
-        Y_batched = model.predict(in_data)
+        Y_batched = model.predict(in_data).data.tolist()
         Y_not_batched = []
         for u in in_data:
             Y_not_batched.extend(model.predict([u]).data.tolist())
-        assert_almost_equal(Y_batched.data, Y_not_batched, decimal=4)
+        assert_almost_equal(Y_batched, Y_not_batched, decimal=4)

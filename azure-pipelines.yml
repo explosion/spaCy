@@ -22,7 +22,7 @@ jobs:
   # defined in .flake8 and overwrites the selected codes.
   - job: "Validate"
     pool:
-      vmImage: "ubuntu-16.04"
+      vmImage: "ubuntu-18.04"
     steps:
       - task: UsePythonVersion@0
         inputs:
@@ -38,7 +38,7 @@ jobs:
       matrix:
         # We're only running one platform per Python version to speed up builds
         Python36Linux:
-          imageName: "ubuntu-16.04"
+          imageName: "ubuntu-18.04"
           python.version: "3.6"
         #        Python36Windows:
         #          imageName: "vs2017-win2016"
@@ -47,7 +47,7 @@ jobs:
         #          imageName: "macos-10.14"
         #          python.version: "3.6"
         #        Python37Linux:
-        #          imageName: "ubuntu-16.04"
+        #          imageName: "ubuntu-18.04"
         #          python.version: "3.7"
         Python37Windows:
           imageName: "vs2017-win2016"
@@ -56,7 +56,7 @@ jobs:
         #          imageName: "macos-10.14"
         #          python.version: "3.7"
         #        Python38Linux:
-        #          imageName: "ubuntu-16.04"
+        #          imageName: "ubuntu-18.04"
         #          python.version: "3.8"
         #        Python38Windows:
         #          imageName: "vs2017-win2016"
@@ -65,7 +65,7 @@ jobs:
           imageName: "macos-10.14"
           python.version: "3.8"
         Python39Linux:
-          imageName: "ubuntu-16.04"
+          imageName: "ubuntu-18.04"
           python.version: "3.9"
         Python39Windows:
           imageName: "vs2017-win2016"
@@ -76,39 +76,24 @@ jobs:
       maxParallel: 4
     pool:
       vmImage: $(imageName)
-
     steps:
-      - task: UsePythonVersion@0
-        inputs:
-          versionSpec: "$(python.version)"
-          architecture: "x64"
+      - template: .github/azure-steps.yml
+        parameters:
+          python_version: '$(python.version)'
+          architecture: 'x64'
 
-      - script: |
-          python -m pip install -U setuptools
-          pip install -r requirements.txt
-        displayName: "Install dependencies"
-
-      - script: |
-          python setup.py build_ext --inplace
-          python setup.py sdist --formats=gztar
-        displayName: "Compile and build sdist"
-
-      - task: DeleteFiles@1
-        inputs:
-          contents: "spacy"
-        displayName: "Delete source directory"
-
-      - script: |
-          pip freeze > installed.txt
-          pip uninstall -y -r installed.txt
-        displayName: "Uninstall all packages"
-
-      - bash: |
-          SDIST=$(python -c "import os;print(os.listdir('./dist')[-1])" 2>&1)
-          pip install dist/$SDIST
-        displayName: "Install from sdist"
-
-      - script: |
-          pip install -r requirements.txt
-          python -m pytest --pyargs spacy
-        displayName: "Run tests"
+#  - job: "TestGPU"
+#    dependsOn: "Validate"
+#    strategy:
+#      matrix:
+#        Python38LinuxX64_GPU:
+#          python.version: '3.8'
+#    pool:
+#      name: "LinuxX64_GPU"
+#    steps:
+#      - template: .github/azure-steps.yml
+#        parameters:
+#          python_version: '$(python.version)'
+#          architecture: 'x64'
+#          gpu: true
+#          num_build_jobs: 24

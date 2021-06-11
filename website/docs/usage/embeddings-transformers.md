@@ -132,7 +132,7 @@ factory = "tok2vec"
 @architectures = "spacy.Tok2Vec.v2"
 
 [components.tok2vec.model.embed]
-@architectures = "spacy.MultiHashEmbed.v1"
+@architectures = "spacy.MultiHashEmbed.v2"
 
 [components.tok2vec.model.encode]
 @architectures = "spacy.MaxoutWindowEncoder.v2"
@@ -164,7 +164,7 @@ factory = "ner"
 @architectures = "spacy.Tok2Vec.v2"
 
 [components.ner.model.tok2vec.embed]
-@architectures = "spacy.MultiHashEmbed.v1"
+@architectures = "spacy.MultiHashEmbed.v2"
 
 [components.ner.model.tok2vec.encode]
 @architectures = "spacy.MaxoutWindowEncoder.v2"
@@ -541,7 +541,7 @@ word vector tables using the `include_static_vectors` flag.
 
 ```ini
 [tagger.model.tok2vec.embed]
-@architectures = "spacy.MultiHashEmbed.v1"
+@architectures = "spacy.MultiHashEmbed.v2"
 width = 128
 attrs = ["LOWER","PREFIX","SUFFIX","SHAPE"]
 rows = [5000,2500,2500,2500]
@@ -550,7 +550,7 @@ include_static_vectors = true
 
 <Infobox title="How it works" emoji="💡">
 
-The configuration system will look up the string `"spacy.MultiHashEmbed.v1"` in
+The configuration system will look up the string `"spacy.MultiHashEmbed.v2"` in
 the `architectures` [registry](/api/top-level#registry), and call the returned
 object with the rest of the arguments from the block. This will result in a call
 to the
@@ -678,7 +678,7 @@ The following defaults are used for the `[pretraining]` block and merged into
 your existing config when you run [`init config`](/api/cli#init-config) or
 [`init fill-config`](/api/cli#init-fill-config) with `--pretraining`. If needed,
 you can [configure](#pretraining-configure) the settings and hyperparameters or
-change the [objective](#pretraining-details).
+change the [objective](#pretraining-objectives).
 
 ```ini
 %%GITHUB_SPACY/spacy/default_config_pretraining.cfg
@@ -732,7 +732,7 @@ component = "textcat"
 layer = "tok2vec"
 ```
 
-#### Pretraining objectives {#pretraining-details}
+#### Pretraining objectives {#pretraining-objectives}
 
 > ```ini
 > ### Characters objective

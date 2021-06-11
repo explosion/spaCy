@@ -142,7 +142,7 @@ applied to the `Doc` in order. Both [`__call__`](/api/entitylinker#call) and
 | `batch_size`   | The number of documents to buffer. Defaults to `128`. ~~int~~ |
 | **YIELDS**     | The processed documents in order. ~~Doc~~                     |
 
-## EntityLinker.set_kb {#initialize tag="method" new="3"}
+## EntityLinker.set_kb {#set_kb tag="method" new="3"}
 
 The `kb_loader` should be a function that takes a `Vocab` instance and creates
 the `KnowledgeBase`, ensuring that the strings of the knowledge base are synced
@@ -213,10 +213,10 @@ if there is no prediction.
 > kb_ids = entity_linker.predict([doc1, doc2])
 > ```
 
-| Name        | Description                                 |
-| ----------- | ------------------------------------------- |
-| `docs`      | The documents to predict. ~~Iterable[Doc]~~ |
-| **RETURNS** | `List[str]`                                 | The predicted KB identifiers for the entities in the `docs`. ~~List[str]~~ |
+| Name        | Description                                                                |
+| ----------- | -------------------------------------------------------------------------- |
+| `docs`      | The documents to predict. ~~Iterable[Doc]~~                                |
+| **RETURNS** | The predicted KB identifiers for the entities in the `docs`. ~~List[str]~~ |
 
 ## EntityLinker.set_annotations {#set_annotations tag="method"}
 
@@ -340,6 +340,42 @@ Load the pipe from disk. Modifies the object in place and returns it.
 | _keyword-only_ |                                                                                                 |
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~     |
 | **RETURNS**    | The modified `EntityLinker` object. ~~EntityLinker~~                                            |
+
+## EntityLinker.to_bytes {#to_bytes tag="method"}
+
+> #### Example
+>
+> ```python
+> entity_linker = nlp.add_pipe("entity_linker")
+> entity_linker_bytes = entity_linker.to_bytes()
+> ```
+
+Serialize the pipe to a bytestring, including the `KnowledgeBase`.
+
+| Name           | Description                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------------- |
+| _keyword-only_ |                                                                                             |
+| `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
+| **RETURNS**    | The serialized form of the `EntityLinker` object. ~~bytes~~                                 |
+
+## EntityLinker.from_bytes {#from_bytes tag="method"}
+
+Load the pipe from a bytestring. Modifies the object in place and returns it.
+
+> #### Example
+>
+> ```python
+> entity_linker_bytes = entity_linker.to_bytes()
+> entity_linker = nlp.add_pipe("entity_linker")
+> entity_linker.from_bytes(entity_linker_bytes)
+> ```
+
+| Name           | Description                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------------- |
+| `bytes_data`   | The data to load from. ~~bytes~~                                                            |
+| _keyword-only_ |                                                                                             |
+| `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
+| **RETURNS**    | The `EntityLinker` object. ~~EntityLinker~~                                                 |
 
 ## Serialization fields {#serialization-fields}
 

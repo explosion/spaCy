@@ -8,6 +8,7 @@ menu:
   - ['Readers', 'readers']
   - ['Batchers', 'batchers']
   - ['Augmenters', 'augmenters']
+  - ['Callbacks', 'callbacks']
   - ['Training & Alignment', 'gold']
   - ['Utility Functions', 'util']
 ---
@@ -785,6 +786,35 @@ useful for making the model less sensitive to capitalization.
 | `level`     | The percentage of texts that will be augmented. ~~float~~                                                                                                                    |
 | **CREATES** | A function that takes the current `nlp` object and an [`Example`](/api/example) and yields augmented `Example` objects. ~~Callable[[Language, Example], Iterator[Example]]~~ |
 
+## Callbacks {#callbacks source="spacy/training/callbacks.py" new="3"}
+
+The config supports [callbacks](/usage/training#custom-code-nlp-callbacks) at
+several points in the lifecycle that can be used modify the `nlp` object.
+
+### spacy.copy_from_base_model.v1 {#copy_from_base_model tag="registered function"}
+
+> #### Example config
+>
+> ```ini
+> [initialize.before_init]
+> @callbacks = "spacy.copy_from_base_model.v1"
+> tokenizer = "en_core_sci_md"
+> vocab = "en_core_sci_md"
+> ```
+
+Copy the tokenizer and/or vocab from the specified models. It's similar to the
+v2 [base model](https://v2.spacy.io/api/cli#train) option and useful in
+combination with
+[sourced components](/usage/processing-pipelines#sourced-components) when
+fine-tuning an existing pipeline. The vocab includes the lookups and the vectors
+from the specified model. Intended for use in `[initialize.before_init]`.
+
+| Name        | Description                                                                                                             |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `tokenizer` | The pipeline to copy the tokenizer from. Defaults to `None`. ~~Optional[str]~~                                          |
+| `vocab`     | The pipeline to copy the vocab from. The vocab includes the lookups and vectors. Defaults to `None`. ~~Optional[str]~~  |
+| **CREATES** | A function that takes the current `nlp` object and modifies its `tokenizer` and `vocab`. ~~Callable[[Language], None]~~ |
+
 ## Training data and alignment {#gold source="spacy/training"}
 
 ### training.offsets_to_biluo_tags {#offsets_to_biluo_tags tag="function"}
@@ -849,7 +879,7 @@ This method was previously available as `spacy.gold.offsets_from_biluo_tags`.
 | Name        | Description                                                                                                                                                                                                                                                  |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `doc`       | The document that the BILUO tags refer to. ~~Doc~~                                                                                                                                                                                                           |
-| `entities`  | A sequence of [BILUO](/usage/linguistic-features#accessing-ner) tags with each tag describing one token. Each tag string will be of the form of either `""`, `"O"` or `"{action}-{label}"`, where action is one of `"B"`, `"I"`, `"L"`, `"U"`. ~~List[str]~~ |
+| `tags`      | A sequence of [BILUO](/usage/linguistic-features#accessing-ner) tags with each tag describing one token. Each tag string will be of the form of either `""`, `"O"` or `"{action}-{label}"`, where action is one of `"B"`, `"I"`, `"L"`, `"U"`. ~~List[str]~~ |
 | **RETURNS** | A sequence of `(start, end, label)` triples. `start` and `end` will be character-offset integers denoting the slice into the original string. ~~List[Tuple[int, int, str]]~~                                                                                 |
 
 ### training.biluo_tags_to_spans {#biluo_tags_to_spans tag="function" new="2.1"}
@@ -878,7 +908,7 @@ This method was previously available as `spacy.gold.spans_from_biluo_tags`.
 | Name        | Description                                                                                                                                                                                                                                                  |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `doc`       | The document that the BILUO tags refer to. ~~Doc~~                                                                                                                                                                                                           |
-| `entities`  | A sequence of [BILUO](/usage/linguistic-features#accessing-ner) tags with each tag describing one token. Each tag string will be of the form of either `""`, `"O"` or `"{action}-{label}"`, where action is one of `"B"`, `"I"`, `"L"`, `"U"`. ~~List[str]~~ |
+| `tags`      | A sequence of [BILUO](/usage/linguistic-features#accessing-ner) tags with each tag describing one token. Each tag string will be of the form of either `""`, `"O"` or `"{action}-{label}"`, where action is one of `"B"`, `"I"`, `"L"`, `"U"`. ~~List[str]~~ |
 | **RETURNS** | A sequence of `Span` objects with added entity labels. ~~List[Span]~~                                                                                                                                                                                        |
 
 ## Utility functions {#util source="spacy/util.py"}

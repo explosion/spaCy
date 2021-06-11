@@ -33,6 +33,15 @@ def test_matcher_from_api_docs(en_vocab):
     assert len(patterns[0])
 
 
+def test_matcher_empty_patterns_warns(en_vocab):
+    matcher = Matcher(en_vocab)
+    assert len(matcher) == 0
+    doc = Doc(en_vocab, words=["This", "is", "quite", "something"])
+    with pytest.warns(UserWarning):
+        matcher(doc)
+    assert len(doc.ents) == 0
+
+
 def test_matcher_from_usage_docs(en_vocab):
     text = "Wow 😀 This is really cool! 😂 😂"
     doc = Doc(en_vocab, words=text.split(" "))
@@ -512,6 +521,12 @@ def test_matcher_as_spans(matcher):
     assert isinstance(matches[1], Span)
     assert matches[1].text == "Java"
     assert matches[1].label_ == "Java"
+
+    matches = matcher(doc[1:], as_spans=True)
+    assert len(matches) == 1
+    assert isinstance(matches[0], Span)
+    assert matches[0].text == "Java"
+    assert matches[0].label_ == "Java"
 
 
 def test_matcher_deprecated(matcher):

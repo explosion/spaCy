@@ -10,7 +10,7 @@ const DEFAULT_LANG = 'en'
 const DEFAULT_HARDWARE = 'cpu'
 const DEFAULT_OPT = 'efficiency'
 const DEFAULT_TEXTCAT_EXCLUSIVE = true
-const COMPONENTS = ['tagger', 'parser', 'ner', 'textcat']
+const COMPONENTS = ['tagger', 'morphologizer', 'parser', 'ner', 'textcat']
 const COMMENT = `# This is an auto-generated partial config. To use it with 'spacy train'
 # you can run spacy init fill-config to auto-fill all default settings:
 # python -m spacy init fill-config ./base_config.cfg ./config.cfg`
@@ -86,13 +86,14 @@ export default function QuickstartTraining({ id, title, download = 'base_config.
             updateComponents(_components, isExclusive)
         },
     }
-    const reco = GENERATOR_DATA[lang] || GENERATOR_DATA.__default__
+    const defaultData = GENERATOR_DATA.__default__
+    const reco = GENERATOR_DATA[lang] || defaultData
     const content = generator({
         lang,
         components,
         optimize,
         hardware,
-        transformer_data: reco.transformer,
+        transformer_data: reco.transformer || defaultData.transformer,
         word_vectors: reco.word_vectors,
         has_letters: reco.has_letters,
     })
@@ -115,7 +116,9 @@ export default function QuickstartTraining({ id, title, download = 'base_config.
                     }))
                     .sort((a, b) => a.title.localeCompare(b.title))
                 if (!_components.includes('textcat')) {
-                    data = data.filter(({ id }) => id !== 'textcat')
+                    data = data.map(field =>
+                        field.id === 'textcat' ? { ...field, hidden: true } : field
+                    )
                 }
                 return (
                     <Quickstart
