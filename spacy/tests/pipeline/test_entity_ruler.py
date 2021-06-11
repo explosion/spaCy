@@ -46,6 +46,17 @@ def test_entity_ruler_init(nlp, patterns):
     assert doc.ents[1].label_ == "BYE"
 
 
+def test_entity_ruler_no_patterns_warns(nlp):
+    ruler = EntityRuler(nlp)
+    assert len(ruler) == 0
+    assert len(ruler.labels) == 0
+    nlp.add_pipe("entity_ruler")
+    assert nlp.pipe_names == ["entity_ruler"]
+    with pytest.warns(UserWarning):
+        doc = nlp("hello world bye bye")
+    assert len(doc.ents) == 0
+
+
 def test_entity_ruler_init_patterns(nlp, patterns):
     # initialize with patterns
     ruler = nlp.add_pipe("entity_ruler")

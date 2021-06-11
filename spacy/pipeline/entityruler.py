@@ -1,3 +1,4 @@
+import warnings
 from typing import Optional, Union, List, Dict, Tuple, Iterable, Any, Callable, Sequence
 from collections import defaultdict
 from pathlib import Path
@@ -6,7 +7,7 @@ import srsly
 from .pipe import Pipe
 from ..training import Example
 from ..language import Language
-from ..errors import Errors
+from ..errors import Errors, Warnings
 from ..util import ensure_path, to_disk, from_disk, SimpleFrozenList
 from ..tokens import Doc, Span
 from ..matcher import Matcher, PhraseMatcher
@@ -139,6 +140,7 @@ class EntityRuler(Pipe):
             error_handler(self.name, self, [doc], e)
 
     def match(self, doc: Doc):
+        self._require_patterns()
         matches = list(self.matcher(doc)) + list(self.phrase_matcher(doc))
         matches = set(
             [(m_id, start, end) for m_id, start, end in matches if start != end]
@@ -326,6 +328,11 @@ class EntityRuler(Pipe):
         self.phrase_matcher = PhraseMatcher(
             self.nlp.vocab, attr=self.phrase_matcher_attr, validate=self._validate
         )
+
+    def _require_patterns(self) -> None:
+        """Raise a warning if this component has no patterns defined."""
+        if len(self) == 0:
+            warnings.warn(Warnings.W036.format(name=self.name))
 
     def _split_label(self, label: str) -> Tuple[str, str]:
         """Split Entity label into ent_label and ent_id if it contains self.ent_id_sep

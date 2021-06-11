@@ -2,8 +2,6 @@ import weakref
 
 import pytest
 import numpy
-import logging
-import mock
 
 from spacy.lang.xx import MultiLanguage
 from spacy.tokens import Doc, Span, Token
@@ -158,13 +156,10 @@ def test_doc_api_serialize(en_tokenizer, text):
     def inner_func(d1, d2):
         return "hello!"
 
-    logger = logging.getLogger("spacy")
-    with mock.patch.object(logger, "warning") as mock_warning:
-        _ = tokens.to_bytes()  # noqa: F841
-        mock_warning.assert_not_called()
+    _ = tokens.to_bytes()  # noqa: F841
+    with pytest.warns(UserWarning):
         tokens.user_hooks["similarity"] = inner_func
         _ = tokens.to_bytes()  # noqa: F841
-        mock_warning.assert_called_once()
 
 
 def test_doc_api_set_ents(en_tokenizer):
