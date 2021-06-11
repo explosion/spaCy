@@ -1,3 +1,5 @@
+import os
+import random
 from libc.stdint cimport int32_t
 from cymem.cymem cimport Pool
 
@@ -37,6 +39,7 @@ MOVE_NAMES[LAST] = 'L'
 MOVE_NAMES[UNIT] = 'U'
 MOVE_NAMES[OUT] = 'O'
 
+HACK_IN_RANDOM_O = bool(os.environ.get("HACK_IN_RANDOM_O", 0))
 
 cdef struct GoldNERStateC:
     Transition* ner
@@ -78,6 +81,11 @@ cdef GoldNERStateC create_gold_state(
     gs.negs = <SpanC*>mem.alloc(len(negs), sizeof(SpanC))
     gs.nr_neg = len(negs)
     ner_tags = example.get_aligned_ner()
+    if HACK_IN_RANDOM_O:
+        # Replace some portion of the 'missing' values with O.
+        for i, ner_tag in enumerate(ner_tags):
+            if ner_tag is None and random.random() < 0.2:
+                ner_tags[i] = "O"
     for i, ner_tag in enumerate(ner_tags):
         gs.ner[i] = moves.lookup_transition(ner_tag)
     # In order to handle negative samples, we need to maintain the full

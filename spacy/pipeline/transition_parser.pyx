@@ -1,5 +1,6 @@
 # cython: infer_types=True, cdivision=True, boundscheck=False, binding=True
 from __future__ import print_function
+import os
 from cymem.cymem cimport Pool
 cimport numpy as np
 from itertools import islice
@@ -28,6 +29,10 @@ from ._parser_internals import _beam_utils
 from ..training import validate_examples, validate_get_examples
 from ..errors import Errors, Warnings
 from .. import util
+
+
+HACK_IN_REHEARSAL = bool(os.environ.get("HACK_REHEARSAL", 0))
+
 
 cdef class Parser(TrainablePipe):
     """
@@ -358,6 +363,8 @@ cdef class Parser(TrainablePipe):
             losses = {}
         losses.setdefault(self.name, 0.)
         validate_examples(examples, "Parser.update")
+        if HACK_IN_REHEARSAL:
+            self.rehearse(examples)
         self._ensure_labels_are_added(
             [eg.x for eg in examples] + [eg.y for eg in examples]
         )
