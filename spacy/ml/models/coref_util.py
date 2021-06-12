@@ -111,7 +111,7 @@ def get_predicted_clusters(
 
 def get_sentence_map(doc: Doc):
     """For the given span, return a list of sentence indexes."""
-    if doc.is_sentenced:
+    if doc.has_annotation("SENT_START"):
         si = 0
         out = []
         for sent in doc.sents:
