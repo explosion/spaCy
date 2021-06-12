@@ -843,6 +843,10 @@ class Errors:
              "DependencyMatcher token patterns. The token pattern in "
              "RIGHT_ATTR should return matches that are each exactly one token "
              "long. Invalid pattern:\n{node}")
+    E1017 = ("Heads passed without deps. Normally this is a mistake, but if "
+             "intentional then pass filler deps such as `[\"dep\"] * len(heads)`.")
+
+
 
 
 # Deprecated model shortcuts, only used in errors and warnings
