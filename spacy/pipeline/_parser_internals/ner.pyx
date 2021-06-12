@@ -39,7 +39,6 @@ MOVE_NAMES[LAST] = 'L'
 MOVE_NAMES[UNIT] = 'U'
 MOVE_NAMES[OUT] = 'O'
 
-HACK_IN_RANDOM_O = bool(os.environ.get("HACK_IN_RANDOM_O", 0))
 
 cdef struct GoldNERStateC:
     Transition* ner
@@ -81,11 +80,6 @@ cdef GoldNERStateC create_gold_state(
     gs.negs = <SpanC*>mem.alloc(len(negs), sizeof(SpanC))
     gs.nr_neg = len(negs)
     ner_tags = example.get_aligned_ner()
-    if HACK_IN_RANDOM_O:
-        # Replace some portion of the 'missing' values with O.
-        for i, ner_tag in enumerate(ner_tags):
-            if ner_tag is None and random.random() < 0.2:
-                ner_tags[i] = "O"
     for i, ner_tag in enumerate(ner_tags):
         gs.ner[i] = moves.lookup_transition(ner_tag)
     # In order to handle negative samples, we need to maintain the full
@@ -668,23 +662,33 @@ cdef class Out:
         gold = <GoldNERStateC*>_gold
         cdef int g_act = gold.ner[s.B(0)].move
         cdef attr_t g_tag = gold.ner[s.B(0)].label
-
+        cdef weight_t cost = 0
         if g_act == MISSING:
-            return 0
+            pass
         elif g_act == BEGIN:
             # O, Gold B --> False
-            return 1
+            pass
         elif g_act == IN:
             # O, Gold I --> True
-            return 0
+            pass
         elif g_act == LAST:
             # O, Gold L --> True
-            return 0
+            pass
         elif g_act == OUT:
             # O, Gold O --> True
-            return 0
+            pass
         elif g_act == UNIT:
             # O, Gold U --> False
-            return 1
+            cost += 1
         else:
-            return 1
+            cost += 1
+        # If we have negative-example entities, integrate them into the objective.
+        # This is a bit quirky for "O". We assume that if someone adds a negative
+        # span with a null label, they mean 'not O'. Kind of a dodgy convention?
+        # The cost is applied regardless of how the negative spans are chunked.
+        # You can have a bunch of separate spans, or merge them all together.
+        cdef int b0 = s.B(0)
+        for span in gold.negs[:gold.nr_neg]:
+            if span.label == 0 and span.start <= b0 and span.end > b0:
+                cost += 1
+                break
