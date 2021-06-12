@@ -359,8 +359,6 @@ cdef class Parser(TrainablePipe):
             losses = {}
         losses.setdefault(self.name, 0.)
         validate_examples(examples, "Parser.update")
-        if HACK_IN_REHEARSAL:
-            self.rehearse(examples)
         self._ensure_labels_are_added(
             [eg.x for eg in examples] + [eg.y for eg in examples]
         )
