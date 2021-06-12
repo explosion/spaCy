@@ -879,7 +879,7 @@ This method was previously available as `spacy.gold.offsets_from_biluo_tags`.
 | Name        | Description                                                                                                                                                                                                                                                  |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `doc`       | The document that the BILUO tags refer to. ~~Doc~~                                                                                                                                                                                                           |
-| `entities`  | A sequence of [BILUO](/usage/linguistic-features#accessing-ner) tags with each tag describing one token. Each tag string will be of the form of either `""`, `"O"` or `"{action}-{label}"`, where action is one of `"B"`, `"I"`, `"L"`, `"U"`. ~~List[str]~~ |
+| `tags`      | A sequence of [BILUO](/usage/linguistic-features#accessing-ner) tags with each tag describing one token. Each tag string will be of the form of either `""`, `"O"` or `"{action}-{label}"`, where action is one of `"B"`, `"I"`, `"L"`, `"U"`. ~~List[str]~~ |
 | **RETURNS** | A sequence of `(start, end, label)` triples. `start` and `end` will be character-offset integers denoting the slice into the original string. ~~List[Tuple[int, int, str]]~~                                                                                 |
 
 ### training.biluo_tags_to_spans {#biluo_tags_to_spans tag="function" new="2.1"}
@@ -908,7 +908,7 @@ This method was previously available as `spacy.gold.spans_from_biluo_tags`.
 | Name        | Description                                                                                                                                                                                                                                                  |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `doc`       | The document that the BILUO tags refer to. ~~Doc~~                                                                                                                                                                                                           |
-| `entities`  | A sequence of [BILUO](/usage/linguistic-features#accessing-ner) tags with each tag describing one token. Each tag string will be of the form of either `""`, `"O"` or `"{action}-{label}"`, where action is one of `"B"`, `"I"`, `"L"`, `"U"`. ~~List[str]~~ |
+| `tags`      | A sequence of [BILUO](/usage/linguistic-features#accessing-ner) tags with each tag describing one token. Each tag string will be of the form of either `""`, `"O"` or `"{action}-{label}"`, where action is one of `"B"`, `"I"`, `"L"`, `"U"`. ~~List[str]~~ |
 | **RETURNS** | A sequence of `Span` objects with added entity labels. ~~List[Span]~~                                                                                                                                                                                        |
 
 ## Utility functions {#util source="spacy/util.py"}

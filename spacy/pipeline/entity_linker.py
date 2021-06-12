@@ -142,7 +142,7 @@ class EntityLinker(TrainablePipe):
         self.get_candidates = get_candidates
         self.cfg = {}
         self.distance = CosineDistance(normalize=False)
-        # how many neightbour sentences to take into account
+        # how many neighbour sentences to take into account
         # create an empty KB by default. If you want to load a predefined one, specify it in 'initialize'.
         self.kb = empty_kb(entity_vector_length)(self.vocab)
 
@@ -305,7 +305,7 @@ class EntityLinker(TrainablePipe):
                     sent = ent.sent
                     sent_index = sentences.index(sent)
                     assert sent_index >= 0
-                    # get n_neightbour sentences, clipped to the length of the document
+                    # get n_neighbour sentences, clipped to the length of the document
                     start_sentence = max(0, sent_index - self.n_sents)
                     end_sentence = min(
                         len(sentences) - 1, sent_index + self.n_sents

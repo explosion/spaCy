@@ -1,3 +1,6 @@
+import warnings
+
+
 def add_codes(err_cls):
     """Add error codes to string messages via class attribute names."""
 
@@ -10,6 +13,30 @@ def add_codes(err_cls):
                 return "[{code}] {msg}".format(code=code, msg=msg)
 
     return ErrorsWithCodes()
+
+
+def setup_default_warnings():
+    # ignore certain numpy warnings
+    filter_warning("ignore", error_msg="numpy.dtype size changed")  # noqa
+    filter_warning("ignore", error_msg="numpy.ufunc size changed")  # noqa
+
+    # warn about entity_ruler & matcher having no patterns only once
+    for pipe in ["matcher", "entity_ruler"]:
+        filter_warning("once", error_msg=Warnings.W036.format(name=pipe))
+
+
+def filter_warning(action: str, error_msg: str):
+    """Customize how spaCy should handle a certain warning.
+
+    error_msg (str): e.g. "W006", or a full error message
+    action (str): "default", "error", "ignore", "always", "module" or "once"
+    """
+    warnings.filterwarnings(action, message=_escape_warning_msg(error_msg))
+
+
+def _escape_warning_msg(msg):
+    """To filter with warnings.filterwarnings, the [] brackets need to be escaped"""
+    return msg.replace("[", "\\[").replace("]", "\\]")
 
 
 # fmt: off
@@ -80,8 +107,9 @@ class Warnings:
             "@misc = \"spacy.LookupsDataLoader.v1\"\n"
             "lang = ${{nlp.lang}}\n"
             "tables = [\"lexeme_norm\"]\n")
-    W035 = ('Discarding subpattern "{pattern}" due to an unrecognized '
+    W035 = ("Discarding subpattern '{pattern}' due to an unrecognized "
             "attribute or operator.")
+    W036 = ("The component '{name}' does not have any patterns defined.")
 
     # New warnings added in v3.x
     W086 = ("Component '{listener}' will be (re)trained, but it needs the component "
