@@ -736,7 +736,7 @@ cdef class Span:
     @property
     def lemma_(self):
         """RETURNS (str): The span's lemma."""
-        return " ".join([t.lemma_ for t in self]).strip()
+        return "".join([t.lemma_ + t.whitespace_ for t in self]).strip()
 
     property label_:
         """RETURNS (str): The span's label."""
