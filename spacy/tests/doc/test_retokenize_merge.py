@@ -111,7 +111,9 @@ def test_doc_retokenize_spans_merge_tokens_default_attrs(en_vocab):
     deps = ["dep"] * len(heads)
     tags = ["DT", "NN", "VBZ", "."]
     pos = ["DET", "NOUN", "VERB", "PUNCT"]
-    doc = Doc(en_vocab, words=words, tags=tags, pos=pos, heads=heads, deps=deps, lemmas=lemmas)
+    doc = Doc(
+        en_vocab, words=words, tags=tags, pos=pos, heads=heads, deps=deps, lemmas=lemmas
+    )
     assert len(doc) == 4
     assert doc[0].text == "The"
     assert doc[0].tag_ == "DT"
@@ -124,7 +126,9 @@ def test_doc_retokenize_spans_merge_tokens_default_attrs(en_vocab):
     assert doc[0].tag_ == "NN"
     assert doc[0].pos_ == "NOUN"
     assert doc[0].lemma_ == "the players"
-    doc = Doc(en_vocab, words=words, tags=tags, pos=pos, heads=heads, deps=deps, lemmas=lemmas)
+    doc = Doc(
+        en_vocab, words=words, tags=tags, pos=pos, heads=heads, deps=deps, lemmas=lemmas
+    )
     assert len(doc) == 4
     assert doc[0].text == "The"
     assert doc[0].tag_ == "DT"
@@ -225,7 +229,12 @@ def test_doc_retokenize_spans_entity_merge(en_tokenizer):
     # fmt: on
     tokens = en_tokenizer(text)
     doc = Doc(
-        tokens.vocab, words=[t.text for t in tokens], heads=heads, deps=deps, tags=tags, ents=ents
+        tokens.vocab,
+        words=[t.text for t in tokens],
+        heads=heads,
+        deps=deps,
+        tags=tags,
+        ents=ents,
     )
     assert len(doc) == 17
     with doc.retokenize() as retokenizer:
