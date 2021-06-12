@@ -692,3 +692,4 @@ cdef class Out:
             if span.label == 0 and span.start <= b0 and span.end > b0:
                 cost += 1
                 break
+        return cost
