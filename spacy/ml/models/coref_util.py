@@ -34,7 +34,7 @@ def topk(xp, arr, k, axis=None):
 
     vals = xp.take_along_axis(arr, idxs, axis=1)
 
-    sidxs = xp.argsort(vals, axis=1)
+    sidxs = xp.argsort(-vals, axis=1)
     # map these idxs back to the original
     oidxs = xp.take_along_axis(idxs, sidxs, axis=1)
     svals = xp.take_along_axis(vals, sidxs, axis=1)
