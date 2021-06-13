@@ -176,7 +176,6 @@ def span_embeddings_forward(
     spanvecs = ops.asarray2f(avgs)
 
     # first and last token embeds
-    # XXX probably would be faster to get these at once
     starts, ends = zip(*[(tokvecs[ii], tokvecs[jj]) for ii, jj in mentions])
 
     starts = ops.asarray2f(starts)
@@ -343,7 +342,7 @@ def ant_scorer_forward(
     dropout = model.layers[1]
 
     # XXX Note on dimensions: This won't work as a ragged because the floats2ds
-    # are not all the same dimentions. Each floats2d is a square in the size of
+    # are not all the same dimensions. Each floats2d is a square in the size of
     # the number of antecedents in the document. Actually, that will have the
     # same size if antecedents are padded... Needs checking.
 
