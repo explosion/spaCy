@@ -281,6 +281,13 @@ def uk_tokenizer():
     return get_lang_class("uk")().tokenizer
 
 
+@pytest.fixture
+def uk_lemmatizer():
+    pytest.importorskip("pymorphy2")
+    pytest.importorskip("pymorphy2_dicts_uk")
+    return get_lang_class("uk")().add_pipe("lemmatizer")
+
+
 @pytest.fixture(scope="session")
 def ur_tokenizer():
     return get_lang_class("ur")().tokenizer
