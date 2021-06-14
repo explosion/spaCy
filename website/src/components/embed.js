@@ -13,7 +13,7 @@ const YouTube = ({ id, ratio = '16x9', className }) => {
         [classes.ratio16x9]: ratio === '16x9',
         [classes.ratio4x3]: ratio === '4x3',
     })
-    const url = `https://www.youtube.com/embed/${id}`
+    const url = `https://www.youtube-nocookie.com/embed/${id}`
     return (
         <figure className={embedClassNames}>
             <iframe
