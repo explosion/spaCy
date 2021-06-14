@@ -667,7 +667,7 @@ cdef class Out:
             pass
         elif g_act == BEGIN:
             # O, Gold B --> False
-            pass
+            cost += 1
         elif g_act == IN:
             # O, Gold I --> True
             pass
