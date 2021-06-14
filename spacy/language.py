@@ -1681,7 +1681,7 @@ class Language:
                     if model not in source_nlps:
                         # We only need the components here and we need to init
                         # model with the same vocab as the current nlp object
-                        source_nlps[model] = util.load_model(model, vocab=nlp.vocab)
+                        source_nlps[model] = util.load_model(model)
                     source_name = pipe_cfg.get("component", pipe_name)
                     listeners_replaced = False
                     if "replace_listeners" in pipe_cfg:
