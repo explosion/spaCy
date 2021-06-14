@@ -682,14 +682,4 @@ cdef class Out:
             cost += 1
         else:
             cost += 1
-        # If we have negative-example entities, integrate them into the objective.
-        # This is a bit quirky for "O". We assume that if someone adds a negative
-        # span with a null label, they mean 'not O'. Kind of a dodgy convention?
-        # The cost is applied regardless of how the negative spans are chunked.
-        # You can have a bunch of separate spans, or merge them all together.
-        cdef int b0 = s.B(0)
-        for span in gold.negs[:gold.nr_neg]:
-            if span.label == 0 and span.start <= b0 and span.end > b0:
-                cost += 1
-                break
         return cost
