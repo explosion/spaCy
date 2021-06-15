@@ -1,6 +1,7 @@
 from typing import List
 import pytest
 from thinc.api import fix_random_seed, Adam, set_dropout_rate
+from thinc.api import Ragged, reduce_mean, Logistic, chain, Relu
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 import numpy
 from spacy.ml.models import build_Tok2Vec_model, MultiHashEmbed, MaxoutWindowEncoder
@@ -211,6 +212,7 @@ def test_empty_docs(model_func, kwargs):
 
 def test_init_extract_spans():
     model = extract_spans().initialize()
+
 
 def test_extract_spans_span_indices():
     model = extract_spans().initialize()
