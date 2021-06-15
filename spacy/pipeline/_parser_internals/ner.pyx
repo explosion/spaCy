@@ -79,9 +79,17 @@ cdef GoldNERStateC create_gold_state(
     gs.ner = <Transition*>mem.alloc(example.x.length, sizeof(Transition))
     gs.negs = <SpanC*>mem.alloc(len(negs), sizeof(SpanC))
     gs.nr_neg = len(negs)
-    ner_tags = example.get_aligned_ner()
+    ner_ents, ner_tags = example.get_aligned_ents_and_ner()
     for i, ner_tag in enumerate(ner_tags):
         gs.ner[i] = moves.lookup_transition(ner_tag)
+
+    # Prevent conflicting spans in the data. For NER, spans are equal if they have the same offsets and label.
+    neg_span_hashes = [hash((neg_ent.start_char, neg_ent.end_char, neg_ent.label)) for neg_ent in negs]
+    for pos_span in ner_ents:
+        pos_hash = hash((pos_span.start_char, pos_span.end_char, pos_span.label))
+        if pos_hash in neg_span_hashes:
+            raise ValueError(Errors.E868.format(span=(pos_span.start_char, pos_span.end_char, pos_span.label_)))
+
     # In order to handle negative samples, we need to maintain the full
     # (start, end, label) triple. If we break it down to the 'isnt B-LOC'
     # thing, we'll get blocked if there's an incorrect prefix.

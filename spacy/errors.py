@@ -518,6 +518,9 @@ class Errors:
     E202 = ("Unsupported alignment mode '{mode}'. Supported modes: {modes}.")
 
     # New errors added in v3.x
+    E868 = ("Found a conflicting gold annotation in a reference document, "
+            "with the following char-based span occurring both in the gold ents "
+            "as well as in the negative spans: {span}.")
     E869 = ("The notation '{label}' is not supported anymore. To annotate "
             "negative NER samples, use `doc.spans[key]` instead, and "
             "specify the key as 'incorrect_spans_key' when constructing "

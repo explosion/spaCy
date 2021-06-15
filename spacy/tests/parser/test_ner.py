@@ -540,6 +540,62 @@ def test_beam_overfitting_IO(neg_key):
     assert len(nlp(test_text).ents) == 0
 
 
+def test_neg_annotation(neg_key):
+    """Check that the NER update works with a negative annotation that is a different label of the correct one,
+    or partly overlapping, etc"""
+    nlp = English()
+    beam_width = 16
+    beam_density = 0.0001
+    config = {
+        "beam_width": beam_width,
+        "beam_density": beam_density,
+        "incorrect_spans_key": neg_key,
+    }
+    ner = nlp.add_pipe("beam_ner", config=config)
+    train_text = "Who is Shaka Khan?"
+    neg_doc = nlp.make_doc(train_text)
+    ner.add_label("PERSON")
+    ner.add_label("ORG")
+    example = Example.from_dict(neg_doc, {"entities": [(7, 17, "PERSON")]})
+    example.reference.spans[neg_key] = [Span(neg_doc, 2, 4, "ORG"), Span(neg_doc, 2, 3, "PERSON"), Span(neg_doc, 1, 4, "PERSON")]
+
+    optimizer = nlp.initialize()
+    for i in range(2):
+        losses = {}
+        nlp.update([example], sgd=optimizer, losses=losses)
+
+
+def test_neg_annotation_conflict(neg_key):
+    # Check that NER raises for a negative annotation that is THE SAME as a correct one
+    nlp = English()
+    beam_width = 16
+    beam_density = 0.0001
+    config = {
+        "beam_width": beam_width,
+        "beam_density": beam_density,
+        "incorrect_spans_key": neg_key,
+    }
+    ner = nlp.add_pipe("beam_ner", config=config)
+    train_text = "Who is Shaka Khan?"
+    neg_doc = nlp.make_doc(train_text)
+    ner.add_label("PERSON")
+    ner.add_label("LOC")
+    example = Example.from_dict(neg_doc, {"entities": [(7, 17, "PERSON")]})
+    example.reference.spans[neg_key] = [Span(neg_doc, 2, 4, "PERSON")]
+    assert len(example.reference.ents) == 1
+    assert example.reference.ents[0].text == "Shaka Khan"
+    assert example.reference.ents[0].label_ == "PERSON"
+    assert len(example.reference.spans[neg_key]) == 1
+    assert example.reference.spans[neg_key][0].text == "Shaka Khan"
+    assert example.reference.spans[neg_key][0].label_ == "PERSON"
+
+    optimizer = nlp.initialize()
+    for i in range(2):
+        losses = {}
+        with pytest.raises(ValueError):
+            nlp.update([example], sgd=optimizer, losses=losses)
+
+
 def test_beam_valid_parse(neg_key):
     """Regression test for previously flakey behaviour"""
     nlp = English()
