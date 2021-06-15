@@ -20,7 +20,17 @@ def doc(en_tokenizer):
             "O", "O", "O", "O", "O"]
     # fmt: on
     tokens = en_tokenizer(text)
-    return Doc(tokens.vocab, words=[t.text for t in tokens], heads=heads, deps=deps, ents=ents)
+    lemmas = [t.text for t in tokens]  # this is not correct, just a placeholder
+    spaces = [bool(t.whitespace_) for t in tokens]
+    return Doc(
+        tokens.vocab,
+        words=[t.text for t in tokens],
+        spaces=spaces,
+        heads=heads,
+        deps=deps,
+        ents=ents,
+        lemmas=lemmas,
+    )
 
 
 @pytest.fixture
@@ -84,7 +94,7 @@ def test_spans_span_sent(doc, doc_not_parsed):
     """Test span.sent property"""
     assert len(list(doc.sents))
     assert doc[:2].sent.root.text == "is"
-    assert doc[:2].sent.text == "This is a sentence ."
+    assert doc[:2].sent.text == "This is a sentence."
     assert doc[6:7].sent.root.left_edge.text == "This"
     # test on manual sbd
     doc_not_parsed[0].is_sent_start = True
@@ -249,7 +259,7 @@ def test_span_as_doc(doc):
 
 @pytest.mark.usefixtures("clean_underscore")
 def test_span_as_doc_user_data(doc):
-    """Test that the user_data can be preserved (but not by default). """
+    """Test that the user_data can be preserved (but not by default)."""
     my_key = "my_info"
     my_value = 342
     doc.user_data[my_key] = my_value
@@ -286,7 +296,6 @@ def test_span_attrs_writable(doc):
 
 
 def test_span_ents_property(doc):
-    """Test span.ents for the """
     doc.ents = [
         (doc.vocab.strings["PRODUCT"], 0, 1),
         (doc.vocab.strings["PRODUCT"], 7, 8),
@@ -308,7 +317,7 @@ def test_span_ents_property(doc):
     assert sentences[1].ents[0].start == 7
     assert sentences[1].ents[0].end == 8
     # Third sentence ents, Also tests end of sentence
-    assert sentences[2].ents[0].text == "a third ."
+    assert sentences[2].ents[0].text == "a third."
     assert sentences[2].ents[0].label_ == "PRODUCT"
     assert sentences[2].ents[0].start == 11
     assert sentences[2].ents[0].end == 14
@@ -359,6 +368,12 @@ def test_span_boundaries(doc):
         span[-5]
     with pytest.raises(IndexError):
         span[5]
+
+
+def test_span_lemma(doc):
+    # span lemmas should have the same number of spaces as the span
+    sp = doc[1:5]
+    assert len(sp.text.split(" ")) == len(sp.lemma_.split(" "))
 
 
 def test_sent(en_tokenizer):
