@@ -233,7 +233,6 @@ class SpanCategorizer(TrainablePipe):
         examples: Iterable[Example],
         *,
         drop: float = 0.0,
-        set_annotations: bool = False,
         sgd: Optional[Optimizer] = None,
         losses: Optional[Dict[str, float]] = None,
     ) -> Dict[str, float]:
@@ -242,8 +241,6 @@ class SpanCategorizer(TrainablePipe):
 
         examples (Iterable[Example]): A batch of Example objects.
         drop (float): The dropout rate.
-        set_annotations (bool): Whether or not to update the Example objects
-            with the predictions.
         sgd (thinc.api.Optimizer): The optimizer.
         losses (Dict[str, float]): Optional record of the loss during training.
             Updated using the component name as the key.
@@ -269,7 +266,6 @@ class SpanCategorizer(TrainablePipe):
         backprop_scores(d_scores)
         if sgd is not None:
             self.finish_update(sgd)
-        self.set_annotations([eg.x for eg in examples], (spans, scores))
         losses[self.name] += loss
         return losses
 
