@@ -17,7 +17,7 @@ from ..util import registry
 spancat_default_config = """
 [model]
 @architectures = "spacy.SpanCategorizer.v1"
-scorer = {"@architectures": "spacy.MaxoutLogistic.v1"}
+scorer = {"@architectures": "spacy.LinearLogistic.v1"}
 reducer = {"@architectures": "spacy.mean_max_reducer.v1"}
 
 [model.tok2vec]

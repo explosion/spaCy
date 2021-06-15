@@ -732,7 +732,7 @@ the others, but may not be as accurate, especially if texts are short.
 > ```ini
 > [model]
 > @architectures = "spacy.SpanCategorizer.v1"
-> scorer = {"@architectures": "spacy.MaxoutLogistic.v1"}
+> scorer = {"@architectures": "spacy.LinearLogistic.v1"}
 > reducer = {"@architectures": "spacy.mean_max_reducer.v1"}
 >
 > [model.tok2vec]
