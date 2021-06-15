@@ -733,7 +733,10 @@ the others, but may not be as accurate, especially if texts are short.
 > [model]
 > @architectures = "spacy.SpanCategorizer.v1"
 > scorer = {"@architectures": "spacy.LinearLogistic.v1"}
-> reducer = {"@architectures": "spacy.mean_max_reducer.v1"}
+> 
+> [model.reducer]
+> @architectures = spacy.mean_max_reducer.v1"
+> hidden_size = 96
 >
 > [model.tok2vec]
 > @architectures = "spacy.Tok2Vec.v1"
