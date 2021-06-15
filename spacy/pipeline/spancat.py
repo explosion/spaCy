@@ -95,7 +95,7 @@ def make_spancat(
     threshold: float = 0.5,
     max_positive: Optional[int] = None,
 ) -> "SpanCategorizer":
-    """Create a SpanCategorizer compoment. The span categorizer consists of two
+    """Create a SpanCategorizer component. The span categorizer consists of two
     parts: a suggester function that proposes candidate spans, and a labeller
     model that predicts one or more labels for each span.
 
@@ -112,8 +112,8 @@ def make_spancat(
     threshold (float): Minimum probability to consider a prediction positive.
         Spans with a positive prediction will be saved on the Doc. Defaults to
         0.5.
-    max_positive (int): Maximum number of labels to consider positive per span.
-        Defaults to None, indicating no limit.
+    max_positive (Optional[int]): Maximum number of labels to consider positive
+        per span. Defaults to None, indicating no limit.
     """
     return SpanCategorizer(
         nlp.vocab,
@@ -129,7 +129,7 @@ def make_spancat(
 class SpanCategorizer(TrainablePipe):
     """Pipeline component to label spans of text.
 
-    DOCS: https://nightly.spacy.io/api/spancategorizer
+    DOCS: https://spacy.io/api/spancategorizer
     """
 
     def __init__(
@@ -145,7 +145,7 @@ class SpanCategorizer(TrainablePipe):
     ) -> None:
         """Initialize the span categorizer.
 
-        DOCS: https://nightly.spacy.io/api/spancategorizer#init
+        DOCS: https://spacy.io/api/spancategorizer#init
         """
         self.cfg = {
             "labels": [],
@@ -172,7 +172,7 @@ class SpanCategorizer(TrainablePipe):
         label (str): The label to add.
         RETURNS (int): 0 if label is already present, otherwise 1.
 
-        DOCS: https://nightly.spacy.io/api/spancategorizer#add_label
+        DOCS: https://spacy.io/api/spancategorizer#add_label
         """
         if not isinstance(label, str):
             raise ValueError(Errors.E187)
@@ -186,7 +186,7 @@ class SpanCategorizer(TrainablePipe):
     def labels(self) -> Tuple[str]:
         """RETURNS (Tuple[str]): The labels currently added to the component.
 
-        DOCS: https://nightly.spacy.io/api/spancategorizer#labels
+        DOCS: https://spacy.io/api/spancategorizer#labels
         """
         return tuple(self.cfg["labels"])
 
@@ -194,7 +194,7 @@ class SpanCategorizer(TrainablePipe):
     def label_data(self) -> List[str]:
         """RETURNS (List[str]): Information about the component's labels.
 
-        DOCS: https://nightly.spacy.io/api/spancategorizer#label_data
+        DOCS: https://spacy.io/api/spancategorizer#label_data
         """
         return list(self.labels)
 
@@ -204,7 +204,7 @@ class SpanCategorizer(TrainablePipe):
         docs (Iterable[Doc]): The documents to predict.
         RETURNS: The models prediction for each document.
 
-        DOCS: https://nightly.spacy.io/api/spancategorizer#predict
+        DOCS: https://spacy.io/api/spancategorizer#predict
         """
         indices = self.suggester(docs, ops=self.model.ops)
         scores = self.model.predict((docs, indices))
@@ -216,7 +216,7 @@ class SpanCategorizer(TrainablePipe):
         docs (Iterable[Doc]): The documents to modify.
         scores: The scores to set, produced by SpanCategorizer.predict.
 
-        DOCS: https://nightly.spacy.io/api/spancategorizer#set_annotations
+        DOCS: https://spacy.io/api/spancategorizer#set_annotations
         """
         labels = self.labels
         indices, scores = indices_scores
@@ -249,7 +249,7 @@ class SpanCategorizer(TrainablePipe):
             Updated using the component name as the key.
         RETURNS (Dict[str, float]): The updated losses dictionary.
 
-        DOCS: https://nightly.spacy.io/api/spancategorizer#update
+        DOCS: https://spacy.io/api/spancategorizer#update
         """
         if losses is None:
             losses = {}
@@ -283,7 +283,7 @@ class SpanCategorizer(TrainablePipe):
         spans_scores: Scores representing the model's predictions.
         RETURNS (Tuple[float, float]): The loss and the gradient.
 
-        DOCS: https://nightly.spacy.io/api/spancategorizer#get_loss
+        DOCS: https://spacy.io/api/spancategorizer#get_loss
         """
         spans, scores = spans_scores
         label_map = {label: i for i, label in enumerate(self.labels)}
@@ -337,7 +337,7 @@ class SpanCategorizer(TrainablePipe):
             `init labels` command. If no labels are provided, the get_examples
             callback is used to extract the labels from the data.
 
-        DOCS: https://nightly.spacy.io/api/spancategorizer#initialize
+        DOCS: https://spacy.io/api/spancategorizer#initialize
         """
         subbatch = []
         if labels is not None:
@@ -364,7 +364,7 @@ class SpanCategorizer(TrainablePipe):
         examples (Iterable[Example]): The examples to score.
         RETURNS (Dict[str, Any]): The scores, produced by Scorer.score_cats.
 
-        DOCS: https://nightly.spacy.io/api/spancategorizer#score
+        DOCS: https://spacy.io/api/spancategorizer#score
         """
         validate_examples(examples, "SpanCategorizer.score")
         self._validate_categories(examples)

@@ -218,7 +218,7 @@ def test_extract_spans_span_indices():
     model = extract_spans().initialize()
     spans = Ragged(
         model.ops.asarray([[0, 3], [2, 3], [5, 7]], dtype="i"),
-        model.ops.asarray([2, 1], dtype="i")
+        model.ops.asarray([2, 1], dtype="i"),
     )
     x_lengths = model.ops.asarray([5, 10], dtype="i")
     indices = _get_span_indices(model.ops, spans, x_lengths)
@@ -227,13 +227,10 @@ def test_extract_spans_span_indices():
 
 def test_extract_spans_forward_backward():
     model = extract_spans().initialize()
-    X = Ragged(
-        model.ops.alloc2f(15, 4),
-        model.ops.asarray([5, 10], dtype="i")
-    )
+    X = Ragged(model.ops.alloc2f(15, 4), model.ops.asarray([5, 10], dtype="i"))
     spans = Ragged(
         model.ops.asarray([[0, 3], [2, 3], [5, 7]], dtype="i"),
-        model.ops.asarray([2, 1], dtype="i")
+        model.ops.asarray([2, 1], dtype="i"),
     )
     Y, backprop = model.begin_update((X, spans))
     assert list(Y.lengths) == [3, 1, 2]
@@ -246,9 +243,7 @@ def test_extract_spans_forward_backward():
 
 def test_spancat_model_init():
     model = build_spancat_model(
-        build_Tok2Vec_model(**get_tok2vec_kwargs()),
-        reduce_mean(),
-        Logistic()
+        build_Tok2Vec_model(**get_tok2vec_kwargs()), reduce_mean(), Logistic()
     )
     model.initialize()
 
@@ -264,12 +259,10 @@ def test_spancat_model_forward_backward(nO=5):
         lengths.append(2)
     spans = Ragged(
         tok2vec.ops.asarray([[s.start, s.end] for s in spans_list], dtype="i"),
-        tok2vec.ops.asarray(lengths, dtype="i")
+        tok2vec.ops.asarray(lengths, dtype="i"),
     )
     model = build_spancat_model(
-        tok2vec,
-        reduce_mean(),
-        chain(Relu(nO=nO), Logistic())
+        tok2vec, reduce_mean(), chain(Relu(nO=nO), Logistic())
     ).initialize(X=(docs, spans))
 
     Y, backprop = model((docs, spans), is_train=True)

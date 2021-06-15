@@ -42,7 +42,7 @@ architectures and their arguments and hyperparameters.
 | `model`        | A model instance that is given a a list of documents and `(start, end)` indices representing candidate span offsets. The model predicts a probability for each category for each span. Defaults to [SpanCategorizer](/api/architectures#SpanCategorizer). ~~Model[Tuple[List[Doc], Ragged], Floats2d]~~ |
 | `spans_key`    | Key of the [`Doc.spans`](/api/doc#spans) dict to save the spans under. During initialization and training, the component will look for spans on the reference document under the same key. Defaults to `"spans"`. ~~str~~                                                                               |
 | `threshold`    | Minimum probability to consider a prediction positive. Spans with a positive prediction will be saved on the Doc. Defaults to `0.5`. ~~float~~                                                                                                                                                          |
-| `max_positive` | Maximum number of labels to consider positive per span. Defaults to `None`, indicating no limit. ~~int~~                                                                                                                                                                                                |
+| `max_positive` | Maximum number of labels to consider positive per span. Defaults to `None`, indicating no limit. ~~Optional[int]~~                                                                                                                                                                                      |
 
 ```python
 %%GITHUB_SPACY/spacy/pipeline/spancat.py
@@ -78,7 +78,7 @@ shortcut for this and instantiate the component using its string name and
 | _keyword-only_ |                                                                                                                                                                                                                                      |
 | `spans_key`    | Key of the [`Doc.spans`](/api/doc#sans) dict to save the spans under. During initialization and training, the component will look for spans on the reference document under the same key. Defaults to `"spans"`. ~~str~~             |
 | `threshold`    | Minimum probability to consider a prediction positive. Spans with a positive prediction will be saved on the Doc. Defaults to `0.5`. ~~float~~                                                                                       |
-| `max_positive` | Maximum number of labels to consider positive per span. Defaults to `None`, indicating no limit. ~~int~~                                                                                                                             |
+| `max_positive` | Maximum number of labels to consider positive per span. Defaults to `None`, indicating no limit. ~~Optional[int]~~                                                                                                                   |
 
 ## SpanCategorizer.\_\_call\_\_ {#call tag="method"}
 

@@ -1,11 +1,8 @@
 from typing import List, Tuple
 from thinc.api import Model, with_getitem, chain, list2ragged, Logistic
-from thinc.api import Maxout, Linear, concatenate
-from thinc.api import reduce_mean, reduce_max, zero_init
+from thinc.api import Maxout, Linear, concatenate, zero_init
+from thinc.api import reduce_mean, reduce_max, reduce_first, reduce_last
 from thinc.types import Ragged, Floats2d
-
-# TODO: Uncomment these when next Thinc makes them available.
-# from thinc.api import reduce_first, reduce_last
 
 from ...util import registry
 from ...tokens import Doc
@@ -26,9 +23,7 @@ def build_mean_max_reducer(hidden_size: int) -> Model[Ragged, Floats2d]:
     and then combine the concatenated vectors with a hidden layer.
     """
     return chain(
-        # TODO: Add reduce_first and reduce_last when Thinc has them.
-        # concatenate(reduce_last(), reduce_first(), reduce_mean(), reduce_max()),
-        concatenate(reduce_mean(), reduce_max()),
+        concatenate(reduce_last(), reduce_first(), reduce_mean(), reduce_max()),
         Maxout(nO=hidden_size, normalize=True, dropout=0.0),
     )
 
