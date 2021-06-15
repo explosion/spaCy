@@ -14,14 +14,14 @@
                 "client.entities('John Doe is a Go Developer at Google')",
                 "# [{'end': 8, 'start': 0, 'text': 'John Doe', 'type': 'PERSON'}, {'end': 25, 'start': 13, 'text': 'Go Developer', 'type': 'POSITION'}, {'end': 35,'start': 30, 'text': 'Google', 'type': 'ORG'}]"
             ],
-            "thumb":"https://avatars.githubusercontent.com/u/77671902",
-            "image":"https://nlpcloud.io/assets/images/logo.svg",
+            "thumb": "https://avatars.githubusercontent.com/u/77671902",
+            "image": "https://nlpcloud.io/assets/images/logo.svg",
             "code_language": "python",
             "author": "NLPCloud.io",
             "author_links": {
-            "github": "nlpcloud",
-            "twitter": "cloud_nlp",
-            "website": "https://nlpcloud.io"   
+                "github": "nlpcloud",
+                "twitter": "cloud_nlp",
+                "website": "https://nlpcloud.io"
             },
             "category": ["apis", "nonpython", "standalone"],
             "tags": ["api", "deploy", "production"]
@@ -42,22 +42,22 @@
                 "print(doc._.person_name)",
                 "# ['Meghana S.R Bhange', 'Asha']"
             ],
-            "thumb":"https://i.ibb.co/jwGVWPZ/rainbow-bohemian-logo-removebg-preview.png",
+            "thumb": "https://i.ibb.co/jwGVWPZ/rainbow-bohemian-logo-removebg-preview.png",
             "code_language": "python",
             "author": "Meghana Bhange",
             "author_links": {
-            "github": "meghanabhange",
-            "twitter": "_aspiringcat"
+                "github": "meghanabhange",
+                "twitter": "_aspiringcat"
             },
             "category": ["standalone"],
             "tags": ["person-name-detection"]
         },
-	{
+        {
             "id": "eMFDscore",
             "title": "eMFDscore : Extended Moral Foundation Dictionary Scoring for Python",
             "slogan": "Extended Moral Foundation Dictionary Scoring for Python",
             "description": "eMFDscore is a library for the fast and flexible extraction of various moral information metrics from textual input data. eMFDscore is built on spaCy for faster execution and performs minimal preprocessing consisting of tokenization, syntactic dependency parsing, lower-casing, and stopword/punctuation/whitespace removal. eMFDscore lets users score documents with multiple Moral Foundations Dictionaries, provides various metrics for analyzing moral information, and extracts moral patient, agent, and attribute words related to entities.",
-            "github": "https://github.com/medianeuroscience/emfdscore",
+            "github": "medianeuroscience/emfdscore",
             "code_example": [
                 "from emfdscore.scoring import score_docs",
                 "import pandas as pd",
@@ -65,20 +65,20 @@
                 "DICT_TYPE = 'emfd'",
                 "PROB_MAP = 'single'",
                 "SCORE_METHOD = 'bow'",
-		"OUT_METRICS = 'vice-virtue'",
-		"OUT_CSV_PATH = 'single-vv.csv'",
-		"df = score_docs(template_input,DICT_TYPE,PROB_MAP,SCORE_METHOD,OUT_METRICS,num_docs)",
+                "OUT_METRICS = 'vice-virtue'",
+                "OUT_CSV_PATH = 'single-vv.csv'",
+                "df = score_docs(template_input,DICT_TYPE,PROB_MAP,SCORE_METHOD,OUT_METRICS,num_docs)"
             ],
             "code_language": "python",
             "author": "Media Neuroscience Lab",
             "author_links": {
-            "github": "medianeuroscience",
-            "twitter": "medianeuro"
+                "github": "medianeuroscience",
+                "twitter": "medianeuro"
             },
             "category": ["research", "teaching"],
             "tags": ["morality", "dictionary", "sentiment"]
         },
-	      {
+        {
             "id": "skweak",
             "title": "skweak",
             "slogan": "Weak supervision for NLP",
@@ -2087,9 +2087,9 @@
                 "",
                 "# Load an spacy model (supported models are \"es\" and \"en\") ",
                 "nlp = spacy.load('en')",
-		"# Spacy 3.x",
-		"nlp.add_pipe(\"spacy_wordnet\", after='tagger', config={'lang': nlp.lang})",
-		"# Spacy 2.x",
+                "# Spacy 3.x",
+                "nlp.add_pipe(\"spacy_wordnet\", after='tagger', config={'lang': nlp.lang})",
+                "# Spacy 2.x",
                 "# nlp.add_pipe(WordnetAnnotator(nlp.lang), after='tagger')",
                 "token = nlp('prices')[0]",
                 "",

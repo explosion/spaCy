@@ -847,6 +847,9 @@ class Errors:
              "DependencyMatcher token patterns. The token pattern in "
              "RIGHT_ATTR should return matches that are each exactly one token "
              "long. Invalid pattern:\n{node}")
+    E1017 = ("A Doc object requires both 'deps' and 'heads' for dependency "
+             "parses. If no dependency labels are available, provide "
+             "placeholder deps such as `deps=[\"dep\"]*len(heads)`.")
 
 
 # Deprecated model shortcuts, only used in errors and warnings
