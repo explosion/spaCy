@@ -372,7 +372,7 @@ factory = "{{ pipe }}"
 [corpora.train]
 @readers = "spacy.Corpus.v1"
 path = ${paths.train}
-max_length = {{ 500 if hardware == "gpu" else 2000 }}
+max_length = 0
 
 [corpora.dev]
 @readers = "spacy.Corpus.v1"

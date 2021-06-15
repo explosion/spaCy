@@ -50,6 +50,8 @@ cdef class PhraseMatcher:
         if isinstance(attr, (int, long)):
             self.attr = attr
         else:
+            if attr is None:
+                attr = "ORTH"
             attr = attr.upper()
             if attr == "TEXT":
                 attr = "ORTH"

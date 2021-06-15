@@ -4,6 +4,7 @@ from collections import defaultdict
 from itertools import product
 
 import numpy
+import warnings
 
 from .matcher cimport Matcher
 from ..vocab cimport Vocab
@@ -11,7 +12,6 @@ from ..tokens.doc cimport Doc
 
 from ..errors import Errors, Warnings
 from ..tokens import Span
-from ..util import logger
 
 
 DELIMITER = "||"
@@ -282,7 +282,7 @@ cdef class DependencyMatcher:
         keys_to_position_maps = defaultdict(lambda: defaultdict(list))
         for match_id, start, end in self._matcher(doc):
             if start + 1 != end:
-                logger.warning(Warnings.W110.format(tokens=[t.text for t in doc[start:end]], pattern=self._matcher.get(match_id)[1][0][0]))
+                warnings.warn(Warnings.W110.format(tokens=[t.text for t in doc[start:end]], pattern=self._matcher.get(match_id)[1][0][0]))
             token = doc[start]
             root = ([token] + list(token.ancestors))[-1]
             keys_to_position_maps[root.i][match_id].append(start)

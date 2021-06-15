@@ -14,7 +14,7 @@ cdef class Tokenizer:
     cdef Pool mem
     cdef PreshMap _cache
     cdef PreshMap _specials
-    cpdef readonly Vocab vocab
+    cdef readonly Vocab vocab
 
     cdef object _token_match
     cdef object _url_match
