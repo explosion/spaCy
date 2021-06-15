@@ -64,6 +64,7 @@ def test_create_from_words_and_text(vocab):
         text = "  'dogs'\n\nrun  "
         (words, spaces) = util.get_words_and_spaces(words + ["away"], text)
 
+
 def test_create_with_heads_and_no_deps(vocab):
     words = "I like ginger".split()
     heads = list(range(len(words)))

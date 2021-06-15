@@ -848,8 +848,6 @@ class Errors:
              "placeholder deps such as `deps=[\"dep\"]*len(heads)`.")
 
 
-
-
 # Deprecated model shortcuts, only used in errors and warnings
 OLD_MODEL_SHORTCUTS = {
     "en": "en_core_web_sm", "de": "de_core_news_sm", "es": "es_core_news_sm",
