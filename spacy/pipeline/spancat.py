@@ -87,7 +87,7 @@ def make_spancat(
     nlp: Language,
     name: str,
     suggester: Callable[[List[Doc]], Ragged],
-    model: Model[Tuple[List[Doc], Ragged], List[Ragged]],
+    model: Model[Tuple[List[Doc], Ragged], Floats2d],
     spans_key: str,
     threshold: float = 0.5,
     max_positive: Optional[int] = None,
