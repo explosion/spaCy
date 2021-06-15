@@ -296,7 +296,6 @@ def test_span_attrs_writable(doc):
 
 
 def test_span_ents_property(doc):
-    """Test span.ents for the"""
     doc.ents = [
         (doc.vocab.strings["PRODUCT"], 0, 1),
         (doc.vocab.strings["PRODUCT"], 7, 8),
