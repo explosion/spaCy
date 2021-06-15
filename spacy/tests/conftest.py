@@ -40,6 +40,11 @@ def ar_tokenizer():
 
 
 @pytest.fixture(scope="session")
+def bg_tokenizer():
+    return get_lang_class("bg")().tokenizer
+
+
+@pytest.fixture(scope="session")
 def bn_tokenizer():
     return get_lang_class("bn")().tokenizer
 
@@ -266,9 +271,21 @@ def tt_tokenizer():
 
 
 @pytest.fixture(scope="session")
+def ky_tokenizer():
+    return get_lang_class("ky")().tokenizer
+
+
+@pytest.fixture(scope="session")
 def uk_tokenizer():
     pytest.importorskip("pymorphy2")
     return get_lang_class("uk")().tokenizer
+
+
+@pytest.fixture
+def uk_lemmatizer():
+    pytest.importorskip("pymorphy2")
+    pytest.importorskip("pymorphy2_dicts_uk")
+    return get_lang_class("uk")().add_pipe("lemmatizer")
 
 
 @pytest.fixture(scope="session")

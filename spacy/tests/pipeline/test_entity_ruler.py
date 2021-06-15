@@ -5,6 +5,7 @@ from spacy.tokens import Span
 from spacy.language import Language
 from spacy.pipeline import EntityRuler
 from spacy.errors import MatchPatternError
+from thinc.api import NumpyOps, get_current_ops
 
 
 @pytest.fixture
@@ -43,6 +44,17 @@ def test_entity_ruler_init(nlp, patterns):
     assert len(doc.ents) == 2
     assert doc.ents[0].label_ == "HELLO"
     assert doc.ents[1].label_ == "BYE"
+
+
+def test_entity_ruler_no_patterns_warns(nlp):
+    ruler = EntityRuler(nlp)
+    assert len(ruler) == 0
+    assert len(ruler.labels) == 0
+    nlp.add_pipe("entity_ruler")
+    assert nlp.pipe_names == ["entity_ruler"]
+    with pytest.warns(UserWarning):
+        doc = nlp("hello world bye bye")
+    assert len(doc.ents) == 0
 
 
 def test_entity_ruler_init_patterns(nlp, patterns):
@@ -201,13 +213,14 @@ def test_entity_ruler_overlapping_spans(nlp):
 
 @pytest.mark.parametrize("n_process", [1, 2])
 def test_entity_ruler_multiprocessing(nlp, n_process):
-    texts = ["I enjoy eating Pizza Hut pizza."]
+    if isinstance(get_current_ops, NumpyOps) or n_process < 2:
+        texts = ["I enjoy eating Pizza Hut pizza."]
 
-    patterns = [{"label": "FASTFOOD", "pattern": "Pizza Hut", "id": "1234"}]
+        patterns = [{"label": "FASTFOOD", "pattern": "Pizza Hut", "id": "1234"}]
 
-    ruler = nlp.add_pipe("entity_ruler")
-    ruler.add_patterns(patterns)
+        ruler = nlp.add_pipe("entity_ruler")
+        ruler.add_patterns(patterns)
 
-    for doc in nlp.pipe(texts, n_process=2):
-        for ent in doc.ents:
-            assert ent.ent_id_ == "1234"
+        for doc in nlp.pipe(texts, n_process=2):
+            for ent in doc.ents:
+                assert ent.ent_id_ == "1234"

@@ -24,8 +24,8 @@ from ..strings import get_string_id
 cdef class Retokenizer:
     """Helper class for doc.retokenize() context manager.
 
-    DOCS: https://nightly.spacy.io/api/doc#retokenize
-    USAGE: https://nightly.spacy.io/usage/linguistic-features#retokenization
+    DOCS: https://spacy.io/api/doc#retokenize
+    USAGE: https://spacy.io/usage/linguistic-features#retokenization
     """
     cdef Doc doc
     cdef list merges
@@ -47,7 +47,7 @@ cdef class Retokenizer:
         span (Span): The span to merge.
         attrs (dict): Attributes to set on the merged token.
 
-        DOCS: https://nightly.spacy.io/api/doc#retokenizer.merge
+        DOCS: https://spacy.io/api/doc#retokenizer.merge
         """
         if (span.start, span.end) in self._spans_to_merge:
             return
@@ -73,7 +73,7 @@ cdef class Retokenizer:
         attrs (dict): Attributes to set on all split tokens. Attribute names
             mapped to list of per-token attribute values.
 
-        DOCS: https://nightly.spacy.io/api/doc#retokenizer.split
+        DOCS: https://spacy.io/api/doc#retokenizer.split
         """
         if ''.join(orths) != token.text:
             raise ValueError(Errors.E117.format(new=''.join(orths), old=token.text))
@@ -281,7 +281,8 @@ def _merge(Doc doc, merges):
     for i in range(doc.length):
         doc.c[i].head -= i
     # Set the left/right children, left/right edges
-    set_children_from_heads(doc.c, 0, doc.length)
+    if doc.has_annotation("DEP"):
+        set_children_from_heads(doc.c, 0, doc.length)
     # Make sure ent_iob remains consistent
     make_iob_consistent(doc.c, doc.length)
     # Return the merged Python object
@@ -294,7 +295,19 @@ def _resize_tensor(tensor, ranges):
         for i in range(start, end-1):
             delete.append(i)
     xp = get_array_module(tensor)
-    return xp.delete(tensor, delete, axis=0)
+    if xp is numpy:
+        return xp.delete(tensor, delete, axis=0)
+    else:
+        offset = 0
+        copy_start = 0
+        resized_shape = (tensor.shape[0] - len(delete), tensor.shape[1])
+        for start, end in ranges:
+            if copy_start > 0:
+                tensor[copy_start - offset:start - offset] = tensor[copy_start: start]
+            offset += end - start - 1
+            copy_start = end - 1
+        tensor[copy_start - offset:resized_shape[0]] = tensor[copy_start:]
+        return xp.asarray(tensor[:resized_shape[0]])
 
 
 def _split(Doc doc, int token_index, orths, heads, attrs):
@@ -331,7 +344,13 @@ def _split(Doc doc, int token_index, orths, heads, attrs):
     to_process_tensor = (doc.tensor is not None and doc.tensor.size != 0)
     if to_process_tensor:
         xp = get_array_module(doc.tensor)
-        doc.tensor = xp.append(doc.tensor, xp.zeros((nb_subtokens,doc.tensor.shape[1]), dtype="float32"), axis=0)
+        if xp is numpy:
+            doc.tensor = xp.append(doc.tensor, xp.zeros((nb_subtokens,doc.tensor.shape[1]), dtype="float32"), axis=0)
+        else:
+            shape = (doc.tensor.shape[0] + nb_subtokens, doc.tensor.shape[1])
+            resized_array = xp.zeros(shape, dtype="float32")
+            resized_array[:doc.tensor.shape[0]] = doc.tensor[:doc.tensor.shape[0]]
+            doc.tensor = resized_array
     for token_to_move in range(orig_length - 1, token_index, -1):
         doc.c[token_to_move + nb_subtokens - 1] = doc.c[token_to_move]
         if to_process_tensor:
@@ -348,7 +367,7 @@ def _split(Doc doc, int token_index, orths, heads, attrs):
         token.norm = 0  # reset norm
         if to_process_tensor:
             # setting the tensors of the split tokens to array of zeros
-            doc.tensor[token_index + i] = xp.zeros((1,doc.tensor.shape[1]), dtype="float32")
+            doc.tensor[token_index + i:token_index + i + 1] = xp.zeros((1,doc.tensor.shape[1]), dtype="float32")
         # Update the character offset of the subtokens
         if i != 0:
             token.idx = orig_token.idx + idx_offset
@@ -392,7 +411,8 @@ def _split(Doc doc, int token_index, orths, heads, attrs):
     for i in range(doc.length):
         doc.c[i].head -= i
     # set children from head
-    set_children_from_heads(doc.c, 0, doc.length)
+    if doc.has_annotation("DEP"):
+        set_children_from_heads(doc.c, 0, doc.length)
 
 
 def _validate_extensions(extensions):

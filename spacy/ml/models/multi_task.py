@@ -13,14 +13,16 @@ from functools import partial
 if TYPE_CHECKING:
     # This lets us add type hints for mypy etc. without causing circular imports
     from ...vocab import Vocab  # noqa: F401
-    from ...tokens import Doc  # noqa: F401
+    from ...tokens.doc import Doc  # noqa: F401
 
 
-@registry.architectures.register("spacy.PretrainVectors.v1")
+@registry.architectures("spacy.PretrainVectors.v1")
 def create_pretrain_vectors(
     maxout_pieces: int, hidden_size: int, loss: str
 ) -> Callable[["Vocab", Model], Model]:
     def create_vectors_objective(vocab: "Vocab", tok2vec: Model) -> Model:
+        if vocab.vectors.data.shape[1] == 0:
+            raise ValueError(Errors.E875)
         model = build_cloze_multi_task_model(
             vocab, tok2vec, hidden_size=hidden_size, maxout_pieces=maxout_pieces
         )
@@ -40,7 +42,7 @@ def create_pretrain_vectors(
     return create_vectors_objective
 
 
-@registry.architectures.register("spacy.PretrainCharacters.v1")
+@registry.architectures("spacy.PretrainCharacters.v1")
 def create_pretrain_characters(
     maxout_pieces: int, hidden_size: int, n_characters: int
 ) -> Callable[["Vocab", Model], Model]:
@@ -134,7 +136,7 @@ def build_cloze_characters_multi_task_model(
 ) -> Model:
     output_layer = chain(
         list2array(),
-        Maxout(hidden_size, nP=maxout_pieces),
+        Maxout(nO=hidden_size, nP=maxout_pieces),
         LayerNorm(nI=hidden_size),
         MultiSoftmax([256] * nr_char, nI=hidden_size),
     )
@@ -203,7 +205,7 @@ def _apply_mask(
     docs: Iterable["Doc"], random_words: _RandomWords, mask_prob: float = 0.15
 ) -> Tuple[numpy.ndarray, List["Doc"]]:
     # This needs to be here to avoid circular imports
-    from ...tokens import Doc  # noqa: F811
+    from ...tokens.doc import Doc  # noqa: F811
 
     N = sum(len(doc) for doc in docs)
     mask = numpy.random.uniform(0.0, 1.0, (N,))

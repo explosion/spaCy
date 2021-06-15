@@ -20,7 +20,7 @@ cdef class TrainablePipe(Pipe):
     from it and it defines the interface that components should follow to
     function as trainable components in a spaCy pipeline.
 
-    DOCS: https://nightly.spacy.io/api/pipe
+    DOCS: https://spacy.io/api/pipe
     """
     def __init__(self, vocab: Vocab, model: Model, name: str, **cfg):
         """Initialize a pipeline component.
@@ -28,9 +28,9 @@ cdef class TrainablePipe(Pipe):
         vocab (Vocab): The shared vocabulary.
         model (thinc.api.Model): The Thinc Model powering the pipeline component.
         name (str): The component instance name.
-        **cfg: Additonal settings and config parameters.
+        **cfg: Additional settings and config parameters.
 
-        DOCS: https://nightly.spacy.io/api/pipe#init
+        DOCS: https://spacy.io/api/pipe#init
         """
         self.vocab = vocab
         self.model = model
@@ -45,11 +45,15 @@ cdef class TrainablePipe(Pipe):
         docs (Doc): The Doc to process.
         RETURNS (Doc): The processed Doc.
 
-        DOCS: https://nightly.spacy.io/api/pipe#call
+        DOCS: https://spacy.io/api/pipe#call
         """
-        scores = self.predict([doc])
-        self.set_annotations([doc], scores)
-        return doc
+        error_handler = self.get_error_handler()
+        try:
+            scores = self.predict([doc])
+            self.set_annotations([doc], scores)
+            return doc
+        except Exception as e:
+            error_handler(self.name, self, [doc], e)
 
     def pipe(self, stream: Iterable[Doc], *, batch_size: int=128) -> Iterator[Doc]:
         """Apply the pipe to a stream of documents. This usually happens under
@@ -58,14 +62,21 @@ cdef class TrainablePipe(Pipe):
 
         stream (Iterable[Doc]): A stream of documents.
         batch_size (int): The number of documents to buffer.
+        error_handler (Callable[[str, List[Doc], Exception], Any]): Function that
+            deals with a failing batch of documents. The default function just reraises
+            the exception.
         YIELDS (Doc): Processed documents in order.
 
-        DOCS: https://nightly.spacy.io/api/pipe#pipe
+        DOCS: https://spacy.io/api/pipe#pipe
         """
+        error_handler = self.get_error_handler()
         for docs in util.minibatch(stream, size=batch_size):
-            scores = self.predict(docs)
-            self.set_annotations(docs, scores)
-            yield from docs
+            try:
+                scores = self.predict(docs)
+                self.set_annotations(docs, scores)
+                yield from docs
+            except Exception as e:
+                error_handler(self.name, self, docs, e)
 
     def predict(self, docs: Iterable[Doc]):
         """Apply the pipeline's model to a batch of docs, without modifying them.
@@ -74,7 +85,7 @@ cdef class TrainablePipe(Pipe):
         docs (Iterable[Doc]): The documents to predict.
         RETURNS: Vector representations of the predictions.
 
-        DOCS: https://nightly.spacy.io/api/pipe#predict
+        DOCS: https://spacy.io/api/pipe#predict
         """
         raise NotImplementedError(Errors.E931.format(parent="TrainablePipe", method="predict", name=self.name))
 
@@ -84,7 +95,7 @@ cdef class TrainablePipe(Pipe):
         docs (Iterable[Doc]): The documents to modify.
         scores: The scores to assign.
 
-        DOCS: https://nightly.spacy.io/api/pipe#set_annotations
+        DOCS: https://spacy.io/api/pipe#set_annotations
         """
         raise NotImplementedError(Errors.E931.format(parent="TrainablePipe", method="set_annotations", name=self.name))
 
@@ -94,8 +105,7 @@ cdef class TrainablePipe(Pipe):
                sgd: Optimizer=None,
                losses: Optional[Dict[str, float]]=None) -> Dict[str, float]:
         """Learn from a batch of documents and gold-standard information,
-        updating the pipe's model. Delegates to predict, get_loss and
-        set_annotations.
+        updating the pipe's model. Delegates to predict and get_loss.
 
         examples (Iterable[Example]): A batch of Example objects.
         drop (float): The dropout rate.
@@ -104,7 +114,7 @@ cdef class TrainablePipe(Pipe):
             Updated using the component name as the key.
         RETURNS (Dict[str, float]): The updated losses dictionary.
 
-        DOCS: https://nightly.spacy.io/api/pipe#update
+        DOCS: https://spacy.io/api/pipe#update
         """
         if losses is None:
             losses = {}
@@ -122,8 +132,6 @@ cdef class TrainablePipe(Pipe):
         if sgd not in (None, False):
             self.finish_update(sgd)
         losses[self.name] += loss
-        docs = [eg.predicted for eg in examples]
-        self.set_annotations(docs, scores=scores)
         return losses
 
     def rehearse(self,
@@ -143,7 +151,7 @@ cdef class TrainablePipe(Pipe):
             Updated using the component name as the key.
         RETURNS (Dict[str, float]): The updated losses dictionary.
 
-        DOCS: https://nightly.spacy.io/api/pipe#rehearse
+        DOCS: https://spacy.io/api/pipe#rehearse
         """
         pass
 
@@ -155,7 +163,7 @@ cdef class TrainablePipe(Pipe):
         scores: Scores representing the model's predictions.
         RETURNS (Tuple[float, float]): The loss and the gradient.
 
-        DOCS: https://nightly.spacy.io/api/pipe#get_loss
+        DOCS: https://spacy.io/api/pipe#get_loss
         """
         raise NotImplementedError(Errors.E931.format(parent="TrainablePipe", method="get_loss", name=self.name))
 
@@ -164,7 +172,7 @@ cdef class TrainablePipe(Pipe):
 
         RETURNS (thinc.api.Optimizer): The optimizer.
 
-        DOCS: https://nightly.spacy.io/api/pipe#create_optimizer
+        DOCS: https://spacy.io/api/pipe#create_optimizer
         """
         return util.create_default_optimizer()
 
@@ -178,7 +186,7 @@ cdef class TrainablePipe(Pipe):
             returns a representative sample of gold-standard Example objects.
         nlp (Language): The current nlp object the component is part of.
 
-        DOCS: https://nightly.spacy.io/api/pipe#initialize
+        DOCS: https://spacy.io/api/pipe#initialize
         """
         raise NotImplementedError(Errors.E931.format(parent="TrainablePipe", method="initialize", name=self.name))
 
@@ -191,7 +199,7 @@ cdef class TrainablePipe(Pipe):
         label (str): The label to add.
         RETURNS (int): 0 if label is already present, otherwise 1.
 
-        DOCS: https://nightly.spacy.io/api/pipe#add_label
+        DOCS: https://spacy.io/api/pipe#add_label
         """
         raise NotImplementedError(Errors.E931.format(parent="Pipe", method="add_label", name=self.name))
 
@@ -221,7 +229,7 @@ cdef class TrainablePipe(Pipe):
 
         params (dict): The parameter values to use in the model.
 
-        DOCS: https://nightly.spacy.io/api/pipe#use_params
+        DOCS: https://spacy.io/api/pipe#use_params
         """
         with self.model.use_params(params):
             yield
@@ -233,7 +241,7 @@ cdef class TrainablePipe(Pipe):
 
         sgd (thinc.api.Optimizer): The optimizer.
 
-        DOCS: https://nightly.spacy.io/api/pipe#finish_update
+        DOCS: https://spacy.io/api/pipe#finish_update
         """
         self.model.finish_update(sgd)
 
@@ -253,7 +261,7 @@ cdef class TrainablePipe(Pipe):
         exclude (Iterable[str]): String names of serialization fields to exclude.
         RETURNS (bytes): The serialized object.
 
-        DOCS: https://nightly.spacy.io/api/pipe#to_bytes
+        DOCS: https://spacy.io/api/pipe#to_bytes
         """
         self._validate_serialization_attrs()
         serialize = {}
@@ -269,7 +277,7 @@ cdef class TrainablePipe(Pipe):
         exclude (Iterable[str]): String names of serialization fields to exclude.
         RETURNS (TrainablePipe): The loaded object.
 
-        DOCS: https://nightly.spacy.io/api/pipe#from_bytes
+        DOCS: https://spacy.io/api/pipe#from_bytes
         """
         self._validate_serialization_attrs()
 
@@ -293,7 +301,7 @@ cdef class TrainablePipe(Pipe):
         path (str / Path): Path to a directory.
         exclude (Iterable[str]): String names of serialization fields to exclude.
 
-        DOCS: https://nightly.spacy.io/api/pipe#to_disk
+        DOCS: https://spacy.io/api/pipe#to_disk
         """
         self._validate_serialization_attrs()
         serialize = {}
@@ -310,7 +318,7 @@ cdef class TrainablePipe(Pipe):
         exclude (Iterable[str]): String names of serialization fields to exclude.
         RETURNS (TrainablePipe): The loaded object.
 
-        DOCS: https://nightly.spacy.io/api/pipe#from_disk
+        DOCS: https://spacy.io/api/pipe#from_disk
         """
         self._validate_serialization_attrs()
 

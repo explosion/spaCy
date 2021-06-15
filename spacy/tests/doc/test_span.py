@@ -1,8 +1,12 @@
 import pytest
+import numpy
+from numpy.testing import assert_array_equal
 from spacy.attrs import ORTH, LENGTH
-from spacy.tokens import Doc, Span
+from spacy.tokens import Doc, Span, Token
 from spacy.vocab import Vocab
 from spacy.util import filter_spans
+
+from .test_underscore import clean_underscore  # noqa: F401
 
 
 @pytest.fixture
@@ -12,9 +16,21 @@ def doc(en_tokenizer):
     heads = [1, 1, 3, 1, 1, 6, 6, 8, 6, 6, 12, 12, 12, 12]
     deps = ["nsubj", "ROOT", "det", "attr", "punct", "nsubj", "ROOT", "det",
             "attr", "punct", "ROOT", "det", "npadvmod", "punct"]
+    ents = ["O", "O", "B-ENT", "I-ENT", "I-ENT", "I-ENT", "I-ENT", "O", "O",
+            "O", "O", "O", "O", "O"]
     # fmt: on
     tokens = en_tokenizer(text)
-    return Doc(tokens.vocab, words=[t.text for t in tokens], heads=heads, deps=deps)
+    lemmas = [t.text for t in tokens]  # this is not correct, just a placeholder
+    spaces = [bool(t.whitespace_) for t in tokens]
+    return Doc(
+        tokens.vocab,
+        words=[t.text for t in tokens],
+        spaces=spaces,
+        heads=heads,
+        deps=deps,
+        ents=ents,
+        lemmas=lemmas,
+    )
 
 
 @pytest.fixture
@@ -78,7 +94,7 @@ def test_spans_span_sent(doc, doc_not_parsed):
     """Test span.sent property"""
     assert len(list(doc.sents))
     assert doc[:2].sent.root.text == "is"
-    assert doc[:2].sent.text == "This is a sentence ."
+    assert doc[:2].sent.text == "This is a sentence."
     assert doc[6:7].sent.root.left_edge.text == "This"
     # test on manual sbd
     doc_not_parsed[0].is_sent_start = True
@@ -115,6 +131,17 @@ def test_spans_lca_matrix(en_tokenizer):
     assert lca[0, 1] == 1  # dog & slept -> slept
     assert lca[1, 0] == 1  # slept & dog -> slept
     assert lca[1, 1] == 1  # slept & slept -> slept
+
+    # example from Span API docs
+    tokens = en_tokenizer("I like New York in Autumn")
+    doc = Doc(
+        tokens.vocab,
+        words=[t.text for t in tokens],
+        heads=[1, 1, 3, 1, 3, 4],
+        deps=["dep"] * len(tokens),
+    )
+    lca = doc[1:4].get_lca_matrix()
+    assert_array_equal(lca, numpy.asarray([[0, 0, 0], [0, 1, 2], [0, 2, 2]]))
 
 
 def test_span_similarity_match():
@@ -195,6 +222,12 @@ def test_spans_by_character(doc):
     assert span1.end_char == span2.end_char
     assert span2.label_ == "GPE"
 
+    # unsupported alignment mode
+    with pytest.raises(ValueError):
+        span2 = doc.char_span(
+            span1.start_char + 1, span1.end_char, label="GPE", alignment_mode="unk"
+        )
+
 
 def test_span_to_array(doc):
     span = doc[1:-2]
@@ -212,12 +245,26 @@ def test_span_as_doc(doc):
     assert span_doc is not doc
     assert span_doc[0].idx == 0
 
+    # partial initial entity is removed
+    assert len(span_doc.ents) == 0
 
+    # full entity is preserved
+    span_doc = doc[2:10].as_doc()
+    assert len(span_doc.ents) == 1
+
+    # partial final entity is removed
+    span_doc = doc[0:5].as_doc()
+    assert len(span_doc.ents) == 0
+
+
+@pytest.mark.usefixtures("clean_underscore")
 def test_span_as_doc_user_data(doc):
-    """Test that the user_data can be preserved (but not by default). """
+    """Test that the user_data can be preserved (but not by default)."""
     my_key = "my_info"
     my_value = 342
     doc.user_data[my_key] = my_value
+    Token.set_extension("is_x", default=False)
+    doc[7]._.is_x = True
 
     span = doc[4:10]
     span_doc_with = span.as_doc(copy_user_data=True)
@@ -226,6 +273,12 @@ def test_span_as_doc_user_data(doc):
     assert doc.user_data.get(my_key, None) is my_value
     assert span_doc_with.user_data.get(my_key, None) is my_value
     assert span_doc_without.user_data.get(my_key, None) is None
+    for i in range(len(span_doc_with)):
+        if i != 3:
+            assert span_doc_with[i]._.is_x is False
+        else:
+            assert span_doc_with[i]._.is_x is True
+    assert not any([t._.is_x for t in span_doc_without])
 
 
 def test_span_string_label_kb_id(doc):
@@ -236,20 +289,13 @@ def test_span_string_label_kb_id(doc):
     assert span.kb_id == doc.vocab.strings["Q342"]
 
 
-def test_span_label_readonly(doc):
+def test_span_attrs_writable(doc):
     span = Span(doc, 0, 1)
-    with pytest.raises(NotImplementedError):
-        span.label_ = "hello"
-
-
-def test_span_kb_id_readonly(doc):
-    span = Span(doc, 0, 1)
-    with pytest.raises(NotImplementedError):
-        span.kb_id_ = "Q342"
+    span.label_ = "label"
+    span.kb_id_ = "kb_id"
 
 
 def test_span_ents_property(doc):
-    """Test span.ents for the """
     doc.ents = [
         (doc.vocab.strings["PRODUCT"], 0, 1),
         (doc.vocab.strings["PRODUCT"], 7, 8),
@@ -271,7 +317,7 @@ def test_span_ents_property(doc):
     assert sentences[1].ents[0].start == 7
     assert sentences[1].ents[0].end == 8
     # Third sentence ents, Also tests end of sentence
-    assert sentences[2].ents[0].text == "a third ."
+    assert sentences[2].ents[0].text == "a third."
     assert sentences[2].ents[0].label_ == "PRODUCT"
     assert sentences[2].ents[0].start == 11
     assert sentences[2].ents[0].end == 14
@@ -322,6 +368,12 @@ def test_span_boundaries(doc):
         span[-5]
     with pytest.raises(IndexError):
         span[5]
+
+
+def test_span_lemma(doc):
+    # span lemmas should have the same number of spaces as the span
+    sp = doc[1:5]
+    assert len(sp.text.split(" ")) == len(sp.lemma_.split(" "))
 
 
 def test_sent(en_tokenizer):

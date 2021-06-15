@@ -45,6 +45,14 @@ you generate a starter config with the **recommended settings** for your
 specific use case. It's also available in spaCy as the
 [`init config`](/api/cli#init-config) command.
 
+<Infobox variant="warning">
+
+Upgrade to the [latest version of spaCy](/usage) to use the quickstart widget.
+For earlier releases, follow the CLI instructions to generate a compatible
+config.
+
+</Infobox>
+
 > #### Instructions: widget
 >
 > 1. Select your requirements and settings.
@@ -94,6 +102,14 @@ spaCy's binary `.spacy` format. You can either include the data paths in the
 ```cli
 $ python -m spacy train config.cfg --output ./output --paths.train ./train.spacy --paths.dev ./dev.spacy
 ```
+
+> #### Tip: Enable your GPU
+>
+> Use the `--gpu-id` option to select the GPU:
+>
+> ```cli
+> $ python -m spacy train config.cfg --gpu-id 0
+> ```
 
 <Accordion title="How are the config recommendations generated?" id="quickstart-source" spaced>
 
@@ -185,13 +201,15 @@ sections of a config file are:
 
 For a full overview of spaCy's config format and settings, see the
 [data format documentation](/api/data-formats#config) and
-[Thinc's config system docs](https://thinc.ai/usage/config). The settings
+[Thinc's config system docs](https://thinc.ai/docs/usage-config). The settings
 available for the different architectures are documented with the
 [model architectures API](/api/architectures). See the Thinc documentation for
 [optimizers](https://thinc.ai/docs/api-optimizers) and
 [schedules](https://thinc.ai/docs/api-schedules).
 
 </Infobox>
+
+<YouTube id="BWhh3r6W-qE"></YouTube>
 
 ### Config lifecycle at runtime and training {#config-lifecycle}
 
@@ -419,13 +437,29 @@ pipeline = ["parser", "ner", "textcat", "custom"]
 frozen_components = ["parser", "custom"]
 ```
 
-<Infobox variant="warning" title="Shared Tok2Vec layer">
+<Infobox variant="warning" title="Shared Tok2Vec listener layer" id="config-components-listeners">
 
 When the components in your pipeline
 [share an embedding layer](/usage/embeddings-transformers#embedding-layers), the
-**performance** of your frozen component will be **degraded** if you continue training
-other layers with the same underlying `Tok2Vec` instance. As a rule of thumb,
-ensure that your frozen components are truly **independent** in the pipeline.
+**performance** of your frozen component will be **degraded** if you continue
+training other layers with the same underlying `Tok2Vec` instance. As a rule of
+thumb, ensure that your frozen components are truly **independent** in the
+pipeline.
+
+To automatically replace a shared token-to-vector listener with an independent
+copy of the token-to-vector layer, you can use the `replace_listeners` setting
+of a sourced component, pointing to the listener layer(s) in the config. For
+more details on how this works under the hood, see
+[`Language.replace_listeners`](/api/language#replace_listeners).
+
+```ini
+[training]
+frozen_components = ["tagger"]
+
+[components.tagger]
+source = "en_core_web_sm"
+replace_listeners = ["model.tok2vec"]
+```
 
 </Infobox>
 
@@ -922,7 +956,7 @@ import spacy
 from spacy.tokens import Doc
 
 @spacy.registry.architectures("custom_neural_network.v1")
-def MyModel(output_width: int) -> Model[List[Doc], List[Floats2d]]:
+def custom_neural_network(output_width: int) -> Model[List[Doc], List[Floats2d]]:
     return create_model(output_width)
 ```
 
@@ -1104,8 +1138,8 @@ any other custom workflows. `corpora.train` and `corpora.dev` are used as
 conventions within spaCy's default configs, but you can also define any other
 custom blocks. Each section in the corpora config should resolve to a
 [`Corpus`](/api/corpus) – for example, using spaCy's built-in
-[corpus reader](/api/top-level#readers) that takes a path to a binary `.spacy`
-file. The `train_corpus` and `dev_corpus` fields in the
+[corpus reader](/api/top-level#corpus-readers) that takes a path to a binary
+`.spacy` file. The `train_corpus` and `dev_corpus` fields in the
 [`[training]`](/api/data-formats#config-training) block specify where to find
 the corpus in your config. This makes it easy to **swap out** different corpora
 by only changing a single config setting.
@@ -1116,21 +1150,23 @@ corpora, keyed by corpus name, e.g. `"train"` and `"dev"`. This can be
 especially useful if you need to split a single file into corpora for training
 and evaluation, without loading the same file twice.
 
+By default, the training data is loaded into memory and shuffled before each
+epoch. If the corpus is **too large to fit into memory** during training, stream
+the corpus using a custom reader as described in the next section.
+
 ### Custom data reading and batching {#custom-code-readers-batchers}
 
 Some use-cases require **streaming in data** or manipulating datasets on the
-fly, rather than generating all data beforehand and storing it to file. Instead
+fly, rather than generating all data beforehand and storing it to disk. Instead
 of using the built-in [`Corpus`](/api/corpus) reader, which uses static file
 paths, you can create and register a custom function that generates
-[`Example`](/api/example) objects. The resulting generator can be infinite. When
-using this dataset for training, stopping criteria such as maximum number of
-steps, or stopping when the loss does not decrease further, can be used.
+[`Example`](/api/example) objects.
 
-In this example we assume a custom function `read_custom_data` which loads or
-generates texts with relevant text classification annotations. Then, small
-lexical variations of the input text are created before generating the final
-[`Example`](/api/example) objects. The `@spacy.registry.readers` decorator lets
-you register the function creating the custom reader in the `readers`
+In the following example we assume a custom function `read_custom_data` which
+loads or generates texts with relevant text classification annotations. Then,
+small lexical variations of the input text are created before generating the
+final [`Example`](/api/example) objects. The `@spacy.registry.readers` decorator
+lets you register the function creating the custom reader in the `readers`
 [registry](/api/top-level#registry) and assign it a string name, so it can be
 used in your config. All arguments on the registered function become available
 as **config settings** – in this case, `source`.
@@ -1172,6 +1208,80 @@ Remember that a registered function should always be a function that spaCy
 – it's not the reader itself.
 
 </Infobox>
+
+If the corpus is **too large to load into memory** or the corpus reader is an
+**infinite generator**, use the setting `max_epochs = -1` to indicate that the
+train corpus should be streamed. With this setting the train corpus is merely
+streamed and batched, not shuffled, so any shuffling needs to be implemented in
+the corpus reader itself. In the example below, a corpus reader that generates
+sentences containing even or odd numbers is used with an unlimited number of
+examples for the train corpus and a limited number of examples for the dev
+corpus. The dev corpus should always be finite and fit in memory during the
+evaluation step. `max_steps` and/or `patience` are used to determine when the
+training should stop.
+
+> #### config.cfg
+>
+> ```ini
+> [corpora.dev]
+> @readers = "even_odd.v1"
+> limit = 100
+>
+> [corpora.train]
+> @readers = "even_odd.v1"
+> limit = -1
+>
+> [training]
+> max_epochs = -1
+> patience = 500
+> max_steps = 2000
+> ```
+
+```python
+### functions.py
+from typing import Callable, Iterable, Iterator
+from spacy import util
+import random
+from spacy.training import Example
+from spacy import Language
+
+
+@util.registry.readers("even_odd.v1")
+def create_even_odd_corpus(limit: int = -1) -> Callable[[Language], Iterable[Example]]:
+    return EvenOddCorpus(limit)
+
+
+class EvenOddCorpus:
+    def __init__(self, limit):
+        self.limit = limit
+
+    def __call__(self, nlp: Language) -> Iterator[Example]:
+        i = 0
+        while i < self.limit or self.limit < 0:
+            r = random.randint(0, 1000)
+            cat = r % 2 == 0
+            text = "This is sentence " + str(r)
+            yield Example.from_dict(
+                nlp.make_doc(text), {"cats": {"EVEN": cat, "ODD": not cat}}
+            )
+            i += 1
+```
+
+> #### config.cfg
+>
+> ```ini
+> [initialize.components.textcat.labels]
+> @readers = "spacy.read_labels.v1"
+> path = "labels/textcat.json"
+> require = true
+> ```
+
+If the train corpus is streamed, the initialize step peeks at the first 100
+examples in the corpus to find the labels for each component. If this isn't
+sufficient, you'll need to [provide the labels](#initialization-labels) for each
+component in the `[initialize]` block. [`init labels`](/api/cli#init-labels) can
+be used to generate JSON files in the correct format, which you can extend with
+the full label set.
 
 We can also customize the **batching strategy** by registering a new batcher
 function in the `batchers` [registry](/api/top-level#registry). A batcher turns

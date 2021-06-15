@@ -17,7 +17,7 @@ def validate_cli():
     if the installed packages are compatible and shows upgrade instructions if
     available. Should be run after `pip install -U spacy`.
 
-    DOCS: https://nightly.spacy.io/api/cli#validate
+    DOCS: https://spacy.io/api/cli#validate
     """
     validate()
 

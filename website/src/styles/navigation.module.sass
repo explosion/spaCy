@@ -68,6 +68,14 @@
     height: 100%
     padding-right: 2rem
 
+.github
+    text-transform: initial
+    margin-top: 0.25rem
+    margin-left: 1.5em !important
+
+    & > span
+        min-width: 100px
+
 .dropdown
     --dropdown-text-color: var(--color-theme)
     font-family: var(--font-secondary)
@@ -83,9 +91,32 @@
         border: 2px dotted var(--color-theme)
         outline: none
 
+.has-alert
+    display: inline-flex
+    flex-flow: row nowrap
+    align-items: center
+
+.alert
+    font-size: 1.2rem
+    font-family: var(--font-primary)
+    display: inline-block
+    background: var(--color-yellow-opaque)
+    color: var(--color-dark)
+    border-radius: var(--border-radius)
+    margin-left: var(--spacing-xs)
+    padding: 0.5rem
+    line-height: var(--line-height-xs)
+    text-align: center
+
 @include breakpoint(max, xs)
     .list
         display: none
+
+    .alert
+        display: none
+
+    .has-alert
+        display: inline
 
 @include breakpoint(min, sm)
     .dropdown

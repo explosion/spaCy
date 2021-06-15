@@ -203,18 +203,19 @@ def setup_package():
     ext_modules = []
     for name in MOD_NAMES:
         mod_path = name.replace(".", "/") + ".pyx"
-        ext = Extension(name, [mod_path], language="c++", extra_compile_args=["-std=c++11"])
+        ext = Extension(
+            name, [mod_path], language="c++", include_dirs=include_dirs, extra_compile_args=["-std=c++11"]
+        )
         ext_modules.append(ext)
     print("Cythonizing sources")
     ext_modules = cythonize(ext_modules, compiler_directives=COMPILER_DIRECTIVES)
 
     setup(
-        name="spacy-nightly",
+        name="spacy",
         packages=PACKAGES,
         version=about["__version__"],
         ext_modules=ext_modules,
         cmdclass={"build_ext": build_ext_subclass},
-        include_dirs=include_dirs,
         package_data={"": ["*.pyx", "*.pxd", "*.pxi"]},
     )
 

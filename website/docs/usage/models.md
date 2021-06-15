@@ -33,7 +33,9 @@ spaCy currently provides support for the following languages. You can help by
 improving the existing [language data](/usage/linguistic-features#language-data)
 and extending the tokenization patterns.
 [See here](https://github.com/explosion/spaCy/issues/3056) for details on how to
-contribute to development.
+contribute to development. Also see the
+[training documentation](/usage/training) for how to train your own pipelines on
+your data.
 
 > #### Usage note
 >
@@ -267,7 +269,7 @@ best-matching package compatible with your spaCy installation.
 >
 > ```diff
 > - python -m spacy download en
-> + python -m spacy dowmload en_core_web_sm
+> + python -m spacy download en_core_web_sm
 > ```
 >
 > ```diff
@@ -301,15 +303,18 @@ doc = nlp("This is a sentence.")
 
 To download a trained pipeline directly using
 [pip](https://pypi.python.org/pypi/pip), point `pip install` to the URL or local
-path of the archive file. To find the direct link to a package, head over to the
+path of the wheel file or archive. Installing the wheel is usually more
+efficient. To find the direct link to a package, head over to the
 [releases](https://github.com/explosion/spacy-models/releases), right click on
 the archive link and copy it to your clipboard.
 
 ```bash
 # With external URL
+$ pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.0.0/en_core_web_sm-3.0.0-py3-none-any.whl
 $ pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.0.0/en_core_web_sm-3.0.0.tar.gz
 
 # With local file
+$ pip install /Users/you/en_core_web_sm-3.0.0-py3-none-any.whl
 $ pip install /Users/you/en_core_web_sm-3.0.0.tar.gz
 ```
 
@@ -377,7 +382,7 @@ doc = nlp("This is a sentence.")
 
 You can use the [`info`](/api/cli#info) command or
 [`spacy.info()`](/api/top-level#spacy.info) method to print a pipeline
-packages's meta data before loading it. Each `Language` object with a loaded
+package's meta data before loading it. Each `Language` object with a loaded
 pipeline also exposes the pipeline's meta data as the attribute `meta`. For
 example, `nlp.meta['version']` will return the package version.
 
@@ -433,8 +438,8 @@ URLs.
 
 ```text
 ### requirements.txt
-spacy>=2.2.0,<3.0.0
-https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-2.2.0/en_core_web_sm-2.2.0.tar.gz#egg=en_core_web_sm
+spacy>=3.0.0,<4.0.0
+https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.0.0/en_core_web_sm-3.0.0.tar.gz#egg=en_core_web_sm
 ```
 
 Specifying `#egg=` with the package name tells pip which package to expect from
@@ -471,6 +476,6 @@ logic around spaCy's loader, you can use
 [pytest](http://pytest.readthedocs.io/en/latest/)'s
 [`importorskip()`](https://docs.pytest.org/en/latest/builtin.html#_pytest.outcomes.importorskip)
 method to only run a test if a specific pipeline package or version is
-installed. Each pipeline package package exposes a `__version__` attribute which
+installed. Each pipeline package exposes a `__version__` attribute which
 you can also use to perform your own version compatibility checks before loading
 it.

@@ -77,7 +77,7 @@ import Benchmarks from 'usage/\_benchmarks-models.md'
 
 | Dependency Parsing System                                                      |  UAS |  LAS |
 | ------------------------------------------------------------------------------ | ---: | ---: |
-| spaCy RoBERTa (2020)                                                           | 95.5 | 94.3 |
+| spaCy RoBERTa (2020)                                                           | 95.1 | 93.7 |
 | [Mrini et al.](https://khalilmrini.github.io/Label_Attention_Layer.pdf) (2019) | 97.4 | 96.3 |
 | [Zhou and Zhao](https://www.aclweb.org/anthology/P19-1230/) (2019)             | 97.2 | 95.7 |
 
@@ -87,6 +87,31 @@ import Benchmarks from 'usage/\_benchmarks-models.md'
 [NLP-progress](http://nlpprogress.com/english/dependency_parsing.html) for more
 results. Project template:
 [`benchmarks/parsing_penn_treebank`](%%GITHUB_PROJECTS/benchmarks/parsing_penn_treebank).
+
+</figcaption>
+
+</figure>
+
+### Speed comparison {#benchmarks-speed}
+
+We compare the speed of different NLP libraries, measured in words per second
+(WPS) - higher is better. The evaluation was performed on 10,000 Reddit
+comments.
+
+<figure>
+
+| Library | Pipeline                                        | WPS CPU <Help>words per second on CPU, higher is better</Help> | WPS GPU <Help>words per second on GPU, higher is better</Help> |
+| ------- | ----------------------------------------------- | -------------------------------------------------------------: | -------------------------------------------------------------: |
+| spaCy   | [`en_core_web_lg`](/models/en#en_core_web_lg)   |                                                         10,014 |                                                         14,954 |
+| spaCy   | [`en_core_web_trf`](/models/en#en_core_web_trf) |                                                            684 |                                                          3,768 |
+| Stanza  | `en_ewt`                                        |                                                            878 |                                                          2,180 |
+| Flair   | `pos`(`-fast`) & `ner`(`-fast`)                 |                                                            323 |                                                          1,184 |
+| UDPipe  | `english-ewt-ud-2.5`                            |                                                          1,101 |                                                          _n/a_ |
+
+<figcaption class="caption">
+
+**End-to-end processing speed** on raw unannotated text. Project template:
+[`benchmarks/speed`](%%GITHUB_PROJECTS/benchmarks/speed).
 
 </figcaption>
 

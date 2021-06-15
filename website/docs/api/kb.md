@@ -82,7 +82,7 @@ Add an alias or mention to the knowledge base, specifying its potential KB
 identifiers and their prior probabilities. The entity identifiers should refer
 to entities previously added with [`add_entity`](/api/kb#add_entity) or
 [`set_entities`](/api/kb#set_entities). The sum of the prior probabilities
-should not exceed 1.
+should not exceed 1. Note that an empty string can not be used as alias.
 
 > #### Example
 >
@@ -92,7 +92,7 @@ should not exceed 1.
 
 | Name            | Description                                                                       |
 | --------------- | --------------------------------------------------------------------------------- |
-| `alias`         | The textual mention or alias. ~~str~~                                             |
+| `alias`         | The textual mention or alias. Can not be the empty string. ~~str~~                |
 | `entities`      | The potential entities that the alias may refer to. ~~Iterable[Union[str, int]]~~ |
 | `probabilities` | The prior probabilities of each entity. ~~Iterable[float]~~                       |
 
@@ -152,7 +152,7 @@ Get a list of all aliases in the knowledge base.
 | ----------- | -------------------------------------------------------- |
 | **RETURNS** | The list of aliases in the knowledge base. ~~List[str]~~ |
 
-## KnowledgeBase.get_candidates {#get_candidates tag="method"}
+## KnowledgeBase.get_alias_candidates {#get_alias_candidates tag="method"}
 
 Given a certain textual mention as input, retrieve a list of candidate entities
 of type [`Candidate`](/api/kb/#candidate).
@@ -160,13 +160,13 @@ of type [`Candidate`](/api/kb/#candidate).
 > #### Example
 >
 > ```python
-> candidates = kb.get_candidates("Douglas")
+> candidates = kb.get_alias_candidates("Douglas")
 > ```
 
-| Name        | Description                           |
-| ----------- | ------------------------------------- |
-| `alias`     | The textual mention or alias. ~~str~~ |
-| **RETURNS** | iterable                              | The list of relevant `Candidate` objects. ~~List[Candidate]~~ |
+| Name        | Description                                                   |
+| ----------- | ------------------------------------------------------------- |
+| `alias`     | The textual mention or alias. ~~str~~                         |
+| **RETURNS** | The list of relevant `Candidate` objects. ~~List[Candidate]~~ |
 
 ## KnowledgeBase.get_vector {#get_vector tag="method"}
 
@@ -246,7 +246,7 @@ certain prior probability.
 
 Construct a `Candidate` object. Usually this constructor is not called directly,
 but instead these objects are returned by the
-[`get_candidates`](/api/kb#get_candidates) method of a `KnowledgeBase`.
+`get_candidates` method of the [`entity_linker`](/api/entitylinker) pipe.
 
 > #### Example
 >

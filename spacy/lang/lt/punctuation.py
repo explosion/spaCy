@@ -19,7 +19,7 @@ _infixes = (
 )
 
 
-_suffixes = ["\."] + list(TOKENIZER_SUFFIXES)
+_suffixes = [r"\."] + list(TOKENIZER_SUFFIXES)
 
 
 TOKENIZER_INFIXES = _infixes

@@ -4,13 +4,13 @@ import { Help } from 'components/typography'; import Link from 'components/link'
 
 | Pipeline                                                   | Parser | Tagger |  NER |
 | ---------------------------------------------------------- | -----: | -----: | ---: |
-| [`en_core_web_trf`](/models/en#en_core_web_trf) (spaCy v3) |   95.5 |   98.3 | 89.4 |
-| [`en_core_web_lg`](/models/en#en_core_web_lg) (spaCy v3)   |   92.2 |   97.4 | 85.4 |
+| [`en_core_web_trf`](/models/en#en_core_web_trf) (spaCy v3) |   95.1 |   97.8 | 89.8 |
+| [`en_core_web_lg`](/models/en#en_core_web_lg) (spaCy v3)   |   92.0 |   97.4 | 85.5 |
 | `en_core_web_lg` (spaCy v2)                                |   91.9 |   97.2 | 85.5 |
 
 <figcaption class="caption">
 
-**Full pipeline accuracy and speed** on the
+**Full pipeline accuracy** on the
 [OntoNotes 5.0](https://catalog.ldc.upenn.edu/LDC2013T19) corpus (reported on
 the development set).
 
@@ -22,7 +22,7 @@ the development set).
 
 | Named Entity Recognition System  | OntoNotes | CoNLL '03 |
 | -------------------------------- | --------: | --------: |
-| spaCy RoBERTa (2020)             |      89.7 |      91.6 |
+| spaCy RoBERTa (2020)             |      89.8 |      91.6 |
 | Stanza (StanfordNLP)<sup>1</sup> |      88.8 |      92.1 |
 | Flair<sup>2</sup>                |      89.7 |      93.1 |
 

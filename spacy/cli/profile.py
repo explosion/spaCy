@@ -30,7 +30,7 @@ def profile_cli(
     It can either be provided as a JSONL file, or be read from sys.sytdin.
     If no input file is specified, the IMDB dataset is loaded via Thinc.
 
-    DOCS: https://nightly.spacy.io/api/cli#debug-profile
+    DOCS: https://spacy.io/api/cli#debug-profile
     """
     if ctx.parent.command.name == NAME:  # called as top-level command
         msg.warn(

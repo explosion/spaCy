@@ -7,7 +7,6 @@ from libcpp.vector cimport vector
 from libc.string cimport memset, memcpy
 from libc.stdlib cimport calloc, free
 import random
-from typing import Optional
 
 import srsly
 from thinc.api import set_dropout_rate, CupyOps
@@ -29,7 +28,6 @@ from ._parser_internals import _beam_utils
 from ..training import validate_examples, validate_get_examples
 from ..errors import Errors, Warnings
 from .. import util
-
 
 cdef class Parser(TrainablePipe):
     """
@@ -132,6 +130,23 @@ cdef class Parser(TrainablePipe):
             return 1
         return 0
 
+    def _ensure_labels_are_added(self, docs):
+        """Ensure that all labels for a batch of docs are added."""
+        resized = False
+        labels = set()
+        for doc in docs:
+            labels.update(self.moves.get_doc_labels(doc))
+        for label in labels:
+            for action in self.moves.action_types:
+                added = self.moves.add_action(action, label)
+                if added:
+                    self.vocab.strings.add(label)
+                    resized = True
+        if resized:
+            self._resize()
+            return 1
+        return 0
+
     def _resize(self):
         self.model.attrs["resize_output"](self.model, self.moves.n_moves)
         if self._rehearsal_model not in (True, False, None):
@@ -158,39 +173,37 @@ cdef class Parser(TrainablePipe):
         with self.model.use_params(params):
             yield
 
-    def __call__(self, Doc doc):
-        """Apply the parser or entity recognizer, setting the annotations onto
-        the `Doc` object.
-
-        doc (Doc): The document to be processed.
-        """
-        states = self.predict([doc])
-        self.set_annotations([doc], states)
-        return doc
-
     def pipe(self, docs, *, int batch_size=256):
         """Process a stream of documents.
 
         stream: The sequence of documents to process.
         batch_size (int): Number of documents to accumulate into a working set.
+        error_handler (Callable[[str, List[Doc], Exception], Any]): Function that
+            deals with a failing batch of documents. The default function just reraises
+            the exception.
+
         YIELDS (Doc): Documents, in order.
         """
         cdef Doc doc
+        error_handler = self.get_error_handler()
         for batch in util.minibatch(docs, size=batch_size):
             batch_in_order = list(batch)
-            by_length = sorted(batch, key=lambda doc: len(doc))
-            for subbatch in util.minibatch(by_length, size=max(batch_size//4, 2)):
-                subbatch = list(subbatch)
-                parse_states = self.predict(subbatch)
-                self.set_annotations(subbatch, parse_states)
-            yield from batch_in_order
+            try:
+                by_length = sorted(batch, key=lambda doc: len(doc))
+                for subbatch in util.minibatch(by_length, size=max(batch_size//4, 2)):
+                    subbatch = list(subbatch)
+                    parse_states = self.predict(subbatch)
+                    self.set_annotations(subbatch, parse_states)
+                yield from batch_in_order
+            except Exception as e:
+                error_handler(self.name, self, batch_in_order, e)
+
 
     def predict(self, docs):
         if isinstance(docs, Doc):
             docs = [docs]
         if not any(len(doc) for doc in docs):
             result = self.moves.init_batch(docs)
-            self._resize()
             return result
         if self.cfg["beam_width"] == 1:
             return self.greedy_parse(docs, drop=0.0)
@@ -205,12 +218,9 @@ cdef class Parser(TrainablePipe):
     def greedy_parse(self, docs, drop=0.):
         cdef vector[StateC*] states
         cdef StateClass state
+        self._ensure_labels_are_added(docs)
         set_dropout_rate(self.model, drop)
         batch = self.moves.init_batch(docs)
-        # This is pretty dirty, but the NER can resize itself in init_batch,
-        # if labels are missing. We therefore have to check whether we need to
-        # expand our model output.
-        self._resize()
         model = self.model.predict(docs)
         weights = get_c_weights(model)
         for state in batch:
@@ -227,6 +237,7 @@ cdef class Parser(TrainablePipe):
     def beam_parse(self, docs, int beam_width, float drop=0., beam_density=0.):
         cdef Beam beam
         cdef Doc doc
+        self._ensure_labels_are_added(docs)
         batch = _beam_utils.BeamBatch(
             self.moves,
             self.moves.init_batch(docs),
@@ -234,10 +245,6 @@ cdef class Parser(TrainablePipe):
             beam_width,
             density=beam_density
         )
-        # This is pretty dirty, but the NER can resize itself in init_batch,
-        # if labels are missing. We therefore have to check whether we need to
-        # expand our model output.
-        self._resize()
         model = self.model.predict(docs)
         while not batch.is_done:
             states = batch.get_unfinished_states()
@@ -314,6 +321,9 @@ cdef class Parser(TrainablePipe):
             losses = {}
         losses.setdefault(self.name, 0.)
         validate_examples(examples, "Parser.update")
+        self._ensure_labels_are_added(
+            [eg.x for eg in examples] + [eg.y for eg in examples]
+        )
         for multitask in self._multitasks:
             multitask.update(examples, drop=drop, sgd=sgd)
     
@@ -369,8 +379,6 @@ cdef class Parser(TrainablePipe):
         backprop_tok2vec(golds)
         if sgd not in (None, False):
             self.finish_update(sgd)
-        docs = [eg.predicted for eg in examples]
-        self.set_annotations(docs, all_states)
         # Ugh, this is annoying. If we're working on GPU, we want to free the
         # memory ASAP. It seems that Python doesn't necessarily get around to
         # removing these in time if we don't explicitly delete? It's confusing.
@@ -485,10 +493,7 @@ cdef class Parser(TrainablePipe):
 
     def initialize(self, get_examples, nlp=None, labels=None):
         validate_get_examples(get_examples, "Parser.initialize")
-        lexeme_norms = self.vocab.lookups.get_table("lexeme_norm", {})
-        if len(lexeme_norms) == 0 and self.vocab.lang in util.LEXEME_NORM_LANGS:
-            langs = ", ".join(util.LEXEME_NORM_LANGS)
-            util.logger.debug(Warnings.W033.format(model="parser or NER", langs=langs))
+        util.check_lexeme_norms(self.vocab, "parser or NER")
         if labels is not None:
             actions = dict(labels)
         else:

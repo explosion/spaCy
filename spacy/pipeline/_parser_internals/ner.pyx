@@ -126,6 +126,13 @@ cdef class BiluoPushDown(TransitionSystem):
     def action_types(self):
         return (BEGIN, IN, LAST, UNIT, OUT)
 
+    def get_doc_labels(self, doc):
+        labels = set()
+        for token in doc:
+            if token.ent_type:
+                labels.add(token.ent_type_)
+        return labels
+    
     def move_name(self, int move, attr_t label):
         if move == OUT:
             return 'O'
@@ -240,7 +247,7 @@ cdef class BiluoPushDown(TransitionSystem):
         for i in range(state.c._ents.size()):
             ent = state.c._ents.at(i)
             if ent.start != -1 and ent.end != -1:
-                ents.append(Span(doc, ent.start, ent.end, label=ent.label))
+                ents.append(Span(doc, ent.start, ent.end, label=ent.label, kb_id=doc.c[ent.start].ent_kb_id))
         doc.set_ents(ents, default="unmodified")
         # Set non-blocked tokens to O
         for i in range(doc.length):

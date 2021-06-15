@@ -91,7 +91,7 @@ cdef Utf8Str* _allocate(Pool mem, const unsigned char* chars, uint32_t length) e
 cdef class StringStore:
     """Look up strings by 64-bit hashes.
 
-    DOCS: https://nightly.spacy.io/api/stringstore
+    DOCS: https://spacy.io/api/stringstore
     """
     def __init__(self, strings=None, freeze=False):
         """Create the StringStore.
@@ -223,7 +223,7 @@ cdef class StringStore:
             it doesn't exist. Paths may be either strings or Path-like objects.
         """
         path = util.ensure_path(path)
-        strings = list(self)
+        strings = sorted(self)
         srsly.write_json(path, strings)
 
     def from_disk(self, path):
@@ -247,7 +247,7 @@ cdef class StringStore:
 
         RETURNS (bytes): The serialized form of the `StringStore` object.
         """
-        return srsly.json_dumps(list(self))
+        return srsly.json_dumps(sorted(self))
 
     def from_bytes(self, bytes_data, **kwargs):
         """Load state from a binary string.

@@ -1,15 +1,13 @@
 # cython: infer_types=True, profile=True, binding=True
-import srsly
 from typing import Optional, List
+import srsly
 
 from ..tokens.doc cimport Doc
-
 from .pipe import Pipe
 from ..language import Language
 from ..scorer import Scorer
 from ..training import validate_examples
 from .. import util
-
 
 @Language.factory(
     "sentencizer",
@@ -28,7 +26,7 @@ def make_sentencizer(
 class Sentencizer(Pipe):
     """Segment the Doc into sentences using a rule-based strategy.
 
-    DOCS: https://nightly.spacy.io/api/sentencizer
+    DOCS: https://spacy.io/api/sentencizer
     """
 
     default_punct_chars = ['!', '.', '?', '։', '؟', '۔', '܀', '܁', '܂', '߹',
@@ -50,7 +48,7 @@ class Sentencizer(Pipe):
             serialized with the nlp object.
         RETURNS (Sentencizer): The sentencizer component.
 
-        DOCS: https://nightly.spacy.io/api/sentencizer#init
+        DOCS: https://spacy.io/api/sentencizer#init
         """
         self.name = name
         if punct_chars:
@@ -64,38 +62,15 @@ class Sentencizer(Pipe):
         doc (Doc): The document to process.
         RETURNS (Doc): The processed Doc.
 
-        DOCS: https://nightly.spacy.io/api/sentencizer#call
+        DOCS: https://spacy.io/api/sentencizer#call
         """
-        start = 0
-        seen_period = False
-        for i, token in enumerate(doc):
-            is_in_punct_chars = token.text in self.punct_chars
-            token.is_sent_start = i == 0
-            if seen_period and not token.is_punct and not is_in_punct_chars:
-                doc[start].is_sent_start = True
-                start = token.i
-                seen_period = False
-            elif is_in_punct_chars:
-                seen_period = True
-        if start < len(doc):
-            doc[start].is_sent_start = True
-        return doc
-
-    def pipe(self, stream, batch_size=128):
-        """Apply the pipe to a stream of documents. This usually happens under
-        the hood when the nlp object is called on a text and all components are
-        applied to the Doc.
-
-        stream (Iterable[Doc]): A stream of documents.
-        batch_size (int): The number of documents to buffer.
-        YIELDS (Doc): Processed documents in order.
-
-        DOCS: https://nightly.spacy.io/api/sentencizer#pipe
-        """
-        for docs in util.minibatch(stream, size=batch_size):
-            predictions = self.predict(docs)
-            self.set_annotations(docs, predictions)
-            yield from docs
+        error_handler = self.get_error_handler()
+        try:
+            tags = self.predict([doc])
+            self.set_annotations([doc], tags)
+            return doc
+        except Exception as e:
+            error_handler(self.name, self, [doc], e)
 
     def predict(self, docs):
         """Apply the pipe to a batch of docs, without modifying them.
@@ -153,7 +128,7 @@ class Sentencizer(Pipe):
         examples (Iterable[Example]): The examples to score.
         RETURNS (Dict[str, Any]): The scores, produced by Scorer.score_spans.
 
-        DOCS: https://nightly.spacy.io/api/sentencizer#score
+        DOCS: https://spacy.io/api/sentencizer#score
         """
         def has_sents(doc):
             return doc.has_annotation("SENT_START")
@@ -168,7 +143,7 @@ class Sentencizer(Pipe):
 
         RETURNS (bytes): The serialized object.
 
-        DOCS: https://nightly.spacy.io/api/sentencizer#to_bytes
+        DOCS: https://spacy.io/api/sentencizer#to_bytes
         """
         return srsly.msgpack_dumps({"punct_chars": list(self.punct_chars)})
 
@@ -178,7 +153,7 @@ class Sentencizer(Pipe):
         bytes_data (bytes): The data to load.
         returns (Sentencizer): The loaded object.
 
-        DOCS: https://nightly.spacy.io/api/sentencizer#from_bytes
+        DOCS: https://spacy.io/api/sentencizer#from_bytes
         """
         cfg = srsly.msgpack_loads(bytes_data)
         self.punct_chars = set(cfg.get("punct_chars", self.default_punct_chars))
@@ -187,7 +162,7 @@ class Sentencizer(Pipe):
     def to_disk(self, path, *, exclude=tuple()):
         """Serialize the sentencizer to disk.
 
-        DOCS: https://nightly.spacy.io/api/sentencizer#to_disk
+        DOCS: https://spacy.io/api/sentencizer#to_disk
         """
         path = util.ensure_path(path)
         path = path.with_suffix(".json")
@@ -197,7 +172,7 @@ class Sentencizer(Pipe):
     def from_disk(self, path, *, exclude=tuple()):
         """Load the sentencizer from disk.
 
-        DOCS: https://nightly.spacy.io/api/sentencizer#from_disk
+        DOCS: https://spacy.io/api/sentencizer#from_disk
         """
         path = util.ensure_path(path)
         path = path.with_suffix(".json")

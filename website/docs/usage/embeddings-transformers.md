@@ -132,7 +132,7 @@ factory = "tok2vec"
 @architectures = "spacy.Tok2Vec.v2"
 
 [components.tok2vec.model.embed]
-@architectures = "spacy.MultiHashEmbed.v1"
+@architectures = "spacy.MultiHashEmbed.v2"
 
 [components.tok2vec.model.encode]
 @architectures = "spacy.MaxoutWindowEncoder.v2"
@@ -164,7 +164,7 @@ factory = "ner"
 @architectures = "spacy.Tok2Vec.v2"
 
 [components.ner.model.tok2vec.embed]
-@architectures = "spacy.MultiHashEmbed.v1"
+@architectures = "spacy.MultiHashEmbed.v2"
 
 [components.ner.model.tok2vec.encode]
 @architectures = "spacy.MaxoutWindowEncoder.v2"
@@ -204,19 +204,40 @@ drop-in replacements that let you achieve **higher accuracy** in exchange for
 > downloaded: 3GB CUDA runtime, 800MB PyTorch, 400MB CuPy, 500MB weights, 200MB
 > spaCy and dependencies.
 
-Once you have CUDA installed, you'll need to install two pip packages,
-[`cupy`](https://docs.cupy.dev/en/stable/install.html) and
-[`spacy-transformers`](https://github.com/explosion/spacy-transformers). `cupy`
-is just like `numpy`, but for GPU. The best way to install it is to choose a
-wheel that matches the version of CUDA you're using. You may also need to set
-the `CUDA_PATH` environment variable if your CUDA runtime is installed in a
-non-standard location. Putting it all together, if you had installed CUDA 10.2
-in `/opt/nvidia/cuda`, you would run:
+Once you have CUDA installed, we recommend installing PyTorch following the
+[PyTorch installation guidelines](https://pytorch.org/get-started/locally/) for
+your package manager and CUDA version. If you skip this step, pip will install
+PyTorch as a dependency below, but it may not find the best version for your
+setup.
+
+```bash
+### Example: Install PyTorch 1.7.1 for CUDA 10.1 with pip
+# See: https://pytorch.org/get-started/locally/
+$ pip install torch==1.7.1+cu101 torchvision==0.8.2+cu101 torchaudio==0.7.2 -f https://download.pytorch.org/whl/torch_stable.html
+```
+
+Next, install spaCy with the extras for your CUDA version and transformers. The
+CUDA extra (e.g., `cuda92`, `cuda102`, `cuda111`) installs the correct version
+of [`cupy`](https://docs.cupy.dev/en/stable/install.html#installing-cupy), which
+is just like `numpy`, but for GPU. You may also need to set the `CUDA_PATH`
+environment variable if your CUDA runtime is installed in a non-standard
+location. Putting it all together, if you had installed CUDA 10.2 in
+`/opt/nvidia/cuda`, you would run:
 
 ```bash
 ### Installation with CUDA
 $ export CUDA_PATH="/opt/nvidia/cuda"
 $ pip install -U %%SPACY_PKG_NAME[cuda102,transformers]%%SPACY_PKG_FLAGS
+```
+
+For [`transformers`](https://huggingface.co/transformers/) v4.0.0+ and models
+that require [`SentencePiece`](https://github.com/google/sentencepiece) (e.g.,
+ALBERT, CamemBERT, XLNet, Marian, and T5), install the additional dependencies
+with:
+
+```bash
+### Install sentencepiece
+$ pip install transformers[sentencepiece]
 ```
 
 ### Runtime usage {#transformers-runtime}
@@ -481,50 +502,6 @@ custom learning rate for each component. Instead of a constant, you can also
 provide a schedule, allowing you to freeze the shared parameters at the start of
 training.
 
-### Managing transformer model max length limitations {#transformer-max-length}
-
-Many transformer models have a limit on the maximum number of tokens that the
-model can process, for example BERT models are limited to 512 tokens. This limit
-refers to the number of transformer tokens (BPE, WordPiece, etc.), not the
-number of spaCy tokens.
-
-To be able to process longer texts, the spaCy [`transformer`](/api/transformer)
-component uses [`span_getters`](/api/transformer#span_getters) to convert a
-batch of [`Doc`](/api/doc) objects into lists of [`Span`](/api/span) objects. A
-span may correspond to a doc (for `doc_spans`), a sentence (for `sent_spans`) or
-a window of spaCy tokens (`strided_spans`). If a single span corresponds to more
-transformer tokens than the transformer model supports, the spaCy pipeline can't
-process the text because some spaCy tokens would be left without an analysis.
-
-In general, it is up to the transformer pipeline user to manage the input texts
-so that the model max length is not exceeded. If you're training a **new
-pipeline**, you have a number of options to handle the max length limit:
-
-- Use `doc_spans` with short texts only
-- Use `sent_spans` with short sentences only
-- For `strided_spans`, lower the `window` size to be short enough for your input
-  texts (and don't forget to lower the `stride` correspondingly)
-- Implement a [custom span getter](#transformers-training-custom-settings)
-
-You may still run into the max length limit if a single spaCy token is very
-long, like a long URL or a noisy string, or if you're using a **pretrained
-pipeline** like `en_core_web_trf` with a fixed `window` size for
-`strided_spans`. In this case, you need to modify either your texts or your
-pipeline so that you have shorter spaCy tokens. Some options:
-
-- Preprocess your texts to clean up noise and split long tokens with whitespace
-- Add a `token_splitter` to the beginning of your pipeline to break up
-  tokens that are longer than a specified length:
-
-  ```python
-  config={"min_length": 20, "split_length": 5}
-  nlp.add_pipe("token_splitter", config=config, first=True)
-  ```
-
-  In this example, tokens that are at least 20 characters long will be split up
-  into smaller tokens of 5 characters each, resulting in strided spans that
-  correspond to fewer transformer tokens.
-
 ## Static vectors {#static-vectors}
 
 If your pipeline includes a **word vectors table**, you'll be able to use the
@@ -564,7 +541,7 @@ word vector tables using the `include_static_vectors` flag.
 
 ```ini
 [tagger.model.tok2vec.embed]
-@architectures = "spacy.MultiHashEmbed.v1"
+@architectures = "spacy.MultiHashEmbed.v2"
 width = 128
 attrs = ["LOWER","PREFIX","SUFFIX","SHAPE"]
 rows = [5000,2500,2500,2500]
@@ -573,7 +550,7 @@ include_static_vectors = true
 
 <Infobox title="How it works" emoji="💡">
 
-The configuration system will look up the string `"spacy.MultiHashEmbed.v1"` in
+The configuration system will look up the string `"spacy.MultiHashEmbed.v2"` in
 the `architectures` [registry](/api/top-level#registry), and call the returned
 object with the rest of the arguments from the block. This will result in a call
 to the
@@ -701,7 +678,7 @@ The following defaults are used for the `[pretraining]` block and merged into
 your existing config when you run [`init config`](/api/cli#init-config) or
 [`init fill-config`](/api/cli#init-fill-config) with `--pretraining`. If needed,
 you can [configure](#pretraining-configure) the settings and hyperparameters or
-change the [objective](#pretraining-details).
+change the [objective](#pretraining-objectives).
 
 ```ini
 %%GITHUB_SPACY/spacy/default_config_pretraining.cfg
@@ -755,7 +732,7 @@ component = "textcat"
 layer = "tok2vec"
 ```
 
-#### Pretraining objectives {#pretraining-details}
+#### Pretraining objectives {#pretraining-objectives}
 
 > ```ini
 > ### Characters objective

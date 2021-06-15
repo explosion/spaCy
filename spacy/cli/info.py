@@ -23,7 +23,7 @@ def info_cli(
     print its meta information. Flag --markdown prints details in Markdown for easy
     copy-pasting to GitHub issues.
 
-    DOCS: https://nightly.spacy.io/api/cli#info
+    DOCS: https://spacy.io/api/cli#info
     """
     exclude = string_to_list(exclude)
     info(model, markdown=markdown, silent=silent, exclude=exclude)
@@ -34,9 +34,11 @@ def info(
     *,
     markdown: bool = False,
     silent: bool = True,
-    exclude: List[str],
+    exclude: Optional[List[str]] = None,
 ) -> Union[str, dict]:
     msg = Printer(no_print=silent, pretty=not silent)
+    if not exclude:
+        exclude = []
     if model:
         title = f"Info about pipeline '{model}'"
         data = info_model(model, silent=silent)
@@ -103,12 +105,15 @@ def info_model(model: str, *, silent: bool = True) -> Dict[str, Any]:
 
 
 def get_markdown(
-    data: Dict[str, Any], title: Optional[str] = None, exclude: List[str] = None
+    data: Dict[str, Any],
+    title: Optional[str] = None,
+    exclude: Optional[List[str]] = None,
 ) -> str:
     """Get data in GitHub-flavoured Markdown format for issues etc.
 
-    data (dict or list of tuples): Label/value pairs.
-    title (str / None): Title, will be rendered as headline 2.
+    data (Dict[str, Any]): Label/value pairs.
+    title (str): Optional title, will be rendered as headline 2.
+    exclude (List[str]): Names of keys to exclude.
     RETURNS (str): The Markdown string.
     """
     md = MarkdownRenderer()

@@ -20,7 +20,7 @@ spaCy's built-in architectures that are used for different NLP tasks. All
 trainable [built-in components](/api#architecture-pipeline) expect a `model`
 argument defined in the config and document their the default architecture.
 Custom architectures can be registered using the
-[`@spacy.registry.architectures`](/api/top-level#regsitry) decorator and used as
+[`@spacy.registry.architectures`](/api/top-level#registry) decorator and used as
 part of the [training config](/usage/training#custom-functions). Also see the
 usage documentation on
 [layers and model architectures](/usage/layers-architectures).
@@ -36,7 +36,7 @@ usage documentation on
 > @architectures = "spacy.Tok2Vec.v2"
 >
 > [model.embed]
-> @architectures = "spacy.CharacterEmbed.v1"
+> @architectures = "spacy.CharacterEmbed.v2"
 > # ...
 >
 > [model.encode]
@@ -55,13 +55,13 @@ blog post for background.
 | `encode`    | Encode context into the embeddings, using an architecture such as a CNN, BiLSTM or transformer. For example, [MaxoutWindowEncoder](/api/architectures#MaxoutWindowEncoder). ~~Model[List[Floats2d], List[Floats2d]]~~            |
 | **CREATES** | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                                                           |
 
-### spacy.HashEmbedCNN.v1 {#HashEmbedCNN}
+### spacy.HashEmbedCNN.v2 {#HashEmbedCNN}
 
 > #### Example Config
 >
 > ```ini
 > [model]
-> @architectures = "spacy.HashEmbedCNN.v1"
+> @architectures = "spacy.HashEmbedCNN.v2"
 > pretrained_vectors = null
 > width = 96
 > depth = 4
@@ -97,7 +97,7 @@ consisting of a CNN and a layer-normalized maxout activation function.
 > factory = "tok2vec"
 >
 > [components.tok2vec.model]
-> @architectures = "spacy.HashEmbedCNN.v1"
+> @architectures = "spacy.HashEmbedCNN.v2"
 > width = 342
 >
 > [components.tagger]
@@ -130,13 +130,13 @@ argument that connects to the shared `tok2vec` component in the pipeline.
 | `upstream`  | A string to identify the "upstream" `Tok2Vec` component to communicate with. By default, the upstream name is the wildcard string `"*"`, but you could also specify the name of the `Tok2Vec` component. You'll almost never have multiple upstream `Tok2Vec` components, so the wildcard string will almost always be fine. ~~str~~ |
 | **CREATES** | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                                                                                                                                                               |
 
-### spacy.MultiHashEmbed.v1 {#MultiHashEmbed}
+### spacy.MultiHashEmbed.v2 {#MultiHashEmbed}
 
 > #### Example config
 >
 > ```ini
 > [model]
-> @architectures = "spacy.MultiHashEmbed.v1"
+> @architectures = "spacy.MultiHashEmbed.v2"
 > width = 64
 > attrs = ["NORM", "PREFIX", "SUFFIX", "SHAPE"]
 > rows = [2000, 1000, 1000, 1000]
@@ -161,13 +161,13 @@ not updated).
 | `include_static_vectors` | Whether to also use static word vectors. Requires a vectors table to be loaded in the [`Doc`](/api/doc) objects' vocab. ~~bool~~                                                                                                                                                                                                                                                                                                                   |
 | **CREATES**              | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                                                                                                                                                                                                                                                                             |
 
-### spacy.CharacterEmbed.v1 {#CharacterEmbed}
+### spacy.CharacterEmbed.v2 {#CharacterEmbed}
 
 > #### Example config
 >
 > ```ini
 > [model]
-> @architectures = "spacy.CharacterEmbed.v1"
+> @architectures = "spacy.CharacterEmbed.v2"
 > width = 128
 > rows = 7000
 > nM = 64
@@ -267,13 +267,13 @@ Encode context using bidirectional LSTM layers. Requires
 | `dropout`   | Creates a Dropout layer on the outputs of each LSTM layer except the last layer. Set to 0.0 to disable this functionality. ~~float~~                                                                           |
 | **CREATES** | The model using the architecture. ~~Model[List[Floats2d], List[Floats2d]]~~                                                                                                                                    |
 
-### spacy.StaticVectors.v1 {#StaticVectors}
+### spacy.StaticVectors.v2 {#StaticVectors}
 
 > #### Example config
 >
 > ```ini
 > [model]
-> @architectures = "spacy.StaticVectors.v1"
+> @architectures = "spacy.StaticVectors.v2"
 > nO = null
 > nM = null
 > dropout = 0.2
@@ -284,8 +284,9 @@ Encode context using bidirectional LSTM layers. Requires
 > ```
 
 Embed [`Doc`](/api/doc) objects with their vocab's vectors table, applying a
-learned linear projection to control the dimensionality. See the documentation
-on [static vectors](/usage/embeddings-transformers#static-vectors) for details.
+learned linear projection to control the dimensionality. Unknown tokens are
+mapped to a zero vector. See the documentation on [static
+vectors](/usage/embeddings-transformers#static-vectors) for details.
 
 | Name        |  Description                                                                                                                                                                                                            |
 | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -448,6 +449,9 @@ For more information, see the section on
 > ```ini
 > [pretraining]
 > component = "tok2vec"
+> 
+> [initialize]
+> vectors = "en_core_web_lg"
 > ...
 >
 > [pretraining.objective]
@@ -458,7 +462,9 @@ For more information, see the section on
 > ```
 
 Predict the word's vector from a static embeddings table as pretraining
-objective for a Tok2Vec layer.
+objective for a Tok2Vec layer. To use this objective, make sure that the 
+`initialize.vectors` section in the config refers to a model with static 
+vectors.
 
 | Name            | Description                                                                                                                                               |
 | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -509,7 +515,7 @@ for a Tok2Vec layer.
 > use_upper = true
 >
 > [model.tok2vec]
-> @architectures = "spacy.HashEmbedCNN.v1"
+> @architectures = "spacy.HashEmbedCNN.v2"
 > pretrained_vectors = null
 > width = 96
 > depth = 4
@@ -585,6 +591,17 @@ several different built-in architectures. It is recommended to experiment with
 different architectures and settings to determine what works best on your
 specific data and challenge.
 
+<Infobox title="Single-label vs. multi-label classification" variant="warning">
+
+When the architecture for a text classification challenge contains a setting for
+`exclusive_classes`, it is important to use the correct value for the correct
+pipeline component. The `textcat` component should always be used for
+single-label use-cases where `exclusive_classes = true`, while the
+`textcat_multilabel` should be used for multi-label settings with
+`exclusive_classes = false`.
+
+</Infobox>
+
 ### spacy.TextCatEnsemble.v2 {#TextCatEnsemble}
 
 > #### Example Config
@@ -604,7 +621,7 @@ specific data and challenge.
 > @architectures = "spacy.Tok2Vec.v2"
 >
 > [model.tok2vec.embed]
-> @architectures = "spacy.MultiHashEmbed.v1"
+> @architectures = "spacy.MultiHashEmbed.v2"
 > width = 64
 > rows = [2000, 2000, 1000, 1000, 1000, 1000]
 > attrs = ["ORTH", "LOWER", "PREFIX", "SUFFIX", "SHAPE", "ID"]
@@ -632,8 +649,8 @@ from the linear model, where it is stored in `model.attrs["multi_label"]`.
 
 <Accordion title="spacy.TextCatEnsemble.v1 definition" spaced>
 
-The v1 was functionally similar, but used an internal `tok2vec` instead of
-taking it as argument.
+[TextCatEnsemble.v1](/api/legacy#TextCatEnsemble_v1) was functionally similar, but used an internal `tok2vec` instead of
+taking it as argument:
 
 | Name                 | Description                                                                                                                                                                                    |
 | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -661,7 +678,7 @@ taking it as argument.
 > nO = null
 >
 > [model.tok2vec]
-> @architectures = "spacy.HashEmbedCNN.v1"
+> @architectures = "spacy.HashEmbedCNN.v2"
 > pretrained_vectors = null
 > width = 96
 > depth = 4
@@ -774,7 +791,7 @@ into the "real world". This requires 3 main components:
 > nO = null
 >
 > [model.tok2vec]
-> @architectures = "spacy.HashEmbedCNN.v1"
+> @architectures = "spacy.HashEmbedCNN.v2"
 > pretrained_vectors = null
 > width = 96
 > depth = 2

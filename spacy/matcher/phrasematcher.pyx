@@ -5,6 +5,7 @@ from preshed.maps cimport map_init, map_set, map_get, map_clear, map_iter
 import warnings
 
 from ..attrs cimport ORTH, POS, TAG, DEP, LEMMA, MORPH
+from ..attrs import IDS
 from ..structs cimport TokenC
 from ..tokens.token cimport Token
 from ..tokens.span cimport Span
@@ -19,8 +20,8 @@ cdef class PhraseMatcher:
     sequences based on lists of token descriptions, the `PhraseMatcher` accepts
     match patterns in the form of `Doc` objects.
 
-    DOCS: https://nightly.spacy.io/api/phrasematcher
-    USAGE: https://nightly.spacy.io/usage/rule-based-matching#phrasematcher
+    DOCS: https://spacy.io/api/phrasematcher
+    USAGE: https://spacy.io/usage/rule-based-matching#phrasematcher
 
     Adapted from FlashText: https://github.com/vi3k6i5/flashtext
     MIT License (see `LICENSE`)
@@ -34,7 +35,7 @@ cdef class PhraseMatcher:
         attr (int / str): Token attribute to match on.
         validate (bool): Perform additional validation when patterns are added.
 
-        DOCS: https://nightly.spacy.io/api/phrasematcher#init
+        DOCS: https://spacy.io/api/phrasematcher#init
         """
         self.vocab = vocab
         self._callbacks = {}
@@ -52,16 +53,18 @@ cdef class PhraseMatcher:
             attr = attr.upper()
             if attr == "TEXT":
                 attr = "ORTH"
+            if attr == "IS_SENT_START":
+                attr = "SENT_START"
             if attr.lower() not in TokenPattern().dict():
                 raise ValueError(Errors.E152.format(attr=attr))
-            self.attr = self.vocab.strings[attr]
+            self.attr = IDS.get(attr)
 
     def __len__(self):
         """Get the number of match IDs added to the matcher.
 
         RETURNS (int): The number of rules.
 
-        DOCS: https://nightly.spacy.io/api/phrasematcher#len
+        DOCS: https://spacy.io/api/phrasematcher#len
         """
         return len(self._callbacks)
 
@@ -71,7 +74,7 @@ cdef class PhraseMatcher:
         key (str): The match ID.
         RETURNS (bool): Whether the matcher contains rules for this match ID.
 
-        DOCS: https://nightly.spacy.io/api/phrasematcher#contains
+        DOCS: https://spacy.io/api/phrasematcher#contains
         """
         return key in self._callbacks
 
@@ -85,7 +88,7 @@ cdef class PhraseMatcher:
 
         key (str): The match ID.
 
-        DOCS: https://nightly.spacy.io/api/phrasematcher#remove
+        DOCS: https://spacy.io/api/phrasematcher#remove
         """
         if key not in self._docs:
             raise KeyError(key)
@@ -164,7 +167,7 @@ cdef class PhraseMatcher:
             as variable arguments. Will be ignored if a list of patterns is
             provided as the second argument.
 
-        DOCS: https://nightly.spacy.io/api/phrasematcher#add
+        DOCS: https://spacy.io/api/phrasematcher#add
         """
         if docs is None or hasattr(docs, "__call__"):  # old API
             on_match = docs
@@ -191,7 +194,7 @@ cdef class PhraseMatcher:
                         if attr == TAG:
                             pipe = "tagger"
                         elif attr in (POS, MORPH):
-                            pipe = "morphologizer"
+                            pipe = "morphologizer or tagger+attribute_ruler"
                         elif attr == LEMMA:
                             pipe = "lemmatizer"
                         elif attr == DEP:
@@ -227,10 +230,10 @@ cdef class PhraseMatcher:
                 result = internal_node
             map_set(self.mem, <MapStruct*>result, self.vocab.strings[key], NULL)
 
-    def __call__(self, doc, *, as_spans=False):
+    def __call__(self, object doclike, *, as_spans=False):
         """Find all sequences matching the supplied patterns on the `Doc`.
 
-        doc (Doc): The document to match over.
+        doclike (Doc or Span): The document to match over.
         as_spans (bool): Return Span objects with labels instead of (match_id,
             start, end) tuples.
         RETURNS (list): A list of `(match_id, start, end)` tuples,
@@ -238,15 +241,25 @@ cdef class PhraseMatcher:
             `doc[start:end]`. The `match_id` is an integer. If as_spans is set
             to True, a list of Span objects is returned.
 
-        DOCS: https://nightly.spacy.io/api/phrasematcher#call
+        DOCS: https://spacy.io/api/phrasematcher#call
         """
         matches = []
-        if doc is None or len(doc) == 0:
+        if doclike is None or len(doclike) == 0:
             # if doc is empty or None just return empty list
             return matches
+        if isinstance(doclike, Doc):
+            doc = doclike
+            start_idx = 0
+            end_idx = len(doc)
+        elif isinstance(doclike, Span):
+            doc = doclike.doc
+            start_idx = doclike.start
+            end_idx = doclike.end
+        else:
+            raise ValueError(Errors.E195.format(good="Doc or Span", got=type(doclike).__name__))
 
         cdef vector[SpanC] c_matches
-        self.find_matches(doc, &c_matches)
+        self.find_matches(doc, start_idx, end_idx, &c_matches)
         for i in range(c_matches.size()):
             matches.append((c_matches[i].label, c_matches[i].start, c_matches[i].end))
         for i, (ent_id, start, end) in enumerate(matches):
@@ -258,17 +271,17 @@ cdef class PhraseMatcher:
         else:
             return matches
 
-    cdef void find_matches(self, Doc doc, vector[SpanC] *matches) nogil:
+    cdef void find_matches(self, Doc doc, int start_idx, int end_idx, vector[SpanC] *matches) nogil:
         cdef MapStruct* current_node = self.c_map
         cdef int start = 0
-        cdef int idx = 0
-        cdef int idy = 0
+        cdef int idx = start_idx
+        cdef int idy = start_idx
         cdef key_t key
         cdef void* value
         cdef int i = 0
         cdef SpanC ms
         cdef void* result
-        while idx < doc.length:
+        while idx < end_idx:
             start = idx
             token = Token.get_struct_attr(&doc.c[idx], self.attr)
             # look for sequences from this position
@@ -276,7 +289,7 @@ cdef class PhraseMatcher:
             if result:
                 current_node = <MapStruct*>result
                 idy = idx + 1
-                while idy < doc.length:
+                while idy < end_idx:
                     result = map_get(current_node, self._terminal_hash)
                     if result:
                         i = 0

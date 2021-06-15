@@ -9,14 +9,18 @@ from ...util import ensure_path
 from .._util import project_cli, Arg, Opt, COMMAND, PROJECT_FILE
 from .._util import git_checkout, get_git_version
 
+DEFAULT_REPO = about.__projects__
+DEFAULT_PROJECTS_BRANCH = about.__projects_branch__
+DEFAULT_BRANCH = "master"
+
 
 @project_cli.command("clone")
 def project_clone_cli(
     # fmt: off
     name: str = Arg(..., help="The name of the template to clone"),
     dest: Optional[Path] = Arg(None, help="Where to clone the project. Defaults to current working directory", exists=False),
-    repo: str = Opt(about.__projects__, "--repo", "-r", help="The repository to clone from"),
-    branch: str = Opt(about.__projects_branch__, "--branch", "-b", help="The branch to clone from"),
+    repo: str = Opt(DEFAULT_REPO, "--repo", "-r", help="The repository to clone from"),
+    branch: Optional[str] = Opt(None, "--branch", "-b", help="The branch to clone from"),
     sparse_checkout: bool = Opt(False, "--sparse", "-S", help="Use sparse Git checkout to only check out and clone the files needed. Requires Git v22.2+.")
     # fmt: on
 ):
@@ -25,10 +29,13 @@ def project_clone_cli(
     defaults to the official spaCy template repo, but can be customized
     (including using a private repo).
 
-    DOCS: https://nightly.spacy.io/api/cli#project-clone
+    DOCS: https://spacy.io/api/cli#project-clone
     """
     if dest is None:
         dest = Path.cwd() / Path(name).parts[-1]
+    if branch is None:
+        # If it's a user repo, we want to default to other branch
+        branch = DEFAULT_PROJECTS_BRANCH if repo == DEFAULT_REPO else DEFAULT_BRANCH
     project_clone(name, dest, repo=repo, branch=branch, sparse_checkout=sparse_checkout)
 
 

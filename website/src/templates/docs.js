@@ -32,7 +32,7 @@ const Docs = ({ pageContext, children }) => (
                 version,
                 apiDetails,
             } = pageContext
-            const { sidebars = [], modelsRepo, languages, nightly } = site.siteMetadata
+            const { sidebars = [], modelsRepo, languages, nightly, legacy } = site.siteMetadata
             const isModels = section === 'models'
             const sidebar = pageContext.sidebar
                 ? { items: pageContext.sidebar }
@@ -74,7 +74,7 @@ const Docs = ({ pageContext, children }) => (
                     {sidebar && <Sidebar items={sidebar.items} pageMenu={pageMenu} slug={slug} />}
                     <Main
                         section={section}
-                        theme={nightly ? 'nightly' : theme}
+                        theme={nightly ? 'nightly' : legacy ? 'legacy' : theme}
                         sidebar
                         asides
                         wrapContent
@@ -138,6 +138,7 @@ const query = graphql`
                     models
                 }
                 nightly
+                legacy
                 sidebars {
                     section
                     items {

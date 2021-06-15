@@ -18,7 +18,7 @@ def project_push_cli(
     the smart-open library can upload to, e.g. AWS, Google Cloud Storage, SSH,
     local directories etc.
 
-    DOCS: https://nightly.spacy.io/api/cli#project-push
+    DOCS: https://spacy.io/api/cli#project-push
     """
     for output_path, url in project_push(project_dir, remote):
         if url is None:

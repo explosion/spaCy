@@ -121,7 +121,6 @@ function parseArgs(raw) {
 }
 
 function convertLine(line, i) {
-    console.log(line, i)
     const cliRegex = /^(\$ )?python -m spacy/
     if (cliRegex.test(line)) {
         const text = line.replace(cliRegex, '')

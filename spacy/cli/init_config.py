@@ -10,7 +10,8 @@ from jinja2 import Template
 from .. import util
 from ..language import DEFAULT_CONFIG_PRETRAIN_PATH
 from ..schemas import RecommendationSchema
-from ._util import init_cli, Arg, Opt, show_validation_error, COMMAND, string_to_list
+from ._util import init_cli, Arg, Opt, show_validation_error, COMMAND
+from ._util import string_to_list, import_code
 
 
 ROOT = Path(__file__).parent / "templates"
@@ -41,7 +42,7 @@ def init_config_cli(
     optimal settings for your use case. This includes the choice of architecture,
     pretrained weights and related hyperparameters.
 
-    DOCS: https://nightly.spacy.io/api/cli#init-config
+    DOCS: https://spacy.io/api/cli#init-config
     """
     if isinstance(optimize, Optimizations):  # instance of enum from the CLI
         optimize = optimize.value
@@ -70,7 +71,8 @@ def init_fill_config_cli(
     base_path: Path = Arg(..., help="Base config to fill", exists=True, dir_okay=False),
     output_file: Path = Arg("-", help="File to save config.cfg to (or - for stdout)", allow_dash=True),
     pretraining: bool = Opt(False, "--pretraining", "-pt", help="Include config for pretraining (with 'spacy pretrain')"),
-    diff: bool = Opt(False, "--diff", "-D", help="Print a visual diff highlighting the changes")
+    diff: bool = Opt(False, "--diff", "-D", help="Print a visual diff highlighting the changes"),
+    code_path: Optional[Path] = Opt(None, "--code-path", "--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
     # fmt: on
 ):
     """
@@ -78,10 +80,11 @@ def init_fill_config_cli(
     from the default config and will create all objects, check the registered
     functions for their default values and update the base config. This command
     can be used with a config generated via the training quickstart widget:
-    https://nightly.spacy.io/usage/training#quickstart
+    https://spacy.io/usage/training#quickstart
 
-    DOCS: https://nightly.spacy.io/api/cli#init-fill-config
+    DOCS: https://spacy.io/api/cli#init-fill-config
     """
+    import_code(code_path)
     fill_config(output_file, base_path, pretraining=pretraining, diff=diff)
 
 
@@ -103,6 +106,10 @@ def fill_config(
     # config result is a valid config
     nlp = util.load_model_from_config(nlp.config)
     filled = nlp.config
+    # If we have sourced components in the base config, those will have been
+    # replaced with their actual config after loading, so we have to re-add them
+    sourced = util.get_sourced_components(config)
+    filled["components"].update(sourced)
     if pretraining:
         validate_config_for_pretrain(filled, msg)
         pretrain_config = util.load_config(DEFAULT_CONFIG_PRETRAIN_PATH)
@@ -140,7 +147,8 @@ def init_config(
         template = Template(f.read())
     # Filter out duplicates since tok2vec and transformer are added by template
     pipeline = [pipe for pipe in pipeline if pipe not in ("tok2vec", "transformer")]
-    reco = RecommendationSchema(**RECOMMENDATIONS.get(lang, {})).dict()
+    defaults = RECOMMENDATIONS["__default__"]
+    reco = RecommendationSchema(**RECOMMENDATIONS.get(lang, defaults)).dict()
     variables = {
         "lang": lang,
         "components": pipeline,
@@ -167,7 +175,9 @@ def init_config(
         "Pipeline": ", ".join(pipeline),
         "Optimize for": optimize,
         "Hardware": variables["hardware"].upper(),
-        "Transformer": template_vars.transformer.get("name", False),
+        "Transformer": template_vars.transformer.get("name")
+        if template_vars.use_transformer
+        else None,
     }
     msg.info("Generated config template specific for your use case")
     for label, value in use_case.items():

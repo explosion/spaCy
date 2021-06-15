@@ -198,10 +198,31 @@ more efficient than processing texts one-by-one.
 | `as_tuples`                                | If set to `True`, inputs should be a sequence of `(text, context)` tuples. Output will then be a sequence of `(doc, context)` tuples. Defaults to `False`. ~~bool~~ |
 | `batch_size`                               | The number of texts to buffer. ~~Optional[int]~~                                                                                                                    |
 | `disable`                                  | Names of pipeline components to [disable](/usage/processing-pipelines#disabling). ~~List[str]~~                                                                     |
-| `cleanup`                                  | If `True`, unneeded strings are freed to control memory use. Experimental. ~~bool~~                                                                                 |
 | `component_cfg`                            | Optional dictionary of keyword arguments for components, keyed by component names. Defaults to `None`. ~~Optional[Dict[str, Dict[str, Any]]]~~                      |
 | `n_process` <Tag variant="new">2.2.2</Tag> | Number of processors to use. Defaults to `1`. ~~int~~                                                                                                               |
 | **YIELDS**                                 | Documents in the order of the original text. ~~Doc~~                                                                                                                |
+
+## Language.set_error_handler {#set_error_handler tag="method" new="3"}
+
+Define a callback that will be invoked when an error is thrown during processing
+of one or more documents. Specifically, this function will call
+[`set_error_handler`](/api/pipe#set_error_handler) on all the pipeline
+components that define that function. The error handler will be invoked with the
+original component's name, the component itself, the list of documents that was
+being processed, and the original error.
+
+> #### Example
+>
+> ```python
+> def warn_error(proc_name, proc, docs, e):
+>     print(f"An error occurred when applying component {proc_name}.")
+>
+> nlp.set_error_handler(warn_error)
+> ```
+
+| Name            | Description                                                                                                    |
+| --------------- | -------------------------------------------------------------------------------------------------------------- |
+| `error_handler` | A function that performs custom error handling. ~~Callable[[str, Callable[[Doc], Doc], List[Doc], Exception]~~ |
 
 ## Language.initialize {#initialize tag="method" new="3"}
 
@@ -342,7 +363,7 @@ Evaluate a pipeline's components.
 
 <Infobox variant="warning" title="Changed in v3.0">
 
-The `Language.update` method now takes a batch of [`Example`](/api/example)
+The `Language.evaluate` method now takes a batch of [`Example`](/api/example)
 objects instead of tuples of `Doc` and `GoldParse` objects.
 
 </Infobox>
@@ -405,7 +426,8 @@ component, adds it to the pipeline and returns it.
 > ```python
 > @Language.component("component")
 > def component_func(doc):
->     # modify Doc and return it return doc
+>     # modify Doc and return it
+>     return doc
 >
 > nlp.add_pipe("component", before="ner")
 > component = nlp.add_pipe("component", name="custom_name", last=True)
@@ -810,6 +832,51 @@ token.ent_iob, token.ent_type
 | `keys`         | The values to display in the table. Corresponds to attributes of the [`FactoryMeta`](/api/language#factorymeta). Defaults to `["assigns", "requires", "scores", "retokenizes"]`. ~~List[str]~~                                              |
 | `pretty`       | Pretty-print the results as a table. Defaults to `False`. ~~bool~~                                                                                                                                                                          |
 | **RETURNS**    | Dictionary containing the pipe analysis, keyed by `"summary"` (component meta by pipe), `"problems"` (attribute names by pipe) and `"attrs"` (pipes that assign and require an attribute, keyed by attribute). ~~Optional[Dict[str, Any]]~~ |
+
+## Language.replace_listeners {#replace_listeners tag="method" new="3"}
+
+Find [listener layers](/usage/embeddings-transformers#embedding-layers)
+(connecting to a shared token-to-vector embedding component) of a given pipeline
+component model and replace them with a standalone copy of the token-to-vector
+layer. The listener layer allows other components to connect to a shared
+token-to-vector embedding component like [`Tok2Vec`](/api/tok2vec) or
+[`Transformer`](/api/transformer). Replacing listeners can be useful when
+training a pipeline with components sourced from an existing pipeline: if
+multiple components (e.g. tagger, parser, NER) listen to the same
+token-to-vector component, but some of them are frozen and not updated, their
+performance may degrade significally as the token-to-vector component is updated
+with new data. To prevent this, listeners can be replaced with a standalone
+token-to-vector layer that is owned by the component and doesn't change if the
+component isn't updated.
+
+This method is typically not called directly and only executed under the hood
+when loading a config with
+[sourced components](/usage/training#config-components) that define
+`replace_listeners`.
+
+> ```python
+> ### Example
+> nlp = spacy.load("en_core_web_sm")
+> nlp.replace_listeners("tok2vec", "tagger", ["model.tok2vec"])
+> ```
+>
+> ```ini
+> ### config.cfg (excerpt)
+> [training]
+> frozen_components = ["tagger"]
+>
+> [components]
+>
+> [components.tagger]
+> source = "en_core_web_sm"
+> replace_listeners = ["model.tok2vec"]
+> ```
+
+| Name           | Description                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tok2vec_name` | Name of the token-to-vector component, typically `"tok2vec"` or `"transformer"`.~~str~~                                                                                                                                                                                                                                                                                                                                                |
+| `pipe_name`    | Name of pipeline component to replace listeners for. ~~str~~                                                                                                                                                                                                                                                                                                                                                                           |
+| `listeners`    | The paths to the listeners, relative to the component config, e.g. `["model.tok2vec"]`. Typically, implementations will only connect to one tok2vec component, `model.tok2vec`, but in theory, custom models can use multiple listeners. The value here can either be an empty list to not replace any listeners, or a _complete_ list of the paths to all listener layers used by the model that should be replaced.~~Iterable[str]~~ |
 
 ## Language.meta {#meta tag="property"}
 

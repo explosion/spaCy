@@ -23,17 +23,17 @@ class RussianLemmatizer(Lemmatizer):
         mode: str = "pymorphy2",
         overwrite: bool = False,
     ) -> None:
+        if mode == "pymorphy2":
+            try:
+                from pymorphy2 import MorphAnalyzer
+            except ImportError:
+                raise ImportError(
+                    "The Russian lemmatizer mode 'pymorphy2' requires the "
+                    "pymorphy2 library. Install it with: pip install pymorphy2"
+                ) from None
+            if RussianLemmatizer._morph is None:
+                RussianLemmatizer._morph = MorphAnalyzer()
         super().__init__(vocab, model, name, mode=mode, overwrite=overwrite)
-
-        try:
-            from pymorphy2 import MorphAnalyzer
-        except ImportError:
-            raise ImportError(
-                "The Russian lemmatizer requires the pymorphy2 library: "
-                'try to fix it with "pip install pymorphy2"'
-            ) from None
-        if RussianLemmatizer._morph is None:
-            RussianLemmatizer._morph = MorphAnalyzer()
 
     def pymorphy2_lemmatize(self, token: Token) -> List[str]:
         string = token.text
@@ -91,12 +91,12 @@ class RussianLemmatizer(Lemmatizer):
             return [string.lower()]
         return list(set([analysis.normal_form for analysis in filtered_analyses]))
 
-    def lookup_lemmatize(self, token: Token) -> List[str]:
+    def pymorphy2_lookup_lemmatize(self, token: Token) -> List[str]:
         string = token.text
         analyses = self._morph.parse(string)
         if len(analyses) == 1:
-            return analyses[0].normal_form
-        return string
+            return [analyses[0].normal_form]
+        return [string]
 
 
 def oc2ud(oc_tag: str) -> Tuple[str, Dict[str, str]]:

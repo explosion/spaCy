@@ -318,3 +318,44 @@ def test_phrase_matcher_deprecated(en_vocab):
             pass
         assert record.list
         assert "spaCy v3.0" in str(record.list[0].message)
+
+
+@pytest.mark.parametrize("attr", ["SENT_START", "IS_SENT_START"])
+def test_phrase_matcher_sent_start(en_vocab, attr):
+    _ = PhraseMatcher(en_vocab, attr=attr)  # noqa: F841
+
+
+def test_span_in_phrasematcher(en_vocab):
+    """Ensure that PhraseMatcher accepts Span and Doc as input"""
+    # fmt: off
+    words = ["I", "like", "Spans", "and", "Docs", "in", "my", "input", ",", "and", "nothing", "else", "."]
+    # fmt: on
+    doc = Doc(en_vocab, words=words)
+    span = doc[:8]
+    pattern = Doc(en_vocab, words=["Spans", "and", "Docs"])
+    matcher = PhraseMatcher(en_vocab)
+    matcher.add("SPACY", [pattern])
+    matches_doc = matcher(doc)
+    matches_span = matcher(span)
+    assert len(matches_doc) == 1
+    assert len(matches_span) == 1
+
+
+def test_span_v_doc_in_phrasematcher(en_vocab):
+    """Ensure that PhraseMatcher only returns matches in input Span and not in entire Doc"""
+    # fmt: off
+    words = [
+        "I", "like", "Spans", "and", "Docs", "in", "my", "input", ",", "Spans",
+        "and", "Docs", "in", "my", "matchers", "," "and", "Spans", "and", "Docs",
+        "everywhere", "."
+    ]
+    # fmt: on
+    doc = Doc(en_vocab, words=words)
+    span = doc[9:15]  # second clause
+    pattern = Doc(en_vocab, words=["Spans", "and", "Docs"])
+    matcher = PhraseMatcher(en_vocab)
+    matcher.add("SPACY", [pattern])
+    matches_doc = matcher(doc)
+    matches_span = matcher(span)
+    assert len(matches_doc) == 3
+    assert len(matches_span) == 1

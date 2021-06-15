@@ -124,6 +124,9 @@ def segment_sents_and_docs(doc, n_sents, doc_delimiter, model=None, msg=None):
         nlp = load_model(model)
         if "parser" in nlp.pipe_names:
             msg.info(f"Segmenting sentences with parser from model '{model}'.")
+            for name, proc in nlp.pipeline:
+                if "parser" in getattr(proc, "listening_components", []):
+                    nlp.replace_listeners(name, "parser", ["model.tok2vec"])
             sentencizer = nlp.get_pipe("parser")
     if not sentencizer:
         msg.info(

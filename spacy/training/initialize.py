@@ -1,4 +1,4 @@
-from typing import Union, Dict, Optional, Any, List, IO, TYPE_CHECKING
+from typing import Union, Dict, Optional, Any, IO, TYPE_CHECKING
 from thinc.api import Config, fix_random_seed, set_gpu_allocator
 from thinc.api import ConfigValidationError
 from pathlib import Path
@@ -8,13 +8,16 @@ import tarfile
 import gzip
 import zipfile
 import tqdm
+from itertools import islice
 
+from .pretrain import get_tok2vec_ref
 from ..lookups import Lookups
 from ..vectors import Vectors
-from ..errors import Errors
+from ..errors import Errors, Warnings
 from ..schemas import ConfigSchemaTraining
 from ..util import registry, load_model_from_config, resolve_dot_names, logger
-from ..util import load_model, ensure_path, OOV_RANK, DEFAULT_OOV_PROB
+from ..util import load_model, ensure_path, get_sourced_components
+from ..util import OOV_RANK, DEFAULT_OOV_PROB
 
 if TYPE_CHECKING:
     from ..language import Language  # noqa: F401
@@ -33,7 +36,7 @@ def init_nlp(config: Config, *, use_gpu: int = -1) -> "Language":
     if use_gpu >= 0 and allocator:
         set_gpu_allocator(allocator)
     # Use original config here before it's resolved to functions
-    sourced_components = get_sourced_components(config)
+    sourced = get_sourced_components(config)
     nlp = load_model_from_config(raw_config, auto_fill=True)
     logger.info("Set up nlp object from config")
     config = nlp.config.interpolate()
@@ -57,29 +60,33 @@ def init_nlp(config: Config, *, use_gpu: int = -1) -> "Language":
     # Components that shouldn't be updated during training
     frozen_components = T["frozen_components"]
     # Sourced components that require resume_training
-    resume_components = [p for p in sourced_components if p not in frozen_components]
+    resume_components = [p for p in sourced if p not in frozen_components]
     logger.info(f"Pipeline: {nlp.pipe_names}")
     if resume_components:
         with nlp.select_pipes(enable=resume_components):
             logger.info(f"Resuming training for: {resume_components}")
             nlp.resume_training(sgd=optimizer)
+    # Make sure that listeners are defined before initializing further
+    nlp._link_components()
     with nlp.select_pipes(disable=[*frozen_components, *resume_components]):
-        nlp.initialize(lambda: train_corpus(nlp), sgd=optimizer)
+        if T["max_epochs"] == -1:
+            logger.debug("Due to streamed train corpus, using only first 100 examples for initialization. If necessary, provide all labels in [initialize]. More info: https://spacy.io/api/cli#init_labels")
+            nlp.initialize(lambda: islice(train_corpus(nlp), 100), sgd=optimizer)
+        else:
+            nlp.initialize(lambda: train_corpus(nlp), sgd=optimizer)
         logger.info(f"Initialized pipeline components: {nlp.pipe_names}")
     # Detect components with listeners that are not frozen consistently
     for name, proc in nlp.pipeline:
-        if getattr(proc, "listening_components", None):
-            for listener in proc.listening_components:
-                if listener in frozen_components and name not in frozen_components:
-                    logger.warn(f"Component '{name}' will be (re)trained, but the "
-                                f"'{listener}' depends on it and is frozen. This means "
-                                f"that the performance of the '{listener}' will be degraded. "
-                                f"You should either freeze both, or neither of the two.")
+        for listener in getattr(proc, "listening_components", []):  # e.g. tok2vec/transformer
+            # Don't warn about components not in the pipeline
+            if listener not in nlp.pipe_names:
+                continue
 
-                if listener not in frozen_components and name in frozen_components:
-                    logger.warn(f"Component '{listener}' will be (re)trained, but it needs the "
-                                f"'{name}' which is frozen. "
-                                f"You should either freeze both, or neither of the two.")
+            if listener in frozen_components and name not in frozen_components:
+                logger.warning(Warnings.W087.format(name=name, listener=listener))
+            # We always check this regardless, in case user freezes tok2vec
+            if listener not in frozen_components and name in frozen_components:
+                logger.warning(Warnings.W086.format(name=name, listener=listener))
     return nlp
 
 
@@ -131,6 +138,10 @@ def load_vectors_into_model(
         )
         err = ConfigValidationError.from_error(e, title=title, desc=desc)
         raise err from None
+
+    if len(vectors_nlp.vocab.vectors.keys()) == 0:
+        logger.warning(Warnings.W112.format(name=name))
+
     nlp.vocab.vectors = vectors_nlp.vocab.vectors
     if add_strings:
         # I guess we should add the strings from the vectors_nlp model?
@@ -149,10 +160,6 @@ def init_tok2vec(
     weights_data = None
     init_tok2vec = ensure_path(I["init_tok2vec"])
     if init_tok2vec is not None:
-        if P["objective"].get("type") == "vectors" and not I["vectors"]:
-            err = 'need initialize.vectors if pretraining.objective.type is "vectors"'
-            errors = [{"loc": ["initialize"], "msg": err}]
-            raise ConfigValidationError(config=nlp.config, errors=errors)
         if not init_tok2vec.exists():
             err = f"can't find pretrained tok2vec: {init_tok2vec}"
             errors = [{"loc": ["initialize", "init_tok2vec"], "msg": err}]
@@ -160,35 +167,11 @@ def init_tok2vec(
         with init_tok2vec.open("rb") as file_:
             weights_data = file_.read()
     if weights_data is not None:
-        tok2vec_component = P["component"]
-        if tok2vec_component is None:
-            desc = (
-                f"To use pretrained tok2vec weights, [pretraining.component] "
-                f"needs to specify the component that should load them."
-            )
-            err = "component can't be null"
-            errors = [{"loc": ["pretraining", "component"], "msg": err}]
-            raise ConfigValidationError(
-                config=nlp.config["pretraining"], errors=errors, desc=desc
-            )
-        layer = nlp.get_pipe(tok2vec_component).model
-        if P["layer"]:
-            layer = layer.get_ref(P["layer"])
+        layer = get_tok2vec_ref(nlp, P)
         layer.from_bytes(weights_data)
+        logger.info(f"Loaded pretrained weights from {init_tok2vec}")
         return True
     return False
-
-
-def get_sourced_components(config: Union[Dict[str, Any], Config]) -> List[str]:
-    """RETURNS (List[str]): All sourced components in the original config,
-    e.g. {"source": "en_core_web_sm"}. If the config contains a key
-    "factory", we assume it refers to a component factory.
-    """
-    return [
-        name
-        for name, cfg in config.get("components", {}).items()
-        if "factory" not in cfg and "source" in cfg
-    ]
 
 
 def convert_vectors(
@@ -229,8 +212,7 @@ def convert_vectors(
 
 
 def read_vectors(vectors_loc: Path, truncate_vectors: int):
-    f = open_file(vectors_loc)
-    f = ensure_shape(f)
+    f = ensure_shape(vectors_loc)
     shape = tuple(int(size) for size in next(f).split())
     if truncate_vectors >= 1:
         shape = (truncate_vectors, shape[1])
@@ -265,11 +247,12 @@ def open_file(loc: Union[str, Path]) -> IO:
         return loc.open("r", encoding="utf8")
 
 
-def ensure_shape(lines):
+def ensure_shape(vectors_loc):
     """Ensure that the first line of the data is the vectors shape.
     If it's not, we read in the data and output the shape as the first result,
     so that the reader doesn't have to deal with the problem.
     """
+    lines = open_file(vectors_loc)
     first_line = next(lines)
     try:
         shape = tuple(int(size) for size in first_line.split())
@@ -283,7 +266,11 @@ def ensure_shape(lines):
         # Figure out the shape, make it the first value, and then give the
         # rest of the data.
         width = len(first_line.split()) - 1
-        captured = [first_line] + list(lines)
-        length = len(captured)
+        length = 1
+        for _ in lines:
+            length += 1
         yield f"{length} {width}"
-        yield from captured
+        # Reading the lines in again from file. This to avoid having to
+        # store all the results in a list in memory
+        lines2 = open_file(vectors_loc)
+        yield from lines2

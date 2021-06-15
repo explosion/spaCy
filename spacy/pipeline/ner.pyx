@@ -21,7 +21,7 @@ maxout_pieces = 2
 use_upper = true
 
 [model.tok2vec]
-@architectures = "spacy.HashEmbedCNN.v1"
+@architectures = "spacy.HashEmbedCNN.v2"
 pretrained_vectors = null
 width = 96
 depth = 4
@@ -163,7 +163,7 @@ def make_beam_ner(
 cdef class EntityRecognizer(Parser):
     """Pipeline component for named entity recognition.
 
-    DOCS: https://nightly.spacy.io/api/entityrecognizer
+    DOCS: https://spacy.io/api/entityrecognizer
     """
     TransitionSystem = BiluoPushDown
 
@@ -194,7 +194,7 @@ cdef class EntityRecognizer(Parser):
         examples (Iterable[Example]): The examples to score.
         RETURNS (Dict[str, Any]): The NER precision, recall and f-scores.
 
-        DOCS: https://nightly.spacy.io/api/entityrecognizer#score
+        DOCS: https://spacy.io/api/entityrecognizer#score
         """
         validate_examples(examples, "EntityRecognizer.score")
         return get_ner_prf(examples)

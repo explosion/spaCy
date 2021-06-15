@@ -1,4 +1,6 @@
 import pytest
+import mock
+import logging
 from spacy.language import Language
 from spacy.lang.en import English
 from spacy.lang.de import German
@@ -402,6 +404,38 @@ def test_pipe_factories_from_source():
         nlp.add_pipe("custom", source=source_nlp)
 
 
+def test_pipe_factories_from_source_language_subclass():
+    class CustomEnglishDefaults(English.Defaults):
+        stop_words = set(["custom", "stop"])
+
+    @registry.languages("custom_en")
+    class CustomEnglish(English):
+        lang = "custom_en"
+        Defaults = CustomEnglishDefaults
+
+    source_nlp = English()
+    source_nlp.add_pipe("tagger")
+
+    # custom subclass
+    nlp = CustomEnglish()
+    nlp.add_pipe("tagger", source=source_nlp)
+    assert "tagger" in nlp.pipe_names
+
+    # non-subclass
+    nlp = German()
+    nlp.add_pipe("tagger", source=source_nlp)
+    assert "tagger" in nlp.pipe_names
+
+    # mismatched vectors
+    nlp = English()
+    nlp.vocab.vectors.resize((1, 4))
+    nlp.vocab.vectors.add("cat", vector=[1, 2, 3, 4])
+    logger = logging.getLogger("spacy")
+    with mock.patch.object(logger, "warning") as mock_warning:
+        nlp.add_pipe("tagger", source=source_nlp)
+        mock_warning.assert_called()
+
+
 def test_pipe_factories_from_source_custom():
     """Test adding components from a source model with custom components."""
     name = "test_pipe_factories_from_source_custom"
@@ -451,13 +485,27 @@ def test_pipe_factories_from_source_config():
     assert config["arg"] == "world"
 
 
-def test_pipe_factories_decorator_idempotent():
+class PipeFactoriesIdempotent:
+    def __init__(self, nlp, name):
+        ...
+
+    def __call__(self, doc):
+        ...
+
+
+@pytest.mark.parametrize(
+    "i,func,func2",
+    [
+        (0, lambda nlp, name: lambda doc: doc, lambda doc: doc),
+        (1, PipeFactoriesIdempotent, PipeFactoriesIdempotent(None, None)),
+    ],
+)
+def test_pipe_factories_decorator_idempotent(i, func, func2):
     """Check that decorator can be run multiple times if the function is the
     same. This is especially relevant for live reloading because we don't
     want spaCy to raise an error if a module registering components is reloaded.
     """
-    name = "test_pipe_factories_decorator_idempotent"
-    func = lambda nlp, name: lambda doc: doc
+    name = f"test_pipe_factories_decorator_idempotent_{i}"
     for i in range(5):
         Language.factory(name, func=func)
     nlp = Language()
@@ -466,7 +514,6 @@ def test_pipe_factories_decorator_idempotent():
     # Make sure it also works for component decorator, which creates the
     # factory function
     name2 = f"{name}2"
-    func2 = lambda doc: doc
     for i in range(5):
         Language.component(name2, func=func2)
     nlp = Language()

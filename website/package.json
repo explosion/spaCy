@@ -49,6 +49,7 @@
         "prop-types": "^15.7.2",
         "react": "^16.8.2",
         "react-dom": "^16.8.2",
+        "react-github-btn": "^1.2.0",
         "react-helmet": "^5.2.0",
         "react-intersection-observer": "^8.0.1",
         "remark-react": "^5.0.1"
@@ -57,6 +58,7 @@
         "build": "npm run python:install && npm run python:setup && gatsby build",
         "dev": "npm run python:setup && gatsby develop",
         "dev:nightly": "BRANCH=nightly.spacy.io npm run dev",
+        "dev:legacy": "SPACY_LEGACY=1 npm run dev",
         "lint": "eslint **",
         "clear": "rm -rf .cache",
         "test": "echo \"Write tests! -> https://gatsby.app/unit-testing\"",

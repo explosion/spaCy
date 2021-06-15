@@ -46,7 +46,10 @@ attribute being scored:
 - `tag_acc`, `pos_acc`, `morph_acc`, `morph_per_feat`, `lemma_acc`
 - `dep_uas`, `dep_las`, `dep_las_per_type`
 - `ents_p`, `ents_r` `ents_f`, `ents_per_type`
-- `textcat_macro_auc`, `textcat_macro_f`
+- `cats_score` (depends on config, description provided in `cats_score_desc`),
+  `cats_micro_p`, `cats_micro_r`, `cats_micro_f`, `cats_macro_p`,
+  `cats_macro_r`, `cats_macro_f`, `cats_macro_auc`, `cats_f_per_type`,
+  `cats_auc_per_type`
 
 > #### Example
 >
@@ -77,7 +80,7 @@ Docs with `has_unknown_spaces` are skipped during scoring.
 > ```
 
 | Name        | Description                                                                                                         |
-| ----------- | ------------------------------------------------------------------------------------------------------------------- |
+| ----------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
 | `examples`  | The `Example` objects holding both the predictions and the correct gold-standard annotations. ~~Iterable[Example]~~ |
 | **RETURNS** | `Dict`                                                                                                              | A dictionary containing the scores `token_acc`, `token_p`, `token_r`, `token_f`. ~~Dict[str, float]]~~ |
 
@@ -144,6 +147,8 @@ Returns PRF scores for labeled or unlabeled spans.
 | _keyword-only_   |                                                                                                                                                                                             |
 | `getter`         | Defaults to `getattr`. If provided, `getter(doc, attr)` should return the `Span` objects for an individual `Doc`. ~~Callable[[Doc, str], Iterable[Span]]~~                                  |
 | `has_annotation` | Defaults to `None`. If provided, `has_annotation(doc)` should return whether a `Doc` has annotation for this `attr`. Docs without annotation are skipped for scoring purposes. ~~str~~      |
+| `labeled`        | Defaults to `True`. If set to `False`, two spans will be considered equal if their start and end match, irrespective of their label. ~~bool~~                                               |
+| `allow_overlap`  | Defaults to `False`. Whether or not to allow overlapping spans. If set to `False`, the alignment will automatically resolve conflicts. ~~bool~~                                             |
 | **RETURNS**      | A dictionary containing the PRF scores under the keys `{attr}_p`, `{attr}_r`, `{attr}_f` and the per-type PRF scores under `{attr}_per_type`. ~~Dict[str, Union[float, Dict[str, float]]]~~ |
 
 ## Scorer.score_deps {#score_deps tag="staticmethod" new="3"}

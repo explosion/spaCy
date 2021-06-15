@@ -189,9 +189,8 @@ Modify a batch of [`Doc`](/api/doc) objects, using pre-computed scores.
 
 Learn from a batch of [`Example`](/api/example) objects containing the
 predictions and gold-standard annotations, and update the component's model.
-Delegates to [`predict`](/api/morphologizer#predict), 
-[`get_loss`](/api/morphologizer#get_loss) and 
-[`set_annotations`](/api/morphologizer#set_annotations).
+Delegates to [`predict`](/api/morphologizer#predict) and
+[`get_loss`](/api/morphologizer#get_loss).
 
 > #### Example
 >

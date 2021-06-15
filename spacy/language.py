@@ -8,11 +8,12 @@ from contextlib import contextmanager
 from copy import deepcopy
 from pathlib import Path
 import warnings
-from thinc.api import Model, get_current_ops, Config, Optimizer
+from thinc.api import get_current_ops, Config, Optimizer
 import srsly
 import multiprocessing as mp
 from itertools import chain, cycle
 from timeit import default_timer as timer
+import traceback
 
 from .tokens.underscore import Underscore
 from .vocab import Vocab, create_vocab
@@ -20,8 +21,9 @@ from .pipe_analysis import validate_attrs, analyze_pipes, print_pipe_analysis
 from .training import Example, validate_examples
 from .training.initialize import init_vocab, init_tok2vec
 from .scorer import Scorer
-from .util import registry, SimpleFrozenList, _pipe
+from .util import registry, SimpleFrozenList, _pipe, raise_error
 from .util import SimpleFrozenDict, combine_score_weights, CONFIG_SECTION_ORDER
+from .util import warn_if_jupyter_cupy
 from .lang.tokenizer_exceptions import URL_MATCH, BASE_EXCEPTIONS
 from .lang.punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES
 from .lang.punctuation import TOKENIZER_INFIXES
@@ -104,7 +106,7 @@ class Language:
         object and processing pipeline.
     lang (str): Two-letter language ID, i.e. ISO code.
 
-    DOCS: https://nightly.spacy.io/api/language
+    DOCS: https://spacy.io/api/language
     """
 
     Defaults = BaseDefaults
@@ -141,7 +143,7 @@ class Language:
             returns a tokenizer.
         batch_size (int): Default batch size for pipe and evaluate.
 
-        DOCS: https://nightly.spacy.io/api/language#init
+        DOCS: https://spacy.io/api/language#init
         """
         # We're only calling this to import all factories provided via entry
         # points. The factory decorator applied to these functions takes care
@@ -176,6 +178,7 @@ class Language:
             create_tokenizer = registry.resolve(tokenizer_cfg)["tokenizer"]
         self.tokenizer = create_tokenizer(self)
         self.batch_size = batch_size
+        self.default_error_handler = raise_error
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
@@ -193,7 +196,7 @@ class Language:
 
         RETURNS (Dict[str, Any]): The meta.
 
-        DOCS: https://nightly.spacy.io/api/language#meta
+        DOCS: https://spacy.io/api/language#meta
         """
         spacy_version = util.get_model_version_range(about.__version__)
         if self.vocab.lang:
@@ -234,7 +237,7 @@ class Language:
 
         RETURNS (thinc.api.Config): The config.
 
-        DOCS: https://nightly.spacy.io/api/language#config
+        DOCS: https://spacy.io/api/language#config
         """
         self._config.setdefault("nlp", {})
         self._config.setdefault("training", {})
@@ -431,9 +434,9 @@ class Language:
         default_config (Dict[str, Any]): Default configuration, describing the
             default values of the factory arguments.
         assigns (Iterable[str]): Doc/Token attributes assigned by this component,
-            e.g. "token.ent_id". Used for pipeline analyis.
+            e.g. "token.ent_id". Used for pipeline analysis.
         requires (Iterable[str]): Doc/Token attributes required by this component,
-            e.g. "token.ent_id". Used for pipeline analyis.
+            e.g. "token.ent_id". Used for pipeline analysis.
         retokenizes (bool): Whether the component changes the tokenization.
             Used for pipeline analysis.
         default_score_weights (Dict[str, float]): The scores to report during
@@ -443,7 +446,7 @@ class Language:
             the score won't be shown in the logs or be weighted.
         func (Optional[Callable]): Factory function if not used as a decorator.
 
-        DOCS: https://nightly.spacy.io/api/language#factory
+        DOCS: https://spacy.io/api/language#factory
         """
         if not isinstance(name, str):
             raise ValueError(Errors.E963.format(decorator="factory"))
@@ -516,14 +519,14 @@ class Language:
 
         name (str): The name of the component factory.
         assigns (Iterable[str]): Doc/Token attributes assigned by this component,
-            e.g. "token.ent_id". Used for pipeline analyis.
+            e.g. "token.ent_id". Used for pipeline analysis.
         requires (Iterable[str]): Doc/Token attributes required by this component,
-            e.g. "token.ent_id". Used for pipeline analyis.
+            e.g. "token.ent_id". Used for pipeline analysis.
         retokenizes (bool): Whether the component changes the tokenization.
             Used for pipeline analysis.
         func (Optional[Callable]): Factory function if not used as a decorator.
 
-        DOCS: https://nightly.spacy.io/api/language#component
+        DOCS: https://spacy.io/api/language#component
         """
         if name is not None and not isinstance(name, str):
             raise ValueError(Errors.E963.format(decorator="component"))
@@ -589,7 +592,7 @@ class Language:
         name (str): Name of pipeline component to get.
         RETURNS (callable): The pipeline component.
 
-        DOCS: https://nightly.spacy.io/api/language#get_pipe
+        DOCS: https://spacy.io/api/language#get_pipe
         """
         for pipe_name, component in self._components:
             if pipe_name == name:
@@ -618,7 +621,7 @@ class Language:
             arguments and types expected by the factory.
         RETURNS (Callable[[Doc], Doc]): The pipeline component.
 
-        DOCS: https://nightly.spacy.io/api/language#create_pipe
+        DOCS: https://spacy.io/api/language#create_pipe
         """
         name = name if name is not None else factory_name
         if not isinstance(config, dict):
@@ -641,16 +644,16 @@ class Language:
         # specify the full config settings, which is not really viable.
         if pipe_meta.default_config:
             config = Config(pipe_meta.default_config).merge(config)
-        # We need to create a top-level key because Thinc doesn't allow resolving
-        # top-level references to registered functions. Also gives nicer errors.
-        # The name allows components to know their pipe name and use it in the
-        # losses etc. (even if multiple instances of the same factory are used)
         internal_name = self.get_factory_name(factory_name)
         # If the language-specific factory doesn't exist, try again with the
         # not-specific name
         if internal_name not in registry.factories:
             internal_name = factory_name
+        # The name allows components to know their pipe name and use it in the
+        # losses etc. (even if multiple instances of the same factory are used)
         config = {"nlp": self, "name": name, **config, "@factories": internal_name}
+        # We need to create a top-level key because Thinc doesn't allow resolving
+        # top-level references to registered functions. Also gives nicer errors.
         cfg = {factory_name: config}
         # We're calling the internal _fill here to avoid constructing the
         # registered functions twice
@@ -680,15 +683,20 @@ class Language:
         name (str): Optional alternative name to use in current pipeline.
         RETURNS (Tuple[Callable, str]): The component and its factory name.
         """
-        # TODO: handle errors and mismatches (vectors etc.)
-        if not isinstance(source, self.__class__):
+        # Check source type
+        if not isinstance(source, Language):
             raise ValueError(Errors.E945.format(name=source_name, source=type(source)))
-        if not source.has_pipe(source_name):
+        # Check vectors, with faster checks first
+        if self.vocab.vectors.shape != source.vocab.vectors.shape or \
+                self.vocab.vectors.key2row != source.vocab.vectors.key2row or \
+                self.vocab.vectors.to_bytes() != source.vocab.vectors.to_bytes():
+            util.logger.warning(Warnings.W113.format(name=source_name))
+        if not source_name in source.component_names:
             raise KeyError(
                 Errors.E944.format(
                     name=source_name,
                     model=f"{source.meta['lang']}_{source.meta['name']}",
-                    opts=", ".join(source.pipe_names),
+                    opts=", ".join(source.component_names),
                 )
             )
         pipe = source.get_pipe(source_name)
@@ -739,7 +747,7 @@ class Language:
             arguments and types expected by the factory.
         RETURNS (Callable[[Doc], Doc]): The pipeline component.
 
-        DOCS: https://nightly.spacy.io/api/language#add_pipe
+        DOCS: https://spacy.io/api/language#add_pipe
         """
         if not isinstance(factory_name, str):
             bad_val = repr(factory_name)
@@ -837,7 +845,7 @@ class Language:
         name (str): Name of the component.
         RETURNS (bool): Whether a component of the name exists in the pipeline.
 
-        DOCS: https://nightly.spacy.io/api/language#has_pipe
+        DOCS: https://spacy.io/api/language#has_pipe
         """
         return name in self.pipe_names
 
@@ -859,7 +867,7 @@ class Language:
             arguments and types expected by the factory.
         RETURNS (Callable[[Doc], Doc]): The new pipeline component.
 
-        DOCS: https://nightly.spacy.io/api/language#replace_pipe
+        DOCS: https://spacy.io/api/language#replace_pipe
         """
         if name not in self.pipe_names:
             raise ValueError(Errors.E001.format(name=name, opts=self.pipe_names))
@@ -890,7 +898,7 @@ class Language:
         old_name (str): Name of the component to rename.
         new_name (str): New name of the component.
 
-        DOCS: https://nightly.spacy.io/api/language#rename_pipe
+        DOCS: https://spacy.io/api/language#rename_pipe
         """
         if old_name not in self.component_names:
             raise ValueError(
@@ -915,7 +923,7 @@ class Language:
         name (str): Name of the component to remove.
         RETURNS (tuple): A `(name, component)` tuple of the removed component.
 
-        DOCS: https://nightly.spacy.io/api/language#remove_pipe
+        DOCS: https://spacy.io/api/language#remove_pipe
         """
         if name not in self.component_names:
             raise ValueError(Errors.E001.format(name=name, opts=self.component_names))
@@ -971,7 +979,7 @@ class Language:
             keyword arguments for specific components.
         RETURNS (Doc): A container for accessing the annotations.
 
-        DOCS: https://nightly.spacy.io/api/language#call
+        DOCS: https://spacy.io/api/language#call
         """
         doc = self.make_doc(text)
         if component_cfg is None:
@@ -981,11 +989,16 @@ class Language:
                 continue
             if not hasattr(proc, "__call__"):
                 raise ValueError(Errors.E003.format(component=type(proc), name=name))
+            error_handler = self.default_error_handler
+            if hasattr(proc, "get_error_handler"):
+                error_handler = proc.get_error_handler()
             try:
                 doc = proc(doc, **component_cfg.get(name, {}))
             except KeyError as e:
                 # This typically happens if a component is not initialized
                 raise ValueError(Errors.E109.format(name=name)) from e
+            except Exception as e:
+                error_handler(name, proc, [doc], e)
             if doc is None:
                 raise ValueError(Errors.E005.format(name=name))
         return doc
@@ -1017,7 +1030,7 @@ class Language:
         disable (str or iterable): The name(s) of the pipes to disable
         enable (str or iterable): The name(s) of the pipes to enable - all others will be disabled
 
-        DOCS: https://nightly.spacy.io/api/language#select_pipes
+        DOCS: https://spacy.io/api/language#select_pipes
         """
         if enable is None and disable is None:
             raise ValueError(Errors.E991)
@@ -1075,7 +1088,7 @@ class Language:
         exclude (Iterable[str]): Names of components that shouldn't be updated.
         RETURNS (Dict[str, float]): The updated losses dictionary
 
-        DOCS: https://nightly.spacy.io/api/language#update
+        DOCS: https://spacy.io/api/language#update
         """
         if _ is not None:
             raise ValueError(Errors.E989)
@@ -1138,7 +1151,7 @@ class Language:
             >>>     raw_batch = [Example.from_dict(nlp.make_doc(text), {}) for text in next(raw_text_batches)]
             >>>     nlp.rehearse(raw_batch)
 
-        DOCS: https://nightly.spacy.io/api/language#rehearse
+        DOCS: https://spacy.io/api/language#rehearse
         """
         if len(examples) == 0:
             return
@@ -1193,7 +1206,7 @@ class Language:
             provided, will be created using the .create_optimizer() method.
         RETURNS (thinc.api.Optimizer): The optimizer.
 
-        DOCS: https://nightly.spacy.io/api/language#initialize
+        DOCS: https://spacy.io/api/language#initialize
         """
         if get_examples is None:
             util.logger.debug(
@@ -1213,13 +1226,12 @@ class Language:
         before_init = I["before_init"]
         if before_init is not None:
             before_init(self)
-        init_vocab(
-            self, data=I["vocab_data"], lookups=I["lookups"], vectors=I["vectors"]
-        )
-        pretrain_cfg = config.get("pretraining")
-        if pretrain_cfg:
-            P = registry.resolve(pretrain_cfg, schema=ConfigSchemaPretrain)
-            init_tok2vec(self, P, I)
+        try:
+            init_vocab(
+                self, data=I["vocab_data"], lookups=I["lookups"], vectors=I["vectors"]
+            )
+        except IOError:
+            raise IOError(Errors.E884.format(vectors=I["vectors"]))
         if self.vocab.vectors.data.shape[1] >= 1:
             ops = get_current_ops()
             self.vocab.vectors.data = ops.asarray(self.vocab.vectors.data)
@@ -1238,6 +1250,10 @@ class Language:
                     proc.initialize, p_settings, section="components", name=name
                 )
                 proc.initialize(get_examples, nlp=self, **p_settings)
+        pretrain_cfg = config.get("pretraining")
+        if pretrain_cfg:
+            P = registry.resolve(pretrain_cfg, schema=ConfigSchemaPretrain)
+            init_tok2vec(self, P, I)
         self._link_components()
         self._optimizer = sgd
         if sgd is not None:
@@ -1260,7 +1276,7 @@ class Language:
 
         RETURNS (Optimizer): The optimizer.
 
-        DOCS: https://nightly.spacy.io/api/language#resume_training
+        DOCS: https://spacy.io/api/language#resume_training
         """
         ops = get_current_ops()
         if self.vocab.vectors.data.shape[1] >= 1:
@@ -1273,6 +1289,26 @@ class Language:
         elif self._optimizer is None:
             self._optimizer = self.create_optimizer()
         return self._optimizer
+
+    def set_error_handler(
+        self,
+        error_handler: Callable[
+            [str, Callable[[Doc], Doc], List[Doc], Exception], None
+        ],
+    ):
+        """Set an error handler object for all the components in the pipeline that implement
+        a set_error_handler function.
+
+        error_handler (Callable[[str, Callable[[Doc], Doc], List[Doc], Exception], None]):
+            Function that deals with a failing batch of documents. This callable function should take in
+            the component's name, the component itself, the offending batch of documents, and the exception
+            that was thrown.
+        DOCS: https://spacy.io/api/language#set_error_handler
+        """
+        self.default_error_handler = error_handler
+        for name, pipe in self.pipeline:
+            if hasattr(pipe, "set_error_handler"):
+                pipe.set_error_handler(error_handler)
 
     def evaluate(
         self,
@@ -1293,9 +1329,10 @@ class Language:
             arguments for specific components.
         scorer_cfg (dict): An optional dictionary with extra keyword arguments
             for the scorer.
+
         RETURNS (Scorer): The scorer containing the evaluation results.
 
-        DOCS: https://nightly.spacy.io/api/language#evaluate
+        DOCS: https://spacy.io/api/language#evaluate
         """
         examples = list(examples)
         validate_examples(examples, "Language.evaluate")
@@ -1317,7 +1354,14 @@ class Language:
             kwargs = component_cfg.get(name, {})
             kwargs.setdefault("batch_size", batch_size)
             for doc, eg in zip(
-                _pipe((eg.predicted for eg in examples), pipe, kwargs), examples
+                _pipe(
+                    (eg.predicted for eg in examples),
+                    proc=pipe,
+                    name=name,
+                    default_error_handler=self.default_error_handler,
+                    kwargs=kwargs,
+                ),
+                examples,
             ):
                 eg.predicted = doc
         end_time = timer()
@@ -1343,7 +1387,7 @@ class Language:
             >>> with nlp.use_params(optimizer.averages):
             >>>     nlp.to_disk("/tmp/checkpoint")
 
-        DOCS: https://nightly.spacy.io/api/language#use_params
+        DOCS: https://spacy.io/api/language#use_params
         """
         if not params:
             yield
@@ -1390,7 +1434,7 @@ class Language:
         n_process (int): Number of processors to process texts. If -1, set `multiprocessing.cpu_count()`.
         YIELDS (Doc): Documents in the order of the original text.
 
-        DOCS: https://nightly.spacy.io/api/language#pipe
+        DOCS: https://spacy.io/api/language#pipe
         """
         if n_process == -1:
             n_process = mp.cpu_count()
@@ -1422,7 +1466,13 @@ class Language:
             kwargs = component_cfg.get(name, {})
             # Allow component_cfg to overwrite the top-level kwargs.
             kwargs.setdefault("batch_size", batch_size)
-            f = functools.partial(_pipe, proc=proc, kwargs=kwargs)
+            f = functools.partial(
+                _pipe,
+                proc=proc,
+                name=name,
+                kwargs=kwargs,
+                default_error_handler=self.default_error_handler,
+            )
             pipes.append(f)
 
         if n_process != 1:
@@ -1472,11 +1522,15 @@ class Language:
 
         # Cycle channels not to break the order of docs.
         # The received object is a batch of byte-encoded docs, so flatten them with chain.from_iterable.
-        byte_docs = chain.from_iterable(recv.recv() for recv in cycle(bytedocs_recv_ch))
-        docs = (Doc(self.vocab).from_bytes(byte_doc) for byte_doc in byte_docs)
+        byte_tuples = chain.from_iterable(recv.recv() for recv in cycle(bytedocs_recv_ch))
         try:
-            for i, (_, doc) in enumerate(zip(raw_texts, docs), 1):
-                yield doc
+            for i, (_, (byte_doc, byte_error)) in enumerate(zip(raw_texts, byte_tuples), 1):
+                if byte_doc is not None:
+                    doc = Doc(self.vocab).from_bytes(byte_doc)
+                    yield doc
+                elif byte_error is not None:
+                    error = srsly.msgpack_loads(byte_error)
+                    self.default_error_handler(None, None, None, ValueError(Errors.E871.format(error=error)))
                 if i % batch_size == 0:
                     # tell `sender` that one batch was consumed.
                     sender.step()
@@ -1488,7 +1542,7 @@ class Language:
         """Register 'listeners' within pipeline components, to allow them to
         effectively share weights.
         """
-        # I had though, "Why do we do this inside the Language object? Shouldn't
+        # I had thought, "Why do we do this inside the Language object? Shouldn't
         # it be the tok2vec/transformer/etc's job?
         # The problem is we need to do it during deserialization...And the
         # components don't receive the pipeline then. So this does have to be
@@ -1528,7 +1582,7 @@ class Language:
             the types expected by the factory.
         RETURNS (Language): The initialized Language class.
 
-        DOCS: https://nightly.spacy.io/api/language#from_config
+        DOCS: https://spacy.io/api/language#from_config
         """
         if auto_fill:
             config = Config(
@@ -1552,6 +1606,7 @@ class Language:
         # using the nlp.config with all defaults.
         config = util.copy_config(config)
         orig_pipeline = config.pop("components", {})
+        orig_pretraining = config.pop("pretraining", None)
         config["components"] = {}
         if auto_fill:
             filled = registry.fill(config, validate=validate, schema=ConfigSchema)
@@ -1559,6 +1614,9 @@ class Language:
             filled = config
         filled["components"] = orig_pipeline
         config["components"] = orig_pipeline
+        if orig_pretraining is not None:
+            filled["pretraining"] = orig_pretraining
+            config["pretraining"] = orig_pretraining
         resolved_nlp = registry.resolve(
             filled["nlp"], validate=validate, schema=ConfigSchemaNlp
         )
@@ -1575,6 +1633,10 @@ class Language:
                 or lang_cls is not cls
             ):
                 raise ValueError(Errors.E943.format(value=type(lang_cls)))
+
+        # Warn about require_gpu usage in jupyter notebook
+        warn_if_jupyter_cupy()
+
         # Note that we don't load vectors here, instead they get loaded explicitly
         # inside stuff like the spacy train function. If we loaded them here,
         # then we would load them twice at runtime: once when we make from config,
@@ -1589,6 +1651,7 @@ class Language:
         # Later we replace the component config with the raw config again.
         interpolated = filled.interpolate() if not filled.is_interpolated else filled
         pipeline = interpolated.get("components", {})
+        sourced = util.get_sourced_components(interpolated)
         # If components are loaded from a source (existing models), we cache
         # them here so they're only loaded once
         source_nlps = {}
@@ -1620,7 +1683,16 @@ class Language:
                         # model with the same vocab as the current nlp object
                         source_nlps[model] = util.load_model(model, vocab=nlp.vocab)
                     source_name = pipe_cfg.get("component", pipe_name)
+                    listeners_replaced = False
+                    if "replace_listeners" in pipe_cfg:
+                        for name, proc in source_nlps[model].pipeline:
+                            if source_name in getattr(proc, "listening_components", []):
+                                source_nlps[model].replace_listeners(name, source_name, pipe_cfg["replace_listeners"])
+                                listeners_replaced = True
                     nlp.add_pipe(source_name, source=source_nlps[model], name=pipe_name)
+                    # Delete from cache if listeners were replaced
+                    if listeners_replaced:
+                        del source_nlps[model]
         disabled_pipes = [*config["nlp"]["disabled"], *disable]
         nlp._disabled = set(p for p in disabled_pipes if p not in exclude)
         nlp.batch_size = config["nlp"]["batch_size"]
@@ -1631,7 +1703,119 @@ class Language:
                 raise ValueError(
                     Errors.E942.format(name="pipeline_creation", value=type(nlp))
                 )
+        # Detect components with listeners that are not frozen consistently
+        for name, proc in nlp.pipeline:
+            # Remove listeners not in the pipeline
+            listener_names = getattr(proc, "listening_components", [])
+            unused_listener_names = [ll for ll in listener_names if ll not in nlp.pipe_names]
+            for listener_name in unused_listener_names:
+                for listener in proc.listener_map.get(listener_name, []):
+                    proc.remove_listener(listener, listener_name)
+
+            for listener in getattr(proc, "listening_components", []):  # e.g. tok2vec/transformer
+                # If it's a component sourced from another pipeline, we check if
+                # the tok2vec listeners should be replaced with standalone tok2vec
+                # models (e.g. so component can be frozen without its performance
+                # degrading when other components/tok2vec are updated)
+                paths = sourced.get(listener, {}).get("replace_listeners", [])
+                if paths:
+                    nlp.replace_listeners(name, listener, paths)
         return nlp
+
+    def replace_listeners(
+        self,
+        tok2vec_name: str,
+        pipe_name: str,
+        listeners: Iterable[str],
+    ) -> None:
+        """Find listener layers (connecting to a token-to-vector embedding
+        component) of a given pipeline component model and replace
+        them with a standalone copy of the token-to-vector layer. This can be
+        useful when training a pipeline with components sourced from an existing
+        pipeline: if multiple components (e.g. tagger, parser, NER) listen to
+        the same tok2vec component, but some of them are frozen and not updated,
+        their performance may degrade significally as the tok2vec component is
+        updated with new data. To prevent this, listeners can be replaced with
+        a standalone tok2vec layer that is owned by the component and doesn't
+        change if the component isn't updated.
+
+        tok2vec_name (str): Name of the token-to-vector component, typically
+            "tok2vec" or "transformer".
+        pipe_name (str): Name of pipeline component to replace listeners for.
+        listeners (Iterable[str]): The paths to the listeners, relative to the
+            component config, e.g. ["model.tok2vec"]. Typically, implementations
+            will only connect to one tok2vec component, [model.tok2vec], but in
+            theory, custom models can use multiple listeners. The value here can
+            either be an empty list to not replace any listeners, or a complete
+            (!) list of the paths to all listener layers used by the model.
+
+        DOCS: https://spacy.io/api/language#replace_listeners
+        """
+        if tok2vec_name not in self.pipe_names:
+            err = Errors.E889.format(
+                tok2vec=tok2vec_name,
+                name=pipe_name,
+                unknown=tok2vec_name,
+                opts=", ".join(self.pipe_names),
+            )
+            raise ValueError(err)
+        if pipe_name not in self.pipe_names:
+            err = Errors.E889.format(
+                tok2vec=tok2vec_name,
+                name=pipe_name,
+                unknown=pipe_name,
+                opts=", ".join(self.pipe_names),
+            )
+            raise ValueError(err)
+        tok2vec = self.get_pipe(tok2vec_name)
+        tok2vec_cfg = self.get_pipe_config(tok2vec_name)
+        tok2vec_model = tok2vec.model
+        if (
+            not hasattr(tok2vec, "model")
+            or not hasattr(tok2vec, "listener_map")
+            or not hasattr(tok2vec, "remove_listener")
+            or "model" not in tok2vec_cfg
+        ):
+            raise ValueError(Errors.E888.format(name=tok2vec_name, pipe=type(tok2vec)))
+        pipe_listeners = tok2vec.listener_map.get(pipe_name, [])
+        pipe = self.get_pipe(pipe_name)
+        pipe_cfg = self._pipe_configs[pipe_name]
+        if listeners:
+            util.logger.debug(f"Replacing listeners of component '{pipe_name}'")
+            if len(listeners) != len(pipe_listeners):
+                # The number of listeners defined in the component model doesn't
+                # match the listeners to replace, so we won't be able to update
+                # the nodes and generate a matching config
+                err = Errors.E887.format(
+                    name=pipe_name,
+                    tok2vec=tok2vec_name,
+                    paths=listeners,
+                    n_listeners=len(pipe_listeners),
+                )
+                raise ValueError(err)
+            # Update the config accordingly by copying the tok2vec model to all
+            # sections defined in the listener paths
+            for listener_path in listeners:
+                # Check if the path actually exists in the config
+                try:
+                    util.dot_to_object(pipe_cfg, listener_path)
+                except KeyError:
+                    err = Errors.E886.format(
+                        name=pipe_name, tok2vec=tok2vec_name, path=listener_path
+                    )
+                    raise ValueError(err)
+                new_config = tok2vec_cfg["model"]
+                if "replace_listener_cfg" in tok2vec_model.attrs:
+                    replace_func = tok2vec_model.attrs["replace_listener_cfg"]
+                    new_config = replace_func(tok2vec_cfg["model"], pipe_cfg["model"]["tok2vec"])
+                util.set_dot_to_object(pipe_cfg, listener_path, new_config)
+            # Go over the listener layers and replace them
+            for listener in pipe_listeners:
+                new_model = tok2vec_model.copy()
+                if "replace_listener" in tok2vec_model.attrs:
+                    new_model = tok2vec_model.attrs["replace_listener"](new_model)
+                util.replace_model_node(pipe.model, listener, new_model)
+                tok2vec.remove_listener(listener, pipe_name)
 
     def to_disk(
         self, path: Union[str, Path], *, exclude: Iterable[str] = SimpleFrozenList()
@@ -1643,7 +1827,7 @@ class Language:
             it doesn't exist.
         exclude (list): Names of components or serialization fields to exclude.
 
-        DOCS: https://nightly.spacy.io/api/language#to_disk
+        DOCS: https://spacy.io/api/language#to_disk
         """
         path = util.ensure_path(path)
         serializers = {}
@@ -1662,7 +1846,8 @@ class Language:
         util.to_disk(path, serializers, exclude)
 
     def from_disk(
-        self, path: Union[str, Path], *, exclude: Iterable[str] = SimpleFrozenList()
+        self, path: Union[str, Path], *, exclude: Iterable[str] = SimpleFrozenList(),
+            overrides: Dict[str, Any] = SimpleFrozenDict(),
     ) -> "Language":
         """Loads state from a directory. Modifies the object in place and
         returns it. If the saved `Language` object contains a model, the
@@ -1672,7 +1857,7 @@ class Language:
         exclude (list): Names of components or serialization fields to exclude.
         RETURNS (Language): The modified `Language` object.
 
-        DOCS: https://nightly.spacy.io/api/language#from_disk
+        DOCS: https://spacy.io/api/language#from_disk
         """
 
         def deserialize_meta(path: Path) -> None:
@@ -1691,7 +1876,7 @@ class Language:
         deserializers = {}
         if Path(path / "config.cfg").exists():
             deserializers["config.cfg"] = lambda p: self.config.from_disk(
-                p, interpolate=False
+                p, interpolate=False, overrides=overrides
             )
         deserializers["meta.json"] = deserialize_meta
         deserializers["vocab"] = deserialize_vocab
@@ -1720,7 +1905,7 @@ class Language:
         exclude (list): Names of components or serialization fields to exclude.
         RETURNS (bytes): The serialized form of the `Language` object.
 
-        DOCS: https://nightly.spacy.io/api/language#to_bytes
+        DOCS: https://spacy.io/api/language#to_bytes
         """
         serializers = {}
         serializers["vocab"] = lambda: self.vocab.to_bytes()
@@ -1744,7 +1929,7 @@ class Language:
         exclude (list): Names of components or serialization fields to exclude.
         RETURNS (Language): The `Language` object.
 
-        DOCS: https://nightly.spacy.io/api/language#from_bytes
+        DOCS: https://spacy.io/api/language#from_bytes
         """
 
         def deserialize_meta(b):
@@ -1822,7 +2007,7 @@ class DisabledPipes(list):
 def _copy_examples(examples: Iterable[Example]) -> List[Example]:
     """Make a copy of a batch of examples, copying the predicted Doc as well.
     This is used in contexts where we need to take ownership of the examples
-    so that they can be mutated, for instance during Language.evaluate and 
+    so that they can be mutated, for instance during Language.evaluate and
     Language.update.
     """
     return [Example(eg.x.copy(), eg.y) for eg in examples]
@@ -1848,12 +2033,19 @@ def _apply_pipes(
     """
     Underscore.load_state(underscore_state)
     while True:
-        texts = receiver.get()
-        docs = (make_doc(text) for text in texts)
-        for pipe in pipes:
-            docs = pipe(docs)
-        # Connection does not accept unpickable objects, so send list.
-        sender.send([doc.to_bytes() for doc in docs])
+        try:
+            texts = receiver.get()
+            docs = (make_doc(text) for text in texts)
+            for pipe in pipes:
+                docs = pipe(docs)
+            # Connection does not accept unpickable objects, so send list.
+            byte_docs = [(doc.to_bytes(), None) for doc in docs]
+            padding = [(None, None)] * (len(texts) - len(byte_docs))
+            sender.send(byte_docs + padding)
+        except Exception:
+            error_msg = [(None, srsly.msgpack_dumps(traceback.format_exc()))]
+            padding = [(None, None)] * (len(texts) - 1)
+            sender.send(error_msg + padding)
 
 
 class _Sender:

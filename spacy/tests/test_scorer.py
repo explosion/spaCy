@@ -3,10 +3,10 @@ import pytest
 from pytest import approx
 from spacy.training import Example
 from spacy.training.iob_utils import offsets_to_biluo_tags
-from spacy.scorer import Scorer, ROCAUCScore
+from spacy.scorer import Scorer, ROCAUCScore, PRFScore
 from spacy.scorer import _roc_auc_score, _roc_curve
 from spacy.lang.en import English
-from spacy.tokens import Doc
+from spacy.tokens import Doc, Span
 
 
 test_las_apple = [
@@ -403,3 +403,68 @@ def test_roc_auc_score():
     score.score_set(0.75, 1)
     with pytest.raises(ValueError):
         _ = score.score  # noqa: F841
+
+
+def test_score_spans():
+    nlp = English()
+    text = "This is just a random sentence."
+    key = "my_spans"
+    gold = nlp.make_doc(text)
+    pred = nlp.make_doc(text)
+    spans = []
+    spans.append(gold.char_span(0, 4, label="PERSON"))
+    spans.append(gold.char_span(0, 7, label="ORG"))
+    spans.append(gold.char_span(8, 12, label="ORG"))
+    gold.spans[key] = spans
+
+    def span_getter(doc, span_key):
+        return doc.spans[span_key]
+
+    # Predict exactly the same, but overlapping spans will be discarded
+    pred.spans[key] = spans
+    eg = Example(pred, gold)
+    scores = Scorer.score_spans([eg], attr=key, getter=span_getter)
+    assert scores[f"{key}_p"] == 1.0
+    assert scores[f"{key}_r"] < 1.0
+
+    # Allow overlapping, now both precision and recall should be 100%
+    pred.spans[key] = spans
+    eg = Example(pred, gold)
+    scores = Scorer.score_spans([eg], attr=key, getter=span_getter, allow_overlap=True)
+    assert scores[f"{key}_p"] == 1.0
+    assert scores[f"{key}_r"] == 1.0
+
+    # Change the predicted labels
+    new_spans = [Span(pred, span.start, span.end, label="WRONG") for span in spans]
+    pred.spans[key] = new_spans
+    eg = Example(pred, gold)
+    scores = Scorer.score_spans([eg], attr=key, getter=span_getter, allow_overlap=True)
+    assert scores[f"{key}_p"] == 0.0
+    assert scores[f"{key}_r"] == 0.0
+    assert f"{key}_per_type" in scores
+
+    # Discard labels from the evaluation
+    scores = Scorer.score_spans([eg], attr=key, getter=span_getter, allow_overlap=True, labeled=False)
+    assert scores[f"{key}_p"] == 1.0
+    assert scores[f"{key}_r"] == 1.0
+    assert f"{key}_per_type" not in scores
+
+
+def test_prf_score():
+    cand = {"hi", "ho"}
+    gold1 = {"yo", "hi"}
+    gold2 = set()
+
+    a = PRFScore()
+    a.score_set(cand=cand, gold=gold1)
+    assert (a.precision, a.recall, a.fscore) == approx((0.5, 0.5, 0.5))
+
+    b = PRFScore()
+    b.score_set(cand=cand, gold=gold2)
+    assert (b.precision, b.recall, b.fscore) == approx((0.0, 0.0, 0.0))
+
+    c = a + b
+    assert (c.precision, c.recall, c.fscore) == approx((0.25, 0.5, 0.33333333))
+
+    a += b
+    assert (a.precision, a.recall, a.fscore) == approx((c.precision, c.recall, c.fscore))

@@ -1,5 +1,4 @@
-from typing import Optional, List, Dict, Any, Callable, Iterable, Iterator, Union
-from typing import Tuple
+from typing import Optional, List, Dict, Any, Callable, Iterable, Union, Tuple
 from thinc.api import Model
 from pathlib import Path
 
@@ -23,11 +22,7 @@ from .. import util
     default_score_weights={"lemma_acc": 1.0},
 )
 def make_lemmatizer(
-    nlp: Language,
-    model: Optional[Model],
-    name: str,
-    mode: str,
-    overwrite: bool = False,
+    nlp: Language, model: Optional[Model], name: str, mode: str, overwrite: bool = False
 ):
     return Lemmatizer(nlp.vocab, model, name, mode=mode, overwrite=overwrite)
 
@@ -37,7 +32,7 @@ class Lemmatizer(Pipe):
     The Lemmatizer supports simple part-of-speech-sensitive suffix rules and
     lookup tables.
 
-    DOCS: https://nightly.spacy.io/api/lemmatizer
+    DOCS: https://spacy.io/api/lemmatizer
     """
 
     @classmethod
@@ -73,7 +68,7 @@ class Lemmatizer(Pipe):
         overwrite (bool): Whether to overwrite existing lemmas. Defaults to
             `False`.
 
-        DOCS: https://nightly.spacy.io/api/lemmatizer#init
+        DOCS: https://spacy.io/api/lemmatizer#init
         """
         self.vocab = vocab
         self.model = model
@@ -103,14 +98,18 @@ class Lemmatizer(Pipe):
         doc (Doc): The Doc to process.
         RETURNS (Doc): The processed Doc.
 
-        DOCS: https://nightly.spacy.io/api/lemmatizer#call
+        DOCS: https://spacy.io/api/lemmatizer#call
         """
         if not self._validated:
             self._validate_tables(Errors.E1004)
-        for token in doc:
-            if self.overwrite or token.lemma == 0:
-                token.lemma_ = self.lemmatize(token)[0]
-        return doc
+        error_handler = self.get_error_handler()
+        try:
+            for token in doc:
+                if self.overwrite or token.lemma == 0:
+                    token.lemma_ = self.lemmatize(token)[0]
+            return doc
+        except Exception as e:
+            error_handler(self.name, self, [doc], e)
 
     def initialize(
         self,
@@ -154,28 +153,13 @@ class Lemmatizer(Pipe):
                 )
         self._validated = True
 
-    def pipe(self, stream: Iterable[Doc], *, batch_size: int = 128) -> Iterator[Doc]:
-        """Apply the pipe to a stream of documents. This usually happens under
-        the hood when the nlp object is called on a text and all components are
-        applied to the Doc.
-
-        stream (Iterable[Doc]): A stream of documents.
-        batch_size (int): The number of documents to buffer.
-        YIELDS (Doc): Processed documents in order.
-
-        DOCS: https://nightly.spacy.io/api/lemmatizer#pipe
-        """
-        for doc in stream:
-            doc = self(doc)
-            yield doc
-
     def lookup_lemmatize(self, token: Token) -> List[str]:
         """Lemmatize using a lookup-based approach.
 
         token (Token): The token to lemmatize.
         RETURNS (list): The available lemmas for the string.
 
-        DOCS: https://nightly.spacy.io/api/lemmatizer#lookup_lemmatize
+        DOCS: https://spacy.io/api/lemmatizer#lookup_lemmatize
         """
         lookup_table = self.lookups.get_table("lemma_lookup", {})
         result = lookup_table.get(token.text, token.text)
@@ -189,9 +173,9 @@ class Lemmatizer(Pipe):
         token (Token): The token to lemmatize.
         RETURNS (list): The available lemmas for the string.
 
-        DOCS: https://nightly.spacy.io/api/lemmatizer#rule_lemmatize
+        DOCS: https://spacy.io/api/lemmatizer#rule_lemmatize
         """
-        cache_key = (token.orth, token.pos, token.morph)
+        cache_key = (token.orth, token.pos, token.morph.key)
         if cache_key in self.cache:
             return self.cache[cache_key]
         string = token.text
@@ -257,7 +241,7 @@ class Lemmatizer(Pipe):
         token (Token): The token.
         RETURNS (bool): Whether the token is a base form.
 
-        DOCS: https://nightly.spacy.io/api/lemmatizer#is_base_form
+        DOCS: https://spacy.io/api/lemmatizer#is_base_form
         """
         return False
 
@@ -267,7 +251,7 @@ class Lemmatizer(Pipe):
         examples (Iterable[Example]): The examples to score.
         RETURNS (Dict[str, Any]): The scores.
 
-        DOCS: https://nightly.spacy.io/api/lemmatizer#score
+        DOCS: https://spacy.io/api/lemmatizer#score
         """
         validate_examples(examples, "Lemmatizer.score")
         return Scorer.score_token_attr(examples, "lemma", **kwargs)
@@ -280,7 +264,7 @@ class Lemmatizer(Pipe):
         path (str / Path): Path to a directory.
         exclude (Iterable[str]): String names of serialization fields to exclude.
 
-        DOCS: https://nightly.spacy.io/api/lemmatizer#to_disk
+        DOCS: https://spacy.io/api/lemmatizer#to_disk
         """
         serialize = {}
         serialize["vocab"] = lambda p: self.vocab.to_disk(p)
@@ -296,7 +280,7 @@ class Lemmatizer(Pipe):
         exclude (Iterable[str]): String names of serialization fields to exclude.
         RETURNS (Lemmatizer): The modified Lemmatizer object.
 
-        DOCS: https://nightly.spacy.io/api/lemmatizer#from_disk
+        DOCS: https://spacy.io/api/lemmatizer#from_disk
         """
         deserialize = {}
         deserialize["vocab"] = lambda p: self.vocab.from_disk(p)
@@ -311,7 +295,7 @@ class Lemmatizer(Pipe):
         exclude (Iterable[str]): String names of serialization fields to exclude.
         RETURNS (bytes): The serialized object.
 
-        DOCS: https://nightly.spacy.io/api/lemmatizer#to_bytes
+        DOCS: https://spacy.io/api/lemmatizer#to_bytes
         """
         serialize = {}
         serialize["vocab"] = self.vocab.to_bytes
@@ -327,7 +311,7 @@ class Lemmatizer(Pipe):
         exclude (Iterable[str]): String names of serialization fields to exclude.
         RETURNS (Lemmatizer): The loaded Lemmatizer.
 
-        DOCS: https://nightly.spacy.io/api/lemmatizer#from_bytes
+        DOCS: https://spacy.io/api/lemmatizer#from_bytes
         """
         deserialize = {}
         deserialize["vocab"] = lambda b: self.vocab.from_bytes(b)

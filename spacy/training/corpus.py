@@ -2,6 +2,7 @@ import warnings
 from typing import Union, List, Iterable, Iterator, TYPE_CHECKING, Callable
 from typing import Optional
 from pathlib import Path
+import random
 import srsly
 
 from .. import util
@@ -40,7 +41,7 @@ def create_docbin_reader(
 
 @util.registry.readers("spacy.JsonlCorpus.v1")
 def create_jsonl_reader(
-    path: Path, min_length: int = 0, max_length: int = 0, limit: int = 0
+    path: Optional[Path], min_length: int = 0, max_length: int = 0, limit: int = 0
 ) -> Callable[["Language"], Iterable[Doc]]:
     return JsonlCorpus(path, min_length=min_length, max_length=max_length, limit=limit)
 
@@ -96,8 +97,9 @@ class Corpus:
         Defaults to 0, which indicates no limit.
     augment (Callable[Example, Iterable[Example]]): Optional data augmentation
         function, to extrapolate additional examples from your annotations.
+    shuffle (bool): Whether to shuffle the examples.
 
-    DOCS: https://nightly.spacy.io/api/corpus
+    DOCS: https://spacy.io/api/corpus
     """
 
     def __init__(
@@ -108,12 +110,14 @@ class Corpus:
         gold_preproc: bool = False,
         max_length: int = 0,
         augmenter: Optional[Callable] = None,
+        shuffle: bool = False,
     ) -> None:
         self.path = util.ensure_path(path)
         self.gold_preproc = gold_preproc
         self.max_length = max_length
         self.limit = limit
         self.augmenter = augmenter if augmenter is not None else dont_augment
+        self.shuffle = shuffle
 
     def __call__(self, nlp: "Language") -> Iterator[Example]:
         """Yield examples from the data.
@@ -121,9 +125,13 @@ class Corpus:
         nlp (Language): The current nlp object.
         YIELDS (Example): The examples.
 
-        DOCS: https://nightly.spacy.io/api/corpus#call
+        DOCS: https://spacy.io/api/corpus#call
         """
         ref_docs = self.read_docbin(nlp.vocab, walk_corpus(self.path, FILE_TYPE))
+        if self.shuffle:
+            ref_docs = list(ref_docs)
+            random.shuffle(ref_docs)
+
         if self.gold_preproc:
             examples = self.make_examples_gold_preproc(nlp, ref_docs)
         else:
@@ -155,7 +163,7 @@ class Corpus:
                 continue
             elif self.max_length == 0 or len(reference) < self.max_length:
                 yield self._make_example(nlp, reference, False)
-            elif reference.is_sentenced:
+            elif reference.has_annotation("SENT_START"):
                 for ref_sent in reference.sents:
                     if len(ref_sent) == 0:
                         continue
@@ -166,7 +174,7 @@ class Corpus:
         self, nlp: "Language", reference_docs: Iterable[Doc]
     ) -> Iterator[Example]:
         for reference in reference_docs:
-            if reference.is_sentenced:
+            if reference.has_annotation("SENT_START"):
                 ref_sents = [sent.as_doc() for sent in reference.sents]
             else:
                 ref_sents = [reference]
@@ -206,7 +214,7 @@ class JsonlCorpus:
     limit (int): Limit corpus to a subset of examples, e.g. for debugging.
         Defaults to 0, which indicates no limit.
 
-    DOCS: https://nightly.spacy.io/api/corpus#jsonlcorpus
+    DOCS: https://spacy.io/api/corpus#jsonlcorpus
     """
 
     file_type = "jsonl"
@@ -230,7 +238,7 @@ class JsonlCorpus:
         nlp (Language): The current nlp object.
         YIELDS (Example): The example objects.
 
-        DOCS: https://nightly.spacy.io/api/corpus#jsonlcorpus-call
+        DOCS: https://spacy.io/api/corpus#jsonlcorpus-call
         """
         for loc in walk_corpus(self.path, ".jsonl"):
             records = srsly.read_jsonl(loc)
