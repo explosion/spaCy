@@ -93,7 +93,7 @@ Defines the `nlp` object, its tokenizer and
 > labels = ["POSITIVE", "NEGATIVE"]
 >
 > [components.textcat.model]
-> @architectures = "spacy.TextCatBOW.v1"
+> @architectures = "spacy.TextCatBOW.v2"
 > exclusive_classes = true
 > ngram_size = 1
 > no_output_layer = false

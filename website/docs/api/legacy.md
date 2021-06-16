@@ -176,6 +176,68 @@ added to an existing vectors table. See more details in
 
 </Infobox>
 
+### spacy.TextCatCNN.v1 {#TextCatCNN_v1}
+
+Since `spacy.TextCatCNN.v2`, this architecture has become resizable, which means that you can add 
+labels to a previously trained textcat. `TextCatCNN` v1 did not yet support that.
+
+> #### Example Config
+>
+> ```ini
+> [model]
+> @architectures = "spacy.TextCatCNN.v1"
+> exclusive_classes = false
+> nO = null
+>
+> [model.tok2vec]
+> @architectures = "spacy.HashEmbedCNN.v1"
+> pretrained_vectors = null
+> width = 96
+> depth = 4
+> embed_size = 2000
+> window_size = 1
+> maxout_pieces = 3
+> subword_features = true
+> ```
+
+A neural network model where token vectors are calculated using a CNN. The
+vectors are mean pooled and used as features in a feed-forward network. This
+architecture is usually less accurate than the ensemble, but runs faster.
+
+| Name                | Description                                                                                                                                                                                    |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `exclusive_classes` | Whether or not categories are mutually exclusive. ~~bool~~                                                                                                                                     |
+| `tok2vec`           | The [`tok2vec`](#tok2vec) layer of the model. ~~Model~~                                                                                                                                        |
+| `nO`                | Output dimension, determined by the number of different labels. If not set, the [`TextCategorizer`](/api/textcategorizer) component will set it when `initialize` is called. ~~Optional[int]~~ |
+| **CREATES**         | The model using the architecture. ~~Model[List[Doc], Floats2d]~~                                                                                                                               |
+
+### spacy.TextCatBOW.v1 {#TextCatBOW_v1}
+
+Since `spacy.TextCatBOW.v2`, this architecture has become resizable, which means that you can add 
+labels to a previously trained textcat. `TextCatBOW` v1 did not yet support that.
+
+> #### Example Config
+>
+> ```ini
+> [model]
+> @architectures = "spacy.TextCatBOW.v1"
+> exclusive_classes = false
+> ngram_size = 1
+> no_output_layer = false
+> nO = null
+> ```
+
+An n-gram "bag-of-words" model. This architecture should run much faster than
+the others, but may not be as accurate, especially if texts are short.
+
+| Name                | Description                                                                                                                                                                                    |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `exclusive_classes` | Whether or not categories are mutually exclusive. ~~bool~~                                                                                                                                     |
+| `ngram_size`        | Determines the maximum length of the n-grams in the BOW model. For instance, `ngram_size=3` would give unigram, trigram and bigram features. ~~int~~                                           |
+| `no_output_layer`   | Whether or not to add an output layer to the model (`Softmax` activation if `exclusive_classes` is `True`, else `Logistic`). ~~bool~~                                                          |
+| `nO`                | Output dimension, determined by the number of different labels. If not set, the [`TextCategorizer`](/api/textcategorizer) component will set it when `initialize` is called. ~~Optional[int]~~ |
+| **CREATES**         | The model using the architecture. ~~Model[List[Doc], Floats2d]~~                                                                                                                               |
+
 ## Loggers {#loggers}
 
 These functions are available from `@spacy.registry.loggers`.
