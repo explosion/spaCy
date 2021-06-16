@@ -15,7 +15,7 @@ def TransitionModel(
     return Model(
         name="parser_model",
         forward=forward,
-        dims={"nI": tok2vec.get_dim("nI") if tok2vec.has_dim("nI") else None},
+        dims={"nI": tok2vec.maybe_get_dim("nI")},
         layers=[tok2vec, lower, upper],
         refs={"tok2vec": tok2vec, "lower": lower, "upper": upper},
         init=init,
