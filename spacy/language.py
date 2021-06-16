@@ -690,7 +690,7 @@ class Language:
         if self.vocab.vectors.shape != source.vocab.vectors.shape or \
                 self.vocab.vectors.key2row != source.vocab.vectors.key2row or \
                 self.vocab.vectors.to_bytes() != source.vocab.vectors.to_bytes():
-            util.logger.warning(Warnings.W113.format(name=source_name))
+            warnings.warn(Warnings.W113.format(name=source_name))
         if not source_name in source.component_names:
             raise KeyError(
                 Errors.E944.format(
@@ -1075,6 +1075,7 @@ class Language:
         losses: Optional[Dict[str, float]] = None,
         component_cfg: Optional[Dict[str, Dict[str, Any]]] = None,
         exclude: Iterable[str] = SimpleFrozenList(),
+        annotates: Iterable[str] = SimpleFrozenList(),
     ):
         """Update the models in the pipeline.
 
@@ -1082,10 +1083,13 @@ class Language:
         _: Should not be set - serves to catch backwards-incompatible scripts.
         drop (float): The dropout rate.
         sgd (Optimizer): An optimizer.
-        losses (Dict[str, float]): Dictionary to update with the loss, keyed by component.
+        losses (Dict[str, float]): Dictionary to update with the loss, keyed by
+            component.
         component_cfg (Dict[str, Dict]): Config parameters for specific pipeline
             components, keyed by component name.
         exclude (Iterable[str]): Names of components that shouldn't be updated.
+        annotates (Iterable[str]): Names of components that should set
+            annotations on the predicted examples after updating.
         RETURNS (Dict[str, float]): The updated losses dictionary
 
         DOCS: https://spacy.io/api/language#update
@@ -1104,15 +1108,16 @@ class Language:
             sgd = self._optimizer
         if component_cfg is None:
             component_cfg = {}
+        pipe_kwargs = {}
         for i, (name, proc) in enumerate(self.pipeline):
             component_cfg.setdefault(name, {})
+            pipe_kwargs[name] = deepcopy(component_cfg[name])
             component_cfg[name].setdefault("drop", drop)
+            pipe_kwargs[name].setdefault("batch_size", self.batch_size)
         for name, proc in self.pipeline:
-            if name in exclude or not hasattr(proc, "update"):
-                continue
-            proc.update(examples, sgd=None, losses=losses, **component_cfg[name])
-        if sgd not in (None, False):
-            for name, proc in self.pipeline:
+            if name not in exclude and hasattr(proc, "update"):
+                proc.update(examples, sgd=None, losses=losses, **component_cfg[name])
+            if sgd not in (None, False):
                 if (
                     name not in exclude
                     and hasattr(proc, "is_trainable")
@@ -1120,6 +1125,18 @@ class Language:
                     and proc.model not in (True, False, None)
                 ):
                     proc.finish_update(sgd)
+            if name in annotates:
+                for doc, eg in zip(
+                    _pipe(
+                        (eg.predicted for eg in examples),
+                        proc=proc,
+                        name=name,
+                        default_error_handler=self.default_error_handler,
+                        kwargs=pipe_kwargs[name],
+                    ),
+                    examples,
+                ):
+                    eg.predicted = doc
         return losses
 
     def rehearse(

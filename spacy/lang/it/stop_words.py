@@ -72,7 +72,7 @@ steste stesti stette stettero stetti stia stiamo stiano stiate sto su sua
 subito successivamente successivo sue sugl sugli sui sul sull sulla sulle
 sullo suo suoi
 
-tale tali talvolta tanto te tempo ti titolo torino tra tranne tre trenta
+tale tali talvolta tanto te tempo ti titolo tra tranne tre trenta
 troppo trovato tu tua tue tuo tuoi tutta tuttavia tutte tutti tutto
 
 uguali ulteriore ultimo un una uno uomo

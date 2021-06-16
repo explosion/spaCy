@@ -1,6 +1,4 @@
 import pytest
-import logging
-import mock
 import pickle
 from spacy import util, registry
 from spacy.lang.en import English
@@ -59,10 +57,10 @@ def test_lemmatizer_config(nlp):
 
     # warning if no POS assigned
     doc = nlp.make_doc("coping")
-    logger = logging.getLogger("spacy")
-    with mock.patch.object(logger, "warning") as mock_warning:
+    with pytest.warns(UserWarning):
         doc = lemmatizer(doc)
-        mock_warning.assert_called_once()
+    # warns once by default
+    doc = lemmatizer(doc)
 
     # works with POS
     doc = nlp.make_doc("coping")

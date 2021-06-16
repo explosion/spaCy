@@ -24,6 +24,13 @@ for exc_data in [
     {ORTH: "núm", NORM: "número"},
     {ORTH: "St.", NORM: "sant"},
     {ORTH: "Sta.", NORM: "santa"},
+    {ORTH: "'l"},
+    {ORTH: "'ls"},
+    {ORTH: "'m"},
+    {ORTH: "'n"},
+    {ORTH: "'ns"},
+    {ORTH: "'s"},
+    {ORTH: "'t"},
 ]:
     _exc[exc_data[ORTH]] = [exc_data]
 

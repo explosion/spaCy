@@ -1,20 +1,11 @@
 # cython: infer_types
-from libc.string cimport memset
-
-import srsly
-from collections import Counter
 import numpy
 import warnings
 
-from .attrs cimport POS, IS_SPACE
-from .parts_of_speech cimport SPACE
-from .lexeme cimport Lexeme
+from .attrs cimport POS
 
-from .strings import get_string_id
-from .attrs import LEMMA, intify_attrs
 from .parts_of_speech import IDS as POS_IDS
-from .errors import Errors, Warnings
-from .util import ensure_path
+from .errors import Warnings
 from . import symbols
 
 
