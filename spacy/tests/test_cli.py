@@ -13,6 +13,7 @@ from spacy.cli._util import string_to_list
 from spacy import about
 from spacy.util import get_minor_version
 from spacy.cli.validate import get_model_pkgs
+from spacy.cli.download import get_compatibility, get_version
 from thinc.api import ConfigValidationError, Config
 import srsly
 import os
@@ -485,6 +486,13 @@ def test_string_to_list(value):
 def test_string_to_list_intify(value):
     assert string_to_list(value, intify=False) == ["1", "2", "3"]
     assert string_to_list(value, intify=True) == [1, 2, 3]
+
+
+def test_download_compatibility():
+    model_name = "en_core_web_sm"
+    compatibility = get_compatibility()
+    version = get_version(model_name, compatibility)
+    assert get_minor_version(about.__version__) == get_minor_version(version)
 
 
 def test_validate_compatibility_table():
