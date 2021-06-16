@@ -84,10 +84,9 @@ cdef GoldNERStateC create_gold_state(
         gs.ner[i] = moves.lookup_transition(ner_tag)
 
     # Prevent conflicting spans in the data. For NER, spans are equal if they have the same offsets and label.
-    neg_span_hashes = [hash((neg_ent.start_char, neg_ent.end_char, neg_ent.label)) for neg_ent in negs]
+    neg_span_triples = {(neg_ent.start_char, neg_ent.end_char, neg_ent.label) for neg_ent in negs}
     for pos_span in ner_ents:
-        pos_hash = hash((pos_span.start_char, pos_span.end_char, pos_span.label))
-        if pos_hash in neg_span_hashes:
+        if (pos_span.start_char, pos_span.end_char, pos_span.label) in neg_span_triples:
             raise ValueError(Errors.E868.format(span=(pos_span.start_char, pos_span.end_char, pos_span.label_)))
 
     # In order to handle negative samples, we need to maintain the full
