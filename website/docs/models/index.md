@@ -185,6 +185,12 @@ nlp = spacy.load("en_core_web_trf", disable=["tagger", "parser", "attribute_rule
 
 #### Move NER to the end of the pipeline
 
+<Infobox title="For v3.0.x models only" variant="warning">
+
+As of v3.1, the NER component is at the end of the pipeline by default.
+
+</Infobox>
+
 For access to `POS` and `LEMMA` features in an `entity_ruler`, move `ner` to the
 end of the pipeline after `attribute_ruler` and `lemmatizer`:
 
