@@ -1168,7 +1168,7 @@ class WhitespaceTokenizer:
         self.vocab = vocab
 
     def __call__(self, text):
-        words = text.split(" ")
+        words = text.split()
         return Doc(self.vocab, words=words)
 
 nlp = spacy.blank("en")

@@ -419,6 +419,23 @@ def test_language_from_config_before_after_init_invalid():
             English.from_config(config)
 
 
+def test_language_whitespace_tokenizer():
+    """Test the custom whitespace tokenizer from the docs."""
+
+    class WhitespaceTokenizer:
+        def __init__(self, vocab):
+            self.vocab = vocab
+
+        def __call__(self, text):
+            words = text.split()
+            return Doc(self.vocab, words=words)
+
+    nlp = spacy.blank("en")
+    nlp.tokenizer = WhitespaceTokenizer(nlp.vocab)
+    doc = nlp("What's happened to    me? he thought. It wasn't a dream. ")
+    assert doc
+
+
 def test_language_custom_tokenizer():
     """Test that a fully custom tokenizer can be plugged in via the registry."""
     name = "test_language_custom_tokenizer"
