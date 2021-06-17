@@ -413,13 +413,10 @@ def ant_scorer_forward(
 
         offset = 0
         for dy, (prod_back, pw_sum_back), ll in zip(dYscores, backprops, veclens):
-            # I'm not undoing the operations in the right order here.
             dyscore, dyidx = dy
             # the full score grid is square
 
             fullscore = ops.alloc2f(ll, ll)
-            # cupy has no put_along_axis
-            # xp.put_along_axis(fullscore, dyidx, dyscore, 1)
             for ii, (ridx, rscores) in enumerate(zip(dyidx, dyscore)):
                 fullscore[ii][ridx] = rscores
 
