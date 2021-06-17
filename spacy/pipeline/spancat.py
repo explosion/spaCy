@@ -366,6 +366,7 @@ class SpanCategorizer(TrainablePipe):
         self._validate_categories(examples)
         kwargs = dict(kwargs)
         kwargs.setdefault("attr", self.key)
+        kwargs.setdefault("attr_name", "spans")  # ensure the dict contains 'spans_f' etc
         kwargs.setdefault("labels", self.labels)
         kwargs.setdefault("multi_label", True)
         kwargs.setdefault("threshold", self.cfg["threshold"])

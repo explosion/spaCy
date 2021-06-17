@@ -149,6 +149,7 @@ Returns PRF scores for labeled or unlabeled spans.
 | `has_annotation` | Defaults to `None`. If provided, `has_annotation(doc)` should return whether a `Doc` has annotation for this `attr`. Docs without annotation are skipped for scoring purposes. ~~str~~      |
 | `labeled`        | Defaults to `True`. If set to `False`, two spans will be considered equal if their start and end match, irrespective of their label. ~~bool~~                                               |
 | `allow_overlap`  | Defaults to `False`. Whether or not to allow overlapping spans. If set to `False`, the alignment will automatically resolve conflicts. ~~bool~~                                             |
+| `attr_name`      | The name of the scored attribute as used in the scoring dictionary. Defaults to `None`, in which case the value of `attr` is used.  ~~Optional[str]~~                                       |
 | **RETURNS**      | A dictionary containing the PRF scores under the keys `{attr}_p`, `{attr}_r`, `{attr}_f` and the per-type PRF scores under `{attr}_per_type`. ~~Dict[str, Union[float, Dict[str, float]]]~~ |
 
 ## Scorer.score_deps {#score_deps tag="staticmethod" new="3"}

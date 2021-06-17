@@ -313,12 +313,15 @@ class Scorer:
         has_annotation: Optional[Callable[[Doc], bool]] = None,
         labeled: bool = True,
         allow_overlap: bool = False,
+        attr_name: Optional[str] = None,
         **cfg,
     ) -> Dict[str, Any]:
         """Returns PRF scores for labeled spans.
 
         examples (Iterable[Example]): Examples to score
         attr (str): The attribute to score.
+        attr_name (Optional[str]): The name of the attr to use in the final scoring dict.
+            Defaults to `None`, in which case the value of `attr` is used.
         getter (Callable[[Doc, str], Iterable[Span]]): Defaults to getattr. If
             provided, getter(doc, attr) should return the spans for the
             individual doc.
@@ -337,6 +340,8 @@ class Scorer:
         """
         score = PRFScore()
         score_per_type = dict()
+        if attr_name is None:
+            attr_name = attr
         for example in examples:
             pred_doc = example.predicted
             gold_doc = example.reference
@@ -381,18 +386,18 @@ class Scorer:
             score.score_set(pred_spans, gold_spans)
         # Assemble final result
         final_scores = {
-                f"{attr}_p": None,
-                f"{attr}_r": None,
-                f"{attr}_f": None,
+                f"{attr_name}_p": None,
+                f"{attr_name}_r": None,
+                f"{attr_name}_f": None,
             }
         if labeled:
-            final_scores[f"{attr}_per_type"] = None
+            final_scores[f"{attr_name}_per_type"] = None
         if len(score) > 0:
-            final_scores[f"{attr}_p"] = score.precision
-            final_scores[f"{attr}_r"] = score.recall
-            final_scores[f"{attr}_f"] = score.fscore
+            final_scores[f"{attr_name}_p"] = score.precision
+            final_scores[f"{attr_name}_r"] = score.recall
+            final_scores[f"{attr_name}_f"] = score.fscore
             if labeled:
-                final_scores[f"{attr}_per_type"] = {k: v.to_dict() for k, v in score_per_type.items()}
+                final_scores[f"{attr_name}_per_type"] = {k: v.to_dict() for k, v in score_per_type.items()}
         return final_scores
 
     @staticmethod
