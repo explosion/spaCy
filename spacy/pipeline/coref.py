@@ -29,8 +29,10 @@ default_config = """
 @architectures = "spacy.Coref.v1"
 max_span_width = 20
 mention_limit = 3900
+mention_limit_ratio = 0.4
 dropout = 0.3
 hidden = 1000
+antecedent_limit = 50
 
 [model.get_mentions]
 @misc = "spacy.CorefCandidateGenerator.v1"
