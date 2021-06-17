@@ -28,7 +28,7 @@ architectures and their arguments and hyperparameters.
 > from spacy.pipeline.spancat import DEFAULT_SPANCAT_MODEL
 > config = {
 >     "threshold": 0.5,
->     "spans_key": "spans",
+>     "spans_key": "labeled_spans",
 >     "max_positive": None,
 >     "model": DEFAULT_SPANCAT_MODEL,
 >     "suggester": {"@misc": "ngram_suggester.v1", "sizes": [1, 2]},
