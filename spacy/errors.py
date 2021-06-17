@@ -24,6 +24,9 @@ def setup_default_warnings():
     for pipe in ["matcher", "entity_ruler"]:
         filter_warning("once", error_msg=Warnings.W036.format(name=pipe))
 
+    # warn once about lemmatizer without required POS
+    filter_warning("once", error_msg="[W108]")
+
 
 def filter_warning(action: str, error_msg: str):
     """Customize how spaCy should handle a certain warning.
@@ -518,6 +521,13 @@ class Errors:
     E202 = ("Unsupported alignment mode '{mode}'. Supported modes: {modes}.")
 
     # New errors added in v3.x
+    E868 = ("Found a conflicting gold annotation in a reference document, "
+            "with the following char-based span occurring both in the gold ents "
+            "as well as in the negative spans: {span}.")
+    E869 = ("The notation '{label}' is not supported anymore. To annotate "
+            "negative NER samples, use `doc.spans[key]` instead, and "
+            "specify the key as 'incorrect_spans_key' when constructing "
+            "the NER component.")
     E870 = ("Could not serialize the DocBin because it is too large. Consider "
             "splitting up your documents into several doc bins and serializing "
             "each separately. spacy.Corpus.v1 will search recursively for all "

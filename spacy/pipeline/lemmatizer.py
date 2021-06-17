@@ -2,6 +2,8 @@ from typing import Optional, List, Dict, Any, Callable, Iterable, Union, Tuple
 from thinc.api import Model
 from pathlib import Path
 
+import warnings
+
 from .pipe import Pipe
 from ..errors import Errors, Warnings
 from ..language import Language
@@ -182,7 +184,7 @@ class Lemmatizer(Pipe):
         univ_pos = token.pos_.lower()
         if univ_pos in ("", "eol", "space"):
             if univ_pos == "":
-                logger.warning(Warnings.W108.format(text=string))
+                warnings.warn(Warnings.W108.format(text=string))
             return [string.lower()]
         # See Issue #435 for example of where this logic is requied.
         if self.is_base_form(token):

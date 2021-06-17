@@ -235,9 +235,9 @@ cdef class Example:
                     seen.update(indices)
         return output
 
-    def get_aligned_ner(self):
+    def get_aligned_ents_and_ner(self):
         if not self.y.has_annotation("ENT_IOB"):
-            return [None] * len(self.x)  # should this be 'missing' instead of 'None' ?
+            return [], [None] * len(self.x)
         x_ents = self.get_aligned_spans_y2x(self.y.ents, allow_overlap=False)
         # Default to 'None' for missing values
         x_tags = offsets_to_biluo_tags(
@@ -253,6 +253,10 @@ cdef class Example:
                     x_tags[i] = "O"
                 elif self.x[i].is_space:
                     x_tags[i] = "O"
+        return x_ents, x_tags
+
+    def get_aligned_ner(self):
+        x_ents, x_tags = self.get_aligned_ents_and_ner()
         return x_tags
 
     def to_dict(self):

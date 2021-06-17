@@ -612,7 +612,7 @@ single-label use-cases where `exclusive_classes = true`, while the
 > nO = null
 >
 > [model.linear_model]
-> @architectures = "spacy.TextCatBOW.v1"
+> @architectures = "spacy.TextCatBOW.v2"
 > exclusive_classes = true
 > ngram_size = 1
 > no_output_layer = false
@@ -667,13 +667,13 @@ taking it as argument:
 
 </Accordion>
 
-### spacy.TextCatCNN.v1 {#TextCatCNN}
+### spacy.TextCatCNN.v2 {#TextCatCNN}
 
 > #### Example Config
 >
 > ```ini
 > [model]
-> @architectures = "spacy.TextCatCNN.v1"
+> @architectures = "spacy.TextCatCNN.v2"
 > exclusive_classes = false
 > nO = null
 >
@@ -699,13 +699,20 @@ architecture is usually less accurate than the ensemble, but runs faster.
 | `nO`                | Output dimension, determined by the number of different labels. If not set, the [`TextCategorizer`](/api/textcategorizer) component will set it when `initialize` is called. ~~Optional[int]~~ |
 | **CREATES**         | The model using the architecture. ~~Model[List[Doc], Floats2d]~~                                                                                                                               |
 
-### spacy.TextCatBOW.v1 {#TextCatBOW}
+<Accordion title="spacy.TextCatCNN.v1 definition" spaced>
+
+[TextCatCNN.v1](/api/legacy#TextCatCNN_v1) had the exact same signature, but was not yet resizable. 
+Since v2, new labels can be added to this component, even after training.
+
+</Accordion>
+
+### spacy.TextCatBOW.v2 {#TextCatBOW}
 
 > #### Example Config
 >
 > ```ini
 > [model]
-> @architectures = "spacy.TextCatBOW.v1"
+> @architectures = "spacy.TextCatBOW.v2"
 > exclusive_classes = false
 > ngram_size = 1
 > no_output_layer = false
@@ -722,6 +729,13 @@ the others, but may not be as accurate, especially if texts are short.
 | `no_output_layer`   | Whether or not to add an output layer to the model (`Softmax` activation if `exclusive_classes` is `True`, else `Logistic`). ~~bool~~                                                          |
 | `nO`                | Output dimension, determined by the number of different labels. If not set, the [`TextCategorizer`](/api/textcategorizer) component will set it when `initialize` is called. ~~Optional[int]~~ |
 | **CREATES**         | The model using the architecture. ~~Model[List[Doc], Floats2d]~~                                                                                                                               |
+
+<Accordion title="spacy.TextCatBOW.v1 definition" spaced>
+
+[TextCatBOW.v1](/api/legacy#TextCatBOW_v1) had the exact same signature, but was not yet resizable. 
+Since v2, new labels can be added to this component, even after training.
+
+</Accordion>
 
 ## Span classification architectures {#spancat source="spacy/ml/models/spancat.py"}
 
