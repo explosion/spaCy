@@ -373,7 +373,7 @@ def ant_scorer_forward(
             warnings.filterwarnings('ignore', category=RuntimeWarning)
             mask = xp.log(
                 (xp.expand_dims(ant_range, 1) - xp.expand_dims(ant_range, 0)) >= 1
-            ).astype(float)
+            ).astype('f')
 
         scores = pw_prod + pw_sum + mask
 
