@@ -21,14 +21,14 @@ scorer = {"@architectures": "spacy.LinearLogistic.v1"}
 
 [model.reducer]
 @architectures = spacy.mean_max_reducer.v1
-hidden_size = 96
+hidden_size = 128
 
 [model.tok2vec]
 @architectures = "spacy.Tok2Vec.v1"
 
 [model.tok2vec.embed]
 @architectures = "spacy.MultiHashEmbed.v1"
-width = 128
+width = 96
 rows = [5000, 2000, 1000, 1000]
 attrs = ["ORTH", "PREFIX", "SUFFIX", "SHAPE"]
 include_static_vectors = false
@@ -82,7 +82,7 @@ def build_ngram_suggester(sizes: List[int]) -> Callable[[List[Doc]], Ragged]:
         "spans_key": "spans",
         "max_positive": None,
         "model": DEFAULT_SPANCAT_MODEL,
-        "suggester": {"@misc": "ngram_suggester.v1", "sizes": [1, 2]},
+        "suggester": {"@misc": "ngram_suggester.v1", "sizes": [1, 2, 3]},
     },
     default_score_weights={"spans_f": 1.0, "spans_p": 0.0, "spans_r": 0.0},
 )

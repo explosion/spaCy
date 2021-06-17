@@ -736,7 +736,7 @@ the others, but may not be as accurate, especially if texts are short.
 > 
 > [model.reducer]
 > @architectures = spacy.mean_max_reducer.v1"
-> hidden_size = 96
+> hidden_size = 128
 >
 > [model.tok2vec]
 > @architectures = "spacy.Tok2Vec.v1"

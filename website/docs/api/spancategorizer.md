@@ -31,7 +31,7 @@ architectures and their arguments and hyperparameters.
 >     "spans_key": "labeled_spans",
 >     "max_positive": None,
 >     "model": DEFAULT_SPANCAT_MODEL,
->     "suggester": {"@misc": "ngram_suggester.v1", "sizes": [1, 2]},
+>     "suggester": {"@misc": "ngram_suggester.v1", "sizes": [1, 2, 3]},
 > }
 > nlp.add_pipe("spancat", config=config)
 > ```
@@ -441,7 +441,7 @@ serialization by passing in the string names via the `exclude` argument.
 > ```ini
 > [components.spancat.suggester]
 > @misc = "spacy.ngram_suggester.v1"
-> sizes = [1, 2]
+> sizes = [1, 2, 3]
 > ```
 
 Suggest all spans of the given lengths. Spans are returned as a ragged array of
