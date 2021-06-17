@@ -718,8 +718,10 @@ def load_meta(path: Union[str, Path]) -> Dict[str, Any]:
             lower_version = get_minor_version(lower_version)
             if lower_version is not None:
                 lower_version = "v" + lower_version
+            elif "spacy_git_version" in meta:
+                lower_version = "git commit " + meta["spacy_git_version"]
             else:
-                lower_version = "git commit " + meta.get("spacy_git_version", "version unknown")
+                lower_version = "version unknown"
             warn_msg = Warnings.W095.format(
                 model=f"{meta['lang']}_{meta['name']}",
                 model_version=meta["version"],
