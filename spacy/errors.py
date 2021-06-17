@@ -151,11 +151,11 @@ class Warnings:
             'not. Consider changing the "spacy_version" in your meta.json to a '
             "version range, with a lower and upper pin. For example: {example}")
     W095 = ("Model '{model}' ({model_version}) was trained with spaCy "
-            "{version} and may not be 100% compatible with the current version "
-            "({current}). If you see errors or degraded performance, download "
-            "a newer compatible model or retrain your custom model with the "
-            "current spaCy version. For more details and available updates, "
-            "run: python -m spacy validate")
+            "v{version} and may not be 100% compatible with the current "
+            "version ({current}). If you see errors or degraded performance, "
+            "download a newer compatible model or retrain your custom model "
+            "with the current spaCy version. For more details and available "
+            "updates, run: python -m spacy validate")
     W096 = ("The method `nlp.disable_pipes` is now deprecated - use "
             "`nlp.select_pipes` instead.")
     W100 = ("Skipping unsupported morphological feature(s): '{feature}'. "

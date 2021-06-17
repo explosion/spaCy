@@ -648,6 +648,19 @@ def get_model_version_range(spacy_version: str) -> str:
     return f">={spacy_version},<{release[0]}.{release[1] + 1}.0"
 
 
+def get_model_lower_version(constraint: str) -> Optional[str]:
+    """From a version range like >=1.2.3,<1.3.0 return the lower pin.
+    """
+    try:
+        specset = SpecifierSet(constraint)
+        for spec in specset:
+            if spec.operator in (">=", "==", "~="):
+                return spec.version
+    except Exception:
+        pass
+    return None
+
+
 def get_base_version(version: str) -> str:
     """Generate the base version without any prerelease identifiers.
 
@@ -701,10 +714,14 @@ def load_meta(path: Union[str, Path]) -> Dict[str, Any]:
             raise ValueError(Errors.E054.format(setting=setting))
     if "spacy_version" in meta:
         if not is_compatible_version(about.__version__, meta["spacy_version"]):
+            lower_version = get_model_lower_version(meta["spacy_version"])
+            lower_version = get_minor_version(lower_version)
+            if lower_version is None:
+                lower_version = "unknown"
             warn_msg = Warnings.W095.format(
                 model=f"{meta['lang']}_{meta['name']}",
                 model_version=meta["version"],
-                version=meta["spacy_version"],
+                version=lower_version,
                 current=about.__version__,
             )
             warnings.warn(warn_msg)
