@@ -190,14 +190,9 @@ def test_issue3345():
     doc = Doc(nlp.vocab, words=["I", "live", "in", "New", "York"])
     doc[4].is_sent_start = True
     ruler = EntityRuler(nlp, patterns=[{"label": "GPE", "pattern": "New York"}])
-    config = {
-        "learn_tokens": False,
-        "min_action_freq": 30,
-        "update_with_oracle_cut_size": 100,
-    }
     cfg = {"model": DEFAULT_NER_MODEL}
     model = registry.resolve(cfg, validate=True)["model"]
-    ner = EntityRecognizer(doc.vocab, model, **config)
+    ner = EntityRecognizer(doc.vocab, model)
     # Add the OUT action. I wouldn't have thought this would be necessary...
     ner.moves.add_action(5, "")
     ner.add_label("GPE")
