@@ -27,7 +27,7 @@ class Doc:
     def set_extension(
         cls,
         name: str,
-        default: Optional[Any],
+        default: Optional[Any] = ...,
         getter: Optional[Callable[[Doc], Any]] = ...,
         setter: Optional[Callable[[Doc, Any], None]] = ...,
         method: Optional[DocMethod] = ...,
