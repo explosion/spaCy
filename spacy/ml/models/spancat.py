@@ -9,7 +9,7 @@ from ...tokens import Doc
 from ..extract_spans import extract_spans
 
 
-@registry.architectures.register("spacy.LinearLogistic.v1")
+@registry.layers.register("spacy.LinearLogistic.v1")
 def build_linear_logistic(nO=None, nI=None) -> Model[Floats2d, Floats2d]:
     """An output layer for multi-label classification. It uses a linear layer
     followed by a logistic activation.
@@ -17,7 +17,7 @@ def build_linear_logistic(nO=None, nI=None) -> Model[Floats2d, Floats2d]:
     return chain(Linear(nO=nO, nI=nI, init_W=zero_init), Logistic())
 
 
-@registry.architectures.register("spacy.mean_max_reducer.v1")
+@registry.layers.register("spacy.mean_max_reducer.v1")
 def build_mean_max_reducer(hidden_size: int) -> Model[Ragged, Floats2d]:
     """Reduce sequences by concatenating their mean and max pooled vectors,
     and then combine the concatenated vectors with a hidden layer.

@@ -746,10 +746,10 @@ Since v2, new labels can be added to this component, even after training.
 > ```ini
 > [model]
 > @architectures = "spacy.SpanCategorizer.v1"
-> scorer = {"@architectures": "spacy.LinearLogistic.v1"}
+> scorer = {"@layers": "spacy.LinearLogistic.v1"}
 > 
 > [model.reducer]
-> @architectures = spacy.mean_max_reducer.v1"
+> @layers = spacy.mean_max_reducer.v1"
 > hidden_size = 128
 >
 > [model.tok2vec]
