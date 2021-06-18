@@ -1,6 +1,6 @@
 ---
 title: SpanCategorizer
-tag: class
+tag: class,experimental
 source: spacy/pipeline/spancat.py
 new: 3.1
 teaser: 'Pipeline component for labeling potentially overlapping spans of text'
