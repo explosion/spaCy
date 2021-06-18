@@ -2,7 +2,7 @@
 title: SpanCategorizer
 tag: class
 source: spacy/pipeline/spancat.py
-new: 3
+new: 3.1
 teaser: 'Pipeline component for labeling potentially overlapping spans of text'
 api_base_class: /api/pipe
 api_string_name: spancat
