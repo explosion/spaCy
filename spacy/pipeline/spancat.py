@@ -79,12 +79,12 @@ def build_ngram_suggester(sizes: List[int]) -> Callable[[List[Doc]], Ragged]:
     assigns=["doc.spans"],
     default_config={
         "threshold": 0.5,
-        "spans_key": "spans",
+        "spans_key": "sc",
         "max_positive": None,
         "model": DEFAULT_SPANCAT_MODEL,
         "suggester": {"@misc": "ngram_suggester.v1", "sizes": [1, 2, 3]},
     },
-    default_score_weights={"spans_f": 1.0, "spans_p": 0.0, "spans_r": 0.0},
+    default_score_weights={"spans_sc_f": 1.0, "spans_sc_p": 0.0, "spans_sc_r": 0.0},
 )
 def make_spancat(
     nlp: Language,
@@ -365,12 +365,11 @@ class SpanCategorizer(TrainablePipe):
         validate_examples(examples, "SpanCategorizer.score")
         self._validate_categories(examples)
         kwargs = dict(kwargs)
-        kwargs.setdefault("attr", self.key)
-        kwargs.setdefault("attr_name", "spans")  # ensure the dict contains 'spans_f' etc
+        kwargs.setdefault("attr", f"spans_{self.key}")
         kwargs.setdefault("labels", self.labels)
         kwargs.setdefault("multi_label", True)
         kwargs.setdefault("threshold", self.cfg["threshold"])
-        kwargs.setdefault("getter", lambda doc, key: doc.spans.get(key, []))
+        kwargs.setdefault("getter", lambda doc, key: doc.spans.get(key.split("_")[-1], []))
         kwargs.setdefault("has_annotation", lambda doc: self.key in doc.spans)
         return Scorer.score_spans(examples, **kwargs)
 

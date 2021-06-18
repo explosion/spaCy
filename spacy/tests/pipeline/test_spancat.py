@@ -41,3 +41,5 @@ def test_simple_train():
     assert doc.spans[spancat.key] == doc.spans[SPAN_KEY]
     assert len(doc.spans[spancat.key]) == 2
     assert doc.spans[spancat.key][0].text == "London"
+    scores = nlp.evaluate(get_examples())
+    assert f"spans_{SPAN_KEY}_f" in scores
