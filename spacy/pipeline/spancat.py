@@ -365,11 +365,12 @@ class SpanCategorizer(TrainablePipe):
         validate_examples(examples, "SpanCategorizer.score")
         self._validate_categories(examples)
         kwargs = dict(kwargs)
-        kwargs.setdefault("attr", f"spans_{self.key}")
+        attr_prefix = "spans_"
+        kwargs.setdefault("attr", f"{attr_prefix}{self.key}")
         kwargs.setdefault("labels", self.labels)
         kwargs.setdefault("multi_label", True)
         kwargs.setdefault("threshold", self.cfg["threshold"])
-        kwargs.setdefault("getter", lambda doc, key: doc.spans.get(key.split("_")[-1], []))
+        kwargs.setdefault("getter", lambda doc, key: doc.spans.get(key[len(attr_prefix):], []))
         kwargs.setdefault("has_annotation", lambda doc: self.key in doc.spans)
         return Scorer.score_spans(examples, **kwargs)
 
