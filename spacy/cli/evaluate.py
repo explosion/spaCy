@@ -60,6 +60,7 @@ def evaluate(
     displacy_path: Optional[Path] = None,
     displacy_limit: int = 25,
     silent: bool = True,
+    span_key="sc",
 ) -> Scorer:
     msg = Printer(no_print=silent, pretty=not silent)
     fix_random_seed()
@@ -90,6 +91,9 @@ def evaluate(
         "SENT P": "sents_p",
         "SENT R": "sents_r",
         "SENT F": "sents_f",
+        "SPAN P": f"spans_{span_key}_p",
+        "SPAN R": f"spans_{span_key}_r",
+        "SPAN F": f"spans_{span_key}_f",
         "SPEED": "speed",
     }
     results = {}
