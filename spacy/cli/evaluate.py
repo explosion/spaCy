@@ -60,6 +60,7 @@ def evaluate(
     displacy_path: Optional[Path] = None,
     displacy_limit: int = 25,
     silent: bool = True,
+    spans_key="sc",
 ) -> Scorer:
     msg = Printer(no_print=silent, pretty=not silent)
     fix_random_seed()
@@ -90,6 +91,9 @@ def evaluate(
         "SENT P": "sents_p",
         "SENT R": "sents_r",
         "SENT F": "sents_f",
+        "SPAN P": f"spans_{spans_key}_p",
+        "SPAN R": f"spans_{spans_key}_r",
+        "SPAN F": f"spans_{spans_key}_f",
         "SPEED": "speed",
     }
     results = {}
@@ -121,6 +125,10 @@ def evaluate(
         if scores["ents_per_type"]:
             print_prf_per_type(msg, scores["ents_per_type"], "NER", "type")
             data["ents_per_type"] = scores["ents_per_type"]
+    if f"spans_{spans_key}_per_type" in scores:
+        if scores[f"spans_{spans_key}_per_type"]:
+            print_prf_per_type(msg, scores[f"spans_{spans_key}_per_type"], "SPANS", "type")
+            data[f"spans_{spans_key}_per_type"] = scores[f"spans_{spans_key}_per_type"]
     if "cats_f_per_type" in scores:
         if scores["cats_f_per_type"]:
             print_prf_per_type(msg, scores["cats_f_per_type"], "Textcat F", "label")
