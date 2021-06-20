@@ -643,7 +643,7 @@ The default score weights are defined by each pipeline component via the
 components are weighted equally. If a score weight is set to `null`, it will be
 excluded from the logs and the score won't be weighted.
 
-<Accordion title="Understanding the training output and score types" spaced>
+<Accordion title="Understanding the training output and score types" spaced id="score-types">
 
 | Name                       | Description                                                                                                             |
 | -------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
