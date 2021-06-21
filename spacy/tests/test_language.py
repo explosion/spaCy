@@ -475,3 +475,26 @@ def test_language_init_invalid_vocab(value):
     with pytest.raises(ValueError) as e:
         Language(value)
     assert err_fragment in str(e.value)
+
+
+def test_language_source_and_vectors(nlp2):
+    nlp = Language(Vocab())
+    textcat = nlp.add_pipe("textcat")
+    for label in ("POSITIVE", "NEGATIVE"):
+        textcat.add_label(label)
+    nlp.initialize()
+    long_string = "thisisalongstring"
+    assert long_string not in nlp.vocab.strings
+    assert long_string not in nlp2.vocab.strings
+    nlp.vocab.strings.add(long_string)
+    assert nlp.vocab.vectors.to_bytes() != nlp2.vocab.vectors.to_bytes()
+    vectors_bytes = nlp.vocab.vectors.to_bytes()
+    # TODO: convert to pytest.warns for v3.1
+    logger = logging.getLogger("spacy")
+    with mock.patch.object(logger, "warning") as mock_warning:
+        nlp2.add_pipe("textcat", name="textcat2", source=nlp)
+        mock_warning.assert_called()
+    # strings should be added
+    assert long_string in nlp2.vocab.strings
+    # vectors should remain unmodified
+    assert nlp.vocab.vectors.to_bytes() == vectors_bytes
