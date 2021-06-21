@@ -282,6 +282,9 @@ class SpanCategorizer(TrainablePipe):
         DOCS: https://spacy.io/api/spancategorizer#get_loss
         """
         spans, scores = spans_scores
+        spans = Ragged(
+            self.model.ops.to_numpy(spans.data), self.model.ops.to_numpy(spans.lengths)
+        )
         label_map = {label: i for i, label in enumerate(self.labels)}
         target = numpy.zeros(scores.shape, dtype=scores.dtype)
         offset = 0
@@ -370,7 +373,9 @@ class SpanCategorizer(TrainablePipe):
         kwargs.setdefault("labels", self.labels)
         kwargs.setdefault("multi_label", True)
         kwargs.setdefault("threshold", self.cfg["threshold"])
-        kwargs.setdefault("getter", lambda doc, key: doc.spans.get(key[len(attr_prefix):], []))
+        kwargs.setdefault(
+            "getter", lambda doc, key: doc.spans.get(key[len(attr_prefix) :], [])
+        )
         kwargs.setdefault("has_annotation", lambda doc: self.key in doc.spans)
         return Scorer.score_spans(examples, **kwargs)
 
