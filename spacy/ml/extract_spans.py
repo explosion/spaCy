@@ -1,5 +1,5 @@
 from typing import Tuple, Callable
-from thinc.api import Model
+from thinc.api import Model, to_numpy
 from thinc.types import Ragged, Ints1d
 
 from ..util import registry
@@ -45,6 +45,7 @@ def _get_span_indices(ops, spans: Ragged, lengths: Ints1d) -> Ints1d:
     source data. For instance, if we want the spans (5, 9), (8, 10) the
     indices will be [5, 6, 7, 8, 8, 9].
     """
+    spans, lengths = _ensure_cpu(spans, lengths)
     indices = []
     offset = 0
     for i, length in enumerate(lengths):
@@ -53,3 +54,7 @@ def _get_span_indices(ops, spans: Ragged, lengths: Ints1d) -> Ints1d:
             indices.append(ops.xp.arange(spans_i[j, 0], spans_i[j, 1]))
         offset += length
     return ops.flatten(indices)
+
+
+def _ensure_cpu(spans: Ragged, lengths: Ints1d) -> Tuple[Ragged, Ints1d]:
+    return (Ragged(to_numpy(spans.dataXd), to_numpy(spans.lengths)), to_numpy(lengths))
