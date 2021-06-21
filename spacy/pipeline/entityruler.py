@@ -3,6 +3,7 @@ from typing import Optional, Union, List, Dict, Tuple, Iterable, Any, Callable, 
 from collections import defaultdict
 from pathlib import Path
 import srsly
+import warnings
 
 from .pipe import Pipe
 from ..training import Example
@@ -141,7 +142,9 @@ class EntityRuler(Pipe):
 
     def match(self, doc: Doc):
         self._require_patterns()
-        matches = list(self.matcher(doc)) + list(self.phrase_matcher(doc))
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", message="\\[W036")
+            matches = list(self.matcher(doc)) + list(self.phrase_matcher(doc))
         matches = set(
             [(m_id, start, end) for m_id, start, end in matches if start != end]
         )
@@ -276,7 +279,7 @@ class EntityRuler(Pipe):
                     current_index = i
                     break
             subsequent_pipes = [
-                pipe for pipe in self.nlp.pipe_names[current_index + 1 :]
+                pipe for pipe in self.nlp.pipe_names[current_index :]
             ]
         except ValueError:
             subsequent_pipes = []
@@ -328,11 +331,6 @@ class EntityRuler(Pipe):
         self.phrase_matcher = PhraseMatcher(
             self.nlp.vocab, attr=self.phrase_matcher_attr, validate=self._validate
         )
-
-    def _require_patterns(self) -> None:
-        """Raise a warning if this component has no patterns defined."""
-        if len(self) == 0:
-            warnings.warn(Warnings.W036.format(name=self.name))
 
     def _require_patterns(self) -> None:
         """Raise a warning if this component has no patterns defined."""
