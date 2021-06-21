@@ -489,11 +489,8 @@ def test_language_source_and_vectors(nlp2):
     nlp.vocab.strings.add(long_string)
     assert nlp.vocab.vectors.to_bytes() != nlp2.vocab.vectors.to_bytes()
     vectors_bytes = nlp.vocab.vectors.to_bytes()
-    # TODO: convert to pytest.warns for v3.1
-    logger = logging.getLogger("spacy")
-    with mock.patch.object(logger, "warning") as mock_warning:
+    with pytest.warns(UserWarning):
         nlp2.add_pipe("textcat", name="textcat2", source=nlp)
-        mock_warning.assert_called()
     # strings should be added
     assert long_string in nlp2.vocab.strings
     # vectors should remain unmodified
