@@ -11,19 +11,35 @@ from typing import (
     Any,
     overload,
 )
+from cymem.cymem import Pool
 from thinc.types import Floats1d, Floats2d, Ints2d
 from .span import Span
 from .token import Token
+from ._dict_proxies import SpanGroups
 from ._retokenize import Retokenizer
 from ..lexeme import Lexeme
 from ..vocab import Vocab
 from .underscore import Underscore
 from pathlib import Path
+import numpy
 
 class DocMethod(Protocol):
     def __call__(self: Doc, *args: Any, **kwargs: Any) -> Any: ...
 
 class Doc:
+    vocab: Vocab
+    mem: Pool
+    spans: SpanGroups
+    max_length: int
+    length: int
+    sentiment: float
+    cats: Dict[str, float]
+    user_hooks: Dict[str, Callable[..., Any]]
+    user_token_hooks: Dict[str, Callable[..., Any]]
+    user_span_hooks: Dict[str, Callable[..., Any]]
+    tensor: numpy.ndarray
+    user_data: Dict[str, Any]
+    has_unknown_spaces: bool
     @classmethod
     def set_extension(
         cls,

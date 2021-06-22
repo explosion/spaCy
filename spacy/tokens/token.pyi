@@ -19,6 +19,9 @@ class TokenMethod(Protocol):
     def __call__(self: Token, *args: Any, **kwargs: Any) -> Any: ...
 
 class Token:
+    i: int
+    doc: Doc
+    vocab: Vocab
     @classmethod
     def set_extension(
         cls,
