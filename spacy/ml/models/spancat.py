@@ -1,6 +1,6 @@
 from typing import List, Tuple
 from thinc.api import Model, with_getitem, chain, list2ragged, Logistic
-from thinc.api import Maxout, Linear, concatenate, zero_init
+from thinc.api import Maxout, Linear, concatenate, glorot_uniform_init
 from thinc.api import reduce_mean, reduce_max, reduce_first, reduce_last
 from thinc.types import Ragged, Floats2d
 
@@ -14,7 +14,7 @@ def build_linear_logistic(nO=None, nI=None) -> Model[Floats2d, Floats2d]:
     """An output layer for multi-label classification. It uses a linear layer
     followed by a logistic activation.
     """
-    return chain(Linear(nO=nO, nI=nI, init_W=zero_init), Logistic())
+    return chain(Linear(nO=nO, nI=nI, init_W=glorot_uniform_init), Logistic())
 
 
 @registry.layers.register("spacy.mean_max_reducer.v1")
