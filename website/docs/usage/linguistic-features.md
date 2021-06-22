@@ -1248,7 +1248,7 @@ hyperparameters, pipeline and tokenizer used for constructing and training the
 pipeline. The `[nlp.tokenizer]` block refers to a **registered function** that
 takes the `nlp` object and returns a tokenizer. Here, we're registering a
 function called `whitespace_tokenizer` in the
-[`@tokenizers` registry](/api/registry). To make sure spaCy knows how to
+[`@tokenizers` registry](/api/top-level#registry). To make sure spaCy knows how to
 construct your tokenizer during training, you can pass in your Python file by
 setting `--code functions.py` when you run [`spacy train`](/api/cli#train).
 
