@@ -98,7 +98,8 @@ def test_entity_ruler_clear(nlp, patterns):
     assert len(doc.ents) == 1
     ruler.clear()
     assert len(ruler.labels) == 0
-    doc = nlp("hello world")
+    with pytest.warns(UserWarning):
+        doc = nlp("hello world")
     assert len(doc.ents) == 0
 
 

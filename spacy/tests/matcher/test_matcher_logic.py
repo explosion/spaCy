@@ -180,6 +180,7 @@ def test_matcher_sets_return_correct_tokens(en_vocab):
     assert texts == ["zero", "one", "two"]
 
 
+@pytest.mark.filterwarnings("ignore:\\[W036")
 def test_matcher_remove():
     nlp = English()
     matcher = Matcher(nlp.vocab)

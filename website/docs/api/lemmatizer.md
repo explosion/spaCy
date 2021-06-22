@@ -64,11 +64,13 @@ libraries (`pymorphy2`).
 | Language | Default Mode |
 | -------- | ------------ |
 | `bn`     | `rule`       |
+| `ca`     | `pos_lookup` |
 | `el`     | `rule`       |
 | `en`     | `rule`       |
 | `es`     | `rule`       |
 | `fa`     | `rule`       |
 | `fr`     | `rule`       |
+| `it`     | `pos_lookup` |
 | `mk`     | `rule`       |
 | `nb`     | `rule`       |
 | `nl`     | `rule`       |

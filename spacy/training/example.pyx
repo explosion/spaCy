@@ -420,7 +420,7 @@ def _fix_legacy_dict_data(example_dict):
     token_dict = example_dict.get("token_annotation", {})
     doc_dict = example_dict.get("doc_annotation", {})
     for key, value in example_dict.items():
-        if value:
+        if value is not None:
             if key in ("token_annotation", "doc_annotation"):
                 pass
             elif key == "ids":

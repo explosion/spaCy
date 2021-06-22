@@ -133,7 +133,7 @@ def package(
     for file_name in FILENAMES_DOCS:
         file_path = package_path / model_name_v / file_name
         if file_path.exists():
-            shutil.move(str(file_path), str(main_path))
+            shutil.copy(str(file_path), str(main_path))
     imports = []
     for code_path in code_paths:
         imports.append(code_path.stem)
@@ -248,6 +248,13 @@ def load_meta(fp):
         return json.load(f)
 
 
+def load_readme(fp):
+    if path.exists(fp):
+        with io.open(fp, encoding='utf8') as f:
+            return f.read()
+    return ""
+
+
 def list_files(data_dir):
     output = []
     for root, _, filenames in walk(data_dir):
@@ -273,6 +280,8 @@ def setup_package():
     root = path.abspath(path.dirname(__file__))
     meta_path = path.join(root, 'meta.json')
     meta = load_meta(meta_path)
+    readme_path = path.join(root, 'README.md')
+    readme = load_readme(readme_path)
     model_name = str(meta['lang'] + '_' + meta['name'])
     model_dir = path.join(model_name, model_name + '-' + meta['version'])
 
@@ -282,6 +291,7 @@ def setup_package():
     setup(
         name=model_name,
         description=meta.get('description'),
+        long_description=readme,
         author=meta.get('author'),
         author_email=meta.get('email'),
         url=meta.get('url'),
@@ -303,6 +313,8 @@ if __name__ == '__main__':
 TEMPLATE_MANIFEST = """
 include meta.json
 include LICENSE
+include LICENSES_SOURCES
+include README.md
 """.strip()
 
 
