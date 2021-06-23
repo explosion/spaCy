@@ -1,6 +1,7 @@
+from numpy.testing import assert_equal
 from spacy.language import Language
 from spacy.training import Example
-from spacy.util import fix_random_seed
+from spacy.util import fix_random_seed, registry
 
 
 SPAN_KEY = "labeled_spans"
@@ -44,3 +45,102 @@ def test_simple_train():
     scores = nlp.evaluate(get_examples())
     assert f"spans_{SPAN_KEY}_f" in scores
     assert scores[f"spans_{SPAN_KEY}_f"] == 1.0
+
+
+def test_ngram_suggester(en_tokenizer):
+    # test different n-gram lengths
+    for size in [1, 2, 3]:
+        ngram_suggester = registry.misc.get("ngram_suggester.v1")(sizes=[size])
+        docs = [
+            en_tokenizer(text)
+            for text in [
+                "a",
+                "a b",
+                "a b c",
+                "a b c d",
+                "a b c d e",
+                "a " * 100,
+            ]
+        ]
+        ngrams = ngram_suggester(docs)
+        # span sizes are correct
+        for s in ngrams.data:
+            assert s[1] - s[0] == size
+        # spans are within docs
+        offset = 0
+        for i, doc in enumerate(docs):
+            spans = ngrams.dataXd[offset : offset + ngrams.lengths[i]]
+            spans_set = set()
+            for span in spans:
+                assert 0 <= span[0] < len(doc)
+                assert 0 < span[1] <= len(doc)
+                spans_set.add((span[0], span[1]))
+            # spans are unique
+            assert spans.shape[0] == len(spans_set)
+            offset += ngrams.lengths[i]
+        # the number of spans is correct
+        assert_equal(
+            ngrams.lengths,
+            [max(0, len(doc) - (size - 1)) for doc in docs]
+        )
+
+    # test 1-3-gram suggestions
+    ngram_suggester = registry.misc.get("ngram_suggester.v1")(sizes=[1, 2, 3])
+    docs = [
+        en_tokenizer(text) for text in ["a", "a b", "a b c", "a b c d", "a b c d e"]
+    ]
+    ngrams = ngram_suggester(docs)
+    assert_equal(ngrams.lengths, [1, 3, 6, 9, 12])
+    assert_equal(
+        ngrams.data,
+        [
+            # doc 0
+            [0, 1],
+            # doc 1
+            [0, 1],
+            [1, 2],
+            [0, 2],
+            # doc 2
+            [0, 1],
+            [1, 2],
+            [2, 3],
+            [0, 2],
+            [1, 3],
+            [0, 3],
+            # doc 3
+            [0, 1],
+            [1, 2],
+            [2, 3],
+            [3, 4],
+            [0, 2],
+            [1, 3],
+            [2, 4],
+            [0, 3],
+            [1, 4],
+            # doc 4
+            [0, 1],
+            [1, 2],
+            [2, 3],
+            [3, 4],
+            [4, 5],
+            [0, 2],
+            [1, 3],
+            [2, 4],
+            [3, 5],
+            [0, 3],
+            [1, 4],
+            [2, 5],
+        ],
+    )
+
+    # test some empty docs
+    ngram_suggester = registry.misc.get("ngram_suggester.v1")(sizes=[1])
+    docs = [en_tokenizer(text) for text in ["", "a", ""]]
+    ngrams = ngram_suggester(docs)
+    assert_equal(ngrams.lengths, [len(doc) for doc in docs])
+
+    # test all empty docs
+    ngram_suggester = registry.misc.get("ngram_suggester.v1")(sizes=[1])
+    docs = [en_tokenizer(text) for text in ["", "", ""]]
+    ngrams = ngram_suggester(docs)
+    assert_equal(ngrams.lengths, [len(doc) for doc in docs])
