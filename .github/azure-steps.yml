@@ -60,8 +60,8 @@ steps:
     displayName: "Run GPU tests"
     condition: eq(${{ parameters.gpu }}, true)
 
-#  - script: |
-#      python -m spacy download en_core_web_sm
-#      python -c "import spacy; nlp=spacy.load('en_core_web_sm'); doc=nlp('test')"
-#    displayName: 'Test download CLI'
-#    condition: eq(variables['python_version'], '3.8')
+  - script: |
+      python -m spacy download ca_core_news_sm
+      python -c "import spacy; nlp=spacy.load('ca_core_news_sm'); doc=nlp('test')"
+    displayName: 'Test download CLI'
+    condition: eq(variables['python_version'], '3.8')
