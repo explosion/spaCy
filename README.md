@@ -61,11 +61,11 @@ open-source software, released under the MIT license.
 ## 💬 Where to ask questions
 
 The spaCy project is maintained by **[@honnibal](https://github.com/honnibal)**,
-**[@ines](https://github.com/ines)**, **[@svlandeg](https://github.com/svlandeg)** and
-**[@adrianeboyd](https://github.com/adrianeboyd)**. Please understand that we won't
-be able to provide individual support via email. We also believe that help is
-much more valuable if it's shared publicly, so that more people can benefit from
-it.
+**[@ines](https://github.com/ines)**, **[@svlandeg](https://github.com/svlandeg)**,
+**[@adrianeboyd](https://github.com/adrianeboyd)** and **[@polm](https://github.com/polm)**.
+Please understand that we won't be able to provide individual support via email.
+We also believe that help is much more valuable if it's shared publicly, so that
+more people can benefit from it.
 
 | Type                            | Platforms                               |
 | ------------------------------- | --------------------------------------- |
