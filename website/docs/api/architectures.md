@@ -9,6 +9,7 @@ menu:
   - ['Parser & NER', 'parser']
   - ['Tagging', 'tagger']
   - ['Text Classification', 'textcat']
+  - ['Span Classification', 'spancat']
   - ['Entity Linking', 'entitylinker']
 ---
 
@@ -735,6 +736,54 @@ the others, but may not be as accurate, especially if texts are short.
 Since v2, new labels can be added to this component, even after training.
 
 </Accordion>
+
+## Span classification architectures {#spancat source="spacy/ml/models/spancat.py"}
+
+### spacy.SpanCategorizer.v1 {#SpanCategorizer}
+
+> #### Example Config
+>
+> ```ini
+> [model]
+> @architectures = "spacy.SpanCategorizer.v1"
+> scorer = {"@layers": "spacy.LinearLogistic.v1"}
+> 
+> [model.reducer]
+> @layers = spacy.mean_max_reducer.v1"
+> hidden_size = 128
+>
+> [model.tok2vec]
+> @architectures = "spacy.Tok2Vec.v1"
+>
+> [model.tok2vec.embed]
+> @architectures = "spacy.MultiHashEmbed.v1"
+> # ...
+>
+> [model.tok2vec.encode]
+> @architectures = "spacy.MaxoutWindowEncoder.v1"
+> # ...
+> ```
+
+Build a span categorizer model to power a
+[`SpanCategorizer`](/api/spancategorizer) component, given a token-to-vector
+model, a reducer model to map the sequence of vectors for each span down to a
+single vector, and a scorer model to map the vectors to probabilities.
+
+| Name        | Description                                                                     |
+| ----------- | ------------------------------------------------------------------------------- |
+| `tok2vec`   | The token-to-vector model. ~~Model[List[Doc], List[Floats2d]]~~                 |
+| `reducer`   | The reducer model. ~~Model[Ragged, Floats2d]~~                                  |
+| `scorer`    | The scorer model. ~~Model[Floats2d, Floats2d]~~                                 |
+| **CREATES** | The model using the architecture. ~~Model[Tuple[List[Doc], Ragged], Floats2d]~~ |
+
+### spacy.mean_max_reducer.v1 {#mean_max_reducer}
+
+Reduce sequences by concatenating their mean and max pooled vectors, and then
+combine the concatenated vectors with a hidden layer.
+
+| Name          | Description                           |
+| ------------- | ------------------------------------- |
+| `hidden_size` | The size of the hidden layer. ~~int~~ |
 
 ## Entity linking architectures {#entitylinker source="spacy/ml/models/entity_linker.py"}
 
