@@ -253,8 +253,13 @@ def generate_readme(meta: Dict[str, Any]) -> str:
     components = ", ".join([md.code(p) for p in meta.get("components", [])])
     vecs = meta.get("vectors", {})
     vectors = f"{vecs.get('keys', 0)} keys, {vecs.get('vectors', 0)} unique vectors ({ vecs.get('width', 0)} dimensions)"
-    author = meta.get("author", "n/a")
+    author = meta.get("author") or "n/a"
     notes = meta.get("notes", "")
+    license_name = meta.get("license")
+    sources = _format_sources(meta.get("sources"))
+    description = meta.get("description")
+    label_scheme = _format_label_scheme(meta.get("labels"))
+    accuracy = _format_accuracy(meta.get("performance"))
     table_data = [
         (md.bold("Name"), md.code(name)),
         (md.bold("Version"), md.code(version)),
@@ -262,17 +267,20 @@ def generate_readme(meta: Dict[str, Any]) -> str:
         (md.bold("Default Pipeline"), pipeline),
         (md.bold("Components"), components),
         (md.bold("Vectors"), vectors),
-        (md.bold("Sources"), _format_sources(meta.get("sources"))),
-        (md.bold("License"), md.code(meta.get("license", "n/a"))),
+        (md.bold("Sources"), sources or "n/a"),
+        (md.bold("License"), md.code(license_name) if license_name else "n/a"),
         (md.bold("Author"), md.link(author, meta["url"]) if "url" in meta else author),
     ]
     # Put together Markdown body
-    md.add(meta.get("description", ""))
+    if description:
+        md.add(description)
     md.add(md.table(table_data, ["Feature", "Description"]))
-    md.add(md.title(3, "Label Scheme"))
-    md.add(_format_label_scheme(meta.get("labels")))
-    md.add(md.title(3, "Accuracy"))
-    md.add(_format_accuracy(meta.get("performance")))
+    if label_scheme:
+        md.add(md.title(3, "Label Scheme"))
+        md.add(label_scheme)
+    if accuracy:
+        md.add(md.title(3, "Accuracy"))
+        md.add(accuracy)
     if notes:
         md.add(notes)
     return md.text
