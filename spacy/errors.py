@@ -857,7 +857,8 @@ class Errors:
              "parses. If no dependency labels are available, provide "
              "placeholder deps such as `deps=[\"dep\"]*len(heads)`.")
     E1018 = ("Knowledge base for component '{name}' is not set. "
-             "Use the methods `kb.add_entity` and `kb.add_alias` to add entries.")
+             "Make sure either `nel.initialize` or `nel.set_kb` "
+             "is called with a `kb_loader` function.")
 
 
 # Deprecated model shortcuts, only used in errors and warnings
