@@ -1,17 +1,5 @@
-from typing import (
-    Generator,
-    Iterator,
-    Optional,
-    Any,
-    Dict,
-    Callable,
-    Iterable,
-    TypeVar,
-    Union,
-    List,
-    Pattern,
-    overload,
-)
+from typing import Iterator, Optional, Any, Dict, Callable, Iterable, TypeVar
+from typing import Union, List, Pattern, overload
 from typing import Tuple
 from dataclasses import dataclass
 import random
