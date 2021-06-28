@@ -6,7 +6,6 @@ import logging
 
 from ._util import app, Arg, Opt, parse_config_overrides, show_validation_error
 from ._util import import_code
-from ..training.initialize import init_nlp
 from .. import util
 from ..util import get_sourced_components, load_model_from_config
 

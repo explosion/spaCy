@@ -381,9 +381,9 @@ def test_doc_api_from_docs(en_tokenizer, de_tokenizer):
     en_docs_tokens = [t for doc in en_docs for t in doc]
     assert len(m_doc) == len(en_docs_tokens)
     think_idx = len(en_texts[0]) + 1 + en_texts[2].index("think")
-    assert m_doc[2]._.is_ambiguous == True
+    assert m_doc[2]._.is_ambiguous is True
     assert m_doc[9].idx == think_idx
-    assert m_doc[9]._.is_ambiguous == True
+    assert m_doc[9]._.is_ambiguous is True
     assert not any([t._.is_ambiguous for t in m_doc[3:8]])
     assert "group" in m_doc.spans
     assert span_group_texts == sorted([s.text for s in m_doc.spans["group"]])

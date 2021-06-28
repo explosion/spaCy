@@ -3,7 +3,6 @@ from typing import Optional, Union, List, Dict, Tuple, Iterable, Any, Callable, 
 from collections import defaultdict
 from pathlib import Path
 import srsly
-import warnings
 
 from .pipe import Pipe
 from ..training import Example

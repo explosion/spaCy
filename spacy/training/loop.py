@@ -1,4 +1,4 @@
-from typing import List, Callable, Tuple, Dict, Iterable, Iterator, Union, Any, IO
+from typing import List, Callable, Tuple, Dict, Iterable, Union, Any, IO
 from typing import Optional, TYPE_CHECKING
 from pathlib import Path
 from timeit import default_timer as timer

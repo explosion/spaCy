@@ -693,7 +693,7 @@ class Language:
             or self.vocab.vectors.to_bytes() != source.vocab.vectors.to_bytes()
         ):
             warnings.warn(Warnings.W113.format(name=source_name))
-        if not source_name in source.component_names:
+        if source_name not in source.component_names:
             raise KeyError(
                 Errors.E944.format(
                     name=source_name,

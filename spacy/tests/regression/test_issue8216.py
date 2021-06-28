@@ -2,7 +2,6 @@ import pytest
 
 from spacy import registry
 from spacy.language import Language
-from spacy.pipeline import EntityRuler
 
 
 @pytest.fixture

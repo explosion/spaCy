@@ -1,11 +1,11 @@
-from typing import Dict, Any, Optional, Iterable
+from typing import Dict, Any, Optional
 from pathlib import Path
 import itertools
 
 from spacy.training import Example
 from spacy.util import resolve_dot_names
 from wasabi import msg
-from thinc.api import fix_random_seed, set_dropout_rate, Adam
+from thinc.api import fix_random_seed, set_dropout_rate
 from thinc.api import Model, data_validation, set_gpu_allocator
 import typer
 
@@ -133,7 +133,6 @@ def debug_model(
         _print_model(model, print_settings)
 
     # STEP 2: Updating the model and printing again
-    optimizer = Adam(0.001)
     set_dropout_rate(model, 0.2)
     # ugly hack to deal with Tok2Vec/Transformer listeners
     upstream_component = None
@@ -144,7 +143,6 @@ def debug_model(
         and "transformer-listener" in model.get_ref("tok2vec").name
     ):
         upstream_component = nlp.get_pipe("transformer")
-    goldY = None
     for e in range(3):
         if upstream_component:
             upstream_component.update(examples)

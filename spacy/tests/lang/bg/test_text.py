@@ -1,5 +1,4 @@
 import pytest
-from spacy.lang.bg.lex_attrs import like_num
 
 
 @pytest.mark.parametrize(

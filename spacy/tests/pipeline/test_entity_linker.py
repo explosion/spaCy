@@ -11,7 +11,7 @@ from spacy.ml import load_kb
 from spacy.scorer import Scorer
 from spacy.training import Example
 from spacy.lang.en import English
-from spacy.tests.util import make_tempdir, make_tempfile
+from spacy.tests.util import make_tempdir
 from spacy.tokens import Span
 
 

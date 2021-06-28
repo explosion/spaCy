@@ -8,7 +8,7 @@ from spacy.vocab import Vocab
 from spacy.training import Example
 from spacy.lang.en import English
 from spacy.lang.de import German
-from spacy.util import registry, ignore_error, raise_error, logger
+from spacy.util import registry, ignore_error, raise_error
 import spacy
 from thinc.api import NumpyOps, get_current_ops
 
