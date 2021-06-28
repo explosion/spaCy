@@ -41,21 +41,6 @@ def topk(xp, arr, k, axis=None):
     return svals, oidxs
 
 
-def logsumexp(xp, arr, axis=None):
-    """Emulate torch.logsumexp by returning the log of summed exponentials
-    along each row in the given dimension.
-
-    Reduces a 2d array to 1d."""
-    # from slide 5 here:
-    # https://www.slideshare.net/ryokuta/cupy
-
-    # Note: this was added to reproduce loss calculation in coref-hoi. If loss
-    # can be calculated using another method this is not necessary.
-    hi = arr.max(axis=axis)
-    hi = xp.expand_dims(hi, 1)
-    return hi.squeeze() + xp.log(xp.exp(arr - hi).sum(axis=axis))
-
-
 # from model.py, refactored to be non-member
 def get_predicted_antecedents(xp, antecedent_idx, antecedent_scores):
     """Get the ID of the antecedent for each span. -1 if no antecedent."""
