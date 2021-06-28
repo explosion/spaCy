@@ -178,8 +178,9 @@ added to an existing vectors table. See more details in
 
 ### spacy.TextCatCNN.v1 {#TextCatCNN_v1}
 
-Since `spacy.TextCatCNN.v2`, this architecture has become resizable, which means that you can add 
-labels to a previously trained textcat. `TextCatCNN` v1 did not yet support that.
+Since `spacy.TextCatCNN.v2`, this architecture has become resizable, which means
+that you can add labels to a previously trained textcat. `TextCatCNN` v1 did not
+yet support that.
 
 > #### Example Config
 >
@@ -213,8 +214,9 @@ architecture is usually less accurate than the ensemble, but runs faster.
 
 ### spacy.TextCatBOW.v1 {#TextCatBOW_v1}
 
-Since `spacy.TextCatBOW.v2`, this architecture has become resizable, which means that you can add 
-labels to a previously trained textcat. `TextCatBOW` v1 did not yet support that.
+Since `spacy.TextCatBOW.v2`, this architecture has become resizable, which means
+that you can add labels to a previously trained textcat. `TextCatBOW` v1 did not
+yet support that.
 
 > #### Example Config
 >
