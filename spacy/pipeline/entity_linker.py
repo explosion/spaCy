@@ -9,7 +9,7 @@ import warnings
 
 from ..kb import KnowledgeBase, Candidate
 from ..ml import empty_kb
-from ..tokens import Doc
+from ..tokens import Doc, Span
 from .pipe import deserialize_config
 from .trainable_pipe import TrainablePipe
 from ..language import Language
@@ -67,7 +67,7 @@ def make_entity_linker(
     incl_prior: bool,
     incl_context: bool,
     entity_vector_length: int,
-    get_candidates: Callable[[KnowledgeBase, "Span"], Iterable[Candidate]],
+    get_candidates: Callable[[KnowledgeBase, Span], Iterable[Candidate]],
 ):
     """Construct an EntityLinker component.
 
@@ -114,7 +114,7 @@ class EntityLinker(TrainablePipe):
         incl_prior: bool,
         incl_context: bool,
         entity_vector_length: int,
-        get_candidates: Callable[[KnowledgeBase, "Span"], Iterable[Candidate]],
+        get_candidates: Callable[[KnowledgeBase, Span], Iterable[Candidate]],
     ) -> None:
         """Initialize an entity linker.
 
@@ -127,7 +127,7 @@ class EntityLinker(TrainablePipe):
         incl_prior (bool): Whether or not to include prior probabilities from the KB in the model.
         incl_context (bool): Whether or not to include the local context in the model.
         entity_vector_length (int): Size of encoding vectors in the KB.
-        get_candidates (Callable[[KnowledgeBase, "Span"], Iterable[Candidate]]): Function that
+        get_candidates (Callable[[KnowledgeBase, Span], Iterable[Candidate]]): Function that
             produces a list of candidates, given a certain knowledge base and a textual mention.
 
         DOCS: https://spacy.io/api/entitylinker#init
