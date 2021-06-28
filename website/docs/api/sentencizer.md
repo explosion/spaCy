@@ -28,7 +28,7 @@ how the component should be configured. You can override its settings via the
 > ```
 
 | Setting       | Description                                                                                                                                            |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ |
 | `punct_chars` | Optional custom list of punctuation characters that mark sentence ends. See below for defaults if not set. Defaults to `None`. ~~Optional[List[str]]~~ | `None` |
 
 ```python

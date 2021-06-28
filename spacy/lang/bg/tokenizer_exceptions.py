@@ -58,7 +58,6 @@ _abbr_dot_exc = [
     {ORTH: "стр.", NORM: "страница"},
     {ORTH: "ул.", NORM: "улица"},
     {ORTH: "чл.", NORM: "член"},
-
 ]
 
 for abbr in _abbr_dot_exc:

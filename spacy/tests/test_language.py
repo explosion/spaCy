@@ -8,7 +8,7 @@ from spacy.vocab import Vocab
 from spacy.training import Example
 from spacy.lang.en import English
 from spacy.lang.de import German
-from spacy.util import registry, ignore_error, raise_error, logger
+from spacy.util import registry, ignore_error, raise_error
 import spacy
 from thinc.api import NumpyOps, get_current_ops
 
@@ -143,7 +143,9 @@ def sample_vectors():
 
 @pytest.fixture
 def nlp2(nlp, sample_vectors):
-    Language.component("test_language_vector_modification_pipe", func=vector_modification_pipe)
+    Language.component(
+        "test_language_vector_modification_pipe", func=vector_modification_pipe
+    )
     Language.component("test_language_userdata_pipe", func=userdata_pipe)
     Language.component("test_language_ner_pipe", func=ner_pipe)
     add_vecs_to_vocab(nlp.vocab, sample_vectors)
@@ -475,3 +477,23 @@ def test_language_init_invalid_vocab(value):
     with pytest.raises(ValueError) as e:
         Language(value)
     assert err_fragment in str(e.value)
+
+
+def test_language_source_and_vectors(nlp2):
+    nlp = Language(Vocab())
+    textcat = nlp.add_pipe("textcat")
+    for label in ("POSITIVE", "NEGATIVE"):
+        textcat.add_label(label)
+    nlp.initialize()
+    long_string = "thisisalongstring"
+    assert long_string not in nlp.vocab.strings
+    assert long_string not in nlp2.vocab.strings
+    nlp.vocab.strings.add(long_string)
+    assert nlp.vocab.vectors.to_bytes() != nlp2.vocab.vectors.to_bytes()
+    vectors_bytes = nlp.vocab.vectors.to_bytes()
+    with pytest.warns(UserWarning):
+        nlp2.add_pipe("textcat", name="textcat2", source=nlp)
+    # strings should be added
+    assert long_string in nlp2.vocab.strings
+    # vectors should remain unmodified
+    assert nlp.vocab.vectors.to_bytes() == vectors_bytes

@@ -933,7 +933,10 @@ copied into the package and imported in the `__init__.py`. If the path to a
 [`meta.json`](/api/data-formats#meta) is supplied, or a `meta.json` is found in
 the input directory, this file is used. Otherwise, the data can be entered
 directly from the command line. spaCy will then create a build artifact that you
-can distribute and install with `pip install`.
+can distribute and install with `pip install`. As of v3.1, the `package` command
+will also create a formatted `README.md` based on the pipeline information
+defined in the `meta.json`. If a `README.md` is already present in the source
+directory, it will be used instead.
 
 <Infobox title="New in v3.0" variant="warning">
 

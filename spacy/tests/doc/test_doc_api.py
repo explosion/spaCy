@@ -346,17 +346,25 @@ def test_doc_from_array_morph(en_vocab):
 
 @pytest.mark.usefixtures("clean_underscore")
 def test_doc_api_from_docs(en_tokenizer, de_tokenizer):
-    en_texts = ["Merging the docs is fun.", "", "They don't think alike."]
+    en_texts = [
+        "Merging the docs is fun.",
+        "",
+        "They don't think alike. ",
+        "Another doc.",
+    ]
     en_texts_without_empty = [t for t in en_texts if len(t)]
     de_text = "Wie war die Frage?"
     en_docs = [en_tokenizer(text) for text in en_texts]
     en_docs[0].spans["group"] = [en_docs[0][1:4]]
     en_docs[2].spans["group"] = [en_docs[2][1:4]]
-    span_group_texts = sorted([en_docs[0][1:4].text, en_docs[2][1:4].text])
+    en_docs[3].spans["group"] = [en_docs[3][0:1]]
+    span_group_texts = sorted(
+        [en_docs[0][1:4].text, en_docs[2][1:4].text, en_docs[3][0:1].text]
+    )
     de_doc = de_tokenizer(de_text)
     Token.set_extension("is_ambiguous", default=False)
-    en_docs[0][2]._.is_ambiguous = True # docs
-    en_docs[2][3]._.is_ambiguous = True # think
+    en_docs[0][2]._.is_ambiguous = True  # docs
+    en_docs[2][3]._.is_ambiguous = True  # think
     assert Doc.from_docs([]) is None
     assert de_doc is not Doc.from_docs([de_doc])
     assert str(de_doc) == str(Doc.from_docs([de_doc]))
@@ -366,24 +374,25 @@ def test_doc_api_from_docs(en_tokenizer, de_tokenizer):
 
     m_doc = Doc.from_docs(en_docs)
     assert len(en_texts_without_empty) == len(list(m_doc.sents))
-    assert len(str(m_doc)) > len(en_texts[0]) + len(en_texts[1])
-    assert str(m_doc) == " ".join(en_texts_without_empty)
+    assert len(m_doc.text) > len(en_texts[0]) + len(en_texts[1])
+    assert m_doc.text == " ".join([t.strip() for t in en_texts_without_empty])
     p_token = m_doc[len(en_docs[0]) - 1]
     assert p_token.text == "." and bool(p_token.whitespace_)
     en_docs_tokens = [t for doc in en_docs for t in doc]
     assert len(m_doc) == len(en_docs_tokens)
     think_idx = len(en_texts[0]) + 1 + en_texts[2].index("think")
-    assert m_doc[2]._.is_ambiguous == True
+    assert m_doc[2]._.is_ambiguous is True
     assert m_doc[9].idx == think_idx
-    assert m_doc[9]._.is_ambiguous == True
+    assert m_doc[9]._.is_ambiguous is True
     assert not any([t._.is_ambiguous for t in m_doc[3:8]])
     assert "group" in m_doc.spans
     assert span_group_texts == sorted([s.text for s in m_doc.spans["group"]])
+    assert bool(m_doc[11].whitespace_)
 
     m_doc = Doc.from_docs(en_docs, ensure_whitespace=False)
     assert len(en_texts_without_empty) == len(list(m_doc.sents))
-    assert len(str(m_doc)) == sum(len(t) for t in en_texts)
-    assert str(m_doc) == "".join(en_texts)
+    assert len(m_doc.text) == sum(len(t) for t in en_texts)
+    assert m_doc.text == "".join(en_texts_without_empty)
     p_token = m_doc[len(en_docs[0]) - 1]
     assert p_token.text == "." and not bool(p_token.whitespace_)
     en_docs_tokens = [t for doc in en_docs for t in doc]
@@ -392,11 +401,12 @@ def test_doc_api_from_docs(en_tokenizer, de_tokenizer):
     assert m_doc[9].idx == think_idx
     assert "group" in m_doc.spans
     assert span_group_texts == sorted([s.text for s in m_doc.spans["group"]])
+    assert bool(m_doc[11].whitespace_)
 
     m_doc = Doc.from_docs(en_docs, attrs=["lemma", "length", "pos"])
-    assert len(str(m_doc)) > len(en_texts[0]) + len(en_texts[1])
+    assert len(m_doc.text) > len(en_texts[0]) + len(en_texts[1])
     # space delimiter considered, although spacy attribute was missing
-    assert str(m_doc) == " ".join(en_texts_without_empty)
+    assert m_doc.text == " ".join([t.strip() for t in en_texts_without_empty])
     p_token = m_doc[len(en_docs[0]) - 1]
     assert p_token.text == "." and bool(p_token.whitespace_)
     en_docs_tokens = [t for doc in en_docs for t in doc]
@@ -408,6 +418,16 @@ def test_doc_api_from_docs(en_tokenizer, de_tokenizer):
 
     # can merge empty docs
     doc = Doc.from_docs([en_tokenizer("")] * 10)
+
+    # empty but set spans keys are preserved
+    en_docs = [en_tokenizer(text) for text in en_texts]
+    m_doc = Doc.from_docs(en_docs)
+    assert "group" not in m_doc.spans
+    for doc in en_docs:
+        doc.spans["group"] = []
+    m_doc = Doc.from_docs(en_docs)
+    assert "group" in m_doc.spans
+    assert len(m_doc.spans["group"]) == 0
 
 
 def test_doc_api_from_docs_ents(en_tokenizer):

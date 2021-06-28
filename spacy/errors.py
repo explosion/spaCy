@@ -150,12 +150,12 @@ class Warnings:
             "released, because the model may say it's compatible when it's "
             'not. Consider changing the "spacy_version" in your meta.json to a '
             "version range, with a lower and upper pin. For example: {example}")
-    W095 = ("Model '{model}' ({model_version}) requires spaCy {version} and is "
-            "incompatible with the current version ({current}). This may lead "
-            "to unexpected results or runtime errors. To resolve this, "
-            "download a newer compatible model or retrain your custom model "
-            "with the current spaCy version. For more details and available "
-            "updates, run: python -m spacy validate")
+    W095 = ("Model '{model}' ({model_version}) was trained with spaCy "
+            "{version} and may not be 100% compatible with the current version "
+            "({current}). If you see errors or degraded performance, download "
+            "a newer compatible model or retrain your custom model with the "
+            "current spaCy version. For more details and available updates, "
+            "run: python -m spacy validate")
     W096 = ("The method `nlp.disable_pipes` is now deprecated - use "
             "`nlp.select_pipes` instead.")
     W100 = ("Skipping unsupported morphological feature(s): '{feature}'. "
@@ -856,6 +856,9 @@ class Errors:
     E1017 = ("A Doc object requires both 'deps' and 'heads' for dependency "
              "parses. If no dependency labels are available, provide "
              "placeholder deps such as `deps=[\"dep\"]*len(heads)`.")
+    E1018 = ("Knowledge base for component '{name}' is not set. "
+             "Make sure either `nel.initialize` or `nel.set_kb` "
+             "is called with a `kb_loader` function.")
 
 
 # Deprecated model shortcuts, only used in errors and warnings

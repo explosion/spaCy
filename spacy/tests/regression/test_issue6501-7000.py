@@ -152,7 +152,8 @@ labels = ['label1', 'label2']
 
 
 @pytest.mark.parametrize(
-    "component_name", ["textcat", "textcat_multilabel"],
+    "component_name",
+    ["textcat", "textcat_multilabel"],
 )
 def test_issue6908(component_name):
     """Test intializing textcat with labels in a list"""

@@ -9,7 +9,7 @@ import warnings
 
 from ..kb import KnowledgeBase, Candidate
 from ..ml import empty_kb
-from ..tokens import Doc
+from ..tokens import Doc, Span
 from .pipe import deserialize_config
 from .trainable_pipe import TrainablePipe
 from ..language import Language
@@ -67,7 +67,7 @@ def make_entity_linker(
     incl_prior: bool,
     incl_context: bool,
     entity_vector_length: int,
-    get_candidates: Callable[[KnowledgeBase, "Span"], Iterable[Candidate]],
+    get_candidates: Callable[[KnowledgeBase, Span], Iterable[Candidate]],
 ):
     """Construct an EntityLinker component.
 
@@ -114,7 +114,7 @@ class EntityLinker(TrainablePipe):
         incl_prior: bool,
         incl_context: bool,
         entity_vector_length: int,
-        get_candidates: Callable[[KnowledgeBase, "Span"], Iterable[Candidate]],
+        get_candidates: Callable[[KnowledgeBase, Span], Iterable[Candidate]],
     ) -> None:
         """Initialize an entity linker.
 
@@ -127,7 +127,7 @@ class EntityLinker(TrainablePipe):
         incl_prior (bool): Whether or not to include prior probabilities from the KB in the model.
         incl_context (bool): Whether or not to include the local context in the model.
         entity_vector_length (int): Size of encoding vectors in the KB.
-        get_candidates (Callable[[KnowledgeBase, "Span"], Iterable[Candidate]]): Function that
+        get_candidates (Callable[[KnowledgeBase, Span], Iterable[Candidate]]): Function that
             produces a list of candidates, given a certain knowledge base and a textual mention.
 
         DOCS: https://spacy.io/api/entitylinker#init
@@ -156,6 +156,8 @@ class EntityLinker(TrainablePipe):
 
     def validate_kb(self) -> None:
         # Raise an error if the knowledge base is not initialized.
+        if self.kb is None:
+            raise ValueError(Errors.E1018.format(name=self.name))
         if len(self.kb) == 0:
             raise ValueError(Errors.E139.format(name=self.name))
 
@@ -307,9 +309,7 @@ class EntityLinker(TrainablePipe):
                     assert sent_index >= 0
                     # get n_neighbour sentences, clipped to the length of the document
                     start_sentence = max(0, sent_index - self.n_sents)
-                    end_sentence = min(
-                        len(sentences) - 1, sent_index + self.n_sents
-                    )
+                    end_sentence = min(len(sentences) - 1, sent_index + self.n_sents)
                     start_token = sentences[start_sentence].start
                     end_token = sentences[end_sentence].end
                     sent_doc = doc[start_token:end_token].as_doc()
@@ -335,22 +335,16 @@ class EntityLinker(TrainablePipe):
                         else:
                             random.shuffle(candidates)
                             # set all prior probabilities to 0 if incl_prior=False
-                            prior_probs = xp.asarray(
-                                [c.prior_prob for c in candidates]
-                            )
+                            prior_probs = xp.asarray([c.prior_prob for c in candidates])
                             if not self.incl_prior:
-                                prior_probs = xp.asarray(
-                                    [0.0 for _ in candidates]
-                                )
+                                prior_probs = xp.asarray([0.0 for _ in candidates])
                             scores = prior_probs
                             # add in similarity from the context
                             if self.incl_context:
                                 entity_encodings = xp.asarray(
                                     [c.entity_vector for c in candidates]
                                 )
-                                entity_norm = xp.linalg.norm(
-                                    entity_encodings, axis=1
-                                )
+                                entity_norm = xp.linalg.norm(entity_encodings, axis=1)
                                 if len(entity_encodings) != len(prior_probs):
                                     raise RuntimeError(
                                         Errors.E147.format(
@@ -359,14 +353,12 @@ class EntityLinker(TrainablePipe):
                                         )
                                     )
                                 # cosine similarity
-                                sims = xp.dot(
-                                    entity_encodings, sentence_encoding_t
-                                ) / (sentence_norm * entity_norm)
+                                sims = xp.dot(entity_encodings, sentence_encoding_t) / (
+                                    sentence_norm * entity_norm
+                                )
                                 if sims.shape != prior_probs.shape:
                                     raise ValueError(Errors.E161)
-                                scores = (
-                                    prior_probs + sims - (prior_probs * sims)
-                                )
+                                scores = prior_probs + sims - (prior_probs * sims)
                             # TODO: thresholding
                             best_index = scores.argmax().item()
                             best_candidate = candidates[best_index]

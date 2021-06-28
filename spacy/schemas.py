@@ -4,7 +4,7 @@ from enum import Enum
 from pydantic import BaseModel, Field, ValidationError, validator, create_model
 from pydantic import StrictStr, StrictInt, StrictFloat, StrictBool
 from pydantic.main import ModelMetaclass
-from thinc.api import Optimizer, ConfigValidationError
+from thinc.api import Optimizer, ConfigValidationError, Model
 from thinc.config import Promise
 from collections import defaultdict
 import inspect
@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     # This lets us add type hints for mypy etc. without causing circular imports
     from .language import Language  # noqa: F401
     from .training import Example  # noqa: F401
+    from .vocab import Vocab  # noqa: F401
 
 
 # fmt: off
@@ -354,7 +355,7 @@ class ConfigSchemaPretrain(BaseModel):
     batcher: Batcher = Field(..., title="Batcher for the training data")
     component: str = Field(..., title="Component to find the layer to pretrain")
     layer: str = Field(..., title="Layer to pretrain. Whole model if empty.")
-    objective: Callable[["Vocab", "Model"], "Model"] = Field(..., title="A function that creates the pretraining objective.")
+    objective: Callable[["Vocab", Model], Model] = Field(..., title="A function that creates the pretraining objective.")
     # fmt: on
 
     class Config:

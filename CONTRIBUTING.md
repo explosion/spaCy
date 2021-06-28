@@ -2,11 +2,7 @@
 
 # Contribute to spaCy
 
-Thanks for your interest in contributing to spaCy 🎉 The project is maintained
-by **[@honnibal](https://github.com/honnibal)**,
-**[@ines](https://github.com/ines)**, **[@svlandeg](https://github.com/svlandeg)** and
-**[@adrianeboyd](https://github.com/adrianeboyd)**,
-and we'll do our best to help you get started. This page will give you a quick
+Thanks for your interest in contributing to spaCy 🎉 This page will give you a quick
 overview of how things are organized and most importantly, how to get involved.
 
 ## Table of contents

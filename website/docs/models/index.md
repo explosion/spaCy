@@ -97,9 +97,10 @@ In the `sm`/`md`/`lg` models:
   tagger. For English, the attribute ruler can improve its mapping from
   `token.tag` to `token.pos` if dependency parses from a `parser` are present,
   but the parser is not required.
-- The `lemmatizer` component for many languages (Dutch, English, French, Greek,
-  Macedonian, Norwegian, Polish and Spanish) requires `token.pos` annotation
-  from either `tagger`+`attribute_ruler` or `morphologizer`.
+- The `lemmatizer` component for many languages (Catalan, Dutch, English,
+  French, Greek, Italian Macedonian, Norwegian, Polish and Spanish) requires
+  `token.pos` annotation from either `tagger`+`attribute_ruler` or
+  `morphologizer`.
 - The `ner` component is independent with its own internal tok2vec layer.
 
 ### Transformer pipeline design {#design-trf}
@@ -133,9 +134,9 @@ nlp = spacy.load("en_core_web_trf", disable=["tagger", "attribute_ruler", "lemma
 Token.pos">
 
 The lemmatizer depends on `tagger`+`attribute_ruler` or `morphologizer` for
-Dutch, English, French, Greek, Macedonian, Norwegian, Polish and Spanish. If you
-disable any of these components, you'll see lemmatizer warnings unless the
-lemmatizer is also disabled.
+Catalan, Dutch, English, French, Greek, Italian, Macedonian, Norwegian, Polish
+and Spanish. If you disable any of these components, you'll see lemmatizer
+warnings unless the lemmatizer is also disabled.
 
 </Infobox>
 
@@ -183,6 +184,12 @@ nlp = spacy.load("en_core_web_trf", disable=["tagger", "parser", "attribute_rule
 ```
 
 #### Move NER to the end of the pipeline
+
+<Infobox title="For v3.0.x models only" variant="warning">
+
+As of v3.1, the NER component is at the end of the pipeline by default.
+
+</Infobox>
 
 For access to `POS` and `LEMMA` features in an `entity_ruler`, move `ner` to the
 end of the pipeline after `attribute_ruler` and `lemmatizer`:

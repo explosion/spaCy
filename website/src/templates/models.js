@@ -218,7 +218,7 @@ const Model = ({
         }
     }, [initialized, version, baseUrl, name])
 
-    const releaseTag = meta.fullName ? `/tag/${meta.fullName}` : ''
+    const releaseTag = meta.fullName ? `tag/${meta.fullName}` : ''
     const releaseUrl = `https://github.com/${repo}/releases/${releaseTag}`
     const pipeline = linkComponents(meta.pipeline)
     const components = linkComponents(meta.components)

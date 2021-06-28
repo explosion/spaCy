@@ -4,6 +4,7 @@ import sys
 
 # set library-specific custom warning handling before doing anything else
 from .errors import setup_default_warnings
+
 setup_default_warnings()
 
 # These are imported as part of the API

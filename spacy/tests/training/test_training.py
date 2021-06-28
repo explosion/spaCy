@@ -434,8 +434,14 @@ def test_aligned_spans_y2x_overlap(en_vocab, en_tokenizer):
     gold_doc = nlp.make_doc(text)
     spans = []
     prefix = "I flew to "
-    spans.append(gold_doc.char_span(len(prefix), len(prefix + "San Francisco"), label="CITY"))
-    spans.append(gold_doc.char_span(len(prefix), len(prefix + "San Francisco Valley"), label="VALLEY"))
+    spans.append(
+        gold_doc.char_span(len(prefix), len(prefix + "San Francisco"), label="CITY")
+    )
+    spans.append(
+        gold_doc.char_span(
+            len(prefix), len(prefix + "San Francisco Valley"), label="VALLEY"
+        )
+    )
     spans_key = "overlap_ents"
     gold_doc.spans[spans_key] = spans
     example = Example(doc, gold_doc)
@@ -443,7 +449,9 @@ def test_aligned_spans_y2x_overlap(en_vocab, en_tokenizer):
     assert [(ent.start, ent.end) for ent in spans_gold] == [(3, 5), (3, 6)]
 
     # Ensure that 'get_aligned_spans_y2x' has the aligned entities correct
-    spans_y2x_no_overlap = example.get_aligned_spans_y2x(spans_gold, allow_overlap=False)
+    spans_y2x_no_overlap = example.get_aligned_spans_y2x(
+        spans_gold, allow_overlap=False
+    )
     assert [(ent.start, ent.end) for ent in spans_y2x_no_overlap] == [(3, 5)]
     spans_y2x_overlap = example.get_aligned_spans_y2x(spans_gold, allow_overlap=True)
     assert [(ent.start, ent.end) for ent in spans_y2x_overlap] == [(3, 5), (3, 6)]

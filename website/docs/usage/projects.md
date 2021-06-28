@@ -800,7 +800,7 @@ vars:
 commands:
   - name: annotate
   - script:
-      - 'python -m prodigy ner.correct ${vars.prodigy.dataset} ./assets/raw_data.jsonl ${vars.prodigy.model} --labels ${vars.prodigy.labels}'
+      - 'python -m prodigy ner.correct ${vars.prodigy.dataset} ${vars.prodigy.model} ./assets/raw_data.jsonl --labels ${vars.prodigy.labels}'
       - 'python -m prodigy data-to-spacy ./corpus/train.json ./corpus/eval.json --ner ${vars.prodigy.dataset}'
       - 'python -m spacy convert ./corpus/train.json ./corpus/train.spacy'
       - 'python -m spacy convert ./corpus/eval.json ./corpus/eval.spacy'

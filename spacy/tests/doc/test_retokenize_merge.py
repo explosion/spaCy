@@ -484,7 +484,7 @@ def test_doc_retokenize_merge_without_parse_keeps_sents(en_tokenizer):
     assert len(list(doc.sents)) == 2
     with doc.retokenize() as retokenizer:
         retokenizer.merge(doc[3:6])
-    assert doc[3].is_sent_start == None
+    assert doc[3].is_sent_start is None
 
     # merging over a sentence boundary and setting sent_start
     doc = Doc(tokens.vocab, words=[t.text for t in tokens], sent_starts=sent_starts)

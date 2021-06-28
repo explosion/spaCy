@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 🗯 Discussions Forum
+    url: https://github.com/explosion/spaCy/discussions
+    about: Usage questions, general discussion and anything else that isn't a bug report.
+  - name: 📖 spaCy FAQ & Troubleshooting
+    url: https://github.com/explosion/spaCy/discussions/8226
+    about: Before you post, check out the FAQ for answers to common community questions!
+  - name: 💫 spaCy Usage Guides & API reference
+    url: https://spacy.io/usage
+    about: Everything you need to know about spaCy and how to use it.
+  - name: 🛠 Submit a Pull Request
+    url: https://github.com/explosion/spaCy/pulls
+    about: Did you spot a mistake and know how to fix it? Feel free to submit a PR straight away!

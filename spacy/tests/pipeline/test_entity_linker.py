@@ -11,7 +11,7 @@ from spacy.ml import load_kb
 from spacy.scorer import Scorer
 from spacy.training import Example
 from spacy.lang.en import English
-from spacy.tests.util import make_tempdir, make_tempfile
+from spacy.tests.util import make_tempdir
 from spacy.tokens import Span
 
 
@@ -254,7 +254,9 @@ def test_nel_nsents(nlp):
     """Test that n_sents can be set through the configuration"""
     entity_linker = nlp.add_pipe("entity_linker", config={})
     assert entity_linker.n_sents == 0
-    entity_linker = nlp.replace_pipe("entity_linker", "entity_linker", config={"n_sents": 2})
+    entity_linker = nlp.replace_pipe(
+        "entity_linker", "entity_linker", config={"n_sents": 2}
+    )
     assert entity_linker.n_sents == 2
 
 
@@ -324,6 +326,7 @@ def test_append_alias(nlp):
     assert len(mykb.get_alias_candidates("douglas")) == 3
 
 
+@pytest.mark.filterwarnings("ignore:\\[W036")
 def test_append_invalid_alias(nlp):
     """Test that append an alias will throw an error if prior probs are exceeding 1"""
     mykb = KnowledgeBase(nlp.vocab, entity_vector_length=1)
@@ -342,6 +345,7 @@ def test_append_invalid_alias(nlp):
         mykb.append_alias(alias="douglas", entity="Q1", prior_prob=0.2)
 
 
+@pytest.mark.filterwarnings("ignore:\\[W036")
 def test_preserving_links_asdoc(nlp):
     """Test that Span.as_doc preserves the existing entity links"""
     vector_length = 1
@@ -594,7 +598,9 @@ def test_kb_to_bytes():
     kb_1.add_entity(entity="Q66", freq=9, entity_vector=[1, 2, 3])
     kb_1.add_alias(alias="Russ Cochran", entities=["Q2146908"], probabilities=[0.8])
     kb_1.add_alias(alias="Boeing", entities=["Q66"], probabilities=[0.5])
-    kb_1.add_alias(alias="Randomness", entities=["Q66", "Q2146908"], probabilities=[0.1, 0.2])
+    kb_1.add_alias(
+        alias="Randomness", entities=["Q66", "Q2146908"], probabilities=[0.1, 0.2]
+    )
     assert kb_1.contains_alias("Russ Cochran")
     kb_bytes = kb_1.to_bytes()
     kb_2 = KnowledgeBase(nlp.vocab, entity_vector_length=3)
@@ -609,8 +615,12 @@ def test_kb_to_bytes():
     assert kb_2.contains_alias("Russ Cochran")
     assert kb_1.get_size_aliases() == kb_2.get_size_aliases()
     assert kb_1.get_alias_strings() == kb_2.get_alias_strings()
-    assert len(kb_1.get_alias_candidates("Russ Cochran")) == len(kb_2.get_alias_candidates("Russ Cochran"))
-    assert len(kb_1.get_alias_candidates("Randomness")) == len(kb_2.get_alias_candidates("Randomness"))
+    assert len(kb_1.get_alias_candidates("Russ Cochran")) == len(
+        kb_2.get_alias_candidates("Russ Cochran")
+    )
+    assert len(kb_1.get_alias_candidates("Randomness")) == len(
+        kb_2.get_alias_candidates("Randomness")
+    )
 
 
 def test_nel_to_bytes():
@@ -638,7 +648,9 @@ def test_nel_to_bytes():
     kb_2 = nlp_2.get_pipe("entity_linker").kb
     assert kb_2.contains_alias("Russ Cochran")
     assert kb_2.get_vector("Q2146908") == [6, -4, 3]
-    assert_almost_equal(kb_2.get_prior_prob(entity="Q2146908", alias="Russ Cochran"), 0.8)
+    assert_almost_equal(
+        kb_2.get_prior_prob(entity="Q2146908", alias="Russ Cochran"), 0.8
+    )
 
 
 def test_scorer_links():

@@ -1,12 +1,17 @@
 ---
-title: Tagger
-tag: class
-source: spacy/pipeline/tagger.pyx
-teaser: 'Pipeline component for part-of-speech tagging'
+title: SpanCategorizer
+tag: class,experimental
+source: spacy/pipeline/spancat.py
+new: 3.1
+teaser: 'Pipeline component for labeling potentially overlapping spans of text'
 api_base_class: /api/pipe
-api_string_name: tagger
+api_string_name: spancat
 api_trainable: true
 ---
+
+A span categorizer consists of two parts: a [suggester function](#suggesters)
+that proposes candidate spans, which may or may not overlap, and a labeler model
+that predicts zero or more labels for each candidate.
 
 ## Config and implementation {#config}
 
@@ -20,62 +25,77 @@ architectures and their arguments and hyperparameters.
 > #### Example
 >
 > ```python
-> from spacy.pipeline.tagger import DEFAULT_TAGGER_MODEL
-> config = {"model": DEFAULT_TAGGER_MODEL}
-> nlp.add_pipe("tagger", config=config)
+> from spacy.pipeline.spancat import DEFAULT_SPANCAT_MODEL
+> config = {
+>     "threshold": 0.5,
+>     "spans_key": "labeled_spans",
+>     "max_positive": None,
+>     "model": DEFAULT_SPANCAT_MODEL,
+>     "suggester": {"@misc": "ngram_suggester.v1", "sizes": [1, 2, 3]},
+> }
+> nlp.add_pipe("spancat", config=config)
 > ```
 
-| Setting | Description                                                                                                                                                                                                                                                                                            |
-| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `model` | A model instance that predicts the tag probabilities. The output vectors should match the number of tags in size, and be normalized as probabilities (all scores between 0 and 1, with the rows summing to `1`). Defaults to [Tagger](/api/architectures#Tagger). ~~Model[List[Doc], List[Floats2d]]~~ |
+| Setting        | Description                                                                                                                                                                                                                                                                                             |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `suggester`    | A function that [suggests spans](#suggesters). Spans are returned as a ragged array with two integer columns, for the start and end positions. Defaults to [`ngram_suggester`](#ngram_suggester). ~~Callable[List[Doc], Ragged]~~                                                                       |
+| `model`        | A model instance that is given a a list of documents and `(start, end)` indices representing candidate span offsets. The model predicts a probability for each category for each span. Defaults to [SpanCategorizer](/api/architectures#SpanCategorizer). ~~Model[Tuple[List[Doc], Ragged], Floats2d]~~ |
+| `spans_key`    | Key of the [`Doc.spans`](/api/doc#spans) dict to save the spans under. During initialization and training, the component will look for spans on the reference document under the same key. Defaults to `"spans"`. ~~str~~                                                                               |
+| `threshold`    | Minimum probability to consider a prediction positive. Spans with a positive prediction will be saved on the Doc. Defaults to `0.5`. ~~float~~                                                                                                                                                          |
+| `max_positive` | Maximum number of labels to consider positive per span. Defaults to `None`, indicating no limit. ~~Optional[int]~~                                                                                                                                                                                      |
 
 ```python
-%%GITHUB_SPACY/spacy/pipeline/tagger.pyx
+%%GITHUB_SPACY/spacy/pipeline/spancat.py
 ```
 
-## Tagger.\_\_init\_\_ {#init tag="method"}
+## SpanCategorizer.\_\_init\_\_ {#init tag="method"}
 
 > #### Example
 >
 > ```python
 > # Construction via add_pipe with default model
-> tagger = nlp.add_pipe("tagger")
+> spancat = nlp.add_pipe("spancat")
 >
-> # Construction via create_pipe with custom model
-> config = {"model": {"@architectures": "my_tagger"}}
-> tagger = nlp.add_pipe("tagger", config=config)
+> # Construction via add_pipe with custom model
+> config = {"model": {"@architectures": "my_spancat"}}
+> parser = nlp.add_pipe("spancat", config=config)
 >
 > # Construction from class
-> from spacy.pipeline import Tagger
-> tagger = Tagger(nlp.vocab, model)
+> from spacy.pipeline import SpanCategorizer
+> spancat = SpanCategorizer(nlp.vocab, model, suggester)
 > ```
 
 Create a new pipeline instance. In your application, you would normally use a
 shortcut for this and instantiate the component using its string name and
-[`nlp.add_pipe`](/api/language#add_pipe).
+[`nlp.add_pipe`](/api/language#create_pipe).
 
-| Name    | Description                                                                                                                                                                                                                                           |
-| ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `vocab` | The shared vocabulary. ~~Vocab~~                                                                                                                                                                                                                      |
-| `model` | A model instance that predicts the tag probabilities. The output vectors should match the number of tags in size, and be normalized as probabilities (all scores between 0 and 1, with the rows summing to `1`). ~~Model[List[Doc], List[Floats2d]]~~ |
-| `name`  | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~                                                                                                                                                   |
+| Name           | Description                                                                                                                                                                                                                          |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `vocab`        | The shared vocabulary. ~~Vocab~~                                                                                                                                                                                                     |
+| `model`        | A model instance that is given a a list of documents and `(start, end)` indices representing candidate span offsets. The model predicts a probability for each category for each span. ~~Model[Tuple[List[Doc], Ragged], Floats2d]~~ |
+| `suggester`    | A function that [suggests spans](#suggesters). Spans are returned as a ragged array with two integer columns, for the start and end positions. ~~Callable[List[Doc], Ragged]~~                                                       |
+| `name`         | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~                                                                                                                                  |
+| _keyword-only_ |                                                                                                                                                                                                                                      |
+| `spans_key`    | Key of the [`Doc.spans`](/api/doc#sans) dict to save the spans under. During initialization and training, the component will look for spans on the reference document under the same key. Defaults to `"spans"`. ~~str~~             |
+| `threshold`    | Minimum probability to consider a prediction positive. Spans with a positive prediction will be saved on the Doc. Defaults to `0.5`. ~~float~~                                                                                       |
+| `max_positive` | Maximum number of labels to consider positive per span. Defaults to `None`, indicating no limit. ~~Optional[int]~~                                                                                                                   |
 
-## Tagger.\_\_call\_\_ {#call tag="method"}
+## SpanCategorizer.\_\_call\_\_ {#call tag="method"}
 
 Apply the pipe to one document. The document is modified in place, and returned.
 This usually happens under the hood when the `nlp` object is called on a text
 and all pipeline components are applied to the `Doc` in order. Both
-[`__call__`](/api/tagger#call) and [`pipe`](/api/tagger#pipe) delegate to the
-[`predict`](/api/tagger#predict) and
-[`set_annotations`](/api/tagger#set_annotations) methods.
+[`__call__`](/api/spancategorizer#call) and [`pipe`](/api/spancategorizer#pipe)
+delegate to the [`predict`](/api/spancategorizer#predict) and
+[`set_annotations`](/api/spancategorizer#set_annotations) methods.
 
 > #### Example
 >
 > ```python
 > doc = nlp("This is a sentence.")
-> tagger = nlp.add_pipe("tagger")
+> spancat = nlp.add_pipe("spancat")
 > # This usually happens under the hood
-> processed = tagger(doc)
+> processed = spancat(doc)
 > ```
 
 | Name        | Description                      |
@@ -83,19 +103,20 @@ and all pipeline components are applied to the `Doc` in order. Both
 | `doc`       | The document to process. ~~Doc~~ |
 | **RETURNS** | The processed document. ~~Doc~~  |
 
-## Tagger.pipe {#pipe tag="method"}
+## SpanCategorizer.pipe {#pipe tag="method"}
 
 Apply the pipe to a stream of documents. This usually happens under the hood
 when the `nlp` object is called on a text and all pipeline components are
-applied to the `Doc` in order. Both [`__call__`](/api/tagger#call) and
-[`pipe`](/api/tagger#pipe) delegate to the [`predict`](/api/tagger#predict) and
-[`set_annotations`](/api/tagger#set_annotations) methods.
+applied to the `Doc` in order. Both [`__call__`](/api/spancategorizer#call) and
+[`pipe`](/api/spancategorizer#pipe) delegate to the
+[`predict`](/api/spancategorizer#predict) and
+[`set_annotations`](/api/spancategorizer#set_annotations) methods.
 
 > #### Example
 >
 > ```python
-> tagger = nlp.add_pipe("tagger")
-> for doc in tagger.pipe(docs, batch_size=50):
+> spancat = nlp.add_pipe("spancat")
+> for doc in spancat.pipe(docs, batch_size=50):
 >     pass
 > ```
 
@@ -106,7 +127,7 @@ applied to the `Doc` in order. Both [`__call__`](/api/tagger#call) and
 | `batch_size`   | The number of documents to buffer. Defaults to `128`. ~~int~~ |
 | **YIELDS**     | The processed documents in order. ~~Doc~~                     |
 
-## Tagger.initialize {#initialize tag="method" new="3"}
+## SpanCategorizer.initialize {#initialize tag="method"}
 
 Initialize the component for training. `get_examples` should be a function that
 returns an iterable of [`Example`](/api/example) objects. The data examples are
@@ -120,26 +141,20 @@ arguments it receives via the
 [`[initialize.components]`](/api/data-formats#config-initialize) block in the
 config.
 
-<Infobox variant="warning" title="Changed in v3.0" id="begin_training">
-
-This method was previously called `begin_training`.
-
-</Infobox>
-
 > #### Example
 >
 > ```python
-> tagger = nlp.add_pipe("tagger")
-> tagger.initialize(lambda: [], nlp=nlp)
+> spancat = nlp.add_pipe("spancat")
+> spancat.initialize(lambda: [], nlp=nlp)
 > ```
 >
 > ```ini
 > ### config.cfg
-> [initialize.components.tagger]
+> [initialize.components.spancat]
 >
-> [initialize.components.tagger.labels]
+> [initialize.components.spancat.labels]
 > @readers = "spacy.read_labels.v1"
-> path = "corpus/labels/tagger.json
+> path = "corpus/labels/spancat.json
 > ```
 
 | Name           | Description                                                                                                                                                                                                                                                                                                                                                                                                |
@@ -149,16 +164,16 @@ This method was previously called `begin_training`.
 | `nlp`          | The current `nlp` object. Defaults to `None`. ~~Optional[Language]~~                                                                                                                                                                                                                                                                                                                                       |
 | `labels`       | The label information to add to the component, as provided by the [`label_data`](#label_data) property after initialization. To generate a reusable JSON file from your data, you should run the [`init labels`](/api/cli#init-labels) command. If no labels are provided, the `get_examples` callback is used to extract the labels from the data, which may be a lot slower. ~~Optional[Iterable[str]]~~ |
 
-## Tagger.predict {#predict tag="method"}
+## SpanCategorizer.predict {#predict tag="method"}
 
-Apply the component's model to a batch of [`Doc`](/api/doc) objects, without
+Apply the component's model to a batch of [`Doc`](/api/doc) objects without
 modifying them.
 
 > #### Example
 >
 > ```python
-> tagger = nlp.add_pipe("tagger")
-> scores = tagger.predict([doc1, doc2])
+> spancat = nlp.add_pipe("spancat")
+> scores = spancat.predict([doc1, doc2])
 > ```
 
 | Name        | Description                                 |
@@ -166,36 +181,36 @@ modifying them.
 | `docs`      | The documents to predict. ~~Iterable[Doc]~~ |
 | **RETURNS** | The model's prediction for each document.   |
 
-## Tagger.set_annotations {#set_annotations tag="method"}
+## SpanCategorizer.set_annotations {#set_annotations tag="method"}
 
-Modify a batch of [`Doc`](/api/doc) objects, using pre-computed scores.
+Modify a batch of [`Doc`](/api/doc) objects using pre-computed scores.
 
 > #### Example
 >
 > ```python
-> tagger = nlp.add_pipe("tagger")
-> scores = tagger.predict([doc1, doc2])
-> tagger.set_annotations([doc1, doc2], scores)
+> spancat = nlp.add_pipe("spancat")
+> scores = spancat.predict(docs)
+> spancat.set_annotations(docs, scores)
 > ```
 
-| Name     | Description                                      |
-| -------- | ------------------------------------------------ |
-| `docs`   | The documents to modify. ~~Iterable[Doc]~~       |
-| `scores` | The scores to set, produced by `Tagger.predict`. |
+| Name     | Description                                               |
+| -------- | --------------------------------------------------------- |
+| `docs`   | The documents to modify. ~~Iterable[Doc]~~                |
+| `scores` | The scores to set, produced by `SpanCategorizer.predict`. |
 
-## Tagger.update {#update tag="method"}
+## SpanCategorizer.update {#update tag="method"}
 
 Learn from a batch of [`Example`](/api/example) objects containing the
 predictions and gold-standard annotations, and update the component's model.
-Delegates to [`predict`](/api/tagger#predict) and
-[`get_loss`](/api/tagger#get_loss).
+Delegates to [`predict`](/api/spancategorizer#predict) and
+[`get_loss`](/api/spancategorizer#get_loss).
 
 > #### Example
 >
 > ```python
-> tagger = nlp.add_pipe("tagger")
+> spancat = nlp.add_pipe("spancat")
 > optimizer = nlp.initialize()
-> losses = tagger.update(examples, sgd=optimizer)
+> losses = spancat.update(examples, sgd=optimizer)
 > ```
 
 | Name           | Description                                                                                                              |
@@ -207,30 +222,7 @@ Delegates to [`predict`](/api/tagger#predict) and
 | `losses`       | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~ |
 | **RETURNS**    | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                    |
 
-## Tagger.rehearse {#rehearse tag="method,experimental" new="3"}
-
-Perform a "rehearsal" update from a batch of data. Rehearsal updates teach the
-current model to make predictions similar to an initial model, to try to address
-the "catastrophic forgetting" problem. This feature is experimental.
-
-> #### Example
->
-> ```python
-> tagger = nlp.add_pipe("tagger")
-> optimizer = nlp.resume_training()
-> losses = tagger.rehearse(examples, sgd=optimizer)
-> ```
-
-| Name           | Description                                                                                                              |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `examples`     | A batch of [`Example`](/api/example) objects to learn from. ~~Iterable[Example]~~                                        |
-| _keyword-only_ |                                                                                                                          |
-| `drop`         | The dropout rate. ~~float~~                                                                                              |
-| `sgd`          | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~            |
-| `losses`       | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~ |
-| **RETURNS**    | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                    |
-
-## Tagger.get_loss {#get_loss tag="method"}
+## SpanCategorizer.get_loss {#get_loss tag="method"}
 
 Find the loss and gradient of loss for the batch of documents and their
 predicted scores.
@@ -238,9 +230,9 @@ predicted scores.
 > #### Example
 >
 > ```python
-> tagger = nlp.add_pipe("tagger")
-> scores = tagger.predict([eg.predicted for eg in examples])
-> loss, d_loss = tagger.get_loss(examples, scores)
+> spancat = nlp.add_pipe("spancat")
+> scores = spancat.predict([eg.predicted for eg in examples])
+> loss, d_loss = spancat.get_loss(examples, scores)
 > ```
 
 | Name        | Description                                                                 |
@@ -249,54 +241,54 @@ predicted scores.
 | `scores`    | Scores representing the model's predictions.                                |
 | **RETURNS** | The loss and the gradient, i.e. `(loss, gradient)`. ~~Tuple[float, float]~~ |
 
-## Tagger.score {#score tag="method" new="3"}
+## SpanCategorizer.score {#score tag="method"}
 
 Score a batch of examples.
 
 > #### Example
 >
 > ```python
-> scores = tagger.score(examples)
+> scores = spancat.score(examples)
 > ```
 
-| Name        | Description                                                                                                                       |
-| ----------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `examples`  | The examples to score. ~~Iterable[Example]~~                                                                                      |
-| **RETURNS** | The scores, produced by [`Scorer.score_token_attr`](/api/scorer#score_token_attr) for the attribute `"tag"`. ~~Dict[str, float]~~ |
+| Name           | Description                                                                                                            |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `examples`     | The examples to score. ~~Iterable[Example]~~                                                                           |
+| _keyword-only_ |                                                                                                                        |
+| **RETURNS**    | The scores, produced by [`Scorer.score_spans`](/api/scorer#score_spans). ~~Dict[str, Union[float, Dict[str, float]]]~~ |
 
-## Tagger.create_optimizer {#create_optimizer tag="method"}
+## SpanCategorizer.create_optimizer {#create_optimizer tag="method"}
 
 Create an optimizer for the pipeline component.
 
 > #### Example
 >
 > ```python
-> tagger = nlp.add_pipe("tagger")
-> optimizer = tagger.create_optimizer()
+> spancat = nlp.add_pipe("spancat")
+> optimizer = spancat.create_optimizer()
 > ```
 
 | Name        | Description                  |
 | ----------- | ---------------------------- |
 | **RETURNS** | The optimizer. ~~Optimizer~~ |
 
-## Tagger.use_params {#use_params tag="method, contextmanager"}
+## SpanCategorizer.use_params {#use_params tag="method, contextmanager"}
 
-Modify the pipe's model, to use the given parameter values. At the end of the
-context, the original parameters are restored.
+Modify the pipe's model to use the given parameter values.
 
 > #### Example
 >
 > ```python
-> tagger = nlp.add_pipe("tagger")
-> with tagger.use_params(optimizer.averages):
->     tagger.to_disk("/best_model")
+> spancat = nlp.add_pipe("spancat")
+> with spancat.use_params(optimizer.averages):
+>     spancat.to_disk("/best_model")
 > ```
 
 | Name     | Description                                        |
 | -------- | -------------------------------------------------- |
 | `params` | The parameter values to use in the model. ~~dict~~ |
 
-## Tagger.add_label {#add_label tag="method"}
+## SpanCategorizer.add_label {#add_label tag="method"}
 
 Add a new label to the pipe. Raises an error if the output dimension is already
 set, or if the model has already been fully [initialized](#initialize). Note
@@ -309,8 +301,8 @@ automatically.
 > #### Example
 >
 > ```python
-> tagger = nlp.add_pipe("tagger")
-> tagger.add_label("MY_LABEL")
+> spancat = nlp.add_pipe("spancat")
+> spancat.add_label("MY_LABEL")
 > ```
 
 | Name        | Description                                                 |
@@ -318,15 +310,15 @@ automatically.
 | `label`     | The label to add. ~~str~~                                   |
 | **RETURNS** | `0` if the label is already present, otherwise `1`. ~~int~~ |
 
-## Tagger.to_disk {#to_disk tag="method"}
+## SpanCategorizer.to_disk {#to_disk tag="method"}
 
 Serialize the pipe to disk.
 
 > #### Example
 >
 > ```python
-> tagger = nlp.add_pipe("tagger")
-> tagger.to_disk("/path/to/tagger")
+> spancat = nlp.add_pipe("spancat")
+> spancat.to_disk("/path/to/spancat")
 > ```
 
 | Name           | Description                                                                                                                                |
@@ -335,15 +327,15 @@ Serialize the pipe to disk.
 | _keyword-only_ |                                                                                                                                            |
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~                                                |
 
-## Tagger.from_disk {#from_disk tag="method"}
+## SpanCategorizer.from_disk {#from_disk tag="method"}
 
 Load the pipe from disk. Modifies the object in place and returns it.
 
 > #### Example
 >
 > ```python
-> tagger = nlp.add_pipe("tagger")
-> tagger.from_disk("/path/to/tagger")
+> spancat = nlp.add_pipe("spancat")
+> spancat.from_disk("/path/to/spancat")
 > ```
 
 | Name           | Description                                                                                     |
@@ -351,15 +343,15 @@ Load the pipe from disk. Modifies the object in place and returns it.
 | `path`         | A path to a directory. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
 | _keyword-only_ |                                                                                                 |
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~     |
-| **RETURNS**    | The modified `Tagger` object. ~~Tagger~~                                                        |
+| **RETURNS**    | The modified `SpanCategorizer` object. ~~SpanCategorizer~~                                      |
 
-## Tagger.to_bytes {#to_bytes tag="method"}
+## SpanCategorizer.to_bytes {#to_bytes tag="method"}
 
 > #### Example
 >
 > ```python
-> tagger = nlp.add_pipe("tagger")
-> tagger_bytes = tagger.to_bytes()
+> spancat = nlp.add_pipe("spancat")
+> spancat_bytes = spancat.to_bytes()
 > ```
 
 Serialize the pipe to a bytestring.
@@ -368,18 +360,18 @@ Serialize the pipe to a bytestring.
 | -------------- | ------------------------------------------------------------------------------------------- |
 | _keyword-only_ |                                                                                             |
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
-| **RETURNS**    | The serialized form of the `Tagger` object. ~~bytes~~                                       |
+| **RETURNS**    | The serialized form of the `SpanCategorizer` object. ~~bytes~~                              |
 
-## Tagger.from_bytes {#from_bytes tag="method"}
+## SpanCategorizer.from_bytes {#from_bytes tag="method"}
 
 Load the pipe from a bytestring. Modifies the object in place and returns it.
 
 > #### Example
 >
 > ```python
-> tagger_bytes = tagger.to_bytes()
-> tagger = nlp.add_pipe("tagger")
-> tagger.from_bytes(tagger_bytes)
+> spancat_bytes = spancat.to_bytes()
+> spancat = nlp.add_pipe("spancat")
+> spancat.from_bytes(spancat_bytes)
 > ```
 
 | Name           | Description                                                                                 |
@@ -387,35 +379,35 @@ Load the pipe from a bytestring. Modifies the object in place and returns it.
 | `bytes_data`   | The data to load from. ~~bytes~~                                                            |
 | _keyword-only_ |                                                                                             |
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
-| **RETURNS**    | The `Tagger` object. ~~Tagger~~                                                             |
+| **RETURNS**    | The `SpanCategorizer` object. ~~SpanCategorizer~~                                           |
 
-## Tagger.labels {#labels tag="property"}
+## SpanCategorizer.labels {#labels tag="property"}
 
 The labels currently added to the component.
 
 > #### Example
 >
 > ```python
-> tagger.add_label("MY_LABEL")
-> assert "MY_LABEL" in tagger.labels
+> spancat.add_label("MY_LABEL")
+> assert "MY_LABEL" in spancat.labels
 > ```
 
 | Name        | Description                                            |
 | ----------- | ------------------------------------------------------ |
 | **RETURNS** | The labels added to the component. ~~Tuple[str, ...]~~ |
 
-## Tagger.label_data {#label_data tag="property" new="3"}
+## SpanCategorizer.label_data {#label_data tag="property"}
 
 The labels currently added to the component and their internal meta information.
 This is the data generated by [`init labels`](/api/cli#init-labels) and used by
-[`Tagger.initialize`](/api/tagger#initialize) to initialize the model with a
-pre-defined label set.
+[`SpanCategorizer.initialize`](/api/spancategorizer#initialize) to initialize
+the model with a pre-defined label set.
 
 > #### Example
 >
 > ```python
-> labels = tagger.label_data
-> tagger.initialize(lambda: [], nlp=nlp, labels=labels)
+> labels = spancat.label_data
+> spancat.initialize(lambda: [], nlp=nlp, labels=labels)
 > ```
 
 | Name        | Description                                                |
@@ -431,7 +423,7 @@ serialization by passing in the string names via the `exclude` argument.
 > #### Example
 >
 > ```python
-> data = tagger.to_disk("/path", exclude=["vocab"])
+> data = spancat.to_disk("/path", exclude=["vocab"])
 > ```
 
 | Name    | Description                                                    |
@@ -439,3 +431,23 @@ serialization by passing in the string names via the `exclude` argument.
 | `vocab` | The shared [`Vocab`](/api/vocab).                              |
 | `cfg`   | The config file. You usually don't want to exclude this.       |
 | `model` | The binary model data. You usually don't want to exclude this. |
+
+## Suggesters {#suggesters tag="registered functions" source="spacy/pipeline/spancat.py"}
+
+### spacy.ngram_suggester.v1 {#ngram_suggester}
+
+> #### Example Config
+>
+> ```ini
+> [components.spancat.suggester]
+> @misc = "spacy.ngram_suggester.v1"
+> sizes = [1, 2, 3]
+> ```
+
+Suggest all spans of the given lengths. Spans are returned as a ragged array of
+integers. The array has two columns, indicating the start and end position.
+
+| Name        | Description                                                                                                          |
+| ----------- | -------------------------------------------------------------------------------------------------------------------- |
+| `sizes`     | The phrase lengths to suggest. For example, `[1, 2]` will suggest phrases consisting of 1 or 2 tokens. ~~List[int]~~ |
+| **CREATES** | The suggester function. ~~Callable[[List[Doc]], Ragged]~~                                                            |

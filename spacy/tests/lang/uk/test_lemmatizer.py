@@ -1,4 +1,3 @@
-import pytest
 from spacy.tokens import Doc
 
 

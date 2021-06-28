@@ -129,8 +129,14 @@ cfg_string = """
     """
 
 TRAIN_DATA = [
-    ("I like green eggs", {"tags": ["N", "V", "J", "N"], "cats": {"preference": 1.0, "imperative": 0.0}}),
-    ("Eat blue ham", {"tags": ["V", "J", "N"], "cats": {"preference": 0.0, "imperative": 1.0}}),
+    (
+        "I like green eggs",
+        {"tags": ["N", "V", "J", "N"], "cats": {"preference": 1.0, "imperative": 0.0}},
+    ),
+    (
+        "Eat blue ham",
+        {"tags": ["V", "J", "N"], "cats": {"preference": 0.0, "imperative": 1.0}},
+    ),
 ]
 
 
@@ -405,5 +411,5 @@ def test_tok2vec_listeners_textcat():
     cats1 = docs[1].cats
     assert cats1["preference"] > 0.1
     assert cats1["imperative"] < 0.9
-    assert([t.tag_ for t in docs[0]] == ["V", "J", "N"])
-    assert([t.tag_ for t in docs[1]] == ["N", "V", "J", "N"])
+    assert [t.tag_ for t in docs[0]] == ["V", "J", "N"]
+    assert [t.tag_ for t in docs[1]] == ["N", "V", "J", "N"]
