@@ -181,7 +181,7 @@ def select_non_crossing_spans(
             if end > max_end:
                 start_to_max_end[start] = end
             min_start = end_to_min_start.get(end, -1)
-            if start == -1 or start < min_start:
+            if min_start == -1 or start < min_start:
                 end_to_min_start[end] = start
 
     # sort idxs by order in doc
