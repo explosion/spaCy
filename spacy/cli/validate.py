@@ -5,7 +5,6 @@ import requests
 from wasabi import msg, Printer
 import warnings
 
-from ..errors import Warnings
 from ._util import app
 from .. import about
 from ..util import get_package_version, get_installed_models, get_minor_version

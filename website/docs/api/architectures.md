@@ -285,8 +285,8 @@ Encode context using bidirectional LSTM layers. Requires
 
 Embed [`Doc`](/api/doc) objects with their vocab's vectors table, applying a
 learned linear projection to control the dimensionality. Unknown tokens are
-mapped to a zero vector. See the documentation on [static
-vectors](/usage/embeddings-transformers#static-vectors) for details.
+mapped to a zero vector. See the documentation on
+[static vectors](/usage/embeddings-transformers#static-vectors) for details.
 
 | Name        |  Description                                                                                                                                                                                                            |
 | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -449,7 +449,7 @@ For more information, see the section on
 > ```ini
 > [pretraining]
 > component = "tok2vec"
-> 
+>
 > [initialize]
 > vectors = "en_core_web_lg"
 > ...
@@ -462,8 +462,8 @@ For more information, see the section on
 > ```
 
 Predict the word's vector from a static embeddings table as pretraining
-objective for a Tok2Vec layer. To use this objective, make sure that the 
-`initialize.vectors` section in the config refers to a model with static 
+objective for a Tok2Vec layer. To use this objective, make sure that the
+`initialize.vectors` section in the config refers to a model with static
 vectors.
 
 | Name            | Description                                                                                                                                               |
@@ -649,8 +649,8 @@ from the linear model, where it is stored in `model.attrs["multi_label"]`.
 
 <Accordion title="spacy.TextCatEnsemble.v1 definition" spaced>
 
-[TextCatEnsemble.v1](/api/legacy#TextCatEnsemble_v1) was functionally similar, but used an internal `tok2vec` instead of
-taking it as argument:
+[TextCatEnsemble.v1](/api/legacy#TextCatEnsemble_v1) was functionally similar,
+but used an internal `tok2vec` instead of taking it as argument:
 
 | Name                 | Description                                                                                                                                                                                    |
 | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -701,8 +701,9 @@ architecture is usually less accurate than the ensemble, but runs faster.
 
 <Accordion title="spacy.TextCatCNN.v1 definition" spaced>
 
-[TextCatCNN.v1](/api/legacy#TextCatCNN_v1) had the exact same signature, but was not yet resizable. 
-Since v2, new labels can be added to this component, even after training.
+[TextCatCNN.v1](/api/legacy#TextCatCNN_v1) had the exact same signature, but was
+not yet resizable. Since v2, new labels can be added to this component, even
+after training.
 
 </Accordion>
 
@@ -732,8 +733,9 @@ the others, but may not be as accurate, especially if texts are short.
 
 <Accordion title="spacy.TextCatBOW.v1 definition" spaced>
 
-[TextCatBOW.v1](/api/legacy#TextCatBOW_v1) had the exact same signature, but was not yet resizable. 
-Since v2, new labels can be added to this component, even after training.
+[TextCatBOW.v1](/api/legacy#TextCatBOW_v1) had the exact same signature, but was
+not yet resizable. Since v2, new labels can be added to this component, even
+after training.
 
 </Accordion>
 
@@ -747,7 +749,7 @@ Since v2, new labels can be added to this component, even after training.
 > [model]
 > @architectures = "spacy.SpanCategorizer.v1"
 > scorer = {"@layers": "spacy.LinearLogistic.v1"}
-> 
+>
 > [model.reducer]
 > @layers = spacy.mean_max_reducer.v1"
 > hidden_size = 128

@@ -491,8 +491,8 @@ document by the `parser`, `senter`, `sentencizer` or some custom function. It
 will raise an error otherwise.
 
 If the span happens to cross sentence boundaries, only the first sentence will
-be returned. If it is required that the sentence always includes the
-full span, the result can be adjusted as such:
+be returned. If it is required that the sentence always includes the full span,
+the result can be adjusted as such:
 
 ```python
 sent = span.sent

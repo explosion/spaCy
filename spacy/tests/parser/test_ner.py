@@ -557,7 +557,11 @@ def test_neg_annotation(neg_key):
     ner.add_label("PERSON")
     ner.add_label("ORG")
     example = Example.from_dict(neg_doc, {"entities": [(7, 17, "PERSON")]})
-    example.reference.spans[neg_key] = [Span(neg_doc, 2, 4, "ORG"), Span(neg_doc, 2, 3, "PERSON"), Span(neg_doc, 1, 4, "PERSON")]
+    example.reference.spans[neg_key] = [
+        Span(neg_doc, 2, 4, "ORG"),
+        Span(neg_doc, 2, 3, "PERSON"),
+        Span(neg_doc, 1, 4, "PERSON"),
+    ]
 
     optimizer = nlp.initialize()
     for i in range(2):

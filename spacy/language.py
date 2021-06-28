@@ -687,11 +687,13 @@ class Language:
         if not isinstance(source, Language):
             raise ValueError(Errors.E945.format(name=source_name, source=type(source)))
         # Check vectors, with faster checks first
-        if self.vocab.vectors.shape != source.vocab.vectors.shape or \
-                self.vocab.vectors.key2row != source.vocab.vectors.key2row or \
-                self.vocab.vectors.to_bytes() != source.vocab.vectors.to_bytes():
+        if (
+            self.vocab.vectors.shape != source.vocab.vectors.shape
+            or self.vocab.vectors.key2row != source.vocab.vectors.key2row
+            or self.vocab.vectors.to_bytes() != source.vocab.vectors.to_bytes()
+        ):
             warnings.warn(Warnings.W113.format(name=source_name))
-        if not source_name in source.component_names:
+        if source_name not in source.component_names:
             raise KeyError(
                 Errors.E944.format(
                     name=source_name,
@@ -1539,15 +1541,21 @@ class Language:
 
         # Cycle channels not to break the order of docs.
         # The received object is a batch of byte-encoded docs, so flatten them with chain.from_iterable.
-        byte_tuples = chain.from_iterable(recv.recv() for recv in cycle(bytedocs_recv_ch))
+        byte_tuples = chain.from_iterable(
+            recv.recv() for recv in cycle(bytedocs_recv_ch)
+        )
         try:
-            for i, (_, (byte_doc, byte_error)) in enumerate(zip(raw_texts, byte_tuples), 1):
+            for i, (_, (byte_doc, byte_error)) in enumerate(
+                zip(raw_texts, byte_tuples), 1
+            ):
                 if byte_doc is not None:
                     doc = Doc(self.vocab).from_bytes(byte_doc)
                     yield doc
                 elif byte_error is not None:
                     error = srsly.msgpack_loads(byte_error)
-                    self.default_error_handler(None, None, None, ValueError(Errors.E871.format(error=error)))
+                    self.default_error_handler(
+                        None, None, None, ValueError(Errors.E871.format(error=error))
+                    )
                 if i % batch_size == 0:
                     # tell `sender` that one batch was consumed.
                     sender.step()
@@ -1707,7 +1715,9 @@ class Language:
                     if "replace_listeners" in pipe_cfg:
                         for name, proc in source_nlps[model].pipeline:
                             if source_name in getattr(proc, "listening_components", []):
-                                source_nlps[model].replace_listeners(name, source_name, pipe_cfg["replace_listeners"])
+                                source_nlps[model].replace_listeners(
+                                    name, source_name, pipe_cfg["replace_listeners"]
+                                )
                                 listeners_replaced = True
                     nlp.add_pipe(source_name, source=source_nlps[model], name=pipe_name)
                     # Delete from cache if listeners were replaced
@@ -1727,12 +1737,16 @@ class Language:
         for name, proc in nlp.pipeline:
             # Remove listeners not in the pipeline
             listener_names = getattr(proc, "listening_components", [])
-            unused_listener_names = [ll for ll in listener_names if ll not in nlp.pipe_names]
+            unused_listener_names = [
+                ll for ll in listener_names if ll not in nlp.pipe_names
+            ]
             for listener_name in unused_listener_names:
                 for listener in proc.listener_map.get(listener_name, []):
                     proc.remove_listener(listener, listener_name)
 
-            for listener in getattr(proc, "listening_components", []):  # e.g. tok2vec/transformer
+            for listener in getattr(
+                proc, "listening_components", []
+            ):  # e.g. tok2vec/transformer
                 # If it's a component sourced from another pipeline, we check if
                 # the tok2vec listeners should be replaced with standalone tok2vec
                 # models (e.g. so component can be frozen without its performance
@@ -1827,7 +1841,9 @@ class Language:
                 new_config = tok2vec_cfg["model"]
                 if "replace_listener_cfg" in tok2vec_model.attrs:
                     replace_func = tok2vec_model.attrs["replace_listener_cfg"]
-                    new_config = replace_func(tok2vec_cfg["model"], pipe_cfg["model"]["tok2vec"])
+                    new_config = replace_func(
+                        tok2vec_cfg["model"], pipe_cfg["model"]["tok2vec"]
+                    )
                 util.set_dot_to_object(pipe_cfg, listener_path, new_config)
             # Go over the listener layers and replace them
             for listener in pipe_listeners:
@@ -1866,8 +1882,11 @@ class Language:
         util.to_disk(path, serializers, exclude)
 
     def from_disk(
-        self, path: Union[str, Path], *, exclude: Iterable[str] = SimpleFrozenList(),
-            overrides: Dict[str, Any] = SimpleFrozenDict(),
+        self,
+        path: Union[str, Path],
+        *,
+        exclude: Iterable[str] = SimpleFrozenList(),
+        overrides: Dict[str, Any] = SimpleFrozenDict(),
     ) -> "Language":
         """Loads state from a directory. Modifies the object in place and
         returns it. If the saved `Language` object contains a model, the

@@ -127,7 +127,9 @@ def evaluate(
             data["ents_per_type"] = scores["ents_per_type"]
     if f"spans_{spans_key}_per_type" in scores:
         if scores[f"spans_{spans_key}_per_type"]:
-            print_prf_per_type(msg, scores[f"spans_{spans_key}_per_type"], "SPANS", "type")
+            print_prf_per_type(
+                msg, scores[f"spans_{spans_key}_per_type"], "SPANS", "type"
+            )
             data[f"spans_{spans_key}_per_type"] = scores[f"spans_{spans_key}_per_type"]
     if "cats_f_per_type" in scores:
         if scores["cats_f_per_type"]:

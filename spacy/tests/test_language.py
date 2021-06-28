@@ -8,7 +8,7 @@ from spacy.vocab import Vocab
 from spacy.training import Example
 from spacy.lang.en import English
 from spacy.lang.de import German
-from spacy.util import registry, ignore_error, raise_error, logger
+from spacy.util import registry, ignore_error, raise_error
 import spacy
 from thinc.api import NumpyOps, get_current_ops
 
@@ -143,7 +143,9 @@ def sample_vectors():
 
 @pytest.fixture
 def nlp2(nlp, sample_vectors):
-    Language.component("test_language_vector_modification_pipe", func=vector_modification_pipe)
+    Language.component(
+        "test_language_vector_modification_pipe", func=vector_modification_pipe
+    )
     Language.component("test_language_userdata_pipe", func=userdata_pipe)
     Language.component("test_language_ner_pipe", func=ner_pipe)
     add_vecs_to_vocab(nlp.vocab, sample_vectors)

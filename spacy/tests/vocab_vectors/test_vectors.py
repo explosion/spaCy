@@ -12,6 +12,7 @@ from ..util import add_vecs_to_vocab, get_cosine, make_tempdir
 
 OPS = get_current_ops()
 
+
 @pytest.fixture
 def strings():
     return ["apple", "orange"]
