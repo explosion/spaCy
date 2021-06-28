@@ -131,7 +131,7 @@ def test_implicit_label(name, get_examples):
     nlp.initialize(get_examples=get_examples(nlp))
 
 
-#fmt: off
+# fmt: off
 @pytest.mark.parametrize(
     "name,textcat_config",
     [
@@ -150,7 +150,7 @@ def test_implicit_label(name, get_examples):
         ("textcat_multilabel", {"@architectures": "spacy.TextCatCNN.v1", "tok2vec": DEFAULT_TOK2VEC_MODEL, "exclusive_classes": False}),
     ],
 )
-#fmt: on
+# fmt: on
 def test_no_resize(name, textcat_config):
     """The old textcat architectures weren't resizable"""
     nlp = Language()
@@ -165,7 +165,7 @@ def test_no_resize(name, textcat_config):
         textcat.add_label("NEUTRAL")
 
 
-#fmt: off
+# fmt: off
 @pytest.mark.parametrize(
     "name,textcat_config",
     [
@@ -179,7 +179,7 @@ def test_no_resize(name, textcat_config):
         ("textcat_multilabel", {"@architectures": "spacy.TextCatCNN.v2", "tok2vec": DEFAULT_TOK2VEC_MODEL, "exclusive_classes": False}),
     ],
 )
-#fmt: on
+# fmt: on
 def test_resize(name, textcat_config):
     """The new textcat architectures are resizable"""
     nlp = Language()
@@ -194,7 +194,7 @@ def test_resize(name, textcat_config):
     assert textcat.model.maybe_get_dim("nO") in [3, None]
 
 
-#fmt: off
+# fmt: off
 @pytest.mark.parametrize(
     "name,textcat_config",
     [
@@ -208,7 +208,7 @@ def test_resize(name, textcat_config):
         ("textcat_multilabel", {"@architectures": "spacy.TextCatCNN.v2", "tok2vec": DEFAULT_TOK2VEC_MODEL, "exclusive_classes": False}),
     ],
 )
-#fmt: on
+# fmt: on
 def test_resize_same_results(name, textcat_config):
     # Ensure that the resized textcat classifiers still produce the same results for old labels
     fix_random_seed(0)
@@ -511,7 +511,9 @@ def test_textcat_threshold():
     macro_f = scores["cats_score"]
     assert scores["cats_f_per_type"]["POSITIVE"]["r"] == 1.0
 
-    scores = nlp.evaluate(train_examples, scorer_cfg={"threshold": 0, "positive_label": "POSITIVE"})
+    scores = nlp.evaluate(
+        train_examples, scorer_cfg={"threshold": 0, "positive_label": "POSITIVE"}
+    )
     pos_f = scores["cats_score"]
     assert scores["cats_f_per_type"]["POSITIVE"]["r"] == 1.0
     assert pos_f > macro_f

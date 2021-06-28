@@ -8,8 +8,7 @@ def test_issue7056():
     sentence segmentation errors."""
     vocab = Vocab()
     ae = ArcEager(
-        vocab.strings,
-        ArcEager.get_actions(left_labels=["amod"], right_labels=["pobj"])
+        vocab.strings, ArcEager.get_actions(left_labels=["amod"], right_labels=["pobj"])
     )
     doc = Doc(vocab, words="Severe pain , after trauma".split())
     state = ae.init_batch([doc])[0]

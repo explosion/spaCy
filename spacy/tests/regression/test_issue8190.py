@@ -9,20 +9,13 @@ def test_issue8190():
         "nlp": {
             "lang": "en",
         },
-        "custom": {
-            "key": "value"
-        }
-
+        "custom": {"key": "value"},
     }
     source_nlp = English.from_config(source_cfg)
     with make_tempdir() as dir_path:
         # We need to create a loadable source pipeline
         source_path = dir_path / "test_model"
         source_nlp.to_disk(source_path)
-        nlp = spacy.load(source_path, config={
-            "custom": {
-                "key": "updated_value"
-            }
-        })
+        nlp = spacy.load(source_path, config={"custom": {"key": "updated_value"}})
 
         assert nlp.config["custom"]["key"] == "updated_value"

@@ -64,7 +64,9 @@ def test_serialize_doc_span_groups(en_vocab):
 
 
 def test_serialize_doc_bin():
-    doc_bin = DocBin(attrs=["LEMMA", "ENT_IOB", "ENT_TYPE", "NORM", "ENT_ID"], store_user_data=True)
+    doc_bin = DocBin(
+        attrs=["LEMMA", "ENT_IOB", "ENT_TYPE", "NORM", "ENT_ID"], store_user_data=True
+    )
     texts = ["Some text", "Lots of texts...", "..."]
     cats = {"A": 0.5}
     nlp = English()

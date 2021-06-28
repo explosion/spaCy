@@ -278,9 +278,7 @@ class EntityRuler(Pipe):
                 if self == pipe:
                     current_index = i
                     break
-            subsequent_pipes = [
-                pipe for pipe in self.nlp.pipe_names[current_index :]
-            ]
+            subsequent_pipes = [pipe for pipe in self.nlp.pipe_names[current_index:]]
         except ValueError:
             subsequent_pipes = []
         with self.nlp.select_pipes(disable=subsequent_pipes):

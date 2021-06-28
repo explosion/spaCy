@@ -57,13 +57,13 @@ if TYPE_CHECKING:
     from .vocab import Vocab  # noqa: F401
 
 
+# fmt: off
 OOV_RANK = numpy.iinfo(numpy.uint64).max
 DEFAULT_OOV_PROB = -20
 LEXEME_NORM_LANGS = ["cs", "da", "de", "el", "en", "id", "lb", "mk", "pt", "ru", "sr", "ta", "th"]
 
 # Default order of sections in the config.cfg. Not all sections needs to exist,
 # and additional sections are added at the end, in alphabetical order.
-# fmt: off
 CONFIG_SECTION_ORDER = ["paths", "variables", "system", "nlp", "components", "corpora", "training", "pretraining", "initialize"]
 # fmt: on
 
@@ -649,8 +649,7 @@ def get_model_version_range(spacy_version: str) -> str:
 
 
 def get_model_lower_version(constraint: str) -> Optional[str]:
-    """From a version range like >=1.2.3,<1.3.0 return the lower pin.
-    """
+    """From a version range like >=1.2.3,<1.3.0 return the lower pin."""
     try:
         specset = SpecifierSet(constraint)
         for spec in specset:

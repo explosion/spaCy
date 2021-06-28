@@ -143,7 +143,9 @@ def sample_vectors():
 
 @pytest.fixture
 def nlp2(nlp, sample_vectors):
-    Language.component("test_language_vector_modification_pipe", func=vector_modification_pipe)
+    Language.component(
+        "test_language_vector_modification_pipe", func=vector_modification_pipe
+    )
     Language.component("test_language_userdata_pipe", func=userdata_pipe)
     Language.component("test_language_ner_pipe", func=ner_pipe)
     add_vecs_to_vocab(nlp.vocab, sample_vectors)

@@ -139,7 +139,10 @@ def debug_model(
     upstream_component = None
     if model.has_ref("tok2vec") and "tok2vec-listener" in model.get_ref("tok2vec").name:
         upstream_component = nlp.get_pipe("tok2vec")
-    if model.has_ref("tok2vec") and "transformer-listener" in model.get_ref("tok2vec").name:
+    if (
+        model.has_ref("tok2vec")
+        and "transformer-listener" in model.get_ref("tok2vec").name
+    ):
         upstream_component = nlp.get_pipe("transformer")
     goldY = None
     for e in range(3):

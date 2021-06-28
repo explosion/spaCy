@@ -40,19 +40,20 @@ CONTRACTION_TESTS = [
     (
         "Päätimme ettemme tule.",
         ["Päätimme", "ett", "emme", "tule", "."],
-        ["päätimme", "että", "emme", "tule", "."]
+        ["päätimme", "että", "emme", "tule", "."],
     ),
     (
         "Miksei puhuttaisi?",
         ["Miks", "ei", "puhuttaisi", "?"],
-        ["miksi", "ei", "puhuttaisi", "?"]
+        ["miksi", "ei", "puhuttaisi", "?"],
     ),
     (
         "He tottelivat vaikkeivat halunneet",
         ["He", "tottelivat", "vaikk", "eivat", "halunneet"],
-        ["he", "tottelivat", "vaikka", "eivät", "halunneet"]
+        ["he", "tottelivat", "vaikka", "eivät", "halunneet"],
     ),
 ]
+
 
 @pytest.mark.parametrize("text,expected_tokens", ABBREVIATION_TESTS)
 def test_fi_tokenizer_abbreviations(fi_tokenizer, text, expected_tokens):

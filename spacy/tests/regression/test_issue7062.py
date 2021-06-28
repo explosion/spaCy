@@ -41,7 +41,7 @@ def test_partial_links():
     nlp.add_pipe("sentencizer", first=True)
     patterns = [
         {"label": "PERSON", "pattern": [{"LOWER": "russ"}, {"LOWER": "cochran"}]},
-        {"label": "ORG", "pattern": [{"LOWER": "ec"}, {"LOWER": "comics"}]}
+        {"label": "ORG", "pattern": [{"LOWER": "ec"}, {"LOWER": "comics"}]},
     ]
     ruler = nlp.add_pipe("entity_ruler", before="entity_linker")
     ruler.add_patterns(patterns)
