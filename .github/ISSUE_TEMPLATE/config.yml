@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: spaCy FAQ
+    url: https://github.com/explosion/spaCy/discussions/8226
+    about: Check the FAQ for answers to common community questions.
+  - name: Github Discussions forum
+    url: https://github.com/explosion/spaCy/discussions
+    about: Questions and anything that isn't a bug report should posted here.
