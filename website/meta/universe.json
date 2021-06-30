@@ -3142,7 +3142,7 @@
             "slogan": "Forte is a toolkit for building Natural Language Processing pipelines, featuring cross-task interaction, adaptable data-model interfaces and composable pipelines.",
             "description": "Forte provides a platform to assemble state-of-the-art NLP and ML technologies in a highly-composable fashion, including a wide spectrum of tasks ranging from Information Retrieval, Natural Language Understanding to Natural Language Generation.",
             "github": "asyml/forte",
-            "pip": "\"git+https://git@github.com/asyml/forte-wrappers.git#egg=forte.spacy&subdirectory=src/spacy\"",
+            "pip": "forte.spacy torch",
             "code_example": [
                 "from forte.spacy import SpacyProcessor",
                 "from forte import Pipeline",
