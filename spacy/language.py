@@ -934,6 +934,7 @@ class Language:
         # because factory may be used for something else
         self._pipe_meta.pop(name)
         self._pipe_configs.pop(name)
+        self.meta.get("_sourced_vectors_hashes", {}).pop(name)
         # Make sure name is removed from the [initialize] config
         if name in self._config["initialize"]["components"]:
             self._config["initialize"]["components"].pop(name)
