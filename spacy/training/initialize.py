@@ -126,7 +126,7 @@ def init_vocab(
         load_vectors_into_model(nlp, vectors)
         logger.info(f"Added vectors: {vectors}")
     # warn if source model vectors are not identical
-    sourced_vectors_hashes = nlp.meta.get("_sourced_vectors_hashes", {})
+    sourced_vectors_hashes = nlp.meta.pop("_sourced_vectors_hashes", {})
     vectors_hash = hash(nlp.vocab.vectors.to_bytes())
     for sourced_component, sourced_vectors_hash in sourced_vectors_hashes.items():
         if vectors_hash != sourced_vectors_hash:
