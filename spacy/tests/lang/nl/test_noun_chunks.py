@@ -1,4 +1,192 @@
+from spacy.tokens import Doc
 import pytest
+
+
+@pytest.fixture
+def nl_sample(nl_vocab):
+    # TEXT :
+    # Haar vriend lacht luid. We kregen alweer ruzie toen we de supermarkt ingingen.
+    # Aan het begin van de supermarkt is al het fruit en de groentes. Uiteindelijk hebben we dan ook
+    # geen avondeten gekocht.
+    words = [
+        "Haar",
+        "vriend",
+        "lacht",
+        "luid",
+        ".",
+        "We",
+        "kregen",
+        "alweer",
+        "ruzie",
+        "toen",
+        "we",
+        "de",
+        "supermarkt",
+        "ingingen",
+        ".",
+        "Aan",
+        "het",
+        "begin",
+        "van",
+        "de",
+        "supermarkt",
+        "is",
+        "al",
+        "het",
+        "fruit",
+        "en",
+        "de",
+        "groentes",
+        ".",
+        "Uiteindelijk",
+        "hebben",
+        "we",
+        "dan",
+        "ook",
+        "geen",
+        "avondeten",
+        "gekocht",
+        ".",
+    ]
+    heads = [
+        1,
+        2,
+        2,
+        2,
+        2,
+        6,
+        6,
+        6,
+        6,
+        13,
+        13,
+        12,
+        13,
+        6,
+        6,
+        17,
+        17,
+        24,
+        20,
+        20,
+        17,
+        24,
+        24,
+        24,
+        24,
+        27,
+        27,
+        24,
+        24,
+        36,
+        36,
+        36,
+        36,
+        36,
+        35,
+        36,
+        36,
+        36,
+    ]
+    deps = [
+        "nmod:poss",
+        "nsubj",
+        "ROOT",
+        "advmod",
+        "punct",
+        "nsubj",
+        "ROOT",
+        "advmod",
+        "obj",
+        "mark",
+        "nsubj",
+        "det",
+        "obj",
+        "advcl",
+        "punct",
+        "case",
+        "det",
+        "obl",
+        "case",
+        "det",
+        "nmod",
+        "cop",
+        "advmod",
+        "det",
+        "ROOT",
+        "cc",
+        "det",
+        "conj",
+        "punct",
+        "advmod",
+        "aux",
+        "nsubj",
+        "advmod",
+        "advmod",
+        "det",
+        "obj",
+        "ROOT",
+        "punct",
+    ]
+    pos = [
+        "PRON",
+        "NOUN",
+        "VERB",
+        "ADJ",
+        "PUNCT",
+        "PRON",
+        "VERB",
+        "ADV",
+        "NOUN",
+        "SCONJ",
+        "PRON",
+        "DET",
+        "NOUN",
+        "NOUN",
+        "PUNCT",
+        "ADP",
+        "DET",
+        "NOUN",
+        "ADP",
+        "DET",
+        "NOUN",
+        "AUX",
+        "ADV",
+        "DET",
+        "NOUN",
+        "CCONJ",
+        "DET",
+        "NOUN",
+        "PUNCT",
+        "ADJ",
+        "AUX",
+        "PRON",
+        "ADV",
+        "ADV",
+        "DET",
+        "NOUN",
+        "VERB",
+        "PUNCT",
+    ]
+    return Doc(nl_vocab, words=words, heads=heads, deps=deps, pos=pos)
+
+
+@pytest.fixture
+def nl_reference_chunking():
+    # Using frog https://github.com/LanguageMachines/frog/ we obtain the following NOUN-PHRASES:
+    return [
+        "haar vriend",
+        "we",
+        "ruzie",
+        "we",
+        "de supermarkt",
+        "het begin",
+        "de supermarkt",
+        "het fruit",
+        "de groentes",
+        "we",
+        "geen avondeten",
+    ]
 
 
 def test_need_dep(nl_tokenizer):
@@ -12,25 +200,11 @@ def test_need_dep(nl_tokenizer):
         list(doc.noun_chunks)
 
 
-def test_chunking(nl_tokenizer):
+def test_chunking(nl_sample, nl_reference_chunking):
     """
     Test the noun chunks of a sample text. Uses a sample.
     The sample text was made as a Doc object with nl_core_news_md loaded. The Doc object was serialized with
     the to_bytes() method.
     """
-    # TEXT :
-    # Haar vriend lacht luid. We kregen alweer ruzie toen we de supermarkt ingingen.
-    # Aan het begin van de supermarkt is al het fruit en de groentes. Uiteindelijk hebben we dan ook
-    # geen avondeten gekocht.
-    # Using frog https://github.com/LanguageMachines/frog/ we obtain the following NOUN-PHRASES:
-    # fmt: off
-    expected = ["haar vriend", "we", "ruzie", "we", "de supermarkt", "het begin", "de supermarkt", "het fruit",
-                "de groentes", "we", "geen avondeten"]
-
-    doc = nl_tokenizer("")
-    with open("sample.bin", "rb") as src:
-        doc.from_bytes(src.read())
-
-    chunks = [s.text.lower() for s in doc.noun_chunks]
-
-    assert chunks == expected
+    chunks = [s.text.lower() for s in nl_sample.noun_chunks]
+    assert chunks == nl_reference_chunking
