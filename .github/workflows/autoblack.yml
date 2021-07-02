@@ -22,13 +22,13 @@ jobs:
         run: |
           black spacy
           git status
+          git add -A
+          git commit -am "Auto-format code with black"
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v3
         with:
             title: Auto-format code with black
             labels: meta
-            commit-message: Auto-format code with black
-            committer: GitHub <noreply@github.com>
             author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
             body: _This PR is auto-generated._
             draft: false
