@@ -1,0 +1,37 @@
+# GitHub Action that uses Black to reformat all Python code and submits a PR
+# in regular intervals. Inspired by: https://github.com/cclauss/autoblack
+
+name: autoblack
+on:
+  schedule:
+    cron: '0 8 * * 5'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+            ref: ${{ github.head_ref }}
+      - uses: actions/setup-python@v2
+      - run: pip install black
+      - run: black --check spacy
+      - name: Auto-format code if needed
+        if: failure()
+        run: |
+          black spacy
+          git status
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v3
+        with:
+            title: Auto-format code with black
+            labels: meta
+            commit-message: Auto-format code with black
+            committer: GitHub <noreply@github.com>
+            author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
+            body: _This PR is auto-generated._
+            draft: false
+      - name: Check outputs
+        run: |
+          echo "Pull Request Number - ${{ steps.cpr.outputs.pull-request-number }}"
+          echo "Pull Request URL - ${{ steps.cpr.outputs.pull-request-url }}"
