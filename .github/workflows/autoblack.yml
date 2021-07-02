@@ -8,7 +8,7 @@ on:
   workflow_dispatch:  # allow manual trigger
 
 jobs:
-  build:
+  autoblack:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -16,11 +16,14 @@ jobs:
             ref: ${{ github.head_ref }}
       - uses: actions/setup-python@v2
       - run: pip install black
-      - run: black --check spacy
       - name: Auto-format code if needed
-        if: failure()
+        run: black spacy
+      - name: Check for modified files
+        id: git-check
+        run: echo ::set-output name=modified::$(if git diff-index --quiet HEAD --; then echo "false"; else echo "true"; fi)
+      - name: Commit modified files
+        if: steps.git-check.outputs.modified == 'true'
         run: |
-          black spacy
           git config --global user.name 'explosion-bot'
           git config --global user.email 'explosion-bot@users.noreply.github.com'
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/$GITHUB_REPOSITORY
@@ -28,6 +31,7 @@ jobs:
           git add -A
           git commit -am "Auto-format code with black"
       - name: Create Pull Request
+        if: steps.git-check.outputs.modified == 'true'
         uses: peter-evans/create-pull-request@v3
         with:
             title: Auto-format code with black
@@ -38,6 +42,7 @@ jobs:
             delete-branch: true
             draft: false
       - name: Check outputs
+        if: steps.git-check.outputs.modified == 'true'
         run: |
           echo "Pull Request Number - ${{ steps.cpr.outputs.pull-request-number }}"
           echo "Pull Request URL - ${{ steps.cpr.outputs.pull-request-url }}"
