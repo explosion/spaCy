@@ -21,6 +21,9 @@ jobs:
         if: failure()
         run: |
           black spacy
+          git config --global user.name 'explosion-bot'
+          git config --global user.email 'explosion-bot@users.noreply.github.com'
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/$GITHUB_REPOSITORY
           git status
           git add -A
           git commit -am "Auto-format code with black"
@@ -31,6 +34,8 @@ jobs:
             labels: meta
             author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
             body: _This PR is auto-generated._
+            branch: autoblack
+            delete-branch: true
             draft: false
       - name: Check outputs
         run: |
