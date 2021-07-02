@@ -4,7 +4,8 @@
 name: autoblack
 on:
   schedule:
-    cron: '0 8 * * 5'
+    cron: '0 8 * * 5'  # every Friday at 8am UTC
+  workflow_dispatch:  # allow manual trigger
 
 jobs:
   build:
