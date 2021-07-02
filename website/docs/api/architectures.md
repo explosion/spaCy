@@ -553,6 +553,13 @@ consists of either two or three subnetworks:
 | `nO`                 | The number of actions the model will predict between. Usually inferred from data at the beginning of training, or loaded from disk. ~~int~~                                                                                                                                                                                                                             |
 | **CREATES**          | The model using the architecture. ~~Model[List[Docs], List[List[Floats2d]]]~~                                                                                                                                                                                                                                                                                           |
 
+<Accordion title="spacy.TransitionBasedParser.v1 definition" spaced>
+
+[TransitionBasedParser.v1](/api/legacy#TransitionBasedParser_v1) had the exact same signature, 
+but the `use_upper` argument was `True` by default.
+
+</Accordion>
+
 ## Tagging architectures {#tagger source="spacy/ml/models/tagger.py"}
 
 ### spacy.Tagger.v1 {#Tagger}
