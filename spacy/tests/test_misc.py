@@ -275,7 +275,7 @@ def test_util_minibatch(doc_sizes, expected_batches):
     ],
 )
 def test_util_minibatch_oversize(doc_sizes, expected_batches):
-    """ Test that oversized documents are returned in their own batch"""
+    """Test that oversized documents are returned in their own batch"""
     docs = [get_random_doc(doc_size) for doc_size in doc_sizes]
     tol = 0.2
     batch_size = 1000

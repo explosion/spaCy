@@ -197,7 +197,7 @@ def test_issue3555(en_vocab):
 
 
 def test_issue3611():
-    """ Test whether adding n-grams in the textcat works even when n > token length of some docs """
+    """Test whether adding n-grams in the textcat works even when n > token length of some docs"""
     unique_classes = ["offensive", "inoffensive"]
     x_train = [
         "This is an offensive text",
@@ -282,7 +282,7 @@ def test_issue3830_with_subtok():
 
 
 def test_issue3839(en_vocab):
-    """Test that match IDs returned by the matcher are correct, are in the string """
+    """Test that match IDs returned by the matcher are correct, are in the string"""
     doc = Doc(en_vocab, words=["terrific", "group", "of", "people"])
     matcher = Matcher(en_vocab)
     match_id = "PATTERN"
@@ -366,7 +366,7 @@ def test_issue3951(en_vocab):
 
 
 def test_issue3959():
-    """ Ensure that a modified pos attribute is serialized correctly."""
+    """Ensure that a modified pos attribute is serialized correctly."""
     nlp = English()
     doc = nlp(
         "displaCy uses JavaScript, SVG and CSS to show you how computers understand language"
