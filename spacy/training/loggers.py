@@ -110,6 +110,7 @@ def wandb_logger(
 ):
     try:
         import wandb
+
         # test that these are available
         from wandb import init, log, join  # noqa: F401
     except ImportError:
