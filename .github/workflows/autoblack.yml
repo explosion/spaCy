@@ -31,7 +31,7 @@ jobs:
             labels: meta
             commit-message: Auto-format code with black
             committer: GitHub <noreply@github.com>
-            author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
+            author: explosion-bot <explosion-bot@users.noreply.github.com>
             body: _This PR is auto-generated._
             branch: autoblack
             delete-branch: true
