@@ -11,27 +11,6 @@ from ...tokens import Doc
 
 
 @registry.architectures("spacy.TransitionBasedParser.v2")
-def transition_parser_v2(
-    tok2vec: Model[List[Doc], List[Floats2d]],
-    state_type: Literal["parser", "ner"],
-    extra_state_tokens: bool,
-    hidden_width: int,
-    maxout_pieces: int,
-    use_upper: bool,
-    nO: Optional[int] = None,
-) -> Model:
-    return build_tb_parser_model(
-        tok2vec,
-        state_type,
-        extra_state_tokens,
-        hidden_width,
-        maxout_pieces,
-        use_upper,
-        nO,
-    )
-
-
-@registry.layers("spacy.build_tb_parser_model.v2")
 def build_tb_parser_model(
     tok2vec: Model[List[Doc], List[Floats2d]],
     state_type: Literal["parser", "ner"],
