@@ -18,24 +18,19 @@ jobs:
       - run: pip install black
       - name: Auto-format code if needed
         run: black spacy
+      # We can't run black --check here because that returns a non-zero excit
+      # code and makes GitHub think the action failed
       - name: Check for modified files
         id: git-check
         run: echo ::set-output name=modified::$(if git diff-index --quiet HEAD --; then echo "false"; else echo "true"; fi)
-      - name: Commit modified files
-        if: steps.git-check.outputs.modified == 'true'
-        run: |
-          git config --global user.name 'explosion-bot'
-          git config --global user.email 'explosion-bot@users.noreply.github.com'
-          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/$GITHUB_REPOSITORY
-          git status
-          git add -A
-          git commit -am "Auto-format code with black"
       - name: Create Pull Request
         if: steps.git-check.outputs.modified == 'true'
         uses: peter-evans/create-pull-request@v3
         with:
             title: Auto-format code with black
             labels: meta
+            commit-message: Auto-format code with black
+            committer: GitHub <noreply@github.com>
             author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
             body: _This PR is auto-generated._
             branch: autoblack
