@@ -64,7 +64,7 @@ def evaluate(
 ) -> Scorer:
     msg = Printer(no_print=silent, pretty=not silent)
     fix_random_seed()
-    setup_gpu(use_gpu)
+    setup_gpu(use_gpu, printer=msg)
     data_path = util.ensure_path(data_path)
     output_path = util.ensure_path(output)
     displacy_path = util.ensure_path(displacy_path)
