@@ -10,11 +10,12 @@ api_trainable: true
 ---
 
 The text categorizer predicts **categories over a whole document**. and comes in
-two flavours: `textcat` and `textcat_multilabel`. When you need to predict
+two flavors: `textcat` and `textcat_multilabel`. When you need to predict
 exactly one true label per document, use the `textcat` which has mutually
 exclusive labels. If you want to perform multi-label classification and predict
-zero, one or more labels per document, use the `textcat_multilabel` component
-instead.
+zero, one or more true labels per document, use the `textcat_multilabel`
+component instead. For a binary classification task, you can use `textcat` with
+**two** labels or `textcat_multilabel` with **one** label.
 
 Both components are documented on this page.
 
