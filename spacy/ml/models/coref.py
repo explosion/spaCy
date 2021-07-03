@@ -387,7 +387,13 @@ def ant_scorer_forward(
 
         scores = pw_prod + pw_sum + mask
 
-        top_scores, top_scores_idx = topk(xp, scores, min(ant_limit, len(scores)))
+        top_limit = min(ant_limit, len(scores))
+        top_scores, top_scores_idx = topk(xp, scores, top_limit)
+        # now add the placeholder
+        placeholder = ops.alloc2f(scores.shape[0], 1)
+        top_scores = xp.concatenate( (placeholder, top_scores), 1)
+        top_scores = ops.softmax(top_scores, axis=1)
+
         out.append((top_scores, top_scores_idx))
 
         # In the full model these scores can be further refined. In the current
@@ -414,6 +420,8 @@ def ant_scorer_forward(
         offset = 0
         for dy, (prod_back, pw_sum_back), ll in zip(dYscores, backprops, veclens):
             dyscore, dyidx = dy
+            # remove the placeholder
+            dyscore = dyscore[:, 1:]
             # the full score grid is square
 
             fullscore = ops.alloc2f(ll, ll)

@@ -142,10 +142,6 @@ class CoreferenceResolver(TrainablePipe):
             starts = idxs[offset:hi, 0]
             ends = idxs[offset:hi, 1]
 
-            # need to add the placeholder
-            placeholder = self.model.ops.alloc2f(cscores.shape[0], 1)
-            cscores = xp.concatenate((placeholder, cscores), 1)
-
             predicted = get_predicted_clusters(xp, starts, ends, ant_idxs, cscores)
             clusters_by_doc.append(predicted)
         return clusters_by_doc
@@ -291,9 +287,8 @@ class CoreferenceResolver(TrainablePipe):
 
         offset = 0
         gradients = []
-        loss = 0
+        total_loss = 0
         for example, (cscores, cidx) in zip(examples, score_matrix):
-            # assume cids has absolute mention ids
 
             ll = cscores.shape[0]
             hi = offset + ll
@@ -310,20 +305,14 @@ class CoreferenceResolver(TrainablePipe):
             # boolean to float
             top_gscores = ops.asarray2f(top_gscores)
 
-            # add the placeholder to cscores
-            placeholder = self.model.ops.alloc2f(ll, 1)
-            cscores = xp.concatenate((placeholder, cscores), 1)
+            grad, loss = self.loss(cscores.T, top_gscores.T)
 
-            # do softmax to cscores
-            cscores = ops.softmax(cscores, axis=1)
+            gradients.append((grad.T, cidx))
+            total_loss += float(loss)
 
-            diff = self.loss.get_grad(cscores.T, top_gscores.T).T
-            diff = diff[:, 1:]
-            gradients.append((diff, cidx))
+            offset = hi
 
-            loss += float(self.loss.get_loss(cscores.T, top_gscores.T))
-            offset += ll
-        return loss, gradients
+        return total_loss, gradients
 
     def initialize(
         self,
