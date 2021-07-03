@@ -333,7 +333,7 @@ class CoreferenceResolver(TrainablePipe):
 
         X = []
         Y = []
-        for ex in islice(get_examples(), 10):
+        for ex in islice(get_examples(), 2):
             X.append(ex.predicted)
             Y.append(ex.reference)
 
