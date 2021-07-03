@@ -162,7 +162,7 @@ def select_non_crossing_spans(
         start, end = starts[idx], ends[idx]
         cross = False
 
-        for ti in range(start, end + 1):
+        for ti in range(start, end):
             max_end = start_to_max_end.get(ti, -1)
             if ti > start and max_end > end:
                 cross = True
