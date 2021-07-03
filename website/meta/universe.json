@@ -1330,6 +1330,35 @@
             "category": ["nonpython"]
         },
         {
+            "id": "ruby-spacy",
+            "title": "ruby-spacy",
+            "slogan": "Wrapper module for using spaCy from Ruby via PyCall",
+            "description": "ruby-spacy is a wrapper module for using spaCy from the Ruby programming language via PyCall. This module aims to make it easy and natural for Ruby programmers to use spaCy.",
+            "github": "https://github.com/yohasebe/ruby-spacy",
+            "code_example": [
+                "require \"ruby-spacy\"",
+                "require \"terminal-table\"",
+                "nlp = Spacy::Language.new(\"en_core_web_sm\")",
+                "doc = nlp.read(\"Apple is looking at buying U.K. startup for $1 billion\")",
+                "headings = [\"text\", \"lemma\", \"pos\", \"tag\", \"dep\"]",
+                "rows = []",
+                "doc.each do |token|",
+                "  rows << [token.text, token.lemma, token.pos, token.tag, token.dep]",
+                "end",
+                "table = Terminal::Table.new rows: rows, headings: headings",
+                "puts table"
+            ],
+            "code_language": "ruby",
+            "url": "https://rubygems.org/gems/ruby-spacy",
+            "author": "Yoichiro Hasebe",
+            "author_links": {
+                "github": "yohasebe",
+                "twitter": "yohasebe"
+            },
+            "category": ["nonpython"],
+            "tags": ["ruby"]
+        },        
+        {
             "id": "spacy_api",
             "slogan": "Server/client to load models in a separate, dedicated process",
             "github": "kootenpv/spacy_api",
