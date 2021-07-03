@@ -455,7 +455,6 @@ def pairwise_sum(ops, mention_scores: Floats1d) -> Tuple[Floats2d, Callable]:
         out = ops.alloc1f(dim)
         for ii in range(dim):
             out[ii] = d_pwsum[:, ii].sum() + d_pwsum[ii, :].sum()
-        # XXX maybe subtract d_pwsum[ii,ii] to avoid double counting?
 
         return out
 
