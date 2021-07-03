@@ -186,7 +186,7 @@ class Corpus:
     def read_docbin(
         self, vocab: Vocab, locs: Iterable[Union[str, Path]]
     ) -> Iterator[Doc]:
-        """ Yield training examples as example dicts """
+        """Yield training examples as example dicts"""
         i = 0
         for loc in locs:
             loc = util.ensure_path(loc)

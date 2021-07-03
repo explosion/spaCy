@@ -304,7 +304,7 @@ def test_empty_ner():
 
 
 def test_ruler_before_ner():
-    """ Test that an NER works after an entity_ruler: the second can add annotations """
+    """Test that an NER works after an entity_ruler: the second can add annotations"""
     nlp = English()
 
     # 1 : Entity Ruler - should set "this" to B and everything else to empty
@@ -334,7 +334,7 @@ def test_ner_constructor(en_vocab):
 
 
 def test_ner_before_ruler():
-    """ Test that an entity_ruler works after an NER: the second can overwrite O annotations """
+    """Test that an entity_ruler works after an NER: the second can overwrite O annotations"""
     nlp = English()
 
     # 1: untrained NER - should set everything to O
@@ -355,7 +355,7 @@ def test_ner_before_ruler():
 
 
 def test_block_ner():
-    """ Test functionality for blocking tokens so they can't be in a named entity """
+    """Test functionality for blocking tokens so they can't be in a named entity"""
     # block "Antti L Korhonen" from being a named entity
     nlp = English()
     nlp.add_pipe("blocker", config={"start": 2, "end": 5})

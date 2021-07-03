@@ -69,7 +69,7 @@ def read_conllx(
     ner_tag_pattern="",
     ner_map=None,
 ):
-    """ Yield docs, one for each sentence """
+    """Yield docs, one for each sentence"""
     vocab = Vocab()  # need vocab to make a minimal Doc
     for sent in input_data.strip().split("\n\n"):
         lines = sent.strip().split("\n")
