@@ -1334,7 +1334,7 @@
             "title": "ruby-spacy",
             "slogan": "Wrapper module for using spaCy from Ruby via PyCall",
             "description": "ruby-spacy is a wrapper module for using spaCy from the Ruby programming language via PyCall. This module aims to make it easy and natural for Ruby programmers to use spaCy.",
-            "github": "https://github.com/yohasebe/ruby-spacy",
+            "github": "yohasebe/ruby-spacy",
             "code_example": [
                 "require \"ruby-spacy\"",
                 "require \"terminal-table\"",
