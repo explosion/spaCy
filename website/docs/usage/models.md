@@ -299,6 +299,17 @@ nlp = spacy.load("en_core_web_sm")
 doc = nlp("This is a sentence.")
 ```
 
+If you're in a **Jupyter notebook** or similar environment, you can use the `!`
+prefix to
+[execute commands](https://ipython.org/ipython-doc/3/interactive/tutorial.html#system-shell-commands).
+Make sure to **restart your kernel** or runtime after installation (just like
+you would when installing other Python packages) to make sure that the installed
+pipeline package can be found.
+
+```cli
+!python -m spacy download en_core_web_sm
+```
+
 ### Installation via pip {#download-pip}
 
 To download a trained pipeline directly using
@@ -353,6 +364,27 @@ pipeline data.
 
 You can place the **pipeline package directory** anywhere on your local file
 system.
+
+### Installation from Python {#download-python}
+
+Since the [`spacy download`](/api/cli#download) command installs the pipeline as
+a **Python package**, we always recommend running it from the command line, just
+like you install other Python packages with `pip install`. However, if you need
+to, or if you want to integrate the download process into another CLI command,
+you can also import and call the `download` function used by the CLI via Python.
+
+<Infobox variant="warning">
+
+Keep in mind that the `download` command installs a Python package into your
+environment. In order for it to be found after installation, you will need to
+**restart or reload** your Python process so that new packages are recognized.
+
+</Infobox>
+
+```python
+import spacy
+spacy.cli.download("en_core_web_sm")
+```
 
 ### Using trained pipelines with spaCy {#usage}
 
@@ -476,6 +508,5 @@ logic around spaCy's loader, you can use
 [pytest](http://pytest.readthedocs.io/en/latest/)'s
 [`importorskip()`](https://docs.pytest.org/en/latest/builtin.html#_pytest.outcomes.importorskip)
 method to only run a test if a specific pipeline package or version is
-installed. Each pipeline package exposes a `__version__` attribute which
-you can also use to perform your own version compatibility checks before loading
-it.
+installed. Each pipeline package exposes a `__version__` attribute which you can
+also use to perform your own version compatibility checks before loading it.
