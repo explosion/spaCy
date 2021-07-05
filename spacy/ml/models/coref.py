@@ -394,7 +394,7 @@ def ant_scorer_forward(
         # now add the placeholder
         placeholder = ops.alloc2f(scores.shape[0], 1)
         top_scores = xp.concatenate( (placeholder, top_scores), 1)
-        top_scores = ops.softmax(top_scores, axis=1)
+        #top_scores = ops.softmax(top_scores, axis=1)
 
         out.append((top_scores, top_scores_idx))
 

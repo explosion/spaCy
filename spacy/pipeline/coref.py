@@ -1,4 +1,5 @@
 from typing import Iterable, Tuple, Optional, Dict, Callable, Any, List
+import warnings
 
 from thinc.types import Floats2d, Ints2d
 from thinc.api import Model, Config, Optimizer, CategoricalCrossentropy
@@ -305,9 +306,15 @@ class CoreferenceResolver(TrainablePipe):
             # boolean to float
             top_gscores = ops.asarray2f(top_gscores)
 
-            grad, loss = self.loss(cscores.T, top_gscores.T)
+            with warnings.catch_warnings():
+                warnings.filterwarnings('ignore', category=RuntimeWarning)
+                log_marg = ops.softmax(cscores + ops.xp.log(top_gscores), axis=1)
+            log_norm = ops.softmax(cscores, axis=1)
+            grad = log_norm - log_marg
+            # XXX might be better to not square this
+            loss = (grad ** 2).sum()
 
-            gradients.append((grad.T, cidx))
+            gradients.append((grad, cidx))
             total_loss += float(loss)
 
             offset = hi
