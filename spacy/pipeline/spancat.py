@@ -44,7 +44,7 @@ depth = 4
 DEFAULT_SPANCAT_MODEL = Config().from_str(spancat_default_config)["model"]
 
 
-@registry.misc("ngram_suggester.v1")
+@registry.misc("spacy.ngram_suggester.v1")
 def build_ngram_suggester(sizes: List[int]) -> Callable[[List[Doc]], Ragged]:
     """Suggest all spans of the given lengths. Spans are returned as a ragged
     array of integers. The array has two columns, indicating the start and end
@@ -86,7 +86,7 @@ def build_ngram_suggester(sizes: List[int]) -> Callable[[List[Doc]], Ragged]:
         "spans_key": "sc",
         "max_positive": None,
         "model": DEFAULT_SPANCAT_MODEL,
-        "suggester": {"@misc": "ngram_suggester.v1", "sizes": [1, 2, 3]},
+        "suggester": {"@misc": "spacy.ngram_suggester.v1", "sizes": [1, 2, 3]},
     },
     default_score_weights={"spans_sc_f": 1.0, "spans_sc_p": 0.0, "spans_sc_r": 0.0},
 )
