@@ -13,16 +13,16 @@ for token in ["᾽Αλλ'", "ἀλλ'", "ἀλλὰ"]:
 for token in ["παρ'", "Παρ'", "παρὰ", "παρ"]:
     _exc[token] = [{ORTH: token, NORM: "παρά"}]
 
-for token in ["καθ'", "Καθ'","κατ'", "Κατ'", "κατὰ"]:
+for token in ["καθ'", "Καθ'", "κατ'", "Κατ'", "κατὰ"]:
     _exc[token] = [{ORTH: token, NORM: "κατά"}]
 
-for token in ["Ἐπ'", "ἐπ'", "ἐπὶ","Εφ'","εφ'"]:
+for token in ["Ἐπ'", "ἐπ'", "ἐπὶ", "Εφ'", "εφ'"]:
     _exc[token] = [{ORTH: token, NORM: "επί"}]
 
 for token in ["Δι'", "δι'", "διὰ"]:
     _exc[token] = [{ORTH: token, NORM: "διά"}]
 
-for token in ["Ὑπ'", "ὑπ'","ὑφ'" ]:
+for token in ["Ὑπ'", "ὑπ'", "ὑφ'"]:
     _exc[token] = [{ORTH: token, NORM: "ὑπό"}]
 
 for token in ["Μετ'", "μετ'", "μεθ'", "μετὰ"]:
@@ -47,7 +47,7 @@ _other_exc = {
     "τὴν": [{ORTH: "τὴν", NORM: "τήν"}],
     "τὸν": [{ORTH: "τὸν", NORM: "τόν"}],
     "καὶ": [{ORTH: "καὶ", NORM: "καί"}],
-    "καὐτός":[{ORTH: "κ", NORM: "καί"}, {ORTH: "αὐτός"}],
+    "καὐτός": [{ORTH: "κ", NORM: "καί"}, {ORTH: "αὐτός"}],
     "καὐτὸς": [{ORTH: "κ", NORM: "καί"}, {ORTH: "αὐτὸς", NORM: "αὐτός"}],
     "κοὐ": [{ORTH: "κ", NORM: "καί"}, {ORTH: "οὐ"}],
     "χἡ": [{ORTH: "χ", NORM: "καί"}, {ORTH: "ἡ"}],
@@ -60,7 +60,7 @@ _other_exc = {
     "ἁγὼ": [{ORTH: "ἁ", NORM: "ἃ"}, {ORTH: "γὼ", NORM: "ἐγώ"}],
     "ἐγᾦδα": [{ORTH: "ἐγ", NORM: "ἐγώ"}, {ORTH: "ᾦδα", NORM: "οἶδα"}],
     "ἐγᾦμαι": [{ORTH: "ἐγ", NORM: "ἐγώ"}, {ORTH: "ᾦμαι", NORM: "οἶμαι"}],
-    "κἀς":  [{ORTH: "κ", NORM: "καί"}, {ORTH: "ἀς", NORM: "ἐς"}],
+    "κἀς": [{ORTH: "κ", NORM: "καί"}, {ORTH: "ἀς", NORM: "ἐς"}],
     "κᾆτα": [{ORTH: "κ", NORM: "καί"}, {ORTH: "ᾆτα", NORM: "εἶτα"}],
     "κεἰ": [{ORTH: "κ", NORM: "καί"}, {ORTH: "εἰ"}],
     "κεἰς": [{ORTH: "κ", NORM: "καί"}, {ORTH: "εἰς"}],
@@ -104,11 +104,6 @@ _other_exc = {
     "αὑτός": [{ORTH: "αὑ", NORM: "ὁ"}, {ORTH: "τός", NORM: "αὐτός"}],
     "αὑτὸς": [{ORTH: "αὑ", NORM: "ὁ"}, {ORTH: "τὸς", NORM: "αὐτός"}],
     "ταὐτοῦ": [{ORTH: "τ", NORM: "τοῦ"}, {ORTH: "αὐτοῦ"}],
-
-
-
-
-
 }
 
 _exc.update(_other_exc)

@@ -1,10 +1,7 @@
-from typing import Optional
-from thinc.api import Model
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
 from ...language import Language
-
 
 
 class AncientGreekDefaults(Language.Defaults):
