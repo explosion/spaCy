@@ -1,4 +1,5 @@
-from typing import Optional, Any, Dict, Callable, Iterable, Union, List, Pattern
+from typing import Iterator, Optional, Any, Dict, Callable, Iterable, TypeVar
+from typing import Union, List, Pattern, overload
 from typing import Tuple
 from dataclasses import dataclass
 import random
@@ -1431,6 +1432,21 @@ class Language:
                 except StopIteration:
                     pass
 
+    _AnyContext = TypeVar("_AnyContext")
+
+    @overload
+    def pipe(
+        self,
+        texts: Iterable[Tuple[str, _AnyContext]],
+        *,
+        as_tuples: bool = ...,
+        batch_size: Optional[int] = ...,
+        disable: Iterable[str] = ...,
+        component_cfg: Optional[Dict[str, Dict[str, Any]]] = ...,
+        n_process: int = ...,
+    ) -> Iterator[Tuple[Doc, _AnyContext]]:
+        ...
+
     def pipe(
         self,
         texts: Iterable[str],
@@ -1440,7 +1456,7 @@ class Language:
         disable: Iterable[str] = SimpleFrozenList(),
         component_cfg: Optional[Dict[str, Dict[str, Any]]] = None,
         n_process: int = 1,
-    ):
+    ) -> Iterator[Doc]:
         """Process texts as a stream, and yield `Doc` objects in order.
 
         texts (Iterable[str]): A sequence of texts to process.
