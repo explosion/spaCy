@@ -8,6 +8,7 @@ import StreamlitLogo from '-!svg-react-loader!../images/logos/streamlit.svg'
 import FastAPILogo from '-!svg-react-loader!../images/logos/fastapi.svg'
 import WandBLogo from '-!svg-react-loader!../images/logos/wandb.svg'
 import RayLogo from '-!svg-react-loader!../images/logos/ray.svg'
+import HuggingFaceHubLogo from '-!svg-react-loader!../images/logos/huggingface_hub.svg'
 
 const LOGOS = {
     dvc: DVCLogo,
@@ -16,6 +17,7 @@ const LOGOS = {
     fastapi: FastAPILogo,
     wandb: WandBLogo,
     ray: RayLogo,
+    huggingface_hub: HuggingFaceHubLogo,
 }
 
 export const IntegrationLogo = ({ name, title, width, height, maxWidth, align, ...props }) => {

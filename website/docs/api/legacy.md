@@ -103,6 +103,11 @@ and residual connections.
 | `depth`       | The number of convolutional layers. Recommended value is `4`. ~~int~~                                                                                                                                          |
 | **CREATES**   | The model using the architecture. ~~Model[Floats2d, Floats2d]~~                                                                                                                                                |
 
+### spacy.TransitionBasedParser.v1 {#TransitionBasedParser_v1}
+
+Identical to [`spacy.TransitionBasedParser.v2`](/api/architectures#TransitionBasedParser)
+except the `use_upper` was set to `True` by default.
+
 ### spacy.TextCatEnsemble.v1 {#TextCatEnsemble_v1}
 
 The `spacy.TextCatEnsemble.v1` architecture built an internal `tok2vec` and

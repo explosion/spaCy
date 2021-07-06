@@ -9,7 +9,8 @@
                     { "text": "Models & Languages", "url": "/usage/models" },
                     { "text": "Facts & Figures", "url": "/usage/facts-figures" },
                     { "text": "spaCy 101", "url": "/usage/spacy-101" },
-                    { "text": "New in v3.0", "url": "/usage/v3" }
+                    { "text": "New in v3.0", "url": "/usage/v3" },
+                    { "text": "New in v3.1", "url": "/usage/v3-1" }
                 ]
             },
             {
@@ -136,9 +137,7 @@
             },
             {
                 "label": "Legacy",
-                "items": [
-                    { "text": "Legacy functions", "url": "/api/legacy" }
-                ]
+                "items": [{ "text": "Legacy functions", "url": "/api/legacy" }]
             }
         ]
     }

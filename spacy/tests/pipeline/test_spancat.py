@@ -1,3 +1,4 @@
+import pytest
 from numpy.testing import assert_equal
 from spacy.language import Language
 from spacy.training import Example
@@ -25,6 +26,47 @@ def make_get_examples(nlp):
         return train_examples
 
     return get_examples
+
+
+def test_no_label():
+    nlp = Language()
+    nlp.add_pipe("spancat", config={"spans_key": SPAN_KEY})
+    with pytest.raises(ValueError):
+        nlp.initialize()
+
+
+def test_no_resize():
+    nlp = Language()
+    spancat = nlp.add_pipe("spancat", config={"spans_key": SPAN_KEY})
+    spancat.add_label("Thing")
+    spancat.add_label("Phrase")
+    assert spancat.labels == ("Thing", "Phrase")
+    nlp.initialize()
+    assert spancat.model.get_dim("nO") == 2
+    # this throws an error because the spancat can't be resized after initialization
+    with pytest.raises(ValueError):
+        spancat.add_label("Stuff")
+
+
+def test_implicit_labels():
+    nlp = Language()
+    spancat = nlp.add_pipe("spancat", config={"spans_key": SPAN_KEY})
+    assert len(spancat.labels) == 0
+    train_examples = []
+    for t in TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
+    nlp.initialize(get_examples=lambda: train_examples)
+    assert spancat.labels == ("PERSON", "LOC")
+
+
+def test_explicit_labels():
+    nlp = Language()
+    spancat = nlp.add_pipe("spancat", config={"spans_key": SPAN_KEY})
+    assert len(spancat.labels) == 0
+    spancat.add_label("PERSON")
+    spancat.add_label("LOC")
+    nlp.initialize()
+    assert spancat.labels == ("PERSON", "LOC")
 
 
 def test_simple_train():

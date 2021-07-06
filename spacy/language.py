@@ -1,4 +1,5 @@
-from typing import Optional, Any, Dict, Callable, Iterable, Union, List, Pattern
+from typing import Iterator, Optional, Any, Dict, Callable, Iterable, TypeVar
+from typing import Union, List, Pattern, overload
 from typing import Tuple
 from dataclasses import dataclass
 import random
@@ -934,6 +935,7 @@ class Language:
         # because factory may be used for something else
         self._pipe_meta.pop(name)
         self._pipe_configs.pop(name)
+        self.meta.get("_sourced_vectors_hashes", {}).pop(name, None)
         # Make sure name is removed from the [initialize] config
         if name in self._config["initialize"]["components"]:
             self._config["initialize"]["components"].pop(name)
@@ -1430,6 +1432,21 @@ class Language:
                 except StopIteration:
                     pass
 
+    _AnyContext = TypeVar("_AnyContext")
+
+    @overload
+    def pipe(
+        self,
+        texts: Iterable[Tuple[str, _AnyContext]],
+        *,
+        as_tuples: bool = ...,
+        batch_size: Optional[int] = ...,
+        disable: Iterable[str] = ...,
+        component_cfg: Optional[Dict[str, Dict[str, Any]]] = ...,
+        n_process: int = ...,
+    ) -> Iterator[Tuple[Doc, _AnyContext]]:
+        ...
+
     def pipe(
         self,
         texts: Iterable[str],
@@ -1439,7 +1456,7 @@ class Language:
         disable: Iterable[str] = SimpleFrozenList(),
         component_cfg: Optional[Dict[str, Dict[str, Any]]] = None,
         n_process: int = 1,
-    ):
+    ) -> Iterator[Doc]:
         """Process texts as a stream, and yield `Doc` objects in order.
 
         texts (Iterable[str]): A sequence of texts to process.
@@ -1680,6 +1697,8 @@ class Language:
         # If components are loaded from a source (existing models), we cache
         # them here so they're only loaded once
         source_nlps = {}
+        source_nlp_vectors_hashes = {}
+        nlp.meta["_sourced_vectors_hashes"] = {}
         for pipe_name in config["nlp"]["pipeline"]:
             if pipe_name not in pipeline:
                 opts = ", ".join(pipeline.keys())
@@ -1719,7 +1738,12 @@ class Language:
                                     name, source_name, pipe_cfg["replace_listeners"]
                                 )
                                 listeners_replaced = True
-                    nlp.add_pipe(source_name, source=source_nlps[model], name=pipe_name)
+                    with warnings.catch_warnings():
+                        warnings.filterwarnings("ignore", message="\\[W113\\]")
+                        nlp.add_pipe(source_name, source=source_nlps[model], name=pipe_name)
+                    if model not in source_nlp_vectors_hashes:
+                        source_nlp_vectors_hashes[model] = hash(source_nlps[model].vocab.vectors.to_bytes())
+                    nlp.meta["_sourced_vectors_hashes"][pipe_name] = source_nlp_vectors_hashes[model]
                     # Delete from cache if listeners were replaced
                     if listeners_replaced:
                         del source_nlps[model]

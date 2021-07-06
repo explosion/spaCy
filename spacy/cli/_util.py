@@ -2,7 +2,7 @@ from typing import Dict, Any, Union, List, Optional, Tuple, Iterable, TYPE_CHECK
 import sys
 import shutil
 from pathlib import Path
-from wasabi import msg
+from wasabi import msg, Printer
 import srsly
 import hashlib
 import typer
@@ -504,8 +504,10 @@ def string_to_list(value: str, intify: bool = False) -> Union[List[str], List[in
     return result
 
 
-def setup_gpu(use_gpu: int) -> None:
+def setup_gpu(use_gpu: int, silent=None) -> None:
     """Configure the GPU and log info."""
+    if silent is not None:
+        msg = Printer(no_print=silent, pretty=not silent)
     if use_gpu >= 0:
         msg.info(f"Using GPU: {use_gpu}")
         require_gpu(use_gpu)
