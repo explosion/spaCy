@@ -16,6 +16,7 @@ menu:
   - ['package', 'package']
   - ['project', 'project']
   - ['ray', 'ray']
+  - ['huggingface-hub', 'huggingface-hub']
 ---
 
 spaCy's CLI provides a range of helpful commands for downloading and training
@@ -1273,3 +1274,49 @@ $ python -m spacy ray train [config_path] [--code] [--output] [--n-workers] [--a
 | `--verbose`, `-V`   | Display more information for debugging purposes. ~~bool (flag)~~                                                                                                                           |
 | `--help`, `-h`      | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                 |
 | overrides           | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--paths.train ./train.spacy`. ~~Any (option/flag)~~ |
+
+## huggingface-hub {#huggingface-hub new="3.1"}
+
+The `spacy huggingface-cli` CLI includes commands for uploading your trained
+spaCy pipelines to the [Hugging Face Hub](https://huggingface.co/).
+
+> #### Installation
+>
+> ```cli
+> $ pip install spacy-huggingface-hub
+> $ huggingface-cli login
+> ```
+
+<Infobox variant="warning">
+
+To use this command, you need the
+[`spacy-huggingface-hub`](https://github.com/explosion/spacy-huggingface-hub)
+package installed. Installing the package will automatically add the
+`huggingface-hub` command to the spaCy CLI.
+
+</Infobox>
+
+### huggingface-hub push {#huggingface-hub-push tag="command"}
+
+Push a spaCy pipeline to the Hugging Face Hub. Expects a `.whl` file packaged
+with [`spacy package`](/api/cli#package) and `--build wheel`. For more details,
+see the spaCy project [integration](/usage/projects#huggingface_hub).
+
+```cli
+$ python -m spacy huggingface-hub push [whl_path] [--org] [--msg] [--local-repo] [--verbose]
+```
+
+> #### Example
+>
+> ```cli
+> $ python -m spacy huggingface-hub push en_ner_fashion-0.0.0-py3-none-any.whl
+> ```
+
+| Name                 | Description                                                                                                                                     |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `whl_path`           | The path to the `.whl` file packaged with [`spacy package`](https://spacy.io/api/cli#package). ~~Path(positional)~~                             |
+| `--org`, `-o`        | Optional name of organization to which the pipeline should be uploaded. ~~str (option)~~                                                        |
+| `--msg`, `-m`        | Commit message to use for update. Defaults to `"Update spaCy pipeline"`. ~~str (option)~~                                                       |
+| `--local-repo`, `-l` | Local path to the model repository (will be created if it doesn't exist). Defaults to `hub` in the current working directory. ~~Path (option)~~ |
+| `--verbose`, `-V`    | Output additional info for debugging, e.g. the full generated hub metadata. ~~bool (flag)~~                                                     |
+| **UPLOADS**          | The pipeline to the hub.                                                                                                                        |
