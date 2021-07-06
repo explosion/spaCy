@@ -1105,10 +1105,10 @@ While you could use a registered function or a file loader like
 [`srsly.read_json.v1`](/api/top-level#file_readers) as an argument of the
 component factory, this approach is problematic: the component factory runs
 **every time the component is created**. This means it will run when creating
-the `nlp` object before training, but also every a user loads your pipeline. So
-your runtime pipeline would either depend on a local path on your file system,
-or it's loaded twice: once when the component is created, and then again when
-the data is by `from_disk`.
+the `nlp` object before training, but also every time a user loads your
+pipeline. So your runtime pipeline would either depend on a local path on your
+file system, or it's loaded twice: once when the component is created, and then
+again when the data is by `from_disk`.
 
 > ```ini
 > ### config.cfg
