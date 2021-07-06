@@ -48,7 +48,7 @@ def test_no_resize():
         spancat.add_label("Stuff")
 
 
-def test_implicit_label():
+def test_implicit_labels():
     nlp = Language()
     spancat = nlp.add_pipe("spancat", config={"spans_key": SPAN_KEY})
     assert len(spancat.labels) == 0
@@ -59,7 +59,7 @@ def test_implicit_label():
     assert spancat.labels == ("PERSON", "LOC")
 
 
-def test_explicit_label():
+def test_explicit_labels():
     nlp = Language()
     spancat = nlp.add_pipe("spancat", config={"spans_key": SPAN_KEY})
     assert len(spancat.labels) == 0
