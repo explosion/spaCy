@@ -79,6 +79,17 @@ steps:
     condition: eq(variables['python_version'], '3.8')
 
   - script: |
+      # will have errors due to sparse data, check for summary in output
+      python -m spacy debug data ner.cfg --paths.train ner-token-per-line-conll2003.spacy --paths.dev ner-token-per-line-conll2003.spacy | grep -q Summary
+    displayName: 'Test debug data CLI'
+    condition: eq(variables['python_version'], '3.8')
+
+  - script: |
+      python -m spacy train ner.cfg --paths.train ner-token-per-line-conll2003.spacy --paths.dev ner-token-per-line-conll2003.spacy --training.max_steps 10 --gpu-id -1
+    displayName: 'Test train CLI'
+    condition: eq(variables['python_version'], '3.8')
+
+  - script: |
       python -c "import spacy; config = spacy.util.load_config('ner.cfg'); config['components']['ner'] = {'source': 'ca_core_news_sm'}; config.to_disk('ner_source_sm.cfg')"
       PYTHONWARNINGS="error,ignore::DeprecationWarning" python -m spacy assemble ner_source_sm.cfg output_dir
     displayName: 'Test assemble CLI'
