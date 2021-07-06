@@ -108,6 +108,12 @@ def test_label_types(name):
     textcat.add_label("answer")
     with pytest.raises(ValueError):
         textcat.add_label(9)
+    # textcat requires at least two labels
+    if name == "textcat":
+        with pytest.raises(ValueError):
+            nlp.initialize()
+    else:
+        nlp.initialize()
 
 
 @pytest.mark.parametrize("name", ["textcat", "textcat_multilabel"])
