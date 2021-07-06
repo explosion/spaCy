@@ -507,13 +507,13 @@ def string_to_list(value: str, intify: bool = False) -> Union[List[str], List[in
 def setup_gpu(use_gpu: int, silent=None) -> None:
     """Configure the GPU and log info."""
     if silent is None:
-        msg = Printer()
+        local_msg = Printer()
     else:
-        msg = Printer(no_print=silent, pretty=not silent)
+        local_msg = Printer(no_print=silent, pretty=not silent)
     if use_gpu >= 0:
-        msg.info(f"Using GPU: {use_gpu}")
+        local_msg.info(f"Using GPU: {use_gpu}")
         require_gpu(use_gpu)
     else:
-        msg.info("Using CPU")
+        local_msg.info("Using CPU")
         if has_cupy and gpu_is_available():
-            msg.info("To switch to GPU 0, use the option: --gpu-id 0")
+            local_msg.info("To switch to GPU 0, use the option: --gpu-id 0")
