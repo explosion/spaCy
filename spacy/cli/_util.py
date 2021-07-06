@@ -506,7 +506,9 @@ def string_to_list(value: str, intify: bool = False) -> Union[List[str], List[in
 
 def setup_gpu(use_gpu: int, silent=None) -> None:
     """Configure the GPU and log info."""
-    if silent is not None:
+    if silent is None:
+        msg = Printer()
+    else:
         msg = Printer(no_print=silent, pretty=not silent)
     if use_gpu >= 0:
         msg.info(f"Using GPU: {use_gpu}")
