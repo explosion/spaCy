@@ -82,7 +82,7 @@ shortcut for this and instantiate the component using its string name and
 | `moves`                       | A list of transition names. Inferred from the data if set to `None`, which is the default. ~~Optional[List[str]]~~                                                                                                                                  |
 | _keyword-only_                |                                                                                                                                                                                                                                                     |
 | `update_with_oracle_cut_size` | During training, cut long sequences into shorter segments by creating intermediate states based on the gold-standard history. The model is not very sensitive to this parameter, so you usually won't need to change it. Defaults to `100`. ~~int~~ |
-| `incorrect_spans_key`         | Identifies spans that are known to be incorrect entity annotations. The incorrect entity annotations can be stored in the span group, under this key. Defaults to `None`. ~~Optional[str]~~                                                         |
+| `incorrect_spans_key`         | Identifies spans that are known to be incorrect entity annotations. The incorrect entity annotations can be stored in the span group in [`Doc.spans`](/api/doc#spans), under this key. Defaults to `None`. ~~Optional[str]~~                        |
 
 ## EntityRecognizer.\_\_call\_\_ {#call tag="method"}
 
