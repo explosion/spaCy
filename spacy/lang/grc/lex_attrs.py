@@ -201,7 +201,7 @@ _num_words = [
     "δεκακισμυρίαις",
     "δεκακισμυρίας",
     "δεκακισμύρια",
-    #  ANCIENT GREEK NUMERALS (1-100)
+    #  ANCIENT GREEK NUMBERS (1-100)
     "α",
     "β",
     "γ",
