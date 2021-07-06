@@ -399,7 +399,7 @@ the package name or a path to the data directory:
 >
 > ```diff
 > - python -m spacy download en
-> + python -m spacy dowmload en_core_web_sm
+> + python -m spacy download en_core_web_sm
 > ```
 
 ```python
