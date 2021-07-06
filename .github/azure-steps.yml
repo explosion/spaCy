@@ -79,7 +79,8 @@ steps:
     condition: eq(variables['python_version'], '3.8')
 
   - script: |
-      python -m spacy debug data ner.cfg --paths.train ner-token-per-line-conll2003.spacy --paths.dev ner-token-per-line-conll2003.spacy
+      # will have errors due to sparse data, check for summary in output
+      python -m spacy debug data ner.cfg --paths.train ner-token-per-line-conll2003.spacy --paths.dev ner-token-per-line-conll2003.spacy | grep -q Summary
     displayName: 'Test debug data CLI'
     condition: eq(variables['python_version'], '3.8')
 
