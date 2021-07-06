@@ -182,6 +182,7 @@ class SpanCategorizer(TrainablePipe):
             raise ValueError(Errors.E187)
         if label in self.labels:
             return 0
+        self._allow_extra_label()
         self.cfg["labels"].append(label)
         self.vocab.strings.add(label)
         return 1
@@ -348,7 +349,7 @@ class SpanCategorizer(TrainablePipe):
                 self.add_label(label)
         for eg in get_examples():
             if labels is None:
-                for span in eg.reference.spans[self.key]:
+                for span in eg.reference.spans.get(self.key, []):
                     self.add_label(span.label_)
             if len(subbatch) < 10:
                 subbatch.append(eg)
