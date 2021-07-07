@@ -92,7 +92,7 @@ def test_simple_train():
 def test_ngram_suggester(en_tokenizer):
     # test different n-gram lengths
     for size in [1, 2, 3]:
-        ngram_suggester = registry.misc.get("ngram_suggester.v1")(sizes=[size])
+        ngram_suggester = registry.misc.get("spacy.ngram_suggester.v1")(sizes=[size])
         docs = [
             en_tokenizer(text)
             for text in [
@@ -124,7 +124,7 @@ def test_ngram_suggester(en_tokenizer):
         assert_equal(ngrams.lengths, [max(0, len(doc) - (size - 1)) for doc in docs])
 
     # test 1-3-gram suggestions
-    ngram_suggester = registry.misc.get("ngram_suggester.v1")(sizes=[1, 2, 3])
+    ngram_suggester = registry.misc.get("spacy.ngram_suggester.v1")(sizes=[1, 2, 3])
     docs = [
         en_tokenizer(text) for text in ["a", "a b", "a b c", "a b c d", "a b c d e"]
     ]
@@ -173,13 +173,13 @@ def test_ngram_suggester(en_tokenizer):
     )
 
     # test some empty docs
-    ngram_suggester = registry.misc.get("ngram_suggester.v1")(sizes=[1])
+    ngram_suggester = registry.misc.get("spacy.ngram_suggester.v1")(sizes=[1])
     docs = [en_tokenizer(text) for text in ["", "a", ""]]
     ngrams = ngram_suggester(docs)
     assert_equal(ngrams.lengths, [len(doc) for doc in docs])
 
     # test all empty docs
-    ngram_suggester = registry.misc.get("ngram_suggester.v1")(sizes=[1])
+    ngram_suggester = registry.misc.get("spacy.ngram_suggester.v1")(sizes=[1])
     docs = [en_tokenizer(text) for text in ["", "", ""]]
     ngrams = ngram_suggester(docs)
     assert_equal(ngrams.lengths, [len(doc) for doc in docs])
