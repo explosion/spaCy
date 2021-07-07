@@ -1,5 +1,5 @@
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
-from ...symbols import ORTH
+from ...symbols import ORTH, NORM
 from ...util import update_exc
 
 
@@ -79,5 +79,34 @@ for exc_data in [
 ]:
     _exc[exc_data[ORTH]] = [exc_data]
 
+# Source: https://kaino.kotus.fi/visk/sisallys.php?p=141
+conj_contraction_bases = [
+    ("ett", "että"),
+    ("jott", "jotta"),
+    ("kosk", "koska"),
+    ("mutt", "mutta"),
+    ("vaikk", "vaikka"),
+    ("ehk", "ehkä"),
+    ("miks", "miksi"),
+    ("siks", "siksi"),
+    ("joll", "jos"),
+    ("ell", "jos"),
+]
+conj_contraction_negations = [
+    ("en", "en"),
+    ("et", "et"),
+    ("ei", "ei"),
+    ("emme", "emme"),
+    ("ette", "ette"),
+    ("eivat", "eivät"),
+    ("eivät", "eivät"),
+]
+for (base_lower, base_norm) in conj_contraction_bases:
+    for base in [base_lower, base_lower.title()]:
+        for (suffix, suffix_norm) in conj_contraction_negations:
+            _exc[base + suffix] = [
+                {ORTH: base, NORM: base_norm},
+                {ORTH: suffix, NORM: suffix_norm},
+            ]
 
 TOKENIZER_EXCEPTIONS = update_exc(BASE_EXCEPTIONS, _exc)

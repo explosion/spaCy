@@ -82,7 +82,9 @@ def util_batch_unbatch_docs_list(
         Y_batched = model.predict(in_data)
         Y_not_batched = [model.predict([u])[0] for u in in_data]
         for i in range(len(Y_batched)):
-            assert_almost_equal(OPS.to_numpy(Y_batched[i]), OPS.to_numpy(Y_not_batched[i]), decimal=4)
+            assert_almost_equal(
+                OPS.to_numpy(Y_batched[i]), OPS.to_numpy(Y_not_batched[i]), decimal=4
+            )
 
 
 def util_batch_unbatch_docs_array(

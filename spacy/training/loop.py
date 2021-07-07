@@ -1,4 +1,4 @@
-from typing import List, Callable, Tuple, Dict, Iterable, Iterator, Union, Any, IO
+from typing import List, Callable, Tuple, Dict, Iterable, Union, Any, IO
 from typing import Optional, TYPE_CHECKING
 from pathlib import Path
 from timeit import default_timer as timer
@@ -74,6 +74,8 @@ def train(
 
     # Components that shouldn't be updated during training
     frozen_components = T["frozen_components"]
+    # Components that should set annotations on update
+    annotating_components = T["annotating_components"]
     # Create iterator, which yields out info after each optimization step.
     training_step_iterator = train_while_improving(
         nlp,
@@ -86,11 +88,16 @@ def train(
         max_steps=T["max_steps"],
         eval_frequency=T["eval_frequency"],
         exclude=frozen_components,
+        annotating_components=annotating_components,
     )
     clean_output_dir(output_path)
     stdout.write(msg.info(f"Pipeline: {nlp.pipe_names}") + "\n")
     if frozen_components:
         stdout.write(msg.info(f"Frozen components: {frozen_components}") + "\n")
+    if annotating_components:
+        stdout.write(
+            msg.info(f"Set annotations on update for: {annotating_components}") + "\n"
+        )
     stdout.write(msg.info(f"Initial learn rate: {optimizer.learn_rate}") + "\n")
     with nlp.select_pipes(disable=frozen_components):
         log_step, finalize_logger = train_logger(nlp, stdout, stderr)
@@ -142,6 +149,7 @@ def train_while_improving(
     patience: int,
     max_steps: int,
     exclude: List[str],
+    annotating_components: List[str],
 ):
     """Train until an evaluation stops improving. Works as a generator,
     with each iteration yielding a tuple `(batch, info, is_best_checkpoint)`,
@@ -193,7 +201,12 @@ def train_while_improving(
         dropout = next(dropouts)
         for subbatch in subdivide_batch(batch, accumulate_gradient):
             nlp.update(
-                subbatch, drop=dropout, losses=losses, sgd=False, exclude=exclude
+                subbatch,
+                drop=dropout,
+                losses=losses,
+                sgd=False,
+                exclude=exclude,
+                annotates=annotating_components,
             )
         # TODO: refactor this so we don't have to run it separately in here
         for name, proc in nlp.pipeline:

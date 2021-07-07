@@ -95,7 +95,8 @@ def test_doc_token_api_ancestors(en_vocab):
     # the structure of this sentence depends on the English annotation scheme
     words = ["Yesterday", "I", "saw", "a", "dog", "that", "barked", "loudly", "."]
     heads = [2, 2, 2, 4, 2, 6, 4, 6, 2]
-    doc = Doc(en_vocab, words=words, heads=heads)
+    deps = ["dep"] * len(heads)
+    doc = Doc(en_vocab, words=words, heads=heads, deps=deps)
     assert [t.text for t in doc[6].ancestors] == ["dog", "saw"]
     assert [t.text for t in doc[1].ancestors] == ["saw"]
     assert [t.text for t in doc[2].ancestors] == []
@@ -146,7 +147,7 @@ def test_doc_token_api_head_setter(en_vocab):
     assert doc[4].left_edge.i == 0
     assert doc[2].left_edge.i == 0
     # head token must be from the same document
-    doc2 = Doc(en_vocab, words=words, heads=heads)
+    doc2 = Doc(en_vocab, words=words, heads=heads, deps=["dep"] * len(heads))
     with pytest.raises(ValueError):
         doc[0].head = doc2[0]
     # test sentence starts when two sentences are joined
@@ -254,7 +255,7 @@ def test_token_api_non_conjuncts(en_vocab):
 
 
 def test_missing_head_dep(en_vocab):
-    """ Check that the Doc constructor and Example.from_dict parse missing information the same"""
+    """Check that the Doc constructor and Example.from_dict parse missing information the same"""
     heads = [1, 1, 1, 1, 2, None]  # element 5 is missing
     deps = ["", "ROOT", "dobj", "cc", "conj", None]  # element 0 and 5 are missing
     words = ["I", "like", "London", "and", "Berlin", "."]

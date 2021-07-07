@@ -57,6 +57,6 @@ class GreekLemmatizer(Lemmatizer):
             forms.extend(oov_forms)
         if not forms:
             forms.append(string)
-        forms = list(set(forms))
+        forms = list(dict.fromkeys(forms))
         self.cache[cache_key] = forms
         return forms

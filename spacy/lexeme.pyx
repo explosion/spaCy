@@ -163,7 +163,7 @@ cdef class Lexeme:
             self.vocab.set_vector(self.c.orth, vector)
 
     property rank:
-        """RETURNS (str): Sequential ID of the lexemes's lexical type, used
+        """RETURNS (str): Sequential ID of the lexeme's lexical type, used
             to index into tables, e.g. for word vectors."""
         def __get__(self):
             return self.c.id
@@ -205,7 +205,7 @@ cdef class Lexeme:
             self.c.lower = x
 
     property norm:
-        """RETURNS (uint64): The lexemes's norm, i.e. a normalised form of the
+        """RETURNS (uint64): The lexeme's norm, i.e. a normalised form of the
             lexeme text.
         """
         def __get__(self):
@@ -288,7 +288,7 @@ cdef class Lexeme:
             self.c.lower = self.vocab.strings.add(x)
 
     property norm_:
-        """RETURNS (str): The lexemes's norm, i.e. a normalised form of the
+        """RETURNS (str): The lexeme's norm, i.e. a normalised form of the
             lexeme text.
         """
         def __get__(self):

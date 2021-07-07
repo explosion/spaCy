@@ -1,10 +1,11 @@
 from typing import Union, Iterable, Dict, Any
 from pathlib import Path
-import warnings
 import sys
 
-warnings.filterwarnings("ignore", message="numpy.dtype size changed")  # noqa
-warnings.filterwarnings("ignore", message="numpy.ufunc size changed")  # noqa
+# set library-specific custom warning handling before doing anything else
+from .errors import setup_default_warnings
+
+setup_default_warnings()
 
 # These are imported as part of the API
 from thinc.api import prefer_gpu, require_gpu, require_cpu  # noqa: F401

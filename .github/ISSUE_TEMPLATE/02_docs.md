@@ -1,5 +1,5 @@
 ---
-name: "\U0001F4DA Documentation"
+name: "\U0001F4DA Submit a Documentation Report"
 about: Did you spot a mistake in the docs, is anything unclear or do you have a
   suggestion?
 

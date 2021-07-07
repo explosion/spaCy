@@ -48,11 +48,36 @@ data format used by the lookup and rule-based lemmatizers, see
 > nlp.add_pipe("lemmatizer", config=config)
 > ```
 
-| Setting     | Description                                                                       |
-| ----------- | --------------------------------------------------------------------------------- |
-| `mode`      | The lemmatizer mode, e.g. `"lookup"` or `"rule"`. Defaults to `"lookup"`. ~~str~~ |
-| `overwrite` | Whether to overwrite existing lemmas. Defaults to `False`. ~~bool~~               |
-| `model`     | **Not yet implemented:** the model to use. ~~Model~~                              |
+| Setting     | Description                                                                                                                                               |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mode`      | The lemmatizer mode, e.g. `"lookup"` or `"rule"`. Defaults to `lookup` if no language-specific lemmatizer is available (see the following table). ~~str~~ |
+| `overwrite` | Whether to overwrite existing lemmas. Defaults to `False`. ~~bool~~                                                                                       |
+| `model`     | **Not yet implemented:** the model to use. ~~Model~~                                                                                                      |
+
+Many languages specify a default lemmatizer mode other than `lookup` if a better
+lemmatizer is available. The lemmatizer modes `rule` and `pos_lookup` require
+[`token.pos`](/api/token) from a previous pipeline component (see example
+pipeline configurations in the
+[pretrained pipeline design details](/models#design-cnn)) or rely on third-party
+libraries (`pymorphy2`).
+
+| Language | Default Mode |
+| -------- | ------------ |
+| `bn`     | `rule`       |
+| `ca`     | `pos_lookup` |
+| `el`     | `rule`       |
+| `en`     | `rule`       |
+| `es`     | `rule`       |
+| `fa`     | `rule`       |
+| `fr`     | `rule`       |
+| `it`     | `pos_lookup` |
+| `mk`     | `rule`       |
+| `nb`     | `rule`       |
+| `nl`     | `rule`       |
+| `pl`     | `pos_lookup` |
+| `ru`     | `pymorphy2`  |
+| `sv`     | `rule`       |
+| `uk`     | `pymorphy2`  |
 
 ```python
 %%GITHUB_SPACY/spacy/pipeline/lemmatizer.py

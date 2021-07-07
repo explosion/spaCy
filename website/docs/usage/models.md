@@ -414,7 +414,7 @@ doc = nlp("This is a sentence.")
 
 You can use the [`info`](/api/cli#info) command or
 [`spacy.info()`](/api/top-level#spacy.info) method to print a pipeline
-packages's meta data before loading it. Each `Language` object with a loaded
+package's meta data before loading it. Each `Language` object with a loaded
 pipeline also exposes the pipeline's meta data as the attribute `meta`. For
 example, `nlp.meta['version']` will return the package version.
 

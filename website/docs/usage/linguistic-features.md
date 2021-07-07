@@ -1169,7 +1169,20 @@ class WhitespaceTokenizer:
 
     def __call__(self, text):
         words = text.split(" ")
-        return Doc(self.vocab, words=words)
+        spaces = [True] * len(words)
+        # Avoid zero-length tokens
+        for i, word in enumerate(words):
+            if word == "":
+                words[i] = " "
+                spaces[i] = False
+        # Remove the final trailing space
+        if words[-1] == " ":
+            words = words[0:-1]
+            spaces = spaces[0:-1]
+        else:
+           spaces[-1] = False
+            
+        return Doc(self.vocab, words=words, spaces=spaces)
 
 nlp = spacy.blank("en")
 nlp.tokenizer = WhitespaceTokenizer(nlp.vocab)
@@ -1248,7 +1261,7 @@ hyperparameters, pipeline and tokenizer used for constructing and training the
 pipeline. The `[nlp.tokenizer]` block refers to a **registered function** that
 takes the `nlp` object and returns a tokenizer. Here, we're registering a
 function called `whitespace_tokenizer` in the
-[`@tokenizers` registry](/api/registry). To make sure spaCy knows how to
+[`@tokenizers` registry](/api/top-level#registry). To make sure spaCy knows how to
 construct your tokenizer during training, you can pass in your Python file by
 setting `--code functions.py` when you run [`spacy train`](/api/cli#train).
 

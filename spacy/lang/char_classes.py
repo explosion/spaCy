@@ -260,7 +260,10 @@ _units = (
     "кг г мг м/с км/ч кПа Па мбар Кб КБ кб Мб МБ мб Гб ГБ гб Тб ТБ тб"
     "كم كم² كم³ م م² م³ سم سم² سم³ مم مم² مم³ كم غرام جرام جم كغ ملغ كوب اكواب"
 )
-_currency = r"\$ £ € ¥ ฿ US\$ C\$ A\$ ₽ ﷼ ₴"
+_currency = (
+    r"\$ £ € ¥ ฿ US\$ C\$ A\$ ₽ ﷼ ₴ ₠ ₡ ₢ ₣ ₤ ₥ ₦ ₧ ₨ ₩ ₪ ₫ € ₭ ₮ ₯ ₰ "
+    r"₱ ₲ ₳ ₴ ₵ ₶ ₷ ₸ ₹ ₺ ₻ ₼ ₽ ₾ ₿"
+)
 
 # These expressions contain various unicode variations, including characters
 # used in Chinese (see #1333, #1340, #1351) – unless there are cross-language

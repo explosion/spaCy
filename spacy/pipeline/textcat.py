@@ -35,7 +35,7 @@ maxout_pieces = 3
 depth = 2
 
 [model.linear_model]
-@architectures = "spacy.TextCatBOW.v1"
+@architectures = "spacy.TextCatBOW.v2"
 exclusive_classes = true
 ngram_size = 1
 no_output_layer = false
@@ -44,7 +44,7 @@ DEFAULT_SINGLE_TEXTCAT_MODEL = Config().from_str(single_label_default_config)["m
 
 single_label_bow_config = """
 [model]
-@architectures = "spacy.TextCatBOW.v1"
+@architectures = "spacy.TextCatBOW.v2"
 exclusive_classes = true
 ngram_size = 1
 no_output_layer = false
@@ -52,7 +52,7 @@ no_output_layer = false
 
 single_label_cnn_config = """
 [model]
-@architectures = "spacy.TextCatCNN.v1"
+@architectures = "spacy.TextCatCNN.v2"
 exclusive_classes = true
 
 [model.tok2vec]
@@ -298,6 +298,10 @@ class TextCategorizer(TrainablePipe):
             return 0
         self._allow_extra_label()
         self.cfg["labels"].append(label)
+        if self.model and "resize_output" in self.model.attrs:
+            self.model = self.model.attrs["resize_output"](
+                self.model, len(self.cfg["labels"])
+            )
         self.vocab.strings.add(label)
         return 1
 
@@ -332,6 +336,8 @@ class TextCategorizer(TrainablePipe):
         else:
             for label in labels:
                 self.add_label(label)
+        if len(self.labels) < 2:
+            raise ValueError(Errors.E867)
         if positive_label is not None:
             if positive_label not in self.labels:
                 err = Errors.E920.format(pos_label=positive_label, labels=self.labels)

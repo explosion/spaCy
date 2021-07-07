@@ -6,12 +6,13 @@ from thinc.api import Model, Maxout, Linear
 from ...util import registry
 from ...kb import KnowledgeBase, Candidate, get_candidates
 from ...vocab import Vocab
+from ...tokens import Span
 
 
 @registry.architectures("spacy.EntityLinker.v1")
 def build_nel_encoder(tok2vec: Model, nO: Optional[int] = None) -> Model:
     with Model.define_operators({">>": chain, "**": clone}):
-        token_width = tok2vec.get_dim("nO")
+        token_width = tok2vec.maybe_get_dim("nO")
         output_layer = Linear(nO=nO, nI=token_width)
         model = (
             tok2vec
@@ -44,5 +45,5 @@ def empty_kb(entity_vector_length: int) -> Callable[[Vocab], KnowledgeBase]:
 
 
 @registry.misc("spacy.CandidateGenerator.v1")
-def create_candidates() -> Callable[[KnowledgeBase, "Span"], Iterable[Candidate]]:
+def create_candidates() -> Callable[[KnowledgeBase, Span], Iterable[Candidate]]:
     return get_candidates

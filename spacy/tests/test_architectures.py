@@ -5,7 +5,6 @@ from catalogue import RegistryError
 
 
 def test_get_architecture():
-
     @registry.architectures("my_test_function")
     def create_model(nr_in, nr_out):
         return Linear(nr_in, nr_out)
