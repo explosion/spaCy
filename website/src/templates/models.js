@@ -96,7 +96,7 @@ function isStableVersion(v) {
 
 function getLatestVersion(modelId, compatibility, prereleases) {
     for (let [version, models] of Object.entries(compatibility)) {
-        if (version.startsWith('3.0') && isStableVersion(version) && models[modelId]) {
+        if (isStableVersion(version) && models[modelId]) {
             const modelVersions = models[modelId]
             for (let modelVersion of modelVersions) {
                 if (isStableVersion(modelVersion) || prereleases) {
