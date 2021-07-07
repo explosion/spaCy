@@ -29,6 +29,7 @@ from ..training import validate_examples, validate_get_examples
 from ..errors import Errors, Warnings
 from .. import util
 
+
 cdef class Parser(TrainablePipe):
     """
     Base class of the DependencyParser and EntityRecognizer.
@@ -48,15 +49,43 @@ cdef class Parser(TrainablePipe):
         beam_density=0.0,
         beam_update_prob=0.0,
         multitasks=tuple(),
+        incorrect_spans_key=None
     ):
         """Create a Parser.
 
         vocab (Vocab): The vocabulary object. Must be shared with documents
             to be processed. The value is set to the `.vocab` attribute.
-        **cfg: Configuration parameters. Set to the `.cfg` attribute.
-             If it doesn't include a value for 'moves',  a new instance is
-             created with `self.TransitionSystem()`. This defines how the
-             parse-state is created, updated and evaluated.
+        model (Model): The model for the transition-based parser. The model needs
+            to have a specific substructure of named components --- see the
+            spacy.ml.tb_framework.TransitionModel for details.
+        name (str): The name of the pipeline component
+        moves (Optional[TransitionSystem]): This defines how the parse-state is created,
+            updated and evaluated. If 'moves' is None, a new instance is
+            created with `self.TransitionSystem()`. Defaults to `None`.
+        update_with_oracle_cut_size (int): During training, cut long sequences into
+            shorter segments by creating intermediate states based on the gold-standard
+            history. The model is not very sensitive to this parameter, so you usually
+            won't need to change it. 100 is a good default.
+        min_action_freq (int): The minimum frequency of labelled actions to retain.
+            Rarer labelled actions have their label backed-off to "dep". While this
+            primarily affects the label accuracy, it can also affect the attachment
+            structure, as the labels are used to represent the pseudo-projectivity
+            transformation.
+        learn_tokens (bool): Whether to learn to merge subtokens that are split
+            relative to the gold standard. Experimental.
+        beam_width (int): The number of candidate analyses to maintain.
+        beam_density (float): The minimum ratio between the scores of the first and
+            last candidates in the beam. This allows the parser to avoid exploring
+            candidates that are too far behind. This is mostly intended to improve
+            efficiency, but it can also improve accuracy as deeper search is not
+            always better.
+        beam_update_prob (float): The chance of making a beam update, instead of a
+            greedy update. Greedy updates are an approximation for the beam updates,
+            and are faster to compute.
+        multitasks: additional multi-tasking components. Experimental.
+        incorrect_spans_key (Optional[str]): Identifies spans that are known
+            to be incorrect entity annotations. The incorrect entity annotations
+            can be stored in the span group, under this key.
         """
         self.vocab = vocab
         self.name = name
@@ -68,11 +97,16 @@ cdef class Parser(TrainablePipe):
             "learn_tokens": learn_tokens,
             "beam_width": beam_width,
             "beam_density": beam_density,
-            "beam_update_prob": beam_update_prob
+            "beam_update_prob": beam_update_prob,
+            "incorrect_spans_key": incorrect_spans_key
         }
         if moves is None:
-            # defined by EntityRecognizer as a BiluoPushDown
-            moves = self.TransitionSystem(self.vocab.strings)
+            # EntityRecognizer -> BiluoPushDown
+            # DependencyParser -> ArcEager
+            moves = self.TransitionSystem(
+                self.vocab.strings,
+                incorrect_spans_key=incorrect_spans_key
+            )
         self.moves = moves
         self.model = model
         if self.moves.n_moves != 0:
@@ -117,6 +151,10 @@ cdef class Parser(TrainablePipe):
     def postprocesses(self):
         # Available for subclasses, e.g. to deprojectivize
         return []
+
+    @property
+    def incorrect_spans_key(self):
+        return self.cfg["incorrect_spans_key"]
 
     def add_label(self, label):
         resized = False
@@ -326,7 +364,6 @@ cdef class Parser(TrainablePipe):
         )
         for multitask in self._multitasks:
             multitask.update(examples, drop=drop, sgd=sgd)
-    
         n_examples = len([eg for eg in examples if self.moves.has_gold(eg)])
         if n_examples == 0:
             return losses
@@ -554,7 +591,7 @@ cdef class Parser(TrainablePipe):
                 self._resize()
                 self.model.from_bytes(bytes_data)
             except AttributeError:
-                raise ValueError(Errors.E149) from None
+                raise ValueError(Errors.E149)
         return self
 
     def to_bytes(self, exclude=tuple()):

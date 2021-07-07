@@ -61,8 +61,6 @@ def taggers(en_vocab):
 @pytest.mark.parametrize("Parser", test_parsers)
 def test_serialize_parser_roundtrip_bytes(en_vocab, Parser):
     config = {
-        "learn_tokens": False,
-        "min_action_freq": 0,
         "update_with_oracle_cut_size": 100,
         "beam_width": 1,
         "beam_update_prob": 1.0,
@@ -70,8 +68,8 @@ def test_serialize_parser_roundtrip_bytes(en_vocab, Parser):
     }
     cfg = {"model": DEFAULT_PARSER_MODEL}
     model = registry.resolve(cfg, validate=True)["model"]
-    parser = Parser(en_vocab, model, **config)
-    new_parser = Parser(en_vocab, model, **config)
+    parser = Parser(en_vocab, model)
+    new_parser = Parser(en_vocab, model)
     new_parser = new_parser.from_bytes(parser.to_bytes(exclude=["vocab"]))
     bytes_2 = new_parser.to_bytes(exclude=["vocab"])
     bytes_3 = parser.to_bytes(exclude=["vocab"])
@@ -84,43 +82,27 @@ def test_serialize_parser_strings(Parser):
     vocab1 = Vocab()
     label = "FunnyLabel"
     assert label not in vocab1.strings
-    config = {
-        "learn_tokens": False,
-        "min_action_freq": 0,
-        "update_with_oracle_cut_size": 100,
-        "beam_width": 1,
-        "beam_update_prob": 1.0,
-        "beam_density": 0.0,
-    }
     cfg = {"model": DEFAULT_PARSER_MODEL}
     model = registry.resolve(cfg, validate=True)["model"]
-    parser1 = Parser(vocab1, model, **config)
+    parser1 = Parser(vocab1, model)
     parser1.add_label(label)
     assert label in parser1.vocab.strings
     vocab2 = Vocab()
     assert label not in vocab2.strings
-    parser2 = Parser(vocab2, model, **config)
+    parser2 = Parser(vocab2, model)
     parser2 = parser2.from_bytes(parser1.to_bytes(exclude=["vocab"]))
     assert label in parser2.vocab.strings
 
 
 @pytest.mark.parametrize("Parser", test_parsers)
 def test_serialize_parser_roundtrip_disk(en_vocab, Parser):
-    config = {
-        "learn_tokens": False,
-        "min_action_freq": 0,
-        "update_with_oracle_cut_size": 100,
-        "beam_width": 1,
-        "beam_update_prob": 1.0,
-        "beam_density": 0.0,
-    }
     cfg = {"model": DEFAULT_PARSER_MODEL}
     model = registry.resolve(cfg, validate=True)["model"]
-    parser = Parser(en_vocab, model, **config)
+    parser = Parser(en_vocab, model)
     with make_tempdir() as d:
         file_path = d / "parser"
         parser.to_disk(file_path)
-        parser_d = Parser(en_vocab, model, **config)
+        parser_d = Parser(en_vocab, model)
         parser_d = parser_d.from_disk(file_path)
         parser_bytes = parser.to_bytes(exclude=["model", "vocab"])
         parser_d_bytes = parser_d.to_bytes(exclude=["model", "vocab"])
@@ -198,17 +180,12 @@ def test_serialize_textcat_empty(en_vocab):
 def test_serialize_pipe_exclude(en_vocab, Parser):
     cfg = {"model": DEFAULT_PARSER_MODEL}
     model = registry.resolve(cfg, validate=True)["model"]
-    config = {
-        "learn_tokens": False,
-        "min_action_freq": 0,
-        "update_with_oracle_cut_size": 100,
-    }
 
     def get_new_parser():
-        new_parser = Parser(en_vocab, model, **config)
+        new_parser = Parser(en_vocab, model)
         return new_parser
 
-    parser = Parser(en_vocab, model, **config)
+    parser = Parser(en_vocab, model)
     parser.cfg["foo"] = "bar"
     new_parser = get_new_parser().from_bytes(parser.to_bytes(exclude=["vocab"]))
     assert "foo" in new_parser.cfg

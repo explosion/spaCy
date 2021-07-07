@@ -69,7 +69,7 @@ def heads():
 
 
 def test_parser_parse_navigate_consistency(en_vocab, words, heads):
-    doc = Doc(en_vocab, words=words, heads=heads)
+    doc = Doc(en_vocab, words=words, heads=heads, deps=["dep"] * len(heads))
     for head in doc:
         for child in head.lefts:
             assert child.head == head
@@ -109,7 +109,7 @@ def test_parser_parse_navigate_child_consistency(en_vocab, words, heads):
 
 
 def test_parser_parse_navigate_edges(en_vocab, words, heads):
-    doc = Doc(en_vocab, words=words, heads=heads)
+    doc = Doc(en_vocab, words=words, heads=heads, deps=["dep"] * len(heads))
     for token in doc:
         subtree = list(token.subtree)
         debug = "\t".join((token.text, token.left_edge.text, subtree[0].text))

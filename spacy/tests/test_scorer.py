@@ -444,7 +444,9 @@ def test_score_spans():
     assert f"{key}_per_type" in scores
 
     # Discard labels from the evaluation
-    scores = Scorer.score_spans([eg], attr=key, getter=span_getter, allow_overlap=True, labeled=False)
+    scores = Scorer.score_spans(
+        [eg], attr=key, getter=span_getter, allow_overlap=True, labeled=False
+    )
     assert scores[f"{key}_p"] == 1.0
     assert scores[f"{key}_r"] == 1.0
     assert f"{key}_per_type" not in scores
@@ -467,4 +469,6 @@ def test_prf_score():
     assert (c.precision, c.recall, c.fscore) == approx((0.25, 0.5, 0.33333333))
 
     a += b
-    assert (a.precision, a.recall, a.fscore) == approx((c.precision, c.recall, c.fscore))
+    assert (a.precision, a.recall, a.fscore) == approx(
+        (c.precision, c.recall, c.fscore)
+    )

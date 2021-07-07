@@ -15,6 +15,29 @@ from thinc.api import NumpyOps, get_current_ops
 from .util import add_vecs_to_vocab, assert_docs_equal
 
 
+def evil_component(doc):
+    if "2" in doc.text:
+        raise ValueError("no dice")
+    return doc
+
+
+def perhaps_set_sentences(doc):
+    if not doc.text.startswith("4"):
+        doc[-1].is_sent_start = True
+    return doc
+
+
+def assert_sents_error(doc):
+    if not doc.has_annotation("SENT_START"):
+        raise ValueError("no sents")
+    return doc
+
+
+def warn_error(proc_name, proc, docs, e):
+    logger = logging.getLogger("spacy")
+    logger.warning(f"Trouble with component {proc_name}.")
+
+
 @pytest.fixture
 def nlp():
     nlp = Language(Vocab())
@@ -93,19 +116,16 @@ def test_evaluate_no_pipe(nlp):
     nlp.evaluate([Example.from_dict(doc, annots)])
 
 
-@Language.component("test_language_vector_modification_pipe")
 def vector_modification_pipe(doc):
     doc.vector += 1
     return doc
 
 
-@Language.component("test_language_userdata_pipe")
 def userdata_pipe(doc):
     doc.user_data["foo"] = "bar"
     return doc
 
 
-@Language.component("test_language_ner_pipe")
 def ner_pipe(doc):
     span = Span(doc, 0, 1, label="FIRST")
     doc.ents += (span,)
@@ -123,6 +143,11 @@ def sample_vectors():
 
 @pytest.fixture
 def nlp2(nlp, sample_vectors):
+    Language.component(
+        "test_language_vector_modification_pipe", func=vector_modification_pipe
+    )
+    Language.component("test_language_userdata_pipe", func=userdata_pipe)
+    Language.component("test_language_ner_pipe", func=ner_pipe)
     add_vecs_to_vocab(nlp.vocab, sample_vectors)
     nlp.add_pipe("test_language_vector_modification_pipe")
     nlp.add_pipe("test_language_ner_pipe")
@@ -168,82 +193,115 @@ def test_language_pipe_stream(nlp2, n_process, texts):
             assert_docs_equal(doc, expected_doc)
 
 
-def test_language_pipe_error_handler():
+@pytest.mark.parametrize("n_process", [1, 2])
+def test_language_pipe_error_handler(n_process):
     """Test that the error handling of nlp.pipe works well"""
-    nlp = English()
-    nlp.add_pipe("merge_subtokens")
-    nlp.initialize()
-    texts = ["Curious to see what will happen to this text.", "And this one."]
-    # the pipeline fails because there's no parser
-    with pytest.raises(ValueError):
+    ops = get_current_ops()
+    if isinstance(ops, NumpyOps) or n_process < 2:
+        nlp = English()
+        nlp.add_pipe("merge_subtokens")
+        nlp.initialize()
+        texts = ["Curious to see what will happen to this text.", "And this one."]
+        # the pipeline fails because there's no parser
+        with pytest.raises(ValueError):
+            nlp(texts[0])
+        with pytest.raises(ValueError):
+            list(nlp.pipe(texts, n_process=n_process))
+        nlp.set_error_handler(raise_error)
+        with pytest.raises(ValueError):
+            list(nlp.pipe(texts, n_process=n_process))
+        # set explicitely to ignoring
+        nlp.set_error_handler(ignore_error)
+        docs = list(nlp.pipe(texts, n_process=n_process))
+        assert len(docs) == 0
         nlp(texts[0])
-    with pytest.raises(ValueError):
-        list(nlp.pipe(texts))
-    nlp.set_error_handler(raise_error)
-    with pytest.raises(ValueError):
-        list(nlp.pipe(texts))
-    # set explicitely to ignoring
-    nlp.set_error_handler(ignore_error)
-    docs = list(nlp.pipe(texts))
-    assert len(docs) == 0
-    nlp(texts[0])
 
 
-def test_language_pipe_error_handler_custom(en_vocab):
+@pytest.mark.parametrize("n_process", [1, 2])
+def test_language_pipe_error_handler_custom(en_vocab, n_process):
     """Test the error handling of a custom component that has no pipe method"""
+    Language.component("my_evil_component", func=evil_component)
+    ops = get_current_ops()
+    if isinstance(ops, NumpyOps) or n_process < 2:
+        nlp = English()
+        nlp.add_pipe("my_evil_component")
+        texts = ["TEXT 111", "TEXT 222", "TEXT 333", "TEXT 342", "TEXT 666"]
+        with pytest.raises(ValueError):
+            # the evil custom component throws an error
+            list(nlp.pipe(texts))
 
-    @Language.component("my_evil_component")
-    def evil_component(doc):
-        if "2" in doc.text:
-            raise ValueError("no dice")
-        return doc
-
-    def warn_error(proc_name, proc, docs, e):
-        from spacy.util import logger
-
-        logger.warning(f"Trouble with component {proc_name}.")
-
-    nlp = English()
-    nlp.add_pipe("my_evil_component")
-    nlp.initialize()
-    texts = ["TEXT 111", "TEXT 222", "TEXT 333", "TEXT 342", "TEXT 666"]
-    with pytest.raises(ValueError):
-        # the evil custom component throws an error
-        list(nlp.pipe(texts))
-
-    nlp.set_error_handler(warn_error)
-    logger = logging.getLogger("spacy")
-    with mock.patch.object(logger, "warning") as mock_warning:
-        # the errors by the evil custom component raise a warning for each bad batch
-        docs = list(nlp.pipe(texts))
-        mock_warning.assert_called()
-        assert mock_warning.call_count == 2
-        assert len(docs) + mock_warning.call_count == len(texts)
-        assert [doc.text for doc in docs] == ["TEXT 111", "TEXT 333", "TEXT 666"]
+        nlp.set_error_handler(warn_error)
+        logger = logging.getLogger("spacy")
+        with mock.patch.object(logger, "warning") as mock_warning:
+            # the errors by the evil custom component raise a warning for each
+            # bad doc
+            docs = list(nlp.pipe(texts, n_process=n_process))
+            # HACK/TODO? the warnings in child processes don't seem to be
+            # detected by the mock logger
+            if n_process == 1:
+                mock_warning.assert_called()
+                assert mock_warning.call_count == 2
+                assert len(docs) + mock_warning.call_count == len(texts)
+            assert [doc.text for doc in docs] == ["TEXT 111", "TEXT 333", "TEXT 666"]
 
 
-def test_language_pipe_error_handler_pipe(en_vocab):
+@pytest.mark.parametrize("n_process", [1, 2])
+def test_language_pipe_error_handler_pipe(en_vocab, n_process):
     """Test the error handling of a component's pipe method"""
+    Language.component("my_perhaps_sentences", func=perhaps_set_sentences)
+    Language.component("assert_sents_error", func=assert_sents_error)
+    ops = get_current_ops()
+    if isinstance(ops, NumpyOps) or n_process < 2:
+        texts = [f"{str(i)} is enough. Done" for i in range(100)]
+        nlp = English()
+        nlp.add_pipe("my_perhaps_sentences")
+        nlp.add_pipe("assert_sents_error")
+        nlp.initialize()
+        with pytest.raises(ValueError):
+            # assert_sents_error requires sentence boundaries, will throw an error otherwise
+            docs = list(nlp.pipe(texts, n_process=n_process, batch_size=10))
+        nlp.set_error_handler(ignore_error)
+        docs = list(nlp.pipe(texts, n_process=n_process, batch_size=10))
+        # we lose/ignore the failing 4,40-49 docs
+        assert len(docs) == 89
 
-    @Language.component("my_sentences")
-    def perhaps_set_sentences(doc):
-        if not doc.text.startswith("4"):
-            doc[-1].is_sent_start = True
-        return doc
 
-    texts = [f"{str(i)} is enough. Done" for i in range(100)]
-    nlp = English()
-    nlp.add_pipe("my_sentences")
-    entity_linker = nlp.add_pipe("entity_linker", config={"entity_vector_length": 3})
-    entity_linker.kb.add_entity(entity="Q1", freq=12, entity_vector=[1, 2, 3])
-    nlp.initialize()
-    with pytest.raises(ValueError):
-        # the entity linker requires sentence boundaries, will throw an error otherwise
-        docs = list(nlp.pipe(texts, batch_size=10))
-    nlp.set_error_handler(ignore_error)
-    docs = list(nlp.pipe(texts, batch_size=10))
-    # we lose/ignore the failing 0-9 and 40-49 batches
-    assert len(docs) == 80
+@pytest.mark.parametrize("n_process", [1, 2])
+def test_language_pipe_error_handler_make_doc_actual(n_process):
+    """Test the error handling for make_doc"""
+    # TODO: fix so that the following test is the actual behavior
+
+    ops = get_current_ops()
+    if isinstance(ops, NumpyOps) or n_process < 2:
+        nlp = English()
+        nlp.max_length = 10
+        texts = ["12345678901234567890", "12345"] * 10
+        with pytest.raises(ValueError):
+            list(nlp.pipe(texts, n_process=n_process))
+        nlp.default_error_handler = ignore_error
+        if n_process == 1:
+            with pytest.raises(ValueError):
+                list(nlp.pipe(texts, n_process=n_process))
+        else:
+            docs = list(nlp.pipe(texts, n_process=n_process))
+            assert len(docs) == 0
+
+
+@pytest.mark.xfail
+@pytest.mark.parametrize("n_process", [1, 2])
+def test_language_pipe_error_handler_make_doc_preferred(n_process):
+    """Test the error handling for make_doc"""
+
+    ops = get_current_ops()
+    if isinstance(ops, NumpyOps) or n_process < 2:
+        nlp = English()
+        nlp.max_length = 10
+        texts = ["12345678901234567890", "12345"] * 10
+        with pytest.raises(ValueError):
+            list(nlp.pipe(texts, n_process=n_process))
+        nlp.default_error_handler = ignore_error
+        docs = list(nlp.pipe(texts, n_process=n_process))
+        assert len(docs) == 0
 
 
 def test_language_from_config_before_after_init():
@@ -363,6 +421,37 @@ def test_language_from_config_before_after_init_invalid():
             English.from_config(config)
 
 
+def test_language_whitespace_tokenizer():
+    """Test the custom whitespace tokenizer from the docs."""
+
+    class WhitespaceTokenizer:
+        def __init__(self, vocab):
+            self.vocab = vocab
+
+        def __call__(self, text):
+            words = text.split(" ")
+            spaces = [True] * len(words)
+            # Avoid zero-length tokens
+            for i, word in enumerate(words):
+                if word == "":
+                    words[i] = " "
+                    spaces[i] = False
+            # Remove the final trailing space
+            if words[-1] == " ":
+                words = words[0:-1]
+                spaces = spaces[0:-1]
+            else:
+                spaces[-1] = False
+
+            return Doc(self.vocab, words=words, spaces=spaces)
+
+    nlp = spacy.blank("en")
+    nlp.tokenizer = WhitespaceTokenizer(nlp.vocab)
+    text = "   What's happened to    me? he thought. It wasn't a dream.    "
+    doc = nlp(text)
+    assert doc.text == text
+
+
 def test_language_custom_tokenizer():
     """Test that a fully custom tokenizer can be plugged in via the registry."""
     name = "test_language_custom_tokenizer"
@@ -419,3 +508,23 @@ def test_language_init_invalid_vocab(value):
     with pytest.raises(ValueError) as e:
         Language(value)
     assert err_fragment in str(e.value)
+
+
+def test_language_source_and_vectors(nlp2):
+    nlp = Language(Vocab())
+    textcat = nlp.add_pipe("textcat")
+    for label in ("POSITIVE", "NEGATIVE"):
+        textcat.add_label(label)
+    nlp.initialize()
+    long_string = "thisisalongstring"
+    assert long_string not in nlp.vocab.strings
+    assert long_string not in nlp2.vocab.strings
+    nlp.vocab.strings.add(long_string)
+    assert nlp.vocab.vectors.to_bytes() != nlp2.vocab.vectors.to_bytes()
+    vectors_bytes = nlp.vocab.vectors.to_bytes()
+    with pytest.warns(UserWarning):
+        nlp2.add_pipe("textcat", name="textcat2", source=nlp)
+    # strings should be added
+    assert long_string in nlp2.vocab.strings
+    # vectors should remain unmodified
+    assert nlp.vocab.vectors.to_bytes() == vectors_bytes

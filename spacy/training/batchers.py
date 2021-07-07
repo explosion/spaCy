@@ -66,7 +66,11 @@ def configure_minibatch_by_words(
     """
     optionals = {"get_length": get_length} if get_length is not None else {}
     return partial(
-        minibatch_by_words, size=size, discard_oversize=discard_oversize, **optionals
+        minibatch_by_words,
+        size=size,
+        tolerance=tolerance,
+        discard_oversize=discard_oversize,
+        **optionals
     )
 
 

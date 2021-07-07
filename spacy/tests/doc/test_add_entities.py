@@ -18,14 +18,9 @@ def _ner_example(ner):
 def test_doc_add_entities_set_ents_iob(en_vocab):
     text = ["This", "is", "a", "lion"]
     doc = Doc(en_vocab, words=text)
-    config = {
-        "learn_tokens": False,
-        "min_action_freq": 30,
-        "update_with_oracle_cut_size": 100,
-    }
     cfg = {"model": DEFAULT_NER_MODEL}
     model = registry.resolve(cfg, validate=True)["model"]
-    ner = EntityRecognizer(en_vocab, model, **config)
+    ner = EntityRecognizer(en_vocab, model)
     ner.initialize(lambda: [_ner_example(ner)])
     ner(doc)
 
@@ -40,14 +35,9 @@ def test_ents_reset(en_vocab):
     """Ensure that resetting doc.ents does not change anything"""
     text = ["This", "is", "a", "lion"]
     doc = Doc(en_vocab, words=text)
-    config = {
-        "learn_tokens": False,
-        "min_action_freq": 30,
-        "update_with_oracle_cut_size": 100,
-    }
     cfg = {"model": DEFAULT_NER_MODEL}
     model = registry.resolve(cfg, validate=True)["model"]
-    ner = EntityRecognizer(en_vocab, model, **config)
+    ner = EntityRecognizer(en_vocab, model)
     ner.initialize(lambda: [_ner_example(ner)])
     ner(doc)
     orig_iobs = [t.ent_iob_ for t in doc]

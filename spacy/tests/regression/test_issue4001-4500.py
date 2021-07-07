@@ -38,7 +38,7 @@ def test_issue4002(en_vocab):
 
 
 def test_issue4030():
-    """ Test whether textcat works fine with empty doc """
+    """Test whether textcat works fine with empty doc"""
     unique_classes = ["offensive", "inoffensive"]
     x_train = [
         "This is an offensive text",
@@ -237,7 +237,7 @@ def test_issue4190():
 
 
 def test_issue4267():
-    """ Test that running an entity_ruler after ner gives consistent results"""
+    """Test that running an entity_ruler after ner gives consistent results"""
     nlp = English()
     ner = nlp.add_pipe("ner")
     ner.add_label("PEOPLE")
@@ -288,7 +288,7 @@ def test_multiple_predictions():
 
 
 def test_issue4313():
-    """ This should not crash or exit with some strange error code """
+    """This should not crash or exit with some strange error code"""
     beam_width = 16
     beam_density = 0.0001
     nlp = English()

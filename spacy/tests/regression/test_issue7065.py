@@ -8,7 +8,17 @@ def test_issue7065():
     nlp = English()
     nlp.add_pipe("sentencizer")
     ruler = nlp.add_pipe("entity_ruler")
-    patterns = [{"label": "THING", "pattern": [{"LOWER": "symphony"}, {"LOWER": "no"}, {"LOWER": "."}, {"LOWER": "8"}]}]
+    patterns = [
+        {
+            "label": "THING",
+            "pattern": [
+                {"LOWER": "symphony"},
+                {"LOWER": "no"},
+                {"LOWER": "."},
+                {"LOWER": "8"},
+            ],
+        }
+    ]
     ruler.add_patterns(patterns)
 
     doc = nlp(text)
@@ -28,11 +38,15 @@ def test_issue7065_b():
 
     text = "Mahler 's Symphony No. 8 was beautiful."
     entities = [(0, 6, "PERSON"), (10, 24, "WORK")]
-    links = {(0, 6): {"Q7304": 1.0, "Q270853": 0.0},
-             (10, 24): {"Q7304": 0.0, "Q270853": 1.0}}
+    links = {
+        (0, 6): {"Q7304": 1.0, "Q270853": 0.0},
+        (10, 24): {"Q7304": 0.0, "Q270853": 1.0},
+    }
     sent_starts = [1, -1, 0, 0, 0, 0, 0, 0, 0]
     doc = nlp(text)
-    example = Example.from_dict(doc, {"entities": entities, "links": links, "sent_starts": sent_starts})
+    example = Example.from_dict(
+        doc, {"entities": entities, "links": links, "sent_starts": sent_starts}
+    )
     train_examples = [example]
 
     def create_kb(vocab):
@@ -65,7 +79,15 @@ def test_issue7065_b():
     # Add a custom rule-based component to mimick NER
     patterns = [
         {"label": "PERSON", "pattern": [{"LOWER": "mahler"}]},
-        {"label": "WORK", "pattern": [{"LOWER": "symphony"}, {"LOWER": "no"}, {"LOWER": "."}, {"LOWER": "8"}]}
+        {
+            "label": "WORK",
+            "pattern": [
+                {"LOWER": "symphony"},
+                {"LOWER": "no"},
+                {"LOWER": "."},
+                {"LOWER": "8"},
+            ],
+        },
     ]
     ruler = nlp.add_pipe("entity_ruler", before="entity_linker")
     ruler.add_patterns(patterns)

@@ -14,7 +14,7 @@ import GitHubCode from './github'
 import classes from '../styles/code.module.sass'
 
 const WRAP_THRESHOLD = 30
-const CLI_GROUPS = ['init', 'debug', 'project', 'ray']
+const CLI_GROUPS = ['init', 'debug', 'project', 'ray', 'huggingface-hub']
 
 export default props => (
     <Pre>

@@ -9,6 +9,7 @@ import gzip
 import zipfile
 import tqdm
 from itertools import islice
+import warnings
 
 from .pretrain import get_tok2vec_ref
 from ..lookups import Lookups
@@ -70,14 +71,18 @@ def init_nlp(config: Config, *, use_gpu: int = -1) -> "Language":
     nlp._link_components()
     with nlp.select_pipes(disable=[*frozen_components, *resume_components]):
         if T["max_epochs"] == -1:
-            logger.debug("Due to streamed train corpus, using only first 100 examples for initialization. If necessary, provide all labels in [initialize]. More info: https://spacy.io/api/cli#init_labels")
+            logger.debug(
+                "Due to streamed train corpus, using only first 100 examples for initialization. If necessary, provide all labels in [initialize]. More info: https://spacy.io/api/cli#init_labels"
+            )
             nlp.initialize(lambda: islice(train_corpus(nlp), 100), sgd=optimizer)
         else:
             nlp.initialize(lambda: train_corpus(nlp), sgd=optimizer)
         logger.info(f"Initialized pipeline components: {nlp.pipe_names}")
     # Detect components with listeners that are not frozen consistently
     for name, proc in nlp.pipeline:
-        for listener in getattr(proc, "listening_components", []):  # e.g. tok2vec/transformer
+        for listener in getattr(
+            proc, "listening_components", []
+        ):  # e.g. tok2vec/transformer
             # Don't warn about components not in the pipeline
             if listener not in nlp.pipe_names:
                 continue
@@ -120,6 +125,12 @@ def init_vocab(
     if vectors is not None:
         load_vectors_into_model(nlp, vectors)
         logger.info(f"Added vectors: {vectors}")
+    # warn if source model vectors are not identical
+    sourced_vectors_hashes = nlp.meta.pop("_sourced_vectors_hashes", {})
+    vectors_hash = hash(nlp.vocab.vectors.to_bytes())
+    for sourced_component, sourced_vectors_hash in sourced_vectors_hashes.items():
+        if vectors_hash != sourced_vectors_hash:
+            warnings.warn(Warnings.W113.format(name=sourced_component))
     logger.info("Finished initializing nlp object")
 
 
