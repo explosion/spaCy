@@ -329,7 +329,7 @@ class SpanCategorizer(TrainablePipe):
         get_examples: Callable[[], Iterable[Example]],
         *,
         nlp: Language = None,
-        labels: Optional[Dict] = None,
+        labels: Optional[List[str]] = None,
     ) -> None:
         """Initialize the pipe for training, using a representative set
         of data examples.

@@ -19,6 +19,7 @@ import srsly
 import os
 
 from .util import make_tempdir
+from ..cli.init_pipeline import _init_labels
 
 
 def test_cli_info():
@@ -501,3 +502,33 @@ def test_validate_compatibility_table():
     current_compat = compat.get(spacy_version, {})
     assert len(current_compat) > 0
     assert "en_core_web_sm" in current_compat
+
+
+@pytest.mark.parametrize("component_name", ["ner", "textcat", "spancat", "tagger"])
+def test_init_labels(component_name):
+    nlp = Dutch()
+    component = nlp.add_pipe(component_name)
+    for label in ["T1", "T2", "T3", "T4"]:
+        component.add_label(label)
+    assert len(nlp.get_pipe(component_name).labels) == 4
+
+    with make_tempdir() as tmp_dir:
+        _init_labels(nlp, tmp_dir)
+
+        config = init_config(
+            lang="nl",
+            pipeline=[component_name],
+            optimize="efficiency",
+            gpu=False,
+        )
+        config["initialize"]["components"][component_name] = {
+            "labels": {
+                "@readers": "spacy.read_labels.v1",
+                "path": f"{tmp_dir}/{component_name}.json",
+            }
+        }
+
+        nlp2 = load_model_from_config(config, auto_fill=True)
+        assert len(nlp2.get_pipe(component_name).labels) == 0
+        nlp2.initialize()
+        assert len(nlp2.get_pipe(component_name).labels) == 4
