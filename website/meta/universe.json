@@ -3164,6 +3164,36 @@
             },
             "category": ["pipeline", "standalone", "scientific", "biomedical"],
             "tags": ["babylonhealth", "rule-engine", "matcher"]
+        },
+        {
+            "id": "forte",
+            "title": "Forte",
+            "slogan": "Forte is a toolkit for building Natural Language Processing pipelines, featuring cross-task interaction, adaptable data-model interfaces and composable pipelines.",
+            "description": "Forte provides a platform to assemble state-of-the-art NLP and ML technologies in a highly-composable fashion, including a wide spectrum of tasks ranging from Information Retrieval, Natural Language Understanding to Natural Language Generation.",
+            "github": "asyml/forte",
+            "pip": "forte.spacy torch",
+            "code_example": [
+                "from forte.spacy import SpacyProcessor",
+                "from forte import Pipeline",
+                "from forte.data.readers import StringReader",
+                "",
+                "pipeline = Pipeline()",
+                "pipeline.set_reader(StringReader())",
+                "pipeline.add(SpacyProcessor())",
+                "pipeline.run('Running SpaCy with Forte!')"
+            ],
+            "code_language": "python",
+            "url": "https://medium.com/casl-project/forte-building-modular-and-re-purposable-nlp-pipelines-cf5b5c5abbe9",
+            "thumb": "https://raw.githubusercontent.com/asyml/forte/master/docs/_static/img/forte_graphic.png",
+            "image": "https://raw.githubusercontent.com/asyml/forte/master/docs/_static/img/logo_h.png",
+            "author": "Petuum",
+            "author_links": {
+                "twitter": "PetuumInc",
+                "github": "asyml",
+                "website": "https://petuum.com"
+            },
+            "category": ["pipeline", "standalone"],
+            "tags": ["pipeline"]
         }
     ],
 
