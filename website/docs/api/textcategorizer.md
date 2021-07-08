@@ -69,6 +69,10 @@ architectures and their arguments and hyperparameters.
 %%GITHUB_SPACY/spacy/pipeline/textcat.py
 ```
 
+```python
+%%GITHUB_SPACY/spacy/pipeline/textcat_multilabel.py
+```
+
 ## TextCategorizer.\_\_init\_\_ {#init tag="method"}
 
 > #### Example
