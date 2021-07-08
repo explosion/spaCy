@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 import warnings
 
-from thinc.api import Model, Linear, Relu, Dropout, chain, noop, Embed, add
+from thinc.api import Model, Linear, Relu, Dropout
+from thinc.api import chain, noop, Embed, add, tuplify
 from thinc.types import Floats2d, Floats1d, Ints2d, Ragged
 from typing import List, Callable, Tuple, Any
 from ...tokens import Doc
@@ -53,61 +54,6 @@ def build_coref(
             >> build_coarse_pruner(mention_limit, mention_limit_ratio)
             >> build_ant_scorer(bilinear, Dropout(dropout), antecedent_limit)
         )
-    return model
-
-
-# TODO replace this with thinc version once PR is in
-def tuplify(layer1: Model, layer2: Model, *layers) -> Model:
-    layers = (layer1, layer2) + layers
-    names = [layer.name for layer in layers]
-    return Model(
-        "tuple(" + ", ".join(names) + ")",
-        tuplify_forward,
-        init=tuplify_init,
-        layers=layers,
-    )
-
-
-# TODO replace this with thinc version once PR is in
-def tuplify_forward(model, X, is_train):
-    Ys = []
-    backprops = []
-    for layer in model.layers:
-        Y, backprop = layer(X, is_train)
-        Ys.append(Y)
-        backprops.append(backprop)
-
-    def backprop_tuplify(dYs):
-        dXs = [bp(dY) for bp, dY in zip(backprops, dYs)]
-        dX = dXs[0]
-        for dx in dXs[1:]:
-            dX += dx
-        return dX
-
-    return tuple(Ys), backprop_tuplify
-
-
-# TODO replace this with thinc version once PR is in
-def tuplify_init(model, X, Y) -> Model:
-    if X is None and Y is None:
-        for layer in model.layers:
-            layer.initialize()
-        if model.layers[0].has_dim("nI"):
-            model.set_dim("nI", model.layers[0].get_dim("nI"))
-        return model
-
-    # Try to set nO on each layer, where available.
-    # All layers have the same input, and the output should map directly from the
-    # given Y, if provided.
-    for ii, layer in enumerate(model.layers):
-        if Y is not None and layer.has_dim("nO") is None:
-            layer.initialize(X=X, Y=Y[ii])
-        else:
-            layer.initialize(X=X)
-
-    if model.layers[0].has_dim("nI"):
-        model.set_dim("nI", model.layers[0].get_dim("nI"))
-    # this model can have an input dimension, but can't have an output dimension
     return model
 
 
