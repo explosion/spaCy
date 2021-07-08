@@ -154,6 +154,8 @@ def load_vectors_into_model(
         logger.warning(Warnings.W112.format(name=name))
 
     nlp.vocab.vectors = vectors_nlp.vocab.vectors
+    for lex in nlp.vocab:
+        lex.rank = nlp.vocab.vectors.key2row.get(lex.orth, OOV_RANK)
     if add_strings:
         # I guess we should add the strings from the vectors_nlp model?
         # E.g. if someone does a similarity query, they might expect the strings.
