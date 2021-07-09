@@ -202,8 +202,9 @@ def get_meta(
         "url": "",
         "license": "MIT",
     }
-    meta.update(existing_meta)
     nlp = util.load_model_from_path(Path(model_path))
+    meta.update(nlp.meta)
+    meta.update(existing_meta)
     meta["spacy_version"] = util.get_model_version_range(about.__version__)
     meta["vectors"] = {
         "width": nlp.vocab.vectors_length,
