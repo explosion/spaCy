@@ -1740,10 +1740,16 @@ class Language:
                                 listeners_replaced = True
                     with warnings.catch_warnings():
                         warnings.filterwarnings("ignore", message="\\[W113\\]")
-                        nlp.add_pipe(source_name, source=source_nlps[model], name=pipe_name)
+                        nlp.add_pipe(
+                            source_name, source=source_nlps[model], name=pipe_name
+                        )
                     if model not in source_nlp_vectors_hashes:
-                        source_nlp_vectors_hashes[model] = hash(source_nlps[model].vocab.vectors.to_bytes())
-                    nlp.meta["_sourced_vectors_hashes"][pipe_name] = source_nlp_vectors_hashes[model]
+                        source_nlp_vectors_hashes[model] = hash(
+                            source_nlps[model].vocab.vectors.to_bytes()
+                        )
+                    nlp.meta["_sourced_vectors_hashes"][
+                        pipe_name
+                    ] = source_nlp_vectors_hashes[model]
                     # Delete from cache if listeners were replaced
                     if listeners_replaced:
                         del source_nlps[model]
