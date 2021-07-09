@@ -63,7 +63,7 @@ another token that's at least 10 characters long.
 
 spaCy features a rule-matching engine, the [`Matcher`](/api/matcher), that
 operates over tokens, similar to regular expressions. The rules can refer to
-token annotations (e.g. the token `text` or `tag_`, and flags (e.g. `IS_PUNCT`).
+token annotations (e.g. the token `text` or `tag_`, and flags (e.g. `IS_PUNCT`)).
 The rule matcher also lets you pass in a custom callback to act on matches – for
 example, to merge entities and apply custom labels. You can also associate
 patterns with entity IDs, to allow some basic entity linking or disambiguation.
@@ -1552,7 +1552,7 @@ doc = nlp("Dr. Alex Smith chaired first board meeting of Acme Corp Inc.")
 print([(ent.text, ent.label_) for ent in doc.ents])
 ```
 
-An alternative approach would be to an
+An alternative approach would be to use an
 [extension attribute](/usage/processing-pipelines/#custom-components-attributes)
 like `._.person_title` and add it to `Span` objects (which includes entity spans
 in `doc.ents`). The advantage here is that the entity text stays intact and can
