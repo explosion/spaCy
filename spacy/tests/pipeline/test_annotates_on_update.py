@@ -1,6 +1,5 @@
 from typing import Callable, Iterable, Iterator
 import pytest
-import io
 
 from thinc.api import Config
 from spacy.language import Language

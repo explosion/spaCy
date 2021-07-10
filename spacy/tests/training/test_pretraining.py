@@ -278,7 +278,9 @@ def test_pretraining_training():
         filled = filled.interpolate()
         P = filled["pretraining"]
         nlp_base = init_nlp(filled)
-        model_base = nlp_base.get_pipe(P["component"]).model.get_ref(P["layer"]).get_ref("embed")
+        model_base = (
+            nlp_base.get_pipe(P["component"]).model.get_ref(P["layer"]).get_ref("embed")
+        )
         embed_base = None
         for node in model_base.walk():
             if node.name == "hashembed":
@@ -331,11 +333,12 @@ def write_sample_training(tmp_dir):
 
 def write_vectors_model(tmp_dir):
     import numpy
+
     vocab = Vocab()
     vector_data = {
         "dog": numpy.random.uniform(-1, 1, (300,)),
         "cat": numpy.random.uniform(-1, 1, (300,)),
-        "orange": numpy.random.uniform(-1, 1, (300,))
+        "orange": numpy.random.uniform(-1, 1, (300,)),
     }
     for word, vector in vector_data.items():
         vocab.set_vector(word, vector)

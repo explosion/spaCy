@@ -1,7 +1,9 @@
 from thinc.api import Model, noop
 from .parser_model import ParserStepModel
+from ..util import registry
 
 
+@registry.layers("spacy.TransitionModel.v1")
 def TransitionModel(
     tok2vec, lower, upper, resize_output, dropout=0.2, unseen_classes=set()
 ):
@@ -15,7 +17,7 @@ def TransitionModel(
     return Model(
         name="parser_model",
         forward=forward,
-        dims={"nI": tok2vec.get_dim("nI") if tok2vec.has_dim("nI") else None},
+        dims={"nI": tok2vec.maybe_get_dim("nI")},
         layers=[tok2vec, lower, upper],
         refs={"tok2vec": tok2vec, "lower": lower, "upper": upper},
         init=init,

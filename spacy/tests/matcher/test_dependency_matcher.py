@@ -354,7 +354,6 @@ def test_dependency_matcher_span_user_data(en_tokenizer):
     for token in doc:
         token.head = doc[0]
         token.dep_ = "a"
-    get_is_c = lambda token: token.text in ("c",)
     Token.set_extension("is_c", default=False)
     doc[2]._.is_c = True
     pattern = [

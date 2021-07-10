@@ -8,7 +8,7 @@ from spacy.util import get_lang_class
 # Only include languages with no external dependencies
 # excluded: ru, uk
 # excluded for custom tables: es, pl
-LANGUAGES = ["bn", "el", "en", "fa", "fr", "nb", "nl", "sv"]
+LANGUAGES = ["bn", "ca", "el", "en", "fa", "fr", "nb", "nl", "sv"]
 # fmt: on
 
 

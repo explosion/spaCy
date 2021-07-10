@@ -12,6 +12,7 @@ from .senter import SentenceRecognizer
 from .sentencizer import Sentencizer
 from .tagger import Tagger
 from .textcat import TextCategorizer
+from .spancat import SpanCategorizer
 from .textcat_multilabel import MultiLabel_TextCategorizer
 from .tok2vec import Tok2Vec
 from .functions import merge_entities, merge_noun_chunks, merge_subtokens
@@ -28,6 +29,7 @@ __all__ = [
     "Pipe",
     "SentenceRecognizer",
     "Sentencizer",
+    "SpanCategorizer",
     "Tagger",
     "TextCategorizer",
     "Tok2Vec",

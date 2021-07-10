@@ -130,14 +130,9 @@ def test_get_oracle_actions():
         deps.append(dep)
         ents.append(ent)
     doc = Doc(Vocab(), words=[t[1] for t in annot_tuples])
-    config = {
-        "learn_tokens": False,
-        "min_action_freq": 0,
-        "update_with_oracle_cut_size": 100,
-    }
     cfg = {"model": DEFAULT_PARSER_MODEL}
     model = registry.resolve(cfg, validate=True)["model"]
-    parser = DependencyParser(doc.vocab, model, **config)
+    parser = DependencyParser(doc.vocab, model)
     parser.moves.add_action(0, "")
     parser.moves.add_action(1, "")
     parser.moves.add_action(1, "")

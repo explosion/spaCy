@@ -23,11 +23,11 @@ def test_vi_tokenizer_serialize(vi_tokenizer):
     nlp_r = Vietnamese()
     nlp_r.from_bytes(nlp_bytes)
     assert nlp_bytes == nlp_r.to_bytes()
-    assert nlp_r.tokenizer.use_pyvi == False
+    assert nlp_r.tokenizer.use_pyvi is False
 
     with make_tempdir() as d:
         nlp.to_disk(d)
         nlp_r = Vietnamese()
         nlp_r.from_disk(d)
         assert nlp_bytes == nlp_r.to_bytes()
-        assert nlp_r.tokenizer.use_pyvi == False
+        assert nlp_r.tokenizer.use_pyvi is False

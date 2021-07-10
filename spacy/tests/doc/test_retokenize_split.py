@@ -44,7 +44,8 @@ def test_doc_retokenize_split_lemmas(en_vocab):
     # If lemmas are not set, leave unset
     words = ["LosAngeles", "start", "."]
     heads = [1, 2, 2]
-    doc = Doc(en_vocab, words=words, heads=heads)
+    deps = ["dep"] * len(heads)
+    doc = Doc(en_vocab, words=words, heads=heads, deps=deps)
     with doc.retokenize() as retokenizer:
         retokenizer.split(
             doc[0],
@@ -57,7 +58,8 @@ def test_doc_retokenize_split_lemmas(en_vocab):
     # If lemmas are set, use split orth as default lemma
     words = ["LosAngeles", "start", "."]
     heads = [1, 2, 2]
-    doc = Doc(en_vocab, words=words, heads=heads)
+    deps = ["dep"] * len(heads)
+    doc = Doc(en_vocab, words=words, heads=heads, deps=deps)
     for t in doc:
         t.lemma_ = "a"
     with doc.retokenize() as retokenizer:

@@ -49,6 +49,7 @@ production.
 <Integration title="FastAPI" logo="fastapi" url="#fastapi">Serve your models and host APIs</Integration>
 <Integration title="Ray" logo="ray" url="#ray">Distributed and parallel training</Integration>
 <Integration title="Weights &amp; Biases" logo="wandb" url="#wandb">Track your experiments and results</Integration>
+<Integration title="Hugging Face Hub" logo="huggingface_hub" url="#huggingface_hub">Upload your pipelines to the Hugging Face Hub</Integration>
 </Grid>
 
 ### 1. Clone a project template {#clone}
@@ -800,7 +801,7 @@ vars:
 commands:
   - name: annotate
   - script:
-      - 'python -m prodigy ner.correct ${vars.prodigy.dataset} ./assets/raw_data.jsonl ${vars.prodigy.model} --labels ${vars.prodigy.labels}'
+      - 'python -m prodigy ner.correct ${vars.prodigy.dataset} ${vars.prodigy.model} ./assets/raw_data.jsonl --labels ${vars.prodigy.labels}'
       - 'python -m prodigy data-to-spacy ./corpus/train.json ./corpus/eval.json --ner ${vars.prodigy.dataset}'
       - 'python -m spacy convert ./corpus/train.json ./corpus/train.spacy'
       - 'python -m spacy convert ./corpus/eval.json ./corpus/eval.spacy'
@@ -1011,5 +1012,70 @@ project template. It trains on the IMDB Movie Review Dataset and includes a
 simple config with the built-in `WandbLogger`, as well as a custom example of
 creating variants of the config for a simple hyperparameter grid search and
 logging the results.
+
+</Project>
+
+---
+
+### Hugging Face Hub {#huggingface_hub} <IntegrationLogo name="huggingface_hub" width={175} height="auto" align="right" />
+
+The [Hugging Face Hub](https://huggingface.co/) lets you upload models and share
+them with others. It hosts models as Git-based repositories which are storage
+spaces that can contain all your files. It support versioning, branches and
+custom metadata out-of-the-box, and provides browser-based visualizers for
+exploring your models interactively, as well as an API for production use. The
+[`spacy-huggingface-hub`](https://github.com/explosion/spacy-huggingface-hub)
+package automatically adds the `huggingface-hub` command to your `spacy` CLI if
+it's installed.
+
+> #### Installation
+>
+> ```cli
+> $ pip install spacy-huggingface-hub
+> # Check that the CLI is registered
+> $ python -m spacy huggingface-hub --help
+> ```
+
+You can then upload any pipeline packaged with
+[`spacy package`](/api/cli#package). Make sure to set `--build wheel` to output
+a binary `.whl` file. The uploader will read all metadata from the pipeline
+package, including the auto-generated pretty `README.md` and the model details
+available in the `meta.json`. For examples, check out the
+[spaCy pipelines](https://huggingface.co/spacy) we've uploaded.
+
+```cli
+$ huggingface-cli login
+$ python -m spacy package ./en_ner_fashion ./output --build wheel
+$ cd ./output/en_ner_fashion-0.0.0/dist
+$ python -m spacy huggingface-hub push en_ner_fashion-0.0.0-py3-none-any.whl
+```
+
+After uploading, you will see the live URL of your pipeline packages, as well as
+the direct URL to the model wheel you can install via `pip install`. You'll also
+be able to test your pipeline interactively from your browser:
+
+![Screenshot: interactive NER visualizer](../images/huggingface_hub.jpg)
+
+In your `project.yml`, you can add a command that uploads your trained and
+packaged pipeline to the hub. You can either run this as a manual step, or
+automatically as part of a workflow. Make sure to set `--build wheel` when
+running `spacy package` to build a wheel file for your pipeline package.
+
+<!-- prettier-ignore -->
+```yaml
+### project.yml
+- name: "push_to_hub"
+  help: "Upload the trained model to the Hugging Face Hub"
+  script:
+    - "python -m spacy huggingface-hub push packages/en_${vars.name}-${vars.version}/dist/en_${vars.name}-${vars.version}-py3-none-any.whl"
+  deps:
+    - "packages/en_${vars.name}-${vars.version}/dist/en_${vars.name}-${vars.version}-py3-none-any.whl"
+```
+
+<Project id="integrations/huggingface_hub">
+
+Get started with uploading your models to the Hugging Face hub using our project
+template. It trains a simple pipeline, packages it and uploads it if the
+packaged model has changed. This makes it easy to deploy your models end-to-end.
 
 </Project>

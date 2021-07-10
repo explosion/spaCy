@@ -329,7 +329,7 @@ cdef class Token:
     @property
     def shape(self):
         """RETURNS (uint64): ID of the token's shape, a transform of the
-            tokens's string, to show orthographic features (e.g. "Xxxx", "dd").
+            token's string, to show orthographic features (e.g. "Xxxx", "dd").
         """
         return self.c.lex.shape
 
@@ -825,7 +825,7 @@ cdef class Token:
 
     @property
     def shape_(self):
-        """RETURNS (str): Transform of the tokens's string, to show
+        """RETURNS (str): Transform of the token's string, to show
             orthographic features. For example, "Xxxx" or "dd".
         """
         return self.vocab.strings[self.c.lex.shape]

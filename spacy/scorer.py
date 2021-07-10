@@ -365,7 +365,9 @@ class Scorer:
                 gold_spans.add(gold_span)
                 gold_per_type[span.label_].add(gold_span)
             pred_per_type = {label: set() for label in labels}
-            for span in example.get_aligned_spans_x2y(getter(pred_doc, attr), allow_overlap):
+            for span in example.get_aligned_spans_x2y(
+                getter(pred_doc, attr), allow_overlap
+            ):
                 if labeled:
                     pred_span = (span.label_, span.start, span.end - 1)
                 else:
@@ -381,10 +383,10 @@ class Scorer:
             score.score_set(pred_spans, gold_spans)
         # Assemble final result
         final_scores = {
-                f"{attr}_p": None,
-                f"{attr}_r": None,
-                f"{attr}_f": None,
-            }
+            f"{attr}_p": None,
+            f"{attr}_r": None,
+            f"{attr}_f": None,
+        }
         if labeled:
             final_scores[f"{attr}_per_type"] = None
         if len(score) > 0:
@@ -392,7 +394,9 @@ class Scorer:
             final_scores[f"{attr}_r"] = score.recall
             final_scores[f"{attr}_f"] = score.fscore
             if labeled:
-                final_scores[f"{attr}_per_type"] = {k: v.to_dict() for k, v in score_per_type.items()}
+                final_scores[f"{attr}_per_type"] = {
+                    k: v.to_dict() for k, v in score_per_type.items()
+                }
         return final_scores
 
     @staticmethod

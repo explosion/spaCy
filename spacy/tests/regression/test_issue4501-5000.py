@@ -152,7 +152,7 @@ def test_issue4707():
 
 
 def test_issue4725_1():
-    """ Ensure the pickling of the NER goes well"""
+    """Ensure the pickling of the NER goes well"""
     vocab = Vocab(vectors_name="test_vocab_add_vector")
     nlp = English(vocab=vocab)
     config = {

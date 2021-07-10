@@ -138,6 +138,11 @@ cdef class Matcher:
         self._filter[key] = greedy
         self._patterns[key].extend(patterns)
 
+    def _require_patterns(self) -> None:
+        """Raise a warning if this component has no patterns defined."""
+        if len(self) == 0:
+            warnings.warn(Warnings.W036.format(name="matcher"))
+
     def remove(self, key):
         """Remove a rule from the matcher. A KeyError is raised if the key does
         not exist.
@@ -215,6 +220,7 @@ cdef class Matcher:
             If with_alignments is set to True and as_spans is set to False,
             A list of `(match_id, start, end, alignments)` tuples is returned.
         """
+        self._require_patterns()
         if isinstance(doclike, Doc):
             doc = doclike
             length = len(doc)

@@ -2,11 +2,7 @@
 
 # Contribute to spaCy
 
-Thanks for your interest in contributing to spaCy 🎉 The project is maintained
-by **[@honnibal](https://github.com/honnibal)**,
-**[@ines](https://github.com/ines)**, **[@svlandeg](https://github.com/svlandeg)** and
-**[@adrianeboyd](https://github.com/adrianeboyd)**,
-and we'll do our best to help you get started. This page will give you a quick
+Thanks for your interest in contributing to spaCy 🎉 This page will give you a quick
 overview of how things are organized and most importantly, how to get involved.
 
 ## Table of contents
@@ -180,6 +176,15 @@ tools installed.
 
 **⚠️ Note that formatting and linting is currently only possible for Python
 modules in `.py` files, not Cython modules in `.pyx` and `.pxd` files.**
+
+### Pre-Commit Hooks
+
+After cloning the repo, after installing the packages from `requirements.txt`, enter the repo folder and run `pre-commit install`.
+Each time a `git commit` is initiated, `black` and `flake8` will run automatically on the modified files only.
+
+In case of error, or when `black` modified a file, the modified file needs to be `git add` once again and a new
+`git commit` has to be issued.
+
 
 ### Code formatting
 

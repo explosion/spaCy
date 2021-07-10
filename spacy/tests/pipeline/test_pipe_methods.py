@@ -446,7 +446,12 @@ def test_update_with_annotates():
     for text in texts:
         examples.append(Example(nlp.make_doc(text), nlp.make_doc(text)))
 
-    for components_to_annotate in [[], [f"{name}1"], [f"{name}1", f"{name}2"], [f"{name}2", f"{name}1"]]:
+    for components_to_annotate in [
+        [],
+        [f"{name}1"],
+        [f"{name}1", f"{name}2"],
+        [f"{name}2", f"{name}1"],
+    ]:
         for key in results:
             results[key] = ""
         nlp = English(vocab=nlp.vocab)

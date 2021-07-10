@@ -41,7 +41,7 @@ def create_docbin_reader(
 
 @util.registry.readers("spacy.JsonlCorpus.v1")
 def create_jsonl_reader(
-    path: Path, min_length: int = 0, max_length: int = 0, limit: int = 0
+    path: Optional[Path], min_length: int = 0, max_length: int = 0, limit: int = 0
 ) -> Callable[["Language"], Iterable[Doc]]:
     return JsonlCorpus(path, min_length=min_length, max_length=max_length, limit=limit)
 
@@ -186,7 +186,7 @@ class Corpus:
     def read_docbin(
         self, vocab: Vocab, locs: Iterable[Union[str, Path]]
     ) -> Iterator[Doc]:
-        """ Yield training examples as example dicts """
+        """Yield training examples as example dicts"""
         i = 0
         for loc in locs:
             loc = util.ensure_path(loc)

@@ -1,3 +1,6 @@
+import warnings
+
+
 def add_codes(err_cls):
     """Add error codes to string messages via class attribute names."""
 
@@ -10,6 +13,33 @@ def add_codes(err_cls):
                 return "[{code}] {msg}".format(code=code, msg=msg)
 
     return ErrorsWithCodes()
+
+
+def setup_default_warnings():
+    # ignore certain numpy warnings
+    filter_warning("ignore", error_msg="numpy.dtype size changed")  # noqa
+    filter_warning("ignore", error_msg="numpy.ufunc size changed")  # noqa
+
+    # warn about entity_ruler & matcher having no patterns only once
+    for pipe in ["matcher", "entity_ruler"]:
+        filter_warning("once", error_msg=Warnings.W036.format(name=pipe))
+
+    # warn once about lemmatizer without required POS
+    filter_warning("once", error_msg="[W108]")
+
+
+def filter_warning(action: str, error_msg: str):
+    """Customize how spaCy should handle a certain warning.
+
+    error_msg (str): e.g. "W006", or a full error message
+    action (str): "default", "error", "ignore", "always", "module" or "once"
+    """
+    warnings.filterwarnings(action, message=_escape_warning_msg(error_msg))
+
+
+def _escape_warning_msg(msg):
+    """To filter with warnings.filterwarnings, the [] brackets need to be escaped"""
+    return msg.replace("[", "\\[").replace("]", "\\]")
 
 
 # fmt: off
@@ -80,8 +110,9 @@ class Warnings:
             "@misc = \"spacy.LookupsDataLoader.v1\"\n"
             "lang = ${{nlp.lang}}\n"
             "tables = [\"lexeme_norm\"]\n")
-    W035 = ('Discarding subpattern "{pattern}" due to an unrecognized '
+    W035 = ("Discarding subpattern '{pattern}' due to an unrecognized "
             "attribute or operator.")
+    W036 = ("The component '{name}' does not have any patterns defined.")
 
     # New warnings added in v3.x
     W086 = ("Component '{listener}' will be (re)trained, but it needs the component "
@@ -119,12 +150,12 @@ class Warnings:
             "released, because the model may say it's compatible when it's "
             'not. Consider changing the "spacy_version" in your meta.json to a '
             "version range, with a lower and upper pin. For example: {example}")
-    W095 = ("Model '{model}' ({model_version}) requires spaCy {version} and is "
-            "incompatible with the current version ({current}). This may lead "
-            "to unexpected results or runtime errors. To resolve this, "
-            "download a newer compatible model or retrain your custom model "
-            "with the current spaCy version. For more details and available "
-            "updates, run: python -m spacy validate")
+    W095 = ("Model '{model}' ({model_version}) was trained with spaCy "
+            "{version} and may not be 100% compatible with the current version "
+            "({current}). If you see errors or degraded performance, download "
+            "a newer compatible model or retrain your custom model with the "
+            "current spaCy version. For more details and available updates, "
+            "run: python -m spacy validate")
     W096 = ("The method `nlp.disable_pipes` is now deprecated - use "
             "`nlp.select_pipes` instead.")
     W100 = ("Skipping unsupported morphological feature(s): '{feature}'. "
@@ -490,6 +521,18 @@ class Errors:
     E202 = ("Unsupported alignment mode '{mode}'. Supported modes: {modes}.")
 
     # New errors added in v3.x
+    E867 = ("The 'textcat' component requires at least two labels because it "
+            "uses mutually exclusive classes where exactly one label is True "
+            "for each doc. For binary classification tasks, you can use two "
+            "labels with 'textcat' (LABEL / NOT_LABEL) or alternatively, you "
+            "can use the 'textcat_multilabel' component with one label.")
+    E868 = ("Found a conflicting gold annotation in a reference document, "
+            "with the following char-based span occurring both in the gold ents "
+            "as well as in the negative spans: {span}.")
+    E869 = ("The notation '{label}' is not supported anymore. To annotate "
+            "negative NER samples, use `doc.spans[key]` instead, and "
+            "specify the key as 'incorrect_spans_key' when constructing "
+            "the NER component.")
     E870 = ("Could not serialize the DocBin because it is too large. Consider "
             "splitting up your documents into several doc bins and serializing "
             "each separately. spacy.Corpus.v1 will search recursively for all "
@@ -815,6 +858,12 @@ class Errors:
              "DependencyMatcher token patterns. The token pattern in "
              "RIGHT_ATTR should return matches that are each exactly one token "
              "long. Invalid pattern:\n{node}")
+    E1017 = ("A Doc object requires both 'deps' and 'heads' for dependency "
+             "parses. If no dependency labels are available, provide "
+             "placeholder deps such as `deps=[\"dep\"]*len(heads)`.")
+    E1018 = ("Knowledge base for component '{name}' is not set. "
+             "Make sure either `nel.initialize` or `nel.set_kb` "
+             "is called with a `kb_loader` function.")
 
 
 # Deprecated model shortcuts, only used in errors and warnings

@@ -25,7 +25,13 @@
             "code": "ca",
             "name": "Catalan",
             "example": "Això és una frase.",
-            "has_examples": true
+            "has_examples": true,
+            "models": [
+                "ca_core_news_sm",
+                "ca_core_news_md",
+                "ca_core_news_lg",
+                "ca_core_news_trf"
+            ]
         },
         {
             "code": "cs",
@@ -40,7 +46,8 @@
             "models": [
                 "da_core_news_sm",
                 "da_core_news_md",
-                "da_core_news_lg"
+                "da_core_news_lg",
+                "da_core_news_trf"
             ]
         },
         {
@@ -262,7 +269,12 @@
         },
         {
             "code": "mk",
-            "name": "Macedonian"
+            "name": "Macedonian",
+            "models": [
+                "mk_core_news_sm",
+                "mk_core_news_md",
+                "mk_core_news_lg"
+            ]
         },
         {
             "code": "ml",

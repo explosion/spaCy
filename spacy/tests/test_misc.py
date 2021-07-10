@@ -9,7 +9,7 @@ from spacy.ml._precomputable_affine import PrecomputableAffine
 from spacy.ml._precomputable_affine import _backprop_precomputable_affine_padding
 from spacy.util import dot_to_object, SimpleFrozenList, import_file
 from spacy.util import to_ternary_int
-from thinc.api import Config, Optimizer, ConfigValidationError, get_current_ops
+from thinc.api import Config, Optimizer, ConfigValidationError
 from thinc.api import set_current_ops
 from spacy.training.batchers import minibatch_by_words
 from spacy.lang.en import English
@@ -275,7 +275,7 @@ def test_util_minibatch(doc_sizes, expected_batches):
     ],
 )
 def test_util_minibatch_oversize(doc_sizes, expected_batches):
-    """ Test that oversized documents are returned in their own batch"""
+    """Test that oversized documents are returned in their own batch"""
     docs = [get_random_doc(doc_size) for doc_size in doc_sizes]
     tol = 0.2
     batch_size = 1000
@@ -297,7 +297,7 @@ def test_util_dot_section():
     factory = "textcat"
 
     [components.textcat.model]
-    @architectures = "spacy.TextCatBOW.v1"
+    @architectures = "spacy.TextCatBOW.v2"
     exclusive_classes = true
     ngram_size = 1
     no_output_layer = false

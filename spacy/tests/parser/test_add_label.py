@@ -18,14 +18,9 @@ def vocab():
 
 @pytest.fixture
 def parser(vocab):
-    config = {
-        "learn_tokens": False,
-        "min_action_freq": 30,
-        "update_with_oracle_cut_size": 100,
-    }
     cfg = {"model": DEFAULT_PARSER_MODEL}
     model = registry.resolve(cfg, validate=True)["model"]
-    parser = DependencyParser(vocab, model, **config)
+    parser = DependencyParser(vocab, model)
     return parser
 
 
@@ -77,19 +72,14 @@ def test_add_label(parser):
 
 
 def test_add_label_deserializes_correctly():
-    config = {
-        "learn_tokens": False,
-        "min_action_freq": 30,
-        "update_with_oracle_cut_size": 100,
-    }
     cfg = {"model": DEFAULT_NER_MODEL}
     model = registry.resolve(cfg, validate=True)["model"]
-    ner1 = EntityRecognizer(Vocab(), model, **config)
+    ner1 = EntityRecognizer(Vocab(), model)
     ner1.add_label("C")
     ner1.add_label("B")
     ner1.add_label("A")
     ner1.initialize(lambda: [_ner_example(ner1)])
-    ner2 = EntityRecognizer(Vocab(), model, **config)
+    ner2 = EntityRecognizer(Vocab(), model)
 
     # the second model needs to be resized before we can call from_bytes
     ner2.model.attrs["resize_output"](ner2.model, ner1.moves.n_moves)
@@ -113,12 +103,7 @@ def test_add_label_get_label(pipe_cls, n_moves, model_config):
     """
     labels = ["A", "B", "C"]
     model = registry.resolve({"model": model_config}, validate=True)["model"]
-    config = {
-        "learn_tokens": False,
-        "min_action_freq": 30,
-        "update_with_oracle_cut_size": 100,
-    }
-    pipe = pipe_cls(Vocab(), model, **config)
+    pipe = pipe_cls(Vocab(), model)
     for label in labels:
         pipe.add_label(label)
     assert len(pipe.move_names) == len(labels) * n_moves

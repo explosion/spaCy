@@ -245,8 +245,8 @@ certain prior probability.
 ### Candidate.\_\_init\_\_ {#candidate-init tag="method"}
 
 Construct a `Candidate` object. Usually this constructor is not called directly,
-but instead these objects are returned by the
-`get_candidates` method of the [`entity_linker`](/api/entitylinker) pipe.
+but instead these objects are returned by the `get_candidates` method of the
+[`entity_linker`](/api/entitylinker) pipe.
 
 > #### Example
 >
