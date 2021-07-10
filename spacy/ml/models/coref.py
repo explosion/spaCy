@@ -89,15 +89,17 @@ def build_width_scorer(max_span_width, hidden_size, feature_embed_size=20):
         >> Linear(nI=hidden_size, nO=1)
     )
     span_width_prior.initialize()
-    return Model(
+    model = Model(
             "WidthScorer",
             forward=width_score_forward,
             layers=[span_width_prior])
+    model.set_ref("width_prior", span_width_prior)
+    return model
 
 
 def width_score_forward(model, embeds: SpanEmbeddings, is_train) -> Tuple[Floats1d, Callable]:
     # calculate widths, subtracting 1 so it's 0-index
-    w_ffnn = model.layers[0]
+    w_ffnn = model.get_ref("width_prior")
     idxs = embeds.indices
     widths = idxs[:,1] - idxs[:,0] - 1
     wscores, width_b = w_ffnn(widths, is_train)
@@ -227,6 +229,7 @@ def coarse_prune(
         cscores = scores[offset:hi]
 
         # negate it so highest numbers come first
+        # This is relatively slow but can't be skipped.
         tops = (model.ops.xp.argsort(-1 * cscores)).tolist()
         starts = spanembeds.indices[offset:hi, 0].tolist()
         ends = spanembeds.indices[offset:hi:, 1].tolist()
@@ -298,7 +301,7 @@ def take_vecs_forward(model, inputs: SpanEmbeddings, is_train) -> Floats2d:
 def build_ant_scorer(
     bilinear, dropout, ant_limit=50
 ) -> Model[Tuple[Floats1d, SpanEmbeddings], List[Floats2d]]:
-    return Model(
+    model = Model(
         "AntScorer",
         forward=ant_scorer_forward,
         layers=[bilinear, dropout],
@@ -306,6 +309,9 @@ def build_ant_scorer(
             "ant_limit": ant_limit,
         },
     )
+    model.set_ref("bilinear", bilinear)
+    model.set_ref("dropout", dropout)
+    return model
 
 
 def ant_scorer_forward(
@@ -318,13 +324,8 @@ def ant_scorer_forward(
     # this contains the coarse bilinear in coref-hoi
     # coarse bilinear is a single layer linear network
     # TODO make these proper refs
-    bilinear = model.layers[0]
-    dropout = model.layers[1]
-
-    # XXX Note on dimensions: This won't work as a ragged because the floats2ds
-    # are not all the same dimensions. Each floats2d is a square in the size of
-    # the number of antecedents in the document. Actually, that will have the
-    # same size if antecedents are padded... Needs checking.
+    bilinear = model.get_ref("bilinear")
+    dropout = model.get_ref("dropout")
 
     mscores, sembeds = inputs
     vecs = sembeds.vectors  # ragged
@@ -362,7 +363,6 @@ def ant_scorer_forward(
         # now add the placeholder
         placeholder = ops.alloc2f(scores.shape[0], 1)
         top_scores = xp.concatenate( (placeholder, top_scores), 1)
-        #top_scores = ops.softmax(top_scores, axis=1)
 
         out.append((top_scores, top_scores_idx))
 
@@ -389,6 +389,7 @@ def ant_scorer_forward(
 
         offset = 0
         for dy, (prod_back, pw_sum_back), ll in zip(dYscores, backprops, veclens):
+            hi = offset + ll
             dyscore, dyidx = dy
             # remove the placeholder
             dyscore = dyscore[:, 1:]
@@ -398,10 +399,10 @@ def ant_scorer_forward(
             for ii, (ridx, rscores) in enumerate(zip(dyidx, dyscore)):
                 fullscore[ii][ridx] = rscores
 
-            dXembeds.data[offset : offset + ll] = prod_back(fullscore)
-            dXscores[offset : offset + ll] = pw_sum_back(fullscore)
+            dXembeds.data[offset : hi] = prod_back(fullscore)
+            dXscores[offset : hi] = pw_sum_back(fullscore)
 
-            offset += ll
+            offset = hi
         # make it fit back into the linear
         dXscores = xp.expand_dims(dXscores, 1)
         return (dXscores, SpanEmbeddings(idxes, dXembeds))
