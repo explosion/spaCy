@@ -312,7 +312,7 @@ class CoreferenceResolver(TrainablePipe):
             log_norm = ops.softmax(cscores, axis=1)
             grad = log_norm - log_marg
             gradients.append((grad, cidx))
-            total_loss += float(loss)
+            total_loss += float((grad ** 2).sum())
 
             offset = hi
 
