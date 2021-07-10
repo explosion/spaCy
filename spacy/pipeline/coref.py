@@ -296,7 +296,7 @@ class CoreferenceResolver(TrainablePipe):
 
             clusters = get_clusters_from_doc(example.reference)
             gscores = create_gold_scores(mention_idx[offset:hi], clusters)
-            gscores = xp.asarray(gscores)
+            gscores = ops.asarray2f(gscores)
             top_gscores = xp.take_along_axis(gscores, cidx, axis=1)
             # now add the placeholder
             gold_placeholder = ~top_gscores.any(axis=1).T
@@ -311,9 +311,6 @@ class CoreferenceResolver(TrainablePipe):
                 log_marg = ops.softmax(cscores + ops.xp.log(top_gscores), axis=1)
             log_norm = ops.softmax(cscores, axis=1)
             grad = log_norm - log_marg
-            # XXX might be better to not square this
-            loss = (grad ** 2).sum()
-
             gradients.append((grad, cidx))
             total_loss += float(loss)
 

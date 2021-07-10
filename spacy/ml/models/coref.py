@@ -2,7 +2,8 @@ from dataclasses import dataclass
 import warnings
 
 from thinc.api import Model, Linear, Relu, Dropout
-from thinc.api import chain, noop, Embed, add, tuplify
+from thinc.api import chain, noop, Embed, add, tuplify, concatenate
+from thinc.api import reduce_first, reduce_last, reduce_mean
 from thinc.types import Floats2d, Floats1d, Ints2d, Ragged
 from typing import List, Callable, Tuple, Any
 from ...tokens import Doc
@@ -163,7 +164,8 @@ def span_embeddings_forward(
 
     # TODO support attention here
     tokvecs = xp.concatenate(tokvecs)
-    tokvecs_r = Ragged(tokvecs, docmenlens)
+    doclens = [len(doc) for doc in docs]
+    tokvecs_r = Ragged(tokvecs, doclens)
     mentions_r = Ragged(mentions, docmenlens)
 
     span_reduce = model.get_ref("span_reducer")
@@ -172,16 +174,15 @@ def span_embeddings_forward(
     embeds = Ragged(spanvecs, docmenlens)
 
     def backprop_span_embed(dY: SpanEmbeddings) -> Tuple[List[Floats2d], List[Doc]]:
+        grad, idxes = span_reduce_back(dY.vectors.data)
 
         oweights = []
         offset = 0
-        for mlen in dY.vectors.lengths:
-            hi = offset + mlen
-            vecs = dY.vectors.data[offset:hi]
-            out, out_idx = span_reduce_back(vecs)
-            oweights.append(out.data)
-
+        for doclen in doclens:
+            hi = offset + doclen
+            oweights.append(grad.data[offset:hi])
             offset = hi
+
         return oweights, docs
 
     return SpanEmbeddings(mentions, embeds), backprop_span_embed
@@ -420,10 +421,8 @@ def pairwise_sum(ops, mention_scores: Floats1d) -> Tuple[Floats2d, Callable]:
     def backward(d_pwsum: Floats2d) -> Floats1d:
         # For the backward pass, the gradient is distributed over the whole row and
         # column, so pull it all in.
-        dim = d_pwsum.shape[0]
-        out = ops.alloc1f(dim)
-        for ii in range(dim):
-            out[ii] = d_pwsum[:, ii].sum() + d_pwsum[ii, :].sum()
+        
+        out = d_pwsum.sum(axis=0) + d_pwsum.sum(axis=1)
 
         return out
 

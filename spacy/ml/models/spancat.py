@@ -25,7 +25,7 @@ def build_mean_max_reducer(hidden_size: int) -> Model[Ragged, Floats2d]:
     return chain(
         concatenate(reduce_last(), reduce_first(), reduce_mean(), reduce_max()),
         Maxout(nO=hidden_size, normalize=True, dropout=0.0),
-    )
+        )
 
 
 @registry.architectures.register("spacy.SpanCategorizer.v1")
