@@ -9,6 +9,7 @@ on:
 
 jobs:
   autoblack:
+    if: github.repository_owner = 'explosion'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
