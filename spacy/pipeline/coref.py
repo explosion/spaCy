@@ -344,27 +344,6 @@ class CoreferenceResolver(TrainablePipe):
         assert len(X) > 0, Errors.E923.format(name=self.name)
         self.model.initialize(X=X, Y=Y)
 
-    def alt_score(self, examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
-        """Score a batch of examples.
-
-        examples (Iterable[Example]): The examples to score.
-        RETURNS (Dict[str, Any]): The scores, produced by Scorer.score_coref.
-
-        DOCS: https://spacy.io/api/coref#score (TODO)
-        """
-
-        def clusters_getter(doc, span_key):
-            return [
-                spans for name, spans in doc.spans.items() if name.startswith(span_key)
-            ]
-
-        validate_examples(examples, "CoreferenceResolver.score")
-        kwargs.setdefault("getter", clusters_getter)
-        kwargs.setdefault("attr", self.span_cluster_prefix)
-        kwargs.setdefault("include_label", False)
-        return Scorer.score_clusters(examples, **kwargs)
-
-
     # TODO consider whether to use this. It's pretty fast, but it'll be slower if 
     # we use all three methods like the original evaluator does. Also the current
     # implementation, borrowed from the coval project, uses scipy, which we would
