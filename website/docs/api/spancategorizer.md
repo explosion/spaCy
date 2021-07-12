@@ -451,3 +451,24 @@ integers. The array has two columns, indicating the start and end position.
 | ----------- | -------------------------------------------------------------------------------------------------------------------- |
 | `sizes`     | The phrase lengths to suggest. For example, `[1, 2]` will suggest phrases consisting of 1 or 2 tokens. ~~List[int]~~ |
 | **CREATES** | The suggester function. ~~Callable[[List[Doc]], Ragged]~~                                                            |
+
+### spacy.ngram_range_suggester.v1 {#ngram_range_suggester}
+
+> #### Example Config
+>
+> ```ini
+> [components.spancat.suggester]
+> @misc = "spacy.ngram_range_suggester.v1"
+> min_size = 2
+> max_size = 4
+> ```
+
+Suggest all spans of at least length `min_size` and at most length `max_size`
+(both inclusive). Spans are returned as a ragged array of integers. The array
+has two columns, indicating the start and end position.
+
+| Name        | Description                                                  |
+| ----------- | ------------------------------------------------------------ |
+| `min_size`  | The minimal phrase lengths to suggest (inclusive). ~~[int]~~ |
+| `max_size`  | The maximal phrase lengths to suggest (exclusive). ~~[int]~~ |
+| **CREATES** | The suggester function. ~~Callable[[List[Doc]], Ragged]~~    |
