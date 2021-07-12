@@ -456,6 +456,32 @@
             }
         },
         {
+            "id": "spacy-udpipe",
+            "title": "spacy-udpipe",
+            "slogan": "Use the latest UDPipe models directly in spaCy",
+            "description": "This package wraps the fast and efficient UDPipe language-agnostic NLP pipeline (via its Python bindings), so you can use UDPipe pre-trained models as a spaCy pipeline for 50+ languages out-of-the-box. Inspired by spacy-stanza, this package offers slightly less accurate models that are in turn much faster.",
+            "github": "TakeLab/spacy-udpipe",
+            "pip": "spacy-udpipe",
+            "code_example": [
+                "import spacy_udpipe",
+                "",
+                "spacy_udpipe.download(\"en\") # download English model",
+                "",
+                "text = \"Wikipedia is a free online encyclopedia, created and edited by volunteers around the world.\"",
+                "nlp = spacy_udpipe.load(\"en\")",
+                "",
+                "doc = nlp(text)",
+                "for token in doc:",
+                "    print(token.text, token.lemma_, token.pos_, token.dep_)"
+            ],
+            "category": ["pipeline", "standalone", "models", "research"],
+            "author": "TakeLab",
+            "author_links": {
+                "github": "TakeLab",
+                "website": "https://takelab.fer.hr/"
+            }
+        },
+        {
             "id": "spacy-server",
             "title": "spaCy Server",
             "slogan": "\uD83E\uDD9C Containerized HTTP API for spaCy NLP",
