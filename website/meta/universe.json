@@ -889,6 +889,31 @@
             "tags": ["lemmatizer", "danish"]
         },
         {
+            "id": "dacy",
+            "title": "DaCy",
+            "slogan": "An efficient Pipeline for Danish NLP",
+            "description": "DaCy is a Danish preprocessing pipeline trained in SpaCy. It has achieved State-of-the-Art performance on Named entity recognition, part-of-speech tagging and dependency parsing for Danish. This repository contains material for using the DaCy, reproducing the results and guides on usage of the package. Furthermore, it also contains a series of behavioural test for biases and robustness of Danish NLP pipelines.",
+            "github": "centre-for-humanities-computing/DaCy",
+            "pip": "dacy",
+            "code_example": [
+                "import dacy",
+                "dacy.models() # get a list of dacy models",
+                "nlp = dacy.load('medium')  # load your spacy pipeline",
+                "",
+                "# DaCy also includes functionality for adding other Danish models to the pipeline",
+                "# For instance you can add the BertTone model for classification of sentiment polarity to the pipeline:"
+                "nlp = add_berttone_polarity(nlp)",
+            ],
+            "thumb": "https://centre-for-humanities-computing.github.io/DaCy/_static/icon.png",
+            "author": "Centre for Humanities Computing Aarhus",
+            "author_links": {
+                "github": "https://github.com/centre-for-humanities-computing"
+                "website": "https://chcaa.io/#/"
+            },
+            "category": ["pipeline"],
+            "tags": ["pipeline", "danish"]
+        },
+        {
             "id": "wmd-relax",
             "slogan": "Calculates word mover's distance insanely fast",
             "description": "Calculates Word Mover's Distance as described in [From Word Embeddings To Document Distances](http://www.cs.cornell.edu/~kilian/papers/wmd_metric.pdf) by Matt Kusner, Yu Sun, Nicholas Kolkin and Kilian Weinberger.\n\n⚠️ **This package is currently only compatible with spaCy v.1x.**",
