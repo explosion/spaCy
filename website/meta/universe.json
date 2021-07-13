@@ -437,10 +437,10 @@
             "thumb": "https://i.imgur.com/myhLjMJ.png",
             "code_example": [
                 "import stanza",
-                "from spacy_stanza import StanzaLanguage",
+                "import spacy_stanza",
                 "",
-                "snlp = stanza.Pipeline(lang=\"en\")",
-                "nlp = StanzaLanguage(snlp)",
+                "stanza.download(\"en\")",
+                "nlp = spacy_stanza.load_pipeline(\"en\")",
                 "",
                 "doc = nlp(\"Barack Obama was born in Hawaii. He was elected president in 2008.\")",
                 "for token in doc:",
