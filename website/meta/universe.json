@@ -907,7 +907,7 @@
             "thumb": "https://centre-for-humanities-computing.github.io/DaCy/_static/icon.png",
             "author": "Centre for Humanities Computing Aarhus",
             "author_links": {
-                "github": "https://github.com/centre-for-humanities-computing"
+                "github": "https://github.com/centre-for-humanities-computing",
                 "website": "https://chcaa.io/#/"
             },
             "category": ["pipeline"],
