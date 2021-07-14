@@ -203,8 +203,7 @@ def test_need_dep(nl_tokenizer):
 def test_chunking(nl_sample, nl_reference_chunking):
     """
     Test the noun chunks of a sample text. Uses a sample.
-    The sample text was made as a Doc object with nl_core_news_md loaded. The Doc object was serialized with
-    the to_bytes() method.
+    The sample text simulates a Doc object as would be produced by nl_core_news_md.
     """
     chunks = [s.text.lower() for s in nl_sample.noun_chunks]
     assert chunks == nl_reference_chunking
