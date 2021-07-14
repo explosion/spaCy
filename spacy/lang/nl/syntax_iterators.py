@@ -49,13 +49,10 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Span]:
             nsubjs = filter(
                 lambda x: x.dep == doc.vocab.strings["nsubj"], word.children
             )
-            try:
-                _ = next(nsubjs)
-                # No exception, so we found some nsubj, we skip this word
+            next_word = next(nsubjs, None)
+            if next_word:
+                # We found some nsubj, so we skip this word. Otherwise, consider it a normal NOUN
                 continue
-            except StopIteration:
-                # No such thing, consider it a normal NOUN
-                pass
 
             children = filter(lambda x: x.dep in noun_deps, word.children)
             children_i = [c.i for c in children] + [word.i]
