@@ -63,7 +63,6 @@ def test_initialized_short(nlp):
     nlp.initialize()
     assert nlp.pipe_names == ["coref"]
     text = "Hi there"
-    # TODO: this crashes with an IndexError: too many indices
     doc = nlp(text)
     print(doc.spans)
 
