@@ -153,7 +153,6 @@ def span_embeddings_forward(
     get_mentions = model.attrs["get_mentions"]
     max_span_width = model.attrs["max_span_width"]
     mentions = ops.alloc2i(0, 2)
-    total_length = 0
     docmenlens = []  # number of mentions per doc
 
     for doc in docs:
@@ -161,8 +160,7 @@ def span_embeddings_forward(
         docmenlens.append(len(starts))
         cments = ops.asarray2i([starts, ends]).transpose()
 
-        mentions = xp.concatenate((mentions, cments + total_length))
-        total_length += len(doc)
+        mentions = xp.concatenate( (mentions, cments) )
 
     # TODO support attention here
     tokvecs = xp.concatenate(tokvecs)
