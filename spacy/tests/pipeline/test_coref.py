@@ -93,8 +93,10 @@ def test_coref_serialization(nlp):
         spans_result2 = doc2.spans
         print(1, [(k, len(v)) for k, v in spans_result.items()])
         print(2, [(k, len(v)) for k, v in spans_result2.items()])
+        # Note: spans do not compare equal because docs are different and docs
+        # use object identity for equality
         for k, v in spans_result.items():
-            assert spans_result[k] == spans_result2[k]
+            assert str(spans_result[k]) == str(spans_result2[k])
         # assert spans_result == spans_result2
 
 
