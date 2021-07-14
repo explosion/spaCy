@@ -50,7 +50,7 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Span]:
                 lambda x: x.dep == doc.vocab.strings["nsubj"], word.children
             )
             next_word = next(nsubjs, None)
-            if next_word:
+            if next_word is not None:
                 # We found some nsubj, so we skip this word. Otherwise, consider it a normal NOUN
                 continue
 
