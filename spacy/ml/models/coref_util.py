@@ -128,7 +128,8 @@ def get_candidate_mentions(
         si = sentence_map[tok.i]  # sentence index
         for ii in range(1, max_span_width):
             ei = tok.i + ii  # end index
-            if ei >= len(doc) or sentence_map[ei] != si:
+            # Note: this matches slice syntax, so the token index is one less
+            if ei > len(doc) or sentence_map[ei-1] != si:
                 continue
 
             begins.append(tok.i)
