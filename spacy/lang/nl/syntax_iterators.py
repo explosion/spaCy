@@ -8,8 +8,8 @@ from ...tokens import Doc, Span
 def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Span]:
     """
     Detect base noun phrases from a dependency parse. Works on Doc and Span.
-    Takes definition from the enemy: https://www.nltk.org/book/ch07.html
-    Consider : [Noun + determinant / adjective] and also [Pronoun]df
+    The definition is inspired by https://www.nltk.org/book/ch07.html
+    Consider : [Noun + determinant / adjective] and also [Pronoun]
     """
     # fmt: off
     # labels = ["nsubj", "nsubj:pass", "obj", "iobj", "ROOT", "appos", "nmod", "nmod:poss"]
