@@ -3,6 +3,7 @@ from pathlib import Path
 import sys
 import requests
 from wasabi import msg, Printer
+import warnings
 
 from ._util import app
 from .. import about
@@ -45,7 +46,7 @@ def validate() -> None:
                 version = msg.text(data["version"], color="green", no_print=True)
             else:
                 version = msg.text(data["version"], color="red", no_print=True)
-                comp = f"--> {compat.get(data['name'], ['n/a'])[0]}"
+                comp = f"--> {current_compat.get(data['name'], ['n/a'])[0]}"
             rows.append((data["name"], data["spacy"], version, comp))
         msg.table(rows, header=header)
     else:
@@ -78,7 +79,9 @@ def get_model_pkgs(silent: bool = False) -> Tuple[dict, dict]:
     msg.good("Loaded compatibility table")
     compat = r.json()["spacy"]
     all_models = set()
-    installed_models = get_installed_models()
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", message="\\[W09[45]")
+        installed_models = get_installed_models()
     for spacy_v, models in dict(compat).items():
         all_models.update(models.keys())
         for model, model_vs in models.items():
@@ -92,7 +95,9 @@ def get_model_pkgs(silent: bool = False) -> Tuple[dict, dict]:
             spacy_version = about.__version__
         else:
             model_path = get_package_path(package)
-            model_meta = get_model_meta(model_path)
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore", message="\\[W09[45]")
+                model_meta = get_model_meta(model_path)
             spacy_version = model_meta.get("spacy_version", "n/a")
             is_compat = is_compatible_version(about.__version__, spacy_version)
         pkgs[pkg_name] = {
