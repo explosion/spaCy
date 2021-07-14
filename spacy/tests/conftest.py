@@ -203,6 +203,11 @@ def ne_tokenizer():
 
 
 @pytest.fixture(scope="session")
+def nl_vocab():
+    return get_lang_class("nl")().vocab
+
+
+@pytest.fixture(scope="session")
 def nl_tokenizer():
     return get_lang_class("nl")().tokenizer
 
