@@ -4,7 +4,6 @@ tag: class
 source: spacy/pipeline/lemmatizer.py
 new: 3
 teaser: 'Pipeline component for lemmatization'
-api_base_class: /api/pipe
 api_string_name: lemmatizer
 api_trainable: false
 ---
