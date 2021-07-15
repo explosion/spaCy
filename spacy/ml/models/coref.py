@@ -8,6 +8,7 @@ from thinc.types import Floats2d, Floats1d, Ints2d, Ragged
 from typing import List, Callable, Tuple, Any
 from ...tokens import Doc
 from ...util import registry
+from ..extract_spans import extract_spans
 
 from .coref_util import get_candidate_mentions, select_non_crossing_spans, topk
 
