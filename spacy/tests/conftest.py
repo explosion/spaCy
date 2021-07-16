@@ -123,7 +123,7 @@ def fr_tokenizer():
 @pytest.fixture(scope="session")
 def ga_tokenizer():
     return get_lang_class("ga")().tokenizer
-    
+
 
 @pytest.fixture(scope="session")
 def grc_tokenizer():

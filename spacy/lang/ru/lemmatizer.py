@@ -12,7 +12,6 @@ PUNCT_RULES = {"«": '"', "»": '"'}
 
 
 class RussianLemmatizer(Lemmatizer):
-
     def __init__(
         self,
         vocab: Vocab,
