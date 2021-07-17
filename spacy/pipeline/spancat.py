@@ -79,11 +79,13 @@ def build_ngram_suggester(sizes: List[int]) -> Callable[[List[Doc]], Ragged]:
 
 
 @registry.misc("spacy.ngram_range_suggester.v1")
-def build_ngram_range_suggester(min_size: int, max_size: int) -> Callable[[List[Doc]], Ragged]:
+def build_ngram_range_suggester(
+    min_size: int, max_size: int
+) -> Callable[[List[Doc]], Ragged]:
     """Suggest all spans of the given lengths between a given min and max value - both inclusive.
     Spans are returned as a ragged array of integers. The array has two columns,
     indicating the start and end position."""
-    sizes = range(min_size, max_size+1)
+    sizes = range(min_size, max_size + 1)
     return build_ngram_suggester(sizes)
 
 
