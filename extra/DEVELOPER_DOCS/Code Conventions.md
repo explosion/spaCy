@@ -9,6 +9,7 @@ For a general overview of code conventions for contributors, see the [section in
 5. [Type hints](#type-hints)
 6. [Structuring logic](#structuring-logic)
 7. [Error handling](#error-handling)
+8. [Writing tests](#writing-tests)
 
 ## Code compatibility
 
@@ -54,6 +55,7 @@ The most common problems surfaced by linting are:
 - **Unused variables.** This can often indicate bugs, e.g. a variable that's declared and not correctly passed on or returned. To prevent ambiguity here, your code shouldn't contain unused variables. If you're unpacking a list of tuples and end up with variables you don't need, you can call them `_` to indicate that they're unused.
 - **Redefinition of function.** This can also indicate bugs, e.g. a copy-pasted function that you forgot to rename and that now replaces the original function.
 - **Repeated dictionary keys.** This either indicates a bug or unnecessary duplication.
+- **Comparison with `True`, `False`, `None`**. This is mostly a stylistic thing: when checking whether a value is `True`, `False` or `None`, you should be using `is` instead of `==`. For example, `if value is None`.
 
 ### Ignoring linter rules for special cases
 
@@ -182,6 +184,26 @@ We generally try to avoid writing functions and methods with too many arguments,
 
 This makes the function calls easier to read, because it's immediately clear what the additional values mean. It also makes it easier to extend arguments or change their order later on, because you don't end up with any function calls that depend on a specific positional order.
 
+### Avoid mutable default arguments
+
+A common Python gotcha are [mutable default arguments](https://docs.python-guide.org/writing/gotchas/#mutable-default-arguments): if your argument defines a mutable default value like `[]` or `{}` and then goes and mutates it, the default value is created _once_ when the function is created and the same object is then mutated every time the function is called. This can be pretty unintuitive when you first encounter it. We therefore avoid writing logic that does this.
+
+If your arguments need to default to an empty list or dict, you can use the `SimpleFrozenList` and `SimpleFrozenDict` helpers provided by spaCy. They are simple frozen implementations that raise an error if they're being mutated to prevent bugs and logic that accidentally mutates default arguments.
+
+```diff
+- def to_bytes(self, *, exclude: List[str] = []):
++ def to_bytes(self, *, exclude: List[str] = SimpleFrozenList()):
+    ...
+```
+
+```diff
+def do_something(values: List[str] = SimpleFrozenList()):
+    if some_condition:
+-         values.append("foo")  # raises an error
++         values = [*values, "foo"]
+    return values
+```
+
 ### Don't use `try`/`except` for control flow
 
 We strongly discourage using `try`/`except` blocks for anything that's not third-party error handling or error handling that we otherwise have little control over. There's typically always a way to anticipate the _actual_ problem and **check for it explicitly**, which makes the code easier to follow and understand, and prevents bugs:
@@ -217,6 +239,54 @@ If you have to use `try`/`except`, make sure to only include what's **absolutely
 + except ValueError:
 +     score = 0.0
 ```
+
+### Avoid lambda functions
+
+`lambda` functions can be useful for defining simple anonymous functions in a single line, but they also introduce problems: for instance, they require [additional logic](https://stackoverflow.com/questions/25348532/can-python-pickle-lambda-functions) in order to be pickled and are pretty ugly to type-annotate. So we typically avoid them in the code base and only use them in the serialization handlers and within tests for simplicity. Instead of `lambda`s, check if your code can be refactored to not need them, or use helper functions instead.
+
+```diff
+- split_string: Callable[[str], List[str]] = lambda value: [v.strip() for v in value.split(",")]
+
++ def split_string(value: str) -> List[str]:
++     return [v.strip() for v in value.split(",")]
+```
+
+### Iteration and comprehensions
+
+We generally avoid using built-in functions like `filter` or `map` in favor of list or generator comprehensions.
+
+```diff
+- filtered = filter(lambda x: x in ["foo", "bar"], values)
++ filtered = (x for x in values if x in ["foo", "bar"])
+- filtered = list(filter(lambda x: x in ["foo", "bar"], values))
++ filtered = [x for x in values if x in ["foo", "bar"]]
+
+- result = map(lambda x: { x: x in ["foo", "bar"]}, values)
++ result = ({x: x in ["foo", "bar"]} for x in values)
+- result = list(map(lambda x: { x: x in ["foo", "bar"]}, values))
++ result = [{x: x in ["foo", "bar"]} for x in values]
+```
+
+If your logic is more complex, it's often better to write a loop instead, even if it adds more lines of code in total. The result will be much easier to follow and understand.
+
+```diff
+- result = [{"key": key, "scores": {f"{i}": score for i, score in enumerate(scores)}} for key, scores in values]
+
++ result = []
++ for key, scores in values:
++     scores_dict = {f"{i}": score for i, score in enumerate(scores)}
++     result.append({"key": key, "scores": scores_dict})
+```
+
+### Composition vs. inheritance
+
+Although spaCy uses a lot of classes, **inheritance is viewed with some suspicion** — it's seen as a mechanism of last resort. You should discuss plans to extend the class hierarchy before implementing. Unless you're implementing a new data structure or pipeline component, you typically shouldn't have to use classes at all.
+
+### Don't use `print`
+
+The core library never `print`s anything. While we encourage using `print` statements for simple debugging (it's the most straightforward way of looking at what's happening), make sure to clean them up once you're ready to submit your pull request. If you want to output warnings or debugging information for users, use the respective dedicated mechanisms for this instead (see sections on warnings and logging for details).
+
+The only exceptions are the CLI functions, which pretty-print messages for the user, and methods that are explicitly intended for printing things, e.g. `Language.analyze_pipes` with `pretty=True` enabled.
 
 ## Error handling
 
@@ -280,4 +350,127 @@ Otherwise, the user will get to see a naked `AssertionError` with no further exp
 E161 = ("Found an internal inconsistency when predicting entity links. "
         "This is likely a bug in spaCy, so feel free to open an issue: "
         "https://github.com/explosion/spaCy/issues")
+```
+
+### Warnings
+
+Instead of raising an error, some parts of the code base can raise warnings to notify the user of a potential problem. This is done using Python's `warnings.warn` and the messages defined in `Warnings` in the `errors.py`. Whether or not warnings are shown can be controlled by the user, including custom filters for disabling specific warnings using a regular expression matching our internal codes, e.g. `W123`.
+
+```diff
+- print("Warning: No examples provided for validation")
++ warnings.warn(Warnings.W123)
+```
+
+When adding warnings, make sure you're not calling `warnings.warn` repeatedly, e.g. in a loop, which will clog up the terminal output. Instead, you can collect the potential problems first and then raise a single warning. If the problem is critical, consider raising an error instead and to exit early.
+
+```diff
++ n_empty = 0
+for spans in lots_of_annotations:
+    if len(spans) == 0:
+-       warnings.warn(Warnings.456)
++       n_empty += 1
++ warnings.warn(Warnings.456.format(count=n_empty))
+```
+
+### Logging
+
+Log statements can be added via spaCy's `logger`, which uses Python's native `logging` module under the hood. We generally only use logging for debugging information that **the user may choose to see** in debugging mode or that's **relevant during training** but not at runtime.
+
+```diff
++ logger.info("Set up nlp object from config")
+config = nlp.config.interpolate()
+```
+
+`spacy train` and similar CLI commands will enable all log statements of level `INFO` by default (which is not the case at runtime). This allows outputting specific information within certain parts of the core library during training, without having it shown at runtime. `DEBUG`-level logs are only shown if the user enables `--verbose` logging during training. They can be used to provide more specific and potentially more verbose details, especially in areas that can indicate bugs or problems, or to surface more details about what spaCy does under the hood. You should only use logging statements if absolutely necessary and important.
+
+## Writing tests
+
+spaCy uses the [`pytest`](http://doc.pytest.org/) framework for testing. Tests for spaCy modules and classes live in their own directories of the same name and all test files should be prefixed with `test_`. Tests included in the core library only cover the code and do not depend on any trained pipelines.
+
+When implementing a new feature or fixing a bug, it's usually good to start by writing some tests that describe what _should_ happen. As you write your code, you can then keep running the relevant tests until all of them pass.
+
+### Test suite structure
+
+When adding tests, make sure to use descriptive names and only test for one behavior at a time. Tests should be grouped into modules dedicated to the same type of functionality and some test modules are organized as directories of test files related to the same larger area of the library, e.g. `matcher` or `tokenizer`.
+
+Regression tests are tests that refer to bugs reported in specific issues. They should live in the `regression` module and are named according to the issue number (e.g. `test_issue1234.py`). This system allows us to relate tests for specific bugs back to the original reported issue, which is especially useful if we introduce a regression and a previously passing regression tests suddenly fails again. When fixing a bug, it's often useful to create a regression test for it first. Every once in a while, we go through the `regression` module and group tests together into larger files by issue number, in groups of 500 to 1000 numbers. This prevents us from ending up with too many individual files over time.
+
+The test suite also provides [fixtures](https://github.com/explosion/spaCy/blob/master/spacy/tests/conftest.py) for different language tokenizers that can be used as function arguments of the same name and will be passed in automatically. Those should only be used for tests related to those specific languages. We also have [test utility functions](https://github.com/explosion/spaCy/blob/master/spacy/tests/util.py) for common operations, like creating a temporary file.
+
+### Constructing objects and state
+
+Test functions usually follow the same simple structure: they set up some state, perform the operation you want to test and `assert` conditions that you expect to be true, usually before and after the operation.
+
+Tests should focus on exactly what they're testing and avoid dependencies on other unrelated library functionality wherever possible. If all your tests needs is a `Doc` object with certain annotations set, you should always construct it manually:
+
+```python
+def test_doc_creation_with_pos():
+    doc = Doc(Vocab(), words=["hello", "world"], pos=["NOUN", "VERB"])
+    assert doc[0].pos_ == "NOUN"
+    assert doc[1].pos_ == "VERB"
+```
+
+### Parametrizing tests
+
+If you need to run the same test function over different input examples, you usually want to parametrize the test cases instead of using a loop within your test. This lets you keep a better separation between test cases and test logic, and it'll result in more useful output because `pytest` will be able to tell you which exact test case failed.
+
+The `@pytest.mark.parametrize` decorator takes two arguments: a string defining one or more comma-separated arguments that should be passed to the test function and a list of corresponding test cases (or a list of tuples to provide multiple arguments).
+
+```python
+@pytest.mark.parametrize("words", [["hello", "world"], ["this", "is", "a", "test"]])
+def test_doc_length(words):
+    doc = Doc(Vocab(), words=words)
+    assert len(doc) == len(words)
+```
+
+```python
+@pytest.mark.parametrize("text,expected_len", [("hello world", 2), ("I can't!", 4)])
+def test_token_length(en_tokenizer, text, expected_len):  # en_tokenizer is a fixture
+    doc = en_tokenizer(text)
+    assert len(doc) == expected_len
+```
+
+You can also stack `@pytest.mark.parametrize` decorators, although this is not recommended unless it's absolutely needed or required for the test. When stacking decorators, keep in mind that this will run the test with all possible combinations of the respective parametrized values, which is often not what you want and can slow down the test suite.
+
+### Skipping and xfailing tests
+
+`xfail` means that a test **should pass but currently fails**, i.e. is expected to fail. You can mark a test as currently xfailing by adding the `@pytest.mark.xfail` decorator. This should only be used for tests that don't yet work, not for logic that cause errors we raise on purpose (see the section on testing errors for this). It's often very helpful to implement tests for edge cases that we don't yet cover and mark them as `xfail`.
+
+When you run the test suite, you may come across tests that are reported as `xpass`. This means that they're marked as `xfail` but didn't actually fail. This is worth looking into: sometimes, it can mean that we have since fixed a bug that caused the test to previously fail, so we can remove the decorator. In other cases, especially when it comes to machine learning model implementations, it can also indicate that the **test is flaky**: it sometimes passes and sometimes fails. This can be caused by a bug, or by constraints being too narrowly defined. If a test shows different behavior depending on whether its run in isolation or not, this can indicate that it reacts to global state set in a previous test, which is unideal and should be avoided.
+
+The `@pytest.mark.skip` decorator lets you skip tests entirely. You only want to do this for failing tests that may be slow to run or cause memory errors or segfaults, which would otherwise terminate the entire process and wouldn't be caught by `xfail`. We also sometimes use the `skip` decorator for old and outdated regression tests that we want to keep around but that don't apply anymore. When using the `skip` decorator, make sure to provide the `reason` keyword argument with a quick explanation of why you chose to skip this test.
+
+### Testing errors and warnings
+
+`pytest` lets you check whether a given error is raised by using the `pytest.raises` contextmanager. This is very useful when implementing custom error handling, so make sure you're not only testing for the correct behavior but also for errors resulting from incorrect inputs. If you're testing errors, you should always check for `pytest.raises` explicitly and not use `xfail`.
+
+```python
+words = ["a", "b", "c", "d", "e"]
+ents = ["Q-PERSON", "I-PERSON", "O", "I-PERSON", "I-GPE"]
+with pytest.raises(ValueError):
+    Doc(Vocab(), words=words, ents=ents)
+```
+
+You can also use the `pytest.warns` contextmanager to check that a given warning type is raised. The first argument is the warning type or `None` (which will capture a list of warnings that you can `assert` is empty).
+
+```python
+def test_phrase_matcher_validation(en_vocab):
+    doc1 = Doc(en_vocab, words=["Test"], deps=["ROOT"])
+    doc2 = Doc(en_vocab, words=["Test"])
+    matcher = PhraseMatcher(en_vocab, validate=True)
+    with pytest.warns(UserWarning):
+        # Warn about unnecessarily parsed document
+        matcher.add("TEST1", [doc1])
+    with pytest.warns(None) as record:
+        matcher.add("TEST2", [docs])
+        assert not record.list
+```
+
+Keep in mind that your tests will fail if you're using the `pytest.warns` contextmanager with a given warning and the warning is _not_ shown. So you should only use it to check that spaCy handles and outputs warnings correctly. If your test outputs a warning that's expected but not relevant to what you're testing, you can use the `@pytest.mark.filterwarnings` decorator and ignore specific warnings starting with a given code:
+
+```python
+@pytest.mark.filterwarnings("ignore:\\[W036")
+def test_matcher_empty(en_vocab):
+    matcher = Matcher(en_vocab)
+    matcher(Doc(en_vocab, words=["test"]))
 ```
