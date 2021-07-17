@@ -897,7 +897,7 @@
             "pip": "dacy",
             "code_example": [
                 "import dacy",
-                "dacy.models() # get a list of dacy models",
+                "print(dacy.models()) # get a list of dacy models",
                 "nlp = dacy.load('medium')  # load your spacy pipeline",
                 "",
                 "# DaCy also includes functionality for adding other Danish models to the pipeline",
