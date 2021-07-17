@@ -90,7 +90,7 @@ In addition to the actual component settings in `[components]`, the config also 
 
 ### Working with and accessing configs
 
-When working with configs in spaCy, make sure to use the available utility functions provided by spaCy if available, instead of calling the respective `Config` methods. The utilities take care of providing spaCy-specific error messages and ensure a consistent order of config sections by setting the `section_order` argument. This ensures that exported configs always have the same consistent format.
+When working with configs in spaCy, make sure to use the utility functions provided by spaCy if available, instead of calling the respective `Config` methods. The utilities take care of providing spaCy-specific error messages and ensure a consistent order of config sections by setting the `section_order` argument. This ensures that exported configs always have the same consistent format.
 
 - `util.load_config`: load a config from a file
 - `util.load_config_from_str`: load a confirm from a string representation
