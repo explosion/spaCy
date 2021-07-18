@@ -60,12 +60,6 @@ def taggers(en_vocab):
 
 @pytest.mark.parametrize("Parser", test_parsers)
 def test_serialize_parser_roundtrip_bytes(en_vocab, Parser):
-    config = {
-        "update_with_oracle_cut_size": 100,
-        "beam_width": 1,
-        "beam_update_prob": 1.0,
-        "beam_density": 0.0,
-    }
     cfg = {"model": DEFAULT_PARSER_MODEL}
     model = registry.resolve(cfg, validate=True)["model"]
     parser = Parser(en_vocab, model)

@@ -440,7 +440,7 @@ def test_init_config(lang, pipeline, optimize, pretraining):
     assert isinstance(config, Config)
     if pretraining:
         config["paths"]["raw_text"] = "my_data.jsonl"
-    nlp = load_model_from_config(config, auto_fill=True)
+    load_model_from_config(config, auto_fill=True)
 
 
 def test_model_recommendations():

@@ -110,4 +110,4 @@ def test_lemmatizer_serialize(nlp):
     assert doc2[0].lemma_ == "cope"
 
     # Make sure that lemmatizer cache can be pickled
-    b = pickle.dumps(lemmatizer2)
+    pickle.dumps(lemmatizer2)

@@ -1447,7 +1447,7 @@ class Language:
     ) -> Iterator[Tuple[Doc, _AnyContext]]:
         ...
 
-    def pipe(
+    def pipe(  # noqa: F811
         self,
         texts: Iterable[str],
         *,

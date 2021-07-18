@@ -74,7 +74,7 @@ def test_annotates_on_update():
     nlp.add_pipe("assert_sents")
 
     # When the pipeline runs, annotations are set
-    doc = nlp("This is a sentence.")
+    nlp("This is a sentence.")
 
     examples = []
     for text in ["a a", "b b", "c c"]:
