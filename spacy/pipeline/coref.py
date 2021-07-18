@@ -79,7 +79,9 @@ def make_coref(
 ) -> "CoreferenceResolver":
     """Create a CoreferenceResolver component."""
 
-    return CoreferenceResolver(nlp.vocab, model, name, span_cluster_prefix=span_cluster_prefix)
+    return CoreferenceResolver(
+        nlp.vocab, model, name, span_cluster_prefix=span_cluster_prefix
+    )
 
 
 class CoreferenceResolver(TrainablePipe):
@@ -308,7 +310,7 @@ class CoreferenceResolver(TrainablePipe):
             top_gscores = ops.asarray2f(top_gscores)
 
             with warnings.catch_warnings():
-                warnings.filterwarnings('ignore', category=RuntimeWarning)
+                warnings.filterwarnings("ignore", category=RuntimeWarning)
                 log_marg = ops.softmax(cscores + ops.xp.log(top_gscores), axis=1)
             log_norm = ops.softmax(cscores, axis=1)
             grad = log_norm - log_marg
@@ -351,7 +353,7 @@ class CoreferenceResolver(TrainablePipe):
     def score(self, examples, **kwargs):
         """Score a batch of examples."""
 
-        #NOTE traditionally coref uses the average of b_cubed, muc, and ceaf.
+        # NOTE traditionally coref uses the average of b_cubed, muc, and ceaf.
         # we need to handle the average ourselves.
         scores = []
         for metric in (b_cubed, muc, ceafe):
@@ -365,11 +367,11 @@ class CoreferenceResolver(TrainablePipe):
 
                 evaluator.update(cluster_info)
 
-            score ={
-                    "coref_f": evaluator.get_f1(),
-                    "coref_p": evaluator.get_precision(),
-                    "coref_r": evaluator.get_recall(),
-                    }
+            score = {
+                "coref_f": evaluator.get_f1(),
+                "coref_p": evaluator.get_precision(),
+                "coref_r": evaluator.get_recall(),
+            }
             scores.append(score)
 
         out = {}

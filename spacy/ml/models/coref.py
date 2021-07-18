@@ -20,11 +20,11 @@ def build_coref(
     hidden: int = 1000,
     dropout: float = 0.3,
     mention_limit: int = 3900,
-    #TODO this needs a better name. It limits the max mentions as a ratio of 
+    # TODO this needs a better name. It limits the max mentions as a ratio of
     # the token count.
     mention_limit_ratio: float = 0.4,
     max_span_width: int = 20,
-    antecedent_limit: int = 50
+    antecedent_limit: int = 50,
 ):
     dim = tok2vec.get_dim("nO") * 3
 
@@ -40,7 +40,7 @@ def build_coref(
         )
         mention_scorer.initialize()
 
-        #TODO make feature_embed_size a param
+        # TODO make feature_embed_size a param
         feature_embed_size = 20
         width_scorer = build_width_scorer(max_span_width, hidden, feature_embed_size)
 
@@ -90,19 +90,18 @@ def build_width_scorer(max_span_width, hidden_size, feature_embed_size=20):
         >> Linear(nI=hidden_size, nO=1)
     )
     span_width_prior.initialize()
-    model = Model(
-            "WidthScorer",
-            forward=width_score_forward,
-            layers=[span_width_prior])
+    model = Model("WidthScorer", forward=width_score_forward, layers=[span_width_prior])
     model.set_ref("width_prior", span_width_prior)
     return model
 
 
-def width_score_forward(model, embeds: SpanEmbeddings, is_train) -> Tuple[Floats1d, Callable]:
+def width_score_forward(
+    model, embeds: SpanEmbeddings, is_train
+) -> Tuple[Floats1d, Callable]:
     # calculate widths, subtracting 1 so it's 0-index
     w_ffnn = model.get_ref("width_prior")
     idxs = embeds.indices
-    widths = idxs[:,1] - idxs[:,0] - 1
+    widths = idxs[:, 1] - idxs[:, 0] - 1
     wscores, width_b = w_ffnn(widths, is_train)
 
     lens = embeds.vectors.lengths
@@ -115,6 +114,7 @@ def width_score_forward(model, embeds: SpanEmbeddings, is_train) -> Tuple[Floats
 
     return wscores, width_score_backward
 
+
 # model converting a Doc/Mention to span embeddings
 # get_mentions: Callable[Doc, Pairs[int]]
 def build_span_embedder(
@@ -123,8 +123,9 @@ def build_span_embedder(
 ) -> Model[Tuple[List[Floats2d], List[Doc]], SpanEmbeddings]:
 
     with Model.define_operators({">>": chain, "|": concatenate}):
-        span_reduce = (extract_spans() >> 
-                (reduce_first() | reduce_last() | reduce_mean()))
+        span_reduce = extract_spans() >> (
+            reduce_first() | reduce_last() | reduce_mean()
+        )
     model = Model(
         "SpanEmbedding",
         forward=span_embeddings_forward,
@@ -161,7 +162,7 @@ def span_embeddings_forward(
         docmenlens.append(len(starts))
         cments = ops.asarray2i([starts, ends]).transpose()
 
-        mentions = xp.concatenate( (mentions, cments) )
+        mentions = xp.concatenate((mentions, cments))
 
     # TODO support attention here
     tokvecs = xp.concatenate(tokvecs)
@@ -170,7 +171,7 @@ def span_embeddings_forward(
     mentions_r = Ragged(mentions, docmenlens)
 
     span_reduce = model.get_ref("span_reducer")
-    spanvecs, span_reduce_back = span_reduce( (tokvecs_r, mentions_r), is_train)
+    spanvecs, span_reduce_back = span_reduce((tokvecs_r, mentions_r), is_train)
 
     embeds = Ragged(spanvecs, docmenlens)
 
@@ -236,7 +237,7 @@ def coarse_prune(
         # calculate the doc length
         doclen = ends[-1] - starts[0]
         # XXX seems to make more sense to use menlen than doclen here?
-        #mlimit = min(mention_limit, int(mention_limit_ratio * doclen))
+        # mlimit = min(mention_limit, int(mention_limit_ratio * doclen))
         mlimit = min(mention_limit, int(mention_limit_ratio * menlen))
         # csel is a 1d integer list
         csel = select_non_crossing_spans(tops, starts, ends, mlimit)
@@ -290,6 +291,7 @@ def build_take_vecs() -> Model[SpanEmbeddings, Floats2d]:
 def take_vecs_forward(model, inputs: SpanEmbeddings, is_train) -> Floats2d:
     idxs = inputs.indices
     lens = inputs.vectors.lengths
+
     def backprop(dY: Floats2d) -> SpanEmbeddings:
         vecs = Ragged(dY, lens)
         return SpanEmbeddings(idxs, vecs)
@@ -350,10 +352,10 @@ def ant_scorer_forward(
         # This will take the log of 0, which causes a warning, but we're doing
         # it on purpose so we can just ignore the warning.
         with warnings.catch_warnings():
-            warnings.filterwarnings('ignore', category=RuntimeWarning)
+            warnings.filterwarnings("ignore", category=RuntimeWarning)
             mask = xp.log(
                 (xp.expand_dims(ant_range, 1) - xp.expand_dims(ant_range, 0)) >= 1
-            ).astype('f')
+            ).astype("f")
 
         scores = pw_prod + pw_sum + mask
 
@@ -361,7 +363,7 @@ def ant_scorer_forward(
         top_scores, top_scores_idx = topk(xp, scores, top_limit)
         # now add the placeholder
         placeholder = ops.alloc2f(scores.shape[0], 1)
-        top_scores = xp.concatenate( (placeholder, top_scores), 1)
+        top_scores = xp.concatenate((placeholder, top_scores), 1)
 
         out.append((top_scores, top_scores_idx))
 
@@ -398,8 +400,8 @@ def ant_scorer_forward(
             for ii, (ridx, rscores) in enumerate(zip(dyidx, dyscore)):
                 fullscore[ii][ridx] = rscores
 
-            dXembeds.data[offset : hi] = prod_back(fullscore)
-            dXscores[offset : hi] = pw_sum_back(fullscore)
+            dXembeds.data[offset:hi] = prod_back(fullscore)
+            dXscores[offset:hi] = pw_sum_back(fullscore)
 
             offset = hi
         # make it fit back into the linear
@@ -421,7 +423,7 @@ def pairwise_sum(ops, mention_scores: Floats1d) -> Tuple[Floats2d, Callable]:
     def backward(d_pwsum: Floats2d) -> Floats1d:
         # For the backward pass, the gradient is distributed over the whole row and
         # column, so pull it all in.
-        
+
         out = d_pwsum.sum(axis=0) + d_pwsum.sum(axis=1)
 
         return out
