@@ -6,7 +6,7 @@ from spacy.training import Example
 from spacy.lang.en import English
 from spacy.tests.util import make_tempdir
 from spacy.pipeline.coref import DEFAULT_CLUSTERS_PREFIX
-from spacy.ml.models.coref_util import select_non_crossing_spans
+from spacy.ml.models.coref_util import select_non_crossing_spans, get_candidate_mentions
 
 # fmt: off
 TRAIN_DATA = [
@@ -155,3 +155,9 @@ def test_crossing_spans():
     guess = select_non_crossing_spans(idxs, starts, ends, limit)
     guess = sorted(guess)
     assert gold == guess
+
+def test_mention_generator(nlp):
+    doc = nlp("I like text.") # four tokens
+    max_width = 20
+    mentions = get_candidate_mentions(doc, max_width)
+    assert len(mentions[0]) == 10
