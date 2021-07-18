@@ -613,7 +613,7 @@
             "id": "spacymoji",
             "slogan": "Emoji handling and meta data as a spaCy pipeline component",
             "github": "ines/spacymoji",
-            "description": "spaCy v2.0 extension and pipeline component for adding emoji meta data to `Doc` objects. Detects emoji consisting of one or more unicode characters, and can optionally merge multi-char emoji (combined pictures, emoji with skin tone modifiers) into one token. Human-readable emoji descriptions are added as a custom attribute, and an optional lookup table can be provided for your own descriptions. The extension sets the custom `Doc`, `Token` and `Span` attributes `._.is_emoji`, `._.emoji_desc`, `._.has_emoji` and `._.emoji`.",
+            "description": "spaCy extension and pipeline component for adding emoji meta data to `Doc` objects. Detects emoji consisting of one or more unicode characters, and can optionally merge multi-char emoji (combined pictures, emoji with skin tone modifiers) into one token. Human-readable emoji descriptions are added as a custom attribute, and an optional lookup table can be provided for your own descriptions. The extension sets the custom `Doc`, `Token` and `Span` attributes `._.is_emoji`, `._.emoji_desc`, `._.has_emoji` and `._.emoji`.",
             "pip": "spacymoji",
             "category": ["pipeline"],
             "tags": ["emoji", "unicode"],
