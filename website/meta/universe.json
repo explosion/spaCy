@@ -927,8 +927,8 @@
                 "nlp = dacy.load('medium')  # load your spacy pipeline",
                 "",
                 "# DaCy also includes functionality for adding other Danish models to the pipeline",
-                "# For instance you can add the BertTone model for classification of sentiment polarity to the pipeline:"
-                "nlp = add_berttone_polarity(nlp)",
+                "# For instance you can add the BertTone model for classification of sentiment polarity to the pipeline:",
+                "nlp = add_berttone_polarity(nlp)"
             ],
             "thumb": "https://centre-for-humanities-computing.github.io/DaCy/_static/icon.png",
             "author": "Centre for Humanities Computing Aarhus",
@@ -1408,7 +1408,7 @@
             },
             "category": ["nonpython"],
             "tags": ["ruby"]
-        },        
+        },
         {
             "id": "spacy_api",
             "slogan": "Server/client to load models in a separate, dedicated process",
