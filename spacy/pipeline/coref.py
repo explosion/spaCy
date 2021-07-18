@@ -5,6 +5,7 @@ from thinc.types import Floats2d, Ints2d
 from thinc.api import Model, Config, Optimizer, CategoricalCrossentropy
 from thinc.api import set_dropout_rate
 from itertools import islice
+from statistics import mean
 
 from .trainable_pipe import TrainablePipe
 from ..language import Language
@@ -23,7 +24,7 @@ from ..ml.models.coref_util import (
     doc2clusters,
 )
 
-from ..coref_scorer import Evaluator, get_cluster_info, b_cubed
+from ..coref_scorer import Evaluator, get_cluster_info, b_cubed, muc, ceafe
 
 default_config = """
 [model]
@@ -344,28 +345,35 @@ class CoreferenceResolver(TrainablePipe):
         assert len(X) > 0, Errors.E923.format(name=self.name)
         self.model.initialize(X=X, Y=Y)
 
-    # TODO consider whether to use this. It's pretty fast, but it'll be slower if 
-    # we use all three methods like the original evaluator does. Also the current
-    # implementation, borrowed from the coval project, uses scipy, which we would
-    # want to avoid. (If that's the only issue we can probably work around it.)
+    # TODO This mirrors the evaluation used in prior work, but we don't want to
+    # include this in the final release. The metrics all have fundamental
+    # issues and the current implementation requires scipy.
     def score(self, examples, **kwargs):
         """Score a batch of examples."""
 
-        #TODO traditionally coref uses the average of b_cubed, muc, and ceaf.
+        #NOTE traditionally coref uses the average of b_cubed, muc, and ceaf.
         # we need to handle the average ourselves.
-        evaluator = Evaluator(b_cubed)
+        scores = []
+        for metric in (b_cubed, muc, ceafe):
+            evaluator = Evaluator(b_cubed)
 
-        for ex in examples:
-            p_clusters = doc2clusters(ex.predicted, self.span_cluster_prefix)
-            g_clusters = doc2clusters(ex.reference, self.span_cluster_prefix)
+            for ex in examples:
+                p_clusters = doc2clusters(ex.predicted, self.span_cluster_prefix)
+                g_clusters = doc2clusters(ex.reference, self.span_cluster_prefix)
 
-            cluster_info = get_cluster_info(p_clusters, g_clusters)
+                cluster_info = get_cluster_info(p_clusters, g_clusters)
 
-            evaluator.update(cluster_info)
+                evaluator.update(cluster_info)
 
-        scores ={
-                "coref_f": evaluator.get_f1(),
-                "coref_p": evaluator.get_precision(),
-                "coref_r": evaluator.get_recall(),
-                }
-        return scores
+            score ={
+                    "coref_f": evaluator.get_f1(),
+                    "coref_p": evaluator.get_precision(),
+                    "coref_r": evaluator.get_recall(),
+                    }
+            scores.append(score)
+
+        out = {}
+        for field in ("f", "p", "r"):
+            fname = f"coref_{field}"
+            out[fname] = mean([ss[fname] for ss in scores])
+        return out
