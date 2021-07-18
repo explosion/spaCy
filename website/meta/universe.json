@@ -930,10 +930,10 @@
                 "# For instance you can add the BertTone model for classification of sentiment polarity to the pipeline:",
                 "nlp = add_berttone_polarity(nlp)"
             ],
-            "thumb": "https://centre-for-humanities-computing.github.io/DaCy/_static/icon.png",
+            "thumb": "https://github.com/centre-for-humanities-computing/DaCy/blob/main/img/icon_no_title.png?raw=true",
             "author": "Centre for Humanities Computing Aarhus",
             "author_links": {
-                "github": "https://github.com/centre-for-humanities-computing",
+                "github": "centre-for-humanities-computing",
                 "website": "https://chcaa.io/#/"
             },
             "category": ["pipeline"],
