@@ -145,19 +145,30 @@ def test_overfitting_IO(nlp):
     # assert_equal(batch_deps_1, batch_deps_2)
     # assert_equal(batch_deps_1, no_batch_deps)
 
-def test_crossing_spans():
-    starts = [ 6, 10, 0, 1, 0, 1, 0, 1, 2, 2, 2]
-    ends   = [12, 12, 2, 3, 3, 4, 4, 4, 3, 4, 5]
-    idxs   = list(range(len(starts)))
-    limit  = 5
 
-    gold = sorted([0 , 1, 2, 4, 6])
+def test_crossing_spans():
+    starts = [6, 10, 0, 1, 0, 1, 0, 1, 2, 2, 2]
+    ends = [12, 12, 2, 3, 3, 4, 4, 4, 3, 4, 5]
+    idxs = list(range(len(starts)))
+    limit = 5
+
+    gold = sorted([0, 1, 2, 4, 6])
     guess = select_non_crossing_spans(idxs, starts, ends, limit)
     guess = sorted(guess)
     assert gold == guess
 
-def test_mention_generator(nlp):
-    doc = nlp("I like text.") # four tokens
+
+def test_mention_generator():
+    # don't use the fixture because we want the sentencizer
+    nlp = English()
+    doc = nlp("I like text.")  # four tokens
     max_width = 20
     mentions = get_candidate_mentions(doc, max_width)
     assert len(mentions[0]) == 10
+
+    # check multiple sentences
+    nlp.add_pipe("sentencizer")
+    doc = nlp("I like text. This is text.")  # eight tokens, two sents
+    max_width = 20
+    mentions = get_candidate_mentions(doc, max_width)
+    assert len(mentions[0]) == 20
