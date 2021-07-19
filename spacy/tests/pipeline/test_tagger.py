@@ -182,6 +182,17 @@ def test_overfitting_IO():
     assert_equal(batch_deps_1, batch_deps_2)
     assert_equal(batch_deps_1, no_batch_deps)
 
+    # Try to unlearn the first 'N' tag with negative annotation
+    neg_ex = Example.from_dict(nlp.make_doc(test_text), {"tags": ["!N", "V", "J", "N"]})
+
+    for i in range(20):
+        losses = {}
+        nlp.update([neg_ex], sgd=optimizer, losses=losses)
+
+    # test the "untrained" tag
+    doc3 = nlp(test_text)
+    assert doc3[0].tag_ != "N"
+
 
 def test_tagger_requires_labels():
     nlp = English()
