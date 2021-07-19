@@ -7,8 +7,6 @@ from ...vocab import Vocab
 
 
 class UkrainianLemmatizer(RussianLemmatizer):
-    _morph = None
-
     def __init__(
         self,
         vocab: Vocab,
@@ -27,6 +25,6 @@ class UkrainianLemmatizer(RussianLemmatizer):
                     "pymorphy2 library and dictionaries. Install them with: "
                     "pip install pymorphy2 pymorphy2-dicts-uk"
                 ) from None
-            if UkrainianLemmatizer._morph is None:
-                UkrainianLemmatizer._morph = MorphAnalyzer(lang="uk")
+            if getattr(self, "_morph", None) is None:
+                self._morph = MorphAnalyzer(lang="uk")
         super().__init__(vocab, model, name, mode=mode, overwrite=overwrite)

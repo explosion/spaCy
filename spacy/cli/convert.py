@@ -115,7 +115,8 @@ def convert(
     ner_map = srsly.read_json(ner_map) if ner_map is not None else None
     doc_files = []
     for input_loc in walk_directory(Path(input_path), converter):
-        input_data = input_loc.open("r", encoding="utf-8").read()
+        with input_loc.open("r", encoding="utf-8") as infile:
+            input_data = infile.read()
         # Use converter function to convert data
         func = CONVERTERS[converter]
         docs = func(
