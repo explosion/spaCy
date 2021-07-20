@@ -224,8 +224,8 @@ def test_parser_constructor(en_vocab):
     }
     cfg = {"model": DEFAULT_PARSER_MODEL}
     model = registry.resolve(cfg, validate=True)["model"]
-    parser_1 = DependencyParser(en_vocab, model, **config)
-    parser_2 = DependencyParser(en_vocab, model)
+    DependencyParser(en_vocab, model, **config)
+    DependencyParser(en_vocab, model)
 
 
 @pytest.mark.parametrize("pipe_name", ["parser", "beam_parser"])

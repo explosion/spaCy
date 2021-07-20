@@ -329,8 +329,8 @@ def test_ner_constructor(en_vocab):
     }
     cfg = {"model": DEFAULT_NER_MODEL}
     model = registry.resolve(cfg, validate=True)["model"]
-    ner_1 = EntityRecognizer(en_vocab, model, **config)
-    ner_2 = EntityRecognizer(en_vocab, model)
+    EntityRecognizer(en_vocab, model, **config)
+    EntityRecognizer(en_vocab, model)
 
 
 def test_ner_before_ruler():

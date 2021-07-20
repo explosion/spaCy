@@ -139,6 +139,9 @@ def package(
         readme = generate_readme(meta)
         create_file(readme_path, readme)
         create_file(package_path / model_name_v / "README.md", readme)
+        msg.good("Generated README.md from meta.json")
+    else:
+        msg.info("Using existing README.md from pipeline directory")
     imports = []
     for code_path in code_paths:
         imports.append(code_path.stem)
@@ -202,8 +205,9 @@ def get_meta(
         "url": "",
         "license": "MIT",
     }
-    meta.update(existing_meta)
     nlp = util.load_model_from_path(Path(model_path))
+    meta.update(nlp.meta)
+    meta.update(existing_meta)
     meta["spacy_version"] = util.get_model_version_range(about.__version__)
     meta["vectors"] = {
         "width": nlp.vocab.vectors_length,

@@ -71,10 +71,13 @@ def init_nlp(config: Config, *, use_gpu: int = -1) -> "Language":
     nlp._link_components()
     with nlp.select_pipes(disable=[*frozen_components, *resume_components]):
         if T["max_epochs"] == -1:
+            sample_size = 100
             logger.debug(
-                "Due to streamed train corpus, using only first 100 examples for initialization. If necessary, provide all labels in [initialize]. More info: https://spacy.io/api/cli#init_labels"
+                f"Due to streamed train corpus, using only first {sample_size} "
+                f"examples for initialization. If necessary, provide all labels "
+                f"in [initialize]. More info: https://spacy.io/api/cli#init_labels"
             )
-            nlp.initialize(lambda: islice(train_corpus(nlp), 100), sgd=optimizer)
+            nlp.initialize(lambda: islice(train_corpus(nlp), sample_size), sgd=optimizer)
         else:
             nlp.initialize(lambda: train_corpus(nlp), sgd=optimizer)
         logger.info(f"Initialized pipeline components: {nlp.pipe_names}")
@@ -86,7 +89,6 @@ def init_nlp(config: Config, *, use_gpu: int = -1) -> "Language":
             # Don't warn about components not in the pipeline
             if listener not in nlp.pipe_names:
                 continue
-
             if listener in frozen_components and name not in frozen_components:
                 logger.warning(Warnings.W087.format(name=name, listener=listener))
             # We always check this regardless, in case user freezes tok2vec
@@ -154,6 +156,8 @@ def load_vectors_into_model(
         logger.warning(Warnings.W112.format(name=name))
 
     nlp.vocab.vectors = vectors_nlp.vocab.vectors
+    for lex in nlp.vocab:
+        lex.rank = nlp.vocab.vectors.key2row.get(lex.orth, OOV_RANK)
     if add_strings:
         # I guess we should add the strings from the vectors_nlp model?
         # E.g. if someone does a similarity query, they might expect the strings.

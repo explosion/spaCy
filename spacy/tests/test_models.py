@@ -211,7 +211,7 @@ def test_empty_docs(model_func, kwargs):
 
 
 def test_init_extract_spans():
-    model = extract_spans().initialize()
+    extract_spans().initialize()
 
 
 def test_extract_spans_span_indices():

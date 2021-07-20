@@ -52,7 +52,7 @@ def test_cant_add_pipe_first_and_last(nlp):
         nlp.add_pipe("new_pipe", first=True, last=True)
 
 
-@pytest.mark.parametrize("name", ["my_component"])
+@pytest.mark.parametrize("name", ["test_get_pipe"])
 def test_get_pipe(nlp, name):
     with pytest.raises(KeyError):
         nlp.get_pipe(name)
@@ -62,7 +62,7 @@ def test_get_pipe(nlp, name):
 
 @pytest.mark.parametrize(
     "name,replacement,invalid_replacement",
-    [("my_component", "other_pipe", lambda doc: doc)],
+    [("test_replace_pipe", "other_pipe", lambda doc: doc)],
 )
 def test_replace_pipe(nlp, name, replacement, invalid_replacement):
     with pytest.raises(ValueError):
@@ -435,8 +435,8 @@ def test_update_with_annotates():
 
         return component
 
-    c1 = Language.component(f"{name}1", func=make_component(f"{name}1"))
-    c2 = Language.component(f"{name}2", func=make_component(f"{name}2"))
+    Language.component(f"{name}1", func=make_component(f"{name}1"))
+    Language.component(f"{name}2", func=make_component(f"{name}2"))
 
     components = set([f"{name}1", f"{name}2"])
 

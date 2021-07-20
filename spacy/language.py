@@ -872,14 +872,14 @@ class Language:
 
         DOCS: https://spacy.io/api/language#replace_pipe
         """
-        if name not in self.pipe_names:
+        if name not in self.component_names:
             raise ValueError(Errors.E001.format(name=name, opts=self.pipe_names))
         if hasattr(factory_name, "__call__"):
             err = Errors.E968.format(component=repr(factory_name), name=name)
             raise ValueError(err)
         # We need to delegate to Language.add_pipe here instead of just writing
         # to Language.pipeline to make sure the configs are handled correctly
-        pipe_index = self.pipe_names.index(name)
+        pipe_index = self.component_names.index(name)
         self.remove_pipe(name)
         if not len(self._components) or pipe_index == len(self._components):
             # we have no components to insert before/after, or we're replacing the last component
@@ -1447,7 +1447,7 @@ class Language:
     ) -> Iterator[Tuple[Doc, _AnyContext]]:
         ...
 
-    def pipe(
+    def pipe(  # noqa: F811
         self,
         texts: Iterable[str],
         *,
@@ -1740,10 +1740,16 @@ class Language:
                                 listeners_replaced = True
                     with warnings.catch_warnings():
                         warnings.filterwarnings("ignore", message="\\[W113\\]")
-                        nlp.add_pipe(source_name, source=source_nlps[model], name=pipe_name)
+                        nlp.add_pipe(
+                            source_name, source=source_nlps[model], name=pipe_name
+                        )
                     if model not in source_nlp_vectors_hashes:
-                        source_nlp_vectors_hashes[model] = hash(source_nlps[model].vocab.vectors.to_bytes())
-                    nlp.meta["_sourced_vectors_hashes"][pipe_name] = source_nlp_vectors_hashes[model]
+                        source_nlp_vectors_hashes[model] = hash(
+                            source_nlps[model].vocab.vectors.to_bytes()
+                        )
+                    nlp.meta["_sourced_vectors_hashes"][
+                        pipe_name
+                    ] = source_nlp_vectors_hashes[model]
                     # Delete from cache if listeners were replaced
                     if listeners_replaced:
                         del source_nlps[model]

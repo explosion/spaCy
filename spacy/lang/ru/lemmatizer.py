@@ -12,8 +12,6 @@ PUNCT_RULES = {"«": '"', "»": '"'}
 
 
 class RussianLemmatizer(Lemmatizer):
-    _morph = None
-
     def __init__(
         self,
         vocab: Vocab,
@@ -31,8 +29,8 @@ class RussianLemmatizer(Lemmatizer):
                     "The Russian lemmatizer mode 'pymorphy2' requires the "
                     "pymorphy2 library. Install it with: pip install pymorphy2"
                 ) from None
-            if RussianLemmatizer._morph is None:
-                RussianLemmatizer._morph = MorphAnalyzer()
+            if getattr(self, "_morph", None) is None:
+                self._morph = MorphAnalyzer()
         super().__init__(vocab, model, name, mode=mode, overwrite=overwrite)
 
     def pymorphy2_lemmatize(self, token: Token) -> List[str]:

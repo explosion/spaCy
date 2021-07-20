@@ -183,3 +183,24 @@ def test_ngram_suggester(en_tokenizer):
     docs = [en_tokenizer(text) for text in ["", "", ""]]
     ngrams = ngram_suggester(docs)
     assert_equal(ngrams.lengths, [len(doc) for doc in docs])
+
+
+def test_ngram_sizes(en_tokenizer):
+    # test that the range suggester works well
+    size_suggester = registry.misc.get("spacy.ngram_suggester.v1")(sizes=[1, 2, 3])
+    suggester_factory = registry.misc.get("spacy.ngram_range_suggester.v1")
+    range_suggester = suggester_factory(min_size=1, max_size=3)
+    docs = [
+        en_tokenizer(text) for text in ["a", "a b", "a b c", "a b c d", "a b c d e"]
+    ]
+    ngrams_1 = size_suggester(docs)
+    ngrams_2 = range_suggester(docs)
+    assert_equal(ngrams_1.lengths, [1, 3, 6, 9, 12])
+    assert_equal(ngrams_1.lengths, ngrams_2.lengths)
+    assert_equal(ngrams_1.data, ngrams_2.data)
+
+    # one more variation
+    suggester_factory = registry.misc.get("spacy.ngram_range_suggester.v1")
+    range_suggester = suggester_factory(min_size=2, max_size=4)
+    ngrams_3 = range_suggester(docs)
+    assert_equal(ngrams_3.lengths, [0, 1, 3, 6, 9])

@@ -126,6 +126,11 @@ def ga_tokenizer():
 
 
 @pytest.fixture(scope="session")
+def grc_tokenizer():
+    return get_lang_class("grc")().tokenizer
+
+
+@pytest.fixture(scope="session")
 def gu_tokenizer():
     return get_lang_class("gu")().tokenizer
 
@@ -200,6 +205,11 @@ def nb_tokenizer():
 @pytest.fixture(scope="session")
 def ne_tokenizer():
     return get_lang_class("ne")().tokenizer
+
+
+@pytest.fixture(scope="session")
+def nl_vocab():
+    return get_lang_class("nl")().vocab
 
 
 @pytest.fixture(scope="session")
