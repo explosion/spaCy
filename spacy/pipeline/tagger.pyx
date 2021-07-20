@@ -19,6 +19,7 @@ from ..parts_of_speech import X
 from ..errors import Errors, Warnings
 from ..scorer import Scorer
 from ..training import validate_examples, validate_get_examples
+from ..util import registry
 from .. import util
 
 
@@ -42,7 +43,7 @@ DEFAULT_TAGGER_MODEL = Config().from_str(default_model_config)["model"]
 @Language.factory(
     "tagger",
     assigns=["token.tag"],
-    default_config={"model": DEFAULT_TAGGER_MODEL, "scorer": None},
+    default_config={"model": DEFAULT_TAGGER_MODEL, "scorer": {"@scorers": "spacy.tagger_scorer.v1"}},
     default_score_weights={"tag_acc": 1.0},
 )
 def make_tagger(nlp: Language, name: str, model: Model, scorer: Optional[Callable]):
@@ -56,12 +57,22 @@ def make_tagger(nlp: Language, name: str, model: Model, scorer: Optional[Callabl
     return Tagger(nlp.vocab, model, name, scorer=scorer)
 
 
+def tagger_score(examples, **kwargs):
+    validate_examples(examples, "Tagger.score")
+    return Scorer.score_token_attr(examples, "tag", **kwargs)
+
+
+@registry.scorers("spacy.tagger_scorer.v1")
+def make_tagger_scorer():
+    return tagger_score
+
+
 class Tagger(TrainablePipe):
     """Pipeline component for part-of-speech tagging.
 
     DOCS: https://spacy.io/api/tagger
     """
-    def __init__(self, vocab, model, name="tagger", *, scorer=None):
+    def __init__(self, vocab, model, name="tagger", *, scorer=tagger_score):
         """Initialize a part-of-speech tagger.
 
         vocab (Vocab): The shared vocabulary.
@@ -291,17 +302,3 @@ class Tagger(TrainablePipe):
         self.cfg["labels"].append(label)
         self.vocab.strings.add(label)
         return 1
-
-    def score(self, examples, **kwargs):
-        """Score a batch of examples.
-
-        examples (Iterable[Example]): The examples to score.
-        RETURNS (Dict[str, Any]): The scores, produced by
-            Scorer.score_token_attr for the attributes "tag".
-
-        DOCS: https://spacy.io/api/tagger#score
-        """
-        validate_examples(examples, "Tagger.score")
-        if self.scorer:
-            return self.scorer(examples, **kwargs)
-        return Scorer.score_token_attr(examples, "tag", **kwargs)

@@ -10,6 +10,7 @@ from ..training import Example, validate_examples, validate_get_examples
 from ..errors import Errors
 from ..scorer import Scorer
 from ..tokens import Doc
+from ..util import registry
 from ..vocab import Vocab
 
 
@@ -73,7 +74,7 @@ subword_features = true
     default_config={
         "threshold": 0.5,
         "model": DEFAULT_SINGLE_TEXTCAT_MODEL,
-        "scorer": None,
+        "scorer": {"@scorers": "spacy.textcat_scorer.v1"},
     },
     default_score_weights={
         "cats_score": 1.0,
@@ -107,6 +108,21 @@ def make_textcat(
     return TextCategorizer(nlp.vocab, model, name, threshold=threshold, scorer=scorer)
 
 
+def textcat_score(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
+    validate_examples(examples, "TextCategorizer.score")
+    return Scorer.score_cats(
+        examples,
+        "cats",
+        multi_label=False,
+        **kwargs,
+    )
+
+
+@registry.scorers("spacy.textcat_scorer.v1")
+def make_textcat_scorer():
+    return textcat_score
+
+
 class TextCategorizer(TrainablePipe):
     """Pipeline component for single-label text classification.
 
@@ -120,7 +136,7 @@ class TextCategorizer(TrainablePipe):
         name: str = "textcat",
         *,
         threshold: float,
-        scorer: Optional[Callable] = None,
+        scorer: Optional[Callable] = textcat_score,
     ) -> None:
         """Initialize a text categorizer for single-label classification.
 
@@ -368,28 +384,6 @@ class TextCategorizer(TrainablePipe):
         assert len(doc_sample) > 0, Errors.E923.format(name=self.name)
         assert len(label_sample) > 0, Errors.E923.format(name=self.name)
         self.model.initialize(X=doc_sample, Y=label_sample)
-
-    def score(self, examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
-        """Score a batch of examples.
-
-        examples (Iterable[Example]): The examples to score.
-        RETURNS (Dict[str, Any]): The scores, produced by Scorer.score_cats.
-
-        DOCS: https://spacy.io/api/textcategorizer#score
-        """
-        validate_examples(examples, "TextCategorizer.score")
-        if self.scorer is not None:
-            self.scorer(examples, **kwargs)
-        self._validate_categories(examples)
-        kwargs.setdefault("threshold", self.cfg["threshold"])
-        kwargs.setdefault("positive_label", self.cfg["positive_label"])
-        return Scorer.score_cats(
-            examples,
-            "cats",
-            labels=self.labels,
-            multi_label=False,
-            **kwargs,
-        )
 
     def _validate_categories(self, examples: List[Example]):
         """Check whether the provided examples all have single-label cats annotations."""

@@ -17,6 +17,7 @@ from .tagger import Tagger
 from .. import util
 from ..scorer import Scorer
 from ..training import validate_examples, validate_get_examples
+from ..util import registry
 
 
 default_model_config = """
@@ -48,7 +49,7 @@ DEFAULT_MORPH_MODEL = Config().from_str(default_model_config)["model"]
 @Language.factory(
     "morphologizer",
     assigns=["token.morph", "token.pos"],
-    default_config={"model": DEFAULT_MORPH_MODEL, "scorer": None},
+    default_config={"model": DEFAULT_MORPH_MODEL, "scorer": {"@scorers": "spacy.morphologizer_scorer.v1"}},
     default_score_weights={"pos_acc": 0.5, "morph_acc": 0.5, "morph_per_feat": None},
 )
 def make_morphologizer(
@@ -60,6 +61,24 @@ def make_morphologizer(
     return Morphologizer(nlp.vocab, model, name, scorer=scorer)
 
 
+def morphologizer_score(examples, **kwargs):
+    validate_examples(examples, "Morphologizer.score")
+    def morph_key_getter(token, attr):
+        return getattr(token, attr).key
+
+    results = {}
+    results.update(Scorer.score_token_attr(examples, "pos", **kwargs))
+    results.update(Scorer.score_token_attr(examples, "morph", getter=morph_key_getter, **kwargs))
+    results.update(Scorer.score_token_attr_per_feat(examples,
+        "morph", getter=morph_key_getter, **kwargs))
+    return results
+
+
+@registry.scorers("spacy.morphologizer_scorer.v1")
+def make_morphologizer_scorer():
+    return morphologizer_score
+
+
 class Morphologizer(Tagger):
     POS_FEAT = "POS"
 
@@ -69,7 +88,7 @@ class Morphologizer(Tagger):
         model: Model,
         name: str = "morphologizer",
         *,
-        scorer: Optional[Callable] = None,
+        scorer: Optional[Callable] = morphologizer_score,
     ):
         """Initialize a morphologizer.
 
@@ -250,27 +269,3 @@ class Morphologizer(Tagger):
         if self.model.ops.xp.isnan(loss):
             raise ValueError(Errors.E910.format(name=self.name))
         return float(loss), d_scores
-
-    def score(self, examples, **kwargs):
-        """Score a batch of examples.
-
-        examples (Iterable[Example]): The examples to score.
-        RETURNS (Dict[str, Any]): The scores, produced by
-            Scorer.score_token_attr for the attributes "pos" and "morph" and
-            Scorer.score_token_attr_per_feat for the attribute "morph".
-
-        DOCS: https://spacy.io/api/morphologizer#score
-        """
-        validate_examples(examples, "Morphologizer.score")
-        if self.scorer is not None:
-            return self.scorer(examples, **kwargs)
-
-        def morph_key_getter(token, attr):
-            return getattr(token, attr).key
-
-        results = {}
-        results.update(Scorer.score_token_attr(examples, "pos", **kwargs))
-        results.update(Scorer.score_token_attr(examples, "morph", getter=morph_key_getter, **kwargs))
-        results.update(Scorer.score_token_attr_per_feat(examples,
-            "morph", getter=morph_key_getter, **kwargs))
-        return results

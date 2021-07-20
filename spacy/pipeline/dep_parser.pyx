@@ -13,6 +13,7 @@ from ._parser_internals import nonproj
 from ._parser_internals.nonproj import DELIMITER
 from ..scorer import Scorer
 from ..training import validate_examples
+from ..util import registry
 
 
 default_model_config = """
@@ -46,7 +47,7 @@ DEFAULT_PARSER_MODEL = Config().from_str(default_model_config)["model"]
         "learn_tokens": False,
         "min_action_freq": 30,
         "model": DEFAULT_PARSER_MODEL,
-        "scorer": None,
+        "scorer": {"@scorers": "spacy.parser_scorer.v1"},
     },
     default_score_weights={
         "dep_uas": 0.5,
@@ -133,7 +134,7 @@ def make_parser(
         "learn_tokens": False,
         "min_action_freq": 30,
         "model": DEFAULT_PARSER_MODEL,
-        "scorer": None,
+        "scorer": {"@scorers": "spacy.parser_scorer.v1"},
     },
     default_score_weights={
         "dep_uas": 0.5,
@@ -217,6 +218,38 @@ def make_beam_parser(
     )
 
 
+def parser_score(examples, **kwargs):
+    """Score a batch of examples.
+
+    examples (Iterable[Example]): The examples to score.
+    RETURNS (Dict[str, Any]): The scores, produced by Scorer.score_spans
+        and Scorer.score_deps.
+
+    DOCS: https://spacy.io/api/dependencyparser#score
+    """
+    validate_examples(examples, "DependencyParser.score")
+
+    def has_sents(doc):
+        return doc.has_annotation("SENT_START")
+
+    def dep_getter(token, attr):
+        dep = getattr(token, attr)
+        dep = token.vocab.strings.as_string(dep).lower()
+        return dep
+    results = {}
+    results.update(Scorer.score_spans(examples, "sents", has_annotation=has_sents, **kwargs))
+    kwargs.setdefault("getter", dep_getter)
+    kwargs.setdefault("ignore_labels", ("p", "punct"))
+    results.update(Scorer.score_deps(examples, "dep", **kwargs))
+    del results["sents_per_type"]
+    return results
+
+
+@registry.scorers("spacy.parser_scorer.v1")
+def make_parser_scorer():
+    return parser_score
+
+
 cdef class DependencyParser(Parser):
     """Pipeline component for dependency parsing.
 
@@ -239,7 +272,7 @@ cdef class DependencyParser(Parser):
         beam_update_prob=0.0,
         multitasks=tuple(),
         incorrect_spans_key=None,
-        scorer=None,
+        scorer=parser_score,
     ):
         """Create a DependencyParser.
         """
@@ -256,6 +289,7 @@ cdef class DependencyParser(Parser):
             beam_update_prob=beam_update_prob,
             multitasks=multitasks,
             incorrect_spans_key=incorrect_spans_key,
+            scorer=scorer,
         )
 
     @property
@@ -287,34 +321,6 @@ cdef class DependencyParser(Parser):
                     label = label.split(DELIMITER)[1]
                 labels.add(label)
         return tuple(sorted(labels))
-
-    def score(self, examples, **kwargs):
-        """Score a batch of examples.
-
-        examples (Iterable[Example]): The examples to score.
-        RETURNS (Dict[str, Any]): The scores, produced by Scorer.score_spans
-            and Scorer.score_deps.
-
-        DOCS: https://spacy.io/api/dependencyparser#score
-        """
-        validate_examples(examples, "DependencyParser.score")
-        if self.scorer:
-            return self.scorer(examples, **kwargs)
-
-        def has_sents(doc):
-            return doc.has_annotation("SENT_START")
-
-        def dep_getter(token, attr):
-            dep = getattr(token, attr)
-            dep = token.vocab.strings.as_string(dep).lower()
-            return dep
-        results = {}
-        results.update(Scorer.score_spans(examples, "sents", has_annotation=has_sents, **kwargs))
-        kwargs.setdefault("getter", dep_getter)
-        kwargs.setdefault("ignore_labels", ("p", "punct"))
-        results.update(Scorer.score_deps(examples, "dep", **kwargs))
-        del results["sents_per_type"]
-        return results
 
     def scored_parses(self, beams):
         """Return two dictionaries with scores for each beam/doc that was processed:

@@ -12,6 +12,7 @@ from ..language import Language
 from ..errors import Errors
 from ..scorer import Scorer
 from ..training import validate_examples, validate_get_examples
+from ..util import registry
 from .. import util
 
 
@@ -35,11 +36,27 @@ DEFAULT_SENTER_MODEL = Config().from_str(default_model_config)["model"]
 @Language.factory(
     "senter",
     assigns=["token.is_sent_start"],
-    default_config={"model": DEFAULT_SENTER_MODEL, "scorer": None},
+    default_config={"model": DEFAULT_SENTER_MODEL, "scorer": {"@scorers": "spacy.senter_scorer.v1"}},
     default_score_weights={"sents_f": 1.0, "sents_p": 0.0, "sents_r": 0.0},
 )
 def make_senter(nlp: Language, name: str, model: Model, scorer: Optional[Callable]):
     return SentenceRecognizer(nlp.vocab, model, name, scorer=scorer)
+
+
+def senter_score(examples, **kwargs):
+    validate_examples(examples, "SentenceRecognizer.score")
+
+    def has_sents(doc):
+        return doc.has_annotation("SENT_START")
+
+    results = Scorer.score_spans(examples, "sents", has_annotation=has_sents, **kwargs)
+    del results["sents_per_type"]
+    return results
+
+
+@registry.scorers("spacy.senter_scorer.v1")
+def make_senter_scorer():
+    return senter_score
 
 
 class SentenceRecognizer(Tagger):
@@ -47,7 +64,7 @@ class SentenceRecognizer(Tagger):
 
     DOCS: https://spacy.io/api/sentencerecognizer
     """
-    def __init__(self, vocab, model, name="senter", *, scorer=None):
+    def __init__(self, vocab, model, name="senter", *, scorer=senter_score):
         """Initialize a sentence recognizer.
 
         vocab (Vocab): The shared vocabulary.
@@ -155,21 +172,3 @@ class SentenceRecognizer(Tagger):
 
     def add_label(self, label, values=None):
         raise NotImplementedError
-
-    def score(self, examples, **kwargs):
-        """Score a batch of examples.
-
-        examples (Iterable[Example]): The examples to score.
-        RETURNS (Dict[str, Any]): The scores, produced by Scorer.score_spans.
-        DOCS: https://spacy.io/api/sentencerecognizer#score
-        """
-        validate_examples(examples, "SentenceRecognizer.score")
-        if self.scorer is not None:
-            return self.scorer(examples, **kwargs)
-
-        def has_sents(doc):
-            return doc.has_annotation("SENT_START")
-
-        results = Scorer.score_spans(examples, "sents", has_annotation=has_sents, **kwargs)
-        del results["sents_per_type"]
-        return results

@@ -9,6 +9,7 @@ from ..training import Example, validate_examples, validate_get_examples
 from ..errors import Errors
 from ..scorer import Scorer
 from ..tokens import Doc
+from ..util import registry
 from ..vocab import Vocab
 from .textcat import TextCategorizer
 
@@ -73,7 +74,7 @@ subword_features = true
     default_config={
         "threshold": 0.5,
         "model": DEFAULT_MULTI_TEXTCAT_MODEL,
-        "scorer": None,
+        "scorer": {"@scorers": "spacy.textcat_multilabel_scorer.v1"},
     },
     default_score_weights={
         "cats_score": 1.0,
@@ -110,6 +111,21 @@ def make_multilabel_textcat(
     )
 
 
+def textcat_multilabel_score(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
+    validate_examples(examples, "MultiLabel_TextCategorizer.score")
+    return Scorer.score_cats(
+        examples,
+        "cats",
+        multi_label=True,
+        **kwargs,
+    )
+
+
+@registry.scorers("spacy.textcat_multilabel_scorer.v1")
+def make_textcat_multilabel_scorer():
+    return textcat_multilabel_score
+
+
 class MultiLabel_TextCategorizer(TextCategorizer):
     """Pipeline component for multi-label text classification.
 
@@ -123,7 +139,7 @@ class MultiLabel_TextCategorizer(TextCategorizer):
         name: str = "textcat_multilabel",
         *,
         threshold: float,
-        scorer: Optional[Callable] = None,
+        scorer: Optional[Callable] = textcat_multilabel_score,
     ) -> None:
         """Initialize a text categorizer for multi-label classification.
 
@@ -177,26 +193,6 @@ class MultiLabel_TextCategorizer(TextCategorizer):
         assert len(doc_sample) > 0, Errors.E923.format(name=self.name)
         assert len(label_sample) > 0, Errors.E923.format(name=self.name)
         self.model.initialize(X=doc_sample, Y=label_sample)
-
-    def score(self, examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
-        """Score a batch of examples.
-
-        examples (Iterable[Example]): The examples to score.
-        RETURNS (Dict[str, Any]): The scores, produced by Scorer.score_cats.
-
-        DOCS: https://spacy.io/api/textcategorizer#score
-        """
-        validate_examples(examples, "MultiLabel_TextCategorizer.score")
-        if self.scorer is not None:
-            return self.scorer(examples, **kwargs)
-        kwargs.setdefault("threshold", self.cfg["threshold"])
-        return Scorer.score_cats(
-            examples,
-            "cats",
-            labels=self.labels,
-            multi_label=True,
-            **kwargs,
-        )
 
     def _validate_categories(self, examples: List[Example]):
         """This component allows any type of single- or multi-label annotations.

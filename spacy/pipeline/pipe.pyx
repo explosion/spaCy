@@ -81,6 +81,14 @@ cdef class Pipe:
 
         DOCS: https://spacy.io/api/pipe#score
         """
+        if hasattr(self, "scorer") and self.scorer is not None:
+            scorer_kwargs = {}
+            # use default settings from cfg (e.g., threshold)
+            if hasattr(self, "cfg"):
+                scorer_kwargs.update(self.cfg)
+            # override with kwargs settings
+            scorer_kwargs.update(kwargs)
+            return self.scorer(examples, **scorer_kwargs)
         return {}
 
     @property

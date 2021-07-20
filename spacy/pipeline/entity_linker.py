@@ -16,7 +16,7 @@ from ..language import Language
 from ..vocab import Vocab
 from ..training import Example, validate_examples, validate_get_examples
 from ..errors import Errors, Warnings
-from ..util import SimpleFrozenList
+from ..util import SimpleFrozenList, registry
 from .. import util
 from ..scorer import Scorer
 
@@ -50,7 +50,7 @@ DEFAULT_NEL_MODEL = Config().from_str(default_model_config)["model"]
         "incl_context": True,
         "entity_vector_length": 64,
         "get_candidates": {"@misc": "spacy.CandidateGenerator.v1"},
-        "scorer": None,
+        "scorer": {"@scorers": "spacy.entity_linker_scorer.v1"},
     },
     default_score_weights={
         "nel_micro_f": 1.0,
@@ -98,6 +98,16 @@ def make_entity_linker(
     )
 
 
+def entity_linker_score(examples, **kwargs):
+    validate_examples(examples, "EntityLinker.score")
+    return Scorer.score_links(examples, negative_labels=[EntityLinker.NIL], **kwargs)
+
+
+@registry.scorers("spacy.entity_linker_scorer.v1")
+def make_entity_linker_scorer():
+    return entity_linker_score
+
+
 class EntityLinker(TrainablePipe):
     """Pipeline component for named entity linking.
 
@@ -118,7 +128,7 @@ class EntityLinker(TrainablePipe):
         incl_context: bool,
         entity_vector_length: int,
         get_candidates: Callable[[KnowledgeBase, Span], Iterable[Candidate]],
-        scorer: Optional[Callable] = None,
+        scorer: Optional[Callable] = entity_linker_score,
     ) -> None:
         """Initialize an entity linker.
 
@@ -393,19 +403,6 @@ class EntityLinker(TrainablePipe):
                 i += 1
                 for token in ent:
                     token.ent_kb_id_ = kb_id
-
-    def score(self, examples, **kwargs):
-        """Score a batch of examples.
-
-        examples (Iterable[Example]): The examples to score.
-        RETURNS (Dict[str, Any]): The scores.
-
-        DOCS TODO: https://spacy.io/api/entity_linker#score
-        """
-        validate_examples(examples, "EntityLinker.score")
-        if self.scorer is not None:
-            return self.scorer(examples, **kwargs)
-        return Scorer.score_links(examples, negative_labels=[self.NIL])
 
     def to_bytes(self, *, exclude=tuple()):
         """Serialize the pipe to a bytestring.

@@ -10,6 +10,7 @@ from ._parser_internals.ner cimport BiluoPushDown
 from ..language import Language
 from ..scorer import get_ner_prf, PRFScore
 from ..training import validate_examples
+from ..util import registry
 
 
 default_model_config = """
@@ -42,7 +43,7 @@ DEFAULT_NER_MODEL = Config().from_str(default_model_config)["model"]
         "update_with_oracle_cut_size": 100,
         "model": DEFAULT_NER_MODEL,
         "incorrect_spans_key": None,
-        "scorer": None,
+        "scorer": {"@scorers": "spacy.ner_scorer.v1"},
     },
     default_score_weights={"ents_f": 1.0, "ents_p": 0.0, "ents_r": 0.0, "ents_per_type": None},
 
@@ -53,8 +54,8 @@ def make_ner(
     model: Model,
     moves: Optional[TransitionSystem],
     update_with_oracle_cut_size: int,
-    incorrect_spans_key: Optional[str]=None,
-    scorer: Optional[Callable]=None,
+    incorrect_spans_key: Optional[str],
+    scorer: Optional[Callable],
 ):
     """Create a transition-based EntityRecognizer component. The entity recognizer
     identifies non-overlapping labelled spans of tokens.
@@ -121,8 +122,8 @@ def make_beam_ner(
     beam_width: int,
     beam_density: float,
     beam_update_prob: float,
-    incorrect_spans_key: Optional[str]=None,
-    scorer: Optional[Callable]=None,
+    incorrect_spans_key: Optional[str],
+    scorer: Optional[Callable],
 ):
     """Create a transition-based EntityRecognizer component that uses beam-search.
     The entity recognizer identifies non-overlapping labelled spans of tokens.
@@ -174,6 +175,16 @@ def make_beam_ner(
     )
 
 
+def ner_score(examples, **kwargs):
+    validate_examples(examples, "EntityRecognizer.score")
+    return get_ner_prf(examples, **kwargs)
+
+
+@registry.scorers("spacy.ner_scorer.v1")
+def make_ner_scorer():
+    return ner_score
+
+
 cdef class EntityRecognizer(Parser):
     """Pipeline component for named entity recognition.
 
@@ -194,7 +205,7 @@ cdef class EntityRecognizer(Parser):
         beam_update_prob=0.0,
         multitasks=tuple(),
         incorrect_spans_key=None,
-        scorer=None,
+        scorer=ner_score,
     ):
         """Create an EntityRecognizer.
         """
@@ -211,6 +222,7 @@ cdef class EntityRecognizer(Parser):
             beam_update_prob=beam_update_prob,
             multitasks=multitasks,
             incorrect_spans_key=incorrect_spans_key,
+            scorer=scorer,
         )
 
     def add_multitask_objective(self, mt_component):
@@ -233,19 +245,6 @@ cdef class EntityRecognizer(Parser):
         labels = set(move.split("-")[1] for move in self.move_names
                      if move[0] in ("B", "I", "L", "U"))
         return tuple(sorted(labels))
-
-    def score(self, examples, **kwargs):
-        """Score a batch of examples.
-
-        examples (Iterable[Example]): The examples to score.
-        RETURNS (Dict[str, Any]): The NER precision, recall and f-scores.
-
-        DOCS: https://spacy.io/api/entityrecognizer#score
-        """
-        validate_examples(examples, "EntityRecognizer.score")
-        if self.scorer is not None:
-            return self.scorer(examples, **kwargs)
-        return get_ner_prf(examples)
 
     def scored_ents(self, beams):
         """Return a dictionary of (start, end, label) tuples with corresponding scores

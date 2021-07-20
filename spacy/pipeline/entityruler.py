@@ -8,7 +8,7 @@ from .pipe import Pipe
 from ..training import Example
 from ..language import Language
 from ..errors import Errors, Warnings
-from ..util import ensure_path, to_disk, from_disk, SimpleFrozenList
+from ..util import ensure_path, to_disk, from_disk, SimpleFrozenList, registry
 from ..tokens import Doc, Span
 from ..matcher import Matcher, PhraseMatcher
 from ..scorer import get_ner_prf
@@ -27,7 +27,7 @@ PatternType = Dict[str, Union[str, List[Dict[str, Any]]]]
         "validate": False,
         "overwrite_ents": False,
         "ent_id_sep": DEFAULT_ENT_ID_SEP,
-        "scorer": None,
+        "scorer": {"@scorers": "spacy.entity_ruler_scorer.v1"},
     },
     default_score_weights={
         "ents_f": 1.0,
@@ -56,6 +56,16 @@ def make_entity_ruler(
     )
 
 
+def entity_ruler_score(examples, **kwargs):
+    validate_examples(examples, "EntityRuler.score")
+    return get_ner_prf(examples)
+
+
+@registry.scorers("spacy.entity_ruler_scorer.v1")
+def make_entity_ruler_scorer():
+    return entity_ruler_score
+
+
 class EntityRuler(Pipe):
     """The EntityRuler lets you add spans to the `Doc.ents` using token-based
     rules or exact phrase matches. It can be combined with the statistical
@@ -77,7 +87,7 @@ class EntityRuler(Pipe):
         overwrite_ents: bool = False,
         ent_id_sep: str = DEFAULT_ENT_ID_SEP,
         patterns: Optional[List[PatternType]] = None,
-        scorer: Optional[Callable] = None,
+        scorer: Optional[Callable] = entity_ruler_score,
     ) -> None:
         """Initialize the entity ruler. If patterns are supplied here, they
         need to be a list of dictionaries with a `"label"` and `"pattern"`
@@ -362,12 +372,6 @@ class EntityRuler(Pipe):
         if isinstance(ent_id, str):
             label = f"{label}{self.ent_id_sep}{ent_id}"
         return label
-
-    def score(self, examples, **kwargs):
-        validate_examples(examples, "EntityRuler.score")
-        if self.scorer is not None:
-            return self.scorer(examples, **kwargs)
-        return get_ner_prf(examples)
 
     def from_bytes(
         self, patterns_bytes: bytes, *, exclude: Iterable[str] = SimpleFrozenList()
