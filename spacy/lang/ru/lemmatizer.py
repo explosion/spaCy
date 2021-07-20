@@ -3,7 +3,7 @@ from typing import Optional, List, Dict, Tuple, Callable
 from thinc.api import Model
 
 from ...pipeline import Lemmatizer
-from ...pipeline.lemmatizer import make_lemmatizer_scorer
+from ...pipeline.lemmatizer import lemmatizer_score
 from ...symbols import POS
 from ...tokens import Token
 from ...vocab import Vocab
@@ -21,7 +21,7 @@ class RussianLemmatizer(Lemmatizer):
         *,
         mode: str = "pymorphy2",
         overwrite: bool = False,
-        scorer: Optional[Callable] = make_lemmatizer_scorer(),
+        scorer: Optional[Callable] = lemmatizer_score,
     ) -> None:
         if mode == "pymorphy2":
             try:
