@@ -262,12 +262,7 @@
         },
         {
             "code": "mk",
-            "name": "Macedonian",
-            "models": [
-                "mk_core_news_sm",
-                "mk_core_news_md",
-                "mk_core_news_lg"
-            ]
+            "name": "Macedonian"
         },
         {
             "code": "ml",

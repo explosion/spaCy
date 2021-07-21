@@ -324,8 +324,7 @@ cdef class TrainablePipe(Pipe):
 
         def load_model(p):
             try:
-                with open(p, "rb") as mfile:
-                    self.model.from_bytes(mfile.read())
+                self.model.from_bytes(p.open("rb").read())
             except AttributeError:
                 raise ValueError(Errors.E149) from None
 

@@ -481,8 +481,7 @@ class EntityLinker(TrainablePipe):
 
         def load_model(p):
             try:
-                with p.open("rb") as infile:
-                    self.model.from_bytes(infile.read())
+                self.model.from_bytes(p.open("rb").read())
             except AttributeError:
                 raise ValueError(Errors.E149) from None
 
