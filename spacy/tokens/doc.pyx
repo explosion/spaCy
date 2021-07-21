@@ -1141,10 +1141,6 @@ cdef class Doc:
                 else:
                     warnings.warn(Warnings.W102.format(key=key, value=value))
             for key in doc.spans:
-                # if a spans key is in any doc, include it in the merged doc
-                # even if it is empty
-                if key not in concat_spans:
-                    concat_spans[key] = []
                 for span in doc.spans[key]:
                     concat_spans[key].append((
                         span.start_char + char_offset,
@@ -1154,7 +1150,7 @@ cdef class Doc:
                         span.text, # included as a check
                     ))
             char_offset += len(doc.text)
-            if len(doc) > 0 and ensure_whitespace and not doc[-1].is_space and not bool(doc[-1].whitespace_):
+            if len(doc) > 0 and ensure_whitespace and not doc[-1].is_space:
                 char_offset += 1
 
         arrays = [doc.to_array(attrs) for doc in docs]

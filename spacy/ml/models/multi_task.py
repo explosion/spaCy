@@ -3,7 +3,7 @@ from thinc.api import chain, Maxout, LayerNorm, Softmax, Linear, zero_init, Mode
 from thinc.api import MultiSoftmax, list2array
 from thinc.api import to_categorical, CosineDistance, L2Distance
 
-from ...util import registry, OOV_RANK
+from ...util import registry
 from ...errors import Errors
 from ...attrs import ID
 
@@ -70,7 +70,6 @@ def get_vectors_loss(ops, docs, prediction, distance):
     # and look them up all at once. This prevents data copying.
     ids = ops.flatten([doc.to_array(ID).ravel() for doc in docs])
     target = docs[0].vocab.vectors.data[ids]
-    target[ids == OOV_RANK] = 0
     d_target, loss = distance(prediction, target)
     return loss, d_target
 

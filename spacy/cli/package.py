@@ -18,7 +18,7 @@ def package_cli(
     output_dir: Path = Arg(..., help="Output parent directory", exists=True, file_okay=False),
     code_paths: str = Opt("", "--code", "-c", help="Comma-separated paths to Python file with additional code (registered functions) to be included in the package"),
     meta_path: Optional[Path] = Opt(None, "--meta-path", "--meta", "-m", help="Path to meta.json", exists=True, dir_okay=False),
-    create_meta: bool = Opt(False, "--create-meta", "-C", help="Create meta.json, even if one exists"),
+    create_meta: bool = Opt(False, "--create-meta", "-c", "-C", help="Create meta.json, even if one exists"),
     name: Optional[str] = Opt(None, "--name", "-n", help="Package name to override meta"),
     version: Optional[str] = Opt(None, "--version", "-v", help="Package version to override meta"),
     build: str = Opt("sdist", "--build", "-b", help="Comma-separated formats to build: sdist and/or wheel, or none."),
