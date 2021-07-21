@@ -81,8 +81,8 @@ it compares to another value.
 | -------------------------- | ------------------------------------------------------------------------------------------------------- |
 | `IN`                       | Attribute value is member of a list. ~~Any~~                                                            |
 | `NOT_IN`                   | Attribute value is _not_ member of a list. ~~Any~~                                                      |
-| `ISSUBSET`                 | Attribute values (for `MORPH`) are a subset of a list. ~~Any~~                                          |
-| `ISSUPERSET`               | Attribute values (for `MORPH`) are a superset of a list. ~~Any~~                                        |
+| `IS_SUBSET`                 | Attribute values (for `MORPH`) are a subset of a list. ~~Any~~                                          |
+| `IS_SUPERSET`               | Attribute values (for `MORPH`) are a superset of a list. ~~Any~~                                        |
 | `==`, `>=`, `<=`, `>`, `<` | Attribute value is equal, greater or equal, smaller or equal, greater or smaller. ~~Union[int, float]~~ |
 
 ## Matcher.\_\_init\_\_ {#init tag="method"}
