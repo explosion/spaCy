@@ -324,6 +324,7 @@ def test_append_alias(nlp):
     assert len(mykb.get_alias_candidates("douglas")) == 3
 
 
+@pytest.mark.filterwarnings("ignore:\\[W036")
 def test_append_invalid_alias(nlp):
     """Test that append an alias will throw an error if prior probs are exceeding 1"""
     mykb = KnowledgeBase(nlp.vocab, entity_vector_length=1)
@@ -342,6 +343,7 @@ def test_append_invalid_alias(nlp):
         mykb.append_alias(alias="douglas", entity="Q1", prior_prob=0.2)
 
 
+@pytest.mark.filterwarnings("ignore:\\[W036")
 def test_preserving_links_asdoc(nlp):
     """Test that Span.as_doc preserves the existing entity links"""
     vector_length = 1
