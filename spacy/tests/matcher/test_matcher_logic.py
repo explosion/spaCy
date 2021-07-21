@@ -3,7 +3,7 @@ import re
 
 from spacy.lang.en import English
 from spacy.matcher import Matcher
-from spacy.tokens import Doc, Span, MorphAnalysis
+from spacy.tokens import Doc, Span
 
 
 pattern1 = [{"ORTH": "A"}, {"ORTH": "A", "OP": "*"}]
@@ -302,25 +302,3 @@ def test_matcher_with_alignments_nongreedy(en_vocab):
         for _, s, e, expected in matches:
             assert expected in results, (case_id, string, pattern_str, s, e, n_matches)
             assert len(expected) == e - s
-
-
-def test_matcher_morph_sets(en_vocab):
-    matcher = Matcher(en_vocab)
-    matcher.add("SUB", [[{"MORPH": {"IS_SUBSET": ["a=a", "b=b"]}}]])
-    doc = Doc(matcher.vocab, words=["XXX"])
-    # Note: null set is still a subset
-    assert len(matcher(doc)) == 1
-    doc[0].morph = MorphAnalysis(matcher.vocab, "a=a")
-    assert len(matcher(doc)) == 1
-    doc[0].morph = MorphAnalysis(matcher.vocab, "a=a|b=b|c=c")
-    assert len(matcher(doc)) == 0
-
-    # now do super
-    matcher = Matcher(en_vocab)
-    matcher.add("SUPER", [[{"MORPH": {"IS_SUPERSET": ["a=a", "b=b"]}}]])
-    doc = Doc(matcher.vocab, words=["XXX"])
-    assert len(matcher(doc)) == 0
-    doc[0].morph = MorphAnalysis(matcher.vocab, "a=a")
-    assert len(matcher(doc)) == 0
-    doc[0].morph = MorphAnalysis(matcher.vocab, "a=a|b=b|c=c")
-    assert len(matcher(doc)) == 1
