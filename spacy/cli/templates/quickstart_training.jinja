@@ -418,7 +418,7 @@ compound = 1.001
 
 [initialize]
 {% if use_transformer or optimize == "efficiency" or not word_vectors -%}
-vectors = ${paths.vectors}
+vectors = null
 {% else -%}
 vectors = "{{ word_vectors }}"
 {% endif -%}

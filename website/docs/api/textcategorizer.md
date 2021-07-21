@@ -10,12 +10,11 @@ api_trainable: true
 ---
 
 The text categorizer predicts **categories over a whole document**. and comes in
-two flavors: `textcat` and `textcat_multilabel`. When you need to predict
+two flavours: `textcat` and `textcat_multilabel`. When you need to predict
 exactly one true label per document, use the `textcat` which has mutually
 exclusive labels. If you want to perform multi-label classification and predict
-zero, one or more true labels per document, use the `textcat_multilabel`
-component instead. For a binary classification task, you can use `textcat` with
-**two** labels or `textcat_multilabel` with **one** label.
+zero, one or more labels per document, use the `textcat_multilabel` component
+instead.
 
 Both components are documented on this page.
 
@@ -190,7 +189,7 @@ This method was previously called `begin_training`.
 | _keyword-only_   |                                                                                                                                                                                                                                                                                                                                                                                                            |
 | `nlp`            | The current `nlp` object. Defaults to `None`. ~~Optional[Language]~~                                                                                                                                                                                                                                                                                                                                       |
 | `labels`         | The label information to add to the component, as provided by the [`label_data`](#label_data) property after initialization. To generate a reusable JSON file from your data, you should run the [`init labels`](/api/cli#init-labels) command. If no labels are provided, the `get_examples` callback is used to extract the labels from the data, which may be a lot slower. ~~Optional[Iterable[str]]~~ |
-| `positive_label` | The positive label for a binary task with exclusive classes, `None` otherwise and by default. This parameter is only used during scoring. It is not available when using the `textcat_multilabel` component. ~~Optional[str]~~                                                                                                                                                                             |
+| `positive_label` | The positive label for a binary task with exclusive classes, `None` otherwise and by default. This parameter is not available when using the `textcat_multilabel` component. ~~Optional[str]~~                                                                                                                                                                                                             |
 
 ## TextCategorizer.predict {#predict tag="method"}
 

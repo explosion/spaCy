@@ -182,27 +182,6 @@ def test_Example_from_dict_with_entities(annots):
     assert example.reference[5].ent_type_ == "LOC"
 
 
-def test_Example_from_dict_with_empty_entities():
-    annots = {
-        "words": ["I", "like", "New", "York", "and", "Berlin", "."],
-        "entities": [],
-    }
-    vocab = Vocab()
-    predicted = Doc(vocab, words=annots["words"])
-    example = Example.from_dict(predicted, annots)
-    # entities as empty list sets everything to O
-    assert example.reference.has_annotation("ENT_IOB")
-    assert len(list(example.reference.ents)) == 0
-    assert all(token.ent_iob_ == "O" for token in example.reference)
-    # various unset/missing entities leaves entities unset
-    annots["entities"] = None
-    example = Example.from_dict(predicted, annots)
-    assert not example.reference.has_annotation("ENT_IOB")
-    annots.pop("entities", None)
-    example = Example.from_dict(predicted, annots)
-    assert not example.reference.has_annotation("ENT_IOB")
-
-
 @pytest.mark.parametrize(
     "annots",
     [

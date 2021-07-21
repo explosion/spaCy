@@ -481,7 +481,6 @@ def test_matcher_schema_token_attributes(en_vocab, pattern, text):
     assert len(matches) == 1
 
 
-@pytest.mark.filterwarnings("ignore:\\[W036")
 def test_matcher_valid_callback(en_vocab):
     """Test that on_match can only be None or callable."""
     matcher = Matcher(en_vocab)

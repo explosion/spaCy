@@ -84,8 +84,7 @@ Phasellus tincidunt, augue quis porta finibus, massa sapien consectetur augue, n
 @pytest.mark.parametrize("file_name", ["sun.txt"])
 def test_tokenizer_handle_text_from_file(tokenizer, file_name):
     loc = ensure_path(__file__).parent / file_name
-    with loc.open("r", encoding="utf8") as infile:
-        text = infile.read()
+    text = loc.open("r", encoding="utf8").read()
     assert len(text) != 0
     tokens = tokenizer(text)
     assert len(tokens) > 100
