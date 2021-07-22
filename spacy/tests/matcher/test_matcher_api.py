@@ -330,7 +330,7 @@ def test_matcher_superset_value_operator(en_vocab):
 
 def test_matcher_intersect_value_operator(en_vocab):
     matcher = Matcher(en_vocab)
-    pattern = [{"MORPH": {"IS_INTERSECT": ["Feat=Val", "Feat2=Val2", "Feat3=Val3"]}}]
+    pattern = [{"MORPH": {"INTERSECTS": ["Feat=Val", "Feat2=Val2", "Feat3=Val3"]}}]
     matcher.add("M", [pattern])
     doc = Doc(en_vocab, words=["a", "b", "c"])
     assert len(matcher(doc)) == 0
@@ -343,42 +343,42 @@ def test_matcher_intersect_value_operator(en_vocab):
     doc[0].set_morph("Feat=Val|Feat2=Val2|Feat3=Val3|Feat4=Val4")
     assert len(matcher(doc)) == 1
 
-    # IS_INTERSECT with a single value is the same as IN
+    # INTERSECTS with a single value is the same as IN
     matcher = Matcher(en_vocab)
-    pattern = [{"TAG": {"IS_INTERSECT": ["A", "B"]}}]
+    pattern = [{"TAG": {"INTERSECTS": ["A", "B"]}}]
     matcher.add("M", [pattern])
     doc = Doc(en_vocab, words=["a", "b", "c"])
     doc[0].tag_ = "A"
     assert len(matcher(doc)) == 1
 
-    # IS_INTERSECT with an empty pattern list matches nothing
+    # INTERSECTS with an empty pattern list matches nothing
     matcher = Matcher(en_vocab)
-    pattern = [{"TAG": {"IS_INTERSECT": []}}]
+    pattern = [{"TAG": {"INTERSECTS": []}}]
     matcher.add("M", [pattern])
     doc = Doc(en_vocab, words=["a", "b", "c"])
     doc[0].tag_ = "A"
     assert len(matcher(doc)) == 0
 
-    # IS_INTERSECT with a list value
+    # INTERSECTS with a list value
     Token.set_extension("ext", default=[])
     matcher = Matcher(en_vocab)
-    pattern = [{"_": {"ext": {"IS_INTERSECT": ["A", "C"]}}}]
+    pattern = [{"_": {"ext": {"INTERSECTS": ["A", "C"]}}}]
     matcher.add("M", [pattern])
     doc = Doc(en_vocab, words=["a", "b", "c"])
     doc[0]._.ext = ["A", "B"]
     assert len(matcher(doc)) == 1
 
-    # IS_INTERSECT with an empty pattern list matches nothing
+    # INTERSECTS with an empty pattern list matches nothing
     matcher = Matcher(en_vocab)
-    pattern = [{"_": {"ext": {"IS_INTERSECT": []}}}]
+    pattern = [{"_": {"ext": {"INTERSECTS": []}}}]
     matcher.add("M", [pattern])
     doc = Doc(en_vocab, words=["a", "b", "c"])
     doc[0]._.ext = ["A", "B"]
     assert len(matcher(doc)) == 0
 
-    # IS_INTERSECT with an empty value matches nothing
+    # INTERSECTS with an empty value matches nothing
     matcher = Matcher(en_vocab)
-    pattern = [{"_": {"ext": {"IS_INTERSECT": ["A", "B"]}}}]
+    pattern = [{"_": {"ext": {"INTERSECTS": ["A", "B"]}}}]
     matcher.add("M", [pattern])
     doc = Doc(en_vocab, words=["a", "b", "c"])
     doc[0]._.ext = []

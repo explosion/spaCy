@@ -845,7 +845,7 @@ class _RegexPredicate:
 
 
 class _SetPredicate:
-    operators = ("IN", "NOT_IN", "IS_SUBSET", "IS_SUPERSET", "IS_INTERSECT")
+    operators = ("IN", "NOT_IN", "IS_SUBSET", "IS_SUPERSET", "INTERSECTS")
 
     def __init__(self, i, attr, value, predicate, is_extension=False, vocab=None):
         self.i = i
@@ -868,7 +868,7 @@ class _SetPredicate:
         else:
             value = get_token_attr_for_matcher(token.c, self.attr)
 
-        if self.predicate in ("IS_SUBSET", "IS_SUPERSET", "IS_INTERSECT"):
+        if self.predicate in ("IS_SUBSET", "IS_SUPERSET", "INTERSECTS"):
             if self.attr == MORPH:
                 # break up MORPH into individual Feat=Val values
                 value = set(get_string_id(v) for v in MorphAnalysis.from_id(self.vocab, value))
@@ -886,7 +886,7 @@ class _SetPredicate:
             return value <= self.value
         elif self.predicate == "IS_SUPERSET":
             return value >= self.value
-        elif self.predicate == "IS_INTERSECT":
+        elif self.predicate == "INTERSECTS":
             return bool(value & self.value)
 
     def __repr__(self):
@@ -932,7 +932,7 @@ def _get_extra_predicates(spec, extra_predicates, vocab):
         "NOT_IN": _SetPredicate,
         "IS_SUBSET": _SetPredicate,
         "IS_SUPERSET": _SetPredicate,
-        "IS_INTERSECT": _SetPredicate,
+        "INTERSECTS": _SetPredicate,
         "==": _ComparisonPredicate,
         "!=": _ComparisonPredicate,
         ">=": _ComparisonPredicate,

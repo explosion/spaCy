@@ -159,7 +159,7 @@ class TokenPatternString(BaseModel):
     NOT_IN: Optional[List[StrictStr]] = Field(None, alias="not_in")
     IS_SUBSET: Optional[List[StrictStr]] = Field(None, alias="is_subset")
     IS_SUPERSET: Optional[List[StrictStr]] = Field(None, alias="is_superset")
-    IS_INTERSECT: Optional[List[StrictStr]] = Field(None, alias="is_intersect")
+    INTERSECTS: Optional[List[StrictStr]] = Field(None, alias="intersects")
 
     class Config:
         extra = "forbid"
@@ -178,7 +178,7 @@ class TokenPatternNumber(BaseModel):
     NOT_IN: Optional[List[StrictInt]] = Field(None, alias="not_in")
     IS_SUBSET: Optional[List[StrictInt]] = Field(None, alias="is_subset")
     IS_SUPERSET: Optional[List[StrictInt]] = Field(None, alias="is_superset")
-    IS_INTERSECT: Optional[List[StrictInt]] = Field(None, alias="is_intersect")
+    INTERSECTS: Optional[List[StrictInt]] = Field(None, alias="intersects")
     EQ: Union[StrictInt, StrictFloat] = Field(None, alias="==")
     NEQ: Union[StrictInt, StrictFloat] = Field(None, alias="!=")
     GEQ: Union[StrictInt, StrictFloat] = Field(None, alias=">=")

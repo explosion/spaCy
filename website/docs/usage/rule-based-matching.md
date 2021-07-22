@@ -240,7 +240,7 @@ following rich comparison attributes are available:
 | `NOT_IN`                   | Attribute value is _not_ member of a list. ~~Any~~                                                       |
 | `IS_SUBSET`                | Attribute value (for `MORPH` or custom list attributes) is a subset of a list. ~~Any~~                   |
 | `IS_SUPERSET`              | Attribute value (for `MORPH` or custom list attributes) is a superset of a list. ~~Any~~                 |
-| `IS_INTERSECT`             | Attribute value (for `MORPH` or custom list attribute) has a non-empty intersection with a list. ~~Any~~ |
+| `INTERSECTS`               | Attribute value (for `MORPH` or custom list attribute) has a non-empty intersection with a list. ~~Any~~ |
 | `==`, `>=`, `<=`, `>`, `<` | Attribute value is equal, greater or equal, smaller or equal, greater or smaller. ~~Union[int, float]~~  |
 
 #### Regular expressions {#regex new="2.1"}
