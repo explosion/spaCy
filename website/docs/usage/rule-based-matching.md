@@ -234,14 +234,10 @@ following rich comparison attributes are available:
 > pattern2 = [{"LENGTH": {">=": 10}}]
 >
 > # Match based on morph attributes
-> pattern3 = [{"MORPH": {"IS_SUBSET": ["Number=Singular", "Gender=Neuter"]}}]
-> doc = nlp(...)
-> # this will match because it's an exact match
-> doc[0].set_morph("Number=Singular|Gender=Neutral")
-> # this will not match
-> doc[0].set_morph("Number=Plural|Gender=Neutral")
-> # this will also not match because it's a superset
-> doc[0].set_morph("Number=Singular|Gender=Neutral|Politeness=Informal")
+> pattern3 = [{"MORPH": {"IS_SUBSET": ["Number=Sing", "Gender=Neut"]}}]
+> # "", "Number=Sing" and "Number=Sing|Gender=Neut" will match as subsets
+> # "Number=Plur|Gender=Neut" will not match
+> # "Number=Sing|Gender=Neut|Polite=Infm" will not match because it's a superset
 > ```
 
 | Attribute                  | Description                                                                                             |
