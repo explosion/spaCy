@@ -122,9 +122,10 @@ cdef class DependencyMatcher:
                     raise ValueError(Errors.E099.format(key=key))
                 visited_nodes[relation["RIGHT_ID"]] = True
             else:
+                if not "RIGHT_ATTRS" in relation:
+                    relation["RIGHT_ATTRS"] = {}
                 if not(
                     "RIGHT_ID" in relation
-                    and "RIGHT_ATTRS" in relation
                     and "REL_OP" in relation
                     and "LEFT_ID" in relation
                 ):
