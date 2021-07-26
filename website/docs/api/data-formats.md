@@ -297,7 +297,7 @@ objects to JSON, you can now serialize them directly using the
 format:
 
 ```cli
-$ python -m spacy convert ./data.json ./output.spacy
+$ python -m spacy convert ./data.json .
 ```
 
 </Infobox>
