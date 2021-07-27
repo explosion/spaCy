@@ -1,4 +1,4 @@
-from typing import Dict, Any, List, Union, Optional
+from typing import Any, List, Union, Optional
 from pathlib import Path
 import srsly
 from preshed.bloom import BloomFilter
@@ -12,18 +12,16 @@ from .strings import get_string_id
 UNSET = object()
 
 
-def load_lookups(
-    lang: str, tables: List[str], strict: bool = True
-) -> Optional[Dict[str, Any]]:
+def load_lookups(lang: str, tables: List[str], strict: bool = True) -> "Lookups":
     """Load the data from the spacy-lookups-data package for a given language,
-    if available. Returns an empty dict if there's no data or if the package
+    if available. Returns an empty `Lookups` container if there's no data or if the package
     is not installed.
 
     lang (str): The language code (corresponds to entry point exposed by
         the spacy-lookups-data package).
     tables (List[str]): Name of tables to load, e.g. ["lemma_lookup", "lemma_exc"]
     strict (bool): Whether to raise an error if a table doesn't exist.
-    RETURNS (Dict[str, Any]): The lookups, keyed by table name.
+    RETURNS (Lookups): The lookups container containing the loaded tables.
     """
     # TODO: import spacy_lookups_data instead of going via entry points here?
     lookups = Lookups()

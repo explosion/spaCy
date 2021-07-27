@@ -5,10 +5,11 @@ from spacy.attrs import DEP
 from spacy.lang.en import English
 from spacy.training import Example
 from spacy.tokens import Doc
-from spacy import util
+from spacy import util, registry
 
 from ..util import apply_transition_sequence, make_tempdir
-
+from ...pipeline import DependencyParser
+from ...pipeline.dep_parser import DEFAULT_PARSER_MODEL
 
 TRAIN_DATA = [
     (
@@ -213,6 +214,18 @@ def test_parser_set_sent_starts(en_vocab):
     for sent in doc.sents:
         for token in sent:
             assert token.head in sent
+
+
+def test_parser_constructor(en_vocab):
+    config = {
+        "learn_tokens": False,
+        "min_action_freq": 30,
+        "update_with_oracle_cut_size": 100,
+    }
+    cfg = {"model": DEFAULT_PARSER_MODEL}
+    model = registry.resolve(cfg, validate=True)["model"]
+    DependencyParser(en_vocab, model, **config)
+    DependencyParser(en_vocab, model)
 
 
 @pytest.mark.parametrize("pipe_name", ["parser", "beam_parser"])

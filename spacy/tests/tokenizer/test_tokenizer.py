@@ -209,10 +209,6 @@ def test_tokenizer_flush_specials(en_vocab):
         suffix_search=suffix_re.search,
         rules=rules,
     )
-    tokenizer2 = Tokenizer(
-        en_vocab,
-        suffix_search=suffix_re.search,
-    )
     assert [t.text for t in tokenizer1("a a.")] == ["a a", "."]
     tokenizer1.rules = {}
     assert [t.text for t in tokenizer1("a a.")] == ["a", "a", "."]

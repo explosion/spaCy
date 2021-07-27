@@ -16,6 +16,7 @@ menu:
   - ['package', 'package']
   - ['project', 'project']
   - ['ray', 'ray']
+  - ['huggingface-hub', 'huggingface-hub']
 ---
 
 spaCy's CLI provides a range of helpful commands for downloading and training
@@ -768,6 +769,7 @@ $ python -m spacy debug model ./config.cfg tagger -l "5,15" -DIM -PAR -P0 -P1 -P
 | `--print-step3`, `-P3`  | Print final predictions. ~~bool (flag)~~                                                                                                                                                                           |
 | `--gpu-id`, `-g`        | GPU ID or `-1` for CPU. Defaults to `-1`. ~~int (option)~~                                                                                                                                                         |
 | `--help`, `-h`          | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                                         |
+| overrides               | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--paths.train ./train.spacy`. ~~Any (option/flag)~~                         |
 | **PRINTS**              | Debugging information.                                                                                                                                                                                             |
 
 ## train {#train tag="command"}
@@ -932,7 +934,10 @@ copied into the package and imported in the `__init__.py`. If the path to a
 [`meta.json`](/api/data-formats#meta) is supplied, or a `meta.json` is found in
 the input directory, this file is used. Otherwise, the data can be entered
 directly from the command line. spaCy will then create a build artifact that you
-can distribute and install with `pip install`.
+can distribute and install with `pip install`. As of v3.1, the `package` command
+will also create a formatted `README.md` based on the pipeline information
+defined in the `meta.json`. If a `README.md` is already present in the source
+directory, it will be used instead.
 
 <Infobox title="New in v3.0" variant="warning">
 
@@ -1272,3 +1277,49 @@ $ python -m spacy ray train [config_path] [--code] [--output] [--n-workers] [--a
 | `--verbose`, `-V`   | Display more information for debugging purposes. ~~bool (flag)~~                                                                                                                           |
 | `--help`, `-h`      | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                 |
 | overrides           | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--paths.train ./train.spacy`. ~~Any (option/flag)~~ |
+
+## huggingface-hub {#huggingface-hub new="3.1"}
+
+The `spacy huggingface-cli` CLI includes commands for uploading your trained
+spaCy pipelines to the [Hugging Face Hub](https://huggingface.co/).
+
+> #### Installation
+>
+> ```cli
+> $ pip install spacy-huggingface-hub
+> $ huggingface-cli login
+> ```
+
+<Infobox variant="warning">
+
+To use this command, you need the
+[`spacy-huggingface-hub`](https://github.com/explosion/spacy-huggingface-hub)
+package installed. Installing the package will automatically add the
+`huggingface-hub` command to the spaCy CLI.
+
+</Infobox>
+
+### huggingface-hub push {#huggingface-hub-push tag="command"}
+
+Push a spaCy pipeline to the Hugging Face Hub. Expects a `.whl` file packaged
+with [`spacy package`](/api/cli#package) and `--build wheel`. For more details,
+see the spaCy project [integration](/usage/projects#huggingface_hub).
+
+```cli
+$ python -m spacy huggingface-hub push [whl_path] [--org] [--msg] [--local-repo] [--verbose]
+```
+
+> #### Example
+>
+> ```cli
+> $ python -m spacy huggingface-hub push en_ner_fashion-0.0.0-py3-none-any.whl
+> ```
+
+| Name                 | Description                                                                                                                                     |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `whl_path`           | The path to the `.whl` file packaged with [`spacy package`](https://spacy.io/api/cli#package). ~~Path(positional)~~                             |
+| `--org`, `-o`        | Optional name of organization to which the pipeline should be uploaded. ~~str (option)~~                                                        |
+| `--msg`, `-m`        | Commit message to use for update. Defaults to `"Update spaCy pipeline"`. ~~str (option)~~                                                       |
+| `--local-repo`, `-l` | Local path to the model repository (will be created if it doesn't exist). Defaults to `hub` in the current working directory. ~~Path (option)~~ |
+| `--verbose`, `-V`    | Output additional info for debugging, e.g. the full generated hub metadata. ~~bool (flag)~~                                                     |
+| **UPLOADS**          | The pipeline to the hub.                                                                                                                        |

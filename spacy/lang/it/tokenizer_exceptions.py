@@ -25,7 +25,7 @@ for orth in [
     "artt.",
     "att.",
     "avv.",
-    "Avv."
+    "Avv.",
     "by-pass",
     "c.d.",
     "c/c",

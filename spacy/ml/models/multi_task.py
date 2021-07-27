@@ -3,7 +3,7 @@ from thinc.api import chain, Maxout, LayerNorm, Softmax, Linear, zero_init, Mode
 from thinc.api import MultiSoftmax, list2array
 from thinc.api import to_categorical, CosineDistance, L2Distance
 
-from ...util import registry
+from ...util import registry, OOV_RANK
 from ...errors import Errors
 from ...attrs import ID
 
@@ -13,7 +13,7 @@ from functools import partial
 if TYPE_CHECKING:
     # This lets us add type hints for mypy etc. without causing circular imports
     from ...vocab import Vocab  # noqa: F401
-    from ...tokens import Doc  # noqa: F401
+    from ...tokens.doc import Doc  # noqa: F401
 
 
 @registry.architectures("spacy.PretrainVectors.v1")
@@ -70,6 +70,7 @@ def get_vectors_loss(ops, docs, prediction, distance):
     # and look them up all at once. This prevents data copying.
     ids = ops.flatten([doc.to_array(ID).ravel() for doc in docs])
     target = docs[0].vocab.vectors.data[ids]
+    target[ids == OOV_RANK] = 0
     d_target, loss = distance(prediction, target)
     return loss, d_target
 
@@ -205,7 +206,7 @@ def _apply_mask(
     docs: Iterable["Doc"], random_words: _RandomWords, mask_prob: float = 0.15
 ) -> Tuple[numpy.ndarray, List["Doc"]]:
     # This needs to be here to avoid circular imports
-    from ...tokens import Doc  # noqa: F811
+    from ...tokens.doc import Doc  # noqa: F811
 
     N = sum(len(doc) for doc in docs)
     mask = numpy.random.uniform(0.0, 1.0, (N,))

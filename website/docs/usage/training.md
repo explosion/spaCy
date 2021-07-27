@@ -45,6 +45,14 @@ you generate a starter config with the **recommended settings** for your
 specific use case. It's also available in spaCy as the
 [`init config`](/api/cli#init-config) command.
 
+<Infobox variant="warning">
+
+Upgrade to the [latest version of spaCy](/usage) to use the quickstart widget.
+For earlier releases, follow the CLI instructions to generate a compatible
+config.
+
+</Infobox>
+
 > #### Instructions: widget
 >
 > 1. Select your requirements and settings.
@@ -635,7 +643,7 @@ The default score weights are defined by each pipeline component via the
 components are weighted equally. If a score weight is set to `null`, it will be
 excluded from the logs and the score won't be weighted.
 
-<Accordion title="Understanding the training output and score types" spaced>
+<Accordion title="Understanding the training output and score types" spaced id="score-types">
 
 | Name                       | Description                                                                                                             |
 | -------------------------- | ----------------------------------------------------------------------------------------------------------------------- |

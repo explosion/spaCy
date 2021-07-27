@@ -1,3 +1,5 @@
+import os
+import random
 from libc.stdint cimport int32_t
 from cymem.cymem cimport Pool
 
@@ -6,10 +8,11 @@ from thinc.extra.search cimport Beam
 
 from ...tokens.doc cimport Doc
 from ...tokens.span import Span
+from ...tokens.span cimport Span
 from ...typedefs cimport weight_t, attr_t
 from ...lexeme cimport Lexeme
 from ...attrs cimport IS_SPACE
-from ...structs cimport TokenC
+from ...structs cimport TokenC, SpanC
 from ...training.example cimport Example
 from .stateclass cimport StateClass
 from ._state cimport StateC
@@ -25,7 +28,6 @@ cdef enum:
     LAST
     UNIT
     OUT
-    ISNT
     N_MOVES
 
 
@@ -36,39 +38,62 @@ MOVE_NAMES[IN] = 'I'
 MOVE_NAMES[LAST] = 'L'
 MOVE_NAMES[UNIT] = 'U'
 MOVE_NAMES[OUT] = 'O'
-MOVE_NAMES[ISNT] = 'x'
 
 
 cdef struct GoldNERStateC:
     Transition* ner
+    SpanC* negs
     int32_t length
+    int32_t nr_neg
 
 
 cdef class BiluoGold:
     cdef Pool mem
     cdef GoldNERStateC c
 
-    def __init__(self, BiluoPushDown moves, StateClass stcls, Example example):
+    def __init__(self, BiluoPushDown moves, StateClass stcls, Example example, neg_key):
         self.mem = Pool()
-        self.c = create_gold_state(self.mem, moves, stcls.c, example)
+        self.c = create_gold_state(self.mem, moves, stcls.c, example, neg_key)
 
     def update(self, StateClass stcls):
         update_gold_state(&self.c, stcls.c)
-
 
 
 cdef GoldNERStateC create_gold_state(
     Pool mem,
     BiluoPushDown moves,
     const StateC* stcls,
-    Example example
+    Example example,
+    neg_key
 ) except *:
     cdef GoldNERStateC gs
+    cdef Span neg
+    if neg_key is not None:
+        negs = example.get_aligned_spans_y2x(
+            example.y.spans.get(neg_key, []),
+            allow_overlap=True
+        )
+    else:
+        negs = []
     assert example.x.length > 0
     gs.ner = <Transition*>mem.alloc(example.x.length, sizeof(Transition))
-    ner_tags = example.get_aligned_ner()
+    gs.negs = <SpanC*>mem.alloc(len(negs), sizeof(SpanC))
+    gs.nr_neg = len(negs)
+    ner_ents, ner_tags = example.get_aligned_ents_and_ner()
     for i, ner_tag in enumerate(ner_tags):
         gs.ner[i] = moves.lookup_transition(ner_tag)
+
+    # Prevent conflicting spans in the data. For NER, spans are equal if they have the same offsets and label.
+    neg_span_triples = {(neg_ent.start_char, neg_ent.end_char, neg_ent.label) for neg_ent in negs}
+    for pos_span in ner_ents:
+        if (pos_span.start_char, pos_span.end_char, pos_span.label) in neg_span_triples:
+            raise ValueError(Errors.E868.format(span=(pos_span.start_char, pos_span.end_char, pos_span.label_)))
+
+    # In order to handle negative samples, we need to maintain the full
+    # (start, end, label) triple. If we break it down to the 'isnt B-LOC'
+    # thing, we'll get blocked if there's an incorrect prefix.
+    for i, neg in enumerate(negs):
+        gs.negs[i] = neg.c
     return gs
 
 
@@ -156,21 +181,16 @@ cdef class BiluoPushDown(TransitionSystem):
         cdef attr_t label
         if name == '-' or name == '' or name is None:
             return Transition(clas=0, move=MISSING, label=0, score=0)
-        elif name == '!O':
-            return Transition(clas=0, move=ISNT, label=0, score=0)
         elif '-' in name:
             move_str, label_str = name.split('-', 1)
-            # Hacky way to denote 'not this entity'
+            # Deprecated, hacky way to denote 'not this entity'
             if label_str.startswith('!'):
-                label_str = label_str[1:]
-                move_str = 'x'
+                raise ValueError(Errors.E869.format(label=name))
             label = self.strings.add(label_str)
         else:
             move_str = name
             label = 0
         move = MOVE_NAMES.index(move_str)
-        if move == ISNT:
-            return Transition(clas=0, move=ISNT, label=label, score=0)
         for i in range(self.n_moves):
             if self.c[i].move == move and self.c[i].label == label:
                 return self.c[i]
@@ -220,7 +240,7 @@ cdef class BiluoPushDown(TransitionSystem):
             label_id = label_name
         if action == OUT and label_id != 0:
             return None
-        if action == MISSING or action == ISNT:
+        if action == MISSING:
             return None
         # Check we're not creating a move we already have, so that this is
         # idempotent
@@ -247,7 +267,7 @@ cdef class BiluoPushDown(TransitionSystem):
         for i in range(state.c._ents.size()):
             ent = state.c._ents.at(i)
             if ent.start != -1 and ent.end != -1:
-                ents.append(Span(doc, ent.start, ent.end, label=ent.label))
+                ents.append(Span(doc, ent.start, ent.end, label=ent.label, kb_id=doc.c[ent.start].ent_kb_id))
         doc.set_ents(ents, default="unmodified")
         # Set non-blocked tokens to O
         for i in range(doc.length):
@@ -270,9 +290,23 @@ cdef class BiluoPushDown(TransitionSystem):
         return parses
 
     def init_gold(self, StateClass state, Example example):
-        return BiluoGold(self, state, example)
+        return BiluoGold(self, state, example, self.neg_key)
 
     def has_gold(self, Example eg, start=0, end=None):
+        # We get x and y referring to X, we want to check relative to Y,
+        # the reference
+        y_spans = eg.get_aligned_spans_x2y([eg.x[start:end]])
+        if not y_spans:
+            y_spans = [eg.y[:]]
+        y_span = y_spans[0]
+        start = y_span.start
+        end = y_span.end
+        neg_key = self.neg_key
+        if neg_key is not None:
+            # If we have any negative samples, count that as having annotation.
+            for span in eg.y.spans.get(neg_key, []):
+                if span.start >= start and span.end <= end:
+                    return True
         for word in eg.y[start:end]:
             if word.ent_iob != 0:
                 return True
@@ -306,8 +340,6 @@ cdef class BiluoPushDown(TransitionSystem):
                 n_gold += costs[i] <= 0
             else:
                 costs[i] = 9000
-        if n_gold < 1:
-            raise ValueError
 
 
 cdef class Missing:
@@ -373,23 +405,33 @@ cdef class Begin:
     @staticmethod
     cdef weight_t cost(const StateC* s, const void* _gold, attr_t label) nogil:
         gold = <GoldNERStateC*>_gold
-        cdef int g_act = gold.ner[s.B(0)].move
-        cdef attr_t g_tag = gold.ner[s.B(0)].label
+        b0 = s.B(0)
+        cdef int cost = 0
+        cdef int g_act = gold.ner[b0].move
+        cdef attr_t g_tag = gold.ner[b0].label
 
         if g_act == MISSING:
-            return 0
+            pass
         elif g_act == BEGIN:
             # B, Gold B --> Label match
-            return label != g_tag
-        # Support partial supervision in the form of "not this label"
-        elif g_act == ISNT:
-            return label == g_tag
+            cost += label != g_tag
         else:
             # B, Gold I --> False (P)
             # B, Gold L --> False (P)
             # B, Gold O --> False (P)
             # B, Gold U --> False (P)
-            return 1
+            cost += 1
+        if s.buffer_length() < 3:
+            # Handle negatives. In general we can't really do much to block
+            # B, because we don't know whether the whole entity is going to
+            # be correct or not. However, we can at least tell whether we're
+            # going to be opening an entity where there's only one possible
+            # L.
+            for span in gold.negs[:gold.nr_neg]:
+                if span.label == label and span.start == b0:
+                    cost += 1
+                    break
+        return cost
 
 
 cdef class In:
@@ -462,9 +504,6 @@ cdef class In:
         elif g_act == UNIT:
             # I, Gold U --> True iff next tag == O
             return next_act != OUT
-        # Support partial supervision in the form of "not this label"
-        elif g_act == ISNT:
-            return 0
         else:
             return 1
 
@@ -504,32 +543,41 @@ cdef class Last:
     cdef weight_t cost(const StateC* s, const void* _gold, attr_t label) nogil:
         gold = <GoldNERStateC*>_gold
         move = LAST
+        b0 = s.B(0)
+        ent_start = s.E(0)
 
-        cdef int g_act = gold.ner[s.B(0)].move
-        cdef attr_t g_tag = gold.ner[s.B(0)].label
+        cdef int g_act = gold.ner[b0].move
+        cdef attr_t g_tag = gold.ner[b0].label
+
+        cdef int cost = 0
 
         if g_act == MISSING:
-            return 0
+            pass
         elif g_act == BEGIN:
             # L, Gold B --> True
-            return 0
+            pass
         elif g_act == IN:
             # L, Gold I --> True iff this entity sunk
-            return not _entity_is_sunk(s, gold.ner)
+            cost += not _entity_is_sunk(s, gold.ner)
         elif g_act == LAST:
             # L, Gold L --> True
-            return 0
+            pass
         elif g_act == OUT:
             # L, Gold O --> True
-            return 0
+            pass
         elif g_act == UNIT:
             # L, Gold U --> True
-            return 0
-        # Support partial supervision in the form of "not this label"
-        elif g_act == ISNT:
-            return 0
+            pass
         else:
-            return 1
+            cost += 1
+        # If we have negative-example entities, integrate them into the objective,
+        # by marking actions that close an entity that we know is incorrect
+        # as costly.
+        for span in gold.negs[:gold.nr_neg]:
+            if span.label == label and (span.end-1) == b0 and span.start == ent_start:
+                cost += 1
+                break
+        return cost
 
 
 cdef class Unit:
@@ -573,21 +621,29 @@ cdef class Unit:
         gold = <GoldNERStateC*>_gold
         cdef int g_act = gold.ner[s.B(0)].move
         cdef attr_t g_tag = gold.ner[s.B(0)].label
+        cdef int cost = 0
 
         if g_act == MISSING:
-            return 0
+            pass
         elif g_act == UNIT:
             # U, Gold U --> True iff tag match
-            return label != g_tag
-        # Support partial supervision in the form of "not this label"
-        elif g_act == ISNT:
-            return label == g_tag
+            cost += label != g_tag
         else:
             # U, Gold B --> False
             # U, Gold I --> False
             # U, Gold L --> False
             # U, Gold O --> False
-            return 1
+            cost += 1
+        # If we have negative-example entities, integrate them into the objective.
+        # This is fairly straight-forward for U- entities, as we have a single
+        # action
+        cdef int b0 = s.B(0)
+        for span in gold.negs[:gold.nr_neg]:
+            if span.label == label and span.start == b0 and span.end == (b0+1):
+                cost += 1
+                break
+        return cost
+ 
 
 
 cdef class Out:
@@ -613,25 +669,24 @@ cdef class Out:
         gold = <GoldNERStateC*>_gold
         cdef int g_act = gold.ner[s.B(0)].move
         cdef attr_t g_tag = gold.ner[s.B(0)].label
-
-        if g_act == ISNT and g_tag == 0:
-            return 1
-        elif g_act == MISSING or g_act == ISNT:
-            return 0
+        cdef weight_t cost = 0
+        if g_act == MISSING:
+            pass
         elif g_act == BEGIN:
             # O, Gold B --> False
-            return 1
+            cost += 1
         elif g_act == IN:
             # O, Gold I --> True
-            return 0
+            pass
         elif g_act == LAST:
             # O, Gold L --> True
-            return 0
+            pass
         elif g_act == OUT:
             # O, Gold O --> True
-            return 0
+            pass
         elif g_act == UNIT:
             # O, Gold U --> False
-            return 1
+            cost += 1
         else:
-            return 1
+            cost += 1
+        return cost

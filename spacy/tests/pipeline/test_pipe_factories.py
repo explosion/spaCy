@@ -160,7 +160,7 @@ def test_pipe_class_component_model():
             "@architectures": "spacy.TextCatEnsemble.v2",
             "tok2vec": DEFAULT_TOK2VEC_MODEL,
             "linear_model": {
-                "@architectures": "spacy.TextCatBOW.v1",
+                "@architectures": "spacy.TextCatBOW.v2",
                 "exclusive_classes": False,
                 "ngram_size": 1,
                 "no_output_layer": False,
@@ -351,8 +351,21 @@ def test_language_factories_invalid():
         ([{"a": 0.5, "b": 0.5}, {"b": 1.0}], {"a": 0.0}, {"a": 0.0, "b": 1.0}),
         ([{"a": 0.0, "b": 0.0}, {"c": 0.0}], {}, {"a": 0.0, "b": 0.0, "c": 0.0}),
         ([{"a": 0.0, "b": 0.0}, {"c": 1.0}], {}, {"a": 0.0, "b": 0.0, "c": 1.0}),
-        ([{"a": 0.0, "b": 0.0}, {"c": 0.0}], {"c": 0.2}, {"a": 0.0, "b": 0.0, "c": 1.0}),
-        ([{"a": 0.5, "b": 0.5, "c": 1.0, "d": 1.0}], {"a": 0.0, "b": 0.0}, {"a": 0.0, "b": 0.0, "c": 0.5, "d": 0.5}),
+        (
+            [{"a": 0.0, "b": 0.0}, {"c": 0.0}],
+            {"c": 0.2},
+            {"a": 0.0, "b": 0.0, "c": 1.0},
+        ),
+        (
+            [{"a": 0.5, "b": 0.5, "c": 1.0, "d": 1.0}],
+            {"a": 0.0, "b": 0.0},
+            {"a": 0.0, "b": 0.0, "c": 0.5, "d": 0.5},
+        ),
+        (
+            [{"a": 0.5, "b": 0.5, "c": 1.0, "d": 1.0}],
+            {"a": 0.0, "b": 0.0, "f": 0.0},
+            {"a": 0.0, "b": 0.0, "c": 0.5, "d": 0.5, "f": 0.0},
+        ),
     ],
 )
 def test_language_factories_combine_score_weights(weights, override, expected):

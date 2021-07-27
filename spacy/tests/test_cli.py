@@ -10,11 +10,16 @@ from spacy.cli.init_config import init_config, RECOMMENDATIONS
 from spacy.cli._util import validate_project_commands, parse_config_overrides
 from spacy.cli._util import load_project_config, substitute_project_variables
 from spacy.cli._util import string_to_list
+from spacy import about
+from spacy.util import get_minor_version
+from spacy.cli.validate import get_model_pkgs
+from spacy.cli.download import get_compatibility, get_version
 from thinc.api import ConfigValidationError, Config
 import srsly
 import os
 
 from .util import make_tempdir
+from ..cli.init_pipeline import _init_labels
 
 
 def test_cli_info():
@@ -308,7 +313,8 @@ def test_project_config_validation2(config, n_errors):
 
 
 @pytest.mark.parametrize(
-    "int_value", [10, pytest.param("10", marks=pytest.mark.xfail)],
+    "int_value",
+    [10, pytest.param("10", marks=pytest.mark.xfail)],
 )
 def test_project_config_interpolation(int_value):
     variables = {"a": int_value, "b": {"c": "foo", "d": True}}
@@ -331,7 +337,8 @@ def test_project_config_interpolation(int_value):
 
 
 @pytest.mark.parametrize(
-    "greeting", [342, "everyone", "tout le monde", pytest.param("42", marks=pytest.mark.xfail)],
+    "greeting",
+    [342, "everyone", "tout le monde", pytest.param("42", marks=pytest.mark.xfail)],
 )
 def test_project_config_interpolation_override(greeting):
     variables = {"a": "world"}
@@ -423,11 +430,17 @@ def test_parse_cli_overrides():
 @pytest.mark.parametrize("pretraining", [True, False])
 def test_init_config(lang, pipeline, optimize, pretraining):
     # TODO: add more tests and also check for GPU with transformers
-    config = init_config(lang=lang, pipeline=pipeline, optimize=optimize, pretraining=pretraining, gpu=False)
+    config = init_config(
+        lang=lang,
+        pipeline=pipeline,
+        optimize=optimize,
+        pretraining=pretraining,
+        gpu=False,
+    )
     assert isinstance(config, Config)
     if pretraining:
         config["paths"]["raw_text"] = "my_data.jsonl"
-    nlp = load_model_from_config(config, auto_fill=True)
+    load_model_from_config(config, auto_fill=True)
 
 
 def test_model_recommendations():
@@ -474,3 +487,48 @@ def test_string_to_list(value):
 def test_string_to_list_intify(value):
     assert string_to_list(value, intify=False) == ["1", "2", "3"]
     assert string_to_list(value, intify=True) == [1, 2, 3]
+
+
+def test_download_compatibility():
+    model_name = "en_core_web_sm"
+    compatibility = get_compatibility()
+    version = get_version(model_name, compatibility)
+    assert get_minor_version(about.__version__) == get_minor_version(version)
+
+
+def test_validate_compatibility_table():
+    model_pkgs, compat = get_model_pkgs()
+    spacy_version = get_minor_version(about.__version__)
+    current_compat = compat.get(spacy_version, {})
+    assert len(current_compat) > 0
+    assert "en_core_web_sm" in current_compat
+
+
+@pytest.mark.parametrize("component_name", ["ner", "textcat", "spancat", "tagger"])
+def test_init_labels(component_name):
+    nlp = Dutch()
+    component = nlp.add_pipe(component_name)
+    for label in ["T1", "T2", "T3", "T4"]:
+        component.add_label(label)
+    assert len(nlp.get_pipe(component_name).labels) == 4
+
+    with make_tempdir() as tmp_dir:
+        _init_labels(nlp, tmp_dir)
+
+        config = init_config(
+            lang="nl",
+            pipeline=[component_name],
+            optimize="efficiency",
+            gpu=False,
+        )
+        config["initialize"]["components"][component_name] = {
+            "labels": {
+                "@readers": "spacy.read_labels.v1",
+                "path": f"{tmp_dir}/{component_name}.json",
+            }
+        }
+
+        nlp2 = load_model_from_config(config, auto_fill=True)
+        assert len(nlp2.get_pipe(component_name).labels) == 0
+        nlp2.initialize()
+        assert len(nlp2.get_pipe(component_name).labels) == 4

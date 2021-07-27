@@ -57,13 +57,13 @@ if TYPE_CHECKING:
     from .vocab import Vocab  # noqa: F401
 
 
+# fmt: off
 OOV_RANK = numpy.iinfo(numpy.uint64).max
 DEFAULT_OOV_PROB = -20
 LEXEME_NORM_LANGS = ["cs", "da", "de", "el", "en", "id", "lb", "mk", "pt", "ru", "sr", "ta", "th"]
 
 # Default order of sections in the config.cfg. Not all sections needs to exist,
 # and additional sections are added at the end, in alphabetical order.
-# fmt: off
 CONFIG_SECTION_ORDER = ["paths", "variables", "system", "nlp", "components", "corpora", "training", "pretraining", "initialize"]
 # fmt: on
 
@@ -387,9 +387,10 @@ def load_model_from_path(
     if not meta:
         meta = get_model_meta(model_path)
     config_path = model_path / "config.cfg"
-    config = load_config(config_path, overrides=dict_to_dot(config))
+    overrides = dict_to_dot(config)
+    config = load_config(config_path, overrides=overrides)
     nlp = load_model_from_config(config, vocab=vocab, disable=disable, exclude=exclude)
-    return nlp.from_disk(model_path, exclude=exclude)
+    return nlp.from_disk(model_path, exclude=exclude, overrides=overrides)
 
 
 def load_model_from_config(
@@ -647,6 +648,18 @@ def get_model_version_range(spacy_version: str) -> str:
     return f">={spacy_version},<{release[0]}.{release[1] + 1}.0"
 
 
+def get_model_lower_version(constraint: str) -> Optional[str]:
+    """From a version range like >=1.2.3,<1.3.0 return the lower pin."""
+    try:
+        specset = SpecifierSet(constraint)
+        for spec in specset:
+            if spec.operator in (">=", "==", "~="):
+                return spec.version
+    except Exception:
+        pass
+    return None
+
+
 def get_base_version(version: str) -> str:
     """Generate the base version without any prerelease identifiers.
 
@@ -700,10 +713,18 @@ def load_meta(path: Union[str, Path]) -> Dict[str, Any]:
             raise ValueError(Errors.E054.format(setting=setting))
     if "spacy_version" in meta:
         if not is_compatible_version(about.__version__, meta["spacy_version"]):
+            lower_version = get_model_lower_version(meta["spacy_version"])
+            lower_version = get_minor_version(lower_version)
+            if lower_version is not None:
+                lower_version = "v" + lower_version
+            elif "spacy_git_version" in meta:
+                lower_version = "git commit " + meta["spacy_git_version"]
+            else:
+                lower_version = "version unknown"
             warn_msg = Warnings.W095.format(
                 model=f"{meta['lang']}_{meta['name']}",
                 model_version=meta["version"],
-                version=meta["spacy_version"],
+                version=lower_version,
                 current=about.__version__,
             )
             warnings.warn(warn_msg)
@@ -1372,7 +1393,8 @@ def combine_score_weights(
     # We divide each weight by the total weight sum.
     # We first need to extract all None/null values for score weights that
     # shouldn't be shown in the table *or* be weighted
-    result = {key: overrides.get(key, value) for w_dict in weights for (key, value) in w_dict.items()}
+    result = {key: value for w_dict in weights for (key, value) in w_dict.items()}
+    result.update(overrides)
     weight_sum = sum([v if v else 0.0 for v in result.values()])
     for key, value in result.items():
         if value and weight_sum > 0:
@@ -1515,11 +1537,15 @@ def to_ternary_int(val) -> int:
     attributes such as SENT_START: True/1/1.0 is 1 (True), None/0/0.0 is 0
     (None), any other values are -1 (False).
     """
-    if isinstance(val, float):
-        val = int(val)
-    if val is True or val is 1:
+    if val is True:
         return 1
-    elif val is None or val is 0:
+    elif val is None:
+        return 0
+    elif val is False:
+        return -1
+    elif val == 1:
+        return 1
+    elif val == 0:
         return 0
     else:
         return -1

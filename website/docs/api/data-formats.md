@@ -93,7 +93,7 @@ Defines the `nlp` object, its tokenizer and
 > labels = ["POSITIVE", "NEGATIVE"]
 >
 > [components.textcat.model]
-> @architectures = "spacy.TextCatBOW.v1"
+> @architectures = "spacy.TextCatBOW.v2"
 > exclusive_classes = true
 > ngram_size = 1
 > no_output_layer = false
@@ -297,7 +297,7 @@ objects to JSON, you can now serialize them directly using the
 format:
 
 ```cli
-$ python -m spacy convert ./data.json ./output.spacy
+$ python -m spacy convert ./data.json .
 ```
 
 </Infobox>
@@ -589,7 +589,7 @@ source of truth** used for loading a pipeline.
 | `vectors`                                      | Information about the word vectors included with the pipeline. Typically a dict with the keys `"width"`, `"vectors"` (number of vectors), `"keys"` and `"name"`. ~~Dict[str, Any]~~                                                                                                                                              |
 | `pipeline`                                     | Names of pipeline component names, in order. Corresponds to [`nlp.pipe_names`](/api/language#pipe_names). Only exists for reference and is not used to create the components. This information is defined in the [`config.cfg`](/api/data-formats#config). Defaults to `[]`. ~~List[str]~~                                       |
 | `labels`                                       | Label schemes of the trained pipeline components, keyed by component name. Corresponds to [`nlp.pipe_labels`](/api/language#pipe_labels). [See here](https://github.com/explosion/spacy-models/tree/master/meta) for examples. Defaults to `{}`. ~~Dict[str, Dict[str, List[str]]]~~                                             |
-| `accuracy`                                     | Training accuracy, added automatically by [`spacy train`](/api/cli#train). Dictionary of [score names](/usage/training#metrics) mapped to scores. Defaults to `{}`. ~~Dict[str, Union[float, Dict[str, float]]]~~                                                                                                                |
+| `performance`                                  | Training accuracy, added automatically by [`spacy train`](/api/cli#train). Dictionary of [score names](/usage/training#metrics) mapped to scores. Defaults to `{}`. ~~Dict[str, Union[float, Dict[str, float]]]~~                                                                                                                |
 | `speed`                                        | Inference speed, added automatically by [`spacy train`](/api/cli#train). Typically a dictionary with the keys `"cpu"`, `"gpu"` and `"nwords"` (words per second). Defaults to `{}`. ~~Dict[str, Optional[Union[float, str]]]~~                                                                                                   |
 | `spacy_git_version` <Tag variant="new">3</Tag> | Git commit of [`spacy`](https://github.com/explosion/spaCy) used to create pipeline. ~~str~~                                                                                                                                                                                                                                     |
 | other                                          | Any other custom meta information you want to add. The data is preserved in [`nlp.meta`](/api/language#meta). ~~Any~~                                                                                                                                                                                                            |

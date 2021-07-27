@@ -103,10 +103,12 @@ class DocBin:
             self.strings.add(token.text)
             self.strings.add(token.tag_)
             self.strings.add(token.lemma_)
+            self.strings.add(token.norm_)
             self.strings.add(str(token.morph))
             self.strings.add(token.dep_)
             self.strings.add(token.ent_type_)
             self.strings.add(token.ent_kb_id_)
+            self.strings.add(token.ent_id_)
         self.cats.append(doc.cats)
         self.user_data.append(srsly.msgpack_dumps(doc.user_data))
         self.span_groups.append(doc.spans.to_bytes())
@@ -244,7 +246,10 @@ class DocBin:
         """
         path = ensure_path(path)
         with path.open("wb") as file_:
-            file_.write(self.to_bytes())
+            try:
+                file_.write(self.to_bytes())
+            except ValueError:
+                raise ValueError(Errors.E870)
 
     def from_disk(self, path: Union[str, Path]) -> "DocBin":
         """Load the DocBin from a file (typically called .spacy).

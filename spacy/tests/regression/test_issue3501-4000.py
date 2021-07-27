@@ -197,7 +197,7 @@ def test_issue3555(en_vocab):
 
 
 def test_issue3611():
-    """ Test whether adding n-grams in the textcat works even when n > token length of some docs """
+    """Test whether adding n-grams in the textcat works even when n > token length of some docs"""
     unique_classes = ["offensive", "inoffensive"]
     x_train = [
         "This is an offensive text",
@@ -259,8 +259,6 @@ def test_issue3830_no_subtok():
     """Test that the parser doesn't have subtok label if not learn_tokens"""
     config = {
         "learn_tokens": False,
-        "min_action_freq": 30,
-        "update_with_oracle_cut_size": 100,
     }
     model = registry.resolve({"model": DEFAULT_PARSER_MODEL}, validate=True)["model"]
     parser = DependencyParser(Vocab(), model, **config)
@@ -274,8 +272,6 @@ def test_issue3830_with_subtok():
     """Test that the parser does have subtok label if learn_tokens=True."""
     config = {
         "learn_tokens": True,
-        "min_action_freq": 30,
-        "update_with_oracle_cut_size": 100,
     }
     model = registry.resolve({"model": DEFAULT_PARSER_MODEL}, validate=True)["model"]
     parser = DependencyParser(Vocab(), model, **config)
@@ -286,7 +282,7 @@ def test_issue3830_with_subtok():
 
 
 def test_issue3839(en_vocab):
-    """Test that match IDs returned by the matcher are correct, are in the string """
+    """Test that match IDs returned by the matcher are correct, are in the string"""
     doc = Doc(en_vocab, words=["terrific", "group", "of", "people"])
     matcher = Matcher(en_vocab)
     match_id = "PATTERN"
@@ -370,7 +366,7 @@ def test_issue3951(en_vocab):
 
 
 def test_issue3959():
-    """ Ensure that a modified pos attribute is serialized correctly."""
+    """Ensure that a modified pos attribute is serialized correctly."""
     nlp = English()
     doc = nlp(
         "displaCy uses JavaScript, SVG and CSS to show you how computers understand language"

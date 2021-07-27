@@ -141,7 +141,9 @@ class EntityRuler(Pipe):
 
     def match(self, doc: Doc):
         self._require_patterns()
-        matches = list(self.matcher(doc)) + list(self.phrase_matcher(doc))
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", message="\\[W036")
+            matches = list(self.matcher(doc)) + list(self.phrase_matcher(doc))
         matches = set(
             [(m_id, start, end) for m_id, start, end in matches if start != end]
         )
@@ -275,9 +277,7 @@ class EntityRuler(Pipe):
                 if self == pipe:
                     current_index = i
                     break
-            subsequent_pipes = [
-                pipe for pipe in self.nlp.pipe_names[current_index + 1 :]
-            ]
+            subsequent_pipes = [pipe for pipe in self.nlp.pipe_names[current_index:]]
         except ValueError:
             subsequent_pipes = []
         with self.nlp.select_pipes(disable=subsequent_pipes):
@@ -298,7 +298,7 @@ class EntityRuler(Pipe):
                 self.nlp.pipe(phrase_pattern_texts),
                 phrase_pattern_ids,
             ):
-                phrase_pattern = {"label": label, "pattern": pattern, "id": ent_id}
+                phrase_pattern = {"label": label, "pattern": pattern}
                 if ent_id:
                     phrase_pattern["id"] = ent_id
                 phrase_patterns.append(phrase_pattern)

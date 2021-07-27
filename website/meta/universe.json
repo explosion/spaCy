@@ -1,12 +1,38 @@
 {
     "resources": [
         {
+            "id": "nlpcloud",
+            "title": "NLPCloud.io",
+            "slogan": "Production-ready API for spaCy models in production",
+            "description": "A highly-available hosted API to easily deploy and use spaCy models in production. Supports NER, POS tagging, dependency parsing, and tokenization.",
+            "github": "nlpcloud",
+            "pip": "nlpcloud",
+            "code_example": [
+                "import nlpcloud",
+                "",
+                "client = nlpcloud.Client('en_core_web_lg', '4eC39HqLyjWDarjtT1zdp7dc')",
+                "client.entities('John Doe is a Go Developer at Google')",
+                "# [{'end': 8, 'start': 0, 'text': 'John Doe', 'type': 'PERSON'}, {'end': 25, 'start': 13, 'text': 'Go Developer', 'type': 'POSITION'}, {'end': 35,'start': 30, 'text': 'Google', 'type': 'ORG'}]"
+            ],
+            "thumb": "https://avatars.githubusercontent.com/u/77671902",
+            "image": "https://nlpcloud.io/assets/images/logo.svg",
+            "code_language": "python",
+            "author": "NLPCloud.io",
+            "author_links": {
+                "github": "nlpcloud",
+                "twitter": "cloud_nlp",
+                "website": "https://nlpcloud.io"
+            },
+            "category": ["apis", "nonpython", "standalone"],
+            "tags": ["api", "deploy", "production"]
+        },
+        {
             "id": "denomme",
             "title": "denomme : Multilingual Name Detector",
             "slogan": "Multilingual Name Detection",
             "description": "A SpaCy extension for Spans to extract multilingual names out of documents trained on XLM-roberta backbone",
             "github": "meghanabhange/denomme",
-            "pip": "denomme",
+            "pip": "denomme https://denomme.s3.us-east-2.amazonaws.com/xx_denomme-0.3.1/dist/xx_denomme-0.3.1.tar.gz",
             "code_example": [
                 "from spacy.lang.xx import MultiLanguage",
                 "from denomme.name import person_name_component",
@@ -16,20 +42,48 @@
                 "print(doc._.person_name)",
                 "# ['Meghana S.R Bhange', 'Asha']"
             ],
+            "thumb": "https://i.ibb.co/jwGVWPZ/rainbow-bohemian-logo-removebg-preview.png",
+            "code_language": "python",
             "author": "Meghana Bhange",
             "author_links": {
-            "github": "meghanabhange",
-            "twitter": "_aspiringcat"
+                "github": "meghanabhange",
+                "twitter": "_aspiringcat"
             },
             "category": ["standalone"],
             "tags": ["person-name-detection"]
         },
-	      {
+        {
+            "id": "eMFDscore",
+            "title": "eMFDscore : Extended Moral Foundation Dictionary Scoring for Python",
+            "slogan": "Extended Moral Foundation Dictionary Scoring for Python",
+            "description": "eMFDscore is a library for the fast and flexible extraction of various moral information metrics from textual input data. eMFDscore is built on spaCy for faster execution and performs minimal preprocessing consisting of tokenization, syntactic dependency parsing, lower-casing, and stopword/punctuation/whitespace removal. eMFDscore lets users score documents with multiple Moral Foundations Dictionaries, provides various metrics for analyzing moral information, and extracts moral patient, agent, and attribute words related to entities.",
+            "github": "medianeuroscience/emfdscore",
+            "code_example": [
+                "from emfdscore.scoring import score_docs",
+                "import pandas as pd",
+                "template_input = pd.read_csv('emfdscore/template_input.csv', header=None)",
+                "DICT_TYPE = 'emfd'",
+                "PROB_MAP = 'single'",
+                "SCORE_METHOD = 'bow'",
+                "OUT_METRICS = 'vice-virtue'",
+                "OUT_CSV_PATH = 'single-vv.csv'",
+                "df = score_docs(template_input,DICT_TYPE,PROB_MAP,SCORE_METHOD,OUT_METRICS,num_docs)"
+            ],
+            "code_language": "python",
+            "author": "Media Neuroscience Lab",
+            "author_links": {
+                "github": "medianeuroscience",
+                "twitter": "medianeuro"
+            },
+            "category": ["research", "teaching"],
+            "tags": ["morality", "dictionary", "sentiment"]
+        },
+        {
             "id": "skweak",
             "title": "skweak",
             "slogan": "Weak supervision for NLP",
             "description": "`skweak` brings the power of weak supervision to NLP tasks, and in particular sequence labelling and text classification. Instead of annotating documents by hand, `skweak` allows you to define *labelling functions* to automatically label your documents, and then aggregate their results using a statistical model that estimates the accuracy and confusions of each labelling function.",
-            "github": "https://github.com/NorskRegnesentral/skweak",
+            "github": "NorskRegnesentral/skweak",
             "pip": "skweak",
             "code_example": [
                 "import spacy, re",
@@ -240,7 +294,7 @@
                 "",
                 "models = [\"en_core_web_sm\", \"en_core_web_md\"]",
                 "default_text = \"Sundar Pichai is the CEO of Google.\"",
-                "spacy_streamlit.visualize(models, default_text))"
+                "spacy_streamlit.visualize(models, default_text)"
             ],
             "author": "Ines Montani",
             "author_links": {
@@ -383,10 +437,10 @@
             "thumb": "https://i.imgur.com/myhLjMJ.png",
             "code_example": [
                 "import stanza",
-                "from spacy_stanza import StanzaLanguage",
+                "import spacy_stanza",
                 "",
-                "snlp = stanza.Pipeline(lang=\"en\")",
-                "nlp = StanzaLanguage(snlp)",
+                "stanza.download(\"en\")",
+                "nlp = spacy_stanza.load_pipeline(\"en\")",
                 "",
                 "doc = nlp(\"Barack Obama was born in Hawaii. He was elected president in 2008.\")",
                 "for token in doc:",
@@ -399,6 +453,32 @@
                 "twitter": "explosion_ai",
                 "github": "explosion",
                 "website": "https://explosion.ai"
+            }
+        },
+        {
+            "id": "spacy-udpipe",
+            "title": "spacy-udpipe",
+            "slogan": "Use the latest UDPipe models directly in spaCy",
+            "description": "This package wraps the fast and efficient UDPipe language-agnostic NLP pipeline (via its Python bindings), so you can use UDPipe pre-trained models as a spaCy pipeline for 50+ languages out-of-the-box. Inspired by spacy-stanza, this package offers slightly less accurate models that are in turn much faster.",
+            "github": "TakeLab/spacy-udpipe",
+            "pip": "spacy-udpipe",
+            "code_example": [
+                "import spacy_udpipe",
+                "",
+                "spacy_udpipe.download(\"en\") # download English model",
+                "",
+                "text = \"Wikipedia is a free online encyclopedia, created and edited by volunteers around the world.\"",
+                "nlp = spacy_udpipe.load(\"en\")",
+                "",
+                "doc = nlp(text)",
+                "for token in doc:",
+                "    print(token.text, token.lemma_, token.pos_, token.dep_)"
+            ],
+            "category": ["pipeline", "standalone", "models", "research"],
+            "author": "TakeLab",
+            "author_links": {
+                "github": "TakeLab",
+                "website": "https://takelab.fer.hr/"
             }
         },
         {
@@ -483,7 +563,7 @@
                 "trainer = ListTrainer(chatbot)",
                 "trainer.train([",
                 "'Hi, can I help you?',",
-                "'Sure, I would like to book a flight to Iceland.",
+                "'Sure, I would like to book a flight to Iceland.',",
                 "'Your flight has been booked.'",
                 "])",
                 "",
@@ -533,7 +613,7 @@
             "id": "spacymoji",
             "slogan": "Emoji handling and meta data as a spaCy pipeline component",
             "github": "ines/spacymoji",
-            "description": "spaCy v2.0 extension and pipeline component for adding emoji meta data to `Doc` objects. Detects emoji consisting of one or more unicode characters, and can optionally merge multi-char emoji (combined pictures, emoji with skin tone modifiers) into one token. Human-readable emoji descriptions are added as a custom attribute, and an optional lookup table can be provided for your own descriptions. The extension sets the custom `Doc`, `Token` and `Span` attributes `._.is_emoji`, `._.emoji_desc`, `._.has_emoji` and `._.emoji`.",
+            "description": "spaCy extension and pipeline component for adding emoji meta data to `Doc` objects. Detects emoji consisting of one or more unicode characters, and can optionally merge multi-char emoji (combined pictures, emoji with skin tone modifiers) into one token. Human-readable emoji descriptions are added as a custom attribute, and an optional lookup table can be provided for your own descriptions. The extension sets the custom `Doc`, `Token` and `Span` attributes `._.is_emoji`, `._.emoji_desc`, `._.has_emoji` and `._.emoji`.",
             "pip": "spacymoji",
             "category": ["pipeline"],
             "tags": ["emoji", "unicode"],
@@ -833,6 +913,31 @@
             },
             "category": ["pipeline"],
             "tags": ["lemmatizer", "danish"]
+        },
+        {
+            "id": "dacy",
+            "title": "DaCy",
+            "slogan": "An efficient Pipeline for Danish NLP",
+            "description": "DaCy is a Danish preprocessing pipeline trained in SpaCy. It has achieved State-of-the-Art performance on Named entity recognition, part-of-speech tagging and dependency parsing for Danish. This repository contains material for using the DaCy, reproducing the results and guides on usage of the package. Furthermore, it also contains a series of behavioural test for biases and robustness of Danish NLP pipelines.",
+            "github": "centre-for-humanities-computing/DaCy",
+            "pip": "dacy",
+            "code_example": [
+                "import dacy",
+                "print(dacy.models()) # get a list of dacy models",
+                "nlp = dacy.load('medium')  # load your spacy pipeline",
+                "",
+                "# DaCy also includes functionality for adding other Danish models to the pipeline",
+                "# For instance you can add the BertTone model for classification of sentiment polarity to the pipeline:",
+                "nlp = add_berttone_polarity(nlp)"
+            ],
+            "thumb": "https://github.com/centre-for-humanities-computing/DaCy/blob/main/img/icon_no_title.png?raw=true",
+            "author": "Centre for Humanities Computing Aarhus",
+            "author_links": {
+                "github": "centre-for-humanities-computing",
+                "website": "https://chcaa.io/#/"
+            },
+            "category": ["pipeline"],
+            "tags": ["pipeline", "danish"]
         },
         {
             "id": "wmd-relax",
@@ -1274,6 +1379,35 @@
                 "twitter": "jekbradbury"
             },
             "category": ["nonpython"]
+        },
+        {
+            "id": "ruby-spacy",
+            "title": "ruby-spacy",
+            "slogan": "Wrapper module for using spaCy from Ruby via PyCall",
+            "description": "ruby-spacy is a wrapper module for using spaCy from the Ruby programming language via PyCall. This module aims to make it easy and natural for Ruby programmers to use spaCy.",
+            "github": "yohasebe/ruby-spacy",
+            "code_example": [
+                "require \"ruby-spacy\"",
+                "require \"terminal-table\"",
+                "nlp = Spacy::Language.new(\"en_core_web_sm\")",
+                "doc = nlp.read(\"Apple is looking at buying U.K. startup for $1 billion\")",
+                "headings = [\"text\", \"lemma\", \"pos\", \"tag\", \"dep\"]",
+                "rows = []",
+                "doc.each do |token|",
+                "  rows << [token.text, token.lemma, token.pos, token.tag, token.dep]",
+                "end",
+                "table = Terminal::Table.new rows: rows, headings: headings",
+                "puts table"
+            ],
+            "code_language": "ruby",
+            "url": "https://rubygems.org/gems/ruby-spacy",
+            "author": "Yoichiro Hasebe",
+            "author_links": {
+                "github": "yohasebe",
+                "twitter": "yohasebe"
+            },
+            "category": ["nonpython"],
+            "tags": ["ruby"]
         },
         {
             "id": "spacy_api",
@@ -2026,14 +2160,17 @@
             "description": "`spacy-wordnet` creates annotations that easily allow the use of WordNet and [WordNet Domains](http://wndomains.fbk.eu/) by using the [NLTK WordNet interface](http://www.nltk.org/howto/wordnet.html)",
             "github": "recognai/spacy-wordnet",
             "tags": ["wordnet", "synsets"],
-            "thumb": "https://i.imgur.com/3y2uPUv.jpg",
+            "thumb": "https://i.imgur.com/ud4C7cj.png",
             "code_example": [
                 "import spacy",
                 "from spacy_wordnet.wordnet_annotator import WordnetAnnotator ",
                 "",
                 "# Load an spacy model (supported models are \"es\" and \"en\") ",
                 "nlp = spacy.load('en')",
-                "nlp.add_pipe(WordnetAnnotator(nlp.lang), after='tagger')",
+                "# Spacy 3.x",
+                "nlp.add_pipe(\"spacy_wordnet\", after='tagger', config={'lang': nlp.lang})",
+                "# Spacy 2.x",
+                "# nlp.add_pipe(WordnetAnnotator(nlp.lang), after='tagger')",
                 "token = nlp('prices')[0]",
                 "",
                 "# wordnet object link spacy token with nltk wordnet interface by giving acces to",
@@ -2373,8 +2510,7 @@
                 "from negspacy.negation import Negex",
                 "",
                 "nlp = spacy.load(\"en_core_web_sm\")",
-                "negex = Negex(nlp, ent_types=[\"PERSON','ORG\"])",
-                "nlp.add_pipe(negex, last=True)",
+                "nlp.add_pipe(\"negex\", config={\"ent_types\":[\"PERSON\",\"ORG\"]})",
                 "",
                 "doc = nlp(\"She does not like Steve Jobs but likes Apple products.\")",
                 "for e in doc.ents:",
@@ -2716,10 +2852,10 @@
             "pip": "pyate",
             "code_example": [
                 "import spacy",
-                "from pyate.term_extraction_pipeline import TermExtractionPipeline",
+                "import pyate",
                 "",
                 "nlp = spacy.load('en_core_web_sm')",
-                "nlp.add_pipe(TermExtractionPipeline())",
+                "nlp.add_pipe(\"combo_basic\") # or any of `basic`, `weirdness`, `term_extractor` or `cvalue`",
                 "# source: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1994795/",
                 "string = 'Central to the development of cancer are genetic changes that endow these “cancer cells” with many of the hallmarks of cancer, such as self-sufficient growth and resistance to anti-growth and pro-death signals. However, while the genetic changes that occur within cancer cells themselves, such as activated oncogenes or dysfunctional tumor suppressors, are responsible for many aspects of cancer development, they are not sufficient. Tumor promotion and progression are dependent on ancillary processes provided by cells of the tumor environment but that are not necessarily cancerous themselves. Inflammation has long been associated with the development of cancer. This review will discuss the reflexive relationship between cancer and inflammation with particular focus on how considering the role of inflammation in physiologic processes such as the maintenance of tissue homeostasis and repair may provide a logical framework for understanding the connection between the inflammatory response and cancer.'",
                 "",
@@ -3030,6 +3166,85 @@
             },
             "category": ["research", "standalone", "scientific"],
             "tags": ["Text Analytics", "Coherence", "Cohesion"]
+        },
+        {
+            "id": "hmrb",
+            "title": "Hammurabi",
+            "slogan": "Python Rule Processing Engine 🏺",
+            "description": "Hammurabi works as a rule engine to parse input using a defined set of rules. It uses a simple and readable syntax to define complex rules to handle phrase matching. The syntax supports nested logical statements, regular expressions, reusable or side-loaded variables and match triggered callback functions to modularize your rules. The latest version works with both spaCy 2.X and 3.X. For more information check the documentation on [ReadTheDocs](https://hmrb.readthedocs.io/en/latest/).",
+            "github": "babylonhealth/hmrb",
+            "pip": "hmrb",
+            "code_example": [
+                "import spacy # __version__ 3.0+",
+                "from hmrb.core import SpacyCore",
+                "",
+                "grammar = \"\"\"",
+                "Var is_hurting:",
+                "(",
+                "    optional (lemma: \"be\")",
+                "    (lemma: \"hurt\")",
+                ")",
+                "Law:",
+                "    - package: \"headache\"",
+                "    - callback: \"mark_headache\"",
+                "(",
+                "    (lemma: \"head\", pos: \"NOUN\")",
+                "    $is_hurting",
+                ")\"\"\"",
+                "",
+                "conf = {",
+                "   \"rules\": grammar",
+                "   \"callbacks\": {",
+                "        \"mark_headache\": \"callbacks.headache_handler\",",
+                "    },",
+                "   \"map_doc\": \"augmenters.jsonify_span\",",
+                "   \"sort_length\": True,",
+                "}",
+                "nlp = spacy.load(\"en_core_web_sm\")",
+                "nlp.add_pipe(\"hammurabi\", config=conf)",
+                "nlp(sentences)"
+            ],
+            "code_language": "python",
+            "thumb": "https://user-images.githubusercontent.com/6807878/118643685-cae6b880-b7d4-11eb-976e-066aec9505da.png",
+            "image": "https://user-images.githubusercontent.com/6807878/118643685-cae6b880-b7d4-11eb-976e-066aec9505da.png",
+            "author": "Kristian Boda",
+            "author_links": {
+                "github": "bodak",
+                "twitter": "bodak",
+                "website": "https://github.com/babylonhealth/"
+            },
+            "category": ["pipeline", "standalone", "scientific", "biomedical"],
+            "tags": ["babylonhealth", "rule-engine", "matcher"]
+        },
+        {
+            "id": "forte",
+            "title": "Forte",
+            "slogan": "Forte is a toolkit for building Natural Language Processing pipelines, featuring cross-task interaction, adaptable data-model interfaces and composable pipelines.",
+            "description": "Forte provides a platform to assemble state-of-the-art NLP and ML technologies in a highly-composable fashion, including a wide spectrum of tasks ranging from Information Retrieval, Natural Language Understanding to Natural Language Generation.",
+            "github": "asyml/forte",
+            "pip": "forte.spacy torch",
+            "code_example": [
+                "from forte.spacy import SpacyProcessor",
+                "from forte import Pipeline",
+                "from forte.data.readers import StringReader",
+                "",
+                "pipeline = Pipeline()",
+                "pipeline.set_reader(StringReader())",
+                "pipeline.add(SpacyProcessor())",
+                "pipeline.run('Running SpaCy with Forte!')"
+            ],
+            "code_language": "python",
+            "url": "https://medium.com/casl-project/forte-building-modular-and-re-purposable-nlp-pipelines-cf5b5c5abbe9",
+            "thumb": "https://raw.githubusercontent.com/asyml/forte/master/docs/_static/img/forte_graphic.png",
+            "image": "https://raw.githubusercontent.com/asyml/forte/master/docs/_static/img/logo_h.png",
+            "author": "Petuum",
+            "author_links": {
+                "twitter": "PetuumInc",
+                "github": "asyml",
+                "website": "https://petuum.com"
+            },
+            "category": ["pipeline", "standalone"],
+            "tags": ["pipeline"]
         }
     ],
 

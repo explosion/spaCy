@@ -101,7 +101,8 @@ cdef class TrainablePipe(Pipe):
 
     def update(self,
                examples: Iterable["Example"],
-               *, drop: float=0.0,
+               *,
+               drop: float=0.0,
                sgd: Optimizer=None,
                losses: Optional[Dict[str, float]]=None) -> Dict[str, float]:
         """Learn from a batch of documents and gold-standard information,
@@ -213,7 +214,12 @@ cdef class TrainablePipe(Pipe):
 
     def _allow_extra_label(self) -> None:
         """Raise an error if the component can not add any more labels."""
-        if self.model.has_dim("nO") and self.model.get_dim("nO") == len(self.labels):
+        nO = None
+        if self.model.has_dim("nO"):
+            nO = self.model.get_dim("nO")
+        elif self.model.has_ref("output_layer") and self.model.get_ref("output_layer").has_dim("nO"):
+            nO = self.model.get_ref("output_layer").get_dim("nO")
+        if nO is not None and nO == len(self.labels):
             if not self.is_resizable:
                 raise ValueError(Errors.E922.format(name=self.name, nO=self.model.get_dim("nO")))
 

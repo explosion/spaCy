@@ -512,7 +512,7 @@ nlp = spacy.load("en_core_web_sm", disable=["parser"])
 
 spaCy features an extremely fast statistical entity recognition system, that
 assigns labels to contiguous spans of tokens. The default
-[trained pipelines](/models) can indentify a variety of named and numeric
+[trained pipelines](/models) can identify a variety of named and numeric
 entities, including companies, locations, organizations and products. You can
 add arbitrary classes to the entity recognition system, and update the model
 with new examples.
@@ -550,7 +550,7 @@ on a token, it will return an empty string.
 > - `I` – Token is **inside** a multi-token entity.
 > - `L` – Token is the **last** token of a multi-token entity.
 > - `U` – Token is a single-token **unit** entity.
-> - `O` – Toke is **outside** an entity.
+> - `O` – Token is **outside** an entity.
 
 ```python
 ### {executable="true"}
@@ -1169,7 +1169,20 @@ class WhitespaceTokenizer:
 
     def __call__(self, text):
         words = text.split(" ")
-        return Doc(self.vocab, words=words)
+        spaces = [True] * len(words)
+        # Avoid zero-length tokens
+        for i, word in enumerate(words):
+            if word == "":
+                words[i] = " "
+                spaces[i] = False
+        # Remove the final trailing space
+        if words[-1] == " ":
+            words = words[0:-1]
+            spaces = spaces[0:-1]
+        else:
+           spaces[-1] = False
+            
+        return Doc(self.vocab, words=words, spaces=spaces)
 
 nlp = spacy.blank("en")
 nlp.tokenizer = WhitespaceTokenizer(nlp.vocab)
@@ -1248,7 +1261,7 @@ hyperparameters, pipeline and tokenizer used for constructing and training the
 pipeline. The `[nlp.tokenizer]` block refers to a **registered function** that
 takes the `nlp` object and returns a tokenizer. Here, we're registering a
 function called `whitespace_tokenizer` in the
-[`@tokenizers` registry](/api/registry). To make sure spaCy knows how to
+[`@tokenizers` registry](/api/top-level#registry). To make sure spaCy knows how to
 construct your tokenizer during training, you can pass in your Python file by
 setting `--code functions.py` when you run [`spacy train`](/api/cli#train).
 
@@ -1485,7 +1498,7 @@ that time, the `Doc` will already be tokenized.
 
 This process of splitting a token requires more settings, because you need to
 specify the text of the individual tokens, optional per-token attributes and how
-the should be attached to the existing syntax tree. This can be done by
+the tokens should be attached to the existing syntax tree. This can be done by
 supplying a list of `heads` – either the token to attach the newly split token
 to, or a `(token, subtoken)` tuple if the newly split token should be attached
 to another subtoken. In this case, "New" should be attached to "York" (the
