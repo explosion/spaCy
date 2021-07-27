@@ -194,10 +194,6 @@ def test_dependency_matcher_pattern_validation(en_vocab):
         matcher.add("FOUNDED", [pattern2])
     with pytest.raises(ValueError):
         pattern2 = copy.deepcopy(pattern)
-        del pattern2[1]["RIGHT_ATTRS"]
-        matcher.add("FOUNDED", [pattern2])
-    with pytest.raises(ValueError):
-        pattern2 = copy.deepcopy(pattern)
         del pattern2[1]["LEFT_ID"]
         matcher.add("FOUNDED", [pattern2])
     with pytest.raises(ValueError):
