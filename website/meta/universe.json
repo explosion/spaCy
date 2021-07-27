@@ -563,7 +563,7 @@
                 "trainer = ListTrainer(chatbot)",
                 "trainer.train([",
                 "'Hi, can I help you?',",
-                "'Sure, I would like to book a flight to Iceland.",
+                "'Sure, I would like to book a flight to Iceland.',",
                 "'Your flight has been booked.'",
                 "])",
                 "",
