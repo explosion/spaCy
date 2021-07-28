@@ -104,6 +104,7 @@ def console_logger(progress_bar: bool = False):
 @registry.loggers("spacy.WandbLogger.v2")
 def wandb_logger(
     project_name: str,
+    entity_name: str,
     remove_config_values: List[str] = [],
     model_log_interval: Optional[int] = None,
     log_dataset_dir: Optional[str] = None,
@@ -126,7 +127,7 @@ def wandb_logger(
         for field in remove_config_values:
             del config_dot[field]
         config = util.dot_to_dict(config_dot)
-        run = wandb.init(project=project_name, config=config, reinit=True)
+        run = wandb.init(project=project_name, entity=entity_name, config=config, reinit=True)
         console_log_step, console_finalize = console(nlp, stdout, stderr)
 
         def log_dir_artifact(
