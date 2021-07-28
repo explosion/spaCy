@@ -276,7 +276,7 @@ class AttributeRuler(Pipe):
         DOCS: https://spacy.io/api/attributeruler#to_bytes
         """
         serialize = {}
-        serialize["vocab"] = self.vocab.to_bytes
+        serialize["vocab"] = lambda: self.vocab.to_bytes(exclude=exclude)
         serialize["patterns"] = lambda: srsly.msgpack_dumps(self.patterns)
         return util.to_bytes(serialize, exclude)
 
@@ -296,7 +296,7 @@ class AttributeRuler(Pipe):
             self.add_patterns(srsly.msgpack_loads(b))
 
         deserialize = {
-            "vocab": lambda b: self.vocab.from_bytes(b),
+            "vocab": lambda b: self.vocab.from_bytes(b, exclude=exclude),
             "patterns": load_patterns,
         }
         util.from_bytes(bytes_data, deserialize, exclude)
@@ -313,7 +313,7 @@ class AttributeRuler(Pipe):
         DOCS: https://spacy.io/api/attributeruler#to_disk
         """
         serialize = {
-            "vocab": lambda p: self.vocab.to_disk(p),
+            "vocab": lambda p: self.vocab.to_disk(p, exclude=exclude),
             "patterns": lambda p: srsly.write_msgpack(p, self.patterns),
         }
         util.to_disk(path, serialize, exclude)
@@ -334,7 +334,7 @@ class AttributeRuler(Pipe):
             self.add_patterns(srsly.read_msgpack(p))
 
         deserialize = {
-            "vocab": lambda p: self.vocab.from_disk(p),
+            "vocab": lambda p: self.vocab.from_disk(p, exclude=exclude),
             "patterns": load_patterns,
         }
         util.from_disk(path, deserialize, exclude)

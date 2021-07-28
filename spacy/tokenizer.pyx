@@ -765,7 +765,7 @@ cdef class Tokenizer:
         DOCS: https://spacy.io/api/tokenizer#to_bytes
         """
         serializers = {
-            "vocab": lambda: self.vocab.to_bytes(),
+            "vocab": lambda: self.vocab.to_bytes(exclude=exclude),
             "prefix_search": lambda: _get_regex_pattern(self.prefix_search),
             "suffix_search": lambda: _get_regex_pattern(self.suffix_search),
             "infix_finditer": lambda: _get_regex_pattern(self.infix_finditer),
@@ -786,7 +786,7 @@ cdef class Tokenizer:
         """
         data = {}
         deserializers = {
-            "vocab": lambda b: self.vocab.from_bytes(b),
+            "vocab": lambda b: self.vocab.from_bytes(b, exclude=exclude),
             "prefix_search": lambda b: data.setdefault("prefix_search", b),
             "suffix_search": lambda b: data.setdefault("suffix_search", b),
             "infix_finditer": lambda b: data.setdefault("infix_finditer", b),
