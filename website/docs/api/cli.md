@@ -878,9 +878,6 @@ skew. To render a sample of dependency parses in a HTML file using the
 [displaCy visualizations](/usage/visualizers), set as output directory as the
 `--displacy-path` argument.
 
-The `SPEED` value included in the output is the words per second processed by
-the pipeline.
-
 ```cli
 $ python -m spacy evaluate [model] [data_path] [--output] [--code] [--gold-preproc] [--gpu-id] [--displacy-path] [--displacy-limit]
 ```
