@@ -6,6 +6,7 @@ from thinc.api import Model, Ops, registry
 
 from ..tokens import Doc
 from ..errors import Errors
+from ..vectors import Mode
 
 
 @registry.layers("spacy.StaticVectors.v2")
@@ -34,20 +35,46 @@ def StaticVectors(
 def forward(
     model: Model[List[Doc], Ragged], docs: List[Doc], is_train: bool
 ) -> Tuple[Ragged, Callable]:
-    if not sum(len(doc) for doc in docs):
+    token_count = sum(len(doc) for doc in docs)
+    if not token_count:
         return _handle_empty(model.ops, model.get_dim("nO"))
     key_attr = model.attrs["key_attr"]
+    keys = model.ops.flatten([doc.to_array(key_attr) for doc in docs])
+    vocab = docs[0].vocab
     W = cast(Floats2d, model.ops.as_contig(model.get_param("W")))
-    V = cast(Floats2d, model.ops.asarray(docs[0].vocab.vectors.data))
-    rows = model.ops.flatten(
-        [doc.vocab.vectors.find(keys=doc.to_array(key_attr)) for doc in docs]
-    )
+    if vocab.vectors.mode == Mode.default:
+        V = cast(Floats2d, model.ops.asarray(vocab.vectors.data))
+        rows = vocab.vectors.find(keys=keys)
+    elif vocab.vectors.mode == Mode.ngram:
+        # build a vector table with one row for each unique key
+        V = cast(
+            Floats2d,
+            model.ops.xp.zeros(
+                (len(set(keys)), vocab.vectors_length), dtype=vocab.vectors.data.dtype
+            ),
+        )
+        rows = model.ops.xp.zeros((token_count,), dtype="uint32")
+        r_i = 0
+        v_i = 0
+        row_index = {}
+        for key in keys:
+            if key not in row_index:
+                V[v_i] = vocab.vectors[key]
+                row_index[key] = v_i
+                v_i += 1
+            rows[r_i] = row_index[key]
+            r_i += 1
+    else:
+        raise RuntimeError(Errors.E896)
     try:
-        vectors_data = model.ops.gemm(model.ops.as_contig(V[rows]), W, trans2=True)
+        V = model.ops.as_contig(V[rows])
+        vectors_data = model.ops.gemm(V, W, trans2=True)
     except ValueError:
         raise RuntimeError(Errors.E896)
-    # Convert negative indices to 0-vectors (TODO: more options for UNK tokens)
-    vectors_data[rows < 0] = 0
+    if vocab.vectors.mode == Mode.default:
+        # Convert negative indices to 0-vectors
+        # TODO: more options for UNK tokens
+        vectors_data[rows < 0] = 0
     output = Ragged(
         vectors_data, model.ops.asarray([len(doc) for doc in docs], dtype="i")
     )
@@ -62,7 +89,7 @@ def forward(
             d_output.data *= mask
         model.inc_grad(
             "W",
-            model.ops.gemm(d_output.data, model.ops.as_contig(V[rows]), trans1=True),
+            model.ops.gemm(d_output.data, V, trans1=True),
         )
         return []
 

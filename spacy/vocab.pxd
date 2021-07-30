@@ -27,7 +27,7 @@ cdef class Vocab:
     cdef Pool mem
     cdef readonly StringStore strings
     cdef public Morphology morphology
-    cdef public object vectors
+    cdef public object _vectors
     cdef public object _lookups
     cdef public object writing_system
     cdef public object get_noun_chunks

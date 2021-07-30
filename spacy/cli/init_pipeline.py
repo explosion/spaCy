@@ -23,6 +23,7 @@ def init_vectors_cli(
     name: Optional[str] = Opt(None, "--name", "-n", help="Optional name for the word vectors, e.g. en_core_web_lg.vectors"),
     verbose: bool = Opt(False, "--verbose", "-V", "-VV", help="Display more information for debugging purposes"),
     jsonl_loc: Optional[Path] = Opt(None, "--lexemes-jsonl", "-j", help="Location of JSONL-formatted attributes file", hidden=True),
+    fasttext_bloom_vectors: bool = Opt(False, "--fasttext-bloom-vectors", "-F", help="Vectors in fastText Bloom hash ngram format"),
     # fmt: on
 ):
     """Convert word vectors for use with spaCy. Will export an nlp object that
@@ -34,7 +35,14 @@ def init_vectors_cli(
     nlp = util.get_lang_class(lang)()
     if jsonl_loc is not None:
         update_lexemes(nlp, jsonl_loc)
-    convert_vectors(nlp, vectors_loc, truncate=truncate, prune=prune, name=name)
+    convert_vectors(
+        nlp,
+        vectors_loc,
+        truncate=truncate,
+        prune=prune,
+        name=name,
+        fasttext_bloom_vectors=fasttext_bloom_vectors,
+    )
     msg.good(f"Successfully converted {len(nlp.vocab.vectors)} vectors")
     nlp.to_disk(output_dir)
     msg.good(

@@ -24,8 +24,13 @@ def setup_default_warnings():
     for pipe in ["matcher", "entity_ruler"]:
         filter_warning("once", error_msg=Warnings.W036.format(name=pipe))
 
-    # warn once about lemmatizer without required POS
+    # warn once about:
+
+    # lemmatizer without required POS
     filter_warning("once", error_msg="[W108]")
+
+    # ngram vector table cannot be modified
+    filter_warning("once", error_msg="[W114]")
 
 
 def filter_warning(action: str, error_msg: str):
@@ -192,6 +197,8 @@ class Warnings:
             "vectors. This is almost certainly a mistake.")
     W113 = ("Sourced component '{name}' may not work as expected: source "
             "vectors are not identical to current pipeline vectors.")
+    W114 = ("Skipping {method}: the ngram vector table cannot be modified. "
+            "Vectors are calculated from character ngrams.")
 
 
 @add_codes
@@ -518,9 +525,19 @@ class Errors:
     E199 = ("Unable to merge 0-length span at `doc[{start}:{end}]`.")
     E200 = ("Can't yet set {attr} from Span. Vote for this feature on the "
             "issue tracker: http://github.com/explosion/spaCy/issues")
-    E202 = ("Unsupported alignment mode '{mode}'. Supported modes: {modes}.")
+    E202 = ("Unsupported {name} mode '{mode}'. Supported modes: {modes}.")
 
     # New errors added in v3.x
+    E860 = ("Can't truncate fasttext-bloom vectors.")
+    E861 = ("No 'keys' should be provided when initializing ngram vectors "
+            "with 'minn' and 'maxn'.")
+    E862 = ("'hash_count' must be between 1-4 for ngram vectors.")
+    E863 = ("'maxn' must be greater than or equal to 'minn'.")
+    E864 = ("The complete vector table 'data' is required to initialize ngram "
+            "vectors.")
+    E865 = ("The {mode} vector table does not support this operation. "
+            "{alternative}")
+    E866 = ("The ngram vector table cannot be modified.")
     E867 = ("The 'textcat' component requires at least two labels because it "
             "uses mutually exclusive classes where exactly one label is True "
             "for each doc. For binary classification tasks, you can use two "
