@@ -286,4 +286,3 @@ def test_load_without_strings():
         reloaded_nlp = load(d, exclude=["strings"])
         assert orig_strings_length == len(reloaded_nlp.vocab.strings)
         assert word not in reloaded_nlp.vocab.strings
-
