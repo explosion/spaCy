@@ -1,5 +1,5 @@
 import pytest
-from spacy import registry, Vocab
+from spacy import registry, Vocab, load
 from spacy.pipeline import Tagger, DependencyParser, EntityRecognizer
 from spacy.pipeline import TextCategorizer, SentenceRecognizer, TrainablePipe
 from spacy.pipeline.dep_parser import DEFAULT_PARSER_MODEL
@@ -268,3 +268,22 @@ def test_serialize_custom_trainable_pipe():
         pipe.to_disk(d)
         new_pipe = CustomPipe(Vocab(), Linear()).from_disk(d)
     assert new_pipe.to_bytes() == pipe_bytes
+
+
+def test_load_without_strings():
+    nlp = spacy.blank("en")
+    orig_strings_length = len(nlp.vocab.strings)
+    word = "unlikely_word_" * 20
+    nlp.vocab.strings.add(word)
+    assert len(nlp.vocab.strings) == orig_strings_length + 1
+    with make_tempdir() as d:
+        nlp.to_disk(d)
+        # reload with strings
+        reloaded_nlp = load(d)
+        assert len(nlp.vocab.strings) == len(reloaded_nlp.vocab.strings)
+        assert word in reloaded_nlp.vocab.strings
+        # reload without strings
+        reloaded_nlp = load(d, exclude=["strings"])
+        assert orig_strings_length == len(reloaded_nlp.vocab.strings)
+        assert word not in reloaded_nlp.vocab.strings
+
