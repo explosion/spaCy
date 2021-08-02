@@ -1698,7 +1698,6 @@ class Language:
         # them here so they're only loaded once
         source_nlps = {}
         source_nlp_vectors_hashes = {}
-        nlp.meta["_sourced_vectors_hashes"] = {}
         for pipe_name in config["nlp"]["pipeline"]:
             if pipe_name not in pipeline:
                 opts = ", ".join(pipeline.keys())
@@ -1747,6 +1746,8 @@ class Language:
                         source_nlp_vectors_hashes[model] = hash(
                             source_nlps[model].vocab.vectors.to_bytes()
                         )
+                    if "_sourced_vectors_hashes" not in nlp.meta:
+                        nlp.meta["_sourced_vectors_hashes"] = {}
                     nlp.meta["_sourced_vectors_hashes"][
                         pipe_name
                     ] = source_nlp_vectors_hashes[model]
