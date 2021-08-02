@@ -1,7 +1,7 @@
 """
 References:
-    https://slovored.com/bg/abbr/grammar/
-
+    https://slovored.com/bg/abbr/grammar/ - Additional refs for abbreviations
+    (countries, occupations, fields of studies and more).
 """
 
 from ...symbols import ORTH, NORM
@@ -110,6 +110,7 @@ for abbr in [
     {ORTH: "футб.", NORM: "футбол"},
     {ORTH: "хим.", NORM: "химия"},
     {ORTH: "хир.", NORM: "хирургия"},
+    {ORTH: "ел.", NORM: "електротехника"},
 ]:
     _exc[abbr[ORTH]] = [abbr]
 
@@ -131,7 +132,6 @@ for abbr in [
     {ORTH: "гл.", NORM: "глагол"},
     {ORTH: "др.", NORM: "други"},
     {ORTH: "ез.", NORM: "езеро"},
-    {ORTH: "ел.", NORM: "електротехника"},
     {ORTH: "ж.р.", NORM: "женски род"},
     {ORTH: "жп.", NORM: "железопът"},
     {ORTH: "застр.", NORM: "застрахователно дело"},
