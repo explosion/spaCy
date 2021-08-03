@@ -357,7 +357,8 @@ class Errors:
     E099 = ("Invalid pattern: the first node of pattern should be an anchor "
             "node. The node should only contain RIGHT_ID and RIGHT_ATTRS.")
     E100 = ("Nodes other than the anchor node should all contain LEFT_ID, "
-            "REL_OP and RIGHT_ID.")
+            "REL_OP, RIGHT_ID, and RIGHT_ATTRS, but these are missing: "
+            "{missing}")
     E101 = ("RIGHT_ID should be a new node and LEFT_ID should already have "
             "have been declared in previous edges.")
     E102 = ("Can't merge non-disjoint spans. '{token}' is already part of "
