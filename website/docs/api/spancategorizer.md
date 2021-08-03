@@ -13,6 +13,9 @@ A span categorizer consists of two parts: a [suggester function](#suggesters)
 that proposes candidate spans, which may or may not overlap, and a labeler model
 that predicts zero or more labels for each candidate.
 
+Predicted spans will be saved in a [`SpanGroup`](/api/spangroup) on the doc.
+Individual span scores can be found in `spangroup.attrs["scores"]`.
+
 ## Config and implementation {#config}
 
 The default config is defined by the pipeline component factory and describes
