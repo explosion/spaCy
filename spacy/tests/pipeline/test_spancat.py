@@ -1,9 +1,8 @@
 import pytest
-from numpy.testing import assert_equal
+from numpy.testing import assert_equal, assert_array_equal
 from spacy.language import Language
 from spacy.training import Example
 from spacy.util import fix_random_seed, registry
-
 
 SPAN_KEY = "labeled_spans"
 
@@ -195,12 +194,12 @@ def test_ngram_sizes(en_tokenizer):
     ]
     ngrams_1 = size_suggester(docs)
     ngrams_2 = range_suggester(docs)
-    assert_equal(ngrams_1.lengths, [1, 3, 6, 9, 12])
-    assert_equal(ngrams_1.lengths, ngrams_2.lengths)
-    assert_equal(ngrams_1.data, ngrams_2.data)
+    assert_array_equal(ngrams_1.lengths, [1, 3, 6, 9, 12])
+    assert_array_equal(ngrams_1.lengths, ngrams_2.lengths)
+    assert_array_equal(ngrams_1.data, ngrams_2.data)
 
     # one more variation
     suggester_factory = registry.misc.get("spacy.ngram_range_suggester.v1")
     range_suggester = suggester_factory(min_size=2, max_size=4)
     ngrams_3 = range_suggester(docs)
-    assert_equal(ngrams_3.lengths, [0, 1, 3, 6, 9])
+    assert_array_equal(ngrams_3.lengths, [0, 1, 3, 6, 9])
