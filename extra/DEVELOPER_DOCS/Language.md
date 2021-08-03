@@ -2,10 +2,20 @@
 
 > Reference: `spacy/language.py`
 
-1. [Constructing the `nlp` object from a config](#constructing-the-nlp-object-from-a-config)
+1. [Constructing the `nlp` object from a config](#construct-from-config)
+   - [A. Overview of `Language.from_config`](#language-from-config)
+   - [B. Component factories](#component-factories)
+   - [C. Sourcing a component](#component-sourcing)
+   - [D. Tracking components as they're modified](#modifications)
+   - [E. spaCy's config utility function](#utility)
 2. [Initialization](#initialization)
+   - [A. Initialization for training](#initialization-training): `init_nlp`
+   - [B. Initializing the `nlp` object](#initialization-nlp): `Language.initialize`
+   - [C. Initializing the vocab](#initialization-vocab): `init_vocab`
 
-## Constructing the `nlp` object from a config
+## 1. Constructing the `nlp` object from a config {#construct-from-config}
+
+### 1A. Overview {#language-from-config}
 
 Most of the functions referenced in the config are regular functions with arbitrary arguments registered via the function registry. However, the pipeline components are a bit special: they don't only receive arguments passed in via the config file, but also the current `nlp` object and the string `name` of the individual component instance (so a user can have multiple components created with the same factory, e.g. `ner_one` and `ner_two`). This name can then be used by the components to add to the losses and scores. This special requirement means that pipeline components can't just be resolved via the config the "normal" way: we need to retrieve the component functions manually and pass them their arguments, plus the `nlp` and `name`.
 
@@ -21,7 +31,7 @@ The `Language.from_config` classmethod takes care of constructing the `nlp` obje
 
 Note that we only resolve and load **selected sections** in `Language.from_config`, i.e. only the parts that are relevant at runtime, which is `[nlp]` and `[components]`. We don't want to be resolving anything related to training or initialization, since this would mean loading and constructing unnecessary functions, including functions that require information that isn't necessarily available at runtime, like `paths.train`.
 
-## How pipeline component factories work in the config
+### 1B. How pipeline component factories work in the config {#component-factories}
 
 As opposed to regular registered functions that refer to a registry and function name (e.g. `"@misc": "foo.v1"`), pipeline components follow a different format and refer to their component `factory` name. This corresponds to the name defined via the `@Language.component` or `@Language.factory` decorator. We need this decorator to define additional meta information for the components, like their default config and score weights.
 
@@ -34,13 +44,13 @@ other_arg = ${paths.some_path}
 
 This means that we need to create and resolve the `config["components"]` separately from the rest of the config. There are some important considerations and things we need to manage explicitly to avoid unexpected behavior:
 
-### Variable interpolation
+#### Variable interpolation {#variable-interpolation}
 
 When a config is resolved, references to variables are replaced, so that the functions receive the correct value instead of just the variable name. To interpolate a config, we need it in its entirety: we couldn't just interpolate a subsection that refers to variables defined in a different subsection. So we first interpolate the entire config.
 
 However, the `nlp.config` should include the original config with variables intact – otherwise, loading a pipeline and saving it to disk will destroy all logic implemented via variables and hard-code the values all over the place. This means that when we create the components, we need to keep two versions of the config: the interpolated config with the "real" values and the `raw_config` including the variable references.
 
-### How component factories are registered
+#### Factory registry {#factory-registry}
 
 Component factories are special and use the `@Language.factory` or `@Language.component` decorator to register themselves and their meta. When the decorator runs, it performs some basic validation, stores the meta information for the factory on the `Language` class (default config, scores etc.) and then adds the factory function to `registry.factories`. The `component` decorator can be used for registering simple functions that just take a `Doc` object and return it so in that case, we create the factory for the user automatically.
 
@@ -48,11 +58,11 @@ There's one important detail to note about how factories are registered via entr
 
 Normally, adding to the registry via an entry point will just add the function to the registry under the given name. But for `spacy_factories`, we don't actually want that: all we care about is that the function decorated with `@Language` is imported so the decorator runs. So we only exploit Python's entry point system to automatically import the function, and the `spacy_factories` entry point group actually adds to a **separate registry**, `registry._factories`, under the hood. Its only purpose is that the functions are imported. The decorator then runs, creates the factory if needed and adds it to the `registry.factories` registry.
 
-### Language-specific factories
+#### Language-specific factories {#language-specific-factories}
 
 spaCy supports registering factories on the `Language` base class, as well as language-specific subclasses like `English` or `German`. This allows providing different factories depending on the language, e.g. a different default lemmatizer. The `Language.get_factory_name` classmethod constructs the factory name as `{lang}.{name}` if a language is available (i.e. if it's a subclass) and falls back to `{name}` otherwise. So `@German.factory("foo")` will add a factory `de.foo` under the hood. If you add `nlp.add_pipe("foo")`, we first check if there's a factory for `{nlp.lang}.foo` and if not, we fall back to checking for a factory `foo`.
 
-### Creating a pipeline component from a factory
+#### Creating a pipeline component from a factory {#component-from-factory}
 
 `Language.add_pipe` takes care of adding a pipeline component, given its factory name, its config. If no source pipeline to copy the component from is provided, it delegates to `Language.create_pipe`, which sets up the actual component function.
 
@@ -63,7 +73,12 @@ spaCy supports registering factories on the `Language` base class, as well as la
 - Fill the config to make sure all unspecified defaults from the function arguments are added and update the `raw_config` (uniterpolated with variables intact) with that information, so the component config we store in `nlp.config` is up to date. We do this by adding the `raw_config` _into_ the filled config – otherwise, the references to variables would be overwritten.
 - Resolve the config and create all functions it refers to (e.g. `model`). This gives us the actual component function that we can insert into the pipeline.
 
-### Sourcing a pipeline component
+### 1C. Sourcing a pipeline component {#component-sourcing}
+
+```ini
+[components.ner]
+source = "en_core_web_sm"
+```
 
 spaCy also allows "sourcing" a component, which will copy it over from an existing pipeline. In this case, `Language.add_pipe` will delegate to `Language.create_pipe_from_source`. In order to copy a component effectively and validate it, the source pipeline first needs to be loaded. This is done in `Language.from_config`, so a source pipeline only has to be loaded once if multiple components source from it. Sourcing a component will perform the following checks and modifications:
 
@@ -75,7 +90,7 @@ spaCy also allows "sourcing" a component, which will copy it over from an existi
 
 Note that there may be other incompatibilities that we're currently not checking for and that could cause a sourced component to not work in the destination pipeline. We're interested in adding more checks here but there'll always be a small number of edge cases we'll never be able to catch, including a sourced component depending on other pipeline state that's not available in the destination pipeline.
 
-### Tracking components as they're modified
+### 1D. Tracking components as they're modified {#modifications}
 
 The `Language` class implements methods for removing, replacing or renaming pipeline components. Whenever we make these changes, we need to update the information stored on the `Language` object to ensure that it matches the current state of the pipeline. If a user just writes to `nlp.config` manually, we obviously can't ensure that the config matches the reality – but since we offer modification via the pipe methods, it's expected that spaCy keeps the config in sync under the hood. Otherwise, saving a modified pipeline to disk and loading it back wouldn't work. The internal attributes we need to keep in sync here are:
 
@@ -89,7 +104,7 @@ The `Language` class implements methods for removing, replacing or renaming pipe
 
 In addition to the actual component settings in `[components]`, the config also allows specifying component-specific arguments via the `[initialize.components]` block, which are passed to the component's `initialize` method during initialization if it's available. So we also need to keep this in sync in the underlying config.
 
-### Working with and accessing configs
+### 1E. spaCy's config utility functions {#utility}
 
 When working with configs in spaCy, make sure to use the utility functions provided by spaCy if available, instead of calling the respective `Config` methods. The utilities take care of providing spaCy-specific error messages and ensure a consistent order of config sections by setting the `section_order` argument. This ensures that exported configs always have the same consistent format.
 
@@ -97,13 +112,13 @@ When working with configs in spaCy, make sure to use the utility functions provi
 - `util.load_config_from_str`: load a confirm from a string representation
 - `util.copy_config`: deepcopy a config
 
-## Initialization
+## 2. Initialization {#initialization}
 
 Initialization is a separate step of the [config lifecycle](https://spacy.io/usage/training#config-lifecycle) that's not performed at runtime. It's implemented via the `training.initialize.init_nlp` helper and calls into `Language.initialize` method, which sets up the pipeline and component models before training. The `initialize` method takes a callback that returns a sample of examples, which is used to initialize the component models, add all required labels and perform shape inference if applicable.
 
 Components can also define custom initialization setting via the `[initialize.components]` block, e.g. if they require external data like lookup tables to be loaded in. All config settings defined here will be passed to the component's `initialize` method, if it implements one. Components are expected to handle their own serialization after they're initialized so that any data or settings they require are saved with the pipeline and will be available from disk when the pipeline is loaded back at runtime.
 
-### Initialization for training
+### 2A. Initialization for training {#initialization-training}
 
 The `init_nlp` function is called before training and returns an initialized `nlp` object that can be updated with the examples. It only needs the config and does the following:
 
@@ -115,7 +130,7 @@ The `init_nlp` function is called before training and returns an initialized `nl
 - Initialize the `nlp` object via `nlp.initialize` and pass it a `get_examples` callback that returns the training corpus (used for shape inference, setting up labels etc.). If the training corpus is streamed, we only provide a small sample of the data, which can potentially be infinite. `nlp.initialize` will delegate to the components as well and pass the data sample forward.
 - Check the listeners and warn about components dependencies, e.g. if a frozen component listens to a component that is retrained, or vice versa (which can degrade results).
 
-### Initializing the `nlp` object
+### 2B. Initializing the `nlp` object {#initialization-nlp}
 
 The `Language.initialize` method does the following:
 
@@ -128,7 +143,7 @@ The `Language.initialize` method does the following:
 - **Register listeners** if token-to-vector embedding layers of a component model "listen" to a previous component (`tok2vec`, `transformer`) in the pipeline.
 - **Create an optimizer** on the `Language` class, either by adding the optimizer passed as `sgd` to `initialize`, or by creating the optimizer defined in the config's training settings.
 
-### Initializing the vocab
+### 2C. Initializing the vocab {#initialization-vocab}
 
 Vocab initialization is handled in the `training.initialize.init_vocab` helper. It takes the relevant loaded functions and values from the config and takes care of the following:
 
