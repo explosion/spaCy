@@ -133,7 +133,7 @@ for sub_file in sorted(fp for fp in path.rglob("*") if fp.is_file()):
     dir_checksum.update(sub_file.read_bytes())
 ```
 
-If any of the TODOs you've added are important and should be fixed soon, you should add a task for this on the project board or an issue on the issue tracker to make sure we don't forget to address it.
+If any of the TODOs you've added are important and should be fixed soon, you should add a task for this on Explosion's internal Ora board or an issue on the public issue tracker to make sure we don't forget to address it.
 
 ## Type hints
 
@@ -307,7 +307,7 @@ The only exceptions are the CLI functions, which pretty-print messages for the u
 
 ## Naming
 
-Naming is hard and it's probably one of the main things we discuss in our regular PR meetings. We don't expect you to come up with the perfect names for everything you write – finding the right names is often an iterative and collaborative process. That said, we do try to follow some basic conventions.
+Naming is hard and often a topic of long internal discussions. We don't expect you to come up with the perfect names for everything you write – finding the right names is often an iterative and collaborative process. That said, we do try to follow some basic conventions.
 
 Consistent with general Python conventions, we use `CamelCase` for class names including dataclasses, `snake_case` for methods, functions and variables, and `UPPER_SNAKE_CASE` for constants, typically defined at the top of a module. We also avoid using variable names that shadow the names of built-in functions, e.g. `input`, `help` or `list`.
 
@@ -452,7 +452,7 @@ The test suite also provides [fixtures](https://github.com/explosion/spaCy/blob/
 
 Test functions usually follow the same simple structure: they set up some state, perform the operation you want to test and `assert` conditions that you expect to be true, usually before and after the operation.
 
-Tests should focus on exactly what they're testing and avoid dependencies on other unrelated library functionality wherever possible. If all your tests needs is a `Doc` object with certain annotations set, you should always construct it manually:
+Tests should focus on exactly what they're testing and avoid dependencies on other unrelated library functionality wherever possible. If all your test needs is a `Doc` object with certain annotations set, you should always construct it manually:
 
 ```python
 def test_doc_creation_with_pos():
