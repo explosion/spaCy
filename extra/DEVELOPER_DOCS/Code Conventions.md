@@ -414,7 +414,7 @@ Instead of raising an error, some parts of the code base can raise warnings to n
 + warnings.warn(Warnings.W123)
 ```
 
-When adding warnings, make sure you're not calling `warnings.warn` repeatedly, e.g. in a loop, which will clog up the terminal output. Instead, you can collect the potential problems first and then raise a single warning. If the problem is critical, consider raising an error instead and to exit early.
+When adding warnings, make sure you're not calling `warnings.warn` repeatedly, e.g. in a loop, which will clog up the terminal output. Instead, you can collect the potential problems first and then raise a single warning. If the problem is critical, consider raising an error instead.
 
 ```diff
 + n_empty = 0
