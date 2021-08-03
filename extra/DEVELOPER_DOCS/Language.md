@@ -19,8 +19,6 @@
 
 Most of the functions referenced in the config are regular functions with arbitrary arguments registered via the function registry. However, the pipeline components are a bit special: they don't only receive arguments passed in via the config file, but also the current `nlp` object and the string `name` of the individual component instance (so a user can have multiple components created with the same factory, e.g. `ner_one` and `ner_two`). This name can then be used by the components to add to the losses and scores. This special requirement means that pipeline components can't just be resolved via the config the "normal" way: we need to retrieve the component functions manually and pass them their arguments, plus the `nlp` and `name`.
 
-Pipeline components can also be modified via the `Language` methods like `add_pipe` and `remove_pipe`, so we need to track the components separately to ensure that the `components` and `nlp.pipeline` sections in the `nlp.config` always match the actual state of the current pipeline.
-
 The `Language.from_config` classmethod takes care of constructing the `nlp` object from a config. It's the single place where this happens and what `spacy.load` delegates to under the hood. Its main responsibilities are:
 
 - **Load and validate the config**, and optionally **auto-fill** all missing values that we either have defaults for in the config template or that registered function arguments define defaults for. This helps ensure backwards-compatibility, because we're able to add a new argument `foo: str = "bar"` to an existing function, without breaking configs that don't specity it.
