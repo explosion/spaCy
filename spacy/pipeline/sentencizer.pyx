@@ -50,7 +50,7 @@ class Sentencizer(Pipe):
         name="sentencizer",
         *,
         punct_chars=None,
-        scorer=senter_score
+        scorer=senter_score,
     ):
         """Initialize the sentencizer.
 
