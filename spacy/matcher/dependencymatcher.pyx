@@ -130,7 +130,7 @@ cdef class DependencyMatcher:
                 if missing:
                     missing_txt = ", ".join(list(missing))
                     raise ValueError(Errors.E100.format(
-                        key=key,
+                        required=required_keys,
                         missing=missing_txt
                     ))
                 if (
