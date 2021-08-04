@@ -405,20 +405,20 @@ class SpanCategorizer(TrainablePipe):
     def _make_span_group(
         self, doc: Doc, indices: Ints2d, scores: Floats2d, labels: List[str]
     ) -> SpanGroup:
-        spans = SpanGroup(doc, name=self.key, attrs={"scores": []})
+        spans = SpanGroup(doc, name=self.key)
         max_positive = self.cfg["max_positive"]
         threshold = self.cfg["threshold"]
+
+        keeps = scores >= threshold
+        ranked = (scores * -1).argsort()
+        keeps[ranked[:, max_positive:]] = False
+        spans.attrs["scores"] = scores[keeps].flatten()
         for i in range(indices.shape[0]):
             start = int(indices[i, 0])
             end = int(indices[i, 1])
-            positives = []
-            for j, score in enumerate(scores[i]):
-                if score >= threshold:
-                    positives.append((score, start, end, labels[j]))
-            positives.sort(reverse=True)
-            if max_positive:
-                positives = positives[:max_positive]
-            for score, start, end, label in positives:
-                spans.append(Span(doc, start, end, label=label))
-                spans.attrs["scores"].append(score)
+
+            for j, keep in enumerate(keeps[i]):
+                if keep:
+                    spans.append(Span(doc, start, end, label=labels[j]))
+
         return spans
