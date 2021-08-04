@@ -58,7 +58,6 @@ def make_tagger(nlp: Language, name: str, model: Model, scorer: Optional[Callabl
 
 
 def tagger_score(examples, **kwargs):
-    validate_examples(examples, "Tagger.score")
     return Scorer.score_token_attr(examples, "tag", **kwargs)
 
 

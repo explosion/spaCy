@@ -8,7 +8,6 @@ from .pipe import Pipe
 from .senter import senter_score
 from ..language import Language
 from ..scorer import Scorer
-from ..training import validate_examples
 from .. import util
 
 

@@ -44,8 +44,6 @@ def make_senter(nlp: Language, name: str, model: Model, scorer: Optional[Callabl
 
 
 def senter_score(examples, **kwargs):
-    validate_examples(examples, "SentenceRecognizer.score")
-
     def has_sents(doc):
         return doc.has_annotation("SENT_START")
 

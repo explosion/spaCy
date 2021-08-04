@@ -145,7 +145,6 @@ def make_spancat(
 
 
 def spancat_score(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
-    validate_examples(examples, "SpanCategorizer.score")
     kwargs = dict(kwargs)
     attr_prefix = "spans_"
     key = kwargs["spans_key"]

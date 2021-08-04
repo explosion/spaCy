@@ -109,7 +109,6 @@ def make_textcat(
 
 
 def textcat_score(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
-    validate_examples(examples, "TextCategorizer.score")
     return Scorer.score_cats(
         examples,
         "cats",

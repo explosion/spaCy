@@ -9,7 +9,6 @@ from ._parser_internals.ner cimport BiluoPushDown
 
 from ..language import Language
 from ..scorer import get_ner_prf, PRFScore
-from ..training import validate_examples
 from ..util import registry
 
 
@@ -176,7 +175,6 @@ def make_beam_ner(
 
 
 def ner_score(examples, **kwargs):
-    validate_examples(examples, "EntityRecognizer.score")
     return get_ner_prf(examples, **kwargs)
 
 

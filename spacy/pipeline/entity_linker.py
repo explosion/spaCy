@@ -99,7 +99,6 @@ def make_entity_linker(
 
 
 def entity_linker_score(examples, **kwargs):
-    validate_examples(examples, "EntityLinker.score")
     return Scorer.score_links(examples, negative_labels=[EntityLinker.NIL], **kwargs)
 
 

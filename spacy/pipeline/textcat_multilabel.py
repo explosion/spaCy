@@ -5,7 +5,7 @@ from thinc.api import Model, Config
 from thinc.types import Floats2d
 
 from ..language import Language
-from ..training import Example, validate_examples, validate_get_examples
+from ..training import Example, validate_get_examples
 from ..errors import Errors
 from ..scorer import Scorer
 from ..tokens import Doc
@@ -112,7 +112,6 @@ def make_multilabel_textcat(
 
 
 def textcat_multilabel_score(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
-    validate_examples(examples, "MultiLabel_TextCategorizer.score")
     return Scorer.score_cats(
         examples,
         "cats",

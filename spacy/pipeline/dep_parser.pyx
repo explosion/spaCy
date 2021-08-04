@@ -12,7 +12,6 @@ from ..language import Language
 from ._parser_internals import nonproj
 from ._parser_internals.nonproj import DELIMITER
 from ..scorer import Scorer
-from ..training import validate_examples
 from ..util import registry
 
 
@@ -227,8 +226,6 @@ def parser_score(examples, **kwargs):
 
     DOCS: https://spacy.io/api/dependencyparser#score
     """
-    validate_examples(examples, "DependencyParser.score")
-
     def has_sents(doc):
         return doc.has_annotation("SENT_START")
 

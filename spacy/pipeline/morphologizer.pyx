@@ -62,7 +62,6 @@ def make_morphologizer(
 
 
 def morphologizer_score(examples, **kwargs):
-    validate_examples(examples, "Morphologizer.score")
     def morph_key_getter(token, attr):
         return getattr(token, attr).key
 

@@ -5,7 +5,7 @@ from pathlib import Path
 
 from .pipe import Pipe
 from ..errors import Errors
-from ..training import validate_examples, Example
+from ..training import Example
 from ..language import Language
 from ..matcher import Matcher
 from ..scorer import Scorer
@@ -39,8 +39,6 @@ def make_attribute_ruler(
 def attribute_ruler_score(
     examples: Iterable[Example], **kwargs
 ) -> Dict[str, Any]:
-    validate_examples(examples, "AttributeRuler.score")
-
     def morph_key_getter(token, attr):
         return getattr(token, attr).key
 

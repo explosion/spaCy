@@ -12,7 +12,6 @@ from ..util import ensure_path, to_disk, from_disk, SimpleFrozenList, registry
 from ..tokens import Doc, Span
 from ..matcher import Matcher, PhraseMatcher
 from ..scorer import get_ner_prf
-from ..training import validate_examples
 
 
 DEFAULT_ENT_ID_SEP = "||"
@@ -57,7 +56,6 @@ def make_entity_ruler(
 
 
 def entity_ruler_score(examples, **kwargs):
-    validate_examples(examples, "EntityRuler.score")
     return get_ner_prf(examples)
 
 

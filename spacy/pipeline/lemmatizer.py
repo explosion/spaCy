@@ -12,7 +12,6 @@ from ..lookups import Lookups, load_lookups
 from ..scorer import Scorer
 from ..tokens import Doc, Token
 from ..vocab import Vocab
-from ..training import validate_examples
 from ..util import logger, SimpleFrozenList, registry
 from .. import util
 
@@ -42,7 +41,6 @@ def make_lemmatizer(
 
 
 def lemmatizer_score(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
-    validate_examples(examples, "Lemmatizer.score")
     return Scorer.score_token_attr(examples, "lemma", **kwargs)
 
 
