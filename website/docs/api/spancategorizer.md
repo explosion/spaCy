@@ -16,6 +16,19 @@ that predicts zero or more labels for each candidate.
 Predicted spans will be saved in a [`SpanGroup`](/api/spangroup) on the doc.
 Individual span scores can be found in `spangroup.attrs["scores"]`.
 
+## Annotation Format {#annotations}
+
+Annotations will be saved to `Doc.spans[SPAN_KEY]` as a
+[`SpanGroup`](/api/spangroup). The scores for the spans in the `SpanGroup`
+will be saved in `SpanGroup.attrs["scores"]`. 
+
+`SPAN_KEY` defaults to `"spans"`, but can be passed as a parameter.
+
+| Location              | Value                      |
+| --------------------- | -------------------------------- |
+| `Doc.spans[SPAN_KEY]`  | The annotated spans. ~~SpanGroup~~ |
+| `Doc.spans[SPAN_KEY].attrs["scores"]` | The score for each span in the `SpanGroup`. ~~Floats1d~~  |
+
 ## Config and implementation {#config}
 
 The default config is defined by the pipeline component factory and describes
