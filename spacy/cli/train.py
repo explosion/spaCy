@@ -44,7 +44,7 @@ def train_cli(
     if not config_path or (str(config_path) != "-" and not config_path.exists()):
         msg.fail("Config file not found", config_path, exits=1)
     if output_path is not None:
-        if not output_path.exists()
+        if not output_path.exists():
             output_path.mkdir(parents=True)
             msg.good(f"Created output directory: {output_path}")
     else:
