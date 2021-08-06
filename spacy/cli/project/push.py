@@ -54,7 +54,9 @@ def project_push(project_dir: Path, remote: str):
                     command_hash=cmd_hash,
                     content_hash=get_content_hash(output_loc),
                 )
-                logger.debug(f"URL: {url} for output {output_path} with cmd_hash {cmd_hash}")
+                logger.debug(
+                    f"URL: {url} for output {output_path} with cmd_hash {cmd_hash}"
+                )
                 yield output_path, url
 
 
