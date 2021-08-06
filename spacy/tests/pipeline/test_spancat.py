@@ -123,7 +123,10 @@ def test_ngram_suggester(en_tokenizer):
             assert spans.shape[0] == len(spans_set)
             offset += ngrams.lengths[i]
         # the number of spans is correct
-        assert_array_equal(OPS.to_numpy(ngrams.lengths), [max(0, len(doc) - (size - 1)) for doc in docs])
+        assert_array_equal(
+            OPS.to_numpy(ngrams.lengths),
+            [max(0, len(doc) - (size - 1)) for doc in docs],
+        )
 
     # test 1-3-gram suggestions
     ngram_suggester = registry.misc.get("spacy.ngram_suggester.v1")(sizes=[1, 2, 3])
