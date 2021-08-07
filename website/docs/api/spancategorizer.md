@@ -16,9 +16,9 @@ that predicts zero or more labels for each candidate.
 Predicted spans will be saved in a [`SpanGroup`](/api/spangroup) on the doc.
 Individual span scores can be found in `spangroup.attrs["scores"]`.
 
-## Annotation Format {#annotations}
+## Assigned Attributes {#assigned-attributes}
 
-Annotations will be saved to `Doc.spans[spans_key]` as a
+Predictions will be saved to `Doc.spans[spans_key]` as a
 [`SpanGroup`](/api/spangroup). The scores for the spans in the `SpanGroup`
 will be saved in `SpanGroup.attrs["scores"]`. 
 
