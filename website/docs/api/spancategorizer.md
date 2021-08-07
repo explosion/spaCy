@@ -18,16 +18,16 @@ Individual span scores can be found in `spangroup.attrs["scores"]`.
 
 ## Annotation Format {#annotations}
 
-Annotations will be saved to `Doc.spans[SPAN_KEY]` as a
+Annotations will be saved to `Doc.spans[spans_key]` as a
 [`SpanGroup`](/api/spangroup). The scores for the spans in the `SpanGroup`
 will be saved in `SpanGroup.attrs["scores"]`. 
 
-`SPAN_KEY` defaults to `"spans"`, but can be passed as a parameter.
+`spans_key` defaults to `"sc"`, but can be passed as a parameter.
 
 | Location              | Value                      |
 | --------------------- | -------------------------------- |
-| `Doc.spans[SPAN_KEY]`  | The annotated spans. ~~SpanGroup~~ |
-| `Doc.spans[SPAN_KEY].attrs["scores"]` | The score for each span in the `SpanGroup`. ~~Floats1d~~  |
+| `Doc.spans[spans_key]`  | The annotated spans. ~~SpanGroup~~ |
+| `Doc.spans[spans_key].attrs["scores"]` | The score for each span in the `SpanGroup`. ~~Floats1d~~  |
 
 ## Config and implementation {#config}
 
