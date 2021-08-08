@@ -29,7 +29,7 @@ Create the vocabulary.
 | `oov_prob`                                  | The default OOV probability. Defaults to `-20.0`. ~~float~~                                                                                            |
 | `vectors_name` <Tag variant="new">2.2</Tag> | A name to identify the vectors table. ~~str~~                                                                                                          |
 | `writing_system`                            | A dictionary describing the language's writing system. Typically provided by [`Language.Defaults`](/api/language#defaults). ~~Dict[str, Any]~~         |
-| `get_noun_chunks`                           | A function that yields base noun phrases used for [`Doc.noun_chunks`](/ap/doc#noun_chunks). ~~Optional[Callable[[Union[Doc, Span], Iterator[Span]]]]~~ |
+| `get_noun_chunks`                           | A function that yields base noun phrases used for [`Doc.noun_chunks`](/api/doc#noun_chunks). ~~Optional[Callable[[Union[Doc, Span], Iterator[Span]]]]~~ |
 
 ## Vocab.\_\_len\_\_ {#len tag="method"}
 
