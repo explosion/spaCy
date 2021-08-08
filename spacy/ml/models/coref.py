@@ -237,8 +237,8 @@ def coarse_prune(
         # calculate the doc length
         doclen = ends[-1] - starts[0]
         # XXX seems to make more sense to use menlen than doclen here?
-        # mlimit = min(mention_limit, int(mention_limit_ratio * doclen))
-        mlimit = min(mention_limit, int(mention_limit_ratio * menlen))
+        # coref-hoi uses doclen (number of words). 
+        mlimit = min(mention_limit, int(mention_limit_ratio * doclen))
         # csel is a 1d integer list
         csel = select_non_crossing_spans(tops, starts, ends, mlimit)
         # add the offset so these indices are absolute
