@@ -1616,6 +1616,22 @@
         },
         {
             "type": "education",
+            "id": "mastering-spacy",
+            "title": "Mastering spaCy",
+            "slogan": "Packt, 2021",
+            "description": "This is your ultimate spaCy book. Master the crucial skills to use spaCy components effectively to create real-world NLP applications with spaCy. Explaining linguistic concepts such as dependency parsing, POS-tagging and named entity extraction with many examples, this book will help you to conquer computational linguistics with spaCy. The book further focuses on ML topics with Keras and Tensorflow. You'll cover popular topics, including intent recognition, sentiment analysis and context resolution; and use them on popular datasets and interpret the results. A special hands-on section on chatbot design is included.",
+            "github": "PacktPublishing/Mastering-spaCy",
+            "cover": "https://tinyimg.io/i/aWEm0dh.jpeg",
+            "url": "https://www.amazon.com/Mastering-spaCy-end-end-implementing/dp/1800563353",
+            "author": "Duygu Altinok",
+            "author_links": {
+                "github": "DuyguA",
+                "website": "https://www.linkedin.com/in/duygu-altinok-4021389a"
+            },
+            "category": ["books"]
+        },
+        {
+            "type": "education",
             "id": "learning-path-spacy",
             "title": "Learning Path: Mastering spaCy for Natural Language Processing",
             "slogan": "O'Reilly, 2017",
