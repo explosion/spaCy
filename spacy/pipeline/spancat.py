@@ -413,6 +413,10 @@ class SpanCategorizer(TrainablePipe):
         ranked = (scores * -1).argsort()
         keeps[ranked[:, max_positive:]] = False
         spans.attrs["scores"] = scores[keeps].flatten()
+
+        indices = self.model.ops.to_numpy(indices)
+        keeps = self.model.ops.to_numpy(keeps)
+
         for i in range(indices.shape[0]):
             start = int(indices[i, 0])
             end = int(indices[i, 1])
