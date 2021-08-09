@@ -652,7 +652,7 @@ excluded from the logs and the score won't be weighted.
 | **Recall** (R)             | Percentage of reference annotations recovered. Should increase.                                                         |
 | **F-Score** (F)            | Harmonic mean of precision and recall. Should increase.                                                                 |
 | **UAS** / **LAS**          | Unlabeled and labeled attachment score for the dependency parser, i.e. the percentage of correct arcs. Should increase. |
-| **Words per second** (WPS) | Prediction speed in words per second. Should stay stable.                                                               |
+| **Speed** | Prediction speed in words per second (WPS). Should stay stable.                                                               |
 
 Note that if the development data has raw text, some of the gold-standard
 entities might not align to the predicted tokenization. These tokenization

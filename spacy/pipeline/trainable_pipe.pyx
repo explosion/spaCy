@@ -273,7 +273,7 @@ cdef class TrainablePipe(Pipe):
         serialize = {}
         if hasattr(self, "cfg") and self.cfg is not None:
             serialize["cfg"] = lambda: srsly.json_dumps(self.cfg)
-        serialize["vocab"] = self.vocab.to_bytes
+        serialize["vocab"] = lambda: self.vocab.to_bytes(exclude=exclude)
         serialize["model"] = self.model.to_bytes
         return util.to_bytes(serialize, exclude)
 
@@ -296,7 +296,7 @@ cdef class TrainablePipe(Pipe):
         deserialize = {}
         if hasattr(self, "cfg") and self.cfg is not None:
             deserialize["cfg"] = lambda b: self.cfg.update(srsly.json_loads(b))
-        deserialize["vocab"] = lambda b: self.vocab.from_bytes(b)
+        deserialize["vocab"] = lambda b: self.vocab.from_bytes(b, exclude=exclude)
         deserialize["model"] = load_model
         util.from_bytes(bytes_data, deserialize, exclude)
         return self
@@ -313,7 +313,7 @@ cdef class TrainablePipe(Pipe):
         serialize = {}
         if hasattr(self, "cfg") and self.cfg is not None:
             serialize["cfg"] = lambda p: srsly.write_json(p, self.cfg)
-        serialize["vocab"] = lambda p: self.vocab.to_disk(p)
+        serialize["vocab"] = lambda p: self.vocab.to_disk(p, exclude=exclude)
         serialize["model"] = lambda p: self.model.to_disk(p)
         util.to_disk(path, serialize, exclude)
 
@@ -338,7 +338,7 @@ cdef class TrainablePipe(Pipe):
         deserialize = {}
         if hasattr(self, "cfg") and self.cfg is not None:
             deserialize["cfg"] = lambda p: self.cfg.update(deserialize_config(p))
-        deserialize["vocab"] = lambda p: self.vocab.from_disk(p)
+        deserialize["vocab"] = lambda p: self.vocab.from_disk(p, exclude=exclude)
         deserialize["model"] = load_model
         util.from_disk(path, deserialize, exclude)
         return self

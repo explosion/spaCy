@@ -1698,7 +1698,6 @@ class Language:
         # them here so they're only loaded once
         source_nlps = {}
         source_nlp_vectors_hashes = {}
-        nlp.meta["_sourced_vectors_hashes"] = {}
         for pipe_name in config["nlp"]["pipeline"]:
             if pipe_name not in pipeline:
                 opts = ", ".join(pipeline.keys())
@@ -1747,6 +1746,8 @@ class Language:
                         source_nlp_vectors_hashes[model] = hash(
                             source_nlps[model].vocab.vectors.to_bytes()
                         )
+                    if "_sourced_vectors_hashes" not in nlp.meta:
+                        nlp.meta["_sourced_vectors_hashes"] = {}
                     nlp.meta["_sourced_vectors_hashes"][
                         pipe_name
                     ] = source_nlp_vectors_hashes[model]
@@ -1908,7 +1909,7 @@ class Language:
             if not hasattr(proc, "to_disk"):
                 continue
             serializers[name] = lambda p, proc=proc: proc.to_disk(p, exclude=["vocab"])
-        serializers["vocab"] = lambda p: self.vocab.to_disk(p)
+        serializers["vocab"] = lambda p: self.vocab.to_disk(p, exclude=exclude)
         util.to_disk(path, serializers, exclude)
 
     def from_disk(
@@ -1939,7 +1940,7 @@ class Language:
 
         def deserialize_vocab(path: Path) -> None:
             if path.exists():
-                self.vocab.from_disk(path)
+                self.vocab.from_disk(path, exclude=exclude)
 
         path = util.ensure_path(path)
         deserializers = {}
@@ -1977,7 +1978,7 @@ class Language:
         DOCS: https://spacy.io/api/language#to_bytes
         """
         serializers = {}
-        serializers["vocab"] = lambda: self.vocab.to_bytes()
+        serializers["vocab"] = lambda: self.vocab.to_bytes(exclude=exclude)
         serializers["tokenizer"] = lambda: self.tokenizer.to_bytes(exclude=["vocab"])
         serializers["meta.json"] = lambda: srsly.json_dumps(self.meta)
         serializers["config.cfg"] = lambda: self.config.to_bytes()
@@ -2013,7 +2014,7 @@ class Language:
             b, interpolate=False
         )
         deserializers["meta.json"] = deserialize_meta
-        deserializers["vocab"] = self.vocab.from_bytes
+        deserializers["vocab"] = lambda b: self.vocab.from_bytes(b, exclude=exclude)
         deserializers["tokenizer"] = lambda b: self.tokenizer.from_bytes(
             b, exclude=["vocab"]
         )

@@ -845,7 +845,7 @@ class _RegexPredicate:
 
 
 class _SetPredicate:
-    operators = ("IN", "NOT_IN", "IS_SUBSET", "IS_SUPERSET")
+    operators = ("IN", "NOT_IN", "IS_SUBSET", "IS_SUPERSET", "INTERSECTS")
 
     def __init__(self, i, attr, value, predicate, is_extension=False, vocab=None):
         self.i = i
@@ -868,14 +868,16 @@ class _SetPredicate:
         else:
             value = get_token_attr_for_matcher(token.c, self.attr)
 
-        if self.predicate in ("IS_SUBSET", "IS_SUPERSET"):
+        if self.predicate in ("IS_SUBSET", "IS_SUPERSET", "INTERSECTS"):
             if self.attr == MORPH:
                 # break up MORPH into individual Feat=Val values
                 value = set(get_string_id(v) for v in MorphAnalysis.from_id(self.vocab, value))
             else:
-                # IS_SUBSET for other attrs will be equivalent to "IN"
-                # IS_SUPERSET will only match for other attrs with 0 or 1 values
-                value = set([value])
+                # treat a single value as a list
+                if isinstance(value, (str, int)):
+                    value = set([get_string_id(value)])
+                else:
+                    value = set(get_string_id(v) for v in value)
         if self.predicate == "IN":
             return value in self.value
         elif self.predicate == "NOT_IN":
@@ -884,6 +886,8 @@ class _SetPredicate:
             return value <= self.value
         elif self.predicate == "IS_SUPERSET":
             return value >= self.value
+        elif self.predicate == "INTERSECTS":
+            return bool(value & self.value)
 
     def __repr__(self):
         return repr(("SetPredicate", self.i, self.attr, self.value, self.predicate))
@@ -928,6 +932,7 @@ def _get_extra_predicates(spec, extra_predicates, vocab):
         "NOT_IN": _SetPredicate,
         "IS_SUBSET": _SetPredicate,
         "IS_SUPERSET": _SetPredicate,
+        "INTERSECTS": _SetPredicate,
         "==": _ComparisonPredicate,
         "!=": _ComparisonPredicate,
         ">=": _ComparisonPredicate,

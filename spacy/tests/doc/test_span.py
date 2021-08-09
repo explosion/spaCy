@@ -357,6 +357,9 @@ def test_span_eq_hash(doc, doc_not_parsed):
     assert hash(doc[0:2]) != hash(doc[1:3])
     assert hash(doc[0:2]) != hash(doc_not_parsed[0:2])
 
+    # check that an out-of-bounds is not equivalent to the span of the full doc
+    assert doc[0 : len(doc)] != doc[len(doc) : len(doc) + 1]
+
 
 def test_span_boundaries(doc):
     start = 1
@@ -368,6 +371,33 @@ def test_span_boundaries(doc):
         span[-5]
     with pytest.raises(IndexError):
         span[5]
+
+    empty_span_0 = doc[0:0]
+    assert empty_span_0.text == ""
+    assert empty_span_0.start == 0
+    assert empty_span_0.end == 0
+    assert empty_span_0.start_char == 0
+    assert empty_span_0.end_char == 0
+
+    empty_span_1 = doc[1:1]
+    assert empty_span_1.text == ""
+    assert empty_span_1.start == 1
+    assert empty_span_1.end == 1
+    assert empty_span_1.start_char == empty_span_1.end_char
+
+    oob_span_start = doc[-len(doc) - 1 : -len(doc) - 10]
+    assert oob_span_start.text == ""
+    assert oob_span_start.start == 0
+    assert oob_span_start.end == 0
+    assert oob_span_start.start_char == 0
+    assert oob_span_start.end_char == 0
+
+    oob_span_end = doc[len(doc) + 1 : len(doc) + 10]
+    assert oob_span_end.text == ""
+    assert oob_span_end.start == len(doc)
+    assert oob_span_end.end == len(doc)
+    assert oob_span_end.start_char == len(doc.text)
+    assert oob_span_end.end_char == len(doc.text)
 
 
 def test_span_lemma(doc):
