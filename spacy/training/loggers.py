@@ -29,7 +29,7 @@ def console_logger(progress_bar: bool = False):
     def setup_printer(
         nlp: "Language", stdout: IO = sys.stdout, stderr: IO = sys.stderr
     ) -> Tuple[Callable[[Optional[Dict[str, Any]]], None], Callable[[], None]]:
-        write = lambda text: stdout.write(f"{text}\n")
+        write = lambda text: print(text, file=stdout, flush=True)
         msg = Printer(no_print=True)
         # ensure that only trainable components are logged
         logged_pipes = [
