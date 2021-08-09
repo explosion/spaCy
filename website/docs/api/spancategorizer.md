@@ -19,15 +19,15 @@ Individual span scores can be found in `spangroup.attrs["scores"]`.
 ## Assigned Attributes {#assigned-attributes}
 
 Predictions will be saved to `Doc.spans[spans_key]` as a
-[`SpanGroup`](/api/spangroup). The scores for the spans in the `SpanGroup`
-will be saved in `SpanGroup.attrs["scores"]`. 
+[`SpanGroup`](/api/spangroup). The scores for the spans in the `SpanGroup` will
+be saved in `SpanGroup.attrs["scores"]`.
 
 `spans_key` defaults to `"sc"`, but can be passed as a parameter.
 
-| Location              | Value                      |
-| --------------------- | -------------------------------- |
-| `Doc.spans[spans_key]`  | The annotated spans. ~~SpanGroup~~ |
-| `Doc.spans[spans_key].attrs["scores"]` | The score for each span in the `SpanGroup`. ~~Floats1d~~  |
+| Location                               | Value                                                    |
+| -------------------------------------- | -------------------------------------------------------- |
+| `Doc.spans[spans_key]`                 | The annotated spans. ~~SpanGroup~~                       |
+| `Doc.spans[spans_key].attrs["scores"]` | The score for each span in the `SpanGroup`. ~~Floats1d~~ |
 
 ## Config and implementation {#config}
 
