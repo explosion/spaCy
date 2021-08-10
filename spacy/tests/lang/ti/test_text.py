@@ -37,7 +37,7 @@ def test_ti_tokenizer_handles_cnts(ti_tokenizer, text, length):
         ("10.000", True),
         ("1000", True),
         ("999,0", True),
-        ("ሐደ", True),
+        ("ሓደ", True),
         ("ክልተ", True),
         ("ትሪልዮን", True),
         ("ከልቢ", False),
