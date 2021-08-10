@@ -217,8 +217,8 @@ cdef class Span:
         """Create a `Doc` object with a copy of the `Span`'s data.
 
         copy_user_data (bool): Whether or not to copy the original doc's user data.
-        array_head: `Doc` array attrs, can be passed in to speed up computation.
-        array: `Doc` as array, can be passed in to speed up computation.
+        array_head (tuple): `Doc` array attrs, can be passed in to speed up computation.
+        array (ndarray): `Doc` as array, can be passed in to speed up computation.
         RETURNS (Doc): The `Doc` copy of the span.
 
         DOCS: https://spacy.io/api/span#as_doc
