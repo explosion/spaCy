@@ -418,8 +418,8 @@ class SpanCategorizer(TrainablePipe):
         keeps = self.model.ops.to_numpy(keeps)
 
         for i in range(indices.shape[0]):
-            start = int(indices[i, 0])
-            end = int(indices[i, 1])
+            start = indices[i, 0]
+            end = indices[i, 1]
 
             for j, keep in enumerate(keeps[i]):
                 if keep:
