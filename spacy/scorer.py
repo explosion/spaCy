@@ -537,7 +537,7 @@ class Scorer:
 
     @staticmethod
     def score_links(
-        examples: Iterable[Example], *, negative_labels: Iterable[str]
+        examples: Iterable[Example], *, negative_labels: Iterable[str], **cfg
     ) -> Dict[str, Any]:
         """Returns PRF for predicted links on the entity level.
         To disentangle the performance of the NEL from the NER,

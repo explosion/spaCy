@@ -86,6 +86,9 @@ cdef class Pipe:
             # use default settings from cfg (e.g., threshold)
             if hasattr(self, "cfg") and isinstance(self.cfg, dict):
                 scorer_kwargs.update(self.cfg)
+            # override self.cfg["labels"] with self.labels
+            if hasattr(self, "labels"):
+                scorer_kwargs["labels"] = self.labels
             # override with kwargs settings
             scorer_kwargs.update(kwargs)
             return self.scorer(examples, **scorer_kwargs)
