@@ -13,6 +13,22 @@ A span categorizer consists of two parts: a [suggester function](#suggesters)
 that proposes candidate spans, which may or may not overlap, and a labeler model
 that predicts zero or more labels for each candidate.
 
+Predicted spans will be saved in a [`SpanGroup`](/api/spangroup) on the doc.
+Individual span scores can be found in `spangroup.attrs["scores"]`.
+
+## Assigned Attributes {#assigned-attributes}
+
+Predictions will be saved to `Doc.spans[spans_key]` as a
+[`SpanGroup`](/api/spangroup). The scores for the spans in the `SpanGroup` will
+be saved in `SpanGroup.attrs["scores"]`.
+
+`spans_key` defaults to `"sc"`, but can be passed as a parameter.
+
+| Location                               | Value                                                    |
+| -------------------------------------- | -------------------------------------------------------- |
+| `Doc.spans[spans_key]`                 | The annotated spans. ~~SpanGroup~~                       |
+| `Doc.spans[spans_key].attrs["scores"]` | The score for each span in the `SpanGroup`. ~~Floats1d~~ |
+
 ## Config and implementation {#config}
 
 The default config is defined by the pipeline component factory and describes

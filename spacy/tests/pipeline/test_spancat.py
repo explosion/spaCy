@@ -85,10 +85,12 @@ def test_simple_train():
     doc = nlp("I like London and Berlin.")
     assert doc.spans[spancat.key] == doc.spans[SPAN_KEY]
     assert len(doc.spans[spancat.key]) == 2
+    assert len(doc.spans[spancat.key].attrs["scores"]) == 2
     assert doc.spans[spancat.key][0].text == "London"
     scores = nlp.evaluate(get_examples())
     assert f"spans_{SPAN_KEY}_f" in scores
     assert scores[f"spans_{SPAN_KEY}_f"] == 1.0
+
 
 
 def test_ngram_suggester(en_tokenizer):
