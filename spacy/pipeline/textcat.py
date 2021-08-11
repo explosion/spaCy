@@ -104,6 +104,7 @@ def make_textcat(
     model (Model[List[Doc], List[Floats2d]]): A model instance that predicts
         scores for each category.
     threshold (float): Cutoff to consider a prediction "positive".
+    scorer (Optional[Callable]): The scoring method.
     """
     return TextCategorizer(nlp.vocab, model, name, threshold=threshold, scorer=scorer)
 
@@ -144,6 +145,8 @@ class TextCategorizer(TrainablePipe):
         name (str): The component instance name, used to add entries to the
             losses during training.
         threshold (float): Cutoff to consider a prediction "positive".
+        scorer (Optional[Callable]): The scoring method. Defaults to
+                Scorer.score_cats for the attribute "cats".
 
         DOCS: https://spacy.io/api/textcategorizer#init
         """

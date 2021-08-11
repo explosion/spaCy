@@ -83,6 +83,7 @@ def make_entity_linker(
     entity_vector_length (int): Size of encoding vectors in the KB.
     get_candidates (Callable[[KnowledgeBase, "Span"], Iterable[Candidate]]): Function that
         produces a list of candidates, given a certain knowledge base and a textual mention.
+    scorer (Optional[Callable]): The scoring method.
     """
     return EntityLinker(
         nlp.vocab,
@@ -142,6 +143,8 @@ class EntityLinker(TrainablePipe):
         entity_vector_length (int): Size of encoding vectors in the KB.
         get_candidates (Callable[[KnowledgeBase, Span], Iterable[Candidate]]): Function that
             produces a list of candidates, given a certain knowledge base and a textual mention.
+        scorer (Optional[Callable]): The scoring method. Defaults to
+            Scorer.score_links.
 
         DOCS: https://spacy.io/api/entitylinker#init
         """

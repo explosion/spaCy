@@ -48,12 +48,13 @@ Initialize the attribute ruler.
 > ruler = nlp.add_pipe("attribute_ruler")
 > ```
 
-| Name           | Description                                                                                                                              |
-| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `vocab`        | The shared vocabulary to pass to the matcher. ~~Vocab~~                                                                                  |
-| `name`         | Instance name of the current pipeline component. Typically passed in automatically from the factory when the component is added. ~~str~~ |
-| _keyword-only_ |                                                                                                                                          |
-| `validate`     | Whether patterns should be validated (passed to the [`Matcher`](/api/matcher#init)). Defaults to `False`. ~~bool~~                       |
+| Name           | Description                                                                                                                                                                                                                                                                                |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `vocab`        | The shared vocabulary to pass to the matcher. ~~Vocab~~                                                                                                                                                                                                                                    |
+| `name`         | Instance name of the current pipeline component. Typically passed in automatically from the factory when the component is added. ~~str~~                                                                                                                                                   |
+| _keyword-only_ |                                                                                                                                                                                                                                                                                            |
+| `validate`     | Whether patterns should be validated (passed to the [`Matcher`](/api/matcher#init)). Defaults to `False`. ~~bool~~                                                                                                                                                                         |
+| `scorer`       | The scoring method. Defaults to [`Scorer.score_token_attr`](/api/scorer#score_token_attr) for the attributes `"tag`", `"pos"`, `"morph"` and `"lemma"` and [`Scorer.score_token_attr_per_feat`](/api/scorer#score_token_attr_per_feat) for the attribute `"morph"`. ~~Optional[Callable]~~ |
 
 ## AttributeRuler.\_\_call\_\_ {#call tag="method"}
 
@@ -174,21 +175,6 @@ Load attribute ruler patterns from morph rules.
 | Name          | Description                                                                                                                                                                           |
 | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `morph_rules` | The morph rules that map token text and fine-grained tags to coarse-grained tags, lemmas and morphological features. ~~Dict[str, Dict[str, Dict[Union[int, str], Union[int, str]]]]~~ |
-
-## AttributeRuler.score {#score tag="method" new="3"}
-
-Score a batch of examples.
-
-> #### Example
->
-> ```python
-> scores = ruler.score(examples)
-> ```
-
-| Name        | Description                                                                                                                                                                                                           |
-| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `examples`  | The examples to score. ~~Iterable[Example]~~                                                                                                                                                                          |
-| **RETURNS** | The scores, produced by [`Scorer.score_token_attr`](/api/scorer#score_token_attr) for the attributes `"tag"`, `"pos"`, `"morph"` and `"lemma"` if present in any of the target token attributes. ~~Dict[str, float]~~ |
 
 ## AttributeRuler.to_disk {#to_disk tag="method"}
 

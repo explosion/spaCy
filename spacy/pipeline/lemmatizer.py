@@ -90,6 +90,8 @@ class Lemmatizer(Pipe):
         mode (str): The lemmatizer mode: "lookup", "rule". Defaults to "lookup".
         overwrite (bool): Whether to overwrite existing lemmas. Defaults to
             `False`.
+        scorer (Optional[Callable]): The scoring method. Defaults to
+            Scorer.score_token_attr for the attributes "lemma".
 
         DOCS: https://spacy.io/api/lemmatizer#init
         """

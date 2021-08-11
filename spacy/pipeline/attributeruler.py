@@ -36,9 +36,7 @@ def make_attribute_ruler(
     return AttributeRuler(nlp.vocab, name, validate=validate, scorer=scorer)
 
 
-def attribute_ruler_score(
-    examples: Iterable[Example], **kwargs
-) -> Dict[str, Any]:
+def attribute_ruler_score(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
     def morph_key_getter(token, attr):
         return getattr(token, attr).key
 
@@ -84,6 +82,10 @@ class AttributeRuler(Pipe):
 
         vocab (Vocab): The vocab.
         name (str): The pipe name. Defaults to "attribute_ruler".
+        scorer (Optional[Callable]): The scoring method. Defaults to
+            Scorer.score_token_attr for the attributes "tag", "pos", "morph" and
+            "lemma" and Scorer.score_token_attr_per_feat for the attribute
+            "morph".
 
         RETURNS (AttributeRuler): The AttributeRuler component.
 

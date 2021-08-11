@@ -28,7 +28,7 @@ how the component should be configured. You can override its settings via the
 > ```
 
 | Setting       | Description                                                                                                                                            |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `punct_chars` | Optional custom list of punctuation characters that mark sentence ends. See below for defaults if not set. Defaults to `None`. ~~Optional[List[str]]~~ | `None` |
 
 ```python
@@ -50,10 +50,11 @@ Initialize the sentencizer.
 > sentencizer = Sentencizer()
 > ```
 
-| Name           | Description                                                                                                             |
-| -------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| _keyword-only_ |                                                                                                                         |
-| `punct_chars`  | Optional custom list of punctuation characters that mark sentence ends. See below for defaults. ~~Optional[List[str]]~~ |
+| Name           | Description                                                                                                                        |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| _keyword-only_ |                                                                                                                                    |
+| `punct_chars`  | Optional custom list of punctuation characters that mark sentence ends. See below for defaults. ~~Optional[List[str]]~~            |
+| `scorer`       | The scoring method. Defaults to [`Scorer.score_spans`](/api/scorer#score_spans) for the attribute `"sents"` ~~Optional[Callable]~~ |
 
 ```python
 ### punct_chars defaults
@@ -111,21 +112,6 @@ applied to the `Doc` in order.
 | _keyword-only_ |                                                               |
 | `batch_size`   | The number of documents to buffer. Defaults to `128`. ~~int~~ |
 | **YIELDS**     | The processed documents in order. ~~Doc~~                     |
-
-## Sentencizer.score {#score tag="method" new="3"}
-
-Score a batch of examples.
-
-> #### Example
->
-> ```python
-> scores = sentencizer.score(examples)
-> ```
-
-| Name        | Description                                                                                                           |
-| ----------- | --------------------------------------------------------------------------------------------------------------------- |
-| `examples`  | The examples to score. ~~Iterable[Example]~~                                                                          |
-| **RETURNS** | The scores, produced by [`Scorer.score_spans`](/api/scorer#score_spans). ~~Dict[str, Union[float, Dict[str, float]]~~ |
 
 ## Sentencizer.to_disk {#to_disk tag="method"}
 

@@ -27,9 +27,13 @@ Create a new `Scorer`.
 > scorer = Scorer(nlp)
 > ```
 
-| Name  | Description                                                                                                                                                                                                                                                                         |
-| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `nlp` | The pipeline to use for scoring, where each pipeline component may provide a scoring method. If none is provided, then a default pipeline for the multi-language code `xx` is constructed containing: `senter`, `tagger`, `morphologizer`, `parser`, `ner`, `textcat`. ~~Language~~ |
+| Name               | Description                                                                                                                                                                                                                               |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `nlp`              | The pipeline to use for scoring, where each pipeline component may provide a scoring method. If none is provided, then a default pipeline is constructed using the `default_lang` and `default_pipeline` settings. ~~Optional[Language]~~ |
+| `default_lang`     | The language to use for a default pipeline if `nlp` is not provided. Defaults to `xx`. ~~str~~                                                                                                                                            |
+| `default_pipeline` | The pipeline components to use for a default pipeline if `nlp` is not provided. Defaults to `("senter", "tagger", "morphologizer", "parser", "ner", "textcat")`. ~~Iterable[string]~~                                                     |
+| _keyword-only_     |                                                                                                                                                                                                                                           |
+| `\*\*kwargs`       | Any additional settings to pass on to the individual scoring methods. ~~Any~~                                                                                                                                                             |
 
 ## Scorer.score {#score tag="method"}
 
@@ -80,7 +84,7 @@ Docs with `has_unknown_spaces` are skipped during scoring.
 > ```
 
 | Name        | Description                                                                                                         |
-| ----------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| ----------- | ------------------------------------------------------------------------------------------------------------------- |
 | `examples`  | The `Example` objects holding both the predictions and the correct gold-standard annotations. ~~Iterable[Example]~~ |
 | **RETURNS** | `Dict`                                                                                                              | A dictionary containing the scores `token_acc`, `token_p`, `token_r`, `token_f`. ~~Dict[str, float]]~~ |
 
@@ -253,3 +257,11 @@ entities that overlap between the gold reference and the predictions.
 | _keyword-only_    |                                                                                                                     |
 | `negative_labels` | The string values that refer to no annotation (e.g. "NIL"). ~~Iterable[str]~~                                       |
 | **RETURNS**       | A dictionary containing the scores. ~~Dict[str, Optional[float]]~~                                                  |
+
+## get_ner_prf {#get_ner_prf new="3"}
+
+Compute micro-PRF and per-entity PRF scores.
+
+| Name       | Description                                                                                                         |
+| ---------- | ------------------------------------------------------------------------------------------------------------------- |
+| `examples` | The `Example` objects holding both the predictions and the correct gold-standard annotations. ~~Iterable[Example]~~ |
