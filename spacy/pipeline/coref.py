@@ -357,7 +357,7 @@ class CoreferenceResolver(TrainablePipe):
         # we need to handle the average ourselves.
         scores = []
         for metric in (b_cubed, muc, ceafe):
-            evaluator = Evaluator(b_cubed)
+            evaluator = Evaluator(metric)
 
             for ex in examples:
                 p_clusters = doc2clusters(ex.predicted, self.span_cluster_prefix)
