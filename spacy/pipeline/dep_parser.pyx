@@ -102,6 +102,7 @@ def make_parser(
         primarily affects the label accuracy, it can also affect the attachment
         structure, as the labels are used to represent the pseudo-projectivity
         transformation.
+    scorer (Optional[Callable]): The scoring method.
     """
     return DependencyParser(
         nlp.vocab,

@@ -82,6 +82,7 @@ def make_ner(
     incorrect_spans_key (Optional[str]): Identifies spans that are known
         to be incorrect entity annotations. The incorrect entity annotations
         can be stored in the span group, under this key.
+    scorer (Optional[Callable]): The scoring method.
     """
     return EntityRecognizer(
         nlp.vocab,
@@ -158,6 +159,7 @@ def make_beam_ner(
         and are faster to compute.
     incorrect_spans_key (Optional[str]): Optional key into span groups of
         entities known to be non-entities.
+    scorer (Optional[Callable]): The scoring method.
     """
     return EntityRecognizer(
         nlp.vocab,

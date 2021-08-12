@@ -50,6 +50,7 @@ architectures and their arguments and hyperparameters.
 | `model`                | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. Defaults to [EntityLinker](/api/architectures#EntityLinker). ~~Model~~                                                                                                                   |
 | `entity_vector_length` | Size of encoding vectors in the KB. Defaults to `64`. ~~int~~                                                                                                                                                                                                            |
 | `get_candidates`       | Function that generates plausible candidates for a given `Span` object. Defaults to [CandidateGenerator](/api/architectures#CandidateGenerator), a function looking up exact, case-dependent aliases in the KB. ~~Callable[[KnowledgeBase, Span], Iterable[Candidate]]~~ |
+| `scorer`               | The scoring method. Defaults to [`Scorer.score_links`](/api/scorer#score_links). ~~Optional[Callable]~~                                                                                                                                                                  |
 
 ```python
 %%GITHUB_SPACY/spacy/pipeline/entity_linker.py
@@ -258,21 +259,6 @@ pipe's entity linking model and context encoder. Delegates to
 | `sgd`          | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~            |
 | `losses`       | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~ |
 | **RETURNS**    | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                    |
-
-## EntityLinker.score {#score tag="method" new="3"}
-
-Score a batch of examples.
-
-> #### Example
->
-> ```python
-> scores = entity_linker.score(examples)
-> ```
-
-| Name        | Description                                                                                    |
-| ----------- | ---------------------------------------------------------------------------------------------- |
-| `examples`  | The examples to score. ~~Iterable[Example]~~                                                   |
-| **RETURNS** | The scores, produced by [`Scorer.score_links`](/api/scorer#score_links) . ~~Dict[str, float]~~ |
 
 ## EntityLinker.create_optimizer {#create_optimizer tag="method"}
 

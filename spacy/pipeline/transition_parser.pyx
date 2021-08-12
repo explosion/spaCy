@@ -87,6 +87,7 @@ cdef class Parser(TrainablePipe):
         incorrect_spans_key (Optional[str]): Identifies spans that are known
             to be incorrect entity annotations. The incorrect entity annotations
             can be stored in the span group, under this key.
+        scorer (Optional[Callable]): The scoring method. Defaults to None.
         """
         self.vocab = vocab
         self.name = name
