@@ -3,7 +3,7 @@ from typing import Optional, Callable
 from thinc.api import Model
 
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
-from .punctuation import TOKENIZER_INFIXES, TOKENIZER_SUFFIXES
+from .punctuation import TOKENIZER_INFIXES, TOKENIZER_SUFFIXES, TOKENIZER_PREFIXES
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
 from .syntax_iterators import SYNTAX_ITERATORS
@@ -15,6 +15,7 @@ class CatalanDefaults(Language.Defaults):
     tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     infixes = TOKENIZER_INFIXES
     suffixes = TOKENIZER_SUFFIXES
+    prefixes = TOKENIZER_PREFIXES
     stop_words = STOP_WORDS
     lex_attr_getters = LEX_ATTRS
     syntax_iterators = SYNTAX_ITERATORS
