@@ -92,7 +92,6 @@ def test_simple_train():
     assert scores[f"spans_{SPAN_KEY}_f"] == 1.0
 
 
-
 def test_ngram_suggester(en_tokenizer):
     # test different n-gram lengths
     for size in [1, 2, 3]:
