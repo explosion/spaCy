@@ -83,9 +83,10 @@ https://github.com/explosion/spacy-transformers/blob/master/spacy_transformers/p
 > # Construction via add_pipe with custom config
 > config = {
 >     "model": {
->         "@architectures": "spacy-transformers.TransformerModel.v1",
+>         "@architectures": "spacy-transformers.TransformerModel.v2",
 >         "name": "bert-base-uncased",
->         "tokenizer_config": {"use_fast": True}
+>         "tokenizer_config": {"use_fast": True},
+>         "transformer_config": {"output_attentions": False}
 >     }
 > }
 > trf = nlp.add_pipe("transformer", config=config)
