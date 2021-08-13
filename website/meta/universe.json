@@ -962,12 +962,7 @@
             "category": [
                 "pipeline"
             ],
-            "tags": [
-                "pipeline",
-                "readability",
-                "syntactic complexity",
-                "descriptive statistics"
-            ]
+            "tags": ["pipeline", "readability", "syntactic complexity", "descriptive statistics"]
         },
         {
             "id": "wmd-relax",
