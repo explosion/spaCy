@@ -20,6 +20,7 @@ import sys
 import warnings
 from packaging.specifiers import SpecifierSet, InvalidSpecifier
 from packaging.version import Version, InvalidVersion
+from packaging.requirements import Requirement
 import subprocess
 from contextlib import contextmanager
 import tempfile
@@ -33,11 +34,6 @@ try:
 except ImportError:
     cupy = None
 
-try:  # Python 3.8
-    import importlib.metadata as importlib_metadata
-except ImportError:
-    from catalogue import _importlib_metadata as importlib_metadata
-
 # These are functions that were previously (v2.x) available from spacy.util
 # and have since moved to Thinc. We're importing them here so people's code
 # doesn't break, but they should always be imported from Thinc from now on,
@@ -46,7 +42,7 @@ from thinc.api import fix_random_seed, compounding, decaying  # noqa: F401
 
 
 from .symbols import ORTH
-from .compat import cupy, CudaStream, is_windows
+from .compat import cupy, CudaStream, is_windows, importlib_metadata
 from .errors import Errors, Warnings, OLD_MODEL_SHORTCUTS
 from . import about
 
@@ -639,13 +635,18 @@ def is_unconstrained_version(
     return True
 
 
-def get_model_version_range(spacy_version: str) -> str:
-    """Generate a version range like >=1.2.3,<1.3.0 based on a given spaCy
-    version. Models are always compatible across patch versions but not
-    across minor or major versions.
+def split_requirement(requirement: str) -> Tuple[str, str]:
+    """Split a requirement like spacy>=1.2.3 into ("spacy", >=1.2.3)."""
+    req = Requirement(requirement)
+    return (req.name, str(req.specifier))
+
+
+def get_minor_version_range(version: str) -> str:
+    """Generate a version range like >=1.2.3,<1.3.0 based on a given version
+    (e.g. of spaCy).
     """
-    release = Version(spacy_version).release
-    return f">={spacy_version},<{release[0]}.{release[1] + 1}.0"
+    release = Version(version).release
+    return f">={version},<{release[0]}.{release[1] + 1}.0"
 
 
 def get_model_lower_version(constraint: str) -> Optional[str]:
@@ -733,7 +734,7 @@ def load_meta(path: Union[str, Path]) -> Dict[str, Any]:
                 model=f"{meta['lang']}_{meta['name']}",
                 model_version=meta["version"],
                 version=meta["spacy_version"],
-                example=get_model_version_range(about.__version__),
+                example=get_minor_version_range(about.__version__),
             )
             warnings.warn(warn_msg)
     return meta
