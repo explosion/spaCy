@@ -4,6 +4,7 @@ teaser: Train and update components on your own data and integrate custom models
 next: /usage/layers-architectures
 menu:
   - ['Introduction', 'basics']
+  - ['Training Data', 'training-data']
   - ['Quickstart', 'quickstart']
   - ['Config System', 'config']
   - ['Custom Training', 'config-custom']
@@ -51,7 +52,7 @@ are handled automatically.
 Here's an example of creating a `.spacy` file from some NER annotations.
 
 ```python
-### functions.py
+### preprocess.py
 import spacy
 from spacy.tokens import DocBin
 
