@@ -14,6 +14,7 @@ from spacy import about
 from spacy.util import get_minor_version
 from spacy.cli.validate import get_model_pkgs
 from spacy.cli.download import get_compatibility, get_version
+from spacy.cli.package import get_third_party_dependencies
 from thinc.api import ConfigValidationError, Config
 import srsly
 import os
@@ -532,3 +533,10 @@ def test_init_labels(component_name):
         assert len(nlp2.get_pipe(component_name).labels) == 0
         nlp2.initialize()
         assert len(nlp2.get_pipe(component_name).labels) == 4
+
+
+def test_get_third_party_dependencies_runs():
+    # We can't easily test the detection of third-party packages here, but we
+    # can at least make sure that the function and its importlib magic runs.
+    nlp = Dutch()
+    assert get_third_party_dependencies(nlp.config) == []
