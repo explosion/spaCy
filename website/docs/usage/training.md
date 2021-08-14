@@ -53,8 +53,9 @@ Here's an example of creating a `.spacy` file from some NER annotations.
 ```python
 ### functions.py
 import spacy
-nlp = spacy.blank("en")
 from spacy.tokens import DocBin
+
+nlp = spacy.blank("en")
 
 training_data = [
   ("Tokyo Tower is 333m tall.", [(0, 11, "BUILDING")]),
@@ -80,11 +81,10 @@ for use with spaCy, look at the preprocessing steps in the
 
 <Accordion title="What about the spaCy JSON format?" id="json-annotations" spaced>
 
-In spaCy v2, the recommended way to store training data was in
-[a particular JSON format](/api/data-formats#json-input), but in v3 this format
-is deprecated. It's fine as a readable storage format, but if you have data in
-another format there's no need to convert to JSON before creating a `.spacy`
-file.
+In spaCy v2, the recommended way to store training data was in [a particular
+JSON format](/api/data-formats#json-input), but in v3 this format is
+deprecated. It's fine as a readable storage format, but there's no need to
+convert your data to JSON before creating a `.spacy` file.
 
 </Accordion>
 
