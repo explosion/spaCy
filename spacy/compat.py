@@ -28,12 +28,6 @@ except ImportError:
     from typing_extensions import Literal  # noqa: F401
 
 
-try:  # Python 3.8+
-    import importlib.metadata as importlib_metadata
-except ImportError:
-    from catalogue import _importlib_metadata as importlib_metadata  # noqa: F401
-
-
 from thinc.api import Optimizer  # noqa: F401
 
 pickle = pickle

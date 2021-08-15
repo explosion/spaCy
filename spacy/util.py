@@ -34,6 +34,11 @@ try:
 except ImportError:
     cupy = None
 
+try:  # Python 3.8+
+    import importlib.metadata as importlib_metadata
+except ImportError:
+    from catalogue import _importlib_metadata as importlib_metadata  # noqa: F401
+
 # These are functions that were previously (v2.x) available from spacy.util
 # and have since moved to Thinc. We're importing them here so people's code
 # doesn't break, but they should always be imported from Thinc from now on,
@@ -42,7 +47,7 @@ from thinc.api import fix_random_seed, compounding, decaying  # noqa: F401
 
 
 from .symbols import ORTH
-from .compat import cupy, CudaStream, is_windows, importlib_metadata
+from .compat import cupy, CudaStream, is_windows
 from .errors import Errors, Warnings, OLD_MODEL_SHORTCUTS
 from . import about
 

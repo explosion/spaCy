@@ -4,12 +4,12 @@ from pathlib import Path
 from wasabi import Printer, MarkdownRenderer, get_raw_input
 from thinc.api import Config
 from collections import defaultdict
+from catalogue._importlib_metadata import packages_distributions
 import srsly
 import sys
 
 from ._util import app, Arg, Opt, string_to_list, WHEEL_SUFFIX, SDIST_SUFFIX
 from ..schemas import validate, ModelMetaSchema
-from ..compat import importlib_metadata
 from ..util import registry
 from .. import util
 from .. import about
@@ -203,7 +203,7 @@ def get_third_party_dependencies(
     RETURNS (list): The versioned requirements.
     """
     own_packages = ("spacy", "spacy-nightly", "thinc", "srsly")
-    distributions = importlib_metadata.packages_distributions()
+    distributions = packages_distributions()
     funcs = defaultdict(set)
     for path, value in util.walk_dict(config):
         if path[-1].startswith("@"):  # collect all function references by registry
