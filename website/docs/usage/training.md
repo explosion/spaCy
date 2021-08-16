@@ -37,7 +37,7 @@ ready-to-use spaCy pipelines.
 ## Preparing Training Data {#training-data}
 
 Training data for NLP projects comes in many different formats. For some common
-formats such as CoNLL spaCy provides [converters](/api/cli#convert) you can use
+formats such as CoNLL, spaCy provides [converters](/api/cli#convert) you can use
 from the command line. In other cases you'll have to prepare training data
 yourself.
 
