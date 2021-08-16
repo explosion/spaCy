@@ -190,8 +190,9 @@ cdef class DependencyMatcher:
 
             # TODO: Better ways to hash edges in pattern?
             for j, _pattern in enumerate(current_patterns):
-                tokens_to_key[j] = k = self._get_matcher_key(key, i, j)
+                k = self._get_matcher_key(key, i, j)
                 self._matcher.add(k, [_pattern])
+                tokens_to_key[j] = k
 
             tokens_to_key_list.append(tokens_to_key)
 
