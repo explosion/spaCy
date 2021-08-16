@@ -386,9 +386,7 @@ class SpanCategorizer(TrainablePipe):
         kwargs = dict(kwargs)
         attr_prefix = "spans_"
         kwargs.setdefault("attr", f"{attr_prefix}{self.key}")
-        kwargs.setdefault("labels", self.labels)
-        kwargs.setdefault("multi_label", True)
-        kwargs.setdefault("threshold", self.cfg["threshold"])
+        kwargs.setdefault("allow_overlap", True)
         kwargs.setdefault(
             "getter", lambda doc, key: doc.spans.get(key[len(attr_prefix) :], [])
         )
