@@ -4,9 +4,9 @@ teaser: Train and update components on your own data and integrate custom models
 next: /usage/layers-architectures
 menu:
   - ['Introduction', 'basics']
-  - ['Training Data', 'training-data']
   - ['Quickstart', 'quickstart']
   - ['Config System', 'config']
+  - ['Training Data', 'training-data']
   - ['Custom Training', 'config-custom']
   - ['Custom Functions', 'custom-functions']
   - ['Initialization', 'initialization']
