@@ -940,6 +940,31 @@
             "tags": ["pipeline", "danish"]
         },
         {
+            "id": "textdescriptives",
+            "title": "TextDescriptives",
+            "slogan": "Extraction of descriptive stats, readability, and syntactic complexity measures",
+            "description": "Pipeline component for spaCy v.3 that calculates descriptive statistics, readability metrics, and syntactic complexity (dependency distance).",
+            "github": "HLasse/TextDescriptives",
+            "pip": "textdescriptives",
+            "code_example": [
+                "import spacy",
+                "import textdescriptives as td",
+                "nlp = spacy.load('en_core_web_sm')",
+                "nlp.add_pipe('textdescriptives')",
+                "doc = nlp('This is a short test text')",
+                "doc._.readability # access some of the values",
+                "td.extract_df(doc) # extract all metrics to DataFrame"
+            ],
+            "author": "Lasse Hansen, Kenneth Enevoldsen, Ludvig Olsen",
+            "author_links": {
+                "github": "HLasse"
+            },
+            "category": [
+                "pipeline"
+            ],
+            "tags": ["pipeline", "readability", "syntactic complexity", "descriptive statistics"]
+        },
+        {
             "id": "wmd-relax",
             "slogan": "Calculates word mover's distance insanely fast",
             "description": "Calculates Word Mover's Distance as described in [From Word Embeddings To Document Distances](http://www.cs.cornell.edu/~kilian/papers/wmd_metric.pdf) by Matt Kusner, Yu Sun, Nicholas Kolkin and Kilian Weinberger.\n\n⚠️ **This package is currently only compatible with spaCy v.1x.**",
