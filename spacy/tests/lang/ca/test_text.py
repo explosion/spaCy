@@ -24,6 +24,8 @@ def test_ca_tokenizer_handles_long_text(ca_tokenizer):
         ("""Sí! "Anem", va contestar el Joan Carles""", 11),
         ("Van córrer aprox. 10km", 5),
         ("Llavors perqué...", 3),
+        ("Vull parlar-te'n demà al matí", 8),
+        ("Vull explicar-t'ho demà al matí", 8),
     ],
 )
 def test_ca_tokenizer_handles_cnts(ca_tokenizer, text, length):
