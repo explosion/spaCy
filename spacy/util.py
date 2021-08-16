@@ -23,6 +23,7 @@ from packaging.version import Version, InvalidVersion
 from packaging.requirements import Requirement
 import subprocess
 from contextlib import contextmanager
+from collections import defaultdict
 import tempfile
 import shutil
 import shlex
@@ -1555,3 +1556,15 @@ def to_ternary_int(val) -> int:
         return 0
     else:
         return -1
+
+
+def packages_distributions() -> Dict[str, List[str]]:
+    """Return a mapping of top-level packages to their distributions. We're
+    inlining this helper from the importlib_metadata "backport" here, since
+    it's not available in the builtin importlib.metadata.
+    """
+    pkg_to_dist = defaultdict(list)
+    for dist in importlib_metadata.distributions():
+        for pkg in (dist.read_text("top_level.txt") or "").split():
+            pkg_to_dist[pkg].append(dist.metadata["Name"])
+    return dict(pkg_to_dist)
