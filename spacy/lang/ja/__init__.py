@@ -8,7 +8,6 @@ from .syntax_iterators import SYNTAX_ITERATORS
 from .tag_map import TAG_MAP
 from .tag_orth_map import TAG_ORTH_MAP
 from .tag_bigram_map import TAG_BIGRAM_MAP
-from ...compat import copy_reg
 from ...errors import Errors
 from ...language import Language
 from ...scorer import Scorer
@@ -16,6 +15,7 @@ from ...symbols import POS
 from ...tokens import Doc
 from ...training import validate_examples
 from ...util import DummyTokenizer, registry, load_config_from_str
+from ...vocab import Vocab
 from ... import util
 
 
@@ -31,16 +31,19 @@ split_mode = null
 @registry.tokenizers("spacy.ja.JapaneseTokenizer")
 def create_tokenizer(split_mode: Optional[str] = None):
     def japanese_tokenizer_factory(nlp):
-        return JapaneseTokenizer(nlp, split_mode=split_mode)
+        return JapaneseTokenizer(nlp.vocab, split_mode=split_mode)
 
     return japanese_tokenizer_factory
 
 
 class JapaneseTokenizer(DummyTokenizer):
-    def __init__(self, nlp: Language, split_mode: Optional[str] = None) -> None:
-        self.vocab = nlp.vocab
+    def __init__(self, vocab: Vocab, split_mode: Optional[str] = None) -> None:
+        self.vocab = vocab
         self.split_mode = split_mode
         self.tokenizer = try_sudachi_import(self.split_mode)
+
+    def __reduce__(self):
+        return JapaneseTokenizer, (self.vocab, self.split_mode)
 
     def __call__(self, text: str) -> Doc:
         # convert sudachipy.morpheme.Morpheme to DetailedToken and merge continuous spaces
@@ -292,11 +295,5 @@ def get_dtokens_and_spaces(dtokens, text, gap_tag="空白"):
 
     return text_dtokens, text_spaces
 
-
-def pickle_japanese(instance):
-    return Japanese, tuple()
-
-
-copy_reg.pickle(Japanese, pickle_japanese)
 
 __all__ = ["Japanese"]
