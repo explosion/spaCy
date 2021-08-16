@@ -363,11 +363,12 @@ formats such as CoNLL, spaCy provides [converters](/api/cli#convert) you can use
 from the command line. In other cases you'll have to prepare the training data
 yourself.
 
-When converting training data for use in spaCy, the main thing is to create [`Doc`](/api/doc)
-objects just like the results you want as output from the pipeline. For example,
-if you're creating an NER pipeline, loading your annotations and setting them as
-the `.ents` property on a `Doc` is all you need to worry about. On disk the
-annotations will be saved as a [`DocBin`](/api/docbin) in the
+When converting training data for use in spaCy, the main thing is to create
+[`Doc`](/api/doc) objects just like the results you want as output from the
+pipeline. For example, if you're creating an NER pipeline, loading your
+annotations and setting them as the `.ents` property on a `Doc` is all you need
+to worry about. On disk the annotations will be saved as a
+[`DocBin`](/api/docbin) in the
 [`.spacy` format](/api/data-formats#binary-training), but the details of that
 are handled automatically.
 
@@ -401,9 +402,9 @@ for use with spaCy, look at the preprocessing steps in the
 
 <Accordion title="What about the spaCy JSON format?" id="json-annotations" spaced>
 
-In spaCy v2, the recommended way to store training data was in [a particular
-JSON format](/api/data-formats#json-input), but in v3 this format is
-deprecated. It's fine as a readable storage format, but there's no need to
+In spaCy v2, the recommended way to store training data was in
+[a particular JSON format](/api/data-formats#json-input), but in v3 this format
+is deprecated. It's fine as a readable storage format, but there's no need to
 convert your data to JSON before creating a `.spacy` file.
 
 </Accordion>
