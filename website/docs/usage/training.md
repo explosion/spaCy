@@ -363,7 +363,7 @@ formats such as CoNLL, spaCy provides [converters](/api/cli#convert) you can use
 from the command line. In other cases you'll have to prepare the training data
 yourself.
 
-When converting training data for use in spaCy, the main thing is to create Doc
+When converting training data for use in spaCy, the main thing is to create [`Doc`](/api/doc)
 objects just like the results you want as output from the pipeline. For example,
 if you're creating an NER pipeline, loading your annotations and setting them as
 the `.ents` property on a `Doc` is all you need to worry about. On disk the
