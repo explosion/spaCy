@@ -283,6 +283,10 @@ CLI [`train`](/api/cli#train) command. The built-in
 of the `.conllu` format used by the
 [Universal Dependencies corpora](https://github.com/UniversalDependencies).
 
+Note that while this is the format used to save training data, you do not have
+to understand the internal details to use it or create training data. See the
+section on [preparing training data](/usage/training#training-data).
+
 ### JSON training format {#json-input tag="deprecated"}
 
 <Infobox variant="warning" title="Changed in v3.0">
