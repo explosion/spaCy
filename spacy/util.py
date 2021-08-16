@@ -642,7 +642,7 @@ def is_unconstrained_version(
 
 
 def split_requirement(requirement: str) -> Tuple[str, str]:
-    """Split a requirement like spacy>=1.2.3 into ("spacy", >=1.2.3)."""
+    """Split a requirement like spacy>=1.2.3 into ("spacy", ">=1.2.3")."""
     req = Requirement(requirement)
     return (req.name, str(req.specifier))
 
