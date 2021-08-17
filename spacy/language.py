@@ -199,7 +199,7 @@ class Language:
 
         DOCS: https://spacy.io/api/language#meta
         """
-        spacy_version = util.get_model_version_range(about.__version__)
+        spacy_version = util.get_minor_version_range(about.__version__)
         if self.vocab.lang:
             self._meta.setdefault("lang", self.vocab.lang)
         else:
