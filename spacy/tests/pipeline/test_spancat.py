@@ -1,5 +1,6 @@
 import pytest
-from numpy.testing import assert_equal, assert_array_equal
+import numpy
+from numpy.testing import assert_equal, assert_array_equal, assert_almost_equal
 from thinc.api import get_current_ops
 from spacy.language import Language
 from spacy.training import Example
@@ -75,8 +76,6 @@ def test_explicit_labels():
     "max_positive,nr_results", [(None, 4), (1, 2), (2, 3), (3, 4), (4, 4)]
 )
 def test_make_spangroup(max_positive, nr_results):
-    import numpy
-
     fix_random_seed(0)
     nlp = Language()
     spancat = nlp.add_pipe(
@@ -86,7 +85,7 @@ def test_make_spangroup(max_positive, nr_results):
     doc = nlp.make_doc("Greater London")
     ngram_suggester = registry.misc.get("spacy.ngram_suggester.v1")(sizes=[1, 2])
     indices = ngram_suggester([doc])[0].dataXd
-    numpy.testing.assert_array_equal(indices, numpy.asarray([[0, 1], [1, 2], [0, 2]]))
+    assert_array_equal(indices, numpy.asarray([[0, 1], [1, 2], [0, 2]]))
     labels = ["Thing", "City", "Person", "GreatCity"]
     scores = numpy.asarray(
         [[0.2, 0.4, 0.3, 0.1], [0.1, 0.6, 0.2, 0.4], [0.8, 0.7, 0.3, 0.9]], dtype="f"
@@ -97,29 +96,29 @@ def test_make_spangroup(max_positive, nr_results):
     # first span is always the second token "London"
     assert spangroup[0].text == "London"
     assert spangroup[0].label_ == "City"
-    numpy.testing.assert_almost_equal(0.6, spangroup.attrs["scores"][0], 5)
+    assert_almost_equal(0.6, spangroup.attrs["scores"][0], 5)
 
     # second span depends on the number of positives that were allowed
     assert spangroup[1].text == "Greater London"
     if max_positive == 1:
         assert spangroup[1].label_ == "GreatCity"
-        numpy.testing.assert_almost_equal(0.9, spangroup.attrs["scores"][1], 5)
+        assert_almost_equal(0.9, spangroup.attrs["scores"][1], 5)
     else:
         assert spangroup[1].label_ == "Thing"
-        numpy.testing.assert_almost_equal(0.8, spangroup.attrs["scores"][1], 5)
+        assert_almost_equal(0.8, spangroup.attrs["scores"][1], 5)
 
     if nr_results > 2:
         assert spangroup[2].text == "Greater London"
         if max_positive == 2:
             assert spangroup[2].label_ == "GreatCity"
-            numpy.testing.assert_almost_equal(0.9, spangroup.attrs["scores"][2], 5)
+            assert_almost_equal(0.9, spangroup.attrs["scores"][2], 5)
         else:
             assert spangroup[2].label_ == "City"
-            numpy.testing.assert_almost_equal(0.7, spangroup.attrs["scores"][2], 5)
+            assert_almost_equal(0.7, spangroup.attrs["scores"][2], 5)
 
     assert spangroup[-1].text == "Greater London"
     assert spangroup[-1].label_ == "GreatCity"
-    numpy.testing.assert_almost_equal(0.9, spangroup.attrs["scores"][-1], 5)
+    assert_almost_equal(0.9, spangroup.attrs["scores"][-1], 5)
 
 
 def test_simple_train():
