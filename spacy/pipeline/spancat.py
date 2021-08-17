@@ -411,7 +411,10 @@ class SpanCategorizer(TrainablePipe):
 
         keeps = scores >= threshold
         ranked = (scores * -1).argsort()
-        keeps[ranked[:, max_positive:]] = False
+        if max_positive is not None:
+            filter = ranked[:, max_positive:]
+            for i, row in enumerate(filter):
+                keeps[i, row] = False
         spans.attrs["scores"] = scores[keeps].flatten()
 
         indices = self.model.ops.to_numpy(indices)
