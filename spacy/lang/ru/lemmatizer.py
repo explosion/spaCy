@@ -1,8 +1,9 @@
-from typing import Optional, List, Dict, Tuple
+from typing import Optional, List, Dict, Tuple, Callable
 
 from thinc.api import Model
 
 from ...pipeline import Lemmatizer
+from ...pipeline.lemmatizer import lemmatizer_score
 from ...symbols import POS
 from ...tokens import Token
 from ...vocab import Vocab
@@ -20,6 +21,7 @@ class RussianLemmatizer(Lemmatizer):
         *,
         mode: str = "pymorphy2",
         overwrite: bool = False,
+        scorer: Optional[Callable] = lemmatizer_score,
     ) -> None:
         if mode == "pymorphy2":
             try:
@@ -31,7 +33,7 @@ class RussianLemmatizer(Lemmatizer):
                 ) from None
             if getattr(self, "_morph", None) is None:
                 self._morph = MorphAnalyzer()
-        super().__init__(vocab, model, name, mode=mode, overwrite=overwrite)
+        super().__init__(vocab, model, name, mode=mode, overwrite=overwrite, scorer=scorer)
 
     def pymorphy2_lemmatize(self, token: Token) -> List[str]:
         string = token.text

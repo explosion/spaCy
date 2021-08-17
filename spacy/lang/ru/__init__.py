@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Callable
 from thinc.api import Model
 
 from .stop_words import STOP_WORDS
@@ -22,7 +22,12 @@ class Russian(Language):
 @Russian.factory(
     "lemmatizer",
     assigns=["token.lemma"],
-    default_config={"model": None, "mode": "pymorphy2", "overwrite": False},
+    default_config={
+        "model": None,
+        "mode": "pymorphy2",
+        "overwrite": False,
+        "scorer": {"@scorers": "spacy.lemmatizer_scorer.v1"},
+    },
     default_score_weights={"lemma_acc": 1.0},
 )
 def make_lemmatizer(
@@ -31,8 +36,11 @@ def make_lemmatizer(
     name: str,
     mode: str,
     overwrite: bool,
+    scorer: Optional[Callable],
 ):
-    return RussianLemmatizer(nlp.vocab, model, name, mode=mode, overwrite=overwrite)
+    return RussianLemmatizer(
+        nlp.vocab, model, name, mode=mode, overwrite=overwrite, scorer=scorer
+    )
 
 
 __all__ = ["Russian"]

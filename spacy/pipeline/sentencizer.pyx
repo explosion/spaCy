@@ -1,26 +1,29 @@
 # cython: infer_types=True, profile=True, binding=True
-from typing import Optional, List
+from typing import Optional, List, Callable
 import srsly
 
 from ..tokens.doc cimport Doc
+
 from .pipe import Pipe
+from .senter import senter_score
 from ..language import Language
 from ..scorer import Scorer
-from ..training import validate_examples
 from .. import util
+
 
 @Language.factory(
     "sentencizer",
     assigns=["token.is_sent_start", "doc.sents"],
-    default_config={"punct_chars": None},
+    default_config={"punct_chars": None, "scorer": {"@scorers": "spacy.senter_scorer.v1"}},
     default_score_weights={"sents_f": 1.0, "sents_p": 0.0, "sents_r": 0.0},
 )
 def make_sentencizer(
     nlp: Language,
     name: str,
-    punct_chars: Optional[List[str]]
+    punct_chars: Optional[List[str]],
+    scorer: Optional[Callable],
 ):
-    return Sentencizer(name, punct_chars=punct_chars)
+    return Sentencizer(name, punct_chars=punct_chars, scorer=scorer)
 
 
 class Sentencizer(Pipe):
@@ -41,12 +44,19 @@ class Sentencizer(Pipe):
             '𑩃', '𑪛', '𑪜', '𑱁', '𑱂', '𖩮', '𖩯', '𖫵', '𖬷', '𖬸', '𖭄', '𛲟', '𝪈',
             '｡', '。']
 
-    def __init__(self, name="sentencizer", *, punct_chars=None):
+    def __init__(
+        self,
+        name="sentencizer",
+        *,
+        punct_chars=None,
+        scorer=senter_score,
+    ):
         """Initialize the sentencizer.
 
         punct_chars (list): Punctuation characters to split on. Will be
             serialized with the nlp object.
-        RETURNS (Sentencizer): The sentencizer component.
+        scorer (Optional[Callable]): The scoring method. Defaults to
+            Scorer.score_spans for the attribute "sents".
 
         DOCS: https://spacy.io/api/sentencizer#init
         """
@@ -55,6 +65,7 @@ class Sentencizer(Pipe):
             self.punct_chars = set(punct_chars)
         else:
             self.punct_chars = set(self.default_punct_chars)
+        self.scorer = scorer
 
     def __call__(self, doc):
         """Apply the sentencizer to a Doc and set Token.is_sent_start.
@@ -121,22 +132,6 @@ class Sentencizer(Pipe):
                         doc.c[j].sent_start = 1
                     else:
                         doc.c[j].sent_start = -1
-
-    def score(self, examples, **kwargs):
-        """Score a batch of examples.
-
-        examples (Iterable[Example]): The examples to score.
-        RETURNS (Dict[str, Any]): The scores, produced by Scorer.score_spans.
-
-        DOCS: https://spacy.io/api/sentencizer#score
-        """
-        def has_sents(doc):
-            return doc.has_annotation("SENT_START")
-
-        validate_examples(examples, "Sentencizer.score")
-        results = Scorer.score_spans(examples, "sents", has_annotation=has_sents, **kwargs)
-        del results["sents_per_type"]
-        return results
 
     def to_bytes(self, *, exclude=tuple()):
         """Serialize the sentencizer to a bytestring.

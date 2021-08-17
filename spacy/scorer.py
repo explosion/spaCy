@@ -537,7 +537,7 @@ class Scorer:
 
     @staticmethod
     def score_links(
-        examples: Iterable[Example], *, negative_labels: Iterable[str]
+        examples: Iterable[Example], *, negative_labels: Iterable[str], **cfg
     ) -> Dict[str, Any]:
         """Returns PRF for predicted links on the entity level.
         To disentangle the performance of the NEL from the NER,
@@ -711,7 +711,7 @@ class Scorer:
             }
 
 
-def get_ner_prf(examples: Iterable[Example]) -> Dict[str, Any]:
+def get_ner_prf(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
     """Compute micro-PRF and per-entity PRF scores for a sequence of examples."""
     score_per_type = defaultdict(PRFScore)
     for eg in examples:
