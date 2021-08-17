@@ -2,9 +2,12 @@ import pytest
 import numpy
 from numpy.testing import assert_equal, assert_array_equal, assert_almost_equal
 from thinc.api import get_current_ops
+
+from spacy import util
+from spacy.lang.en import English
 from spacy.language import Language
 from spacy.training import Example
-from spacy.util import fix_random_seed, registry
+from spacy.util import fix_random_seed, registry, make_tempdir
 
 OPS = get_current_ops()
 
@@ -13,7 +16,7 @@ SPAN_KEY = "labeled_spans"
 TRAIN_DATA = [
     ("Who is Shaka Khan?", {"spans": {SPAN_KEY: [(7, 17, "PERSON")]}}),
     (
-        "I like London and Berlin.",
+        "I like London and Berlin",
         {"spans": {SPAN_KEY: [(7, 13, "LOC"), (18, 24, "LOC")]}},
     ),
 ]
@@ -263,3 +266,51 @@ def test_ngram_sizes(en_tokenizer):
     range_suggester = suggester_factory(min_size=2, max_size=4)
     ngrams_3 = range_suggester(docs)
     assert_array_equal(OPS.to_numpy(ngrams_3.lengths), [0, 1, 3, 6, 9])
+
+
+def test_overfitting_IO():
+    # Simple test to try and quickly overfit the spancat component - ensuring the ML models work correctly
+    fix_random_seed(0)
+    nlp = English()
+    spancat = nlp.add_pipe("spancat", config={"spans_key": SPAN_KEY, "threshold": 0.8}) # "max_positive": 5,
+
+    train_examples = []
+    for text, annotations in TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
+    optimizer = nlp.initialize(get_examples=lambda: train_examples)
+    assert spancat.model.get_dim("nO") == 2
+    assert set(spancat.labels) == {"LOC", "PERSON"}
+
+    for i in range(50):
+        losses = {}
+        nlp.update(train_examples, sgd=optimizer, losses=losses)
+    assert losses["spancat"] < 0.01
+
+    # test the trained model
+    test_text = "I like London and Berlin"
+    doc = nlp(test_text)
+    spans = doc.spans[SPAN_KEY]
+    assert len(spans) == 2
+    assert len(spans.attrs["scores"]) == 2
+    assert min(spans.attrs["scores"]) > 0.9
+    assert set([span.text for span in spans]) == {"London", "Berlin"}
+    assert set([span.label_ for span in spans]) == {"LOC"}
+
+    # Also test the results are still the same after IO
+    with make_tempdir() as tmp_dir:
+        nlp.to_disk(tmp_dir)
+        nlp2 = util.load_model_from_path(tmp_dir)
+        doc2 = nlp2(test_text)
+        spans2 = doc2.spans[SPAN_KEY]
+        assert len(spans2) == 2
+        assert len(spans2.attrs["scores"]) == 2
+        assert min(spans2.attrs["scores"]) > 0.9
+        assert set([span.text for span in spans2]) == {"London", "Berlin"}
+        assert set([span.label_ for span in spans2]) == {"LOC"}
+
+    # Test scoring
+    scores = nlp.evaluate(train_examples)
+    print(scores)
+    assert scores[f"spans_{SPAN_KEY}_p"] == 1.0
+    assert scores[f"spans_{SPAN_KEY}_r"] == 1.0
+    assert scores[f"spans_{SPAN_KEY}_f"] == 1.0
