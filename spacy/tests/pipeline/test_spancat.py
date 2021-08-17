@@ -1,11 +1,13 @@
 import pytest
 import numpy
-from numpy.testing import assert_equal, assert_array_equal, assert_almost_equal
+from numpy.testing import assert_array_equal, assert_almost_equal
+from spacy.tokens.doc import SpanGroups
 from thinc.api import get_current_ops
 
 from spacy import util
 from spacy.lang.en import English
 from spacy.language import Language
+from spacy.tokens import SpanGroup
 from spacy.training import Example
 from spacy.util import fix_random_seed, registry, make_tempdir
 
@@ -244,6 +246,25 @@ def test_ngram_sizes(en_tokenizer):
     range_suggester = suggester_factory(min_size=2, max_size=4)
     ngrams_3 = range_suggester(docs)
     assert_array_equal(OPS.to_numpy(ngrams_3.lengths), [0, 1, 3, 6, 9])
+
+
+def test_list_comprehension():
+    nlp = English()
+    spancat = nlp.add_pipe("spancat", config={"spans_key": SPAN_KEY})
+    spancat.add_label("PERSON")
+    nlp.initialize()
+    texts = ["Just a sentence.", "I like London and Berlin", "I like Berlin", "I eat ham."]
+    all_spans = [doc.spans for doc in nlp.pipe(texts)]
+    for text, spangroups in zip(texts, all_spans):
+        assert isinstance(spangroups, SpanGroups)
+        for key, spangroup in spangroups.items():
+            assert isinstance(spangroup, SpanGroup)
+            print("text", text)
+            print("doc", spangroup.doc)
+            print("len", len(spangroup))
+            if len(spangroup) > 0:
+                print("span", spangroup[0])
+            assert spangroup.doc is not None
 
 
 def test_overfitting_IO():
