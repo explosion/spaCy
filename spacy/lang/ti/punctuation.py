@@ -1,7 +1,7 @@
 from ..char_classes import LIST_PUNCT, LIST_ELLIPSES, LIST_QUOTES, CURRENCY
 from ..char_classes import UNITS, ALPHA_UPPER
 
-_list_punct = LIST_PUNCT + "፡ ። ፣ ፤ ፥ ፦ ፧".strip().split()
+_list_punct = LIST_PUNCT + "፡ ። ፣ ፤ ፥ ፦ ፧ ፠ ፨".strip().split()
 
 _suffixes = (
     _list_punct
