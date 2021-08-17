@@ -248,25 +248,6 @@ def test_ngram_sizes(en_tokenizer):
     assert_array_equal(OPS.to_numpy(ngrams_3.lengths), [0, 1, 3, 6, 9])
 
 
-def test_list_comprehension():
-    nlp = English()
-    spancat = nlp.add_pipe("spancat", config={"spans_key": SPAN_KEY})
-    spancat.add_label("PERSON")
-    nlp.initialize()
-    texts = ["Just a sentence.", "I like London and Berlin", "I like Berlin", "I eat ham."]
-    all_spans = [doc.spans for doc in nlp.pipe(texts)]
-    for text, spangroups in zip(texts, all_spans):
-        assert isinstance(spangroups, SpanGroups)
-        for key, spangroup in spangroups.items():
-            assert isinstance(spangroup, SpanGroup)
-            print("text", text)
-            print("doc", spangroup.doc)
-            print("len", len(spangroup))
-            if len(spangroup) > 0:
-                print("span", spangroup[0])
-            assert spangroup.doc is not None
-
-
 def test_overfitting_IO():
     # Simple test to try and quickly overfit the spancat component - ensuring the ML models work correctly
     fix_random_seed(0)
