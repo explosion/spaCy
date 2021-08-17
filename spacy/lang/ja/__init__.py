@@ -13,7 +13,7 @@ from ...errors import Errors
 from ...language import Language
 from ...scorer import Scorer
 from ...symbols import POS
-from ...tokens import Doc
+from ...tokens import Doc, MorphAnalysis
 from ...training import validate_examples
 from ...util import DummyTokenizer, registry, load_config_from_str
 from ... import util
@@ -41,6 +41,8 @@ class JapaneseTokenizer(DummyTokenizer):
         self.vocab = nlp.vocab
         self.split_mode = split_mode
         self.tokenizer = try_sudachi_import(self.split_mode)
+        # if we're using split mode A we don't need subtokens
+        self.need_subtokens = not (split_mode is None or split_mode == "A")
 
     def __call__(self, text: str) -> Doc:
         # convert sudachipy.morpheme.Morpheme to DetailedToken and merge continuous spaces
@@ -49,8 +51,8 @@ class JapaneseTokenizer(DummyTokenizer):
         dtokens, spaces = get_dtokens_and_spaces(dtokens, text)
 
         # create Doc with tag bi-gram based part-of-speech identification rules
-        words, tags, inflections, lemmas, readings, sub_tokens_list = (
-            zip(*dtokens) if dtokens else [[]] * 6
+        words, tags, inflections, lemmas, norms, readings, sub_tokens_list = (
+            zip(*dtokens) if dtokens else [[]] * 7
         )
         sub_tokens_list = list(sub_tokens_list)
         doc = Doc(self.vocab, words=words, spaces=spaces)
@@ -68,9 +70,14 @@ class JapaneseTokenizer(DummyTokenizer):
                 )
             # if there's no lemma info (it's an unk) just use the surface
             token.lemma_ = dtoken.lemma if dtoken.lemma else dtoken.surface
-        doc.user_data["inflections"] = inflections
-        doc.user_data["reading_forms"] = readings
-        doc.user_data["sub_tokens"] = sub_tokens_list
+            morph = {}
+            morph["inflection"] = dtoken.inf
+            morph["norm"] = dtoken.norm
+            if dtoken.reading:
+                morph["reading"] = dtoken.reading
+            token.morph = MorphAnalysis(self.vocab, morph)
+        if self.need_subtokens:
+            doc.user_data["sub_tokens"] = sub_tokens_list
         return doc
 
     def _get_dtokens(self, sudachipy_tokens, need_sub_tokens: bool = True):
@@ -83,7 +90,8 @@ class JapaneseTokenizer(DummyTokenizer):
                 "-".join([xx for xx in token.part_of_speech()[:4] if xx != "*"]),  # tag
                 ",".join([xx for xx in token.part_of_speech()[4:] if xx != "*"]),  # inf
                 token.dictionary_form(),  # lemma
-                token.reading_form(),  # user_data['reading_forms']
+                token.normalized_form(),
+                token.reading_form(),
                 sub_tokens_list[idx]
                 if sub_tokens_list
                 else None,  # user_data['sub_tokens']
@@ -105,9 +113,8 @@ class JapaneseTokenizer(DummyTokenizer):
         ]
 
     def _get_sub_tokens(self, sudachipy_tokens):
-        if (
-            self.split_mode is None or self.split_mode == "A"
-        ):  # do nothing for default split mode
+        # do nothing for default split mode
+        if not self.need_subtokens:
             return None
 
         sub_tokens_list = []  # list of (list of list of DetailedToken | None)
@@ -178,7 +185,7 @@ class Japanese(Language):
 
 # Hold the attributes we need with convenient names
 DetailedToken = namedtuple(
-    "DetailedToken", ["surface", "tag", "inf", "lemma", "reading", "sub_tokens"]
+    "DetailedToken", ["surface", "tag", "inf", "lemma", "norm", "reading", "sub_tokens"]
 )
 
 
@@ -254,7 +261,7 @@ def get_dtokens_and_spaces(dtokens, text, gap_tag="空白"):
         return text_dtokens, text_spaces
     elif len([word for word in words if not word.isspace()]) == 0:
         assert text.isspace()
-        text_dtokens = [DetailedToken(text, gap_tag, "", text, None, None)]
+        text_dtokens = [DetailedToken(text, gap_tag, "", text, text, None, None)]
         text_spaces = [False]
         return text_dtokens, text_spaces
 
@@ -271,7 +278,7 @@ def get_dtokens_and_spaces(dtokens, text, gap_tag="空白"):
         # space token
         if word_start > 0:
             w = text[text_pos : text_pos + word_start]
-            text_dtokens.append(DetailedToken(w, gap_tag, "", w, None, None))
+            text_dtokens.append(DetailedToken(w, gap_tag, "", w, w, None, None))
             text_spaces.append(False)
             text_pos += word_start
 
@@ -287,7 +294,7 @@ def get_dtokens_and_spaces(dtokens, text, gap_tag="空白"):
     # trailing space token
     if text_pos < len(text):
         w = text[text_pos:]
-        text_dtokens.append(DetailedToken(w, gap_tag, "", w, None, None))
+        text_dtokens.append(DetailedToken(w, gap_tag, "", w, w, None, None))
         text_spaces.append(False)
 
     return text_dtokens, text_spaces
