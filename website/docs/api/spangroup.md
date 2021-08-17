@@ -13,6 +13,16 @@ into a `SpanGroup` object for you automatically on assignment. `SpanGroup`
 objects behave similar to `list`s, so you can append `Span` objects to them or
 access a member at a given index.
 
+<Infobox title="SpanGroup and Doc lifecycle" variant="warning">
+
+When a `Doc` object is garbage collected, any reference to a related `SpanGroup`
+object won't be functional anymore. A `W085` warning will be shown when
+attempting to access the `spans` and eventually an error will be raised as the
+internal `doc` object will be `None`. To avoid this, make sure that the original
+`Doc` objects are still available in the scope of your function.
+
+</Infobox>
+
 ## SpanGroup.\_\_init\_\_ {#init tag="method"}
 
 Create a `SpanGroup`.
