@@ -115,8 +115,6 @@ class Warnings:
     W036 = ("The component '{name}' does not have any patterns defined.")
 
     # New warnings added in v3.x
-    W085 = ("A SpanGroup is not functional after the corresponding Doc has "
-            "been garbage collected.")
     W086 = ("Component '{listener}' will be (re)trained, but it needs the component "
             "'{name}' which is frozen. You can either freeze both, or neither "
             "of the two. If you're sourcing the component from "
@@ -523,6 +521,10 @@ class Errors:
     E202 = ("Unsupported alignment mode '{mode}'. Supported modes: {modes}.")
 
     # New errors added in v3.x
+    E866 = ("A SpanGroup is not functional after the corresponding Doc has "
+            "been garbage collected. To keep using the spans, make sure that "
+            "the corresponding Doc object is still available in the scope of "
+            "your function.")
     E867 = ("The 'textcat' component requires at least two labels because it "
             "uses mutually exclusive classes where exactly one label is True "
             "for each doc. For binary classification tasks, you can use two "

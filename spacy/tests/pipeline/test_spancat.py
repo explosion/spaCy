@@ -87,7 +87,7 @@ def test_doc_gc():
         for key, spangroup in spangroups.items():
             assert isinstance(spangroup, SpanGroup)
             assert len(spangroup) > 0
-            with pytest.raises(Exception):
+            with pytest.raises(RuntimeError):
                 span = spangroup[0]
 
 

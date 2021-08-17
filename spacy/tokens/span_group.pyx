@@ -1,9 +1,8 @@
-import warnings
 import weakref
 import struct
 import srsly
 
-from spacy.errors import Warnings
+from spacy.errors import Errors
 from .span cimport Span
 from libc.stdint cimport uint64_t, uint32_t, int32_t
 
@@ -64,7 +63,7 @@ cdef class SpanGroup:
         doc = self._doc_ref()
         if doc is None:
             # referent has been garbage collected
-            warnings.warn(Warnings.W085)
+            raise RuntimeError(Errors.E866)
         return doc
 
     @property
