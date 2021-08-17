@@ -1553,6 +1553,10 @@ def to_ternary_int(val) -> int:
         return -1
 
 
+# The following implementation of packages_distributions() is adapted from
+# importlib_metadata, which is distributed under the Apache 2.0 License.
+# Copyright (c) 2017-2019 Jason R. Coombs, Barry Warsaw
+# See licenses/3rd_party_licenses.txt
 def packages_distributions() -> Dict[str, List[str]]:
     """Return a mapping of top-level packages to their distributions. We're
     inlining this helper from the importlib_metadata "backport" here, since
