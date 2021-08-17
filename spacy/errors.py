@@ -115,6 +115,8 @@ class Warnings:
     W036 = ("The component '{name}' does not have any patterns defined.")
 
     # New warnings added in v3.x
+    W085 = ("A SpanGroup is not functional after the corresponding Doc has "
+            "been garbage collected.")
     W086 = ("Component '{listener}' will be (re)trained, but it needs the component "
             "'{name}' which is frozen. You can either freeze both, or neither "
             "of the two. If you're sourcing the component from "
