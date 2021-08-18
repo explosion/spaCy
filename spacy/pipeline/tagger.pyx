@@ -43,10 +43,16 @@ DEFAULT_TAGGER_MODEL = Config().from_str(default_model_config)["model"]
 @Language.factory(
     "tagger",
     assigns=["token.tag"],
-    default_config={"model": DEFAULT_TAGGER_MODEL, "scorer": {"@scorers": "spacy.tagger_scorer.v1"}},
+    default_config={"model": DEFAULT_TAGGER_MODEL, "overwrite": False, "scorer": {"@scorers": "spacy.tagger_scorer.v1"}},
     default_score_weights={"tag_acc": 1.0},
 )
-def make_tagger(nlp: Language, name: str, model: Model, scorer: Optional[Callable]):
+def make_tagger(
+    nlp: Language,
+    name: str,
+    model: Model,
+    overwrite: bool,
+    scorer: Optional[Callable],
+):
     """Construct a part-of-speech tagger component.
 
     model (Model[List[Doc], List[Floats2d]]): A model instance that predicts
@@ -54,7 +60,7 @@ def make_tagger(nlp: Language, name: str, model: Model, scorer: Optional[Callabl
         in size, and be normalized as probabilities (all scores between 0 and 1,
         with the rows summing to 1).
     """
-    return Tagger(nlp.vocab, model, name, scorer=scorer)
+    return Tagger(nlp.vocab, model, name, overwrite=overwrite, scorer=scorer)
 
 
 def tagger_score(examples, **kwargs):
@@ -71,7 +77,7 @@ class Tagger(TrainablePipe):
 
     DOCS: https://spacy.io/api/tagger
     """
-    def __init__(self, vocab, model, name="tagger", *, scorer=tagger_score):
+    def __init__(self, vocab, model, name="tagger", *, overwrite=False, scorer=tagger_score):
         """Initialize a part-of-speech tagger.
 
         vocab (Vocab): The shared vocabulary.
@@ -87,7 +93,7 @@ class Tagger(TrainablePipe):
         self.model = model
         self.name = name
         self._rehearsal_model = None
-        cfg = {"labels": []}
+        cfg = {"labels": [], "overwrite": overwrite}
         self.cfg = dict(sorted(cfg.items()))
         self.scorer = scorer
 
@@ -149,13 +155,13 @@ class Tagger(TrainablePipe):
             docs = [docs]
         cdef Doc doc
         cdef Vocab vocab = self.vocab
+        overwrite = self.cfg.get("overwrite", False)
         for i, doc in enumerate(docs):
             doc_tag_ids = batch_tag_ids[i]
             if hasattr(doc_tag_ids, "get"):
                 doc_tag_ids = doc_tag_ids.get()
             for j, tag_id in enumerate(doc_tag_ids):
-                # Don't clobber preset POS tags
-                if doc.c[j].tag == 0:
+                if doc.c[j].tag == 0 or overwrite:
                     doc.c[j].tag = self.vocab.strings[self.labels[tag_id]]
 
     def update(self, examples, *, drop=0., sgd=None, losses=None):

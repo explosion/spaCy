@@ -36,11 +36,11 @@ DEFAULT_SENTER_MODEL = Config().from_str(default_model_config)["model"]
 @Language.factory(
     "senter",
     assigns=["token.is_sent_start"],
-    default_config={"model": DEFAULT_SENTER_MODEL, "scorer": {"@scorers": "spacy.senter_scorer.v1"}},
+    default_config={"model": DEFAULT_SENTER_MODEL, "overwrite": False, "scorer": {"@scorers": "spacy.senter_scorer.v1"}},
     default_score_weights={"sents_f": 1.0, "sents_p": 0.0, "sents_r": 0.0},
 )
-def make_senter(nlp: Language, name: str, model: Model, scorer: Optional[Callable]):
-    return SentenceRecognizer(nlp.vocab, model, name, scorer=scorer)
+def make_senter(nlp: Language, name: str, model: Model, overwrite: bool, scorer: Optional[Callable]):
+    return SentenceRecognizer(nlp.vocab, model, name, overwrite=overwrite, scorer=scorer)
 
 
 def senter_score(examples, **kwargs):
@@ -62,7 +62,15 @@ class SentenceRecognizer(Tagger):
 
     DOCS: https://spacy.io/api/sentencerecognizer
     """
-    def __init__(self, vocab, model, name="senter", *, scorer=senter_score):
+    def __init__(
+        self,
+        vocab,
+        model,
+        name="senter",
+        *,
+        overwrite=False,
+        scorer=senter_score,
+    ):
         """Initialize a sentence recognizer.
 
         vocab (Vocab): The shared vocabulary.
@@ -104,13 +112,13 @@ class SentenceRecognizer(Tagger):
         if isinstance(docs, Doc):
             docs = [docs]
         cdef Doc doc
+        overwrite = self.cfg.get("overwrite", False)
         for i, doc in enumerate(docs):
             doc_tag_ids = batch_tag_ids[i]
             if hasattr(doc_tag_ids, "get"):
                 doc_tag_ids = doc_tag_ids.get()
             for j, tag_id in enumerate(doc_tag_ids):
-                # Don't clobber existing sentence boundaries
-                if doc.c[j].sent_start == 0:
+                if doc.c[j].sent_start == 0 or overwrite:
                     if tag_id == 1:
                         doc.c[j].sent_start = 1
                     else:
