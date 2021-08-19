@@ -2,7 +2,7 @@
 
 1. [Overview](#1-overview)
    - [A. Initialization](#1a-initialization)
-   - [B. Model architectures](#1b-model-architectures)
+   - [B. Internal communication](#1b-internal-communication)
 
 ## 1. Overview
 
@@ -75,10 +75,26 @@ commands (`assemble` and `train`), we need to call `nlp._link_components` even b
 object. To cover all use-cases and avoid negative side effects, the code base ensures that performing the
 linking twice is not harmful.
 
-### 1B. Model architectures
+[comment]: <> (TODO: empty initialization )
 
-class Tok2VecListener
+[comment]: <> ("The Tok2Vec listener did not receive any valid input from an upstream component.")
 
-> Reference: `spacy/ml/models/tok2vec.py`
->
-> Reference: `spacy_transformers/architectures.py`
+### 1B. Internal communication
+
+The internal communication between a listener and its downstream components is organized by sending and 
+receiving information across the components. 
+
+#### During training
+
+[comment]: <> (`nlp.update` batches the data and sends each batch)
+
+The `tok2vec` or `transformer` component runs first and calculates 
+the embeddings for a given batch of input documents, either in the `predict` or the `update` method. These 
+embeddings are then sent to the listeners by calling their `receive` function and uniquely identifying the 
+batch of documents with a `batch_id`. Only one such batch is kept in memory for each listener. Then, when the 
+downstream component runs and the listener should produce results, it verifies whether the given batch of documents 
+matches the `batch_id` it has in memory. If not, one of two errors is raised: `E953` if a different batch is in 
+memory, or the dreaded `E954` if no batch is in memory at all. If the batch ID does match, the results from 
+memory are produced.
+
+
