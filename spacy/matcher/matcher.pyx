@@ -284,18 +284,17 @@ cdef class Matcher:
         if with_alignments:
             final_matches_with_alignments = final_matches
             final_matches = [(key, start, end) for key, start, end, alignments in final_matches]
-        # perform the callbacks on the filtered set of results
-        for i, (key, start, end) in enumerate(final_matches):
-            on_match = self._callbacks.get(key, None)
-            if on_match is not None:
-                on_match(self, doc, i, final_matches)
         if as_spans:
             spans = []
-            for key, start, end in final_matches:
+            for i, (key, start, end) in enumerate(final_matches):
                 if isinstance(doclike, Span):
                     start += doclike.start
                     end += doclike.start
                 spans.append(Span(doc, start, end, label=key))
+                # perform the callbacks on the filtered set of results
+                on_match = self._callbacks.get(key, None)
+                if on_match is not None:
+                    on_match(self, doc, i, final_matches)
             return spans
         elif with_alignments:
             # convert alignments List[Dict[str, int]] --> List[int]
@@ -312,9 +311,12 @@ cdef class Matcher:
                     # this overwrites smaller token_idx when they have same length.
                     alignments[align['length']] = align['token_idx']
                 final_matches.append((key, start, end, alignments))
-            return final_matches
-        else:
-            return final_matches
+        # perform the callbacks on the filtered set of results
+        for i, (key, *_) in enumerate(final_matches):
+            on_match = self._callbacks.get(key, None)
+            if on_match is not None:
+                on_match(self, doc, i, final_matches)
+        return final_matches
 
     def _normalize_key(self, key):
         if isinstance(key, basestring):
