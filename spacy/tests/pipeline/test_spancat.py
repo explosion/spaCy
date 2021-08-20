@@ -252,7 +252,7 @@ def test_overfitting_IO():
     # Simple test to try and quickly overfit the spancat component - ensuring the ML models work correctly
     fix_random_seed(0)
     nlp = English()
-    spancat = nlp.add_pipe("spancat", config={"spans_key": SPAN_KEY, "threshold": 0.8})
+    spancat = nlp.add_pipe("spancat", config={"spans_key": SPAN_KEY})
     train_examples = make_examples(nlp)
     optimizer = nlp.initialize(get_examples=lambda: train_examples)
     assert spancat.model.get_dim("nO") == 2
@@ -299,10 +299,10 @@ def test_overfitting_IO():
 
 
 def test_overfitting_IO_overlapping():
-    # Simple test to try and quickly overfit the spancat component - ensuring the ML models work correctly
+    # Test for overfitting on overlapping entities
     fix_random_seed(0)
     nlp = English()
-    spancat = nlp.add_pipe("spancat", config={"spans_key": SPAN_KEY, "threshold": 0.8}) # "max_positive": 5,
+    spancat = nlp.add_pipe("spancat", config={"spans_key": SPAN_KEY})
 
     train_examples = make_examples(nlp, data=TRAIN_DATA_OVERLAPPING)
     optimizer = nlp.initialize(get_examples=lambda: train_examples)
@@ -318,7 +318,6 @@ def test_overfitting_IO_overlapping():
     test_text = "I like London and Berlin"
     doc = nlp(test_text)
     spans = doc.spans[SPAN_KEY]
-    print("SPANS", spans)  # TODO: remove
     assert len(spans) == 3
     assert len(spans.attrs["scores"]) == 3
     assert min(spans.attrs["scores"]) > 0.9
