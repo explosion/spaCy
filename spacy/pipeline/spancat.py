@@ -386,9 +386,7 @@ class SpanCategorizer(TrainablePipe):
         kwargs = dict(kwargs)
         attr_prefix = "spans_"
         kwargs.setdefault("attr", f"{attr_prefix}{self.key}")
-        kwargs.setdefault("labels", self.labels)
-        kwargs.setdefault("multi_label", True)
-        kwargs.setdefault("threshold", self.cfg["threshold"])
+        kwargs.setdefault("allow_overlap", True)
         kwargs.setdefault(
             "getter", lambda doc, key: doc.spans.get(key[len(attr_prefix) :], [])
         )
@@ -400,7 +398,7 @@ class SpanCategorizer(TrainablePipe):
         pass
 
     def _get_aligned_spans(self, eg: Example):
-        return eg.get_aligned_spans_y2x(eg.reference.spans.get(self.key, []))
+        return eg.get_aligned_spans_y2x(eg.reference.spans.get(self.key, []), allow_overlap=True)
 
     def _make_span_group(
         self, doc: Doc, indices: Ints2d, scores: Floats2d, labels: List[str]
@@ -408,16 +406,24 @@ class SpanCategorizer(TrainablePipe):
         spans = SpanGroup(doc, name=self.key)
         max_positive = self.cfg["max_positive"]
         threshold = self.cfg["threshold"]
+
+        keeps = scores >= threshold
+        ranked = (scores * -1).argsort()
+        if max_positive is not None:
+            filter = ranked[:, max_positive:]
+            for i, row in enumerate(filter):
+                keeps[i, row] = False
+        spans.attrs["scores"] = scores[keeps].flatten()
+
+        indices = self.model.ops.to_numpy(indices)
+        keeps = self.model.ops.to_numpy(keeps)
+
         for i in range(indices.shape[0]):
-            start = int(indices[i, 0])
-            end = int(indices[i, 1])
-            positives = []
-            for j, score in enumerate(scores[i]):
-                if score >= threshold:
-                    positives.append((score, start, end, labels[j]))
-            positives.sort(reverse=True)
-            if max_positive:
-                positives = positives[:max_positive]
-            for score, start, end, label in positives:
-                spans.append(Span(doc, start, end, label=label))
+            start = indices[i, 0]
+            end = indices[i, 1]
+
+            for j, keep in enumerate(keeps[i]):
+                if keep:
+                    spans.append(Span(doc, start, end, label=labels[j]))
+
         return spans

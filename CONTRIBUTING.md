@@ -185,7 +185,6 @@ Each time a `git commit` is initiated, `black` and `flake8` will run automatical
 In case of error, or when `black` modified a file, the modified file needs to be `git add` once again and a new
 `git commit` has to be issued.
 
-
 ### Code formatting
 
 [`black`](https://github.com/ambv/black) is an opinionated Python code
@@ -414,14 +413,7 @@ all test files and test functions need to be prefixed with `test_`.
 When adding tests, make sure to use descriptive names, keep the code short and
 concise and only test for one behavior at a time. Try to `parametrize` test
 cases wherever possible, use our pre-defined fixtures for spaCy components and
-avoid unnecessary imports.
-
-Extensive tests that take a long time should be marked with `@pytest.mark.slow`.
-Tests that require the model to be loaded should be marked with
-`@pytest.mark.models`. Loading the models is expensive and not necessary if
-you're not actually testing the model performance. If all you need is a `Doc`
-object with annotations like heads, POS tags or the dependency parse, you can
-use the `Doc` constructor to construct it manually.
+avoid unnecessary imports. Extensive tests that take a long time should be marked with `@pytest.mark.slow`.
 
 📖 **For more guidelines and information on how to add tests, check out the [tests README](spacy/tests/README.md).**
 

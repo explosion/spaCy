@@ -77,7 +77,9 @@ def init_nlp(config: Config, *, use_gpu: int = -1) -> "Language":
                 f"examples for initialization. If necessary, provide all labels "
                 f"in [initialize]. More info: https://spacy.io/api/cli#init_labels"
             )
-            nlp.initialize(lambda: islice(train_corpus(nlp), sample_size), sgd=optimizer)
+            nlp.initialize(
+                lambda: islice(train_corpus(nlp), sample_size), sgd=optimizer
+            )
         else:
             nlp.initialize(lambda: train_corpus(nlp), sgd=optimizer)
         logger.info(f"Initialized pipeline components: {nlp.pipe_names}")

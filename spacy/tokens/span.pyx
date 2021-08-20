@@ -105,13 +105,18 @@ cdef class Span:
         if label not in doc.vocab.strings:
             raise ValueError(Errors.E084.format(label=label))
 
+        start_char = doc[start].idx if start < doc.length else len(doc.text)
+        if start == end:
+            end_char = start_char
+        else:
+            end_char = doc[end - 1].idx + len(doc[end - 1])
         self.c = SpanC(
             label=label,
             kb_id=kb_id,
             start=start,
             end=end,
-            start_char=doc[start].idx if start < doc.length else 0,
-            end_char=doc[end - 1].idx + len(doc[end - 1]) if end >= 1 else 0,
+            start_char=start_char,
+            end_char=end_char,
         )
         self._vector = vector
         self._vector_norm = vector_norm
@@ -213,10 +218,12 @@ cdef class Span:
         return Underscore(Underscore.span_extensions, self,
                           start=self.c.start_char, end=self.c.end_char)
 
-    def as_doc(self, *, bint copy_user_data=False):
+    def as_doc(self, *, bint copy_user_data=False, array_head=None, array=None):
         """Create a `Doc` object with a copy of the `Span`'s data.
 
         copy_user_data (bool): Whether or not to copy the original doc's user data.
+        array_head (tuple): `Doc` array attrs, can be passed in to speed up computation.
+        array (ndarray): `Doc` as array, can be passed in to speed up computation.
         RETURNS (Doc): The `Doc` copy of the span.
 
         DOCS: https://spacy.io/api/span#as_doc
@@ -224,8 +231,10 @@ cdef class Span:
         words = [t.text for t in self]
         spaces = [bool(t.whitespace_) for t in self]
         cdef Doc doc = Doc(self.doc.vocab, words=words, spaces=spaces)
-        array_head = self.doc._get_array_attrs()
-        array = self.doc.to_array(array_head)
+        if array_head is None:
+            array_head = self.doc._get_array_attrs()
+        if array is None:
+            array = self.doc.to_array(array_head)
         array = array[self.start : self.end]
         self._fix_dep_copy(array_head, array)
         # Fix initial IOB so the entities are valid for doc.ents below.
