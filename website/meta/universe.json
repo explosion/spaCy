@@ -959,9 +959,7 @@
             "author_links": {
                 "github": "HLasse"
             },
-            "category": [
-                "pipeline"
-            ],
+            "category": ["pipeline"],
             "tags": ["pipeline", "readability", "syntactic complexity", "descriptive statistics"]
         },
         {
@@ -3286,6 +3284,29 @@
             },
             "category": ["pipeline", "standalone"],
             "tags": ["pipeline"]
+        },
+        {
+            "id": "spacy-api-docker-v3",
+            "slogan": "spaCy v3 REST API, wrapped in a Docker container",
+            "github": "bbieniek/spacy-api-docker",
+            "url": "https://hub.docker.com/r/bbieniek/spacyapi/",
+            "thumb": "https://i.imgur.com/NRnDKyj.jpg",
+            "code_example": [
+                "version: '3'",
+                "",
+                "services:",
+                "  spacyapi:",
+                "    image: bbieniek/spacyapi:en_v3",
+                "    ports:",
+                "      - \"127.0.0.1:8080:80\"",
+                "    restart: always"
+            ],
+            "code_language": "docker",
+            "author": "Baltazar Bieniek",
+            "author_links": {
+                "github": "bbieniek"
+            },
+            "category": ["apis"]
         }
     ],
 
