@@ -18,14 +18,15 @@ Create a `Span` object from the slice `doc[start : end]`.
 > assert [t.text for t in span] ==  ["it", "back", "!"]
 > ```
 
-| Name     | Description                                                                             |
-| -------- | --------------------------------------------------------------------------------------- |
-| `doc`    | The parent document. ~~Doc~~                                                            |
-| `start`  | The index of the first token of the span. ~~int~~                                       |
-| `end`    | The index of the first token after the span. ~~int~~                                    |
-| `label`  | A label to attach to the span, e.g. for named entities. ~~Union[str, int]~~             |
-| `kb_id`  | A knowledge base ID to attach to the span, e.g. for named entities. ~~Union[str, int]~~ |
-| `vector` | A meaning representation of the span. ~~numpy.ndarray[ndim=1, dtype=float32]~~          |
+| Name          | Description                                                                             |
+| ------------- | --------------------------------------------------------------------------------------- |
+| `doc`         | The parent document. ~~Doc~~                                                            |
+| `start`       | The index of the first token of the span. ~~int~~                                       |
+| `end`         | The index of the first token after the span. ~~int~~                                    |
+| `label`       | A label to attach to the span, e.g. for named entities. ~~Union[str, int]~~             |
+| `vector`      | A meaning representation of the span. ~~numpy.ndarray[ndim=1, dtype=float32]~~          |
+| `vector_norm` | The L2 norm of the document's vector representation. ~~float~~                          |
+| `kb_id`       | A knowledge base ID to attach to the span, e.g. for named entities. ~~Union[str, int]~~ |
 
 ## Span.\_\_getitem\_\_ {#getitem tag="method"}
 
