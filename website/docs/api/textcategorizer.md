@@ -29,6 +29,21 @@ only.
 
 </Infobox>
 
+## Assigned Attributes {#assigned-attributes}
+
+Predictions will be saved to `doc.cats` as a dictionary, where the key is the
+name of the category and the value is a score between 0 and 1 (inclusive). For
+`textcat` (exclusive categories), the scores will sum to 1, while for
+`textcat_multilabel` there is no particular guarantee about their sum.
+
+Note that when assigning values to create training data, the score of each
+category must be 0 or 1. Using other values, for example to create a document
+that is a little of category A and a little of category B, is not supported.
+
+| Location   | Value                                 |
+| ---------- | ------------------------------------- |
+| `Doc.cats` | Category scores. ~~Dict[str, float]~~ |
+
 ## Config and implementation {#config}
 
 The default config is defined by the pipeline component factory and describes
