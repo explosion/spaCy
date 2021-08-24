@@ -1573,6 +1573,12 @@ class Language:
                     self.default_error_handler(
                         None, None, None, ValueError(Errors.E871.format(error=error))
                     )
+                    yield None
+                else:
+                    self.default_error_handler(
+                        None, None, None, ValueError(Errors.E871.format(error="Both doc and error are missing"))
+                    )
+                    yield None
                 if i % batch_size == 0:
                     # tell `sender` that one batch was consumed.
                     sender.step()
@@ -2109,7 +2115,7 @@ def _apply_pipes(
             for pipe in pipes:
                 docs = pipe(docs)
             # Connection does not accept unpickable objects, so send list.
-            byte_docs = [(doc.to_bytes(), None) for doc in docs]
+            byte_docs = [(doc.to_bytes() if doc is not None else None, None) for doc in docs]
             padding = [(None, None)] * (len(texts) - len(byte_docs))
             sender.send(byte_docs + padding)
         except Exception:
