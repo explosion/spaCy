@@ -1643,6 +1643,12 @@ class Language:
                     self.default_error_handler(
                         None, None, None, ValueError(Errors.E871.format(error=error))
                     )
+                    yield None
+                else:
+                    self.default_error_handler(
+                        None, None, None, ValueError(Errors.E871.format(error="Both doc and error are missing"))
+                    )
+                    yield None
                 if i % batch_size == 0:
                     # tell `sender` that one batch was consumed.
                     sender.step()
