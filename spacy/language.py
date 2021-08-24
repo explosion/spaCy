@@ -9,7 +9,9 @@ from contextlib import contextmanager
 from copy import deepcopy
 from pathlib import Path
 import warnings
-from thinc.api import get_current_ops, Config, Optimizer
+from thinc.api import get_current_ops, Config, Optimizer, set_gpu_allocator
+from thinc.api import CupyOps
+from thinc.util import cupy, has_torch
 import srsly
 import multiprocessing as mp
 from itertools import chain, cycle
@@ -1690,6 +1692,12 @@ class Language:
             ):
                 raise ValueError(Errors.E943.format(value=type(lang_cls)))
 
+        # Set the GPU allocator
+        allocator = config["nlp"].get("gpu_allocator")
+        if isinstance(get_current_ops(), CupyOps) and allocator:
+            if cupy and has_torch:
+                set_gpu_allocator(allocator)
+                cupy.get_default_memory_pool().free_all_blocks()
         # Warn about require_gpu usage in jupyter notebook
         warn_if_jupyter_cupy()
 

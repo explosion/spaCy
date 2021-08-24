@@ -335,6 +335,7 @@ class ConfigSchemaNlp(BaseModel):
     after_creation: Optional[Callable[["Language"], "Language"]] = Field(..., title="Optional callback to modify nlp object after creation and before the pipeline is constructed")
     after_pipeline_creation: Optional[Callable[["Language"], "Language"]] = Field(..., title="Optional callback to modify nlp object after the pipeline is constructed")
     batch_size: Optional[int] = Field(..., title="Default batch size")
+    gpu_allocator: Optional[StrictStr] = Field(..., title="Memory allocator when running on GPU")
     # fmt: on
 
     class Config:
