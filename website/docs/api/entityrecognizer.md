@@ -20,6 +20,18 @@ your entities will be close to their initial tokens. If your entities are long
 and characterized by tokens in their middle, the component will likely not be a
 good fit for your task.
 
+## Assigned Attributes {#assigned-attributes}
+
+Predictions will be saved to `Doc.ents` as a tuple. Each label will also be
+reflected to each underlying token.
+
+When setting `Doc.ents` to create training data, all the spans must be valid and
+non-overlapping, or an error will be thrown.
+
+| Location   | Value                                     |
+| ---------- | ----------------------------------------- |
+| `Doc.ents` | The annotated spans. ~~Tuple[Span, ...]~~ |
+
 ## Config and implementation {#config}
 
 The default config is defined by the pipeline component factory and describes
