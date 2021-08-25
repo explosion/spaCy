@@ -89,9 +89,10 @@ cdef class Span:
         start (int): The index of the first token of the span.
         end (int): The index of the first token after the span.
         label (uint64): A label to attach to the Span, e.g. for named entities.
-        kb_id (uint64): An identifier from a Knowledge Base to capture the meaning of a named entity.
         vector (ndarray[ndim=1, dtype='float32']): A meaning representation
             of the span.
+        vector_norm (float): The L2 norm of the span's vector representation.
+        kb_id (uint64): An identifier from a Knowledge Base to capture the meaning of a named entity.
 
         DOCS: https://spacy.io/api/span#init
         """
@@ -486,10 +487,10 @@ cdef class Span:
         """
         if "vector_norm" in self.doc.user_span_hooks:
             return self.doc.user_span_hooks["vector"](self)
-        vector = self.vector
-        xp = get_array_module(vector)
         if self._vector_norm is None:
+            vector = self.vector
             total = (vector*vector).sum()
+            xp = get_array_module(vector)
             self._vector_norm = xp.sqrt(total) if total != 0. else 0.
         return self._vector_norm
 
