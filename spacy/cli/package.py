@@ -206,6 +206,9 @@ def get_third_party_dependencies(
     for path, value in util.walk_dict(config):
         if path[-1].startswith("@"):  # collect all function references by registry
             funcs[path[-1][1:]].add(value)
+    for component in config.get("components", {}).values():
+        if "factory" in component:
+            funcs["factories"].add(component["factory"])
     modules = set()
     for reg_name, func_names in funcs.items():
         sub_registry = getattr(util.registry, reg_name)

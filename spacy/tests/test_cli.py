@@ -539,4 +539,6 @@ def test_get_third_party_dependencies_runs():
     # We can't easily test the detection of third-party packages here, but we
     # can at least make sure that the function and its importlib magic runs.
     nlp = Dutch()
+    # Test with component factory based on Cython module
+    nlp.add_pipe("tagger")
     assert get_third_party_dependencies(nlp.config) == []
