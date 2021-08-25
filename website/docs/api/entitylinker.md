@@ -16,6 +16,16 @@ plausible candidates from that `KnowledgeBase` given a certain textual mention,
 and a machine learning model to pick the right candidate, given the local
 context of the mention.
 
+## Assigned Attributes {#assigned-attributes}
+
+Predictions, in the form of knowledge base IDs, will be assigned to
+`Token.ent_kb_id_`.
+
+| Location           | Value                             |
+| ------------------ | --------------------------------- |
+| `Token.ent_kb_id`  | Knowledge base ID (hash). ~~int~~ |
+| `Token.ent_kb_id_` | Knowledge base ID. ~~str~~        |
+
 ## Config and implementation {#config}
 
 The default config is defined by the pipeline component factory and describes
