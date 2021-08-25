@@ -451,6 +451,28 @@ def test_ngram_vectors(ngram_vectors_vec_str, ngram_vectors_hashvec_str):
         # every word has a vector
         assert nlp.vocab[word * 5].has_vector
 
+    # check that single and batched vector lookups are identical
+    words = [s for s in nlp_plain.vocab.vectors]
+    single_vecs = OPS.to_numpy(OPS.asarray([nlp.vocab[word].vector for word in words]))
+    batch_vecs = OPS.to_numpy(nlp.vocab.vectors.get_ngram_vectors(words))
+    assert_equal(single_vecs, batch_vecs)
+
+    # an empty key returns 0s
+    assert_equal(
+        OPS.to_numpy(nlp.vocab[""].vector),
+        numpy.zeros((nlp.vocab.vectors.data.shape[0],)),
+    )
+    # an empty batch returns 0s
+    assert_equal(
+        OPS.to_numpy(nlp.vocab.vectors.get_ngram_vectors([""])),
+        numpy.zeros((1, nlp.vocab.vectors.data.shape[0])),
+    )
+    # an empty key within a batch returns 0s
+    assert_equal(
+        OPS.to_numpy(nlp.vocab.vectors.get_ngram_vectors(["a", "", "b"])[1]),
+        numpy.zeros((nlp.vocab.vectors.data.shape[0],)),
+    )
+
     # the loaded ngram vector table cannot be modified
     # except for clear: warning, then return without modifications
     vector = list(range(nlp.vocab.vectors.shape[1]))
@@ -485,13 +507,3 @@ def test_ngram_vectors(ngram_vectors_vec_str, ngram_vectors_hashvec_str):
             OPS.to_numpy(vocab_r[word].vector),
             decimal=6,
         )
-
-    # default cache size is the same as hash ngram table size
-    assert nlp.vocab.vectors.ngram_cache_size == nlp.vocab.vectors.data.shape[0]
-    # modify cache size
-    nlp.vocab.vectors.ngram_cache_size = 5
-    assert nlp.vocab.vectors.ngram_cache_size == 5
-    assert nlp.vocab.vectors._ngram_cache.data.shape == (
-        5,
-        nlp.vocab.vectors.data.shape[1],
-    )

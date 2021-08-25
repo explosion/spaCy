@@ -45,29 +45,13 @@ def forward(
     if vocab.vectors.mode == Mode.default:
         V = cast(Floats2d, model.ops.asarray(vocab.vectors.data))
         rows = vocab.vectors.find(keys=keys)
+        V = model.ops.as_contig(V[rows])
     elif vocab.vectors.mode == Mode.ngram:
-        # build a vector table with one row for each unique key
-        V = cast(
-            Floats2d,
-            model.ops.xp.zeros(
-                (len(set(keys)), vocab.vectors_length), dtype=vocab.vectors.data.dtype
-            ),
-        )
-        rows = model.ops.xp.zeros((token_count,), dtype="uint32")
-        r_i = 0
-        v_i = 0
-        row_index = {}
-        for key in keys:
-            if key not in row_index:
-                V[v_i] = vocab.vectors[key]
-                row_index[key] = v_i
-                v_i += 1
-            rows[r_i] = row_index[key]
-            r_i += 1
+        V = cast(Floats2d, vocab.vectors.get_ngram_vectors(keys))
+        V = model.ops.as_contig(V)
     else:
         raise RuntimeError(Errors.E896)
     try:
-        V = model.ops.as_contig(V[rows])
         vectors_data = model.ops.gemm(V, W, trans2=True)
     except ValueError:
         raise RuntimeError(Errors.E896)

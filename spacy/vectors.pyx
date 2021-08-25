@@ -6,10 +6,13 @@ from murmurhash.mrmr cimport hash128_x64
 
 import functools
 import numpy
+from typing import cast
 import warnings
 from enum import Enum
 import srsly
 from thinc.api import get_array_module, get_current_ops
+from thinc.backends import get_array_ops
+from thinc.types import Floats2d
 
 from .strings cimport StringStore
 
@@ -61,9 +64,8 @@ cdef class Vectors:
     cdef readonly uint32_t hash_seed
     cdef readonly unicode bow
     cdef readonly unicode eow
-    cdef readonly object _ngram_cache
 
-    def __init__(self, *, strings=None, shape=None, data=None, keys=None, name=None, mode=Mode.default, minn=0, maxn=0, hash_count=0, hash_seed=0, bow="<", eow=">", ngram_cache_size=None):
+    def __init__(self, *, strings=None, shape=None, data=None, keys=None, name=None, mode=Mode.default, minn=0, maxn=0, hash_count=0, hash_seed=0, bow="<", eow=">"):
         """Create a new vector store.
 
         strings (StringStore): The string store.
@@ -78,8 +80,6 @@ cdef class Vectors:
         hash_seed (int): The fasttext-bloom ngram hash seed (default: 0).
         bow (str): The fasttext-bloom bow string (default: "<").
         eow (str): The fasttext-bloom eow string (default: ">").
-        ngram_cache_size (int): The fasttext-bloom vector cache size
-            (default: data.shape[0]).
 
         DOCS: https://spacy.io/api/vectors#init
         """
@@ -126,28 +126,7 @@ cdef class Vectors:
             if keys is not None:
                 raise ValueError(Errors.E861)
             self.data = data
-            if ngram_cache_size is None:
-                ngram_cache_size = data.shape[0]
-            self.ngram_cache_size = ngram_cache_size
             self._unset = cppset[int]()
-
-    property ngram_cache_size:
-        def __get__(self):
-            if self.mode == Mode.ngram:
-                if not self._ngram_cache:
-                    return 0
-                else:
-                    return self._ngram_cache.data.shape[0]
-            else:
-                return -1
-
-        def __set__(self, size):
-            if self.mode == Mode.ngram:
-                shape = (size, self.data.shape[1])
-                if not self._ngram_cache:
-                    self._ngram_cache = Vectors(strings=self.strings, shape=shape)
-                else:
-                    self._ngram_cache.resize(shape)
 
     @property
     def shape(self):
@@ -212,7 +191,7 @@ cdef class Vectors:
             else:
                 return self.data[i]
         elif self.mode == Mode.ngram:
-            return self._get_ngram_vector(self.strings.as_string(key))
+            return self.get_ngram_vectors([key])[0]
         raise KeyError(Errors.E058.format(key=key))
 
     def __setitem__(self, key, vector):
@@ -395,10 +374,10 @@ cdef class Vectors:
         ]
         return ngrams
 
-    def _get_ngram_vector(self, key):
-        """Get the ngram-based vector for the provided string key.
-        key (str): The string key.
-        RETURNS: The requested vector from the ngram-based vector table.
+    def get_ngram_vectors(self, keys):
+        """Get the ngram-based vectors for the provided keys.
+        keys (Iterable[Union[int, str]]): The keys.
+        RETURNS: The requested vectors from the ngram-based vector table.
         """
         if self.mode != Mode.ngram:
             raise ValueError(
@@ -407,27 +386,31 @@ cdef class Vectors:
                     alternative="Use Vectors[key] or Vectors.find() instead.",
                 )
             )
-        if key in self._ngram_cache:
-            return self._ngram_cache[key]
-        key = self.strings.as_string(key)
-        xp = get_array_module(self.data)
-        if len(key) == 0:
-            return xp.zeros((1, self.data.shape[1]))
-        ngrams = self._get_ngrams(key)
-        rows = xp.asarray(
-            [
-                h % self.data.shape[0]
-                for ngram in ngrams
-                for h in self._get_ngram_hashes(ngram)
-            ],
-            dtype="uint32",
-        )
-        vec = xp.sum(self.data[rows], axis=0)
-        if len(rows) > 0:
-            vec = vec / len(rows)
-        if not self._ngram_cache.is_full:
-            self._ngram_cache.add(key, vector=vec)
-        return vec
+        ops = get_array_ops(self.data)
+        keys = [self.strings.as_string(key) for key in keys]
+        if sum(len(key) for key in keys) == 0:
+            return ops.xp.zeros((len(keys), self.data.shape[1]))
+        unique_keys = tuple(set(keys))
+        row_index = {key: i for i, key in enumerate(unique_keys)}
+        rows = [row_index[key] for key in keys]
+        indices = []
+        lengths = []
+        for key in unique_keys:
+            if key == "":
+                ngram_rows = []
+            else:
+                ngram_rows = [
+                    h % self.data.shape[0]
+                    for ngram in self._get_ngrams(key)
+                    for h in self._get_ngram_hashes(ngram)
+                ]
+            indices.extend(ngram_rows)
+            lengths.append(len(ngram_rows))
+        indices = ops.asarray(indices, dtype="int32")
+        lengths = ops.asarray(lengths, dtype="int32")
+        vecs = ops.reduce_mean(cast(Floats2d, self.data[indices]), lengths)
+        vecs = vecs[rows]
+        return vecs
 
     def add(self, key, *, vector=None, row=None):
         """Add a key to the table. Keys can be mapped to an existing vector
@@ -546,7 +529,6 @@ cdef class Vectors:
                 "hash_seed": self.hash_seed,
                 "bow": self.bow,
                 "eow": self.eow,
-                "ngram_cache_size": self.ngram_cache_size,
             }
 
     def _set_cfg(self, cfg):
@@ -557,7 +539,6 @@ cdef class Vectors:
         self.hash_seed = cfg.get("hash_seed", 0)
         self.bow = cfg.get("bow", "<")
         self.eow = cfg.get("eow", ">")
-        self.ngram_cache_size = cfg.get("ngram_cache_size", 0)
 
     def to_disk(self, path, *, exclude=tuple()):
         """Save the current state to a directory.
