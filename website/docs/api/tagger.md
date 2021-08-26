@@ -8,6 +8,22 @@ api_string_name: tagger
 api_trainable: true
 ---
 
+A trainable pipeline component to predict part of speech tags using an arbitrary
+schema. Internally it shares much of its implementation with the
+[`DependencyParser`](/api/dependencyparser).
+
+In the pre-trained pipelines, the tag schemas vary by language; see the
+[individual model pages](/models) for details.
+
+## Assigned Attributes {#assigned-attributes}
+
+Predictions are assigned to `Token.tag`.
+
+| Location     | Value                              |
+| ------------ | ---------------------------------- |
+| `Token.tag`  | The part of speech (hash). ~~int~~ |
+| `Token.tag_` | The part of speech. ~~str~~        |
+
 ## Config and implementation {#config}
 
 The default config is defined by the pipeline component factory and describes
