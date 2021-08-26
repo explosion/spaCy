@@ -480,7 +480,10 @@ as-is. They are also excluded when calling
 > still impact your model's performance – for instance, a sentence boundary
 > detector can impact what the parser or entity recognizer considers a valid
 > parse. So the evaluation results should always reflect what your pipeline will
-> produce at runtime.
+> produce at runtime. If you want a frozen component to run (without updating)
+> during training as well, so that downstream components can use its
+> **predictions**, you can add it to the list of
+> [`annotating_components`](/usage/training#annotating-components).
 
 ```ini
 [nlp]
@@ -566,6 +569,10 @@ source = "en_core_web_sm"
 frozen_components = ["ner"]
 annotating_components = ["sentencizer", "ner"]
 ```
+
+Similarly, a pretrained `tok2vec` layer can be frozen and specified in the list
+of `annotating_components` to ensure that a downstream component can use the
+embedding layer without updating it.
 
 <Infobox variant="warning" title="Training speed with annotating components" id="annotating-components-speed">
 
@@ -699,14 +706,14 @@ excluded from the logs and the score won't be weighted.
 
 <Accordion title="Understanding the training output and score types" spaced id="score-types">
 
-| Name                       | Description                                                                                                             |
-| -------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| **Loss**                   | The training loss representing the amount of work left for the optimizer. Should decrease, but usually not to `0`.      |
-| **Precision** (P)          | Percentage of predicted annotations that were correct. Should increase.                                                 |
-| **Recall** (R)             | Percentage of reference annotations recovered. Should increase.                                                         |
-| **F-Score** (F)            | Harmonic mean of precision and recall. Should increase.                                                                 |
-| **UAS** / **LAS**          | Unlabeled and labeled attachment score for the dependency parser, i.e. the percentage of correct arcs. Should increase. |
-| **Speed** | Prediction speed in words per second (WPS). Should stay stable.                                                               |
+| Name              | Description                                                                                                             |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| **Loss**          | The training loss representing the amount of work left for the optimizer. Should decrease, but usually not to `0`.      |
+| **Precision** (P) | Percentage of predicted annotations that were correct. Should increase.                                                 |
+| **Recall** (R)    | Percentage of reference annotations recovered. Should increase.                                                         |
+| **F-Score** (F)   | Harmonic mean of precision and recall. Should increase.                                                                 |
+| **UAS** / **LAS** | Unlabeled and labeled attachment score for the dependency parser, i.e. the percentage of correct arcs. Should increase. |
+| **Speed**         | Prediction speed in words per second (WPS). Should stay stable.                                                         |
 
 Note that if the development data has raw text, some of the gold-standard
 entities might not align to the predicted tokenization. These tokenization
