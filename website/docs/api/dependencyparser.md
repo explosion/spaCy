@@ -25,7 +25,7 @@ current state. The weights are updated such that the scores assigned to the set
 of optimal actions is increased, while scores assigned to other actions are
 decreased. Note that more than one action may be optimal for a given state.
 
-## Assigned Fields {#assigned-fields}
+## Assigned Attributes {#assigned-attributes}
 
 Dependency predictions are assigned to the `Token.dep` and `Token.head` fields.
 Beside the dependencies themselves, the parser decides sentence boundaries,
