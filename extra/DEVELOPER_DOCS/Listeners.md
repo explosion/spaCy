@@ -43,7 +43,7 @@ factory = "tok2vec"
 ```
 
 A listener can then be set up by making sure the correct `upstream` name is defined, referring to the
-name of the Tok2Vec component (which equals the factory name by default), or `*` as a wildcard:
+name of the `tok2vec` component (which equals the factory name by default), or `*` as a wildcard:
 
 ```
 [components.ner.model.tok2vec]
@@ -53,15 +53,16 @@ upstream = "tok2vec"
 
 When an [`nlp`](https://github.com/explosion/spaCy/blob/master/extra/DEVELOPER_DOCS/Language.md) object is
 initialized or deserialized, it will make sure to link each `tok2vec` component to its listeners. This is
-implemented in the method `nlp._link_components` which loops over each
-component in the pipeline and calls `find_listeners` on a component if it's defined.
+implemented in the method `nlp._link_components()` which loops over each
+component in the pipeline and calls `find_listeners()` on a component if it's defined.
 The [`tok2vec` component](https://github.com/explosion/spaCy/blob/master/spacy/pipeline/tok2vec.py)'s implementation
-of this `find_listener` method will specifically identify sublayers of a model definition that are of type
+of this `find_listener()` method will specifically identify sublayers of a model definition that are of type
 `Tok2VecListener` with a matching upstream name and will then add that listener to the internal `self.listener_map`.
 
 If it's a Transformer-based pipeline, a
 [`transformer` component](https://github.com/explosion/spacy-transformers/blob/master/spacy_transformers/pipeline_component.py)
-has a similar implementation but will specifically look for `TransformerListener` sublayers of downstream components.
+has a similar implementation but its `find_listener()` function will specifically look for `TransformerListener` 
+sublayers of downstream components.
 
 ### 2B. Shape inference
 
@@ -74,7 +75,7 @@ For a standard `Tok2Vec`-based component, this is typically known up-front and d
 width = ${components.tok2vec.model.encode.width}
 ```
 
-A `transformer` component however typically only knows its `nO` dimension after the HuggingFace transformer
+A `transformer` component however only knows its `nO` dimension after the HuggingFace transformer
 is set with the function `model.attrs["set_transformer"]`,
 [implemented](https://github.com/explosion/spacy-transformers/blob/master/spacy_transformers/layers/transformer_model.py)
 by `set_pytorch_transformer`.
@@ -96,7 +97,7 @@ Either way, the `tok2vec` or `transformer` component always needs to run before 
 ### 3A. During prediction
 
 When the `Tok2Vec` pipeline component is called, its `predict()` method is executed to produce the results,
-which are then stored by `set_annotations()` in `doc.tensor`.
+which are then stored by `set_annotations()` in the `doc.tensor` field of the document(s).
 Similarly, the `Transformer` component stores the produced embeddings
 in `doc._.trf_data`. Next, the `forward` pass of a
 [`Tok2VecListener`](https://github.com/explosion/spaCy/blob/master/spacy/pipeline/tok2vec.py)
@@ -126,7 +127,7 @@ There are two ways in which this mechanism can fail, both are detected by `verif
 
 - `E953` if a different batch is in memory than the requested one - signaling some kind of out-of-sync state of the
   training pipeline.
-- `E954` if no batch is in memory at all, the pipeline is probably not set up correctly.
+- `E954` if no batch is in memory at all - signaling that the pipeline is probably not set up correctly.
 
 #### Training with multiple listeners
 
@@ -141,19 +142,19 @@ will initiate the backpropagation of the `tok2vec` or `transformer` model with t
 
 The listener pattern can get particularly tricky in combination with frozen components. To detect components
 with listeners that are not frozen consistently, `init_nlp()` (which is called by `spacy train`) goes through
-the listeners and their upstream components and warns in two cases:
+the listeners and their upstream components and warns in two scenarios.
 
-#### The Tok2Vec or Transformer is frozen and not annotating
+#### The Tok2Vec or Transformer is frozen
 
 If the `Tok2Vec` or `Transformer` was already trained,
 e.g. by [pretraining](https://spacy.io/usage/embeddings-transformers#pretraining),
 it could be a valid use-case to freeze the embedding architecture and only train downstream components such
-as a tagger or a parser. This used to be impossible before 3.1, but has become possible since by putting the
+as a tagger or a parser. This used to be impossible before 3.1, but has become supported since then by putting the
 embedding component in the [`annotating_components`](https://spacy.io/usage/training#annotating-components)
 list of the config. This works like any other "annotating component" because it relies on the `Doc` attributes.
 
-However, if the `Tok2Vec` or `Transformer` is frozen, and not present in `annotating_components`,
-and a related listener isn't frozen, then a `W086` warning is shown and further processing will likely end with `E954`.
+However, if the `Tok2Vec` or `Transformer` is frozen, and not present in `annotating_components`, and a related 
+listener isn't frozen, then a `W086` warning is shown and further training of the pipeline will likely end with `E954`.
 
 #### The upstream component is frozen
 
@@ -164,17 +165,17 @@ how to use the `replace_listeners` functionality to prevent this problem.
 ## 4. Replacing listener with standalone
 
 The [`replace_listeners`](https://spacy.io/api/language#replace_listeners) functionality changes the architecture
-of a certain downstream component from using a listener pattern to standalone `tok2vec` or `transformer` layer,
+of a downstream component from using a listener pattern to a standalone `tok2vec` or `transformer` layer,
 effectively making the downstream component independent of any other components in the pipeline.
-It is implemented by `nlp.replace_listeners()` and typically executed by `nlp.from_config`.
-First, it fetches the original `Model` of the original component:
+It is implemented by `nlp.replace_listeners()` and typically executed by `nlp.from_config()`.
+First, it fetches the original `Model` of the original component that creates the embeddings:
 
 ```
 tok2vec = self.get_pipe(tok2vec_name)
 tok2vec_model = tok2vec.model
 ```
 
-Which is either a [`Tok2Vec Model`](https://github.com/explosion/spaCy/blob/master/spacy/ml/models/tok2vec.py) or a
+Which is either a [`Tok2Vec` model](https://github.com/explosion/spaCy/blob/master/spacy/ml/models/tok2vec.py) or a
 [`TransformerModel`](https://github.com/explosion/spacy-transformers/blob/master/spacy_transformers/layers/transformer_model.py).
 
 In the case of the `tok2vec`, this model can be copied as-is into the configuration and architecture of the
@@ -214,3 +215,5 @@ new_model = tok2vec_model.attrs["replace_listener"](new_model)
 ```
 
 The new config and model are then properly stored on the `nlp` object.
+Note that this functionality (running the replacement for a transformer listener) was broken prior to 
+`spacy-transformers` 1.0.5.
