@@ -23,7 +23,9 @@ good fit for your task.
 ## Assigned Attributes {#assigned-attributes}
 
 Predictions will be saved to `Doc.ents` as a tuple. Each label will also be
-reflected to each underlying token.
+reflected to each underlying token, where it is saved in the `Token.ent_type`
+and `Token.ent_iob` fields. Note that by definition each token can only have
+one label.
 
 When setting `Doc.ents` to create training data, all the spans must be valid and
 non-overlapping, or an error will be thrown.
