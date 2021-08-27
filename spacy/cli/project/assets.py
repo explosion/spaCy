@@ -61,7 +61,7 @@ def project_assets(project_dir: Path, *, sparse_checkout: bool = False) -> None:
                         dest.unlink()
             git_checkout(
                 asset["git"]["repo"],
-                asset["git"]["path"],
+                asset["git"].get("path", ""),
                 dest,
                 branch=asset["git"].get("branch"),
                 sparse=sparse_checkout,
