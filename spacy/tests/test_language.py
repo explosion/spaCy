@@ -528,3 +528,15 @@ def test_language_source_and_vectors(nlp2):
     assert long_string in nlp2.vocab.strings
     # vectors should remain unmodified
     assert nlp.vocab.vectors.to_bytes() == vectors_bytes
+
+
+def test_pass_doc_to_pipeline(nlp):
+    texts = ["cats", "dogs", "guinea pigs"]
+    docs = [nlp.make_doc(text) for text in texts]
+    assert not any(len(doc.cats) for doc in docs)
+    doc = nlp(docs[0])
+    assert doc.text == texts[0]
+    assert len(doc.cats) > 0
+    docs = nlp.pipe(docs)
+    assert [doc.text for doc in docs] == texts
+    assert all(len(doc.cats) for doc in docs)

@@ -968,7 +968,7 @@ class Language:
 
     def __call__(
         self,
-        text: str,
+        text: Union[str, Doc],
         *,
         disable: Iterable[str] = SimpleFrozenList(),
         component_cfg: Optional[Dict[str, Dict[str, Any]]] = None,
@@ -977,7 +977,9 @@ class Language:
         and can contain arbitrary whitespace. Alignment into the original string
         is preserved.
 
-        text (str): The text to be processed.
+        text (Union[str, Doc]): If `str`, the text to be processed. If `Doc`,
+            the doc will be passed directly to the pipeline, skipping
+            `Language.make_doc`.
         disable (list): Names of the pipeline components to disable.
         component_cfg (Dict[str, dict]): An optional dictionary with extra
             keyword arguments for specific components.
@@ -985,7 +987,10 @@ class Language:
 
         DOCS: https://spacy.io/api/language#call
         """
-        doc = self.make_doc(text)
+        if isinstance(text, str):
+            doc = self.make_doc(text)
+        else:
+            doc = text
         if component_cfg is None:
             component_cfg = {}
         for name, proc in self.pipeline:
@@ -1437,7 +1442,7 @@ class Language:
     @overload
     def pipe(
         self,
-        texts: Iterable[Tuple[str, _AnyContext]],
+        texts: Iterable[Tuple[Union[str, Doc], _AnyContext]],
         *,
         as_tuples: bool = ...,
         batch_size: Optional[int] = ...,
@@ -1449,7 +1454,7 @@ class Language:
 
     def pipe(  # noqa: F811
         self,
-        texts: Iterable[str],
+        texts: Iterable[Union[str, Doc]],
         *,
         as_tuples: bool = False,
         batch_size: Optional[int] = None,
@@ -1459,7 +1464,8 @@ class Language:
     ) -> Iterator[Doc]:
         """Process texts as a stream, and yield `Doc` objects in order.
 
-        texts (Iterable[str]): A sequence of texts to process.
+        texts (Iterable[Union[str, Doc]]): A sequence of texts or docs to
+            process.
         as_tuples (bool): If set to True, inputs should be a sequence of
             (text, context) tuples. Output will then be a sequence of
             (doc, context) tuples. Defaults to False.
@@ -1515,7 +1521,9 @@ class Language:
             docs = self._multiprocessing_pipe(texts, pipes, n_process, batch_size)
         else:
             # if n_process == 1, no processes are forked.
-            docs = (self.make_doc(text) for text in texts)
+            docs = (
+                self.make_doc(text) if isinstance(text, str) else text for text in texts
+            )
             for pipe in pipes:
                 docs = pipe(docs)
         for doc in docs:
@@ -2105,7 +2113,7 @@ def _apply_pipes(
     while True:
         try:
             texts = receiver.get()
-            docs = (make_doc(text) for text in texts)
+            docs = (make_doc(text) if isinstance(text, str) else text for text in texts)
             for pipe in pipes:
                 docs = pipe(docs)
             # Connection does not accept unpickable objects, so send list.
