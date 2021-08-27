@@ -20,8 +20,8 @@ usage examples, see the docs on
 This component assigns predictions basically the same way as the
 [`EntityRecognizer`](/api/entityrecognizer).
 
-Predictions will be saved to `Doc.ents` as a tuple. Each label will also be
-reflected to each underlying token, where it is saved in the `Token.ent_type`
+Predictions can be accessed under `Doc.ents` as a tuple. Each label will also be
+reflected in each underlying token, where it is saved in the `Token.ent_type`
 and `Token.ent_iob` fields. Note that by definition each token can only have one
 label.
 
