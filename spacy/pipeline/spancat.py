@@ -398,7 +398,9 @@ class SpanCategorizer(TrainablePipe):
         pass
 
     def _get_aligned_spans(self, eg: Example):
-        return eg.get_aligned_spans_y2x(eg.reference.spans.get(self.key, []), allow_overlap=True)
+        return eg.get_aligned_spans_y2x(
+            eg.reference.spans.get(self.key, []), allow_overlap=True
+        )
 
     def _make_span_group(
         self, doc: Doc, indices: Ints2d, scores: Floats2d, labels: List[str]
