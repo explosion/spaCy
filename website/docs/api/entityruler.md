@@ -30,7 +30,7 @@ non-overlapping, or an error will be thrown.
 
 | Location          | Value                                                          |
 | ----------------- | -------------------------------------------------------------- |
-| `Doc.ents`        | The annotated spans. ~~Tuple[Span, ...]~~                      |
+| `Doc.ents`        | The annotated spans. ~~Tuple[Span]~~                           |
 | `Token.ent_iob`   | An enum encoding of the IOB part of the named entity tag. ~~int~~ |
 | `Token.ent_iob_`  | The IOB part of the named entity tag. ~~str~~                  |
 | `Token.ent_type`  | The label part of the named entity tag (hash). ~~int~~         |
