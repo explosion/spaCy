@@ -41,10 +41,14 @@ def pretrain(
     optimizer = P["optimizer"]
     # Load in pretrained weights to resume from
     if resume_path is not None:
-        _resume_model(model, resume_path, epoch_resume, silent=silent)
+        epoch_resume = _resume_model(model, resume_path, epoch_resume, silent=silent)
     else:
         # Without '--resume-path' the '--epoch-resume' argument is ignored
         epoch_resume = 0
+
+    if epoch_resume is None:
+        raise ValueError(Errors.E1020)
+
     objective = model.attrs["loss"]
     # TODO: move this to logger function?
     tracker = ProgressTracker(frequency=10000)
@@ -93,7 +97,7 @@ def ensure_docs(examples_or_docs: Iterable[Union[Doc, Example]]) -> List[Doc]:
 
 def _resume_model(
     model: Model, resume_path: Path, epoch_resume: int, silent: bool = True
-) -> None:
+) -> int:
     msg = Printer(no_print=silent)
     msg.info(f"Resume training tok2vec from: {resume_path}")
     with resume_path.open("rb") as file_:
@@ -107,6 +111,7 @@ def _resume_model(
         msg.info(f"Resuming from epoch: {epoch_resume}")
     else:
         msg.info(f"Resuming from epoch: {epoch_resume}")
+    return epoch_resume
 
 
 def make_update(
