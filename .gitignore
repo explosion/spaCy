@@ -124,6 +124,5 @@ Desktop.ini
 
 # IPython
 .ipynb_checkpoints/
-spacy/lang/ca/tokenizer_exceptions.py.bak
-spacy/lang/ca/punctuation.py.bak
-*.bak
+
+>>>>>>> Stashed changes
