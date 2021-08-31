@@ -19,8 +19,8 @@ sentences can be accessed using `Doc.sents`.
 
 | Location              | Value                                                                                                                                         |
 | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Token.is_sent_start` | A boolean value indicating whether the token starts a sentence. After the parser runs this will be `True` or `False` for all tokens. ~~bool~~ |
-| `Doc.sents`           | An iterator over sentences in the Doc, determined by `Token.is_sent_start` values. ~~Iterator[Span]~~                                         |
+| `Token.is_sent_start` | A boolean value indicating whether the token starts a sentence. This will be either `True` or `False` for all tokens. ~~bool~~ |
+| `Doc.sents`           | An iterator over sentences in the `Doc`, determined by `Token.is_sent_start` values. ~~Iterator[Span]~~                                         |
 
 ## Config and implementation {#config}
 
