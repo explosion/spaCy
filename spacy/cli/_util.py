@@ -399,7 +399,7 @@ def git_checkout(
         try:
             source_path = tmp_dir / Path(subpath)
             if not is_subpath_of(tmp_dir, source_path):
-                err = f"{subpath!r} is a path outside of the cloned repository."
+                err = f"'{subpath}' is a path outside of the cloned repository."
                 msg.fail(err, repo, exits=1)
             shutil.copytree(str(source_path), str(dest))
         except FileNotFoundError:
@@ -450,10 +450,10 @@ def git_sparse_checkout(repo, subpath, dest, branch):
         cmd = f"git -C {tmp_dir} checkout {branch} {subpath}"
         run_command(cmd, capture=True)
 
-        # Get a subdirectory of the cloned path, if approriate
+        # Get a subdirectory of the cloned path, if appropriate
         source_path = tmp_dir / Path(subpath)
         if not is_subpath_of(tmp_dir, source_path):
-            err = f"{subpath!r} is a path outside of the cloned repository."
+            err = f"'{subpath}' is a path outside of the cloned repository."
             msg.fail(err, repo, exits=1)
 
         shutil.move(str(source_path), str(dest))
