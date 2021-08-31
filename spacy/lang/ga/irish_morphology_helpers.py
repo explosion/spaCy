@@ -1,35 +1,89 @@
-# fmt: off
-consonants = ["b", "c", "d", "f", "g", "h", "j", "k", "l", "m", "n", "p", "q", "r", "s", "t", "v", "w", "x", "z"]
-broad_vowels = ["a", "á", "o", "ó", "u", "ú"]
-slender_vowels = ["e", "é", "i", "í"]
-vowels = broad_vowels + slender_vowels
-# fmt: on
+def demutate(word):
+    UVOWELS = "AÁEÉIÍOÓUÚ"
+    LVOWELS = "aáeéiíoóuú"
+    lc = word.lower()
+    # remove eclipsis
+    if lc.startswith("bhf"):
+        word = word[2:]
+    elif lc.startswith("mb"):
+        word = word[1:]
+    elif lc.startswith("gc"):
+        word = word[1:]
+    elif lc.startswith("nd"):
+        word = word[1:]
+    elif lc.startswith("ng"):
+        word = word[1:]
+    elif lc.startswith("bp"):
+        word = word[1:]
+    elif lc.startswith("dt"):
+        word = word[1:]
+    elif word[0:1] == "n" and word[1:2] in UVOWELS:
+        word = word[1:]
+    elif lc.startswith("n-") and word[2:3] in LVOWELS:
+        word = word[2:]
+    # non-standard eclipsis
+    elif lc.startswith("bh-f"):
+        word = word[3:]
+    elif lc.startswith("m-b"):
+        word = word[2:]
+    elif lc.startswith("g-c"):
+        word = word[2:]
+    elif lc.startswith("n-d"):
+        word = word[2:]
+    elif lc.startswith("n-g"):
+        word = word[2:]
+    elif lc.startswith("b-p"):
+        word = word[2:]
+    elif lc.startswith("d-t"):
+        word = word[2:]
+
+    # t-prothesis
+    elif lc.startswith("ts"):
+        word = word[1:]
+    elif lc.startswith("t-s"):
+        word = word[2:]
+
+    # h-prothesis, simple case
+    # words can also begin with 'h', but unlike eclipsis,
+    # a hyphen is not used, so that needs to be handled
+    # elsewhere
+    elif word[0:1] == "h" and word[1:2] in UVOWELS:
+        word = word[1:]
+
+    # lenition
+    # this breaks the previous if, to handle super-non-standard
+    # text where both eclipsis and lenition were used.
+    if lc[0:1] in "bcdfgmpst" and lc[1:2] == "h":
+        word = word[0:1] + word[2:]
+
+    return word
 
 
-def ends_dentals(word):
-    if word != "" and word[-1] in ["d", "n", "t", "s"]:
-        return True
-    else:
-        return False
-
-
-def devoice(word):
-    if len(word) > 2 and word[-2] == "s" and word[-1] == "d":
-        return word[:-1] + "t"
-    else:
-        return word
-
-
-def ends_with_vowel(word):
-    return word != "" and word[-1] in vowels
-
-
-def starts_with_vowel(word):
-    return word != "" and word[0] in vowels
-
-
-def deduplicate(word):
-    if len(word) > 2 and word[-2] == word[-1] and word[-1] in consonants:
-        return word[:-1]
-    else:
-        return word
+def unponc(word):
+    PONC = {
+        "ḃ": "bh",
+        "ċ": "ch",
+        "ḋ": "dh",
+        "ḟ": "fh",
+        "ġ": "gh",
+        "ṁ": "mh",
+        "ṗ": "ph",
+        "ṡ": "sh",
+        "ṫ": "th",
+        "Ḃ": "BH",
+        "Ċ": "CH",
+        "Ḋ": "DH",
+        "Ḟ": "FH",
+        "Ġ": "GH",
+        "Ṁ": "MH",
+        "Ṗ": "PH",
+        "Ṡ": "SH",
+        "Ṫ": "TH"
+    }
+    buf = []
+    for ch in word:
+        if ch in PONC:
+            buf.append(PONC[ch])
+        else:
+            buf.append(ch)
+    return ''.join(buf)
