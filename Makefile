@@ -5,7 +5,7 @@ override SPACY_EXTRAS = spacy-lookups-data==1.0.2 jieba spacy-pkuseg==0.0.28 sud
 endif
 
 ifndef PYVER
-override PYVER = 3.8
+override PYVER = 3.6
 endif
 
 VENV := ./env$(PYVER)
