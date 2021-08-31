@@ -12,8 +12,7 @@ def test_ca_tokenizer_handles_abbr(ca_tokenizer, text, lemma):
    
 def test_ca_tokenizer_handles_exc_in_text(ca_tokenizer):
     text = "La Dra. Puig viu a la pl. dels Til·lers"
-    tokens = ca_tokenizer(text)
-    print(tokens) # [La, Dra., Puig, viu, a, la, pl., d, els, Til·lers]
+    tokens = ca_tokenizer(text) # [La, Dra., Puig, viu, a, la, pl., d, els, Til·lers]
     assert len(tokens) == 10
     assert tokens[1].text == "Dra."
     assert tokens[7].text == "d"
