@@ -1,4 +1,4 @@
-def demutate(word):
+def demutate(word: str) -> str:
     UVOWELS = "AÁEÉIÍOÓUÚ"
     LVOWELS = "aáeéiíoóuú"
     lc = word.lower()
@@ -59,7 +59,7 @@ def demutate(word):
     return word
 
 
-def unponc(word):
+def unponc(word: str) -> str:
     # fmt: off
     PONC = {
         "ḃ": "bh",
