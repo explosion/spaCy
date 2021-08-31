@@ -140,17 +140,6 @@ Changes to `.py` files will be effective immediately.
 
 📖 **For more details and instructions, see the documentation on [compiling spaCy from source](https://spacy.io/usage/#source) and the [quickstart widget](https://spacy.io/usage/#section-quickstart) to get the right commands for your platform and Python version.**
 
-### Contributor agreement
-
-If you've made a contribution to spaCy, you should fill in the
-[spaCy contributor agreement](.github/CONTRIBUTOR_AGREEMENT.md) to ensure that
-your contribution can be used across the project. If you agree to be bound by
-the terms of the agreement, fill in the [template](.github/CONTRIBUTOR_AGREEMENT.md)
-and include it with your pull request, or submit it separately to
-[`.github/contributors/`](/.github/contributors). The name of the file should be
-your GitHub username, with the extension `.md`. For example, the user
-example_user would create the file `.github/contributors/example_user.md`.
-
 ### Fixing bugs
 
 When fixing a bug, first create an
