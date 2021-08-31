@@ -60,6 +60,7 @@ def demutate(word):
 
 
 def unponc(word):
+    # fmt: off
     PONC = {
         "ḃ": "bh",
         "ċ": "ch",
@@ -80,6 +81,7 @@ def unponc(word):
         "Ṡ": "SH",
         "Ṫ": "TH"
     }
+    # fmt: on
     buf = []
     for ch in word:
         if ch in PONC:
