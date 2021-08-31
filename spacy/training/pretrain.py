@@ -46,9 +46,6 @@ def pretrain(
         # Without '--resume-path' the '--epoch-resume' argument is ignored
         epoch_resume = 0
 
-    if epoch_resume is None:
-        raise ValueError(Errors.E1020)
-
     objective = model.attrs["loss"]
     # TODO: move this to logger function?
     tracker = ProgressTracker(frequency=10000)
@@ -103,14 +100,18 @@ def _resume_model(
     with resume_path.open("rb") as file_:
         weights_data = file_.read()
         model.get_ref("tok2vec").from_bytes(weights_data)
-    # Parse the epoch number from the given weight file
-    model_name = re.search(r"model\d+\.bin", str(resume_path))
-    if model_name:
-        # Default weight file name so read epoch_start from it by cutting off 'model' and '.bin'
-        epoch_resume = int(model_name.group(0)[5:][:-4]) + 1
-        msg.info(f"Resuming from epoch: {epoch_resume}")
-    else:
-        msg.info(f"Resuming from epoch: {epoch_resume}")
+
+    if epoch_resume is None:
+        # Parse the epoch number from the given weight file
+        model_name = re.search(r"model\d+\.bin", str(resume_path))
+        if model_name:
+            # Default weight file name so read epoch_start from it by cutting off 'model' and '.bin'
+            epoch_resume = int(model_name.group(0)[5:][:-4]) + 1
+        else:
+            # No epoch given and couldn't infer it
+            raise ValueError(Errors.E1020)
+
+    msg.info(f"Resuming from epoch: {epoch_resume}")
     return epoch_resume
 
 
