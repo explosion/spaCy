@@ -105,7 +105,8 @@ and residual connections.
 
 ### spacy.TransitionBasedParser.v1 {#TransitionBasedParser_v1}
 
-Identical to [`spacy.TransitionBasedParser.v2`](/api/architectures#TransitionBasedParser)
+Identical to
+[`spacy.TransitionBasedParser.v2`](/api/architectures#TransitionBasedParser)
 except the `use_upper` was set to `True` by default.
 
 ### spacy.TextCatEnsemble.v1 {#TextCatEnsemble_v1}

@@ -321,7 +321,7 @@ performed in chunks to avoid consuming too much memory. You can set the
 > ```
 
 | Name           | Description                                                                 |
-| -------------- | --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| -------------- | --------------------------------------------------------------------------- |
 | `queries`      | An array with one or more vectors. ~~numpy.ndarray~~                        |
 | _keyword-only_ |                                                                             |
 | `batch_size`   | The batch size to use. Default to `1024`. ~~int~~                           |

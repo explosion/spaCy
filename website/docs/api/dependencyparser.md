@@ -25,6 +25,20 @@ current state. The weights are updated such that the scores assigned to the set
 of optimal actions is increased, while scores assigned to other actions are
 decreased. Note that more than one action may be optimal for a given state.
 
+## Assigned Attributes {#assigned-attributes}
+
+Dependency predictions are assigned to the `Token.dep` and `Token.head` fields.
+Beside the dependencies themselves, the parser decides sentence boundaries,
+which are saved in `Token.is_sent_start` and accessible via `Doc.sents`.
+
+| Location              | Value                                                                                                                                         |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Token.dep`           | The type of dependency relation (hash). ~~int~~                                                                                               |
+| `Token.dep_`          | The type of dependency relation. ~~str~~                                                                                                      |
+| `Token.head`          | The syntactic parent, or "governor", of this token. ~~Token~~                                                                                 |
+| `Token.is_sent_start` | A boolean value indicating whether the token starts a sentence. After the parser runs this will be `True` or `False` for all tokens. ~~bool~~ |
+| `Doc.sents`           | An iterator over sentences in the `Doc`, determined by `Token.is_sent_start` values. ~~Iterator[Span]~~                                       |
+
 ## Config and implementation {#config}
 
 The default config is defined by the pipeline component factory and describes
