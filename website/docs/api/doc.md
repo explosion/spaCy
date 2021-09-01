@@ -571,9 +571,9 @@ objects, if the entity recognizer has been applied.
 > assert ents[0].text == "Mr. Best"
 > ```
 
-| Name        | Description                                                           |
-| ----------- | --------------------------------------------------------------------- |
-| **RETURNS** | Entities in the document, one `Span` per entity. ~~Tuple[Span, ...]~~ |
+| Name        | Description                                                      |
+| ----------- | ---------------------------------------------------------------- |
+| **RETURNS** | Entities in the document, one `Span` per entity. ~~Tuple[Span]~~ |
 
 ## Doc.spans {#spans tag="property"}
 
