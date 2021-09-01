@@ -78,6 +78,7 @@ cdef class TrainablePipe(Pipe):
                 yield from docs
             except Exception as e:
                 error_handler(self.name, self, docs, e)
+                yield from [None] * len(docs)
 
     def predict(self, docs: Iterable[Doc]):
         """Apply the pipeline's model to a batch of docs, without modifying them.
