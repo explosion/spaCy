@@ -429,7 +429,7 @@ matcher.add("HelloWorld", [pattern])
 # 🚨 Raises an error:
 # MatchPatternError: Invalid token patterns for matcher rule 'HelloWorld'
 # Pattern 0:
-# - Additional properties are not allowed ('CASEINSENSITIVE' was unexpected) [2]
+# - [pattern -> 2 -> CASEINSENSITIVE] extra fields not permitted
 
 ```
 
