@@ -49,7 +49,7 @@ functions. For more details, see the
 The component sets the following
 [custom extension attribute](/usage/processing-pipeline#custom-components-attributes):
 
-| Name             | Description                                                              |
+| Location         | Value                                                                    |
 | ---------------- | ------------------------------------------------------------------------ |
 | `Doc._.trf_data` | Transformer tokens and outputs for the `Doc` object. ~~TransformerData~~ |
 
