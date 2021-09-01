@@ -9,6 +9,7 @@ from spacy.cli import info
 from spacy.cli.init_config import init_config, RECOMMENDATIONS
 from spacy.cli._util import validate_project_commands, parse_config_overrides
 from spacy.cli._util import load_project_config, substitute_project_variables
+from spacy.cli._util import is_subpath_of
 from spacy.cli._util import string_to_list
 from spacy import about
 from spacy.util import get_minor_version
@@ -542,3 +543,18 @@ def test_get_third_party_dependencies_runs():
     # Test with component factory based on Cython module
     nlp.add_pipe("tagger")
     assert get_third_party_dependencies(nlp.config) == []
+
+
+@pytest.mark.parametrize(
+    "parent,child,expected",
+    [
+        ("/tmp", "/tmp", True),
+        ("/tmp", "/", False),
+        ("/tmp", "/tmp/subdir", True),
+        ("/tmp", "/tmpdir", False),
+        ("/tmp", "/tmp/subdir/..", True),
+        ("/tmp", "/tmp/..", False)
+    ],
+)
+def test_is_subpath_of(parent, child, expected):
+    assert is_subpath_of(parent, child) == expected
