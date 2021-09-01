@@ -145,6 +145,7 @@ class AttributeRuler(Pipe):
             return doc
         except Exception as e:
             error_handler(self.name, self, [doc], e)
+            return None
 
     def match(self, doc: Doc):
         matches = self.matcher(doc, allow_missing=True)

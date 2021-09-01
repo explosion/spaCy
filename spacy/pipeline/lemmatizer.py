@@ -136,6 +136,7 @@ class Lemmatizer(Pipe):
             return doc
         except Exception as e:
             error_handler(self.name, self, [doc], e)
+            return None
 
     def initialize(
         self,

@@ -54,6 +54,7 @@ cdef class TrainablePipe(Pipe):
             return doc
         except Exception as e:
             error_handler(self.name, self, [doc], e)
+            return None
 
     def pipe(self, stream: Iterable[Doc], *, batch_size: int=128) -> Iterator[Doc]:
         """Apply the pipe to a stream of documents. This usually happens under

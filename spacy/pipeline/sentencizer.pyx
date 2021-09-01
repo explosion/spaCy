@@ -82,6 +82,7 @@ class Sentencizer(Pipe):
             return doc
         except Exception as e:
             error_handler(self.name, self, [doc], e)
+            return None
 
     def predict(self, docs):
         """Apply the pipe to a batch of docs, without modifying them.

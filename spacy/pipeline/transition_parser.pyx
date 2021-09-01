@@ -238,6 +238,7 @@ cdef class Parser(TrainablePipe):
                 yield from batch_in_order
             except Exception as e:
                 error_handler(self.name, self, batch_in_order, e)
+                yield from [None] * len(batch_in_order)
 
 
     def predict(self, docs):

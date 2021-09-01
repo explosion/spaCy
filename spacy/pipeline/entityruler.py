@@ -153,6 +153,7 @@ class EntityRuler(Pipe):
             return doc
         except Exception as e:
             error_handler(self.name, self, [doc], e)
+            return None
 
     def match(self, doc: Doc):
         self._require_patterns()
