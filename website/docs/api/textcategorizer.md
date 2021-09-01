@@ -38,7 +38,8 @@ name of the category and the value is a score between 0 and 1 (inclusive). For
 
 Note that when assigning values to create training data, the score of each
 category must be 0 or 1. Using other values, for example to create a document
-that is a little bit in category A and a little bit in category B, is not supported.
+that is a little bit in category A and a little bit in category B, is not
+supported.
 
 | Location   | Value                                 |
 | ---------- | ------------------------------------- |

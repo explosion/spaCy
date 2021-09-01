@@ -80,7 +80,7 @@ Docs with `has_unknown_spaces` are skipped during scoring.
 > ```
 
 | Name        | Description                                                                                                         |
-| ----------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| ----------- | ------------------------------------------------------------------------------------------------------------------- |
 | `examples`  | The `Example` objects holding both the predictions and the correct gold-standard annotations. ~~Iterable[Example]~~ |
 | **RETURNS** | `Dict`                                                                                                              | A dictionary containing the scores `token_acc`, `token_p`, `token_r`, `token_f`. ~~Dict[str, float]]~~ |
 

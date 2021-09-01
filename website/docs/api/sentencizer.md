@@ -18,10 +18,10 @@ require a statistical model to be loaded.
 Calculated values will be assigned to `Token.is_sent_start`. The resulting
 sentences can be accessed using `Doc.sents`.
 
-| Location              | Value                                                                                                                                         |
-| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Location              | Value                                                                                                                          |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | `Token.is_sent_start` | A boolean value indicating whether the token starts a sentence. This will be either `True` or `False` for all tokens. ~~bool~~ |
-| `Doc.sents`           | An iterator over sentences in the `Doc`, determined by `Token.is_sent_start` values. ~~Iterator[Span]~~                                         |
+| `Doc.sents`           | An iterator over sentences in the `Doc`, determined by `Token.is_sent_start` values. ~~Iterator[Span]~~                        |
 
 ## Config and implementation {#config}
 
@@ -38,7 +38,7 @@ how the component should be configured. You can override its settings via the
 > ```
 
 | Setting       | Description                                                                                                                                            |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `punct_chars` | Optional custom list of punctuation characters that mark sentence ends. See below for defaults if not set. Defaults to `None`. ~~Optional[List[str]]~~ | `None` |
 
 ```python
