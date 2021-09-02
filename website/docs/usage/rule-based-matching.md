@@ -429,7 +429,7 @@ matcher.add("HelloWorld", [pattern])
 # 🚨 Raises an error:
 # MatchPatternError: Invalid token patterns for matcher rule 'HelloWorld'
 # Pattern 0:
-# - Additional properties are not allowed ('CASEINSENSITIVE' was unexpected) [2]
+# - [pattern -> 2 -> CASEINSENSITIVE] extra fields not permitted
 
 ```
 
@@ -438,7 +438,8 @@ matcher.add("HelloWorld", [pattern])
 To move on to a more realistic example, let's say you're working with a large
 corpus of blog articles, and you want to match all mentions of "Google I/O"
 (which spaCy tokenizes as `['Google', 'I', '/', 'O'`]). To be safe, you only
-match on the uppercase versions, in case someone has written it as "Google i/o".
+match on the uppercase versions, avoiding matches with phrases such as "Google
+i/o".
 
 ```python
 ### {executable="true"}
