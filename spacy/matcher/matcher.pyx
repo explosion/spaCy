@@ -283,7 +283,7 @@ cdef class Matcher:
                     memset(&matched[start], 1, span_len * sizeof(matched[0]))
         if as_spans:
             final_results = []
-            for i, (key, start, end, *_) in enumerate(final_matches):
+            for key, start, end, *_ in final_matches:
                 if isinstance(doclike, Span):
                     start += doclike.start
                     end += doclike.start
