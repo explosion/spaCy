@@ -340,7 +340,7 @@ cdef find_matches(TokenPatternC** patterns, int n, object doclike, int length, e
     The "predicates" list contains functions that take a Python list and return a
     boolean value. It's mostly used for regular expressions.
 
-    The "extra_getters" list contains functions that take a Python list and return
+    The "extensions" list contains functions that take a Python list and return
     an attr ID. It's mostly used for extension attributes.
     """
     cdef vector[PatternStateC] states
