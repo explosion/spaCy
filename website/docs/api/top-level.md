@@ -817,6 +817,19 @@ from the specified model. Intended for use in `[initialize.before_init]`.
 | `vocab`     | The pipeline to copy the vocab from. The vocab includes the lookups and vectors. Defaults to `None`. ~~Optional[str]~~  |
 | **CREATES** | A function that takes the current `nlp` object and modifies its `tokenizer` and `vocab`. ~~Callable[[Language], None]~~ |
 
+### spacy.models_with_nvtx_range.v1 {#models_with_nvtx_range tag="registered function"}
+
+> #### Example config
+>
+> ```ini
+> [initialize]
+> after_init = {"@callbacks":"spacy.models_with_nvtx_range.v1"}
+> ```
+
+Recursively wrap the models in each pipe using [NVTX](https://nvidia.github.io/NVTX/)
+range markers. These markers aid in GPU profiling by attributing specific operations
+to a ~~Model~~'s forward or backprop passes.
+
 ## Training data and alignment {#gold source="spacy/training"}
 
 ### training.offsets_to_biluo_tags {#offsets_to_biluo_tags tag="function"}
