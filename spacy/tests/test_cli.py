@@ -553,7 +553,7 @@ def test_get_third_party_dependencies_runs():
         ("/tmp", "/tmp/subdir", True),
         ("/tmp", "/tmpdir", False),
         ("/tmp", "/tmp/subdir/..", True),
-        ("/tmp", "/tmp/..", False)
+        ("/tmp", "/tmp/..", False),
     ],
 )
 def test_is_subpath_of(parent, child, expected):

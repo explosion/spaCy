@@ -73,7 +73,14 @@ def project_run(
     if subcommand in workflows:
         msg.info(f"Running workflow '{subcommand}'")
         for cmd in workflows[subcommand]:
-            project_run(project_dir, cmd, overrides=overrides, force=force, dry=dry, capture=capture)
+            project_run(
+                project_dir,
+                cmd,
+                overrides=overrides,
+                force=force,
+                dry=dry,
+                capture=capture,
+            )
     else:
         cmd = commands[subcommand]
         for dep in cmd.get("deps", []):
