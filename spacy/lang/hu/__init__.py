@@ -4,7 +4,7 @@ from .stop_words import STOP_WORDS
 from ...language import Language
 
 
-class HungarianDefaults(Language.Defaults):
+class HungarianDefaults(Language.Defaults):  # type: ignore[misc, valid-type]
     tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     prefixes = TOKENIZER_PREFIXES
     suffixes = TOKENIZER_SUFFIXES

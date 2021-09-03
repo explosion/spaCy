@@ -12,7 +12,7 @@ from ...util import update_exc
 from ...lookups import Lookups
 
 
-class MacedonianDefaults(Language.Defaults):
+class MacedonianDefaults(Language.Defaults):  # type: ignore[misc, valid-type]
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
     lex_attr_getters[LANG] = lambda text: "mk"
 

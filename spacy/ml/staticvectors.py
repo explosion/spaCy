@@ -38,9 +38,9 @@ def forward(
         return _handle_empty(model.ops, model.get_dim("nO"))
     key_attr = model.attrs["key_attr"]
     W = cast(Floats2d, model.ops.as_contig(model.get_param("W")))
-    V = cast(Floats2d, model.ops.asarray(docs[0].vocab.vectors.data))
+    V = cast(Floats2d, model.ops.asarray(docs[0].vocab.vectors.data))  # type: ignore[attr-defined]
     rows = model.ops.flatten(
-        [doc.vocab.vectors.find(keys=doc.to_array(key_attr)) for doc in docs]
+        [doc.vocab.vectors.find(keys=doc.to_array(key_attr)) for doc in docs]  # type: ignore[attr-defined]
     )
     try:
         vectors_data = model.ops.gemm(model.ops.as_contig(V[rows]), W, trans2=True)
@@ -49,7 +49,7 @@ def forward(
     # Convert negative indices to 0-vectors (TODO: more options for UNK tokens)
     vectors_data[rows < 0] = 0
     output = Ragged(
-        vectors_data, model.ops.asarray([len(doc) for doc in docs], dtype="i")
+        vectors_data, model.ops.asarray([len(doc) for doc in docs], dtype="i")  # type: ignore[arg-type]
     )
     mask = None
     if is_train:
@@ -62,7 +62,7 @@ def forward(
             d_output.data *= mask
         model.inc_grad(
             "W",
-            model.ops.gemm(d_output.data, model.ops.as_contig(V[rows]), trans1=True),
+            model.ops.gemm(d_output.data, model.ops.as_contig(V[rows]), trans1=True),  # type: ignore[arg-type]
         )
         return []
 
@@ -78,7 +78,7 @@ def init(
     nM = model.get_dim("nM") if model.has_dim("nM") else None
     nO = model.get_dim("nO") if model.has_dim("nO") else None
     if X is not None and len(X):
-        nM = X[0].vocab.vectors.data.shape[1]
+        nM = X[0].vocab.vectors.data.shape[1]  # type: ignore[attr-defined]
     if Y is not None:
         nO = Y.data.shape[1]
 
@@ -97,4 +97,4 @@ def _handle_empty(ops: Ops, nO: int):
 
 
 def _get_drop_mask(ops: Ops, nO: int, rate: Optional[float]) -> Optional[Floats1d]:
-    return ops.get_dropout_mask((nO,), rate) if rate is not None else None
+    return ops.get_dropout_mask((nO,), rate) if rate is not None else None  # type: ignore[return-value]

@@ -25,7 +25,7 @@ def merge_noun_chunks(doc: Doc) -> Doc:
     with doc.retokenize() as retokenizer:
         for np in doc.noun_chunks:
             attrs = {"tag": np.root.tag, "dep": np.root.dep}
-            retokenizer.merge(np, attrs=attrs)
+            retokenizer.merge(np, attrs=attrs)  # type: ignore[arg-type]
     return doc
 
 
@@ -45,7 +45,7 @@ def merge_entities(doc: Doc):
     with doc.retokenize() as retokenizer:
         for ent in doc.ents:
             attrs = {"tag": ent.root.tag, "dep": ent.root.dep, "ent_type": ent.label}
-            retokenizer.merge(ent, attrs=attrs)
+            retokenizer.merge(ent, attrs=attrs)  # type: ignore[arg-type]
     return doc
 
 
@@ -63,7 +63,7 @@ def merge_subtokens(doc: Doc, label: str = "subtok") -> Doc:
     merger = Matcher(doc.vocab)
     merger.add("SUBTOK", [[{"DEP": label, "op": "+"}]])
     matches = merger(doc)
-    spans = util.filter_spans([doc[start : end + 1] for _, start, end in matches])
+    spans = util.filter_spans([doc[start : end + 1] for _, start, end in matches])  # type: ignore[misc, operator]
     with doc.retokenize() as retokenizer:
         for span in spans:
             retokenizer.merge(span)
@@ -93,11 +93,11 @@ class TokenSplitter:
                     if len(t.text) >= self.min_length:
                         orths = []
                         heads = []
-                        attrs = {}
+                        attrs = {}  # type: ignore[var-annotated]
                         for i in range(0, len(t.text), self.split_length):
                             orths.append(t.text[i : i + self.split_length])
                             heads.append((t, i / self.split_length))
-                        retokenizer.split(t, orths, heads, attrs)
+                        retokenizer.split(t, orths, heads, attrs)  # type: ignore[arg-type]
         return doc
 
     def _get_config(self) -> Dict[str, Any]:

@@ -45,8 +45,8 @@ def init_config_cli(
     DOCS: https://spacy.io/api/cli#init-config
     """
     if isinstance(optimize, Optimizations):  # instance of enum from the CLI
-        optimize = optimize.value
-    pipeline = string_to_list(pipeline)
+        optimize = optimize.value  # type: ignore[assignment]
+    pipeline = string_to_list(pipeline)  # type: ignore[arg-type, assignment]
     is_stdout = str(output_file) == "-"
     if not is_stdout and output_file.exists() and not force_overwrite:
         msg = Printer()
@@ -55,8 +55,8 @@ def init_config_cli(
             exits=1,
         )
     config = init_config(
-        lang=lang,
-        pipeline=pipeline,
+        lang=lang,  # type: ignore[arg-type]
+        pipeline=pipeline,  # type: ignore[arg-type]
         optimize=optimize,
         gpu=gpu,
         pretraining=pretraining,
@@ -175,8 +175,8 @@ def init_config(
         "Pipeline": ", ".join(pipeline),
         "Optimize for": optimize,
         "Hardware": variables["hardware"].upper(),
-        "Transformer": template_vars.transformer.get("name")
-        if template_vars.use_transformer
+        "Transformer": template_vars.transformer.get("name")  # type: ignore[attr-defined]
+        if template_vars.use_transformer  # type: ignore[attr-defined]
         else None,
     }
     msg.info("Generated config template specific for your use case")

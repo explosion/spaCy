@@ -4,7 +4,7 @@ from .punctuation import TOKENIZER_SUFFIXES
 from ...language import Language
 
 
-class BasqueDefaults(Language.Defaults):
+class BasqueDefaults(Language.Defaults):  # type: ignore[misc, valid-type]
     suffixes = TOKENIZER_SUFFIXES
     stop_words = STOP_WORDS
     lex_attr_getters = LEX_ATTRS

@@ -88,13 +88,13 @@ class Lemmatizer(Pipe):
             if not hasattr(self, mode_attr):
                 raise ValueError(Errors.E1003.format(mode=mode))
             self.lemmatize = getattr(self, mode_attr)
-        self.cache = {}
+        self.cache = {}  # type: ignore[var-annotated]
 
     @property
     def mode(self):
         return self._mode
 
-    def __call__(self, doc: Doc) -> Doc:
+    def __call__(self, doc: Doc) -> Doc:  # type: ignore[return]
         """Apply the lemmatizer to one document.
 
         doc (Doc): The Doc to process.
@@ -132,9 +132,9 @@ class Lemmatizer(Pipe):
         required_tables, optional_tables = self.get_lookups_config(self.mode)
         if lookups is None:
             logger.debug("Lemmatizer: loading tables from spacy-lookups-data")
-            lookups = load_lookups(lang=self.vocab.lang, tables=required_tables)
+            lookups = load_lookups(lang=self.vocab.lang, tables=required_tables)  # type: ignore[arg-type]
             optional_lookups = load_lookups(
-                lang=self.vocab.lang, tables=optional_tables, strict=False
+                lang=self.vocab.lang, tables=optional_tables, strict=False  # type: ignore[arg-type]
             )
             for table in optional_lookups.tables:
                 lookups.set_table(table, optional_lookups.get_table(table))
@@ -177,7 +177,7 @@ class Lemmatizer(Pipe):
 
         DOCS: https://spacy.io/api/lemmatizer#rule_lemmatize
         """
-        cache_key = (token.orth, token.pos, token.morph.key)
+        cache_key = (token.orth, token.pos, token.morph.key)  # type: ignore[attr-defined]
         if cache_key in self.cache:
             return self.cache[cache_key]
         string = token.text
@@ -269,7 +269,7 @@ class Lemmatizer(Pipe):
         DOCS: https://spacy.io/api/lemmatizer#to_disk
         """
         serialize = {}
-        serialize["vocab"] = lambda p: self.vocab.to_disk(p, exclude=exclude)
+        serialize["vocab"] = lambda p: self.vocab.to_disk(p, exclude=exclude)  # type: ignore[arg-type]
         serialize["lookups"] = lambda p: self.lookups.to_disk(p)
         util.to_disk(path, serialize, exclude)
 
@@ -285,9 +285,9 @@ class Lemmatizer(Pipe):
         DOCS: https://spacy.io/api/lemmatizer#from_disk
         """
         deserialize = {}
-        deserialize["vocab"] = lambda p: self.vocab.from_disk(p, exclude=exclude)
-        deserialize["lookups"] = lambda p: self.lookups.from_disk(p)
-        util.from_disk(path, deserialize, exclude)
+        deserialize["vocab"] = lambda p: self.vocab.from_disk(p, exclude=exclude)  # type: ignore[arg-type]
+        deserialize["lookups"] = lambda p: self.lookups.from_disk(p)  # type: ignore[assignment, return-value]
+        util.from_disk(path, deserialize, exclude)  # type: ignore[arg-type]
         self._validate_tables()
         return self
 
@@ -300,7 +300,7 @@ class Lemmatizer(Pipe):
         DOCS: https://spacy.io/api/lemmatizer#to_bytes
         """
         serialize = {}
-        serialize["vocab"] = lambda: self.vocab.to_bytes(exclude=exclude)
+        serialize["vocab"] = lambda: self.vocab.to_bytes(exclude=exclude)  # type: ignore[arg-type]
         serialize["lookups"] = self.lookups.to_bytes
         return util.to_bytes(serialize, exclude)
 
@@ -316,8 +316,8 @@ class Lemmatizer(Pipe):
         DOCS: https://spacy.io/api/lemmatizer#from_bytes
         """
         deserialize = {}
-        deserialize["vocab"] = lambda b: self.vocab.from_bytes(b, exclude=exclude)
-        deserialize["lookups"] = lambda b: self.lookups.from_bytes(b)
+        deserialize["vocab"] = lambda b: self.vocab.from_bytes(b, exclude=exclude)  # type: ignore[arg-type]
+        deserialize["lookups"] = lambda b: self.lookups.from_bytes(b)  # type: ignore[assignment, return-value]
         util.from_bytes(bytes_data, deserialize, exclude)
         self._validate_tables()
         return self

@@ -34,7 +34,7 @@ for pron in ["i"]:
 
         _exc[orth + "m"] = [
             {ORTH: orth, NORM: pron},
-            {ORTH: "m", "tenspect": 1, "number": 1},
+            {ORTH: "m", "tenspect": 1, "number": 1},  # type: ignore[dict-item]
         ]
 
         _exc[orth + "'ma"] = [
@@ -284,7 +284,7 @@ for verb_data in [
         _exc[data[ORTH] + "ve"] = [dict(data), {ORTH: "ve"}]
 
 
-for verb_data in [
+for verb_data in [  # type: ignore[assignment]
     {ORTH: "ai", "number": 2},
     {ORTH: "are", NORM: "are", "number": 2},
     {ORTH: "is", NORM: "is"},

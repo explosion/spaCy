@@ -35,7 +35,7 @@ def test_readers():
             doc = nlp.make_doc(f"This is an example")
             return [Example.from_dict(doc, annots)]
 
-        return {"train": reader, "dev": reader, "extra": reader, "something": reader}
+        return {"train": reader, "dev": reader, "extra": reader, "something": reader}  # type: ignore[dict-item]
 
     config = Config().from_str(config_string)
     nlp = load_model_from_config(config, auto_fill=True)

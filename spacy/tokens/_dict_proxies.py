@@ -22,7 +22,7 @@ class SpanGroups(UserDict):
         self, doc: "Doc", items: Iterable[Tuple[str, SpanGroup]] = tuple()
     ) -> None:
         self.doc_ref = weakref.ref(doc)
-        UserDict.__init__(self, items)
+        UserDict.__init__(self, items)  # type: ignore[arg-type]
 
     def __setitem__(self, key: str, value: Union[SpanGroup, Iterable["Span"]]) -> None:
         if not isinstance(value, SpanGroup):
@@ -31,9 +31,9 @@ class SpanGroups(UserDict):
         UserDict.__setitem__(self, key, value)
 
     def _make_span_group(self, name: str, spans: Iterable["Span"]) -> SpanGroup:
-        return SpanGroup(self.doc_ref(), name=name, spans=spans)
+        return SpanGroup(self.doc_ref(), name=name, spans=spans)  # type: ignore[arg-type]
 
-    def copy(self, doc: "Doc" = None) -> "SpanGroups":
+    def copy(self, doc: "Doc" = None) -> "SpanGroups":  # type: ignore[assignment]
         if doc is None:
             doc = self.doc_ref()
         return SpanGroups(doc).from_bytes(self.to_bytes())
@@ -49,6 +49,6 @@ class SpanGroups(UserDict):
         self.clear()
         doc = self.doc_ref()
         for value_bytes in msg:
-            group = SpanGroup(doc).from_bytes(value_bytes)
-            self[group.name] = group
+            group = SpanGroup(doc).from_bytes(value_bytes)  # type: ignore[arg-type]
+            self[group.name] = group  # type: ignore[attr-defined]
         return self

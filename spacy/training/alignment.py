@@ -15,7 +15,7 @@ class Alignment:
     def from_indices(cls, x2y: List[List[int]], y2x: List[List[int]]) -> "Alignment":
         x2y = _make_ragged(x2y)
         y2x = _make_ragged(y2x)
-        return Alignment(x2y=x2y, y2x=y2x)
+        return Alignment(x2y=x2y, y2x=y2x)  # type: ignore[arg-type]
 
     @classmethod
     def from_strings(cls, A: List[str], B: List[str]) -> "Alignment":

@@ -639,7 +639,7 @@ for verb_root in verb_roots:
         )
 
     if past.startswith("آ"):
-        conjugations = set(
+        conjugations = set(  # type: ignore[assignment]
             map(
                 lambda item: item.replace("بآ", "بیا").replace("نآ", "نیا"),
                 conjugations,

@@ -32,7 +32,7 @@ def profile_cli(
 
     DOCS: https://spacy.io/api/cli#debug-profile
     """
-    if ctx.parent.command.name == NAME:  # called as top-level command
+    if ctx.parent.command.name == NAME:  # type: ignore[union-attr]    # called as top-level command
         msg.warn(
             "The profile command is now available via the 'debug profile' "
             "subcommand. You can run python -m spacy debug --help for an "
@@ -44,7 +44,7 @@ def profile_cli(
 def profile(model: str, inputs: Optional[Path] = None, n_texts: int = 10000) -> None:
 
     if inputs is not None:
-        inputs = _read_inputs(inputs, msg)
+        inputs = _read_inputs(inputs, msg)  # type: ignore[assignment]
     if inputs is None:
         try:
             import ml_datasets
@@ -61,11 +61,11 @@ def profile(model: str, inputs: Optional[Path] = None, n_texts: int = 10000) -> 
             imdb_train, _ = ml_datasets.imdb()
             inputs, _ = zip(*imdb_train)
         msg.info(f"Loaded IMDB dataset and using {n_inputs} examples")
-        inputs = inputs[:n_inputs]
+        inputs = inputs[:n_inputs]  # type: ignore[index]
     with msg.loading(f"Loading pipeline '{model}'..."):
         nlp = load_model(model)
     msg.good(f"Loaded pipeline '{model}'")
-    texts = list(itertools.islice(inputs, n_texts))
+    texts = list(itertools.islice(inputs, n_texts))  # type: ignore[call-overload]
     cProfile.runctx("parse_texts(nlp, texts)", globals(), locals(), "Profile.prof")
     s = pstats.Stats("Profile.prof")
     msg.divider("Profile stats")
@@ -81,7 +81,7 @@ def _read_inputs(loc: Union[Path, str], msg: Printer) -> Iterator[str]:
     if loc == "-":
         msg.info("Reading input from sys.stdin")
         file_ = sys.stdin
-        file_ = (line.encode("utf8") for line in file_)
+        file_ = (line.encode("utf8") for line in file_)  # type: ignore[assignment]
     else:
         input_path = Path(loc)
         if not input_path.exists() or not input_path.is_file():

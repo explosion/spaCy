@@ -9,7 +9,7 @@ from ...language import Language
 from ...pipeline import Lemmatizer
 
 
-class PersianDefaults(Language.Defaults):
+class PersianDefaults(Language.Defaults):  # type: ignore[misc, valid-type]
     tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     suffixes = TOKENIZER_SUFFIXES
     lex_attr_getters = LEX_ATTRS

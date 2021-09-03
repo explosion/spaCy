@@ -3,7 +3,7 @@ from .lex_attrs import LEX_ATTRS
 from ...language import Language
 
 
-class YorubaDefaults(Language.Defaults):
+class YorubaDefaults(Language.Defaults):  # type: ignore[misc, valid-type]
     lex_attr_getters = LEX_ATTRS
     stop_words = STOP_WORDS
 

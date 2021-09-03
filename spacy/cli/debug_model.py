@@ -44,7 +44,7 @@ def debug_model_cli(
     DOCS: https://spacy.io/api/cli#debug-model
     """
     setup_gpu(use_gpu)
-    layers = string_to_list(layers, intify=True)
+    layers = string_to_list(layers, intify=True)  # type: ignore[assignment]
     print_settings = {
         "dimensions": dimensions,
         "parameters": parameters,
@@ -170,8 +170,8 @@ def _sentences():
 
 
 def _get_docs(lang: str = "en"):
-    nlp = util.get_lang_class(lang)()
-    return list(nlp.pipe(_sentences()))
+    nlp = util.get_lang_class(lang)()  # type: ignore[call-arg]
+    return list(nlp.pipe(_sentences()))  # type: ignore[attr-defined]
 
 
 def _set_output_dim(model, nO):

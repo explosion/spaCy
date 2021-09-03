@@ -6,7 +6,7 @@ from .syntax_iterators import SYNTAX_ITERATORS
 from ...language import Language
 
 
-class IndonesianDefaults(Language.Defaults):
+class IndonesianDefaults(Language.Defaults):  # type: ignore[misc, valid-type]
     tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     prefixes = TOKENIZER_PREFIXES
     suffixes = TOKENIZER_SUFFIXES

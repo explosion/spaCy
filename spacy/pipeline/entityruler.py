@@ -32,7 +32,7 @@ PatternType = Dict[str, Union[str, List[Dict[str, Any]]]]
         "ents_f": 1.0,
         "ents_p": 0.0,
         "ents_r": 0.0,
-        "ents_per_type": None,
+        "ents_per_type": None,  # type: ignore[dict-item]
     },
 )
 def make_entity_ruler(
@@ -100,8 +100,8 @@ class EntityRuler(Pipe):
         self.nlp = nlp
         self.name = name
         self.overwrite = overwrite_ents
-        self.token_patterns = defaultdict(list)
-        self.phrase_patterns = defaultdict(list)
+        self.token_patterns = defaultdict(list)  # type: ignore[var-annotated]
+        self.phrase_patterns = defaultdict(list)  # type: ignore[var-annotated]
         self._validate = validate
         self.matcher = Matcher(nlp.vocab, validate=validate)
         self.phrase_matcher_attr = phrase_matcher_attr
@@ -109,7 +109,7 @@ class EntityRuler(Pipe):
             nlp.vocab, attr=self.phrase_matcher_attr, validate=validate
         )
         self.ent_id_sep = ent_id_sep
-        self._ent_ids = defaultdict(dict)
+        self._ent_ids = defaultdict(dict)  # type: ignore[var-annotated]
         if patterns is not None:
             self.add_patterns(patterns)
 
@@ -123,7 +123,7 @@ class EntityRuler(Pipe):
         """Whether a label is present in the patterns."""
         return label in self.token_patterns or label in self.phrase_patterns
 
-    def __call__(self, doc: Doc) -> Doc:
+    def __call__(self, doc: Doc) -> Doc:  # type: ignore[return]
         """Find matches in document and add them as entities.
 
         doc (Doc): The Doc object in the pipeline.
@@ -144,8 +144,8 @@ class EntityRuler(Pipe):
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", message="\\[W036")
             matches = list(self.matcher(doc)) + list(self.phrase_matcher(doc))
-        matches = set(
-            [(m_id, start, end) for m_id, start, end in matches if start != end]
+        matches = set(  # type: ignore[assignment]
+            [(m_id, start, end) for m_id, start, end in matches if start != end]  # type: ignore[has-type, misc]
         )
         get_sort_key = lambda m: (m[2] - m[1], -m[1])
         matches = sorted(matches, key=get_sort_key, reverse=True)
@@ -214,7 +214,7 @@ class EntityRuler(Pipe):
         """
         self.clear()
         if patterns:
-            self.add_patterns(patterns)
+            self.add_patterns(patterns)  # type: ignore[arg-type]
 
     @property
     def ent_ids(self) -> Tuple[str, ...]:
@@ -293,23 +293,23 @@ class EntityRuler(Pipe):
                 elif isinstance(entry["pattern"], list):
                     token_patterns.append(entry)
             phrase_patterns = []
-            for label, pattern, ent_id in zip(
+            for label, pattern, ent_id in zip(  # type: ignore[var-annotated]
                 phrase_pattern_labels,
-                self.nlp.pipe(phrase_pattern_texts),
+                self.nlp.pipe(phrase_pattern_texts),  # type: ignore[arg-type]
                 phrase_pattern_ids,
             ):
                 phrase_pattern = {"label": label, "pattern": pattern}
                 if ent_id:
                     phrase_pattern["id"] = ent_id
                 phrase_patterns.append(phrase_pattern)
-            for entry in token_patterns + phrase_patterns:
+            for entry in token_patterns + phrase_patterns:  # type: ignore[operator]
                 label = entry["label"]
                 if "id" in entry:
                     ent_label = label
-                    label = self._create_label(label, entry["id"])
-                    key = self.matcher._normalize_key(label)
-                    self._ent_ids[key] = (ent_label, entry["id"])
-                pattern = entry["pattern"]
+                    label = self._create_label(label, entry["id"])  # type: ignore[arg-type]
+                    key = self.matcher._normalize_key(label)  # type: ignore[attr-defined]
+                    self._ent_ids[key] = (ent_label, entry["id"])  # type: ignore[assignment]
+                pattern = entry["pattern"]  # type: ignore[assignment]
                 if isinstance(pattern, Doc):
                     self.phrase_patterns[label].append(pattern)
                     self.phrase_matcher.add(label, [pattern])
@@ -344,7 +344,7 @@ class EntityRuler(Pipe):
             ent_label, ent_id = label.rsplit(self.ent_id_sep, 1)
         else:
             ent_label = label
-            ent_id = None
+            ent_id = None  # type: ignore[assignment]
         return ent_label, ent_id
 
     def _create_label(self, label: str, ent_id: str) -> str:
@@ -414,7 +414,7 @@ class EntityRuler(Pipe):
         """
         path = ensure_path(path)
         self.clear()
-        depr_patterns_path = path.with_suffix(".jsonl")
+        depr_patterns_path = path.with_suffix(".jsonl")  # type: ignore[union-attr]
         if depr_patterns_path.is_file():
             patterns = srsly.read_jsonl(depr_patterns_path)
             self.add_patterns(patterns)
@@ -459,7 +459,7 @@ class EntityRuler(Pipe):
             ),
             "cfg": lambda p: srsly.write_json(p, cfg),
         }
-        if path.suffix == ".jsonl":  # user wants to save only JSONL
+        if path.suffix == ".jsonl":  # type: ignore[union-attr]    # user wants to save only JSONL
             srsly.write_jsonl(path, self.patterns)
         else:
             to_disk(path, serializers, {})

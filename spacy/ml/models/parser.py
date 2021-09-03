@@ -13,7 +13,7 @@ from ...tokens import Doc
 @registry.architectures("spacy.TransitionBasedParser.v2")
 def build_tb_parser_model(
     tok2vec: Model[List[Doc], List[Floats2d]],
-    state_type: Literal["parser", "ner"],
+    state_type: Literal["parser", "ner"],  # type: ignore[name-defined]
     extra_state_tokens: bool,
     hidden_width: int,
     maxout_pieces: int,
@@ -70,7 +70,7 @@ def build_tb_parser_model(
     else:
         raise ValueError(Errors.E917.format(value=state_type))
     t2v_width = tok2vec.get_dim("nO") if tok2vec.has_dim("nO") else None
-    tok2vec = chain(tok2vec, list2array(), Linear(hidden_width, t2v_width))
+    tok2vec = chain(tok2vec, list2array(), Linear(hidden_width, t2v_width))  # type: ignore[assignment, layer-mismatch-input, layer-mismatch-output, misc]
     tok2vec.set_dim("nO", hidden_width)
     lower = _define_lower(
         nO=hidden_width if use_upper else nO,

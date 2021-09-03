@@ -25,8 +25,8 @@ def info_cli(
 
     DOCS: https://spacy.io/api/cli#info
     """
-    exclude = string_to_list(exclude)
-    info(model, markdown=markdown, silent=silent, exclude=exclude)
+    exclude = string_to_list(exclude)  # type: ignore[arg-type, assignment]
+    info(model, markdown=markdown, silent=silent, exclude=exclude)  # type: ignore[arg-type]
 
 
 def info(
@@ -61,7 +61,7 @@ def info(
     return raw_data
 
 
-def info_spacy() -> Dict[str, any]:
+def info_spacy() -> Dict[str, any]:  # type: ignore[valid-type]
     """Generate info about the current spaCy intallation.
 
     RETURNS (dict): The spaCy info.

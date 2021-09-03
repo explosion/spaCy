@@ -252,7 +252,7 @@ def get_hash(data, exclude: Iterable[str] = tuple()) -> str:
     return hashlib.md5(data_str).hexdigest()
 
 
-def get_checksum(path: Union[Path, str]) -> str:
+def get_checksum(path: Union[Path, str]) -> str:  # type: ignore[return]
     """Get the checksum for a file or directory given its file path. If a
     directory path is provided, this uses all files in that directory.
 
@@ -469,7 +469,7 @@ def get_git_version(
         (0, 0) if the version couldn't be determined.
     """
     ret = run_command("git --version", capture=True)
-    stdout = ret.stdout.strip()
+    stdout = ret.stdout.strip()  # type: ignore[union-attr]
     if not stdout or not stdout.startswith("git version"):
         return (0, 0)
     version = stdout[11:].strip().split(".")
@@ -510,7 +510,7 @@ def string_to_list(value: str, intify: bool = False) -> Union[List[str], List[in
     RETURNS (Union[List[str], List[int]]): A list of strings or ints.
     """
     if not value:
-        return []
+        return []  # type: ignore[return-value]
     if value.startswith("[") and value.endswith("]"):
         value = value[1:-1]
     result = []
@@ -522,7 +522,7 @@ def string_to_list(value: str, intify: bool = False) -> Union[List[str], List[in
             p = p[1:-1]
         p = p.strip()
         if intify:
-            p = int(p)
+            p = int(p)  # type: ignore[assignment]
         result.append(p)
     return result
 

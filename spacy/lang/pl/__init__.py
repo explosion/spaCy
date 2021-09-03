@@ -16,7 +16,7 @@ TOKENIZER_EXCEPTIONS = {
 }
 
 
-class PolishDefaults(Language.Defaults):
+class PolishDefaults(Language.Defaults):  # type: ignore[misc, valid-type]
     tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     prefixes = TOKENIZER_PREFIXES
     infixes = TOKENIZER_INFIXES

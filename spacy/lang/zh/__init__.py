@@ -57,7 +57,7 @@ class ChineseTokenizer(DummyTokenizer):
     def __init__(self, nlp: Language, segmenter: Segmenter = Segmenter.char):
         self.vocab = nlp.vocab
         if isinstance(segmenter, Segmenter):
-            segmenter = segmenter.value
+            segmenter = segmenter.value  # type: ignore[assignment]
         self.segmenter = segmenter
         self.pkuseg_seg = None
         self.jieba_seg = None
@@ -71,7 +71,7 @@ class ChineseTokenizer(DummyTokenizer):
             warnings.warn(warn_msg)
             self.segmenter = Segmenter.char
         if segmenter == Segmenter.jieba:
-            self.jieba_seg = try_jieba_import()
+            self.jieba_seg = try_jieba_import()  # type: ignore[func-returns-value]
 
     def initialize(
         self,
@@ -84,13 +84,13 @@ class ChineseTokenizer(DummyTokenizer):
         if self.segmenter == Segmenter.pkuseg:
             if pkuseg_user_dict is None:
                 pkuseg_user_dict = pkuseg_model
-            self.pkuseg_seg = try_pkuseg_import(
-                pkuseg_model=pkuseg_model, pkuseg_user_dict=pkuseg_user_dict
+            self.pkuseg_seg = try_pkuseg_import(  # type: ignore[func-returns-value]
+                pkuseg_model=pkuseg_model, pkuseg_user_dict=pkuseg_user_dict  # type: ignore[arg-type]
             )
 
     def __call__(self, text: str) -> Doc:
         if self.segmenter == Segmenter.jieba:
-            words = list([x for x in self.jieba_seg.cut(text, cut_all=False) if x])
+            words = list([x for x in self.jieba_seg.cut(text, cut_all=False) if x])  # type: ignore[union-attr]
             (words, spaces) = util.get_words_and_spaces(words, text)
             return Doc(self.vocab, words=words, spaces=spaces)
         elif self.segmenter == Segmenter.pkuseg:
@@ -121,7 +121,7 @@ class ChineseTokenizer(DummyTokenizer):
                 try:
                     import spacy_pkuseg
 
-                    self.pkuseg_seg.preprocesser = spacy_pkuseg.Preprocesser(None)
+                    self.pkuseg_seg.preprocesser = spacy_pkuseg.Preprocesser(None)  # type: ignore[attr-defined]
                 except ImportError:
                     msg = (
                         "spacy_pkuseg not installed: unable to reset pkuseg "
@@ -129,7 +129,7 @@ class ChineseTokenizer(DummyTokenizer):
                     )
                     raise ImportError(msg) from None
             for word in words:
-                self.pkuseg_seg.preprocesser.insert(word.strip(), "")
+                self.pkuseg_seg.preprocesser.insert(word.strip(), "")  # type: ignore[attr-defined]
         else:
             warn_msg = Warnings.W104.format(target="pkuseg", current=self.segmenter)
             warnings.warn(warn_msg)
@@ -282,7 +282,7 @@ class ChineseTokenizer(DummyTokenizer):
         util.from_disk(path, serializers, [])
 
 
-class ChineseDefaults(Language.Defaults):
+class ChineseDefaults(Language.Defaults):  # type: ignore[misc, valid-type]
     config = load_config_from_str(DEFAULT_CONFIG)
     lex_attr_getters = LEX_ATTRS
     stop_words = STOP_WORDS

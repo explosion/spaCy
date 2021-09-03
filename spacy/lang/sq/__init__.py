@@ -2,7 +2,7 @@ from .stop_words import STOP_WORDS
 from ...language import Language
 
 
-class AlbanianDefaults(Language.Defaults):
+class AlbanianDefaults(Language.Defaults):  # type: ignore[misc, valid-type]
     stop_words = STOP_WORDS
 
 

@@ -12,7 +12,7 @@ from .lemmatizer import FrenchLemmatizer
 from ...language import Language
 
 
-class FrenchDefaults(Language.Defaults):
+class FrenchDefaults(Language.Defaults):  # type: ignore[misc, valid-type]
     tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     prefixes = TOKENIZER_PREFIXES
     infixes = TOKENIZER_INFIXES

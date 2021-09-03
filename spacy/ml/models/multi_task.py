@@ -21,7 +21,7 @@ def create_pretrain_vectors(
     maxout_pieces: int, hidden_size: int, loss: str
 ) -> Callable[["Vocab", Model], Model]:
     def create_vectors_objective(vocab: "Vocab", tok2vec: Model) -> Model:
-        if vocab.vectors.data.shape[1] == 0:
+        if vocab.vectors.data.shape[1] == 0:  # type: ignore[attr-defined]
             raise ValueError(Errors.E875)
         model = build_cloze_multi_task_model(
             vocab, tok2vec, hidden_size=hidden_size, maxout_pieces=maxout_pieces
@@ -34,7 +34,7 @@ def create_pretrain_vectors(
             distance = CosineDistance(normalize=True, ignore_zeros=True)
             return partial(get_vectors_loss, distance=distance)
         elif loss == "L2":
-            distance = L2Distance(normalize=True)
+            distance = L2Distance(normalize=True)  # type: ignore[assignment]
             return partial(get_vectors_loss, distance=distance)
         else:
             raise ValueError(Errors.E906.format(found=loss, supported="'cosine', 'L2'"))
@@ -113,10 +113,10 @@ def build_multi_task_model(
 def build_cloze_multi_task_model(
     vocab: "Vocab", tok2vec: Model, maxout_pieces: int, hidden_size: int
 ) -> Model:
-    nO = vocab.vectors.data.shape[1]
-    output_layer = chain(
-        list2array(),
-        Maxout(
+    nO = vocab.vectors.data.shape[1]  # type: ignore[attr-defined]
+    output_layer = chain(  # type: ignore[misc]
+        list2array(),  # type: ignore[layer-mismatch-output]
+        Maxout(  # type: ignore[layer-mismatch-input]
             nO=hidden_size,
             nI=tok2vec.get_dim("nO"),
             nP=maxout_pieces,
@@ -135,11 +135,11 @@ def build_cloze_multi_task_model(
 def build_cloze_characters_multi_task_model(
     vocab: "Vocab", tok2vec: Model, maxout_pieces: int, hidden_size: int, nr_char: int
 ) -> Model:
-    output_layer = chain(
-        list2array(),
-        Maxout(nO=hidden_size, nP=maxout_pieces),
+    output_layer = chain(  # type: ignore[misc]
+        list2array(),  # type: ignore[layer-mismatch-output]
+        Maxout(nO=hidden_size, nP=maxout_pieces),  # type: ignore[layer-mismatch-input]
         LayerNorm(nI=hidden_size),
-        MultiSoftmax([256] * nr_char, nI=hidden_size),
+        MultiSoftmax([256] * nr_char, nI=hidden_size),  # type: ignore[arg-type]
     )
     model = build_masked_language_model(vocab, chain(tok2vec, output_layer))
     model.set_ref("tok2vec", tok2vec)
@@ -171,7 +171,7 @@ def build_masked_language_model(
             if wrapped.has_dim(dim):
                 model.set_dim(dim, wrapped.get_dim(dim))
 
-    mlm_model = Model(
+    mlm_model = Model(  # type: ignore[var-annotated]
         "masked-language-model",
         mlm_forward,
         layers=[wrapped_model],
@@ -189,9 +189,9 @@ class _RandomWords:
         self.probs = [lex.prob for lex in vocab if lex.prob != 0.0]
         self.words = self.words[:10000]
         self.probs = self.probs[:10000]
-        self.probs = numpy.exp(numpy.array(self.probs, dtype="f"))
-        self.probs /= self.probs.sum()
-        self._cache = []
+        self.probs = numpy.exp(numpy.array(self.probs, dtype="f"))  # type: ignore[assignment]
+        self.probs /= self.probs.sum()  # type: ignore[attr-defined]
+        self._cache = []  # type: ignore[var-annotated]
 
     def next(self) -> str:
         if not self._cache:
@@ -210,7 +210,7 @@ def _apply_mask(
 
     N = sum(len(doc) for doc in docs)
     mask = numpy.random.uniform(0.0, 1.0, (N,))
-    mask = mask >= mask_prob
+    mask = mask >= mask_prob  # type: ignore[assignment]
     i = 0
     masked_docs = []
     for doc in docs:

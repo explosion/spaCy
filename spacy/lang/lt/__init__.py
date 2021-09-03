@@ -5,7 +5,7 @@ from .lex_attrs import LEX_ATTRS
 from ...language import Language
 
 
-class LithuanianDefaults(Language.Defaults):
+class LithuanianDefaults(Language.Defaults):  # type: ignore[misc, valid-type]
     infixes = TOKENIZER_INFIXES
     suffixes = TOKENIZER_SUFFIXES
     tokenizer_exceptions = TOKENIZER_EXCEPTIONS

@@ -161,25 +161,25 @@ def MultiHashEmbed(
     if include_static_vectors:
         model = chain(
             concatenate(
-                chain(
-                    FeatureExtractor(attrs),
-                    list2ragged(),
+                chain(  # type: ignore[layer-mismatch-output, misc]
+                    FeatureExtractor(attrs),  # type: ignore[layer-mismatch-output]
+                    list2ragged(),  # type: ignore[layer-mismatch-input]
                     with_array(concatenate(*embeddings)),
                 ),
-                StaticVectors(width, dropout=0.0),
+                StaticVectors(width, dropout=0.0),  # type: ignore[layer-mismatch-output]
             ),
-            with_array(Maxout(width, concat_size, nP=3, dropout=0.0, normalize=True)),
+            with_array(Maxout(width, concat_size, nP=3, dropout=0.0, normalize=True)),  # type: ignore[arg-type]
             ragged2list(),
         )
     else:
-        model = chain(
-            FeatureExtractor(list(attrs)),
-            list2ragged(),
+        model = chain(  # type: ignore[misc]
+            FeatureExtractor(list(attrs)),  # type: ignore[layer-mismatch-output]
+            list2ragged(),  # type: ignore[layer-mismatch-input]
             with_array(concatenate(*embeddings)),
-            with_array(Maxout(width, concat_size, nP=3, dropout=0.0, normalize=True)),
+            with_array(Maxout(width, concat_size, nP=3, dropout=0.0, normalize=True)),  # type: ignore[arg-type]
             ragged2list(),
         )
-    return model
+    return model  # type: ignore[return-value]
 
 
 @registry.architectures("spacy.CharacterEmbed.v2")
@@ -222,37 +222,37 @@ def CharacterEmbed(
     if feature is None:
         raise ValueError(Errors.E911(feat=feature))
     if include_static_vectors:
-        model = chain(
+        model = chain(  # type: ignore[misc]
             concatenate(
-                chain(_character_embed.CharacterEmbed(nM=nM, nC=nC), list2ragged()),
-                chain(
-                    FeatureExtractor([feature]),
-                    list2ragged(),
-                    with_array(HashEmbed(nO=width, nV=rows, column=0, seed=5)),
+                chain(_character_embed.CharacterEmbed(nM=nM, nC=nC), list2ragged()),  # type: ignore[layer-mismatch-input, layer-mismatch-output, misc]
+                chain(  # type: ignore[layer-mismatch-output, misc]
+                    FeatureExtractor([feature]),  # type: ignore[layer-mismatch-output]
+                    list2ragged(),  # type: ignore[layer-mismatch-input]
+                    with_array(HashEmbed(nO=width, nV=rows, column=0, seed=5)),  # type: ignore[arg-type]
                 ),
-                StaticVectors(width, dropout=0.0),
+                StaticVectors(width, dropout=0.0),  # type: ignore[layer-mismatch-output]
             ),
             with_array(
-                Maxout(width, nM * nC + (2 * width), nP=3, normalize=True, dropout=0.0)
+                Maxout(width, nM * nC + (2 * width), nP=3, normalize=True, dropout=0.0)  # type: ignore[arg-type]
             ),
             ragged2list(),
         )
     else:
-        model = chain(
+        model = chain(  # type: ignore[misc]
             concatenate(
-                chain(_character_embed.CharacterEmbed(nM=nM, nC=nC), list2ragged()),
-                chain(
-                    FeatureExtractor([feature]),
-                    list2ragged(),
-                    with_array(HashEmbed(nO=width, nV=rows, column=0, seed=5)),
+                chain(_character_embed.CharacterEmbed(nM=nM, nC=nC), list2ragged()),  # type: ignore[layer-mismatch-input, layer-mismatch-output, misc]
+                chain(  # type: ignore[layer-mismatch-output, misc]
+                    FeatureExtractor([feature]),  # type: ignore[layer-mismatch-output]
+                    list2ragged(),  # type: ignore[layer-mismatch-input]
+                    with_array(HashEmbed(nO=width, nV=rows, column=0, seed=5)),  # type: ignore[arg-type]
                 ),
             ),
             with_array(
-                Maxout(width, nM * nC + width, nP=3, normalize=True, dropout=0.0)
+                Maxout(width, nM * nC + width, nP=3, normalize=True, dropout=0.0)  # type: ignore[arg-type]
             ),
             ragged2list(),
         )
-    return model
+    return model  # type: ignore[return-value]
 
 
 @registry.architectures("spacy.MaxoutWindowEncoder.v2")
@@ -281,10 +281,10 @@ def MaxoutWindowEncoder(
             normalize=True,
         ),
     )
-    model = clone(residual(cnn), depth)
+    model = clone(residual(cnn), depth)  # type: ignore[arg-type]
     model.set_dim("nO", width)
     receptive_field = window_size * depth
-    return with_array(model, pad=receptive_field)
+    return with_array(model, pad=receptive_field)  # type: ignore[arg-type]
 
 
 @registry.architectures("spacy.MishWindowEncoder.v2")
@@ -305,9 +305,9 @@ def MishWindowEncoder(
         expand_window(window_size=window_size),
         Mish(nO=width, nI=width * ((window_size * 2) + 1), dropout=0.0, normalize=True),
     )
-    model = clone(residual(cnn), depth)
+    model = clone(residual(cnn), depth)  # type: ignore[arg-type]
     model.set_dim("nO", width)
-    return with_array(model)
+    return with_array(model)  # type: ignore[arg-type]
 
 
 @registry.architectures("spacy.TorchBiLSTMEncoder.v1")

@@ -22,8 +22,8 @@ class OrthVariantsPaired(BaseModel):
 
 
 class OrthVariants(BaseModel):
-    paired: List[OrthVariantsPaired] = {}
-    single: List[OrthVariantsSingle] = {}
+    paired: List[OrthVariantsPaired] = {}  # type: ignore[assignment]
+    single: List[OrthVariantsSingle] = {}  # type: ignore[assignment]
 
 
 @registry.augmenters("spacy.orth_variants.v1")

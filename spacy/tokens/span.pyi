@@ -7,7 +7,7 @@ from ..lexeme import Lexeme
 from ..vocab import Vocab
 
 class SpanMethod(Protocol):
-    def __call__(self: Span, *args: Any, **kwargs: Any) -> Any: ...
+    def __call__(self: Span, *args: Any, **kwargs: Any) -> Any: ...  # type: ignore[misc]
 
 class Span:
     @classmethod

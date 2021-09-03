@@ -4,7 +4,7 @@ from .punctuation import TOKENIZER_SUFFIXES
 from ...language import Language
 
 
-class UrduDefaults(Language.Defaults):
+class UrduDefaults(Language.Defaults):  # type: ignore[misc, valid-type]
     suffixes = TOKENIZER_SUFFIXES
     lex_attr_getters = LEX_ATTRS
     stop_words = STOP_WORDS

@@ -5,7 +5,7 @@ from .syntax_iterators import SYNTAX_ITERATORS
 from ...language import Language
 
 
-class GermanDefaults(Language.Defaults):
+class GermanDefaults(Language.Defaults):  # type: ignore[misc, valid-type]
     tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     prefixes = TOKENIZER_PREFIXES
     suffixes = TOKENIZER_SUFFIXES

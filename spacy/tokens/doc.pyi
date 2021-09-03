@@ -24,7 +24,7 @@ from pathlib import Path
 import numpy
 
 class DocMethod(Protocol):
-    def __call__(self: Doc, *args: Any, **kwargs: Any) -> Any: ...
+    def __call__(self: Doc, *args: Any, **kwargs: Any) -> Any: ...  # type: ignore[misc]
 
 class Doc:
     vocab: Vocab

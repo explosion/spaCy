@@ -12,7 +12,7 @@ from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from ...language import Language
 
 
-class DutchDefaults(Language.Defaults):
+class DutchDefaults(Language.Defaults):  # type: ignore[misc, valid-type]
     tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     prefixes = TOKENIZER_PREFIXES
     infixes = TOKENIZER_INFIXES

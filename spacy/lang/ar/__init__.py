@@ -5,7 +5,7 @@ from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from ...language import Language
 
 
-class ArabicDefaults(Language.Defaults):
+class ArabicDefaults(Language.Defaults):  # type: ignore[misc, valid-type]
     tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     suffixes = TOKENIZER_SUFFIXES
     stop_words = STOP_WORDS

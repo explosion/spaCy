@@ -21,12 +21,12 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Span]:
         "attr",
         "ROOT",
     ]
-    doc = doclike.doc  # Ensure works on both Doc and Span.
+    doc = doclike.doc  # type: ignore[union-attr]    # Ensure works on both Doc and Span.
     if not doc.has_annotation("DEP"):
         raise ValueError(Errors.E029)
-    np_deps = [doc.vocab.strings.add(label) for label in labels]
-    conj = doc.vocab.strings.add("conj")
-    np_label = doc.vocab.strings.add("NP")
+    np_deps = [doc.vocab.strings.add(label) for label in labels]  # type: ignore[union-attr]
+    conj = doc.vocab.strings.add("conj")  # type: ignore[union-attr]
+    np_label = doc.vocab.strings.add("NP")  # type: ignore[union-attr]
     prev_end = -1
     for i, word in enumerate(doclike):
         if word.pos not in (NOUN, PROPN, PRON):
@@ -36,7 +36,7 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Span]:
             continue
         if word.dep in np_deps:
             prev_end = word.i
-            yield word.left_edge.i, word.i + 1, np_label
+            yield word.left_edge.i, word.i + 1, np_label  # type: ignore[misc]
         elif word.dep == conj:
             head = word.head
             while head.dep == conj and head.head.i < head.i:
@@ -44,7 +44,7 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Span]:
             # If the head is an NP, and we're coordinated to it, we're an NP
             if head.dep in np_deps:
                 prev_end = word.i
-                yield word.left_edge.i, word.i + 1, np_label
+                yield word.left_edge.i, word.i + 1, np_label  # type: ignore[misc]
 
 
 SYNTAX_ITERATORS = {"noun_chunks": noun_chunks}

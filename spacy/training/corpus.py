@@ -43,7 +43,7 @@ def create_docbin_reader(
 def create_jsonl_reader(
     path: Optional[Path], min_length: int = 0, max_length: int = 0, limit: int = 0
 ) -> Callable[["Language"], Iterable[Doc]]:
-    return JsonlCorpus(path, min_length=min_length, max_length=max_length, limit=limit)
+    return JsonlCorpus(path, min_length=min_length, max_length=max_length, limit=limit)  # type: ignore[arg-type]
 
 
 @util.registry.readers("spacy.read_labels.v1")
@@ -57,8 +57,8 @@ def read_labels(path: Path, *, require: bool = False):
 
 def walk_corpus(path: Union[str, Path], file_type) -> List[Path]:
     path = util.ensure_path(path)
-    if not path.is_dir() and path.parts[-1].endswith(file_type):
-        return [path]
+    if not path.is_dir() and path.parts[-1].endswith(file_type):  # type: ignore[union-attr]
+        return [path]  # type: ignore[list-item]
     orig_path = path
     paths = [path]
     locs = []
@@ -67,17 +67,17 @@ def walk_corpus(path: Union[str, Path], file_type) -> List[Path]:
         if str(path) in seen:
             continue
         seen.add(str(path))
-        if path.parts and path.parts[-1].startswith("."):
+        if path.parts and path.parts[-1].startswith("."):  # type: ignore[union-attr]
             continue
-        elif path.is_dir():
-            paths.extend(path.iterdir())
-        elif path.parts[-1].endswith(file_type):
+        elif path.is_dir():  # type: ignore[union-attr]
+            paths.extend(path.iterdir())  # type: ignore[union-attr]
+        elif path.parts[-1].endswith(file_type):  # type: ignore[union-attr]
             locs.append(path)
     if len(locs) == 0:
         warnings.warn(Warnings.W090.format(path=orig_path, format=file_type))
     # It's good to sort these, in case the ordering messes up a cache.
     locs.sort()
-    return locs
+    return locs  # type: ignore[return-value]
 
 
 class Corpus:
@@ -129,15 +129,15 @@ class Corpus:
         """
         ref_docs = self.read_docbin(nlp.vocab, walk_corpus(self.path, FILE_TYPE))
         if self.shuffle:
-            ref_docs = list(ref_docs)
-            random.shuffle(ref_docs)
+            ref_docs = list(ref_docs)  # type: ignore[assignment]
+            random.shuffle(ref_docs)  # type: ignore[arg-type]
 
         if self.gold_preproc:
             examples = self.make_examples_gold_preproc(nlp, ref_docs)
         else:
             examples = self.make_examples(nlp, ref_docs)
         for real_eg in examples:
-            for augmented_eg in self.augmenter(nlp, real_eg):
+            for augmented_eg in self.augmenter(nlp, real_eg):  # type: ignore[operator]
                 yield augmented_eg
 
     def _make_example(
@@ -190,7 +190,7 @@ class Corpus:
         i = 0
         for loc in locs:
             loc = util.ensure_path(loc)
-            if loc.parts[-1].endswith(FILE_TYPE):
+            if loc.parts[-1].endswith(FILE_TYPE):  # type: ignore[union-attr]
                 doc_bin = DocBin().from_disk(loc)
                 docs = doc_bin.get_docs(vocab)
                 for doc in docs:

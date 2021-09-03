@@ -56,7 +56,7 @@ def init_nlp(config: Config, *, use_gpu: int = -1) -> "Language":
                 field="training.dev_corpus", type=type(T["dev_corpus"])
             )
         )
-    train_corpus, dev_corpus = resolve_dot_names(config, dot_names)
+    train_corpus, dev_corpus = resolve_dot_names(config, dot_names)  # type: ignore[misc]
     optimizer = T["optimizer"]
     # Components that shouldn't be updated during training
     frozen_components = T["frozen_components"]
@@ -78,10 +78,10 @@ def init_nlp(config: Config, *, use_gpu: int = -1) -> "Language":
                 f"in [initialize]. More info: https://spacy.io/api/cli#init_labels"
             )
             nlp.initialize(
-                lambda: islice(train_corpus(nlp), sample_size), sgd=optimizer
+                lambda: islice(train_corpus(nlp), sample_size), sgd=optimizer  # type: ignore[has-type]
             )
         else:
-            nlp.initialize(lambda: train_corpus(nlp), sgd=optimizer)
+            nlp.initialize(lambda: train_corpus(nlp), sgd=optimizer)  # type: ignore[has-type]
         logger.info(f"Initialized pipeline components: {nlp.pipe_names}")
     # Detect components with listeners that are not frozen consistently
     for name, proc in nlp.pipeline:
@@ -100,7 +100,7 @@ def init_nlp(config: Config, *, use_gpu: int = -1) -> "Language":
     return nlp
 
 
-def init_vocab(
+def init_vocab(  # type: ignore[return]
     nlp: "Language",
     *,
     data: Optional[Path] = None,
@@ -124,7 +124,7 @@ def init_vocab(
             oov_prob = min(lex.prob for lex in nlp.vocab) - 1
         else:
             oov_prob = DEFAULT_OOV_PROB
-        nlp.vocab.cfg.update({"oov_prob": oov_prob})
+        nlp.vocab.cfg.update({"oov_prob": oov_prob})  # type: ignore[attr-defined]
         logger.info(f"Added {len(nlp.vocab)} lexical entries to the vocab")
     logger.info("Created vocabulary")
     if vectors is not None:
@@ -132,7 +132,7 @@ def init_vocab(
         logger.info(f"Added vectors: {vectors}")
     # warn if source model vectors are not identical
     sourced_vectors_hashes = nlp.meta.pop("_sourced_vectors_hashes", {})
-    vectors_hash = hash(nlp.vocab.vectors.to_bytes())
+    vectors_hash = hash(nlp.vocab.vectors.to_bytes())  # type: ignore[attr-defined]
     for sourced_component, sourced_vectors_hash in sourced_vectors_hashes.items():
         if vectors_hash != sourced_vectors_hash:
             warnings.warn(Warnings.W113.format(name=sourced_component))
@@ -155,18 +155,18 @@ def load_vectors_into_model(
         err = ConfigValidationError.from_error(e, title=title, desc=desc)
         raise err from None
 
-    if len(vectors_nlp.vocab.vectors.keys()) == 0:
+    if len(vectors_nlp.vocab.vectors.keys()) == 0:  # type: ignore[attr-defined]
         logger.warning(Warnings.W112.format(name=name))
 
-    nlp.vocab.vectors = vectors_nlp.vocab.vectors
+    nlp.vocab.vectors = vectors_nlp.vocab.vectors  # type: ignore[attr-defined]
     for lex in nlp.vocab:
-        lex.rank = nlp.vocab.vectors.key2row.get(lex.orth, OOV_RANK)
+        lex.rank = nlp.vocab.vectors.key2row.get(lex.orth, OOV_RANK)  # type: ignore[attr-defined]
     if add_strings:
         # I guess we should add the strings from the vectors_nlp model?
         # E.g. if someone does a similarity query, they might expect the strings.
-        for key in nlp.vocab.vectors.key2row:
-            if key in vectors_nlp.vocab.strings:
-                nlp.vocab.strings.add(vectors_nlp.vocab.strings[key])
+        for key in nlp.vocab.vectors.key2row:  # type: ignore[attr-defined]
+            if key in vectors_nlp.vocab.strings:  # type: ignore[attr-defined]
+                nlp.vocab.strings.add(vectors_nlp.vocab.strings[key])  # type: ignore[attr-defined]
 
 
 def init_tok2vec(
@@ -202,10 +202,10 @@ def convert_vectors(
 ) -> None:
     vectors_loc = ensure_path(vectors_loc)
     if vectors_loc and vectors_loc.parts[-1].endswith(".npz"):
-        nlp.vocab.vectors = Vectors(data=numpy.load(vectors_loc.open("rb")))
+        nlp.vocab.vectors = Vectors(data=numpy.load(vectors_loc.open("rb")))  # type: ignore[attr-defined]
         for lex in nlp.vocab:
             if lex.rank and lex.rank != OOV_RANK:
-                nlp.vocab.vectors.add(lex.orth, row=lex.rank)
+                nlp.vocab.vectors.add(lex.orth, row=lex.rank)  # type: ignore[attr-defined]
     else:
         if vectors_loc:
             logger.info(f"Reading vectors from {vectors_loc}")
@@ -218,13 +218,13 @@ def convert_vectors(
                 if word not in nlp.vocab:
                     nlp.vocab[word]
         if vectors_data is not None:
-            nlp.vocab.vectors = Vectors(data=vectors_data, keys=vector_keys)
+            nlp.vocab.vectors = Vectors(data=vectors_data, keys=vector_keys)  # type: ignore[attr-defined]
     if name is None:
         # TODO: Is this correct? Does this matter?
-        nlp.vocab.vectors.name = f"{nlp.meta['lang']}_{nlp.meta['name']}.vectors"
+        nlp.vocab.vectors.name = f"{nlp.meta['lang']}_{nlp.meta['name']}.vectors"  # type: ignore[attr-defined]
     else:
-        nlp.vocab.vectors.name = name
-    nlp.meta["vectors"]["name"] = nlp.vocab.vectors.name
+        nlp.vocab.vectors.name = name  # type: ignore[attr-defined]
+    nlp.meta["vectors"]["name"] = nlp.vocab.vectors.name  # type: ignore[attr-defined]
     if prune >= 1:
         nlp.vocab.prune_vectors(prune)
 
@@ -253,16 +253,16 @@ def open_file(loc: Union[str, Path]) -> IO:
     """Handle .gz, .tar.gz or unzipped files"""
     loc = ensure_path(loc)
     if tarfile.is_tarfile(str(loc)):
-        return tarfile.open(str(loc), "r:gz")
-    elif loc.parts[-1].endswith("gz"):
-        return (line.decode("utf8") for line in gzip.open(str(loc), "r"))
-    elif loc.parts[-1].endswith("zip"):
+        return tarfile.open(str(loc), "r:gz")  # type: ignore[return-value]
+    elif loc.parts[-1].endswith("gz"):  # type: ignore[union-attr]
+        return (line.decode("utf8") for line in gzip.open(str(loc), "r"))  # type: ignore[return-value]
+    elif loc.parts[-1].endswith("zip"):  # type: ignore[union-attr]
         zip_file = zipfile.ZipFile(str(loc))
         names = zip_file.namelist()
         file_ = zip_file.open(names[0])
-        return (line.decode("utf8") for line in file_)
+        return (line.decode("utf8") for line in file_)  # type: ignore[return-value]
     else:
-        return loc.open("r", encoding="utf8")
+        return loc.open("r", encoding="utf8")  # type: ignore[union-attr]
 
 
 def ensure_shape(vectors_loc):

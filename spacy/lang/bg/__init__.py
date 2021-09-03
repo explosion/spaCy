@@ -8,7 +8,7 @@ from ...attrs import LANG
 from ...util import update_exc
 
 
-class BulgarianDefaults(Language.Defaults):
+class BulgarianDefaults(Language.Defaults):  # type: ignore[misc, valid-type]
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
     lex_attr_getters[LANG] = lambda text: "bg"
 

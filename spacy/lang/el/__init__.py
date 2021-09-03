@@ -10,7 +10,7 @@ from .lemmatizer import GreekLemmatizer
 from ...language import Language
 
 
-class GreekDefaults(Language.Defaults):
+class GreekDefaults(Language.Defaults):  # type: ignore[misc, valid-type]
     tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     prefixes = TOKENIZER_PREFIXES
     suffixes = TOKENIZER_SUFFIXES

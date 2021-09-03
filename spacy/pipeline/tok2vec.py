@@ -60,8 +60,8 @@ class Tok2Vec(TrainablePipe):
         self.vocab = vocab
         self.model = model
         self.name = name
-        self.listener_map = {}
-        self.cfg = {}
+        self.listener_map = {}  # type: ignore[var-annotated]
+        self.cfg = {}  # type: ignore[var-annotated]
 
     @property
     def listeners(self) -> List["Tok2VecListener"]:
@@ -119,7 +119,7 @@ class Tok2Vec(TrainablePipe):
         DOCS: https://spacy.io/api/tok2vec#predict
         """
         tokvecs = self.model.predict(docs)
-        batch_id = Tok2VecListener.get_batch_id(docs)
+        batch_id = Tok2VecListener.get_batch_id(docs)  # type: ignore[arg-type]
         for listener in self.listeners:
             listener.receive(batch_id, tokvecs, _empty_backprop)
         return tokvecs
@@ -261,7 +261,7 @@ class Tok2VecListener(Model):
         predictions and callback are produced by the upstream Tok2Vec component,
         and later will be used when the listener's component's model is called.
         """
-        self._batch_id = batch_id
+        self._batch_id = batch_id  # type: ignore[assignment]
         self._outputs = outputs
         self._backprop = backprop
 

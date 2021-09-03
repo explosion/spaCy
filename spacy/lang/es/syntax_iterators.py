@@ -7,18 +7,18 @@ from ...tokens import Doc, Span, Token
 
 def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Span]:
     """Detect base noun phrases from a dependency parse. Works on Doc and Span."""
-    doc = doclike.doc
+    doc = doclike.doc  # type: ignore[union-attr]
     if not doc.has_annotation("DEP"):
         raise ValueError(Errors.E029)
     if not len(doc):
         return
-    np_label = doc.vocab.strings.add("NP")
+    np_label = doc.vocab.strings.add("NP")  # type: ignore[union-attr]
     left_labels = ["det", "fixed", "neg"]  # ['nunmod', 'det', 'appos', 'fixed']
     right_labels = ["flat", "fixed", "compound", "neg"]
     stop_labels = ["punct"]
-    np_left_deps = [doc.vocab.strings.add(label) for label in left_labels]
-    np_right_deps = [doc.vocab.strings.add(label) for label in right_labels]
-    stop_deps = [doc.vocab.strings.add(label) for label in stop_labels]
+    np_left_deps = [doc.vocab.strings.add(label) for label in left_labels]  # type: ignore[union-attr]
+    np_right_deps = [doc.vocab.strings.add(label) for label in right_labels]  # type: ignore[union-attr]
+    stop_deps = [doc.vocab.strings.add(label) for label in stop_labels]  # type: ignore[union-attr]
 
     prev_right = -1
     for token in doclike:
@@ -28,7 +28,7 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Span]:
             )
             if left.i <= prev_right:
                 continue
-            yield left.i, right.i + 1, np_label
+            yield left.i, right.i + 1, np_label  # type: ignore[misc]
             prev_right = right.i
 
 

@@ -15,12 +15,12 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Span]:
     # fmt: off
     labels = ["sb", "oa", "da", "nk", "mo", "ag", "ROOT", "root", "cj", "pd", "og", "app"]
     # fmt: on
-    doc = doclike.doc  # Ensure works on both Doc and Span.
+    doc = doclike.doc  # type: ignore[union-attr]    # Ensure works on both Doc and Span.
     if not doc.has_annotation("DEP"):
         raise ValueError(Errors.E029)
-    np_label = doc.vocab.strings.add("NP")
-    np_deps = set(doc.vocab.strings.add(label) for label in labels)
-    close_app = doc.vocab.strings.add("nk")
+    np_label = doc.vocab.strings.add("NP")  # type: ignore[union-attr]
+    np_deps = set(doc.vocab.strings.add(label) for label in labels)  # type: ignore[union-attr]
+    close_app = doc.vocab.strings.add("nk")  # type: ignore[union-attr]
     rbracket = 0
     prev_end = -1
     for i, word in enumerate(doclike):
@@ -37,7 +37,7 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Span]:
                 if rdep.pos in (NOUN, PROPN) and rdep.dep == close_app:
                     rbracket = rdep.i + 1
             prev_end = rbracket - 1
-            yield word.left_edge.i, rbracket, np_label
+            yield word.left_edge.i, rbracket, np_label  # type: ignore[misc]
 
 
 SYNTAX_ITERATORS = {"noun_chunks": noun_chunks}

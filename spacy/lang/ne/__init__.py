@@ -3,7 +3,7 @@ from .lex_attrs import LEX_ATTRS
 from ...language import Language
 
 
-class NepaliDefaults(Language.Defaults):
+class NepaliDefaults(Language.Defaults):  # type: ignore[misc, valid-type]
     stop_words = STOP_WORDS
     lex_attr_getters = LEX_ATTRS
 

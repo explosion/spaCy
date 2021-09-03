@@ -53,8 +53,8 @@ DEFAULT_NEL_MODEL = Config().from_str(default_model_config)["model"]
     },
     default_score_weights={
         "nel_micro_f": 1.0,
-        "nel_micro_r": None,
-        "nel_micro_p": None,
+        "nel_micro_r": None,  # type: ignore[dict-item]
+        "nel_micro_p": None,  # type: ignore[dict-item]
     },
 )
 def make_entity_linker(
@@ -140,7 +140,7 @@ class EntityLinker(TrainablePipe):
         self.incl_prior = incl_prior
         self.incl_context = incl_context
         self.get_candidates = get_candidates
-        self.cfg = {}
+        self.cfg = {}  # type: ignore[var-annotated]
         self.distance = CosineDistance(normalize=False)
         # how many neighbour sentences to take into account
         # create an empty KB by default. If you want to load a predefined one, specify it in 'initialize'.
@@ -166,7 +166,7 @@ class EntityLinker(TrainablePipe):
         get_examples: Callable[[], Iterable[Example]],
         *,
         nlp: Optional[Language] = None,
-        kb_loader: Callable[[Vocab], KnowledgeBase] = None,
+        kb_loader: Callable[[Vocab], KnowledgeBase] = None,  # type: ignore[assignment]
     ):
         """Initialize the pipe for training, using a representative set
         of data examples.
@@ -271,14 +271,14 @@ class EntityLinker(TrainablePipe):
                 if kb_id:
                     entity_encoding = self.kb.get_vector(kb_id)
                     entity_encodings.append(entity_encoding)
-        entity_encodings = self.model.ops.asarray(entity_encodings, dtype="float32")
-        if sentence_encodings.shape != entity_encodings.shape:
+        entity_encodings = self.model.ops.asarray(entity_encodings, dtype="float32")  # type: ignore[assignment]
+        if sentence_encodings.shape != entity_encodings.shape:  # type: ignore[attr-defined]
             err = Errors.E147.format(
                 method="get_loss", msg="gold entities do not match up"
             )
             raise RuntimeError(err)
-        gradients = self.distance.get_grad(sentence_encodings, entity_encodings)
-        loss = self.distance.get_loss(sentence_encodings, entity_encodings)
+        gradients = self.distance.get_grad(sentence_encodings, entity_encodings)  # type: ignore[arg-type]
+        loss = self.distance.get_loss(sentence_encodings, entity_encodings)  # type: ignore[arg-type]
         loss = loss / len(entity_encodings)
         return float(loss), gradients
 
@@ -294,7 +294,7 @@ class EntityLinker(TrainablePipe):
         """
         self.validate_kb()
         entity_count = 0
-        final_kb_ids = []
+        final_kb_ids = []  # type: ignore[var-annotated]
         if not docs:
             return final_kb_ids
         if isinstance(docs, Doc):
@@ -328,12 +328,12 @@ class EntityLinker(TrainablePipe):
                         if not candidates:
                             # no prediction possible for this entity - setting to NIL
                             final_kb_ids.append(self.NIL)
-                        elif len(candidates) == 1:
+                        elif len(candidates) == 1:  # type: ignore[arg-type]
                             # shortcut for efficiency reasons: take the 1 candidate
                             # TODO: thresholding
-                            final_kb_ids.append(candidates[0].entity_)
+                            final_kb_ids.append(candidates[0].entity_)  # type: ignore[index]
                         else:
-                            random.shuffle(candidates)
+                            random.shuffle(candidates)  # type: ignore[arg-type]
                             # set all prior probabilities to 0 if incl_prior=False
                             prior_probs = xp.asarray([c.prior_prob for c in candidates])
                             if not self.incl_prior:
@@ -361,7 +361,7 @@ class EntityLinker(TrainablePipe):
                                 scores = prior_probs + sims - (prior_probs * sims)
                             # TODO: thresholding
                             best_index = scores.argmax().item()
-                            best_candidate = candidates[best_index]
+                            best_candidate = candidates[best_index]  # type: ignore[index]
                             final_kb_ids.append(best_candidate.entity_)
         if not (len(final_kb_ids) == entity_count):
             err = Errors.E147.format(
@@ -453,7 +453,7 @@ class EntityLinker(TrainablePipe):
         DOCS: https://spacy.io/api/entitylinker#to_disk
         """
         serialize = {}
-        serialize["vocab"] = lambda p: self.vocab.to_disk(p, exclude=exclude)
+        serialize["vocab"] = lambda p: self.vocab.to_disk(p, exclude=exclude)  # type: ignore[arg-type]
         serialize["cfg"] = lambda p: srsly.write_json(p, self.cfg)
         serialize["kb"] = lambda p: self.kb.to_disk(p)
         serialize["model"] = lambda p: self.model.to_disk(p)
@@ -480,7 +480,7 @@ class EntityLinker(TrainablePipe):
 
         deserialize = {}
         deserialize["cfg"] = lambda p: self.cfg.update(deserialize_config(p))
-        deserialize["vocab"] = lambda p: self.vocab.from_disk(p, exclude=exclude)
+        deserialize["vocab"] = lambda p: self.vocab.from_disk(p, exclude=exclude)  # type: ignore[arg-type, assignment]
         deserialize["kb"] = lambda p: self.kb.from_disk(p)
         deserialize["model"] = load_model
         util.from_disk(path, deserialize, exclude)

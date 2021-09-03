@@ -10,7 +10,7 @@ from ...language import Language
 # Replaced characters using cedillas with the correct ones (ș and ț)
 
 
-class RomanianDefaults(Language.Defaults):
+class RomanianDefaults(Language.Defaults):  # type: ignore[misc, valid-type]
     tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     prefixes = TOKENIZER_PREFIXES
     suffixes = TOKENIZER_SUFFIXES

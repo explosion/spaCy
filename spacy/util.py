@@ -243,7 +243,7 @@ def get_lang_class(lang: str) -> "Language":
             module = importlib.import_module(f".lang.{lang}", "spacy")
         except ImportError as err:
             raise ImportError(Errors.E048.format(lang=lang, err=err)) from err
-        set_lang_class(lang, getattr(module, module.__all__[0]))
+        set_lang_class(lang, getattr(module, module.__all__[0]))  # type: ignore[attr-defined]
     return registry.languages.get(lang)
 
 
@@ -276,9 +276,9 @@ def load_language_data(path: Union[str, Path]) -> Union[dict, list]:
     RETURNS: The loaded data.
     """
     path = ensure_path(path)
-    if path.exists():
+    if path.exists():  # type: ignore[union-attr]
         return srsly.read_json(path)
-    path = path.with_suffix(path.suffix + ".gz")
+    path = path.with_suffix(path.suffix + ".gz")  # type: ignore[union-attr]
     if path.exists():
         return srsly.read_gzip_json(path)
     raise ValueError(Errors.E160.format(path=path))
@@ -316,15 +316,15 @@ def load_model(
     kwargs = {"vocab": vocab, "disable": disable, "exclude": exclude, "config": config}
     if isinstance(name, str):  # name or string path
         if name.startswith("blank:"):  # shortcut for blank model
-            return get_lang_class(name.replace("blank:", ""))()
+            return get_lang_class(name.replace("blank:", ""))()  # type: ignore[call-arg, return-value]
         if is_package(name):  # installed as package
-            return load_model_from_package(name, **kwargs)
+            return load_model_from_package(name, **kwargs)  # type: ignore[arg-type]
         if Path(name).exists():  # path to model data directory
-            return load_model_from_path(Path(name), **kwargs)
+            return load_model_from_path(Path(name), **kwargs)  # type: ignore[arg-type]
     elif hasattr(name, "exists"):  # Path or Path-like to model data
-        return load_model_from_path(name, **kwargs)
+        return load_model_from_path(name, **kwargs)  # type: ignore[arg-type]
     if name in OLD_MODEL_SHORTCUTS:
-        raise IOError(Errors.E941.format(name=name, full=OLD_MODEL_SHORTCUTS[name]))
+        raise IOError(Errors.E941.format(name=name, full=OLD_MODEL_SHORTCUTS[name]))  # type: ignore[index]
     raise IOError(Errors.E050.format(name=name))
 
 
@@ -351,7 +351,7 @@ def load_model_from_package(
     RETURNS (Language): The loaded nlp object.
     """
     cls = importlib.import_module(name)
-    return cls.load(vocab=vocab, disable=disable, exclude=exclude, config=config)
+    return cls.load(vocab=vocab, disable=disable, exclude=exclude, config=config)  # type: ignore[attr-defined]
 
 
 def load_model_from_path(
@@ -379,11 +379,11 @@ def load_model_from_path(
         keyed by section values in dot notation.
     RETURNS (Language): The loaded nlp object.
     """
-    if not model_path.exists():
+    if not model_path.exists():  # type: ignore[union-attr]
         raise IOError(Errors.E052.format(path=model_path))
     if not meta:
         meta = get_model_meta(model_path)
-    config_path = model_path / "config.cfg"
+    config_path = model_path / "config.cfg"  # type: ignore[operator]
     overrides = dict_to_dot(config)
     config = load_config(config_path, overrides=overrides)
     nlp = load_model_from_config(config, vocab=vocab, disable=disable, exclude=exclude)
@@ -458,7 +458,7 @@ def resolve_dot_names(config: Config, dot_names: List[Optional[str]]) -> Tuple[A
     """
     # TODO: include schema?
     resolved = {}
-    output = []
+    output = []  # type: ignore[var-annotated]
     errors = []
     for name in dot_names:
         if name is None:
@@ -474,13 +474,13 @@ def resolve_dot_names(config: Config, dot_names: List[Optional[str]]) -> Tuple[A
                     result = registry.resolve(config[section])
                 resolved[section] = result
             try:
-                output.append(dot_to_object(resolved, name))
+                output.append(dot_to_object(resolved, name))  # type: ignore[arg-type]
             except KeyError:
                 msg = f"not a valid section reference: {name}"
                 errors.append({"loc": name.split("."), "msg": msg})
     if errors:
         raise ConfigValidationError(config=config, errors=errors)
-    return tuple(output)
+    return tuple(output)  # type: ignore[return-value]
 
 
 def load_model_from_init_py(
@@ -578,8 +578,8 @@ def get_package_version(name: str) -> Optional[str]:
     RETURNS (str / None): The version or None if package not installed.
     """
     try:
-        return importlib_metadata.version(name)
-    except importlib_metadata.PackageNotFoundError:
+        return importlib_metadata.version(name)  # type: ignore[attr-defined]
+    except importlib_metadata.PackageNotFoundError:  # type: ignore[attr-defined]
         return None
 
 
@@ -602,7 +602,7 @@ def is_compatible_version(
         constraint = f"=={constraint}"
     try:
         spec = SpecifierSet(constraint)
-        version = Version(version)
+        version = Version(version)  # type: ignore[assignment]
     except (InvalidSpecifier, InvalidVersion):
         return None
     spec.prereleases = prereleases
@@ -705,10 +705,10 @@ def load_meta(path: Union[str, Path]) -> Dict[str, Any]:
     RETURNS (Dict[str, Any]): The loaded meta.
     """
     path = ensure_path(path)
-    if not path.parent.exists():
-        raise IOError(Errors.E052.format(path=path.parent))
-    if not path.exists() or not path.is_file():
-        raise IOError(Errors.E053.format(path=path.parent, name="meta.json"))
+    if not path.parent.exists():  # type: ignore[union-attr]
+        raise IOError(Errors.E052.format(path=path.parent))  # type: ignore[union-attr]
+    if not path.exists() or not path.is_file():  # type: ignore[union-attr]
+        raise IOError(Errors.E053.format(path=path.parent, name="meta.json"))  # type: ignore[union-attr]
     meta = srsly.read_json(path)
     for setting in ["lang", "name", "version"]:
         if setting not in meta or not meta[setting]:
@@ -716,7 +716,7 @@ def load_meta(path: Union[str, Path]) -> Dict[str, Any]:
     if "spacy_version" in meta:
         if not is_compatible_version(about.__version__, meta["spacy_version"]):
             lower_version = get_model_lower_version(meta["spacy_version"])
-            lower_version = get_minor_version(lower_version)
+            lower_version = get_minor_version(lower_version)  # type: ignore[arg-type]
             if lower_version is not None:
                 lower_version = "v" + lower_version
             elif "spacy_git_version" in meta:
@@ -758,7 +758,7 @@ def is_package(name: str) -> bool:
     RETURNS (bool): True if installed package, False if not.
     """
     try:
-        importlib_metadata.distribution(name)
+        importlib_metadata.distribution(name)  # type: ignore[attr-defined]
         return True
     except:  # noqa: E722
         return False
@@ -862,16 +862,16 @@ def run_command(
             message += f"\n\nProcess log (stdout and stderr):\n\n"
             message += ret.stdout
         error = subprocess.SubprocessError(message)
-        error.ret = ret
-        error.command = cmd_str
+        error.ret = ret  # type: ignore[attr-defined]
+        error.command = cmd_str  # type: ignore[attr-defined]
         raise error
     elif ret.returncode != 0:
         sys.exit(ret.returncode)
     return ret
 
 
-@contextmanager
-def working_dir(path: Union[str, Path]) -> None:
+@contextmanager  # type: ignore[arg-type, misc]
+def working_dir(path: Union[str, Path]) -> None:  # type: ignore[misc]
     """Change current working directory and returns to previous on exit.
 
     path (str / Path): The directory to navigate to.
@@ -919,7 +919,7 @@ def is_in_jupyter() -> bool:
     """
     # https://stackoverflow.com/a/39662359/6400719
     try:
-        shell = get_ipython().__class__.__name__
+        shell = get_ipython().__class__.__name__  # type: ignore[name-defined]
         if shell == "ZMQInteractiveShell":
             return True  # Jupyter notebook or qtconsole
     except NameError:
@@ -986,7 +986,7 @@ def get_async(stream, numpy_array):
 
 def read_regex(path: Union[str, Path]) -> Pattern:
     path = ensure_path(path)
-    with path.open(encoding="utf8") as file_:
+    with path.open(encoding="utf8") as file_:  # type: ignore[union-attr]
         entries = file_.read().split("\n")
     expression = "|".join(
         ["^" + re.escape(piece) for piece in entries if piece.strip()]
@@ -1001,7 +1001,7 @@ def compile_prefix_regex(entries: Iterable[Union[str, Pattern]]) -> Pattern:
         spacy.lang.punctuation.TOKENIZER_PREFIXES.
     RETURNS (Pattern): The regex object. to be used for Tokenizer.prefix_search.
     """
-    expression = "|".join(["^" + piece for piece in entries if piece.strip()])
+    expression = "|".join(["^" + piece for piece in entries if piece.strip()])  # type: ignore[operator, union-attr]
     return re.compile(expression)
 
 
@@ -1012,7 +1012,7 @@ def compile_suffix_regex(entries: Iterable[Union[str, Pattern]]) -> Pattern:
         spacy.lang.punctuation.TOKENIZER_SUFFIXES.
     RETURNS (Pattern): The regex object. to be used for Tokenizer.suffix_search.
     """
-    expression = "|".join([piece + "$" for piece in entries if piece.strip()])
+    expression = "|".join([piece + "$" for piece in entries if piece.strip()])  # type: ignore[operator, union-attr]
     return re.compile(expression)
 
 
@@ -1023,7 +1023,7 @@ def compile_infix_regex(entries: Iterable[Union[str, Pattern]]) -> Pattern:
         spacy.lang.punctuation.TOKENIZER_INFIXES.
     RETURNS (regex object): The regex object. to be used for Tokenizer.infix_finditer.
     """
-    expression = "|".join([piece for piece in entries if piece.strip()])
+    expression = "|".join([piece for piece in entries if piece.strip()])  # type: ignore[misc, union-attr]
     return re.compile(expression)
 
 
@@ -1045,7 +1045,7 @@ def _get_attr_unless_lookup(
 ) -> Any:
     for lookup in lookups:
         if string in lookup:
-            return lookup[string]
+            return lookup[string]  # type: ignore[index]
     return default_func(string)
 
 
@@ -1127,7 +1127,7 @@ def filter_spans(spans: Iterable["Span"]) -> List["Span"]:
     get_sort_key = lambda span: (span.end - span.start, -span.start)
     sorted_spans = sorted(spans, key=get_sort_key, reverse=True)
     result = []
-    seen_tokens = set()
+    seen_tokens = set()  # type: ignore[var-annotated]
     for span in sorted_spans:
         # Check for end - 1 here because boundaries are inclusive
         if span.start not in seen_tokens and span.end - 1 not in seen_tokens:
@@ -1146,7 +1146,7 @@ def from_bytes(
     setters: Dict[str, Callable[[bytes], Any]],
     exclude: Iterable[str],
 ) -> None:
-    return from_dict(srsly.msgpack_loads(bytes_data), setters, exclude)
+    return from_dict(srsly.msgpack_loads(bytes_data), setters, exclude)  # type: ignore[return-value]
 
 
 def to_dict(
@@ -1178,13 +1178,13 @@ def to_disk(
     exclude: Iterable[str],
 ) -> Path:
     path = ensure_path(path)
-    if not path.exists():
-        path.mkdir()
+    if not path.exists():  # type: ignore[union-attr]
+        path.mkdir()  # type: ignore[union-attr]
     for key, writer in writers.items():
         # Split to support file names like meta.json
         if key.split(".")[0] not in exclude:
-            writer(path / key)
-    return path
+            writer(path / key)  # type: ignore[operator]
+    return path  # type: ignore[return-value]
 
 
 def from_disk(
@@ -1196,8 +1196,8 @@ def from_disk(
     for key, reader in readers.items():
         # Split to support file names like meta.json
         if key.split(".")[0] not in exclude:
-            reader(path / key)
-    return path
+            reader(path / key)  # type: ignore[operator]
+    return path  # type: ignore[return-value]
 
 
 def import_file(name: str, loc: Union[str, Path]) -> ModuleType:
@@ -1208,8 +1208,8 @@ def import_file(name: str, loc: Union[str, Path]) -> ModuleType:
     RETURNS: The loaded module.
     """
     spec = importlib.util.spec_from_file_location(name, str(loc))
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
+    module = importlib.util.module_from_spec(spec)  # type: ignore[arg-type]
+    spec.loader.exec_module(module)  # type: ignore[union-attr]
     return module
 
 
@@ -1299,7 +1299,7 @@ def dot_to_dict(values: Dict[str, Any]) -> Dict[str, dict]:
     values (Dict[str, Any]): The key/value pairs to convert.
     RETURNS (Dict[str, dict]): The converted values.
     """
-    result = {}
+    result = {}  # type: ignore[var-annotated]
     for key, value in values.items():
         path = result
         parts = key.lower().split(".")
@@ -1396,7 +1396,7 @@ def combine_score_weights(
     # We first need to extract all None/null values for score weights that
     # shouldn't be shown in the table *or* be weighted
     result = {key: value for w_dict in weights for (key, value) in w_dict.items()}
-    result.update(overrides)
+    result.update(overrides)  # type: ignore[arg-type]
     weight_sum = sum([v if v else 0.0 for v in result.values()])
     for key, value in result.items():
         if value and weight_sum > 0:
@@ -1563,7 +1563,7 @@ def packages_distributions() -> Dict[str, List[str]]:
     it's not available in the builtin importlib.metadata.
     """
     pkg_to_dist = defaultdict(list)
-    for dist in importlib_metadata.distributions():
+    for dist in importlib_metadata.distributions():  # type: ignore[attr-defined]
         for pkg in (dist.read_text("top_level.txt") or "").split():
             pkg_to_dist[pkg].append(dist.metadata["Name"])
     return dict(pkg_to_dist)

@@ -100,13 +100,13 @@ def debug_data(
 
     # Create the gold corpus to be able to better analyze data
     dot_names = [T["train_corpus"], T["dev_corpus"]]
-    train_corpus, dev_corpus = resolve_dot_names(config, dot_names)
+    train_corpus, dev_corpus = resolve_dot_names(config, dot_names)  # type: ignore[misc]
 
-    nlp.initialize(lambda: train_corpus(nlp))
+    nlp.initialize(lambda: train_corpus(nlp))  # type: ignore[has-type]
     msg.good("Pipeline can be initialized with data")
 
-    train_dataset = list(train_corpus(nlp))
-    dev_dataset = list(dev_corpus(nlp))
+    train_dataset = list(train_corpus(nlp))  # type: ignore[has-type]
+    dev_dataset = list(dev_corpus(nlp))  # type: ignore[has-type]
     msg.good("Corpus is loadable")
 
     # Create all gold data here to avoid iterating over the train_dataset constantly
@@ -167,9 +167,9 @@ def debug_data(
         f"10 most common words: {_format_labels(most_common_words, counts=True)}",
         show=verbose,
     )
-    if len(nlp.vocab.vectors):
+    if len(nlp.vocab.vectors):  # type: ignore[attr-defined]
         msg.info(
-            f"{len(nlp.vocab.vectors)} vectors ({nlp.vocab.vectors.n_keys} "
+            f"{len(nlp.vocab.vectors)} vectors ({nlp.vocab.vectors.n_keys} "  # type: ignore[attr-defined]
             f"unique keys, {nlp.vocab.vectors_length} dimensions)"
         )
         n_missing_vectors = sum(gold_train_data["words_missing_vectors"].values())
@@ -215,14 +215,14 @@ def debug_data(
             for label, count in label_counts.most_common()
             if label != "-"
         ]
-        labels_with_counts = _format_labels(labels_with_counts, counts=True)
-        msg.text(f"Labels in train data: {_format_labels(labels)}", show=verbose)
+        labels_with_counts = _format_labels(labels_with_counts, counts=True)  # type: ignore[assignment]
+        msg.text(f"Labels in train data: {_format_labels(labels)}", show=verbose)  # type: ignore[arg-type]
         missing_labels = model_labels - labels
         if missing_labels:
             msg.warn(
-                "Some model labels are not present in the train data. The "
+                "Some model labels are not present in the train data. The "  # type: ignore[arg-type]
                 "model performance may be degraded for these labels after "
-                f"training: {_format_labels(missing_labels)}."
+                f"training: {_format_labels(missing_labels)}."  # type: ignore[arg-type]
             )
         if gold_train_data["ws_ents"]:
             msg.fail(f"{gold_train_data['ws_ents']} invalid whitespace entity spans")
@@ -283,13 +283,13 @@ def debug_data(
         msg.divider("Text Classification (Exclusive Classes)")
         labels = _get_labels_from_model(nlp, "textcat")
         msg.info(f"Text Classification: {len(labels)} label(s)")
-        msg.text(f"Labels: {_format_labels(labels)}", show=verbose)
+        msg.text(f"Labels: {_format_labels(labels)}", show=verbose)  # type: ignore[arg-type]
         missing_labels = labels - set(gold_train_data["cats"])
         if missing_labels:
             msg.warn(
-                "Some model labels are not present in the train data. The "
+                "Some model labels are not present in the train data. The "  # type: ignore[arg-type]
                 "model performance may be degraded for these labels after "
-                f"training: {_format_labels(missing_labels)}."
+                f"training: {_format_labels(missing_labels)}."  # type: ignore[arg-type]
             )
         if set(gold_train_data["cats"]) != set(gold_dev_data["cats"]):
             msg.warn(
@@ -332,13 +332,13 @@ def debug_data(
         msg.divider("Text Classification (Multilabel)")
         labels = _get_labels_from_model(nlp, "textcat_multilabel")
         msg.info(f"Text Classification: {len(labels)} label(s)")
-        msg.text(f"Labels: {_format_labels(labels)}", show=verbose)
+        msg.text(f"Labels: {_format_labels(labels)}", show=verbose)  # type: ignore[arg-type]
         missing_labels = labels - set(gold_train_data["cats"])
         if missing_labels:
             msg.warn(
-                "Some model labels are not present in the train data. The "
+                "Some model labels are not present in the train data. The "  # type: ignore[arg-type]
                 "model performance may be degraded for these labels after "
-                f"training: {_format_labels(missing_labels)}."
+                f"training: {_format_labels(missing_labels)}."  # type: ignore[arg-type]
             )
         if set(gold_train_data["cats"]) != set(gold_dev_data["cats"]):
             msg.warn(
@@ -378,34 +378,34 @@ def debug_data(
 
     if "tagger" in factory_names:
         msg.divider("Part-of-speech Tagging")
-        labels = [label for label in gold_train_data["tags"]]
+        labels = [label for label in gold_train_data["tags"]]  # type: ignore[assignment]
         model_labels = _get_labels_from_model(nlp, "tagger")
         msg.info(f"{len(labels)} label(s) in train data")
         missing_labels = model_labels - set(labels)
         if missing_labels:
             msg.warn(
-                "Some model labels are not present in the train data. The "
+                "Some model labels are not present in the train data. The "  # type: ignore[arg-type]
                 "model performance may be degraded for these labels after "
-                f"training: {_format_labels(missing_labels)}."
+                f"training: {_format_labels(missing_labels)}."  # type: ignore[arg-type]
             )
-        labels_with_counts = _format_labels(
+        labels_with_counts = _format_labels(  # type: ignore[assignment]
             gold_train_data["tags"].most_common(), counts=True
         )
         msg.text(labels_with_counts, show=verbose)
 
     if "morphologizer" in factory_names:
         msg.divider("Morphologizer (POS+Morph)")
-        labels = [label for label in gold_train_data["morphs"]]
+        labels = [label for label in gold_train_data["morphs"]]  # type: ignore[assignment]
         model_labels = _get_labels_from_model(nlp, "morphologizer")
         msg.info(f"{len(labels)} label(s) in train data")
         missing_labels = model_labels - set(labels)
         if missing_labels:
             msg.warn(
-                "Some model labels are not present in the train data. The "
+                "Some model labels are not present in the train data. The "  # type: ignore[arg-type]
                 "model performance may be degraded for these labels after "
-                f"training: {_format_labels(missing_labels)}."
+                f"training: {_format_labels(missing_labels)}."  # type: ignore[arg-type]
             )
-        labels_with_counts = _format_labels(
+        labels_with_counts = _format_labels(  # type: ignore[assignment]
             gold_train_data["morphs"].most_common(), counts=True
         )
         msg.text(labels_with_counts, show=verbose)
@@ -445,7 +445,7 @@ def debug_data(
             msg.info(f"Found {n_nonproj} nonprojective dev sentence(s)")
         msg.info(f"{len(labels_train_unpreprocessed)} label(s) in train data")
         msg.info(f"{len(labels_train)} label(s) in projectivized train data")
-        labels_with_counts = _format_labels(
+        labels_with_counts = _format_labels(  # type: ignore[assignment]
             gold_train_unpreprocessed_data["deps"].most_common(), counts=True
         )
         msg.text(labels_with_counts, show=verbose)
@@ -589,26 +589,26 @@ def _compile_gold(
         gold = eg.reference
         doc = eg.predicted
         valid_words = [x.text for x in gold]
-        data["words"].update(valid_words)
-        data["n_words"] += len(valid_words)
+        data["words"].update(valid_words)  # type: ignore[attr-defined]
+        data["n_words"] += len(valid_words)  # type: ignore[operator]
         align = eg.alignment
         for token in doc:
             if token.orth_.isspace():
                 continue
             if align.x2y.lengths[token.i] != 1:
-                data["n_misaligned_words"] += 1
-        data["texts"].add(doc.text)
-        if len(nlp.vocab.vectors):
+                data["n_misaligned_words"] += 1  # type: ignore[operator]
+        data["texts"].add(doc.text)  # type: ignore[attr-defined]
+        if len(nlp.vocab.vectors):  # type: ignore[attr-defined]
             for word in [t.text for t in doc]:
-                if nlp.vocab.strings[word] not in nlp.vocab.vectors:
-                    data["words_missing_vectors"].update([word])
+                if nlp.vocab.strings[word] not in nlp.vocab.vectors:  # type: ignore[attr-defined]
+                    data["words_missing_vectors"].update([word])  # type: ignore[attr-defined]
         if "ner" in factory_names:
             for i, label in enumerate(eg.get_aligned_ner()):
                 if label is None:
                     continue
                 if label.startswith(("B-", "U-", "L-")) and doc[i].is_space:
                     # "Illegal" whitespace entity
-                    data["ws_ents"] += 1
+                    data["ws_ents"] += 1  # type: ignore[operator]
                 if label.startswith(("B-", "U-", "L-")) and doc[i].text in [
                     ".",
                     "'",
@@ -618,21 +618,21 @@ def _compile_gold(
                 ]:
                     # punctuation entity: could be replaced by whitespace when training with noise,
                     # so add a warning to alert the user to this unexpected side effect.
-                    data["punct_ents"] += 1
+                    data["punct_ents"] += 1  # type: ignore[operator]
                 if label.startswith(("B-", "U-")):
                     combined_label = label.split("-")[1]
-                    data["ner"][combined_label] += 1
+                    data["ner"][combined_label] += 1  # type: ignore[index]
                 elif label == "-":
-                    data["ner"]["-"] += 1
+                    data["ner"]["-"] += 1  # type: ignore[index]
         if "textcat" in factory_names or "textcat_multilabel" in factory_names:
-            data["cats"].update(gold.cats)
+            data["cats"].update(gold.cats)  # type: ignore[attr-defined]
             if any(val not in (0, 1) for val in gold.cats.values()):
-                data["n_cats_bad_values"] += 1
+                data["n_cats_bad_values"] += 1  # type: ignore[operator]
             if list(gold.cats.values()).count(1) != 1:
-                data["n_cats_multilabel"] += 1
+                data["n_cats_multilabel"] += 1  # type: ignore[operator]
         if "tagger" in factory_names:
             tags = eg.get_aligned("TAG", as_string=True)
-            data["tags"].update([x for x in tags if x is not None])
+            data["tags"].update([x for x in tags if x is not None])  # type: ignore[attr-defined]
         if "morphologizer" in factory_names:
             pos_tags = eg.get_aligned("POS", as_string=True)
             morphs = eg.get_aligned("MORPH", as_string=True)
@@ -655,18 +655,18 @@ def _compile_gold(
                     label = eg.reference.vocab.strings[
                         eg.reference.vocab.morphology.add(label_dict)
                     ]
-                    data["morphs"].update([label])
+                    data["morphs"].update([label])  # type: ignore[attr-defined]
         if "parser" in factory_names:
             aligned_heads, aligned_deps = eg.get_aligned_parse(projectivize=make_proj)
-            data["deps"].update([x for x in aligned_deps if x is not None])
+            data["deps"].update([x for x in aligned_deps if x is not None])  # type: ignore[attr-defined]
             for i, (dep, head) in enumerate(zip(aligned_deps, aligned_heads)):
                 if head == i:
-                    data["roots"].update([dep])
-                    data["n_sents"] += 1
+                    data["roots"].update([dep])  # type: ignore[attr-defined]
+                    data["n_sents"] += 1  # type: ignore[operator]
             if nonproj.is_nonproj_tree(aligned_heads):
-                data["n_nonproj"] += 1
+                data["n_nonproj"] += 1  # type: ignore[operator]
             if nonproj.contains_cycle(aligned_heads):
-                data["n_cycles"] += 1
+                data["n_cycles"] += 1  # type: ignore[operator]
     return data
 
 
@@ -693,4 +693,4 @@ def _get_labels_from_model(nlp: Language, pipe_name: str) -> Set[str]:
     if pipe_name not in nlp.pipe_names:
         return set()
     pipe = nlp.get_pipe(pipe_name)
-    return set(pipe.labels)
+    return set(pipe.labels)  # type: ignore[attr-defined]

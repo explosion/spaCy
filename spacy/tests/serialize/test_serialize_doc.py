@@ -1,5 +1,5 @@
 import pytest
-from spacy.tokens.doc import Underscore
+from spacy.tokens.doc import Underscore  # type: ignore[attr-defined]
 
 import spacy
 from spacy.lang.en import English

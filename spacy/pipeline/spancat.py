@@ -68,9 +68,9 @@ def build_ngram_suggester(sizes: List[int]) -> Callable[[List[Doc]], Ragged]:
                     assert spans[-1].ndim == 2, spans[-1].shape
             lengths.append(length)
         if len(spans) > 0:
-            output = Ragged(ops.xp.vstack(spans), ops.asarray(lengths, dtype="i"))
+            output = Ragged(ops.xp.vstack(spans), ops.asarray(lengths, dtype="i"))  # type: ignore[arg-type]
         else:
-            output = Ragged(ops.xp.zeros((0, 0)), ops.asarray(lengths, dtype="i"))
+            output = Ragged(ops.xp.zeros((0, 0)), ops.asarray(lengths, dtype="i"))  # type: ignore[arg-type]
 
         assert output.dataXd.ndim == 2
         return output
@@ -179,7 +179,7 @@ class SpanCategorizer(TrainablePipe):
         initialization and training, the component will look for spans on the
         reference document under the same key.
         """
-        return self.cfg["spans_key"]
+        return self.cfg["spans_key"]  # type: ignore[return-value]
 
     def add_label(self, label: str) -> int:
         """Add a new label to the pipe.
@@ -194,8 +194,8 @@ class SpanCategorizer(TrainablePipe):
         if label in self.labels:
             return 0
         self._allow_extra_label()
-        self.cfg["labels"].append(label)
-        self.vocab.strings.add(label)
+        self.cfg["labels"].append(label)  # type: ignore[attr-defined]
+        self.vocab.strings.add(label)  # type: ignore[attr-defined]
         return 1
 
     @property
@@ -204,7 +204,7 @@ class SpanCategorizer(TrainablePipe):
 
         DOCS: https://spacy.io/api/spancategorizer#labels
         """
-        return tuple(self.cfg["labels"])
+        return tuple(self.cfg["labels"])  # type: ignore[arg-type, return-value]
 
     @property
     def label_data(self) -> List[str]:
@@ -222,8 +222,8 @@ class SpanCategorizer(TrainablePipe):
 
         DOCS: https://spacy.io/api/spancategorizer#predict
         """
-        indices = self.suggester(docs, ops=self.model.ops)
-        scores = self.model.predict((docs, indices))
+        indices = self.suggester(docs, ops=self.model.ops)  # type: ignore[arg-type, call-arg]
+        scores = self.model.predict((docs, indices))  # type: ignore[arg-type]
         return (indices, scores)
 
     def set_annotations(self, docs: Iterable[Doc], indices_scores) -> None:
@@ -240,7 +240,7 @@ class SpanCategorizer(TrainablePipe):
         for i, doc in enumerate(docs):
             indices_i = indices[i].dataXd
             doc.spans[self.key] = self._make_span_group(
-                doc, indices_i, scores[offset : offset + indices.lengths[i]], labels
+                doc, indices_i, scores[offset : offset + indices.lengths[i]], labels  # type: ignore[arg-type]
             )
             offset += indices.lengths[i]
 
@@ -273,13 +273,13 @@ class SpanCategorizer(TrainablePipe):
             # Handle cases where there are no tokens in any docs.
             return losses
         docs = [eg.predicted for eg in examples]
-        spans = self.suggester(docs, ops=self.model.ops)
+        spans = self.suggester(docs, ops=self.model.ops)  # type: ignore[call-arg]
         if spans.lengths.sum() == 0:
             return losses
         set_dropout_rate(self.model, drop)
         scores, backprop_scores = self.model.begin_update((docs, spans))
-        loss, d_scores = self.get_loss(examples, (spans, scores))
-        backprop_scores(d_scores)
+        loss, d_scores = self.get_loss(examples, (spans, scores))  # type: ignore[arg-type]
+        backprop_scores(d_scores)  # type: ignore[arg-type]
         if sgd is not None:
             self.finish_update(sgd)
         losses[self.name] += loss
@@ -302,7 +302,7 @@ class SpanCategorizer(TrainablePipe):
             self.model.ops.to_numpy(spans.data), self.model.ops.to_numpy(spans.lengths)
         )
         label_map = {label: i for i, label in enumerate(self.labels)}
-        target = numpy.zeros(scores.shape, dtype=scores.dtype)
+        target = numpy.zeros(scores.shape, dtype=scores.dtype)  # type: ignore[attr-defined]
         offset = 0
         for i, eg in enumerate(examples):
             # Map (start, end) offset of spans to the row in the d_scores array,
@@ -311,8 +311,8 @@ class SpanCategorizer(TrainablePipe):
             spans_index = {}
             spans_i = spans[i].dataXd
             for j in range(spans.lengths[i]):
-                start = int(spans_i[j, 0])
-                end = int(spans_i[j, 1])
+                start = int(spans_i[j, 0])  # type: ignore[call-overload, index]
+                end = int(spans_i[j, 1])  # type: ignore[call-overload, index]
                 spans_index[(start, end)] = offset + j
             for gold_span in self._get_aligned_spans(eg):
                 key = (gold_span.start, gold_span.end)
@@ -323,7 +323,7 @@ class SpanCategorizer(TrainablePipe):
             # The target is a flat array for all docs. Track the position
             # we're at within the flat array.
             offset += spans.lengths[i]
-        target = self.model.ops.asarray(target, dtype="f")
+        target = self.model.ops.asarray(target, dtype="f")  # type: ignore[arg-type, assignment]
         # The target will have the values 0 (for untrue predictions) or 1
         # (for true predictions).
         # The scores should be in the range [0, 1].
@@ -339,7 +339,7 @@ class SpanCategorizer(TrainablePipe):
         self,
         get_examples: Callable[[], Iterable[Example]],
         *,
-        nlp: Language = None,
+        nlp: Language = None,  # type: ignore[assignment]
         labels: Optional[List[str]] = None,
     ) -> None:
         """Initialize the pipe for training, using a representative set
@@ -354,7 +354,7 @@ class SpanCategorizer(TrainablePipe):
 
         DOCS: https://spacy.io/api/spancategorizer#initialize
         """
-        subbatch = []
+        subbatch = []  # type: ignore[var-annotated]
         if labels is not None:
             for label in labels:
                 self.add_label(label)
@@ -410,12 +410,12 @@ class SpanCategorizer(TrainablePipe):
         threshold = self.cfg["threshold"]
 
         keeps = scores >= threshold
-        ranked = (scores * -1).argsort()
+        ranked = (scores * -1).argsort()  # type: ignore[attr-defined]
         if max_positive is not None:
-            filter = ranked[:, max_positive:]
+            filter = ranked[:, max_positive:]  # type: ignore[misc]
             for i, row in enumerate(filter):
                 keeps[i, row] = False
-        spans.attrs["scores"] = scores[keeps].flatten()
+        spans.attrs["scores"] = scores[keeps].flatten()  # type: ignore[attr-defined]
 
         indices = self.model.ops.to_numpy(indices)
         keeps = self.model.ops.to_numpy(keeps)
@@ -426,6 +426,6 @@ class SpanCategorizer(TrainablePipe):
 
             for j, keep in enumerate(keeps[i]):
                 if keep:
-                    spans.append(Span(doc, start, end, label=labels[j]))
+                    spans.append(Span(doc, start, end, label=labels[j]))  # type: ignore[arg-type]
 
         return spans

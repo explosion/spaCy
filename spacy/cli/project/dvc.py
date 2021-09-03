@@ -144,7 +144,7 @@ def run_dvc_commands(
         command-line setting while avoiding lots of nested conditionals.
     """
     for command in commands:
-        command = split_command(command)
+        command = split_command(command)  # type: ignore[assignment]
         dvc_command = ["dvc", *command]
         # Add the flags if they are set to True
         for flag, is_active in flags.items():

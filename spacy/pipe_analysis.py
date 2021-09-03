@@ -67,7 +67,7 @@ def get_attr_info(nlp: "Language", attr: str) -> Dict[str, List[str]]:
     RETURNS (Dict[str, List[str]]): A dict keyed by "assigns" and "requires",
         mapped to a list of component names.
     """
-    result = {"assigns": [], "requires": []}
+    result = {"assigns": [], "requires": []}  # type: ignore[var-annotated]
     for pipe_name in nlp.pipe_names:
         meta = nlp.get_pipe_meta(pipe_name)
         if attr in meta.assigns:
@@ -88,8 +88,8 @@ def analyze_pipes(
     keys (List[str]): The meta keys to show in the table.
     RETURNS (dict): A dict with "summary" and "problems".
     """
-    result = {"summary": {}, "problems": {}}
-    all_attrs = set()
+    result = {"summary": {}, "problems": {}}  # type: ignore[var-annotated]
+    all_attrs = set()  # type: ignore[var-annotated]
     for i, name in enumerate(nlp.pipe_names):
         meta = nlp.get_pipe_meta(name)
         all_attrs.update(meta.assigns)
@@ -107,10 +107,10 @@ def analyze_pipes(
             if not fulfilled:
                 result["problems"][name].append(annot)
     result["attrs"] = {attr: get_attr_info(nlp, attr) for attr in all_attrs}
-    return result
+    return result  # type: ignore[return-value]
 
 
-def print_pipe_analysis(
+def print_pipe_analysis(  # type: ignore[return]
     analysis: Dict[str, Union[List[str], Dict[str, List[str]]]],
     *,
     keys: List[str] = DEFAULT_KEYS,
@@ -122,13 +122,13 @@ def print_pipe_analysis(
     """
     msg.divider("Pipeline Overview")
     header = ["#", "Component", *[key.capitalize() for key in keys]]
-    summary = analysis["summary"].items()
+    summary = analysis["summary"].items()  # type: ignore[union-attr]
     body = [[i, n, *[v for v in m.values()]] for i, (n, m) in enumerate(summary)]
     msg.table(body, header=header, divider=True, multiline=True)
-    n_problems = sum(len(p) for p in analysis["problems"].values())
-    if any(p for p in analysis["problems"].values()):
+    n_problems = sum(len(p) for p in analysis["problems"].values())  # type: ignore[union-attr]
+    if any(p for p in analysis["problems"].values()):  # type: ignore[union-attr]
         msg.divider(f"Problems ({n_problems})")
-        for name, problem in analysis["problems"].items():
+        for name, problem in analysis["problems"].items():  # type: ignore[union-attr]
             if problem:
                 msg.warn(f"'{name}' requirements not met: {', '.join(problem)}")
     else:

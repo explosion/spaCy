@@ -3,7 +3,7 @@ from .stop_words import STOP_WORDS
 from ...language import Language
 
 
-class IrishDefaults(Language.Defaults):
+class IrishDefaults(Language.Defaults):  # type: ignore[misc, valid-type]
     tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     stop_words = STOP_WORDS
 

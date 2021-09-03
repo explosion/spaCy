@@ -68,13 +68,13 @@ class DocBin:
         self.version = "0.1"
         self.attrs = [attr for attr in attrs if attr != ORTH and attr != SPACY]
         self.attrs.insert(0, ORTH)  # Ensure ORTH is always attrs[0]
-        self.tokens = []
-        self.spaces = []
-        self.cats = []
-        self.span_groups = []
-        self.user_data = []
-        self.flags = []
-        self.strings = set()
+        self.tokens = []  # type: ignore[var-annotated]
+        self.spaces = []  # type: ignore[var-annotated]
+        self.cats = []  # type: ignore[var-annotated]
+        self.span_groups = []  # type: ignore[var-annotated]
+        self.user_data = []  # type: ignore[var-annotated]
+        self.flags = []  # type: ignore[var-annotated]
+        self.strings = set()  # type: ignore[var-annotated]
         self.store_user_data = store_user_data
         for doc in docs:
             self.add(doc)
@@ -90,11 +90,11 @@ class DocBin:
 
         DOCS: https://spacy.io/api/docbin#add
         """
-        array = doc.to_array(self.attrs)
+        array = doc.to_array(self.attrs)  # type: ignore[attr-defined]
         if len(array.shape) == 1:
             array = array.reshape((array.shape[0], 1))
         self.tokens.append(array)
-        spaces = doc.to_array(SPACY)
+        spaces = doc.to_array(SPACY)  # type: ignore[attr-defined]
         assert array.shape[0] == spaces.shape[0]  # this should never happen
         spaces = spaces.reshape((spaces.shape[0], 1))
         self.spaces.append(numpy.asarray(spaces, dtype=bool))
@@ -136,7 +136,7 @@ class DocBin:
             if flags.get("has_unknown_spaces"):
                 spaces = None
             doc = Doc(vocab, words=tokens[:, orth_col], spaces=spaces)
-            doc = doc.from_array(self.attrs, tokens)
+            doc = doc.from_array(self.attrs, tokens)  # type: ignore[arg-type]
             doc.cats = self.cats[i]
             if self.span_groups[i]:
                 doc.spans.from_bytes(self.span_groups[i])
@@ -245,7 +245,7 @@ class DocBin:
         DOCS: https://spacy.io/api/docbin#to_disk
         """
         path = ensure_path(path)
-        with path.open("wb") as file_:
+        with path.open("wb") as file_:  # type: ignore[union-attr]
             try:
                 file_.write(self.to_bytes())
             except ValueError:
@@ -260,7 +260,7 @@ class DocBin:
         DOCS: https://spacy.io/api/docbin#to_disk
         """
         path = ensure_path(path)
-        with path.open("rb") as file_:
+        with path.open("rb") as file_:  # type: ignore[union-attr]
             self.from_bytes(file_.read())
         return self
 

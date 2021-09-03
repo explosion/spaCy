@@ -6,7 +6,7 @@ from ..tokens import Span, Doc
 
 
 def iob_to_biluo(tags: Iterable[str]) -> List[str]:
-    out = []
+    out = []  # type: ignore[var-annotated]
     tags = list(tags)
     while tags:
         out.extend(_consume_os(tags))
@@ -90,7 +90,7 @@ def offsets_to_biluo_tags(
         >>> assert tags == ["O", "O", 'U-LOC', "O"]
     """
     # Ensure no overlapping entity labels exist
-    tokens_in_ents = {}
+    tokens_in_ents = {}  # type: ignore[var-annotated]
     starts = {token.idx: token.i for token in doc}
     ends = {token.idx + len(token): token.i for token in doc}
     biluo = ["-" for _ in doc]
@@ -161,7 +161,7 @@ def biluo_tags_to_spans(doc: Doc, tags: Iterable[str]) -> List[Span]:
     token_offsets = tags_to_entities(tags)
     spans = []
     for label, start_idx, end_idx in token_offsets:
-        span = Span(doc, start_idx, end_idx + 1, label=label)
+        span = Span(doc, start_idx, end_idx + 1, label=label)  # type: ignore[arg-type]
         spans.append(span)
     return spans
 
@@ -199,14 +199,14 @@ def tags_to_entities(tags: Iterable[str]) -> List[Tuple[str, int, int]]:
             pass
         elif tag.startswith("I"):
             if start is None:
-                raise ValueError(Errors.E067.format(start="I", tags=tags[: i + 1]))
+                raise ValueError(Errors.E067.format(start="I", tags=tags[: i + 1]))  # type: ignore[index]
         elif tag.startswith("U"):
             entities.append((tag[2:], i, i))
         elif tag.startswith("B"):
             start = i
         elif tag.startswith("L"):
             if start is None:
-                raise ValueError(Errors.E067.format(start="L", tags=tags[: i + 1]))
+                raise ValueError(Errors.E067.format(start="L", tags=tags[: i + 1]))  # type: ignore[index]
             entities.append((tag[2:], start, i))
             start = None
         else:

@@ -34,9 +34,9 @@ def load_lookups(lang: str, tables: List[str], strict: bool = True) -> "Lookups"
         if table not in data:
             if strict:
                 raise ValueError(Errors.E955.format(table=table, lang=lang))
-            language_data = {}
+            language_data = {}  # type: ignore[var-annotated]
         else:
-            language_data = load_language_data(data[table])
+            language_data = load_language_data(data[table])  # type: ignore[assignment]
         lookups.add_table(table, language_data)
     return lookups
 
@@ -84,7 +84,7 @@ class Table(OrderedDict):
         key (str / int): The key to set.
         value: The value to set.
         """
-        key = get_string_id(key)
+        key = get_string_id(key)  # type: ignore[arg-type]
         OrderedDict.__setitem__(self, key, value)
         self.bloom.add(key)
 
@@ -103,7 +103,7 @@ class Table(OrderedDict):
         key (str / int): The key to get.
         RETURNS: The value.
         """
-        key = get_string_id(key)
+        key = get_string_id(key)  # type: ignore[arg-type]
         return OrderedDict.__getitem__(self, key)
 
     def get(self, key: Union[str, int], default: Optional[Any] = None) -> Any:
@@ -113,16 +113,16 @@ class Table(OrderedDict):
         default: The default value to return.
         RETURNS: The value.
         """
-        key = get_string_id(key)
+        key = get_string_id(key)  # type: ignore[arg-type]
         return OrderedDict.get(self, key, default)
 
-    def __contains__(self, key: Union[str, int]) -> bool:
+    def __contains__(self, key: Union[str, int]) -> bool:  # type: ignore[override]
         """Check whether a key is in the table. String keys will be hashed.
 
         key (str / int): The key to check.
         RETURNS (bool): Whether the key is in the table.
         """
-        key = get_string_id(key)
+        key = get_string_id(key)  # type: ignore[arg-type]
         # This can give a false positive, so we need to check it after
         if key not in self.bloom:
             return False
@@ -172,7 +172,7 @@ class Lookups:
 
         DOCS: https://spacy.io/api/lookups#init
         """
-        self._tables = {}
+        self._tables = {}  # type: ignore[var-annotated]
 
     def __contains__(self, name: str) -> bool:
         """Check if the lookups contain a table of a given name. Delegates to
@@ -288,9 +288,9 @@ class Lookups:
         DOCS: https://spacy.io/api/lookups#to_disk
         """
         path = ensure_path(path)
-        if not path.exists():
-            path.mkdir()
-        filepath = path / filename
+        if not path.exists():  # type: ignore[union-attr]
+            path.mkdir()  # type: ignore[union-attr]
+        filepath = path / filename  # type: ignore[operator]
         with filepath.open("wb") as file_:
             file_.write(self.to_bytes())
 
@@ -306,7 +306,7 @@ class Lookups:
         DOCS: https://spacy.io/api/lookups#from_disk
         """
         path = ensure_path(path)
-        filepath = path / filename
+        filepath = path / filename  # type: ignore[operator]
         if filepath.exists():
             with filepath.open("rb") as file_:
                 data = file_.read()

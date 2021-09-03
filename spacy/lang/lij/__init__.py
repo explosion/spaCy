@@ -4,7 +4,7 @@ from .punctuation import TOKENIZER_INFIXES
 from ...language import Language
 
 
-class LigurianDefaults(Language.Defaults):
+class LigurianDefaults(Language.Defaults):  # type: ignore[misc, valid-type]
     tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     infixes = TOKENIZER_INFIXES
     stop_words = STOP_WORDS

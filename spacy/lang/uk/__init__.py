@@ -9,7 +9,7 @@ from .lemmatizer import UkrainianLemmatizer
 from ...language import Language
 
 
-class UkrainianDefaults(Language.Defaults):
+class UkrainianDefaults(Language.Defaults):  # type: ignore[misc, valid-type]
     tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     lex_attr_getters = LEX_ATTRS
     stop_words = STOP_WORDS

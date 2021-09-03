@@ -145,18 +145,18 @@ class JapaneseTokenizer(DummyTokenizer):
         serializers = {"cfg": lambda: srsly.json_dumps(self._get_config())}
         return util.to_bytes(serializers, [])
 
-    def from_bytes(self, data: bytes, **kwargs) -> "JapaneseTokenizer":
+    def from_bytes(self, data: bytes, **kwargs) -> "JapaneseTokenizer":  # type: ignore[override]
         deserializers = {"cfg": lambda b: self._set_config(srsly.json_loads(b))}
         util.from_bytes(data, deserializers, [])
         self.tokenizer = try_sudachi_import(self.split_mode)
         return self
 
-    def to_disk(self, path: Union[str, Path], **kwargs) -> None:
+    def to_disk(self, path: Union[str, Path], **kwargs) -> None:  # type: ignore[override]
         path = util.ensure_path(path)
         serializers = {"cfg": lambda p: srsly.write_json(p, self._get_config())}
-        return util.to_disk(path, serializers, [])
+        return util.to_disk(path, serializers, [])  # type: ignore[return-value]
 
-    def from_disk(self, path: Union[str, Path], **kwargs) -> "JapaneseTokenizer":
+    def from_disk(self, path: Union[str, Path], **kwargs) -> "JapaneseTokenizer":  # type: ignore[override]
         path = util.ensure_path(path)
         serializers = {"cfg": lambda p: self._set_config(srsly.read_json(p))}
         util.from_disk(path, serializers, [])
@@ -164,7 +164,7 @@ class JapaneseTokenizer(DummyTokenizer):
         return self
 
 
-class JapaneseDefaults(Language.Defaults):
+class JapaneseDefaults(Language.Defaults):  # type: ignore[misc, valid-type]
     config = load_config_from_str(DEFAULT_CONFIG)
     stop_words = STOP_WORDS
     syntax_iterators = SYNTAX_ITERATORS

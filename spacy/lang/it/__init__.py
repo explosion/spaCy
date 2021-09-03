@@ -8,7 +8,7 @@ from ...language import Language
 from .lemmatizer import ItalianLemmatizer
 
 
-class ItalianDefaults(Language.Defaults):
+class ItalianDefaults(Language.Defaults):  # type: ignore[misc, valid-type]
     tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     stop_words = STOP_WORDS
     prefixes = TOKENIZER_PREFIXES

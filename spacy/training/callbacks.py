@@ -29,4 +29,4 @@ def create_copy_from_base_model(
                 base_nlp = load_model(vocab)
             nlp.vocab.from_bytes(base_nlp.vocab.to_bytes())
 
-    return copy_from_base_model
+    return copy_from_base_model  # type: ignore[return-value]

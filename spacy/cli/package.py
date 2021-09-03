@@ -42,13 +42,13 @@ def package_cli(
 
     DOCS: https://spacy.io/api/cli#package
     """
-    create_sdist, create_wheel = get_build_formats(string_to_list(build))
-    code_paths = [Path(p.strip()) for p in string_to_list(code_paths)]
+    create_sdist, create_wheel = get_build_formats(string_to_list(build))  # type: ignore[arg-type]
+    code_paths = [Path(p.strip()) for p in string_to_list(code_paths)]  # type: ignore[assignment, union-attr]
     package(
         input_dir,
         output_dir,
         meta_path=meta_path,
-        code_paths=code_paths,
+        code_paths=code_paths,  # type: ignore[arg-type]
         name=name,
         version=version,
         create_meta=create_meta,
@@ -226,7 +226,7 @@ def get_third_party_dependencies(
                 if pkg in own_packages or pkg in exclude:
                     continue
                 version = util.get_package_version(pkg)
-                version_range = util.get_minor_version_range(version)
+                version_range = util.get_minor_version_range(version)  # type: ignore[arg-type]
                 dependencies.append(f"{pkg}{version_range}")
     return dependencies
 
@@ -265,19 +265,19 @@ def get_meta(
     meta.update(nlp.meta)
     meta.update(existing_meta)
     meta["spacy_version"] = util.get_minor_version_range(about.__version__)
-    meta["vectors"] = {
+    meta["vectors"] = {  # type: ignore[assignment]
         "width": nlp.vocab.vectors_length,
-        "vectors": len(nlp.vocab.vectors),
-        "keys": nlp.vocab.vectors.n_keys,
-        "name": nlp.vocab.vectors.name,
+        "vectors": len(nlp.vocab.vectors),  # type: ignore[attr-defined]
+        "keys": nlp.vocab.vectors.n_keys,  # type: ignore[attr-defined]
+        "name": nlp.vocab.vectors.name,  # type: ignore[attr-defined]
     }
     if about.__title__ != "spacy":
         meta["parent_package"] = about.__title__
-    meta.setdefault("requirements", [])
+    meta.setdefault("requirements", [])  # type: ignore[arg-type]
     # Update the requirements with all third-party packages in the config
     existing_reqs = [util.split_requirement(req)[0] for req in meta["requirements"]]
     reqs = get_third_party_dependencies(nlp.config, exclude=existing_reqs)
-    meta["requirements"].extend(reqs)
+    meta["requirements"].extend(reqs)  # type: ignore[attr-defined]
     return meta
 
 
@@ -323,8 +323,8 @@ def generate_readme(meta: Dict[str, Any]) -> str:
     license_name = meta.get("license")
     sources = _format_sources(meta.get("sources"))
     description = meta.get("description")
-    label_scheme = _format_label_scheme(meta.get("labels"))
-    accuracy = _format_accuracy(meta.get("performance"))
+    label_scheme = _format_label_scheme(meta.get("labels"))  # type: ignore[arg-type]
+    accuracy = _format_accuracy(meta.get("performance"))  # type: ignore[arg-type]
     table_data = [
         (md.bold("Name"), md.code(name)),
         (md.bold("Version"), md.code(version)),

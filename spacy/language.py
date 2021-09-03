@@ -55,14 +55,14 @@ class BaseDefaults:
 
     config: Config = Config(section_order=CONFIG_SECTION_ORDER)
     tokenizer_exceptions: Dict[str, List[dict]] = BASE_EXCEPTIONS
-    prefixes: Optional[List[Union[str, Pattern]]] = TOKENIZER_PREFIXES
+    prefixes: Optional[List[Union[str, Pattern]]] = TOKENIZER_PREFIXES  # type: ignore[assignment]
     suffixes: Optional[List[Union[str, Pattern]]] = TOKENIZER_SUFFIXES
-    infixes: Optional[List[Union[str, Pattern]]] = TOKENIZER_INFIXES
+    infixes: Optional[List[Union[str, Pattern]]] = TOKENIZER_INFIXES  # type: ignore[assignment]
     token_match: Optional[Pattern] = None
-    url_match: Optional[Pattern] = URL_MATCH
+    url_match: Optional[Pattern] = URL_MATCH  # type: ignore[assignment]
     syntax_iterators: Dict[str, Callable] = {}
     lex_attr_getters: Dict[int, Callable[[str], Any]] = {}
-    stop_words = set()
+    stop_words = set()  # type: ignore[var-annotated]
     writing_system = {"direction": "ltr", "has_case": True, "has_letters": True}
 
 
@@ -111,7 +111,7 @@ class Language:
     """
 
     Defaults = BaseDefaults
-    lang: str = None
+    lang: str = None  # type: ignore[assignment]
     default_config = DEFAULT_CONFIG
 
     factories = SimpleFrozenDict(error=Errors.E957)
@@ -163,15 +163,15 @@ class Language:
             raise ValueError(Errors.E918.format(vocab=vocab, vocab_type=type(Vocab)))
         if vocab is True:
             vectors_name = meta.get("vectors", {}).get("name")
-            vocab = create_vocab(self.lang, self.Defaults, vectors_name=vectors_name)
+            vocab = create_vocab(self.lang, self.Defaults, vectors_name=vectors_name)  # type: ignore[arg-type]
         else:
             if (self.lang and vocab.lang) and (self.lang != vocab.lang):
                 raise ValueError(Errors.E150.format(nlp=self.lang, vocab=vocab.lang))
         self.vocab: Vocab = vocab
         if self.lang is None:
             self.lang = self.vocab.lang
-        self._components = []
-        self._disabled = set()
+        self._components = []  # type: ignore[var-annotated]
+        self._disabled = set()  # type: ignore[var-annotated]
         self.max_length = max_length
         # Create the default tokenizer from the default config
         if not create_tokenizer:
@@ -215,9 +215,9 @@ class Language:
         self._meta.setdefault("spacy_git_version", GIT_VERSION)
         self._meta["vectors"] = {
             "width": self.vocab.vectors_length,
-            "vectors": len(self.vocab.vectors),
-            "keys": self.vocab.vectors.n_keys,
-            "name": self.vocab.vectors.name,
+            "vectors": len(self.vocab.vectors),  # type: ignore[attr-defined]
+            "keys": self.vocab.vectors.n_keys,  # type: ignore[attr-defined]
+            "name": self.vocab.vectors.name,  # type: ignore[attr-defined]
         }
         self._meta["labels"] = dict(self.pipe_labels)
         # TODO: Adding this back to prevent breaking people's code etc., but
@@ -537,10 +537,10 @@ class Language:
             if isinstance(func, type):  # function is a class
                 raise ValueError(Errors.E965.format(name=component_name))
 
-            def factory_func(nlp: cls, name: str) -> Callable[[Doc], Doc]:
+            def factory_func(nlp: cls, name: str) -> Callable[[Doc], Doc]:  # type: ignore[valid-type]
                 return component_func
 
-            internal_name = cls.get_factory_name(name)
+            internal_name = cls.get_factory_name(name)  # type: ignore[arg-type]
             if internal_name in registry.factories:
                 # We only check for the internal name here – it's okay if it's a
                 # subclass and the base class has a factory of the same name. We
@@ -688,9 +688,9 @@ class Language:
             raise ValueError(Errors.E945.format(name=source_name, source=type(source)))
         # Check vectors, with faster checks first
         if (
-            self.vocab.vectors.shape != source.vocab.vectors.shape
-            or self.vocab.vectors.key2row != source.vocab.vectors.key2row
-            or self.vocab.vectors.to_bytes() != source.vocab.vectors.to_bytes()
+            self.vocab.vectors.shape != source.vocab.vectors.shape  # type: ignore[attr-defined]
+            or self.vocab.vectors.key2row != source.vocab.vectors.key2row  # type: ignore[attr-defined]
+            or self.vocab.vectors.to_bytes() != source.vocab.vectors.to_bytes()  # type: ignore[attr-defined]
         ):
             warnings.warn(Warnings.W113.format(name=source_name))
         if source_name not in source.component_names:
@@ -707,8 +707,8 @@ class Language:
         source_config = source.config.interpolate()
         pipe_config = util.copy_config(source_config["components"][source_name])
         self._pipe_configs[name] = pipe_config
-        for s in source.vocab.strings:
-            self.vocab.strings.add(s)
+        for s in source.vocab.strings:  # type: ignore[attr-defined]
+            self.vocab.strings.add(s)  # type: ignore[attr-defined]
         return pipe, pipe_config["factory"]
 
     def add_pipe(
@@ -994,9 +994,9 @@ class Language:
                 raise ValueError(Errors.E003.format(component=type(proc), name=name))
             error_handler = self.default_error_handler
             if hasattr(proc, "get_error_handler"):
-                error_handler = proc.get_error_handler()
+                error_handler = proc.get_error_handler()  # type: ignore[attr-defined]
             try:
-                doc = proc(doc, **component_cfg.get(name, {}))
+                doc = proc(doc, **component_cfg.get(name, {}))  # type: ignore[call-arg]
             except KeyError as e:
                 # This typically happens if a component is not initialized
                 raise ValueError(Errors.E109.format(name=name)) from e
@@ -1016,7 +1016,7 @@ class Language:
         """
         warnings.warn(Warnings.W096, DeprecationWarning)
         if len(names) == 1 and isinstance(names[0], (list, tuple)):
-            names = names[0]  # support list of names instead of spread
+            names = names[0]  # type: ignore[assignment]    # support list of names instead of spread
         return self.select_pipes(disable=names)
 
     def select_pipes(
@@ -1053,7 +1053,7 @@ class Language:
             disable = to_disable
         # DisabledPipes will restore the pipes in 'disable' when it's done, so we need to exclude
         # those pipes that were already disabled.
-        disable = [d for d in disable if d not in self._disabled]
+        disable = [d for d in disable if d not in self._disabled]  # type: ignore[union-attr]
         return DisabledPipes(self, disable)
 
     def make_doc(self, text: str) -> Doc:
@@ -1101,7 +1101,7 @@ class Language:
             raise ValueError(Errors.E989)
         if losses is None:
             losses = {}
-        if len(examples) == 0:
+        if len(examples) == 0:  # type: ignore[arg-type]
             return losses
         validate_examples(examples, "Language.update")
         examples = _copy_examples(examples)
@@ -1119,15 +1119,15 @@ class Language:
             pipe_kwargs[name].setdefault("batch_size", self.batch_size)
         for name, proc in self.pipeline:
             if name not in exclude and hasattr(proc, "update"):
-                proc.update(examples, sgd=None, losses=losses, **component_cfg[name])
+                proc.update(examples, sgd=None, losses=losses, **component_cfg[name])  # type: ignore[attr-defined]
             if sgd not in (None, False):
                 if (
                     name not in exclude
                     and hasattr(proc, "is_trainable")
-                    and proc.is_trainable
-                    and proc.model not in (True, False, None)
+                    and proc.is_trainable  # type: ignore[attr-defined]
+                    and proc.model not in (True, False, None)  # type: ignore[attr-defined]
                 ):
-                    proc.finish_update(sgd)
+                    proc.finish_update(sgd)  # type: ignore[attr-defined]
             if name in annotates:
                 for doc, eg in zip(
                     _pipe(
@@ -1173,8 +1173,8 @@ class Language:
 
         DOCS: https://spacy.io/api/language#rehearse
         """
-        if len(examples) == 0:
-            return
+        if len(examples) == 0:  # type: ignore[arg-type]
+            return  # type: ignore[return-value]
         validate_examples(examples, "Language.rehearse")
         if sgd is None:
             if self._optimizer is None:
@@ -1189,19 +1189,19 @@ class Language:
         def get_grads(W, dW, key=None):
             grads[key] = (W, dW)
 
-        get_grads.learn_rate = sgd.learn_rate
-        get_grads.b1 = sgd.b1
-        get_grads.b2 = sgd.b2
+        get_grads.learn_rate = sgd.learn_rate  # type: ignore[attr-defined, union-attr]
+        get_grads.b1 = sgd.b1  # type: ignore[attr-defined, union-attr]
+        get_grads.b2 = sgd.b2  # type: ignore[attr-defined, union-attr]
         for name, proc in pipes:
             if name in exclude or not hasattr(proc, "rehearse"):
                 continue
             grads = {}
-            proc.rehearse(
+            proc.rehearse(  # type: ignore[attr-defined]
                 examples, sgd=get_grads, losses=losses, **component_cfg.get(name, {})
             )
         for key, (W, dW) in grads.items():
-            sgd(W, dW, key=key)
-        return losses
+            sgd(W, dW, key=key)  # type: ignore[call-arg, misc]
+        return losses  # type: ignore[return-value]
 
     def begin_training(
         self,
@@ -1252,38 +1252,38 @@ class Language:
             )
         except IOError:
             raise IOError(Errors.E884.format(vectors=I["vectors"]))
-        if self.vocab.vectors.data.shape[1] >= 1:
+        if self.vocab.vectors.data.shape[1] >= 1:  # type: ignore[attr-defined]
             ops = get_current_ops()
-            self.vocab.vectors.data = ops.asarray(self.vocab.vectors.data)
+            self.vocab.vectors.data = ops.asarray(self.vocab.vectors.data)  # type: ignore[attr-defined]
         if hasattr(self.tokenizer, "initialize"):
             tok_settings = validate_init_settings(
-                self.tokenizer.initialize,
+                self.tokenizer.initialize,  # type: ignore[union-attr]
                 I["tokenizer"],
                 section="tokenizer",
                 name="tokenizer",
             )
-            self.tokenizer.initialize(get_examples, nlp=self, **tok_settings)
+            self.tokenizer.initialize(get_examples, nlp=self, **tok_settings)  # type: ignore[union-attr]
         for name, proc in self.pipeline:
             if hasattr(proc, "initialize"):
                 p_settings = I["components"].get(name, {})
                 p_settings = validate_init_settings(
-                    proc.initialize, p_settings, section="components", name=name
+                    proc.initialize, p_settings, section="components", name=name  # type: ignore[attr-defined]
                 )
-                proc.initialize(get_examples, nlp=self, **p_settings)
+                proc.initialize(get_examples, nlp=self, **p_settings)  # type: ignore[attr-defined]
         pretrain_cfg = config.get("pretraining")
         if pretrain_cfg:
             P = registry.resolve(pretrain_cfg, schema=ConfigSchemaPretrain)
             init_tok2vec(self, P, I)
         self._link_components()
-        self._optimizer = sgd
+        self._optimizer = sgd  # type: ignore[assignment]
         if sgd is not None:
-            self._optimizer = sgd
+            self._optimizer = sgd  # type: ignore[assignment]
         elif self._optimizer is None:
             self._optimizer = self.create_optimizer()
         after_init = I["after_init"]
         if after_init is not None:
             after_init(self)
-        return self._optimizer
+        return self._optimizer  # type: ignore[return-value]
 
     def resume_training(self, *, sgd: Optional[Optimizer] = None) -> Optimizer:
         """Continue training a pretrained model.
@@ -1299,16 +1299,16 @@ class Language:
         DOCS: https://spacy.io/api/language#resume_training
         """
         ops = get_current_ops()
-        if self.vocab.vectors.data.shape[1] >= 1:
-            self.vocab.vectors.data = ops.asarray(self.vocab.vectors.data)
+        if self.vocab.vectors.data.shape[1] >= 1:  # type: ignore[attr-defined]
+            self.vocab.vectors.data = ops.asarray(self.vocab.vectors.data)  # type: ignore[attr-defined]
         for name, proc in self.pipeline:
             if hasattr(proc, "_rehearsal_model"):
-                proc._rehearsal_model = deepcopy(proc.model)
+                proc._rehearsal_model = deepcopy(proc.model)  # type: ignore[attr-defined]
         if sgd is not None:
-            self._optimizer = sgd
+            self._optimizer = sgd  # type: ignore[assignment]
         elif self._optimizer is None:
             self._optimizer = self.create_optimizer()
-        return self._optimizer
+        return self._optimizer  # type: ignore[return-value]
 
     def set_error_handler(
         self,
@@ -1328,7 +1328,7 @@ class Language:
         self.default_error_handler = error_handler
         for name, pipe in self.pipeline:
             if hasattr(pipe, "set_error_handler"):
-                pipe.set_error_handler(error_handler)
+                pipe.set_error_handler(error_handler)  # type: ignore[attr-defined]
 
     def evaluate(
         self,
@@ -1413,7 +1413,7 @@ class Language:
             yield
         else:
             contexts = [
-                pipe.use_params(params)
+                pipe.use_params(params)  # type: ignore[attr-defined]
                 for name, pipe in self.pipeline
                 if hasattr(pipe, "use_params") and hasattr(pipe, "model")
             ]
@@ -1433,7 +1433,7 @@ class Language:
 
     _AnyContext = TypeVar("_AnyContext")
 
-    @overload
+    @overload  # type: ignore[misc]
     def pipe(
         self,
         texts: Iterable[Tuple[str, _AnyContext]],
@@ -1446,7 +1446,7 @@ class Language:
     ) -> Iterator[Tuple[Doc, _AnyContext]]:
         ...
 
-    def pipe(  # noqa: F811
+    def pipe(  # type: ignore[misc]    # type: ignore[misc]    # noqa: F811
         self,
         texts: Iterable[str],
         *,
@@ -1477,15 +1477,15 @@ class Language:
             text_context1, text_context2 = itertools.tee(texts)
             texts = (tc[0] for tc in text_context1)
             contexts = (tc[1] for tc in text_context2)
-            docs = self.pipe(
-                texts,
+            docs = self.pipe(  # type: ignore[var-annotated]
+                texts,  # type: ignore[arg-type]
                 batch_size=batch_size,
                 disable=disable,
                 n_process=n_process,
                 component_cfg=component_cfg,
             )
             for doc, context in zip(docs, contexts):
-                yield (doc, context)
+                yield (doc, context)  # type: ignore[misc]
             return
         if component_cfg is None:
             component_cfg = {}
@@ -1511,16 +1511,16 @@ class Language:
             pipes.append(f)
 
         if n_process != 1:
-            docs = self._multiprocessing_pipe(texts, pipes, n_process, batch_size)
+            docs = self._multiprocessing_pipe(texts, pipes, n_process, batch_size)  # type: ignore[func-returns-value]
         else:
             # if n_process == 1, no processes are forked.
-            docs = (self.make_doc(text) for text in texts)
+            docs = (self.make_doc(text) for text in texts)  # type: ignore[misc]
             for pipe in pipes:
                 docs = pipe(docs)
         for doc in docs:
-            yield doc
+            yield doc  # type: ignore[misc]
 
-    def _multiprocessing_pipe(
+    def _multiprocessing_pipe(  # type: ignore[misc]
         self,
         texts: Iterable[str],
         pipes: Iterable[Callable[[Doc], Doc]],
@@ -1530,7 +1530,7 @@ class Language:
         # raw_texts is used later to stop iteration.
         texts, raw_texts = itertools.tee(texts)
         # for sending texts to worker
-        texts_q = [mp.Queue() for _ in range(n_process)]
+        texts_q = [mp.Queue() for _ in range(n_process)]  # type: ignore[var-annotated]
         # for receiving byte-encoded docs from worker
         bytedocs_recv_ch, bytedocs_send_ch = zip(
             *[mp.Pipe(False) for _ in range(n_process)]
@@ -1591,7 +1591,7 @@ class Language:
         for i, (name1, proc1) in enumerate(self.pipeline):
             if hasattr(proc1, "find_listeners"):
                 for name2, proc2 in self.pipeline[i + 1 :]:
-                    proc1.find_listeners(proc2)
+                    proc1.find_listeners(proc2)  # type: ignore[attr-defined]
 
     @classmethod
     def from_config(
@@ -1743,7 +1743,7 @@ class Language:
                         )
                     if model not in source_nlp_vectors_hashes:
                         source_nlp_vectors_hashes[model] = hash(
-                            source_nlps[model].vocab.vectors.to_bytes()
+                            source_nlps[model].vocab.vectors.to_bytes()  # type: ignore[attr-defined]
                         )
                     if "_sourced_vectors_hashes" not in nlp.meta:
                         nlp.meta["_sourced_vectors_hashes"] = {}
@@ -1771,8 +1771,8 @@ class Language:
                 ll for ll in listener_names if ll not in nlp.pipe_names
             ]
             for listener_name in unused_listener_names:
-                for listener in proc.listener_map.get(listener_name, []):
-                    proc.remove_listener(listener, listener_name)
+                for listener in proc.listener_map.get(listener_name, []):  # type: ignore[attr-defined]
+                    proc.remove_listener(listener, listener_name)  # type: ignore[attr-defined]
 
             for listener in getattr(
                 proc, "listening_components", []
@@ -1833,7 +1833,7 @@ class Language:
             raise ValueError(err)
         tok2vec = self.get_pipe(tok2vec_name)
         tok2vec_cfg = self.get_pipe_config(tok2vec_name)
-        tok2vec_model = tok2vec.model
+        tok2vec_model = tok2vec.model  # type: ignore[attr-defined]
         if (
             not hasattr(tok2vec, "model")
             or not hasattr(tok2vec, "listener_map")
@@ -1841,12 +1841,12 @@ class Language:
             or "model" not in tok2vec_cfg
         ):
             raise ValueError(Errors.E888.format(name=tok2vec_name, pipe=type(tok2vec)))
-        pipe_listeners = tok2vec.listener_map.get(pipe_name, [])
+        pipe_listeners = tok2vec.listener_map.get(pipe_name, [])  # type: ignore[attr-defined]
         pipe = self.get_pipe(pipe_name)
         pipe_cfg = self._pipe_configs[pipe_name]
         if listeners:
             util.logger.debug(f"Replacing listeners of component '{pipe_name}'")
-            if len(listeners) != len(pipe_listeners):
+            if len(listeners) != len(pipe_listeners):  # type: ignore[arg-type]
                 # The number of listeners defined in the component model doesn't
                 # match the listeners to replace, so we won't be able to update
                 # the nodes and generate a matching config
@@ -1880,8 +1880,8 @@ class Language:
                 new_model = tok2vec_model.copy()
                 if "replace_listener" in tok2vec_model.attrs:
                     new_model = tok2vec_model.attrs["replace_listener"](new_model)
-                util.replace_model_node(pipe.model, listener, new_model)
-                tok2vec.remove_listener(listener, pipe_name)
+                util.replace_model_node(pipe.model, listener, new_model)  # type: ignore[attr-defined]
+                tok2vec.remove_listener(listener, pipe_name)  # type: ignore[attr-defined]
 
     def to_disk(
         self, path: Union[str, Path], *, exclude: Iterable[str] = SimpleFrozenList()
@@ -1897,7 +1897,7 @@ class Language:
         """
         path = util.ensure_path(path)
         serializers = {}
-        serializers["tokenizer"] = lambda p: self.tokenizer.to_disk(
+        serializers["tokenizer"] = lambda p: self.tokenizer.to_disk(  # type: ignore[union-attr]
             p, exclude=["vocab"]
         )
         serializers["meta.json"] = lambda p: srsly.write_json(p, self.meta)
@@ -1907,8 +1907,8 @@ class Language:
                 continue
             if not hasattr(proc, "to_disk"):
                 continue
-            serializers[name] = lambda p, proc=proc: proc.to_disk(p, exclude=["vocab"])
-        serializers["vocab"] = lambda p: self.vocab.to_disk(p, exclude=exclude)
+            serializers[name] = lambda p, proc=proc: proc.to_disk(p, exclude=["vocab"])  # type: ignore[misc]
+        serializers["vocab"] = lambda p: self.vocab.to_disk(p, exclude=exclude)  # type: ignore[arg-type]
         util.to_disk(path, serializers, exclude)
 
     def from_disk(
@@ -1935,21 +1935,21 @@ class Language:
                 self.meta.update(data)
                 # self.meta always overrides meta["vectors"] with the metadata
                 # from self.vocab.vectors, so set the name directly
-                self.vocab.vectors.name = data.get("vectors", {}).get("name")
+                self.vocab.vectors.name = data.get("vectors", {}).get("name")  # type: ignore[attr-defined]
 
         def deserialize_vocab(path: Path) -> None:
             if path.exists():
-                self.vocab.from_disk(path, exclude=exclude)
+                self.vocab.from_disk(path, exclude=exclude)  # type: ignore[arg-type]
 
         path = util.ensure_path(path)
         deserializers = {}
-        if Path(path / "config.cfg").exists():
+        if Path(path / "config.cfg").exists():  # type: ignore[operator]
             deserializers["config.cfg"] = lambda p: self.config.from_disk(
                 p, interpolate=False, overrides=overrides
             )
-        deserializers["meta.json"] = deserialize_meta
-        deserializers["vocab"] = deserialize_vocab
-        deserializers["tokenizer"] = lambda p: self.tokenizer.from_disk(
+        deserializers["meta.json"] = deserialize_meta  # type: ignore[assignment]
+        deserializers["vocab"] = deserialize_vocab  # type: ignore[assignment]
+        deserializers["tokenizer"] = lambda p: self.tokenizer.from_disk(  # type: ignore[union-attr]
             p, exclude=["vocab"]
         )
         for name, proc in self._components:
@@ -1957,14 +1957,14 @@ class Language:
                 continue
             if not hasattr(proc, "from_disk"):
                 continue
-            deserializers[name] = lambda p, proc=proc: proc.from_disk(
+            deserializers[name] = lambda p, proc=proc: proc.from_disk(  # type: ignore[misc]
                 p, exclude=["vocab"]
             )
-        if not (path / "vocab").exists() and "vocab" not in exclude:
+        if not (path / "vocab").exists() and "vocab" not in exclude:  # type: ignore[operator]
             # Convert to list here in case exclude is (default) tuple
             exclude = list(exclude) + ["vocab"]
-        util.from_disk(path, deserializers, exclude)
-        self._path = path
+        util.from_disk(path, deserializers, exclude)  # type: ignore[arg-type]
+        self._path = path  # type: ignore[assignment]
         self._link_components()
         return self
 
@@ -1977,8 +1977,8 @@ class Language:
         DOCS: https://spacy.io/api/language#to_bytes
         """
         serializers = {}
-        serializers["vocab"] = lambda: self.vocab.to_bytes(exclude=exclude)
-        serializers["tokenizer"] = lambda: self.tokenizer.to_bytes(exclude=["vocab"])
+        serializers["vocab"] = lambda: self.vocab.to_bytes(exclude=exclude)  # type: ignore[arg-type]
+        serializers["tokenizer"] = lambda: self.tokenizer.to_bytes(exclude=["vocab"])  # type: ignore[union-attr]
         serializers["meta.json"] = lambda: srsly.json_dumps(self.meta)
         serializers["config.cfg"] = lambda: self.config.to_bytes()
         for name, proc in self._components:
@@ -1986,7 +1986,7 @@ class Language:
                 continue
             if not hasattr(proc, "to_bytes"):
                 continue
-            serializers[name] = lambda proc=proc: proc.to_bytes(exclude=["vocab"])
+            serializers[name] = lambda proc=proc: proc.to_bytes(exclude=["vocab"])  # type: ignore[misc]
         return util.to_bytes(serializers, exclude)
 
     def from_bytes(
@@ -2013,8 +2013,8 @@ class Language:
             b, interpolate=False
         )
         deserializers["meta.json"] = deserialize_meta
-        deserializers["vocab"] = lambda b: self.vocab.from_bytes(b, exclude=exclude)
-        deserializers["tokenizer"] = lambda b: self.tokenizer.from_bytes(
+        deserializers["vocab"] = lambda b: self.vocab.from_bytes(b, exclude=exclude)  # type: ignore[arg-type, assignment, return-value]
+        deserializers["tokenizer"] = lambda b: self.tokenizer.from_bytes(  # type: ignore[union-attr]
             b, exclude=["vocab"]
         )
         for name, proc in self._components:
@@ -2022,7 +2022,7 @@ class Language:
                 continue
             if not hasattr(proc, "from_bytes"):
                 continue
-            deserializers[name] = lambda b, proc=proc: proc.from_bytes(
+            deserializers[name] = lambda b, proc=proc: proc.from_bytes(  # type: ignore[misc]
                 b, exclude=["vocab"]
             )
         util.from_bytes(bytes_data, deserializers, exclude)
@@ -2106,11 +2106,11 @@ def _apply_pipes(
             texts = receiver.get()
             docs = (make_doc(text) for text in texts)
             for pipe in pipes:
-                docs = pipe(docs)
+                docs = pipe(docs)  # type: ignore[arg-type, assignment]
             # Connection does not accept unpickable objects, so send list.
             byte_docs = [(doc.to_bytes(), None) for doc in docs]
             padding = [(None, None)] * (len(texts) - len(byte_docs))
-            sender.send(byte_docs + padding)
+            sender.send(byte_docs + padding)  # type: ignore[operator]
         except Exception:
             error_msg = [(None, srsly.msgpack_dumps(traceback.format_exc()))]
             padding = [(None, None)] * (len(texts) - 1)

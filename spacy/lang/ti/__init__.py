@@ -9,7 +9,7 @@ from ...attrs import LANG
 from ...util import update_exc
 
 
-class TigrinyaDefaults(Language.Defaults):
+class TigrinyaDefaults(Language.Defaults):  # type: ignore[misc, valid-type]
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
     lex_attr_getters.update(LEX_ATTRS)
     lex_attr_getters[LANG] = lambda text: "ti"

@@ -41,7 +41,7 @@ def pretrain(
     optimizer = P["optimizer"]
     # Load in pretrained weights to resume from
     if resume_path is not None:
-        epoch_resume = _resume_model(model, resume_path, epoch_resume, silent=silent)
+        epoch_resume = _resume_model(model, resume_path, epoch_resume, silent=silent)  # type: ignore[arg-type]
     else:
         # Without '--resume-path' the '--epoch-resume' argument is ignored
         epoch_resume = 0

@@ -68,9 +68,9 @@ def convert_cli(
     """
     if isinstance(file_type, FileTypes):
         # We get an instance of the FileTypes from the CLI so we need its string value
-        file_type = file_type.value
-    input_path = Path(input_path)
-    output_dir = "-" if output_dir == Path("-") else output_dir
+        file_type = file_type.value  # type: ignore[assignment]
+    input_path = Path(input_path)  # type: ignore[assignment]
+    output_dir = "-" if output_dir == Path("-") else output_dir  # type: ignore[assignment]
     silent = output_dir == "-"
     msg = Printer(no_print=silent)
     verify_cli_args(msg, input_path, output_dir, file_type, converter, ner_map)
@@ -119,7 +119,7 @@ def convert(
             input_data = infile.read()
         # Use converter function to convert data
         func = CONVERTERS[converter]
-        docs = func(
+        docs = func(  # type: ignore[operator]
             input_data,
             n_sents=n_sents,
             seg_sents=seg_sents,
@@ -133,7 +133,7 @@ def convert(
         doc_files.append((input_loc, docs))
     if concatenate:
         all_docs = itertools.chain.from_iterable([docs for _, docs in doc_files])
-        doc_files = [(input_path, all_docs)]
+        doc_files = [(input_path, all_docs)]  # type: ignore[list-item]
     for input_loc, docs in doc_files:
         if file_type == "json":
             data = [docs_to_json(docs)]
@@ -141,7 +141,7 @@ def convert(
         else:
             db = DocBin(docs=docs, store_user_data=True)
             len_docs = len(db)
-            data = db.to_bytes()
+            data = db.to_bytes()  # type: ignore[assignment]
         if output_dir == "-":
             _print_docs_to_stdout(data, file_type)
         else:
@@ -244,7 +244,7 @@ def verify_cli_args(
             msg.fail("No input files in directory", input_path, exits=1)
         file_types = list(set([loc.suffix[1:] for loc in input_locs]))
         if converter == "auto" and len(file_types) >= 2:
-            file_types = ",".join(file_types)
+            file_types = ",".join(file_types)  # type: ignore[assignment]
             msg.fail("All input files must be same type", file_types, exits=1)
     if converter != "auto" and converter not in CONVERTERS:
         msg.fail(f"Can't find converter for {converter}", exits=1)

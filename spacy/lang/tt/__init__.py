@@ -5,7 +5,7 @@ from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from ...language import Language
 
 
-class TatarDefaults(Language.Defaults):
+class TatarDefaults(Language.Defaults):  # type: ignore[misc, valid-type]
     tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     infixes = TOKENIZER_INFIXES
     lex_attr_getters = LEX_ATTRS

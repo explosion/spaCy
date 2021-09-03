@@ -133,24 +133,24 @@ class VietnameseTokenizer(DummyTokenizer):
         serializers = {"cfg": lambda: srsly.json_dumps(self._get_config())}
         return util.to_bytes(serializers, [])
 
-    def from_bytes(self, data: bytes, **kwargs) -> "VietnameseTokenizer":
+    def from_bytes(self, data: bytes, **kwargs) -> "VietnameseTokenizer":  # type: ignore[override]
         deserializers = {"cfg": lambda b: self._set_config(srsly.json_loads(b))}
         util.from_bytes(data, deserializers, [])
         return self
 
-    def to_disk(self, path: Union[str, Path], **kwargs) -> None:
+    def to_disk(self, path: Union[str, Path], **kwargs) -> None:  # type: ignore[override]
         path = util.ensure_path(path)
         serializers = {"cfg": lambda p: srsly.write_json(p, self._get_config())}
-        return util.to_disk(path, serializers, [])
+        return util.to_disk(path, serializers, [])  # type: ignore[return-value]
 
-    def from_disk(self, path: Union[str, Path], **kwargs) -> "VietnameseTokenizer":
+    def from_disk(self, path: Union[str, Path], **kwargs) -> "VietnameseTokenizer":  # type: ignore[override]
         path = util.ensure_path(path)
         serializers = {"cfg": lambda p: self._set_config(srsly.read_json(p))}
         util.from_disk(path, serializers, [])
         return self
 
 
-class VietnameseDefaults(Language.Defaults):
+class VietnameseDefaults(Language.Defaults):  # type: ignore[misc, valid-type]
     config = load_config_from_str(DEFAULT_CONFIG)
     lex_attr_getters = LEX_ATTRS
     stop_words = STOP_WORDS

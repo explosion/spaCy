@@ -6,7 +6,7 @@ from .syntax_iterators import SYNTAX_ITERATORS
 from ...language import Language
 
 
-class DanishDefaults(Language.Defaults):
+class DanishDefaults(Language.Defaults):  # type: ignore[misc, valid-type]
     tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     infixes = TOKENIZER_INFIXES
     suffixes = TOKENIZER_SUFFIXES

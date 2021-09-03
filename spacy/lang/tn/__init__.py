@@ -4,7 +4,7 @@ from .punctuation import TOKENIZER_INFIXES
 from ...language import Language
 
 
-class SetswanaDefaults(Language.Defaults):
+class SetswanaDefaults(Language.Defaults):  # type: ignore[misc, valid-type]
     infixes = TOKENIZER_INFIXES
     stop_words = STOP_WORDS
     lex_attr_getters = LEX_ATTRS

@@ -9,7 +9,7 @@ from .punctuation import TOKENIZER_INFIXES, TOKENIZER_SUFFIXES
 from ...language import Language
 
 
-class SpanishDefaults(Language.Defaults):
+class SpanishDefaults(Language.Defaults):  # type: ignore[misc, valid-type]
     tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     infixes = TOKENIZER_INFIXES
     suffixes = TOKENIZER_SUFFIXES

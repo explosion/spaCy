@@ -31,11 +31,11 @@ def init_vectors_cli(
     """
     util.logger.setLevel(logging.DEBUG if verbose else logging.INFO)
     msg.info(f"Creating blank nlp object for language '{lang}'")
-    nlp = util.get_lang_class(lang)()
+    nlp = util.get_lang_class(lang)()  # type: ignore[call-arg]
     if jsonl_loc is not None:
-        update_lexemes(nlp, jsonl_loc)
-    convert_vectors(nlp, vectors_loc, truncate=truncate, prune=prune, name=name)
-    msg.good(f"Successfully converted {len(nlp.vocab.vectors)} vectors")
+        update_lexemes(nlp, jsonl_loc)  # type: ignore[arg-type]
+    convert_vectors(nlp, vectors_loc, truncate=truncate, prune=prune, name=name)  # type: ignore[arg-type]
+    msg.good(f"Successfully converted {len(nlp.vocab.vectors)} vectors")  # type: ignore[attr-defined]
     nlp.to_disk(output_dir)
     msg.good(
         "Saved nlp object with vectors to output directory. You can now use the "

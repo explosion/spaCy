@@ -9,7 +9,7 @@ from ...language import Language
 from ...pipeline import Lemmatizer
 
 
-class NorwegianDefaults(Language.Defaults):
+class NorwegianDefaults(Language.Defaults):  # type: ignore[misc, valid-type]
     tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     prefixes = TOKENIZER_PREFIXES
     infixes = TOKENIZER_INFIXES

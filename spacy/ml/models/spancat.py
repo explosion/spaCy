@@ -9,7 +9,7 @@ from ...tokens import Doc
 from ..extract_spans import extract_spans
 
 
-@registry.layers.register("spacy.LinearLogistic.v1")
+@registry.layers.register("spacy.LinearLogistic.v1")  # type: ignore[attr-defined]
 def build_linear_logistic(nO=None, nI=None) -> Model[Floats2d, Floats2d]:
     """An output layer for multi-label classification. It uses a linear layer
     followed by a logistic activation.
@@ -17,13 +17,13 @@ def build_linear_logistic(nO=None, nI=None) -> Model[Floats2d, Floats2d]:
     return chain(Linear(nO=nO, nI=nI, init_W=glorot_uniform_init), Logistic())
 
 
-@registry.layers.register("spacy.mean_max_reducer.v1")
+@registry.layers.register("spacy.mean_max_reducer.v1")  # type: ignore[attr-defined]
 def build_mean_max_reducer(hidden_size: int) -> Model[Ragged, Floats2d]:
     """Reduce sequences by concatenating their mean and max pooled vectors,
     and then combine the concatenated vectors with a hidden layer.
     """
     return chain(
-        concatenate(reduce_last(), reduce_first(), reduce_mean(), reduce_max()),
+        concatenate(reduce_last(), reduce_first(), reduce_mean(), reduce_max()),  # type: ignore[layer-mismatch-output]
         Maxout(nO=hidden_size, normalize=True, dropout=0.0),
     )
 
@@ -42,13 +42,13 @@ def build_spancat_model(
     reducer (Model[Ragged, Floats2d]): The reducer model.
     scorer (Model[Floats2d, Floats2d]): The scorer model.
     """
-    model = chain(
-        with_getitem(0, chain(tok2vec, list2ragged())),
-        extract_spans(),
+    model = chain(  # type: ignore[misc]
+        with_getitem(0, chain(tok2vec, list2ragged())),  # type: ignore[layer-mismatch-input, layer-mismatch-output, misc]
+        extract_spans(),  # type: ignore[layer-mismatch-input]
         reducer,
         scorer,
     )
     model.set_ref("tok2vec", tok2vec)
     model.set_ref("reducer", reducer)
     model.set_ref("scorer", scorer)
-    return model
+    return model  # type: ignore[return-value]

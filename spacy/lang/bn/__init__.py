@@ -7,7 +7,7 @@ from ...language import Language
 from ...pipeline import Lemmatizer
 
 
-class BengaliDefaults(Language.Defaults):
+class BengaliDefaults(Language.Defaults):  # type: ignore[misc, valid-type]
     tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     prefixes = TOKENIZER_PREFIXES
     suffixes = TOKENIZER_SUFFIXES

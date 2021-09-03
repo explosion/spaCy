@@ -11,7 +11,7 @@ from ...language import Language
 from .lemmatizer import CatalanLemmatizer
 
 
-class CatalanDefaults(Language.Defaults):
+class CatalanDefaults(Language.Defaults):  # type: ignore[misc, valid-type]
     tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     infixes = TOKENIZER_INFIXES
     suffixes = TOKENIZER_SUFFIXES

@@ -35,7 +35,7 @@ def console_logger(progress_bar: bool = False):
         logged_pipes = [
             name
             for name, proc in nlp.pipeline
-            if hasattr(proc, "is_trainable") and proc.is_trainable
+            if hasattr(proc, "is_trainable") and proc.is_trainable  # type: ignore[attr-defined]
         ]
         eval_frequency = nlp.config["training"]["eval_frequency"]
         score_weights = nlp.config["training"]["score_weights"]
@@ -125,7 +125,7 @@ def wandb_logger(
         config_dot = util.dict_to_dot(config)
         for field in remove_config_values:
             del config_dot[field]
-        config = util.dot_to_dict(config_dot)
+        config = util.dot_to_dict(config_dot)  # type: ignore[assignment]
         run = wandb.init(project=project_name, config=config, reinit=True)
         console_log_step, console_finalize = console(nlp, stdout, stderr)
 

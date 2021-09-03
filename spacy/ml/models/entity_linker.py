@@ -18,7 +18,7 @@ def build_nel_encoder(tok2vec: Model, nO: Optional[int] = None) -> Model:
             tok2vec
             >> list2ragged()
             >> reduce_mean()
-            >> residual(Maxout(nO=token_width, nI=token_width, nP=2, dropout=0.0))
+            >> residual(Maxout(nO=token_width, nI=token_width, nP=2, dropout=0.0))  # type: ignore[arg-type]
             >> output_layer
         )
         model.set_ref("output_layer", output_layer)

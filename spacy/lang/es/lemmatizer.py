@@ -52,7 +52,7 @@ class SpanishLemmatizer(Lemmatizer):
                 rule_pos = "verb"
             else:
                 rule_pos = pos
-            rule = self.select_rule(rule_pos, features)
+            rule = self.select_rule(rule_pos, features)  # type: ignore[arg-type]
             index = self.lookups.get_table("lemma_index").get(rule_pos, [])
             lemmas = getattr(self, "lemmatize_" + rule_pos)(
                 string, features, rule, index
@@ -141,7 +141,7 @@ class SpanishLemmatizer(Lemmatizer):
         # If none of the rules applies, return the original word
         return [word]
 
-    def lemmatize_det(
+    def lemmatize_det(  # type: ignore[return]
         self, word: str, features: List[str], rule: str, index: List[str]
     ) -> List[str]:
         """
@@ -267,7 +267,7 @@ class SpanishLemmatizer(Lemmatizer):
         word = re.sub(r",", r".", word)
         return [word]
 
-    def lemmatize_pron(
+    def lemmatize_pron(  # type: ignore[return]
         self, word: str, features: List[str], rule: str, index: List[str]
     ) -> List[str]:
         """
@@ -393,7 +393,7 @@ class SpanishLemmatizer(Lemmatizer):
     ) -> List[str]:
         # Strip and collect pronouns
         pron_patt = "^(.*?)([mts]e|l[aeo]s?|n?os)$"
-        prons = []
+        prons = []  # type: ignore[var-annotated]
         verb = word
         m = re.search(pron_patt, verb)
         while m is not None and len(prons) <= 3:
@@ -408,9 +408,9 @@ class SpanishLemmatizer(Lemmatizer):
         if exc is not None:
             verb_lemma = exc[0]
         else:
-            rule = self.select_rule("verb", features)
+            rule = self.select_rule("verb", features)  # type: ignore[assignment]
             verb_lemma = self.lemmatize_verb(
-                verb, features - {"PronType=Prs"}, rule, index
+                verb, features - {"PronType=Prs"}, rule, index  # type: ignore[operator]
             )[0]
         pron_lemmas = []
         for pron in prons:
@@ -418,6 +418,6 @@ class SpanishLemmatizer(Lemmatizer):
             if exc is not None:
                 pron_lemmas.append(exc[0])
             else:
-                rule = self.select_rule("pron", features)
+                rule = self.select_rule("pron", features)  # type: ignore[assignment]
                 pron_lemmas.append(self.lemmatize_pron(pron, features, rule, index)[0])
         return [verb_lemma + " " + " ".join(pron_lemmas)]

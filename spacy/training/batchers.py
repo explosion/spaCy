@@ -113,7 +113,7 @@ def minibatch_by_padded_size(
     if isinstance(size, int):
         size_ = itertools.repeat(size)
     else:
-        size_ = size
+        size_ = size  # type: ignore[assignment]
     for outer_batch in minibatch(seqs, size=buffer):
         outer_batch = list(outer_batch)
         target_size = next(size_)
@@ -149,9 +149,9 @@ def minibatch_by_words(
     if isinstance(size, int):
         size_ = itertools.repeat(size)
     elif isinstance(size, List):
-        size_ = iter(size)
+        size_ = iter(size)  # type: ignore[assignment]
     else:
-        size_ = size
+        size_ = size  # type: ignore[assignment]
     target_size = next(size_)
     tol_size = target_size * tolerance
     batch = []
@@ -216,7 +216,7 @@ def _batch_by_length(
     lengths_indices = [(get_length(seq), i) for i, seq in enumerate(seqs)]
     lengths_indices.sort()
     batches = []
-    batch = []
+    batch = []  # type: ignore[var-annotated]
     for length, i in lengths_indices:
         if not batch:
             batch.append(i)

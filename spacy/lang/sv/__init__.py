@@ -12,7 +12,7 @@ from ...pipeline import Lemmatizer
 from ..da.punctuation import TOKENIZER_INFIXES, TOKENIZER_SUFFIXES
 
 
-class SwedishDefaults(Language.Defaults):
+class SwedishDefaults(Language.Defaults):  # type: ignore[misc, valid-type]
     tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     infixes = TOKENIZER_INFIXES
     suffixes = TOKENIZER_SUFFIXES

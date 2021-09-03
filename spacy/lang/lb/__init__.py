@@ -5,7 +5,7 @@ from .stop_words import STOP_WORDS
 from ...language import Language
 
 
-class LuxembourgishDefaults(Language.Defaults):
+class LuxembourgishDefaults(Language.Defaults):  # type: ignore[misc, valid-type]
     tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     infixes = TOKENIZER_INFIXES
     lex_attr_getters = LEX_ATTRS

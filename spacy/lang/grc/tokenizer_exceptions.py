@@ -108,7 +108,7 @@ _other_exc = {
 
 _exc.update(_other_exc)
 
-_exc_data = {}
+_exc_data = {}  # type: ignore[var-annotated]
 
 _exc.update(_exc_data)
 

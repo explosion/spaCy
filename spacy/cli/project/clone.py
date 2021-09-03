@@ -84,7 +84,7 @@ def check_clone(name: str, dest: Path, repo: str) -> None:
         f"To clone a project without Git, copy the files from the '{name}' "
         f"directory in the {repo} to {dest} manually.",
     )
-    get_git_version(error=git_err)
+    get_git_version(error=git_err)  # type: ignore[arg-type]
     if not dest:
         msg.fail(f"Not a valid directory to clone project: {dest}", exits=1)
     if dest.exists():

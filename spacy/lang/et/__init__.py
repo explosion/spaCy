@@ -2,7 +2,7 @@ from .stop_words import STOP_WORDS
 from ...language import Language
 
 
-class EstonianDefaults(Language.Defaults):
+class EstonianDefaults(Language.Defaults):  # type: ignore[misc, valid-type]
     stop_words = STOP_WORDS
 
 

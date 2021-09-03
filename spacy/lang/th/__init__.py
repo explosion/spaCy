@@ -39,7 +39,7 @@ class ThaiTokenizer(DummyTokenizer):
         return Doc(self.vocab, words=words, spaces=spaces)
 
 
-class ThaiDefaults(Language.Defaults):
+class ThaiDefaults(Language.Defaults):  # type: ignore[misc, valid-type]
     config = load_config_from_str(DEFAULT_CONFIG)
     lex_attr_getters = LEX_ATTRS
     stop_words = STOP_WORDS

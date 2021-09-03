@@ -14,7 +14,7 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Span]:
     # fmt: off
     # labels = ["nsubj", "nsubj:pass", "obj", "iobj", "ROOT", "appos", "nmod", "nmod:poss"]
     # fmt: on
-    doc = doclike.doc  # Ensure works on both Doc and Span.
+    doc = doclike.doc  # type: ignore[union-attr]    # Ensure works on both Doc and Span.
 
     # Check for dependencies: POS, DEP
     if not doc.has_annotation("POS"):
@@ -29,15 +29,15 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Span]:
     # det = determiner
     # det:poss = possessive determiner
     noun_deps = [
-        doc.vocab.strings[label] for label in ["amod", "nmod:poss", "det", "det:poss"]
+        doc.vocab.strings[label] for label in ["amod", "nmod:poss", "det", "det:poss"]  # type: ignore[union-attr]
     ]
 
     # nsubj = nominal subject
     # nsubj:pass = passive nominal subject
-    pronoun_deps = [doc.vocab.strings[label] for label in ["nsubj", "nsubj:pass"]]
+    pronoun_deps = [doc.vocab.strings[label] for label in ["nsubj", "nsubj:pass"]]  # type: ignore[union-attr]
 
     # Label NP for the Span to identify it as Noun-Phrase
-    span_label = doc.vocab.strings.add("NP")
+    span_label = doc.vocab.strings.add("NP")  # type: ignore[union-attr]
 
     # Only NOUNS and PRONOUNS matter
     for i, word in enumerate(filter(lambda x: x.pos in [PRON, NOUN], doclike)):
@@ -47,7 +47,7 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Span]:
             # Some debugging. It happens that VERBS are POS-TAGGED as NOUNS
             # We check if the word has a "nsubj", if it's the case, we eliminate it
             nsubjs = filter(
-                lambda x: x.dep == doc.vocab.strings["nsubj"], word.children
+                lambda x: x.dep == doc.vocab.strings["nsubj"], word.children  # type: ignore[union-attr]
             )
             next_word = next(nsubjs, None)
             if next_word is not None:
@@ -59,14 +59,14 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Span]:
 
             start_span = min(children_i)
             end_span = max(children_i) + 1
-            yield start_span, end_span, span_label
+            yield start_span, end_span, span_label  # type: ignore[misc]
 
         # PRONOUNS only if it is the subject of a verb
         elif word.pos == PRON:
             if word.dep in pronoun_deps:
                 start_span = word.i
                 end_span = word.i + 1
-                yield start_span, end_span, span_label
+                yield start_span, end_span, span_label  # type: ignore[misc]
 
 
 SYNTAX_ITERATORS = {"noun_chunks": noun_chunks}

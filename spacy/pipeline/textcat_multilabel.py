@@ -73,16 +73,16 @@ subword_features = true
     default_config={"threshold": 0.5, "model": DEFAULT_MULTI_TEXTCAT_MODEL},
     default_score_weights={
         "cats_score": 1.0,
-        "cats_score_desc": None,
-        "cats_micro_p": None,
-        "cats_micro_r": None,
-        "cats_micro_f": None,
-        "cats_macro_p": None,
-        "cats_macro_r": None,
-        "cats_macro_f": None,
-        "cats_macro_auc": None,
-        "cats_f_per_type": None,
-        "cats_macro_auc_per_type": None,
+        "cats_score_desc": None,  # type: ignore[dict-item]
+        "cats_micro_p": None,  # type: ignore[dict-item]
+        "cats_micro_r": None,  # type: ignore[dict-item]
+        "cats_micro_f": None,  # type: ignore[dict-item]
+        "cats_macro_p": None,  # type: ignore[dict-item]
+        "cats_macro_r": None,  # type: ignore[dict-item]
+        "cats_macro_f": None,  # type: ignore[dict-item]
+        "cats_macro_auc": None,  # type: ignore[dict-item]
+        "cats_f_per_type": None,  # type: ignore[dict-item]
+        "cats_macro_auc_per_type": None,  # type: ignore[dict-item]
     },
 )
 def make_multilabel_textcat(
@@ -131,7 +131,7 @@ class MultiLabel_TextCategorizer(TextCategorizer):
         cfg = {"labels": [], "threshold": threshold}
         self.cfg = dict(cfg)
 
-    def initialize(
+    def initialize(  # type: ignore[override]
         self,
         get_examples: Callable[[], Iterable[Example]],
         *,

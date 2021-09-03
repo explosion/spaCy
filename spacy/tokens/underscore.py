@@ -6,9 +6,9 @@ from ..errors import Errors
 
 class Underscore:
     mutable_types = (dict, list, set)
-    doc_extensions = {}
-    span_extensions = {}
-    token_extensions = {}
+    doc_extensions = {}  # type: ignore[var-annotated]
+    span_extensions = {}  # type: ignore[var-annotated]
+    token_extensions = {}  # type: ignore[var-annotated]
 
     def __init__(self, extensions, obj, start=None, end=None):
         object.__setattr__(self, "_extensions", extensions)

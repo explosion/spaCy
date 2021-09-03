@@ -11,7 +11,7 @@ from ..matcher import Matcher
 from ..scorer import Scorer
 from ..symbols import IDS, TAG, POS, MORPH, LEMMA
 from ..tokens import Doc, Span
-from ..tokens._retokenize import normalize_token_attrs, set_token_attrs
+from ..tokens._retokenize import normalize_token_attrs, set_token_attrs  # type: ignore[attr-defined]
 from ..vocab import Vocab
 from ..util import SimpleFrozenList
 from .. import util
@@ -54,9 +54,9 @@ class AttributeRuler(Pipe):
         self.vocab = vocab
         self.matcher = Matcher(self.vocab, validate=validate)
         self.validate = validate
-        self.attrs = []
-        self._attrs_unnormed = []  # store for reference
-        self.indices = []
+        self.attrs = []  # type: ignore[var-annotated]
+        self._attrs_unnormed = []  # type: ignore[var-annotated]    # store for reference
+        self.indices = []  # type: ignore[var-annotated]
 
     def clear(self) -> None:
         """Reset all patterns."""
@@ -88,7 +88,7 @@ class AttributeRuler(Pipe):
         if morph_rules:
             self.load_from_morph_rules(morph_rules)
 
-    def __call__(self, doc: Doc) -> Doc:
+    def __call__(self, doc: Doc) -> Doc:  # type: ignore[return]
         """Apply the AttributeRuler to a Doc and set all attribute exceptions.
 
         doc (Doc): The document to process.
@@ -107,8 +107,8 @@ class AttributeRuler(Pipe):
     def match(self, doc: Doc):
         matches = self.matcher(doc, allow_missing=True)
         # Sort by the attribute ID, so that later rules have precedence
-        matches = [
-            (int(self.vocab.strings[m_id]), m_id, s, e) for m_id, s, e in matches
+        matches = [  # type: ignore[assignment]
+            (int(self.vocab.strings[m_id]), m_id, s, e) for m_id, s, e in matches  # type: ignore[assignment, attr-defined]
         ]
         matches.sort()
         return matches
@@ -149,12 +149,12 @@ class AttributeRuler(Pipe):
             pattern = [{"TAG": tag}]
             attrs, morph_attrs = _split_morph_attrs(attrs)
             if "MORPH" not in attrs:
-                morph = self.vocab.morphology.add(morph_attrs)
-                attrs["MORPH"] = self.vocab.strings[morph]
+                morph = self.vocab.morphology.add(morph_attrs)  # type: ignore[attr-defined]
+                attrs["MORPH"] = self.vocab.strings[morph]  # type: ignore[attr-defined]
             else:
-                morph = self.vocab.morphology.add(attrs["MORPH"])
-                attrs["MORPH"] = self.vocab.strings[morph]
-            self.add([pattern], attrs)
+                morph = self.vocab.morphology.add(attrs["MORPH"])  # type: ignore[attr-defined]
+                attrs["MORPH"] = self.vocab.strings[morph]  # type: ignore[attr-defined]
+            self.add([pattern], attrs)  # type: ignore[list-item]
 
     def load_from_morph_rules(
         self, morph_rules: Dict[str, Dict[str, Dict[Union[int, str], Union[int, str]]]]
@@ -173,12 +173,12 @@ class AttributeRuler(Pipe):
                 attrs = morph_rules[tag][word]
                 attrs, morph_attrs = _split_morph_attrs(attrs)
                 if "MORPH" in attrs:
-                    morph = self.vocab.morphology.add(attrs["MORPH"])
-                    attrs["MORPH"] = self.vocab.strings[morph]
+                    morph = self.vocab.morphology.add(attrs["MORPH"])  # type: ignore[attr-defined]
+                    attrs["MORPH"] = self.vocab.strings[morph]  # type: ignore[attr-defined]
                 elif morph_attrs:
-                    morph = self.vocab.morphology.add(morph_attrs)
-                    attrs["MORPH"] = self.vocab.strings[morph]
-                self.add([pattern], attrs)
+                    morph = self.vocab.morphology.add(morph_attrs)  # type: ignore[attr-defined]
+                    attrs["MORPH"] = self.vocab.strings[morph]  # type: ignore[attr-defined]
+                self.add([pattern], attrs)  # type: ignore[list-item]
 
     def add(
         self, patterns: Iterable[MatcherPatternType], attrs: Dict, index: int = 0
@@ -198,7 +198,7 @@ class AttributeRuler(Pipe):
         # We need to make a string here, because otherwise the ID we pass back
         # will be interpreted as the hash of a string, rather than an ordinal.
         key = str(len(self.attrs))
-        self.matcher.add(self.vocab.strings.add(key), patterns)
+        self.matcher.add(self.vocab.strings.add(key), patterns)  # type: ignore[arg-type, attr-defined]
         self._attrs_unnormed.append(attrs)
         attrs = normalize_token_attrs(self.vocab, attrs)
         self.attrs.append(attrs)
@@ -214,7 +214,7 @@ class AttributeRuler(Pipe):
         DOCS: https://spacy.io/api/attributeruler#add_patterns
         """
         for p in patterns:
-            self.add(**p)
+            self.add(**p)  # type: ignore[arg-type]
 
     @property
     def patterns(self) -> List[AttributeRulerPatternType]:
@@ -226,7 +226,7 @@ class AttributeRuler(Pipe):
             p["attrs"] = self._attrs_unnormed[i]
             p["index"] = self.indices[i]
             all_patterns.append(p)
-        return all_patterns
+        return all_patterns  # type: ignore[return-value]
 
     def score(self, examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
         """Score a batch of examples.
@@ -276,7 +276,7 @@ class AttributeRuler(Pipe):
         DOCS: https://spacy.io/api/attributeruler#to_bytes
         """
         serialize = {}
-        serialize["vocab"] = lambda: self.vocab.to_bytes(exclude=exclude)
+        serialize["vocab"] = lambda: self.vocab.to_bytes(exclude=exclude)  # type: ignore[arg-type]
         serialize["patterns"] = lambda: srsly.msgpack_dumps(self.patterns)
         return util.to_bytes(serialize, exclude)
 
@@ -296,7 +296,7 @@ class AttributeRuler(Pipe):
             self.add_patterns(srsly.msgpack_loads(b))
 
         deserialize = {
-            "vocab": lambda b: self.vocab.from_bytes(b, exclude=exclude),
+            "vocab": lambda b: self.vocab.from_bytes(b, exclude=exclude),  # type: ignore[arg-type]
             "patterns": load_patterns,
         }
         util.from_bytes(bytes_data, deserialize, exclude)
@@ -313,7 +313,7 @@ class AttributeRuler(Pipe):
         DOCS: https://spacy.io/api/attributeruler#to_disk
         """
         serialize = {
-            "vocab": lambda p: self.vocab.to_disk(p, exclude=exclude),
+            "vocab": lambda p: self.vocab.to_disk(p, exclude=exclude),  # type: ignore[arg-type]
             "patterns": lambda p: srsly.write_msgpack(p, self.patterns),
         }
         util.to_disk(path, serialize, exclude)
@@ -334,7 +334,7 @@ class AttributeRuler(Pipe):
             self.add_patterns(srsly.read_msgpack(p))
 
         deserialize = {
-            "vocab": lambda p: self.vocab.from_disk(p, exclude=exclude),
+            "vocab": lambda p: self.vocab.from_disk(p, exclude=exclude),  # type: ignore[arg-type]
             "patterns": load_patterns,
         }
         util.from_disk(path, deserialize, exclude)

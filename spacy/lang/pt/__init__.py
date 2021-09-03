@@ -5,7 +5,7 @@ from .punctuation import TOKENIZER_INFIXES, TOKENIZER_PREFIXES
 from ...language import Language
 
 
-class PortugueseDefaults(Language.Defaults):
+class PortugueseDefaults(Language.Defaults):  # type: ignore[misc, valid-type]
     tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     infixes = TOKENIZER_INFIXES
     prefixes = TOKENIZER_PREFIXES

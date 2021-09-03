@@ -53,7 +53,7 @@ def train(
         set_gpu_allocator(allocator)
     T = registry.resolve(config["training"], schema=ConfigSchemaTraining)
     dot_names = [T["train_corpus"], T["dev_corpus"]]
-    train_corpus, dev_corpus = resolve_dot_names(config, dot_names)
+    train_corpus, dev_corpus = resolve_dot_names(config, dot_names)  # type: ignore[misc]
     optimizer = T["optimizer"]
     score_weights = T["score_weights"]
     batcher = T["batcher"]
@@ -80,8 +80,8 @@ def train(
     training_step_iterator = train_while_improving(
         nlp,
         optimizer,
-        create_train_batches(nlp, train_corpus, batcher, T["max_epochs"]),
-        create_evaluation_callback(nlp, dev_corpus, score_weights),
+        create_train_batches(nlp, train_corpus, batcher, T["max_epochs"]),  # type: ignore[has-type]
+        create_evaluation_callback(nlp, dev_corpus, score_weights),  # type: ignore[has-type]
         dropout=T["dropout"],
         accumulate_gradient=T["accumulate_gradient"],
         patience=T["patience"],
@@ -90,7 +90,7 @@ def train(
         exclude=frozen_components,
         annotating_components=annotating_components,
     )
-    clean_output_dir(output_path)
+    clean_output_dir(output_path)  # type: ignore[arg-type]
     stdout.write(msg.info(f"Pipeline: {nlp.pipe_names}") + "\n")
     if frozen_components:
         stdout.write(msg.info(f"Frozen components: {frozen_components}") + "\n")
@@ -194,17 +194,17 @@ def train_while_improving(
     else:
         dropouts = dropout
     results = []
-    losses = {}
+    losses = {}  # type: ignore[var-annotated]
     words_seen = 0
     start_time = timer()
     for step, (epoch, batch) in enumerate(train_data):
-        dropout = next(dropouts)
+        dropout = next(dropouts)  # type: ignore[call-overload]
         for subbatch in subdivide_batch(batch, accumulate_gradient):
             nlp.update(
                 subbatch,
                 drop=dropout,
                 losses=losses,
-                sgd=False,
+                sgd=False,  # type: ignore[arg-type]
                 exclude=exclude,
                 annotates=annotating_components,
             )
@@ -213,10 +213,10 @@ def train_while_improving(
             if (
                 name not in exclude
                 and hasattr(proc, "is_trainable")
-                and proc.is_trainable
-                and proc.model not in (True, False, None)
+                and proc.is_trainable  # type: ignore[attr-defined]
+                and proc.model not in (True, False, None)  # type: ignore[attr-defined]
             ):
-                proc.finish_update(optimizer)
+                proc.finish_update(optimizer)  # type: ignore[attr-defined]
         optimizer.step_schedules()
         if not (step % eval_frequency):
             if optimizer.averages:
@@ -291,13 +291,13 @@ def create_evaluation_callback(
                 raise ValueError(Errors.E915.format(name=key, score_type=type(value)))
         try:
             weighted_score = sum(
-                scores.get(s, 0.0) * weights.get(s, 0.0) for s in weights
+                scores.get(s, 0.0) * weights.get(s, 0.0) for s in weights  # type: ignore[operator]
             )
         except KeyError as e:
             keys = list(scores.keys())
             err = Errors.E983.format(dict="score_weights", key=str(e), keys=keys)
             raise KeyError(err) from None
-        return weighted_score, scores
+        return weighted_score, scores  # type: ignore[return-value]
 
     return evaluate
 
@@ -318,7 +318,7 @@ def create_train_batches(
         if max_epochs >= 0:
             random.shuffle(examples)
         else:
-            examples = corpus(nlp)
+            examples = corpus(nlp)  # type: ignore[assignment]
         for batch in batcher(examples):
             yield epoch, batch
         epoch += 1
@@ -359,8 +359,8 @@ def clean_output_dir(path: Union[str, Path]) -> None:
     by nlp.to_disk, which could preserve existing subdirectories (e.g.
     components that don't exist anymore).
     """
-    if path is not None and path.exists():
-        for subdir in [path / DIR_MODEL_BEST, path / DIR_MODEL_LAST]:
+    if path is not None and path.exists():  # type: ignore[union-attr]
+        for subdir in [path / DIR_MODEL_BEST, path / DIR_MODEL_LAST]:  # type: ignore[operator]
             if subdir.exists():
                 try:
                     shutil.rmtree(str(subdir))

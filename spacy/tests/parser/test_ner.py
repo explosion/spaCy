@@ -9,7 +9,7 @@ from spacy.lookups import Lookups
 from spacy.pipeline._parser_internals.ner import BiluoPushDown
 from spacy.training import Example
 from spacy.tokens import Doc, Span
-from spacy.vocab import Vocab, registry
+from spacy.vocab import Vocab, registry  # type: ignore[attr-defined]
 import logging
 
 from ..util import make_tempdir

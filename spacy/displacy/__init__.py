@@ -47,14 +47,14 @@ def render(
     if style not in factories:
         raise ValueError(Errors.E087.format(style=style))
     if isinstance(docs, (Doc, Span, dict)):
-        docs = [docs]
+        docs = [docs]  # type: ignore[list-item]
     docs = [obj if not isinstance(obj, Span) else obj.as_doc() for obj in docs]
     if not all(isinstance(obj, (Doc, Span, dict)) for obj in docs):
         raise ValueError(Errors.E096)
     renderer_func, converter = factories[style]
     renderer = renderer_func(options=options)
-    parsed = [converter(doc, options) for doc in docs] if not manual else docs
-    _html["parsed"] = renderer.render(parsed, page=page, minify=minify).strip()
+    parsed = [converter(doc, options) for doc in docs] if not manual else docs  # type: ignore[arg-type]
+    _html["parsed"] = renderer.render(parsed, page=page, minify=minify).strip()  # type: ignore[attr-defined]
     html = _html["parsed"]
     if RENDER_WRAPPER is not None:
         html = RENDER_WRAPPER(html)
@@ -133,7 +133,7 @@ def parse_deps(orig_doc: Doc, options: Dict[str, Any] = {}) -> Dict[str, Any]:
                     "lemma": np.root.lemma_,
                     "ent_type": np.root.ent_type_,
                 }
-                retokenizer.merge(np, attrs=attrs)
+                retokenizer.merge(np, attrs=attrs)  # type: ignore[arg-type]
     if options.get("collapse_punct", True):
         spans = []
         for word in doc[:-1]:
@@ -148,7 +148,7 @@ def parse_deps(orig_doc: Doc, options: Dict[str, Any] = {}) -> Dict[str, Any]:
         with doc.retokenize() as retokenizer:
             for span, tag, lemma, ent_type in spans:
                 attrs = {"tag": tag, "lemma": lemma, "ent_type": ent_type}
-                retokenizer.merge(span, attrs=attrs)
+                retokenizer.merge(span, attrs=attrs)  # type: ignore[arg-type]
     fine_grained = options.get("fine_grained")
     add_lemma = options.get("add_lemma")
     words = [
@@ -214,5 +214,5 @@ def set_render_wrapper(func: Callable[[str], str]) -> None:
 def get_doc_settings(doc: Doc) -> Dict[str, Any]:
     return {
         "lang": doc.lang_,
-        "direction": doc.vocab.writing_system.get("direction", "ltr"),
+        "direction": doc.vocab.writing_system.get("direction", "ltr"),  # type: ignore[attr-defined]
     }

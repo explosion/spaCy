@@ -5,7 +5,7 @@ from .punctuation import TOKENIZER_INFIXES, TOKENIZER_SUFFIXES
 from ...language import Language
 
 
-class FinnishDefaults(Language.Defaults):
+class FinnishDefaults(Language.Defaults):  # type: ignore[misc, valid-type]
     infixes = TOKENIZER_INFIXES
     suffixes = TOKENIZER_SUFFIXES
     tokenizer_exceptions = TOKENIZER_EXCEPTIONS

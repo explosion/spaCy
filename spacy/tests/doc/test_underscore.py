@@ -1,5 +1,5 @@
 import pytest
-from mock import Mock
+from mock import Mock  # type: ignore[import]
 from spacy.tokens import Doc, Span, Token
 from spacy.tokens.underscore import Underscore
 
