@@ -25,6 +25,9 @@ steps:
       ${{ parameters.prefix }} python setup.py sdist --formats=gztar
     displayName: "Compile and build sdist"
 
+  - script: python -m mypy spacy
+    displayName: 'Run mypy'
+
   - task: DeleteFiles@1
     inputs:
       contents: "spacy"

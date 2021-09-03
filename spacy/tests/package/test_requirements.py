@@ -12,6 +12,7 @@ def test_build_dependencies():
         "flake8",
         "hypothesis",
         "pre-commit",
+        "mypy",
     ]
     # ignore language-specific packages that shouldn't be installed by all
     libs_ignore_setup = [
