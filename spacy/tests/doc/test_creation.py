@@ -70,3 +70,10 @@ def test_create_with_heads_and_no_deps(vocab):
     heads = list(range(len(words)))
     with pytest.raises(ValueError):
         Doc(vocab, words=words, heads=heads)
+
+
+def test_create_invalid_pos(vocab):
+    words = "I like ginger".split()
+    pos = "QQ ZZ XX".split()
+    with pytest.raises(ValueError):
+        Doc(vocab, words=words, pos=pos)
