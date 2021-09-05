@@ -438,7 +438,7 @@ cdef class DependencyMatcher:
         return candidate_children
 
     def _normalize_key(self, key):
-        if isinstance(key, basestring):
+        if isinstance(key, unicode):
             return self.vocab.strings.add(key)
         else:
             return key

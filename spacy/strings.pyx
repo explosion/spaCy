@@ -110,7 +110,7 @@ cdef class StringStore:
         string_or_id (bytes, unicode or uint64): The value to encode.
         Returns (str / uint64): The value to be retrieved.
         """
-        if isinstance(string_or_id, basestring) and len(string_or_id) == 0:
+        if isinstance(string_or_id, unicode) and len(string_or_id) == 0:
             return 0
         elif string_or_id == 0:
             return ""
@@ -135,14 +135,14 @@ cdef class StringStore:
 
     def as_int(self, key):
         """If key is an int, return it; otherwise, get the int value."""
-        if not isinstance(key, basestring):
+        if not isinstance(key, unicode):
             return key
         else:
             return self[key]
 
     def as_string(self, key):
         """If key is a string, return it; otherwise, get the string value."""
-        if isinstance(key, basestring):
+        if isinstance(key, unicode):
             return key
         else:
             return self[key]
