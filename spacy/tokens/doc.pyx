@@ -260,7 +260,7 @@ cdef class Doc:
             raise ValueError(Errors.E027)
         cdef const LexemeC* lexeme
         for word, has_space in zip(words, spaces):
-            if isinstance(word, unicode):
+            if isinstance(word, str):
                 lexeme = self.vocab.get(self.mem, word)
             elif isinstance(word, bytes):
                 raise ValueError(Errors.E028.format(value=word))

@@ -110,14 +110,14 @@ cdef class StringStore:
         string_or_id (bytes, unicode or uint64): The value to encode.
         Returns (str / uint64): The value to be retrieved.
         """
-        if isinstance(string_or_id, unicode) and len(string_or_id) == 0:
+        if isinstance(string_or_id, str) and len(string_or_id) == 0:
             return 0
         elif string_or_id == 0:
             return ""
         elif string_or_id in SYMBOLS_BY_STR:
             return SYMBOLS_BY_STR[string_or_id]
         cdef hash_t key
-        if isinstance(string_or_id, unicode):
+        if isinstance(string_or_id, str):
             key = hash_string(string_or_id)
             return key
         elif isinstance(string_or_id, bytes):
@@ -135,14 +135,14 @@ cdef class StringStore:
 
     def as_int(self, key):
         """If key is an int, return it; otherwise, get the int value."""
-        if not isinstance(key, unicode):
+        if not isinstance(key, str):
             return key
         else:
             return self[key]
 
     def as_string(self, key):
         """If key is a string, return it; otherwise, get the string value."""
-        if isinstance(key, unicode):
+        if isinstance(key, str):
             return key
         else:
             return self[key]
@@ -153,7 +153,7 @@ cdef class StringStore:
         string (str): The string to add.
         RETURNS (uint64): The string's hash value.
         """
-        if isinstance(string, unicode):
+        if isinstance(string, str):
             if string in SYMBOLS_BY_STR:
                 return SYMBOLS_BY_STR[string]
             key = hash_string(string)
@@ -189,7 +189,7 @@ cdef class StringStore:
             return True
         elif string in SYMBOLS_BY_STR:
             return True
-        elif isinstance(string, unicode):
+        elif isinstance(string, str):
             key = hash_string(string)
         else:
             string = string.encode("utf8")

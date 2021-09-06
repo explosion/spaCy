@@ -184,7 +184,7 @@ cdef class Vocab:
         if self.lex_attr_getters is not None:
             for attr, func in self.lex_attr_getters.items():
                 value = func(string)
-                if isinstance(value, unicode):
+                if isinstance(value, str):
                     value = self.strings.add(value)
                 if value is not None:
                     Lexeme.set_struct_attr(lex, attr, value)
@@ -209,7 +209,7 @@ cdef class Vocab:
         cdef hash_t int_key
         if isinstance(key, bytes):
             int_key = self.strings[key.decode("utf8")]
-        elif isinstance(key, unicode):
+        elif isinstance(key, str):
             int_key = self.strings[key]
         else:
             int_key = key
@@ -247,7 +247,7 @@ cdef class Vocab:
         DOCS: https://spacy.io/api/vocab#getitem
         """
         cdef attr_t orth
-        if isinstance(id_or_string, unicode):
+        if isinstance(id_or_string, str):
             orth = self.strings.add(id_or_string)
         else:
             orth = id_or_string
