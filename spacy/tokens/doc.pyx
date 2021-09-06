@@ -1362,7 +1362,7 @@ cdef class Doc:
             self.has_unknown_spaces = msg["has_unknown_spaces"]
         start = 0
         cdef const LexemeC* lex
-        cdef unicode orth_
+        cdef str orth_
         text = msg["text"]
         attrs = msg["array_body"]
         for i in range(attrs.shape[0]):
@@ -1423,7 +1423,7 @@ cdef class Doc:
             attributes are inherited from the syntactic root of the span.
         RETURNS (Token): The first newly merged token.
         """
-        cdef unicode tag, lemma, ent_type
+        cdef str tag, lemma, ent_type
         attr_len = len(attributes)
         span_len = len(spans)
         if not attr_len == span_len:

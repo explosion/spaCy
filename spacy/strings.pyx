@@ -33,7 +33,7 @@ def get_string_id(key):
         return hash_utf8(chars, len(chars))
 
 
-cpdef hash_t hash_string(unicode string) except 0:
+cpdef hash_t hash_string(str string) except 0:
     chars = string.encode("utf8")
     return hash_utf8(chars, len(chars))
 
@@ -46,7 +46,7 @@ cdef uint32_t hash32_utf8(char* utf8_string, int length) nogil:
     return hash32(utf8_string, length, 1)
 
 
-cdef unicode decode_Utf8Str(const Utf8Str* string):
+cdef str decode_Utf8Str(const Utf8Str* string):
     cdef int i, length
     if string.s[0] < sizeof(string.s) and string.s[0] != 0:
         return string.s[1:string.s[0]+1].decode("utf8")
@@ -107,7 +107,7 @@ cdef class StringStore:
     def __getitem__(self, object string_or_id):
         """Retrieve a string from a given hash, or vice versa.
 
-        string_or_id (bytes, unicode or uint64): The value to encode.
+        string_or_id (bytes, str or uint64): The value to encode.
         Returns (str / uint64): The value to be retrieved.
         """
         if isinstance(string_or_id, str) and len(string_or_id) == 0:
@@ -269,7 +269,7 @@ cdef class StringStore:
         for string in strings:
             self.add(string)
 
-    cdef const Utf8Str* intern_unicode(self, unicode py_string):
+    cdef const Utf8Str* intern_unicode(self, str py_string):
         # 0 means missing, but we don't bother offsetting the index.
         cdef bytes byte_string = py_string.encode("utf8")
         return self._intern_utf8(byte_string, len(byte_string))

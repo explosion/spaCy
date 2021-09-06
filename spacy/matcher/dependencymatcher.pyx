@@ -151,9 +151,9 @@ cdef class DependencyMatcher:
         Creates a token key to be used by the matcher
         """
         return self._normalize_key(
-            unicode(key) + DELIMITER + 
-            unicode(pattern_idx) + DELIMITER + 
-            unicode(token_idx)
+            str(key) + DELIMITER +
+            str(pattern_idx) + DELIMITER +
+            str(token_idx)
         )
 
     def add(self, key, patterns, *, on_match=None):

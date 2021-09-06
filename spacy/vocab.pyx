@@ -60,7 +60,7 @@ cdef class Vocab:
             vice versa.
         lookups (Lookups): Container for large lookup tables and dictionaries.
         oov_prob (float): Default OOV probability.
-        vectors_name (unicode): Optional name to identify the vectors table.
+        vectors_name (str): Optional name to identify the vectors table.
         get_noun_chunks (Optional[Callable[[Union[Doc, Span], Iterator[Span]]]]):
             A function that yields base noun phrases used for Doc.noun_chunks.
         """
@@ -105,7 +105,7 @@ cdef class Vocab:
         See also: `Lexeme.set_flag`, `Lexeme.check_flag`, `Token.set_flag`,
         `Token.check_flag`.
 
-        flag_getter (callable): A function `f(unicode) -> bool`, to get the
+        flag_getter (callable): A function `f(str) -> bool`, to get the
             flag value.
         flag_id (int): An integer between 1 and 63 (inclusive), specifying
             the bit at which the flag will be stored. If -1, the lowest
@@ -128,7 +128,7 @@ cdef class Vocab:
         self.lex_attr_getters[flag_id] = flag_getter
         return flag_id
 
-    cdef const LexemeC* get(self, Pool mem, unicode string) except NULL:
+    cdef const LexemeC* get(self, Pool mem, str string) except NULL:
         """Get a pointer to a `LexemeC` from the lexicon, creating a new
         `Lexeme` if necessary using memory acquired from the given pool. If the
         pool is the lexicon's own memory, the lexeme is saved in the lexicon.
@@ -162,7 +162,7 @@ cdef class Vocab:
         else:
             return self._new_lexeme(mem, self.strings[orth])
 
-    cdef const LexemeC* _new_lexeme(self, Pool mem, unicode string) except NULL:
+    cdef const LexemeC* _new_lexeme(self, Pool mem, str string) except NULL:
         # I think this heuristic is bad, and the Vocab should always
         # own the lexemes. It avoids weird bugs this way, as it's how the thing
         # was originally supposed to work. The best solution to the growing
@@ -201,7 +201,7 @@ cdef class Vocab:
     def __contains__(self, key):
         """Check whether the string or int key has an entry in the vocabulary.
 
-        string (unicode): The ID string.
+        string (str): The ID string.
         RETURNS (bool) Whether the string has an entry in the vocabulary.
 
         DOCS: https://spacy.io/api/vocab#contains
@@ -234,7 +234,7 @@ cdef class Vocab:
         previously unseen unicode string is given, a new lexeme is created and
         stored.
 
-        id_or_string (int or unicode): The integer ID of a word, or its unicode
+        id_or_string (int or str): The integer ID of a word, or its unicode
             string. If `int >= Lexicon.size`, `IndexError` is raised. If
             `id_or_string` is neither an int nor a unicode string, `ValueError`
             is raised.
@@ -348,7 +348,7 @@ cdef class Vocab:
         If `minn` is defined, then the resulting vector uses Fasttext's
         subword features by average over ngrams of `orth`.
 
-        orth (int / unicode): The hash value of a word, or its unicode string.
+        orth (int / str): The hash value of a word, or its unicode string.
         minn (int): Minimum n-gram length used for Fasttext's ngram computation.
             Defaults to the length of `orth`.
         maxn (int): Maximum n-gram length used for Fasttext's ngram computation.
@@ -401,7 +401,7 @@ cdef class Vocab:
         """Set a vector for a word in the vocabulary. Words can be referenced
         by string or int ID.
 
-        orth (int / unicode): The word.
+        orth (int / str): The word.
         vector (numpy.ndarray or cupy.nadarry[ndim=1, dtype='float32']): The vector to set.
 
         DOCS: https://spacy.io/api/vocab#set_vector
@@ -423,7 +423,7 @@ cdef class Vocab:
         """Check whether a word has a vector. Returns False if no vectors have
         been loaded. Words can be looked up by string or int ID.
 
-        orth (int / unicode): The word.
+        orth (int / str): The word.
         RETURNS (bool): Whether the word has a vector.
 
         DOCS: https://spacy.io/api/vocab#has_vector
@@ -448,7 +448,7 @@ cdef class Vocab:
     def to_disk(self, path, *, exclude=tuple()):
         """Save the current state to a directory.
 
-        path (unicode or Path): A path to a directory, which will be created if
+        path (str or Path): A path to a directory, which will be created if
             it doesn't exist.
         exclude (list): String names of serialization fields to exclude.
 
@@ -469,7 +469,7 @@ cdef class Vocab:
         """Loads state from a directory. Modifies the object in place and
         returns it.
 
-        path (unicode or Path): A path to a directory.
+        path (str or Path): A path to a directory.
         exclude (list): String names of serialization fields to exclude.
         RETURNS (Vocab): The modified `Vocab` object.
 
