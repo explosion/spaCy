@@ -4,7 +4,6 @@ from pathlib import Path
 from wasabi import Printer, MarkdownRenderer, get_raw_input
 from thinc.api import Config
 from collections import defaultdict
-import catalogue
 import srsly
 import sys
 
