@@ -3,6 +3,7 @@ from click import NoSuchOption
 from spacy.training import docs_to_json, offsets_to_biluo_tags
 from spacy.training.converters import iob_to_docs, conll_ner_to_docs, conllu_to_docs
 from spacy.schemas import ProjectConfigSchema, RecommendationSchema, validate
+from spacy.lang.en import English
 from spacy.lang.nl import Dutch
 from spacy.util import ENV_VARS, load_model_from_config
 from spacy.cli import info
@@ -543,6 +544,10 @@ def test_get_third_party_dependencies_runs():
     # Test with component factory based on Cython module
     nlp.add_pipe("tagger")
     assert get_third_party_dependencies(nlp.config) == []
+
+    nlp = English()
+    nlp.add_pipe("textcat", config={"model": {"@architectures": "spacy.TextCatBOW.v1", "exclusive_classes": True, "ngram_size": 1, "no_output_layer": False}})
+    get_third_party_dependencies(nlp.config) == []
 
 
 @pytest.mark.parametrize(

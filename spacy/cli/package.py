@@ -4,6 +4,7 @@ from pathlib import Path
 from wasabi import Printer, MarkdownRenderer, get_raw_input
 from thinc.api import Config
 from collections import defaultdict
+import catalogue
 import srsly
 import sys
 
@@ -200,7 +201,7 @@ def get_third_party_dependencies(
     exclude (list): List of packages to exclude (e.g. that already exist in meta).
     RETURNS (list): The versioned requirements.
     """
-    own_packages = ("spacy", "spacy-nightly", "thinc", "srsly")
+    own_packages = ("spacy", "spacy-legacy", "spacy-nightly", "thinc", "srsly")
     distributions = util.packages_distributions()
     funcs = defaultdict(set)
     for path, value in util.walk_dict(config):
@@ -213,7 +214,15 @@ def get_third_party_dependencies(
     for reg_name, func_names in funcs.items():
         sub_registry = getattr(util.registry, reg_name)
         for func_name in func_names:
-            func_info = sub_registry.find(func_name)
+            try:
+                func_info = sub_registry.find(func_name)
+            except catalogue.RegistryError:
+                if func_name.startswith("spacy."):
+                    legacy_name = func_name.replace("spacy.", "spacy-legacy.")
+                    try:
+                        func_info = sub_registry.find(legacy_name)
+                    except catalogue.RegistryError:
+                        pass
             module_name = func_info.get("module")
             if module_name:  # the code is part of a module, not a --code file
                 modules.add(func_info["module"].split(".")[0])
