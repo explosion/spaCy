@@ -3,7 +3,6 @@ from click import NoSuchOption
 from spacy.training import docs_to_json, offsets_to_biluo_tags
 from spacy.training.converters import iob_to_docs, conll_ner_to_docs, conllu_to_docs
 from spacy.schemas import ProjectConfigSchema, RecommendationSchema, validate
-from spacy.lang.en import English
 from spacy.lang.nl import Dutch
 from spacy.util import ENV_VARS, load_model_from_config
 from spacy.cli import info
@@ -537,7 +536,7 @@ def test_init_labels(component_name):
         assert len(nlp2.get_pipe(component_name).labels) == 4
 
 
-def test_get_third_party_dependencies_runs():
+def test_get_third_party_dependencies():
     # We can't easily test the detection of third-party packages here, but we
     # can at least make sure that the function and its importlib magic runs.
     nlp = Dutch()
@@ -545,8 +544,20 @@ def test_get_third_party_dependencies_runs():
     nlp.add_pipe("tagger")
     assert get_third_party_dependencies(nlp.config) == []
 
-    nlp = English()
-    nlp.add_pipe("textcat", config={"model": {"@architectures": "spacy.TextCatBOW.v1", "exclusive_classes": True, "ngram_size": 1, "no_output_layer": False}})
+    # Test with legacy function
+    nlp = Dutch()
+    nlp.add_pipe(
+        "textcat",
+        config={
+            "model": {
+                # Do not update from legacy architecture spacy.TextCatBOW.v1
+                "@architectures": "spacy.TextCatBOW.v1",
+                "exclusive_classes": True,
+                "ngram_size": 1,
+                "no_output_layer": False,
+            }
+        },
+    )
     get_third_party_dependencies(nlp.config) == []
 
 
