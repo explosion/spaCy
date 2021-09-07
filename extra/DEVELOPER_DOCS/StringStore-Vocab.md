@@ -68,16 +68,17 @@ removed?)
 ### Implementation Details: Hashes and Allocations
 
 Hashes are 64-bit and are computed using murmurhash on UTF-8 bytes. There is no
-mechanism for detecting and avoiding collisions; to date a collision has never
-been observed.
+mechanism for detecting and avoiding collisions. To date there has never been a
+reproducible collision or user report about any related issues.
 
 The empty string is not hashed, it's just converted to/from 0. 
 
 A small number of strings use indices into a lookup table (so low integers)
 rather than hashes. This is mostly Universal Dependencies labels or other
-strings considered "core" in spaCy. The difference between these and normal
-strings was sometimes important in v2 but in v3 it's mostly just a historical
-artefact.
+strings considered "core" in spaCy. This was critical in v1, which hasn't
+introduced hashing yet. Since v2 it's important for items in `spacy.attrs`,
+especially lexeme flags, but is otherwise only maintained for backwards
+compatability.
 
 You can call `strings["mystring"]` with a string the `StringStore` has never seen
 before and it will return a hash. But in order to do the reverse operation, you
@@ -161,6 +162,10 @@ that identify various context-free token attributes. Lexemes are the core data
 of the `Vocab`, and can be accessed using `__getitem__` on the `Vocab`. The memory
 for storing `LexemeC` objects is managed by a pool that belongs to the `Vocab`.
 
+Note that `__getitem__` on the `Vocab` works much like the `StringStore`, in
+that it accepts a hash or id, with one important difference: if you do a lookup
+using a string, that value is added to the `StringStore` automatically. 
+
 The attributes stored in a `LexemeC` are:
 
 - orth (the raw text)
@@ -170,9 +175,9 @@ The attributes stored in a `LexemeC` are:
 - prefix
 - suffix
 
-Most of these are straightforward. `shape` can technically be customized,
-though that's not usually done. `norm` is more likely to be customized, and
-spaCy doesn't prescribe any particular type of normalization.
+Most of these are straightforward. All of them can be customized, and (except
+`orth`) probably should be since the defaults are based on English, but in
+practice this is rarely done at present.
 
 ### Lookups
 
@@ -197,16 +202,19 @@ This is a dict with three attributes:
 - `has_case`: bool (default `True`)
 - `has_letters`: bool (default `True`, `False` only for CJK for now)
 
-Currently these are not used much, but they could be used when choosing
-hyperparameters for subwords, controlling word shape generation, and similar
-tasks.
+Currently these are not used much - the main use is that `direction` is used in
+visualizers, though `rtl` doesn't quite work. In the future they could be used
+when choosing hyperparameters for subwords, controlling word shape generation,
+and similar tasks.
 
 ### Other Vocab Members
 
-Some members of the Vocab are more mysterious. 
+Some members of the Vocab have less clear purposes. The Vocab is kind of the
+default place to store things from `Language.defaults` that don't belong to the
+Tokenizer, which explains most of these.
 
-- `get_noun_chunks`: This is maybe here for serialization reasons?
-- `cfg`: This is a dict that just stores `oov_prob`, which isn't used (???)
+- `get_noun_chunks`
+- `cfg`: This is a dict that just stores `oov_prob` (hardcoded to `-20`)
 - `data_dir`: This seems to be serialization related but presently unused.
 
 
