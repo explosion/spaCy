@@ -141,6 +141,32 @@ class registry(thinc.registry):
         return func
 
     @classmethod
+    def find(cls, registry_name: str, func_name: str) -> Callable:
+        """Get info about a registered function from the registry."""
+        # We're overwriting this classmethod so we're able to provide more
+        # specific error messages and implement a fallback to spacy-legacy.
+        if not hasattr(cls, registry_name):
+            names = ", ".join(cls.get_registry_names()) or "none"
+            raise RegistryError(Errors.E892.format(name=registry_name, available=names))
+        reg = getattr(cls, registry_name)
+        try:
+            func_info = reg.find(func_name)
+        except RegistryError:
+            if func_name.startswith("spacy."):
+                legacy_name = func_name.replace("spacy.", "spacy-legacy.")
+                try:
+                    return reg.find(legacy_name)
+                except catalogue.RegistryError:
+                    pass
+            available = ", ".join(sorted(reg.get_all().keys())) or "none"
+            raise RegistryError(
+                Errors.E893.format(
+                    name=func_name, reg_name=registry_name, available=available
+                )
+            ) from None
+        return func_info
+
+    @classmethod
     def has(cls, registry_name: str, func_name: str) -> bool:
         """Check whether a function is available in a registry."""
         if not hasattr(cls, registry_name):
