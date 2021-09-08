@@ -200,7 +200,7 @@ def get_third_party_dependencies(
     exclude (list): List of packages to exclude (e.g. that already exist in meta).
     RETURNS (list): The versioned requirements.
     """
-    own_packages = ("spacy", "spacy-nightly", "thinc", "srsly")
+    own_packages = ("spacy", "spacy-legacy", "spacy-nightly", "thinc", "srsly")
     distributions = util.packages_distributions()
     funcs = defaultdict(set)
     for path, value in util.walk_dict(config):
@@ -211,9 +211,8 @@ def get_third_party_dependencies(
             funcs["factories"].add(component["factory"])
     modules = set()
     for reg_name, func_names in funcs.items():
-        sub_registry = getattr(util.registry, reg_name)
         for func_name in func_names:
-            func_info = sub_registry.find(func_name)
+            func_info = util.registry.find(reg_name, func_name)
             module_name = func_info.get("module")
             if module_name:  # the code is part of a module, not a --code file
                 modules.add(func_info["module"].split(".")[0])
