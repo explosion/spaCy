@@ -213,9 +213,9 @@ def get_third_party_dependencies(
     for reg_name, func_names in funcs.items():
         for func_name in func_names:
             func_info = util.registry.find(reg_name, func_name)
-            module_name = func_info.get("module")
+            module_name = func_info.get("module")  # type: ignore[attr-defined]
             if module_name:  # the code is part of a module, not a --code file
-                modules.add(func_info["module"].split(".")[0])
+                modules.add(func_info["module"].split(".")[0])  # type: ignore[index]
     dependencies = []
     for module_name in modules:
         if module_name in distributions:
