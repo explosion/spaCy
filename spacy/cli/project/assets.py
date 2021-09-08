@@ -3,7 +3,7 @@ from pathlib import Path
 from wasabi import msg
 import re
 import shutil
-import requests  # type: ignore[import]
+import requests
 
 from ...util import ensure_path, working_dir
 from .._util import project_cli, Arg, Opt, PROJECT_FILE, load_project_config

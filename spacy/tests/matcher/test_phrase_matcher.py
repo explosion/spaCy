@@ -1,6 +1,6 @@
 import pytest
 import srsly
-from mock import Mock  # type: ignore[import]
+from mock import Mock
 from spacy.matcher import PhraseMatcher
 from spacy.tokens import Doc, Span
 

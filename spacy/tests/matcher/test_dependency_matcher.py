@@ -2,7 +2,7 @@ import pytest
 import pickle
 import re
 import copy
-from mock import Mock  # type: ignore[import]
+from mock import Mock
 from spacy.matcher import DependencyMatcher
 from spacy.tokens import Doc, Token
 

@@ -1,5 +1,5 @@
 from typing import Optional, Sequence
-import requests  # type: ignore[import]
+import requests
 import sys
 from wasabi import msg
 import typer

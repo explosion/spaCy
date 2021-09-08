@@ -1,7 +1,7 @@
 from typing import Tuple
 from pathlib import Path
 import sys
-import requests  # type: ignore[import]
+import requests
 from wasabi import msg, Printer
 import warnings
 

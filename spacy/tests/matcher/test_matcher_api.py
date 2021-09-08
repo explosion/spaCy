@@ -1,5 +1,5 @@
 import pytest
-from mock import Mock  # type: ignore[import]
+from mock import Mock
 from spacy.matcher import Matcher
 from spacy.tokens import Doc, Token, Span
 
