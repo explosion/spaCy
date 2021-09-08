@@ -13,6 +13,8 @@ def test_build_dependencies():
         "hypothesis",
         "pre-commit",
         "mypy",
+        "types-mock",
+        "types-requests",
     ]
     # ignore language-specific packages that shouldn't be installed by all
     libs_ignore_setup = [
