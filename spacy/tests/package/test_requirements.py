@@ -13,6 +13,7 @@ def test_build_dependencies():
         "hypothesis",
         "pre-commit",
         "mypy",
+        "types-dataclasses",
         "types-mock",
         "types-requests",
     ]
