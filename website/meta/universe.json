@@ -661,7 +661,7 @@
                 "## Check also span._.types, span._.aliases, span._.rank"
             ],
             "category": ["models", "pipeline"],
-			"tags": ["NER", "NEL"]
+            "tags": ["NER", "NEL"],
             "author": "Renat Shigapov",
             "author_links": {
                 "twitter": "_shigapov",
