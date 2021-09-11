@@ -643,6 +643,32 @@
             }
         },
         {
+            "id": "spacyopentapioca",
+            "title": "spaCyOpenTapioca",
+            "slogan": "Named entity linking on Wikidata in spaCy via OpenTapioca",
+            "description": "A spaCy wrapper of OpenTapioca for named entity linking on Wikidata",
+            "github": "UB-Mannheim/spacyopentapioca",
+            "pip": "spacyopentapioca",
+            "code_example": [
+                "import spacy",
+                "nlp = spacy.blank('en')",
+                "nlp.add_pipe('opentapioca')",
+                "doc = nlp('Christian Drosten works in Germany.')",
+                "for span in doc.ents:",
+                "    print((span.text, span.kb_id_, span.label_, span._.description, span._.score))",
+                "# ('Christian Drosten', 'Q1079331', 'PERSON', 'German virologist and university teacher', 3.6533377082098895)",
+                "# ('Germany', 'Q183', 'LOC', 'sovereign state in Central Europe', 2.1099332471902863)",
+                "## Check also span._.types, span._.aliases, span._.rank"
+            ],
+            "category": ["models", "pipeline"],
+            "tags": ["NER", "NEL"],
+            "author": "Renat Shigapov",
+            "author_links": {
+                "twitter": "_shigapov",
+                "github": "shigapov"
+            }
+        },
+        {
             "id": "spacy_hunspell",
             "slogan": "Add spellchecking and spelling suggestions to your spaCy pipeline using Hunspell",
             "description": "This package uses the [spaCy 2.0 extensions](https://spacy.io/usage/processing-pipelines#extensions) to add [Hunspell](http://hunspell.github.io) support for spellchecking.",
