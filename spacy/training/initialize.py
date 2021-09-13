@@ -254,15 +254,15 @@ def open_file(loc: Union[str, Path]) -> IO:
     loc = ensure_path(loc)
     if tarfile.is_tarfile(str(loc)):
         return tarfile.open(str(loc), "r:gz")  # type: ignore[return-value]
-    elif loc.parts[-1].endswith("gz"):  # type: ignore[union-attr]
+    elif loc.parts[-1].endswith("gz"):
         return (line.decode("utf8") for line in gzip.open(str(loc), "r"))  # type: ignore[return-value]
-    elif loc.parts[-1].endswith("zip"):  # type: ignore[union-attr]
+    elif loc.parts[-1].endswith("zip"):
         zip_file = zipfile.ZipFile(str(loc))
         names = zip_file.namelist()
         file_ = zip_file.open(names[0])
         return (line.decode("utf8") for line in file_)  # type: ignore[return-value]
     else:
-        return loc.open("r", encoding="utf8")  # type: ignore[union-attr]
+        return loc.open("r", encoding="utf8")
 
 
 def ensure_shape(vectors_loc):

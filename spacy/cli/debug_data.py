@@ -215,7 +215,7 @@ def debug_data(
             for label, count in label_counts.most_common()
             if label != "-"
         ]
-        labels_with_counts = _format_labels(labels_with_counts, counts=True)  # type: ignore[assignment]
+        labels_with_counts = _format_labels(labels_with_counts, counts=True)
         msg.text(f"Labels in train data: {_format_labels(labels)}", show=verbose)  # type: ignore[arg-type]
         missing_labels = model_labels - labels
         if missing_labels:
@@ -388,7 +388,7 @@ def debug_data(
                 "model performance may be degraded for these labels after "
                 f"training: {_format_labels(missing_labels)}."  # type: ignore[arg-type]
             )
-        labels_with_counts = _format_labels(  # type: ignore[assignment]
+        labels_with_counts = _format_labels(
             gold_train_data["tags"].most_common(), counts=True
         )
         msg.text(labels_with_counts, show=verbose)
@@ -405,7 +405,7 @@ def debug_data(
                 "model performance may be degraded for these labels after "
                 f"training: {_format_labels(missing_labels)}."  # type: ignore[arg-type]
             )
-        labels_with_counts = _format_labels(  # type: ignore[assignment]
+        labels_with_counts = _format_labels(
             gold_train_data["morphs"].most_common(), counts=True
         )
         msg.text(labels_with_counts, show=verbose)
@@ -445,7 +445,7 @@ def debug_data(
             msg.info(f"Found {n_nonproj} nonprojective dev sentence(s)")
         msg.info(f"{len(labels_train_unpreprocessed)} label(s) in train data")
         msg.info(f"{len(labels_train)} label(s) in projectivized train data")
-        labels_with_counts = _format_labels(  # type: ignore[assignment]
+        labels_with_counts = _format_labels(
             gold_train_unpreprocessed_data["deps"].most_common(), counts=True
         )
         msg.text(labels_with_counts, show=verbose)

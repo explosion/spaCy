@@ -220,7 +220,7 @@ def CharacterEmbed(
     """
     feature = intify_attr(feature)
     if feature is None:
-        raise ValueError(Errors.E911(feat=feature))
+        raise ValueError(Errors.E911(feat=feature))  # type: ignore[operator]
     if include_static_vectors:
         model = chain(  # type: ignore[misc]
             concatenate(

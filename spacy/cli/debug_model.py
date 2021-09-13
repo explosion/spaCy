@@ -44,7 +44,7 @@ def debug_model_cli(
     DOCS: https://spacy.io/api/cli#debug-model
     """
     setup_gpu(use_gpu)
-    layers = string_to_list(layers, intify=True)  # type: ignore[assignment]
+    layers = string_to_list(layers, intify=True)
     print_settings = {
         "dimensions": dimensions,
         "parameters": parameters,

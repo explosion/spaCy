@@ -26,7 +26,7 @@ def forward(model: Model, docs, is_train: bool):
         batch_vals.append(vals)
     lengths = model.ops.asarray([arr.shape[0] for arr in batch_keys], dtype="int32")
     batch_keys = model.ops.xp.concatenate(batch_keys)
-    batch_vals = model.ops.asarray(model.ops.xp.concatenate(batch_vals), dtype="f")  # type: ignore[assignment]
+    batch_vals = model.ops.asarray(model.ops.xp.concatenate(batch_vals), dtype="f")
 
     def backprop(dY):
         return []

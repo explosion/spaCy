@@ -284,7 +284,7 @@ for verb_data in [
         _exc[data[ORTH] + "ve"] = [dict(data), {ORTH: "ve"}]
 
 
-for verb_data in [  # type: ignore[assignment]
+for verb_data in [
     {ORTH: "ai", "number": 2},
     {ORTH: "are", NORM: "are", "number": 2},
     {ORTH: "is", NORM: "is"},
@@ -294,9 +294,9 @@ for verb_data in [  # type: ignore[assignment]
     {ORTH: "has", NORM: "has"},
     {ORTH: "dare", NORM: "dare"},
 ]:
-    verb_data_tc = dict(verb_data)
+    verb_data_tc = dict(verb_data)  # type: ignore[call-overload]
     verb_data_tc[ORTH] = verb_data_tc[ORTH].title()
-    for data in [verb_data, verb_data_tc]:
+    for data in [verb_data, verb_data_tc]:  # type: ignore[assignment]
         _exc[data[ORTH] + "n't"] = [
             dict(data),
             {ORTH: "n't", NORM: "not"},

@@ -271,8 +271,8 @@ class EntityLinker(TrainablePipe):
                 if kb_id:
                     entity_encoding = self.kb.get_vector(kb_id)
                     entity_encodings.append(entity_encoding)
-        entity_encodings = self.model.ops.asarray(entity_encodings, dtype="float32")  # type: ignore[assignment]
-        if sentence_encodings.shape != entity_encodings.shape:  # type: ignore[attr-defined]
+        entity_encodings = self.model.ops.asarray(entity_encodings, dtype="float32")
+        if sentence_encodings.shape != entity_encodings.shape:
             err = Errors.E147.format(
                 method="get_loss", msg="gold entities do not match up"
             )

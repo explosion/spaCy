@@ -86,7 +86,7 @@ def project_document(
             with working_dir(project_dir) as p:  # type: ignore[var-annotated]
                 if (p / dest_path).exists():
                     dest = md.link(dest, dest_path)
-        data.append((dest, source, a.get("description", "")))  # type: ignore[arg-type]
+        data.append((dest, source, a.get("description", "")))
     if data:
         md.add(md.title(3, "Assets", "🗂"))
         md.add(INTRO_ASSETS)

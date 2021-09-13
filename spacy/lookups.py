@@ -288,9 +288,9 @@ class Lookups:
         DOCS: https://spacy.io/api/lookups#to_disk
         """
         path = ensure_path(path)
-        if not path.exists():  # type: ignore[union-attr]
-            path.mkdir()  # type: ignore[union-attr]
-        filepath = path / filename  # type: ignore[operator]
+        if not path.exists():
+            path.mkdir()
+        filepath = path / filename
         with filepath.open("wb") as file_:
             file_.write(self.to_bytes())
 
@@ -306,7 +306,7 @@ class Lookups:
         DOCS: https://spacy.io/api/lookups#from_disk
         """
         path = ensure_path(path)
-        filepath = path / filename  # type: ignore[operator]
+        filepath = path / filename
         if filepath.exists():
             with filepath.open("rb") as file_:
                 data = file_.read()

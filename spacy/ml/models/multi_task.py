@@ -210,7 +210,7 @@ def _apply_mask(
 
     N = sum(len(doc) for doc in docs)
     mask = numpy.random.uniform(0.0, 1.0, (N,))
-    mask = mask >= mask_prob  # type: ignore[assignment]
+    mask = mask >= mask_prob
     i = 0
     masked_docs = []
     for doc in docs:

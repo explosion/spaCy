@@ -125,7 +125,7 @@ def wandb_logger(
         config_dot = util.dict_to_dot(config)
         for field in remove_config_values:
             del config_dot[field]
-        config = util.dot_to_dict(config_dot)  # type: ignore[assignment]
+        config = util.dot_to_dict(config_dot)
         run = wandb.init(project=project_name, config=config, reinit=True)
         console_log_step, console_finalize = console(nlp, stdout, stderr)
 

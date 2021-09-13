@@ -57,8 +57,8 @@ def read_labels(path: Path, *, require: bool = False):
 
 def walk_corpus(path: Union[str, Path], file_type) -> List[Path]:
     path = util.ensure_path(path)
-    if not path.is_dir() and path.parts[-1].endswith(file_type):  # type: ignore[union-attr]
-        return [path]  # type: ignore[list-item]
+    if not path.is_dir() and path.parts[-1].endswith(file_type):
+        return [path]
     orig_path = path
     paths = [path]
     locs = []
@@ -67,17 +67,17 @@ def walk_corpus(path: Union[str, Path], file_type) -> List[Path]:
         if str(path) in seen:
             continue
         seen.add(str(path))
-        if path.parts and path.parts[-1].startswith("."):  # type: ignore[union-attr]
+        if path.parts and path.parts[-1].startswith("."):
             continue
-        elif path.is_dir():  # type: ignore[union-attr]
-            paths.extend(path.iterdir())  # type: ignore[union-attr]
-        elif path.parts[-1].endswith(file_type):  # type: ignore[union-attr]
+        elif path.is_dir():
+            paths.extend(path.iterdir())
+        elif path.parts[-1].endswith(file_type):
             locs.append(path)
     if len(locs) == 0:
         warnings.warn(Warnings.W090.format(path=orig_path, format=file_type))
     # It's good to sort these, in case the ordering messes up a cache.
     locs.sort()
-    return locs  # type: ignore[return-value]
+    return locs
 
 
 class Corpus:

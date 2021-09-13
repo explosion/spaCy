@@ -107,7 +107,7 @@ class AttributeRuler(Pipe):
     def match(self, doc: Doc):
         matches = self.matcher(doc, allow_missing=True)
         # Sort by the attribute ID, so that later rules have precedence
-        matches = [  # type: ignore[assignment]
+        matches = [
             (int(self.vocab.strings[m_id]), m_id, s, e) for m_id, s, e in matches  # type: ignore[assignment, attr-defined]
         ]
         matches.sort()

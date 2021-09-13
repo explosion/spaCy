@@ -414,7 +414,7 @@ class EntityRuler(Pipe):
         """
         path = ensure_path(path)
         self.clear()
-        depr_patterns_path = path.with_suffix(".jsonl")  # type: ignore[union-attr]
+        depr_patterns_path = path.with_suffix(".jsonl")
         if depr_patterns_path.is_file():
             patterns = srsly.read_jsonl(depr_patterns_path)
             self.add_patterns(patterns)
@@ -459,7 +459,7 @@ class EntityRuler(Pipe):
             ),
             "cfg": lambda p: srsly.write_json(p, cfg),
         }
-        if path.suffix == ".jsonl":  # type: ignore[union-attr]    # user wants to save only JSONL
+        if path.suffix == ".jsonl":  # user wants to save only JSONL
             srsly.write_jsonl(path, self.patterns)
         else:
             to_disk(path, serializers, {})

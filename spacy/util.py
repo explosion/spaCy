@@ -302,9 +302,9 @@ def load_language_data(path: Union[str, Path]) -> Union[dict, list]:
     RETURNS: The loaded data.
     """
     path = ensure_path(path)
-    if path.exists():  # type: ignore[union-attr]
+    if path.exists():
         return srsly.read_json(path)
-    path = path.with_suffix(path.suffix + ".gz")  # type: ignore[union-attr]
+    path = path.with_suffix(path.suffix + ".gz")
     if path.exists():
         return srsly.read_gzip_json(path)
     raise ValueError(Errors.E160.format(path=path))
@@ -731,10 +731,10 @@ def load_meta(path: Union[str, Path]) -> Dict[str, Any]:
     RETURNS (Dict[str, Any]): The loaded meta.
     """
     path = ensure_path(path)
-    if not path.parent.exists():  # type: ignore[union-attr]
-        raise IOError(Errors.E052.format(path=path.parent))  # type: ignore[union-attr]
-    if not path.exists() or not path.is_file():  # type: ignore[union-attr]
-        raise IOError(Errors.E053.format(path=path.parent, name="meta.json"))  # type: ignore[union-attr]
+    if not path.parent.exists():
+        raise IOError(Errors.E052.format(path=path.parent))
+    if not path.exists() or not path.is_file():
+        raise IOError(Errors.E053.format(path=path.parent, name="meta.json"))
     meta = srsly.read_json(path)
     for setting in ["lang", "name", "version"]:
         if setting not in meta or not meta[setting]:
@@ -1012,7 +1012,7 @@ def get_async(stream, numpy_array):
 
 def read_regex(path: Union[str, Path]) -> Pattern:
     path = ensure_path(path)
-    with path.open(encoding="utf8") as file_:  # type: ignore[union-attr]
+    with path.open(encoding="utf8") as file_:
         entries = file_.read().split("\n")
     expression = "|".join(
         ["^" + re.escape(piece) for piece in entries if piece.strip()]
@@ -1204,13 +1204,13 @@ def to_disk(
     exclude: Iterable[str],
 ) -> Path:
     path = ensure_path(path)
-    if not path.exists():  # type: ignore[union-attr]
-        path.mkdir()  # type: ignore[union-attr]
+    if not path.exists():
+        path.mkdir()
     for key, writer in writers.items():
         # Split to support file names like meta.json
         if key.split(".")[0] not in exclude:
-            writer(path / key)  # type: ignore[operator]
-    return path  # type: ignore[return-value]
+            writer(path / key)
+    return path
 
 
 def from_disk(
@@ -1222,8 +1222,8 @@ def from_disk(
     for key, reader in readers.items():
         # Split to support file names like meta.json
         if key.split(".")[0] not in exclude:
-            reader(path / key)  # type: ignore[operator]
-    return path  # type: ignore[return-value]
+            reader(path / key)
+    return path
 
 
 def import_file(name: str, loc: Union[str, Path]) -> ModuleType:

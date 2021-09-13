@@ -263,7 +263,7 @@ class TextCategorizer(TrainablePipe):
                 else:
                     not_missing[i, j] = 0.0
         truths = self.model.ops.asarray(truths)  # type: ignore[arg-type, assignment]
-        return truths, not_missing
+        return truths, not_missing  # type: ignore[return-value]
 
     def get_loss(self, examples: Iterable[Example], scores) -> Tuple[float, float]:
         """Find the loss and gradient of loss for the batch of documents and

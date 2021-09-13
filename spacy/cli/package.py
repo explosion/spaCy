@@ -48,7 +48,7 @@ def package_cli(
         input_dir,
         output_dir,
         meta_path=meta_path,
-        code_paths=code_paths,  # type: ignore[arg-type]
+        code_paths=code_paths,
         name=name,
         version=version,
         create_meta=create_meta,

@@ -136,7 +136,7 @@ class DocBin:
             if flags.get("has_unknown_spaces"):
                 spaces = None
             doc = Doc(vocab, words=tokens[:, orth_col], spaces=spaces)
-            doc = doc.from_array(self.attrs, tokens)  # type: ignore[arg-type]
+            doc = doc.from_array(self.attrs, tokens)
             doc.cats = self.cats[i]
             if self.span_groups[i]:
                 doc.spans.from_bytes(self.span_groups[i])
@@ -245,7 +245,7 @@ class DocBin:
         DOCS: https://spacy.io/api/docbin#to_disk
         """
         path = ensure_path(path)
-        with path.open("wb") as file_:  # type: ignore[union-attr]
+        with path.open("wb") as file_:
             try:
                 file_.write(self.to_bytes())
             except ValueError:
@@ -260,7 +260,7 @@ class DocBin:
         DOCS: https://spacy.io/api/docbin#to_disk
         """
         path = ensure_path(path)
-        with path.open("rb") as file_:  # type: ignore[union-attr]
+        with path.open("rb") as file_:
             self.from_bytes(file_.read())
         return self
 

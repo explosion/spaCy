@@ -69,15 +69,15 @@ def convert_cli(
     if isinstance(file_type, FileTypes):
         # We get an instance of the FileTypes from the CLI so we need its string value
         file_type = file_type.value  # type: ignore[assignment]
-    input_path = Path(input_path)  # type: ignore[assignment]
-    output_dir = "-" if output_dir == Path("-") else output_dir  # type: ignore[assignment]
+    input_path = Path(input_path)
+    output_dir = "-" if output_dir == Path("-") else output_dir
     silent = output_dir == "-"
     msg = Printer(no_print=silent)
-    verify_cli_args(msg, input_path, output_dir, file_type, converter, ner_map)
+    verify_cli_args(msg, input_path, output_dir, file_type, converter, ner_map)  # type: ignore[arg-type]
     converter = _get_converter(msg, converter, input_path)
     convert(
         input_path,
-        output_dir,
+        output_dir,  # type: ignore[arg-type]
         file_type=file_type,
         n_sents=n_sents,
         seg_sents=seg_sents,
