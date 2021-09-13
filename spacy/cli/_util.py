@@ -469,7 +469,7 @@ def get_git_version(
         (0, 0) if the version couldn't be determined.
     """
     ret = run_command("git --version", capture=True)
-    stdout = ret.stdout.strip()  # type: ignore[union-attr]
+    stdout = ret.stdout.strip()
     if not stdout or not stdout.startswith("git version"):
         return (0, 0)
     version = stdout[11:].strip().split(".")
