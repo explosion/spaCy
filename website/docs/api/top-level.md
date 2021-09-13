@@ -507,6 +507,8 @@ remain in the config file stored on your local system.
 | `remove_config_values` | A list of values to include from the config before it is uploaded to W&B (default: empty). ~~List[str]~~                              |
 | `model_log_interval`   | Steps to wait between logging model checkpoints to W&B dasboard (default: None). ~~Optional[int]~~                                    |
 | `log_dataset_dir`      | Directory containing dataset to be logged and versioned as W&B artifact (default: None). ~~Optional[str]~~                            |
+| `run_name`             | The name of the run. If you don't specify a run_name, the name will be created by wandb library. (default: None ). ~~Optional[str]~~                            |
+| `entity`               | An entity is a username or team name where you're sending runs. If you don't specify an entity, the run will be sent to your default entity, which is usually your username.  (default: None). ~~Optional[str]~~                            |
 
 <Project id="integrations/wandb">
 
