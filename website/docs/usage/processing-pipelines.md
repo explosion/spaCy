@@ -795,7 +795,7 @@ if there's no state to be passed through – spaCy can just take care of this fo
 you. The following two code examples are equivalent:
 
 ```python
-# Statless component with @Language.factory
+# Stateless component with @Language.factory
 @Language.factory("my_component")
 def create_my_component():
     def my_component(doc):
