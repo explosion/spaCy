@@ -305,7 +305,7 @@ class EntityRenderer:
         """Render entities in text.
 
         text (str): Original text.
-        spans (list): Individual entity spans and their start, end and label.
+        spans (list): Individual entity spans and their start, end, label, kb_id and kb_url.
         title (str / None): Document title set in Doc.user_data['title'].
         """
         markup = ""
@@ -314,6 +314,8 @@ class EntityRenderer:
             label = span["label"]
             start = span["start"]
             end = span["end"]
+            kb_id = str(span.get("kb_id") or "")
+            kb_url = str(span.get("kb_url") or "")
             additional_params = span.get("params", {})
             entity = escape_html(text[start:end])
             fragments = text[offset:start].split("\n")
@@ -323,7 +325,7 @@ class EntityRenderer:
                     markup += "</br>"
             if self.ents is None or label.upper() in self.ents:
                 color = self.colors.get(label.upper(), self.default_color)
-                ent_settings = {"label": label, "text": entity, "bg": color}
+                ent_settings = {"label": label, "text": entity, "bg": color, "kb_id": kb_id, "kb_url": kb_url}
                 ent_settings.update(additional_params)
                 markup += self.ent_template.format(**ent_settings)
             else:
