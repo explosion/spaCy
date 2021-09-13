@@ -36,7 +36,7 @@ class DocBin:
         "spans": List[Dict[str, bytes]], # SpanGroups data for each doc
         "spaces": bytes, # Serialized numpy boolean array with spaces data
         "lengths": bytes, # Serialized numpy int32 array with the doc lengths
-        "strings": List[unicode] # List of unique strings in the token data
+        "strings": List[str] # List of unique strings in the token data
         "version": str, # DocBin version number
     }
 
