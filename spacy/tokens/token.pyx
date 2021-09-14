@@ -868,7 +868,7 @@ cdef class Token:
 
         def __set__(self, pos_name):
             if pos_name not in parts_of_speech.IDS:
-                raise ValueError(Errors.E1021.format(pp=pp))
+                raise ValueError(Errors.E1021.format(pp=pos_name))
             self.c.pos = parts_of_speech.IDS[pos_name]
 
     property tag_:
