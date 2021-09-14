@@ -1,5 +1,8 @@
 # StringStore & Vocab
 
+> Reference: `spacy/strings.pyx`
+> Reference: `spacy/vocab.pyx`
+
 ## Overview
 
 spaCy represents mosts strings internally using a `uint64` in Cython which
@@ -20,8 +23,19 @@ The `StringStore` is a `cdef class` that looks a bit like a two-way dictionary,
 though it is not a subclass of anything in particular.
 
 The main functionality of the `StringStore` is that `__getitem__` converts
-hashes into strings or strings into hashes. The details of this are very messy
-but generally not a problem in practice.
+hashes into strings or strings into hashes.
+
+The full details of the conversion are complicated. Normally you shouldn't have
+to worry about them, but the first applicable case here is used to get the
+return value:
+
+1. 0 and the empty string are special cased to each other
+2. internal symbols use a lookup table (`SYMBOLS_BY_STR`)
+3. normal strings or bytes are hashed
+4. internal symbol IDs in `SYMBOLS_BY_INT` are handled
+5. anything not yet handled is used as a hash to lookup a string
+
+For the symbol enums, see [`symbols.pxd`](https://github.com/explosion/spaCy/blob/master/spacy/symbols.pxd).
 
 Example:
 
@@ -31,10 +45,10 @@ from spacy.strings import StringStore
 ss = StringStore()
 hashval = ss["spacy"] # 10639093010105930009
 try:
-  # this won't work
-  ss[hashval]
+    # this won't work
+    ss[hashval]
 except KeyError:
-  print(f"key {hashval} unknown in the StringStore.")
+    print(f"key {hashval} unknown in the StringStore.")
 
 ss.add("spacy")
 assert ss[hashval] == "spacy" # it works now
@@ -42,14 +56,14 @@ assert ss[hashval] == "spacy" # it works now
 # There is no `.keys` property, but you can iterate over keys
 # The empty string will never be in the list of keys
 for key in ss:
-  print(key)
+    print(key)
 ```
 
 Almost all strings in spaCy are stored in the `StringStore`. This naturally
 includes tokens, but also includes things like labels (not just NER/POS/dep,
 but also categories etc.), lemmas, lowercase forms, word shapes, and so on. One
 of the main results of this is that tokens can be represented by a compact C
-struct that mostly consists of string hashes. This also means that converting
+struct ([`LexemeC`](https://spacy.io/api/cython-structs#lexemec)/[`TokenC`](https://github.com/explosion/spaCy/issues/4854)) that mostly consists of string hashes. This also means that converting
 input for the models is straightforward, and there's not a token mapping step
 like in many machine learning frameworks. Additionally, because the token IDs
 in spaCy are based on hashes, they are consistent across environments or
@@ -62,14 +76,15 @@ generated via a property that calls into the `StringStore` with the `int`.
 
 Besides `__getitem__`, the `StringStore` has functions to return specifically a
 string or specifically a hash, regardless of whether the input was a string or
-hash to begin with, though these are only used occasionally. (Maybe they can be
-removed?)
+hash to begin with, though these are only used occasionally.
 
 ### Implementation Details: Hashes and Allocations
 
-Hashes are 64-bit and are computed using murmurhash on UTF-8 bytes. There is no
+Hashes are 64-bit and are computed using [murmurhash][] on UTF-8 bytes. There is no
 mechanism for detecting and avoiding collisions. To date there has never been a
 reproducible collision or user report about any related issues.
+
+[murmurhash]: https://github.com/explosion/murmurhash
 
 The empty string is not hashed, it's just converted to/from 0. 
 
@@ -78,7 +93,7 @@ rather than hashes. This is mostly Universal Dependencies labels or other
 strings considered "core" in spaCy. This was critical in v1, which hadn't
 introduced hashing yet. Since v2 it's important for items in `spacy.attrs`,
 especially lexeme flags, but is otherwise only maintained for backwards
-compatability.
+compatibility.
 
 You can call `strings["mystring"]` with a string the `StringStore` has never seen
 before and it will return a hash. But in order to do the reverse operation, you
@@ -91,31 +106,12 @@ length you can have explosive memory usage. In practice this has never been an
 issue. (Note that this is also different from using `sys.intern` to intern
 Python strings, which does not guarantee they won't be memory collected later.)
 
-Strings are stored in the `StringStore` in a peculiar way: short strings are stored
-in a fixed-length buffer (one per string, not a shared buffer), while longer
-strings are prefixed with their length and use malloced memory. If you want to
-understand the full details see the implementation of `decode_Utf8Str` and
-`_allocate` in `strings.pyx`.
-
-### Notes on Python & Cython String Types
-
-The `StringStore` doesn't do anything too weird with Python strings, but because
-it's in Cython some of the type details of Python strings become important.
-
-In Python 2 strings were more like sequences of bytes, but in Python 3 they're
-more like UTF-8 sequences and treated separately from bytes. Cython has several
-string types to manage compatability with bytes and strings in Python 2 and 3:
-`str`, `unicode`, `bytes`, and `basestring`. 
-
-Here is how the types work in Python 3:
-
-- `str` and `unicode` are the same
-- `bytes` is just `bytes`
-- `basestring` is the union of `str` and `unicode`, so in Py3 all are equivalent
-
-`basestring` and `unicode` are still used in several places in spaCy code,
-presumably as a legacy of Python 2 support. In Python 3 there should be no
-difference between these types and `str`.
+Strings are stored in the `StringStore` in a peculiar way: each string uses a
+union that is either an eight-byte `char[]` or a `char*`. Short strings are
+stored directly in the `char[]`, while longer strings are stored in allocated
+memory and prefixed with their length. This is a strategy to reduce indirection
+and memory fragmentation. See  `decode_Utf8Str` and `_allocate` in
+`strings.pyx` for the implementation.
 
 ### When to Use the StringStore?
 
@@ -147,9 +143,9 @@ These are things stored in the vocab:
 - `lookups`: language specific data like lemmas
 - `writing_system`: language specific metadata
 - `get_noun_chunks`: a syntax iterator
-- `data_dir`: unused?
 - lex attribute getters: functions like `is_punct`, set in language defaults
 - `cfg`: **not** the pipeline config, this is mostly unused
+- `_unused_object`: Formerly an unused object, kept around until v4 for compatability
 
 Some of these, like the Morphology and Vectors, are complex enough that they
 need their own explanations. Here we'll just look at Vocab-specific items.
@@ -202,18 +198,19 @@ This is a dict with three attributes:
 - `has_letters`: bool (default `True`, `False` only for CJK for now)
 
 Currently these are not used much - the main use is that `direction` is used in
-visualizers, though `rtl` doesn't quite work. In the future they could be used
-when choosing hyperparameters for subwords, controlling word shape generation,
-and similar tasks.
+visualizers, though `rtl` doesn't quite work (see
+[#4854](https://github.com/explosion/spaCy/issues/4854)). In the future they
+could be used when choosing hyperparameters for subwords, controlling word
+shape generation, and similar tasks.
 
 ### Other Vocab Members
 
-Some members of the Vocab have less clear purposes. The Vocab is kind of the
-default place to store things from `Language.defaults` that don't belong to the
-Tokenizer, which explains most of these.
+The Vocab is kind of the default place to store things from `Language.defaults`
+that don't belong to the Tokenizer. The following properties are in the Vocab
+just because they don't have anywhere else to go.
 
 - `get_noun_chunks`
 - `cfg`: This is a dict that just stores `oov_prob` (hardcoded to `-20`)
-- `data_dir`: This seems to be serialization related but presently unused.
+- `_unused_object`: Leftover C member, should be removed in next major version
 
 
