@@ -474,7 +474,7 @@ def get_sourced_components(
     }
 
 
-def resolve_dot_names(config: Config, dot_names: List[Optional[str]]) -> Tuple[Any]:
+def resolve_dot_names(config: Config, dot_names: List[Optional[str]]) -> Tuple[Any, ...]:
     """Resolve one or more "dot notation" names, e.g. corpora.train.
     The paths could point anywhere into the config, so we don't know which
     top-level section we'll be looking within.
@@ -484,7 +484,7 @@ def resolve_dot_names(config: Config, dot_names: List[Optional[str]]) -> Tuple[A
     """
     # TODO: include schema?
     resolved = {}
-    output = []  # type: ignore[var-annotated]
+    output: List[Any] = []
     errors = []
     for name in dot_names:
         if name is None:
@@ -506,7 +506,7 @@ def resolve_dot_names(config: Config, dot_names: List[Optional[str]]) -> Tuple[A
                 errors.append({"loc": name.split("."), "msg": msg})
     if errors:
         raise ConfigValidationError(config=config, errors=errors)
-    return tuple(output)  # type: ignore[return-value]
+    return tuple(output)
 
 
 def load_model_from_init_py(

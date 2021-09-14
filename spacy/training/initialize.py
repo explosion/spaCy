@@ -56,7 +56,7 @@ def init_nlp(config: Config, *, use_gpu: int = -1) -> "Language":
                 field="training.dev_corpus", type=type(T["dev_corpus"])
             )
         )
-    train_corpus, dev_corpus = resolve_dot_names(config, dot_names)  # type: ignore[misc]
+    train_corpus, dev_corpus = resolve_dot_names(config, dot_names)
     optimizer = T["optimizer"]
     # Components that shouldn't be updated during training
     frozen_components = T["frozen_components"]
@@ -78,10 +78,10 @@ def init_nlp(config: Config, *, use_gpu: int = -1) -> "Language":
                 f"in [initialize]. More info: https://spacy.io/api/cli#init_labels"
             )
             nlp.initialize(
-                lambda: islice(train_corpus(nlp), sample_size), sgd=optimizer  # type: ignore[has-type]
+                lambda: islice(train_corpus(nlp), sample_size), sgd=optimizer
             )
         else:
-            nlp.initialize(lambda: train_corpus(nlp), sgd=optimizer)  # type: ignore[has-type]
+            nlp.initialize(lambda: train_corpus(nlp), sgd=optimizer)
         logger.info(f"Initialized pipeline components: {nlp.pipe_names}")
     # Detect components with listeners that are not frozen consistently
     for name, proc in nlp.pipeline:

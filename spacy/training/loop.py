@@ -53,7 +53,7 @@ def train(
         set_gpu_allocator(allocator)
     T = registry.resolve(config["training"], schema=ConfigSchemaTraining)
     dot_names = [T["train_corpus"], T["dev_corpus"]]
-    train_corpus, dev_corpus = resolve_dot_names(config, dot_names)  # type: ignore[misc]
+    train_corpus, dev_corpus = resolve_dot_names(config, dot_names)
     optimizer = T["optimizer"]
     score_weights = T["score_weights"]
     batcher = T["batcher"]
@@ -80,8 +80,8 @@ def train(
     training_step_iterator = train_while_improving(
         nlp,
         optimizer,
-        create_train_batches(nlp, train_corpus, batcher, T["max_epochs"]),  # type: ignore[has-type]
-        create_evaluation_callback(nlp, dev_corpus, score_weights),  # type: ignore[has-type]
+        create_train_batches(nlp, train_corpus, batcher, T["max_epochs"]),
+        create_evaluation_callback(nlp, dev_corpus, score_weights),
         dropout=T["dropout"],
         accumulate_gradient=T["accumulate_gradient"],
         patience=T["patience"],

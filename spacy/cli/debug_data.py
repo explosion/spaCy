@@ -100,13 +100,13 @@ def debug_data(
 
     # Create the gold corpus to be able to better analyze data
     dot_names = [T["train_corpus"], T["dev_corpus"]]
-    train_corpus, dev_corpus = resolve_dot_names(config, dot_names)  # type: ignore[misc]
+    train_corpus, dev_corpus = resolve_dot_names(config, dot_names)
 
-    nlp.initialize(lambda: train_corpus(nlp))  # type: ignore[has-type]
+    nlp.initialize(lambda: train_corpus(nlp))
     msg.good("Pipeline can be initialized with data")
 
-    train_dataset = list(train_corpus(nlp))  # type: ignore[has-type]
-    dev_dataset = list(dev_corpus(nlp))  # type: ignore[has-type]
+    train_dataset = list(train_corpus(nlp))
+    dev_dataset = list(dev_corpus(nlp))
     msg.good("Corpus is loadable")
 
     # Create all gold data here to avoid iterating over the train_dataset constantly
