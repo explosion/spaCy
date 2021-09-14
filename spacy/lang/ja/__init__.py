@@ -1,7 +1,8 @@
-from typing import Optional, Union, Dict, Any
+from typing import Optional, Union, Dict, Any, Callable
 from pathlib import Path
 import srsly
 from collections import namedtuple
+from thinc.api import Model
 
 from .stop_words import STOP_WORDS
 from .syntax_iterators import SYNTAX_ITERATORS
@@ -11,6 +12,8 @@ from .tag_bigram_map import TAG_BIGRAM_MAP
 from ...compat import copy_reg
 from ...errors import Errors
 from ...language import Language
+from ...pipeline import Morphologizer
+from ...pipeline.morphologizer import DEFAULT_MORPH_MODEL
 from ...scorer import Scorer
 from ...symbols import POS
 from ...tokens import Doc, MorphAnalysis
@@ -181,6 +184,30 @@ class JapaneseDefaults(Language.Defaults):
 class Japanese(Language):
     lang = "ja"
     Defaults = JapaneseDefaults
+
+
+@Japanese.factory(
+    "morphologizer",
+    assigns=["token.morph", "token.pos"],
+    default_config={
+        "model": DEFAULT_MORPH_MODEL,
+        "overwrite": True,
+        "extend": True,
+        "scorer": {"@scorers": "spacy.morphologizer_scorer.v1"},
+    },
+    default_score_weights={"pos_acc": 0.5, "morph_acc": 0.5, "morph_per_feat": None},
+)
+def make_morphologizer(
+    nlp: Language,
+    model: Model,
+    name: str,
+    overwrite: bool,
+    extend: bool,
+    scorer: Optional[Callable],
+):
+    return Morphologizer(
+        nlp.vocab, model, name, overwrite=overwrite, extend=extend, scorer=scorer
+    )
 
 
 # Hold the attributes we need with convenient names
