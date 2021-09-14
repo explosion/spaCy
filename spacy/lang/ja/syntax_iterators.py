@@ -13,9 +13,9 @@ labels = ["nsubj", "nmod", "ddoclike", "nsubjpass", "pcomp", "pdoclike", "doclik
 def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Span]:
     """Detect base noun phrases from a dependency parse. Works on Doc and Span."""
     doc = doclike.doc  # type: ignore[union-attr]    # Ensure works on both Doc and Span.
-    np_deps = [doc.vocab.strings.add(label) for label in labels]  # type: ignore[union-attr]
-    doc.vocab.strings.add("conj")  # type: ignore[union-attr]
-    np_label = doc.vocab.strings.add("NP")  # type: ignore[union-attr]
+    np_deps = [doc.vocab.strings.add(label) for label in labels]
+    doc.vocab.strings.add("conj")
+    np_label = doc.vocab.strings.add("NP")
     seen = set()  # type: ignore[var-annotated]
     for i, word in enumerate(doclike):
         if word.pos not in (NOUN, PROPN, PRON):

@@ -38,7 +38,7 @@ def forward(
         return _handle_empty(model.ops, model.get_dim("nO"))
     key_attr = model.attrs["key_attr"]
     W = cast(Floats2d, model.ops.as_contig(model.get_param("W")))
-    V = cast(Floats2d, model.ops.asarray(docs[0].vocab.vectors.data))  # type: ignore[attr-defined]
+    V = cast(Floats2d, model.ops.asarray(docs[0].vocab.vectors.data))
     rows = model.ops.flatten(
         [doc.vocab.vectors.find(keys=doc.to_array(key_attr)) for doc in docs]  # type: ignore[attr-defined]
     )
@@ -78,7 +78,7 @@ def init(
     nM = model.get_dim("nM") if model.has_dim("nM") else None
     nO = model.get_dim("nO") if model.has_dim("nO") else None
     if X is not None and len(X):
-        nM = X[0].vocab.vectors.data.shape[1]  # type: ignore[attr-defined]
+        nM = X[0].vocab.vectors.data.shape[1]
     if Y is not None:
         nO = Y.data.shape[1]
 

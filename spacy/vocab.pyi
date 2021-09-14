@@ -14,6 +14,7 @@ from .strings import StringStore
 from .lexeme import Lexeme
 from .lookups import Lookups
 from .tokens import Doc, Span
+from .vectors import Vectors
 from pathlib import Path
 
 def create_vocab(
@@ -21,6 +22,9 @@ def create_vocab(
 ) -> Vocab: ...
 
 class Vocab:
+    strings: StringStore
+    vectors: Vectors
+
     def __init__(
         self,
         lex_attr_getters: Optional[Dict[str, Callable[[str], Any]]] = ...,

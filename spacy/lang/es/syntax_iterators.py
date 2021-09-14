@@ -12,13 +12,13 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Span]:
         raise ValueError(Errors.E029)
     if not len(doc):
         return
-    np_label = doc.vocab.strings.add("NP")  # type: ignore[union-attr]
+    np_label = doc.vocab.strings.add("NP")
     left_labels = ["det", "fixed", "neg"]  # ['nunmod', 'det', 'appos', 'fixed']
     right_labels = ["flat", "fixed", "compound", "neg"]
     stop_labels = ["punct"]
-    np_left_deps = [doc.vocab.strings.add(label) for label in left_labels]  # type: ignore[union-attr]
-    np_right_deps = [doc.vocab.strings.add(label) for label in right_labels]  # type: ignore[union-attr]
-    stop_deps = [doc.vocab.strings.add(label) for label in stop_labels]  # type: ignore[union-attr]
+    np_left_deps = [doc.vocab.strings.add(label) for label in left_labels]
+    np_right_deps = [doc.vocab.strings.add(label) for label in right_labels]
+    stop_deps = [doc.vocab.strings.add(label) for label in stop_labels]
 
     prev_right = -1
     for token in doclike:

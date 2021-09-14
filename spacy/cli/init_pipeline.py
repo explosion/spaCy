@@ -35,7 +35,7 @@ def init_vectors_cli(
     if jsonl_loc is not None:
         update_lexemes(nlp, jsonl_loc)  # type: ignore[arg-type]
     convert_vectors(nlp, vectors_loc, truncate=truncate, prune=prune, name=name)  # type: ignore[arg-type]
-    msg.good(f"Successfully converted {len(nlp.vocab.vectors)} vectors")  # type: ignore[attr-defined]
+    msg.good(f"Successfully converted {len(nlp.vocab.vectors)} vectors")
     nlp.to_disk(output_dir)
     msg.good(
         "Saved nlp object with vectors to output directory. You can now use the "

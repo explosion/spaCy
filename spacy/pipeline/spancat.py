@@ -195,7 +195,7 @@ class SpanCategorizer(TrainablePipe):
             return 0
         self._allow_extra_label()
         self.cfg["labels"].append(label)  # type: ignore[attr-defined]
-        self.vocab.strings.add(label)  # type: ignore[attr-defined]
+        self.vocab.strings.add(label)
         return 1
 
     @property

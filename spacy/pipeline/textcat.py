@@ -302,7 +302,7 @@ class TextCategorizer(TrainablePipe):
             self.model = self.model.attrs["resize_output"](
                 self.model, len(self.cfg["labels"])  # type: ignore[arg-type]
             )
-        self.vocab.strings.add(label)  # type: ignore[attr-defined]
+        self.vocab.strings.add(label)
         return 1
 
     def initialize(

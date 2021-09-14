@@ -167,9 +167,9 @@ def debug_data(
         f"10 most common words: {_format_labels(most_common_words, counts=True)}",
         show=verbose,
     )
-    if len(nlp.vocab.vectors):  # type: ignore[attr-defined]
+    if len(nlp.vocab.vectors):
         msg.info(
-            f"{len(nlp.vocab.vectors)} vectors ({nlp.vocab.vectors.n_keys} "  # type: ignore[attr-defined]
+            f"{len(nlp.vocab.vectors)} vectors ({nlp.vocab.vectors.n_keys} "
             f"unique keys, {nlp.vocab.vectors_length} dimensions)"
         )
         n_missing_vectors = sum(gold_train_data["words_missing_vectors"].values())
@@ -598,9 +598,9 @@ def _compile_gold(
             if align.x2y.lengths[token.i] != 1:
                 data["n_misaligned_words"] += 1  # type: ignore[operator]
         data["texts"].add(doc.text)  # type: ignore[attr-defined]
-        if len(nlp.vocab.vectors):  # type: ignore[attr-defined]
+        if len(nlp.vocab.vectors):
             for word in [t.text for t in doc]:
-                if nlp.vocab.strings[word] not in nlp.vocab.vectors:  # type: ignore[attr-defined]
+                if nlp.vocab.strings[word] not in nlp.vocab.vectors:
                     data["words_missing_vectors"].update([word])  # type: ignore[attr-defined]
         if "ner" in factory_names:
             for i, label in enumerate(eg.get_aligned_ner()):

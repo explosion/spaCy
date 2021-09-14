@@ -215,9 +215,9 @@ class Language:
         self._meta.setdefault("spacy_git_version", GIT_VERSION)
         self._meta["vectors"] = {
             "width": self.vocab.vectors_length,
-            "vectors": len(self.vocab.vectors),  # type: ignore[attr-defined]
-            "keys": self.vocab.vectors.n_keys,  # type: ignore[attr-defined]
-            "name": self.vocab.vectors.name,  # type: ignore[attr-defined]
+            "vectors": len(self.vocab.vectors),
+            "keys": self.vocab.vectors.n_keys,
+            "name": self.vocab.vectors.name,
         }
         self._meta["labels"] = dict(self.pipe_labels)
         # TODO: Adding this back to prevent breaking people's code etc., but
@@ -688,9 +688,9 @@ class Language:
             raise ValueError(Errors.E945.format(name=source_name, source=type(source)))
         # Check vectors, with faster checks first
         if (
-            self.vocab.vectors.shape != source.vocab.vectors.shape  # type: ignore[attr-defined]
-            or self.vocab.vectors.key2row != source.vocab.vectors.key2row  # type: ignore[attr-defined]
-            or self.vocab.vectors.to_bytes() != source.vocab.vectors.to_bytes()  # type: ignore[attr-defined]
+            self.vocab.vectors.shape != source.vocab.vectors.shape
+            or self.vocab.vectors.key2row != source.vocab.vectors.key2row
+            or self.vocab.vectors.to_bytes() != source.vocab.vectors.to_bytes()
         ):
             warnings.warn(Warnings.W113.format(name=source_name))
         if source_name not in source.component_names:
@@ -707,8 +707,8 @@ class Language:
         source_config = source.config.interpolate()
         pipe_config = util.copy_config(source_config["components"][source_name])
         self._pipe_configs[name] = pipe_config
-        for s in source.vocab.strings:  # type: ignore[attr-defined]
-            self.vocab.strings.add(s)  # type: ignore[attr-defined]
+        for s in source.vocab.strings:
+            self.vocab.strings.add(s)
         return pipe, pipe_config["factory"]
 
     def add_pipe(
@@ -1252,9 +1252,9 @@ class Language:
             )
         except IOError:
             raise IOError(Errors.E884.format(vectors=I["vectors"]))
-        if self.vocab.vectors.data.shape[1] >= 1:  # type: ignore[attr-defined]
+        if self.vocab.vectors.data.shape[1] >= 1:
             ops = get_current_ops()
-            self.vocab.vectors.data = ops.asarray(self.vocab.vectors.data)  # type: ignore[attr-defined]
+            self.vocab.vectors.data = ops.asarray(self.vocab.vectors.data)
         if hasattr(self.tokenizer, "initialize"):
             tok_settings = validate_init_settings(
                 self.tokenizer.initialize,  # type: ignore[union-attr]
@@ -1299,8 +1299,8 @@ class Language:
         DOCS: https://spacy.io/api/language#resume_training
         """
         ops = get_current_ops()
-        if self.vocab.vectors.data.shape[1] >= 1:  # type: ignore[attr-defined]
-            self.vocab.vectors.data = ops.asarray(self.vocab.vectors.data)  # type: ignore[attr-defined]
+        if self.vocab.vectors.data.shape[1] >= 1:
+            self.vocab.vectors.data = ops.asarray(self.vocab.vectors.data)
         for name, proc in self.pipeline:
             if hasattr(proc, "_rehearsal_model"):
                 proc._rehearsal_model = deepcopy(proc.model)  # type: ignore[attr-defined]
@@ -1743,7 +1743,7 @@ class Language:
                         )
                     if model not in source_nlp_vectors_hashes:
                         source_nlp_vectors_hashes[model] = hash(
-                            source_nlps[model].vocab.vectors.to_bytes()  # type: ignore[attr-defined]
+                            source_nlps[model].vocab.vectors.to_bytes()
                         )
                     if "_sourced_vectors_hashes" not in nlp.meta:
                         nlp.meta["_sourced_vectors_hashes"] = {}
@@ -1935,7 +1935,7 @@ class Language:
                 self.meta.update(data)
                 # self.meta always overrides meta["vectors"] with the metadata
                 # from self.vocab.vectors, so set the name directly
-                self.vocab.vectors.name = data.get("vectors", {}).get("name")  # type: ignore[attr-defined]
+                self.vocab.vectors.name = data.get("vectors", {}).get("name")
 
         def deserialize_vocab(path: Path) -> None:
             if path.exists():

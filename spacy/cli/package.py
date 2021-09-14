@@ -266,9 +266,9 @@ def get_meta(
     meta["spacy_version"] = util.get_minor_version_range(about.__version__)
     meta["vectors"] = {  # type: ignore[assignment]
         "width": nlp.vocab.vectors_length,
-        "vectors": len(nlp.vocab.vectors),  # type: ignore[attr-defined]
-        "keys": nlp.vocab.vectors.n_keys,  # type: ignore[attr-defined]
-        "name": nlp.vocab.vectors.name,  # type: ignore[attr-defined]
+        "vectors": len(nlp.vocab.vectors),
+        "keys": nlp.vocab.vectors.n_keys,
+        "name": nlp.vocab.vectors.name,
     }
     if about.__title__ != "spacy":
         meta["parent_package"] = about.__title__

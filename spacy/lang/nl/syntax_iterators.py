@@ -29,15 +29,15 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Span]:
     # det = determiner
     # det:poss = possessive determiner
     noun_deps = [
-        doc.vocab.strings[label] for label in ["amod", "nmod:poss", "det", "det:poss"]  # type: ignore[union-attr]
+        doc.vocab.strings[label] for label in ["amod", "nmod:poss", "det", "det:poss"]
     ]
 
     # nsubj = nominal subject
     # nsubj:pass = passive nominal subject
-    pronoun_deps = [doc.vocab.strings[label] for label in ["nsubj", "nsubj:pass"]]  # type: ignore[union-attr]
+    pronoun_deps = [doc.vocab.strings[label] for label in ["nsubj", "nsubj:pass"]]
 
     # Label NP for the Span to identify it as Noun-Phrase
-    span_label = doc.vocab.strings.add("NP")  # type: ignore[union-attr]
+    span_label = doc.vocab.strings.add("NP")
 
     # Only NOUNS and PRONOUNS matter
     for i, word in enumerate(filter(lambda x: x.pos in [PRON, NOUN], doclike)):
@@ -47,7 +47,7 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Span]:
             # Some debugging. It happens that VERBS are POS-TAGGED as NOUNS
             # We check if the word has a "nsubj", if it's the case, we eliminate it
             nsubjs = filter(
-                lambda x: x.dep == doc.vocab.strings["nsubj"], word.children  # type: ignore[union-attr]
+                lambda x: x.dep == doc.vocab.strings["nsubj"], word.children
             )
             next_word = next(nsubjs, None)
             if next_word is not None:

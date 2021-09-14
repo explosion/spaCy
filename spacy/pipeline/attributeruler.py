@@ -108,7 +108,7 @@ class AttributeRuler(Pipe):
         matches = self.matcher(doc, allow_missing=True)
         # Sort by the attribute ID, so that later rules have precedence
         matches = [
-            (int(self.vocab.strings[m_id]), m_id, s, e) for m_id, s, e in matches  # type: ignore[assignment, attr-defined]
+            (int(self.vocab.strings[m_id]), m_id, s, e) for m_id, s, e in matches  # type: ignore[index]
         ]
         matches.sort()
         return matches
@@ -150,10 +150,10 @@ class AttributeRuler(Pipe):
             attrs, morph_attrs = _split_morph_attrs(attrs)
             if "MORPH" not in attrs:
                 morph = self.vocab.morphology.add(morph_attrs)  # type: ignore[attr-defined]
-                attrs["MORPH"] = self.vocab.strings[morph]  # type: ignore[attr-defined]
+                attrs["MORPH"] = self.vocab.strings[morph]
             else:
                 morph = self.vocab.morphology.add(attrs["MORPH"])  # type: ignore[attr-defined]
-                attrs["MORPH"] = self.vocab.strings[morph]  # type: ignore[attr-defined]
+                attrs["MORPH"] = self.vocab.strings[morph]
             self.add([pattern], attrs)  # type: ignore[list-item]
 
     def load_from_morph_rules(
@@ -174,10 +174,10 @@ class AttributeRuler(Pipe):
                 attrs, morph_attrs = _split_morph_attrs(attrs)
                 if "MORPH" in attrs:
                     morph = self.vocab.morphology.add(attrs["MORPH"])  # type: ignore[attr-defined]
-                    attrs["MORPH"] = self.vocab.strings[morph]  # type: ignore[attr-defined]
+                    attrs["MORPH"] = self.vocab.strings[morph]
                 elif morph_attrs:
                     morph = self.vocab.morphology.add(morph_attrs)  # type: ignore[attr-defined]
-                    attrs["MORPH"] = self.vocab.strings[morph]  # type: ignore[attr-defined]
+                    attrs["MORPH"] = self.vocab.strings[morph]
                 self.add([pattern], attrs)  # type: ignore[list-item]
 
     def add(

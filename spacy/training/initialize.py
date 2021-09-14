@@ -132,7 +132,7 @@ def init_vocab(  # type: ignore[return]
         logger.info(f"Added vectors: {vectors}")
     # warn if source model vectors are not identical
     sourced_vectors_hashes = nlp.meta.pop("_sourced_vectors_hashes", {})
-    vectors_hash = hash(nlp.vocab.vectors.to_bytes())  # type: ignore[attr-defined]
+    vectors_hash = hash(nlp.vocab.vectors.to_bytes())
     for sourced_component, sourced_vectors_hash in sourced_vectors_hashes.items():
         if vectors_hash != sourced_vectors_hash:
             warnings.warn(Warnings.W113.format(name=sourced_component))
@@ -155,18 +155,18 @@ def load_vectors_into_model(
         err = ConfigValidationError.from_error(e, title=title, desc=desc)
         raise err from None
 
-    if len(vectors_nlp.vocab.vectors.keys()) == 0:  # type: ignore[attr-defined]
+    if len(vectors_nlp.vocab.vectors.keys()) == 0:
         logger.warning(Warnings.W112.format(name=name))
 
-    nlp.vocab.vectors = vectors_nlp.vocab.vectors  # type: ignore[attr-defined]
+    nlp.vocab.vectors = vectors_nlp.vocab.vectors
     for lex in nlp.vocab:
         lex.rank = nlp.vocab.vectors.key2row.get(lex.orth, OOV_RANK)  # type: ignore[attr-defined]
     if add_strings:
         # I guess we should add the strings from the vectors_nlp model?
         # E.g. if someone does a similarity query, they might expect the strings.
-        for key in nlp.vocab.vectors.key2row:  # type: ignore[attr-defined]
-            if key in vectors_nlp.vocab.strings:  # type: ignore[attr-defined]
-                nlp.vocab.strings.add(vectors_nlp.vocab.strings[key])  # type: ignore[attr-defined]
+        for key in nlp.vocab.vectors.key2row:
+            if key in vectors_nlp.vocab.strings:
+                nlp.vocab.strings.add(vectors_nlp.vocab.strings[key])  # type: ignore[arg-type]
 
 
 def init_tok2vec(
@@ -202,7 +202,7 @@ def convert_vectors(
 ) -> None:
     vectors_loc = ensure_path(vectors_loc)
     if vectors_loc and vectors_loc.parts[-1].endswith(".npz"):
-        nlp.vocab.vectors = Vectors(data=numpy.load(vectors_loc.open("rb")))  # type: ignore[attr-defined]
+        nlp.vocab.vectors = Vectors(data=numpy.load(vectors_loc.open("rb")))
         for lex in nlp.vocab:
             if lex.rank and lex.rank != OOV_RANK:
                 nlp.vocab.vectors.add(lex.orth, row=lex.rank)  # type: ignore[attr-defined]
@@ -218,13 +218,13 @@ def convert_vectors(
                 if word not in nlp.vocab:
                     nlp.vocab[word]
         if vectors_data is not None:
-            nlp.vocab.vectors = Vectors(data=vectors_data, keys=vector_keys)  # type: ignore[attr-defined]
+            nlp.vocab.vectors = Vectors(data=vectors_data, keys=vector_keys)
     if name is None:
         # TODO: Is this correct? Does this matter?
-        nlp.vocab.vectors.name = f"{nlp.meta['lang']}_{nlp.meta['name']}.vectors"  # type: ignore[attr-defined]
+        nlp.vocab.vectors.name = f"{nlp.meta['lang']}_{nlp.meta['name']}.vectors"
     else:
-        nlp.vocab.vectors.name = name  # type: ignore[attr-defined]
-    nlp.meta["vectors"]["name"] = nlp.vocab.vectors.name  # type: ignore[attr-defined]
+        nlp.vocab.vectors.name = name
+    nlp.meta["vectors"]["name"] = nlp.vocab.vectors.name
     if prune >= 1:
         nlp.vocab.prune_vectors(prune)
 
