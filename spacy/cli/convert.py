@@ -244,8 +244,8 @@ def verify_cli_args(
             msg.fail("No input files in directory", input_path, exits=1)
         file_types = list(set([loc.suffix[1:] for loc in input_locs]))
         if converter == "auto" and len(file_types) >= 2:
-            file_types = ",".join(file_types)  # type: ignore[assignment]
-            msg.fail("All input files must be same type", file_types, exits=1)
+            file_types_str = ",".join(file_types)
+            msg.fail("All input files must be same type", file_types_str, exits=1)
     if converter != "auto" and converter not in CONVERTERS:
         msg.fail(f"Can't find converter for {converter}", exits=1)
 
