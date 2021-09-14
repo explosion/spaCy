@@ -1,4 +1,4 @@
-from typing import Optional, Any, List, Union
+from typing import Callable, Iterable, Mapping, Optional, Any, List, Union
 from enum import Enum
 from pathlib import Path
 from wasabi import Printer
@@ -9,7 +9,7 @@ import itertools
 
 from ._util import app, Arg, Opt
 from ..training import docs_to_json
-from ..tokens import DocBin
+from ..tokens import Doc, DocBin
 from ..training.converters import iob_to_docs, conll_ner_to_docs, json_to_docs
 from ..training.converters import conllu_to_docs
 
@@ -19,7 +19,7 @@ from ..training.converters import conllu_to_docs
 # entry to this dict with the file extension mapped to the converter function
 # imported from /converters.
 
-CONVERTERS = {
+CONVERTERS: Mapping[str, Callable[..., Iterable[Doc]]] = {
     "conllubio": conllu_to_docs,
     "conllu": conllu_to_docs,
     "conll": conll_ner_to_docs,
@@ -119,7 +119,7 @@ def convert(
             input_data = infile.read()
         # Use converter function to convert data
         func = CONVERTERS[converter]
-        docs = func(  # type: ignore[operator]
+        docs = func(
             input_data,
             n_sents=n_sents,
             seg_sents=seg_sents,
