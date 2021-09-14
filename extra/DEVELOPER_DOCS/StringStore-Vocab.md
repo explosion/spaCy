@@ -26,15 +26,15 @@ but generally not a problem in practice.
 Example:
 
 ```
-from spacy.strings import `StringStore`
+from spacy.strings import StringStore
 
-ss = `StringStore`()
+ss = StringStore()
 hashval = ss["spacy"] # 10639093010105930009
 try:
   # this won't work
   ss[hashval]
-except:
-  pass
+except KeyError:
+  print(f"key {hashval} unknown in the StringStore.")
 
 ss.add("spacy")
 assert ss[hashval] == "spacy" # it works now
@@ -46,7 +46,7 @@ for key in ss:
 ```
 
 Almost all strings in spaCy are stored in the `StringStore`. This naturally
-includes tokens, but also includes things like labels (not just NER/PoS/dep,
+includes tokens, but also includes things like labels (not just NER/POS/dep,
 but also categories etc.), lemmas, lowercase forms, word shapes, and so on. One
 of the main results of this is that tokens can be represented by a compact C
 struct that mostly consists of string hashes. This also means that converting
@@ -75,7 +75,7 @@ The empty string is not hashed, it's just converted to/from 0.
 
 A small number of strings use indices into a lookup table (so low integers)
 rather than hashes. This is mostly Universal Dependencies labels or other
-strings considered "core" in spaCy. This was critical in v1, which hasn't
+strings considered "core" in spaCy. This was critical in v1, which hadn't
 introduced hashing yet. Since v2 it's important for items in `spacy.attrs`,
 especially lexeme flags, but is otherwise only maintained for backwards
 compatability.
@@ -91,8 +91,7 @@ length you can have explosive memory usage. In practice this has never been an
 issue. (Note that this is also different from using `sys.intern` to intern
 Python strings, which does not guarantee they won't be memory collected later.)
 
-The way strings are stored in the `StringStore` is weird, but is well isolated
-from outside code. A short explanation is that very short strings are stored
+Strings are stored in the `StringStore` in a peculiar way: short strings are stored
 in a fixed-length buffer (one per string, not a shared buffer), while longer
 strings are prefixed with their length and use malloced memory. If you want to
 understand the full details see the implementation of `decode_Utf8Str` and
@@ -123,12 +122,12 @@ difference between these types and `str`.
 While you can ignore the `StringStore` in many cases, there are situations where
 you should make use of it to avoid errors. 
 
-Any time you introduce a string that may be set on a Doc field that has a hash,
+Any time you introduce a string that may be set on a `Doc` field that has a hash,
 you should add the string to the `StringStore`. This mainly happens when adding
 labels in components, but there are some other cases:
 
 - syntax iterators, mainly `get_noun_chunks`
-- external data used in components, like the KnowledgeBase in EntityLinking
+- external data used in components, like the `KnowledgeBase` in the `entity_linker`
 - labels used in tests
 
 ## Vocab
@@ -137,7 +136,7 @@ The `Vocab` is a core component of a `Language` pipeline. Its main function is
 to manage `Lexeme`s, which are structs that contain information about a token
 that depends only on its surface form, without context. `Lexeme`s store much of
 the data associated with `Token`s. As a side effect of this the `Vocab` also
-managed the `StringStore` for a pipeline and a grab-bag of other data.
+manages the `StringStore` for a pipeline and a grab-bag of other data.
 
 These are things stored in the vocab:
 
