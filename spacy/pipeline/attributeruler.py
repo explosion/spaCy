@@ -149,10 +149,10 @@ class AttributeRuler(Pipe):
             pattern = [{"TAG": tag}]
             attrs, morph_attrs = _split_morph_attrs(attrs)
             if "MORPH" not in attrs:
-                morph = self.vocab.morphology.add(morph_attrs)  # type: ignore[attr-defined]
+                morph = self.vocab.morphology.add(morph_attrs)
                 attrs["MORPH"] = self.vocab.strings[morph]
             else:
-                morph = self.vocab.morphology.add(attrs["MORPH"])  # type: ignore[attr-defined]
+                morph = self.vocab.morphology.add(attrs["MORPH"])
                 attrs["MORPH"] = self.vocab.strings[morph]
             self.add([pattern], attrs)  # type: ignore[list-item]
 
@@ -173,10 +173,10 @@ class AttributeRuler(Pipe):
                 attrs = morph_rules[tag][word]
                 attrs, morph_attrs = _split_morph_attrs(attrs)
                 if "MORPH" in attrs:
-                    morph = self.vocab.morphology.add(attrs["MORPH"])  # type: ignore[attr-defined]
+                    morph = self.vocab.morphology.add(attrs["MORPH"])
                     attrs["MORPH"] = self.vocab.strings[morph]
                 elif morph_attrs:
-                    morph = self.vocab.morphology.add(morph_attrs)  # type: ignore[attr-defined]
+                    morph = self.vocab.morphology.add(morph_attrs)
                     attrs["MORPH"] = self.vocab.strings[morph]
                 self.add([pattern], attrs)  # type: ignore[list-item]
 

@@ -124,7 +124,7 @@ def init_vocab(  # type: ignore[return]
             oov_prob = min(lex.prob for lex in nlp.vocab) - 1
         else:
             oov_prob = DEFAULT_OOV_PROB
-        nlp.vocab.cfg.update({"oov_prob": oov_prob})  # type: ignore[attr-defined]
+        nlp.vocab.cfg.update({"oov_prob": oov_prob})
         logger.info(f"Added {len(nlp.vocab)} lexical entries to the vocab")
     logger.info("Created vocabulary")
     if vectors is not None:

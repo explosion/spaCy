@@ -13,6 +13,7 @@ from . import Language
 from .strings import StringStore
 from .lexeme import Lexeme
 from .lookups import Lookups
+from .morphology import Morphology
 from .tokens import Doc, Span
 from .vectors import Vectors
 from pathlib import Path
@@ -22,8 +23,13 @@ def create_vocab(
 ) -> Vocab: ...
 
 class Vocab:
+    cfg: Dict[str, Any]
+    get_noun_chunks: Optional[Callable[[Union[Doc, Span]], Iterator[Span]]]
+    lookups: Lookups
+    morphology: Morphology
     strings: StringStore
     vectors: Vectors
+    writing_system: Dict[str, Any]
 
     def __init__(
         self,
@@ -58,7 +64,6 @@ class Vocab:
     ) -> FloatsXd: ...
     def set_vector(self, orth: Union[int, str], vector: Floats1d) -> None: ...
     def has_vector(self, orth: Union[int, str]) -> bool: ...
-    lookups: Lookups
     def to_disk(
         self, path: Union[str, Path], *, exclude: Union[List[str], Tuple[str]] = ...
     ) -> None: ...

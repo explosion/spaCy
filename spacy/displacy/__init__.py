@@ -214,5 +214,5 @@ def set_render_wrapper(func: Callable[[str], str]) -> None:
 def get_doc_settings(doc: Doc) -> Dict[str, Any]:
     return {
         "lang": doc.lang_,
-        "direction": doc.vocab.writing_system.get("direction", "ltr"),  # type: ignore[attr-defined]
+        "direction": doc.vocab.writing_system.get("direction", "ltr"),
     }
