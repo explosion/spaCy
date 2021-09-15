@@ -287,7 +287,7 @@ cdef class Doc:
                 elif sent_starts[i] is None or sent_starts[i] not in [-1, 0, 1]:
                     sent_starts[i] = 0
         if pos is not None:
-            for pp in pos:
+            for pp in set(pos):
                 if pp not in parts_of_speech.IDS:
                     raise ValueError(Errors.E1021.format(pp=pp))
         ent_iobs = None
