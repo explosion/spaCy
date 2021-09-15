@@ -463,62 +463,6 @@ start decreasing across epochs.
 
  </Accordion>
 
-#### spacy.WandbLogger.v2 {#WandbLogger tag="registered function"}
-
-> #### Installation
->
-> ```bash
-> $ pip install wandb
-> $ wandb login
-> ```
-
-Built-in logger that sends the results of each training step to the dashboard of
-the [Weights & Biases](https://www.wandb.com/) tool. To use this logger, Weights
-& Biases should be installed, and you should be logged in. The logger will send
-the full config file to W&B, as well as various system information such as
-memory utilization, network traffic, disk IO, GPU statistics, etc. This will
-also include information such as your hostname and operating system, as well as
-the location of your Python executable.
-
-<Infobox variant="warning">
-
-Note that by default, the full (interpolated)
-[training config](/usage/training#config) is sent over to the W&B dashboard. If
-you prefer to **exclude certain information** such as path names, you can list
-those fields in "dot notation" in the `remove_config_values` parameter. These
-fields will then be removed from the config before uploading, but will otherwise
-remain in the config file stored on your local system.
-
-</Infobox>
-
-> #### Example config
->
-> ```ini
-> [training.logger]
-> @loggers = "spacy.WandbLogger.v2"
-> project_name = "monitor_spacy_training"
-> remove_config_values = ["paths.train", "paths.dev", "corpora.train.path", "corpora.dev.path"]
-> log_dataset_dir = "corpus"
-> model_log_interval = 1000
-> ```
-
-| Name                   | Description                                                                                                                           |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `project_name`         | The name of the project in the Weights & Biases interface. The project will be created automatically if it doesn't exist yet. ~~str~~ |
-| `remove_config_values` | A list of values to include from the config before it is uploaded to W&B (default: empty). ~~List[str]~~                              |
-| `model_log_interval`   | Steps to wait between logging model checkpoints to W&B dasboard (default: None). ~~Optional[int]~~                                    |
-| `log_dataset_dir`      | Directory containing dataset to be logged and versioned as W&B artifact (default: None). ~~Optional[str]~~                            |
-
-<Project id="integrations/wandb">
-
-Get started with tracking your spaCy training runs in Weights & Biases using our
-project template. It trains on the IMDB Movie Review Dataset and includes a
-simple config with the built-in `WandbLogger`, as well as a custom example of
-creating variants of the config for a simple hyperparameter grid search and
-logging the results.
-
-</Project>
-
 ## Readers {#readers}
 
 ### File readers {#file-readers source="github.com/explosion/srsly" new="3"}
