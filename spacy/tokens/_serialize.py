@@ -110,7 +110,8 @@ class DocBin:
             self.strings.add(token.ent_kb_id_)
             self.strings.add(token.ent_id_)
         self.cats.append(doc.cats)
-        self.user_data.append(srsly.msgpack_dumps(doc.user_data))
+        if self.store_user_data:
+            self.user_data.append(srsly.msgpack_dumps(doc.user_data))
         self.span_groups.append(doc.spans.to_bytes())
         for key, group in doc.spans.items():
             for span in group:
