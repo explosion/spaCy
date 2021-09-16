@@ -202,6 +202,10 @@ def test_set_pos():
     doc[1].pos = VERB
     assert doc[1].pos_ == "VERB"
 
+def test_set_invalid_pos():
+    doc = Doc(Vocab(), words=["hello", "world"])
+    with pytest.raises(ValueError):
+        doc[0].pos_ = "blah"
 
 def test_tokens_sent(doc):
     """Test token.sent property"""
