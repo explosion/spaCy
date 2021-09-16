@@ -314,8 +314,8 @@ class EntityRenderer:
             label = span["label"]
             start = span["start"]
             end = span["end"]
-            kb_id = str(span.get("kb_id") or "")
-            kb_url = str(span.get("kb_url") or "")
+            kb_id = span.get("kb_id", "")
+            kb_url = span.get("kb_url", "")
             additional_params = span.get("params", {})
             entity = escape_html(text[start:end])
             fragments = text[offset:start].split("\n")
