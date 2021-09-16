@@ -3293,7 +3293,7 @@
                 "}",
                 "",
                 "nlp.add_pipe(\"hmrb\", config=conf)",
-                "nlp(sentence)"
+                "nlp(sentences)"
             ],
             "code_language": "python",
             "thumb": "https://user-images.githubusercontent.com/6807878/118643685-cae6b880-b7d4-11eb-976e-066aec9505da.png",
