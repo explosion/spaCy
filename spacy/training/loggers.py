@@ -206,7 +206,9 @@ def wandb_logger(
         for field in remove_config_values:
             del config_dot[field]
         config = util.dot_to_dict(config_dot)
-        run = wandb.init(project=project_name, config=config, entity=entity, reinit=True)
+        run = wandb.init(
+            project=project_name, config=config, entity=entity, reinit=True
+        )
 
         if run_name:
             wandb.run.name = run_name
