@@ -170,8 +170,8 @@ def _sentences():
 
 
 def _get_docs(lang: str = "en"):
-    nlp = util.get_lang_class(lang)()  # type: ignore[call-arg]
-    return list(nlp.pipe(_sentences()))  # type: ignore[attr-defined]
+    nlp = util.get_lang_class(lang)()
+    return list(nlp.pipe(_sentences()))
 
 
 def _set_output_dim(model, nO):

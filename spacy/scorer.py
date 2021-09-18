@@ -114,9 +114,9 @@ class Scorer:
         self.nlp = nlp
         self.cfg = cfg
         if not nlp:
-            nlp = get_lang_class(default_lang)()  # type: ignore[assignment, call-arg]
+            nlp = get_lang_class(default_lang)()
             for pipe in default_pipeline:
-                nlp.add_pipe(pipe)  # type: ignore[union-attr]
+                nlp.add_pipe(pipe)
             self.nlp = nlp
 
     def score(self, examples: Iterable[Example]) -> Dict[str, Any]:

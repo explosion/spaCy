@@ -1,4 +1,4 @@
-from typing import List, Union, Dict, Any, Optional, Iterable, Callable, Tuple
+from typing import List, Union, Dict, Any, Optional, Iterable, Callable, Tuple, Type
 from typing import Iterator, Type, Pattern, Generator, TYPE_CHECKING
 from types import ModuleType
 import os
@@ -255,7 +255,7 @@ def lang_class_is_loaded(lang: str) -> bool:
     return lang in registry.languages
 
 
-def get_lang_class(lang: str) -> "Language":
+def get_lang_class(lang: str) -> Type["Language"]:
     """Import and load a Language class.
 
     lang (str): Two-letter language code, e.g. 'en'.
@@ -342,7 +342,7 @@ def load_model(
     kwargs = {"vocab": vocab, "disable": disable, "exclude": exclude, "config": config}
     if isinstance(name, str):  # name or string path
         if name.startswith("blank:"):  # shortcut for blank model
-            return get_lang_class(name.replace("blank:", ""))()  # type: ignore[call-arg, return-value]
+            return get_lang_class(name.replace("blank:", ""))()
         if is_package(name):  # installed as package
             return load_model_from_package(name, **kwargs)  # type: ignore[arg-type]
         if Path(name).exists():  # path to model data directory
