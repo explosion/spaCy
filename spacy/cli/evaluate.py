@@ -136,40 +136,40 @@ def evaluate(
 
 
 def handle_scores_per_type(
-    scores: Union[Scorer, Dict[str, Any]],
+    scores: Dict[str, Any],
     data: Dict[str, Any] = {},
     *,
     spans_key: str = "sc",
     silent: bool = False,
 ) -> Dict[str, Any]:
     msg = Printer(no_print=silent, pretty=not silent)
-    if "morph_per_feat" in scores:  # type: ignore[operator]
-        if scores["morph_per_feat"]:  # type: ignore[index]
-            print_prf_per_type(msg, scores["morph_per_feat"], "MORPH", "feat")  # type: ignore[index]
-            data["morph_per_feat"] = scores["morph_per_feat"]  # type: ignore[index]
-    if "dep_las_per_type" in scores:  # type: ignore[operator]
-        if scores["dep_las_per_type"]:  # type: ignore[index]
-            print_prf_per_type(msg, scores["dep_las_per_type"], "LAS", "type")  # type: ignore[index]
-            data["dep_las_per_type"] = scores["dep_las_per_type"]  # type: ignore[index]
-    if "ents_per_type" in scores:  # type: ignore[operator]
-        if scores["ents_per_type"]:  # type: ignore[index]
-            print_prf_per_type(msg, scores["ents_per_type"], "NER", "type")  # type: ignore[index]
-            data["ents_per_type"] = scores["ents_per_type"]  # type: ignore[index]
-    if f"spans_{spans_key}_per_type" in scores:  # type: ignore[operator]
-        if scores[f"spans_{spans_key}_per_type"]:  # type: ignore[index]
+    if "morph_per_feat" in scores:
+        if scores["morph_per_feat"]:
+            print_prf_per_type(msg, scores["morph_per_feat"], "MORPH", "feat")
+            data["morph_per_feat"] = scores["morph_per_feat"]
+    if "dep_las_per_type" in scores:
+        if scores["dep_las_per_type"]:
+            print_prf_per_type(msg, scores["dep_las_per_type"], "LAS", "type")
+            data["dep_las_per_type"] = scores["dep_las_per_type"]
+    if "ents_per_type" in scores:
+        if scores["ents_per_type"]:
+            print_prf_per_type(msg, scores["ents_per_type"], "NER", "type")
+            data["ents_per_type"] = scores["ents_per_type"]
+    if f"spans_{spans_key}_per_type" in scores:
+        if scores[f"spans_{spans_key}_per_type"]:
             print_prf_per_type(
-                msg, scores[f"spans_{spans_key}_per_type"], "SPANS", "type"  # type: ignore[index]
+                msg, scores[f"spans_{spans_key}_per_type"], "SPANS", "type"
             )
-            data[f"spans_{spans_key}_per_type"] = scores[f"spans_{spans_key}_per_type"]  # type: ignore[index]
-    if "cats_f_per_type" in scores:  # type: ignore[operator]
-        if scores["cats_f_per_type"]:  # type: ignore[index]
-            print_prf_per_type(msg, scores["cats_f_per_type"], "Textcat F", "label")  # type: ignore[index]
-            data["cats_f_per_type"] = scores["cats_f_per_type"]  # type: ignore[index]
-    if "cats_auc_per_type" in scores:  # type: ignore[operator]
-        if scores["cats_auc_per_type"]:  # type: ignore[index]
-            print_textcats_auc_per_cat(msg, scores["cats_auc_per_type"])  # type: ignore[index]
-            data["cats_auc_per_type"] = scores["cats_auc_per_type"]  # type: ignore[index]
-    return scores  # type: ignore[return-value]
+            data[f"spans_{spans_key}_per_type"] = scores[f"spans_{spans_key}_per_type"]
+    if "cats_f_per_type" in scores:
+        if scores["cats_f_per_type"]:
+            print_prf_per_type(msg, scores["cats_f_per_type"], "Textcat F", "label")
+            data["cats_f_per_type"] = scores["cats_f_per_type"]
+    if "cats_auc_per_type" in scores:
+        if scores["cats_auc_per_type"]:
+            print_textcats_auc_per_cat(msg, scores["cats_auc_per_type"])
+            data["cats_auc_per_type"] = scores["cats_auc_per_type"]
+    return scores
 
 
 def render_parses(
