@@ -28,8 +28,8 @@ class Optimizations(str, Enum):
 def init_config_cli(
     # fmt: off
     output_file: Path = Arg(..., help="File to save config.cfg to or - for stdout (will only output config and no additional logging info)", allow_dash=True),
-    lang: Optional[str] = Opt("en", "--lang", "-l", help="Two-letter code of the language to use"),
-    pipeline: Optional[str] = Opt("tagger,parser,ner", "--pipeline", "-p", help="Comma-separated names of trainable pipeline components to include (without 'tok2vec' or 'transformer')"),
+    lang: str = Opt("en", "--lang", "-l", help="Two-letter code of the language to use"),
+    pipeline: str = Opt("tagger,parser,ner", "--pipeline", "-p", help="Comma-separated names of trainable pipeline components to include (without 'tok2vec' or 'transformer')"),
     optimize: Optimizations = Opt(Optimizations.efficiency.value, "--optimize", "-o", help="Whether to optimize for efficiency (faster inference, smaller model, lower memory consumption) or higher accuracy (potentially larger and slower model). This will impact the choice of architecture, pretrained weights and related hyperparameters."),
     gpu: bool = Opt(False, "--gpu", "-G", help="Whether the model can run on GPU. This will impact the choice of architecture, pretrained weights and related hyperparameters."),
     pretraining: bool = Opt(False, "--pretraining", "-pt", help="Include config for pretraining (with 'spacy pretrain')"),
@@ -46,7 +46,7 @@ def init_config_cli(
     """
     if isinstance(optimize, Optimizations):  # instance of enum from the CLI
         optimize = optimize.value  # type: ignore[assignment]
-    pipeline = string_to_list(pipeline)  # type: ignore[arg-type, assignment]
+    pipeline = string_to_list(pipeline)
     is_stdout = str(output_file) == "-"
     if not is_stdout and output_file.exists() and not force_overwrite:
         msg = Printer()
@@ -55,7 +55,7 @@ def init_config_cli(
             exits=1,
         )
     config = init_config(
-        lang=lang,  # type: ignore[arg-type]
+        lang=lang,
         pipeline=pipeline,
         optimize=optimize,
         gpu=gpu,
