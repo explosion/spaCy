@@ -565,7 +565,7 @@ def _compile_gold(
     nlp: Language,
     make_proj: bool,
 ) -> Dict[str, Any]:
-    data = {
+    data: Dict[str, Any] = {
         "ner": Counter(),
         "cats": Counter(),
         "tags": Counter(),
@@ -589,26 +589,26 @@ def _compile_gold(
         gold = eg.reference
         doc = eg.predicted
         valid_words = [x.text for x in gold]
-        data["words"].update(valid_words)  # type: ignore[attr-defined]
-        data["n_words"] += len(valid_words)  # type: ignore[operator]
+        data["words"].update(valid_words)
+        data["n_words"] += len(valid_words)
         align = eg.alignment
         for token in doc:
             if token.orth_.isspace():
                 continue
             if align.x2y.lengths[token.i] != 1:
-                data["n_misaligned_words"] += 1  # type: ignore[operator]
-        data["texts"].add(doc.text)  # type: ignore[attr-defined]
+                data["n_misaligned_words"] += 1
+        data["texts"].add(doc.text)
         if len(nlp.vocab.vectors):
             for word in [t.text for t in doc]:
                 if nlp.vocab.strings[word] not in nlp.vocab.vectors:
-                    data["words_missing_vectors"].update([word])  # type: ignore[attr-defined]
+                    data["words_missing_vectors"].update([word])
         if "ner" in factory_names:
             for i, label in enumerate(eg.get_aligned_ner()):
                 if label is None:
                     continue
                 if label.startswith(("B-", "U-", "L-")) and doc[i].is_space:
                     # "Illegal" whitespace entity
-                    data["ws_ents"] += 1  # type: ignore[operator]
+                    data["ws_ents"] += 1
                 if label.startswith(("B-", "U-", "L-")) and doc[i].text in [
                     ".",
                     "'",
@@ -618,21 +618,21 @@ def _compile_gold(
                 ]:
                     # punctuation entity: could be replaced by whitespace when training with noise,
                     # so add a warning to alert the user to this unexpected side effect.
-                    data["punct_ents"] += 1  # type: ignore[operator]
+                    data["punct_ents"] += 1
                 if label.startswith(("B-", "U-")):
                     combined_label = label.split("-")[1]
-                    data["ner"][combined_label] += 1  # type: ignore[index]
+                    data["ner"][combined_label] += 1
                 elif label == "-":
-                    data["ner"]["-"] += 1  # type: ignore[index]
+                    data["ner"]["-"] += 1
         if "textcat" in factory_names or "textcat_multilabel" in factory_names:
-            data["cats"].update(gold.cats)  # type: ignore[attr-defined]
+            data["cats"].update(gold.cats)
             if any(val not in (0, 1) for val in gold.cats.values()):
-                data["n_cats_bad_values"] += 1  # type: ignore[operator]
+                data["n_cats_bad_values"] += 1
             if list(gold.cats.values()).count(1) != 1:
-                data["n_cats_multilabel"] += 1  # type: ignore[operator]
+                data["n_cats_multilabel"] += 1
         if "tagger" in factory_names:
             tags = eg.get_aligned("TAG", as_string=True)
-            data["tags"].update([x for x in tags if x is not None])  # type: ignore[attr-defined]
+            data["tags"].update([x for x in tags if x is not None])
         if "morphologizer" in factory_names:
             pos_tags = eg.get_aligned("POS", as_string=True)
             morphs = eg.get_aligned("MORPH", as_string=True)
@@ -655,18 +655,18 @@ def _compile_gold(
                     label = eg.reference.vocab.strings[
                         eg.reference.vocab.morphology.add(label_dict)
                     ]
-                    data["morphs"].update([label])  # type: ignore[attr-defined]
+                    data["morphs"].update([label])
         if "parser" in factory_names:
             aligned_heads, aligned_deps = eg.get_aligned_parse(projectivize=make_proj)
-            data["deps"].update([x for x in aligned_deps if x is not None])  # type: ignore[attr-defined]
+            data["deps"].update([x for x in aligned_deps if x is not None])
             for i, (dep, head) in enumerate(zip(aligned_deps, aligned_heads)):
                 if head == i:
-                    data["roots"].update([dep])  # type: ignore[attr-defined]
-                    data["n_sents"] += 1  # type: ignore[operator]
+                    data["roots"].update([dep])
+                    data["n_sents"] += 1
             if nonproj.is_nonproj_tree(aligned_heads):
-                data["n_nonproj"] += 1  # type: ignore[operator]
+                data["n_nonproj"] += 1
             if nonproj.contains_cycle(aligned_heads):
-                data["n_cycles"] += 1  # type: ignore[operator]
+                data["n_cycles"] += 1
     return data
 
 
