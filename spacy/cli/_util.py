@@ -1,4 +1,4 @@
-from typing import Dict, Any, Union, List, Optional, Tuple, Iterable, TYPE_CHECKING
+from typing import Dict, Any, Union, List, Optional, Tuple, Iterable, TYPE_CHECKING, overload
 import sys
 import shutil
 from pathlib import Path
@@ -15,6 +15,7 @@ from thinc.util import has_cupy, gpu_is_available
 from configparser import InterpolationError
 import os
 
+from ..compat import Literal
 from ..schemas import ProjectConfigSchema, validate
 from ..util import import_file, run_command, make_tempdir, registry, logger
 from ..util import is_compatible_version, SimpleFrozenDict, ENV_VARS
@@ -498,6 +499,16 @@ def is_subpath_of(parent, child):
     parent_realpath = os.path.realpath(parent)
     child_realpath = os.path.realpath(child)
     return os.path.commonpath([parent_realpath, child_realpath]) == parent_realpath
+
+
+@overload
+def string_to_list(value: str, intify: Literal[False] = False) -> List[str]:
+    ...
+
+
+@overload
+def string_to_list(value: str, intify: Literal[True]) -> List[int]:
+    ...
 
 
 def string_to_list(value: str, intify: bool = False) -> Union[List[str], List[int]]:

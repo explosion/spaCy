@@ -42,8 +42,8 @@ def package_cli(
 
     DOCS: https://spacy.io/api/cli#package
     """
-    create_sdist, create_wheel = get_build_formats(string_to_list(build))  # type: ignore[arg-type]
-    code_paths = [Path(p.strip()) for p in string_to_list(code_paths)]  # type: ignore[assignment, union-attr]
+    create_sdist, create_wheel = get_build_formats(string_to_list(build))
+    code_paths = [Path(p.strip()) for p in string_to_list(code_paths)]
     package(
         input_dir,
         output_dir,

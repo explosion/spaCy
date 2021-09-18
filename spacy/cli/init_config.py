@@ -56,7 +56,7 @@ def init_config_cli(
         )
     config = init_config(
         lang=lang,  # type: ignore[arg-type]
-        pipeline=pipeline,  # type: ignore[arg-type]
+        pipeline=pipeline,
         optimize=optimize,
         gpu=gpu,
         pretraining=pretraining,

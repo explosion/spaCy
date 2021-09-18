@@ -26,7 +26,7 @@ def info_cli(
     DOCS: https://spacy.io/api/cli#info
     """
     exclude = string_to_list(exclude)  # type: ignore[arg-type, assignment]
-    info(model, markdown=markdown, silent=silent, exclude=exclude)  # type: ignore[arg-type]
+    info(model, markdown=markdown, silent=silent, exclude=exclude)
 
 
 def info(
