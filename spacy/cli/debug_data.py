@@ -1,4 +1,4 @@
-from typing import List, Sequence, Dict, Any, Tuple, Optional, Set
+from typing import Any, Dict, Iterable, List, Optional, Sequence, Set, Tuple, Union, cast, overload
 from pathlib import Path
 from collections import Counter
 import sys
@@ -17,6 +17,7 @@ from ..pipeline import Morphologizer
 from ..morphology import Morphology
 from ..language import Language
 from ..util import registry, resolve_dot_names
+from ..compat import Literal
 from .. import util
 
 
@@ -216,13 +217,13 @@ def debug_data(
             if label != "-"
         ]
         labels_with_counts = _format_labels(labels_with_counts, counts=True)
-        msg.text(f"Labels in train data: {_format_labels(labels)}", show=verbose)  # type: ignore[arg-type]
+        msg.text(f"Labels in train data: {_format_labels(labels)}", show=verbose)
         missing_labels = model_labels - labels
         if missing_labels:
             msg.warn(
-                "Some model labels are not present in the train data. The "  # type: ignore[arg-type]
+                "Some model labels are not present in the train data. The "
                 "model performance may be degraded for these labels after "
-                f"training: {_format_labels(missing_labels)}."  # type: ignore[arg-type]
+                f"training: {_format_labels(missing_labels)}."
             )
         if gold_train_data["ws_ents"]:
             msg.fail(f"{gold_train_data['ws_ents']} invalid whitespace entity spans")
@@ -283,13 +284,13 @@ def debug_data(
         msg.divider("Text Classification (Exclusive Classes)")
         labels = _get_labels_from_model(nlp, "textcat")
         msg.info(f"Text Classification: {len(labels)} label(s)")
-        msg.text(f"Labels: {_format_labels(labels)}", show=verbose)  # type: ignore[arg-type]
+        msg.text(f"Labels: {_format_labels(labels)}", show=verbose)
         missing_labels = labels - set(gold_train_data["cats"])
         if missing_labels:
             msg.warn(
-                "Some model labels are not present in the train data. The "  # type: ignore[arg-type]
+                "Some model labels are not present in the train data. The "
                 "model performance may be degraded for these labels after "
-                f"training: {_format_labels(missing_labels)}."  # type: ignore[arg-type]
+                f"training: {_format_labels(missing_labels)}."
             )
         if set(gold_train_data["cats"]) != set(gold_dev_data["cats"]):
             msg.warn(
@@ -332,13 +333,13 @@ def debug_data(
         msg.divider("Text Classification (Multilabel)")
         labels = _get_labels_from_model(nlp, "textcat_multilabel")
         msg.info(f"Text Classification: {len(labels)} label(s)")
-        msg.text(f"Labels: {_format_labels(labels)}", show=verbose)  # type: ignore[arg-type]
+        msg.text(f"Labels: {_format_labels(labels)}", show=verbose)
         missing_labels = labels - set(gold_train_data["cats"])
         if missing_labels:
             msg.warn(
-                "Some model labels are not present in the train data. The "  # type: ignore[arg-type]
+                "Some model labels are not present in the train data. The "
                 "model performance may be degraded for these labels after "
-                f"training: {_format_labels(missing_labels)}."  # type: ignore[arg-type]
+                f"training: {_format_labels(missing_labels)}."
             )
         if set(gold_train_data["cats"]) != set(gold_dev_data["cats"]):
             msg.warn(
@@ -384,9 +385,9 @@ def debug_data(
         missing_labels = model_labels - set(labels)
         if missing_labels:
             msg.warn(
-                "Some model labels are not present in the train data. The "  # type: ignore[arg-type]
+                "Some model labels are not present in the train data. The "
                 "model performance may be degraded for these labels after "
-                f"training: {_format_labels(missing_labels)}."  # type: ignore[arg-type]
+                f"training: {_format_labels(missing_labels)}."
             )
         labels_with_counts = _format_labels(
             gold_train_data["tags"].most_common(), counts=True
@@ -401,9 +402,9 @@ def debug_data(
         missing_labels = model_labels - set(labels)
         if missing_labels:
             msg.warn(
-                "Some model labels are not present in the train data. The "  # type: ignore[arg-type]
+                "Some model labels are not present in the train data. The "
                 "model performance may be degraded for these labels after "
-                f"training: {_format_labels(missing_labels)}."  # type: ignore[arg-type]
+                f"training: {_format_labels(missing_labels)}."
             )
         labels_with_counts = _format_labels(
             gold_train_data["morphs"].most_common(), counts=True
@@ -670,10 +671,29 @@ def _compile_gold(
     return data
 
 
-def _format_labels(labels: List[Tuple[str, int]], counts: bool = False) -> str:
+@overload
+def _format_labels(
+    labels: Iterable[str],
+    counts: Literal[False] = False
+) -> str:
+    ...
+
+
+@overload
+def _format_labels(
+    labels: Iterable[Tuple[str, int]],
+    counts: Literal[True],
+) -> str:
+    ...
+
+
+def _format_labels(
+    labels: Union[Iterable[str], Iterable[Tuple[str, int]]],
+    counts: bool = False,
+) -> str:
     if counts:
-        return ", ".join([f"'{l}' ({c})" for l, c in labels])
-    return ", ".join([f"'{l}'" for l in labels])
+        return ", ".join([f"'{l}' ({c})" for l, c in cast(Iterable[Tuple[str, int]], labels)])
+    return ", ".join([f"'{l}'" for l in cast(Iterable[str], labels)])
 
 
 def _get_examples_without_label(data: Sequence[Example], label: str) -> int:
