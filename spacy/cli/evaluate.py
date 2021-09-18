@@ -101,12 +101,12 @@ def evaluate(
     for metric, key in metrics.items():
         if key in scores:
             if key == "cats_score":
-                metric = metric + " (" + scores.get("cats_score_desc", "unk") + ")"  # type: ignore[operator]
+                metric = metric + " (" + scores.get("cats_score_desc", "unk") + ")"
             if isinstance(scores[key], (int, float)):
                 if key == "speed":
                     results[metric] = f"{scores[key]:.0f}"
                 else:
-                    results[metric] = f"{scores[key]*100:.2f}"  # type: ignore[operator]
+                    results[metric] = f"{scores[key]*100:.2f}"
             else:
                 results[metric] = "-"
             data[re.sub(r"[\s/]", "_", key.lower())] = scores[key]

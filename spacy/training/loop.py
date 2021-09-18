@@ -291,13 +291,13 @@ def create_evaluation_callback(
                 raise ValueError(Errors.E915.format(name=key, score_type=type(value)))
         try:
             weighted_score = sum(
-                scores.get(s, 0.0) * weights.get(s, 0.0) for s in weights  # type: ignore[operator]
+                scores.get(s, 0.0) * weights.get(s, 0.0) for s in weights
             )
         except KeyError as e:
             keys = list(scores.keys())
             err = Errors.E983.format(dict="score_weights", key=str(e), keys=keys)
             raise KeyError(err) from None
-        return weighted_score, scores  # type: ignore[return-value]
+        return weighted_score, scores
 
     return evaluate
 

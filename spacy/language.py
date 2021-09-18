@@ -1338,7 +1338,7 @@ class Language:
         scorer: Optional[Scorer] = None,
         component_cfg: Optional[Dict[str, Dict[str, Any]]] = None,
         scorer_cfg: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Union[float, dict]]:
+    ) -> Dict[str, Any]:
         """Evaluate a model's pipeline components.
 
         examples (Iterable[Example]): `Example` objects.
