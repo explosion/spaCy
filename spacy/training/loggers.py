@@ -179,7 +179,7 @@ def wandb_logger(
     return setup_logger
 
 
-@registry.loggers("spacy.WandbLogger.v3")
+@registry.loggers("spacy.WandbLogger.v3")  # type: ignore[no-redef]
 def wandb_logger(
     project_name: str,
     remove_config_values: List[str] = [],
