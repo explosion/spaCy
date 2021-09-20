@@ -57,6 +57,7 @@ def project_run(
 
     project_dir (Path): Path to project directory.
     subcommand (str): Name of command to run.
+    overrides (Dict[str, Any]): Optional config overrides.
     force (bool): Force re-running, even if nothing changed.
     dry (bool): Perform a dry run and don't execute commands.
     capture (bool): Whether to capture the output and errors of individual commands.
@@ -72,7 +73,14 @@ def project_run(
     if subcommand in workflows:
         msg.info(f"Running workflow '{subcommand}'")
         for cmd in workflows[subcommand]:
-            project_run(project_dir, cmd, force=force, dry=dry, capture=capture)
+            project_run(
+                project_dir,
+                cmd,
+                overrides=overrides,
+                force=force,
+                dry=dry,
+                capture=capture,
+            )
     else:
         cmd = commands[subcommand]
         for dep in cmd.get("deps", []):

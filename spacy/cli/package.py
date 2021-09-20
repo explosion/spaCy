@@ -200,17 +200,21 @@ def get_third_party_dependencies(
     exclude (list): List of packages to exclude (e.g. that already exist in meta).
     RETURNS (list): The versioned requirements.
     """
-    own_packages = ("spacy", "spacy-nightly", "thinc", "srsly")
+    own_packages = ("spacy", "spacy-legacy", "spacy-nightly", "thinc", "srsly")
     distributions = util.packages_distributions()
     funcs = defaultdict(set)
-    for path, value in util.walk_dict(config):
-        if path[-1].startswith("@"):  # collect all function references by registry
-            funcs[path[-1][1:]].add(value)
+    # We only want to look at runtime-relevant sections, not [training] or [initialize]
+    for section in ("nlp", "components"):
+        for path, value in util.walk_dict(config[section]):
+            if path[-1].startswith("@"):  # collect all function references by registry
+                funcs[path[-1][1:]].add(value)
+    for component in config.get("components", {}).values():
+        if "factory" in component:
+            funcs["factories"].add(component["factory"])
     modules = set()
     for reg_name, func_names in funcs.items():
-        sub_registry = getattr(util.registry, reg_name)
         for func_name in func_names:
-            func_info = sub_registry.find(func_name)
+            func_info = util.registry.find(reg_name, func_name)
             module_name = func_info.get("module")
             if module_name:  # the code is part of a module, not a --code file
                 modules.add(func_info["module"].split(".")[0])
