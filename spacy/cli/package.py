@@ -203,9 +203,11 @@ def get_third_party_dependencies(
     own_packages = ("spacy", "spacy-legacy", "spacy-nightly", "thinc", "srsly")
     distributions = util.packages_distributions()
     funcs = defaultdict(set)
-    for path, value in util.walk_dict(config):
-        if path[-1].startswith("@"):  # collect all function references by registry
-            funcs[path[-1][1:]].add(value)
+    # We only want to look at runtime-relevant sections, not [training] or [initialize]
+    for section in ("nlp", "components"):
+        for path, value in util.walk_dict(config[section]):
+            if path[-1].startswith("@"):  # collect all function references by registry
+                funcs[path[-1][1:]].add(value)
     for component in config.get("components", {}).values():
         if "factory" in component:
             funcs["factories"].add(component["factory"])
