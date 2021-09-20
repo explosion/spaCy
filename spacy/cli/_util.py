@@ -502,7 +502,7 @@ def is_subpath_of(parent, child):
 
 
 @overload
-def string_to_list(value: str, intify: Literal[False] = False) -> List[str]:
+def string_to_list(value: str, intify: Literal[False] = ...) -> List[str]:
     ...
 
 

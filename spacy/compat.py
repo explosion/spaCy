@@ -1,6 +1,7 @@
 """Helpers for Python and platform compatibility."""
 import sys
 from thinc.util import copy_array
+from typing_extensions import Literal
 
 try:
     import cPickle as pickle
@@ -21,11 +22,6 @@ try:
     import cupy
 except ImportError:
     cupy = None
-
-try:  # Python 3.8+
-    from typing import Literal  # type: ignore[attr-defined]
-except ImportError:
-    from typing_extensions import Literal  # type: ignore[misc]    # noqa: F401
 
 # Important note: The importlib_metadata "backport" includes functionality
 # that's not part of the built-in importlib.metadata. We should treat this
