@@ -792,7 +792,7 @@ class Errors:
             "to token boundaries.")
     E982 = ("The `Token.ent_iob` attribute should be an integer indexing "
             "into {values}, but found {value}.")
-    E983 = ("Invalid key for '{dict}': {key}. Available keys: "
+    E983 = ("Invalid key(s) for '{dict}': {key}. Available keys: "
             "{keys}")
     E984 = ("Invalid component config for '{name}': component block needs either "
             "a key `factory` specifying the registered function used to "
