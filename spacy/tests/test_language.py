@@ -538,7 +538,8 @@ def test_pass_doc_to_pipeline(nlp, n_process):
     doc = nlp(docs[0])
     assert doc.text == texts[0]
     assert len(doc.cats) > 0
-    docs = nlp.pipe(docs, n_process=n_process)
+    if isinstance(get_current_ops(), NumpyOps) or n_process < 2:
+        docs = nlp.pipe(docs, n_process=n_process)
     assert [doc.text for doc in docs] == texts
     assert all(len(doc.cats) for doc in docs)
 
