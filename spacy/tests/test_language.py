@@ -540,8 +540,8 @@ def test_pass_doc_to_pipeline(nlp, n_process):
     assert len(doc.cats) > 0
     if isinstance(get_current_ops(), NumpyOps) or n_process < 2:
         docs = nlp.pipe(docs, n_process=n_process)
-    assert [doc.text for doc in docs] == texts
-    assert all(len(doc.cats) for doc in docs)
+        assert [doc.text for doc in docs] == texts
+        assert all(len(doc.cats) for doc in docs)
 
 
 def test_invalid_arg_to_pipeline(nlp):
