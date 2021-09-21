@@ -120,7 +120,7 @@ def evaluate(
         render_deps = "parser" in factory_names
         render_ents = "ner" in factory_names
         render_parses(
-            docs,  # type: ignore[arg-type]
+            docs,
             displacy_path,
             model_name=model,
             limit=displacy_limit,

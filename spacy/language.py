@@ -1,5 +1,5 @@
 from typing import Iterator, Optional, Any, Dict, Callable, Iterable, TypeVar
-from typing import Union, List, Pattern, overload
+from typing import Union, List, Pattern, cast, overload
 from typing import Tuple
 from dataclasses import dataclass
 import random
@@ -37,6 +37,7 @@ from .git_info import GIT_VERSION
 from . import util
 from . import about
 from .lookups import load_lookups
+from .compat import Literal
 
 
 # This is the base config will all settings (training etc.)
@@ -45,6 +46,9 @@ DEFAULT_CONFIG = util.load_config(DEFAULT_CONFIG_PATH)
 # This is the base config for the [pretraining] block and currently not included
 # in the main config and only added via the 'init fill-config' command
 DEFAULT_CONFIG_PRETRAIN_PATH = Path(__file__).parent / "default_config_pretraining.cfg"
+
+# Type variable for contexts piped with documents
+_AnyContext = TypeVar("_AnyContext")
 
 
 class BaseDefaults:
@@ -1431,14 +1435,25 @@ class Language:
                 except StopIteration:
                     pass
 
-    _AnyContext = TypeVar("_AnyContext")
-
-    @overload  # type: ignore[misc]
+    @overload
     def pipe(
+        self,
+        texts: Iterable[str],
+        *,
+        as_tuples: Literal[False] = ...,
+        batch_size: Optional[int] = ...,
+        disable: Iterable[str] = ...,
+        component_cfg: Optional[Dict[str, Dict[str, Any]]] = ...,
+        n_process: int = ...,
+    ) -> Iterator[Doc]:
+        ...
+
+    @overload
+    def pipe(  # noqa: F811
         self,
         texts: Iterable[Tuple[str, _AnyContext]],
         *,
-        as_tuples: bool = ...,
+        as_tuples: Literal[True] = ...,
         batch_size: Optional[int] = ...,
         disable: Iterable[str] = ...,
         component_cfg: Optional[Dict[str, Dict[str, Any]]] = ...,
@@ -1446,16 +1461,16 @@ class Language:
     ) -> Iterator[Tuple[Doc, _AnyContext]]:
         ...
 
-    def pipe(  # type: ignore[misc]    # type: ignore[misc]    # noqa: F811
+    def pipe(  # noqa: F811
         self,
-        texts: Iterable[str],
+        texts: Union[Iterable[str], Iterable[Tuple[str, _AnyContext]]],
         *,
         as_tuples: bool = False,
         batch_size: Optional[int] = None,
         disable: Iterable[str] = SimpleFrozenList(),
         component_cfg: Optional[Dict[str, Dict[str, Any]]] = None,
         n_process: int = 1,
-    ) -> Iterator[Doc]:
+    ) -> Union[Iterator[Doc], Iterator[Tuple[Doc, _AnyContext]]]:
         """Process texts as a stream, and yield `Doc` objects in order.
 
         texts (Iterable[str]): A sequence of texts to process.
@@ -1471,22 +1486,29 @@ class Language:
 
         DOCS: https://spacy.io/api/language#pipe
         """
-        if n_process == -1:
-            n_process = mp.cpu_count()
+        # Handle texts with context as tuples
         if as_tuples:
+            texts = cast(Iterable[Tuple[str, _AnyContext]], texts)
             text_context1, text_context2 = itertools.tee(texts)
             texts = (tc[0] for tc in text_context1)
             contexts = (tc[1] for tc in text_context2)
-            docs = self.pipe(  # type: ignore[var-annotated]
-                texts,  # type: ignore[arg-type]
+            docs = self.pipe(
+                texts,
                 batch_size=batch_size,
                 disable=disable,
                 n_process=n_process,
                 component_cfg=component_cfg,
             )
             for doc, context in zip(docs, contexts):
-                yield (doc, context)  # type: ignore[misc]
+                yield (doc, context)
             return
+
+        # At this point, we know that we're dealing with an iterable of plain texts
+        texts = cast(Iterable[str], texts)
+
+        # Set argument defaults
+        if n_process == -1:
+            n_process = mp.cpu_count()
         if component_cfg is None:
             component_cfg = {}
         if batch_size is None:
@@ -1514,11 +1536,11 @@ class Language:
             docs = self._multiprocessing_pipe(texts, pipes, n_process, batch_size)  # type: ignore[func-returns-value]
         else:
             # if n_process == 1, no processes are forked.
-            docs = (self.make_doc(text) for text in texts)  # type: ignore[misc]
+            docs = (self.make_doc(text) for text in texts)
             for pipe in pipes:
                 docs = pipe(docs)
         for doc in docs:
-            yield doc  # type: ignore[misc]
+            yield doc
 
     def _multiprocessing_pipe(  # type: ignore[misc]
         self,

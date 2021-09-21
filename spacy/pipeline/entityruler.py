@@ -293,9 +293,9 @@ class EntityRuler(Pipe):
                 elif isinstance(entry["pattern"], list):
                     token_patterns.append(entry)
             phrase_patterns = []
-            for label, pattern, ent_id in zip(  # type: ignore[var-annotated]
+            for label, pattern, ent_id in zip(
                 phrase_pattern_labels,
-                self.nlp.pipe(phrase_pattern_texts),  # type: ignore[arg-type]
+                self.nlp.pipe(phrase_pattern_texts),
                 phrase_pattern_ids,
             ):
                 phrase_pattern = {"label": label, "pattern": pattern}
