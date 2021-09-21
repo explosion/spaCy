@@ -830,6 +830,13 @@ Recursively wrap the models in each pipe using [NVTX](https://nvidia.github.io/N
 range markers. These markers aid in GPU profiling by attributing specific operations
 to a ~~Model~~'s forward or backprop passes.
 
+| Name             | Description                                                                                                                  |
+|------------------|------------------------------------------------------------------------------------------------------------------------------|
+| `forward_color`  | Color identifier for forward passes. Defaults to `-1`. ~~int~~                                                               |
+| `backprop_color` | Color identifier for backpropagation passes. Defaults to `-1`. ~~int~~                                                       |
+| **CREATES**      | A function that takes the current `nlp` and wraps forward/backprop passes in NVTX ranges. ~~Callable[[Language], Language]~~ |
+
+
 ## Training data and alignment {#gold source="spacy/training"}
 
 ### training.offsets_to_biluo_tags {#offsets_to_biluo_tags tag="function"}

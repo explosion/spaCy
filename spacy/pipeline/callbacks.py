@@ -1,3 +1,4 @@
+from functools import partial
 from typing import Type, Callable
 
 from thinc.layers import with_nvtx_range
@@ -9,7 +10,9 @@ from ..util import registry
 
 
 @registry.callbacks("spacy.models_with_nvtx_range.v1")
-def create_models_with_nvtx_range() -> Callable[[Language], Language]:
+def create_models_with_nvtx_range(
+    forward_color: int = -1, backprop_color: int = -1
+) -> Callable[[Language], Language]:
     def models_with_nvtx_range(nlp):
         pipes = [pipe for _, pipe in nlp.components if isinstance(pipe, TrainablePipe)]
 
@@ -19,7 +22,14 @@ def create_models_with_nvtx_range() -> Callable[[Language], Language]:
             forward=lambda model, X, is_train: ...,
             layers=[pipe.model for pipe in pipes],
         )
-        models = wrap_model_recursive(models, with_nvtx_range)
+        models = wrap_model_recursive(
+            models,
+            partial(
+                with_nvtx_range,
+                forward_color=forward_color,
+                backprop_color=backprop_color,
+            ),
+        )
 
         wrapped_models = models.layers[0].layers
 
