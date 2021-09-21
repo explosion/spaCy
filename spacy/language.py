@@ -987,10 +987,7 @@ class Language:
 
         DOCS: https://spacy.io/api/language#call
         """
-        if isinstance(text, str):
-            doc = self.make_doc(text)
-        else:
-            doc = text
+        doc = self._ensure_doc(text)
         if component_cfg is None:
             component_cfg = {}
         for name, proc in self.pipeline:
@@ -1073,6 +1070,14 @@ class Language:
                 Errors.E088.format(length=len(text), max_length=self.max_length)
             )
         return self.tokenizer(text)
+
+    def _ensure_doc(self, doc_like: Union[str, Doc]) -> Doc:
+        """Create a Doc if need be, or raise an error if the input is not a Doc or a string."""
+        if isinstance(doc_like, Doc):
+            return doc_like
+        if isinstance(doc_like, str):
+            return self.make_doc(doc_like)
+        raise ValueError(Errors.E866.format(type=type(doc_like)))
 
     def update(
         self,
@@ -1521,9 +1526,7 @@ class Language:
             docs = self._multiprocessing_pipe(texts, pipes, n_process, batch_size)
         else:
             # if n_process == 1, no processes are forked.
-            docs = (
-                self.make_doc(text) if isinstance(text, str) else text for text in texts
-            )
+            docs = (self._ensure_doc(text) for text in texts)
             for pipe in pipes:
                 docs = pipe(docs)
         for doc in docs:
@@ -1557,7 +1560,7 @@ class Language:
         procs = [
             mp.Process(
                 target=_apply_pipes,
-                args=(self.make_doc, pipes, rch, sch, Underscore.get_state()),
+                args=(self._ensure_doc, pipes, rch, sch, Underscore.get_state()),
             )
             for rch, sch in zip(texts_q, bytedocs_send_ch)
         ]
@@ -2092,7 +2095,7 @@ def _copy_examples(examples: Iterable[Example]) -> List[Example]:
 
 
 def _apply_pipes(
-    make_doc: Callable[[str], Doc],
+    ensure_doc: Callable[[Union[str, Doc]], Doc],
     pipes: Iterable[Callable[[Doc], Doc]],
     receiver,
     sender,
@@ -2100,7 +2103,8 @@ def _apply_pipes(
 ) -> None:
     """Worker for Language.pipe
 
-    make_doc (Callable[[str,] Doc]): Function to create Doc from text.
+    ensure_doc (Callable[[Union[str, Doc]], Doc]): Function to create Doc from text
+        or raise an error if the input is neither a Doc nor a string.
     pipes (Iterable[Callable[[Doc], Doc]]): The components to apply.
     receiver (multiprocessing.Connection): Pipe to receive text. Usually
         created by `multiprocessing.Pipe()`
@@ -2113,7 +2117,7 @@ def _apply_pipes(
     while True:
         try:
             texts = receiver.get()
-            docs = (make_doc(text) if isinstance(text, str) else text for text in texts)
+            docs = (ensure_doc(text) for text in texts)
             for pipe in pipes:
                 docs = pipe(docs)
             # Connection does not accept unpickable objects, so send list.
