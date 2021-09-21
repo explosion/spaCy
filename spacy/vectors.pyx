@@ -27,7 +27,7 @@ def unpickle_vectors(bytes_data):
 
 class Mode(str, Enum):
     default = "default"
-    ngram = "ngram"
+    floret = "floret"
 
     @classmethod
     def values(cls):
@@ -46,9 +46,8 @@ cdef class Vectors:
     vector, and not all of the rows in the table need to be assigned - so
     len(list(vectors.keys())) may be greater or smaller than vectors.shape[0].
 
-    In ngram mode, the fasttext-bloom ngram settings (minn, maxn, etc.) are
-    used to calculate the vector from the rows corresponding to the key's
-    ngrams.
+    In floret mode, the floret settings (minn, maxn, etc.) are used to
+    calculate the vector from the rows corresponding to the key's ngrams.
 
     DOCS: https://spacy.io/api/vectors
     """
@@ -73,13 +72,13 @@ cdef class Vectors:
         data (numpy.ndarray or cupy.ndarray): The vector data.
         keys (iterable): A sequence of keys, aligned with the data.
         name (str): A name to identify the vectors table.
-        mode (str): Vectors mode: "default" or "ngram" (default: "default").
-        minn (int): The fasttext-bloom ngram minn (default: 0).
-        maxn (int): The fasttext-bloom ngram maxn (default: 0).
-        hash_count (int): The fasttext-bloom ngram hash count (1-4, default: 0).
-        hash_seed (int): The fasttext-bloom ngram hash seed (default: 0).
-        bow (str): The fasttext-bloom bow string (default: "<").
-        eow (str): The fasttext-bloom eow string (default: ">").
+        mode (str): Vectors mode: "default" or "floret" (default: "default").
+        minn (int): The floret ngram minn (default: 0).
+        maxn (int): The floret ngram maxn (default: 0).
+        hash_count (int): The floret hash count (1-4, default: 0).
+        hash_seed (int): The floret hash seed (default: 0).
+        bow (str): The floret bow string (default: "<").
+        eow (str): The floret eow string (default: ">").
 
         DOCS: https://spacy.io/api/vectors#init
         """
@@ -116,7 +115,7 @@ cdef class Vectors:
             if keys is not None:
                 for i, key in enumerate(keys):
                     self.add(key, row=i)
-        elif self.mode == Mode.ngram:
+        elif self.mode == Mode.floret:
             if maxn < minn:
                 raise ValueError(Errors.E863)
             if hash_count < 1 or hash_count >= 5:
@@ -157,7 +156,7 @@ cdef class Vectors:
 
         DOCS: https://spacy.io/api/vectors#is_full
         """
-        if self.mode == Mode.ngram:
+        if self.mode == Mode.floret:
             return True
         return self._unset.size() == 0
 
@@ -167,7 +166,7 @@ cdef class Vectors:
         of all keys, not just unique vectors.
 
         RETURNS (int): The number of keys in the table for default vectors.
-        For ngram vectors, return -1.
+        For floret vectors, return -1.
 
         DOCS: https://spacy.io/api/vectors#n_keys
         """
@@ -190,8 +189,8 @@ cdef class Vectors:
                 raise KeyError(Errors.E058.format(key=key))
             else:
                 return self.data[i]
-        elif self.mode == Mode.ngram:
-            return self.get_ngram_vectors([key])[0]
+        elif self.mode == Mode.floret:
+            return self.get_floret_vectors([key])[0]
         raise KeyError(Errors.E058.format(key=key))
 
     def __setitem__(self, key, vector):
@@ -202,7 +201,7 @@ cdef class Vectors:
 
         DOCS: https://spacy.io/api/vectors#setitem
         """
-        if self.mode == Mode.ngram:
+        if self.mode == Mode.floret:
             warnings.warn(Warnings.W114.format(method="Vectors.__setitem__"))
             return
         key = get_string_id(key)
@@ -237,7 +236,7 @@ cdef class Vectors:
 
         DOCS: https://spacy.io/api/vectors#contains
         """
-        if self.mode == Mode.ngram:
+        if self.mode == Mode.floret:
             return True
         else:
             return key in self.key2row
@@ -257,7 +256,7 @@ cdef class Vectors:
 
         DOCS: https://spacy.io/api/vectors#resize
         """
-        if self.mode == Mode.ngram:
+        if self.mode == Mode.floret:
             warnings.warn(Warnings.W114.format(method="Vectors.resize"))
             return -1
         xp = get_array_module(self.data)
@@ -322,7 +321,7 @@ cdef class Vectors:
             Returns ndarray.
         RETURNS: The requested key, keys, row or rows.
         """
-        if self.mode == Mode.ngram:
+        if self.mode == Mode.floret:
             raise ValueError(
                 Errors.E865.format(
                     mode=self.mode,
@@ -350,7 +349,7 @@ cdef class Vectors:
 
     def _get_ngram_hashes(self, unicode s):
         """Calculate up to 4 32-bit hash values with MurmurHash3_x64_128 using
-        the ngram hash settings.
+        the floret hash settings.
         key (str): The string key.
         RETURNS: A list of the integer hashes.
         """
@@ -374,12 +373,12 @@ cdef class Vectors:
         ]
         return ngrams
 
-    def get_ngram_vectors(self, keys):
-        """Get the ngram-based vectors for the provided keys.
+    def get_floret_vectors(self, keys):
+        """Get the floret vectors for the provided keys.
         keys (Iterable[Union[int, str]]): The keys.
-        RETURNS: The requested vectors from the ngram-based vector table.
+        RETURNS: The requested vectors from the floret vector table.
         """
-        if self.mode != Mode.ngram:
+        if self.mode != Mode.floret:
             raise ValueError(
                 Errors.E865.format(
                     mode=self.mode,
@@ -423,7 +422,7 @@ cdef class Vectors:
 
         DOCS: https://spacy.io/api/vectors#add
         """
-        if self.mode == Mode.ngram:
+        if self.mode == Mode.floret:
             warnings.warn(Warnings.W114.format(method="Vectors.add"))
             return -1
         # use int for all keys and rows in key2row for more efficient access
@@ -466,7 +465,7 @@ cdef class Vectors:
         RETURNS (tuple): The most similar entries as a `(keys, best_rows, scores)`
             tuple.
         """
-        if self.mode == Mode.ngram:
+        if self.mode == Mode.floret:
             raise ValueError(Errors.E865.format(
                 mode=self.mode,
                 alternative="",
@@ -520,7 +519,7 @@ cdef class Vectors:
             return {
                 "mode": Mode(self.mode).value,
             }
-        elif self.mode == Mode.ngram:
+        elif self.mode == Mode.floret:
             return {
                 "mode": Mode(self.mode).value,
                 "minn": self.minn,
@@ -665,7 +664,7 @@ cdef class Vectors:
 
         DOCS: https://spacy.io/api/vectors#clear
         """
-        if self.mode == Mode.ngram:
+        if self.mode == Mode.floret:
             raise ValueError(Errors.E866)
         self.key2row = {}
         self._sync_unset()

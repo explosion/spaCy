@@ -23,7 +23,7 @@ def init_vectors_cli(
     name: Optional[str] = Opt(None, "--name", "-n", help="Optional name for the word vectors, e.g. en_core_web_lg.vectors"),
     verbose: bool = Opt(False, "--verbose", "-V", "-VV", help="Display more information for debugging purposes"),
     jsonl_loc: Optional[Path] = Opt(None, "--lexemes-jsonl", "-j", help="Location of JSONL-formatted attributes file", hidden=True),
-    fasttext_bloom_vectors: bool = Opt(False, "--fasttext-bloom-vectors", "-F", help="Vectors in fastText Bloom hash ngram format"),
+    floret_vectors: bool = Opt(False, "--floret-vectors", "-F", help="Vectors in floret format"),
     # fmt: on
 ):
     """Convert word vectors for use with spaCy. Will export an nlp object that
@@ -41,7 +41,7 @@ def init_vectors_cli(
         truncate=truncate,
         prune=prune,
         name=name,
-        fasttext_bloom_vectors=fasttext_bloom_vectors,
+        floret_vectors=floret_vectors,
     )
     msg.good(f"Successfully converted {len(nlp.vocab.vectors)} vectors")
     nlp.to_disk(output_dir)

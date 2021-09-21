@@ -350,9 +350,9 @@ def test_init_vectors_unset():
     assert v.data.shape == (10, 10)
 
     with pytest.raises(ValueError):
-        v = Vectors(shape=(10, 10), mode="ngram")
+        v = Vectors(shape=(10, 10), mode="floret")
 
-    v = Vectors(data=OPS.xp.zeros((10, 10)), mode="ngram", hash_count=1)
+    v = Vectors(data=OPS.xp.zeros((10, 10)), mode="floret", hash_count=1)
     assert v.is_full is True
 
 
@@ -372,8 +372,8 @@ def test_vectors_clear():
 
 
 @pytest.fixture()
-def ngram_vectors_hashvec_str():
-    """The full hashvec table from fasttext-bloom with the settings:
+def floret_vectors_hashvec_str():
+    """The full hashvec table from floret with the settings:
     bucket 10, dim 10, minn 2, maxn 3, hash count 2, hash seed 2166136261,
     bow <, eow >"""
     return """10 10 2 3 2 2166136261 < >
@@ -391,9 +391,9 @@ def ngram_vectors_hashvec_str():
 
 
 @pytest.fixture()
-def ngram_vectors_vec_str():
-    """The top 10 rows from fasttext-bloom with the settings above, to verify
-    that the spacy ngrams vectors are equivalent to the fasttext static
+def floret_vectors_vec_str():
+    """The top 10 rows from floret with the settings above, to verify
+    that the spacy floret vectors are equivalent to the fasttext static
     vectors."""
     return """10 10
 , -5.7814 2.6918 0.57029 -3.6985 -2.7079 1.4406 1.0084 1.7463 -3.8625 -3.0565
@@ -409,18 +409,18 @@ von -0.10589 1.196 1.1143 -0.40907 -1.0848 -0.054756 -2.5016 -1.0381 -0.41598 0.
 """
 
 
-def test_ngram_vectors(ngram_vectors_vec_str, ngram_vectors_hashvec_str):
+def test_floret_vectors(floret_vectors_vec_str, floret_vectors_hashvec_str):
     nlp = English()
     nlp_plain = English()
     # load both vec and hashvec tables
     with make_tempdir() as tmpdir:
         p = tmpdir / "test.hashvec"
         with open(p, "w") as fileh:
-            fileh.write(ngram_vectors_hashvec_str)
-        convert_vectors(nlp, p, truncate=0, prune=-1, fasttext_bloom_vectors=True)
+            fileh.write(floret_vectors_hashvec_str)
+        convert_vectors(nlp, p, truncate=0, prune=-1, floret_vectors=True)
         p = tmpdir / "test.vec"
         with open(p, "w") as fileh:
-            fileh.write(ngram_vectors_vec_str)
+            fileh.write(floret_vectors_vec_str)
         convert_vectors(nlp_plain, p, truncate=0, prune=-1)
 
     word = "der"
@@ -454,7 +454,7 @@ def test_ngram_vectors(ngram_vectors_vec_str, ngram_vectors_hashvec_str):
     # check that single and batched vector lookups are identical
     words = [s for s in nlp_plain.vocab.vectors]
     single_vecs = OPS.to_numpy(OPS.asarray([nlp.vocab[word].vector for word in words]))
-    batch_vecs = OPS.to_numpy(nlp.vocab.vectors.get_ngram_vectors(words))
+    batch_vecs = OPS.to_numpy(nlp.vocab.vectors.get_floret_vectors(words))
     assert_equal(single_vecs, batch_vecs)
 
     # an empty key returns 0s
@@ -464,12 +464,12 @@ def test_ngram_vectors(ngram_vectors_vec_str, ngram_vectors_hashvec_str):
     )
     # an empty batch returns 0s
     assert_equal(
-        OPS.to_numpy(nlp.vocab.vectors.get_ngram_vectors([""])),
+        OPS.to_numpy(nlp.vocab.vectors.get_floret_vectors([""])),
         numpy.zeros((1, nlp.vocab.vectors.data.shape[0])),
     )
     # an empty key within a batch returns 0s
     assert_equal(
-        OPS.to_numpy(nlp.vocab.vectors.get_ngram_vectors(["a", "", "b"])[1]),
+        OPS.to_numpy(nlp.vocab.vectors.get_floret_vectors(["a", "", "b"])[1]),
         numpy.zeros((nlp.vocab.vectors.data.shape[0],)),
     )
 

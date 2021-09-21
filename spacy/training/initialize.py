@@ -156,10 +156,10 @@ def load_vectors_into_model(
 
     if (
         len(vectors_nlp.vocab.vectors.keys()) == 0
-        and not vectors_nlp.vocab.vectors.mode == VectorsMode.ngram
+        and not vectors_nlp.vocab.vectors.mode == VectorsMode.floret
     ) or (
         vectors_nlp.vocab.vectors.data.shape[0] == 0
-        and vectors_nlp.vocab.vectors.mode == VectorsMode.ngram
+        and vectors_nlp.vocab.vectors.mode == VectorsMode.floret
     ):
         logger.warning(Warnings.W112.format(name=name))
 
@@ -204,7 +204,7 @@ def convert_vectors(
     truncate: int,
     prune: int,
     name: Optional[str] = None,
-    fasttext_bloom_vectors: bool = False,
+    floret_vectors: bool = False,
 ) -> None:
     vectors_loc = ensure_path(vectors_loc)
     if vectors_loc and vectors_loc.parts[-1].endswith(".npz"):
@@ -217,18 +217,18 @@ def convert_vectors(
     else:
         if vectors_loc:
             logger.info(f"Reading vectors from {vectors_loc}")
-            vectors_data, vector_keys, fasttext_bloom_settings = read_vectors(
-                vectors_loc, truncate, fasttext_bloom_vectors=fasttext_bloom_vectors
+            vectors_data, vector_keys, floret_settings = read_vectors(
+                vectors_loc, truncate, floret_vectors=floret_vectors
             )
             logger.info(f"Loaded vectors from {vectors_loc}")
         else:
             vectors_data, vector_keys = (None, None)
-        if vector_keys is not None and not fasttext_bloom_vectors:
+        if vector_keys is not None and not floret_vectors:
             for word in vector_keys:
                 if word not in nlp.vocab:
                     nlp.vocab[word]
         if vectors_data is not None:
-            if not fasttext_bloom_vectors:
+            if not floret_vectors:
                 nlp.vocab.vectors = Vectors(
                     strings=nlp.vocab.strings, data=vectors_data, keys=vector_keys
                 )
@@ -236,7 +236,7 @@ def convert_vectors(
                 nlp.vocab.vectors = Vectors(
                     strings=nlp.vocab.strings,
                     data=vectors_data,
-                    **fasttext_bloom_settings,
+                    **floret_settings,
                 )
     if name is None:
         # TODO: Is this correct? Does this matter?
@@ -244,25 +244,25 @@ def convert_vectors(
     else:
         nlp.vocab.vectors.name = name
     nlp.meta["vectors"]["name"] = nlp.vocab.vectors.name
-    if prune >= 1 and not fasttext_bloom_vectors:
+    if prune >= 1 and not floret_vectors:
         nlp.vocab.prune_vectors(prune)
 
 
 def read_vectors(
-    vectors_loc: Path, truncate_vectors: int, *, fasttext_bloom_vectors: bool = False
+    vectors_loc: Path, truncate_vectors: int, *, floret_vectors: bool = False
 ):
     f = ensure_shape(vectors_loc)
     header_parts = next(f).split()
     shape = tuple(int(size) for size in header_parts[:2])
-    fasttext_bloom_settings = {}
-    if fasttext_bloom_vectors:
+    floret_settings = {}
+    if floret_vectors:
         if len(header_parts) != 8:
             raise ValueError(
-                "Invalid header for fasttext ngram vectors. "
+                "Invalid header for floret vectors. "
                 "Expected: bucket dim minn maxn hash_count hash_seed BOW EOW"
             )
-        fasttext_bloom_settings = {
-            "mode": "ngram",
+        floret_settings = {
+            "mode": "floret",
             "minn": int(header_parts[2]),
             "maxn": int(header_parts[3]),
             "hash_count": int(header_parts[4]),
@@ -288,7 +288,7 @@ def read_vectors(
         vectors_keys.append(word)
         if i == truncate_vectors - 1:
             break
-    return vectors_data, vectors_keys, fasttext_bloom_settings
+    return vectors_data, vectors_keys, floret_settings
 
 
 def open_file(loc: Union[str, Path]) -> IO:
