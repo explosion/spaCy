@@ -2622,7 +2622,7 @@
         {
             "id": "spacy-clausie",
             "title": "spacy-clausie",
-            "slogan": "Implementation of the ClausIE information extraction system for python+spacy",
+            "slogan": "Implementation of the ClausIE information extraction system for Python+spaCy",
             "github": "mmxgn/spacy-clausie",
             "url": "https://github.com/mmxgn/spacy-clausie",
             "description": "ClausIE, a novel, clause-based approach to open information extraction, which extracts relations and their arguments from natural language text",
