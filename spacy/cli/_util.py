@@ -1,4 +1,5 @@
-from typing import Dict, Any, Union, List, Optional, Tuple, Iterable, TYPE_CHECKING, overload
+from typing import Dict, Any, Union, List, Optional, Tuple, Iterable
+from typing import TYPE_CHECKING, overload
 import sys
 import shutil
 from pathlib import Path
@@ -253,7 +254,7 @@ def get_hash(data, exclude: Iterable[str] = tuple()) -> str:
     return hashlib.md5(data_str).hexdigest()
 
 
-def get_checksum(path: Union[Path, str]) -> str:  # type: ignore[return]
+def get_checksum(path: Union[Path, str]) -> str:
     """Get the checksum for a file or directory given its file path. If a
     directory path is provided, this uses all files in that directory.
 
@@ -261,15 +262,16 @@ def get_checksum(path: Union[Path, str]) -> str:  # type: ignore[return]
     RETURNS (str): The checksum.
     """
     path = Path(path)
+    if not (path.is_file() or path.is_dir()):
+        msg.fail(f"Can't get checksum for {path}: not a file or directory", exits=1)
     if path.is_file():
         return hashlib.md5(Path(path).read_bytes()).hexdigest()
-    if path.is_dir():
+    else:
         # TODO: this is currently pretty slow
         dir_checksum = hashlib.md5()
         for sub_file in sorted(fp for fp in path.rglob("*") if fp.is_file()):
             dir_checksum.update(sub_file.read_bytes())
         return dir_checksum.hexdigest()
-    msg.fail(f"Can't get checksum for {path}: not a file or directory", exits=1)
 
 
 @contextmanager
