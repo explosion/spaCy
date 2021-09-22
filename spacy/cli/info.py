@@ -61,7 +61,7 @@ def info(
     return raw_data
 
 
-def info_spacy() -> Dict[str, any]:  # type: ignore[valid-type]
+def info_spacy() -> Dict[str, Any]:
     """Generate info about the current spaCy intallation.
 
     RETURNS (dict): The spaCy info.

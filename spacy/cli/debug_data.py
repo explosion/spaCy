@@ -1,4 +1,5 @@
-from typing import Any, Dict, Iterable, List, Optional, Sequence, Set, Tuple, Union, cast, overload
+from typing import Any, Dict, Iterable, List, Optional, Sequence, Set, Tuple, Union
+from typing import cast, overload
 from pathlib import Path
 from collections import Counter
 import sys
@@ -674,10 +675,7 @@ def _compile_gold(
 
 
 @overload
-def _format_labels(
-    labels: Iterable[str],
-    counts: Literal[False] = False
-) -> str:
+def _format_labels(labels: Iterable[str], counts: Literal[False] = False) -> str:
     ...
 
 
@@ -694,7 +692,9 @@ def _format_labels(
     counts: bool = False,
 ) -> str:
     if counts:
-        return ", ".join([f"'{l}' ({c})" for l, c in cast(Iterable[Tuple[str, int]], labels)])
+        return ", ".join(
+            [f"'{l}' ({c})" for l, c in cast(Iterable[Tuple[str, int]], labels)]
+        )
     return ", ".join([f"'{l}'" for l in cast(Iterable[str], labels)])
 
 
