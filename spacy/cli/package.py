@@ -1,4 +1,4 @@
-from typing import Optional, Union, Any, Dict, List, Tuple
+from typing import Optional, Union, Any, Dict, List, Tuple, cast
 import shutil
 from pathlib import Path
 from wasabi import Printer, MarkdownRenderer, get_raw_input
@@ -252,7 +252,7 @@ def create_file(file_path: Path, contents: str) -> None:
 def get_meta(
     model_path: Union[str, Path], existing_meta: Dict[str, Any]
 ) -> Dict[str, Any]:
-    meta = {
+    meta: Dict[str, Any] = {
         "lang": "en",
         "name": "pipeline",
         "version": "0.0.0",
@@ -266,7 +266,7 @@ def get_meta(
     meta.update(nlp.meta)
     meta.update(existing_meta)
     meta["spacy_version"] = util.get_minor_version_range(about.__version__)
-    meta["vectors"] = {  # type: ignore[assignment]
+    meta["vectors"] = {
         "width": nlp.vocab.vectors_length,
         "vectors": len(nlp.vocab.vectors),
         "keys": nlp.vocab.vectors.n_keys,
@@ -274,11 +274,11 @@ def get_meta(
     }
     if about.__title__ != "spacy":
         meta["parent_package"] = about.__title__
-    meta.setdefault("requirements", [])  # type: ignore[arg-type]
+    meta.setdefault("requirements", [])
     # Update the requirements with all third-party packages in the config
     existing_reqs = [util.split_requirement(req)[0] for req in meta["requirements"]]
     reqs = get_third_party_dependencies(nlp.config, exclude=existing_reqs)
-    meta["requirements"].extend(reqs)  # type: ignore[attr-defined]
+    meta["requirements"].extend(reqs)
     return meta
 
 
@@ -324,8 +324,8 @@ def generate_readme(meta: Dict[str, Any]) -> str:
     license_name = meta.get("license")
     sources = _format_sources(meta.get("sources"))
     description = meta.get("description")
-    label_scheme = _format_label_scheme(meta.get("labels"))  # type: ignore[arg-type]
-    accuracy = _format_accuracy(meta.get("performance"))  # type: ignore[arg-type]
+    label_scheme = _format_label_scheme(cast(Dict[str, Any], meta.get("labels")))
+    accuracy = _format_accuracy(cast(Dict[str, Any], meta.get("performance")))
     table_data = [
         (md.bold("Name"), md.code(name)),
         (md.bold("Version"), md.code(version)),

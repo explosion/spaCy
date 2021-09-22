@@ -44,8 +44,6 @@ def init_config_cli(
 
     DOCS: https://spacy.io/api/cli#init-config
     """
-    if isinstance(optimize, Optimizations):  # instance of enum from the CLI
-        optimize = optimize.value  # type: ignore[assignment]
     pipeline = string_to_list(pipeline)
     is_stdout = str(output_file) == "-"
     if not is_stdout and output_file.exists() and not force_overwrite:
@@ -57,7 +55,7 @@ def init_config_cli(
     config = init_config(
         lang=lang,
         pipeline=pipeline,
-        optimize=optimize,
+        optimize=optimize.value,
         gpu=gpu,
         pretraining=pretraining,
         silent=is_stdout,
