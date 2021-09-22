@@ -198,10 +198,10 @@ class TokenPatternNumber(BaseModel):
 
 
 class TokenPatternOperator(str, Enum):
-    plus: StrictStr = "+"
-    start: StrictStr = "*"
-    question: StrictStr = "?"
-    exclamation: StrictStr = "!"
+    plus: StrictStr = StrictStr("+")
+    start: StrictStr = StrictStr("*")
+    question: StrictStr = StrictStr("?")
+    exclamation: StrictStr = StrictStr("!")
 
 
 StringValue = Union[TokenPatternString, StrictStr]
