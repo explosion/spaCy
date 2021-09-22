@@ -1143,7 +1143,7 @@
             "image": "https://i.imgur.com/6uOI4Op.png",
             "code_example": [
                 "import spacy",
-                "import import deplacy",
+                "import deplacy",
                 "",
                 "nlp=spacy.load('en_core_web_sm')",
                 "doc=nlp('I saw a horse yesterday which had no name.')",
