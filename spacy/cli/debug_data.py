@@ -379,10 +379,11 @@ def debug_data(
 
     if "tagger" in factory_names:
         msg.divider("Part-of-speech Tagging")
-        labels = [label for label in gold_train_data["tags"]]  # type: ignore[assignment]
+        label_list = [label for label in gold_train_data["tags"]]
         model_labels = _get_labels_from_model(nlp, "tagger")
-        msg.info(f"{len(labels)} label(s) in train data")
-        missing_labels = model_labels - set(labels)
+        msg.info(f"{len(label_list)} label(s) in train data")
+        labels = set(label_list)
+        missing_labels = model_labels - labels
         if missing_labels:
             msg.warn(
                 "Some model labels are not present in the train data. The "
@@ -396,10 +397,11 @@ def debug_data(
 
     if "morphologizer" in factory_names:
         msg.divider("Morphologizer (POS+Morph)")
-        labels = [label for label in gold_train_data["morphs"]]  # type: ignore[assignment]
+        label_list = [label for label in gold_train_data["morphs"]]
         model_labels = _get_labels_from_model(nlp, "morphologizer")
-        msg.info(f"{len(labels)} label(s) in train data")
-        missing_labels = model_labels - set(labels)
+        msg.info(f"{len(label_list)} label(s) in train data")
+        labels = set(label_list)
+        missing_labels = model_labels - labels
         if missing_labels:
             msg.warn(
                 "Some model labels are not present in the train data. The "
