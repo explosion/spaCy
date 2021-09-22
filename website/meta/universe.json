@@ -2654,7 +2654,7 @@
         {
             "id": "ipymarkup",
             "slogan": "NER, syntax markup visualizations",
-            "description": "Collection of NLP visualizations for NER and syntax tree markup. Similar to [Spacy displaCy](https://explosion.ai/demos/displacy) and [displaCy ENT](https://explosion.ai/demos/displacy-ent).",
+            "description": "Collection of NLP visualizations for NER and syntax tree markup. Similar to [displaCy](https://explosion.ai/demos/displacy) and [displaCy ENT](https://explosion.ai/demos/displacy-ent).",
             "github": "natasha/ipymarkup",
             "image": "https://github.com/natasha/ipymarkup/blob/master/table.png?raw=true",
             "pip":"pip install ipymarkup",
