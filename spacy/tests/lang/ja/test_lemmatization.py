@@ -20,5 +20,5 @@ def test_ja_lemmatizer_assigns(ja_tokenizer, word, lemma):
     ],
 )
 def test_ja_lemmatizer_norm(ja_tokenizer, word, norm):
-    test_norm = ja_tokenizer(word)[0].morph.get("norm")[0]
+    test_norm = ja_tokenizer(word)[0].norm_
     assert test_norm == norm

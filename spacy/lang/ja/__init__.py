@@ -75,7 +75,7 @@ class JapaneseTokenizer(DummyTokenizer):
             token.lemma_ = dtoken.lemma if dtoken.lemma else dtoken.surface
             morph = {}
             morph["inflection"] = dtoken.inf
-            morph["norm"] = dtoken.norm
+            token.norm_ = dtoken.norm
             if dtoken.reading:
                 morph["reading"] = dtoken.reading
             token.morph = MorphAnalysis(self.vocab, morph)
