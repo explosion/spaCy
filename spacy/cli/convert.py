@@ -66,19 +66,16 @@ def convert_cli(
 
     DOCS: https://spacy.io/api/cli#convert
     """
-    if isinstance(file_type, FileTypes):
-        # We get an instance of the FileTypes from the CLI so we need its string value
-        file_type = file_type.value  # type: ignore[assignment]
     input_path = Path(input_path)
-    output_dir = "-" if output_dir == Path("-") else output_dir
+    output_dir: Union[str, Path] = "-" if output_dir == Path("-") else output_dir
     silent = output_dir == "-"
     msg = Printer(no_print=silent)
-    verify_cli_args(msg, input_path, output_dir, file_type, converter, ner_map)  # type: ignore[arg-type]
+    verify_cli_args(msg, input_path, output_dir, file_type.value, converter, ner_map)
     converter = _get_converter(msg, converter, input_path)
     convert(
         input_path,
-        output_dir,  # type: ignore[arg-type]
-        file_type=file_type,
+        output_dir,
+        file_type=file_type.value,
         n_sents=n_sents,
         seg_sents=seg_sents,
         model=model,
@@ -94,7 +91,7 @@ def convert_cli(
 
 
 def convert(
-    input_path: Union[str, Path],
+    input_path: Path,
     output_dir: Union[str, Path],
     *,
     file_type: str = "json",
@@ -114,7 +111,7 @@ def convert(
         msg = Printer(no_print=silent)
     ner_map = srsly.read_json(ner_map) if ner_map is not None else None
     doc_files = []
-    for input_loc in walk_directory(Path(input_path), converter):
+    for input_loc in walk_directory(input_path, converter):
         with input_loc.open("r", encoding="utf-8") as infile:
             input_data = infile.read()
         # Use converter function to convert data
@@ -133,7 +130,7 @@ def convert(
         doc_files.append((input_loc, docs))
     if concatenate:
         all_docs = itertools.chain.from_iterable([docs for _, docs in doc_files])
-        doc_files = [(input_path, all_docs)]  # type: ignore[list-item]
+        doc_files = [(input_path, all_docs)]
     for input_loc, docs in doc_files:
         if file_type == "json":
             data = [docs_to_json(docs)]
@@ -220,13 +217,12 @@ def walk_directory(path: Path, converter: str) -> List[Path]:
 
 def verify_cli_args(
     msg: Printer,
-    input_path: Union[str, Path],
+    input_path: Path,
     output_dir: Union[str, Path],
-    file_type: FileTypes,
+    file_type: str,
     converter: str,
     ner_map: Optional[Path],
 ):
-    input_path = Path(input_path)
     if file_type not in FILE_TYPES_STDOUT and output_dir == "-":
         msg.fail(
             f"Can't write .{file_type} data to stdout. Please specify an output directory.",
@@ -250,7 +246,7 @@ def verify_cli_args(
         msg.fail(f"Can't find converter for {converter}", exits=1)
 
 
-def _get_converter(msg, converter, input_path):
+def _get_converter(msg, converter, input_path: Path):
     if input_path.is_dir():
         input_path = walk_directory(input_path, converter)[0]
     if converter == "auto":
