@@ -1,4 +1,4 @@
-from typing import Union, Iterator
+from typing import Union, Iterator, Tuple
 
 from ...symbols import NOUN, PROPN, PRON, VERB
 from ...tokens import Doc, Span
@@ -10,7 +10,7 @@ labels = ["nsubj", "nmod", "ddoclike", "nsubjpass", "pcomp", "pdoclike", "doclik
 # fmt: on
 
 
-def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Span]:
+def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Tuple[int, int, int]]:
     """Detect base noun phrases from a dependency parse. Works on Doc and Span."""
     doc = doclike.doc  # type: ignore[union-attr]    # Ensure works on both Doc and Span.
     np_deps = [doc.vocab.strings.add(label) for label in labels]
@@ -36,7 +36,7 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Span]:
             if word.head.pos == VERB:
                 seen.add(word.head.i)
                 seen.update(w.i for w in word.head.rights)
-            yield unseen[0], word.i + 1, np_label  # type: ignore[misc]
+            yield unseen[0], word.i + 1, np_label
 
 
 SYNTAX_ITERATORS = {"noun_chunks": noun_chunks}

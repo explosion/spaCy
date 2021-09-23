@@ -1,11 +1,11 @@
-from typing import Union, Iterator
+from typing import Union, Iterator, Tuple
 
 from ...symbols import NOUN, PROPN, PRON, VERB, AUX
 from ...errors import Errors
 from ...tokens import Doc, Span, Token
 
 
-def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Span]:
+def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Tuple[int, int, int]]:
     """Detect base noun phrases from a dependency parse. Works on Doc and Span."""
     doc = doclike.doc  # type: ignore[union-attr]
     if not doc.has_annotation("DEP"):
@@ -28,7 +28,7 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Span]:
             )
             if left.i <= prev_right:
                 continue
-            yield left.i, right.i + 1, np_label  # type: ignore[misc]
+            yield left.i, right.i + 1, np_label
             prev_right = right.i
 
 

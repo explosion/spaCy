@@ -1,11 +1,11 @@
-from typing import Union, Iterator
+from typing import Union, Iterator, Tuple
 
 from ...symbols import NOUN, PROPN, PRON
 from ...errors import Errors
 from ...tokens import Doc, Span
 
 
-def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Span]:
+def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Tuple[int, int, int]]:
     """Detect base noun phrases from a dependency parse. Works on Doc and Span."""
     # It follows the logic of the noun chunks finder of English language,
     # adjusted to some Greek language special characteristics.
@@ -33,12 +33,12 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Span]:
                 for potential_nmod in word.rights:
                     if potential_nmod.dep == nmod:
                         prev_end = potential_nmod.i
-                        yield word.left_edge.i, potential_nmod.i + 1, np_label  # type: ignore[misc]
+                        yield word.left_edge.i, potential_nmod.i + 1, np_label
                         flag = True
                         break
             if flag is False:
                 prev_end = word.i
-                yield word.left_edge.i, word.i + 1, np_label  # type: ignore[misc]
+                yield word.left_edge.i, word.i + 1, np_label
         elif word.dep == conj:
             # covers the case: έχει όμορφα και έξυπνα παιδιά
             head = word.head
@@ -47,7 +47,7 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Span]:
             # If the head is an NP, and we're coordinated to it, we're an NP
             if head.dep in np_deps:
                 prev_end = word.i
-                yield word.left_edge.i, word.i + 1, np_label  # type: ignore[misc]
+                yield word.left_edge.i, word.i + 1, np_label
 
 
 SYNTAX_ITERATORS = {"noun_chunks": noun_chunks}

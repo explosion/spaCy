@@ -1,11 +1,11 @@
-from typing import Union, Iterator
+from typing import Union, Iterator, Tuple
 
 from ...symbols import NOUN, PRON
 from ...errors import Errors
 from ...tokens import Doc, Span
 
 
-def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Span]:
+def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Tuple[int, int, int]]:
     """
     Detect base noun phrases from a dependency parse. Works on Doc and Span.
     The definition is inspired by https://www.nltk.org/book/ch07.html
@@ -59,14 +59,14 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Span]:
 
             start_span = min(children_i)
             end_span = max(children_i) + 1
-            yield start_span, end_span, span_label  # type: ignore[misc]
+            yield start_span, end_span, span_label
 
         # PRONOUNS only if it is the subject of a verb
         elif word.pos == PRON:
             if word.dep in pronoun_deps:
                 start_span = word.i
                 end_span = word.i + 1
-                yield start_span, end_span, span_label  # type: ignore[misc]
+                yield start_span, end_span, span_label
 
 
 SYNTAX_ITERATORS = {"noun_chunks": noun_chunks}
