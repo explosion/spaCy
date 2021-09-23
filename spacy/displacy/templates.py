@@ -51,17 +51,20 @@ TPL_ENTS = """
 TPL_ENT = """
 <mark class="entity" style="background: {bg}; padding: 0.45em 0.6em; margin: 0 0.25em; line-height: 1; border-radius: 0.35em;">
     {text}
-    <span style="font-size: 0.8em; font-weight: bold; line-height: 1; border-radius: 0.35em; vertical-align: middle; margin-left: 0.5rem">{label}
-    {kb_link}
-    </span>
+    <span style="font-size: 0.8em; font-weight: bold; line-height: 1; border-radius: 0.35em; vertical-align: middle; margin-left: 0.5rem">{label}{kb_link}</span>
 </mark>
 """
 
 TPL_ENT_RTL = """
 <mark class="entity" style="background: {bg}; padding: 0.45em 0.6em; margin: 0 0.25em; line-height: 1; border-radius: 0.35em">
     {text}
-    <span style="font-size: 0.8em; font-weight: bold; line-height: 1; border-radius: 0.35em; vertical-align: middle; margin-right: 0.5rem">{label}</span>
+    <span style="font-size: 0.8em; font-weight: bold; line-height: 1; border-radius: 0.35em; vertical-align: middle; margin-right: 0.5rem">{label}{kb_link}</span>
 </mark>
+"""
+
+# Important: this needs to start with a space!
+TPL_KB_LINK = """
+ <a style="text-decoration: none; color: inherit; font-weight: normal" href="{kb_url}">{kb_id}</a>
 """
 
 

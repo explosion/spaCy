@@ -297,7 +297,7 @@ position.
 >
 > ```python
 > ex = [{"text": "But Google is starting from behind.",
->        "ents": [{"start": 4, "end": 10, "label": "ORG", "kb_id": "Q95", "kb_url": "https://www.wikidata.org/entity/Q95"}],
+>        "ents": [{"start": 4, "end": 10, "label": "ORG"}],
 >        "title": None}]
 > html = displacy.render(ex, style="ent", manual=True)
 > ```
@@ -321,6 +321,15 @@ position.
 
 ```python
 ### ENT input
+{
+    "text": "But Google is starting from behind.",
+    "ents": [{"start": 4, "end": 10, "label": "ORG"}],
+    "title": None
+}
+```
+
+```python
+### ENT input with knowledge base links
 {
     "text": "But Google is starting from behind.",
     "ents": [{"start": 4, "end": 10, "label": "ORG", "kb_id": "Q95", "kb_url": "https://www.wikidata.org/entity/Q95"}],

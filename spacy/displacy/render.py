@@ -3,7 +3,7 @@ import uuid
 
 from .templates import TPL_DEP_SVG, TPL_DEP_WORDS, TPL_DEP_WORDS_LEMMA, TPL_DEP_ARCS
 from .templates import TPL_ENT, TPL_ENT_RTL, TPL_FIGURE, TPL_TITLE, TPL_PAGE
-from .templates import TPL_ENTS
+from .templates import TPL_ENTS, TPL_KB_LINK
 from ..util import minify_html, escape_html, registry
 from ..errors import Errors
 
@@ -315,11 +315,8 @@ class EntityRenderer:
             start = span["start"]
             end = span["end"]
             kb_id = span.get("kb_id", "")
-            kb_url = span.get("kb_url", "")
-            if kb_id:
-                kb_link = """<a style="text-decoration: none; color: black; font-weight: bold" href="{}">{}</a>""".format(kb_url, kb_id)
-            else:
-                kb_link = ""
+            kb_url = span.get("kb_url", "#")
+            kb_link = TPL_KB_LINK.format(kb_id=kb_id, kb_url=kb_url) if kb_id else ""
             additional_params = span.get("params", {})
             entity = escape_html(text[start:end])
             fragments = text[offset:start].split("\n")
@@ -329,7 +326,12 @@ class EntityRenderer:
                     markup += "</br>"
             if self.ents is None or label.upper() in self.ents:
                 color = self.colors.get(label.upper(), self.default_color)
-                ent_settings = {"label": label, "text": entity, "bg": color, "kb_link": kb_link}
+                ent_settings = {
+                    "label": label,
+                    "text": entity,
+                    "bg": color,
+                    "kb_link": kb_link,
+                }
                 ent_settings.update(additional_params)
                 markup += self.ent_template.format(**ent_settings)
             else:
