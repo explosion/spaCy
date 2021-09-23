@@ -9,6 +9,7 @@ keys/
 spacy/tests/package/setup.cfg
 spacy/tests/package/pyproject.toml
 spacy/tests/package/requirements.txt
+spacy/tests/universe/universe.json
 
 # Website
 website/.cache/
