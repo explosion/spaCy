@@ -516,12 +516,12 @@
             "title": "NeuroNER",
             "slogan": "Named-entity recognition using neural networks",
             "github": "Franck-Dernoncourt/NeuroNER",
+            "category": ["ner"],
             "pip": "pyneuroner[cpu]",
             "code_example": [
                 "from neuroner import neuromodel",
                 "nn = neuromodel.NeuroNER(train_model=False, use_pretrained_model=True)"
             ],
-            "category": ["ner"],
             "tags": ["standalone"]
         },
         {
@@ -1136,6 +1136,26 @@
             "category": ["visualizers"]
         },
         {
+            "id": "deplacy",
+            "slogan": "CUI-based Tree Visualizer for Universal Dependencies and Immediate Catena Analysis",
+            "discreption": "Simple dependency visualizer for [spaCy](https://spacy.io/), [UniDic2UD](https://pypi.org/project/unidic2ud), [Stanza](https://stanfordnlp.github.io/stanza/), [NLP-Cube](https://github.com/Adobe/NLP-Cube), [Trankit](https://github.com/nlp-uoregon/trankit), etc.",
+            "github": "KoichiYasuoka/deplacy",
+            "image": "https://i.imgur.com/6uOI4Op.png",
+            "code_example": [
+                "import spacy",
+                "import deplacy",
+                "",
+                "nlp=spacy.load('en_core_web_sm')",
+                "doc=nlp('I saw a horse yesterday which had no name.')",
+                "deplacy.render(doc)"
+            ],
+            "author": "Koichi Yasuoka",
+            "author_links": {
+                "github": "KoichiYasuoka"
+            },
+            "category": ["visualizers"]
+        },
+        {
             "id": "scattertext",
             "slogan": "Beautiful visualizations of how language differs among document types",
             "description": "A tool for finding distinguishing terms in small-to-medium-sized corpora, and presenting them in a sexy, interactive scatter plot with non-overlapping term labels. Exploratory data analysis just got more fun.",
@@ -1680,6 +1700,22 @@
         },
         {
             "type": "education",
+            "id": "applied-nlp-in-enterprise",
+            "title": "Applied Natural Language Processing in the Enterprise: Teaching Machines to Read, Write, and Understand",
+            "slogan": "O'Reilly, 2021",
+            "description": "Natural language processing (NLP) is one of the hottest topics in AI today. Having lagged behind other deep learning fields such as computer vision for years, NLP only recently gained mainstream popularity. Even though Google, Facebook, and OpenAI have open sourced large pretrained language models to make NLP easier, many organizations today still struggle with developing and productionizing NLP applications. This hands-on guide helps you learn the field quickly.",
+            "github": "nlpbook/nlpbook",
+            "cover": "https://i.imgur.com/6RxLBvf.jpg",
+            "url": "https://www.amazon.com/dp/149206257X",
+            "author": "Ankur A. Patel",
+            "author_links": {
+                "github": "aapatel09",
+                "website": "https://www.ankurapatel.io"
+            },
+            "category": ["books"]
+        },
+        {
+            "type": "education",
             "id": "learning-path-spacy",
             "title": "Learning Path: Mastering spaCy for Natural Language Processing",
             "slogan": "O'Reilly, 2017",
@@ -1687,6 +1723,16 @@
             "url": "https://www.safaribooksonline.com/library/view/learning-path-mastering/9781491986653/",
             "thumb": "https://i.imgur.com/9MIgMAc.jpg",
             "author": "Aaron Kramer",
+            "category": ["courses"]
+        },
+        {
+            "type": "education",
+            "id": "introduction-into-spacy-3",
+            "title": "Introduction to spaCy 3",
+            "slogan": "A free course for beginners by Dr. W.J.B. Mattingly",
+            "url": "http://spacy.pythonhumanities.com/",
+            "thumb": "https://spacy.pythonhumanities.com/_static/freecodecamp_small.jpg",
+            "author": "Dr. W.J.B. Mattingly",
             "category": ["courses"]
         },
         {
@@ -2554,6 +2600,75 @@
                 "github": "explosion",
                 "website": "https://explosion.ai"
             }
+        },
+        {
+            "id": "spacy-huggingface-hub",
+            "title": "spacy-huggingface-hub",
+            "slogan": "Push your spaCy pipelines to the Hugging Face Hub",
+            "description": "This package provides a CLI command for uploading any trained spaCy pipeline packaged with [`spacy package`](https://spacy.io/api/cli#package) to the [Hugging Face Hub](https://huggingface.co). It auto-generates all meta information for you, uploads a pretty README (requires spaCy v3.1+) and handles version control under the hood.",
+            "github": "explosion/spacy-huggingface-hub",
+            "thumb": "https://i.imgur.com/j6FO9O6.jpg",
+            "url": "https://github.com/explosion/spacy-huggingface-hub",
+            "pip": "spacy-huggingface-hub",
+            "category": ["pipeline", "models"],
+            "author": "Explosion",
+            "author_links": {
+                "twitter": "explosion_ai",
+                "github": "explosion",
+                "website": "https://explosion.ai"
+            }
+        },
+        {
+            "id": "spacy-clausie",
+            "title": "spacy-clausie",
+            "slogan": "Implementation of the ClausIE information extraction system for Python+spaCy",
+            "github": "mmxgn/spacy-clausie",
+            "url": "https://github.com/mmxgn/spacy-clausie",
+            "description": "ClausIE, a novel, clause-based approach to open information extraction, which extracts relations and their arguments from natural language text",
+            "category": ["pipeline", "scientific", "research"],
+            "code_example": [
+                "import spacy",
+                "import claucy",
+                "",
+                "nlp = spacy.load(\"en\")",
+                "claucy.add_to_pipe(nlp)",
+                "",
+                "doc = nlp(\"AE died in Princeton in 1955.\")",
+                "",
+                "print(doc._.clauses)",
+                "# Output:",       
+                "# <SV, AE, died, None, None, None, [in Princeton, in 1955]>",
+                "",
+                "propositions = doc._.clauses[0].to_propositions(as_text=True)",
+                "",
+                "print(propositions)",
+                "# Output:",
+                "# [AE died in Princeton in 1955, AE died in 1955, AE died in Princeton"
+            ],
+            "author": "Emmanouil Theofanis Chourdakis",
+            "author_links": {
+                "github": "mmxgn"
+            }
+        },
+        {
+            "id": "ipymarkup",
+            "slogan": "NER, syntax markup visualizations",
+            "description": "Collection of NLP visualizations for NER and syntax tree markup. Similar to [displaCy](https://explosion.ai/demos/displacy) and [displaCy ENT](https://explosion.ai/demos/displacy-ent).",
+            "github": "natasha/ipymarkup",
+            "image": "https://github.com/natasha/ipymarkup/blob/master/table.png?raw=true",
+            "pip":"pip install ipymarkup",
+            "code_example": [
+                "from ipymarkup import show_span_ascii_markup, show_dep_ascii_markup",
+                "",
+                "text = 'В мероприятии примут участие не только российские учёные, но и зарубежные исследователи, в том числе, Крис Хелмбрехт - управляющий директор и совладелец креативного агентства Kollektiv (Германия, США), Ннека Угбома - руководитель проекта Mushroom works (Великобритания), Гергей Ковач - политик и лидер субкультурной партии «Dog with two tails» (Венгрия), Георг Жено - немецкий режиссёр, один из создателей экспериментального театра «Театр.doc», Театра им. Йозефа Бойса (Германия).'",
+                "spans = [(102, 116, 'PER'), (186, 194, 'LOC'), (196, 199, 'LOC'), (202, 214, 'PER'), (254, 268, 'LOC'), (271, 283, 'PER'), (324, 342, 'ORG'), (345, 352, 'LOC'), (355, 365, 'PER'), (445, 455, 'ORG'), (456, 468, 'PER'), (470, 478, 'LOC')]",
+                "show_span_ascii_markup(text, spans)"
+            ],
+            "author": "Alexander Kukushkin",
+            "author_links": {
+                "github": "kuk"
+            },
+            "category": ["visualizers"]
         },
         {
             "id": "negspacy",
