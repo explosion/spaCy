@@ -32,7 +32,7 @@ def profile_cli(
 
     DOCS: https://spacy.io/api/cli#debug-profile
     """
-    if ctx.parent.command.name == NAME:  # type: ignore[union-attr]    # called as top-level command
+    if ctx.parent.command.name == NAME:
         msg.warn(
             "The profile command is now available via the 'debug profile' "
             "subcommand. You can run python -m spacy debug --help for an "
@@ -42,9 +42,9 @@ def profile_cli(
 
 
 def profile(model: str, inputs: Optional[Path] = None, n_texts: int = 10000) -> None:
-
     if inputs is not None:
-        inputs = _read_inputs(inputs, msg)  # type: ignore[assignment]
+        texts = _read_inputs(inputs, msg)
+        texts = list(itertools.islice(texts, n_texts))
     if inputs is None:
         try:
             import ml_datasets
@@ -56,16 +56,13 @@ def profile(model: str, inputs: Optional[Path] = None, n_texts: int = 10000) -> 
                 exits=1,
             )
 
-        n_inputs = 25000
-        with msg.loading("Loading IMDB dataset via Thinc..."):
-            imdb_train, _ = ml_datasets.imdb()
-            inputs, _ = zip(*imdb_train)
-        msg.info(f"Loaded IMDB dataset and using {n_inputs} examples")
-        inputs = inputs[:n_inputs]  # type: ignore[index]
+        with msg.loading("Loading IMDB dataset via ml_datasets..."):
+            imdb_train, _ = ml_datasets.imdb(train_limit=n_texts, dev_limit=0)
+            texts, _ = zip(*imdb_train)
+        msg.info(f"Loaded IMDB dataset and using {n_texts} examples")
     with msg.loading(f"Loading pipeline '{model}'..."):
         nlp = load_model(model)
     msg.good(f"Loaded pipeline '{model}'")
-    texts = list(itertools.islice(inputs, n_texts))  # type: ignore[call-overload]
     cProfile.runctx("parse_texts(nlp, texts)", globals(), locals(), "Profile.prof")
     s = pstats.Stats("Profile.prof")
     msg.divider("Profile stats")
