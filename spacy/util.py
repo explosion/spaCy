@@ -1410,8 +1410,8 @@ def get_arg_names(func: Callable) -> List[str]:
 
 def combine_score_weights(
     weights: List[Dict[str, float]],
-    overrides: Dict[str, Optional[Union[float, int]]] = SimpleFrozenDict(),
-) -> Dict[str, float]:
+    overrides: Dict[str, Optional[float]] = SimpleFrozenDict(),
+) -> Dict[str, Optional[float]]:
     """Combine and normalize score weights defined by components, e.g.
     {"ents_r": 0.2, "ents_p": 0.3, "ents_f": 0.5} and {"some_other_score": 1.0}.
 
@@ -1423,8 +1423,8 @@ def combine_score_weights(
     # We divide each weight by the total weight sum.
     # We first need to extract all None/null values for score weights that
     # shouldn't be shown in the table *or* be weighted
-    result = {key: value for w_dict in weights for (key, value) in w_dict.items()}
-    result.update(overrides)  # type: ignore[arg-type]
+    result: Dict[str, Optional[float]] = {key: value for w_dict in weights for (key, value) in w_dict.items()}
+    result.update(overrides)
     weight_sum = sum([v if v else 0.0 for v in result.values()])
     for key, value in result.items():
         if value and weight_sum > 0:
