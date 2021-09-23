@@ -52,7 +52,7 @@ TPL_ENT = """
 <mark class="entity" style="background: {bg}; padding: 0.45em 0.6em; margin: 0 0.25em; line-height: 1; border-radius: 0.35em;">
     {text}
     <span style="font-size: 0.8em; font-weight: bold; line-height: 1; border-radius: 0.35em; vertical-align: middle; margin-left: 0.5rem">{label}
-    <a style="text-decoration: none; color: black; font-weight: bold" href="{kb_url}">{kb_id}</a>
+    {kb_link}
     </span>
 </mark>
 """
