@@ -18,7 +18,7 @@ RENDER_WRAPPER = None
 
 
 def render(
-    docs: Union[Iterable[Union[Doc, Span]], Doc, Span],
+    docs: Union[Iterable[Union[Doc, Span, dict]], Doc, Span, dict],
     style: str = "dep",
     page: bool = False,
     minify: bool = False,
@@ -28,7 +28,8 @@ def render(
 ) -> str:
     """Render displaCy visualisation.
 
-    docs (Union[Iterable[Union[Doc, Span]], Doc, Span]): Document(s) to visualise.
+    docs (Union[Iterable[Union[Doc, Span, dict]], Doc, Span, dict]]): Document(s) to visualise.
+        a 'dict' is only allowed here when 'manual' is set to True
     style (str): Visualisation style, 'dep' or 'ent'.
     page (bool): Render markup as full HTML page.
     minify (bool): Minify HTML markup.
@@ -46,15 +47,15 @@ def render(
     }
     if style not in factories:
         raise ValueError(Errors.E087.format(style=style))
-    if isinstance(docs, (Doc, Span)):
+    if isinstance(docs, (Doc, Span, dict)):
         docs = [docs]
     docs = [obj if not isinstance(obj, Span) else obj.as_doc() for obj in docs]
     if not all(isinstance(obj, (Doc, Span, dict)) for obj in docs):
         raise ValueError(Errors.E096)
     renderer_func, converter = factories[style]
     renderer = renderer_func(options=options)
-    parsed = [converter(doc, options) for doc in docs] if not manual else docs
-    _html["parsed"] = renderer.render(parsed, page=page, minify=minify).strip()  # type: ignore[attr-defined]
+    parsed = [converter(doc, options) for doc in docs] if not manual else docs  # type: ignore
+    _html["parsed"] = renderer.render(parsed, page=page, minify=minify).strip()  # type: ignore
     html = _html["parsed"]
     if RENDER_WRAPPER is not None:
         html = RENDER_WRAPPER(html)
