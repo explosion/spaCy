@@ -32,7 +32,7 @@ def profile_cli(
 
     DOCS: https://spacy.io/api/cli#debug-profile
     """
-    if ctx.parent.command.name == NAME:
+    if ctx.parent.command.name == NAME:  # type: ignore[union-attr]    # called as top-level command
         msg.warn(
             "The profile command is now available via the 'debug profile' "
             "subcommand. You can run python -m spacy debug --help for an "
