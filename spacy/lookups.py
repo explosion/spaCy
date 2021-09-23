@@ -84,7 +84,7 @@ class Table(OrderedDict):
         key (str / int): The key to set.
         value: The value to set.
         """
-        key = get_string_id(key)  # type: ignore[arg-type]
+        key = get_string_id(key)
         OrderedDict.__setitem__(self, key, value)
         self.bloom.add(key)
 
@@ -103,7 +103,7 @@ class Table(OrderedDict):
         key (str / int): The key to get.
         RETURNS: The value.
         """
-        key = get_string_id(key)  # type: ignore[arg-type]
+        key = get_string_id(key)
         return OrderedDict.__getitem__(self, key)
 
     def get(self, key: Union[str, int], default: Optional[Any] = None) -> Any:
@@ -113,7 +113,7 @@ class Table(OrderedDict):
         default: The default value to return.
         RETURNS: The value.
         """
-        key = get_string_id(key)  # type: ignore[arg-type]
+        key = get_string_id(key)
         return OrderedDict.get(self, key, default)
 
     def __contains__(self, key: Union[str, int]) -> bool:  # type: ignore[override]
@@ -122,7 +122,7 @@ class Table(OrderedDict):
         key (str / int): The key to check.
         RETURNS (bool): Whether the key is in the table.
         """
-        key = get_string_id(key)  # type: ignore[arg-type]
+        key = get_string_id(key)
         # This can give a false positive, so we need to check it after
         if key not in self.bloom:
             return False
