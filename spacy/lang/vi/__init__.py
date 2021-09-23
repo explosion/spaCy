@@ -6,7 +6,7 @@ import string
 
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
-from ...language import Language
+from ...language import Language, BaseDefaults
 from ...tokens import Doc
 from ...util import DummyTokenizer, registry, load_config_from_str
 from ... import util
@@ -150,7 +150,7 @@ class VietnameseTokenizer(DummyTokenizer):
         return self
 
 
-class VietnameseDefaults(Language.Defaults):  # type: ignore[misc, valid-type]
+class VietnameseDefaults(BaseDefaults):
     config = load_config_from_str(DEFAULT_CONFIG)
     lex_attr_getters = LEX_ATTRS
     stop_words = STOP_WORDS

@@ -1,6 +1,5 @@
-from typing import Iterator, Optional, Any, Dict, Callable, Iterable, TypeVar
-from typing import Union, List, Pattern, cast, overload
-from typing import Tuple
+from typing import Iterator, Optional, Any, Dict, Callable, Iterable, TypeVar, Sequence
+from typing import Union, Tuple, List, Pattern, cast, overload
 from dataclasses import dataclass
 import random
 import itertools
@@ -59,11 +58,11 @@ class BaseDefaults:
 
     config: Config = Config(section_order=CONFIG_SECTION_ORDER)
     tokenizer_exceptions: Dict[str, List[dict]] = BASE_EXCEPTIONS
-    prefixes: Optional[List[Union[str, Pattern]]] = TOKENIZER_PREFIXES  # type: ignore[assignment]
-    suffixes: Optional[List[Union[str, Pattern]]] = TOKENIZER_SUFFIXES
-    infixes: Optional[List[Union[str, Pattern]]] = TOKENIZER_INFIXES  # type: ignore[assignment]
-    token_match: Optional[Pattern] = None
-    url_match: Optional[Pattern] = URL_MATCH  # type: ignore[assignment]
+    prefixes: Optional[Sequence[Union[str, Pattern]]] = TOKENIZER_PREFIXES
+    suffixes: Optional[Sequence[Union[str, Pattern]]] = TOKENIZER_SUFFIXES
+    infixes: Optional[Sequence[Union[str, Pattern]]] = TOKENIZER_INFIXES
+    token_match: Optional[Callable] = None
+    url_match: Optional[Callable] = URL_MATCH
     syntax_iterators: Dict[str, Callable] = {}
     lex_attr_getters: Dict[int, Callable[[str], Any]] = {}
     stop_words = set()  # type: ignore[var-annotated]

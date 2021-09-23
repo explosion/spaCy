@@ -3,7 +3,7 @@ from typing import Optional, Any, Dict
 from .stop_words import STOP_WORDS
 from .tag_map import TAG_MAP
 from .lex_attrs import LEX_ATTRS
-from ...language import Language
+from ...language import Language, BaseDefaults
 from ...tokens import Doc
 from ...compat import copy_reg
 from ...scorer import Scorer
@@ -68,7 +68,7 @@ class KoreanTokenizer(DummyTokenizer):
         return Scorer.score_tokenization(examples)
 
 
-class KoreanDefaults(Language.Defaults):  # type: ignore[misc, valid-type]
+class KoreanDefaults(BaseDefaults):
     config = load_config_from_str(DEFAULT_CONFIG)
     lex_attr_getters = LEX_ATTRS
     stop_words = STOP_WORDS

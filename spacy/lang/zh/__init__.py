@@ -6,7 +6,7 @@ import warnings
 from pathlib import Path
 
 from ...errors import Warnings, Errors
-from ...language import Language
+from ...language import Language, BaseDefaults
 from ...scorer import Scorer
 from ...tokens import Doc
 from ...training import validate_examples, Example
@@ -282,7 +282,7 @@ class ChineseTokenizer(DummyTokenizer):
         util.from_disk(path, serializers, [])
 
 
-class ChineseDefaults(Language.Defaults):  # type: ignore[misc, valid-type]
+class ChineseDefaults(BaseDefaults):
     config = load_config_from_str(DEFAULT_CONFIG)
     lex_attr_getters = LEX_ATTRS
     stop_words = STOP_WORDS
