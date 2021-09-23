@@ -1445,10 +1445,10 @@ class DummyTokenizer:
     def to_bytes(self, **kwargs):
         return b""
 
-    def from_bytes(self, _bytes_data, **kwargs):
+    def from_bytes(self, _bytes_data: bytes, **kwargs):
         return self
 
-    def to_disk(self, _path, **kwargs):
+    def to_disk(self, _path: Union[str, Path], **kwargs) -> None:
         return None
 
     def from_disk(self, _path, **kwargs):

@@ -1,9 +1,10 @@
+from typing import Dict, List
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ...symbols import ORTH, NORM
 from ...util import update_exc
 
 
-_exc = {}
+_exc: Dict[str, List[Dict]] = {}
 _exclude = [
     "Ill",
     "ill",
@@ -34,7 +35,7 @@ for pron in ["i"]:
 
         _exc[orth + "m"] = [
             {ORTH: orth, NORM: pron},
-            {ORTH: "m", "tenspect": 1, "number": 1},  # type: ignore[dict-item]
+            {ORTH: "m", "tenspect": 1, "number": 1},
         ]
 
         _exc[orth + "'ma"] = [

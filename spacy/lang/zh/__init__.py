@@ -56,22 +56,22 @@ def create_chinese_tokenizer(segmenter: Segmenter = Segmenter.char):
 class ChineseTokenizer(DummyTokenizer):
     def __init__(self, nlp: Language, segmenter: Segmenter = Segmenter.char):
         self.vocab = nlp.vocab
-        if isinstance(segmenter, Segmenter):
-            segmenter = segmenter.value  # type: ignore[assignment]
-        self.segmenter = segmenter
+        self.segmenter = (
+            segmenter.value if isinstance(segmenter, Segmenter) else segmenter
+        )
         self.pkuseg_seg = None
         self.jieba_seg = None
-        if segmenter not in Segmenter.values():
+        if self.segmenter not in Segmenter.values():
             warn_msg = Warnings.W103.format(
                 lang="Chinese",
-                segmenter=segmenter,
+                segmenter=self.segmenter,
                 supported=", ".join(Segmenter.values()),
                 default="'char' (character segmentation)",
             )
             warnings.warn(warn_msg)
             self.segmenter = Segmenter.char
-        if segmenter == Segmenter.jieba:
-            self.jieba_seg = try_jieba_import()  # type: ignore[func-returns-value]
+        if self.segmenter == Segmenter.jieba:
+            self.jieba_seg = try_jieba_import()
 
     def initialize(
         self,
@@ -84,8 +84,8 @@ class ChineseTokenizer(DummyTokenizer):
         if self.segmenter == Segmenter.pkuseg:
             if pkuseg_user_dict is None:
                 pkuseg_user_dict = pkuseg_model
-            self.pkuseg_seg = try_pkuseg_import(  # type: ignore[func-returns-value]
-                pkuseg_model=pkuseg_model, pkuseg_user_dict=pkuseg_user_dict  # type: ignore[arg-type]
+            self.pkuseg_seg = try_pkuseg_import(
+                pkuseg_model=pkuseg_model, pkuseg_user_dict=pkuseg_user_dict
             )
 
     def __call__(self, text: str) -> Doc:
@@ -294,7 +294,7 @@ class Chinese(Language):
     Defaults = ChineseDefaults
 
 
-def try_jieba_import() -> None:
+def try_jieba_import():
     try:
         import jieba
 
@@ -310,7 +310,7 @@ def try_jieba_import() -> None:
         raise ImportError(msg) from None
 
 
-def try_pkuseg_import(pkuseg_model: str, pkuseg_user_dict: str) -> None:
+def try_pkuseg_import(pkuseg_model: Optional[str], pkuseg_user_dict: Optional[str]):
     try:
         import spacy_pkuseg
 
@@ -318,9 +318,9 @@ def try_pkuseg_import(pkuseg_model: str, pkuseg_user_dict: str) -> None:
         msg = "spacy-pkuseg not installed. To use pkuseg, " + _PKUSEG_INSTALL_MSG
         raise ImportError(msg) from None
     try:
-        return spacy_pkuseg.pkuseg(pkuseg_model, pkuseg_user_dict)
+        return spacy_pkuseg.pkuseg(pkuseg_model, user_dict=pkuseg_user_dict)
     except FileNotFoundError:
-        msg = "Unable to load pkuseg model from: " + pkuseg_model
+        msg = "Unable to load pkuseg model from: " + str(pkuseg_model or "")
         raise FileNotFoundError(msg) from None
 
 

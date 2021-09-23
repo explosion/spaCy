@@ -1,4 +1,4 @@
-from typing import Union, Iterator, Tuple
+from typing import Union, Iterator, Tuple, Set
 
 from ...symbols import NOUN, PROPN, PRON, VERB
 from ...tokens import Doc, Span
@@ -16,7 +16,7 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Tuple[int, int, int]]:
     np_deps = [doc.vocab.strings.add(label) for label in labels]
     doc.vocab.strings.add("conj")
     np_label = doc.vocab.strings.add("NP")
-    seen = set()  # type: ignore[var-annotated]
+    seen: Set[int] = set()
     for i, word in enumerate(doclike):
         if word.pos not in (NOUN, PROPN, PRON):
             continue

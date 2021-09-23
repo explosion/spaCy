@@ -154,7 +154,7 @@ class JapaneseTokenizer(DummyTokenizer):
     def to_disk(self, path: Union[str, Path], **kwargs) -> None:  # type: ignore[override]
         path = util.ensure_path(path)
         serializers = {"cfg": lambda p: srsly.write_json(p, self._get_config())}
-        return util.to_disk(path, serializers, [])  # type: ignore[return-value]
+        util.to_disk(path, serializers, [])
 
     def from_disk(self, path: Union[str, Path], **kwargs) -> "JapaneseTokenizer":  # type: ignore[override]
         path = util.ensure_path(path)

@@ -1,4 +1,4 @@
-from typing import Optional, Any, Dict
+from typing import Iterator, Any, Dict
 
 from .stop_words import STOP_WORDS
 from .tag_map import TAG_MAP
@@ -29,8 +29,8 @@ def create_tokenizer():
 
 
 class KoreanTokenizer(DummyTokenizer):
-    def __init__(self, nlp: Optional[Language] = None):
-        self.vocab = nlp.vocab  # type: ignore[union-attr]
+    def __init__(self, nlp: Language):
+        self.vocab = nlp.vocab
         MeCab = try_mecab_import()  # type: ignore[func-returns-value]
         self.mecab_tokenizer = MeCab("-F%f[0],%f[7]")
 
@@ -39,17 +39,17 @@ class KoreanTokenizer(DummyTokenizer):
 
     def __call__(self, text: str) -> Doc:
         dtokens = list(self.detailed_tokens(text))
-        surfaces = [dt["surface"] for dt in dtokens]  # type: ignore[index]
+        surfaces = [dt["surface"] for dt in dtokens]
         doc = Doc(self.vocab, words=surfaces, spaces=list(check_spaces(text, surfaces)))
         for token, dtoken in zip(doc, dtokens):
-            first_tag, sep, eomi_tags = dtoken["tag"].partition("+")  # type: ignore[index]
+            first_tag, sep, eomi_tags = dtoken["tag"].partition("+")
             token.tag_ = first_tag  # stem(어간) or pre-final(선어말 어미)
             token.pos = TAG_MAP[token.tag_][POS]
-            token.lemma_ = dtoken["lemma"]  # type: ignore[index]
-        doc.user_data["full_tags"] = [dt["tag"] for dt in dtokens]  # type: ignore[index]
+            token.lemma_ = dtoken["lemma"]
+        doc.user_data["full_tags"] = [dt["tag"] for dt in dtokens]
         return doc
 
-    def detailed_tokens(self, text: str) -> Dict[str, Any]:  # type: ignore[misc]
+    def detailed_tokens(self, text: str) -> Iterator[Dict[str, Any]]:
         # 품사 태그(POS)[0], 의미 부류(semantic class)[1],	종성 유무(jongseong)[2], 읽기(reading)[3],
         # 타입(type)[4], 첫번째 품사(start pos)[5],	마지막 품사(end pos)[6], 표현(expression)[7], *
         for node in self.mecab_tokenizer.parse(text, as_nodes=True):
