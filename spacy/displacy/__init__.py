@@ -28,7 +28,7 @@ def render(
 ) -> str:
     """Render displaCy visualisation.
 
-    docs (Union[Iterable[Doc], Doc]): Document(s) to visualise.
+    docs (Union[Iterable[Union[Doc, Span]], Doc, Span]): Document(s) to visualise.
     style (str): Visualisation style, 'dep' or 'ent'.
     page (bool): Render markup as full HTML page.
     minify (bool): Minify HTML markup.
@@ -46,8 +46,8 @@ def render(
     }
     if style not in factories:
         raise ValueError(Errors.E087.format(style=style))
-    if isinstance(docs, (Doc, Span, dict)):
-        docs = [docs]  # type: ignore[list-item]
+    if isinstance(docs, (Doc, Span)):
+        docs = [docs]
     docs = [obj if not isinstance(obj, Span) else obj.as_doc() for obj in docs]
     if not all(isinstance(obj, (Doc, Span, dict)) for obj in docs):
         raise ValueError(Errors.E096)
