@@ -332,16 +332,18 @@ for details and system requirements.
 
 </Infobox>
 
-### spacy-transformers.TransformerModel.v2 {#TransformerModel}
+### spacy-transformers.TransformerModel.v3 {#TransformerModel}
 
 > #### Example Config
 >
 > ```ini
 > [model]
-> @architectures = "spacy-transformers.TransformerModel.v2"
+> @architectures = "spacy-transformers.TransformerModel.v3"
 > name = "roberta-base"
 > tokenizer_config = {"use_fast": true}
 > transformer_config = {"output_attentions": false}
+> mixed_precision = true
+> grad_scaler_config = {"init_scale": 32768}
 >
 > [model.get_spans]
 > @span_getters = "spacy-transformers.strided_spans.v1"
@@ -368,17 +370,24 @@ in other components, see
 [Tok2VecTransformer](/api/architectures#Tok2VecTransformer).
 
 | Name                 | Description                                                                                                                                                                                                                                           |
-| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|----------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `name`               | Any model name that can be loaded by [`transformers.AutoModel`](https://huggingface.co/transformers/model_doc/auto.html#transformers.AutoModel). ~~str~~                                                                                              |
 | `get_spans`          | Function that takes a batch of [`Doc`](/api/doc) object and returns lists of [`Span`](/api) objects to process by the transformer. [See here](/api/transformer#span_getters) for built-in options and examples. ~~Callable[[List[Doc]], List[Span]]~~ |
 | `tokenizer_config`   | Tokenizer settings passed to [`transformers.AutoTokenizer`](https://huggingface.co/transformers/model_doc/auto.html#transformers.AutoTokenizer). ~~Dict[str, Any]~~                                                                                   |
 | `transformer_config` | Settings to pass to the transformers forward pass. ~~Dict[str, Any]~~                                                                                                                                                                                 |
+| `mixed_precision`    | Replace whitelisted ops by half-precision counterparts. Speeds up training and prediction on GPUs with [Tensor Cores](https://developer.nvidia.com/tensor-cores) and reduces GPU memory use. ~~bool~~                                                 |
+| `grad_scaler_config` | Configuration to pass to `thinc.api.PyTorchGradScaler` during training when `mixed_precision` is enabled. ~~Dict[str, Any]~~                                                                                                                          |
 | **CREATES**          | The model using the architecture. ~~Model[List[Doc], FullTransformerBatch]~~                                                                                                                                                                          |
+|                      |                                                                                                                                                                                                                                                       |
 
-<Accordion title="spacy-transformers.TransformerModel.v1 definition" spaced>
+<Accordion title="Previous versions of spacy-transformers.TransformerModel" spaced>
 
-`spacy-transformers.TransformerModel.v1` had almost the same signature, but did
-not yet support the `transformer_config` argument.
+* The `transformer_config` argument was added in
+`spacy-transformers.TransformerModel.v2`.
+* The `mixed_precision` and `grad_scaler_config` arguments were added in
+`spacy-transformers.TransformerModel.v3`
+
+The other arguments are shared between all versions.
 
 </Accordion>
 
@@ -412,17 +421,19 @@ a single token vector given zero or more wordpiece vectors.
 | `upstream`    | A string to identify the "upstream" `Transformer` component to communicate with. By default, the upstream name is the wildcard string `"*"`, but you could also specify the name of the `Transformer` component. You'll almost never have multiple upstream `Transformer` components, so the wildcard string will almost always be fine. ~~str~~ |
 | **CREATES**   | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                                                                                                                                                                           |
 
-### spacy-transformers.Tok2VecTransformer.v2 {#Tok2VecTransformer}
+### spacy-transformers.Tok2VecTransformer.v3 {#Tok2VecTransformer}
 
 > #### Example Config
 >
 > ```ini
 > [model]
-> @architectures = "spacy-transformers.Tok2VecTransformer.v2"
+> @architectures = "spacy-transformers.Tok2VecTransformer.v3"
 > name = "albert-base-v2"
 > tokenizer_config = {"use_fast": false}
 > transformer_config = {"output_attentions": false}
 > grad_factor = 1.0
+> mixed_precision = true
+> grad_scaler_config = {"init_scale": 32768}
 > ```
 
 Use a transformer as a [`Tok2Vec`](/api/tok2vec) layer directly. This does
@@ -432,12 +443,14 @@ object, but it's a **simpler solution** if you only need the transformer within
 one component.
 
 | Name                 | Description                                                                                                                                                                                                                                                                   |
-| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|----------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `get_spans`          | Function that takes a batch of [`Doc`](/api/doc) object and returns lists of [`Span`](/api) objects to process by the transformer. [See here](/api/transformer#span_getters) for built-in options and examples. ~~Callable[[List[Doc]], List[Span]]~~                         |
 | `tokenizer_config`   | Tokenizer settings passed to [`transformers.AutoTokenizer`](https://huggingface.co/transformers/model_doc/auto.html#transformers.AutoTokenizer). ~~Dict[str, Any]~~                                                                                                           |
 | `transformer_config` | Settings to pass to the transformers forward pass. ~~Dict[str, Any]~~                                                                                                                                                                                                         |
 | `pooling`            | A reduction layer used to calculate the token vectors based on zero or more wordpiece vectors. If in doubt, mean pooling (see [`reduce_mean`](https://thinc.ai/docs/api-layers#reduce_mean)) is usually a good choice. ~~Model[Ragged, Floats2d]~~                            |
 | `grad_factor`        | Reweight gradients from the component before passing them upstream. You can set this to `0` to "freeze" the transformer weights with respect to the component, or use it to make some components more significant than others. Leaving it at `1.0` is usually fine. ~~float~~ |
+| `mixed_precision`    | Replace whitelisted ops by half-precision counterparts. Speeds up training and prediction on GPUs with [Tensor Cores](https://developer.nvidia.com/tensor-cores) and reduces GPU memory use. ~~bool~~                                                                         |
+| `grad_scaler_config` | Configuration to pass to `thinc.api.PyTorchGradScaler` during training when `mixed_precision` is enabled. ~~Dict[str, Any]~~                                                                                                                                                  |
 | **CREATES**          | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                                                                                                        |
 
 <Accordion title="spacy-transformers.Tok2VecTransformer.v1 definition" spaced>
