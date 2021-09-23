@@ -474,7 +474,9 @@ def get_sourced_components(
     }
 
 
-def resolve_dot_names(config: Config, dot_names: List[Optional[str]]) -> Tuple[Any, ...]:
+def resolve_dot_names(
+    config: Config, dot_names: List[Optional[str]]
+) -> Tuple[Any, ...]:
     """Resolve one or more "dot notation" names, e.g. corpora.train.
     The paths could point anywhere into the config, so we don't know which
     top-level section we'll be looking within.
@@ -896,8 +898,8 @@ def run_command(
     return ret
 
 
-@contextmanager  # type: ignore[arg-type, misc]
-def working_dir(path: Union[str, Path]) -> None:  # type: ignore[misc]
+@contextmanager
+def working_dir(path: Union[str, Path]) -> Iterator[Path]:
     """Change current working directory and returns to previous on exit.
 
     path (str / Path): The directory to navigate to.

@@ -69,7 +69,7 @@ def project_run(
     config = load_project_config(project_dir, overrides=overrides)
     commands = {cmd["name"]: cmd for cmd in config.get("commands", [])}
     workflows = config.get("workflows", {})
-    validate_subcommand(commands.keys(), workflows.keys(), subcommand)  # type: ignore[arg-type]
+    validate_subcommand(list(commands.keys()), list(workflows.keys()), subcommand)
     if subcommand in workflows:
         msg.info(f"Running workflow '{subcommand}'")
         for cmd in workflows[subcommand]:
@@ -90,7 +90,7 @@ def project_run(
                 err_kwargs = {"exits": 1} if not dry else {}
                 msg.fail(err, err_help, **err_kwargs)
         check_spacy_commit = check_bool_env_var(ENV_VARS.PROJECT_USE_GIT_VERSION)
-        with working_dir(project_dir) as current_dir:  # type: ignore[var-annotated]
+        with working_dir(project_dir) as current_dir:
             msg.divider(subcommand)
             rerun = check_rerun(current_dir, cmd, check_spacy_commit=check_spacy_commit)
             if not rerun and not force:
@@ -115,7 +115,7 @@ def print_run_help(project_dir: Path, subcommand: Optional[str] = None) -> None:
     workflows = config.get("workflows", {})
     project_loc = "" if is_cwd(project_dir) else project_dir
     if subcommand:
-        validate_subcommand(commands.keys(), workflows.keys(), subcommand)  # type: ignore[arg-type]
+        validate_subcommand(list(commands.keys()), list(workflows.keys()), subcommand)
         print(f"Usage: {COMMAND} project run {subcommand} {project_loc}")
         if subcommand in commands:
             help_text = commands[subcommand].get("help")
@@ -163,8 +163,8 @@ def run_commands(
         when you want to turn over execution to the command, and capture=True
         when you want to run the command more like a function.
     """
-    for command in commands:
-        command = split_command(command)  # type: ignore[assignment]
+    for c in commands:
+        command = split_command(c)
         # Not sure if this is needed or a good idea. Motivation: users may often
         # use commands in their config that reference "python" and we want to
         # make sure that it's always executing the same Python that spaCy is
@@ -173,11 +173,11 @@ def run_commands(
         # that's how it's set up on their system), and user 2 without the
         # shortcut tries to re-run the command.
         if len(command) and command[0] in ("python", "python3"):
-            command[0] = sys.executable  # type: ignore[index]
+            command[0] = sys.executable
         elif len(command) and command[0] in ("pip", "pip3"):
-            command = [sys.executable, "-m", "pip", *command[1:]]  # type: ignore[assignment]
+            command = [sys.executable, "-m", "pip", *command[1:]]
         if not silent:
-            print(f"Running command: {join_command(command)}")  # type: ignore[arg-type]
+            print(f"Running command: {join_command(command)}")
         if not dry:
             run_command(command, capture=capture)
 
@@ -293,7 +293,7 @@ def get_lock_entry(project_dir: Path, command: Dict[str, Any]) -> Dict[str, Any]
     }
 
 
-def get_fileinfo(project_dir: Path, paths: List[str]) -> List[Dict[str, str]]:
+def get_fileinfo(project_dir: Path, paths: List[str]) -> List[Dict[str, Optional[str]]]:
     """Generate the file information for a list of paths (dependencies, outputs).
     Includes the file path and the file's checksum.
 
@@ -306,4 +306,4 @@ def get_fileinfo(project_dir: Path, paths: List[str]) -> List[Dict[str, str]]:
         file_path = project_dir / path
         md5 = get_checksum(file_path) if file_path.exists() else None
         data.append({"path": path, "md5": md5})
-    return data  # type: ignore[return-value]
+    return data

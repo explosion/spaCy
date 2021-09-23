@@ -83,7 +83,7 @@ def project_document(
         dest = md.code(dest_path)
         if source == "Local":
             # Only link assets if they're in the repo
-            with working_dir(project_dir) as p:  # type: ignore[var-annotated]
+            with working_dir(project_dir) as p:
                 if (p / dest_path).exists():
                     dest = md.link(dest, dest_path)
         data.append((dest, source, a.get("description", "")))

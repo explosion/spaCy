@@ -121,7 +121,6 @@ def fetch_asset(
         # If there's already a file, check for checksum
         if checksum == get_checksum(dest_path):
             msg.good(f"Skipping download with matching checksum: {dest}")
-            return dest_path  # type: ignore[return-value]
     # We might as well support the user here and create parent directories in
     # case the asset dir isn't listed as a dir to create in the project.yml
     if not dest_path.parent.exists():
@@ -138,7 +137,6 @@ def fetch_asset(
                 msg.good(f"Copied local asset {dest}")
             else:
                 msg.fail(f"Download failed: {dest}", e)
-                return
     if checksum and checksum != get_checksum(dest_path):
         msg.fail(f"Checksum doesn't match value defined in {PROJECT_FILE}: {dest}")
 

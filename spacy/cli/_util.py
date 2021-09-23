@@ -471,12 +471,15 @@ def get_git_version(
     RETURNS (Tuple[int, int]): The version as a (major, minor) tuple. Returns
         (0, 0) if the version couldn't be determined.
     """
-    ret = run_command("git --version", capture=True)
+    try:
+        ret = run_command("git --version", capture=True)
+    except:
+        raise RuntimeError(error)
     stdout = ret.stdout.strip()
     if not stdout or not stdout.startswith("git version"):
-        return (0, 0)
+        return 0, 0
     version = stdout[11:].strip().split(".")
-    return (int(version[0]), int(version[1]))
+    return int(version[0]), int(version[1])
 
 
 def _http_to_git(repo: str) -> str:
