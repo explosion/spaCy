@@ -29,7 +29,7 @@ def setup_default_warnings():
     # lemmatizer without required POS
     filter_warning("once", error_msg="[W108]")
 
-    # ngram vector table cannot be modified
+    # floret vector table cannot be modified
     filter_warning("once", error_msg="[W114]")
 
 
@@ -197,7 +197,7 @@ class Warnings:
             "vectors. This is almost certainly a mistake.")
     W113 = ("Sourced component '{name}' may not work as expected: source "
             "vectors are not identical to current pipeline vectors.")
-    W114 = ("Skipping {method}: the ngram vector table cannot be modified. "
+    W114 = ("Skipping {method}: the floret vector table cannot be modified. "
             "Vectors are calculated from character ngrams.")
 
 
@@ -528,13 +528,13 @@ class Errors:
     E202 = ("Unsupported {name} mode '{mode}'. Supported modes: {modes}.")
 
     # New errors added in v3.x
-    E859 = ("The ngram vector table cannot be modified.")
+    E859 = ("The floret vector table cannot be modified.")
     E860 = ("Can't truncate fasttext-bloom vectors.")
-    E861 = ("No 'keys' should be provided when initializing ngram vectors "
+    E861 = ("No 'keys' should be provided when initializing floret vectors "
             "with 'minn' and 'maxn'.")
-    E862 = ("'hash_count' must be between 1-4 for ngram vectors.")
+    E862 = ("'hash_count' must be between 1-4 for floret vectors.")
     E863 = ("'maxn' must be greater than or equal to 'minn'.")
-    E864 = ("The complete vector table 'data' is required to initialize ngram "
+    E864 = ("The complete vector table 'data' is required to initialize floret "
             "vectors.")
     E865 = ("The {mode} vector table does not support this operation. "
             "{alternative}")
