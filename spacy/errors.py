@@ -521,6 +521,7 @@ class Errors:
     E202 = ("Unsupported alignment mode '{mode}'. Supported modes: {modes}.")
 
     # New errors added in v3.x
+    E866 = ("Expected a string or 'Doc' as input, but got: {type}.")
     E867 = ("The 'textcat' component requires at least two labels because it "
             "uses mutually exclusive classes where exactly one label is True "
             "for each doc. For binary classification tasks, you can use two "

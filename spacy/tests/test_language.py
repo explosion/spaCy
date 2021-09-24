@@ -528,3 +528,29 @@ def test_language_source_and_vectors(nlp2):
     assert long_string in nlp2.vocab.strings
     # vectors should remain unmodified
     assert nlp.vocab.vectors.to_bytes() == vectors_bytes
+
+
+@pytest.mark.parametrize("n_process", [1, 2])
+def test_pass_doc_to_pipeline(nlp, n_process):
+    texts = ["cats", "dogs", "guinea pigs"]
+    docs = [nlp.make_doc(text) for text in texts]
+    assert not any(len(doc.cats) for doc in docs)
+    doc = nlp(docs[0])
+    assert doc.text == texts[0]
+    assert len(doc.cats) > 0
+    if isinstance(get_current_ops(), NumpyOps) or n_process < 2:
+        docs = nlp.pipe(docs, n_process=n_process)
+        assert [doc.text for doc in docs] == texts
+        assert all(len(doc.cats) for doc in docs)
+
+
+def test_invalid_arg_to_pipeline(nlp):
+    str_list = ["This is a text.", "This is another."]
+    with pytest.raises(ValueError):
+        nlp(str_list)  # type: ignore
+    assert len(list(nlp.pipe(str_list))) == 2
+    int_list = [1, 2, 3]
+    with pytest.raises(ValueError):
+        list(nlp.pipe(int_list))  # type: ignore
+    with pytest.raises(ValueError):
+        nlp(int_list)  # type: ignore
