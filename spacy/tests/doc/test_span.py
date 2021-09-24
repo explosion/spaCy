@@ -428,9 +428,9 @@ def test_span_with_vectors(doc):
     ]
     add_vecs_to_vocab(doc.vocab, vectors)
     # 0-length span
-    assert_array_equal(ops.to_numpy(doc[0:0].vector), numpy.zeros((3, )))
+    assert_array_equal(ops.to_numpy(doc[0:0].vector), numpy.zeros((3,)))
     # longer span with no vector
-    assert_array_equal(ops.to_numpy(doc[0:4].vector), numpy.zeros((3, )))
+    assert_array_equal(ops.to_numpy(doc[0:4].vector), numpy.zeros((3,)))
     # single-token span with vector
     assert_array_equal(ops.to_numpy(doc[10:11].vector), [-1, -1, -1])
     doc.vocab.vectors = prev_vectors
