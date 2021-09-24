@@ -462,10 +462,14 @@ one component.
 Mixed-precision support is currently an experimental feature.
 </Infobox>
 
-<Accordion title="spacy-transformers.Tok2VecTransformer.v1 definition" spaced>
+<Accordion title="Previous versions of spacy-transformers.Tok2VecTransformer" spaced>
 
-`spacy-transformers.Tok2VecTransformer.v1` had almost the same signature, but
-did not yet support the `transformer_config` argument.
+* The `transformer_config` argument was added in
+`spacy-transformers.Tok2VecTransformer.v2`.
+* The `mixed_precision` and `grad_scaler_config` arguments were added in
+`spacy-transformers.Tok2VecTransformer.v3`
+
+The other arguments are shared between all versions.
 
 </Accordion>
 
