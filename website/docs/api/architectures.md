@@ -380,6 +380,10 @@ in other components, see
 | **CREATES**          | The model using the architecture. ~~Model[List[Doc], FullTransformerBatch]~~                                                                                                                                                                          |
 |                      |                                                                                                                                                                                                                                                       |
 
+<Infobox title="Mixed precision support" variant="warning">
+Mixed-precision support is currently an experimental feature.
+</Infobox>
+
 <Accordion title="Previous versions of spacy-transformers.TransformerModel" spaced>
 
 * The `transformer_config` argument was added in
@@ -452,6 +456,11 @@ one component.
 | `mixed_precision`    | Replace whitelisted ops by half-precision counterparts. Speeds up training and prediction on GPUs with [Tensor Cores](https://developer.nvidia.com/tensor-cores) and reduces GPU memory use. ~~bool~~                                                                         |
 | `grad_scaler_config` | Configuration to pass to `thinc.api.PyTorchGradScaler` during training when `mixed_precision` is enabled. ~~Dict[str, Any]~~                                                                                                                                                  |
 | **CREATES**          | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                                                                                                        |
+
+
+<Infobox title="Mixed precision support" variant="warning">
+Mixed-precision support is currently an experimental feature.
+</Infobox>
 
 <Accordion title="spacy-transformers.Tok2VecTransformer.v1 definition" spaced>
 
