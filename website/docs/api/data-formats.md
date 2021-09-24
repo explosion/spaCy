@@ -90,7 +90,6 @@ Defines the `nlp` object, its tokenizer and
 > ```ini
 > [components.textcat]
 > factory = "textcat"
-> labels = ["POSITIVE", "NEGATIVE"]
 >
 > [components.textcat.model]
 > @architectures = "spacy.TextCatBOW.v2"

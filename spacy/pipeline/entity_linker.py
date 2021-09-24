@@ -16,7 +16,7 @@ from ..language import Language
 from ..vocab import Vocab
 from ..training import Example, validate_examples, validate_get_examples
 from ..errors import Errors, Warnings
-from ..util import SimpleFrozenList
+from ..util import SimpleFrozenList, registry
 from .. import util
 from ..scorer import Scorer
 
@@ -50,6 +50,7 @@ DEFAULT_NEL_MODEL = Config().from_str(default_model_config)["model"]
         "incl_context": True,
         "entity_vector_length": 64,
         "get_candidates": {"@misc": "spacy.CandidateGenerator.v1"},
+        "scorer": {"@scorers": "spacy.entity_linker_scorer.v1"},
     },
     default_score_weights={
         "nel_micro_f": 1.0,
@@ -68,6 +69,7 @@ def make_entity_linker(
     incl_context: bool,
     entity_vector_length: int,
     get_candidates: Callable[[KnowledgeBase, Span], Iterable[Candidate]],
+    scorer: Optional[Callable],
 ):
     """Construct an EntityLinker component.
 
@@ -81,6 +83,7 @@ def make_entity_linker(
     entity_vector_length (int): Size of encoding vectors in the KB.
     get_candidates (Callable[[KnowledgeBase, "Span"], Iterable[Candidate]]): Function that
         produces a list of candidates, given a certain knowledge base and a textual mention.
+    scorer (Optional[Callable]): The scoring method.
     """
     return EntityLinker(
         nlp.vocab,
@@ -92,7 +95,17 @@ def make_entity_linker(
         incl_context=incl_context,
         entity_vector_length=entity_vector_length,
         get_candidates=get_candidates,
+        scorer=scorer,
     )
+
+
+def entity_linker_score(examples, **kwargs):
+    return Scorer.score_links(examples, negative_labels=[EntityLinker.NIL], **kwargs)
+
+
+@registry.scorers("spacy.entity_linker_scorer.v1")
+def make_entity_linker_scorer():
+    return entity_linker_score
 
 
 class EntityLinker(TrainablePipe):
@@ -115,6 +128,7 @@ class EntityLinker(TrainablePipe):
         incl_context: bool,
         entity_vector_length: int,
         get_candidates: Callable[[KnowledgeBase, Span], Iterable[Candidate]],
+        scorer: Optional[Callable] = entity_linker_score,
     ) -> None:
         """Initialize an entity linker.
 
@@ -129,6 +143,8 @@ class EntityLinker(TrainablePipe):
         entity_vector_length (int): Size of encoding vectors in the KB.
         get_candidates (Callable[[KnowledgeBase, Span], Iterable[Candidate]]): Function that
             produces a list of candidates, given a certain knowledge base and a textual mention.
+        scorer (Optional[Callable]): The scoring method. Defaults to
+            Scorer.score_links.
 
         DOCS: https://spacy.io/api/entitylinker#init
         """
@@ -145,6 +161,7 @@ class EntityLinker(TrainablePipe):
         # how many neighbour sentences to take into account
         # create an empty KB by default. If you want to load a predefined one, specify it in 'initialize'.
         self.kb = empty_kb(entity_vector_length)(self.vocab)
+        self.scorer = scorer
 
     def set_kb(self, kb_loader: Callable[[Vocab], KnowledgeBase]):
         """Define the KB of this pipe by providing a function that will
@@ -389,17 +406,6 @@ class EntityLinker(TrainablePipe):
                 for token in ent:
                     token.ent_kb_id_ = kb_id
 
-    def score(self, examples, **kwargs):
-        """Score a batch of examples.
-
-        examples (Iterable[Example]): The examples to score.
-        RETURNS (Dict[str, Any]): The scores.
-
-        DOCS TODO: https://spacy.io/api/entity_linker#score
-        """
-        validate_examples(examples, "EntityLinker.score")
-        return Scorer.score_links(examples, negative_labels=[self.NIL])
-
     def to_bytes(self, *, exclude=tuple()):
         """Serialize the pipe to a bytestring.
 
@@ -412,7 +418,7 @@ class EntityLinker(TrainablePipe):
         serialize = {}
         if hasattr(self, "cfg") and self.cfg is not None:
             serialize["cfg"] = lambda: srsly.json_dumps(self.cfg)
-        serialize["vocab"] = self.vocab.to_bytes
+        serialize["vocab"] = lambda: self.vocab.to_bytes(exclude=exclude)
         serialize["kb"] = self.kb.to_bytes
         serialize["model"] = self.model.to_bytes
         return util.to_bytes(serialize, exclude)
@@ -436,7 +442,7 @@ class EntityLinker(TrainablePipe):
         deserialize = {}
         if hasattr(self, "cfg") and self.cfg is not None:
             deserialize["cfg"] = lambda b: self.cfg.update(srsly.json_loads(b))
-        deserialize["vocab"] = lambda b: self.vocab.from_bytes(b)
+        deserialize["vocab"] = lambda b: self.vocab.from_bytes(b, exclude=exclude)
         deserialize["kb"] = lambda b: self.kb.from_bytes(b)
         deserialize["model"] = load_model
         util.from_bytes(bytes_data, deserialize, exclude)
@@ -453,7 +459,7 @@ class EntityLinker(TrainablePipe):
         DOCS: https://spacy.io/api/entitylinker#to_disk
         """
         serialize = {}
-        serialize["vocab"] = lambda p: self.vocab.to_disk(p)
+        serialize["vocab"] = lambda p: self.vocab.to_disk(p, exclude=exclude)
         serialize["cfg"] = lambda p: srsly.write_json(p, self.cfg)
         serialize["kb"] = lambda p: self.kb.to_disk(p)
         serialize["model"] = lambda p: self.model.to_disk(p)
@@ -480,6 +486,7 @@ class EntityLinker(TrainablePipe):
 
         deserialize = {}
         deserialize["cfg"] = lambda p: self.cfg.update(deserialize_config(p))
+        deserialize["vocab"] = lambda p: self.vocab.from_disk(p, exclude=exclude)
         deserialize["kb"] = lambda p: self.kb.from_disk(p)
         deserialize["model"] = load_model
         util.from_disk(path, deserialize, exclude)

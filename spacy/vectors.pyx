@@ -665,7 +665,7 @@ cdef class Vectors:
         DOCS: https://spacy.io/api/vectors#clear
         """
         if self.mode == Mode.floret:
-            raise ValueError(Errors.E866)
+            raise ValueError(Errors.E859)
         self.key2row = {}
         self._sync_unset()
 

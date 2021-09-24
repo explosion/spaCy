@@ -969,7 +969,7 @@ class Language:
 
     def __call__(
         self,
-        text: str,
+        text: Union[str, Doc],
         *,
         disable: Iterable[str] = SimpleFrozenList(),
         component_cfg: Optional[Dict[str, Dict[str, Any]]] = None,
@@ -978,7 +978,9 @@ class Language:
         and can contain arbitrary whitespace. Alignment into the original string
         is preserved.
 
-        text (str): The text to be processed.
+        text (Union[str, Doc]): If `str`, the text to be processed. If `Doc`,
+            the doc will be passed directly to the pipeline, skipping
+            `Language.make_doc`.
         disable (list): Names of the pipeline components to disable.
         component_cfg (Dict[str, dict]): An optional dictionary with extra
             keyword arguments for specific components.
@@ -986,7 +988,7 @@ class Language:
 
         DOCS: https://spacy.io/api/language#call
         """
-        doc = self.make_doc(text)
+        doc = self._ensure_doc(text)
         if component_cfg is None:
             component_cfg = {}
         for name, proc in self.pipeline:
@@ -1069,6 +1071,14 @@ class Language:
                 Errors.E088.format(length=len(text), max_length=self.max_length)
             )
         return self.tokenizer(text)
+
+    def _ensure_doc(self, doc_like: Union[str, Doc]) -> Doc:
+        """Create a Doc if need be, or raise an error if the input is not a Doc or a string."""
+        if isinstance(doc_like, Doc):
+            return doc_like
+        if isinstance(doc_like, str):
+            return self.make_doc(doc_like)
+        raise ValueError(Errors.E866.format(type=type(doc_like)))
 
     def update(
         self,
@@ -1438,7 +1448,7 @@ class Language:
     @overload
     def pipe(
         self,
-        texts: Iterable[Tuple[str, _AnyContext]],
+        texts: Iterable[Tuple[Union[str, Doc], _AnyContext]],
         *,
         as_tuples: bool = ...,
         batch_size: Optional[int] = ...,
@@ -1450,7 +1460,7 @@ class Language:
 
     def pipe(  # noqa: F811
         self,
-        texts: Iterable[str],
+        texts: Iterable[Union[str, Doc]],
         *,
         as_tuples: bool = False,
         batch_size: Optional[int] = None,
@@ -1460,7 +1470,8 @@ class Language:
     ) -> Iterator[Doc]:
         """Process texts as a stream, and yield `Doc` objects in order.
 
-        texts (Iterable[str]): A sequence of texts to process.
+        texts (Iterable[Union[str, Doc]]): A sequence of texts or docs to
+            process.
         as_tuples (bool): If set to True, inputs should be a sequence of
             (text, context) tuples. Output will then be a sequence of
             (doc, context) tuples. Defaults to False.
@@ -1516,7 +1527,7 @@ class Language:
             docs = self._multiprocessing_pipe(texts, pipes, n_process, batch_size)
         else:
             # if n_process == 1, no processes are forked.
-            docs = (self.make_doc(text) for text in texts)
+            docs = (self._ensure_doc(text) for text in texts)
             for pipe in pipes:
                 docs = pipe(docs)
         for doc in docs:
@@ -1550,7 +1561,7 @@ class Language:
         procs = [
             mp.Process(
                 target=_apply_pipes,
-                args=(self.make_doc, pipes, rch, sch, Underscore.get_state()),
+                args=(self._ensure_doc, pipes, rch, sch, Underscore.get_state()),
             )
             for rch, sch in zip(texts_q, bytedocs_send_ch)
         ]
@@ -1699,7 +1710,6 @@ class Language:
         # them here so they're only loaded once
         source_nlps = {}
         source_nlp_vectors_hashes = {}
-        nlp.meta["_sourced_vectors_hashes"] = {}
         for pipe_name in config["nlp"]["pipeline"]:
             if pipe_name not in pipeline:
                 opts = ", ".join(pipeline.keys())
@@ -1748,6 +1758,8 @@ class Language:
                         source_nlp_vectors_hashes[model] = hash(
                             source_nlps[model].vocab.vectors.to_bytes()
                         )
+                    if "_sourced_vectors_hashes" not in nlp.meta:
+                        nlp.meta["_sourced_vectors_hashes"] = {}
                     nlp.meta["_sourced_vectors_hashes"][
                         pipe_name
                     ] = source_nlp_vectors_hashes[model]
@@ -1909,7 +1921,7 @@ class Language:
             if not hasattr(proc, "to_disk"):
                 continue
             serializers[name] = lambda p, proc=proc: proc.to_disk(p, exclude=["vocab"])
-        serializers["vocab"] = lambda p: self.vocab.to_disk(p)
+        serializers["vocab"] = lambda p: self.vocab.to_disk(p, exclude=exclude)
         util.to_disk(path, serializers, exclude)
 
     def from_disk(
@@ -1940,7 +1952,7 @@ class Language:
 
         def deserialize_vocab(path: Path) -> None:
             if path.exists():
-                self.vocab.from_disk(path)
+                self.vocab.from_disk(path, exclude=exclude)
 
         path = util.ensure_path(path)
         deserializers = {}
@@ -1978,7 +1990,7 @@ class Language:
         DOCS: https://spacy.io/api/language#to_bytes
         """
         serializers = {}
-        serializers["vocab"] = lambda: self.vocab.to_bytes()
+        serializers["vocab"] = lambda: self.vocab.to_bytes(exclude=exclude)
         serializers["tokenizer"] = lambda: self.tokenizer.to_bytes(exclude=["vocab"])
         serializers["meta.json"] = lambda: srsly.json_dumps(self.meta)
         serializers["config.cfg"] = lambda: self.config.to_bytes()
@@ -2014,7 +2026,7 @@ class Language:
             b, interpolate=False
         )
         deserializers["meta.json"] = deserialize_meta
-        deserializers["vocab"] = self.vocab.from_bytes
+        deserializers["vocab"] = lambda b: self.vocab.from_bytes(b, exclude=exclude)
         deserializers["tokenizer"] = lambda b: self.tokenizer.from_bytes(
             b, exclude=["vocab"]
         )
@@ -2084,7 +2096,7 @@ def _copy_examples(examples: Iterable[Example]) -> List[Example]:
 
 
 def _apply_pipes(
-    make_doc: Callable[[str], Doc],
+    ensure_doc: Callable[[Union[str, Doc]], Doc],
     pipes: Iterable[Callable[[Doc], Doc]],
     receiver,
     sender,
@@ -2092,7 +2104,8 @@ def _apply_pipes(
 ) -> None:
     """Worker for Language.pipe
 
-    make_doc (Callable[[str,] Doc]): Function to create Doc from text.
+    ensure_doc (Callable[[Union[str, Doc]], Doc]): Function to create Doc from text
+        or raise an error if the input is neither a Doc nor a string.
     pipes (Iterable[Callable[[Doc], Doc]]): The components to apply.
     receiver (multiprocessing.Connection): Pipe to receive text. Usually
         created by `multiprocessing.Pipe()`
@@ -2105,7 +2118,7 @@ def _apply_pipes(
     while True:
         try:
             texts = receiver.get()
-            docs = (make_doc(text) for text in texts)
+            docs = (ensure_doc(text) for text in texts)
             for pipe in pipes:
                 docs = pipe(docs)
             # Connection does not accept unpickable objects, so send list.

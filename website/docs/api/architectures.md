@@ -409,7 +409,7 @@ a single token vector given zero or more wordpiece vectors.
 >
 > ```ini
 > [model]
-> @architectures = "spacy.Tok2VecTransformer.v1"
+> @architectures = "spacy-transformers.Tok2VecTransformer.v1"
 > name = "albert-base-v2"
 > tokenizer_config = {"use_fast": false}
 > grad_factor = 1.0

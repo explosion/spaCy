@@ -232,15 +232,22 @@ following rich comparison attributes are available:
 >
 > # Matches tokens of length >= 10
 > pattern2 = [{"LENGTH": {">=": 10}}]
+>
+> # Match based on morph attributes
+> pattern3 = [{"MORPH": {"IS_SUBSET": ["Number=Sing", "Gender=Neut"]}}]
+> # "", "Number=Sing" and "Number=Sing|Gender=Neut" will match as subsets
+> # "Number=Plur|Gender=Neut" will not match
+> # "Number=Sing|Gender=Neut|Polite=Infm" will not match because it's a superset
 > ```
 
-| Attribute                  | Description                                                                                             |
-| -------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `IN`                       | Attribute value is member of a list. ~~Any~~                                                            |
-| `NOT_IN`                   | Attribute value is _not_ member of a list. ~~Any~~                                                      |
-| `ISSUBSET`                 | Attribute values (for `MORPH`) are a subset of a list. ~~Any~~                                          |
-| `ISSUPERSET`               | Attribute values (for `MORPH`) are a superset of a list. ~~Any~~                                        |
-| `==`, `>=`, `<=`, `>`, `<` | Attribute value is equal, greater or equal, smaller or equal, greater or smaller. ~~Union[int, float]~~ |
+| Attribute                  | Description                                                                                               |
+| -------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `IN`                       | Attribute value is member of a list. ~~Any~~                                                              |
+| `NOT_IN`                   | Attribute value is _not_ member of a list. ~~Any~~                                                        |
+| `IS_SUBSET`                | Attribute value (for `MORPH` or custom list attributes) is a subset of a list. ~~Any~~                    |
+| `IS_SUPERSET`              | Attribute value (for `MORPH` or custom list attributes) is a superset of a list. ~~Any~~                  |
+| `INTERSECTS`               | Attribute value (for `MORPH` or custom list attributes) has a non-empty intersection with a list. ~~Any~~ |
+| `==`, `>=`, `<=`, `>`, `<` | Attribute value is equal, greater or equal, smaller or equal, greater or smaller. ~~Union[int, float]~~   |
 
 #### Regular expressions {#regex new="2.1"}
 

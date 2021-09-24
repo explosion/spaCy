@@ -10,7 +10,7 @@ class EnglishLemmatizer(Lemmatizer):
         Check whether we're dealing with an uninflected paradigm, so we can
         avoid lemmatization entirely.
 
-        univ_pos (unicode / int): The token's universal part-of-speech tag.
+        univ_pos (str / int): The token's universal part-of-speech tag.
         morphology (dict): The token's morphological features following the
             Universal Dependencies scheme.
         """

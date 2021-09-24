@@ -61,11 +61,13 @@ shortcut for this and instantiate the component using its string name and
 > morphologizer = Morphologizer(nlp.vocab, model)
 > ```
 
-| Name    | Description                                                                                                          |
-| ------- | -------------------------------------------------------------------------------------------------------------------- |
-| `vocab` | The shared vocabulary. ~~Vocab~~                                                                                     |
-| `model` | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. ~~Model[List[Doc], List[Floats2d]]~~ |
-| `name`  | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~                  |
+| Name           | Description                                                                                                                                                                                                                                                            |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vocab`        | The shared vocabulary. ~~Vocab~~                                                                                                                                                                                                                                       |
+| `model`        | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                                                   |
+| `name`         | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~                                                                                                                                                                    |
+| _keyword-only_ |                                                                                                                                                                                                                                                                        |
+| `scorer`       | The scoring method. Defaults to [`Scorer.score_token_attr`](/api/scorer#score_token_attr) for the attributes `"pos"` and `"morph"` and [`Scorer.score_token_attr_per_feat`](/api/scorer#score_token_attr_per_feat) for the attribute `"morph"`. ~~Optional[Callable]~~ |
 
 ## Morphologizer.\_\_call\_\_ {#call tag="method"}
 

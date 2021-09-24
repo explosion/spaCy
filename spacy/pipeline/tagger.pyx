@@ -1,4 +1,5 @@
 # cython: infer_types=True, profile=True, binding=True
+from typing import Callable, Optional
 import numpy
 import srsly
 from thinc.api import Model, set_dropout_rate, SequenceCategoricalCrossentropy, Config
@@ -18,6 +19,7 @@ from ..parts_of_speech import X
 from ..errors import Errors, Warnings
 from ..scorer import Scorer
 from ..training import validate_examples, validate_get_examples
+from ..util import registry
 from .. import util
 
 
@@ -41,10 +43,10 @@ DEFAULT_TAGGER_MODEL = Config().from_str(default_model_config)["model"]
 @Language.factory(
     "tagger",
     assigns=["token.tag"],
-    default_config={"model": DEFAULT_TAGGER_MODEL},
+    default_config={"model": DEFAULT_TAGGER_MODEL, "scorer": {"@scorers": "spacy.tagger_scorer.v1"}},
     default_score_weights={"tag_acc": 1.0},
 )
-def make_tagger(nlp: Language, name: str, model: Model):
+def make_tagger(nlp: Language, name: str, model: Model, scorer: Optional[Callable]):
     """Construct a part-of-speech tagger component.
 
     model (Model[List[Doc], List[Floats2d]]): A model instance that predicts
@@ -52,7 +54,16 @@ def make_tagger(nlp: Language, name: str, model: Model):
         in size, and be normalized as probabilities (all scores between 0 and 1,
         with the rows summing to 1).
     """
-    return Tagger(nlp.vocab, model, name)
+    return Tagger(nlp.vocab, model, name, scorer=scorer)
+
+
+def tagger_score(examples, **kwargs):
+    return Scorer.score_token_attr(examples, "tag", **kwargs)
+
+
+@registry.scorers("spacy.tagger_scorer.v1")
+def make_tagger_scorer():
+    return tagger_score
 
 
 class Tagger(TrainablePipe):
@@ -60,13 +71,15 @@ class Tagger(TrainablePipe):
 
     DOCS: https://spacy.io/api/tagger
     """
-    def __init__(self, vocab, model, name="tagger"):
+    def __init__(self, vocab, model, name="tagger", *, scorer=tagger_score):
         """Initialize a part-of-speech tagger.
 
         vocab (Vocab): The shared vocabulary.
         model (thinc.api.Model): The Thinc Model powering the pipeline component.
         name (str): The component instance name, used to add entries to the
             losses during training.
+        scorer (Optional[Callable]): The scoring method. Defaults to
+            Scorer.score_token_attr for the attribute "tag".
 
         DOCS: https://spacy.io/api/tagger#init
         """
@@ -76,6 +89,7 @@ class Tagger(TrainablePipe):
         self._rehearsal_model = None
         cfg = {"labels": []}
         self.cfg = dict(sorted(cfg.items()))
+        self.scorer = scorer
 
     @property
     def labels(self):
@@ -289,15 +303,3 @@ class Tagger(TrainablePipe):
         self.cfg["labels"].append(label)
         self.vocab.strings.add(label)
         return 1
-
-    def score(self, examples, **kwargs):
-        """Score a batch of examples.
-
-        examples (Iterable[Example]): The examples to score.
-        RETURNS (Dict[str, Any]): The scores, produced by
-            Scorer.score_token_attr for the attributes "tag".
-
-        DOCS: https://spacy.io/api/tagger#score
-        """
-        validate_examples(examples, "Tagger.score")
-        return Scorer.score_token_attr(examples, "tag", **kwargs)

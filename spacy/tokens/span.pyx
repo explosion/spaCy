@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 cimport numpy as np
 from libc.math cimport sqrt
 
@@ -105,13 +103,18 @@ cdef class Span:
         if label not in doc.vocab.strings:
             raise ValueError(Errors.E084.format(label=label))
 
+        start_char = doc[start].idx if start < doc.length else len(doc.text)
+        if start == end:
+            end_char = start_char
+        else:
+            end_char = doc[end - 1].idx + len(doc[end - 1])
         self.c = SpanC(
             label=label,
             kb_id=kb_id,
             start=start,
             end=end,
-            start_char=doc[start].idx if start < doc.length else 0,
-            end_char=doc[end - 1].idx + len(doc[end - 1]) if end >= 1 else 0,
+            start_char=start_char,
+            end_char=end_char,
         )
         self._vector = vector
         self._vector_norm = vector_norm
@@ -740,7 +743,7 @@ cdef class Span:
         def __get__(self):
             return self.root.ent_id_
 
-        def __set__(self, unicode key):
+        def __set__(self, str key):
             raise NotImplementedError(Errors.E200.format(attr="ent_id_"))
 
     @property
@@ -761,7 +764,7 @@ cdef class Span:
         def __get__(self):
             return self.doc.vocab.strings[self.label]
 
-        def __set__(self, unicode label_):
+        def __set__(self, str label_):
             self.label = self.doc.vocab.strings.add(label_)
 
     property kb_id_:
@@ -769,7 +772,7 @@ cdef class Span:
         def __get__(self):
             return self.doc.vocab.strings[self.kb_id]
 
-        def __set__(self, unicode kb_id_):
+        def __set__(self, str kb_id_):
             self.kb_id = self.doc.vocab.strings.add(kb_id_)
 
 

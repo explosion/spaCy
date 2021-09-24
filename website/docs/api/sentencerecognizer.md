@@ -60,11 +60,13 @@ Create a new pipeline instance. In your application, you would normally use a
 shortcut for this and instantiate the component using its string name and
 [`nlp.add_pipe`](/api/language#add_pipe).
 
-| Name    | Description                                                                                                          |
-| ------- | -------------------------------------------------------------------------------------------------------------------- |
-| `vocab` | The shared vocabulary. ~~Vocab~~                                                                                     |
-| `model` | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. ~~Model[List[Doc], List[Floats2d]]~~ |
-| `name`  | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~                  |
+| Name           | Description                                                                                                                         |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `vocab`        | The shared vocabulary. ~~Vocab~~                                                                                                    |
+| `model`        | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. ~~Model[List[Doc], List[Floats2d]]~~                |
+| `name`         | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~                                 |
+| _keyword-only_ |                                                                                                                                     |
+| `scorer`       | The scoring method. Defaults to [`Scorer.score_spans`](/api/scorer#score_spans) for the attribute `"sents"`. ~~Optional[Callable]~~ |
 
 ## SentenceRecognizer.\_\_call\_\_ {#call tag="method"}
 
@@ -237,21 +239,6 @@ predicted scores.
 | `examples`  | The batch of examples. ~~Iterable[Example]~~                                |
 | `scores`    | Scores representing the model's predictions.                                |
 | **RETURNS** | The loss and the gradient, i.e. `(loss, gradient)`. ~~Tuple[float, float]~~ |
-
-## SentenceRecognizer.score {#score tag="method" new="3"}
-
-Score a batch of examples.
-
-> #### Example
->
-> ```python
-> scores = senter.score(examples)
-> ```
-
-| Name        | Description                                                                                                                                               |
-| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `examples`  | The examples to score. ~~Iterable[Example]~~                                                                                                              |
-| **RETURNS** | The scores, produced by [`Scorer.score_token_attr`](/api/scorer#score_token_attr) for the attributes `"pos"`, `"tag"` and `"lemma"`. ~~Dict[str, float]~~ |
 
 ## SentenceRecognizer.create_optimizer {#create_optimizer tag="method"}
 

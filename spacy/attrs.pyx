@@ -142,7 +142,7 @@ def intify_attrs(stringy_attrs, strings_map=None, _do_deprecated=False):
     for name, value in stringy_attrs.items():
         int_key = intify_attr(name)
         if int_key is not None:
-            if strings_map is not None and isinstance(value, basestring):
+            if strings_map is not None and isinstance(value, str):
                 if hasattr(strings_map, 'add'):
                     value = strings_map.add(value)
                 else:
