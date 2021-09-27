@@ -199,7 +199,7 @@ class Language:
 
         DOCS: https://spacy.io/api/language#meta
         """
-        spacy_version = util.get_model_version_range(about.__version__)
+        spacy_version = util.get_minor_version_range(about.__version__)
         if self.vocab.lang:
             self._meta.setdefault("lang", self.vocab.lang)
         else:
@@ -605,7 +605,7 @@ class Language:
         factory_name: str,
         name: Optional[str] = None,
         *,
-        config: Optional[Dict[str, Any]] = SimpleFrozenDict(),
+        config: Dict[str, Any] = SimpleFrozenDict(),
         raw_config: Optional[Config] = None,
         validate: bool = True,
     ) -> Callable[[Doc], Doc]:
@@ -615,8 +615,8 @@ class Language:
         factory_name (str): Name of component factory.
         name (Optional[str]): Optional name to assign to component instance.
             Defaults to factory name if not set.
-        config (Optional[Dict[str, Any]]): Config parameters to use for this
-            component. Will be merged with default config, if available.
+        config (Dict[str, Any]): Config parameters to use for this component.
+            Will be merged with default config, if available.
         raw_config (Optional[Config]): Internals: the non-interpolated config.
         validate (bool): Whether to validate the component config against the
             arguments and types expected by the factory.
@@ -640,7 +640,6 @@ class Language:
             )
             raise ValueError(err)
         pipe_meta = self.get_factory_meta(factory_name)
-        config = config or {}
         # This is unideal, but the alternative would mean you always need to
         # specify the full config settings, which is not really viable.
         if pipe_meta.default_config:
@@ -722,7 +721,7 @@ class Language:
         first: Optional[bool] = None,
         last: Optional[bool] = None,
         source: Optional["Language"] = None,
-        config: Optional[Dict[str, Any]] = SimpleFrozenDict(),
+        config: Dict[str, Any] = SimpleFrozenDict(),
         raw_config: Optional[Config] = None,
         validate: bool = True,
     ) -> Callable[[Doc], Doc]:
@@ -743,8 +742,8 @@ class Language:
         last (bool): If True, insert component last in the pipeline.
         source (Language): Optional loaded nlp object to copy the pipeline
             component from.
-        config (Optional[Dict[str, Any]]): Config parameters to use for this
-            component. Will be merged with default config, if available.
+        config (Dict[str, Any]): Config parameters to use for this component.
+            Will be merged with default config, if available.
         raw_config (Optional[Config]): Internals: the non-interpolated config.
         validate (bool): Whether to validate the component config against the
             arguments and types expected by the factory.

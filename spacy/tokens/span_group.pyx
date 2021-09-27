@@ -1,6 +1,8 @@
 import weakref
 import struct
 import srsly
+
+from spacy.errors import Errors
 from .span cimport Span
 from libc.stdint cimport uint64_t, uint32_t, int32_t
 
@@ -58,7 +60,11 @@ cdef class SpanGroup:
 
         DOCS: https://spacy.io/api/spangroup#doc
         """
-        return self._doc_ref()
+        doc = self._doc_ref()
+        if doc is None:
+            # referent has been garbage collected
+            raise RuntimeError(Errors.E865)
+        return doc
 
     @property
     def has_overlap(self):

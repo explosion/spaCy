@@ -291,7 +291,7 @@ files you need and not the whole repo.
 | Name          | Description                                                                                                                                                                                          |
 | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `dest`        | The destination path to save the downloaded asset to (relative to the project directory), including the file name.                                                                                   |
-| `git`         | `repo`: The URL of the repo to download from.<br />`path`: Path of the file or directory to download, relative to the repo root.<br />`branch`: The branch to download from. Defaults to `"master"`. |
+| `git`         | `repo`: The URL of the repo to download from.<br />`path`: Path of the file or directory to download, relative to the repo root. "" specifies the root directory.<br />`branch`: The branch to download from. Defaults to `"master"`. |
 | `checksum`    | Optional checksum of the file. If provided, it will be used to verify that the file matches and downloads will be skipped if a local file with the same checksum already exists.                     |
 | `description` | Optional asset description, used in [auto-generated docs](#custom-docs).                                                                                                                             |
 
@@ -758,16 +758,6 @@ workflows, but only one can be tracked by DVC.
 
 ### Prodigy {#prodigy} <IntegrationLogo name="prodigy" width={100} height="auto" align="right" />
 
-<Infobox title="This section is still under construction" emoji="🚧" variant="warning">
-
-The Prodigy integration will require a nightly version of Prodigy that supports
-spaCy v3+. You can already use annotations created with Prodigy in spaCy v3 by
-exporting your data with
-[`data-to-spacy`](https://prodi.gy/docs/recipes#data-to-spacy) and running
-[`spacy convert`](/api/cli#convert) to convert it to the binary format.
-
-</Infobox>
-
 [Prodigy](https://prodi.gy) is a modern annotation tool for creating training
 data for machine learning models, developed by us. It integrates with spaCy
 out-of-the-box and provides many different
@@ -776,17 +766,23 @@ with and without a model in the loop. If Prodigy is installed in your project,
 you can start the annotation server from your `project.yml` for a tight feedback
 loop between data development and training.
 
-The following example command starts the Prodigy app using the
-[`ner.correct`](https://prodi.gy/docs/recipes#ner-correct) recipe and streams in
-suggestions for the given entity labels produced by a pretrained model. You can
-then correct the suggestions manually in the UI. After you save and exit the
-server, the full dataset is exported in spaCy's format and split into a training
-and evaluation set.
+<Infobox variant="warning">
+
+This integration requires [Prodigy v1.11](https://prodi.gy/docs/changelog#v1.11)
+or higher. If you're using an older version of Prodigy, you can still use your
+annotations in spaCy v3 by exporting your data with
+[`data-to-spacy`](https://prodi.gy/docs/recipes#data-to-spacy) and running
+[`spacy convert`](/api/cli#convert) to convert it to the binary format.
+
+</Infobox>
+
+The following example shows a workflow for merging and exporting NER annotations
+collected with Prodigy and training a spaCy pipeline:
 
 > #### Example usage
 >
 > ```cli
-> $ python -m spacy project run annotate
+> $ python -m spacy project run all
 > ```
 
 <!-- prettier-ignore -->
@@ -794,36 +790,71 @@ and evaluation set.
 ### project.yml
 vars:
   prodigy:
-    dataset: 'ner_articles'
-    labels: 'PERSON,ORG,PRODUCT'
-    model: 'en_core_web_md'
+    train_dataset: "fashion_brands_training"
+    eval_dataset: "fashion_brands_eval"
+
+workflows:
+  all:
+    - data-to-spacy
+    - train_spacy
 
 commands:
-  - name: annotate
-  - script:
-      - 'python -m prodigy ner.correct ${vars.prodigy.dataset} ${vars.prodigy.model} ./assets/raw_data.jsonl --labels ${vars.prodigy.labels}'
-      - 'python -m prodigy data-to-spacy ./corpus/train.json ./corpus/eval.json --ner ${vars.prodigy.dataset}'
-      - 'python -m spacy convert ./corpus/train.json ./corpus/train.spacy'
-      - 'python -m spacy convert ./corpus/eval.json ./corpus/eval.spacy'
-  - deps:
-      - 'assets/raw_data.jsonl'
-  - outputs:
-      - 'corpus/train.spacy'
-      - 'corpus/eval.spacy'
+  - name: "data-to-spacy"
+    help: "Merge your annotations and create data in spaCy's binary format"
+    script:
+      - "python -m prodigy data-to-spacy corpus/ --ner ${vars.prodigy.train_dataset},eval:${vars.prodigy.eval_dataset}"
+    outputs:
+      - "corpus/train.spacy"
+      - "corpus/dev.spacy"
+  - name: "train_spacy"
+    help: "Train a named entity recognition model with spaCy"
+    script:
+      - "python -m spacy train configs/config.cfg --output training/ --paths.train corpus/train.spacy --paths.dev corpus/dev.spacy"
+    deps:
+      - "corpus/train.spacy"
+      - "corpus/dev.spacy"
+    outputs:
+      - "training/model-best"
 ```
 
-You can use the same approach for other types of projects and annotation
+> #### Example train curve output
+>
+> [![Screenshot of train curve terminal output](../images/prodigy_train_curve.jpg)](https://prodi.gy/docs/recipes#train-curve)
+
+The [`train-curve`](https://prodi.gy/docs/recipes#train-curve) recipe is another
+cool workflow you can include in your project. It will run the training with
+different portions of the data, e.g. 25%, 50%, 75% and 100%. As a rule of thumb,
+if accuracy increases in the last segment, this could indicate that collecting
+more annotations of the same type might improve the model further.
+
+<!-- prettier-ignore -->
+```yaml
+### project.yml (excerpt)
+- name: "train_curve"
+    help: "Train the model with Prodigy by using different portions of training examples to evaluate if more annotations can potentially improve the performance"
+    script:
+      - "python -m prodigy train-curve --ner ${vars.prodigy.train_dataset},eval:${vars.prodigy.eval_dataset} --config configs/${vars.config} --show-plot"
+```
+
+You can use the same approach for various types of projects and annotation
 workflows, including
-[text classification](https://prodi.gy/docs/recipes#textcat),
-[dependency parsing](https://prodi.gy/docs/recipes#dep),
+[named entity recognition](https://prodi.gy/docs/named-entity-recognition),
+[span categorization](https://prodi.gy/docs/span-categorization),
+[text classification](https://prodi.gy/docs/text-classification),
+[dependency parsing](https://prodi.gy/docs/dependencies-relations),
 [part-of-speech tagging](https://prodi.gy/docs/recipes#pos) or fully
-[custom recipes](https://prodi.gy/docs/custom-recipes) – for instance, an A/B
-evaluation workflow that lets you compare two different models and their
-results.
+[custom recipes](https://prodi.gy/docs/custom-recipes). You can also use spaCy
+project templates to quickly start the annotation server to collect more
+annotations and add them to your Prodigy dataset.
 
-<!-- TODO: <Project id="integrations/prodigy">
+<Project id="integrations/prodigy">
 
-</Project> -->
+Get started with spaCy and Prodigy using our project template. It includes
+commands to create a merged training corpus from your Prodigy annotations,
+training and packaging a spaCy pipeline and analyzing if more annotations may
+improve performance.
+
+</Project>
 
 ---
 

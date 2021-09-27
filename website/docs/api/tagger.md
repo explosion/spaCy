@@ -8,6 +8,21 @@ api_string_name: tagger
 api_trainable: true
 ---
 
+A trainable pipeline component to predict part-of-speech tags for any
+part-of-speech tag set.
+
+In the pre-trained pipelines, the tag schemas vary by language; see the
+[individual model pages](/models) for details.
+
+## Assigned Attributes {#assigned-attributes}
+
+Predictions are assigned to `Token.tag`.
+
+| Location     | Value                              |
+| ------------ | ---------------------------------- |
+| `Token.tag`  | The part of speech (hash). ~~int~~ |
+| `Token.tag_` | The part of speech. ~~str~~        |
+
 ## Config and implementation {#config}
 
 The default config is defined by the pipeline component factory and describes

@@ -15,6 +15,16 @@ coarse-grained POS tags following the Universal Dependencies
 [FEATS](https://universaldependencies.org/format.html#morphological-annotation)
 annotation guidelines.
 
+## Assigned Attributes {#assigned-attributes}
+
+Predictions are saved to `Token.morph` and `Token.pos`.
+
+| Location      | Value                                     |
+| ------------- | ----------------------------------------- |
+| `Token.pos`   | The UPOS part of speech (hash). ~~int~~   |
+| `Token.pos_`  | The UPOS part of speech. ~~str~~          |
+| `Token.morph` | Morphological features. ~~MorphAnalysis~~ |
+
 ## Config and implementation {#config}
 
 The default config is defined by the pipeline component factory and describes
