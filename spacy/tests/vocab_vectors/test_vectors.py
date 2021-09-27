@@ -417,7 +417,7 @@ def test_floret_vectors(floret_vectors_vec_str, floret_vectors_hashvec_str):
         p = tmpdir / "test.hashvec"
         with open(p, "w") as fileh:
             fileh.write(floret_vectors_hashvec_str)
-        convert_vectors(nlp, p, truncate=0, prune=-1, floret_vectors=True)
+        convert_vectors(nlp, p, truncate=0, prune=-1, vectors_mode="floret")
         p = tmpdir / "test.vec"
         with open(p, "w") as fileh:
             fileh.write(floret_vectors_vec_str)

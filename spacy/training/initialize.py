@@ -205,7 +205,7 @@ def convert_vectors(
     truncate: int,
     prune: int,
     name: Optional[str] = None,
-    floret_vectors: bool = False,
+    vectors_mode: str = VectorsMode.default,
 ) -> None:
     vectors_loc = ensure_path(vectors_loc)
     if vectors_loc and vectors_loc.parts[-1].endswith(".npz"):
@@ -219,25 +219,27 @@ def convert_vectors(
         if vectors_loc:
             logger.info(f"Reading vectors from {vectors_loc}")
             vectors_data, vector_keys, floret_settings = read_vectors(
-                vectors_loc, truncate, floret_vectors=floret_vectors
+                vectors_loc,
+                truncate,
+                vectors_mode=vectors_mode,
             )
             logger.info(f"Loaded vectors from {vectors_loc}")
         else:
             vectors_data, vector_keys = (None, None)
-        if vector_keys is not None and not floret_vectors:
+        if vector_keys is not None and vectors_mode != VectorsMode.floret:
             for word in vector_keys:
                 if word not in nlp.vocab:
                     nlp.vocab[word]
         if vectors_data is not None:
-            if not floret_vectors:
-                nlp.vocab.vectors = Vectors(
-                    strings=nlp.vocab.strings, data=vectors_data, keys=vector_keys
-                )
-            else:
+            if vectors_mode == VectorsMode.floret:
                 nlp.vocab.vectors = Vectors(
                     strings=nlp.vocab.strings,
                     data=vectors_data,
                     **floret_settings,
+                )
+            else:
+                nlp.vocab.vectors = Vectors(
+                    strings=nlp.vocab.strings, data=vectors_data, keys=vector_keys
                 )
     if name is None:
         # TODO: Is this correct? Does this matter?
@@ -250,13 +252,13 @@ def convert_vectors(
 
 
 def read_vectors(
-    vectors_loc: Path, truncate_vectors: int, *, floret_vectors: bool = False
+    vectors_loc: Path, truncate_vectors: int, *, vectors_mode: str = VectorsMode.default
 ):
     f = ensure_shape(vectors_loc)
     header_parts = next(f).split()
     shape = tuple(int(size) for size in header_parts[:2])
     floret_settings = {}
-    if floret_vectors:
+    if vectors_mode == VectorsMode.floret:
         if len(header_parts) != 8:
             raise ValueError(
                 "Invalid header for floret vectors. "
