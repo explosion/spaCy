@@ -657,7 +657,9 @@ class Errors:
             "{nO} - cannot add any more labels.")
     E923 = ("It looks like there is no proper sample data to initialize the "
             "Model of component '{name}'. To check your input data paths and "
-            "annotation, run: python -m spacy debug data config.cfg")
+            "annotation, run: python -m spacy debug data config.cfg "
+            "and include the same config override values you would specify "
+            "for the 'spacy train' command.")
     E924 = ("The '{name}' component does not seem to be initialized properly. "
             "This is likely a bug in spaCy, so feel free to open an issue: "
             "https://github.com/explosion/spaCy/issues")
@@ -792,7 +794,7 @@ class Errors:
             "to token boundaries.")
     E982 = ("The `Token.ent_iob` attribute should be an integer indexing "
             "into {values}, but found {value}.")
-    E983 = ("Invalid key for '{dict}': {key}. Available keys: "
+    E983 = ("Invalid key(s) for '{dict}': {key}. Available keys: "
             "{keys}")
     E984 = ("Invalid component config for '{name}': component block needs either "
             "a key `factory` specifying the registered function used to "
