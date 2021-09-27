@@ -318,7 +318,6 @@ def ensure_shape(vectors_loc):
     lines = open_file(vectors_loc)
     first_line = next(lines)
     try:
-        parts = first_line.split()
         shape = tuple(int(size) for size in first_line.split()[:2])
     except ValueError:
         shape = None
