@@ -157,7 +157,7 @@ def load_vectors_into_model(
 
     if (
         len(vectors_nlp.vocab.vectors.keys()) == 0
-        and not vectors_nlp.vocab.vectors.mode == VectorsMode.floret
+        and vectors_nlp.vocab.vectors.mode != VectorsMode.floret
     ) or (
         vectors_nlp.vocab.vectors.data.shape[0] == 0
         and vectors_nlp.vocab.vectors.mode == VectorsMode.floret
@@ -247,7 +247,7 @@ def convert_vectors(
     else:
         nlp.vocab.vectors.name = name
     nlp.meta["vectors"]["name"] = nlp.vocab.vectors.name
-    if prune >= 1 and not floret_vectors:
+    if prune >= 1 and vectors_mode != VectorsMode.floret:
         nlp.vocab.prune_vectors(prune)
 
 
