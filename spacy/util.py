@@ -20,8 +20,10 @@ import sys
 import warnings
 from packaging.specifiers import SpecifierSet, InvalidSpecifier
 from packaging.version import Version, InvalidVersion
+from packaging.requirements import Requirement
 import subprocess
 from contextlib import contextmanager
+from collections import defaultdict
 import tempfile
 import shutil
 import shlex
@@ -33,11 +35,6 @@ try:
 except ImportError:
     cupy = None
 
-try:  # Python 3.8
-    import importlib.metadata as importlib_metadata
-except ImportError:
-    from catalogue import _importlib_metadata as importlib_metadata
-
 # These are functions that were previously (v2.x) available from spacy.util
 # and have since moved to Thinc. We're importing them here so people's code
 # doesn't break, but they should always be imported from Thinc from now on,
@@ -46,7 +43,7 @@ from thinc.api import fix_random_seed, compounding, decaying  # noqa: F401
 
 
 from .symbols import ORTH
-from .compat import cupy, CudaStream, is_windows
+from .compat import cupy, CudaStream, is_windows, importlib_metadata
 from .errors import Errors, Warnings, OLD_MODEL_SHORTCUTS
 from . import about
 
@@ -143,6 +140,32 @@ class registry(thinc.registry):
                 )
             ) from None
         return func
+
+    @classmethod
+    def find(cls, registry_name: str, func_name: str) -> Callable:
+        """Get info about a registered function from the registry."""
+        # We're overwriting this classmethod so we're able to provide more
+        # specific error messages and implement a fallback to spacy-legacy.
+        if not hasattr(cls, registry_name):
+            names = ", ".join(cls.get_registry_names()) or "none"
+            raise RegistryError(Errors.E892.format(name=registry_name, available=names))
+        reg = getattr(cls, registry_name)
+        try:
+            func_info = reg.find(func_name)
+        except RegistryError:
+            if func_name.startswith("spacy."):
+                legacy_name = func_name.replace("spacy.", "spacy-legacy.")
+                try:
+                    return reg.find(legacy_name)
+                except catalogue.RegistryError:
+                    pass
+            available = ", ".join(sorted(reg.get_all().keys())) or "none"
+            raise RegistryError(
+                Errors.E893.format(
+                    name=func_name, reg_name=registry_name, available=available
+                )
+            ) from None
+        return func_info
 
     @classmethod
     def has(cls, registry_name: str, func_name: str) -> bool:
@@ -640,13 +663,18 @@ def is_unconstrained_version(
     return True
 
 
-def get_model_version_range(spacy_version: str) -> str:
-    """Generate a version range like >=1.2.3,<1.3.0 based on a given spaCy
-    version. Models are always compatible across patch versions but not
-    across minor or major versions.
+def split_requirement(requirement: str) -> Tuple[str, str]:
+    """Split a requirement like spacy>=1.2.3 into ("spacy", ">=1.2.3")."""
+    req = Requirement(requirement)
+    return (req.name, str(req.specifier))
+
+
+def get_minor_version_range(version: str) -> str:
+    """Generate a version range like >=1.2.3,<1.3.0 based on a given version
+    (e.g. of spaCy).
     """
-    release = Version(spacy_version).release
-    return f">={spacy_version},<{release[0]}.{release[1] + 1}.0"
+    release = Version(version).release
+    return f">={version},<{release[0]}.{release[1] + 1}.0"
 
 
 def get_model_lower_version(constraint: str) -> Optional[str]:
@@ -734,7 +762,7 @@ def load_meta(path: Union[str, Path]) -> Dict[str, Any]:
                 model=f"{meta['lang']}_{meta['name']}",
                 model_version=meta["version"],
                 version=meta["spacy_version"],
-                example=get_model_version_range(about.__version__),
+                example=get_minor_version_range(about.__version__),
             )
             warnings.warn(warn_msg)
     return meta
@@ -1550,3 +1578,19 @@ def to_ternary_int(val) -> int:
         return 0
     else:
         return -1
+
+
+# The following implementation of packages_distributions() is adapted from
+# importlib_metadata, which is distributed under the Apache 2.0 License.
+# Copyright (c) 2017-2019 Jason R. Coombs, Barry Warsaw
+# See licenses/3rd_party_licenses.txt
+def packages_distributions() -> Dict[str, List[str]]:
+    """Return a mapping of top-level packages to their distributions. We're
+    inlining this helper from the importlib_metadata "backport" here, since
+    it's not available in the builtin importlib.metadata.
+    """
+    pkg_to_dist = defaultdict(list)
+    for dist in importlib_metadata.distributions():
+        for pkg in (dist.read_text("top_level.txt") or "").split():
+            pkg_to_dist[pkg].append(dist.metadata["Name"])
+    return dict(pkg_to_dist)

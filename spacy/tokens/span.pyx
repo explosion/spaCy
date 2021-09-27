@@ -87,9 +87,10 @@ cdef class Span:
         start (int): The index of the first token of the span.
         end (int): The index of the first token after the span.
         label (uint64): A label to attach to the Span, e.g. for named entities.
-        kb_id (uint64): An identifier from a Knowledge Base to capture the meaning of a named entity.
         vector (ndarray[ndim=1, dtype='float32']): A meaning representation
             of the span.
+        vector_norm (float): The L2 norm of the span's vector representation.
+        kb_id (uint64): An identifier from a Knowledge Base to capture the meaning of a named entity.
 
         DOCS: https://spacy.io/api/span#init
         """
@@ -216,10 +217,12 @@ cdef class Span:
         return Underscore(Underscore.span_extensions, self,
                           start=self.c.start_char, end=self.c.end_char)
 
-    def as_doc(self, *, bint copy_user_data=False):
+    def as_doc(self, *, bint copy_user_data=False, array_head=None, array=None):
         """Create a `Doc` object with a copy of the `Span`'s data.
 
         copy_user_data (bool): Whether or not to copy the original doc's user data.
+        array_head (tuple): `Doc` array attrs, can be passed in to speed up computation.
+        array (ndarray): `Doc` as array, can be passed in to speed up computation.
         RETURNS (Doc): The `Doc` copy of the span.
 
         DOCS: https://spacy.io/api/span#as_doc
@@ -227,8 +230,10 @@ cdef class Span:
         words = [t.text for t in self]
         spaces = [bool(t.whitespace_) for t in self]
         cdef Doc doc = Doc(self.doc.vocab, words=words, spaces=spaces)
-        array_head = self.doc._get_array_attrs()
-        array = self.doc.to_array(array_head)
+        if array_head is None:
+            array_head = self.doc._get_array_attrs()
+        if array is None:
+            array = self.doc.to_array(array_head)
         array = array[self.start : self.end]
         self._fix_dep_copy(array_head, array)
         # Fix initial IOB so the entities are valid for doc.ents below.
@@ -467,7 +472,11 @@ cdef class Span:
         if "vector" in self.doc.user_span_hooks:
             return self.doc.user_span_hooks["vector"](self)
         if self._vector is None:
-            self._vector = sum(t.vector for t in self) / len(self)
+            if not len(self):
+                xp = get_array_module(self.vocab.vectors.data)
+                self._vector = xp.zeros((self.vocab.vectors_length,), dtype="f")
+            else:
+                self._vector = sum(t.vector for t in self) / len(self)
         return self._vector
 
     @property
@@ -480,10 +489,10 @@ cdef class Span:
         """
         if "vector_norm" in self.doc.user_span_hooks:
             return self.doc.user_span_hooks["vector"](self)
-        vector = self.vector
-        xp = get_array_module(vector)
         if self._vector_norm is None:
+            vector = self.vector
             total = (vector*vector).sum()
+            xp = get_array_module(vector)
             self._vector_norm = xp.sqrt(total) if total != 0. else 0.
         return self._vector_norm
 

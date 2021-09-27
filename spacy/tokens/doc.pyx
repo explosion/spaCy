@@ -30,6 +30,7 @@ from ..compat import copy_reg, pickle
 from ..errors import Errors, Warnings
 from ..morphology import Morphology
 from .. import util
+from .. import parts_of_speech
 from .underscore import Underscore, get_ext_args
 from ._retokenize import Retokenizer
 from ._serialize import ALL_ATTRS as DOCBIN_ALL_ATTRS
@@ -285,6 +286,10 @@ cdef class Doc:
                     sent_starts[i] = -1
                 elif sent_starts[i] is None or sent_starts[i] not in [-1, 0, 1]:
                     sent_starts[i] = 0
+        if pos is not None:
+            for pp in set(pos):
+                if pp not in parts_of_speech.IDS:
+                    raise ValueError(Errors.E1021.format(pp=pp))
         ent_iobs = None
         ent_types = None
         if ents is not None:

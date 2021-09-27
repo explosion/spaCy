@@ -95,7 +95,8 @@ def init_nlp(config: Config, *, use_gpu: int = -1) -> "Language":
                 logger.warning(Warnings.W087.format(name=name, listener=listener))
             # We always check this regardless, in case user freezes tok2vec
             if listener not in frozen_components and name in frozen_components:
-                logger.warning(Warnings.W086.format(name=name, listener=listener))
+                if name not in T["annotating_components"]:
+                    logger.warning(Warnings.W086.format(name=name, listener=listener))
     return nlp
 
 

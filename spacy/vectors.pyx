@@ -323,7 +323,7 @@ cdef class Vectors:
         """
         if self.mode == Mode.floret:
             raise ValueError(
-                Errors.E865.format(
+                Errors.E858.format(
                     mode=self.mode,
                     alternative="Use Vectors[key] instead.",
                 )
@@ -380,7 +380,7 @@ cdef class Vectors:
         """
         if self.mode != Mode.floret:
             raise ValueError(
-                Errors.E865.format(
+                Errors.E858.format(
                     mode=self.mode,
                     alternative="Use Vectors[key] or Vectors.find() instead.",
                 )
@@ -466,7 +466,7 @@ cdef class Vectors:
             tuple.
         """
         if self.mode == Mode.floret:
-            raise ValueError(Errors.E865.format(
+            raise ValueError(Errors.E858.format(
                 mode=self.mode,
                 alternative="",
             ))

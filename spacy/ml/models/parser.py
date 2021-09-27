@@ -56,7 +56,7 @@ def build_tb_parser_model(
         non-linearity if use_upper=False.
     use_upper (bool): Whether to use an additional hidden layer after the state
         vector in order to predict the action scores. It is recommended to set
-        this to False for large pretrained models such as transformers, and False
+        this to False for large pretrained models such as transformers, and True
         for smaller networks. The upper layer is computed on CPU, which becomes
         a bottleneck on larger GPU-based models, where it's also less necessary.
     nO (int or None): The number of actions the model will predict between.

@@ -3,7 +3,6 @@ from typing import List
 from collections import defaultdict
 from itertools import product
 
-import numpy
 import warnings
 
 from .matcher cimport Matcher
@@ -122,9 +121,7 @@ cdef class DependencyMatcher:
                     raise ValueError(Errors.E099.format(key=key))
                 visited_nodes[relation["RIGHT_ID"]] = True
             else:
-                required_keys = set(
-                    ("RIGHT_ID", "RIGHT_ATTRS", "REL_OP", "LEFT_ID")
-                )
+                required_keys = {"RIGHT_ID", "RIGHT_ATTRS", "REL_OP", "LEFT_ID"}
                 relation_keys = set(relation.keys())
                 missing = required_keys - relation_keys
                 if missing:
@@ -179,28 +176,22 @@ cdef class DependencyMatcher:
         self._callbacks[key] = on_match
 
         # Add 'RIGHT_ATTRS' to self._patterns[key]
-        _patterns = []
-        for pattern in patterns:
-            token_patterns = []
-            for i in range(len(pattern)):
-                token_pattern = [pattern[i]["RIGHT_ATTRS"]]
-                token_patterns.append(token_pattern)
-            _patterns.append(token_patterns)
+        _patterns = [[[pat["RIGHT_ATTRS"]] for pat in pattern] for pattern in patterns]
         self._patterns[key].extend(_patterns)
 
         # Add each node pattern of all the input patterns individually to the
         # matcher. This enables only a single instance of Matcher to be used.
         # Multiple adds are required to track each node pattern.
         tokens_to_key_list = []
-        for i in range(len(_patterns)):
+        for i, current_patterns in enumerate(_patterns):
 
             # Preallocate list space
-            tokens_to_key = [None]*len(_patterns[i])
+            tokens_to_key = [None] * len(current_patterns)
 
             # TODO: Better ways to hash edges in pattern?
-            for j in range(len(_patterns[i])):
+            for j, _pattern in enumerate(current_patterns):
                 k = self._get_matcher_key(key, i, j)
-                self._matcher.add(k, [_patterns[i][j]])
+                self._matcher.add(k, [_pattern])
                 tokens_to_key[j] = k
 
             tokens_to_key_list.append(tokens_to_key)
@@ -337,7 +328,7 @@ cdef class DependencyMatcher:
         # position of the matched tokens
         for candidate_match in product(*all_positions):
 
-            # A potential match is a valid match if all relationhips between the
+            # A potential match is a valid match if all relationships between the
             # matched tokens are satisfied.
             is_valid = True
             for left_idx in range(len(candidate_match)):
@@ -424,18 +415,10 @@ cdef class DependencyMatcher:
         return []
 
     def _right_sib(self, doc, node):
-        candidate_children = []
-        for child in list(doc[node].head.children):
-            if child.i > node:
-                candidate_children.append(doc[child.i])
-        return candidate_children
+        return [doc[child.i] for child in doc[node].head.children if child.i > node]
 
     def _left_sib(self, doc, node):
-        candidate_children = []
-        for child in list(doc[node].head.children):
-            if child.i < node:
-                candidate_children.append(doc[child.i])
-        return candidate_children
+        return [doc[child.i] for child in doc[node].head.children if child.i < node]
 
     def _normalize_key(self, key):
         if isinstance(key, str):

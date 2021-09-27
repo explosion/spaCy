@@ -38,11 +38,20 @@ attributes. We also calculate an alignment between the word-piece tokens and the
 spaCy tokenization, so that we can use the last hidden states to set the
 `Doc.tensor` attribute. When multiple word-piece tokens align to the same spaCy
 token, the spaCy token receives the sum of their values. To access the values,
-you can use the custom [`Doc._.trf_data`](#custom-attributes) attribute. The
+you can use the custom [`Doc._.trf_data`](#assigned-attributes) attribute. The
 package also adds the function registries [`@span_getters`](#span_getters) and
 [`@annotation_setters`](#annotation_setters) with several built-in registered
 functions. For more details, see the
 [usage documentation](/usage/embeddings-transformers).
+
+## Assigned Attributes {#assigned-attributes}
+
+The component sets the following
+[custom extension attribute](/usage/processing-pipeline#custom-components-attributes):
+
+| Location         | Value                                                                    |
+| ---------------- | ------------------------------------------------------------------------ |
+| `Doc._.trf_data` | Transformer tokens and outputs for the `Doc` object. ~~TransformerData~~ |
 
 ## Config and implementation {#config}
 
@@ -98,7 +107,7 @@ https://github.com/explosion/spacy-transformers/blob/master/spacy_transformers/p
 Construct a `Transformer` component. One or more subsequent spaCy components can
 use the transformer outputs as features in its model, with gradients
 backpropagated to the single shared weights. The activations from the
-transformer are saved in the [`Doc._.trf_data`](#custom-attributes) extension
+transformer are saved in the [`Doc._.trf_data`](#assigned-attributes) extension
 attribute. You can also provide a callback to set additional annotations. In
 your application, you would normally use a shortcut for this and instantiate the
 component using its string name and [`nlp.add_pipe`](/api/language#create_pipe).
@@ -205,7 +214,7 @@ modifying them.
 
 Assign the extracted features to the `Doc` objects. By default, the
 [`TransformerData`](/api/transformer#transformerdata) object is written to the
-[`Doc._.trf_data`](#custom-attributes) attribute. Your `set_extra_annotations`
+[`Doc._.trf_data`](#assigned-attributes) attribute. Your `set_extra_annotations`
 callback is then called, if provided.
 
 > #### Example
@@ -383,7 +392,7 @@ are wrapped into the
 [FullTransformerBatch](/api/transformer#fulltransformerbatch) object. The
 `FullTransformerBatch` then splits out the per-document data, which is handled
 by this class. Instances of this class are typically assigned to the
-[`Doc._.trf_data`](/api/transformer#custom-attributes) extension attribute.
+[`Doc._.trf_data`](/api/transformer#assigned-attributes) extension attribute.
 
 | Name      | Description                                                                                                                                                                                                                                                                                                                                               |
 | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -549,12 +558,3 @@ The following built-in functions are available:
 | Name                                           | Description                           |
 | ---------------------------------------------- | ------------------------------------- |
 | `spacy-transformers.null_annotation_setter.v1` | Don't set any additional annotations. |
-
-## Custom attributes {#custom-attributes}
-
-The component sets the following
-[custom extension attributes](/usage/processing-pipeline#custom-components-attributes):
-
-| Name             | Description                                                              |
-| ---------------- | ------------------------------------------------------------------------ |
-| `Doc._.trf_data` | Transformer tokens and outputs for the `Doc` object. ~~TransformerData~~ |
