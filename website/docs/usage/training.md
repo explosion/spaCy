@@ -6,6 +6,7 @@ menu:
   - ['Introduction', 'basics']
   - ['Quickstart', 'quickstart']
   - ['Config System', 'config']
+  - ['Training Data', 'training-data']
   - ['Custom Training', 'config-custom']
   - ['Custom Functions', 'custom-functions']
   - ['Initialization', 'initialization']
@@ -355,6 +356,59 @@ that reference this variable.
 
 </Infobox>
 
+## Preparing Training Data {#training-data}
+
+Training data for NLP projects comes in many different formats. For some common
+formats such as CoNLL, spaCy provides [converters](/api/cli#convert) you can use
+from the command line. In other cases you'll have to prepare the training data
+yourself.
+
+When converting training data for use in spaCy, the main thing is to create
+[`Doc`](/api/doc) objects just like the results you want as output from the
+pipeline. For example, if you're creating an NER pipeline, loading your
+annotations and setting them as the `.ents` property on a `Doc` is all you need
+to worry about. On disk the annotations will be saved as a
+[`DocBin`](/api/docbin) in the
+[`.spacy` format](/api/data-formats#binary-training), but the details of that
+are handled automatically.
+
+Here's an example of creating a `.spacy` file from some NER annotations.
+
+```python
+### preprocess.py
+import spacy
+from spacy.tokens import DocBin
+
+nlp = spacy.blank("en")
+training_data = [
+  ("Tokyo Tower is 333m tall.", [(0, 11, "BUILDING")]),
+]
+# the DocBin will store the example documents
+db = DocBin()
+for text, annotations in training_data:
+    doc = nlp(text)
+    ents = []
+    for start, end, label in annotations:
+        span = doc.char_span(start, end, label=label)
+        ents.append(span)
+    doc.ents = ents
+    db.add(doc)
+db.to_disk("./train.spacy")
+```
+
+For more examples of how to convert training data from a wide variety of formats
+for use with spaCy, look at the preprocessing steps in the
+[tutorial projects](https://github.com/explosion/projects/tree/v3/tutorials).
+
+<Accordion title="What about the spaCy JSON format?" id="json-annotations" spaced>
+
+In spaCy v2, the recommended way to store training data was in
+[a particular JSON format](/api/data-formats#json-input), but in v3 this format
+is deprecated. It's fine as a readable storage format, but there's no need to
+convert your data to JSON before creating a `.spacy` file.
+
+</Accordion>
+
 ## Customizing the pipeline and training {#config-custom}
 
 ### Defining pipeline components {#config-components}
@@ -426,7 +480,10 @@ as-is. They are also excluded when calling
 > still impact your model's performance – for instance, a sentence boundary
 > detector can impact what the parser or entity recognizer considers a valid
 > parse. So the evaluation results should always reflect what your pipeline will
-> produce at runtime.
+> produce at runtime. If you want a frozen component to run (without updating)
+> during training as well, so that downstream components can use its
+> **predictions**, you can add it to the list of
+> [`annotating_components`](/usage/training#annotating-components).
 
 ```ini
 [nlp]
@@ -512,6 +569,10 @@ source = "en_core_web_sm"
 frozen_components = ["ner"]
 annotating_components = ["sentencizer", "ner"]
 ```
+
+Similarly, a pretrained `tok2vec` layer can be frozen and specified in the list
+of `annotating_components` to ensure that a downstream component can use the
+embedding layer without updating it.
 
 <Infobox variant="warning" title="Training speed with annotating components" id="annotating-components-speed">
 
@@ -645,14 +706,14 @@ excluded from the logs and the score won't be weighted.
 
 <Accordion title="Understanding the training output and score types" spaced id="score-types">
 
-| Name                       | Description                                                                                                             |
-| -------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| **Loss**                   | The training loss representing the amount of work left for the optimizer. Should decrease, but usually not to `0`.      |
-| **Precision** (P)          | Percentage of predicted annotations that were correct. Should increase.                                                 |
-| **Recall** (R)             | Percentage of reference annotations recovered. Should increase.                                                         |
-| **F-Score** (F)            | Harmonic mean of precision and recall. Should increase.                                                                 |
-| **UAS** / **LAS**          | Unlabeled and labeled attachment score for the dependency parser, i.e. the percentage of correct arcs. Should increase. |
-| **Speed** | Prediction speed in words per second (WPS). Should stay stable.                                                               |
+| Name              | Description                                                                                                             |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| **Loss**          | The training loss representing the amount of work left for the optimizer. Should decrease, but usually not to `0`.      |
+| **Precision** (P) | Percentage of predicted annotations that were correct. Should increase.                                                 |
+| **Recall** (R)    | Percentage of reference annotations recovered. Should increase.                                                         |
+| **F-Score** (F)   | Harmonic mean of precision and recall. Should increase.                                                                 |
+| **UAS** / **LAS** | Unlabeled and labeled attachment score for the dependency parser, i.e. the percentage of correct arcs. Should increase. |
+| **Speed**         | Prediction speed in words per second (WPS). Should stay stable.                                                         |
 
 Note that if the development data has raw text, some of the gold-standard
 entities might not align to the predicted tokenization. These tokenization
