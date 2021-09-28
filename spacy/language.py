@@ -1,5 +1,5 @@
 from typing import Iterator, Optional, Any, Dict, Callable, Iterable, TypeVar, Sequence
-from typing import Union, Tuple, List, Pattern, cast, overload
+from typing import Union, Tuple, List, Set, Pattern, cast, overload
 from dataclasses import dataclass
 import random
 import itertools
@@ -65,7 +65,7 @@ class BaseDefaults:
     url_match: Optional[Callable] = URL_MATCH
     syntax_iterators: Dict[str, Callable] = {}
     lex_attr_getters: Dict[int, Callable[[str], Any]] = {}
-    stop_words = set()  # type: ignore[var-annotated]
+    stop_words: Set[str] = set()
     writing_system = {"direction": "ltr", "has_case": True, "has_letters": True}
 
 
@@ -114,7 +114,7 @@ class Language:
     """
 
     Defaults = BaseDefaults
-    lang: str = None  # type: ignore[assignment]
+    lang: Optional[str] = None
     default_config = DEFAULT_CONFIG
 
     factories = SimpleFrozenDict(error=Errors.E957)
@@ -157,7 +157,7 @@ class Language:
         self._config = DEFAULT_CONFIG.merge(self.default_config)
         self._meta = dict(meta)
         self._path = None
-        self._optimizer = None
+        self._optimizer: Optional[Optimizer] = None
         # Component meta and configs are only needed on the instance
         self._pipe_meta: Dict[str, "FactoryMeta"] = {}  # meta by component
         self._pipe_configs: Dict[str, Config] = {}  # config by component
@@ -166,7 +166,7 @@ class Language:
             raise ValueError(Errors.E918.format(vocab=vocab, vocab_type=type(Vocab)))
         if vocab is True:
             vectors_name = meta.get("vectors", {}).get("name")
-            vocab = create_vocab(self.lang, self.Defaults, vectors_name=vectors_name)  # type: ignore[arg-type]
+            vocab = create_vocab(self.lang, self.Defaults, vectors_name=vectors_name)
         else:
             if (self.lang and vocab.lang) and (self.lang != vocab.lang):
                 raise ValueError(Errors.E150.format(nlp=self.lang, vocab=vocab.lang))
@@ -174,7 +174,7 @@ class Language:
         if self.lang is None:
             self.lang = self.vocab.lang
         self._components = []  # type: ignore[var-annotated]
-        self._disabled = set()  # type: ignore[var-annotated]
+        self._disabled: Set[str] = set()
         self.max_length = max_length
         # Create the default tokenizer from the default config
         if not create_tokenizer:
@@ -508,7 +508,7 @@ class Language:
     @classmethod
     def component(
         cls,
-        name: Optional[str] = None,
+        name: str,
         *,
         assigns: Iterable[str] = SimpleFrozenList(),
         requires: Iterable[str] = SimpleFrozenList(),
@@ -540,10 +540,10 @@ class Language:
             if isinstance(func, type):  # function is a class
                 raise ValueError(Errors.E965.format(name=component_name))
 
-            def factory_func(nlp: cls, name: str) -> Callable[[Doc], Doc]:  # type: ignore[valid-type]
+            def factory_func(nlp, name: str) -> Callable[[Doc], Doc]:
                 return component_func
 
-            internal_name = cls.get_factory_name(name)  # type: ignore[arg-type]
+            internal_name = cls.get_factory_name(name)
             if internal_name in registry.factories:
                 # We only check for the internal name here – it's okay if it's a
                 # subclass and the base class has a factory of the same name. We
@@ -980,7 +980,7 @@ class Language:
         is preserved.
 
         text (str): The text to be processed.
-        disable (list): Names of the pipeline components to disable.
+        disable (List[str]): Names of the pipeline components to disable.
         component_cfg (Dict[str, dict]): An optional dictionary with extra
             keyword arguments for specific components.
         RETURNS (Doc): A container for accessing the annotations.
@@ -1054,9 +1054,10 @@ class Language:
                     )
                 )
             disable = to_disable
+        assert disable is not None
         # DisabledPipes will restore the pipes in 'disable' when it's done, so we need to exclude
         # those pipes that were already disabled.
-        disable = [d for d in disable if d not in self._disabled]  # type: ignore[union-attr]
+        disable = [d for d in disable if d not in self._disabled]
         return DisabledPipes(self, disable)
 
     def make_doc(self, text: str) -> Doc:
@@ -1104,7 +1105,7 @@ class Language:
             raise ValueError(Errors.E989)
         if losses is None:
             losses = {}
-        if len(examples) == 0:  # type: ignore[arg-type]
+        if isinstance(examples, list) and len(examples) == 0:
             return losses
         validate_examples(examples, "Language.update")
         examples = _copy_examples(examples)
@@ -1121,16 +1122,17 @@ class Language:
             component_cfg[name].setdefault("drop", drop)
             pipe_kwargs[name].setdefault("batch_size", self.batch_size)
         for name, proc in self.pipeline:
+            # ignore statements are used here because mypy ignores hasattr
             if name not in exclude and hasattr(proc, "update"):
-                proc.update(examples, sgd=None, losses=losses, **component_cfg[name])  # type: ignore[attr-defined]
+                proc.update(examples, sgd=None, losses=losses, **component_cfg[name])  # type: ignore
             if sgd not in (None, False):
                 if (
                     name not in exclude
                     and hasattr(proc, "is_trainable")
-                    and proc.is_trainable  # type: ignore[attr-defined]
-                    and proc.model not in (True, False, None)  # type: ignore[attr-defined]
+                    and proc.is_trainable  # type: ignore
+                    and proc.model not in (True, False, None)  # type: ignore
                 ):
-                    proc.finish_update(sgd)  # type: ignore[attr-defined]
+                    proc.finish_update(sgd)  # type: ignore
             if name in annotates:
                 for doc, eg in zip(
                     _pipe(
@@ -1176,8 +1178,10 @@ class Language:
 
         DOCS: https://spacy.io/api/language#rehearse
         """
-        if len(examples) == 0:  # type: ignore[arg-type]
-            return  # type: ignore[return-value]
+        if losses is None:
+            losses = {}
+        if isinstance(examples, list) and len(examples) == 0:
+            return losses
         validate_examples(examples, "Language.rehearse")
         if sgd is None:
             if self._optimizer is None:
@@ -1204,7 +1208,7 @@ class Language:
             )
         for key, (W, dW) in grads.items():
             sgd(W, dW, key=key)  # type: ignore[call-arg, misc]
-        return losses  # type: ignore[return-value]
+        return losses
 
     def begin_training(
         self,
@@ -1278,15 +1282,15 @@ class Language:
             P = registry.resolve(pretrain_cfg, schema=ConfigSchemaPretrain)
             init_tok2vec(self, P, I)
         self._link_components()
-        self._optimizer = sgd  # type: ignore[assignment]
+        self._optimizer = sgd
         if sgd is not None:
-            self._optimizer = sgd  # type: ignore[assignment]
+            self._optimizer = sgd
         elif self._optimizer is None:
             self._optimizer = self.create_optimizer()
         after_init = I["after_init"]
         if after_init is not None:
             after_init(self)
-        return self._optimizer  # type: ignore[return-value]
+        return self._optimizer
 
     def resume_training(self, *, sgd: Optional[Optimizer] = None) -> Optimizer:
         """Continue training a pretrained model.
@@ -1308,10 +1312,10 @@ class Language:
             if hasattr(proc, "_rehearsal_model"):
                 proc._rehearsal_model = deepcopy(proc.model)  # type: ignore[attr-defined]
         if sgd is not None:
-            self._optimizer = sgd  # type: ignore[assignment]
+            self._optimizer = sgd
         elif self._optimizer is None:
             self._optimizer = self.create_optimizer()
-        return self._optimizer  # type: ignore[return-value]
+        return self._optimizer
 
     def set_error_handler(
         self,
@@ -1532,7 +1536,7 @@ class Language:
             pipes.append(f)
 
         if n_process != 1:
-            docs = self._multiprocessing_pipe(texts, pipes, n_process, batch_size)  # type: ignore[func-returns-value]
+            docs = self._multiprocessing_pipe(texts, pipes, n_process, batch_size)
         else:
             # if n_process == 1, no processes are forked.
             docs = (self.make_doc(text) for text in texts)
@@ -1541,17 +1545,17 @@ class Language:
         for doc in docs:
             yield doc
 
-    def _multiprocessing_pipe(  # type: ignore[misc]
+    def _multiprocessing_pipe(
         self,
         texts: Iterable[str],
         pipes: Iterable[Callable[[Doc], Doc]],
         n_process: int,
         batch_size: int,
-    ) -> None:
+    ) -> Iterator[Doc]:
         # raw_texts is used later to stop iteration.
         texts, raw_texts = itertools.tee(texts)
         # for sending texts to worker
-        texts_q = [mp.Queue() for _ in range(n_process)]  # type: ignore[var-annotated]
+        texts_q: List[mp.Queue] = [mp.Queue() for _ in range(n_process)]
         # for receiving byte-encoded docs from worker
         bytedocs_recv_ch, bytedocs_send_ch = zip(
             *[mp.Pipe(False) for _ in range(n_process)]
@@ -1854,7 +1858,6 @@ class Language:
             raise ValueError(err)
         tok2vec = self.get_pipe(tok2vec_name)
         tok2vec_cfg = self.get_pipe_config(tok2vec_name)
-        tok2vec_model = tok2vec.model  # type: ignore[attr-defined]
         if (
             not hasattr(tok2vec, "model")
             or not hasattr(tok2vec, "listener_map")
@@ -1862,12 +1865,13 @@ class Language:
             or "model" not in tok2vec_cfg
         ):
             raise ValueError(Errors.E888.format(name=tok2vec_name, pipe=type(tok2vec)))
+        tok2vec_model = tok2vec.model  # type: ignore[attr-defined]
         pipe_listeners = tok2vec.listener_map.get(pipe_name, [])  # type: ignore[attr-defined]
         pipe = self.get_pipe(pipe_name)
         pipe_cfg = self._pipe_configs[pipe_name]
         if listeners:
             util.logger.debug(f"Replacing listeners of component '{pipe_name}'")
-            if len(listeners) != len(pipe_listeners):  # type: ignore[arg-type]
+            if len(list(listeners)) != len(pipe_listeners):
                 # The number of listeners defined in the component model doesn't
                 # match the listeners to replace, so we won't be able to update
                 # the nodes and generate a matching config
@@ -1912,7 +1916,7 @@ class Language:
 
         path (str / Path): Path to a directory, which will be created if
             it doesn't exist.
-        exclude (list): Names of components or serialization fields to exclude.
+        exclude (Iterable[str]): Names of components or serialization fields to exclude.
 
         DOCS: https://spacy.io/api/language#to_disk
         """
@@ -1929,7 +1933,7 @@ class Language:
             if not hasattr(proc, "to_disk"):
                 continue
             serializers[name] = lambda p, proc=proc: proc.to_disk(p, exclude=["vocab"])  # type: ignore[misc]
-        serializers["vocab"] = lambda p: self.vocab.to_disk(p, exclude=exclude)  # type: ignore[arg-type]
+        serializers["vocab"] = lambda p: self.vocab.to_disk(p, exclude=exclude)
         util.to_disk(path, serializers, exclude)
 
     def from_disk(
@@ -1944,7 +1948,7 @@ class Language:
         model will be loaded.
 
         path (str / Path): A path to a directory.
-        exclude (list): Names of components or serialization fields to exclude.
+        exclude (Iterable[str]): Names of components or serialization fields to exclude.
         RETURNS (Language): The modified `Language` object.
 
         DOCS: https://spacy.io/api/language#from_disk
@@ -1960,7 +1964,7 @@ class Language:
 
         def deserialize_vocab(path: Path) -> None:
             if path.exists():
-                self.vocab.from_disk(path, exclude=exclude)  # type: ignore[arg-type]
+                self.vocab.from_disk(path, exclude=exclude)
 
         path = util.ensure_path(path)
         deserializers = {}
@@ -1992,13 +1996,13 @@ class Language:
     def to_bytes(self, *, exclude: Iterable[str] = SimpleFrozenList()) -> bytes:
         """Serialize the current state to a binary string.
 
-        exclude (list): Names of components or serialization fields to exclude.
+        exclude (Iterable[str]): Names of components or serialization fields to exclude.
         RETURNS (bytes): The serialized form of the `Language` object.
 
         DOCS: https://spacy.io/api/language#to_bytes
         """
-        serializers = {}
-        serializers["vocab"] = lambda: self.vocab.to_bytes(exclude=exclude)  # type: ignore[arg-type]
+        serializers: Dict[str, Callable[[], bytes]] = {}
+        serializers["vocab"] = lambda: self.vocab.to_bytes(exclude=exclude)
         serializers["tokenizer"] = lambda: self.tokenizer.to_bytes(exclude=["vocab"])  # type: ignore[union-attr]
         serializers["meta.json"] = lambda: srsly.json_dumps(self.meta)
         serializers["config.cfg"] = lambda: self.config.to_bytes()
@@ -2016,7 +2020,7 @@ class Language:
         """Load state from a binary string.
 
         bytes_data (bytes): The data to load from.
-        exclude (list): Names of components or serialization fields to exclude.
+        exclude (Iterable[str]): Names of components or serialization fields to exclude.
         RETURNS (Language): The `Language` object.
 
         DOCS: https://spacy.io/api/language#from_bytes
@@ -2029,12 +2033,12 @@ class Language:
             # from self.vocab.vectors, so set the name directly
             self.vocab.vectors.name = data.get("vectors", {}).get("name")
 
-        deserializers = {}
+        deserializers: Dict[str, Callable[[bytes], Any]] = {}
         deserializers["config.cfg"] = lambda b: self.config.from_bytes(
             b, interpolate=False
         )
         deserializers["meta.json"] = deserialize_meta
-        deserializers["vocab"] = lambda b: self.vocab.from_bytes(b, exclude=exclude)  # type: ignore[arg-type, assignment, return-value]
+        deserializers["vocab"] = lambda b: self.vocab.from_bytes(b, exclude=exclude)
         deserializers["tokenizer"] = lambda b: self.tokenizer.from_bytes(  # type: ignore[union-attr]
             b, exclude=["vocab"]
         )
