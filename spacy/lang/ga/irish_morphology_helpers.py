@@ -1,4 +1,4 @@
-def demutate(word: str) -> str:
+def demutate(word: str, is_hpref=False) -> str:
     UVOWELS = "AÁEÉIÍOÓUÚ"
     LVOWELS = "aáeéiíoóuú"
     lc = word.lower()
@@ -43,6 +43,9 @@ def demutate(word: str) -> str:
     elif lc.startswith("t-s"):
         word = word[2:]
 
+    # h-prothesis, if known to be present
+    elif is_hpref and word[0:1] == "h":
+        word = word[1:]
     # h-prothesis, simple case
     # words can also begin with 'h', but unlike eclipsis,
     # a hyphen is not used, so that needs to be handled
