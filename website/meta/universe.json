@@ -3476,7 +3476,41 @@
                 "github": "bbieniek"
             },
             "category": ["apis"]
-        }
+        },
+        {
+            "id": "phruzz_matcher",
+            "title": "phruzz-matcher",
+            "slogan": "Phrase matcher using RapidFuzz",
+            "description": "Combination of the RapidFuzz library with Spacy PhraseMatcher The goal of this component is to find matches when there were NO "perfect matches" due to typos or abbreviations between a Spacy doc and a list of phrases.",
+            "github": "mjvallone/phruzz-matcher",
+            "pip": "phruzz_matcher",
+            "code_example": [
+                "from phruzz_matcher.phrase_matcher import PhruzzMatcher",
+                "",
+                "nlp = spacy.load('es_core_news_lg')",
+                "famous_people = [",
+                "        \"Brad Pitt\",",
+                "        \"Demi Moore\",",
+                "        \"Bruce Willis\",",
+                "        \"Jim Carrey\",",
+                "]",
+                "",
+                "@Language.factory(\"phrase_matcher\")",
+                "def phrase_matcher(nlp: Language, name: str):",
+                "    return PhruzzMatcher(nlp, famous_people, \"FAMOUS_PEOPLE\", 92)",
+            ],
+            "thumb": "https://avatars.githubusercontent.com/u/961296?v=4",
+            "image": "",
+            "code_language": "python",
+            "author": "Martin Vallone",
+            "author_links": {
+                "github": "mjvallone",
+                "twitter": "vallotin",
+                "website": "https://fiqus.coop/"
+            },
+            "category": ["pipeline", "research", "standalone"],
+            "tags": ["spacy", "python", "nlp", "ner"]
+        }        
     ],
 
     "categories": [
