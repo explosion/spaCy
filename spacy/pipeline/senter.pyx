@@ -15,6 +15,8 @@ from ..training import validate_examples, validate_get_examples
 from ..util import registry
 from .. import util
 
+# See #9050
+BACKWARD_OVERWRITE = False
 
 default_model_config = """
 [model]
@@ -112,7 +114,7 @@ class SentenceRecognizer(Tagger):
         if isinstance(docs, Doc):
             docs = [docs]
         cdef Doc doc
-        overwrite = self.cfg.get("overwrite", False)
+        overwrite = self.cfg.get("overwrite", BACKWARD_OVERWRITE)
         for i, doc in enumerate(docs):
             doc_tag_ids = batch_tag_ids[i]
             if hasattr(doc_tag_ids, "get"):

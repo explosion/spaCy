@@ -10,6 +10,8 @@ from ..language import Language
 from ..scorer import Scorer
 from .. import util
 
+# see #9050
+BACKWARD_OVERWRITE = False
 
 @Language.factory(
     "sentencizer",
@@ -154,7 +156,7 @@ class Sentencizer(Pipe):
         """
         cfg = srsly.msgpack_loads(bytes_data)
         self.punct_chars = set(cfg.get("punct_chars", self.default_punct_chars))
-        self.overwrite = cfg.get("overwrite", False)
+        self.overwrite = cfg.get("overwrite", BACKWARD_OVERWRITE)
         return self
 
     def to_disk(self, path, *, exclude=tuple()):
@@ -176,5 +178,5 @@ class Sentencizer(Pipe):
         path = path.with_suffix(".json")
         cfg = srsly.read_json(path)
         self.punct_chars = set(cfg.get("punct_chars", self.default_punct_chars))
-        self.overwrite = cfg.get("overwrite", False)
+        self.overwrite = cfg.get("overwrite", BACKWARD_OVERWRITE)
         return self

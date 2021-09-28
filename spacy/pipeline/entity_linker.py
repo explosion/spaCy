@@ -20,6 +20,8 @@ from ..util import SimpleFrozenList, registry
 from .. import util
 from ..scorer import Scorer
 
+# See #9050
+BACKWARD_OVERWRITE = True
 
 default_model_config = """
 [model]
@@ -403,7 +405,7 @@ class EntityLinker(TrainablePipe):
         if count_ents != len(kb_ids):
             raise ValueError(Errors.E148.format(ents=count_ents, ids=len(kb_ids)))
         i = 0
-        overwrite = self.cfg.get("overwrite", False)
+        overwrite = self.cfg["overwrite"]
         for doc in docs:
             for ent in doc.ents:
                 kb_id = kb_ids[i]
@@ -452,6 +454,8 @@ class EntityLinker(TrainablePipe):
         deserialize["kb"] = lambda b: self.kb.from_bytes(b)
         deserialize["model"] = load_model
         util.from_bytes(bytes_data, deserialize, exclude)
+        if "overwrite" not in self.cfg:
+            self.cfg["overwrite"] = BACKWARD_OVERWRITE
         return self
 
     def to_disk(
@@ -496,6 +500,8 @@ class EntityLinker(TrainablePipe):
         deserialize["kb"] = lambda p: self.kb.from_disk(p)
         deserialize["model"] = load_model
         util.from_disk(path, deserialize, exclude)
+        if "overwrite" not in self.cfg:
+            self.cfg["overwrite"] = BACKWARD_OVERWRITE
         return self
 
     def rehearse(self, examples, *, sgd=None, losses=None, **config):

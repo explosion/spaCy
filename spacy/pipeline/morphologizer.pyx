@@ -19,6 +19,9 @@ from ..scorer import Scorer
 from ..training import validate_examples, validate_get_examples
 from ..util import registry
 
+# See #9050
+BACKWARD_OVERWRITE = True
+BACKWARD_EXTEND = False
 
 default_model_config = """
 [model]
@@ -226,8 +229,8 @@ class Morphologizer(Tagger):
             docs = [docs]
         cdef Doc doc
         cdef Vocab vocab = self.vocab
-        overwrite = self.cfg.get("overwrite", False)
-        extend = self.cfg.get("extend", False)
+        overwrite = self.cfg.get("overwrite", BACKWARD_OVERWRITE)
+        extend = self.cfg.get("extend", BACKWARD_EXTEND)
         for i, doc in enumerate(docs):
             doc_tag_ids = batch_tag_ids[i]
             if hasattr(doc_tag_ids, "get"):
