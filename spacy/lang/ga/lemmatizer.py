@@ -31,30 +31,27 @@ class IrishLemmatizer(Lemmatizer):
         secondary = ""
         if string[0:1].lower() == "h" and string[1:2].lower() in "aáeéiíoóuú":
             secondary = string[1:]
-        morphology = token.morph.to_dict()
         lookup_pos = univ_pos.lower()
-        try_orig = False
         if univ_pos == "PROPN":
             lookup_pos = "noun"
-            try_orig = True
         lookup_table = self.lookups.get_table("lemma_lookup_" + lookup_pos, {})
+
+        def to_list(value):
+            if value is None:
+                value = []
+            elif not isinstance(value, list):
+                value = [value]
+            return value
+
         if univ_pos == "ADP":
-            return [lookup_table.get(string, string.lower())]
+            return to_list(lookup_table.get(string, string.lower()))
         ret = []
-        def addret(ret, input):
-            if type(input) == list:
-                ret += input
-            elif type(input) == str:
-                ret.append(input)
-        if try_orig and demutated in lookup_table.keys():
-            addret(ret, lookup_table.get(demutated))
-        elif demutated.lower() in lookup_table.keys():
-            addret(ret, lookup_table.get(demutated.lower()))
-        if try_orig and secondary in lookup_table.keys():
-            addret(ret, lookup_table.get(secondary))
-        elif secondary.lower() in lookup_table.keys():
-            addret(ret, lookup_table.get(secondary.lower()))
-        if len(ret) == 0:
-            return [string.lower()]
+        if univ_pos == "PROPN":
+            ret.extend(to_list(lookup_table.get(demutated)))
+            ret.extend(to_list(lookup_table.get(secondary)))
         else:
-            return ret
+            ret.extend(to_list(lookup_table.get(demutated.lower())))
+            ret.extend(to_list(lookup_table.get(secondary.lower())))
+        if len(ret) == 0:
+            ret = [string.lower()]
+        return ret
