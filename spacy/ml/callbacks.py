@@ -1,20 +1,26 @@
 from functools import partial
-from typing import Type, Callable
+from typing import Type, Callable, TYPE_CHECKING
 
 from thinc.layers import with_nvtx_range
 from thinc.model import Model, wrap_model_recursive
 
-from ..language import Language
-from ..pipeline import TrainablePipe
 from ..util import registry
+
+if TYPE_CHECKING:
+    # This lets us add type hints for mypy etc. without causing circular imports
+    from ..language import Language  # noqa: F401
 
 
 @registry.callbacks("spacy.models_with_nvtx_range.v1")
 def create_models_with_nvtx_range(
     forward_color: int = -1, backprop_color: int = -1
-) -> Callable[[Language], Language]:
+) -> Callable[["Language"], "Language"]:
     def models_with_nvtx_range(nlp):
-        pipes = [pipe for _, pipe in nlp.components if isinstance(pipe, TrainablePipe)]
+        pipes = [
+            pipe
+            for _, pipe in nlp.components
+            if hasattr(pipe, "is_trainable") and pipe.is_trainable
+        ]
 
         # We need to wrap all models jointly to avoid double-wrapping.
         models = Model(

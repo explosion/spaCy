@@ -15,7 +15,6 @@ from .spancat import SpanCategorizer
 from .textcat_multilabel import MultiLabel_TextCategorizer
 from .tok2vec import Tok2Vec
 from .functions import merge_entities, merge_noun_chunks, merge_subtokens
-from .callbacks import create_models_with_nvtx_range
 
 __all__ = [
     "AttributeRuler",
