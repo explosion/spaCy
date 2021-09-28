@@ -555,8 +555,8 @@ consists of either two or three subnetworks:
 
 <Accordion title="spacy.TransitionBasedParser.v1 definition" spaced>
 
-[TransitionBasedParser.v1](/api/legacy#TransitionBasedParser_v1) had the exact same signature, 
-but the `use_upper` argument was `True` by default.
+[TransitionBasedParser.v1](/api/legacy#TransitionBasedParser_v1) had the exact
+same signature, but the `use_upper` argument was `True` by default.
 
 </Accordion>
 

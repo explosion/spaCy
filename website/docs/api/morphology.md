@@ -105,11 +105,11 @@ representation.
 
 ## Attributes {#attributes}
 
-| Name          | Description                                                                                                                  |
-| ------------- | ---------------------------------------------------------------------------------------------------------------------------- | ---------- |
-| `FEATURE_SEP` | The [FEATS](https://universaldependencies.org/format.html#morphological-annotation) feature separator. Default is `          | `. ~~str~~ |
-| `FIELD_SEP`   | The [FEATS](https://universaldependencies.org/format.html#morphological-annotation) field separator. Default is `=`. ~~str~~ |
-| `VALUE_SEP`   | The [FEATS](https://universaldependencies.org/format.html#morphological-annotation) value separator. Default is `,`. ~~str~~ |
+| Name          | Description                                                                                                                    |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `FEATURE_SEP` | The [FEATS](https://universaldependencies.org/format.html#morphological-annotation) feature separator. Default is `|`. ~~str~~ |
+| `FIELD_SEP`   | The [FEATS](https://universaldependencies.org/format.html#morphological-annotation) field separator. Default is `=`. ~~str~~   |
+| `VALUE_SEP`   | The [FEATS](https://universaldependencies.org/format.html#morphological-annotation) value separator. Default is `,`. ~~str~~   |
 
 ## MorphAnalysis {#morphanalysis tag="class" source="spacy/tokens/morphanalysis.pyx"}
 

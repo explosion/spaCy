@@ -9,11 +9,13 @@ from spacy.cli import info
 from spacy.cli.init_config import init_config, RECOMMENDATIONS
 from spacy.cli._util import validate_project_commands, parse_config_overrides
 from spacy.cli._util import load_project_config, substitute_project_variables
+from spacy.cli._util import is_subpath_of
 from spacy.cli._util import string_to_list
 from spacy import about
 from spacy.util import get_minor_version
 from spacy.cli.validate import get_model_pkgs
 from spacy.cli.download import get_compatibility, get_version
+from spacy.cli.package import get_third_party_dependencies
 from thinc.api import ConfigValidationError, Config
 import srsly
 import os
@@ -532,3 +534,43 @@ def test_init_labels(component_name):
         assert len(nlp2.get_pipe(component_name).labels) == 0
         nlp2.initialize()
         assert len(nlp2.get_pipe(component_name).labels) == 4
+
+
+def test_get_third_party_dependencies():
+    # We can't easily test the detection of third-party packages here, but we
+    # can at least make sure that the function and its importlib magic runs.
+    nlp = Dutch()
+    # Test with component factory based on Cython module
+    nlp.add_pipe("tagger")
+    assert get_third_party_dependencies(nlp.config) == []
+
+    # Test with legacy function
+    nlp = Dutch()
+    nlp.add_pipe(
+        "textcat",
+        config={
+            "model": {
+                # Do not update from legacy architecture spacy.TextCatBOW.v1
+                "@architectures": "spacy.TextCatBOW.v1",
+                "exclusive_classes": True,
+                "ngram_size": 1,
+                "no_output_layer": False,
+            }
+        },
+    )
+    get_third_party_dependencies(nlp.config) == []
+
+
+@pytest.mark.parametrize(
+    "parent,child,expected",
+    [
+        ("/tmp", "/tmp", True),
+        ("/tmp", "/", False),
+        ("/tmp", "/tmp/subdir", True),
+        ("/tmp", "/tmpdir", False),
+        ("/tmp", "/tmp/subdir/..", True),
+        ("/tmp", "/tmp/..", False),
+    ],
+)
+def test_is_subpath_of(parent, child, expected):
+    assert is_subpath_of(parent, child) == expected

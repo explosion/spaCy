@@ -411,10 +411,13 @@ finished. To log each training step, a
 [`spacy train`](/api/cli#train), including information such as the training loss
 and the accuracy scores on the development set.
 
-There are two built-in logging functions: a logger printing results to the
-console in tabular format (which is the default), and one that also sends the
-results to a [Weights & Biases](https://www.wandb.com/) dashboard. Instead of
-using one of the built-in loggers listed here, you can also
+The built-in, default logger is the ConsoleLogger, which prints results to the
+console in tabular format. The 
+[spacy-loggers](https://github.com/explosion/spacy-loggers) package, included as
+a dependency of spaCy, enables other loggers: currently it provides one that sends
+results to a [Weights & Biases](https://www.wandb.com/) dashboard.
+
+Instead of using one of the built-in loggers, you can
 [implement your own](/usage/training#custom-logging).
 
 #### spacy.ConsoleLogger.v1 {#ConsoleLogger tag="registered function"}
@@ -462,6 +465,7 @@ Note that the cumulative loss keeps increasing within one epoch, but should
 start decreasing across epochs.
 
  </Accordion>
+
 
 ## Readers {#readers}
 

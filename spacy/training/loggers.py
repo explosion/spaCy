@@ -98,3 +98,4 @@ def console_logger(progress_bar: bool = False):
         return log_step, finalize
 
     return setup_printer
+

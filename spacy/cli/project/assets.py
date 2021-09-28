@@ -1,18 +1,24 @@
-from typing import Optional
+from typing import Any, Dict, Optional
 from pathlib import Path
 from wasabi import msg
 import re
 import shutil
 import requests
+import typer
 
 from ...util import ensure_path, working_dir
 from .._util import project_cli, Arg, Opt, PROJECT_FILE, load_project_config
 from .._util import get_checksum, download_file, git_checkout, get_git_version
+from .._util import SimpleFrozenDict, parse_config_overrides
 
 
-@project_cli.command("assets")
+@project_cli.command(
+    "assets",
+    context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
+)
 def project_assets_cli(
     # fmt: off
+    ctx: typer.Context,  # This is only used to read additional arguments
     project_dir: Path = Arg(Path.cwd(), help="Path to cloned project. Defaults to current working directory.", exists=True, file_okay=False),
     sparse_checkout: bool = Opt(False, "--sparse", "-S", help="Use sparse checkout for assets provided via Git, to only check out and clone the files needed. Requires Git v22.2+.")
     # fmt: on
@@ -24,16 +30,22 @@ def project_assets_cli(
 
     DOCS: https://spacy.io/api/cli#project-assets
     """
-    project_assets(project_dir, sparse_checkout=sparse_checkout)
+    overrides = parse_config_overrides(ctx.args)
+    project_assets(project_dir, overrides=overrides, sparse_checkout=sparse_checkout)
 
 
-def project_assets(project_dir: Path, *, sparse_checkout: bool = False) -> None:
+def project_assets(
+    project_dir: Path,
+    *,
+    overrides: Dict[str, Any] = SimpleFrozenDict(),
+    sparse_checkout: bool = False,
+) -> None:
     """Fetch assets for a project using DVC if possible.
 
     project_dir (Path): Path to project directory.
     """
     project_path = ensure_path(project_dir)
-    config = load_project_config(project_path)
+    config = load_project_config(project_path, overrides=overrides)
     assets = config.get("assets", {})
     if not assets:
         msg.warn(f"No assets specified in {PROJECT_FILE}", exits=0)
@@ -59,6 +71,15 @@ def project_assets(project_dir: Path, *, sparse_checkout: bool = False) -> None:
                         shutil.rmtree(dest)
                     else:
                         dest.unlink()
+            if "repo" not in asset["git"] or asset["git"]["repo"] is None:
+                msg.fail(
+                    "A git asset must include 'repo', the repository address.", exits=1
+                )
+            if "path" not in asset["git"] or asset["git"]["path"] is None:
+                msg.fail(
+                    "A git asset must include 'path' - use \"\" to get the entire repository.",
+                    exits=1,
+                )
             git_checkout(
                 asset["git"]["repo"],
                 asset["git"]["path"],

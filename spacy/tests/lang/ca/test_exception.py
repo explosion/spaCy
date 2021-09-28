@@ -11,7 +11,18 @@ def test_ca_tokenizer_handles_abbr(ca_tokenizer, text, lemma):
 
 
 def test_ca_tokenizer_handles_exc_in_text(ca_tokenizer):
-    text = "La Núria i el Pere han vingut aprox. a les 7 de la tarda."
-    tokens = ca_tokenizer(text)
-    assert len(tokens) == 15
-    assert tokens[7].text == "aprox."
+    text = "La Dra. Puig viu a la pl. dels Til·lers."
+    doc = ca_tokenizer(text)
+    assert [t.text for t in doc] == [
+        "La",
+        "Dra.",
+        "Puig",
+        "viu",
+        "a",
+        "la",
+        "pl.",
+        "d",
+        "els",
+        "Til·lers",
+        ".",
+    ]

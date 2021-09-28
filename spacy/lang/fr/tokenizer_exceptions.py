@@ -82,7 +82,8 @@ for orth in [
 
 for verb in [
     "a",
-    "est" "semble",
+    "est",
+    "semble",
     "indique",
     "moque",
     "passe",
