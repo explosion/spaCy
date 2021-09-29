@@ -13,6 +13,7 @@ from ..tokens import Doc, Span
 from ..matcher import Matcher, PhraseMatcher
 from ..scorer import get_ner_prf
 
+
 DEFAULT_ENT_ID_SEP = "||"
 PatternType = Dict[str, Union[str, List[Dict[str, Any]]]]
 
