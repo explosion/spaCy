@@ -1,4 +1,5 @@
-from typing import Optional, Iterable, Callable, Dict, Union, List
+from typing import Optional, Iterable, Callable, Dict, Union, List, Any
+from thinc.types import Floats2d
 from pathlib import Path
 from itertools import islice
 import srsly
@@ -53,8 +54,8 @@ DEFAULT_NEL_MODEL = Config().from_str(default_model_config)["model"]
     },
     default_score_weights={
         "nel_micro_f": 1.0,
-        "nel_micro_r": None,  # type: ignore[dict-item]
-        "nel_micro_p": None,  # type: ignore[dict-item]
+        "nel_micro_r": None,
+        "nel_micro_p": None,
     },
 )
 def make_entity_linker(
@@ -140,7 +141,7 @@ class EntityLinker(TrainablePipe):
         self.incl_prior = incl_prior
         self.incl_context = incl_context
         self.get_candidates = get_candidates
-        self.cfg = {}  # type: ignore[var-annotated]
+        self.cfg = {}  # type: Dict[str, Any]
         self.distance = CosineDistance(normalize=False)
         # how many neighbour sentences to take into account
         # create an empty KB by default. If you want to load a predefined one, specify it in 'initialize'.
@@ -166,7 +167,7 @@ class EntityLinker(TrainablePipe):
         get_examples: Callable[[], Iterable[Example]],
         *,
         nlp: Optional[Language] = None,
-        kb_loader: Callable[[Vocab], KnowledgeBase] = None,  # type: ignore[assignment]
+        kb_loader: Optional[Callable[[Vocab], KnowledgeBase]] = None,
     ):
         """Initialize the pipe for training, using a representative set
         of data examples.
@@ -261,7 +262,7 @@ class EntityLinker(TrainablePipe):
         losses[self.name] += loss
         return losses
 
-    def get_loss(self, examples: Iterable[Example], sentence_encodings):
+    def get_loss(self, examples: Iterable[Example], sentence_encodings: Floats2d):
         validate_examples(examples, "EntityLinker.get_loss")
         entity_encodings = []
         for eg in examples:
@@ -272,13 +273,14 @@ class EntityLinker(TrainablePipe):
                     entity_encoding = self.kb.get_vector(kb_id)
                     entity_encodings.append(entity_encoding)
         entity_encodings = self.model.ops.asarray(entity_encodings, dtype="float32")
+        assert isinstance(entity_encodings, Floats2d)
         if sentence_encodings.shape != entity_encodings.shape:
             err = Errors.E147.format(
                 method="get_loss", msg="gold entities do not match up"
             )
             raise RuntimeError(err)
-        gradients = self.distance.get_grad(sentence_encodings, entity_encodings)  # type: ignore[arg-type]
-        loss = self.distance.get_loss(sentence_encodings, entity_encodings)  # type: ignore[arg-type]
+        gradients = self.distance.get_grad(sentence_encodings, entity_encodings)
+        loss = self.distance.get_loss(sentence_encodings, entity_encodings)
         loss = loss / len(entity_encodings)
         return float(loss), gradients
 
@@ -288,13 +290,13 @@ class EntityLinker(TrainablePipe):
         no prediction.
 
         docs (Iterable[Doc]): The documents to predict.
-        RETURNS (List[int]): The models prediction for each document.
+        RETURNS (List[str]): The models prediction for each document.
 
         DOCS: https://spacy.io/api/entitylinker#predict
         """
         self.validate_kb()
         entity_count = 0
-        final_kb_ids = []  # type: ignore[var-annotated]
+        final_kb_ids = []  # type: List[str]
         if not docs:
             return final_kb_ids
         if isinstance(docs, Doc):
@@ -324,16 +326,16 @@ class EntityLinker(TrainablePipe):
                         # ignoring this entity - setting to NIL
                         final_kb_ids.append(self.NIL)
                     else:
-                        candidates = self.get_candidates(self.kb, ent)
+                        candidates = list(self.get_candidates(self.kb, ent))
                         if not candidates:
                             # no prediction possible for this entity - setting to NIL
                             final_kb_ids.append(self.NIL)
-                        elif len(candidates) == 1:  # type: ignore[arg-type]
+                        elif len(candidates) == 1:
                             # shortcut for efficiency reasons: take the 1 candidate
                             # TODO: thresholding
-                            final_kb_ids.append(candidates[0].entity_)  # type: ignore[index]
+                            final_kb_ids.append(candidates[0].entity_)
                         else:
-                            random.shuffle(candidates)  # type: ignore[arg-type]
+                            random.shuffle(candidates)
                             # set all prior probabilities to 0 if incl_prior=False
                             prior_probs = xp.asarray([c.prior_prob for c in candidates])
                             if not self.incl_prior:
@@ -361,7 +363,7 @@ class EntityLinker(TrainablePipe):
                                 scores = prior_probs + sims - (prior_probs * sims)
                             # TODO: thresholding
                             best_index = scores.argmax().item()
-                            best_candidate = candidates[best_index]  # type: ignore[index]
+                            best_candidate = candidates[best_index]
                             final_kb_ids.append(best_candidate.entity_)
         if not (len(final_kb_ids) == entity_count):
             err = Errors.E147.format(
@@ -453,7 +455,7 @@ class EntityLinker(TrainablePipe):
         DOCS: https://spacy.io/api/entitylinker#to_disk
         """
         serialize = {}
-        serialize["vocab"] = lambda p: self.vocab.to_disk(p, exclude=exclude)  # type: ignore[arg-type]
+        serialize["vocab"] = lambda p: self.vocab.to_disk(p, exclude=exclude)
         serialize["cfg"] = lambda p: srsly.write_json(p, self.cfg)
         serialize["kb"] = lambda p: self.kb.to_disk(p)
         serialize["model"] = lambda p: self.model.to_disk(p)
@@ -478,9 +480,9 @@ class EntityLinker(TrainablePipe):
             except AttributeError:
                 raise ValueError(Errors.E149) from None
 
-        deserialize = {}
+        deserialize = {}  # type: Dict[str, Callable[[Any], Any]]
         deserialize["cfg"] = lambda p: self.cfg.update(deserialize_config(p))
-        deserialize["vocab"] = lambda p: self.vocab.from_disk(p, exclude=exclude)  # type: ignore[arg-type, assignment]
+        deserialize["vocab"] = lambda p: self.vocab.from_disk(p, exclude=exclude)
         deserialize["kb"] = lambda p: self.kb.from_disk(p)
         deserialize["model"] = load_model
         util.from_disk(path, deserialize, exclude)

@@ -426,7 +426,7 @@ class Language:
         assigns: Iterable[str] = SimpleFrozenList(),
         requires: Iterable[str] = SimpleFrozenList(),
         retokenizes: bool = False,
-        default_score_weights: Dict[str, float] = SimpleFrozenDict(),
+        default_score_weights: Dict[str, Optional[float]] = SimpleFrozenDict(),
         func: Optional[Callable] = None,
     ) -> Callable:
         """Register a new pipeline component factory. Can be used as a decorator
@@ -443,7 +443,7 @@ class Language:
             e.g. "token.ent_id". Used for pipeline analysis.
         retokenizes (bool): Whether the component changes the tokenization.
             Used for pipeline analysis.
-        default_score_weights (Dict[str, float]): The scores to report during
+        default_score_weights (Dict[str, Optional[float]]): The scores to report during
             training, and their default weight towards the final score used to
             select the best model. Weights should sum to 1.0 per component and
             will be combined and normalized for the whole pipeline. If None,
@@ -2072,7 +2072,7 @@ class FactoryMeta:
     requires: Iterable[str] = tuple()
     retokenizes: bool = False
     scores: Iterable[str] = tuple()
-    default_score_weights: Optional[Dict[str, float]] = None  # noqa: E704
+    default_score_weights: Optional[Dict[str, Optional[float]]] = None  # noqa: E704
 
 
 class DisabledPipes(list):

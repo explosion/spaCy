@@ -9,7 +9,7 @@ class Matcher:
     def __contains__(self, key: str) -> bool: ...
     def add(
         self,
-        key: str,
+        key: Union[str, int],
         patterns: List[List[Dict[str, Any]]],
         *,
         on_match: Optional[
@@ -39,3 +39,4 @@ class Matcher:
         allow_missing: bool = ...,
         with_alignments: bool = ...
     ) -> Union[List[Tuple[int, int, int]], List[Span]]: ...
+    def _normalize_key(self, key: Any) -> Any: ...

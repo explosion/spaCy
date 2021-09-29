@@ -1409,7 +1409,7 @@ def get_arg_names(func: Callable) -> List[str]:
 
 
 def combine_score_weights(
-    weights: List[Dict[str, float]],
+    weights: List[Dict[str, Optional[float]]],
     overrides: Dict[str, Optional[float]] = SimpleFrozenDict(),
 ) -> Dict[str, Optional[float]]:
     """Combine and normalize score weights defined by components, e.g.
