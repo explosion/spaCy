@@ -194,8 +194,9 @@ class _RandomWords:
         # Compute normalized lexeme probabilities
         probs = [lex.prob for lex in vocab if lex.prob != 0.0]
         probs = probs[:10000]
-        import numpy.typing as npt
-        probs: npt.NDArray[numpy.floating] = numpy.exp(numpy.array(probs, dtype="f"))
+        probs: numpy.ndarray[Any, numpy.dtype[numpy.floating]] = numpy.exp(
+            numpy.array(probs, dtype="f")
+        )
         probs /= probs.sum()
         self.probs = probs
 
