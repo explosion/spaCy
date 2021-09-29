@@ -35,13 +35,14 @@ class IrishLemmatizer(Lemmatizer):
         if univ_pos == "PROPN":
             lookup_pos = "noun"
         if token.has_morph():
-            vs = ["Vnoun", "Inf"]
             # TODO: lookup is actually required for the genitive forms, but
             # this is not in BuNaMo, and would not be of use with IDT.
-            if token.pos_ == "NOUN" and token.morph.get("VerbForm", "") in vs:
-                hpref = token.morph.get("Form", "") == "HPref"
+            if univ_pos == "NOUN" and (
+                "VerbForm=Vnoun" in token.morph or "VerbForm=Inf" in token.morph
+            ):
+                hpref = "Form=HPref" in token.morph
                 return [demutate(string, hpref).lower()]
-            elif token.pos_ == "ADJ" and token.morph.get("VerbForm", "") == "Part":
+            elif univ_pos == "ADJ" and "VerbForm=Part" in token.morph:
                 return [demutate(string).lower()]
         lookup_table = self.lookups.get_table("lemma_lookup_" + lookup_pos, {})
 
