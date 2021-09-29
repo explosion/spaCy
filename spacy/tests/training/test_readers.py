@@ -82,15 +82,15 @@ def test_cat_readers(reader, additional_config):
 
     [nlp]
     lang = "en"
-    pipeline = ["tok2vec", "textcat"]
+    pipeline = ["tok2vec", "textcat_multilabel"]
 
     [components]
 
     [components.tok2vec]
     factory = "tok2vec"
 
-    [components.textcat]
-    factory = "textcat"
+    [components.textcat_multilabel]
+    factory = "textcat_multilabel"
     """
     config = Config().from_str(nlp_config_string)
     config["corpora"]["@readers"] = reader

@@ -1,6 +1,7 @@
 from typing import Optional, List, Dict, Sequence, Any, Iterable
 from pathlib import Path
 from wasabi import msg
+from wasabi.util import locale_escape
 import sys
 import srsly
 import typer
@@ -135,7 +136,7 @@ def print_run_help(project_dir: Path, subcommand: Optional[str] = None) -> None:
         print("")
         title = config.get("title")
         if title:
-            print(f"{title}\n")
+            print(f"{locale_escape(title)}\n")
         if config_commands:
             print(f"Available commands in {PROJECT_FILE}")
             print(f"Usage: {COMMAND} project run [COMMAND] {project_loc}")

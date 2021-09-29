@@ -1376,6 +1376,9 @@ class Language:
             scorer = Scorer(**kwargs)
         # reset annotation in predicted docs and time tokenization
         start_time = timer()
+        # this is purely for timing
+        for eg in examples:
+            self.make_doc(eg.reference.text)
         # apply all pipeline components
         for name, pipe in self.pipeline:
             kwargs = component_cfg.get(name, {})

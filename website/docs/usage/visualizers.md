@@ -328,6 +328,15 @@ position.
 }
 ```
 
+```python
+### ENT input with knowledge base links
+{
+    "text": "But Google is starting from behind.",
+    "ents": [{"start": 4, "end": 10, "label": "ORG", "kb_id": "Q95", "kb_url": "https://www.wikidata.org/entity/Q95"}],
+    "title": None
+}
+```
+
 ## Using displaCy in a web application {#webapp}
 
 If you want to use the visualizers as part of a web application, for example to
