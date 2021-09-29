@@ -498,8 +498,6 @@ class EntityLinker(TrainablePipe):
         deserialize["kb"] = lambda p: self.kb.from_disk(p)
         deserialize["model"] = load_model
         util.from_disk(path, deserialize, exclude)
-        if "overwrite" not in self.cfg:
-            self.cfg["overwrite"] = BACKWARD_OVERWRITE
         return self
 
     def rehearse(self, examples, *, sgd=None, losses=None, **config):
