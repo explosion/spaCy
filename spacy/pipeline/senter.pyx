@@ -70,7 +70,7 @@ class SentenceRecognizer(Tagger):
         model,
         name="senter",
         *,
-        overwrite=False,
+        overwrite=BACKWARD_OVERWRITE,
         scorer=senter_score,
     ):
         """Initialize a sentence recognizer.
@@ -88,7 +88,7 @@ class SentenceRecognizer(Tagger):
         self.model = model
         self.name = name
         self._rehearsal_model = None
-        self.cfg = {}
+        self.cfg = {"overwrite": overwrite}
         self.scorer = scorer
 
     @property
@@ -114,7 +114,7 @@ class SentenceRecognizer(Tagger):
         if isinstance(docs, Doc):
             docs = [docs]
         cdef Doc doc
-        overwrite = self.cfg.get("overwrite", BACKWARD_OVERWRITE)
+        cdef bint overwrite = self.cfg["overwrite"]
         for i, doc in enumerate(docs):
             doc_tag_ids = batch_tag_ids[i]
             if hasattr(doc_tag_ids, "get"):

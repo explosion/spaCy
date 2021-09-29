@@ -52,7 +52,7 @@ class Sentencizer(Pipe):
         name="sentencizer",
         *,
         punct_chars=None,
-        overwrite=False,
+        overwrite=BACKWARD_OVERWRITE,
         scorer=senter_score,
     ):
         """Initialize the sentencizer.
@@ -156,7 +156,7 @@ class Sentencizer(Pipe):
         """
         cfg = srsly.msgpack_loads(bytes_data)
         self.punct_chars = set(cfg.get("punct_chars", self.default_punct_chars))
-        self.overwrite = cfg.get("overwrite", BACKWARD_OVERWRITE)
+        self.overwrite = cfg.get("overwrite", self.overwrite)
         return self
 
     def to_disk(self, path, *, exclude=tuple()):
@@ -178,5 +178,5 @@ class Sentencizer(Pipe):
         path = path.with_suffix(".json")
         cfg = srsly.read_json(path)
         self.punct_chars = set(cfg.get("punct_chars", self.default_punct_chars))
-        self.overwrite = cfg.get("overwrite", BACKWARD_OVERWRITE)
+        self.overwrite = cfg.get("overwrite", self.overwrite)
         return self

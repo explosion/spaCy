@@ -79,7 +79,15 @@ class Tagger(TrainablePipe):
 
     DOCS: https://spacy.io/api/tagger
     """
-    def __init__(self, vocab, model, name="tagger", *, overwrite=False, scorer=tagger_score):
+    def __init__(
+        self,
+        vocab,
+        model,
+        name="tagger",
+        *,
+        overwrite=BACKWARD_OVERWRITE,
+        scorer=tagger_score,
+    ):
         """Initialize a part-of-speech tagger.
 
         vocab (Vocab): The shared vocabulary.
@@ -157,7 +165,7 @@ class Tagger(TrainablePipe):
             docs = [docs]
         cdef Doc doc
         cdef Vocab vocab = self.vocab
-        overwrite = self.cfg.get("overwrite", BACKWARD_OVERWRITE)
+        cdef bint overwrite = self.cfg["overwrite"]
         for i, doc in enumerate(docs):
             doc_tag_ids = batch_tag_ids[i]
             if hasattr(doc_tag_ids, "get"):

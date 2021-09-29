@@ -133,7 +133,7 @@ class EntityLinker(TrainablePipe):
         incl_context: bool,
         entity_vector_length: int,
         get_candidates: Callable[[KnowledgeBase, Span], Iterable[Candidate]],
-        overwrite: bool = True,
+        overwrite: bool = BACKWARD_OVERWRITE,
         scorer: Optional[Callable] = entity_linker_score,
     ) -> None:
         """Initialize an entity linker.
@@ -454,8 +454,6 @@ class EntityLinker(TrainablePipe):
         deserialize["kb"] = lambda b: self.kb.from_bytes(b)
         deserialize["model"] = load_model
         util.from_bytes(bytes_data, deserialize, exclude)
-        if "overwrite" not in self.cfg:
-            self.cfg["overwrite"] = BACKWARD_OVERWRITE
         return self
 
     def to_disk(

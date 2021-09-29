@@ -92,8 +92,8 @@ class Morphologizer(Tagger):
         model: Model,
         name: str = "morphologizer",
         *,
-        overwrite: bool = True,
-        extend: bool = False,
+        overwrite: bool = BACKWARD_OVERWRITE,
+        extend: bool = BACKWARD_EXTEND,
         scorer: Optional[Callable] = morphologizer_score,
     ):
         """Initialize a morphologizer.
@@ -229,8 +229,8 @@ class Morphologizer(Tagger):
             docs = [docs]
         cdef Doc doc
         cdef Vocab vocab = self.vocab
-        overwrite = self.cfg.get("overwrite", BACKWARD_OVERWRITE)
-        extend = self.cfg.get("extend", BACKWARD_EXTEND)
+        cdef bint overwrite = self.cfg["overwrite"]
+        cdef bint extend = self.cfg["extend"]
         for i, doc in enumerate(docs):
             doc_tag_ids = batch_tag_ids[i]
             if hasattr(doc_tag_ids, "get"):
