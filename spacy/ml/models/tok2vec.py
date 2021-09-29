@@ -158,7 +158,7 @@ def MultiHashEmbed(
 
     embeddings = [make_hash_embed(i) for i in range(len(attrs))]
     concat_size = width * (len(embeddings) + include_static_vectors)
-    max_out = with_array(
+    max_out: Model[Ragged, Ragged] = with_array(
         Maxout(width, concat_size, nP=3, dropout=0.0, normalize=True)  # type: ignore
     )
     if include_static_vectors:
@@ -234,27 +234,30 @@ def CharacterEmbed(
         cast(Model[List[Ints2d], Ragged], list2ragged()),
         with_array(HashEmbed(nO=width, nV=rows, column=0, seed=5)),  # type: ignore
     )  # type: Model[List[Doc], Ragged]
+    max_out: Model[Ragged, Ragged]
     if include_static_vectors:
+        max_out = with_array(
+            Maxout(width, nM * nC + (2 * width), nP=3, normalize=True, dropout=0.0)  # type: ignore
+        )
         model = chain(
             concatenate(
                 char_embed,
                 feature_extractor,
                 StaticVectors(width, dropout=0.0),
             ),
-            with_array(
-                Maxout(width, nM * nC + (2 * width), nP=3, normalize=True, dropout=0.0)  # type: ignore
-            ),
+            max_out,
             cast(Model[Ragged, List[Floats2d]], ragged2list()),
         )
     else:
+        max_out = with_array(
+            Maxout(width, nM * nC + width, nP=3, normalize=True, dropout=0.0)  # type: ignore
+        )
         model = chain(
             concatenate(
                 char_embed,
                 feature_extractor,
             ),
-            with_array(
-                Maxout(width, nM * nC + width, nP=3, normalize=True, dropout=0.0)  # type: ignore
-            ),
+            max_out,
             cast(Model[Ragged, List[Floats2d]], ragged2list()),
         )
     return model
