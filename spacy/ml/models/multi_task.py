@@ -1,4 +1,4 @@
-from typing import Optional, Iterable, Tuple, List, Callable, TYPE_CHECKING, cast
+from typing import Any, Optional, Iterable, Tuple, List, Callable, TYPE_CHECKING, cast
 from thinc.types import Floats2d
 from thinc.api import chain, Maxout, LayerNorm, Softmax, Linear, zero_init, Model
 from thinc.api import MultiSoftmax, list2array
@@ -187,12 +187,19 @@ def build_masked_language_model(
 
 class _RandomWords:
     def __init__(self, vocab: "Vocab") -> None:
+        # Extract lexeme representations
         self.words = [lex.text for lex in vocab if lex.prob != 0.0]
-        self.probs = [lex.prob for lex in vocab if lex.prob != 0.0]
         self.words = self.words[:10000]
-        self.probs = self.probs[:10000]
-        self.probs = numpy.exp(numpy.array(self.probs, dtype="f"))
-        self.probs /= self.probs.sum()  # type: ignore[attr-defined]
+
+        # Compute normalized lexeme probabilities
+        probs = [lex.prob for lex in vocab if lex.prob != 0.0]
+        probs = probs[:10000]
+        import numpy.typing as npt
+        probs: npt.NDArray[numpy.floating] = numpy.exp(numpy.array(probs, dtype="f"))
+        probs /= probs.sum()
+        self.probs = probs
+
+        # Initialize cache
         self._cache: List[int] = []
 
     def next(self) -> str:
