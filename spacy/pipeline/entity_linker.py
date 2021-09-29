@@ -273,14 +273,14 @@ class EntityLinker(TrainablePipe):
                     entity_encoding = self.kb.get_vector(kb_id)
                     entity_encodings.append(entity_encoding)
         entity_encodings = self.model.ops.asarray(entity_encodings, dtype="float32")
-        assert isinstance(entity_encodings, Floats2d)
         if sentence_encodings.shape != entity_encodings.shape:
             err = Errors.E147.format(
                 method="get_loss", msg="gold entities do not match up"
             )
             raise RuntimeError(err)
-        gradients = self.distance.get_grad(sentence_encodings, entity_encodings)
-        loss = self.distance.get_loss(sentence_encodings, entity_encodings)
+        # TODO: fix typing issue here
+        gradients = self.distance.get_grad(sentence_encodings, entity_encodings)  # type: ignore
+        loss = self.distance.get_loss(sentence_encodings, entity_encodings)  # type: ignore
         loss = loss / len(entity_encodings)
         return float(loss), gradients
 
