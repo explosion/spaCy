@@ -1,4 +1,4 @@
-def demutate(word: str, is_hpref=False) -> str:
+def demutate(word: str, is_hpref: bool = False) -> str:
     UVOWELS = "AÁEÉIÍOÓUÚ"
     LVOWELS = "aáeéiíoóuú"
     lc = word.lower()
@@ -91,4 +91,4 @@ def unponc(word: str) -> str:
             buf.append(PONC[ch])
         else:
             buf.append(ch)
-    return ''.join(buf)
+    return "".join(buf)
