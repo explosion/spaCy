@@ -1,7 +1,9 @@
-from typing import Optional, Iterable, Tuple, List, Callable, TYPE_CHECKING
+from typing import Optional, Iterable, Tuple, List, Callable, TYPE_CHECKING, cast
+from thinc.types import Floats2d
 from thinc.api import chain, Maxout, LayerNorm, Softmax, Linear, zero_init, Model
 from thinc.api import MultiSoftmax, list2array
 from thinc.api import to_categorical, CosineDistance, L2Distance
+from thinc.loss import Loss
 
 from ...util import registry, OOV_RANK
 from ...errors import Errors
@@ -31,10 +33,10 @@ def create_pretrain_vectors(
 
     def create_vectors_loss() -> Callable:
         if loss == "cosine":
-            distance = CosineDistance(normalize=True, ignore_zeros=True)
+            distance = CosineDistance(normalize=True, ignore_zeros=True)  # type: Loss
             return partial(get_vectors_loss, distance=distance)
         elif loss == "L2":
-            distance = L2Distance(normalize=True)  # type: ignore[assignment]
+            distance = L2Distance(normalize=True)
             return partial(get_vectors_loss, distance=distance)
         else:
             raise ValueError(Errors.E906.format(found=loss, supported="'cosine', 'L2'"))
@@ -114,9 +116,9 @@ def build_cloze_multi_task_model(
     vocab: "Vocab", tok2vec: Model, maxout_pieces: int, hidden_size: int
 ) -> Model:
     nO = vocab.vectors.data.shape[1]
-    output_layer = chain(  # type: ignore[misc]
-        list2array(),  # type: ignore[layer-mismatch-output]
-        Maxout(  # type: ignore[layer-mismatch-input]
+    output_layer = chain(
+        cast(Model[List["Floats2d"], Floats2d], list2array()),
+        Maxout(
             nO=hidden_size,
             nI=tok2vec.get_dim("nO"),
             nP=maxout_pieces,
@@ -135,9 +137,9 @@ def build_cloze_multi_task_model(
 def build_cloze_characters_multi_task_model(
     vocab: "Vocab", tok2vec: Model, maxout_pieces: int, hidden_size: int, nr_char: int
 ) -> Model:
-    output_layer = chain(  # type: ignore[misc]
-        list2array(),  # type: ignore[layer-mismatch-output]
-        Maxout(nO=hidden_size, nP=maxout_pieces),  # type: ignore[layer-mismatch-input]
+    output_layer = chain(
+        cast(Model[List["Floats2d"], Floats2d], list2array()),
+        Maxout(nO=hidden_size, nP=maxout_pieces),
         LayerNorm(nI=hidden_size),
         MultiSoftmax([256] * nr_char, nI=hidden_size),  # type: ignore[arg-type]
     )
@@ -171,14 +173,14 @@ def build_masked_language_model(
             if wrapped.has_dim(dim):
                 model.set_dim(dim, wrapped.get_dim(dim))
 
-    mlm_model = Model(  # type: ignore[var-annotated]
+    mlm_model = Model(
         "masked-language-model",
         mlm_forward,
         layers=[wrapped_model],
         init=mlm_initialize,
         refs={"wrapped": wrapped_model},
         dims={dim: None for dim in wrapped_model.dim_names},
-    )
+    )  # type: Model
     mlm_model.set_ref("wrapped", wrapped_model)
     return mlm_model
 
@@ -189,9 +191,9 @@ class _RandomWords:
         self.probs = [lex.prob for lex in vocab if lex.prob != 0.0]
         self.words = self.words[:10000]
         self.probs = self.probs[:10000]
-        self.probs = numpy.exp(numpy.array(self.probs, dtype="f"))  # type: ignore[assignment]
+        self.probs = numpy.exp(numpy.array(self.probs, dtype="f"))
         self.probs /= self.probs.sum()  # type: ignore[attr-defined]
-        self._cache = []  # type: ignore[var-annotated]
+        self._cache: List[int] = []
 
     def next(self) -> str:
         if not self._cache:

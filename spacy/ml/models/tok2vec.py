@@ -1,5 +1,5 @@
-from typing import Optional, List, Union
-from thinc.types import Floats2d
+from typing import Optional, List, Union, cast
+from thinc.types import Floats2d, Ints2d, Ragged
 from thinc.api import chain, clone, concatenate, with_array, with_padded
 from thinc.api import Model, noop, list2ragged, ragged2list, HashEmbed
 from thinc.api import expand_window, residual, Maxout, Mish, PyTorchLSTM
@@ -158,28 +158,32 @@ def MultiHashEmbed(
 
     embeddings = [make_hash_embed(i) for i in range(len(attrs))]
     concat_size = width * (len(embeddings) + include_static_vectors)
+    max_out = with_array(
+        Maxout(width, concat_size, nP=3, dropout=0.0, normalize=True)  # type: ignore
+    )
     if include_static_vectors:
+        feature_extractor = chain(
+            FeatureExtractor(attrs),
+            cast(Model[List[Ints2d], Ragged], list2ragged()),
+            with_array(concatenate(*embeddings)),
+        )  # type: Model[List[Doc], Ragged]
         model = chain(
             concatenate(
-                chain(  # type: ignore[layer-mismatch-output, misc]
-                    FeatureExtractor(attrs),  # type: ignore[layer-mismatch-output]
-                    list2ragged(),  # type: ignore[layer-mismatch-input]
-                    with_array(concatenate(*embeddings)),
-                ),
-                StaticVectors(width, dropout=0.0),  # type: ignore[layer-mismatch-output]
+                feature_extractor,
+                StaticVectors(width, dropout=0.0),
             ),
-            with_array(Maxout(width, concat_size, nP=3, dropout=0.0, normalize=True)),  # type: ignore[arg-type]
-            ragged2list(),
+            max_out,
+            cast(Model[Ragged, List[Floats2d]], ragged2list()),
         )
     else:
-        model = chain(  # type: ignore[misc]
-            FeatureExtractor(list(attrs)),  # type: ignore[layer-mismatch-output]
-            list2ragged(),  # type: ignore[layer-mismatch-input]
+        model = chain(
+            FeatureExtractor(list(attrs)),
+            cast(Model[List[Ints2d], Ragged], list2ragged()),
             with_array(concatenate(*embeddings)),
-            with_array(Maxout(width, concat_size, nP=3, dropout=0.0, normalize=True)),  # type: ignore[arg-type]
-            ragged2list(),
+            max_out,
+            cast(Model[Ragged, List[Floats2d]], ragged2list()),
         )
-    return model  # type: ignore[return-value]
+    return model
 
 
 @registry.architectures("spacy.CharacterEmbed.v2")
@@ -220,39 +224,40 @@ def CharacterEmbed(
     """
     feature = intify_attr(feature)
     if feature is None:
-        raise ValueError(Errors.E911(feat=feature))  # type: ignore[operator]
+        raise ValueError(Errors.E911.format(feat=feature))
+    char_embed = chain(
+        _character_embed.CharacterEmbed(nM=nM, nC=nC),
+        cast(Model[List[Floats2d], Ragged], list2ragged()),
+    )
+    feature_extractor = chain(
+        FeatureExtractor([feature]),
+        cast(Model[List[Ints2d], Ragged], list2ragged()),
+        with_array(HashEmbed(nO=width, nV=rows, column=0, seed=5)),  # type: ignore
+    )  # type: Model[List[Doc], Ragged]
     if include_static_vectors:
-        model = chain(  # type: ignore[misc]
+        model = chain(
             concatenate(
-                chain(_character_embed.CharacterEmbed(nM=nM, nC=nC), list2ragged()),  # type: ignore[layer-mismatch-input, layer-mismatch-output, misc]
-                chain(  # type: ignore[layer-mismatch-output, misc]
-                    FeatureExtractor([feature]),  # type: ignore[layer-mismatch-output]
-                    list2ragged(),  # type: ignore[layer-mismatch-input]
-                    with_array(HashEmbed(nO=width, nV=rows, column=0, seed=5)),  # type: ignore[arg-type]
-                ),
-                StaticVectors(width, dropout=0.0),  # type: ignore[layer-mismatch-output]
+                char_embed,
+                feature_extractor,
+                StaticVectors(width, dropout=0.0),
             ),
             with_array(
-                Maxout(width, nM * nC + (2 * width), nP=3, normalize=True, dropout=0.0)  # type: ignore[arg-type]
+                Maxout(width, nM * nC + (2 * width), nP=3, normalize=True, dropout=0.0)  # type: ignore
             ),
-            ragged2list(),
+            cast(Model[Ragged, List[Floats2d]], ragged2list()),
         )
     else:
-        model = chain(  # type: ignore[misc]
+        model = chain(
             concatenate(
-                chain(_character_embed.CharacterEmbed(nM=nM, nC=nC), list2ragged()),  # type: ignore[layer-mismatch-input, layer-mismatch-output, misc]
-                chain(  # type: ignore[layer-mismatch-output, misc]
-                    FeatureExtractor([feature]),  # type: ignore[layer-mismatch-output]
-                    list2ragged(),  # type: ignore[layer-mismatch-input]
-                    with_array(HashEmbed(nO=width, nV=rows, column=0, seed=5)),  # type: ignore[arg-type]
-                ),
+                char_embed,
+                feature_extractor,
             ),
             with_array(
-                Maxout(width, nM * nC + width, nP=3, normalize=True, dropout=0.0)  # type: ignore[arg-type]
+                Maxout(width, nM * nC + width, nP=3, normalize=True, dropout=0.0)  # type: ignore
             ),
-            ragged2list(),
+            cast(Model[Ragged, List[Floats2d]], ragged2list()),
         )
-    return model  # type: ignore[return-value]
+    return model
 
 
 @registry.architectures("spacy.MaxoutWindowEncoder.v2")

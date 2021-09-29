@@ -1,4 +1,4 @@
-from typing import Any, List, Union, Optional
+from typing import Any, List, Union, Optional, Dict
 from pathlib import Path
 import srsly
 from preshed.bloom import BloomFilter
@@ -172,7 +172,7 @@ class Lookups:
 
         DOCS: https://spacy.io/api/lookups#init
         """
-        self._tables = {}  # type: ignore[var-annotated]
+        self._tables: Dict[str, Table] = {}
 
     def __contains__(self, name: str) -> bool:
         """Check if the lookups contain a table of a given name. Delegates to

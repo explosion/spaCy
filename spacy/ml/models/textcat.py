@@ -37,12 +37,12 @@ def build_simple_cnn_text_classifier(
         if exclusive_classes:
             output_layer = Softmax(nO=nO, nI=nI)
             fill_defaults["b"] = NEG_VALUE
-            resizable_layer = resizable(  # type: ignore[var-annotated]
+            resizable_layer = resizable(
                 output_layer,
                 resize_layer=partial(
                     resize_linear_weighted, fill_defaults=fill_defaults
                 ),
-            )
+            )  # type: Model
             model = cnn >> resizable_layer
         else:
             output_layer = Linear(nO=nO, nI=nI)
@@ -59,7 +59,7 @@ def build_simple_cnn_text_classifier(
             resizable_layer=resizable_layer,
         )
     model.set_ref("tok2vec", tok2vec)
-    model.set_dim("nO", nO)  # type: ignore[arg-type]
+    model.set_dim("nO", nO)  # type: ignore  # TODO: remove type ignore once Thinc has been updated
     model.attrs["multi_label"] = not exclusive_classes
     return model
 

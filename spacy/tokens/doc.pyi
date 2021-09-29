@@ -1,16 +1,5 @@
-from typing import (
-    Callable,
-    Protocol,
-    Iterable,
-    Iterator,
-    Optional,
-    Union,
-    Tuple,
-    List,
-    Dict,
-    Any,
-    overload,
-)
+from typing import Callable, Protocol, Iterable, Iterator, Optional
+from typing import Union, Tuple, List, Dict, Any, overload
 from cymem.cymem import Pool
 from thinc.types import Floats1d, Floats2d, Ints2d
 from .span import Span
@@ -150,6 +139,7 @@ class Doc:
         self, attr_id: int, exclude: Optional[Any] = ..., counts: Optional[Any] = ...
     ) -> Dict[Any, int]: ...
     def from_array(self, attrs: List[int], array: Ints2d) -> Doc: ...
+    def to_array(self, py_attr_ids: List[int]) -> numpy.ndarray: ...
     @staticmethod
     def from_docs(
         docs: List[Doc],

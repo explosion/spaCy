@@ -6,7 +6,7 @@ from ..attrs import LOWER
 
 @registry.layers("spacy.extract_ngrams.v1")
 def extract_ngrams(ngram_size: int, attr: int = LOWER) -> Model:
-    model = Model("extract_ngrams", forward)  # type: ignore[var-annotated]
+    model = Model("extract_ngrams", forward)  # type: Model
     model.attrs["ngram_size"] = ngram_size
     model.attrs["attr"] = attr
     return model
