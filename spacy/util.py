@@ -1,4 +1,5 @@
-from typing import List, Union, Dict, Any, Optional, Iterable, Callable, Tuple, Type
+from typing import List, Union, Dict, Any, Set
+from typing import Optional, Iterable, Callable, Tuple, Type
 from typing import Iterator, Type, Pattern, Generator, TYPE_CHECKING
 from types import ModuleType
 import os
@@ -381,7 +382,7 @@ def load_model_from_package(
 
 
 def load_model_from_path(
-    model_path: Union[str, Path],
+    model_path: Path,
     *,
     meta: Optional[Dict[str, Any]] = None,
     vocab: Union["Vocab", bool] = True,
@@ -392,7 +393,7 @@ def load_model_from_path(
     """Load a model from a data directory path. Creates Language class with
     pipeline from config.cfg and then calls from_disk() with path.
 
-    name (str): Package name or model path.
+    model_path (Path): Mmodel path.
     meta (Dict[str, Any]): Optional model meta.
     vocab (Vocab / True): Optional vocab to pass in on initialization. If True,
         a new Vocab object will be created.
@@ -405,11 +406,11 @@ def load_model_from_path(
         keyed by section values in dot notation.
     RETURNS (Language): The loaded nlp object.
     """
-    if not model_path.exists():  # type: ignore[union-attr]
+    if not model_path.exists():
         raise IOError(Errors.E052.format(path=model_path))
     if not meta:
         meta = get_model_meta(model_path)
-    config_path = model_path / "config.cfg"  # type: ignore[operator]
+    config_path = model_path / "config.cfg"
     overrides = dict_to_dot(config)
     config = load_config(config_path, overrides=overrides)
     nlp = load_model_from_config(config, vocab=vocab, disable=disable, exclude=exclude)
@@ -1155,7 +1156,7 @@ def filter_spans(spans: Iterable["Span"]) -> List["Span"]:
     get_sort_key = lambda span: (span.end - span.start, -span.start)
     sorted_spans = sorted(spans, key=get_sort_key, reverse=True)
     result = []
-    seen_tokens = set()  # type: ignore[var-annotated]
+    seen_tokens = set()  # type: Set[int]
     for span in sorted_spans:
         # Check for end - 1 here because boundaries are inclusive
         if span.start not in seen_tokens and span.end - 1 not in seen_tokens:
@@ -1327,7 +1328,7 @@ def dot_to_dict(values: Dict[str, Any]) -> Dict[str, dict]:
     values (Dict[str, Any]): The key/value pairs to convert.
     RETURNS (Dict[str, dict]): The converted values.
     """
-    result = {}  # type: ignore[var-annotated]
+    result = {}  # type: Dict[str, dict]
     for key, value in values.items():
         path = result
         parts = key.lower().split(".")
@@ -1423,7 +1424,9 @@ def combine_score_weights(
     # We divide each weight by the total weight sum.
     # We first need to extract all None/null values for score weights that
     # shouldn't be shown in the table *or* be weighted
-    result: Dict[str, Optional[float]] = {key: value for w_dict in weights for (key, value) in w_dict.items()}
+    result: Dict[str, Optional[float]] = {
+        key: value for w_dict in weights for (key, value) in w_dict.items()
+    }
     result.update(overrides)
     weight_sum = sum([v if v else 0.0 for v in result.values()])
     for key, value in result.items():
