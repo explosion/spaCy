@@ -100,13 +100,13 @@ def init_nlp(config: Config, *, use_gpu: int = -1) -> "Language":
     return nlp
 
 
-def init_vocab(  # type: ignore[return]
+def init_vocab(
     nlp: "Language",
     *,
     data: Optional[Path] = None,
     lookups: Optional[Lookups] = None,
     vectors: Optional[str] = None,
-) -> "Language":
+) -> None:
     if lookups:
         nlp.vocab.lookups = lookups
         logger.info(f"Added vocab lookups: {', '.join(lookups.tables)}")

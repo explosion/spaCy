@@ -1,3 +1,4 @@
+from typing import Dict, Any
 import functools
 import copy
 
@@ -6,9 +7,9 @@ from ..errors import Errors
 
 class Underscore:
     mutable_types = (dict, list, set)
-    doc_extensions = {}  # type: ignore[var-annotated]
-    span_extensions = {}  # type: ignore[var-annotated]
-    token_extensions = {}  # type: ignore[var-annotated]
+    doc_extensions = {}  # type: Dict[Any, Any]
+    span_extensions = {}  # type: Dict[Any, Any]
+    token_extensions = {}  # type: Dict[Any, Any]
 
     def __init__(self, extensions, obj, start=None, end=None):
         object.__setattr__(self, "_extensions", extensions)

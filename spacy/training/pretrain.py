@@ -41,7 +41,7 @@ def pretrain(
     optimizer = P["optimizer"]
     # Load in pretrained weights to resume from
     if resume_path is not None:
-        epoch_resume = _resume_model(model, resume_path, epoch_resume, silent=silent)  # type: ignore[arg-type]
+        epoch_resume = _resume_model(model, resume_path, epoch_resume, silent=silent)
     else:
         # Without '--resume-path' the '--epoch-resume' argument is ignored
         epoch_resume = 0
@@ -93,7 +93,7 @@ def ensure_docs(examples_or_docs: Iterable[Union[Doc, Example]]) -> List[Doc]:
 
 
 def _resume_model(
-    model: Model, resume_path: Path, epoch_resume: int, silent: bool = True
+    model: Model, resume_path: Path, epoch_resume: Optional[int], silent: bool = True
 ) -> int:
     msg = Printer(no_print=silent)
     msg.info(f"Resume training tok2vec from: {resume_path}")

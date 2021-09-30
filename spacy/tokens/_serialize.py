@@ -1,6 +1,7 @@
-from typing import Iterable, Iterator, Union
+from typing import List, Dict, Set, Iterable, Iterator, Union, Optional
 from pathlib import Path
 import numpy
+from numpy import ndarray
 import zlib
 import srsly
 from thinc.api import NumpyOps
@@ -67,18 +68,20 @@ class DocBin:
         int_attrs = [intify_attr(attr) for attr in attrs]
         if None in int_attrs:
             non_valid = [attr for attr in attrs if intify_attr(attr) is None]
-            raise KeyError(Errors.E983.format(dict="attrs", key=non_valid, keys=IDS.keys())) from None
+            raise KeyError(
+                Errors.E983.format(dict="attrs", key=non_valid, keys=IDS.keys())
+            ) from None
         attrs = sorted(int_attrs)
         self.version = "0.1"
         self.attrs = [attr for attr in attrs if attr != ORTH and attr != SPACY]
         self.attrs.insert(0, ORTH)  # Ensure ORTH is always attrs[0]
-        self.tokens = []  # type: ignore[var-annotated]
-        self.spaces = []  # type: ignore[var-annotated]
-        self.cats = []  # type: ignore[var-annotated]
-        self.span_groups = []  # type: ignore[var-annotated]
-        self.user_data = []  # type: ignore[var-annotated]
-        self.flags = []  # type: ignore[var-annotated]
-        self.strings = set()  # type: ignore[var-annotated]
+        self.tokens = []  # type: List[ndarray]
+        self.spaces = []  # type: List[ndarray]
+        self.cats = []  # type: List[Dict]
+        self.span_groups = []  # type: List[bytes]
+        self.user_data = []  # type: List[Optional[bytes]]
+        self.flags = []  # type: List[Dict]
+        self.strings = set()  # type: Set[str]
         self.store_user_data = store_user_data
         for doc in docs:
             self.add(doc)
@@ -94,11 +97,11 @@ class DocBin:
 
         DOCS: https://spacy.io/api/docbin#add
         """
-        array = doc.to_array(self.attrs)  # type: ignore[attr-defined]
+        array = doc.to_array(self.attrs)
         if len(array.shape) == 1:
             array = array.reshape((array.shape[0], 1))
         self.tokens.append(array)
-        spaces = doc.to_array(SPACY)  # type: ignore[attr-defined]
+        spaces = doc.to_array(SPACY)
         assert array.shape[0] == spaces.shape[0]  # this should never happen
         spaces = spaces.reshape((spaces.shape[0], 1))
         self.spaces.append(numpy.asarray(spaces, dtype=bool))
@@ -136,11 +139,11 @@ class DocBin:
         for i in range(len(self.tokens)):
             flags = self.flags[i]
             tokens = self.tokens[i]
-            spaces = self.spaces[i]
+            spaces = self.spaces[i]  # type: Optional[ndarray]
             if flags.get("has_unknown_spaces"):
                 spaces = None
-            doc = Doc(vocab, words=tokens[:, orth_col], spaces=spaces)
-            doc = doc.from_array(self.attrs, tokens)
+            doc = Doc(vocab, words=tokens[:, orth_col], spaces=spaces)  # type: ignore
+            doc = doc.from_array(self.attrs, tokens)  # type: ignore
             doc.cats = self.cats[i]
             if self.span_groups[i]:
                 doc.spans.from_bytes(self.span_groups[i])

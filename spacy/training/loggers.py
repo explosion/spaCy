@@ -158,7 +158,7 @@ def wandb_logger_v2(
                     if info["step"] % model_log_interval == 0 and info["step"] != 0:
                         log_dir_artifact(
                             path=info["output_path"],
-                            name="pipeline_" + run.id,  # type: ignore[union-attr]
+                            name="pipeline_" + run.id,
                             type="checkpoint",
                             metadata=info,
                             aliases=[

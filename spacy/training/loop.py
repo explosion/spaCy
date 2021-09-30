@@ -32,7 +32,7 @@ def train(
     """Train a pipeline.
 
     nlp (Language): The initialized nlp object with the full config.
-    output_path (Path): Optional output path to save trained model to.
+    output_path (Optional[Path]): Optional output path to save trained model to.
     use_gpu (int): Whether to train on GPU. Make sure to call require_gpu
         before calling this function.
     stdout (file): A file-like object to write output messages. To disable
@@ -90,7 +90,7 @@ def train(
         exclude=frozen_components,
         annotating_components=annotating_components,
     )
-    clean_output_dir(output_path)  # type: ignore[arg-type]
+    clean_output_dir(output_path)
     stdout.write(msg.info(f"Pipeline: {nlp.pipe_names}") + "\n")
     if frozen_components:
         stdout.write(msg.info(f"Frozen components: {frozen_components}") + "\n")
@@ -194,11 +194,11 @@ def train_while_improving(
     else:
         dropouts = dropout
     results = []
-    losses = {}  # type: ignore[var-annotated]
+    losses = {}  # type: Dict[str, float]
     words_seen = 0
     start_time = timer()
     for step, (epoch, batch) in enumerate(train_data):
-        dropout = next(dropouts)  # type: ignore[call-overload]
+        dropout = next(dropouts)  # type: ignore
         for subbatch in subdivide_batch(batch, accumulate_gradient):
             nlp.update(
                 subbatch,
@@ -213,7 +213,7 @@ def train_while_improving(
             if (
                 name not in exclude
                 and hasattr(proc, "is_trainable")
-                and proc.is_trainable  # type: ignore[attr-defined]
+                and proc.is_trainable  # type: ignore
                 and proc.model not in (True, False, None)  # type: ignore[attr-defined]
             ):
                 proc.finish_update(optimizer)  # type: ignore[attr-defined]
@@ -310,15 +310,15 @@ def create_train_batches(
 ):
     epoch = 0
     if max_epochs >= 0:
-        examples = list(corpus(nlp))
+        examples = list(corpus(nlp))  # type: Iterable[Example]
         if not examples:
             # Raise error if no data
             raise ValueError(Errors.E986)
     while max_epochs < 1 or epoch != max_epochs:
         if max_epochs >= 0:
-            random.shuffle(examples)
+            random.shuffle(examples)  # type: ignore
         else:
-            examples = corpus(nlp)  # type: ignore[assignment]
+            examples = corpus(nlp)
         for batch in batcher(examples):
             yield epoch, batch
         epoch += 1
@@ -353,14 +353,14 @@ def create_before_to_disk_callback(
     return before_to_disk
 
 
-def clean_output_dir(path: Union[str, Path]) -> None:
+def clean_output_dir(path: Optional[Path]) -> None:
     """Remove an existing output directory. Typically used to ensure that that
     a directory like model-best and its contents aren't just being overwritten
     by nlp.to_disk, which could preserve existing subdirectories (e.g.
     components that don't exist anymore).
     """
-    if path is not None and path.exists():  # type: ignore[union-attr]
-        for subdir in [path / DIR_MODEL_BEST, path / DIR_MODEL_LAST]:  # type: ignore[operator]
+    if path is not None and path.exists():
+        for subdir in [path / DIR_MODEL_BEST, path / DIR_MODEL_LAST]:
             if subdir.exists():
                 try:
                     shutil.rmtree(str(subdir))

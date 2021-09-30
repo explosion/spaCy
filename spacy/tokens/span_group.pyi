@@ -3,6 +3,7 @@ from .doc import Doc
 from .span import Span
 
 class SpanGroup:
+    name: str
     attrs: Dict[str, Any]
     def __init__(
         self,

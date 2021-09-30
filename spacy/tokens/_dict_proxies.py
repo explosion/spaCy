@@ -1,9 +1,10 @@
-from typing import Iterable, Tuple, Union, TYPE_CHECKING
+from typing import Iterable, Tuple, Union, Optional, TYPE_CHECKING
 import weakref
 from collections import UserDict
 import srsly
 
 from .span_group import SpanGroup
+from .. import Errors
 
 if TYPE_CHECKING:
     # This lets us add type hints for mypy etc. without causing circular imports
@@ -13,7 +14,7 @@ if TYPE_CHECKING:
 
 # Why inherit from UserDict instead of dict here?
 # Well, the 'dict' class doesn't necessarily delegate everything nicely,
-# for performance reasons. The UserDict is slower by better behaved.
+# for performance reasons. The UserDict is slower but better behaved.
 # See https://treyhunner.com/2019/04/why-you-shouldnt-inherit-from-list-and-dict-in-python/0ww
 class SpanGroups(UserDict):
     """A dict-like proxy held by the Doc, to control access to span groups."""
@@ -31,11 +32,12 @@ class SpanGroups(UserDict):
         UserDict.__setitem__(self, key, value)
 
     def _make_span_group(self, name: str, spans: Iterable["Span"]) -> SpanGroup:
-        return SpanGroup(self.doc_ref(), name=name, spans=spans)  # type: ignore[arg-type]
+        doc = self._ensure_doc()
+        return SpanGroup(doc, name=name, spans=spans)
 
-    def copy(self, doc: "Doc" = None) -> "SpanGroups":  # type: ignore[assignment]
+    def copy(self, doc: Optional["Doc"] = None) -> "SpanGroups":
         if doc is None:
-            doc = self.doc_ref()
+            doc = self._ensure_doc()
         return SpanGroups(doc).from_bytes(self.to_bytes())
 
     def to_bytes(self) -> bytes:
@@ -47,8 +49,14 @@ class SpanGroups(UserDict):
     def from_bytes(self, bytes_data: bytes) -> "SpanGroups":
         msg = srsly.msgpack_loads(bytes_data)
         self.clear()
-        doc = self.doc_ref()
+        doc = self._ensure_doc()
         for value_bytes in msg:
-            group = SpanGroup(doc).from_bytes(value_bytes)  # type: ignore[arg-type]
-            self[group.name] = group  # type: ignore[attr-defined]
+            group = SpanGroup(doc).from_bytes(value_bytes)
+            self[group.name] = group
         return self
+
+    def _ensure_doc(self) -> "Doc":
+        doc = self.doc_ref()
+        if doc is None:
+            raise ValueError(Errors.E866)
+        return doc
