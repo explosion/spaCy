@@ -822,8 +822,8 @@ from the specified model. Intended for use in `[initialize.before_init]`.
 > #### Example config
 >
 > ```ini
-> [initialize]
-> after_init = {"@callbacks":"spacy.models_with_nvtx_range.v1"}
+> [nlp]
+> after_pipeline_creation = {"@callbacks":"spacy.models_with_nvtx_range.v1"}
 > ```
 
 Recursively wrap the models in each pipe using [NVTX](https://nvidia.github.io/NVTX/)
