@@ -284,7 +284,9 @@ $ python -m pytest --pyargs %%SPACY_PKG_NAME --slow        # basic and slow test
 ## Troubleshooting guide {#troubleshooting}
 
 This section collects some of the most common errors you may come across when
-installing, loading and using spaCy, as well as their solutions.
+installing, loading and using spaCy, as well as their solutions. Also see the
+[Discussions FAQ Thread](https://github.com/explosion/spaCy/discussions/8226),
+which is updated more frequently and covers more transitory issues.
 
 > #### Help us improve this guide
 >
