@@ -28,14 +28,14 @@ def test_readers():
     """
 
     @registry.readers("myreader.v1")
-    def myreader() -> Dict[str, Callable[[Language, str], Iterable[Example]]]:
+    def myreader() -> Dict[str, Callable[[Language], Iterable[Example]]]:
         annots = {"cats": {"POS": 1.0, "NEG": 0.0}}
 
         def reader(nlp: Language):
             doc = nlp.make_doc(f"This is an example")
             return [Example.from_dict(doc, annots)]
 
-        return {"train": reader, "dev": reader, "extra": reader, "something": reader}  # type: ignore[dict-item]
+        return {"train": reader, "dev": reader, "extra": reader, "something": reader}
 
     config = Config().from_str(config_string)
     nlp = load_model_from_config(config, auto_fill=True)
