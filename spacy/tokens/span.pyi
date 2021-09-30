@@ -45,7 +45,7 @@ class Span:
         doc: Doc,
         start: int,
         end: int,
-        label: int = ...,
+        label: Union[str, int] = ...,
         vector: Optional[Floats1d] = ...,
         vector_norm: Optional[float] = ...,
         kb_id: Optional[int] = ...,

@@ -287,7 +287,7 @@ class Lemmatizer(Pipe):
         deserialize = {}  # type: Dict[str, Callable[[Any], Any]]
         deserialize["vocab"] = lambda p: self.vocab.from_disk(p, exclude=exclude)
         deserialize["lookups"] = lambda p: self.lookups.from_disk(p)
-        util.from_disk(path, deserialize, exclude)  # type: ignore[arg-type]
+        util.from_disk(path, deserialize, exclude)
         self._validate_tables()
         return self
 

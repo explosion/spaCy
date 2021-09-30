@@ -73,16 +73,16 @@ subword_features = true
     default_config={"threshold": 0.5, "model": DEFAULT_MULTI_TEXTCAT_MODEL},
     default_score_weights={
         "cats_score": 1.0,
-        "cats_score_desc": None,  # type: ignore[dict-item]
-        "cats_micro_p": None,  # type: ignore[dict-item]
-        "cats_micro_r": None,  # type: ignore[dict-item]
-        "cats_micro_f": None,  # type: ignore[dict-item]
-        "cats_macro_p": None,  # type: ignore[dict-item]
-        "cats_macro_r": None,  # type: ignore[dict-item]
-        "cats_macro_f": None,  # type: ignore[dict-item]
-        "cats_macro_auc": None,  # type: ignore[dict-item]
-        "cats_f_per_type": None,  # type: ignore[dict-item]
-        "cats_macro_auc_per_type": None,  # type: ignore[dict-item]
+        "cats_score_desc": None,
+        "cats_micro_p": None,
+        "cats_micro_r": None,
+        "cats_micro_f": None,
+        "cats_macro_p": None,
+        "cats_macro_r": None,
+        "cats_macro_f": None,
+        "cats_macro_auc": None,
+        "cats_f_per_type": None,
+        "cats_macro_auc_per_type": None,
     },
 )
 def make_multilabel_textcat(
@@ -184,7 +184,7 @@ class MultiLabel_TextCategorizer(TextCategorizer):
             **kwargs,
         )
 
-    def _validate_categories(self, examples: List[Example]):
+    def _validate_categories(self, examples: Iterable[Example]):
         """This component allows any type of single- or multi-label annotations.
         This method overwrites the more strict one from 'textcat'."""
         pass

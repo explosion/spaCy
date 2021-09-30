@@ -60,8 +60,8 @@ class Tok2Vec(TrainablePipe):
         self.vocab = vocab
         self.model = model
         self.name = name
-        self.listener_map = {}  # type: ignore[var-annotated]
-        self.cfg = {}  # type: ignore[var-annotated]
+        self.listener_map = {}  # type: Dict[str, List["Tok2VecListener"]]
+        self.cfg = {}  # type: Dict[str, Any]
 
     @property
     def listeners(self) -> List["Tok2VecListener"]:
@@ -119,7 +119,7 @@ class Tok2Vec(TrainablePipe):
         DOCS: https://spacy.io/api/tok2vec#predict
         """
         tokvecs = self.model.predict(docs)
-        batch_id = Tok2VecListener.get_batch_id(docs)  # type: ignore[arg-type]
+        batch_id = Tok2VecListener.get_batch_id(docs)
         for listener in self.listeners:
             listener.receive(batch_id, tokvecs, _empty_backprop)
         return tokvecs
@@ -250,7 +250,7 @@ class Tok2VecListener(Model):
         self._backprop = None
 
     @classmethod
-    def get_batch_id(cls, inputs: List[Doc]) -> int:
+    def get_batch_id(cls, inputs: Iterable[Doc]) -> int:
         """Calculate a content-sensitive hash of the batch of documents, to check
         whether the next batch of documents is unexpected.
         """
@@ -261,7 +261,7 @@ class Tok2VecListener(Model):
         predictions and callback are produced by the upstream Tok2Vec component,
         and later will be used when the listener's component's model is called.
         """
-        self._batch_id = batch_id  # type: ignore[assignment]
+        self._batch_id = batch_id
         self._outputs = outputs
         self._backprop = backprop
 

@@ -73,16 +73,16 @@ subword_features = true
     default_config={"threshold": 0.5, "model": DEFAULT_SINGLE_TEXTCAT_MODEL},
     default_score_weights={
         "cats_score": 1.0,
-        "cats_score_desc": None,  # type: ignore[dict-item]
-        "cats_micro_p": None,  # type: ignore[dict-item]
-        "cats_micro_r": None,  # type: ignore[dict-item]
-        "cats_micro_f": None,  # type: ignore[dict-item]
-        "cats_macro_p": None,  # type: ignore[dict-item]
-        "cats_macro_r": None,  # type: ignore[dict-item]
-        "cats_macro_f": None,  # type: ignore[dict-item]
-        "cats_macro_auc": None,  # type: ignore[dict-item]
-        "cats_f_per_type": None,  # type: ignore[dict-item]
-        "cats_macro_auc_per_type": None,  # type: ignore[dict-item]
+        "cats_score_desc": None,
+        "cats_micro_p": None,
+        "cats_micro_r": None,
+        "cats_micro_f": None,
+        "cats_macro_p": None,
+        "cats_macro_r": None,
+        "cats_macro_f": None,
+        "cats_macro_auc": None,
+        "cats_f_per_type": None,
+        "cats_macro_auc_per_type": None,
     },
 )
 def make_textcat(
@@ -153,7 +153,7 @@ class TextCategorizer(TrainablePipe):
             # Handle cases where there are no tokens in any docs.
             tensors = [doc.tensor for doc in docs]
             xp = get_array_module(tensors)
-            scores = xp.zeros((len(docs), len(self.labels)))  # type: ignore[arg-type]
+            scores = xp.zeros((len(list(docs)), len(self.labels)))
             return scores
         scores = self.model.predict(docs)
         scores = self.model.ops.asarray(scores)
@@ -195,7 +195,7 @@ class TextCategorizer(TrainablePipe):
             losses = {}
         losses.setdefault(self.name, 0.0)
         validate_examples(examples, "TextCategorizer.update")
-        self._validate_categories(examples)  # type: ignore[arg-type]
+        self._validate_categories(examples)
         if not any(len(eg.predicted) if eg.predicted else 0 for eg in examples):
             # Handle cases where there are no tokens in any docs.
             return losses
@@ -230,10 +230,11 @@ class TextCategorizer(TrainablePipe):
 
         DOCS: https://spacy.io/api/textcategorizer#rehearse
         """
-        if losses is not None:
-            losses.setdefault(self.name, 0.0)
+        if losses is None:
+            losses = {}
+        losses.setdefault(self.name, 0.0)
         if self._rehearsal_model is None:
-            return losses  # type: ignore[return-value]
+            return losses
         validate_examples(examples, "TextCategorizer.rehearse")
         self._validate_categories(examples)
         docs = [eg.predicted for eg in examples]
@@ -247,23 +248,23 @@ class TextCategorizer(TrainablePipe):
         bp_scores(gradient)
         if sgd is not None:
             self.finish_update(sgd)
-        if losses is not None:
-            losses[self.name] += (gradient ** 2).sum()
+        losses[self.name] += (gradient ** 2).sum()
         return losses
 
     def _examples_to_truth(
-        self, examples: List[Example]
+        self, examples: Iterable[Example]
     ) -> Tuple[numpy.ndarray, numpy.ndarray]:
-        truths = numpy.zeros((len(examples), len(self.labels)), dtype="f")
-        not_missing = numpy.ones((len(examples), len(self.labels)), dtype="f")
+        nr_examples = len(list(examples))
+        truths = numpy.zeros((nr_examples, len(self.labels)), dtype="f")
+        not_missing = numpy.ones((nr_examples, len(self.labels)), dtype="f")
         for i, eg in enumerate(examples):
             for j, label in enumerate(self.labels):
                 if label in eg.reference.cats:
                     truths[i, j] = eg.reference.cats[label]
                 else:
                     not_missing[i, j] = 0.0
-        truths = self.model.ops.asarray(truths)  # type: ignore[arg-type, assignment]
-        return truths, not_missing  # type: ignore[return-value]
+        truths = self.model.ops.asarray(truths)  # type: ignore
+        return truths, not_missing  # type: ignore
 
     def get_loss(self, examples: Iterable[Example], scores) -> Tuple[float, float]:
         """Find the loss and gradient of loss for the batch of documents and
@@ -276,9 +277,9 @@ class TextCategorizer(TrainablePipe):
         DOCS: https://spacy.io/api/textcategorizer#get_loss
         """
         validate_examples(examples, "TextCategorizer.get_loss")
-        self._validate_categories(examples)  # type: ignore[arg-type]
-        truths, not_missing = self._examples_to_truth(examples)  # type: ignore[arg-type]
-        not_missing = self.model.ops.asarray(not_missing)  # type: ignore[arg-type, assignment]
+        self._validate_categories(examples)
+        truths, not_missing = self._examples_to_truth(examples)
+        not_missing = self.model.ops.asarray(not_missing)  # type: ignore
         d_scores = (scores - truths) / scores.shape[0]
         d_scores *= not_missing
         mean_square_error = (d_scores ** 2).sum(axis=1).mean()
@@ -299,9 +300,7 @@ class TextCategorizer(TrainablePipe):
         self._allow_extra_label()
         self.cfg["labels"].append(label)  # type: ignore[attr-defined]
         if self.model and "resize_output" in self.model.attrs:
-            self.model = self.model.attrs["resize_output"](
-                self.model, len(self.cfg["labels"])  # type: ignore[arg-type]
-            )
+            self.model = self.model.attrs["resize_output"](self.model, len(self.labels))
         self.vocab.strings.add(label)
         return 1
 
@@ -328,7 +327,7 @@ class TextCategorizer(TrainablePipe):
         DOCS: https://spacy.io/api/textcategorizer#initialize
         """
         validate_get_examples(get_examples, "TextCategorizer.initialize")
-        self._validate_categories(get_examples())  # type: ignore[arg-type]
+        self._validate_categories(get_examples())
         if labels is None:
             for example in get_examples():
                 for cat in example.y.cats:
@@ -363,7 +362,7 @@ class TextCategorizer(TrainablePipe):
         DOCS: https://spacy.io/api/textcategorizer#score
         """
         validate_examples(examples, "TextCategorizer.score")
-        self._validate_categories(examples)  # type: ignore[arg-type]
+        self._validate_categories(examples)
         kwargs.setdefault("threshold", self.cfg["threshold"])
         kwargs.setdefault("positive_label", self.cfg["positive_label"])
         return Scorer.score_cats(
@@ -374,7 +373,7 @@ class TextCategorizer(TrainablePipe):
             **kwargs,
         )
 
-    def _validate_categories(self, examples: List[Example]):
+    def _validate_categories(self, examples: Iterable[Example]):
         """Check whether the provided examples all have single-label cats annotations."""
         for ex in examples:
             if list(ex.reference.cats.values()).count(1.0) > 1:

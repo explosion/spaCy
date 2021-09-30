@@ -54,7 +54,7 @@ architectures and their arguments and hyperparameters.
 
 | Setting        | Description                                                                                                                                                                                                                                                                                             |
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `suggester`    | A function that [suggests spans](#suggesters). Spans are returned as a ragged array with two integer columns, for the start and end positions. Defaults to [`ngram_suggester`](#ngram_suggester). ~~Callable[List[Doc], Ragged]~~                                                                       |
+| `suggester`    | A function that [suggests spans](#suggesters). Spans are returned as a ragged array with two integer columns, for the start and end positions. Defaults to [`ngram_suggester`](#ngram_suggester). ~~Callable[[Iterable[Doc], Optional[Ops]], Ragged]~~                                                  |
 | `model`        | A model instance that is given a a list of documents and `(start, end)` indices representing candidate span offsets. The model predicts a probability for each category for each span. Defaults to [SpanCategorizer](/api/architectures#SpanCategorizer). ~~Model[Tuple[List[Doc], Ragged], Floats2d]~~ |
 | `spans_key`    | Key of the [`Doc.spans`](/api/doc#spans) dict to save the spans under. During initialization and training, the component will look for spans on the reference document under the same key. Defaults to `"spans"`. ~~str~~                                                                               |
 | `threshold`    | Minimum probability to consider a prediction positive. Spans with a positive prediction will be saved on the Doc. Defaults to `0.5`. ~~float~~                                                                                                                                                          |
@@ -89,7 +89,7 @@ shortcut for this and instantiate the component using its string name and
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `vocab`        | The shared vocabulary. ~~Vocab~~                                                                                                                                                                                                     |
 | `model`        | A model instance that is given a a list of documents and `(start, end)` indices representing candidate span offsets. The model predicts a probability for each category for each span. ~~Model[Tuple[List[Doc], Ragged], Floats2d]~~ |
-| `suggester`    | A function that [suggests spans](#suggesters). Spans are returned as a ragged array with two integer columns, for the start and end positions. ~~Callable[List[Doc], Ragged]~~                                                       |
+| `suggester`    | A function that [suggests spans](#suggesters). Spans are returned as a ragged array with two integer columns, for the start and end positions. ~~Callable[[Iterable[Doc], Optional[Ops]], Ragged]~~                                  |
 | `name`         | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~                                                                                                                                  |
 | _keyword-only_ |                                                                                                                                                                                                                                      |
 | `spans_key`    | Key of the [`Doc.spans`](/api/doc#sans) dict to save the spans under. During initialization and training, the component will look for spans on the reference document under the same key. Defaults to `"spans"`. ~~str~~             |
@@ -251,11 +251,11 @@ predicted scores.
 > loss, d_loss = spancat.get_loss(examples, scores)
 > ```
 
-| Name        | Description                                                                 |
-| ----------- | --------------------------------------------------------------------------- |
-| `examples`  | The batch of examples. ~~Iterable[Example]~~                                |
-| `scores`    | Scores representing the model's predictions.                                |
-| **RETURNS** | The loss and the gradient, i.e. `(loss, gradient)`. ~~Tuple[float, float]~~ |
+| Name           | Description                                                                 |
+| -------------- | --------------------------------------------------------------------------- |
+| `examples`     | The batch of examples. ~~Iterable[Example]~~                                |
+| `spans_scores` | Scores representing the model's predictions. ~~Tuple[Ragged, Floats2d]~~    |
+| **RETURNS**    | The loss and the gradient, i.e. `(loss, gradient)`. ~~Tuple[float, float]~~ |
 
 ## SpanCategorizer.score {#score tag="method"}
 
@@ -466,7 +466,7 @@ integers. The array has two columns, indicating the start and end position.
 | Name        | Description                                                                                                          |
 | ----------- | -------------------------------------------------------------------------------------------------------------------- |
 | `sizes`     | The phrase lengths to suggest. For example, `[1, 2]` will suggest phrases consisting of 1 or 2 tokens. ~~List[int]~~ |
-| **CREATES** | The suggester function. ~~Callable[[List[Doc]], Ragged]~~                                                            |
+| **CREATES** | The suggester function. ~~Callable[[Iterable[Doc], Optional[Ops]], Ragged]~~                                         |
 
 ### spacy.ngram_range_suggester.v1 {#ngram_range_suggester}
 
@@ -483,8 +483,8 @@ Suggest all spans of at least length `min_size` and at most length `max_size`
 (both inclusive). Spans are returned as a ragged array of integers. The array
 has two columns, indicating the start and end position.
 
-| Name        | Description                                                  |
-| ----------- | ------------------------------------------------------------ |
-| `min_size`  | The minimal phrase lengths to suggest (inclusive). ~~[int]~~ |
-| `max_size`  | The maximal phrase lengths to suggest (exclusive). ~~[int]~~ |
-| **CREATES** | The suggester function. ~~Callable[[List[Doc]], Ragged]~~    |
+| Name        | Description                                                                  |
+| ----------- | ---------------------------------------------------------------------------- |
+| `min_size`  | The minimal phrase lengths to suggest (inclusive). ~~[int]~~                 |
+| `max_size`  | The maximal phrase lengths to suggest (exclusive). ~~[int]~~                 |
+| **CREATES** | The suggester function. ~~Callable[[Iterable[Doc], Optional[Ops]], Ragged]~~ |
