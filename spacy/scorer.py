@@ -1,4 +1,5 @@
-from typing import Optional, Iterable, Dict, Set, Any, Callable, TYPE_CHECKING
+from typing import Optional, Iterable, Dict, Set, List, Any, Callable, Tuple
+from typing import TYPE_CHECKING
 import numpy as np
 from collections import defaultdict
 
@@ -74,8 +75,8 @@ class ROCAUCScore:
     may throw an error."""
 
     def __init__(self) -> None:
-        self.golds = []  # type: ignore[var-annotated]
-        self.cands = []  # type: ignore[var-annotated]
+        self.golds = []  # type: List[Any]
+        self.cands = []  # type: List[Any]
         self.saved_score = 0.0
         self.saved_score_at_len = 0
 
@@ -111,9 +112,10 @@ class Scorer:
 
         DOCS: https://spacy.io/api/scorer#init
         """
-        self.nlp = nlp
         self.cfg = cfg
-        if not nlp:
+        if nlp:
+            self.nlp = nlp
+        else:
             nlp = get_lang_class(default_lang)()
             for pipe in default_pipeline:
                 nlp.add_pipe(pipe)
@@ -128,11 +130,11 @@ class Scorer:
         DOCS: https://spacy.io/api/scorer#score
         """
         scores = {}
-        if hasattr(self.nlp.tokenizer, "score"):  # type: ignore[union-attr]
-            scores.update(self.nlp.tokenizer.score(examples, **self.cfg))  # type: ignore[union-attr]
-        for name, component in self.nlp.pipeline:  # type: ignore[union-attr]
+        if hasattr(self.nlp.tokenizer, "score"):
+            scores.update(self.nlp.tokenizer.score(examples, **self.cfg))  # type: ignore
+        for name, component in self.nlp.pipeline:
             if hasattr(component, "score"):
-                scores.update(component.score(examples, **self.cfg))  # type: ignore[union-attr]
+                scores.update(component.score(examples, **self.cfg))  # type: ignore
         return scores
 
     @staticmethod
@@ -201,6 +203,8 @@ class Scorer:
         getter (Callable[[Token, str], Any]): Defaults to getattr. If provided,
             getter(token, attr) should return the value of the attribute for an
             individual token.
+        missing_values (Set[Any]): Attribute values to treat as missing annotation
+            in the reference annotation.
         RETURNS (Dict[str, Any]): A dictionary containing the accuracy score
             under the key attr_acc.
 
@@ -250,6 +254,8 @@ class Scorer:
         getter (Callable[[Token, str], Any]): Defaults to getattr. If provided,
             getter(token, attr) should return the value of the attribute for an
             individual token.
+        missing_values (Set[Any]): Attribute values to treat as missing annotation
+            in the reference annotation.
         RETURNS (dict): A dictionary containing the per-feat PRF scores under
             the key attr_per_feat.
         """
@@ -258,7 +264,7 @@ class Scorer:
             pred_doc = example.predicted
             gold_doc = example.reference
             align = example.alignment
-            gold_per_feat = {}  # type: ignore[var-annotated]
+            gold_per_feat = {}  # type: Dict[str, Set]
             missing_indices = set()
             for gold_i, token in enumerate(gold_doc):
                 value = getter(token, attr)
@@ -273,7 +279,7 @@ class Scorer:
                         gold_per_feat[field].add((gold_i, feat))
                 else:
                     missing_indices.add(gold_i)
-            pred_per_feat = {}  # type: ignore[var-annotated]
+            pred_per_feat = {}  # type: Dict[str, Set]
             for token in pred_doc:
                 if token.orth_.isspace():
                     continue
@@ -350,7 +356,7 @@ class Scorer:
                 + [k.label_ for k in getter(pred_doc, attr)]
             )
             # Set up all labels for per type scoring and prepare gold per type
-            gold_per_type = {label: set() for label in labels}  # type: ignore[var-annotated]
+            gold_per_type = {label: set() for label in labels}  # type: Dict[str, Set]
             for label in labels:
                 if label not in score_per_type:
                     score_per_type[label] = PRFScore()
@@ -359,19 +365,19 @@ class Scorer:
             pred_spans = set()
             for span in getter(gold_doc, attr):
                 if labeled:
-                    gold_span = (span.label_, span.start, span.end - 1)
+                    gold_span = (span.label_, span.start, span.end - 1)  # type: Tuple
                 else:
-                    gold_span = (span.start, span.end - 1)  # type: ignore[assignment]
+                    gold_span = (span.start, span.end - 1)
                 gold_spans.add(gold_span)
                 gold_per_type[span.label_].add(gold_span)
-            pred_per_type = {label: set() for label in labels}  # type: ignore[var-annotated]
+            pred_per_type = {label: set() for label in labels}  # type: Dict[str, Set]
             for span in example.get_aligned_spans_x2y(
                 getter(pred_doc, attr), allow_overlap
             ):
                 if labeled:
-                    pred_span = (span.label_, span.start, span.end - 1)
+                    pred_span = (span.label_, span.start, span.end - 1)  # type: Tuple
                 else:
-                    pred_span = (span.start, span.end - 1)  # type: ignore[assignment]
+                    pred_span = (span.start, span.end - 1)
                 pred_spans.add(pred_span)
                 pred_per_type[span.label_].add(pred_span)
             # Scores per label
@@ -382,7 +388,7 @@ class Scorer:
             # Score for all labels
             score.score_set(pred_spans, gold_spans)
         # Assemble final result
-        final_scores = {
+        final_scores: Dict[str, Any] = {
             f"{attr}_p": None,
             f"{attr}_r": None,
             f"{attr}_f": None,
@@ -390,11 +396,11 @@ class Scorer:
         if labeled:
             final_scores[f"{attr}_per_type"] = None
         if len(score) > 0:
-            final_scores[f"{attr}_p"] = score.precision  # type: ignore[assignment]
-            final_scores[f"{attr}_r"] = score.recall  # type: ignore[assignment]
-            final_scores[f"{attr}_f"] = score.fscore  # type: ignore[assignment]
+            final_scores[f"{attr}_p"] = score.precision
+            final_scores[f"{attr}_r"] = score.recall
+            final_scores[f"{attr}_f"] = score.fscore
             if labeled:
-                final_scores[f"{attr}_per_type"] = {  # type: ignore[assignment]
+                final_scores[f"{attr}_per_type"] = {
                     k: v.to_dict() for k, v in score_per_type.items()
                 }
         return final_scores
@@ -508,7 +514,7 @@ class Scorer:
             sum(auc.score if auc.is_binary() else 0.0 for auc in auc_per_type.values())
             / n_cats
         )
-        results = {
+        results: Dict[str, Any] = {
             f"{attr}_score": None,
             f"{attr}_score_desc": None,
             f"{attr}_micro_p": micro_prf.precision,
@@ -524,7 +530,7 @@ class Scorer:
             },
         }
         if len(labels) == 2 and not multi_label and positive_label:
-            positive_label_f = results[f"{attr}_f_per_type"][positive_label]["f"]  # type: ignore[index]
+            positive_label_f = results[f"{attr}_f_per_type"][positive_label]["f"]
             results[f"{attr}_score"] = positive_label_f
             results[f"{attr}_score_desc"] = f"F ({positive_label})"
         elif not multi_label:
@@ -630,6 +636,8 @@ class Scorer:
             head_getter(token, attr) should return the value of the head for an
             individual token.
         ignore_labels (Tuple): Labels to ignore while scoring (e.g., punct).
+        missing_values (Set[Any]): Attribute values to treat as missing annotation
+            in the reference annotation.
         RETURNS (Dict[str, Any]): A dictionary containing the scores:
             attr_uas, attr_las, and attr_las_per_type.
 
@@ -644,7 +652,7 @@ class Scorer:
             pred_doc = example.predicted
             align = example.alignment
             gold_deps = set()
-            gold_deps_per_dep = {}  # type: ignore[var-annotated]
+            gold_deps_per_dep = {}  # type: Dict[str, Set]
             for gold_i, token in enumerate(gold_doc):
                 dep = getter(token, attr)
                 head = head_getter(token, head_attr)
@@ -659,12 +667,12 @@ class Scorer:
                 else:
                     missing_indices.add(gold_i)
             pred_deps = set()
-            pred_deps_per_dep = {}  # type: ignore[var-annotated]
+            pred_deps_per_dep = {}  # type: Dict[str, Set]
             for token in pred_doc:
                 if token.orth_.isspace():
                     continue
                 if align.x2y.lengths[token.i] != 1:
-                    gold_i = None  # type: ignore[assignment]
+                    gold_i = None  # type: ignore
                 else:
                     gold_i = align.x2y[token.i].dataXd[0, 0]
                 if gold_i not in missing_indices:
