@@ -1,3 +1,4 @@
+import pytest
 from spacy.lang.ja import Japanese
 
 
