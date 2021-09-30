@@ -262,7 +262,7 @@ def find_matching_language(lang: str) -> Optional[str]:
     """
     Given an IETF language code, find a supported spaCy language that is a
     close match for it (according to Unicode CLDR language-matching rules).
-    This allows for language aliases, ISO 639-3 codes, more detailed language
+    This allows for language aliases, ISO 639-2 codes, more detailed language
     tags, and close matches.
 
     Returns the language code if a matching language is available, or None
@@ -272,7 +272,7 @@ def find_matching_language(lang: str) -> Optional[str]:
     'en'
     >>> find_matching_language('pt-BR')  # Brazilian Portuguese
     'pt'
-    >>> find_matching_language('fra')  # ISO 639-3 code for French
+    >>> find_matching_language('fra')  # an ISO 639-2 code for French
     'fr'
     >>> find_matching_language('iw')  # obsolete alias for Hebrew
     'he'
