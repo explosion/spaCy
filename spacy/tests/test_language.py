@@ -8,7 +8,7 @@ from spacy.vocab import Vocab
 from spacy.training import Example
 from spacy.lang.en import English
 from spacy.lang.de import German
-from spacy.util import registry, ignore_error, raise_error
+from spacy.util import registry, ignore_error, raise_error, find_matching_language
 import spacy
 from thinc.api import NumpyOps, get_current_ops
 
@@ -500,6 +500,55 @@ def test_spacy_blank():
     nlp = spacy.blank("en", config=config, meta=meta)
     assert nlp.config["training"]["dropout"] == 0.2
     assert nlp.meta["name"] == "my_custom_model"
+
+
+@pytest.mark.parametrize(
+    "lang,target",
+    [
+        ('en', 'en'),
+        ('fra', 'fr'),
+        ('fre', 'fr'),
+        ('iw', 'he'),
+        ('mo', 'ro'),
+        ('mul', 'xx'),
+        ('no', 'nb'),
+        ('pt-BR', 'pt'),
+        ('xx', 'xx'),
+        ('zh-Hans', 'zh'),
+        ('zh-Hant', None),
+        ('zxx', None)
+    ]
+)
+def test_language_matching(lang, target):
+    """
+    Test that we can look up languages by equivalent or nearly-equivalent
+    language codes.
+    """
+    assert find_matching_language(lang) == target
+
+
+@pytest.mark.parametrize(
+    "lang,target",
+    [
+        ('en', 'en'),
+        ('fra', 'fr'),
+        ('fre', 'fr'),
+        ('iw', 'he'),
+        ('mo', 'ro'),
+        ('mul', 'xx'),
+        ('no', 'nb'),
+        ('pt-BR', 'pt'),
+        ('xx', 'xx'),
+        ('zh-Hans', 'zh'),
+    ]
+)
+def test_blank_languages(lang, target):
+    """
+    Test that we can get spacy.blank in various languages, including codes
+    that are defined to be equivalent or that match by CLDR language matching.
+    """
+    nlp = spacy.blank(lang)
+    assert nlp.lang == target
 
 
 @pytest.mark.parametrize("value", [False, None, ["x", "y"], Language, Vocab])
