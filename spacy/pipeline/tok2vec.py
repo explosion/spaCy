@@ -1,4 +1,4 @@
-from typing import Sequence, Iterable, Optional, Dict, Callable, List
+from typing import Sequence, Iterable, Optional, Dict, Callable, List, Any
 from thinc.api import Model, set_dropout_rate, Optimizer, Config
 from itertools import islice
 
@@ -245,7 +245,7 @@ class Tok2VecListener(Model):
         """
         Model.__init__(self, name=self.name, forward=forward, dims={"nO": width})
         self.upstream_name = upstream_name
-        self._batch_id = None
+        self._batch_id: Optional[int] = None
         self._outputs = None
         self._backprop = None
 
