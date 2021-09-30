@@ -3481,7 +3481,7 @@
             "id": "phruzz_matcher",
             "title": "phruzz-matcher",
             "slogan": "Phrase matcher using RapidFuzz",
-            "description": "Combination of the RapidFuzz library with Spacy PhraseMatcher The goal of this component is to find matches when there were NO "perfect matches" due to typos or abbreviations between a Spacy doc and a list of phrases.",
+            "description": "Combination of the RapidFuzz library with Spacy PhraseMatcher The goal of this component is to find matches when there were NO \"perfect matches\" due to typos or abbreviations between a Spacy doc and a list of phrases.",
             "github": "mjvallone/phruzz-matcher",
             "pip": "phruzz_matcher",
             "code_example": [
@@ -3507,7 +3507,7 @@
                 "print(f\"doc.ents: {doc.ents}\")",
                 "",
                 "#OUTPUT",
-                "#doc.ents: (brad pit, Demi Moore)",
+                "#doc.ents: (brad pit, Demi Moore)"
             ],
             "thumb": "https://avatars.githubusercontent.com/u/961296?v=4",
             "image": "",
