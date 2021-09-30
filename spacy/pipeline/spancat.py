@@ -1,6 +1,6 @@
 import numpy
 from typing import List, Dict, Callable, Tuple, Optional, Iterable, Any, cast
-from typing_extensions import Protocol
+from typing_extensions import Protocol, runtime_checkable
 from thinc.api import Config, Model, get_current_ops, set_dropout_rate, Ops
 from thinc.api import Optimizer
 from thinc.types import Ragged, Ints2d, Floats2d, Ints1d
@@ -45,6 +45,7 @@ depth = 4
 DEFAULT_SPANCAT_MODEL = Config().from_str(spancat_default_config)["model"]
 
 
+@runtime_checkable
 class Suggester(Protocol):
     def __call__(self, docs: Iterable[Doc], *, ops: Optional[Ops] = None) -> Ragged:
         ...
