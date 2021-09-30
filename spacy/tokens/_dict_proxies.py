@@ -4,7 +4,7 @@ from collections import UserDict
 import srsly
 
 from .span_group import SpanGroup
-from .. import Errors
+from ..errors import Errors
 
 if TYPE_CHECKING:
     # This lets us add type hints for mypy etc. without causing circular imports
