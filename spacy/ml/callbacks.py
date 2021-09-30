@@ -22,27 +22,15 @@ def create_models_with_nvtx_range(
             if hasattr(pipe, "is_trainable") and pipe.is_trainable
         ]
 
-        # We need to wrap all models jointly to avoid double-wrapping.
+        # We need process all models jointly to avoid wrapping callbacks twice.
         models = Model(
             "wrap_with_nvtx_range",
             forward=lambda model, X, is_train: ...,
             layers=[pipe.model for pipe in pipes],
         )
-        models = wrap_model_recursive(
-            models,
-            partial(
-                with_nvtx_range,
-                forward_color=forward_color,
-                backprop_color=backprop_color,
-            ),
-        )
 
-        wrapped_models = models.layers[0].layers
-
-        assert len(wrapped_models) == len(pipes)
-
-        for (model, pipe) in zip(wrapped_models, pipes):
-            pipe.model = model
+        for node in models.walk():
+            with_nvtx_range(node, forward_color=forward_color, backprop_color=backprop_color)
 
         return nlp
 
