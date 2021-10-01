@@ -67,7 +67,9 @@ class DocBin:
         int_attrs = [intify_attr(attr) for attr in attrs]
         if None in int_attrs:
             non_valid = [attr for attr in attrs if intify_attr(attr) is None]
-            raise KeyError(Errors.E983.format(dict="attrs", key=non_valid, keys=IDS.keys())) from None
+            raise KeyError(
+                Errors.E983.format(dict="attrs", key=non_valid, keys=IDS.keys())
+            ) from None
         attrs = sorted(int_attrs)
         self.version = "0.1"
         self.attrs = [attr for attr in attrs if attr != ORTH and attr != SPACY]
