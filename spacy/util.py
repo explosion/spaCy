@@ -295,24 +295,23 @@ def find_matching_language(lang: str) -> Optional[str]:
         code = modinfo.name
         if code == 'xx':
             # Temporarily make 'xx' into a valid language code
-            code = 'mul'
-        try:
-            language = langcodes.Language.get(code)
-            if language.is_valid():
-                possible_languages.append(code)
-        except langcodes.tag_parser.LanguageTagError:
-            pass
+            possible_languages.append('mul')
+        elif langcodes.tag_is_valid(code):
+            possible_languages.append(code)
 
-    match, _dist = langcodes.closest_match(
-        lang, possible_languages, max_distance=10
+    # Distances from 1-9 allow near misses like Bosnian -> Croatian and
+    # Norwegian -> Norwegian Bokmål. A distance of 10 would include several
+    # more possibilities, like variants of Chinese like 'wuu', but text that
+    # is labeled that way is probably trying to be distinct from 'zh' and
+    # shouldn't automatically match.
+    match = langcodes.closest_supported_match(
+        lang, possible_languages, max_distance=9
     )
     if match == 'mul':
         # Convert 'mul' back to spaCy's 'xx'
         return 'xx'
-    elif match != 'und':
-        return match
     else:
-        return None
+        return match
 
 
 def get_lang_class(lang: str) -> "Language":
@@ -331,7 +330,10 @@ def get_lang_class(lang: str) -> "Language":
         except ImportError as err:
             # Find a matching language. For example, if the language 'no' is
             # requested, we can use language-matching to load `spacy.lang.nb`.
-            match = find_matching_language(lang)
+            try:
+                match = find_matching_language(lang)
+            except langcodes.tag_parser.LanguageTagError:
+                raise ValueError(Errors.E049.format(lang=lang)) from err
             if match:
                 lang = match
                 module = importlib.import_module(f".lang.{lang}", "spacy")
