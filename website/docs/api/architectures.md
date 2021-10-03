@@ -467,7 +467,7 @@ Mixed-precision support is currently an experimental feature.
 * The `transformer_config` argument was added in
 `spacy-transformers.Tok2VecTransformer.v2`.
 * The `mixed_precision` and `grad_scaler_config` arguments were added in
-`spacy-transformers.Tok2VecTransformer.v3`
+`spacy-transformers.Tok2VecTransformer.v3`.
 
 The other arguments are shared between all versions.
 
