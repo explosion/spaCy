@@ -333,7 +333,9 @@ def get_lang_class(lang: str) -> "Language":
             try:
                 match = find_matching_language(lang)
             except langcodes.tag_parser.LanguageTagError:
-                raise ValueError(Errors.E049.format(lang=lang)) from err
+                # proceed to raising an import error
+                match = None
+
             if match:
                 lang = match
                 module = importlib.import_module(f".lang.{lang}", "spacy")

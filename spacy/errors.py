@@ -283,8 +283,6 @@ class Errors:
     E047 = ("Can't assign a value to unregistered extension attribute "
             "'{name}'. Did you forget to call the `set_extension` method?")
     E048 = ("Can't import language {lang} or any matching language from spacy.lang: {err}")
-    E049 = ("'{lang}' is not a valid language code, and is not the name of a "
-            "registered custom language."),
     E050 = ("Can't find model '{name}'. It doesn't seem to be a Python "
             "package or a valid path to a data directory.")
     E052 = ("Can't find model directory: {path}")

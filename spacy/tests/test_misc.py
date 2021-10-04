@@ -144,8 +144,8 @@ def test_load_model_blank_shortcut():
     with pytest.raises(ImportError):
         util.load_model("blank:zxx")
 
-    # ValueError for requesting an invalid language code that isn't registered
-    with pytest.raises(ValueError):
+    # ImportError for requesting an invalid language code that isn't registered
+    with pytest.raises(ImportError):
         util.load_model("blank:fjsfijsdof")
 
 
