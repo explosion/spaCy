@@ -371,6 +371,16 @@ def test_vectors_clear():
         v["A"]
 
 
+def test_vectors_get_batch():
+    data = OPS.asarray([[4, 2, 2, 2], [4, 2, 2, 2], [1, 1, 1, 1]], dtype="f")
+    v = Vectors(data=data, keys=["A", "B", "C"])
+    # check with mixed int/str keys
+    words = ["C", "B", "A", v.strings["B"]]
+    rows = v.find(keys=words)
+    vecs = OPS.as_contig(v.data[rows])
+    assert_equal(OPS.to_numpy(vecs), OPS.to_numpy(v.get_batch(words)))
+
+
 @pytest.fixture()
 def floret_vectors_hashvec_str():
     """The full hashvec table from floret with the settings:
@@ -417,7 +427,7 @@ def test_floret_vectors(floret_vectors_vec_str, floret_vectors_hashvec_str):
         p = tmpdir / "test.hashvec"
         with open(p, "w") as fileh:
             fileh.write(floret_vectors_hashvec_str)
-        convert_vectors(nlp, p, truncate=0, prune=-1, vectors_mode="floret")
+        convert_vectors(nlp, p, truncate=0, prune=-1, mode="floret")
         p = tmpdir / "test.vec"
         with open(p, "w") as fileh:
             fileh.write(floret_vectors_vec_str)
@@ -454,7 +464,7 @@ def test_floret_vectors(floret_vectors_vec_str, floret_vectors_hashvec_str):
     # check that single and batched vector lookups are identical
     words = [s for s in nlp_plain.vocab.vectors]
     single_vecs = OPS.to_numpy(OPS.asarray([nlp.vocab[word].vector for word in words]))
-    batch_vecs = OPS.to_numpy(nlp.vocab.vectors.get_floret_vectors(words))
+    batch_vecs = OPS.to_numpy(nlp.vocab.vectors.get_batch(words))
     assert_equal(single_vecs, batch_vecs)
 
     # an empty key returns 0s
@@ -464,12 +474,12 @@ def test_floret_vectors(floret_vectors_vec_str, floret_vectors_hashvec_str):
     )
     # an empty batch returns 0s
     assert_equal(
-        OPS.to_numpy(nlp.vocab.vectors.get_floret_vectors([""])),
+        OPS.to_numpy(nlp.vocab.vectors.get_batch([""])),
         numpy.zeros((1, nlp.vocab.vectors.data.shape[0])),
     )
     # an empty key within a batch returns 0s
     assert_equal(
-        OPS.to_numpy(nlp.vocab.vectors.get_floret_vectors(["a", "", "b"])[1]),
+        OPS.to_numpy(nlp.vocab.vectors.get_batch(["a", "", "b"])[1]),
         numpy.zeros((nlp.vocab.vectors.data.shape[0],)),
     )
 

@@ -20,10 +20,10 @@ def init_vectors_cli(
     output_dir: Path = Arg(..., help="Pipeline output directory"),
     prune: int = Opt(-1, "--prune", "-p", help="Optional number of vectors to prune to"),
     truncate: int = Opt(0, "--truncate", "-t", help="Optional number of vectors to truncate to when reading in vectors file"),
+    mode: str = Opt("default", "--mode", "-m", help="Vectors mode: default or floret"),
     name: Optional[str] = Opt(None, "--name", "-n", help="Optional name for the word vectors, e.g. en_core_web_lg.vectors"),
     verbose: bool = Opt(False, "--verbose", "-V", "-VV", help="Display more information for debugging purposes"),
     jsonl_loc: Optional[Path] = Opt(None, "--lexemes-jsonl", "-j", help="Location of JSONL-formatted attributes file", hidden=True),
-    vectors_mode: str = Opt("default", "--vectors-mode", "-m", help="Vectors mode: default or floret"),
     # fmt: on
 ):
     """Convert word vectors for use with spaCy. Will export an nlp object that
@@ -41,7 +41,7 @@ def init_vectors_cli(
         truncate=truncate,
         prune=prune,
         name=name,
-        vectors_mode=vectors_mode,
+        mode=mode,
     )
     msg.good(f"Successfully converted {len(nlp.vocab.vectors)} vectors")
     nlp.to_disk(output_dir)

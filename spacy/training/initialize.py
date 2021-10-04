@@ -205,7 +205,7 @@ def convert_vectors(
     truncate: int,
     prune: int,
     name: Optional[str] = None,
-    vectors_mode: str = VectorsMode.default,
+    mode: str = VectorsMode.default,
 ) -> None:
     vectors_loc = ensure_path(vectors_loc)
     if vectors_loc and vectors_loc.parts[-1].endswith(".npz"):
@@ -221,17 +221,17 @@ def convert_vectors(
             vectors_data, vector_keys, floret_settings = read_vectors(
                 vectors_loc,
                 truncate,
-                vectors_mode=vectors_mode,
+                mode=mode,
             )
             logger.info(f"Loaded vectors from {vectors_loc}")
         else:
             vectors_data, vector_keys = (None, None)
-        if vector_keys is not None and vectors_mode != VectorsMode.floret:
+        if vector_keys is not None and mode != VectorsMode.floret:
             for word in vector_keys:
                 if word not in nlp.vocab:
                     nlp.vocab[word]
         if vectors_data is not None:
-            if vectors_mode == VectorsMode.floret:
+            if mode == VectorsMode.floret:
                 nlp.vocab.vectors = Vectors(
                     strings=nlp.vocab.strings,
                     data=vectors_data,
@@ -247,18 +247,18 @@ def convert_vectors(
     else:
         nlp.vocab.vectors.name = name
     nlp.meta["vectors"]["name"] = nlp.vocab.vectors.name
-    if prune >= 1 and vectors_mode != VectorsMode.floret:
+    if prune >= 1 and mode != VectorsMode.floret:
         nlp.vocab.prune_vectors(prune)
 
 
 def read_vectors(
-    vectors_loc: Path, truncate_vectors: int, *, vectors_mode: str = VectorsMode.default
+    vectors_loc: Path, truncate_vectors: int, *, mode: str = VectorsMode.default
 ):
     f = ensure_shape(vectors_loc)
     header_parts = next(f).split()
     shape = tuple(int(size) for size in header_parts[:2])
     floret_settings = {}
-    if vectors_mode == VectorsMode.floret:
+    if mode == VectorsMode.floret:
         if len(header_parts) != 8:
             raise ValueError(
                 "Invalid header for floret vectors. "

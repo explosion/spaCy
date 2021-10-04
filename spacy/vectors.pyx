@@ -64,7 +64,7 @@ cdef class Vectors:
     cdef readonly unicode bow
     cdef readonly unicode eow
 
-    def __init__(self, *, strings=None, shape=None, data=None, keys=None, name=None, mode=Mode.default, minn=0, maxn=0, hash_count=0, hash_seed=0, bow="<", eow=">"):
+    def __init__(self, *, strings=None, shape=None, data=None, keys=None, name=None, mode=Mode.default, minn=0, maxn=0, hash_count=1, hash_seed=0, bow="<", eow=">"):
         """Create a new vector store.
 
         strings (StringStore): The string store.
@@ -73,12 +73,12 @@ cdef class Vectors:
         keys (iterable): A sequence of keys, aligned with the data.
         name (str): A name to identify the vectors table.
         mode (str): Vectors mode: "default" or "floret" (default: "default").
-        minn (int): The floret ngram minn (default: 0).
-        maxn (int): The floret ngram maxn (default: 0).
-        hash_count (int): The floret hash count (1-4, default: 0).
+        minn (int): The floret char ngram minn (default: 0).
+        maxn (int): The floret char ngram maxn (default: 0).
+        hash_count (int): The floret hash count (1-4, default: 1).
         hash_seed (int): The floret hash seed (default: 0).
-        bow (str): The floret bow string (default: "<").
-        eow (str): The floret eow string (default: ">").
+        bow (str): The floret BOW string (default: "<").
+        eow (str): The floret EOW string (default: ">").
 
         DOCS: https://spacy.io/api/vectors#init
         """
@@ -190,7 +190,7 @@ cdef class Vectors:
             else:
                 return self.data[i]
         elif self.mode == Mode.floret:
-            return self.get_floret_vectors([key])[0]
+            return self.get_batch([key])[0]
         raise KeyError(Errors.E058.format(key=key))
 
     def __setitem__(self, key, vector):
@@ -311,13 +311,13 @@ cdef class Vectors:
     def find(self, *, key=None, keys=None, row=None, rows=None):
         """Look up one or more keys by row, or vice versa.
 
-        key (str / int): Find the row that the given key points to.
+        key (Union[int, str]): Find the row that the given key points to.
             Returns int, -1 if missing.
-        keys (iterable): Find rows that the keys point to.
+        keys (Iterable[Union[int, str]]): Find rows that the keys point to.
             Returns ndarray.
         row (int): Find the first key that points to the row.
             Returns int.
-        rows (iterable): Find the keys that point to the rows.
+        rows (Iterable[int]): Find the keys that point to the rows.
             Returns ndarray.
         RETURNS: The requested key, keys, row or rows.
         """
@@ -373,43 +373,40 @@ cdef class Vectors:
         ]
         return ngrams
 
-    def get_floret_vectors(self, keys):
-        """Get the floret vectors for the provided keys.
+    def get_batch(self, keys):
+        """Get the vectors for the provided keys efficiently as a batch.
         keys (Iterable[Union[int, str]]): The keys.
-        RETURNS: The requested vectors from the floret vector table.
+        RETURNS: The requested vectors from the vector table.
         """
-        if self.mode != Mode.floret:
-            raise ValueError(
-                Errors.E858.format(
-                    mode=self.mode,
-                    alternative="Use Vectors[key] or Vectors.find() instead.",
-                )
-            )
         ops = get_array_ops(self.data)
-        keys = [self.strings.as_string(key) for key in keys]
-        if sum(len(key) for key in keys) == 0:
-            return ops.xp.zeros((len(keys), self.data.shape[1]))
-        unique_keys = tuple(set(keys))
-        row_index = {key: i for i, key in enumerate(unique_keys)}
-        rows = [row_index[key] for key in keys]
-        indices = []
-        lengths = []
-        for key in unique_keys:
-            if key == "":
-                ngram_rows = []
-            else:
-                ngram_rows = [
-                    h % self.data.shape[0]
-                    for ngram in self._get_ngrams(key)
-                    for h in self._get_ngram_hashes(ngram)
-                ]
-            indices.extend(ngram_rows)
-            lengths.append(len(ngram_rows))
-        indices = ops.asarray(indices, dtype="int32")
-        lengths = ops.asarray(lengths, dtype="int32")
-        vecs = ops.reduce_mean(cast(Floats2d, self.data[indices]), lengths)
-        vecs = vecs[rows]
-        return vecs
+        if self.mode == Mode.default:
+            rows = self.find(keys=keys)
+            vecs = self.data[rows]
+        elif self.mode == Mode.floret:
+            keys = [self.strings.as_string(key) for key in keys]
+            if sum(len(key) for key in keys) == 0:
+                return ops.xp.zeros((len(keys), self.data.shape[1]))
+            unique_keys = tuple(set(keys))
+            row_index = {key: i for i, key in enumerate(unique_keys)}
+            rows = [row_index[key] for key in keys]
+            indices = []
+            lengths = []
+            for key in unique_keys:
+                if key == "":
+                    ngram_rows = []
+                else:
+                    ngram_rows = [
+                        h % self.data.shape[0]
+                        for ngram in self._get_ngrams(key)
+                        for h in self._get_ngram_hashes(ngram)
+                    ]
+                indices.extend(ngram_rows)
+                lengths.append(len(ngram_rows))
+            indices = ops.asarray(indices, dtype="int32")
+            lengths = ops.asarray(lengths, dtype="int32")
+            vecs = ops.reduce_mean(cast(Floats2d, self.data[indices]), lengths)
+            vecs = vecs[rows]
+        return ops.as_contig(vecs)
 
     def add(self, key, *, vector=None, row=None):
         """Add a key to the table. Keys can be mapped to an existing vector
