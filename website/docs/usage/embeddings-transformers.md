@@ -354,9 +354,6 @@ max_batch_items = 4096
 @architectures = "spacy-transformers.TransformerModel.v3"
 name = "bert-base-cased"
 tokenizer_config = {"use_fast": true}
-transformer_config = {"output_attentions": false}
-mixed_precision = true
-grad_scaler_config = {"init_scale": 32768}
 
 [components.transformer.model.get_spans]
 @span_getters = "spacy-transformers.doc_spans.v1"
