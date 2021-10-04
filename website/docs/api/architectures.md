@@ -341,7 +341,7 @@ for details and system requirements.
 > @architectures = "spacy-transformers.TransformerModel.v3"
 > name = "roberta-base"
 > tokenizer_config = {"use_fast": true}
-> transformer_config = {"output_attentions": false}
+> transformer_config = {}
 > mixed_precision = true
 > grad_scaler_config = {"init_scale": 32768}
 >
@@ -434,7 +434,7 @@ a single token vector given zero or more wordpiece vectors.
 > @architectures = "spacy-transformers.Tok2VecTransformer.v3"
 > name = "albert-base-v2"
 > tokenizer_config = {"use_fast": false}
-> transformer_config = {"output_attentions": false}
+> transformer_config = {}
 > grad_factor = 1.0
 > mixed_precision = true
 > grad_scaler_config = {"init_scale": 32768}

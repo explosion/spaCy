@@ -35,9 +35,6 @@ factory = "transformer"
 @architectures = "spacy-transformers.TransformerModel.v3"
 name = "{{ transformer["name"] }}"
 tokenizer_config = {"use_fast": true}
-transformer_config = {"output_attentions": false}
-mixed_precision = false
-grad_scaler_config = {"init_scale": 32768}
 
 [components.transformer.model.get_spans]
 @span_getters = "spacy-transformers.strided_spans.v1"
