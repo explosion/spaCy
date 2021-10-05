@@ -135,8 +135,7 @@ class Lemmatizer(Pipe):
                     token.lemma_ = self.lemmatize(token)[0]
             return doc
         except Exception as e:
-            error_handler(self.name, self, [doc], e)
-            return None
+            return error_handler(self.name, self, [doc], e)[0]
 
     def initialize(
         self,

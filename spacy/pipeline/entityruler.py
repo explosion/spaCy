@@ -152,8 +152,7 @@ class EntityRuler(Pipe):
             self.set_annotations(doc, matches)
             return doc
         except Exception as e:
-            error_handler(self.name, self, [doc], e)
-            return None
+            return error_handler(self.name, self, [doc], e)[0]
 
     def match(self, doc: Doc):
         self._require_patterns()

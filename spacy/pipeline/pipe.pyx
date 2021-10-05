@@ -55,8 +55,7 @@ cdef class Pipe:
                 doc = self(doc)
                 yield doc
             except Exception as e:
-                error_handler(self.name, self, [doc], e)
-                yield None
+                yield error_handler(self.name, self, [doc], e)[0]
 
     def initialize(self, get_examples: Callable[[], Iterable[Example]], *, nlp: Language=None):
         """Initialize the pipe. For non-trainable components, this method

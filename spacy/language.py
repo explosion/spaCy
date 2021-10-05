@@ -1527,7 +1527,7 @@ class Language:
         pipes: Iterable[Callable[[Doc], Doc]],
         n_process: int,
         batch_size: int,
-    ) -> None:
+    ) -> Iterator[Doc]:
         # raw_texts is used later to stop iteration.
         texts, raw_texts = itertools.tee(texts)
         # for sending texts to worker
@@ -1570,15 +1570,13 @@ class Language:
                     yield doc
                 elif byte_error is not None:
                     error = srsly.msgpack_loads(byte_error)
-                    self.default_error_handler(
-                        None, None, None, ValueError(Errors.E871.format(error=error))
-                    )
-                    yield None
+                    yield self.default_error_handler(
+                        None, None, [None], ValueError(Errors.E871.format(error=error))
+                    )[0]
                 else:
-                    self.default_error_handler(
-                        None, None, None, ValueError(Errors.E871.format(error="Both doc and error are missing"))
-                    )
-                    yield None
+                    yield self.default_error_handler(
+                        None, None, [None], ValueError(Errors.E871.format(error="Both doc and error are missing"))
+                    )[0]
                 if i % batch_size == 0:
                     # tell `sender` that one batch was consumed.
                     sender.step()

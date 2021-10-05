@@ -237,9 +237,7 @@ cdef class Parser(TrainablePipe):
                     self.set_annotations(subbatch, parse_states)
                 yield from batch_in_order
             except Exception as e:
-                error_handler(self.name, self, batch_in_order, e)
-                yield from [None] * len(batch_in_order)
-
+                yield from error_handler(self.name, self, batch_in_order, e)
 
     def predict(self, docs):
         if isinstance(docs, Doc):

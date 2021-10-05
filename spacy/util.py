@@ -1,4 +1,4 @@
-from typing import List, Union, Dict, Any, Optional, Iterable, Callable, Tuple
+from typing import List, Union, Dict, Any, Optional, Iterable, Callable, Tuple, NoReturn
 from typing import Iterator, Type, Pattern, Generator, TYPE_CHECKING
 from types import ModuleType
 import os
@@ -1504,12 +1504,13 @@ def _pipe(docs, proc, name, default_error_handler, kwargs):
                 error_handler(name, proc, [doc], e)
                 yield None
 
-def raise_error(proc_name, proc, docs, e):
+
+def raise_error(proc_name: str, proc: Callable[["Doc"], "Doc"], docs: List["Doc"], e: Exception) -> NoReturn:
     raise e
 
 
-def ignore_error(proc_name, proc, docs, e):
-    pass
+def ignore_error(proc_name: str, proc: Callable[["Doc"], "Doc"], docs: List["Doc"], e: Exception) -> List[Optional["Doc"]]:
+    return [None] * len(docs)
 
 
 def warn_if_jupyter_cupy():

@@ -144,8 +144,7 @@ class AttributeRuler(Pipe):
             self.set_annotations(doc, matches)
             return doc
         except Exception as e:
-            error_handler(self.name, self, [doc], e)
-            return None
+            return error_handler(self.name, self, [doc], e)[0]
 
     def match(self, doc: Doc):
         matches = self.matcher(doc, allow_missing=True)

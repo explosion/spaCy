@@ -81,8 +81,7 @@ class Sentencizer(Pipe):
             self.set_annotations([doc], tags)
             return doc
         except Exception as e:
-            error_handler(self.name, self, [doc], e)
-            return None
+            return error_handler(self.name, self, [doc], e)[0]
 
     def predict(self, docs):
         """Apply the pipe to a batch of docs, without modifying them.
