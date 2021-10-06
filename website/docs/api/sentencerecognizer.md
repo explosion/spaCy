@@ -39,9 +39,11 @@ architectures and their arguments and hyperparameters.
 > nlp.add_pipe("senter", config=config)
 > ```
 
-| Setting | Description                                                                                                                                                           |
-| ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `model` | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. Defaults to [Tagger](/api/architectures#Tagger). ~~Model[List[Doc], List[Floats2d]]~~ |
+| Setting                                  | Description                                                                                                                                                           |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `model`                                  | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. Defaults to [Tagger](/api/architectures#Tagger). ~~Model[List[Doc], List[Floats2d]]~~ |
+| `overwrite` <Tag variant="new">3.2</Tag> | Whether existing annotation is overwritten. Defaults to `False`. ~~bool~~                                                                                             |
+| `scorer` <Tag variant="new">3.2</Tag>    | The scoring method. Defaults to [`Scorer.score_spans`](/api/scorer#score_spans) for the attribute `"sents"`. ~~Optional[Callable]~~                                   |
 
 ```python
 %%GITHUB_SPACY/spacy/pipeline/senter.pyx
@@ -70,13 +72,14 @@ Create a new pipeline instance. In your application, you would normally use a
 shortcut for this and instantiate the component using its string name and
 [`nlp.add_pipe`](/api/language#add_pipe).
 
-| Name           | Description                                                                                                                         |
-| -------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `vocab`        | The shared vocabulary. ~~Vocab~~                                                                                                    |
-| `model`        | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. ~~Model[List[Doc], List[Floats2d]]~~                |
-| `name`         | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~                                 |
-| _keyword-only_ |                                                                                                                                     |
-| `scorer`       | The scoring method. Defaults to [`Scorer.score_spans`](/api/scorer#score_spans) for the attribute `"sents"`. ~~Optional[Callable]~~ |
+| Name                                     | Description                                                                                                                         |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `vocab`                                  | The shared vocabulary. ~~Vocab~~                                                                                                    |
+| `model`                                  | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. ~~Model[List[Doc], List[Floats2d]]~~                |
+| `name`                                   | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~                                 |
+| _keyword-only_                           |                                                                                                                                     |
+| `overwrite` <Tag variant="new">3.2</Tag> | Whether existing annotation is overwritten. Defaults to `False`. ~~bool~~                                                           |
+| `scorer` <Tag variant="new">3.2</Tag>    | The scoring method. Defaults to [`Scorer.score_spans`](/api/scorer#score_spans) for the attribute `"sents"`. ~~Optional[Callable]~~ |
 
 ## SentenceRecognizer.\_\_call\_\_ {#call tag="method"}
 
