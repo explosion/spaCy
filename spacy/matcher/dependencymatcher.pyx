@@ -264,7 +264,9 @@ cdef class DependencyMatcher:
         self._raw_patterns.pop(key)
         self._tree.pop(key)
         self._root.pop(key)
-        self._tokens_to_key.pop(key)
+        for mklist in self._tokens_to_key.pop(key):
+            for mkey in mklist:
+                self._matcher.remove(mkey)
 
     def _get_keys_to_position_maps(self, doc):
         """
