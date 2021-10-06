@@ -408,3 +408,42 @@ def test_dependency_matcher_order_issue(en_tokenizer):
     matches = matcher(doc)
 
     assert matches == []
+
+
+def test_dependency_matcher_remove(en_tokenizer):
+    # issue from #9263
+    doc = en_tokenizer("The red book")
+    doc[1].head = doc[2]
+
+    # this matches
+    pattern1 = [
+        {"RIGHT_ID": "root", "RIGHT_ATTRS": {"ORTH": "book"}},
+        {
+            "LEFT_ID": "root",
+            "RIGHT_ID": "r",
+            "RIGHT_ATTRS": {"ORTH": "red"},
+            "REL_OP": ">",
+        },
+    ]
+
+    # add and then remove it
+    matcher = DependencyMatcher(en_tokenizer.vocab)
+    matcher.add("check", [pattern1])
+    matcher.remove("check")
+
+    # this matches on rel op but not attrs
+    pattern2 = [
+        {"RIGHT_ID": "root", "RIGHT_ATTRS": {"ORTH": "flag"}},
+        {
+            "LEFT_ID": "root",
+            "RIGHT_ID": "r",
+            "RIGHT_ATTRS": {"ORTH": "blue"},
+            "REL_OP": ">",
+        },
+    ]
+
+    # Adding this new pattern with the same label, which should not match
+    matcher.add("check", [pattern2])
+    matches = matcher(doc)
+
+    assert matches == []
