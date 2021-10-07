@@ -400,8 +400,13 @@ def test_dependency_matcher_order_issue(en_tokenizer):
     matcher = DependencyMatcher(en_tokenizer.vocab)
 
     # This should behave the same as the next pattern
-    # matcher.add("check", [pattern1, pattern2])
+    matcher.add("check", [pattern1, pattern2])
+    matches = matcher(doc)
 
+    assert matches == []
+
+    # use a new matcher
+    matcher = DependencyMatcher(en_tokenizer.vocab)
     # adding one at a time under same label gets a match
     matcher.add("check", [pattern1])
     matcher.add("check", [pattern2])
