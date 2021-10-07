@@ -94,7 +94,7 @@ class JapaneseTokenizer(DummyTokenizer):
             DetailedToken(
                 token.surface(),  # orth
                 "-".join([xx for xx in token.part_of_speech()[:4] if xx != "*"]),  # tag
-                "-".join([xx for xx in token.part_of_speech()[4:] if xx != "*"]),  # inf
+                "|".join([xx for xx in token.part_of_speech()[4:] if xx != "*"]),  # inf
                 token.dictionary_form(),  # lemma
                 token.normalized_form(),
                 token.reading_form(),
