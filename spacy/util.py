@@ -1,4 +1,4 @@
-from typing import List, Union, Dict, Any, Set
+from typing import List, Mapping, NoReturn, Union, Dict, Any, Set
 from typing import Optional, Iterable, Callable, Tuple, Type
 from typing import Iterator, Type, Pattern, Generator, TYPE_CHECKING
 from types import ModuleType
@@ -51,6 +51,7 @@ from . import about
 if TYPE_CHECKING:
     # This lets us add type hints for mypy etc. without causing circular imports
     from .language import Language  # noqa: F401
+    from .pipeline import Pipe  # noqa: F401
     from .tokens import Doc, Span  # noqa: F401
     from .vocab import Vocab  # noqa: F401
 
@@ -1516,7 +1517,13 @@ def check_bool_env_var(env_var: str) -> bool:
     return bool(value)
 
 
-def _pipe(docs, proc, name, default_error_handler, kwargs):
+def _pipe(
+    docs: Iterable["Doc"],
+    proc: "Pipe",
+    name: str,
+    default_error_handler: Callable[[str, "Pipe", List["Doc"], Exception], NoReturn],
+    kwargs: Mapping[str, Any],
+) -> Iterator["Doc"]:
     if hasattr(proc, "pipe"):
         yield from proc.pipe(docs, **kwargs)
     else:
@@ -1530,7 +1537,7 @@ def _pipe(docs, proc, name, default_error_handler, kwargs):
                 kwargs.pop(arg)
         for doc in docs:
             try:
-                doc = proc(doc, **kwargs)
+                doc = proc(doc, **kwargs)  # type: ignore[call-arg]
                 yield doc
             except Exception as e:
                 error_handler(name, proc, [doc], e)

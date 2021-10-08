@@ -715,4 +715,4 @@ def _get_labels_from_model(nlp: Language, pipe_name: str) -> Set[str]:
     if pipe_name not in nlp.pipe_names:
         return set()
     pipe = nlp.get_pipe(pipe_name)
-    return set(pipe.labels)  # type: ignore[attr-defined]
+    return set(pipe.labels)

@@ -213,7 +213,7 @@ def train_while_improving(
             if (
                 name not in exclude
                 and hasattr(proc, "is_trainable")
-                and proc.is_trainable  # type: ignore
+                and proc.is_trainable
                 and proc.model not in (True, False, None)  # type: ignore[attr-defined]
             ):
                 proc.finish_update(optimizer)  # type: ignore[attr-defined]

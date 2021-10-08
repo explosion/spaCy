@@ -134,7 +134,7 @@ class Scorer:
             scores.update(self.nlp.tokenizer.score(examples, **self.cfg))  # type: ignore
         for name, component in self.nlp.pipeline:
             if hasattr(component, "score"):
-                scores.update(component.score(examples, **self.cfg))  # type: ignore
+                scores.update(component.score(examples, **self.cfg))
         return scores
 
     @staticmethod

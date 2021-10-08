@@ -35,7 +35,7 @@ def console_logger(progress_bar: bool = False):
         logged_pipes = [
             name
             for name, proc in nlp.pipeline
-            if hasattr(proc, "is_trainable") and proc.is_trainable  # type: ignore[attr-defined]
+            if hasattr(proc, "is_trainable") and proc.is_trainable
         ]
         eval_frequency = nlp.config["training"]["eval_frequency"]
         score_weights = nlp.config["training"]["score_weights"]

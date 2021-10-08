@@ -94,7 +94,7 @@ class Lemmatizer(Pipe):
     def mode(self):
         return self._mode
 
-    def __call__(self, doc: Doc) -> Doc:  # type: ignore[return]
+    def __call__(self, doc: Doc) -> Doc:
         """Apply the lemmatizer to one document.
 
         doc (Doc): The Doc to process.
