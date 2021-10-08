@@ -173,7 +173,7 @@ class Language:
         self.vocab: Vocab = vocab
         if self.lang is None:
             self.lang = self.vocab.lang
-        self._components = []  # type: ignore[var-annotated]
+        self._components: List[Tuple[str, Callable[[Doc], Doc]]] = []
         self._disabled: Set[str] = set()
         self.max_length = max_length
         # Create the default tokenizer from the default config
@@ -353,7 +353,7 @@ class Language:
         labels = {}
         for name, pipe in self._components:
             if hasattr(pipe, "labels"):
-                labels[name] = list(pipe.labels)
+                labels[name] = list(pipe.labels)  # type: ignore[attr-defined]
         return SimpleFrozenDict(labels)
 
     @classmethod
