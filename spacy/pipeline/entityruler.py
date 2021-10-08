@@ -246,7 +246,7 @@ class EntityRuler(Pipe):
 
         DOCS: https://spacy.io/api/entityruler#patterns
         """
-        all_patterns = []  # type: ignore
+        all_patterns = []
         for label, patterns in self.token_patterns.items():
             for pattern in patterns:
                 ent_label, ent_id = self._split_label(label)
@@ -257,11 +257,11 @@ class EntityRuler(Pipe):
         for label, patterns in self.phrase_patterns.items():
             for pattern in patterns:
                 ent_label, ent_id = self._split_label(label)
-                p = {"label": ent_label, "pattern": pattern.text}  # type: ignore
+                p = {"label": ent_label, "pattern": pattern.text}
                 if ent_id:
                     p["id"] = ent_id
                 all_patterns.append(p)
-        return all_patterns  # type: ignore
+        return all_patterns
 
     def add_patterns(self, patterns: List[PatternType]) -> None:
         """Add patterns to the entity ruler. A pattern can either be a token
@@ -302,7 +302,7 @@ class EntityRuler(Pipe):
                 self.nlp.pipe(phrase_pattern_texts),
                 phrase_pattern_ids,
             ):
-                phrase_pattern = {"label": label, "pattern": pattern}  # type: ignore
+                phrase_pattern = {"label": label, "pattern": pattern}
                 if ent_id:
                     phrase_pattern["id"] = ent_id
                 phrase_patterns.append(phrase_pattern)

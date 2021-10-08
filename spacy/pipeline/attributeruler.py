@@ -221,7 +221,7 @@ class AttributeRuler(Pipe):
         """All the added patterns."""
         all_patterns = []
         for i in range(len(self.attrs)):
-            p = {}  # type: ignore
+            p = {}
             p["patterns"] = self.matcher.get(str(i))[1]
             p["attrs"] = self._attrs_unnormed[i]  # type: ignore
             p["index"] = self.indices[i]  # type: ignore

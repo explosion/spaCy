@@ -132,9 +132,9 @@ class Lemmatizer(Pipe):
         required_tables, optional_tables = self.get_lookups_config(self.mode)
         if lookups is None:
             logger.debug("Lemmatizer: loading tables from spacy-lookups-data")
-            lookups = load_lookups(lang=self.vocab.lang, tables=required_tables)  # type: ignore[arg-type]
+            lookups = load_lookups(lang=self.vocab.lang, tables=required_tables)
             optional_lookups = load_lookups(
-                lang=self.vocab.lang, tables=optional_tables, strict=False  # type: ignore[arg-type]
+                lang=self.vocab.lang, tables=optional_tables, strict=False
             )
             for table in optional_lookups.tables:
                 lookups.set_table(table, optional_lookups.get_table(table))
