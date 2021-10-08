@@ -3476,7 +3476,51 @@
                 "github": "bbieniek"
             },
             "category": ["apis"]
-        }
+        },
+        {
+            "id": "phruzz_matcher",
+            "title": "phruzz-matcher",
+            "slogan": "Phrase matcher using RapidFuzz",
+            "description": "Combination of the RapidFuzz library with Spacy PhraseMatcher The goal of this component is to find matches when there were NO \"perfect matches\" due to typos or abbreviations between a Spacy doc and a list of phrases.",
+            "github": "mjvallone/phruzz-matcher",
+            "pip": "phruzz_matcher",
+            "code_example": [
+                "import spacy",
+                "from spacy.language import Language",
+                "from phruzz_matcher.phrase_matcher import PhruzzMatcher",
+                "",
+                "famous_people = [",
+                "        \"Brad Pitt\",",
+                "        \"Demi Moore\",",
+                "        \"Bruce Willis\",",
+                "        \"Jim Carrey\",",
+                "]",
+                "",
+                "@Language.factory(\"phrase_matcher\")",
+                "def phrase_matcher(nlp: Language, name: str):",
+                "    return PhruzzMatcher(nlp, famous_people, \"FAMOUS_PEOPLE\", 85)",
+                "",
+                "nlp = spacy.blank('es')",
+                "nlp.add_pipe(\"phrase_matcher\")",
+                "",
+                "doc = nlp(\"El otro día fui a un bar donde vi a brad pit y a Demi Moore, estaban tomando unas cervezas mientras charlaban de sus asuntos.\")",
+                "print(f\"doc.ents: {doc.ents}\")",
+                "",
+                "#OUTPUT",
+                "#doc.ents: (brad pit, Demi Moore)"
+            ],
+            "thumb": "https://avatars.githubusercontent.com/u/961296?v=4",
+            "image": "",
+            "code_language": "python",
+            "author": "Martin Vallone",
+            "author_links": {
+                "github": "mjvallone",
+                "twitter": "vallotin",
+                "website": "https://fiqus.coop/"
+            },
+            "category": ["pipeline", "research", "standalone"],
+            "tags": ["spacy", "python", "nlp", "ner"]
+        }        
     ],
 
     "categories": [
