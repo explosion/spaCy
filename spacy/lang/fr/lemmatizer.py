@@ -2,6 +2,7 @@ from typing import List, Tuple
 
 from ...pipeline import Lemmatizer
 from ...tokens import Token
+from ...util import unique
 
 
 class FrenchLemmatizer(Lemmatizer):
@@ -75,6 +76,6 @@ class FrenchLemmatizer(Lemmatizer):
             forms.append(self.lookup_lemmatize(token)[0])
         if not forms:
             forms.append(string)
-        forms = list(set(forms))
+        forms = unique(forms)
         self.cache[cache_key] = forms
         return forms
