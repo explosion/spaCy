@@ -2,7 +2,6 @@ from typing import List, Tuple
 
 from ...pipeline import Lemmatizer
 from ...tokens import Token
-from ...util import unique
 
 
 class DutchLemmatizer(Lemmatizer):
@@ -98,7 +97,7 @@ class DutchLemmatizer(Lemmatizer):
                     return forms
                 else:
                     oov_forms.append(form)
-        forms = unique(oov_forms)
+        forms = list(dict.fromkeys(oov_forms))
         # Back-off through remaining return value candidates.
         if forms:
             for form in forms:

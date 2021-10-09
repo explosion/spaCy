@@ -1395,22 +1395,6 @@ def walk_dict(
             yield (key_parent, value)
 
 
-def unique(ll):
-    """Return unique values in a list, preserving order.
-
-    When there are multiple versions of the same item, the first is kept. This
-    should be used instead of list(set(ll)) to avoid inconcistency between
-    different process runs.
-    """
-    seen = set()
-    out = []
-    for ii in ll:
-        if ii not in seen:
-            out.append(ii)
-            seen.add(ii)
-    return out
-
-
 def get_arg_names(func: Callable) -> List[str]:
     """Get a list of all named arguments of a function (regular,
     keyword-only).
@@ -1419,7 +1403,7 @@ def get_arg_names(func: Callable) -> List[str]:
     RETURNS (List[str]): The argument names.
     """
     argspec = inspect.getfullargspec(func)
-    return unique([*argspec.args, *argspec.kwonlyargs])
+    return list(dict.fromkeys([*argspec.args, *argspec.kwonlyargs]))
 
 
 def combine_score_weights(
