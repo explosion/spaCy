@@ -85,3 +85,10 @@ def test_sents_1_3(parser):
     doc[3].is_sent_start = True
     doc = parser(doc)
     assert len(list(doc.sents)) == 3
+
+def test_partial_annotation(parser):
+    doc = Doc(parser.vocab, words=["a", "b", "c", "d"])
+    doc[2].is_sent_start = False
+    doc = parser(doc)
+    assert doc[2].is_sent_start == False
+
