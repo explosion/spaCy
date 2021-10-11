@@ -530,7 +530,6 @@ cdef class Vocab:
 
         setters = {
             "strings": lambda b: self.strings.from_bytes(b),
-            "lexemes": lambda b: self.lexemes_from_bytes(b),
             "vectors": lambda b: serialize_vectors(b),
             "lookups": lambda b: self.lookups.from_bytes(b),
         }
