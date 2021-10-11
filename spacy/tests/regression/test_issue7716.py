@@ -43,45 +43,12 @@ def parser(vocab):
     return parser
 
 
-def test_no_sentences(parser):
+# @pytest.mark.xfail(reason="Not fixed yet", strict=False)
+def test_partial_annotation(parser):
     doc = Doc(parser.vocab, words=["a", "b", "c", "d"])
-    doc = parser(doc)
-    assert len(list(doc.sents)) >= 1
-
-
-def test_sents_1(parser):
-    doc = Doc(parser.vocab, words=["a", "b", "c", "d"])
-    doc[2].sent_start = True
-    doc = parser(doc)
-    assert len(list(doc.sents)) >= 2
-    doc = Doc(parser.vocab, words=["a", "b", "c", "d"])
-    doc[1].sent_start = False
-    doc[2].sent_start = True
-    doc[3].sent_start = False
-    doc = parser(doc)
-    assert len(list(doc.sents)) == 2
-
-
-def test_sents_1_2(parser):
-    doc = Doc(parser.vocab, words=["a", "b", "c", "d"])
-    doc[1].sent_start = True
-    doc[2].sent_start = True
-    doc = parser(doc)
-    assert len(list(doc.sents)) >= 3
-
-
-def test_sents_1_3(parser):
-    doc = Doc(parser.vocab, words=["a", "b", "c", "d"])
-    doc[0].is_sent_start = True
-    doc[1].is_sent_start = True
-    doc[2].is_sent_start = None
-    doc[3].is_sent_start = True
-    doc = parser(doc)
-    assert len(list(doc.sents)) >= 3
-    doc = Doc(parser.vocab, words=["a", "b", "c", "d"])
-    doc[0].is_sent_start = True
-    doc[1].is_sent_start = True
     doc[2].is_sent_start = False
-    doc[3].is_sent_start = True
+    # Note that if the following line is used, then doc[2].is_sent_start == False
+    # doc[3].is_sent_start = False
+
     doc = parser(doc)
-    assert len(list(doc.sents)) == 3
+    assert doc[2].is_sent_start == False
