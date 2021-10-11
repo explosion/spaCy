@@ -40,9 +40,11 @@ architectures and their arguments and hyperparameters.
 > nlp.add_pipe("tagger", config=config)
 > ```
 
-| Setting | Description                                                                                                                                                                                                                                                                                            |
-| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `model` | A model instance that predicts the tag probabilities. The output vectors should match the number of tags in size, and be normalized as probabilities (all scores between 0 and 1, with the rows summing to `1`). Defaults to [Tagger](/api/architectures#Tagger). ~~Model[List[Doc], List[Floats2d]]~~ |
+| Setting                                  | Description                                                                                                                                                                                                                                                                                            |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `model`                                  | A model instance that predicts the tag probabilities. The output vectors should match the number of tags in size, and be normalized as probabilities (all scores between 0 and 1, with the rows summing to `1`). Defaults to [Tagger](/api/architectures#Tagger). ~~Model[List[Doc], List[Floats2d]]~~ |
+| `overwrite` <Tag variant="new">3.2</Tag> | Whether existing annotation is overwritten. Defaults to `False`. ~~bool~~                                                                                                                                                                                                                              |
+| `scorer` <Tag variant="new">3.2</Tag>    | The scoring method. Defaults to [`Scorer.score_token_attr`](/api/scorer#score_token_attr) for the attribute `"tag"`. ~~Optional[Callable]~~                                                                                                                                                            |
 
 ```python
 %%GITHUB_SPACY/spacy/pipeline/tagger.pyx
@@ -69,13 +71,14 @@ Create a new pipeline instance. In your application, you would normally use a
 shortcut for this and instantiate the component using its string name and
 [`nlp.add_pipe`](/api/language#add_pipe).
 
-| Name           | Description                                                                                                                                                                                                                                           |
-| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `vocab`        | The shared vocabulary. ~~Vocab~~                                                                                                                                                                                                                      |
-| `model`        | A model instance that predicts the tag probabilities. The output vectors should match the number of tags in size, and be normalized as probabilities (all scores between 0 and 1, with the rows summing to `1`). ~~Model[List[Doc], List[Floats2d]]~~ |
-| `name`         | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~                                                                                                                                                   |
-| _keyword-only_ |                                                                                                                                                                                                                                                       |
-| `scorer`       | The scoring method. Defaults to [`Scorer.score_token_attr`](/api/scorer#score_token_attr) for the attribute `"tag"`. ~~Optional[Callable]~~                                                                                                           |
+| Name                                     | Description                                                                                                                                                                                                                                           |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vocab`                                  | The shared vocabulary. ~~Vocab~~                                                                                                                                                                                                                      |
+| `model`                                  | A model instance that predicts the tag probabilities. The output vectors should match the number of tags in size, and be normalized as probabilities (all scores between 0 and 1, with the rows summing to `1`). ~~Model[List[Doc], List[Floats2d]]~~ |
+| `name`                                   | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~                                                                                                                                                   |
+| _keyword-only_                           |                                                                                                                                                                                                                                                       |
+| `overwrite` <Tag variant="new">3.2</Tag> | Whether existing annotation is overwritten. Defaults to `False`. ~~bool~~                                                                                                                                                                             |
+| `scorer` <Tag variant="new">3.2</Tag>    | The scoring method. Defaults to [`Scorer.score_token_attr`](/api/scorer#score_token_attr) for the attribute `"tag"`. ~~Optional[Callable]~~                                                                                                           |
 
 ## Tagger.\_\_call\_\_ {#call tag="method"}
 
