@@ -171,7 +171,7 @@ class Warnings:
     W107 = ("The property `Doc.{prop}` is deprecated. Use "
             "`Doc.has_annotation(\"{attr}\")` instead.")
     W108 = ("The rule-based lemmatizer did not find POS annotation for one or "
-            "multiple tokens'. Check that your pipeline includes components that "
+            "multiple tokens. Check that your pipeline includes components that "
             "assign token.pos, typically 'tagger'+'attribute_ruler' or "
             "'morphologizer'.")
     W109 = ("Unable to save user hooks while serializing the doc. Re-add any "
