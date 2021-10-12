@@ -460,13 +460,13 @@ class Scorer:
 
             for label in labels:
                 pred_score = pred_cats.get(label, 0.0)
-                gold_score = gold_cats.get(label, 0.0)
+                gold_score = gold_cats.get(label)
                 if gold_score is not None:
                     auc_per_type[label].score_set(pred_score, gold_score)
             if multi_label:
                 for label in labels:
                     pred_score = pred_cats.get(label, 0.0)
-                    gold_score = gold_cats.get(label, 0.0)
+                    gold_score = gold_cats.get(label)
                     if gold_score is not None:
                         if pred_score >= threshold and gold_score > 0:
                             f_per_type[label].tp += 1
@@ -478,16 +478,15 @@ class Scorer:
                 # Get the highest-scoring for each.
                 pred_label, pred_score = max(pred_cats.items(), key=lambda it: it[1])
                 gold_label, gold_score = max(gold_cats.items(), key=lambda it: it[1])
-                if gold_score is not None:
-                    if pred_label == gold_label and pred_score >= threshold:
-                        f_per_type[pred_label].tp += 1
-                    else:
-                        f_per_type[gold_label].fn += 1
-                        if pred_score >= threshold:
-                            f_per_type[pred_label].fp += 1
+                if pred_label == gold_label and pred_score >= threshold:
+                    f_per_type[pred_label].tp += 1
+                else:
+                    f_per_type[gold_label].fn += 1
+                    if pred_score >= threshold:
+                        f_per_type[pred_label].fp += 1
             elif gold_cats:
                 gold_label, gold_score = max(gold_cats, key=lambda it: it[1])
-                if gold_score is not None and gold_score > 0:
+                if gold_score > 0:
                     f_per_type[gold_label].fn += 1
             elif pred_cats:
                 pred_label, pred_score = max(pred_cats.items(), key=lambda it: it[1])
