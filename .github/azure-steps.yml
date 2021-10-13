@@ -100,3 +100,8 @@ steps:
       python -m spacy assemble ner_source_md.cfg output_dir 2>&1 | grep -q W113
     displayName: 'Test assemble CLI vectors warning'
     condition: eq(variables['python_version'], '3.8')
+
+  - script: |
+      python .github/test_universe_json.py website/meta/universe.json
+    displayName: 'Test website/meta/universe.json'
+    condition: eq(variables['python_version'], '3.8')
