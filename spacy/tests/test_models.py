@@ -193,6 +193,7 @@ def test_models_update_consistently(seed, dropout, model_func, kwargs, get_X):
     assert_array_almost_equal(
         model1.ops.to_numpy(get_all_params(model1)),
         model2.ops.to_numpy(get_all_params(model2)),
+        decimal=5,
     )
 
 
