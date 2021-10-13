@@ -97,7 +97,7 @@ cdef class Matcher:
         the first greedy match ("FIRST"), or the longest ("LONGEST").
 
         Since spaCy v2.2.2, Matcher.add takes a list of patterns as the second
-        argument, and the on_match callback is an optiona keyword argument.
+        argument, and the on_match callback is an optional keyword argument.
 
         key (str): The match ID.
         patterns (list): The patterns to add for the given key.
