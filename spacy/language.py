@@ -1,5 +1,7 @@
-from typing import TYPE_CHECKING, Iterator, Optional, Any, Dict, Callable, Iterable, NoReturn, TypeVar, Sequence
-from typing import Union, Tuple, List, Set, Pattern, cast, overload
+from typing import Iterator, Optional, Any, Dict, Callable, Iterable
+from typing import Union, Tuple, List, Set, Pattern, Sequence
+from typing import NoReturn, TYPE_CHECKING, TypeVar, cast, overload
+
 from dataclasses import dataclass
 import random
 import itertools
@@ -1324,9 +1326,7 @@ class Language:
 
     def set_error_handler(
         self,
-        error_handler: Callable[
-            [str, "Pipe", List[Doc], Exception], NoReturn
-        ],
+        error_handler: Callable[[str, "Pipe", List[Doc], Exception], NoReturn],
     ):
         """Set an error handler object for all the components in the pipeline that implement
         a set_error_handler function.

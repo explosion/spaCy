@@ -346,7 +346,7 @@ class SpanishLemmatizer(Lemmatizer):
         selected_lemmas = []
 
         # Apply lemmatization rules
-        rule = str(rule or "")  # TODO: the code around 'rule' var needs cleaning up
+        rule = str(rule or "")
         for old, new in self.lookups.get_table("lemma_rules").get(rule, []):
             possible_lemma = re.sub(old + "$", new, word)
             if possible_lemma != word:
@@ -415,7 +415,7 @@ class SpanishLemmatizer(Lemmatizer):
         else:
             rule = self.select_rule("verb", features)
             verb_lemma = self.lemmatize_verb(
-                verb, features - {"PronType=Prs"}, rule, index   # type: ignore[operator]
+                verb, features - {"PronType=Prs"}, rule, index  # type: ignore[operator]
             )[0]
         pron_lemmas = []
         for pron in prons:
