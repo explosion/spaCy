@@ -21,6 +21,7 @@ TOKENIZER_SUFFIXES = (
     + ["'s", "'S", "’s", "’S", "—", "–"]
     + [
         r"(?<=[0-9])\+",
+        r"(?<=°[FfCcKk])\.",
         r"(?<=[0-9])(?:{c})".format(c=CURRENCY),
         r"(?<=[0-9])(?:{u})".format(u=UNITS),
         r"(?<=[0-9{al}{e}{p}(?:{q})])\.".format(
