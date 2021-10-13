@@ -6,7 +6,7 @@ from ..tokens import Span, Doc
 
 
 def iob_to_biluo(tags: Iterable[str]) -> List[str]:
-    out = []  # type: List[str]
+    out: List[str] = []
     tags = list(tags)
     while tags:
         out.extend(_consume_os(tags))
@@ -90,7 +90,7 @@ def offsets_to_biluo_tags(
         >>> assert tags == ["O", "O", 'U-LOC', "O"]
     """
     # Ensure no overlapping entity labels exist
-    tokens_in_ents = {}  # type: Dict[int, Tuple[int, int, Union[str, int]]]
+    tokens_in_ents: Dict[int, Tuple[int, int, Union[str, int]]] = {}
     starts = {token.idx: token.i for token in doc}
     ends = {token.idx + len(token): token.i for token in doc}
     biluo = ["-" for _ in doc]

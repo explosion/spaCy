@@ -32,8 +32,9 @@ def create_pretrain_vectors(
         return model
 
     def create_vectors_loss() -> Callable:
+        distance: Loss
         if loss == "cosine":
-            distance = CosineDistance(normalize=True, ignore_zeros=True)  # type: Loss
+            distance = CosineDistance(normalize=True, ignore_zeros=True)
             return partial(get_vectors_loss, distance=distance)
         elif loss == "L2":
             distance = L2Distance(normalize=True)
@@ -173,14 +174,14 @@ def build_masked_language_model(
             if wrapped.has_dim(dim):
                 model.set_dim(dim, wrapped.get_dim(dim))
 
-    mlm_model = Model(
+    mlm_model: Model = Model(
         "masked-language-model",
         mlm_forward,
         layers=[wrapped_model],
         init=mlm_initialize,
         refs={"wrapped": wrapped_model},
         dims={dim: None for dim in wrapped_model.dim_names},
-    )  # type: Model
+    )
     mlm_model.set_ref("wrapped", wrapped_model)
     return mlm_model
 
@@ -194,9 +195,7 @@ class _RandomWords:
         # Compute normalized lexeme probabilities
         probs = [lex.prob for lex in vocab if lex.prob != 0.0]
         probs = probs[:10000]
-        probs: numpy.ndarray = numpy.exp(
-            numpy.array(probs, dtype="f")
-        )
+        probs: numpy.ndarray = numpy.exp(numpy.array(probs, dtype="f"))
         probs /= probs.sum()
         self.probs = probs
 

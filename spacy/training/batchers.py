@@ -214,7 +214,7 @@ def _batch_by_length(
     lengths_indices = [(get_length(seq), i) for i, seq in enumerate(seqs)]
     lengths_indices.sort()
     batches = []
-    batch = []  # type: List[int]
+    batch: List[int] = []
     for length, i in lengths_indices:
         if not batch:
             batch.append(i)

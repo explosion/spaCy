@@ -284,7 +284,7 @@ class Lemmatizer(Pipe):
 
         DOCS: https://spacy.io/api/lemmatizer#from_disk
         """
-        deserialize = {}  # type: Dict[str, Callable[[Any], Any]]
+        deserialize: Dict[str, Callable[[Any], Any]] = {}
         deserialize["vocab"] = lambda p: self.vocab.from_disk(p, exclude=exclude)
         deserialize["lookups"] = lambda p: self.lookups.from_disk(p)
         util.from_disk(path, deserialize, exclude)
@@ -315,7 +315,7 @@ class Lemmatizer(Pipe):
 
         DOCS: https://spacy.io/api/lemmatizer#from_bytes
         """
-        deserialize = {}  # type: Dict[str, Callable[[Any], Any]]
+        deserialize: Dict[str, Callable[[Any], Any]] = {}
         deserialize["vocab"] = lambda b: self.vocab.from_bytes(b, exclude=exclude)
         deserialize["lookups"] = lambda b: self.lookups.from_bytes(b)
         util.from_bytes(bytes_data, deserialize, exclude)

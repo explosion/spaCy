@@ -75,8 +75,8 @@ class ROCAUCScore:
     may throw an error."""
 
     def __init__(self) -> None:
-        self.golds = []  # type: List[Any]
-        self.cands = []  # type: List[Any]
+        self.golds: List[Any] = []
+        self.cands: List[Any] = []
         self.saved_score = 0.0
         self.saved_score_at_len = 0
 
@@ -264,7 +264,7 @@ class Scorer:
             pred_doc = example.predicted
             gold_doc = example.reference
             align = example.alignment
-            gold_per_feat = {}  # type: Dict[str, Set]
+            gold_per_feat: Dict[str, Set] = {}
             missing_indices = set()
             for gold_i, token in enumerate(gold_doc):
                 value = getter(token, attr)
@@ -279,7 +279,7 @@ class Scorer:
                         gold_per_feat[field].add((gold_i, feat))
                 else:
                     missing_indices.add(gold_i)
-            pred_per_feat = {}  # type: Dict[str, Set]
+            pred_per_feat: Dict[str, Set] = {}
             for token in pred_doc:
                 if token.orth_.isspace():
                     continue
@@ -356,7 +356,7 @@ class Scorer:
                 + [k.label_ for k in getter(pred_doc, attr)]
             )
             # Set up all labels for per type scoring and prepare gold per type
-            gold_per_type = {label: set() for label in labels}  # type: Dict[str, Set]
+            gold_per_type: Dict[str, Set] = {label: set() for label in labels}
             for label in labels:
                 if label not in score_per_type:
                     score_per_type[label] = PRFScore()
@@ -364,18 +364,20 @@ class Scorer:
             gold_spans = set()
             pred_spans = set()
             for span in getter(gold_doc, attr):
+                gold_span: Tuple
                 if labeled:
-                    gold_span = (span.label_, span.start, span.end - 1)  # type: Tuple
+                    gold_span = (span.label_, span.start, span.end - 1)
                 else:
                     gold_span = (span.start, span.end - 1)
                 gold_spans.add(gold_span)
                 gold_per_type[span.label_].add(gold_span)
-            pred_per_type = {label: set() for label in labels}  # type: Dict[str, Set]
+            pred_per_type: Dict[str, Set] = {label: set() for label in labels}
             for span in example.get_aligned_spans_x2y(
                 getter(pred_doc, attr), allow_overlap
             ):
+                pred_span: Tuple
                 if labeled:
-                    pred_span = (span.label_, span.start, span.end - 1)  # type: Tuple
+                    pred_span = (span.label_, span.start, span.end - 1)
                 else:
                     pred_span = (span.start, span.end - 1)
                 pred_spans.add(pred_span)
@@ -652,7 +654,7 @@ class Scorer:
             pred_doc = example.predicted
             align = example.alignment
             gold_deps = set()
-            gold_deps_per_dep = {}  # type: Dict[str, Set]
+            gold_deps_per_dep: Dict[str, Set] = {}
             for gold_i, token in enumerate(gold_doc):
                 dep = getter(token, attr)
                 head = head_getter(token, head_attr)
@@ -667,7 +669,7 @@ class Scorer:
                 else:
                     missing_indices.add(gold_i)
             pred_deps = set()
-            pred_deps_per_dep = {}  # type: Dict[str, Set]
+            pred_deps_per_dep: Dict[str, Set] = {}
             for token in pred_doc:
                 if token.orth_.isspace():
                     continue

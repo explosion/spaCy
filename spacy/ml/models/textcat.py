@@ -37,12 +37,12 @@ def build_simple_cnn_text_classifier(
         if exclusive_classes:
             output_layer = Softmax(nO=nO, nI=nI)
             fill_defaults["b"] = NEG_VALUE
-            resizable_layer = resizable(
+            resizable_layer: Model = resizable(
                 output_layer,
                 resize_layer=partial(
                     resize_linear_weighted, fill_defaults=fill_defaults
                 ),
-            )  # type: Model
+            )
             model = cnn >> resizable_layer
         else:
             output_layer = Linear(nO=nO, nI=nI)

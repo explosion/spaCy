@@ -194,7 +194,7 @@ def train_while_improving(
     else:
         dropouts = dropout
     results = []
-    losses = {}  # type: Dict[str, float]
+    losses: Dict[str, float] = {}
     words_seen = 0
     start_time = timer()
     for step, (epoch, batch) in enumerate(train_data):

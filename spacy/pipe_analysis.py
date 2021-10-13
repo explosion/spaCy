@@ -67,7 +67,7 @@ def get_attr_info(nlp: "Language", attr: str) -> Dict[str, List[str]]:
     RETURNS (Dict[str, List[str]]): A dict keyed by "assigns" and "requires",
         mapped to a list of component names.
     """
-    result = {"assigns": [], "requires": []}  # type: Dict[str, List[str]]
+    result: Dict[str, List[str]] = {"assigns": [], "requires": []}
     for pipe_name in nlp.pipe_names:
         meta = nlp.get_pipe_meta(pipe_name)
         if attr in meta.assigns:
@@ -88,11 +88,11 @@ def analyze_pipes(
     keys (List[str]): The meta keys to show in the table.
     RETURNS (dict): A dict with "summary" and "problems".
     """
-    result = {
+    result: Dict[str, Dict[str, Union[List[str], Dict]]] = {
         "summary": {},
         "problems": {},
-    }  # type: Dict[str, Dict[str, Union[List[str], Dict]]]
-    all_attrs = set()  # type: Set[str]
+    }
+    all_attrs: Set[str] = set()
     for i, name in enumerate(nlp.pipe_names):
         meta = nlp.get_pipe_meta(name)
         all_attrs.update(meta.assigns)
@@ -124,7 +124,7 @@ def print_pipe_analysis(
     """
     msg.divider("Pipeline Overview")
     header = ["#", "Component", *[key.capitalize() for key in keys]]
-    summary = analysis["summary"].items()  # type: ItemsView
+    summary: ItemsView = analysis["summary"].items()
     body = [[i, n, *[v for v in m.values()]] for i, (n, m) in enumerate(summary)]
     msg.table(body, header=header, divider=True, multiline=True)
     n_problems = sum(len(p) for p in analysis["problems"].values())

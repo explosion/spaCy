@@ -75,13 +75,13 @@ class DocBin:
         self.version = "0.1"
         self.attrs = [attr for attr in attrs if attr != ORTH and attr != SPACY]
         self.attrs.insert(0, ORTH)  # Ensure ORTH is always attrs[0]
-        self.tokens = []  # type: List[ndarray]
-        self.spaces = []  # type: List[ndarray]
-        self.cats = []  # type: List[Dict]
-        self.span_groups = []  # type: List[bytes]
-        self.user_data = []  # type: List[Optional[bytes]]
-        self.flags = []  # type: List[Dict]
-        self.strings = set()  # type: Set[str]
+        self.tokens: List[ndarray] = []
+        self.spaces: List[ndarray] = []
+        self.cats: List[Dict] = []
+        self.span_groups: List[bytes] = []
+        self.user_data: List[Optional[bytes]] = []
+        self.flags: List[Dict] = []
+        self.strings: Set[str] = set()
         self.store_user_data = store_user_data
         for doc in docs:
             self.add(doc)
@@ -139,7 +139,7 @@ class DocBin:
         for i in range(len(self.tokens)):
             flags = self.flags[i]
             tokens = self.tokens[i]
-            spaces = self.spaces[i]  # type: Optional[ndarray]
+            spaces: Optional[ndarray] = self.spaces[i]
             if flags.get("has_unknown_spaces"):
                 spaces = None
             doc = Doc(vocab, words=tokens[:, orth_col], spaces=spaces)  # type: ignore

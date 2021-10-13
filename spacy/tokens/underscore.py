@@ -7,9 +7,9 @@ from ..errors import Errors
 
 class Underscore:
     mutable_types = (dict, list, set)
-    doc_extensions = {}  # type: Dict[Any, Any]
-    span_extensions = {}  # type: Dict[Any, Any]
-    token_extensions = {}  # type: Dict[Any, Any]
+    doc_extensions: Dict[Any, Any] = {}
+    span_extensions: Dict[Any, Any] = {}
+    token_extensions: Dict[Any, Any] = {}
 
     def __init__(self, extensions, obj, start=None, end=None):
         object.__setattr__(self, "_extensions", extensions)

@@ -60,8 +60,8 @@ class Tok2Vec(TrainablePipe):
         self.vocab = vocab
         self.model = model
         self.name = name
-        self.listener_map = {}  # type: Dict[str, List["Tok2VecListener"]]
-        self.cfg = {}  # type: Dict[str, Any]
+        self.listener_map: Dict[str, List["Tok2VecListener"]] = {}
+        self.cfg: Dict[str, Any] = {}
 
     @property
     def listeners(self) -> List["Tok2VecListener"]:

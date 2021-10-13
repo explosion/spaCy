@@ -162,11 +162,11 @@ def MultiHashEmbed(
         Maxout(width, concat_size, nP=3, dropout=0.0, normalize=True)  # type: ignore
     )
     if include_static_vectors:
-        feature_extractor = chain(
+        feature_extractor: Model[List[Doc], Ragged] = chain(
             FeatureExtractor(attrs),
             cast(Model[List[Ints2d], Ragged], list2ragged()),
             with_array(concatenate(*embeddings)),
-        )  # type: Model[List[Doc], Ragged]
+        )
         model = chain(
             concatenate(
                 feature_extractor,
@@ -229,11 +229,11 @@ def CharacterEmbed(
         _character_embed.CharacterEmbed(nM=nM, nC=nC),
         cast(Model[List[Floats2d], Ragged], list2ragged()),
     )
-    feature_extractor = chain(
+    feature_extractor: Model[List[Doc], Ragged] = chain(
         FeatureExtractor([feature]),
         cast(Model[List[Ints2d], Ragged], list2ragged()),
         with_array(HashEmbed(nO=width, nV=rows, column=0, seed=5)),  # type: ignore
-    )  # type: Model[List[Doc], Ragged]
+    )
     max_out: Model[Ragged, Ragged]
     if include_static_vectors:
         max_out = with_array(

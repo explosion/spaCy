@@ -141,7 +141,7 @@ class EntityLinker(TrainablePipe):
         self.incl_prior = incl_prior
         self.incl_context = incl_context
         self.get_candidates = get_candidates
-        self.cfg = {}  # type: Dict[str, Any]
+        self.cfg: Dict[str, Any] = {}
         self.distance = CosineDistance(normalize=False)
         # how many neighbour sentences to take into account
         # create an empty KB by default. If you want to load a predefined one, specify it in 'initialize'.
@@ -296,7 +296,7 @@ class EntityLinker(TrainablePipe):
         """
         self.validate_kb()
         entity_count = 0
-        final_kb_ids = []  # type: List[str]
+        final_kb_ids: List[str] = []
         if not docs:
             return final_kb_ids
         if isinstance(docs, Doc):
@@ -480,7 +480,7 @@ class EntityLinker(TrainablePipe):
             except AttributeError:
                 raise ValueError(Errors.E149) from None
 
-        deserialize = {}  # type: Dict[str, Callable[[Any], Any]]
+        deserialize: Dict[str, Callable[[Any], Any]] = {}
         deserialize["cfg"] = lambda p: self.cfg.update(deserialize_config(p))
         deserialize["vocab"] = lambda p: self.vocab.from_disk(p, exclude=exclude)
         deserialize["kb"] = lambda p: self.kb.from_disk(p)

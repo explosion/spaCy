@@ -1157,7 +1157,7 @@ def filter_spans(spans: Iterable["Span"]) -> List["Span"]:
     get_sort_key = lambda span: (span.end - span.start, -span.start)
     sorted_spans = sorted(spans, key=get_sort_key, reverse=True)
     result = []
-    seen_tokens = set()  # type: Set[int]
+    seen_tokens: Set[int] = set()
     for span in sorted_spans:
         # Check for end - 1 here because boundaries are inclusive
         if span.start not in seen_tokens and span.end - 1 not in seen_tokens:
@@ -1329,7 +1329,7 @@ def dot_to_dict(values: Dict[str, Any]) -> Dict[str, dict]:
     values (Dict[str, Any]): The key/value pairs to convert.
     RETURNS (Dict[str, dict]): The converted values.
     """
-    result = {}  # type: Dict[str, dict]
+    result: Dict[str, dict] = {}
     for key, value in values.items():
         path = result
         parts = key.lower().split(".")

@@ -360,7 +360,7 @@ class SpanCategorizer(TrainablePipe):
 
         DOCS: https://spacy.io/api/spancategorizer#initialize
         """
-        subbatch = []  # type: List[Example]
+        subbatch: List[Example] = []
         if labels is not None:
             for label in labels:
                 self.add_label(label)
