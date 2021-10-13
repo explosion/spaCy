@@ -77,9 +77,13 @@ class JapaneseTokenizer(DummyTokenizer):
             # if there's no lemma info (it's an unk) just use the surface
             token.lemma_ = dtoken.lemma if dtoken.lemma else dtoken.surface
             morph = {}
-            morph["inflection"] = dtoken.inf
+            if dtoken.inf:
+                # it's normal for this to be empty for non-inflecting types
+                morph["inflection"] = dtoken.inf
             token.norm_ = dtoken.norm
-            if dtoken.reading:
+            if dtoken.reading and dtoken.pos_ != "PUNCT":
+                # punctuation is its own reading, but we don't want values like
+                # "=" here
                 morph["reading"] = dtoken.reading
             token.morph = MorphAnalysis(self.vocab, morph)
         if self.need_subtokens:
