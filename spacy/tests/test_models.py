@@ -112,7 +112,9 @@ def test_models_initialize_consistently(seed, model_func, kwargs):
     model2.initialize()
     params1 = get_all_params(model1)
     params2 = get_all_params(model2)
-    assert_array_equal(model1.ops.to_numpy(params1), model2.ops.to_numpy(params2))
+    assert_array_equal(
+        model1.ops.to_numpy(params1), model2.ops.to_numpy(params2), decimal=5
+    )
 
 
 @pytest.mark.parametrize(
@@ -193,6 +195,7 @@ def test_models_update_consistently(seed, dropout, model_func, kwargs, get_X):
     assert_array_almost_equal(
         model1.ops.to_numpy(get_all_params(model1)),
         model2.ops.to_numpy(get_all_params(model2)),
+        decimal=5,
     )
 
 
