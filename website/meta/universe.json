@@ -1373,7 +1373,7 @@
                 "freq = doc[3:6]._.s2v_freq",
                 "vector = doc[3:6]._.s2v_vec",
                 "most_similar = doc[3:6]._.s2v_most_similar(3)",
-                "# [(('machine learning', 'NOUN'), 0.8986967),",
+                "# [(("machine learning", "NOUN'), 0.8986967),",
                 "#  (('computer vision', 'NOUN'), 0.8636297),",
                 "#  (('deep learning', 'NOUN'), 0.8573361)]"
             ],
