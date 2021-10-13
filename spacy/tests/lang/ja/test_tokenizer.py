@@ -139,9 +139,9 @@ def test_ja_tokenizer_inflections_reading_forms(
     ja_tokenizer, text, inflections, reading_forms
 ):
     tokens = ja_tokenizer(text)
-    test_inflections = [tt.morph.get("inflection")[0] for tt in tokens]
+    test_inflections = [tt.morph.get("inflection", [""])[0] for tt in tokens]
     assert test_inflections == list(inflections)
-    test_readings = [tt.morph.get("reading")[0] for tt in tokens]
+    test_readings = [tt.morph.get("reading", [""])[0] for tt in tokens]
     assert test_readings == list(reading_forms)
 
 
