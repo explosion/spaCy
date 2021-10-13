@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 
 
-def test_universe_json(document):
+def validate_json(document):
     universe_file = Path(document)
     with universe_file.open() as f:
         universe_data = json.load(f)
@@ -16,4 +16,4 @@ def test_universe_json(document):
 
 
 if __name__ == "__main__":
-    test_universe_json(str(sys.argv[1]))
+    validate_json(str(sys.argv[1]))

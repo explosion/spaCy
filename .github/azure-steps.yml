@@ -102,6 +102,6 @@ steps:
     condition: eq(variables['python_version'], '3.8')
 
   - script: |
-      python .github/test_universe_json.py website/meta/universe.json
+      python .github/validate_universe_json.py website/meta/universe.json
     displayName: 'Test website/meta/universe.json'
     condition: eq(variables['python_version'], '3.8')
