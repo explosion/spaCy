@@ -269,14 +269,14 @@ def debug_data(
             )
         if has_ws_ents_error:
             msg.text(
-                "As of spaCy v2.1.0, entity spans consisting of or starting/ending "
+                "Entity spans consisting of or starting/ending "
                 "with whitespace characters are considered invalid."
             )
 
         if has_punct_ents_warning:
             msg.text(
                 "Entity spans consisting of or starting/ending "
-                "with punctuation can not be trained with a noise level > 0."
+                "with punctuation can not be learned."
             )
 
     if "textcat" in factory_names:
