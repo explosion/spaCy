@@ -81,7 +81,7 @@ class JapaneseTokenizer(DummyTokenizer):
                 # it's normal for this to be empty for non-inflecting types
                 morph["inflection"] = dtoken.inf
             token.norm_ = dtoken.norm
-            if dtoken.reading and dtoken.pos_ != "PUNCT":
+            if dtoken.reading and token.tag_[:4] != "補助記号":
                 # punctuation is its own reading, but we don't want values like
                 # "=" here
                 morph["reading"] = dtoken.reading
