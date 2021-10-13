@@ -15,7 +15,7 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Tuple[int, int, int]]:
     # fmt: off
     labels = ["sb", "oa", "da", "nk", "mo", "ag", "ROOT", "root", "cj", "pd", "og", "app"]
     # fmt: on
-    doc = doclike.doc  # type: ignore[union-attr]    # Ensure works on both Doc and Span.
+    doc = doclike.doc  # Ensure works on both Doc and Span.
     if not doc.has_annotation("DEP"):
         raise ValueError(Errors.E029)
     np_label = doc.vocab.strings.add("NP")

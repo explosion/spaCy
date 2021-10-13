@@ -19,7 +19,7 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Tuple[int, int, int]]:
         "attr",
         "ROOT",
     ]
-    doc = doclike.doc  # type: ignore[union-attr]    # Ensure works on both Doc and Span.
+    doc = doclike.doc  # Ensure works on both Doc and Span.
 
     if not doc.has_annotation("DEP"):
         raise ValueError(Errors.E029)

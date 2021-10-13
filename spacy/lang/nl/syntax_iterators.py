@@ -14,7 +14,7 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Tuple[int, int, int]]:
     # fmt: off
     # labels = ["nsubj", "nsubj:pass", "obj", "iobj", "ROOT", "appos", "nmod", "nmod:poss"]
     # fmt: on
-    doc = doclike.doc  # type: ignore[union-attr]    # Ensure works on both Doc and Span.
+    doc = doclike.doc  # Ensure works on both Doc and Span.
 
     # Check for dependencies: POS, DEP
     if not doc.has_annotation("POS"):

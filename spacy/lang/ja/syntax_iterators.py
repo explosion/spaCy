@@ -12,7 +12,7 @@ labels = ["nsubj", "nmod", "ddoclike", "nsubjpass", "pcomp", "pdoclike", "doclik
 
 def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Tuple[int, int, int]]:
     """Detect base noun phrases from a dependency parse. Works on Doc and Span."""
-    doc = doclike.doc  # type: ignore[union-attr]    # Ensure works on both Doc and Span.
+    doc = doclike.doc  # Ensure works on both Doc and Span.
     np_deps = [doc.vocab.strings.add(label) for label in labels]
     doc.vocab.strings.add("conj")
     np_label = doc.vocab.strings.add("NP")

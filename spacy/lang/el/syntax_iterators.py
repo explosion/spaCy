@@ -12,7 +12,7 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Tuple[int, int, int]]:
     # obj tag corrects some DEP tagger mistakes.
     # Further improvement of the models will eliminate the need for this tag.
     labels = ["nsubj", "obj", "iobj", "appos", "ROOT", "obl"]
-    doc = doclike.doc  # type: ignore[union-attr]    # Ensure works on both Doc and Span.
+    doc = doclike.doc  # Ensure works on both Doc and Span.
     if not doc.has_annotation("DEP"):
         raise ValueError(Errors.E029)
     np_deps = [doc.vocab.strings.add(label) for label in labels]

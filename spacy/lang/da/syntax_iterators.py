@@ -34,7 +34,7 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Tuple[int, int, int]]:
     def get_bounds(doc, root):
         return get_left_bound(doc, root), get_right_bound(doc, root)
 
-    doc = doclike.doc  # type: ignore[union-attr]    # Ensure works on both Doc and Span.
+    doc = doclike.doc  # Ensure works on both Doc and Span.
 
     if not doc.has_annotation("DEP"):
         raise ValueError(Errors.E029)
