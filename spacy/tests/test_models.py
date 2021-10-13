@@ -113,7 +113,6 @@ def test_models_initialize_consistently(seed, model_func, kwargs):
     params1 = get_all_params(model1)
     params2 = get_all_params(model2)
     assert_array_equal(model1.ops.to_numpy(params1), model2.ops.to_numpy(params2))
-    )
 
 
 @pytest.mark.parametrize(
