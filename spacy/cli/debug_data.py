@@ -273,12 +273,6 @@ def debug_data(
                 "with whitespace characters are considered invalid."
             )
 
-        if has_punct_ents_warning:
-            msg.text(
-                "Entity spans consisting of or starting/ending "
-                "with punctuation can not be learned."
-            )
-
     if "textcat" in factory_names:
         msg.divider("Text Classification (Exclusive Classes)")
         labels = _get_labels_from_model(nlp, "textcat")
