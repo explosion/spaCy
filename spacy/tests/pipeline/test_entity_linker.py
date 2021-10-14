@@ -154,6 +154,20 @@ def test_kb_serialize(nlp):
             mykb.from_disk(d / "unknown" / "kb")
 
 
+@pytest.mark.issue(9137)
+def test_kb_serialize_2(nlp):
+    v = [5, 6, 7, 8]
+    kb1 = KnowledgeBase(vocab=nlp.vocab, entity_vector_length=4)
+    kb1.set_entities(["1"], [1], [v])
+    with make_tempdir() as d:
+        kb1.to_disk(d / "kb")
+        assert kb1.get_vector("1") == v
+
+        kb2 = KnowledgeBase(vocab=nlp.vocab, entity_vector_length=4)
+        kb2.from_disk(d / "kb")
+        assert kb2.get_vector("1") == v
+
+
 def test_kb_serialize_vocab(nlp):
     """Test serialization of the KB and custom strings"""
     entity = "MyFunnyID"
