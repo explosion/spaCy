@@ -1,5 +1,7 @@
-from typing import Protocol, runtime_checkable, TYPE_CHECKING
+from typing import runtime_checkable, TYPE_CHECKING
 from typing import Optional, Any, Iterable, Dict, Callable, Sequence, List
+
+from .compat import Protocol
 
 from thinc.api import Optimizer, Model
 
