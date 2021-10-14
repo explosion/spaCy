@@ -3,6 +3,7 @@ from pathlib import Path
 import srsly
 from collections import namedtuple
 from thinc.api import Model
+import re
 
 from .stop_words import STOP_WORDS
 from .syntax_iterators import SYNTAX_ITERATORS
@@ -77,10 +78,14 @@ class JapaneseTokenizer(DummyTokenizer):
             # if there's no lemma info (it's an unk) just use the surface
             token.lemma_ = dtoken.lemma if dtoken.lemma else dtoken.surface
             morph = {}
-            morph["inflection"] = dtoken.inf
+            if dtoken.inf:
+                # it's normal for this to be empty for non-inflecting types
+                morph["inflection"] = dtoken.inf
             token.norm_ = dtoken.norm
             if dtoken.reading:
-                morph["reading"] = dtoken.reading
+                # punctuation is its own reading, but we don't want values like
+                # "=" here
+                morph["reading"] = re.sub("[=|]", "_", dtoken.reading)
             token.morph = MorphAnalysis(self.vocab, morph)
         if self.need_subtokens:
             doc.user_data["sub_tokens"] = sub_tokens_list

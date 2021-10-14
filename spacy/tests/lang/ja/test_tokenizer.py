@@ -130,8 +130,13 @@ def test_ja_tokenizer_sub_tokens(
     [
         (
             "取ってつけた",
-            ("五段-ラ行;連用形-促音便", "", "下一段-カ行;連用形-一般", "助動詞-タ;終止形-一般"),
-            ("トッ", "テ", "ツケ", "タ"),
+            (["五段-ラ行;連用形-促音便"], [], ["下一段-カ行;連用形-一般"], ["助動詞-タ;終止形-一般"]),
+            (["トッ"], ["テ"], ["ツケ"], ["タ"]),
+        ),
+        (
+            "2=3",
+            ([], [], []),
+            (["ニ"], ["_"], ["サン"])
         ),
     ],
 )
@@ -139,9 +144,9 @@ def test_ja_tokenizer_inflections_reading_forms(
     ja_tokenizer, text, inflections, reading_forms
 ):
     tokens = ja_tokenizer(text)
-    test_inflections = [tt.morph.get("inflection")[0] for tt in tokens]
+    test_inflections = [tt.morph.get("inflection") for tt in tokens]
     assert test_inflections == list(inflections)
-    test_readings = [tt.morph.get("reading")[0] for tt in tokens]
+    test_readings = [tt.morph.get("reading") for tt in tokens]
     assert test_readings == list(reading_forms)
 
 
