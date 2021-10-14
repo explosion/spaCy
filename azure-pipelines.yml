@@ -17,6 +17,8 @@ pr:
       - "*.cfg"
       - "*.py"
       - "*.toml"
+      - "*.yml"
+      - ".github/azure-steps.yml"
       - "spacy/*"
       - "website/meta/universe.json"
 
