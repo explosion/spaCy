@@ -1,7 +1,7 @@
 {
     "resources": [
         {
-            "id": "nlpcloud",
+            "id": "nlpcloud nlpcloud",
             "title": "NLPCloud.io",
             "slogan": "Production-ready API for spaCy models in production",
             "description": "A highly-available hosted API to easily deploy and use spaCy models in production. Supports NER, POS tagging, dependency parsing, and tokenization.",
