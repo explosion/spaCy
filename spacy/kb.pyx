@@ -156,6 +156,7 @@ cdef class KnowledgeBase:
 
         nr_entities = len(set(entity_list))
         self.initialize_entities(nr_entities)
+        self.initialize_vectors(nr_entities)
 
         i = 0
         cdef KBEntryC entry
@@ -174,8 +175,8 @@ cdef class KnowledgeBase:
                 entry.entity_hash = entity_hash
                 entry.freq = freq_list[i]
 
-                vector_index = self.c_add_vector(entity_vector=vector_list[i])
-                entry.vector_index = vector_index
+                self._vectors_table[i] = entity_vector
+                entry.vector_index = i
 
                 entry.feats_row = -1   # Features table currently not implemented
 
