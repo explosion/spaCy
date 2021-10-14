@@ -5,11 +5,11 @@ from .punctuation import TOKENIZER_PREFIXES, TOKENIZER_INFIXES
 from .punctuation import TOKENIZER_SUFFIXES
 from .stop_words import STOP_WORDS
 from .syntax_iterators import SYNTAX_ITERATORS
-from ...language import Language
+from ...language import Language, BaseDefaults
 from ...pipeline import Lemmatizer
 
 
-class NorwegianDefaults(Language.Defaults):
+class NorwegianDefaults(BaseDefaults):
     tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     prefixes = TOKENIZER_PREFIXES
     infixes = TOKENIZER_INFIXES

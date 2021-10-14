@@ -1,4 +1,5 @@
-from typing import Optional, Iterable, Callable, Dict, Union, List
+from typing import Optional, Iterable, Callable, Dict, Union, List, Any
+from thinc.types import Floats2d
 from pathlib import Path
 from itertools import islice
 import srsly
@@ -140,7 +141,7 @@ class EntityLinker(TrainablePipe):
         self.incl_prior = incl_prior
         self.incl_context = incl_context
         self.get_candidates = get_candidates
-        self.cfg = {}
+        self.cfg: Dict[str, Any] = {}
         self.distance = CosineDistance(normalize=False)
         # how many neighbour sentences to take into account
         # create an empty KB by default. If you want to load a predefined one, specify it in 'initialize'.
@@ -166,7 +167,7 @@ class EntityLinker(TrainablePipe):
         get_examples: Callable[[], Iterable[Example]],
         *,
         nlp: Optional[Language] = None,
-        kb_loader: Callable[[Vocab], KnowledgeBase] = None,
+        kb_loader: Optional[Callable[[Vocab], KnowledgeBase]] = None,
     ):
         """Initialize the pipe for training, using a representative set
         of data examples.
@@ -261,7 +262,7 @@ class EntityLinker(TrainablePipe):
         losses[self.name] += loss
         return losses
 
-    def get_loss(self, examples: Iterable[Example], sentence_encodings):
+    def get_loss(self, examples: Iterable[Example], sentence_encodings: Floats2d):
         validate_examples(examples, "EntityLinker.get_loss")
         entity_encodings = []
         for eg in examples:
@@ -277,8 +278,9 @@ class EntityLinker(TrainablePipe):
                 method="get_loss", msg="gold entities do not match up"
             )
             raise RuntimeError(err)
-        gradients = self.distance.get_grad(sentence_encodings, entity_encodings)
-        loss = self.distance.get_loss(sentence_encodings, entity_encodings)
+        # TODO: fix typing issue here
+        gradients = self.distance.get_grad(sentence_encodings, entity_encodings)  # type: ignore
+        loss = self.distance.get_loss(sentence_encodings, entity_encodings)  # type: ignore
         loss = loss / len(entity_encodings)
         return float(loss), gradients
 
@@ -288,13 +290,13 @@ class EntityLinker(TrainablePipe):
         no prediction.
 
         docs (Iterable[Doc]): The documents to predict.
-        RETURNS (List[int]): The models prediction for each document.
+        RETURNS (List[str]): The models prediction for each document.
 
         DOCS: https://spacy.io/api/entitylinker#predict
         """
         self.validate_kb()
         entity_count = 0
-        final_kb_ids = []
+        final_kb_ids: List[str] = []
         if not docs:
             return final_kb_ids
         if isinstance(docs, Doc):
@@ -324,7 +326,7 @@ class EntityLinker(TrainablePipe):
                         # ignoring this entity - setting to NIL
                         final_kb_ids.append(self.NIL)
                     else:
-                        candidates = self.get_candidates(self.kb, ent)
+                        candidates = list(self.get_candidates(self.kb, ent))
                         if not candidates:
                             # no prediction possible for this entity - setting to NIL
                             final_kb_ids.append(self.NIL)
@@ -478,7 +480,7 @@ class EntityLinker(TrainablePipe):
             except AttributeError:
                 raise ValueError(Errors.E149) from None
 
-        deserialize = {}
+        deserialize: Dict[str, Callable[[Any], Any]] = {}
         deserialize["cfg"] = lambda p: self.cfg.update(deserialize_config(p))
         deserialize["vocab"] = lambda p: self.vocab.from_disk(p, exclude=exclude)
         deserialize["kb"] = lambda p: self.kb.from_disk(p)

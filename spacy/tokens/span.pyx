@@ -88,7 +88,7 @@ cdef class Span:
         doc (Doc): The parent document.
         start (int): The index of the first token of the span.
         end (int): The index of the first token after the span.
-        label (uint64): A label to attach to the Span, e.g. for named entities.
+        label (int or str): A label to attach to the Span, e.g. for named entities.
         vector (ndarray[ndim=1, dtype='float32']): A meaning representation
             of the span.
         vector_norm (float): The L2 norm of the span's vector representation.

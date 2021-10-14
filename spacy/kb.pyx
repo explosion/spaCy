@@ -1,5 +1,5 @@
 # cython: infer_types=True, profile=True
-from typing import Iterator, Iterable
+from typing import Iterator, Iterable, Callable, Dict, Any
 
 import srsly
 from cymem.cymem cimport Pool
@@ -446,7 +446,7 @@ cdef class KnowledgeBase:
             raise ValueError(Errors.E929.format(loc=path))
         if not path.is_dir():
             raise ValueError(Errors.E928.format(loc=path))
-        deserialize = {}
+        deserialize: Dict[str, Callable[[Any], Any]] = {}
         deserialize["contents"] = lambda p: self.read_contents(p)
         deserialize["strings.json"] = lambda p: self.vocab.strings.from_disk(p)
         util.from_disk(path, deserialize, exclude)
