@@ -13,10 +13,13 @@ trigger:
       - "*.md"
 pr:
   paths:
-    exclude:
-      - "website/*"
-      - "*.md"
     include:
+      - "*.cfg"
+      - "*.py"
+      - "*.toml"
+      - "*.yml"
+      - ".github/azure-steps.yml"
+      - "spacy/*"
       - "website/meta/universe.json"
 
 jobs:
