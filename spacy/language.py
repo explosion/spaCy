@@ -1131,8 +1131,8 @@ class Language:
             pipe_kwargs[name].setdefault("batch_size", self.batch_size)
         for name, proc in self.pipeline:
             # ignore statements are used here because mypy ignores hasattr
-            if name not in exclude and isinstance(proc, ty.TrainableComponent):
-                proc.update(examples, sgd=None, losses=losses, **component_cfg[name])
+            if name not in exclude and hasattr(proc, "update"):
+                proc.update(examples, sgd=None, losses=losses, **component_cfg[name])  # type: ignore
             if sgd not in (None, False):
                 if (
                     name not in exclude
