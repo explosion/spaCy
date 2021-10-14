@@ -13,12 +13,12 @@ trigger:
       - "*.md"
 pr:
   paths:
-    exclude:
-      - "website/*"
-      - "*.md"
     include:
       - "*"
       - "website/meta/universe.json"
+    exclude:
+      - "website/*"
+      - "*.md"
 
 jobs:
   # Perform basic checks for most important errors (syntax etc.) Uses the config
