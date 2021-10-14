@@ -94,7 +94,8 @@ steps:
 
   - script: |
       python -c "import spacy; config = spacy.util.load_config('ner.cfg'); config['components']['ner'] = {'source': 'ca_core_news_sm'}; config.to_disk('ner_source_sm.cfg')"
-      PYTHONWARNINGS="error,ignore::DeprecationWarning" python -m spacy assemble ner_source_sm.cfg output_dir
+      # temporarily ignore W095
+      PYTHONWARNINGS="error,ignore:[W095]:UserWarning,ignore::DeprecationWarning" python -m spacy assemble ner_source_sm.cfg output_dir
     displayName: 'Test assemble CLI'
     condition: eq(variables['python_version'], '3.8')
 
