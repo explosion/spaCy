@@ -17,7 +17,7 @@ class TrainableComponent(Protocol):
         examples: Iterable["Example"],
         *,
         drop: float = 0.0,
-        sgd: Optimizer = None,
+        sgd: Optional[Optimizer] = None,
         losses: Optional[Dict[str, float]] = None
     ) -> Dict[str, float]:
         ...

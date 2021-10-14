@@ -1821,15 +1821,15 @@ class Language:
                     for listener in proc.listener_map.get(listener_name, []):
                         proc.remove_listener(listener, listener_name)
 
-                for listener in proc.listening_components:
+                for listener_name in proc.listening_components:
                     # e.g. tok2vec/transformer
                     # If it's a component sourced from another pipeline, we check if
                     # the tok2vec listeners should be replaced with standalone tok2vec
                     # models (e.g. so component can be frozen without its performance
                     # degrading when other components/tok2vec are updated)
-                    paths = sourced.get(listener, {}).get("replace_listeners", [])
+                    paths = sourced.get(listener_name, {}).get("replace_listeners", [])
                     if paths:
-                        nlp.replace_listeners(name, listener, paths)
+                        nlp.replace_listeners(name, listener_name, paths)
         return nlp
 
     def replace_listeners(
