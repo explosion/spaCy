@@ -17,7 +17,7 @@ from itertools import chain, cycle
 from timeit import default_timer as timer
 import traceback
 
-import ty
+from . import ty
 from .tokens.underscore import Underscore
 from .vocab import Vocab, create_vocab
 from .pipe_analysis import validate_attrs, analyze_pipes, print_pipe_analysis
