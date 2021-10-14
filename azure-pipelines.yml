@@ -14,11 +14,11 @@ trigger:
 pr:
   paths:
     include:
-      - "*"
+      - "*.cfg"
+      - "*.py"
+      - "*.toml"
+      - "spacy/*"
       - "website/meta/universe.json"
-    exclude:
-      - "website/*"
-      - "*.md"
 
 jobs:
   # Perform basic checks for most important errors (syntax etc.) Uses the config
