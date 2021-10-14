@@ -17,6 +17,7 @@ pr:
       - "website/*"
       - "*.md"
     include:
+      - "*"
       - "website/meta/universe.json"
 
 jobs:
