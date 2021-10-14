@@ -707,8 +707,9 @@ class Language:
         source_config = source.config.interpolate()
         pipe_config = util.copy_config(source_config["components"][source_name])
         self._pipe_configs[name] = pipe_config
-        for s in source.vocab.strings:
-            self.vocab.strings.add(s)
+        if self.vocab.strings != source.vocab.strings:
+            for s in source.vocab.strings:
+                self.vocab.strings.add(s)
         return pipe, pipe_config["factory"]
 
     def add_pipe(
@@ -1379,6 +1380,9 @@ class Language:
             scorer = Scorer(**kwargs)
         # reset annotation in predicted docs and time tokenization
         start_time = timer()
+        # this is purely for timing
+        for eg in examples:
+            self.make_doc(eg.reference.text)
         # apply all pipeline components
         for name, pipe in self.pipeline:
             kwargs = component_cfg.get(name, {})
@@ -1708,6 +1712,7 @@ class Language:
         # them here so they're only loaded once
         source_nlps = {}
         source_nlp_vectors_hashes = {}
+        vocab_b = None
         for pipe_name in config["nlp"]["pipeline"]:
             if pipe_name not in pipeline:
                 opts = ", ".join(pipeline.keys())
@@ -1730,14 +1735,22 @@ class Language:
                         raw_config=raw_config,
                     )
                 else:
+                    # We need the sourced components to reference the same
+                    # vocab without modifying the current vocab state **AND**
+                    # we still want to load the source model vectors to perform
+                    # the vectors check. Since the source vectors clobber the
+                    # current ones, we save the original vocab state and
+                    # restore after this loop. Existing strings are preserved
+                    # during deserialization, so they do not need any
+                    # additional handling.
+                    if vocab_b is None:
+                        vocab_b = nlp.vocab.to_bytes(exclude=["lookups", "strings"])
                     model = pipe_cfg["source"]
                     if model not in source_nlps:
-                        # We only need the components here and we intentionally
-                        # do not load the model with the same vocab because
-                        # this would cause the vectors to be copied into the
-                        # current nlp object (all the strings will be added in
-                        # create_pipe_from_source)
-                        source_nlps[model] = util.load_model(model)
+                        # Load with the same vocab, adding any strings
+                        source_nlps[model] = util.load_model(
+                            model, vocab=nlp.vocab, exclude=["lookups"]
+                        )
                     source_name = pipe_cfg.get("component", pipe_name)
                     listeners_replaced = False
                     if "replace_listeners" in pipe_cfg:
@@ -1764,6 +1777,9 @@ class Language:
                     # Delete from cache if listeners were replaced
                     if listeners_replaced:
                         del source_nlps[model]
+        # Restore the original vocab after sourcing if necessary
+        if vocab_b is not None:
+            nlp.vocab.from_bytes(vocab_b)
         disabled_pipes = [*config["nlp"]["disabled"], *disable]
         nlp._disabled = set(p for p in disabled_pipes if p not in exclude)
         nlp.batch_size = config["nlp"]["batch_size"]
