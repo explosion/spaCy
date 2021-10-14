@@ -16,6 +16,8 @@ pr:
     exclude:
       - "website/*"
       - "*.md"
+    include:
+      - "website/meta/universe.json"
 
 jobs:
   # Perform basic checks for most important errors (syntax etc.) Uses the config

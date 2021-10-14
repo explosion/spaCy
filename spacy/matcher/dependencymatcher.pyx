@@ -177,13 +177,14 @@ cdef class DependencyMatcher:
 
         # Add 'RIGHT_ATTRS' to self._patterns[key]
         _patterns = [[[pat["RIGHT_ATTRS"]] for pat in pattern] for pattern in patterns]
+        pattern_offset = len(self._patterns[key])
         self._patterns[key].extend(_patterns)
 
         # Add each node pattern of all the input patterns individually to the
         # matcher. This enables only a single instance of Matcher to be used.
         # Multiple adds are required to track each node pattern.
         tokens_to_key_list = []
-        for i, current_patterns in enumerate(_patterns):
+        for i, current_patterns in enumerate(_patterns, start=pattern_offset):
 
             # Preallocate list space
             tokens_to_key = [None] * len(current_patterns)
@@ -263,7 +264,9 @@ cdef class DependencyMatcher:
         self._raw_patterns.pop(key)
         self._tree.pop(key)
         self._root.pop(key)
-        self._tokens_to_key.pop(key)
+        for mklist in self._tokens_to_key.pop(key):
+            for mkey in mklist:
+                self._matcher.remove(mkey)
 
     def _get_keys_to_position_maps(self, doc):
         """

@@ -1475,7 +1475,7 @@ def get_arg_names(func: Callable) -> List[str]:
     RETURNS (List[str]): The argument names.
     """
     argspec = inspect.getfullargspec(func)
-    return list(set([*argspec.args, *argspec.kwonlyargs]))
+    return list(dict.fromkeys([*argspec.args, *argspec.kwonlyargs]))
 
 
 def combine_score_weights(

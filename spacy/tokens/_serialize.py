@@ -8,7 +8,7 @@ from thinc.api import NumpyOps
 from .doc import Doc
 from ..vocab import Vocab
 from ..compat import copy_reg
-from ..attrs import SPACY, ORTH, intify_attr
+from ..attrs import SPACY, ORTH, intify_attr, IDS
 from ..errors import Errors
 from ..util import ensure_path, SimpleFrozenList
 
@@ -64,7 +64,13 @@ class DocBin:
 
         DOCS: https://spacy.io/api/docbin#init
         """
-        attrs = sorted([intify_attr(attr) for attr in attrs])
+        int_attrs = [intify_attr(attr) for attr in attrs]
+        if None in int_attrs:
+            non_valid = [attr for attr in attrs if intify_attr(attr) is None]
+            raise KeyError(
+                Errors.E983.format(dict="attrs", key=non_valid, keys=IDS.keys())
+            ) from None
+        attrs = sorted(int_attrs)
         self.version = "0.1"
         self.attrs = [attr for attr in attrs if attr != ORTH and attr != SPACY]
         self.attrs.insert(0, ORTH)  # Ensure ORTH is always attrs[0]
