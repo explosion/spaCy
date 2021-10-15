@@ -168,11 +168,11 @@ def write_git_info_py(filename="spacy/git_info.py"):
 #
 GIT_VERSION = "%(git_version)s"
 """
-    a = open(filename, "w")
-    try:
-        a.write(text % {"git_version": git_version})
-    finally:
-        a.close()
+    with open(filename, "w") as a:
+        try:
+            a.write(text % {"git_version": git_version})
+        except:
+            print("Could not write to "+a.name)
 
 
 def clean(path):
