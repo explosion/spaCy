@@ -1516,9 +1516,10 @@ class Language:
             pipes.append(f)
 
         if n_process != 1:
-            docs = self._multiprocessing_pipe(
-                texts, pipes, n_process, batch_size, disable
-            )
+            if self._has_gpu_model(disable):
+                raise ValueError(Errors.E1022)
+
+            docs = self._multiprocessing_pipe(texts, pipes, n_process, batch_size)
         else:
             # if n_process == 1, no processes are forked.
             docs = (self.make_doc(text) for text in texts)
@@ -1544,11 +1545,7 @@ class Language:
         pipes: Iterable[Callable[[Doc], Doc]],
         n_process: int,
         batch_size: int,
-        disable: Iterable[str],
     ) -> None:
-        if self._has_gpu_model(disable):
-            raise ValueError(Errors.E1022)
-
         # raw_texts is used later to stop iteration.
         texts, raw_texts = itertools.tee(texts)
         # for sending texts to worker
