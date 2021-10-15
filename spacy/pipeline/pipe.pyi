@@ -1,5 +1,6 @@
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, Iterator, List, NoReturn, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Iterable, Iterator, List
+from typing import NoReturn, Optional, Tuple, Union
 
 from ..tokens.doc import Doc
 
@@ -8,9 +9,14 @@ from ..language import Language
 
 class Pipe:
     def __call__(self, doc: Doc) -> Doc: ...
-    def pipe(self, stream: Iterable[Doc], *, batch_size: int = ...) -> Iterator[Doc]: ...
+    def pipe(
+        self, stream: Iterable[Doc], *, batch_size: int = ...
+    ) -> Iterator[Doc]: ...
     def initialize(
-        self, get_examples: Callable[[], Iterable[Example]], *, nlp: Language = ...,
+        self,
+        get_examples: Callable[[], Iterable[Example]],
+        *,
+        nlp: Language = ...,
     ) -> None: ...
     def score(
         self, examples: Iterable[Example], **kwargs: Any
@@ -26,7 +32,7 @@ class Pipe:
         self, error_handler: Callable[[str, "Pipe", List[Doc], Exception], NoReturn]
     ) -> None: ...
     def get_error_handler(
-        self
+        self,
     ) -> Callable[[str, "Pipe", List[Doc], Exception], NoReturn]: ...
 
 def deserialize_config(path: Path) -> Any: ...

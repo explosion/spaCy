@@ -105,8 +105,9 @@ def convert(
     lang: Optional[str] = None,
     concatenate: bool = False,
     silent: bool = True,
-    msg: Optional[Printer],
+    msg: Optional[Printer] = None,
 ) -> None:
+    input_path = Path(input_path)
     if not msg:
         msg = Printer(no_print=silent)
     ner_map = srsly.read_json(ner_map) if ner_map is not None else None

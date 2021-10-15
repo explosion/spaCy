@@ -22,7 +22,6 @@ class Vocab:
     strings: StringStore
     vectors: Vectors
     writing_system: Dict[str, Any]
-
     def __init__(
         self,
         lex_attr_getters: Optional[Dict[str, Callable[[str], Any]]] = ...,
