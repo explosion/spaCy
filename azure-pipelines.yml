@@ -9,17 +9,17 @@ trigger:
       - "v2.spacy.io"
   paths:
     exclude:
-      - "website/*"
+      - "website/**"
       - "*.md"
 pr:
   paths:
     include:
-      - "*.cfg"
-      - "*.py"
-      - "*.toml"
-      - "*.yml"
+      - "setup.cfg"
+      - "setup.py"
+      - "pyproject.toml"
+      - "azure-pipelines.yml"
       - ".github/azure-steps.yml"
-      - "spacy/*"
+      - "spacy/**"
       - "website/meta/universe.json"
 
 jobs:
