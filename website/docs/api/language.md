@@ -192,14 +192,14 @@ more efficient than processing texts one-by-one.
 > ```
 
 | Name                                       | Description                                                                                                                                                         |
-|--------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `texts`                                    | A sequence of strings. ~~Iterable[str]~~                                                                                                                            |
 | _keyword-only_                             |                                                                                                                                                                     |
 | `as_tuples`                                | If set to `True`, inputs should be a sequence of `(text, context)` tuples. Output will then be a sequence of `(doc, context)` tuples. Defaults to `False`. ~~bool~~ |
 | `batch_size`                               | The number of texts to buffer. ~~Optional[int]~~                                                                                                                    |
 | `disable`                                  | Names of pipeline components to [disable](/usage/processing-pipelines#disabling). ~~List[str]~~                                                                     |
 | `component_cfg`                            | Optional dictionary of keyword arguments for components, keyed by component names. Defaults to `None`. ~~Optional[Dict[str, Dict[str, Any]]]~~                      |
-| `n_process` <Tag variant="new">2.2.2</Tag> | Number of processors to use. Defaults to `1`. Values larger than 1 are not supported on GPU. ~~int~~                                                                |
+| `n_process` <Tag variant="new">2.2.2</Tag> | Number of processors to use. Defaults to `1`. ~~int~~                                                                                                               |
 | **YIELDS**                                 | Documents in the order of the original text. ~~Doc~~                                                                                                                |
 
 ## Language.set_error_handler {#set_error_handler tag="method" new="3"}

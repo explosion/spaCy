@@ -154,9 +154,9 @@ docs = nlp.pipe(texts, n_process=2, batch_size=2000)
 
 <Infobox title="Multiprocessing on GPU" variant="warning">
 
-Multiprocessing is not supported on GPU. CUDA is incompatible with the default
-`fork` multiprocessing start method and the `spawn` policy requires too much GPU
-memory.
+Multiprocessing is not generally recommended on GPU because RAM is too limited.
+If you want to try it out, be aware that it is only possible using `spawn` due
+to limitations in CUDA.
 
 </Infobox>
 

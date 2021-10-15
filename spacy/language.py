@@ -1469,9 +1469,7 @@ class Language:
         disable (List[str]): Names of the pipeline components to disable.
         component_cfg (Dict[str, Dict]): An optional dictionary with extra keyword
             arguments for specific components.
-        n_process (int): Number of processors to process texts. If -1, set
-            `multiprocessing.cpu_count()`. Values larger than 1 are not supported
-            on GPU.
+        n_process (int): Number of processors to process texts. If -1, set `multiprocessing.cpu_count()`.
         YIELDS (Doc): Documents in the order of the original text.
 
         DOCS: https://spacy.io/api/language#pipe
@@ -1517,7 +1515,7 @@ class Language:
 
         if n_process != 1:
             if self._has_gpu_model(disable):
-                raise ValueError(Errors.E1022)
+                warnings.warn(Warnings.W114)
 
             docs = self._multiprocessing_pipe(texts, pipes, n_process, batch_size)
         else:

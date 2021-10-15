@@ -190,7 +190,7 @@ class Warnings:
             "vectors. This is almost certainly a mistake.")
     W113 = ("Sourced component '{name}' may not work as expected: source "
             "vectors are not identical to current pipeline vectors.")
-
+    W114 = ("Using multiprocessing with GPU models is unreliable.")
 
 @add_codes
 class Errors:
@@ -875,7 +875,6 @@ class Errors:
              "filename. Specify an epoch to resume from.")
     E1021 = ("`pos` value \"{pp}\" is not a valid Universal Dependencies tag. "
              "Non-UD tags should use the `tag` property.")
-    E1022 = ("Multiprocessing cannot be used with GPU models.")
 
 
 # Deprecated model shortcuts, only used in errors and warnings
