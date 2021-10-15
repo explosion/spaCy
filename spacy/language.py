@@ -9,7 +9,7 @@ from contextlib import contextmanager
 from copy import deepcopy
 from pathlib import Path
 import warnings
-from thinc.api import get_current_ops, Config, Optimizer
+from thinc.api import get_current_ops, Config, CupyOps, Optimizer
 import srsly
 import multiprocessing as mp
 from itertools import chain, cycle
@@ -1469,7 +1469,9 @@ class Language:
         disable (List[str]): Names of the pipeline components to disable.
         component_cfg (Dict[str, Dict]): An optional dictionary with extra keyword
             arguments for specific components.
-        n_process (int): Number of processors to process texts. If -1, set `multiprocessing.cpu_count()`.
+        n_process (int): Number of processors to process texts. If -1, set
+            `multiprocessing.cpu_count()`. Values larger than 1 are not supported
+            on GPU.
         YIELDS (Doc): Documents in the order of the original text.
 
         DOCS: https://spacy.io/api/language#pipe
@@ -1514,7 +1516,9 @@ class Language:
             pipes.append(f)
 
         if n_process != 1:
-            docs = self._multiprocessing_pipe(texts, pipes, n_process, batch_size)
+            docs = self._multiprocessing_pipe(
+                texts, pipes, n_process, batch_size, disable
+            )
         else:
             # if n_process == 1, no processes are forked.
             docs = (self.make_doc(text) for text in texts)
@@ -1523,13 +1527,28 @@ class Language:
         for doc in docs:
             yield doc
 
+    def _has_gpu_model(self, disable: Iterable[str]):
+        for name, proc in self.pipeline:
+            is_trainable = hasattr(proc, "is_trainable") and proc.is_trainable
+            if name in disable or not is_trainable:
+                continue
+
+            if isinstance(proc.model.ops, CupyOps):
+                return True
+
+        return False
+
     def _multiprocessing_pipe(
         self,
         texts: Iterable[str],
         pipes: Iterable[Callable[[Doc], Doc]],
         n_process: int,
         batch_size: int,
+        disable: Iterable[str],
     ) -> None:
+        if self._has_gpu_model(disable):
+            raise ValueError(Errors.E1022)
+
         # raw_texts is used later to stop iteration.
         texts, raw_texts = itertools.tee(texts)
         # for sending texts to worker
