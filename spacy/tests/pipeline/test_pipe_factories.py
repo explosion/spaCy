@@ -196,7 +196,11 @@ def test_pipe_class_component_model_custom():
     @Language.factory(name, default_config=default_config)
     class Component:
         def __init__(
-            self, nlp: Language, model: Model, name: str, value1: StrictInt = StrictInt(10)
+            self,
+            nlp: Language,
+            model: Model,
+            name: str,
+            value1: StrictInt = StrictInt(10),
         ):
             self.nlp = nlp
             self.model = model
