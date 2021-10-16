@@ -172,7 +172,7 @@ GIT_VERSION = "%(git_version)s"
         try:
             a.write(text % {"git_version": git_version})
         except:
-            print("Could not write to "+a.name)
+            pass
 
 
 def clean(path):
