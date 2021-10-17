@@ -8,6 +8,7 @@ from ._util import app, Arg, Opt, WHEEL_SUFFIX, SDIST_SUFFIX
 from .. import about
 from ..util import is_package, get_minor_version, run_command
 from ..errors import OLD_MODEL_SHORTCUTS
+from ..version import __version__
 
 
 @app.command(
@@ -74,13 +75,13 @@ def download(model: str, direct: bool = False, sdist: bool = False, *pip_args) -
 
 
 def get_compatibility() -> dict:
-    version = get_minor_version(about.__version__)
+    version = get_minor_version(__version__)
     r = requests.get(about.__compatibility__)
     if r.status_code != 200:
         msg.fail(
             f"Server error ({r.status_code})",
             f"Couldn't fetch compatibility table. Please find a package for your spaCy "
-            f"installation (v{about.__version__}), and download it manually. "
+            f"installation (v{__version__}), and download it manually. "
             f"For more details, see the documentation: "
             f"https://spacy.io/usage/models",
             exits=1,
@@ -95,7 +96,7 @@ def get_compatibility() -> dict:
 def get_version(model: str, comp: dict) -> str:
     if model not in comp:
         msg.fail(
-            f"No compatible package found for '{model}' (spaCy v{about.__version__})",
+            f"No compatible package found for '{model}' (spaCy v{__version__})",
             exits=1,
         )
     return comp[model][0]

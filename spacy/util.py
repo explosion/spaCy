@@ -46,7 +46,7 @@ from thinc.api import fix_random_seed, compounding, decaying  # noqa: F401
 from .symbols import ORTH
 from .compat import cupy, CudaStream, is_windows, importlib_metadata
 from .errors import Errors, Warnings, OLD_MODEL_SHORTCUTS
-from . import about
+from .version import __version__
 
 if TYPE_CHECKING:
     # This lets us add type hints for mypy etc. without causing circular imports
@@ -744,7 +744,7 @@ def load_meta(path: Union[str, Path]) -> Dict[str, Any]:
         if setting not in meta or not meta[setting]:
             raise ValueError(Errors.E054.format(setting=setting))
     if "spacy_version" in meta:
-        if not is_compatible_version(about.__version__, meta["spacy_version"]):
+        if not is_compatible_version(__version__, meta["spacy_version"]):
             lower_version = get_model_lower_version(meta["spacy_version"])
             lower_version = get_minor_version(lower_version)  # type: ignore[arg-type]
             if lower_version is not None:
@@ -757,7 +757,7 @@ def load_meta(path: Union[str, Path]) -> Dict[str, Any]:
                 model=f"{meta['lang']}_{meta['name']}",
                 model_version=meta["version"],
                 version=lower_version,
-                current=about.__version__,
+                current=__version__,
             )
             warnings.warn(warn_msg)
         if is_unconstrained_version(meta["spacy_version"]):
@@ -765,7 +765,7 @@ def load_meta(path: Union[str, Path]) -> Dict[str, Any]:
                 model=f"{meta['lang']}_{meta['name']}",
                 model_version=meta["version"],
                 version=meta["spacy_version"],
-                example=get_minor_version_range(about.__version__),
+                example=get_minor_version_range(__version__),
             )
             warnings.warn(warn_msg)
     return meta

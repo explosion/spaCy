@@ -20,7 +20,7 @@ from ..compat import Literal
 from ..schemas import ProjectConfigSchema, validate
 from ..util import import_file, run_command, make_tempdir, registry, logger
 from ..util import is_compatible_version, SimpleFrozenDict, ENV_VARS
-from .. import about
+from ..version import __version__
 
 if TYPE_CHECKING:
     from pathy import Pathy  # noqa: F401
@@ -205,11 +205,11 @@ def validate_project_version(config: Dict[str, Any]) -> None:
     config (Dict[str, Any]): The loaded config.
     """
     spacy_version = config.get("spacy_version", None)
-    if spacy_version and not is_compatible_version(about.__version__, spacy_version):
+    if spacy_version and not is_compatible_version(__version__, spacy_version):
         err = (
             f"The {PROJECT_FILE} specifies a spaCy version range ({spacy_version}) "
             f"that's not compatible with the version of spaCy you're running "
-            f"({about.__version__}). You can edit version requirement in the "
+            f"({__version__}). You can edit version requirement in the "
             f"{PROJECT_FILE} to load it, but the project may not run as expected."
         )
         msg.fail(err, exits=1)

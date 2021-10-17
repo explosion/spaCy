@@ -34,9 +34,8 @@ from .tokenizer import Tokenizer
 from .errors import Errors, Warnings
 from .schemas import ConfigSchema, ConfigSchemaNlp, ConfigSchemaInit
 from .schemas import ConfigSchemaPretrain, validate_init_settings
-from .git_info import GIT_VERSION
+from .version import __version__, git_revision as GIT_VERSION
 from . import util
-from . import about
 from .lookups import load_lookups
 from .compat import Literal
 
@@ -208,7 +207,7 @@ class Language:
 
         DOCS: https://spacy.io/api/language#meta
         """
-        spacy_version = util.get_minor_version_range(about.__version__)
+        spacy_version = util.get_minor_version_range(__version__)
         if self.vocab.lang:
             self._meta.setdefault("lang", self.vocab.lang)
         else:

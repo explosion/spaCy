@@ -11,11 +11,11 @@ from spacy.cli._util import validate_project_commands, parse_config_overrides
 from spacy.cli._util import load_project_config, substitute_project_variables
 from spacy.cli._util import is_subpath_of
 from spacy.cli._util import string_to_list
-from spacy import about
 from spacy.util import get_minor_version
 from spacy.cli.validate import get_model_pkgs
 from spacy.cli.download import get_compatibility, get_version
 from spacy.cli.package import get_third_party_dependencies
+from spacy import __version__
 from thinc.api import ConfigValidationError, Config
 import srsly
 import os
@@ -495,12 +495,12 @@ def test_download_compatibility():
     model_name = "en_core_web_sm"
     compatibility = get_compatibility()
     version = get_version(model_name, compatibility)
-    assert get_minor_version(about.__version__) == get_minor_version(version)
+    assert get_minor_version(__version__) == get_minor_version(version)
 
 
 def test_validate_compatibility_table():
     model_pkgs, compat = get_model_pkgs()
-    spacy_version = get_minor_version(about.__version__)
+    spacy_version = get_minor_version(__version__)
     current_compat = compat.get(spacy_version, {})
     assert len(current_compat) > 0
     assert "en_core_web_sm" in current_compat

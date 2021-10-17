@@ -6,7 +6,7 @@ import srsly
 
 from ._util import app, Arg, Opt, string_to_list
 from .. import util
-from .. import about
+from .. import version
 
 
 @app.command("info")
@@ -71,7 +71,7 @@ def info_spacy() -> Dict[str, Any]:
         package = pkg_name.replace("-", "_")
         all_models[package] = util.get_package_version(pkg_name)
     return {
-        "spaCy version": about.__version__,
+        "spaCy version": version.__version__,
         "Location": str(Path(__file__).parent.parent),
         "Platform": platform.platform(),
         "Python version": platform.python_version(),

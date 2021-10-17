@@ -7,6 +7,7 @@ import warnings
 
 from ._util import app
 from .. import about
+from ..version import __version__
 from ..util import get_package_version, get_installed_models, get_minor_version
 from ..util import get_package_path, get_model_meta, is_compatible_version
 
@@ -25,7 +26,7 @@ def validate_cli():
 
 def validate() -> None:
     model_pkgs, compat = get_model_pkgs()
-    spacy_version = get_minor_version(about.__version__)
+    spacy_version = get_minor_version(__version__)
     current_compat = compat.get(spacy_version, {})
     if not current_compat:
         msg.warn(f"No compatible packages found for v{spacy_version} of spaCy")
@@ -34,7 +35,7 @@ def validate() -> None:
     update_models = [m for m in incompat_models if m in current_compat]
     spacy_dir = Path(__file__).parent.parent
 
-    msg.divider(f"Installed pipeline packages (spaCy v{about.__version__})")
+    msg.divider(f"Installed pipeline packages (spaCy v{__version__})")
     msg.info(f"spaCy installation: {spacy_dir}")
 
     if model_pkgs:
@@ -59,7 +60,7 @@ def validate() -> None:
     if na_models:
         msg.info(
             f"The following packages are custom spaCy pipelines or not "
-            f"available for spaCy v{about.__version__}:",
+            f"available for spaCy v{__version__}:",
             ", ".join(na_models),
         )
     if incompat_models:
@@ -92,14 +93,14 @@ def get_model_pkgs(silent: bool = False) -> Tuple[dict, dict]:
         version = get_package_version(pkg_name)
         if package in compat:
             is_compat = version in compat[package]
-            spacy_version = about.__version__
+            spacy_version = __version__
         else:
             model_path = get_package_path(package)
             with warnings.catch_warnings():
                 warnings.filterwarnings("ignore", message="\\[W09[45]")
                 model_meta = get_model_meta(model_path)
             spacy_version = model_meta.get("spacy_version", "n/a")
-            is_compat = is_compatible_version(about.__version__, spacy_version)  # type: ignore[assignment]
+            is_compat = is_compatible_version(__version__, spacy_version)  # type: ignore[assignment]
         pkgs[pkg_name] = {
             "name": package,
             "version": version,

@@ -11,6 +11,7 @@ from ._util import app, Arg, Opt, string_to_list, WHEEL_SUFFIX, SDIST_SUFFIX
 from ..schemas import validate, ModelMetaSchema
 from .. import util
 from .. import about
+from ..version import __version__
 
 
 @app.command("package")
@@ -265,7 +266,7 @@ def get_meta(
     nlp = util.load_model_from_path(Path(model_path))
     meta.update(nlp.meta)
     meta.update(existing_meta)
-    meta["spacy_version"] = util.get_minor_version_range(about.__version__)
+    meta["spacy_version"] = util.get_minor_version_range(__version__)
     meta["vectors"] = {
         "width": nlp.vocab.vectors_length,
         "vectors": len(nlp.vocab.vectors),

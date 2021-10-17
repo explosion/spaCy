@@ -9,3 +9,4 @@ recursive-include spacy/lang *.json.gz
 recursive-include spacy/cli *.json *.yml
 recursive-include licenses *
 recursive-exclude spacy *.cpp
+include versioneer.py

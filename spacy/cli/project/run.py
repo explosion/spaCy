@@ -6,8 +6,7 @@ import sys
 import srsly
 import typer
 
-from ... import about
-from ...git_info import GIT_VERSION
+from ...version import __version__, git_revision as GIT_VERSION
 from ...util import working_dir, run_command, split_command, is_cwd, join_command
 from ...util import SimpleFrozenList, is_minor_version_match, ENV_VARS
 from ...util import check_bool_env_var, SimpleFrozenDict
@@ -237,8 +236,8 @@ def check_rerun(
     # Always rerun if spaCy version or commit hash changed
     spacy_v = entry.get("spacy_version")
     commit = entry.get("spacy_git_version")
-    if check_spacy_version and not is_minor_version_match(spacy_v, about.__version__):
-        info = f"({spacy_v} in {PROJECT_LOCK}, {about.__version__} current)"
+    if check_spacy_version and not is_minor_version_match(spacy_v, __version__):
+        info = f"({spacy_v} in {PROJECT_LOCK}, {__version__} current)"
         msg.info(f"Re-running '{command['name']}': spaCy minor version changed {info}")
         return True
     if check_spacy_commit and commit != GIT_VERSION:
@@ -289,7 +288,7 @@ def get_lock_entry(project_dir: Path, command: Dict[str, Any]) -> Dict[str, Any]
         "script": command["script"],
         "deps": deps,
         "outs": [*outs, *outs_nc],
-        "spacy_version": about.__version__,
+        "spacy_version": __version__,
         "spacy_git_version": GIT_VERSION,
     }
 

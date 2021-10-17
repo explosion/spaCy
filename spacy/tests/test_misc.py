@@ -2,7 +2,7 @@ import pytest
 import os
 import ctypes
 from pathlib import Path
-from spacy.about import __version__ as spacy_version
+from spacy.version import __version__ as spacy_version
 from spacy import util
 from spacy import prefer_gpu, require_gpu, require_cpu
 from spacy.ml._precomputable_affine import PrecomputableAffine
