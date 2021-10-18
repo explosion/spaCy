@@ -43,6 +43,7 @@
     "cymem.Pool": "https://github.com/explosion/cymem",
     "preshed.BloomFilter": "https://github.com/explosion/preshed",
     "transformers.BatchEncoding": "https://huggingface.co/transformers/main_classes/tokenizer.html#transformers.BatchEncoding",
+    "transformers.file_utils.ModelOutput": "https://huggingface.co/transformers/main_classes/output.html#modeloutput",
     "torch.Tensor": "https://pytorch.org/docs/stable/tensors.html",
     "numpy.ndarray": "https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html",
     "Match": "https://docs.python.org/3/library/re.html#match-objects",
