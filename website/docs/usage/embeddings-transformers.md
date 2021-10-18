@@ -351,7 +351,7 @@ factory = "transformer"
 max_batch_items = 4096
 
 [components.transformer.model]
-@architectures = "spacy-transformers.TransformerModel.v1"
+@architectures = "spacy-transformers.TransformerModel.v3"
 name = "bert-base-cased"
 tokenizer_config = {"use_fast": true}
 
@@ -367,7 +367,7 @@ The `[components.transformer.model]` block describes the `model` argument passed
 to the transformer component. It's a Thinc
 [`Model`](https://thinc.ai/docs/api-model) object that will be passed into the
 component. Here, it references the function
-[spacy-transformers.TransformerModel.v1](/api/architectures#TransformerModel)
+[spacy-transformers.TransformerModel.v3](/api/architectures#TransformerModel)
 registered in the [`architectures` registry](/api/top-level#registry). If a key
 in a block starts with `@`, it's **resolved to a function** and all other
 settings are passed to the function as arguments. In this case, `name`,
