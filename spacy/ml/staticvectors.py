@@ -101,6 +101,5 @@ def _handle_empty(ops: Ops, nO: int):
 def _get_drop_mask(ops: Ops, nO: int, rate: Optional[float]) -> Optional[Floats1d]:
     if rate is not None:
         mask = ops.get_dropout_mask((nO,), rate)
-        assert isinstance(mask, Floats1d)
-        return mask
+        return mask  # type: ignore
     return None
