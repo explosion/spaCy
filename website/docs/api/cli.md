@@ -203,7 +203,7 @@ $ python -m spacy init vectors [lang] [vectors_loc] [output_dir] [--prune] [--tr
 
 | Name               | Description                                                                                                                                                                                                                                                         |
 | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `lang`             | Pipeline language [ISO code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes), e.g. `en`. ~~str (positional)~~                                                                                                                                                |
+| `lang`             | Pipeline language [IETF language tag](https://www.w3.org/International/articles/language-tags/), such as `en`. ~~str (positional)~~                                                                                                                                 |
 | `vectors_loc`      | Location of vectors. Should be a file where the first row contains the dimensions of the vectors, followed by a space-separated Word2Vec table. File can be provided in `.txt` format or as a zipped text file in `.zip` or `.tar.gz` format. ~~Path (positional)~~ |
 | `output_dir`       | Pipeline output directory. Will be created if it doesn't exist. ~~Path (positional)~~                                                                                                                                                                               |
 | `--truncate`, `-t` | Number of vectors to truncate to when reading in vectors file. Defaults to `0` for no truncation. ~~int (option)~~                                                                                                                                                  |
@@ -261,16 +261,18 @@ $ python -m spacy convert [input_file] [output_dir] [--converter] [--file-type] 
 
 | Name                                             | Description                                                                                                                               |
 | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `input_file`                                     | Input file. ~~Path (positional)~~                                                                                                         |
+| `input_path`                                     | Input file or directory. ~~Path (positional)~~                                                                                            |
 | `output_dir`                                     | Output directory for converted file. Defaults to `"-"`, meaning data will be written to `stdout`. ~~Optional[Path] \(option)~~            |
 | `--converter`, `-c` <Tag variant="new">2</Tag>   | Name of converter to use (see below). ~~str (option)~~                                                                                    |
 | `--file-type`, `-t` <Tag variant="new">2.1</Tag> | Type of file to create. Either `spacy` (default) for binary [`DocBin`](/api/docbin) data or `json` for v2.x JSON format. ~~str (option)~~ |
 | `--n-sents`, `-n`                                | Number of sentences per document. Supported for: `conll`, `conllu`, `iob`, `ner` ~~int (option)~~                                         |
 | `--seg-sents`, `-s` <Tag variant="new">2.2</Tag> | Segment sentences. Supported for: `conll`, `ner` ~~bool (flag)~~                                                                          |
-| `--base`, `-b`                                   | Trained spaCy pipeline for sentence segmentation to use as base (for `--seg-sents`). ~~Optional[str](option)~~                            |
+| `--base`, `-b`, `--model`                        | Trained spaCy pipeline for sentence segmentation to use as base (for `--seg-sents`). ~~Optional[str](option)~~                            |
 | `--morphology`, `-m`                             | Enable appending morphology to tags. Supported for: `conllu` ~~bool (flag)~~                                                              |
+| `--merge-subtokens`, `-T`                        | Merge CoNLL-U subtokens ~~bool (flag)~~                                                                                                   |
 | `--ner-map`, `-nm`                               | NER tag mapping (as JSON-encoded dict of entity types). Supported for: `conllu` ~~Optional[Path](option)~~                                |
 | `--lang`, `-l` <Tag variant="new">2.1</Tag>      | Language code (if tokenizer required). ~~Optional[str] \(option)~~                                                                        |
+| `--concatenate`, `-C`                            | Concatenate output to a single file ~~bool (flag)~~                                                                                       |
 | `--help`, `-h`                                   | Show help message and available arguments. ~~bool (flag)~~                                                                                |
 | **CREATES**                                      | Binary [`DocBin`](/api/docbin) training data that can be used with [`spacy train`](/api/cli#train).                                       |
 

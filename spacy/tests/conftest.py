@@ -4,6 +4,7 @@ from spacy.util import get_lang_class
 
 def pytest_addoption(parser):
     parser.addoption("--slow", action="store_true", help="include slow tests")
+    parser.addoption("--issue", action="store", help="test specific issues")
 
 
 def pytest_runtest_setup(item):
@@ -16,9 +17,23 @@ def pytest_runtest_setup(item):
         # options weren't given.
         return item.config.getoption(f"--{opt}", False)
 
+    # Integration of boolean flags
     for opt in ["slow"]:
         if opt in item.keywords and not getopt(opt):
             pytest.skip(f"need --{opt} option to run")
+
+    # Special integration to mark tests with issue numbers
+    issues = getopt("issue")
+    if isinstance(issues, str):
+        if "issue" in item.keywords:
+            # Convert issues provided on the CLI to list of ints
+            issue_nos = [int(issue.strip()) for issue in issues.split(",")]
+            # Get all issues specified by decorators and check if they're provided
+            issue_refs = [mark.args[0] for mark in item.iter_markers(name="issue")]
+            if not any([ref in issue_nos for ref in issue_refs]):
+                pytest.skip(f"not referencing specified issues: {issue_nos}")
+        else:
+            pytest.skip("not referencing any issues")
 
 
 # Fixtures for language tokenizers (languages sorted alphabetically)

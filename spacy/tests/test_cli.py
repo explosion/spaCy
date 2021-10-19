@@ -1,5 +1,6 @@
 import pytest
 from click import NoSuchOption
+from packaging.specifiers import SpecifierSet
 from spacy.training import docs_to_json, offsets_to_biluo_tags
 from spacy.training.converters import iob_to_docs, conll_ner_to_docs, conllu_to_docs
 from spacy.schemas import ProjectConfigSchema, RecommendationSchema, validate
@@ -492,18 +493,24 @@ def test_string_to_list_intify(value):
 
 
 def test_download_compatibility():
-    model_name = "en_core_web_sm"
-    compatibility = get_compatibility()
-    version = get_version(model_name, compatibility)
-    assert get_minor_version(about.__version__) == get_minor_version(version)
+    spec = SpecifierSet("==" + about.__version__)
+    spec.prereleases = False
+    if about.__version__ in spec:
+        model_name = "en_core_web_sm"
+        compatibility = get_compatibility()
+        version = get_version(model_name, compatibility)
+        assert get_minor_version(about.__version__) == get_minor_version(version)
 
 
 def test_validate_compatibility_table():
-    model_pkgs, compat = get_model_pkgs()
-    spacy_version = get_minor_version(about.__version__)
-    current_compat = compat.get(spacy_version, {})
-    assert len(current_compat) > 0
-    assert "en_core_web_sm" in current_compat
+    spec = SpecifierSet("==" + about.__version__)
+    spec.prereleases = False
+    if about.__version__ in spec:
+        model_pkgs, compat = get_model_pkgs()
+        spacy_version = get_minor_version(about.__version__)
+        current_compat = compat.get(spacy_version, {})
+        assert len(current_compat) > 0
+        assert "en_core_web_sm" in current_compat
 
 
 @pytest.mark.parametrize("component_name", ["ner", "textcat", "spancat", "tagger"])

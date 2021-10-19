@@ -325,6 +325,5 @@ serialization by passing in the string names via the `exclude` argument.
 | Name      | Description                                           |
 | --------- | ----------------------------------------------------- |
 | `strings` | The strings in the [`StringStore`](/api/stringstore). |
-| `lexemes` | The lexeme data.                                      |
 | `vectors` | The word vectors, if available.                       |
 | `lookups` | The lookup tables, if available.                      |

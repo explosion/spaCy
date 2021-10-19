@@ -37,9 +37,11 @@ how the component should be configured. You can override its settings via the
 > nlp.add_pipe("sentencizer", config=config)
 > ```
 
-| Setting       | Description                                                                                                                                            |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `punct_chars` | Optional custom list of punctuation characters that mark sentence ends. See below for defaults if not set. Defaults to `None`. ~~Optional[List[str]]~~ | `None` |
+| Setting                                  | Description                                                                                                                                            |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `punct_chars`                            | Optional custom list of punctuation characters that mark sentence ends. See below for defaults if not set. Defaults to `None`. ~~Optional[List[str]]~~ | `None` |
+| `overwrite` <Tag variant="new">3.2</Tag> | Whether existing annotation is overwritten. Defaults to `False`. ~~bool~~                                                                              |
+| `scorer` <Tag variant="new">3.2</Tag>    | The scoring method. Defaults to [`Scorer.score_spans`](/api/scorer#score_spans) for the attribute `"sents"` ~~Optional[Callable]~~                     |
 
 ```python
 %%GITHUB_SPACY/spacy/pipeline/sentencizer.pyx
@@ -60,11 +62,12 @@ Initialize the sentencizer.
 > sentencizer = Sentencizer()
 > ```
 
-| Name           | Description                                                                                                                        |
-| -------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| _keyword-only_ |                                                                                                                                    |
-| `punct_chars`  | Optional custom list of punctuation characters that mark sentence ends. See below for defaults. ~~Optional[List[str]]~~            |
-| `scorer`       | The scoring method. Defaults to [`Scorer.score_spans`](/api/scorer#score_spans) for the attribute `"sents"` ~~Optional[Callable]~~ |
+| Name                                     | Description                                                                                                                        |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| _keyword-only_                           |                                                                                                                                    |
+| `punct_chars`                            | Optional custom list of punctuation characters that mark sentence ends. See below for defaults. ~~Optional[List[str]]~~            |
+| `overwrite` <Tag variant="new">3.2</Tag> | Whether existing annotation is overwritten. Defaults to `False`. ~~bool~~                                                          |
+| `scorer` <Tag variant="new">3.2</Tag>    | The scoring method. Defaults to [`Scorer.score_spans`](/api/scorer#score_spans) for the attribute `"sents"` ~~Optional[Callable]~~ |
 
 ```python
 ### punct_chars defaults

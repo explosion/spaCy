@@ -51,16 +51,17 @@ architectures and their arguments and hyperparameters.
 > nlp.add_pipe("entity_linker", config=config)
 > ```
 
-| Setting                | Description                                                                                                                                                                                                                                                              |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `labels_discard`       | NER labels that will automatically get a "NIL" prediction. Defaults to `[]`. ~~Iterable[str]~~                                                                                                                                                                           |
-| `n_sents`              | The number of neighbouring sentences to take into account. Defaults to 0. ~~int~~                                                                                                                                                                                        |
-| `incl_prior`           | Whether or not to include prior probabilities from the KB in the model. Defaults to `True`. ~~bool~~                                                                                                                                                                     |
-| `incl_context`         | Whether or not to include the local context in the model. Defaults to `True`. ~~bool~~                                                                                                                                                                                   |
-| `model`                | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. Defaults to [EntityLinker](/api/architectures#EntityLinker). ~~Model~~                                                                                                                   |
-| `entity_vector_length` | Size of encoding vectors in the KB. Defaults to `64`. ~~int~~                                                                                                                                                                                                            |
-| `get_candidates`       | Function that generates plausible candidates for a given `Span` object. Defaults to [CandidateGenerator](/api/architectures#CandidateGenerator), a function looking up exact, case-dependent aliases in the KB. ~~Callable[[KnowledgeBase, Span], Iterable[Candidate]]~~ |
-| `scorer`               | The scoring method. Defaults to [`Scorer.score_links`](/api/scorer#score_links). ~~Optional[Callable]~~                                                                                                                                                                  |
+| Setting                                  | Description                                                                                                                                                                                                                                                              |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `labels_discard`                         | NER labels that will automatically get a "NIL" prediction. Defaults to `[]`. ~~Iterable[str]~~                                                                                                                                                                           |
+| `n_sents`                                | The number of neighbouring sentences to take into account. Defaults to 0. ~~int~~                                                                                                                                                                                        |
+| `incl_prior`                             | Whether or not to include prior probabilities from the KB in the model. Defaults to `True`. ~~bool~~                                                                                                                                                                     |
+| `incl_context`                           | Whether or not to include the local context in the model. Defaults to `True`. ~~bool~~                                                                                                                                                                                   |
+| `model`                                  | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. Defaults to [EntityLinker](/api/architectures#EntityLinker). ~~Model~~                                                                                                                   |
+| `entity_vector_length`                   | Size of encoding vectors in the KB. Defaults to `64`. ~~int~~                                                                                                                                                                                                            |
+| `get_candidates`                         | Function that generates plausible candidates for a given `Span` object. Defaults to [CandidateGenerator](/api/architectures#CandidateGenerator), a function looking up exact, case-dependent aliases in the KB. ~~Callable[[KnowledgeBase, Span], Iterable[Candidate]]~~ |
+| `overwrite` <Tag variant="new">3.2</Tag> | Whether existing annotation is overwritten. Defaults to `True`. ~~bool~~                                                                                                                                                                                                 |
+| `scorer` <Tag variant="new">3.2</Tag>    | The scoring method. Defaults to [`Scorer.score_links`](/api/scorer#score_links). ~~Optional[Callable]~~                                                                                                                                                                  |
 
 ```python
 %%GITHUB_SPACY/spacy/pipeline/entity_linker.py
@@ -93,18 +94,20 @@ custom knowledge base, you should either call
 [`set_kb`](/api/entitylinker#set_kb) or provide a `kb_loader` in the
 [`initialize`](/api/entitylinker#initialize) call.
 
-| Name                   | Description                                                                                                                      |
-| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `vocab`                | The shared vocabulary. ~~Vocab~~                                                                                                 |
-| `model`                | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. ~~Model~~                                        |
-| `name`                 | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~                              |
-| _keyword-only_         |                                                                                                                                  |
-| `entity_vector_length` | Size of encoding vectors in the KB. ~~int~~                                                                                      |
-| `get_candidates`       | Function that generates plausible candidates for a given `Span` object. ~~Callable[[KnowledgeBase, Span], Iterable[Candidate]]~~ |
-| `labels_discard`       | NER labels that will automatically get a `"NIL"` prediction. ~~Iterable[str]~~                                                   |
-| `n_sents`              | The number of neighbouring sentences to take into account. ~~int~~                                                               |
-| `incl_prior`           | Whether or not to include prior probabilities from the KB in the model. ~~bool~~                                                 |
-| `incl_context`         | Whether or not to include the local context in the model. ~~bool~~                                                               |
+| Name                                     | Description                                                                                                                      |
+| ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `vocab`                                  | The shared vocabulary. ~~Vocab~~                                                                                                 |
+| `model`                                  | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. ~~Model~~                                        |
+| `name`                                   | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~                              |
+| _keyword-only_                           |                                                                                                                                  |
+| `entity_vector_length`                   | Size of encoding vectors in the KB. ~~int~~                                                                                      |
+| `get_candidates`                         | Function that generates plausible candidates for a given `Span` object. ~~Callable[[KnowledgeBase, Span], Iterable[Candidate]]~~ |
+| `labels_discard`                         | NER labels that will automatically get a `"NIL"` prediction. ~~Iterable[str]~~                                                   |
+| `n_sents`                                | The number of neighbouring sentences to take into account. ~~int~~                                                               |
+| `incl_prior`                             | Whether or not to include prior probabilities from the KB in the model. ~~bool~~                                                 |
+| `incl_context`                           | Whether or not to include the local context in the model. ~~bool~~                                                               |
+| `overwrite` <Tag variant="new">3.2</Tag> | Whether existing annotation is overwritten. Defaults to `True`. ~~bool~~                                                         |
+| `scorer` <Tag variant="new">3.2</Tag>    | The scoring method. Defaults to [`Scorer.score_links`](/api/scorer#score_links). ~~Optional[Callable]~~                          |
 
 ## EntityLinker.\_\_call\_\_ {#call tag="method"}
 

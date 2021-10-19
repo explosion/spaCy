@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+preferred-citation:
+  type: article
+  message: "If you use spaCy, please cite it as below."
+  authors:
+  - family-names: "Honnibal"
+    given-names: "Matthew"
+  - family-names: "Montani"
+    given-names: "Ines"
+  - family-names: "Van Landeghem"
+    given-names: "Sofie"
+  - family-names: "Boyd"
+    given-names: "Adriane"
+  title: "spaCy: Industrial-strength Natural Language Processing in Python"
+  doi: "10.5281/zenodo.1212303"
+  year: 2020

@@ -284,7 +284,9 @@ $ python -m pytest --pyargs %%SPACY_PKG_NAME --slow        # basic and slow test
 ## Troubleshooting guide {#troubleshooting}
 
 This section collects some of the most common errors you may come across when
-installing, loading and using spaCy, as well as their solutions.
+installing, loading and using spaCy, as well as their solutions. Also see the
+[Discussions FAQ Thread](https://github.com/explosion/spaCy/discussions/8226),
+which is updated more frequently and covers more transitory issues.
 
 > #### Help us improve this guide
 >
@@ -308,62 +310,6 @@ supports tokenization for [a variety of languages](/usage/models#languages), not
 all of them come with trained pipelines. To only use the tokenizer, import the
 language's `Language` class instead, for example
 `from spacy.lang.fr import French`.
-
-</Accordion>
-
-<Accordion title="No such option: --no-cache-dir" id="no-cache-dir">
-
-```
-no such option: --no-cache-dir
-```
-
-The `download` command uses pip to install the pipeline packages and sets the
-`--no-cache-dir` flag to prevent it from requiring too much memory.
-[This setting](https://pip.pypa.io/en/stable/reference/pip_install/#caching)
-requires pip v6.0 or newer. Run `pip install -U pip` to upgrade to the latest
-version of pip. To see which version you have installed, run `pip --version`.
-
-</Accordion>
-
-<Accordion title="sre_constants.error: bad character range" id="narrow-unicode">
-
-```
-sre_constants.error: bad character range
-```
-
-In [v2.1](/usage/v2-1), spaCy changed its implementation of regular expressions
-for tokenization to make it up to 2-3 times faster. But this also means that
-it's very important now that you run spaCy with a wide unicode build of Python.
-This means that the build has 1114111 unicode characters available, instead of
-only 65535 in a narrow unicode build. You can check this by running the
-following command:
-
-```bash
-$ python -c "import sys; print(sys.maxunicode)"
-```
-
-If you're running a narrow unicode build, reinstall Python and use a wide
-unicode build instead. You can also rebuild Python and set the
-`--enable-unicode=ucs4` flag.
-
-</Accordion>
-
-<Accordion title="Unknown locale: UTF-8" id="unknown-locale">
-
-```
-ValueError: unknown locale: UTF-8
-```
-
-This error can sometimes occur on OSX and is likely related to a still
-unresolved [Python bug](https://bugs.python.org/issue18378). However, it's easy
-to fix: just add the following to your `~/.bash_profile` or `~/.zshrc` and then
-run `source ~/.bash_profile` or `source ~/.zshrc`. Make sure to add **both
-lines** for `LC_ALL` and `LANG`.
-
-```bash
-$ export LC_ALL=en_US.UTF-8
-$ export LANG=en_US.UTF-8
-```
 
 </Accordion>
 
