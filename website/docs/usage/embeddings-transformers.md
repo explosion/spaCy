@@ -387,11 +387,8 @@ use a local file path. For full details, see the
 [huggingface-models]:
   https://huggingface.co/models?library=pytorch&sort=downloads
 
-A wide variety of PyTorch models are supported, but some might not work. If a
-model doesn't seem to work feel free to open an
-[issue](https://github.com/explosion/spacy/issues). Additionally note that
-Transformers loaded in spaCy can only be used for tensors, and pretrained
-task-specific heads or text generation features cannot be used.
+task-specific heads or text generation features cannot be used as part of 
+the `transformer` pipeline component.
 
 <Infobox variant="warning">
 
