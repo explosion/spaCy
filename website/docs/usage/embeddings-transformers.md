@@ -379,16 +379,19 @@ of potentially overlapping `Span` objects to process by the transformer. Several
 to process the whole document or individual sentences. When the config is
 resolved, the function is created and passed into the model as an argument.
 
-The `name` value is the name of any
-[HuggingFace model](https://huggingface.co/models), which will be downloaded
-automatically the first time it's used. You can also use a local file path. For
-full details, see the
+The `name` value is the name of any [HuggingFace model](huggingface-models),
+which will be downloaded automatically the first time it's used. You can also
+use a local file path. For full details, see the
 [`TransformerModel` docs](/api/architectures#TransformerModel).
 
-While most models should just work, some aren't supported yet or may have
-problems. If a model doesn't seem to work feel free to open an
-[issue](https://github.com/explosion/spacy/issues) or
-[discussion](https://github.com/explosion/spaCy/discussions).
+[huggingface-models]:
+  https://huggingface.co/models?library=pytorch&sort=downloads
+
+A wide variety of PyTorch models are supported, but some might not work. If a
+model doesn't seem to work feel free to open an
+[issue](https://github.com/explosion/spacy/issues). Additionally note that
+Transformers loaded in spaCy can only be used for tensors, and pretrained
+task-specific heads or text generation features cannot be used.
 
 <Infobox variant="warning">
 
