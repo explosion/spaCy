@@ -383,7 +383,7 @@ The `name` value is the name of any
 [HuggingFace model](https://huggingface.co/models), which will be downloaded
 automatically the first time it's used. You can also use a local file path. For
 full details, see the
-[`TransformerModel` docs](https://spacy.io/api/architectures#TransformerModel).
+[`TransformerModel` docs](/api/architectures#TransformerModel).
 
 While most models should just work, some aren't supported yet or may have
 problems. If a model doesn't seem to work feel free to open an
