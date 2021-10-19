@@ -140,17 +140,6 @@ Changes to `.py` files will be effective immediately.
 
 📖 **For more details and instructions, see the documentation on [compiling spaCy from source](https://spacy.io/usage/#source) and the [quickstart widget](https://spacy.io/usage/#section-quickstart) to get the right commands for your platform and Python version.**
 
-### Contributor agreement
-
-If you've made a contribution to spaCy, you should fill in the
-[spaCy contributor agreement](.github/CONTRIBUTOR_AGREEMENT.md) to ensure that
-your contribution can be used across the project. If you agree to be bound by
-the terms of the agreement, fill in the [template](.github/CONTRIBUTOR_AGREEMENT.md)
-and include it with your pull request, or submit it separately to
-[`.github/contributors/`](/.github/contributors). The name of the file should be
-your GitHub username, with the extension `.md`. For example, the user
-example_user would create the file `.github/contributors/example_user.md`.
-
 ### Fixing bugs
 
 When fixing a bug, first create an
@@ -184,7 +173,6 @@ Each time a `git commit` is initiated, `black` and `flake8` will run automatical
 
 In case of error, or when `black` modified a file, the modified file needs to be `git add` once again and a new
 `git commit` has to be issued.
-
 
 ### Code formatting
 
@@ -414,14 +402,7 @@ all test files and test functions need to be prefixed with `test_`.
 When adding tests, make sure to use descriptive names, keep the code short and
 concise and only test for one behavior at a time. Try to `parametrize` test
 cases wherever possible, use our pre-defined fixtures for spaCy components and
-avoid unnecessary imports.
-
-Extensive tests that take a long time should be marked with `@pytest.mark.slow`.
-Tests that require the model to be loaded should be marked with
-`@pytest.mark.models`. Loading the models is expensive and not necessary if
-you're not actually testing the model performance. If all you need is a `Doc`
-object with annotations like heads, POS tags or the dependency parse, you can
-use the `Doc` constructor to construct it manually.
+avoid unnecessary imports. Extensive tests that take a long time should be marked with `@pytest.mark.slow`.
 
 📖 **For more guidelines and information on how to add tests, check out the [tests README](spacy/tests/README.md).**
 

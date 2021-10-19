@@ -281,28 +281,19 @@ cdef class Matcher:
                     final_matches.append((key, *match))
                     # Mark tokens that have matched
                     memset(&matched[start], 1, span_len * sizeof(matched[0]))
-        if with_alignments:
-            final_matches_with_alignments = final_matches
-            final_matches = [(key, start, end) for key, start, end, alignments in final_matches]
-        # perform the callbacks on the filtered set of results
-        for i, (key, start, end) in enumerate(final_matches):
-            on_match = self._callbacks.get(key, None)
-            if on_match is not None:
-                on_match(self, doc, i, final_matches)
         if as_spans:
-            spans = []
-            for key, start, end in final_matches:
+            final_results = []
+            for key, start, end, *_ in final_matches:
                 if isinstance(doclike, Span):
                     start += doclike.start
                     end += doclike.start
-                spans.append(Span(doc, start, end, label=key))
-            return spans
+                final_results.append(Span(doc, start, end, label=key))
         elif with_alignments:
             # convert alignments List[Dict[str, int]] --> List[int]
-            final_matches = []
             # when multiple alignment (belongs to the same length) is found,
             # keeps the alignment that has largest token_idx
-            for key, start, end, alignments in final_matches_with_alignments:
+            final_results = []
+            for key, start, end, alignments in final_matches:
                 sorted_alignments = sorted(alignments, key=lambda x: (x['length'], x['token_idx']), reverse=False)
                 alignments = [0] * (end-start)
                 for align in sorted_alignments:
@@ -311,13 +302,19 @@ cdef class Matcher:
                     # Since alignments are sorted in order of (length, token_idx)
                     # this overwrites smaller token_idx when they have same length.
                     alignments[align['length']] = align['token_idx']
-                final_matches.append((key, start, end, alignments))
-            return final_matches
+                final_results.append((key, start, end, alignments))
+            final_matches = final_results  # for callbacks
         else:
-            return final_matches
+            final_results = final_matches
+        # perform the callbacks on the filtered set of results
+        for i, (key, *_) in enumerate(final_matches):
+            on_match = self._callbacks.get(key, None)
+            if on_match is not None:
+                on_match(self, doc, i, final_matches)
+        return final_results
 
     def _normalize_key(self, key):
-        if isinstance(key, basestring):
+        if isinstance(key, str):
             return self.vocab.strings.add(key)
         else:
             return key
@@ -340,7 +337,7 @@ cdef find_matches(TokenPatternC** patterns, int n, object doclike, int length, e
     The "predicates" list contains functions that take a Python list and return a
     boolean value. It's mostly used for regular expressions.
 
-    The "extra_getters" list contains functions that take a Python list and return
+    The "extensions" list contains functions that take a Python list and return
     an attr ID. It's mostly used for extension attributes.
     """
     cdef vector[PatternStateC] states
@@ -365,7 +362,7 @@ cdef find_matches(TokenPatternC** patterns, int n, object doclike, int length, e
     for i, token in enumerate(doclike):
         for name, index in extensions.items():
             value = token._.get(name)
-            if isinstance(value, basestring):
+            if isinstance(value, str):
                 value = token.vocab.strings[value]
             extra_attr_values[i * nr_extra_attr + index] = value
     # Main loop
@@ -791,7 +788,7 @@ def _preprocess_pattern(token_specs, vocab, extensions_table, extra_predicates):
 def _get_attr_values(spec, string_store):
     attr_values = []
     for attr, value in spec.items():
-        if isinstance(attr, basestring):
+        if isinstance(attr, str):
             attr = attr.upper()
             if attr == '_':
                 continue
@@ -802,7 +799,7 @@ def _get_attr_values(spec, string_store):
             if attr == "IS_SENT_START":
                 attr = "SENT_START"
             attr = IDS.get(attr)
-        if isinstance(value, basestring):
+        if isinstance(value, str):
             value = string_store.add(value)
         elif isinstance(value, bool):
             value = int(value)
@@ -943,7 +940,7 @@ def _get_extra_predicates(spec, extra_predicates, vocab):
     seen_predicates = {pred.key: pred.i for pred in extra_predicates}
     output = []
     for attr, value in spec.items():
-        if isinstance(attr, basestring):
+        if isinstance(attr, str):
             if attr == "_":
                 output.extend(
                     _get_extension_extra_predicates(
@@ -1000,7 +997,7 @@ def _get_operators(spec):
               "?": (ZERO_ONE,), "1": (ONE,), "!": (ZERO,)}
     # Fix casing
     spec = {key.upper(): values for key, values in spec.items()
-            if isinstance(key, basestring)}
+            if isinstance(key, str)}
     if "OP" not in spec:
         return (ONE,)
     elif spec["OP"] in lookup:
@@ -1018,7 +1015,7 @@ def _get_extensions(spec, string_store, name2index):
         if isinstance(value, dict):
             # Handle predicates (e.g. "IN", in the extra_predicates, not here.
             continue
-        if isinstance(value, basestring):
+        if isinstance(value, str):
             value = string_store.add(value)
         if name not in name2index:
             name2index[name] = len(name2index)

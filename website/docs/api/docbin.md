@@ -16,7 +16,7 @@ document from the `DocBin`. The serialization format is gzipped msgpack, where
 the msgpack object has the following structure:
 
 ```python
-### msgpack object structrue
+### msgpack object structure
 {
     "version": str,           # DocBin version number
     "attrs": List[uint64],    # e.g. [TAG, HEAD, ENT_IOB, ENT_TYPE]

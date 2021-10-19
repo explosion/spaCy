@@ -30,6 +30,7 @@ from ..compat import copy_reg, pickle
 from ..errors import Errors, Warnings
 from ..morphology import Morphology
 from .. import util
+from .. import parts_of_speech
 from .underscore import Underscore, get_ext_args
 from ._retokenize import Retokenizer
 from ._serialize import ALL_ATTRS as DOCBIN_ALL_ATTRS
@@ -260,7 +261,7 @@ cdef class Doc:
             raise ValueError(Errors.E027)
         cdef const LexemeC* lexeme
         for word, has_space in zip(words, spaces):
-            if isinstance(word, unicode):
+            if isinstance(word, str):
                 lexeme = self.vocab.get(self.mem, word)
             elif isinstance(word, bytes):
                 raise ValueError(Errors.E028.format(value=word))
@@ -285,6 +286,10 @@ cdef class Doc:
                     sent_starts[i] = -1
                 elif sent_starts[i] is None or sent_starts[i] not in [-1, 0, 1]:
                     sent_starts[i] = 0
+        if pos is not None:
+            for pp in set(pos):
+                if pp not in parts_of_speech.IDS:
+                    raise ValueError(Errors.E1021.format(pp=pp))
         ent_iobs = None
         ent_types = None
         if ents is not None:
@@ -1362,7 +1367,7 @@ cdef class Doc:
             self.has_unknown_spaces = msg["has_unknown_spaces"]
         start = 0
         cdef const LexemeC* lex
-        cdef unicode orth_
+        cdef str orth_
         text = msg["text"]
         attrs = msg["array_body"]
         for i in range(attrs.shape[0]):
@@ -1423,7 +1428,7 @@ cdef class Doc:
             attributes are inherited from the syntactic root of the span.
         RETURNS (Token): The first newly merged token.
         """
-        cdef unicode tag, lemma, ent_type
+        cdef str tag, lemma, ent_type
         attr_len = len(attributes)
         span_len = len(spans)
         if not attr_len == span_len:

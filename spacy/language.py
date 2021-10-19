@@ -105,7 +105,7 @@ class Language:
 
     Defaults (class): Settings, data and factory methods for creating the `nlp`
         object and processing pipeline.
-    lang (str): Two-letter language ID, i.e. ISO code.
+    lang (str): IETF language code, such as 'en'.
 
     DOCS: https://spacy.io/api/language
     """
@@ -199,7 +199,7 @@ class Language:
 
         DOCS: https://spacy.io/api/language#meta
         """
-        spacy_version = util.get_model_version_range(about.__version__)
+        spacy_version = util.get_minor_version_range(about.__version__)
         if self.vocab.lang:
             self._meta.setdefault("lang", self.vocab.lang)
         else:
@@ -605,7 +605,7 @@ class Language:
         factory_name: str,
         name: Optional[str] = None,
         *,
-        config: Optional[Dict[str, Any]] = SimpleFrozenDict(),
+        config: Dict[str, Any] = SimpleFrozenDict(),
         raw_config: Optional[Config] = None,
         validate: bool = True,
     ) -> Callable[[Doc], Doc]:
@@ -615,8 +615,8 @@ class Language:
         factory_name (str): Name of component factory.
         name (Optional[str]): Optional name to assign to component instance.
             Defaults to factory name if not set.
-        config (Optional[Dict[str, Any]]): Config parameters to use for this
-            component. Will be merged with default config, if available.
+        config (Dict[str, Any]): Config parameters to use for this component.
+            Will be merged with default config, if available.
         raw_config (Optional[Config]): Internals: the non-interpolated config.
         validate (bool): Whether to validate the component config against the
             arguments and types expected by the factory.
@@ -640,7 +640,6 @@ class Language:
             )
             raise ValueError(err)
         pipe_meta = self.get_factory_meta(factory_name)
-        config = config or {}
         # This is unideal, but the alternative would mean you always need to
         # specify the full config settings, which is not really viable.
         if pipe_meta.default_config:
@@ -708,8 +707,9 @@ class Language:
         source_config = source.config.interpolate()
         pipe_config = util.copy_config(source_config["components"][source_name])
         self._pipe_configs[name] = pipe_config
-        for s in source.vocab.strings:
-            self.vocab.strings.add(s)
+        if self.vocab.strings != source.vocab.strings:
+            for s in source.vocab.strings:
+                self.vocab.strings.add(s)
         return pipe, pipe_config["factory"]
 
     def add_pipe(
@@ -722,7 +722,7 @@ class Language:
         first: Optional[bool] = None,
         last: Optional[bool] = None,
         source: Optional["Language"] = None,
-        config: Optional[Dict[str, Any]] = SimpleFrozenDict(),
+        config: Dict[str, Any] = SimpleFrozenDict(),
         raw_config: Optional[Config] = None,
         validate: bool = True,
     ) -> Callable[[Doc], Doc]:
@@ -743,8 +743,8 @@ class Language:
         last (bool): If True, insert component last in the pipeline.
         source (Language): Optional loaded nlp object to copy the pipeline
             component from.
-        config (Optional[Dict[str, Any]]): Config parameters to use for this
-            component. Will be merged with default config, if available.
+        config (Dict[str, Any]): Config parameters to use for this component.
+            Will be merged with default config, if available.
         raw_config (Optional[Config]): Internals: the non-interpolated config.
         validate (bool): Whether to validate the component config against the
             arguments and types expected by the factory.
@@ -968,7 +968,7 @@ class Language:
 
     def __call__(
         self,
-        text: str,
+        text: Union[str, Doc],
         *,
         disable: Iterable[str] = SimpleFrozenList(),
         component_cfg: Optional[Dict[str, Dict[str, Any]]] = None,
@@ -977,7 +977,9 @@ class Language:
         and can contain arbitrary whitespace. Alignment into the original string
         is preserved.
 
-        text (str): The text to be processed.
+        text (Union[str, Doc]): If `str`, the text to be processed. If `Doc`,
+            the doc will be passed directly to the pipeline, skipping
+            `Language.make_doc`.
         disable (list): Names of the pipeline components to disable.
         component_cfg (Dict[str, dict]): An optional dictionary with extra
             keyword arguments for specific components.
@@ -985,7 +987,7 @@ class Language:
 
         DOCS: https://spacy.io/api/language#call
         """
-        doc = self.make_doc(text)
+        doc = self._ensure_doc(text)
         if component_cfg is None:
             component_cfg = {}
         for name, proc in self.pipeline:
@@ -1068,6 +1070,14 @@ class Language:
                 Errors.E088.format(length=len(text), max_length=self.max_length)
             )
         return self.tokenizer(text)
+
+    def _ensure_doc(self, doc_like: Union[str, Doc]) -> Doc:
+        """Create a Doc if need be, or raise an error if the input is not a Doc or a string."""
+        if isinstance(doc_like, Doc):
+            return doc_like
+        if isinstance(doc_like, str):
+            return self.make_doc(doc_like)
+        raise ValueError(Errors.E866.format(type=type(doc_like)))
 
     def update(
         self,
@@ -1370,6 +1380,9 @@ class Language:
             scorer = Scorer(**kwargs)
         # reset annotation in predicted docs and time tokenization
         start_time = timer()
+        # this is purely for timing
+        for eg in examples:
+            self.make_doc(eg.reference.text)
         # apply all pipeline components
         for name, pipe in self.pipeline:
             kwargs = component_cfg.get(name, {})
@@ -1437,7 +1450,7 @@ class Language:
     @overload
     def pipe(
         self,
-        texts: Iterable[Tuple[str, _AnyContext]],
+        texts: Iterable[Tuple[Union[str, Doc], _AnyContext]],
         *,
         as_tuples: bool = ...,
         batch_size: Optional[int] = ...,
@@ -1449,7 +1462,7 @@ class Language:
 
     def pipe(  # noqa: F811
         self,
-        texts: Iterable[str],
+        texts: Iterable[Union[str, Doc]],
         *,
         as_tuples: bool = False,
         batch_size: Optional[int] = None,
@@ -1459,7 +1472,8 @@ class Language:
     ) -> Iterator[Doc]:
         """Process texts as a stream, and yield `Doc` objects in order.
 
-        texts (Iterable[str]): A sequence of texts to process.
+        texts (Iterable[Union[str, Doc]]): A sequence of texts or docs to
+            process.
         as_tuples (bool): If set to True, inputs should be a sequence of
             (text, context) tuples. Output will then be a sequence of
             (doc, context) tuples. Defaults to False.
@@ -1515,7 +1529,7 @@ class Language:
             docs = self._multiprocessing_pipe(texts, pipes, n_process, batch_size)
         else:
             # if n_process == 1, no processes are forked.
-            docs = (self.make_doc(text) for text in texts)
+            docs = (self._ensure_doc(text) for text in texts)
             for pipe in pipes:
                 docs = pipe(docs)
         for doc in docs:
@@ -1549,7 +1563,7 @@ class Language:
         procs = [
             mp.Process(
                 target=_apply_pipes,
-                args=(self.make_doc, pipes, rch, sch, Underscore.get_state()),
+                args=(self._ensure_doc, pipes, rch, sch, Underscore.get_state()),
             )
             for rch, sch in zip(texts_q, bytedocs_send_ch)
         ]
@@ -1698,6 +1712,7 @@ class Language:
         # them here so they're only loaded once
         source_nlps = {}
         source_nlp_vectors_hashes = {}
+        vocab_b = None
         for pipe_name in config["nlp"]["pipeline"]:
             if pipe_name not in pipeline:
                 opts = ", ".join(pipeline.keys())
@@ -1720,14 +1735,22 @@ class Language:
                         raw_config=raw_config,
                     )
                 else:
+                    # We need the sourced components to reference the same
+                    # vocab without modifying the current vocab state **AND**
+                    # we still want to load the source model vectors to perform
+                    # the vectors check. Since the source vectors clobber the
+                    # current ones, we save the original vocab state and
+                    # restore after this loop. Existing strings are preserved
+                    # during deserialization, so they do not need any
+                    # additional handling.
+                    if vocab_b is None:
+                        vocab_b = nlp.vocab.to_bytes(exclude=["lookups", "strings"])
                     model = pipe_cfg["source"]
                     if model not in source_nlps:
-                        # We only need the components here and we intentionally
-                        # do not load the model with the same vocab because
-                        # this would cause the vectors to be copied into the
-                        # current nlp object (all the strings will be added in
-                        # create_pipe_from_source)
-                        source_nlps[model] = util.load_model(model)
+                        # Load with the same vocab, adding any strings
+                        source_nlps[model] = util.load_model(
+                            model, vocab=nlp.vocab, exclude=["lookups"]
+                        )
                     source_name = pipe_cfg.get("component", pipe_name)
                     listeners_replaced = False
                     if "replace_listeners" in pipe_cfg:
@@ -1754,6 +1777,9 @@ class Language:
                     # Delete from cache if listeners were replaced
                     if listeners_replaced:
                         del source_nlps[model]
+        # Restore the original vocab after sourcing if necessary
+        if vocab_b is not None:
+            nlp.vocab.from_bytes(vocab_b)
         disabled_pipes = [*config["nlp"]["disabled"], *disable]
         nlp._disabled = set(p for p in disabled_pipes if p not in exclude)
         nlp.batch_size = config["nlp"]["batch_size"]
@@ -2084,7 +2110,7 @@ def _copy_examples(examples: Iterable[Example]) -> List[Example]:
 
 
 def _apply_pipes(
-    make_doc: Callable[[str], Doc],
+    ensure_doc: Callable[[Union[str, Doc]], Doc],
     pipes: Iterable[Callable[[Doc], Doc]],
     receiver,
     sender,
@@ -2092,7 +2118,8 @@ def _apply_pipes(
 ) -> None:
     """Worker for Language.pipe
 
-    make_doc (Callable[[str,] Doc]): Function to create Doc from text.
+    ensure_doc (Callable[[Union[str, Doc]], Doc]): Function to create Doc from text
+        or raise an error if the input is neither a Doc nor a string.
     pipes (Iterable[Callable[[Doc], Doc]]): The components to apply.
     receiver (multiprocessing.Connection): Pipe to receive text. Usually
         created by `multiprocessing.Pipe()`
@@ -2105,7 +2132,7 @@ def _apply_pipes(
     while True:
         try:
             texts = receiver.get()
-            docs = (make_doc(text) for text in texts)
+            docs = (ensure_doc(text) for text in texts)
             for pipe in pipes:
                 docs = pipe(docs)
             # Connection does not accept unpickable objects, so send list.

@@ -76,6 +76,6 @@ class CatalanLemmatizer(Lemmatizer):
             forms.append(self.lookup_lemmatize(token)[0])
         if not forms:
             forms.append(string)
-        forms = list(set(forms))
+        forms = list(dict.fromkeys(forms))
         self.cache[cache_key] = forms
         return forms

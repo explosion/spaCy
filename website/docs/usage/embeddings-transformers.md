@@ -671,7 +671,7 @@ You can then run [`spacy pretrain`](/api/cli#pretrain) with the updated config
 and pass in optional config overrides, like the path to the raw text file:
 
 ```cli
-$ python -m spacy pretrain config_pretrain.cfg ./output --paths.raw text.jsonl
+$ python -m spacy pretrain config_pretrain.cfg ./output --paths.raw_text text.jsonl
 ```
 
 The following defaults are used for the `[pretraining]` block and merged into

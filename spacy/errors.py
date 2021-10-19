@@ -25,7 +25,7 @@ def setup_default_warnings():
         filter_warning("once", error_msg=Warnings.W036.format(name=pipe))
 
     # warn once about lemmatizer without required POS
-    filter_warning("once", error_msg="[W108]")
+    filter_warning("once", error_msg=Warnings.W108)
 
 
 def filter_warning(action: str, error_msg: str):
@@ -116,13 +116,11 @@ class Warnings:
 
     # New warnings added in v3.x
     W086 = ("Component '{listener}' will be (re)trained, but it needs the component "
-            "'{name}' which is frozen. You can either freeze both, or neither "
-            "of the two. If you're sourcing the component from "
-            "an existing pipeline, you can use the `replace_listeners` setting in "
-            "the config block to replace its token-to-vector listener with a copy "
-            "and make it independent. For example, `replace_listeners = "
-            "[\"model.tok2vec\"]` See the documentation for details: "
-            "https://spacy.io/usage/training#config-components-listeners")
+            "'{name}' which is frozen. If you want to prevent retraining '{name}' "
+            "but want to train '{listener}' on top of it, you should add '{name}' to the "
+            "list of 'annotating_components' in the 'training' block in the config. "
+            "See the documentation for details: "
+            "https://spacy.io/usage/training#annotating-components")
     W087 = ("Component '{name}' will be (re)trained, but the component '{listener}' "
             "depends on it via a listener and is frozen. This means that the "
             "performance of '{listener}' will be degraded. You can either freeze "
@@ -172,8 +170,8 @@ class Warnings:
             "call the {matcher} on each Doc object.")
     W107 = ("The property `Doc.{prop}` is deprecated. Use "
             "`Doc.has_annotation(\"{attr}\")` instead.")
-    W108 = ("The rule-based lemmatizer did not find POS annotation for the "
-            "token '{text}'. Check that your pipeline includes components that "
+    W108 = ("The rule-based lemmatizer did not find POS annotation for one or "
+            "more tokens. Check that your pipeline includes components that "
             "assign token.pos, typically 'tagger'+'attribute_ruler' or "
             "'morphologizer'.")
     W109 = ("Unable to save user hooks while serializing the doc. Re-add any "
@@ -284,7 +282,7 @@ class Errors:
             "you forget to call the `set_extension` method?")
     E047 = ("Can't assign a value to unregistered extension attribute "
             "'{name}'. Did you forget to call the `set_extension` method?")
-    E048 = ("Can't import language {lang} from spacy.lang: {err}")
+    E048 = ("Can't import language {lang} or any matching language from spacy.lang: {err}")
     E050 = ("Can't find model '{name}'. It doesn't seem to be a Python "
             "package or a valid path to a data directory.")
     E052 = ("Can't find model directory: {path}")
@@ -521,6 +519,11 @@ class Errors:
     E202 = ("Unsupported alignment mode '{mode}'. Supported modes: {modes}.")
 
     # New errors added in v3.x
+    E865 = ("A SpanGroup is not functional after the corresponding Doc has "
+            "been garbage collected. To keep using the spans, make sure that "
+            "the corresponding Doc object is still available in the scope of "
+            "your function.")
+    E866 = ("Expected a string or 'Doc' as input, but got: {type}.")
     E867 = ("The 'textcat' component requires at least two labels because it "
             "uses mutually exclusive classes where exactly one label is True "
             "for each doc. For binary classification tasks, you can use two "
@@ -655,7 +658,9 @@ class Errors:
             "{nO} - cannot add any more labels.")
     E923 = ("It looks like there is no proper sample data to initialize the "
             "Model of component '{name}'. To check your input data paths and "
-            "annotation, run: python -m spacy debug data config.cfg")
+            "annotation, run: python -m spacy debug data config.cfg "
+            "and include the same config override values you would specify "
+            "for the 'spacy train' command.")
     E924 = ("The '{name}' component does not seem to be initialized properly. "
             "This is likely a bug in spaCy, so feel free to open an issue: "
             "https://github.com/explosion/spaCy/issues")
@@ -790,7 +795,7 @@ class Errors:
             "to token boundaries.")
     E982 = ("The `Token.ent_iob` attribute should be an integer indexing "
             "into {values}, but found {value}.")
-    E983 = ("Invalid key for '{dict}': {key}. Available keys: "
+    E983 = ("Invalid key(s) for '{dict}': {key}. Available keys: "
             "{keys}")
     E984 = ("Invalid component config for '{name}': component block needs either "
             "a key `factory` specifying the registered function used to "
@@ -867,6 +872,10 @@ class Errors:
     E1019 = ("`noun_chunks` requires the pos tagging, which requires a "
              "statistical model to be installed and loaded. For more info, see "
              "the documentation:\nhttps://spacy.io/usage/models")
+    E1020 = ("No `epoch_resume` value specified and could not infer one from "
+             "filename. Specify an epoch to resume from.")
+    E1021 = ("`pos` value \"{pp}\" is not a valid Universal Dependencies tag. "
+             "Non-UD tags should use the `tag` property.")
 
 
 # Deprecated model shortcuts, only used in errors and warnings

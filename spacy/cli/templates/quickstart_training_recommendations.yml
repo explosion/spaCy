@@ -41,10 +41,10 @@ da:
   word_vectors: da_core_news_lg
   transformer:
     efficiency:
-      name: DJSammy/bert-base-danish-uncased_BotXO,ai
+      name: Maltehb/danish-bert-botxo
       size_factor: 3
     accuracy:
-      name: DJSammy/bert-base-danish-uncased_BotXO,ai
+      name: Maltehb/danish-bert-botxo
       size_factor: 3
 de:
   word_vectors: de_core_news_lg

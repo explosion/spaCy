@@ -10,20 +10,23 @@ from ..language import Language
 from ..scorer import Scorer
 from .. import util
 
+# see #9050
+BACKWARD_OVERWRITE = False
 
 @Language.factory(
     "sentencizer",
     assigns=["token.is_sent_start", "doc.sents"],
-    default_config={"punct_chars": None, "scorer": {"@scorers": "spacy.senter_scorer.v1"}},
+    default_config={"punct_chars": None, "overwrite": False, "scorer": {"@scorers": "spacy.senter_scorer.v1"}},
     default_score_weights={"sents_f": 1.0, "sents_p": 0.0, "sents_r": 0.0},
 )
 def make_sentencizer(
     nlp: Language,
     name: str,
     punct_chars: Optional[List[str]],
+    overwrite: bool,
     scorer: Optional[Callable],
 ):
-    return Sentencizer(name, punct_chars=punct_chars, scorer=scorer)
+    return Sentencizer(name, punct_chars=punct_chars, overwrite=overwrite, scorer=scorer)
 
 
 class Sentencizer(Pipe):
@@ -49,6 +52,7 @@ class Sentencizer(Pipe):
         name="sentencizer",
         *,
         punct_chars=None,
+        overwrite=BACKWARD_OVERWRITE,
         scorer=senter_score,
     ):
         """Initialize the sentencizer.
@@ -65,6 +69,7 @@ class Sentencizer(Pipe):
             self.punct_chars = set(punct_chars)
         else:
             self.punct_chars = set(self.default_punct_chars)
+        self.overwrite = overwrite
         self.scorer = scorer
 
     def __call__(self, doc):
@@ -126,8 +131,7 @@ class Sentencizer(Pipe):
         for i, doc in enumerate(docs):
             doc_tag_ids = batch_tag_ids[i]
             for j, tag_id in enumerate(doc_tag_ids):
-                # Don't clobber existing sentence boundaries
-                if doc.c[j].sent_start == 0:
+                if doc.c[j].sent_start == 0 or self.overwrite:
                     if tag_id:
                         doc.c[j].sent_start = 1
                     else:
@@ -140,7 +144,7 @@ class Sentencizer(Pipe):
 
         DOCS: https://spacy.io/api/sentencizer#to_bytes
         """
-        return srsly.msgpack_dumps({"punct_chars": list(self.punct_chars)})
+        return srsly.msgpack_dumps({"punct_chars": list(self.punct_chars), "overwrite": self.overwrite})
 
     def from_bytes(self, bytes_data, *, exclude=tuple()):
         """Load the sentencizer from a bytestring.
@@ -152,6 +156,7 @@ class Sentencizer(Pipe):
         """
         cfg = srsly.msgpack_loads(bytes_data)
         self.punct_chars = set(cfg.get("punct_chars", self.default_punct_chars))
+        self.overwrite = cfg.get("overwrite", self.overwrite)
         return self
 
     def to_disk(self, path, *, exclude=tuple()):
@@ -161,7 +166,7 @@ class Sentencizer(Pipe):
         """
         path = util.ensure_path(path)
         path = path.with_suffix(".json")
-        srsly.write_json(path, {"punct_chars": list(self.punct_chars)})
+        srsly.write_json(path, {"punct_chars": list(self.punct_chars), "overwrite": self.overwrite})
 
 
     def from_disk(self, path, *, exclude=tuple()):
@@ -173,4 +178,5 @@ class Sentencizer(Pipe):
         path = path.with_suffix(".json")
         cfg = srsly.read_json(path)
         self.punct_chars = set(cfg.get("punct_chars", self.default_punct_chars))
+        self.overwrite = cfg.get("overwrite", self.overwrite)
         return self

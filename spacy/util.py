@@ -16,27 +16,26 @@ import numpy
 import srsly
 import catalogue
 from catalogue import RegistryError, Registry
+import langcodes
 import sys
 import warnings
 from packaging.specifiers import SpecifierSet, InvalidSpecifier
 from packaging.version import Version, InvalidVersion
+from packaging.requirements import Requirement
 import subprocess
 from contextlib import contextmanager
+from collections import defaultdict
 import tempfile
 import shutil
 import shlex
 import inspect
+import pkgutil
 import logging
 
 try:
     import cupy.random
 except ImportError:
     cupy = None
-
-try:  # Python 3.8
-    import importlib.metadata as importlib_metadata
-except ImportError:
-    from catalogue import _importlib_metadata as importlib_metadata
 
 # These are functions that were previously (v2.x) available from spacy.util
 # and have since moved to Thinc. We're importing them here so people's code
@@ -46,7 +45,7 @@ from thinc.api import fix_random_seed, compounding, decaying  # noqa: F401
 
 
 from .symbols import ORTH
-from .compat import cupy, CudaStream, is_windows
+from .compat import cupy, CudaStream, is_windows, importlib_metadata
 from .errors import Errors, Warnings, OLD_MODEL_SHORTCUTS
 from . import about
 
@@ -145,6 +144,32 @@ class registry(thinc.registry):
         return func
 
     @classmethod
+    def find(cls, registry_name: str, func_name: str) -> Callable:
+        """Get info about a registered function from the registry."""
+        # We're overwriting this classmethod so we're able to provide more
+        # specific error messages and implement a fallback to spacy-legacy.
+        if not hasattr(cls, registry_name):
+            names = ", ".join(cls.get_registry_names()) or "none"
+            raise RegistryError(Errors.E892.format(name=registry_name, available=names))
+        reg = getattr(cls, registry_name)
+        try:
+            func_info = reg.find(func_name)
+        except RegistryError:
+            if func_name.startswith("spacy."):
+                legacy_name = func_name.replace("spacy.", "spacy-legacy.")
+                try:
+                    return reg.find(legacy_name)
+                except catalogue.RegistryError:
+                    pass
+            available = ", ".join(sorted(reg.get_all().keys())) or "none"
+            raise RegistryError(
+                Errors.E893.format(
+                    name=func_name, reg_name=registry_name, available=available
+                )
+            ) from None
+        return func_info
+
+    @classmethod
     def has(cls, registry_name: str, func_name: str) -> bool:
         """Check whether a function is available in a registry."""
         if not hasattr(cls, registry_name):
@@ -233,20 +258,89 @@ def lang_class_is_loaded(lang: str) -> bool:
     return lang in registry.languages
 
 
+def find_matching_language(lang: str) -> Optional[str]:
+    """
+    Given an IETF language code, find a supported spaCy language that is a
+    close match for it (according to Unicode CLDR language-matching rules).
+    This allows for language aliases, ISO 639-2 codes, more detailed language
+    tags, and close matches.
+
+    Returns the language code if a matching language is available, or None
+    if there is no matching language.
+
+    >>> find_matching_language('en')
+    'en'
+    >>> find_matching_language('pt-BR')  # Brazilian Portuguese
+    'pt'
+    >>> find_matching_language('fra')  # an ISO 639-2 code for French
+    'fr'
+    >>> find_matching_language('iw')  # obsolete alias for Hebrew
+    'he'
+    >>> find_matching_language('no')  # Norwegian
+    'nb'
+    >>> find_matching_language('mo')  # old code for ro-MD
+    'ro'
+    >>> find_matching_language('zh-Hans')  # Simplified Chinese
+    'zh'
+    >>> find_matching_language('zxx')
+    None
+    """
+    import spacy.lang  # noqa: F401
+    if lang == 'xx':
+        return 'xx'
+
+    # Find out which language modules we have
+    possible_languages = []
+    for modinfo in pkgutil.iter_modules(spacy.lang.__path__):
+        code = modinfo.name
+        if code == 'xx':
+            # Temporarily make 'xx' into a valid language code
+            possible_languages.append('mul')
+        elif langcodes.tag_is_valid(code):
+            possible_languages.append(code)
+
+    # Distances from 1-9 allow near misses like Bosnian -> Croatian and
+    # Norwegian -> Norwegian Bokmål. A distance of 10 would include several
+    # more possibilities, like variants of Chinese like 'wuu', but text that
+    # is labeled that way is probably trying to be distinct from 'zh' and
+    # shouldn't automatically match.
+    match = langcodes.closest_supported_match(
+        lang, possible_languages, max_distance=9
+    )
+    if match == 'mul':
+        # Convert 'mul' back to spaCy's 'xx'
+        return 'xx'
+    else:
+        return match
+
+
 def get_lang_class(lang: str) -> "Language":
     """Import and load a Language class.
 
-    lang (str): Two-letter language code, e.g. 'en'.
+    lang (str): IETF language code, such as 'en'.
     RETURNS (Language): Language class.
     """
     # Check if language is registered / entry point is available
     if lang in registry.languages:
         return registry.languages.get(lang)
     else:
+        # Find the language in the spacy.lang subpackage
         try:
             module = importlib.import_module(f".lang.{lang}", "spacy")
         except ImportError as err:
-            raise ImportError(Errors.E048.format(lang=lang, err=err)) from err
+            # Find a matching language. For example, if the language 'no' is
+            # requested, we can use language-matching to load `spacy.lang.nb`.
+            try:
+                match = find_matching_language(lang)
+            except langcodes.tag_parser.LanguageTagError:
+                # proceed to raising an import error
+                match = None
+
+            if match:
+                lang = match
+                module = importlib.import_module(f".lang.{lang}", "spacy")
+            else:
+                raise ImportError(Errors.E048.format(lang=lang, err=err)) from err
         set_lang_class(lang, getattr(module, module.__all__[0]))
     return registry.languages.get(lang)
 
@@ -640,13 +734,18 @@ def is_unconstrained_version(
     return True
 
 
-def get_model_version_range(spacy_version: str) -> str:
-    """Generate a version range like >=1.2.3,<1.3.0 based on a given spaCy
-    version. Models are always compatible across patch versions but not
-    across minor or major versions.
+def split_requirement(requirement: str) -> Tuple[str, str]:
+    """Split a requirement like spacy>=1.2.3 into ("spacy", ">=1.2.3")."""
+    req = Requirement(requirement)
+    return (req.name, str(req.specifier))
+
+
+def get_minor_version_range(version: str) -> str:
+    """Generate a version range like >=1.2.3,<1.3.0 based on a given version
+    (e.g. of spaCy).
     """
-    release = Version(spacy_version).release
-    return f">={spacy_version},<{release[0]}.{release[1] + 1}.0"
+    release = Version(version).release
+    return f">={version},<{release[0]}.{release[1] + 1}.0"
 
 
 def get_model_lower_version(constraint: str) -> Optional[str]:
@@ -734,7 +833,7 @@ def load_meta(path: Union[str, Path]) -> Dict[str, Any]:
                 model=f"{meta['lang']}_{meta['name']}",
                 model_version=meta["version"],
                 version=meta["spacy_version"],
-                example=get_model_version_range(about.__version__),
+                example=get_minor_version_range(about.__version__),
             )
             warnings.warn(warn_msg)
     return meta
@@ -1376,7 +1475,7 @@ def get_arg_names(func: Callable) -> List[str]:
     RETURNS (List[str]): The argument names.
     """
     argspec = inspect.getfullargspec(func)
-    return list(set([*argspec.args, *argspec.kwonlyargs]))
+    return list(dict.fromkeys([*argspec.args, *argspec.kwonlyargs]))
 
 
 def combine_score_weights(
@@ -1550,3 +1649,19 @@ def to_ternary_int(val) -> int:
         return 0
     else:
         return -1
+
+
+# The following implementation of packages_distributions() is adapted from
+# importlib_metadata, which is distributed under the Apache 2.0 License.
+# Copyright (c) 2017-2019 Jason R. Coombs, Barry Warsaw
+# See licenses/3rd_party_licenses.txt
+def packages_distributions() -> Dict[str, List[str]]:
+    """Return a mapping of top-level packages to their distributions. We're
+    inlining this helper from the importlib_metadata "backport" here, since
+    it's not available in the builtin importlib.metadata.
+    """
+    pkg_to_dist = defaultdict(list)
+    for dist in importlib_metadata.distributions():
+        for pkg in (dist.read_text("top_level.txt") or "").split():
+            pkg_to_dist[pkg].append(dist.metadata["Name"])
+    return dict(pkg_to_dist)
