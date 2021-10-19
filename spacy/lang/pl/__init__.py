@@ -12,7 +12,9 @@ from ...language import Language
 
 
 TOKENIZER_EXCEPTIONS = {
-    exc: val for exc, val in BASE_EXCEPTIONS.items() if not exc.endswith(".")
+    exc: val
+    for exc, val in BASE_EXCEPTIONS.items()
+    if not exc.endswith(".") and not exc.startswith("°")
 }
 
 
