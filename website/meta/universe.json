@@ -516,7 +516,7 @@
             "title": "NeuroNER",
             "slogan": "Named-entity recognition using neural networks",
             "github": "Franck-Dernoncourt/NeuroNER",
-            "category": ["ner"],
+            "category": ["models"],
             "pip": "pyneuroner[cpu]",
             "code_example": [
                 "from neuroner import neuromodel",
@@ -3549,6 +3549,11 @@
                     "id": "scientific",
                     "title": "Scientific",
                     "description": "Frameworks and utilities for scientific text processing"
+                },
+                {
+                    "id": "biomedical",
+                    "title": "Biomedical",
+                    "description": "Frameworks and utilities for processing biomedical text"
                 },
                 {
                     "id": "visualizers",
