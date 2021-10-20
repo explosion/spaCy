@@ -49,5 +49,5 @@ def test_tokenizer_handles_emoji(tokenizer, text, length):
 
 def test_tokenizer_degree(tokenizer):
     for u in "cfkCFK":
-        assert [t.text for t in tokenizer(f"°{u}.")] == [f"°{u}", "."]
-        assert [t[1] for t in tokenizer.explain(f"°{u}.")] == [f"°{u}", "."]
+        assert [t.text for t in tokenizer(f"°{u}.")] == ["°", f"{u}", "."]
+        assert [t[1] for t in tokenizer.explain(f"°{u}.")] == ["°", f"{u}", "."]
