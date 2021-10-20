@@ -1532,7 +1532,7 @@ class Language:
             if name in disable or not is_trainable:
                 continue
 
-            if isinstance(proc.model.ops, CupyOps):
+            if hasattr(proc, "model") and hasattr(proc.model, "ops") and isinstance(proc.model.ops, CupyOps):
                 return True
 
         return False
