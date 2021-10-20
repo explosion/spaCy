@@ -750,7 +750,7 @@ file:
 ### config.cfg
 
 [initialize]
-init_tok2vec = pretrain/model4.bin
+init_tok2vec = "pretrain/model4.bin"
 ```
 
 <Infobox variant="warning">
