@@ -738,7 +738,7 @@ layer = "tok2vec"
 
 To benefit from pretraining, your training step needs to know to initialize
 its `tok2vec` component with the weights learned from the pretraining step.
-You do this by setting `initializer.init_tok2vec` to the filename of the
+You do this by setting `initialize.init_tok2vec` to the filename of the
 `.bin` file that you want to use from pretraining.
 
 A pretraining step that runs for 5 epochs with an output path of `pretrain/`,
