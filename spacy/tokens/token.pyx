@@ -600,7 +600,7 @@ cdef class Token:
             yield from word.subtree
 
     @property
-    def left_edge(self):
+    def left_edge(self) -> int:
         """The leftmost token of this token's syntactic descendents.
 
         RETURNS (Token): The first token such that `self.is_ancestor(token)`.
@@ -608,7 +608,7 @@ cdef class Token:
         return self.doc[self.c.l_edge]
 
     @property
-    def right_edge(self):
+    def right_edge(self) -> int:
         """The rightmost token of this token's syntactic descendents.
 
         RETURNS (Token): The last token such that `self.is_ancestor(token)`.

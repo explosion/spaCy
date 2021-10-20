@@ -833,7 +833,7 @@ retrieve and add to them.
         self.cfg = {"labels": []}
 
     @property
-    def labels(self) -> Tuple[str]:
+    def labels(self) -> Tuple[str, ...]:
         """Returns the labels currently added to the component."""
         return tuple(self.cfg["labels"])
 

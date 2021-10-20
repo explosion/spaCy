@@ -12,10 +12,11 @@ trigger:
       - "website/*"
       - "*.md"
 pr:
-  paths:
+   paths:
     exclude:
-      - "website/*"
       - "*.md"
+      - "website/docs/*"
+      - "website/src/*"
 
 jobs:
   # Perform basic checks for most important errors (syntax etc.) Uses the config

@@ -88,7 +88,7 @@ cdef class Pipe:
         return False
 
     @property
-    def labels(self) -> Optional[Tuple[str]]:
+    def labels(self) -> Tuple[str, ...]:
         return tuple()
 
     @property
@@ -115,7 +115,7 @@ cdef class Pipe:
         """
         self.error_handler = error_handler
 
-    def get_error_handler(self) -> Optional[Callable]:
+    def get_error_handler(self) -> Callable:
         """Retrieve the error handler function.
 
         RETURNS (Callable): The error handler, or if it's not set a default function that just reraises.

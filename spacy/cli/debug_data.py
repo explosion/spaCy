@@ -1,4 +1,5 @@
-from typing import List, Sequence, Dict, Any, Tuple, Optional, Set
+from typing import Any, Dict, Iterable, List, Optional, Sequence, Set, Tuple, Union
+from typing import cast, overload
 from pathlib import Path
 from collections import Counter
 import sys
@@ -17,6 +18,7 @@ from ..pipeline import Morphologizer
 from ..morphology import Morphology
 from ..language import Language
 from ..util import registry, resolve_dot_names
+from ..compat import Literal
 from .. import util
 
 
@@ -378,10 +380,11 @@ def debug_data(
 
     if "tagger" in factory_names:
         msg.divider("Part-of-speech Tagging")
-        labels = [label for label in gold_train_data["tags"]]
+        label_list = [label for label in gold_train_data["tags"]]
         model_labels = _get_labels_from_model(nlp, "tagger")
-        msg.info(f"{len(labels)} label(s) in train data")
-        missing_labels = model_labels - set(labels)
+        msg.info(f"{len(label_list)} label(s) in train data")
+        labels = set(label_list)
+        missing_labels = model_labels - labels
         if missing_labels:
             msg.warn(
                 "Some model labels are not present in the train data. The "
@@ -395,10 +398,11 @@ def debug_data(
 
     if "morphologizer" in factory_names:
         msg.divider("Morphologizer (POS+Morph)")
-        labels = [label for label in gold_train_data["morphs"]]
+        label_list = [label for label in gold_train_data["morphs"]]
         model_labels = _get_labels_from_model(nlp, "morphologizer")
-        msg.info(f"{len(labels)} label(s) in train data")
-        missing_labels = model_labels - set(labels)
+        msg.info(f"{len(label_list)} label(s) in train data")
+        labels = set(label_list)
+        missing_labels = model_labels - labels
         if missing_labels:
             msg.warn(
                 "Some model labels are not present in the train data. The "
@@ -565,7 +569,7 @@ def _compile_gold(
     nlp: Language,
     make_proj: bool,
 ) -> Dict[str, Any]:
-    data = {
+    data: Dict[str, Any] = {
         "ner": Counter(),
         "cats": Counter(),
         "tags": Counter(),
@@ -670,10 +674,28 @@ def _compile_gold(
     return data
 
 
-def _format_labels(labels: List[Tuple[str, int]], counts: bool = False) -> str:
+@overload
+def _format_labels(labels: Iterable[str], counts: Literal[False] = False) -> str:
+    ...
+
+
+@overload
+def _format_labels(
+    labels: Iterable[Tuple[str, int]],
+    counts: Literal[True],
+) -> str:
+    ...
+
+
+def _format_labels(
+    labels: Union[Iterable[str], Iterable[Tuple[str, int]]],
+    counts: bool = False,
+) -> str:
     if counts:
-        return ", ".join([f"'{l}' ({c})" for l, c in labels])
-    return ", ".join([f"'{l}'" for l in labels])
+        return ", ".join(
+            [f"'{l}' ({c})" for l, c in cast(Iterable[Tuple[str, int]], labels)]
+        )
+    return ", ".join([f"'{l}'" for l in cast(Iterable[str], labels)])
 
 
 def _get_examples_without_label(data: Sequence[Example], label: str) -> int:

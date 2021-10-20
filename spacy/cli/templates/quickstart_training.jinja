@@ -32,7 +32,7 @@ batch_size = {{ 128 if hardware == "gpu" else 1000 }}
 factory = "transformer"
 
 [components.transformer.model]
-@architectures = "spacy-transformers.TransformerModel.v1"
+@architectures = "spacy-transformers.TransformerModel.v3"
 name = "{{ transformer["name"] }}"
 tokenizer_config = {"use_fast": true}
 

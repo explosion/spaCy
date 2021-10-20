@@ -1,6 +1,8 @@
+import pytest
 from spacy.lang.en import English
 
 
+@pytest.mark.issue(8168)
 def test_issue8168():
     nlp = English()
     ruler = nlp.add_pipe("entity_ruler")

@@ -5,7 +5,7 @@ from thinc.api import get_current_ops
 from spacy.vocab import Vocab
 from spacy.vectors import Vectors
 from spacy.tokenizer import Tokenizer
-from spacy.strings import hash_string
+from spacy.strings import hash_string  # type: ignore
 from spacy.tokens import Doc
 
 from ..util import add_vecs_to_vocab, get_cosine, make_tempdir

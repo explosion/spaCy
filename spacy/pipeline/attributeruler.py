@@ -54,9 +54,9 @@ class AttributeRuler(Pipe):
         self.vocab = vocab
         self.matcher = Matcher(self.vocab, validate=validate)
         self.validate = validate
-        self.attrs = []
-        self._attrs_unnormed = []  # store for reference
-        self.indices = []
+        self.attrs: List[Dict] = []
+        self._attrs_unnormed: List[Dict] = []  # store for reference
+        self.indices: List[int] = []
 
     def clear(self) -> None:
         """Reset all patterns."""
@@ -102,13 +102,13 @@ class AttributeRuler(Pipe):
             self.set_annotations(doc, matches)
             return doc
         except Exception as e:
-            error_handler(self.name, self, [doc], e)
+            return error_handler(self.name, self, [doc], e)
 
     def match(self, doc: Doc):
-        matches = self.matcher(doc, allow_missing=True)
+        matches = self.matcher(doc, allow_missing=True, as_spans=False)
         # Sort by the attribute ID, so that later rules have precedence
         matches = [
-            (int(self.vocab.strings[m_id]), m_id, s, e) for m_id, s, e in matches
+            (int(self.vocab.strings[m_id]), m_id, s, e) for m_id, s, e in matches  # type: ignore
         ]
         matches.sort()
         return matches
@@ -154,7 +154,7 @@ class AttributeRuler(Pipe):
             else:
                 morph = self.vocab.morphology.add(attrs["MORPH"])
                 attrs["MORPH"] = self.vocab.strings[morph]
-            self.add([pattern], attrs)
+            self.add([pattern], attrs)  # type: ignore[list-item]
 
     def load_from_morph_rules(
         self, morph_rules: Dict[str, Dict[str, Dict[Union[int, str], Union[int, str]]]]
@@ -178,7 +178,7 @@ class AttributeRuler(Pipe):
                 elif morph_attrs:
                     morph = self.vocab.morphology.add(morph_attrs)
                     attrs["MORPH"] = self.vocab.strings[morph]
-                self.add([pattern], attrs)
+                self.add([pattern], attrs)  # type: ignore[list-item]
 
     def add(
         self, patterns: Iterable[MatcherPatternType], attrs: Dict, index: int = 0
@@ -198,7 +198,7 @@ class AttributeRuler(Pipe):
         # We need to make a string here, because otherwise the ID we pass back
         # will be interpreted as the hash of a string, rather than an ordinal.
         key = str(len(self.attrs))
-        self.matcher.add(self.vocab.strings.add(key), patterns)
+        self.matcher.add(self.vocab.strings.add(key), patterns)  # type: ignore[arg-type]
         self._attrs_unnormed.append(attrs)
         attrs = normalize_token_attrs(self.vocab, attrs)
         self.attrs.append(attrs)
@@ -214,7 +214,7 @@ class AttributeRuler(Pipe):
         DOCS: https://spacy.io/api/attributeruler#add_patterns
         """
         for p in patterns:
-            self.add(**p)
+            self.add(**p)  # type: ignore[arg-type]
 
     @property
     def patterns(self) -> List[AttributeRulerPatternType]:
@@ -223,10 +223,10 @@ class AttributeRuler(Pipe):
         for i in range(len(self.attrs)):
             p = {}
             p["patterns"] = self.matcher.get(str(i))[1]
-            p["attrs"] = self._attrs_unnormed[i]
-            p["index"] = self.indices[i]
+            p["attrs"] = self._attrs_unnormed[i]  # type: ignore
+            p["index"] = self.indices[i]  # type: ignore
             all_patterns.append(p)
-        return all_patterns
+        return all_patterns  # type: ignore[return-value]
 
     def score(self, examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
         """Score a batch of examples.
@@ -244,7 +244,7 @@ class AttributeRuler(Pipe):
 
         validate_examples(examples, "AttributeRuler.score")
         results = {}
-        attrs = set()
+        attrs = set()  # type: ignore
         for token_attrs in self.attrs:
             attrs.update(token_attrs)
         for attr in attrs:

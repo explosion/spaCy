@@ -3,10 +3,10 @@ from .punctuation import TOKENIZER_INFIXES, TOKENIZER_SUFFIXES
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
 from .syntax_iterators import SYNTAX_ITERATORS
-from ...language import Language
+from ...language import Language, BaseDefaults
 
 
-class DanishDefaults(Language.Defaults):
+class DanishDefaults(BaseDefaults):
     tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     infixes = TOKENIZER_INFIXES
     suffixes = TOKENIZER_SUFFIXES

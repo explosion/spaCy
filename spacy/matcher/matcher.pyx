@@ -101,7 +101,7 @@ cdef class Matcher:
         number of arguments). The on_match callback becomes an optional keyword
         argument.
 
-        key (str): The match ID.
+        key (Union[str, int]): The match ID.
         patterns (list): The patterns to add for the given key.
         on_match (callable): Optional callback executed on match.
         greedy (str): Optional filter: "FIRST" or "LONGEST".
