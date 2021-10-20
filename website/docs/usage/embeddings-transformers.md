@@ -759,7 +759,8 @@ init_tok2vec = ${paths.init_tok2vec}
 <Infobox variant="warning">
 
 The outputs of `spacy pretrain` are not the same data format as the
-pre-packaged word vectors that would go into `initialize.vectors`.
+pre-packaged static word vectors that would go into 
+[`initialize.vectors`](/api/data-formats#config-initialize).
 The pretraining output consists of the weights that the `tok2vec`
 component should start with in an existing pipeline, so it goes in
 `initialize.init_tok2vec`.
