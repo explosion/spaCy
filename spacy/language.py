@@ -1528,7 +1528,7 @@ class Language:
 
     def _has_gpu_model(self, disable: Iterable[str]):
         for name, proc in self.pipeline:
-            is_trainable = hasattr(proc, "is_trainable") and proc.is_trainable
+            is_trainable = hasattr(proc, "is_trainable") and proc.is_trainable  # type: ignore
             if name in disable or not is_trainable:
                 continue
 
