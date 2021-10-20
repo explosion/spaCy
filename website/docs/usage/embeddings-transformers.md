@@ -749,8 +749,11 @@ file:
 ```ini
 ### config.cfg
 
-[initialize]
+[paths]
 init_tok2vec = "pretrain/model4.bin"
+
+[initialize]
+init_tok2vec = ${paths.init_tok2vec}
 ```
 
 <Infobox variant="warning">
