@@ -10,7 +10,7 @@ from contextlib import contextmanager
 from copy import deepcopy
 from pathlib import Path
 import warnings
-from thinc.api import get_current_ops, Config, Optimizer
+from thinc.api import get_current_ops, Config, CupyOps, Optimizer
 import srsly
 import multiprocessing as mp
 from itertools import chain, cycle
@@ -1545,6 +1545,9 @@ class Language:
             pipes.append(f)
 
         if n_process != 1:
+            if self._has_gpu_model(disable):
+                warnings.warn(Warnings.W114)
+
             docs = self._multiprocessing_pipe(texts, pipes, n_process, batch_size)
         else:
             # if n_process == 1, no processes are forked.
@@ -1553,6 +1556,17 @@ class Language:
                 docs = pipe(docs)
         for doc in docs:
             yield doc
+
+    def _has_gpu_model(self, disable: Iterable[str]):
+        for name, proc in self.pipeline:
+            is_trainable = hasattr(proc, "is_trainable") and proc.is_trainable  # type: ignore
+            if name in disable or not is_trainable:
+                continue
+
+            if hasattr(proc, "model") and hasattr(proc.model, "ops") and isinstance(proc.model.ops, CupyOps):  # type: ignore
+                return True
+
+        return False
 
     def _multiprocessing_pipe(
         self,
