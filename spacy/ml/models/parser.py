@@ -84,7 +84,7 @@ def build_tb_parser_model(
     )
     upper = None
     if use_upper:
-        with use_ops("numpy"):
+        with use_ops("cpu"):
             # Initialize weights at zero, as it's a classification layer.
             upper = _define_upper(nO=nO, nI=None)
     return TransitionModel(tok2vec, lower, upper, resize_output)
@@ -114,7 +114,7 @@ def _resize_upper(model, new_nO):
 
     smaller = upper
     nI = smaller.maybe_get_dim("nI")
-    with use_ops("numpy"):
+    with use_ops("cpu"):
         larger = _define_upper(nO=new_nO, nI=nI)
     # it could be that the model is not initialized yet, then skip this bit
     if smaller.has_param("W"):
