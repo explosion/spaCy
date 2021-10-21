@@ -136,7 +136,7 @@ def evaluate(
 
 
 def handle_scores_per_type(
-    scores: Union[Scorer, Dict[str, Any]],
+    scores: Dict[str, Any],
     data: Dict[str, Any] = {},
     *,
     spans_key: str = "sc",

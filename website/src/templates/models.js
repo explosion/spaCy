@@ -34,6 +34,7 @@ const MODEL_META = {
     core_sm: 'Vocabulary, syntax, entities',
     dep: 'Vocabulary, syntax',
     ent: 'Named entities',
+    sent: 'Sentence boundaries',
     pytt: 'PyTorch Transformers',
     trf: 'Transformers',
     vectors: 'Word vectors',
@@ -195,6 +196,7 @@ const Model = ({
     const [isError, setIsError] = useState(true)
     const [meta, setMeta] = useState({})
     const { type, genre, size } = getModelComponents(name)
+    const display_type = type === 'core' && size === 'sm' ? 'core_sm' : type
     const version = useMemo(() => getLatestVersion(name, compatibility, prereleases), [
         name,
         compatibility,
@@ -231,7 +233,7 @@ const Model = ({
 
     const rows = [
         { label: 'Language', tag: langId, content: langName },
-        { label: 'Type', tag: type, content: MODEL_META[type] },
+        { label: 'Type', tag: type, content: MODEL_META[display_type] },
         { label: 'Genre', tag: genre, content: MODEL_META[genre] },
         { label: 'Size', tag: size, content: meta.sizeFull },
         { label: 'Components', content: components, help: MODEL_META.components },

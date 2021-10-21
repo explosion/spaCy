@@ -9,10 +9,10 @@ from .punctuation import TOKENIZER_SUFFIXES
 from .stop_words import STOP_WORDS
 from .syntax_iterators import SYNTAX_ITERATORS
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
-from ...language import Language
+from ...language import Language, BaseDefaults
 
 
-class DutchDefaults(Language.Defaults):
+class DutchDefaults(BaseDefaults):
     tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     prefixes = TOKENIZER_PREFIXES
     infixes = TOKENIZER_INFIXES

@@ -6,7 +6,7 @@ import warnings
 from pathlib import Path
 
 from ...errors import Warnings, Errors
-from ...language import Language
+from ...language import Language, BaseDefaults
 from ...scorer import Scorer
 from ...tokens import Doc
 from ...training import validate_examples, Example
@@ -56,21 +56,21 @@ def create_chinese_tokenizer(segmenter: Segmenter = Segmenter.char):
 class ChineseTokenizer(DummyTokenizer):
     def __init__(self, nlp: Language, segmenter: Segmenter = Segmenter.char):
         self.vocab = nlp.vocab
-        if isinstance(segmenter, Segmenter):
-            segmenter = segmenter.value
-        self.segmenter = segmenter
+        self.segmenter = (
+            segmenter.value if isinstance(segmenter, Segmenter) else segmenter
+        )
         self.pkuseg_seg = None
         self.jieba_seg = None
-        if segmenter not in Segmenter.values():
+        if self.segmenter not in Segmenter.values():
             warn_msg = Warnings.W103.format(
                 lang="Chinese",
-                segmenter=segmenter,
+                segmenter=self.segmenter,
                 supported=", ".join(Segmenter.values()),
                 default="'char' (character segmentation)",
             )
             warnings.warn(warn_msg)
             self.segmenter = Segmenter.char
-        if segmenter == Segmenter.jieba:
+        if self.segmenter == Segmenter.jieba:
             self.jieba_seg = try_jieba_import()
 
     def initialize(
@@ -90,7 +90,7 @@ class ChineseTokenizer(DummyTokenizer):
 
     def __call__(self, text: str) -> Doc:
         if self.segmenter == Segmenter.jieba:
-            words = list([x for x in self.jieba_seg.cut(text, cut_all=False) if x])
+            words = list([x for x in self.jieba_seg.cut(text, cut_all=False) if x])  # type: ignore[union-attr]
             (words, spaces) = util.get_words_and_spaces(words, text)
             return Doc(self.vocab, words=words, spaces=spaces)
         elif self.segmenter == Segmenter.pkuseg:
@@ -121,7 +121,7 @@ class ChineseTokenizer(DummyTokenizer):
                 try:
                     import spacy_pkuseg
 
-                    self.pkuseg_seg.preprocesser = spacy_pkuseg.Preprocesser(None)
+                    self.pkuseg_seg.preprocesser = spacy_pkuseg.Preprocesser(None)  # type: ignore[attr-defined]
                 except ImportError:
                     msg = (
                         "spacy_pkuseg not installed: unable to reset pkuseg "
@@ -129,7 +129,7 @@ class ChineseTokenizer(DummyTokenizer):
                     )
                     raise ImportError(msg) from None
             for word in words:
-                self.pkuseg_seg.preprocesser.insert(word.strip(), "")
+                self.pkuseg_seg.preprocesser.insert(word.strip(), "")  # type: ignore[attr-defined]
         else:
             warn_msg = Warnings.W104.format(target="pkuseg", current=self.segmenter)
             warnings.warn(warn_msg)
@@ -282,7 +282,7 @@ class ChineseTokenizer(DummyTokenizer):
         util.from_disk(path, serializers, [])
 
 
-class ChineseDefaults(Language.Defaults):
+class ChineseDefaults(BaseDefaults):
     config = load_config_from_str(DEFAULT_CONFIG)
     lex_attr_getters = LEX_ATTRS
     stop_words = STOP_WORDS
@@ -294,7 +294,7 @@ class Chinese(Language):
     Defaults = ChineseDefaults
 
 
-def try_jieba_import() -> None:
+def try_jieba_import():
     try:
         import jieba
 
@@ -310,7 +310,7 @@ def try_jieba_import() -> None:
         raise ImportError(msg) from None
 
 
-def try_pkuseg_import(pkuseg_model: str, pkuseg_user_dict: str) -> None:
+def try_pkuseg_import(pkuseg_model: Optional[str], pkuseg_user_dict: Optional[str]):
     try:
         import spacy_pkuseg
 
@@ -318,9 +318,9 @@ def try_pkuseg_import(pkuseg_model: str, pkuseg_user_dict: str) -> None:
         msg = "spacy-pkuseg not installed. To use pkuseg, " + _PKUSEG_INSTALL_MSG
         raise ImportError(msg) from None
     try:
-        return spacy_pkuseg.pkuseg(pkuseg_model, pkuseg_user_dict)
+        return spacy_pkuseg.pkuseg(pkuseg_model, user_dict=pkuseg_user_dict)
     except FileNotFoundError:
-        msg = "Unable to load pkuseg model from: " + pkuseg_model
+        msg = "Unable to load pkuseg model from: " + str(pkuseg_model or "")
         raise FileNotFoundError(msg) from None
 
 

@@ -6,8 +6,8 @@ from thinc.api import get_current_ops
 from spacy import util
 from spacy.lang.en import English
 from spacy.language import Language
-from spacy.tokens.doc import SpanGroups
 from spacy.tokens import SpanGroup
+from spacy.tokens._dict_proxies import SpanGroups
 from spacy.training import Example
 from spacy.util import fix_random_seed, registry, make_tempdir
 
@@ -114,7 +114,7 @@ def test_make_spangroup(max_positive, nr_results):
     doc = nlp.make_doc("Greater London")
     ngram_suggester = registry.misc.get("spacy.ngram_suggester.v1")(sizes=[1, 2])
     indices = ngram_suggester([doc])[0].dataXd
-    assert_array_equal(indices, numpy.asarray([[0, 1], [1, 2], [0, 2]]))
+    assert_array_equal(OPS.to_numpy(indices), numpy.asarray([[0, 1], [1, 2], [0, 2]]))
     labels = ["Thing", "City", "Person", "GreatCity"]
     scores = numpy.asarray(
         [[0.2, 0.4, 0.3, 0.1], [0.1, 0.6, 0.2, 0.4], [0.8, 0.7, 0.3, 0.9]], dtype="f"

@@ -351,7 +351,7 @@ factory = "transformer"
 max_batch_items = 4096
 
 [components.transformer.model]
-@architectures = "spacy-transformers.TransformerModel.v1"
+@architectures = "spacy-transformers.TransformerModel.v3"
 name = "bert-base-cased"
 tokenizer_config = {"use_fast": true}
 
@@ -367,7 +367,7 @@ The `[components.transformer.model]` block describes the `model` argument passed
 to the transformer component. It's a Thinc
 [`Model`](https://thinc.ai/docs/api-model) object that will be passed into the
 component. Here, it references the function
-[spacy-transformers.TransformerModel.v1](/api/architectures#TransformerModel)
+[spacy-transformers.TransformerModel.v3](/api/architectures#TransformerModel)
 registered in the [`architectures` registry](/api/top-level#registry). If a key
 in a block starts with `@`, it's **resolved to a function** and all other
 settings are passed to the function as arguments. In this case, `name`,
@@ -378,6 +378,21 @@ of potentially overlapping `Span` objects to process by the transformer. Several
 [built-in functions](/api/transformer#span_getters) are available – for example,
 to process the whole document or individual sentences. When the config is
 resolved, the function is created and passed into the model as an argument.
+
+The `name` value is the name of any [HuggingFace model](huggingface-models),
+which will be downloaded automatically the first time it's used. You can also
+use a local file path. For full details, see the
+[`TransformerModel` docs](/api/architectures#TransformerModel).
+
+[huggingface-models]:
+  https://huggingface.co/models?library=pytorch&sort=downloads
+
+A wide variety of PyTorch models are supported, but some might not work. If a
+model doesn't seem to work feel free to open an
+[issue](https://github.com/explosion/spacy/issues). Additionally note that
+Transformers loaded in spaCy can only be used for tensors, and pretrained
+task-specific heads or text generation features cannot be used as part of 
+the `transformer` pipeline component.
 
 <Infobox variant="warning">
 

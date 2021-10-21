@@ -1,4 +1,4 @@
-from typing import Union, Iterable, Sequence, TypeVar, List, Callable
+from typing import Union, Iterable, Sequence, TypeVar, List, Callable, Iterator
 from typing import Optional, Any
 from functools import partial
 import itertools
@@ -6,7 +6,7 @@ import itertools
 from ..util import registry, minibatch
 
 
-Sizing = Union[Iterable[int], int]
+Sizing = Union[Sequence[int], int]
 ItemT = TypeVar("ItemT")
 BatcherT = Callable[[Iterable[ItemT]], Iterable[List[ItemT]]]
 
@@ -24,7 +24,7 @@ def configure_minibatch_by_padded_size(
     The padded size is defined as the maximum length of sequences within the
     batch multiplied by the number of sequences in the batch.
 
-    size (int or Iterable[int]): The largest padded size to batch sequences into.
+    size (int or Sequence[int]): The largest padded size to batch sequences into.
         Can be a single integer, or a sequence, allowing for variable batch sizes.
     buffer (int): The number of sequences to accumulate before sorting by length.
         A larger buffer will result in more even sizing, but if the buffer is
@@ -56,7 +56,7 @@ def configure_minibatch_by_words(
 ) -> BatcherT:
     """Create a batcher that uses the "minibatch by words" strategy.
 
-    size (int or Iterable[int]): The target number of words per batch.
+    size (int or Sequence[int]): The target number of words per batch.
         Can be a single integer, or a sequence, allowing for variable batch sizes.
     tolerance (float): What percentage of the size to allow batches to exceed.
     discard_oversize (bool): Whether to discard sequences that by themselves
@@ -80,7 +80,7 @@ def configure_minibatch(
 ) -> BatcherT:
     """Create a batcher that creates batches of the specified size.
 
-    size (int or Iterable[int]): The target number of items per batch.
+    size (int or Sequence[int]): The target number of items per batch.
         Can be a single integer, or a sequence, allowing for variable batch sizes.
     """
     optionals = {"get_length": get_length} if get_length is not None else {}
@@ -100,7 +100,7 @@ def minibatch_by_padded_size(
     The padded size is defined as the maximum length of sequences within the
     batch multiplied by the number of sequences in the batch.
 
-    size (int): The largest padded size to batch sequences into.
+    size (int or Sequence[int]): The largest padded size to batch sequences into.
     buffer (int): The number of sequences to accumulate before sorting by length.
         A larger buffer will result in more even sizing, but if the buffer is
         very large, the iteration order will be less random, which can result
@@ -111,9 +111,9 @@ def minibatch_by_padded_size(
         The `len` function is used by default.
     """
     if isinstance(size, int):
-        size_ = itertools.repeat(size)
+        size_ = itertools.repeat(size)  # type: Iterator[int]
     else:
-        size_ = size
+        size_ = iter(size)
     for outer_batch in minibatch(seqs, size=buffer):
         outer_batch = list(outer_batch)
         target_size = next(size_)
@@ -138,7 +138,7 @@ def minibatch_by_words(
     themselves, or be discarded if discard_oversize=True.
 
     seqs (Iterable[Sequence]): The sequences to minibatch.
-    size (int or Iterable[int]): The target number of words per batch.
+    size (int or Sequence[int]): The target number of words per batch.
         Can be a single integer, or a sequence, allowing for variable batch sizes.
     tolerance (float): What percentage of the size to allow batches to exceed.
     discard_oversize (bool): Whether to discard sequences that by themselves
@@ -147,11 +147,9 @@ def minibatch_by_words(
         item. The `len` function is used by default.
     """
     if isinstance(size, int):
-        size_ = itertools.repeat(size)
-    elif isinstance(size, List):
-        size_ = iter(size)
+        size_ = itertools.repeat(size)  # type: Iterator[int]
     else:
-        size_ = size
+        size_ = iter(size)
     target_size = next(size_)
     tol_size = target_size * tolerance
     batch = []
@@ -216,7 +214,7 @@ def _batch_by_length(
     lengths_indices = [(get_length(seq), i) for i, seq in enumerate(seqs)]
     lengths_indices.sort()
     batches = []
-    batch = []
+    batch: List[int] = []
     for length, i in lengths_indices:
         if not batch:
             batch.append(i)

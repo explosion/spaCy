@@ -96,12 +96,10 @@ cdef class Matcher:
         by returning a non-overlapping set per key, either taking preference to
         the first greedy match ("FIRST"), or the longest ("LONGEST").
 
-        As of spaCy v2.2.2, Matcher.add supports the future API, which makes
-        the patterns the second argument and a list (instead of a variable
-        number of arguments). The on_match callback becomes an optional keyword
-        argument.
+        Since spaCy v2.2.2, Matcher.add takes a list of patterns as the second
+        argument, and the on_match callback is an optional keyword argument.
 
-        key (str): The match ID.
+        key (Union[str, int]): The match ID.
         patterns (list): The patterns to add for the given key.
         on_match (callable): Optional callback executed on match.
         greedy (str): Optional filter: "FIRST" or "LONGEST".

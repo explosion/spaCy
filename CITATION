@@ -1,8 +1,0 @@
-@software{spacy,
-  author = {Honnibal, Matthew and Montani, Ines and Van Landeghem, Sofie and Boyd, Adriane},
-  title = {{spaCy: Industrial-strength Natural Language Processing in Python}},
-  year = 2020,
-  publisher = {Zenodo},
-  doi = {10.5281/zenodo.1212303},
-  url = {https://doi.org/10.5281/zenodo.1212303}
-}

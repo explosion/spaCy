@@ -28,7 +28,7 @@ def test_readers():
     """
 
     @registry.readers("myreader.v1")
-    def myreader() -> Dict[str, Callable[[Language, str], Iterable[Example]]]:
+    def myreader() -> Dict[str, Callable[[Language], Iterable[Example]]]:
         annots = {"cats": {"POS": 1.0, "NEG": 0.0}}
 
         def reader(nlp: Language):

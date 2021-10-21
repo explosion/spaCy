@@ -6,7 +6,7 @@ import string
 
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
-from ...language import Language
+from ...language import Language, BaseDefaults
 from ...tokens import Doc
 from ...util import DummyTokenizer, registry, load_config_from_str
 from ... import util
@@ -141,7 +141,7 @@ class VietnameseTokenizer(DummyTokenizer):
     def to_disk(self, path: Union[str, Path], **kwargs) -> None:
         path = util.ensure_path(path)
         serializers = {"cfg": lambda p: srsly.write_json(p, self._get_config())}
-        return util.to_disk(path, serializers, [])
+        util.to_disk(path, serializers, [])
 
     def from_disk(self, path: Union[str, Path], **kwargs) -> "VietnameseTokenizer":
         path = util.ensure_path(path)
@@ -150,7 +150,7 @@ class VietnameseTokenizer(DummyTokenizer):
         return self
 
 
-class VietnameseDefaults(Language.Defaults):
+class VietnameseDefaults(BaseDefaults):
     config = load_config_from_str(DEFAULT_CONFIG)
     lex_attr_getters = LEX_ATTRS
     stop_words = STOP_WORDS

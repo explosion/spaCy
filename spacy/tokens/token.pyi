@@ -16,7 +16,7 @@ from ..vocab import Vocab
 from .underscore import Underscore
 
 class TokenMethod(Protocol):
-    def __call__(self: Token, *args: Any, **kwargs: Any) -> Any: ...
+    def __call__(self: Token, *args: Any, **kwargs: Any) -> Any: ...  # type: ignore[misc]
 
 class Token:
     i: int

@@ -10,7 +10,7 @@ from .tag_orth_map import TAG_ORTH_MAP
 from .tag_bigram_map import TAG_BIGRAM_MAP
 from ...compat import copy_reg
 from ...errors import Errors
-from ...language import Language
+from ...language import Language, BaseDefaults
 from ...scorer import Scorer
 from ...symbols import POS
 from ...tokens import Doc
@@ -154,7 +154,7 @@ class JapaneseTokenizer(DummyTokenizer):
     def to_disk(self, path: Union[str, Path], **kwargs) -> None:
         path = util.ensure_path(path)
         serializers = {"cfg": lambda p: srsly.write_json(p, self._get_config())}
-        return util.to_disk(path, serializers, [])
+        util.to_disk(path, serializers, [])
 
     def from_disk(self, path: Union[str, Path], **kwargs) -> "JapaneseTokenizer":
         path = util.ensure_path(path)
@@ -164,7 +164,7 @@ class JapaneseTokenizer(DummyTokenizer):
         return self
 
 
-class JapaneseDefaults(Language.Defaults):
+class JapaneseDefaults(BaseDefaults):
     config = load_config_from_str(DEFAULT_CONFIG)
     stop_words = STOP_WORDS
     syntax_iterators = SYNTAX_ITERATORS

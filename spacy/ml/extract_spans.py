@@ -28,13 +28,13 @@ def forward(
     X, spans = source_spans
     assert spans.dataXd.ndim == 2
     indices = _get_span_indices(ops, spans, X.lengths)
-    Y = Ragged(X.dataXd[indices], spans.dataXd[:, 1] - spans.dataXd[:, 0])
+    Y = Ragged(X.dataXd[indices], spans.dataXd[:, 1] - spans.dataXd[:, 0])  # type: ignore[arg-type, index]
     x_shape = X.dataXd.shape
     x_lengths = X.lengths
 
     def backprop_windows(dY: Ragged) -> Tuple[Ragged, Ragged]:
         dX = Ragged(ops.alloc2f(*x_shape), x_lengths)
-        ops.scatter_add(dX.dataXd, indices, dY.dataXd)
+        ops.scatter_add(dX.dataXd, indices, dY.dataXd)  # type: ignore[arg-type]
         return (dX, spans)
 
     return Y, backprop_windows
@@ -51,7 +51,7 @@ def _get_span_indices(ops, spans: Ragged, lengths: Ints1d) -> Ints1d:
     for i, length in enumerate(lengths):
         spans_i = spans[i].dataXd + offset
         for j in range(spans_i.shape[0]):
-            indices.append(ops.xp.arange(spans_i[j, 0], spans_i[j, 1]))
+            indices.append(ops.xp.arange(spans_i[j, 0], spans_i[j, 1]))  # type: ignore[call-overload, index]
         offset += length
     return ops.flatten(indices)
 

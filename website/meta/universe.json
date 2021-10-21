@@ -516,7 +516,7 @@
             "title": "NeuroNER",
             "slogan": "Named-entity recognition using neural networks",
             "github": "Franck-Dernoncourt/NeuroNER",
-            "category": ["ner"],
+            "category": ["models"],
             "pip": "pyneuroner[cpu]",
             "code_example": [
                 "from neuroner import neuromodel",
@@ -1363,20 +1363,19 @@
             "url": "https://explosion.ai/demos/sense2vec",
             "code_example": [
                 "import spacy",
-                "from sense2vec import Sense2VecComponent",
                 "",
-                "nlp = spacy.load('en')",
-                "s2v = Sense2VecComponent('/path/to/reddit_vectors-1.1.0')",
-                "nlp.add_pipe(s2v)",
+                "nlp = spacy.load(\"en_core_web_sm\")",
+                "s2v = nlp.add_pipe(\"sense2vec\")",
+                "s2v.from_disk(\"/path/to/s2v_reddit_2015_md\")",
                 "",
                 "doc = nlp(\"A sentence about natural language processing.\")",
-                "assert doc[3].text == 'natural language processing'",
-                "freq = doc[3]._.s2v_freq",
-                "vector = doc[3]._.s2v_vec",
-                "most_similar = doc[3]._.s2v_most_similar(3)",
-                "# [(('natural language processing', 'NOUN'), 1.0),",
-                "#  (('machine learning', 'NOUN'), 0.8986966609954834),",
-                "#  (('computer vision', 'NOUN'), 0.8636297583580017)]"
+                "assert doc[3:6].text == \"natural language processing\"",
+                "freq = doc[3:6]._.s2v_freq",
+                "vector = doc[3:6]._.s2v_vec",
+                "most_similar = doc[3:6]._.s2v_most_similar(3)",
+                "# [(('machine learning', 'NOUN'), 0.8986967),",
+                "#  (('computer vision', 'NOUN'), 0.8636297),",
+                "#  (('deep learning', 'NOUN'), 0.8573361)]"
             ],
             "category": ["pipeline", "standalone", "visualizers"],
             "tags": ["vectors"],
@@ -2970,11 +2969,10 @@
             "github": "thomasthiebaud/spacy-fastlang",
             "pip": "spacy_fastlang",
             "code_example": [
-                "import spacy",
-                "from spacy_fastlang import LanguageDetector",
+                "import spacy_fastlang",
                 "",
-                "nlp = spacy.load('en_core_web_sm')",
-                "nlp.add_pipe(LanguageDetector())",
+                "nlp = spacy.load(\"en_core_web_sm\")",
+                "nlp.add_pipe(\"language_detector\")",
                 "doc = nlp('Life is like a box of chocolates. You never know what you are gonna get.')",
                 "",
                 "assert doc._.language == 'en'",
@@ -3551,6 +3549,11 @@
                     "id": "scientific",
                     "title": "Scientific",
                     "description": "Frameworks and utilities for scientific text processing"
+                },
+                {
+                    "id": "biomedical",
+                    "title": "Biomedical",
+                    "description": "Frameworks and utilities for processing biomedical text"
                 },
                 {
                     "id": "visualizers",
