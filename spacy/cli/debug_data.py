@@ -203,7 +203,6 @@ def debug_data(
         has_low_data_warning = False
         has_no_neg_warning = False
         has_ws_ents_error = False
-        has_punct_ents_warning = False
 
         msg.divider("Named Entity Recognition")
         msg.info(f"{len(model_labels)} label(s)")
@@ -230,10 +229,6 @@ def debug_data(
             msg.fail(f"{gold_train_data['ws_ents']} invalid whitespace entity spans")
             has_ws_ents_error = True
 
-        if gold_train_data["punct_ents"]:
-            msg.warn(f"{gold_train_data['punct_ents']} entity span(s) with punctuation")
-            has_punct_ents_warning = True
-
         for label in labels:
             if label_counts[label] <= NEW_LABEL_THRESHOLD:
                 msg.warn(
@@ -253,8 +248,6 @@ def debug_data(
             msg.good("Examples without occurrences available for all labels")
         if not has_ws_ents_error:
             msg.good("No entities consisting of or starting/ending with whitespace")
-        if not has_punct_ents_warning:
-            msg.good("No entities consisting of or starting/ending with punctuation")
 
         if has_low_data_warning:
             msg.text(
@@ -271,14 +264,8 @@ def debug_data(
             )
         if has_ws_ents_error:
             msg.text(
-                "As of spaCy v2.1.0, entity spans consisting of or starting/ending "
-                "with whitespace characters are considered invalid."
-            )
-
-        if has_punct_ents_warning:
-            msg.text(
                 "Entity spans consisting of or starting/ending "
-                "with punctuation can not be trained with a noise level > 0."
+                "with whitespace characters are considered invalid."
             )
 
     if "textcat" in factory_names:
@@ -578,7 +565,6 @@ def _compile_gold(
         "words": Counter(),
         "roots": Counter(),
         "ws_ents": 0,
-        "punct_ents": 0,
         "n_words": 0,
         "n_misaligned_words": 0,
         "words_missing_vectors": Counter(),
@@ -613,16 +599,6 @@ def _compile_gold(
                 if label.startswith(("B-", "U-", "L-")) and doc[i].is_space:
                     # "Illegal" whitespace entity
                     data["ws_ents"] += 1
-                if label.startswith(("B-", "U-", "L-")) and doc[i].text in [
-                    ".",
-                    "'",
-                    "!",
-                    "?",
-                    ",",
-                ]:
-                    # punctuation entity: could be replaced by whitespace when training with noise,
-                    # so add a warning to alert the user to this unexpected side effect.
-                    data["punct_ents"] += 1
                 if label.startswith(("B-", "U-")):
                     combined_label = label.split("-")[1]
                     data["ner"][combined_label] += 1
