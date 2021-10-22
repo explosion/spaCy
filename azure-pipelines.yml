@@ -81,7 +81,7 @@ jobs:
           imageName: "vs2017-win2016"
           python.version: "3.10"
         Python310Mac:
-          imageName: "macos-10.14"
+          imageName: "macos-10.15"
           python.version: "3.10"
       maxParallel: 4
     pool:
