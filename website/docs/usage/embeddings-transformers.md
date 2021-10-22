@@ -712,9 +712,11 @@ given you a 10% error reduction, pretraining with spaCy might give you another
 The [`spacy pretrain`](/api/cli#pretrain) command will take a **specific
 subnetwork** within one of your components, and add additional layers to build a
 network for a temporary task that forces the model to learn something about
-sentence structure and word cooccurrence statistics. Pretraining produces a
-**binary weights file** that can be loaded back in at the start of training. The
-weights file specifies an initial set of weights. Training then proceeds as
+sentence structure and word cooccurrence statistics.
+
+Pretraining produces a **binary weights file** that can be loaded back in at the
+start of training, using the configuration option `initialize.init_tok2vec`.
+The weights file specifies an initial set of weights. Training then proceeds as
 normal.
 
 You can only pretrain one subnetwork from your pipeline at a time, and the
@@ -746,6 +748,40 @@ layer = ""
 component = "textcat"
 layer = "tok2vec"
 ```
+
+#### Connecting pretraining to training {#pretraining-training}
+
+To benefit from pretraining, your training step needs to know to initialize
+its `tok2vec` component with the weights learned from the pretraining step.
+You do this by setting `initialize.init_tok2vec` to the filename of the
+`.bin` file that you want to use from pretraining.
+
+A pretraining step that runs for 5 epochs with an output path of `pretrain/`,
+as an example, produces `pretrain/model0.bin` through `pretrain/model4.bin`.
+To make use of the final output, you could fill in this value in your config
+file:
+
+```ini
+### config.cfg
+
+[paths]
+init_tok2vec = "pretrain/model4.bin"
+
+[initialize]
+init_tok2vec = ${paths.init_tok2vec}
+```
+
+<Infobox variant="warning">
+
+The outputs of `spacy pretrain` are not the same data format as the
+pre-packaged static word vectors that would go into 
+[`initialize.vectors`](/api/data-formats#config-initialize).
+The pretraining output consists of the weights that the `tok2vec`
+component should start with in an existing pipeline, so it goes in
+`initialize.init_tok2vec`.
+
+</Infobox>
+
 
 #### Pretraining objectives {#pretraining-objectives}
 
