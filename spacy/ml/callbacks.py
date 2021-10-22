@@ -30,7 +30,9 @@ def create_models_with_nvtx_range(
         )
 
         for node in models.walk():
-            with_nvtx_range(node, forward_color=forward_color, backprop_color=backprop_color)
+            with_nvtx_range(
+                node, forward_color=forward_color, backprop_color=backprop_color
+            )
 
         return nlp
 
