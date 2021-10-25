@@ -17,10 +17,17 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Tuple[int, int, int]]:
         "appos",
         "ROOT",
     ]
+    post_modifiers = [
+            "amod",
+            "flat",
+            "fixed",
+            "compound"
+    ]
     doc = doclike.doc  # Ensure works on both Doc and Span.
     if not doc.has_annotation("DEP"):
         raise ValueError(Errors.E029)
     np_deps = [doc.vocab.strings.add(label) for label in labels]
+    np_modifs = [doc.vocab.strings.add(modifier) for modifier in post_modifiers]
     np_label = doc.vocab.strings.add("NP")
     prev_end = -1
     for i, word in enumerate(doclike):
@@ -30,8 +37,9 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Tuple[int, int, int]]:
         if word.left_edge.i <= prev_end:
             continue
         if word.dep in np_deps:
-            right_edge = word.right_edge
-            right_end = right_edge if right_edge.dep_ == "amod" else word
+            right_childs = list(word.rights)
+            right_child = right_childs[0] if right_childs else None
+            right_end = word.right_edge if right_child and right_child.dep in np_modifs else word
             prev_end = right_end.i
             yield word.left_edge.i, right_end.i + 1, np_label
 
