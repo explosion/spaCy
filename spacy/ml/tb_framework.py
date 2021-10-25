@@ -122,43 +122,59 @@ def forward(model, docs_moves, is_train):
     states = moves.init_batch(docs)
     tokvecs, backprop_tok2vec = tok2vec(docs, is_train)
     feats, backprop_feats = _forward_precomputable_affine(model, tokvecs, is_train)
-    memory = []
+    all_ids = []
+    all_which = []
+    all_statevecs = []
     all_scores = []
     next_states = list(states)
+    unseen_mask = _get_unseen_mask(model)
     while next_states:
         ids = moves.get_state_ids(states)
+        # Sum the state features, add the bias and apply the activation (maxout)
+        # to create the state vectors.
         preacts = _sum_state_features(feats, lower_pad, ids)
-        # * Add the bias
         preacts += lower_b
-        # * Apply the activation (maxout)
         statevecs, which = ops.maxout(preacts)
-        # * Multiply the state-vector by the scores weights
+        # Multiply the state-vector by the scores weights and add the bias,
+        # to get the logits.
         scores = ops.gemm(statevecs, upper_W, trans2=True)
-        # * Add the bias
         scores += upper_b
+        scores[:, unseen_mask == 0] = model.ops.xp.nanmin(scores)
+        # Transition the states, filtering out any that are finished.
         next_states = moves.transition_states(states, scores)
         all_scores.append(scores)
         if is_train:
-            memory.append((ids, statevecs, which))
+            # Remember intermediate results for the backprop.
+            all_ids.append(ids)
+            all_statevecs.append(statevecs)
+            all_which.append(which)
 
     def backprop_parser(d_states_d_scores):
         _, d_scores = d_states_d_scores
-        ids, statevecs, whiches = [ops.xp.concatenate(*item) for item in zip(*memory)]
-        # TODO: Unseen class masking
+        d_scores *= unseen_mask
+        ids = ops.xp.concatenate(all_ids)
+        statevecs = ops.xp.concatenate(all_statevecs)
+        which = ops.xp.concatenate(all_which)
         # Calculate the gradients for the parameters of the upper layer.
         model.inc_grad("upper_b", d_scores.sum(axis=0))
         model.inc_grad("upper_W", model.ops.gemm(d_scores, statevecs, trans1=True))
         # Now calculate d_statevecs, by backproping through the upper linear layer.
         d_statevecs = model.ops.gemm(d_scores, upper_W)
         # Backprop through the maxout activation
-        d_preacts = model.ops.backprop_maxount(
-            d_statevecs, whiches, model.get_dim("nP")
-        )
+        d_preacts = model.ops.backprop_maxount(d_statevecs, which, model.get_dim("nP"))
         # We don't need to backprop the summation, because we pass back the IDs instead
         d_tokvecs = backprop_feats((d_preacts, ids))
         return (backprop_tok2vec(d_tokvecs), None)
 
     return (states, all_scores), backprop_parser
+
+
+def _get_unseen_mask(model: Model) -> Floats1d:
+    mask = model.ops.alloc1f(model.get_dim("nO"))
+    mask.fill(1)
+    for class_ in model.attrs.get("unseen_classes", set()):
+        mask[class_] = 0
+    return mask
 
 
 def _sum_state_features(ops: Ops, feats: Floats3d, ids: Ints2d, _arange=[]) -> Floats2d:
