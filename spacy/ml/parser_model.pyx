@@ -212,7 +212,7 @@ def ParserStepModel(
     tokvecs: Floats2d,
     bp_tokvecs: Callable,
     upper: Model[Floats2d, Floats2d],
-    dropout: float=0.1
+    dropout: float=0.1,
     unseen_classes: Optional[List[int]]=None
 ) -> Model[Ints2d, Floats2d]:
     # TODO: Keep working on replacing all of this with just 'chain'
