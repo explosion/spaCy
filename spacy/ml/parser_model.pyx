@@ -208,50 +208,41 @@ cdef int arg_max_if_valid(const weight_t* scores, const int* is_valid, int n) no
 
 
 
-class ParserStepModel(Model):
-    def __init__(self, docs, layers, *, has_upper, unseen_classes=None, train=True,
-            dropout=0.1):
-        Model.__init__(self, name="parser_step_model", forward=step_forward)
-        self.attrs["has_upper"] = has_upper
-        self.attrs["dropout_rate"] = dropout
-        self.tokvecs, self.bp_tokvecs = layers[0](docs, is_train=train)
-        if layers[1].get_dim("nP") >= 2:
-            activation = "maxout"
-        elif has_upper:
-            activation = None
-        else:
-            activation = "relu"
-        self.state2vec = precompute_hiddens(
-            len(docs),
-            self.tokvecs,
-            layers[1],
-            activation=activation,
-            train=train
-        )
-        if has_upper:
-            self.vec2scores = layers[-1]
-        else:
-            self.vec2scores = None
-        self._class_mask = numpy.zeros((self.nO,), dtype='f')
-        self._class_mask.fill(1)
-        if unseen_classes is not None:
-            for class_ in unseen_classes:
-                self._class_mask[class_] = 0.
+def ParserStepModel(
+    tokvecs: Floats2d,
+    bp_tokvecs: Callable,
+    upper: Model[Floats2d, Floats2d],
+    dropout: float=0.1
+    unseen_classes: Optional[List[int]]=None
+) -> Model[Ints2d, Floats2d]:
+    # TODO: Keep working on replacing all of this with just 'chain'
+    state2vec = precompute_hiddens(
+        tokvecs,
+        bp_tokvecs
+    )
+    class_mask = numpy.zeros((self.nO,), dtype='f')
+    class_mask.fill(1)
+    if unseen_classes is not None:
+        for class_ in unseen_classes:
+            class_mask[class_] = 0.
 
-    @property
-    def nO(self):
-        if self.attrs["has_upper"]:
-            return self.vec2scores.get_dim("nO")
-        else:
-            return self.state2vec.get_dim("nO")
+    return _ParserStepModel(
+        "ParserStep",
+        step_forward,
+        init=None,
+        dims={"nO": upper.get_dim("nO")},
+        layers=[state2vec, upper],
+        attrs={
+            "tokvecs": tokvecs,
+            "bp_tokvecs": bp_tokvecs,
+            "dropout_rate": dropout,
+            "class_mask": class_mask
+        }
+    )
 
-    def clear_memory(self):
-        del self.tokvecs
-        del self.bp_tokvecs
-        del self.state2vec
-        del self.backprops
-        del self._class_mask
 
+class _ParserStepModel(Model):
+    # TODO: Remove need for all this stuff, so we can normalize this
     def class_is_unseen(self, class_):
         return self._class_mask[class_]
 
@@ -274,21 +265,22 @@ class ParserStepModel(Model):
         return ids
 
 
-def step_forward(model: ParserStepModel, token_ids, is_train):
-    vector, get_d_tokvecs = model.state2vec(token_ids, is_train)
+def step_forward(model: _ParserStepModel, token_ids, is_train):
+    # TODO: Eventually we hopefully can get rid of all of this?
+    # If we make the 'class_mask' thing its own layer, we can just
+    # have chain() here, right?
+    state2vec, upper = model.layers
+    vector, get_d_tokvecs = state2vec(token_ids, is_train)
     mask = None
-    if model.attrs["has_upper"]:
-        vec2scores = ensure_same_device(model.ops, model.vec2scores)
-        dropout_rate = model.attrs["dropout_rate"]
-        if is_train and dropout_rate > 0:
-            mask = model.ops.get_dropout_mask(vector.shape, dropout_rate)
-            vector *= mask
-        scores, get_d_vector = vec2scores(vector, is_train)
-    else:
-        scores = vector
-        get_d_vector = lambda d_scores: d_scores
+    vec2scores = ensure_same_device(model.ops, vec2scores)
+    dropout_rate = model.attrs["dropout_rate"]
+    if is_train and dropout_rate > 0:
+        mask = model.ops.get_dropout_mask(vector.shape, dropout_rate)
+        vector *= mask
+    scores, get_d_vector = vec2scores(vector, is_train)
     # If the class is unseen, make sure its score is minimum
-    scores[:, model._class_mask == 0] = model.ops.xp.nanmin(scores)
+    class_mask = model.attrs["class_mask"]
+    scores[:, class_mask == 0] = model.ops.xp.nanmin(scores)
 
     def backprop_parser_step(d_scores):
         # Zero vectors for unseen classes
@@ -301,127 +293,45 @@ def step_forward(model: ParserStepModel, token_ids, is_train):
     return scores, backprop_parser_step
 
 
-def ensure_same_device(ops, model):
-    """Ensure a model is on the same device as a given ops"""
-    if not isinstance(model.ops, ops.__class__):
-        model._to_ops(ops)
-    return model
+def precompute_hiddens(lower_model, feat_weights: Floats3d, bp_hiddens: Callable) -> Model:
+    return Model(
+        "precompute_hiddens",
+        init=None,
+        forward=_precompute_forward,
+        dims={
+            "nO": feat_weights.shape[2],
+            "nP": lower_model.get_dim("nP") if lower_model.has_dim("nP") else 1,
+            "nF": cached.shape[1]
+        },
+        ops=lower_model.ops
+    )
 
 
-cdef class precompute_hiddens:
-    """Allow a model to be "primed" by pre-computing input features in bulk.
+def _precomputed_forward(
+    model: Model[Ints2d, Floats2d],
+    token_ids: Ints2d,
+    is_train: bool
+) -> Tuple[Floats2d, Callable]:
+    nO = model.get_dim("nO")
+    nP = model.get_dim("nP")
+    bp_hiddens = model.attrs["bp_hiddens"]
+    feat_weights = model.attrs["feat_weights"]
+    bias = model.attrs["bias"]
+    hidden = model.ops.alloc2f(
+        token_ids.shape[0],
+        nO * nP
+    ) 
+    # TODO: This is probably wrong, right?
+    model.ops.scatter_add(
+        hidden,
+        feat_weights,
+        token_ids
+    )
+    statevec, mask = model.ops.maxout(hidden.reshape((-1, nO, nP)))
 
-    This is used for the parser, where we want to take a batch of documents,
-    and compute vectors for each (token, position) pair. These vectors can then
-    be reused, especially for beam-search.
-
-    Let's say we're using 12 features for each state, e.g. word at start of
-    buffer, three words on stack, their children, etc. In the normal arc-eager
-    system, a document of length N is processed in 2*N states. This means we'll
-    create 2*N*12 feature vectors --- but if we pre-compute, we only need
-    N*12 vector computations. The saving for beam-search is much better:
-    if we have a beam of k, we'll normally make 2*N*12*K computations --
-    so we can save the factor k. This also gives a nice CPU/GPU division:
-    we can do all our hard maths up front, packed into large multiplications,
-    and do the hard-to-program parsing on the CPU.
-    """
-    cdef readonly int nF, nO, nP
-    cdef public object ops
-    cdef readonly object bias
-    cdef readonly object activation
-    cdef readonly object _features
-    cdef readonly object _cached
-    cdef readonly object _bp_hiddens
-
-    def __init__(
-        self,
-        batch_size,
-        tokvecs,
-        lower_model, 
-        activation="maxout",
-        train=False
-    ):
-        cached, bp_features = lower_model(tokvecs, train)
-        self.bias = lower_model.get_param("b")
-        self.nF = cached.shape[1]
-        if lower_model.has_dim("nP"):
-            self.nP = lower_model.get_dim("nP")
-        else:
-            self.nP = 1
-        self.nO = cached.shape[2]
-        self.ops = lower_model.ops
-        assert activation in (None, "relu", "maxout")
-        self.activation = activation
-        self._cached = cached
-        self._bp_hiddens = bp_features
-
-    cdef const float* get_feat_weights(self) except NULL:
-        cdef np.ndarray cached
-        if isinstance(self._cached, numpy.ndarray):
-            cached = self._cached
-        else:
-            cached = self._cached.get()
-        return <float*>cached.data
-
-    def has_dim(self, name):
-        if name == "nF":
-            return self.nF if self.nF is not None else True
-        elif name == "nP":
-            return self.nP if self.nP is not None else True
-        elif name == "nO":
-            return self.nO if self.nO is not None else True
-        else:
-            return False
-
-    def get_dim(self, name):
-        if name == "nF":
-            return self.nF
-        elif name == "nP":
-            return self.nP
-        elif name == "nO":
-            return self.nO
-        else:
-            raise ValueError(f"Dimension {name} invalid -- only nO, nF, nP")
-
-    def set_dim(self, name, value):
-        if name == "nF":
-            self.nF = value
-        elif name == "nP":
-            self.nP = value
-        elif name == "nO":
-            self.nO = value
-        else:
-            raise ValueError(f"Dimension {name} invalid -- only nO, nF, nP")
-
-    def __call__(self, X, bint is_train):
-        if is_train:
-            return self.begin_update(X)
-        else:
-            return self.predict(X), lambda X: X
-
-    def predict(self, X):
-        return self.begin_update(X)[0]
-
-    def begin_update(self, token_ids):
-        nO = self.nO
-        nP = self.nP
-        hidden = self.model.ops.alloc2f(
-            token_ids.shape[0],
-            nO * nP
-        ) 
-        bp_hiddens = self._bp_hiddens
-        feat_weights = self.cached
-        self.ops.scatter_add(
-            hidden,
-            feat_weights,
-            token_ids
+    def backward(d_statevec):
+        return bp_hiddens(
+            model.ops.backprop_maxout(d_statevec, mask, nP)
         )
-        hidden += self.bias
-        statevec, mask = self.ops.maxout(hidden.reshape((-1, nO, nP)))
-
-        def backward(d_statevec):
-            return bp_hiddens(
-                self.ops.backprop_maxout(d_statevec, mask, nP)
-            )
         
-        return statevec, backward
+    return statevec, backward

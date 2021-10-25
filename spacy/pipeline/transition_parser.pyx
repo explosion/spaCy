@@ -208,70 +208,11 @@ cdef class Parser(TrainablePipe):
         # if labels are missing. We therefore have to check whether we need to
         # expand our model output.
         self._resize()
-        model = self.model.predict(docs)
-        batch = self.moves.init_batch(docs)
-        states = self._predict_states(model, batch)
-        model.clear_memory()
-        del model
+        states, scores = self.model.predict((docs, self.moves))
         return states
 
-    def _predict_states(self, model, batch):
-        cdef vector[StateC*] states
-        cdef StateClass state
-        weights = get_c_weights(model)
-        for state in batch:
-            if not state.is_final():
-                states.push_back(state.c)
-        sizes = get_c_sizes(model, states.size())
-        with nogil:
-            self._parseC(&states[0],
-                weights, sizes)
-        return batch
-
     def beam_parse(self, docs, int beam_width, float drop=0., beam_density=0.):
-        cdef Beam beam
-        cdef Doc doc
-        batch = _beam_utils.BeamBatch(
-            self.moves,
-            self.moves.init_batch(docs),
-            None,
-            beam_width,
-            density=beam_density
-        )
-        # This is pretty dirty, but the NER can resize itself in init_batch,
-        # if labels are missing. We therefore have to check whether we need to
-        # expand our model output.
-        self._resize()
-        model = self.model.predict(docs)
-        while not batch.is_done:
-            states = batch.get_unfinished_states()
-            if not states:
-                break
-            scores = model.predict(states)
-            batch.advance(scores)
-        model.clear_memory()
-        del model
-        return list(batch)
-
-    cdef void _parseC(self, StateC** states,
-            WeightsC weights, SizesC sizes) nogil:
-        cdef int i, j
-        cdef vector[StateC*] unfinished
-        cdef ActivationsC activations = alloc_activations(sizes)
-        while sizes.states >= 1:
-            predict_states(&activations,
-                states, &weights, sizes)
-            # Validate actions, argmax, take action.
-            self.c_transition_batch(states,
-                activations.scores, sizes.classes, sizes.states)
-            for i in range(sizes.states):
-                if not states[i].is_final():
-                    unfinished.push_back(states[i])
-            for i in range(unfinished.size()):
-                states[i] = unfinished[i]
-            sizes.states = unfinished.size()
-            unfinished.clear()
-        free_activations(&activations)
+        raise NotImplementedError
 
     def set_annotations(self, docs, states_or_beams):
         cdef StateClass state
@@ -282,36 +223,6 @@ cdef class Parser(TrainablePipe):
             self.moves.set_annotations(state, doc)
             for hook in self.postprocesses:
                 hook(doc)
-
-    def transition_states(self, states, float[:, ::1] scores):
-        cdef StateClass state
-        cdef float* c_scores = &scores[0, 0]
-        cdef vector[StateC*] c_states
-        for state in states:
-            c_states.push_back(state.c)
-        self.c_transition_batch(&c_states[0], c_scores, scores.shape[1], scores.shape[0])
-        return [state for state in states if not state.c.is_final()]
-
-    cdef void c_transition_batch(self, StateC** states, const float* scores,
-            int nr_class, int batch_size) nogil:
-        # n_moves should not be zero at this point, but make sure to avoid zero-length mem alloc
-        with gil:
-            assert self.moves.n_moves > 0, Errors.E924.format(name=self.name)
-        is_valid = <int*>calloc(self.moves.n_moves, sizeof(int))
-        cdef int i, guess
-        cdef Transition action
-        for i in range(batch_size):
-            self.moves.set_valid(is_valid, states[i])
-            guess = arg_max_if_valid(&scores[i*nr_class], is_valid, nr_class)
-            if guess == -1:
-                # This shouldn't happen, but it's hard to raise an error here,
-                # and we don't want to infinite loop. So, force to end state.
-                states[i].force_final()
-            else:
-                action = self.moves.c[guess]
-                action.do(states[i], action.label)
-                states[i].history.push_back(guess)
-        free(is_valid)
 
     def update(self, examples, *, drop=0., sgd=None, losses=None):
         cdef StateClass state
@@ -327,58 +238,48 @@ cdef class Parser(TrainablePipe):
         if n_examples == 0:
             return losses
         set_dropout_rate(self.model, drop)
-        # The probability we use beam update, instead of falling back to
-        # a greedy update
-        beam_update_prob = self.cfg["beam_update_prob"]
-        if self.cfg['beam_width'] >= 2 and numpy.random.random() < beam_update_prob:
-            return self.update_beam(
-                examples,
-                beam_width=self.cfg["beam_width"],
-                sgd=sgd,
-                losses=losses,
-                beam_density=self.cfg["beam_density"]
-            )
         docs = [eg.x for eg in examples]
-        model, backprop_tok2vec = self.model.begin_update(docs)
-        states = self.moves.init_batch(docs)
-        self._predict_states(states)
-        # I've separated the prediction from getting the batch because
-        # I like the idea of trying to store the histories or maybe compute
-        # them in another process or something. Just walking the states
-        # and transitioning isn't expensive anyway.
-        ids, costs = self._get_ids_and_costs_from_histories(
-            examples,
-            [list(state.history) for state in states]
-        )
-        scores, backprop_states = model.begin_update(ids)
-        d_scores = self.get_loss(scores, costs)
-        d_tokvecs = backprop_states(d_scores)
-        backprop_tok2vec(d_tokvecs)
+        (states, scores), backprop_scores = self.model.begin_update((docs, self.moves))
+        d_scores = self.get_loss((states, scores), examples)
+        backprop_scores(d_scores)
         if sgd not in (None, False):
             self.finish_update(sgd)
-        self.set_annotations(docs, states)
         losses[self.name] += (d_scores**2).sum()
         # Ugh, this is annoying. If we're working on GPU, we want to free the
         # memory ASAP. It seems that Python doesn't necessarily get around to
         # removing these in time if we don't explicitly delete? It's confusing.
-        del backprop_states
-        del backprop_tok2vec
-        model.clear_memory()
-        del model
+        del backprop_scores
         return losses
 
-    def _get_ids_and_costs_from_histories(self, examples, histories):
+    def get_loss(self, states_scores, examples):
+        states, scores = states_scores
+        costs = self._get_costs_from_histories(
+            examples,
+            [list(state.history) for state in states]
+        )
+        xp = get_array_module(scores)
+        best_costs = costs.min(axis=1, keepdims=True)
+        is_gold = costs <= costs.min(axis=1, keepdims=True)
+        gscores = scores[is_gold]
+        max_ = scores.max(axis=1)
+        gmax = gscores.max(axis=1, keepdims=True)
+        exp_scores = xp.exp(scores - max_)
+        exp_gscores = xp.exp(gscores - gmax)
+        Z = exp_scores.sum(axis=1, keepdims=True)
+        gZ = exp_gscores.sum(axis=1, keepdims=True)
+        d_scores = exp_scores / Z
+        d_scores[is_gold] -= exp_gscores / gZ
+        return d_scores
+
+    def _get_costs_from_histories(self, examples, histories):
         cdef StateClass state
         cdef int clas
         cdef int nF = self.model.state2vec.nF
         cdef int nO = self.moves.n_moves
         cdef int nS = sum([len(history) for history in histories])
-        # ids and costs have one row per state in the whole batch.
-        cdef np.ndarray ids = numpy.zeros((nS, nF), dtype="i")
         cdef np.ndarray costs = numpy.zeros((nS, nO), dtype="f")
         cdef Pool mem = Pool()
         is_valid = <int*>mem.alloc(nO, sizeof(int))
-        c_ids = <int*>ids.data
         c_costs = <float*>costs.data
         states = self.moves.init_states([eg.x for eg in examples])
         cdef int i = 0
@@ -394,92 +295,15 @@ cdef class Parser(TrainablePipe):
                 i += 1
         # If the model is on GPU, copy the costs to device.
         costs = self.model.ops.asarray(costs)
-        return ids, costs
-
-    def get_loss(self, scores, costs):
-        xp = get_array_module(scores)
-        best_costs = costs.min(axis=1, keepdims=True)
-        is_gold = costs <= costs.min(axis=1, keepdims=True)
-        gscores = scores[is_gold]
-        max_ = scores.max(axis=1)
-        gmax = gscores.max(axis=1, keepdims=True)
-        exp_scores = xp.exp(scores - max_)
-        exp_gscores = xp.exp(gscores - gmax)
-        Z = exp_scores.sum(axis=1, keepdims=True)
-        gZ = exp_gscores.sum(axis=1, keepdims=True)
-        d_scores = exp_scores / Z
-        d_scores[is_gold] -= exp_gscores / gZ
-        return d_scores
+        return costs
 
     def rehearse(self, examples, sgd=None, losses=None, **cfg):
         """Perform a "rehearsal" update, to prevent catastrophic forgetting."""
-        if losses is None:
-            losses = {}
-        for multitask in self._multitasks:
-            if hasattr(multitask, 'rehearse'):
-                multitask.rehearse(examples, losses=losses, sgd=sgd)
-        if self._rehearsal_model is None:
-            return None
-        losses.setdefault(self.name, 0.)
-        validate_examples(examples, "Parser.rehearse")
-        docs = [eg.predicted for eg in examples]
-        states = self.moves.init_batch(docs)
-        # This is pretty dirty, but the NER can resize itself in init_batch,
-        # if labels are missing. We therefore have to check whether we need to
-        # expand our model output.
-        self._resize()
-        # Prepare the stepwise model, and get the callback for finishing the batch
-        set_dropout_rate(self._rehearsal_model, 0.0)
-        set_dropout_rate(self.model, 0.0)
-        tutor, _ = self._rehearsal_model.begin_update(docs)
-        model, backprop_tok2vec = self.model.begin_update(docs)
-        n_scores = 0.
-        loss = 0.
-        while states:
-            targets, _ = tutor.begin_update(states)
-            guesses, backprop = model.begin_update(states)
-            d_scores = (guesses - targets) / targets.shape[0]
-            # If all weights for an output are 0 in the original model, don't
-            # supervise that output. This allows us to add classes.
-            loss += (d_scores**2).sum()
-            backprop(d_scores)
-            # Follow the predicted action
-            self.transition_states(states, guesses)
-            states = [state for state in states if not state.is_final()]
-            n_scores += d_scores.size
-        # Do the backprop
-        backprop_tok2vec(docs)
-        if sgd is not None:
-            self.finish_update(sgd)
-        losses[self.name] += loss / n_scores
-        del backprop
-        del backprop_tok2vec
-        model.clear_memory()
-        tutor.clear_memory()
-        del model
-        del tutor
-        return losses
+        raise NotImplementedError
 
     def update_beam(self, examples, *, beam_width,
             drop=0., sgd=None, losses=None, beam_density=0.0):
-        states, golds, _ = self.moves.init_gold_batch(examples)
-        if not states:
-            return losses
-        # Prepare the stepwise model, and get the callback for finishing the batch
-        model, backprop_tok2vec = self.model.begin_update(
-            [eg.predicted for eg in examples])
-        loss = _beam_utils.update_beam(
-            self.moves,
-            states,
-            golds,
-            model,
-            beam_width,
-            beam_density=beam_density,
-        )
-        losses[self.name] += loss
-        backprop_tok2vec(golds)
-        if sgd is not None:
-            self.finish_update(sgd)
+        raise NotImplementedError
 
     def set_output(self, nO):
         self.model.attrs["resize_output"](self.model, nO)
