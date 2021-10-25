@@ -151,6 +151,13 @@ def forward(model, docs_moves, is_train):
 
     def backprop_parser(d_states_d_scores):
         _, d_scores = d_states_d_scores
+        if model.attrs.get("unseen_classes"):
+            # If we have a negative gradient (i.e. the probability should
+            # increase) on any classes we filtered out as unseen, mark
+            # them as seen.
+            for clas in set(model.attrs["unseen_classes"]):
+                if (d_scores[:, clas] < 0).any():
+                    model.attrs["unseen_classes"].remove(clas)
         d_scores *= unseen_mask
         ids = ops.xp.concatenate(all_ids)
         statevecs = ops.xp.concatenate(all_statevecs)
