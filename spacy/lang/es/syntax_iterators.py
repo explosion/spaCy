@@ -13,6 +13,7 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Tuple[int, int, int]]:
         "nsubj",
         "nsubjpass",
         "obj",
+        "nmod",
         "pcomp",
         "appos",
         "ROOT",
@@ -35,11 +36,13 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Tuple[int, int, int]]:
             continue
         # Prevent nested chunks from being produced
         if word.left_edge.i <= prev_end:
+            print(word, word.left_edge.i, prev_end, "edges")
             continue
         if word.dep in np_deps:
+            print(word, word.left_edge.i, prev_end, "edges")
             right_childs = list(word.rights)
             right_child = right_childs[0] if right_childs else None
-            right_end = word.right_edge if right_child and right_child.dep in np_modifs else word
+            right_end = right_child.right_edge if right_child and right_child.dep in np_modifs else word
             prev_end = right_end.i
             yield word.left_edge.i, right_end.i + 1, np_label
 
