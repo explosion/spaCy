@@ -5,8 +5,6 @@ from pathlib import Path
 from spacy.about import __version__ as spacy_version
 from spacy import util
 from spacy import prefer_gpu, require_gpu, require_cpu
-from spacy.ml._precomputable_affine import PrecomputableAffine
-from spacy.ml._precomputable_affine import _backprop_precomputable_affine_padding
 from spacy.util import dot_to_object, SimpleFrozenList
 from thinc.api import Config, Optimizer, ConfigValidationError
 from spacy.training.batchers import minibatch_by_words

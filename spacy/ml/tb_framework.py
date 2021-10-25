@@ -1,6 +1,7 @@
 from typing import List, Tuple, Any, Optional
 from thinc.api import Ops, Model, normal_init, chain, list2array, Linear
 from thinc.types import Floats1d, Floats2d, Floats3d, Ints2d, Floats4d
+import numpy
 from ..tokens.doc import Doc
 
 
@@ -29,7 +30,7 @@ def TransitionModel(
         forward=forward,
         init=init,
         layers=[tok2vec_projected],
-        refs={"tok2vec": tok2vec},
+        refs={"tok2vec": tok2vec_projected},
         params={
             "lower_W": None,  # Floats2d W for the hidden layer
             "lower_b": None,  # Floats1d bias for the hidden layer
@@ -77,8 +78,10 @@ def init(
     Y: Optional[Tuple[List[State], List[Floats2d]]] = None,
 ):
     if X is not None:
-        docs, states = X
+        docs, moves = X
         model.get_ref("tok2vec").initialize(X=docs)
+    else:
+        model.get_ref("tok2vec").initialize()
     inferred_nO = _infer_nO(Y)
     if inferred_nO is not None:
         current_nO = model.maybe_get_dim("nO")
@@ -110,7 +113,8 @@ def init(
     _lsuv_init(model)
 
 
-def forward(model, docs_moves, is_train):
+def forward(model, docs_moves: Tuple[List[Doc], TransitionSystem], is_train: bool):
+    nF = model.get_dim("nF")
     tok2vec = model.get_ref("tok2vec")
     lower_pad = model.get_param("lower_pad")
     lower_b = model.get_param("lower_b")
@@ -126,13 +130,16 @@ def forward(model, docs_moves, is_train):
     all_which = []
     all_statevecs = []
     all_scores = []
-    next_states = list(states)
+    next_states = [s for s in states if not s.is_final()]
     unseen_mask = _get_unseen_mask(model)
+    ids = numpy.zeros((len(states), nF), dtype="i")
     while next_states:
-        ids = moves.get_state_ids(states)
+        ids = ids[: len(next_states)]
+        for i, state in enumerate(next_states):
+            state.set_context_tokens(ids, i, nF)
         # Sum the state features, add the bias and apply the activation (maxout)
         # to create the state vectors.
-        preacts = _sum_state_features(feats, lower_pad, ids)
+        preacts = _sum_state_features(ops, feats, ids)
         preacts += lower_b
         statevecs, which = ops.maxout(preacts)
         # Multiply the state-vector by the scores weights and add the bias,
@@ -141,7 +148,7 @@ def forward(model, docs_moves, is_train):
         scores += upper_b
         scores[:, unseen_mask == 0] = model.ops.xp.nanmin(scores)
         # Transition the states, filtering out any that are finished.
-        next_states = moves.transition_states(states, scores)
+        next_states = moves.transition_states(next_states, scores)
         all_scores.append(scores)
         if is_train:
             # Remember intermediate results for the backprop.
@@ -204,24 +211,23 @@ def _sum_state_features(ops: Ops, feats: Floats3d, ids: Ints2d, _arange=[]) -> F
 def _forward_precomputable_affine(model, X: Floats2d, is_train: bool):
 
     W: Floats4d = model.get_param("lower_W")
-    b: Floats2d = model.get_param("lower_b")
     pad: Floats4d = model.get_param("lower_pad")
     nF = model.get_dim("nF")
-    nO = model.get_dim("nO")
+    nH = model.get_dim("nH")
     nP = model.get_dim("nP")
     nI = model.get_dim("nI")
-    Yf_ = model.ops.gemm(X, model.ops.reshape2f(W, nF * nO * nP, nI), trans2=True)
-    Yf = model.ops.reshape4f(Yf_, Yf_.shape[0], nF, nO, nP)
+    Yf_ = model.ops.gemm(X, model.ops.reshape2f(W, nF * nH * nP, nI), trans2=True)
+    Yf = model.ops.reshape4f(Yf_, Yf_.shape[0], nF, nH, nP)
     Yf = model.ops.xp.vstack((Yf, pad))
 
     def backward(dY_ids: Tuple[Floats3d, Ints2d]):
         # This backprop is particularly tricky, because we get back a different
         # thing from what we put out. We put out an array of shape:
-        # (nB, nF, nO, nP), and get back:
-        # (nB, nO, nP) and ids (nB, nF)
+        # (nB, nF, nH, nP), and get back:
+        # (nB, nH, nP) and ids (nB, nF)
         # The ids tell us the values of nF, so we would have:
         #
-        # dYf = zeros((nB, nF, nO, nP))
+        # dYf = zeros((nB, nF, nH, nP))
         # for b in range(nB):
         #     for f in range(nF):
         #         dYf[b, ids[b, f]] += dY[b]
@@ -230,7 +236,7 @@ def _forward_precomputable_affine(model, X: Floats2d, is_train: bool):
         # in the indices.
         dY, ids = dY_ids
         assert dY.ndim == 3
-        assert dY.shape[1] == nO, dY.shape
+        assert dY.shape[1] == nH, dY.shape
         assert dY.shape[2] == nP, dY.shape
         # nB = dY.shape[0]
         model.inc_grad(
@@ -239,14 +245,14 @@ def _forward_precomputable_affine(model, X: Floats2d, is_train: bool):
         Xf = model.ops.reshape2f(X[ids], ids.shape[0], nF * nI)
 
         model.inc_grad("lower_b", dY.sum(axis=0))  # type: ignore
-        dY = model.ops.reshape2f(dY, dY.shape[0], nO * nP)
+        dY = model.ops.reshape2f(dY, dY.shape[0], nH * nP)
 
         Wopfi = W.transpose((1, 2, 0, 3))
-        Wopfi = Wopfi.reshape((nO * nP, nF * nI))
-        dXf = model.ops.gemm(dY.reshape((dY.shape[0], nO * nP)), Wopfi)
+        Wopfi = Wopfi.reshape((nH * nP, nF * nI))
+        dXf = model.ops.gemm(dY.reshape((dY.shape[0], nH * nP)), Wopfi)
 
         dWopfi = model.ops.gemm(dY, Xf, trans1=True)
-        dWopfi = dWopfi.reshape((nO, nP, nF, nI))
+        dWopfi = dWopfi.reshape((nH, nP, nF, nI))
         # (o, p, f, i) --> (f, o, p, i)
         dWopfi = dWopfi.transpose((2, 0, 1, 3))
         model.inc_grad("W", dWopfi)

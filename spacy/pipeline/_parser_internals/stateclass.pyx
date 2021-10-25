@@ -180,3 +180,6 @@ cdef class StateClass:
 
     def clone(self, StateClass src):
         self.c.clone(src.c)
+
+    def set_context_tokens(self, int[:, :] output, int row, int n_feats):
+        self.c.set_context_tokens(&output[row, 0], n_feats)

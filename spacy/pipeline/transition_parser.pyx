@@ -92,8 +92,9 @@ class Parser(TrainablePipe):
     @property
     def move_names(self):
         names = []
+        cdef TransitionSystem moves = self.moves
         for i in range(self.moves.n_moves):
-            name = self.moves.move_name(self.moves.c[i].move, self.moves.c[i].label)
+            name = self.moves.move_name(moves.c[i].move, moves.c[i].label)
             # Explicitly removing the internal "U-" token used for blocking entities
             if name != "U-":
                 names.append(name)
@@ -273,14 +274,14 @@ class Parser(TrainablePipe):
         cdef TransitionSystem moves = self.moves
         cdef StateClass state
         cdef int clas
-        cdef int nF = self.model.state2vec.nF
+        cdef int nF = self.model.get_dim("nF")
         cdef int nO = moves.n_moves
         cdef int nS = sum([len(history) for history in histories])
         cdef np.ndarray costs = numpy.zeros((nS, nO), dtype="f")
         cdef Pool mem = Pool()
         is_valid = <int*>mem.alloc(nO, sizeof(int))
         c_costs = <float*>costs.data
-        states = moves.init_states([eg.x for eg in examples])
+        states = moves.init_batch([eg.x for eg in examples])
         cdef int i = 0
         for eg, state, history in zip(examples, states, histories):
             gold = moves.init_gold(state, eg)
@@ -342,7 +343,7 @@ class Parser(TrainablePipe):
             for example in islice(get_examples(), 10):
                 doc_sample.append(example.predicted)
         assert len(doc_sample) > 0, Errors.E923.format(name=self.name)
-        self.model.initialize(doc_sample)
+        self.model.initialize((doc_sample, self.moves))
         if nlp is not None:
             self.init_multitask_objectives(get_examples, nlp.pipeline)
 
