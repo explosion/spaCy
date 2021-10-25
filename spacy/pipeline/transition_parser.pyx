@@ -17,21 +17,19 @@ import numpy
 import warnings
 
 from ._parser_internals.stateclass cimport StateClass
-from ..ml.parser_model cimport alloc_activations, free_activations
-from ..ml.parser_model cimport predict_states, arg_max_if_valid
-from ..ml.parser_model cimport WeightsC, ActivationsC, SizesC, cpu_log_loss
-from ..ml.parser_model cimport get_c_weights, get_c_sizes
 from ..tokens.doc cimport Doc
 from .trainable_pipe import TrainablePipe
 from ._parser_internals cimport _beam_utils
 from ._parser_internals import _beam_utils
+from ..vocab cimport Vocab
+from ._parser_internals.transition_system cimport TransitionSystem
 
 from ..training import validate_examples, validate_get_examples
 from ..errors import Errors, Warnings
 from .. import util
 
 
-cdef class Parser(TrainablePipe):
+class Parser(TrainablePipe):
     """
     Base class of the DependencyParser and EntityRecognizer.
     """
@@ -272,24 +270,23 @@ cdef class Parser(TrainablePipe):
         return d_scores
 
     def _get_costs_from_histories(self, examples, histories):
+        cdef TransitionSystem moves = self.moves
         cdef StateClass state
         cdef int clas
         cdef int nF = self.model.state2vec.nF
-        cdef int nO = self.moves.n_moves
+        cdef int nO = moves.n_moves
         cdef int nS = sum([len(history) for history in histories])
         cdef np.ndarray costs = numpy.zeros((nS, nO), dtype="f")
         cdef Pool mem = Pool()
         is_valid = <int*>mem.alloc(nO, sizeof(int))
         c_costs = <float*>costs.data
-        states = self.moves.init_states([eg.x for eg in examples])
+        states = moves.init_states([eg.x for eg in examples])
         cdef int i = 0
         for eg, state, history in zip(examples, states, histories):
-            gold = self.moves.init_gold(state, eg)
+            gold = moves.init_gold(state, eg)
             for clas in history:
-                # Set a row into the C data of the arrays (which we return)
-                state.c.set_context_tokens(&c_ids[i*nF], nF)
-                self.moves.set_costs(is_valid, &c_costs[i*nO], state.c, gold)
-                action = self.moves.c[clas]
+                moves.set_costs(is_valid, &c_costs[i*nO], state.c, gold)
+                action = moves.c[clas]
                 action.do(state.c, action.label)
                 state.c.history.push_back(clas)
                 i += 1

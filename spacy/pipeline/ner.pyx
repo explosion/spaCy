@@ -3,8 +3,8 @@ from collections import defaultdict
 from typing import Optional, Iterable
 from thinc.api import Model, Config
 
-from .transition_parser cimport Parser
-from ._parser_internals.ner cimport BiluoPushDown
+from .transition_parser import Parser
+from ._parser_internals.ner import BiluoPushDown
 
 from ..language import Language
 from ..scorer import get_ner_prf, PRFScore
@@ -160,7 +160,7 @@ def make_beam_ner(
     )
 
 
-cdef class EntityRecognizer(Parser):
+class EntityRecognizer(Parser):
     """Pipeline component for named entity recognition.
 
     DOCS: https://nightly.spacy.io/api/entityrecognizer

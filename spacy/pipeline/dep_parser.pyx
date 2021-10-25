@@ -3,8 +3,8 @@ from collections import defaultdict
 from typing import Optional, Iterable
 from thinc.api import Model, Config
 
-from .transition_parser cimport Parser
-from ._parser_internals.arc_eager cimport ArcEager
+from .transition_parser import Parser
+from ._parser_internals.arc_eager import ArcEager
 
 from .functions import merge_subtokens
 from ..language import Language
@@ -199,7 +199,7 @@ def make_beam_parser(
     )
 
 
-cdef class DependencyParser(Parser):
+class DependencyParser(Parser):
     """Pipeline component for dependency parsing.
 
     DOCS: https://nightly.spacy.io/api/dependencyparser
