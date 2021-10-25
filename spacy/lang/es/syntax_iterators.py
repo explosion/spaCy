@@ -30,6 +30,7 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Tuple[int, int, int]]:
     np_deps = [doc.vocab.strings.add(label) for label in labels]
     np_modifs = [doc.vocab.strings.add(modifier) for modifier in post_modifiers]
     np_label = doc.vocab.strings.add("NP")
+    adp_label = doc.vocab.strings.add("ADP")
     prev_end = -1
     for i, word in enumerate(doclike):
         if word.pos not in (NOUN, PROPN, PRON):
@@ -40,9 +41,13 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Tuple[int, int, int]]:
         if word.dep in np_deps:
             right_childs = list(word.rights)
             right_child = right_childs[0] if right_childs else None
-            right_end = right_child.right_edge if right_child and right_child.dep in np_modifs else word
+            right_end = right_child.right_edge if right_child and right_child.dep in np_modifs else word  # Check if we can expand to right
             prev_end = right_end.i
-            yield word.left_edge.i, right_end.i + 1, np_label
+
+            left_index = word.left_edge.i
+            left_index = left_index+1 if word.left_edge.pos == adp_label else left_index  # Eliminate left attached de, del 
+
+            yield left_index, right_end.i + 1, np_label
 
 
 
