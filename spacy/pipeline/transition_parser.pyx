@@ -267,6 +267,12 @@ class Parser(TrainablePipe):
         gZ = exp_gscores.sum(axis=1, keepdims=True)
         d_scores = exp_scores / Z
         d_scores[is_gold] -= exp_gscores / gZ
+        if "unseen_classes" in model.attrs:
+            for i in range(costs.shape[0]):
+                for clas in range(costs.shape[1]):
+                    if costs[i, clas] <= best_costs[i, 0]:
+                        if clas in model.attrs["unseen_classes"]:
+                            model.attrs["unseen_classes"].remove(clas)
         return d_scores
 
     def _get_costs_from_histories(self, examples, histories):
