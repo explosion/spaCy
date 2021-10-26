@@ -9,10 +9,10 @@ from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
 from .syntax_iterators import SYNTAX_ITERATORS
 from .lemmatizer import FrenchLemmatizer
-from ...language import Language
+from ...language import Language, BaseDefaults
 
 
-class FrenchDefaults(Language.Defaults):
+class FrenchDefaults(BaseDefaults):
     tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     prefixes = TOKENIZER_PREFIXES
     infixes = TOKENIZER_INFIXES

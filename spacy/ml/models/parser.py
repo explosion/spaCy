@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Optional, List, cast
 from thinc.api import Model, chain, list2array, Linear, zero_init, use_ops
 from thinc.types import Floats2d
 
@@ -70,7 +70,11 @@ def build_tb_parser_model(
     else:
         raise ValueError(Errors.E917.format(value=state_type))
     t2v_width = tok2vec.get_dim("nO") if tok2vec.has_dim("nO") else None
-    tok2vec = chain(tok2vec, list2array(), Linear(hidden_width, t2v_width))
+    tok2vec = chain(
+        tok2vec,
+        cast(Model[List["Floats2d"], Floats2d], list2array()),
+        Linear(hidden_width, t2v_width),
+    )
     tok2vec.set_dim("nO", hidden_width)
     lower = _define_lower(
         nO=hidden_width if use_upper else nO,
@@ -80,7 +84,7 @@ def build_tb_parser_model(
     )
     upper = None
     if use_upper:
-        with use_ops("numpy"):
+        with use_ops("cpu"):
             # Initialize weights at zero, as it's a classification layer.
             upper = _define_upper(nO=nO, nI=None)
     return TransitionModel(tok2vec, lower, upper, resize_output)
@@ -110,7 +114,7 @@ def _resize_upper(model, new_nO):
 
     smaller = upper
     nI = smaller.maybe_get_dim("nI")
-    with use_ops("numpy"):
+    with use_ops("cpu"):
         larger = _define_upper(nO=new_nO, nI=nI)
     # it could be that the model is not initialized yet, then skip this bit
     if smaller.has_param("W"):

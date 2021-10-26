@@ -99,7 +99,7 @@ def get_model_pkgs(silent: bool = False) -> Tuple[dict, dict]:
                 warnings.filterwarnings("ignore", message="\\[W09[45]")
                 model_meta = get_model_meta(model_path)
             spacy_version = model_meta.get("spacy_version", "n/a")
-            is_compat = is_compatible_version(about.__version__, spacy_version)
+            is_compat = is_compatible_version(about.__version__, spacy_version)  # type: ignore[assignment]
         pkgs[pkg_name] = {
             "name": package,
             "version": version,

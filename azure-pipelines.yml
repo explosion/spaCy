@@ -12,15 +12,11 @@ trigger:
       - "website/*"
       - "*.md"
 pr:
-  paths:
-    include:
-      - "*.cfg"
-      - "*.py"
-      - "*.toml"
-      - "*.yml"
-      - ".github/azure-steps.yml"
-      - "spacy/*"
-      - "website/meta/universe.json"
+   paths:
+    exclude:
+      - "*.md"
+      - "website/docs/*"
+      - "website/src/*"
 
 jobs:
   # Perform basic checks for most important errors (syntax etc.) Uses the config

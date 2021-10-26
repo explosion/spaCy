@@ -6,10 +6,10 @@ from .lex_attrs import LEX_ATTRS
 from .lemmatizer import SpanishLemmatizer
 from .syntax_iterators import SYNTAX_ITERATORS
 from .punctuation import TOKENIZER_INFIXES, TOKENIZER_SUFFIXES
-from ...language import Language
+from ...language import Language, BaseDefaults
 
 
-class SpanishDefaults(Language.Defaults):
+class SpanishDefaults(BaseDefaults):
     tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     infixes = TOKENIZER_INFIXES
     suffixes = TOKENIZER_SUFFIXES

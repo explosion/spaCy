@@ -914,7 +914,7 @@ cdef class Doc:
         can specify attributes by integer ID (e.g. spacy.attrs.LEMMA) or
         string name (e.g. 'LEMMA' or 'lemma').
 
-        attr_ids (list[]): A list of attributes (int IDs or string names).
+        py_attr_ids (list[]): A list of attributes (int IDs or string names).
         RETURNS (numpy.ndarray[long, ndim=2]): A feature matrix, with one row
             per word, and one column per attribute indicated in the input
             `attr_ids`.

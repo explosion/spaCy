@@ -1,5 +1,5 @@
 # cython: infer_types=True, profile=True
-from typing import Iterator, Iterable
+from typing import Iterator, Iterable, Callable, Dict, Any
 
 import srsly
 from cymem.cymem cimport Pool
@@ -96,6 +96,8 @@ cdef class KnowledgeBase:
     def initialize_entities(self, int64_t nr_entities):
         self._entry_index = PreshMap(nr_entities + 1)
         self._entries = entry_vec(nr_entities + 1)
+
+    def initialize_vectors(self, int64_t nr_entities):
         self._vectors_table = float_matrix(nr_entities + 1)
 
     def initialize_aliases(self, int64_t nr_aliases):
@@ -154,6 +156,7 @@ cdef class KnowledgeBase:
 
         nr_entities = len(set(entity_list))
         self.initialize_entities(nr_entities)
+        self.initialize_vectors(nr_entities)
 
         i = 0
         cdef KBEntryC entry
@@ -172,8 +175,8 @@ cdef class KnowledgeBase:
                 entry.entity_hash = entity_hash
                 entry.freq = freq_list[i]
 
-                vector_index = self.c_add_vector(entity_vector=vector_list[i])
-                entry.vector_index = vector_index
+                self._vectors_table[i] = entity_vector
+                entry.vector_index = i
 
                 entry.feats_row = -1   # Features table currently not implemented
 
@@ -386,6 +389,7 @@ cdef class KnowledgeBase:
             nr_aliases = header[1]
             entity_vector_length = header[2]
             self.initialize_entities(nr_entities)
+            self.initialize_vectors(nr_entities)
             self.initialize_aliases(nr_aliases)
             self.entity_vector_length = entity_vector_length
 
@@ -446,7 +450,7 @@ cdef class KnowledgeBase:
             raise ValueError(Errors.E929.format(loc=path))
         if not path.is_dir():
             raise ValueError(Errors.E928.format(loc=path))
-        deserialize = {}
+        deserialize: Dict[str, Callable[[Any], Any]] = {}
         deserialize["contents"] = lambda p: self.read_contents(p)
         deserialize["strings.json"] = lambda p: self.vocab.strings.from_disk(p)
         util.from_disk(path, deserialize, exclude)
@@ -509,6 +513,7 @@ cdef class KnowledgeBase:
         reader.read_header(&nr_entities, &entity_vector_length)
 
         self.initialize_entities(nr_entities)
+        self.initialize_vectors(nr_entities)
         self.entity_vector_length = entity_vector_length
 
         # STEP 1: load entity vectors

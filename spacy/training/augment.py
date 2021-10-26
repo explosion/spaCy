@@ -22,8 +22,8 @@ class OrthVariantsPaired(BaseModel):
 
 
 class OrthVariants(BaseModel):
-    paired: List[OrthVariantsPaired] = {}
-    single: List[OrthVariantsSingle] = {}
+    paired: List[OrthVariantsPaired] = []
+    single: List[OrthVariantsSingle] = []
 
 
 @registry.augmenters("spacy.orth_variants.v1")
@@ -76,7 +76,7 @@ def lower_casing_augmenter(
 def orth_variants_augmenter(
     nlp: "Language",
     example: Example,
-    orth_variants: dict,
+    orth_variants: Dict,
     *,
     level: float = 0.0,
     lower: float = 0.0,
