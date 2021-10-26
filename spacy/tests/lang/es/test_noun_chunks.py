@@ -233,9 +233,9 @@ def test_noun_chunks_nmod_3_nouns(doc_nmod3, es_tokenizer):
 
     chunk2 = doc_chunks[1]
     assert chunk2 in doc_chunks
-    assert chunk1.start == 3
-    assert chunk1.end == 4
-    assert chunk1.text == "Susana"
+    assert chunk2.start == 3
+    assert chunk2.end == 4
+    assert chunk2.text == "Susana"
 
     chunk3 = doc_chunks[2]
     assert chunk3 in doc_chunks
