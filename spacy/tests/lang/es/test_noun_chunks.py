@@ -85,16 +85,16 @@ def test_noun_chunks_noun_conj_noun(doc_noun_conj_noun, es_tokenizer):
     assert len(doc_chunks) == 2
 
     chunk1 = doc_chunks[0]
-    assert chunk in doc_chunks
-    assert chunk.start == 1
-    assert chunk.end ==3
-    assert chunk.text == "un gato"
+    assert chunk1 in doc_chunks
+    assert chunk1.start == 1
+    assert chunk1.end ==3
+    assert chunk1.text == "un gato"
 
     chunk2 = doc_chunks[1]
-    assert chunk1 in doc_chunks
-    assert chunk1.start == 4
-    assert chunk1.end == 6
-    assert chunk1.text == "un perro"
+    assert chunk2 in doc_chunks
+    assert chunk2.start == 4
+    assert chunk2.end == 6
+    assert chunk2.text == "un perro"
 
 def test_noun_chunks_two_adjectives(doc_two_adjs, es_tokenizer):
     """Test that noun_chunks for np determiner+adj+noun"""
