@@ -7,7 +7,7 @@ def doc_basic(es_vocab):
     heads = [1, 1]
     deps = ["det", "ROOT"]
     pos = ["DET", "NOUN"]
-    return Doc(en_vocab, words=words, heads=heads, deps=deps, pos=pos)
+    return Doc(es_vocab, words=words, heads=heads, deps=deps, pos=pos)
 
 @pytest.fixture
 def doc_basic_adj(es_vocab):
@@ -15,7 +15,7 @@ def doc_basic_adj(es_vocab):
     heads = [1, 1, 1]
     deps = ["det", "ROOT", "amod"]
     pos = ["DET", "NOUN", "ADJ"]
-    return Doc(en_vocab, words=words, heads=heads, deps=deps, pos=pos)
+    return Doc(es_vocab, words=words, heads=heads, deps=deps, pos=pos)
 
 
 def test_noun_chunks_is_parsed_es(es_tokenizer):
