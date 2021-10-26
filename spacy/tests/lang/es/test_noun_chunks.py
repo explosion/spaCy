@@ -27,7 +27,7 @@ def test_noun_chunks_is_parsed_es(es_tokenizer):
 
 def test_noun_chunks_basic(doc_basic, es_tokenizer):
     """Test that noun_chunks for basic np determiner+noun"""
-    doc_chunks = list(doc.noun_chunks)
+    doc_chunks = list(doc_basic.noun_chunks)
     assert len(doc_chunks) == 1
     chunk = doc_chunks[0]
     assert chunk in doc_chunks
@@ -38,7 +38,7 @@ def test_noun_chunks_basic(doc_basic, es_tokenizer):
 
 def test_noun_chunks_basic_adj(doc_basic_adj, es_tokenizer):
     """Test that noun_chunks for basic np determiner+noun+adj"""
-    doc_chunks = list(doc.noun_chunks)
+    doc_chunks = list(doc_basic_adj.noun_chunks)
     assert len(doc_chunks) == 1
     chunk = doc_chunks[0]
     assert chunk in doc_chunks
