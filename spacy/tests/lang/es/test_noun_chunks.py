@@ -17,8 +17,6 @@ def doc_basic_adj(es_vocab):
     pos = ["DET", "NOUN", "ADJ"]
     return Doc(en_vocab, words=words, heads=heads, deps=deps, pos=pos)
 
-Tengo un gato y un perro.
-
 
 def test_noun_chunks_is_parsed_es(es_tokenizer):
     """Test that noun_chunks raises Value Error for 'es' language if Doc is not parsed."""
