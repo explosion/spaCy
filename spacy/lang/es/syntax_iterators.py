@@ -19,7 +19,6 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Tuple[int, int, int]]:
         "ROOT",
     ]
     post_modifiers = [
-            "amod",
             "flat",
             "fixed",
             "compound"
@@ -30,6 +29,7 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Tuple[int, int, int]]:
     np_deps = {doc.vocab.strings.add(label) for label in labels}
     np_modifs = {doc.vocab.strings.add(modifier) for modifier in post_modifiers}
     np_label = doc.vocab.strings.add("NP")
+    adj_label = doc.vocab.strings.add("amod")
     adp_label = doc.vocab.strings.add("ADP")
     conj = doc.vocab.strings.add("conj")
     conj_pos = doc.vocab.strings.add("CCONJ")
@@ -43,7 +43,16 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Tuple[int, int, int]]:
         if word.dep in np_deps:
             right_childs = list(word.rights)
             right_child = right_childs[0] if right_childs else None
-            right_end = right_child.right_edge if right_child and right_child.dep in np_modifs else word  # Check if we can expand to right
+
+            if right_child:
+                if right_child.dep == adj_label:
+                    right_end = right_child.right_edge
+                elif right_child.dep in np_modifs:  # Check if we can expand to right
+                    right_end = word.right_edge
+                else:
+                    right_end = word
+            else:
+                right_end = word
             prev_end = right_end.i
 
             left_index = word.left_edge.i
