@@ -74,6 +74,30 @@ def doc_compound_by_flat_and_particle2(es_vocab):
     pos = ["PROPN", "ADP", "PROPN"]
     return Doc(es_vocab, words=words, heads=heads, deps=deps, pos=pos)
 
+@pytest.fixture
+def doc_nmod_basic(es_vocab):
+    words = ["la", "destrucción", "de", "la", "ciudad"]
+    heads = [1, 1, 4, 4, 1]
+    deps = ['det', 'ROOT', 'case', 'det', 'nmod']
+    pos = ['DET', 'NOUN', 'ADP', 'DET', 'NOUN']
+    return Doc(es_vocab, words=words, heads=heads, deps=deps, pos=pos)
+
+@pytest.fixture
+def doc_nmod3(es_vocab):
+    words = ['la', 'traducción', 'de', 'Susana', 'del', 'informe']  # Susan's translation of the report
+    heads = [1, 1, 3, 1, 5, 1]
+    deps = ['det', 'ROOT', 'case', 'nmod', 'case', 'nmod']
+    pos = ['DET', 'NOUN', 'ADP', 'PROPN', 'ADP', 'NOUN']
+    return Doc(es_vocab, words=words, heads=heads, deps=deps, pos=pos)
+
+@pytest.fixture
+def doc_nmod_adj(es_vocab):
+    words = ['El', 'gato', 'regordete', 'de', 'Susana', 'y', 'su', 'amigo'] # Susan's chubby cat and his friend
+    heads = [1, 1, 1, 4, 1, 7, 7, 1]
+    deps = ['det', 'ROOT', 'amod', 'case', 'nmod', 'cc', 'det', 'conj']
+    pos = ['DET', 'NOUN', 'ADJ', 'ADP', 'PROPN', 'CCONJ', 'DET', 'NOUN']
+    return Doc(es_vocab, words=words, heads=heads, deps=deps, pos=pos)
+
 def test_noun_chunks_is_parsed_es(es_tokenizer):
     """Test that noun_chunks raises Value Error for 'es' language if Doc is not parsed."""
     doc = es_tokenizer("en Oxford este verano")
@@ -178,3 +202,66 @@ def test_proper_noun_compound_flat_and_case2(doc_compound_by_flat_and_particle2,
     assert chunk.start == 0
     assert chunk.end == 3
     assert chunk.text == "Rio de Janeiro"
+
+def test_noun_chunks_nmod_basic(doc_nmod_basic, es_tokenizer):
+    """Test that noun_chunks are correct for compounding build by nmod"""
+    doc_chunks = list(doc_nmod_basic.noun_chunks)
+    assert len(doc_chunks) == 2
+
+    chunk1 = doc_chunks[0]
+    assert chunk1 in doc_chunks
+    assert chunk1.start == 0
+    assert chunk1.end == 2
+    assert chunk1.text == "la destrucción"
+
+    chunk2 = doc_chunks[1]
+    assert chunk2 in doc_chunks
+    assert chunk2.start == 3
+    assert chunk2.end == 5
+    assert chunk2.text == "la ciudad"
+
+def test_noun_chunks_nmod_3_nouns(doc_nmod3, es_tokenizer):
+    """Test that noun_chunks are correct for compounding build by nmod"""
+    doc_chunks = list(doc_nmod3.noun_chunks)
+    assert len(doc_chunks) == 3
+
+    chunk1 = doc_chunks[0]
+    assert chunk1 in doc_chunks
+    assert chunk1.start == 0
+    assert chunk1.end == 2
+    assert chunk1.text == "la traducción"
+
+    chunk2 = doc_chunks[1]
+    assert chunk2 in doc_chunks
+    assert chunk1.start == 3
+    assert chunk1.end == 4
+    assert chunk1.text == "Susana"
+
+    chunk3 = doc_chunks[2]
+    assert chunk3 in doc_chunks
+    assert chunk3.start == 5
+    assert chunk3.end == 6
+    assert chunk3.text == "informe"
+
+def test_noun_chunks_nmod_adj(doc_nmod_adj, es_tokenizer):
+    """Test that noun_chunks are correct for compounds build by nmod with adjective in between"""
+    doc_chunks = list(doc_nmod_adj.noun_chunks)
+    assert len(doc_chunks) == 3
+
+    chunk1 = doc_chunks[0]
+    assert chunk1 in doc_chunks
+    assert chunk1.start == 0
+    assert chunk1.end == 3
+    assert chunk1.text == "El gato regordete"
+
+    chunk2 = doc_chunks[1]
+    assert chunk2 in doc_chunks
+    assert chunk1.start == 4
+    assert chunk1.end == 5
+    assert chunk1.text == "Susana"
+
+    chunk3 = doc_chunks[2]
+    assert chunk3 in doc_chunks
+    assert chunk3.start == 6
+    assert chunk3.end == 8
+    assert chunk3.text == "su amigo"
