@@ -41,6 +41,23 @@ def doc_noun_conj_noun(es_vocab):
     pos = ["VERB", "DET", "NOUN", "CCONJ", "DET", "NOUN"]
     return Doc(es_vocab, words=words, heads=heads, deps=deps, pos=pos)
 
+
+@pytest.fixture
+def doc_compound_by_flat(es_vocab):
+    words = ["Dom", "Pedro", "II"]
+    heads = [0, 0, 0]
+    deps = ["ROOT", "flat", "flat"]
+    pos = ["PROPN", "PROPN", "PROPN"]
+    return Doc(es_vocab, words=words, heads=heads, deps=deps, pos=pos)
+
+@pytest.fixture
+def doc_compound_by_flat_and_particle(es_vocab):
+    words = ["Miguel", "de", "Cervantes"]
+    heads = [0, 2, 0]
+    deps = ["ROOT", "case", "flat"]
+    pos = ["PROPN", "ADP", "PROPN"]
+    return Doc(es_vocab, words=words, heads=heads, deps=deps, pos=pos)
+
 def test_noun_chunks_is_parsed_es(es_tokenizer):
     """Test that noun_chunks raises Value Error for 'es' language if Doc is not parsed."""
     doc = es_tokenizer("en Oxford este verano")
@@ -49,7 +66,7 @@ def test_noun_chunks_is_parsed_es(es_tokenizer):
 
 
 def test_noun_chunks_basic(doc_basic, es_tokenizer):
-    """Test that noun_chunks for basic np determiner+noun"""
+    """Test that noun_chunks are correct for basic np determiner+noun"""
     doc_chunks = list(doc_basic.noun_chunks)
     assert len(doc_chunks) == 1
     chunk = doc_chunks[0]
@@ -60,7 +77,7 @@ def test_noun_chunks_basic(doc_basic, es_tokenizer):
 
 
 def test_noun_chunks_basic_adj(doc_basic_adj, es_tokenizer):
-    """Test that noun_chunks for basic np determiner+noun+adj"""
+    """Test that noun_chunks are correct for basic NP determiner+noun+adj"""
     doc_chunks = list(doc_basic_adj.noun_chunks)
     assert len(doc_chunks) == 1
     chunk = doc_chunks[0]
@@ -70,7 +87,7 @@ def test_noun_chunks_basic_adj(doc_basic_adj, es_tokenizer):
     assert chunk.text == "la camisa negra"
 
 def test_noun_chunks_adj_preceeds_noun(doc_adj_noun, es_tokenizer):
-    """Test that noun_chunks for np determiner+adj+noun"""
+    """Test that noun_chunks are correct for NP determiner+adj+noun"""
     doc_chunks = list(doc_adj_noun.noun_chunks)
     assert len(doc_chunks) == 1
     chunk = doc_chunks[0]
@@ -80,7 +97,7 @@ def test_noun_chunks_adj_preceeds_noun(doc_adj_noun, es_tokenizer):
     assert chunk.text == "Un lindo gatito"
 
 def test_noun_chunks_noun_conj_noun(doc_noun_conj_noun, es_tokenizer):
-    """Test that noun_chunks for two NPs connected by conjunction"""
+    """Test that noun_chunks are correct for two NPs connected by conjunction"""
     doc_chunks = list(doc_noun_conj_noun.noun_chunks)
     assert len(doc_chunks) == 2
 
@@ -97,7 +114,7 @@ def test_noun_chunks_noun_conj_noun(doc_noun_conj_noun, es_tokenizer):
     assert chunk2.text == "un perro"
 
 def test_noun_chunks_two_adjectives(doc_two_adjs, es_tokenizer):
-    """Test that noun_chunks for np determiner+adj+noun"""
+    """Test that noun_chunks are correct for one two adjectives conjuncted qualifying a noun"""
     doc_chunks = list(doc_two_adjs.noun_chunks)
     assert len(doc_chunks) == 1
     chunk = doc_chunks[0]
@@ -106,3 +123,22 @@ def test_noun_chunks_two_adjectives(doc_two_adjs, es_tokenizer):
     assert chunk.end == 5
     assert chunk.text == "Una chica hermosa e inteligente"
 
+def test_compound_by_flat(doc_compound_by_flat, es_tokenizer):
+    """Test that noun_chunks are correct for a compound formed by flat rels"""
+    doc_chunks = list(doc_compound_by_flat.noun_chunks)
+    assert len(doc_chunks) == 1
+    chunk = doc_chunks[0]
+    assert chunk in doc_chunks
+    assert chunk.start == 0
+    assert chunk.end == 3
+    assert chunk.text == "Dom Pedro II"
+
+def test_proper_noun_compound_flat_and_case(doc_compound_by_flat_and_particle, es_tokenizer):
+    """Test that noun_chunks are correct for a compound formed by flat rels"""
+    doc_chunks = list(doc_compound_by_flat_and_particle.noun_chunks)
+    assert len(doc_chunks) == 1
+    chunk = doc_chunks[0]
+    assert chunk in doc_chunks
+    assert chunk.start == 0
+    assert chunk.end == 3
+    assert chunk.text == "Miguel de Cervantes"
