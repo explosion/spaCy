@@ -119,6 +119,9 @@ def en_parser(en_vocab):
 def es_tokenizer():
     return get_lang_class("es")().tokenizer
 
+@pytest.fixture(scope="session")
+def es_vocab():
+    return get_lang_class("es")().vocab
 
 @pytest.fixture(scope="session")
 def eu_tokenizer():
