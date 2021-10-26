@@ -204,7 +204,7 @@ def test_proper_noun_compound_flat_and_case2(doc_compound_by_flat_and_particle2,
     assert chunk.text == "Rio de Janeiro"
 
 def test_noun_chunks_nmod_basic(doc_nmod_basic, es_tokenizer):
-    """Test that noun_chunks are correct for compounding build by nmod"""
+    """Test that noun_chunks are correct for nominal modifier"""
     doc_chunks = list(doc_nmod_basic.noun_chunks)
     assert len(doc_chunks) == 2
 
@@ -221,7 +221,7 @@ def test_noun_chunks_nmod_basic(doc_nmod_basic, es_tokenizer):
     assert chunk2.text == "la ciudad"
 
 def test_noun_chunks_nmod_3_nouns(doc_nmod3, es_tokenizer):
-    """Test that noun_chunks are correct for compounding build by nmod"""
+    """Test that noun_chunks are correct for nominal modifier"""
     doc_chunks = list(doc_nmod3.noun_chunks)
     assert len(doc_chunks) == 3
 
@@ -244,7 +244,7 @@ def test_noun_chunks_nmod_3_nouns(doc_nmod3, es_tokenizer):
     assert chunk3.text == "informe"
 
 def test_noun_chunks_nmod_adj(doc_nmod_adj, es_tokenizer):
-    """Test that noun_chunks are correct for compounds build by nmod with adjective in between"""
+    """Test that noun_chunks are correct for nominal modifier with adjective in between"""
     doc_chunks = list(doc_nmod_adj.noun_chunks)
     assert len(doc_chunks) == 3
 
