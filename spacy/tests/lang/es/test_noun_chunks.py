@@ -51,8 +51,24 @@ def doc_compound_by_flat(es_vocab):
     return Doc(es_vocab, words=words, heads=heads, deps=deps, pos=pos)
 
 @pytest.fixture
+def doc_compound_by_flat2(es_vocab):
+    words = ["los", "Estados", "Unidos"]
+    heads = [1, 1, 1]
+    deps = ["det", "ROOT", "flat"]
+    pos = ["DET", "PROPN", "PROPN"]
+    return Doc(es_vocab, words=words, heads=heads, deps=deps, pos=pos)
+
+@pytest.fixture
 def doc_compound_by_flat_and_particle(es_vocab):
     words = ["Miguel", "de", "Cervantes"]
+    heads = [0, 2, 0]
+    deps = ["ROOT", "case", "flat"]
+    pos = ["PROPN", "ADP", "PROPN"]
+    return Doc(es_vocab, words=words, heads=heads, deps=deps, pos=pos)
+
+@pytest.fixture
+def doc_compound_by_flat_and_particle2(es_vocab):
+    words = ["Rio", "de", "Janeiro"]
     heads = [0, 2, 0]
     deps = ["ROOT", "case", "flat"]
     pos = ["PROPN", "ADP", "PROPN"]
@@ -133,8 +149,18 @@ def test_compound_by_flat(doc_compound_by_flat, es_tokenizer):
     assert chunk.end == 3
     assert chunk.text == "Dom Pedro II"
 
-def test_proper_noun_compound_flat_and_case(doc_compound_by_flat_and_particle, es_tokenizer):
+def test_proper_noun_compound_flat2(doc_compound_by_flat2, es_tokenizer):
     """Test that noun_chunks are correct for a compound formed by flat rels"""
+    doc_chunks = list(doc_compound_by_flat2.noun_chunks)
+    assert len(doc_chunks) == 1
+    chunk = doc_chunks[0]
+    assert chunk in doc_chunks
+    assert chunk.start == 0
+    assert chunk.end == 3
+    assert chunk.text == "los Estados Unidos"
+
+def test_proper_noun_compound_flat_and_case(doc_compound_by_flat_and_particle, es_tokenizer):
+    """Test that noun_chunks are correct for a compound formed by flat and case"""
     doc_chunks = list(doc_compound_by_flat_and_particle.noun_chunks)
     assert len(doc_chunks) == 1
     chunk = doc_chunks[0]
@@ -142,3 +168,13 @@ def test_proper_noun_compound_flat_and_case(doc_compound_by_flat_and_particle, e
     assert chunk.start == 0
     assert chunk.end == 3
     assert chunk.text == "Miguel de Cervantes"
+
+def test_proper_noun_compound_flat_and_case2(doc_compound_by_flat_and_particle2, es_tokenizer):
+    """Test that noun_chunks are correct for a compound formed by flat and case"""
+    doc_chunks = list(doc_compound_by_flat_and_particle2.noun_chunks)
+    assert len(doc_chunks) == 1
+    chunk = doc_chunks[0]
+    assert chunk in doc_chunks
+    assert chunk.start == 0
+    assert chunk.end == 3
+    assert chunk.text == "Rio de Janeiro"
