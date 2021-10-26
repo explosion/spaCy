@@ -31,6 +31,8 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Tuple[int, int, int]]:
     np_modifs = {doc.vocab.strings.add(modifier) for modifier in post_modifiers}
     np_label = doc.vocab.strings.add("NP")
     adp_label = doc.vocab.strings.add("ADP")
+    conj = doc.vocab.strings.add("conj")
+    conj_pos = doc.vocab.strings.add("CCONJ")
     prev_end = -1
     for i, word in enumerate(doclike):
         if word.pos not in (NOUN, PROPN, PRON):
@@ -48,6 +50,19 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Tuple[int, int, int]]:
             left_index = left_index+1 if word.left_edge.pos == adp_label else left_index  # Eliminate left attached de, del 
 
             yield left_index, right_end.i + 1, np_label
+        elif word.dep == conj:
+            head = word.head
+            while head.dep == conj and head.head.i < head.i:
+                head = head.head
+            # If the head is an NP, and we're coordinated to it, we're an NP
+            if head.dep in np_deps:
+                prev_end = word.i
+
+                left_index = word.left_edge.i  # eliminate left attached conjunction
+                left_index = left_index+1 if word.left_edge.pos == conj_pos else left_index  
+                yield left_index, word.i + 1, np_label
+
+
 
 
 
