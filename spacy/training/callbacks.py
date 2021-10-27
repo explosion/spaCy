@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Callable, Optional
 from ..errors import Errors
 from ..language import Language
 from ..util import load_model, registry, logger
@@ -8,7 +8,7 @@ from ..util import load_model, registry, logger
 def create_copy_from_base_model(
     tokenizer: Optional[str] = None,
     vocab: Optional[str] = None,
-) -> Language:
+) -> Callable[[Language], Language]:
     def copy_from_base_model(nlp):
         if tokenizer:
             logger.info(f"Copying tokenizer from: {tokenizer}")

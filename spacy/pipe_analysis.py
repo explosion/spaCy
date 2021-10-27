@@ -1,4 +1,4 @@
-from typing import List, Dict, Iterable, Optional, Union, TYPE_CHECKING
+from typing import List, Set, Dict, Iterable, ItemsView, Union, TYPE_CHECKING
 from wasabi import msg
 
 from .tokens import Doc, Token, Span
@@ -67,7 +67,7 @@ def get_attr_info(nlp: "Language", attr: str) -> Dict[str, List[str]]:
     RETURNS (Dict[str, List[str]]): A dict keyed by "assigns" and "requires",
         mapped to a list of component names.
     """
-    result = {"assigns": [], "requires": []}
+    result: Dict[str, List[str]] = {"assigns": [], "requires": []}
     for pipe_name in nlp.pipe_names:
         meta = nlp.get_pipe_meta(pipe_name)
         if attr in meta.assigns:
@@ -79,7 +79,7 @@ def get_attr_info(nlp: "Language", attr: str) -> Dict[str, List[str]]:
 
 def analyze_pipes(
     nlp: "Language", *, keys: List[str] = DEFAULT_KEYS
-) -> Dict[str, Union[List[str], Dict[str, List[str]]]]:
+) -> Dict[str, Dict[str, Union[List[str], Dict]]]:
     """Print a formatted summary for the current nlp object's pipeline. Shows
     a table with the pipeline components and why they assign and require, as
     well as any problems if available.
@@ -88,8 +88,11 @@ def analyze_pipes(
     keys (List[str]): The meta keys to show in the table.
     RETURNS (dict): A dict with "summary" and "problems".
     """
-    result = {"summary": {}, "problems": {}}
-    all_attrs = set()
+    result: Dict[str, Dict[str, Union[List[str], Dict]]] = {
+        "summary": {},
+        "problems": {},
+    }
+    all_attrs: Set[str] = set()
     for i, name in enumerate(nlp.pipe_names):
         meta = nlp.get_pipe_meta(name)
         all_attrs.update(meta.assigns)
@@ -102,19 +105,18 @@ def analyze_pipes(
                 prev_meta = nlp.get_pipe_meta(prev_name)
                 for annot in prev_meta.assigns:
                     requires[annot] = True
-        result["problems"][name] = []
-        for annot, fulfilled in requires.items():
-            if not fulfilled:
-                result["problems"][name].append(annot)
+        result["problems"][name] = [
+            annot for annot, fulfilled in requires.items() if not fulfilled
+        ]
     result["attrs"] = {attr: get_attr_info(nlp, attr) for attr in all_attrs}
     return result
 
 
 def print_pipe_analysis(
-    analysis: Dict[str, Union[List[str], Dict[str, List[str]]]],
+    analysis: Dict[str, Dict[str, Union[List[str], Dict]]],
     *,
     keys: List[str] = DEFAULT_KEYS,
-) -> Optional[Dict[str, Union[List[str], Dict[str, List[str]]]]]:
+) -> None:
     """Print a formatted version of the pipe analysis produced by analyze_pipes.
 
     analysis (Dict[str, Union[List[str], Dict[str, List[str]]]]): The analysis.
@@ -122,7 +124,7 @@ def print_pipe_analysis(
     """
     msg.divider("Pipeline Overview")
     header = ["#", "Component", *[key.capitalize() for key in keys]]
-    summary = analysis["summary"].items()
+    summary: ItemsView = analysis["summary"].items()
     body = [[i, n, *[v for v in m.values()]] for i, (n, m) in enumerate(summary)]
     msg.table(body, header=header, divider=True, multiline=True)
     n_problems = sum(len(p) for p in analysis["problems"].values())

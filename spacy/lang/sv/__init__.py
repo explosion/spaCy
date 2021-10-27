@@ -4,7 +4,7 @@ from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
 from .syntax_iterators import SYNTAX_ITERATORS
-from ...language import Language
+from ...language import Language, BaseDefaults
 from ...pipeline import Lemmatizer
 
 
@@ -12,7 +12,7 @@ from ...pipeline import Lemmatizer
 from ..da.punctuation import TOKENIZER_INFIXES, TOKENIZER_SUFFIXES
 
 
-class SwedishDefaults(Language.Defaults):
+class SwedishDefaults(BaseDefaults):
     tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     infixes = TOKENIZER_INFIXES
     suffixes = TOKENIZER_SUFFIXES

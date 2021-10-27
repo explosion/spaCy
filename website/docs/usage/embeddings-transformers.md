@@ -351,7 +351,7 @@ factory = "transformer"
 max_batch_items = 4096
 
 [components.transformer.model]
-@architectures = "spacy-transformers.TransformerModel.v1"
+@architectures = "spacy-transformers.TransformerModel.v3"
 name = "bert-base-cased"
 tokenizer_config = {"use_fast": true}
 
@@ -367,7 +367,7 @@ The `[components.transformer.model]` block describes the `model` argument passed
 to the transformer component. It's a Thinc
 [`Model`](https://thinc.ai/docs/api-model) object that will be passed into the
 component. Here, it references the function
-[spacy-transformers.TransformerModel.v1](/api/architectures#TransformerModel)
+[spacy-transformers.TransformerModel.v3](/api/architectures#TransformerModel)
 registered in the [`architectures` registry](/api/top-level#registry). If a key
 in a block starts with `@`, it's **resolved to a function** and all other
 settings are passed to the function as arguments. In this case, `name`,
@@ -378,6 +378,21 @@ of potentially overlapping `Span` objects to process by the transformer. Several
 [built-in functions](/api/transformer#span_getters) are available – for example,
 to process the whole document or individual sentences. When the config is
 resolved, the function is created and passed into the model as an argument.
+
+The `name` value is the name of any [HuggingFace model](huggingface-models),
+which will be downloaded automatically the first time it's used. You can also
+use a local file path. For full details, see the
+[`TransformerModel` docs](/api/architectures#TransformerModel).
+
+[huggingface-models]:
+  https://huggingface.co/models?library=pytorch&sort=downloads
+
+A wide variety of PyTorch models are supported, but some might not work. If a
+model doesn't seem to work feel free to open an
+[issue](https://github.com/explosion/spacy/issues). Additionally note that
+Transformers loaded in spaCy can only be used for tensors, and pretrained
+task-specific heads or text generation features cannot be used as part of 
+the `transformer` pipeline component.
 
 <Infobox variant="warning">
 
@@ -697,9 +712,11 @@ given you a 10% error reduction, pretraining with spaCy might give you another
 The [`spacy pretrain`](/api/cli#pretrain) command will take a **specific
 subnetwork** within one of your components, and add additional layers to build a
 network for a temporary task that forces the model to learn something about
-sentence structure and word cooccurrence statistics. Pretraining produces a
-**binary weights file** that can be loaded back in at the start of training. The
-weights file specifies an initial set of weights. Training then proceeds as
+sentence structure and word cooccurrence statistics.
+
+Pretraining produces a **binary weights file** that can be loaded back in at the
+start of training, using the configuration option `initialize.init_tok2vec`.
+The weights file specifies an initial set of weights. Training then proceeds as
 normal.
 
 You can only pretrain one subnetwork from your pipeline at a time, and the
@@ -731,6 +748,40 @@ layer = ""
 component = "textcat"
 layer = "tok2vec"
 ```
+
+#### Connecting pretraining to training {#pretraining-training}
+
+To benefit from pretraining, your training step needs to know to initialize
+its `tok2vec` component with the weights learned from the pretraining step.
+You do this by setting `initialize.init_tok2vec` to the filename of the
+`.bin` file that you want to use from pretraining.
+
+A pretraining step that runs for 5 epochs with an output path of `pretrain/`,
+as an example, produces `pretrain/model0.bin` through `pretrain/model4.bin`.
+To make use of the final output, you could fill in this value in your config
+file:
+
+```ini
+### config.cfg
+
+[paths]
+init_tok2vec = "pretrain/model4.bin"
+
+[initialize]
+init_tok2vec = ${paths.init_tok2vec}
+```
+
+<Infobox variant="warning">
+
+The outputs of `spacy pretrain` are not the same data format as the
+pre-packaged static word vectors that would go into 
+[`initialize.vectors`](/api/data-formats#config-initialize).
+The pretraining output consists of the weights that the `tok2vec`
+component should start with in an existing pipeline, so it goes in
+`initialize.init_tok2vec`.
+
+</Infobox>
+
 
 #### Pretraining objectives {#pretraining-objectives}
 

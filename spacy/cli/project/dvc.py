@@ -143,8 +143,8 @@ def run_dvc_commands(
         easier to pass flags like --quiet that depend on a variable or
         command-line setting while avoiding lots of nested conditionals.
     """
-    for command in commands:
-        command = split_command(command)
+    for c in commands:
+        command = split_command(c)
         dvc_command = ["dvc", *command]
         # Add the flags if they are set to True
         for flag, is_active in flags.items():

@@ -1,5 +1,5 @@
 recursive-include include *.h
-recursive-include spacy *.pyx *.pxd *.txt *.cfg *.jinja *.toml
+recursive-include spacy *.pyi *.pyx *.pxd *.txt *.cfg *.jinja *.toml
 include LICENSE
 include README.md
 include pyproject.toml

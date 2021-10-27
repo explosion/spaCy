@@ -111,7 +111,7 @@ class Lemmatizer(Pipe):
             if not hasattr(self, mode_attr):
                 raise ValueError(Errors.E1003.format(mode=mode))
             self.lemmatize = getattr(self, mode_attr)
-        self.cache = {}
+        self.cache = {}  # type: ignore[var-annotated]
         self.scorer = scorer
 
     @property
@@ -201,7 +201,7 @@ class Lemmatizer(Pipe):
 
         DOCS: https://spacy.io/api/lemmatizer#rule_lemmatize
         """
-        cache_key = (token.orth, token.pos, token.morph.key)
+        cache_key = (token.orth, token.pos, token.morph.key)  # type: ignore[attr-defined]
         if cache_key in self.cache:
             return self.cache[cache_key]
         string = token.text
@@ -297,7 +297,7 @@ class Lemmatizer(Pipe):
 
         DOCS: https://spacy.io/api/lemmatizer#from_disk
         """
-        deserialize = {}
+        deserialize: Dict[str, Callable[[Any], Any]] = {}
         deserialize["vocab"] = lambda p: self.vocab.from_disk(p, exclude=exclude)
         deserialize["lookups"] = lambda p: self.lookups.from_disk(p)
         util.from_disk(path, deserialize, exclude)
@@ -328,7 +328,7 @@ class Lemmatizer(Pipe):
 
         DOCS: https://spacy.io/api/lemmatizer#from_bytes
         """
-        deserialize = {}
+        deserialize: Dict[str, Callable[[Any], Any]] = {}
         deserialize["vocab"] = lambda b: self.vocab.from_bytes(b, exclude=exclude)
         deserialize["lookups"] = lambda b: self.lookups.from_bytes(b)
         util.from_bytes(bytes_data, deserialize, exclude)

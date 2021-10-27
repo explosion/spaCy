@@ -1,4 +1,4 @@
-from typing import List, Tuple, Iterable, Union, Iterator
+from typing import List, Dict, Tuple, Iterable, Union, Iterator
 import warnings
 
 from ..errors import Errors, Warnings
@@ -6,7 +6,7 @@ from ..tokens import Span, Doc
 
 
 def iob_to_biluo(tags: Iterable[str]) -> List[str]:
-    out = []
+    out: List[str] = []
     tags = list(tags)
     while tags:
         out.extend(_consume_os(tags))
@@ -90,7 +90,7 @@ def offsets_to_biluo_tags(
         >>> assert tags == ["O", "O", 'U-LOC', "O"]
     """
     # Ensure no overlapping entity labels exist
-    tokens_in_ents = {}
+    tokens_in_ents: Dict[int, Tuple[int, int, Union[str, int]]] = {}
     starts = {token.idx: token.i for token in doc}
     ends = {token.idx + len(token): token.i for token in doc}
     biluo = ["-" for _ in doc]
@@ -199,14 +199,18 @@ def tags_to_entities(tags: Iterable[str]) -> List[Tuple[str, int, int]]:
             pass
         elif tag.startswith("I"):
             if start is None:
-                raise ValueError(Errors.E067.format(start="I", tags=tags[: i + 1]))
+                raise ValueError(
+                    Errors.E067.format(start="I", tags=list(tags)[: i + 1])
+                )
         elif tag.startswith("U"):
             entities.append((tag[2:], i, i))
         elif tag.startswith("B"):
             start = i
         elif tag.startswith("L"):
             if start is None:
-                raise ValueError(Errors.E067.format(start="L", tags=tags[: i + 1]))
+                raise ValueError(
+                    Errors.E067.format(start="L", tags=list(tags)[: i + 1])
+                )
             entities.append((tag[2:], start, i))
             start = None
         else:
