@@ -14,7 +14,7 @@ from .attrs cimport LANG, ORTH
 from .compat import copy_reg
 from .errors import Errors
 from .attrs import intify_attrs, NORM, IS_STOP
-from .vectors import Vectors
+from .vectors import Vectors, Mode as VectorsMode
 from .util import registry
 from .lookups import Lookups
 from . import util
@@ -77,10 +77,20 @@ cdef class Vocab:
                 _ = self[string]
         self.lex_attr_getters = lex_attr_getters
         self.morphology = Morphology(self.strings)
-        self.vectors = Vectors(name=vectors_name)
+        self.vectors = Vectors(strings=self.strings, name=vectors_name)
         self.lookups = lookups
         self.writing_system = writing_system
         self.get_noun_chunks = get_noun_chunks
+
+    property vectors:
+        def __get__(self):
+            return self._vectors
+
+        def __set__(self, vectors):
+            for s in vectors.strings:
+                self.strings.add(s)
+            self._vectors = vectors
+            self._vectors.strings = self.strings
 
     @property
     def lang(self):
@@ -282,10 +292,10 @@ cdef class Vocab:
         if width is not None and shape is not None:
             raise ValueError(Errors.E065.format(width=width, shape=shape))
         elif shape is not None:
-            self.vectors = Vectors(shape=shape)
+            self.vectors = Vectors(strings=self.strings, shape=shape)
         else:
             width = width if width is not None else self.vectors.data.shape[1]
-            self.vectors = Vectors(shape=(self.vectors.shape[0], width))
+            self.vectors = Vectors(strings=self.strings, shape=(self.vectors.shape[0], width))
 
     def prune_vectors(self, nr_row, batch_size=1024):
         """Reduce the current vector table to `nr_row` unique entries. Words
@@ -314,6 +324,8 @@ cdef class Vocab:
 
         DOCS: https://spacy.io/api/vocab#prune_vectors
         """
+        if self.vectors.mode != VectorsMode.default:
+            raise ValueError(Errors.E866)
         ops = get_current_ops()
         xp = get_array_module(self.vectors.data)
         # Make sure all vectors are in the vocab
@@ -328,7 +340,7 @@ cdef class Vocab:
         keys = xp.asarray([key for (prob, i, key) in priority], dtype="uint64")
         keep = xp.ascontiguousarray(self.vectors.data[indices[:nr_row]])
         toss = xp.ascontiguousarray(self.vectors.data[indices[nr_row:]])
-        self.vectors = Vectors(data=keep, keys=keys[:nr_row], name=self.vectors.name)
+        self.vectors = Vectors(strings=self.strings, data=keep, keys=keys[:nr_row], name=self.vectors.name)
         syn_keys, syn_rows, scores = self.vectors.most_similar(toss, batch_size=batch_size)
         syn_keys = ops.to_numpy(syn_keys)
         remap = {}
@@ -340,19 +352,12 @@ cdef class Vocab:
             remap[word] = (synonym, score)
         return remap
 
-    def get_vector(self, orth, minn=None, maxn=None):
+    def get_vector(self, orth):
         """Retrieve a vector for a word in the vocabulary. Words can be looked
         up by string or int ID. If no vectors data is loaded, ValueError is
         raised.
 
-        If `minn` is defined, then the resulting vector uses Fasttext's
-        subword features by average over ngrams of `orth`.
-
-        orth (int / str): The hash value of a word, or its unicode string.
-        minn (int): Minimum n-gram length used for Fasttext's ngram computation.
-            Defaults to the length of `orth`.
-        maxn (int): Maximum n-gram length used for Fasttext's ngram computation.
-            Defaults to the length of `orth`.
+        orth (int / unicode): The hash value of a word, or its unicode string.
         RETURNS (numpy.ndarray or cupy.ndarray): A word vector. Size
             and shape determined by the `vocab.vectors` instance. Usually, a
             numpy ndarray of shape (300,) and dtype float32.
@@ -361,40 +366,10 @@ cdef class Vocab:
         """
         if isinstance(orth, str):
             orth = self.strings.add(orth)
-        word = self[orth].orth_
-        if orth in self.vectors.key2row:
+        if self.has_vector(orth):
             return self.vectors[orth]
         xp = get_array_module(self.vectors.data)
         vectors = xp.zeros((self.vectors_length,), dtype="f")
-        if minn is None:
-            return vectors
-        # Fasttext's ngram computation taken from
-        # https://github.com/facebookresearch/fastText
-        # Assign default ngram limit to maxn which is the length of the word.
-        if maxn is None:
-            maxn = len(word)
-        ngrams_size = 0;
-        for i in range(len(word)):
-            ngram = ""
-            if (word[i] and 0xC0) == 0x80:
-                continue
-            n = 1
-            j = i
-            while (j < len(word) and n <= maxn):
-                if n > maxn:
-                    break
-                ngram += word[j]
-                j = j + 1
-                while (j < len(word) and (word[j] and 0xC0) == 0x80):
-                    ngram += word[j]
-                    j = j + 1
-                if (n >= minn and not (n == 1 and (i == 0 or j == len(word)))):
-                    if self.strings[ngram] in self.vectors.key2row:
-                        vectors = xp.add(self.vectors[self.strings[ngram]], vectors)
-                        ngrams_size += 1
-                n = n + 1
-        if ngrams_size > 0:
-            vectors = vectors * (1.0/ngrams_size)
         return vectors
 
     def set_vector(self, orth, vector):
@@ -417,7 +392,8 @@ cdef class Vocab:
             self.vectors.resize((new_rows, width))
         lex = self[orth]  # Add word to vocab if necessary
         row = self.vectors.add(orth, vector=vector)
-        lex.rank = row
+        if row >= 0:
+            lex.rank = row
 
     def has_vector(self, orth):
         """Check whether a word has a vector. Returns False if no vectors have
@@ -461,7 +437,7 @@ cdef class Vocab:
         if "strings" not in exclude:
             self.strings.to_disk(path / "strings.json")
         if "vectors" not in "exclude":
-            self.vectors.to_disk(path)
+            self.vectors.to_disk(path, exclude=["strings"])
         if "lookups" not in "exclude":
             self.lookups.to_disk(path)
 
@@ -504,7 +480,7 @@ cdef class Vocab:
             if self.vectors is None:
                 return None
             else:
-                return self.vectors.to_bytes()
+                return self.vectors.to_bytes(exclude=["strings"])
 
         getters = {
             "strings": lambda: self.strings.to_bytes(),
@@ -526,7 +502,7 @@ cdef class Vocab:
             if self.vectors is None:
                 return None
             else:
-                return self.vectors.from_bytes(b)
+                return self.vectors.from_bytes(b, exclude=["strings"])
 
         setters = {
             "strings": lambda b: self.strings.from_bytes(b),

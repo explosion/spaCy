@@ -228,6 +228,7 @@ class Language:
             "vectors": len(self.vocab.vectors),
             "keys": self.vocab.vectors.n_keys,
             "name": self.vocab.vectors.name,
+            "mode": self.vocab.vectors.mode,
         }
         self._meta["labels"] = dict(self.pipe_labels)
         # TODO: Adding this back to prevent breaking people's code etc., but

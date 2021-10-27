@@ -534,7 +534,13 @@ cdef class Doc:
             kb_id = self.vocab.strings.add(kb_id)
         alignment_modes = ("strict", "contract", "expand")
         if alignment_mode not in alignment_modes:
-            raise ValueError(Errors.E202.format(mode=alignment_mode, modes=", ".join(alignment_modes)))
+            raise ValueError(
+                Errors.E202.format(
+                    name="alignment",
+                    mode=alignment_mode,
+                    modes=", ".join(alignment_modes),
+                )
+            )
         cdef int start = token_by_char(self.c, self.length, start_idx)
         if start < 0 or (alignment_mode == "strict" and start_idx != self[start].idx):
             return None

@@ -27,6 +27,9 @@ def setup_default_warnings():
     # warn once about lemmatizer without required POS
     filter_warning("once", error_msg=Warnings.W108)
 
+    # floret vector table cannot be modified
+    filter_warning("once", error_msg="[W114]")
+
 
 def filter_warning(action: str, error_msg: str):
     """Customize how spaCy should handle a certain warning.
@@ -192,6 +195,8 @@ class Warnings:
             "vectors are not identical to current pipeline vectors.")
     W114 = ("Using multiprocessing with GPU models is not recommended and may "
             "lead to errors.")
+    W115 = ("Skipping {method}: the floret vector table cannot be modified. "
+            "Vectors are calculated from character ngrams.")
 
 
 @add_codes
@@ -518,9 +523,19 @@ class Errors:
     E199 = ("Unable to merge 0-length span at `doc[{start}:{end}]`.")
     E200 = ("Can't yet set {attr} from Span. Vote for this feature on the "
             "issue tracker: http://github.com/explosion/spaCy/issues")
-    E202 = ("Unsupported alignment mode '{mode}'. Supported modes: {modes}.")
+    E202 = ("Unsupported {name} mode '{mode}'. Supported modes: {modes}.")
 
     # New errors added in v3.x
+    E858 = ("The {mode} vector table does not support this operation. "
+            "{alternative}")
+    E859 = ("The floret vector table cannot be modified.")
+    E860 = ("Can't truncate fasttext-bloom vectors.")
+    E861 = ("No 'keys' should be provided when initializing floret vectors "
+            "with 'minn' and 'maxn'.")
+    E862 = ("'hash_count' must be between 1-4 for floret vectors.")
+    E863 = ("'maxn' must be greater than or equal to 'minn'.")
+    E864 = ("The complete vector table 'data' is required to initialize floret "
+            "vectors.")
     E865 = ("A SpanGroup is not functional after the corresponding Doc has "
             "been garbage collected. To keep using the spans, make sure that "
             "the corresponding Doc object is still available in the scope of "
