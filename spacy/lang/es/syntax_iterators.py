@@ -18,11 +18,7 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Tuple[int, int, int]]:
         "appos",
         "ROOT",
     ]
-    post_modifiers = [
-            "flat",
-            "fixed",
-            "compound"
-    ]
+    post_modifiers = ["flat", "fixed", "compound"]
     doc = doclike.doc  # Ensure works on both Doc and Span.
     if not doc.has_annotation("DEP"):
         raise ValueError(Errors.E029)
@@ -56,7 +52,9 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Tuple[int, int, int]]:
             prev_end = right_end.i
 
             left_index = word.left_edge.i
-            left_index = left_index+1 if word.left_edge.pos == adp_label else left_index  # Eliminate left attached de, del 
+            left_index = (
+                left_index + 1 if word.left_edge.pos == adp_label else left_index
+            )  # Eliminate left attached de, del
 
             yield left_index, right_end.i + 1, np_label
         elif word.dep == conj:
@@ -68,13 +66,10 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Tuple[int, int, int]]:
                 prev_end = word.i
 
                 left_index = word.left_edge.i  # eliminate left attached conjunction
-                left_index = left_index+1 if word.left_edge.pos == conj_pos else left_index  
+                left_index = (
+                    left_index + 1 if word.left_edge.pos == conj_pos else left_index
+                )
                 yield left_index, word.i + 1, np_label
 
 
-
-
-
-
 SYNTAX_ITERATORS = {"noun_chunks": noun_chunks}
-
