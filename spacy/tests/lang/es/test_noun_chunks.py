@@ -108,7 +108,7 @@ import pytest
 # fmt: on
 def test_es_noun_chunks(es_vocab, words, heads, deps, pos, chunk_offsets):
     doc = Doc(es_vocab, words=words, heads=heads, deps=deps, pos=pos)
-    assert [(c.start, c.end) for c in doc.noun_chunks] == chunk_off
+    assert [(c.start, c.end) for c in doc.noun_chunks] == chunk_offsets
 
 
 def test_noun_chunks_is_parsed_es(es_tokenizer):
