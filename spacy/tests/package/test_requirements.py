@@ -21,6 +21,7 @@ def test_build_dependencies():
         "sudachipy",
         "sudachidict_core",
         "spacy-pkuseg",
+        "thinc-apple-ops",
     ]
 
     # check requirements.txt
