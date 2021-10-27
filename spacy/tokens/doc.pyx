@@ -266,10 +266,11 @@ cdef class Doc:
                 lexeme = self.vocab.get(self.mem, word)
             elif isinstance(word, bytes):
                 raise ValueError(Errors.E028.format(value=word))
-            elif isinstance(word, int):
-                lexeme = self.vocab.get_by_orth(self.mem, word)
             else:
-                raise TypeError(Errors.E1022.format(wtype=type(word)))
+                try:
+                    lexeme = self.vocab.get_by_orth(self.mem, word)
+                except TypeError:
+                    raise TypeError(Errors.E1022.format(wtype=type(word)))
             self.push_back(lexeme, has_space)
 
         if heads is not None:
