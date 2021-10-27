@@ -150,7 +150,7 @@ patterns = [nlp("health care reform"), nlp("healthcare reform")]
 
 | Name           | Description                                                                                                                                                |
 | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `match_id`     | An ID for the thing you're matching. ~~str~~                                                                                                               |  |
+| `key`          | An ID for the thing you're matching. ~~str~~                                                                                                               |
 | `docs`         | `Doc` objects of the phrases to match. ~~List[Doc]~~                                                                                                       |
 | _keyword-only_ |                                                                                                                                                            |
 | `on_match`     | Callback function to act on matches. Takes the arguments `matcher`, `doc`, `i` and `matches`. ~~Optional[Callable[[Matcher, Doc, int, List[tuple], Any]]~~ |

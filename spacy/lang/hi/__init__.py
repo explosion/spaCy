@@ -1,9 +1,9 @@
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
-from ...language import Language
+from ...language import Language, BaseDefaults
 
 
-class HindiDefaults(Language.Defaults):
+class HindiDefaults(BaseDefaults):
     stop_words = STOP_WORDS
     lex_attr_getters = LEX_ATTRS
 

@@ -193,7 +193,9 @@ class Warnings:
             "vectors. This is almost certainly a mistake.")
     W113 = ("Sourced component '{name}' may not work as expected: source "
             "vectors are not identical to current pipeline vectors.")
-    W114 = ("Skipping {method}: the floret vector table cannot be modified. "
+    W114 = ("Using multiprocessing with GPU models is not recommended and may "
+            "lead to errors.")
+    W115 = ("Skipping {method}: the floret vector table cannot be modified. "
             "Vectors are calculated from character ngrams.")
 
 

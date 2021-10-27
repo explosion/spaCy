@@ -18,7 +18,7 @@ RENDER_WRAPPER = None
 
 
 def render(
-    docs: Union[Iterable[Union[Doc, Span]], Doc, Span],
+    docs: Union[Iterable[Union[Doc, Span, dict]], Doc, Span, dict],
     style: str = "dep",
     page: bool = False,
     minify: bool = False,
@@ -28,7 +28,8 @@ def render(
 ) -> str:
     """Render displaCy visualisation.
 
-    docs (Union[Iterable[Doc], Doc]): Document(s) to visualise.
+    docs (Union[Iterable[Union[Doc, Span, dict]], Doc, Span, dict]]): Document(s) to visualise.
+        a 'dict' is only allowed here when 'manual' is set to True
     style (str): Visualisation style, 'dep' or 'ent'.
     page (bool): Render markup as full HTML page.
     minify (bool): Minify HTML markup.
@@ -53,8 +54,8 @@ def render(
         raise ValueError(Errors.E096)
     renderer_func, converter = factories[style]
     renderer = renderer_func(options=options)
-    parsed = [converter(doc, options) for doc in docs] if not manual else docs
-    _html["parsed"] = renderer.render(parsed, page=page, minify=minify).strip()
+    parsed = [converter(doc, options) for doc in docs] if not manual else docs  # type: ignore
+    _html["parsed"] = renderer.render(parsed, page=page, minify=minify).strip()  # type: ignore
     html = _html["parsed"]
     if RENDER_WRAPPER is not None:
         html = RENDER_WRAPPER(html)
@@ -133,7 +134,7 @@ def parse_deps(orig_doc: Doc, options: Dict[str, Any] = {}) -> Dict[str, Any]:
                     "lemma": np.root.lemma_,
                     "ent_type": np.root.ent_type_,
                 }
-                retokenizer.merge(np, attrs=attrs)
+                retokenizer.merge(np, attrs=attrs)  # type: ignore[arg-type]
     if options.get("collapse_punct", True):
         spans = []
         for word in doc[:-1]:
@@ -148,7 +149,7 @@ def parse_deps(orig_doc: Doc, options: Dict[str, Any] = {}) -> Dict[str, Any]:
         with doc.retokenize() as retokenizer:
             for span, tag, lemma, ent_type in spans:
                 attrs = {"tag": tag, "lemma": lemma, "ent_type": ent_type}
-                retokenizer.merge(span, attrs=attrs)
+                retokenizer.merge(span, attrs=attrs)  # type: ignore[arg-type]
     fine_grained = options.get("fine_grained")
     add_lemma = options.get("add_lemma")
     words = [

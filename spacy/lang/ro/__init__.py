@@ -3,14 +3,14 @@ from .stop_words import STOP_WORDS
 from .punctuation import TOKENIZER_PREFIXES, TOKENIZER_INFIXES
 from .punctuation import TOKENIZER_SUFFIXES
 from .lex_attrs import LEX_ATTRS
-from ...language import Language
+from ...language import Language, BaseDefaults
 
 # Lemma data note:
 # Original pairs downloaded from http://www.lexiconista.com/datasets/lemmatization/
 # Replaced characters using cedillas with the correct ones (ș and ț)
 
 
-class RomanianDefaults(Language.Defaults):
+class RomanianDefaults(BaseDefaults):
     tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     prefixes = TOKENIZER_PREFIXES
     suffixes = TOKENIZER_SUFFIXES

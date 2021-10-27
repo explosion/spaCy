@@ -202,7 +202,7 @@ cdef class Vectors:
         DOCS: https://spacy.io/api/vectors#setitem
         """
         if self.mode == Mode.floret:
-            warnings.warn(Warnings.W114.format(method="Vectors.__setitem__"))
+            warnings.warn(Warnings.W115.format(method="Vectors.__setitem__"))
             return
         key = get_string_id(key)
         i = self.key2row[key]
@@ -257,7 +257,7 @@ cdef class Vectors:
         DOCS: https://spacy.io/api/vectors#resize
         """
         if self.mode == Mode.floret:
-            warnings.warn(Warnings.W114.format(method="Vectors.resize"))
+            warnings.warn(Warnings.W115.format(method="Vectors.resize"))
             return -1
         xp = get_array_module(self.data)
         if inplace:
@@ -420,7 +420,7 @@ cdef class Vectors:
         DOCS: https://spacy.io/api/vectors#add
         """
         if self.mode == Mode.floret:
-            warnings.warn(Warnings.W114.format(method="Vectors.add"))
+            warnings.warn(Warnings.W115.format(method="Vectors.add"))
             return -1
         # use int for all keys and rows in key2row for more efficient access
         # and serialization

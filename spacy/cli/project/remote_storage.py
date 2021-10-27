@@ -41,7 +41,7 @@ class RemoteStorage:
             raise IOError(f"Cannot push {loc}: does not exist.")
         url = self.make_url(path, command_hash, content_hash)
         if url.exists():
-            return None
+            return url
         tmp: Path
         with make_tempdir() as tmp:
             tar_loc = tmp / self.encode_name(str(path))
@@ -131,8 +131,10 @@ def get_command_hash(
     currently installed packages, whatever environment variables have been marked
     as relevant, and the command.
     """
-    check_commit = check_bool_env_var(ENV_VARS.PROJECT_USE_GIT_VERSION)
-    spacy_v = GIT_VERSION if check_commit else get_minor_version(about.__version__)
+    if check_bool_env_var(ENV_VARS.PROJECT_USE_GIT_VERSION):
+        spacy_v = GIT_VERSION
+    else:
+        spacy_v = str(get_minor_version(about.__version__) or "")
     dep_checksums = [get_checksum(dep) for dep in sorted(deps)]
     hashes = [spacy_v, site_hash, env_hash] + dep_checksums
     hashes.extend(cmd)

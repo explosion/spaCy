@@ -7,10 +7,10 @@ from .lex_attrs import LEX_ATTRS
 from .syntax_iterators import SYNTAX_ITERATORS
 from .punctuation import TOKENIZER_INFIXES
 from .lemmatizer import EnglishLemmatizer
-from ...language import Language
+from ...language import Language, BaseDefaults
 
 
-class EnglishDefaults(Language.Defaults):
+class EnglishDefaults(BaseDefaults):
     tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     infixes = TOKENIZER_INFIXES
     lex_attr_getters = LEX_ATTRS

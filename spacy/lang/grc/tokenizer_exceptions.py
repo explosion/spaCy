@@ -108,8 +108,4 @@ _other_exc = {
 
 _exc.update(_other_exc)
 
-_exc_data = {}
-
-_exc.update(_exc_data)
-
 TOKENIZER_EXCEPTIONS = update_exc(BASE_EXCEPTIONS, _exc)

@@ -6,8 +6,8 @@ from thinc.api import get_current_ops
 from spacy import util
 from spacy.lang.en import English
 from spacy.language import Language
-from spacy.tokens.doc import SpanGroups
 from spacy.tokens import SpanGroup
+from spacy.tokens._dict_proxies import SpanGroups
 from spacy.training import Example
 from spacy.util import fix_random_seed, registry, make_tempdir
 

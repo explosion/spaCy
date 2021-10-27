@@ -61,7 +61,7 @@ cdef class Vocab:
         lookups (Lookups): Container for large lookup tables and dictionaries.
         oov_prob (float): Default OOV probability.
         vectors_name (str): Optional name to identify the vectors table.
-        get_noun_chunks (Optional[Callable[[Union[Doc, Span], Iterator[Span]]]]):
+        get_noun_chunks (Optional[Callable[[Union[Doc, Span], Iterator[Tuple[int, int, int]]]]]):
             A function that yields base noun phrases used for Doc.noun_chunks.
         """
         lex_attr_getters = lex_attr_getters if lex_attr_getters is not None else {}
@@ -426,7 +426,7 @@ cdef class Vocab:
 
         path (str or Path): A path to a directory, which will be created if
             it doesn't exist.
-        exclude (list): String names of serialization fields to exclude.
+        exclude (Iterable[str]): String names of serialization fields to exclude.
 
         DOCS: https://spacy.io/api/vocab#to_disk
         """
@@ -446,7 +446,7 @@ cdef class Vocab:
         returns it.
 
         path (str or Path): A path to a directory.
-        exclude (list): String names of serialization fields to exclude.
+        exclude (Iterable[str]): String names of serialization fields to exclude.
         RETURNS (Vocab): The modified `Vocab` object.
 
         DOCS: https://spacy.io/api/vocab#to_disk
@@ -471,7 +471,7 @@ cdef class Vocab:
     def to_bytes(self, *, exclude=tuple()):
         """Serialize the current state to a binary string.
 
-        exclude (list): String names of serialization fields to exclude.
+        exclude (Iterable[str]): String names of serialization fields to exclude.
         RETURNS (bytes): The serialized form of the `Vocab` object.
 
         DOCS: https://spacy.io/api/vocab#to_bytes
@@ -493,7 +493,7 @@ cdef class Vocab:
         """Load state from a binary string.
 
         bytes_data (bytes): The data to load from.
-        exclude (list): String names of serialization fields to exclude.
+        exclude (Iterable[str]): String names of serialization fields to exclude.
         RETURNS (Vocab): The `Vocab` object.
 
         DOCS: https://spacy.io/api/vocab#from_bytes

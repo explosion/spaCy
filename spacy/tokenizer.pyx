@@ -408,7 +408,7 @@ cdef class Tokenizer:
                     string = minus_pre
                     prefixes.push_back(self.vocab.get(mem, prefix))
                     break
-            suf_len = self.find_suffix(string)
+            suf_len = self.find_suffix(string[pre_len:])
             if suf_len != 0:
                 suffix = string[-suf_len:]
                 minus_suf = string[:-suf_len]

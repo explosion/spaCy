@@ -1,8 +1,8 @@
 from .stop_words import STOP_WORDS
-from ...language import Language
+from ...language import Language, BaseDefaults
 
 
-class KannadaDefaults(Language.Defaults):
+class KannadaDefaults(BaseDefaults):
     stop_words = STOP_WORDS
 
 

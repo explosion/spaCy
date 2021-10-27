@@ -6,7 +6,7 @@ from spacy.lang.en import English
 from spacy.vocab import Vocab
 from spacy.vectors import Vectors
 from spacy.tokenizer import Tokenizer
-from spacy.strings import hash_string
+from spacy.strings import hash_string  # type: ignore
 from spacy.tokens import Doc
 from spacy.training.initialize import convert_vectors
 

@@ -5,10 +5,10 @@ from .stop_words import STOP_WORDS
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .lex_attrs import LEX_ATTRS
 from .lemmatizer import RussianLemmatizer
-from ...language import Language
+from ...language import Language, BaseDefaults
 
 
-class RussianDefaults(Language.Defaults):
+class RussianDefaults(BaseDefaults):
     tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     lex_attr_getters = LEX_ATTRS
     stop_words = STOP_WORDS

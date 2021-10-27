@@ -1,4 +1,4 @@
-from typing import Optional, Any, List, Union
+from typing import Callable, Iterable, Mapping, Optional, Any, List, Union
 from enum import Enum
 from pathlib import Path
 from wasabi import Printer
@@ -9,7 +9,7 @@ import itertools
 
 from ._util import app, Arg, Opt
 from ..training import docs_to_json
-from ..tokens import DocBin
+from ..tokens import Doc, DocBin
 from ..training.converters import iob_to_docs, conll_ner_to_docs, json_to_docs
 from ..training.converters import conllu_to_docs
 
@@ -19,7 +19,7 @@ from ..training.converters import conllu_to_docs
 # entry to this dict with the file extension mapped to the converter function
 # imported from /converters.
 
-CONVERTERS = {
+CONVERTERS: Mapping[str, Callable[..., Iterable[Doc]]] = {
     "conllubio": conllu_to_docs,
     "conllu": conllu_to_docs,
     "conll": conll_ner_to_docs,
@@ -66,19 +66,16 @@ def convert_cli(
 
     DOCS: https://spacy.io/api/cli#convert
     """
-    if isinstance(file_type, FileTypes):
-        # We get an instance of the FileTypes from the CLI so we need its string value
-        file_type = file_type.value
     input_path = Path(input_path)
-    output_dir = "-" if output_dir == Path("-") else output_dir
+    output_dir: Union[str, Path] = "-" if output_dir == Path("-") else output_dir
     silent = output_dir == "-"
     msg = Printer(no_print=silent)
-    verify_cli_args(msg, input_path, output_dir, file_type, converter, ner_map)
+    verify_cli_args(msg, input_path, output_dir, file_type.value, converter, ner_map)
     converter = _get_converter(msg, converter, input_path)
     convert(
         input_path,
         output_dir,
-        file_type=file_type,
+        file_type=file_type.value,
         n_sents=n_sents,
         seg_sents=seg_sents,
         model=model,
@@ -94,7 +91,7 @@ def convert_cli(
 
 
 def convert(
-    input_path: Union[str, Path],
+    input_path: Path,
     output_dir: Union[str, Path],
     *,
     file_type: str = "json",
@@ -108,13 +105,14 @@ def convert(
     lang: Optional[str] = None,
     concatenate: bool = False,
     silent: bool = True,
-    msg: Optional[Printer],
+    msg: Optional[Printer] = None,
 ) -> None:
+    input_path = Path(input_path)
     if not msg:
         msg = Printer(no_print=silent)
     ner_map = srsly.read_json(ner_map) if ner_map is not None else None
     doc_files = []
-    for input_loc in walk_directory(Path(input_path), converter):
+    for input_loc in walk_directory(input_path, converter):
         with input_loc.open("r", encoding="utf-8") as infile:
             input_data = infile.read()
         # Use converter function to convert data
@@ -141,7 +139,7 @@ def convert(
         else:
             db = DocBin(docs=docs, store_user_data=True)
             len_docs = len(db)
-            data = db.to_bytes()
+            data = db.to_bytes()  # type: ignore[assignment]
         if output_dir == "-":
             _print_docs_to_stdout(data, file_type)
         else:
@@ -220,13 +218,12 @@ def walk_directory(path: Path, converter: str) -> List[Path]:
 
 def verify_cli_args(
     msg: Printer,
-    input_path: Union[str, Path],
+    input_path: Path,
     output_dir: Union[str, Path],
-    file_type: FileTypes,
+    file_type: str,
     converter: str,
     ner_map: Optional[Path],
 ):
-    input_path = Path(input_path)
     if file_type not in FILE_TYPES_STDOUT and output_dir == "-":
         msg.fail(
             f"Can't write .{file_type} data to stdout. Please specify an output directory.",
@@ -244,13 +241,13 @@ def verify_cli_args(
             msg.fail("No input files in directory", input_path, exits=1)
         file_types = list(set([loc.suffix[1:] for loc in input_locs]))
         if converter == "auto" and len(file_types) >= 2:
-            file_types = ",".join(file_types)
-            msg.fail("All input files must be same type", file_types, exits=1)
+            file_types_str = ",".join(file_types)
+            msg.fail("All input files must be same type", file_types_str, exits=1)
     if converter != "auto" and converter not in CONVERTERS:
         msg.fail(f"Can't find converter for {converter}", exits=1)
 
 
-def _get_converter(msg, converter, input_path):
+def _get_converter(msg, converter, input_path: Path):
     if input_path.is_dir():
         input_path = walk_directory(input_path, converter)[0]
     if converter == "auto":
