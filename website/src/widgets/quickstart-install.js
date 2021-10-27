@@ -29,7 +29,7 @@ const LANG_EXTRAS = ['ja'] // only for languages with models
 const QuickstartInstall = ({ id, title }) => {
     const [train, setTrain] = useState(false)
     const [platform, setPlatform] = useState(DEFAULT_PLATFORM)
-    const [apple, setApple] = useState(DEFAULT_OS === 'mac' && DEFAULT_PLATFORM === 'arm')
+    const [os, setOs] = useState(DEFAULT_OS)
     const [hardware, setHardware] = useState(DEFAULT_HARDWARE)
     const [cuda, setCuda] = useState(DEFAULT_CUDA)
     const [selectedModels, setModels] = useState(DEFAULT_MODELS)
@@ -39,11 +39,14 @@ const QuickstartInstall = ({ id, title }) => {
         config: v => setTrain(v.includes('train')),
         models: setModels,
         optimize: v => setEfficiency(v.includes('efficiency')),
+        platform: v => setPlatform(v[0]),
+        os: v => setOs(v[0]),
     }
     const showDropdown = {
         hardware: () => hardware === 'gpu',
     }
     const modelExtras = train ? selectedModels.filter(m => LANG_EXTRAS.includes(m)) : []
+    const apple = os === 'mac' && platform === 'arm'
     const pipExtras = [
         hardware === 'gpu' && cuda,
         train && 'transformers',
@@ -76,7 +79,7 @@ const QuickstartInstall = ({ id, title }) => {
                         title: 'Platform',
                         options: [
                             { id: 'x86', title: 'x86', checked: true },
-                            { id: 'arm', title: 'ARM/M1' },
+                            { id: 'arm', title: 'ARM / M1' },
                         ],
                         defaultValue: DEFAULT_PLATFORM,
                     },
