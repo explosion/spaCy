@@ -42,7 +42,7 @@ def TransitionModel(
             "nO": None,  # Output size
             "nP": maxout_pieces,
             "nH": hidden_width,
-            "nI": tok2vec.maybe_get_dim("nO"),
+            "nI": tok2vec_projected.maybe_get_dim("nO"),
             "nF": state_tokens,
         },
         attrs={
@@ -69,6 +69,9 @@ def resize_output(model: Model, new_nO: int) -> Model:
         new_b[:old_nO] = old_b  # type: ignore
         for i in range(old_nO, new_nO):
             model.attrs["unseen_classes"].add(i)
+        model.set_param("upper_W", new_W)
+        model.set_param("upper_b", new_b)
+    model.set_dim("nO", new_nO, force=True)
     return model
 
 
@@ -167,9 +170,8 @@ def forward(model, docs_moves: Tuple[List[Doc], TransitionSystem], is_train: boo
                 if (d_scores[:, clas] < 0).any():
                     model.attrs["unseen_classes"].remove(clas)
         d_scores *= unseen_mask
-        ids = ops.xp.concatenate(all_ids)
-        statevecs = ops.xp.concatenate(all_statevecs)
-        which = ops.xp.concatenate(all_which)
+        statevecs = ops.xp.vstack(all_statevecs)
+        which = ops.xp.vstack(all_which)
         # Calculate the gradients for the parameters of the upper layer.
         model.inc_grad("upper_b", d_scores.sum(axis=0))
         model.inc_grad("upper_W", model.ops.gemm(d_scores, statevecs, trans1=True))
@@ -178,8 +180,12 @@ def forward(model, docs_moves: Tuple[List[Doc], TransitionSystem], is_train: boo
         # Backprop through the maxout activation
         d_preacts = model.ops.backprop_maxout(d_statevecs, which, model.get_dim("nP"))
         # We don't need to backprop the summation, because we pass back the IDs instead
-        d_tokvecs = backprop_feats((d_preacts, ids))
-        return (backprop_tok2vec(d_tokvecs), None)
+        d_state_features = backprop_feats((d_preacts, all_ids))
+        ids1d = model.ops.xp.vstack(all_ids).flatten()
+        d_state_features = d_state_features.reshape((ids1d.size, -1))
+        d_tokvecs = model.ops.alloc((tokvecs.shape[0] + 1, tokvecs.shape[1]))
+        model.ops.scatter_add(d_tokvecs, ids1d, d_state_features)
+        return (backprop_tok2vec(d_tokvecs[:-1]), None)
 
     return (states, all_scores), backprop_parser
 
@@ -200,6 +206,7 @@ def _forward_precomputable_affine(model, X: Floats2d, is_train: bool):
     nH = model.get_dim("nH")
     nP = model.get_dim("nP")
     nI = model.get_dim("nI")
+    assert X.shape == (X.shape[0], nI), X.shape
     Yf_ = model.ops.gemm(X, model.ops.reshape2f(W, nF * nH * nP, nI), trans2=True)
     Yf = model.ops.reshape4f(Yf_, Yf_.shape[0], nF, nH, nP)
     Yf = model.ops.xp.vstack((Yf, pad))
@@ -226,19 +233,13 @@ def _forward_precomputable_affine(model, X: Floats2d, is_train: bool):
         model.inc_grad(
             "lower_pad", _backprop_precomputable_affine_padding(model, dY, ids)
         )
-        print("X", X.shape)
-        print("ids", ids.shape)
-        print("dims", "nF", "nI")
-        print("X[ids]", X[ids].shape)
-        Xf = model.ops.reshape2f(X[ids], ids.shape[0], nF * nI)
-
         model.inc_grad("lower_b", dY.sum(axis=0))  # type: ignore
         dY = model.ops.reshape2f(dY, dY.shape[0], nH * nP)
-
         Wopfi = W.transpose((1, 2, 0, 3))
         Wopfi = Wopfi.reshape((nH * nP, nF * nI))
         dXf = model.ops.gemm(dY.reshape((dY.shape[0], nH * nP)), Wopfi)
-
+        ids1d = model.ops.xp.vstack(ids).flatten()
+        Xf = model.ops.reshape2f(X[ids1d], -1, nF * nI)
         dWopfi = model.ops.gemm(dY, Xf, trans1=True)
         dWopfi = dWopfi.reshape((nH, nP, nF, nI))
         # (o, p, f, i) --> (f, o, p, i)
@@ -250,6 +251,7 @@ def _forward_precomputable_affine(model, X: Floats2d, is_train: bool):
 
 
 def _backprop_precomputable_affine_padding(model, dY, ids):
+    ids = model.ops.xp.vstack(ids)
     nB = dY.shape[0]
     nF = model.get_dim("nF")
     nP = model.get_dim("nP")

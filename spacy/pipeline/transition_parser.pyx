@@ -263,6 +263,7 @@ class Parser(TrainablePipe):
         best_costs = costs.min(axis=1, keepdims=True)
         gscores = scores.copy()
         min_score = scores.min()
+        assert costs.shape == scores.shape, (costs.shape, scores.shape)
         gscores[costs > best_costs] = min_score
         max_ = scores.max(axis=1, keepdims=True)
         gmax = gscores.max(axis=1, keepdims=True)
