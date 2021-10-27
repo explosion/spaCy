@@ -80,12 +80,12 @@ class JapaneseTokenizer(DummyTokenizer):
             morph = {}
             if dtoken.inf:
                 # it's normal for this to be empty for non-inflecting types
-                morph["inflection"] = dtoken.inf
+                morph["Inflection"] = dtoken.inf
             token.norm_ = dtoken.norm
             if dtoken.reading:
                 # punctuation is its own reading, but we don't want values like
                 # "=" here
-                morph["reading"] = re.sub("[=|]", "_", dtoken.reading)
+                morph["Reading"] = re.sub("[=|]", "_", dtoken.reading)
             token.morph = MorphAnalysis(self.vocab, morph)
         if self.need_subtokens:
             doc.user_data["sub_tokens"] = sub_tokens_list
