@@ -55,6 +55,8 @@ PARTIAL_DATA = [
     ),
 ]
 
+PARSERS = ["parser"] # TODO: Test beam_parser when ready
+
 eps = 0.1
 
 
@@ -215,7 +217,7 @@ def test_parser_set_sent_starts(en_vocab):
             assert token.head in sent
 
 
-@pytest.mark.parametrize("pipe_name", ["parser", "beam_parser"])
+@pytest.mark.parametrize("pipe_name", PARSERS)
 def test_incomplete_data(pipe_name):
     # Test that the parser works with incomplete information
     nlp = English()
@@ -241,7 +243,7 @@ def test_incomplete_data(pipe_name):
     assert doc[2].head.i == 1
 
 
-@pytest.mark.parametrize("pipe_name", ["parser", "beam_parser"])
+@pytest.mark.parametrize("pipe_name", PARSERS)
 def test_overfitting_IO(pipe_name):
     # Simple test to try and quickly overfit the dependency parser (normal or beam)
     nlp = English()
@@ -292,6 +294,7 @@ def test_overfitting_IO(pipe_name):
     assert_equal(batch_deps_1, no_batch_deps)
 
 
+@pytest.mark.xfail(reason="no beam parser yet")
 def test_beam_parser_scores():
     # Test that we can get confidence values out of the beam_parser pipe
     beam_width = 16
@@ -330,6 +333,7 @@ def test_beam_parser_scores():
             assert 0 - eps <= head_score <= 1 + eps
 
 
+@pytest.mark.xfail(reason="no beam parser yet")
 def test_beam_overfitting_IO():
     # Simple test to try and quickly overfit the Beam dependency parser
     nlp = English()

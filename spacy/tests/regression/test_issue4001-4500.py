@@ -287,6 +287,7 @@ def test_multiple_predictions():
     dummy_pipe(doc)
 
 
+@pytest.mark.xfail(reason="no beam parser yet")
 def test_issue4313():
     """ This should not crash or exit with some strange error code """
     beam_width = 16
