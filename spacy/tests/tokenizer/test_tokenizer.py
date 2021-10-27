@@ -2,7 +2,7 @@ import pytest
 import re
 from spacy.vocab import Vocab
 from spacy.tokenizer import Tokenizer
-from spacy.util import ensure_path
+from spacy.util import ensure_path, compile_prefix_regex, compile_suffix_regex
 from spacy.lang.en import English
 
 
@@ -212,3 +212,20 @@ def test_tokenizer_flush_specials(en_vocab):
     assert [t.text for t in tokenizer1("a a.")] == ["a a", "."]
     tokenizer1.rules = {}
     assert [t.text for t in tokenizer1("a a.")] == ["a", "a", "."]
+
+
+def test_tokenizer_prefix_suffix_overlap_lookbehind(en_vocab):
+    # the prefix and suffix matches overlap in the suffix lookbehind
+    prefixes = ['a(?=.)']
+    suffixes = [r'(?<=\w)\.', r'(?<=a)\d+\.']
+    prefix_re = compile_prefix_regex(prefixes)
+    suffix_re = compile_suffix_regex(suffixes)
+    tokenizer = Tokenizer(
+        en_vocab,
+        prefix_search=prefix_re.search,
+        suffix_search=suffix_re.search,
+    )
+    tokens = [t.text for t in tokenizer("a10.")]
+    assert tokens == ["a", "10", "."]
+    explain_tokens = [t[1] for t in tokenizer.explain("a10.")]
+    assert tokens == explain_tokens
