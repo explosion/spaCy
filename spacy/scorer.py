@@ -259,6 +259,7 @@ class Scorer:
         RETURNS (dict): A dictionary containing the per-feat PRF scores under
             the key attr_per_feat.
         """
+        micro_score = PRFScore()
         per_feat = {}
         for example in examples:
             pred_doc = example.predicted
@@ -300,15 +301,22 @@ class Scorer:
                                     pred_per_feat[field] = set()
                                 pred_per_feat[field].add((gold_i, feat))
             for field in per_feat:
+                micro_score.score_set(pred_per_feat.get(field, set()), gold_per_feat.get(field, set()))
                 per_feat[field].score_set(
                     pred_per_feat.get(field, set()), gold_per_feat.get(field, set())
                 )
-        score_key = f"{attr}_per_feat"
-        if any([len(v) for v in per_feat.values()]):
-            result = {k: v.to_dict() for k, v in per_feat.items()}
-            return {score_key: result}
+        result = {}
+        if len(micro_score) > 0:
+            result[f"{attr}_micro_p"] = micro_score.precision
+            result[f"{attr}_micro_r"] = micro_score.recall
+            result[f"{attr}_micro_f"] = micro_score.fscore
+            result[f"{attr}_per_feat"] = {k: v.to_dict() for k, v in per_feat.items()}
         else:
-            return {score_key: None}
+            result[f"{attr}_micro_p"] = None
+            result[f"{attr}_micro_r"] = None
+            result[f"{attr}_micro_f"] = None
+            result[f"{attr}_per_feat"] = None
+        return result
 
     @staticmethod
     def score_spans(
