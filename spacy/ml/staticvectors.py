@@ -1,12 +1,13 @@
-from typing import List, Tuple, Callable, Optional, cast
+from typing import List, Tuple, Callable, Optional, Sequence, cast
 from thinc.initializers import glorot_uniform_init
 from thinc.util import partial
-from thinc.types import Ragged, Floats2d, Floats1d
+from thinc.types import Ragged, Floats2d, Floats1d, Ints1d
 from thinc.api import Model, Ops, registry
 
 from ..tokens import Doc
 from ..errors import Errors
 from ..vectors import Mode
+from ..vocab import Vocab
 
 
 @registry.layers("spacy.StaticVectors.v2")
@@ -38,9 +39,11 @@ def forward(
     token_count = sum(len(doc) for doc in docs)
     if not token_count:
         return _handle_empty(model.ops, model.get_dim("nO"))
-    key_attr = model.attrs["key_attr"]
-    keys = model.ops.flatten([doc.to_array(key_attr) for doc in docs])
-    vocab = docs[0].vocab
+    key_attr: int = model.attrs["key_attr"]
+    keys: Ints1d = model.ops.flatten(
+        cast(Sequence, [doc.to_array(key_attr) for doc in docs])
+    )
+    vocab: Vocab = docs[0].vocab
     W = cast(Floats2d, model.ops.as_contig(model.get_param("W")))
     if vocab.vectors.mode == Mode.default:
         V = cast(Floats2d, model.ops.asarray(vocab.vectors.data))
