@@ -307,7 +307,7 @@ class Scorer:
                 per_feat[field].score_set(
                     pred_per_feat.get(field, set()), gold_per_feat.get(field, set())
                 )
-        result = {}
+        result: Dict[str, Any] = {}
         if len(micro_score) > 0:
             result[f"{attr}_micro_p"] = micro_score.precision
             result[f"{attr}_micro_r"] = micro_score.recall
