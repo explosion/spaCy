@@ -258,7 +258,7 @@ class Scorer:
         missing_values (Set[Any]): Attribute values to treat as missing
             annotation in the reference annotation.
         RETURNS (dict): A dictionary containing the micro PRF scores under the
-            key attr_micro_p/r/f/ and the per-feat PRF scores under
+            key attr_micro_p/r/f and the per-feat PRF scores under
             attr_per_feat.
         """
         micro_score = PRFScore()
