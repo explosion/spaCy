@@ -121,7 +121,7 @@ import pytest
         ),
         # Asimismo defiende la financiación pública de la investigación básica y pone de manifiesto que las empresas se centran más en la investigación y desarrollo con objetivos de mercado. -> la financiación pública, la investigación básica, manifiesto, las empresas, se, la investigación, desarrollo, objetivos, mercado
         (
-            ['Asimismo', 'defiende', 'la', 'financiación', 'pública', 'de', 'la', 'investigación', 'básica', 'y', 'pone', 'de', 'manifiesto', 'que', 'las', 'empresas', 'se', 'centran', 'más', 'en', 'la', 'investigación', 'y' 'desarrollo', 'con', 'objetivos', 'de', 'mercado'],
+            ['Asimismo', 'defiende', 'la', 'financiación', 'pública', 'de', 'la', 'investigación', 'básica', 'y', 'pone', 'de', 'manifiesto', 'que', 'las', 'empresas', 'se', 'centran', 'más', 'en', 'la', 'investigación', 'y', 'desarrollo', 'con', 'objetivos', 'de', 'mercado'],
             [1, 1, 3, 1, 3, 7, 7, 3, 7, 10, 1, 12, 10, 17, 15, 17, 17, 10, 17, 21, 21, 17, 23, 21, 25, 17, 27, 25],
             ['advmod', 'ROOT', 'det', 'obj', 'amod', 'case', 'det', 'nmod', 'amod', 'cc', 'conj', 'case', 'obl', 'mark', 'det', 'nsubj', 'obj', 'ccomp', 'obj', 'case', 'det', 'obl', 'cc', 'conj', 'case', 'obl', 'case', 'nmod'],
             ['ADV', 'VERB', 'DET', 'NOUN', 'ADJ', 'ADP', 'DET', 'NOUN', 'ADJ', 'CCONJ', 'VERB', 'ADP', 'NOUN', 'SCONJ', 'DET', 'NOUN', 'PRON', 'VERB', 'ADV', 'ADP', 'DET', 'NOUN', 'CCONJ', 'NOUN', 'ADP', 'NOUN', 'ADP', 'NOUN'],
