@@ -4,10 +4,12 @@ import { StaticQuery, graphql } from 'gatsby'
 import { Quickstart, QS } from '../components/quickstart'
 import { repo, DEFAULT_BRANCH } from '../components/util'
 
+const DEFAULT_OS = 'mac'
+const DEFAULT_PLATFORM = 'x86'
 const DEFAULT_MODELS = ['en']
 const DEFAULT_OPT = 'efficiency'
 const DEFAULT_HARDWARE = 'cpu'
-const DEFAULT_CUDA = 'cuda102'
+const DEFAULT_CUDA = 'cuda113'
 const CUDA = {
     '8.0': 'cuda80',
     '9.0': 'cuda90',
@@ -19,11 +21,15 @@ const CUDA = {
     '11.0': 'cuda110',
     '11.1': 'cuda111',
     '11.2': 'cuda112',
+    '11.3': 'cuda113',
+    '11.4': 'cuda114',
 }
 const LANG_EXTRAS = ['ja'] // only for languages with models
 
 const QuickstartInstall = ({ id, title }) => {
     const [train, setTrain] = useState(false)
+    const [platform, setPlatform] = useState(DEFAULT_PLATFORM)
+    const [apple, setApple] = useState(DEFAULT_OS === 'mac' && DEFAULT_PLATFORM === 'arm')
     const [hardware, setHardware] = useState(DEFAULT_HARDWARE)
     const [cuda, setCuda] = useState(DEFAULT_CUDA)
     const [selectedModels, setModels] = useState(DEFAULT_MODELS)
@@ -42,6 +48,7 @@ const QuickstartInstall = ({ id, title }) => {
         hardware === 'gpu' && cuda,
         train && 'transformers',
         train && 'lookups',
+        apple && 'apple',
         ...modelExtras,
     ]
         .filter(e => e)
@@ -62,6 +69,16 @@ const QuickstartInstall = ({ id, title }) => {
                             { id: 'windows', title: 'Windows' },
                             { id: 'linux', title: 'Linux' },
                         ],
+                        defaultValue: DEFAULT_OS,
+                    },
+                    {
+                        id: 'platform',
+                        title: 'Platform',
+                        options: [
+                            { id: 'x86', title: 'x86', checked: true },
+                            { id: 'arm', title: 'ARM/M1' },
+                        ],
+                        defaultValue: DEFAULT_PLATFORM,
                     },
                     {
                         id: 'package',
