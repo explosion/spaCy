@@ -133,13 +133,14 @@ def forward(model, docs_moves: Tuple[List[Doc], TransitionSystem], is_train: boo
     next_states = [s for s in states if not s.is_final()]
     unseen_mask = _get_unseen_mask(model)
     ids = numpy.zeros((len(states), nF), dtype="i")
+    arange = model.ops.xp.arange(nF)
     while next_states:
         ids = ids[: len(next_states)]
         for i, state in enumerate(next_states):
             state.set_context_tokens(ids, i, nF)
         # Sum the state features, add the bias and apply the activation (maxout)
         # to create the state vectors.
-        preacts = _sum_state_features(ops, feats, ids)
+        preacts = feats[ids, arange].sum(axis=1)  # type: ignore
         preacts += lower_b
         statevecs, which = ops.maxout(preacts)
         # Multiply the state-vector by the scores weights and add the bias,
@@ -152,7 +153,7 @@ def forward(model, docs_moves: Tuple[List[Doc], TransitionSystem], is_train: boo
         all_scores.append(scores)
         if is_train:
             # Remember intermediate results for the backprop.
-            all_ids.append(ids)
+            all_ids.append(ids.copy())
             all_statevecs.append(statevecs)
             all_which.append(which)
 
@@ -175,7 +176,7 @@ def forward(model, docs_moves: Tuple[List[Doc], TransitionSystem], is_train: boo
         # Now calculate d_statevecs, by backproping through the upper linear layer.
         d_statevecs = model.ops.gemm(d_scores, upper_W)
         # Backprop through the maxout activation
-        d_preacts = model.ops.backprop_maxount(d_statevecs, which, model.get_dim("nP"))
+        d_preacts = model.ops.backprop_maxout(d_statevecs, which, model.get_dim("nP"))
         # We don't need to backprop the summation, because we pass back the IDs instead
         d_tokvecs = backprop_feats((d_preacts, ids))
         return (backprop_tok2vec(d_tokvecs), None)
@@ -189,23 +190,6 @@ def _get_unseen_mask(model: Model) -> Floats1d:
     for class_ in model.attrs.get("unseen_classes", set()):
         mask[class_] = 0
     return mask
-
-
-def _sum_state_features(ops: Ops, feats: Floats3d, ids: Ints2d, _arange=[]) -> Floats2d:
-    # Here's what we're trying to implement here:
-    #
-    # for i in range(ids.shape[0]):
-    #     for j in range(ids.shape[1]):
-    #         output[i] += feats[ids[i, j], j]
-    #
-    # The arange thingy here is highly weird to me, but apparently
-    # it's how it works. If you squint a bit at the loop above I guess
-    # it makes sense?
-    if not _arange:
-        _arange.append(ops.xp.arange(ids.shape[1]))
-    if _arange[0].size != ids.shape[1]:
-        _arange[0] = ops.xp.arange(ids.shape[1])
-    return feats[ids, _arange[0]].sum(axis=1)  # type: ignore
 
 
 def _forward_precomputable_affine(model, X: Floats2d, is_train: bool):
@@ -265,7 +249,7 @@ def _backprop_precomputable_affine_padding(model, dY, ids):
     nB = dY.shape[0]
     nF = model.get_dim("nF")
     nP = model.get_dim("nP")
-    nO = model.get_dim("nO")
+    nH = model.get_dim("nH")
     # Backprop the "padding", used as a filler for missing values.
     # Values that are missing are set to -1, and each state vector could
     # have multiple missing values. The padding has different values for
@@ -280,8 +264,8 @@ def _backprop_precomputable_affine_padding(model, dY, ids):
     #
     # (ids < 0).T @ dY
     mask = model.ops.asarray(ids < 0, dtype="f")
-    d_pad = model.ops.gemm(mask, dY.reshape(nB, nO * nP), trans1=True)
-    return d_pad.reshape((1, nF, nO, nP))
+    d_pad = model.ops.gemm(mask, dY.reshape(nB, nH * nP), trans1=True)
+    return d_pad.reshape((1, nF, nH, nP))
 
 
 def _infer_nO(Y: Optional[Tuple[List[State], List[Floats2d]]]) -> Optional[int]:

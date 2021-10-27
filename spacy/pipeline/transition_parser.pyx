@@ -239,8 +239,10 @@ class Parser(TrainablePipe):
         set_dropout_rate(self.model, drop)
         docs = [eg.x for eg in examples]
         (states, scores), backprop_scores = self.model.begin_update((docs, self.moves))
+        if sum(s.shape[0] for s in scores) == 0:
+            return losses
         d_scores = self.get_loss((states, scores), examples)
-        backprop_scores(d_scores)
+        backprop_scores((states, d_scores))
         if sgd not in (None, False):
             self.finish_update(sgd)
         losses[self.name] += (d_scores**2).sum()
@@ -252,22 +254,24 @@ class Parser(TrainablePipe):
 
     def get_loss(self, states_scores, examples):
         states, scores = states_scores
+        scores = self.model.ops.xp.vstack(scores)
         costs = self._get_costs_from_histories(
             examples,
             [list(state.history) for state in states]
         )
         xp = get_array_module(scores)
         best_costs = costs.min(axis=1, keepdims=True)
-        is_gold = costs <= costs.min(axis=1, keepdims=True)
-        gscores = scores[is_gold]
-        max_ = scores.max(axis=1)
+        gscores = scores.copy()
+        min_score = scores.min()
+        gscores[costs > best_costs] = min_score
+        max_ = scores.max(axis=1, keepdims=True)
         gmax = gscores.max(axis=1, keepdims=True)
         exp_scores = xp.exp(scores - max_)
         exp_gscores = xp.exp(gscores - gmax)
         Z = exp_scores.sum(axis=1, keepdims=True)
         gZ = exp_gscores.sum(axis=1, keepdims=True)
         d_scores = exp_scores / Z
-        d_scores[is_gold] -= exp_gscores / gZ
+        d_scores -= (costs <= best_costs) * (exp_gscores / gZ)
         return d_scores
 
     def _get_costs_from_histories(self, examples, histories):

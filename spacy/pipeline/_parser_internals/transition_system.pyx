@@ -279,6 +279,7 @@ cdef void c_transition_batch(TransitionSystem moves, StateC** states, const floa
         else:
             action = moves.c[guess]
             action.do(states[i], action.label)
+            states[i].history.push_back(guess)
     free(is_valid)
 
 
