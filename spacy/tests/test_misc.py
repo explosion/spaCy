@@ -50,6 +50,7 @@ def test_util_get_package_path(package):
     assert isinstance(path, Path)
 
 
+@pytest.mark.xfail(reason="No precomputable affine")
 def test_PrecomputableAffine(nO=4, nI=5, nF=3, nP=2):
     model = PrecomputableAffine(nO=nO, nI=nI, nF=nF, nP=nP).initialize()
     assert model.get_param("W").shape == (nF, nO, nP, nI)
