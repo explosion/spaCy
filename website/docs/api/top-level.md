@@ -933,6 +933,31 @@ This method was previously available as `spacy.gold.spans_from_biluo_tags`.
 | `tags`      | A sequence of [BILUO](/usage/linguistic-features#accessing-ner) tags with each tag describing one token. Each tag string will be of the form of either `""`, `"O"` or `"{action}-{label}"`, where action is one of `"B"`, `"I"`, `"L"`, `"U"`. ~~List[str]~~ |
 | **RETURNS** | A sequence of `Span` objects with added entity labels. ~~List[Span]~~                                                                                                                                                                                        |
 
+### spacy.cli.train.train {#spacy_cli_train_train tag="function" new="3.2"}
+
+Call the train command, just like `spacy train` from the command line. Usually
+it's easier to use the command line directly, but if you need to kick off
+training from code this is how to do it. (The `train_cli` command, which is used
+internally, has a slightly more complicated API to cooperate with CLI related
+tooling.)
+
+> #### Example
+>
+> ```python
+> from spacy.cli.train import train
+>
+> train("./config.cfg", overrides={"paths.train": "./train.spacy", "paths.dev": "./dev.spacy"})
+>
+> ```
+
+| Name           | Description                                                                                             |
+| -------------- | ------------------------------------------------------------------------------------------------------- |
+| `config_path`  | Path to the config to use for training. ~~Path~~                                                        |
+| `output_path`  | Optional name of directory to save output model in. If not provided a model will not be saved. ~~Path~~ |
+| _keyword-only_ |                                                                                                         |
+| `use_gpu`      | Which GPU to use. Defaults to -1 for no GPU. ~~int~~                                                    |
+| `overrides`    | Values to override config settings. ~~Dict[str, Any]~~                                                  |
+
 ## Utility functions {#util source="spacy/util.py"}
 
 spaCy comes with a small collection of utility functions located in
