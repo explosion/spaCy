@@ -102,7 +102,23 @@ import pytest
             ['det', 'ROOT', 'amod', 'case', 'nmod', 'cc', 'det', 'conj'],
             ['DET', 'NOUN', 'ADJ', 'ADP', 'PROPN', 'CCONJ', 'DET', 'NOUN'],
             [(0,3), (4,5), (6,8)]
-        )
+        ),
+        # Afirmó que sigue el criterio europeo y que trata de incentivar el mercado donde no lo hay -> el criterio europeo, el mercado, donde, lo
+        (
+            ['Afirmó', 'que', 'sigue', 'el', 'criterio', 'europeo', 'y', 'que', 'trata', 'de', 'incentivar', 'el', 'mercado', 'donde', 'no', 'lo', 'hay'],
+            [0, 2, 0, 4, 2, 4, 8, 8, 2, 10, 8, 12, 10, 16, 16, 16, 0],
+            ['ROOT', 'mark', 'ccomp', 'det', 'obj', 'amod', 'cc', 'mark', 'conj', 'mark', 'xcomp', 'det', 'obj', 'obl', 'advmod', 'obj', 'advcl'],
+            ['VERB', 'SCONJ', 'VERB', 'DET', 'NOUN', 'ADJ', 'CCONJ', 'SCONJ', 'VERB', 'ADP', 'VERB', 'DET', 'NOUN', 'PRON', 'ADV', 'PRON', 'AUX'],
+            [(3,6), (11,13), (13,14), (15,16)]
+        ),
+        # Tras indicar que la inversión media en investigación en la Unión Europea se sitúa en el 1,8 por ciento del PIB, frente al 2,8 por ciento en Japón y EEUU, Couceiro dijo que España está en "el buen camino" y se está creando un entorno propicio para la innovación empresarial' -> la inversión media, investigación, la Unión Europea, se, PIB, Japón, EEUU, Couceiro, España, se, un entorno propicio para la innovación empresaria
+        (
+            ['Tras', 'indicar', 'que', 'la', 'inversión', 'media', 'en', 'investigación', 'en', 'la', 'Unión', 'Europea', 'se', 'sitúa', 'en', 'el', '1,8', 'por', 'ciento', 'del', 'PIB', ',', 'frente', 'al', '2,8', 'por', 'ciento', 'en', 'Japón', 'y', 'EEUU', ',', 'Couceiro', 'dijo', 'que', 'España', 'está', 'en', '"', 'el', 'buen', 'camino', '"', 'y', 'se', 'está', 'creando', 'un', 'entorno', 'propicio', 'para', 'la', 'innovación', 'empresarial'],
+            [1, 33, 13, 4, 13, 4, 7, 4, 10, 10, 4, 10, 13, 1, 16, 16, 13, 18, 16, 20, 16, 24, 24, 22, 13, 26, 24, 28, 24, 30, 28, 1, 33, 33, 41, 41, 41, 41, 41, 41, 41, 33, 41, 46, 46, 46, 33, 48, 46, 48, 52, 52, 49, 52],
+            ['mark', 'advcl', 'mark', 'det', 'nsubj', 'amod', 'case', 'nmod', 'case', 'det', 'nmod', 'flat', 'obj', 'ccomp', 'case', 'det', 'obj', 'case', 'compound', 'case', 'nmod', 'punct', 'case', 'fixed', 'obl', 'case', 'compound', 'case', 'nmod', 'cc', 'conj', 'punct', 'nsubj', 'ROOT', 'mark', 'nsubj', 'cop', 'case', 'punct', 'det', 'amod', 'ccomp', 'punct', 'cc', 'obj', 'aux', 'conj', 'det', 'nsubj', 'amod', 'case', 'det', 'nmod', 'amod'],
+            ['ADP', 'VERB', 'SCONJ', 'DET', 'NOUN', 'ADJ', 'ADP', 'NOUN', 'ADP', 'DET', 'PROPN', 'PROPN', 'PRON', 'VERB', 'ADP', 'DET', 'NUM', 'ADP', 'NUM', 'ADP', 'PROPN', 'PUNCT', 'NOUN', 'ADP', 'NUM', 'ADP', 'NUM', 'ADP', 'PROPN', 'CCONJ', 'PROPN', 'PUNCT', 'PROPN', 'VERB', 'SCONJ', 'PROPN', 'AUX', 'ADP', 'PUNCT', 'DET', 'ADJ', 'NOUN', 'PUNCT', 'CCONJ', 'PRON', 'AUX', 'VERB', 'DET', 'NOUN', 'ADJ', 'ADP', 'DET', 'NOUN', 'ADJ'],
+            [(3, 6), (7, 8), (9, 12), (12, 13), (20, 21), (28, 29), (30, 31), (32, 33), (35, 36), (44, 45), (47, 54)]
+        ),
     ],
 )
 # fmt: on
