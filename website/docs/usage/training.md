@@ -54,6 +54,14 @@ config.
 
 </Infobox>
 
+<Infobox variant="danger">
+
+It shouldn't generally be necessary, but you can also call the train command
+[directly from code](/api/top-level#spacy_cli_train_train). The interface is the
+same as the CLI, and you'll still need a training config.
+
+</Infobox>
+
 > #### Instructions: widget
 >
 > 1. Select your requirements and settings.
