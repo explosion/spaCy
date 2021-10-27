@@ -226,6 +226,10 @@ def _forward_precomputable_affine(model, X: Floats2d, is_train: bool):
         model.inc_grad(
             "lower_pad", _backprop_precomputable_affine_padding(model, dY, ids)
         )
+        print("X", X.shape)
+        print("ids", ids.shape)
+        print("dims", "nF", "nI")
+        print("X[ids]", X[ids].shape)
         Xf = model.ops.reshape2f(X[ids], ids.shape[0], nF * nI)
 
         model.inc_grad("lower_b", dY.sum(axis=0))  # type: ignore
