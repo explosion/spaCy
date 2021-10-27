@@ -111,6 +111,22 @@ import pytest
             ['VERB', 'SCONJ', 'VERB', 'DET', 'NOUN', 'ADJ', 'CCONJ', 'SCONJ', 'VERB', 'ADP', 'VERB', 'DET', 'NOUN', 'PRON', 'ADV', 'PRON', 'AUX'],
             [(3,6), (11,13), (13,14), (15,16)]
         ),
+        # En este sentido se refirió a la reciente creación del Ministerio de Ciencia y Tecnología y a las primeras declaraciones de su titular, Anna Birulés, sobre el impulso de la investigación, desarrollo e innovación -> este sentido, se, la reciente creación, Ministerio de Ciencia y Tecnología, a las primeras declaraciones, su titular, , Anna Birulés,, el impulso, la investigación, , desarrollo, innovación
+        (
+            ['En', 'este', 'sentido', 'se', 'refirió', 'a', 'la', 'reciente', 'creación', 'del', 'Ministerio', 'de', 'Ciencia', 'y', 'Tecnología', 'y', 'a', 'las', 'primeras', 'declaraciones', 'de', 'su', 'titular', ',', 'Anna', 'Birulés', ',', 'sobre', 'el', 'impulso', 'de', 'la', 'investigación', ',', 'desarrollo', 'e', 'innovación'],
+            [2, 2, 4, 4, 4, 8, 8, 8, 4, 10, 8, 12, 10, 14, 12, 19, 19, 19, 19, 8, 22, 22, 19, 24, 22, 24, 24, 29, 29, 19, 32, 32, 29, 34, 32, 36, 32],
+            ['case', 'det', 'obl', 'obj', 'ROOT', 'case', 'det', 'amod', 'obj', 'case', 'nmod', 'case', 'flat', 'cc', 'conj', 'cc', 'case', 'det', 'amod', 'conj', 'case', 'det', 'nmod', 'punct', 'appos', 'flat', 'punct', 'case', 'det', 'nmod', 'case', 'det', 'nmod', 'punct', 'conj', 'cc', 'conj'],
+            ['ADP', 'DET', 'NOUN', 'PRON', 'VERB', 'ADP', 'DET', 'ADJ', 'NOUN', 'ADP', 'PROPN', 'ADP', 'PROPN', 'CCONJ', 'PROPN', 'CCONJ', 'ADP', 'DET', 'ADJ', 'NOUN', 'ADP', 'DET', 'NOUN', 'PUNCT', 'PROPN', 'PROPN', 'PUNCT', 'ADP', 'DET', 'NOUN', 'ADP', 'DET', 'NOUN', 'PUNCT', 'NOUN', 'CCONJ', 'NOUN'],
+            [(1, 3), (3, 4), (6, 9), (10, 15), (16, 20), (21, 23), (23, 27), (28, 30), (31, 33), (33, 35), (36, 37)]
+        ),
+        # Asimismo defiende la financiación pública de la investigación básica y pone de manifiesto que las empresas se centran más en la investigación y desarrollo con objetivos de mercado. -> la financiación pública, la investigación básica, manifiesto, las empresas, se, la investigación, desarrollo, objetivos, mercado
+        (
+            ['Asimismo', 'defiende', 'la', 'financiación', 'pública', 'de', 'la', 'investigación', 'básica', 'y', 'pone', 'de', 'manifiesto', 'que', 'las', 'empresas', 'se', 'centran', 'más', 'en', 'la', 'investigación', 'y' 'desarrollo', 'con', 'objetivos', 'de', 'mercado'],
+            [1, 1, 3, 1, 3, 7, 7, 3, 7, 10, 1, 12, 10, 17, 15, 17, 17, 10, 17, 21, 21, 17, 23, 21, 25, 17, 27, 25],
+            ['advmod', 'ROOT', 'det', 'obj', 'amod', 'case', 'det', 'nmod', 'amod', 'cc', 'conj', 'case', 'obl', 'mark', 'det', 'nsubj', 'obj', 'ccomp', 'obj', 'case', 'det', 'obl', 'cc', 'conj', 'case', 'obl', 'case', 'nmod'],
+            ['ADV', 'VERB', 'DET', 'NOUN', 'ADJ', 'ADP', 'DET', 'NOUN', 'ADJ', 'CCONJ', 'VERB', 'ADP', 'NOUN', 'SCONJ', 'DET', 'NOUN', 'PRON', 'VERB', 'ADV', 'ADP', 'DET', 'NOUN', 'CCONJ', 'NOUN', 'ADP', 'NOUN', 'ADP', 'NOUN'],
+            [(2, 5), (6, 9), (12, 13), (14, 16), (16, 17), (20, 22), (23, 24), (25, 26), (27, 28)]
+        ),
         # Tras indicar que la inversión media en investigación en la Unión Europea se sitúa en el 1,8 por ciento del PIB, frente al 2,8 por ciento en Japón y EEUU, Couceiro dijo que España está en "el buen camino" y se está creando un entorno propicio para la innovación empresarial' -> la inversión media, investigación, la Unión Europea, se, PIB, Japón, EEUU, Couceiro, España, se, un entorno propicio para la innovación empresaria
         (
             ['Tras', 'indicar', 'que', 'la', 'inversión', 'media', 'en', 'investigación', 'en', 'la', 'Unión', 'Europea', 'se', 'sitúa', 'en', 'el', '1,8', 'por', 'ciento', 'del', 'PIB', ',', 'frente', 'al', '2,8', 'por', 'ciento', 'en', 'Japón', 'y', 'EEUU', ',', 'Couceiro', 'dijo', 'que', 'España', 'está', 'en', '"', 'el', 'buen', 'camino', '"', 'y', 'se', 'está', 'creando', 'un', 'entorno', 'propicio', 'para', 'la', 'innovación', 'empresarial'],
