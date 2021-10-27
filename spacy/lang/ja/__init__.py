@@ -77,8 +77,6 @@ class JapaneseTokenizer(DummyTokenizer):
                 )
             # if there's no lemma info (it's an unk) just use the surface
             token.lemma_ = dtoken.lemma if dtoken.lemma else dtoken.surface
-            # note: if new morph features are added, sync in
-            # morphologizer_score_ja
             morph = {}
             if dtoken.inf:
                 # it's normal for this to be empty for non-inflecting types
@@ -203,7 +201,7 @@ class Japanese(Language):
         "model": DEFAULT_MORPH_MODEL,
         "overwrite": True,
         "extend": True,
-        "scorer": {"@scorers": "spacy.morphologizer_scorer_ja.v1"},
+        "scorer": {"@scorers": "spacy.morphologizer_scorer.v1"},
     },
     default_score_weights={"pos_acc": 0.5, "morph_acc": 0.5, "morph_per_feat": None},
 )

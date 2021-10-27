@@ -6,7 +6,7 @@ from collections import defaultdict
 from .training import Example
 from .tokens import Token, Doc, Span
 from .errors import Errors
-from .util import get_lang_class, SimpleFrozenList, registry
+from .util import get_lang_class, SimpleFrozenList
 from .morphology import Morphology
 
 if TYPE_CHECKING:
@@ -764,39 +764,6 @@ def get_ner_prf(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
             "ents_f": None,
             "ents_per_type": None,
         }
-
-
-def morphologizer_score_ja(examples, **kwargs):
-    def morph_key_getter(token, attr):
-        morph = getattr(token, attr)
-        key = morph.key
-        if key > 0:
-            # to_dict() doesn't distinguish unset ("") from empty ("_")
-            morph_dict = getattr(token, attr).to_dict()
-            filtered_morph = {
-                key: value
-                for key, value in morph_dict.items()
-                if key not in ("Inflection", "Reading")
-            }
-            key = token.vocab.morphology.add(filtered_morph)
-        return key
-
-    results = {}
-    results.update(Scorer.score_token_attr(examples, "pos", **kwargs))
-    results.update(
-        Scorer.score_token_attr(examples, "morph", getter=morph_key_getter, **kwargs)
-    )
-    results.update(
-        Scorer.score_token_attr_per_feat(
-            examples, "morph", getter=morph_key_getter, **kwargs
-        )
-    )
-    return results
-
-
-@registry.scorers("spacy.morphologizer_scorer_ja.v1")
-def make_morphologizer_scorer_ja():
-    return morphologizer_score_ja
 
 
 # The following implementation of roc_auc_score() is adapted from
