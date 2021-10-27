@@ -93,8 +93,6 @@ For the feedstock including the build recipe and configuration, check out
 [this repository](https://github.com/conda-forge/spacy-feedstock). Note that we
 currently don't publish any [pre-releases](#changelog-pre) on conda.
 
-### Platform-specific notes {#platform-specific}
-
 ### Upgrading spaCy {#upgrading}
 
 > #### Upgrading from v2 to v3
