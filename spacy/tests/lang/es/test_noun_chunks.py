@@ -24,7 +24,7 @@ import pytest
         ),
         # un lindo gatito -> "un lindo gatito"
         (
-            ["Un", "lindo", "gatito"]
+            ["Un", "lindo", "gatito"],
             [2, 2, 2],
             ["det", "amod", "ROOT"],
             ["DET", "ADJ", "NOUN"],
