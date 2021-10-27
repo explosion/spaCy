@@ -359,6 +359,7 @@ def test_overfitting_IO(use_upper):
     assert_equal(batch_deps_1, no_batch_deps)
 
 
+@pytest.mark.xfail(reason="no beam parser yet")
 def test_beam_ner_scores():
     # Test that we can get confidence values out of the beam_ner pipe
     beam_width = 16
@@ -394,6 +395,7 @@ def test_beam_ner_scores():
             assert 0 - eps <= score <= 1 + eps
 
 
+@pytest.mark.xfail(reason="no beam parser yet")
 def test_beam_overfitting_IO():
     # Simple test to try and quickly overfit the Beam NER component
     nlp = English()
