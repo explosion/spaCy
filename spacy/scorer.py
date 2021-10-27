@@ -247,17 +247,19 @@ class Scorer:
         missing_values: Set[Any] = MISSING_VALUES,  # type: ignore[assignment]
         **cfg,
     ) -> Dict[str, Any]:
-        """Return PRF scores per feat for a token attribute in UFEATS format.
+        """Return micro PRF and PRF scores per feat for a token attribute in
+        UFEATS format.
 
         examples (Iterable[Example]): Examples to score
         attr (str): The attribute to score.
         getter (Callable[[Token, str], Any]): Defaults to getattr. If provided,
             getter(token, attr) should return the value of the attribute for an
             individual token.
-        missing_values (Set[Any]): Attribute values to treat as missing annotation
-            in the reference annotation.
-        RETURNS (dict): A dictionary containing the per-feat PRF scores under
-            the key attr_per_feat.
+        missing_values (Set[Any]): Attribute values to treat as missing
+            annotation in the reference annotation.
+        RETURNS (dict): A dictionary containing the micro PRF scores under the
+            key attr_micro_p/r/f/ and the per-feat PRF scores under
+            attr_per_feat.
         """
         micro_score = PRFScore()
         per_feat = {}
