@@ -94,7 +94,15 @@ import pytest
             ["DET", "NOUN", "ADJ", "CCONJ", "ADJ"],
             [(0,5)]
         ),
-        # Eu tenho um cachorro e um gato  -> um cacharo, um gato        Two NPs conjuncted
+        # alguns fazendeiros muito ricos -> alguns fazendeiros muito ricos   one determiner + one noun + one adjective qualified by an adverb
+        (
+            ['alguns', 'fazendeiros', 'muito', 'ricos'],
+            [1, 1, 3, 1],
+            ['det', 'ROOT', 'advmod', 'amod'],
+            ['DET', 'NOUN', 'ADV', 'ADJ'],
+            [(0,4)]
+        ),
+        # Eu tenho um cachorro e um gato  -> um cacharo, um gato                                 Two NPs conjuncted
         ( 
             ["Eu", "tenho", "um", "cachorro", "e", "um", "gato"],
             [0, 2, 0, 5, 5, 0],
@@ -102,6 +110,14 @@ import pytest
             ["VERB", "DET", "NOUN", "CCONJ", "DET", "NOUN"],
             [(1,3), (4,6)]
          
+        ),
+        # o escritor brasileiro Aníbal Machado -> o escritor brasileiro,  Aníbal Machado         Two NPs together
+        (
+            ['o', 'escritor', 'brasileiro', 'Aníbal', 'Machado'],
+            [1, 1, 1, 1, 3],
+            ['det', 'ROOT', 'amod', 'appos', 'flat:name'],
+            ['DET', 'NOUN', 'ADJ', 'PROPN', 'PROPN'],
+            [(0, 3), (3, 5)]
         ),
         # Dom Pedro II -> Dom Pedro II              Noun compound, person name and titles
         (
