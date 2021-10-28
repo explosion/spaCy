@@ -22,6 +22,14 @@ import pytest
             ["DET", "DET", "NOUN"],
             [(0, 3)],
         ),
+        # um irmão meu -> "um irmão meu"   two determiners, one is after noun
+        (
+            ["um", "irmão", "meu"],
+            [1, 1, 1],
+            ["det", "ROOT", "det"],
+            ["DET", "NOUN", "DET"],
+            [(0, 3)],
+        ),
         # o meu pai -> "o meu pai"   two determiners + noun
         (
             ["o", "meu", "pai"],
@@ -95,11 +103,19 @@ import pytest
             ['DET', 'NOUN', 'ADP', 'NOUN'],
             [(0,2), (3,4)]
         ),
+        # a primeira fábrica de medicamentos do governo -> a primeira fábrica, medicamentos, governo  Compounding by nmod, several NPs chained together
+        (
+            ["a primeira fábrica", "medicamentos", "governo"],
+            [2, 2, 2, 4, 2, 6, 2],
+            ['det', 'amod', 'ROOT', 'case', 'nmod', 'case', 'nmod',
+            ['DET', 'ADJ', 'NOUN', 'ADP', 'NOUN', 'ADP', 'NOUN'],
+            [(0, 3), (4, 5), (6, 7)]
+        ),
         # Tradução da reportagem de Susana -> Tradução, reportagem, Susana   several NPs
         (
-            ['la', 'traducción', 'de', 'Susana', 'del', 'informe'],
-            [0, 2, 0, 4, 2],
             ['Tradução', 'da', 'reportagem', 'de', 'Susana'],
+            [0, 2, 0, 4, 2],
+            ['ROOT', 'case', 'nmod', 'case', 'nmod'],
             ['NOUN', 'ADP', 'NOUN', 'ADP', 'PROPN'],
             [(0,1), (2,3), (4,5)]  
        
