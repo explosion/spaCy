@@ -54,6 +54,14 @@ import pytest
             ['DET', 'NOUN', 'PRON', 'AUX', 'ADJ'],
             [(0,2)]
         ),
+        #  o computador que comprou -> o computador    relative subclause
+        (
+            ['o', 'computador', 'que', 'comprou'],
+            [1, 1, 3, 1],
+            ['det', 'ROOT', 'nsubj', 'acl:relcl'],
+            ['DET', 'NOUN', 'PRON', 'VERB'],
+            [(0, 2), (2, 3)]
+        ),
         # O cachorro marrom  -> "O cachorro marrom "  det + noun + adj
         (
             ["O", "cachorro", "marrom"],
