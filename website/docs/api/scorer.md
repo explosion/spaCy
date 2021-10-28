@@ -41,16 +41,20 @@ Calculate the scores for a list of [`Example`](/api/example) objects using the
 scoring methods provided by the components in the pipeline.
 
 The returned `Dict` contains the scores provided by the individual pipeline
-components. For the scoring methods provided by the `Scorer` and use by the core
-pipeline components, the individual score names start with the `Token` or `Doc`
-attribute being scored:
+components. For the scoring methods provided by the `Scorer` and used by the
+core pipeline components, the individual score names start with the `Token` or
+`Doc` attribute being scored:
 
-- `token_acc`, `token_p`, `token_r`, `token_f`,
+- `token_acc`, `token_p`, `token_r`, `token_f`
 - `sents_p`, `sents_r`, `sents_f`
-- `tag_acc`, `pos_acc`, `morph_acc`, `morph_micro_p`, `morph_micro_r`,
-  `morph_micro_f`, `morph_per_feat`, `lemma_acc`
+- `tag_acc`
+- `pos_acc`
+- `morph_acc`, `morph_micro_p`, `morph_micro_r`, `morph_micro_f`,
+  `morph_per_feat`
+- `lemma_acc`
 - `dep_uas`, `dep_las`, `dep_las_per_type`
 - `ents_p`, `ents_r` `ents_f`, `ents_per_type`
+- `spans_sc_p`, `spans_sc_r`, `spans_sc_f`
 - `cats_score` (depends on config, description provided in `cats_score_desc`),
   `cats_micro_p`, `cats_micro_r`, `cats_micro_f`, `cats_macro_p`,
   `cats_macro_r`, `cats_macro_f`, `cats_macro_auc`, `cats_f_per_type`,
