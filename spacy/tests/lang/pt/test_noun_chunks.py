@@ -86,7 +86,7 @@ import pytest
             ["DET", "ADJ", "NOUN"],
             [(0,3)]
         ),
-        # Uma garota esperta e inteligente -> Uma garota esperta e inteligente  multiple adjectives
+        # Uma garota esperta e inteligente -> Uma garota esperta e inteligente         multiple adjectives
         (
             ["Uma", "garota", "esperta", "e", "inteligente"],
             [1, 1, 1, 4, 2],
@@ -94,7 +94,15 @@ import pytest
             ["DET", "NOUN", "ADJ", "CCONJ", "ADJ"],
             [(0,5)]
         ),
-        # alguns fazendeiros muito ricos -> alguns fazendeiros muito ricos   one determiner + one noun + one adjective qualified by an adverb
+        # a grande São Paolo ->  a grande São Paolo          determiner, adjective, compound created by flat
+        (
+            ["a", "grande", "São", "Paolo"],
+            [2, 2, 2, 2],
+            ["det", "amod", "ROOT", "flat:name"],
+            ["DET", "ADJ", "PROPN", "PROPN"],
+            [(0,4)]
+        ),
+        # alguns fazendeiros muito ricos -> alguns fazendeiros muito ricos             one determiner + one noun + one adjective qualified by an adverb
         (
             ['alguns', 'fazendeiros', 'muito', 'ricos'],
             [1, 1, 3, 1],
@@ -135,7 +143,7 @@ import pytest
             ["DET", "PROPN", "PROPN"],
             [(0,3)]
         ),
-        # a destruição da cidade -> a destruição, cidade
+        # a destruição da cidade -> a destruição, cidade        nmod relation between NPs
         (
             ['a', 'destruição', 'da', 'cidade'],
             [1, 1, 3, 1],
@@ -168,18 +176,14 @@ import pytest
             ['DET', 'NOUN', 'ADJ', 'ADP', 'PROPN', 'CCONJ', 'DET', 'NOUN'],
             [(0,3), (4,5), (6,8)]
         ),
-        # 
+        # Para aqueles que seguem as transições das redes sociais no Capitol Hill, esta será um pouco diferente-> que, redes sociais, Capitol Hill, um pouco diferente NPs in a long sentence
         (
-        ),
-        # 
-        (
-        ),
-        # 
-        (
-        ),
-        # 
-        (
-        ),
+            ['Para', 'aqueles', 'que', 'seguem', 'as', 'transições', 'das', 'redes', 'sociais', 'no', 'Capitol', 'Hill', ',', 'esta', 'será', 'um', 'pouco', 'diferente'],
+            [2, 19, 4, 2, 6, 4, 9, , 6, 9, 13, 4, 13, 2, 20, 20, 20, 20,0],
+            ["case", "nmod", "nsubj", "acl:relcl", "det", "obj", "case", "det", "nmod", "amod", "det", "obl", "flat", "punct", "nsubj", "cop", "det", "advmod", "root"],
+            ["ADP", "PRON", "PRON", "VERB", "DET", "ADP", "DET", "NOUN", "ADJ", "DET", "PROPN", "PROPN", "PUNCT", "PRON", "AUX", "DET", "ADV", "ADJ"],
+            [(2,3), (7,8), (10,11), (15,18)]
+        )
     ],
 )
 # fmt: on
