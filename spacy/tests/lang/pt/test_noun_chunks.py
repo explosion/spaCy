@@ -22,6 +22,14 @@ import pytest
             ["DET", "DET", "NOUN"],
             [(0, 3)],
         ),
+        # todos essos caros -> "todos essos caros"   two determiners + noun
+        (
+            ["todos", "essos", "caros"],
+            [2, 2, 2],
+            ["det", "det", "ROOT"],
+            ["DET", "DET", "NOUN"],
+            [(0, 3)],
+        ),
         # um irmão meu -> "um irmão meu"   two determiners, one is after noun
         (
             ["um", "irmão", "meu"],
@@ -37,6 +45,14 @@ import pytest
             ["det","det", "ROOT"],
             ["DET", "DET", "NOUN"],
             [(0, 3)],
+        ),
+        #  A bicicleta essa está estragada -> A bicicleta    relative pronoun
+        (
+            ['A', 'bicicleta', 'essa', 'está', 'estragada'],
+            [1, 4, 1, 4, 4],
+            ['det', 'nsubj', 'det', 'cop', 'ROOT'],
+            ['DET', 'NOUN', 'PRON', 'AUX', 'ADJ'],
+            [(0,2)]
         ),
         # O cachorro marrom  -> "O cachorro marrom "  det + noun + adj
         (
