@@ -419,7 +419,7 @@ simply click on the "Suggest edits" button at the bottom of a page.
 ## Publishing spaCy extensions and plugins
 
 We're very excited about all the new possibilities for **community extensions**
-and plugins in spaCy v2.0, and we can't wait to see what you build with it!
+and plugins in spaCy v3.0, and we can't wait to see what you build with it!
 
 - An extension or plugin should add substantial functionality, be
   **well-documented** and **open-source**. It should be available for users to download

@@ -168,7 +168,7 @@ def test_kb_serialize_2(nlp):
 
 
 def test_kb_set_entities(nlp):
-    """ Test that set_entities entirely overwrites the previous set of entities """
+    """Test that set_entities entirely overwrites the previous set of entities"""
     v = [5, 6, 7, 8]
     v1 = [1, 1, 1, 0]
     v2 = [2, 2, 2, 3]
