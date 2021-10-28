@@ -45,6 +45,7 @@ import pytest
             ["det", "ROOT", "amod"],
             ["DET", "NOUN", "ADJ"],
             [(0, 3)],
+        ),
         # Uma boa ideia -> Uma boa ideia       det + adj + noun
         (
             ['uma', 'boa', 'ideia'],
