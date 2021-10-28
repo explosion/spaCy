@@ -155,7 +155,7 @@ import pytest
         (
             ["a primeira fábrica", "medicamentos", "governo"],
             [2, 2, 2, 4, 2, 6, 2],
-            ['det', 'amod', 'ROOT', 'case', 'nmod', 'case', 'nmod',
+            ['det', 'amod', 'ROOT', 'case', 'nmod', 'case', 'nmod'],
             ['DET', 'ADJ', 'NOUN', 'ADP', 'NOUN', 'ADP', 'NOUN'],
             [(0, 3), (4, 5), (6, 7)]
         ),
