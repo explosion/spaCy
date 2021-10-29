@@ -13,12 +13,11 @@ from ..training import validate_examples
 
 default_model_config = """
 [model]
-@architectures = "spacy.TransitionBasedParser.v2"
+@architectures = "spacy.TransitionBasedParser.v3"
 state_type = "ner"
 extra_state_tokens = false
 hidden_width = 64
 maxout_pieces = 2
-use_upper = true
 
 [model.tok2vec]
 @architectures = "spacy.HashEmbedCNN.v1"
@@ -41,8 +40,12 @@ DEFAULT_NER_MODEL = Config().from_str(default_model_config)["model"]
         "update_with_oracle_cut_size": 100,
         "model": DEFAULT_NER_MODEL,
     },
-    default_score_weights={"ents_f": 1.0, "ents_p": 0.0, "ents_r": 0.0, "ents_per_type": None},
-
+    default_score_weights={
+        "ents_f": 1.0,
+        "ents_p": 0.0,
+        "ents_r": 0.0,
+        "ents_per_type": None,
+    },
 )
 def make_ner(
     nlp: Language,
@@ -89,6 +92,7 @@ def make_ner(
         beam_update_prob=0.0,
     )
 
+
 @Language.factory(
     "beam_ner",
     assigns=["doc.ents", "token.ent_iob", "token.ent_type"],
@@ -98,9 +102,14 @@ def make_ner(
         "model": DEFAULT_NER_MODEL,
         "beam_density": 0.01,
         "beam_update_prob": 0.5,
-        "beam_width": 32
+        "beam_width": 32,
     },
-    default_score_weights={"ents_f": 1.0, "ents_p": 0.0, "ents_r": 0.0, "ents_per_type": None},
+    default_score_weights={
+        "ents_f": 1.0,
+        "ents_p": 0.0,
+        "ents_r": 0.0,
+        "ents_per_type": None,
+    },
 )
 def make_beam_ner(
     nlp: Language,
@@ -165,6 +174,7 @@ class EntityRecognizer(Parser):
 
     DOCS: https://nightly.spacy.io/api/entityrecognizer
     """
+
     TransitionSystem = BiluoPushDown
 
     def add_multitask_objective(self, mt_component):
@@ -184,8 +194,11 @@ class EntityRecognizer(Parser):
     def labels(self):
         # Get the labels from the model by looking at the available moves, e.g.
         # B-PERSON, I-PERSON, L-PERSON, U-PERSON
-        labels = set(move.split("-")[1] for move in self.move_names
-                     if move[0] in ("B", "I", "L", "U"))
+        labels = set(
+            move.split("-")[1]
+            for move in self.move_names
+            if move[0] in ("B", "I", "L", "U")
+        )
         return tuple(sorted(labels))
 
     def score(self, examples, **kwargs):

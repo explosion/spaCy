@@ -141,7 +141,7 @@ factory = "tok2vec"
 factory = "ner"
 
 [components.ner.model]
-@architectures = "spacy.TransitionBasedParser.v1"
+@architectures = "spacy.TransitionBasedParser.v3"
 
 [components.ner.model.tok2vec]
 @architectures = "spacy.Tok2VecListener.v1"
@@ -158,7 +158,7 @@ same. This makes them fully independent and doesn't require an upstream
 factory = "ner"
 
 [components.ner.model]
-@architectures = "spacy.TransitionBasedParser.v1"
+@architectures = "spacy.TransitionBasedParser.v3"
 
 [components.ner.model.tok2vec]
 @architectures = "spacy.Tok2Vec.v2"
@@ -446,7 +446,7 @@ sneakily delegates to the `Transformer` pipeline component.
 factory = "ner"
 
 [nlp.pipeline.ner.model]
-@architectures = "spacy.TransitionBasedParser.v1"
+@architectures = "spacy.TransitionBasedParser.v3"
 state_type = "ner"
 extra_state_tokens = false
 hidden_width = 128

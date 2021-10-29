@@ -12,49 +12,8 @@ TransitionSystem = Any  # TODO
 State = Any  # TODO
 
 
-@registry.architectures.register("spacy.TransitionBasedParser.v1")
-def transition_parser_v1(
-    tok2vec: Model[List[Doc], List[Floats2d]],
-    state_type: Literal["parser", "ner"],
-    extra_state_tokens: bool,
-    hidden_width: int,
-    maxout_pieces: int,
-    use_upper: bool = True,
-    nO: Optional[int] = None,
-) -> Model[Tuple[List[Doc], TransitionSystem], List[Tuple[State, List[Floats2d]]]]:
-    return build_tb_parser_model(
-        tok2vec,
-        state_type,
-        extra_state_tokens,
-        hidden_width,
-        maxout_pieces,
-        use_upper,
-        nO,
-    )
-
-
-@registry.architectures.register("spacy.TransitionBasedParser.v2")
-def transition_parser_v2(
-    tok2vec: Model[List[Doc], List[Floats2d]],
-    state_type: Literal["parser", "ner"],
-    extra_state_tokens: bool,
-    hidden_width: int,
-    maxout_pieces: int,
-    use_upper: bool,
-    nO: Optional[int] = None,
-) -> Model:
-    return build_tb_parser_model(
-        tok2vec,
-        state_type,
-        extra_state_tokens,
-        hidden_width,
-        maxout_pieces,
-        nO=nO,
-    )
-
-
 @registry.architectures.register("spacy.TransitionBasedParser.v3")
-def transition_parser_v2(
+def transition_parser_v3(
     tok2vec: Model[List[Doc], List[Floats2d]],
     state_type: Literal["parser", "ner"],
     extra_state_tokens: bool,
@@ -111,14 +70,7 @@ def build_tb_parser_model(
         feature sets (for the NER) or 13 (for the parser).
     hidden_width (int): The width of the hidden layer.
     maxout_pieces (int): How many pieces to use in the state prediction layer.
-        Recommended values are 1, 2 or 3. If 1, the maxout non-linearity
-        is replaced with a ReLu non-linearity if use_upper=True, and no
-        non-linearity if use_upper=False.
-    use_upper (bool): Whether to use an additional hidden layer after the state
-        vector in order to predict the action scores. It is recommended to set
-        this to False for large pretrained models such as transformers, and False
-        for smaller networks. The upper layer is computed on CPU, which becomes
-        a bottleneck on larger GPU-based models, where it's also less necessary.
+        Recommended values are 1, 2 or 3.
     nO (int or None): The number of actions the model will predict between.
         Usually inferred from data at the beginning of training, or loaded from
         disk.

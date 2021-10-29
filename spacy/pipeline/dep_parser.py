@@ -16,12 +16,11 @@ from ..training import validate_examples
 
 default_model_config = """
 [model]
-@architectures = "spacy.TransitionBasedParser.v2"
+@architectures = "spacy.TransitionBasedParser.v3"
 state_type = "parser"
 extra_state_tokens = false
 hidden_width = 64
 maxout_pieces = 2
-use_upper = true
 
 [model.tok2vec]
 @architectures = "spacy.HashEmbedCNN.v1"
@@ -62,7 +61,7 @@ def make_parser(
     moves: Optional[list],
     update_with_oracle_cut_size: int,
     learn_tokens: bool,
-    min_action_freq: int
+    min_action_freq: int,
 ):
     """Create a transition-based DependencyParser component. The dependency parser
     jointly learns sentence segmentation and labelled dependency parsing, and can
@@ -113,6 +112,7 @@ def make_parser(
         beam_density=0.0,
         beam_update_prob=0.0,
     )
+
 
 @Language.factory(
     "beam_parser",
@@ -195,7 +195,7 @@ def make_beam_parser(
         beam_update_prob=beam_update_prob,
         multitasks=[],
         learn_tokens=learn_tokens,
-        min_action_freq=min_action_freq
+        min_action_freq=min_action_freq,
     )
 
 
@@ -204,6 +204,7 @@ class DependencyParser(Parser):
 
     DOCS: https://nightly.spacy.io/api/dependencyparser
     """
+
     TransitionSystem = ArcEager
 
     @property
@@ -245,16 +246,21 @@ class DependencyParser(Parser):
 
         DOCS: https://nightly.spacy.io/api/dependencyparser#score
         """
+
         def has_sents(doc):
             return doc.has_annotation("SENT_START")
 
         validate_examples(examples, "DependencyParser.score")
+
         def dep_getter(token, attr):
             dep = getattr(token, attr)
             dep = token.vocab.strings.as_string(dep).lower()
             return dep
+
         results = {}
-        results.update(Scorer.score_spans(examples, "sents", has_annotation=has_sents, **kwargs))
+        results.update(
+            Scorer.score_spans(examples, "sents", has_annotation=has_sents, **kwargs)
+        )
         kwargs.setdefault("getter", dep_getter)
         kwargs.setdefault("ignore_labels", ("p", "punct"))
         results.update(Scorer.score_deps(examples, "dep", **kwargs))
