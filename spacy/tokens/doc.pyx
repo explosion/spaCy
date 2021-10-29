@@ -195,11 +195,11 @@ cdef class Doc:
         vocab (Vocab): A vocabulary object, which must match any models you
             want to use (e.g. tokenizer, parser, entity recognizer).
         words (Optional[List[Union[str, int]]]): A list of unicode strings or
-            lex IDs to add to the document as words. If `None`, defaults to
+            hash values to add to the document as words. If `None`, defaults to
             empty list.
         spaces (Optional[List[bool]]): A list of boolean values, of the same
-            length as words. True means that the word is followed by a space,
-            False means it is not. If `None`, defaults to `[True]*len(words)`
+            length as `words`. `True` means that the word is followed by a space,
+            `False` means it is not. If `None`, defaults to `[True]*len(words)`
         user_data (dict or None): Optional extra data to attach to the Doc.
         tags (Optional[List[str]]): A list of unicode strings, of the same
             length as words, to assign as token.tag. Defaults to None.
