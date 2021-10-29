@@ -176,13 +176,13 @@ import pytest
             ['DET', 'NOUN', 'ADJ', 'ADP', 'PROPN', 'CCONJ', 'DET', 'NOUN'],
             [(0,3), (4,5), (6,8)]
         ),
-        # Para aqueles que seguem as transições das redes sociais no Capitol Hill, esta será um pouco diferente-> que, transições, redes sociais, Capitol Hill, um pouco diferente NPs in a long sentence
+        # Os novos gastos são alimentados pela grande conta bancária de Clinton ->    Os novos gastos, grande conta bancária, Clinton       passive subject
         (
-            ['Para', 'aqueles', 'que', 'seguem', 'as', 'transições', 'das', 'redes', 'sociais', 'no', 'Capitol', 'Hill', ',', 'esta', 'será', 'um', 'pouco', 'diferente'],
-            [1, 16, 3, 1, 5, 3, 7, 5, 7, 10, 3, 10, 1, 17, 17, 17, 17,17],
-            ["case", "nmod", "nsubj", "acl:relcl", "det", "obj", "case", "nmod", "amod", "det", "obl", "flat", "punct", "nsubj", "cop", "det", "advmod", "ROOT"],
-            ["ADP", "PRON", "PRON", "VERB", "DET", "NOUN", "ADP", "NOUN", "ADJ", "ADP", "PROPN", "PROPN", "PUNCT", "PRON", "AUX", "DET", "ADV", "ADJ"],
-            [(2,3), (5,6), (7,8), (10,11), (15,18)]
+            ['Os', 'novos', 'gastos', 'são', 'alimentados', 'pela', 'grande', 'conta', 'bancária', 'de', 'Clinton'],
+            [2, 2, 4, 4, 4, 7, 7, 4, 7, 10, 7],
+            ['det', 'amod', 'nsubj:pass', 'aux:pass', 'ROOT', 'case', 'amod', 'obl:agent', 'amod', 'case', 'nmod'],
+            ['DET', 'ADJ', 'NOUN', 'AUX', 'VERB', 'ADP', 'ADJ', 'NOUN', 'ADJ', 'ADP', 'PROPN'],
+            [(0, 3), (6, 9), (10, 11)]
         )
     ],
 )
