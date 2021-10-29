@@ -179,7 +179,7 @@ import pytest
         # Para aqueles que seguem as transições das redes sociais no Capitol Hill, esta será um pouco diferente-> que, transições, redes sociais, Capitol Hill, um pouco diferente NPs in a long sentence
         (
             ['Para', 'aqueles', 'que', 'seguem', 'as', 'transições', 'das', 'redes', 'sociais', 'no', 'Capitol', 'Hill', ',', 'esta', 'será', 'um', 'pouco', 'diferente'],
-            [2, 19, 4, 2, 6, 4, 9, 6, 9, 13, 4, 13, 2, 20, 20, 20, 20,0],
+            [1, 16, 3, 1, 5, 3, 7, 5, 7, 10, 3, 10, 1, 17, 17, 17, 17,17],
             ["case", "nmod", "nsubj", "acl:relcl", "det", "obj", "case", "nmod", "amod", "det", "obl", "flat", "punct", "nsubj", "cop", "det", "advmod", "ROOT"],
             ["ADP", "PRON", "PRON", "VERB", "DET", "NOUN", "ADP", "NOUN", "ADJ", "ADP", "PROPN", "PROPN", "PUNCT", "PRON", "AUX", "DET", "ADV", "ADJ"],
             [(2,3), (5,6), (7,8), (10,11), (15,18)]
