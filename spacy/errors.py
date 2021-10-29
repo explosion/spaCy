@@ -25,7 +25,7 @@ def setup_default_warnings():
         filter_warning("once", error_msg=Warnings.W036.format(name=pipe))
 
     # warn once about lemmatizer without required POS
-    filter_warning("once", error_msg="[W108]")
+    filter_warning("once", error_msg=Warnings.W108)
 
 
 def filter_warning(action: str, error_msg: str):
@@ -170,8 +170,8 @@ class Warnings:
             "call the {matcher} on each Doc object.")
     W107 = ("The property `Doc.{prop}` is deprecated. Use "
             "`Doc.has_annotation(\"{attr}\")` instead.")
-    W108 = ("The rule-based lemmatizer did not find POS annotation for the "
-            "token '{text}'. Check that your pipeline includes components that "
+    W108 = ("The rule-based lemmatizer did not find POS annotation for one or "
+            "more tokens. Check that your pipeline includes components that "
             "assign token.pos, typically 'tagger'+'attribute_ruler' or "
             "'morphologizer'.")
     W109 = ("Unable to save user hooks while serializing the doc. Re-add any "
@@ -190,6 +190,8 @@ class Warnings:
             "vectors. This is almost certainly a mistake.")
     W113 = ("Sourced component '{name}' may not work as expected: source "
             "vectors are not identical to current pipeline vectors.")
+    W114 = ("Using multiprocessing with GPU models is not recommended and may "
+            "lead to errors.")
 
 
 @add_codes
@@ -657,7 +659,9 @@ class Errors:
             "{nO} - cannot add any more labels.")
     E923 = ("It looks like there is no proper sample data to initialize the "
             "Model of component '{name}'. To check your input data paths and "
-            "annotation, run: python -m spacy debug data config.cfg")
+            "annotation, run: python -m spacy debug data config.cfg "
+            "and include the same config override values you would specify "
+            "for the 'spacy train' command.")
     E924 = ("The '{name}' component does not seem to be initialized properly. "
             "This is likely a bug in spaCy, so feel free to open an issue: "
             "https://github.com/explosion/spaCy/issues")
@@ -792,7 +796,7 @@ class Errors:
             "to token boundaries.")
     E982 = ("The `Token.ent_iob` attribute should be an integer indexing "
             "into {values}, but found {value}.")
-    E983 = ("Invalid key for '{dict}': {key}. Available keys: "
+    E983 = ("Invalid key(s) for '{dict}': {key}. Available keys: "
             "{keys}")
     E984 = ("Invalid component config for '{name}': component block needs either "
             "a key `factory` specifying the registered function used to "
@@ -873,6 +877,7 @@ class Errors:
              "filename. Specify an epoch to resume from.")
     E1021 = ("`pos` value \"{pp}\" is not a valid Universal Dependencies tag. "
              "Non-UD tags should use the `tag` property.")
+    E1022 = ("Words must be of type str or int, but input is of type '{wtype}'")
 
 
 # Deprecated model shortcuts, only used in errors and warnings

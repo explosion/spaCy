@@ -7,7 +7,7 @@ from ..lexeme import Lexeme
 from ..vocab import Vocab
 
 class SpanMethod(Protocol):
-    def __call__(self: Span, *args: Any, **kwargs: Any) -> Any: ...
+    def __call__(self: Span, *args: Any, **kwargs: Any) -> Any: ...  # type: ignore[misc]
 
 class Span:
     @classmethod
@@ -45,7 +45,7 @@ class Span:
         doc: Doc,
         start: int,
         end: int,
-        label: int = ...,
+        label: Union[str, int] = ...,
         vector: Optional[Floats1d] = ...,
         vector_norm: Optional[float] = ...,
         kb_id: Optional[int] = ...,
@@ -64,6 +64,8 @@ class Span:
     def as_doc(self, *, copy_user_data: bool = ...) -> Doc: ...
     def get_lca_matrix(self) -> Ints2d: ...
     def similarity(self, other: Union[Doc, Span, Token, Lexeme]) -> float: ...
+    @property
+    def doc(self) -> Doc: ...
     @property
     def vocab(self) -> Vocab: ...
     @property

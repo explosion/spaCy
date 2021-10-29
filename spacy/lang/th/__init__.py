@@ -1,6 +1,6 @@
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
-from ...language import Language
+from ...language import Language, BaseDefaults
 from ...tokens import Doc
 from ...util import DummyTokenizer, registry, load_config_from_str
 
@@ -39,7 +39,7 @@ class ThaiTokenizer(DummyTokenizer):
         return Doc(self.vocab, words=words, spaces=spaces)
 
 
-class ThaiDefaults(Language.Defaults):
+class ThaiDefaults(BaseDefaults):
     config = load_config_from_str(DEFAULT_CONFIG)
     lex_attr_getters = LEX_ATTRS
     stop_words = STOP_WORDS

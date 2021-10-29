@@ -106,7 +106,7 @@ def init_vocab(
     data: Optional[Path] = None,
     lookups: Optional[Lookups] = None,
     vectors: Optional[str] = None,
-) -> "Language":
+) -> None:
     if lookups:
         nlp.vocab.lookups = lookups
         logger.info(f"Added vocab lookups: {', '.join(lookups.tables)}")
@@ -144,7 +144,12 @@ def load_vectors_into_model(
 ) -> None:
     """Load word vectors from an installed model or path into a model instance."""
     try:
-        vectors_nlp = load_model(name)
+        # Load with the same vocab, which automatically adds the vectors to
+        # the current nlp object. Exclude lookups so they are not modified.
+        exclude = ["lookups"]
+        if not add_strings:
+            exclude.append("strings")
+        vectors_nlp = load_model(name, vocab=nlp.vocab, exclude=exclude)
     except ConfigValidationError as e:
         title = f"Config validation error for vectors {name}"
         desc = (
@@ -158,15 +163,8 @@ def load_vectors_into_model(
     if len(vectors_nlp.vocab.vectors.keys()) == 0:
         logger.warning(Warnings.W112.format(name=name))
 
-    nlp.vocab.vectors = vectors_nlp.vocab.vectors
     for lex in nlp.vocab:
-        lex.rank = nlp.vocab.vectors.key2row.get(lex.orth, OOV_RANK)
-    if add_strings:
-        # I guess we should add the strings from the vectors_nlp model?
-        # E.g. if someone does a similarity query, they might expect the strings.
-        for key in nlp.vocab.vectors.key2row:
-            if key in vectors_nlp.vocab.strings:
-                nlp.vocab.strings.add(vectors_nlp.vocab.strings[key])
+        lex.rank = nlp.vocab.vectors.key2row.get(lex.orth, OOV_RANK)  # type: ignore[attr-defined]
 
 
 def init_tok2vec(
@@ -205,7 +203,7 @@ def convert_vectors(
         nlp.vocab.vectors = Vectors(data=numpy.load(vectors_loc.open("rb")))
         for lex in nlp.vocab:
             if lex.rank and lex.rank != OOV_RANK:
-                nlp.vocab.vectors.add(lex.orth, row=lex.rank)
+                nlp.vocab.vectors.add(lex.orth, row=lex.rank)  # type: ignore[attr-defined]
     else:
         if vectors_loc:
             logger.info(f"Reading vectors from {vectors_loc}")
@@ -253,14 +251,14 @@ def open_file(loc: Union[str, Path]) -> IO:
     """Handle .gz, .tar.gz or unzipped files"""
     loc = ensure_path(loc)
     if tarfile.is_tarfile(str(loc)):
-        return tarfile.open(str(loc), "r:gz")
+        return tarfile.open(str(loc), "r:gz")  # type: ignore[return-value]
     elif loc.parts[-1].endswith("gz"):
-        return (line.decode("utf8") for line in gzip.open(str(loc), "r"))
+        return (line.decode("utf8") for line in gzip.open(str(loc), "r"))  # type: ignore[return-value]
     elif loc.parts[-1].endswith("zip"):
         zip_file = zipfile.ZipFile(str(loc))
         names = zip_file.namelist()
         file_ = zip_file.open(names[0])
-        return (line.decode("utf8") for line in file_)
+        return (line.decode("utf8") for line in file_)  # type: ignore[return-value]
     else:
         return loc.open("r", encoding="utf8")
 

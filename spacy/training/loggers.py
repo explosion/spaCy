@@ -102,7 +102,7 @@ def console_logger(progress_bar: bool = False):
 
 
 @registry.loggers("spacy.WandbLogger.v2")
-def wandb_logger(
+def wandb_logger_v2(
     project_name: str,
     remove_config_values: List[str] = [],
     model_log_interval: Optional[int] = None,
@@ -180,7 +180,7 @@ def wandb_logger(
 
 
 @registry.loggers("spacy.WandbLogger.v3")
-def wandb_logger(
+def wandb_logger_v3(
     project_name: str,
     remove_config_values: List[str] = [],
     model_log_interval: Optional[int] = None,

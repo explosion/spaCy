@@ -56,7 +56,9 @@ class RussianLemmatizer(Lemmatizer):
         if not len(filtered_analyses):
             return [string.lower()]
         if morphology is None or (len(morphology) == 1 and POS in morphology):
-            return list(set([analysis.normal_form for analysis in filtered_analyses]))
+            return list(
+                dict.fromkeys([analysis.normal_form for analysis in filtered_analyses])
+            )
         if univ_pos in ("ADJ", "DET", "NOUN", "PROPN"):
             features_to_compare = ["Case", "Number", "Gender"]
         elif univ_pos == "NUM":
@@ -87,7 +89,9 @@ class RussianLemmatizer(Lemmatizer):
                 filtered_analyses.append(analysis)
         if not len(filtered_analyses):
             return [string.lower()]
-        return list(set([analysis.normal_form for analysis in filtered_analyses]))
+        return list(
+            dict.fromkeys([analysis.normal_form for analysis in filtered_analyses])
+        )
 
     def pymorphy2_lookup_lemmatize(self, token: Token) -> List[str]:
         string = token.text

@@ -1,7 +1,7 @@
 from typing import Optional, Iterable, Iterator, Union, Any
 from pathlib import Path
 
-def get_string_id(key: str) -> int: ...
+def get_string_id(key: Union[str, int]) -> int: ...
 
 class StringStore:
     def __init__(
