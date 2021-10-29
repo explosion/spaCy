@@ -153,7 +153,7 @@ import pytest
         ),
         # a primeira fábrica de medicamentos do governo -> a primeira fábrica, medicamentos, governo  Compounding by nmod, several NPs chained together
         (
-            ["a", "primeira", "fábrica", "medicamentos", "governo"],
+            ["a", "primeira", "fábrica", "de", "medicamentos",  "do", "governo"],
             [2, 2, 2, 4, 2, 6, 2],
             ['det', 'amod', 'ROOT', 'case', 'nmod', 'case', 'nmod'],
             ['DET', 'ADJ', 'NOUN', 'ADP', 'NOUN', 'ADP', 'NOUN'],
