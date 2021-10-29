@@ -114,7 +114,7 @@ def make_parser(
         beam_update_prob=0.0,
         # At some point in the future we can try to implement support for
         # partial annotations, perhaps only in the beam objective.
-        incorrect_spans_key=None
+        incorrect_spans_key=None,
     )
 
 
@@ -207,7 +207,7 @@ def make_beam_parser(
         min_action_freq=min_action_freq,
         # At some point in the future we can try to implement support for
         # partial annotations, perhaps only in the beam objective.
-        incorrect_spans_key=None
+        incorrect_spans_key=None,
     )
 
 
@@ -235,8 +235,7 @@ class DependencyParser(Parser):
         multitasks=tuple(),
         incorrect_spans_key=None,
     ):
-        """Create a DependencyParser.
-        """
+        """Create a DependencyParser."""
         super().__init__(
             vocab,
             model,

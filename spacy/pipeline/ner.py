@@ -40,7 +40,7 @@ DEFAULT_NER_MODEL = Config().from_str(default_model_config)["model"]
         "moves": None,
         "update_with_oracle_cut_size": 100,
         "model": DEFAULT_NER_MODEL,
-        "incorrect_spans_key": None
+        "incorrect_spans_key": None,
     },
     default_score_weights={
         "ents_f": 1.0,
@@ -55,7 +55,7 @@ def make_ner(
     model: Model,
     moves: Optional[TransitionSystem],
     update_with_oracle_cut_size: int,
-    incorrect_spans_key: Optional[str]=None
+    incorrect_spans_key: Optional[str] = None,
 ):
     """Create a transition-based EntityRecognizer component. The entity recognizer
     identifies non-overlapping labelled spans of tokens.
@@ -126,7 +126,7 @@ def make_beam_ner(
     beam_width: int,
     beam_density: float,
     beam_update_prob: float,
-    incorrect_spans_key: Optional[str]=None
+    incorrect_spans_key: Optional[str] = None,
 ):
     """Create a transition-based EntityRecognizer component that uses beam-search.
     The entity recognizer identifies non-overlapping labelled spans of tokens.
@@ -173,7 +173,7 @@ def make_beam_ner(
         beam_width=beam_width,
         beam_density=beam_density,
         beam_update_prob=beam_update_prob,
-        incorrect_spans_key=incorrect_spans_key
+        incorrect_spans_key=incorrect_spans_key,
     )
 
 
@@ -199,15 +199,14 @@ class EntityRecognizer(Parser):
         multitasks=tuple(),
         incorrect_spans_key=None,
     ):
-        """Create an EntityRecognizer.
-        """
+        """Create an EntityRecognizer."""
         super().__init__(
             vocab,
             model,
             name,
             moves,
             update_with_oracle_cut_size=update_with_oracle_cut_size,
-            min_action_freq=1,   # not relevant for NER
+            min_action_freq=1,  # not relevant for NER
             learn_tokens=False,  # not relevant for NER
             beam_width=beam_width,
             beam_density=beam_density,

@@ -56,7 +56,7 @@ PARTIAL_DATA = [
     ),
 ]
 
-PARSERS = ["parser"] # TODO: Test beam_parser when ready
+PARSERS = ["parser"]  # TODO: Test beam_parser when ready
 
 eps = 0.1
 
