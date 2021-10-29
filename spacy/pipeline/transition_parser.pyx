@@ -47,7 +47,7 @@ class Parser(TrainablePipe):
         beam_density=0.0,
         beam_update_prob=0.0,
         multitasks=tuple(),
-        incorrect_spans_key=None
+        incorrect_spans_key=None,
     ):
         """Create a Parser.
 

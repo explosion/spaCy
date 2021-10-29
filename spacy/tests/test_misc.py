@@ -5,7 +5,7 @@ from pathlib import Path
 from spacy.about import __version__ as spacy_version
 from spacy import util
 from spacy import prefer_gpu, require_gpu, require_cpu
-from spacy.util import dot_to_object, SimpleFrozenList
+from spacy.util import dot_to_object, SimpleFrozenList, import_file, to_ternary_int
 from thinc.api import Config, Optimizer, ConfigValidationError
 from thinc.api import set_current_ops
 from spacy.training.batchers import minibatch_by_words
