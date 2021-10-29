@@ -52,7 +52,7 @@ class SpanishLemmatizer(Lemmatizer):
                 rule_pos = "verb"
             else:
                 rule_pos = pos
-            rule = self.select_rule(rule_pos, features)
+            rule = self.select_rule(rule_pos, list(features))
             index = self.lookups.get_table("lemma_index").get(rule_pos, [])
             lemmas = getattr(self, "lemmatize_" + rule_pos)(
                 string, features, rule, index
@@ -191,6 +191,8 @@ class SpanishLemmatizer(Lemmatizer):
                 return selected_lemmas
             else:
                 return possible_lemmas
+        else:
+            return []
 
     def lemmatize_noun(
         self, word: str, features: List[str], rule: str, index: List[str]
@@ -268,7 +270,7 @@ class SpanishLemmatizer(Lemmatizer):
         return [word]
 
     def lemmatize_pron(
-        self, word: str, features: List[str], rule: str, index: List[str]
+        self, word: str, features: List[str], rule: Optional[str], index: List[str]
     ) -> List[str]:
         """
         Lemmatize a pronoun.
@@ -319,9 +321,11 @@ class SpanishLemmatizer(Lemmatizer):
                 return selected_lemmas
             else:
                 return possible_lemmas
+        else:
+            return []
 
     def lemmatize_verb(
-        self, word: str, features: List[str], rule: str, index: List[str]
+        self, word: str, features: List[str], rule: Optional[str], index: List[str]
     ) -> List[str]:
         """
         Lemmatize a verb.
@@ -342,6 +346,7 @@ class SpanishLemmatizer(Lemmatizer):
         selected_lemmas = []
 
         # Apply lemmatization rules
+        rule = str(rule or "")
         for old, new in self.lookups.get_table("lemma_rules").get(rule, []):
             possible_lemma = re.sub(old + "$", new, word)
             if possible_lemma != word:
@@ -389,11 +394,11 @@ class SpanishLemmatizer(Lemmatizer):
             return [word]
 
     def lemmatize_verb_pron(
-        self, word: str, features: List[str], rule: str, index: List[str]
+        self, word: str, features: List[str], rule: Optional[str], index: List[str]
     ) -> List[str]:
         # Strip and collect pronouns
         pron_patt = "^(.*?)([mts]e|l[aeo]s?|n?os)$"
-        prons = []
+        prons: List[str] = []
         verb = word
         m = re.search(pron_patt, verb)
         while m is not None and len(prons) <= 3:
@@ -410,7 +415,7 @@ class SpanishLemmatizer(Lemmatizer):
         else:
             rule = self.select_rule("verb", features)
             verb_lemma = self.lemmatize_verb(
-                verb, features - {"PronType=Prs"}, rule, index
+                verb, features - {"PronType=Prs"}, rule, index  # type: ignore[operator]
             )[0]
         pron_lemmas = []
         for pron in prons:

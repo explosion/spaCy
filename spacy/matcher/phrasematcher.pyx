@@ -157,9 +157,8 @@ cdef class PhraseMatcher:
         """Add a match-rule to the phrase-matcher. A match-rule consists of: an ID
         key, an on_match callback, and one or more patterns.
 
-        As of spaCy v2.2.2, PhraseMatcher.add supports the future API, which
-        makes the patterns the second argument and a list (instead of a variable
-        number of arguments). The on_match callback becomes an optional keyword
+        Since spaCy v2.2.2, PhraseMatcher.add takes a list of patterns as the
+        second argument, with the on_match callback as an optional keyword
         argument.
 
         key (str): The match ID.

@@ -8,7 +8,7 @@ from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
 from .lemmatizer import PolishLemmatizer
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
-from ...language import Language
+from ...language import Language, BaseDefaults
 
 
 TOKENIZER_EXCEPTIONS = {
@@ -16,7 +16,7 @@ TOKENIZER_EXCEPTIONS = {
 }
 
 
-class PolishDefaults(Language.Defaults):
+class PolishDefaults(BaseDefaults):
     tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     prefixes = TOKENIZER_PREFIXES
     infixes = TOKENIZER_INFIXES

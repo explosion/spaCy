@@ -131,7 +131,7 @@ class MultiLabel_TextCategorizer(TextCategorizer):
         cfg = {"labels": [], "threshold": threshold}
         self.cfg = dict(cfg)
 
-    def initialize(
+    def initialize(  # type: ignore[override]
         self,
         get_examples: Callable[[], Iterable[Example]],
         *,
@@ -184,7 +184,7 @@ class MultiLabel_TextCategorizer(TextCategorizer):
             **kwargs,
         )
 
-    def _validate_categories(self, examples: List[Example]):
+    def _validate_categories(self, examples: Iterable[Example]):
         """This component allows any type of single- or multi-label annotations.
         This method overwrites the more strict one from 'textcat'."""
         pass

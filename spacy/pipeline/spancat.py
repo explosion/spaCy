@@ -1,9 +1,10 @@
 import numpy
-from typing import List, Dict, Callable, Tuple, Optional, Iterable, Any
+from typing import List, Dict, Callable, Tuple, Optional, Iterable, Any, cast
 from thinc.api import Config, Model, get_current_ops, set_dropout_rate, Ops
 from thinc.api import Optimizer
-from thinc.types import Ragged, Ints2d, Floats2d
+from thinc.types import Ragged, Ints2d, Floats2d, Ints1d
 
+from ..compat import Protocol, runtime_checkable
 from ..scorer import Scorer
 from ..language import Language
 from .trainable_pipe import TrainablePipe
@@ -44,13 +45,19 @@ depth = 4
 DEFAULT_SPANCAT_MODEL = Config().from_str(spancat_default_config)["model"]
 
 
+@runtime_checkable
+class Suggester(Protocol):
+    def __call__(self, docs: Iterable[Doc], *, ops: Optional[Ops] = None) -> Ragged:
+        ...
+
+
 @registry.misc("spacy.ngram_suggester.v1")
-def build_ngram_suggester(sizes: List[int]) -> Callable[[List[Doc]], Ragged]:
+def build_ngram_suggester(sizes: List[int]) -> Suggester:
     """Suggest all spans of the given lengths. Spans are returned as a ragged
     array of integers. The array has two columns, indicating the start and end
     position."""
 
-    def ngram_suggester(docs: List[Doc], *, ops: Optional[Ops] = None) -> Ragged:
+    def ngram_suggester(docs: Iterable[Doc], *, ops: Optional[Ops] = None) -> Ragged:
         if ops is None:
             ops = get_current_ops()
         spans = []
@@ -67,10 +74,11 @@ def build_ngram_suggester(sizes: List[int]) -> Callable[[List[Doc]], Ragged]:
                 if spans:
                     assert spans[-1].ndim == 2, spans[-1].shape
             lengths.append(length)
+        lengths_array = cast(Ints1d, ops.asarray(lengths, dtype="i"))
         if len(spans) > 0:
-            output = Ragged(ops.xp.vstack(spans), ops.asarray(lengths, dtype="i"))
+            output = Ragged(ops.xp.vstack(spans), lengths_array)
         else:
-            output = Ragged(ops.xp.zeros((0, 0)), ops.asarray(lengths, dtype="i"))
+            output = Ragged(ops.xp.zeros((0, 0)), lengths_array)
 
         assert output.dataXd.ndim == 2
         return output
@@ -79,13 +87,11 @@ def build_ngram_suggester(sizes: List[int]) -> Callable[[List[Doc]], Ragged]:
 
 
 @registry.misc("spacy.ngram_range_suggester.v1")
-def build_ngram_range_suggester(
-    min_size: int, max_size: int
-) -> Callable[[List[Doc]], Ragged]:
+def build_ngram_range_suggester(min_size: int, max_size: int) -> Suggester:
     """Suggest all spans of the given lengths between a given min and max value - both inclusive.
     Spans are returned as a ragged array of integers. The array has two columns,
     indicating the start and end position."""
-    sizes = range(min_size, max_size + 1)
+    sizes = list(range(min_size, max_size + 1))
     return build_ngram_suggester(sizes)
 
 
@@ -104,7 +110,7 @@ def build_ngram_range_suggester(
 def make_spancat(
     nlp: Language,
     name: str,
-    suggester: Callable[[List[Doc]], Ragged],
+    suggester: Suggester,
     model: Model[Tuple[List[Doc], Ragged], Floats2d],
     spans_key: str,
     threshold: float = 0.5,
@@ -114,7 +120,7 @@ def make_spancat(
     parts: a suggester function that proposes candidate spans, and a labeller
     model that predicts one or more labels for each span.
 
-    suggester (Callable[List[Doc], Ragged]): A function that suggests spans.
+    suggester (Callable[[Iterable[Doc], Optional[Ops]], Ragged]): A function that suggests spans.
         Spans are returned as a ragged array with two integer columns, for the
         start and end positions.
     model (Model[Tuple[List[Doc], Ragged], Floats2d]): A model instance that
@@ -151,7 +157,7 @@ class SpanCategorizer(TrainablePipe):
         self,
         vocab: Vocab,
         model: Model[Tuple[List[Doc], Ragged], Floats2d],
-        suggester: Callable[[List[Doc]], Ragged],
+        suggester: Suggester,
         name: str = "spancat",
         *,
         spans_key: str = "spans",
@@ -179,7 +185,7 @@ class SpanCategorizer(TrainablePipe):
         initialization and training, the component will look for spans on the
         reference document under the same key.
         """
-        return self.cfg["spans_key"]
+        return str(self.cfg["spans_key"])
 
     def add_label(self, label: str) -> int:
         """Add a new label to the pipe.
@@ -194,7 +200,7 @@ class SpanCategorizer(TrainablePipe):
         if label in self.labels:
             return 0
         self._allow_extra_label()
-        self.cfg["labels"].append(label)
+        self.cfg["labels"].append(label)  # type: ignore
         self.vocab.strings.add(label)
         return 1
 
@@ -204,7 +210,7 @@ class SpanCategorizer(TrainablePipe):
 
         DOCS: https://spacy.io/api/spancategorizer#labels
         """
-        return tuple(self.cfg["labels"])
+        return tuple(self.cfg["labels"])  # type: ignore
 
     @property
     def label_data(self) -> List[str]:
@@ -223,8 +229,8 @@ class SpanCategorizer(TrainablePipe):
         DOCS: https://spacy.io/api/spancategorizer#predict
         """
         indices = self.suggester(docs, ops=self.model.ops)
-        scores = self.model.predict((docs, indices))
-        return (indices, scores)
+        scores = self.model.predict((docs, indices))  # type: ignore
+        return indices, scores
 
     def set_annotations(self, docs: Iterable[Doc], indices_scores) -> None:
         """Modify a batch of Doc objects, using pre-computed scores.
@@ -240,7 +246,7 @@ class SpanCategorizer(TrainablePipe):
         for i, doc in enumerate(docs):
             indices_i = indices[i].dataXd
             doc.spans[self.key] = self._make_span_group(
-                doc, indices_i, scores[offset : offset + indices.lengths[i]], labels
+                doc, indices_i, scores[offset : offset + indices.lengths[i]], labels  # type: ignore[arg-type]
             )
             offset += indices.lengths[i]
 
@@ -279,14 +285,14 @@ class SpanCategorizer(TrainablePipe):
         set_dropout_rate(self.model, drop)
         scores, backprop_scores = self.model.begin_update((docs, spans))
         loss, d_scores = self.get_loss(examples, (spans, scores))
-        backprop_scores(d_scores)
+        backprop_scores(d_scores)  # type: ignore
         if sgd is not None:
             self.finish_update(sgd)
         losses[self.name] += loss
         return losses
 
     def get_loss(
-        self, examples: Iterable[Example], spans_scores: Tuple[Ragged, Ragged]
+        self, examples: Iterable[Example], spans_scores: Tuple[Ragged, Floats2d]
     ) -> Tuple[float, float]:
         """Find the loss and gradient of loss for the batch of documents and
         their predicted scores.
@@ -311,8 +317,8 @@ class SpanCategorizer(TrainablePipe):
             spans_index = {}
             spans_i = spans[i].dataXd
             for j in range(spans.lengths[i]):
-                start = int(spans_i[j, 0])
-                end = int(spans_i[j, 1])
+                start = int(spans_i[j, 0])  # type: ignore
+                end = int(spans_i[j, 1])  # type: ignore
                 spans_index[(start, end)] = offset + j
             for gold_span in self._get_aligned_spans(eg):
                 key = (gold_span.start, gold_span.end)
@@ -323,7 +329,7 @@ class SpanCategorizer(TrainablePipe):
             # The target is a flat array for all docs. Track the position
             # we're at within the flat array.
             offset += spans.lengths[i]
-        target = self.model.ops.asarray(target, dtype="f")
+        target = self.model.ops.asarray(target, dtype="f")  # type: ignore
         # The target will have the values 0 (for untrue predictions) or 1
         # (for true predictions).
         # The scores should be in the range [0, 1].
@@ -339,7 +345,7 @@ class SpanCategorizer(TrainablePipe):
         self,
         get_examples: Callable[[], Iterable[Example]],
         *,
-        nlp: Language = None,
+        nlp: Optional[Language] = None,
         labels: Optional[List[str]] = None,
     ) -> None:
         """Initialize the pipe for training, using a representative set
@@ -347,14 +353,14 @@ class SpanCategorizer(TrainablePipe):
 
         get_examples (Callable[[], Iterable[Example]]): Function that
             returns a representative sample of gold-standard Example objects.
-        nlp (Language): The current nlp object the component is part of.
-        labels: The labels to add to the component, typically generated by the
+        nlp (Optional[Language]): The current nlp object the component is part of.
+        labels (Optional[List[str]]): The labels to add to the component, typically generated by the
             `init labels` command. If no labels are provided, the get_examples
             callback is used to extract the labels from the data.
 
         DOCS: https://spacy.io/api/spancategorizer#initialize
         """
-        subbatch = []
+        subbatch: List[Example] = []
         if labels is not None:
             for label in labels:
                 self.add_label(label)
@@ -393,7 +399,7 @@ class SpanCategorizer(TrainablePipe):
         kwargs.setdefault("has_annotation", lambda doc: self.key in doc.spans)
         return Scorer.score_spans(examples, **kwargs)
 
-    def _validate_categories(self, examples):
+    def _validate_categories(self, examples: Iterable[Example]):
         # TODO
         pass
 
@@ -410,10 +416,11 @@ class SpanCategorizer(TrainablePipe):
         threshold = self.cfg["threshold"]
 
         keeps = scores >= threshold
-        ranked = (scores * -1).argsort()
+        ranked = (scores * -1).argsort()  # type: ignore
         if max_positive is not None:
-            filter = ranked[:, max_positive:]
-            for i, row in enumerate(filter):
+            assert isinstance(max_positive, int)
+            span_filter = ranked[:, max_positive:]
+            for i, row in enumerate(span_filter):
                 keeps[i, row] = False
         spans.attrs["scores"] = scores[keeps].flatten()
 

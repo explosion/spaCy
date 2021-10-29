@@ -12,10 +12,11 @@ trigger:
       - "website/*"
       - "*.md"
 pr:
-  paths:
+   paths:
     exclude:
-      - "website/*"
       - "*.md"
+      - "website/docs/*"
+      - "website/src/*"
 
 jobs:
   # Perform basic checks for most important errors (syntax etc.) Uses the config
@@ -41,7 +42,7 @@ jobs:
           imageName: "ubuntu-18.04"
           python.version: "3.6"
         #        Python36Windows:
-        #          imageName: "vs2017-win2016"
+        #          imageName: "windows-2019"
         #          python.version: "3.6"
         #        Python36Mac:
         #          imageName: "macos-10.14"
@@ -50,7 +51,7 @@ jobs:
         #          imageName: "ubuntu-18.04"
         #          python.version: "3.7"
         Python37Windows:
-          imageName: "vs2017-win2016"
+          imageName: "windows-2019"
           python.version: "3.7"
         #        Python37Mac:
         #          imageName: "macos-10.14"
@@ -59,7 +60,7 @@ jobs:
         #          imageName: "ubuntu-18.04"
         #          python.version: "3.8"
         #        Python38Windows:
-        #          imageName: "vs2017-win2016"
+        #          imageName: "windows-2019"
         #          python.version: "3.8"
         Python38Mac:
           imageName: "macos-10.14"
@@ -67,12 +68,21 @@ jobs:
         Python39Linux:
           imageName: "ubuntu-18.04"
           python.version: "3.9"
-        Python39Windows:
-          imageName: "vs2017-win2016"
-          python.version: "3.9"
-        Python39Mac:
-          imageName: "macos-10.14"
-          python.version: "3.9"
+        #        Python39Windows:
+        #          imageName: "windows-2019"
+        #          python.version: "3.9"
+        #        Python39Mac:
+        #          imageName: "macos-10.14"
+        #          python.version: "3.9"
+        Python310Linux:
+          imageName: "ubuntu-20.04"
+          python.version: "3.10"
+        Python310Windows:
+          imageName: "windows-2019"
+          python.version: "3.10"
+        Python310Mac:
+          imageName: "macos-10.15"
+          python.version: "3.10"
       maxParallel: 4
     pool:
       vmImage: $(imageName)

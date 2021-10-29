@@ -19,7 +19,7 @@ _ordinal_words = [
 # fmt: on
 
 
-def like_num(text: str) -> bool:
+def like_num(text):
     if text.startswith(("+", "-", "±", "~")):
         text = text[1:]
     text = text.replace(",", "").replace(".", "")

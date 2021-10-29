@@ -25,6 +25,10 @@ steps:
       ${{ parameters.prefix }} python setup.py sdist --formats=gztar
     displayName: "Compile and build sdist"
 
+  - script: python -m mypy spacy
+    displayName: 'Run mypy'
+    condition: ne(variables['python_version'], '3.10')
+
   - task: DeleteFiles@1
     inputs:
       contents: "spacy"
@@ -100,3 +104,14 @@ steps:
       python -m spacy assemble ner_source_md.cfg output_dir 2>&1 | grep -q W113
     displayName: 'Test assemble CLI vectors warning'
     condition: eq(variables['python_version'], '3.8')
+
+  - script: |
+      python .github/validate_universe_json.py website/meta/universe.json
+    displayName: 'Test website/meta/universe.json'
+    condition: eq(variables['python_version'], '3.8')
+
+  - script: |
+      ${{ parameters.prefix }} python -m pip install thinc-apple-ops
+      ${{ parameters.prefix }} python -m pytest --pyargs spacy
+    displayName: "Run CPU tests with thinc-apple-ops"
+    condition: and(startsWith(variables['imageName'], 'macos'), eq(variables['python.version'], '3.9'))

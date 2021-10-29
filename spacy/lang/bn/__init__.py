@@ -3,11 +3,11 @@ from thinc.api import Model
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES, TOKENIZER_INFIXES
 from .stop_words import STOP_WORDS
-from ...language import Language
+from ...language import Language, BaseDefaults
 from ...pipeline import Lemmatizer
 
 
-class BengaliDefaults(Language.Defaults):
+class BengaliDefaults(BaseDefaults):
     tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     prefixes = TOKENIZER_PREFIXES
     suffixes = TOKENIZER_SUFFIXES

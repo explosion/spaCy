@@ -7,10 +7,10 @@ from .lex_attrs import LEX_ATTRS
 from .syntax_iterators import SYNTAX_ITERATORS
 from .punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES, TOKENIZER_INFIXES
 from .lemmatizer import GreekLemmatizer
-from ...language import Language
+from ...language import Language, BaseDefaults
 
 
-class GreekDefaults(Language.Defaults):
+class GreekDefaults(BaseDefaults):
     tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     prefixes = TOKENIZER_PREFIXES
     suffixes = TOKENIZER_SUFFIXES
