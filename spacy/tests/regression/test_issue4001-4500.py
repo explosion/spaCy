@@ -38,7 +38,7 @@ def test_issue4002(en_vocab):
 
 
 def test_issue4030():
-    """ Test whether textcat works fine with empty doc """
+    """Test whether textcat works fine with empty doc"""
     unique_classes = ["offensive", "inoffensive"]
     x_train = [
         "This is an offensive text",
@@ -237,7 +237,7 @@ def test_issue4190():
 
 
 def test_issue4267():
-    """ Test that running an entity_ruler after ner gives consistent results"""
+    """Test that running an entity_ruler after ner gives consistent results"""
     nlp = English()
     ner = nlp.add_pipe("ner")
     ner.add_label("PEOPLE")
@@ -289,7 +289,7 @@ def test_multiple_predictions():
 
 @pytest.mark.xfail(reason="no beam parser yet")
 def test_issue4313():
-    """ This should not crash or exit with some strange error code """
+    """This should not crash or exit with some strange error code"""
     beam_width = 16
     beam_density = 0.0001
     nlp = English()
@@ -304,14 +304,14 @@ def test_issue4313():
     doc = nlp("What do you think about Apple ?")
     assert len(ner.labels) == 1
     assert "SOME_LABEL" in ner.labels
-    ner.add_label("MY_ORG")  # TODO: not sure if we want this to be necessary...
     apple_ent = Span(doc, 5, 6, label="MY_ORG")
     doc.ents = list(doc.ents) + [apple_ent]
 
     # ensure the beam_parse still works with the new label
     docs = [doc]
-    ner = nlp.get_pipe("beam_ner")
     ner.beam_parse(docs, drop=0.0, beam_width=beam_width, beam_density=beam_density)
+    assert len(ner.labels) == 2
+    assert "MY_ORG" in ner.labels
 
 
 def test_issue4348():

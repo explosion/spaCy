@@ -6,21 +6,26 @@ def test_build_dependencies():
     # Check that library requirements are pinned exactly the same across different setup files.
     # TODO: correct checks for numpy rather than ignoring
     libs_ignore_requirements = [
-        "numpy",
         "pytest",
         "pytest-timeout",
         "mock",
         "flake8",
+        "hypothesis",
+        "pre-commit",
+        "mypy",
+        "types-dataclasses",
+        "types-mock",
+        "types-requests",
     ]
     # ignore language-specific packages that shouldn't be installed by all
     libs_ignore_setup = [
-        "numpy",
         "fugashi",
         "natto-py",
         "pythainlp",
         "sudachipy",
         "sudachidict_core",
         "spacy-pkuseg",
+        "thinc-apple-ops",
     ]
 
     # check requirements.txt

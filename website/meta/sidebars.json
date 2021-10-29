@@ -9,7 +9,8 @@
                     { "text": "Models & Languages", "url": "/usage/models" },
                     { "text": "Facts & Figures", "url": "/usage/facts-figures" },
                     { "text": "spaCy 101", "url": "/usage/spacy-101" },
-                    { "text": "New in v3.0", "url": "/usage/v3" }
+                    { "text": "New in v3.0", "url": "/usage/v3" },
+                    { "text": "New in v3.1", "url": "/usage/v3-1" }
                 ]
             },
             {
@@ -37,7 +38,8 @@
             {
                 "label": "Resources",
                 "items": [
-                    { "text": "Project Templates", "url": "https://github.com/explosion/projects" }
+                    { "text": "Project Templates", "url": "https://github.com/explosion/projects" },
+                    { "text": "v2.x Documentation", "url": "https://v2.spacy.io" }
                 ]
             }
         ]
@@ -93,6 +95,7 @@
                     { "text": "Morphologizer", "url": "/api/morphologizer" },
                     { "text": "SentenceRecognizer", "url": "/api/sentencerecognizer" },
                     { "text": "Sentencizer", "url": "/api/sentencizer" },
+                    { "text": "SpanCategorizer", "url": "/api/spancategorizer" },
                     { "text": "Tagger", "url": "/api/tagger" },
                     { "text": "TextCategorizer", "url": "/api/textcategorizer" },
                     { "text": "Tok2Vec", "url": "/api/tok2vec" },
@@ -131,6 +134,10 @@
                     { "text": "Classes", "url": "/api/cython-classes" },
                     { "text": "Structs", "url": "/api/cython-structs" }
                 ]
+            },
+            {
+                "label": "Legacy",
+                "items": [{ "text": "Legacy functions", "url": "/api/legacy" }]
             }
         ]
     }

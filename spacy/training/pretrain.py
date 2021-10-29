@@ -6,9 +6,12 @@ from collections import Counter
 import srsly
 import time
 import re
+
+from thinc.config import ConfigValidationError
 from wasabi import Printer
 
 from .example import Example
+from ..errors import Errors
 from ..tokens import Doc
 from ..schemas import ConfigSchemaPretrain
 from ..util import registry, load_model_from_config, dot_to_object
@@ -38,10 +41,11 @@ def pretrain(
     optimizer = P["optimizer"]
     # Load in pretrained weights to resume from
     if resume_path is not None:
-        _resume_model(model, resume_path, epoch_resume, silent=silent)
+        epoch_resume = _resume_model(model, resume_path, epoch_resume, silent=silent)
     else:
         # Without '--resume-path' the '--epoch-resume' argument is ignored
         epoch_resume = 0
+
     objective = model.attrs["loss"]
     # TODO: move this to logger function?
     tracker = ProgressTracker(frequency=10000)
@@ -89,21 +93,26 @@ def ensure_docs(examples_or_docs: Iterable[Union[Doc, Example]]) -> List[Doc]:
 
 
 def _resume_model(
-    model: Model, resume_path: Path, epoch_resume: int, silent: bool = True
-) -> None:
+    model: Model, resume_path: Path, epoch_resume: Optional[int], silent: bool = True
+) -> int:
     msg = Printer(no_print=silent)
     msg.info(f"Resume training tok2vec from: {resume_path}")
     with resume_path.open("rb") as file_:
         weights_data = file_.read()
         model.get_ref("tok2vec").from_bytes(weights_data)
-    # Parse the epoch number from the given weight file
-    model_name = re.search(r"model\d+\.bin", str(resume_path))
-    if model_name:
-        # Default weight file name so read epoch_start from it by cutting off 'model' and '.bin'
-        epoch_resume = int(model_name.group(0)[5:][:-4]) + 1
-        msg.info(f"Resuming from epoch: {epoch_resume}")
-    else:
-        msg.info(f"Resuming from epoch: {epoch_resume}")
+
+    if epoch_resume is None:
+        # Parse the epoch number from the given weight file
+        model_name = re.search(r"model\d+\.bin", str(resume_path))
+        if model_name:
+            # Default weight file name so read epoch_start from it by cutting off 'model' and '.bin'
+            epoch_resume = int(model_name.group(0)[5:][:-4]) + 1
+        else:
+            # No epoch given and couldn't infer it
+            raise ValueError(Errors.E1020)
+
+    msg.info(f"Resuming from epoch: {epoch_resume}")
+    return epoch_resume
 
 
 def make_update(
@@ -133,18 +142,45 @@ def create_pretraining_model(nlp, pretrain_config):
     The actual tok2vec layer is stored as a reference, and only this bit will be
     serialized to file and read back in when calling the 'train' command.
     """
-    nlp.initialize()
-    component = nlp.get_pipe(pretrain_config["component"])
-    if pretrain_config.get("layer"):
-        tok2vec = component.model.get_ref(pretrain_config["layer"])
-    else:
-        tok2vec = component.model
+    with nlp.select_pipes(enable=[]):
+        nlp.initialize()
+    tok2vec = get_tok2vec_ref(nlp, pretrain_config)
+    # If the config referred to a Tok2VecListener, grab the original model instead
+    if type(tok2vec).__name__ == "Tok2VecListener":
+        original_tok2vec = (
+            tok2vec.upstream_name if tok2vec.upstream_name != "*" else "tok2vec"
+        )
+        tok2vec = nlp.get_pipe(original_tok2vec).model
+    try:
+        tok2vec.initialize(X=[nlp.make_doc("Give it a doc to infer shapes")])
+    except ValueError:
+        component = pretrain_config["component"]
+        layer = pretrain_config["layer"]
+        raise ValueError(Errors.E874.format(component=component, layer=layer))
 
     create_function = pretrain_config["objective"]
     model = create_function(nlp.vocab, tok2vec)
     model.initialize(X=[nlp.make_doc("Give it a doc to infer shapes")])
     set_dropout_rate(model, pretrain_config["dropout"])
     return model
+
+
+def get_tok2vec_ref(nlp, pretrain_config):
+    tok2vec_component = pretrain_config["component"]
+    if tok2vec_component is None:
+        desc = (
+            f"To use pretrained tok2vec weights, [pretraining.component] "
+            f"needs to specify the component that should load them."
+        )
+        err = "component can't be null"
+        errors = [{"loc": ["pretraining", "component"], "msg": err}]
+        raise ConfigValidationError(
+            config=nlp.config["pretraining"], errors=errors, desc=desc
+        )
+    layer = nlp.get_pipe(tok2vec_component).model
+    if pretrain_config["layer"]:
+        layer = layer.get_ref(pretrain_config["layer"])
+    return layer
 
 
 class ProgressTracker:

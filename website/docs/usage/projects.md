@@ -49,6 +49,7 @@ production.
 <Integration title="FastAPI" logo="fastapi" url="#fastapi">Serve your models and host APIs</Integration>
 <Integration title="Ray" logo="ray" url="#ray">Distributed and parallel training</Integration>
 <Integration title="Weights &amp; Biases" logo="wandb" url="#wandb">Track your experiments and results</Integration>
+<Integration title="Hugging Face Hub" logo="huggingface_hub" url="#huggingface_hub">Upload your pipelines to the Hugging Face Hub</Integration>
 </Grid>
 
 ### 1. Clone a project template {#clone}
@@ -69,9 +70,9 @@ python -m spacy project clone pipelines/tagger_parser_ud
 
 By default, the project will be cloned into the current working directory. You
 can specify an optional second argument to define the output directory. The
-`--repo` option lets you define a custom repo to clone from if you don't want
-to use the spaCy [`projects`](https://github.com/explosion/projects) repo. You
-can also use any private repo you have access to with Git.
+`--repo` option lets you define a custom repo to clone from if you don't want to
+use the spaCy [`projects`](https://github.com/explosion/projects) repo. You can
+also use any private repo you have access to with Git.
 
 ### 2. Fetch the project assets {#assets}
 
@@ -221,6 +222,7 @@ pipelines.
 | `title`         | An optional project title used in `--help` message and [auto-generated docs](#custom-docs).                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | `description`   | An optional project description used in [auto-generated docs](#custom-docs).                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | `vars`          | A dictionary of variables that can be referenced in paths, URLs and scripts, just like [`config.cfg` variables](/usage/training#config-interpolation). For example, `${vars.name}` will use the value of the variable `name`. Variables need to be defined in the section `vars`, but can be a nested dict, so you're able to reference `${vars.model.name}`.                                                                                                                                                |
+| `env`           | A dictionary of variables, mapped to the names of environment variables that will be read in when running the project. For example, `${env.name}` will use the value of the environment variable defined as `name`.                                                                                                                                                                                                                                                                                          |
 | `directories`   | An optional list of [directories](#project-files) that should be created in the project for assets, training outputs, metrics etc. spaCy will make sure that these directories always exist.                                                                                                                                                                                                                                                                                                                 |
 | `assets`        | A list of assets that can be fetched with the [`project assets`](/api/cli#project-assets) command. `url` defines a URL or local path, `dest` is the destination file relative to the project directory, and an optional `checksum` ensures that an error is raised if the file's checksum doesn't match. Instead of `url`, you can also provide a `git` block with the keys `repo`, `branch` and `path`, to download from a Git repo.                                                                        |
 | `workflows`     | A dictionary of workflow names, mapped to a list of command names, to execute in order. Workflows can be run with the [`project run`](/api/cli#project-run) command.                                                                                                                                                                                                                                                                                                                                         |
@@ -289,7 +291,7 @@ files you need and not the whole repo.
 | Name          | Description                                                                                                                                                                                          |
 | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `dest`        | The destination path to save the downloaded asset to (relative to the project directory), including the file name.                                                                                   |
-| `git`         | `repo`: The URL of the repo to download from.<br />`path`: Path of the file or directory to download, relative to the repo root.<br />`branch`: The branch to download from. Defaults to `"master"`. |
+| `git`         | `repo`: The URL of the repo to download from.<br />`path`: Path of the file or directory to download, relative to the repo root. "" specifies the root directory.<br />`branch`: The branch to download from. Defaults to `"master"`. |
 | `checksum`    | Optional checksum of the file. If provided, it will be used to verify that the file matches and downloads will be skipped if a local file with the same checksum already exists.                     |
 | `description` | Optional asset description, used in [auto-generated docs](#custom-docs).                                                                                                                             |
 
@@ -310,8 +312,8 @@ company-internal and not available over the internet. In that case, you can
 specify the destination paths and a checksum, and leave out the URL. When your
 teammates clone and run your project, they can place the files in the respective
 directory themselves. The [`project assets`](/api/cli#project-assets) command
-will alert you about missing files and mismatched checksums, so you can ensure that
-others are running your project with the same data.
+will alert you about missing files and mismatched checksums, so you can ensure
+that others are running your project with the same data.
 
 ### Dependencies and outputs {#deps-outputs}
 
@@ -358,9 +360,10 @@ graphs based on the dependencies and outputs, and won't re-run previous steps
 automatically. For instance, if you only run the command `train` that depends on
 data created by `preprocess` and those files are missing, spaCy will show an
 error – it won't just re-run `preprocess`. If you're looking for more advanced
-data management, check out the [Data Version Control (DVC) integration](#dvc). If you're planning on integrating your spaCy project with DVC, you
-can also use `outputs_no_cache` instead of `outputs` to define outputs that
-won't be cached or tracked.
+data management, check out the [Data Version Control (DVC) integration](#dvc).
+If you're planning on integrating your spaCy project with DVC, you can also use
+`outputs_no_cache` instead of `outputs` to define outputs that won't be cached
+or tracked.
 
 ### Files and directory structure {#project-files}
 
@@ -467,7 +470,9 @@ In your `project.yml`, you can then run the script by calling
 `python scripts/custom_evaluation.py` with the function arguments. You can also
 use the `vars` section to define reusable variables that will be substituted in
 commands, paths and URLs. In this example, the batch size is defined as a
-variable will be added in place of `${vars.batch_size}` in the script.
+variable will be added in place of `${vars.batch_size}` in the script. Just like
+in the [training config](/usage/training##config-overrides), you can also
+override settings on the command line – for example using `--vars.batch_size`.
 
 > #### Calling into Python
 >
@@ -489,6 +494,29 @@ commands:
     deps:
       - 'training/model-best'
       - 'corpus/eval.json'
+```
+
+You can also use the `env` section to reference **environment variables** and
+make their values available to the commands. This can be useful for overriding
+settings on the command line and passing through system-level settings.
+
+> #### Usage example
+>
+> ```bash
+> export GPU_ID=1
+> BATCH_SIZE=128 python -m spacy project run evaluate
+> ```
+
+```yaml
+### project.yml
+env:
+  batch_size: BATCH_SIZE
+  gpu_id: GPU_ID
+
+commands:
+  - name: evaluate
+    script:
+      - 'python scripts/custom_evaluation.py ${env.batch_size}'
 ```
 
 ### Documenting your project {#custom-docs}
@@ -730,16 +758,6 @@ workflows, but only one can be tracked by DVC.
 
 ### Prodigy {#prodigy} <IntegrationLogo name="prodigy" width={100} height="auto" align="right" />
 
-<Infobox title="This section is still under construction" emoji="🚧" variant="warning">
-
-The Prodigy integration will require a nightly version of Prodigy that supports
-spaCy v3+. You can already use annotations created with Prodigy in spaCy v3 by
-exporting your data with
-[`data-to-spacy`](https://prodi.gy/docs/recipes#data-to-spacy) and running
-[`spacy convert`](/api/cli#convert) to convert it to the binary format.
-
-</Infobox>
-
 [Prodigy](https://prodi.gy) is a modern annotation tool for creating training
 data for machine learning models, developed by us. It integrates with spaCy
 out-of-the-box and provides many different
@@ -748,17 +766,23 @@ with and without a model in the loop. If Prodigy is installed in your project,
 you can start the annotation server from your `project.yml` for a tight feedback
 loop between data development and training.
 
-The following example command starts the Prodigy app using the
-[`ner.correct`](https://prodi.gy/docs/recipes#ner-correct) recipe and streams in
-suggestions for the given entity labels produced by a pretrained model. You can
-then correct the suggestions manually in the UI. After you save and exit the
-server, the full dataset is exported in spaCy's format and split into a training
-and evaluation set.
+<Infobox variant="warning">
+
+This integration requires [Prodigy v1.11](https://prodi.gy/docs/changelog#v1.11)
+or higher. If you're using an older version of Prodigy, you can still use your
+annotations in spaCy v3 by exporting your data with
+[`data-to-spacy`](https://prodi.gy/docs/recipes#data-to-spacy) and running
+[`spacy convert`](/api/cli#convert) to convert it to the binary format.
+
+</Infobox>
+
+The following example shows a workflow for merging and exporting NER annotations
+collected with Prodigy and training a spaCy pipeline:
 
 > #### Example usage
 >
 > ```cli
-> $ python -m spacy project run annotate
+> $ python -m spacy project run all
 > ```
 
 <!-- prettier-ignore -->
@@ -766,36 +790,71 @@ and evaluation set.
 ### project.yml
 vars:
   prodigy:
-    dataset: 'ner_articles'
-    labels: 'PERSON,ORG,PRODUCT'
-    model: 'en_core_web_md'
+    train_dataset: "fashion_brands_training"
+    eval_dataset: "fashion_brands_eval"
+
+workflows:
+  all:
+    - data-to-spacy
+    - train_spacy
 
 commands:
-  - name: annotate
-  - script:
-      - 'python -m prodigy ner.correct ${vars.prodigy.dataset} ./assets/raw_data.jsonl ${vars.prodigy.model} --labels ${vars.prodigy.labels}'
-      - 'python -m prodigy data-to-spacy ./corpus/train.json ./corpus/eval.json --ner ${vars.prodigy.dataset}'
-      - 'python -m spacy convert ./corpus/train.json ./corpus/train.spacy'
-      - 'python -m spacy convert ./corpus/eval.json ./corpus/eval.spacy'
-  - deps:
-      - 'assets/raw_data.jsonl'
-  - outputs:
-      - 'corpus/train.spacy'
-      - 'corpus/eval.spacy'
+  - name: "data-to-spacy"
+    help: "Merge your annotations and create data in spaCy's binary format"
+    script:
+      - "python -m prodigy data-to-spacy corpus/ --ner ${vars.prodigy.train_dataset},eval:${vars.prodigy.eval_dataset}"
+    outputs:
+      - "corpus/train.spacy"
+      - "corpus/dev.spacy"
+  - name: "train_spacy"
+    help: "Train a named entity recognition model with spaCy"
+    script:
+      - "python -m spacy train configs/config.cfg --output training/ --paths.train corpus/train.spacy --paths.dev corpus/dev.spacy"
+    deps:
+      - "corpus/train.spacy"
+      - "corpus/dev.spacy"
+    outputs:
+      - "training/model-best"
 ```
 
-You can use the same approach for other types of projects and annotation
+> #### Example train curve output
+>
+> [![Screenshot of train curve terminal output](../images/prodigy_train_curve.jpg)](https://prodi.gy/docs/recipes#train-curve)
+
+The [`train-curve`](https://prodi.gy/docs/recipes#train-curve) recipe is another
+cool workflow you can include in your project. It will run the training with
+different portions of the data, e.g. 25%, 50%, 75% and 100%. As a rule of thumb,
+if accuracy increases in the last segment, this could indicate that collecting
+more annotations of the same type might improve the model further.
+
+<!-- prettier-ignore -->
+```yaml
+### project.yml (excerpt)
+- name: "train_curve"
+    help: "Train the model with Prodigy by using different portions of training examples to evaluate if more annotations can potentially improve the performance"
+    script:
+      - "python -m prodigy train-curve --ner ${vars.prodigy.train_dataset},eval:${vars.prodigy.eval_dataset} --config configs/${vars.config} --show-plot"
+```
+
+You can use the same approach for various types of projects and annotation
 workflows, including
-[text classification](https://prodi.gy/docs/recipes#textcat),
-[dependency parsing](https://prodi.gy/docs/recipes#dep),
+[named entity recognition](https://prodi.gy/docs/named-entity-recognition),
+[span categorization](https://prodi.gy/docs/span-categorization),
+[text classification](https://prodi.gy/docs/text-classification),
+[dependency parsing](https://prodi.gy/docs/dependencies-relations),
 [part-of-speech tagging](https://prodi.gy/docs/recipes#pos) or fully
-[custom recipes](https://prodi.gy/docs/custom-recipes) – for instance, an A/B
-evaluation workflow that lets you compare two different models and their
-results.
+[custom recipes](https://prodi.gy/docs/custom-recipes). You can also use spaCy
+project templates to quickly start the annotation server to collect more
+annotations and add them to your Prodigy dataset.
 
-<!-- TODO: <Project id="integrations/prodigy">
+<Project id="integrations/prodigy">
 
-</Project> -->
+Get started with spaCy and Prodigy using our project template. It includes
+commands to create a merged training corpus from your Prodigy annotations,
+training and packaging a spaCy pipeline and analyzing if more annotations may
+improve performance.
+
+</Project>
 
 ---
 
@@ -968,7 +1027,7 @@ your results.
 >
 > ```ini
 > [training.logger]
-> @loggers = "spacy.WandbLogger.v1"
+> @loggers = "spacy.WandbLogger.v2"
 > project_name = "monitor_spacy_training"
 > remove_config_values = ["paths.train", "paths.dev", "corpora.train.path", "corpora.dev.path"]
 > ```
@@ -984,5 +1043,70 @@ project template. It trains on the IMDB Movie Review Dataset and includes a
 simple config with the built-in `WandbLogger`, as well as a custom example of
 creating variants of the config for a simple hyperparameter grid search and
 logging the results.
+
+</Project>
+
+---
+
+### Hugging Face Hub {#huggingface_hub} <IntegrationLogo name="huggingface_hub" width={175} height="auto" align="right" />
+
+The [Hugging Face Hub](https://huggingface.co/) lets you upload models and share
+them with others. It hosts models as Git-based repositories which are storage
+spaces that can contain all your files. It support versioning, branches and
+custom metadata out-of-the-box, and provides browser-based visualizers for
+exploring your models interactively, as well as an API for production use. The
+[`spacy-huggingface-hub`](https://github.com/explosion/spacy-huggingface-hub)
+package automatically adds the `huggingface-hub` command to your `spacy` CLI if
+it's installed.
+
+> #### Installation
+>
+> ```cli
+> $ pip install spacy-huggingface-hub
+> # Check that the CLI is registered
+> $ python -m spacy huggingface-hub --help
+> ```
+
+You can then upload any pipeline packaged with
+[`spacy package`](/api/cli#package). Make sure to set `--build wheel` to output
+a binary `.whl` file. The uploader will read all metadata from the pipeline
+package, including the auto-generated pretty `README.md` and the model details
+available in the `meta.json`. For examples, check out the
+[spaCy pipelines](https://huggingface.co/spacy) we've uploaded.
+
+```cli
+$ huggingface-cli login
+$ python -m spacy package ./en_ner_fashion ./output --build wheel
+$ cd ./output/en_ner_fashion-0.0.0/dist
+$ python -m spacy huggingface-hub push en_ner_fashion-0.0.0-py3-none-any.whl
+```
+
+After uploading, you will see the live URL of your pipeline packages, as well as
+the direct URL to the model wheel you can install via `pip install`. You'll also
+be able to test your pipeline interactively from your browser:
+
+![Screenshot: interactive NER visualizer](../images/huggingface_hub.jpg)
+
+In your `project.yml`, you can add a command that uploads your trained and
+packaged pipeline to the hub. You can either run this as a manual step, or
+automatically as part of a workflow. Make sure to set `--build wheel` when
+running `spacy package` to build a wheel file for your pipeline package.
+
+<!-- prettier-ignore -->
+```yaml
+### project.yml
+- name: "push_to_hub"
+  help: "Upload the trained model to the Hugging Face Hub"
+  script:
+    - "python -m spacy huggingface-hub push packages/en_${vars.name}-${vars.version}/dist/en_${vars.name}-${vars.version}-py3-none-any.whl"
+  deps:
+    - "packages/en_${vars.name}-${vars.version}/dist/en_${vars.name}-${vars.version}-py3-none-any.whl"
+```
+
+<Project id="integrations/huggingface_hub">
+
+Get started with uploading your models to the Hugging Face hub using our project
+template. It trains a simple pipeline, packages it and uploads it if the
+packaged model has changed. This makes it easy to deploy your models end-to-end.
 
 </Project>

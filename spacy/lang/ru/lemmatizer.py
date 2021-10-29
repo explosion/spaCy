@@ -12,8 +12,6 @@ PUNCT_RULES = {"«": '"', "»": '"'}
 
 
 class RussianLemmatizer(Lemmatizer):
-    _morph = None
-
     def __init__(
         self,
         vocab: Vocab,
@@ -23,17 +21,17 @@ class RussianLemmatizer(Lemmatizer):
         mode: str = "pymorphy2",
         overwrite: bool = False,
     ) -> None:
+        if mode == "pymorphy2":
+            try:
+                from pymorphy2 import MorphAnalyzer
+            except ImportError:
+                raise ImportError(
+                    "The Russian lemmatizer mode 'pymorphy2' requires the "
+                    "pymorphy2 library. Install it with: pip install pymorphy2"
+                ) from None
+            if getattr(self, "_morph", None) is None:
+                self._morph = MorphAnalyzer()
         super().__init__(vocab, model, name, mode=mode, overwrite=overwrite)
-
-        try:
-            from pymorphy2 import MorphAnalyzer
-        except ImportError:
-            raise ImportError(
-                "The Russian lemmatizer requires the pymorphy2 library: "
-                'try to fix it with "pip install pymorphy2"'
-            ) from None
-        if RussianLemmatizer._morph is None:
-            RussianLemmatizer._morph = MorphAnalyzer()
 
     def pymorphy2_lemmatize(self, token: Token) -> List[str]:
         string = token.text
@@ -58,7 +56,9 @@ class RussianLemmatizer(Lemmatizer):
         if not len(filtered_analyses):
             return [string.lower()]
         if morphology is None or (len(morphology) == 1 and POS in morphology):
-            return list(set([analysis.normal_form for analysis in filtered_analyses]))
+            return list(
+                dict.fromkeys([analysis.normal_form for analysis in filtered_analyses])
+            )
         if univ_pos in ("ADJ", "DET", "NOUN", "PROPN"):
             features_to_compare = ["Case", "Number", "Gender"]
         elif univ_pos == "NUM":
@@ -89,14 +89,16 @@ class RussianLemmatizer(Lemmatizer):
                 filtered_analyses.append(analysis)
         if not len(filtered_analyses):
             return [string.lower()]
-        return list(set([analysis.normal_form for analysis in filtered_analyses]))
+        return list(
+            dict.fromkeys([analysis.normal_form for analysis in filtered_analyses])
+        )
 
-    def lookup_lemmatize(self, token: Token) -> List[str]:
+    def pymorphy2_lookup_lemmatize(self, token: Token) -> List[str]:
         string = token.text
         analyses = self._morph.parse(string)
         if len(analyses) == 1:
-            return analyses[0].normal_form
-        return string
+            return [analyses[0].normal_form]
+        return [string]
 
 
 def oc2ud(oc_tag: str) -> Tuple[str, Dict[str, str]]:

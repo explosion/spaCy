@@ -132,8 +132,8 @@ def test_incomplete_data():
     # test the trained model
     test_text = "I like blue eggs"
     doc = nlp(test_text)
-    assert doc[1].tag_ is "V"
-    assert doc[2].tag_ is "J"
+    assert doc[1].tag_ == "V"
+    assert doc[2].tag_ == "J"
 
 
 def test_overfitting_IO():
@@ -154,20 +154,20 @@ def test_overfitting_IO():
     # test the trained model
     test_text = "I like blue eggs"
     doc = nlp(test_text)
-    assert doc[0].tag_ is "N"
-    assert doc[1].tag_ is "V"
-    assert doc[2].tag_ is "J"
-    assert doc[3].tag_ is "N"
+    assert doc[0].tag_ == "N"
+    assert doc[1].tag_ == "V"
+    assert doc[2].tag_ == "J"
+    assert doc[3].tag_ == "N"
 
     # Also test the results are still the same after IO
     with make_tempdir() as tmp_dir:
         nlp.to_disk(tmp_dir)
         nlp2 = util.load_model_from_path(tmp_dir)
         doc2 = nlp2(test_text)
-        assert doc2[0].tag_ is "N"
-        assert doc2[1].tag_ is "V"
-        assert doc2[2].tag_ is "J"
-        assert doc2[3].tag_ is "N"
+        assert doc2[0].tag_ == "N"
+        assert doc2[1].tag_ == "V"
+        assert doc2[2].tag_ == "J"
+        assert doc2[3].tag_ == "N"
 
     # Make sure that running pipe twice, or comparing to call, always amounts to the same predictions
     texts = [
@@ -181,6 +181,17 @@ def test_overfitting_IO():
     no_batch_deps = [doc.to_array([TAG]) for doc in [nlp(text) for text in texts]]
     assert_equal(batch_deps_1, batch_deps_2)
     assert_equal(batch_deps_1, no_batch_deps)
+
+    # Try to unlearn the first 'N' tag with negative annotation
+    neg_ex = Example.from_dict(nlp.make_doc(test_text), {"tags": ["!N", "V", "J", "N"]})
+
+    for i in range(20):
+        losses = {}
+        nlp.update([neg_ex], sgd=optimizer, losses=losses)
+
+    # test the "untrained" tag
+    doc3 = nlp(test_text)
+    assert doc3[0].tag_ != "N"
 
 
 def test_tagger_requires_labels():

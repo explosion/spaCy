@@ -108,10 +108,14 @@ def init_labels_cli(
         config = util.load_config(config_path, overrides=overrides)
     with show_validation_error(hint_fill=False):
         nlp = init_nlp(config, use_gpu=use_gpu)
+    _init_labels(nlp, output_path)
+
+
+def _init_labels(nlp, output_path):
     for name, component in nlp.pipeline:
         if getattr(component, "label_data", None) is not None:
             output_file = output_path / f"{name}.json"
             srsly.write_json(output_file, component.label_data)
-            msg.good(f"Saving {name} labels to {output_file}")
+            msg.good(f"Saving label data for component '{name}' to {output_file}")
         else:
-            msg.info(f"No labels found for {name}")
+            msg.info(f"No label data found for component '{name}'")

@@ -34,6 +34,7 @@ const MODEL_META = {
     core_sm: 'Vocabulary, syntax, entities',
     dep: 'Vocabulary, syntax',
     ent: 'Named entities',
+    sent: 'Sentence boundaries',
     pytt: 'PyTorch Transformers',
     trf: 'Transformers',
     vectors: 'Word vectors',
@@ -42,22 +43,26 @@ const MODEL_META = {
     wiki: 'Wikipedia',
     uas: 'Unlabelled dependencies',
     las: 'Labelled dependencies',
+    dep_uas: 'Unlabelled dependencies',
+    dep_las: 'Labelled dependencies',
     token_acc: 'Tokenization',
     tok: 'Tokenization',
     lemma: 'Lemmatization',
     morph: 'Morphological analysis',
     tags_acc: 'Part-of-speech tags (fine grained tags, Token.tag)',
+    tag_acc: 'Part-of-speech tags (fine grained tags, Token.tag)',
     tag: 'Part-of-speech tags (fine grained tags, Token.tag)',
     pos: 'Part-of-speech tags (coarse grained tags, Token.pos)',
+    pos_acc: 'Part-of-speech tags (coarse grained tags, Token.pos)',
     ents_f: 'Named entities (F-score)',
     ents_p: 'Named entities (precision)',
     ents_r: 'Named entities (recall)',
     ner_f: 'Named entities (F-score)',
     ner_p: 'Named entities (precision)',
     ner_r: 'Named entities (recall)',
-    sent_f: 'Sentence segmentation (F-score)',
-    sent_p: 'Sentence segmentation (precision)',
-    sent_r: 'Sentence segmentation (recall)',
+    sents_f: 'Sentence segmentation (F-score)',
+    sents_p: 'Sentence segmentation (precision)',
+    sents_r: 'Sentence segmentation (recall)',
     cpu: 'words per second on CPU',
     gpu: 'words per second on GPU',
     pipeline: 'Active processing pipeline components in order',
@@ -191,6 +196,7 @@ const Model = ({
     const [isError, setIsError] = useState(true)
     const [meta, setMeta] = useState({})
     const { type, genre, size } = getModelComponents(name)
+    const display_type = type === 'core' && size === 'sm' ? 'core_sm' : type
     const version = useMemo(() => getLatestVersion(name, compatibility, prereleases), [
         name,
         compatibility,
@@ -214,7 +220,7 @@ const Model = ({
         }
     }, [initialized, version, baseUrl, name])
 
-    const releaseTag = meta.fullName ? `/tag/${meta.fullName}` : ''
+    const releaseTag = meta.fullName ? `tag/${meta.fullName}` : ''
     const releaseUrl = `https://github.com/${repo}/releases/${releaseTag}`
     const pipeline = linkComponents(meta.pipeline)
     const components = linkComponents(meta.components)
@@ -227,7 +233,7 @@ const Model = ({
 
     const rows = [
         { label: 'Language', tag: langId, content: langName },
-        { label: 'Type', tag: type, content: MODEL_META[type] },
+        { label: 'Type', tag: type, content: MODEL_META[display_type] },
         { label: 'Genre', tag: genre, content: MODEL_META[genre] },
         { label: 'Size', tag: size, content: meta.sizeFull },
         { label: 'Components', content: components, help: MODEL_META.components },

@@ -14,7 +14,7 @@ import GitHubCode from './github'
 import classes from '../styles/code.module.sass'
 
 const WRAP_THRESHOLD = 30
-const CLI_GROUPS = ['init', 'debug', 'project', 'ray']
+const CLI_GROUPS = ['init', 'debug', 'project', 'ray', 'huggingface-hub']
 
 export default props => (
     <Pre>
@@ -121,7 +121,6 @@ function parseArgs(raw) {
 }
 
 function convertLine(line, i) {
-    console.log(line, i)
     const cliRegex = /^(\$ )?python -m spacy/
     if (cliRegex.test(line)) {
         const text = line.replace(cliRegex, '')

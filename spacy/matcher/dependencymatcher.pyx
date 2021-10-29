@@ -3,13 +3,13 @@ from typing import List
 from collections import defaultdict
 from itertools import product
 
-import numpy
+import warnings
 
 from .matcher cimport Matcher
 from ..vocab cimport Vocab
 from ..tokens.doc cimport Doc
 
-from ..errors import Errors
+from ..errors import Errors, Warnings
 from ..tokens import Span
 
 
@@ -121,13 +121,15 @@ cdef class DependencyMatcher:
                     raise ValueError(Errors.E099.format(key=key))
                 visited_nodes[relation["RIGHT_ID"]] = True
             else:
-                if not(
-                    "RIGHT_ID" in relation
-                    and "RIGHT_ATTRS" in relation
-                    and "REL_OP" in relation
-                    and "LEFT_ID" in relation
-                ):
-                    raise ValueError(Errors.E100.format(key=key))
+                required_keys = {"RIGHT_ID", "RIGHT_ATTRS", "REL_OP", "LEFT_ID"}
+                relation_keys = set(relation.keys())
+                missing = required_keys - relation_keys
+                if missing:
+                    missing_txt = ", ".join(list(missing))
+                    raise ValueError(Errors.E100.format(
+                        required=required_keys,
+                        missing=missing_txt
+                    ))
                 if (
                     relation["RIGHT_ID"] in visited_nodes
                     or relation["LEFT_ID"] not in visited_nodes
@@ -137,6 +139,8 @@ cdef class DependencyMatcher:
                     raise ValueError(Errors.E1007.format(op=relation["REL_OP"]))
                 visited_nodes[relation["RIGHT_ID"]] = True
                 visited_nodes[relation["LEFT_ID"]] = True
+            if relation["RIGHT_ATTRS"].get("OP", "") in ("?", "*", "+"):
+                raise ValueError(Errors.E1016.format(node=relation))
             idx = idx + 1
 
     def _get_matcher_key(self, key, pattern_idx, token_idx):
@@ -172,28 +176,23 @@ cdef class DependencyMatcher:
         self._callbacks[key] = on_match
 
         # Add 'RIGHT_ATTRS' to self._patterns[key]
-        _patterns = []
-        for pattern in patterns:
-            token_patterns = []
-            for i in range(len(pattern)):
-                token_pattern = [pattern[i]["RIGHT_ATTRS"]]
-                token_patterns.append(token_pattern)
-            _patterns.append(token_patterns)
+        _patterns = [[[pat["RIGHT_ATTRS"]] for pat in pattern] for pattern in patterns]
+        pattern_offset = len(self._patterns[key])
         self._patterns[key].extend(_patterns)
 
         # Add each node pattern of all the input patterns individually to the
         # matcher. This enables only a single instance of Matcher to be used.
         # Multiple adds are required to track each node pattern.
         tokens_to_key_list = []
-        for i in range(len(_patterns)):
+        for i, current_patterns in enumerate(_patterns, start=pattern_offset):
 
             # Preallocate list space
-            tokens_to_key = [None]*len(_patterns[i])
+            tokens_to_key = [None] * len(current_patterns)
 
             # TODO: Better ways to hash edges in pattern?
-            for j in range(len(_patterns[i])):
+            for j, _pattern in enumerate(current_patterns):
                 k = self._get_matcher_key(key, i, j)
-                self._matcher.add(k, [_patterns[i][j]])
+                self._matcher.add(k, [_pattern])
                 tokens_to_key[j] = k
 
             tokens_to_key_list.append(tokens_to_key)
@@ -265,7 +264,9 @@ cdef class DependencyMatcher:
         self._raw_patterns.pop(key)
         self._tree.pop(key)
         self._root.pop(key)
-        self._tokens_to_key.pop(key)
+        for mklist in self._tokens_to_key.pop(key):
+            for mkey in mklist:
+                self._matcher.remove(mkey)
 
     def _get_keys_to_position_maps(self, doc):
         """
@@ -277,7 +278,9 @@ cdef class DependencyMatcher:
         e.g. keys_to_position_maps[root_index][match_id] = [...]
         """
         keys_to_position_maps = defaultdict(lambda: defaultdict(list))
-        for match_id, start, _ in self._matcher(doc):
+        for match_id, start, end in self._matcher(doc):
+            if start + 1 != end:
+                warnings.warn(Warnings.W110.format(tokens=[t.text for t in doc[start:end]], pattern=self._matcher.get(match_id)[1][0][0]))
             token = doc[start]
             root = ([token] + list(token.ancestors))[-1]
             keys_to_position_maps[root.i][match_id].append(start)
@@ -294,7 +297,7 @@ cdef class DependencyMatcher:
         if isinstance(doclike, Doc):
             doc = doclike
         elif isinstance(doclike, Span):
-            doc = doclike.as_doc()
+            doc = doclike.as_doc(copy_user_data=True)
         else:
             raise ValueError(Errors.E195.format(good="Doc or Span", got=type(doclike).__name__))
 
@@ -328,7 +331,7 @@ cdef class DependencyMatcher:
         # position of the matched tokens
         for candidate_match in product(*all_positions):
 
-            # A potential match is a valid match if all relationhips between the
+            # A potential match is a valid match if all relationships between the
             # matched tokens are satisfied.
             is_valid = True
             for left_idx in range(len(candidate_match)):
@@ -415,18 +418,10 @@ cdef class DependencyMatcher:
         return []
 
     def _right_sib(self, doc, node):
-        candidate_children = []
-        for child in list(doc[node].head.children):
-            if child.i > node:
-                candidate_children.append(doc[child.i])
-        return candidate_children
+        return [doc[child.i] for child in doc[node].head.children if child.i > node]
 
     def _left_sib(self, doc, node):
-        candidate_children = []
-        for child in list(doc[node].head.children):
-            if child.i < node:
-                candidate_children.append(doc[child.i])
-        return candidate_children
+        return [doc[child.i] for child in doc[node].head.children if child.i < node]
 
     def _normalize_key(self, key):
         if isinstance(key, basestring):

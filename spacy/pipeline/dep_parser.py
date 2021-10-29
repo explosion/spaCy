@@ -3,6 +3,7 @@ from collections import defaultdict
 from typing import Optional, Iterable
 from thinc.api import Model, Config
 
+from ._parser_internals.transition_system import TransitionSystem
 from .transition_parser import Parser
 from ._parser_internals.arc_eager import ArcEager
 
@@ -23,7 +24,7 @@ hidden_width = 64
 maxout_pieces = 2
 
 [model.tok2vec]
-@architectures = "spacy.HashEmbedCNN.v1"
+@architectures = "spacy.HashEmbedCNN.v2"
 pretrained_vectors = null
 width = 96
 depth = 4
@@ -58,7 +59,7 @@ def make_parser(
     nlp: Language,
     name: str,
     model: Model,
-    moves: Optional[list],
+    moves: Optional[TransitionSystem],
     update_with_oracle_cut_size: int,
     learn_tokens: bool,
     min_action_freq: int,
@@ -84,13 +85,13 @@ def make_parser(
     model (Model): The model for the transition-based parser. The model needs
         to have a specific substructure of named components --- see the
         spacy.ml.tb_framework.TransitionModel for details.
-    moves (List[str]): A list of transition names. Inferred from the data if not
-        provided.
-    update_with_oracle_cut_size (int):
-        During training, cut long sequences into shorter segments by creating
-        intermediate states based on the gold-standard history. The model is
-        not very sensitive to this parameter, so you usually won't need to change
-        it. 100 is a good default.
+    moves (Optional[TransitionSystem]): This defines how the parse-state is created,
+        updated and evaluated. If 'moves' is None, a new instance is
+        created with `self.TransitionSystem()`. Defaults to `None`.
+    update_with_oracle_cut_size (int): During training, cut long sequences into
+        shorter segments by creating intermediate states based on the gold-standard
+        history. The model is not very sensitive to this parameter, so you usually
+        won't need to change it. 100 is a good default.
     learn_tokens (bool): Whether to learn to merge subtokens that are split
         relative to the gold standard. Experimental.
     min_action_freq (int): The minimum frequency of labelled actions to retain.
@@ -111,6 +112,9 @@ def make_parser(
         beam_width=1,
         beam_density=0.0,
         beam_update_prob=0.0,
+        # At some point in the future we can try to implement support for
+        # partial annotations, perhaps only in the beam objective.
+        incorrect_spans_key=None
     )
 
 
@@ -140,7 +144,7 @@ def make_beam_parser(
     nlp: Language,
     name: str,
     model: Model,
-    moves: Optional[list],
+    moves: Optional[TransitionSystem],
     update_with_oracle_cut_size: int,
     learn_tokens: bool,
     min_action_freq: int,
@@ -165,8 +169,13 @@ def make_beam_parser(
     model (Model): The model for the transition-based parser. The model needs
         to have a specific substructure of named components --- see the
         spacy.ml.tb_framework.TransitionModel for details.
-    moves (List[str]): A list of transition names. Inferred from the data if not
-        provided.
+    moves (Optional[TransitionSystem]): This defines how the parse-state is created,
+        updated and evaluated. If 'moves' is None, a new instance is
+        created with `self.TransitionSystem()`. Defaults to `None`.
+    update_with_oracle_cut_size (int): During training, cut long sequences into
+        shorter segments by creating intermediate states based on the gold-standard
+        history. The model is not very sensitive to this parameter, so you usually
+        won't need to change it. 100 is a good default.
     beam_width (int): The number of candidate analyses to maintain.
     beam_density (float): The minimum ratio between the scores of the first and
         last candidates in the beam. This allows the parser to avoid exploring
@@ -196,16 +205,52 @@ def make_beam_parser(
         multitasks=[],
         learn_tokens=learn_tokens,
         min_action_freq=min_action_freq,
+        # At some point in the future we can try to implement support for
+        # partial annotations, perhaps only in the beam objective.
+        incorrect_spans_key=None
     )
 
 
 class DependencyParser(Parser):
     """Pipeline component for dependency parsing.
 
-    DOCS: https://nightly.spacy.io/api/dependencyparser
+    DOCS: https://spacy.io/api/dependencyparser
     """
 
     TransitionSystem = ArcEager
+
+    def __init__(
+        self,
+        vocab,
+        model,
+        name="parser",
+        moves=None,
+        *,
+        update_with_oracle_cut_size=100,
+        min_action_freq=30,
+        learn_tokens=False,
+        beam_width=1,
+        beam_density=0.0,
+        beam_update_prob=0.0,
+        multitasks=tuple(),
+        incorrect_spans_key=None,
+    ):
+        """Create a DependencyParser.
+        """
+        super().__init__(
+            vocab,
+            model,
+            name,
+            moves,
+            update_with_oracle_cut_size=update_with_oracle_cut_size,
+            min_action_freq=min_action_freq,
+            learn_tokens=learn_tokens,
+            beam_width=beam_width,
+            beam_density=beam_density,
+            beam_update_prob=beam_update_prob,
+            multitasks=multitasks,
+            incorrect_spans_key=incorrect_spans_key,
+        )
 
     @property
     def postprocesses(self):
@@ -244,7 +289,7 @@ class DependencyParser(Parser):
         RETURNS (Dict[str, Any]): The scores, produced by Scorer.score_spans
             and Scorer.score_deps.
 
-        DOCS: https://nightly.spacy.io/api/dependencyparser#score
+        DOCS: https://spacy.io/api/dependencyparser#score
         """
 
         def has_sents(doc):
@@ -283,3 +328,10 @@ class DependencyParser(Parser):
             head_scores.append(score_head_dict)
             label_scores.append(score_label_dict)
         return head_scores, label_scores
+
+    def _ensure_labels_are_added(self, docs):
+        # This gives the parser a chance to add labels it's missing for a batch
+        # of documents. However, this isn't desirable for the dependency parser,
+        # because we instead have a label frequency cut-off and back off rare
+        # labels to 'dep'.
+        pass

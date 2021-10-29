@@ -4,7 +4,9 @@ import re
 import copy
 from mock import Mock
 from spacy.matcher import DependencyMatcher
-from spacy.tokens import Doc
+from spacy.tokens import Doc, Token
+
+from ..doc.test_underscore import clean_underscore  # noqa: F401
 
 
 @pytest.fixture
@@ -334,3 +336,119 @@ def test_dependency_matcher_ops(en_vocab, doc, left, right, op, num_matches):
     matcher.add("pattern", [pattern])
     matches = matcher(doc)
     assert len(matches) == num_matches
+
+
+def test_dependency_matcher_long_matches(en_vocab, doc):
+    pattern = [
+        {"RIGHT_ID": "quick", "RIGHT_ATTRS": {"DEP": "amod", "OP": "+"}},
+    ]
+
+    matcher = DependencyMatcher(en_vocab)
+    with pytest.raises(ValueError):
+        matcher.add("pattern", [pattern])
+
+
+@pytest.mark.usefixtures("clean_underscore")
+def test_dependency_matcher_span_user_data(en_tokenizer):
+    doc = en_tokenizer("a b c d e")
+    for token in doc:
+        token.head = doc[0]
+        token.dep_ = "a"
+    Token.set_extension("is_c", default=False)
+    doc[2]._.is_c = True
+    pattern = [
+        {"RIGHT_ID": "c", "RIGHT_ATTRS": {"_": {"is_c": True}}},
+    ]
+    matcher = DependencyMatcher(en_tokenizer.vocab)
+    matcher.add("C", [pattern])
+    doc_matches = matcher(doc)
+    offset = 1
+    span_matches = matcher(doc[offset:])
+    for doc_match, span_match in zip(sorted(doc_matches), sorted(span_matches)):
+        assert doc_match[0] == span_match[0]
+        for doc_t_i, span_t_i in zip(doc_match[1], span_match[1]):
+            assert doc_t_i == span_t_i + offset
+
+
+def test_dependency_matcher_order_issue(en_tokenizer):
+    # issue from #9263
+    doc = en_tokenizer("I like text")
+    doc[2].head = doc[1]
+
+    # this matches on attrs but not rel op
+    pattern1 = [
+        {"RIGHT_ID": "root", "RIGHT_ATTRS": {"ORTH": "like"}},
+        {
+            "LEFT_ID": "root",
+            "RIGHT_ID": "r",
+            "RIGHT_ATTRS": {"ORTH": "text"},
+            "REL_OP": "<",
+        },
+    ]
+
+    # this matches on rel op but not attrs
+    pattern2 = [
+        {"RIGHT_ID": "root", "RIGHT_ATTRS": {"ORTH": "like"}},
+        {
+            "LEFT_ID": "root",
+            "RIGHT_ID": "r",
+            "RIGHT_ATTRS": {"ORTH": "fish"},
+            "REL_OP": ">",
+        },
+    ]
+
+    matcher = DependencyMatcher(en_tokenizer.vocab)
+
+    # This should behave the same as the next pattern
+    matcher.add("check", [pattern1, pattern2])
+    matches = matcher(doc)
+
+    assert matches == []
+
+    # use a new matcher
+    matcher = DependencyMatcher(en_tokenizer.vocab)
+    # adding one at a time under same label gets a match
+    matcher.add("check", [pattern1])
+    matcher.add("check", [pattern2])
+    matches = matcher(doc)
+
+    assert matches == []
+
+
+def test_dependency_matcher_remove(en_tokenizer):
+    # issue from #9263
+    doc = en_tokenizer("The red book")
+    doc[1].head = doc[2]
+
+    # this matches
+    pattern1 = [
+        {"RIGHT_ID": "root", "RIGHT_ATTRS": {"ORTH": "book"}},
+        {
+            "LEFT_ID": "root",
+            "RIGHT_ID": "r",
+            "RIGHT_ATTRS": {"ORTH": "red"},
+            "REL_OP": ">",
+        },
+    ]
+
+    # add and then remove it
+    matcher = DependencyMatcher(en_tokenizer.vocab)
+    matcher.add("check", [pattern1])
+    matcher.remove("check")
+
+    # this matches on rel op but not attrs
+    pattern2 = [
+        {"RIGHT_ID": "root", "RIGHT_ATTRS": {"ORTH": "flag"}},
+        {
+            "LEFT_ID": "root",
+            "RIGHT_ID": "r",
+            "RIGHT_ATTRS": {"ORTH": "blue"},
+            "REL_OP": ">",
+        },
+    ]
+
+    # Adding this new pattern with the same label, which should not match
+    matcher.add("check", [pattern2])
+    matches = matcher(doc)
+
+    assert matches == []

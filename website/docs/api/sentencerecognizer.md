@@ -12,6 +12,16 @@ api_trainable: true
 A trainable pipeline component for sentence segmentation. For a simpler,
 rule-based strategy, see the [`Sentencizer`](/api/sentencizer).
 
+## Assigned Attributes {#assigned-attributes}
+
+Predicted values will be assigned to `Token.is_sent_start`. The resulting
+sentences can be accessed using `Doc.sents`.
+
+| Location              | Value                                                                                                                          |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `Token.is_sent_start` | A boolean value indicating whether the token starts a sentence. This will be either `True` or `False` for all tokens. ~~bool~~ |
+| `Doc.sents`           | An iterator over sentences in the `Doc`, determined by `Token.is_sent_start` values. ~~Iterator[Span]~~                        |
+
 ## Config and implementation {#config}
 
 The default config is defined by the pipeline component factory and describes
@@ -176,9 +186,8 @@ Modify a batch of [`Doc`](/api/doc) objects, using pre-computed scores.
 
 Learn from a batch of [`Example`](/api/example) objects containing the
 predictions and gold-standard annotations, and update the component's model.
-Delegates to [`predict`](/api/sentencerecognizer#predict), 
-[`get_loss`](/api/sentencerecognizer#get_loss) and 
-[`set_annotations`](/api/sentencerecognizer#set_annotations).
+Delegates to [`predict`](/api/sentencerecognizer#predict) and
+[`get_loss`](/api/sentencerecognizer#get_loss).
 
 > #### Example
 >
@@ -188,14 +197,14 @@ Delegates to [`predict`](/api/sentencerecognizer#predict),
 > losses = senter.update(examples, sgd=optimizer)
 > ```
 
-| Name              | Description                                                                                                                        |
-| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `examples`        | A batch of [`Example`](/api/example) objects to learn from. ~~Iterable[Example]~~                                                  |
-| _keyword-only_    |                                                                                                                                    |
-| `drop`            | The dropout rate. ~~float~~                                                                                                        |
-| `sgd`             | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~                      |
-| `losses`          | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~           |
-| **RETURNS**       | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                              |
+| Name           | Description                                                                                                              |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `examples`     | A batch of [`Example`](/api/example) objects to learn from. ~~Iterable[Example]~~                                        |
+| _keyword-only_ |                                                                                                                          |
+| `drop`         | The dropout rate. ~~float~~                                                                                              |
+| `sgd`          | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~            |
+| `losses`       | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~ |
+| **RETURNS**    | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                    |
 
 ## SentenceRecognizer.rehearse {#rehearse tag="method,experimental" new="3"}
 

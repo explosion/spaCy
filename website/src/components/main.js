@@ -6,6 +6,7 @@ import patternBlue from '../images/pattern_blue.jpg'
 import patternGreen from '../images/pattern_green.jpg'
 import patternPurple from '../images/pattern_purple.jpg'
 import patternNightly from '../images/pattern_nightly.jpg'
+import patternLegacy from '../images/pattern_legacy.jpg'
 import classes from '../styles/main.module.sass'
 
 const patterns = {
@@ -13,6 +14,7 @@ const patterns = {
     green: patternGreen,
     purple: patternPurple,
     nightly: patternNightly,
+    legacy: patternLegacy,
 }
 
 export const Content = ({ Component = 'div', className, children }) => (

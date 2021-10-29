@@ -15,7 +15,7 @@ def info_cli(
     model: Optional[str] = Arg(None, help="Optional loadable spaCy pipeline"),
     markdown: bool = Opt(False, "--markdown", "-md", help="Generate Markdown for GitHub issues"),
     silent: bool = Opt(False, "--silent", "-s", "-S", help="Don't print anything (just return)"),
-    exclude: Optional[str] = Opt("labels", "--exclude", "-e", help="Comma-separated keys to exclude from the print-out"),
+    exclude: str = Opt("labels", "--exclude", "-e", help="Comma-separated keys to exclude from the print-out"),
     # fmt: on
 ):
     """
@@ -23,7 +23,7 @@ def info_cli(
     print its meta information. Flag --markdown prints details in Markdown for easy
     copy-pasting to GitHub issues.
 
-    DOCS: https://nightly.spacy.io/api/cli#info
+    DOCS: https://spacy.io/api/cli#info
     """
     exclude = string_to_list(exclude)
     info(model, markdown=markdown, silent=silent, exclude=exclude)
@@ -34,7 +34,7 @@ def info(
     *,
     markdown: bool = False,
     silent: bool = True,
-    exclude: List[str] = None,
+    exclude: Optional[List[str]] = None,
 ) -> Union[str, dict]:
     msg = Printer(no_print=silent, pretty=not silent)
     if not exclude:
@@ -61,7 +61,7 @@ def info(
     return raw_data
 
 
-def info_spacy() -> Dict[str, any]:
+def info_spacy() -> Dict[str, Any]:
     """Generate info about the current spaCy intallation.
 
     RETURNS (dict): The spaCy info.
@@ -105,12 +105,15 @@ def info_model(model: str, *, silent: bool = True) -> Dict[str, Any]:
 
 
 def get_markdown(
-    data: Dict[str, Any], title: Optional[str] = None, exclude: List[str] = None
+    data: Dict[str, Any],
+    title: Optional[str] = None,
+    exclude: Optional[List[str]] = None,
 ) -> str:
     """Get data in GitHub-flavoured Markdown format for issues etc.
 
-    data (dict or list of tuples): Label/value pairs.
-    title (str / None): Title, will be rendered as headline 2.
+    data (Dict[str, Any]): Label/value pairs.
+    title (str): Optional title, will be rendered as headline 2.
+    exclude (List[str]): Names of keys to exclude.
     RETURNS (str): The Markdown string.
     """
     md = MarkdownRenderer()

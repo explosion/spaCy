@@ -3,6 +3,7 @@ from collections import defaultdict
 from typing import Optional, Iterable
 from thinc.api import Model, Config
 
+from ._parser_internals.transition_system import TransitionSystem
 from .transition_parser import Parser
 from ._parser_internals.ner import BiluoPushDown
 
@@ -20,7 +21,7 @@ hidden_width = 64
 maxout_pieces = 2
 
 [model.tok2vec]
-@architectures = "spacy.HashEmbedCNN.v1"
+@architectures = "spacy.HashEmbedCNN.v2"
 pretrained_vectors = null
 width = 96
 depth = 4
@@ -39,6 +40,7 @@ DEFAULT_NER_MODEL = Config().from_str(default_model_config)["model"]
         "moves": None,
         "update_with_oracle_cut_size": 100,
         "model": DEFAULT_NER_MODEL,
+        "incorrect_spans_key": None
     },
     default_score_weights={
         "ents_f": 1.0,
@@ -51,8 +53,9 @@ def make_ner(
     nlp: Language,
     name: str,
     model: Model,
-    moves: Optional[list],
+    moves: Optional[TransitionSystem],
     update_with_oracle_cut_size: int,
+    incorrect_spans_key: Optional[str]=None
 ):
     """Create a transition-based EntityRecognizer component. The entity recognizer
     identifies non-overlapping labelled spans of tokens.
@@ -70,13 +73,16 @@ def make_ner(
     model (Model): The model for the transition-based parser. The model needs
         to have a specific substructure of named components --- see the
         spacy.ml.tb_framework.TransitionModel for details.
-    moves (list[str]): A list of transition names. Inferred from the data if not
-        provided.
-    update_with_oracle_cut_size (int):
-        During training, cut long sequences into shorter segments by creating
-        intermediate states based on the gold-standard history. The model is
-        not very sensitive to this parameter, so you usually won't need to change
-        it. 100 is a good default.
+    moves (Optional[TransitionSystem]): This defines how the parse-state is created,
+        updated and evaluated. If 'moves' is None, a new instance is
+        created with `self.TransitionSystem()`. Defaults to `None`.
+    update_with_oracle_cut_size (int): During training, cut long sequences into
+        shorter segments by creating intermediate states based on the gold-standard
+        history. The model is not very sensitive to this parameter, so you usually
+        won't need to change it. 100 is a good default.
+    incorrect_spans_key (Optional[str]): Identifies spans that are known
+        to be incorrect entity annotations. The incorrect entity annotations
+        can be stored in the span group, under this key.
     """
     return EntityRecognizer(
         nlp.vocab,
@@ -84,9 +90,8 @@ def make_ner(
         name,
         moves=moves,
         update_with_oracle_cut_size=update_with_oracle_cut_size,
+        incorrect_spans_key=incorrect_spans_key,
         multitasks=[],
-        min_action_freq=1,
-        learn_tokens=False,
         beam_width=1,
         beam_density=0.0,
         beam_update_prob=0.0,
@@ -103,6 +108,7 @@ def make_ner(
         "beam_density": 0.01,
         "beam_update_prob": 0.5,
         "beam_width": 32,
+        "incorrect_spans_key": None,
     },
     default_score_weights={
         "ents_f": 1.0,
@@ -115,11 +121,12 @@ def make_beam_ner(
     nlp: Language,
     name: str,
     model: Model,
-    moves: Optional[list],
+    moves: Optional[TransitionSystem],
     update_with_oracle_cut_size: int,
     beam_width: int,
     beam_density: float,
     beam_update_prob: float,
+    incorrect_spans_key: Optional[str]=None
 ):
     """Create a transition-based EntityRecognizer component that uses beam-search.
     The entity recognizer identifies non-overlapping labelled spans of tokens.
@@ -137,13 +144,13 @@ def make_beam_ner(
     model (Model): The model for the transition-based parser. The model needs
         to have a specific substructure of named components --- see the
         spacy.ml.tb_framework.TransitionModel for details.
-    moves (list[str]): A list of transition names. Inferred from the data if not
-        provided.
-    update_with_oracle_cut_size (int):
-        During training, cut long sequences into shorter segments by creating
-        intermediate states based on the gold-standard history. The model is
-        not very sensitive to this parameter, so you usually won't need to change
-        it. 100 is a good default.
+    moves (Optional[TransitionSystem]): This defines how the parse-state is created,
+        updated and evaluated. If 'moves' is None, a new instance is
+        created with `self.TransitionSystem()`. Defaults to `None`.
+    update_with_oracle_cut_size (int): During training, cut long sequences into
+        shorter segments by creating intermediate states based on the gold-standard
+        history. The model is not very sensitive to this parameter, so you usually
+        won't need to change it. 100 is a good default.
     beam_width (int): The number of candidate analyses to maintain.
     beam_density (float): The minimum ratio between the scores of the first and
         last candidates in the beam. This allows the parser to avoid exploring
@@ -153,6 +160,8 @@ def make_beam_ner(
     beam_update_prob (float): The chance of making a beam update, instead of a
         greedy update. Greedy updates are an approximation for the beam updates,
         and are faster to compute.
+    incorrect_spans_key (Optional[str]): Optional key into span groups of
+        entities known to be non-entities.
     """
     return EntityRecognizer(
         nlp.vocab,
@@ -161,21 +170,51 @@ def make_beam_ner(
         moves=moves,
         update_with_oracle_cut_size=update_with_oracle_cut_size,
         multitasks=[],
-        min_action_freq=1,
-        learn_tokens=False,
         beam_width=beam_width,
         beam_density=beam_density,
         beam_update_prob=beam_update_prob,
+        incorrect_spans_key=incorrect_spans_key
     )
 
 
 class EntityRecognizer(Parser):
     """Pipeline component for named entity recognition.
 
-    DOCS: https://nightly.spacy.io/api/entityrecognizer
+    DOCS: https://spacy.io/api/entityrecognizer
     """
 
     TransitionSystem = BiluoPushDown
+
+    def __init__(
+        self,
+        vocab,
+        model,
+        name="ner",
+        moves=None,
+        *,
+        update_with_oracle_cut_size=100,
+        beam_width=1,
+        beam_density=0.0,
+        beam_update_prob=0.0,
+        multitasks=tuple(),
+        incorrect_spans_key=None,
+    ):
+        """Create an EntityRecognizer.
+        """
+        super().__init__(
+            vocab,
+            model,
+            name,
+            moves,
+            update_with_oracle_cut_size=update_with_oracle_cut_size,
+            min_action_freq=1,   # not relevant for NER
+            learn_tokens=False,  # not relevant for NER
+            beam_width=beam_width,
+            beam_density=beam_density,
+            beam_update_prob=beam_update_prob,
+            multitasks=multitasks,
+            incorrect_spans_key=incorrect_spans_key,
+        )
 
     def add_multitask_objective(self, mt_component):
         """Register another component as a multi-task objective. Experimental."""
@@ -207,7 +246,7 @@ class EntityRecognizer(Parser):
         examples (Iterable[Example]): The examples to score.
         RETURNS (Dict[str, Any]): The NER precision, recall and f-scores.
 
-        DOCS: https://nightly.spacy.io/api/entityrecognizer#score
+        DOCS: https://spacy.io/api/entityrecognizer#score
         """
         validate_examples(examples, "EntityRecognizer.score")
         return get_ner_prf(examples)

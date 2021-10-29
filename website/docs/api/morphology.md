@@ -98,9 +98,9 @@ representation.
 > assert f == "Feat1=Val1|Feat2=Val2"
 > ```
 
-| Name         | Description                                                                                                                                             |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `feats_dict` | The morphological features as a dictionary. ~~Dict[str, str]~~                                                                                          |
+| Name         | Description                                                                                                                                          |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `feats_dict` | The morphological features as a dictionary. ~~Dict[str, str]~~                                                                                       |
 | **RETURNS**  | The morphological features in Universal Dependencies [FEATS](https://universaldependencies.org/format.html#morphological-annotation) format. ~~str~~ |
 
 ## Attributes {#attributes}

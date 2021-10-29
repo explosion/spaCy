@@ -1,6 +1,5 @@
 import pytest
-import logging
-import mock
+import pickle
 from spacy import util, registry
 from spacy.lang.en import English
 from spacy.lookups import Lookups
@@ -58,10 +57,10 @@ def test_lemmatizer_config(nlp):
 
     # warning if no POS assigned
     doc = nlp.make_doc("coping")
-    logger = logging.getLogger("spacy")
-    with mock.patch.object(logger, "warning") as mock_warning:
+    with pytest.warns(UserWarning):
         doc = lemmatizer(doc)
-        mock_warning.assert_called_once()
+    # warns once by default
+    doc = lemmatizer(doc)
 
     # works with POS
     doc = nlp.make_doc("coping")
@@ -106,6 +105,9 @@ def test_lemmatizer_serialize(nlp):
     doc2 = nlp2.make_doc("coping")
     doc2[0].pos_ = "VERB"
     assert doc2[0].lemma_ == ""
-    doc2 = lemmatizer(doc2)
+    doc2 = lemmatizer2(doc2)
     assert doc2[0].text == "coping"
     assert doc2[0].lemma_ == "cope"
+
+    # Make sure that lemmatizer cache can be pickled
+    pickle.dumps(lemmatizer2)

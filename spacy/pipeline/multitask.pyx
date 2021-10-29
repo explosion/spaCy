@@ -22,7 +22,7 @@ maxout_pieces = 3
 token_vector_width = 96
 
 [model.tok2vec]
-@architectures = "spacy.HashEmbedCNN.v1"
+@architectures = "spacy.HashEmbedCNN.v2"
 pretrained_vectors = null
 width = 96
 depth = 4
@@ -197,7 +197,7 @@ class ClozeMultitask(TrainablePipe):
         target = vectors[ids]
         gradient = self.distance.get_grad(prediction, target)
         loss = self.distance.get_loss(prediction, target)
-        return loss, gradient
+        return float(loss), gradient
 
     def update(self, examples, *, drop=0., sgd=None, losses=None):
         pass

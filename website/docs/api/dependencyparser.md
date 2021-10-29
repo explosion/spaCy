@@ -25,6 +25,20 @@ current state. The weights are updated such that the scores assigned to the set
 of optimal actions is increased, while scores assigned to other actions are
 decreased. Note that more than one action may be optimal for a given state.
 
+## Assigned Attributes {#assigned-attributes}
+
+Dependency predictions are assigned to the `Token.dep` and `Token.head` fields.
+Beside the dependencies themselves, the parser decides sentence boundaries,
+which are saved in `Token.is_sent_start` and accessible via `Doc.sents`.
+
+| Location              | Value                                                                                                                                         |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Token.dep`           | The type of dependency relation (hash). ~~int~~                                                                                               |
+| `Token.dep_`          | The type of dependency relation. ~~str~~                                                                                                      |
+| `Token.head`          | The syntactic parent, or "governor", of this token. ~~Token~~                                                                                 |
+| `Token.is_sent_start` | A boolean value indicating whether the token starts a sentence. After the parser runs this will be `True` or `False` for all tokens. ~~bool~~ |
+| `Doc.sents`           | An iterator over sentences in the `Doc`, determined by `Token.is_sent_start` values. ~~Iterator[Span]~~                                       |
+
 ## Config and implementation {#config}
 
 The default config is defined by the pipeline component factory and describes
@@ -50,7 +64,7 @@ architectures and their arguments and hyperparameters.
 
 | Setting                       | Description                                                                                                                                                                                                                                                                                                           |
 | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `moves`                       | A list of transition names. Inferred from the data if not provided. Defaults to `None`. ~~Optional[List[str]]~~                                                                                                                                                                                                       |
+| `moves`                       | A list of transition names. Inferred from the data if not provided. Defaults to `None`. ~~Optional[TransitionSystem]~~                                                                                                                                                                                                |
 | `update_with_oracle_cut_size` | During training, cut long sequences into shorter segments by creating intermediate states based on the gold-standard history. The model is not very sensitive to this parameter, so you usually won't need to change it. Defaults to `100`. ~~int~~                                                                   |
 | `learn_tokens`                | Whether to learn to merge subtokens that are split relative to the gold standard. Experimental. Defaults to `False`. ~~bool~~                                                                                                                                                                                         |
 | `min_action_freq`             | The minimum frequency of labelled actions to retain. Rarer labelled actions have their label backed-off to "dep". While this primarily affects the label accuracy, it can also affect the attachment structure, as the labels are used to represent the pseudo-projectivity transformation. Defaults to `30`. ~~int~~ |
@@ -88,8 +102,8 @@ shortcut for this and instantiate the component using its string name and
 | `name`                        | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~                                                                                                                                                                                                 |
 | `moves`                       | A list of transition names. Inferred from the data if not provided. ~~Optional[List[str]]~~                                                                                                                                                                                                         |
 | _keyword-only_                |                                                                                                                                                                                                                                                                                                     |
-| `update_with_oracle_cut_size` | During training, cut long sequences into shorter segments by creating intermediate states based on the gold-standard history. The model is not very sensitive to this parameter, so you usually won't need to change it. `100` is a good default. ~~int~~                                           |
-| `learn_tokens`                | Whether to learn to merge subtokens that are split relative to the gold standard. Experimental. ~~bool~~                                                                                                                                                                                            |
+| `update_with_oracle_cut_size` | During training, cut long sequences into shorter segments by creating intermediate states based on the gold-standard history. The model is not very sensitive to this parameter, so you usually won't need to change it. Defaults to `100`. ~~int~~                                                 |
+| `learn_tokens`                | Whether to learn to merge subtokens that are split relative to the gold standard. Experimental. Defaults to `False`. ~~bool~~                                                                                                                                                                       |
 | `min_action_freq`             | The minimum frequency of labelled actions to retain. Rarer labelled actions have their label backed-off to "dep". While this primarily affects the label accuracy, it can also affect the attachment structure, as the labels are used to represent the pseudo-projectivity transformation. ~~int~~ |
 
 ## DependencyParser.\_\_call\_\_ {#call tag="method"}
@@ -220,9 +234,8 @@ Modify a batch of [`Doc`](/api/doc) objects, using pre-computed scores.
 ## DependencyParser.update {#update tag="method"}
 
 Learn from a batch of [`Example`](/api/example) objects, updating the pipe's
-model. Delegates to [`predict`](/api/dependencyparser#predict), 
-[`get_loss`](/api/dependencyparser#get_loss) and 
-[`set_annotations`](/api/dependencyparser#set_annotations).
+model. Delegates to [`predict`](/api/dependencyparser#predict) and
+[`get_loss`](/api/dependencyparser#get_loss).
 
 > #### Example
 >
@@ -232,14 +245,14 @@ model. Delegates to [`predict`](/api/dependencyparser#predict),
 > losses = parser.update(examples, sgd=optimizer)
 > ```
 
-| Name              | Description                                                                                                                        |
-| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `examples`        | A batch of [`Example`](/api/example) objects to learn from. ~~Iterable[Example]~~                                                  |
-| _keyword-only_    |                                                                                                                                    |
-| `drop`            | The dropout rate. ~~float~~                                                                                                        |
-| `sgd`             | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~                      |
-| `losses`          | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~           |
-| **RETURNS**       | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                              |
+| Name           | Description                                                                                                              |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `examples`     | A batch of [`Example`](/api/example) objects to learn from. ~~Iterable[Example]~~                                        |
+| _keyword-only_ |                                                                                                                          |
+| `drop`         | The dropout rate. ~~float~~                                                                                              |
+| `sgd`          | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~            |
+| `losses`       | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~ |
+| **RETURNS**    | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                    |
 
 ## DependencyParser.get_loss {#get_loss tag="method"}
 

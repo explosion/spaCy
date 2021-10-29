@@ -19,7 +19,7 @@ _ordinal_words = [
 # fmt: on
 
 
-def like_num(text: str) -> bool:
+def like_num(text):
     if text.startswith(("+", "-", "±", "~")):
         text = text[1:]
     text = text.replace(",", "").replace(".", "")
@@ -35,7 +35,7 @@ def like_num(text: str) -> bool:
     # Check ordinal number
     if text_lower in _ordinal_words:
         return True
-    if text_lower.endswith("th"):
+    if text_lower.endswith(("st", "nd", "rd", "th")):
         if text_lower[:-2].isdigit():
             return True
     return False

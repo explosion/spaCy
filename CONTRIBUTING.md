@@ -2,9 +2,7 @@
 
 # Contribute to spaCy
 
-Thanks for your interest in contributing to spaCy 🎉 The project is maintained
-by [@honnibal](https://github.com/honnibal) and [@ines](https://github.com/ines),
-and we'll do our best to help you get started. This page will give you a quick
+Thanks for your interest in contributing to spaCy 🎉 This page will give you a quick
 overview of how things are organized and most importantly, how to get involved.
 
 ## Table of contents
@@ -50,8 +48,7 @@ issue body. A few more tips:
   parts and don't just dump your entire script. This will make it easier for us to
   reproduce the error.
 
-- **Getting info about your spaCy installation and environment:** If you're
-  using spaCy v1.7+, you can use the command line interface to print details and
+- **Getting info about your spaCy installation and environment:** You can use the command line interface to print details and
   even format them as Markdown to copy-paste into GitHub issues:
   `python -m spacy info --markdown`.
 
@@ -60,7 +57,7 @@ issue body. A few more tips:
   model is incompatible with your spaCy installation. In spaCy v2.0+, you can check
   this on the command line by running `python -m spacy validate`.
 
-- **Sharing a model's output, like dependencies and entities:** spaCy v2.0+
+- **Sharing a model's output, like dependencies and entities:** spaCy
   comes with [built-in visualizers](https://spacy.io/usage/visualizers) that
   you can run from within your script or a Jupyter notebook. For some issues, it's
   helpful to **include a screenshot** of the visualization. You can simply drag and
@@ -99,7 +96,7 @@ questions:
   changes to spaCy's built-in methods. In contrast, a library of word
   alignment functions could easily live as a separate package that depended on
   spaCy — there's little difference between writing `import word_aligner` and
-  `import spacy.word_aligner`. spaCy v2.0+ makes it easy to implement
+  `import spacy.word_aligner`. spaCy makes it easy to implement
   [custom pipeline components](https://spacy.io/usage/processing-pipelines#custom-components),
   and add your own attributes, properties and methods to the `Doc`, `Token` and
   `Span`. If you're looking to implement a new spaCy feature, starting with a
@@ -109,8 +106,8 @@ questions:
   library later.
 
 - **Would the feature be easier to implement if it relied on "heavy" dependencies spaCy doesn't currently require?**
-  Python has a very rich ecosystem. Libraries like scikit-learn, SciPy, Gensim or
-  TensorFlow/Keras do lots of useful things — but we don't want to have them as
+  Python has a very rich ecosystem. Libraries like PyTorch, TensorFlow, scikit-learn, SciPy or Gensim
+  do lots of useful things — but we don't want to have them as default
   dependencies. If the feature requires functionality in one of these libraries,
   it's probably better to break it out into a different package.
 
@@ -137,34 +134,11 @@ files, a compiler, [pip](https://pip.pypa.io/en/latest/installing/),
 [virtualenv](https://virtualenv.pypa.io/en/stable/) and
 [git](https://git-scm.com) installed. The compiler is usually the trickiest part.
 
-```
-python -m pip install -U pip
-git clone https://github.com/explosion/spaCy
-cd spaCy
-
-python -m venv .env
-source .env/bin/activate
-export PYTHONPATH=`pwd`
-pip install -r requirements.txt
-python setup.py build_ext --inplace
-```
-
-If you've made changes to `.pyx` files, you need to recompile spaCy before you
+If you've made changes to `.pyx` files, you need to **recompile spaCy** before you
 can test your changes by re-running `python setup.py build_ext --inplace`.
 Changes to `.py` files will be effective immediately.
 
 📖 **For more details and instructions, see the documentation on [compiling spaCy from source](https://spacy.io/usage/#source) and the [quickstart widget](https://spacy.io/usage/#section-quickstart) to get the right commands for your platform and Python version.**
-
-### Contributor agreement
-
-If you've made a contribution to spaCy, you should fill in the
-[spaCy contributor agreement](.github/CONTRIBUTOR_AGREEMENT.md) to ensure that
-your contribution can be used across the project. If you agree to be bound by
-the terms of the agreement, fill in the [template](.github/CONTRIBUTOR_AGREEMENT.md)
-and include it with your pull request, or submit it separately to
-[`.github/contributors/`](/.github/contributors). The name of the file should be
-your GitHub username, with the extension `.md`. For example, the user
-example_user would create the file `.github/contributors/example_user.md`.
 
 ### Fixing bugs
 
@@ -184,13 +158,21 @@ sure your test passes and reference the issue in your commit message.
 ## Code conventions
 
 Code should loosely follow [pep8](https://www.python.org/dev/peps/pep-0008/).
-As of `v2.1.0`, spaCy uses [`black`](https://github.com/ambv/black) for code
+spaCy uses [`black`](https://github.com/ambv/black) for code
 formatting and [`flake8`](http://flake8.pycqa.org/en/latest/) for linting its
 Python modules. If you've built spaCy from source, you'll already have both
 tools installed.
 
 **⚠️ Note that formatting and linting is currently only possible for Python
 modules in `.py` files, not Cython modules in `.pyx` and `.pxd` files.**
+
+### Pre-Commit Hooks
+
+After cloning the repo, after installing the packages from `requirements.txt`, enter the repo folder and run `pre-commit install`.
+Each time a `git commit` is initiated, `black` and `flake8` will run automatically on the modified files only.
+
+In case of error, or when `black` modified a file, the modified file needs to be `git add` once again and a new
+`git commit` has to be issued.
 
 ### Code formatting
 
@@ -216,8 +198,7 @@ list of available editor integrations.
 #### Disabling formatting
 
 There are a few cases where auto-formatting doesn't improve readability – for
-example, in some of the language data files like the `tag_map.py`, or in
-the tests that construct `Doc` objects from lists of words and other labels.
+example, in some of the language data files or in the tests that construct `Doc` objects from lists of words and other labels.
 Wrapping a block in `# fmt: off` and `# fmt: on` lets you disable formatting
 for that particular code. Here's an example:
 
@@ -281,6 +262,9 @@ except:  # noqa: E722
 ### Python conventions
 
 All Python code must be written **compatible with Python 3.6+**.
+
+#### I/O and handling paths
+
 Code that interacts with the file-system should accept objects that follow the
 `pathlib.Path` API, without assuming that the object inherits from `pathlib.Path`.
 If the function is user-facing and takes a path as an argument, it should check
@@ -290,14 +274,18 @@ accept **file-like objects**, as it makes the library IO-agnostic. Working on
 buffers makes the code more general, easier to test, and compatible with Python
 3's asynchronous IO.
 
+#### Composition vs. inheritance
+
 Although spaCy uses a lot of classes, **inheritance is viewed with some suspicion**
 — it's seen as a mechanism of last resort. You should discuss plans to extend
 the class hierarchy before implementing.
 
+#### Naming conventions
+
 We have a number of conventions around variable naming that are still being
 documented, and aren't 100% strict. A general policy is that instances of the
-class `Doc` should by default be called `doc`, `Token` `token`, `Lexeme` `lex`,
-`Vocab` `vocab` and `Language` `nlp`. You should avoid naming variables that are
+class `Doc` should by default be called `doc`, `Token` &rarr; `token`, `Lexeme` &rarr; `lex`,
+`Vocab` &rarr; `vocab` and `Language` &rarr; `nlp`. You should avoid naming variables that are
 of other types these names. For instance, don't name a text string `doc` — you
 should usually call this `text`. Two general code style preferences further help
 with naming. First, **lean away from introducing temporary variables**, as these
@@ -414,14 +402,7 @@ all test files and test functions need to be prefixed with `test_`.
 When adding tests, make sure to use descriptive names, keep the code short and
 concise and only test for one behavior at a time. Try to `parametrize` test
 cases wherever possible, use our pre-defined fixtures for spaCy components and
-avoid unnecessary imports.
-
-Extensive tests that take a long time should be marked with `@pytest.mark.slow`.
-Tests that require the model to be loaded should be marked with
-`@pytest.mark.models`. Loading the models is expensive and not necessary if
-you're not actually testing the model performance. If all you need is a `Doc`
-object with annotations like heads, POS tags or the dependency parse, you can
-use the `Doc` constructor to construct it manually.
+avoid unnecessary imports. Extensive tests that take a long time should be marked with `@pytest.mark.slow`.
 
 📖 **For more guidelines and information on how to add tests, check out the [tests README](spacy/tests/README.md).**
 
@@ -438,7 +419,7 @@ simply click on the "Suggest edits" button at the bottom of a page.
 ## Publishing spaCy extensions and plugins
 
 We're very excited about all the new possibilities for **community extensions**
-and plugins in spaCy v2.0, and we can't wait to see what you build with it!
+and plugins in spaCy v3.0, and we can't wait to see what you build with it!
 
 - An extension or plugin should add substantial functionality, be
   **well-documented** and **open-source**. It should be available for users to download

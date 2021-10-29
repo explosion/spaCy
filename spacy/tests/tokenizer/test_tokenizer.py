@@ -1,4 +1,5 @@
 import pytest
+import re
 from spacy.vocab import Vocab
 from spacy.tokenizer import Tokenizer
 from spacy.util import ensure_path
@@ -83,7 +84,8 @@ Phasellus tincidunt, augue quis porta finibus, massa sapien consectetur augue, n
 @pytest.mark.parametrize("file_name", ["sun.txt"])
 def test_tokenizer_handle_text_from_file(tokenizer, file_name):
     loc = ensure_path(__file__).parent / file_name
-    text = loc.open("r", encoding="utf8").read()
+    with loc.open("r", encoding="utf8") as infile:
+        text = infile.read()
     assert len(text) != 0
     tokens = tokenizer(text)
     assert len(tokens) > 100
@@ -186,3 +188,27 @@ def test_tokenizer_special_cases_spaces(tokenizer):
     assert [t.text for t in tokenizer("a b c")] == ["a", "b", "c"]
     tokenizer.add_special_case("a b c", [{"ORTH": "a b c"}])
     assert [t.text for t in tokenizer("a b c")] == ["a b c"]
+
+
+def test_tokenizer_flush_cache(en_vocab):
+    suffix_re = re.compile(r"[\.]$")
+    tokenizer = Tokenizer(
+        en_vocab,
+        suffix_search=suffix_re.search,
+    )
+    assert [t.text for t in tokenizer("a.")] == ["a", "."]
+    tokenizer.suffix_search = None
+    assert [t.text for t in tokenizer("a.")] == ["a."]
+
+
+def test_tokenizer_flush_specials(en_vocab):
+    suffix_re = re.compile(r"[\.]$")
+    rules = {"a a": [{"ORTH": "a a"}]}
+    tokenizer1 = Tokenizer(
+        en_vocab,
+        suffix_search=suffix_re.search,
+        rules=rules,
+    )
+    assert [t.text for t in tokenizer1("a a.")] == ["a a", "."]
+    tokenizer1.rules = {}
+    assert [t.text for t in tokenizer1("a a.")] == ["a", "a", "."]

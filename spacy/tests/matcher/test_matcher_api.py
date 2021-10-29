@@ -33,6 +33,15 @@ def test_matcher_from_api_docs(en_vocab):
     assert len(patterns[0])
 
 
+def test_matcher_empty_patterns_warns(en_vocab):
+    matcher = Matcher(en_vocab)
+    assert len(matcher) == 0
+    doc = Doc(en_vocab, words=["This", "is", "quite", "something"])
+    with pytest.warns(UserWarning):
+        matcher(doc)
+    assert len(doc.ents) == 0
+
+
 def test_matcher_from_usage_docs(en_vocab):
     text = "Wow 😀 This is really cool! 😂 😂"
     doc = Doc(en_vocab, words=text.split(" "))
@@ -261,6 +270,16 @@ def test_matcher_subset_value_operator(en_vocab):
     doc[0].tag_ = "A"
     assert len(matcher(doc)) == 0
 
+    # IS_SUBSET with a list value
+    Token.set_extension("ext", default=[])
+    matcher = Matcher(en_vocab)
+    pattern = [{"_": {"ext": {"IS_SUBSET": ["A", "B"]}}}]
+    matcher.add("M", [pattern])
+    doc = Doc(en_vocab, words=["a", "b", "c"])
+    doc[0]._.ext = ["A"]
+    doc[1]._.ext = ["C", "D"]
+    assert len(matcher(doc)) == 2
+
 
 def test_matcher_superset_value_operator(en_vocab):
     matcher = Matcher(en_vocab)
@@ -298,6 +317,72 @@ def test_matcher_superset_value_operator(en_vocab):
     doc = Doc(en_vocab, words=["a", "b", "c"])
     doc[0].tag_ = "A"
     assert len(matcher(doc)) == 3
+
+    # IS_SUPERSET with a list value
+    Token.set_extension("ext", default=[])
+    matcher = Matcher(en_vocab)
+    pattern = [{"_": {"ext": {"IS_SUPERSET": ["A"]}}}]
+    matcher.add("M", [pattern])
+    doc = Doc(en_vocab, words=["a", "b", "c"])
+    doc[0]._.ext = ["A", "B"]
+    assert len(matcher(doc)) == 1
+
+
+def test_matcher_intersect_value_operator(en_vocab):
+    matcher = Matcher(en_vocab)
+    pattern = [{"MORPH": {"INTERSECTS": ["Feat=Val", "Feat2=Val2", "Feat3=Val3"]}}]
+    matcher.add("M", [pattern])
+    doc = Doc(en_vocab, words=["a", "b", "c"])
+    assert len(matcher(doc)) == 0
+    doc[0].set_morph("Feat=Val")
+    assert len(matcher(doc)) == 1
+    doc[0].set_morph("Feat=Val|Feat2=Val2")
+    assert len(matcher(doc)) == 1
+    doc[0].set_morph("Feat=Val|Feat2=Val2|Feat3=Val3")
+    assert len(matcher(doc)) == 1
+    doc[0].set_morph("Feat=Val|Feat2=Val2|Feat3=Val3|Feat4=Val4")
+    assert len(matcher(doc)) == 1
+
+    # INTERSECTS with a single value is the same as IN
+    matcher = Matcher(en_vocab)
+    pattern = [{"TAG": {"INTERSECTS": ["A", "B"]}}]
+    matcher.add("M", [pattern])
+    doc = Doc(en_vocab, words=["a", "b", "c"])
+    doc[0].tag_ = "A"
+    assert len(matcher(doc)) == 1
+
+    # INTERSECTS with an empty pattern list matches nothing
+    matcher = Matcher(en_vocab)
+    pattern = [{"TAG": {"INTERSECTS": []}}]
+    matcher.add("M", [pattern])
+    doc = Doc(en_vocab, words=["a", "b", "c"])
+    doc[0].tag_ = "A"
+    assert len(matcher(doc)) == 0
+
+    # INTERSECTS with a list value
+    Token.set_extension("ext", default=[])
+    matcher = Matcher(en_vocab)
+    pattern = [{"_": {"ext": {"INTERSECTS": ["A", "C"]}}}]
+    matcher.add("M", [pattern])
+    doc = Doc(en_vocab, words=["a", "b", "c"])
+    doc[0]._.ext = ["A", "B"]
+    assert len(matcher(doc)) == 1
+
+    # INTERSECTS with an empty pattern list matches nothing
+    matcher = Matcher(en_vocab)
+    pattern = [{"_": {"ext": {"INTERSECTS": []}}}]
+    matcher.add("M", [pattern])
+    doc = Doc(en_vocab, words=["a", "b", "c"])
+    doc[0]._.ext = ["A", "B"]
+    assert len(matcher(doc)) == 0
+
+    # INTERSECTS with an empty value matches nothing
+    matcher = Matcher(en_vocab)
+    pattern = [{"_": {"ext": {"INTERSECTS": ["A", "B"]}}}]
+    matcher.add("M", [pattern])
+    doc = Doc(en_vocab, words=["a", "b", "c"])
+    doc[0]._.ext = []
+    assert len(matcher(doc)) == 0
 
 
 def test_matcher_morph_handling(en_vocab):
@@ -472,6 +557,7 @@ def test_matcher_schema_token_attributes(en_vocab, pattern, text):
     assert len(matches) == 1
 
 
+@pytest.mark.filterwarnings("ignore:\\[W036")
 def test_matcher_valid_callback(en_vocab):
     """Test that on_match can only be None or callable."""
     matcher = Matcher(en_vocab)
@@ -487,6 +573,16 @@ def test_matcher_callback(en_vocab):
     matcher.add("Rule", [pattern], on_match=mock)
     doc = Doc(en_vocab, words=["This", "is", "a", "test", "."])
     matches = matcher(doc)
+    mock.assert_called_once_with(matcher, doc, 0, matches)
+
+
+def test_matcher_callback_with_alignments(en_vocab):
+    mock = Mock()
+    matcher = Matcher(en_vocab)
+    pattern = [{"ORTH": "test"}]
+    matcher.add("Rule", [pattern], on_match=mock)
+    doc = Doc(en_vocab, words=["This", "is", "a", "test", "."])
+    matches = matcher(doc, with_alignments=True)
     mock.assert_called_once_with(matcher, doc, 0, matches)
 
 
@@ -513,6 +609,12 @@ def test_matcher_as_spans(matcher):
     assert matches[1].text == "Java"
     assert matches[1].label_ == "Java"
 
+    matches = matcher(doc[1:], as_spans=True)
+    assert len(matches) == 1
+    assert isinstance(matches[0], Span)
+    assert matches[0].text == "Java"
+    assert matches[0].label_ == "Java"
+
 
 def test_matcher_deprecated(matcher):
     doc = Doc(matcher.vocab, words=["hello", "world"])
@@ -521,3 +623,22 @@ def test_matcher_deprecated(matcher):
             pass
         assert record.list
         assert "spaCy v3.0" in str(record.list[0].message)
+
+
+def test_matcher_remove_zero_operator(en_vocab):
+    matcher = Matcher(en_vocab)
+    pattern = [{"OP": "!"}]
+    matcher.add("Rule", [pattern])
+    doc = Doc(en_vocab, words=["This", "is", "a", "test", "."])
+    matches = matcher(doc)
+    assert len(matches) == 0
+    assert "Rule" in matcher
+    matcher.remove("Rule")
+    assert "Rule" not in matcher
+
+
+def test_matcher_no_zero_length(en_vocab):
+    doc = Doc(en_vocab, words=["a", "b"], tags=["A", "B"])
+    matcher = Matcher(en_vocab)
+    matcher.add("TEST", [[{"TAG": "C", "OP": "?"}]])
+    assert len(matcher(doc)) == 0

@@ -71,13 +71,14 @@ spaCy's [`setup.cfg`](%%GITHUB_SPACY/setup.cfg) for details on what's included.
 > $ pip install %%SPACY_PKG_NAME[lookups,transformers]%%SPACY_PKG_FLAGS
 > ```
 
-| Name                   | Description                                                                                                                                                                                                                                                    |
-| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `lookups`              | Install [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data) for data tables for lemmatization and lexeme normalization. The data is serialized with trained pipelines, so you only need this package if you want to train your own models. |
-| `transformers`         | Install [`spacy-transformers`](https://github.com/explosion/spacy-transformers). The package will be installed automatically when you install a transformer-based pipeline.                                                                                    |
-| `ray`                  | Install [`spacy-ray`](https://github.com/explosion/spacy-ray) to add CLI commands for [parallel training](/usage/training#parallel-training).                                                                                                                  |
-| `cuda`, ...            | Install spaCy with GPU support provided by [CuPy](https://cupy.chainer.org) for your given CUDA version. See the GPU [installation instructions](#gpu) for details and options.                                                                                |
-| `ja`, `ko`, `th`, `zh` | Install additional dependencies required for tokenization for the [languages](/usage/models#languages).                                                                                                                                                        |
+| Name             | Description                                                                                                                                                                                                                                                    |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `lookups`        | Install [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data) for data tables for lemmatization and lexeme normalization. The data is serialized with trained pipelines, so you only need this package if you want to train your own models. |
+| `transformers`   | Install [`spacy-transformers`](https://github.com/explosion/spacy-transformers). The package will be installed automatically when you install a transformer-based pipeline.                                                                                    |
+| `ray`            | Install [`spacy-ray`](https://github.com/explosion/spacy-ray) to add CLI commands for [parallel training](/usage/training#parallel-training).                                                                                                                  |
+| `cuda`, ...      | Install spaCy with GPU support provided by [CuPy](https://cupy.chainer.org) for your given CUDA version. See the GPU [installation instructions](#gpu) for details and options.                                                                                |
+| `apple`          | Install [`thinc-apple-ops`](https://github.com/explosion/thinc-apple-ops) to improve performance on an Apple M1.                                                                                                                                               |
+| `ja`, `ko`, `th` | Install additional dependencies required for tokenization for the [languages](/usage/models#languages).                                                                                                                                                        |
 
 ### conda {#conda}
 
@@ -130,9 +131,9 @@ which provides a numpy-compatible interface for GPU arrays.
 
 spaCy can be installed on GPU by specifying `spacy[cuda]`, `spacy[cuda90]`,
 `spacy[cuda91]`, `spacy[cuda92]`, `spacy[cuda100]`, `spacy[cuda101]`,
-`spacy[cuda102]`, `spacy[cuda110]` or `spacy[cuda111]`. If you know your cuda
-version, using the more explicit specifier allows cupy to be installed via
-wheel, saving some compilation time. The specifiers should install
+`spacy[cuda102]`, `spacy[cuda110]`, `spacy[cuda111]` or `spacy[cuda112]`. If you
+know your cuda version, using the more explicit specifier allows cupy to be
+installed via wheel, saving some compilation time. The specifiers should install
 [`cupy`](https://cupy.chainer.org).
 
 ```bash
@@ -170,26 +171,17 @@ $ git clone https://github.com/explosion/spaCy  # clone spaCy
 $ cd spaCy                                      # navigate into dir
 $ python -m venv .env                           # create environment in .env
 $ source .env/bin/activate                      # activate virtual env
-$ pip install .                                 # compile and install spaCy
+$ pip install -r requirements.txt               # install requirements
+$ pip install --no-build-isolation --editable . # compile and install spaCy
 ```
 
 To install with extras:
 
 ```bash
-$ pip install .[lookups,cuda102]                # install spaCy with extras
+$ pip install --no-build-isolation --editable .[lookups,cuda102]
 ```
 
-To install all dependencies required for development:
-
-```bash
-$ pip install -r requirements.txt
-```
-
-Compared to a regular install via pip, the
-[`requirements.txt`](%%GITHUB_SPACY/requirements.txt) additionally includes
-developer dependencies such as Cython and the libraries required to run the test
-suite. See the [quickstart widget](#quickstart) to get the right commands for
-your platform and Python version.
+How to install compilers and related build tools:
 
 <a id="source-ubuntu"></a><a id="source-osx"></a><a id="source-windows"></a>
 
@@ -227,7 +219,7 @@ source code and recompiling frequently.
   ```bash
   $ pip install -r requirements.txt
   $ python setup.py build_ext --inplace -j N
-  $ pip install --no-build-isolation --editable .
+  $ python setup.py develop
   ```
 
 ### Building an executable {#executable}
@@ -264,36 +256,6 @@ You can configure the build process with the following environment variables:
 | `PYVER`        | The Python version to build against. This version needs to be available on your build and runtime machines. Defaults to `3.6`.                                                                              |
 | `WHEELHOUSE`   | Directory to store the wheel files during compilation. Defaults to `./wheelhouse`.                                                                                                                          |
 
-#### Additional options for developers {#source-developers}
-
-Some additional options may be useful for spaCy developers who are editing the
-source code and recompiling frequently.
-
-- Install in editable mode. Changes to `.py` files will be reflected as soon as
-  the files are saved, but edits to Cython files (`.pxd`, `.pyx`) will require
-  the `pip install` or `python setup.py build_ext` command below to be run
-  again. Before installing in editable mode, be sure you have removed any
-  previous installs with `pip uninstall spacy`, which you may need to run
-  multiple times to remove all traces of earlier installs.
-
-  ```diff
-    pip install -U pip setuptools wheel
-  - pip install .
-  + pip install -r requirements.txt
-  + pip install --no-build-isolation --editable .
-  ```
-
-- Build in parallel using `N` CPUs to speed up compilation and then install in
-  editable mode:
-
-  ```diff
-    pip install -U pip setuptools wheel
-  - pip install .
-  + pip install -r requirements.txt
-  + python setup.py build_ext --inplace -j N
-  + python setup.py develop
-  ```
-
 ### Run tests {#run-tests}
 
 spaCy comes with an [extensive test suite](%%GITHUB_SPACY/spacy/tests). In order
@@ -323,7 +285,9 @@ $ python -m pytest --pyargs %%SPACY_PKG_NAME --slow        # basic and slow test
 ## Troubleshooting guide {#troubleshooting}
 
 This section collects some of the most common errors you may come across when
-installing, loading and using spaCy, as well as their solutions.
+installing, loading and using spaCy, as well as their solutions. Also see the
+[Discussions FAQ Thread](https://github.com/explosion/spaCy/discussions/8226),
+which is updated more frequently and covers more transitory issues.
 
 > #### Help us improve this guide
 >
@@ -347,62 +311,6 @@ supports tokenization for [a variety of languages](/usage/models#languages), not
 all of them come with trained pipelines. To only use the tokenizer, import the
 language's `Language` class instead, for example
 `from spacy.lang.fr import French`.
-
-</Accordion>
-
-<Accordion title="No such option: --no-cache-dir" id="no-cache-dir">
-
-```
-no such option: --no-cache-dir
-```
-
-The `download` command uses pip to install the pipeline packages and sets the
-`--no-cache-dir` flag to prevent it from requiring too much memory.
-[This setting](https://pip.pypa.io/en/stable/reference/pip_install/#caching)
-requires pip v6.0 or newer. Run `pip install -U pip` to upgrade to the latest
-version of pip. To see which version you have installed, run `pip --version`.
-
-</Accordion>
-
-<Accordion title="sre_constants.error: bad character range" id="narrow-unicode">
-
-```
-sre_constants.error: bad character range
-```
-
-In [v2.1](/usage/v2-1), spaCy changed its implementation of regular expressions
-for tokenization to make it up to 2-3 times faster. But this also means that
-it's very important now that you run spaCy with a wide unicode build of Python.
-This means that the build has 1114111 unicode characters available, instead of
-only 65535 in a narrow unicode build. You can check this by running the
-following command:
-
-```bash
-$ python -c "import sys; print(sys.maxunicode)"
-```
-
-If you're running a narrow unicode build, reinstall Python and use a wide
-unicode build instead. You can also rebuild Python and set the
-`--enable-unicode=ucs4` flag.
-
-</Accordion>
-
-<Accordion title="Unknown locale: UTF-8" id="unknown-locale">
-
-```
-ValueError: unknown locale: UTF-8
-```
-
-This error can sometimes occur on OSX and is likely related to a still
-unresolved [Python bug](https://bugs.python.org/issue18378). However, it's easy
-to fix: just add the following to your `~/.bash_profile` or `~/.zshrc` and then
-run `source ~/.bash_profile` or `source ~/.zshrc`. Make sure to add **both
-lines** for `LC_ALL` and `LANG`.
-
-```bash
-$ export LC_ALL=en_US.UTF-8
-$ export LANG=en_US.UTF-8
-```
 
 </Accordion>
 

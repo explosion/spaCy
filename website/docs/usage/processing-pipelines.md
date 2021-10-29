@@ -54,9 +54,8 @@ texts = ["This is a text", "These are lots of texts", "..."]
 In this example, we're using [`nlp.pipe`](/api/language#pipe) to process a
 (potentially very large) iterable of texts as a stream. Because we're only
 accessing the named entities in `doc.ents` (set by the `ner` component), we'll
-disable all other statistical components (the `tagger` and `parser`) during
-processing. `nlp.pipe` yields `Doc` objects, so we can iterate over them and
-access the named entity predictions:
+disable all other components during processing. `nlp.pipe` yields `Doc` objects,
+so we can iterate over them and access the named entity predictions:
 
 > #### ✏️ Things to try
 >
@@ -73,7 +72,7 @@ texts = [
 ]
 
 nlp = spacy.load("en_core_web_sm")
-for doc in nlp.pipe(texts, disable=["tagger", "parser"]):
+for doc in nlp.pipe(texts, disable=["tok2vec", "tagger", "parser", "attribute_ruler", "lemmatizer"]):
     # Do something with the doc here
     print([(ent.text, ent.label_) for ent in doc.ents])
 ```
@@ -89,6 +88,85 @@ have to call `list()` on it first:
 - docs = nlp.pipe(texts)[0]         # will raise an error
 + docs = list(nlp.pipe(texts))[0]   # works as expected
 ```
+
+</Infobox>
+
+You can use the `as_tuples` option to pass additional context along with each
+doc when using [`nlp.pipe`](/api/language#pipe). If `as_tuples` is `True`, then
+the input should be a sequence of `(text, context)` tuples and the output will
+be a sequence of `(doc, context)` tuples. For example, you can pass metadata in
+the context and save it in a [custom attribute](#custom-components-attributes):
+
+```python
+### {executable="true"}
+import spacy
+from spacy.tokens import Doc
+
+if not Doc.has_extension("text_id"):
+    Doc.set_extension("text_id", default=None)
+
+text_tuples = [
+    ("This is the first text.", {"text_id": "text1"}),
+    ("This is the second text.", {"text_id": "text2"})
+]
+
+nlp = spacy.load("en_core_web_sm")
+doc_tuples = nlp.pipe(text_tuples, as_tuples=True)
+
+docs = []
+for doc, context in doc_tuples:
+    doc._.text_id = context["text_id"]
+    docs.append(doc)
+
+for doc in docs:
+    print(f"{doc._.text_id}: {doc.text}")
+```
+
+### Multiprocessing {#multiprocessing}
+
+spaCy includes built-in support for multiprocessing with
+[`nlp.pipe`](/api/language#pipe) using the `n_process` option:
+
+```python
+# Multiprocessing with 4 processes
+docs = nlp.pipe(texts, n_process=4)
+
+# With as many processes as CPUs (use with caution!)
+docs = nlp.pipe(texts, n_process=-1)
+```
+
+Depending on your platform, starting many processes with multiprocessing can add
+a lot of overhead. In particular, the default start method `spawn` used in
+macOS/OS X (as of Python 3.8) and in Windows can be slow for larger models
+because the model data is copied in memory for each new process. See the
+[Python docs on multiprocessing](https://docs.python.org/3/library/multiprocessing.html#contexts-and-start-methods)
+for further details.
+
+For shorter tasks and in particular with `spawn`, it can be faster to use a
+smaller number of processes with a larger batch size. The optimal `batch_size`
+setting will depend on the pipeline components, the length of your documents,
+the number of processes and how much memory is available.
+
+```python
+# Default batch size is `nlp.batch_size` (typically 1000)
+docs = nlp.pipe(texts, n_process=2, batch_size=2000)
+```
+
+<Infobox title="Multiprocessing on GPU" variant="warning">
+
+Multiprocessing is not generally recommended on GPU because RAM is too limited.
+If you want to try it out, be aware that it is only possible using `spawn` due
+to limitations in CUDA.
+
+</Infobox>
+
+<Infobox title="Multiprocessing with transformer models" variant="warning">
+
+In Linux, transformer models may hang or deadlock with multiprocessing due to an
+[issue in PyTorch](https://github.com/pytorch/pytorch/issues/17199). One
+suggested workaround is to use `spawn` instead of `fork` and another is to limit
+the number of threads before loading any models using
+`torch.set_num_threads(1)`.
 
 </Infobox>
 
@@ -144,10 +222,12 @@ nlp = spacy.load("en_core_web_sm")
 ```
 
 ... the pipeline's `config.cfg` tells spaCy to use the language `"en"` and the
-pipeline `["tok2vec", "tagger", "parser", "ner"]`. spaCy will then initialize
-`spacy.lang.en.English`, and create each pipeline component and add it to the
-processing pipeline. It'll then load in the model data from the data directory
-and return the modified `Language` class for you to use as the `nlp` object.
+pipeline
+`["tok2vec", "tagger", "parser", "ner", "attribute_ruler", "lemmatizer"]`. spaCy
+will then initialize `spacy.lang.en.English`, and create each pipeline component
+and add it to the processing pipeline. It'll then load in the model data from
+the data directory and return the modified `Language` class for you to use as
+the `nlp` object.
 
 <Infobox title="Changed in v3.0" variant="warning">
 
@@ -171,7 +251,7 @@ the binary data:
 ```python
 ### spacy.load under the hood
 lang = "en"
-pipeline = ["tok2vec", "tagger", "parser", "ner"]
+pipeline = ["tok2vec", "tagger", "parser", "ner", "attribute_ruler", "lemmatizer"]
 data_path = "path/to/en_core_web_sm/en_core_web_sm-3.0.0"
 
 cls = spacy.util.get_lang_class(lang)  # 1. Get Language class, e.g. English
@@ -186,7 +266,7 @@ component** on the `Doc`, in order. Since the model data is loaded, the
 components can access it to assign annotations to the `Doc` object, and
 subsequently to the `Token` and `Span` which are only views of the `Doc`, and
 don't own any data themselves. All components return the modified document,
-which is then processed by the component next in the pipeline.
+which is then processed by the next component in the pipeline.
 
 ```python
 ### The pipeline under the hood
@@ -201,9 +281,9 @@ list of human-readable component names.
 
 ```python
 print(nlp.pipeline)
-# [('tok2vec', <spacy.pipeline.Tok2Vec>), ('tagger', <spacy.pipeline.Tagger>), ('parser', <spacy.pipeline.DependencyParser>), ('ner', <spacy.pipeline.EntityRecognizer>)]
+# [('tok2vec', <spacy.pipeline.Tok2Vec>), ('tagger', <spacy.pipeline.Tagger>), ('parser', <spacy.pipeline.DependencyParser>), ('ner', <spacy.pipeline.EntityRecognizer>), ('attribute_ruler', <spacy.pipeline.AttributeRuler>), ('lemmatizer', <spacy.lang.en.lemmatizer.EnglishLemmatizer>)]
 print(nlp.pipe_names)
-# ['tok2vec', 'tagger', 'parser', 'ner']
+# ['tok2vec', 'tagger', 'parser', 'ner', 'attribute_ruler', 'lemmatizer']
 ```
 
 ### Built-in pipeline components {#built-in}
@@ -223,21 +303,22 @@ available pipeline components and component functions.
 > ruler = nlp.add_pipe("entity_ruler")
 > ```
 
-| String name       | Component                                       | Description                                                                               |
-| ----------------- | ----------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| `tagger`          | [`Tagger`](/api/tagger)                         | Assign part-of-speech-tags.                                                               |
-| `parser`          | [`DependencyParser`](/api/dependencyparser)     | Assign dependency labels.                                                                 |
-| `ner`             | [`EntityRecognizer`](/api/entityrecognizer)     | Assign named entities.                                                                    |
-| `entity_linker`   | [`EntityLinker`](/api/entitylinker)             | Assign knowledge base IDs to named entities. Should be added after the entity recognizer. |
-| `entity_ruler`    | [`EntityRuler`](/api/entityruler)               | Assign named entities based on pattern rules and dictionaries.                            |
-| `textcat`         | [`TextCategorizer`](/api/textcategorizer)       | Assign text categories.                                                                   |
-| `lemmatizer`      | [`Lemmatizer`](/api/lemmatizer)                 | Assign base forms to words.                                                               |
-| `morphologizer`   | [`Morphologizer`](/api/morphologizer)           | Assign morphological features and coarse-grained POS tags.                                |
-| `attribute_ruler` | [`AttributeRuler`](/api/attributeruler)         | Assign token attribute mappings and rule-based exceptions.                                |
-| `senter`          | [`SentenceRecognizer`](/api/sentencerecognizer) | Assign sentence boundaries.                                                               |
-| `sentencizer`     | [`Sentencizer`](/api/sentencizer)               | Add rule-based sentence segmentation without the dependency parse.                        |
-| `tok2vec`         | [`Tok2Vec`](/api/tok2vec)                       | Assign token-to-vector embeddings.                                                        |
-| `transformer`     | [`Transformer`](/api/transformer)               | Assign the tokens and outputs of a transformer model.                                     |
+| String name          | Component                                            | Description                                                                               |
+| -------------------- | ---------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `tagger`             | [`Tagger`](/api/tagger)                              | Assign part-of-speech-tags.                                                               |
+| `parser`             | [`DependencyParser`](/api/dependencyparser)          | Assign dependency labels.                                                                 |
+| `ner`                | [`EntityRecognizer`](/api/entityrecognizer)          | Assign named entities.                                                                    |
+| `entity_linker`      | [`EntityLinker`](/api/entitylinker)                  | Assign knowledge base IDs to named entities. Should be added after the entity recognizer. |
+| `entity_ruler`       | [`EntityRuler`](/api/entityruler)                    | Assign named entities based on pattern rules and dictionaries.                            |
+| `textcat`            | [`TextCategorizer`](/api/textcategorizer)            | Assign text categories: exactly one category is predicted per document.                   |
+| `textcat_multilabel` | [`MultiLabel_TextCategorizer`](/api/textcategorizer) | Assign text categories in a multi-label setting: zero, one or more labels per document.   |
+| `lemmatizer`         | [`Lemmatizer`](/api/lemmatizer)                      | Assign base forms to words.                                                               |
+| `morphologizer`      | [`Morphologizer`](/api/morphologizer)                | Assign morphological features and coarse-grained POS tags.                                |
+| `attribute_ruler`    | [`AttributeRuler`](/api/attributeruler)              | Assign token attribute mappings and rule-based exceptions.                                |
+| `senter`             | [`SentenceRecognizer`](/api/sentencerecognizer)      | Assign sentence boundaries.                                                               |
+| `sentencizer`        | [`Sentencizer`](/api/sentencizer)                    | Add rule-based sentence segmentation without the dependency parse.                        |
+| `tok2vec`            | [`Tok2Vec`](/api/tok2vec)                            | Assign token-to-vector embeddings.                                                        |
+| `transformer`        | [`Transformer`](/api/transformer)                    | Assign the tokens and outputs of a transformer model.                                     |
 
 ### Disabling, excluding and modifying components {#disabling}
 
@@ -299,7 +380,7 @@ blocks.
 ```python
 ### Disable for block
 # 1. Use as a context manager
-with nlp.select_pipes(disable=["tagger", "parser"]):
+with nlp.select_pipes(disable=["tagger", "parser", "lemmatizer"]):
     doc = nlp("I won't be tagged and parsed")
 doc = nlp("I will be tagged and parsed")
 
@@ -323,7 +404,7 @@ The [`nlp.pipe`](/api/language#pipe) method also supports a `disable` keyword
 argument if you only want to disable components during processing:
 
 ```python
-for doc in nlp.pipe(texts, disable=["tagger", "parser"]):
+for doc in nlp.pipe(texts, disable=["tagger", "parser", "lemmatizer"]):
     # Do something with the doc here
 ```
 
@@ -400,8 +481,8 @@ vectors available – otherwise, it won't be able to make the same predictions.
 > ```
 >
 > By default, sourced components will be updated with your data during training.
-> If you want to preserve the component as-is, you can "freeze" it if the pipeline 
-> is not using a shared `Tok2Vec` layer:
+> If you want to preserve the component as-is, you can "freeze" it if the
+> pipeline is not using a shared `Tok2Vec` layer:
 >
 > ```ini
 > [training]
@@ -714,7 +795,7 @@ if there's no state to be passed through – spaCy can just take care of this fo
 you. The following two code examples are equivalent:
 
 ```python
-# Statless component with @Language.factory
+# Stateless component with @Language.factory
 @Language.factory("my_component")
 def create_my_component():
     def my_component(doc):
@@ -1024,10 +1105,10 @@ While you could use a registered function or a file loader like
 [`srsly.read_json.v1`](/api/top-level#file_readers) as an argument of the
 component factory, this approach is problematic: the component factory runs
 **every time the component is created**. This means it will run when creating
-the `nlp` object before training, but also every a user loads your pipeline. So
-your runtime pipeline would either depend on a local path on your file system,
-or it's loaded twice: once when the component is created, and then again when
-the data is by `from_disk`.
+the `nlp` object before training, but also every time a user loads your
+pipeline. So your runtime pipeline would either depend on a local path on your
+file system, or it's loaded twice: once when the component is created, and then
+again when the data is by `from_disk`.
 
 > ```ini
 > ### config.cfg
@@ -1243,8 +1324,8 @@ labels = []
 # This function is created and then passed to the "textcat" component as
 # the argument "model"
 [components.textcat.model]
-@architectures = "spacy.TextCatBOW.v1"
-exclusive_classes = false
+@architectures = "spacy.TextCatBOW.v2"
+exclusive_classes = true
 ngram_size = 1
 no_output_layer = false
 
@@ -1273,7 +1354,7 @@ loss is calculated and to add evaluation scores to the training output.
 | [`update`](/api/pipe#update)         | Learn from a batch of [`Example`](/api/example) objects containing the predictions and gold-standard annotations, and update the component's model.                                                                                                                                                                                           |
 | [`initialize`](/api/pipe#initialize) | Initialize the model. Typically calls into [`Model.initialize`](https://thinc.ai/docs/api-model#initialize) and can be passed custom arguments via the [`[initialize]`](/api/data-formats#config-initialize) config block that are only loaded during training or when you call [`nlp.initialize`](/api/language#initialize), not at runtime. |
 | [`get_loss`](/api/pipe#get_loss)     | Return a tuple of the loss and the gradient for a batch of [`Example`](/api/example) objects.                                                                                                                                                                                                                                                 |
-| [`score`](/api/pipe#score)           | Score a batch of [`Example`](/api/example) objects and return a dictionary of scores. The [`@Language.factory`](/api/language#factory) decorator can define the `default_socre_weights` of the component to decide which keys of the scores to display during training and how they count towards the final score.                            |
+| [`score`](/api/pipe#score)           | Score a batch of [`Example`](/api/example) objects and return a dictionary of scores. The [`@Language.factory`](/api/language#factory) decorator can define the `default_score_weights` of the component to decide which keys of the scores to display during training and how they count towards the final score.                            |
 
 <Infobox title="Custom trainable components and models" emoji="📖">
 
@@ -1322,6 +1403,8 @@ There are three main types of extensions, which can be defined using the
 [`Doc.set_extension`](/api/doc#set_extension),
 [`Span.set_extension`](/api/span#set_extension) and
 [`Token.set_extension`](/api/token#set_extension) methods.
+
+## Description
 
 1. **Attribute extensions.** Set a default value for an attribute, which can be
    overwritten manually at any time. Attribute extensions work like "normal"
@@ -1496,24 +1579,33 @@ to `Doc.user_span_hooks` and `Doc.user_token_hooks`.
 
 | Name               | Customizes                                                                                                                                                                                                              |
 | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `user_hooks`       | [`Doc.vector`](/api/doc#vector), [`Doc.has_vector`](/api/doc#has_vector), [`Doc.vector_norm`](/api/doc#vector_norm), [`Doc.sents`](/api/doc#sents)                                                                      |
+| `user_hooks`       | [`Doc.similarity`](/api/doc#similarity), [`Doc.vector`](/api/doc#vector), [`Doc.has_vector`](/api/doc#has_vector), [`Doc.vector_norm`](/api/doc#vector_norm), [`Doc.sents`](/api/doc#sents)                             |
 | `user_token_hooks` | [`Token.similarity`](/api/token#similarity), [`Token.vector`](/api/token#vector), [`Token.has_vector`](/api/token#has_vector), [`Token.vector_norm`](/api/token#vector_norm), [`Token.conjuncts`](/api/token#conjuncts) |
 | `user_span_hooks`  | [`Span.similarity`](/api/span#similarity), [`Span.vector`](/api/span#vector), [`Span.has_vector`](/api/span#has_vector), [`Span.vector_norm`](/api/span#vector_norm), [`Span.root`](/api/span#root)                     |
 
 ```python
 ### Add custom similarity hooks
+from spacy.language import Language
+
+
 class SimilarityModel:
-    def __init__(self, model):
-        self._model = model
+    def __init__(self, name: str, index: int):
+        self.name = name
+        self.index = index
 
     def __call__(self, doc):
         doc.user_hooks["similarity"] = self.similarity
         doc.user_span_hooks["similarity"] = self.similarity
         doc.user_token_hooks["similarity"] = self.similarity
+        return doc
 
     def similarity(self, obj1, obj2):
-        y = self._model([obj1.vector, obj2.vector])
-        return float(y[0])
+        return obj1.vector[self.index] + obj2.vector[self.index]
+
+
+@Language.factory("similarity_component", default_config={"index": 0})
+def create_similarity_component(nlp, name, index: int):
+    return SimilarityModel(name, index)
 ```
 
 ## Developing plugins and wrappers {#plugins}

@@ -1,0 +1,44 @@
+# GitHub Action that uses Black to reformat all Python code and submits a PR
+# in regular intervals. Inspired by: https://github.com/cclauss/autoblack
+
+name: autoblack
+on:
+  workflow_dispatch:  # allow manual trigger
+  schedule:
+    - cron: '0 8 * * 5'  # every Friday at 8am UTC
+
+jobs:
+  autoblack:
+    if: github.repository_owner == 'explosion'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+            ref: ${{ github.head_ref }}
+      - uses: actions/setup-python@v2
+      - run: pip install black
+      - name: Auto-format code if needed
+        run: black spacy
+      # We can't run black --check here because that returns a non-zero excit
+      # code and makes GitHub think the action failed
+      - name: Check for modified files
+        id: git-check
+        run: echo ::set-output name=modified::$(if git diff-index --quiet HEAD --; then echo "false"; else echo "true"; fi)
+      - name: Create Pull Request
+        if: steps.git-check.outputs.modified == 'true'
+        uses: peter-evans/create-pull-request@v3
+        with:
+            title: Auto-format code with black
+            labels: meta
+            commit-message: Auto-format code with black
+            committer: GitHub <noreply@github.com>
+            author: explosion-bot <explosion-bot@users.noreply.github.com>
+            body: _This PR is auto-generated._
+            branch: autoblack
+            delete-branch: true
+            draft: false
+      - name: Check outputs
+        if: steps.git-check.outputs.modified == 'true'
+        run: |
+          echo "Pull Request Number - ${{ steps.cpr.outputs.pull-request-number }}"
+          echo "Pull Request URL - ${{ steps.cpr.outputs.pull-request-url }}"

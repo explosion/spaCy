@@ -1,5 +1,7 @@
 import pytest
+import re
 from spacy.util import get_lang_class
+from spacy.tokenizer import Tokenizer
 
 # Only include languages with no external dependencies
 # "is" seems to confuse importlib, so we're also excluding it for now
@@ -60,3 +62,18 @@ def test_tokenizer_explain(lang):
         tokens = [t.text for t in tokenizer(sentence) if not t.is_space]
         debug_tokens = [t[1] for t in tokenizer.explain(sentence)]
         assert tokens == debug_tokens
+
+
+def test_tokenizer_explain_special_matcher(en_vocab):
+    suffix_re = re.compile(r"[\.]$")
+    infix_re = re.compile(r"[/]")
+    rules = {"a.": [{"ORTH": "a."}]}
+    tokenizer = Tokenizer(
+        en_vocab,
+        rules=rules,
+        suffix_search=suffix_re.search,
+        infix_finditer=infix_re.finditer,
+    )
+    tokens = [t.text for t in tokenizer("a/a.")]
+    explain_tokens = [t[1] for t in tokenizer.explain("a/a.")]
+    assert tokens == explain_tokens

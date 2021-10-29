@@ -1,11 +1,13 @@
-from typing import Optional, Union, Any, Dict, List
+from typing import Optional, Union, Any, Dict, List, Tuple, cast
 import shutil
 from pathlib import Path
-from wasabi import Printer, get_raw_input
+from wasabi import Printer, MarkdownRenderer, get_raw_input
+from thinc.api import Config
+from collections import defaultdict
 import srsly
 import sys
 
-from ._util import app, Arg, Opt
+from ._util import app, Arg, Opt, string_to_list, WHEEL_SUFFIX, SDIST_SUFFIX
 from ..schemas import validate, ModelMetaSchema
 from .. import util
 from .. import about
@@ -16,12 +18,12 @@ def package_cli(
     # fmt: off
     input_dir: Path = Arg(..., help="Directory with pipeline data", exists=True, file_okay=False),
     output_dir: Path = Arg(..., help="Output parent directory", exists=True, file_okay=False),
-    code_paths: Optional[str] = Opt(None, "--code", "-c", help="Comma-separated paths to Python file with additional code (registered functions) to be included in the package"),
+    code_paths: str = Opt("", "--code", "-c", help="Comma-separated paths to Python file with additional code (registered functions) to be included in the package"),
     meta_path: Optional[Path] = Opt(None, "--meta-path", "--meta", "-m", help="Path to meta.json", exists=True, dir_okay=False),
-    create_meta: bool = Opt(False, "--create-meta", "-c", "-C", help="Create meta.json, even if one exists"),
+    create_meta: bool = Opt(False, "--create-meta", "-C", help="Create meta.json, even if one exists"),
     name: Optional[str] = Opt(None, "--name", "-n", help="Package name to override meta"),
     version: Optional[str] = Opt(None, "--version", "-v", help="Package version to override meta"),
-    no_sdist: bool = Opt(False, "--no-sdist", "-NS", help="Don't build .tar.gz sdist, can be set if you want to run this step manually"),
+    build: str = Opt("sdist", "--build", "-b", help="Comma-separated formats to build: sdist and/or wheel, or none."),
     force: bool = Opt(False, "--force", "-f", "-F", help="Force overwriting existing data in output directory"),
     # fmt: on
 ):
@@ -38,13 +40,10 @@ def package_cli(
     registered functions like pipeline components), they are copied into the
     package and imported in the __init__.py.
 
-    DOCS: https://nightly.spacy.io/api/cli#package
+    DOCS: https://spacy.io/api/cli#package
     """
-    code_paths = (
-        [Path(p.strip()) for p in code_paths.split(",")]
-        if code_paths is not None
-        else []
-    )
+    create_sdist, create_wheel = get_build_formats(string_to_list(build))
+    code_paths = [Path(p.strip()) for p in string_to_list(code_paths)]
     package(
         input_dir,
         output_dir,
@@ -53,7 +52,8 @@ def package_cli(
         name=name,
         version=version,
         create_meta=create_meta,
-        create_sdist=not no_sdist,
+        create_sdist=create_sdist,
+        create_wheel=create_wheel,
         force=force,
         silent=False,
     )
@@ -68,6 +68,7 @@ def package(
     version: Optional[str] = None,
     create_meta: bool = False,
     create_sdist: bool = True,
+    create_wheel: bool = False,
     force: bool = False,
     silent: bool = True,
 ) -> None:
@@ -75,10 +76,16 @@ def package(
     input_path = util.ensure_path(input_dir)
     output_path = util.ensure_path(output_dir)
     meta_path = util.ensure_path(meta_path)
+    if create_wheel and not has_wheel():
+        err = "Generating a binary .whl file requires wheel to be installed"
+        msg.fail(err, "pip install wheel", exits=1)
     if not input_path or not input_path.exists():
         msg.fail("Can't locate pipeline data", input_path, exits=1)
     if not output_path or not output_path.exists():
         msg.fail("Output directory not found", output_path, exits=1)
+    if create_sdist or create_wheel:
+        opts = ["sdist" if create_sdist else "", "wheel" if create_wheel else ""]
+        msg.info(f"Building package artifacts: {', '.join(opt for opt in opts if opt)}")
     for code_path in code_paths:
         if not code_path.exists():
             msg.fail("Can't find code file", code_path, exits=1)
@@ -94,6 +101,12 @@ def package(
         msg.fail("Can't load pipeline meta.json", meta_path, exits=1)
     meta = srsly.read_json(meta_path)
     meta = get_meta(input_dir, meta)
+    if meta["requirements"]:
+        msg.good(
+            f"Including {len(meta['requirements'])} package requirement(s) from "
+            f"meta and config",
+            ", ".join(meta["requirements"]),
+        )
     if name is not None:
         meta["name"] = name
     if version is not None:
@@ -107,7 +120,9 @@ def package(
         msg.fail("Invalid pipeline meta.json")
         print("\n".join(errors))
         sys.exit(1)
-    model_name = meta["lang"] + "_" + meta["name"]
+    model_name = meta["name"]
+    if not model_name.startswith(meta["lang"] + "_"):
+        model_name = f"{meta['lang']}_{model_name}"
     model_name_v = model_name + "-" + meta["version"]
     main_path = output_dir / model_name_v
     package_path = main_path / model_name
@@ -123,9 +138,18 @@ def package(
             )
     Path.mkdir(package_path, parents=True)
     shutil.copytree(str(input_dir), str(package_path / model_name_v))
-    license_path = package_path / model_name_v / "LICENSE"
-    if license_path.exists():
-        shutil.move(str(license_path), str(main_path))
+    for file_name in FILENAMES_DOCS:
+        file_path = package_path / model_name_v / file_name
+        if file_path.exists():
+            shutil.copy(str(file_path), str(main_path))
+    readme_path = main_path / "README.md"
+    if not readme_path.exists():
+        readme = generate_readme(meta)
+        create_file(readme_path, readme)
+        create_file(package_path / model_name_v / "README.md", readme)
+        msg.good("Generated README.md from meta.json")
+    else:
+        msg.info("Using existing README.md from pipeline directory")
     imports = []
     for code_path in code_paths:
         imports.append(code_path.stem)
@@ -141,8 +165,83 @@ def package(
     if create_sdist:
         with util.working_dir(main_path):
             util.run_command([sys.executable, "setup.py", "sdist"], capture=False)
-        zip_file = main_path / "dist" / f"{model_name_v}.tar.gz"
+        zip_file = main_path / "dist" / f"{model_name_v}{SDIST_SUFFIX}"
         msg.good(f"Successfully created zipped Python package", zip_file)
+    if create_wheel:
+        with util.working_dir(main_path):
+            util.run_command([sys.executable, "setup.py", "bdist_wheel"], capture=False)
+        wheel = main_path / "dist" / f"{model_name_v}{WHEEL_SUFFIX}"
+        msg.good(f"Successfully created binary wheel", wheel)
+
+
+def has_wheel() -> bool:
+    try:
+        import wheel  # noqa: F401
+
+        return True
+    except ImportError:
+        return False
+
+
+def get_third_party_dependencies(
+    config: Config, exclude: List[str] = util.SimpleFrozenList()
+) -> List[str]:
+    """If the config includes references to registered functions that are
+    provided by third-party packages (spacy-transformers, other libraries), we
+    want to include them in meta["requirements"] so that the package specifies
+    them as dependencies and the user won't have to do it manually.
+
+    We do this by:
+    - traversing the config to check for registered function (@ keys)
+    - looking up the functions and getting their module
+    - looking up the module version and generating an appropriate version range
+
+    config (Config): The pipeline config.
+    exclude (list): List of packages to exclude (e.g. that already exist in meta).
+    RETURNS (list): The versioned requirements.
+    """
+    own_packages = ("spacy", "spacy-legacy", "spacy-nightly", "thinc", "srsly")
+    distributions = util.packages_distributions()
+    funcs = defaultdict(set)
+    # We only want to look at runtime-relevant sections, not [training] or [initialize]
+    for section in ("nlp", "components"):
+        for path, value in util.walk_dict(config[section]):
+            if path[-1].startswith("@"):  # collect all function references by registry
+                funcs[path[-1][1:]].add(value)
+    for component in config.get("components", {}).values():
+        if "factory" in component:
+            funcs["factories"].add(component["factory"])
+    modules = set()
+    for reg_name, func_names in funcs.items():
+        for func_name in func_names:
+            func_info = util.registry.find(reg_name, func_name)
+            module_name = func_info.get("module")  # type: ignore[attr-defined]
+            if module_name:  # the code is part of a module, not a --code file
+                modules.add(func_info["module"].split(".")[0])  # type: ignore[index]
+    dependencies = []
+    for module_name in modules:
+        if module_name in distributions:
+            dist = distributions.get(module_name)
+            if dist:
+                pkg = dist[0]
+                if pkg in own_packages or pkg in exclude:
+                    continue
+                version = util.get_package_version(pkg)
+                version_range = util.get_minor_version_range(version)  # type: ignore[arg-type]
+                dependencies.append(f"{pkg}{version_range}")
+    return dependencies
+
+
+def get_build_formats(formats: List[str]) -> Tuple[bool, bool]:
+    supported = ["sdist", "wheel", "none"]
+    for form in formats:
+        if form not in supported:
+            msg = Printer()
+            err = f"Unknown build format: {form}. Supported: {', '.join(supported)}"
+            msg.fail(err, exits=1)
+    if not formats or "none" in formats:
+        return (False, False)
+    return ("sdist" in formats, "wheel" in formats)
 
 
 def create_file(file_path: Path, contents: str) -> None:
@@ -153,7 +252,7 @@ def create_file(file_path: Path, contents: str) -> None:
 def get_meta(
     model_path: Union[str, Path], existing_meta: Dict[str, Any]
 ) -> Dict[str, Any]:
-    meta = {
+    meta: Dict[str, Any] = {
         "lang": "en",
         "name": "pipeline",
         "version": "0.0.0",
@@ -163,9 +262,10 @@ def get_meta(
         "url": "",
         "license": "MIT",
     }
-    meta.update(existing_meta)
     nlp = util.load_model_from_path(Path(model_path))
-    meta["spacy_version"] = util.get_model_version_range(about.__version__)
+    meta.update(nlp.meta)
+    meta.update(existing_meta)
+    meta["spacy_version"] = util.get_minor_version_range(about.__version__)
     meta["vectors"] = {
         "width": nlp.vocab.vectors_length,
         "vectors": len(nlp.vocab.vectors),
@@ -174,6 +274,11 @@ def get_meta(
     }
     if about.__title__ != "spacy":
         meta["parent_package"] = about.__title__
+    meta.setdefault("requirements", [])
+    # Update the requirements with all third-party packages in the config
+    existing_reqs = [util.split_requirement(req)[0] for req in meta["requirements"]]
+    reqs = get_third_party_dependencies(nlp.config, exclude=existing_reqs)
+    meta["requirements"].extend(reqs)
     return meta
 
 
@@ -200,6 +305,113 @@ def generate_meta(existing_meta: Dict[str, Any], msg: Printer) -> Dict[str, Any]
     return meta
 
 
+def generate_readme(meta: Dict[str, Any]) -> str:
+    """
+    Generate a Markdown-formatted README text from a model meta.json. Used
+    within the GitHub release notes and as content for README.md file added
+    to model packages.
+    """
+    md = MarkdownRenderer()
+    lang = meta["lang"]
+    name = f"{lang}_{meta['name']}"
+    version = meta["version"]
+    pipeline = ", ".join([md.code(p) for p in meta.get("pipeline", [])])
+    components = ", ".join([md.code(p) for p in meta.get("components", [])])
+    vecs = meta.get("vectors", {})
+    vectors = f"{vecs.get('keys', 0)} keys, {vecs.get('vectors', 0)} unique vectors ({ vecs.get('width', 0)} dimensions)"
+    author = meta.get("author") or "n/a"
+    notes = meta.get("notes", "")
+    license_name = meta.get("license")
+    sources = _format_sources(meta.get("sources"))
+    description = meta.get("description")
+    label_scheme = _format_label_scheme(cast(Dict[str, Any], meta.get("labels")))
+    accuracy = _format_accuracy(cast(Dict[str, Any], meta.get("performance")))
+    table_data = [
+        (md.bold("Name"), md.code(name)),
+        (md.bold("Version"), md.code(version)),
+        (md.bold("spaCy"), md.code(meta["spacy_version"])),
+        (md.bold("Default Pipeline"), pipeline),
+        (md.bold("Components"), components),
+        (md.bold("Vectors"), vectors),
+        (md.bold("Sources"), sources or "n/a"),
+        (md.bold("License"), md.code(license_name) if license_name else "n/a"),
+        (md.bold("Author"), md.link(author, meta["url"]) if "url" in meta else author),
+    ]
+    # Put together Markdown body
+    if description:
+        md.add(description)
+    md.add(md.table(table_data, ["Feature", "Description"]))
+    if label_scheme:
+        md.add(md.title(3, "Label Scheme"))
+        md.add(label_scheme)
+    if accuracy:
+        md.add(md.title(3, "Accuracy"))
+        md.add(accuracy)
+    if notes:
+        md.add(notes)
+    return md.text
+
+
+def _format_sources(data: Any) -> str:
+    if not data or not isinstance(data, list):
+        return "n/a"
+    sources = []
+    for source in data:
+        if not isinstance(source, dict):
+            source = {"name": source}
+        name = source.get("name")
+        if not name:
+            continue
+        url = source.get("url")
+        author = source.get("author")
+        result = name if not url else "[{}]({})".format(name, url)
+        if author:
+            result += " ({})".format(author)
+        sources.append(result)
+    return "<br />".join(sources)
+
+
+def _format_accuracy(data: Dict[str, Any], exclude: List[str] = ["speed"]) -> str:
+    if not data:
+        return ""
+    md = MarkdownRenderer()
+    scalars = [(k, v) for k, v in data.items() if isinstance(v, (int, float))]
+    scores = [
+        (md.code(acc.upper()), f"{score*100:.2f}")
+        for acc, score in scalars
+        if acc not in exclude
+    ]
+    md.add(md.table(scores, ["Type", "Score"]))
+    return md.text
+
+
+def _format_label_scheme(data: Dict[str, Any]) -> str:
+    if not data:
+        return ""
+    md = MarkdownRenderer()
+    n_labels = 0
+    n_pipes = 0
+    label_data = []
+    for pipe, labels in data.items():
+        if not labels:
+            continue
+        col1 = md.bold(md.code(pipe))
+        col2 = ", ".join(
+            [md.code(label.replace("|", "\\|")) for label in labels]
+        )  # noqa: W605
+        label_data.append((col1, col2))
+        n_labels += len(labels)
+        n_pipes += 1
+    if not label_data:
+        return ""
+    label_info = f"View label scheme ({n_labels} labels for {n_pipes} components)"
+    md.add("<details>")
+    md.add(f"<summary>{label_info}</summary>")
+    md.add(md.table(label_data, ["Component", "Labels"]))
+    md.add("</details>")
+    return md.text
+
+
 TEMPLATE_SETUP = """
 #!/usr/bin/env python
 import io
@@ -212,6 +424,13 @@ from setuptools import setup
 def load_meta(fp):
     with io.open(fp, encoding='utf8') as f:
         return json.load(f)
+
+
+def load_readme(fp):
+    if path.exists(fp):
+        with io.open(fp, encoding='utf8') as f:
+            return f.read()
+    return ""
 
 
 def list_files(data_dir):
@@ -239,6 +458,8 @@ def setup_package():
     root = path.abspath(path.dirname(__file__))
     meta_path = path.join(root, 'meta.json')
     meta = load_meta(meta_path)
+    readme_path = path.join(root, 'README.md')
+    readme = load_readme(readme_path)
     model_name = str(meta['lang'] + '_' + meta['name'])
     model_dir = path.join(model_name, model_name + '-' + meta['version'])
 
@@ -248,6 +469,7 @@ def setup_package():
     setup(
         name=model_name,
         description=meta.get('description'),
+        long_description=readme,
         author=meta.get('author'),
         author_email=meta.get('email'),
         url=meta.get('url'),
@@ -263,12 +485,14 @@ def setup_package():
 
 if __name__ == '__main__':
     setup_package()
-""".strip()
+""".lstrip()
 
 
 TEMPLATE_MANIFEST = """
 include meta.json
 include LICENSE
+include LICENSES_SOURCES
+include README.md
 """.strip()
 
 
@@ -283,4 +507,7 @@ __version__ = get_model_meta(Path(__file__).parent)['version']
 
 def load(**overrides):
     return load_model_from_init_py(__file__, **overrides)
-""".strip()
+""".lstrip()
+
+
+FILENAMES_DOCS = ["LICENSE", "LICENSES_SOURCES", "README.md"]

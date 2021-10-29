@@ -1,7 +1,9 @@
 import pytest
 import numpy
 import srsly
+from spacy.lang.en import English
 from spacy.strings import StringStore
+from spacy.tokens import Doc
 from spacy.vocab import Vocab
 from spacy.attrs import NORM
 
@@ -20,7 +22,10 @@ def test_pickle_string_store(text1, text2):
 
 @pytest.mark.parametrize("text1,text2", [("dog", "cat")])
 def test_pickle_vocab(text1, text2):
-    vocab = Vocab(lex_attr_getters={int(NORM): lambda string: string[:-1]})
+    vocab = Vocab(
+        lex_attr_getters={int(NORM): lambda string: string[:-1]},
+        get_noun_chunks=English.Defaults.syntax_iterators.get("noun_chunks"),
+    )
     vocab.set_vector("dog", numpy.ones((5,), dtype="f"))
     lex1 = vocab[text1]
     lex2 = vocab[text2]
@@ -34,4 +39,23 @@ def test_pickle_vocab(text1, text2):
     assert unpickled[text2].norm == lex2.norm
     assert unpickled[text1].norm != unpickled[text2].norm
     assert unpickled.vectors is not None
+    assert unpickled.get_noun_chunks is not None
     assert list(vocab["dog"].vector) == [1.0, 1.0, 1.0, 1.0, 1.0]
+
+
+def test_pickle_doc(en_vocab):
+    words = ["a", "b", "c"]
+    deps = ["dep"] * len(words)
+    heads = [0] * len(words)
+    doc = Doc(
+        en_vocab,
+        words=words,
+        deps=deps,
+        heads=heads,
+    )
+    data = srsly.pickle_dumps(doc)
+    unpickled = srsly.pickle_loads(data)
+    assert [t.text for t in unpickled] == words
+    assert [t.dep_ for t in unpickled] == deps
+    assert [t.head.i for t in unpickled] == heads
+    assert list(doc.noun_chunks) == []

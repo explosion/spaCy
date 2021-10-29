@@ -2,7 +2,7 @@
 from libc.string cimport memcpy
 
 import srsly
-from thinc.api import get_array_module
+from thinc.api import get_array_module, get_current_ops
 import functools
 
 from .lexeme cimport EMPTY_LEXEME, OOV_RANK
@@ -47,7 +47,7 @@ cdef class Vocab:
     instance also provides access to the `StringStore`, and owns underlying
     C-data that is shared between `Doc` objects.
 
-    DOCS: https://nightly.spacy.io/api/vocab
+    DOCS: https://spacy.io/api/vocab
     """
     def __init__(self, lex_attr_getters=None, strings=tuple(), lookups=None,
                  oov_prob=-20., vectors_name=None, writing_system={},
@@ -61,6 +61,8 @@ cdef class Vocab:
         lookups (Lookups): Container for large lookup tables and dictionaries.
         oov_prob (float): Default OOV probability.
         vectors_name (unicode): Optional name to identify the vectors table.
+        get_noun_chunks (Optional[Callable[[Union[Doc, Span], Iterator[Tuple[int, int, int]]]]]):
+            A function that yields base noun phrases used for Doc.noun_chunks.
         """
         lex_attr_getters = lex_attr_getters if lex_attr_getters is not None else {}
         if lookups in (None, True, False):
@@ -110,7 +112,7 @@ cdef class Vocab:
             available bit will be chosen.
         RETURNS (int): The integer ID by which the flag value can be checked.
 
-        DOCS: https://nightly.spacy.io/api/vocab#add_flag
+        DOCS: https://spacy.io/api/vocab#add_flag
         """
         if flag_id == -1:
             for bit in range(1, 64):
@@ -197,7 +199,7 @@ cdef class Vocab:
         string (unicode): The ID string.
         RETURNS (bool) Whether the string has an entry in the vocabulary.
 
-        DOCS: https://nightly.spacy.io/api/vocab#contains
+        DOCS: https://spacy.io/api/vocab#contains
         """
         cdef hash_t int_key
         if isinstance(key, bytes):
@@ -214,7 +216,7 @@ cdef class Vocab:
 
         YIELDS (Lexeme): An entry in the vocabulary.
 
-        DOCS: https://nightly.spacy.io/api/vocab#iter
+        DOCS: https://spacy.io/api/vocab#iter
         """
         cdef attr_t key
         cdef size_t addr
@@ -237,7 +239,7 @@ cdef class Vocab:
             >>> apple = nlp.vocab.strings["apple"]
             >>> assert nlp.vocab[apple] == nlp.vocab[u"apple"]
 
-        DOCS: https://nightly.spacy.io/api/vocab#getitem
+        DOCS: https://spacy.io/api/vocab#getitem
         """
         cdef attr_t orth
         if isinstance(id_or_string, unicode):
@@ -286,7 +288,7 @@ cdef class Vocab:
         among those remaining.
 
         For example, suppose the original table had vectors for the words:
-        ['sat', 'cat', 'feline', 'reclined']. If we prune the vector table to,
+        ['sat', 'cat', 'feline', 'reclined']. If we prune the vector table to
         two rows, we would discard the vectors for 'feline' and 'reclined'.
         These words would then be remapped to the closest remaining vector
         -- so "feline" would have the same vector as "cat", and "reclined"
@@ -305,8 +307,9 @@ cdef class Vocab:
             word was mapped to, and `score` the similarity score between the
             two words.
 
-        DOCS: https://nightly.spacy.io/api/vocab#prune_vectors
+        DOCS: https://spacy.io/api/vocab#prune_vectors
         """
+        ops = get_current_ops()
         xp = get_array_module(self.vectors.data)
         # Make sure all vectors are in the vocab
         for orth in self.vectors:
@@ -322,8 +325,9 @@ cdef class Vocab:
         toss = xp.ascontiguousarray(self.vectors.data[indices[nr_row:]])
         self.vectors = Vectors(data=keep, keys=keys[:nr_row], name=self.vectors.name)
         syn_keys, syn_rows, scores = self.vectors.most_similar(toss, batch_size=batch_size)
+        syn_keys = ops.to_numpy(syn_keys)
         remap = {}
-        for i, key in enumerate(keys[nr_row:]):
+        for i, key in enumerate(ops.to_numpy(keys[nr_row:])):
             self.vectors.add(key, row=syn_rows[i][0])
             word = self.strings[key]
             synonym = self.strings[syn_keys[i][0]]
@@ -344,26 +348,26 @@ cdef class Vocab:
             Defaults to the length of `orth`.
         maxn (int): Maximum n-gram length used for Fasttext's ngram computation.
             Defaults to the length of `orth`.
-        RETURNS (numpy.ndarray): A word vector. Size
+        RETURNS (numpy.ndarray or cupy.ndarray): A word vector. Size
             and shape determined by the `vocab.vectors` instance. Usually, a
             numpy ndarray of shape (300,) and dtype float32.
 
-        DOCS: https://nightly.spacy.io/api/vocab#get_vector
+        DOCS: https://spacy.io/api/vocab#get_vector
         """
         if isinstance(orth, str):
             orth = self.strings.add(orth)
         word = self[orth].orth_
         if orth in self.vectors.key2row:
             return self.vectors[orth]
-        # Assign default ngram limits to minn and maxn which is the length of the word.
-        if minn is None:
-            minn = len(word)
-        if maxn is None:
-            maxn = len(word)
         xp = get_array_module(self.vectors.data)
         vectors = xp.zeros((self.vectors_length,), dtype="f")
+        if minn is None:
+            return vectors
         # Fasttext's ngram computation taken from
         # https://github.com/facebookresearch/fastText
+        # Assign default ngram limit to maxn which is the length of the word.
+        if maxn is None:
+            maxn = len(word)
         ngrams_size = 0;
         for i in range(len(word)):
             ngram = ""
@@ -393,9 +397,9 @@ cdef class Vocab:
         by string or int ID.
 
         orth (int / unicode): The word.
-        vector (numpy.ndarray[ndim=1, dtype='float32']): The vector to set.
+        vector (numpy.ndarray or cupy.nadarry[ndim=1, dtype='float32']): The vector to set.
 
-        DOCS: https://nightly.spacy.io/api/vocab#set_vector
+        DOCS: https://spacy.io/api/vocab#set_vector
         """
         if isinstance(orth, str):
             orth = self.strings.add(orth)
@@ -417,7 +421,7 @@ cdef class Vocab:
         orth (int / unicode): The word.
         RETURNS (bool): Whether the word has a vector.
 
-        DOCS: https://nightly.spacy.io/api/vocab#has_vector
+        DOCS: https://spacy.io/api/vocab#has_vector
         """
         if isinstance(orth, str):
             orth = self.strings.add(orth)
@@ -441,9 +445,9 @@ cdef class Vocab:
 
         path (unicode or Path): A path to a directory, which will be created if
             it doesn't exist.
-        exclude (list): String names of serialization fields to exclude.
+        exclude (Iterable[str]): String names of serialization fields to exclude.
 
-        DOCS: https://nightly.spacy.io/api/vocab#to_disk
+        DOCS: https://spacy.io/api/vocab#to_disk
         """
         path = util.ensure_path(path)
         if not path.exists():
@@ -461,10 +465,10 @@ cdef class Vocab:
         returns it.
 
         path (unicode or Path): A path to a directory.
-        exclude (list): String names of serialization fields to exclude.
+        exclude (Iterable[str]): String names of serialization fields to exclude.
         RETURNS (Vocab): The modified `Vocab` object.
 
-        DOCS: https://nightly.spacy.io/api/vocab#to_disk
+        DOCS: https://spacy.io/api/vocab#to_disk
         """
         path = util.ensure_path(path)
         getters = ["strings", "vectors"]
@@ -486,10 +490,10 @@ cdef class Vocab:
     def to_bytes(self, *, exclude=tuple()):
         """Serialize the current state to a binary string.
 
-        exclude (list): String names of serialization fields to exclude.
+        exclude (Iterable[str]): String names of serialization fields to exclude.
         RETURNS (bytes): The serialized form of the `Vocab` object.
 
-        DOCS: https://nightly.spacy.io/api/vocab#to_bytes
+        DOCS: https://spacy.io/api/vocab#to_bytes
         """
         def deserialize_vectors():
             if self.vectors is None:
@@ -508,10 +512,10 @@ cdef class Vocab:
         """Load state from a binary string.
 
         bytes_data (bytes): The data to load from.
-        exclude (list): String names of serialization fields to exclude.
+        exclude (Iterable[str]): String names of serialization fields to exclude.
         RETURNS (Vocab): The `Vocab` object.
 
-        DOCS: https://nightly.spacy.io/api/vocab#from_bytes
+        DOCS: https://spacy.io/api/vocab#from_bytes
         """
         def serialize_vectors(b):
             if self.vectors is None:
@@ -521,7 +525,6 @@ cdef class Vocab:
 
         setters = {
             "strings": lambda b: self.strings.from_bytes(b),
-            "lexemes": lambda b: self.lexemes_from_bytes(b),
             "vectors": lambda b: serialize_vectors(b),
             "lookups": lambda b: self.lookups.from_bytes(b),
         }
@@ -546,12 +549,13 @@ def pickle_vocab(vocab):
     data_dir = vocab.data_dir
     lex_attr_getters = srsly.pickle_dumps(vocab.lex_attr_getters)
     lookups = vocab.lookups
+    get_noun_chunks = vocab.get_noun_chunks
     return (unpickle_vocab,
-            (sstore, vectors, morph, data_dir, lex_attr_getters, lookups))
+            (sstore, vectors, morph, data_dir, lex_attr_getters, lookups, get_noun_chunks))
 
 
 def unpickle_vocab(sstore, vectors, morphology, data_dir,
-                   lex_attr_getters, lookups):
+                   lex_attr_getters, lookups, get_noun_chunks):
     cdef Vocab vocab = Vocab()
     vocab.vectors = vectors
     vocab.strings = sstore
@@ -559,6 +563,7 @@ def unpickle_vocab(sstore, vectors, morphology, data_dir,
     vocab.data_dir = data_dir
     vocab.lex_attr_getters = srsly.pickle_loads(lex_attr_getters)
     vocab.lookups = lookups
+    vocab.get_noun_chunks = get_noun_chunks
     return vocab
 
 

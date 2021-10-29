@@ -1,6 +1,6 @@
 from typing import Dict, Iterable, Callable
 import pytest
-from thinc.api import Config
+from thinc.api import Config, fix_random_seed
 from spacy import Language
 from spacy.util import load_model_from_config, registry, resolve_dot_names
 from spacy.schemas import ConfigSchemaTraining
@@ -27,8 +27,8 @@ def test_readers():
     factory = "textcat"
     """
 
-    @registry.readers.register("myreader.v1")
-    def myreader() -> Dict[str, Callable[[Language, str], Iterable[Example]]]:
+    @registry.readers("myreader.v1")
+    def myreader() -> Dict[str, Callable[[Language], Iterable[Example]]]:
         annots = {"cats": {"POS": 1.0, "NEG": 0.0}}
 
         def reader(nlp: Language):
@@ -64,8 +64,8 @@ def test_readers():
 @pytest.mark.parametrize(
     "reader,additional_config",
     [
-        ("ml_datasets.imdb_sentiment.v1", {"train_limit": 10, "dev_limit": 2}),
-        ("ml_datasets.dbpedia.v1", {"train_limit": 10, "dev_limit": 2}),
+        ("ml_datasets.imdb_sentiment.v1", {"train_limit": 10, "dev_limit": 10}),
+        ("ml_datasets.dbpedia.v1", {"train_limit": 10, "dev_limit": 10}),
         ("ml_datasets.cmu_movies.v1", {"limit": 10, "freq_cutoff": 200, "split": 0.8}),
     ],
 )
@@ -82,17 +82,18 @@ def test_cat_readers(reader, additional_config):
 
     [nlp]
     lang = "en"
-    pipeline = ["tok2vec", "textcat"]
+    pipeline = ["tok2vec", "textcat_multilabel"]
 
     [components]
 
     [components.tok2vec]
     factory = "tok2vec"
 
-    [components.textcat]
-    factory = "textcat"
+    [components.textcat_multilabel]
+    factory = "textcat_multilabel"
     """
     config = Config().from_str(nlp_config_string)
+    fix_random_seed(config["training"]["seed"])
     config["corpora"]["@readers"] = reader
     config["corpora"].update(additional_config)
     nlp = load_model_from_config(config, auto_fill=True)

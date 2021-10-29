@@ -1,4 +1,6 @@
+import warnings
 from typing import Optional, Union, List, Dict, Tuple, Iterable, Any, Callable, Sequence
+from typing import cast
 from collections import defaultdict
 from pathlib import Path
 import srsly
@@ -6,7 +8,7 @@ import srsly
 from .pipe import Pipe
 from ..training import Example
 from ..language import Language
-from ..errors import Errors
+from ..errors import Errors, Warnings
 from ..util import ensure_path, to_disk, from_disk, SimpleFrozenList
 from ..tokens import Doc, Span
 from ..matcher import Matcher, PhraseMatcher
@@ -59,8 +61,8 @@ class EntityRuler(Pipe):
     purely rule-based entity recognition system. After initialization, the
     component is typically added to the pipeline using `nlp.add_pipe`.
 
-    DOCS: https://nightly.spacy.io/api/entityruler
-    USAGE: https://nightly.spacy.io/usage/rule-based-matching#entityruler
+    DOCS: https://spacy.io/api/entityruler
+    USAGE: https://spacy.io/usage/rule-based-matching#entityruler
     """
 
     def __init__(
@@ -94,26 +96,21 @@ class EntityRuler(Pipe):
             added by the model, overwrite them by matches if necessary.
         ent_id_sep (str): Separator used internally for entity IDs.
 
-        DOCS: https://nightly.spacy.io/api/entityruler#init
+        DOCS: https://spacy.io/api/entityruler#init
         """
         self.nlp = nlp
         self.name = name
         self.overwrite = overwrite_ents
-        self.token_patterns = defaultdict(list)
-        self.phrase_patterns = defaultdict(list)
+        self.token_patterns = defaultdict(list)  # type: ignore
+        self.phrase_patterns = defaultdict(list)  # type: ignore
+        self._validate = validate
         self.matcher = Matcher(nlp.vocab, validate=validate)
-        if phrase_matcher_attr is not None:
-            if phrase_matcher_attr.upper() == "TEXT":
-                phrase_matcher_attr = "ORTH"
-            self.phrase_matcher_attr = phrase_matcher_attr
-            self.phrase_matcher = PhraseMatcher(
-                nlp.vocab, attr=self.phrase_matcher_attr, validate=validate
-            )
-        else:
-            self.phrase_matcher_attr = None
-            self.phrase_matcher = PhraseMatcher(nlp.vocab, validate=validate)
+        self.phrase_matcher_attr = phrase_matcher_attr
+        self.phrase_matcher = PhraseMatcher(
+            nlp.vocab, attr=self.phrase_matcher_attr, validate=validate
+        )
         self.ent_id_sep = ent_id_sep
-        self._ent_ids = defaultdict(dict)
+        self._ent_ids = defaultdict(tuple)  # type: ignore
         if patterns is not None:
             self.add_patterns(patterns)
 
@@ -133,14 +130,33 @@ class EntityRuler(Pipe):
         doc (Doc): The Doc object in the pipeline.
         RETURNS (Doc): The Doc with added entities, if available.
 
-        DOCS: https://nightly.spacy.io/api/entityruler#call
+        DOCS: https://spacy.io/api/entityruler#call
         """
-        matches = list(self.matcher(doc)) + list(self.phrase_matcher(doc))
-        matches = set(
+        error_handler = self.get_error_handler()
+        try:
+            matches = self.match(doc)
+            self.set_annotations(doc, matches)
+            return doc
+        except Exception as e:
+            return error_handler(self.name, self, [doc], e)
+
+    def match(self, doc: Doc):
+        self._require_patterns()
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", message="\\[W036")
+            matches = cast(
+                List[Tuple[int, int, int]],
+                list(self.matcher(doc)) + list(self.phrase_matcher(doc)),
+            )
+        final_matches = set(
             [(m_id, start, end) for m_id, start, end in matches if start != end]
         )
         get_sort_key = lambda m: (m[2] - m[1], -m[1])
-        matches = sorted(matches, key=get_sort_key, reverse=True)
+        final_matches = sorted(final_matches, key=get_sort_key, reverse=True)
+        return final_matches
+
+    def set_annotations(self, doc, matches):
+        """Modify the document in place"""
         entities = list(doc.ents)
         new_entities = []
         seen_tokens = set()
@@ -163,7 +179,6 @@ class EntityRuler(Pipe):
                 ]
                 seen_tokens.update(range(start, end))
         doc.ents = entities + new_entities
-        return doc
 
     @property
     def labels(self) -> Tuple[str, ...]:
@@ -171,7 +186,7 @@ class EntityRuler(Pipe):
 
         RETURNS (set): The string labels.
 
-        DOCS: https://nightly.spacy.io/api/entityruler#labels
+        DOCS: https://spacy.io/api/entityruler#labels
         """
         keys = set(self.token_patterns.keys())
         keys.update(self.phrase_patterns.keys())
@@ -183,7 +198,7 @@ class EntityRuler(Pipe):
                 all_labels.add(label)
             else:
                 all_labels.add(l)
-        return tuple(all_labels)
+        return tuple(sorted(all_labels))
 
     def initialize(
         self,
@@ -199,19 +214,19 @@ class EntityRuler(Pipe):
         nlp (Language): The current nlp object the component is part of.
         patterns Optional[Iterable[PatternType]]: The list of patterns.
 
-        DOCS: https://nightly.spacy.io/api/entityruler#initialize
+        DOCS: https://spacy.io/api/entityruler#initialize
         """
         self.clear()
         if patterns:
-            self.add_patterns(patterns)
+            self.add_patterns(patterns)  # type: ignore[arg-type]
 
     @property
-    def ent_ids(self) -> Tuple[str, ...]:
+    def ent_ids(self) -> Tuple[Optional[str], ...]:
         """All entity ids present in the match patterns `id` properties
 
         RETURNS (set): The string entity ids.
 
-        DOCS: https://nightly.spacy.io/api/entityruler#ent_ids
+        DOCS: https://spacy.io/api/entityruler#ent_ids
         """
         keys = set(self.token_patterns.keys())
         keys.update(self.phrase_patterns.keys())
@@ -229,7 +244,7 @@ class EntityRuler(Pipe):
 
         RETURNS (list): The original patterns, one dictionary per pattern.
 
-        DOCS: https://nightly.spacy.io/api/entityruler#patterns
+        DOCS: https://spacy.io/api/entityruler#patterns
         """
         all_patterns = []
         for label, patterns in self.token_patterns.items():
@@ -256,7 +271,7 @@ class EntityRuler(Pipe):
 
         patterns (list): The patterns to add.
 
-        DOCS: https://nightly.spacy.io/api/entityruler#add_patterns
+        DOCS: https://spacy.io/api/entityruler#add_patterns
         """
 
         # disable the nlp components after this one in case they hadn't been initialized / deserialised yet
@@ -266,9 +281,7 @@ class EntityRuler(Pipe):
                 if self == pipe:
                     current_index = i
                     break
-            subsequent_pipes = [
-                pipe for pipe in self.nlp.pipe_names[current_index + 1 :]
-            ]
+            subsequent_pipes = [pipe for pipe in self.nlp.pipe_names[current_index:]]
         except ValueError:
             subsequent_pipes = []
         with self.nlp.select_pipes(disable=subsequent_pipes):
@@ -289,36 +302,43 @@ class EntityRuler(Pipe):
                 self.nlp.pipe(phrase_pattern_texts),
                 phrase_pattern_ids,
             ):
-                phrase_pattern = {"label": label, "pattern": pattern, "id": ent_id}
+                phrase_pattern = {"label": label, "pattern": pattern}
                 if ent_id:
                     phrase_pattern["id"] = ent_id
                 phrase_patterns.append(phrase_pattern)
-            for entry in token_patterns + phrase_patterns:
+            for entry in token_patterns + phrase_patterns:  # type: ignore[operator]
                 label = entry["label"]
                 if "id" in entry:
                     ent_label = label
                     label = self._create_label(label, entry["id"])
                     key = self.matcher._normalize_key(label)
                     self._ent_ids[key] = (ent_label, entry["id"])
-                pattern = entry["pattern"]
+                pattern = entry["pattern"]  # type: ignore
                 if isinstance(pattern, Doc):
                     self.phrase_patterns[label].append(pattern)
+                    self.phrase_matcher.add(label, [pattern])  # type: ignore
                 elif isinstance(pattern, list):
                     self.token_patterns[label].append(pattern)
+                    self.matcher.add(label, [pattern])
                 else:
                     raise ValueError(Errors.E097.format(pattern=pattern))
-            for label, patterns in self.token_patterns.items():
-                self.matcher.add(label, patterns)
-            for label, patterns in self.phrase_patterns.items():
-                self.phrase_matcher.add(label, patterns)
 
     def clear(self) -> None:
         """Reset all patterns."""
         self.token_patterns = defaultdict(list)
         self.phrase_patterns = defaultdict(list)
-        self._ent_ids = defaultdict(dict)
+        self._ent_ids = defaultdict(tuple)
+        self.matcher = Matcher(self.nlp.vocab, validate=self._validate)
+        self.phrase_matcher = PhraseMatcher(
+            self.nlp.vocab, attr=self.phrase_matcher_attr, validate=self._validate
+        )
 
-    def _split_label(self, label: str) -> Tuple[str, str]:
+    def _require_patterns(self) -> None:
+        """Raise a warning if this component has no patterns defined."""
+        if len(self) == 0:
+            warnings.warn(Warnings.W036.format(name=self.name))
+
+    def _split_label(self, label: str) -> Tuple[str, Optional[str]]:
         """Split Entity label into ent_label and ent_id if it contains self.ent_id_sep
 
         label (str): The value of label in a pattern entry
@@ -328,11 +348,12 @@ class EntityRuler(Pipe):
             ent_label, ent_id = label.rsplit(self.ent_id_sep, 1)
         else:
             ent_label = label
-            ent_id = None
+            ent_id = None  # type: ignore
         return ent_label, ent_id
 
-    def _create_label(self, label: str, ent_id: str) -> str:
+    def _create_label(self, label: Any, ent_id: Any) -> str:
         """Join Entity label with ent_id if the pattern has an `id` attribute
+        If ent_id is not a string, the label is returned as is.
 
         label (str): The label to set for ent.label_
         ent_id (str): The label
@@ -354,7 +375,7 @@ class EntityRuler(Pipe):
         patterns_bytes (bytes): The bytestring to load.
         RETURNS (EntityRuler): The loaded entity ruler.
 
-        DOCS: https://nightly.spacy.io/api/entityruler#from_bytes
+        DOCS: https://spacy.io/api/entityruler#from_bytes
         """
         cfg = srsly.msgpack_loads(patterns_bytes)
         self.clear()
@@ -362,10 +383,9 @@ class EntityRuler(Pipe):
             self.add_patterns(cfg.get("patterns", cfg))
             self.overwrite = cfg.get("overwrite", False)
             self.phrase_matcher_attr = cfg.get("phrase_matcher_attr", None)
-            if self.phrase_matcher_attr is not None:
-                self.phrase_matcher = PhraseMatcher(
-                    self.nlp.vocab, attr=self.phrase_matcher_attr
-                )
+            self.phrase_matcher = PhraseMatcher(
+                self.nlp.vocab, attr=self.phrase_matcher_attr
+            )
             self.ent_id_sep = cfg.get("ent_id_sep", DEFAULT_ENT_ID_SEP)
         else:
             self.add_patterns(cfg)
@@ -376,7 +396,7 @@ class EntityRuler(Pipe):
 
         RETURNS (bytes): The serialized patterns.
 
-        DOCS: https://nightly.spacy.io/api/entityruler#to_bytes
+        DOCS: https://spacy.io/api/entityruler#to_bytes
         """
         serial = {
             "overwrite": self.overwrite,
@@ -395,7 +415,7 @@ class EntityRuler(Pipe):
         path (str / Path): The JSONL file to load.
         RETURNS (EntityRuler): The loaded entity ruler.
 
-        DOCS: https://nightly.spacy.io/api/entityruler#from_disk
+        DOCS: https://spacy.io/api/entityruler#from_disk
         """
         path = ensure_path(path)
         self.clear()
@@ -416,10 +436,9 @@ class EntityRuler(Pipe):
             self.phrase_matcher_attr = cfg.get("phrase_matcher_attr")
             self.ent_id_sep = cfg.get("ent_id_sep", DEFAULT_ENT_ID_SEP)
 
-            if self.phrase_matcher_attr is not None:
-                self.phrase_matcher = PhraseMatcher(
-                    self.nlp.vocab, attr=self.phrase_matcher_attr
-                )
+            self.phrase_matcher = PhraseMatcher(
+                self.nlp.vocab, attr=self.phrase_matcher_attr
+            )
             from_disk(path, deserializers_patterns, {})
         return self
 
@@ -431,7 +450,7 @@ class EntityRuler(Pipe):
 
         path (str / Path): The JSONL file to save.
 
-        DOCS: https://nightly.spacy.io/api/entityruler#to_disk
+        DOCS: https://spacy.io/api/entityruler#to_disk
         """
         path = ensure_path(path)
         cfg = {

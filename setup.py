@@ -208,12 +208,11 @@ def setup_package():
     ext_modules = cythonize(ext_modules, compiler_directives=COMPILER_DIRECTIVES)
 
     setup(
-        name="spacy-nightly",
+        name="spacy",
         packages=PACKAGES,
         version=about["__version__"],
         ext_modules=ext_modules,
         cmdclass={"build_ext": build_ext_subclass},
-        include_dirs=include_dirs,
         package_data={"": ["*.pyx", "*.pxd", "*.pxi"]},
     )
 

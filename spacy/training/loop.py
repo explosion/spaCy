@@ -1,4 +1,4 @@
-from typing import List, Callable, Tuple, Dict, Iterable, Iterator, Union, Any, IO
+from typing import List, Callable, Tuple, Dict, Iterable, Union, Any, IO
 from typing import Optional, TYPE_CHECKING
 from pathlib import Path
 from timeit import default_timer as timer
@@ -32,7 +32,7 @@ def train(
     """Train a pipeline.
 
     nlp (Language): The initialized nlp object with the full config.
-    output_path (Path): Optional output path to save trained model to.
+    output_path (Optional[Path]): Optional output path to save trained model to.
     use_gpu (int): Whether to train on GPU. Make sure to call require_gpu
         before calling this function.
     stdout (file): A file-like object to write output messages. To disable
@@ -74,11 +74,13 @@ def train(
 
     # Components that shouldn't be updated during training
     frozen_components = T["frozen_components"]
+    # Components that should set annotations on update
+    annotating_components = T["annotating_components"]
     # Create iterator, which yields out info after each optimization step.
     training_step_iterator = train_while_improving(
         nlp,
         optimizer,
-        create_train_batches(train_corpus(nlp), batcher, T["max_epochs"]),
+        create_train_batches(nlp, train_corpus, batcher, T["max_epochs"]),
         create_evaluation_callback(nlp, dev_corpus, score_weights),
         dropout=T["dropout"],
         accumulate_gradient=T["accumulate_gradient"],
@@ -86,21 +88,28 @@ def train(
         max_steps=T["max_steps"],
         eval_frequency=T["eval_frequency"],
         exclude=frozen_components,
+        annotating_components=annotating_components,
     )
     clean_output_dir(output_path)
     stdout.write(msg.info(f"Pipeline: {nlp.pipe_names}") + "\n")
     if frozen_components:
         stdout.write(msg.info(f"Frozen components: {frozen_components}") + "\n")
+    if annotating_components:
+        stdout.write(
+            msg.info(f"Set annotations on update for: {annotating_components}") + "\n"
+        )
     stdout.write(msg.info(f"Initial learn rate: {optimizer.learn_rate}") + "\n")
     with nlp.select_pipes(disable=frozen_components):
         log_step, finalize_logger = train_logger(nlp, stdout, stderr)
     try:
         for batch, info, is_best_checkpoint in training_step_iterator:
-            log_step(info if is_best_checkpoint is not None else None)
-            if is_best_checkpoint is not None and output_path is not None:
+            if is_best_checkpoint is not None:
                 with nlp.select_pipes(disable=frozen_components):
                     update_meta(T, nlp, info)
-                save_checkpoint(is_best_checkpoint)
+                if output_path is not None:
+                    save_checkpoint(is_best_checkpoint)
+                    info["output_path"] = str(output_path / DIR_MODEL_LAST)
+            log_step(info if is_best_checkpoint is not None else None)
     except Exception as e:
         if output_path is not None:
             stdout.write(
@@ -113,7 +122,8 @@ def train(
         raise e
     finally:
         finalize_logger()
-        save_checkpoint(False)
+        if output_path is not None:
+            save_checkpoint(False)
     # This will only run if we did't hit an error
     if optimizer.averages:
         nlp.use_params(optimizer.averages)
@@ -139,6 +149,7 @@ def train_while_improving(
     patience: int,
     max_steps: int,
     exclude: List[str],
+    annotating_components: List[str],
 ):
     """Train until an evaluation stops improving. Works as a generator,
     with each iteration yielding a tuple `(batch, info, is_best_checkpoint)`,
@@ -183,14 +194,19 @@ def train_while_improving(
     else:
         dropouts = dropout
     results = []
-    losses = {}
+    losses: Dict[str, float] = {}
     words_seen = 0
     start_time = timer()
     for step, (epoch, batch) in enumerate(train_data):
-        dropout = next(dropouts)
+        dropout = next(dropouts)  # type: ignore
         for subbatch in subdivide_batch(batch, accumulate_gradient):
             nlp.update(
-                subbatch, drop=dropout, losses=losses, sgd=False, exclude=exclude
+                subbatch,
+                drop=dropout,
+                losses=losses,
+                sgd=False,  # type: ignore[arg-type]
+                exclude=exclude,
+                annotates=annotating_components,
             )
         # TODO: refactor this so we don't have to run it separately in here
         for name, proc in nlp.pipeline:
@@ -198,9 +214,9 @@ def train_while_improving(
                 name not in exclude
                 and hasattr(proc, "is_trainable")
                 and proc.is_trainable
-                and proc.model not in (True, False, None)
+                and proc.model not in (True, False, None)  # type: ignore[attr-defined]
             ):
-                proc.finish_update(optimizer)
+                proc.finish_update(optimizer)  # type: ignore[attr-defined]
         optimizer.step_schedules()
         if not (step % eval_frequency):
             if optimizer.averages:
@@ -228,7 +244,10 @@ def train_while_improving(
         if is_best_checkpoint is not None:
             losses = {}
         # Stop if no improvement in `patience` updates (if specified)
-        best_score, best_step = max(results)
+        # Negate step value so that the earliest best step is chosen for the
+        # same score, i.e. (1.0, 100) is chosen over (1.0, 200)
+        best_result = max((r_score, -r_step) for r_score, r_step in results)
+        best_step = -best_result[1]
         if patience and (step - best_step) >= patience:
             break
         # Stop if we've exhausted our max steps (if specified)
@@ -257,6 +276,7 @@ def create_evaluation_callback(
     weights = {key: value for key, value in weights.items() if value is not None}
 
     def evaluate() -> Tuple[float, Dict[str, float]]:
+        nonlocal weights
         try:
             scores = nlp.evaluate(dev_corpus(nlp))
         except KeyError as e:
@@ -264,6 +284,8 @@ def create_evaluation_callback(
         # Calculate a weighted sum based on score_weights for the main score.
         # We can only consider scores that are ints/floats, not dicts like
         # entity scores per type etc.
+        scores = {key: value for key, value in scores.items() if value is not None}
+        weights = {key: value for key, value in weights.items() if key in scores}
         for key, value in scores.items():
             if key in weights and not isinstance(value, (int, float)):
                 raise ValueError(Errors.E915.format(name=key, score_type=type(value)))
@@ -281,17 +303,22 @@ def create_evaluation_callback(
 
 
 def create_train_batches(
-    iterator: Iterator[Example],
+    nlp: "Language",
+    corpus: Callable[["Language"], Iterable[Example]],
     batcher: Callable[[Iterable[Example]], Iterable[Example]],
     max_epochs: int,
 ):
     epoch = 0
-    examples = list(iterator)
-    if not examples:
-        # Raise error if no data
-        raise ValueError(Errors.E986)
+    if max_epochs >= 0:
+        examples = list(corpus(nlp))  # type: Iterable[Example]
+        if not examples:
+            # Raise error if no data
+            raise ValueError(Errors.E986)
     while max_epochs < 1 or epoch != max_epochs:
-        random.shuffle(examples)
+        if max_epochs >= 0:
+            random.shuffle(examples)  # type: ignore
+        else:
+            examples = corpus(nlp)
         for batch in batcher(examples):
             yield epoch, batch
         epoch += 1
@@ -326,7 +353,7 @@ def create_before_to_disk_callback(
     return before_to_disk
 
 
-def clean_output_dir(path: Union[str, Path]) -> None:
+def clean_output_dir(path: Optional[Path]) -> None:
     """Remove an existing output directory. Typically used to ensure that that
     a directory like model-best and its contents aren't just being overwritten
     by nlp.to_disk, which could preserve existing subdirectories (e.g.

@@ -4,11 +4,13 @@ from spacy.util import get_lang_class
 
 # fmt: off
 # Only include languages with no external dependencies
-# excluded: ja, ru, th, uk, vi, zh
-LANGUAGES = ["af", "ar", "bg", "bn", "ca", "cs", "da", "de", "el", "en", "es",
-             "et", "fa", "fi", "fr", "ga", "he", "hi", "hr", "hu", "id", "is",
-             "it", "kn", "lt", "lv", "nb", "nl", "pl", "pt", "ro", "si", "sk",
-             "sl", "sq", "sr", "sv", "ta", "te", "tl", "tr", "tt", "ur", 'yo']
+# excluded: ja, ko, th, vi, zh
+LANGUAGES = ["af", "am", "ar", "az", "bg", "bn", "ca", "cs", "da", "de", "el",
+             "en", "es", "et", "eu", "fa", "fi", "fr", "ga", "gu", "he", "hi",
+             "hr", "hu", "hy", "id", "is", "it", "kn", "ky", "lb", "lt", "lv",
+             "mk", "ml", "mr", "nb", "ne", "nl", "pl", "pt", "ro", "ru", "sa",
+             "si", "sk", "sl", "sq", "sr", "sv", "ta", "te", "ti", "tl", "tn",
+             "tr", "tt", "uk", "ur", "xx", "yo"]
 # fmt: on
 
 

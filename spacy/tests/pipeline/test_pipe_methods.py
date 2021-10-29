@@ -1,7 +1,9 @@
 import pytest
 from spacy.language import Language
 from spacy.pipeline import TrainablePipe
+from spacy.training import Example
 from spacy.util import SimpleFrozenList, get_arg_names
+from spacy.lang.en import English
 
 
 @pytest.fixture
@@ -50,7 +52,7 @@ def test_cant_add_pipe_first_and_last(nlp):
         nlp.add_pipe("new_pipe", first=True, last=True)
 
 
-@pytest.mark.parametrize("name", ["my_component"])
+@pytest.mark.parametrize("name", ["test_get_pipe"])
 def test_get_pipe(nlp, name):
     with pytest.raises(KeyError):
         nlp.get_pipe(name)
@@ -60,7 +62,7 @@ def test_get_pipe(nlp, name):
 
 @pytest.mark.parametrize(
     "name,replacement,invalid_replacement",
-    [("my_component", "other_pipe", lambda doc: doc)],
+    [("test_replace_pipe", "other_pipe", lambda doc: doc)],
 )
 def test_replace_pipe(nlp, name, replacement, invalid_replacement):
     with pytest.raises(ValueError):
@@ -83,9 +85,9 @@ def test_replace_last_pipe(nlp):
 def test_replace_pipe_config(nlp):
     nlp.add_pipe("entity_linker")
     nlp.add_pipe("sentencizer")
-    assert nlp.get_pipe("entity_linker").cfg["incl_prior"] is True
+    assert nlp.get_pipe("entity_linker").incl_prior is True
     nlp.replace_pipe("entity_linker", "entity_linker", config={"incl_prior": False})
-    assert nlp.get_pipe("entity_linker").cfg["incl_prior"] is False
+    assert nlp.get_pipe("entity_linker").incl_prior is False
 
 
 @pytest.mark.parametrize("old_name,new_name", [("old_pipe", "new_pipe")])
@@ -417,3 +419,46 @@ def test_pipe_methods_initialize():
     assert "test" in nlp.config["initialize"]["components"]
     nlp.remove_pipe("test")
     assert "test" not in nlp.config["initialize"]["components"]
+
+
+def test_update_with_annotates():
+    name = "test_with_annotates"
+    results = {}
+
+    def make_component(name):
+        results[name] = ""
+
+        def component(doc):
+            nonlocal results
+            results[name] += doc.text
+            return doc
+
+        return component
+
+    Language.component(f"{name}1", func=make_component(f"{name}1"))
+    Language.component(f"{name}2", func=make_component(f"{name}2"))
+
+    components = set([f"{name}1", f"{name}2"])
+
+    nlp = English()
+    texts = ["a", "bb", "ccc"]
+    examples = []
+    for text in texts:
+        examples.append(Example(nlp.make_doc(text), nlp.make_doc(text)))
+
+    for components_to_annotate in [
+        [],
+        [f"{name}1"],
+        [f"{name}1", f"{name}2"],
+        [f"{name}2", f"{name}1"],
+    ]:
+        for key in results:
+            results[key] = ""
+        nlp = English(vocab=nlp.vocab)
+        nlp.add_pipe(f"{name}1")
+        nlp.add_pipe(f"{name}2")
+        nlp.update(examples, annotates=components_to_annotate)
+        for component in components_to_annotate:
+            assert results[component] == "".join(eg.predicted.text for eg in examples)
+        for component in components - set(components_to_annotate):
+            assert results[component] == ""

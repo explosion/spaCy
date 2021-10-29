@@ -32,7 +32,7 @@ class AttributeRuler(Pipe):
     """Set token-level attributes for tokens matched by Matcher patterns.
     Additionally supports importing patterns from tag maps and morph rules.
 
-    DOCS: https://nightly.spacy.io/api/attributeruler
+    DOCS: https://spacy.io/api/attributeruler
     """
 
     def __init__(
@@ -48,15 +48,15 @@ class AttributeRuler(Pipe):
 
         RETURNS (AttributeRuler): The AttributeRuler component.
 
-        DOCS: https://nightly.spacy.io/api/attributeruler#init
+        DOCS: https://spacy.io/api/attributeruler#init
         """
         self.name = name
         self.vocab = vocab
         self.matcher = Matcher(self.vocab, validate=validate)
         self.validate = validate
-        self.attrs = []
-        self._attrs_unnormed = []  # store for reference
-        self.indices = []
+        self.attrs: List[Dict] = []
+        self._attrs_unnormed: List[Dict] = []  # store for reference
+        self.indices: List[int] = []
 
     def clear(self) -> None:
         """Reset all patterns."""
@@ -94,14 +94,27 @@ class AttributeRuler(Pipe):
         doc (Doc): The document to process.
         RETURNS (Doc): The processed Doc.
 
-        DOCS: https://nightly.spacy.io/api/attributeruler#call
+        DOCS: https://spacy.io/api/attributeruler#call
         """
-        matches = self.matcher(doc, allow_missing=True)
-        # Sort by the attribute ID, so that later rules have precendence
+        error_handler = self.get_error_handler()
+        try:
+            matches = self.match(doc)
+            self.set_annotations(doc, matches)
+            return doc
+        except Exception as e:
+            return error_handler(self.name, self, [doc], e)
+
+    def match(self, doc: Doc):
+        matches = self.matcher(doc, allow_missing=True, as_spans=False)
+        # Sort by the attribute ID, so that later rules have precedence
         matches = [
-            (int(self.vocab.strings[m_id]), m_id, s, e) for m_id, s, e in matches
+            (int(self.vocab.strings[m_id]), m_id, s, e) for m_id, s, e in matches  # type: ignore
         ]
         matches.sort()
+        return matches
+
+    def set_annotations(self, doc, matches):
+        """Modify the document in place"""
         for attr_id, match_id, start, end in matches:
             span = Span(doc, start, end, label=match_id)
             attrs = self.attrs[attr_id]
@@ -121,7 +134,6 @@ class AttributeRuler(Pipe):
                     )
                 ) from None
             set_token_attrs(span[index], attrs)
-        return doc
 
     def load_from_tag_map(
         self, tag_map: Dict[str, Dict[Union[int, str], Union[int, str]]]
@@ -131,7 +143,7 @@ class AttributeRuler(Pipe):
         tag_map (dict): The tag map that maps fine-grained tags to
             coarse-grained tags and morphological features.
 
-        DOCS: https://nightly.spacy.io/api/attributeruler#load_from_morph_rules
+        DOCS: https://spacy.io/api/attributeruler#load_from_morph_rules
         """
         for tag, attrs in tag_map.items():
             pattern = [{"TAG": tag}]
@@ -142,7 +154,7 @@ class AttributeRuler(Pipe):
             else:
                 morph = self.vocab.morphology.add(attrs["MORPH"])
                 attrs["MORPH"] = self.vocab.strings[morph]
-            self.add([pattern], attrs)
+            self.add([pattern], attrs)  # type: ignore[list-item]
 
     def load_from_morph_rules(
         self, morph_rules: Dict[str, Dict[str, Dict[Union[int, str], Union[int, str]]]]
@@ -153,7 +165,7 @@ class AttributeRuler(Pipe):
             fine-grained tags to coarse-grained tags, lemmas and morphological
             features.
 
-        DOCS: https://nightly.spacy.io/api/attributeruler#load_from_morph_rules
+        DOCS: https://spacy.io/api/attributeruler#load_from_morph_rules
         """
         for tag in morph_rules:
             for word in morph_rules[tag]:
@@ -166,7 +178,7 @@ class AttributeRuler(Pipe):
                 elif morph_attrs:
                     morph = self.vocab.morphology.add(morph_attrs)
                     attrs["MORPH"] = self.vocab.strings[morph]
-                self.add([pattern], attrs)
+                self.add([pattern], attrs)  # type: ignore[list-item]
 
     def add(
         self, patterns: Iterable[MatcherPatternType], attrs: Dict, index: int = 0
@@ -181,12 +193,12 @@ class AttributeRuler(Pipe):
         index (int): The index of the token in the matched span to modify. May
             be negative to index from the end of the span. Defaults to 0.
 
-        DOCS: https://nightly.spacy.io/api/attributeruler#add
+        DOCS: https://spacy.io/api/attributeruler#add
         """
         # We need to make a string here, because otherwise the ID we pass back
         # will be interpreted as the hash of a string, rather than an ordinal.
         key = str(len(self.attrs))
-        self.matcher.add(self.vocab.strings.add(key), patterns)
+        self.matcher.add(self.vocab.strings.add(key), patterns)  # type: ignore[arg-type]
         self._attrs_unnormed.append(attrs)
         attrs = normalize_token_attrs(self.vocab, attrs)
         self.attrs.append(attrs)
@@ -199,10 +211,10 @@ class AttributeRuler(Pipe):
             as the arguments to AttributeRuler.add (patterns/attrs/index) to
             add as patterns.
 
-        DOCS: https://nightly.spacy.io/api/attributeruler#add_patterns
+        DOCS: https://spacy.io/api/attributeruler#add_patterns
         """
         for p in patterns:
-            self.add(**p)
+            self.add(**p)  # type: ignore[arg-type]
 
     @property
     def patterns(self) -> List[AttributeRulerPatternType]:
@@ -211,10 +223,10 @@ class AttributeRuler(Pipe):
         for i in range(len(self.attrs)):
             p = {}
             p["patterns"] = self.matcher.get(str(i))[1]
-            p["attrs"] = self._attrs_unnormed[i]
-            p["index"] = self.indices[i]
+            p["attrs"] = self._attrs_unnormed[i]  # type: ignore
+            p["index"] = self.indices[i]  # type: ignore
             all_patterns.append(p)
-        return all_patterns
+        return all_patterns  # type: ignore[return-value]
 
     def score(self, examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
         """Score a batch of examples.
@@ -224,7 +236,7 @@ class AttributeRuler(Pipe):
             Scorer.score_token_attr for the attributes "tag", "pos", "morph"
             and "lemma" for the target token attributes.
 
-        DOCS: https://nightly.spacy.io/api/tagger#score
+        DOCS: https://spacy.io/api/tagger#score
         """
 
         def morph_key_getter(token, attr):
@@ -232,7 +244,7 @@ class AttributeRuler(Pipe):
 
         validate_examples(examples, "AttributeRuler.score")
         results = {}
-        attrs = set()
+        attrs = set()  # type: ignore
         for token_attrs in self.attrs:
             attrs.update(token_attrs)
         for attr in attrs:
@@ -261,10 +273,10 @@ class AttributeRuler(Pipe):
         exclude (Iterable[str]): String names of serialization fields to exclude.
         RETURNS (bytes): The serialized object.
 
-        DOCS: https://nightly.spacy.io/api/attributeruler#to_bytes
+        DOCS: https://spacy.io/api/attributeruler#to_bytes
         """
         serialize = {}
-        serialize["vocab"] = self.vocab.to_bytes
+        serialize["vocab"] = lambda: self.vocab.to_bytes(exclude=exclude)
         serialize["patterns"] = lambda: srsly.msgpack_dumps(self.patterns)
         return util.to_bytes(serialize, exclude)
 
@@ -277,14 +289,14 @@ class AttributeRuler(Pipe):
         exclude (Iterable[str]): String names of serialization fields to exclude.
         returns (AttributeRuler): The loaded object.
 
-        DOCS: https://nightly.spacy.io/api/attributeruler#from_bytes
+        DOCS: https://spacy.io/api/attributeruler#from_bytes
         """
 
         def load_patterns(b):
             self.add_patterns(srsly.msgpack_loads(b))
 
         deserialize = {
-            "vocab": lambda b: self.vocab.from_bytes(b),
+            "vocab": lambda b: self.vocab.from_bytes(b, exclude=exclude),
             "patterns": load_patterns,
         }
         util.from_bytes(bytes_data, deserialize, exclude)
@@ -298,10 +310,10 @@ class AttributeRuler(Pipe):
         path (Union[Path, str]): A path to a directory.
         exclude (Iterable[str]): String names of serialization fields to exclude.
 
-        DOCS: https://nightly.spacy.io/api/attributeruler#to_disk
+        DOCS: https://spacy.io/api/attributeruler#to_disk
         """
         serialize = {
-            "vocab": lambda p: self.vocab.to_disk(p),
+            "vocab": lambda p: self.vocab.to_disk(p, exclude=exclude),
             "patterns": lambda p: srsly.write_msgpack(p, self.patterns),
         }
         util.to_disk(path, serialize, exclude)
@@ -315,14 +327,14 @@ class AttributeRuler(Pipe):
         exclude (Iterable[str]): String names of serialization fields to exclude.
         RETURNS (AttributeRuler): The loaded object.
 
-        DOCS: https://nightly.spacy.io/api/attributeruler#from_disk
+        DOCS: https://spacy.io/api/attributeruler#from_disk
         """
 
         def load_patterns(p):
             self.add_patterns(srsly.read_msgpack(p))
 
         deserialize = {
-            "vocab": lambda p: self.vocab.from_disk(p),
+            "vocab": lambda p: self.vocab.from_disk(p, exclude=exclude),
             "patterns": load_patterns,
         }
         util.from_disk(path, deserialize, exclude)

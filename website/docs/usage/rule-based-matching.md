@@ -63,7 +63,7 @@ another token that's at least 10 characters long.
 
 spaCy features a rule-matching engine, the [`Matcher`](/api/matcher), that
 operates over tokens, similar to regular expressions. The rules can refer to
-token annotations (e.g. the token `text` or `tag_`, and flags (e.g. `IS_PUNCT`).
+token annotations (e.g. the token `text` or `tag_`, and flags like `IS_PUNCT`).
 The rule matcher also lets you pass in a custom callback to act on matches – for
 example, to merge entities and apply custom labels. You can also associate
 patterns with entity IDs, to allow some basic entity linking or disambiguation.
@@ -232,15 +232,22 @@ following rich comparison attributes are available:
 >
 > # Matches tokens of length >= 10
 > pattern2 = [{"LENGTH": {">=": 10}}]
+>
+> # Match based on morph attributes
+> pattern3 = [{"MORPH": {"IS_SUBSET": ["Number=Sing", "Gender=Neut"]}}]
+> # "", "Number=Sing" and "Number=Sing|Gender=Neut" will match as subsets
+> # "Number=Plur|Gender=Neut" will not match
+> # "Number=Sing|Gender=Neut|Polite=Infm" will not match because it's a superset
 > ```
 
-| Attribute                  | Description                                                                                             |
-| -------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `IN`                       | Attribute value is member of a list. ~~Any~~                                                            |
-| `NOT_IN`                   | Attribute value is _not_ member of a list. ~~Any~~                                                      |
-| `ISSUBSET`                 | Attribute values (for `MORPH`) are a subset of a list. ~~Any~~                                          |
-| `ISSUPERSET`               | Attribute values (for `MORPH`) are a superset of a list. ~~Any~~                                        |
-| `==`, `>=`, `<=`, `>`, `<` | Attribute value is equal, greater or equal, smaller or equal, greater or smaller. ~~Union[int, float]~~ |
+| Attribute                  | Description                                                                                               |
+| -------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `IN`                       | Attribute value is member of a list. ~~Any~~                                                              |
+| `NOT_IN`                   | Attribute value is _not_ member of a list. ~~Any~~                                                        |
+| `IS_SUBSET`                | Attribute value (for `MORPH` or custom list attributes) is a subset of a list. ~~Any~~                    |
+| `IS_SUPERSET`              | Attribute value (for `MORPH` or custom list attributes) is a superset of a list. ~~Any~~                  |
+| `INTERSECTS`               | Attribute value (for `MORPH` or custom list attributes) has a non-empty intersection with a list. ~~Any~~ |
+| `==`, `>=`, `<=`, `>`, `<` | Attribute value is equal, greater or equal, smaller or equal, greater or smaller. ~~Union[int, float]~~   |
 
 #### Regular expressions {#regex new="2.1"}
 
@@ -422,7 +429,7 @@ matcher.add("HelloWorld", [pattern])
 # 🚨 Raises an error:
 # MatchPatternError: Invalid token patterns for matcher rule 'HelloWorld'
 # Pattern 0:
-# - Additional properties are not allowed ('CASEINSENSITIVE' was unexpected) [2]
+# - [pattern -> 2 -> CASEINSENSITIVE] extra fields not permitted
 
 ```
 
@@ -431,7 +438,8 @@ matcher.add("HelloWorld", [pattern])
 To move on to a more realistic example, let's say you're working with a large
 corpus of blog articles, and you want to match all mentions of "Google I/O"
 (which spaCy tokenizes as `['Google', 'I', '/', 'O'`]). To be safe, you only
-match on the uppercase versions, in case someone has written it as "Google i/o".
+match on the uppercase versions, avoiding matches with phrases such as "Google
+i/o".
 
 ```python
 ### {executable="true"}
@@ -1552,7 +1560,7 @@ doc = nlp("Dr. Alex Smith chaired first board meeting of Acme Corp Inc.")
 print([(ent.text, ent.label_) for ent in doc.ents])
 ```
 
-An alternative approach would be to an
+An alternative approach would be to use an
 [extension attribute](/usage/processing-pipelines/#custom-components-attributes)
 like `._.person_title` and add it to `Span` objects (which includes entity spans
 in `doc.ents`). The advantage here is that the entity text stays intact and can

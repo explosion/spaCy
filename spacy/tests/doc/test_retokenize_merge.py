@@ -108,9 +108,12 @@ def test_doc_retokenize_spans_merge_tokens_default_attrs(en_vocab):
     words = ["The", "players", "start", "."]
     lemmas = [t.lower() for t in words]
     heads = [1, 2, 2, 2]
+    deps = ["dep"] * len(heads)
     tags = ["DT", "NN", "VBZ", "."]
     pos = ["DET", "NOUN", "VERB", "PUNCT"]
-    doc = Doc(en_vocab, words=words, tags=tags, pos=pos, heads=heads, lemmas=lemmas)
+    doc = Doc(
+        en_vocab, words=words, tags=tags, pos=pos, heads=heads, deps=deps, lemmas=lemmas
+    )
     assert len(doc) == 4
     assert doc[0].text == "The"
     assert doc[0].tag_ == "DT"
@@ -123,7 +126,9 @@ def test_doc_retokenize_spans_merge_tokens_default_attrs(en_vocab):
     assert doc[0].tag_ == "NN"
     assert doc[0].pos_ == "NOUN"
     assert doc[0].lemma_ == "the players"
-    doc = Doc(en_vocab, words=words, tags=tags, pos=pos, heads=heads, lemmas=lemmas)
+    doc = Doc(
+        en_vocab, words=words, tags=tags, pos=pos, heads=heads, deps=deps, lemmas=lemmas
+    )
     assert len(doc) == 4
     assert doc[0].text == "The"
     assert doc[0].tag_ == "DT"
@@ -190,8 +195,9 @@ def test_doc_retokenize_span_np_merges(en_tokenizer):
 
     text = "displaCy is a lightweight and modern dependency parse tree visualization tool built with CSS3 and JavaScript."
     heads = [1, 1, 10, 7, 3, 3, 7, 10, 9, 10, 1, 10, 11, 12, 13, 13, 1]
+    deps = ["dep"] * len(heads)
     tokens = en_tokenizer(text)
-    doc = Doc(tokens.vocab, words=[t.text for t in tokens], heads=heads)
+    doc = Doc(tokens.vocab, words=[t.text for t in tokens], heads=heads, deps=deps)
     with doc.retokenize() as retokenizer:
         for ent in doc.ents:
             attrs = {"tag": ent.label_, "lemma": ent.lemma_, "ent_type": ent.label_}
@@ -199,8 +205,9 @@ def test_doc_retokenize_span_np_merges(en_tokenizer):
 
     text = "One test with entities like New York City so the ents list is not void"
     heads = [1, 1, 1, 2, 3, 6, 7, 4, 12, 11, 11, 12, 1, 12, 12]
+    deps = ["dep"] * len(heads)
     tokens = en_tokenizer(text)
-    doc = Doc(tokens.vocab, words=[t.text for t in tokens], heads=heads)
+    doc = Doc(tokens.vocab, words=[t.text for t in tokens], heads=heads, deps=deps)
     with doc.retokenize() as retokenizer:
         for ent in doc.ents:
             retokenizer.merge(ent)
@@ -210,6 +217,7 @@ def test_doc_retokenize_spans_entity_merge(en_tokenizer):
     # fmt: off
     text = "Stewart Lee is a stand up comedian who lives in England and loves Joe Pasquale.\n"
     heads = [1, 2, 2, 4, 6, 4, 2, 8, 6, 8, 9, 8, 8, 14, 12, 2, 15]
+    deps = ["dep"] * len(heads)
     tags = ["NNP", "NNP", "VBZ", "DT", "VB", "RP", "NN", "WP", "VBZ", "IN", "NNP", "CC", "VBZ", "NNP", "NNP", ".", "SP"]
     ents = [("PERSON", 0, 2), ("GPE", 10, 11), ("PERSON", 13, 15)]
     ents = ["O"] * len(heads)
@@ -221,7 +229,12 @@ def test_doc_retokenize_spans_entity_merge(en_tokenizer):
     # fmt: on
     tokens = en_tokenizer(text)
     doc = Doc(
-        tokens.vocab, words=[t.text for t in tokens], heads=heads, tags=tags, ents=ents
+        tokens.vocab,
+        words=[t.text for t in tokens],
+        heads=heads,
+        deps=deps,
+        tags=tags,
+        ents=ents,
     )
     assert len(doc) == 17
     with doc.retokenize() as retokenizer:
@@ -452,3 +465,30 @@ def test_retokenize_disallow_zero_length(en_vocab):
     with pytest.raises(ValueError):
         with doc.retokenize() as retokenizer:
             retokenizer.merge(doc[1:1])
+
+
+def test_doc_retokenize_merge_without_parse_keeps_sents(en_tokenizer):
+    text = "displaCy is a parse tool built with Javascript"
+    sent_starts = [1, 0, 0, 0, 1, 0, 0, 0]
+    tokens = en_tokenizer(text)
+
+    # merging within a sentence keeps all sentence boundaries
+    doc = Doc(tokens.vocab, words=[t.text for t in tokens], sent_starts=sent_starts)
+    assert len(list(doc.sents)) == 2
+    with doc.retokenize() as retokenizer:
+        retokenizer.merge(doc[1:3])
+    assert len(list(doc.sents)) == 2
+
+    # merging over a sentence boundary unsets it by default
+    doc = Doc(tokens.vocab, words=[t.text for t in tokens], sent_starts=sent_starts)
+    assert len(list(doc.sents)) == 2
+    with doc.retokenize() as retokenizer:
+        retokenizer.merge(doc[3:6])
+    assert doc[3].is_sent_start is None
+
+    # merging over a sentence boundary and setting sent_start
+    doc = Doc(tokens.vocab, words=[t.text for t in tokens], sent_starts=sent_starts)
+    assert len(list(doc.sents)) == 2
+    with doc.retokenize() as retokenizer:
+        retokenizer.merge(doc[3:6], attrs={"sent_start": True})
+    assert len(list(doc.sents)) == 2

@@ -1,4 +1,5 @@
-from typing import List, Sequence, Dict, Any, Tuple, Optional
+from typing import Any, Dict, Iterable, List, Optional, Sequence, Set, Tuple, Union
+from typing import cast, overload
 from pathlib import Path
 from collections import Counter
 import sys
@@ -13,8 +14,11 @@ from ..training.initialize import get_sourced_components
 from ..schemas import ConfigSchemaTraining
 from ..pipeline._parser_internals import nonproj
 from ..pipeline._parser_internals.nonproj import DELIMITER
+from ..pipeline import Morphologizer
+from ..morphology import Morphology
 from ..language import Language
 from ..util import registry, resolve_dot_names
+from ..compat import Literal
 from .. import util
 
 
@@ -39,7 +43,7 @@ def debug_data_cli(
     # fmt: off
     ctx: typer.Context,  # This is only used to read additional arguments
     config_path: Path = Arg(..., help="Path to config file", exists=True, allow_dash=True),
-    code_path: Optional[Path] = Opt(None, "--code-path", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
+    code_path: Optional[Path] = Opt(None, "--code-path", "--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
     ignore_warnings: bool = Opt(False, "--ignore-warnings", "-IW", help="Ignore warnings, only show stats and errors"),
     verbose: bool = Opt(False, "--verbose", "-V", help="Print additional information and explanations"),
     no_format: bool = Opt(False, "--no-format", "-NF", help="Don't pretty-print the results"),
@@ -50,7 +54,7 @@ def debug_data_cli(
     useful stats, and can help you find problems like invalid entity annotations,
     cyclic dependencies, low data labels and more.
 
-    DOCS: https://nightly.spacy.io/api/cli#debug-data
+    DOCS: https://spacy.io/api/cli#debug-data
     """
     if ctx.command.name == "debug-data":
         msg.warn(
@@ -99,12 +103,13 @@ def debug_data(
     # Create the gold corpus to be able to better analyze data
     dot_names = [T["train_corpus"], T["dev_corpus"]]
     train_corpus, dev_corpus = resolve_dot_names(config, dot_names)
+
+    nlp.initialize(lambda: train_corpus(nlp))
+    msg.good("Pipeline can be initialized with data")
+
     train_dataset = list(train_corpus(nlp))
     dev_dataset = list(dev_corpus(nlp))
     msg.good("Corpus is loadable")
-
-    nlp.initialize(lambda: train_dataset)
-    msg.good("Pipeline can be initialized with data")
 
     # Create all gold data here to avoid iterating over the train_dataset constantly
     gold_train_data = _compile_gold(train_dataset, factory_names, nlp, make_proj=True)
@@ -171,8 +176,9 @@ def debug_data(
         )
         n_missing_vectors = sum(gold_train_data["words_missing_vectors"].values())
         msg.warn(
-            "{} words in training data without vectors ({:0.2f}%)".format(
-                n_missing_vectors, n_missing_vectors / gold_train_data["n_words"]
+            "{} words in training data without vectors ({:.0f}%)".format(
+                n_missing_vectors,
+                100 * (n_missing_vectors / gold_train_data["n_words"]),
             ),
         )
         msg.text(
@@ -194,44 +200,39 @@ def debug_data(
         )
         label_counts = gold_train_data["ner"]
         model_labels = _get_labels_from_model(nlp, "ner")
-        new_labels = [l for l in labels if l not in model_labels]
-        existing_labels = [l for l in labels if l in model_labels]
         has_low_data_warning = False
         has_no_neg_warning = False
         has_ws_ents_error = False
-        has_punct_ents_warning = False
 
         msg.divider("Named Entity Recognition")
-        msg.info(
-            f"{len(new_labels)} new label(s), {len(existing_labels)} existing label(s)"
-        )
+        msg.info(f"{len(model_labels)} label(s)")
         missing_values = label_counts["-"]
         msg.text(f"{missing_values} missing value(s) (tokens with '-' label)")
-        for label in new_labels:
+        for label in labels:
             if len(label) == 0:
-                msg.fail("Empty label found in new labels")
-        if new_labels:
-            labels_with_counts = [
-                (label, count)
-                for label, count in label_counts.most_common()
-                if label != "-"
-            ]
-            labels_with_counts = _format_labels(labels_with_counts, counts=True)
-            msg.text(f"New: {labels_with_counts}", show=verbose)
-        if existing_labels:
-            msg.text(f"Existing: {_format_labels(existing_labels)}", show=verbose)
+                msg.fail("Empty label found in train data")
+        labels_with_counts = [
+            (label, count)
+            for label, count in label_counts.most_common()
+            if label != "-"
+        ]
+        labels_with_counts = _format_labels(labels_with_counts, counts=True)
+        msg.text(f"Labels in train data: {_format_labels(labels)}", show=verbose)
+        missing_labels = model_labels - labels
+        if missing_labels:
+            msg.warn(
+                "Some model labels are not present in the train data. The "
+                "model performance may be degraded for these labels after "
+                f"training: {_format_labels(missing_labels)}."
+            )
         if gold_train_data["ws_ents"]:
             msg.fail(f"{gold_train_data['ws_ents']} invalid whitespace entity spans")
             has_ws_ents_error = True
 
-        if gold_train_data["punct_ents"]:
-            msg.warn(f"{gold_train_data['punct_ents']} entity span(s) with punctuation")
-            has_punct_ents_warning = True
-
-        for label in new_labels:
+        for label in labels:
             if label_counts[label] <= NEW_LABEL_THRESHOLD:
                 msg.warn(
-                    f"Low number of examples for new label '{label}' ({label_counts[label]})"
+                    f"Low number of examples for label '{label}' ({label_counts[label]})"
                 )
                 has_low_data_warning = True
 
@@ -247,8 +248,6 @@ def debug_data(
             msg.good("Examples without occurrences available for all labels")
         if not has_ws_ents_error:
             msg.good("No entities consisting of or starting/ending with whitespace")
-        if not has_punct_ents_warning:
-            msg.good("No entities consisting of or starting/ending with punctuation")
 
         if has_low_data_warning:
             msg.text(
@@ -265,55 +264,99 @@ def debug_data(
             )
         if has_ws_ents_error:
             msg.text(
-                "As of spaCy v2.1.0, entity spans consisting of or starting/ending "
+                "Entity spans consisting of or starting/ending "
                 "with whitespace characters are considered invalid."
             )
 
-        if has_punct_ents_warning:
-            msg.text(
-                "Entity spans consisting of or starting/ending "
-                "with punctuation can not be trained with a noise level > 0."
-            )
-
     if "textcat" in factory_names:
-        msg.divider("Text Classification")
-        labels = [label for label in gold_train_data["cats"]]
-        model_labels = _get_labels_from_model(nlp, "textcat")
-        new_labels = [l for l in labels if l not in model_labels]
-        existing_labels = [l for l in labels if l in model_labels]
-        msg.info(
-            f"Text Classification: {len(new_labels)} new label(s), "
-            f"{len(existing_labels)} existing label(s)"
-        )
-        if new_labels:
-            labels_with_counts = _format_labels(
-                gold_train_data["cats"].most_common(), counts=True
+        msg.divider("Text Classification (Exclusive Classes)")
+        labels = _get_labels_from_model(nlp, "textcat")
+        msg.info(f"Text Classification: {len(labels)} label(s)")
+        msg.text(f"Labels: {_format_labels(labels)}", show=verbose)
+        missing_labels = labels - set(gold_train_data["cats"])
+        if missing_labels:
+            msg.warn(
+                "Some model labels are not present in the train data. The "
+                "model performance may be degraded for these labels after "
+                f"training: {_format_labels(missing_labels)}."
             )
-            msg.text(f"New: {labels_with_counts}", show=verbose)
-        if existing_labels:
-            msg.text(f"Existing: {_format_labels(existing_labels)}", show=verbose)
         if set(gold_train_data["cats"]) != set(gold_dev_data["cats"]):
-            msg.fail(
-                f"The train and dev labels are not the same. "
+            msg.warn(
+                "Potential train/dev mismatch: the train and dev labels are "
+                "not the same. "
                 f"Train labels: {_format_labels(gold_train_data['cats'])}. "
                 f"Dev labels: {_format_labels(gold_dev_data['cats'])}."
             )
-        if gold_train_data["n_cats_multilabel"] > 0:
-            msg.info(
-                "The train data contains instances without "
-                "mutually-exclusive classes. Use '--textcat-multilabel' "
-                "when training."
+        if len(labels) < 2:
+            msg.fail(
+                "The model does not have enough labels. 'textcat' requires at "
+                "least two labels due to mutually-exclusive classes, e.g. "
+                "LABEL/NOT_LABEL or POSITIVE/NEGATIVE for a binary "
+                "classification task."
             )
+        if (
+            gold_train_data["n_cats_bad_values"] > 0
+            or gold_dev_data["n_cats_bad_values"] > 0
+        ):
+            msg.fail(
+                "Unsupported values for cats: the supported values are "
+                "1.0/True and 0.0/False."
+            )
+        if gold_train_data["n_cats_multilabel"] > 0:
+            # Note: you should never get here because you run into E895 on
+            # initialization first.
+            msg.fail(
+                "The train data contains instances without mutually-exclusive "
+                "classes. Use the component 'textcat_multilabel' instead of "
+                "'textcat'."
+            )
+        if gold_dev_data["n_cats_multilabel"] > 0:
+            msg.fail(
+                "The dev data contains instances without mutually-exclusive "
+                "classes. Use the component 'textcat_multilabel' instead of "
+                "'textcat'."
+            )
+
+    if "textcat_multilabel" in factory_names:
+        msg.divider("Text Classification (Multilabel)")
+        labels = _get_labels_from_model(nlp, "textcat_multilabel")
+        msg.info(f"Text Classification: {len(labels)} label(s)")
+        msg.text(f"Labels: {_format_labels(labels)}", show=verbose)
+        missing_labels = labels - set(gold_train_data["cats"])
+        if missing_labels:
+            msg.warn(
+                "Some model labels are not present in the train data. The "
+                "model performance may be degraded for these labels after "
+                f"training: {_format_labels(missing_labels)}."
+            )
+        if set(gold_train_data["cats"]) != set(gold_dev_data["cats"]):
+            msg.warn(
+                "Potential train/dev mismatch: the train and dev labels are "
+                "not the same. "
+                f"Train labels: {_format_labels(gold_train_data['cats'])}. "
+                f"Dev labels: {_format_labels(gold_dev_data['cats'])}."
+            )
+        if (
+            gold_train_data["n_cats_bad_values"] > 0
+            or gold_dev_data["n_cats_bad_values"] > 0
+        ):
+            msg.fail(
+                "Unsupported values for cats: the supported values are "
+                "1.0/True and 0.0/False."
+            )
+        if gold_train_data["n_cats_multilabel"] > 0:
             if gold_dev_data["n_cats_multilabel"] == 0:
                 msg.warn(
                     "Potential train/dev mismatch: the train data contains "
                     "instances without mutually-exclusive classes while the "
-                    "dev data does not."
+                    "dev data contains only instances with mutually-exclusive "
+                    "classes."
                 )
         else:
-            msg.info(
+            msg.warn(
                 "The train data contains only instances with "
-                "mutually-exclusive classes."
+                "mutually-exclusive classes. You can potentially use the "
+                "component 'textcat' instead of 'textcat_multilabel'."
             )
             if gold_dev_data["n_cats_multilabel"] > 0:
                 msg.fail(
@@ -324,11 +367,37 @@ def debug_data(
 
     if "tagger" in factory_names:
         msg.divider("Part-of-speech Tagging")
-        labels = [label for label in gold_train_data["tags"]]
-        # TODO: does this need to be updated?
-        msg.info(f"{len(labels)} label(s) in data")
+        label_list = [label for label in gold_train_data["tags"]]
+        model_labels = _get_labels_from_model(nlp, "tagger")
+        msg.info(f"{len(label_list)} label(s) in train data")
+        labels = set(label_list)
+        missing_labels = model_labels - labels
+        if missing_labels:
+            msg.warn(
+                "Some model labels are not present in the train data. The "
+                "model performance may be degraded for these labels after "
+                f"training: {_format_labels(missing_labels)}."
+            )
         labels_with_counts = _format_labels(
             gold_train_data["tags"].most_common(), counts=True
+        )
+        msg.text(labels_with_counts, show=verbose)
+
+    if "morphologizer" in factory_names:
+        msg.divider("Morphologizer (POS+Morph)")
+        label_list = [label for label in gold_train_data["morphs"]]
+        model_labels = _get_labels_from_model(nlp, "morphologizer")
+        msg.info(f"{len(label_list)} label(s) in train data")
+        labels = set(label_list)
+        missing_labels = model_labels - labels
+        if missing_labels:
+            msg.warn(
+                "Some model labels are not present in the train data. The "
+                "model performance may be degraded for these labels after "
+                f"training: {_format_labels(missing_labels)}."
+            )
+        labels_with_counts = _format_labels(
+            gold_train_data["morphs"].most_common(), counts=True
         )
         msg.text(labels_with_counts, show=verbose)
 
@@ -487,15 +556,15 @@ def _compile_gold(
     nlp: Language,
     make_proj: bool,
 ) -> Dict[str, Any]:
-    data = {
+    data: Dict[str, Any] = {
         "ner": Counter(),
         "cats": Counter(),
         "tags": Counter(),
+        "morphs": Counter(),
         "deps": Counter(),
         "words": Counter(),
         "roots": Counter(),
         "ws_ents": 0,
-        "punct_ents": 0,
         "n_words": 0,
         "n_misaligned_words": 0,
         "words_missing_vectors": Counter(),
@@ -503,6 +572,7 @@ def _compile_gold(
         "n_nonproj": 0,
         "n_cycles": 0,
         "n_cats_multilabel": 0,
+        "n_cats_bad_values": 0,
         "texts": set(),
     }
     for eg in examples:
@@ -529,28 +599,43 @@ def _compile_gold(
                 if label.startswith(("B-", "U-", "L-")) and doc[i].is_space:
                     # "Illegal" whitespace entity
                     data["ws_ents"] += 1
-                if label.startswith(("B-", "U-", "L-")) and doc[i].text in [
-                    ".",
-                    "'",
-                    "!",
-                    "?",
-                    ",",
-                ]:
-                    # punctuation entity: could be replaced by whitespace when training with noise,
-                    # so add a warning to alert the user to this unexpected side effect.
-                    data["punct_ents"] += 1
                 if label.startswith(("B-", "U-")):
                     combined_label = label.split("-")[1]
                     data["ner"][combined_label] += 1
                 elif label == "-":
                     data["ner"]["-"] += 1
-        if "textcat" in factory_names:
+        if "textcat" in factory_names or "textcat_multilabel" in factory_names:
             data["cats"].update(gold.cats)
-            if list(gold.cats.values()).count(1.0) != 1:
+            if any(val not in (0, 1) for val in gold.cats.values()):
+                data["n_cats_bad_values"] += 1
+            if list(gold.cats.values()).count(1) != 1:
                 data["n_cats_multilabel"] += 1
         if "tagger" in factory_names:
             tags = eg.get_aligned("TAG", as_string=True)
             data["tags"].update([x for x in tags if x is not None])
+        if "morphologizer" in factory_names:
+            pos_tags = eg.get_aligned("POS", as_string=True)
+            morphs = eg.get_aligned("MORPH", as_string=True)
+            for pos, morph in zip(pos_tags, morphs):
+                # POS may align (same value for multiple tokens) when morph
+                # doesn't, so if either is misaligned (None), treat the
+                # annotation as missing so that truths doesn't end up with an
+                # unknown morph+POS combination
+                if pos is None or morph is None:
+                    pass
+                # If both are unset, the annotation is missing (empty morph
+                # converted from int is "_" rather than "")
+                elif pos == "" and morph == "":
+                    pass
+                # Otherwise, generate the combined label
+                else:
+                    label_dict = Morphology.feats_to_dict(morph)
+                    if pos:
+                        label_dict[Morphologizer.POS_FEAT] = pos
+                    label = eg.reference.vocab.strings[
+                        eg.reference.vocab.morphology.add(label_dict)
+                    ]
+                    data["morphs"].update([label])
         if "parser" in factory_names:
             aligned_heads, aligned_deps = eg.get_aligned_parse(projectivize=make_proj)
             data["deps"].update([x for x in aligned_deps if x is not None])
@@ -565,10 +650,28 @@ def _compile_gold(
     return data
 
 
-def _format_labels(labels: List[Tuple[str, int]], counts: bool = False) -> str:
+@overload
+def _format_labels(labels: Iterable[str], counts: Literal[False] = False) -> str:
+    ...
+
+
+@overload
+def _format_labels(
+    labels: Iterable[Tuple[str, int]],
+    counts: Literal[True],
+) -> str:
+    ...
+
+
+def _format_labels(
+    labels: Union[Iterable[str], Iterable[Tuple[str, int]]],
+    counts: bool = False,
+) -> str:
     if counts:
-        return ", ".join([f"'{l}' ({c})" for l, c in labels])
-    return ", ".join([f"'{l}'" for l in labels])
+        return ", ".join(
+            [f"'{l}' ({c})" for l, c in cast(Iterable[Tuple[str, int]], labels)]
+        )
+    return ", ".join([f"'{l}'" for l in cast(Iterable[str], labels)])
 
 
 def _get_examples_without_label(data: Sequence[Example], label: str) -> int:
@@ -584,8 +687,8 @@ def _get_examples_without_label(data: Sequence[Example], label: str) -> int:
     return count
 
 
-def _get_labels_from_model(nlp: Language, pipe_name: str) -> Sequence[str]:
+def _get_labels_from_model(nlp: Language, pipe_name: str) -> Set[str]:
     if pipe_name not in nlp.pipe_names:
         return set()
     pipe = nlp.get_pipe(pipe_name)
-    return pipe.labels
+    return set(pipe.labels)

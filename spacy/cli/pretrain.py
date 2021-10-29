@@ -44,7 +44,7 @@ def pretrain_cli(
     all settings are the same between pretraining and training. Ideally,
     this is done by using the same config file for both commands.
 
-    DOCS: https://nightly.spacy.io/api/cli#pretrain
+    DOCS: https://spacy.io/api/cli#pretrain
     """
     config_overrides = parse_config_overrides(ctx.args)
     import_code(code_path)
@@ -95,6 +95,13 @@ def verify_cli_args(config_path, output_dir, resume_path, epoch_resume):
                 "then the new directory will be created for you.",
             )
     if resume_path is not None:
+        if resume_path.is_dir():
+            # This is necessary because Windows gives a Permission Denied when we
+            # try to open the directory later, which is confusing. See #7878
+            msg.fail(
+                "--resume-path should be a weights file, but {resume_path} is a directory.",
+                exits=True,
+            )
         model_name = re.search(r"model\d+\.bin", str(resume_path))
         if not model_name and not epoch_resume:
             msg.fail(

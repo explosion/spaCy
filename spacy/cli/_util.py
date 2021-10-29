@@ -1,8 +1,9 @@
-from typing import Dict, Any, Union, List, Optional, Tuple, Iterable, TYPE_CHECKING
+from typing import Dict, Any, Union, List, Optional, Tuple, Iterable
+from typing import TYPE_CHECKING, overload
 import sys
 import shutil
 from pathlib import Path
-from wasabi import msg
+from wasabi import msg, Printer
 import srsly
 import hashlib
 import typer
@@ -11,17 +12,22 @@ from click.parser import split_arg_string
 from typer.main import get_command
 from contextlib import contextmanager
 from thinc.api import Config, ConfigValidationError, require_gpu
+from thinc.util import has_cupy, gpu_is_available
 from configparser import InterpolationError
 import os
 
+from ..compat import Literal
 from ..schemas import ProjectConfigSchema, validate
 from ..util import import_file, run_command, make_tempdir, registry, logger
-from ..util import is_compatible_version, ENV_VARS
+from ..util import is_compatible_version, SimpleFrozenDict, ENV_VARS
 from .. import about
 
 if TYPE_CHECKING:
     from pathy import Pathy  # noqa: F401
 
+
+SDIST_SUFFIX = ".tar.gz"
+WHEEL_SUFFIX = "-py3-none-any.whl"
 
 PROJECT_FILE = "project.yml"
 PROJECT_LOCK = "project.lock"
@@ -29,7 +35,7 @@ COMMAND = "python -m spacy"
 NAME = "spacy"
 HELP = """spaCy Command-line Interface
 
-DOCS: https://nightly.spacy.io/api/cli
+DOCS: https://spacy.io/api/cli
 """
 PROJECT_HELP = f"""Command-line interface for spaCy projects and templates.
 You'd typically start by cloning a project template to a local directory and
@@ -108,26 +114,33 @@ def _parse_overrides(args: List[str], is_cli: bool = False) -> Dict[str, Any]:
                     value = "true"
                 else:
                     value = args.pop(0)
-            # Just like we do in the config, we're calling json.loads on the
-            # values. But since they come from the CLI, it'd be unintuitive to
-            # explicitly mark strings with escaped quotes. So we're working
-            # around that here by falling back to a string if parsing fails.
-            # TODO: improve logic to handle simple types like list of strings?
-            try:
-                result[opt] = srsly.json_loads(value)
-            except ValueError:
-                result[opt] = str(value)
+            result[opt] = _parse_override(value)
         else:
             msg.fail(f"{err}: name should start with --", exits=1)
     return result
 
 
-def load_project_config(path: Path, interpolate: bool = True) -> Dict[str, Any]:
+def _parse_override(value: Any) -> Any:
+    # Just like we do in the config, we're calling json.loads on the
+    # values. But since they come from the CLI, it'd be unintuitive to
+    # explicitly mark strings with escaped quotes. So we're working
+    # around that here by falling back to a string if parsing fails.
+    # TODO: improve logic to handle simple types like list of strings?
+    try:
+        return srsly.json_loads(value)
+    except ValueError:
+        return str(value)
+
+
+def load_project_config(
+    path: Path, interpolate: bool = True, overrides: Dict[str, Any] = SimpleFrozenDict()
+) -> Dict[str, Any]:
     """Load the project.yml file from a directory and validate it. Also make
     sure that all directories defined in the config exist.
 
     path (Path): The path to the project directory.
     interpolate (bool): Whether to substitute project variables.
+    overrides (Dict[str, Any]): Optional config overrides.
     RETURNS (Dict[str, Any]): The loaded project.yml.
     """
     config_path = path / PROJECT_FILE
@@ -151,20 +164,36 @@ def load_project_config(path: Path, interpolate: bool = True) -> Dict[str, Any]:
         if not dir_path.exists():
             dir_path.mkdir(parents=True)
     if interpolate:
-        err = "project.yml validation error"
+        err = f"{PROJECT_FILE} validation error"
         with show_validation_error(title=err, hint_fill=False):
-            config = substitute_project_variables(config)
+            config = substitute_project_variables(config, overrides)
     return config
 
 
-def substitute_project_variables(config: Dict[str, Any], overrides: Dict = {}):
-    key = "vars"
+def substitute_project_variables(
+    config: Dict[str, Any],
+    overrides: Dict[str, Any] = SimpleFrozenDict(),
+    key: str = "vars",
+    env_key: str = "env",
+) -> Dict[str, Any]:
+    """Interpolate variables in the project file using the config system.
+
+    config (Dict[str, Any]): The project config.
+    overrides (Dict[str, Any]): Optional config overrides.
+    key (str): Key containing variables in project config.
+    env_key (str): Key containing environment variable mapping in project config.
+    RETURNS (Dict[str, Any]): The interpolated project config.
+    """
     config.setdefault(key, {})
-    config[key].update(overrides)
+    config.setdefault(env_key, {})
+    # Substitute references to env vars with their values
+    for config_var, env_var in config[env_key].items():
+        config[env_key][config_var] = _parse_override(os.environ.get(env_var, ""))
     # Need to put variables in the top scope again so we can have a top-level
     # section "project" (otherwise, a list of commands in the top scope wouldn't)
     # be allowed by Thinc's config system
-    cfg = Config({"project": config, key: config[key]})
+    cfg = Config({"project": config, key: config[key], env_key: config[env_key]})
+    cfg = Config().from_str(cfg.to_str(), overrides=overrides)
     interpolated = cfg.interpolate()
     return dict(interpolated["project"])
 
@@ -233,15 +262,16 @@ def get_checksum(path: Union[Path, str]) -> str:
     RETURNS (str): The checksum.
     """
     path = Path(path)
+    if not (path.is_file() or path.is_dir()):
+        msg.fail(f"Can't get checksum for {path}: not a file or directory", exits=1)
     if path.is_file():
         return hashlib.md5(Path(path).read_bytes()).hexdigest()
-    if path.is_dir():
+    else:
         # TODO: this is currently pretty slow
         dir_checksum = hashlib.md5()
         for sub_file in sorted(fp for fp in path.rglob("*") if fp.is_file()):
             dir_checksum.update(sub_file.read_bytes())
         return dir_checksum.hexdigest()
-    msg.fail(f"Can't get checksum for {path}: not a file or directory", exits=1)
 
 
 @contextmanager
@@ -369,7 +399,15 @@ def git_checkout(
         cmd = f"git -C {tmp_dir} clone {repo} . -b {branch}"
         run_command(cmd, capture=True)
         # We need Path(name) to make sure we also support subdirectories
-        shutil.copytree(str(tmp_dir / Path(subpath)), str(dest))
+        try:
+            source_path = tmp_dir / Path(subpath)
+            if not is_subpath_of(tmp_dir, source_path):
+                err = f"'{subpath}' is a path outside of the cloned repository."
+                msg.fail(err, repo, exits=1)
+            shutil.copytree(str(source_path), str(dest))
+        except FileNotFoundError:
+            err = f"Can't clone {subpath}. Make sure the directory exists in the repo (branch '{branch}')"
+            msg.fail(err, repo, exits=1)
 
 
 def git_sparse_checkout(repo, subpath, dest, branch):
@@ -414,8 +452,14 @@ def git_sparse_checkout(repo, subpath, dest, branch):
         # And finally, we can checkout our subpath
         cmd = f"git -C {tmp_dir} checkout {branch} {subpath}"
         run_command(cmd, capture=True)
-        # We need Path(name) to make sure we also support subdirectories
-        shutil.move(str(tmp_dir / Path(subpath)), str(dest))
+
+        # Get a subdirectory of the cloned path, if appropriate
+        source_path = tmp_dir / Path(subpath)
+        if not is_subpath_of(tmp_dir, source_path):
+            err = f"'{subpath}' is a path outside of the cloned repository."
+            msg.fail(err, repo, exits=1)
+
+        shutil.move(str(source_path), str(dest))
 
 
 def get_git_version(
@@ -427,12 +471,15 @@ def get_git_version(
     RETURNS (Tuple[int, int]): The version as a (major, minor) tuple. Returns
         (0, 0) if the version couldn't be determined.
     """
-    ret = run_command("git --version", capture=True)
+    try:
+        ret = run_command("git --version", capture=True)
+    except:
+        raise RuntimeError(error)
     stdout = ret.stdout.strip()
     if not stdout or not stdout.startswith("git version"):
-        return (0, 0)
+        return 0, 0
     version = stdout[11:].strip().split(".")
-    return (int(version[0]), int(version[1]))
+    return int(version[0]), int(version[1])
 
 
 def _http_to_git(repo: str) -> str:
@@ -446,6 +493,29 @@ def _http_to_git(repo: str) -> str:
     return repo
 
 
+def is_subpath_of(parent, child):
+    """
+    Check whether `child` is a path contained within `parent`.
+    """
+    # Based on https://stackoverflow.com/a/37095733 .
+
+    # In Python 3.9, the `Path.is_relative_to()` method will supplant this, so
+    # we can stop using crusty old os.path functions.
+    parent_realpath = os.path.realpath(parent)
+    child_realpath = os.path.realpath(child)
+    return os.path.commonpath([parent_realpath, child_realpath]) == parent_realpath
+
+
+@overload
+def string_to_list(value: str, intify: Literal[False] = ...) -> List[str]:
+    ...
+
+
+@overload
+def string_to_list(value: str, intify: Literal[True]) -> List[int]:
+    ...
+
+
 def string_to_list(value: str, intify: bool = False) -> Union[List[str], List[int]]:
     """Parse a comma-separated string to a list and account for various
     formatting options. Mostly used to handle CLI arguments that take a list of
@@ -456,7 +526,7 @@ def string_to_list(value: str, intify: bool = False) -> Union[List[str], List[in
     RETURNS (Union[List[str], List[int]]): A list of strings or ints.
     """
     if not value:
-        return []
+        return []  # type: ignore[return-value]
     if value.startswith("[") and value.endswith("]"):
         value = value[1:-1]
     result = []
@@ -468,15 +538,21 @@ def string_to_list(value: str, intify: bool = False) -> Union[List[str], List[in
             p = p[1:-1]
         p = p.strip()
         if intify:
-            p = int(p)
+            p = int(p)  # type: ignore[assignment]
         result.append(p)
     return result
 
 
-def setup_gpu(use_gpu: int) -> None:
+def setup_gpu(use_gpu: int, silent=None) -> None:
     """Configure the GPU and log info."""
+    if silent is None:
+        local_msg = Printer()
+    else:
+        local_msg = Printer(no_print=silent, pretty=not silent)
     if use_gpu >= 0:
-        msg.info(f"Using GPU: {use_gpu}")
+        local_msg.info(f"Using GPU: {use_gpu}")
         require_gpu(use_gpu)
     else:
-        msg.info("Using CPU")
+        local_msg.info("Using CPU")
+        if has_cupy and gpu_is_available():
+            local_msg.info("To switch to GPU 0, use the option: --gpu-id 0")

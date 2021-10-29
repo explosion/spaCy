@@ -13,7 +13,7 @@ from .iob_utils import biluo_tags_to_spans
 from ..errors import Errors, Warnings
 from ..pipeline._parser_internals import nonproj
 from ..tokens.token cimport MISSING_DEP
-from ..util import logger
+from ..util import logger, to_ternary_int
 
 
 cpdef Doc annotations_to_doc(vocab, tok_annot, doc_annot):
@@ -22,6 +22,8 @@ cpdef Doc annotations_to_doc(vocab, tok_annot, doc_annot):
     output = Doc(vocab, words=tok_annot["ORTH"], spaces=tok_annot["SPACY"])
     if "entities" in doc_annot:
        _add_entities_to_doc(output, doc_annot["entities"])
+    if "spans" in doc_annot:
+       _add_spans_to_doc(output, doc_annot["spans"])
     if array.size:
         output = output.from_array(attrs, array)
     # links are currently added with ENT_KB_ID on the token level
@@ -211,18 +213,19 @@ cdef class Example:
         else:
             return [None] * len(self.x)
 
-    def get_aligned_spans_x2y(self, x_spans):
-        return self._get_aligned_spans(self.y, x_spans, self.alignment.x2y)
+    def get_aligned_spans_x2y(self, x_spans, allow_overlap=False):
+        return self._get_aligned_spans(self.y, x_spans, self.alignment.x2y, allow_overlap)
 
-    def get_aligned_spans_y2x(self, y_spans):
-        return self._get_aligned_spans(self.x, y_spans, self.alignment.y2x)
+    def get_aligned_spans_y2x(self, y_spans, allow_overlap=False):
+        return self._get_aligned_spans(self.x, y_spans, self.alignment.y2x, allow_overlap)
 
-    def _get_aligned_spans(self, doc, spans, align):
+    def _get_aligned_spans(self, doc, spans, align, allow_overlap):
         seen = set()
         output = []
         for span in spans:
             indices = align[span.start : span.end].data.ravel()
-            indices = [idx for idx in indices if idx not in seen]
+            if not allow_overlap:
+                indices = [idx for idx in indices if idx not in seen]
             if len(indices) >= 1:
                 aligned_span = Span(doc, indices[0], indices[-1] + 1, label=span.label)
                 target_text = span.text.lower().strip().replace(" ", "")
@@ -232,10 +235,10 @@ cdef class Example:
                     seen.update(indices)
         return output
 
-    def get_aligned_ner(self):
+    def get_aligned_ents_and_ner(self):
         if not self.y.has_annotation("ENT_IOB"):
-            return [None] * len(self.x)  # should this be 'missing' instead of 'None' ?
-        x_ents = self.get_aligned_spans_y2x(self.y.ents)
+            return [], [None] * len(self.x)
+        x_ents = self.get_aligned_spans_y2x(self.y.ents, allow_overlap=False)
         # Default to 'None' for missing values
         x_tags = offsets_to_biluo_tags(
             self.x,
@@ -250,6 +253,10 @@ cdef class Example:
                     x_tags[i] = "O"
                 elif self.x[i].is_space:
                     x_tags[i] = "O"
+        return x_ents, x_tags
+
+    def get_aligned_ner(self):
+        x_ents, x_tags = self.get_aligned_ents_and_ner()
         return x_tags
 
     def to_dict(self):
@@ -314,13 +321,11 @@ def _annot2array(vocab, tok_annot, doc_annot):
 
     for key, value in doc_annot.items():
         if value:
-            if key == "entities":
+            if key in ["entities", "cats", "spans"]:
                 pass
             elif key == "links":
                 ent_kb_ids = _parse_links(vocab, tok_annot["ORTH"], tok_annot["SPACY"], value)
                 tok_annot["ENT_KB_ID"] = ent_kb_ids
-            elif key == "cats":
-                pass
             else:
                 raise ValueError(Errors.E974.format(obj="doc", key=key))
 
@@ -337,7 +342,7 @@ def _annot2array(vocab, tok_annot, doc_annot):
             values.append([vocab.strings.add(h) if h is not None else MISSING_DEP for h in value])
         elif key == "SENT_START":
             attrs.append(key)
-            values.append(value)
+            values.append([to_ternary_int(v) for v in value])
         elif key == "MORPH":
             attrs.append(key)
             values.append([vocab.morphology.add(v) for v in value])
@@ -351,12 +356,37 @@ def _annot2array(vocab, tok_annot, doc_annot):
     return attrs, array.T
 
 
+def _add_spans_to_doc(doc, spans_data):
+    if not isinstance(spans_data, dict):
+        raise ValueError(Errors.E879)
+    for key, span_list in spans_data.items():
+        spans = []
+        if not isinstance(span_list, list):
+            raise ValueError(Errors.E879)
+        for span_tuple in span_list:
+            if not isinstance(span_tuple, (list, tuple)) or len(span_tuple) < 2:
+                raise ValueError(Errors.E879)
+            start_char = span_tuple[0]
+            end_char = span_tuple[1]
+            label = 0
+            kb_id = 0
+            if len(span_tuple) > 2:
+                label = span_tuple[2]
+            if len(span_tuple) > 3:
+                kb_id = span_tuple[3]
+            span = doc.char_span(start_char, end_char, label=label, kb_id=kb_id)
+            spans.append(span)
+        doc.spans[key] = spans
+
+
 def _add_entities_to_doc(doc, ner_data):
     if ner_data is None:
         return
     elif ner_data == []:
         doc.ents = []
-    elif isinstance(ner_data[0], tuple):
+    elif not isinstance(ner_data, (list, tuple)):
+        raise ValueError(Errors.E973)
+    elif isinstance(ner_data[0], (list, tuple)):
         return _add_entities_to_doc(
             doc,
             offsets_to_biluo_tags(doc, ner_data)
@@ -390,12 +420,12 @@ def _fix_legacy_dict_data(example_dict):
     token_dict = example_dict.get("token_annotation", {})
     doc_dict = example_dict.get("doc_annotation", {})
     for key, value in example_dict.items():
-        if value:
+        if value is not None:
             if key in ("token_annotation", "doc_annotation"):
                 pass
             elif key == "ids":
                 pass
-            elif key in ("cats", "links"):
+            elif key in ("cats", "links", "spans"):
                 doc_dict[key] = value
             elif key in ("ner", "entities"):
                 doc_dict["entities"] = value

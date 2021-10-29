@@ -1,9 +1,11 @@
-from typing import Optional, Iterable, Tuple, List, Callable, TYPE_CHECKING
+from typing import Any, Optional, Iterable, Tuple, List, Callable, TYPE_CHECKING, cast
+from thinc.types import Floats2d
 from thinc.api import chain, Maxout, LayerNorm, Softmax, Linear, zero_init, Model
 from thinc.api import MultiSoftmax, list2array
 from thinc.api import to_categorical, CosineDistance, L2Distance
+from thinc.loss import Loss
 
-from ...util import registry
+from ...util import registry, OOV_RANK
 from ...errors import Errors
 from ...attrs import ID
 
@@ -13,14 +15,16 @@ from functools import partial
 if TYPE_CHECKING:
     # This lets us add type hints for mypy etc. without causing circular imports
     from ...vocab import Vocab  # noqa: F401
-    from ...tokens import Doc  # noqa: F401
+    from ...tokens.doc import Doc  # noqa: F401
 
 
-@registry.architectures.register("spacy.PretrainVectors.v1")
+@registry.architectures("spacy.PretrainVectors.v1")
 def create_pretrain_vectors(
     maxout_pieces: int, hidden_size: int, loss: str
 ) -> Callable[["Vocab", Model], Model]:
     def create_vectors_objective(vocab: "Vocab", tok2vec: Model) -> Model:
+        if vocab.vectors.data.shape[1] == 0:
+            raise ValueError(Errors.E875)
         model = build_cloze_multi_task_model(
             vocab, tok2vec, hidden_size=hidden_size, maxout_pieces=maxout_pieces
         )
@@ -28,6 +32,7 @@ def create_pretrain_vectors(
         return model
 
     def create_vectors_loss() -> Callable:
+        distance: Loss
         if loss == "cosine":
             distance = CosineDistance(normalize=True, ignore_zeros=True)
             return partial(get_vectors_loss, distance=distance)
@@ -40,7 +45,7 @@ def create_pretrain_vectors(
     return create_vectors_objective
 
 
-@registry.architectures.register("spacy.PretrainCharacters.v1")
+@registry.architectures("spacy.PretrainCharacters.v1")
 def create_pretrain_characters(
     maxout_pieces: int, hidden_size: int, n_characters: int
 ) -> Callable[["Vocab", Model], Model]:
@@ -68,6 +73,7 @@ def get_vectors_loss(ops, docs, prediction, distance):
     # and look them up all at once. This prevents data copying.
     ids = ops.flatten([doc.to_array(ID).ravel() for doc in docs])
     target = docs[0].vocab.vectors.data[ids]
+    target[ids == OOV_RANK] = 0
     d_target, loss = distance(prediction, target)
     return loss, d_target
 
@@ -112,7 +118,7 @@ def build_cloze_multi_task_model(
 ) -> Model:
     nO = vocab.vectors.data.shape[1]
     output_layer = chain(
-        list2array(),
+        cast(Model[List["Floats2d"], Floats2d], list2array()),
         Maxout(
             nO=hidden_size,
             nI=tok2vec.get_dim("nO"),
@@ -133,10 +139,10 @@ def build_cloze_characters_multi_task_model(
     vocab: "Vocab", tok2vec: Model, maxout_pieces: int, hidden_size: int, nr_char: int
 ) -> Model:
     output_layer = chain(
-        list2array(),
-        Maxout(hidden_size, nP=maxout_pieces),
+        cast(Model[List["Floats2d"], Floats2d], list2array()),
+        Maxout(nO=hidden_size, nP=maxout_pieces),
         LayerNorm(nI=hidden_size),
-        MultiSoftmax([256] * nr_char, nI=hidden_size),
+        MultiSoftmax([256] * nr_char, nI=hidden_size),  # type: ignore[arg-type]
     )
     model = build_masked_language_model(vocab, chain(tok2vec, output_layer))
     model.set_ref("tok2vec", tok2vec)
@@ -168,7 +174,7 @@ def build_masked_language_model(
             if wrapped.has_dim(dim):
                 model.set_dim(dim, wrapped.get_dim(dim))
 
-    mlm_model = Model(
+    mlm_model: Model = Model(
         "masked-language-model",
         mlm_forward,
         layers=[wrapped_model],
@@ -182,13 +188,19 @@ def build_masked_language_model(
 
 class _RandomWords:
     def __init__(self, vocab: "Vocab") -> None:
+        # Extract lexeme representations
         self.words = [lex.text for lex in vocab if lex.prob != 0.0]
-        self.probs = [lex.prob for lex in vocab if lex.prob != 0.0]
         self.words = self.words[:10000]
-        self.probs = self.probs[:10000]
-        self.probs = numpy.exp(numpy.array(self.probs, dtype="f"))
-        self.probs /= self.probs.sum()
-        self._cache = []
+
+        # Compute normalized lexeme probabilities
+        probs = [lex.prob for lex in vocab if lex.prob != 0.0]
+        probs = probs[:10000]
+        probs: numpy.ndarray = numpy.exp(numpy.array(probs, dtype="f"))
+        probs /= probs.sum()
+        self.probs = probs
+
+        # Initialize cache
+        self._cache: List[int] = []
 
     def next(self) -> str:
         if not self._cache:
@@ -203,7 +215,7 @@ def _apply_mask(
     docs: Iterable["Doc"], random_words: _RandomWords, mask_prob: float = 0.15
 ) -> Tuple[numpy.ndarray, List["Doc"]]:
     # This needs to be here to avoid circular imports
-    from ...tokens import Doc  # noqa: F811
+    from ...tokens.doc import Doc  # noqa: F811
 
     N = sum(len(doc) for doc in docs)
     mask = numpy.random.uniform(0.0, 1.0, (N,))

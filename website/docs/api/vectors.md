@@ -290,8 +290,8 @@ If a table is full, it can be resized using
 ## Vectors.n_keys {#n_keys tag="property"}
 
 Get the number of keys in the table. Note that this is the number of _all_ keys,
-not just unique vectors. If several keys are mapped to the same
-vectors, they will be counted individually.
+not just unique vectors. If several keys are mapped to the same vectors, they
+will be counted individually.
 
 > #### Example
 >

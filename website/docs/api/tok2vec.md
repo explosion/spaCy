@@ -186,8 +186,7 @@ Modify a batch of [`Doc`](/api/doc) objects, using pre-computed scores.
 
 Learn from a batch of [`Example`](/api/example) objects containing the
 predictions and gold-standard annotations, and update the component's model.
-Delegates to [`predict`](/api/tok2vec#predict) and 
-[`set_annotations`](/api/tok2vec#set_annotations).
+Delegates to [`predict`](/api/tok2vec#predict).
 
 > #### Example
 >
@@ -197,14 +196,14 @@ Delegates to [`predict`](/api/tok2vec#predict) and
 > losses = tok2vec.update(examples, sgd=optimizer)
 > ```
 
-| Name              | Description                                                                                                                        |
-| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `examples`        | A batch of [`Example`](/api/example) objects to learn from. ~~Iterable[Example]~~                                                  |
-| _keyword-only_    |                                                                                                                                    |
-| `drop`            | The dropout rate. ~~float~~                                                                                                        |
-| `sgd`             | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~                      |
-| `losses`          | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~           |
-| **RETURNS**       | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                              |
+| Name           | Description                                                                                                              |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `examples`     | A batch of [`Example`](/api/example) objects to learn from. ~~Iterable[Example]~~                                        |
+| _keyword-only_ |                                                                                                                          |
+| `drop`         | The dropout rate. ~~float~~                                                                                              |
+| `sgd`          | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~            |
+| `losses`       | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~ |
+| **RETURNS**    | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                    |
 
 ## Tok2Vec.create_optimizer {#create_optimizer tag="method"}
 

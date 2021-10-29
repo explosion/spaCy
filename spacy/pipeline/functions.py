@@ -1,10 +1,9 @@
-import srsly
-from thinc.api import Config
 from typing import Dict, Any
+import srsly
+
 from ..language import Language
 from ..matcher import Matcher
 from ..tokens import Doc
-from ..util import filter_spans
 from .. import util
 
 
@@ -19,14 +18,14 @@ def merge_noun_chunks(doc: Doc) -> Doc:
     doc (Doc): The Doc object.
     RETURNS (Doc): The Doc object with merged noun chunks.
 
-    DOCS: https://nightly.spacy.io/api/pipeline-functions#merge_noun_chunks
+    DOCS: https://spacy.io/api/pipeline-functions#merge_noun_chunks
     """
     if not doc.has_annotation("DEP"):
         return doc
     with doc.retokenize() as retokenizer:
         for np in doc.noun_chunks:
             attrs = {"tag": np.root.tag, "dep": np.root.dep}
-            retokenizer.merge(np, attrs=attrs)
+            retokenizer.merge(np, attrs=attrs)  # type: ignore[arg-type]
     return doc
 
 
@@ -41,12 +40,12 @@ def merge_entities(doc: Doc):
     doc (Doc): The Doc object.
     RETURNS (Doc): The Doc object with merged entities.
 
-    DOCS: https://nightly.spacy.io/api/pipeline-functions#merge_entities
+    DOCS: https://spacy.io/api/pipeline-functions#merge_entities
     """
     with doc.retokenize() as retokenizer:
         for ent in doc.ents:
             attrs = {"tag": ent.root.tag, "dep": ent.root.dep, "ent_type": ent.label}
-            retokenizer.merge(ent, attrs=attrs)
+            retokenizer.merge(ent, attrs=attrs)  # type: ignore[arg-type]
     return doc
 
 
@@ -58,13 +57,13 @@ def merge_subtokens(doc: Doc, label: str = "subtok") -> Doc:
     label (str): The subtoken dependency label.
     RETURNS (Doc): The Doc object with merged subtokens.
 
-    DOCS: https://nightly.spacy.io/api/pipeline-functions#merge_subtokens
+    DOCS: https://spacy.io/api/pipeline-functions#merge_subtokens
     """
     # TODO: make stateful component with "label" config
     merger = Matcher(doc.vocab)
     merger.add("SUBTOK", [[{"DEP": label, "op": "+"}]])
     matches = merger(doc)
-    spans = filter_spans([doc[start : end + 1] for _, start, end in matches])
+    spans = util.filter_spans([doc[start : end + 1] for _, start, end in matches])  # type: ignore[misc, operator]
     with doc.retokenize() as retokenizer:
         for span in spans:
             retokenizer.merge(span)
@@ -77,15 +76,9 @@ def merge_subtokens(doc: Doc, label: str = "subtok") -> Doc:
     retokenizes=True,
 )
 def make_token_splitter(
-    nlp: Language,
-    name: str,
-    *,
-    min_length=0,
-    split_length=0,
+    nlp: Language, name: str, *, min_length: int = 0, split_length: int = 0
 ):
-    return TokenSplitter(
-        min_length=min_length, split_length=split_length
-    )
+    return TokenSplitter(min_length=min_length, split_length=split_length)
 
 
 class TokenSplitter:
@@ -100,11 +93,11 @@ class TokenSplitter:
                     if len(t.text) >= self.min_length:
                         orths = []
                         heads = []
-                        attrs = {}
+                        attrs = {}  # type: ignore[var-annotated]
                         for i in range(0, len(t.text), self.split_length):
                             orths.append(t.text[i : i + self.split_length])
                             heads.append((t, i / self.split_length))
-                        retokenizer.split(t, orths, heads, attrs)
+                        retokenizer.split(t, orths, heads, attrs)  # type: ignore[arg-type]
         return doc
 
     def _get_config(self) -> Dict[str, Any]:

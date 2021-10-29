@@ -1,5 +1,5 @@
-from typing import Optional, List, Union
-from thinc.types import Floats2d
+from typing import Optional, List, Union, cast
+from thinc.types import Floats2d, Ints2d, Ragged
 from thinc.api import chain, clone, concatenate, with_array, with_padded
 from thinc.api import Model, noop, list2ragged, ragged2list, HashEmbed
 from thinc.api import expand_window, residual, Maxout, Mish, PyTorchLSTM
@@ -14,7 +14,7 @@ from ...pipeline.tok2vec import Tok2VecListener
 from ...attrs import intify_attr
 
 
-@registry.architectures.register("spacy.Tok2VecListener.v1")
+@registry.architectures("spacy.Tok2VecListener.v1")
 def tok2vec_listener_v1(width: int, upstream: str = "*"):
     tok2vec = Tok2VecListener(upstream_name=upstream, width=width)
     return tok2vec
@@ -31,7 +31,7 @@ def get_tok2vec_width(model: Model):
     return nO
 
 
-@registry.architectures.register("spacy.HashEmbedCNN.v1")
+@registry.architectures("spacy.HashEmbedCNN.v2")
 def build_hash_embed_cnn_tok2vec(
     *,
     width: int,
@@ -87,7 +87,7 @@ def build_hash_embed_cnn_tok2vec(
     )
 
 
-@registry.architectures.register("spacy.Tok2Vec.v2")
+@registry.architectures("spacy.Tok2Vec.v2")
 def build_Tok2Vec_model(
     embed: Model[List[Doc], List[Floats2d]],
     encode: Model[List[Floats2d], List[Floats2d]],
@@ -108,7 +108,7 @@ def build_Tok2Vec_model(
     return tok2vec
 
 
-@registry.architectures.register("spacy.MultiHashEmbed.v1")
+@registry.architectures("spacy.MultiHashEmbed.v2")
 def MultiHashEmbed(
     width: int,
     attrs: List[Union[str, int]],
@@ -158,31 +158,35 @@ def MultiHashEmbed(
 
     embeddings = [make_hash_embed(i) for i in range(len(attrs))]
     concat_size = width * (len(embeddings) + include_static_vectors)
+    max_out: Model[Ragged, Ragged] = with_array(
+        Maxout(width, concat_size, nP=3, dropout=0.0, normalize=True)  # type: ignore
+    )
     if include_static_vectors:
+        feature_extractor: Model[List[Doc], Ragged] = chain(
+            FeatureExtractor(attrs),
+            cast(Model[List[Ints2d], Ragged], list2ragged()),
+            with_array(concatenate(*embeddings)),
+        )
         model = chain(
             concatenate(
-                chain(
-                    FeatureExtractor(attrs),
-                    list2ragged(),
-                    with_array(concatenate(*embeddings)),
-                ),
+                feature_extractor,
                 StaticVectors(width, dropout=0.0),
             ),
-            with_array(Maxout(width, concat_size, nP=3, dropout=0.0, normalize=True)),
-            ragged2list(),
+            max_out,
+            cast(Model[Ragged, List[Floats2d]], ragged2list()),
         )
     else:
         model = chain(
             FeatureExtractor(list(attrs)),
-            list2ragged(),
+            cast(Model[List[Ints2d], Ragged], list2ragged()),
             with_array(concatenate(*embeddings)),
-            with_array(Maxout(width, concat_size, nP=3, dropout=0.0, normalize=True)),
-            ragged2list(),
+            max_out,
+            cast(Model[Ragged, List[Floats2d]], ragged2list()),
         )
     return model
 
 
-@registry.architectures.register("spacy.CharacterEmbed.v1")
+@registry.architectures("spacy.CharacterEmbed.v2")
 def CharacterEmbed(
     width: int,
     rows: int,
@@ -220,42 +224,46 @@ def CharacterEmbed(
     """
     feature = intify_attr(feature)
     if feature is None:
-        raise ValueError(Errors.E911(feat=feature))
+        raise ValueError(Errors.E911.format(feat=feature))
+    char_embed = chain(
+        _character_embed.CharacterEmbed(nM=nM, nC=nC),
+        cast(Model[List[Floats2d], Ragged], list2ragged()),
+    )
+    feature_extractor: Model[List[Doc], Ragged] = chain(
+        FeatureExtractor([feature]),
+        cast(Model[List[Ints2d], Ragged], list2ragged()),
+        with_array(HashEmbed(nO=width, nV=rows, column=0, seed=5)),  # type: ignore
+    )
+    max_out: Model[Ragged, Ragged]
     if include_static_vectors:
+        max_out = with_array(
+            Maxout(width, nM * nC + (2 * width), nP=3, normalize=True, dropout=0.0)  # type: ignore
+        )
         model = chain(
             concatenate(
-                chain(_character_embed.CharacterEmbed(nM=nM, nC=nC), list2ragged()),
-                chain(
-                    FeatureExtractor([feature]),
-                    list2ragged(),
-                    with_array(HashEmbed(nO=width, nV=rows, column=0, seed=5)),
-                ),
+                char_embed,
+                feature_extractor,
                 StaticVectors(width, dropout=0.0),
             ),
-            with_array(
-                Maxout(width, nM * nC + (2 * width), nP=3, normalize=True, dropout=0.0)
-            ),
-            ragged2list(),
+            max_out,
+            cast(Model[Ragged, List[Floats2d]], ragged2list()),
         )
     else:
+        max_out = with_array(
+            Maxout(width, nM * nC + width, nP=3, normalize=True, dropout=0.0)  # type: ignore
+        )
         model = chain(
             concatenate(
-                chain(_character_embed.CharacterEmbed(nM=nM, nC=nC), list2ragged()),
-                chain(
-                    FeatureExtractor([feature]),
-                    list2ragged(),
-                    with_array(HashEmbed(nO=width, nV=rows, column=0, seed=5)),
-                ),
+                char_embed,
+                feature_extractor,
             ),
-            with_array(
-                Maxout(width, nM * nC + width, nP=3, normalize=True, dropout=0.0)
-            ),
-            ragged2list(),
+            max_out,
+            cast(Model[Ragged, List[Floats2d]], ragged2list()),
         )
     return model
 
 
-@registry.architectures.register("spacy.MaxoutWindowEncoder.v2")
+@registry.architectures("spacy.MaxoutWindowEncoder.v2")
 def MaxoutWindowEncoder(
     width: int, window_size: int, maxout_pieces: int, depth: int
 ) -> Model[List[Floats2d], List[Floats2d]]:
@@ -281,13 +289,13 @@ def MaxoutWindowEncoder(
             normalize=True,
         ),
     )
-    model = clone(residual(cnn), depth)
+    model = clone(residual(cnn), depth)  # type: ignore[arg-type]
     model.set_dim("nO", width)
     receptive_field = window_size * depth
-    return with_array(model, pad=receptive_field)
+    return with_array(model, pad=receptive_field)  # type: ignore[arg-type]
 
 
-@registry.architectures.register("spacy.MishWindowEncoder.v2")
+@registry.architectures("spacy.MishWindowEncoder.v2")
 def MishWindowEncoder(
     width: int, window_size: int, depth: int
 ) -> Model[List[Floats2d], List[Floats2d]]:
@@ -305,12 +313,12 @@ def MishWindowEncoder(
         expand_window(window_size=window_size),
         Mish(nO=width, nI=width * ((window_size * 2) + 1), dropout=0.0, normalize=True),
     )
-    model = clone(residual(cnn), depth)
+    model = clone(residual(cnn), depth)  # type: ignore[arg-type]
     model.set_dim("nO", width)
-    return with_array(model)
+    return with_array(model)  # type: ignore[arg-type]
 
 
-@registry.architectures.register("spacy.TorchBiLSTMEncoder.v1")
+@registry.architectures("spacy.TorchBiLSTMEncoder.v1")
 def BiLSTMEncoder(
     width: int, depth: int, dropout: float
 ) -> Model[List[Floats2d], List[Floats2d]]:

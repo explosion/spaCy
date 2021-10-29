@@ -1,21 +1,26 @@
 from typing import Optional, List, Dict, Sequence, Any, Iterable
 from pathlib import Path
 from wasabi import msg
+from wasabi.util import locale_escape
 import sys
 import srsly
+import typer
 
 from ... import about
 from ...git_info import GIT_VERSION
 from ...util import working_dir, run_command, split_command, is_cwd, join_command
 from ...util import SimpleFrozenList, is_minor_version_match, ENV_VARS
-from ...util import check_bool_env_var
+from ...util import check_bool_env_var, SimpleFrozenDict
 from .._util import PROJECT_FILE, PROJECT_LOCK, load_project_config, get_hash
-from .._util import get_checksum, project_cli, Arg, Opt, COMMAND
+from .._util import get_checksum, project_cli, Arg, Opt, COMMAND, parse_config_overrides
 
 
-@project_cli.command("run")
+@project_cli.command(
+    "run", context_settings={"allow_extra_args": True, "ignore_unknown_options": True}
+)
 def project_run_cli(
     # fmt: off
+    ctx: typer.Context,  # This is only used to read additional arguments
     subcommand: str = Arg(None, help=f"Name of command defined in the {PROJECT_FILE}"),
     project_dir: Path = Arg(Path.cwd(), help="Location of project directory. Defaults to current working directory.", exists=True, file_okay=False),
     force: bool = Opt(False, "--force", "-F", help="Force re-running steps, even if nothing changed"),
@@ -28,16 +33,23 @@ def project_run_cli(
     commands define dependencies and/or outputs, they will only be re-run if
     state has changed.
 
-    DOCS: https://nightly.spacy.io/api/cli#project-run
+    DOCS: https://spacy.io/api/cli#project-run
     """
     if show_help or not subcommand:
         print_run_help(project_dir, subcommand)
     else:
-        project_run(project_dir, subcommand, force=force, dry=dry)
+        overrides = parse_config_overrides(ctx.args)
+        project_run(project_dir, subcommand, overrides=overrides, force=force, dry=dry)
 
 
 def project_run(
-    project_dir: Path, subcommand: str, *, force: bool = False, dry: bool = False
+    project_dir: Path,
+    subcommand: str,
+    *,
+    overrides: Dict[str, Any] = SimpleFrozenDict(),
+    force: bool = False,
+    dry: bool = False,
+    capture: bool = False,
 ) -> None:
     """Run a named script defined in the project.yml. If the script is part
     of the default pipeline (defined in the "run" section), DVC is used to
@@ -46,17 +58,30 @@ def project_run(
 
     project_dir (Path): Path to project directory.
     subcommand (str): Name of command to run.
+    overrides (Dict[str, Any]): Optional config overrides.
     force (bool): Force re-running, even if nothing changed.
     dry (bool): Perform a dry run and don't execute commands.
+    capture (bool): Whether to capture the output and errors of individual commands.
+        If False, the stdout and stderr will not be redirected, and if there's an error,
+        sys.exit will be called with the return code. You should use capture=False
+        when you want to turn over execution to the command, and capture=True
+        when you want to run the command more like a function.
     """
-    config = load_project_config(project_dir)
+    config = load_project_config(project_dir, overrides=overrides)
     commands = {cmd["name"]: cmd for cmd in config.get("commands", [])}
     workflows = config.get("workflows", {})
-    validate_subcommand(commands.keys(), workflows.keys(), subcommand)
+    validate_subcommand(list(commands.keys()), list(workflows.keys()), subcommand)
     if subcommand in workflows:
         msg.info(f"Running workflow '{subcommand}'")
         for cmd in workflows[subcommand]:
-            project_run(project_dir, cmd, force=force, dry=dry)
+            project_run(
+                project_dir,
+                cmd,
+                overrides=overrides,
+                force=force,
+                dry=dry,
+                capture=capture,
+            )
     else:
         cmd = commands[subcommand]
         for dep in cmd.get("deps", []):
@@ -72,7 +97,7 @@ def project_run(
             if not rerun and not force:
                 msg.info(f"Skipping '{cmd['name']}': nothing changed")
             else:
-                run_commands(cmd["script"], dry=dry)
+                run_commands(cmd["script"], dry=dry, capture=capture)
                 if not dry:
                     update_lockfile(current_dir, cmd)
 
@@ -91,7 +116,7 @@ def print_run_help(project_dir: Path, subcommand: Optional[str] = None) -> None:
     workflows = config.get("workflows", {})
     project_loc = "" if is_cwd(project_dir) else project_dir
     if subcommand:
-        validate_subcommand(commands.keys(), workflows.keys(), subcommand)
+        validate_subcommand(list(commands.keys()), list(workflows.keys()), subcommand)
         print(f"Usage: {COMMAND} project run {subcommand} {project_loc}")
         if subcommand in commands:
             help_text = commands[subcommand].get("help")
@@ -111,7 +136,7 @@ def print_run_help(project_dir: Path, subcommand: Optional[str] = None) -> None:
         print("")
         title = config.get("title")
         if title:
-            print(f"{title}\n")
+            print(f"{locale_escape(title)}\n")
         if config_commands:
             print(f"Available commands in {PROJECT_FILE}")
             print(f"Usage: {COMMAND} project run [COMMAND] {project_loc}")
@@ -126,15 +151,21 @@ def run_commands(
     commands: Iterable[str] = SimpleFrozenList(),
     silent: bool = False,
     dry: bool = False,
+    capture: bool = False,
 ) -> None:
     """Run a sequence of commands in a subprocess, in order.
 
     commands (List[str]): The string commands.
     silent (bool): Don't print the commands.
     dry (bool): Perform a dry run and don't execut anything.
+    capture (bool): Whether to capture the output and errors of individual commands.
+        If False, the stdout and stderr will not be redirected, and if there's an error,
+        sys.exit will be called with the return code. You should use capture=False
+        when you want to turn over execution to the command, and capture=True
+        when you want to run the command more like a function.
     """
-    for command in commands:
-        command = split_command(command)
+    for c in commands:
+        command = split_command(c)
         # Not sure if this is needed or a good idea. Motivation: users may often
         # use commands in their config that reference "python" and we want to
         # make sure that it's always executing the same Python that spaCy is
@@ -149,7 +180,7 @@ def run_commands(
         if not silent:
             print(f"Running command: {join_command(command)}")
         if not dry:
-            run_command(command, capture=False)
+            run_command(command, capture=capture)
 
 
 def validate_subcommand(
@@ -190,6 +221,9 @@ def check_rerun(
     strict_version (bool):
     RETURNS (bool): Whether to re-run the command.
     """
+    # Always rerun if no-skip is set
+    if command.get("no_skip", False):
+        return True
     lock_path = project_dir / PROJECT_LOCK
     if not lock_path.exists():  # We don't have a lockfile, run command
         return True
@@ -260,7 +294,7 @@ def get_lock_entry(project_dir: Path, command: Dict[str, Any]) -> Dict[str, Any]
     }
 
 
-def get_fileinfo(project_dir: Path, paths: List[str]) -> List[Dict[str, str]]:
+def get_fileinfo(project_dir: Path, paths: List[str]) -> List[Dict[str, Optional[str]]]:
     """Generate the file information for a list of paths (dependencies, outputs).
     Includes the file path and the file's checksum.
 

@@ -6,6 +6,7 @@ from spacy.language import Language
 from spacy.lang.en.syntax_iterators import noun_chunks
 from spacy.vocab import Vocab
 import spacy
+from thinc.api import get_current_ops
 import pytest
 
 from ...util import make_tempdir
@@ -54,22 +55,26 @@ def test_issue5082():
     ruler.add_patterns(patterns)
     parsed_vectors_1 = [t.vector for t in nlp(text)]
     assert len(parsed_vectors_1) == 4
-    numpy.testing.assert_array_equal(parsed_vectors_1[0], array1)
-    numpy.testing.assert_array_equal(parsed_vectors_1[1], array2)
-    numpy.testing.assert_array_equal(parsed_vectors_1[2], array3)
-    numpy.testing.assert_array_equal(parsed_vectors_1[3], array4)
+    ops = get_current_ops()
+    numpy.testing.assert_array_equal(ops.to_numpy(parsed_vectors_1[0]), array1)
+    numpy.testing.assert_array_equal(ops.to_numpy(parsed_vectors_1[1]), array2)
+    numpy.testing.assert_array_equal(ops.to_numpy(parsed_vectors_1[2]), array3)
+    numpy.testing.assert_array_equal(ops.to_numpy(parsed_vectors_1[3]), array4)
     nlp.add_pipe("merge_entities")
     parsed_vectors_2 = [t.vector for t in nlp(text)]
     assert len(parsed_vectors_2) == 3
-    numpy.testing.assert_array_equal(parsed_vectors_2[0], array1)
-    numpy.testing.assert_array_equal(parsed_vectors_2[1], array2)
-    numpy.testing.assert_array_equal(parsed_vectors_2[2], array34)
+    numpy.testing.assert_array_equal(ops.to_numpy(parsed_vectors_2[0]), array1)
+    numpy.testing.assert_array_equal(ops.to_numpy(parsed_vectors_2[1]), array2)
+    numpy.testing.assert_array_equal(ops.to_numpy(parsed_vectors_2[2]), array34)
 
 
 def test_issue5137():
-    @Language.factory("my_component")
+    factory_name = "test_issue5137"
+    pipe_name = "my_component"
+
+    @Language.factory(factory_name)
     class MyComponent:
-        def __init__(self, nlp, name="my_component", categories="all_categories"):
+        def __init__(self, nlp, name=pipe_name, categories="all_categories"):
             self.nlp = nlp
             self.categories = categories
             self.name = name
@@ -84,17 +89,17 @@ def test_issue5137():
             pass
 
     nlp = English()
-    my_component = nlp.add_pipe("my_component")
+    my_component = nlp.add_pipe(factory_name, name=pipe_name)
     assert my_component.categories == "all_categories"
     with make_tempdir() as tmpdir:
         nlp.to_disk(tmpdir)
-        overrides = {"components": {"my_component": {"categories": "my_categories"}}}
+        overrides = {"components": {pipe_name: {"categories": "my_categories"}}}
         nlp2 = spacy.load(tmpdir, config=overrides)
-        assert nlp2.get_pipe("my_component").categories == "my_categories"
+        assert nlp2.get_pipe(pipe_name).categories == "my_categories"
 
 
 def test_issue5141(en_vocab):
-    """ Ensure an empty DocBin does not crash on serialization """
+    """Ensure an empty DocBin does not crash on serialization"""
     doc_bin = DocBin(attrs=["DEP", "HEAD"])
     assert list(doc_bin.get_docs(en_vocab)) == []
     doc_bin_bytes = doc_bin.to_bytes()

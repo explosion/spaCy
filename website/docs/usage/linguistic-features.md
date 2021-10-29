@@ -512,7 +512,7 @@ nlp = spacy.load("en_core_web_sm", disable=["parser"])
 
 spaCy features an extremely fast statistical entity recognition system, that
 assigns labels to contiguous spans of tokens. The default
-[trained pipelines](/models) can indentify a variety of named and numeric
+[trained pipelines](/models) can identify a variety of named and numeric
 entities, including companies, locations, organizations and products. You can
 add arbitrary classes to the entity recognition system, and update the model
 with new examples.
@@ -550,7 +550,7 @@ on a token, it will return an empty string.
 > - `I` – Token is **inside** a multi-token entity.
 > - `L` – Token is the **last** token of a multi-token entity.
 > - `U` – Token is a single-token **unit** entity.
-> - `O` – Toke is **outside** an entity.
+> - `O` – Token is **outside** an entity.
 
 ```python
 ### {executable="true"}
@@ -585,7 +585,7 @@ print(ent_francisco)  # ['Francisco', 'I', 'GPE']
 To ensure that the sequence of token annotations remains consistent, you have to
 set entity annotations **at the document level**. However, you can't write
 directly to the `token.ent_iob` or `token.ent_type` attributes, so the easiest
-way to set entities is to assign to the [`doc.ents`](/api/doc#ents) attribute
+way to set entities is to use the [`doc.set_ents`](/api/doc#set_ents) function
 and create the new entity as a [`Span`](/api/span).
 
 ```python
@@ -599,18 +599,28 @@ ents = [(e.text, e.start_char, e.end_char, e.label_) for e in doc.ents]
 print('Before', ents)
 # The model didn't recognize "fb" as an entity :(
 
-fb_ent = Span(doc, 0, 1, label="ORG") # create a Span for the new entity
-doc.ents = list(doc.ents) + [fb_ent]
+# Create a span for the new entity
+fb_ent = Span(doc, 0, 1, label="ORG")
+orig_ents = list(doc.ents)
 
-ents = [(e.text, e.start_char, e.end_char, e.label_) for e in doc.ents]
+# Option 1: Modify the provided entity spans, leaving the rest unmodified
+doc.set_ents([fb_ent], default="unmodified")
+
+# Option 2: Assign a complete list of ents to doc.ents
+doc.ents = orig_ents + [fb_ent]
+
+ents = [(e.text, e.start, e.end, e.label_) for e in doc.ents]
 print('After', ents)
-# [('fb', 0, 2, 'ORG')] 🎉
+# [('fb', 0, 1, 'ORG')] 🎉
 ```
 
-Keep in mind that you need to create a `Span` with the start and end index of
-the **token**, not the start and end index of the entity in the document. In
-this case, "fb" is token `(0, 1)` – but at the document level, the entity will
-have the start and end indices `(0, 2)`.
+Keep in mind that `Span` is initialized with the start and end **token**
+indices, not the character offsets. To create a span from character offsets, use
+[`Doc.char_span`](/api/doc#char_span):
+
+```python
+fb_ent = doc.char_span(0, 2, label="ORG")
+```
 
 #### Setting entity annotations from array {#setting-from-array}
 
@@ -645,9 +655,10 @@ write efficient native code.
 
 ```python
 # cython: infer_types=True
+from spacy.typedefs cimport attr_t
 from spacy.tokens.doc cimport Doc
 
-cpdef set_entity(Doc doc, int start, int end, int ent_type):
+cpdef set_entity(Doc doc, int start, int end, attr_t ent_type):
     for i in range(start, end):
         doc.c[i].ent_type = ent_type
     doc.c[start].ent_iob = 3
@@ -776,6 +787,7 @@ rather than performance:
 
 ```python
 def tokenizer_pseudo_code(
+    text,
     special_cases,
     prefix_search,
     suffix_search,
@@ -829,12 +841,14 @@ def tokenizer_pseudo_code(
                 tokens.append(substring)
                 substring = ""
         tokens.extend(reversed(suffixes))
+    for match in matcher(special_cases, text):
+        tokens.replace(match, special_cases[match])
     return tokens
 ```
 
 The algorithm can be summarized as follows:
 
-1. Iterate over whitespace-separated substrings.
+1. Iterate over space-separated substrings.
 2. Look for a token match. If there is a match, stop processing and keep this
    token.
 3. Check whether we have an explicitly defined special case for this substring.
@@ -848,6 +862,8 @@ The algorithm can be summarized as follows:
 8. Look for "infixes" – stuff like hyphens etc. and split the substring into
    tokens on all infixes.
 9. Once we can't consume any more of the string, handle it as a single token.
+10. Make a final pass over the text to check for special cases that include
+    spaces or that were missed due to the incremental processing of affixes.
 
 </Accordion>
 
@@ -952,7 +968,7 @@ domain. There are six things you may need to define:
    quotes, open brackets, etc.
 3. A function `suffix_search`, to handle **succeeding punctuation**, such as
    commas, periods, close quotes, etc.
-4. A function `infixes_finditer`, to handle non-whitespace separators, such as
+4. A function `infix_finditer`, to handle non-whitespace separators, such as
    hyphens etc.
 5. An optional boolean function `token_match` matching strings that should never
    be split, overriding the infix rules. Useful for things like numbers.
@@ -1153,7 +1169,20 @@ class WhitespaceTokenizer:
 
     def __call__(self, text):
         words = text.split(" ")
-        return Doc(self.vocab, words=words)
+        spaces = [True] * len(words)
+        # Avoid zero-length tokens
+        for i, word in enumerate(words):
+            if word == "":
+                words[i] = " "
+                spaces[i] = False
+        # Remove the final trailing space
+        if words[-1] == " ":
+            words = words[0:-1]
+            spaces = spaces[0:-1]
+        else:
+           spaces[-1] = False
+            
+        return Doc(self.vocab, words=words, spaces=spaces)
 
 nlp = spacy.blank("en")
 nlp.tokenizer = WhitespaceTokenizer(nlp.vocab)
@@ -1232,7 +1261,7 @@ hyperparameters, pipeline and tokenizer used for constructing and training the
 pipeline. The `[nlp.tokenizer]` block refers to a **registered function** that
 takes the `nlp` object and returns a tokenizer. Here, we're registering a
 function called `whitespace_tokenizer` in the
-[`@tokenizers` registry](/api/registry). To make sure spaCy knows how to
+[`@tokenizers` registry](/api/top-level#registry). To make sure spaCy knows how to
 construct your tokenizer during training, you can pass in your Python file by
 setting `--code functions.py` when you run [`spacy train`](/api/cli#train).
 
@@ -1469,7 +1498,7 @@ that time, the `Doc` will already be tokenized.
 
 This process of splitting a token requires more settings, because you need to
 specify the text of the individual tokens, optional per-token attributes and how
-the should be attached to the existing syntax tree. This can be done by
+the tokens should be attached to the existing syntax tree. This can be done by
 supplying a list of `heads` – either the token to attach the newly split token
 to, or a `(token, subtoken)` tuple if the newly split token should be attached
 to another subtoken. In this case, "New" should be attached to "York" (the

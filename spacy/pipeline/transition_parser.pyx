@@ -7,7 +7,6 @@ from libcpp.vector cimport vector
 from libc.string cimport memset, memcpy
 from libc.stdlib cimport calloc, free
 import random
-from typing import Optional
 
 import srsly
 from thinc.api import set_dropout_rate, CupyOps, get_array_module
@@ -48,15 +47,43 @@ class Parser(TrainablePipe):
         beam_density=0.0,
         beam_update_prob=0.0,
         multitasks=tuple(),
+        incorrect_spans_key=None
     ):
         """Create a Parser.
 
         vocab (Vocab): The vocabulary object. Must be shared with documents
             to be processed. The value is set to the `.vocab` attribute.
-        **cfg: Configuration parameters. Set to the `.cfg` attribute.
-             If it doesn't include a value for 'moves',  a new instance is
-             created with `self.TransitionSystem()`. This defines how the
-             parse-state is created, updated and evaluated.
+        model (Model): The model for the transition-based parser. The model needs
+            to have a specific substructure of named components --- see the
+            spacy.ml.tb_framework.TransitionModel for details.
+        name (str): The name of the pipeline component
+        moves (Optional[TransitionSystem]): This defines how the parse-state is created,
+            updated and evaluated. If 'moves' is None, a new instance is
+            created with `self.TransitionSystem()`. Defaults to `None`.
+        update_with_oracle_cut_size (int): During training, cut long sequences into
+            shorter segments by creating intermediate states based on the gold-standard
+            history. The model is not very sensitive to this parameter, so you usually
+            won't need to change it. 100 is a good default.
+        min_action_freq (int): The minimum frequency of labelled actions to retain.
+            Rarer labelled actions have their label backed-off to "dep". While this
+            primarily affects the label accuracy, it can also affect the attachment
+            structure, as the labels are used to represent the pseudo-projectivity
+            transformation.
+        learn_tokens (bool): Whether to learn to merge subtokens that are split
+            relative to the gold standard. Experimental.
+        beam_width (int): The number of candidate analyses to maintain.
+        beam_density (float): The minimum ratio between the scores of the first and
+            last candidates in the beam. This allows the parser to avoid exploring
+            candidates that are too far behind. This is mostly intended to improve
+            efficiency, but it can also improve accuracy as deeper search is not
+            always better.
+        beam_update_prob (float): The chance of making a beam update, instead of a
+            greedy update. Greedy updates are an approximation for the beam updates,
+            and are faster to compute.
+        multitasks: additional multi-tasking components. Experimental.
+        incorrect_spans_key (Optional[str]): Identifies spans that are known
+            to be incorrect entity annotations. The incorrect entity annotations
+            can be stored in the span group, under this key.
         """
         self.vocab = vocab
         self.name = name
@@ -68,11 +95,16 @@ class Parser(TrainablePipe):
             "learn_tokens": learn_tokens,
             "beam_width": beam_width,
             "beam_density": beam_density,
-            "beam_update_prob": beam_update_prob
+            "beam_update_prob": beam_update_prob,
+            "incorrect_spans_key": incorrect_spans_key
         }
         if moves is None:
-            # defined by EntityRecognizer as a BiluoPushDown
-            moves = self.TransitionSystem(self.vocab.strings)
+            # EntityRecognizer -> BiluoPushDown
+            # DependencyParser -> ArcEager
+            moves = self.TransitionSystem(
+                self.vocab.strings,
+                incorrect_spans_key=incorrect_spans_key
+            )
         self.moves = moves
         self.model = model
         if self.moves.n_moves != 0:
@@ -119,6 +151,10 @@ class Parser(TrainablePipe):
         # Available for subclasses, e.g. to deprojectivize
         return []
 
+    @property
+    def incorrect_spans_key(self):
+        return self.cfg["incorrect_spans_key"]
+
     def add_label(self, label):
         resized = False
         for action in self.moves.action_types:
@@ -128,6 +164,23 @@ class Parser(TrainablePipe):
         if resized:
             self._resize()
             self.vocab.strings.add(label)
+            return 1
+        return 0
+
+    def _ensure_labels_are_added(self, docs):
+        """Ensure that all labels for a batch of docs are added."""
+        resized = False
+        labels = set()
+        for doc in docs:
+            labels.update(self.moves.get_doc_labels(doc))
+        for label in labels:
+            for action in self.moves.action_types:
+                added = self.moves.add_action(action, label)
+                if added:
+                    self.vocab.strings.add(label)
+                    resized = True
+        if resized:
+            self._resize()
             return 1
         return 0
 
@@ -157,39 +210,37 @@ class Parser(TrainablePipe):
         with self.model.use_params(params):
             yield
 
-    def __call__(self, Doc doc):
-        """Apply the parser or entity recognizer, setting the annotations onto
-        the `Doc` object.
-
-        doc (Doc): The document to be processed.
-        """
-        states = self.predict([doc])
-        self.set_annotations([doc], states)
-        return doc
-
     def pipe(self, docs, *, int batch_size=256):
         """Process a stream of documents.
 
         stream: The sequence of documents to process.
         batch_size (int): Number of documents to accumulate into a working set.
+        error_handler (Callable[[str, List[Doc], Exception], Any]): Function that
+            deals with a failing batch of documents. The default function just reraises
+            the exception.
+
         YIELDS (Doc): Documents, in order.
         """
         cdef Doc doc
+        error_handler = self.get_error_handler()
         for batch in util.minibatch(docs, size=batch_size):
             batch_in_order = list(batch)
-            by_length = sorted(batch, key=lambda doc: len(doc))
-            for subbatch in util.minibatch(by_length, size=max(batch_size//4, 2)):
-                subbatch = list(subbatch)
-                parse_states = self.predict(subbatch)
-                self.set_annotations(subbatch, parse_states)
-            yield from batch_in_order
+            try:
+                by_length = sorted(batch, key=lambda doc: len(doc))
+                for subbatch in util.minibatch(by_length, size=max(batch_size//4, 2)):
+                    subbatch = list(subbatch)
+                    parse_states = self.predict(subbatch)
+                    self.set_annotations(subbatch, parse_states)
+                yield from batch_in_order
+            except Exception as e:
+                error_handler(self.name, self, batch_in_order, e)
+
 
     def predict(self, docs):
         if isinstance(docs, Doc):
             docs = [docs]
         if not any(len(doc) for doc in docs):
             result = self.moves.init_batch(docs)
-            self._resize()
             return result
         if self.cfg["beam_width"] == 1:
             return self.greedy_parse(docs, drop=0.0)
@@ -229,6 +280,9 @@ class Parser(TrainablePipe):
             losses = {}
         losses.setdefault(self.name, 0.)
         validate_examples(examples, "Parser.update")
+        self._ensure_labels_are_added(
+            [eg.x for eg in examples] + [eg.y for eg in examples]
+        )
         for multitask in self._multitasks:
             multitask.update(examples, drop=drop, sgd=sgd)
         # We need to take care to act on the whole batch, because we might be
@@ -313,10 +367,7 @@ class Parser(TrainablePipe):
 
     def initialize(self, get_examples, nlp=None, labels=None):
         validate_get_examples(get_examples, "Parser.initialize")
-        lexeme_norms = self.vocab.lookups.get_table("lexeme_norm", {})
-        if len(lexeme_norms) == 0 and self.vocab.lang in util.LEXEME_NORM_LANGS:
-            langs = ", ".join(util.LEXEME_NORM_LANGS)
-            util.logger.debug(Warnings.W033.format(model="parser or NER", langs=langs))
+        util.check_lexeme_norms(self.vocab, "parser or NER")
         if labels is not None:
             actions = dict(labels)
         else:
@@ -355,7 +406,7 @@ class Parser(TrainablePipe):
     def to_disk(self, path, exclude=tuple()):
         serializers = {
             "model": lambda p: (self.model.to_disk(p) if self.model is not True else True),
-            "vocab": lambda p: self.vocab.to_disk(p),
+            "vocab": lambda p: self.vocab.to_disk(p, exclude=exclude),
             "moves": lambda p: self.moves.to_disk(p, exclude=["strings"]),
             "cfg": lambda p: srsly.write_json(p, self.cfg)
         }
@@ -363,7 +414,7 @@ class Parser(TrainablePipe):
 
     def from_disk(self, path, exclude=tuple()):
         deserializers = {
-            "vocab": lambda p: self.vocab.from_disk(p),
+            "vocab": lambda p: self.vocab.from_disk(p, exclude=exclude),
             "moves": lambda p: self.moves.from_disk(p, exclude=["strings"]),
             "cfg": lambda p: self.cfg.update(srsly.read_json(p)),
             "model": lambda p: None,
@@ -377,13 +428,13 @@ class Parser(TrainablePipe):
                 self._resize()
                 self.model.from_bytes(bytes_data)
             except AttributeError:
-                raise ValueError(Errors.E149) from None
+                raise ValueError(Errors.E149)
         return self
 
     def to_bytes(self, exclude=tuple()):
         serializers = {
             "model": lambda: (self.model.to_bytes()),
-            "vocab": lambda: self.vocab.to_bytes(),
+            "vocab": lambda: self.vocab.to_bytes(exclude=exclude),
             "moves": lambda: self.moves.to_bytes(exclude=["strings"]),
             "cfg": lambda: srsly.json_dumps(self.cfg, indent=2, sort_keys=True)
         }
@@ -391,7 +442,7 @@ class Parser(TrainablePipe):
 
     def from_bytes(self, bytes_data, exclude=tuple()):
         deserializers = {
-            "vocab": lambda b: self.vocab.from_bytes(b),
+            "vocab": lambda b: self.vocab.from_bytes(b, exclude=exclude),
             "moves": lambda b: self.moves.from_bytes(b, exclude=["strings"]),
             "cfg": lambda b: self.cfg.update(srsly.json_loads(b)),
             "model": lambda b: None,

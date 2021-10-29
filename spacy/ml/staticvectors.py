@@ -8,7 +8,7 @@ from ..tokens import Doc
 from ..errors import Errors
 
 
-@registry.layers("spacy.StaticVectors.v1")
+@registry.layers("spacy.StaticVectors.v2")
 def StaticVectors(
     nO: Optional[int] = None,
     nM: Optional[int] = None,
@@ -38,7 +38,7 @@ def forward(
         return _handle_empty(model.ops, model.get_dim("nO"))
     key_attr = model.attrs["key_attr"]
     W = cast(Floats2d, model.ops.as_contig(model.get_param("W")))
-    V = cast(Floats2d, docs[0].vocab.vectors.data)
+    V = cast(Floats2d, model.ops.asarray(docs[0].vocab.vectors.data))
     rows = model.ops.flatten(
         [doc.vocab.vectors.find(keys=doc.to_array(key_attr)) for doc in docs]
     )
@@ -46,8 +46,10 @@ def forward(
         vectors_data = model.ops.gemm(model.ops.as_contig(V[rows]), W, trans2=True)
     except ValueError:
         raise RuntimeError(Errors.E896)
+    # Convert negative indices to 0-vectors (TODO: more options for UNK tokens)
+    vectors_data[rows < 0] = 0
     output = Ragged(
-        vectors_data, model.ops.asarray([len(doc) for doc in docs], dtype="i")
+        vectors_data, model.ops.asarray([len(doc) for doc in docs], dtype="i")  # type: ignore
     )
     mask = None
     if is_train:
@@ -60,7 +62,9 @@ def forward(
             d_output.data *= mask
         model.inc_grad(
             "W",
-            model.ops.gemm(d_output.data, model.ops.as_contig(V[rows]), trans1=True),
+            model.ops.gemm(
+                cast(Floats2d, d_output.data), model.ops.as_contig(V[rows]), trans1=True
+            ),
         )
         return []
 
@@ -95,4 +99,7 @@ def _handle_empty(ops: Ops, nO: int):
 
 
 def _get_drop_mask(ops: Ops, nO: int, rate: Optional[float]) -> Optional[Floats1d]:
-    return ops.get_dropout_mask((nO,), rate) if rate is not None else None
+    if rate is not None:
+        mask = ops.get_dropout_mask((nO,), rate)
+        return mask  # type: ignore
+    return None

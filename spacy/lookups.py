@@ -1,4 +1,4 @@
-from typing import Dict, Any, List, Union, Optional
+from typing import Any, List, Union, Optional, Dict
 from pathlib import Path
 import srsly
 from preshed.bloom import BloomFilter
@@ -12,18 +12,16 @@ from .strings import get_string_id
 UNSET = object()
 
 
-def load_lookups(
-    lang: str, tables: List[str], strict: bool = True
-) -> Optional[Dict[str, Any]]:
+def load_lookups(lang: str, tables: List[str], strict: bool = True) -> "Lookups":
     """Load the data from the spacy-lookups-data package for a given language,
-    if available. Returns an empty dict if there's no data or if the package
+    if available. Returns an empty `Lookups` container if there's no data or if the package
     is not installed.
 
     lang (str): The language code (corresponds to entry point exposed by
         the spacy-lookups-data package).
     tables (List[str]): Name of tables to load, e.g. ["lemma_lookup", "lemma_exc"]
     strict (bool): Whether to raise an error if a table doesn't exist.
-    RETURNS (Dict[str, Any]): The lookups, keyed by table name.
+    RETURNS (Lookups): The lookups container containing the loaded tables.
     """
     # TODO: import spacy_lookups_data instead of going via entry points here?
     lookups = Lookups()
@@ -36,9 +34,9 @@ def load_lookups(
         if table not in data:
             if strict:
                 raise ValueError(Errors.E955.format(table=table, lang=lang))
-            language_data = {}
+            language_data = {}  # type: ignore[var-annotated]
         else:
-            language_data = load_language_data(data[table])
+            language_data = load_language_data(data[table])  # type: ignore[assignment]
         lookups.add_table(table, language_data)
     return lookups
 
@@ -57,7 +55,7 @@ class Table(OrderedDict):
         data (dict): The dictionary.
         name (str): Optional table name for reference.
 
-        DOCS: https://nightly.spacy.io/api/lookups#table.from_dict
+        DOCS: https://spacy.io/api/lookups#table.from_dict
         """
         self = cls(name=name)
         self.update(data)
@@ -69,7 +67,7 @@ class Table(OrderedDict):
         name (str): Optional table name for reference.
         data (dict): Initial data, used to hint Bloom Filter.
 
-        DOCS: https://nightly.spacy.io/api/lookups#table.init
+        DOCS: https://spacy.io/api/lookups#table.init
         """
         OrderedDict.__init__(self)
         self.name = name
@@ -118,7 +116,7 @@ class Table(OrderedDict):
         key = get_string_id(key)
         return OrderedDict.get(self, key, default)
 
-    def __contains__(self, key: Union[str, int]) -> bool:
+    def __contains__(self, key: Union[str, int]) -> bool:  # type: ignore[override]
         """Check whether a key is in the table. String keys will be hashed.
 
         key (str / int): The key to check.
@@ -135,7 +133,7 @@ class Table(OrderedDict):
 
         RETURNS (bytes): The serialized table.
 
-        DOCS: https://nightly.spacy.io/api/lookups#table.to_bytes
+        DOCS: https://spacy.io/api/lookups#table.to_bytes
         """
         data = {
             "name": self.name,
@@ -150,7 +148,7 @@ class Table(OrderedDict):
         bytes_data (bytes): The data to load.
         RETURNS (Table): The loaded table.
 
-        DOCS: https://nightly.spacy.io/api/lookups#table.from_bytes
+        DOCS: https://spacy.io/api/lookups#table.from_bytes
         """
         loaded = srsly.msgpack_loads(bytes_data)
         data = loaded.get("dict", {})
@@ -172,9 +170,9 @@ class Lookups:
     def __init__(self) -> None:
         """Initialize the Lookups object.
 
-        DOCS: https://nightly.spacy.io/api/lookups#init
+        DOCS: https://spacy.io/api/lookups#init
         """
-        self._tables = {}
+        self._tables: Dict[str, Table] = {}
 
     def __contains__(self, name: str) -> bool:
         """Check if the lookups contain a table of a given name. Delegates to
@@ -201,7 +199,7 @@ class Lookups:
         data (dict): Optional data to add to the table.
         RETURNS (Table): The newly added table.
 
-        DOCS: https://nightly.spacy.io/api/lookups#add_table
+        DOCS: https://spacy.io/api/lookups#add_table
         """
         if name in self.tables:
             raise ValueError(Errors.E158.format(name=name))
@@ -215,7 +213,7 @@ class Lookups:
         name (str): Name of the table to set.
         table (Table): The Table to set.
 
-        DOCS: https://nightly.spacy.io/api/lookups#set_table
+        DOCS: https://spacy.io/api/lookups#set_table
         """
         self._tables[name] = table
 
@@ -227,7 +225,7 @@ class Lookups:
         default (Any): Optional default value to return if table doesn't exist.
         RETURNS (Table): The table.
 
-        DOCS: https://nightly.spacy.io/api/lookups#get_table
+        DOCS: https://spacy.io/api/lookups#get_table
         """
         if name not in self._tables:
             if default == UNSET:
@@ -241,7 +239,7 @@ class Lookups:
         name (str): Name of the table to remove.
         RETURNS (Table): The removed table.
 
-        DOCS: https://nightly.spacy.io/api/lookups#remove_table
+        DOCS: https://spacy.io/api/lookups#remove_table
         """
         if name not in self._tables:
             raise KeyError(Errors.E159.format(name=name, tables=self.tables))
@@ -253,7 +251,7 @@ class Lookups:
         name (str): Name of the table.
         RETURNS (bool): Whether a table of that name exists.
 
-        DOCS: https://nightly.spacy.io/api/lookups#has_table
+        DOCS: https://spacy.io/api/lookups#has_table
         """
         return name in self._tables
 
@@ -262,7 +260,7 @@ class Lookups:
 
         RETURNS (bytes): The serialized Lookups.
 
-        DOCS: https://nightly.spacy.io/api/lookups#to_bytes
+        DOCS: https://spacy.io/api/lookups#to_bytes
         """
         return srsly.msgpack_dumps(self._tables)
 
@@ -272,7 +270,7 @@ class Lookups:
         bytes_data (bytes): The data to load.
         RETURNS (Lookups): The loaded Lookups.
 
-        DOCS: https://nightly.spacy.io/api/lookups#from_bytes
+        DOCS: https://spacy.io/api/lookups#from_bytes
         """
         self._tables = {}
         for key, value in srsly.msgpack_loads(bytes_data).items():
@@ -287,7 +285,7 @@ class Lookups:
 
         path (str / Path): The file path.
 
-        DOCS: https://nightly.spacy.io/api/lookups#to_disk
+        DOCS: https://spacy.io/api/lookups#to_disk
         """
         path = ensure_path(path)
         if not path.exists():
@@ -305,7 +303,7 @@ class Lookups:
         path (str / Path): The directory path.
         RETURNS (Lookups): The loaded lookups.
 
-        DOCS: https://nightly.spacy.io/api/lookups#from_disk
+        DOCS: https://spacy.io/api/lookups#from_disk
         """
         path = ensure_path(path)
         filepath = path / filename

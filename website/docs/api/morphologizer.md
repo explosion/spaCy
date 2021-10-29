@@ -15,6 +15,16 @@ coarse-grained POS tags following the Universal Dependencies
 [FEATS](https://universaldependencies.org/format.html#morphological-annotation)
 annotation guidelines.
 
+## Assigned Attributes {#assigned-attributes}
+
+Predictions are saved to `Token.morph` and `Token.pos`.
+
+| Location      | Value                                     |
+| ------------- | ----------------------------------------- |
+| `Token.pos`   | The UPOS part of speech (hash). ~~int~~   |
+| `Token.pos_`  | The UPOS part of speech. ~~str~~          |
+| `Token.morph` | Morphological features. ~~MorphAnalysis~~ |
+
 ## Config and implementation {#config}
 
 The default config is defined by the pipeline component factory and describes
@@ -61,11 +71,11 @@ shortcut for this and instantiate the component using its string name and
 > morphologizer = Morphologizer(nlp.vocab, model)
 > ```
 
-| Name           | Description                                                                                                          |
-| -------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `vocab`        | The shared vocabulary. ~~Vocab~~                                                                                     |
-| `model`        | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. ~~Model[List[Doc], List[Floats2d]]~~ |
-| `name`         | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~                  |
+| Name    | Description                                                                                                          |
+| ------- | -------------------------------------------------------------------------------------------------------------------- |
+| `vocab` | The shared vocabulary. ~~Vocab~~                                                                                     |
+| `model` | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. ~~Model[List[Doc], List[Floats2d]]~~ |
+| `name`  | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~                  |
 
 ## Morphologizer.\_\_call\_\_ {#call tag="method"}
 
@@ -189,9 +199,8 @@ Modify a batch of [`Doc`](/api/doc) objects, using pre-computed scores.
 
 Learn from a batch of [`Example`](/api/example) objects containing the
 predictions and gold-standard annotations, and update the component's model.
-Delegates to [`predict`](/api/morphologizer#predict), 
-[`get_loss`](/api/morphologizer#get_loss) and 
-[`set_annotations`](/api/morphologizer#set_annotations).
+Delegates to [`predict`](/api/morphologizer#predict) and
+[`get_loss`](/api/morphologizer#get_loss).
 
 > #### Example
 >
@@ -201,14 +210,14 @@ Delegates to [`predict`](/api/morphologizer#predict),
 > losses = morphologizer.update(examples, sgd=optimizer)
 > ```
 
-| Name              | Description                                                                                                                        |
-| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `examples`        | A batch of [`Example`](/api/example) objects to learn from. ~~Iterable[Example]~~                                                  |
-| _keyword-only_    |                                                                                                                                    |
-| `drop`            | The dropout rate. ~~float~~                                                                                                        |
-| `sgd`             | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~                      |
-| `losses`          | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~           |
-| **RETURNS**       | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                              |
+| Name           | Description                                                                                                              |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `examples`     | A batch of [`Example`](/api/example) objects to learn from. ~~Iterable[Example]~~                                        |
+| _keyword-only_ |                                                                                                                          |
+| `drop`         | The dropout rate. ~~float~~                                                                                              |
+| `sgd`          | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~            |
+| `losses`       | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~ |
+| **RETURNS**    | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                    |
 
 ## Morphologizer.get_loss {#get_loss tag="method"}
 

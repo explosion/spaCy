@@ -135,8 +135,8 @@ def test_pipe_class_component_defaults():
             self,
             nlp: Language,
             name: str,
-            value1: StrictInt = 10,
-            value2: StrictStr = "hello",
+            value1: StrictInt = StrictInt(10),
+            value2: StrictStr = StrictStr("hello"),
         ):
             self.nlp = nlp
             self.value1 = value1
@@ -160,7 +160,7 @@ def test_pipe_class_component_model():
             "@architectures": "spacy.TextCatEnsemble.v2",
             "tok2vec": DEFAULT_TOK2VEC_MODEL,
             "linear_model": {
-                "@architectures": "spacy.TextCatBOW.v1",
+                "@architectures": "spacy.TextCatBOW.v2",
                 "exclusive_classes": False,
                 "ngram_size": 1,
                 "no_output_layer": False,
@@ -196,7 +196,11 @@ def test_pipe_class_component_model_custom():
     @Language.factory(name, default_config=default_config)
     class Component:
         def __init__(
-            self, nlp: Language, model: Model, name: str, value1: StrictInt = 10
+            self,
+            nlp: Language,
+            model: Model,
+            name: str,
+            value1: StrictInt = StrictInt(10),
         ):
             self.nlp = nlp
             self.model = model
@@ -332,24 +336,44 @@ def test_language_factories_invalid():
 
 
 @pytest.mark.parametrize(
-    "weights,expected",
+    "weights,override,expected",
     [
-        ([{"a": 1.0}, {"b": 1.0}, {"c": 1.0}], {"a": 0.33, "b": 0.33, "c": 0.33}),
-        ([{"a": 1.0}, {"b": 50}, {"c": 123}], {"a": 0.33, "b": 0.33, "c": 0.33}),
+        ([{"a": 1.0}, {"b": 1.0}, {"c": 1.0}], {}, {"a": 0.33, "b": 0.33, "c": 0.33}),
+        ([{"a": 1.0}, {"b": 50}, {"c": 100}], {}, {"a": 0.01, "b": 0.33, "c": 0.66}),
         (
             [{"a": 0.7, "b": 0.3}, {"c": 1.0}, {"d": 0.5, "e": 0.5}],
+            {},
             {"a": 0.23, "b": 0.1, "c": 0.33, "d": 0.17, "e": 0.17},
         ),
         (
-            [{"a": 100, "b": 400}, {"c": 0.5, "d": 0.5}],
-            {"a": 0.1, "b": 0.4, "c": 0.25, "d": 0.25},
+            [{"a": 100, "b": 300}, {"c": 50, "d": 50}],
+            {},
+            {"a": 0.2, "b": 0.6, "c": 0.1, "d": 0.1},
         ),
-        ([{"a": 0.5, "b": 0.5}, {"b": 1.0}], {"a": 0.25, "b": 0.75}),
-        ([{"a": 0.0, "b": 0.0}, {"c": 0.0}], {"a": 0.0, "b": 0.0, "c": 0.0}),
+        ([{"a": 0.5, "b": 0.5}, {"b": 1.0}], {}, {"a": 0.33, "b": 0.67}),
+        ([{"a": 0.5, "b": 0.0}], {}, {"a": 1.0, "b": 0.0}),
+        ([{"a": 0.5, "b": 0.5}, {"b": 1.0}], {"a": 0.0}, {"a": 0.0, "b": 1.0}),
+        ([{"a": 0.0, "b": 0.0}, {"c": 0.0}], {}, {"a": 0.0, "b": 0.0, "c": 0.0}),
+        ([{"a": 0.0, "b": 0.0}, {"c": 1.0}], {}, {"a": 0.0, "b": 0.0, "c": 1.0}),
+        (
+            [{"a": 0.0, "b": 0.0}, {"c": 0.0}],
+            {"c": 0.2},
+            {"a": 0.0, "b": 0.0, "c": 1.0},
+        ),
+        (
+            [{"a": 0.5, "b": 0.5, "c": 1.0, "d": 1.0}],
+            {"a": 0.0, "b": 0.0},
+            {"a": 0.0, "b": 0.0, "c": 0.5, "d": 0.5},
+        ),
+        (
+            [{"a": 0.5, "b": 0.5, "c": 1.0, "d": 1.0}],
+            {"a": 0.0, "b": 0.0, "f": 0.0},
+            {"a": 0.0, "b": 0.0, "c": 0.5, "d": 0.5, "f": 0.0},
+        ),
     ],
 )
-def test_language_factories_combine_score_weights(weights, expected):
-    result = combine_score_weights(weights)
+def test_language_factories_combine_score_weights(weights, override, expected):
+    result = combine_score_weights(weights, override)
     assert sum(result.values()) in (0.99, 1.0, 0.0)
     assert result == expected
 
@@ -375,17 +399,17 @@ def test_language_factories_scores():
     # Test with custom defaults
     config = nlp.config.copy()
     config["training"]["score_weights"]["a1"] = 0.0
-    config["training"]["score_weights"]["b3"] = 1.0
+    config["training"]["score_weights"]["b3"] = 1.3
     nlp = English.from_config(config)
     score_weights = nlp.config["training"]["score_weights"]
-    expected = {"a1": 0.0, "a2": 0.5, "b1": 0.03, "b2": 0.12, "b3": 0.34}
+    expected = {"a1": 0.0, "a2": 0.12, "b1": 0.05, "b2": 0.17, "b3": 0.65}
     assert score_weights == expected
     # Test with null values
     config = nlp.config.copy()
     config["training"]["score_weights"]["a1"] = None
     nlp = English.from_config(config)
     score_weights = nlp.config["training"]["score_weights"]
-    expected = {"a1": None, "a2": 0.5, "b1": 0.03, "b2": 0.12, "b3": 0.35}
+    expected = {"a1": None, "a2": 0.12, "b1": 0.05, "b2": 0.17, "b3": 0.66}
     assert score_weights == expected
 
 
@@ -400,6 +424,36 @@ def test_pipe_factories_from_source():
     assert "my_tagger" in nlp.pipe_names
     with pytest.raises(KeyError):
         nlp.add_pipe("custom", source=source_nlp)
+
+
+def test_pipe_factories_from_source_language_subclass():
+    class CustomEnglishDefaults(English.Defaults):
+        stop_words = set(["custom", "stop"])
+
+    @registry.languages("custom_en")
+    class CustomEnglish(English):
+        lang = "custom_en"
+        Defaults = CustomEnglishDefaults
+
+    source_nlp = English()
+    source_nlp.add_pipe("tagger")
+
+    # custom subclass
+    nlp = CustomEnglish()
+    nlp.add_pipe("tagger", source=source_nlp)
+    assert "tagger" in nlp.pipe_names
+
+    # non-subclass
+    nlp = German()
+    nlp.add_pipe("tagger", source=source_nlp)
+    assert "tagger" in nlp.pipe_names
+
+    # mismatched vectors
+    nlp = English()
+    nlp.vocab.vectors.resize((1, 4))
+    nlp.vocab.vectors.add("cat", vector=[1, 2, 3, 4])
+    with pytest.warns(UserWarning):
+        nlp.add_pipe("tagger", source=source_nlp)
 
 
 def test_pipe_factories_from_source_custom():
@@ -451,13 +505,27 @@ def test_pipe_factories_from_source_config():
     assert config["arg"] == "world"
 
 
-def test_pipe_factories_decorator_idempotent():
+class PipeFactoriesIdempotent:
+    def __init__(self, nlp, name):
+        ...
+
+    def __call__(self, doc):
+        ...
+
+
+@pytest.mark.parametrize(
+    "i,func,func2",
+    [
+        (0, lambda nlp, name: lambda doc: doc, lambda doc: doc),
+        (1, PipeFactoriesIdempotent, PipeFactoriesIdempotent(None, None)),
+    ],
+)
+def test_pipe_factories_decorator_idempotent(i, func, func2):
     """Check that decorator can be run multiple times if the function is the
     same. This is especially relevant for live reloading because we don't
     want spaCy to raise an error if a module registering components is reloaded.
     """
-    name = "test_pipe_factories_decorator_idempotent"
-    func = lambda nlp, name: lambda doc: doc
+    name = f"test_pipe_factories_decorator_idempotent_{i}"
     for i in range(5):
         Language.factory(name, func=func)
     nlp = Language()
@@ -466,7 +534,6 @@ def test_pipe_factories_decorator_idempotent():
     # Make sure it also works for component decorator, which creates the
     # factory function
     name2 = f"{name}2"
-    func2 = lambda doc: doc
     for i in range(5):
         Language.component(name2, func=func2)
     nlp = Language()

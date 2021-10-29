@@ -1,6 +1,7 @@
-from typing import Iterable, Iterator, Union
+from typing import List, Dict, Set, Iterable, Iterator, Union, Optional
 from pathlib import Path
 import numpy
+from numpy import ndarray
 import zlib
 import srsly
 from thinc.api import NumpyOps
@@ -8,7 +9,7 @@ from thinc.api import NumpyOps
 from .doc import Doc
 from ..vocab import Vocab
 from ..compat import copy_reg
-from ..attrs import SPACY, ORTH, intify_attr
+from ..attrs import SPACY, ORTH, intify_attr, IDS
 from ..errors import Errors
 from ..util import ensure_path, SimpleFrozenList
 
@@ -62,19 +63,25 @@ class DocBin:
         store_user_data (bool): Whether to write the `Doc.user_data` to bytes/file.
         docs (Iterable[Doc]): Docs to add.
 
-        DOCS: https://nightly.spacy.io/api/docbin#init
+        DOCS: https://spacy.io/api/docbin#init
         """
-        attrs = sorted([intify_attr(attr) for attr in attrs])
+        int_attrs = [intify_attr(attr) for attr in attrs]
+        if None in int_attrs:
+            non_valid = [attr for attr in attrs if intify_attr(attr) is None]
+            raise KeyError(
+                Errors.E983.format(dict="attrs", key=non_valid, keys=IDS.keys())
+            ) from None
+        attrs = sorted(int_attrs)
         self.version = "0.1"
         self.attrs = [attr for attr in attrs if attr != ORTH and attr != SPACY]
         self.attrs.insert(0, ORTH)  # Ensure ORTH is always attrs[0]
-        self.tokens = []
-        self.spaces = []
-        self.cats = []
-        self.span_groups = []
-        self.user_data = []
-        self.flags = []
-        self.strings = set()
+        self.tokens: List[ndarray] = []
+        self.spaces: List[ndarray] = []
+        self.cats: List[Dict] = []
+        self.span_groups: List[bytes] = []
+        self.user_data: List[Optional[bytes]] = []
+        self.flags: List[Dict] = []
+        self.strings: Set[str] = set()
         self.store_user_data = store_user_data
         for doc in docs:
             self.add(doc)
@@ -88,7 +95,7 @@ class DocBin:
 
         doc (Doc): The Doc object to add.
 
-        DOCS: https://nightly.spacy.io/api/docbin#add
+        DOCS: https://spacy.io/api/docbin#add
         """
         array = doc.to_array(self.attrs)
         if len(array.shape) == 1:
@@ -103,10 +110,12 @@ class DocBin:
             self.strings.add(token.text)
             self.strings.add(token.tag_)
             self.strings.add(token.lemma_)
+            self.strings.add(token.norm_)
             self.strings.add(str(token.morph))
             self.strings.add(token.dep_)
             self.strings.add(token.ent_type_)
             self.strings.add(token.ent_kb_id_)
+            self.strings.add(token.ent_id_)
         self.cats.append(doc.cats)
         self.user_data.append(srsly.msgpack_dumps(doc.user_data))
         self.span_groups.append(doc.spans.to_bytes())
@@ -122,7 +131,7 @@ class DocBin:
         vocab (Vocab): The shared vocab.
         YIELDS (Doc): The Doc objects.
 
-        DOCS: https://nightly.spacy.io/api/docbin#get_docs
+        DOCS: https://spacy.io/api/docbin#get_docs
         """
         for string in self.strings:
             vocab[string]
@@ -130,11 +139,11 @@ class DocBin:
         for i in range(len(self.tokens)):
             flags = self.flags[i]
             tokens = self.tokens[i]
-            spaces = self.spaces[i]
+            spaces: Optional[ndarray] = self.spaces[i]
             if flags.get("has_unknown_spaces"):
                 spaces = None
-            doc = Doc(vocab, words=tokens[:, orth_col], spaces=spaces)
-            doc = doc.from_array(self.attrs, tokens)
+            doc = Doc(vocab, words=tokens[:, orth_col], spaces=spaces)  # type: ignore
+            doc = doc.from_array(self.attrs, tokens)  # type: ignore
             doc.cats = self.cats[i]
             if self.span_groups[i]:
                 doc.spans.from_bytes(self.span_groups[i])
@@ -153,7 +162,7 @@ class DocBin:
 
         other (DocBin): The DocBin to merge into the current bin.
 
-        DOCS: https://nightly.spacy.io/api/docbin#merge
+        DOCS: https://spacy.io/api/docbin#merge
         """
         if self.attrs != other.attrs:
             raise ValueError(
@@ -180,7 +189,7 @@ class DocBin:
 
         RETURNS (bytes): The serialized DocBin.
 
-        DOCS: https://nightly.spacy.io/api/docbin#to_bytes
+        DOCS: https://spacy.io/api/docbin#to_bytes
         """
         for tokens in self.tokens:
             assert len(tokens.shape) == 2, tokens.shape  # this should never happen
@@ -208,7 +217,7 @@ class DocBin:
         bytes_data (bytes): The data to load from.
         RETURNS (DocBin): The loaded DocBin.
 
-        DOCS: https://nightly.spacy.io/api/docbin#from_bytes
+        DOCS: https://spacy.io/api/docbin#from_bytes
         """
         try:
             msg = srsly.msgpack_loads(zlib.decompress(bytes_data))
@@ -240,11 +249,14 @@ class DocBin:
 
         path (str / Path): The file path.
 
-        DOCS: https://nightly.spacy.io/api/docbin#to_disk
+        DOCS: https://spacy.io/api/docbin#to_disk
         """
         path = ensure_path(path)
         with path.open("wb") as file_:
-            file_.write(self.to_bytes())
+            try:
+                file_.write(self.to_bytes())
+            except ValueError:
+                raise ValueError(Errors.E870)
 
     def from_disk(self, path: Union[str, Path]) -> "DocBin":
         """Load the DocBin from a file (typically called .spacy).
@@ -252,7 +264,7 @@ class DocBin:
         path (str / Path): The file path.
         RETURNS (DocBin): The loaded DocBin.
 
-        DOCS: https://nightly.spacy.io/api/docbin#to_disk
+        DOCS: https://spacy.io/api/docbin#to_disk
         """
         path = ensure_path(path)
         with path.open("rb") as file_:

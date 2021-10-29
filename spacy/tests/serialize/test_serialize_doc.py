@@ -1,5 +1,5 @@
 import pytest
-from spacy.tokens.doc import Underscore
+from spacy.tokens.underscore import Underscore
 
 import spacy
 from spacy.lang.en import English
@@ -64,13 +64,17 @@ def test_serialize_doc_span_groups(en_vocab):
 
 
 def test_serialize_doc_bin():
-    doc_bin = DocBin(attrs=["LEMMA", "ENT_IOB", "ENT_TYPE"], store_user_data=True)
+    doc_bin = DocBin(
+        attrs=["LEMMA", "ENT_IOB", "ENT_TYPE", "NORM", "ENT_ID"], store_user_data=True
+    )
     texts = ["Some text", "Lots of texts...", "..."]
     cats = {"A": 0.5}
     nlp = English()
     for doc in nlp.pipe(texts):
         doc.cats = cats
         doc.spans["start"] = [doc[0:2]]
+        doc[0].norm_ = "UNUSUAL_TOKEN_NORM"
+        doc[0].ent_id_ = "UNUSUAL_TOKEN_ENT_ID"
         doc_bin.add(doc)
     bytes_data = doc_bin.to_bytes()
 
@@ -82,6 +86,8 @@ def test_serialize_doc_bin():
         assert doc.text == texts[i]
         assert doc.cats == cats
         assert len(doc.spans) == 1
+        assert doc[0].norm_ == "UNUSUAL_TOKEN_NORM"
+        assert doc[0].ent_id_ == "UNUSUAL_TOKEN_ENT_ID"
 
 
 def test_serialize_doc_bin_unknown_spaces(en_vocab):

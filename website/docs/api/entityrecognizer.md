@@ -20,6 +20,24 @@ your entities will be close to their initial tokens. If your entities are long
 and characterized by tokens in their middle, the component will likely not be a
 good fit for your task.
 
+## Assigned Attributes {#assigned-attributes}
+
+Predictions will be saved to `Doc.ents` as a tuple. Each label will also be
+reflected to each underlying token, where it is saved in the `Token.ent_type`
+and `Token.ent_iob` fields. Note that by definition each token can only have one
+label.
+
+When setting `Doc.ents` to create training data, all the spans must be valid and
+non-overlapping, or an error will be thrown.
+
+| Location          | Value                                                             |
+| ----------------- | ----------------------------------------------------------------- |
+| `Doc.ents`        | The annotated spans. ~~Tuple[Span]~~                              |
+| `Token.ent_iob`   | An enum encoding of the IOB part of the named entity tag. ~~int~~ |
+| `Token.ent_iob_`  | The IOB part of the named entity tag. ~~str~~                     |
+| `Token.ent_type`  | The label part of the named entity tag (hash). ~~int~~            |
+| `Token.ent_type_` | The label part of the named entity tag. ~~str~~                   |
+
 ## Config and implementation {#config}
 
 The default config is defined by the pipeline component factory and describes
@@ -37,6 +55,7 @@ architectures and their arguments and hyperparameters.
 >    "moves": None,
 >    "update_with_oracle_cut_size": 100,
 >    "model": DEFAULT_NER_MODEL,
+>    "incorrect_spans_key": "incorrect_spans",
 > }
 > nlp.add_pipe("ner", config=config)
 > ```
@@ -46,6 +65,7 @@ architectures and their arguments and hyperparameters.
 | `moves`                       | A list of transition names. Inferred from the data if not provided. Defaults to `None`. ~~Optional[List[str]]~~                                                                                                                                     |
 | `update_with_oracle_cut_size` | During training, cut long sequences into shorter segments by creating intermediate states based on the gold-standard history. The model is not very sensitive to this parameter, so you usually won't need to change it. Defaults to `100`. ~~int~~ |
 | `model`                       | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. Defaults to [TransitionBasedParser](/api/architectures#TransitionBasedParser). ~~Model[List[Doc], List[Floats2d]]~~                                                 |
+| `incorrect_spans_key`         | This key refers to a `SpanGroup` in `doc.spans` that specifies incorrect spans. The NER wiill learn not to predict (exactly) those spans. Defaults to `None`. ~~Optional[str]~~                                                                     |
 
 ```python
 %%GITHUB_SPACY/spacy/pipeline/ner.pyx
@@ -72,14 +92,15 @@ Create a new pipeline instance. In your application, you would normally use a
 shortcut for this and instantiate the component using its string name and
 [`nlp.add_pipe`](/api/language#add_pipe).
 
-| Name                          | Description                                                                                                                                                                                                                                               |
-| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `vocab`                       | The shared vocabulary. ~~Vocab~~                                                                                                                                                                                                                          |
-| `model`                       | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                                      |
-| `name`                        | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~                                                                                                                                                       |
-| `moves`                       | A list of transition names. Inferred from the data if not provided. ~~Optional[List[str]]~~                                                                                                                                                               |
-| _keyword-only_                |                                                                                                                                                                                                                                                           |
-| `update_with_oracle_cut_size` | During training, cut long sequences into shorter segments by creating intermediate states based on the gold-standard history. The model is not very sensitive to this parameter, so you usually won't need to change it. `100` is a good default. ~~int~~ |
+| Name                          | Description                                                                                                                                                                                                                                         |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vocab`                       | The shared vocabulary. ~~Vocab~~                                                                                                                                                                                                                    |
+| `model`                       | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                                |
+| `name`                        | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~                                                                                                                                                 |
+| `moves`                       | A list of transition names. Inferred from the data if set to `None`, which is the default. ~~Optional[List[str]]~~                                                                                                                                  |
+| _keyword-only_                |                                                                                                                                                                                                                                                     |
+| `update_with_oracle_cut_size` | During training, cut long sequences into shorter segments by creating intermediate states based on the gold-standard history. The model is not very sensitive to this parameter, so you usually won't need to change it. Defaults to `100`. ~~int~~ |
+| `incorrect_spans_key`         | Identifies spans that are known to be incorrect entity annotations. The incorrect entity annotations can be stored in the span group in [`Doc.spans`](/api/doc#spans), under this key. Defaults to `None`. ~~Optional[str]~~                        |
 
 ## EntityRecognizer.\_\_call\_\_ {#call tag="method"}
 
@@ -209,9 +230,8 @@ Modify a batch of [`Doc`](/api/doc) objects, using pre-computed scores.
 ## EntityRecognizer.update {#update tag="method"}
 
 Learn from a batch of [`Example`](/api/example) objects, updating the pipe's
-model. Delegates to [`predict`](/api/entityrecognizer#predict), 
-[`get_loss`](/api/entityrecognizer#get_loss) and 
-[`set_annotations`](/api/entityrecognizer#set_annotations).
+model. Delegates to [`predict`](/api/entityrecognizer#predict) and
+[`get_loss`](/api/entityrecognizer#get_loss).
 
 > #### Example
 >
@@ -221,14 +241,14 @@ model. Delegates to [`predict`](/api/entityrecognizer#predict),
 > losses = ner.update(examples, sgd=optimizer)
 > ```
 
-| Name              | Description                                                                                                                        |
-| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `examples`        | A batch of [`Example`](/api/example) objects to learn from. ~~Iterable[Example]~~                                                  |
-| _keyword-only_    |                                                                                                                                    |
-| `drop`            | The dropout rate. ~~float~~                                                                                                        |
-| `sgd`             | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~                      |
-| `losses`          | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~           |
-| **RETURNS**       | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                              |
+| Name           | Description                                                                                                              |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `examples`     | A batch of [`Example`](/api/example) objects to learn from. ~~Iterable[Example]~~                                        |
+| _keyword-only_ |                                                                                                                          |
+| `drop`         | The dropout rate. ~~float~~                                                                                              |
+| `sgd`          | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~            |
+| `losses`       | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~ |
+| **RETURNS**    | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                    |
 
 ## EntityRecognizer.get_loss {#get_loss tag="method"}
 

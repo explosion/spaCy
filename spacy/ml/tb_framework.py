@@ -3,12 +3,14 @@ from thinc.api import Ops, Model, normal_init, chain, list2array, Linear
 from thinc.types import Floats1d, Floats2d, Floats3d, Ints2d, Floats4d
 import numpy
 from ..tokens.doc import Doc
+from ..util import registry
 
 
 TransitionSystem = Any  # TODO
 State = Any  # TODO
 
 
+@registry.layers("spacy.TransitionModel.v2")
 def TransitionModel(
     *,
     tok2vec: Model[List[Doc], List[Floats2d]],

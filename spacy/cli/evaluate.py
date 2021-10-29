@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Any, Union
 from wasabi import Printer
 from pathlib import Path
 import re
@@ -36,7 +36,7 @@ def evaluate_cli(
     dependency parses in a HTML file, set as output directory as the
     displacy_path argument.
 
-    DOCS: https://nightly.spacy.io/api/cli#evaluate
+    DOCS: https://spacy.io/api/cli#evaluate
     """
     import_code(code_path)
     evaluate(
@@ -60,10 +60,11 @@ def evaluate(
     displacy_path: Optional[Path] = None,
     displacy_limit: int = 25,
     silent: bool = True,
-) -> Scorer:
+    spans_key: str = "sc",
+) -> Dict[str, Any]:
     msg = Printer(no_print=silent, pretty=not silent)
     fix_random_seed()
-    setup_gpu(use_gpu)
+    setup_gpu(use_gpu, silent=silent)
     data_path = util.ensure_path(data_path)
     output_path = util.ensure_path(output)
     displacy_path = util.ensure_path(displacy_path)
@@ -90,6 +91,9 @@ def evaluate(
         "SENT P": "sents_p",
         "SENT R": "sents_r",
         "SENT F": "sents_f",
+        "SPAN P": f"spans_{spans_key}_p",
+        "SPAN R": f"spans_{spans_key}_r",
+        "SPAN F": f"spans_{spans_key}_f",
         "SPEED": "speed",
     }
     results = {}
@@ -108,31 +112,11 @@ def evaluate(
             data[re.sub(r"[\s/]", "_", key.lower())] = scores[key]
 
     msg.table(results, title="Results")
-
-    if "morph_per_feat" in scores:
-        if scores["morph_per_feat"]:
-            print_prf_per_type(msg, scores["morph_per_feat"], "MORPH", "feat")
-            data["morph_per_feat"] = scores["morph_per_feat"]
-    if "dep_las_per_type" in scores:
-        if scores["dep_las_per_type"]:
-            print_prf_per_type(msg, scores["dep_las_per_type"], "LAS", "type")
-            data["dep_las_per_type"] = scores["dep_las_per_type"]
-    if "ents_per_type" in scores:
-        if scores["ents_per_type"]:
-            print_prf_per_type(msg, scores["ents_per_type"], "NER", "type")
-            data["ents_per_type"] = scores["ents_per_type"]
-    if "cats_f_per_type" in scores:
-        if scores["cats_f_per_type"]:
-            print_prf_per_type(msg, scores["cats_f_per_type"], "Textcat F", "label")
-            data["cats_f_per_type"] = scores["cats_f_per_type"]
-    if "cats_auc_per_type" in scores:
-        if scores["cats_auc_per_type"]:
-            print_textcats_auc_per_cat(msg, scores["cats_auc_per_type"])
-            data["cats_auc_per_type"] = scores["cats_auc_per_type"]
+    data = handle_scores_per_type(scores, data, spans_key=spans_key, silent=silent)
 
     if displacy_path:
         factory_names = [nlp.get_pipe_meta(pipe).factory for pipe in nlp.pipe_names]
-        docs = [ex.predicted for ex in dev_dataset]
+        docs = list(nlp.pipe(ex.reference.text for ex in dev_dataset[:displacy_limit]))
         render_deps = "parser" in factory_names
         render_ents = "ner" in factory_names
         render_parses(
@@ -149,6 +133,43 @@ def evaluate(
         srsly.write_json(output_path, data)
         msg.good(f"Saved results to {output_path}")
     return data
+
+
+def handle_scores_per_type(
+    scores: Dict[str, Any],
+    data: Dict[str, Any] = {},
+    *,
+    spans_key: str = "sc",
+    silent: bool = False,
+) -> Dict[str, Any]:
+    msg = Printer(no_print=silent, pretty=not silent)
+    if "morph_per_feat" in scores:
+        if scores["morph_per_feat"]:
+            print_prf_per_type(msg, scores["morph_per_feat"], "MORPH", "feat")
+            data["morph_per_feat"] = scores["morph_per_feat"]
+    if "dep_las_per_type" in scores:
+        if scores["dep_las_per_type"]:
+            print_prf_per_type(msg, scores["dep_las_per_type"], "LAS", "type")
+            data["dep_las_per_type"] = scores["dep_las_per_type"]
+    if "ents_per_type" in scores:
+        if scores["ents_per_type"]:
+            print_prf_per_type(msg, scores["ents_per_type"], "NER", "type")
+            data["ents_per_type"] = scores["ents_per_type"]
+    if f"spans_{spans_key}_per_type" in scores:
+        if scores[f"spans_{spans_key}_per_type"]:
+            print_prf_per_type(
+                msg, scores[f"spans_{spans_key}_per_type"], "SPANS", "type"
+            )
+            data[f"spans_{spans_key}_per_type"] = scores[f"spans_{spans_key}_per_type"]
+    if "cats_f_per_type" in scores:
+        if scores["cats_f_per_type"]:
+            print_prf_per_type(msg, scores["cats_f_per_type"], "Textcat F", "label")
+            data["cats_f_per_type"] = scores["cats_f_per_type"]
+    if "cats_auc_per_type" in scores:
+        if scores["cats_auc_per_type"]:
+            print_textcats_auc_per_cat(msg, scores["cats_auc_per_type"])
+            data["cats_auc_per_type"] = scores["cats_auc_per_type"]
+    return scores
 
 
 def render_parses(
@@ -175,10 +196,13 @@ def render_parses(
 def print_prf_per_type(
     msg: Printer, scores: Dict[str, Dict[str, float]], name: str, type: str
 ) -> None:
-    data = [
-        (k, f"{v['p']*100:.2f}", f"{v['r']*100:.2f}", f"{v['f']*100:.2f}")
-        for k, v in scores.items()
-    ]
+    data = []
+    for key, value in scores.items():
+        row = [key]
+        for k in ("p", "r", "f"):
+            v = value[k]
+            row.append(f"{v * 100:.2f}" if isinstance(v, (int, float)) else v)
+        data.append(row)
     msg.table(
         data,
         header=("", "P", "R", "F"),
@@ -191,7 +215,10 @@ def print_textcats_auc_per_cat(
     msg: Printer, scores: Dict[str, Dict[str, float]]
 ) -> None:
     msg.table(
-        [(k, f"{v:.2f}") for k, v in scores.items()],
+        [
+            (k, f"{v:.2f}" if isinstance(v, (float, int)) else v)
+            for k, v in scores.items()
+        ],
         header=("", "ROC AUC"),
         aligns=("l", "r"),
         title="Textcat ROC AUC (per label)",

@@ -34,7 +34,7 @@ def project_update_dvc_cli(
     workflow is used. The DVC config will only be updated if the project.yml
     changed.
 
-    DOCS: https://nightly.spacy.io/api/cli#project-dvc
+    DOCS: https://spacy.io/api/cli#project-dvc
     """
     project_update_dvc(project_dir, workflow, verbose=verbose, force=force)
 
@@ -143,8 +143,8 @@ def run_dvc_commands(
         easier to pass flags like --quiet that depend on a variable or
         command-line setting while avoiding lots of nested conditionals.
     """
-    for command in commands:
-        command = split_command(command)
+    for c in commands:
+        command = split_command(c)
         dvc_command = ["dvc", *command]
         # Add the flags if they are set to True
         for flag, is_active in flags.items():

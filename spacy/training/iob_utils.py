@@ -1,4 +1,4 @@
-from typing import List, Tuple, Iterable, Union, Iterator
+from typing import List, Dict, Tuple, Iterable, Union, Iterator
 import warnings
 
 from ..errors import Errors, Warnings
@@ -6,7 +6,7 @@ from ..tokens import Span, Doc
 
 
 def iob_to_biluo(tags: Iterable[str]) -> List[str]:
-    out = []
+    out: List[str] = []
     tags = list(tags)
     while tags:
         out.extend(_consume_os(tags))
@@ -71,6 +71,8 @@ def offsets_to_biluo_tags(
     entities (iterable): A sequence of `(start, end, label)` triples. `start`
         and `end` should be character-offset integers denoting the slice into
         the original string.
+    missing (str): The label used for missing values, e.g. if tokenization
+        doesn’t align with the entity offsets. Defaults to "O".
     RETURNS (list): A list of unicode strings, describing the tags. Each tag
         string will be of the form either "", "O" or "{action}-{label}", where
         action is one of "B", "I", "L", "U". The missing label is used where the
@@ -88,7 +90,7 @@ def offsets_to_biluo_tags(
         >>> assert tags == ["O", "O", 'U-LOC', "O"]
     """
     # Ensure no overlapping entity labels exist
-    tokens_in_ents = {}
+    tokens_in_ents: Dict[int, Tuple[int, int, Union[str, int]]] = {}
     starts = {token.idx: token.i for token in doc}
     ends = {token.idx + len(token): token.i for token in doc}
     biluo = ["-" for _ in doc]
@@ -150,7 +152,7 @@ def biluo_tags_to_spans(doc: Doc, tags: Iterable[str]) -> List[Span]:
     to overwrite the doc.ents.
 
     doc (Doc): The document that the BILUO tags refer to.
-    entities (iterable): A sequence of BILUO tags with each tag describing one
+    tags (iterable): A sequence of BILUO tags with each tag describing one
         token. Each tag string will be of the form of either "", "O" or
         "{action}-{label}", where action is one of "B", "I", "L", "U".
     RETURNS (list): A sequence of Span objects. Each token with a missing IOB
@@ -170,7 +172,7 @@ def biluo_tags_to_offsets(
     """Encode per-token tags following the BILUO scheme into entity offsets.
 
     doc (Doc): The document that the BILUO tags refer to.
-    entities (iterable): A sequence of BILUO tags with each tag describing one
+    tags (iterable): A sequence of BILUO tags with each tag describing one
         token. Each tags string will be of the form of either "", "O" or
         "{action}-{label}", where action is one of "B", "I", "L", "U".
     RETURNS (list): A sequence of `(start, end, label)` triples. `start` and
@@ -197,14 +199,18 @@ def tags_to_entities(tags: Iterable[str]) -> List[Tuple[str, int, int]]:
             pass
         elif tag.startswith("I"):
             if start is None:
-                raise ValueError(Errors.E067.format(start="I", tags=tags[: i + 1]))
+                raise ValueError(
+                    Errors.E067.format(start="I", tags=list(tags)[: i + 1])
+                )
         elif tag.startswith("U"):
             entities.append((tag[2:], i, i))
         elif tag.startswith("B"):
             start = i
         elif tag.startswith("L"):
             if start is None:
-                raise ValueError(Errors.E067.format(start="L", tags=tags[: i + 1]))
+                raise ValueError(
+                    Errors.E067.format(start="L", tags=list(tags)[: i + 1])
+                )
             entities.append((tag[2:], start, i))
             start = None
         else:

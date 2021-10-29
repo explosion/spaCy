@@ -3,6 +3,7 @@ from typing import Callable
 from spacy import util
 from spacy.util import ensure_path, registry, load_model_from_config
 from spacy.kb import KnowledgeBase
+from spacy.vocab import Vocab
 from thinc.api import Config
 
 from ..util import make_tempdir
@@ -108,10 +109,10 @@ def test_serialize_subclassed_kb():
             super().__init__(vocab, entity_vector_length)
             self.custom_field = custom_field
 
-    @registry.misc.register("spacy.CustomKB.v1")
+    @registry.misc("spacy.CustomKB.v1")
     def custom_kb(
         entity_vector_length: int, custom_field: int
-    ) -> Callable[["Vocab"], KnowledgeBase]:
+    ) -> Callable[[Vocab], KnowledgeBase]:
         def custom_kb_factory(vocab):
             kb = SubKnowledgeBase(
                 vocab=vocab,

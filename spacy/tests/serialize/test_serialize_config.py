@@ -4,7 +4,12 @@ import spacy
 from spacy.lang.en import English
 from spacy.lang.de import German
 from spacy.language import Language, DEFAULT_CONFIG, DEFAULT_CONFIG_PRETRAIN_PATH
-from spacy.util import registry, load_model_from_config, load_config
+from spacy.util import (
+    registry,
+    load_model_from_config,
+    load_config,
+    load_config_from_str,
+)
 from spacy.ml.models import build_Tok2Vec_model, build_tb_parser_model
 from spacy.ml.models import MultiHashEmbed, MaxoutWindowEncoder
 from spacy.schemas import ConfigSchema, ConfigSchemaPretrain
@@ -138,7 +143,7 @@ subword_features = false
 """
 
 
-@registry.architectures.register("my_test_parser")
+@registry.architectures("my_test_parser")
 def my_parser():
     tok2vec = build_Tok2Vec_model(
         MultiHashEmbed(
@@ -210,7 +215,7 @@ def test_create_nlp_from_config_multiple_instances():
 
 
 def test_serialize_nlp():
-    """ Create a custom nlp pipeline from config and ensure it serializes it correctly """
+    """Create a custom nlp pipeline from config and ensure it serializes it correctly"""
     nlp_config = Config().from_str(nlp_config_string)
     nlp = load_model_from_config(nlp_config, auto_fill=True)
     nlp.get_pipe("tagger").add_label("A")
@@ -230,7 +235,7 @@ def test_serialize_nlp():
 
 
 def test_serialize_custom_nlp():
-    """ Create a custom nlp pipeline and ensure it serializes it correctly"""
+    """Create a custom nlp pipeline and ensure it serializes it correctly"""
     nlp = English()
     parser_cfg = dict()
     parser_cfg["model"] = {"@architectures": "my_test_parser"}
@@ -250,7 +255,7 @@ def test_serialize_custom_nlp():
 
 @pytest.mark.parametrize("parser_config_string", [parser_config_string_upper])
 def test_serialize_parser(parser_config_string):
-    """ Create a non-default parser config to check nlp serializes it correctly """
+    """Create a non-default parser config to check nlp serializes it correctly"""
     nlp = English()
     model_config = Config().from_str(parser_config_string)
     parser = nlp.add_pipe("parser", config=model_config)
@@ -269,7 +274,7 @@ def test_serialize_parser(parser_config_string):
 
 
 def test_config_nlp_roundtrip():
-    """Test that a config prduced by the nlp object passes training config
+    """Test that a config produced by the nlp object passes training config
     validation."""
     nlp = English()
     nlp.add_pipe("entity_ruler")
@@ -439,3 +444,32 @@ def test_config_only_resolve_relevant_blocks():
         nlp.initialize()
     nlp.config["initialize"]["lookups"] = None
     nlp.initialize()
+
+
+def test_hyphen_in_config():
+    hyphen_config_str = """
+    [nlp]
+    lang = "en"
+    pipeline = ["my_punctual_component"]
+
+    [components]
+
+    [components.my_punctual_component]
+    factory = "my_punctual_component"
+    punctuation = ["?","-"]
+    """
+
+    @spacy.Language.factory("my_punctual_component")
+    class MyPunctualComponent(object):
+        name = "my_punctual_component"
+
+        def __init__(
+            self,
+            nlp,
+            name,
+            punctuation,
+        ):
+            self.punctuation = punctuation
+
+    nlp = English.from_config(load_config_from_str(hyphen_config_str))
+    assert nlp.get_pipe("my_punctual_component").punctuation == ["?", "-"]
