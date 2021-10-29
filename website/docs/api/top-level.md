@@ -773,16 +773,16 @@ from the specified model. Intended for use in `[initialize.before_init]`.
 > after_pipeline_creation = {"@callbacks":"spacy.models_with_nvtx_range.v1"}
 > ```
 
-Recursively wrap the models in each pipe using [NVTX](https://nvidia.github.io/NVTX/)
-range markers. These markers aid in GPU profiling by attributing specific operations
-to a ~~Model~~'s forward or backprop passes.
+Recursively wrap the models in each pipe using
+[NVTX](https://nvidia.github.io/NVTX/) range markers. These markers aid in GPU
+profiling by attributing specific operations to a ~~Model~~'s forward or
+backprop passes.
 
 | Name             | Description                                                                                                                  |
-|------------------|------------------------------------------------------------------------------------------------------------------------------|
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------- |
 | `forward_color`  | Color identifier for forward passes. Defaults to `-1`. ~~int~~                                                               |
 | `backprop_color` | Color identifier for backpropagation passes. Defaults to `-1`. ~~int~~                                                       |
 | **CREATES**      | A function that takes the current `nlp` and wraps forward/backprop passes in NVTX ranges. ~~Callable[[Language], Language]~~ |
-
 
 ## Training data and alignment {#gold source="spacy/training"}
 

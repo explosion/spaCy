@@ -301,8 +301,6 @@ fly without having to save to and load from disk.
 $ python -m spacy init config - --lang en --pipeline ner,textcat --optimize accuracy | python -m spacy train - --paths.train ./corpus/train.spacy --paths.dev ./corpus/dev.spacy
 ```
 
-<!-- TODO: add reference to Prodigy's commands once Prodigy nightly is available -->
-
 ### Using variable interpolation {#config-interpolation}
 
 Another very useful feature of the config system is that it supports variable
@@ -1647,7 +1645,7 @@ workers are stuck waiting for it to complete before they can continue.
 
 ## Internal training API {#api}
 
-<Infobox variant="warning">
+<Infobox variant="danger">
 
 spaCy gives you full control over the training loop. However, for most use
 cases, it's recommended to train your pipelines via the
@@ -1656,6 +1654,32 @@ track of your settings and hyperparameters, instead of writing your own training
 scripts from scratch. [Custom registered functions](#custom-code) should
 typically give you everything you need to train fully custom pipelines with
 [`spacy train`](/api/cli#train).
+
+</Infobox>
+
+### Training from a Python script {#api-train new="3.2"}
+
+If you want to run the training from a Python script instead of using the
+[`spacy train`](/api/cli#train) CLI command, you can call into the
+[`train`](/api/cli#train-function) helper function directly. It takes the path
+to the config file, an optional output directory and an optional dictionary of
+[config overrides](#config-overrides).
+
+```python
+from spacy.cli.train import train
+
+train("./config.cfg", overrides={"paths.train": "./train.spacy", "paths.dev": "./dev.spacy"})
+```
+
+### Internal training loop API {#api-loop}
+
+<Infobox variant="warning">
+
+This section documents how the training loop and updates to the `nlp` object
+work internally. You typically shouldn't have to implement this in Python unless
+you're writing your own trainable components. To train a pipeline, use
+[`spacy train`](/api/cli#train) or the [`train`](/api/cli#train-function) helper
+function instead.
 
 </Infobox>
 
