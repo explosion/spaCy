@@ -77,7 +77,7 @@ def forward(
         model.inc_grad(
             "W",
             model.ops.gemm(
-                cast(Floats2d, d_output.data), model.ops.as_contig(V[rows]), trans1=True
+                cast(Floats2d, d_output.data), model.ops.as_contig(V), trans1=True
             ),
         )
         return []
