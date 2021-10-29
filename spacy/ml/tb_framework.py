@@ -1,5 +1,5 @@
 from typing import List, Tuple, Any, Optional
-from thinc.api import Ops, Model, normal_init, chain, list2array, Linear
+from thinc.api import Model, normal_init, chain, list2array, Linear
 from thinc.types import Floats1d, Floats2d, Floats3d, Ints2d, Floats4d
 import numpy
 from ..tokens.doc import Doc
@@ -36,12 +36,12 @@ def TransitionModel(
         params={
             "lower_W": None,  # Floats2d W for the hidden layer
             "lower_b": None,  # Floats1d bias for the hidden layer
-            "lower_pad": None,  # Floats1d bias for the hidden layer
+            "lower_pad": None,  # Floats1d padding for the hidden layer
             "upper_W": None,  # Floats2d W for the output layer
             "upper_b": None,  # Floats1d bias for the output layer
         },
         dims={
-            "nO": None,  # Output size
+            "nO": nO,
             "nP": maxout_pieces,
             "nH": hidden_width,
             "nI": tok2vec_projected.maybe_get_dim("nO"),
