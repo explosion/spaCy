@@ -116,7 +116,7 @@ import pytest
             [1, 1, 3, 1, 6, 6, 3],
             ['nsubj', 'ROOT', 'det', 'obj', 'cc', 'det', 'conj'],
             ['PRON', 'VERB', 'DET', 'NOUN', 'CCONJ', 'DET', 'NOUN'],
-            [(1,3), (4,6)]
+            [(0,1), (2,4), (5,7)]
          
         ),
         # o escritor brasileiro Aníbal Machado -> o escritor brasileiro,  Aníbal Machado         Two NPs together
@@ -153,7 +153,7 @@ import pytest
         ),
         # a primeira fábrica de medicamentos do governo -> a primeira fábrica, medicamentos, governo  Compounding by nmod, several NPs chained together
         (
-            ["a primeira fábrica", "medicamentos", "governo"],
+            ["a", "primeira", "fábrica", "medicamentos", "governo"],
             [2, 2, 2, 4, 2, 6, 2],
             ['det', 'amod', 'ROOT', 'case', 'nmod', 'case', 'nmod'],
             ['DET', 'ADJ', 'NOUN', 'ADP', 'NOUN', 'ADP', 'NOUN'],
