@@ -1,4 +1,4 @@
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Union
 from pathlib import Path
 from wasabi import msg
 import typer
@@ -46,12 +46,14 @@ def train_cli(
 
 
 def train(
-    config_path: Path,
-    output_path: Optional[Path] = None,
+    config_path: Union[str, Path],
+    output_path: Optional[Union[str, Path]] = None,
     *,
     use_gpu: int = -1,
     overrides: Dict[str, Any] = util.SimpleFrozenDict(),
 ):
+    config_path = util.ensure_path(config_path)
+    output_path = util.ensure_path(output_path)
     # Make sure all files and paths exists if they are needed
     if not config_path or (str(config_path) != "-" and not config_path.exists()):
         msg.fail("Config file not found", config_path, exits=1)

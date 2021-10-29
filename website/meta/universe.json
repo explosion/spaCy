@@ -1138,7 +1138,7 @@
         {
             "id": "deplacy",
             "slogan": "CUI-based Tree Visualizer for Universal Dependencies and Immediate Catena Analysis",
-            "discreption": "Simple dependency visualizer for [spaCy](https://spacy.io/), [UniDic2UD](https://pypi.org/project/unidic2ud), [Stanza](https://stanfordnlp.github.io/stanza/), [NLP-Cube](https://github.com/Adobe/NLP-Cube), [Trankit](https://github.com/nlp-uoregon/trankit), etc.",
+            "description": "Simple dependency visualizer for [spaCy](https://spacy.io/), [UniDic2UD](https://pypi.org/project/unidic2ud), [Stanza](https://stanfordnlp.github.io/stanza/), [NLP-Cube](https://github.com/Adobe/NLP-Cube), [Trankit](https://github.com/nlp-uoregon/trankit), etc.",
             "github": "KoichiYasuoka/deplacy",
             "image": "https://i.imgur.com/6uOI4Op.png",
             "code_example": [
@@ -1270,7 +1270,7 @@
             "description": "`textacy` is a Python library for performing a variety of natural language processing (NLP) tasks, built on the high-performance `spacy` library. With the fundamentals – tokenization, part-of-speech tagging, dependency parsing, etc. – delegated to another library, `textacy` focuses on the tasks that come before and follow after.",
             "github": "chartbeat-labs/textacy",
             "pip": "textacy",
-            "url": "https://chartbeat-labs.github.io/textacy/",
+            "url": "https://github.com/chartbeat-labs/textacy",
             "author": "Burton DeWilde",
             "author_links": {
                 "github": "bdewilde",

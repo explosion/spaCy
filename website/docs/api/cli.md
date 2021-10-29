@@ -820,6 +820,29 @@ $ python -m spacy train [config_path] [--output] [--code] [--verbose] [--gpu-id]
 | overrides         | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--paths.train ./train.spacy`. ~~Any (option/flag)~~                         |
 | **CREATES**       | The final trained pipeline and the best trained pipeline.                                                                                                                                                          |
 
+### Calling the training function from Python {#train-function new="3.2"}
+
+The training CLI exposes a `train` helper function that lets you run the
+training just like `spacy train`. Usually it's easier to use the command line
+directly, but if you need to kick off training from code this is how to do it.
+
+> #### Example
+>
+> ```python
+> from spacy.cli.train import train
+>
+> train("./config.cfg", overrides={"paths.train": "./train.spacy", "paths.dev": "./dev.spacy"})
+>
+> ```
+
+| Name           | Description                                                                                                                   |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `config_path`  | Path to the config to use for training. ~~Union[str, Path]~~                                                                  |
+| `output_path`  | Optional name of directory to save output model in. If not provided a model will not be saved. ~~Optional[Union[str, Path]]~~ |
+| _keyword-only_ |                                                                                                                               |
+| `use_gpu`      | Which GPU to use. Defaults to -1 for no GPU. ~~int~~                                                                          |
+| `overrides`    | Values to override config settings. ~~Dict[str, Any]~~                                                                        |
+
 ## pretrain {#pretrain new="2.1" tag="command,experimental"}
 
 Pretrain the "token to vector" ([`Tok2vec`](/api/tok2vec)) layer of pipeline

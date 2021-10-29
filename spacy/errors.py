@@ -893,6 +893,7 @@ class Errors:
              "filename. Specify an epoch to resume from.")
     E1021 = ("`pos` value \"{pp}\" is not a valid Universal Dependencies tag. "
              "Non-UD tags should use the `tag` property.")
+    E1022 = ("Words must be of type str or int, but input is of type '{wtype}'")
 
 
 # Deprecated model shortcuts, only used in errors and warnings
