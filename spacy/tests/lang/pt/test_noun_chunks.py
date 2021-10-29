@@ -113,9 +113,9 @@ import pytest
         # Eu tenho um cachorro e um gato  -> um cacharo, um gato                                 Two NPs conjuncted
         ( 
             ["Eu", "tenho", "um", "cachorro", "e", "um", "gato"],
-            [0, 2, 0, 5, 5, 0],
-            ["ROOT", "det", "obj", "cc", "det", "conj"],
-            ["VERB", "DET", "NOUN", "CCONJ", "DET", "NOUN"],
+            [1, 1, 3, 1, 6, 6, 3],
+            ['nsubj', 'ROOT', 'det', 'obj', 'cc', 'det', 'conj'],
+            ['PRON', 'VERB', 'DET', 'NOUN', 'CCONJ', 'DET', 'NOUN'],
             [(1,3), (4,6)]
          
         ),
