@@ -14,6 +14,7 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Tuple[int, int, int]]:
         "nsubj:pass",
         "obj",
         "obl",
+        "obl:agent",
         "nmod",
         "pcomp",
         "appos",
