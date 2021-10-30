@@ -237,7 +237,7 @@ class Parser(TrainablePipe):
         if n_examples == 0:
             return losses
         set_dropout_rate(self.model, drop)
-        docs = [eg.x for eg in examples]
+        docs = [eg.x for eg in examples if len(eg.x)]
         (states, scores), backprop_scores = self.model.begin_update((docs, self.moves))
         if sum(s.shape[0] for s in scores) == 0:
             return losses
@@ -289,6 +289,8 @@ class Parser(TrainablePipe):
         states = moves.init_batch([eg.x for eg in examples])
         cdef int i = 0
         for eg, state, history in zip(examples, states, histories):
+            if len(history) == 0:
+                continue
             gold = moves.init_gold(state, eg)
             for clas in history:
                 moves.set_costs(is_valid, &c_costs[i*nO], state.c, gold)
