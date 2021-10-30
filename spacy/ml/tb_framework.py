@@ -73,7 +73,12 @@ def resize_output(model: Model, new_nO: int) -> Model:
             model.attrs["unseen_classes"].add(i)
         model.set_param("upper_W", new_W)
         model.set_param("upper_b", new_b)
-    model.set_dim("nO", new_nO, force=True)
+    # TODO: Avoid this private intrusion
+    model._dims["nO"] = new_nO
+    if model.has_grad("upper_W"):
+        model.set_grad("upper_W", model.get_param("upper_W") * 0)
+    if model.has_grad("upper_b"):
+        model.set_grad("upper_b", model.get_param("upper_b") * 0)
     return model
 
 
