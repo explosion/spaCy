@@ -56,7 +56,6 @@ cdef class BiluoGold:
         update_gold_state(&self.c, stcls.c)
 
 
-
 cdef GoldNERStateC create_gold_state(
     Pool mem,
     BiluoPushDown moves,

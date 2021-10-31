@@ -10,6 +10,7 @@ from spacy.pipeline._parser_internals.ner import BiluoPushDown
 from spacy.training import Example
 from spacy.tokens import Doc
 from spacy.vocab import Vocab
+from thinc.api import fix_random_seed
 import logging
 
 from ..util import make_tempdir
@@ -302,6 +303,7 @@ def test_block_ner():
 
 
 def test_overfitting_IO():
+    fix_random_seed(1)
     # Simple test to try and quickly overfit the NER component
     nlp = English()
     ner = nlp.add_pipe("ner", config={"model": {}})
@@ -315,7 +317,7 @@ def test_overfitting_IO():
     for i in range(50):
         losses = {}
         nlp.update(train_examples, sgd=optimizer, losses=losses)
-    assert losses["ner"] < 0.00001
+    assert losses["ner"] < 0.001
 
     # test the trained model
     test_text = "I like London."
