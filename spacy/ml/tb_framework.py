@@ -217,10 +217,6 @@ def _forward_reference(
     model, docs_moves: Tuple[List[Doc], TransitionSystem], is_train: bool
 ):
     """Slow reference implementation, without the precomputation"""
-    def debug_predict(*msg):
-        if not is_train:
-            pass
-            #print(*msg)
     nF = model.get_dim("nF")
     tok2vec = model.get_ref("tok2vec")
     lower_pad = model.get_param("lower_pad")
@@ -237,9 +233,6 @@ def _forward_reference(
     docs, moves = docs_moves
     states = moves.init_batch(docs)
     tokvecs, backprop_tok2vec = tok2vec(docs, is_train)
-    debug_predict("Tokvecs shape", tokvecs.shape)
-    debug_predict("Tokvecs mean", tokvecs.mean(axis=1))
-    debug_predict("Tokvecs var", tokvecs.var(axis=1))
     all_ids = []
     all_which = []
     all_statevecs = []
@@ -252,7 +245,6 @@ def _forward_reference(
         ids = ids[: len(next_states)]
         for i, state in enumerate(next_states):
             state.set_context_tokens(ids, i, nF)
-        debug_predict(ids)
         # Sum the state features, add the bias and apply the activation (maxout)
         # to create the state vectors.
         tokfeats3f = model.ops.alloc3f(ids.shape[0], nF, nI)
@@ -260,10 +252,8 @@ def _forward_reference(
             for j in range(nF):
                 if ids[i, j] == -1:
                     tokfeats3f[i, j] = lower_pad
-                    debug_predict("Setting tokfeat", i, j, "to pad")
                 else:
                     tokfeats3f[i, j] = tokvecs[ids[i, j]]
-                    debug_predict("Setting tokfeat", i, j, "to", ids[i, j])
         tokfeats = model.ops.reshape2f(tokfeats3f, tokfeats3f.shape[0], -1)
         preacts2f = model.ops.gemm(tokfeats, lower_W, trans2=True)
         preacts2f += lower_b
