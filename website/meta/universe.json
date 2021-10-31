@@ -3392,8 +3392,8 @@
                 "TraF = LingFeat.TraF_() #Traditional Formulas",
             ],
             "code_language": "python",
-            "thumb": "https://raw.githubusercontent.com/brucewlee/lingfeat/master/imgs/lingfeat_logo2.png",
-            "image": "https://raw.githubusercontent.com/brucewlee/lingfeat/master/imgs/lingfeat_logo.png",
+            "thumb": "https://raw.githubusercontent.com/brucewlee/lingfeat/master/img/lingfeat_logo2.png",
+            "image": "https://raw.githubusercontent.com/brucewlee/lingfeat/master/img/lingfeat_logo.png",
             "author": "Bruce W. Lee (이웅성)",
             "author_links": {
                 "github": "brucewlee",
