@@ -316,7 +316,7 @@ class Parser(TrainablePipe):
         xp = get_array_module(scores)
         best_costs = costs.min(axis=1, keepdims=True)
         gscores = scores.copy()
-        min_score = scores.min()
+        min_score = scores.min() - 1000
         assert costs.shape == scores.shape, (costs.shape, scores.shape)
         gscores[costs > best_costs] = min_score
         max_ = scores.max(axis=1, keepdims=True)
@@ -336,25 +336,29 @@ class Parser(TrainablePipe):
         cdef int nF = self.model.get_dim("nF")
         cdef int nO = moves.n_moves
         cdef int nS = sum([len(history) for history in histories])
-        cdef np.ndarray costs = numpy.zeros((nS, nO), dtype="f")
         cdef Pool mem = Pool()
         is_valid = <int*>mem.alloc(nO, sizeof(int))
-        c_costs = <float*>costs.data
+        c_costs = <float*>mem.alloc(nO, sizeof(float))
         states = moves.init_batch([eg.x for eg in examples])
-        cdef int i = 0
-        for eg, state, history in zip(examples, states, histories):
-            if len(history) == 0:
-                continue
-            gold = moves.init_gold(state, eg)
-            for clas in history:
-                moves.set_costs(is_valid, &c_costs[i*nO], state.c, gold)
+        batch = []
+        for eg, s, h in zip(examples, states, histories):
+            if not s.is_final():
+                gold = moves.init_gold(s, eg)
+                batch.append((eg, s, h, gold))
+        output = []
+        while batch:
+            costs = numpy.zeros((len(batch), nO), dtype="f")
+            for i, (eg, state, history, gold) in enumerate(batch):
+                clas = history.pop(0)
+                moves.set_costs(is_valid, c_costs, state.c, gold)
                 action = moves.c[clas]
                 action.do(state.c, action.label)
                 state.c.history.push_back(clas)
-                i += 1
-        # If the model is on GPU, copy the costs to device.
-        costs = self.model.ops.asarray(costs)
-        return costs
+                for j in range(nO):
+                    costs[i, j] = c_costs[j]
+            output.append(costs)
+            batch = [(eg, s, h, g) for eg, s, h, g in batch if len(h) != 0]
+        return self.model.ops.xp.vstack(output)
 
     def rehearse(self, examples, sgd=None, losses=None, **cfg):
         """Perform a "rehearsal" update, to prevent catastrophic forgetting."""

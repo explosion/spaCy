@@ -6,6 +6,7 @@ from spacy.lang.en import English
 from spacy.training import Example
 from spacy.tokens import Doc
 from spacy import util, registry
+from thinc.api import fix_random_seed
 
 from ..util import apply_transition_sequence, make_tempdir
 from ...pipeline import DependencyParser
@@ -258,6 +259,7 @@ def test_incomplete_data(pipe_name):
 
 @pytest.mark.parametrize("pipe_name", PARSERS)
 def test_overfitting_IO(pipe_name):
+    fix_random_seed(0)
     # Simple test to try and quickly overfit the dependency parser (normal or beam)
     nlp = English()
     parser = nlp.add_pipe(pipe_name)
@@ -266,6 +268,7 @@ def test_overfitting_IO(pipe_name):
         train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
         for dep in annotations.get("deps", []):
             parser.add_label(dep)
+    #train_examples = train_examples[:1]
     optimizer = nlp.initialize()
     # run overfitting
     for i in range(200):
