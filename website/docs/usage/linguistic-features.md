@@ -105,7 +105,7 @@ coarse-grained part-of-speech tags and morphological features.
    that the verb is past tense (e.g. `VBD` for a past tense verb in the Penn
    Treebank) .
 2. For words whose coarse-grained POS is not set by a prior process, a
-   [mapping table](#mapping-exceptions) maps the fine-grained tags to a
+   [mapping table](#mappings-exceptions) maps the fine-grained tags to a
    coarse-grained POS tags and morphological features.
 
 ```python
