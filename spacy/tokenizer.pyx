@@ -1,6 +1,4 @@
 # cython: embedsignature=True, profile=True, binding=True
-from __future__ import unicode_literals
-
 from cython.operator cimport dereference as deref
 from cython.operator cimport preincrement as preinc
 from libc.string cimport memcpy, memset
@@ -132,7 +130,7 @@ cdef class Tokenizer:
                 self.url_match)
         return (self.__class__, args, None, None)
 
-    def __call__(self, unicode string):
+    def __call__(self, str string):
         """Tokenize a string.
 
         string (str): The string to tokenize.
@@ -145,7 +143,7 @@ cdef class Tokenizer:
         return doc
 
     @cython.boundscheck(False)
-    cdef Doc _tokenize_affixes(self, unicode string, bint with_special_cases):
+    cdef Doc _tokenize_affixes(self, str string, bint with_special_cases):
         """Tokenize according to affix and token_match settings.
 
         string (str): The string to tokenize.
@@ -161,7 +159,7 @@ cdef class Tokenizer:
         cdef int start = 0
         cdef int has_special = 0
         cdef bint in_ws = string[0].isspace()
-        cdef unicode span
+        cdef str span
         # The task here is much like string.split, but not quite
         # We find spans of whitespace and non-space characters, and ignore
         # spans that are exactly ' '. So, our sequences will all be separated
@@ -373,7 +371,7 @@ cdef class Tokenizer:
             return False
         return True
 
-    cdef int _tokenize(self, Doc tokens, unicode span, hash_t orig_key, int* has_special, bint with_special_cases) except -1:
+    cdef int _tokenize(self, Doc tokens, str span, hash_t orig_key, int* has_special, bint with_special_cases) except -1:
         cdef vector[LexemeC*] prefixes
         cdef vector[LexemeC*] suffixes
         cdef int orig_size
@@ -385,16 +383,16 @@ cdef class Tokenizer:
         self._save_cached(&tokens.c[orig_size], orig_key, has_special,
                           tokens.length - orig_size)
 
-    cdef unicode _split_affixes(self, Pool mem, unicode string,
+    cdef str _split_affixes(self, Pool mem, str string,
                                 vector[const LexemeC*] *prefixes,
                                 vector[const LexemeC*] *suffixes,
                                 int* has_special,
                                 bint with_special_cases):
         cdef size_t i
-        cdef unicode prefix
-        cdef unicode suffix
-        cdef unicode minus_pre
-        cdef unicode minus_suf
+        cdef str prefix
+        cdef str suffix
+        cdef str minus_pre
+        cdef str minus_suf
         cdef size_t last_size = 0
         while string and len(string) != last_size:
             if self.token_match and self.token_match(string):
@@ -410,7 +408,7 @@ cdef class Tokenizer:
                     string = minus_pre
                     prefixes.push_back(self.vocab.get(mem, prefix))
                     break
-            suf_len = self.find_suffix(string)
+            suf_len = self.find_suffix(string[pre_len:])
             if suf_len != 0:
                 suffix = string[-suf_len:]
                 minus_suf = string[:-suf_len]
@@ -430,7 +428,7 @@ cdef class Tokenizer:
                 suffixes.push_back(self.vocab.get(mem, suffix))
         return string
 
-    cdef int _attach_tokens(self, Doc tokens, unicode string,
+    cdef int _attach_tokens(self, Doc tokens, str string,
                             vector[const LexemeC*] *prefixes,
                             vector[const LexemeC*] *suffixes,
                             int* has_special,
@@ -440,7 +438,7 @@ cdef class Tokenizer:
         cdef int split, end
         cdef const LexemeC* const* lexemes
         cdef const LexemeC* lexeme
-        cdef unicode span
+        cdef str span
         cdef int i
         if prefixes.size():
             for i in range(prefixes.size()):
@@ -513,7 +511,7 @@ cdef class Tokenizer:
         cached.data.lexemes = <const LexemeC* const*>lexemes
         self._cache.set(key, cached)
 
-    def find_infix(self, unicode string):
+    def find_infix(self, str string):
         """Find internal split points of the string, such as hyphens.
 
         string (str): The string to segment.
@@ -527,7 +525,7 @@ cdef class Tokenizer:
             return 0
         return list(self.infix_finditer(string))
 
-    def find_prefix(self, unicode string):
+    def find_prefix(self, str string):
         """Find the length of a prefix that should be segmented from the
         string, or None if no prefix rules match.
 
@@ -541,7 +539,7 @@ cdef class Tokenizer:
         match = self.prefix_search(string)
         return (match.end() - match.start()) if match is not None else 0
 
-    def find_suffix(self, unicode string):
+    def find_suffix(self, str string):
         """Find the length of a suffix that should be segmented from the
         string, or None if no suffix rules match.
 
@@ -579,7 +577,7 @@ cdef class Tokenizer:
                 if attr not in (ORTH, NORM):
                     raise ValueError(Errors.E1005.format(attr=self.vocab.strings[attr], chunk=chunk))
 
-    def add_special_case(self, unicode string, substrings):
+    def add_special_case(self, str string, substrings):
         """Add a special-case tokenization rule.
 
         string (str): The string to specially tokenize.

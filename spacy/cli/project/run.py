@@ -1,6 +1,7 @@
 from typing import Optional, List, Dict, Sequence, Any, Iterable
 from pathlib import Path
 from wasabi import msg
+from wasabi.util import locale_escape
 import sys
 import srsly
 import typer
@@ -57,6 +58,7 @@ def project_run(
 
     project_dir (Path): Path to project directory.
     subcommand (str): Name of command to run.
+    overrides (Dict[str, Any]): Optional config overrides.
     force (bool): Force re-running, even if nothing changed.
     dry (bool): Perform a dry run and don't execute commands.
     capture (bool): Whether to capture the output and errors of individual commands.
@@ -68,11 +70,18 @@ def project_run(
     config = load_project_config(project_dir, overrides=overrides)
     commands = {cmd["name"]: cmd for cmd in config.get("commands", [])}
     workflows = config.get("workflows", {})
-    validate_subcommand(commands.keys(), workflows.keys(), subcommand)
+    validate_subcommand(list(commands.keys()), list(workflows.keys()), subcommand)
     if subcommand in workflows:
         msg.info(f"Running workflow '{subcommand}'")
         for cmd in workflows[subcommand]:
-            project_run(project_dir, cmd, force=force, dry=dry, capture=capture)
+            project_run(
+                project_dir,
+                cmd,
+                overrides=overrides,
+                force=force,
+                dry=dry,
+                capture=capture,
+            )
     else:
         cmd = commands[subcommand]
         for dep in cmd.get("deps", []):
@@ -107,7 +116,7 @@ def print_run_help(project_dir: Path, subcommand: Optional[str] = None) -> None:
     workflows = config.get("workflows", {})
     project_loc = "" if is_cwd(project_dir) else project_dir
     if subcommand:
-        validate_subcommand(commands.keys(), workflows.keys(), subcommand)
+        validate_subcommand(list(commands.keys()), list(workflows.keys()), subcommand)
         print(f"Usage: {COMMAND} project run {subcommand} {project_loc}")
         if subcommand in commands:
             help_text = commands[subcommand].get("help")
@@ -127,7 +136,7 @@ def print_run_help(project_dir: Path, subcommand: Optional[str] = None) -> None:
         print("")
         title = config.get("title")
         if title:
-            print(f"{title}\n")
+            print(f"{locale_escape(title)}\n")
         if config_commands:
             print(f"Available commands in {PROJECT_FILE}")
             print(f"Usage: {COMMAND} project run [COMMAND] {project_loc}")
@@ -155,8 +164,8 @@ def run_commands(
         when you want to turn over execution to the command, and capture=True
         when you want to run the command more like a function.
     """
-    for command in commands:
-        command = split_command(command)
+    for c in commands:
+        command = split_command(c)
         # Not sure if this is needed or a good idea. Motivation: users may often
         # use commands in their config that reference "python" and we want to
         # make sure that it's always executing the same Python that spaCy is
@@ -285,7 +294,7 @@ def get_lock_entry(project_dir: Path, command: Dict[str, Any]) -> Dict[str, Any]
     }
 
 
-def get_fileinfo(project_dir: Path, paths: List[str]) -> List[Dict[str, str]]:
+def get_fileinfo(project_dir: Path, paths: List[str]) -> List[Dict[str, Optional[str]]]:
     """Generate the file information for a list of paths (dependencies, outputs).
     Includes the file path and the file's checksum.
 

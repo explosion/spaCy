@@ -1,9 +1,10 @@
+from typing import Dict, List
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ...symbols import ORTH, NORM
 from ...util import update_exc
 
 
-_exc = {}
+_exc: Dict[str, List[Dict]] = {}
 _exclude = [
     "Ill",
     "ill",
@@ -294,9 +295,9 @@ for verb_data in [
     {ORTH: "has", NORM: "has"},
     {ORTH: "dare", NORM: "dare"},
 ]:
-    verb_data_tc = dict(verb_data)
+    verb_data_tc = dict(verb_data)  # type: ignore[call-overload]
     verb_data_tc[ORTH] = verb_data_tc[ORTH].title()
-    for data in [verb_data, verb_data_tc]:
+    for data in [verb_data, verb_data_tc]:  # type: ignore[assignment]
         _exc[data[ORTH] + "n't"] = [
             dict(data),
             {ORTH: "n't", NORM: "not"},

@@ -30,6 +30,7 @@ from ..compat import copy_reg, pickle
 from ..errors import Errors, Warnings
 from ..morphology import Morphology
 from .. import util
+from .. import parts_of_speech
 from .underscore import Underscore, get_ext_args
 from ._retokenize import Retokenizer
 from ._serialize import ALL_ATTRS as DOCBIN_ALL_ATTRS
@@ -193,11 +194,12 @@ cdef class Doc:
 
         vocab (Vocab): A vocabulary object, which must match any models you
             want to use (e.g. tokenizer, parser, entity recognizer).
-        words (Optional[List[str]]): A list of unicode strings to add to the document
-            as words. If `None`, defaults to empty list.
-        spaces (Optional[List[bool]]): A list of boolean values, of the same length as
-            words. True means that the word is followed by a space, False means
-            it is not. If `None`, defaults to `[True]*len(words)`
+        words (Optional[List[Union[str, int]]]): A list of unicode strings or
+            hash values to add to the document as words. If `None`, defaults to
+            empty list.
+        spaces (Optional[List[bool]]): A list of boolean values, of the same
+            length as `words`. `True` means that the word is followed by a space,
+            `False` means it is not. If `None`, defaults to `[True]*len(words)`
         user_data (dict or None): Optional extra data to attach to the Doc.
         tags (Optional[List[str]]): A list of unicode strings, of the same
             length as words, to assign as token.tag. Defaults to None.
@@ -260,12 +262,15 @@ cdef class Doc:
             raise ValueError(Errors.E027)
         cdef const LexemeC* lexeme
         for word, has_space in zip(words, spaces):
-            if isinstance(word, unicode):
+            if isinstance(word, str):
                 lexeme = self.vocab.get(self.mem, word)
             elif isinstance(word, bytes):
                 raise ValueError(Errors.E028.format(value=word))
             else:
-                lexeme = self.vocab.get_by_orth(self.mem, word)
+                try:
+                    lexeme = self.vocab.get_by_orth(self.mem, word)
+                except TypeError:
+                    raise TypeError(Errors.E1022.format(wtype=type(word)))
             self.push_back(lexeme, has_space)
 
         if heads is not None:
@@ -285,6 +290,10 @@ cdef class Doc:
                     sent_starts[i] = -1
                 elif sent_starts[i] is None or sent_starts[i] not in [-1, 0, 1]:
                     sent_starts[i] = 0
+        if pos is not None:
+            for pp in set(pos):
+                if pp not in parts_of_speech.IDS:
+                    raise ValueError(Errors.E1021.format(pp=pp))
         ent_iobs = None
         ent_types = None
         if ents is not None:
@@ -529,7 +538,13 @@ cdef class Doc:
             kb_id = self.vocab.strings.add(kb_id)
         alignment_modes = ("strict", "contract", "expand")
         if alignment_mode not in alignment_modes:
-            raise ValueError(Errors.E202.format(mode=alignment_mode, modes=", ".join(alignment_modes)))
+            raise ValueError(
+                Errors.E202.format(
+                    name="alignment",
+                    mode=alignment_mode,
+                    modes=", ".join(alignment_modes),
+                )
+            )
         cdef int start = token_by_char(self.c, self.length, start_idx)
         if start < 0 or (alignment_mode == "strict" and start_idx != self[start].idx):
             return None
@@ -909,7 +924,7 @@ cdef class Doc:
         can specify attributes by integer ID (e.g. spacy.attrs.LEMMA) or
         string name (e.g. 'LEMMA' or 'lemma').
 
-        attr_ids (list[]): A list of attributes (int IDs or string names).
+        py_attr_ids (list[]): A list of attributes (int IDs or string names).
         RETURNS (numpy.ndarray[long, ndim=2]): A feature matrix, with one row
             per word, and one column per attribute indicated in the input
             `attr_ids`.
@@ -1362,7 +1377,7 @@ cdef class Doc:
             self.has_unknown_spaces = msg["has_unknown_spaces"]
         start = 0
         cdef const LexemeC* lex
-        cdef unicode orth_
+        cdef str orth_
         text = msg["text"]
         attrs = msg["array_body"]
         for i in range(attrs.shape[0]):
@@ -1423,7 +1438,7 @@ cdef class Doc:
             attributes are inherited from the syntactic root of the span.
         RETURNS (Token): The first newly merged token.
         """
-        cdef unicode tag, lemma, ent_type
+        cdef str tag, lemma, ent_type
         attr_len = len(attributes)
         span_len = len(spans)
         if not attr_len == span_len:

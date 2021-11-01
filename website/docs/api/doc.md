@@ -34,7 +34,7 @@ Construct a `Doc` object. The most common way to get a `Doc` object is via the
 | Name                                     | Description                                                                                                                                                                                        |
 | ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `vocab`                                  | A storage container for lexical types. ~~Vocab~~                                                                                                                                                   |
-| `words`                                  | A list of strings to add to the container. ~~Optional[List[str]]~~                                                                                                                                 |
+| `words`                                  | A list of strings or integer hash values to add to the document as words. ~~Optional[List[Union[str,int]]]~~                                                                                                 |
 | `spaces`                                 | A list of boolean values indicating whether each word has a subsequent space. Must have the same length as `words`, if specified. Defaults to a sequence of `True`. ~~Optional[List[bool]]~~       |
 | _keyword-only_                           |                                                                                                                                                                                                    |
 | `user\_data`                             | Optional extra data to attach to the Doc. ~~Dict~~                                                                                                                                                 |
@@ -212,7 +212,7 @@ alignment mode `"strict".
 | Name                                 | Description                                                                                                                                                                                                                                                                  |
 | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `start`                              | The index of the first character of the span. ~~int~~                                                                                                                                                                                                                        |
-| `end`                                | The index of the last character after the span. ~int~~                                                                                                                                                                                                                       |
+| `end`                                | The index of the last character after the span. ~~int~~                                                                                                                                                                                                                      |
 | `label`                              | A label to attach to the span, e.g. for named entities. ~~Union[int, str]~~                                                                                                                                                                                                  |
 | `kb_id` <Tag variant="new">2.2</Tag> | An ID from a knowledge base to capture the meaning of a named entity. ~~Union[int, str]~~                                                                                                                                                                                    |
 | `vector`                             | A meaning representation of the span. ~~numpy.ndarray[ndim=1, dtype=float32]~~                                                                                                                                                                                               |
@@ -571,9 +571,9 @@ objects, if the entity recognizer has been applied.
 > assert ents[0].text == "Mr. Best"
 > ```
 
-| Name        | Description                                                           |
-| ----------- | --------------------------------------------------------------------- |
-| **RETURNS** | Entities in the document, one `Span` per entity. ~~Tuple[Span, ...]~~ |
+| Name        | Description                                                      |
+| ----------- | ---------------------------------------------------------------- |
+| **RETURNS** | Entities in the document, one `Span` per entity. ~~Tuple[Span]~~ |
 
 ## Doc.spans {#spans tag="property"}
 

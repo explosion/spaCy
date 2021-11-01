@@ -1,4 +1,5 @@
-from typing import List, Union, Dict, Any, Optional, Iterable, Callable, Tuple, NoReturn
+from typing import List, Mapping, NoReturn, Union, Dict, Any, Set
+from typing import Optional, Iterable, Callable, Tuple, Type
 from typing import Iterator, Type, Pattern, Generator, TYPE_CHECKING
 from types import ModuleType
 import os
@@ -16,27 +17,26 @@ import numpy
 import srsly
 import catalogue
 from catalogue import RegistryError, Registry
+import langcodes
 import sys
 import warnings
 from packaging.specifiers import SpecifierSet, InvalidSpecifier
 from packaging.version import Version, InvalidVersion
+from packaging.requirements import Requirement
 import subprocess
 from contextlib import contextmanager
+from collections import defaultdict
 import tempfile
 import shutil
 import shlex
 import inspect
+import pkgutil
 import logging
 
 try:
     import cupy.random
 except ImportError:
     cupy = None
-
-try:  # Python 3.8
-    import importlib.metadata as importlib_metadata
-except ImportError:
-    from catalogue import _importlib_metadata as importlib_metadata
 
 # These are functions that were previously (v2.x) available from spacy.util
 # and have since moved to Thinc. We're importing them here so people's code
@@ -46,13 +46,14 @@ from thinc.api import fix_random_seed, compounding, decaying  # noqa: F401
 
 
 from .symbols import ORTH
-from .compat import cupy, CudaStream, is_windows
+from .compat import cupy, CudaStream, is_windows, importlib_metadata
 from .errors import Errors, Warnings, OLD_MODEL_SHORTCUTS
 from . import about
 
 if TYPE_CHECKING:
     # This lets us add type hints for mypy etc. without causing circular imports
     from .language import Language  # noqa: F401
+    from .pipeline import Pipe  # noqa: F401
     from .tokens import Doc, Span  # noqa: F401
     from .vocab import Vocab  # noqa: F401
 
@@ -145,6 +146,32 @@ class registry(thinc.registry):
         return func
 
     @classmethod
+    def find(cls, registry_name: str, func_name: str) -> Callable:
+        """Get info about a registered function from the registry."""
+        # We're overwriting this classmethod so we're able to provide more
+        # specific error messages and implement a fallback to spacy-legacy.
+        if not hasattr(cls, registry_name):
+            names = ", ".join(cls.get_registry_names()) or "none"
+            raise RegistryError(Errors.E892.format(name=registry_name, available=names))
+        reg = getattr(cls, registry_name)
+        try:
+            func_info = reg.find(func_name)
+        except RegistryError:
+            if func_name.startswith("spacy."):
+                legacy_name = func_name.replace("spacy.", "spacy-legacy.")
+                try:
+                    return reg.find(legacy_name)
+                except catalogue.RegistryError:
+                    pass
+            available = ", ".join(sorted(reg.get_all().keys())) or "none"
+            raise RegistryError(
+                Errors.E893.format(
+                    name=func_name, reg_name=registry_name, available=available
+                )
+            ) from None
+        return func_info
+
+    @classmethod
     def has(cls, registry_name: str, func_name: str) -> bool:
         """Check whether a function is available in a registry."""
         if not hasattr(cls, registry_name):
@@ -233,21 +260,90 @@ def lang_class_is_loaded(lang: str) -> bool:
     return lang in registry.languages
 
 
-def get_lang_class(lang: str) -> "Language":
+def find_matching_language(lang: str) -> Optional[str]:
+    """
+    Given an IETF language code, find a supported spaCy language that is a
+    close match for it (according to Unicode CLDR language-matching rules).
+    This allows for language aliases, ISO 639-2 codes, more detailed language
+    tags, and close matches.
+
+    Returns the language code if a matching language is available, or None
+    if there is no matching language.
+
+    >>> find_matching_language('en')
+    'en'
+    >>> find_matching_language('pt-BR')  # Brazilian Portuguese
+    'pt'
+    >>> find_matching_language('fra')  # an ISO 639-2 code for French
+    'fr'
+    >>> find_matching_language('iw')  # obsolete alias for Hebrew
+    'he'
+    >>> find_matching_language('no')  # Norwegian
+    'nb'
+    >>> find_matching_language('mo')  # old code for ro-MD
+    'ro'
+    >>> find_matching_language('zh-Hans')  # Simplified Chinese
+    'zh'
+    >>> find_matching_language('zxx')
+    None
+    """
+    import spacy.lang  # noqa: F401
+    if lang == 'xx':
+        return 'xx'
+
+    # Find out which language modules we have
+    possible_languages = []
+    for modinfo in pkgutil.iter_modules(spacy.lang.__path__):  # type: ignore
+        code = modinfo.name
+        if code == 'xx':
+            # Temporarily make 'xx' into a valid language code
+            possible_languages.append('mul')
+        elif langcodes.tag_is_valid(code):
+            possible_languages.append(code)
+
+    # Distances from 1-9 allow near misses like Bosnian -> Croatian and
+    # Norwegian -> Norwegian Bokmål. A distance of 10 would include several
+    # more possibilities, like variants of Chinese like 'wuu', but text that
+    # is labeled that way is probably trying to be distinct from 'zh' and
+    # shouldn't automatically match.
+    match = langcodes.closest_supported_match(
+        lang, possible_languages, max_distance=9
+    )
+    if match == 'mul':
+        # Convert 'mul' back to spaCy's 'xx'
+        return 'xx'
+    else:
+        return match
+
+
+def get_lang_class(lang: str) -> Type["Language"]:
     """Import and load a Language class.
 
-    lang (str): Two-letter language code, e.g. 'en'.
+    lang (str): IETF language code, such as 'en'.
     RETURNS (Language): Language class.
     """
     # Check if language is registered / entry point is available
     if lang in registry.languages:
         return registry.languages.get(lang)
     else:
+        # Find the language in the spacy.lang subpackage
         try:
             module = importlib.import_module(f".lang.{lang}", "spacy")
         except ImportError as err:
-            raise ImportError(Errors.E048.format(lang=lang, err=err)) from err
-        set_lang_class(lang, getattr(module, module.__all__[0]))
+            # Find a matching language. For example, if the language 'no' is
+            # requested, we can use language-matching to load `spacy.lang.nb`.
+            try:
+                match = find_matching_language(lang)
+            except langcodes.tag_parser.LanguageTagError:
+                # proceed to raising an import error
+                match = None
+
+            if match:
+                lang = match
+                module = importlib.import_module(f".lang.{lang}", "spacy")
+            else:
+                raise ImportError(Errors.E048.format(lang=lang, err=err)) from err
+        set_lang_class(lang, getattr(module, module.__all__[0]))  # type: ignore[attr-defined]
     return registry.languages.get(lang)
 
 
@@ -322,13 +418,13 @@ def load_model(
         if name.startswith("blank:"):  # shortcut for blank model
             return get_lang_class(name.replace("blank:", ""))()
         if is_package(name):  # installed as package
-            return load_model_from_package(name, **kwargs)
+            return load_model_from_package(name, **kwargs)  # type: ignore[arg-type]
         if Path(name).exists():  # path to model data directory
-            return load_model_from_path(Path(name), **kwargs)
+            return load_model_from_path(Path(name), **kwargs)  # type: ignore[arg-type]
     elif hasattr(name, "exists"):  # Path or Path-like to model data
-        return load_model_from_path(name, **kwargs)
+        return load_model_from_path(name, **kwargs)  # type: ignore[arg-type]
     if name in OLD_MODEL_SHORTCUTS:
-        raise IOError(Errors.E941.format(name=name, full=OLD_MODEL_SHORTCUTS[name]))
+        raise IOError(Errors.E941.format(name=name, full=OLD_MODEL_SHORTCUTS[name]))  # type: ignore[index]
     raise IOError(Errors.E050.format(name=name))
 
 
@@ -355,11 +451,11 @@ def load_model_from_package(
     RETURNS (Language): The loaded nlp object.
     """
     cls = importlib.import_module(name)
-    return cls.load(vocab=vocab, disable=disable, exclude=exclude, config=config)
+    return cls.load(vocab=vocab, disable=disable, exclude=exclude, config=config)  # type: ignore[attr-defined]
 
 
 def load_model_from_path(
-    model_path: Union[str, Path],
+    model_path: Path,
     *,
     meta: Optional[Dict[str, Any]] = None,
     vocab: Union["Vocab", bool] = True,
@@ -370,7 +466,7 @@ def load_model_from_path(
     """Load a model from a data directory path. Creates Language class with
     pipeline from config.cfg and then calls from_disk() with path.
 
-    name (str): Package name or model path.
+    model_path (Path): Mmodel path.
     meta (Dict[str, Any]): Optional model meta.
     vocab (Vocab / True): Optional vocab to pass in on initialization. If True,
         a new Vocab object will be created.
@@ -452,7 +548,9 @@ def get_sourced_components(
     }
 
 
-def resolve_dot_names(config: Config, dot_names: List[Optional[str]]) -> Tuple[Any]:
+def resolve_dot_names(
+    config: Config, dot_names: List[Optional[str]]
+) -> Tuple[Any, ...]:
     """Resolve one or more "dot notation" names, e.g. corpora.train.
     The paths could point anywhere into the config, so we don't know which
     top-level section we'll be looking within.
@@ -462,7 +560,7 @@ def resolve_dot_names(config: Config, dot_names: List[Optional[str]]) -> Tuple[A
     """
     # TODO: include schema?
     resolved = {}
-    output = []
+    output: List[Any] = []
     errors = []
     for name in dot_names:
         if name is None:
@@ -478,7 +576,7 @@ def resolve_dot_names(config: Config, dot_names: List[Optional[str]]) -> Tuple[A
                     result = registry.resolve(config[section])
                 resolved[section] = result
             try:
-                output.append(dot_to_object(resolved, name))
+                output.append(dot_to_object(resolved, name))  # type: ignore[arg-type]
             except KeyError:
                 msg = f"not a valid section reference: {name}"
                 errors.append({"loc": name.split("."), "msg": msg})
@@ -582,8 +680,8 @@ def get_package_version(name: str) -> Optional[str]:
     RETURNS (str / None): The version or None if package not installed.
     """
     try:
-        return importlib_metadata.version(name)
-    except importlib_metadata.PackageNotFoundError:
+        return importlib_metadata.version(name)  # type: ignore[attr-defined]
+    except importlib_metadata.PackageNotFoundError:  # type: ignore[attr-defined]
         return None
 
 
@@ -606,7 +704,7 @@ def is_compatible_version(
         constraint = f"=={constraint}"
     try:
         spec = SpecifierSet(constraint)
-        version = Version(version)
+        version = Version(version)  # type: ignore[assignment]
     except (InvalidSpecifier, InvalidVersion):
         return None
     spec.prereleases = prereleases
@@ -640,13 +738,18 @@ def is_unconstrained_version(
     return True
 
 
-def get_model_version_range(spacy_version: str) -> str:
-    """Generate a version range like >=1.2.3,<1.3.0 based on a given spaCy
-    version. Models are always compatible across patch versions but not
-    across minor or major versions.
+def split_requirement(requirement: str) -> Tuple[str, str]:
+    """Split a requirement like spacy>=1.2.3 into ("spacy", ">=1.2.3")."""
+    req = Requirement(requirement)
+    return (req.name, str(req.specifier))
+
+
+def get_minor_version_range(version: str) -> str:
+    """Generate a version range like >=1.2.3,<1.3.0 based on a given version
+    (e.g. of spaCy).
     """
-    release = Version(spacy_version).release
-    return f">={spacy_version},<{release[0]}.{release[1] + 1}.0"
+    release = Version(version).release
+    return f">={version},<{release[0]}.{release[1] + 1}.0"
 
 
 def get_model_lower_version(constraint: str) -> Optional[str]:
@@ -715,7 +818,7 @@ def load_meta(path: Union[str, Path]) -> Dict[str, Any]:
     if "spacy_version" in meta:
         if not is_compatible_version(about.__version__, meta["spacy_version"]):
             lower_version = get_model_lower_version(meta["spacy_version"])
-            lower_version = get_minor_version(lower_version)
+            lower_version = get_minor_version(lower_version)  # type: ignore[arg-type]
             if lower_version is not None:
                 lower_version = "v" + lower_version
             elif "spacy_git_version" in meta:
@@ -734,7 +837,7 @@ def load_meta(path: Union[str, Path]) -> Dict[str, Any]:
                 model=f"{meta['lang']}_{meta['name']}",
                 model_version=meta["version"],
                 version=meta["spacy_version"],
-                example=get_model_version_range(about.__version__),
+                example=get_minor_version_range(about.__version__),
             )
             warnings.warn(warn_msg)
     return meta
@@ -757,7 +860,7 @@ def is_package(name: str) -> bool:
     RETURNS (bool): True if installed package, False if not.
     """
     try:
-        importlib_metadata.distribution(name)
+        importlib_metadata.distribution(name)  # type: ignore[attr-defined]
         return True
     except:  # noqa: E722
         return False
@@ -818,7 +921,7 @@ def run_command(
     *,
     stdin: Optional[Any] = None,
     capture: bool = False,
-) -> Optional[subprocess.CompletedProcess]:
+) -> subprocess.CompletedProcess:
     """Run a command on the command line as a subprocess. If the subprocess
     returns a non-zero exit code, a system exit is performed.
 
@@ -861,8 +964,8 @@ def run_command(
             message += f"\n\nProcess log (stdout and stderr):\n\n"
             message += ret.stdout
         error = subprocess.SubprocessError(message)
-        error.ret = ret
-        error.command = cmd_str
+        error.ret = ret  # type: ignore[attr-defined]
+        error.command = cmd_str  # type: ignore[attr-defined]
         raise error
     elif ret.returncode != 0:
         sys.exit(ret.returncode)
@@ -870,7 +973,7 @@ def run_command(
 
 
 @contextmanager
-def working_dir(path: Union[str, Path]) -> None:
+def working_dir(path: Union[str, Path]) -> Iterator[Path]:
     """Change current working directory and returns to previous on exit.
 
     path (str / Path): The directory to navigate to.
@@ -918,7 +1021,7 @@ def is_in_jupyter() -> bool:
     """
     # https://stackoverflow.com/a/39662359/6400719
     try:
-        shell = get_ipython().__class__.__name__
+        shell = get_ipython().__class__.__name__  # type: ignore[name-defined]
         if shell == "ZMQInteractiveShell":
             return True  # Jupyter notebook or qtconsole
     except NameError:
@@ -1000,7 +1103,7 @@ def compile_prefix_regex(entries: Iterable[Union[str, Pattern]]) -> Pattern:
         spacy.lang.punctuation.TOKENIZER_PREFIXES.
     RETURNS (Pattern): The regex object. to be used for Tokenizer.prefix_search.
     """
-    expression = "|".join(["^" + piece for piece in entries if piece.strip()])
+    expression = "|".join(["^" + piece for piece in entries if piece.strip()])  # type: ignore[operator, union-attr]
     return re.compile(expression)
 
 
@@ -1011,7 +1114,7 @@ def compile_suffix_regex(entries: Iterable[Union[str, Pattern]]) -> Pattern:
         spacy.lang.punctuation.TOKENIZER_SUFFIXES.
     RETURNS (Pattern): The regex object. to be used for Tokenizer.suffix_search.
     """
-    expression = "|".join([piece + "$" for piece in entries if piece.strip()])
+    expression = "|".join([piece + "$" for piece in entries if piece.strip()])  # type: ignore[operator, union-attr]
     return re.compile(expression)
 
 
@@ -1022,7 +1125,7 @@ def compile_infix_regex(entries: Iterable[Union[str, Pattern]]) -> Pattern:
         spacy.lang.punctuation.TOKENIZER_INFIXES.
     RETURNS (regex object): The regex object. to be used for Tokenizer.infix_finditer.
     """
-    expression = "|".join([piece for piece in entries if piece.strip()])
+    expression = "|".join([piece for piece in entries if piece.strip()])  # type: ignore[misc, union-attr]
     return re.compile(expression)
 
 
@@ -1044,7 +1147,7 @@ def _get_attr_unless_lookup(
 ) -> Any:
     for lookup in lookups:
         if string in lookup:
-            return lookup[string]
+            return lookup[string]  # type: ignore[index]
     return default_func(string)
 
 
@@ -1126,7 +1229,7 @@ def filter_spans(spans: Iterable["Span"]) -> List["Span"]:
     get_sort_key = lambda span: (span.end - span.start, -span.start)
     sorted_spans = sorted(spans, key=get_sort_key, reverse=True)
     result = []
-    seen_tokens = set()
+    seen_tokens: Set[int] = set()
     for span in sorted_spans:
         # Check for end - 1 here because boundaries are inclusive
         if span.start not in seen_tokens and span.end - 1 not in seen_tokens:
@@ -1145,7 +1248,7 @@ def from_bytes(
     setters: Dict[str, Callable[[bytes], Any]],
     exclude: Iterable[str],
 ) -> None:
-    return from_dict(srsly.msgpack_loads(bytes_data), setters, exclude)
+    return from_dict(srsly.msgpack_loads(bytes_data), setters, exclude)  # type: ignore[return-value]
 
 
 def to_dict(
@@ -1207,8 +1310,8 @@ def import_file(name: str, loc: Union[str, Path]) -> ModuleType:
     RETURNS: The loaded module.
     """
     spec = importlib.util.spec_from_file_location(name, str(loc))
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
+    module = importlib.util.module_from_spec(spec)  # type: ignore[arg-type]
+    spec.loader.exec_module(module)  # type: ignore[union-attr]
     return module
 
 
@@ -1298,7 +1401,7 @@ def dot_to_dict(values: Dict[str, Any]) -> Dict[str, dict]:
     values (Dict[str, Any]): The key/value pairs to convert.
     RETURNS (Dict[str, dict]): The converted values.
     """
-    result = {}
+    result: Dict[str, dict] = {}
     for key, value in values.items():
         path = result
         parts = key.lower().split(".")
@@ -1376,13 +1479,13 @@ def get_arg_names(func: Callable) -> List[str]:
     RETURNS (List[str]): The argument names.
     """
     argspec = inspect.getfullargspec(func)
-    return list(set([*argspec.args, *argspec.kwonlyargs]))
+    return list(dict.fromkeys([*argspec.args, *argspec.kwonlyargs]))
 
 
 def combine_score_weights(
-    weights: List[Dict[str, float]],
-    overrides: Dict[str, Optional[Union[float, int]]] = SimpleFrozenDict(),
-) -> Dict[str, float]:
+    weights: List[Dict[str, Optional[float]]],
+    overrides: Dict[str, Optional[float]] = SimpleFrozenDict(),
+) -> Dict[str, Optional[float]]:
     """Combine and normalize score weights defined by components, e.g.
     {"ents_r": 0.2, "ents_p": 0.3, "ents_f": 0.5} and {"some_other_score": 1.0}.
 
@@ -1394,7 +1497,9 @@ def combine_score_weights(
     # We divide each weight by the total weight sum.
     # We first need to extract all None/null values for score weights that
     # shouldn't be shown in the table *or* be weighted
-    result = {key: value for w_dict in weights for (key, value) in w_dict.items()}
+    result: Dict[str, Optional[float]] = {
+        key: value for w_dict in weights for (key, value) in w_dict.items()
+    }
     result.update(overrides)
     weight_sum = sum([v if v else 0.0 for v in result.values()])
     for key, value in result.items():
@@ -1416,13 +1521,13 @@ class DummyTokenizer:
     def to_bytes(self, **kwargs):
         return b""
 
-    def from_bytes(self, _bytes_data, **kwargs):
+    def from_bytes(self, data: bytes, **kwargs) -> "DummyTokenizer":
         return self
 
-    def to_disk(self, _path, **kwargs):
+    def to_disk(self, path: Union[str, Path], **kwargs) -> None:
         return None
 
-    def from_disk(self, _path, **kwargs):
+    def from_disk(self, path: Union[str, Path], **kwargs) -> "DummyTokenizer":
         return self
 
 
@@ -1484,7 +1589,13 @@ def check_bool_env_var(env_var: str) -> bool:
     return bool(value)
 
 
-def _pipe(docs, proc, name, default_error_handler, kwargs):
+def _pipe(
+    docs: Iterable["Doc"],
+    proc: "Pipe",
+    name: str,
+    default_error_handler: Callable[[str, "Pipe", List["Doc"], Exception], NoReturn],
+    kwargs: Mapping[str, Any],
+) -> Iterator["Doc"]:
     if hasattr(proc, "pipe"):
         yield from proc.pipe(docs, **kwargs)
     else:
@@ -1498,7 +1609,7 @@ def _pipe(docs, proc, name, default_error_handler, kwargs):
                 kwargs.pop(arg)
         for doc in docs:
             try:
-                doc = proc(doc, **kwargs)
+                doc = proc(doc, **kwargs)  # type: ignore[call-arg]
                 yield doc
             except Exception as e:
                 error_handler(name, proc, [doc], e)
@@ -1551,3 +1662,19 @@ def to_ternary_int(val) -> int:
         return 0
     else:
         return -1
+
+
+# The following implementation of packages_distributions() is adapted from
+# importlib_metadata, which is distributed under the Apache 2.0 License.
+# Copyright (c) 2017-2019 Jason R. Coombs, Barry Warsaw
+# See licenses/3rd_party_licenses.txt
+def packages_distributions() -> Dict[str, List[str]]:
+    """Return a mapping of top-level packages to their distributions. We're
+    inlining this helper from the importlib_metadata "backport" here, since
+    it's not available in the builtin importlib.metadata.
+    """
+    pkg_to_dist = defaultdict(list)
+    for dist in importlib_metadata.distributions():  # type: ignore[attr-defined]
+        for pkg in (dist.read_text("top_level.txt") or "").split():
+            pkg_to_dist[pkg].append(dist.metadata["Name"])
+    return dict(pkg_to_dist)

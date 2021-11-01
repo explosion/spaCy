@@ -1,7 +1,9 @@
-from typing import Optional, Iterable, Tuple, List, Callable, TYPE_CHECKING
+from typing import Any, Optional, Iterable, Tuple, List, Callable, TYPE_CHECKING, cast
+from thinc.types import Floats2d
 from thinc.api import chain, Maxout, LayerNorm, Softmax, Linear, zero_init, Model
 from thinc.api import MultiSoftmax, list2array
 from thinc.api import to_categorical, CosineDistance, L2Distance
+from thinc.loss import Loss
 
 from ...util import registry, OOV_RANK
 from ...errors import Errors
@@ -30,6 +32,7 @@ def create_pretrain_vectors(
         return model
 
     def create_vectors_loss() -> Callable:
+        distance: Loss
         if loss == "cosine":
             distance = CosineDistance(normalize=True, ignore_zeros=True)
             return partial(get_vectors_loss, distance=distance)
@@ -115,7 +118,7 @@ def build_cloze_multi_task_model(
 ) -> Model:
     nO = vocab.vectors.data.shape[1]
     output_layer = chain(
-        list2array(),
+        cast(Model[List["Floats2d"], Floats2d], list2array()),
         Maxout(
             nO=hidden_size,
             nI=tok2vec.get_dim("nO"),
@@ -136,10 +139,10 @@ def build_cloze_characters_multi_task_model(
     vocab: "Vocab", tok2vec: Model, maxout_pieces: int, hidden_size: int, nr_char: int
 ) -> Model:
     output_layer = chain(
-        list2array(),
+        cast(Model[List["Floats2d"], Floats2d], list2array()),
         Maxout(nO=hidden_size, nP=maxout_pieces),
         LayerNorm(nI=hidden_size),
-        MultiSoftmax([256] * nr_char, nI=hidden_size),
+        MultiSoftmax([256] * nr_char, nI=hidden_size),  # type: ignore[arg-type]
     )
     model = build_masked_language_model(vocab, chain(tok2vec, output_layer))
     model.set_ref("tok2vec", tok2vec)
@@ -171,7 +174,7 @@ def build_masked_language_model(
             if wrapped.has_dim(dim):
                 model.set_dim(dim, wrapped.get_dim(dim))
 
-    mlm_model = Model(
+    mlm_model: Model = Model(
         "masked-language-model",
         mlm_forward,
         layers=[wrapped_model],
@@ -185,13 +188,19 @@ def build_masked_language_model(
 
 class _RandomWords:
     def __init__(self, vocab: "Vocab") -> None:
+        # Extract lexeme representations
         self.words = [lex.text for lex in vocab if lex.prob != 0.0]
-        self.probs = [lex.prob for lex in vocab if lex.prob != 0.0]
         self.words = self.words[:10000]
-        self.probs = self.probs[:10000]
-        self.probs = numpy.exp(numpy.array(self.probs, dtype="f"))
-        self.probs /= self.probs.sum()
-        self._cache = []
+
+        # Compute normalized lexeme probabilities
+        probs = [lex.prob for lex in vocab if lex.prob != 0.0]
+        probs = probs[:10000]
+        probs: numpy.ndarray = numpy.exp(numpy.array(probs, dtype="f"))
+        probs /= probs.sum()
+        self.probs = probs
+
+        # Initialize cache
+        self._cache: List[int] = []
 
     def next(self) -> str:
         if not self._cache:

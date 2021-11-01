@@ -2,10 +2,10 @@ from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
 from .punctuation import TOKENIZER_SUFFIXES
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
-from ...language import Language
+from ...language import Language, BaseDefaults
 
 
-class ArabicDefaults(Language.Defaults):
+class ArabicDefaults(BaseDefaults):
     tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     suffixes = TOKENIZER_SUFFIXES
     stop_words = STOP_WORDS

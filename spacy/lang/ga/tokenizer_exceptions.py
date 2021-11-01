@@ -9,6 +9,8 @@ _exc = {
     "ded'": [{ORTH: "de", NORM: "de"}, {ORTH: "d'", NORM: "do"}],
     "lem'": [{ORTH: "le", NORM: "le"}, {ORTH: "m'", NORM: "mo"}],
     "led'": [{ORTH: "le", NORM: "le"}, {ORTH: "d'", NORM: "do"}],
+    "théis": [{ORTH: "th", NORM: "tar"}, {ORTH: "éis", NORM: "éis"}],
+    "tréis": [{ORTH: "tr", NORM: "tar"}, {ORTH: "éis", NORM: "éis"}],
 }
 
 for exc_data in [

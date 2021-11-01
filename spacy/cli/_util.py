@@ -1,4 +1,5 @@
-from typing import Dict, Any, Union, List, Optional, Tuple, Iterable, TYPE_CHECKING
+from typing import Dict, Any, Union, List, Optional, Tuple, Iterable
+from typing import TYPE_CHECKING, overload
 import sys
 import shutil
 from pathlib import Path
@@ -15,6 +16,7 @@ from thinc.util import has_cupy, gpu_is_available
 from configparser import InterpolationError
 import os
 
+from ..compat import Literal
 from ..schemas import ProjectConfigSchema, validate
 from ..util import import_file, run_command, make_tempdir, registry, logger
 from ..util import is_compatible_version, SimpleFrozenDict, ENV_VARS
@@ -260,15 +262,16 @@ def get_checksum(path: Union[Path, str]) -> str:
     RETURNS (str): The checksum.
     """
     path = Path(path)
+    if not (path.is_file() or path.is_dir()):
+        msg.fail(f"Can't get checksum for {path}: not a file or directory", exits=1)
     if path.is_file():
         return hashlib.md5(Path(path).read_bytes()).hexdigest()
-    if path.is_dir():
+    else:
         # TODO: this is currently pretty slow
         dir_checksum = hashlib.md5()
         for sub_file in sorted(fp for fp in path.rglob("*") if fp.is_file()):
             dir_checksum.update(sub_file.read_bytes())
         return dir_checksum.hexdigest()
-    msg.fail(f"Can't get checksum for {path}: not a file or directory", exits=1)
 
 
 @contextmanager
@@ -397,7 +400,11 @@ def git_checkout(
         run_command(cmd, capture=True)
         # We need Path(name) to make sure we also support subdirectories
         try:
-            shutil.copytree(str(tmp_dir / Path(subpath)), str(dest))
+            source_path = tmp_dir / Path(subpath)
+            if not is_subpath_of(tmp_dir, source_path):
+                err = f"'{subpath}' is a path outside of the cloned repository."
+                msg.fail(err, repo, exits=1)
+            shutil.copytree(str(source_path), str(dest))
         except FileNotFoundError:
             err = f"Can't clone {subpath}. Make sure the directory exists in the repo (branch '{branch}')"
             msg.fail(err, repo, exits=1)
@@ -445,8 +452,14 @@ def git_sparse_checkout(repo, subpath, dest, branch):
         # And finally, we can checkout our subpath
         cmd = f"git -C {tmp_dir} checkout {branch} {subpath}"
         run_command(cmd, capture=True)
-        # We need Path(name) to make sure we also support subdirectories
-        shutil.move(str(tmp_dir / Path(subpath)), str(dest))
+
+        # Get a subdirectory of the cloned path, if appropriate
+        source_path = tmp_dir / Path(subpath)
+        if not is_subpath_of(tmp_dir, source_path):
+            err = f"'{subpath}' is a path outside of the cloned repository."
+            msg.fail(err, repo, exits=1)
+
+        shutil.move(str(source_path), str(dest))
 
 
 def get_git_version(
@@ -458,12 +471,15 @@ def get_git_version(
     RETURNS (Tuple[int, int]): The version as a (major, minor) tuple. Returns
         (0, 0) if the version couldn't be determined.
     """
-    ret = run_command("git --version", capture=True)
+    try:
+        ret = run_command("git --version", capture=True)
+    except:
+        raise RuntimeError(error)
     stdout = ret.stdout.strip()
     if not stdout or not stdout.startswith("git version"):
-        return (0, 0)
+        return 0, 0
     version = stdout[11:].strip().split(".")
-    return (int(version[0]), int(version[1]))
+    return int(version[0]), int(version[1])
 
 
 def _http_to_git(repo: str) -> str:
@@ -477,6 +493,29 @@ def _http_to_git(repo: str) -> str:
     return repo
 
 
+def is_subpath_of(parent, child):
+    """
+    Check whether `child` is a path contained within `parent`.
+    """
+    # Based on https://stackoverflow.com/a/37095733 .
+
+    # In Python 3.9, the `Path.is_relative_to()` method will supplant this, so
+    # we can stop using crusty old os.path functions.
+    parent_realpath = os.path.realpath(parent)
+    child_realpath = os.path.realpath(child)
+    return os.path.commonpath([parent_realpath, child_realpath]) == parent_realpath
+
+
+@overload
+def string_to_list(value: str, intify: Literal[False] = ...) -> List[str]:
+    ...
+
+
+@overload
+def string_to_list(value: str, intify: Literal[True]) -> List[int]:
+    ...
+
+
 def string_to_list(value: str, intify: bool = False) -> Union[List[str], List[int]]:
     """Parse a comma-separated string to a list and account for various
     formatting options. Mostly used to handle CLI arguments that take a list of
@@ -487,7 +526,7 @@ def string_to_list(value: str, intify: bool = False) -> Union[List[str], List[in
     RETURNS (Union[List[str], List[int]]): A list of strings or ints.
     """
     if not value:
-        return []
+        return []  # type: ignore[return-value]
     if value.startswith("[") and value.endswith("]"):
         value = value[1:-1]
     result = []
@@ -499,7 +538,7 @@ def string_to_list(value: str, intify: bool = False) -> Union[List[str], List[in
             p = p[1:-1]
         p = p.strip()
         if intify:
-            p = int(p)
+            p = int(p)  # type: ignore[assignment]
         result.append(p)
     return result
 

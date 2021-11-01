@@ -154,6 +154,40 @@ def test_kb_serialize(nlp):
             mykb.from_disk(d / "unknown" / "kb")
 
 
+@pytest.mark.issue(9137)
+def test_kb_serialize_2(nlp):
+    v = [5, 6, 7, 8]
+    kb1 = KnowledgeBase(vocab=nlp.vocab, entity_vector_length=4)
+    kb1.set_entities(["E1"], [1], [v])
+    assert kb1.get_vector("E1") == v
+    with make_tempdir() as d:
+        kb1.to_disk(d / "kb")
+        kb2 = KnowledgeBase(vocab=nlp.vocab, entity_vector_length=4)
+        kb2.from_disk(d / "kb")
+        assert kb2.get_vector("E1") == v
+
+
+def test_kb_set_entities(nlp):
+    """Test that set_entities entirely overwrites the previous set of entities"""
+    v = [5, 6, 7, 8]
+    v1 = [1, 1, 1, 0]
+    v2 = [2, 2, 2, 3]
+    kb1 = KnowledgeBase(vocab=nlp.vocab, entity_vector_length=4)
+    kb1.set_entities(["E0"], [1], [v])
+    assert kb1.get_entity_strings() == ["E0"]
+    kb1.set_entities(["E1", "E2"], [1, 9], [v1, v2])
+    assert set(kb1.get_entity_strings()) == {"E1", "E2"}
+    assert kb1.get_vector("E1") == v1
+    assert kb1.get_vector("E2") == v2
+    with make_tempdir() as d:
+        kb1.to_disk(d / "kb")
+        kb2 = KnowledgeBase(vocab=nlp.vocab, entity_vector_length=4)
+        kb2.from_disk(d / "kb")
+        assert set(kb2.get_entity_strings()) == {"E1", "E2"}
+        assert kb2.get_vector("E1") == v1
+        assert kb2.get_vector("E2") == v2
+
+
 def test_kb_serialize_vocab(nlp):
     """Test serialization of the KB and custom strings"""
     entity = "MyFunnyID"

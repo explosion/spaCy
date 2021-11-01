@@ -41,8 +41,8 @@ def create_docbin_reader(
 
 @util.registry.readers("spacy.JsonlCorpus.v1")
 def create_jsonl_reader(
-    path: Optional[Path], min_length: int = 0, max_length: int = 0, limit: int = 0
-) -> Callable[["Language"], Iterable[Doc]]:
+    path: Union[str, Path], min_length: int = 0, max_length: int = 0, limit: int = 0
+) -> Callable[["Language"], Iterable[Example]]:
     return JsonlCorpus(path, min_length=min_length, max_length=max_length, limit=limit)
 
 
@@ -129,15 +129,15 @@ class Corpus:
         """
         ref_docs = self.read_docbin(nlp.vocab, walk_corpus(self.path, FILE_TYPE))
         if self.shuffle:
-            ref_docs = list(ref_docs)
-            random.shuffle(ref_docs)
+            ref_docs = list(ref_docs)  # type: ignore
+            random.shuffle(ref_docs)  # type: ignore
 
         if self.gold_preproc:
             examples = self.make_examples_gold_preproc(nlp, ref_docs)
         else:
             examples = self.make_examples(nlp, ref_docs)
         for real_eg in examples:
-            for augmented_eg in self.augmenter(nlp, real_eg):
+            for augmented_eg in self.augmenter(nlp, real_eg):  # type: ignore[operator]
                 yield augmented_eg
 
     def _make_example(
@@ -190,7 +190,7 @@ class Corpus:
         i = 0
         for loc in locs:
             loc = util.ensure_path(loc)
-            if loc.parts[-1].endswith(FILE_TYPE):
+            if loc.parts[-1].endswith(FILE_TYPE):  # type: ignore[union-attr]
                 doc_bin = DocBin().from_disk(loc)
                 docs = doc_bin.get_docs(vocab)
                 for doc in docs:
@@ -202,7 +202,7 @@ class Corpus:
 
 
 class JsonlCorpus:
-    """Iterate Doc objects from a file or directory of jsonl
+    """Iterate Example objects from a file or directory of jsonl
     formatted raw text files.
 
     path (Path): The directory or filename to read from.

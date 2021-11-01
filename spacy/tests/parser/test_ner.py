@@ -2,14 +2,14 @@ import pytest
 from numpy.testing import assert_equal
 from spacy.attrs import ENT_IOB
 
-from spacy import util
+from spacy import util, registry
 from spacy.lang.en import English
 from spacy.language import Language
 from spacy.lookups import Lookups
 from spacy.pipeline._parser_internals.ner import BiluoPushDown
 from spacy.training import Example
 from spacy.tokens import Doc, Span
-from spacy.vocab import Vocab, registry
+from spacy.vocab import Vocab
 import logging
 
 from ..util import make_tempdir

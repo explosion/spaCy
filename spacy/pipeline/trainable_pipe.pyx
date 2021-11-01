@@ -53,8 +53,7 @@ cdef class TrainablePipe(Pipe):
             self.set_annotations([doc], scores)
             return doc
         except Exception as e:
-            error_handler(self.name, self, [doc], e)
-            return None
+            return error_handler(self.name, self, [doc], e)[0]
 
     def pipe(self, stream: Iterable[Doc], *, batch_size: int=128) -> Iterator[Doc]:
         """Apply the pipe to a stream of documents. This usually happens under

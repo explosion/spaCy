@@ -139,6 +139,12 @@ def test_load_model_blank_shortcut():
     nlp = util.load_model("blank:en")
     assert nlp.lang == "en"
     assert nlp.pipeline == []
+
+    # ImportError for loading an unsupported language
+    with pytest.raises(ImportError):
+        util.load_model("blank:zxx")
+
+    # ImportError for requesting an invalid language code that isn't registered
     with pytest.raises(ImportError):
         util.load_model("blank:fjsfijsdof")
 

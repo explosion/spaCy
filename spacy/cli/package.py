@@ -1,7 +1,9 @@
-from typing import Optional, Union, Any, Dict, List, Tuple
+from typing import Optional, Union, Any, Dict, List, Tuple, cast
 import shutil
 from pathlib import Path
 from wasabi import Printer, MarkdownRenderer, get_raw_input
+from thinc.api import Config
+from collections import defaultdict
 import srsly
 import sys
 
@@ -99,6 +101,12 @@ def package(
         msg.fail("Can't load pipeline meta.json", meta_path, exits=1)
     meta = srsly.read_json(meta_path)
     meta = get_meta(input_dir, meta)
+    if meta["requirements"]:
+        msg.good(
+            f"Including {len(meta['requirements'])} package requirement(s) from "
+            f"meta and config",
+            ", ".join(meta["requirements"]),
+        )
     if name is not None:
         meta["name"] = name
     if version is not None:
@@ -175,6 +183,55 @@ def has_wheel() -> bool:
         return False
 
 
+def get_third_party_dependencies(
+    config: Config, exclude: List[str] = util.SimpleFrozenList()
+) -> List[str]:
+    """If the config includes references to registered functions that are
+    provided by third-party packages (spacy-transformers, other libraries), we
+    want to include them in meta["requirements"] so that the package specifies
+    them as dependencies and the user won't have to do it manually.
+
+    We do this by:
+    - traversing the config to check for registered function (@ keys)
+    - looking up the functions and getting their module
+    - looking up the module version and generating an appropriate version range
+
+    config (Config): The pipeline config.
+    exclude (list): List of packages to exclude (e.g. that already exist in meta).
+    RETURNS (list): The versioned requirements.
+    """
+    own_packages = ("spacy", "spacy-legacy", "spacy-nightly", "thinc", "srsly")
+    distributions = util.packages_distributions()
+    funcs = defaultdict(set)
+    # We only want to look at runtime-relevant sections, not [training] or [initialize]
+    for section in ("nlp", "components"):
+        for path, value in util.walk_dict(config[section]):
+            if path[-1].startswith("@"):  # collect all function references by registry
+                funcs[path[-1][1:]].add(value)
+    for component in config.get("components", {}).values():
+        if "factory" in component:
+            funcs["factories"].add(component["factory"])
+    modules = set()
+    for reg_name, func_names in funcs.items():
+        for func_name in func_names:
+            func_info = util.registry.find(reg_name, func_name)
+            module_name = func_info.get("module")  # type: ignore[attr-defined]
+            if module_name:  # the code is part of a module, not a --code file
+                modules.add(func_info["module"].split(".")[0])  # type: ignore[index]
+    dependencies = []
+    for module_name in modules:
+        if module_name in distributions:
+            dist = distributions.get(module_name)
+            if dist:
+                pkg = dist[0]
+                if pkg in own_packages or pkg in exclude:
+                    continue
+                version = util.get_package_version(pkg)
+                version_range = util.get_minor_version_range(version)  # type: ignore[arg-type]
+                dependencies.append(f"{pkg}{version_range}")
+    return dependencies
+
+
 def get_build_formats(formats: List[str]) -> Tuple[bool, bool]:
     supported = ["sdist", "wheel", "none"]
     for form in formats:
@@ -195,7 +252,7 @@ def create_file(file_path: Path, contents: str) -> None:
 def get_meta(
     model_path: Union[str, Path], existing_meta: Dict[str, Any]
 ) -> Dict[str, Any]:
-    meta = {
+    meta: Dict[str, Any] = {
         "lang": "en",
         "name": "pipeline",
         "version": "0.0.0",
@@ -208,7 +265,7 @@ def get_meta(
     nlp = util.load_model_from_path(Path(model_path))
     meta.update(nlp.meta)
     meta.update(existing_meta)
-    meta["spacy_version"] = util.get_model_version_range(about.__version__)
+    meta["spacy_version"] = util.get_minor_version_range(about.__version__)
     meta["vectors"] = {
         "width": nlp.vocab.vectors_length,
         "vectors": len(nlp.vocab.vectors),
@@ -217,6 +274,11 @@ def get_meta(
     }
     if about.__title__ != "spacy":
         meta["parent_package"] = about.__title__
+    meta.setdefault("requirements", [])
+    # Update the requirements with all third-party packages in the config
+    existing_reqs = [util.split_requirement(req)[0] for req in meta["requirements"]]
+    reqs = get_third_party_dependencies(nlp.config, exclude=existing_reqs)
+    meta["requirements"].extend(reqs)
     return meta
 
 
@@ -262,8 +324,8 @@ def generate_readme(meta: Dict[str, Any]) -> str:
     license_name = meta.get("license")
     sources = _format_sources(meta.get("sources"))
     description = meta.get("description")
-    label_scheme = _format_label_scheme(meta.get("labels"))
-    accuracy = _format_accuracy(meta.get("performance"))
+    label_scheme = _format_label_scheme(cast(Dict[str, Any], meta.get("labels")))
+    accuracy = _format_accuracy(cast(Dict[str, Any], meta.get("performance")))
     table_data = [
         (md.bold("Name"), md.code(name)),
         (md.bold("Version"), md.code(version)),

@@ -250,3 +250,9 @@ o.0
 
 for orth in emoticons:
     BASE_EXCEPTIONS[orth] = [{ORTH: orth}]
+
+
+# Moved from a suffix setting due to #9155 removing prefixes from consideration
+# for lookbehinds
+for u in "cfkCFK":
+    BASE_EXCEPTIONS[f"°{u}."] = [{ORTH: "°"}, {ORTH: f"{u}"}, {ORTH: "."}]

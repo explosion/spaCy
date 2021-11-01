@@ -1,4 +1,5 @@
-from typing import Optional, Iterable, Callable, Dict, Union, List
+from typing import Optional, Iterable, Callable, Dict, Union, List, Any
+from thinc.types import Floats2d
 from pathlib import Path
 from itertools import islice
 import srsly
@@ -20,6 +21,8 @@ from ..util import SimpleFrozenList, registry
 from .. import util
 from ..scorer import Scorer
 
+# See #9050
+BACKWARD_OVERWRITE = True
 
 default_model_config = """
 [model]
@@ -50,6 +53,7 @@ DEFAULT_NEL_MODEL = Config().from_str(default_model_config)["model"]
         "incl_context": True,
         "entity_vector_length": 64,
         "get_candidates": {"@misc": "spacy.CandidateGenerator.v1"},
+        "overwrite": True,
         "scorer": {"@scorers": "spacy.entity_linker_scorer.v1"},
     },
     default_score_weights={
@@ -69,6 +73,7 @@ def make_entity_linker(
     incl_context: bool,
     entity_vector_length: int,
     get_candidates: Callable[[KnowledgeBase, Span], Iterable[Candidate]],
+    overwrite: bool,
     scorer: Optional[Callable],
 ):
     """Construct an EntityLinker component.
@@ -95,6 +100,7 @@ def make_entity_linker(
         incl_context=incl_context,
         entity_vector_length=entity_vector_length,
         get_candidates=get_candidates,
+        overwrite=overwrite,
         scorer=scorer,
     )
 
@@ -128,6 +134,7 @@ class EntityLinker(TrainablePipe):
         incl_context: bool,
         entity_vector_length: int,
         get_candidates: Callable[[KnowledgeBase, Span], Iterable[Candidate]],
+        overwrite: bool = BACKWARD_OVERWRITE,
         scorer: Optional[Callable] = entity_linker_score,
     ) -> None:
         """Initialize an entity linker.
@@ -156,7 +163,7 @@ class EntityLinker(TrainablePipe):
         self.incl_prior = incl_prior
         self.incl_context = incl_context
         self.get_candidates = get_candidates
-        self.cfg = {}
+        self.cfg: Dict[str, Any] = {"overwrite": overwrite}
         self.distance = CosineDistance(normalize=False)
         # how many neighbour sentences to take into account
         # create an empty KB by default. If you want to load a predefined one, specify it in 'initialize'.
@@ -183,7 +190,7 @@ class EntityLinker(TrainablePipe):
         get_examples: Callable[[], Iterable[Example]],
         *,
         nlp: Optional[Language] = None,
-        kb_loader: Callable[[Vocab], KnowledgeBase] = None,
+        kb_loader: Optional[Callable[[Vocab], KnowledgeBase]] = None,
     ):
         """Initialize the pipe for training, using a representative set
         of data examples.
@@ -278,7 +285,7 @@ class EntityLinker(TrainablePipe):
         losses[self.name] += loss
         return losses
 
-    def get_loss(self, examples: Iterable[Example], sentence_encodings):
+    def get_loss(self, examples: Iterable[Example], sentence_encodings: Floats2d):
         validate_examples(examples, "EntityLinker.get_loss")
         entity_encodings = []
         for eg in examples:
@@ -294,8 +301,9 @@ class EntityLinker(TrainablePipe):
                 method="get_loss", msg="gold entities do not match up"
             )
             raise RuntimeError(err)
-        gradients = self.distance.get_grad(sentence_encodings, entity_encodings)
-        loss = self.distance.get_loss(sentence_encodings, entity_encodings)
+        # TODO: fix typing issue here
+        gradients = self.distance.get_grad(sentence_encodings, entity_encodings)  # type: ignore
+        loss = self.distance.get_loss(sentence_encodings, entity_encodings)  # type: ignore
         loss = loss / len(entity_encodings)
         return float(loss), gradients
 
@@ -305,13 +313,13 @@ class EntityLinker(TrainablePipe):
         no prediction.
 
         docs (Iterable[Doc]): The documents to predict.
-        RETURNS (List[int]): The models prediction for each document.
+        RETURNS (List[str]): The models prediction for each document.
 
         DOCS: https://spacy.io/api/entitylinker#predict
         """
         self.validate_kb()
         entity_count = 0
-        final_kb_ids = []
+        final_kb_ids: List[str] = []
         if not docs:
             return final_kb_ids
         if isinstance(docs, Doc):
@@ -341,7 +349,7 @@ class EntityLinker(TrainablePipe):
                         # ignoring this entity - setting to NIL
                         final_kb_ids.append(self.NIL)
                     else:
-                        candidates = self.get_candidates(self.kb, ent)
+                        candidates = list(self.get_candidates(self.kb, ent))
                         if not candidates:
                             # no prediction possible for this entity - setting to NIL
                             final_kb_ids.append(self.NIL)
@@ -399,12 +407,14 @@ class EntityLinker(TrainablePipe):
         if count_ents != len(kb_ids):
             raise ValueError(Errors.E148.format(ents=count_ents, ids=len(kb_ids)))
         i = 0
+        overwrite = self.cfg["overwrite"]
         for doc in docs:
             for ent in doc.ents:
                 kb_id = kb_ids[i]
                 i += 1
                 for token in ent:
-                    token.ent_kb_id_ = kb_id
+                    if token.ent_kb_id == 0 or overwrite:
+                        token.ent_kb_id_ = kb_id
 
     def to_bytes(self, *, exclude=tuple()):
         """Serialize the pipe to a bytestring.
@@ -484,7 +494,7 @@ class EntityLinker(TrainablePipe):
             except AttributeError:
                 raise ValueError(Errors.E149) from None
 
-        deserialize = {}
+        deserialize: Dict[str, Callable[[Any], Any]] = {}
         deserialize["cfg"] = lambda p: self.cfg.update(deserialize_config(p))
         deserialize["vocab"] = lambda p: self.vocab.from_disk(p, exclude=exclude)
         deserialize["kb"] = lambda p: self.kb.from_disk(p)

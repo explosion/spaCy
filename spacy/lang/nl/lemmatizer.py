@@ -97,7 +97,7 @@ class DutchLemmatizer(Lemmatizer):
                     return forms
                 else:
                     oov_forms.append(form)
-        forms = list(set(oov_forms))
+        forms = list(dict.fromkeys(oov_forms))
         # Back-off through remaining return value candidates.
         if forms:
             for form in forms:

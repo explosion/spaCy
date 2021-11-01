@@ -524,6 +524,30 @@ def test_roundtrip_docs_to_docbin(doc):
     assert cats["TRAVEL"] == reloaded_example.reference.cats["TRAVEL"]
     assert cats["BAKING"] == reloaded_example.reference.cats["BAKING"]
 
+def test_docbin_user_data_serialized(doc):
+    doc.user_data["check"] = True
+    nlp = English()
+
+    with make_tempdir() as tmpdir:
+        output_file = tmpdir / "userdata.spacy"
+        DocBin(docs=[doc], store_user_data=True).to_disk(output_file)
+        reloaded_docs = DocBin().from_disk(output_file).get_docs(nlp.vocab)
+        reloaded_doc = list(reloaded_docs)[0]
+
+    assert reloaded_doc.user_data["check"] == True
+
+def test_docbin_user_data_not_serialized(doc):
+    # this isn't serializable, but that shouldn't cause an error
+    doc.user_data["check"] = set()
+    nlp = English()
+
+    with make_tempdir() as tmpdir:
+        output_file = tmpdir / "userdata.spacy"
+        DocBin(docs=[doc], store_user_data=False).to_disk(output_file)
+        reloaded_docs = DocBin().from_disk(output_file).get_docs(nlp.vocab)
+        reloaded_doc = list(reloaded_docs)[0]
+
+    assert "check" not in reloaded_doc.user_data
 
 @pytest.mark.parametrize(
     "tokens_a,tokens_b,expected",

@@ -38,11 +38,20 @@ attributes. We also calculate an alignment between the word-piece tokens and the
 spaCy tokenization, so that we can use the last hidden states to set the
 `Doc.tensor` attribute. When multiple word-piece tokens align to the same spaCy
 token, the spaCy token receives the sum of their values. To access the values,
-you can use the custom [`Doc._.trf_data`](#custom-attributes) attribute. The
+you can use the custom [`Doc._.trf_data`](#assigned-attributes) attribute. The
 package also adds the function registries [`@span_getters`](#span_getters) and
 [`@annotation_setters`](#annotation_setters) with several built-in registered
 functions. For more details, see the
 [usage documentation](/usage/embeddings-transformers).
+
+## Assigned Attributes {#assigned-attributes}
+
+The component sets the following
+[custom extension attribute](/usage/processing-pipeline#custom-components-attributes):
+
+| Location         | Value                                                                    |
+| ---------------- | ------------------------------------------------------------------------ |
+| `Doc._.trf_data` | Transformer tokens and outputs for the `Doc` object. ~~TransformerData~~ |
 
 ## Config and implementation {#config}
 
@@ -83,9 +92,12 @@ https://github.com/explosion/spacy-transformers/blob/master/spacy_transformers/p
 > # Construction via add_pipe with custom config
 > config = {
 >     "model": {
->         "@architectures": "spacy-transformers.TransformerModel.v1",
+>         "@architectures": "spacy-transformers.TransformerModel.v3",
 >         "name": "bert-base-uncased",
->         "tokenizer_config": {"use_fast": True}
+>         "tokenizer_config": {"use_fast": True},
+>         "transformer_config": {"output_attentions": True},
+>         "mixed_precision": True,
+>         "grad_scaler_config": {"init_scale": 32768}
 >     }
 > }
 > trf = nlp.add_pipe("transformer", config=config)
@@ -98,7 +110,7 @@ https://github.com/explosion/spacy-transformers/blob/master/spacy_transformers/p
 Construct a `Transformer` component. One or more subsequent spaCy components can
 use the transformer outputs as features in its model, with gradients
 backpropagated to the single shared weights. The activations from the
-transformer are saved in the [`Doc._.trf_data`](#custom-attributes) extension
+transformer are saved in the [`Doc._.trf_data`](#assigned-attributes) extension
 attribute. You can also provide a callback to set additional annotations. In
 your application, you would normally use a shortcut for this and instantiate the
 component using its string name and [`nlp.add_pipe`](/api/language#create_pipe).
@@ -205,7 +217,7 @@ modifying them.
 
 Assign the extracted features to the `Doc` objects. By default, the
 [`TransformerData`](/api/transformer#transformerdata) object is written to the
-[`Doc._.trf_data`](#custom-attributes) attribute. Your `set_extra_annotations`
+[`Doc._.trf_data`](#assigned-attributes) attribute. Your `set_extra_annotations`
 callback is then called, if provided.
 
 > #### Example
@@ -383,14 +395,15 @@ are wrapped into the
 [FullTransformerBatch](/api/transformer#fulltransformerbatch) object. The
 `FullTransformerBatch` then splits out the per-document data, which is handled
 by this class. Instances of this class are typically assigned to the
-[`Doc._.trf_data`](/api/transformer#custom-attributes) extension attribute.
+[`Doc._.trf_data`](/api/transformer#assigned-attributes) extension attribute.
 
-| Name      | Description                                                                                                                                                                                                                                                                                                                                               |
-| --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `tokens`  | A slice of the tokens data produced by the tokenizer. This may have several fields, including the token IDs, the texts and the attention mask. See the [`transformers.BatchEncoding`](https://huggingface.co/transformers/main_classes/tokenizer.html#transformers.BatchEncoding) object for details. ~~dict~~                                            |
-| `tensors` | The activations for the `Doc` from the transformer. Usually the last tensor that is 3-dimensional will be the most important, as that will provide the final hidden state. Generally activations that are 2-dimensional will be attention weights. Details of this variable will differ depending on the underlying transformer model. ~~List[FloatsXd]~~ |
-| `align`   | Alignment from the `Doc`'s tokenization to the wordpieces. This is a ragged array, where `align.lengths[i]` indicates the number of wordpiece tokens that token `i` aligns against. The actual indices are provided at `align[i].dataXd`. ~~Ragged~~                                                                                                      |
-| `width`   | The width of the last hidden layer. ~~int~~                                                                                                                                                                                                                                                                                                               |
+| Name           | Description                                                                                                                                                                                                                                                                                                                          |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `tokens`       | A slice of the tokens data produced by the tokenizer. This may have several fields, including the token IDs, the texts and the attention mask. See the [`transformers.BatchEncoding`](https://huggingface.co/transformers/main_classes/tokenizer.html#transformers.BatchEncoding) object for details. ~~dict~~                       |
+| `model_output` | The model output from the transformer model, determined by the model and transformer config. New in `spacy-transformers` v1.1.0. ~~transformers.file_utils.ModelOutput~~                                                                                                                                                             |
+| `tensors`      | The `model_output` in the earlier `transformers` tuple format converted using [`ModelOutput.to_tuple()`](https://huggingface.co/transformers/main_classes/output.html#transformers.file_utils.ModelOutput.to_tuple). Returns `Tuple` instead of `List` as of `spacy-transformers` v1.1.0. ~~Tuple[Union[FloatsXd, List[FloatsXd]]]~~ |
+| `align`        | Alignment from the `Doc`'s tokenization to the wordpieces. This is a ragged array, where `align.lengths[i]` indicates the number of wordpiece tokens that token `i` aligns against. The actual indices are provided at `align[i].dataXd`. ~~Ragged~~                                                                                 |
+| `width`        | The width of the last hidden layer. ~~int~~                                                                                                                                                                                                                                                                                          |
 
 ### TransformerData.empty {#transformerdata-emoty tag="classmethod"}
 
@@ -400,19 +413,32 @@ Create an empty `TransformerData` container.
 | ----------- | ---------------------------------- |
 | **RETURNS** | The container. ~~TransformerData~~ |
 
+<Accordion title="Previous versions of TransformerData" spaced>
+
+In `spacy-transformers` v1.0, the model output is stored in
+`TransformerData.tensors` as `List[Union[FloatsXd]]` and only includes the
+activations for the `Doc` from the transformer. Usually the last tensor that is
+3-dimensional will be the most important, as that will provide the final hidden
+state. Generally activations that are 2-dimensional will be attention weights.
+Details of this variable will differ depending on the underlying transformer
+model.
+
+</Accordion>
+
 ## FullTransformerBatch {#fulltransformerbatch tag="dataclass"}
 
 Holds a batch of input and output objects for a transformer model. The data can
 then be split to a list of [`TransformerData`](/api/transformer#transformerdata)
 objects to associate the outputs to each [`Doc`](/api/doc) in the batch.
 
-| Name       | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `spans`    | The batch of input spans. The outer list refers to the Doc objects in the batch, and the inner list are the spans for that `Doc`. Note that spans are allowed to overlap or exclude tokens, but each `Span` can only refer to one `Doc` (by definition). This means that within a `Doc`, the regions of the output tensors that correspond to each `Span` may overlap or have gaps, but for each `Doc`, there is a non-overlapping contiguous slice of the outputs. ~~List[List[Span]]~~ |
-| `tokens`   | The output of the tokenizer. ~~transformers.BatchEncoding~~                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| `tensors`  | The output of the transformer model. ~~List[torch.Tensor]~~                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| `align`    | Alignment from the spaCy tokenization to the wordpieces. This is a ragged array, where `align.lengths[i]` indicates the number of wordpiece tokens that token `i` aligns against. The actual indices are provided at `align[i].dataXd`. ~~Ragged~~                                                                                                                                                                                                                                       |
-| `doc_data` | The outputs, split per `Doc` object. ~~List[TransformerData]~~                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Name           | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `spans`        | The batch of input spans. The outer list refers to the Doc objects in the batch, and the inner list are the spans for that `Doc`. Note that spans are allowed to overlap or exclude tokens, but each `Span` can only refer to one `Doc` (by definition). This means that within a `Doc`, the regions of the output tensors that correspond to each `Span` may overlap or have gaps, but for each `Doc`, there is a non-overlapping contiguous slice of the outputs. ~~List[List[Span]]~~ |
+| `tokens`       | The output of the tokenizer. ~~transformers.BatchEncoding~~                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `model_output` | The model output from the transformer model, determined by the model and transformer config. New in `spacy-transformers` v1.1.0. ~~transformers.file_utils.ModelOutput~~                                                                                                                                                                                                                                                                                                                 |
+| `tensors`      | The `model_output` in the earlier `transformers` tuple format converted using [`ModelOutput.to_tuple()`](https://huggingface.co/transformers/main_classes/output.html#transformers.file_utils.ModelOutput.to_tuple). Returns `Tuple` instead of `List` as of `spacy-transformers` v1.1.0. ~~Tuple[Union[torch.Tensor, Tuple[torch.Tensor]]]~~                                                                                                                                            |
+| `align`        | Alignment from the spaCy tokenization to the wordpieces. This is a ragged array, where `align.lengths[i]` indicates the number of wordpiece tokens that token `i` aligns against. The actual indices are provided at `align[i].dataXd`. ~~Ragged~~                                                                                                                                                                                                                                       |
+| `doc_data`     | The outputs, split per `Doc` object. ~~List[TransformerData]~~                                                                                                                                                                                                                                                                                                                                                                                                                           |
 
 ### FullTransformerBatch.unsplit_by_doc {#fulltransformerbatch-unsplit_by_doc tag="method"}
 
@@ -434,6 +460,13 @@ Split a `TransformerData` object that represents a batch into a list with one
 | Name        | Description                                |
 | ----------- | ------------------------------------------ |
 | **RETURNS** | The split batch. ~~List[TransformerData]~~ |
+
+<Accordion title="Previous versions of FullTransformerBatch" spaced>
+
+In `spacy-transformers` v1.0, the model output is stored in
+`FullTransformerBatch.tensors` as `List[torch.Tensor]`.
+
+</Accordion>
 
 ## Span getters {#span_getters source="github.com/explosion/spacy-transformers/blob/master/spacy_transformers/span_getters.py"}
 
@@ -549,12 +582,3 @@ The following built-in functions are available:
 | Name                                           | Description                           |
 | ---------------------------------------------- | ------------------------------------- |
 | `spacy-transformers.null_annotation_setter.v1` | Don't set any additional annotations. |
-
-## Custom attributes {#custom-attributes}
-
-The component sets the following
-[custom extension attributes](/usage/processing-pipeline#custom-components-attributes):
-
-| Name             | Description                                                              |
-| ---------------- | ------------------------------------------------------------------------ |
-| `Doc._.trf_data` | Transformer tokens and outputs for the `Doc` object. ~~TransformerData~~ |

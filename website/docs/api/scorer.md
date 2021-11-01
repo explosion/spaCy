@@ -41,15 +41,20 @@ Calculate the scores for a list of [`Example`](/api/example) objects using the
 scoring methods provided by the components in the pipeline.
 
 The returned `Dict` contains the scores provided by the individual pipeline
-components. For the scoring methods provided by the `Scorer` and use by the core
-pipeline components, the individual score names start with the `Token` or `Doc`
-attribute being scored:
+components. For the scoring methods provided by the `Scorer` and used by the
+core pipeline components, the individual score names start with the `Token` or
+`Doc` attribute being scored:
 
-- `token_acc`, `token_p`, `token_r`, `token_f`,
+- `token_acc`, `token_p`, `token_r`, `token_f`
 - `sents_p`, `sents_r`, `sents_f`
-- `tag_acc`, `pos_acc`, `morph_acc`, `morph_per_feat`, `lemma_acc`
+- `tag_acc`
+- `pos_acc`
+- `morph_acc`, `morph_micro_p`, `morph_micro_r`, `morph_micro_f`,
+  `morph_per_feat`
+- `lemma_acc`
 - `dep_uas`, `dep_las`, `dep_las_per_type`
 - `ents_p`, `ents_r` `ents_f`, `ents_per_type`
+- `spans_sc_p`, `spans_sc_r`, `spans_sc_f`
 - `cats_score` (depends on config, description provided in `cats_score_desc`),
   `cats_micro_p`, `cats_micro_r`, `cats_micro_f`, `cats_macro_p`,
   `cats_macro_r`, `cats_macro_f`, `cats_macro_auc`, `cats_f_per_type`,
@@ -84,7 +89,7 @@ Docs with `has_unknown_spaces` are skipped during scoring.
 > ```
 
 | Name        | Description                                                                                                         |
-| ----------- | ------------------------------------------------------------------------------------------------------------------- |
+| ----------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
 | `examples`  | The `Example` objects holding both the predictions and the correct gold-standard annotations. ~~Iterable[Example]~~ |
 | **RETURNS** | `Dict`                                                                                                              | A dictionary containing the scores `token_acc`, `token_p`, `token_r`, `token_f`. ~~Dict[str, float]]~~ |
 
@@ -124,14 +129,14 @@ scoring.
 > print(scores["morph_per_feat"])
 > ```
 
-| Name             | Description                                                                                                                                                   |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `examples`       | The `Example` objects holding both the predictions and the correct gold-standard annotations. ~~Iterable[Example]~~                                           |
-| `attr`           | The attribute to score. ~~str~~                                                                                                                               |
-| _keyword-only_   |                                                                                                                                                               |
-| `getter`         | Defaults to `getattr`. If provided, `getter(token, attr)` should return the value of the attribute for an individual `Token`. ~~Callable[[Token, str], Any]~~ |
-| `missing_values` | Attribute values to treat as missing annotation in the reference annotation. Defaults to `{0, None, ""}`. ~~Set[Any]~~                                        |
-| **RETURNS**      | A dictionary containing the per-feature PRF scores under the key `{attr}_per_feat`. ~~Dict[str, Dict[str, float]]~~                                           |
+| Name             | Description                                                                                                                                                             |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `examples`       | The `Example` objects holding both the predictions and the correct gold-standard annotations. ~~Iterable[Example]~~                                                     |
+| `attr`           | The attribute to score. ~~str~~                                                                                                                                         |
+| _keyword-only_   |                                                                                                                                                                         |
+| `getter`         | Defaults to `getattr`. If provided, `getter(token, attr)` should return the value of the attribute for an individual `Token`. ~~Callable[[Token, str], Any]~~           |
+| `missing_values` | Attribute values to treat as missing annotation in the reference annotation. Defaults to `{0, None, ""}`. ~~Set[Any]~~                                                  |
+| **RETURNS**      | A dictionary containing the micro PRF scores under the key `{attr}_micro_p/r/f` and the per-feature PRF scores under `{attr}_per_feat`. ~~Dict[str, Dict[str, float]]~~ |
 
 ## Scorer.score_spans {#score_spans tag="staticmethod" new="3"}
 
