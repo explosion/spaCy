@@ -3389,7 +3389,7 @@
                 "",
                 "Shallow Traditional (ShTra) Features",
                 "ShaF = LingFeat.ShaF_() #Shallow Features (e.g. avg number of tokens)",
-                "TraF = LingFeat.TraF_() #Traditional Formulas",
+                "TraF = LingFeat.TraF_() #Traditional Formulas"
             ],
             "code_language": "python",
             "thumb": "https://raw.githubusercontent.com/brucewlee/lingfeat/master/img/lingfeat_logo2.png",
