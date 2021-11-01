@@ -3577,7 +3577,22 @@
             },
             "category": ["pipeline", "research", "standalone"],
             "tags": ["spacy", "python", "nlp", "ner"]
-        }        
+        },
+        {
+            "id": "WordDumb",
+            "title": "WordDumb",
+            "slogan": "A calibre plugin that generates Word Wise and X-Ray files.",
+            "description": "A calibre plugin that generates Word Wise and X-Ray files then sends them to Kindle. Supports KFX, AZW3 and MOBI eBooks. X-Ray supports 18 languages.",
+            "github": "xxyzz/WordDumb",
+            "code_language": "python",
+            "thumb": "https://raw.githubusercontent.com/xxyzz/WordDumb/master/starfish.svg",
+            "image": "https://user-images.githubusercontent.com/21101839/130245435-b874f19a-7785-4093-9975-81596efc42bb.png",
+            "author": "xxyzz",
+            "author_links": {
+                "github": "xxyzz"
+            },
+            "category": ["standalone"]
+        }
     ],
 
     "categories": [
