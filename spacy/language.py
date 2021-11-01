@@ -1338,12 +1338,12 @@ class Language:
 
     def set_error_handler(
         self,
-        error_handler: Callable[[str, "Pipe", List[Doc], Exception], NoReturn],
+        error_handler: Callable[[str, "Pipe", List[Doc], Exception], Any],
     ):
         """Set an error handler object for all the components in the pipeline that implement
         a set_error_handler function.
 
-        error_handler (Callable[[str, Pipe, List[Doc], Exception], NoReturn]):
+        error_handler (Callable[[str, Pipe, List[Doc], Exception], Any):
             Function that deals with a failing batch of documents. This callable function should take in
             the component's name, the component itself, the offending batch of documents, and the exception
             that was thrown.

@@ -46,6 +46,7 @@ def assert_sents_error(doc):
 def warn_error(proc_name, proc, docs, e):
     logger = logging.getLogger("spacy")
     logger.warning(f"Trouble with component {proc_name}.")
+    return [None] * len(docs)
 
 
 @pytest.fixture

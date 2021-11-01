@@ -1593,7 +1593,7 @@ def _pipe(
     docs: Iterable["Doc"],
     proc: "Pipe",
     name: str,
-    default_error_handler: Callable[[str, "Pipe", List["Doc"], Exception], NoReturn],
+    default_error_handler: Callable[[str, "Pipe", List["Doc"], Exception], Any],
     kwargs: Mapping[str, Any],
 ) -> Iterator["Doc"]:
     if hasattr(proc, "pipe"):
@@ -1616,11 +1616,11 @@ def _pipe(
                 yield None
 
 
-def raise_error(proc_name: str, proc: Callable[["Doc"], "Doc"], docs: List["Doc"], e: Exception) -> NoReturn:
+def raise_error(proc_name, proc, docs, e):
     raise e
 
 
-def ignore_error(proc_name: str, proc: Callable[["Doc"], "Doc"], docs: List["Doc"], e: Exception) -> List[Optional["Doc"]]:
+def ignore_error(proc_name, proc, docs, e):
     return [None] * len(docs)
 
 
