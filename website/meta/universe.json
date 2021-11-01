@@ -3346,8 +3346,8 @@
         {
             "id": "lingfeat",
             "title": "LingFeat",
-            "slogan": "A Linguistic Features Extraction (Text Analysis) Tool for Readability Assessment and Text Simplification",
-            "description": "LingFeat is a feature extraction software, which currently extracts 255 linguistic features from English string input. Categories include Syntax, Semantics, Discourse, and also the traditional readability formulas. Published in EMNLP 2021.",
+            "slogan": "A Linguistic Feature Extraction (Text Analysis) Tool for Readability Assessment and Text Simplification",
+            "description": "LingFeat is a feature extraction library which currently extracts 255 linguistic features from English string input. Categories include syntax, semantics, discourse, and also traditional readability formulas. Published in EMNLP 2021.",
             "github": "brucewlee/lingfeat",
             "pip": "lingfeat",
             "code_example": [
