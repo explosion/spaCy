@@ -31,7 +31,7 @@ const COMPONENT_LINKS = {
 
 const MODEL_META = {
     core: 'Vocabulary, syntax, entities, vectors',
-    core_sm: 'Vocabulary, syntax, entities',
+    core_no_vectors: 'Vocabulary, syntax, entities',
     dep: 'Vocabulary, syntax',
     ent: 'Named entities',
     sent: 'Sentence boundaries',
@@ -196,7 +196,7 @@ const Model = ({
     const [isError, setIsError] = useState(true)
     const [meta, setMeta] = useState({})
     const { type, genre, size } = getModelComponents(name)
-    const display_type = type === 'core' && size === 'sm' ? 'core_sm' : type
+    const display_type = type === 'core' && (size === 'sm' || size === 'trf') ? 'core_no_vectors' : type
     const version = useMemo(() => getLatestVersion(name, compatibility, prereleases), [
         name,
         compatibility,
