@@ -255,6 +255,7 @@ def test_language_pipe_error_handler_custom(en_vocab, n_process):
                 assert len(docs) + mock_warning.call_count == len(texts)
             assert [doc.text for doc in docs] == ["TEXT 111", "TEXT 333", "TEXT 666"]
 
+
 @pytest.mark.parametrize("n_process", [1, 2])
 def test_language_pipe_error_handler_input_as_tuples(en_vocab, n_process):
     """Test the error handling of nlp.pipe with input as tuples"""
@@ -263,7 +264,13 @@ def test_language_pipe_error_handler_input_as_tuples(en_vocab, n_process):
     if isinstance(ops, NumpyOps) or n_process < 2:
         nlp = English()
         nlp.add_pipe("my_evil_component")
-        texts = [("TEXT 111", 111), ("TEXT 222", 222), ("TEXT 333", 333), ("TEXT 342", 342), ("TEXT 666", 666)]
+        texts = [
+            ("TEXT 111", 111),
+            ("TEXT 222", 222),
+            ("TEXT 333", 333),
+            ("TEXT 342", 342),
+            ("TEXT 666", 666),
+        ]
         with pytest.raises(ValueError):
             list(nlp.pipe(texts, as_tuples=True))
         nlp.set_error_handler(warn_error)
@@ -539,19 +546,19 @@ def test_spacy_blank():
 @pytest.mark.parametrize(
     "lang,target",
     [
-        ('en', 'en'),
-        ('fra', 'fr'),
-        ('fre', 'fr'),
-        ('iw', 'he'),
-        ('mo', 'ro'),
-        ('mul', 'xx'),
-        ('no', 'nb'),
-        ('pt-BR', 'pt'),
-        ('xx', 'xx'),
-        ('zh-Hans', 'zh'),
-        ('zh-Hant', None),
-        ('zxx', None)
-    ]
+        ("en", "en"),
+        ("fra", "fr"),
+        ("fre", "fr"),
+        ("iw", "he"),
+        ("mo", "ro"),
+        ("mul", "xx"),
+        ("no", "nb"),
+        ("pt-BR", "pt"),
+        ("xx", "xx"),
+        ("zh-Hans", "zh"),
+        ("zh-Hant", None),
+        ("zxx", None),
+    ],
 )
 def test_language_matching(lang, target):
     """
@@ -564,17 +571,17 @@ def test_language_matching(lang, target):
 @pytest.mark.parametrize(
     "lang,target",
     [
-        ('en', 'en'),
-        ('fra', 'fr'),
-        ('fre', 'fr'),
-        ('iw', 'he'),
-        ('mo', 'ro'),
-        ('mul', 'xx'),
-        ('no', 'nb'),
-        ('pt-BR', 'pt'),
-        ('xx', 'xx'),
-        ('zh-Hans', 'zh'),
-    ]
+        ("en", "en"),
+        ("fra", "fr"),
+        ("fre", "fr"),
+        ("iw", "he"),
+        ("mo", "ro"),
+        ("mul", "xx"),
+        ("no", "nb"),
+        ("pt-BR", "pt"),
+        ("xx", "xx"),
+        ("zh-Hans", "zh"),
+    ],
 )
 def test_blank_languages(lang, target):
     """
