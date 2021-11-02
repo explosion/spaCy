@@ -29,6 +29,7 @@ class Doc:
     tensor: numpy.ndarray
     user_data: Dict[str, Any]
     has_unknown_spaces: bool
+    _context: Any
     @classmethod
     def set_extension(
         cls,

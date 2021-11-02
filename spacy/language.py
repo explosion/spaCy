@@ -1480,7 +1480,7 @@ class Language:
     @overload
     def pipe(  # noqa: F811
         self,
-        texts: Iterable[Tuple[str, _AnyContext]],
+        texts: Iterable[Tuple[Union[str, Doc], _AnyContext]],
         *,
         as_tuples: Literal[True] = ...,
         batch_size: Optional[int] = ...,
@@ -1492,7 +1492,7 @@ class Language:
 
     def pipe(  # noqa: F811
         self,
-        texts: Union[Iterable[Union[str, Doc]], Iterable[Tuple[str, _AnyContext]]],
+        texts: Union[Iterable[Union[str, Doc]], Iterable[Tuple[Union[str, Doc], _AnyContext]]],
         *,
         as_tuples: bool = False,
         batch_size: Optional[int] = None,
