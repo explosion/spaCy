@@ -1577,7 +1577,8 @@ class Language:
             for pipe in pipes:
                 docs = pipe(docs)
         for doc in docs:
-            yield doc
+            if doc is not None:
+                yield doc
 
     def _has_gpu_model(self, disable: Iterable[str]):
         for name, proc in self.pipeline:
