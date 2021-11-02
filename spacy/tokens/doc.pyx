@@ -248,6 +248,7 @@ cdef class Doc:
         self.tensor = numpy.zeros((0,), dtype="float32")
         self.user_data = {} if user_data is None else user_data
         self._vector = None
+        self._context = None
         self.noun_chunks_iterator = self.vocab.get_noun_chunks
         cdef bint has_space
         if words is None and spaces is not None:
@@ -1331,7 +1332,8 @@ cdef class Doc:
             "cats": lambda: self.cats,
             "spans": lambda: self.spans.to_bytes(),
             "strings": lambda: list(strings),
-            "has_unknown_spaces": lambda: self.has_unknown_spaces
+            "has_unknown_spaces": lambda: self.has_unknown_spaces,
+            "_context": lambda: srsly.msgpack_dumps(self._context),
         }
         if "user_data" not in exclude and self.user_data:
             user_data_keys, user_data_values = list(zip(*self.user_data.items()))
@@ -1375,6 +1377,8 @@ cdef class Doc:
                 self.vocab.strings.add(s)
         if "has_unknown_spaces" not in exclude and "has_unknown_spaces" in msg:
             self.has_unknown_spaces = msg["has_unknown_spaces"]
+        if "_context" not in exclude and "_context" in msg:
+            self._context = srsly.msgpack_loads(msg["_context"])
         start = 0
         cdef const LexemeC* lex
         cdef str orth_

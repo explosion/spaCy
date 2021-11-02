@@ -127,3 +127,22 @@ def test_serialize_custom_extension(en_vocab, writer_flag, reader_flag, reader_v
     doc_2 = list(doc_bin_2.get_docs(en_vocab))[0]
     assert doc_2._.foo == reader_value
     Underscore.doc_extensions = {}
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        ("bar"),
+        (None),
+        ({"a": 1, "b": 34.5}),
+        ([1, 2, "foo"]),
+    ],
+)
+def test_serialize_roundtrip_context(en_vocab, value):
+    """Test that Doc._context is serialized with to/from_bytes."""
+    doc = Doc(en_vocab, words=["hello", "world"])
+    doc._context = value
+    data = doc.to_bytes()
+    doc2 = Doc(en_vocab)
+    doc2.from_bytes(data)
+    assert doc._context == doc2._context
