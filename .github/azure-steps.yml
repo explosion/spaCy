@@ -65,11 +65,8 @@ steps:
     condition: eq(${{ parameters.gpu }}, true)
 
   - script: |
-      #python -m spacy download ca_core_news_sm
-      #python -m spacy download ca_core_news_md
-      # temporarily install the v3.1.0 models
-      pip install --no-deps https://github.com/explosion/spacy-models/releases/download/ca_core_news_sm-3.1.0/ca_core_news_sm-3.1.0-py3-none-any.whl
-      pip install --no-deps https://github.com/explosion/spacy-models/releases/download/ca_core_news_md-3.1.0/ca_core_news_md-3.1.0-py3-none-any.whl
+      python -m spacy download ca_core_news_sm
+      python -m spacy download ca_core_news_md
       python -c "import spacy; nlp=spacy.load('ca_core_news_sm'); doc=nlp('test')"
     displayName: 'Test download CLI'
     condition: eq(variables['python_version'], '3.8')
