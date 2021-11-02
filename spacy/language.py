@@ -1492,7 +1492,9 @@ class Language:
 
     def pipe(  # noqa: F811
         self,
-        texts: Union[Iterable[Union[str, Doc]], Iterable[Tuple[Union[str, Doc], _AnyContext]]],
+        texts: Union[
+            Iterable[Union[str, Doc]], Iterable[Tuple[Union[str, Doc], _AnyContext]]
+        ],
         *,
         as_tuples: bool = False,
         batch_size: Optional[int] = None,
@@ -1519,7 +1521,9 @@ class Language:
         # Handle texts with context as tuples
         if as_tuples:
             texts = cast(Iterable[Tuple[Union[str, Doc], _AnyContext]], texts)
-            docs_with_contexts = (self._ensure_doc_with_context(text, context) for text, context in texts)
+            docs_with_contexts = (
+                self._ensure_doc_with_context(text, context) for text, context in texts
+            )
             docs = self.pipe(
                 docs_with_contexts,
                 batch_size=batch_size,
