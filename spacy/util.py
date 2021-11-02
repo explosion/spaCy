@@ -1612,8 +1612,7 @@ def _pipe(
                 doc = proc(doc, **kwargs)  # type: ignore[call-arg]
                 yield doc
             except Exception as e:
-                error_handler(name, proc, [doc], e)
-                yield None
+                yield error_handler(name, proc, [doc], e)[0]
 
 
 def raise_error(proc_name, proc, docs, e):
