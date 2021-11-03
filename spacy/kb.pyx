@@ -124,7 +124,7 @@ cdef class KnowledgeBase:
     def get_alias_strings(self):
         return [self.vocab.strings[x] for x in self._alias_index]
 
-    def add_entity(self, unicode entity, float freq, vector[float] entity_vector):
+    def add_entity(self, str entity, float freq, vector[float] entity_vector):
         """
         Add an entity to the KB, optionally specifying its log probability based on corpus frequency
         Return the hash of the entity ID/name at the end.
@@ -185,15 +185,15 @@ cdef class KnowledgeBase:
 
             i += 1
 
-    def contains_entity(self, unicode entity):
+    def contains_entity(self, str entity):
         cdef hash_t entity_hash = self.vocab.strings.add(entity)
         return entity_hash in self._entry_index
 
-    def contains_alias(self, unicode alias):
+    def contains_alias(self, str alias):
         cdef hash_t alias_hash = self.vocab.strings.add(alias)
         return alias_hash in self._alias_index
 
-    def add_alias(self, unicode alias, entities, probabilities):
+    def add_alias(self, str alias, entities, probabilities):
         """
         For a given alias, add its potential entities and prior probabilies to the KB.
         Return the alias_hash at the end
@@ -239,7 +239,7 @@ cdef class KnowledgeBase:
             raise RuntimeError(Errors.E891.format(alias=alias))
         return alias_hash
 
-    def append_alias(self, unicode alias, unicode entity, float prior_prob, ignore_warnings=False):
+    def append_alias(self, str alias, str entity, float prior_prob, ignore_warnings=False):
         """
         For an alias already existing in the KB, extend its potential entities with one more.
         Throw a warning if either the alias or the entity is unknown,
@@ -286,7 +286,7 @@ cdef class KnowledgeBase:
             alias_entry.probs = probs
             self._aliases_table[alias_index] = alias_entry
 
-    def get_alias_candidates(self, unicode alias) -> Iterator[Candidate]:
+    def get_alias_candidates(self, str alias) -> Iterator[Candidate]:
         """
         Return candidate entities for an alias. Each candidate defines the entity, the original alias,
         and the prior probability of that alias resolving to that entity.
@@ -307,7 +307,7 @@ cdef class KnowledgeBase:
                 for (entry_index, prior_prob) in zip(alias_entry.entry_indices, alias_entry.probs)
                 if entry_index != 0]
 
-    def get_vector(self, unicode entity):
+    def get_vector(self, str entity):
         cdef hash_t entity_hash = self.vocab.strings[entity]
 
         # Return an empty list if this entity is unknown in this KB
@@ -317,7 +317,7 @@ cdef class KnowledgeBase:
 
         return self._vectors_table[self._entries[entry_index].vector_index]
 
-    def get_prior_prob(self, unicode entity, unicode alias):
+    def get_prior_prob(self, str entity, str alias):
         """ Return the prior probability of a given alias being linked to a given entity,
         or return 0.0 when this combination is not known in the knowledge base"""
         cdef hash_t alias_hash = self.vocab.strings[alias]
@@ -587,7 +587,7 @@ cdef class Writer:
     def __init__(self, path):
         assert isinstance(path, Path)
         content = bytes(path)
-        cdef bytes bytes_loc = content.encode('utf8') if type(content) == unicode else content
+        cdef bytes bytes_loc = content.encode('utf8') if type(content) == str else content
         self._fp = fopen(<char*>bytes_loc, 'wb')
         if not self._fp:
             raise IOError(Errors.E146.format(path=path))
@@ -629,7 +629,7 @@ cdef class Writer:
 cdef class Reader:
     def __init__(self, path):
         content = bytes(path)
-        cdef bytes bytes_loc = content.encode('utf8') if type(content) == unicode else content
+        cdef bytes bytes_loc = content.encode('utf8') if type(content) == str else content
         self._fp = fopen(<char*>bytes_loc, 'rb')
         if not self._fp:
             PyErr_SetFromErrno(IOError)

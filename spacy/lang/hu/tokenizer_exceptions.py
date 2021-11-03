@@ -646,5 +646,10 @@ _nums = r"(({ne})|({t})|({on})|({c}))({s})?".format(
 )
 
 
+for u in "cfkCFK":
+    _exc[f"°{u}"] = [{ORTH: f"°{u}"}]
+    _exc[f"°{u}."] = [{ORTH: f"°{u}"}, {ORTH: "."}]
+
+
 TOKENIZER_EXCEPTIONS = update_exc(BASE_EXCEPTIONS, _exc)
 TOKEN_MATCH = re.compile(r"^{n}$".format(n=_nums)).match

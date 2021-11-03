@@ -65,8 +65,11 @@ steps:
     condition: eq(${{ parameters.gpu }}, true)
 
   - script: |
-      python -m spacy download ca_core_news_sm
-      python -m spacy download ca_core_news_md
+      #python -m spacy download ca_core_news_sm
+      #python -m spacy download ca_core_news_md
+      # temporarily install the v3.1.0 models
+      pip install --no-deps https://github.com/explosion/spacy-models/releases/download/ca_core_news_sm-3.1.0/ca_core_news_sm-3.1.0-py3-none-any.whl
+      pip install --no-deps https://github.com/explosion/spacy-models/releases/download/ca_core_news_md-3.1.0/ca_core_news_md-3.1.0-py3-none-any.whl
       python -c "import spacy; nlp=spacy.load('ca_core_news_sm'); doc=nlp('test')"
     displayName: 'Test download CLI'
     condition: eq(variables['python_version'], '3.8')
@@ -95,7 +98,8 @@ steps:
 
   - script: |
       python -c "import spacy; config = spacy.util.load_config('ner.cfg'); config['components']['ner'] = {'source': 'ca_core_news_sm'}; config.to_disk('ner_source_sm.cfg')"
-      PYTHONWARNINGS="error,ignore::DeprecationWarning" python -m spacy assemble ner_source_sm.cfg output_dir
+      # temporarily ignore W095
+      PYTHONWARNINGS="error,ignore:[W095]:UserWarning,ignore::DeprecationWarning" python -m spacy assemble ner_source_sm.cfg output_dir
     displayName: 'Test assemble CLI'
     condition: eq(variables['python_version'], '3.8')
 

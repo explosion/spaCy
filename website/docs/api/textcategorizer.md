@@ -112,13 +112,14 @@ Create a new pipeline instance. In your application, you would normally use a
 shortcut for this and instantiate the component using its string name and
 [`nlp.add_pipe`](/api/language#create_pipe).
 
-| Name           | Description                                                                                                                |
-| -------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `vocab`        | The shared vocabulary. ~~Vocab~~                                                                                           |
-| `model`        | The Thinc [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. ~~Model[List[Doc], List[Floats2d]]~~ |
-| `name`         | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~                        |
-| _keyword-only_ |                                                                                                                            |
-| `threshold`    | Cutoff to consider a prediction "positive", relevant when printing accuracy results. ~~float~~                             |
+| Name           | Description                                                                                                                      |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `vocab`        | The shared vocabulary. ~~Vocab~~                                                                                                 |
+| `model`        | The Thinc [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. ~~Model[List[Doc], List[Floats2d]]~~       |
+| `name`         | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~                              |
+| _keyword-only_ |                                                                                                                                  |
+| `threshold`    | Cutoff to consider a prediction "positive", relevant when printing accuracy results. ~~float~~                                   |
+| `scorer`       | The scoring method. Defaults to [`Scorer.score_cats`](/api/scorer#score_cats) for the attribute `"cats"`. ~~Optional[Callable]~~ |
 
 ## TextCategorizer.\_\_call\_\_ {#call tag="method"}
 

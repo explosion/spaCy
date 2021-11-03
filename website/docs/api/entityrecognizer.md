@@ -66,6 +66,7 @@ architectures and their arguments and hyperparameters.
 | `update_with_oracle_cut_size` | During training, cut long sequences into shorter segments by creating intermediate states based on the gold-standard history. The model is not very sensitive to this parameter, so you usually won't need to change it. Defaults to `100`. ~~int~~ |
 | `model`                       | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. Defaults to [TransitionBasedParser](/api/architectures#TransitionBasedParser). ~~Model[List[Doc], List[Floats2d]]~~                                                 |
 | `incorrect_spans_key`         | This key refers to a `SpanGroup` in `doc.spans` that specifies incorrect spans. The NER wiill learn not to predict (exactly) those spans. Defaults to `None`. ~~Optional[str]~~                                                                     |
+| `scorer`                      | The scoring method. Defaults to [`spacy.scorer.get_ner_prf`](/api/scorer#get_ner_prf). ~~Optional[Callable]~~                                                                                                                                       |
 
 ```python
 %%GITHUB_SPACY/spacy/pipeline/ner.pyx
@@ -268,21 +269,6 @@ predicted scores.
 | `examples`  | The batch of examples. ~~Iterable[Example]~~                                |
 | `scores`    | Scores representing the model's predictions. ~~StateClass~~                 |
 | **RETURNS** | The loss and the gradient, i.e. `(loss, gradient)`. ~~Tuple[float, float]~~ |
-
-## EntityRecognizer.score {#score tag="method" new="3"}
-
-Score a batch of examples.
-
-> #### Example
->
-> ```python
-> scores = ner.score(examples)
-> ```
-
-| Name        | Description                                               |
-| ----------- | --------------------------------------------------------- |
-| `examples`  | The examples to score. ~~Iterable[Example]~~              |
-| **RETURNS** | The scores. ~~Dict[str, Union[float, Dict[str, float]]]~~ |
 
 ## EntityRecognizer.create_optimizer {#create_optimizer tag="method"}
 

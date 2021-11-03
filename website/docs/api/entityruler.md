@@ -61,6 +61,7 @@ how the component should be configured. You can override its settings via the
 | `validate`            | Whether patterns should be validated (passed to the `Matcher` and `PhraseMatcher`). Defaults to `False`. ~~bool~~                                                                             |
 | `overwrite_ents`      | If existing entities are present, e.g. entities added by the model, overwrite them by matches if necessary. Defaults to `False`. ~~bool~~                                                     |
 | `ent_id_sep`          | Separator used internally for entity IDs. Defaults to `"\|\|"`. ~~str~~                                                                                                                       |
+| `scorer`              | The scoring method. Defaults to [`spacy.scorer.get_ner_prf`](/api/scorer#get_ner_prf). ~~Optional[Callable]~~                                                                                 |
 
 ```python
 %%GITHUB_SPACY/spacy/pipeline/entityruler.py

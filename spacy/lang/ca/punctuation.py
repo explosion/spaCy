@@ -1,4 +1,5 @@
 from ..char_classes import LIST_PUNCT, LIST_ELLIPSES, LIST_QUOTES, LIST_ICONS
+from ..char_classes import LIST_CURRENCY
 from ..char_classes import CURRENCY
 from ..char_classes import CONCAT_QUOTES, ALPHA_LOWER, ALPHA_UPPER, ALPHA, PUNCT
 from ..char_classes import merge_chars, _units
@@ -6,6 +7,14 @@ from ..char_classes import merge_chars, _units
 
 ELISION = " ' ’ ".strip().replace(" ", "").replace("\n", "")
 
+_prefixes = (
+    ["§", "%", "=", "—", "–", "-", r"\+(?![0-9])"]
+    + LIST_PUNCT
+    + LIST_ELLIPSES
+    + LIST_QUOTES
+    + LIST_CURRENCY
+    + LIST_ICONS
+)
 
 _infixes = (
     LIST_ELLIPSES
@@ -18,6 +27,7 @@ _infixes = (
         r"(?<=[{a}]),(?=[{a}])".format(a=ALPHA),
         r"(?<=[{a}0-9])[:<>=/](?=[{a}])".format(a=ALPHA),
         r"(?<=[{a}][{el}])(?=[{a}0-9])".format(a=ALPHA, el=ELISION),
+        r"('ls|'l|'ns|'t|'m|'n|-les|-la|-lo|-li|-los|-me|-nos|-te|-vos|-se|-hi|-ne|-ho)(?![A-Za-z])|(-l'|-m'|-t'|-n')",
     ]
 )
 
@@ -44,3 +54,4 @@ _suffixes = (
 
 TOKENIZER_INFIXES = _infixes
 TOKENIZER_SUFFIXES = _suffixes
+TOKENIZER_PREFIXES = _prefixes

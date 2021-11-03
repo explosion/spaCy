@@ -49,7 +49,10 @@ def pretrain(
     objective = model.attrs["loss"]
     # TODO: move this to logger function?
     tracker = ProgressTracker(frequency=10000)
-    msg.divider(f"Pre-training tok2vec layer - starting at epoch {epoch_resume}")
+    if P["n_save_epoch"]:
+        msg.divider(f"Pre-training tok2vec layer - starting at epoch {epoch_resume} - saving every {P['n_save_epoch']} epoch")
+    else:
+        msg.divider(f"Pre-training tok2vec layer - starting at epoch {epoch_resume}")
     row_settings = {"widths": (3, 10, 10, 6, 4), "aligns": ("r", "r", "r", "r", "r")}
     msg.row(("#", "# Words", "Total Loss", "Loss", "w/s"), **row_settings)
 
@@ -78,7 +81,12 @@ def pretrain(
                 msg.row(progress, **row_settings)
             if P["n_save_every"] and (batch_id % P["n_save_every"] == 0):
                 _save_model(epoch, is_temp=True)
-        _save_model(epoch)
+
+        if P["n_save_epoch"]:
+            if epoch % P["n_save_epoch"] == 0 or epoch == P["max_epochs"] - 1:
+                _save_model(epoch)
+        else:
+            _save_model(epoch)
         tracker.epoch_loss = 0.0
 
 

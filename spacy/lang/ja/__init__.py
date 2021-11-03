@@ -1,21 +1,25 @@
-from typing import Optional, Union, Dict, Any
+from typing import Optional, Union, Dict, Any, Callable
 from pathlib import Path
 import srsly
 from collections import namedtuple
+from thinc.api import Model
+import re
 
 from .stop_words import STOP_WORDS
 from .syntax_iterators import SYNTAX_ITERATORS
 from .tag_map import TAG_MAP
 from .tag_orth_map import TAG_ORTH_MAP
 from .tag_bigram_map import TAG_BIGRAM_MAP
-from ...compat import copy_reg
 from ...errors import Errors
 from ...language import Language, BaseDefaults
+from ...pipeline import Morphologizer
+from ...pipeline.morphologizer import DEFAULT_MORPH_MODEL
 from ...scorer import Scorer
 from ...symbols import POS
-from ...tokens import Doc
+from ...tokens import Doc, MorphAnalysis
 from ...training import validate_examples
 from ...util import DummyTokenizer, registry, load_config_from_str
+from ...vocab import Vocab
 from ... import util
 
 
@@ -31,16 +35,21 @@ split_mode = null
 @registry.tokenizers("spacy.ja.JapaneseTokenizer")
 def create_tokenizer(split_mode: Optional[str] = None):
     def japanese_tokenizer_factory(nlp):
-        return JapaneseTokenizer(nlp, split_mode=split_mode)
+        return JapaneseTokenizer(nlp.vocab, split_mode=split_mode)
 
     return japanese_tokenizer_factory
 
 
 class JapaneseTokenizer(DummyTokenizer):
-    def __init__(self, nlp: Language, split_mode: Optional[str] = None) -> None:
-        self.vocab = nlp.vocab
+    def __init__(self, vocab: Vocab, split_mode: Optional[str] = None) -> None:
+        self.vocab = vocab
         self.split_mode = split_mode
         self.tokenizer = try_sudachi_import(self.split_mode)
+        # if we're using split mode A we don't need subtokens
+        self.need_subtokens = not (split_mode is None or split_mode == "A")
+
+    def __reduce__(self):
+        return JapaneseTokenizer, (self.vocab, self.split_mode)
 
     def __call__(self, text: str) -> Doc:
         # convert sudachipy.morpheme.Morpheme to DetailedToken and merge continuous spaces
@@ -49,8 +58,8 @@ class JapaneseTokenizer(DummyTokenizer):
         dtokens, spaces = get_dtokens_and_spaces(dtokens, text)
 
         # create Doc with tag bi-gram based part-of-speech identification rules
-        words, tags, inflections, lemmas, readings, sub_tokens_list = (
-            zip(*dtokens) if dtokens else [[]] * 6
+        words, tags, inflections, lemmas, norms, readings, sub_tokens_list = (
+            zip(*dtokens) if dtokens else [[]] * 7
         )
         sub_tokens_list = list(sub_tokens_list)
         doc = Doc(self.vocab, words=words, spaces=spaces)
@@ -68,9 +77,18 @@ class JapaneseTokenizer(DummyTokenizer):
                 )
             # if there's no lemma info (it's an unk) just use the surface
             token.lemma_ = dtoken.lemma if dtoken.lemma else dtoken.surface
-        doc.user_data["inflections"] = inflections
-        doc.user_data["reading_forms"] = readings
-        doc.user_data["sub_tokens"] = sub_tokens_list
+            morph = {}
+            if dtoken.inf:
+                # it's normal for this to be empty for non-inflecting types
+                morph["Inflection"] = dtoken.inf
+            token.norm_ = dtoken.norm
+            if dtoken.reading:
+                # punctuation is its own reading, but we don't want values like
+                # "=" here
+                morph["Reading"] = re.sub("[=|]", "_", dtoken.reading)
+            token.morph = MorphAnalysis(self.vocab, morph)
+        if self.need_subtokens:
+            doc.user_data["sub_tokens"] = sub_tokens_list
         return doc
 
     def _get_dtokens(self, sudachipy_tokens, need_sub_tokens: bool = True):
@@ -81,9 +99,10 @@ class JapaneseTokenizer(DummyTokenizer):
             DetailedToken(
                 token.surface(),  # orth
                 "-".join([xx for xx in token.part_of_speech()[:4] if xx != "*"]),  # tag
-                ",".join([xx for xx in token.part_of_speech()[4:] if xx != "*"]),  # inf
+                ";".join([xx for xx in token.part_of_speech()[4:] if xx != "*"]),  # inf
                 token.dictionary_form(),  # lemma
-                token.reading_form(),  # user_data['reading_forms']
+                token.normalized_form(),
+                token.reading_form(),
                 sub_tokens_list[idx]
                 if sub_tokens_list
                 else None,  # user_data['sub_tokens']
@@ -105,9 +124,8 @@ class JapaneseTokenizer(DummyTokenizer):
         ]
 
     def _get_sub_tokens(self, sudachipy_tokens):
-        if (
-            self.split_mode is None or self.split_mode == "A"
-        ):  # do nothing for default split mode
+        # do nothing for default split mode
+        if not self.need_subtokens:
             return None
 
         sub_tokens_list = []  # list of (list of list of DetailedToken | None)
@@ -176,9 +194,33 @@ class Japanese(Language):
     Defaults = JapaneseDefaults
 
 
+@Japanese.factory(
+    "morphologizer",
+    assigns=["token.morph", "token.pos"],
+    default_config={
+        "model": DEFAULT_MORPH_MODEL,
+        "overwrite": True,
+        "extend": True,
+        "scorer": {"@scorers": "spacy.morphologizer_scorer.v1"},
+    },
+    default_score_weights={"pos_acc": 0.5, "morph_micro_f": 0.5, "morph_per_feat": None},
+)
+def make_morphologizer(
+    nlp: Language,
+    model: Model,
+    name: str,
+    overwrite: bool,
+    extend: bool,
+    scorer: Optional[Callable],
+):
+    return Morphologizer(
+        nlp.vocab, model, name, overwrite=overwrite, extend=extend, scorer=scorer
+    )
+
+
 # Hold the attributes we need with convenient names
 DetailedToken = namedtuple(
-    "DetailedToken", ["surface", "tag", "inf", "lemma", "reading", "sub_tokens"]
+    "DetailedToken", ["surface", "tag", "inf", "lemma", "norm", "reading", "sub_tokens"]
 )
 
 
@@ -254,7 +296,7 @@ def get_dtokens_and_spaces(dtokens, text, gap_tag="空白"):
         return text_dtokens, text_spaces
     elif len([word for word in words if not word.isspace()]) == 0:
         assert text.isspace()
-        text_dtokens = [DetailedToken(text, gap_tag, "", text, None, None)]
+        text_dtokens = [DetailedToken(text, gap_tag, "", text, text, None, None)]
         text_spaces = [False]
         return text_dtokens, text_spaces
 
@@ -271,7 +313,7 @@ def get_dtokens_and_spaces(dtokens, text, gap_tag="空白"):
         # space token
         if word_start > 0:
             w = text[text_pos : text_pos + word_start]
-            text_dtokens.append(DetailedToken(w, gap_tag, "", w, None, None))
+            text_dtokens.append(DetailedToken(w, gap_tag, "", w, w, None, None))
             text_spaces.append(False)
             text_pos += word_start
 
@@ -287,16 +329,10 @@ def get_dtokens_and_spaces(dtokens, text, gap_tag="空白"):
     # trailing space token
     if text_pos < len(text):
         w = text[text_pos:]
-        text_dtokens.append(DetailedToken(w, gap_tag, "", w, None, None))
+        text_dtokens.append(DetailedToken(w, gap_tag, "", w, w, None, None))
         text_spaces.append(False)
 
     return text_dtokens, text_spaces
 
-
-def pickle_japanese(instance):
-    return Japanese, tuple()
-
-
-copy_reg.pickle(Japanese, pickle_japanese)
 
 __all__ = ["Japanese"]

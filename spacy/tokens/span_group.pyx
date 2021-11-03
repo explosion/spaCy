@@ -63,7 +63,7 @@ cdef class SpanGroup:
         doc = self._doc_ref()
         if doc is None:
             # referent has been garbage collected
-            raise RuntimeError(Errors.E866)
+            raise RuntimeError(Errors.E865)
         return doc
 
     @property

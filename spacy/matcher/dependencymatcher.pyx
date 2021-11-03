@@ -148,9 +148,9 @@ cdef class DependencyMatcher:
         Creates a token key to be used by the matcher
         """
         return self._normalize_key(
-            unicode(key) + DELIMITER + 
-            unicode(pattern_idx) + DELIMITER + 
-            unicode(token_idx)
+            str(key) + DELIMITER +
+            str(pattern_idx) + DELIMITER +
+            str(token_idx)
         )
 
     def add(self, key, patterns, *, on_match=None):
@@ -424,7 +424,7 @@ cdef class DependencyMatcher:
         return [doc[child.i] for child in doc[node].head.children if child.i < node]
 
     def _normalize_key(self, key):
-        if isinstance(key, basestring):
+        if isinstance(key, str):
             return self.vocab.strings.add(key)
         else:
             return key

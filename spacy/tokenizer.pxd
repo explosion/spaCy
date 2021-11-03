@@ -23,10 +23,12 @@ cdef class Tokenizer:
     cdef object _infix_finditer
     cdef object _rules
     cdef PhraseMatcher _special_matcher
-    cdef int _property_init_count  # TODO: unused, remove in v3.1
-    cdef int _property_init_max    # TODO: unused, remove in v3.1
+    # TODO next two are unused and should be removed in v4
+    # https://github.com/explosion/spaCy/pull/9150
+    cdef int _unused_int1
+    cdef int _unused_int2
 
-    cdef Doc _tokenize_affixes(self, unicode string, bint with_special_cases)
+    cdef Doc _tokenize_affixes(self, str string, bint with_special_cases)
     cdef int _apply_special_cases(self, Doc doc) except -1
     cdef void _filter_special_spans(self, vector[SpanC] &original,
                             vector[SpanC] &filtered, int doc_len) nogil
@@ -37,13 +39,13 @@ cdef class Tokenizer:
     cdef int _try_specials_and_cache(self, hash_t key, Doc tokens,
                                      int* has_special,
                                      bint with_special_cases) except -1
-    cdef int _tokenize(self, Doc tokens, unicode span, hash_t key,
+    cdef int _tokenize(self, Doc tokens, str span, hash_t key,
                        int* has_special, bint with_special_cases) except -1
-    cdef unicode _split_affixes(self, Pool mem, unicode string,
+    cdef str _split_affixes(self, Pool mem, str string,
                                 vector[LexemeC*] *prefixes,
                                 vector[LexemeC*] *suffixes, int* has_special,
                                 bint with_special_cases)
-    cdef int _attach_tokens(self, Doc tokens, unicode string,
+    cdef int _attach_tokens(self, Doc tokens, str string,
                             vector[LexemeC*] *prefixes,
                             vector[LexemeC*] *suffixes, int* has_special,
                             bint with_special_cases) except -1

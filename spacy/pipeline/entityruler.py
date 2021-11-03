@@ -9,11 +9,10 @@ from .pipe import Pipe
 from ..training import Example
 from ..language import Language
 from ..errors import Errors, Warnings
-from ..util import ensure_path, to_disk, from_disk, SimpleFrozenList
+from ..util import ensure_path, to_disk, from_disk, SimpleFrozenList, registry
 from ..tokens import Doc, Span
 from ..matcher import Matcher, PhraseMatcher
 from ..scorer import get_ner_prf
-from ..training import validate_examples
 
 
 DEFAULT_ENT_ID_SEP = "||"
@@ -28,6 +27,7 @@ PatternType = Dict[str, Union[str, List[Dict[str, Any]]]]
         "validate": False,
         "overwrite_ents": False,
         "ent_id_sep": DEFAULT_ENT_ID_SEP,
+        "scorer": {"@scorers": "spacy.entity_ruler_scorer.v1"},
     },
     default_score_weights={
         "ents_f": 1.0,
@@ -43,6 +43,7 @@ def make_entity_ruler(
     validate: bool,
     overwrite_ents: bool,
     ent_id_sep: str,
+    scorer: Optional[Callable],
 ):
     return EntityRuler(
         nlp,
@@ -51,7 +52,17 @@ def make_entity_ruler(
         validate=validate,
         overwrite_ents=overwrite_ents,
         ent_id_sep=ent_id_sep,
+        scorer=scorer,
     )
+
+
+def entity_ruler_score(examples, **kwargs):
+    return get_ner_prf(examples)
+
+
+@registry.scorers("spacy.entity_ruler_scorer.v1")
+def make_entity_ruler_scorer():
+    return entity_ruler_score
 
 
 class EntityRuler(Pipe):
@@ -75,6 +86,7 @@ class EntityRuler(Pipe):
         overwrite_ents: bool = False,
         ent_id_sep: str = DEFAULT_ENT_ID_SEP,
         patterns: Optional[List[PatternType]] = None,
+        scorer: Optional[Callable] = entity_ruler_score,
     ) -> None:
         """Initialize the entity ruler. If patterns are supplied here, they
         need to be a list of dictionaries with a `"label"` and `"pattern"`
@@ -95,6 +107,8 @@ class EntityRuler(Pipe):
         overwrite_ents (bool): If existing entities are present, e.g. entities
             added by the model, overwrite them by matches if necessary.
         ent_id_sep (str): Separator used internally for entity IDs.
+        scorer (Optional[Callable]): The scoring method. Defaults to
+            spacy.scorer.get_ner_prf.
 
         DOCS: https://spacy.io/api/entityruler#init
         """
@@ -113,6 +127,7 @@ class EntityRuler(Pipe):
         self._ent_ids = defaultdict(tuple)  # type: ignore
         if patterns is not None:
             self.add_patterns(patterns)
+        self.scorer = scorer
 
     def __len__(self) -> int:
         """The number of all patterns added to the entity ruler."""
@@ -362,10 +377,6 @@ class EntityRuler(Pipe):
         if isinstance(ent_id, str):
             label = f"{label}{self.ent_id_sep}{ent_id}"
         return label
-
-    def score(self, examples, **kwargs):
-        validate_examples(examples, "EntityRuler.score")
-        return get_ner_prf(examples)
 
     def from_bytes(
         self, patterns_bytes: bytes, *, exclude: Iterable[str] = SimpleFrozenList()
