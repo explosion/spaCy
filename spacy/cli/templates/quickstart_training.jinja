@@ -16,8 +16,10 @@ gpu_allocator = null
 
 [nlp]
 lang = "{{ lang }}"
-{%- set no_tok2vec = components|length == 1 and (("textcat" in components or "textcat_multilabel" in components) and optimize == "efficiency")-%}
-{%- if not no_tok2vec and ("tagger" in components or "morphologizer" in components or "parser" in components or "ner" in components or "entity_linker" in components or "textcat" in components or "textcat_multilabel" in components) -%}
+{%- set has_textcat = ("textcat" in components or "textcat_multilabel" in components) -%}
+{%- set with_accuracy = optimize == "accuracy" -%}
+{%- set has_accurate_textcat = has_textcat and with_accuracy -%}
+{%- if ("tagger" in components or "morphologizer" in components or "parser" in components or "ner" in components or "entity_linker" in components or has_accurate_textcat) -%}
 {%- set full_pipeline = ["transformer" if use_transformer else "tok2vec"] + components %}
 {%- else -%}
 {%- set full_pipeline = components %}
@@ -199,7 +201,7 @@ no_output_layer = false
 
 {# NON-TRANSFORMER PIPELINE #}
 {% else -%}
-{% if not no_tok2vec-%}
+{% if "tok2vec" in full_pipeline -%}
 [components.tok2vec]
 factory = "tok2vec"
 
