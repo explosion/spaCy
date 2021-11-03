@@ -1537,8 +1537,7 @@ class Language:
                 yield (doc, context)
             return
 
-        # At this point, we know that we're dealing with an iterable of plain texts
-        texts = cast(Iterable[str], texts)
+        texts = cast(Iterable[Union[str, Doc]], texts)
 
         # Set argument defaults
         if n_process == -1:
@@ -1592,7 +1591,7 @@ class Language:
 
     def _multiprocessing_pipe(
         self,
-        texts: Iterable[str],
+        texts: Iterable[Union[str, Doc]],
         pipes: Iterable[Callable[..., Iterator[Doc]]],
         n_process: int,
         batch_size: int,
