@@ -1,3 +1,5 @@
+import pickle
+
 from spacy.lang.vi import Vietnamese
 from ...util import make_tempdir
 
@@ -31,3 +33,9 @@ def test_vi_tokenizer_serialize(vi_tokenizer):
         nlp_r.from_disk(d)
         assert nlp_bytes == nlp_r.to_bytes()
         assert nlp_r.tokenizer.use_pyvi is False
+
+
+def test_vi_tokenizer_pickle(vi_tokenizer):
+    b = pickle.dumps(vi_tokenizer)
+    vi_tokenizer_re = pickle.loads(b)
+    assert vi_tokenizer.to_bytes() == vi_tokenizer_re.to_bytes()

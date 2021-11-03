@@ -1,5 +1,6 @@
 # Our libraries
 spacy-legacy>=3.0.8,<3.1.0
+spacy-loggers>=1.0.0,<2.0.0
 cymem>=2.0.2,<2.1.0
 preshed>=3.0.2,<3.1.0
 thinc>=8.0.12,<8.1.0
@@ -17,6 +18,7 @@ requests>=2.13.0,<3.0.0
 tqdm>=4.38.0,<5.0.0
 pydantic>=1.7.4,!=1.8,!=1.8.1,<1.9.0
 jinja2
+langcodes>=3.2.0,<4.0.0
 # Official Python utilities
 setuptools
 packaging>=20.0

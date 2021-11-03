@@ -192,17 +192,10 @@
             "models": [
                 "ja_core_news_sm",
                 "ja_core_news_md",
-                "ja_core_news_lg"
+                "ja_core_news_lg",
+                "ja_core_news_trf"
             ],
             "dependencies": [
-                {
-                    "name": "Unidic",
-                    "url": "http://unidic.ninjal.ac.jp/back_number#unidic_cwj"
-                },
-                {
-                    "name": "Mecab",
-                    "url": "https://github.com/taku910/mecab"
-                },
                 {
                     "name": "SudachiPy",
                     "url": "https://github.com/WorksApplications/SudachiPy"

@@ -17,10 +17,12 @@ from ..language import Language
 from ..vocab import Vocab
 from ..training import Example, validate_examples, validate_get_examples
 from ..errors import Errors, Warnings
-from ..util import SimpleFrozenList
+from ..util import SimpleFrozenList, registry
 from .. import util
 from ..scorer import Scorer
 
+# See #9050
+BACKWARD_OVERWRITE = True
 
 default_model_config = """
 [model]
@@ -51,6 +53,8 @@ DEFAULT_NEL_MODEL = Config().from_str(default_model_config)["model"]
         "incl_context": True,
         "entity_vector_length": 64,
         "get_candidates": {"@misc": "spacy.CandidateGenerator.v1"},
+        "overwrite": True,
+        "scorer": {"@scorers": "spacy.entity_linker_scorer.v1"},
     },
     default_score_weights={
         "nel_micro_f": 1.0,
@@ -69,6 +73,8 @@ def make_entity_linker(
     incl_context: bool,
     entity_vector_length: int,
     get_candidates: Callable[[KnowledgeBase, Span], Iterable[Candidate]],
+    overwrite: bool,
+    scorer: Optional[Callable],
 ):
     """Construct an EntityLinker component.
 
@@ -82,6 +88,7 @@ def make_entity_linker(
     entity_vector_length (int): Size of encoding vectors in the KB.
     get_candidates (Callable[[KnowledgeBase, "Span"], Iterable[Candidate]]): Function that
         produces a list of candidates, given a certain knowledge base and a textual mention.
+    scorer (Optional[Callable]): The scoring method.
     """
     return EntityLinker(
         nlp.vocab,
@@ -93,7 +100,18 @@ def make_entity_linker(
         incl_context=incl_context,
         entity_vector_length=entity_vector_length,
         get_candidates=get_candidates,
+        overwrite=overwrite,
+        scorer=scorer,
     )
+
+
+def entity_linker_score(examples, **kwargs):
+    return Scorer.score_links(examples, negative_labels=[EntityLinker.NIL], **kwargs)
+
+
+@registry.scorers("spacy.entity_linker_scorer.v1")
+def make_entity_linker_scorer():
+    return entity_linker_score
 
 
 class EntityLinker(TrainablePipe):
@@ -116,6 +134,8 @@ class EntityLinker(TrainablePipe):
         incl_context: bool,
         entity_vector_length: int,
         get_candidates: Callable[[KnowledgeBase, Span], Iterable[Candidate]],
+        overwrite: bool = BACKWARD_OVERWRITE,
+        scorer: Optional[Callable] = entity_linker_score,
     ) -> None:
         """Initialize an entity linker.
 
@@ -130,6 +150,8 @@ class EntityLinker(TrainablePipe):
         entity_vector_length (int): Size of encoding vectors in the KB.
         get_candidates (Callable[[KnowledgeBase, Span], Iterable[Candidate]]): Function that
             produces a list of candidates, given a certain knowledge base and a textual mention.
+        scorer (Optional[Callable]): The scoring method. Defaults to
+            Scorer.score_links.
 
         DOCS: https://spacy.io/api/entitylinker#init
         """
@@ -141,11 +163,12 @@ class EntityLinker(TrainablePipe):
         self.incl_prior = incl_prior
         self.incl_context = incl_context
         self.get_candidates = get_candidates
-        self.cfg: Dict[str, Any] = {}
+        self.cfg: Dict[str, Any] = {"overwrite": overwrite}
         self.distance = CosineDistance(normalize=False)
         # how many neighbour sentences to take into account
         # create an empty KB by default. If you want to load a predefined one, specify it in 'initialize'.
         self.kb = empty_kb(entity_vector_length)(self.vocab)
+        self.scorer = scorer
 
     def set_kb(self, kb_loader: Callable[[Vocab], KnowledgeBase]):
         """Define the KB of this pipe by providing a function that will
@@ -384,23 +407,14 @@ class EntityLinker(TrainablePipe):
         if count_ents != len(kb_ids):
             raise ValueError(Errors.E148.format(ents=count_ents, ids=len(kb_ids)))
         i = 0
+        overwrite = self.cfg["overwrite"]
         for doc in docs:
             for ent in doc.ents:
                 kb_id = kb_ids[i]
                 i += 1
                 for token in ent:
-                    token.ent_kb_id_ = kb_id
-
-    def score(self, examples, **kwargs):
-        """Score a batch of examples.
-
-        examples (Iterable[Example]): The examples to score.
-        RETURNS (Dict[str, Any]): The scores.
-
-        DOCS TODO: https://spacy.io/api/entity_linker#score
-        """
-        validate_examples(examples, "EntityLinker.score")
-        return Scorer.score_links(examples, negative_labels=[self.NIL])
+                    if token.ent_kb_id == 0 or overwrite:
+                        token.ent_kb_id_ = kb_id
 
     def to_bytes(self, *, exclude=tuple()):
         """Serialize the pipe to a bytestring.

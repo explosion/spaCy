@@ -9,11 +9,14 @@ _num_words = [
     "bốn",
     "năm",
     "sáu",
+    "bảy",
     "bẩy",
     "tám",
     "chín",
     "mười",
+    "chục",
     "trăm",
+    "nghìn",
     "tỷ",
 ]
 

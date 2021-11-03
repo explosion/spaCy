@@ -262,7 +262,7 @@ cdef class Doc:
             raise ValueError(Errors.E027)
         cdef const LexemeC* lexeme
         for word, has_space in zip(words, spaces):
-            if isinstance(word, unicode):
+            if isinstance(word, str):
                 lexeme = self.vocab.get(self.mem, word)
             elif isinstance(word, bytes):
                 raise ValueError(Errors.E028.format(value=word))
@@ -538,7 +538,13 @@ cdef class Doc:
             kb_id = self.vocab.strings.add(kb_id)
         alignment_modes = ("strict", "contract", "expand")
         if alignment_mode not in alignment_modes:
-            raise ValueError(Errors.E202.format(mode=alignment_mode, modes=", ".join(alignment_modes)))
+            raise ValueError(
+                Errors.E202.format(
+                    name="alignment",
+                    mode=alignment_mode,
+                    modes=", ".join(alignment_modes),
+                )
+            )
         cdef int start = token_by_char(self.c, self.length, start_idx)
         if start < 0 or (alignment_mode == "strict" and start_idx != self[start].idx):
             return None
@@ -1371,7 +1377,7 @@ cdef class Doc:
             self.has_unknown_spaces = msg["has_unknown_spaces"]
         start = 0
         cdef const LexemeC* lex
-        cdef unicode orth_
+        cdef str orth_
         text = msg["text"]
         attrs = msg["array_body"]
         for i in range(attrs.shape[0]):
@@ -1432,7 +1438,7 @@ cdef class Doc:
             attributes are inherited from the syntactic root of the span.
         RETURNS (Token): The first newly merged token.
         """
-        cdef unicode tag, lemma, ent_type
+        cdef str tag, lemma, ent_type
         attr_len = len(attributes)
         span_len = len(spans)
         if not attr_len == span_len:
@@ -1704,17 +1710,18 @@ cdef int [:,:] _get_lca_matrix(Doc doc, int start, int end):
 def pickle_doc(doc):
     bytes_data = doc.to_bytes(exclude=["vocab", "user_data", "user_hooks"])
     hooks_and_data = (doc.user_data, doc.user_hooks, doc.user_span_hooks,
-                      doc.user_token_hooks)
+                      doc.user_token_hooks, doc._context)
     return (unpickle_doc, (doc.vocab, srsly.pickle_dumps(hooks_and_data), bytes_data))
 
 
 def unpickle_doc(vocab, hooks_and_data, bytes_data):
-    user_data, doc_hooks, span_hooks, token_hooks = srsly.pickle_loads(hooks_and_data)
+    user_data, doc_hooks, span_hooks, token_hooks, _context = srsly.pickle_loads(hooks_and_data)
 
     doc = Doc(vocab, user_data=user_data).from_bytes(bytes_data, exclude=["user_data"])
     doc.user_hooks.update(doc_hooks)
     doc.user_span_hooks.update(span_hooks)
     doc.user_token_hooks.update(token_hooks)
+    doc._context = _context
     return doc
 
 

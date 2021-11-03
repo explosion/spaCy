@@ -56,11 +56,13 @@ data format used by the lookup and rule-based lemmatizers, see
 > nlp.add_pipe("lemmatizer", config=config)
 > ```
 
-| Setting     | Description                                                                                                                                               |
-| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `mode`      | The lemmatizer mode, e.g. `"lookup"` or `"rule"`. Defaults to `lookup` if no language-specific lemmatizer is available (see the following table). ~~str~~ |
-| `overwrite` | Whether to overwrite existing lemmas. Defaults to `False`. ~~bool~~                                                                                       |
-| `model`     | **Not yet implemented:** the model to use. ~~Model~~                                                                                                      |
+| Setting        | Description                                                                                                                                               |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mode`         | The lemmatizer mode, e.g. `"lookup"` or `"rule"`. Defaults to `lookup` if no language-specific lemmatizer is available (see the following table). ~~str~~ |
+| `overwrite`    | Whether to overwrite existing lemmas. Defaults to `False`. ~~bool~~                                                                                       |
+| `model`        | **Not yet implemented:** the model to use. ~~Model~~                                                                                                      |
+| _keyword-only_ |                                                                                                                                                           |
+| `scorer`       | The scoring method. Defaults to [`Scorer.score_token_attr`](/api/scorer#score_token_attr) for the attribute `"lemma"`. ~~Optional[Callable]~~             |
 
 Many languages specify a default lemmatizer mode other than `lookup` if a better
 lemmatizer is available. The lemmatizer modes `rule` and `pos_lookup` require

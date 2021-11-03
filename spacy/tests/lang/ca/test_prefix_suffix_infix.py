@@ -2,7 +2,14 @@ import pytest
 
 
 @pytest.mark.parametrize(
-    "text,expected_tokens", [("d'un", ["d'", "un"]), ("s'ha", ["s'", "ha"])]
+    "text,expected_tokens",
+    [
+        ("d'un", ["d'", "un"]),
+        ("s'ha", ["s'", "ha"]),
+        ("del", ["d", "el"]),
+        ("cantar-te", ["cantar", "-te"]),
+        ("-hola", ["-", "hola"]),
+    ],
 )
 def test_contractions(ca_tokenizer, text, expected_tokens):
     """Test that the contractions are split into two tokens"""

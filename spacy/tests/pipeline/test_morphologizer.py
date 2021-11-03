@@ -8,6 +8,7 @@ from spacy.language import Language
 from spacy.tests.util import make_tempdir
 from spacy.morphology import Morphology
 from spacy.attrs import MORPH
+from spacy.tokens import Doc
 
 
 def test_label_types():
@@ -136,6 +137,41 @@ def test_overfitting_IO():
     gold_pos_tags = ["", "", "", ""]
     assert [str(t.morph) for t in doc] == gold_morphs
     assert [t.pos_ for t in doc] == gold_pos_tags
+
+    # Test overwrite+extend settings
+    # (note that "" is unset, "_" is set and empty)
+    morphs = ["Feat=V", "Feat=N", "_"]
+    doc = Doc(nlp.vocab, words=["blue", "ham", "like"], morphs=morphs)
+    orig_morphs = [str(t.morph) for t in doc]
+    orig_pos_tags = [t.pos_ for t in doc]
+    morphologizer = nlp.get_pipe("morphologizer")
+
+    # don't overwrite or extend
+    morphologizer.cfg["overwrite"] = False
+    doc = morphologizer(doc)
+    assert [str(t.morph) for t in doc] == orig_morphs
+    assert [t.pos_ for t in doc] == orig_pos_tags
+
+    # overwrite and extend
+    morphologizer.cfg["overwrite"] = True
+    morphologizer.cfg["extend"] = True
+    doc = Doc(nlp.vocab, words=["I", "like"], morphs=["Feat=A|That=A|This=A", ""])
+    doc = morphologizer(doc)
+    assert [str(t.morph) for t in doc] == ["Feat=N|That=A|This=A", "Feat=V"]
+
+    # extend without overwriting
+    morphologizer.cfg["overwrite"] = False
+    morphologizer.cfg["extend"] = True
+    doc = Doc(nlp.vocab, words=["I", "like"], morphs=["Feat=A|That=A|This=A", "That=B"])
+    doc = morphologizer(doc)
+    assert [str(t.morph) for t in doc] == ["Feat=A|That=A|This=A", "Feat=V|That=B"]
+
+    # overwrite without extending
+    morphologizer.cfg["overwrite"] = True
+    morphologizer.cfg["extend"] = False
+    doc = Doc(nlp.vocab, words=["I", "like"], morphs=["Feat=A|That=A|This=A", ""])
+    doc = morphologizer(doc)
+    assert [str(t.morph) for t in doc] == ["Feat=N", "Feat=V"]
 
     # Test with unset morph and partial POS
     nlp.remove_pipe("morphologizer")

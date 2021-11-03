@@ -5,11 +5,11 @@ from .tag_map import TAG_MAP
 from .lex_attrs import LEX_ATTRS
 from ...language import Language, BaseDefaults
 from ...tokens import Doc
-from ...compat import copy_reg
 from ...scorer import Scorer
 from ...symbols import POS
 from ...training import validate_examples
 from ...util import DummyTokenizer, registry, load_config_from_str
+from ...vocab import Vocab
 
 
 DEFAULT_CONFIG = """
@@ -23,16 +23,19 @@ DEFAULT_CONFIG = """
 @registry.tokenizers("spacy.ko.KoreanTokenizer")
 def create_tokenizer():
     def korean_tokenizer_factory(nlp):
-        return KoreanTokenizer(nlp)
+        return KoreanTokenizer(nlp.vocab)
 
     return korean_tokenizer_factory
 
 
 class KoreanTokenizer(DummyTokenizer):
-    def __init__(self, nlp: Language):
-        self.vocab = nlp.vocab
+    def __init__(self, vocab: Vocab):
+        self.vocab = vocab
         MeCab = try_mecab_import()  # type: ignore[func-returns-value]
         self.mecab_tokenizer = MeCab("-F%f[0],%f[7]")
+
+    def __reduce__(self):
+        return KoreanTokenizer, (self.vocab,)
 
     def __del__(self):
         self.mecab_tokenizer.__del__()
@@ -105,11 +108,5 @@ def check_spaces(text, tokens):
     if start > 0:
         yield False
 
-
-def pickle_korean(instance):
-    return Korean, tuple()
-
-
-copy_reg.pickle(Korean, pickle_korean)
 
 __all__ = ["Korean"]

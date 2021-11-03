@@ -34,22 +34,22 @@ SENTENCE_TESTS = [
 ]
 
 tokens1 = [
-    DetailedToken(surface="委員", tag="名詞-普通名詞-一般", inf="", lemma="委員", reading="イイン", sub_tokens=None),
-    DetailedToken(surface="会", tag="名詞-普通名詞-一般", inf="", lemma="会", reading="カイ", sub_tokens=None),
+    DetailedToken(surface="委員", tag="名詞-普通名詞-一般", inf="", lemma="委員", norm="委員", reading="イイン", sub_tokens=None),
+    DetailedToken(surface="会", tag="名詞-普通名詞-一般", inf="", lemma="会", norm="会", reading="カイ", sub_tokens=None),
 ]
 tokens2 = [
-    DetailedToken(surface="選挙", tag="名詞-普通名詞-サ変可能", inf="", lemma="選挙", reading="センキョ", sub_tokens=None),
-    DetailedToken(surface="管理", tag="名詞-普通名詞-サ変可能", inf="", lemma="管理", reading="カンリ", sub_tokens=None),
-    DetailedToken(surface="委員", tag="名詞-普通名詞-一般", inf="", lemma="委員", reading="イイン", sub_tokens=None),
-    DetailedToken(surface="会", tag="名詞-普通名詞-一般", inf="", lemma="会", reading="カイ", sub_tokens=None),
+    DetailedToken(surface="選挙", tag="名詞-普通名詞-サ変可能", inf="", lemma="選挙", norm="選挙", reading="センキョ", sub_tokens=None),
+    DetailedToken(surface="管理", tag="名詞-普通名詞-サ変可能", inf="", lemma="管理", norm="管理", reading="カンリ", sub_tokens=None),
+    DetailedToken(surface="委員", tag="名詞-普通名詞-一般", inf="", lemma="委員", norm="委員", reading="イイン", sub_tokens=None),
+    DetailedToken(surface="会", tag="名詞-普通名詞-一般", inf="", lemma="会", norm="会", reading="カイ", sub_tokens=None),
 ]
 tokens3 = [
-    DetailedToken(surface="選挙", tag="名詞-普通名詞-サ変可能", inf="", lemma="選挙", reading="センキョ", sub_tokens=None),
-    DetailedToken(surface="管理", tag="名詞-普通名詞-サ変可能", inf="", lemma="管理", reading="カンリ", sub_tokens=None),
-    DetailedToken(surface="委員会", tag="名詞-普通名詞-一般", inf="", lemma="委員会", reading="イインカイ", sub_tokens=None),
+    DetailedToken(surface="選挙", tag="名詞-普通名詞-サ変可能", inf="", lemma="選挙", norm="選挙", reading="センキョ", sub_tokens=None),
+    DetailedToken(surface="管理", tag="名詞-普通名詞-サ変可能", inf="", lemma="管理", norm="管理", reading="カンリ", sub_tokens=None),
+    DetailedToken(surface="委員会", tag="名詞-普通名詞-一般", inf="", lemma="委員会", norm="委員会", reading="イインカイ", sub_tokens=None),
 ]
 SUB_TOKEN_TESTS = [
-    ("選挙管理委員会", [None, None, None, None], [None, None, [tokens1]], [[tokens2, tokens3]])
+    ("選挙管理委員会", [None, None, [tokens1]], [[tokens2, tokens3]])
 ]
 # fmt: on
 
@@ -111,18 +111,16 @@ def test_ja_tokenizer_split_modes(ja_tokenizer, text, len_a, len_b, len_c):
     assert len(nlp_c(text)) == len_c
 
 
-@pytest.mark.parametrize(
-    "text,sub_tokens_list_a,sub_tokens_list_b,sub_tokens_list_c", SUB_TOKEN_TESTS
-)
+@pytest.mark.parametrize("text,sub_tokens_list_b,sub_tokens_list_c", SUB_TOKEN_TESTS)
 def test_ja_tokenizer_sub_tokens(
-    ja_tokenizer, text, sub_tokens_list_a, sub_tokens_list_b, sub_tokens_list_c
+    ja_tokenizer, text, sub_tokens_list_b, sub_tokens_list_c
 ):
     nlp_a = Japanese.from_config({"nlp": {"tokenizer": {"split_mode": "A"}}})
     nlp_b = Japanese.from_config({"nlp": {"tokenizer": {"split_mode": "B"}}})
     nlp_c = Japanese.from_config({"nlp": {"tokenizer": {"split_mode": "C"}}})
 
-    assert ja_tokenizer(text).user_data["sub_tokens"] == sub_tokens_list_a
-    assert nlp_a(text).user_data["sub_tokens"] == sub_tokens_list_a
+    assert ja_tokenizer(text).user_data.get("sub_tokens") is None
+    assert nlp_a(text).user_data.get("sub_tokens") is None
     assert nlp_b(text).user_data["sub_tokens"] == sub_tokens_list_b
     assert nlp_c(text).user_data["sub_tokens"] == sub_tokens_list_c
 
@@ -132,16 +130,24 @@ def test_ja_tokenizer_sub_tokens(
     [
         (
             "取ってつけた",
-            ("五段-ラ行,連用形-促音便", "", "下一段-カ行,連用形-一般", "助動詞-タ,終止形-一般"),
-            ("トッ", "テ", "ツケ", "タ"),
+            (["五段-ラ行;連用形-促音便"], [], ["下一段-カ行;連用形-一般"], ["助動詞-タ;終止形-一般"]),
+            (["トッ"], ["テ"], ["ツケ"], ["タ"]),
+        ),
+        (
+            "2=3",
+            ([], [], []),
+            (["ニ"], ["_"], ["サン"])
         ),
     ],
 )
 def test_ja_tokenizer_inflections_reading_forms(
     ja_tokenizer, text, inflections, reading_forms
 ):
-    assert ja_tokenizer(text).user_data["inflections"] == inflections
-    assert ja_tokenizer(text).user_data["reading_forms"] == reading_forms
+    tokens = ja_tokenizer(text)
+    test_inflections = [tt.morph.get("Inflection") for tt in tokens]
+    assert test_inflections == list(inflections)
+    test_readings = [tt.morph.get("Reading") for tt in tokens]
+    assert test_readings == list(reading_forms)
 
 
 def test_ja_tokenizer_emptyish_texts(ja_tokenizer):

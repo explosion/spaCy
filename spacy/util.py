@@ -17,6 +17,7 @@ import numpy
 import srsly
 import catalogue
 from catalogue import RegistryError, Registry
+import langcodes
 import sys
 import warnings
 from packaging.specifiers import SpecifierSet, InvalidSpecifier
@@ -29,6 +30,7 @@ import tempfile
 import shutil
 import shlex
 import inspect
+import pkgutil
 import logging
 
 try:
@@ -94,6 +96,7 @@ class registry(thinc.registry):
     readers = catalogue.create("spacy", "readers", entry_points=True)
     augmenters = catalogue.create("spacy", "augmenters", entry_points=True)
     loggers = catalogue.create("spacy", "loggers", entry_points=True)
+    scorers = catalogue.create("spacy", "scorers", entry_points=True)
     # These are factories registered via third-party packages and the
     # spacy_factories entry point. This registry only exists so we can easily
     # load them via the entry points. The "true" factories are added via the
@@ -257,20 +260,89 @@ def lang_class_is_loaded(lang: str) -> bool:
     return lang in registry.languages
 
 
+def find_matching_language(lang: str) -> Optional[str]:
+    """
+    Given an IETF language code, find a supported spaCy language that is a
+    close match for it (according to Unicode CLDR language-matching rules).
+    This allows for language aliases, ISO 639-2 codes, more detailed language
+    tags, and close matches.
+
+    Returns the language code if a matching language is available, or None
+    if there is no matching language.
+
+    >>> find_matching_language('en')
+    'en'
+    >>> find_matching_language('pt-BR')  # Brazilian Portuguese
+    'pt'
+    >>> find_matching_language('fra')  # an ISO 639-2 code for French
+    'fr'
+    >>> find_matching_language('iw')  # obsolete alias for Hebrew
+    'he'
+    >>> find_matching_language('no')  # Norwegian
+    'nb'
+    >>> find_matching_language('mo')  # old code for ro-MD
+    'ro'
+    >>> find_matching_language('zh-Hans')  # Simplified Chinese
+    'zh'
+    >>> find_matching_language('zxx')
+    None
+    """
+    import spacy.lang  # noqa: F401
+    if lang == 'xx':
+        return 'xx'
+
+    # Find out which language modules we have
+    possible_languages = []
+    for modinfo in pkgutil.iter_modules(spacy.lang.__path__):  # type: ignore
+        code = modinfo.name
+        if code == 'xx':
+            # Temporarily make 'xx' into a valid language code
+            possible_languages.append('mul')
+        elif langcodes.tag_is_valid(code):
+            possible_languages.append(code)
+
+    # Distances from 1-9 allow near misses like Bosnian -> Croatian and
+    # Norwegian -> Norwegian Bokmål. A distance of 10 would include several
+    # more possibilities, like variants of Chinese like 'wuu', but text that
+    # is labeled that way is probably trying to be distinct from 'zh' and
+    # shouldn't automatically match.
+    match = langcodes.closest_supported_match(
+        lang, possible_languages, max_distance=9
+    )
+    if match == 'mul':
+        # Convert 'mul' back to spaCy's 'xx'
+        return 'xx'
+    else:
+        return match
+
+
 def get_lang_class(lang: str) -> Type["Language"]:
     """Import and load a Language class.
 
-    lang (str): Two-letter language code, e.g. 'en'.
+    lang (str): IETF language code, such as 'en'.
     RETURNS (Language): Language class.
     """
     # Check if language is registered / entry point is available
     if lang in registry.languages:
         return registry.languages.get(lang)
     else:
+        # Find the language in the spacy.lang subpackage
         try:
             module = importlib.import_module(f".lang.{lang}", "spacy")
         except ImportError as err:
-            raise ImportError(Errors.E048.format(lang=lang, err=err)) from err
+            # Find a matching language. For example, if the language 'no' is
+            # requested, we can use language-matching to load `spacy.lang.nb`.
+            try:
+                match = find_matching_language(lang)
+            except langcodes.tag_parser.LanguageTagError:
+                # proceed to raising an import error
+                match = None
+
+            if match:
+                lang = match
+                module = importlib.import_module(f".lang.{lang}", "spacy")
+            else:
+                raise ImportError(Errors.E048.format(lang=lang, err=err)) from err
         set_lang_class(lang, getattr(module, module.__all__[0]))  # type: ignore[attr-defined]
     return registry.languages.get(lang)
 

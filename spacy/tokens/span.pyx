@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 cimport numpy as np
 from libc.math cimport sqrt
 
@@ -754,7 +752,7 @@ cdef class Span:
         def __get__(self):
             return self.root.ent_id_
 
-        def __set__(self, unicode key):
+        def __set__(self, str key):
             raise NotImplementedError(Errors.E200.format(attr="ent_id_"))
 
     @property
@@ -775,7 +773,7 @@ cdef class Span:
         def __get__(self):
             return self.doc.vocab.strings[self.label]
 
-        def __set__(self, unicode label_):
+        def __set__(self, str label_):
             self.label = self.doc.vocab.strings.add(label_)
 
     property kb_id_:
@@ -783,7 +781,7 @@ cdef class Span:
         def __get__(self):
             return self.doc.vocab.strings[self.kb_id]
 
-        def __set__(self, unicode kb_id_):
+        def __set__(self, str kb_id_):
             self.kb_id = self.doc.vocab.strings.add(kb_id_)
 
 
