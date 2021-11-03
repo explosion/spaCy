@@ -1,18 +1,13 @@
 import warnings
 
 
-def add_codes(err_cls):
-    """Add error codes to string messages via class attribute names."""
-
-    class ErrorsWithCodes(err_cls):
-        def __getattribute__(self, code):
-            msg = super(ErrorsWithCodes, self).__getattribute__(code)
-            if code.startswith("__"):  # python system attributes like __class__
-                return msg
-            else:
-                return "[{code}] {msg}".format(code=code, msg=msg)
-
-    return ErrorsWithCodes()
+class ErrorsWithCodes(type):
+    def __getattribute__(self, code):
+        msg = super().__getattribute__(code)
+        if code.startswith("__"):  # python system attributes like __class__
+            return msg
+        else:
+            return "[{code}] {msg}".format(code=code, msg=msg)
 
 
 def setup_default_warnings():
@@ -44,8 +39,7 @@ def _escape_warning_msg(msg):
 
 # fmt: off
 
-@add_codes
-class Warnings:
+class Warnings(metaclass=ErrorsWithCodes):
     W005 = ("Doc object not parsed. This means displaCy won't be able to "
             "generate a dependency visualization for it. Make sure the Doc "
             "was processed with a model that supports dependency parsing, and "
@@ -194,8 +188,7 @@ class Warnings:
             "lead to errors.")
 
 
-@add_codes
-class Errors:
+class Errors(metaclass=ErrorsWithCodes):
     E001 = ("No component '{name}' found in pipeline. Available names: {opts}")
     E002 = ("Can't find factory for '{name}' for language {lang} ({lang_code}). "
             "This usually happens when spaCy calls `nlp.{method}` with a custom "
