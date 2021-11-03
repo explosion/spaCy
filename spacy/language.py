@@ -1631,11 +1631,12 @@ class Language:
             recv.recv() for recv in cycle(bytedocs_recv_ch)
         )
         try:
-            for i, (_, (byte_doc, byte_error)) in enumerate(
+            for i, (_, (byte_doc, byte_context, byte_error)) in enumerate(
                 zip(raw_texts, byte_tuples), 1
             ):
                 if byte_doc is not None:
                     doc = Doc(self.vocab).from_bytes(byte_doc)
+                    doc._context = byte_context
                     yield doc
                 elif byte_error is not None:
                     error = srsly.msgpack_loads(byte_error)
@@ -2186,12 +2187,12 @@ def _apply_pipes(
             for pipe in pipes:
                 docs = pipe(docs)  # type: ignore[arg-type, assignment]
             # Connection does not accept unpickable objects, so send list.
-            byte_docs = [(doc.to_bytes(), None) for doc in docs]
-            padding = [(None, None)] * (len(texts) - len(byte_docs))
+            byte_docs = [(doc.to_bytes(), doc._context, None) for doc in docs]
+            padding = [(None, None, None)] * (len(texts) - len(byte_docs))
             sender.send(byte_docs + padding)  # type: ignore[operator]
         except Exception:
-            error_msg = [(None, srsly.msgpack_dumps(traceback.format_exc()))]
-            padding = [(None, None)] * (len(texts) - 1)
+            error_msg = [(None, None, srsly.msgpack_dumps(traceback.format_exc()))]
+            padding = [(None, None, None)] * (len(texts) - 1)
             sender.send(error_msg + padding)
 
 
