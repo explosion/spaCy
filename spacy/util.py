@@ -1613,7 +1613,7 @@ def _pipe(
                 yield doc
             except Exception as e:
                 error_handler(name, proc, [doc], e)
-                yield None
+
 
 def raise_error(proc_name, proc, docs, e):
     raise e

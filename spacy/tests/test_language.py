@@ -223,7 +223,7 @@ def test_language_pipe_error_handler(n_process):
         # set explicitely to ignoring
         nlp.set_error_handler(ignore_error)
         docs = list(nlp.pipe(texts, n_process=n_process))
-        assert docs == [None] * len(texts)
+        assert len(docs) == 0
         nlp(texts[0])
 
 
@@ -251,8 +251,9 @@ def test_language_pipe_error_handler_custom(en_vocab, n_process):
             if n_process == 1:
                 mock_warning.assert_called()
                 assert mock_warning.call_count == 2
-                assert len(docs) == len(texts)
-            assert [doc.text for doc in docs if doc is not None] == ["TEXT 111", "TEXT 333", "TEXT 666"]
+                assert len(docs) + mock_warning.call_count == len(texts)
+            assert [doc.text for doc in docs] == ["TEXT 111", "TEXT 333", "TEXT 666"]
+
 
 @pytest.mark.parametrize("n_process", [1, 2])
 def test_language_pipe_error_handler_input_as_tuples(en_vocab, n_process):
@@ -271,12 +272,11 @@ def test_language_pipe_error_handler_input_as_tuples(en_vocab, n_process):
             tuples = list(nlp.pipe(texts, as_tuples=True, n_process=n_process))
             mock_warning.assert_called()
             assert mock_warning.call_count == 2
-            assert len(tuples) == len(texts)
+            assert len(tuples) + mock_warning.call_count == len(texts)
             assert (tuples[0][0].text, tuples[0][1]) == ("TEXT 111", 111)
-            assert (tuples[1][0], tuples[1][1]) == (None, 222)
-            assert (tuples[2][0].text, tuples[2][1]) == ("TEXT 333", 333)
-            assert (tuples[3][0], tuples[3][1]) == (None, 342)
-            assert (tuples[4][0].text, tuples[4][1]) == ("TEXT 666", 666)
+            assert (tuples[1][0].text, tuples[1][1]) == ("TEXT 333", 333)
+            assert (tuples[2][0].text, tuples[2][1]) == ("TEXT 666", 666)
+
 
 @pytest.mark.parametrize("n_process", [1, 2])
 def test_language_pipe_error_handler_pipe(en_vocab, n_process):
@@ -296,8 +296,7 @@ def test_language_pipe_error_handler_pipe(en_vocab, n_process):
         nlp.set_error_handler(ignore_error)
         docs = list(nlp.pipe(texts, n_process=n_process, batch_size=10))
         # we lose/ignore the failing 4,40-49 docs
-        assert len(docs) == len(texts)
-        assert sum(doc is not None for doc in docs) == 89
+        assert len(docs) == 89
 
 
 @pytest.mark.parametrize("n_process", [1, 2])
@@ -318,7 +317,8 @@ def test_language_pipe_error_handler_make_doc_actual(n_process):
                 list(nlp.pipe(texts, n_process=n_process))
         else:
             docs = list(nlp.pipe(texts, n_process=n_process))
-            assert docs == [None] * len(texts)
+            assert len(docs) == 0
+
 
 @pytest.mark.xfail
 @pytest.mark.parametrize("n_process", [1, 2])
@@ -334,7 +334,7 @@ def test_language_pipe_error_handler_make_doc_preferred(n_process):
             list(nlp.pipe(texts, n_process=n_process))
         nlp.default_error_handler = ignore_error
         docs = list(nlp.pipe(texts, n_process=n_process))
-        assert docs == [None] * len(texts)
+        assert len(docs) == 0
 
 
 def test_language_from_config_before_after_init():
