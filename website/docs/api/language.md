@@ -1000,6 +1000,11 @@ subclasses like `English` or `German` to make language-specific functionality
 like the [lexical attribute getters](/usage/linguistic-features#language-data)
 available to the loaded object.
 
+Note that if you want to serialize and reload a whole pipeline, using this alone
+won't work, you also need to handle the config. See
+["Serializing the pipeline"](https://spacy.io/usage/saving-loading#pipeline) for
+details.
+
 > #### Example
 >
 > ```python
