@@ -750,7 +750,6 @@ cdef class Token:
     def iob_strings(cls):
         return ("", "I", "O", "B")
 
-
     property ent_iob_:
         """IOB code of named entity tag. "B" means the token begins an entity,
         "I" means it is inside an entity, "O" means it is outside an entity,
