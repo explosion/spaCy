@@ -38,6 +38,14 @@ import pytest
             ["DET", "NOUN", "ADJ", "CCONJ", "ADJ"],
             [(0,5)]
         ),
+        # el fabuloso gato pardo -> "el fabuloso gato pardo"
+        (
+            ["el", "fabuloso", "gato", "pardo"],
+            [2, 2, 2, 2],
+            ["det", "amod", "ROOT", "amod"],
+            ["DET", "ADJ", "NOUN", "ADJ"],
+            [(0,4)]
+        ),
         # Tengo un gato y un perro -> un gato, un perro
         ( 
             ["Tengo", "un", "gato", "y", "un", "perro"],
