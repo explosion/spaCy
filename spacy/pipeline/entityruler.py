@@ -228,7 +228,7 @@ class EntityRuler(Pipe):
                 label, _ = self._split_label(l)
                 all_labels.add(label)
             elif self.ent_iob_sep in l:
-                label, _ = self.split_iob_label(l)
+                label, _ = self._split_iob_label(l)
                 all_labels.add(label)
             else:
                 all_labels.add(l)
@@ -436,6 +436,15 @@ class EntityRuler(Pipe):
         """
         if isinstance(ent_id, str):
             label = f"{label}{self.ent_id_sep}{ent_id}"
+        return label
+
+    def _create_iob_label(self, label: Any, ent_iobs: str) -> str:
+        """Join Entity label with ent_iobs if the pattern has an `ent_iobs` attribute
+        label (str): The label to set for ent.label_
+        ent_iobs (str): The ent_iobs string
+        RETURNS (str): The ent_label joined with configured `ent_iob_sep`
+        """
+        label = f"{label}{self.ent_iob_sep}{ent_iobs}"
         return label
 
     def from_bytes(
