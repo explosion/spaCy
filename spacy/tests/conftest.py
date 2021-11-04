@@ -248,6 +248,11 @@ def pt_tokenizer():
 
 
 @pytest.fixture(scope="session")
+def pt_vocab():
+    return get_lang_class("pt")().vocab
+
+
+@pytest.fixture(scope="session")
 def ro_tokenizer():
     return get_lang_class("ro")().tokenizer
 
