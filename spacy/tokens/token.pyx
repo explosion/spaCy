@@ -732,21 +732,26 @@ cdef class Token:
         def __set__(self, ent_type):
             self.c.ent_type = self.vocab.strings.add(ent_type)
 
-    @property
-    def ent_iob(self):
+    property ent_iob:
         """IOB code of named entity tag. `1="I", 2="O", 3="B"`. 0 means no tag
         is assigned.
 
         RETURNS (uint64): IOB code of named entity tag.
         """
         return self.c.ent_iob
+        def __get__(self):
+            return self.c.ent_iob
+        def __set__(self, hash_t tag):
+            if not (1 <= tag <= 3):
+                raise ValueError(Errors.E1023.format(tag=tag))
+            self.c.ent_iob = tag
 
     @classmethod
     def iob_strings(cls):
         return ("", "I", "O", "B")
 
-    @property
-    def ent_iob_(self):
+
+    property ent_iob_:
         """IOB code of named entity tag. "B" means the token begins an entity,
         "I" means it is inside an entity, "O" means it is outside an entity,
         and "" means no entity tag is set. "B" with an empty ent_type
@@ -755,6 +760,12 @@ cdef class Token:
         RETURNS (str): IOB code of named entity tag.
         """
         return self.iob_strings()[self.c.ent_iob]
+        def __get__(self):
+            return self.iob_strings()[self.c.ent_iob]
+        def __set__(self, str tag):
+            if tag not in " IOB":
+                raise ValueError(Errors.E1024.format(tag=tag))
+            self.c.ent_iob = self.iob_strings().index[tag]
 
     property ent_id:
         """RETURNS (uint64): ID of the entity the token is an instance of,
