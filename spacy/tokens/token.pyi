@@ -140,12 +140,10 @@ class Token:
     def conjuncts(self) -> Tuple[Token]: ...
     ent_type: int
     ent_type_: str
-    @property
-    def ent_iob(self) -> int: ...
+    ent_iob: int
     @classmethod
     def iob_strings(cls) -> Tuple[str]: ...
-    @property
-    def ent_iob_(self) -> str: ...
+    ent_iob_: str
     ent_id: int
     ent_id_: str
     ent_kb_id: int
