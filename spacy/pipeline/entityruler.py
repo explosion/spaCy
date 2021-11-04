@@ -192,6 +192,15 @@ class EntityRuler(Pipe):
                     if ent_id:
                         for token in span:
                             token.ent_id_ = ent_id
+                    if match_id in self_ent_iobs:
+                        ent_iobs = self._ent_iobs[match_id]
+                        for token,iob in zip(span, ent_iobs):
+                            token.ent_iob_ = iob
+                elif match_id in self._ent_iobs:
+                    label, ent_iobs = self._ent_iobs[match_id]
+                    span = Span(doc, start, end, label=label)
+                    for token,iob in zip(span, ent_iobs):
+                        token.ent_iob_ = iob
                 else:
                     span = Span(doc, start, end, label=match_id)
                 new_entities.append(span)
