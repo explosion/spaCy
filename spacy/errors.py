@@ -887,6 +887,10 @@ class Errors(metaclass=ErrorsWithCodes):
     E1021 = ("`pos` value \"{pp}\" is not a valid Universal Dependencies tag. "
              "Non-UD tags should use the `tag` property.")
     E1022 = ("Words must be of type str or int, but input is of type '{wtype}'")
+    E1023 = ("Possible entity IOB values are 0, 1, 2 and 3, but the provided argument '{tag}' is not one of these values.")
+    E1024 = ("Possible entity IOB strings are I, O and B, but the provided argument '{tag}' is not one of these values.")
+
+
 
 
 # Deprecated model shortcuts, only used in errors and warnings
