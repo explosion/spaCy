@@ -6,7 +6,8 @@ import pytest
 @pytest.mark.parametrize(
     "words,heads,deps,pos,chunk_offsets",
     [
-        # um cachorro -> "um cachorro"   determiner + noun
+        # determiner + noun
+        # um cachorro -> um cachorro
         (
             ["um", "cachorro"],
             [1, 1],
@@ -14,7 +15,8 @@ import pytest
             ["DET", "NOUN"],
             [(0, 2)],
         ),
-        # meu o pai -> "meu o pai"   two determiners + noun
+        # two determiners + noun
+        # meu o pai -> meu o pai
         (
             ["meu", "o", "pai"],
             [2, 2, 2],
@@ -22,7 +24,8 @@ import pytest
             ["DET", "DET", "NOUN"],
             [(0, 3)],
         ),
-        # todos essos caros -> "todos essos caros"   two determiners + noun
+        # two determiners + noun
+        # todos essos caros -> todos essos caros
         (
             ["todos", "essos", "caros"],
             [2, 2, 2],
@@ -30,7 +33,8 @@ import pytest
             ["DET", "DET", "NOUN"],
             [(0, 3)],
         ),
-        # um irmão meu -> "um irmão meu"   two determiners, one is after noun
+        # two determiners, one is after noun
+        # um irmão meu -> um irmão meu
         (
             ["um", "irmão", "meu"],
             [1, 1, 1],
@@ -38,7 +42,8 @@ import pytest
             ["DET", "NOUN", "DET"],
             [(0, 3)],
         ),
-        # o meu pai -> "o meu pai"   two determiners + noun
+        # two determiners + noun
+        # o meu pai -> o meu pai
         (
             ["o", "meu", "pai"],
             [2, 2, 2],
@@ -46,7 +51,8 @@ import pytest
             ["DET", "DET", "NOUN"],
             [(0, 3)],
         ),
-        #  A bicicleta essa está estragada -> A bicicleta    relative pronoun
+        # relative pronoun
+        # A bicicleta essa está estragada -> A bicicleta
         (
             ['A', 'bicicleta', 'essa', 'está', 'estragada'],
             [1, 4, 1, 4, 4],
@@ -54,7 +60,8 @@ import pytest
             ['DET', 'NOUN', 'PRON', 'AUX', 'ADJ'],
             [(0,2)]
         ),
-        #  o computador que comprou -> o computador    relative subclause
+        # relative subclause
+        #  o computador que comprou -> o computador
         (
             ['o', 'computador', 'que', 'comprou'],
             [1, 1, 3, 1],
@@ -62,7 +69,8 @@ import pytest
             ['DET', 'NOUN', 'PRON', 'VERB'],
             [(0, 2), (2, 3)]
         ),
-        # O cachorro marrom  -> "O cachorro marrom "  det + noun + adj
+        # det + noun + adj
+        # O cachorro marrom  -> O cachorro marrom
         (
             ["O", "cachorro", "marrom"],
             [1, 1, 1],
@@ -70,7 +78,8 @@ import pytest
             ["DET", "NOUN", "ADJ"],
             [(0, 3)],
         ),
-        # As calças baratas  -> "As calças baratas "  det + noun + adj plural
+        # det + noun + adj plural
+        # As calças baratas  -> As calças baratas
         (
             ["As", "calças", "baratas"],
             [1, 1, 1],
@@ -78,7 +87,8 @@ import pytest
             ["DET", "NOUN", "ADJ"],
             [(0, 3)],
         ),
-        # Uma boa ideia -> Uma boa ideia       det + adj + noun
+        # det + adj + noun
+        # Uma boa ideia -> Uma boa ideia
         (
             ['uma', 'boa', 'ideia'],
             [2, 2, 2],
@@ -86,7 +96,8 @@ import pytest
             ["DET", "ADJ", "NOUN"],
             [(0,3)]
         ),
-        # Uma garota esperta e inteligente -> Uma garota esperta e inteligente         multiple adjectives
+        # multiple adjectives
+        # Uma garota esperta e inteligente -> Uma garota esperta e inteligente
         (
             ["Uma", "garota", "esperta", "e", "inteligente"],
             [1, 1, 1, 4, 2],
@@ -94,7 +105,8 @@ import pytest
             ["DET", "NOUN", "ADJ", "CCONJ", "ADJ"],
             [(0,5)]
         ),
-        # a grande São Paolo ->  a grande São Paolo          determiner, adjective, compound created by flat
+        # determiner, adjective, compound created by flat
+        # a grande São Paolo -> a grande São Paolo
         (
             ["a", "grande", "São", "Paolo"],
             [2, 2, 2, 2],
@@ -102,7 +114,8 @@ import pytest
             ["DET", "ADJ", "PROPN", "PROPN"],
             [(0,4)]
         ),
-        # alguns fazendeiros muito ricos -> alguns fazendeiros muito ricos             one determiner + one noun + one adjective qualified by an adverb
+        # one determiner + one noun + one adjective qualified by an adverb
+        # alguns fazendeiros muito ricos -> alguns fazendeiros muito ricos
         (
             ['alguns', 'fazendeiros', 'muito', 'ricos'],
             [1, 1, 3, 1],
@@ -110,7 +123,8 @@ import pytest
             ['DET', 'NOUN', 'ADV', 'ADJ'],
             [(0,4)]
         ),
-        # Eu tenho um cachorro e um gato  -> um cacharo, um gato                                 Two NPs conjuncted
+        # Two NPs conjuncted
+        # Eu tenho um cachorro e um gato -> Eu, um cacharo, um gato
         ( 
             ["Eu", "tenho", "um", "cachorro", "e", "um", "gato"],
             [1, 1, 3, 1, 6, 6, 3],
@@ -119,7 +133,8 @@ import pytest
             [(0,1), (2,4), (5,7)]
          
         ),
-        # o escritor brasileiro Aníbal Machado -> o escritor brasileiro,  Aníbal Machado         Two NPs together
+        # Two NPs together
+        # o escritor brasileiro Aníbal Machado -> o escritor brasileiro, Aníbal Machado
         (
             ['o', 'escritor', 'brasileiro', 'Aníbal', 'Machado'],
             [1, 1, 1, 1, 3],
@@ -127,7 +142,8 @@ import pytest
             ['DET', 'NOUN', 'ADJ', 'PROPN', 'PROPN'],
             [(0, 3), (3, 5)]
         ),
-        # Dom Pedro II -> Dom Pedro II              Noun compound, person name and titles
+        # Noun compound, person name and titles
+        # Dom Pedro II -> Dom Pedro II
         (
             ["Dom", "Pedro", "II"],
             [0, 0, 0],
@@ -135,7 +151,8 @@ import pytest
             ["PROPN", "PROPN", "PROPN"],
             [(0,3)]
         ),
-        # os Estados Unidos -> os Estados Unidos     Noun compound created by flat
+        # Noun compound created by flat
+        # os Estados Unidos -> os Estados Unidos
         (
             ["os", "Estados", "Unidos"],
             [1, 1, 1],
@@ -143,7 +160,8 @@ import pytest
             ["DET", "PROPN", "PROPN"],
             [(0,3)]
         ),
-        # a destruição da cidade -> a destruição, cidade        nmod relation between NPs
+        # nmod relation between NPs
+        # a destruição da cidade -> a destruição, cidade
         (
             ['a', 'destruição', 'da', 'cidade'],
             [1, 1, 3, 1],
@@ -151,7 +169,8 @@ import pytest
             ['DET', 'NOUN', 'ADP', 'NOUN'],
             [(0,2), (3,4)]
         ),
-        # a primeira fábrica de medicamentos do governo -> a primeira fábrica, medicamentos, governo  Compounding by nmod, several NPs chained together
+        # Compounding by nmod, several NPs chained together
+        # a primeira fábrica de medicamentos do governo -> a primeira fábrica, medicamentos, governo
         (
             ["a", "primeira", "fábrica", "de", "medicamentos",  "do", "governo"],
             [2, 2, 2, 4, 2, 6, 2],
@@ -159,7 +178,8 @@ import pytest
             ['DET', 'ADJ', 'NOUN', 'ADP', 'NOUN', 'ADP', 'NOUN'],
             [(0, 3), (4, 5), (6, 7)]
         ),
-        # Tradução da reportagem de Susana -> Tradução, reportagem, Susana   several NPs
+        # several NPs
+        # Tradução da reportagem de Susana -> Tradução, reportagem, Susana
         (
             ['Tradução', 'da', 'reportagem', 'de', 'Susana'],
             [0, 2, 0, 4, 2],
@@ -168,7 +188,8 @@ import pytest
             [(0,1), (2,3), (4,5)]  
        
         ),
-        # O gato gordo da Susana e seu amigo -> O gato gordo, Susana, seu amigo    several NPs
+        # Several NPs
+        # O gato gordo da Susana e seu amigo -> O gato gordo, Susana, seu amigo
         (  
             ['O', 'gato', 'gordo', 'da', 'Susana', 'e', 'seu', 'amigo'],
             [1, 1, 1, 4, 1, 7, 7, 1],
@@ -176,7 +197,8 @@ import pytest
             ['DET', 'NOUN', 'ADJ', 'ADP', 'PROPN', 'CCONJ', 'DET', 'NOUN'],
             [(0,3), (4,5), (6,8)]
         ),
-        # Os novos gastos são alimentados pela grande conta bancária de Clinton ->    Os novos gastos, grande conta bancária, Clinton       passive subject
+        # Passive subject
+        # Os novos gastos são alimentados pela grande conta bancária de Clinton -> Os novos gastos, grande conta bancária, Clinton
         (
             ['Os', 'novos', 'gastos', 'são', 'alimentados', 'pela', 'grande', 'conta', 'bancária', 'de', 'Clinton'],
             [2, 2, 4, 4, 4, 7, 7, 4, 7, 10, 7],
