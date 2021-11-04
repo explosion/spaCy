@@ -192,7 +192,7 @@ class EntityRuler(Pipe):
                     if ent_id:
                         for token in span:
                             token.ent_id_ = ent_id
-                    if match_id in self_ent_iobs:
+                    if match_id in self._ent_iobs:
                         ent_iobs = self._ent_iobs[match_id]
                         for token,iob in zip(span, ent_iobs):
                             token.ent_iob_ = iob
