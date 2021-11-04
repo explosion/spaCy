@@ -129,6 +129,7 @@ class EntityRuler(Pipe):
             nlp.vocab, attr=self.phrase_matcher_attr, validate=validate
         )
         self.ent_id_sep = ent_id_sep
+        self.ent_iob_sep = ent_iob_sep
         self._ent_ids = defaultdict(tuple)  # type: ignore
         self._ent_iobs = defaultdict(list)  # type: ignore
         if patterns is not None:
