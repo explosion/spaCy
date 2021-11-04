@@ -16,6 +16,7 @@ from ..scorer import get_ner_prf
 
 
 DEFAULT_ENT_ID_SEP = "||"
+DEFAULT_ENT_IOB_SEP = "|-|"
 PatternType = Dict[str, Union[str, List[Dict[str, Any]]]]
 
 
@@ -27,6 +28,7 @@ PatternType = Dict[str, Union[str, List[Dict[str, Any]]]]
         "validate": False,
         "overwrite_ents": False,
         "ent_id_sep": DEFAULT_ENT_ID_SEP,
+        "ent_iob_sep": DEFAULT_ENT_IOB_SEP,
         "scorer": {"@scorers": "spacy.entity_ruler_scorer.v1"},
     },
     default_score_weights={
@@ -43,6 +45,7 @@ def make_entity_ruler(
     validate: bool,
     overwrite_ents: bool,
     ent_id_sep: str,
+    ent_iob_sep: str,
     scorer: Optional[Callable],
 ):
     return EntityRuler(
@@ -52,6 +55,7 @@ def make_entity_ruler(
         validate=validate,
         overwrite_ents=overwrite_ents,
         ent_id_sep=ent_id_sep,
+        ent_iob_sep=ent_iob_sep,
         scorer=scorer,
     )
 
@@ -85,6 +89,7 @@ class EntityRuler(Pipe):
         validate: bool = False,
         overwrite_ents: bool = False,
         ent_id_sep: str = DEFAULT_ENT_ID_SEP,
+        ent_iob_sep: str = DEFAULT_ENT_IOB_SEP,
         patterns: Optional[List[PatternType]] = None,
         scorer: Optional[Callable] = entity_ruler_score,
     ) -> None:
@@ -125,6 +130,7 @@ class EntityRuler(Pipe):
         )
         self.ent_id_sep = ent_id_sep
         self._ent_ids = defaultdict(tuple)  # type: ignore
+        self._ent_iobs = defaultdict(list)  # type: ignore
         if patterns is not None:
             self.add_patterns(patterns)
         self.scorer = scorer
@@ -211,6 +217,9 @@ class EntityRuler(Pipe):
             if self.ent_id_sep in l:
                 label, _ = self._split_label(l)
                 all_labels.add(label)
+            elif self.ent_iob_sep in l:
+                label, _ = self.split_iob_label(l)
+                all_labels.add(label)
             else:
                 all_labels.add(l)
         return tuple(sorted(all_labels))
@@ -254,6 +263,22 @@ class EntityRuler(Pipe):
         return tuple(all_ent_ids)
 
     @property
+    def ent_iobs(self) -> Tuple[Optional[str], ...]:
+        """All entity iobs present in the match patterns `ent_iobs` properties
+        RETURNS (set): The entity iobs.
+        DOCS: https://spacy.io/api/entityruler#ent_iobs
+        """
+        keys = set(self.token_patterns.keys())
+        keys.update(self.phrase_patterns.keys())
+        all_ent_iobs = set()
+
+        for l in keys:
+            if self.ent_iob_sep in l:
+                _, ent_iobs = self._split_iob_label(l)
+                all_ent_iobs.add(ent_iobs)
+        return tuple(all_ent_iobs)
+
+    @property
     def patterns(self) -> List[PatternType]:
         """Get all patterns that were added to the entity ruler.
 
@@ -265,16 +290,22 @@ class EntityRuler(Pipe):
         for label, patterns in self.token_patterns.items():
             for pattern in patterns:
                 ent_label, ent_id = self._split_label(label)
+                ent_label, ent_iobs = self._split_iob_label(ent_label)
                 p = {"label": ent_label, "pattern": pattern}
                 if ent_id:
                     p["id"] = ent_id
+                if ent_iobs:
+                    p[ent_iobs] = ent_iobs
                 all_patterns.append(p)
         for label, patterns in self.phrase_patterns.items():
             for pattern in patterns:
                 ent_label, ent_id = self._split_label(label)
+                ent_label, ent_iobs = self._split_iob_label(ent_label)
                 p = {"label": ent_label, "pattern": pattern.text}
                 if ent_id:
                     p["id"] = ent_id
+                if ent_iobs:
+                    p["ent_iobs"] = ent_iobs
                 all_patterns.append(p)
         return all_patterns
 
@@ -328,6 +359,13 @@ class EntityRuler(Pipe):
                     label = self._create_label(label, entry["id"])
                     key = self.matcher._normalize_key(label)
                     self._ent_ids[key] = (ent_label, entry["id"])
+                    if "ent_iobs" in entry:
+                        self._ent_iobs[key] = entry["ent_iobs"]
+                elif "ent_iobs" in entry:
+                    ent_label = label
+                    label = self._create_iob_label(label, entry["ent_iobs"])
+                    key = self.matcher._normalize_key(label)
+                    self._ent_iobs[key] = (ent_label, entry["ent_iobs"])
                 pattern = entry["pattern"]  # type: ignore
                 if isinstance(pattern, Doc):
                     self.phrase_patterns[label].append(pattern)
@@ -365,6 +403,18 @@ class EntityRuler(Pipe):
             ent_label = label
             ent_id = None  # type: ignore
         return ent_label, ent_id
+
+    def _split_iob_label(self, label: str) -> Tuple[str, Optional[str]]:
+        """Split Entity label into ent_label and ent_iobs if it contains self.ent_iob_sep
+        label (str): The value of label in a pattern entry
+        RETURNS (tuple): ent_label, ent_iobs
+        """
+        if self.ent_iob_sep in label:
+            ent_label, ent_iobs = label.rsplit(self.ent_iob_sep, 1)
+        else:
+            ent_label = label
+            ent_iobs = None  # type: ignore
+        return ent_label, ent_iobs
 
     def _create_label(self, label: Any, ent_id: Any) -> str:
         """Join Entity label with ent_id if the pattern has an `id` attribute
