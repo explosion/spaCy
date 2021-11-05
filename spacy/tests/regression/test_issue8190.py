@@ -3,6 +3,7 @@ from spacy.lang.en import English
 from ..util import make_tempdir
 
 
+@pytest.mark.issue(8190)
 def test_issue8190():
     """Test that config overrides are not lost after load is complete."""
     source_cfg = {

@@ -9,6 +9,7 @@ from spacy.tokenizer import Tokenizer
 from spacy.symbols import ORTH, LEMMA, POS
 
 
+@pytest.mark.issue(1061)
 def test_issue1061():
     """Test special-case works after tokenizing. Was caching problem."""
     text = "I like _MATH_ even _MATH_ when _MATH_, except when _MATH_ is _MATH_! but not _MATH_."
@@ -33,6 +34,7 @@ def test_issue1061():
 @pytest.mark.skip(
     reason="Can not be fixed without variable-width look-behind (which we don't want)"
 )
+@pytest.mark.issue(1235)
 def test_issue1235():
     """Test that g is not split of if preceded by a number and a letter"""
     nlp = English()
@@ -46,6 +48,7 @@ def test_issue1235():
     assert doc[4].text == "g"
 
 
+@pytest.mark.issue(1242)
 def test_issue1242():
     nlp = English()
     doc = nlp("")
@@ -56,6 +59,7 @@ def test_issue1242():
 
 
 @pytest.mark.skip(reason="v3 no longer supports LEMMA/POS in tokenizer special cases")
+@pytest.mark.issue(1250)
 def test_issue1250():
     """Test cached special cases."""
     special_case = [{ORTH: "reimbur", LEMMA: "reimburse", POS: "VERB"}]
@@ -67,6 +71,7 @@ def test_issue1250():
     assert lemmas == ["reimburse", ",", "reimburse", "..."]
 
 
+@pytest.mark.issue(1257)
 def test_issue1257():
     """Test that tokens compare correctly."""
     doc1 = Doc(Vocab(), words=["a", "b", "c"])
@@ -75,6 +80,7 @@ def test_issue1257():
     assert not doc1[0] == doc2[0]
 
 
+@pytest.mark.issue(1375)
 def test_issue1375():
     """Test that token.nbor() raises IndexError for out-of-bounds access."""
     doc = Doc(Vocab(), words=["0", "1", "2"])
@@ -86,6 +92,7 @@ def test_issue1375():
     assert doc[1].nbor(1).text == "2"
 
 
+@pytest.mark.issue(1434)
 def test_issue1434():
     """Test matches occur when optional element at end of short doc."""
     pattern = [{"ORTH": "Hello"}, {"IS_ALPHA": True, "OP": "?"}]
@@ -111,6 +118,7 @@ def test_issue1434():
         ("a b b", 0, 3),
     ],
 )
+@pytest.mark.issue(1450)
 def test_issue1450(string, start, end):
     """Test matcher works when patterns end with * operator."""
     pattern = [{"ORTH": "a"}, {"ORTH": "b", "OP": "*"}]
@@ -124,6 +132,7 @@ def test_issue1450(string, start, end):
     assert matches[-1][2] == end
 
 
+@pytest.mark.issue(1488)
 def test_issue1488():
     prefix_re = re.compile(r"""[\[\("']""")
     suffix_re = re.compile(r"""[\]\)"']""")
@@ -147,6 +156,7 @@ def test_issue1488():
         assert token.text
 
 
+@pytest.mark.issue(1494)
 def test_issue1494():
     infix_re = re.compile(r"""[^a-z]""")
     test_cases = [

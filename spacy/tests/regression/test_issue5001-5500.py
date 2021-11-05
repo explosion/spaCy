@@ -12,6 +12,7 @@ import pytest
 from ...util import make_tempdir
 
 
+@pytest.mark.issue(5048)
 def test_issue5048(en_vocab):
     words = ["This", "is", "a", "sentence"]
     pos_s = ["DET", "VERB", "DET", "NOUN"]
@@ -34,6 +35,7 @@ def test_issue5048(en_vocab):
     assert v1 == v2
 
 
+@pytest.mark.issue(5082)
 def test_issue5082():
     # Ensure the 'merge_entities' pipeline does something sensible for the vectors of the merged tokens
     nlp = English()
@@ -68,6 +70,7 @@ def test_issue5082():
     numpy.testing.assert_array_equal(ops.to_numpy(parsed_vectors_2[2]), array34)
 
 
+@pytest.mark.issue(5137)
 def test_issue5137():
     factory_name = "test_issue5137"
     pipe_name = "my_component"
@@ -98,6 +101,7 @@ def test_issue5137():
         assert nlp2.get_pipe(pipe_name).categories == "my_categories"
 
 
+@pytest.mark.issue(5141)
 def test_issue5141(en_vocab):
     """Ensure an empty DocBin does not crash on serialization"""
     doc_bin = DocBin(attrs=["DEP", "HEAD"])
@@ -107,6 +111,7 @@ def test_issue5141(en_vocab):
     assert list(doc_bin_2.get_docs(en_vocab)) == []
 
 
+@pytest.mark.issue(5152)
 def test_issue5152():
     # Test that the comparison between a Span and a Token, goes well
     # There was a bug when the number of tokens in the span equaled the number of characters in the token (!)
@@ -125,6 +130,7 @@ def test_issue5152():
         assert span_2.similarity(span_3) < 1.0
 
 
+@pytest.mark.issue(5458)
 def test_issue5458():
     # Test that the noun chuncker does not generate overlapping spans
     # fmt: off

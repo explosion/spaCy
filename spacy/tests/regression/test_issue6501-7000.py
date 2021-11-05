@@ -13,6 +13,7 @@ import pickle
 from ..util import make_tempdir
 
 
+@pytest.mark.issue(6730)
 def test_issue6730(en_vocab):
     """Ensure that the KB does not accept empty strings, but otherwise IO works fine."""
     from spacy.kb import KnowledgeBase
@@ -34,6 +35,7 @@ def test_issue6730(en_vocab):
     assert set(kb.get_alias_strings()) == {"x", "y"}
 
 
+@pytest.mark.issue(6755)
 def test_issue6755(en_tokenizer):
     doc = en_tokenizer("This is a magnificent sentence.")
     span = doc[:0]
@@ -45,6 +47,7 @@ def test_issue6755(en_tokenizer):
     "sentence, start_idx,end_idx,label",
     [("Welcome to Mumbai, my friend", 11, 17, "GPE")],
 )
+@pytest.mark.issue(6815)
 def test_issue6815_1(sentence, start_idx, end_idx, label):
     nlp = English()
     doc = nlp(sentence)
@@ -55,6 +58,7 @@ def test_issue6815_1(sentence, start_idx, end_idx, label):
 @pytest.mark.parametrize(
     "sentence, start_idx,end_idx,kb_id", [("Welcome to Mumbai, my friend", 11, 17, 5)]
 )
+@pytest.mark.issue(6815)
 def test_issue6815_2(sentence, start_idx, end_idx, kb_id):
     nlp = English()
     doc = nlp(sentence)
@@ -66,6 +70,7 @@ def test_issue6815_2(sentence, start_idx, end_idx, kb_id):
     "sentence, start_idx,end_idx,vector",
     [("Welcome to Mumbai, my friend", 11, 17, np.array([0.1, 0.2, 0.3]))],
 )
+@pytest.mark.issue(6815)
 def test_issue6815_3(sentence, start_idx, end_idx, vector):
     nlp = English()
     doc = nlp(sentence)
@@ -73,6 +78,7 @@ def test_issue6815_3(sentence, start_idx, end_idx, vector):
     assert (span.vector == vector).all()
 
 
+@pytest.mark.issue(6839)
 def test_issue6839(en_vocab):
     """Ensure that PhraseMatcher accepts Span as input"""
     # fmt: off
@@ -155,6 +161,7 @@ labels = ['label1', 'label2']
     "component_name",
     ["textcat", "textcat_multilabel"],
 )
+@pytest.mark.issue(6908)
 def test_issue6908(component_name):
     """Test intializing textcat with labels in a list"""
 
@@ -219,6 +226,7 @@ upstream = "*"
 """
 
 
+@pytest.mark.issue(6950)
 def test_issue6950():
     """Test that the nlp object with initialized tok2vec with listeners pickles
     correctly (and doesn't have lambdas).
