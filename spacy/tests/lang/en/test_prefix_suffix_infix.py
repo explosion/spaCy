@@ -119,6 +119,7 @@ def test_en_tokenizer_splits_period_abbr(en_tokenizer):
     assert tokens[4].text == "Mr."
 
 
+@pytest.mark.issue(225)
 @pytest.mark.xfail(reason="Issue #225 - not yet implemented")
 def test_en_tokenizer_splits_em_dash_infix(en_tokenizer):
     tokens = en_tokenizer(
