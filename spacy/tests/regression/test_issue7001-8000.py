@@ -1,3 +1,4 @@
+import pytest
 from spacy.cli.evaluate import print_textcats_auc_per_cat, print_prf_per_type
 from spacy.lang.en import English
 from spacy.training import Example

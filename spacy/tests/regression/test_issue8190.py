@@ -1,3 +1,5 @@
+import pytest
+
 import spacy
 from spacy.lang.en import English
 from ..util import make_tempdir
