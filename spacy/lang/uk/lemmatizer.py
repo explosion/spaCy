@@ -29,4 +29,6 @@ class UkrainianLemmatizer(RussianLemmatizer):
                 ) from None
             if getattr(self, "_morph", None) is None:
                 self._morph = MorphAnalyzer(lang="uk")
-        super().__init__(vocab, model, name, mode=mode, overwrite=overwrite, scorer=scorer)
+        super().__init__(
+            vocab, model, name, mode=mode, overwrite=overwrite, scorer=scorer
+        )

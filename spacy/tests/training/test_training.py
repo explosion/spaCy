@@ -524,6 +524,7 @@ def test_roundtrip_docs_to_docbin(doc):
     assert cats["TRAVEL"] == reloaded_example.reference.cats["TRAVEL"]
     assert cats["BAKING"] == reloaded_example.reference.cats["BAKING"]
 
+
 def test_docbin_user_data_serialized(doc):
     doc.user_data["check"] = True
     nlp = English()
@@ -535,6 +536,7 @@ def test_docbin_user_data_serialized(doc):
         reloaded_doc = list(reloaded_docs)[0]
 
     assert reloaded_doc.user_data["check"] == True
+
 
 def test_docbin_user_data_not_serialized(doc):
     # this isn't serializable, but that shouldn't cause an error
@@ -548,6 +550,7 @@ def test_docbin_user_data_not_serialized(doc):
         reloaded_doc = list(reloaded_docs)[0]
 
     assert "check" not in reloaded_doc.user_data
+
 
 @pytest.mark.parametrize(
     "tokens_a,tokens_b,expected",
