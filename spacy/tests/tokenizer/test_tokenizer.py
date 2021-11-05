@@ -216,8 +216,8 @@ def test_tokenizer_flush_specials(en_vocab):
 
 def test_tokenizer_prefix_suffix_overlap_lookbehind(en_vocab):
     # the prefix and suffix matches overlap in the suffix lookbehind
-    prefixes = ['a(?=.)']
-    suffixes = [r'(?<=\w)\.', r'(?<=a)\d+\.']
+    prefixes = ["a(?=.)"]
+    suffixes = [r"(?<=\w)\.", r"(?<=a)\d+\."]
     prefix_re = compile_prefix_regex(prefixes)
     suffix_re = compile_suffix_regex(suffixes)
     tokenizer = Tokenizer(
