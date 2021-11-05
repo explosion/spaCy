@@ -288,16 +288,17 @@ def find_matching_language(lang: str) -> Optional[str]:
     None
     """
     import spacy.lang  # noqa: F401
-    if lang == 'xx':
-        return 'xx'
+
+    if lang == "xx":
+        return "xx"
 
     # Find out which language modules we have
     possible_languages = []
     for modinfo in pkgutil.iter_modules(spacy.lang.__path__):  # type: ignore
         code = modinfo.name
-        if code == 'xx':
+        if code == "xx":
             # Temporarily make 'xx' into a valid language code
-            possible_languages.append('mul')
+            possible_languages.append("mul")
         elif langcodes.tag_is_valid(code):
             possible_languages.append(code)
 
@@ -306,12 +307,10 @@ def find_matching_language(lang: str) -> Optional[str]:
     # more possibilities, like variants of Chinese like 'wuu', but text that
     # is labeled that way is probably trying to be distinct from 'zh' and
     # shouldn't automatically match.
-    match = langcodes.closest_supported_match(
-        lang, possible_languages, max_distance=9
-    )
-    if match == 'mul':
+    match = langcodes.closest_supported_match(lang, possible_languages, max_distance=9)
+    if match == "mul":
         # Convert 'mul' back to spaCy's 'xx'
-        return 'xx'
+        return "xx"
     else:
         return match
 

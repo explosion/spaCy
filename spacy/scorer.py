@@ -303,7 +303,9 @@ class Scorer:
                                     pred_per_feat[field] = set()
                                 pred_per_feat[field].add((gold_i, feat))
             for field in per_feat:
-                micro_score.score_set(pred_per_feat.get(field, set()), gold_per_feat.get(field, set()))
+                micro_score.score_set(
+                    pred_per_feat.get(field, set()), gold_per_feat.get(field, set())
+                )
                 per_feat[field].score_set(
                     pred_per_feat.get(field, set()), gold_per_feat.get(field, set())
                 )

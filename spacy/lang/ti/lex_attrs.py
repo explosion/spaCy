@@ -27,7 +27,7 @@ _num_words = [
     "ትሪልዮን",
     "ኳድሪልዮን",
     "ጋዚልዮን",
-    "ባዚልዮን"
+    "ባዚልዮን",
 ]
 
 # Tigrinya ordinals above 10 are the same as _num_words but start with "መበል "
@@ -41,7 +41,7 @@ _ordinal_words = [
     "ሻውዓይ",
     "ሻምናይ",
     "ታሽዓይ",
-    "ዓስራይ"
+    "ዓስራይ",
 ]
 
 

@@ -33,7 +33,9 @@ class RussianLemmatizer(Lemmatizer):
                 ) from None
             if getattr(self, "_morph", None) is None:
                 self._morph = MorphAnalyzer()
-        super().__init__(vocab, model, name, mode=mode, overwrite=overwrite, scorer=scorer)
+        super().__init__(
+            vocab, model, name, mode=mode, overwrite=overwrite, scorer=scorer
+        )
 
     def pymorphy2_lemmatize(self, token: Token) -> List[str]:
         string = token.text
