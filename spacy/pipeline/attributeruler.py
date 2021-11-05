@@ -5,15 +5,15 @@ from pathlib import Path
 
 from .pipe import Pipe
 from ..errors import Errors
-from ..training import validate_examples, Example
+from ..training import Example
 from ..language import Language
 from ..matcher import Matcher
 from ..scorer import Scorer
-from ..symbols import IDS, TAG, POS, MORPH, LEMMA
+from ..symbols import IDS
 from ..tokens import Doc, Span
 from ..tokens._retokenize import normalize_token_attrs, set_token_attrs
 from ..vocab import Vocab
-from ..util import SimpleFrozenList
+from ..util import SimpleFrozenList, registry
 from .. import util
 
 
@@ -23,9 +23,41 @@ TagMapType = Dict[str, Dict[Union[int, str], Union[int, str]]]
 MorphRulesType = Dict[str, Dict[str, Dict[Union[int, str], Union[int, str]]]]
 
 
-@Language.factory("attribute_ruler", default_config={"validate": False})
-def make_attribute_ruler(nlp: Language, name: str, validate: bool):
-    return AttributeRuler(nlp.vocab, name, validate=validate)
+@Language.factory(
+    "attribute_ruler",
+    default_config={
+        "validate": False,
+        "scorer": {"@scorers": "spacy.attribute_ruler_scorer.v1"},
+    },
+)
+def make_attribute_ruler(
+    nlp: Language, name: str, validate: bool, scorer: Optional[Callable]
+):
+    return AttributeRuler(nlp.vocab, name, validate=validate, scorer=scorer)
+
+
+def attribute_ruler_score(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
+    def morph_key_getter(token, attr):
+        return getattr(token, attr).key
+
+    results = {}
+    results.update(Scorer.score_token_attr(examples, "tag", **kwargs))
+    results.update(Scorer.score_token_attr(examples, "pos", **kwargs))
+    results.update(
+        Scorer.score_token_attr(examples, "morph", getter=morph_key_getter, **kwargs)
+    )
+    results.update(
+        Scorer.score_token_attr_per_feat(
+            examples, "morph", getter=morph_key_getter, **kwargs
+        )
+    )
+    results.update(Scorer.score_token_attr(examples, "lemma", **kwargs))
+    return results
+
+
+@registry.scorers("spacy.attribute_ruler_scorer.v1")
+def make_attribute_ruler_scorer():
+    return attribute_ruler_score
 
 
 class AttributeRuler(Pipe):
@@ -36,7 +68,12 @@ class AttributeRuler(Pipe):
     """
 
     def __init__(
-        self, vocab: Vocab, name: str = "attribute_ruler", *, validate: bool = False
+        self,
+        vocab: Vocab,
+        name: str = "attribute_ruler",
+        *,
+        validate: bool = False,
+        scorer: Optional[Callable] = attribute_ruler_score,
     ) -> None:
         """Create the AttributeRuler. After creation, you can add patterns
         with the `.initialize()` or `.add_patterns()` methods, or load patterns
@@ -45,6 +82,10 @@ class AttributeRuler(Pipe):
 
         vocab (Vocab): The vocab.
         name (str): The pipe name. Defaults to "attribute_ruler".
+        scorer (Optional[Callable]): The scoring method. Defaults to
+            Scorer.score_token_attr for the attributes "tag", "pos", "morph" and
+            "lemma" and Scorer.score_token_attr_per_feat for the attribute
+            "morph".
 
         RETURNS (AttributeRuler): The AttributeRuler component.
 
@@ -57,6 +98,7 @@ class AttributeRuler(Pipe):
         self.attrs: List[Dict] = []
         self._attrs_unnormed: List[Dict] = []  # store for reference
         self.indices: List[int] = []
+        self.scorer = scorer
 
     def clear(self) -> None:
         """Reset all patterns."""
@@ -227,45 +269,6 @@ class AttributeRuler(Pipe):
             p["index"] = self.indices[i]  # type: ignore
             all_patterns.append(p)
         return all_patterns  # type: ignore[return-value]
-
-    def score(self, examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
-        """Score a batch of examples.
-
-        examples (Iterable[Example]): The examples to score.
-        RETURNS (Dict[str, Any]): The scores, produced by
-            Scorer.score_token_attr for the attributes "tag", "pos", "morph"
-            and "lemma" for the target token attributes.
-
-        DOCS: https://spacy.io/api/tagger#score
-        """
-
-        def morph_key_getter(token, attr):
-            return getattr(token, attr).key
-
-        validate_examples(examples, "AttributeRuler.score")
-        results = {}
-        attrs = set()  # type: ignore
-        for token_attrs in self.attrs:
-            attrs.update(token_attrs)
-        for attr in attrs:
-            if attr == TAG:
-                results.update(Scorer.score_token_attr(examples, "tag", **kwargs))
-            elif attr == POS:
-                results.update(Scorer.score_token_attr(examples, "pos", **kwargs))
-            elif attr == MORPH:
-                results.update(
-                    Scorer.score_token_attr(
-                        examples, "morph", getter=morph_key_getter, **kwargs
-                    )
-                )
-                results.update(
-                    Scorer.score_token_attr_per_feat(
-                        examples, "morph", getter=morph_key_getter, **kwargs
-                    )
-                )
-            elif attr == LEMMA:
-                results.update(Scorer.score_token_attr(examples, "lemma", **kwargs))
-        return results
 
     def to_bytes(self, exclude: Iterable[str] = SimpleFrozenList()) -> bytes:
         """Serialize the AttributeRuler to a bytestring.

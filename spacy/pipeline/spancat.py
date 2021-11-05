@@ -104,6 +104,7 @@ def build_ngram_range_suggester(min_size: int, max_size: int) -> Suggester:
         "max_positive": None,
         "model": DEFAULT_SPANCAT_MODEL,
         "suggester": {"@misc": "spacy.ngram_suggester.v1", "sizes": [1, 2, 3]},
+        "scorer": {"@scorers": "spacy.spancat_scorer.v1"},
     },
     default_score_weights={"spans_sc_f": 1.0, "spans_sc_p": 0.0, "spans_sc_r": 0.0},
 )
@@ -113,8 +114,9 @@ def make_spancat(
     suggester: Suggester,
     model: Model[Tuple[List[Doc], Ragged], Floats2d],
     spans_key: str,
-    threshold: float = 0.5,
-    max_positive: Optional[int] = None,
+    scorer: Optional[Callable],
+    threshold: float,
+    max_positive: Optional[int],
 ) -> "SpanCategorizer":
     """Create a SpanCategorizer component. The span categorizer consists of two
     parts: a suggester function that proposes candidate spans, and a labeller
@@ -144,7 +146,26 @@ def make_spancat(
         threshold=threshold,
         max_positive=max_positive,
         name=name,
+        scorer=scorer,
     )
+
+
+def spancat_score(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
+    kwargs = dict(kwargs)
+    attr_prefix = "spans_"
+    key = kwargs["spans_key"]
+    kwargs.setdefault("attr", f"{attr_prefix}{key}")
+    kwargs.setdefault("allow_overlap", True)
+    kwargs.setdefault(
+        "getter", lambda doc, key: doc.spans.get(key[len(attr_prefix) :], [])
+    )
+    kwargs.setdefault("has_annotation", lambda doc: key in doc.spans)
+    return Scorer.score_spans(examples, **kwargs)
+
+
+@registry.scorers("spacy.spancat_scorer.v1")
+def make_spancat_scorer():
+    return spancat_score
 
 
 class SpanCategorizer(TrainablePipe):
@@ -163,8 +184,25 @@ class SpanCategorizer(TrainablePipe):
         spans_key: str = "spans",
         threshold: float = 0.5,
         max_positive: Optional[int] = None,
+        scorer: Optional[Callable] = spancat_score,
     ) -> None:
         """Initialize the span categorizer.
+        vocab (Vocab): The shared vocabulary.
+        model (thinc.api.Model): The Thinc Model powering the pipeline component.
+        name (str): The component instance name, used to add entries to the
+            losses during training.
+        spans_key (str): Key of the Doc.spans dict to save the spans under.
+            During initialization and training, the component will look for
+            spans on the reference document under the same key. Defaults to
+            `"spans"`.
+        threshold (float): Minimum probability to consider a prediction
+            positive. Spans with a positive prediction will be saved on the Doc.
+            Defaults to 0.5.
+        max_positive (Optional[int]): Maximum number of labels to consider
+            positive per span. Defaults to None, indicating no limit.
+        scorer (Optional[Callable]): The scoring method. Defaults to
+            Scorer.score_spans for the Doc.spans[spans_key] with overlapping
+            spans allowed.
 
         DOCS: https://spacy.io/api/spancategorizer#init
         """
@@ -178,6 +216,7 @@ class SpanCategorizer(TrainablePipe):
         self.suggester = suggester
         self.model = model
         self.name = name
+        self.scorer = scorer
 
     @property
     def key(self) -> str:
@@ -378,26 +417,6 @@ class SpanCategorizer(TrainablePipe):
             self.model.initialize(X=(docs, spans), Y=Y)
         else:
             self.model.initialize()
-
-    def score(self, examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
-        """Score a batch of examples.
-
-        examples (Iterable[Example]): The examples to score.
-        RETURNS (Dict[str, Any]): The scores, produced by Scorer.score_cats.
-
-        DOCS: https://spacy.io/api/spancategorizer#score
-        """
-        validate_examples(examples, "SpanCategorizer.score")
-        self._validate_categories(examples)
-        kwargs = dict(kwargs)
-        attr_prefix = "spans_"
-        kwargs.setdefault("attr", f"{attr_prefix}{self.key}")
-        kwargs.setdefault("allow_overlap", True)
-        kwargs.setdefault(
-            "getter", lambda doc, key: doc.spans.get(key[len(attr_prefix) :], [])
-        )
-        kwargs.setdefault("has_annotation", lambda doc: self.key in doc.spans)
-        return Scorer.score_spans(examples, **kwargs)
 
     def _validate_categories(self, examples: Iterable[Example]):
         # TODO

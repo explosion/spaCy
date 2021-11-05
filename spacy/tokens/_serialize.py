@@ -37,7 +37,7 @@ class DocBin:
         "spans": List[Dict[str, bytes]], # SpanGroups data for each doc
         "spaces": bytes, # Serialized numpy boolean array with spaces data
         "lengths": bytes, # Serialized numpy int32 array with the doc lengths
-        "strings": List[unicode] # List of unique strings in the token data
+        "strings": List[str] # List of unique strings in the token data
         "version": str, # DocBin version number
     }
 
@@ -117,7 +117,8 @@ class DocBin:
             self.strings.add(token.ent_kb_id_)
             self.strings.add(token.ent_id_)
         self.cats.append(doc.cats)
-        self.user_data.append(srsly.msgpack_dumps(doc.user_data))
+        if self.store_user_data:
+            self.user_data.append(srsly.msgpack_dumps(doc.user_data))
         self.span_groups.append(doc.spans.to_bytes())
         for key, group in doc.spans.items():
             for span in group:

@@ -1,5 +1,5 @@
 # cython: infer_types=True, profile=True, binding=True
-from typing import Optional, Union, Dict
+from typing import Optional, Union, Dict, Callable
 import srsly
 from thinc.api import SequenceCategoricalCrossentropy, Model, Config
 from itertools import islice
@@ -17,7 +17,11 @@ from .tagger import Tagger
 from .. import util
 from ..scorer import Scorer
 from ..training import validate_examples, validate_get_examples
+from ..util import registry
 
+# See #9050
+BACKWARD_OVERWRITE = True
+BACKWARD_EXTEND = False
 
 default_model_config = """
 [model]
@@ -48,15 +52,35 @@ DEFAULT_MORPH_MODEL = Config().from_str(default_model_config)["model"]
 @Language.factory(
     "morphologizer",
     assigns=["token.morph", "token.pos"],
-    default_config={"model": DEFAULT_MORPH_MODEL},
+    default_config={"model": DEFAULT_MORPH_MODEL, "overwrite": True, "extend": False, "scorer": {"@scorers": "spacy.morphologizer_scorer.v1"}},
     default_score_weights={"pos_acc": 0.5, "morph_acc": 0.5, "morph_per_feat": None},
 )
 def make_morphologizer(
     nlp: Language,
     model: Model,
     name: str,
+    overwrite: bool,
+    extend: bool,
+    scorer: Optional[Callable],
 ):
-    return Morphologizer(nlp.vocab, model, name)
+    return Morphologizer(nlp.vocab, model, name, overwrite=overwrite, extend=extend, scorer=scorer)
+
+
+def morphologizer_score(examples, **kwargs):
+    def morph_key_getter(token, attr):
+        return getattr(token, attr).key
+
+    results = {}
+    results.update(Scorer.score_token_attr(examples, "pos", **kwargs))
+    results.update(Scorer.score_token_attr(examples, "morph", getter=morph_key_getter, **kwargs))
+    results.update(Scorer.score_token_attr_per_feat(examples,
+        "morph", getter=morph_key_getter, **kwargs))
+    return results
+
+
+@registry.scorers("spacy.morphologizer_scorer.v1")
+def make_morphologizer_scorer():
+    return morphologizer_score
 
 
 class Morphologizer(Tagger):
@@ -67,6 +91,10 @@ class Morphologizer(Tagger):
         vocab: Vocab,
         model: Model,
         name: str = "morphologizer",
+        *,
+        overwrite: bool = BACKWARD_OVERWRITE,
+        extend: bool = BACKWARD_EXTEND,
+        scorer: Optional[Callable] = morphologizer_score,
     ):
         """Initialize a morphologizer.
 
@@ -74,6 +102,9 @@ class Morphologizer(Tagger):
         model (thinc.api.Model): The Thinc Model powering the pipeline component.
         name (str): The component instance name, used to add entries to the
             losses during training.
+        scorer (Optional[Callable]): The scoring method. Defaults to
+            Scorer.score_token_attr for the attributes "pos" and "morph" and
+            Scorer.score_token_attr_per_feat for the attribute "morph".
 
         DOCS: https://spacy.io/api/morphologizer#init
         """
@@ -85,8 +116,14 @@ class Morphologizer(Tagger):
         # store mappings from morph+POS labels to token-level annotations:
         # 1) labels_morph stores a mapping from morph+POS->morph
         # 2) labels_pos stores a mapping from morph+POS->POS
-        cfg = {"labels_morph": {}, "labels_pos": {}}
+        cfg = {
+            "labels_morph": {},
+            "labels_pos": {},
+            "overwrite": overwrite,
+            "extend": extend,
+        }
         self.cfg = dict(sorted(cfg.items()))
+        self.scorer = scorer
 
     @property
     def labels(self):
@@ -192,14 +229,34 @@ class Morphologizer(Tagger):
             docs = [docs]
         cdef Doc doc
         cdef Vocab vocab = self.vocab
+        cdef bint overwrite = self.cfg["overwrite"]
+        cdef bint extend = self.cfg["extend"]
         for i, doc in enumerate(docs):
             doc_tag_ids = batch_tag_ids[i]
             if hasattr(doc_tag_ids, "get"):
                 doc_tag_ids = doc_tag_ids.get()
             for j, tag_id in enumerate(doc_tag_ids):
                 morph = self.labels[tag_id]
-                doc.c[j].morph = self.vocab.morphology.add(self.cfg["labels_morph"].get(morph, 0))
-                doc.c[j].pos = self.cfg["labels_pos"].get(morph, 0)
+                # set morph
+                if doc.c[j].morph == 0 or overwrite or extend:
+                    if overwrite and extend:
+                        # morphologizer morph overwrites any existing features
+                        # while extending
+                        extended_morph = Morphology.feats_to_dict(self.vocab.strings[doc.c[j].morph])
+                        extended_morph.update(Morphology.feats_to_dict(self.cfg["labels_morph"].get(morph, 0)))
+                        doc.c[j].morph = self.vocab.morphology.add(extended_morph)
+                    elif extend:
+                        # existing features are preserved and any new features
+                        # are added
+                        extended_morph = Morphology.feats_to_dict(self.cfg["labels_morph"].get(morph, 0))
+                        extended_morph.update(Morphology.feats_to_dict(self.vocab.strings[doc.c[j].morph]))
+                        doc.c[j].morph = self.vocab.morphology.add(extended_morph)
+                    else:
+                        # clobber
+                        doc.c[j].morph = self.vocab.morphology.add(self.cfg["labels_morph"].get(morph, 0))
+                # set POS
+                if doc.c[j].pos == 0 or overwrite:
+                    doc.c[j].pos = self.cfg["labels_pos"].get(morph, 0)
 
     def get_loss(self, examples, scores):
         """Find the loss and gradient of loss for the batch of documents and
@@ -246,24 +303,3 @@ class Morphologizer(Tagger):
         if self.model.ops.xp.isnan(loss):
             raise ValueError(Errors.E910.format(name=self.name))
         return float(loss), d_scores
-
-    def score(self, examples, **kwargs):
-        """Score a batch of examples.
-
-        examples (Iterable[Example]): The examples to score.
-        RETURNS (Dict[str, Any]): The scores, produced by
-            Scorer.score_token_attr for the attributes "pos" and "morph" and
-            Scorer.score_token_attr_per_feat for the attribute "morph".
-
-        DOCS: https://spacy.io/api/morphologizer#score
-        """
-        def morph_key_getter(token, attr):
-            return getattr(token, attr).key
-
-        validate_examples(examples, "Morphologizer.score")
-        results = {}
-        results.update(Scorer.score_token_attr(examples, "pos", **kwargs))
-        results.update(Scorer.score_token_attr(examples, "morph", getter=morph_key_getter, **kwargs))
-        results.update(Scorer.score_token_attr_per_feat(examples,
-            "morph", getter=morph_key_getter, **kwargs))
-        return results

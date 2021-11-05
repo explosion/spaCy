@@ -83,7 +83,7 @@ Create a blank pipeline of a given language class. This function is the twin of
 
 | Name                                | Description                                                                                                                                                        |
 | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `name`                              | [ISO code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) of the language class to load. ~~str~~                                                           |
+| `name`                              | [IETF language tag](https://www.w3.org/International/articles/language-tags/), such as 'en', of the language class to load. ~~str~~                                |
 | _keyword-only_                      |                                                                                                                                                                    |
 | `vocab`                             | Optional shared vocab to pass in on initialization. If `True` (default), a new `Vocab` object will be created. ~~Union[Vocab, bool]~~                              |
 | `config` <Tag variant="new">3</Tag> | Optional config overrides, either as nested dict or dict keyed by section value in dot notation, e.g. `"components.name.value"`. ~~Union[Dict[str, Any], Config]~~ |
@@ -373,6 +373,7 @@ factories.
 | `optimizers`      | Registry for functions that create [optimizers](https://thinc.ai/docs/api-optimizers).                                                                                                                                                             |
 | `readers`         | Registry for file and data readers, including training and evaluation data readers like [`Corpus`](/api/corpus).                                                                                                                                   |
 | `schedules`       | Registry for functions that create [schedules](https://thinc.ai/docs/api-schedules).                                                                                                                                                               |
+| `scorers`         | Registry for functions that create scoring methods for user with the [`Scorer`](/api/scorer). Scoring methods are called with `Iterable[Example]` and arbitrary `\*\*kwargs` and return scores as `Dict[str, Any]`.                                |
 | `tokenizers`      | Registry for tokenizer factories. Registered functions should return a callback that receives the `nlp` object and returns a [`Tokenizer`](/api/tokenizer) or a custom callable.                                                                   |
 
 ### spacy-transformers registry {#registry-transformers}
@@ -410,10 +411,13 @@ finished. To log each training step, a
 [`spacy train`](/api/cli#train), including information such as the training loss
 and the accuracy scores on the development set.
 
-There are two built-in logging functions: a logger printing results to the
-console in tabular format (which is the default), and one that also sends the
-results to a [Weights & Biases](https://www.wandb.com/) dashboard. Instead of
-using one of the built-in loggers listed here, you can also
+The built-in, default logger is the ConsoleLogger, which prints results to the
+console in tabular format. The 
+[spacy-loggers](https://github.com/explosion/spacy-loggers) package, included as
+a dependency of spaCy, enables other loggers: currently it provides one that sends
+results to a [Weights & Biases](https://www.wandb.com/) dashboard.
+
+Instead of using one of the built-in loggers, you can
 [implement your own](/usage/training#custom-logging).
 
 #### spacy.ConsoleLogger.v1 {#ConsoleLogger tag="registered function"}
@@ -462,63 +466,6 @@ start decreasing across epochs.
 
  </Accordion>
 
-#### spacy.WandbLogger.v3 {#WandbLogger tag="registered function"}
-
-> #### Installation
->
-> ```bash
-> $ pip install wandb
-> $ wandb login
-> ```
-
-Built-in logger that sends the results of each training step to the dashboard of
-the [Weights & Biases](https://www.wandb.com/) tool. To use this logger, Weights
-& Biases should be installed, and you should be logged in. The logger will send
-the full config file to W&B, as well as various system information such as
-memory utilization, network traffic, disk IO, GPU statistics, etc. This will
-also include information such as your hostname and operating system, as well as
-the location of your Python executable.
-
-<Infobox variant="warning">
-
-Note that by default, the full (interpolated)
-[training config](/usage/training#config) is sent over to the W&B dashboard. If
-you prefer to **exclude certain information** such as path names, you can list
-those fields in "dot notation" in the `remove_config_values` parameter. These
-fields will then be removed from the config before uploading, but will otherwise
-remain in the config file stored on your local system.
-
-</Infobox>
-
-> #### Example config
->
-> ```ini
-> [training.logger]
-> @loggers = "spacy.WandbLogger.v3"
-> project_name = "monitor_spacy_training"
-> remove_config_values = ["paths.train", "paths.dev", "corpora.train.path", "corpora.dev.path"]
-> log_dataset_dir = "corpus"
-> model_log_interval = 1000
-> ```
-
-| Name                   | Description                                                                                                                                                                                                     |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `project_name`         | The name of the project in the Weights & Biases interface. The project will be created automatically if it doesn't exist yet. ~~str~~                                                                           |
-| `remove_config_values` | A list of values to include from the config before it is uploaded to W&B (default: empty). ~~List[str]~~                                                                                                        |
-| `model_log_interval`   | Steps to wait between logging model checkpoints to W&B dasboard (default: None). ~~Optional[int]~~                                                                                                              |
-| `log_dataset_dir`      | Directory containing dataset to be logged and versioned as W&B artifact (default: None). ~~Optional[str]~~                                                                                                      |
-| `run_name`             | The name of the run. If you don't specify a run_name, the name will be created by wandb library. (default: None ). ~~Optional[str]~~                                                                            |
-| `entity`               | An entity is a username or team name where you're sending runs. If you don't specify an entity, the run will be sent to your default entity, which is usually your username. (default: None). ~~Optional[str]~~ |
-
-<Project id="integrations/wandb">
-
-Get started with tracking your spaCy training runs in Weights & Biases using our
-project template. It trains on the IMDB Movie Review Dataset and includes a
-simple config with the built-in `WandbLogger`, as well as a custom example of
-creating variants of the config for a simple hyperparameter grid search and
-logging the results.
-
-</Project>
 
 ## Readers {#readers}
 

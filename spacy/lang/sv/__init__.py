@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Callable
 from thinc.api import Model
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .stop_words import STOP_WORDS
@@ -29,13 +29,25 @@ class Swedish(Language):
 @Swedish.factory(
     "lemmatizer",
     assigns=["token.lemma"],
-    default_config={"model": None, "mode": "rule", "overwrite": False},
+    default_config={
+        "model": None,
+        "mode": "rule",
+        "overwrite": False,
+        "scorer": {"@scorers": "spacy.lemmatizer_scorer.v1"},
+    },
     default_score_weights={"lemma_acc": 1.0},
 )
 def make_lemmatizer(
-    nlp: Language, model: Optional[Model], name: str, mode: str, overwrite: bool
+    nlp: Language,
+    model: Optional[Model],
+    name: str,
+    mode: str,
+    overwrite: bool,
+    scorer: Optional[Callable],
 ):
-    return Lemmatizer(nlp.vocab, model, name, mode=mode, overwrite=overwrite)
+    return Lemmatizer(
+        nlp.vocab, model, name, mode=mode, overwrite=overwrite, scorer=scorer
+    )
 
 
 __all__ = ["Swedish"]

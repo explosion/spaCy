@@ -42,9 +42,12 @@ architectures and their arguments and hyperparameters.
 > nlp.add_pipe("morphologizer", config=config)
 > ```
 
-| Setting | Description                                                                                             |
-| ------- | ------------------------------------------------------------------------------------------------------- |
-| `model` | The model to use. Defaults to [Tagger](/api/architectures#Tagger). ~~Model[List[Doc], List[Floats2d]]~~ |
+| Setting                                  | Description                                                                                                                                                                                                                                                            |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `model`                                  | The model to use. Defaults to [Tagger](/api/architectures#Tagger). ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                                                                |
+| `overwrite` <Tag variant="new">3.2</Tag> | Whether the values of existing features are overwritten. Defaults to `True`. ~~bool~~                                                                                                                                                                                  |
+| `extend` <Tag variant="new">3.2</Tag>    | Whether existing feature types (whose values may or may not be overwritten depending on `overwrite`) are preserved. Defaults to `False`. ~~bool~~                                                                                                                      |
+| `scorer` <Tag variant="new">3.2</Tag>    | The scoring method. Defaults to [`Scorer.score_token_attr`](/api/scorer#score_token_attr) for the attributes `"pos"` and `"morph"` and [`Scorer.score_token_attr_per_feat`](/api/scorer#score_token_attr_per_feat) for the attribute `"morph"`. ~~Optional[Callable]~~ |
 
 ```python
 %%GITHUB_SPACY/spacy/pipeline/morphologizer.pyx
@@ -55,6 +58,19 @@ architectures and their arguments and hyperparameters.
 Create a new pipeline instance. In your application, you would normally use a
 shortcut for this and instantiate the component using its string name and
 [`nlp.add_pipe`](/api/language#add_pipe).
+
+The `overwrite` and `extend` settings determine how existing annotation is
+handled (with the example for existing annotation `A=B|C=D` + predicted
+annotation `C=E|X=Y`):
+
+- `overwrite=True, extend=True`: overwrite values of existing features, add any
+  new features (`A=B|C=D` + `C=E|X=Y` &rarr; `A=B|C=E|X=Y`)
+- `overwrite=True, extend=False`: overwrite completely, removing any existing
+  features (`A=B|C=D` + `C=E|X=Y` &rarr; `C=E|X=Y`)
+- `overwrite=False, extend=True`: keep values of existing features, add any new
+  features (`A=B|C=D` + `C=E|X=Y` &rarr; `A=B|C=D|X=Y`)
+- `overwrite=False, extend=False`: do not modify the existing annotation if set
+  (`A=B|C=D` + `C=E|X=Y` &rarr; `A=B|C=D`)
 
 > #### Example
 >
@@ -71,11 +87,15 @@ shortcut for this and instantiate the component using its string name and
 > morphologizer = Morphologizer(nlp.vocab, model)
 > ```
 
-| Name    | Description                                                                                                          |
-| ------- | -------------------------------------------------------------------------------------------------------------------- |
-| `vocab` | The shared vocabulary. ~~Vocab~~                                                                                     |
-| `model` | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. ~~Model[List[Doc], List[Floats2d]]~~ |
-| `name`  | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~                  |
+| Name                                     | Description                                                                                                                                                                                                                                                            |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vocab`                                  | The shared vocabulary. ~~Vocab~~                                                                                                                                                                                                                                       |
+| `model`                                  | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                                                   |
+| `name`                                   | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~                                                                                                                                                                    |
+| _keyword-only_                           |                                                                                                                                                                                                                                                                        |
+| `overwrite` <Tag variant="new">3.2</Tag> | Whether the values of existing features are overwritten. Defaults to `True`. ~~bool~~                                                                                                                                                                                  |
+| `extend` <Tag variant="new">3.2</Tag>    | Whether existing feature types (whose values may or may not be overwritten depending on `overwrite`) are preserved. Defaults to `False`. ~~bool~~                                                                                                                      |
+| `scorer` <Tag variant="new">3.2</Tag>    | The scoring method. Defaults to [`Scorer.score_token_attr`](/api/scorer#score_token_attr) for the attributes `"pos"` and `"morph"` and [`Scorer.score_token_attr_per_feat`](/api/scorer#score_token_attr_per_feat) for the attribute `"morph"`. ~~Optional[Callable]~~ |
 
 ## Morphologizer.\_\_call\_\_ {#call tag="method"}
 

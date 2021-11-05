@@ -267,7 +267,7 @@ cdef class Token:
         """RETURNS (str): The text content of the span (with trailing
             whitespace).
         """
-        cdef unicode orth = self.vocab.strings[self.c.lex.orth]
+        cdef str orth = self.vocab.strings[self.c.lex.orth]
         if self.c.spacy:
             return orth + " "
         else:
@@ -820,7 +820,7 @@ cdef class Token:
         def __get__(self):
             return self.vocab.strings[self.norm]
 
-        def __set__(self, unicode norm_):
+        def __set__(self, str norm_):
             self.c.norm = self.vocab.strings.add(norm_)
 
     @property
@@ -858,7 +858,7 @@ cdef class Token:
         def __get__(self):
             return self.vocab.strings[self.c.lemma]
 
-        def __set__(self, unicode lemma_):
+        def __set__(self, str lemma_):
             self.c.lemma = self.vocab.strings.add(lemma_)
 
     property pos_:
@@ -892,7 +892,7 @@ cdef class Token:
         def __get__(self):
             return self.vocab.strings[self.c.dep]
 
-        def __set__(self, unicode label):
+        def __set__(self, str label):
             self.c.dep = self.vocab.strings.add(label)
 
     @property

@@ -12,21 +12,41 @@ from ..lookups import Lookups, load_lookups
 from ..scorer import Scorer
 from ..tokens import Doc, Token
 from ..vocab import Vocab
-from ..training import validate_examples
-from ..util import logger, SimpleFrozenList
+from ..util import logger, SimpleFrozenList, registry
 from .. import util
 
 
 @Language.factory(
     "lemmatizer",
     assigns=["token.lemma"],
-    default_config={"model": None, "mode": "lookup", "overwrite": False},
+    default_config={
+        "model": None,
+        "mode": "lookup",
+        "overwrite": False,
+        "scorer": {"@scorers": "spacy.lemmatizer_scorer.v1"},
+    },
     default_score_weights={"lemma_acc": 1.0},
 )
 def make_lemmatizer(
-    nlp: Language, model: Optional[Model], name: str, mode: str, overwrite: bool = False
+    nlp: Language,
+    model: Optional[Model],
+    name: str,
+    mode: str,
+    overwrite: bool,
+    scorer: Optional[Callable],
 ):
-    return Lemmatizer(nlp.vocab, model, name, mode=mode, overwrite=overwrite)
+    return Lemmatizer(
+        nlp.vocab, model, name, mode=mode, overwrite=overwrite, scorer=scorer
+    )
+
+
+def lemmatizer_score(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
+    return Scorer.score_token_attr(examples, "lemma", **kwargs)
+
+
+@registry.scorers("spacy.lemmatizer_scorer.v1")
+def make_lemmatizer_scorer():
+    return lemmatizer_score
 
 
 class Lemmatizer(Pipe):
@@ -60,6 +80,7 @@ class Lemmatizer(Pipe):
         *,
         mode: str = "lookup",
         overwrite: bool = False,
+        scorer: Optional[Callable] = lemmatizer_score,
     ) -> None:
         """Initialize a Lemmatizer.
 
@@ -69,6 +90,8 @@ class Lemmatizer(Pipe):
         mode (str): The lemmatizer mode: "lookup", "rule". Defaults to "lookup".
         overwrite (bool): Whether to overwrite existing lemmas. Defaults to
             `False`.
+        scorer (Optional[Callable]): The scoring method. Defaults to
+            Scorer.score_token_attr for the attribute "lemma".
 
         DOCS: https://spacy.io/api/lemmatizer#init
         """
@@ -89,6 +112,7 @@ class Lemmatizer(Pipe):
                 raise ValueError(Errors.E1003.format(mode=mode))
             self.lemmatize = getattr(self, mode_attr)
         self.cache = {}  # type: ignore[var-annotated]
+        self.scorer = scorer
 
     @property
     def mode(self):
@@ -246,17 +270,6 @@ class Lemmatizer(Pipe):
         DOCS: https://spacy.io/api/lemmatizer#is_base_form
         """
         return False
-
-    def score(self, examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
-        """Score a batch of examples.
-
-        examples (Iterable[Example]): The examples to score.
-        RETURNS (Dict[str, Any]): The scores.
-
-        DOCS: https://spacy.io/api/lemmatizer#score
-        """
-        validate_examples(examples, "Lemmatizer.score")
-        return Scorer.score_token_attr(examples, "lemma", **kwargs)
 
     def to_disk(
         self, path: Union[str, Path], *, exclude: Iterable[str] = SimpleFrozenList()
