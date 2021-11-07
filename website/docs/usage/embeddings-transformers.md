@@ -714,10 +714,13 @@ subnetwork** within one of your components, and add additional layers to build a
 network for a temporary task that forces the model to learn something about
 sentence structure and word cooccurrence statistics.
 
-Pretraining produces a **binary weights file** that can be loaded back in at the
-start of training, using the configuration option `initialize.init_tok2vec`.
-The weights file specifies an initial set of weights. Training then proceeds as
-normal.
+Pretraining produces a **binary weights file** that can be loaded back in at
+the start of training, using the configuration option
+`initialize.init_tok2vec`.  The weights file specifies an initial set of
+weights. Training then proceeds as normal. Note that if you fill this value in
+before running pretraining, the command will fail because the file doesn't
+exist yet. You can just update your config file after pretraining finishes, or
+supply the value as a command line override when training.
 
 You can only pretrain one subnetwork from your pipeline at a time, and the
 subnetwork must be typed ~~Model[List[Doc], List[Floats2d]]~~ (i.e. it has to be
