@@ -221,7 +221,7 @@ class JsonlCorpus:
 
     def __init__(
         self,
-        path: Union[str, Path],
+        path: Optional[Union[str, Path]],
         *,
         limit: int = 0,
         min_length: int = 0,
