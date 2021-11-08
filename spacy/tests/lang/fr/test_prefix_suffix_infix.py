@@ -4,6 +4,7 @@ from spacy.lang.punctuation import TOKENIZER_INFIXES
 from spacy.lang.char_classes import ALPHA
 
 
+@pytest.mark.issue(768)
 @pytest.mark.parametrize(
     "text,expected_tokens", [("l'avion", ["l'", "avion"]), ("j'ai", ["j'", "ai"])]
 )

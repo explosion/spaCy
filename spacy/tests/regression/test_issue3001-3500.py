@@ -14,6 +14,7 @@ from spacy.vectors import Vectors
 import numpy
 
 
+@pytest.mark.issue(3002)
 def test_issue3002():
     """Test that the tokenizer doesn't hang on a long list of dots"""
     nlp = German()
@@ -23,6 +24,7 @@ def test_issue3002():
     assert len(doc) == 5
 
 
+@pytest.mark.issue(3009)
 def test_issue3009(en_vocab):
     """Test problem with matcher quantifiers"""
     patterns = [
@@ -53,6 +55,7 @@ def test_issue3009(en_vocab):
         assert matches
 
 
+@pytest.mark.issue(3012)
 def test_issue3012(en_vocab):
     """Test that the is_tagged attribute doesn't get overwritten when we from_array
     without tag information."""
@@ -74,6 +77,7 @@ def test_issue3012(en_vocab):
     assert (doc2[2].text, doc2[2].pos_, doc2[2].tag_, doc2[2].ent_type_) == expected
 
 
+@pytest.mark.issue(3199)
 def test_issue3199():
     """Test that Span.noun_chunks works correctly if no noun chunks iterator
     is available. To make this test future-proof, we're constructing a Doc
@@ -85,6 +89,7 @@ def test_issue3199():
         list(doc[0:3].noun_chunks)
 
 
+@pytest.mark.issue(3209)
 def test_issue3209():
     """Test issue that occurred in spaCy nightly where NER labels were being
     mapped to classes incorrectly after loading the model, when the labels
@@ -104,6 +109,7 @@ def test_issue3209():
     assert ner2.move_names == move_names
 
 
+@pytest.mark.issue(3248)
 def test_issue3248_1():
     """Test that the PhraseMatcher correctly reports its number of rules, not
     total number of patterns."""
@@ -114,6 +120,7 @@ def test_issue3248_1():
     assert len(matcher) == 2
 
 
+@pytest.mark.issue(3248)
 def test_issue3248_2():
     """Test that the PhraseMatcher can be pickled correctly."""
     nlp = English()
@@ -125,6 +132,7 @@ def test_issue3248_2():
     assert len(new_matcher) == len(matcher)
 
 
+@pytest.mark.issue(3277)
 def test_issue3277(es_tokenizer):
     """Test that hyphens are split correctly as prefixes."""
     doc = es_tokenizer("—Yo me llamo... –murmuró el niño– Emilio Sánchez Pérez.")
@@ -134,6 +142,7 @@ def test_issue3277(es_tokenizer):
     assert doc[9].text == "\u2013"
 
 
+@pytest.mark.issue(3288)
 def test_issue3288(en_vocab):
     """Test that retokenization works correctly via displaCy when punctuation
     is merged onto the preceeding token and tensor is resized."""
@@ -145,6 +154,7 @@ def test_issue3288(en_vocab):
     displacy.render(doc)
 
 
+@pytest.mark.issue(3289)
 def test_issue3289():
     """Test that Language.to_bytes handles serializing a pipeline component
     with an uninitialized model."""
@@ -156,6 +166,7 @@ def test_issue3289():
     new_nlp.from_bytes(bytes_data)
 
 
+@pytest.mark.issue(3328)
 def test_issue3328(en_vocab):
     doc = Doc(en_vocab, words=["Hello", ",", "how", "are", "you", "doing", "?"])
     matcher = Matcher(en_vocab)
@@ -170,6 +181,7 @@ def test_issue3328(en_vocab):
     assert matched_texts == ["Hello", "how", "you", "doing"]
 
 
+@pytest.mark.issue(3331)
 def test_issue3331(en_vocab):
     """Test that duplicate patterns for different rules result in multiple
     matches, one per rule.
@@ -184,6 +196,7 @@ def test_issue3331(en_vocab):
     assert sorted(match_ids) == ["A", "B"]
 
 
+@pytest.mark.issue(3345)
 def test_issue3345():
     """Test case where preset entity crosses sentence boundary."""
     nlp = English()
@@ -206,6 +219,7 @@ def test_issue3345():
     assert ner.moves.is_valid(state, "B-GPE")
 
 
+@pytest.mark.issue(3412)
 def test_issue3412():
     data = numpy.asarray([[0, 0, 0], [1, 2, 3], [9, 8, 7]], dtype="f")
     vectors = Vectors(data=data, keys=["A", "B", "C"])
@@ -216,6 +230,7 @@ def test_issue3412():
 
 
 @pytest.mark.skip(reason="default suffix rules avoid one upper-case letter before dot")
+@pytest.mark.issue(3449)
 def test_issue3449():
     nlp = English()
     nlp.add_pipe("sentencizer")
@@ -230,6 +245,7 @@ def test_issue3449():
     assert t3[5].text == "I"
 
 
+@pytest.mark.issue(3456)
 def test_issue3456():
     # this crashed because of a padding error in layer.ops.unflatten in thinc
     nlp = English()
@@ -239,6 +255,7 @@ def test_issue3456():
     list(nlp.pipe(["hi", ""]))
 
 
+@pytest.mark.issue(3468)
 def test_issue3468():
     """Test that sentence boundaries are set correctly so Doc.has_annotation("SENT_START") can
     be restored after serialization."""

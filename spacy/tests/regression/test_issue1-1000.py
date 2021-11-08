@@ -12,6 +12,7 @@ from spacy.tokens import Doc, Span
 from ..util import make_tempdir
 
 
+@pytest.mark.issue(118)
 @pytest.mark.parametrize(
     "patterns",
     [
@@ -39,6 +40,7 @@ def test_issue118(en_tokenizer, patterns):
     assert ents[0].end == 11
 
 
+@pytest.mark.issue(118)
 @pytest.mark.parametrize(
     "patterns",
     [
@@ -66,6 +68,7 @@ def test_issue118_prefix_reorder(en_tokenizer, patterns):
     assert ents[0].end == 11
 
 
+@pytest.mark.issue(242)
 def test_issue242(en_tokenizer):
     """Test overlapping multi-word phrases."""
     text = "There are different food safety standards in different countries."
@@ -88,6 +91,7 @@ def test_issue242(en_tokenizer):
         doc.ents += tuple(matches)
 
 
+@pytest.mark.issue(309)
 def test_issue309(en_vocab):
     """Test Issue #309: SBD fails on empty string"""
     doc = Doc(en_vocab, words=[" "], heads=[0], deps=["ROOT"])
@@ -96,6 +100,7 @@ def test_issue309(en_vocab):
     assert len(sents) == 1
 
 
+@pytest.mark.issue(351)
 def test_issue351(en_tokenizer):
     doc = en_tokenizer("   This is a cat.")
     assert doc[0].idx == 0
@@ -103,12 +108,14 @@ def test_issue351(en_tokenizer):
     assert doc[1].idx == 3
 
 
+@pytest.mark.issue(360)
 def test_issue360(en_tokenizer):
     """Test tokenization of big ellipsis"""
     tokens = en_tokenizer("$45...............Asking")
     assert len(tokens) > 2
 
 
+@pytest.mark.issue(361)
 @pytest.mark.parametrize("text1,text2", [("cat", "dog")])
 def test_issue361(en_vocab, text1, text2):
     """Test Issue #361: Equality of lexemes"""
@@ -116,6 +123,7 @@ def test_issue361(en_vocab, text1, text2):
     assert en_vocab[text1] != en_vocab[text2]
 
 
+@pytest.mark.issue(587)
 def test_issue587(en_tokenizer):
     """Test that Matcher doesn't segfault on particular input"""
     doc = en_tokenizer("a b; c")
@@ -131,12 +139,14 @@ def test_issue587(en_tokenizer):
     assert len(matches) == 2
 
 
+@pytest.mark.issue(588)
 def test_issue588(en_vocab):
     matcher = Matcher(en_vocab)
     with pytest.raises(ValueError):
         matcher.add("TEST", [[]])
 
 
+@pytest.mark.issue(590)
 def test_issue590(en_vocab):
     """Test overlapping matches"""
     doc = Doc(en_vocab, words=["n", "=", "1", ";", "a", ":", "5", "%"])
@@ -149,6 +159,7 @@ def test_issue590(en_vocab):
     assert len(matches) == 2
 
 
+@pytest.mark.issue(595)
 @pytest.mark.skip(reason="Old vocab-based lemmatization")
 def test_issue595():
     """Test lemmatization of base forms"""
@@ -164,6 +175,7 @@ def test_issue595():
     assert doc[2].lemma_ == "feed"
 
 
+@pytest.mark.issue(599)
 def test_issue599(en_vocab):
     doc = Doc(en_vocab)
     doc2 = Doc(doc.vocab)
@@ -171,12 +183,14 @@ def test_issue599(en_vocab):
     assert doc2.has_annotation("DEP")
 
 
+@pytest.mark.issue(600)
 def test_issue600():
     vocab = Vocab(tag_map={"NN": {"pos": "NOUN"}})
     doc = Doc(vocab, words=["hello"])
     doc[0].tag_ = "NN"
 
 
+@pytest.mark.issue(615)
 def test_issue615(en_tokenizer):
     def merge_phrases(matcher, doc, i, matches):
         """Merge a phrase. We have to be careful here because we'll change the
@@ -204,6 +218,7 @@ def test_issue615(en_tokenizer):
     assert entities[0].label != 0
 
 
+@pytest.mark.issue(736)
 @pytest.mark.parametrize("text,number", [("7am", "7"), ("11p.m.", "11")])
 def test_issue736(en_tokenizer, text, number):
     """Test that times like "7am" are tokenized correctly and that numbers are
@@ -213,6 +228,7 @@ def test_issue736(en_tokenizer, text, number):
     assert tokens[0].text == number
 
 
+@pytest.mark.issue(740)
 @pytest.mark.parametrize("text", ["3/4/2012", "01/12/1900"])
 def test_issue740(en_tokenizer, text):
     """Test that dates are not split and kept as one token. This behaviour is
@@ -222,6 +238,7 @@ def test_issue740(en_tokenizer, text):
     assert len(tokens) == 1
 
 
+@pytest.mark.issue(743)
 def test_issue743():
     doc = Doc(Vocab(), ["hello", "world"])
     token = doc[0]
@@ -230,6 +247,7 @@ def test_issue743():
     assert items[0] is token
 
 
+@pytest.mark.issue(744)
 @pytest.mark.parametrize("text", ["We were scared", "We Were Scared"])
 def test_issue744(en_tokenizer, text):
     """Test that 'were' and 'Were' are excluded from the contractions
@@ -239,6 +257,7 @@ def test_issue744(en_tokenizer, text):
     assert tokens[1].text.lower() == "were"
 
 
+@pytest.mark.issue(759)
 @pytest.mark.parametrize(
     "text,is_num", [("one", True), ("ten", True), ("teneleven", False)]
 )
@@ -247,6 +266,7 @@ def test_issue759(en_tokenizer, text, is_num):
     assert tokens[0].like_num == is_num
 
 
+@pytest.mark.issue(775)
 @pytest.mark.parametrize("text", ["Shell", "shell", "Shed", "shed"])
 def test_issue775(en_tokenizer, text):
     """Test that 'Shell' and 'shell' are excluded from the contractions
@@ -256,6 +276,7 @@ def test_issue775(en_tokenizer, text):
     assert tokens[0].text == text
 
 
+@pytest.mark.issue(792)
 @pytest.mark.parametrize("text", ["This is a string ", "This is a string\u0020"])
 def test_issue792(en_tokenizer, text):
     """Test for Issue #792: Trailing whitespace is removed after tokenization."""
@@ -263,6 +284,7 @@ def test_issue792(en_tokenizer, text):
     assert "".join([token.text_with_ws for token in doc]) == text
 
 
+@pytest.mark.issue(792)
 @pytest.mark.parametrize("text", ["This is a string", "This is a string\n"])
 def test_control_issue792(en_tokenizer, text):
     """Test base case for Issue #792: Non-trailing whitespace"""
@@ -270,6 +292,7 @@ def test_control_issue792(en_tokenizer, text):
     assert "".join([token.text_with_ws for token in doc]) == text
 
 
+@pytest.mark.issue(801)
 @pytest.mark.skip(
     reason="Can not be fixed unless with variable-width lookbehinds, cf. PR #3218"
 )
@@ -292,6 +315,7 @@ def test_issue801(en_tokenizer, text, tokens):
     assert [t.text for t in doc] == tokens
 
 
+@pytest.mark.issue(805)
 @pytest.mark.parametrize(
     "text,expected_tokens",
     [
@@ -311,6 +335,7 @@ def test_issue805(sv_tokenizer, text, expected_tokens):
     assert expected_tokens == token_list
 
 
+@pytest.mark.issue(850)
 def test_issue850():
     """The variable-length pattern matches the succeeding token. Check we
     handle the ambiguity correctly."""
@@ -326,6 +351,7 @@ def test_issue850():
     assert end == 4
 
 
+@pytest.mark.issue(850)
 def test_issue850_basic():
     """Test Matcher matches with '*' operator and Boolean flag"""
     vocab = Vocab(lex_attr_getters={LOWER: lambda string: string.lower()})
@@ -340,6 +366,7 @@ def test_issue850_basic():
     assert end == 4
 
 
+@pytest.mark.issue(852)
 @pytest.mark.skip(
     reason="French exception list is not enabled in the default tokenizer anymore"
 )
@@ -352,6 +379,7 @@ def test_issue852(fr_tokenizer, text):
     assert len(tokens) == 1
 
 
+@pytest.mark.issue(859)
 @pytest.mark.parametrize(
     "text", ["aaabbb@ccc.com\nThank you!", "aaabbb@ccc.com \nThank you!"]
 )
@@ -361,6 +389,7 @@ def test_issue859(en_tokenizer, text):
     assert doc.text == text
 
 
+@pytest.mark.issue(886)
 @pytest.mark.parametrize("text", ["Datum:2014-06-02\nDokument:76467"])
 def test_issue886(en_tokenizer, text):
     """Test that token.idx matches the original text index for texts with newlines."""
@@ -370,6 +399,7 @@ def test_issue886(en_tokenizer, text):
         assert text[token.idx] == token.text[0]
 
 
+@pytest.mark.issue(891)
 @pytest.mark.parametrize("text", ["want/need"])
 def test_issue891(en_tokenizer, text):
     """Test that / infixes are split correctly."""
@@ -378,6 +408,7 @@ def test_issue891(en_tokenizer, text):
     assert tokens[1].text == "/"
 
 
+@pytest.mark.issue(912)
 @pytest.mark.skip(reason="Old vocab-based lemmatization")
 @pytest.mark.parametrize(
     "text,tag,lemma",
@@ -390,6 +421,7 @@ def test_issue912(en_vocab, text, tag, lemma):
     assert doc[0].lemma_ == lemma
 
 
+@pytest.mark.issue(957)
 @pytest.mark.slow
 def test_issue957(en_tokenizer):
     """Test that spaCy doesn't hang on many punctuation characters.
@@ -405,6 +437,7 @@ def test_issue957(en_tokenizer):
         assert doc
 
 
+@pytest.mark.issue(999)
 def test_issue999():
     """Test that adding entities and resuming training works passably OK.
     There are two issues here:

@@ -13,6 +13,7 @@ from ..util import add_vecs_to_vocab
 @pytest.mark.skip(
     reason="Can not be fixed without iterative looping between prefix/suffix and infix"
 )
+@pytest.mark.issue(2070)
 def test_issue2070():
     """Test that checks that a dot followed by a quote is handled
     appropriately.
@@ -25,6 +26,7 @@ def test_issue2070():
     assert len(doc) == 11
 
 
+@pytest.mark.issue(2179)
 def test_issue2179():
     """Test that spurious 'extra_labels' aren't created when initializing NER."""
     nlp = Italian()
@@ -41,6 +43,7 @@ def test_issue2179():
     assert nlp2.get_pipe("ner").labels == ("CITIZENSHIP",)
 
 
+@pytest.mark.issue(2203)
 def test_issue2203(en_vocab):
     """Test that lemmas are set correctly in doc.from_array."""
     words = ["I", "'ll", "survive"]
@@ -61,6 +64,7 @@ def test_issue2203(en_vocab):
     assert [t.lemma_ for t in new_doc] == lemmas
 
 
+@pytest.mark.issue(2219)
 def test_issue2219(en_vocab):
     vectors = [("a", [1, 2, 3]), ("letter", [4, 5, 6])]
     add_vecs_to_vocab(en_vocab, vectors)
@@ -69,6 +73,7 @@ def test_issue2219(en_vocab):
     assert doc[0].similarity(doc[1]) == doc[1].similarity(doc[0])
 
 
+@pytest.mark.issue(2361)
 def test_issue2361(de_vocab):
     chars = ("&lt;", "&gt;", "&amp;", "&quot;")
     words = ["<", ">", "&", '"']
@@ -78,6 +83,7 @@ def test_issue2361(de_vocab):
         assert char in html
 
 
+@pytest.mark.issue(2385)
 def test_issue2385():
     """Test that IOB tags are correctly converted to BILUO tags."""
     # fix bug in labels with a 'b' character
@@ -99,11 +105,13 @@ def test_issue2385():
         ("U-BRAWLER", "U-BRAWLER"),
     ],
 )
+@pytest.mark.issue(2385)
 def test_issue2385_biluo(tags):
     """Test that BILUO-compatible tags aren't modified."""
     assert iob_to_biluo(tags) == list(tags)
 
 
+@pytest.mark.issue(2396)
 def test_issue2396(en_vocab):
     words = ["She", "created", "a", "test", "for", "spacy"]
     heads = [1, 1, 3, 1, 3, 4]
@@ -125,6 +133,7 @@ def test_issue2396(en_vocab):
     assert (span.get_lca_matrix() == matrix).all()
 
 
+@pytest.mark.issue(2464)
 def test_issue2464(en_vocab):
     """Test problem with successive ?. This is the same bug, so putting it here."""
     matcher = Matcher(en_vocab)
@@ -134,6 +143,7 @@ def test_issue2464(en_vocab):
     assert len(matches) == 3
 
 
+@pytest.mark.issue(2482)
 def test_issue2482():
     """Test we can serialize and deserialize a blank NER or parser model."""
     nlp = Italian()

@@ -1,3 +1,4 @@
+import pytest
 from spacy.cli.evaluate import print_textcats_auc_per_cat, print_prf_per_type
 from spacy.lang.en import English
 from spacy.training import Example
@@ -13,6 +14,7 @@ from wasabi import msg
 from ..util import make_tempdir
 
 
+@pytest.mark.issue(7019)
 def test_issue7019():
     scores = {"LABEL_A": 0.39829102, "LABEL_B": 0.938298329382, "LABEL_C": None}
     print_textcats_auc_per_cat(msg, scores)
@@ -64,6 +66,7 @@ upstream = "*"
 """
 
 
+@pytest.mark.issue(7029)
 def test_issue7029():
     """Test that an empty document doesn't mess up an entire batch."""
     TRAIN_DATA = [
@@ -84,6 +87,7 @@ def test_issue7029():
     assert [doc[0].tag_ for doc in docs1[:-1]] == [doc[0].tag_ for doc in docs2[:-1]]
 
 
+@pytest.mark.issue(7055)
 def test_issue7055():
     """Test that fill-config doesn't turn sourced components into factories."""
     source_cfg = {
@@ -118,6 +122,7 @@ def test_issue7055():
     assert "model" in filled_cfg["components"]["ner"]
 
 
+@pytest.mark.issue(7056)
 def test_issue7056():
     """Test that the Unshift transition works properly, and doesn't cause
     sentence segmentation errors."""
@@ -190,6 +195,7 @@ def test_partial_links():
     assert "ORG" not in results["nel_f_per_type"]
 
 
+@pytest.mark.issue(7065)
 def test_issue7065():
     text = "Kathleen Battle sang in Mahler 's Symphony No. 8 at the Cincinnati Symphony Orchestra 's May Festival."
     nlp = English()
@@ -217,6 +223,7 @@ def test_issue7065():
     assert sentences.index(ent.sent) == 0
 
 
+@pytest.mark.issue(7065)
 def test_issue7065_b():
     # Test that the NEL doesn't crash when an entity crosses a sentence boundary
     nlp = English()

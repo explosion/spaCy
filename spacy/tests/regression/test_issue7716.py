@@ -43,6 +43,7 @@ def parser(vocab):
     return parser
 
 
+@pytest.mark.issue(7716)
 @pytest.mark.xfail(reason="Not fixed yet")
 def test_partial_annotation(parser):
     doc = Doc(parser.vocab, words=["a", "b", "c", "d"])
