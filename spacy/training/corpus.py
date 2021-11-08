@@ -41,7 +41,7 @@ def create_docbin_reader(
 
 @util.registry.readers("spacy.JsonlCorpus.v1")
 def create_jsonl_reader(
-    path: Union[None, str, Path], min_length: int = 0, max_length: int = 0, limit: int = 0
+    path: Optional[Union[str, Path]], min_length: int = 0, max_length: int = 0, limit: int = 0
 ) -> Callable[["Language"], Iterable[Example]]:
     return JsonlCorpus(path, min_length=min_length, max_length=max_length, limit=limit)
 
