@@ -750,7 +750,7 @@ cdef attr_t get_ent_id(const TokenPatternC* pattern) nogil:
     return id_attr.value
 
 
-def _preprocess_pattern(token_specs, vocab, extensions_table, extra_predicates)
+def _preprocess_pattern(token_specs, vocab, extensions_table, extra_predicates):
     """This function interprets the pattern, converting the various bits of
     syntactic sugar before we compile it into a struct with init_pattern.
 
@@ -783,7 +783,7 @@ def _preprocess_pattern(token_specs, vocab, extensions_table, extra_predicates)
     return tokens
 
 
-def _get_attr_values(spec, string_store)
+def _get_attr_values(spec, string_store):
     attr_values = []
     for attr, value in spec.items():
         orig_attr = attr
