@@ -18,7 +18,7 @@ from ..tokens.doc cimport Doc, get_token_attr_for_matcher
 from ..tokens.span cimport Span
 from ..tokens.token cimport Token
 from ..tokens.morphanalysis cimport MorphAnalysis
-from ..attrs cimport ID, attr_id_t, NULL_ATTR, ORTH, POS, TAG, DEP, LEMMA, MORPH
+from ..attrs cimport ID, attr_id_t, NULL_ATTR, ORTH, POS, TAG, DEP, LEMMA, MORPH, ENT_IOB
 
 from ..schemas import validate_token_pattern
 from ..errors import Errors, MatchPatternError, Warnings
@@ -786,7 +786,6 @@ def _preprocess_pattern(token_specs, vocab, extensions_table, extra_predicates):
 def _get_attr_values(spec, string_store):
     attr_values = []
     for attr, value in spec.items():
-        orig_attr = attr
         if isinstance(attr, str):
             attr = attr.upper()
             if attr == '_':
@@ -801,7 +800,7 @@ def _get_attr_values(spec, string_store):
                 ent_iob = True
             attr = IDS.get(attr)
         if isinstance(value, str):
-            if orig_attr == "ENT_IOB" and value in Token.iob_strings():
+            if attr == ENT_IOB and value in Token.iob_strings():
                 value = iob_strings.index(value)
             else:
                 value = string_store.add(value)
