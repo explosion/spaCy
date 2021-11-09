@@ -642,3 +642,16 @@ def test_matcher_no_zero_length(en_vocab):
     matcher = Matcher(en_vocab)
     matcher.add("TEST", [[{"TAG": "C", "OP": "?"}]])
     assert len(matcher(doc)) == 0
+
+
+def test_matcher_ent_iob_key(en_vocab):
+    """Test that patterns with ent_iob works correctly."""
+    matcher = Matcher(en_vocab)
+    matcher.add("Rule", [[{"ENT_IOB": "I"}]])
+    doc1 = Doc(en_vocab, words=["I", "visited", "New", "York", "and", "California"])
+    doc2 = Doc(en_vocab, words=["I", "visited", "my", "friend", "Alicia"])
+    matches1 = [doc1[start:end].text for _, start, end in matcher(doc1)]
+    matches2 = [doc2[start:end].text for _, start, end in matcher(doc2)]
+    assert len(matches1) == 1
+    assert matches1[0] == "York"
+    assert len(matches2) == 0
