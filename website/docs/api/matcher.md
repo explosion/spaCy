@@ -44,6 +44,7 @@ rule-based matching are:
 | `SPACY`                                         | Token has a trailing space. ~~bool~~                                                                                      |
 |  `POS`, `TAG`, `MORPH`, `DEP`, `LEMMA`, `SHAPE` | The token's simple and extended part-of-speech tag, morphological analysis, dependency label, lemma, shape. ~~str~~       |
 | `ENT_TYPE`                                      | The token's entity label. ~~str~~                                                                                         |
+| `ENT_IOB`                                       | The IOB part of the token's entity tag. ~~str~~                                                                           |
 | `_` <Tag variant="new">2.1</Tag>                | Properties in [custom extension attributes](/usage/processing-pipelines#custom-components-attributes). ~~Dict[str, Any]~~ |
 | `OP`                                            | Operator or quantifier to determine how often to match a token pattern. ~~str~~                                           |
 
