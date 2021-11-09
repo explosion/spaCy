@@ -784,7 +784,6 @@ def _preprocess_pattern(token_specs, vocab, extensions_table, extra_predicates):
 
 
 def _get_attr_values(spec, string_store):
-    iob_strings = Token.iob_strings()
     attr_values = []
     for attr, value in spec.items():
         if isinstance(attr, str):
@@ -797,12 +796,11 @@ def _get_attr_values(spec, string_store):
                 attr = "ORTH"
             if attr == "IS_SENT_START":
                 attr = "SENT_START"
-            if attr == "ENT_IOB":
                 ent_iob = True
             attr = IDS.get(attr)
         if isinstance(value, str):
-            if attr == ENT_IOB and value in iob_strings:
-                value = iob_strings.index(value)
+            if attr == ENT_IOB and value in Token.iob_strings():
+                value = Token.iob_strings().index(value)
             else:
                 value = string_store.add(value)
         elif isinstance(value, bool):
