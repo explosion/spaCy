@@ -16,6 +16,7 @@ from spacy.lang.en import English
 from spacy.lang.nl import Dutch
 from spacy.language import DEFAULT_CONFIG_PATH
 from spacy.schemas import ConfigSchemaTraining
+from spacy.util import minibatch_on_chars
 
 from thinc.api import get_current_ops, NumpyOps, CupyOps
 
@@ -287,6 +288,23 @@ def test_util_minibatch_oversize(doc_sizes, expected_batches):
     batch_size = 1000
     batches = list(
         minibatch_by_words(docs, size=batch_size, tolerance=tol, discard_oversize=False)
+    )
+    assert [len(batch) for batch in batches] == expected_batches
+
+
+@pytest.mark.parametrize(
+    "doc_sizes, expected_batches",
+    [
+        ([200, 100, 100], [1, 2]),
+        ([200, 50, 50, 50, 50], [1, 4]),
+        ([200, 50, 50, 50, 50, 50], [1, 4, 1]),
+        ([200, 200, 100, 100, 100, 50, 50], [1, 1, 2, 3]),
+    ],
+)
+def test_util_minibatch_on_chars(doc_sizes, expected_batches):
+    docs = [get_random_doc(doc_size) for doc_size in doc_sizes]
+    batches = list(
+        minibatch_on_chars(docs, chars_threshold=600)
     )
     assert [len(batch) for batch in batches] == expected_batches
 

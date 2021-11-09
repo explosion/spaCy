@@ -1,5 +1,5 @@
 from typing import List, Mapping, NoReturn, Union, Dict, Any, Set
-from typing import Optional, Iterable, Callable, Tuple, Type
+from typing import Optional, Iterable, Callable, Tuple, cast
 from typing import Iterator, Type, Pattern, Generator, TYPE_CHECKING
 from types import ModuleType
 import os
@@ -1534,7 +1534,7 @@ def create_default_optimizer() -> Optimizer:
     return Adam()
 
 
-def minibatch(items, size):
+def minibatch(items: Iterable[Union[str, "Doc"]], size: int) -> Iterable[List[Union[str, "Doc"]]]:
     """Iterate over batches of items. `size` may be an iterator,
     so that batch-size can vary on each step.
     """
@@ -1549,6 +1549,32 @@ def minibatch(items, size):
         if len(batch) == 0:
             break
         yield list(batch)
+
+
+def minibatch_on_chars(items: Iterable[Union[str, "Doc"]], chars_threshold: int) -> Iterable[List[Union[str, "Doc"]]]:
+    """Iterate over batches of items. A single item whose total characters
+    is equal to or above the threshold will be packed in one batch while the
+    total characters of a multi-item batch should not exceed the threshold.
+    """
+    batch: List = []
+    num_of_chars = 0
+    for item in items:
+        if isinstance(item, str):
+            item = cast(str, item)
+            additional = len(item)
+        else:
+            item = cast("Doc", item)
+            additional = len(item.text)
+        if (num_of_chars + additional) > chars_threshold:
+            if batch:
+                yield batch
+            batch = [item]
+            num_of_chars = additional
+        else:
+            batch.append(item)
+            num_of_chars += additional
+    if batch:
+        yield batch
 
 
 def is_cython_func(func: Callable) -> bool:

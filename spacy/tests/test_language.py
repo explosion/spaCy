@@ -204,6 +204,18 @@ def test_language_pipe_stream(nlp2, n_process, texts):
 
 
 @pytest.mark.parametrize("n_process", [1, 2])
+def test_language_pipe_batch_on_chars(nlp2, n_process, texts):
+    ops = get_current_ops()
+    if isinstance(ops, NumpyOps) or n_process < 2:
+        texts = texts * 10
+        expecteds = [nlp2(text) for text in texts]
+        docs = nlp2.pipe(texts, n_process=n_process, batched_chars_threshold=40)
+
+        for doc, expected_doc in zip(docs, expecteds):
+            assert_docs_equal(doc, expected_doc)
+
+
+@pytest.mark.parametrize("n_process", [1, 2])
 def test_language_pipe_error_handler(n_process):
     """Test that the error handling of nlp.pipe works well"""
     ops = get_current_ops()

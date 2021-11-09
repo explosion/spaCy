@@ -1471,6 +1471,7 @@ class Language:
         *,
         as_tuples: Literal[False] = ...,
         batch_size: Optional[int] = ...,
+        batched_chars_threshold: Optional[int] = ...,
         disable: Iterable[str] = ...,
         component_cfg: Optional[Dict[str, Dict[str, Any]]] = ...,
         n_process: int = ...,
@@ -1484,6 +1485,7 @@ class Language:
         *,
         as_tuples: Literal[True] = ...,
         batch_size: Optional[int] = ...,
+        batched_chars_threshold: Optional[int] = ...,
         disable: Iterable[str] = ...,
         component_cfg: Optional[Dict[str, Dict[str, Any]]] = ...,
         n_process: int = ...,
@@ -1501,6 +1503,7 @@ class Language:
         disable: Iterable[str] = SimpleFrozenList(),
         component_cfg: Optional[Dict[str, Dict[str, Any]]] = None,
         n_process: int = 1,
+        batched_chars_threshold: Optional[int] = None,
     ) -> Union[Iterator[Doc], Iterator[Tuple[Doc, _AnyContext]]]:
         """Process texts as a stream, and yield `Doc` objects in order.
 
@@ -1514,6 +1517,8 @@ class Language:
         component_cfg (Dict[str, Dict]): An optional dictionary with extra keyword
             arguments for specific components.
         n_process (int): Number of processors to process texts. If -1, set `multiprocessing.cpu_count()`.
+        batched_chars_threshold (Optional[int]): The maximum number of characters to buffer.
+            It does not apply to the batch containing a single text or doc.
         YIELDS (Doc): Documents in the order of the original text.
 
         DOCS: https://spacy.io/api/language#pipe
@@ -1527,6 +1532,7 @@ class Language:
             docs = self.pipe(
                 docs_with_contexts,
                 batch_size=batch_size,
+                batched_chars_threshold=batched_chars_threshold,
                 disable=disable,
                 n_process=n_process,
                 component_cfg=component_cfg,
@@ -1569,7 +1575,8 @@ class Language:
             if self._has_gpu_model(disable):
                 warnings.warn(Warnings.W114)
 
-            docs = self._multiprocessing_pipe(texts, pipes, n_process, batch_size)
+            bz = batch_size if batched_chars_threshold is None else 1
+            docs = self._multiprocessing_pipe(texts, pipes, n_process, bz, batched_chars_threshold)
         else:
             # if n_process == 1, no processes are forked.
             docs = (self._ensure_doc(text) for text in texts)
@@ -1595,6 +1602,7 @@ class Language:
         pipes: Iterable[Callable[..., Iterator[Doc]]],
         n_process: int,
         batch_size: int,
+        batched_chars_threshold: Optional[int],
     ) -> Iterator[Doc]:
         # raw_texts is used later to stop iteration.
         texts, raw_texts = itertools.tee(texts)
@@ -1605,7 +1613,10 @@ class Language:
             *[mp.Pipe(False) for _ in range(n_process)]
         )
 
-        batch_texts = util.minibatch(texts, batch_size)
+        if batched_chars_threshold is None:
+            batch_texts = util.minibatch(texts, batch_size)
+        else:
+            batch_texts = util.minibatch_on_chars(texts, batched_chars_threshold)
         # Sender sends texts to the workers.
         # This is necessary to properly handle infinite length of texts.
         # (In this case, all data cannot be sent to the workers at once)
