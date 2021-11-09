@@ -658,9 +658,11 @@ def test_matcher_ent_iob_key(en_vocab):
     assert matches1[0] == "York"
     assert len(matches2) == 0
 
-    matcher = Matcher(en_vocab)   # Test iob pattern with operators
+    matcher = Matcher(en_vocab)  # Test iob pattern with operators
     matcher.add("Rule", [[{"ENT_IOB": "I", "OP": "+"}]])
-    doc = Doc(en_vocab, words=["I", "visited", "my", "friend", "Anna", "Maria", "Esperanza"])
+    doc = Doc(
+        en_vocab, words=["I", "visited", "my", "friend", "Anna", "Maria", "Esperanza"]
+    )
     doc.ents = [Span(doc, 4, 7, label="PERSON")]
     matches = [doc[start:end].text for _, start, end in matcher(doc)]
     assert len(matches) == 3
@@ -668,7 +670,7 @@ def test_matcher_ent_iob_key(en_vocab):
     assert matches[1] == "Maria Esperanza"
     assert matches[2] == "Esperanza"
 
-    matcher = Matcher(en_vocab)   # Test iob pattern with invalid value
+    matcher = Matcher(en_vocab)  # Test iob pattern with invalid value
     matcher.add("Rule", [[{"ENT_IOB": "IT"}]])
     doc = Doc(en_vocab, words=["I", "visited", "my", "friend", "Anna", "Maria"])
     doc.ents = [Span(doc, 4, 6, label="PERSON")]
