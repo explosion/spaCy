@@ -48,7 +48,6 @@ cdef class Matcher:
         self._filter = {}
         self._extensions = {}
         self._seen_attrs = set()
-        self._iob_strings = Token.iob_strings()
         self.vocab = vocab
         self.mem = Pool()
         self.validate = validate
@@ -125,7 +124,7 @@ cdef class Matcher:
         for pattern in patterns:
             try:
                 specs = _preprocess_pattern(pattern, self.vocab,
-                    self._extensions, self._extra_predicates, self._iob_strings)
+                    self._extensions, self._extra_predicates)
                 self.patterns.push_back(init_pattern(self.mem, key, specs))
                 for spec in specs:
                     for attr, _ in spec[1]:
@@ -751,7 +750,7 @@ cdef attr_t get_ent_id(const TokenPatternC* pattern) nogil:
     return id_attr.value
 
 
-def _preprocess_pattern(token_specs, vocab, extensions_table, extra_predicates, iob_strings):
+def _preprocess_pattern(token_specs, vocab, extensions_table, extra_predicates)
     """This function interprets the pattern, converting the various bits of
     syntactic sugar before we compile it into a struct with init_pattern.
 
@@ -776,7 +775,7 @@ def _preprocess_pattern(token_specs, vocab, extensions_table, extra_predicates, 
         if not isinstance(spec, dict):
             raise ValueError(Errors.E154.format())
         ops = _get_operators(spec)
-        attr_values = _get_attr_values(spec, string_store, iob_strings)
+        attr_values = _get_attr_values(spec, string_store)
         extensions = _get_extensions(spec, string_store, extensions_table)
         predicates = _get_extra_predicates(spec, extra_predicates, vocab)
         for op in ops:
@@ -784,7 +783,7 @@ def _preprocess_pattern(token_specs, vocab, extensions_table, extra_predicates, 
     return tokens
 
 
-def _get_attr_values(spec, string_store, iob_strings):
+def _get_attr_values(spec, string_store)
     attr_values = []
     for attr, value in spec.items():
         orig_attr = attr
@@ -802,7 +801,7 @@ def _get_attr_values(spec, string_store, iob_strings):
                 ent_iob = True
             attr = IDS.get(attr)
         if isinstance(value, str):
-            if orig_attr == "ENT_IOB" and value in iob_strings:
+            if orig_attr == "ENT_IOB" and value in Token.iob_strings():
                 value = iob_strings.index(value)
             else:
                 value = string_store.add(value)
