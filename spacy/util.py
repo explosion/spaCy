@@ -1534,7 +1534,7 @@ def create_default_optimizer() -> Optimizer:
     return Adam()
 
 
-def minibatch(items: Iterable[Union[str, "Doc"]], size: int) -> Iterable[List[Union[str, "Doc"]]]:
+def minibatch(items, size):
     """Iterate over batches of items. `size` may be an iterator,
     so that batch-size can vary on each step.
     """
