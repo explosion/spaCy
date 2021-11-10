@@ -12,6 +12,7 @@ TEST_PATTERNS = [
     ([{"IS_PUNCT": True, "OP": "$"}], 1, 1),
     ([{"_": "foo"}], 1, 1),
     ('[{"TEXT": "foo"}, {"LOWER": "bar"}]', 1, 1),
+    ([{"ENT_IOB": "foo"}], 1, 1),
     ([1, 2, 3], 3, 1),
     # Bad patterns flagged outside of Matcher
     ([{"_": {"foo": "bar", "baz": {"IN": "foo"}}}], 2, 0),  # prev: (1, 0)
@@ -68,20 +69,3 @@ def test_pattern_errors(en_vocab):
     # error if subpattern attribute isn't recognized and processed
     with pytest.raises(MatchPatternError):
         matcher.add("TEST2", [[{"TEXT": {"XX": "xx"}}]])
-
-
-def test_iob_keys_invalid_value_no_validation(en_vocab):
-    matcher = Matcher(
-        en_vocab, validate=False
-    )  # Test iob pattern with invalid value, no validation
-    matcher.add("Rule", [[{"ENT_IOB": "XXX"}]])
-    doc = Doc(en_vocab, words=["I", "visited", "my", "friend", "Anna", "Maria"])
-    doc.ents = [Span(doc, 4, 6, label="PERSON")]
-    matches = [doc[start:end].text for _, start, end in matcher(doc)]
-    assert len(matches) == 0
-
-
-def test_iob_keys_invalid_value_validation(en_vocab):
-    matcher = Matcher(en_vocab)  # Test iob pattern with invalid value, error happens
-    with pytest.raises(MatchPatternError):
-        matcher.add("Rule", [[{"ENT_IOB": "XXX"}]])
