@@ -211,7 +211,8 @@ NumberValue = Union[TokenPatternNumber, StrictInt, StrictFloat]
 UnderscoreValue = Union[
     TokenPatternString, TokenPatternNumber, str, int, float, list, bool
 ]
-IobStringValue = Union[TokenPatternString, Literal["", "I", "O", "B"]]
+IobString = Literal["", "I", "O", "B"]
+IobStringValue = Union[TokenPatternString, IobStringValue]
 
 
 class TokenPattern(BaseModel):
