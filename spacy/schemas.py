@@ -1,4 +1,4 @@
-from typing import Dict, List, Union, Optional, Any, Callable, Type, Tuple
+from typing import Dict, List, Union, Optional, Any, Callable, Type, Tuple, Literal
 from typing import Iterable, TypeVar, TYPE_CHECKING
 from enum import Enum
 from pydantic import BaseModel, Field, ValidationError, validator, create_model
@@ -12,6 +12,7 @@ import inspect
 from .attrs import NAMES
 from .lookups import Lookups
 from .util import is_cython_func
+from .tokens import Token
 
 if TYPE_CHECKING:
     # This lets us add type hints for mypy etc. without causing circular imports
@@ -209,6 +210,8 @@ NumberValue = Union[TokenPatternNumber, StrictInt, StrictFloat]
 UnderscoreValue = Union[
     TokenPatternString, TokenPatternNumber, str, int, float, list, bool
 ]
+IobString = Literal[Token.iob_strings()]
+IobStringValue = Union[TokenPatternString, IobString]
 
 
 class TokenPattern(BaseModel):
@@ -222,7 +225,7 @@ class TokenPattern(BaseModel):
     lemma: Optional[StringValue] = None
     shape: Optional[StringValue] = None
     ent_type: Optional[StringValue] = None
-    ent_iob: Optional[StringValue] = None
+    ent_iob: Optional[IobStringValue] = None
     norm: Optional[StringValue] = None
     length: Optional[NumberValue] = None
     spacy: Optional[StrictBool] = None
