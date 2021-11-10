@@ -669,10 +669,3 @@ def test_matcher_ent_iob_key(en_vocab):
     assert matches[0] == "Maria"
     assert matches[1] == "Maria Esperanza"
     assert matches[2] == "Esperanza"
-
-    matcher = Matcher(en_vocab)  # Test iob pattern with invalid value
-    matcher.add("Rule", [[{"ENT_IOB": "IT"}]])
-    doc = Doc(en_vocab, words=["I", "visited", "my", "friend", "Anna", "Maria"])
-    doc.ents = [Span(doc, 4, 6, label="PERSON")]
-    matches = [doc[start:end].text for _, start, end in matcher(doc)]
-    assert len(matches) == 0
