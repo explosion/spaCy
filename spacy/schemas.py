@@ -13,7 +13,6 @@ import inspect
 from .attrs import NAMES
 from .lookups import Lookups
 from .util import is_cython_func
-from .tokens import Token
 
 if TYPE_CHECKING:
     # This lets us add type hints for mypy etc. without causing circular imports
@@ -211,7 +210,7 @@ NumberValue = Union[TokenPatternNumber, StrictInt, StrictFloat]
 UnderscoreValue = Union[
     TokenPatternString, TokenPatternNumber, str, int, float, list, bool
 ]
-IobString = Literal[Token.iob_string()]
+IobString = Literal["", "I", "O", "B"]
 IobStringValue = Union[TokenPatternString, IobString]
 
 
