@@ -377,7 +377,7 @@ def test_zero_suggestions():
             if ops is None:
                 ops = get_current_ops()
             return Ragged(
-                ops.xp.zeros((0, 0), dtype="i"), ops.asarray([0] * len(docs), dtype="i")
+                ops.xp.zeros((0, 0), dtype="i"), ops.xp.zeros((len(docs),), dtype="i")
             )
 
         return zero_suggester
