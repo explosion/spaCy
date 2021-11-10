@@ -796,7 +796,6 @@ def _get_attr_values(spec, string_store):
                 attr = "ORTH"
             if attr == "IS_SENT_START":
                 attr = "SENT_START"
-                ent_iob = True
             attr = IDS.get(attr)
         if isinstance(value, str):
             if attr == ENT_IOB and value in Token.iob_strings():
