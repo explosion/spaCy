@@ -152,18 +152,18 @@ import pytest
             [(0,2), (3,4)]
         ),
         # Compounding by nmod, several NPs chained together
-        # a primeira fábrica de medicamentos do governo -> a primeira fábrica, medicamentos, governo
+        # la prima fabbrica di droga del governo -> la prima fabbrica, droga, governo
         (
-            ["a", "primeira", "fábrica", "de", "medicamentos",  "do", "governo"],
+            ["la", "prima", "fabbrica", "di", "droga", "del", "governo"],
             [2, 2, 2, 4, 2, 6, 2],
             ['det', 'amod', 'ROOT', 'case', 'nmod', 'case', 'nmod'],
             ['DET', 'ADJ', 'NOUN', 'ADP', 'NOUN', 'ADP', 'NOUN'],
             [(0, 3), (4, 5), (6, 7)]
         ),
         # several NPs
-        # Tradução da reportagem de Susana -> Tradução, reportagem, Susana
+        # Traduzione del rapporto di Susana -> Traduzione, rapporto, Susana
         (
-            ['Tradução', 'da', 'reportagem', 'de', 'Susana'],
+            ['Traduzione', 'del', 'rapporto', 'di', 'Susana'],
             [0, 2, 0, 4, 2],
             ['ROOT', 'case', 'nmod', 'case', 'nmod'],
             ['NOUN', 'ADP', 'NOUN', 'ADP', 'PROPN'],
@@ -171,21 +171,21 @@ import pytest
        
         ),
         # Several NPs
-        # O gato gordo da Susana e seu amigo -> O gato gordo, Susana, seu amigo
+        # Il gatto grasso di Susana e la sua amica -> Il gatto grasso, Susana, sua amica
         (  
-            ['O', 'gato', 'gordo', 'da', 'Susana', 'e', 'seu', 'amigo'],
-            [1, 1, 1, 4, 1, 7, 7, 1],
-            ['det', 'ROOT', 'amod', 'case', 'nmod', 'cc', 'det', 'conj'],
-            ['DET', 'NOUN', 'ADJ', 'ADP', 'PROPN', 'CCONJ', 'DET', 'NOUN'],
-            [(0,3), (4,5), (6,8)]
+            ['Il', 'gatto', 'grasso', 'di', 'Susana', 'e', 'la', 'sua', 'amica'],
+            [1, 1, 1, 4, 1, 8, 8, 8, 1],
+            ['det', 'ROOT', 'compound', 'case', 'nmod', 'cc', 'det', 'det:poss', 'conj'],
+            ['DET', 'NOUN', 'NOUN', 'ADP', 'PROPN', 'CCONJ', 'DET', 'DET', 'NOUN'],
+            [(0,3), (4,5), (7,8)]
         ),
         # Passive subject
-        # Os novos gastos são alimentados pela grande conta bancária de Clinton -> Os novos gastos, grande conta bancária, Clinton
+        # La nuova spesa è alimentata dal conto in banca di Clinton -> La nuova spesa, conto in banca, Clinton
         (
             ['Os', 'novos', 'gastos', 'são', 'alimentados', 'pela', 'grande', 'conta', 'bancária', 'de', 'Clinton'],
-            [2, 2, 4, 4, 4, 7, 7, 4, 7, 10, 7],
-            ['det', 'amod', 'nsubj:pass', 'aux:pass', 'ROOT', 'case', 'amod', 'obl:agent', 'amod', 'case', 'nmod'],
-            ['DET', 'ADJ', 'NOUN', 'AUX', 'VERB', 'ADP', 'ADJ', 'NOUN', 'ADJ', 'ADP', 'PROPN'],
+            [2, 2, 4, 4, 4, 6, 4, 8, 4, 10, 8],
+            ['det', 'amod', 'nsubj:pass', 'aux:pass', 'ROOT', 'case', 'obl:agent', 'case', 'obl', 'case', 'nmod'],
+            ['DET', 'ADJ', 'NOUN', 'AUX', 'VERB', 'ADP', 'NOUN', 'ADP', 'NOUN', 'ADP', 'PROPN'],
             [(0, 3), (6, 9), (10, 11)]
         )
     ],
