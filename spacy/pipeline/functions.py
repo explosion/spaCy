@@ -144,17 +144,18 @@ class TokenSplitter:
     "doc_cleaner",
     default_config={"attrs": {"tensor": None, "_.trf_data": None}, "silent": True},
 )
-def make_doc_cleaner(nlp: Language, name: str, *, attrs: dict, silent: bool):
+def make_doc_cleaner(nlp: Language, name: str, *, attrs: Dict[str, Any], silent: bool):
     return DocCleaner(attrs, silent=silent)
 
 
 class DocCleaner:
-    def __init__(self, attrs: dict, *, silent: bool = True):
-        self.cfg = {"attrs": dict(attrs), "silent": silent}
+    def __init__(self, attrs: Dict[str, Any], *, silent: bool = True):
+        self.cfg: Dict[str, Any] = {"attrs": dict(attrs), "silent": silent}
 
     def __call__(self, doc: Doc) -> Doc:
-        silent = self.cfg["silent"]
-        for attr, value in self.cfg["attrs"].items():
+        attrs: dict = self.cfg["attrs"]
+        silent: bool = self.cfg["silent"]
+        for attr, value in attrs:
             obj = doc
             parts = attr.split(".")
             skip = False
