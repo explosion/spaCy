@@ -188,6 +188,14 @@ import pytest
             ['DET', 'ADJ', 'NOUN', 'AUX', 'VERB', 'ADP', 'NOUN', 'ADP', 'NOUN', 'ADP', 'PROPN'],
             [(0, 3), (6, 9), (10, 11)]
         )
+        # Misc
+        # Ma mentre questo prestito possa ora sembrare gestibile, un improvviso cambiamento delle circostanze potrebbe portare a problemi di debiti -> questo prestiti, un provisso cambiento, circostanze, problemi di debiti
+        (
+            ['Ma', 'mentre', 'questo', 'prestito', 'possa', 'ora', 'sembrare', 'gestibile', ',', 'un', 'improvviso', 'cambiamento', 'delle', 'circostanze', 'potrebbe', 'portare', 'a', 'problemi', 'di', 'debitii'],
+            [15, 6, 3, 6, 6, 6, 15, 6, 6, 11, 11, 15, 13, 11, 15, 15, 17, 15, 19, 17],
+            ['cc', 'mark', 'det', 'nsubj', 'aux', 'advmod', 'advcl', 'xcomp', 'punct', 'det', 'amod', 'nsubj', 'case', 'nmod', 'aux', 'ROOT', 'case', 'obl', 'case', 'nmod'],
+            ['CCONJ', 'SCONJ', 'DET', 'NOUN', 'AUX', 'ADV', 'VERB', 'ADJ', 'PUNCT', 'DET', 'ADJ', 'NOUN', 'ADP', 'NOUN', 'AUX', 'VERB', 'ADP', 'NOUN', 'ADP', 'NOUN'],
+            [(2,4), (9,12), (13,14), (17,20)]
     ],
 )
 # fmt: on
