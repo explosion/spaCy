@@ -253,6 +253,6 @@ def test_entity_ruler_serialize_dir(nlp, patterns):
     ruler = nlp.add_pipe("entity_ruler")
     ruler.add_patterns(patterns)
     ruler.to_disk("test_ruler")
-    ruler.from_disk("test_ruler")  # read from an existing directory 
+    ruler.from_disk("test_ruler")  # read from an existing directory
     with pytest.raises(ValueError):
         ruler.from_disk("non_existing_dir")  # read from a bad directory
