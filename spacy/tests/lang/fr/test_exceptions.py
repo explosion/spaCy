@@ -1,6 +1,19 @@
 import pytest
 
 
+@pytest.mark.issue(852)
+@pytest.mark.skip(
+    reason="French exception list is not enabled in the default tokenizer anymore"
+)
+@pytest.mark.parametrize(
+    "text", ["au-delàs", "pair-programmâmes", "terra-formées", "σ-compacts"]
+)
+def test_issue852(fr_tokenizer, text):
+    """Test that French tokenizer exceptions are imported correctly."""
+    tokens = fr_tokenizer(text)
+    assert len(tokens) == 1
+
+
 @pytest.mark.parametrize(
     "text",
     [

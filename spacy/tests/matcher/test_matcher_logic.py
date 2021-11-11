@@ -1,10 +1,11 @@
-import pytest
 import re
 
+import pytest
+from spacy.attrs import LOWER, ORTH, IS_PUNCT
 from spacy.lang.en import English
 from spacy.matcher import Matcher
 from spacy.tokens import Doc, Span
-
+from spacy.vocab import Vocab
 
 pattern1 = [{"ORTH": "A"}, {"ORTH": "A", "OP": "*"}]
 pattern2 = [{"ORTH": "A", "OP": "*"}, {"ORTH": "A"}]
@@ -34,6 +35,153 @@ def text():
 def doc(en_tokenizer, text):
     doc = en_tokenizer(" ".join(text))
     return doc
+
+
+@pytest.mark.issue(118)
+@pytest.mark.parametrize(
+    "patterns",
+    [
+        [[{"LOWER": "celtics"}], [{"LOWER": "boston"}, {"LOWER": "celtics"}]],
+        [[{"LOWER": "boston"}, {"LOWER": "celtics"}], [{"LOWER": "celtics"}]],
+    ],
+)
+def test_issue118(en_tokenizer, patterns):
+    """Test a bug that arose from having overlapping matches"""
+    text = (
+        "how many points did lebron james score against the boston celtics last night"
+    )
+    doc = en_tokenizer(text)
+    ORG = doc.vocab.strings["ORG"]
+    matcher = Matcher(doc.vocab)
+    matcher.add("BostonCeltics", patterns)
+    assert len(list(doc.ents)) == 0
+    matches = [(ORG, start, end) for _, start, end in matcher(doc)]
+    assert matches == [(ORG, 9, 11), (ORG, 10, 11)]
+    doc.ents = matches[:1]
+    ents = list(doc.ents)
+    assert len(ents) == 1
+    assert ents[0].label == ORG
+    assert ents[0].start == 9
+    assert ents[0].end == 11
+
+
+@pytest.mark.issue(118)
+@pytest.mark.parametrize(
+    "patterns",
+    [
+        [[{"LOWER": "boston"}], [{"LOWER": "boston"}, {"LOWER": "celtics"}]],
+        [[{"LOWER": "boston"}, {"LOWER": "celtics"}], [{"LOWER": "boston"}]],
+    ],
+)
+def test_issue118_prefix_reorder(en_tokenizer, patterns):
+    """Test a bug that arose from having overlapping matches"""
+    text = (
+        "how many points did lebron james score against the boston celtics last night"
+    )
+    doc = en_tokenizer(text)
+    ORG = doc.vocab.strings["ORG"]
+    matcher = Matcher(doc.vocab)
+    matcher.add("BostonCeltics", patterns)
+    assert len(list(doc.ents)) == 0
+    matches = [(ORG, start, end) for _, start, end in matcher(doc)]
+    doc.ents += tuple(matches)[1:]
+    assert matches == [(ORG, 9, 10), (ORG, 9, 11)]
+    ents = doc.ents
+    assert len(ents) == 1
+    assert ents[0].label == ORG
+    assert ents[0].start == 9
+    assert ents[0].end == 11
+
+
+@pytest.mark.issue(242)
+def test_issue242(en_tokenizer):
+    """Test overlapping multi-word phrases."""
+    text = "There are different food safety standards in different countries."
+    patterns = [
+        [{"LOWER": "food"}, {"LOWER": "safety"}],
+        [{"LOWER": "safety"}, {"LOWER": "standards"}],
+    ]
+    doc = en_tokenizer(text)
+    matcher = Matcher(doc.vocab)
+    matcher.add("FOOD", patterns)
+    matches = [(ent_type, start, end) for ent_type, start, end in matcher(doc)]
+    match1, match2 = matches
+    assert match1[1] == 3
+    assert match1[2] == 5
+    assert match2[1] == 4
+    assert match2[2] == 6
+    with pytest.raises(ValueError):
+        # One token can only be part of one entity, so test that the matches
+        # can't be added as entities
+        doc.ents += tuple(matches)
+
+
+@pytest.mark.issue(587)
+def test_issue587(en_tokenizer):
+    """Test that Matcher doesn't segfault on particular input"""
+    doc = en_tokenizer("a b; c")
+    matcher = Matcher(doc.vocab)
+    matcher.add("TEST1", [[{ORTH: "a"}, {ORTH: "b"}]])
+    matches = matcher(doc)
+    assert len(matches) == 1
+    matcher.add("TEST2", [[{ORTH: "a"}, {ORTH: "b"}, {IS_PUNCT: True}, {ORTH: "c"}]])
+    matches = matcher(doc)
+    assert len(matches) == 2
+    matcher.add("TEST3", [[{ORTH: "a"}, {ORTH: "b"}, {IS_PUNCT: True}, {ORTH: "d"}]])
+    matches = matcher(doc)
+    assert len(matches) == 2
+
+
+@pytest.mark.issue(588)
+def test_issue588(en_vocab):
+    """Test if empty specs still cause an error when adding patterns"""
+    matcher = Matcher(en_vocab)
+    with pytest.raises(ValueError):
+        matcher.add("TEST", [[]])
+
+
+@pytest.mark.issue(590)
+def test_issue590(en_vocab):
+    """Test overlapping matches"""
+    doc = Doc(en_vocab, words=["n", "=", "1", ";", "a", ":", "5", "%"])
+    matcher = Matcher(en_vocab)
+    matcher.add(
+        "ab", [[{"IS_ALPHA": True}, {"ORTH": ":"}, {"LIKE_NUM": True}, {"ORTH": "%"}]]
+    )
+    matcher.add("ab", [[{"IS_ALPHA": True}, {"ORTH": "="}, {"LIKE_NUM": True}]])
+    matches = matcher(doc)
+    assert len(matches) == 2
+
+
+@pytest.mark.issue(850)
+def test_issue850():
+    """The variable-length pattern matches the succeeding token. Check we
+    handle the ambiguity correctly."""
+    vocab = Vocab(lex_attr_getters={LOWER: lambda string: string.lower()})
+    matcher = Matcher(vocab)
+    pattern = [{"LOWER": "bob"}, {"OP": "*"}, {"LOWER": "frank"}]
+    matcher.add("FarAway", [pattern])
+    doc = Doc(matcher.vocab, words=["bob", "and", "and", "frank"])
+    match = matcher(doc)
+    assert len(match) == 1
+    ent_id, start, end = match[0]
+    assert start == 0
+    assert end == 4
+
+
+@pytest.mark.issue(850)
+def test_issue850_basic():
+    """Test Matcher matches with '*' operator and Boolean flag"""
+    vocab = Vocab(lex_attr_getters={LOWER: lambda string: string.lower()})
+    matcher = Matcher(vocab)
+    pattern = [{"LOWER": "bob"}, {"OP": "*", "LOWER": "and"}, {"LOWER": "frank"}]
+    matcher.add("FarAway", [pattern])
+    doc = Doc(matcher.vocab, words=["bob", "and", "and", "frank"])
+    match = matcher(doc)
+    assert len(match) == 1
+    ent_id, start, end = match[0]
+    assert start == 0
+    assert end == 4
 
 
 @pytest.mark.parametrize(
