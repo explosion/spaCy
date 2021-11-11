@@ -39,7 +39,7 @@ import pytest
             ["È", "molto", "bello", "il", "vestito", "che", "hai", "acquistato"],
             [2, 2, 2, 4, 2, 7, 7, 4],
             ['cop', 'advmod', 'ROOT', 'det', 'nsubj', 'obj', 'aux', 'acl:relcl', 'punct'],
-            ['AUX', 'ADV', 'ADJ', 'DET', 'NOUN', 'PRON', 'AUX', 'VERB']
+            ['AUX', 'ADV', 'ADJ', 'DET', 'NOUN', 'PRON', 'AUX', 'VERB'],
             [(3,4), (5,6)]
         ),
         # relative subclause
@@ -47,7 +47,7 @@ import pytest
         (
             ['il', 'computer', 'che', 'hai', 'comprato'],
             [1, 1, 4, 4, 1],
-            ['det', 'ROOT', 'nsubj', 'aux', 'acl:relcl']
+            ['det', 'ROOT', 'nsubj', 'aux', 'acl:relcl'],
             ['DET', 'NOUN', 'PRON', 'AUX', 'VERB'],
             [(0,2), (2,3)]
         ),
@@ -110,7 +110,7 @@ import pytest
         ( 
             ['Ho', 'un', 'cane', 'e', 'un', 'gatto'],
             [0, 2, 0, 5, 5, 0],
-            ['ROOT', 'det', 'obj', 'cc', 'det', 'conj']
+            ['ROOT', 'det', 'obj', 'cc', 'det', 'conj'],
             ['VERB', 'DET', 'NOUN', 'CCONJ', 'DET', 'NOUN'],
             [(1,2), (4,5)]
          
