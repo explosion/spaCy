@@ -134,18 +134,18 @@ import pytest
             [(0,3)]
         ),
         # Noun compound created by flat
-        # os Estados Unidos -> os Estados Unidos
+        # gli Stati Uniti
         (
-            ["os", "Estados", "Unidos"],
+            ["gli", "Stati", "Uniti"],
             [1, 1, 1],
             ["det", "ROOT", "flat:name"],
             ["DET", "PROPN", "PROPN"],
             [(0,3)]
         ),
         # nmod relation between NPs
-        # a destruição da cidade -> a destruição, cidade
+        # la distruzione della città -> la distruzione, città
         (
-            ['a', 'destruição', 'da', 'cidade'],
+            ['la', 'distruzione', 'della', 'città'],
             [1, 1, 3, 1],
             ['det', 'ROOT', 'case', 'nmod'],
             ['DET', 'NOUN', 'ADP', 'NOUN'],
