@@ -111,7 +111,7 @@ import pytest
             ['Ho', 'un', 'cane', 'e', 'un', 'gatto'],
             [0, 2, 0, 5, 5, 0],
             ['ROOT', 'det', 'obj', 'cc', 'det', 'conj']
-            ['VERB', 'DET', 'NOUN', 'CCONJ', 'DET', 'NOUN'
+            ['VERB', 'DET', 'NOUN', 'CCONJ', 'DET', 'NOUN'],
             [(1,2), (4,5)]
          
         ),
@@ -196,6 +196,7 @@ import pytest
             ['cc', 'mark', 'det', 'nsubj', 'aux', 'advmod', 'advcl', 'xcomp', 'punct', 'det', 'amod', 'nsubj', 'case', 'nmod', 'aux', 'ROOT', 'case', 'obl', 'case', 'nmod'],
             ['CCONJ', 'SCONJ', 'DET', 'NOUN', 'AUX', 'ADV', 'VERB', 'ADJ', 'PUNCT', 'DET', 'ADJ', 'NOUN', 'ADP', 'NOUN', 'AUX', 'VERB', 'ADP', 'NOUN', 'ADP', 'NOUN'],
             [(2,4), (9,12), (13,14), (17,20)]
+        )
     ],
 )
 # fmt: on
