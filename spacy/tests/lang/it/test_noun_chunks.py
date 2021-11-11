@@ -38,7 +38,7 @@ import pytest
         (
             ["È", "molto", "bello", "il", "vestito", "che", "hai", "acquistato"],
             [2, 2, 2, 4, 2, 7, 7, 4],
-            ['cop', 'advmod', 'ROOT', 'det', 'nsubj', 'obj', 'aux', 'acl:relcl', 'punct'],
+            ['cop', 'advmod', 'ROOT', 'det', 'nsubj', 'obj', 'aux', 'acl:relcl'],
             ['AUX', 'ADV', 'ADJ', 'DET', 'NOUN', 'PRON', 'AUX', 'VERB'],
             [(3,4), (5,6)]
         ),
@@ -64,7 +64,7 @@ import pytest
         # mucche bianche 
         (
             ["mucche", "bianche"],
-            [1, 1],
+            [0, 0],
             ["ROOT", "amod"],
             ["NOUN", "ADJ"],
             [(0,2)],
@@ -91,7 +91,7 @@ import pytest
         # le Nazioni Unite -> le Nazioni Unite
         (
             ["le", "Nazioni", "Unite"],
-            [2, 2, 2],
+            [1, 1, 1],
             ["det", "ROOT", "flat:name"],
             ["DET", "PROPN", "PROPN"],
             [(0,3)]
@@ -112,7 +112,7 @@ import pytest
             [0, 2, 0, 5, 5, 0],
             ['ROOT', 'det', 'obj', 'cc', 'det', 'conj'],
             ['VERB', 'DET', 'NOUN', 'CCONJ', 'DET', 'NOUN'],
-            [(1,2), (4,5)]
+            [(1,3), (4,6)]
          
         ),
         # Two NPs together
