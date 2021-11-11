@@ -5,6 +5,8 @@ from spacy.tokens import Span
 from spacy.language import Language
 from spacy.pipeline import EntityRuler
 from spacy.errors import MatchPatternError
+from spacy.tests.util import make_tempdir
+
 from thinc.api import NumpyOps, get_current_ops
 
 
@@ -252,7 +254,8 @@ def test_entity_ruler_serialize_jsonl(nlp, patterns):
 def test_entity_ruler_serialize_dir(nlp, patterns):
     ruler = nlp.add_pipe("entity_ruler")
     ruler.add_patterns(patterns)
-    ruler.to_disk("test_ruler")
-    ruler.from_disk("test_ruler")  # read from an existing directory
-    with pytest.raises(ValueError):
-        ruler.from_disk("non_existing_dir")  # read from a bad directory
+    with make_tempdir() as d:
+        ruler.to_disk(d / "test_ruler")
+        ruler.from_disk(d / "test_ruler")  # read from an existing directory
+        with pytest.raises(ValueError):
+            ruler.from_disk(d / "non_existing_dir")  # read from a bad directory
