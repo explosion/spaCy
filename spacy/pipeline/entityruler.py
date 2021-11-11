@@ -431,7 +431,7 @@ class EntityRuler(Pipe):
         path = ensure_path(path)
         self.clear()
         depr_patterns_path = path.with_suffix(".jsonl")
-        if path.suffix == ".jsonl":     # user provides a jsonl
+        if path.suffix == ".jsonl":  # user provides a jsonl
             if path.is_file:
                 patterns = srsly.read_jsonl(path)
                 self.add_patterns(patterns)
@@ -440,7 +440,7 @@ class EntityRuler(Pipe):
         elif depr_patterns_path.is_file():
             patterns = srsly.read_jsonl(depr_patterns_path)
             self.add_patterns(patterns)
-        elif path.is_dir():         # path is a valid directory
+        elif path.is_dir():  # path is a valid directory
             cfg = {}
             deserializers_patterns = {
                 "patterns": lambda p: self.add_patterns(
