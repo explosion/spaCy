@@ -13,7 +13,7 @@ import pytest
             [1, 1],
             ["det", "ROOT"],
             ["DET", "NOUN"],
-            [(0, 2)],
+            [(0,2)],
         ),
         # two determiners + noun
         # il mio cane -> il mio cane
@@ -22,7 +22,7 @@ import pytest
             [2, 2, 2],
             ["det", "det:poss", "ROOT"],
             ["DET", "DET", "NOUN"],
-            [(0, 3)],
+            [(0,3)],
         ),
         # two determiners, one is after noun. rare usage but still testing
         # il cane mio-> il cane mio
@@ -31,88 +31,88 @@ import pytest
             [1, 1, 1],
             ["det", "ROOT", "det:poss"],
             ["DET", "NOUN", "DET"],
-            [(0, 3)],
+            [(0,3)],
         ),
         # relative pronoun
-        # il vestito che hai acquistato -> il vestito
+        # È molto bello il vestito che hai acquistat -> il vestito, che   the dress that you bought is very pretty.
         (
-            ['A', 'bicicleta', 'essa', 'está', 'estragada'],
-            [1, 4, 1, 4, 4],
-            ['det', 'nsubj', 'det', 'cop', 'ROOT'],
-            ['DET', 'NOUN', 'PRON', 'AUX', 'ADJ'],
-            [(0,2)]
+            ["È", "molto", "bello", "il", "vestito", "che", "hai", "acquistato"],
+            [2, 2, 2, 4, 2, 7, 7, 4],
+            ['cop', 'advmod', 'ROOT', 'det', 'nsubj', 'obj', 'aux', 'acl:relcl', 'punct'],
+            ['AUX', 'ADV', 'ADJ', 'DET', 'NOUN', 'PRON', 'AUX', 'VERB']
+            [(3,4), (5,6)]
         ),
         # relative subclause
-        #  o computador que comprou -> o computador
+        # il computer che hai comprato -> il computer, che     the computer that you bought
         (
-            ['o', 'computador', 'que', 'comprou'],
-            [1, 1, 3, 1],
-            ['det', 'ROOT', 'nsubj', 'acl:relcl'],
-            ['DET', 'NOUN', 'PRON', 'VERB'],
-            [(0, 2), (2, 3)]
+            ['il', 'computer', 'che', 'hai', 'comprato'],
+            [1, 1, 4, 4, 1],
+            ['det', 'ROOT', 'nsubj', 'aux', 'acl:relcl']
+            ['DET', 'NOUN', 'PRON', 'AUX', 'VERB'],
+            [(0,2), (2,3)]
         ),
         # det + noun + adj
-        # O cachorro marrom  -> O cachorro marrom
+        # Un macchina grande  -> Un macchina grande
         (
-            ["O", "cachorro", "marrom"],
+            ["Un", "macchina", "grande"],
             [1, 1, 1],
             ["det", "ROOT", "amod"],
             ["DET", "NOUN", "ADJ"],
-            [(0, 3)],
+            [(0,3)],
         ),
-        # det + noun + adj plural
-        # As calças baratas  -> As calças baratas
+        # noun + adj plural
+        # mucche bianche 
         (
-            ["As", "calças", "baratas"],
-            [1, 1, 1],
-            ["det", "ROOT", "amod"],
-            ["DET", "NOUN", "ADJ"],
-            [(0, 3)],
+            ["mucche", "bianche"],
+            [1, 1],
+            ["ROOT", "amod"],
+            ["NOUN", "ADJ"],
+            [(0,2)],
         ),
         # det + adj + noun
-        # Uma boa ideia -> Uma boa ideia
+        # Un grande macchina -> Un grande macchina
         (
-            ['uma', 'boa', 'ideia'],
+            ['Un', 'grande', 'macchina'],
             [2, 2, 2],
             ["det", "amod", "ROOT"],
             ["DET", "ADJ", "NOUN"],
             [(0,3)]
         ),
         # multiple adjectives
-        # Uma garota esperta e inteligente -> Uma garota esperta e inteligente
+        # Un cane piccolo e marrone -> Un cane piccolo e marrone
         (
-            ["Uma", "garota", "esperta", "e", "inteligente"],
+            ["Un", "cane", "piccolo", "e", "marrone"],
             [1, 1, 1, 4, 2],
             ["det", "ROOT", "amod", "cc", "conj"],
             ["DET", "NOUN", "ADJ", "CCONJ", "ADJ"],
             [(0,5)]
         ),
         # determiner, adjective, compound created by flat
-        # a grande São Paolo -> a grande São Paolo
+        # le Nazioni Unite -> le Nazioni Unite
         (
-            ["a", "grande", "São", "Paolo"],
-            [2, 2, 2, 2],
-            ["det", "amod", "ROOT", "flat:name"],
-            ["DET", "ADJ", "PROPN", "PROPN"],
-            [(0,4)]
+            ["le", "Nazioni", "Unite"],
+            [2, 2, 2],
+            ["det", "ROOT", "flat:name"],
+            ["DET", "PROPN", "PROPN"],
+            [(0,3)]
         ),
         # one determiner + one noun + one adjective qualified by an adverb
-        # alguns fazendeiros muito ricos -> alguns fazendeiros muito ricos
+        # alcuni contadini molto ricchi -> alcuni contadini molto ricchi     some very rich farmers
         (
-            ['alguns', 'fazendeiros', 'muito', 'ricos'],
+            ['alcuni', 'contadini', 'molto', 'ricchi'],
             [1, 1, 3, 1],
             ['det', 'ROOT', 'advmod', 'amod'],
             ['DET', 'NOUN', 'ADV', 'ADJ'],
             [(0,4)]
         ),
         # Two NPs conjuncted
-        # Eu tenho um cachorro e um gato -> Eu, um cacharo, um gato
+        # Ho un cane e un gatto -> un cane, un gatto
         ( 
-            ["Eu", "tenho", "um", "cachorro", "e", "um", "gato"],
-            [1, 1, 3, 1, 6, 6, 3],
-            ['nsubj', 'ROOT', 'det', 'obj', 'cc', 'det', 'conj'],
-            ['PRON', 'VERB', 'DET', 'NOUN', 'CCONJ', 'DET', 'NOUN'],
-            [(0,1), (2,4), (5,7)]
+            ['Ho', 'un', 'cane', 'e', 'un', 'gatto'],
+            [0, 2, 0, 5, 5, 0],
+            ['ROOT', 'det', 'obj', 'cc', 'det', 'conj']
+            ['VERB', 'DET', 'NOUN', 'CCONJ', 'DET', 'NOUN'
+            [(1,2), (4,5)]
          
         ),
         # Two NPs together
