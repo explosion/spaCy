@@ -21,6 +21,7 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Tuple[int, int, int]]:
         "ROOT",
     ]
     post_modifiers = ["flat", "flat:name", "fixed", "compound"]
+    dets = ["det", "det:poss"]
     doc = doclike.doc  # Ensure works on both Doc and Span.
     if not doc.has_annotation("DEP"):
         raise ValueError(Errors.E029)
@@ -28,7 +29,7 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Tuple[int, int, int]]:
     np_modifs = {doc.vocab.strings.add(modifier) for modifier in post_modifiers}
     np_label = doc.vocab.strings.add("NP")
     adj_label = doc.vocab.strings.add("amod")
-    det_label = doc.vocab.strings.add("det")
+    det_labels = {doc.vocab.strings.add(det) for det in dets}
     det_pos = doc.vocab.strings.add("DET")
     adp_label = doc.vocab.strings.add("ADP")
     conj = doc.vocab.strings.add("conj")
@@ -50,7 +51,7 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Tuple[int, int, int]]:
                 ):  # allow chain of adjectives by expanding to right
                     right_end = right_child.right_edge
                 elif (
-                    right_child.dep == det_label and right_child.pos == det_pos
+                    right_child.dep in det_labels and right_child.pos == det_pos
                 ):  # cut relative pronouns here
                     right_end = right_child
                 elif right_child.dep in np_modifs:  # Check if we can expand to right
