@@ -238,3 +238,21 @@ def test_entity_ruler_multiprocessing(nlp, n_process):
         for doc in nlp.pipe(texts, n_process=2):
             for ent in doc.ents:
                 assert ent.ent_id_ == "1234"
+
+
+def test_entity_ruler_serialize_jsonl(nlp, patterns):
+    ruler = nlp.add_pipe("entity_ruler")
+    ruler.add_patterns(patterns)
+    ruler.to_disk("test_ruler.jsonl")
+    ruler.from_disk("test_ruler.jsonl")  # read from an existing jsonl file
+    with pytest.raises(ValueError):
+        ruler.from_disk("non_existing.jsonl")  # read from an bad jsonl file
+
+
+def test_entity_ruler_serialize_dir(nlp, patterns):
+    ruler = nlp.add_pipe("entity_ruler")
+    ruler.add_patterns(patterns)
+    ruler.to_disk("test_ruler")
+    ruler.from_disk("test_ruler")  # read from an existing directory
+    with pytest.raises(ValueError):
+        ruler.from_disk("non_existing_dir")  # read from a bad directory
