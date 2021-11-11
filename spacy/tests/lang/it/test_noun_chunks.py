@@ -9,7 +9,7 @@ import pytest
         # determiner + noun
         # un pollo -> un pollo
         (
-            ["um", "cachorro"],
+            ["un", "pollo"],
             [1, 1],
             ["det", "ROOT"],
             ["DET", "NOUN"],
@@ -18,7 +18,7 @@ import pytest
         # two determiners + noun
         # il mio cane -> il mio cane
         (
-            ["meu", "o", "pai"],
+            ["il", "mio", "cane"],
             [2, 2, 2],
             ["det", "det:poss", "ROOT"],
             ["DET", "DET", "NOUN"],
@@ -27,7 +27,7 @@ import pytest
         # two determiners, one is after noun. rare usage but still testing
         # il cane mio-> il cane mio
         (
-            ["il", "cane", "meu"],
+            ["il", "cane", "mio"],
             [1, 1, 1],
             ["det", "ROOT", "det:poss"],
             ["DET", "NOUN", "DET"],
