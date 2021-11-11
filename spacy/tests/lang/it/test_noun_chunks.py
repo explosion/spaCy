@@ -187,7 +187,7 @@ import pytest
             ['det', 'amod', 'nsubj:pass', 'aux:pass', 'ROOT', 'case', 'obl:agent', 'case', 'obl', 'case', 'nmod'],
             ['DET', 'ADJ', 'NOUN', 'AUX', 'VERB', 'ADP', 'NOUN', 'ADP', 'NOUN', 'ADP', 'PROPN'],
             [(0, 3), (6, 9), (10, 11)]
-        )
+        ),
         # Misc
         # Ma mentre questo prestito possa ora sembrare gestibile, un improvviso cambiamento delle circostanze potrebbe portare a problemi di debiti -> questo prestiti, un provisso cambiento, circostanze, problemi di debiti
         (
