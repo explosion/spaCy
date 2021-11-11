@@ -155,7 +155,7 @@ class DocCleaner:
     def __call__(self, doc: Doc) -> Doc:
         attrs: dict = self.cfg["attrs"]
         silent: bool = self.cfg["silent"]
-        for attr, value in attrs:
+        for attr, value in attrs.items():
             obj = doc
             parts = attr.split(".")
             skip = False
