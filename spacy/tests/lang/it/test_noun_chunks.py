@@ -175,18 +175,18 @@ import pytest
         (  
             ['Il', 'gatto', 'grasso', 'di', 'Susana', 'e', 'la', 'sua', 'amica'],
             [1, 1, 1, 4, 1, 8, 8, 8, 1],
-            ['det', 'ROOT', 'compound', 'case', 'nmod', 'cc', 'det', 'det:poss', 'conj'],
-            ['DET', 'NOUN', 'NOUN', 'ADP', 'PROPN', 'CCONJ', 'DET', 'DET', 'NOUN'],
-            [(0,3), (4,5), (7,8)]
+            ['det', 'ROOT', 'amod', 'case', 'nmod', 'cc', 'det', 'det:poss', 'conj'],
+            ['DET', 'NOUN', 'ADJ', 'ADP', 'PROPN', 'CCONJ', 'DET', 'DET', 'NOUN'],
+            [(0,3), (4,5), (6,9)]
         ),
         # Passive subject
-        # La nuova spesa è alimentata dal conto in banca di Clinton -> La nuova spesa, conto in banca, Clinton
+        # La nuova spesa è alimentata dal grande conto in banca di Clinton  -> Le nuova spesa, grande conto, banca, Clinton
         (
-            ['Os', 'novos', 'gastos', 'são', 'alimentados', 'pela', 'grande', 'conta', 'bancária', 'de', 'Clinton'],
-            [2, 2, 4, 4, 4, 6, 4, 8, 4, 10, 8],
-            ['det', 'amod', 'nsubj:pass', 'aux:pass', 'ROOT', 'case', 'obl:agent', 'case', 'obl', 'case', 'nmod'],
-            ['DET', 'ADJ', 'NOUN', 'AUX', 'VERB', 'ADP', 'NOUN', 'ADP', 'NOUN', 'ADP', 'PROPN'],
-            [(0, 3), (6, 9), (10, 11)]
+            ['La', 'nuova', 'spesa', 'è', 'alimentata', 'dal', 'grande', 'conto', 'in', 'banca', 'di', 'Clinton'],
+            [2, 2, 4, 4, 4, 7, 7, 4, 9, 7, 11, 9],
+            ['det', 'amod', 'nsubj:pass', 'aux:pass', 'ROOT', 'case', 'amod', 'obl:agent', 'case', 'nmod', 'case', 'nmod'],
+            ['DET', 'ADJ', 'NOUN', 'AUX', 'VERB', 'ADP', 'ADJ', 'NOUN', 'ADP', 'NOUN', 'ADP', 'PROPN'],
+            [(0, 3), (6, 8), (9, 10), (11,12)]
         ),
         # Misc
         # Ma mentre questo prestito possa ora sembrare gestibile, un improvviso cambiamento delle circostanze potrebbe portare a problemi di debiti -> questo prestiti, un provisso cambiento, circostanze, problemi di debiti
