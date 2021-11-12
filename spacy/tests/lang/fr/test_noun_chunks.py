@@ -179,18 +179,18 @@ import pytest
             [(0,1), (2,3)]
         ),
         # Compounding by nmod, several NPs chained together
-        # a primeira fábrica de medicamentos do governo -> a primeira fábrica, medicamentos, governo
+        # la première usine de drogue du gouvernement -> la première usine, drogue, gouvernement
         (
-            ["a", "primeira", "fábrica", "de", "medicamentos",  "do", "governo"],
+            ["la", "première", "usine", "de", "drogue", "du", "gouvernement"],
             [2, 2, 2, 4, 2, 6, 2],
             ['det', 'amod', 'ROOT', 'case', 'nmod', 'case', 'nmod'],
             ['DET', 'ADJ', 'NOUN', 'ADP', 'NOUN', 'ADP', 'NOUN'],
             [(0, 3), (4, 5), (6, 7)]
         ),
         # several NPs
-        # Tradução da reportagem de Susana -> Tradução, reportagem, Susana
+        # Traduction du rapport de Susana -> Traduction, rapport, Susana
         (
-            ['Tradução', 'da', 'reportagem', 'de', 'Susana'],
+            ['Traduction', 'du', 'raport', 'de', 'Susana'],
             [0, 2, 0, 4, 2],
             ['ROOT', 'case', 'nmod', 'case', 'nmod'],
             ['NOUN', 'ADP', 'NOUN', 'ADP', 'PROPN'],
