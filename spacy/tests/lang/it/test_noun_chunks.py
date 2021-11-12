@@ -40,7 +40,7 @@ import pytest
             [2, 2, 2, 4, 2, 7, 7, 4],
             ['cop', 'advmod', 'ROOT', 'det', 'nsubj', 'obj', 'aux', 'acl:relcl'],
             ['AUX', 'ADV', 'ADJ', 'DET', 'NOUN', 'PRON', 'AUX', 'VERB'],
-            [(3,4), (5,6)]
+            [(3,5), (5,6)]
         ),
         # relative subclause
         # il computer che hai comprato -> il computer, che     the computer that you bought
