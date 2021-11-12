@@ -1551,13 +1551,15 @@ def minibatch(items, size):
         yield list(batch)
 
 
-def minibatch_on_chars(items: Iterable[Union[str, "Doc"]], chars_threshold: int) -> Iterable[List[Union[str, "Doc"]]]:
+def minibatch_on_chars(items: Iterable[Union[str, "Doc"]],
+                       chars_threshold: int) -> Iterable[Tuple[List[Union[str, "Doc"]], int]]:
     """Iterate over batches of items. A single item whose total characters
     is equal to or above the threshold will be packed in one batch while the
     total characters of a multi-item batch should not exceed the threshold.
     """
     batch: List = []
     num_of_chars = 0
+    batch_end_idx = 0
     for item in items:
         if isinstance(item, str):
             item = cast(str, item)
@@ -1567,14 +1569,16 @@ def minibatch_on_chars(items: Iterable[Union[str, "Doc"]], chars_threshold: int)
             additional = len(item.text)
         if (num_of_chars + additional) > chars_threshold:
             if batch:
-                yield batch
+                batch_end_idx += len(batch)
+                yield batch, batch_end_idx
             batch = [item]
             num_of_chars = additional
         else:
             batch.append(item)
             num_of_chars += additional
     if batch:
-        yield batch
+        batch_end_idx += len(batch)
+        yield batch, batch_end_idx
 
 
 def is_cython_func(func: Callable) -> bool:

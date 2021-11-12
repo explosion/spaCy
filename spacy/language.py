@@ -1575,8 +1575,7 @@ class Language:
             if self._has_gpu_model(disable):
                 warnings.warn(Warnings.W114)
 
-            bz = batch_size if batched_chars_threshold is None else 1
-            docs = self._multiprocessing_pipe(texts, pipes, n_process, bz, batched_chars_threshold)
+            docs = self._multiprocessing_pipe(texts, pipes, n_process, batch_size, batched_chars_threshold)
         else:
             # if n_process == 1, no processes are forked.
             docs = (self._ensure_doc(text) for text in texts)
@@ -1616,7 +1615,12 @@ class Language:
         if batched_chars_threshold is None:
             batch_texts = util.minibatch(texts, batch_size)
         else:
-            batch_texts = util.minibatch_on_chars(texts, batched_chars_threshold)
+            batches = util.minibatch_on_chars(texts, batched_chars_threshold)
+            batches, another_batches = itertools.tee(batches, 2)
+            batch_texts = (batch for batch, end_indices in batches)
+            batch_end_indices = (end_indices for batch, end_indices in another_batches)
+            batch_end_idx = -1
+
         # Sender sends texts to the workers.
         # This is necessary to properly handle infinite length of texts.
         # (In this case, all data cannot be sent to the workers at once)
@@ -1653,9 +1657,21 @@ class Language:
                     self.default_error_handler(
                         None, None, None, ValueError(Errors.E871.format(error=error))
                     )
-                if i % batch_size == 0:
-                    # tell `sender` that one batch was consumed.
-                    sender.step()
+                if batched_chars_threshold is None:
+                    if i % batch_size == 0:
+                        # tell `sender` that one batch was consumed.
+                        sender.step()
+                else:
+                    # The outer for loop guarantees no StopIteration exceptions in here.
+                    batch_end_idx = next(batch_end_indices) if batch_end_idx == -1 else batch_end_idx
+                    if i == batch_end_idx:
+                        # tell `sender` that one batch was consumed.
+                        sender.step()
+                        try:
+                            batch_end_idx = next(batch_end_indices)
+                        except StopIteration:
+                            # No more batched texts or Docs
+                            pass
         finally:
             for proc in procs:
                 proc.terminate()

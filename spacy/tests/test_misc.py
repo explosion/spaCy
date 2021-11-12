@@ -293,20 +293,22 @@ def test_util_minibatch_oversize(doc_sizes, expected_batches):
 
 
 @pytest.mark.parametrize(
-    "doc_sizes, expected_batches",
+    "doc_sizes, expected_batches, expected_batch_end_indices",
     [
-        ([200, 100, 100], [1, 2]),
-        ([200, 50, 50, 50, 50], [1, 4]),
-        ([200, 50, 50, 50, 50, 50], [1, 4, 1]),
-        ([200, 200, 100, 100, 100, 50, 50], [1, 1, 2, 3]),
+        ([200, 100, 100], [1, 2], [1, 3]),
+        ([200, 50, 50, 50, 50], [1, 4], [1, 5]),
+        ([200, 50, 50, 50, 50, 50], [1, 4, 1], [1, 5, 6]),
+        ([200, 200, 100, 100, 100, 50, 50], [1, 1, 2, 3], [1, 2, 4, 7]),
     ],
 )
-def test_util_minibatch_on_chars(doc_sizes, expected_batches):
+def test_util_minibatch_on_chars(doc_sizes, expected_batches, expected_batch_end_indices):
     docs = [get_random_doc(doc_size) for doc_size in doc_sizes]
-    batches = list(
+    batches_and_end_indices = list(
         minibatch_on_chars(docs, chars_threshold=600)
     )
-    assert [len(batch) for batch in batches] == expected_batches
+    for i, (batch, batch_end_indices) in enumerate(batches_and_end_indices):
+        assert len(batch) == expected_batches[i]
+        assert batch_end_indices == expected_batch_end_indices[i]
 
 
 def test_util_dot_section():
