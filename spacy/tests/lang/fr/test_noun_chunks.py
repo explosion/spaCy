@@ -65,7 +65,7 @@ import pytest
         (
             ["un", "nouveau", "film", "intéressant"],
             [2, 2, 2, 2],
-            ["det", "amod", "ROOT" "amod"],
+            ["det", "amod", "ROOT", "amod"],
             ["DET", "ADJ", "NOUN", "ADJ"],
             [(0,4)]
         ),
