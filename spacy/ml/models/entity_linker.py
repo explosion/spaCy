@@ -9,6 +9,7 @@ from ...kb import KnowledgeBase, Candidate, get_candidates
 from ...vocab import Vocab
 from ...tokens import Span, Doc
 from ..extract_spans import extract_spans
+from ...errors import Errors
 
 
 @registry.architectures("spacy.EntityLinker.v1")
