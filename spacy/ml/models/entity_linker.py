@@ -70,11 +70,11 @@ def span_maker_forward(model, docs: List[Doc], is_train) -> Tuple[Ragged, Callab
         candidates.append(ops.asarray2i(cands))
     candlens = [len(cands) for cands in candidates]
     candidates = ops.xp.concatenate(candidates)
-    candidates_r = Ragged(candidates, candlens)
+    outputs = Ragged(candidates, candlens)
     # TODO W093 if there's no data. Can we do that here though?
 
     # because this is just rearranging docs, the backprop does nothing
-    return candidates_r, lambda x: []
+    return outputs, lambda x: []
 
 
 @registry.misc("spacy.KBFromFile.v1")
