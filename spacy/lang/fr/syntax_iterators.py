@@ -29,11 +29,11 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Tuple[int, int, int]]:
     np_deps = {doc.vocab.strings.add(label) for label in labels}
     np_modifs = {doc.vocab.strings.add(modifier) for modifier in post_modifiers}
     np_label = doc.vocab.strings.add("NP")
-    adj_label = doc.vocab.strings.add("amod")
+    adj_pos = doc.vocab.strings.add("amod")
     det_label = doc.vocab.strings.add("det")
     det_pos = doc.vocab.strings.add("DET")
-    adp_label = doc.vocab.strings.add("ADP")
-    conj = doc.vocab.strings.add("conj")
+    adp_pos = doc.vocab.strings.add("ADP")
+    conj_label = doc.vocab.strings.add("conj")
     conj_pos = doc.vocab.strings.add("CCONJ")
     prev_end = -1
     for i, word in enumerate(doclike):
@@ -48,7 +48,7 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Tuple[int, int, int]]:
 
             if right_child:
                 if (
-                    right_child.dep == adj_label
+                    right_child.dep == adj_pos
                 ):  # allow chain of adjectives by expanding to right
                     right_end = right_child.right_edge
                 elif (
@@ -65,7 +65,7 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Tuple[int, int, int]]:
 
             left_index = word.left_edge.i
             left_index = (
-                left_index + 1 if word.left_edge.pos == adp_label else left_index
+                left_index + 1 if word.left_edge.pos == adp_pos else left_index
             )
 
             yield left_index, right_end.i + 1, np_label
