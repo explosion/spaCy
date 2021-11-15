@@ -3,6 +3,7 @@ import re
 import pytest
 from spacy.attrs import LOWER, ORTH, IS_PUNCT
 from spacy.lang.en import English
+from spacy.lang.lex_attrs import LEX_ATTRS
 from spacy.matcher import Matcher
 from spacy.tokens import Doc, Span
 from spacy.vocab import Vocab
@@ -182,6 +183,46 @@ def test_issue850_basic():
     ent_id, start, end = match[0]
     assert start == 0
     assert end == 4
+
+
+@pytest.mark.issue(1434)
+def test_issue1434():
+    """Test matches occur when optional element at end of short doc."""
+    pattern = [{"ORTH": "Hello"}, {"IS_ALPHA": True, "OP": "?"}]
+    vocab = Vocab(lex_attr_getters=LEX_ATTRS)
+    hello_world = Doc(vocab, words=["Hello", "World"])
+    hello = Doc(vocab, words=["Hello"])
+    matcher = Matcher(vocab)
+    matcher.add("MyMatcher", [pattern])
+    matches = matcher(hello_world)
+    assert matches
+    matches = matcher(hello)
+    assert matches
+
+
+@pytest.mark.parametrize(
+    "string,start,end",
+    [
+        ("a", 0, 1),
+        ("a b", 0, 2),
+        ("a c", 0, 1),
+        ("a b c", 0, 2),
+        ("a b b c", 0, 3),
+        ("a b b", 0, 3),
+    ],
+)
+@pytest.mark.issue(1450)
+def test_issue1450(string, start, end):
+    """Test matcher works when patterns end with * operator."""
+    pattern = [{"ORTH": "a"}, {"ORTH": "b", "OP": "*"}]
+    matcher = Matcher(Vocab())
+    matcher.add("TSTEND", [pattern])
+    doc = Doc(Vocab(), words=string.split())
+    matches = matcher(doc)
+    if start is None or end is None:
+        assert matches == []
+    assert matches[-1][1] == start
+    assert matches[-1][2] == end
 
 
 @pytest.mark.parametrize(

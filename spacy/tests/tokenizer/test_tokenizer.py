@@ -6,6 +6,7 @@ from spacy.tokenizer import Tokenizer
 from spacy.tokens import Doc
 from spacy.util import compile_prefix_regex, compile_suffix_regex, ensure_path
 from spacy.vocab import Vocab
+from spacy.symbols import ORTH
 
 
 @pytest.mark.issue(743)
@@ -38,6 +39,120 @@ def test_issue801(en_tokenizer, text, tokens):
     doc = en_tokenizer(text)
     assert len(doc) == len(tokens)
     assert [t.text for t in doc] == tokens
+
+
+@pytest.mark.issue(1061)
+def test_issue1061():
+    """Test special-case works after tokenizing. Was caching problem."""
+    text = "I like _MATH_ even _MATH_ when _MATH_, except when _MATH_ is _MATH_! but not _MATH_."
+    tokenizer = English().tokenizer
+    doc = tokenizer(text)
+    assert "MATH" in [w.text for w in doc]
+    assert "_MATH_" not in [w.text for w in doc]
+
+    tokenizer.add_special_case("_MATH_", [{ORTH: "_MATH_"}])
+    doc = tokenizer(text)
+    assert "_MATH_" in [w.text for w in doc]
+    assert "MATH" not in [w.text for w in doc]
+
+    # For sanity, check it works when pipeline is clean.
+    tokenizer = English().tokenizer
+    tokenizer.add_special_case("_MATH_", [{ORTH: "_MATH_"}])
+    doc = tokenizer(text)
+    assert "_MATH_" in [w.text for w in doc]
+    assert "MATH" not in [w.text for w in doc]
+
+
+@pytest.mark.skip(
+    reason="Can not be fixed without variable-width look-behind (which we don't want)"
+)
+@pytest.mark.issue(1235)
+def test_issue1235():
+    """Test that g is not split of if preceded by a number and a letter"""
+    nlp = English()
+    testwords = "e2g 2g 52g"
+    doc = nlp(testwords)
+    assert len(doc) == 5
+    assert doc[0].text == "e2g"
+    assert doc[1].text == "2"
+    assert doc[2].text == "g"
+    assert doc[3].text == "52"
+    assert doc[4].text == "g"
+
+
+@pytest.mark.issue(1242)
+def test_issue1242():
+    nlp = English()
+    doc = nlp("")
+    assert len(doc) == 0
+    docs = list(nlp.pipe(["", "hello"]))
+    assert len(docs[0]) == 0
+    assert len(docs[1]) == 1
+
+
+@pytest.mark.issue(1257)
+def test_issue1257():
+    """Test that tokens compare correctly."""
+    doc1 = Doc(Vocab(), words=["a", "b", "c"])
+    doc2 = Doc(Vocab(), words=["a", "c", "e"])
+    assert doc1[0] != doc2[0]
+    assert not doc1[0] == doc2[0]
+
+
+@pytest.mark.issue(1375)
+def test_issue1375():
+    """Test that token.nbor() raises IndexError for out-of-bounds access."""
+    doc = Doc(Vocab(), words=["0", "1", "2"])
+    with pytest.raises(IndexError):
+        assert doc[0].nbor(-1)
+    assert doc[1].nbor(-1).text == "0"
+    with pytest.raises(IndexError):
+        assert doc[2].nbor(1)
+    assert doc[1].nbor(1).text == "2"
+
+
+@pytest.mark.issue(1488)
+def test_issue1488():
+    """Test that tokenizer can parse DOT inside non-whitespace separators"""
+    prefix_re = re.compile(r"""[\[\("']""")
+    suffix_re = re.compile(r"""[\]\)"']""")
+    infix_re = re.compile(r"""[-~\.]""")
+    simple_url_re = re.compile(r"""^https?://""")
+
+    def my_tokenizer(nlp):
+        return Tokenizer(
+            nlp.vocab,
+            {},
+            prefix_search=prefix_re.search,
+            suffix_search=suffix_re.search,
+            infix_finditer=infix_re.finditer,
+            token_match=simple_url_re.match,
+        )
+
+    nlp = English()
+    nlp.tokenizer = my_tokenizer(nlp)
+    doc = nlp("This is a test.")
+    for token in doc:
+        assert token.text
+
+
+@pytest.mark.issue(1494)
+def test_issue1494():
+    """Test if infix_finditer works correctly"""
+    infix_re = re.compile(r"""[^a-z]""")
+    test_cases = [
+        ("token 123test", ["token", "1", "2", "3", "test"]),
+        ("token 1test", ["token", "1test"]),
+        ("hello...test", ["hello", ".", ".", ".", "test"]),
+    ]
+
+    def new_tokenizer(nlp):
+        return Tokenizer(nlp.vocab, {}, infix_finditer=infix_re.finditer)
+
+    nlp = English()
+    nlp.tokenizer = new_tokenizer(nlp)
+    for text, expected in test_cases:
+        assert [token.text for token in nlp(text)] == expected
 
 
 def test_tokenizer_handles_no_word(tokenizer):
