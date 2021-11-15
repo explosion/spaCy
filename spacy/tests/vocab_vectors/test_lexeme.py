@@ -15,48 +15,11 @@ def test_issue361(en_vocab, text1, text2):
     assert en_vocab[text1] != en_vocab[text2]
 
 
-@pytest.mark.issue(595)
-@pytest.mark.skip(reason="Old vocab-based lemmatization")
-def test_issue595():
-    """Test lemmatization of base forms"""
-    words = ["Do", "n't", "feed", "the", "dog"]
-    lookups = Lookups()
-    lookups.add_table("lemma_rules", {"verb": [["ed", "e"]]})
-    lookups.add_table("lemma_index", {"verb": {}})
-    lookups.add_table("lemma_exc", {"verb": {}})
-    vocab = Vocab()
-    doc = Doc(vocab, words=words)
-    doc[2].tag_ = "VB"
-    assert doc[2].text == "feed"
-    assert doc[2].lemma_ == "feed"
-
-
-@pytest.mark.issue(599)
-def test_issue599(en_vocab):
-    doc = Doc(en_vocab)
-    doc2 = Doc(doc.vocab)
-    doc2.from_bytes(doc.to_bytes())
-    assert doc2.has_annotation("DEP")
-
-
 @pytest.mark.issue(600)
 def test_issue600():
     vocab = Vocab(tag_map={"NN": {"pos": "NOUN"}})
     doc = Doc(vocab, words=["hello"])
     doc[0].tag_ = "NN"
-
-
-@pytest.mark.issue(912)
-@pytest.mark.skip(reason="Old vocab-based lemmatization")
-@pytest.mark.parametrize(
-    "text,tag,lemma",
-    [("anus", "NN", "anus"), ("princess", "NN", "princess"), ("inner", "JJ", "inner")],
-)
-def test_issue912(en_vocab, text, tag, lemma):
-    """Test base-forms are preserved."""
-    doc = Doc(en_vocab, words=[text])
-    doc[0].tag_ = tag
-    assert doc[0].lemma_ == lemma
 
 
 @pytest.mark.parametrize("text1,prob1,text2,prob2", [("NOUN", -1, "opera", -2)])
