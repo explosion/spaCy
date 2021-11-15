@@ -203,7 +203,11 @@ class Japanese(Language):
         "extend": True,
         "scorer": {"@scorers": "spacy.morphologizer_scorer.v1"},
     },
-    default_score_weights={"pos_acc": 0.5, "morph_micro_f": 0.5, "morph_per_feat": None},
+    default_score_weights={
+        "pos_acc": 0.5,
+        "morph_micro_f": 0.5,
+        "morph_per_feat": None,
+    },
 )
 def make_morphologizer(
     nlp: Language,

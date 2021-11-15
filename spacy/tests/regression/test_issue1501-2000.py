@@ -17,6 +17,7 @@ from spacy.matcher import Matcher
 from ..util import make_tempdir
 
 
+@pytest.mark.issue(1506)
 def test_issue1506():
     def string_generator():
         for _ in range(10001):
@@ -40,6 +41,7 @@ def test_issue1506():
             str(t.lemma_)
 
 
+@pytest.mark.issue(1518)
 def test_issue1518():
     """Test vectors.resize() works."""
     vectors = Vectors(shape=(10, 10))
@@ -47,6 +49,7 @@ def test_issue1518():
     vectors.resize((5, 9))
 
 
+@pytest.mark.issue(1537)
 def test_issue1537():
     """Test that Span.as_doc() doesn't segfault."""
     string = "The sky is blue . The man is pink . The dog is purple ."
@@ -65,6 +68,7 @@ def test_issue1537():
 
 
 # TODO: Currently segfaulting, due to l_edge and r_edge misalignment
+@pytest.mark.issue(1537)
 # def test_issue1537_model():
 #    nlp = load_spacy('en')
 #    doc = nlp('The sky is blue. The man is pink. The dog is purple.')
@@ -73,12 +77,14 @@ def test_issue1537():
 #    print(list(sents[1].noun_chunks))
 
 
+@pytest.mark.issue(1539)
 def test_issue1539():
     """Ensure vectors.resize() doesn't try to modify dictionary during iteration."""
     v = Vectors(shape=(10, 10), keys=[5, 3, 98, 100])
     v.resize((100, 100))
 
 
+@pytest.mark.issue(1547)
 def test_issue1547():
     """Test that entity labels still match after merging tokens."""
     words = ["\n", "worda", ".", "\n", "wordb", "-", "Biosphere", "2", "-", " \n"]
@@ -89,12 +95,14 @@ def test_issue1547():
     assert [ent.text for ent in doc.ents]
 
 
+@pytest.mark.issue(1612)
 def test_issue1612(en_tokenizer):
     doc = en_tokenizer("The black cat purrs.")
     span = doc[1:3]
     assert span.orth_ == span.text
 
 
+@pytest.mark.issue(1654)
 def test_issue1654():
     nlp = Language(Vocab())
     assert not nlp.pipeline
@@ -116,12 +124,14 @@ def test_issue1654():
 
 
 @pytest.mark.parametrize("text", ["test@example.com", "john.doe@example.co.uk"])
+@pytest.mark.issue(1698)
 def test_issue1698(en_tokenizer, text):
     doc = en_tokenizer(text)
     assert len(doc) == 1
     assert not doc[0].like_url
 
 
+@pytest.mark.issue(1727)
 def test_issue1727():
     """Test that models with no pretrained vectors can be deserialized
     correctly after vectors are added."""
@@ -138,6 +148,7 @@ def test_issue1727():
         assert tagger.cfg.get("pretrained_dims", 0) == 0
 
 
+@pytest.mark.issue(1757)
 def test_issue1757():
     """Test comparison against None doesn't cause segfault."""
     doc = Doc(Vocab(), words=["a", "b", "c"])
@@ -151,12 +162,14 @@ def test_issue1757():
     assert not doc.vocab["a"] < None
 
 
+@pytest.mark.issue(1758)
 def test_issue1758(en_tokenizer):
     """Test that "would've" is handled by the English tokenizer exceptions."""
     tokens = en_tokenizer("would've")
     assert len(tokens) == 2
 
 
+@pytest.mark.issue(1773)
 def test_issue1773(en_tokenizer):
     """Test that spaces don't receive a POS but no TAG. This is the root cause
     of the serialization issue reported in #1773."""
@@ -165,6 +178,7 @@ def test_issue1773(en_tokenizer):
         assert doc[0].tag_ != ""
 
 
+@pytest.mark.issue(1799)
 def test_issue1799():
     """Test sentence boundaries are deserialized correctly, even for
     non-projective sentences."""
@@ -186,6 +200,7 @@ def test_issue1799():
     assert len(list(doc.sents)) == 1
 
 
+@pytest.mark.issue(1807)
 def test_issue1807():
     """Test vocab.set_vector also adds the word to the vocab."""
     vocab = Vocab(vectors_name="test_issue1807")
@@ -194,6 +209,7 @@ def test_issue1807():
     assert "hello" in vocab
 
 
+@pytest.mark.issue(1834)
 def test_issue1834():
     """Test that sentence boundaries & parse/tag flags are not lost
     during serialization."""
@@ -217,6 +233,7 @@ def test_issue1834():
     assert new_doc.has_annotation("TAG")
 
 
+@pytest.mark.issue(1868)
 def test_issue1868():
     """Test Vocab.__contains__ works with int keys."""
     vocab = Vocab()
@@ -228,6 +245,7 @@ def test_issue1868():
     assert int_id not in vocab
 
 
+@pytest.mark.issue(1883)
 def test_issue1883():
     matcher = Matcher(Vocab())
     matcher.add("pat1", [[{"orth": "hello"}]])
@@ -239,11 +257,13 @@ def test_issue1883():
 
 
 @pytest.mark.parametrize("word", ["the"])
+@pytest.mark.issue(1889)
 def test_issue1889(word):
     assert is_stop(word, STOP_WORDS) == is_stop(word.upper(), STOP_WORDS)
 
 
 @pytest.mark.skip(reason="obsolete with the config refactor of v.3")
+@pytest.mark.issue(1915)
 def test_issue1915():
     cfg = {"hidden_depth": 2}  # should error out
     nlp = Language()
@@ -253,6 +273,7 @@ def test_issue1915():
         nlp.initialize(**cfg)
 
 
+@pytest.mark.issue(1945)
 def test_issue1945():
     """Test regression in Matcher introduced in v2.0.6."""
     matcher = Matcher(Vocab())
@@ -264,6 +285,7 @@ def test_issue1945():
     assert matches[1][1:] == (1, 3)
 
 
+@pytest.mark.issue(1963)
 def test_issue1963(en_tokenizer):
     """Test that doc.merge() resizes doc.tensor"""
     doc = en_tokenizer("a b c d")
@@ -275,6 +297,7 @@ def test_issue1963(en_tokenizer):
 
 
 @pytest.mark.parametrize("label", ["U-JOB-NAME"])
+@pytest.mark.issue(1967)
 def test_issue1967(label):
     nlp = Language()
     config = {}
@@ -293,6 +316,7 @@ def test_issue1967(label):
     assert "JOB-NAME" in ner.moves.get_actions(examples=[example])[1]
 
 
+@pytest.mark.issue(1971)
 def test_issue1971(en_vocab):
     # Possibly related to #2675 and #2671?
     matcher = Matcher(en_vocab)

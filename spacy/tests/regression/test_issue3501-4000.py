@@ -24,6 +24,7 @@ from ..util import make_tempdir
 
 
 @pytest.mark.parametrize("word", ["don't", "don’t", "I'd", "I’d"])
+@pytest.mark.issue(3521)
 def test_issue3521(en_tokenizer, word):
     tok = en_tokenizer(word)[1]
     # 'not' and 'would' should be stopwords, also in their abbreviated forms
@@ -108,6 +109,7 @@ def test_issue_3526_4(en_vocab):
         assert new_ruler.overwrite is True
 
 
+@pytest.mark.issue(3531)
 def test_issue3531():
     """Test that displaCy renderer doesn't require "settings" key."""
     example_dep = {
@@ -137,6 +139,7 @@ def test_issue3531():
     assert ent_html
 
 
+@pytest.mark.issue(3540)
 def test_issue3540(en_vocab):
     words = ["I", "live", "in", "NewYork", "right", "now"]
     tensor = numpy.asarray(
@@ -176,6 +179,7 @@ def test_issue3540(en_vocab):
     assert vectors_1[5].tolist() == vectors_2[6].tolist()
 
 
+@pytest.mark.issue(3549)
 def test_issue3549(en_vocab):
     """Test that match pattern validation doesn't raise on empty errors."""
     matcher = Matcher(en_vocab, validate=True)
@@ -186,6 +190,7 @@ def test_issue3549(en_vocab):
 
 
 @pytest.mark.skip("Matching currently only works on strings and integers")
+@pytest.mark.issue(3555)
 def test_issue3555(en_vocab):
     """Test that custom extensions with default None don't break matcher."""
     Token.set_extension("issue3555", default=None)
@@ -196,6 +201,7 @@ def test_issue3555(en_vocab):
     matcher(doc)
 
 
+@pytest.mark.issue(3611)
 def test_issue3611():
     """Test whether adding n-grams in the textcat works even when n > token length of some docs"""
     unique_classes = ["offensive", "inoffensive"]
@@ -232,6 +238,7 @@ def test_issue3611():
                 nlp.update(examples=batch, sgd=optimizer, drop=0.1, losses=losses)
 
 
+@pytest.mark.issue(3625)
 def test_issue3625():
     """Test that default punctuation rules applies to hindi unicode characters"""
     nlp = Hindi()
@@ -240,6 +247,7 @@ def test_issue3625():
     assert [token.text for token in doc] == expected
 
 
+@pytest.mark.issue(3803)
 def test_issue3803():
     """Test that spanish num-like tokens have True for like_num attribute."""
     nlp = Spanish()
@@ -255,6 +263,7 @@ def _parser_example(parser):
     return Example.from_dict(doc, gold)
 
 
+@pytest.mark.issue(3830)
 def test_issue3830_no_subtok():
     """Test that the parser doesn't have subtok label if not learn_tokens"""
     config = {
@@ -268,6 +277,7 @@ def test_issue3830_no_subtok():
     assert "subtok" not in parser.labels
 
 
+@pytest.mark.issue(3830)
 def test_issue3830_with_subtok():
     """Test that the parser does have subtok label if learn_tokens=True."""
     config = {
@@ -281,6 +291,7 @@ def test_issue3830_with_subtok():
     assert "subtok" in parser.labels
 
 
+@pytest.mark.issue(3839)
 def test_issue3839(en_vocab):
     """Test that match IDs returned by the matcher are correct, are in the string"""
     doc = Doc(en_vocab, words=["terrific", "group", "of", "people"])
@@ -307,6 +318,7 @@ def test_issue3839(en_vocab):
         "It was a missed assignment, but it shouldn't have resulted in a turnover ...",
     ],
 )
+@pytest.mark.issue(3869)
 def test_issue3869(sentence):
     """Test that the Doc's count_by function works consistently"""
     nlp = English()
@@ -317,6 +329,7 @@ def test_issue3869(sentence):
     assert count == doc.count_by(IS_ALPHA).get(1, 0)
 
 
+@pytest.mark.issue(3879)
 def test_issue3879(en_vocab):
     doc = Doc(en_vocab, words=["This", "is", "a", "test", "."])
     assert len(doc) == 5
@@ -326,6 +339,7 @@ def test_issue3879(en_vocab):
     assert len(matcher(doc)) == 2  # fails because of a FP match 'is a test'
 
 
+@pytest.mark.issue(3880)
 def test_issue3880():
     """Test that `nlp.pipe()` works when an empty string ends the batch.
 
@@ -341,6 +355,7 @@ def test_issue3880():
         pass
 
 
+@pytest.mark.issue(3882)
 def test_issue3882(en_vocab):
     """Test that displaCy doesn't serialize the doc.user_data when making a
     copy of the Doc.
@@ -350,6 +365,7 @@ def test_issue3882(en_vocab):
     parse_deps(doc)
 
 
+@pytest.mark.issue(3951)
 def test_issue3951(en_vocab):
     """Test that combinations of optional rules are matched correctly."""
     matcher = Matcher(en_vocab)
@@ -365,6 +381,7 @@ def test_issue3951(en_vocab):
     assert len(matches) == 0
 
 
+@pytest.mark.issue(3959)
 def test_issue3959():
     """Ensure that a modified pos attribute is serialized correctly."""
     nlp = English()
@@ -383,6 +400,7 @@ def test_issue3959():
         assert doc2[0].pos_ == "NOUN"
 
 
+@pytest.mark.issue(3962)
 def test_issue3962(en_vocab):
     """Ensure that as_doc does not result in out-of-bound access of tokens.
     This is achieved by setting the head to itself if it would lie out of the span otherwise."""
@@ -421,6 +439,7 @@ def test_issue3962(en_vocab):
     assert len(list(doc3.sents)) == 1
 
 
+@pytest.mark.issue(3962)
 def test_issue3962_long(en_vocab):
     """Ensure that as_doc does not result in out-of-bound access of tokens.
     This is achieved by setting the head to itself if it would lie out of the span otherwise."""
@@ -456,6 +475,7 @@ def test_issue3962_long(en_vocab):
     assert sents[1].text == "They never"
 
 
+@pytest.mark.issue(3972)
 def test_issue3972(en_vocab):
     """Test that the PhraseMatcher returns duplicates for duplicate match IDs."""
     matcher = PhraseMatcher(en_vocab)

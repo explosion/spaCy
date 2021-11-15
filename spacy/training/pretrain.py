@@ -50,7 +50,9 @@ def pretrain(
     # TODO: move this to logger function?
     tracker = ProgressTracker(frequency=10000)
     if P["n_save_epoch"]:
-        msg.divider(f"Pre-training tok2vec layer - starting at epoch {epoch_resume} - saving every {P['n_save_epoch']} epoch")
+        msg.divider(
+            f"Pre-training tok2vec layer - starting at epoch {epoch_resume} - saving every {P['n_save_epoch']} epoch"
+        )
     else:
         msg.divider(f"Pre-training tok2vec layer - starting at epoch {epoch_resume}")
     row_settings = {"widths": (3, 10, 10, 6, 4), "aligns": ("r", "r", "r", "r", "r")}

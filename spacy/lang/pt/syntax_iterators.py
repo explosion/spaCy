@@ -14,12 +14,13 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Tuple[int, int, int]]:
         "nsubj:pass",
         "obj",
         "obl",
+        "obl:agent",
         "nmod",
         "pcomp",
         "appos",
         "ROOT",
     ]
-    post_modifiers = ["flat", "fixed", "compound"]
+    post_modifiers = ["flat", "flat:name", "fixed", "compound"]
     doc = doclike.doc  # Ensure works on both Doc and Span.
     if not doc.has_annotation("DEP"):
         raise ValueError(Errors.E029)
@@ -27,6 +28,8 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Tuple[int, int, int]]:
     np_modifs = {doc.vocab.strings.add(modifier) for modifier in post_modifiers}
     np_label = doc.vocab.strings.add("NP")
     adj_label = doc.vocab.strings.add("amod")
+    det_label = doc.vocab.strings.add("det")
+    det_pos = doc.vocab.strings.add("DET")
     adp_label = doc.vocab.strings.add("ADP")
     conj = doc.vocab.strings.add("conj")
     conj_pos = doc.vocab.strings.add("CCONJ")
@@ -42,8 +45,14 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Tuple[int, int, int]]:
             right_child = right_childs[0] if right_childs else None
 
             if right_child:
-                if right_child.dep == adj_label:
+                if (
+                    right_child.dep == adj_label
+                ):  # allow chain of adjectives by expanding to right
                     right_end = right_child.right_edge
+                elif (
+                    right_child.dep == det_label and right_child.pos == det_pos
+                ):  # cut relative pronouns here
+                    right_end = right_child
                 elif right_child.dep in np_modifs:  # Check if we can expand to right
                     right_end = word.right_edge
                 else:
@@ -55,7 +64,7 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Tuple[int, int, int]]:
             left_index = word.left_edge.i
             left_index = (
                 left_index + 1 if word.left_edge.pos == adp_label else left_index
-            )  # Eliminate left attached de, del
+            )
 
             yield left_index, right_end.i + 1, np_label
         elif word.dep == conj:

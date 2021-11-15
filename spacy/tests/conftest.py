@@ -121,6 +121,11 @@ def es_tokenizer():
 
 
 @pytest.fixture(scope="session")
+def es_vocab():
+    return get_lang_class("es")().vocab
+
+
+@pytest.fixture(scope="session")
 def eu_tokenizer():
     return get_lang_class("eu")().tokenizer
 
@@ -248,6 +253,11 @@ def pt_tokenizer():
 
 
 @pytest.fixture(scope="session")
+def pt_vocab():
+    return get_lang_class("pt")().vocab
+
+
+@pytest.fixture(scope="session")
 def ro_tokenizer():
     return get_lang_class("ro")().tokenizer
 
@@ -288,6 +298,11 @@ def th_tokenizer():
 @pytest.fixture(scope="session")
 def ti_tokenizer():
     return get_lang_class("ti")().tokenizer
+
+
+@pytest.fixture(scope="session")
+def tl_tokenizer():
+    return get_lang_class("tl")().tokenizer
 
 
 @pytest.fixture(scope="session")

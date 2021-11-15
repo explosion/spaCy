@@ -162,6 +162,7 @@ def test_serialize_tagger_strings(en_vocab, de_vocab, taggers):
         assert label in tagger2.vocab.strings
 
 
+@pytest.mark.issue(1105)
 def test_serialize_textcat_empty(en_vocab):
     # See issue #1105
     cfg = {"model": DEFAULT_SINGLE_TEXTCAT_MODEL}

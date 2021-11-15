@@ -152,6 +152,7 @@ def test_operator_combos(en_vocab):
             assert not matches, (string, pattern_str)
 
 
+@pytest.mark.issue(1450)
 def test_matcher_end_zero_plus(en_vocab):
     """Test matcher works when patterns end with * operator. (issue 1450)"""
     matcher = Matcher(en_vocab)

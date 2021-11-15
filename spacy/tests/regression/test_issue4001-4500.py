@@ -17,6 +17,7 @@ from thinc.api import compounding
 from ..util import make_tempdir
 
 
+@pytest.mark.issue(4002)
 def test_issue4002(en_vocab):
     """Test that the PhraseMatcher can match on overwritten NORM attributes."""
     matcher = PhraseMatcher(en_vocab, attr="NORM")
@@ -37,6 +38,7 @@ def test_issue4002(en_vocab):
     assert len(matches) == 1
 
 
+@pytest.mark.issue(4030)
 def test_issue4030():
     """Test whether textcat works fine with empty doc"""
     unique_classes = ["offensive", "inoffensive"]
@@ -77,6 +79,7 @@ def test_issue4030():
     assert doc.cats["inoffensive"] == 0.0
 
 
+@pytest.mark.issue(4042)
 def test_issue4042():
     """Test that serialization of an EntityRuler before NER works fine."""
     nlp = English()
@@ -105,6 +108,7 @@ def test_issue4042():
         assert doc2.ents[0].label_ == "MY_ORG"
 
 
+@pytest.mark.issue(4042)
 def test_issue4042_bug2():
     """
     Test that serialization of an NER works fine when new labels were added.
@@ -139,6 +143,7 @@ def test_issue4042_bug2():
         assert len(ner2.labels) == 2
 
 
+@pytest.mark.issue(4054)
 def test_issue4054(en_vocab):
     """Test that a new blank model can be made with a vocab from file,
     and that serialization does not drop the language at any point."""
@@ -159,6 +164,7 @@ def test_issue4054(en_vocab):
         assert nlp3.lang == "en"
 
 
+@pytest.mark.issue(4120)
 def test_issue4120(en_vocab):
     """Test that matches without a final {OP: ?} token are returned."""
     matcher = Matcher(en_vocab)
@@ -177,6 +183,7 @@ def test_issue4120(en_vocab):
     assert len(matcher(doc4)) == 3  # fixed
 
 
+@pytest.mark.issue(4133)
 def test_issue4133(en_vocab):
     nlp = English()
     vocab_bytes = nlp.vocab.to_bytes()
@@ -196,6 +203,7 @@ def test_issue4133(en_vocab):
     assert actual == pos
 
 
+@pytest.mark.issue(4190)
 def test_issue4190():
     def customize_tokenizer(nlp):
         prefix_re = compile_prefix_regex(nlp.Defaults.prefixes)
@@ -236,6 +244,7 @@ def test_issue4190():
     assert result_1b == result_2
 
 
+@pytest.mark.issue(4267)
 def test_issue4267():
     """Test that running an entity_ruler after ner gives consistent results"""
     nlp = English()
@@ -262,6 +271,7 @@ def test_issue4267():
 
 
 @pytest.mark.skip(reason="lemmatizer lookups no longer in vocab")
+@pytest.mark.issue(4272)
 def test_issue4272():
     """Test that lookup table can be accessed from Token.lemma if no POS tags
     are available."""
@@ -287,6 +297,7 @@ def test_multiple_predictions():
     dummy_pipe(doc)
 
 
+@pytest.mark.issue(4313)
 def test_issue4313():
     """This should not crash or exit with some strange error code"""
     beam_width = 16
@@ -313,6 +324,7 @@ def test_issue4313():
     assert "MY_ORG" in ner.labels
 
 
+@pytest.mark.issue(4348)
 def test_issue4348():
     """Test that training the tagger with empty data, doesn't throw errors"""
     nlp = English()
@@ -328,6 +340,7 @@ def test_issue4348():
             nlp.update(batch, sgd=optimizer, losses=losses)
 
 
+@pytest.mark.issue(4367)
 def test_issue4367():
     """Test that docbin init goes well"""
     DocBin()
@@ -335,6 +348,7 @@ def test_issue4367():
     DocBin(attrs=["LEMMA", "ENT_IOB", "ENT_TYPE"])
 
 
+@pytest.mark.issue(4373)
 def test_issue4373():
     """Test that PhraseMatcher.vocab can be accessed (like Matcher.vocab)."""
     matcher = Matcher(Vocab())
@@ -343,6 +357,7 @@ def test_issue4373():
     assert isinstance(matcher.vocab, Vocab)
 
 
+@pytest.mark.issue(4402)
 def test_issue4402():
     json_data = {
         "id": 0,

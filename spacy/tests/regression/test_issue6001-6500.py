@@ -4,6 +4,7 @@ from spacy.schemas import TokenPattern, TokenPatternSchema
 import pytest
 
 
+@pytest.mark.issue(6207)
 def test_issue6207(en_tokenizer):
     doc = en_tokenizer("zero one two three four five six")
 
@@ -18,6 +19,7 @@ def test_issue6207(en_tokenizer):
     assert s3 in result
 
 
+@pytest.mark.issue(6258)
 def test_issue6258():
     """Test that the non-empty constraint pattern field is respected"""
     # These one is valid
