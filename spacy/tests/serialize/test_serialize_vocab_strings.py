@@ -4,6 +4,7 @@ from thinc.api import get_current_ops
 from spacy.vocab import Vocab
 from spacy.strings import StringStore
 from spacy.vectors import Vectors
+from spacy.tokens import Doc
 
 from ..util import make_tempdir
 
