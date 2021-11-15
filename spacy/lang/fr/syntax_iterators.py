@@ -29,7 +29,7 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Tuple[int, int, int]]:
     np_deps = {doc.vocab.strings.add(label) for label in labels}
     np_modifs = {doc.vocab.strings.add(modifier) for modifier in post_modifiers}
     np_label = doc.vocab.strings.add("NP")
-    adj_pos = doc.vocab.strings.add("amod")
+    adj_label = doc.vocab.strings.add("amod")
     det_label = doc.vocab.strings.add("det")
     det_pos = doc.vocab.strings.add("DET")
     adp_pos = doc.vocab.strings.add("ADP")
@@ -48,7 +48,7 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Tuple[int, int, int]]:
 
             if right_child:
                 if (
-                    right_child.dep == adj_pos
+                    right_child.dep == adj_label
                 ):  # allow chain of adjectives by expanding to right
                     right_end = right_child.right_edge
                 elif (
@@ -69,9 +69,9 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Tuple[int, int, int]]:
             )
 
             yield left_index, right_end.i + 1, np_label
-        elif word.dep == conj:
+        elif word.dep == conj_label:
             head = word.head
-            while head.dep == conj and head.head.i < head.i:
+            while head.dep == conj_label and head.head.i < head.i:
                 head = head.head
             # If the head is an NP, and we're coordinated to it, we're an NP
             if head.dep in np_deps:
