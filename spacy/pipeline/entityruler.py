@@ -436,7 +436,7 @@ class EntityRuler(Pipe):
                 patterns = srsly.read_jsonl(path)
                 self.add_patterns(patterns)
             else:
-                raise ValueError(Errors.E1023.format(path=path, frmt=".jsonl"))
+                raise ValueError(Errors.E1023.format(path=path))
         elif depr_patterns_path.is_file():
             patterns = srsly.read_jsonl(depr_patterns_path)
             self.add_patterns(patterns)
