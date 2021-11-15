@@ -15,7 +15,7 @@ import pytest
             ["DET", "NOUN"],
             [(0, 2)],
         ),
-        # determiner + nou starting with vowel
+        # determiner + noun starting with vowel
         # l'heure -> l'heure
         (
             ["l'", "heure"],
