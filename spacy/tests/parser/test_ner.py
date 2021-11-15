@@ -58,6 +58,26 @@ def tsys(vocab, entity_types):
     return BiluoPushDown(vocab.strings, actions)
 
 
+@pytest.mark.parametrize("label", ["U-JOB-NAME"])
+@pytest.mark.issue(1967)
+def test_issue1967(label):
+    nlp = Language()
+    config = {}
+    ner = nlp.create_pipe("ner", config=config)
+    example = Example.from_dict(
+        Doc(ner.vocab, words=["word"]),
+        {
+            "ids": [0],
+            "words": ["word"],
+            "tags": ["tag"],
+            "heads": [0],
+            "deps": ["dep"],
+            "entities": [label],
+        },
+    )
+    assert "JOB-NAME" in ner.moves.get_actions(examples=[example])[1]
+
+
 def test_get_oracle_moves(tsys, doc, entity_annots):
     example = Example.from_dict(doc, {"entities": entity_annots})
     act_classes = tsys.get_oracle_sequence(example, _debug=False)

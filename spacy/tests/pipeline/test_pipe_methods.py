@@ -1,9 +1,11 @@
+import gc
 import pytest
 from spacy.language import Language
 from spacy.pipeline import TrainablePipe
 from spacy.training import Example
 from spacy.util import SimpleFrozenList, get_arg_names
 from spacy.lang.en import English
+from spacy.vocab import Vocab
 
 
 @pytest.fixture
@@ -19,6 +21,51 @@ def new_pipe(doc):
 @Language.component("other_pipe")
 def other_pipe(doc):
     return doc
+
+
+@pytest.mark.issue(1506)
+def test_issue1506():
+    def string_generator():
+        for _ in range(10001):
+            yield "It's sentence produced by that bug."
+        for _ in range(10001):
+            yield "I erase some hbdsaj lemmas."
+        for _ in range(10001):
+            yield "I erase lemmas."
+        for _ in range(10001):
+            yield "It's sentence produced by that bug."
+        for _ in range(10001):
+            yield "It's sentence produced by that bug."
+
+    nlp = English()
+    for i, d in enumerate(nlp.pipe(string_generator())):
+        # We should run cleanup more than one time to actually cleanup data.
+        # In first run — clean up only mark strings as «not hitted».
+        if i == 10000 or i == 20000 or i == 30000:
+            gc.collect()
+        for t in d:
+            str(t.lemma_)
+
+
+@pytest.mark.issue(1654)
+def test_issue1654():
+    nlp = Language(Vocab())
+    assert not nlp.pipeline
+
+    @Language.component("component")
+    def component(doc):
+        return doc
+
+    nlp.add_pipe("component", name="1")
+    nlp.add_pipe("component", name="2", after="1")
+    nlp.add_pipe("component", name="3", after="2")
+    assert nlp.pipe_names == ["1", "2", "3"]
+    nlp2 = Language(Vocab())
+    assert not nlp2.pipeline
+    nlp2.add_pipe("component", name="3")
+    nlp2.add_pipe("component", name="2", before="3")
+    nlp2.add_pipe("component", name="1", before="2")
+    assert nlp2.pipe_names == ["1", "2", "3"]
 
 
 def test_add_pipe_no_name(nlp):

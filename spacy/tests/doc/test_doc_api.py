@@ -30,6 +30,31 @@ def test_doc_api_init(en_vocab):
     assert [t.is_sent_start for t in doc] == [True, False, True, False]
 
 
+@pytest.mark.issue(1547)
+def test_issue1547():
+    """Test that entity labels still match after merging tokens."""
+    words = ["\n", "worda", ".", "\n", "wordb", "-", "Biosphere", "2", "-", " \n"]
+    doc = Doc(Vocab(), words=words)
+    doc.ents = [Span(doc, 6, 8, label=doc.vocab.strings["PRODUCT"])]
+    with doc.retokenize() as retokenizer:
+        retokenizer.merge(doc[5:7])
+    assert [ent.text for ent in doc.ents]
+
+
+@pytest.mark.issue(1757)
+def test_issue1757():
+    """Test comparison against None doesn't cause segfault."""
+    doc = Doc(Vocab(), words=["a", "b", "c"])
+    assert not doc[0] < None
+    assert not doc[0] is None
+    assert doc[0] >= None
+    assert not doc[:2] < None
+    assert not doc[:2] is None
+    assert doc[:2] >= None
+    assert not doc.vocab["a"] is None
+    assert not doc.vocab["a"] < None
+
+
 @pytest.mark.parametrize("text", [["one", "two", "three"]])
 def test_doc_api_compare_by_string_position(en_vocab, text):
     doc = Doc(en_vocab, words=text)

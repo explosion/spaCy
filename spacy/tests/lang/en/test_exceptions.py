@@ -156,6 +156,31 @@ def test_issue957(en_tokenizer):
         assert doc
 
 
+@pytest.mark.parametrize("text", ["test@example.com", "john.doe@example.co.uk"])
+@pytest.mark.issue(1698)
+def test_issue1698(en_tokenizer, text):
+    """Test that doc doesn't identify email-addresses as URLs"""
+    doc = en_tokenizer(text)
+    assert len(doc) == 1
+    assert not doc[0].like_url
+
+
+@pytest.mark.issue(1758)
+def test_issue1758(en_tokenizer):
+    """Test that "would've" is handled by the English tokenizer exceptions."""
+    tokens = en_tokenizer("would've")
+    assert len(tokens) == 2
+
+
+@pytest.mark.issue(1773)
+def test_issue1773(en_tokenizer):
+    """Test that spaces don't receive a POS but no TAG. This is the root cause
+    of the serialization issue reported in #1773."""
+    doc = en_tokenizer("\n")
+    if doc[0].pos_ == "SPACE":
+        assert doc[0].tag_ != ""
+
+
 def test_en_tokenizer_handles_basic_contraction(en_tokenizer):
     text = "don't giggle"
     tokens = en_tokenizer(text)

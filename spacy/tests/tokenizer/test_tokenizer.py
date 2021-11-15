@@ -1,6 +1,8 @@
 import re
 
+import numpy
 import pytest
+
 from spacy.lang.en import English
 from spacy.tokenizer import Tokenizer
 from spacy.tokens import Doc
@@ -61,6 +63,17 @@ def test_issue1061():
     doc = tokenizer(text)
     assert "_MATH_" in [w.text for w in doc]
     assert "MATH" not in [w.text for w in doc]
+
+
+@pytest.mark.issue(1963)
+def test_issue1963(en_tokenizer):
+    """Test that doc.merge() resizes doc.tensor"""
+    doc = en_tokenizer("a b c d")
+    doc.tensor = numpy.ones((len(doc), 128), dtype="f")
+    with doc.retokenize() as retokenizer:
+        retokenizer.merge(doc[0:2])
+    assert len(doc) == 3
+    assert doc.tensor.shape == (3, 128)
 
 
 @pytest.mark.skip(

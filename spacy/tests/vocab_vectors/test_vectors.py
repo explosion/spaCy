@@ -65,6 +65,30 @@ def tokenizer_v(vocab):
     return Tokenizer(vocab, {}, None, None, None)
 
 
+@pytest.mark.issue(1518)
+def test_issue1518():
+    """Test vectors.resize() works."""
+    vectors = Vectors(shape=(10, 10))
+    vectors.add("hello", row=2)
+    vectors.resize((5, 9))
+
+
+@pytest.mark.issue(1539)
+def test_issue1539():
+    """Ensure vectors.resize() doesn't try to modify dictionary during iteration."""
+    v = Vectors(shape=(10, 10), keys=[5, 3, 98, 100])
+    v.resize((100, 100))
+
+
+@pytest.mark.issue(1807)
+def test_issue1807():
+    """Test vocab.set_vector also adds the word to the vocab."""
+    vocab = Vocab(vectors_name="test_issue1807")
+    assert "hello" not in vocab
+    vocab.set_vector("hello", numpy.ones((50,), dtype="f"))
+    assert "hello" in vocab
+
+
 def test_init_vectors_with_resize_shape(strings, resize_data):
     v = Vectors(shape=(len(strings), 3))
     v.resize(shape=resize_data.shape)

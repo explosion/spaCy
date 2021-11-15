@@ -43,6 +43,32 @@ def doc_not_parsed(en_tokenizer):
     return doc
 
 
+@pytest.mark.issue(1537)
+def test_issue1537():
+    """Test that Span.as_doc() doesn't segfault."""
+    string = "The sky is blue . The man is pink . The dog is purple ."
+    doc = Doc(Vocab(), words=string.split())
+    doc[0].sent_start = True
+    for word in doc[1:]:
+        if word.nbor(-1).text == ".":
+            word.sent_start = True
+        else:
+            word.sent_start = False
+    sents = list(doc.sents)
+    sent0 = sents[0].as_doc()
+    sent1 = sents[1].as_doc()
+    assert isinstance(sent0, Doc)
+    assert isinstance(sent1, Doc)
+
+
+@pytest.mark.issue(1612)
+def test_issue1612(en_tokenizer):
+    """Test that span.orth_ is identical to span.text"""
+    doc = en_tokenizer("The black cat purrs.")
+    span = doc[1:3]
+    assert span.orth_ == span.text
+
+
 @pytest.mark.parametrize(
     "i_sent,i,j,text",
     [

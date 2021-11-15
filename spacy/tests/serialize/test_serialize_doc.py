@@ -1,11 +1,93 @@
+import copy
+
+import numpy
 import pytest
-from spacy.tokens.underscore import Underscore
 
 import spacy
+from spacy.attrs import DEP, HEAD
 from spacy.lang.en import English
+from spacy.language import Language
+from spacy.matcher import Matcher
 from spacy.tokens import Doc, DocBin
+from spacy.tokens.underscore import Underscore
+from spacy.vectors import Vectors
+from spacy.vocab import Vocab
 
 from ..util import make_tempdir
+
+
+@pytest.mark.issue(1727)
+def test_issue1727():
+    """Test that models with no pretrained vectors can be deserialized
+    correctly after vectors are added."""
+    nlp = Language(Vocab())
+    data = numpy.ones((3, 300), dtype="f")
+    vectors = Vectors(data=data, keys=["I", "am", "Matt"])
+    tagger = nlp.create_pipe("tagger")
+    tagger.add_label("PRP")
+    assert tagger.cfg.get("pretrained_dims", 0) == 0
+    tagger.vocab.vectors = vectors
+    with make_tempdir() as path:
+        tagger.to_disk(path)
+        tagger = nlp.create_pipe("tagger").from_disk(path)
+        assert tagger.cfg.get("pretrained_dims", 0) == 0
+
+
+@pytest.mark.issue(1799)
+def test_issue1799():
+    """Test sentence boundaries are deserialized correctly, even for
+    non-projective sentences."""
+    heads_deps = numpy.asarray(
+        [
+            [1, 397],
+            [4, 436],
+            [2, 426],
+            [1, 402],
+            [0, 8206900633647566924],
+            [18446744073709551615, 440],
+            [18446744073709551614, 442],
+        ],
+        dtype="uint64",
+    )
+    doc = Doc(Vocab(), words="Just what I was looking for .".split())
+    doc.vocab.strings.add("ROOT")
+    doc = doc.from_array([HEAD, DEP], heads_deps)
+    assert len(list(doc.sents)) == 1
+
+
+@pytest.mark.issue(1834)
+def test_issue1834():
+    """Test that sentence boundaries & parse/tag flags are not lost
+    during serialization."""
+    words = ["This", "is", "a", "first", "sentence", ".", "And", "another", "one"]
+    doc = Doc(Vocab(), words=words)
+    doc[6].is_sent_start = True
+    new_doc = Doc(doc.vocab).from_bytes(doc.to_bytes())
+    assert new_doc[6].sent_start
+    assert not new_doc.has_annotation("DEP")
+    assert not new_doc.has_annotation("TAG")
+    doc = Doc(
+        Vocab(),
+        words=words,
+        tags=["TAG"] * len(words),
+        heads=[0, 0, 0, 0, 0, 0, 6, 6, 6],
+        deps=["dep"] * len(words),
+    )
+    new_doc = Doc(doc.vocab).from_bytes(doc.to_bytes())
+    assert new_doc[6].sent_start
+    assert new_doc.has_annotation("DEP")
+    assert new_doc.has_annotation("TAG")
+
+
+@pytest.mark.issue(1883)
+def test_issue1883():
+    matcher = Matcher(Vocab())
+    matcher.add("pat1", [[{"orth": "hello"}]])
+    doc = Doc(matcher.vocab, words=["hello"])
+    assert len(matcher(doc)) == 1
+    new_matcher = copy.deepcopy(matcher)
+    new_doc = Doc(new_matcher.vocab, words=["hello"])
+    assert len(new_matcher(new_doc)) == 1
 
 
 def test_serialize_empty_doc(en_vocab):
