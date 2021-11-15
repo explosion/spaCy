@@ -12,6 +12,14 @@ test_strings = [([], []), (["rats", "are", "cute"], ["i", "like", "rats"])]
 test_strings_attrs = [(["rats", "are", "cute"], "Hello")]
 
 
+@pytest.mark.issue(599)
+def test_issue599(en_vocab):
+    doc = Doc(en_vocab)
+    doc2 = Doc(doc.vocab)
+    doc2.from_bytes(doc.to_bytes())
+    assert doc2.has_annotation("DEP")
+
+
 @pytest.mark.parametrize("text", ["rat"])
 def test_serialize_vocab(en_vocab, text):
     text_hash = en_vocab.strings.add(text)
