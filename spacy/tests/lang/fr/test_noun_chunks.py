@@ -60,7 +60,7 @@ import pytest
             ["DET", "NOUN", "ADJ"],
             [(0, 3)],
         ),
-        # multiple adjectives, one adj before the noun one adj after the noun
+        # multiple adjectives: one adj before the noun, one adj after the noun
         # un nouveau film intéressant -> un nouveau film intéressant
         (
             ["un", "nouveau", "film", "intéressant"],
