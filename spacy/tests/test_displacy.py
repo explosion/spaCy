@@ -5,6 +5,17 @@ from spacy.tokens import Span, Doc
 from spacy.lang.fa import Persian
 
 
+@pytest.mark.issue(2361)
+def test_issue2361(de_vocab):
+    """Test if < is escaped when rendering"""
+    chars = ("&lt;", "&gt;", "&amp;", "&quot;")
+    words = ["<", ">", "&", '"']
+    doc = Doc(de_vocab, words=words, deps=["dep"] * len(words))
+    html = displacy.render(doc)
+    for char in chars:
+        assert char in html
+
+
 def test_displacy_parse_ents(en_vocab):
     """Test that named entities on a Doc are converted into displaCy's format."""
     doc = Doc(en_vocab, words=["But", "Google", "is", "starting", "from", "behind"])

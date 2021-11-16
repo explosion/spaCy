@@ -55,6 +55,28 @@ def test_issue1757():
     assert not doc.vocab["a"] < None
 
 
+@pytest.mark.issue(2396)
+def test_issue2396(en_vocab):
+    words = ["She", "created", "a", "test", "for", "spacy"]
+    heads = [1, 1, 3, 1, 3, 4]
+    deps = ["dep"] * len(heads)
+    matrix = numpy.array(
+        [
+            [0, 1, 1, 1, 1, 1],
+            [1, 1, 1, 1, 1, 1],
+            [1, 1, 2, 3, 3, 3],
+            [1, 1, 3, 3, 3, 3],
+            [1, 1, 3, 3, 4, 4],
+            [1, 1, 3, 3, 4, 5],
+        ],
+        dtype=numpy.int32,
+    )
+    doc = Doc(en_vocab, words=words, heads=heads, deps=deps)
+    span = doc[:]
+    assert (doc.get_lca_matrix() == matrix).all()
+    assert (span.get_lca_matrix() == matrix).all()
+
+
 @pytest.mark.parametrize("text", [["one", "two", "three"]])
 def test_doc_api_compare_by_string_position(en_vocab, text):
     doc = Doc(en_vocab, words=text)

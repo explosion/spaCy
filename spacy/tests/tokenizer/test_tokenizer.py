@@ -168,6 +168,22 @@ def test_issue1494():
         assert [token.text for token in nlp(text)] == expected
 
 
+@pytest.mark.skip(
+    reason="Can not be fixed without iterative looping between prefix/suffix and infix"
+)
+@pytest.mark.issue(2070)
+def test_issue2070():
+    """Test that checks that a dot followed by a quote is handled
+    appropriately.
+    """
+    # Problem: The dot is now properly split off, but the prefix/suffix rules
+    # are not applied again afterwards. This means that the quote will still be
+    # attached to the remaining token.
+    nlp = English()
+    doc = nlp('First sentence."A quoted sentence" he said ...')
+    assert len(doc) == 11
+
+
 def test_tokenizer_handles_no_word(tokenizer):
     tokens = tokenizer("")
     assert len(tokens) == 0

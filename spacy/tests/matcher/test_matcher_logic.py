@@ -299,6 +299,16 @@ def test_issue_1971_4(en_vocab):
     assert matches[0] == (en_vocab.strings["TEST"], 0, 3)
 
 
+@pytest.mark.issue(2464)
+def test_issue2464(en_vocab):
+    """Test problem with successive ?. This is the same bug, so putting it here."""
+    matcher = Matcher(en_vocab)
+    doc = Doc(en_vocab, words=["a", "b"])
+    matcher.add("4", [[{"OP": "?"}, {"OP": "?"}]])
+    matches = matcher(doc)
+    assert len(matches) == 3
+
+
 @pytest.mark.parametrize(
     "pattern,re_pattern",
     [

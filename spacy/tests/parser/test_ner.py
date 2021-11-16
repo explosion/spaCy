@@ -4,10 +4,11 @@ from spacy.attrs import ENT_IOB
 
 from spacy import util, registry
 from spacy.lang.en import English
+from spacy.lang.it import Italian
 from spacy.language import Language
 from spacy.lookups import Lookups
 from spacy.pipeline._parser_internals.ner import BiluoPushDown
-from spacy.training import Example
+from spacy.training import Example, iob_to_biluo
 from spacy.tokens import Doc, Span
 from spacy.vocab import Vocab
 import logging
@@ -76,6 +77,37 @@ def test_issue1967(label):
         },
     )
     assert "JOB-NAME" in ner.moves.get_actions(examples=[example])[1]
+
+
+@pytest.mark.issue(2179)
+def test_issue2179():
+    """Test that spurious 'extra_labels' aren't created when initializing NER."""
+    nlp = Italian()
+    ner = nlp.add_pipe("ner")
+    ner.add_label("CITIZENSHIP")
+    nlp.initialize()
+    nlp2 = Italian()
+    nlp2.add_pipe("ner")
+    assert len(nlp2.get_pipe("ner").labels) == 0
+    model = nlp2.get_pipe("ner").model
+    model.attrs["resize_output"](model, nlp.get_pipe("ner").moves.n_moves)
+    nlp2.from_bytes(nlp.to_bytes())
+    assert "extra_labels" not in nlp2.get_pipe("ner").cfg
+    assert nlp2.get_pipe("ner").labels == ("CITIZENSHIP",)
+
+
+@pytest.mark.issue(2385)
+def test_issue2385():
+    """Test that IOB tags are correctly converted to BILUO tags."""
+    # fix bug in labels with a 'b' character
+    tags1 = ("B-BRAWLER", "I-BRAWLER", "I-BRAWLER")
+    assert iob_to_biluo(tags1) == ["B-BRAWLER", "I-BRAWLER", "L-BRAWLER"]
+    # maintain support for iob1 format
+    tags2 = ("I-ORG", "I-ORG", "B-ORG")
+    assert iob_to_biluo(tags2) == ["B-ORG", "L-ORG", "U-ORG"]
+    # maintain support for iob2 format
+    tags3 = ("B-PERSON", "I-PERSON", "B-PERSON")
+    assert iob_to_biluo(tags3) == ["B-PERSON", "L-PERSON", "U-PERSON"]
 
 
 def test_get_oracle_moves(tsys, doc, entity_annots):

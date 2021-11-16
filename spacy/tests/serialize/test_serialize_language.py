@@ -2,6 +2,7 @@ import pytest
 import re
 
 from spacy.language import Language
+from spacy.lang.it import Italian
 from spacy.tokenizer import Tokenizer
 
 from ..util import make_tempdir
@@ -19,6 +20,15 @@ def meta_data():
         "license": "license-in-fixture",
         "vectors": {"width": 0, "vectors": 0, "keys": 0, "name": None},
     }
+
+
+@pytest.mark.issue(2482)
+def test_issue2482():
+    """Test we can serialize and deserialize a blank NER or parser model."""
+    nlp = Italian()
+    nlp.add_pipe("ner")
+    b = nlp.to_bytes()
+    Italian().from_bytes(b)
 
 
 def test_serialize_language_meta_disk(meta_data):
