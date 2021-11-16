@@ -134,6 +134,26 @@ def test_issue2800():
             nlp.update([example], sgd=optimizer, losses=losses, drop=0.5)
 
 
+@pytest.mark.issue(3209)
+def test_issue3209():
+    """Test issue that occurred in spaCy nightly where NER labels were being
+    mapped to classes incorrectly after loading the model, when the labels
+    were added using ner.add_label().
+    """
+    nlp = English()
+    ner = nlp.add_pipe("ner")
+    ner.add_label("ANIMAL")
+    nlp.initialize()
+    move_names = ["O", "B-ANIMAL", "I-ANIMAL", "L-ANIMAL", "U-ANIMAL"]
+    assert ner.move_names == move_names
+    nlp2 = English()
+    ner2 = nlp2.add_pipe("ner")
+    model = ner2.model
+    model.attrs["resize_output"](model, ner.moves.n_moves)
+    nlp2.from_bytes(nlp.to_bytes())
+    assert ner2.move_names == move_names
+
+
 def test_get_oracle_moves(tsys, doc, entity_annots):
     example = Example.from_dict(doc, {"entities": entity_annots})
     act_classes = tsys.get_oracle_sequence(example, _debug=False)

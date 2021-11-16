@@ -1,4 +1,5 @@
 import copy
+import pickle
 
 import numpy
 import pytest
@@ -7,7 +8,7 @@ import spacy
 from spacy.attrs import DEP, HEAD
 from spacy.lang.en import English
 from spacy.language import Language
-from spacy.matcher import Matcher
+from spacy.matcher import Matcher, PhraseMatcher
 from spacy.tokens import Doc, DocBin
 from spacy.tokens.underscore import Underscore
 from spacy.vectors import Vectors
@@ -102,6 +103,47 @@ def test_issue2564():
     docs = nlp.pipe(["hello", "world"])
     piped_doc = next(docs)
     assert piped_doc.has_annotation("TAG")
+
+
+@pytest.mark.issue(3248)
+def test_issue3248_2():
+    """Test that the PhraseMatcher can be pickled correctly."""
+    nlp = English()
+    matcher = PhraseMatcher(nlp.vocab)
+    matcher.add("TEST1", [nlp("a"), nlp("b"), nlp("c")])
+    matcher.add("TEST2", [nlp("d")])
+    data = pickle.dumps(matcher)
+    new_matcher = pickle.loads(data)
+    assert len(new_matcher) == len(matcher)
+
+
+@pytest.mark.issue(3289)
+def test_issue3289():
+    """Test that Language.to_bytes handles serializing a pipeline component
+    with an uninitialized model."""
+    nlp = English()
+    nlp.add_pipe("textcat")
+    bytes_data = nlp.to_bytes()
+    new_nlp = English()
+    new_nlp.add_pipe("textcat")
+    new_nlp.from_bytes(bytes_data)
+
+
+@pytest.mark.issue(3468)
+def test_issue3468():
+    """Test that sentence boundaries are set correctly so Doc.has_annotation("SENT_START") can
+    be restored after serialization."""
+    nlp = English()
+    nlp.add_pipe("sentencizer")
+    doc = nlp("Hello world")
+    assert doc[0].is_sent_start
+    assert doc.has_annotation("SENT_START")
+    assert len(list(doc.sents)) == 1
+    doc_bytes = doc.to_bytes()
+    new_doc = Doc(nlp.vocab).from_bytes(doc_bytes)
+    assert new_doc[0].is_sent_start
+    assert new_doc.has_annotation("SENT_START")
+    assert len(list(new_doc.sents)) == 1
 
 
 def test_serialize_empty_doc(en_vocab):

@@ -4,6 +4,7 @@ import numpy
 import pytest
 
 from spacy.lang.en import English
+from spacy.lang.de import German
 from spacy.tokenizer import Tokenizer
 from spacy.tokens import Doc
 from spacy.util import compile_prefix_regex, compile_suffix_regex, ensure_path
@@ -242,6 +243,32 @@ def test_issue2754(en_tokenizer):
     assert a[0].norm_ == "a"
     am = en_tokenizer("am")
     assert am[0].norm_ == "am"
+
+
+@pytest.mark.issue(3002)
+def test_issue3002():
+    """Test that the tokenizer doesn't hang on a long list of dots"""
+    nlp = German()
+    doc = nlp(
+        "880.794.982.218.444.893.023.439.794.626.120.190.780.624.990.275.671 ist eine lange Zahl"
+    )
+    assert len(doc) == 5
+
+
+@pytest.mark.skip(reason="default suffix rules avoid one upper-case letter before dot")
+@pytest.mark.issue(3449)
+def test_issue3449():
+    nlp = English()
+    nlp.add_pipe("sentencizer")
+    text1 = "He gave the ball to I. Do you want to go to the movies with I?"
+    text2 = "He gave the ball to I.  Do you want to go to the movies with I?"
+    text3 = "He gave the ball to I.\nDo you want to go to the movies with I?"
+    t1 = nlp(text1)
+    t2 = nlp(text2)
+    t3 = nlp(text3)
+    assert t1[5].text == "I"
+    assert t2[5].text == "I"
+    assert t3[5].text == "I"
 
 
 def test_tokenizer_handles_no_word(tokenizer):

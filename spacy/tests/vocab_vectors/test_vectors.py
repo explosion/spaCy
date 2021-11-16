@@ -108,6 +108,16 @@ def test_issue2871():
     assert vocab.vectors.find(key="SUFFIX") == 2
 
 
+@pytest.mark.issue(3412)
+def test_issue3412():
+    data = numpy.asarray([[0, 0, 0], [1, 2, 3], [9, 8, 7]], dtype="f")
+    vectors = Vectors(data=data, keys=["A", "B", "C"])
+    keys, best_rows, scores = vectors.most_similar(
+        numpy.asarray([[9, 8, 7], [0, 0, 0]], dtype="f")
+    )
+    assert best_rows[0] == 2
+
+
 def test_init_vectors_with_resize_shape(strings, resize_data):
     v = Vectors(shape=(len(strings), 3))
     v.resize(shape=resize_data.shape)

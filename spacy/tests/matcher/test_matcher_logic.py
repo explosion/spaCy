@@ -347,6 +347,52 @@ def test_issue2671():
         assert nlp.vocab.strings[match_id] == pattern_id
 
 
+@pytest.mark.issue(3009)
+def test_issue3009(en_vocab):
+    """Test problem with matcher quantifiers"""
+    patterns = [
+        [{"ORTH": "has"}, {"LOWER": "to"}, {"LOWER": "do"}, {"TAG": "IN"}],
+        [
+            {"ORTH": "has"},
+            {"IS_ASCII": True, "IS_PUNCT": False, "OP": "*"},
+            {"LOWER": "to"},
+            {"LOWER": "do"},
+            {"TAG": "IN"},
+        ],
+        [
+            {"ORTH": "has"},
+            {"IS_ASCII": True, "IS_PUNCT": False, "OP": "?"},
+            {"LOWER": "to"},
+            {"LOWER": "do"},
+            {"TAG": "IN"},
+        ],
+    ]
+    words = ["also", "has", "to", "do", "with"]
+    tags = ["RB", "VBZ", "TO", "VB", "IN"]
+    pos = ["ADV", "VERB", "ADP", "VERB", "ADP"]
+    doc = Doc(en_vocab, words=words, tags=tags, pos=pos)
+    matcher = Matcher(en_vocab)
+    for i, pattern in enumerate(patterns):
+        matcher.add(str(i), [pattern])
+        matches = matcher(doc)
+        assert matches
+
+
+@pytest.mark.issue(3328)
+def test_issue3328(en_vocab):
+    doc = Doc(en_vocab, words=["Hello", ",", "how", "are", "you", "doing", "?"])
+    matcher = Matcher(en_vocab)
+    patterns = [
+        [{"LOWER": {"IN": ["hello", "how"]}}],
+        [{"LOWER": {"IN": ["you", "doing"]}}],
+    ]
+    matcher.add("TEST", patterns)
+    matches = matcher(doc)
+    assert len(matches) == 4
+    matched_texts = [doc[start:end].text for _, start, end in matches]
+    assert matched_texts == ["Hello", "how", "you", "doing"]
+
+
 @pytest.mark.parametrize(
     "pattern,re_pattern",
     [

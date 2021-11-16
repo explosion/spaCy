@@ -58,6 +58,16 @@ def taggers(en_vocab):
     return tagger1, tagger2
 
 
+@pytest.mark.issue(3456)
+def test_issue3456():
+    # this crashed because of a padding error in layer.ops.unflatten in thinc
+    nlp = English()
+    tagger = nlp.add_pipe("tagger")
+    tagger.add_label("A")
+    nlp.initialize()
+    list(nlp.pipe(["hi", ""]))
+
+
 @pytest.mark.parametrize("Parser", test_parsers)
 def test_serialize_parser_roundtrip_bytes(en_vocab, Parser):
     cfg = {"model": DEFAULT_PARSER_MODEL}

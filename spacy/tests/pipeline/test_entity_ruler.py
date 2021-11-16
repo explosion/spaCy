@@ -1,9 +1,11 @@
 import pytest
 
 from spacy import registry
-from spacy.tokens import Span
+from spacy.tokens import Doc, Span
 from spacy.language import Language
-from spacy.pipeline import EntityRuler
+from spacy.lang.en import English
+from spacy.pipeline import EntityRuler, EntityRecognizer
+from spacy.pipeline.ner import DEFAULT_NER_MODEL
 from spacy.errors import MatchPatternError
 from thinc.api import NumpyOps, get_current_ops
 
@@ -30,6 +32,29 @@ def patterns():
 def add_ent_component(doc):
     doc.ents = [Span(doc, 0, 3, label="ORG")]
     return doc
+
+
+@pytest.mark.issue(3345)
+def test_issue3345():
+    """Test case where preset entity crosses sentence boundary."""
+    nlp = English()
+    doc = Doc(nlp.vocab, words=["I", "live", "in", "New", "York"])
+    doc[4].is_sent_start = True
+    ruler = EntityRuler(nlp, patterns=[{"label": "GPE", "pattern": "New York"}])
+    cfg = {"model": DEFAULT_NER_MODEL}
+    model = registry.resolve(cfg, validate=True)["model"]
+    ner = EntityRecognizer(doc.vocab, model)
+    # Add the OUT action. I wouldn't have thought this would be necessary...
+    ner.moves.add_action(5, "")
+    ner.add_label("GPE")
+    doc = ruler(doc)
+    # Get into the state just before "New"
+    state = ner.moves.init_batch([doc])[0]
+    ner.moves.apply_transition(state, "O")
+    ner.moves.apply_transition(state, "O")
+    ner.moves.apply_transition(state, "O")
+    # Check that B-GPE is valid.
+    assert ner.moves.is_valid(state, "B-GPE")
 
 
 def test_entity_ruler_init(nlp, patterns):
