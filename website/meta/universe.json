@@ -3592,6 +3592,32 @@
                 "github": "xxyzz"
             },
             "category": ["standalone"]
+        },
+        {
+            "id": "eng_spacysentiment",
+            "title": "eng_spacysentiment",
+            "slogan": "Simple sentiment analysis using spaCy pipelines",
+            "description": "Sentiment analysis for simple english sentences using pre-trained spaCy pipelines",
+            "github": "vishnunkumar/spacysentiment",
+            "pip": "eng-spacysentiment",
+            "code_example": [
+                "import eng_spacysentiment",
+                "nlp = eng_spacysentiment.load()",
+                "text = \"Welcome to Arsenals official YouTube channel Watch as we take you closer and show you the personality of the club\"",
+                "doc = nlp(text)",
+                "print(doc.cats)",
+                "# {'positive': 0.29878824949264526, 'negative': 0.7012117505073547}"
+            ],
+            "thumb": "",
+            "image": "",
+            "code_language": "python",
+            "author": "Vishnu Nandakumar",
+            "author_links": {
+                "github": "Vishnunkumar",
+                "twitter": "vishnun_uchiha"
+            },
+            "category": ["pipeline"],
+            "tags": ["pipeline", "nlp", "sentiment"]
         }
     ],
 
