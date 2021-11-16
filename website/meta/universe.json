@@ -3603,9 +3603,9 @@
             "code_example": [
                 "import eng_spacysentiment",
                 "nlp = eng_spacysentiment.load()",
-                "text = Welcome to Arsenals official YouTube channel Watch as we take you closer and show you the personality of the club.",
+                "text = Welcome to Arsenals official YouTube channel Watch as we take you closer and show you the personality of the club",
                 "doc = nlp(text)",
-                "doc.cats"
+                "doc.cats",
                 "# {'positive': 0.29878824949264526, 'negative': 0.7012117505073547}"
             ],
             "thumb": "",
