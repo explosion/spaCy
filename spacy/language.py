@@ -671,7 +671,7 @@ class Language:
         resolved = registry.resolve(cfg, validate=validate)
         filled = registry.fill({"cfg": cfg[factory_name]}, validate=validate)["cfg"]
         filled = Config(filled)
-        filled["factory"] = internal_name
+        filled["factory"] = factory_name
         filled.pop("@factories", None)
         # Remove the extra values we added because we don't want to keep passing
         # them around, copying them etc.
@@ -681,7 +681,7 @@ class Language:
         # interpolated variables)
         if raw_config:
             filled = filled.merge(raw_config)
-        filled["factory"] = internal_name
+        filled["factory"] = factory_name
         self._pipe_configs[name] = filled
         return resolved[factory_name]
 
