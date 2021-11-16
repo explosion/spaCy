@@ -90,6 +90,20 @@ def test_issue1883():
     assert len(new_matcher(new_doc)) == 1
 
 
+@pytest.mark.issue(2564)
+def test_issue2564():
+    """Test the tagger sets has_annotation("TAG") correctly when used via Language.pipe."""
+    nlp = Language()
+    tagger = nlp.add_pipe("tagger")
+    tagger.add_label("A")
+    nlp.initialize()
+    doc = nlp("hello world")
+    assert doc.has_annotation("TAG")
+    docs = nlp.pipe(["hello", "world"])
+    piped_doc = next(docs)
+    assert piped_doc.has_annotation("TAG")
+
+
 def test_serialize_empty_doc(en_vocab):
     doc = Doc(en_vocab)
     data = doc.to_bytes()

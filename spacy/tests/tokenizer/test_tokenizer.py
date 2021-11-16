@@ -184,6 +184,66 @@ def test_issue2070():
     assert len(doc) == 11
 
 
+@pytest.mark.issue(2926)
+def test_issue2926(fr_tokenizer):
+    """Test that the tokenizer correctly splits tokens separated by a slash (/)
+    ending in a digit.
+    """
+    doc = fr_tokenizer("Learn html5/css3/javascript/jquery")
+    assert len(doc) == 8
+    assert doc[0].text == "Learn"
+    assert doc[1].text == "html5"
+    assert doc[2].text == "/"
+    assert doc[3].text == "css3"
+    assert doc[4].text == "/"
+    assert doc[5].text == "javascript"
+    assert doc[6].text == "/"
+    assert doc[7].text == "jquery"
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "ABLEItemColumn IAcceptance Limits of ErrorIn-Service Limits of ErrorColumn IIColumn IIIColumn IVColumn VComputed VolumeUnder Registration of\xa0VolumeOver Registration of\xa0VolumeUnder Registration of\xa0VolumeOver Registration of\xa0VolumeCubic FeetCubic FeetCubic FeetCubic FeetCubic Feet1Up to 10.0100.0050.0100.005220.0200.0100.0200.010350.0360.0180.0360.0184100.0500.0250.0500.0255Over 100.5% of computed volume0.25% of computed volume0.5% of computed volume0.25% of computed volume TABLE ItemColumn IAcceptance Limits of ErrorIn-Service Limits of ErrorColumn IIColumn IIIColumn IVColumn VComputed VolumeUnder Registration of\xa0VolumeOver Registration of\xa0VolumeUnder Registration of\xa0VolumeOver Registration of\xa0VolumeCubic FeetCubic FeetCubic FeetCubic FeetCubic Feet1Up to 10.0100.0050.0100.005220.0200.0100.0200.010350.0360.0180.0360.0184100.0500.0250.0500.0255Over 100.5% of computed volume0.25% of computed volume0.5% of computed volume0.25% of computed volume ItemColumn IAcceptance Limits of ErrorIn-Service Limits of ErrorColumn IIColumn IIIColumn IVColumn VComputed VolumeUnder Registration of\xa0VolumeOver Registration of\xa0VolumeUnder Registration of\xa0VolumeOver Registration of\xa0VolumeCubic FeetCubic FeetCubic FeetCubic FeetCubic Feet1Up to 10.0100.0050.0100.005220.0200.0100.0200.010350.0360.0180.0360.0184100.0500.0250.0500.0255Over 100.5% of computed volume0.25% of computed volume0.5% of computed volume0.25% of computed volume",
+        "oow.jspsearch.eventoracleopenworldsearch.technologyoraclesolarissearch.technologystoragesearch.technologylinuxsearch.technologyserverssearch.technologyvirtualizationsearch.technologyengineeredsystemspcodewwmkmppscem:",
+    ],
+)
+@pytest.mark.issue(2626)
+def test_issue2626_2835(en_tokenizer, text):
+    """Check that sentence doesn't cause an infinite loop in the tokenizer."""
+    doc = en_tokenizer(text)
+    assert doc
+
+
+@pytest.mark.issue(2656)
+def test_issue2656(en_tokenizer):
+    """Test that tokenizer correctly splits off punctuation after numbers with
+    decimal points.
+    """
+    doc = en_tokenizer("I went for 40.3, and got home by 10.0.")
+    assert len(doc) == 11
+    assert doc[0].text == "I"
+    assert doc[1].text == "went"
+    assert doc[2].text == "for"
+    assert doc[3].text == "40.3"
+    assert doc[4].text == ","
+    assert doc[5].text == "and"
+    assert doc[6].text == "got"
+    assert doc[7].text == "home"
+    assert doc[8].text == "by"
+    assert doc[9].text == "10.0"
+    assert doc[10].text == "."
+
+
+@pytest.mark.issue(2754)
+def test_issue2754(en_tokenizer):
+    """Test that words like 'a' and 'a.m.' don't get exceptional norm values."""
+    a = en_tokenizer("a")
+    assert a[0].norm_ == "a"
+    am = en_tokenizer("am")
+    assert am[0].norm_ == "am"
+
+
 def test_tokenizer_handles_no_word(tokenizer):
     tokens = tokenizer("")
     assert len(tokens) == 0

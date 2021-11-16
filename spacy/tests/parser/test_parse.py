@@ -59,6 +59,20 @@ PARTIAL_DATA = [
 eps = 0.1
 
 
+@pytest.mark.issue(2772)
+def test_issue2772(en_vocab):
+    """Test that deprojectivization doesn't mess up sentence boundaries."""
+    # fmt: off
+    words = ["When", "we", "write", "or", "communicate", "virtually", ",", "we", "can", "hide", "our", "true", "feelings", "."]
+    # fmt: on
+    # A tree with a non-projective (i.e. crossing) arc
+    # The arcs (0, 4) and (2, 9) cross.
+    heads = [4, 2, 9, 2, 2, 4, 9, 9, 9, 9, 12, 12, 9, 9]
+    deps = ["dep"] * len(heads)
+    doc = Doc(en_vocab, words=words, heads=heads, deps=deps)
+    assert doc[1].is_sent_start is False
+
+
 def test_parser_root(en_vocab):
     words = ["i", "do", "n't", "have", "other", "assistance"]
     heads = [3, 3, 3, 3, 5, 3]

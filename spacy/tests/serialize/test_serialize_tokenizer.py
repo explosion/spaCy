@@ -1,7 +1,11 @@
+import pickle
+
 import pytest
 import re
+
 from spacy.util import get_lang_class
 from spacy.tokenizer import Tokenizer
+from spacy.tokens import Doc
 
 from ..util import make_tempdir, assert_packed_msg_equal
 
@@ -10,6 +14,16 @@ def load_tokenizer(b):
     tok = get_lang_class("en")().tokenizer
     tok.from_bytes(b)
     return tok
+
+
+@pytest.mark.issue(2833)
+def test_issue2833(en_vocab):
+    """Test that a custom error is raised if a token or span is pickled."""
+    doc = Doc(en_vocab, words=["Hello", "world"])
+    with pytest.raises(NotImplementedError):
+        pickle.dumps(doc[0])
+    with pytest.raises(NotImplementedError):
+        pickle.dumps(doc[0:2])
 
 
 def test_serialize_custom_tokenizer(en_vocab, en_tokenizer):

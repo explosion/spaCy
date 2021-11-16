@@ -77,6 +77,17 @@ def test_issue2396(en_vocab):
     assert (span.get_lca_matrix() == matrix).all()
 
 
+@pytest.mark.parametrize("text", ["-0.23", "+123,456", "±1"])
+@pytest.mark.parametrize("lang_cls", [English, MultiLanguage])
+@pytest.mark.issue(2782)
+def test_issue2782(text, lang_cls):
+    """Check that like_num handles + and - before number."""
+    nlp = lang_cls()
+    doc = nlp(text)
+    assert len(doc) == 1
+    assert doc[0].like_num
+
+
 @pytest.mark.parametrize("text", [["one", "two", "three"]])
 def test_doc_api_compare_by_string_position(en_vocab, text):
     doc = Doc(en_vocab, words=text)

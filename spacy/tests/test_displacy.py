@@ -16,6 +16,18 @@ def test_issue2361(de_vocab):
         assert char in html
 
 
+@pytest.mark.issue(2728)
+def test_issue2728(en_vocab):
+    """Test that displaCy ENT visualizer escapes HTML correctly."""
+    doc = Doc(en_vocab, words=["test", "<RELEASE>", "test"])
+    doc.ents = [Span(doc, 0, 1, label="TEST")]
+    html = displacy.render(doc, style="ent")
+    assert "&lt;RELEASE&gt;" in html
+    doc.ents = [Span(doc, 1, 2, label="TEST")]
+    html = displacy.render(doc, style="ent")
+    assert "&lt;RELEASE&gt;" in html
+
+
 def test_displacy_parse_ents(en_vocab):
     """Test that named entities on a Doc are converted into displaCy's format."""
     doc = Doc(en_vocab, words=["But", "Google", "is", "starting", "from", "behind"])
