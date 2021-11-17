@@ -52,9 +52,9 @@ import pytest
             [(0,2), (2,3)]
         ),
         # det + noun + adj
-        # Un macchina grande  -> Un macchina grande
+        # Una macchina grande  -> Una macchina grande
         (
-            ["Un", "macchina", "grande"],
+            ["Una", "macchina", "grande"],
             [1, 1, 1],
             ["det", "ROOT", "amod"],
             ["DET", "NOUN", "ADJ"],
