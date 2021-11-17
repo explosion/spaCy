@@ -84,6 +84,23 @@ def test_issue3880():
         pass
 
 
+def test_multiple_predictions():
+    class DummyPipe(TrainablePipe):
+        def __init__(self):
+            self.model = "dummy_model"
+
+        def predict(self, docs):
+            return ([1, 2, 3], [4, 5, 6])
+
+        def set_annotations(self, docs, scores):
+            return docs
+
+    nlp = Language()
+    doc = nlp.make_doc("foo")
+    dummy_pipe = DummyPipe()
+    dummy_pipe(doc)
+
+
 def test_add_pipe_no_name(nlp):
     nlp.add_pipe("new_pipe")
     assert "new_pipe" in nlp.pipe_names

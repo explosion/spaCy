@@ -165,6 +165,14 @@ def test_issue3959():
         assert doc2[0].pos_ == "NOUN"
 
 
+@pytest.mark.issue(4367)
+def test_issue4367():
+    """Test that docbin init goes well"""
+    DocBin()
+    DocBin(attrs=["LEMMA"])
+    DocBin(attrs=["LEMMA", "ENT_IOB", "ENT_TYPE"])
+
+
 def test_serialize_empty_doc(en_vocab):
     doc = Doc(en_vocab)
     data = doc.to_bytes()

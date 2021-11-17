@@ -3,8 +3,9 @@ import srsly
 from mock import Mock
 
 from spacy.lang.en import English
-from spacy.matcher import PhraseMatcher
+from spacy.matcher import PhraseMatcher, Matcher
 from spacy.tokens import Doc, Span
+from spacy.vocab import Vocab
 
 
 @pytest.mark.issue(3248)
@@ -48,6 +49,36 @@ def test_issue3972(en_vocab):
     found_ids = [en_vocab.strings[ent_id] for (ent_id, _, _) in matches]
     assert "A" in found_ids
     assert "B" in found_ids
+
+
+@pytest.mark.issue(4002)
+def test_issue4002(en_vocab):
+    """Test that the PhraseMatcher can match on overwritten NORM attributes."""
+    matcher = PhraseMatcher(en_vocab, attr="NORM")
+    pattern1 = Doc(en_vocab, words=["c", "d"])
+    assert [t.norm_ for t in pattern1] == ["c", "d"]
+    matcher.add("TEST", [pattern1])
+    doc = Doc(en_vocab, words=["a", "b", "c", "d"])
+    assert [t.norm_ for t in doc] == ["a", "b", "c", "d"]
+    matches = matcher(doc)
+    assert len(matches) == 1
+    matcher = PhraseMatcher(en_vocab, attr="NORM")
+    pattern2 = Doc(en_vocab, words=["1", "2"])
+    pattern2[0].norm_ = "c"
+    pattern2[1].norm_ = "d"
+    assert [t.norm_ for t in pattern2] == ["c", "d"]
+    matcher.add("TEST", [pattern2])
+    matches = matcher(doc)
+    assert len(matches) == 1
+
+
+@pytest.mark.issue(4373)
+def test_issue4373():
+    """Test that PhraseMatcher.vocab can be accessed (like Matcher.vocab)."""
+    matcher = Matcher(Vocab())
+    assert isinstance(matcher.vocab, Vocab)
+    matcher = PhraseMatcher(Vocab())
+    assert isinstance(matcher.vocab, Vocab)
 
 
 def test_matcher_phrase_matcher(en_vocab):

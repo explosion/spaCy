@@ -154,6 +154,59 @@ def test_issue3209():
     assert ner2.move_names == move_names
 
 
+@pytest.mark.issue(4267)
+def test_issue4267():
+    """Test that running an entity_ruler after ner gives consistent results"""
+    nlp = English()
+    ner = nlp.add_pipe("ner")
+    ner.add_label("PEOPLE")
+    nlp.initialize()
+    assert "ner" in nlp.pipe_names
+    # assert that we have correct IOB annotations
+    doc1 = nlp("hi")
+    assert doc1.has_annotation("ENT_IOB")
+    for token in doc1:
+        assert token.ent_iob == 2
+    # add entity ruler and run again
+    patterns = [{"label": "SOFTWARE", "pattern": "spacy"}]
+    ruler = nlp.add_pipe("entity_ruler")
+    ruler.add_patterns(patterns)
+    assert "entity_ruler" in nlp.pipe_names
+    assert "ner" in nlp.pipe_names
+    # assert that we still have correct IOB annotations
+    doc2 = nlp("hi")
+    assert doc2.has_annotation("ENT_IOB")
+    for token in doc2:
+        assert token.ent_iob == 2
+
+
+@pytest.mark.issue(4313)
+def test_issue4313():
+    """This should not crash or exit with some strange error code"""
+    beam_width = 16
+    beam_density = 0.0001
+    nlp = English()
+    config = {
+        "beam_width": beam_width,
+        "beam_density": beam_density,
+    }
+    ner = nlp.add_pipe("beam_ner", config=config)
+    ner.add_label("SOME_LABEL")
+    nlp.initialize()
+    # add a new label to the doc
+    doc = nlp("What do you think about Apple ?")
+    assert len(ner.labels) == 1
+    assert "SOME_LABEL" in ner.labels
+    apple_ent = Span(doc, 5, 6, label="MY_ORG")
+    doc.ents = list(doc.ents) + [apple_ent]
+
+    # ensure the beam_parse still works with the new label
+    docs = [doc]
+    ner.beam_parse(docs, drop=0.0, beam_width=beam_width, beam_density=beam_density)
+    assert len(ner.labels) == 2
+    assert "MY_ORG" in ner.labels
+
+
 def test_get_oracle_moves(tsys, doc, entity_annots):
     example = Example.from_dict(doc, {"entities": entity_annots})
     act_classes = tsys.get_oracle_sequence(example, _debug=False)

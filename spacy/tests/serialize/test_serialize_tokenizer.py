@@ -1,14 +1,16 @@
 import pickle
-
-import pytest
 import re
 
-from spacy.util import get_lang_class
+import pytest
+
+from spacy.attrs import ENT_IOB, ENT_TYPE
+from spacy.lang.en import English
 from spacy.tokenizer import Tokenizer
 from spacy.tokens import Doc
-from spacy.attrs import ENT_IOB, ENT_TYPE
+from spacy.util import compile_infix_regex, compile_prefix_regex
+from spacy.util import compile_suffix_regex, get_lang_class, load_model
 
-from ..util import make_tempdir, assert_packed_msg_equal
+from ..util import assert_packed_msg_equal, make_tempdir
 
 
 def load_tokenizer(b):
@@ -47,6 +49,47 @@ def test_issue3012(en_vocab):
     doc_bytes = doc.to_bytes()
     doc2 = Doc(en_vocab).from_bytes(doc_bytes)
     assert (doc2[2].text, doc2[2].pos_, doc2[2].tag_, doc2[2].ent_type_) == expected
+
+
+@pytest.mark.issue(4190)
+def test_issue4190():
+    def customize_tokenizer(nlp):
+        prefix_re = compile_prefix_regex(nlp.Defaults.prefixes)
+        suffix_re = compile_suffix_regex(nlp.Defaults.suffixes)
+        infix_re = compile_infix_regex(nlp.Defaults.infixes)
+        # Remove all exceptions where a single letter is followed by a period (e.g. 'h.')
+        exceptions = {
+            k: v
+            for k, v in dict(nlp.Defaults.tokenizer_exceptions).items()
+            if not (len(k) == 2 and k[1] == ".")
+        }
+        new_tokenizer = Tokenizer(
+            nlp.vocab,
+            exceptions,
+            prefix_search=prefix_re.search,
+            suffix_search=suffix_re.search,
+            infix_finditer=infix_re.finditer,
+            token_match=nlp.tokenizer.token_match,
+        )
+        nlp.tokenizer = new_tokenizer
+
+    test_string = "Test c."
+    # Load default language
+    nlp_1 = English()
+    doc_1a = nlp_1(test_string)
+    result_1a = [token.text for token in doc_1a]  # noqa: F841
+    # Modify tokenizer
+    customize_tokenizer(nlp_1)
+    doc_1b = nlp_1(test_string)
+    result_1b = [token.text for token in doc_1b]
+    # Save and Reload
+    with make_tempdir() as model_dir:
+        nlp_1.to_disk(model_dir)
+        nlp_2 = load_model(model_dir)
+    # This should be the modified tokenizer
+    doc_2 = nlp_2(test_string)
+    result_2 = [token.text for token in doc_2]
+    assert result_1b == result_2
 
 
 def test_serialize_custom_tokenizer(en_vocab, en_tokenizer):
