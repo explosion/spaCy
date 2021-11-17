@@ -116,11 +116,11 @@ import pytest
          
         ),
         # Two NPs together
-        # o escritor brasileiro Aníbal Machado -> o escritor brasileiro, Aníbal Machado
+        # lo scrittore brasiliano Aníbal Machado -> lo scrittore brasiliano, Aníbal Machado
         (
-            ['o', 'escritor', 'brasileiro', 'Aníbal', 'Machado'],
+            ['lo', 'scrittore', 'brasiliano', 'Aníbal', 'Machado'],
             [1, 1, 1, 1, 3],
-            ['det', 'ROOT', 'amod', 'appos', 'flat:name'],
+            ['det', 'ROOT', 'amod', 'nmod', 'flat:name'],
             ['DET', 'NOUN', 'ADJ', 'PROPN', 'PROPN'],
             [(0, 3), (3, 5)]
         ),
