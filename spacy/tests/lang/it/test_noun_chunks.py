@@ -70,9 +70,18 @@ import pytest
             [(0,2)],
         ),
         # det + adj + noun
-        # Un grande macchina -> Un grande macchina
+        # Una grande macchina -> Una grande macchina
         (
-            ['Un', 'grande', 'macchina'],
+            ['Una', 'grande', 'macchina'],
+            [2, 2, 2],
+            ["det", "amod", "ROOT"],
+            ["DET", "ADJ", "NOUN"],
+            [(0,3)]
+        ),
+        # det + adj + noun, det with apostrophe
+        # un'importante associazione -> un'importante associazione
+        (
+            ["Un'", 'importante', 'associazione'],
             [2, 2, 2],
             ["det", "amod", "ROOT"],
             ["DET", "ADJ", "NOUN"],
