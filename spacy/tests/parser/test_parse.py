@@ -1,15 +1,16 @@
 import pytest
 from numpy.testing import assert_equal
+
+from spacy import registry, util
 from spacy.attrs import DEP
-
 from spacy.lang.en import English
-from spacy.training import Example
 from spacy.tokens import Doc
-from spacy import util, registry
+from spacy.training import Example
+from spacy.vocab import Vocab
 
-from ..util import apply_transition_sequence, make_tempdir
 from ...pipeline import DependencyParser
 from ...pipeline.dep_parser import DEFAULT_PARSER_MODEL
+from ..util import apply_transition_sequence, make_tempdir
 
 TRAIN_DATA = [
     (
@@ -59,6 +60,12 @@ PARTIAL_DATA = [
 eps = 0.1
 
 
+def _parser_example(parser):
+    doc = Doc(parser.vocab, words=["a", "b", "c", "d"])
+    gold = {"heads": [1, 1, 3, 3], "deps": ["right", "ROOT", "left", "ROOT"]}
+    return Example.from_dict(doc, gold)
+
+
 @pytest.mark.issue(2772)
 def test_issue2772(en_vocab):
     """Test that deprojectivization doesn't mess up sentence boundaries."""
@@ -71,6 +78,34 @@ def test_issue2772(en_vocab):
     deps = ["dep"] * len(heads)
     doc = Doc(en_vocab, words=words, heads=heads, deps=deps)
     assert doc[1].is_sent_start is False
+
+
+@pytest.mark.issue(3830)
+def test_issue3830_no_subtok():
+    """Test that the parser doesn't have subtok label if not learn_tokens"""
+    config = {
+        "learn_tokens": False,
+    }
+    model = registry.resolve({"model": DEFAULT_PARSER_MODEL}, validate=True)["model"]
+    parser = DependencyParser(Vocab(), model, **config)
+    parser.add_label("nsubj")
+    assert "subtok" not in parser.labels
+    parser.initialize(lambda: [_parser_example(parser)])
+    assert "subtok" not in parser.labels
+
+
+@pytest.mark.issue(3830)
+def test_issue3830_with_subtok():
+    """Test that the parser does have subtok label if learn_tokens=True."""
+    config = {
+        "learn_tokens": True,
+    }
+    model = registry.resolve({"model": DEFAULT_PARSER_MODEL}, validate=True)["model"]
+    parser = DependencyParser(Vocab(), model, **config)
+    parser.add_label("nsubj")
+    assert "subtok" not in parser.labels
+    parser.initialize(lambda: [_parser_example(parser)])
+    assert "subtok" in parser.labels
 
 
 def test_parser_root(en_vocab):

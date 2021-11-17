@@ -68,6 +68,22 @@ def test_issue1654():
     assert nlp2.pipe_names == ["1", "2", "3"]
 
 
+@pytest.mark.issue(3880)
+def test_issue3880():
+    """Test that `nlp.pipe()` works when an empty string ends the batch.
+
+    Fixed in v7.0.5 of Thinc.
+    """
+    texts = ["hello", "world", "", ""]
+    nlp = English()
+    nlp.add_pipe("parser").add_label("dep")
+    nlp.add_pipe("ner").add_label("PERSON")
+    nlp.add_pipe("tagger").add_label("NN")
+    nlp.initialize()
+    for doc in nlp.pipe(texts):
+        pass
+
+
 def test_add_pipe_no_name(nlp):
     nlp.add_pipe("new_pipe")
     assert "new_pipe" in nlp.pipe_names

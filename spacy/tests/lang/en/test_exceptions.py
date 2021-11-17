@@ -181,6 +181,14 @@ def test_issue1773(en_tokenizer):
         assert doc[0].tag_ != ""
 
 
+@pytest.mark.parametrize("word", ["don't", "don’t", "I'd", "I’d"])
+@pytest.mark.issue(3521)
+def test_issue3521(en_tokenizer, word):
+    tok = en_tokenizer(word)[1]
+    # 'not' and 'would' should be stopwords, also in their abbreviated forms
+    assert tok.is_stop
+
+
 def test_en_tokenizer_handles_basic_contraction(en_tokenizer):
     text = "don't giggle"
     tokens = en_tokenizer(text)

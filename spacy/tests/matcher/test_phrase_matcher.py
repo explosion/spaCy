@@ -33,6 +33,23 @@ def test_issue3331(en_vocab):
     assert sorted(match_ids) == ["A", "B"]
 
 
+@pytest.mark.issue(3972)
+def test_issue3972(en_vocab):
+    """Test that the PhraseMatcher returns duplicates for duplicate match IDs."""
+    matcher = PhraseMatcher(en_vocab)
+    matcher.add("A", [Doc(en_vocab, words=["New", "York"])])
+    matcher.add("B", [Doc(en_vocab, words=["New", "York"])])
+    doc = Doc(en_vocab, words=["I", "live", "in", "New", "York"])
+    matches = matcher(doc)
+
+    assert len(matches) == 2
+
+    # We should have a match for each of the two rules
+    found_ids = [en_vocab.strings[ent_id] for (ent_id, _, _) in matches]
+    assert "A" in found_ids
+    assert "B" in found_ids
+
+
 def test_matcher_phrase_matcher(en_vocab):
     doc = Doc(en_vocab, words=["I", "like", "Google", "Now", "best"])
     # intermediate phrase

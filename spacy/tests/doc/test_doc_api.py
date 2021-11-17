@@ -1,14 +1,15 @@
 import weakref
 
-import pytest
 import numpy
+import pytest
 
+from spacy.attrs import DEP, ENT_IOB, ENT_TYPE, HEAD, IS_ALPHA, MORPH
+from spacy.attrs import SENT_START
+from spacy.lang.en import English
 from spacy.lang.xx import MultiLanguage
+from spacy.lexeme import Lexeme
 from spacy.tokens import Doc, Span, Token
 from spacy.vocab import Vocab
-from spacy.lexeme import Lexeme
-from spacy.lang.en import English
-from spacy.attrs import ENT_TYPE, ENT_IOB, SENT_START, HEAD, DEP, MORPH
 
 from .test_underscore import clean_underscore  # noqa: F401
 
@@ -86,6 +87,103 @@ def test_issue2782(text, lang_cls):
     doc = nlp(text)
     assert len(doc) == 1
     assert doc[0].like_num
+
+
+@pytest.mark.parametrize(
+    "sentence",
+    [
+        "The story was to the effect that a young American student recently called on Professor Christlieb with a letter of introduction.",
+        "The next month Barry Siddall joined Stoke City on a free transfer, after Chris Pearce had established himself as the Vale's #1.",
+        "The next month Barry Siddall joined Stoke City on a free transfer, after Chris Pearce had established himself as the Vale's number one",
+        "Indeed, making the one who remains do all the work has installed him into a position of such insolent tyranny, it will take a month at least to reduce him to his proper proportions.",
+        "It was a missed assignment, but it shouldn't have resulted in a turnover ...",
+    ],
+)
+@pytest.mark.issue(3869)
+def test_issue3869(sentence):
+    """Test that the Doc's count_by function works consistently"""
+    nlp = English()
+    doc = nlp(sentence)
+    count = 0
+    for token in doc:
+        count += token.is_alpha
+    assert count == doc.count_by(IS_ALPHA).get(1, 0)
+
+
+@pytest.mark.issue(3962)
+def test_issue3962(en_vocab):
+    """Ensure that as_doc does not result in out-of-bound access of tokens.
+    This is achieved by setting the head to itself if it would lie out of the span otherwise."""
+    # fmt: off
+    words = ["He", "jests", "at", "scars", ",", "that", "never", "felt", "a", "wound", "."]
+    heads = [1, 7, 1, 2, 7, 7, 7, 7, 9, 7, 7]
+    deps = ["nsubj", "ccomp", "prep", "pobj", "punct", "nsubj", "neg", "ROOT", "det", "dobj", "punct"]
+    # fmt: on
+    doc = Doc(en_vocab, words=words, heads=heads, deps=deps)
+    span2 = doc[1:5]  # "jests at scars ,"
+    doc2 = span2.as_doc()
+    doc2_json = doc2.to_json()
+    assert doc2_json
+    # head set to itself, being the new artificial root
+    assert doc2[0].head.text == "jests"
+    assert doc2[0].dep_ == "dep"
+    assert doc2[1].head.text == "jests"
+    assert doc2[1].dep_ == "prep"
+    assert doc2[2].head.text == "at"
+    assert doc2[2].dep_ == "pobj"
+    assert doc2[3].head.text == "jests"  # head set to the new artificial root
+    assert doc2[3].dep_ == "dep"
+    # We should still have 1 sentence
+    assert len(list(doc2.sents)) == 1
+    span3 = doc[6:9]  # "never felt a"
+    doc3 = span3.as_doc()
+    doc3_json = doc3.to_json()
+    assert doc3_json
+    assert doc3[0].head.text == "felt"
+    assert doc3[0].dep_ == "neg"
+    assert doc3[1].head.text == "felt"
+    assert doc3[1].dep_ == "ROOT"
+    assert doc3[2].head.text == "felt"  # head set to ancestor
+    assert doc3[2].dep_ == "dep"
+    # We should still have 1 sentence as "a" can be attached to "felt" instead of "wound"
+    assert len(list(doc3.sents)) == 1
+
+
+@pytest.mark.issue(3962)
+def test_issue3962_long(en_vocab):
+    """Ensure that as_doc does not result in out-of-bound access of tokens.
+    This is achieved by setting the head to itself if it would lie out of the span otherwise."""
+    # fmt: off
+    words = ["He", "jests", "at", "scars", ".", "They", "never", "felt", "a", "wound", "."]
+    heads = [1, 1, 1, 2, 1, 7, 7, 7, 9, 7, 7]
+    deps = ["nsubj", "ROOT", "prep", "pobj", "punct", "nsubj", "neg", "ROOT", "det", "dobj", "punct"]
+    # fmt: on
+    two_sent_doc = Doc(en_vocab, words=words, heads=heads, deps=deps)
+    span2 = two_sent_doc[1:7]  # "jests at scars. They never"
+    doc2 = span2.as_doc()
+    doc2_json = doc2.to_json()
+    assert doc2_json
+    # head set to itself, being the new artificial root (in sentence 1)
+    assert doc2[0].head.text == "jests"
+    assert doc2[0].dep_ == "ROOT"
+    assert doc2[1].head.text == "jests"
+    assert doc2[1].dep_ == "prep"
+    assert doc2[2].head.text == "at"
+    assert doc2[2].dep_ == "pobj"
+    assert doc2[3].head.text == "jests"
+    assert doc2[3].dep_ == "punct"
+    # head set to itself, being the new artificial root (in sentence 2)
+    assert doc2[4].head.text == "They"
+    assert doc2[4].dep_ == "dep"
+    # head set to the new artificial head (in sentence 2)
+    assert doc2[4].head.text == "They"
+    assert doc2[4].dep_ == "dep"
+    # We should still have 2 sentences
+    sents = list(doc2.sents)
+    assert len(sents) == 2
+    assert sents[0].text == "jests at scars ."
+    assert sents[1].text == "They never"
+
 
 
 @pytest.mark.parametrize("text", [["one", "two", "three"]])

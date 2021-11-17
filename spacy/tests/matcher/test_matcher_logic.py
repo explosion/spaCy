@@ -1,7 +1,9 @@
 import re
 
 import pytest
-from spacy.attrs import LOWER, ORTH, IS_PUNCT
+
+from spacy.attrs import IS_PUNCT, LOWER, ORTH
+from spacy.errors import MatchPatternError
 from spacy.lang.en import English
 from spacy.lang.lex_attrs import LEX_ATTRS
 from spacy.matcher import Matcher
@@ -391,6 +393,71 @@ def test_issue3328(en_vocab):
     assert len(matches) == 4
     matched_texts = [doc[start:end].text for _, start, end in matches]
     assert matched_texts == ["Hello", "how", "you", "doing"]
+
+
+@pytest.mark.issue(3549)
+def test_issue3549(en_vocab):
+    """Test that match pattern validation doesn't raise on empty errors."""
+    matcher = Matcher(en_vocab, validate=True)
+    pattern = [{"LOWER": "hello"}, {"LOWER": "world"}]
+    matcher.add("GOOD", [pattern])
+    with pytest.raises(MatchPatternError):
+        matcher.add("BAD", [[{"X": "Y"}]])
+
+
+@pytest.mark.skip("Matching currently only works on strings and integers")
+@pytest.mark.issue(3555)
+def test_issue3555(en_vocab):
+    """Test that custom extensions with default None don't break matcher."""
+    Token.set_extension("issue3555", default=None)
+    matcher = Matcher(en_vocab)
+    pattern = [{"ORTH": "have"}, {"_": {"issue3555": True}}]
+    matcher.add("TEST", [pattern])
+    doc = Doc(en_vocab, words=["have", "apple"])
+    matcher(doc)
+
+
+@pytest.mark.issue(3839)
+def test_issue3839(en_vocab):
+    """Test that match IDs returned by the matcher are correct, are in the string"""
+    doc = Doc(en_vocab, words=["terrific", "group", "of", "people"])
+    matcher = Matcher(en_vocab)
+    match_id = "PATTERN"
+    pattern1 = [{"LOWER": "terrific"}, {"OP": "?"}, {"LOWER": "group"}]
+    pattern2 = [{"LOWER": "terrific"}, {"OP": "?"}, {"OP": "?"}, {"LOWER": "group"}]
+    matcher.add(match_id, [pattern1])
+    matches = matcher(doc)
+    assert matches[0][0] == en_vocab.strings[match_id]
+    matcher = Matcher(en_vocab)
+    matcher.add(match_id, [pattern2])
+    matches = matcher(doc)
+    assert matches[0][0] == en_vocab.strings[match_id]
+
+
+@pytest.mark.issue(3879)
+def test_issue3879(en_vocab):
+    doc = Doc(en_vocab, words=["This", "is", "a", "test", "."])
+    assert len(doc) == 5
+    pattern = [{"ORTH": "This", "OP": "?"}, {"OP": "?"}, {"ORTH": "test"}]
+    matcher = Matcher(en_vocab)
+    matcher.add("TEST", [pattern])
+    assert len(matcher(doc)) == 2  # fails because of a FP match 'is a test'
+
+
+@pytest.mark.issue(3951)
+def test_issue3951(en_vocab):
+    """Test that combinations of optional rules are matched correctly."""
+    matcher = Matcher(en_vocab)
+    pattern = [
+        {"LOWER": "hello"},
+        {"LOWER": "this", "OP": "?"},
+        {"OP": "?"},
+        {"LOWER": "world"},
+    ]
+    matcher.add("TEST", [pattern])
+    doc = Doc(en_vocab, words=["Hello", "my", "new", "world"])
+    matches = matcher(doc)
+    assert len(matches) == 0
 
 
 @pytest.mark.parametrize(
