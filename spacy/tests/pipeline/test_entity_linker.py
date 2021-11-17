@@ -1,18 +1,20 @@
 from typing import Callable, Iterable
+
 import pytest
 from numpy.testing import assert_equal
+
+from spacy import registry, util
 from spacy.attrs import ENT_KB_ID
 from spacy.compat import pickle
-from spacy.kb import KnowledgeBase, get_candidates, Candidate
-from spacy.vocab import Vocab
-
-from spacy import util, registry
+from spacy.kb import Candidate, KnowledgeBase, get_candidates
+from spacy.lang.en import English
 from spacy.ml import load_kb
 from spacy.scorer import Scorer
-from spacy.training import Example
-from spacy.lang.en import English
 from spacy.tests.util import make_tempdir
 from spacy.tokens import Span
+from spacy.training import Example
+from spacy.util import ensure_path
+from spacy.vocab import Vocab
 
 
 @pytest.fixture
@@ -23,6 +25,32 @@ def nlp():
 def assert_almost_equal(a, b):
     delta = 0.0001
     assert a - delta <= b <= a + delta
+
+
+@pytest.mark.issue(4674)
+def test_issue4674():
+    """Test that setting entities with overlapping identifiers does not mess up IO"""
+    nlp = English()
+    kb = KnowledgeBase(nlp.vocab, entity_vector_length=3)
+    vector1 = [0.9, 1.1, 1.01]
+    vector2 = [1.8, 2.25, 2.01]
+    with pytest.warns(UserWarning):
+        kb.set_entities(
+            entity_list=["Q1", "Q1"],
+            freq_list=[32, 111],
+            vector_list=[vector1, vector2],
+        )
+    assert kb.get_size_entities() == 1
+    # dumping to file & loading back in
+    with make_tempdir() as d:
+        dir_path = ensure_path(d)
+        if not dir_path.exists():
+            dir_path.mkdir()
+        file_path = dir_path / "kb"
+        kb.to_disk(str(file_path))
+        kb2 = KnowledgeBase(nlp.vocab, entity_vector_length=3)
+        kb2.from_disk(str(file_path))
+    assert kb2.get_size_entities() == 1
 
 
 def test_kb_valid_entities(nlp):

@@ -173,6 +173,22 @@ def test_issue4367():
     DocBin(attrs=["LEMMA", "ENT_IOB", "ENT_TYPE"])
 
 
+@pytest.mark.issue(4528)
+def test_issue4528(en_vocab):
+    """Test that user_data is correctly serialized in DocBin."""
+    doc = Doc(en_vocab, words=["hello", "world"])
+    doc.user_data["foo"] = "bar"
+    # This is how extension attribute values are stored in the user data
+    doc.user_data[("._.", "foo", None, None)] = "bar"
+    doc_bin = DocBin(store_user_data=True)
+    doc_bin.add(doc)
+    doc_bin_bytes = doc_bin.to_bytes()
+    new_doc_bin = DocBin(store_user_data=True).from_bytes(doc_bin_bytes)
+    new_doc = list(new_doc_bin.get_docs(en_vocab))[0]
+    assert new_doc.user_data["foo"] == "bar"
+    assert new_doc.user_data[("._.", "foo", None, None)] == "bar"
+
+
 def test_serialize_empty_doc(en_vocab):
     doc = Doc(en_vocab)
     data = doc.to_bytes()

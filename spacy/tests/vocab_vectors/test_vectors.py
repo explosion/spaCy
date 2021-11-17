@@ -1,14 +1,15 @@
-import pytest
 import numpy
-from numpy.testing import assert_allclose, assert_equal, assert_almost_equal
-from thinc.api import get_current_ops
+import pytest
+from numpy.testing import assert_allclose, assert_almost_equal, assert_equal
+from thinc.api import NumpyOps, get_current_ops
+
 from spacy.lang.en import English
-from spacy.vocab import Vocab
-from spacy.vectors import Vectors
-from spacy.tokenizer import Tokenizer
 from spacy.strings import hash_string  # type: ignore
+from spacy.tokenizer import Tokenizer
 from spacy.tokens import Doc
 from spacy.training.initialize import convert_vectors
+from spacy.vectors import Vectors
+from spacy.vocab import Vocab
 
 from ..util import add_vecs_to_vocab, get_cosine, make_tempdir
 
@@ -116,6 +117,26 @@ def test_issue3412():
         numpy.asarray([[9, 8, 7], [0, 0, 0]], dtype="f")
     )
     assert best_rows[0] == 2
+
+
+@pytest.mark.issue(4725)
+def test_issue4725_2():
+    if isinstance(get_current_ops, NumpyOps):
+        # ensures that this runs correctly and doesn't hang or crash because of the global vectors
+        # if it does crash, it's usually because of calling 'spawn' for multiprocessing (e.g. on Windows),
+        # or because of issues with pickling the NER (cf test_issue4725_1)
+        vocab = Vocab(vectors_name="test_vocab_add_vector")
+        data = numpy.ndarray((5, 3), dtype="f")
+        data[0] = 1.0
+        data[1] = 2.0
+        vocab.set_vector("cat", data[0])
+        vocab.set_vector("dog", data[1])
+        nlp = English(vocab=vocab)
+        nlp.add_pipe("ner")
+        nlp.initialize()
+        docs = ["Kurt is in London."] * 10
+        for _ in nlp.pipe(docs, batch_size=2, n_process=2):
+            pass
 
 
 def test_init_vectors_with_resize_shape(strings, resize_data):

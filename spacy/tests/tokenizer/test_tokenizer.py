@@ -7,6 +7,7 @@ from spacy.lang.en import English
 from spacy.lang.de import German
 from spacy.tokenizer import Tokenizer
 from spacy.tokens import Doc
+from spacy.training import Example
 from spacy.util import compile_prefix_regex, compile_suffix_regex, ensure_path
 from spacy.vocab import Vocab
 from spacy.symbols import ORTH
@@ -269,6 +270,14 @@ def test_issue3449():
     assert t1[5].text == "I"
     assert t2[5].text == "I"
     assert t3[5].text == "I"
+
+
+@pytest.mark.parametrize(
+    "text,words", [("A'B C", ["A", "'", "B", "C"]), ("A-B", ["A-B"])]
+)
+def test_gold_misaligned(en_tokenizer, text, words):
+    doc = en_tokenizer(text)
+    Example.from_dict(doc, {"words": words})
 
 
 def test_tokenizer_handles_no_word(tokenizer):

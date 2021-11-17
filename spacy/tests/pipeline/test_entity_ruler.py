@@ -57,6 +57,32 @@ def test_issue3345():
     assert ner.moves.is_valid(state, "B-GPE")
 
 
+@pytest.mark.issue(4849)
+def test_issue4849():
+    nlp = English()
+    patterns = [
+        {"label": "PERSON", "pattern": "joe biden", "id": "joe-biden"},
+        {"label": "PERSON", "pattern": "bernie sanders", "id": "bernie-sanders"},
+    ]
+    ruler = nlp.add_pipe("entity_ruler", config={"phrase_matcher_attr": "LOWER"})
+    ruler.add_patterns(patterns)
+    text = """
+    The left is starting to take aim at Democratic front-runner Joe Biden.
+    Sen. Bernie Sanders joined in her criticism: "There is no 'middle ground' when it comes to climate policy."
+    """
+    # USING 1 PROCESS
+    count_ents = 0
+    for doc in nlp.pipe([text], n_process=1):
+        count_ents += len([ent for ent in doc.ents if ent.ent_id > 0])
+    assert count_ents == 2
+    # USING 2 PROCESSES
+    if isinstance(get_current_ops, NumpyOps):
+        count_ents = 0
+        for doc in nlp.pipe([text], n_process=2):
+            count_ents += len([ent for ent in doc.ents if ent.ent_id > 0])
+        assert count_ents == 2
+
+
 def test_entity_ruler_init(nlp, patterns):
     ruler = EntityRuler(nlp, patterns=patterns)
     assert len(ruler) == len(patterns)

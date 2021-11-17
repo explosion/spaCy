@@ -2,9 +2,11 @@ import weakref
 
 import numpy
 import pytest
+from thinc.api import NumpyOps, get_current_ops
 
 from spacy.attrs import DEP, ENT_IOB, ENT_TYPE, HEAD, IS_ALPHA, MORPH
 from spacy.attrs import SENT_START
+from spacy.language import Language
 from spacy.lang.en import English
 from spacy.lang.xx import MultiLanguage
 from spacy.lexeme import Lexeme
@@ -184,6 +186,42 @@ def test_issue3962_long(en_vocab):
     assert sents[0].text == "jests at scars ."
     assert sents[1].text == "They never"
 
+
+@Language.factory("my_pipe")
+class CustomPipe:
+    def __init__(self, nlp, name="my_pipe"):
+        self.name = name
+        Span.set_extension("my_ext", getter=self._get_my_ext)
+        Doc.set_extension("my_ext", default=None)
+
+    def __call__(self, doc):
+        gathered_ext = []
+        for sent in doc.sents:
+            sent_ext = self._get_my_ext(sent)
+            sent._.set("my_ext", sent_ext)
+            gathered_ext.append(sent_ext)
+
+        doc._.set("my_ext", "\n".join(gathered_ext))
+        return doc
+
+    @staticmethod
+    def _get_my_ext(span):
+        return str(span.end)
+
+
+@pytest.mark.issue(4903)
+def test_issue4903():
+    """Ensure that this runs correctly and doesn't hang or crash on Windows /
+    macOS."""
+    nlp = English()
+    nlp.add_pipe("sentencizer")
+    nlp.add_pipe("my_pipe", after="sentencizer")
+    text = ["I like bananas.", "Do you like them?", "No, I prefer wasabi."]
+    if isinstance(get_current_ops(), NumpyOps):
+        docs = list(nlp.pipe(text, n_process=2))
+        assert docs[0].text == "I like bananas."
+        assert docs[1].text == "Do you like them?"
+        assert docs[2].text == "No, I prefer wasabi."
 
 
 @pytest.mark.parametrize("text", [["one", "two", "three"]])

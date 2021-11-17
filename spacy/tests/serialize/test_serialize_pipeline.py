@@ -1,3 +1,5 @@
+import pickle
+
 import pytest
 import srsly
 from thinc.api import Linear
@@ -217,6 +219,25 @@ def test_issue4042_bug2():
         ner2 = nlp1.create_pipe("ner", config=config)
         ner2.from_disk(output_dir)
         assert len(ner2.labels) == 2
+
+
+@pytest.mark.issue(4725)
+def test_issue4725_1():
+    """Ensure the pickling of the NER goes well"""
+    vocab = Vocab(vectors_name="test_vocab_add_vector")
+    nlp = English(vocab=vocab)
+    config = {
+        "update_with_oracle_cut_size": 111,
+    }
+    ner = nlp.create_pipe("ner", config=config)
+    with make_tempdir() as tmp_path:
+        with (tmp_path / "ner.pkl").open("wb") as file_:
+            pickle.dump(ner, file_)
+            assert ner.cfg["update_with_oracle_cut_size"] == 111
+
+        with (tmp_path / "ner.pkl").open("rb") as file_:
+            ner2 = pickle.load(file_)
+            assert ner2.cfg["update_with_oracle_cut_size"] == 111
 
 
 @pytest.mark.parametrize("Parser", test_parsers)
