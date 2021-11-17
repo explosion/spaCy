@@ -291,7 +291,7 @@ def test_entity_ruler_remove_nonexisting_pattern(nlp):
     ]
     ruler.add_patterns(patterns)
     assert len(ruler.patterns) == 3
-    with pytest.warns(UserWarning):
+    with pytest.raises(ValueError):
         ruler.remove("nepattern")
         assert len(ruler.patterns) == 3
 
