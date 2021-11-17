@@ -359,7 +359,7 @@ class EntityRuler(Pipe):
             (label, eid) for (label, eid) in self._ent_ids.values() if eid == ent_id
         ]
         if not label_id_pairs:
-            raise ValueError(Errors.E1023.format(ent_id=ent_id))
+            warnings.warn(Warnings.W116.format(ent_id=ent_id))
         created_labels = [
             self._create_label(label, eid) for (label, eid) in label_id_pairs
         ]
