@@ -218,9 +218,7 @@ Remove a pattern by its ID from the entity ruler. An `Error` is raised if ID doe
 > #### Example
 >
 > ```python
-> patterns = [
->     {"label": "ORG", "pattern": "Apple", "id": "apple"},
-> ]
+> patterns = [{"label": "ORG", "pattern": "Apple", "id": "apple"}]
 > ruler = nlp.add_pipe("entity_ruler")
 > ruler.add_patterns(patterns)
 > ruler.remove("apple")
