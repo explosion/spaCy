@@ -333,9 +333,11 @@ def test_entity_ruler_remove_all_patterns(nlp):
     assert len(ruler.patterns) == 2
     ruler.remove("acme")
     assert len(ruler.patterns) == 1
+    ruler.remove("bday")
+    assert len(ruler.patterns) == 0
     with pytest.warns(UserWarning):
-        ruler.remove("bday")
-        assert len(ruler.patterns) == 0
+        doc = ruler(nlp.make_doc("Duygu founded her company ACME on her birthday"))
+        assert len(doc.ents) == 0
     
 
 def test_entity_ruler_remove_and_add(nlp):
