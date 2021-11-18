@@ -4,9 +4,8 @@ import srsly
 
 from spacy.errors import Errors
 from .span cimport Span
-from libc.stdint cimport uint64_t, uint32_t, int32_t
-from libcpp.algorithm cimport sort as sort_vector
 from ..structs cimport SpanC
+from libcpp.algorithm cimport sort as sort_vector
 from libcpp.set cimport set
 from libcpp.utility cimport pair
 
@@ -52,6 +51,8 @@ cdef class SpanGroup:
         self.name = name
         self.attrs = dict(attrs) if attrs is not None else {}
         cdef Span span
+        if len(spans) :
+            self.c.reserve(len(spans))
         for span in spans:
             self.push_back(span.c)
 
@@ -116,6 +117,9 @@ cdef class SpanGroup:
         DOCS: https://spacy.io/api/spangroup#extend
         """
         cdef Span span
+        if len(spans) :
+            self.c.reserve(self.c.size() + len(spans))
+
         for span in spans:
             self.append(span)
 
@@ -157,6 +161,7 @@ cdef class SpanGroup:
         DOCS: https://spacy.io/api/spangroup#to_bytes
         """
         output = {"name": self.name, "attrs": self.attrs, "spans": []}
+        cdef int i
         for i in range(self.c.size()):
             span = self.c[i]
             # The struct.pack here is probably overkill, but it might help if
@@ -230,7 +235,7 @@ cdef class SpanGroup:
 
         DOCS: https://spacy.io/api/spangroup#clone
         """
-        cdef SpanGroup span_group = SpanGroup(self.doc, name=self.name, attrs=self.attrs)
+        cdef SpanGroup span_group = SpanGroup(self.doc, name=self.name, attrs=dict(self.attrs))
         span_group.c = self.c
         return span_group
 
@@ -283,6 +288,75 @@ cdef class SpanGroup:
         span_group.c = result
         return span_group
 
+    def merge(self, SpanGroup other_group, sort_spans = False, filter_spans = False, inplace = False) :
+        """
+        Merges given SpanGroup with self, either in place or creating a copy. Optionally sorts and filters spans.
+        Preserves the name of self, updates attrs only with values that are not in self.
+
+        other_group (SpanGroup): the group to append to this one
+        sort_spans (bool): Indicates if sort should be performed
+        filter_spans (bool): Indicates if result spans should be filtered
+        inplace (bool): Indicates if the operation should be performed on self
+
+        RETURNS (SpanGroup): either a new SpanGroup or self depending on the value of inplace
+
+        DOCS: https://spacy.io/api/spangroup#merge
+        """
+        cdef SpanGroup span_group = self if inplace else self.clone()
+        span_group.attrs.update({key : value for key, value in other_group.attrs.items() if key not in span_group.attrs })
+        if len(other_group) :
+            span_group.c.reserve(span_group.c.size() + other_group.c.size())
+            span_group.c.insert(span_group.c.end(), other_group.c.begin(), other_group.c.end())
+        if filter_spans :
+            span_group.filter_spans(inplace = True)
+        elif sort_spans :
+            span_group.sort(inplace = True)
+        return span_group
+
+def merge_span_groups(span_groups, name = None, attrs = None, sort_spans = False, filter_spans = False) :
+    """
+    Merges a list of SpanGroups into a single SpanGroup.
+    span_group (List of SpanGroups):
+    name (str): name of the result SpanGroup. If not specified, the mame of the first group will be used
+    attrs (dict): attrs of the result SpanGroup. If not specified, merged dictionary of attrs of
+                  all span groups will be used (without overwriting the keys that are already in attrs
+                  from earlier groups)
+    sort_spans (bool): Indicates if the result spans should be sorted
+    filter_spans (bool): Indicates if the result spans shuold be filtered
+
+    RETURNS (SpanGroup): either a new SpanGroup or self depending on the value of inplace
+
+    DOCS: https://spacy.io/api/spangroup#merge
+    """
+    cdef SpanGroup new_group = None
+    cdef int ii
+    cdef SpanGroup group
+    cdef int size = 0
+
+    if len(span_groups) :
+
+        new_group = SpanGroup(span_groups[0].doc)
+        new_group.name = span_groups[0].name if name is None else name
+        new_group.attrs = dict(span_groups[0].attrs) if attrs is None else attrs
+
+        for group in span_groups :
+            size += group.c.size()
+
+        if size :
+            new_group.c.reserve(size)
+
+        for group in span_groups :
+            if group.c.size() :
+                new_group.c.insert(new_group.c.end(), group.c.begin(), group.c.end())
+            if attrs is None :
+                # If attrs is not provided, we will merge those from all groups
+                new_group.attrs.update({key: value for key, value in group.attrs.items() if key not in new_group.attrs})
+
+        if filter_spans :
+            new_group.filter_spans(inplace = True)
+        elif sort_spans :
+            new_group.sort(inplace = True)
+    return new_group
 
 cdef bint _compare_span_c(const SpanC& span_1, const SpanC& span_2) nogil:
     """

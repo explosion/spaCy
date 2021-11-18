@@ -96,13 +96,22 @@ def assert_packed_msg_equal(b1, b2):
         assert v1 == v2
 
 def assert_span_list_equal(spans_1, spans_2) :
+    spans_1 = list(spans_1)
+    spans_2 = list(spans_2)
+    assert len(spans_1) == len(spans_2)
+
     for span_1, span_2 in zip(list(spans_1), list(spans_2)) :
         assert span_1 == span_2
 
 def assert_span_list_not_equal(spans_1, spans_2) :
     found = False
-    for span_1, span_2 in zip(list(spans_1), list(spans_2)) :
-        if span_1 != span_2 :
-            found = True
-            break
+    spans_1 = list(spans_1)
+    spans_2 = list(spans_2)
+    if len(spans_1) != len(spans_2) :
+        found = True
+    if not found :
+        for span_1, span_2 in zip(spans_1, spans_2) :
+            if span_1 != span_2 :
+                found = True
+                break
     assert found

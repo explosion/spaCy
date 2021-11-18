@@ -3,7 +3,7 @@ from random import Random
 from spacy.matcher import Matcher
 from spacy.tokens import Span, SpanGroup
 from ..util import assert_span_list_equal, assert_span_list_not_equal
-from spacy.util import filter_spans
+from spacy.tokens.span_group import merge_span_groups
 
 @pytest.fixture
 def doc(en_tokenizer):
@@ -51,8 +51,14 @@ def test_span_group_clone(doc) :
     assert clone.name == span_group.name
     assert clone.attrs == span_group.attrs
     assert len(clone) == len(span_group)
-    for original_span, clone_span in zip(span_group, clone) :
-        assert original_span == clone_span
+    assert_span_list_equal(span_group, clone)
+    clone.name = 'new_name'
+    clone.attrs['key'] = 'new_value'
+    clone.append(Span(doc, 0, 6, 'LABEL'))
+    assert clone.name != span_group.name
+    assert clone.attrs != span_group.attrs
+    assert span_group.attrs['key'] == 'value'
+    assert_span_list_not_equal(span_group, clone)
     pass
 
 def test_span_group_sort(doc) :
@@ -208,8 +214,7 @@ def test_span_group_set_item(doc) :
     span.label_ = 'NEW LABEL'
     span.kb_id = doc.vocab.strings['KB_ID']
 
-    assert span_group[index].start != span.start
-    assert span_group[index].end != span.end
+
     assert span_group[index].label != span.label
     assert span_group[index].kb_id != span.kb_id
 
@@ -231,4 +236,63 @@ def test_span_group_has_overlap(doc) :
     span_group = span_group.filter_spans()
     assert span_group.has_overlap == False
 
+def test_span_group_merge(doc) :
+    span_group_1 = doc.spans['SPANS']
+    spans = [doc[0:5], doc[0:6]]
+    span_group_2 = SpanGroup(doc, name = 'MORE_SPANS', attrs = {'key' : 'new_value', 'new_key' : 'new_value'}, spans = spans)
+    span_group_3 = span_group_1.merge(span_group_2)
+    assert span_group_3.name == span_group_1.name
+    assert span_group_3.attrs == {'key' : 'value', 'new_key' : 'new_value'}
+    span_list_expected = list(span_group_1) + list(span_group_2)
+    assert_span_list_equal(span_group_3, span_list_expected)
+
+    # Filter result spans
+    span_group_3 = span_group_1.merge(span_group_2, filter_spans = True)
+    span_list_expected = [doc[0:6], Span(doc, 6, 7, '1')]
+    assert_span_list_equal(span_group_3, span_list_expected)
+
+    # Sort result spans
+    span_list_expected = sorted(list(span_group_1) + list(span_group_2), key = lambda x : (x.start, x.end))
+    span_group_3 = span_group_1.merge(span_group_2, sort_spans=True)
+    assert_span_list_equal(span_group_3, span_list_expected)
+
+    # Inplace
+    span_list_expected = list(span_group_1) + list(span_group_2)
+    span_group_3 = span_group_1.merge(span_group_2, inplace = True)
+    assert span_group_3 == span_group_1
+    assert span_group_3.name == span_group_1.name
+    assert span_group_3.attrs == {'key' : 'value', 'new_key' : 'new_value'}
+    assert_span_list_equal(span_group_3, span_list_expected)
+
+
+def test_span_group_merge(doc) :
+    span_list = list(doc.spans['SPANS'])
+    n = 3
+    span_list = [span_list[i:i + n] for i in range(0, len(span_list), n)]
+    span_group_list = []
+    for ii, spans in enumerate(span_list) :
+        attrs = {'key' : 'value %s' % ii, 'key %s' % ii : 'value %s' % ii}
+        span_group_list.append(SpanGroup(doc, name = 'SpanGroup%d' % ii, attrs = attrs, spans = spans))
+    merged_group = merge_span_groups(span_group_list)
+
+    expected_list = list(doc.spans['SPANS'])
+    expected_attrs = {'key' : 'value 0'}
+    for ii in range(len(span_group_list)) :
+        expected_attrs['key %s' % ii] = 'value %s' % ii
+    assert len(merged_group) == len(expected_list)
+    assert merged_group.name == span_group_list[0].name
+    assert merged_group.attrs == expected_attrs
+    assert_span_list_equal(expected_list, merged_group)
+
+    expected_list = sorted(list(doc.spans['SPANS']), key = lambda x : (x.start, x.end))
+    merged_group = merge_span_groups(span_group_list, name = 'merged', attrs = {}, sort_spans = True)
+    assert merged_group.name == 'merged'
+    assert merged_group.attrs == {}
+    assert_span_list_equal(expected_list, merged_group)
+
+    expected_list = doc.spans['SPANS'].filter_spans()
+    merged_group = merge_span_groups(span_group_list, name='merged', attrs={}, sort_spans=True, filter_spans = True)
+    assert merged_group.name == 'merged'
+    assert merged_group.attrs == {}
+    assert_span_list_equal(expected_list, merged_group)
 
