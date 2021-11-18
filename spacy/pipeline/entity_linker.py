@@ -26,7 +26,7 @@ BACKWARD_OVERWRITE = True
 
 default_model_config = """
 [model]
-@architectures = "spacy.EntityLinker.v1"
+@architectures = "spacy.EntityLinker.v2"
 
 [model.tok2vec]
 @architectures = "spacy.HashEmbedCNN.v2"

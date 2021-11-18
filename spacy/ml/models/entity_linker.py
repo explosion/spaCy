@@ -13,6 +13,23 @@ from ...errors import Errors
 
 
 @registry.architectures("spacy.EntityLinker.v1")
+def build_legacy_entity_linker(
+    tok2vec: Model, nO: Optional[int] = None
+) -> Model[List[Doc], Floats2d]:
+    errmsg = """
+
+    EntityLinker v1 was retired due to a bug with listeners that required
+    architectural changes to the pipeline. Please upgrade to v2. You can use
+    the same training data format, but the config requires a small update. See
+    this issue for details:
+
+        https://github.com/explosion/spaCy/pull/9669
+
+    """
+    raise Error(errmsg)
+
+
+@registry.architectures("spacy.EntityLinker.v2")
 def build_nel_encoder(
     tok2vec: Model, nO: Optional[int] = None
 ) -> Model[List[Doc], Floats2d]:
