@@ -107,6 +107,21 @@ def test_issue4651_with_phrase_matcher_attr():
     assert res == res_reloaded
 
 
+@pytest.mark.issue(6839)
+def test_issue6839(en_vocab):
+    """Ensure that PhraseMatcher accepts Span as input"""
+    # fmt: off
+    words = ["I", "like", "Spans", "and", "Docs", "in", "my", "input", ",", "and", "nothing", "else", "."]
+    # fmt: on
+    doc = Doc(en_vocab, words=words)
+    span = doc[:8]
+    pattern = Doc(en_vocab, words=["Spans", "and", "Docs"])
+    matcher = PhraseMatcher(en_vocab)
+    matcher.add("SPACY", [pattern])
+    matches = matcher(span)
+    assert matches
+
+
 def test_matcher_phrase_matcher(en_vocab):
     doc = Doc(en_vocab, words=["I", "like", "Google", "Now", "best"])
     # intermediate phrase

@@ -3,6 +3,7 @@ import pytest
 
 from spacy import displacy
 from spacy.displacy.render import DependencyRenderer, EntityRenderer
+from spacy.lang.en import English
 from spacy.tokens import Span, Doc
 from spacy.lang.fa import Persian
 
@@ -80,6 +81,19 @@ def test_issue3882(en_vocab):
     doc = Doc(en_vocab, words=["Hello", "world"], deps=["dep", "dep"])
     doc.user_data["test"] = set()
     displacy.parse_deps(doc)
+
+
+@pytest.mark.issue(5838)
+def test_issue5838():
+    # Displacy's EntityRenderer break line
+    # not working after last entity
+    sample_text = "First line\nSecond line, with ent\nThird line\nFourth line\n"
+    nlp = English()
+    doc = nlp(sample_text)
+    doc.ents = [Span(doc, 7, 8, label="test")]
+    html = displacy.render(doc, style="ent")
+    found = html.count("</br>")
+    assert found == 4
 
 
 def test_displacy_parse_ents(en_vocab):

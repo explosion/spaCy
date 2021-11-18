@@ -4,7 +4,7 @@ from spacy import registry
 from spacy.tokens import Doc, Span
 from spacy.language import Language
 from spacy.lang.en import English
-from spacy.pipeline import EntityRuler, EntityRecognizer
+from spacy.pipeline import EntityRuler, EntityRecognizer, merge_entities
 from spacy.pipeline.ner import DEFAULT_NER_MODEL
 from spacy.errors import MatchPatternError
 from thinc.api import NumpyOps, get_current_ops
@@ -81,6 +81,34 @@ def test_issue4849():
         for doc in nlp.pipe([text], n_process=2):
             count_ents += len([ent for ent in doc.ents if ent.ent_id > 0])
         assert count_ents == 2
+
+
+@pytest.mark.issue(5918)
+def test_issue5918():
+    # Test edge case when merging entities.
+    nlp = English()
+    ruler = nlp.add_pipe("entity_ruler")
+    patterns = [
+        {"label": "ORG", "pattern": "Digicon Inc"},
+        {"label": "ORG", "pattern": "Rotan Mosle Inc's"},
+        {"label": "ORG", "pattern": "Rotan Mosle Technology Partners Ltd"},
+    ]
+    ruler.add_patterns(patterns)
+
+    text = """
+        Digicon Inc said it has completed the previously-announced disposition
+        of its computer systems division to an investment group led by
+        Rotan Mosle Inc's Rotan Mosle Technology Partners Ltd affiliate.
+        """
+    doc = nlp(text)
+    assert len(doc.ents) == 3
+    # make it so that the third span's head is within the entity (ent_iob=I)
+    # bug #5918 would wrongly transfer that I to the full entity, resulting in 2 instead of 3 final ents.
+    # TODO: test for logging here
+    # with pytest.warns(UserWarning):
+    #     doc[29].head = doc[33]
+    doc = merge_entities(doc)
+    assert len(doc.ents) == 3
 
 
 def test_entity_ruler_init(nlp, patterns):

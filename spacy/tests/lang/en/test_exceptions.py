@@ -1,4 +1,5 @@
 import pytest
+
 from spacy.matcher import Matcher
 from spacy.tokens import Span
 
