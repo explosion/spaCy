@@ -5,9 +5,12 @@ import srsly
 from spacy.errors import Errors
 from .span cimport Span
 from ..structs cimport SpanC
+
 from libcpp.algorithm cimport sort as sort_vector
 from libcpp.set cimport set
 from libcpp.utility cimport pair
+
+from typing import Iterable, Tuple, Union, Optional, TYPE_CHECKING
 
 
 cdef class SpanGroup:
@@ -108,20 +111,15 @@ cdef class SpanGroup:
             raise ValueError("Cannot add span to group: refers to different Doc.")
         self.push_back(span.c)
 
-    def extend(self, spans):
-        """Add multiple spans to the group. All spans must refer to the same
-        Doc object as the span group.
+    def extend(self, spans_or_span_group : Union[SpanGroup, Iterable["Span"]]):
+        """Add multiple spans or contents of another SoanGroup to the group.
+           All spans must refer to the same Doc object as the span group.
 
-        spans (Iterable[Span]): The spans to add.
+         spans (Iterable[Span]): The spans to add.
 
-        DOCS: https://spacy.io/api/spangroup#extend
-        """
-        cdef Span span
-        if len(spans) :
-            self.c.reserve(self.c.size() + len(spans))
-
-        for span in spans:
-            self.append(span)
+         DOCS: https://spacy.io/api/spangroup#extend
+         """
+        self.merge(spans_or_span_group, inplace = True)
 
     def __getitem__(self, int i):
         """Get a span from the group.
@@ -138,6 +136,20 @@ cdef class SpanGroup:
             i += size
         return Span.cinit(self.doc, self.c[i])
 
+    def __delitem__(self, int i) :
+        """Delete a span from the group at index i
+
+        i (int): The item index.
+
+        DOCS: https://spacy.io/api/spangroup#delitem
+        """
+        cdef int size = self.c.size()
+        if i < -size or i >= size:
+            raise IndexError(f"list index {i} out of range")
+        if i < 0:
+            i += size
+        self.c.erase(self.c.begin() + i - 1)
+
     def __setitem__(self, int i, Span span) :
         """Update a span in the group.
 
@@ -151,7 +163,37 @@ cdef class SpanGroup:
             raise IndexError(f"list index {i} out of range")
         if i < 0:
             i += size
+
+        if span.doc is not self.doc:
+            raise ValueError("Cannot add span to group: refers to different Doc.")
+
         self.c[i] = span.c
+
+    def __iadd__(self, other : Union[SpanGroup, Iterable["Span"]]) :
+        """ Operator +. Append a SpanGroup or Iterable[Span] to this group and
+            return self.
+
+            other (SpanGroup or Iterable["Span"]):SpanGroup or spans to add
+
+            RETURNS (SpanGroup): returns the merged SpanGroup
+
+            DOCS: https://spacy.io/api/spangroup#iadd
+        """
+        self.merge(other, inplace = True)
+        return self
+
+    def __add__(self, other : Union[SpanGroup, Iterable["Span"]]):
+        """ Operator +. Merge a SpanGroup or Iterable[Span] with this group and
+        return a new SpanGroup
+
+        other (SpanGroup or Iterable["Span"]):SpanGroup or spans to add
+
+        RETURNS (SpanGroup): returns the merged SpanGroup
+
+        DOCS: https://spacy.io/api/spangroup#add
+        """
+        return self.merge(other)
+
 
     def to_bytes(self):
         """Serialize the SpanGroup's contents to a byte string.
@@ -266,6 +308,10 @@ cdef class SpanGroup:
 
         DOCS: https://spacy.io/api/spangroup#get_overlaps
         """
+
+        if span.doc is not self.doc:
+            raise ValueError("Cannot add span to group: refers to different Doc.")
+
         cdef Span current_span = span
         cdef int start = current_span.start
         cdef int end = current_span.end
@@ -288,12 +334,12 @@ cdef class SpanGroup:
         span_group.c = result
         return span_group
 
-    def merge(self, SpanGroup other_group, sort_spans = False, filter_spans = False, inplace = False) :
+    def merge(self, other : Union[SpanGroup, Iterable["Span"]], sort_spans = False, filter_spans = False, inplace = False) :
         """
         Merges given SpanGroup with self, either in place or creating a copy. Optionally sorts and filters spans.
         Preserves the name of self, updates attrs only with values that are not in self.
 
-        other_group (SpanGroup): the group to append to this one
+        other_group (SpanGroup or Iterable[Span): the group to append to this one
         sort_spans (bool): Indicates if sort should be performed
         filter_spans (bool): Indicates if result spans should be filtered
         inplace (bool): Indicates if the operation should be performed on self
@@ -303,17 +349,34 @@ cdef class SpanGroup:
         DOCS: https://spacy.io/api/spangroup#merge
         """
         cdef SpanGroup span_group = self if inplace else self.clone()
-        span_group.attrs.update({key : value for key, value in other_group.attrs.items() if key not in span_group.attrs })
-        if len(other_group) :
-            span_group.c.reserve(span_group.c.size() + other_group.c.size())
-            span_group.c.insert(span_group.c.end(), other_group.c.begin(), other_group.c.end())
+        cdef SpanGroup other_group
+        cdef Span span
+
+        if isinstance(other, SpanGroup) :
+            other_group = other
+            if other_group.doc is not self.doc:
+                raise ValueError("Cannot merge SpanGroup with group: refers to different Doc.")
+
+            span_group.attrs.update({key : value for key, value in other_group.attrs.items() if key not in span_group.attrs })
+            if len(other_group) :
+                span_group.c.reserve(span_group.c.size() + other_group.c.size())
+                span_group.c.insert(span_group.c.end(), other_group.c.begin(), other_group.c.end())
+        else :
+            spans = other
+            if len(spans) :
+                span_group.c.reserve(self.c.size() + len(spans))
+            for span in spans:
+                if span.doc is not self.doc:
+                    raise ValueError("Cannot add span to the group: refers to different Doc.")
+                span_group.c.push_back(span.c)
+
         if filter_spans :
             span_group.filter_spans(inplace = True)
         elif sort_spans :
             span_group.sort(inplace = True)
         return span_group
 
-def merge_span_groups(span_groups, name = None, attrs = None, sort_spans = False, filter_spans = False) :
+def merge_span_groups(span_groups : Iterable[SpanGroup], name = None, attrs = None, sort_spans = False, filter_spans = False) :
     """
     Merges a list of SpanGroups into a single SpanGroup.
     span_group (List of SpanGroups):
@@ -333,7 +396,9 @@ def merge_span_groups(span_groups, name = None, attrs = None, sort_spans = False
     cdef SpanGroup group
     cdef int size = 0
 
+    span_groups = list(span_groups)
     if len(span_groups) :
+        doc = span_groups[0].doc
 
         new_group = SpanGroup(span_groups[0].doc)
         new_group.name = span_groups[0].name if name is None else name
@@ -346,6 +411,8 @@ def merge_span_groups(span_groups, name = None, attrs = None, sort_spans = False
             new_group.c.reserve(size)
 
         for group in span_groups :
+            if group.doc is not doc:
+                raise ValueError("Cannot merge SpanGroups: refer to different Doc.")
             if group.c.size() :
                 new_group.c.insert(new_group.c.end(), group.c.begin(), group.c.end())
             if attrs is None :
