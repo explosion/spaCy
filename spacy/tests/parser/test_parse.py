@@ -1,8 +1,9 @@
 import pytest
 from numpy.testing import assert_equal
+from thinc.api import Adam
 
 from spacy import registry, util
-from spacy.attrs import DEP
+from spacy.attrs import DEP, NORM
 from spacy.lang.en import English
 from spacy.tokens import Doc
 from spacy.training import Example
@@ -60,6 +61,34 @@ PARTIAL_DATA = [
 eps = 0.1
 
 
+@pytest.fixture
+def vocab():
+    return Vocab(lex_attr_getters={NORM: lambda s: s})
+
+
+@pytest.fixture
+def parser(vocab):
+    vocab.strings.add("ROOT")
+    cfg = {"model": DEFAULT_PARSER_MODEL}
+    model = registry.resolve(cfg, validate=True)["model"]
+    parser = DependencyParser(vocab, model)
+    parser.cfg["token_vector_width"] = 4
+    parser.cfg["hidden_width"] = 32
+    # parser.add_label('right')
+    parser.add_label("left")
+    parser.initialize(lambda: [_parser_example(parser)])
+    sgd = Adam(0.001)
+
+    for i in range(10):
+        losses = {}
+        doc = Doc(vocab, words=["a", "b", "c", "d"])
+        example = Example.from_dict(
+            doc, {"heads": [1, 1, 3, 3], "deps": ["left", "ROOT", "left", "ROOT"]}
+        )
+        parser.update([example], sgd=sgd, losses=losses)
+    return parser
+
+
 def _parser_example(parser):
     doc = Doc(parser.vocab, words=["a", "b", "c", "d"])
     gold = {"heads": [1, 1, 3, 3], "deps": ["right", "ROOT", "left", "ROOT"]}
@@ -106,6 +135,18 @@ def test_issue3830_with_subtok():
     assert "subtok" not in parser.labels
     parser.initialize(lambda: [_parser_example(parser)])
     assert "subtok" in parser.labels
+
+
+@pytest.mark.issue(7716)
+@pytest.mark.xfail(reason="Not fixed yet")
+def test_partial_annotation(parser):
+    doc = Doc(parser.vocab, words=["a", "b", "c", "d"])
+    doc[2].is_sent_start = False
+    # Note that if the following line is used, then doc[2].is_sent_start == False
+    # doc[3].is_sent_start = False
+
+    doc = parser(doc)
+    assert doc[2].is_sent_start == False
 
 
 def test_parser_root(en_vocab):
