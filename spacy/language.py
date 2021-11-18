@@ -681,7 +681,6 @@ class Language:
         # interpolated variables)
         if raw_config:
             filled = filled.merge(raw_config)
-        filled["factory"] = factory_name
         self._pipe_configs[name] = filled
         return resolved[factory_name]
 
