@@ -213,7 +213,7 @@ of dicts) or a phrase pattern (string). For more details, see the usage guide on
 
 ## EntityRuler.remove {#remove tag="method"}
 
-Remove a pattern by its ID from the entity ruler. An `Error` is raised if ID does not exist.
+Remove a pattern by its ID from the entity ruler. A `ValueError` is raised if ID does not exist.
 
 > #### Example
 >
