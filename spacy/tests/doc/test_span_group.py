@@ -208,6 +208,11 @@ def test_span_group_set_item(doc) :
     span.label_ = 'NEW LABEL'
     span.kb_id = doc.vocab.strings['KB_ID']
 
+    assert span_group[index].start != span.start
+    assert span_group[index].end != span.end
+    assert span_group[index].label != span.label
+    assert span_group[index].kb_id != span.kb_id
+
     span_group[index] = span
     assert span_group[index].start == span.start
     assert span_group[index].end == span.end
@@ -219,3 +224,11 @@ def test_span_group_set_item(doc) :
         span_group[-100] = span
     with pytest.raises(IndexError):
         span_group[100] = span
+
+def test_span_group_has_overlap(doc) :
+    span_group = doc.spans['SPANS']
+    assert span_group.has_overlap == True
+    span_group = span_group.filter_spans()
+    assert span_group.has_overlap == False
+
+

@@ -78,8 +78,10 @@ cdef class SpanGroup:
         """
         if not len(self):
             return False
-        sorted_spans = list(sorted(self))
-        last_end = sorted_spans[0].end
+        cdef vector[SpanC] sorted_spans = self.c
+        _sort_span_c_vector(sorted_spans)
+        cdef int last_end = sorted_spans[0].end
+        cdef SpanC span
         for span in sorted_spans[1:]:
             if span.start < last_end:
                 return True
