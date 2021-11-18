@@ -565,7 +565,16 @@ def test_get_third_party_dependencies():
             }
         },
     )
-    get_third_party_dependencies(nlp.config) == []
+    assert get_third_party_dependencies(nlp.config) == []
+
+    # Test with lang-specific factory
+    @Dutch.factory("third_party_test")
+    def test_factory(nlp, name):
+        return lambda x: x
+
+    nlp.add_pipe("third_party_test")
+    # Before #9674 this would throw an exception
+    get_third_party_dependencies(nlp.config)
 
 
 @pytest.mark.parametrize(
