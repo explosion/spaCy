@@ -26,7 +26,7 @@ def build_legacy_entity_linker(
         https://github.com/explosion/spaCy/pull/9669
 
     """
-    raise Error(errmsg)
+    raise RuntimeError(errmsg)
 
 
 @registry.architectures("spacy.EntityLinker.v2")
