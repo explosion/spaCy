@@ -4,10 +4,11 @@ import numpy.random
 import pytest
 from numpy.testing import assert_almost_equal
 from thinc.api import Config, compounding, fix_random_seed, get_current_ops
+from wasabi import msg
 
 import spacy
 from spacy import util
-from spacy.cli.evaluate import print_textcats_auc_per_cat, print_prf_per_type
+from spacy.cli.evaluate import print_prf_per_type, print_textcats_auc_per_cat
 from spacy.lang.en import English
 from spacy.language import Language
 from spacy.pipeline import TextCategorizer

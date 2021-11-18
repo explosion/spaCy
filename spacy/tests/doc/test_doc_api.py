@@ -4,11 +4,11 @@ import numpy
 import pytest
 from thinc.api import NumpyOps, get_current_ops
 
-from spacy.attrs import DEP, ENT_IOB, ENT_TYPE, HEAD, IS_ALPHA, MORPH
-from spacy.attrs import SENT_START
-from spacy.language import Language
+from spacy.attrs import DEP, ENT_IOB, ENT_TYPE, HEAD, IS_ALPHA, MORPH, POS
+from spacy.attrs import SENT_START, TAG
 from spacy.lang.en import English
 from spacy.lang.xx import MultiLanguage
+from spacy.language import Language
 from spacy.lexeme import Lexeme
 from spacy.tokens import Doc, Span, Token
 from spacy.vocab import Vocab
