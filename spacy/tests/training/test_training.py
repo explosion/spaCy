@@ -11,6 +11,7 @@ from spacy.training import offsets_to_biluo_tags
 from spacy.training.align import get_alignments
 from spacy.training.converters import json_to_docs
 from spacy.util import get_words_and_spaces, load_model_from_path, minibatch
+from spacy.util import load_config_from_str
 from thinc.api import compounding
 
 from ..util import make_tempdir
@@ -207,6 +208,68 @@ def test_issue4402():
         for eg in train_data:
             split_train_data.extend(eg.split_sents())
         assert len(split_train_data) == 4
+
+
+CONFIG_7029 = """
+[nlp]
+lang = "en"
+pipeline = ["tok2vec", "tagger"]
+
+[components]
+
+[components.tok2vec]
+factory = "tok2vec"
+
+[components.tok2vec.model]
+@architectures = "spacy.Tok2Vec.v1"
+
+[components.tok2vec.model.embed]
+@architectures = "spacy.MultiHashEmbed.v1"
+width = ${components.tok2vec.model.encode:width}
+attrs = ["NORM","PREFIX","SUFFIX","SHAPE"]
+rows = [5000,2500,2500,2500]
+include_static_vectors = false
+
+[components.tok2vec.model.encode]
+@architectures = "spacy.MaxoutWindowEncoder.v1"
+width = 96
+depth = 4
+window_size = 1
+maxout_pieces = 3
+
+[components.tagger]
+factory = "tagger"
+
+[components.tagger.model]
+@architectures = "spacy.Tagger.v1"
+nO = null
+
+[components.tagger.model.tok2vec]
+@architectures = "spacy.Tok2VecListener.v1"
+width = ${components.tok2vec.model.encode:width}
+upstream = "*"
+"""
+
+
+@pytest.mark.issue(7029)
+def test_issue7029():
+    """Test that an empty document doesn't mess up an entire batch."""
+    TRAIN_DATA = [
+        ("I like green eggs", {"tags": ["N", "V", "J", "N"]}),
+        ("Eat blue ham", {"tags": ["V", "J", "N"]}),
+    ]
+    nlp = English.from_config(load_config_from_str(CONFIG_7029))
+    train_examples = []
+    for t in TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
+    optimizer = nlp.initialize(get_examples=lambda: train_examples)
+    for i in range(50):
+        losses = {}
+        nlp.update(train_examples, sgd=optimizer, losses=losses)
+    texts = ["first", "second", "third", "fourth", "and", "then", "some", ""]
+    docs1 = list(nlp.pipe(texts, batch_size=1))
+    docs2 = list(nlp.pipe(texts, batch_size=4))
+    assert [doc[0].tag_ for doc in docs1[:-1]] == [doc[0].tag_ for doc in docs2[:-1]]
 
 
 def test_gold_biluo_U(en_vocab):
