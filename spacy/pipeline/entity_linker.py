@@ -55,6 +55,7 @@ DEFAULT_NEL_MODEL = Config().from_str(default_model_config)["model"]
         "get_candidates": {"@misc": "spacy.CandidateGenerator.v1"},
         "overwrite": True,
         "scorer": {"@scorers": "spacy.entity_linker_scorer.v1"},
+        "use_gold_ents": True,
     },
     default_score_weights={
         "nel_micro_f": 1.0,
@@ -75,6 +76,7 @@ def make_entity_linker(
     get_candidates: Callable[[KnowledgeBase, Span], Iterable[Candidate]],
     overwrite: bool,
     scorer: Optional[Callable],
+    use_gold_ents: bool,
 ):
     """Construct an EntityLinker component.
 
@@ -102,6 +104,7 @@ def make_entity_linker(
         get_candidates=get_candidates,
         overwrite=overwrite,
         scorer=scorer,
+        use_gold_ents=use_gold_ents
     )
 
 
@@ -136,6 +139,7 @@ class EntityLinker(TrainablePipe):
         get_candidates: Callable[[KnowledgeBase, Span], Iterable[Candidate]],
         overwrite: bool = BACKWARD_OVERWRITE,
         scorer: Optional[Callable] = entity_linker_score,
+        use_gold_ents: bool,
     ) -> None:
         """Initialize an entity linker.
 
@@ -152,6 +156,7 @@ class EntityLinker(TrainablePipe):
             produces a list of candidates, given a certain knowledge base and a textual mention.
         scorer (Optional[Callable]): The scoring method. Defaults to
             Scorer.score_links.
+        use_gold_ents (bool): Whether to copy entities from gold docs or not.
 
         DOCS: https://spacy.io/api/entitylinker#init
         """
@@ -169,6 +174,7 @@ class EntityLinker(TrainablePipe):
         # create an empty KB by default. If you want to load a predefined one, specify it in 'initialize'.
         self.kb = empty_kb(entity_vector_length)(self.vocab)
         self.scorer = scorer
+        self.use_gold_ents = use_gold_ents
 
     def set_kb(self, kb_loader: Callable[[Vocab], KnowledgeBase]):
         """Define the KB of this pipe by providing a function that will
@@ -212,9 +218,9 @@ class EntityLinker(TrainablePipe):
         doc_sample = []
         vector_sample = []
         for example in islice(get_examples(), 10):
-            # XXX hack: copy over ents
             doc = example.x
-            doc.ents = example.y.ents
+            if self.use_gold_ents:
+                doc.ents = example.y.ents
             doc_sample.append(doc)
             vector_sample.append(self.model.ops.alloc1f(nO))
         assert len(doc_sample) > 0, Errors.E923.format(name=self.name)
@@ -253,9 +259,9 @@ class EntityLinker(TrainablePipe):
 
         set_dropout_rate(self.model, drop)
         docs = [eg.predicted for eg in examples]
-        # XXX hack: copy over annotations we need for now
-        for doc, ex in zip(docs, examples):
-            doc.ents = ex.reference.ents
+        if self.use_gold_ents:
+            for doc, ex in zip(docs, examples):
+                doc.ents = ex.reference.ents
 
         sentence_encodings, bp_context = self.model.begin_update(docs)
         loss, d_scores = self.get_loss(
