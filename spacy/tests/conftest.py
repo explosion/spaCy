@@ -285,6 +285,11 @@ def sk_tokenizer():
 
 
 @pytest.fixture(scope="session")
+def sl_tokenizer():
+    return get_lang_class("sl")().tokenizer
+
+
+@pytest.fixture(scope="session")
 def sr_tokenizer():
     return get_lang_class("sr")().tokenizer
 
