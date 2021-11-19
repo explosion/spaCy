@@ -423,6 +423,33 @@ cdef class Span:
             raise ValueError(Errors.E030)
 
     @property
+    def sents(self):
+        cdef int start
+        cdef int i
+
+        if not self.doc.has_annotation("SENT_START"):
+            raise ValueError(Errors.E030)
+        if "sents" in self.doc.user_hooks:
+            yield from self.doc.user_hooks["sents"](self)
+        else:
+            # Use `sent_start` token attribute to find sentence boundaries
+            # Find start of the 1st sentence of the Span
+            start = self.start
+            while self.doc.c[start].sent_start != 1 and start > 0:
+                start -= 1
+
+            # Now, find all the sentences in the span
+            for i in range(start + 1, self.doc.length):
+                if self.doc.c[i].sent_start == 1:
+                    yield Span(self.doc, start, i)
+                    start = i
+                    if start >= self.end :
+                        break
+            if start < self.end :
+                yield Span(self.doc, start, self.end)
+
+
+    @property
     def ents(self):
         """The named entities in the span. Returns a tuple of named entity
         `Span` objects, if the entity recognizer has been applied.

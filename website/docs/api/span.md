@@ -506,17 +506,26 @@ sent = span.sent
 sent = doc[sent.start : max(sent.end, span.end)]
 ```
 
+## Span.sents {#sents tag="property" model="sentences"}
+
+Returns a generator over the sentences the span belongs to. This property is only available
+when [sentence boundaries](/usage/linguistic-features#sbd) have been set on the
+document by the `parser`, `senter`, `sentencizer` or some custom function. It
+will raise an error otherwise.
+
+If the span happens to cross sentence boundaries, all sentences the span overlaps with will be returned.
+
 > #### Example
 >
 > ```python
 > doc = nlp("Give it back! He pleaded.")
-> span = doc[1:3]
-> assert span.sent.text == "Give it back!"
+> span = doc[2:4]
+> assert len(span.sents) == 2
 > ```
 
 | Name        | Description                                             |
 | ----------- | ------------------------------------------------------- |
-| **RETURNS** | The sentence span that this span is a part of. ~~Span~~ |
+| **RETURNS** | A generator yielding sentences this `Span` is a part of ~~Iterable[Span]~~ |
 
 ## Attributes {#attributes}
 
