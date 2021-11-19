@@ -434,3 +434,71 @@ def test_span_with_vectors(doc):
     # single-token span with vector
     assert_array_equal(ops.to_numpy(doc[10:11].vector), [-1, -1, -1])
     doc.vocab.vectors = prev_vectors
+
+def test_span_comparison(doc) :
+    # Identical start, end, only differ in label and kb_id
+    span_1 = Span(doc, 0, 3)
+    span_2 = Span(doc, 0, 3)
+    span_3 = Span(doc, 0, 3, 'LABEL')
+    span_4 = Span(doc, 0, 3, 'LABEL')
+    span_5 = Span(doc, 0, 3, 'LABEL', kb_id = 'KB_ID')
+    span_6 = Span(doc, 0, 3, 'LABEL', kb_id = 'KB_ID')
+    assert span_1 == span_2
+    assert span_3 == span_4
+    assert span_5 == span_6
+
+    assert span_1 != span_3
+    assert span_1 != span_5
+    assert span_3 != span_5
+
+    assert span_1 <= span_2
+    assert span_3 <= span_4
+    assert span_5 <= span_6
+
+    assert span_1 >= span_2
+    assert span_3 >= span_4
+    assert span_5 >= span_6
+
+    assert span_1 != span_3
+    assert span_1 != span_5
+
+    assert span_1 < span_3
+    assert span_1 <= span_3
+
+    assert span_3 > span_1
+    assert span_3 >= span_1
+
+    assert span_1 < span_5
+    assert span_1 <= span_5
+
+    assert span_5 > span_1
+    assert span_5 >= span_1
+
+    assert span_5 > span_3
+    assert span_5 >= span_3
+
+    # Different start
+    span_1 = Span(doc, 1, 3, '', kb_id='KB_ID')
+    span_2 = Span(doc, 0, 3, 'LABEL', kb_id='KB_ID')
+
+    assert span_1 != span_2
+    assert span_1 > span_2
+    assert span_1 >= span_2
+    assert span_2 < span_1
+    assert span_2 <= span_1
+
+    # Same start, different end
+    span_1 = Span(doc, 0, 4, '', kb_id='KB_ID')
+    span_2 = Span(doc, 0, 3, 'LABEL', kb_id='KB_ID')
+
+    assert span_1 != span_2
+    assert span_1 > span_2
+    assert span_1 >= span_2
+    assert span_2 < span_1
+    assert span_2 <= span_1
+
+
+
+
+
+

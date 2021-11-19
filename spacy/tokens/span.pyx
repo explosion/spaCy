@@ -128,10 +128,24 @@ cdef class Span:
                 return True
         # <
         if op == 0:
-            return self.c.start_char < other.c.start_char
+            #return self.c.start_char < other.c.start_char
+            if self.c.start_char != other.c.start_char :
+                return self.c.start_char < other.c.start_char
+            if self.c.end_char != other.c.end_char :
+                return self.c.end_char < other.c.end_char
+            if self.c.label != other.c.label  :
+                return self.c.label < other.c.label
+            return self.c.kb_id < other.c.kb_id
         # <=
         elif op == 1:
-            return self.c.start_char <= other.c.start_char
+            #return self.c.start_char <= other.c.start_char
+            if self.c.start_char != other.c.start_char :
+                return self.c.start_char < other.c.start_char
+            if self.c.end_char != other.c.end_char :
+                return self.c.end_char < other.c.end_char
+            if self.c.label != other.c.label  :
+                return self.c.label < other.c.label
+            return self.c.kb_id <= other.c.kb_id
         # ==
         elif op == 2:
             # Do the cheap comparisons first
@@ -154,10 +168,24 @@ cdef class Span:
             )
         # >
         elif op == 4:
-            return self.c.start_char > other.c.start_char
+            #return self.c.start_char > other.c.start_char
+            if self.c.start_char != other.c.start_char :
+                return self.c.start_char > other.c.start_char
+            if self.c.end_char != other.c.end_char :
+                return self.c.end_char > other.c.end_char
+            if self.c.label != other.c.label  :
+                return self.c.label > other.c.label
+            return self.c.kb_id > other.c.kb_id
         # >=
         elif op == 5:
-            return self.c.start_char >= other.c.start_char
+            #return self.c.start_char >= other.c.start_char
+            if self.c.start_char != other.c.start_char :
+                return self.c.start_char > other.c.start_char
+            if self.c.end_char != other.c.end_char :
+                return self.c.end_char > other.c.end_char
+            if self.c.label != other.c.label  :
+                return self.c.label > other.c.label
+            return self.c.kb_id >= other.c.kb_id
 
     def __hash__(self):
         return hash((self.doc, self.c.start_char, self.c.end_char, self.c.label, self.c.kb_id))
