@@ -375,6 +375,11 @@ def vi_tokenizer():
 
 
 @pytest.fixture(scope="session")
+def xx_tokenizer():
+    return get_lang_class("xx")().tokenizer
+
+
+@pytest.fixture(scope="session")
 def yo_tokenizer():
     return get_lang_class("yo")().tokenizer
 
