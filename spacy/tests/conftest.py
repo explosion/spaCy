@@ -126,6 +126,11 @@ def es_vocab():
 
 
 @pytest.fixture(scope="session")
+def et_tokenizer():
+    return get_lang_class("et")().tokenizer
+
+
+@pytest.fixture(scope="session")
 def eu_tokenizer():
     return get_lang_class("eu")().tokenizer
 
