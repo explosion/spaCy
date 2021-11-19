@@ -315,6 +315,11 @@ def sr_tokenizer():
 
 
 @pytest.fixture(scope="session")
+def sq_tokenizer():
+    return get_lang_class("sq")().tokenizer
+
+
+@pytest.fixture(scope="session")
 def sv_tokenizer():
     return get_lang_class("sv")().tokenizer
 
