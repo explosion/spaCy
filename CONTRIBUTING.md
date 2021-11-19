@@ -147,11 +147,20 @@ When fixing a bug, first create an
 The description text can be very short – we don't want to make this too
 bureaucratic.
 
-Next, create a test file named `test_issue[ISSUE NUMBER].py` in the
-[`spacy/tests/regression`](spacy/tests/regression) folder. Test for the bug
-you're fixing, and make sure the test fails. Next, add and commit your test file
-referencing the issue number in the commit message. Finally, fix the bug, make
-sure your test passes and reference the issue in your commit message.
+Next, add a test to the relevant file in the [`spacy/tests](spacy/tests) folder.
+Then add a [pytest mark](https://docs.pytest.org/en/6.2.x/example/markers.html#working-with-custom-markers), `@pytest.mark.issue(NUMBER)`, to reference the issue number.
+
+```python
+# Assume you're fixing Issue #1234
+@pytest.mark.issue(1234)
+def test_issue921():
+    ...
+```
+
+Test for the bug you're fixing, and make sure the test fails.  Next, add and
+commit your test file referencing the issue number in the commit message.
+Finally, fix the bug, make sure your test passes and reference the issue in your
+commit message.
 
 📖 **For more information on how to add tests, check out the [tests README](spacy/tests/README.md).**
 
