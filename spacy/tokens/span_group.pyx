@@ -119,7 +119,7 @@ cdef class SpanGroup:
 
          DOCS: https://spacy.io/api/spangroup#extend
          """
-        self.merge(spans_or_span_group, inplace = True)
+        self.concat(spans_or_span_group, inplace = True)
 
     def __getitem__(self, int i):
         """Get a span from the group.
@@ -175,24 +175,24 @@ cdef class SpanGroup:
 
             other (SpanGroup or Iterable["Span"]):SpanGroup or spans to add
 
-            RETURNS (SpanGroup): returns the merged SpanGroup
+            RETURNS (SpanGroup): returns the concatenated SpanGroup
 
             DOCS: https://spacy.io/api/spangroup#iadd
         """
-        self.merge(other, inplace = True)
+        self.concat(other, inplace = True)
         return self
 
     def __add__(self, other : Union[SpanGroup, Iterable["Span"]]):
-        """ Operator +. Merge a SpanGroup or Iterable[Span] with this group and
+        """ Operator +. Concatenate a SpanGroup or Iterable[Span] with this group and
         return a new SpanGroup
 
         other (SpanGroup or Iterable["Span"]):SpanGroup or spans to add
 
-        RETURNS (SpanGroup): returns the merged SpanGroup
+        RETURNS (SpanGroup): returns the concatenated SpanGroup
 
         DOCS: https://spacy.io/api/spangroup#add
         """
-        return self.merge(other)
+        return self.concat(other)
 
 
     def to_bytes(self):
@@ -334,19 +334,19 @@ cdef class SpanGroup:
         span_group.c = result
         return span_group
 
-    def merge(self, other : Union[SpanGroup, Iterable["Span"]], sort_spans = False, filter_spans = False, inplace = False) :
+    def concat(self, other : Union[SpanGroup, Iterable["Span"]], sort_spans = False, filter_spans = False, inplace = False) :
         """
-        Merges given SpanGroup with self, either in place or creating a copy. Optionally sorts and filters spans.
+        Concatenates given SpanGroup with self, either in place or creating a copy. Optionally sorts and filters spans.
         Preserves the name of self, updates attrs only with values that are not in self.
 
-        other_group (SpanGroup or Iterable[Span): the group to append to this one
+        other (SpanGroup or Iterable[Span): the group to append to this one
         sort_spans (bool): Indicates if sort should be performed
         filter_spans (bool): Indicates if result spans should be filtered
         inplace (bool): Indicates if the operation should be performed on self
 
         RETURNS (SpanGroup): either a new SpanGroup or self depending on the value of inplace
 
-        DOCS: https://spacy.io/api/spangroup#merge
+        DOCS: https://spacy.io/api/spangroup#concat
         """
         cdef SpanGroup span_group = self if inplace else self.clone()
         cdef SpanGroup other_group
@@ -355,7 +355,7 @@ cdef class SpanGroup:
         if isinstance(other, SpanGroup) :
             other_group = other
             if other_group.doc is not self.doc:
-                raise ValueError("Cannot merge SpanGroup with group: refers to different Doc.")
+                raise ValueError("Cannot concat SpanGroup with group: refers to different Doc.")
 
             span_group.attrs.update({key : value for key, value in other_group.attrs.items() if key not in span_group.attrs })
             if len(other_group) :
@@ -376,9 +376,9 @@ cdef class SpanGroup:
             span_group.sort(inplace = True)
         return span_group
 
-def merge_span_groups(span_groups : Iterable[SpanGroup], name = None, attrs = None, sort_spans = False, filter_spans = False) :
+def concat_span_groups(span_groups : Iterable[SpanGroup], name = None, attrs = None, sort_spans = False, filter_spans = False) :
     """
-    Merges a list of SpanGroups into a single SpanGroup.
+    Concatenates a list of SpanGroups into a single SpanGroup.
     span_group (List of SpanGroups):
     name (str): name of the result SpanGroup. If not specified, the mame of the first group will be used
     attrs (dict): attrs of the result SpanGroup. If not specified, merged dictionary of attrs of
@@ -389,7 +389,7 @@ def merge_span_groups(span_groups : Iterable[SpanGroup], name = None, attrs = No
 
     RETURNS (SpanGroup): either a new SpanGroup or self depending on the value of inplace
 
-    DOCS: https://spacy.io/api/spangroup#merge
+    DOCS: https://spacy.io/api/spangroup#concat_span_groups
     """
     cdef SpanGroup new_group = None
     cdef int ii
@@ -412,7 +412,7 @@ def merge_span_groups(span_groups : Iterable[SpanGroup], name = None, attrs = No
 
         for group in span_groups :
             if group.doc is not doc:
-                raise ValueError("Cannot merge SpanGroups: refer to different Doc.")
+                raise ValueError("Cannot concat SpanGroups: refer to different Doc.")
             if group.c.size() :
                 new_group.c.insert(new_group.c.end(), group.c.begin(), group.c.end())
             if attrs is None :

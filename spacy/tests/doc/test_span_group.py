@@ -3,7 +3,7 @@ from random import Random
 from spacy.matcher import Matcher
 from spacy.tokens import Span, SpanGroup
 from ..util import assert_span_list_equal, assert_span_list_not_equal
-from spacy.tokens.span_group import merge_span_groups
+from spacy.tokens.span_group import concat_span_groups
 
 @pytest.fixture
 def doc(en_tokenizer):
@@ -238,29 +238,29 @@ def test_span_group_has_overlap(doc) :
     span_group = span_group.filter_spans()
     assert span_group.has_overlap == False
 
-def test_span_group_merge(doc, other_doc) :
+def test_span_group_concat(doc, other_doc) :
     span_group_1 = doc.spans['SPANS']
     spans = [doc[0:5], doc[0:6]]
     span_group_2 = SpanGroup(doc, name = 'MORE_SPANS', attrs = {'key' : 'new_value', 'new_key' : 'new_value'}, spans = spans)
-    span_group_3 = span_group_1.merge(span_group_2)
+    span_group_3 = span_group_1.concat(span_group_2)
     assert span_group_3.name == span_group_1.name
     assert span_group_3.attrs == {'key' : 'value', 'new_key' : 'new_value'}
     span_list_expected = list(span_group_1) + list(span_group_2)
     assert_span_list_equal(span_group_3, span_list_expected)
 
     # Filter result spans
-    span_group_3 = span_group_1.merge(span_group_2, filter_spans = True)
+    span_group_3 = span_group_1.concat(span_group_2, filter_spans = True)
     span_list_expected = [doc[0:6], Span(doc, 6, 7, '1')]
     assert_span_list_equal(span_group_3, span_list_expected)
 
     # Sort result spans
     span_list_expected = sorted(list(span_group_1) + list(span_group_2), key = lambda x : (x.start, x.end))
-    span_group_3 = span_group_1.merge(span_group_2, sort_spans=True)
+    span_group_3 = span_group_1.concat(span_group_2, sort_spans=True)
     assert_span_list_equal(span_group_3, span_list_expected)
 
     # Inplace
     span_list_expected = list(span_group_1) + list(span_group_2)
-    span_group_3 = span_group_1.merge(span_group_2, inplace = True)
+    span_group_3 = span_group_1.concat(span_group_2, inplace = True)
     assert span_group_3 == span_group_1
     assert span_group_3.name == span_group_1.name
     assert span_group_3.attrs == {'key' : 'value', 'new_key' : 'new_value'}
@@ -268,10 +268,10 @@ def test_span_group_merge(doc, other_doc) :
 
     span_group_2 = other_doc.spans['SPANS']
     with pytest.raises(ValueError):
-        span_group_1.merge(span_group_2)
+        span_group_1.concat(span_group_2)
 
 
-def test_span_group_merge_span_groups(doc, other_doc) :
+def test_span_group_concat_span_groups(doc, other_doc) :
     span_list = list(doc.spans['SPANS'])
     n = 3
     span_list = [span_list[i:i + n] for i in range(0, len(span_list), n)]
@@ -279,35 +279,35 @@ def test_span_group_merge_span_groups(doc, other_doc) :
     for ii, spans in enumerate(span_list) :
         attrs = {'key' : 'value %s' % ii, 'key %s' % ii : 'value %s' % ii}
         span_group_list.append(SpanGroup(doc, name = 'SpanGroup%d' % ii, attrs = attrs, spans = spans))
-    merged_group = merge_span_groups(span_group_list)
+    concatenated_group = concat_span_groups(span_group_list)
 
     expected_list = list(doc.spans['SPANS'])
     expected_attrs = {'key' : 'value 0'}
     for ii in range(len(span_group_list)) :
         expected_attrs['key %s' % ii] = 'value %s' % ii
-    assert len(merged_group) == len(expected_list)
-    assert merged_group.name == span_group_list[0].name
-    assert merged_group.attrs == expected_attrs
-    assert_span_list_equal(expected_list, merged_group)
+    assert len(concatenated_group) == len(expected_list)
+    assert concatenated_group.name == span_group_list[0].name
+    assert concatenated_group.attrs == expected_attrs
+    assert_span_list_equal(expected_list, concatenated_group)
 
     expected_list = sorted(list(doc.spans['SPANS']), key = lambda x : (x.start, x.end))
-    merged_group = merge_span_groups(span_group_list, name = 'merged', attrs = {}, sort_spans = True)
-    assert merged_group.name == 'merged'
-    assert merged_group.attrs == {}
-    assert_span_list_equal(expected_list, merged_group)
+    concatenated_group = concat_span_groups(span_group_list, name = 'merged', attrs = {}, sort_spans = True)
+    assert concatenated_group.name == 'merged'
+    assert concatenated_group.attrs == {}
+    assert_span_list_equal(expected_list, concatenated_group)
 
     expected_list = doc.spans['SPANS'].filter_spans()
-    merged_group = merge_span_groups(span_group_list, name='merged', attrs={}, sort_spans=True, filter_spans = True)
-    assert merged_group.name == 'merged'
-    assert merged_group.attrs == {}
-    assert_span_list_equal(expected_list, merged_group)
+    concatenated_group = concat_span_groups(span_group_list, name='merged', attrs={}, sort_spans=True, filter_spans = True)
+    assert concatenated_group.name == 'merged'
+    assert concatenated_group.attrs == {}
+    assert_span_list_equal(expected_list, concatenated_group)
 
-    merged_group = merge_span_groups(doc.spans.values())
-    assert merged_group.name == 'SPANS'
+    concatenated_group = concat_span_groups(doc.spans.values())
+    assert concatenated_group.name == 'SPANS'
 
     span_groups = [x for x in doc.spans.values()] + [x for x in other_doc.spans.values()]
     with pytest.raises(ValueError):
-        merge_span_groups(span_groups)
+        concat_span_groups(span_groups)
 
 def test_span_doc_delitem(doc) :
     span_group = doc.spans['SPANS']
@@ -330,7 +330,7 @@ def test_span_group_add(doc) :
     spans = [doc[0:5], doc[0:6]]
     span_group_2 = SpanGroup(doc, name='MORE_SPANS', attrs={'key': 'new_value', 'new_key': 'new_value'}, spans=spans)
 
-    span_group_3_expected = span_group_1.merge(span_group_2)
+    span_group_3_expected = span_group_1.concat(span_group_2)
 
     span_group_3 = span_group_1 + span_group_2
     assert len(span_group_3) ==  len(span_group_3_expected)
@@ -348,7 +348,7 @@ def test_span_group_iadd(doc) :
     spans = [doc[0:5], doc[0:6]]
     span_group_2 = SpanGroup(doc, name='MORE_SPANS', attrs={'key': 'new_value', 'new_key': 'new_value'}, spans=spans)
 
-    span_group_1_expected = span_group_1.merge(span_group_2)
+    span_group_1_expected = span_group_1.concat(span_group_2)
 
     span_group_1 +=  span_group_2
     assert len(span_group_1) == len(span_group_1_expected)
@@ -366,7 +366,7 @@ def test_span_group_extend(doc) :
     spans = [doc[0:5], doc[0:6]]
     span_group_2 = SpanGroup(doc, name='MORE_SPANS', attrs={'key': 'new_value', 'new_key': 'new_value'}, spans=spans)
 
-    span_group_1_expected = span_group_1.merge(span_group_2)
+    span_group_1_expected = span_group_1.concat(span_group_2)
 
     span_group_1.extend(span_group_2)
     assert len(span_group_1) ==  len(span_group_1_expected)

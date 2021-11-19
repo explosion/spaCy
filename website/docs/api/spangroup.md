@@ -144,6 +144,24 @@ Sets a span in the group
 | **RETURNS** | Does not return anything |
 
 
+## SpanGroup.\_\_delitem\_\_ {#delitem tag="method"}
+
+Deletes a span from the group
+
+> #### Example
+>
+> ```python
+> doc = nlp("Their goi ng home")
+> doc.spans["errors"] = [doc[0:1], doc[2:4]]
+> del doc.spans[0]
+> assert len(doc.spans["errors"]) == 1
+> ```
+
+| Name        | Description                           |
+| ----------- | ------------------------------------- |
+| `i`         | The item index. ~~int~~               |
+| **RETURNS** | Does not return anything |
+
 
 ## SpanGroup.append {#append tag="method"}
 
@@ -308,4 +326,29 @@ Selects spans from self that are overlapping with the given span. Returns a copy
 | `exclude_self`| Indicates if the given span should be excluded from the result, if that span belongs to the group. The equality is determined by value (compatible with `Span.__richcmp__`). Default is `True`.    ~~bool~~  |
 | `exclude_partial`| Indicates if partial overlaps should be included in the result. If `False` then only spans containing the given span are inclluded in the result. Default is `False`.    ~~bool~~ |
 | **RETURNS**  | The `SpanGroup` object.    ~~SpanGroup~~|
+
+
+## SpanGroup.concat {#concat tag="method"}
+
+Concatenates given SpanGroup with self, either in place or creating a copy. Optionally sorts and filters spans. Preserves the name of self, updates attrs only with values that are not in self.
+
+> #### Example
+>
+> ```python
+> from spacy.tokens import SpanGroup
+>
+> doc = nlp("Their goi ng home")
+> doc.spans["errors"] = [doc[2:4], doc[0:3]]
+> new_group = doc.spans["errors"].concat([doc[3:4], doc[2:3]])
+> # Inplace
+> doc.spans["errors"].concat(new_group, inplace = True)
+> ```
+
+| Name         | Description                           |
+| ------------ | ------------------------------------- |
+| `other`      | The SpanGroup or Iterable of Span to be concatenated with.  ~~SpanGroup~~|
+| `sort_spans` | Indicates if result span group shpould be sorted. Default is `False`.    ~~bool~~ |
+| `filter_spans`| Indicates if result span group shpould be filtered. Default is `False`.    ~~bool~~ |
+| `inplace`    | Indicates if the operation should be performed in place. Default is `False`.    ~~bool~~ |
+| **RETURNS**  | The `SpanGroup` object. Either `self` or a copy, depending on `inplace` argument.    ~~SpanGroup~~|
 
