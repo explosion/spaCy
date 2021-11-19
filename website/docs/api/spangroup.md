@@ -183,7 +183,7 @@ Add a [`Span`](/api/span) object to the group. The span must refer to the same
 
 ## SpanGroup.extend {#extend tag="method"}
 
-Add multiple [`Span`](/api/span) objects to the group. All spans must refer to
+Add multiple [`Span`](/api/span) objects or contents of another `SpanGroup` to the group. All spans must refer to
 the same [`Doc`](/api/doc) object as the span group.
 
 > #### Example
@@ -193,6 +193,8 @@ the same [`Doc`](/api/doc) object as the span group.
 > doc.spans["errors"] = []
 > doc.spans["errors"].extend([doc[2:4], doc[0:1]])
 > assert len(doc.spans["errors"]) == 2
+> span_group = SpanGroup([doc[1:4], doc[0:3])
+> doc.spans["errors"].extend(span_group)
 > ```
 
 | Name    | Description                          |
@@ -351,4 +353,43 @@ Concatenates given SpanGroup with self, either in place or creating a copy. Opti
 | `filter_spans`| Indicates if result span group shpould be filtered. Default is `False`.    ~~bool~~ |
 | `inplace`    | Indicates if the operation should be performed in place. Default is `False`.    ~~bool~~ |
 | **RETURNS**  | The `SpanGroup` object. Either `self` or a copy, depending on `inplace` argument.    ~~SpanGroup~~|
+
+## SpanGroup.\_\_add\_\_ {#add tag="method"}
+
+Appends an iterable of `Spans` or content of a `SpanGroup` to self and returns the result in a new `SpanGroup`. Equivalent to `concat` with `inplace = False`
+
+> #### Example
+>
+> ```python
+> doc = nlp("Their goi ng home")
+> doc.spans["errors"] = [doc[0:1], doc[2:4]]
+> span_group = doc.spans["errors"] + [doc[3:4], doc[2:3]]
+> assert len(span_group) == 4 
+> ```
+
+| Name        | Description                           |
+| ----------- | ------------------------------------- |
+| `other`     | A `SpanGroup` or an Iterable of `Span`. ~~SpanGroup~~               |
+| **RETURNS** | A new `SpanGroup`. ~~SpanGroup~~ |
+
+
+
+## SpanGroup.\_\_iadd\_\_ {#iadd tag="method"}
+
+Appends an iterable of `Spans` or content of a `SpanGroup` to self. Equivalent to `concat` with `inplace = True`
+
+> #### Example
+>
+> ```python
+> doc = nlp("Their goi ng home")
+> doc.spans["errors"] = [doc[0:1], doc[2:4]]
+> doc.spans["errors"] += [doc[3:4], doc[2:3]]
+> assert len(doc.spans["errors"]) == 4 
+> ```
+
+| Name        | Description                           |
+| ----------- | ------------------------------------- |
+| `other`     | A `SpanGroup` or an Iterable of `Span`. ~~SpanGroup~~               |
+| **RETURNS** | `self`. ~~SpanGroup~~ |
+
 
