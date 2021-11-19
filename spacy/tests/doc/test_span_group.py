@@ -39,6 +39,23 @@ def other_doc(en_tokenizer):
     doc.spans['SPANS'] = SpanGroup(doc, name = 'SPANS', attrs = {'key' : 'value'}, spans = spans)
     return doc
 
+@pytest.fixture
+def span_group(en_tokenizer):
+    doc = en_tokenizer('0 1 2 3 4 5 6')
+    matcher = Matcher(en_tokenizer.vocab, validate=True)
+
+    matcher.add('4', [[{}, {}, {}, {}]])
+    matcher.add('2', [[{}, {}, ]])
+    matcher.add('1', [[{}, ]])
+
+    matches = matcher(doc)
+    spans = []
+    for match in matches:
+        spans.append(Span(doc, match[1], match[2], en_tokenizer.vocab.strings[match[0]]))
+    Random(42).shuffle(spans)
+    doc.spans['SPANS'] = SpanGroup(doc, name='SPANS', attrs={'key': 'value'}, spans=spans)
+
+
 def test_span_group_clone(doc) :
     span_group = doc.spans['SPANS']
     clone = span_group.clone()
@@ -378,3 +395,7 @@ def test_span_group_extend(doc) :
     assert len(span_group_1) == len(span_group_1_expected)
     assert span_group_1.attrs == {'key': 'value'}
     assert_span_list_equal(span_group_1, span_group_1_expected)
+
+def test_span_group_dealloc(span_group) :
+    with pytest.raises(AttributeError) :
+        print(span_group.doc)
