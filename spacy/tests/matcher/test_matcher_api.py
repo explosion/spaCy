@@ -643,6 +643,7 @@ def test_matcher_no_zero_length(en_vocab):
     matcher.add("TEST", [[{"TAG": "C", "OP": "?"}]])
     assert len(matcher(doc)) == 0
 
+@pytest.mark.skip(reason="Redundant.Should be deleted?")
 def test_matcher_ent_id(en_vocab) :
     doc = Doc(en_vocab, words=["Hello", "my", "beautiful", "world"])
     doc[0].ent_id_ = 'hello'
@@ -663,6 +664,7 @@ def test_matcher_ent_id(en_vocab) :
     assert (en_vocab.strings['HELLO'], 0, 1) in matches
     assert (en_vocab.strings['EMPTY'], 1, 2) in matches
 
+@pytest.mark.skip(reason="Redundant.Should be deleted?")
 def test_matcher_ent_kb_id(en_vocab) :
     doc = Doc(en_vocab, words=["Hello", "my", "beautiful", "world"])
     doc[0].ent_kb_id_ = 'hello'
