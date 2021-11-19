@@ -424,6 +424,13 @@ cdef class Span:
 
     @property
     def sents(self):
+        """Obtain the sentences that contains this span. If the given span
+        crosses sentence boundaries, returns all sentences it is a part of
+
+        RETURNS (Iterable[Span]): The genetator of sentences the span is a part of.
+
+         DOCS: https://spacy.io/api/span#sents
+        """
         cdef int start
         cdef int i
 
