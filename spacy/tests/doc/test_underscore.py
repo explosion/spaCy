@@ -189,6 +189,11 @@ def test_underscore_for_span(en_tokenizer) :
     span_1._.span_extension = 'span_1 extension'
     span_2._.span_extension =  'span_2 extension'
 
+    doc._.doc_extension == "doc extension"
+    doc[0]._.token_extension == "token extension"
+    span_1._.span_extension == 'span_1 extension'
+    span_2._.span_extension == 'span_2 extension'
+
     assert doc.user_data[('._.', 'span_extension', span_1.start_char, span_1.end_char, span_1.label, span_1.kb_id)] == 'span_1 extension'
     assert doc.user_data[('._.', 'span_extension', span_2.start_char, span_2.end_char, span_2.label, span_2.kb_id)] == 'span_2 extension'
 
@@ -196,9 +201,19 @@ def test_underscore_for_span(en_tokenizer) :
     assert doc.user_data[('._.', 'span_extension', span_1.start_char, span_1.end_char, span_1.label, span_1.kb_id)] == 'span_1 extension'
     assert doc.user_data[('._.', 'span_extension', span_2.start_char, span_2.end_char, span_2.label, span_2.kb_id)] == 'span_2 extension'
 
+    doc._.doc_extension == "doc extension"
+    doc[0]._.token_extension == "token extension"
+    span_1._.span_extension == 'span_1 extension'
+    span_2._.span_extension == 'span_2 extension'
+
     span_1.kb_id_ = "KB_ID"
     assert doc.user_data[('._.', 'span_extension', span_1.start_char, span_1.end_char, span_1.label, span_1.kb_id)] == 'span_1 extension'
     assert doc.user_data[('._.', 'span_extension', span_2.start_char, span_2.end_char, span_2.label, span_2.kb_id)] == 'span_2 extension'
+
+    doc._.doc_extension == "doc extension"
+    doc[0]._.token_extension == "token extension"
+    span_1._.span_extension == 'span_1 extension'
+    span_2._.span_extension == 'span_2 extension'
 
     assert doc.user_data[('._.', 'doc_extension', None, None)] == 'doc extension'
     assert doc.user_data[('._.', 'token_extension', 0, None)] == 'token extension'
@@ -206,3 +221,9 @@ def test_underscore_for_span(en_tokenizer) :
     span_2._.span_extension = 'updated span_2 extension'
     assert doc.user_data[('._.', 'span_extension', span_1.start_char, span_1.end_char, span_1.label, span_1.kb_id)] == 'span_1 extension'
     assert doc.user_data[('._.', 'span_extension', span_2.start_char, span_2.end_char, span_2.label, span_2.kb_id)] == 'updated span_2 extension'
+
+    doc._.doc_extension == "doc extension"
+    doc[0]._.token_extension == "token extension"
+    span_1._.span_extension == 'span_1 extension'
+    span_2._.span_extension == 'updated span_2 extension'
+
