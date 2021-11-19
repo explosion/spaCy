@@ -50,6 +50,11 @@ def tokenizer():
 
 
 @pytest.fixture(scope="session")
+def af_tokenizer():
+    return get_lang_class("af")().tokenizer
+
+
+@pytest.fixture(scope="session")
 def am_tokenizer():
     return get_lang_class("am")().tokenizer
 
