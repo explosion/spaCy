@@ -191,6 +191,11 @@ def id_tokenizer():
 
 
 @pytest.fixture(scope="session")
+def is_tokenizer():
+    return get_lang_class("is")().tokenizer
+
+
+@pytest.fixture(scope="session")
 def it_tokenizer():
     return get_lang_class("it")().tokenizer
 
