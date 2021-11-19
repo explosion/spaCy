@@ -1,4 +1,3 @@
-"""Words like numbers are recognized correctly."""
 import pytest
 
 def test_long_text(sl_tokenizer):
