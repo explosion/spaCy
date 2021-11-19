@@ -11,7 +11,7 @@ class Underscore:
     span_extensions: Dict[Any, Any] = {}
     token_extensions: Dict[Any, Any] = {}
 
-    def __init__(self, extensions, obj, start=None, end=None):
+    def __init__(self, extensions, obj, start=None, end=None, label=None, kb_id=None):
         object.__setattr__(self, "_extensions", extensions)
         object.__setattr__(self, "_obj", obj)
         # Assumption is that for doc values, _start and _end will both be None
@@ -22,6 +22,12 @@ class Underscore:
         object.__setattr__(self, "_doc", obj.doc)
         object.__setattr__(self, "_start", start)
         object.__setattr__(self, "_end", end)
+        if label is not None or kb_id is not None:
+            # It is reasonably safe to assume that if label and kb_id are None,
+            # they were not passed to this function. Span.label and kb_id are
+            # converted to 0 in Span's c-tor and setters if they are None
+            object.__setattr__(self, "_label", label)
+            object.__setattr__(self, "_kb_id", kb_id)
 
     def __dir__(self):
         # Hack to enable autocomplete on custom extensions
@@ -75,7 +81,24 @@ class Underscore:
         return name in self._extensions
 
     def _get_key(self, name):
-        return ("._.", name, self._start, self._end)
+        if hasattr(self, "_label") :
+            return ("._.", name, self._start, self._end, self._label, self._kb_id)
+        else :
+            return ("._.", name, self._start, self._end)
+
+
+    @staticmethod
+    def _replace_keys(old_underscore, new_underscore):
+        """
+        This function is called by Span when its kb_id or label are re-assigned.
+        It checks if any user_data is stored for this span and replaces the keys
+        """
+        for name in old_underscore._extensions :
+            old_key = old_underscore._get_key(name)
+            new_key = new_underscore._get_key(name)
+            if old_key in old_underscore._doc.user_data and old_key != new_key:
+                old_underscore._doc.user_data[new_key] = old_underscore._doc.user_data.pop(old_key)
+
 
     @classmethod
     def get_state(cls):

@@ -215,7 +215,7 @@ cdef class Span:
     def _(self):
         """Custom extension attributes registered via `set_extension`."""
         return Underscore(Underscore.span_extensions, self,
-                          start=self.c.start_char, end=self.c.end_char)
+                          start=self.c.start_char, end=self.c.end_char, label = self.label, kb_id = self.kb_id)
 
     def as_doc(self, *, bint copy_user_data=False, array_head=None, array=None):
         """Create a `Doc` object with a copy of the `Span`'s data.
@@ -730,14 +730,22 @@ cdef class Span:
             return self.c.label
 
         def __set__(self, attr_t label):
+            old_label = self.c.label
             self.c.label = label
+            new = Underscore(Underscore.span_extensions, self, start=self.c.start_char, end=self.c.end_char, label = self.label, kb_id = self.kb_id)
+            old = Underscore(Underscore.span_extensions, self, start=self.c.start_char, end=self.c.end_char, label=old_label, kb_id=self.kb_id)
+            Underscore._replace_keys(old, new)
 
     property kb_id:
         def __get__(self):
             return self.c.kb_id
 
         def __set__(self, attr_t kb_id):
+            old_kb_id = self.c.kb_id
             self.c.kb_id = kb_id
+            new = Underscore(Underscore.span_extensions, self, start=self.c.start_char, end=self.c.end_char, label=self.label, kb_id=self.kb_id)
+            old = Underscore(Underscore.span_extensions, self, start=self.c.start_char, end=self.c.end_char, label=self.label, kb_id=old_kb_id)
+            Underscore._replace_keys(old, new)
 
     property ent_id:
         """RETURNS (uint64): The entity ID."""
