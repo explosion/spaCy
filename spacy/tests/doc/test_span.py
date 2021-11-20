@@ -436,66 +436,50 @@ def test_span_with_vectors(doc):
     doc.vocab.vectors = prev_vectors
 
 def test_span_comparison(doc) :
+
     # Identical start, end, only differ in label and kb_id
-    span_1 = Span(doc, 0, 3)
-    span_2 = Span(doc, 0, 3)
-    span_3 = Span(doc, 0, 3, 'LABEL')
-    span_4 = Span(doc, 0, 3, 'LABEL')
-    span_5 = Span(doc, 0, 3, 'LABEL', kb_id = 'KB_ID')
-    span_6 = Span(doc, 0, 3, 'LABEL', kb_id = 'KB_ID')
-    assert span_1 == span_2
-    assert span_3 == span_4
-    assert span_5 == span_6
+    assert Span(doc, 0, 3) == Span(doc, 0, 3)
+    assert Span(doc, 0, 3, 'LABEL') == Span(doc, 0, 3, 'LABEL')
+    assert Span(doc, 0, 3, 'LABEL', kb_id = 'KB_ID') == Span(doc, 0, 3, 'LABEL', kb_id = 'KB_ID')
 
-    assert span_1 != span_3
-    assert span_1 != span_5
-    assert span_3 != span_5
+    assert Span(doc, 0, 3) != Span(doc, 0, 3, 'LABEL')
+    assert Span(doc, 0, 3) != Span(doc, 0, 3, 'LABEL', kb_id = 'KB_ID')
+    assert Span(doc, 0, 3, 'LABEL') != Span(doc, 0, 3, 'LABEL', kb_id = 'KB_ID')
 
-    assert span_1 <= span_2
-    assert span_3 <= span_4
-    assert span_5 <= span_6
+    assert Span(doc, 0, 3) <= Span(doc, 0, 3) and Span(doc, 0, 3) >= Span(doc, 0, 3)
+    assert Span(doc, 0, 3, 'LABEL') <= Span(doc, 0, 3, 'LABEL') and Span(doc, 0, 3, 'LABEL') >= Span(doc, 0, 3, 'LABEL')
+    assert Span(doc, 0, 3, 'LABEL', kb_id='KB_ID') <= Span(doc, 0, 3, 'LABEL', kb_id='KB_ID') and Span(doc, 0, 3, 'LABEL', kb_id='KB_ID') >= Span(doc, 0, 3, 'LABEL', kb_id='KB_ID')
 
-    assert span_1 >= span_2
-    assert span_3 >= span_4
-    assert span_5 >= span_6
+    assert Span(doc, 0, 3) < Span(doc, 0, 3, '', kb_id = 'KB_ID') < Span(doc, 0, 3, 'LABEL') < Span(doc, 0, 3, 'LABEL', kb_id = 'KB_ID')
+    assert Span(doc, 0, 3) <= Span(doc, 0, 3, '', kb_id = 'KB_ID') <= Span(doc, 0, 3, 'LABEL') <= Span(doc, 0, 3, 'LABEL', kb_id='KB_ID')
 
-    assert span_1 != span_3
-    assert span_1 != span_5
+    assert Span(doc, 0, 3, 'LABEL', kb_id = 'KB_ID') > Span(doc, 0, 3, 'LABEL') > Span(doc, 0, 3, '', kb_id = 'KB_ID')  > Span(doc, 0, 3)
+    assert Span(doc, 0, 3, 'LABEL', kb_id='KB_ID') >= Span(doc, 0, 3, 'LABEL') >= Span(doc, 0, 3, '', kb_id = 'KB_ID') >= Span(doc, 0, 3)
 
-    assert span_1 < span_3
-    assert span_1 <= span_3
+    # Different end
+    assert Span(doc, 0, 3, 'LABEL', kb_id='KB_ID') < Span(doc, 0, 4, 'LABEL', kb_id='KB_ID')
 
-    assert span_3 > span_1
-    assert span_3 >= span_1
-
-    assert span_1 < span_5
-    assert span_1 <= span_5
-
-    assert span_5 > span_1
-    assert span_5 >= span_1
-
-    assert span_5 > span_3
-    assert span_5 >= span_3
+    assert Span(doc, 0, 3, 'LABEL', kb_id = 'KB_ID') < Span(doc, 0, 4)
+    assert Span(doc, 0, 3, 'LABEL', kb_id='KB_ID') <= Span(doc, 0, 4)
+    assert Span(doc, 0, 4) > Span(doc, 0, 3, 'LABEL', kb_id = 'KB_ID')
+    assert Span(doc, 0, 4) >= Span(doc, 0, 3, 'LABEL', kb_id='KB_ID')
 
     # Different start
-    span_1 = Span(doc, 1, 3, '', kb_id='KB_ID')
-    span_2 = Span(doc, 0, 3, 'LABEL', kb_id='KB_ID')
+    assert Span(doc, 0, 3, 'LABEL', kb_id='KB_ID') != Span(doc, 1, 3, 'LABEL', kb_id='KB_ID')
 
-    assert span_1 != span_2
-    assert span_1 > span_2
-    assert span_1 >= span_2
-    assert span_2 < span_1
-    assert span_2 <= span_1
+    assert Span(doc, 0, 3, 'LABEL', kb_id='KB_ID') < Span(doc, 1, 3)
+    assert Span(doc, 0, 3, 'LABEL', kb_id='KB_ID') <= Span(doc, 1, 3)
+    assert Span(doc, 1, 3) > Span(doc, 0, 3, 'LABEL', kb_id='KB_ID')
+    assert Span(doc, 1, 3) >= Span(doc, 0, 3, 'LABEL', kb_id='KB_ID')
 
-    # Same start, different end
-    span_1 = Span(doc, 0, 4, '', kb_id='KB_ID')
-    span_2 = Span(doc, 0, 3, 'LABEL', kb_id='KB_ID')
+    # Different start & different end
+    assert Span(doc, 0, 4, 'LABEL', kb_id='KB_ID') != Span(doc, 1, 3, 'LABEL', kb_id='KB_ID')
 
-    assert span_1 != span_2
-    assert span_1 > span_2
-    assert span_1 >= span_2
-    assert span_2 < span_1
-    assert span_2 <= span_1
+    assert Span(doc, 0, 4, 'LABEL', kb_id='KB_ID') < Span(doc, 1, 3)
+    assert Span(doc, 0, 4, 'LABEL', kb_id='KB_ID') <= Span(doc, 1, 3)
+    assert Span(doc, 1, 3) > Span(doc, 0, 4, 'LABEL', kb_id='KB_ID')
+    assert Span(doc, 1, 3) >= Span(doc, 0, 4, 'LABEL', kb_id='KB_ID')
+
 
 
 
