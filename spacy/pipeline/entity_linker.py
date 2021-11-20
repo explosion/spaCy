@@ -225,6 +225,16 @@ class EntityLinker(TrainablePipe):
             vector_sample.append(self.model.ops.alloc1f(nO))
         assert len(doc_sample) > 0, Errors.E923.format(name=self.name)
         assert len(vector_sample) > 0, Errors.E923.format(name=self.name)
+
+        # XXX This is a hack. Also `has_annotation` doesn't seem to work as expected?
+        # Check that there are some entities in the batch
+        has_annotations = any([doc.ents for doc in doc_sample])
+        if not has_annotations:
+            doc = doc_sample[0]
+            ent = doc[0:1]
+            ent.label_ = "PERSON"
+            doc.ents = (ent,)
+
         self.model.initialize(
             X=doc_sample, Y=self.model.ops.asarray(vector_sample, dtype="float32")
         )
