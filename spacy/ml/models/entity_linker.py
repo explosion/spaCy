@@ -48,8 +48,8 @@ def build_nel_encoder(
     return model
 
 
-def build_span_maker(n_sents: int = 0):
-    model = Model("candidate_docs", forward=span_maker_forward)
+def build_span_maker(n_sents: int = 0) -> Model:
+    model : Model = Model("candidate_docs", forward=span_maker_forward)
     model.attrs["n_sents"] = n_sents
     return model
 
@@ -85,7 +85,7 @@ def span_maker_forward(model, docs: List[Doc], is_train) -> Tuple[Ragged, Callab
             cands.append((start_token, end_token))
 
         candidates.append(ops.asarray2i(cands))
-    candlens = [len(cands) for cands in candidates]
+    candlens = ops.asarray1i([len(cands) for cands in candidates])
     candidates = ops.xp.concatenate(candidates)
     outputs = Ragged(candidates, candlens)
     # TODO W093 if there's no data. Can we do that here though?
