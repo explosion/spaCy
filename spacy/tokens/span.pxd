@@ -6,7 +6,9 @@ from ..structs cimport SpanC
 
 
 cdef class Span:
-    cdef readonly Doc doc
+    #cdef readonly Doc doc
+    cdef Doc _doc
+    cdef object _doc_ref
     cdef SpanC c
     cdef public _vector
     cdef public _vector_norm

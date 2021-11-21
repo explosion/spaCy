@@ -4,6 +4,7 @@ import srsly
 
 from spacy.errors import Errors
 from .span cimport Span
+from ..structs cimport SpanC
 from libc.stdint cimport uint64_t, uint32_t, int32_t
 
 
@@ -47,9 +48,12 @@ cdef class SpanGroup:
         self._doc_ref = weakref.ref(doc)
         self.name = name
         self.attrs = dict(attrs) if attrs is not None else {}
-        cdef Span span
-        for span in spans:
-            self.push_back(span.c)
+        #cdef Span span
+        #for span in spans:
+        #    self.push_back(span.c)
+        self.spans = list(spans)
+        for span in spans :
+            span._release_doc()
 
     def __repr__(self):
         return str(list(self))
@@ -65,6 +69,7 @@ cdef class SpanGroup:
             # referent has been garbage collected
             raise RuntimeError(Errors.E865)
         return doc
+
 
     @property
     def has_overlap(self):
@@ -87,7 +92,8 @@ cdef class SpanGroup:
 
         DOCS: https://spacy.io/api/spangroup#len
         """
-        return self.c.size()
+        #return self.c.size()
+        return len(self.spans)
 
     def append(self, Span span):
         """Add a span to the group. The span must refer to the same Doc
@@ -99,7 +105,9 @@ cdef class SpanGroup:
         """
         if span.doc is not self.doc:
             raise ValueError("Cannot add span to group: refers to different Doc.")
-        self.push_back(span.c)
+        #self.push_back(span.c)
+        span._release_doc()
+        self.spans.append(span)
 
     def extend(self, spans):
         """Add multiple spans to the group. All spans must refer to the same
@@ -109,8 +117,8 @@ cdef class SpanGroup:
 
         DOCS: https://spacy.io/api/spangroup#extend
         """
-        cdef Span span
-        for span in spans:
+
+        for span in spans :
             self.append(span)
 
     def __getitem__(self, int i):
@@ -121,12 +129,15 @@ cdef class SpanGroup:
 
         DOCS: https://spacy.io/api/spangroup#getitem
         """
-        cdef int size = self.c.size()
+        cdef int size = len(self.spans)#self.c.size()
         if i < -size or i >= size:
             raise IndexError(f"list index {i} out of range")
         if i < 0:
             i += size
-        return Span.cinit(self.doc, self.c[i])
+       # return Span.cinit(self.doc, self.c[i])
+        span = self.spans[i]
+        span._set_doc()
+        return span
 
     def to_bytes(self):
         """Serialize the SpanGroup's contents to a byte string.
@@ -136,8 +147,10 @@ cdef class SpanGroup:
         DOCS: https://spacy.io/api/spangroup#to_bytes
         """
         output = {"name": self.name, "attrs": self.attrs, "spans": []}
-        for i in range(self.c.size()):
-            span = self.c[i]
+        #for i in range(self.c.size()):
+        cdef Span span
+        for span in self.spans :
+
             # The struct.pack here is probably overkill, but it might help if
             # you're saving tonnes of spans, and it doesn't really add any
             # complexity. We do take care to specify little-endian byte order
@@ -149,13 +162,13 @@ cdef class SpanGroup:
             # l: int32_t
             output["spans"].append(struct.pack(
                 ">QQQllll",
-                span.id,
-                span.kb_id,
-                span.label,
-                span.start,
-                span.end,
-                span.start_char,
-                span.end_char
+                span.c.id,
+                span.c.kb_id,
+                span.c.label,
+                span.c.start,
+                span.c.end,
+                span.c.start_char,
+                span.c.end_char
             ))
         return srsly.msgpack_dumps(output)
 
@@ -170,9 +183,10 @@ cdef class SpanGroup:
         msg = srsly.msgpack_loads(bytes_data)
         self.name = msg["name"]
         self.attrs = dict(msg["attrs"])
-        self.c.clear()
-        self.c.reserve(len(msg["spans"]))
+        #self.c.clear()
+        #self.c.reserve(len(msg["spans"]))
         cdef SpanC span
+        self.spans.clear()
         for span_data in msg["spans"]:
             items = struct.unpack(">QQQllll", span_data)
             span.id = items[0]
@@ -182,8 +196,10 @@ cdef class SpanGroup:
             span.end = items[4]
             span.start_char = items[5]
             span.end_char = items[6]
-            self.c.push_back(span)
+            #self.c.push_back(span)
+            python_span = Span.cinit(self.doc, span)
+            self.append(python_span)
         return self
 
-    cdef void push_back(self, SpanC span) nogil:
-        self.c.push_back(span)
+#    cdef void push_back(self, SpanC span) nogil:
+#        self.c.push_back(span)

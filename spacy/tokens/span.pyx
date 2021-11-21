@@ -5,6 +5,7 @@ import numpy
 from thinc.api import get_array_module
 import warnings
 import copy
+import weakref
 
 from .doc cimport token_by_start, token_by_end, get_token_attr, _get_lca_matrix
 from ..structs cimport TokenC, LexemeC
@@ -96,7 +97,8 @@ cdef class Span:
         """
         if not (0 <= start <= end <= len(doc)):
             raise IndexError(Errors.E035.format(start=start, end=end, length=len(doc)))
-        self.doc = doc
+        self._doc = doc
+        self._doc_ref = weakref.ref(doc)
         if isinstance(label, str):
             label = doc.vocab.strings.add(label)
         if isinstance(kb_id, str):
@@ -120,7 +122,27 @@ cdef class Span:
         self._vector = vector
         self._vector_norm = vector_norm
 
+    def _set_doc(self):
+        doc = self._doc_ref()
+        if doc is None :
+            raise RuntimeError(Errors.E865)
+        self._doc = doc
+
+    def _release_doc(self) :
+        self._doc = None
+
+    @property
+    def doc(self) -> Doc :
+        if self._doc is not None :
+            return self._doc
+        else :
+            doc = self._doc_ref()
+            if doc is None :
+                raise RuntimeError(Errors.E865)
+            return doc
+
     def __richcmp__(self, Span other, int op):
+        cdef Doc doc = self.doc
         if other is None:
             if op == 0 or op == 1 or op == 2:
                 return False
@@ -140,7 +162,7 @@ cdef class Span:
                 (self.c.end_char == other.c.end_char) and \
                 (self.c.label == other.c.label) and \
                 (self.c.kb_id == other.c.kb_id) and \
-                (self.doc == other.doc)
+                (doc == other.doc)
             )
         # !=
         elif op == 3:
@@ -150,7 +172,7 @@ cdef class Span:
                 (self.c.end_char == other.c.end_char) and \
                 (self.c.label == other.c.label) and \
                 (self.c.kb_id == other.c.kb_id) and \
-                (self.doc == other.doc)
+                (doc == other.doc)
             )
         # >
         elif op == 4:
@@ -160,7 +182,8 @@ cdef class Span:
             return self.c.start_char >= other.c.start_char
 
     def __hash__(self):
-        return hash((self.doc, self.c.start_char, self.c.end_char, self.c.label, self.c.kb_id))
+        cdef Doc doc = self.doc
+        return hash((doc, self.c.start_char, self.c.end_char, self.c.label, self.c.kb_id))
 
     def __len__(self):
         """Get the number of tokens in the span.
@@ -185,16 +208,17 @@ cdef class Span:
 
         DOCS: https://spacy.io/api/span#getitem
         """
+        cdef Doc doc = self.doc
         if isinstance(i, slice):
             start, end = normalize_slice(len(self), i.start, i.stop, i.step)
-            return Span(self.doc, start + self.start, end + self.start)
+            return Span(doc, start + self.start, end + self.start)
         else:
             if i < 0:
                 token_i = self.c.end + i
             else:
                 token_i = self.c.start + i
             if self.c.start <= token_i < self.c.end:
-                return self.doc[token_i]
+                return doc[token_i]
             else:
                 raise IndexError(Errors.E1002)
 
@@ -205,8 +229,9 @@ cdef class Span:
 
         DOCS: https://spacy.io/api/span#iter
         """
+        cdef Doc doc = self.doc
         for i in range(self.c.start, self.c.end):
-            yield self.doc[i]
+            yield doc[i]
 
     def __reduce__(self):
         raise NotImplementedError(Errors.E112)
@@ -219,22 +244,21 @@ cdef class Span:
 
     def as_doc(self, *, bint copy_user_data=False, array_head=None, array=None):
         """Create a `Doc` object with a copy of the `Span`'s data.
-
         copy_user_data (bool): Whether or not to copy the original doc's user data.
         array_head (tuple): `Doc` array attrs, can be passed in to speed up computation.
         array (ndarray): `Doc` as array, can be passed in to speed up computation.
         RETURNS (Doc): The `Doc` copy of the span.
-
         DOCS: https://spacy.io/api/span#as_doc
         """
         words = [t.text for t in self]
         spaces = [bool(t.whitespace_) for t in self]
-        cdef Doc doc = Doc(self.doc.vocab, words=words, spaces=spaces)
+        cdef Doc self_doc = self.doc
+        cdef Doc doc = Doc(self_doc.vocab, words=words, spaces=spaces)
         if array_head is None:
-            array_head = self.doc._get_array_attrs()
+            array_head = self_doc._get_array_attrs()
         if array is None:
-            array = self.doc.to_array(array_head)
-        array = array[self.start : self.end]
+            array = self_doc.to_array(array_head)
+        array = array[self.start: self.end]
         self._fix_dep_copy(array_head, array)
         # Fix initial IOB so the entities are valid for doc.ents below.
         if len(array) > 0 and ENT_IOB in array_head:
@@ -255,14 +279,14 @@ cdef class Span:
             # Remove final partial ent
             if (doc_ents[-1].start + self.start, doc_ents[-1].end + self.start) not in span_ents:
                 doc.set_ents([], missing=[doc_ents[-1]], default="unmodified")
-        doc.noun_chunks_iterator = self.doc.noun_chunks_iterator
-        doc.user_hooks = self.doc.user_hooks
-        doc.user_span_hooks = self.doc.user_span_hooks
-        doc.user_token_hooks = self.doc.user_token_hooks
+        doc.noun_chunks_iterator = self_doc.noun_chunks_iterator
+        doc.user_hooks = self_doc.user_hooks
+        doc.user_span_hooks = self_doc.user_span_hooks
+        doc.user_token_hooks = self_doc.user_token_hooks
         doc.vector = self.vector
         doc.vector_norm = self.vector_norm
-        doc.tensor = self.doc.tensor[self.start : self.end]
-        for key, value in self.doc.cats.items():
+        doc.tensor = self_doc.tensor[self.start: self.end]
+        for key, value in self_doc.cats.items():
             if hasattr(key, "__len__") and len(key) == 3:
                 cat_start, cat_end, cat_label = key
                 if cat_start == self.start_char and cat_end == self.end_char:
@@ -270,7 +294,7 @@ cdef class Span:
         if copy_user_data:
             user_data = {}
             char_offset = self.start_char
-            for key, value in self.doc.user_data.items():
+            for key, value in self_doc.user_data.items():
                 if isinstance(key, tuple) and len(key) == 4 and key[0] == "._.":
                     data_type, name, start, end = key
                     if start is not None or end is not None:
@@ -332,7 +356,8 @@ cdef class Span:
 
         DOCS: https://spacy.io/api/span#get_lca_matrix
         """
-        return numpy.asarray(_get_lca_matrix(self.doc, self.c.start, self.c.end))
+        cdef Doc doc = self.doc
+        return numpy.asarray(_get_lca_matrix(doc, self.c.start, self.c.end))
 
     def similarity(self, other):
         """Make a semantic similarity estimate. The default estimate is cosine
@@ -344,8 +369,9 @@ cdef class Span:
 
         DOCS: https://spacy.io/api/span#similarity
         """
-        if "similarity" in self.doc.user_span_hooks:
-            return self.doc.user_span_hooks["similarity"](self, other)
+        cdef Doc doc = self.doc
+        if "similarity" in doc.user_span_hooks:
+            return doc.user_span_hooks["similarity"](self, other)
         if len(self) == 1 and hasattr(other, "orth"):
             if self[0].orth == other.orth:
                 return 1.0
@@ -384,15 +410,17 @@ cdef class Span:
         cdef np.ndarray[attr_t, ndim=1] attr_ids = numpy.asarray(py_attr_ids, dtype=numpy.uint64)
         cdef int length = self.end - self.start
         output = numpy.ndarray(shape=(length, len(attr_ids)), dtype=numpy.uint64)
+        cdef Doc doc = self.doc
         for i in range(self.start, self.end):
             for j, feature in enumerate(attr_ids):
-                output[i-self.start, j] = get_token_attr(&self.doc.c[i], feature)
+                output[i - self.start, j] = get_token_attr(&doc.c[i], feature)
         return output
 
     @property
     def vocab(self):
         """RETURNS (Vocab): The Span's Doc's vocab."""
-        return self.doc.vocab
+        cdef Doc doc = self.doc
+        return doc.vocab
 
     @property
     def sent(self):
@@ -402,23 +430,25 @@ cdef class Span:
 
         RETURNS (Span): The sentence span that the span is a part of.
         """
-        if "sent" in self.doc.user_span_hooks:
-            return self.doc.user_span_hooks["sent"](self)
+        cdef Doc doc = self.doc
+        if "sent" in doc.user_span_hooks:
+            return doc.user_span_hooks["sent"](self)
         # Use `sent_start` token attribute to find sentence boundaries
         cdef int n = 0
-        if self.doc.has_annotation("SENT_START"):
+
+        if doc.has_annotation("SENT_START"):
             # Find start of the sentence
             start = self.start
-            while self.doc.c[start].sent_start != 1 and start > 0:
+            while doc.c[start].sent_start != 1 and start > 0:
                 start += -1
             # Find end of the sentence - can be within the entity
             end = self.start + 1
-            while end < self.doc.length and self.doc.c[end].sent_start != 1:
+            while end < doc.length and doc.c[end].sent_start != 1:
                 end += 1
                 n += 1
-                if n >= self.doc.length:
+                if n >= doc.length:
                     break
-            return self.doc[start:end]
+            return doc[start:end]
         else:
             raise ValueError(Errors.E030)
 
@@ -432,8 +462,9 @@ cdef class Span:
         DOCS: https://spacy.io/api/span#ents
         """
         cdef Span ent
+        cdef Doc doc = self.doc
         ents = []
-        for ent in self.doc.ents:
+        for ent in doc.ents:
             if ent.c.start >= self.c.start:
                 if ent.c.end <= self.c.end:
                     ents.append(ent)
@@ -450,11 +481,12 @@ cdef class Span:
 
         DOCS: https://spacy.io/api/span#has_vector
         """
-        if "has_vector" in self.doc.user_span_hooks:
-            return self.doc.user_span_hooks["has_vector"](self)
+        cdef Doc doc = self.doc
+        if "has_vector" in doc.user_span_hooks:
+            return doc.user_span_hooks["has_vector"](self)
         elif self.vocab.vectors.data.size > 0:
             return any(token.has_vector for token in self)
-        elif self.doc.tensor.size > 0:
+        elif doc.tensor.size > 0:
             return True
         else:
             return False
@@ -469,8 +501,9 @@ cdef class Span:
 
         DOCS: https://spacy.io/api/span#vector
         """
-        if "vector" in self.doc.user_span_hooks:
-            return self.doc.user_span_hooks["vector"](self)
+        cdef Doc doc = self.doc
+        if "vector" in doc.user_span_hooks:
+            return doc.user_span_hooks["vector"](self)
         if self._vector is None:
             if not len(self):
                 xp = get_array_module(self.vocab.vectors.data)
@@ -487,8 +520,9 @@ cdef class Span:
 
         DOCS: https://spacy.io/api/span#vector_norm
         """
-        if "vector_norm" in self.doc.user_span_hooks:
-            return self.doc.user_span_hooks["vector"](self)
+        cdef Doc doc = self.doc
+        if "vector_norm" in doc.user_span_hooks:
+            return doc.user_span_hooks["vector"](self)
         if self._vector_norm is None:
             vector = self.vector
             total = (vector*vector).sum()
@@ -503,17 +537,19 @@ cdef class Span:
         RETURNS (ndarray[ndim=2, dtype='float32']): A 2D numpy or cupy array
             representing the span's semantics.
         """
-        if self.doc.tensor is None:
+        cdef Doc doc = self.doc
+        if doc.tensor is None:
             return None
-        return self.doc.tensor[self.start : self.end]
+        return doc.tensor[self.start : self.end]
 
     @property
     def sentiment(self):
         """RETURNS (float): A scalar value indicating the positivity or
             negativity of the span.
         """
-        if "sentiment" in self.doc.user_span_hooks:
-            return self.doc.user_span_hooks["sentiment"](self)
+        cdef Doc doc = self.doc
+        if "sentiment" in doc.user_span_hooks:
+            return doc.user_span_hooks["sentiment"](self)
         else:
             return sum([token.sentiment for token in self]) / len(self)
 
@@ -551,7 +587,8 @@ cdef class Span:
 
         DOCS: https://spacy.io/api/span#noun_chunks
         """
-        for span in self.doc.noun_chunks:
+        cdef Doc doc = self.doc
+        for span in doc.noun_chunks:
             if span.start >= self.start and span.end <= self.end:
                 yield span
 
@@ -565,8 +602,9 @@ cdef class Span:
 
         DOCS: https://spacy.io/api/span#root
         """
-        if "root" in self.doc.user_span_hooks:
-            return self.doc.user_span_hooks["root"](self)
+        cdef Doc doc = self.doc
+        if "root" in doc.user_span_hooks:
+            return doc.user_span_hooks["root"](self)
         # This should probably be called 'head', and the other one called
         # 'gov'. But we went with 'head' elsewhere, and now we're stuck =/
         cdef int i
@@ -575,27 +613,27 @@ cdef class Span:
         # longer the span, the more likely it contains a sentence root, and
         # in this case we return in linear time.
         for i in range(self.c.start, self.c.end):
-            if self.doc.c[i].head == 0:
-                return self.doc[i]
+            if doc.c[i].head == 0:
+                return doc[i]
         # If we don't have a sentence root, we do something that's not so
         # algorithmically clever, but I think should be quite fast,
         # especially for short spans.
         # For each word, we count the path length, and arg min this measure.
         # We could use better tree logic to save steps here...But I
         # think this should be okay.
-        cdef int current_best = self.doc.length
+        cdef int current_best = doc.length
         cdef int root = -1
         for i in range(self.c.start, self.c.end):
-            if self.c.start <= (i+self.doc.c[i].head) < self.c.end:
+            if self.c.start <= (i+doc.c[i].head) < self.c.end:
                 continue
-            words_to_root = _count_words_to_root(&self.doc.c[i], self.doc.length)
+            words_to_root = _count_words_to_root(&doc.c[i], doc.length)
             if words_to_root < current_best:
                 current_best = words_to_root
                 root = i
         if root == -1:
-            return self.doc[self.c.start]
+            return doc[self.c.start]
         else:
-            return self.doc[root]
+            return doc[root]
 
     def char_span(self, int start_idx, int end_idx, label=0, kb_id=0, vector=None):
         """Create a `Span` object from the slice `span.text[start : end]`.
@@ -611,7 +649,8 @@ cdef class Span:
         """
         start_idx += self.c.start_char
         end_idx += self.c.start_char
-        return self.doc.char_span(start_idx, end_idx, label=label, kb_id=kb_id, vector=vector)
+        cdef Doc doc = self.doc
+        return doc.char_span(start_idx, end_idx, label=label, kb_id=kb_id, vector=vector)
 
     @property
     def conjuncts(self):
@@ -771,18 +810,22 @@ cdef class Span:
     property label_:
         """RETURNS (str): The span's label."""
         def __get__(self):
-            return self.doc.vocab.strings[self.label]
+            cdef Doc doc = self.doc
+            return doc.vocab.strings[self.label]
 
         def __set__(self, str label_):
-            self.label = self.doc.vocab.strings.add(label_)
+            cdef Doc doc = self.doc
+            self.label = doc.vocab.strings.add(label_)
 
     property kb_id_:
         """RETURNS (str): The named entity's KB ID."""
         def __get__(self):
-            return self.doc.vocab.strings[self.kb_id]
+            cdef Doc doc = self.doc
+            return doc.vocab.strings[self.kb_id]
 
         def __set__(self, str kb_id_):
-            self.kb_id = self.doc.vocab.strings.add(kb_id_)
+            cdef Doc doc = self.doc
+            self.kb_id = doc.vocab.strings.add(kb_id_)
 
 
 cdef int _count_words_to_root(const TokenC* token, int sent_length) except -1:
