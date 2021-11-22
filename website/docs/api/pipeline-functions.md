@@ -134,9 +134,9 @@ exceed the transformer model max length.
 ## doc_cleaner {#doc_cleaner tag="function" new="3.2.1"}
 
 Clean up `Doc` attributes. Intended for use at the end of pipelines with
-listeners (`tok2vec`, `transformer`) that store tensors and other values that
-can require a lot of memory and frequently aren't needed after the whole
-pipeline has run.
+`tok2vec` or `transformer` pipeline components that store tensors and other
+values that can require a lot of memory and frequently aren't needed after the
+whole pipeline has run.
 
 > #### Example
 >
