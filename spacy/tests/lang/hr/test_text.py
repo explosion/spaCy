@@ -1,5 +1,6 @@
 import pytest
 
+
 def test_long_text(hr_tokenizer):
     # Excerpt: European Convention on Human Rights
     text = """

@@ -1,5 +1,6 @@
 import pytest
 
+
 def test_long_text(sk_tokenizer):
     # Excerpt: European Convention on Human Rights
     text = """
@@ -21,6 +22,7 @@ práv, od ktorých závisia;
     """
     tokens = sk_tokenizer(text)
     assert len(tokens) == 147
+
 
 @pytest.mark.parametrize(
     "text,match",

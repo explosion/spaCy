@@ -1,5 +1,6 @@
 import pytest
 
+
 def test_long_text(af_tokenizer):
     # Excerpt: Universal Declaration of Human Rights
     text = """
