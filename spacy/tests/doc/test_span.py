@@ -99,6 +99,10 @@ def test_spans_span_sent(doc, doc_not_parsed):
     assert doc[:2].sent.text == "This is a sentence."
     assert doc[6:7].sent.root.left_edge.text == "This"
     assert doc[0 : len(doc)].sent == list(doc.sents)[0]
+    assert list(doc[0 : len(doc)].sents) == list(doc.sents)
+
+    with pytest.raises(ValueError):
+        doc_not_parsed[:2].sent
 
     # test on manual sbd
     doc_not_parsed[0].is_sent_start = True
