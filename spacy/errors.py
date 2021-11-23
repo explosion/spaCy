@@ -191,6 +191,7 @@ class Warnings(metaclass=ErrorsWithCodes):
             "lead to errors.")
     W115 = ("Skipping {method}: the floret vector table cannot be modified. "
             "Vectors are calculated from character ngrams.")
+    W116 = ("Unable to clean attribute '{attr}'.")
 
 
 class Errors(metaclass=ErrorsWithCodes):
