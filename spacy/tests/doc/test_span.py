@@ -107,6 +107,35 @@ def test_spans_span_sent(doc, doc_not_parsed):
     assert doc_not_parsed[10:14].sent == doc_not_parsed[5:]
 
 
+@pytest.mark.parametrize(
+    "start,end,expected_sentence",
+    [
+        (0, 14, "This is"),  # Entire doc
+        (1, 4, "This is"),  # Overlapping with 2 sentences
+        (0, 2, "This is"),  # Beginning of the Doc. Full sentence
+        (0, 1, "This is"),  # Beginning of the Doc. Part of a sentence
+        (10, 14, "And a"),  # End of the Doc. Overlapping with 2 senteces
+        (12, 14, "third."),  # End of the Doc. Full sentence
+        (1, 1, "This is"),  # Empty Span
+    ],
+)
+def test_spans_span_sent_user_hooks(doc, start, end, expected_sentence):
+
+    # Doc-level sents hook
+    def user_hook(doc):
+        return [doc[ii : ii + 2] for ii in range(0, len(doc), 2)]
+
+    doc.user_hooks["sents"] = user_hook
+
+    # Make sure doc-level sents hook works
+    assert doc[start:end].sent.text == expected_sentence
+
+    # Span-level sent hook
+    doc.user_span_hooks["sent"] = lambda x: x
+    # Now, span=level sent hook overrides the doc-level sents hook
+    assert doc[start:end].sent == doc[start:end]
+
+
 def test_spans_lca_matrix(en_tokenizer):
     """Test span's lca matrix generation"""
     tokens = en_tokenizer("the lazy dog slept")
@@ -439,35 +468,35 @@ def test_span_with_vectors(doc):
 
 
 @pytest.mark.parametrize(
-    "start,end,expected_number_of_sentences",
+    "start,end,expected_sentences,expected_sentences_with_hook",
     [
-        (0, 14, 3),  # Entire doc
-        (3, 6, 2),  # Overlapping with 2 sentences
-        (0, 4, 1),  # Beginning of the Doc. Full sentence
-        (0, 3, 1),  # Beginning of the Doc. Part of a sentence
-        (9, 14, 2),  # End of the Doc. Overlapping with 2 senteces
-        (10, 14, 1),  # End of the Doc. Full sentence
-        (11, 14, 1),  # End of the Doc. Partial sentence
-        (0, 0, 1),  # Empty Span
+        (0, 14, 3, 7),  # Entire doc
+        (3, 6, 2, 2),  # Overlapping with 2 sentences
+        (0, 4, 1, 2),  # Beginning of the Doc. Full sentence
+        (0, 3, 1, 2),  # Beginning of the Doc. Part of a sentence
+        (9, 14, 2, 3),  # End of the Doc. Overlapping with 2 senteces
+        (10, 14, 1, 2),  # End of the Doc. Full sentence
+        (11, 14, 1, 2),  # End of the Doc. Partial sentence
+        (0, 0, 1, 1),  # Empty Span
     ],
 )
-def test_span_sents_new(doc, start, end, expected_number_of_sentences):
+def test_span_sents(doc, start, end, expected_sentences, expected_sentences_with_hook):
 
-    assert len(list(doc[start:end].sents)) == expected_number_of_sentences
+    assert len(list(doc[start:end].sents)) == expected_sentences
 
-    # Stashing it here for now
-    if False:
-        span = Span(doc_not_parsed, 0, 3)
+    def user_hook(doc):
+        return [doc[ii : ii + 2] for ii in range(0, len(doc), 2)]
 
-        with pytest.raises(ValueError):
-            sentences = list(span.sents)
+    doc.user_hooks["sents"] = user_hook
 
-        def user_hook(span):
-            yield span
+    assert len(list(doc[start:end].sents)) == expected_sentences_with_hook
 
-        doc.user_hooks["sents"] = user_hook
+    doc.user_span_hooks["sents"] = lambda x: [x]
 
-        span = Span(doc, 0, 4)
-        sentences = list(span.sents)
-        assert len(sentences) == 1
-        assert sentences[0] == span
+    assert list(doc[start:end].sents)[0] == doc[start:end]
+    assert len(list(doc[start:end].sents)) == 1
+
+
+def test_span_sents_not_parsed(doc_not_parsed):
+    with pytest.raises(ValueError):
+        list(Span(doc_not_parsed, 0, 3).sents)

@@ -404,6 +404,10 @@ cdef class Span:
         """
         if "sent" in self.doc.user_span_hooks:
             return self.doc.user_span_hooks["sent"](self)
+        elif "sents" in self.doc.user_hooks:
+            for sentence in self.doc.user_hooks["sents"](self.doc) :
+                if sentence.start <= self.start < sentence.end:
+                    return sentence
         # Use `sent_start` token attribute to find sentence boundaries
         cdef int n = 0
         if self.doc.has_annotation("SENT_START"):
@@ -436,8 +440,16 @@ cdef class Span:
 
         if not self.doc.has_annotation("SENT_START"):
             raise ValueError(Errors.E030)
-        if "sents" in self.doc.user_hooks:
-            yield from self.doc.user_hooks["sents"](self)
+
+        if "sents" in self.doc.user_span_hooks:
+            yield from self.doc.user_span_hooks["sents"](self)
+        elif "sents" in self.doc.user_hooks:
+            for sentence in self.doc.user_hooks["sents"](self.doc) :
+                if sentence.end > self.start :
+                    if sentence.start < self.end or sentence.start == self.start == self.end:
+                        yield sentence
+                    else :
+                        break
         else:
             # Use `sent_start` token attribute to find sentence boundaries
             # Find start of the 1st sentence of the Span
