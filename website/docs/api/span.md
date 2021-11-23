@@ -501,10 +501,17 @@ If the span happens to cross sentence boundaries, only the first sentence will
 be returned. If it is required that the sentence always includes the full span,
 the result can be adjusted as such:
 
-```python
-sent = span.sent
-sent = doc[sent.start : max(sent.end, span.end)]
-```
+> #### Example
+>
+> ```python
+> doc = nlp("Give it back! He pleaded.")
+> span = doc[1:3]
+> assert span.sent.text == "Give it back!"
+> ```
+
+| Name        | Description                                             |
+| ----------- | ------------------------------------------------------- |
+| **RETURNS** | The sentence span that this span is a part of. ~~Span~~ |
 
 ## Span.sents {#sents tag="property" model="sentences"}
 
@@ -523,8 +530,8 @@ If the span happens to cross sentence boundaries, all sentences the span overlap
 > assert len(span.sents) == 2
 > ```
 
-| Name        | Description                                             |
-| ----------- | ------------------------------------------------------- |
+| Name        | Description                                                                |
+| ----------- | -------------------------------------------------------------------------- |
 | **RETURNS** | A generator yielding sentences this `Span` is a part of ~~Iterable[Span]~~ |
 
 ## Attributes {#attributes}
