@@ -444,8 +444,7 @@ def test_span_with_vectors(doc):
 def test_span_sents(doc, doc_not_parsed) :
     # Entire doc
     span = Span(doc, 0, len(doc))
-    sentences = list(span.sents)
-    assert len(sentences) == 3
+    assert len(list(span.sents)) == 3
 
     # Overlapping with 2 sentences
     span = Span(doc, 3, 6)
