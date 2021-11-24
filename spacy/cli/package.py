@@ -397,7 +397,7 @@ def _format_label_scheme(data: Dict[str, Any]) -> str:
             continue
         col1 = md.bold(md.code(pipe))
         col2 = ", ".join(
-            [md.code(label.replace("|", "\\|")) for label in labels]
+            [md.code(str(label).replace("|", "\\|")) for label in labels]
         )  # noqa: W605
         label_data.append((col1, col2))
         n_labels += len(labels)

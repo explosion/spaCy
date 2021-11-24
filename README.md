@@ -16,7 +16,7 @@ production-ready [**training system**](https://spacy.io/usage/training) and easy
 model packaging, deployment and workflow management. spaCy is commercial
 open-source software, released under the MIT license.
 
-💫 **Version 3.0 out now!**
+💫 **Version 3.2 out now!**
 [Check out the release notes here.](https://github.com/explosion/spaCy/releases)
 
 [![Azure Pipelines](https://img.shields.io/azure-devops/build/explosion-ai/public/8/master.svg?logo=azure-pipelines&style=flat-square&label=build)](https://dev.azure.com/explosion-ai/public/_build?definitionId=8)

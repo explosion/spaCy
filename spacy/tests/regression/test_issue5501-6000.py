@@ -25,6 +25,7 @@ from spacy.training import Example
         multi_label_cnn_config,
     ],
 )
+@pytest.mark.issue(5551)
 def test_issue5551(textcat_config):
     """Test that after fixing the random seed, the results of the pipeline are truly identical"""
     component = "textcat"
@@ -53,6 +54,7 @@ def test_issue5551(textcat_config):
     assert_almost_equal(ops.to_numpy(results[0]), ops.to_numpy(results[2]), decimal=5)
 
 
+@pytest.mark.issue(5838)
 def test_issue5838():
     # Displacy's EntityRenderer break line
     # not working after last entity
@@ -65,6 +67,7 @@ def test_issue5838():
     assert found == 4
 
 
+@pytest.mark.issue(5918)
 def test_issue5918():
     # Test edge case when merging entities.
     nlp = English()

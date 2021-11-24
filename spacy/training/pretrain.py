@@ -31,6 +31,8 @@ def pretrain(
     allocator = config["training"]["gpu_allocator"]
     if use_gpu >= 0 and allocator:
         set_gpu_allocator(allocator)
+    # ignore in pretraining because we're creating it now
+    config["initialize"]["init_tok2vec"] = None
     nlp = load_model_from_config(config)
     _config = nlp.config.interpolate()
     P = registry.resolve(_config["pretraining"], schema=ConfigSchemaPretrain)

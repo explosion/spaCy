@@ -23,6 +23,8 @@ TEST_PATTERNS = [
     ([{"TEXT": {"VALUE": "foo"}}], 2, 0),  # prev: (1, 0)
     ([{"IS_DIGIT": -1}], 1, 0),
     ([{"ORTH": -1}], 1, 0),
+    ([{"ENT_ID": -1}], 1, 0),
+    ([{"ENT_KB_ID": -1}], 1, 0),
     # Good patterns
     ([{"TEXT": "foo"}, {"LOWER": "bar"}], 0, 0),
     ([{"LEMMA": {"IN": ["love", "like"]}}, {"POS": "DET", "OP": "?"}], 0, 0),
@@ -34,6 +36,8 @@ TEST_PATTERNS = [
     ([{"orth": "foo"}], 0, 0),  # prev: xfail
     ([{"IS_SENT_START": True}], 0, 0),
     ([{"SENT_START": True}], 0, 0),
+    ([{"ENT_ID": "STRING"}], 0, 0),
+    ([{"ENT_KB_ID": "STRING"}], 0, 0),
 ]
 
 

@@ -14,6 +14,7 @@ from thinc.api import NumpyOps, get_current_ops
 from ..util import make_tempdir
 
 
+@pytest.mark.issue(4528)
 def test_issue4528(en_vocab):
     """Test that user_data is correctly serialized in DocBin."""
     doc = Doc(en_vocab, words=["hello", "world"])
@@ -37,6 +38,7 @@ def test_gold_misaligned(en_tokenizer, text, words):
     Example.from_dict(doc, {"words": words})
 
 
+@pytest.mark.issue(4651)
 def test_issue4651_with_phrase_matcher_attr():
     """Test that the EntityRuler PhraseMatcher is deserialized correctly using
     the method from_disk when the EntityRuler argument phrase_matcher_attr is
@@ -59,6 +61,7 @@ def test_issue4651_with_phrase_matcher_attr():
     assert res == res_reloaded
 
 
+@pytest.mark.issue(4651)
 def test_issue4651_without_phrase_matcher_attr():
     """Test that the EntityRuler PhraseMatcher is deserialized correctly using
     the method from_disk when the EntityRuler argument phrase_matcher_attr is
@@ -81,6 +84,7 @@ def test_issue4651_without_phrase_matcher_attr():
     assert res == res_reloaded
 
 
+@pytest.mark.issue(4665)
 def test_issue4665():
     """
     conllu_to_docs should not raise an exception if the HEAD column contains an
@@ -109,6 +113,7 @@ def test_issue4665():
     conllu_to_docs(input_data)
 
 
+@pytest.mark.issue(4674)
 def test_issue4674():
     """Test that setting entities with overlapping identifiers does not mess up IO"""
     nlp = English()
@@ -135,6 +140,7 @@ def test_issue4674():
 
 
 @pytest.mark.skip(reason="API change: disable just disables, new exclude arg")
+@pytest.mark.issue(4707)
 def test_issue4707():
     """Tests that disabled component names are also excluded from nlp.from_disk
     by default when loading a model.
@@ -151,6 +157,7 @@ def test_issue4707():
     assert "entity_ruler" in new_nlp.pipe_names
 
 
+@pytest.mark.issue(4725)
 def test_issue4725_1():
     """Ensure the pickling of the NER goes well"""
     vocab = Vocab(vectors_name="test_vocab_add_vector")
@@ -169,6 +176,7 @@ def test_issue4725_1():
             assert ner2.cfg["update_with_oracle_cut_size"] == 111
 
 
+@pytest.mark.issue(4725)
 def test_issue4725_2():
     if isinstance(get_current_ops, NumpyOps):
         # ensures that this runs correctly and doesn't hang or crash because of the global vectors
@@ -188,6 +196,7 @@ def test_issue4725_2():
             pass
 
 
+@pytest.mark.issue(4849)
 def test_issue4849():
     nlp = English()
     patterns = [
@@ -235,6 +244,7 @@ class CustomPipe:
         return str(span.end)
 
 
+@pytest.mark.issue(4903)
 def test_issue4903():
     """Ensure that this runs correctly and doesn't hang or crash on Windows /
     macOS."""
@@ -249,6 +259,7 @@ def test_issue4903():
         assert docs[2].text == "No, I prefer wasabi."
 
 
+@pytest.mark.issue(4924)
 def test_issue4924():
     nlp = Language()
     example = Example.from_dict(nlp.make_doc(""), {})

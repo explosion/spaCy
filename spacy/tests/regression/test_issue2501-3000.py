@@ -13,6 +13,7 @@ import numpy
 import random
 
 
+@pytest.mark.issue(2564)
 def test_issue2564():
     """Test the tagger sets has_annotation("TAG") correctly when used via Language.pipe."""
     nlp = Language()
@@ -26,6 +27,7 @@ def test_issue2564():
     assert piped_doc.has_annotation("TAG")
 
 
+@pytest.mark.issue(2569)
 def test_issue2569(en_tokenizer):
     """Test that operator + is greedy."""
     doc = en_tokenizer("It is May 15, 1993.")
@@ -46,12 +48,14 @@ def test_issue2569(en_tokenizer):
         "oow.jspsearch.eventoracleopenworldsearch.technologyoraclesolarissearch.technologystoragesearch.technologylinuxsearch.technologyserverssearch.technologyvirtualizationsearch.technologyengineeredsystemspcodewwmkmppscem:",
     ],
 )
+@pytest.mark.issue(2626)
 def test_issue2626_2835(en_tokenizer, text):
     """Check that sentence doesn't cause an infinite loop in the tokenizer."""
     doc = en_tokenizer(text)
     assert doc
 
 
+@pytest.mark.issue(2656)
 def test_issue2656(en_tokenizer):
     """Test that tokenizer correctly splits off punctuation after numbers with
     decimal points.
@@ -71,6 +75,7 @@ def test_issue2656(en_tokenizer):
     assert doc[10].text == "."
 
 
+@pytest.mark.issue(2671)
 def test_issue2671():
     """Ensure the correct entity ID is returned for matches with quantifiers.
     See also #2675
@@ -94,6 +99,7 @@ def test_issue2671():
         assert nlp.vocab.strings[match_id] == pattern_id
 
 
+@pytest.mark.issue(2728)
 def test_issue2728(en_vocab):
     """Test that displaCy ENT visualizer escapes HTML correctly."""
     doc = Doc(en_vocab, words=["test", "<RELEASE>", "test"])
@@ -105,6 +111,7 @@ def test_issue2728(en_vocab):
     assert "&lt;RELEASE&gt;" in html
 
 
+@pytest.mark.issue(2754)
 def test_issue2754(en_tokenizer):
     """Test that words like 'a' and 'a.m.' don't get exceptional norm values."""
     a = en_tokenizer("a")
@@ -113,6 +120,7 @@ def test_issue2754(en_tokenizer):
     assert am[0].norm_ == "am"
 
 
+@pytest.mark.issue(2772)
 def test_issue2772(en_vocab):
     """Test that deprojectivization doesn't mess up sentence boundaries."""
     # fmt: off
@@ -128,6 +136,7 @@ def test_issue2772(en_vocab):
 
 @pytest.mark.parametrize("text", ["-0.23", "+123,456", "±1"])
 @pytest.mark.parametrize("lang_cls", [English, MultiLanguage])
+@pytest.mark.issue(2782)
 def test_issue2782(text, lang_cls):
     """Check that like_num handles + and - before number."""
     nlp = lang_cls()
@@ -136,6 +145,7 @@ def test_issue2782(text, lang_cls):
     assert doc[0].like_num
 
 
+@pytest.mark.issue(2800)
 def test_issue2800():
     """Test issue that arises when too many labels are added to NER model.
     Used to cause segfault.
@@ -157,6 +167,7 @@ def test_issue2800():
             nlp.update([example], sgd=optimizer, losses=losses, drop=0.5)
 
 
+@pytest.mark.issue(2822)
 def test_issue2822(it_tokenizer):
     """Test that the abbreviation of poco is kept as one word."""
     doc = it_tokenizer("Vuoi un po' di zucchero?")
@@ -169,6 +180,7 @@ def test_issue2822(it_tokenizer):
     assert doc[5].text == "?"
 
 
+@pytest.mark.issue(2833)
 def test_issue2833(en_vocab):
     """Test that a custom error is raised if a token or span is pickled."""
     doc = Doc(en_vocab, words=["Hello", "world"])
@@ -178,6 +190,7 @@ def test_issue2833(en_vocab):
         pickle.dumps(doc[0:2])
 
 
+@pytest.mark.issue(2871)
 def test_issue2871():
     """Test that vectors recover the correct key for spaCy reserved words."""
     words = ["dog", "cat", "SUFFIX"]
@@ -196,6 +209,7 @@ def test_issue2871():
     assert vocab.vectors.find(key="SUFFIX") == 2
 
 
+@pytest.mark.issue(2901)
 def test_issue2901():
     """Test that `nlp` doesn't fail."""
     try:
@@ -207,6 +221,7 @@ def test_issue2901():
     assert doc
 
 
+@pytest.mark.issue(2926)
 def test_issue2926(fr_tokenizer):
     """Test that the tokenizer correctly splits tokens separated by a slash (/)
     ending in a digit.
