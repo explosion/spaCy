@@ -158,8 +158,11 @@ def intify_attr(name):
     stringy_attr (string): Attribute string name. Can also be int (will then be left unchanged)
     RETURNS (int): int representation of the attribute, or None if it couldn't be converted.
     """
+    iob_strs = ("", "I", "O", "B")
     if isinstance(name, int):
         return name
+    elif name in "IOB":
+        return iob_strs.index(name)
     elif name in IDS:
         return IDS[name]
     elif name.upper() in IDS:
