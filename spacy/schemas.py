@@ -210,7 +210,6 @@ NumberValue = Union[TokenPatternNumber, StrictInt, StrictFloat]
 UnderscoreValue = Union[
     TokenPatternString, TokenPatternNumber, str, int, float, list, bool
 ]
-IobString = Literal["", "I", "O", "B"]
 IobValue = Literal["", "I", "O", "B", 0, 1, 2, 3]
 
 
