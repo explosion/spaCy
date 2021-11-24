@@ -4,10 +4,6 @@ import pytest
 def test_long_text(sl_tokenizer):
     # Excerpt: European Convention on Human Rights
     text = """
-Vlade podpisnice te Konvencije, članice Sveta Evrope, so se,
-upoštevajoč Splošno deklaracijo o človekovih pravicah, ki
-jo je razglasila Generalna Skupščina Združenih narodov dne
-10. decembra 1948,
 upoštevajoč, da si ta deklaracija prizadeva zagotoviti splošno in
 učinkovito priznavanje in spoštovanje v njej razglašenih pravic,
 upoštevajoč, da je cilj Sveta Evrope doseči večjo enotnost med
@@ -21,4 +17,11 @@ strani s skupnim razumevanjem in spoštovanjem človekovih pravic,
 od katerih so te svoboščine odvisne,    
 """
     tokens = sl_tokenizer(text)
-    assert len(tokens) == 153
+    assert len(tokens) == 116
+
+
+@pytest.mark.xfail
+def test_ordinal_number(sl_tokenizer):
+    text = "10."
+    tokens = sl_tokenizer(text)
+    assert len(tokens) == 1

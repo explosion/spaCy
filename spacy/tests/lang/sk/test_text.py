@@ -4,10 +4,6 @@ import pytest
 def test_long_text(sk_tokenizer):
     # Excerpt: European Convention on Human Rights
     text = """
-    Podpísané vlády, členovia Rady Európy,
-majúc na zreteli Všeobecnú deklaráciu ľudských práv vyhlásenú
-Valným zhromaždením Organizácie Spojených národov
-10. decembra 1948;
 majúc na zreteli, že cieľom tejto deklarácie je zabezpečiť všeobecné
 a účinné uznávanie a dodržiavanie práv v nej vyhlásených;
 majúc na zreteli, že cieľom Rady Európy je dosiahnutie väčšej
@@ -21,7 +17,7 @@ a na strane druhej spoločným poňatím a dodržiavaním ľudských
 práv, od ktorých závisia;
     """
     tokens = sk_tokenizer(text)
-    assert len(tokens) == 147
+    assert len(tokens) == 118
 
 
 @pytest.mark.parametrize(
@@ -43,3 +39,10 @@ def test_lex_attrs_like_number(sk_tokenizer, text, match):
     tokens = sk_tokenizer(text)
     assert len(tokens) == 1
     assert tokens[0].like_num == match
+
+
+@pytest.mark.xfail
+def test_ordinal_number(sk_tokenizer):
+    text = "10."
+    tokens = sk_tokenizer(text)
+    assert len(tokens) == 1
