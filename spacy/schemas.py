@@ -225,7 +225,7 @@ class TokenPattern(BaseModel):
     lemma: Optional[StringValue] = None
     shape: Optional[StringValue] = None
     ent_type: Optional[StringValue] = None
-    ent_iob: Optional[IobStringValue] = None
+    ent_iob: Optional[IobValue] = None
     norm: Optional[StringValue] = None
     length: Optional[NumberValue] = None
     spacy: Optional[StrictBool] = None
