@@ -37,7 +37,6 @@ TEST_PATTERNS = [
     ([{"SENT_START": True}], 0, 0),
     ([{"ENT_ID": "STRING"}], 0, 0),
     ([{"ENT_KB_ID": "STRING"}], 0, 0),
-
 ]
 
 
