@@ -57,14 +57,17 @@ class Visualizer:
                     heads[working_token_index],
                 )
                 if len(children_lists[working_token_index]) > 0:
-                    working_horizontal_arrow_position = max(
-                        [
-                            horizontal_line_lengths[i]
-                            for i in children_lists[working_token_index]
-                        ]
+                    working_horizontal_line_length = (
+                        max(
+                            [
+                                horizontal_line_lengths[i]
+                                for i in children_lists[working_token_index]
+                            ]
+                        )
+                        + 1
                     )
                 else:
-                    working_horizontal_arrow_position = 0
+                    working_horizontal_line_length = 1
                 for inbetween_index in (
                     i
                     for i in range(
@@ -73,30 +76,30 @@ class Visualizer:
                     if i not in children_lists[working_token_index]
                     and horizontal_line_lengths[i] != 0
                 ):
-                    working_horizontal_arrow_position = max(
-                        working_horizontal_arrow_position,
-                        horizontal_line_lengths[inbetween_index] - 1
+                    working_horizontal_line_length = max(
+                        working_horizontal_line_length,
+                        horizontal_line_lengths[inbetween_index]
                         if inbetween_index in children_lists[heads[working_token_index]]
-                        else horizontal_line_lengths[inbetween_index],
+                        else horizontal_line_lengths[inbetween_index] + 1,
                     )
-                    for child_horizontal_arrow_position in (
+                    for child_horizontal_line_length in (
                         horizontal_line_lengths[i]
                         for i in children_lists[working_token_index]
                         if (i < first_index_in_relation or i > second_index_in_relation)
                         and horizontal_line_lengths[i] != 0
                     ):
-                        working_horizontal_arrow_position = max(
-                            working_horizontal_arrow_position,
-                            child_horizontal_arrow_position,
+                        working_horizontal_line_length = max(
+                            working_horizontal_line_length,
+                            child_horizontal_line_length + 1,
                         )
-                horizontal_line_lengths[working_token_index] = (
-                    working_horizontal_arrow_position + 1
-                )
+                horizontal_line_lengths[
+                    working_token_index
+                ] = working_horizontal_line_length
         print(horizontal_line_lengths)
 
 
 import spacy
 
 nlp = spacy.load("en_core_web_sm")
-doc = nlp("I saw a horse yesterday that was injured.")
+doc = nlp("I saw a horse yesterday that was injured")
 Visualizer().render_dependency_trees(doc)
