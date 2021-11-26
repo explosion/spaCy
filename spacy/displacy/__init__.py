@@ -181,7 +181,8 @@ def parse_deps(orig_doc: Doc, options: Dict[str, Any] = {}) -> Dict[str, Any]:
 def parse_ents(doc: Doc, options: Dict[str, Any] = {}) -> Dict[str, Any]:
     """Generate named entities in [{start: i, end: i, label: 'label'}] format.
 
-    doc (Doc): Document do parse.
+    doc (Doc): Document to parse.
+    options (Dict[str, Any]): NER-specific visualisation options.
     RETURNS (dict): Generated entities keyed by text (original text) and ents.
     """
     kb_url_format_template = options.get("kb_url_format_template", None)
