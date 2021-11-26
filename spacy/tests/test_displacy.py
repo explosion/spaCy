@@ -32,7 +32,7 @@ def test_displacy_parse_ents_with_kb_id_options(en_vocab):
     doc.ents = [Span(doc, 1, 2, label=doc.vocab.strings["ORG"], kb_id="Q95")]
 
     ents = displacy.parse_ents(
-        doc, {"kb_url_format_template": "https://www.wikidata.org/wiki/{}"}
+        doc, {"kb_url_template": "https://www.wikidata.org/wiki/{}"}
     )
     assert isinstance(ents, dict)
     assert ents["text"] == "But Google is starting from behind "

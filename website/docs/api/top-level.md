@@ -318,6 +318,7 @@ If a setting is not present in the options, the default value will be used.
 | `ents`                                  | Entity types to highlight or `None` for all types (default). ~~Optional[List[str]]~~                                                                                                                                                        |
 | `colors`                                | Color overrides. Entity types should be mapped to color names or values. ~~Dict[str, str]~~                                                                                                                                                 |
 | `template` <Tag variant="new">2.2</Tag> | Optional template to overwrite the HTML used to render entity spans. Should be a format string and can use `{bg}`, `{text}` and `{label}`. See [`templates.py`](%%GITHUB_SPACY/spacy/displacy/templates.py) for examples. ~~Optional[str]~~ |
+| `kb_url_template`                       | Optional template to construct the KB url for the entity to link to. Expects a python f-string format with single field to fill in. ~~Optional[str]~~                                                                                       |
 
 By default, displaCy comes with colors for all entity types used by
 [spaCy's trained pipelines](/models). If you're using custom entity types, you
@@ -325,6 +326,13 @@ can use the `colors` setting to add your own colors for them. Your application
 or pipeline package can also expose a
 [`spacy_displacy_colors` entry point](/usage/saving-loading#entry-points-displacy)
 to add custom labels and their colors automatically.
+
+By default, displaCy links to `#` for entities without a `kb_id` set on their span. 
+If you wish to link an entity to their URL then consider using the `kb_url_template`
+option from above. For e.g. If the `kb_id` on a span is `Q95` and this is a Wikidata 
+identifier then this option can be set to `https://www.wikidata.org/wiki/{}`.
+Clicking on your entity in the rendered HTML should redirect you to their Wikidata page,
+in this case `https://www.wikidata.org/wiki/Q95`
 
 ## registry {#registry source="spacy/util.py" new="3"}
 
