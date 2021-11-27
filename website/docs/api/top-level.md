@@ -329,7 +329,7 @@ to add custom labels and their colors automatically.
 
 By default, displaCy links to `#` for entities without a `kb_id` set on their span. 
 If you wish to link an entity to their URL then consider using the `kb_url_template`
-option from above. For e.g. If the `kb_id` on a span is `Q95` and this is a Wikidata 
+option from above. For example if the `kb_id` on a span is `Q95` and this is a Wikidata 
 identifier then this option can be set to `https://www.wikidata.org/wiki/{}`.
 Clicking on your entity in the rendered HTML should redirect you to their Wikidata page,
 in this case `https://www.wikidata.org/wiki/Q95`.
