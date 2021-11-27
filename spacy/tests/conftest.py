@@ -191,6 +191,11 @@ def it_tokenizer():
 
 
 @pytest.fixture(scope="session")
+def it_vocab():
+    return get_lang_class("it")().vocab
+
+
+@pytest.fixture(scope="session")
 def ja_tokenizer():
     pytest.importorskip("sudachipy")
     return get_lang_class("ja")().tokenizer
