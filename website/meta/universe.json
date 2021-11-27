@@ -1754,6 +1754,23 @@
         },
         {
             "type": "education",
+            "id": "applt-course",
+            "title": "Applied Language Technology",
+            "slogan": "NLP for newcomers using spaCy and Stanza",
+            "description": "These learning materials provide an introduction to applied language technology for audiences who are unfamiliar with language technology and programming. The learning materials assume no previous knowledge of the Python programming language.",
+            "url": "https://applied-language-technology.readthedocs.io/",
+            "image": "https://www.mv.helsinki.fi/home/thiippal/images/applt-preview.jpg",
+            "thumb": "https://applied-language-technology.readthedocs.io/en/latest/_static/logo.png",
+            "author": "Tuomo Hiippala",
+            "author_links": {
+                "twitter": "tuomo_h",
+                "github": "thiippal",
+                "website": "https://www.mv.helsinki.fi/home/thiippal/"
+            },
+            "category": ["courses"]
+        },
+        {
+            "type": "education",
             "id": "video-spacys-ner-model",
             "title": "spaCy's NER model",
             "slogan": "Incremental parsing with bloom embeddings and residual CNNs",
