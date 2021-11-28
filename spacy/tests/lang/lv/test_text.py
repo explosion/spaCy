@@ -22,6 +22,6 @@ ievērošana no otras puses;
 
 @pytest.mark.xfail
 def test_ordinal_number(lv_tokenizer):
-    text = "10."
+    text = "10. decembrī"
     tokens = lv_tokenizer(text)
-    assert len(tokens) == 1
+    assert len(tokens) == 2
