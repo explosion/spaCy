@@ -21,6 +21,6 @@ inimõiguste, millest nad sõltuvad, üldine mõistmine ja järgimine;
 
 @pytest.mark.xfail
 def test_ordinal_number(et_tokenizer):
-    text = "10."
+    text = "10. detsembril 1948"
     tokens = et_tokenizer(text)
-    assert len(tokens) == 1
+    assert len(tokens) == 3
