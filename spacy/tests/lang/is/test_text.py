@@ -21,6 +21,6 @@ og varðveislu þeirra mannréttinda, sem eru grundvöllur frelsisins;
 
 @pytest.mark.xfail
 def test_ordinal_number(is_tokenizer):
-    text = "10."
+    text = "10. desember 1948"
     tokens = is_tokenizer(text)
-    assert len(tokens) == 1
+    assert len(tokens) == 3
