@@ -501,6 +501,11 @@ If the span happens to cross sentence boundaries, only the first sentence will
 be returned. If it is required that the sentence always includes the full span,
 the result can be adjusted as such:
 
+```python
+sent = span.sent
+sent = doc[sent.start : max(sent.end, span.end)]
+```
+
 > #### Example
 >
 > ```python
