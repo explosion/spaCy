@@ -405,7 +405,7 @@ cdef class Span:
         if "sent" in self.doc.user_span_hooks:
             return self.doc.user_span_hooks["sent"](self)
         elif "sents" in self.doc.user_hooks:
-            for sentence in self.doc.user_hooks["sents"](self.doc) :
+            for sentence in self.doc.user_hooks["sents"](self.doc):
                 if sentence.start <= self.start < sentence.end:
                     return sentence
         # Use `sent_start` token attribute to find sentence boundaries
@@ -444,11 +444,11 @@ cdef class Span:
         if "sents" in self.doc.user_span_hooks:
             yield from self.doc.user_span_hooks["sents"](self)
         elif "sents" in self.doc.user_hooks:
-            for sentence in self.doc.user_hooks["sents"](self.doc) :
-                if sentence.end > self.start :
+            for sentence in self.doc.user_hooks["sents"](self.doc):
+                if sentence.end > self.start:
                     if sentence.start < self.end or sentence.start == self.start == self.end:
                         yield sentence
-                    else :
+                    else:
                         break
         else:
             # Use `sent_start` token attribute to find sentence boundaries
@@ -462,9 +462,9 @@ cdef class Span:
                 if self.doc.c[i].sent_start == 1:
                     yield Span(self.doc, start, i)
                     start = i
-                    if start >= self.end :
+                    if start >= self.end:
                         break
-            if start < self.end :
+            if start < self.end:
                 yield Span(self.doc, start, self.end)
 
 
