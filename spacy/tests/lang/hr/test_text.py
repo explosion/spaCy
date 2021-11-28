@@ -21,6 +21,6 @@ ovise s druge strane;
 
 @pytest.mark.xfail
 def test_ordinal_number(hr_tokenizer):
-    text = "10."
+    text = "10. prosinca 1948"
     tokens = hr_tokenizer(text)
-    assert len(tokens) == 1
+    assert len(tokens) == 3
