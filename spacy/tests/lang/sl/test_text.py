@@ -22,6 +22,6 @@ od katerih so te svoboščine odvisne,
 
 @pytest.mark.xfail
 def test_ordinal_number(sl_tokenizer):
-    text = "10."
+    text = "10. decembra 1948"
     tokens = sl_tokenizer(text)
-    assert len(tokens) == 1
+    assert len(tokens) == 3
