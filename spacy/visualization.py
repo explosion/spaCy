@@ -1,5 +1,5 @@
 from spacy.tests.lang.ko.test_tokenizer import FULL_TAG_TESTS
-from spacy.tokens import Doc, Token
+from spacy.tokens import Span
 from spacy.util import working_dir
 
 SPACE = 0
@@ -39,7 +39,7 @@ ROOT_LEFT_CHARS = {
 
 class Visualizer:
     @staticmethod
-    def render_dependency_trees(doc: Doc, root_right: bool) -> list[str]:
+    def render_dependency_tree(sent: Span, root_right: bool) -> list[str]:
         """
         Returns an ASCII rendering of the document with a dependency tree for each sentence. The
         dependency tree output for a given token has the same index within the output list of
@@ -53,10 +53,10 @@ class Visualizer:
         heads = [
             None
             if token.dep_.lower() == "root" or token.head.i == token.i
-            else token.head.i
-            for token in doc
+            else token.head.i - sent.start
+            for token in sent
         ]
-        children_lists = [[] for _ in range(len(doc))]
+        children_lists = [[] for _ in range(sent.end - sent.start)]
         for child, head in enumerate(heads):
             if head is not None:
                 children_lists[head].append(child)
@@ -78,7 +78,7 @@ class Visualizer:
             -1 if heads[i] is None else 1
             # length == 1: governed by direct neighbour and has no children itself
             if len(children_lists[i]) == 0 and abs(heads[i] - i) == 1 else 0
-            for i in range(len(doc))
+            for i in range(sent.end - sent.start)
         ]
         while 0 in horizontal_line_lengths:
             for working_token_index in (
@@ -126,9 +126,10 @@ class Visualizer:
                     )
         max_horizontal_line_length = max(horizontal_line_lengths)
         char_matrix = [
-            [SPACE] * max_horizontal_line_length * 2 for _ in range(len(doc))
+            [SPACE] * max_horizontal_line_length * 2
+            for _ in range(sent.start, sent.end)
         ]
-        for working_token_index in range(len(doc)):
+        for working_token_index in range(sent.end - sent.start):
             head_token_index = heads[working_token_index]
             if head_token_index is None:
                 continue
@@ -169,7 +170,9 @@ class Visualizer:
                     char_matrix[working_vertical_position][
                         char_horizontal_line_length - 1
                     ] |= FULL_VERTICAL_LINE
-        for working_token_index in (i for i in range(len(doc)) if heads[i] is not None):
+        for working_token_index in (
+            i for i in range(sent.end - sent.start) if heads[i] is not None
+        ):
             for working_horizontal_position in range(
                 2 * horizontal_line_lengths[working_token_index] - 2, -1, -1
             ):
@@ -213,7 +216,7 @@ class Visualizer:
                     ]
                     for horizontal_position in range((max_horizontal_line_length * 2))
                 )
-                for vertical_position in range(len(doc))
+                for vertical_position in range(sent.end - sent.start)
             ]
         else:
             return [
@@ -221,5 +224,5 @@ class Visualizer:
                     ROOT_LEFT_CHARS[char_matrix[vertical_position][horizontal_position]]
                     for horizontal_position in range((max_horizontal_line_length * 2))
                 )[::-1]
-                for vertical_position in range(len(doc))
+                for vertical_position in range(sent.end - sent.start)
             ]
