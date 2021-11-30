@@ -50,6 +50,10 @@ class Visualizer:
 
         Adapted from https://github.com/KoichiYasuoka/deplacy
         """
+
+        # Check sent is really a sentence
+        assert sent.start == sent[0].sent.start
+        assert sent.end == sent[0].sent.end
         heads = [
             None
             if token.dep_.lower() == "root" or token.head.i == token.i
