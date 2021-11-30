@@ -359,14 +359,15 @@ class Scorer:
             pred_doc = example.predicted
             gold_doc = example.reference
             # Option to handle docs without annotation for this attribute
-            if has_annotation is not None:
-                if not has_annotation(gold_doc):
-                    continue
-            # Find all labels in gold and doc
-            labels = set(
-                [k.label_ for k in getter(gold_doc, attr)]
-                + [k.label_ for k in getter(pred_doc, attr)]
-            )
+            if has_annotation is not None and not has_annotation(gold_doc):
+                continue
+            # Find all labels in gold
+            labels = set([k.label_ for k in getter(gold_doc, attr)])
+            # If labeled, find all labels in pred
+            if has_annotation is None or (
+                has_annotation is not None and has_annotation(pred_doc)
+            ):
+                labels |= set([k.label_ for k in getter(pred_doc, attr)])
             # Set up all labels for per type scoring and prepare gold per type
             gold_per_type: Dict[str, Set] = {label: set() for label in labels}
             for label in labels:
@@ -384,16 +385,19 @@ class Scorer:
                 gold_spans.add(gold_span)
                 gold_per_type[span.label_].add(gold_span)
             pred_per_type: Dict[str, Set] = {label: set() for label in labels}
-            for span in example.get_aligned_spans_x2y(
-                getter(pred_doc, attr), allow_overlap
+            if has_annotation is None or (
+                has_annotation is not None and has_annotation(pred_doc)
             ):
-                pred_span: Tuple
-                if labeled:
-                    pred_span = (span.label_, span.start, span.end - 1)
-                else:
-                    pred_span = (span.start, span.end - 1)
-                pred_spans.add(pred_span)
-                pred_per_type[span.label_].add(pred_span)
+                for span in example.get_aligned_spans_x2y(
+                    getter(pred_doc, attr), allow_overlap
+                ):
+                    pred_span: Tuple
+                    if labeled:
+                        pred_span = (span.label_, span.start, span.end - 1)
+                    else:
+                        pred_span = (span.start, span.end - 1)
+                    pred_spans.add(pred_span)
+                    pred_per_type[span.label_].add(pred_span)
             # Scores per label
             if labeled:
                 for k, v in score_per_type.items():

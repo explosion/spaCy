@@ -431,10 +431,16 @@ class EntityRuler(Pipe):
         path = ensure_path(path)
         self.clear()
         depr_patterns_path = path.with_suffix(".jsonl")
-        if depr_patterns_path.is_file():
+        if path.suffix == ".jsonl":  # user provides a jsonl
+            if path.is_file:
+                patterns = srsly.read_jsonl(path)
+                self.add_patterns(patterns)
+            else:
+                raise ValueError(Errors.E1023.format(path=path))
+        elif depr_patterns_path.is_file():
             patterns = srsly.read_jsonl(depr_patterns_path)
             self.add_patterns(patterns)
-        else:
+        elif path.is_dir():  # path is a valid directory
             cfg = {}
             deserializers_patterns = {
                 "patterns": lambda p: self.add_patterns(
@@ -451,6 +457,8 @@ class EntityRuler(Pipe):
                 self.nlp.vocab, attr=self.phrase_matcher_attr
             )
             from_disk(path, deserializers_patterns, {})
+        else:  # path is not a valid directory or file
+            raise ValueError(Errors.E146.format(path=path))
         return self
 
     def to_disk(

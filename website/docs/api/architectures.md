@@ -124,6 +124,14 @@ Instead of defining its own `Tok2Vec` instance, a model architecture like
 [Tagger](/api/architectures#tagger) can define a listener as its `tok2vec`
 argument that connects to the shared `tok2vec` component in the pipeline.
 
+Listeners work by caching the `Tok2Vec` output for a given batch of `Doc`s. This
+means that in order for a component to work with the listener, the batch of
+`Doc`s passed to the listener must be the same as the batch of `Doc`s passed to
+the `Tok2Vec`. As a result, any manipulation of the `Doc`s which would affect
+`Tok2Vec` output, such as to create special contexts or remove `Doc`s for which
+no prediction can be made, must happen inside the model, **after** the call to
+the `Tok2Vec` component.
+
 | Name        | Description                                                                                                                                                                                                                                                                                                                          |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `width`     | The width of the vectors produced by the "upstream" [`Tok2Vec`](/api/tok2vec) component. ~~int~~                                                                                                                                                                                                                                     |

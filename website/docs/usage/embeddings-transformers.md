@@ -391,8 +391,8 @@ A wide variety of PyTorch models are supported, but some might not work. If a
 model doesn't seem to work feel free to open an
 [issue](https://github.com/explosion/spacy/issues). Additionally note that
 Transformers loaded in spaCy can only be used for tensors, and pretrained
-task-specific heads or text generation features cannot be used as part of 
-the `transformer` pipeline component.
+task-specific heads or text generation features cannot be used as part of the
+`transformer` pipeline component.
 
 <Infobox variant="warning">
 
@@ -715,8 +715,8 @@ network for a temporary task that forces the model to learn something about
 sentence structure and word cooccurrence statistics.
 
 Pretraining produces a **binary weights file** that can be loaded back in at the
-start of training, using the configuration option `initialize.init_tok2vec`.
-The weights file specifies an initial set of weights. Training then proceeds as
+start of training, using the configuration option `initialize.init_tok2vec`. The
+weights file specifies an initial set of weights. Training then proceeds as
 normal.
 
 You can only pretrain one subnetwork from your pipeline at a time, and the
@@ -751,15 +751,14 @@ layer = "tok2vec"
 
 #### Connecting pretraining to training {#pretraining-training}
 
-To benefit from pretraining, your training step needs to know to initialize
-its `tok2vec` component with the weights learned from the pretraining step.
-You do this by setting `initialize.init_tok2vec` to the filename of the
-`.bin` file that you want to use from pretraining.
+To benefit from pretraining, your training step needs to know to initialize its
+`tok2vec` component with the weights learned from the pretraining step. You do
+this by setting `initialize.init_tok2vec` to the filename of the `.bin` file
+that you want to use from pretraining.
 
-A pretraining step that runs for 5 epochs with an output path of `pretrain/`,
-as an example, produces `pretrain/model0.bin` through `pretrain/model4.bin`.
-To make use of the final output, you could fill in this value in your config
-file:
+A pretraining step that runs for 5 epochs with an output path of `pretrain/`, as
+an example, produces `pretrain/model0.bin` through `pretrain/model4.bin`. To
+make use of the final output, you could fill in this value in your config file:
 
 ```ini
 ### config.cfg
@@ -773,15 +772,13 @@ init_tok2vec = ${paths.init_tok2vec}
 
 <Infobox variant="warning">
 
-The outputs of `spacy pretrain` are not the same data format as the
-pre-packaged static word vectors that would go into 
-[`initialize.vectors`](/api/data-formats#config-initialize).
-The pretraining output consists of the weights that the `tok2vec`
-component should start with in an existing pipeline, so it goes in
-`initialize.init_tok2vec`.
+The outputs of `spacy pretrain` are not the same data format as the pre-packaged
+static word vectors that would go into
+[`initialize.vectors`](/api/data-formats#config-initialize). The pretraining
+output consists of the weights that the `tok2vec` component should start with in
+an existing pipeline, so it goes in `initialize.init_tok2vec`.
 
 </Infobox>
-
 
 #### Pretraining objectives {#pretraining-objectives}
 

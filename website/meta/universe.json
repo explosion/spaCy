@@ -1754,6 +1754,23 @@
         },
         {
             "type": "education",
+            "id": "applt-course",
+            "title": "Applied Language Technology",
+            "slogan": "NLP for newcomers using spaCy and Stanza",
+            "description": "These learning materials provide an introduction to applied language technology for audiences who are unfamiliar with language technology and programming. The learning materials assume no previous knowledge of the Python programming language.",
+            "url": "https://applied-language-technology.readthedocs.io/",
+            "image": "https://www.mv.helsinki.fi/home/thiippal/images/applt-preview.jpg",
+            "thumb": "https://applied-language-technology.readthedocs.io/en/latest/_static/logo.png",
+            "author": "Tuomo Hiippala",
+            "author_links": {
+                "twitter": "tuomo_h",
+                "github": "thiippal",
+                "website": "https://www.mv.helsinki.fi/home/thiippal/"
+            },
+            "category": ["courses"]
+        },
+        {
+            "type": "education",
             "id": "video-spacys-ner-model",
             "title": "spaCy's NER model",
             "slogan": "Incremental parsing with bloom embeddings and residual CNNs",
@@ -3592,6 +3609,32 @@
                 "github": "xxyzz"
             },
             "category": ["standalone"]
+        },
+        {
+            "id": "eng_spacysentiment",
+            "title": "eng_spacysentiment",
+            "slogan": "Simple sentiment analysis using spaCy pipelines",
+            "description": "Sentiment analysis for simple english sentences using pre-trained spaCy pipelines",
+            "github": "vishnunkumar/spacysentiment",
+            "pip": "eng-spacysentiment",
+            "code_example": [
+                "import eng_spacysentiment",
+                "nlp = eng_spacysentiment.load()",
+                "text = \"Welcome to Arsenals official YouTube channel Watch as we take you closer and show you the personality of the club\"",
+                "doc = nlp(text)",
+                "print(doc.cats)",
+                "# {'positive': 0.29878824949264526, 'negative': 0.7012117505073547}"
+            ],
+            "thumb": "",
+            "image": "",
+            "code_language": "python",
+            "author": "Vishnu Nandakumar",
+            "author_links": {
+                "github": "Vishnunkumar",
+                "twitter": "vishnun_uchiha"
+            },
+            "category": ["pipeline"],
+            "tags": ["pipeline", "nlp", "sentiment"]
         }
     ],
 
