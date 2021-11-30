@@ -438,9 +438,6 @@ cdef class Span:
         cdef int start
         cdef int i
 
-        if not self.doc.has_annotation("SENT_START"):
-            raise ValueError(Errors.E030)
-
         if "sents" in self.doc.user_span_hooks:
             yield from self.doc.user_span_hooks["sents"](self)
         elif "sents" in self.doc.user_hooks:
@@ -451,6 +448,8 @@ cdef class Span:
                     else:
                         break
         else:
+            if not self.doc.has_annotation("SENT_START"):
+                raise ValueError(Errors.E030)
             # Use `sent_start` token attribute to find sentence boundaries
             # Find start of the 1st sentence of the Span
             start = self.start
