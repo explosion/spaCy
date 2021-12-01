@@ -7,6 +7,8 @@ from spacy.lang.en import English
 from spacy.pipeline import EntityRuler, EntityRecognizer, merge_entities
 from spacy.pipeline.ner import DEFAULT_NER_MODEL
 from spacy.errors import MatchPatternError
+from spacy.tests.util import make_tempdir
+
 from thinc.api import NumpyOps, get_current_ops
 
 
@@ -351,3 +353,23 @@ def test_entity_ruler_multiprocessing(nlp, n_process):
         for doc in nlp.pipe(texts, n_process=2):
             for ent in doc.ents:
                 assert ent.ent_id_ == "1234"
+
+
+def test_entity_ruler_serialize_jsonl(nlp, patterns):
+    ruler = nlp.add_pipe("entity_ruler")
+    ruler.add_patterns(patterns)
+    with make_tempdir() as d:
+        ruler.to_disk(d / "test_ruler.jsonl")
+        ruler.from_disk(d / "test_ruler.jsonl")  # read from an existing jsonl file
+        with pytest.raises(ValueError):
+            ruler.from_disk(d / "non_existing.jsonl")  # read from a bad jsonl file
+
+
+def test_entity_ruler_serialize_dir(nlp, patterns):
+    ruler = nlp.add_pipe("entity_ruler")
+    ruler.add_patterns(patterns)
+    with make_tempdir() as d:
+        ruler.to_disk(d / "test_ruler")
+        ruler.from_disk(d / "test_ruler")  # read from an existing directory
+        with pytest.raises(ValueError):
+            ruler.from_disk(d / "non_existing_dir")  # read from a bad directory

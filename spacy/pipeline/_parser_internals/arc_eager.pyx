@@ -585,7 +585,10 @@ cdef class ArcEager(TransitionSystem):
             actions[RIGHT][label] = 1
             actions[REDUCE][label] = 1
         for example in kwargs.get('examples', []):
-            heads, labels = example.get_aligned_parse(projectivize=True)
+            # use heads and labels from the reference parse (without regard to
+            # misalignments between the predicted and reference)
+            example_gold_preproc = Example(example.reference, example.reference)
+            heads, labels = example_gold_preproc.get_aligned_parse(projectivize=True)
             for child, (head, label) in enumerate(zip(heads, labels)):
                 if head is None or label is None:
                     continue

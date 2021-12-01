@@ -701,7 +701,8 @@ class Language:
         if (
             self.vocab.vectors.shape != source.vocab.vectors.shape
             or self.vocab.vectors.key2row != source.vocab.vectors.key2row
-            or self.vocab.vectors.to_bytes() != source.vocab.vectors.to_bytes()
+            or self.vocab.vectors.to_bytes(exclude=["strings"])
+            != source.vocab.vectors.to_bytes(exclude=["strings"])
         ):
             warnings.warn(Warnings.W113.format(name=source_name))
         if source_name not in source.component_names:
@@ -1822,7 +1823,9 @@ class Language:
                         )
                     if model not in source_nlp_vectors_hashes:
                         source_nlp_vectors_hashes[model] = hash(
-                            source_nlps[model].vocab.vectors.to_bytes()
+                            source_nlps[model].vocab.vectors.to_bytes(
+                                exclude=["strings"]
+                            )
                         )
                     if "_sourced_vectors_hashes" not in nlp.meta:
                         nlp.meta["_sourced_vectors_hashes"] = {}
