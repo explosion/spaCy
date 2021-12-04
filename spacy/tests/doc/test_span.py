@@ -1,7 +1,9 @@
 import pytest
 import numpy
 from numpy.testing import assert_array_equal
+
 from spacy.attrs import ORTH, LENGTH
+from spacy.lang.en import English
 from spacy.tokens import Doc, Span, Token
 from spacy.vocab import Vocab
 from spacy.util import filter_spans
@@ -41,6 +43,106 @@ def doc_not_parsed(en_tokenizer):
     tokens = en_tokenizer(text)
     doc = Doc(tokens.vocab, words=[t.text for t in tokens])
     return doc
+
+
+@pytest.mark.issue(1537)
+def test_issue1537():
+    """Test that Span.as_doc() doesn't segfault."""
+    string = "The sky is blue . The man is pink . The dog is purple ."
+    doc = Doc(Vocab(), words=string.split())
+    doc[0].sent_start = True
+    for word in doc[1:]:
+        if word.nbor(-1).text == ".":
+            word.sent_start = True
+        else:
+            word.sent_start = False
+    sents = list(doc.sents)
+    sent0 = sents[0].as_doc()
+    sent1 = sents[1].as_doc()
+    assert isinstance(sent0, Doc)
+    assert isinstance(sent1, Doc)
+
+
+@pytest.mark.issue(1612)
+def test_issue1612(en_tokenizer):
+    """Test that span.orth_ is identical to span.text"""
+    doc = en_tokenizer("The black cat purrs.")
+    span = doc[1:3]
+    assert span.orth_ == span.text
+
+
+@pytest.mark.issue(3199)
+def test_issue3199():
+    """Test that Span.noun_chunks works correctly if no noun chunks iterator
+    is available. To make this test future-proof, we're constructing a Doc
+    with a new Vocab here and a parse tree to make sure the noun chunks run.
+    """
+    words = ["This", "is", "a", "sentence"]
+    doc = Doc(Vocab(), words=words, heads=[0] * len(words), deps=["dep"] * len(words))
+    with pytest.raises(NotImplementedError):
+        list(doc[0:3].noun_chunks)
+
+
+@pytest.mark.issue(5152)
+def test_issue5152():
+    # Test that the comparison between a Span and a Token, goes well
+    # There was a bug when the number of tokens in the span equaled the number of characters in the token (!)
+    nlp = English()
+    text = nlp("Talk about being boring!")
+    text_var = nlp("Talk of being boring!")
+    y = nlp("Let")
+    span = text[0:3]  # Talk about being
+    span_2 = text[0:3]  # Talk about being
+    span_3 = text_var[0:3]  # Talk of being
+    token = y[0]  # Let
+    with pytest.warns(UserWarning):
+        assert span.similarity(token) == 0.0
+    assert span.similarity(span_2) == 1.0
+    with pytest.warns(UserWarning):
+        assert span_2.similarity(span_3) < 1.0
+
+
+@pytest.mark.issue(6755)
+def test_issue6755(en_tokenizer):
+    doc = en_tokenizer("This is a magnificent sentence.")
+    span = doc[:0]
+    assert span.text_with_ws == ""
+    assert span.text == ""
+
+
+@pytest.mark.parametrize(
+    "sentence, start_idx,end_idx,label",
+    [("Welcome to Mumbai, my friend", 11, 17, "GPE")],
+)
+@pytest.mark.issue(6815)
+def test_issue6815_1(sentence, start_idx, end_idx, label):
+    nlp = English()
+    doc = nlp(sentence)
+    span = doc[:].char_span(start_idx, end_idx, label=label)
+    assert span.label_ == label
+
+
+@pytest.mark.parametrize(
+    "sentence, start_idx,end_idx,kb_id", [("Welcome to Mumbai, my friend", 11, 17, 5)]
+)
+@pytest.mark.issue(6815)
+def test_issue6815_2(sentence, start_idx, end_idx, kb_id):
+    nlp = English()
+    doc = nlp(sentence)
+    span = doc[:].char_span(start_idx, end_idx, kb_id=kb_id)
+    assert span.kb_id == kb_id
+
+
+@pytest.mark.parametrize(
+    "sentence, start_idx,end_idx,vector",
+    [("Welcome to Mumbai, my friend", 11, 17, numpy.array([0.1, 0.2, 0.3]))],
+)
+@pytest.mark.issue(6815)
+def test_issue6815_3(sentence, start_idx, end_idx, vector):
+    nlp = English()
+    doc = nlp(sentence)
+    span = doc[:].char_span(start_idx, end_idx, vector=vector)
+    assert (span.vector == vector).all()
 
 
 @pytest.mark.parametrize(

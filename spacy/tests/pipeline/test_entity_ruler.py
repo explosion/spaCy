@@ -1,9 +1,11 @@
 import pytest
 
 from spacy import registry
-from spacy.tokens import Span
+from spacy.tokens import Doc, Span
 from spacy.language import Language
-from spacy.pipeline import EntityRuler
+from spacy.lang.en import English
+from spacy.pipeline import EntityRuler, EntityRecognizer, merge_entities
+from spacy.pipeline.ner import DEFAULT_NER_MODEL
 from spacy.errors import MatchPatternError
 from spacy.tests.util import make_tempdir
 
@@ -32,6 +34,117 @@ def patterns():
 def add_ent_component(doc):
     doc.ents = [Span(doc, 0, 3, label="ORG")]
     return doc
+
+
+@pytest.mark.issue(3345)
+def test_issue3345():
+    """Test case where preset entity crosses sentence boundary."""
+    nlp = English()
+    doc = Doc(nlp.vocab, words=["I", "live", "in", "New", "York"])
+    doc[4].is_sent_start = True
+    ruler = EntityRuler(nlp, patterns=[{"label": "GPE", "pattern": "New York"}])
+    cfg = {"model": DEFAULT_NER_MODEL}
+    model = registry.resolve(cfg, validate=True)["model"]
+    ner = EntityRecognizer(doc.vocab, model)
+    # Add the OUT action. I wouldn't have thought this would be necessary...
+    ner.moves.add_action(5, "")
+    ner.add_label("GPE")
+    doc = ruler(doc)
+    # Get into the state just before "New"
+    state = ner.moves.init_batch([doc])[0]
+    ner.moves.apply_transition(state, "O")
+    ner.moves.apply_transition(state, "O")
+    ner.moves.apply_transition(state, "O")
+    # Check that B-GPE is valid.
+    assert ner.moves.is_valid(state, "B-GPE")
+
+
+@pytest.mark.issue(4849)
+def test_issue4849():
+    nlp = English()
+    patterns = [
+        {"label": "PERSON", "pattern": "joe biden", "id": "joe-biden"},
+        {"label": "PERSON", "pattern": "bernie sanders", "id": "bernie-sanders"},
+    ]
+    ruler = nlp.add_pipe("entity_ruler", config={"phrase_matcher_attr": "LOWER"})
+    ruler.add_patterns(patterns)
+    text = """
+    The left is starting to take aim at Democratic front-runner Joe Biden.
+    Sen. Bernie Sanders joined in her criticism: "There is no 'middle ground' when it comes to climate policy."
+    """
+    # USING 1 PROCESS
+    count_ents = 0
+    for doc in nlp.pipe([text], n_process=1):
+        count_ents += len([ent for ent in doc.ents if ent.ent_id > 0])
+    assert count_ents == 2
+    # USING 2 PROCESSES
+    if isinstance(get_current_ops, NumpyOps):
+        count_ents = 0
+        for doc in nlp.pipe([text], n_process=2):
+            count_ents += len([ent for ent in doc.ents if ent.ent_id > 0])
+        assert count_ents == 2
+
+
+@pytest.mark.issue(5918)
+def test_issue5918():
+    # Test edge case when merging entities.
+    nlp = English()
+    ruler = nlp.add_pipe("entity_ruler")
+    patterns = [
+        {"label": "ORG", "pattern": "Digicon Inc"},
+        {"label": "ORG", "pattern": "Rotan Mosle Inc's"},
+        {"label": "ORG", "pattern": "Rotan Mosle Technology Partners Ltd"},
+    ]
+    ruler.add_patterns(patterns)
+
+    text = """
+        Digicon Inc said it has completed the previously-announced disposition
+        of its computer systems division to an investment group led by
+        Rotan Mosle Inc's Rotan Mosle Technology Partners Ltd affiliate.
+        """
+    doc = nlp(text)
+    assert len(doc.ents) == 3
+    # make it so that the third span's head is within the entity (ent_iob=I)
+    # bug #5918 would wrongly transfer that I to the full entity, resulting in 2 instead of 3 final ents.
+    # TODO: test for logging here
+    # with pytest.warns(UserWarning):
+    #     doc[29].head = doc[33]
+    doc = merge_entities(doc)
+    assert len(doc.ents) == 3
+
+
+@pytest.mark.issue(8168)
+def test_issue8168():
+    nlp = English()
+    ruler = nlp.add_pipe("entity_ruler")
+    patterns = [
+        {"label": "ORG", "pattern": "Apple"},
+        {
+            "label": "GPE",
+            "pattern": [{"LOWER": "san"}, {"LOWER": "francisco"}],
+            "id": "san-francisco",
+        },
+        {
+            "label": "GPE",
+            "pattern": [{"LOWER": "san"}, {"LOWER": "fran"}],
+            "id": "san-francisco",
+        },
+    ]
+    ruler.add_patterns(patterns)
+
+    assert ruler._ent_ids == {8043148519967183733: ("GPE", "san-francisco")}
+
+
+@pytest.mark.issue(8216)
+def test_entity_ruler_fix8216(nlp, patterns):
+    """Test that patterns don't get added excessively."""
+    ruler = nlp.add_pipe("entity_ruler", config={"validate": True})
+    ruler.add_patterns(patterns)
+    pattern_count = sum(len(mm) for mm in ruler.matcher._patterns.values())
+    assert pattern_count > 0
+    ruler.add_patterns([])
+    after_count = sum(len(mm) for mm in ruler.matcher._patterns.values())
+    assert after_count == pattern_count
 
 
 def test_entity_ruler_init(nlp, patterns):

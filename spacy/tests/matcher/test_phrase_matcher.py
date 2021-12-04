@@ -1,8 +1,125 @@
 import pytest
 import srsly
 from mock import Mock
-from spacy.matcher import PhraseMatcher
+
+from spacy.lang.en import English
+from spacy.matcher import PhraseMatcher, Matcher
 from spacy.tokens import Doc, Span
+from spacy.vocab import Vocab
+
+
+from ..util import make_tempdir
+
+
+@pytest.mark.issue(3248)
+def test_issue3248_1():
+    """Test that the PhraseMatcher correctly reports its number of rules, not
+    total number of patterns."""
+    nlp = English()
+    matcher = PhraseMatcher(nlp.vocab)
+    matcher.add("TEST1", [nlp("a"), nlp("b"), nlp("c")])
+    matcher.add("TEST2", [nlp("d")])
+    assert len(matcher) == 2
+
+
+@pytest.mark.issue(3331)
+def test_issue3331(en_vocab):
+    """Test that duplicate patterns for different rules result in multiple
+    matches, one per rule.
+    """
+    matcher = PhraseMatcher(en_vocab)
+    matcher.add("A", [Doc(en_vocab, words=["Barack", "Obama"])])
+    matcher.add("B", [Doc(en_vocab, words=["Barack", "Obama"])])
+    doc = Doc(en_vocab, words=["Barack", "Obama", "lifts", "America"])
+    matches = matcher(doc)
+    assert len(matches) == 2
+    match_ids = [en_vocab.strings[matches[0][0]], en_vocab.strings[matches[1][0]]]
+    assert sorted(match_ids) == ["A", "B"]
+
+
+@pytest.mark.issue(3972)
+def test_issue3972(en_vocab):
+    """Test that the PhraseMatcher returns duplicates for duplicate match IDs."""
+    matcher = PhraseMatcher(en_vocab)
+    matcher.add("A", [Doc(en_vocab, words=["New", "York"])])
+    matcher.add("B", [Doc(en_vocab, words=["New", "York"])])
+    doc = Doc(en_vocab, words=["I", "live", "in", "New", "York"])
+    matches = matcher(doc)
+
+    assert len(matches) == 2
+
+    # We should have a match for each of the two rules
+    found_ids = [en_vocab.strings[ent_id] for (ent_id, _, _) in matches]
+    assert "A" in found_ids
+    assert "B" in found_ids
+
+
+@pytest.mark.issue(4002)
+def test_issue4002(en_vocab):
+    """Test that the PhraseMatcher can match on overwritten NORM attributes."""
+    matcher = PhraseMatcher(en_vocab, attr="NORM")
+    pattern1 = Doc(en_vocab, words=["c", "d"])
+    assert [t.norm_ for t in pattern1] == ["c", "d"]
+    matcher.add("TEST", [pattern1])
+    doc = Doc(en_vocab, words=["a", "b", "c", "d"])
+    assert [t.norm_ for t in doc] == ["a", "b", "c", "d"]
+    matches = matcher(doc)
+    assert len(matches) == 1
+    matcher = PhraseMatcher(en_vocab, attr="NORM")
+    pattern2 = Doc(en_vocab, words=["1", "2"])
+    pattern2[0].norm_ = "c"
+    pattern2[1].norm_ = "d"
+    assert [t.norm_ for t in pattern2] == ["c", "d"]
+    matcher.add("TEST", [pattern2])
+    matches = matcher(doc)
+    assert len(matches) == 1
+
+
+@pytest.mark.issue(4373)
+def test_issue4373():
+    """Test that PhraseMatcher.vocab can be accessed (like Matcher.vocab)."""
+    matcher = Matcher(Vocab())
+    assert isinstance(matcher.vocab, Vocab)
+    matcher = PhraseMatcher(Vocab())
+    assert isinstance(matcher.vocab, Vocab)
+
+
+@pytest.mark.issue(4651)
+def test_issue4651_with_phrase_matcher_attr():
+    """Test that the EntityRuler PhraseMatcher is deserialized correctly using
+    the method from_disk when the EntityRuler argument phrase_matcher_attr is
+    specified.
+    """
+    text = "Spacy is a python library for nlp"
+    nlp = English()
+    patterns = [{"label": "PYTHON_LIB", "pattern": "spacy", "id": "spaCy"}]
+    ruler = nlp.add_pipe("entity_ruler", config={"phrase_matcher_attr": "LOWER"})
+    ruler.add_patterns(patterns)
+    doc = nlp(text)
+    res = [(ent.text, ent.label_, ent.ent_id_) for ent in doc.ents]
+    nlp_reloaded = English()
+    with make_tempdir() as d:
+        file_path = d / "entityruler"
+        ruler.to_disk(file_path)
+        nlp_reloaded.add_pipe("entity_ruler").from_disk(file_path)
+    doc_reloaded = nlp_reloaded(text)
+    res_reloaded = [(ent.text, ent.label_, ent.ent_id_) for ent in doc_reloaded.ents]
+    assert res == res_reloaded
+
+
+@pytest.mark.issue(6839)
+def test_issue6839(en_vocab):
+    """Ensure that PhraseMatcher accepts Span as input"""
+    # fmt: off
+    words = ["I", "like", "Spans", "and", "Docs", "in", "my", "input", ",", "and", "nothing", "else", "."]
+    # fmt: on
+    doc = Doc(en_vocab, words=words)
+    span = doc[:8]
+    pattern = Doc(en_vocab, words=["Spans", "and", "Docs"])
+    matcher = PhraseMatcher(en_vocab)
+    matcher.add("SPACY", [pattern])
+    matches = matcher(span)
+    assert matches
 
 
 def test_matcher_phrase_matcher(en_vocab):
