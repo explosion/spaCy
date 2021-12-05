@@ -363,6 +363,7 @@ class EntityRuler(Pipe):
         created_labels = [
             self._create_label(label, eid) for (label, eid) in label_id_pairs
         ]
+        # remove the patterns from self.phrase_patterns
         self.phrase_patterns = defaultdict(
             list,
             {
@@ -370,7 +371,8 @@ class EntityRuler(Pipe):
                 for (label, val) in self.phrase_patterns.items()
                 if label not in created_labels
             },
-        )  # remove the patterns from self.phrase_patterns
+        )
+        # remove the patterns from self.token_pattern
         self.token_patterns = defaultdict(
             list,
             {
@@ -378,10 +380,9 @@ class EntityRuler(Pipe):
                 for (label, val) in self.token_patterns.items()
                 if label not in created_labels
             },
-        )  # remove the patterns from self.token_patterns
-        for (
-            label
-        ) in created_labels:  # remove the patterns from the matcher and phrase matcher
+        )
+        # remove the patterns from self.token_pattern
+        for label in created_labels:
             if label in self.phrase_matcher:
                 self.phrase_matcher.remove(label)
             else:
