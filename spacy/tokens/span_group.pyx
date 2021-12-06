@@ -112,7 +112,7 @@ cdef class SpanGroup:
         self.push_back(span.c)
 
     def extend(self, spans_or_span_group : Union[SpanGroup, Iterable["Span"]]):
-        """Add multiple spans or contents of another SoanGroup to the group.
+        """Add multiple spans or contents of another SpanGroup to the group.
            All spans must refer to the same Doc object as the span group.
 
          spans (Iterable[Span]): The spans to add.
