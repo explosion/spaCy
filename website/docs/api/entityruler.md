@@ -211,7 +211,7 @@ of dicts) or a phrase pattern (string). For more details, see the usage guide on
 | `patterns` | The patterns to add. ~~List[Dict[str, Union[str, List[dict]]]]~~ |
 
 
-## EntityRuler.remove {#remove tag="method"}
+## EntityRuler.remove {#remove tag="method" new="3.2.1"}
 
 Remove a pattern by its ID from the entity ruler. A `ValueError` is raised if the ID does not exist.
 
