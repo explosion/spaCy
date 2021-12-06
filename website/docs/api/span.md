@@ -518,7 +518,7 @@ sent = doc[sent.start : max(sent.end, span.end)]
 | ----------- | ------------------------------------------------------- |
 | **RETURNS** | The sentence span that this span is a part of. ~~Span~~ |
 
-## Span.sents {#sents tag="property" model="sentences"}
+## Span.sents {#sents tag="property" model="sentences" new="3.2.1"}
 
 Returns a generator over the sentences the span belongs to. This property is only available
 when [sentence boundaries](/usage/linguistic-features#sbd) have been set on the
