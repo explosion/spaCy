@@ -528,6 +528,7 @@ def test_textcat_evaluation_missing():
     assert scores["cats_micro_p"] == 4 / 5
     assert scores["cats_micro_r"] == 4 / 4
 
+
 def test_textcat_threshold():
     # Ensure the scorer can be called with a different threshold
     nlp = English()
