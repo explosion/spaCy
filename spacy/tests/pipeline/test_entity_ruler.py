@@ -373,3 +373,185 @@ def test_entity_ruler_serialize_dir(nlp, patterns):
         ruler.from_disk(d / "test_ruler")  # read from an existing directory
         with pytest.raises(ValueError):
             ruler.from_disk(d / "non_existing_dir")  # read from a bad directory
+
+
+def test_entity_ruler_remove_basic(nlp):
+    ruler = EntityRuler(nlp)
+    patterns = [
+        {"label": "PERSON", "pattern": "Duygu", "id": "duygu"},
+        {"label": "ORG", "pattern": "ACME", "id": "acme"},
+        {"label": "ORG", "pattern": "ACM"},
+    ]
+    ruler.add_patterns(patterns)
+    doc = ruler(nlp.make_doc("Duygu went to school"))
+    assert len(ruler.patterns) == 3
+    assert len(doc.ents) == 1
+    assert doc.ents[0].label_ == "PERSON"
+    assert doc.ents[0].text == "Duygu"
+    assert "PERSON||duygu" in ruler.phrase_matcher
+    ruler.remove("duygu")
+    doc = ruler(nlp.make_doc("Duygu went to school"))
+    assert len(doc.ents) == 0
+    assert "PERSON||duygu" not in ruler.phrase_matcher
+    assert len(ruler.patterns) == 2
+
+
+def test_entity_ruler_remove_same_id_multiple_patterns(nlp):
+    ruler = EntityRuler(nlp)
+    patterns = [
+        {"label": "PERSON", "pattern": "Duygu", "id": "duygu"},
+        {"label": "ORG", "pattern": "DuyguCorp", "id": "duygu"},
+        {"label": "ORG", "pattern": "ACME", "id": "acme"},
+    ]
+    ruler.add_patterns(patterns)
+    doc = ruler(nlp.make_doc("Duygu founded DuyguCorp and ACME."))
+    assert len(ruler.patterns) == 3
+    assert "PERSON||duygu" in ruler.phrase_matcher
+    assert "ORG||duygu" in ruler.phrase_matcher
+    assert len(doc.ents) == 3
+    ruler.remove("duygu")
+    doc = ruler(nlp.make_doc("Duygu founded DuyguCorp and ACME."))
+    assert len(ruler.patterns) == 1
+    assert "PERSON||duygu" not in ruler.phrase_matcher
+    assert "ORG||duygu" not in ruler.phrase_matcher
+    assert len(doc.ents) == 1
+
+
+def test_entity_ruler_remove_nonexisting_pattern(nlp):
+    ruler = EntityRuler(nlp)
+    patterns = [
+        {"label": "PERSON", "pattern": "Duygu", "id": "duygu"},
+        {"label": "ORG", "pattern": "ACME", "id": "acme"},
+        {"label": "ORG", "pattern": "ACM"},
+    ]
+    ruler.add_patterns(patterns)
+    assert len(ruler.patterns) == 3
+    with pytest.raises(ValueError):
+        ruler.remove("nepattern")
+        assert len(ruler.patterns) == 3
+
+
+def test_entity_ruler_remove_several_patterns(nlp):
+    ruler = EntityRuler(nlp)
+    patterns = [
+        {"label": "PERSON", "pattern": "Duygu", "id": "duygu"},
+        {"label": "ORG", "pattern": "ACME", "id": "acme"},
+        {"label": "ORG", "pattern": "ACM"},
+    ]
+    ruler.add_patterns(patterns)
+    doc = ruler(nlp.make_doc("Duygu founded her company ACME."))
+    assert len(ruler.patterns) == 3
+    assert len(doc.ents) == 2
+    assert doc.ents[0].label_ == "PERSON"
+    assert doc.ents[0].text == "Duygu"
+    assert doc.ents[1].label_ == "ORG"
+    assert doc.ents[1].text == "ACME"
+    ruler.remove("duygu")
+    doc = ruler(nlp.make_doc("Duygu founded her company ACME"))
+    assert len(ruler.patterns) == 2
+    assert len(doc.ents) == 1
+    assert doc.ents[0].label_ == "ORG"
+    assert doc.ents[0].text == "ACME"
+    ruler.remove("acme")
+    doc = ruler(nlp.make_doc("Duygu founded her company ACME"))
+    assert len(ruler.patterns) == 1
+    assert len(doc.ents) == 0
+
+
+def test_entity_ruler_remove_patterns_in_a_row(nlp):
+    ruler = EntityRuler(nlp)
+    patterns = [
+        {"label": "PERSON", "pattern": "Duygu", "id": "duygu"},
+        {"label": "ORG", "pattern": "ACME", "id": "acme"},
+        {"label": "DATE", "pattern": "her birthday", "id": "bday"},
+        {"label": "ORG", "pattern": "ACM"},
+    ]
+    ruler.add_patterns(patterns)
+    doc = ruler(nlp.make_doc("Duygu founded her company ACME on her birthday"))
+    assert len(doc.ents) == 3
+    assert doc.ents[0].label_ == "PERSON"
+    assert doc.ents[0].text == "Duygu"
+    assert doc.ents[1].label_ == "ORG"
+    assert doc.ents[1].text == "ACME"
+    assert doc.ents[2].label_ == "DATE"
+    assert doc.ents[2].text == "her birthday"
+    ruler.remove("duygu")
+    ruler.remove("acme")
+    ruler.remove("bday")
+    doc = ruler(nlp.make_doc("Duygu went to school"))
+    assert len(doc.ents) == 0
+
+
+def test_entity_ruler_remove_all_patterns(nlp):
+    ruler = EntityRuler(nlp)
+    patterns = [
+        {"label": "PERSON", "pattern": "Duygu", "id": "duygu"},
+        {"label": "ORG", "pattern": "ACME", "id": "acme"},
+        {"label": "DATE", "pattern": "her birthday", "id": "bday"},
+    ]
+    ruler.add_patterns(patterns)
+    assert len(ruler.patterns) == 3
+    ruler.remove("duygu")
+    assert len(ruler.patterns) == 2
+    ruler.remove("acme")
+    assert len(ruler.patterns) == 1
+    ruler.remove("bday")
+    assert len(ruler.patterns) == 0
+    with pytest.warns(UserWarning):
+        doc = ruler(nlp.make_doc("Duygu founded her company ACME on her birthday"))
+        assert len(doc.ents) == 0
+
+
+def test_entity_ruler_remove_and_add(nlp):
+    ruler = EntityRuler(nlp)
+    patterns = [{"label": "DATE", "pattern": "last time"}]
+    ruler.add_patterns(patterns)
+    doc = ruler(
+        nlp.make_doc("I saw him last time we met, this time he brought some flowers")
+    )
+    assert len(ruler.patterns) == 1
+    assert len(doc.ents) == 1
+    assert doc.ents[0].label_ == "DATE"
+    assert doc.ents[0].text == "last time"
+    patterns1 = [{"label": "DATE", "pattern": "this time", "id": "ttime"}]
+    ruler.add_patterns(patterns1)
+    doc = ruler(
+        nlp.make_doc("I saw him last time we met, this time he brought some flowers")
+    )
+    assert len(ruler.patterns) == 2
+    assert len(doc.ents) == 2
+    assert doc.ents[0].label_ == "DATE"
+    assert doc.ents[0].text == "last time"
+    assert doc.ents[1].label_ == "DATE"
+    assert doc.ents[1].text == "this time"
+    ruler.remove("ttime")
+    doc = ruler(
+        nlp.make_doc("I saw him last time we met, this time he brought some flowers")
+    )
+    assert len(ruler.patterns) == 1
+    assert len(doc.ents) == 1
+    assert doc.ents[0].label_ == "DATE"
+    assert doc.ents[0].text == "last time"
+    ruler.add_patterns(patterns1)
+    doc = ruler(
+        nlp.make_doc("I saw him last time we met, this time he brought some flowers")
+    )
+    assert len(ruler.patterns) == 2
+    assert len(doc.ents) == 2
+    patterns2 = [{"label": "DATE", "pattern": "another time", "id": "ttime"}]
+    ruler.add_patterns(patterns2)
+    doc = ruler(
+        nlp.make_doc(
+            "I saw him last time we met, this time he brought some flowers, another time some chocolate."
+        )
+    )
+    assert len(ruler.patterns) == 3
+    assert len(doc.ents) == 3
+    ruler.remove("ttime")
+    doc = ruler(
+        nlp.make_doc(
+            "I saw him last time we met, this time he brought some flowers, another time some chocolate."
+        )
+    )
+    assert len(ruler.patterns) == 1
+    assert len(doc.ents) == 1
