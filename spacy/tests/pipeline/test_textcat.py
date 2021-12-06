@@ -519,7 +519,7 @@ def test_textcat_evaluation_missing():
     assert scores["cats_f_per_type"]["winter"]["p"] == 1 / 2
     assert scores["cats_f_per_type"]["winter"]["r"] == 1 / 1
     assert scores["cats_f_per_type"]["summer"]["p"] == 0
-    assert scores["cats_f_per_type"]["summer"]["r"] == 0 / 1
+    assert scores["cats_f_per_type"]["summer"]["r"] == 0
     assert scores["cats_f_per_type"]["spring"]["p"] == 1 / 1
     assert scores["cats_f_per_type"]["spring"]["r"] == 1 / 1
     assert scores["cats_f_per_type"]["autumn"]["p"] == 2 / 2
