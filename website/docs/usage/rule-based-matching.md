@@ -948,7 +948,7 @@ for match_id, start, end in matcher(doc):
 
 The examples here use [`nlp.make_doc`](/api/language#make_doc) to create `Doc`
 object patterns as efficiently as possible and without running any of the other
-pipeline components. If the token attribute you want to match on are set by a
+pipeline components. If the token attribute you want to match on is set by a
 pipeline component, **make sure that the pipeline component runs** when you
 create the pattern. For example, to match on `POS` or `LEMMA`, the pattern `Doc`
 objects need to have part-of-speech tags set by the `tagger` or `morphologizer`.
@@ -959,9 +959,9 @@ disable components selectively.
 </Infobox>
 
 Another possible use case is matching number tokens like IP addresses based on
-their shape. This means that you won't have to worry about how those string will
-be tokenized and you'll be able to find tokens and combinations of tokens based
-on a few examples. Here, we're matching on the shapes `ddd.d.d.d` and
+their shape. This means that you won't have to worry about how those strings
+will be tokenized and you'll be able to find tokens and combinations of tokens
+based on a few examples. Here, we're matching on the shapes `ddd.d.d.d` and
 `ddd.ddd.d.d`:
 
 ```python
