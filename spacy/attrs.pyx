@@ -1,4 +1,4 @@
-from .tokens.token cimport Token
+from .tokens.token import Token
 from .errors import Errors
 
 IDS = {
@@ -66,7 +66,6 @@ IDS = {
     "FLAG61": FLAG61,
     "FLAG62": FLAG62,
     "FLAG63": FLAG63,
-
     "ID": ID,
     "ORTH": ORTH,
     "LOWER": LOWER,
@@ -74,7 +73,6 @@ IDS = {
     "SHAPE": SHAPE,
     "PREFIX": PREFIX,
     "SUFFIX": SUFFIX,
-
     "LENGTH": LENGTH,
     "LEMMA": LEMMA,
     "POS": POS,
@@ -89,7 +87,7 @@ IDS = {
     "SPACY": SPACY,
     "LANG": LANG,
     "MORPH": MORPH,
-    "IDX": IDX
+    "IDX": IDX,
 }
 
 
@@ -111,28 +109,66 @@ def intify_attrs(stringy_attrs, strings_map=None, _do_deprecated=False):
     """
     inty_attrs = {}
     if _do_deprecated:
-        if 'F' in stringy_attrs:
+        if "F" in stringy_attrs:
             stringy_attrs["ORTH"] = stringy_attrs.pop("F")
-        if 'L' in stringy_attrs:
+        if "L" in stringy_attrs:
             stringy_attrs["LEMMA"] = stringy_attrs.pop("L")
-        if 'pos' in stringy_attrs:
+        if "pos" in stringy_attrs:
             stringy_attrs["TAG"] = stringy_attrs.pop("pos")
-        if 'morph' in stringy_attrs:
-            morphs = stringy_attrs.pop('morph')
-        if 'number' in stringy_attrs:
-            stringy_attrs.pop('number')
-        if 'tenspect' in stringy_attrs:
-            stringy_attrs.pop('tenspect')
+        if "morph" in stringy_attrs:
+            morphs = stringy_attrs.pop("morph")
+        if "number" in stringy_attrs:
+            stringy_attrs.pop("number")
+        if "tenspect" in stringy_attrs:
+            stringy_attrs.pop("tenspect")
         morph_keys = [
-            'PunctType', 'PunctSide', 'Other', 'Degree', 'AdvType', 'Number',
-            'VerbForm', 'PronType', 'Aspect', 'Tense', 'PartType', 'Poss',
-            'Hyph', 'ConjType', 'NumType', 'Foreign', 'VerbType', 'NounType',
-            'Gender', 'Mood', 'Negative', 'Tense', 'Voice', 'Abbr',
-            'Derivation', 'Echo', 'Foreign', 'NameType', 'NounType', 'NumForm',
-            'NumValue', 'PartType', 'Polite', 'StyleVariant',
-            'PronType', 'AdjType', 'Person', 'Variant', 'AdpType',
-            'Reflex', 'Negative', 'Mood', 'Aspect', 'Case',
-            'Polarity', 'PrepCase', 'Animacy' # U20
+            "PunctType",
+            "PunctSide",
+            "Other",
+            "Degree",
+            "AdvType",
+            "Number",
+            "VerbForm",
+            "PronType",
+            "Aspect",
+            "Tense",
+            "PartType",
+            "Poss",
+            "Hyph",
+            "ConjType",
+            "NumType",
+            "Foreign",
+            "VerbType",
+            "NounType",
+            "Gender",
+            "Mood",
+            "Negative",
+            "Tense",
+            "Voice",
+            "Abbr",
+            "Derivation",
+            "Echo",
+            "Foreign",
+            "NameType",
+            "NounType",
+            "NumForm",
+            "NumValue",
+            "PartType",
+            "Polite",
+            "StyleVariant",
+            "PronType",
+            "AdjType",
+            "Person",
+            "Variant",
+            "AdpType",
+            "Reflex",
+            "Negative",
+            "Mood",
+            "Aspect",
+            "Case",
+            "Polarity",
+            "PrepCase",
+            "Animacy",  # U20
         ]
         for key in morph_keys:
             if key in stringy_attrs:
@@ -150,7 +186,7 @@ def intify_attrs(stringy_attrs, strings_map=None, _do_deprecated=False):
                 else:
                     raise ValueError(Errors.E1025.format(value=value))
             if strings_map is not None and isinstance(value, str):
-                if hasattr(strings_map, 'add'):
+                if hasattr(strings_map, "add"):
                     value = strings_map.add(value)
                 else:
                     value = strings_map[value]
