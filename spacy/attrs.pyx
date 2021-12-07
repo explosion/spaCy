@@ -1,3 +1,5 @@
+from .tokens.token cimport Token
+from .errors import Errors
 
 IDS = {
     "": NULL_ATTR,
@@ -142,6 +144,11 @@ def intify_attrs(stringy_attrs, strings_map=None, _do_deprecated=False):
     for name, value in stringy_attrs.items():
         int_key = intify_attr(name)
         if int_key is not None:
+            if name == "ENT_IOB":
+                if value in Token.iob_strings():
+                    value = Token.iob_strings().index(value)
+                else:
+                    raise ValueError(Errors.E1025.format(value=value))
             if strings_map is not None and isinstance(value, str):
                 if hasattr(strings_map, 'add'):
                     value = strings_map.add(value)
@@ -158,11 +165,8 @@ def intify_attr(name):
     stringy_attr (string): Attribute string name. Can also be int (will then be left unchanged)
     RETURNS (int): int representation of the attribute, or None if it couldn't be converted.
     """
-    iob_strs = ("", "I", "O", "B")
     if isinstance(name, int):
         return name
-    elif name in "IOB":
-        return iob_strs.index(name)
     elif name in IDS:
         return IDS[name]
     elif name.upper() in IDS:
