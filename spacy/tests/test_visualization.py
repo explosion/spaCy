@@ -1,4 +1,5 @@
 import pytest
+import deplacy
 from spacy.visualization import Visualizer
 from spacy.tokens import Span, Doc
 
@@ -113,6 +114,8 @@ def test_dependency_tree_non_projective(en_vocab):
         deps=["dep"] * 9,
     )
     dep_tree = Visualizer.render_dependency_tree(doc[0 : len(doc)], True)
+    for line in dep_tree:
+        print(line)
     assert dep_tree == [
         "<╗    ",
         "═╩═══╗",
@@ -159,3 +162,45 @@ def test_dependency_tree_input_not_span(en_vocab):
 
     with pytest.raises(AssertionError):
         Visualizer.render_dependency_tree(doc[1:3], True)
+
+def test_dependency_tree_highly_nonprojective(en_vocab):
+    """Test a highly non-projective tree (colloquial Polish)."""
+    doc = Doc(
+        en_vocab,
+        words=[
+            "Owczarki",
+            "przecież",
+            "niemieckie",
+            "zawsze",
+            "wierne",
+            "są",
+            "bardzo",
+            ".",
+        ],
+        heads=[5, 5, 0, 5, 5, None, 4, 5],
+        deps=["dep"] * 8,
+    )
+    dep_tree = Visualizer.render_dependency_tree(doc[0 : len(doc)], True)
+    assert dep_tree == [
+        "═╗<╗",
+        " ║<╣",
+        "<╝ ║",
+        "<══╣",
+        "═╗<╣",
+        "═══╣",
+        "<╝ ║",
+        "<══╝",
+    ]
+    dep_tree = Visualizer.render_dependency_tree(doc[0 : len(doc)], False)
+    assert dep_tree == [
+        "╔>╔═",
+        "╠>║ ",
+        "║ ╚>",
+        "╠══>",
+        "╠>╔═",
+        "╠═══",
+        "║ ╚>",
+        "╚══>",
+    ]
+
+
