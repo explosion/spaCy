@@ -1,20 +1,17 @@
 import pytest
-from thinc.api import Config, ConfigValidationError
-import spacy
-from spacy.lang.en import English
-from spacy.lang.de import German
-from spacy.language import Language, DEFAULT_CONFIG, DEFAULT_CONFIG_PRETRAIN_PATH
-from spacy.util import (
-    registry,
-    load_model_from_config,
-    load_config,
-    load_config_from_str,
-)
-from spacy.ml.models import build_Tok2Vec_model, build_tb_parser_model
-from spacy.ml.models import MultiHashEmbed, MaxoutWindowEncoder
-from spacy.schemas import ConfigSchema, ConfigSchemaPretrain
 from catalogue import RegistryError
+from thinc.api import Config, ConfigValidationError
 
+import spacy
+from spacy.lang.de import German
+from spacy.lang.en import English
+from spacy.language import DEFAULT_CONFIG, DEFAULT_CONFIG_PRETRAIN_PATH
+from spacy.language import Language
+from spacy.ml.models import MaxoutWindowEncoder, MultiHashEmbed
+from spacy.ml.models import build_tb_parser_model, build_Tok2Vec_model
+from spacy.schemas import ConfigSchema, ConfigSchemaPretrain
+from spacy.util import load_config, load_config_from_str
+from spacy.util import load_model_from_config, registry
 
 from ..util import make_tempdir
 
@@ -185,6 +182,25 @@ def my_parser():
         use_upper=True,
     )
     return parser
+
+
+@pytest.mark.issue(8190)
+def test_issue8190():
+    """Test that config overrides are not lost after load is complete."""
+    source_cfg = {
+        "nlp": {
+            "lang": "en",
+        },
+        "custom": {"key": "value"},
+    }
+    source_nlp = English.from_config(source_cfg)
+    with make_tempdir() as dir_path:
+        # We need to create a loadable source pipeline
+        source_path = dir_path / "test_model"
+        source_nlp.to_disk(source_path)
+        nlp = spacy.load(source_path, config={"custom": {"key": "updated_value"}})
+
+        assert nlp.config["custom"]["key"] == "updated_value"
 
 
 def test_create_nlp_from_config():

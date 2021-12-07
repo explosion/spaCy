@@ -1,13 +1,16 @@
+import random
+
 import pytest
 from numpy.testing import assert_equal
-from spacy.attrs import ENT_IOB
 
+from spacy.attrs import ENT_IOB
 from spacy import util, registry
 from spacy.lang.en import English
+from spacy.lang.it import Italian
 from spacy.language import Language
 from spacy.lookups import Lookups
 from spacy.pipeline._parser_internals.ner import BiluoPushDown
-from spacy.training import Example
+from spacy.training import Example, iob_to_biluo
 from spacy.tokens import Doc, Span
 from spacy.vocab import Vocab
 import logging
@@ -56,6 +59,152 @@ def entity_types(entity_annots):
 def tsys(vocab, entity_types):
     actions = BiluoPushDown.get_actions(entity_types=entity_types)
     return BiluoPushDown(vocab.strings, actions)
+
+
+@pytest.mark.parametrize("label", ["U-JOB-NAME"])
+@pytest.mark.issue(1967)
+def test_issue1967(label):
+    nlp = Language()
+    config = {}
+    ner = nlp.create_pipe("ner", config=config)
+    example = Example.from_dict(
+        Doc(ner.vocab, words=["word"]),
+        {
+            "ids": [0],
+            "words": ["word"],
+            "tags": ["tag"],
+            "heads": [0],
+            "deps": ["dep"],
+            "entities": [label],
+        },
+    )
+    assert "JOB-NAME" in ner.moves.get_actions(examples=[example])[1]
+
+
+@pytest.mark.issue(2179)
+def test_issue2179():
+    """Test that spurious 'extra_labels' aren't created when initializing NER."""
+    nlp = Italian()
+    ner = nlp.add_pipe("ner")
+    ner.add_label("CITIZENSHIP")
+    nlp.initialize()
+    nlp2 = Italian()
+    nlp2.add_pipe("ner")
+    assert len(nlp2.get_pipe("ner").labels) == 0
+    model = nlp2.get_pipe("ner").model
+    model.attrs["resize_output"](model, nlp.get_pipe("ner").moves.n_moves)
+    nlp2.from_bytes(nlp.to_bytes())
+    assert "extra_labels" not in nlp2.get_pipe("ner").cfg
+    assert nlp2.get_pipe("ner").labels == ("CITIZENSHIP",)
+
+
+@pytest.mark.issue(2385)
+def test_issue2385():
+    """Test that IOB tags are correctly converted to BILUO tags."""
+    # fix bug in labels with a 'b' character
+    tags1 = ("B-BRAWLER", "I-BRAWLER", "I-BRAWLER")
+    assert iob_to_biluo(tags1) == ["B-BRAWLER", "I-BRAWLER", "L-BRAWLER"]
+    # maintain support for iob1 format
+    tags2 = ("I-ORG", "I-ORG", "B-ORG")
+    assert iob_to_biluo(tags2) == ["B-ORG", "L-ORG", "U-ORG"]
+    # maintain support for iob2 format
+    tags3 = ("B-PERSON", "I-PERSON", "B-PERSON")
+    assert iob_to_biluo(tags3) == ["B-PERSON", "L-PERSON", "U-PERSON"]
+
+
+@pytest.mark.issue(2800)
+def test_issue2800():
+    """Test issue that arises when too many labels are added to NER model.
+    Used to cause segfault.
+    """
+    nlp = English()
+    train_data = []
+    train_data.extend(
+        [Example.from_dict(nlp.make_doc("One sentence"), {"entities": []})]
+    )
+    entity_types = [str(i) for i in range(1000)]
+    ner = nlp.add_pipe("ner")
+    for entity_type in list(entity_types):
+        ner.add_label(entity_type)
+    optimizer = nlp.initialize()
+    for i in range(20):
+        losses = {}
+        random.shuffle(train_data)
+        for example in train_data:
+            nlp.update([example], sgd=optimizer, losses=losses, drop=0.5)
+
+
+@pytest.mark.issue(3209)
+def test_issue3209():
+    """Test issue that occurred in spaCy nightly where NER labels were being
+    mapped to classes incorrectly after loading the model, when the labels
+    were added using ner.add_label().
+    """
+    nlp = English()
+    ner = nlp.add_pipe("ner")
+    ner.add_label("ANIMAL")
+    nlp.initialize()
+    move_names = ["O", "B-ANIMAL", "I-ANIMAL", "L-ANIMAL", "U-ANIMAL"]
+    assert ner.move_names == move_names
+    nlp2 = English()
+    ner2 = nlp2.add_pipe("ner")
+    model = ner2.model
+    model.attrs["resize_output"](model, ner.moves.n_moves)
+    nlp2.from_bytes(nlp.to_bytes())
+    assert ner2.move_names == move_names
+
+
+@pytest.mark.issue(4267)
+def test_issue4267():
+    """Test that running an entity_ruler after ner gives consistent results"""
+    nlp = English()
+    ner = nlp.add_pipe("ner")
+    ner.add_label("PEOPLE")
+    nlp.initialize()
+    assert "ner" in nlp.pipe_names
+    # assert that we have correct IOB annotations
+    doc1 = nlp("hi")
+    assert doc1.has_annotation("ENT_IOB")
+    for token in doc1:
+        assert token.ent_iob == 2
+    # add entity ruler and run again
+    patterns = [{"label": "SOFTWARE", "pattern": "spacy"}]
+    ruler = nlp.add_pipe("entity_ruler")
+    ruler.add_patterns(patterns)
+    assert "entity_ruler" in nlp.pipe_names
+    assert "ner" in nlp.pipe_names
+    # assert that we still have correct IOB annotations
+    doc2 = nlp("hi")
+    assert doc2.has_annotation("ENT_IOB")
+    for token in doc2:
+        assert token.ent_iob == 2
+
+
+@pytest.mark.issue(4313)
+def test_issue4313():
+    """This should not crash or exit with some strange error code"""
+    beam_width = 16
+    beam_density = 0.0001
+    nlp = English()
+    config = {
+        "beam_width": beam_width,
+        "beam_density": beam_density,
+    }
+    ner = nlp.add_pipe("beam_ner", config=config)
+    ner.add_label("SOME_LABEL")
+    nlp.initialize()
+    # add a new label to the doc
+    doc = nlp("What do you think about Apple ?")
+    assert len(ner.labels) == 1
+    assert "SOME_LABEL" in ner.labels
+    apple_ent = Span(doc, 5, 6, label="MY_ORG")
+    doc.ents = list(doc.ents) + [apple_ent]
+
+    # ensure the beam_parse still works with the new label
+    docs = [doc]
+    ner.beam_parse(docs, drop=0.0, beam_width=beam_width, beam_density=beam_density)
+    assert len(ner.labels) == 2
+    assert "MY_ORG" in ner.labels
 
 
 def test_get_oracle_moves(tsys, doc, entity_annots):
