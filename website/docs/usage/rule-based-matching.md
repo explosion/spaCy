@@ -1432,7 +1432,7 @@ of `"phrase_matcher_attr": "POS"` for the entity ruler.
 Running the full language pipeline across every pattern in a large list scales
 linearly and can therefore take a long time on large amounts of phrase patterns.
 As of spaCy v2.2.4 the `add_patterns` function has been refactored to use
-nlp.pipe on all phrase patterns resulting in about a 10x-20x speed up with
+`nlp.pipe` on all phrase patterns resulting in about a 10x-20x speed up with
 5,000-100,000 phrase patterns respectively. Even with this speedup (but
 especially if you're using an older version) the `add_patterns` function can
 still take a long time. An easy workaround to make this function run faster is
