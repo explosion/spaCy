@@ -1,6 +1,5 @@
 import pytest
-from spacy.attrs import intify_attrs, ORTH, NORM, LEMMA, IS_ALPHA, ENT_IOB
-from spacy.lang.lex_attrs import is_punct, is_ascii, is_currency, like_url, word_shape
+from spacy.attrs import intify_attrs, ENT_IOB
 
 from spacy.attrs import IS_ALPHA, LEMMA, NORM, ORTH, intify_attrs
 from spacy.lang.en.stop_words import STOP_WORDS
