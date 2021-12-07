@@ -1,4 +1,4 @@
-from .tokens.token import Token
+from .tokens import Token
 from .errors import Errors
 
 IDS = {
