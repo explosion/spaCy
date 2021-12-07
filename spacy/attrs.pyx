@@ -1,5 +1,6 @@
-from .tokens import Token
 from .errors import Errors
+
+iob_strings = ("", "I", "O", "B")
 
 IDS = {
     "": NULL_ATTR,
@@ -181,8 +182,8 @@ def intify_attrs(stringy_attrs, strings_map=None, _do_deprecated=False):
         int_key = intify_attr(name)
         if int_key is not None:
             if name == "ENT_IOB":
-                if value in Token.iob_strings():
-                    value = Token.iob_strings().index(value)
+                if value in iob_strings:
+                    value = iob_strings.index(value)
                 else:
                     raise ValueError(Errors.E1025.format(value=value))
             if strings_map is not None and isinstance(value, str):
