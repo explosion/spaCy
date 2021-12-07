@@ -889,6 +889,7 @@ class Errors(metaclass=ErrorsWithCodes):
              "Non-UD tags should use the `tag` property.")
     E1022 = ("Words must be of type str or int, but input is of type '{wtype}'")
     E1023 = ("Couldn't read EntityRuler from the {path}. This file doesn't exist.")
+    E1025 = ("Cannot intify the value '{value}' as an IOB string. Only possible values are I, O, B and the empty string.")
 
 
 # Deprecated model shortcuts, only used in errors and warnings
