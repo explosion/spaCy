@@ -2778,7 +2778,7 @@
             "id": "Healthsea",
             "title": "Healthsea",
             "slogan": "Healthsea: an end-to-end spaCy pipeline for exploring health supplement effects",
-            "description": "This spaCy project trains a NER model and a custom Text Classification model with Clause Segmentation and Blinding capabilities to analyze supplement reviews after their potential effects on health.",
+            "description": "This spaCy project trains an NER model and a custom Text Classification model with Clause Segmentation and Blinding capabilities to analyze supplement reviews and their potential effects on health.",
             "github": "explosion/healthsea",
             "category": ["pipeline", "research"],
             "code_example": [
