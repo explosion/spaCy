@@ -29,6 +29,38 @@ class AttributeFormat:
         self.permitted_values = permitted_values
         self.value_dependent_fg_colors = value_dependent_fg_colors
         self.value_dependent_bg_colors = value_dependent_bg_colors
+        self.printer = wasabi.Printer(no_print=True)
+
+    def render(
+        self,
+        token: Token,
+        *,
+        ignore_colors: bool = False,
+    ) -> str:
+        obj = token
+        parts = self.attribute.split(".")
+        for part in parts[:-1]:
+            obj = getattr(obj, part)
+        value = str(getattr(obj, parts[-1]))
+        if self.permitted_values is not None and value not in (
+            str(v) for v in self.permitted_values
+        ):
+            return ""
+        if self.max_width is not None:
+            value = value[: self.max_width]
+        fg_color = (
+            self.value_dependent_fg_colors.get(value, None)
+            if not ignore_colors and self.value_dependent_fg_colors is not None
+            else None
+        )
+        bg_color = (
+            self.value_dependent_bg_colors.get(value, None)
+            if not ignore_colors and self.value_dependent_bg_colors is not None
+            else None
+        )
+        if fg_color is not None or bg_color is not None:
+            value = self.printer.text(value, color=fg_color, bg_color=bg_color)
+        return value
 
 
 SPACE = 0
@@ -67,9 +99,6 @@ ROOT_LEFT_CHARS = {
 
 
 class Visualizer:
-    def __init__(self):
-        self.printer = wasabi.Printer(no_print=True)
-
     @staticmethod
     def render_dependency_tree(sent: Span, root_right: bool) -> list[str]:
         """
@@ -296,39 +325,6 @@ class Visualizer:
                 for vertical_position in range(sent.end - sent.start)
             ]
 
-    def get_entity(
-        self,
-        token: Token,
-        entity_name: str,
-        *,
-        permitted_values: list[str] = None,
-        value_dependent_fg_colors: dict[str : Union[str, int]] = None,
-        value_dependent_bg_colors: dict[str : Union[str, int]] = None,
-        truncate_at_width: int = None,
-    ) -> str:
-        obj = token
-        parts = entity_name.split(".")
-        for part in parts[:-1]:
-            obj = getattr(obj, part)
-        value = str(getattr(obj, parts[-1]))
-        if permitted_values is not None and value not in (str(v) for v in permitted_values):
-            return ""
-        if truncate_at_width is not None:
-            value = value[:truncate_at_width]
-        fg_color = (
-            value_dependent_fg_colors.get(value, None)
-            if value_dependent_fg_colors is not None
-            else None
-        )
-        bg_color = (
-            value_dependent_bg_colors.get(value, None)
-            if value_dependent_bg_colors is not None
-            else None
-        )
-        if fg_color is not None or bg_color is not None:
-            value = self.printer.text(value, color=fg_color, bg_color=bg_color)
-        return value
-
     def render_table(
         self, doc: Doc, columns: list[AttributeFormat], spacing: int = 3
     ) -> str:
@@ -347,12 +343,7 @@ class Visualizer:
                     width = len(tree_right[0])
                 else:
                     width = max(
-                        len(
-                            self.get_entity(
-                                token, column.attribute, permitted_values=column.permitted_values
-                            )
-                        )
-                        for token in sent
+                        len(column.render(token, ignore_colors=True)) for token in sent
                     )
                     if column.max_width is not None:
                         width = min(width, column.max_width)
@@ -364,14 +355,7 @@ class Visualizer:
                     if column.attribute == "tree_right"
                     else tree_left[token_index]
                     if column.attribute == "tree_left"
-                    else self.get_entity(
-                        token,
-                        column.attribute,
-                        permitted_values=column.permitted_values,
-                        value_dependent_fg_colors=column.value_dependent_fg_colors,
-                        value_dependent_bg_colors=column.value_dependent_bg_colors,
-                        truncate_at_width=widths[column_index],
-                    )
+                    else column.render(token)
                     for column_index, column in enumerate(columns)
                 ]
                 for token_index, token in enumerate(sent)
@@ -397,3 +381,13 @@ class Visualizer:
                 + linesep
             )
         return return_string
+
+    def render_text(self, doc: Doc, attributes: list[AttributeFormat]) -> str:
+        return_string = ""
+        for token in doc:
+            return_string += token.text_with_ws
+            for attribute in attributes:
+                if self.get_entity(
+                    token,
+                ):
+                    pass

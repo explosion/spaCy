@@ -207,7 +207,7 @@ def test_visualization_dependency_tree_highly_nonprojective(en_vocab):
     ]
 
 
-def test_visualization_get_entity_native_attribute_int(en_vocab):
+def test_visualization_render_native_attribute_int(en_vocab):
     doc = Doc(
         en_vocab,
         words=[
@@ -224,10 +224,10 @@ def test_visualization_get_entity_native_attribute_int(en_vocab):
         heads=[1, None, 3, 1, 1, 7, 7, 3, 1],
         deps=["dep"] * 9,
     )
-    assert Visualizer().get_entity(doc[2], "head.i") == "3"
+    assert AttributeFormat("head.i").render(doc[2]) == "3"
 
 
-def test_visualization_get_entity_native_attribute_str(en_vocab):
+def test_visualization_render_native_attribute_str(en_vocab):
     doc = Doc(
         en_vocab,
         words=[
@@ -245,10 +245,10 @@ def test_visualization_get_entity_native_attribute_str(en_vocab):
         deps=["dep"] * 9,
     )
 
-    assert Visualizer().get_entity(doc[2], "dep_") == "dep"
+    assert AttributeFormat("dep_").render(doc[2]) == "dep"
 
 
-def test_visualization_get_entity_colors(en_vocab):
+def test_visualization_render_colors(en_vocab):
     doc = Doc(
         en_vocab,
         words=[
@@ -267,19 +267,18 @@ def test_visualization_get_entity_colors(en_vocab):
     )
 
     assert (
-        Visualizer().get_entity(
-            doc[2],
+        AttributeFormat(
             "dep_",
             value_dependent_fg_colors={"dep": 2},
             value_dependent_bg_colors={"dep": 11},
-        )
+        ).render(doc[2])
         == "\x1b[38;5;2;48;5;11mdep\x1b[0m"
         if supports_ansi
         else "dep"
     )
 
 
-def test_visualization_get_entity_colors_only_fg(en_vocab):
+def test_visualization_render_colors_only_fg(en_vocab):
     doc = Doc(
         en_vocab,
         words=[
@@ -298,14 +297,17 @@ def test_visualization_get_entity_colors_only_fg(en_vocab):
     )
 
     assert (
-        Visualizer().get_entity(doc[2], "dep_", value_dependent_fg_colors={"dep": 2})
+        AttributeFormat(
+            "dep_",
+            value_dependent_fg_colors={"dep": 2},
+        ).render(doc[2])
         == "\x1b[38;5;2mdep\x1b[0m"
         if supports_ansi
         else "dep"
     )
 
 
-def test_visualization_get_entity_colors_only_bg(en_vocab):
+def test_visualization_render_entity_colors_only_bg(en_vocab):
     doc = Doc(
         en_vocab,
         words=[
@@ -324,14 +326,17 @@ def test_visualization_get_entity_colors_only_bg(en_vocab):
     )
 
     assert (
-        Visualizer().get_entity(doc[2], "dep_", value_dependent_bg_colors={"dep": 11})
+        AttributeFormat(
+            "dep_",
+            value_dependent_bg_colors={"dep": 11},
+        ).render(doc[2])
         == "\x1b[48;5;11mdep\x1b[0m"
         if supports_ansi
         else "dep"
     )
 
 
-def test_visualization_get_entity_native_attribute_missing(en_vocab):
+def test_visualization_render_native_attribute_missing(en_vocab):
     doc = Doc(
         en_vocab,
         words=[
@@ -349,10 +354,10 @@ def test_visualization_get_entity_native_attribute_missing(en_vocab):
         deps=["dep"] * 9,
     )
     with pytest.raises(AttributeError):
-        Visualizer().get_entity(doc[2], "depp")
+        AttributeFormat("depp").render(doc[2])
 
 
-def test_visualization_get_entity_custom_attribute_str(en_vocab):
+def test_visualization_render_custom_attribute_str(en_vocab):
     doc = Doc(
         en_vocab,
         words=[
@@ -370,10 +375,10 @@ def test_visualization_get_entity_custom_attribute_str(en_vocab):
         deps=["dep"] * 9,
     )
     Token.set_extension("test", default="tested", force=True)
-    assert Visualizer().get_entity(doc[2], "_.test") == "tested"
+    assert AttributeFormat("_.test").render(doc[2]) == "tested"
 
 
-def test_visualization_get_entity_nested_custom_attribute_str(en_vocab):
+def test_visualization_render_nested_custom_attribute_str(en_vocab):
     doc = Doc(
         en_vocab,
         words=[
@@ -396,10 +401,10 @@ def test_visualization_get_entity_nested_custom_attribute_str(en_vocab):
             self.inner_test = "tested"
 
     Token.set_extension("test", default=Test(), force=True)
-    assert Visualizer().get_entity(doc[2], "_.test.inner_test") == "tested"
+    assert AttributeFormat("_.test.inner_test").render(doc[2]) == "tested"
 
 
-def test_visualization_get_entity_custom_attribute_missing(en_vocab):
+def test_visualization_render_custom_attribute_missing(en_vocab):
     doc = Doc(
         en_vocab,
         words=[
@@ -417,10 +422,10 @@ def test_visualization_get_entity_custom_attribute_missing(en_vocab):
         deps=["dep"] * 9,
     )
     with pytest.raises(AttributeError):
-        Visualizer().get_entity(doc[2], "_.depp")
+        AttributeFormat("._depp").render(doc[2])
 
 
-def test_visualization_get_entity_permitted_values(en_vocab):
+def test_visualization_render_permitted_values(en_vocab):
     doc = Doc(
         en_vocab,
         words=[
@@ -437,8 +442,8 @@ def test_visualization_get_entity_permitted_values(en_vocab):
         heads=[1, None, 3, 1, 1, 7, 7, 3, 1],
         deps=["dep"] * 9,
     )
-    visualizer = Visualizer()
-    assert [visualizer.get_entity(token, "head.i", permitted_values=(3, 7)) for token in doc] == [
+    attribute_format = AttributeFormat("head.i", permitted_values=(3, 7))
+    assert [attribute_format.render(token) for token in doc] == [
         "",
         "",
         "3",
@@ -509,6 +514,7 @@ def test_visualization_minimal_render_table_permitted_values(
 ╚════>   punct      .               PUNCT   .     PunctType=peri
     """.strip()
     )
+
 
 def test_visualization_spacing(
     fully_featured_doc_one_sentence,
