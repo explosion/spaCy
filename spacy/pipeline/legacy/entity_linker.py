@@ -1,5 +1,5 @@
 # This file is present to provide a prior version of the EntityLinker component
-# for backward compatability. For details see #9669.
+# for backwards compatability. For details see #9669.
 
 from typing import Optional, Iterable, Callable, Dict, Union, List, Any
 from thinc.types import Floats2d
@@ -28,7 +28,7 @@ from ...scorer import Scorer
 BACKWARD_OVERWRITE = True
 
 def entity_linker_score(examples, **kwargs):
-    return Scorer.score_links(examples, negative_labels=[EntityLinker.NIL], **kwargs)
+    return Scorer.score_links(examples, negative_labels=[EntityLinker_v1.NIL], **kwargs)
 
 class EntityLinker_v1(TrainablePipe):
     """Pipeline component for named entity linking.
@@ -120,7 +120,7 @@ class EntityLinker_v1(TrainablePipe):
 
         DOCS: https://spacy.io/api/entitylinker#initialize
         """
-        validate_get_examples(get_examples, "EntityLinker.initialize")
+        validate_get_examples(get_examples, "EntityLinker_v1.initialize")
         if kb_loader is not None:
             self.set_kb(kb_loader)
         self.validate_kb()
@@ -162,7 +162,7 @@ class EntityLinker_v1(TrainablePipe):
         losses.setdefault(self.name, 0.0)
         if not examples:
             return losses
-        validate_examples(examples, "EntityLinker.update")
+        validate_examples(examples, "EntityLinker_v1.update")
         sentence_docs = []
         for eg in examples:
             sentences = [s for s in eg.reference.sents]
@@ -202,7 +202,7 @@ class EntityLinker_v1(TrainablePipe):
         return losses
 
     def get_loss(self, examples: Iterable[Example], sentence_encodings: Floats2d):
-        validate_examples(examples, "EntityLinker.get_loss")
+        validate_examples(examples, "EntityLinker_v1.get_loss")
         entity_encodings = []
         for eg in examples:
             kb_ids = eg.get_aligned("ENT_KB_ID", as_string=True)
@@ -393,7 +393,7 @@ class EntityLinker_v1(TrainablePipe):
 
     def from_disk(
         self, path: Union[str, Path], *, exclude: Iterable[str] = SimpleFrozenList()
-    ) -> "EntityLinker":
+    ) -> "EntityLinker_v1":
         """Load the pipe from disk. Modifies the object in place and returns it.
 
         path (str / Path): Path to a directory.
