@@ -420,6 +420,37 @@ def test_visualization_get_entity_custom_attribute_missing(en_vocab):
         Visualizer().get_entity(doc[2], "_.depp")
 
 
+def test_visualization_get_entity_permitted_values(en_vocab):
+    doc = Doc(
+        en_vocab,
+        words=[
+            "I",
+            "saw",
+            "a",
+            "horse",
+            "yesterday",
+            "that",
+            "was",
+            "injured",
+            ".",
+        ],
+        heads=[1, None, 3, 1, 1, 7, 7, 3, 1],
+        deps=["dep"] * 9,
+    )
+    visualizer = Visualizer()
+    assert [visualizer.get_entity(token, "head.i", permitted_values=(3, 7)) for token in doc] == [
+        "",
+        "",
+        "3",
+        "",
+        "",
+        "7",
+        "7",
+        "3",
+        "",
+    ]
+
+
 def test_visualization_minimal_render_table_one_sentence(
     fully_featured_doc_one_sentence,
 ):
@@ -446,6 +477,67 @@ def test_visualization_minimal_render_table_one_sentence(
 ╠══>╔═   prep       via       via       ADP     IN                                      
 ║   ╚>   pobj       London    london    PROPN   NNP   NounType=prop|Number=sing   GPE   
 ╚════>   punct      .         .         PUNCT   .     PunctType=peri
+    """.strip()
+    )
+
+
+def test_visualization_minimal_render_table_permitted_values(
+    fully_featured_doc_one_sentence,
+):
+    formats = [
+        AttributeFormat("tree_left"),
+        AttributeFormat("dep_"),
+        AttributeFormat("text"),
+        AttributeFormat("lemma_", permitted_values=("fly", "to")),
+        AttributeFormat("pos_"),
+        AttributeFormat("tag_"),
+        AttributeFormat("morph"),
+        AttributeFormat("ent_type_"),
+    ]
+    assert (
+        Visualizer().render_table(fully_featured_doc_one_sentence, formats).strip()
+        == """
+  ╔>╔═   poss       Sarah           PROPN   NNP   NounType=prop|Number=sing   PERSON
+  ║ ╚>   case       's              PART    POS   Poss=yes                          
+╔>╚═══   nsubj      sister          NOUN    NN    Number=sing                       
+╠═════   ROOT       flew      fly   VERB    VBD   Tense=past|VerbForm=fin           
+╠>╔═══   prep       to        to    ADP     IN                                      
+║ ║ ╔>   compound   Silicon         PROPN   NNP   NounType=prop|Number=sing   GPE   
+║ ╚>╚═   pobj       Valley          PROPN   NNP   NounType=prop|Number=sing   GPE   
+╠══>╔═   prep       via             ADP     IN                                      
+║   ╚>   pobj       London          PROPN   NNP   NounType=prop|Number=sing   GPE   
+╚════>   punct      .               PUNCT   .     PunctType=peri
+    """.strip()
+    )
+
+def test_visualization_spacing(
+    fully_featured_doc_one_sentence,
+):
+    formats = [
+        AttributeFormat("tree_left"),
+        AttributeFormat("dep_"),
+        AttributeFormat("text"),
+        AttributeFormat("lemma_"),
+        AttributeFormat("pos_"),
+        AttributeFormat("tag_"),
+        AttributeFormat("morph"),
+        AttributeFormat("ent_type_"),
+    ]
+    assert (
+        Visualizer()
+        .render_table(fully_featured_doc_one_sentence, formats, spacing=1)
+        .strip()
+        == """
+  ╔>╔═ poss     Sarah   sarah   PROPN NNP NounType=prop|Number=sing PERSON
+  ║ ╚> case     's      's      PART  POS Poss=yes                        
+╔>╚═══ nsubj    sister  sister  NOUN  NN  Number=sing                     
+╠═════ ROOT     flew    fly     VERB  VBD Tense=past|VerbForm=fin         
+╠>╔═══ prep     to      to      ADP   IN                                  
+║ ║ ╔> compound Silicon silicon PROPN NNP NounType=prop|Number=sing GPE   
+║ ╚>╚═ pobj     Valley  valley  PROPN NNP NounType=prop|Number=sing GPE   
+╠══>╔═ prep     via     via     ADP   IN                                  
+║   ╚> pobj     London  london  PROPN NNP NounType=prop|Number=sing GPE   
+╚════> punct    .       .       PUNCT .   PunctType=peri
     """.strip()
     )
 

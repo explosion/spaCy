@@ -16,6 +16,7 @@ class AttributeFormat:
         max_width: int = None,
         fg_color: Union[str, int] = None,
         bg_color: Union[str, int] = None,
+        permitted_values: tuple = None,
         value_dependent_fg_colors: dict[str, Union[str, int]] = None,
         value_dependent_bg_colors: dict[str, Union[str, int]] = None,
     ):
@@ -25,6 +26,7 @@ class AttributeFormat:
         self.max_width = max_width
         self.fg_color = fg_color
         self.bg_color = bg_color
+        self.permitted_values = permitted_values
         self.value_dependent_fg_colors = value_dependent_fg_colors
         self.value_dependent_bg_colors = value_dependent_bg_colors
 
@@ -65,7 +67,6 @@ ROOT_LEFT_CHARS = {
 
 
 class Visualizer:
-
     def __init__(self):
         self.printer = wasabi.Printer(no_print=True)
 
@@ -300,19 +301,30 @@ class Visualizer:
         token: Token,
         entity_name: str,
         *,
+        permitted_values: list[str] = None,
         value_dependent_fg_colors: dict[str : Union[str, int]] = None,
         value_dependent_bg_colors: dict[str : Union[str, int]] = None,
-        truncate_at_width: int = None
+        truncate_at_width: int = None,
     ) -> str:
         obj = token
         parts = entity_name.split(".")
         for part in parts[:-1]:
             obj = getattr(obj, part)
         value = str(getattr(obj, parts[-1]))
+        if permitted_values is not None and value not in (str(v) for v in permitted_values):
+            return ""
         if truncate_at_width is not None:
             value = value[:truncate_at_width]
-        fg_color = value_dependent_fg_colors.get(value, None) if value_dependent_fg_colors is not None else None
-        bg_color = value_dependent_bg_colors.get(value, None) if value_dependent_bg_colors is not None else None
+        fg_color = (
+            value_dependent_fg_colors.get(value, None)
+            if value_dependent_fg_colors is not None
+            else None
+        )
+        bg_color = (
+            value_dependent_bg_colors.get(value, None)
+            if value_dependent_bg_colors is not None
+            else None
+        )
         if fg_color is not None or bg_color is not None:
             value = self.printer.text(value, color=fg_color, bg_color=bg_color)
         return value
@@ -329,12 +341,19 @@ class Visualizer:
             widths = []
             for column in columns:
                 # get the values without any color codes
-                if column.attribute == 'tree_left':
+                if column.attribute == "tree_left":
                     width = len(tree_left[0])
-                elif column.attribute == 'tree_right':
+                elif column.attribute == "tree_right":
                     width = len(tree_right[0])
                 else:
-                    width = max(len(self.get_entity(token, column.attribute)) for token in sent)
+                    width = max(
+                        len(
+                            self.get_entity(
+                                token, column.attribute, permitted_values=column.permitted_values
+                            )
+                        )
+                        for token in sent
+                    )
                     if column.max_width is not None:
                         width = min(width, column.max_width)
                 width = max(width, len(column.name))
@@ -348,9 +367,10 @@ class Visualizer:
                     else self.get_entity(
                         token,
                         column.attribute,
+                        permitted_values=column.permitted_values,
                         value_dependent_fg_colors=column.value_dependent_fg_colors,
                         value_dependent_bg_colors=column.value_dependent_bg_colors,
-                        truncate_at_width=widths[column_index]
+                        truncate_at_width=widths[column_index],
                     )
                     for column_index, column in enumerate(columns)
                 ]
@@ -372,6 +392,7 @@ class Visualizer:
                     widths=widths,
                     fg_colors=fg_colors,
                     bg_colors=bg_colors,
+                    spacing=spacing,
                 )
                 + linesep
             )
