@@ -43,58 +43,6 @@ test_ner_apple = [
 ]
 
 
-@pytest.fixture
-def tagged_doc():
-    text = "Sarah's sister flew to Silicon Valley via London."
-    tags = ["NNP", "POS", "NN", "VBD", "IN", "NNP", "NNP", "IN", "NNP", "."]
-    pos = [
-        "PROPN",
-        "PART",
-        "NOUN",
-        "VERB",
-        "ADP",
-        "PROPN",
-        "PROPN",
-        "ADP",
-        "PROPN",
-        "PUNCT",
-    ]
-    morphs = [
-        "NounType=prop|Number=sing",
-        "Poss=yes",
-        "Number=sing",
-        "Tense=past|VerbForm=fin",
-        "",
-        "NounType=prop|Number=sing",
-        "NounType=prop|Number=sing",
-        "",
-        "NounType=prop|Number=sing",
-        "PunctType=peri",
-    ]
-    nlp = English()
-    doc = nlp(text)
-    for i in range(len(tags)):
-        doc[i].tag_ = tags[i]
-        doc[i].pos_ = pos[i]
-        doc[i].set_morph(morphs[i])
-        if i > 0:
-            doc[i].is_sent_start = False
-    return doc
-
-
-@pytest.fixture
-def sented_doc():
-    text = "One sentence. Two sentences. Three sentences."
-    nlp = English()
-    doc = nlp(text)
-    for i in range(len(doc)):
-        if i % 3 == 0:
-            doc[i].is_sent_start = True
-        else:
-            doc[i].is_sent_start = False
-    return doc
-
-
 def test_tokenization(sented_doc):
     scorer = Scorer()
     gold = {"sent_starts": [t.sent_start for t in sented_doc]}

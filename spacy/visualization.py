@@ -1,6 +1,33 @@
+from os import linesep, truncate
+from typing import Union
+import wasabi
 from spacy.tests.lang.ko.test_tokenizer import FULL_TAG_TESTS
-from spacy.tokens import Span
+from spacy.tokens import Span, Token, Doc
 from spacy.util import working_dir
+
+
+class AttributeFormat:
+    def __init__(
+        self,
+        attribute: str,
+        *,
+        name: str = "",
+        aligns: str = "l",
+        max_width: int = None,
+        fg_color: Union[str, int] = None,
+        bg_color: Union[str, int] = None,
+        value_dependent_fg_colors: dict[str, Union[str, int]] = None,
+        value_dependent_bg_colors: dict[str, Union[str, int]] = None,
+    ):
+        self.attribute = attribute
+        self.name = name
+        self.aligns = aligns
+        self.max_width = max_width
+        self.fg_color = fg_color
+        self.bg_color = bg_color
+        self.value_dependent_fg_colors = value_dependent_fg_colors
+        self.value_dependent_bg_colors = value_dependent_bg_colors
+
 
 SPACE = 0
 HALF_HORIZONTAL_LINE = 1  # the half is the half further away from the root
@@ -37,12 +64,11 @@ ROOT_LEFT_CHARS = {
 }
 
 
-class TableColumn:
-    def __init__(self, entity: str, width: int, overflow_strategy: str = "truncate"):
-        pass
-
-
 class Visualizer:
+
+    def __init__(self):
+        self.printer = wasabi.Printer(no_print=True)
+
     @staticmethod
     def render_dependency_tree(sent: Span, root_right: bool) -> list[str]:
         """
@@ -65,6 +91,17 @@ class Visualizer:
             else token.head.i - sent.start
             for token in sent
         ]
+        # Check there are no head references outside the sentence
+        assert (
+            len(
+                [
+                    head
+                    for head in heads
+                    if head is not None and (head < 0 or head > sent.end - sent.start)
+                ]
+            )
+            == 0
+        )
         children_lists = [[] for _ in range(sent.end - sent.start)]
         for child, head in enumerate(heads):
             if head is not None:
@@ -257,3 +294,85 @@ class Visualizer:
                 )[::-1]
                 for vertical_position in range(sent.end - sent.start)
             ]
+
+    def get_entity(
+        self,
+        token: Token,
+        entity_name: str,
+        *,
+        value_dependent_fg_colors: dict[str : Union[str, int]] = None,
+        value_dependent_bg_colors: dict[str : Union[str, int]] = None,
+        truncate_at_width: int = None
+    ) -> str:
+        obj = token
+        parts = entity_name.split(".")
+        for part in parts[:-1]:
+            obj = getattr(obj, part)
+        value = str(getattr(obj, parts[-1]))
+        if truncate_at_width is not None:
+            value = value[:truncate_at_width]
+        fg_color = value_dependent_fg_colors.get(value, None) if value_dependent_fg_colors is not None else None
+        bg_color = value_dependent_bg_colors.get(value, None) if value_dependent_bg_colors is not None else None
+        if fg_color is not None or bg_color is not None:
+            value = self.printer.text(value, color=fg_color, bg_color=bg_color)
+        return value
+
+    def render_table(
+        self, doc: Doc, columns: list[AttributeFormat], spacing: int = 3
+    ) -> str:
+        return_string = ""
+        for sent in doc.sents:
+            if "tree_right" in (c.attribute for c in columns):
+                tree_right = self.render_dependency_tree(sent, True)
+            if "tree_left" in (c.attribute for c in columns):
+                tree_left = self.render_dependency_tree(sent, False)
+            widths = []
+            for column in columns:
+                # get the values without any color codes
+                if column.attribute == 'tree_left':
+                    width = len(tree_left[0])
+                elif column.attribute == 'tree_right':
+                    width = len(tree_right[0])
+                else:
+                    width = max(len(self.get_entity(token, column.attribute)) for token in sent)
+                    if column.max_width is not None:
+                        width = min(width, column.max_width)
+                width = max(width, len(column.name))
+                widths.append(width)
+            data = [
+                [
+                    tree_right[token_index]
+                    if column.attribute == "tree_right"
+                    else tree_left[token_index]
+                    if column.attribute == "tree_left"
+                    else self.get_entity(
+                        token,
+                        column.attribute,
+                        value_dependent_fg_colors=column.value_dependent_fg_colors,
+                        value_dependent_bg_colors=column.value_dependent_bg_colors,
+                        truncate_at_width=widths[column_index]
+                    )
+                    for column_index, column in enumerate(columns)
+                ]
+                for token_index, token in enumerate(sent)
+            ]
+            if len([1 for c in columns if len(c.name) > 0]) > 0:
+                header = [c.name for c in columns]
+            else:
+                header = None
+            aligns = [c.aligns for c in columns]
+            fg_colors = [c.fg_color for c in columns]
+            bg_colors = [c.bg_color for c in columns]
+            return_string += (
+                wasabi.table(
+                    data,
+                    header=header,
+                    divider=True,
+                    aligns=aligns,
+                    widths=widths,
+                    fg_colors=fg_colors,
+                    bg_colors=bg_colors,
+                )
+                + linesep
+            )
+        return return_string
