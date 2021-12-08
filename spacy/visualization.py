@@ -344,9 +344,12 @@ class Visualizer:
                 elif column.attribute == "tree_right":
                     width = len(tree_right[0])
                 else:
-                    width = max(
-                        len(column.render(token, ignore_colors=True)) for token in sent
-                    )
+                    if len(sent) > 0:
+                        width = max(
+                            len(column.render(token, ignore_colors=True)) for token in sent
+                        )
+                    else:
+                        width = 0
                     if column.max_width is not None:
                         width = min(width, column.max_width)
                 width = max(width, len(column.name))
@@ -406,3 +409,65 @@ class Visualizer:
             this_token_strings.append(token.whitespace_)
             return_string += "".join(this_token_strings)
         return return_string
+
+    def render_instances(
+        self,
+        doc: Doc,
+        *,
+        search_attributes: list[AttributeFormat],
+        display_columns: list[AttributeFormat],
+        group: bool,
+        spacing: int = 3,
+    ) -> str:
+        def filter(token: Token) -> bool:
+            for attribute in search_attributes:
+                value = attribute.render(token, ignore_colors=True)
+                if len(value) == 0:
+                    return False
+            return True
+
+        tokens = [token for token in doc if filter(token)]
+        if group:
+            tokens.sort(
+                key=(
+                    lambda token: [attribute.render(token, ignore_colors=True)
+                    for attribute in search_attributes]
+                )
+            )
+
+        widths = []
+        for column in display_columns:
+            if len(tokens) > 0:
+                width = max(
+                    len(column.render(token, ignore_colors=True)) for token in tokens
+                )
+            else:
+                width = 0
+            if column.max_width is not None:
+                width = min(width, column.max_width)
+            width = max(width, len(column.name))
+            widths.append(width)
+            data = [
+                [
+                    column.render(token)
+                    for column_index, column in enumerate(display_columns)
+                ]
+                for token in tokens
+            ]
+            if len([1 for c in display_columns if len(c.name) > 0]) > 0:
+                header = [c.name for c in display_columns]
+            else:
+                header = None
+            aligns = [c.aligns for c in display_columns]
+            fg_colors = [c.fg_color for c in display_columns]
+            bg_colors = [c.bg_color for c in display_columns]
+        return wasabi.table(
+            data,
+            header=header,
+            divider=True,
+            aligns=aligns,
+            widths=widths,
+            fg_colors=fg_colors,
+            bg_colors=bg_colors,
+            spacing=spacing,
+        )

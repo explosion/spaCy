@@ -486,6 +486,38 @@ def test_visualization_minimal_render_table_one_sentence(
     )
 
 
+def test_visualization_minimal_render_table_empty_text_no_headers(
+    en_vocab,
+):
+    formats = [
+        AttributeFormat("tree_left"),
+        AttributeFormat("dep_"),
+        AttributeFormat("text"),
+        AttributeFormat("lemma_"),
+        AttributeFormat("pos_"),
+        AttributeFormat("tag_"),
+        AttributeFormat("morph"),
+        AttributeFormat("ent_type_"),
+    ]
+    assert Visualizer().render_table(Doc(en_vocab), formats).strip() == ""
+
+
+def test_visualization_minimal_render_table_empty_text_headers(
+    en_vocab,
+):
+    formats = [
+        AttributeFormat("tree_left", name="tree"),
+        AttributeFormat("dep_"),
+        AttributeFormat("text"),
+        AttributeFormat("lemma_"),
+        AttributeFormat("pos_"),
+        AttributeFormat("tag_"),
+        AttributeFormat("morph"),
+        AttributeFormat("ent_type_", name="ent"),
+    ]
+    assert Visualizer().render_table(Doc(en_vocab), formats).strip() == ""
+
+
 def test_visualization_minimal_render_table_permitted_values(
     fully_featured_doc_one_sentence,
 ):
@@ -640,7 +672,8 @@ def test_visualization_rich_render_table_two_sentences(
         else "\n  tree   dep        index   text      lemma     pos     tag   morph                       ent   \n------   --------   -----   -------   -------   -----   ---   -------------------------   ------\n  ╔>╔═   poss           0   Sarah     sarah     PROPN   NNP   NounType=prop|Number=sing   PERSON\n  ║ ╚>   case           1   's        's        PART    POS   Poss=yes                          \n╔>╚═══   nsubj          2   sister    sister    NOUN    NN    Number=sing                       \n╠═════   ROOT           3   flew      fly       VERB    VBD   Tense=past|VerbForm=fin           \n╠>╔═══   prep           4   to        to        ADP     IN                                      \n║ ║ ╔>   compound       5   Silicon   silicon   PROPN   NNP   NounType=prop|Number=sing   GPE   \n║ ╚>╚═   pobj           6   Valley    valley    PROPN   NNP   NounType=prop|Number=sing   GPE   \n╠══>╔═   prep           7   via       via       ADP     IN                                      \n║   ╚>   pobj           8   London    london    PROPN   NNP   NounType=prop|Number=sing   GPE   \n╚════>   punct          9   .         .         PUNCT   .     PunctType=peri                    \n\n\ntree   dep     index   text    lemma   pos     tag   morph                                                    ent\n----   -----   -----   -----   -----   -----   ---   ------------------------------------------------------   ---\n  ╔>   nsubj      10   She     she     PRON    PRP   Case=Nom|Gender=Fem|Number=Sing|Person=3|PronType=Prs       \n  ╠═   ROOT       11   loved   love    VERB    VBD   Tense=Past|VerbForm=Fin                                     \n  ╠>   dobj       12   it      it      PRON    PRP   Case=Acc|Gender=Neut|Number=Sing|Person=3|PronType=Prs      \n  ╚>   punct      13   .       .       PUNCT   .     PunctType=peri                                              \n\n"
     )
 
-def test_render_text_with_text_format(
+
+def test_visualization_text_with_text_format(
     fully_featured_doc_two_sentences,
 ):
     formats = [
@@ -658,15 +691,18 @@ def test_render_text_with_text_format(
             value_dependent_bg_colors={"PERSON": 12},
         ),
         AttributeFormat(
-            "lemma_",
-            fg_color=50,
-            bg_color=53,
-            permitted_values=("fly", "valley")
+            "lemma_", fg_color=50, bg_color=53, permitted_values=("fly", "valley")
         ),
     ]
-    assert Visualizer().render_text(fully_featured_doc_two_sentences, formats) == "\x1b[38;5;50;48;5;53mSarah\x1b[0m \x1b[38;5;50;48;5;12mPERSON\x1b[0m's sister \x1b[38;5;50;48;5;53mflew\x1b[0m \x1b[38;5;50;48;5;53mfly\x1b[0m to \x1b[38;5;50;48;5;53mSilicon\x1b[0m \x1b[38;5;50mGPE\x1b[0m \x1b[38;5;50;48;5;53mValley\x1b[0m \x1b[38;5;50mGPE\x1b[0m \x1b[38;5;50;48;5;53mvalley\x1b[0m via \x1b[38;5;50;48;5;53mLondon\x1b[0m \x1b[38;5;50mGPE\x1b[0m. She loved it." if supports_ansi else "Sarah PERSON's sister flew fly to Silicon GPE Valley GPE valley via London GPE. She loved it."
+    assert (
+        Visualizer().render_text(fully_featured_doc_two_sentences, formats)
+        == "\x1b[38;5;50;48;5;53mSarah\x1b[0m \x1b[38;5;50;48;5;12mPERSON\x1b[0m's sister \x1b[38;5;50;48;5;53mflew\x1b[0m \x1b[38;5;50;48;5;53mfly\x1b[0m to \x1b[38;5;50;48;5;53mSilicon\x1b[0m \x1b[38;5;50mGPE\x1b[0m \x1b[38;5;50;48;5;53mValley\x1b[0m \x1b[38;5;50mGPE\x1b[0m \x1b[38;5;50;48;5;53mvalley\x1b[0m via \x1b[38;5;50;48;5;53mLondon\x1b[0m \x1b[38;5;50mGPE\x1b[0m. She loved it."
+        if supports_ansi
+        else "Sarah PERSON's sister flew fly to Silicon GPE Valley GPE valley via London GPE. She loved it."
+    )
 
-def test_render_text_without_text_format(
+
+def test_visualization_render_text_without_text_format(
     fully_featured_doc_two_sentences,
 ):
     formats = [
@@ -675,9 +711,143 @@ def test_render_text_without_text_format(
             value_dependent_fg_colors={"PERSON": 50},
             value_dependent_bg_colors={"PERSON": 12},
         ),
-        AttributeFormat(
-            "lemma_",
-            permitted_values=("fly", "valley")
-        ),
+        AttributeFormat("lemma_", permitted_values=("fly", "valley")),
     ]
-    assert Visualizer().render_text(fully_featured_doc_two_sentences, formats) == "Sarah \x1b[38;5;50;48;5;12mPERSON\x1b[0m's sister flew fly to Silicon GPE Valley GPE valley via London GPE. She loved it." if supports_ansi else "Sarah PERSON's sister flew fly to Silicon GPE Valley GPE valley via London GPE. She loved it."
+    assert (
+        Visualizer().render_text(fully_featured_doc_two_sentences, formats)
+        == "Sarah \x1b[38;5;50;48;5;12mPERSON\x1b[0m's sister flew fly to Silicon GPE Valley GPE valley via London GPE. She loved it."
+        if supports_ansi
+        else "Sarah PERSON's sister flew fly to Silicon GPE Valley GPE valley via London GPE. She loved it."
+    )
+
+
+def test_visualization_minimal_render_instances_two_sentences_type_non_grouping(
+    fully_featured_doc_two_sentences,
+):
+    display_columns = [
+        AttributeFormat("dep_"),
+        AttributeFormat("text"),
+        AttributeFormat("lemma_"),
+        AttributeFormat("pos_"),
+        AttributeFormat("tag_"),
+        AttributeFormat("morph"),
+        AttributeFormat("ent_type_"),
+    ]
+
+    search_attributes = [AttributeFormat("ent_type_")]
+
+    assert (
+        Visualizer().render_instances(
+            fully_featured_doc_two_sentences,
+            search_attributes=search_attributes,
+            display_columns=display_columns,
+            group=False,
+        )
+        == "\nposs       Sarah     sarah     PROPN   NNP   NounType=prop|Number=sing   PERSON\ncompound   Silicon   silicon   PROPN   NNP   NounType=prop|Number=sing   GPE   \npobj       Valley    valley    PROPN   NNP   NounType=prop|Number=sing   GPE   \npobj       London    london    PROPN   NNP   NounType=prop|Number=sing   GPE   \n"
+    )
+
+
+def test_visualization_minimal_render_instances_two_sentences_value_non_grouping(
+    fully_featured_doc_two_sentences,
+):
+    display_columns = [
+        AttributeFormat("dep_"),
+        AttributeFormat("text"),
+        AttributeFormat("lemma_"),
+        AttributeFormat("pos_"),
+        AttributeFormat("tag_"),
+        AttributeFormat("morph"),
+        AttributeFormat("ent_type_"),
+    ]
+
+    search_attributes = [AttributeFormat("ent_type_", permitted_values=["PERSON"])]
+
+    assert (
+        Visualizer().render_instances(
+            fully_featured_doc_two_sentences,
+            search_attributes=search_attributes,
+            display_columns=display_columns,
+            group=False,
+        )
+        == "\nposs   Sarah   sarah   PROPN   NNP   NounType=prop|Number=sing   PERSON\n"
+    )
+
+
+def test_visualization_minimal_render_instances_two_sentences_missing_value_non_grouping(
+    fully_featured_doc_two_sentences,
+):
+    display_columns = [
+        AttributeFormat("dep_", name="dep"),
+        AttributeFormat("text", name="text"),
+        AttributeFormat("lemma_"),
+        AttributeFormat("pos_"),
+        AttributeFormat("tag_"),
+        AttributeFormat("morph"),
+        AttributeFormat("ent_type_"),
+    ]
+
+    search_attributes = [AttributeFormat("ent_type_", permitted_values=["PERSONN"])]
+
+    assert (
+        Visualizer().render_instances(
+            fully_featured_doc_two_sentences,
+            search_attributes=search_attributes,
+            display_columns=display_columns,
+            group=False,
+        )
+        == "\ndep   text               \n---   ----               \n"
+    )
+
+
+def test_visualization_minimal_render_instances_two_sentences_type_grouping(
+    fully_featured_doc_two_sentences,
+):
+    display_columns = [
+        AttributeFormat("dep_"),
+        AttributeFormat("text"),
+        AttributeFormat("lemma_"),
+        AttributeFormat("pos_"),
+        AttributeFormat("tag_"),
+        AttributeFormat("morph"),
+        AttributeFormat("ent_type_"),
+    ]
+
+    search_attributes = [AttributeFormat("ent_type_"), AttributeFormat("lemma_")]
+
+    assert (
+        Visualizer().render_instances(
+            fully_featured_doc_two_sentences,
+            search_attributes=search_attributes,
+            display_columns=display_columns,
+            group=True,
+        )
+        == "\npobj       London    london    PROPN   NNP   NounType=prop|Number=sing   GPE   \ncompound   Silicon   silicon   PROPN   NNP   NounType=prop|Number=sing   GPE   \npobj       Valley    valley    PROPN   NNP   NounType=prop|Number=sing   GPE   \nposs       Sarah     sarah     PROPN   NNP   NounType=prop|Number=sing   PERSON\n"
+    )
+
+
+def test_visualization_minimal_render_instances_two_sentences_type_grouping_colors(
+    fully_featured_doc_two_sentences,
+):
+    display_columns = [
+        AttributeFormat("dep_", fg_color=20),
+        AttributeFormat("text", bg_color=30),
+        AttributeFormat("lemma_"),
+        AttributeFormat("pos_"),
+        AttributeFormat("tag_"),
+        AttributeFormat("morph"),
+        AttributeFormat("ent_type_"),
+    ]
+
+    search_attributes = [AttributeFormat("ent_type_"), AttributeFormat("lemma_")]
+
+    assert (
+        Visualizer().render_instances(
+            fully_featured_doc_two_sentences,
+            search_attributes=search_attributes,
+            display_columns=display_columns,
+            group=True,
+        )
+        == "\n\x1b[38;5;20mpobj    \x1b[0m   \x1b[48;5;30mLondon \x1b[0m   london    PROPN   NNP   NounType=prop|Number=sing   GPE   \n\x1b[38;5;20mcompound\x1b[0m   \x1b[48;5;30mSilicon\x1b[0m   silicon   PROPN   NNP   NounType=prop|Number=sing   GPE   \n\x1b[38;5;20mpobj    \x1b[0m   \x1b[48;5;30mValley \x1b[0m   valley    PROPN   NNP   NounType=prop|Number=sing   GPE   \n\x1b[38;5;20mposs    \x1b[0m   \x1b[48;5;30mSarah  \x1b[0m   sarah     PROPN   NNP   NounType=prop|Number=sing   PERSON\n"
+        if supports_ansi
+        else "npobj       London    london    PROPN   NNP   NounType=prop|Number=sing   GPE   \ncompound   Silicon   silicon   PROPN   NNP   NounType=prop|Number=sing   GPE   \npobj       Valley    valley    PROPN   NNP   NounType=prop|Number=sing   GPE   \nposs       Sarah     sarah     PROPN   NNP   NounType=prop|Number=sing   PERSON\n"
+    )
