@@ -6,63 +6,6 @@ from spacy.tokens import Span, Token, Doc
 from spacy.util import working_dir
 
 
-class AttributeFormat:
-    def __init__(
-        self,
-        attribute: str,
-        *,
-        name: str = "",
-        aligns: str = "l",
-        max_width: int = None,
-        fg_color: Union[str, int] = None,
-        bg_color: Union[str, int] = None,
-        permitted_values: tuple = None,
-        value_dependent_fg_colors: dict[str, Union[str, int]] = None,
-        value_dependent_bg_colors: dict[str, Union[str, int]] = None,
-    ):
-        self.attribute = attribute
-        self.name = name
-        self.aligns = aligns
-        self.max_width = max_width
-        self.fg_color = fg_color
-        self.bg_color = bg_color
-        self.permitted_values = permitted_values
-        self.value_dependent_fg_colors = value_dependent_fg_colors
-        self.value_dependent_bg_colors = value_dependent_bg_colors
-        self.printer = wasabi.Printer(no_print=True)
-
-    def render(
-        self,
-        token: Token,
-        *,
-        ignore_colors: bool = False,
-    ) -> str:
-        obj = token
-        parts = self.attribute.split(".")
-        for part in parts[:-1]:
-            obj = getattr(obj, part)
-        value = str(getattr(obj, parts[-1]))
-        if self.permitted_values is not None and value not in (
-            str(v) for v in self.permitted_values
-        ):
-            return ""
-        if self.max_width is not None:
-            value = value[: self.max_width]
-        fg_color = (
-            self.value_dependent_fg_colors.get(value, None)
-            if not ignore_colors and self.value_dependent_fg_colors is not None
-            else None
-        )
-        bg_color = (
-            self.value_dependent_bg_colors.get(value, None)
-            if not ignore_colors and self.value_dependent_bg_colors is not None
-            else None
-        )
-        if fg_color is not None or bg_color is not None:
-            value = self.printer.text(value, color=fg_color, bg_color=bg_color)
-        return value
-
-
 SPACE = 0
 HALF_HORIZONTAL_LINE = 1  # the half is the half further away from the root
 FULL_HORIZONTAL_LINE = 3
@@ -96,6 +39,65 @@ ROOT_LEFT_CHARS = {
     FULL_VERTICAL_LINE + FULL_HORIZONTAL_LINE: "╬",
     ARROWHEAD: ">",
 }
+
+
+class AttributeFormat:
+    def __init__(
+        self,
+        attribute: str,
+        *,
+        name: str = "",
+        aligns: str = "l",
+        max_width: int = None,
+        fg_color: Union[str, int] = None,
+        bg_color: Union[str, int] = None,
+        permitted_values: tuple = None,
+        value_dependent_fg_colors: dict[str, Union[str, int]] = None,
+        value_dependent_bg_colors: dict[str, Union[str, int]] = None,
+    ):
+        self.attribute = attribute
+        self.name = name
+        self.aligns = aligns
+        self.max_width = max_width
+        self.fg_color = fg_color
+        self.bg_color = bg_color
+        self.permitted_values = permitted_values
+        self.value_dependent_fg_colors = value_dependent_fg_colors
+        self.value_dependent_bg_colors = value_dependent_bg_colors
+        self.printer = wasabi.Printer(no_print=True)
+
+    def render(
+        self,
+        token: Token,
+        *,
+        ignore_colors: bool = False,
+        render_all_colors_within_values: bool = False,
+    ) -> str:
+        obj = token
+        parts = self.attribute.split(".")
+        for part in parts[:-1]:
+            obj = getattr(obj, part)
+        value = str(getattr(obj, parts[-1]))
+        if self.permitted_values is not None and value not in (
+            str(v) for v in self.permitted_values
+        ):
+            return ""
+        if self.max_width is not None:
+            value = value[: self.max_width]
+        fg_color = None
+        bg_color = None
+        if not ignore_colors and len(value) > 0:
+            if self.value_dependent_fg_colors is not None:
+                fg_color = self.value_dependent_fg_colors.get(value, None)
+            if fg_color is None and render_all_colors_within_values:
+                fg_color = self.fg_color
+            if self.value_dependent_bg_colors is not None:
+                bg_color = self.value_dependent_bg_colors.get(value, None)
+            if bg_color is None and render_all_colors_within_values:
+                bg_color = self.bg_color
+        if fg_color is not None or bg_color is not None:
+            value = self.printer.text(value, color=fg_color, bg_color=bg_color)
+        return value
 
 
 class Visualizer:
@@ -384,10 +386,23 @@ class Visualizer:
 
     def render_text(self, doc: Doc, attributes: list[AttributeFormat]) -> str:
         return_string = ""
+        text_attributes = [a for a in attributes if a.attribute == "text"]
+        text_attribute = (
+            text_attributes[0] if len(text_attributes) > 0 else AttributeFormat("text")
+        )
         for token in doc:
-            return_string += token.text_with_ws
-            for attribute in attributes:
-                if self.get_entity(
-                    token,
-                ):
-                    pass
+            this_token_strings = [""]
+            for attribute in (a for a in attributes if a.attribute != "text"):
+                attribute_text = attribute.render(
+                    token, render_all_colors_within_values=True
+                )
+                if attribute_text is not None and len(attribute_text) > 0:
+                    this_token_strings.append(" " + attribute_text)
+            this_token_strings[0] = (
+                token.text
+                if len(this_token_strings) == 1
+                else text_attribute.render(token, render_all_colors_within_values=True)
+            )
+            this_token_strings.append(token.whitespace_)
+            return_string += "".join(this_token_strings)
+        return return_string

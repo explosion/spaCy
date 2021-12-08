@@ -549,7 +549,7 @@ def fully_featured_doc_two_sentences(en_vocab):
         "it",
         "."
     ]
-    spaces = [False, True, True, True, True, True, True, True, False, False, True, True, False, False]
+    spaces = [False, True, True, True, True, True, True, True, False, True, True, True, False, False]
     pos = [
         "PROPN",
         "PART",
