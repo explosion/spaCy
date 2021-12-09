@@ -1,15 +1,69 @@
-import pytest
 import pickle
+
+import pytest
 from thinc.api import get_current_ops
-from spacy.vocab import Vocab
+
+import spacy
+from spacy.lang.en import English
 from spacy.strings import StringStore
+from spacy.tokens import Doc
+from spacy.util import ensure_path, load_model
 from spacy.vectors import Vectors
+from spacy.vocab import Vocab
 
 from ..util import make_tempdir
 
-
 test_strings = [([], []), (["rats", "are", "cute"], ["i", "like", "rats"])]
 test_strings_attrs = [(["rats", "are", "cute"], "Hello")]
+
+
+@pytest.mark.issue(599)
+def test_issue599(en_vocab):
+    doc = Doc(en_vocab)
+    doc2 = Doc(doc.vocab)
+    doc2.from_bytes(doc.to_bytes())
+    assert doc2.has_annotation("DEP")
+
+
+@pytest.mark.issue(4054)
+def test_issue4054(en_vocab):
+    """Test that a new blank model can be made with a vocab from file,
+    and that serialization does not drop the language at any point."""
+    nlp1 = English()
+    vocab1 = nlp1.vocab
+    with make_tempdir() as d:
+        vocab_dir = ensure_path(d / "vocab")
+        if not vocab_dir.exists():
+            vocab_dir.mkdir()
+        vocab1.to_disk(vocab_dir)
+        vocab2 = Vocab().from_disk(vocab_dir)
+        nlp2 = spacy.blank("en", vocab=vocab2)
+        nlp_dir = ensure_path(d / "nlp")
+        if not nlp_dir.exists():
+            nlp_dir.mkdir()
+        nlp2.to_disk(nlp_dir)
+        nlp3 = load_model(nlp_dir)
+        assert nlp3.lang == "en"
+
+
+@pytest.mark.issue(4133)
+def test_issue4133(en_vocab):
+    nlp = English()
+    vocab_bytes = nlp.vocab.to_bytes()
+    words = ["Apple", "is", "looking", "at", "buying", "a", "startup"]
+    pos = ["NOUN", "VERB", "ADP", "VERB", "PROPN", "NOUN", "ADP"]
+    doc = Doc(en_vocab, words=words)
+    for i, token in enumerate(doc):
+        token.pos_ = pos[i]
+    # usually this is already True when starting from proper models instead of blank English
+    doc_bytes = doc.to_bytes()
+    vocab = Vocab()
+    vocab = vocab.from_bytes(vocab_bytes)
+    doc = Doc(vocab).from_bytes(doc_bytes)
+    actual = []
+    for token in doc:
+        actual.append(token.pos_)
+    assert actual == pos
 
 
 @pytest.mark.parametrize("text", ["rat"])

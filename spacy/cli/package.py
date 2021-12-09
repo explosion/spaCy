@@ -4,6 +4,7 @@ from pathlib import Path
 from wasabi import Printer, MarkdownRenderer, get_raw_input
 from thinc.api import Config
 from collections import defaultdict
+from catalogue import RegistryError
 import srsly
 import sys
 
@@ -212,9 +213,18 @@ def get_third_party_dependencies(
         if "factory" in component:
             funcs["factories"].add(component["factory"])
     modules = set()
+    lang = config["nlp"]["lang"]
     for reg_name, func_names in funcs.items():
         for func_name in func_names:
-            func_info = util.registry.find(reg_name, func_name)
+            # Try the lang-specific version and fall back
+            try:
+                func_info = util.registry.find(reg_name, lang + "." + func_name)
+            except RegistryError:
+                try:
+                    func_info = util.registry.find(reg_name, func_name)
+                except RegistryError as regerr:
+                    # lang-specific version being absent is not actually an issue
+                    raise regerr from None
             module_name = func_info.get("module")  # type: ignore[attr-defined]
             if module_name:  # the code is part of a module, not a --code file
                 modules.add(func_info["module"].split(".")[0])  # type: ignore[index]
@@ -397,7 +407,7 @@ def _format_label_scheme(data: Dict[str, Any]) -> str:
             continue
         col1 = md.bold(md.code(pipe))
         col2 = ", ".join(
-            [md.code(label.replace("|", "\\|")) for label in labels]
+            [md.code(str(label).replace("|", "\\|")) for label in labels]
         )  # noqa: W605
         label_data.append((col1, col2))
         n_labels += len(labels)

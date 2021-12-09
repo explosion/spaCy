@@ -6,8 +6,25 @@ from spacy import util
 from spacy.training import Example
 from spacy.lang.en import English
 from spacy.language import Language
+from thinc.api import compounding
 
 from ..util import make_tempdir
+
+
+@pytest.mark.issue(4348)
+def test_issue4348():
+    """Test that training the tagger with empty data, doesn't throw errors"""
+    nlp = English()
+    example = Example.from_dict(nlp.make_doc(""), {"tags": []})
+    TRAIN_DATA = [example, example]
+    tagger = nlp.add_pipe("tagger")
+    tagger.add_label("A")
+    optimizer = nlp.initialize()
+    for i in range(5):
+        losses = {}
+        batches = util.minibatch(TRAIN_DATA, size=compounding(4.0, 32.0, 1.001))
+        for batch in batches:
+            nlp.update(batch, sgd=optimizer, losses=losses)
 
 
 def test_label_types():

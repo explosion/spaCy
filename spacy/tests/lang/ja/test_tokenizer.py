@@ -54,6 +54,18 @@ SUB_TOKEN_TESTS = [
 # fmt: on
 
 
+@pytest.mark.issue(2901)
+def test_issue2901():
+    """Test that `nlp` doesn't fail."""
+    try:
+        nlp = Japanese()
+    except ImportError:
+        pytest.skip()
+
+    doc = nlp("pythonが大好きです")
+    assert doc
+
+
 @pytest.mark.parametrize("text,expected_tokens", TOKENIZER_TESTS)
 def test_ja_tokenizer(ja_tokenizer, text, expected_tokens):
     tokens = [token.text for token in ja_tokenizer(text)]

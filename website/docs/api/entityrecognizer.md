@@ -65,7 +65,7 @@ architectures and their arguments and hyperparameters.
 | `moves`                       | A list of transition names. Inferred from the data if not provided. Defaults to `None`. ~~Optional[List[str]]~~                                                                                                                                     |
 | `update_with_oracle_cut_size` | During training, cut long sequences into shorter segments by creating intermediate states based on the gold-standard history. The model is not very sensitive to this parameter, so you usually won't need to change it. Defaults to `100`. ~~int~~ |
 | `model`                       | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. Defaults to [TransitionBasedParser](/api/architectures#TransitionBasedParser). ~~Model[List[Doc], List[Floats2d]]~~                                                 |
-| `incorrect_spans_key`         | This key refers to a `SpanGroup` in `doc.spans` that specifies incorrect spans. The NER wiill learn not to predict (exactly) those spans. Defaults to `None`. ~~Optional[str]~~                                                                     |
+| `incorrect_spans_key`         | This key refers to a `SpanGroup` in `doc.spans` that specifies incorrect spans. The NER will learn not to predict (exactly) those spans. Defaults to `None`. ~~Optional[str]~~                                                                      |
 | `scorer`                      | The scoring method. Defaults to [`spacy.scorer.get_ner_prf`](/api/scorer#get_ner_prf). ~~Optional[Callable]~~                                                                                                                                       |
 
 ```python
