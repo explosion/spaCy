@@ -303,6 +303,8 @@ class EntityLinker(TrainablePipe):
     def get_loss(self, examples: Iterable[Example], sentence_encodings: Floats2d):
         validate_examples(examples, "EntityLinker.get_loss")
         entity_encodings = []
+        eidx = 0
+        keep_ents = []
         for eg in examples:
             kb_ids = eg.get_aligned("ENT_KB_ID", as_string=True)
             for ent in eg.reference.ents:
@@ -310,7 +312,10 @@ class EntityLinker(TrainablePipe):
                 if kb_id:
                     entity_encoding = self.kb.get_vector(kb_id)
                     entity_encodings.append(entity_encoding)
+                    keep_ents.append(eidx)
+                eidx += 1
         entity_encodings = self.model.ops.asarray(entity_encodings, dtype="float32")
+        sentence_encodings = sentence_encodings[keep_ents]
         if sentence_encodings.shape != entity_encodings.shape:
             err = Errors.E147.format(
                 method="get_loss", msg="gold entities do not match up"
