@@ -29,7 +29,7 @@ import Aside from '../components/aside'
 import Button from '../components/button'
 import Tag from '../components/tag'
 import Grid from '../components/grid'
-import { YouTube, SoundCloud, Iframe, Image } from '../components/embed'
+import { YouTube, SoundCloud, Iframe, Image, GoogleSheet } from '../components/embed'
 import Alert from '../components/alert'
 import Search from '../components/search'
 import Project from '../widgets/project'
@@ -72,6 +72,7 @@ const scopeComponents = {
     YouTube,
     SoundCloud,
     Iframe,
+    GoogleSheet,
     Abbr,
     Tag,
     Accordion,
