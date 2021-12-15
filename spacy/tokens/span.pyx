@@ -1,5 +1,6 @@
 cimport numpy as np
 from libc.math cimport sqrt
+from libcpp.memory cimport make_shared
 
 import numpy
 from thinc.api import get_array_module
@@ -109,14 +110,14 @@ cdef class Span:
             end_char = start_char
         else:
             end_char = doc[end - 1].idx + len(doc[end - 1])
-        self.c = SpanC(
+        self.c = make_shared[SpanC](SpanC(
             label=label,
             kb_id=kb_id,
             start=start,
             end=end,
             start_char=start_char,
             end_char=end_char,
-        )
+        ))
         self._vector = vector
         self._vector_norm = vector_norm
 
@@ -128,39 +129,39 @@ cdef class Span:
                 return True
         # <
         if op == 0:
-            return self.c.start_char < other.c.start_char
+            return self.c.get().start_char < other.c.get().start_char
         # <=
         elif op == 1:
-            return self.c.start_char <= other.c.start_char
+            return self.c.get().start_char <= other.c.get().start_char
         # ==
         elif op == 2:
             # Do the cheap comparisons first
             return (
-                (self.c.start_char == other.c.start_char) and \
-                (self.c.end_char == other.c.end_char) and \
-                (self.c.label == other.c.label) and \
-                (self.c.kb_id == other.c.kb_id) and \
+                (self.c.get().start_char == other.c.get().start_char) and \
+                (self.c.get().end_char == other.c.get().end_char) and \
+                (self.c.get().label == other.c.get().label) and \
+                (self.c.get().kb_id == other.c.get().kb_id) and \
                 (self.doc == other.doc)
             )
         # !=
         elif op == 3:
             # Do the cheap comparisons first
             return not (
-                (self.c.start_char == other.c.start_char) and \
-                (self.c.end_char == other.c.end_char) and \
-                (self.c.label == other.c.label) and \
-                (self.c.kb_id == other.c.kb_id) and \
+                (self.c.get().start_char == other.c.get().start_char) and \
+                (self.c.get().end_char == other.c.get().end_char) and \
+                (self.c.get().label == other.c.get().label) and \
+                (self.c.get().kb_id == other.c.get().kb_id) and \
                 (self.doc == other.doc)
             )
         # >
         elif op == 4:
-            return self.c.start_char > other.c.start_char
+            return self.c.get().start_char > other.c.get().start_char
         # >=
         elif op == 5:
-            return self.c.start_char >= other.c.start_char
+            return self.c.get().start_char >= other.c.get().start_char
 
     def __hash__(self):
-        return hash((self.doc, self.c.start_char, self.c.end_char, self.c.label, self.c.kb_id))
+        return hash((self.doc, self.c.get().start_char, self.c.get().end_char, self.c.get().label, self.c.get().kb_id))
 
     def __len__(self):
         """Get the number of tokens in the span.
@@ -169,9 +170,9 @@ cdef class Span:
 
         DOCS: https://spacy.io/api/span#len
         """
-        if self.c.end < self.c.start:
+        if self.c.get().end < self.c.get().start:
             return 0
-        return self.c.end - self.c.start
+        return self.c.get().end - self.c.get().start
 
     def __repr__(self):
         return self.text
@@ -190,10 +191,10 @@ cdef class Span:
             return Span(self.doc, start + self.start, end + self.start)
         else:
             if i < 0:
-                token_i = self.c.end + i
+                token_i = self.c.get().end + i
             else:
-                token_i = self.c.start + i
-            if self.c.start <= token_i < self.c.end:
+                token_i = self.c.get().start + i
+            if self.c.get().start <= token_i < self.c.get().end:
                 return self.doc[token_i]
             else:
                 raise IndexError(Errors.E1002)
@@ -205,7 +206,7 @@ cdef class Span:
 
         DOCS: https://spacy.io/api/span#iter
         """
-        for i in range(self.c.start, self.c.end):
+        for i in range(self.c.get().start, self.c.get().end):
             yield self.doc[i]
 
     def __reduce__(self):
@@ -215,7 +216,7 @@ cdef class Span:
     def _(self):
         """Custom extension attributes registered via `set_extension`."""
         return Underscore(Underscore.span_extensions, self,
-                          start=self.c.start_char, end=self.c.end_char)
+                          start=self.c.get().start_char, end=self.c.get().end_char)
 
     def as_doc(self, *, bint copy_user_data=False, array_head=None, array=None):
         """Create a `Doc` object with a copy of the `Span`'s data.
@@ -295,7 +296,7 @@ cdef class Span:
             for i in range(length):
                 # if the HEAD refers to a token outside this span, find a more appropriate ancestor
                 token = self[i]
-                ancestor_i = token.head.i - self.c.start   # span offset
+                ancestor_i = token.head.i - self.c.get().start   # span offset
                 if ancestor_i not in range(length):
                     if DEP in attrs:
                         array[i, attrs.index(DEP)] = dep
@@ -303,7 +304,7 @@ cdef class Span:
                     # try finding an ancestor within this span
                     ancestors = token.ancestors
                     for ancestor in ancestors:
-                        ancestor_i = ancestor.i - self.c.start
+                        ancestor_i = ancestor.i - self.c.get().start
                         if ancestor_i in range(length):
                             array[i, head_col] = ancestor_i - i
 
@@ -332,7 +333,7 @@ cdef class Span:
 
         DOCS: https://spacy.io/api/span#get_lca_matrix
         """
-        return numpy.asarray(_get_lca_matrix(self.doc, self.c.start, self.c.end))
+        return numpy.asarray(_get_lca_matrix(self.doc, self.c.get().start, self.c.get().end))
 
     def similarity(self, other):
         """Make a semantic similarity estimate. The default estimate is cosine
@@ -479,8 +480,8 @@ cdef class Span:
         cdef Span ent
         ents = []
         for ent in self.doc.ents:
-            if ent.c.start >= self.c.start:
-                if ent.c.end <= self.c.end:
+            if ent.c.get().start >= self.c.get().start:
+                if ent.c.get().end <= self.c.get().end:
                     ents.append(ent)
                 else:
                     break
@@ -619,7 +620,7 @@ cdef class Span:
         # with head==0, i.e. a sentence root. If so, we can return it. The
         # longer the span, the more likely it contains a sentence root, and
         # in this case we return in linear time.
-        for i in range(self.c.start, self.c.end):
+        for i in range(self.c.get().start, self.c.get().end):
             if self.doc.c[i].head == 0:
                 return self.doc[i]
         # If we don't have a sentence root, we do something that's not so
@@ -630,15 +631,15 @@ cdef class Span:
         # think this should be okay.
         cdef int current_best = self.doc.length
         cdef int root = -1
-        for i in range(self.c.start, self.c.end):
-            if self.c.start <= (i+self.doc.c[i].head) < self.c.end:
+        for i in range(self.c.get().start, self.c.get().end):
+            if self.c.get().start <= (i+self.doc.c[i].head) < self.c.get().end:
                 continue
             words_to_root = _count_words_to_root(&self.doc.c[i], self.doc.length)
             if words_to_root < current_best:
                 current_best = words_to_root
                 root = i
         if root == -1:
-            return self.doc[self.c.start]
+            return self.doc[self.c.get().start]
         else:
             return self.doc[root]
 
@@ -654,8 +655,8 @@ cdef class Span:
             the span.
         RETURNS (Span): The newly constructed object.
         """
-        start_idx += self.c.start_char
-        end_idx += self.c.start_char
+        start_idx += self.c.get().start_char
+        end_idx += self.c.get().start_char
         return self.doc.char_span(start_idx, end_idx, label=label, kb_id=kb_id, vector=vector)
 
     @property
@@ -736,53 +737,53 @@ cdef class Span:
 
     property start:
         def __get__(self):
-            return self.c.start
+            return self.c.get().start
 
         def __set__(self, int start):
             if start < 0:
                 raise IndexError("TODO")
-            self.c.start = start
+            self.c.get().start = start
 
     property end:
         def __get__(self):
-            return self.c.end
+            return self.c.get().end
 
         def __set__(self, int end):
             if end < 0:
                 raise IndexError("TODO")
-            self.c.end = end
+            self.c.get().end = end
 
     property start_char:
         def __get__(self):
-            return self.c.start_char
+            return self.c.get().start_char
 
         def __set__(self, int start_char):
             if start_char < 0:
                 raise IndexError("TODO")
-            self.c.start_char = start_char
+            self.c.get().start_char = start_char
 
     property end_char:
         def __get__(self):
-            return self.c.end_char
+            return self.c.get().end_char
 
         def __set__(self, int end_char):
             if end_char < 0:
                 raise IndexError("TODO")
-            self.c.end_char = end_char
+            self.c.get().end_char = end_char
 
     property label:
         def __get__(self):
-            return self.c.label
+            return self.c.get().label
 
         def __set__(self, attr_t label):
-            self.c.label = label
+            self.c.get().label = label
 
     property kb_id:
         def __get__(self):
-            return self.c.kb_id
+            return self.c.get().kb_id
 
         def __set__(self, attr_t kb_id):
-            self.c.kb_id = kb_id
+            self.c.get().kb_id = kb_id
 
     property ent_id:
         """RETURNS (uint64): The entity ID."""

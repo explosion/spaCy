@@ -5,6 +5,7 @@ import srsly
 from spacy.errors import Errors
 from .span cimport Span
 from libc.stdint cimport uint64_t, uint32_t, int32_t
+from libcpp.memory cimport make_shared
 
 
 cdef class SpanGroup:
@@ -149,13 +150,13 @@ cdef class SpanGroup:
             # l: int32_t
             output["spans"].append(struct.pack(
                 ">QQQllll",
-                span.id,
-                span.kb_id,
-                span.label,
-                span.start,
-                span.end,
-                span.start_char,
-                span.end_char
+                span.get().id,
+                span.get().kb_id,
+                span.get().label,
+                span.get().start,
+                span.get().end,
+                span.get().start_char,
+                span.get().end_char
             ))
         return srsly.msgpack_dumps(output)
 
@@ -182,8 +183,8 @@ cdef class SpanGroup:
             span.end = items[4]
             span.start_char = items[5]
             span.end_char = items[6]
-            self.c.push_back(span)
+            self.c.push_back(make_shared[SpanC](span))
         return self
 
-    cdef void push_back(self, SpanC span) nogil:
+    cdef void push_back(self, const shared_ptr[SpanC] &span) nogil:
         self.c.push_back(span)

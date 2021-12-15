@@ -1,6 +1,8 @@
 import os
 import random
 from libc.stdint cimport int32_t
+from libcpp.memory cimport shared_ptr
+from libcpp.vector cimport vector
 from cymem.cymem cimport Pool
 
 from collections import Counter
@@ -42,9 +44,7 @@ MOVE_NAMES[OUT] = 'O'
 
 cdef struct GoldNERStateC:
     Transition* ner
-    SpanC* negs
-    int32_t length
-    int32_t nr_neg
+    vector[shared_ptr[SpanC]] negs
 
 
 cdef class BiluoGold:
@@ -77,8 +77,6 @@ cdef GoldNERStateC create_gold_state(
         negs = []
     assert example.x.length > 0
     gs.ner = <Transition*>mem.alloc(example.x.length, sizeof(Transition))
-    gs.negs = <SpanC*>mem.alloc(len(negs), sizeof(SpanC))
-    gs.nr_neg = len(negs)
     ner_ents, ner_tags = example.get_aligned_ents_and_ner()
     for i, ner_tag in enumerate(ner_tags):
         gs.ner[i] = moves.lookup_transition(ner_tag)
@@ -92,8 +90,8 @@ cdef GoldNERStateC create_gold_state(
     # In order to handle negative samples, we need to maintain the full
     # (start, end, label) triple. If we break it down to the 'isnt B-LOC'
     # thing, we'll get blocked if there's an incorrect prefix.
-    for i, neg in enumerate(negs):
-        gs.negs[i] = neg.c
+    for neg in negs:
+        gs.negs.push_back(neg.c)
     return gs
 
 
@@ -410,6 +408,8 @@ cdef class Begin:
         cdef int g_act = gold.ner[b0].move
         cdef attr_t g_tag = gold.ner[b0].label
 
+        cdef shared_ptr[SpanC] span
+
         if g_act == MISSING:
             pass
         elif g_act == BEGIN:
@@ -427,8 +427,8 @@ cdef class Begin:
             # be correct or not. However, we can at least tell whether we're
             # going to be opening an entity where there's only one possible
             # L.
-            for span in gold.negs[:gold.nr_neg]:
-                if span.label == label and span.start == b0:
+            for span in gold.negs:
+                if span.get().label == label and span.get().start == b0:
                     cost += 1
                     break
         return cost
@@ -573,8 +573,9 @@ cdef class Last:
         # If we have negative-example entities, integrate them into the objective,
         # by marking actions that close an entity that we know is incorrect
         # as costly.
-        for span in gold.negs[:gold.nr_neg]:
-            if span.label == label and (span.end-1) == b0 and span.start == ent_start:
+        cdef shared_ptr[SpanC] span
+        for span in gold.negs:
+            if span.get().label == label and (span.get().end-1) == b0 and span.get().start == ent_start:
                 cost += 1
                 break
         return cost
@@ -638,8 +639,9 @@ cdef class Unit:
         # This is fairly straight-forward for U- entities, as we have a single
         # action
         cdef int b0 = s.B(0)
-        for span in gold.negs[:gold.nr_neg]:
-            if span.label == label and span.start == b0 and span.end == (b0+1):
+        cdef shared_ptr[SpanC] span
+        for span in gold.negs:
+            if span.get().label == label and span.get().start == b0 and span.get().end == (b0+1):
                 cost += 1
                 break
         return cost
