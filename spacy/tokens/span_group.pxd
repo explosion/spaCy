@@ -8,4 +8,4 @@ cdef class SpanGroup:
     cdef public dict attrs
     cdef vector[const shared_ptr[SpanC]] c
 
-    cdef void push_back(self, const shared_ptr[SpanC] &span) nogil
+    cdef void push_back(self, const shared_ptr[SpanC] &span)

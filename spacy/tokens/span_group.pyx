@@ -186,5 +186,5 @@ cdef class SpanGroup:
             self.c.push_back(make_shared[SpanC](span))
         return self
 
-    cdef void push_back(self, const shared_ptr[SpanC] &span) nogil:
+    cdef void push_back(self, const shared_ptr[SpanC] &span):
         self.c.push_back(span)
