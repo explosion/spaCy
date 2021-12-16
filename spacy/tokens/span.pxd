@@ -25,4 +25,4 @@ cdef class Span:
 
     cpdef np.ndarray to_array(self, object features)
 
-    cdef SpanC *span_c(self)
+    cdef SpanC* span_c(self)

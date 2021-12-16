@@ -128,8 +128,8 @@ cdef class Span:
             else:
                 return True
 
-        cdef SpanC *span_c = self.span_c()
-        cdef SpanC *other_span_c = other.span_c()
+        cdef SpanC* span_c = self.span_c()
+        cdef SpanC* other_span_c = other.span_c()
 
         # <
         if op == 0:
@@ -165,7 +165,7 @@ cdef class Span:
             return span_c.start_char >= other_span_c.start_char
 
     def __hash__(self):
-        cdef SpanC *span_c = self.span_c()
+        cdef SpanC* span_c = self.span_c()
         return hash((self.doc, span_c.start_char, span_c.end_char, span_c.label, span_c.kb_id))
 
     def __len__(self):
@@ -175,7 +175,7 @@ cdef class Span:
 
         DOCS: https://spacy.io/api/span#len
         """
-        cdef SpanC *span_c = self.span_c()
+        cdef SpanC* span_c = self.span_c()
         if span_c.end < span_c.start:
             return 0
         return span_c.end - span_c.start
@@ -192,7 +192,7 @@ cdef class Span:
 
         DOCS: https://spacy.io/api/span#getitem
         """
-        cdef SpanC *span_c = self.span_c()
+        cdef SpanC* span_c = self.span_c()
         if isinstance(i, slice):
             start, end = normalize_slice(len(self), i.start, i.stop, i.step)
             return Span(self.doc, start + self.start, end + self.start)
@@ -213,7 +213,7 @@ cdef class Span:
 
         DOCS: https://spacy.io/api/span#iter
         """
-        cdef SpanC *span_c = self.span_c()
+        cdef SpanC* span_c = self.span_c()
         for i in range(span_c.start, span_c.end):
             yield self.doc[i]
 
@@ -222,7 +222,7 @@ cdef class Span:
 
     @property
     def _(self):
-        cdef SpanC *span_c = self.span_c()
+        cdef SpanC* span_c = self.span_c()
         """Custom extension attributes registered via `set_extension`."""
         return Underscore(Underscore.span_extensions, self,
                           start=span_c.start_char, end=span_c.end_char)
@@ -299,7 +299,7 @@ cdef class Span:
         cdef int length = len(array)
         cdef attr_t value
         cdef int i, head_col, ancestor_i
-        cdef SpanC *span_c = self.span_c()
+        cdef SpanC* span_c = self.span_c()
         old_to_new_root = dict()
         if HEAD in attrs:
             head_col = attrs.index(HEAD)
@@ -343,7 +343,7 @@ cdef class Span:
 
         DOCS: https://spacy.io/api/span#get_lca_matrix
         """
-        cdef SpanC *span_c = self.span_c()
+        cdef SpanC* span_c = self.span_c()
         return numpy.asarray(_get_lca_matrix(self.doc, span_c.start, span_c.end))
 
     def similarity(self, other):
@@ -438,7 +438,7 @@ cdef class Span:
         else:
             raise ValueError(Errors.E030)
 
-    cdef SpanC *span_c(self):
+    cdef SpanC* span_c(self):
         return self.c.get()
 
     @property
@@ -492,8 +492,8 @@ cdef class Span:
         DOCS: https://spacy.io/api/span#ents
         """
         cdef Span ent
-        cdef SpanC *span_c = self.span_c()
-        cdef SpanC *ent_span_c
+        cdef SpanC* span_c = self.span_c()
+        cdef SpanC* ent_span_c
         ents = []
         for ent in self.doc.ents:
             ent_span_c = ent.span_c()
@@ -633,7 +633,7 @@ cdef class Span:
         # This should probably be called 'head', and the other one called
         # 'gov'. But we went with 'head' elsewhere, and now we're stuck =/
         cdef int i
-        cdef SpanC *span_c = self.span_c()
+        cdef SpanC* span_c = self.span_c()
         # First, we scan through the Span, and check whether there's a word
         # with head==0, i.e. a sentence root. If so, we can return it. The
         # longer the span, the more likely it contains a sentence root, and
@@ -673,7 +673,7 @@ cdef class Span:
             the span.
         RETURNS (Span): The newly constructed object.
         """
-        cdef SpanC *span_c = self.span_c()
+        cdef SpanC* span_c = self.span_c()
         start_idx += span_c.start_char
         end_idx += span_c.start_char
         return self.doc.char_span(start_idx, end_idx, label=label, kb_id=kb_id, vector=vector)
