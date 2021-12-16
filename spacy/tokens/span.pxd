@@ -24,3 +24,5 @@ cdef class Span:
         return self
 
     cpdef np.ndarray to_array(self, object features)
+
+    cdef SpanC *span_c(self)
