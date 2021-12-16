@@ -371,6 +371,23 @@ Get the vectors for the provided keys efficiently as a batch.
 | ------ | --------------------------------------- |
 | `keys` | The keys. ~~Iterable[Union[int, str]]~~ |
 
+## Vectors.to_ops {#to_ops tag="method"}
+
+Change the embedding matrix to use different Thinc ops.
+
+> #### Example
+>
+> ```python
+> from thinc.api import NumpyOps
+>
+> vectors.to_ops(NumpyOps())
+>
+> ```
+
+| Name  | Description                                              |
+|-------|----------------------------------------------------------|
+| `ops` | The Thinc ops to switch the embedding matrix to. ~~Ops~~ |
+
 ## Vectors.to_disk {#to_disk tag="method"}
 
 Save the current state to a directory.
