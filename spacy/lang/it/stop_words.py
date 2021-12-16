@@ -77,7 +77,7 @@ troppo trovato tu tua tue tuo tuoi tutta tuttavia tutte tutti tutto
 
 uguali ulteriore ultimo un un' una uno uomo
 
-va vale vari varia varie vario verso vi vi' via vicino visto vita voi volta volte
+v' va vale vari varia varie vario verso vi via vicino visto vita voi volta volte
 vostra vostre vostri vostro
 """.split()
 )
