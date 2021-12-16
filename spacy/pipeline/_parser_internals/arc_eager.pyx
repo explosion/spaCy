@@ -604,7 +604,7 @@ cdef class ArcEager(TransitionSystem):
                     actions[SHIFT][''] += 1
         if min_freq is not None:
             for action, label_freqs in actions.items():
-                for label, freq in list(label_freqs.items()):
+                for label, freq in label_freqs.copy().items():
                     if freq < min_freq:
                         label_freqs.pop(label)
         # Ensure these actions are present
