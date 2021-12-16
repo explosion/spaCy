@@ -146,7 +146,7 @@ cdef class Vectors:
 
         DOCS: https://spacy.io/api/vectors#size
         """
-        return self.data.shape[0] * self.data.shape[1]
+        return self.data.size
 
     @property
     def is_full(self):
