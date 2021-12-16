@@ -10,13 +10,13 @@ avresti avrete avrà avrò avuta avute avuti avuto
 
 basta bene benissimo brava bravo
 
-casa caso cento certa certe certi certo che chi chicchessia chiunque ci ci'
+casa caso cento certa certe certi certo che chi chicchessia chiunque ci c'
 ciascuna ciascuno cima cio cioe circa citta città co codesta codesti codesto
 cogli coi col colei coll coloro colui come cominci comunque con concernente
 conciliarsi conclusione consiglio contro cortesia cos cosa cosi così cui
 
 d' da dagl dagli dai dal dall dall' dalla dalle dallo dappertutto davanti degl degli
-dei del dell dell' della delle dello dentro detto deve di di' dice dietro dire
+dei del dell dell' della delle dello dentro detto deve di dice dietro dire
 dirimpetto diventa diventare diventato dopo dov dove dovra dovrà dovunque due
 dunque durante
 
@@ -39,8 +39,8 @@ ieri il improvviso in inc infatti inoltre insieme intanto intorno invece io
 
 l' la là lasciato lato lavoro le lei li lo lontano loro lui lungo luogo
 
-ma macche magari maggior mai male malgrado malissimo mancanza marche me
-medesimo mediante meglio meno mentre mesi mezzo mi mi' mia mie miei mila miliardi
+m' ma macche magari maggior mai male malgrado malissimo mancanza marche me
+medesimo mediante meglio meno mentre mesi mezzo mi mia mie miei mila miliardi
 milioni minimi ministro mio modo molti moltissimo molto momento mondo mosto
 
 nazionale ne negl negli nei nel nell nella nelle nello nemmeno neppure nessun nessun'
@@ -61,9 +61,9 @@ questa queste questi questo qui quindi
 
 realmente recente recentemente registrazione relativo riecco salvo
 
-sara sarà sarai saranno sarebbe sarebbero sarei saremmo saremo sareste
+s' sara sarà sarai saranno sarebbe sarebbero sarei saremmo saremo sareste
 saresti sarete saro sarò scola scopo scorso se secondo seguente seguito sei
-sembra sembrare sembrato sembri sempre senza sette si si' sia siamo siano siate
+sembra sembrare sembrato sembri sempre senza sette si sia siamo siano siate
 siete sig solito solo soltanto sono sopra sotto spesso srl sta stai stando
 stanno starai staranno starebbe starebbero starei staremmo staremo stareste
 staresti starete starà starò stata state stati stato stava stavamo stavano
@@ -72,7 +72,7 @@ steste stesti stette stettero stetti stia stiamo stiano stiate sto su sua
 subito successivamente successivo sue sugl sugli sui sul sull sulla sulle
 sullo suo suoi
 
-tale tali talvolta tanto te tempo ti ti' titolo tra tranne tre trenta
+t' tale tali talvolta tanto te tempo ti titolo tra tranne tre trenta
 troppo trovato tu tua tue tuo tuoi tutta tuttavia tutte tutti tutto
 
 uguali ulteriore ultimo un un' una uno uomo
