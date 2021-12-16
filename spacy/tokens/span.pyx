@@ -438,7 +438,6 @@ cdef class Span:
         else:
             raise ValueError(Errors.E030)
 
-
     cdef SpanC *span_c(self):
         return self.c.get()
 
