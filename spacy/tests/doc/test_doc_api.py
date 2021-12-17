@@ -1,14 +1,17 @@
 import weakref
 
-import pytest
 import numpy
+import pytest
+from thinc.api import NumpyOps, get_current_ops
 
+from spacy.attrs import DEP, ENT_IOB, ENT_TYPE, HEAD, IS_ALPHA, MORPH, POS
+from spacy.attrs import SENT_START, TAG
+from spacy.lang.en import English
 from spacy.lang.xx import MultiLanguage
+from spacy.language import Language
+from spacy.lexeme import Lexeme
 from spacy.tokens import Doc, Span, Token
 from spacy.vocab import Vocab
-from spacy.lexeme import Lexeme
-from spacy.lang.en import English
-from spacy.attrs import ENT_TYPE, ENT_IOB, SENT_START, HEAD, DEP, MORPH
 
 from .test_underscore import clean_underscore  # noqa: F401
 
@@ -28,6 +31,220 @@ def test_doc_api_init(en_vocab):
         en_vocab, words=words, sent_starts=[True] * 4, heads=heads, deps=["dep"] * 4
     )
     assert [t.is_sent_start for t in doc] == [True, False, True, False]
+
+
+@pytest.mark.issue(1547)
+def test_issue1547():
+    """Test that entity labels still match after merging tokens."""
+    words = ["\n", "worda", ".", "\n", "wordb", "-", "Biosphere", "2", "-", " \n"]
+    doc = Doc(Vocab(), words=words)
+    doc.ents = [Span(doc, 6, 8, label=doc.vocab.strings["PRODUCT"])]
+    with doc.retokenize() as retokenizer:
+        retokenizer.merge(doc[5:7])
+    assert [ent.text for ent in doc.ents]
+
+
+@pytest.mark.issue(1757)
+def test_issue1757():
+    """Test comparison against None doesn't cause segfault."""
+    doc = Doc(Vocab(), words=["a", "b", "c"])
+    assert not doc[0] < None
+    assert not doc[0] is None
+    assert doc[0] >= None
+    assert not doc[:2] < None
+    assert not doc[:2] is None
+    assert doc[:2] >= None
+    assert not doc.vocab["a"] is None
+    assert not doc.vocab["a"] < None
+
+
+@pytest.mark.issue(2396)
+def test_issue2396(en_vocab):
+    words = ["She", "created", "a", "test", "for", "spacy"]
+    heads = [1, 1, 3, 1, 3, 4]
+    deps = ["dep"] * len(heads)
+    matrix = numpy.array(
+        [
+            [0, 1, 1, 1, 1, 1],
+            [1, 1, 1, 1, 1, 1],
+            [1, 1, 2, 3, 3, 3],
+            [1, 1, 3, 3, 3, 3],
+            [1, 1, 3, 3, 4, 4],
+            [1, 1, 3, 3, 4, 5],
+        ],
+        dtype=numpy.int32,
+    )
+    doc = Doc(en_vocab, words=words, heads=heads, deps=deps)
+    span = doc[:]
+    assert (doc.get_lca_matrix() == matrix).all()
+    assert (span.get_lca_matrix() == matrix).all()
+
+
+@pytest.mark.parametrize("text", ["-0.23", "+123,456", "±1"])
+@pytest.mark.parametrize("lang_cls", [English, MultiLanguage])
+@pytest.mark.issue(2782)
+def test_issue2782(text, lang_cls):
+    """Check that like_num handles + and - before number."""
+    nlp = lang_cls()
+    doc = nlp(text)
+    assert len(doc) == 1
+    assert doc[0].like_num
+
+
+@pytest.mark.parametrize(
+    "sentence",
+    [
+        "The story was to the effect that a young American student recently called on Professor Christlieb with a letter of introduction.",
+        "The next month Barry Siddall joined Stoke City on a free transfer, after Chris Pearce had established himself as the Vale's #1.",
+        "The next month Barry Siddall joined Stoke City on a free transfer, after Chris Pearce had established himself as the Vale's number one",
+        "Indeed, making the one who remains do all the work has installed him into a position of such insolent tyranny, it will take a month at least to reduce him to his proper proportions.",
+        "It was a missed assignment, but it shouldn't have resulted in a turnover ...",
+    ],
+)
+@pytest.mark.issue(3869)
+def test_issue3869(sentence):
+    """Test that the Doc's count_by function works consistently"""
+    nlp = English()
+    doc = nlp(sentence)
+    count = 0
+    for token in doc:
+        count += token.is_alpha
+    assert count == doc.count_by(IS_ALPHA).get(1, 0)
+
+
+@pytest.mark.issue(3962)
+def test_issue3962(en_vocab):
+    """Ensure that as_doc does not result in out-of-bound access of tokens.
+    This is achieved by setting the head to itself if it would lie out of the span otherwise."""
+    # fmt: off
+    words = ["He", "jests", "at", "scars", ",", "that", "never", "felt", "a", "wound", "."]
+    heads = [1, 7, 1, 2, 7, 7, 7, 7, 9, 7, 7]
+    deps = ["nsubj", "ccomp", "prep", "pobj", "punct", "nsubj", "neg", "ROOT", "det", "dobj", "punct"]
+    # fmt: on
+    doc = Doc(en_vocab, words=words, heads=heads, deps=deps)
+    span2 = doc[1:5]  # "jests at scars ,"
+    doc2 = span2.as_doc()
+    doc2_json = doc2.to_json()
+    assert doc2_json
+    # head set to itself, being the new artificial root
+    assert doc2[0].head.text == "jests"
+    assert doc2[0].dep_ == "dep"
+    assert doc2[1].head.text == "jests"
+    assert doc2[1].dep_ == "prep"
+    assert doc2[2].head.text == "at"
+    assert doc2[2].dep_ == "pobj"
+    assert doc2[3].head.text == "jests"  # head set to the new artificial root
+    assert doc2[3].dep_ == "dep"
+    # We should still have 1 sentence
+    assert len(list(doc2.sents)) == 1
+    span3 = doc[6:9]  # "never felt a"
+    doc3 = span3.as_doc()
+    doc3_json = doc3.to_json()
+    assert doc3_json
+    assert doc3[0].head.text == "felt"
+    assert doc3[0].dep_ == "neg"
+    assert doc3[1].head.text == "felt"
+    assert doc3[1].dep_ == "ROOT"
+    assert doc3[2].head.text == "felt"  # head set to ancestor
+    assert doc3[2].dep_ == "dep"
+    # We should still have 1 sentence as "a" can be attached to "felt" instead of "wound"
+    assert len(list(doc3.sents)) == 1
+
+
+@pytest.mark.issue(3962)
+def test_issue3962_long(en_vocab):
+    """Ensure that as_doc does not result in out-of-bound access of tokens.
+    This is achieved by setting the head to itself if it would lie out of the span otherwise."""
+    # fmt: off
+    words = ["He", "jests", "at", "scars", ".", "They", "never", "felt", "a", "wound", "."]
+    heads = [1, 1, 1, 2, 1, 7, 7, 7, 9, 7, 7]
+    deps = ["nsubj", "ROOT", "prep", "pobj", "punct", "nsubj", "neg", "ROOT", "det", "dobj", "punct"]
+    # fmt: on
+    two_sent_doc = Doc(en_vocab, words=words, heads=heads, deps=deps)
+    span2 = two_sent_doc[1:7]  # "jests at scars. They never"
+    doc2 = span2.as_doc()
+    doc2_json = doc2.to_json()
+    assert doc2_json
+    # head set to itself, being the new artificial root (in sentence 1)
+    assert doc2[0].head.text == "jests"
+    assert doc2[0].dep_ == "ROOT"
+    assert doc2[1].head.text == "jests"
+    assert doc2[1].dep_ == "prep"
+    assert doc2[2].head.text == "at"
+    assert doc2[2].dep_ == "pobj"
+    assert doc2[3].head.text == "jests"
+    assert doc2[3].dep_ == "punct"
+    # head set to itself, being the new artificial root (in sentence 2)
+    assert doc2[4].head.text == "They"
+    assert doc2[4].dep_ == "dep"
+    # head set to the new artificial head (in sentence 2)
+    assert doc2[4].head.text == "They"
+    assert doc2[4].dep_ == "dep"
+    # We should still have 2 sentences
+    sents = list(doc2.sents)
+    assert len(sents) == 2
+    assert sents[0].text == "jests at scars ."
+    assert sents[1].text == "They never"
+
+
+@Language.factory("my_pipe")
+class CustomPipe:
+    def __init__(self, nlp, name="my_pipe"):
+        self.name = name
+        Span.set_extension("my_ext", getter=self._get_my_ext)
+        Doc.set_extension("my_ext", default=None)
+
+    def __call__(self, doc):
+        gathered_ext = []
+        for sent in doc.sents:
+            sent_ext = self._get_my_ext(sent)
+            sent._.set("my_ext", sent_ext)
+            gathered_ext.append(sent_ext)
+
+        doc._.set("my_ext", "\n".join(gathered_ext))
+        return doc
+
+    @staticmethod
+    def _get_my_ext(span):
+        return str(span.end)
+
+
+@pytest.mark.issue(4903)
+def test_issue4903():
+    """Ensure that this runs correctly and doesn't hang or crash on Windows /
+    macOS."""
+    nlp = English()
+    nlp.add_pipe("sentencizer")
+    nlp.add_pipe("my_pipe", after="sentencizer")
+    text = ["I like bananas.", "Do you like them?", "No, I prefer wasabi."]
+    if isinstance(get_current_ops(), NumpyOps):
+        docs = list(nlp.pipe(text, n_process=2))
+        assert docs[0].text == "I like bananas."
+        assert docs[1].text == "Do you like them?"
+        assert docs[2].text == "No, I prefer wasabi."
+
+
+@pytest.mark.issue(5048)
+def test_issue5048(en_vocab):
+    words = ["This", "is", "a", "sentence"]
+    pos_s = ["DET", "VERB", "DET", "NOUN"]
+    spaces = [" ", " ", " ", ""]
+    deps_s = ["dep", "adj", "nn", "atm"]
+    tags_s = ["DT", "VBZ", "DT", "NN"]
+    strings = en_vocab.strings
+    for w in words:
+        strings.add(w)
+    deps = [strings.add(d) for d in deps_s]
+    pos = [strings.add(p) for p in pos_s]
+    tags = [strings.add(t) for t in tags_s]
+    attrs = [POS, DEP, TAG]
+    array = numpy.array(list(zip(pos, deps, tags)), dtype="uint64")
+    doc = Doc(en_vocab, words=words, spaces=spaces)
+    doc.from_array(attrs, array)
+    v1 = [(token.text, token.pos_, token.tag_) for token in doc]
+    doc2 = Doc(en_vocab, words=words, pos=pos_s, deps=deps_s, tags=tags_s)
+    v2 = [(token.text, token.pos_, token.tag_) for token in doc2]
+    assert v1 == v2
 
 
 @pytest.mark.parametrize("text", [["one", "two", "three"]])

@@ -274,7 +274,7 @@ cdef class Vectors:
             self.data = resized_array
         self._sync_unset()
         removed_items = []
-        for key, row in list(self.key2row.items()):
+        for key, row in self.key2row.copy().items():
             if row >= shape[0]:
                 self.key2row.pop(key)
                 removed_items.append((key, row))

@@ -1,7 +1,9 @@
 import pytest
 import numpy
 from numpy.testing import assert_array_equal
+
 from spacy.attrs import ORTH, LENGTH
+from spacy.lang.en import English
 from spacy.tokens import Doc, Span, Token
 from spacy.vocab import Vocab
 from spacy.util import filter_spans
@@ -41,6 +43,106 @@ def doc_not_parsed(en_tokenizer):
     tokens = en_tokenizer(text)
     doc = Doc(tokens.vocab, words=[t.text for t in tokens])
     return doc
+
+
+@pytest.mark.issue(1537)
+def test_issue1537():
+    """Test that Span.as_doc() doesn't segfault."""
+    string = "The sky is blue . The man is pink . The dog is purple ."
+    doc = Doc(Vocab(), words=string.split())
+    doc[0].sent_start = True
+    for word in doc[1:]:
+        if word.nbor(-1).text == ".":
+            word.sent_start = True
+        else:
+            word.sent_start = False
+    sents = list(doc.sents)
+    sent0 = sents[0].as_doc()
+    sent1 = sents[1].as_doc()
+    assert isinstance(sent0, Doc)
+    assert isinstance(sent1, Doc)
+
+
+@pytest.mark.issue(1612)
+def test_issue1612(en_tokenizer):
+    """Test that span.orth_ is identical to span.text"""
+    doc = en_tokenizer("The black cat purrs.")
+    span = doc[1:3]
+    assert span.orth_ == span.text
+
+
+@pytest.mark.issue(3199)
+def test_issue3199():
+    """Test that Span.noun_chunks works correctly if no noun chunks iterator
+    is available. To make this test future-proof, we're constructing a Doc
+    with a new Vocab here and a parse tree to make sure the noun chunks run.
+    """
+    words = ["This", "is", "a", "sentence"]
+    doc = Doc(Vocab(), words=words, heads=[0] * len(words), deps=["dep"] * len(words))
+    with pytest.raises(NotImplementedError):
+        list(doc[0:3].noun_chunks)
+
+
+@pytest.mark.issue(5152)
+def test_issue5152():
+    # Test that the comparison between a Span and a Token, goes well
+    # There was a bug when the number of tokens in the span equaled the number of characters in the token (!)
+    nlp = English()
+    text = nlp("Talk about being boring!")
+    text_var = nlp("Talk of being boring!")
+    y = nlp("Let")
+    span = text[0:3]  # Talk about being
+    span_2 = text[0:3]  # Talk about being
+    span_3 = text_var[0:3]  # Talk of being
+    token = y[0]  # Let
+    with pytest.warns(UserWarning):
+        assert span.similarity(token) == 0.0
+    assert span.similarity(span_2) == 1.0
+    with pytest.warns(UserWarning):
+        assert span_2.similarity(span_3) < 1.0
+
+
+@pytest.mark.issue(6755)
+def test_issue6755(en_tokenizer):
+    doc = en_tokenizer("This is a magnificent sentence.")
+    span = doc[:0]
+    assert span.text_with_ws == ""
+    assert span.text == ""
+
+
+@pytest.mark.parametrize(
+    "sentence, start_idx,end_idx,label",
+    [("Welcome to Mumbai, my friend", 11, 17, "GPE")],
+)
+@pytest.mark.issue(6815)
+def test_issue6815_1(sentence, start_idx, end_idx, label):
+    nlp = English()
+    doc = nlp(sentence)
+    span = doc[:].char_span(start_idx, end_idx, label=label)
+    assert span.label_ == label
+
+
+@pytest.mark.parametrize(
+    "sentence, start_idx,end_idx,kb_id", [("Welcome to Mumbai, my friend", 11, 17, 5)]
+)
+@pytest.mark.issue(6815)
+def test_issue6815_2(sentence, start_idx, end_idx, kb_id):
+    nlp = English()
+    doc = nlp(sentence)
+    span = doc[:].char_span(start_idx, end_idx, kb_id=kb_id)
+    assert span.kb_id == kb_id
+
+
+@pytest.mark.parametrize(
+    "sentence, start_idx,end_idx,vector",
+    [("Welcome to Mumbai, my friend", 11, 17, numpy.array([0.1, 0.2, 0.3]))],
+)
+@pytest.mark.issue(6815)
+def test_issue6815_3(sentence, start_idx, end_idx, vector):
+    nlp = English()
+    doc = nlp(sentence)
+    span = doc[:].char_span(start_idx, end_idx, vector=vector)
+    assert (span.vector == vector).all()
 
 
 @pytest.mark.parametrize(
@@ -98,11 +200,46 @@ def test_spans_span_sent(doc, doc_not_parsed):
     assert doc[:2].sent.root.text == "is"
     assert doc[:2].sent.text == "This is a sentence."
     assert doc[6:7].sent.root.left_edge.text == "This"
+    assert doc[0 : len(doc)].sent == list(doc.sents)[0]
+    assert list(doc[0 : len(doc)].sents) == list(doc.sents)
+
+    with pytest.raises(ValueError):
+        doc_not_parsed[:2].sent
+
     # test on manual sbd
     doc_not_parsed[0].is_sent_start = True
     doc_not_parsed[5].is_sent_start = True
     assert doc_not_parsed[1:3].sent == doc_not_parsed[0:5]
     assert doc_not_parsed[10:14].sent == doc_not_parsed[5:]
+
+
+@pytest.mark.parametrize(
+    "start,end,expected_sentence",
+    [
+        (0, 14, "This is"),  # Entire doc
+        (1, 4, "This is"),  # Overlapping with 2 sentences
+        (0, 2, "This is"),  # Beginning of the Doc. Full sentence
+        (0, 1, "This is"),  # Beginning of the Doc. Part of a sentence
+        (10, 14, "And a"),  # End of the Doc. Overlapping with 2 senteces
+        (12, 14, "third."),  # End of the Doc. Full sentence
+        (1, 1, "This is"),  # Empty Span
+    ],
+)
+def test_spans_span_sent_user_hooks(doc, start, end, expected_sentence):
+
+    # Doc-level sents hook
+    def user_hook(doc):
+        return [doc[ii : ii + 2] for ii in range(0, len(doc), 2)]
+
+    doc.user_hooks["sents"] = user_hook
+
+    # Make sure doc-level sents hook works
+    assert doc[start:end].sent.text == expected_sentence
+
+    # Span-level sent hook
+    doc.user_span_hooks["sent"] = lambda x: x
+    # Now, span=level sent hook overrides the doc-level sents hook
+    assert doc[start:end].sent == doc[start:end]
 
 
 def test_spans_lca_matrix(en_tokenizer):
@@ -434,3 +571,38 @@ def test_span_with_vectors(doc):
     # single-token span with vector
     assert_array_equal(ops.to_numpy(doc[10:11].vector), [-1, -1, -1])
     doc.vocab.vectors = prev_vectors
+
+
+@pytest.mark.parametrize(
+    "start,end,expected_sentences,expected_sentences_with_hook",
+    [
+        (0, 14, 3, 7),  # Entire doc
+        (3, 6, 2, 2),  # Overlapping with 2 sentences
+        (0, 4, 1, 2),  # Beginning of the Doc. Full sentence
+        (0, 3, 1, 2),  # Beginning of the Doc. Part of a sentence
+        (9, 14, 2, 3),  # End of the Doc. Overlapping with 2 senteces
+        (10, 14, 1, 2),  # End of the Doc. Full sentence
+        (11, 14, 1, 2),  # End of the Doc. Partial sentence
+        (0, 0, 1, 1),  # Empty Span
+    ],
+)
+def test_span_sents(doc, start, end, expected_sentences, expected_sentences_with_hook):
+
+    assert len(list(doc[start:end].sents)) == expected_sentences
+
+    def user_hook(doc):
+        return [doc[ii : ii + 2] for ii in range(0, len(doc), 2)]
+
+    doc.user_hooks["sents"] = user_hook
+
+    assert len(list(doc[start:end].sents)) == expected_sentences_with_hook
+
+    doc.user_span_hooks["sents"] = lambda x: [x]
+
+    assert list(doc[start:end].sents)[0] == doc[start:end]
+    assert len(list(doc[start:end].sents)) == 1
+
+
+def test_span_sents_not_parsed(doc_not_parsed):
+    with pytest.raises(ValueError):
+        list(Span(doc_not_parsed, 0, 3).sents)
