@@ -191,6 +191,8 @@ def conllu_sentence_to_doc(
         morph = morph if morph != "_" else ""
         dep = "ROOT" if dep == "root" else dep
         lemmas.append(lemma)
+        if pos == "_":
+            pos = ""
         poses.append(pos)
         tags.append(tag)
         morphs.append(morph)
