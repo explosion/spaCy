@@ -12,6 +12,11 @@ test_strings = [([], []), (["rats", "are", "cute"], ["i", "like", "rats"])]
 test_strings_attrs = [(["rats", "are", "cute"], "Hello")]
 
 
+def custom_get_noun_chunks(doc):
+    for token in doc:
+        yield (token.i, token.i + 1, 42)
+
+
 @pytest.mark.parametrize("text", ["rat"])
 def test_serialize_vocab(en_vocab, text):
     text_hash = en_vocab.strings.add(text)
@@ -23,8 +28,8 @@ def test_serialize_vocab(en_vocab, text):
 
 @pytest.mark.parametrize("strings1,strings2", test_strings)
 def test_serialize_vocab_roundtrip_bytes(strings1, strings2):
-    vocab1 = Vocab(strings=strings1)
-    vocab2 = Vocab(strings=strings2)
+    vocab1 = Vocab(strings=strings1, get_noun_chunks=custom_get_noun_chunks)
+    vocab2 = Vocab(strings=strings2, get_noun_chunks=custom_get_noun_chunks)
     vocab1_b = vocab1.to_bytes()
     vocab2_b = vocab2.to_bytes()
     if strings1 == strings2:
@@ -37,11 +42,12 @@ def test_serialize_vocab_roundtrip_bytes(strings1, strings2):
     assert new_vocab1.to_bytes() == vocab1_b
     assert len(new_vocab1.strings) == len(strings1)
     assert sorted([s for s in new_vocab1.strings]) == sorted(strings1)
+    assert new_vocab1.get_noun_chunks.__name__ == custom_get_noun_chunks.__name__
 
 
 @pytest.mark.parametrize("strings1,strings2", test_strings)
 def test_serialize_vocab_roundtrip_disk(strings1, strings2):
-    vocab1 = Vocab(strings=strings1)
+    vocab1 = Vocab(strings=strings1, get_noun_chunks=custom_get_noun_chunks)
     vocab2 = Vocab(strings=strings2)
     with make_tempdir() as d:
         file_path1 = d / "vocab1"
@@ -57,7 +63,7 @@ def test_serialize_vocab_roundtrip_disk(strings1, strings2):
             assert [s for s in vocab1_d.strings] == [s for s in vocab2_d.strings]
         else:
             assert [s for s in vocab1_d.strings] != [s for s in vocab2_d.strings]
-
+        assert vocab1_d.get_noun_chunks.__name__ == custom_get_noun_chunks.__name__
 
 @pytest.mark.parametrize("strings,lex_attr", test_strings_attrs)
 def test_serialize_vocab_lex_attrs_bytes(strings, lex_attr):
@@ -130,7 +136,7 @@ def test_serialize_stringstore_roundtrip_disk(strings1, strings2):
 
 @pytest.mark.parametrize("strings,lex_attr", test_strings_attrs)
 def test_pickle_vocab(strings, lex_attr):
-    vocab = Vocab(strings=strings)
+    vocab = Vocab(strings=strings, get_noun_chunks=custom_get_noun_chunks)
     ops = get_current_ops()
     vectors = Vectors(data=ops.xp.zeros((10, 10)), mode="floret", hash_count=1)
     vocab.vectors = vectors
@@ -138,4 +144,5 @@ def test_pickle_vocab(strings, lex_attr):
     vocab_pickled = pickle.dumps(vocab)
     vocab_unpickled = pickle.loads(vocab_pickled)
     assert vocab.to_bytes() == vocab_unpickled.to_bytes()
+    assert vocab_unpickled.get_noun_chunks.__name__ == custom_get_noun_chunks.__name__
     assert vocab_unpickled.vectors.mode == "floret"

@@ -2,6 +2,7 @@
 from libc.string cimport memcpy
 
 import srsly
+from srsly.util import FilePath
 from thinc.api import get_array_module, get_current_ops
 import functools
 
@@ -420,6 +421,30 @@ cdef class Vocab:
                     self.lookups.get_table("lexeme_norm"),
                 )
 
+    def _deserialize_get_noun_chunks(self, bytes_data: bytes):
+        self.get_noun_chunks = srsly.pickle_loads(bytes_data)
+
+    def _serialize_get_noun_chunks_to_disk(self, filepath: FilePath):
+        """Save the implementation of get_noun_chunks to a directory.
+
+        filepath (str / Path): A path to a binary file,
+            Paths may be either strings or Path-like objects.
+        """
+        path = util.ensure_path(filepath)
+        with open(filepath, "wb") as file_:
+            file_.write(srsly.pickle_dumps(self.get_noun_chunks))
+
+    def _deserialize_get_noun_chunks_from_disk(self, filepath: FilePath):
+        """Load the implementation of get_noun_chunks from a directory.
+
+        filepath (str / Path): A path to a binary file holding get_noun_chunks serialization,
+            Paths may be either strings or Path-like objects.
+        """
+        path = util.ensure_path(filepath)
+        if filepath.exists():
+            with open(filepath, "rb") as file_:
+                self._deserialize_get_noun_chunks(file_.read())
+        return self
 
     def to_disk(self, path, *, exclude=tuple()):
         """Save the current state to a directory.
@@ -440,6 +465,8 @@ cdef class Vocab:
             self.vectors.to_disk(path, exclude=["strings"])
         if "lookups" not in "exclude":
             self.lookups.to_disk(path)
+        if "get_noun_chunks" not in "exclude":
+            self._serialize_get_noun_chunks_to_disk(path / "get_noun_chunks.bin")
 
     def from_disk(self, path, *, exclude=tuple()):
         """Loads state from a directory. Modifies the object in place and
@@ -464,6 +491,8 @@ cdef class Vocab:
             self.lex_attr_getters[NORM] = util.add_lookups(
                 self.lex_attr_getters.get(NORM, LEX_ATTRS[NORM]), self.lookups.get_table("lexeme_norm")
             )
+        if "get_noun_chunks" not in "exclude":
+            self._deserialize_get_noun_chunks_from_disk(path / "get_noun_chunks.bin")
         self.length = 0
         self._by_orth = PreshMap()
         return self
@@ -486,6 +515,7 @@ cdef class Vocab:
             "strings": lambda: self.strings.to_bytes(),
             "vectors": deserialize_vectors,
             "lookups": lambda: self.lookups.to_bytes(),
+            "get_noun_chunks": lambda: srsly.pickle_dumps(self.get_noun_chunks),
         }
         return util.to_bytes(getters, exclude)
 
@@ -508,6 +538,7 @@ cdef class Vocab:
             "strings": lambda b: self.strings.from_bytes(b),
             "vectors": lambda b: serialize_vectors(b),
             "lookups": lambda b: self.lookups.from_bytes(b),
+            "get_noun_chunks": self._deserialize_get_noun_chunks,
         }
         util.from_bytes(bytes_data, setters, exclude)
         if "lexeme_norm" in self.lookups:
