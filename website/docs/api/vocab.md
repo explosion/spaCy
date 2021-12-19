@@ -327,4 +327,4 @@ serialization by passing in the string names via the `exclude` argument.
 | `strings`         | The strings in the [`StringStore`](/api/stringstore). |
 | `vectors`         | The word vectors, if available.                       |
 | `lookups`         | The lookup tables, if available.                      |
-| `get_noun_chunks` | A function that yields base noun phrases              |
+| `get_noun_chunks` | A function that yields base noun phrases.             |
