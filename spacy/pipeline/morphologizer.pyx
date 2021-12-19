@@ -231,12 +231,13 @@ class Morphologizer(Tagger):
         cdef Vocab vocab = self.vocab
         cdef bint overwrite = self.cfg["overwrite"]
         cdef bint extend = self.cfg["extend"]
+        labels = self.labels
         for i, doc in enumerate(docs):
             doc_tag_ids = batch_tag_ids[i]
             if hasattr(doc_tag_ids, "get"):
                 doc_tag_ids = doc_tag_ids.get()
             for j, tag_id in enumerate(doc_tag_ids):
-                morph = self.labels[tag_id]
+                morph = labels[tag_id]
                 # set morph
                 if doc.c[j].morph == 0 or overwrite or extend:
                     if overwrite and extend:

@@ -1754,6 +1754,23 @@
         },
         {
             "type": "education",
+            "id": "applt-course",
+            "title": "Applied Language Technology",
+            "slogan": "NLP for newcomers using spaCy and Stanza",
+            "description": "These learning materials provide an introduction to applied language technology for audiences who are unfamiliar with language technology and programming. The learning materials assume no previous knowledge of the Python programming language.",
+            "url": "https://applied-language-technology.readthedocs.io/",
+            "image": "https://www.mv.helsinki.fi/home/thiippal/images/applt-preview.jpg",
+            "thumb": "https://applied-language-technology.readthedocs.io/en/latest/_static/logo.png",
+            "author": "Tuomo Hiippala",
+            "author_links": {
+                "twitter": "tuomo_h",
+                "github": "thiippal",
+                "website": "https://www.mv.helsinki.fi/home/thiippal/"
+            },
+            "category": ["courses"]
+        },
+        {
+            "type": "education",
             "id": "video-spacys-ner-model",
             "title": "spaCy's NER model",
             "slogan": "Incremental parsing with bloom embeddings and residual CNNs",
@@ -2755,6 +2772,54 @@
                 "github": "yanaiela",
                 "twitter": "yanaiela",
                 "website": "https://yanaiela.github.io"
+            }
+        },
+        {
+            "id": "Healthsea",
+            "title": "Healthsea",
+            "slogan": "Healthsea: an end-to-end spaCy pipeline for exploring health supplement effects",
+            "description": "This spaCy project trains an NER model and a custom Text Classification model with Clause Segmentation and Blinding capabilities to analyze supplement reviews and their potential effects on health.",
+            "github": "explosion/healthsea",
+            "thumb": "https://github.com/explosion/healthsea/blob/main/img/Jellyfish.png",
+            "category": ["pipeline", "research"],
+            "code_example": [
+                "import spacy",
+                "",
+                "nlp = spacy.load(\"en_healthsea\")",
+                "doc = nlp(\"This is great for joint pain.\")",
+                "",
+                "# Clause Segmentation & Blinding",
+                "print(doc._.clauses)",
+                "",
+                ">     {",
+                ">    \"split_indices\": [0, 7],",
+                ">    \"has_ent\": true,",
+                ">    \"ent_indices\": [4, 6],",
+                ">    \"blinder\": \"_CONDITION_\",",
+                ">    \"ent_name\": \"joint pain\",",
+                ">    \"cats\": {",
+                ">        \"POSITIVE\": 0.9824668169021606,",
+                ">        \"NEUTRAL\": 0.017364952713251114,",
+                ">        \"NEGATIVE\": 0.00002889777533710003,",
+                ">        \"ANAMNESIS\": 0.0001394189748680219",
+                ">    \"prediction_text\": [\"This\", \"is\", \"great\", \"for\", \"_CONDITION_\", \"!\"]",
+                ">    }",
+                "",
+                "# Aggregated results",
+                ">    {",
+                ">    \"joint_pain\": {",
+                ">        \"effects\": [\"POSITIVE\"],",
+                ">        \"effect\": \"POSITIVE\",",
+                ">        \"label\": \"CONDITION\",",
+                ">        \"text\": \"joint pain\"",
+                ">       }",
+                ">    }"
+            ],
+            "author": "Edward Schmuhl",
+            "author_links": {
+                "github": "thomashacker",
+                "twitter": "aestheticedwar1",
+                "website": "https://explosion.ai/"
             }
         },
         {
