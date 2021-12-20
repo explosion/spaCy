@@ -186,7 +186,7 @@ class SpanRuler(Pipe):
         get_examples (Callable[[], Iterable[Example]]): Function that
             returns a representative sample of gold-standard Example objects.
         nlp (Language): The current nlp object the component is part of.
-        patterns Optional[Iterable[PatternType]]: The list of patterns.
+        patterns (Optional[Iterable[PatternType]]): The list of patterns.
 
         DOCS: https://spacy.io/api/spanruler#initialize
         """
