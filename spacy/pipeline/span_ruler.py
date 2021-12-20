@@ -253,7 +253,7 @@ class SpanRuler(Pipe):
         )
         self.phrase_matcher: PhraseMatcher = PhraseMatcher(
             self.nlp.vocab,
-            attr=cast(bool, self.cfg["phrase_matcher_attr"]),
+            attr=cast(Optional[Union[int, str]], self.cfg["phrase_matcher_attr"]),
             validate=cast(bool, self.cfg["validate"]),
         )
 
