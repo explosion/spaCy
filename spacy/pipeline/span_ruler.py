@@ -121,6 +121,12 @@ class SpanRuler(Pipe):
         """Whether a label is present in the patterns."""
         return label in self.matcher or label in self.phrase_matcher
 
+    @property
+    def key(self) -> str:
+        """Key of the doc.spans dict to save the spans under.
+        """
+        return str(self.cfg["spans_key"])
+
     def __call__(self, doc: Doc) -> Doc:
         """Find matches in document and add them as entities.
 
@@ -154,15 +160,15 @@ class SpanRuler(Pipe):
 
     def set_annotations(self, doc, matches):
         """Modify the document in place"""
-        if not self.cfg["spans_key"] in doc.spans:
-            doc.spans[self.cfg["spans_key"]] = []
+        if not self.key in doc.spans:
+            doc.spans[self.key] = []
         if self.cfg["overwrite"]:
             spans = []
         else:
-            spans = doc.spans[self.cfg["spans_key"]]
+            spans = doc.spans[self.key]
         for match_id, start, end in matches:
             spans.append(Span(doc, start, end, label=match_id))
-        doc.spans[self.cfg["spans_key"]] = spans
+        doc.spans[self.key] = spans
 
     @property
     def labels(self) -> Tuple[str, ...]:
