@@ -73,7 +73,6 @@ class SpanRuler(Pipe):
         validate: bool = False,
         overwrite: bool = False,
         scorer: Optional[Callable] = spancat_score,
-        patterns: Optional[List[PatternType]] = None,
     ) -> None:
         """Initialize the span ruler. If patterns are supplied here, they
         need to be a list of dictionaries with a `"label"` and `"pattern"`
@@ -92,7 +91,6 @@ class SpanRuler(Pipe):
             to the internal PhraseMatcher as `attr`
         validate (bool): Whether patterns should be validated, passed to
             Matcher and PhraseMatcher as `validate`
-        patterns (iterable): Optional patterns to load in.
         overwrite (bool): Whether to reset any existing spans under this spans
             key.
         scorer (Optional[Callable]): The scoring method. Defaults to
@@ -108,10 +106,8 @@ class SpanRuler(Pipe):
             "phrase_matcher_attr": phrase_matcher_attr,
             "validate": validate,
         }
-        self.clear()
-        if patterns:
-            self.add_patterns(patterns)
         self.scorer = scorer
+        self.clear()
 
     def __len__(self) -> int:
         """The number of all labels added to the span ruler."""

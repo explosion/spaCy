@@ -41,7 +41,8 @@ def test_span_ruler_fix8216(nlp, patterns):
 
 
 def test_span_ruler_init(nlp, patterns):
-    ruler = SpanRuler(nlp, patterns=patterns)
+    ruler = SpanRuler(nlp)
+    ruler.add_patterns(patterns)
     assert len(ruler) == len(patterns)
     assert len(ruler.labels) == 4
     assert "HELLO" in ruler
@@ -136,7 +137,8 @@ def test_span_ruler_existing_overwrite(nlp, patterns):
 
 
 def test_span_ruler_serialize_bytes(nlp, patterns):
-    ruler = SpanRuler(nlp, patterns=patterns)
+    ruler = SpanRuler(nlp)
+    ruler.add_patterns(patterns)
     assert len(ruler) == len(patterns)
     assert len(ruler.labels) == 4
     ruler_bytes = ruler.to_bytes()
@@ -153,7 +155,8 @@ def test_span_ruler_serialize_bytes(nlp, patterns):
 
 
 def test_span_ruler_serialize_phrase_matcher_attr_bytes(nlp, patterns):
-    ruler = SpanRuler(nlp, phrase_matcher_attr="LOWER", patterns=patterns)
+    ruler = SpanRuler(nlp, phrase_matcher_attr="LOWER")
+    ruler.add_patterns(patterns)
     assert len(ruler) == len(patterns)
     assert len(ruler.labels) == 4
     ruler_bytes = ruler.to_bytes()
@@ -187,7 +190,8 @@ def test_span_ruler_validate(nlp):
 
 
 def test_span_ruler_properties(nlp, patterns):
-    ruler = SpanRuler(nlp, patterns=patterns, overwrite=True)
+    ruler = SpanRuler(nlp, overwrite=True)
+    ruler.add_patterns(patterns)
     assert sorted(ruler.labels) == sorted(["HELLO", "BYE", "COMPLEX", "TECH_ORG"])
 
 
