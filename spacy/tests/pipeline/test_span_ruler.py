@@ -42,7 +42,7 @@ def test_span_ruler_fix8216(nlp, patterns):
 
 def test_span_ruler_init(nlp, patterns):
     ruler = SpanRuler(nlp, patterns=patterns)
-    assert len(ruler) == len(set([p["label"] for p in patterns]))
+    assert len(ruler) == len(patterns)
     assert len(ruler.labels) == 4
     assert "HELLO" in ruler
     assert "BYE" in ruler
@@ -137,14 +137,14 @@ def test_span_ruler_existing_overwrite(nlp, patterns):
 
 def test_span_ruler_serialize_bytes(nlp, patterns):
     ruler = SpanRuler(nlp, patterns=patterns)
-    assert len(ruler) == len(set([p["label"] for p in patterns]))
+    assert len(ruler) == len(patterns)
     assert len(ruler.labels) == 4
     ruler_bytes = ruler.to_bytes()
     new_ruler = SpanRuler(nlp)
     assert len(new_ruler) == 0
     assert len(new_ruler.labels) == 0
     new_ruler = new_ruler.from_bytes(ruler_bytes)
-    assert len(new_ruler) == len(set([p["label"] for p in patterns]))
+    assert len(new_ruler) == len(patterns)
     assert len(new_ruler.labels) == 4
     assert len(new_ruler.patterns) == len(ruler.patterns)
     for pattern in ruler.patterns:
@@ -154,7 +154,7 @@ def test_span_ruler_serialize_bytes(nlp, patterns):
 
 def test_span_ruler_serialize_phrase_matcher_attr_bytes(nlp, patterns):
     ruler = SpanRuler(nlp, phrase_matcher_attr="LOWER", patterns=patterns)
-    assert len(ruler) == len(set([p["label"] for p in patterns]))
+    assert len(ruler) == len(patterns)
     assert len(ruler.labels) == 4
     ruler_bytes = ruler.to_bytes()
     new_ruler = SpanRuler(nlp)
@@ -162,7 +162,7 @@ def test_span_ruler_serialize_phrase_matcher_attr_bytes(nlp, patterns):
     assert len(new_ruler.labels) == 0
     assert new_ruler.cfg["phrase_matcher_attr"] is None
     new_ruler = new_ruler.from_bytes(ruler_bytes)
-    assert len(new_ruler) == len(set([p["label"] for p in patterns]))
+    assert len(new_ruler) == len(patterns)
     assert len(new_ruler.labels) == 4
     assert new_ruler.cfg["phrase_matcher_attr"] == "LOWER"
 

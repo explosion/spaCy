@@ -115,7 +115,7 @@ class SpanRuler(Pipe):
 
     def __len__(self) -> int:
         """The number of all labels added to the span ruler."""
-        return len(set([p["label"] for p in self._patterns]))
+        return len(self._patterns)
 
     def __contains__(self, label: str) -> bool:
         """Whether a label is present in the patterns."""
