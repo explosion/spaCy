@@ -731,23 +731,23 @@ def test_textcat_evaluation():
 )
 def test_textcat_eval_missing(multi_label: bool, spring_p: float):
     """
-    multi-label: the missing spring in gold_doc_2 doesn't incur a penalty
-    exclusive labels: the missing spring in gold_doc_2 is interpreted as 0.0"""
+    multi-label: the missing 'spring' in gold_doc_2 doesn't incur a penalty
+    exclusive labels: the missing 'spring' in gold_doc_2 is interpreted as 0.0"""
     train_examples = []
     nlp = English()
 
-    gold_doc_1 = nlp("one")
-    gold_doc_1.cats = {"winter": 0.0, "summer": 0.0, "autumn": 0.0, "spring": 1.0}
-    pred_doc_1 = nlp("one")
-    pred_doc_1.cats = {"winter": 0.0, "summer": 0.0, "autumn": 0.0, "spring": 1.0}
-    train_examples.append(Example(pred_doc_1, gold_doc_1))
+    ref1 = nlp("one")
+    ref1.cats = {"winter": 0.0, "summer": 0.0, "autumn": 0.0, "spring": 1.0}
+    pred1 = nlp("one")
+    pred1.cats = {"winter": 0.0, "summer": 0.0, "autumn": 0.0, "spring": 1.0}
+    train_examples.append(Example(ref1, pred1))
 
-    gold_doc_2 = nlp("two")
+    ref2 = nlp("two")
     # reference 'spring' is missing, pred 'spring' is 1
-    gold_doc_2.cats = {"winter": 0.0, "summer": 0.0, "autumn": 1.0}
-    pred_doc_2 = nlp("two")
-    pred_doc_2.cats = {"winter": 0.0, "summer": 0.0, "autumn": 0.0, "spring": 1.0}
-    train_examples.append(Example(pred_doc_2, gold_doc_2))
+    ref2.cats = {"winter": 0.0, "summer": 0.0, "autumn": 1.0}
+    pred2 = nlp("two")
+    pred2.cats = {"winter": 0.0, "summer": 0.0, "autumn": 0.0, "spring": 1.0}
+    train_examples.append(Example(pred2, ref2))
 
     scores = Scorer().score_cats(
         train_examples,
@@ -765,18 +765,18 @@ def test_textcat_eval_missing(multi_label: bool, spring_p: float):
 )
 def test_textcat_loss(multi_label: bool, expected_loss: float):
     """
-    multi-label: the missing spring in gold_doc_2 doesn't incur an increase in loss
-    exclusive labels: the missing spring in gold_doc_2 is interpreted as 0.0 and adds to the loss"""
+    multi-label: the missing 'spring' in gold_doc_2 doesn't incur an increase in loss
+    exclusive labels: the missing 'spring' in gold_doc_2 is interpreted as 0.0 and adds to the loss"""
     train_examples = []
     nlp = English()
 
-    doc_1 = nlp("one")
-    cats_1 = {"winter": 0.0, "summer": 0.0, "autumn": 0.0, "spring": 1.0}
-    train_examples.append(Example.from_dict(doc_1, {"cats": cats_1}))
+    doc1 = nlp("one")
+    cats1 = {"winter": 0.0, "summer": 0.0, "autumn": 0.0, "spring": 1.0}
+    train_examples.append(Example.from_dict(doc1, {"cats": cats1}))
 
-    doc_2 = nlp("two")
-    cats_2 = {"winter": 0.0, "summer": 0.0, "autumn": 1.0}
-    train_examples.append(Example.from_dict(doc_2, {"cats": cats_2}))
+    doc2 = nlp("two")
+    cats2 = {"winter": 0.0, "summer": 0.0, "autumn": 1.0}
+    train_examples.append(Example.from_dict(doc2, {"cats": cats2}))
 
     if multi_label:
         textcat = nlp.add_pipe("textcat_multilabel")
