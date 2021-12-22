@@ -725,37 +725,38 @@ def test_textcat_evaluation():
     assert scores["cats_micro_r"] == 4 / 6
 
 
-def test_textcat_evaluation_missing():
+@pytest.mark.parametrize(
+    "multi_label,spring_p",
+    [(True, 1 / 1), (False, 1 / 2)],
+)
+def test_textcat_evaluation_missing(multi_label: bool, spring_p: float):
+    """
+    multi-label: the missing spring in gold_doc_2 doesn't incur a penalty
+    exclusive labels: the missing spring in gold_doc_2 is interpreted as 0.0"""
     train_examples = []
     nlp = English()
-    ref1 = nlp("one")
-    # reference 'summer' is missing, pred 'summer' is 0
-    ref1.cats = {"winter": 1.0, "spring": 1.0, "autumn": 1.0}
-    pred1 = nlp("one")
-    pred1.cats = {"winter": 1.0, "summer": 0.0, "spring": 1.0, "autumn": 1.0}
-    train_examples.append(Example(pred1, ref1))
 
-    ref2 = nlp("two")
+    gold_doc_1 = nlp("one")
+    gold_doc_1.cats = {"winter": 0.0, "summer": 0.0, "autumn": 0.0, "spring": 1.0}
+    pred_doc_1 = nlp("one")
+    pred_doc_1.cats = {"winter": 0.0, "summer": 0.0, "autumn": 0.0, "spring": 1.0}
+    train_examples.append(Example(pred_doc_1, gold_doc_1))
+
+    gold_doc_2 = nlp("two")
     # reference 'spring' is missing, pred 'spring' is 1
-    ref2.cats = {"winter": 0.0, "summer": 0.0, "autumn": 1.0}
-    pred2 = nlp("two")
-    pred2.cats = {"winter": 1.0, "summer": 0.0, "spring": 1.0, "autumn": 1.0}
-    train_examples.append(Example(pred2, ref2))
+    gold_doc_2.cats = {"winter": 0.0, "summer": 0.0, "autumn": 1.0}
+    pred_doc_2 = nlp("two")
+    pred_doc_2.cats = {"winter": 0.0, "summer": 0.0, "autumn": 0.0, "spring": 1.0}
+    train_examples.append(Example(pred_doc_2, gold_doc_2))
 
     scores = Scorer().score_cats(
-        train_examples, "cats", labels=["winter", "summer", "spring", "autumn"]
+        train_examples,
+        "cats",
+        labels=["winter", "summer", "spring", "autumn"],
+        multi_label=multi_label,
     )
-    assert scores["cats_f_per_type"]["winter"]["p"] == 1 / 2
-    assert scores["cats_f_per_type"]["winter"]["r"] == 1 / 1
-    assert scores["cats_f_per_type"]["summer"]["p"] == 0
-    assert scores["cats_f_per_type"]["summer"]["r"] == 0
-    assert scores["cats_f_per_type"]["spring"]["p"] == 1 / 1
+    assert scores["cats_f_per_type"]["spring"]["p"] == spring_p
     assert scores["cats_f_per_type"]["spring"]["r"] == 1 / 1
-    assert scores["cats_f_per_type"]["autumn"]["p"] == 2 / 2
-    assert scores["cats_f_per_type"]["autumn"]["r"] == 2 / 2
-
-    assert scores["cats_micro_p"] == 4 / 5
-    assert scores["cats_micro_r"] == 4 / 4
 
 
 def test_textcat_threshold():

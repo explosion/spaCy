@@ -445,7 +445,8 @@ class Scorer:
             getter(doc, attr) should return the values for the individual doc.
         labels (Iterable[str]): The set of possible labels. Defaults to [].
         multi_label (bool): Whether the attribute allows multiple labels.
-            Defaults to True.
+            Defaults to True. When set to False (exclusive labels), missing
+            gold labels are interpreted as 0.0.
         positive_label (str): The positive label for a binary task with
             exclusive classes. Defaults to None.
         threshold (float): Cutoff to consider a prediction "positive". Defaults
@@ -485,6 +486,8 @@ class Scorer:
             for label in labels:
                 pred_score = pred_cats.get(label, 0.0)
                 gold_score = gold_cats.get(label)
+                if not gold_score and not multi_label:
+                    gold_score = 0.0
                 if gold_score is not None:
                     auc_per_type[label].score_set(pred_score, gold_score)
             if multi_label:
