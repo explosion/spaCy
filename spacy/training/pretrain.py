@@ -31,6 +31,8 @@ def pretrain(
     allocator = config["training"]["gpu_allocator"]
     if use_gpu >= 0 and allocator:
         set_gpu_allocator(allocator)
+    # ignore in pretraining because we're creating it now
+    config["initialize"]["init_tok2vec"] = None
     nlp = load_model_from_config(config)
     _config = nlp.config.interpolate()
     P = registry.resolve(_config["pretraining"], schema=ConfigSchemaPretrain)
@@ -49,7 +51,12 @@ def pretrain(
     objective = model.attrs["loss"]
     # TODO: move this to logger function?
     tracker = ProgressTracker(frequency=10000)
-    msg.divider(f"Pre-training tok2vec layer - starting at epoch {epoch_resume}")
+    if P["n_save_epoch"]:
+        msg.divider(
+            f"Pre-training tok2vec layer - starting at epoch {epoch_resume} - saving every {P['n_save_epoch']} epoch"
+        )
+    else:
+        msg.divider(f"Pre-training tok2vec layer - starting at epoch {epoch_resume}")
     row_settings = {"widths": (3, 10, 10, 6, 4), "aligns": ("r", "r", "r", "r", "r")}
     msg.row(("#", "# Words", "Total Loss", "Loss", "w/s"), **row_settings)
 
@@ -78,7 +85,12 @@ def pretrain(
                 msg.row(progress, **row_settings)
             if P["n_save_every"] and (batch_id % P["n_save_every"] == 0):
                 _save_model(epoch, is_temp=True)
-        _save_model(epoch)
+
+        if P["n_save_epoch"]:
+            if epoch % P["n_save_epoch"] == 0 or epoch == P["max_epochs"] - 1:
+                _save_model(epoch)
+        else:
+            _save_model(epoch)
         tracker.epoch_loss = 0.0
 
 
@@ -93,7 +105,7 @@ def ensure_docs(examples_or_docs: Iterable[Union[Doc, Example]]) -> List[Doc]:
 
 
 def _resume_model(
-    model: Model, resume_path: Path, epoch_resume: int, silent: bool = True
+    model: Model, resume_path: Path, epoch_resume: Optional[int], silent: bool = True
 ) -> int:
     msg = Printer(no_print=silent)
     msg.info(f"Resume training tok2vec from: {resume_path}")

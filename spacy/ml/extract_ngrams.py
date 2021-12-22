@@ -6,7 +6,7 @@ from ..attrs import LOWER
 
 @registry.layers("spacy.extract_ngrams.v1")
 def extract_ngrams(ngram_size: int, attr: int = LOWER) -> Model:
-    model = Model("extract_ngrams", forward)
+    model: Model = Model("extract_ngrams", forward)
     model.attrs["ngram_size"] = ngram_size
     model.attrs["attr"] = attr
     return model
@@ -19,7 +19,7 @@ def forward(model: Model, docs, is_train: bool):
         unigrams = model.ops.asarray(doc.to_array([model.attrs["attr"]]))
         ngrams = [unigrams]
         for n in range(2, model.attrs["ngram_size"] + 1):
-            ngrams.append(model.ops.ngrams(n, unigrams))
+            ngrams.append(model.ops.ngrams(n, unigrams))  # type: ignore[arg-type]
         keys = model.ops.xp.concatenate(ngrams)
         keys, vals = model.ops.xp.unique(keys, return_counts=True)
         batch_keys.append(keys)

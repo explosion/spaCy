@@ -56,7 +56,7 @@ cdef class Doc:
 
     cdef public bint has_unknown_spaces
 
-    cdef public list _py_tokens
+    cdef public object _context
 
     cdef int length
     cdef int max_length

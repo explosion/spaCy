@@ -203,11 +203,12 @@ $ python -m spacy init vectors [lang] [vectors_loc] [output_dir] [--prune] [--tr
 
 | Name               | Description                                                                                                                                                                                                                                                         |
 | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `lang`             | Pipeline language [ISO code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes), e.g. `en`. ~~str (positional)~~                                                                                                                                                |
+| `lang`             | Pipeline language [IETF language tag](https://www.w3.org/International/articles/language-tags/), such as `en`. ~~str (positional)~~                                                                                                                                 |
 | `vectors_loc`      | Location of vectors. Should be a file where the first row contains the dimensions of the vectors, followed by a space-separated Word2Vec table. File can be provided in `.txt` format or as a zipped text file in `.zip` or `.tar.gz` format. ~~Path (positional)~~ |
 | `output_dir`       | Pipeline output directory. Will be created if it doesn't exist. ~~Path (positional)~~                                                                                                                                                                               |
 | `--truncate`, `-t` | Number of vectors to truncate to when reading in vectors file. Defaults to `0` for no truncation. ~~int (option)~~                                                                                                                                                  |
 | `--prune`, `-p`    | Number of vectors to prune the vocabulary to. Defaults to `-1` for no pruning. ~~int (option)~~                                                                                                                                                                     |
+| `--mode`, `-m`     | Vectors mode: `default` or [`floret`](https://github.com/explosion/floret). Defaults to `default`. ~~Optional[str] \(option)~~                                                                                                                                                   |
 | `--name`, `-n`     | Name to assign to the word vectors in the `meta.json`, e.g. `en_core_web_md.vectors`. ~~Optional[str] \(option)~~                                                                                                                                                   |
 | `--verbose`, `-V`  | Print additional information and explanations. ~~bool (flag)~~                                                                                                                                                                                                      |
 | `--help`, `-h`     | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                                                                                          |
@@ -818,6 +819,29 @@ $ python -m spacy train [config_path] [--output] [--code] [--verbose] [--gpu-id]
 | `--help`, `-h`    | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                                         |
 | overrides         | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--paths.train ./train.spacy`. ~~Any (option/flag)~~                         |
 | **CREATES**       | The final trained pipeline and the best trained pipeline.                                                                                                                                                          |
+
+### Calling the training function from Python {#train-function new="3.2"}
+
+The training CLI exposes a `train` helper function that lets you run the
+training just like `spacy train`. Usually it's easier to use the command line
+directly, but if you need to kick off training from code this is how to do it.
+
+> #### Example
+>
+> ```python
+> from spacy.cli.train import train
+>
+> train("./config.cfg", overrides={"paths.train": "./train.spacy", "paths.dev": "./dev.spacy"})
+>
+> ```
+
+| Name           | Description                                                                                                                   |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `config_path`  | Path to the config to use for training. ~~Union[str, Path]~~                                                                  |
+| `output_path`  | Optional name of directory to save output model in. If not provided a model will not be saved. ~~Optional[Union[str, Path]]~~ |
+| _keyword-only_ |                                                                                                                               |
+| `use_gpu`      | Which GPU to use. Defaults to -1 for no GPU. ~~int~~                                                                          |
+| `overrides`    | Values to override config settings. ~~Dict[str, Any]~~                                                                        |
 
 ## pretrain {#pretrain new="2.1" tag="command,experimental"}
 

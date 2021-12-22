@@ -13,7 +13,7 @@ import warnings
 
 from .pretrain import get_tok2vec_ref
 from ..lookups import Lookups
-from ..vectors import Vectors
+from ..vectors import Vectors, Mode as VectorsMode
 from ..errors import Errors, Warnings
 from ..schemas import ConfigSchemaTraining
 from ..util import registry, load_model_from_config, resolve_dot_names, logger
@@ -106,7 +106,7 @@ def init_vocab(
     data: Optional[Path] = None,
     lookups: Optional[Lookups] = None,
     vectors: Optional[str] = None,
-) -> "Language":
+) -> None:
     if lookups:
         nlp.vocab.lookups = lookups
         logger.info(f"Added vocab lookups: {', '.join(lookups.tables)}")
@@ -132,7 +132,7 @@ def init_vocab(
         logger.info(f"Added vectors: {vectors}")
     # warn if source model vectors are not identical
     sourced_vectors_hashes = nlp.meta.pop("_sourced_vectors_hashes", {})
-    vectors_hash = hash(nlp.vocab.vectors.to_bytes())
+    vectors_hash = hash(nlp.vocab.vectors.to_bytes(exclude=["strings"]))
     for sourced_component, sourced_vectors_hash in sourced_vectors_hashes.items():
         if vectors_hash != sourced_vectors_hash:
             warnings.warn(Warnings.W113.format(name=sourced_component))
@@ -160,11 +160,17 @@ def load_vectors_into_model(
         err = ConfigValidationError.from_error(e, title=title, desc=desc)
         raise err from None
 
-    if len(vectors_nlp.vocab.vectors.keys()) == 0:
+    if (
+        len(vectors_nlp.vocab.vectors.keys()) == 0
+        and vectors_nlp.vocab.vectors.mode != VectorsMode.floret
+    ) or (
+        vectors_nlp.vocab.vectors.data.shape[0] == 0
+        and vectors_nlp.vocab.vectors.mode == VectorsMode.floret
+    ):
         logger.warning(Warnings.W112.format(name=name))
 
     for lex in nlp.vocab:
-        lex.rank = nlp.vocab.vectors.key2row.get(lex.orth, OOV_RANK)
+        lex.rank = nlp.vocab.vectors.key2row.get(lex.orth, OOV_RANK)  # type: ignore[attr-defined]
 
 
 def init_tok2vec(
@@ -197,41 +203,80 @@ def convert_vectors(
     truncate: int,
     prune: int,
     name: Optional[str] = None,
+    mode: str = VectorsMode.default,
 ) -> None:
     vectors_loc = ensure_path(vectors_loc)
     if vectors_loc and vectors_loc.parts[-1].endswith(".npz"):
-        nlp.vocab.vectors = Vectors(data=numpy.load(vectors_loc.open("rb")))
+        nlp.vocab.vectors = Vectors(
+            strings=nlp.vocab.strings, data=numpy.load(vectors_loc.open("rb"))
+        )
         for lex in nlp.vocab:
             if lex.rank and lex.rank != OOV_RANK:
-                nlp.vocab.vectors.add(lex.orth, row=lex.rank)
+                nlp.vocab.vectors.add(lex.orth, row=lex.rank)  # type: ignore[attr-defined]
     else:
         if vectors_loc:
             logger.info(f"Reading vectors from {vectors_loc}")
-            vectors_data, vector_keys = read_vectors(vectors_loc, truncate)
+            vectors_data, vector_keys, floret_settings = read_vectors(
+                vectors_loc,
+                truncate,
+                mode=mode,
+            )
             logger.info(f"Loaded vectors from {vectors_loc}")
         else:
             vectors_data, vector_keys = (None, None)
-        if vector_keys is not None:
+        if vector_keys is not None and mode != VectorsMode.floret:
             for word in vector_keys:
                 if word not in nlp.vocab:
                     nlp.vocab[word]
         if vectors_data is not None:
-            nlp.vocab.vectors = Vectors(data=vectors_data, keys=vector_keys)
+            if mode == VectorsMode.floret:
+                nlp.vocab.vectors = Vectors(
+                    strings=nlp.vocab.strings,
+                    data=vectors_data,
+                    **floret_settings,
+                )
+            else:
+                nlp.vocab.vectors = Vectors(
+                    strings=nlp.vocab.strings, data=vectors_data, keys=vector_keys
+                )
     if name is None:
         # TODO: Is this correct? Does this matter?
         nlp.vocab.vectors.name = f"{nlp.meta['lang']}_{nlp.meta['name']}.vectors"
     else:
         nlp.vocab.vectors.name = name
     nlp.meta["vectors"]["name"] = nlp.vocab.vectors.name
-    if prune >= 1:
+    if prune >= 1 and mode != VectorsMode.floret:
         nlp.vocab.prune_vectors(prune)
 
 
-def read_vectors(vectors_loc: Path, truncate_vectors: int):
+def read_vectors(
+    vectors_loc: Path, truncate_vectors: int, *, mode: str = VectorsMode.default
+):
     f = ensure_shape(vectors_loc)
-    shape = tuple(int(size) for size in next(f).split())
-    if truncate_vectors >= 1:
-        shape = (truncate_vectors, shape[1])
+    header_parts = next(f).split()
+    shape = tuple(int(size) for size in header_parts[:2])
+    floret_settings = {}
+    if mode == VectorsMode.floret:
+        if len(header_parts) != 8:
+            raise ValueError(
+                "Invalid header for floret vectors. "
+                "Expected: bucket dim minn maxn hash_count hash_seed BOW EOW"
+            )
+        floret_settings = {
+            "mode": "floret",
+            "minn": int(header_parts[2]),
+            "maxn": int(header_parts[3]),
+            "hash_count": int(header_parts[4]),
+            "hash_seed": int(header_parts[5]),
+            "bow": header_parts[6],
+            "eow": header_parts[7],
+        }
+        if truncate_vectors >= 1:
+            raise ValueError(Errors.E860)
+    else:
+        assert len(header_parts) == 2
+        if truncate_vectors >= 1:
+            shape = (truncate_vectors, shape[1])
     vectors_data = numpy.zeros(shape=shape, dtype="f")
     vectors_keys = []
     for i, line in enumerate(tqdm.tqdm(f)):
@@ -244,21 +289,21 @@ def read_vectors(vectors_loc: Path, truncate_vectors: int):
         vectors_keys.append(word)
         if i == truncate_vectors - 1:
             break
-    return vectors_data, vectors_keys
+    return vectors_data, vectors_keys, floret_settings
 
 
 def open_file(loc: Union[str, Path]) -> IO:
     """Handle .gz, .tar.gz or unzipped files"""
     loc = ensure_path(loc)
     if tarfile.is_tarfile(str(loc)):
-        return tarfile.open(str(loc), "r:gz")
+        return tarfile.open(str(loc), "r:gz")  # type: ignore[return-value]
     elif loc.parts[-1].endswith("gz"):
-        return (line.decode("utf8") for line in gzip.open(str(loc), "r"))
+        return (line.decode("utf8") for line in gzip.open(str(loc), "r"))  # type: ignore[return-value]
     elif loc.parts[-1].endswith("zip"):
         zip_file = zipfile.ZipFile(str(loc))
         names = zip_file.namelist()
         file_ = zip_file.open(names[0])
-        return (line.decode("utf8") for line in file_)
+        return (line.decode("utf8") for line in file_)  # type: ignore[return-value]
     else:
         return loc.open("r", encoding="utf8")
 
@@ -271,7 +316,7 @@ def ensure_shape(vectors_loc):
     lines = open_file(vectors_loc)
     first_line = next(lines)
     try:
-        shape = tuple(int(size) for size in first_line.split())
+        shape = tuple(int(size) for size in first_line.split()[:2])
     except ValueError:
         shape = None
     if shape is not None:

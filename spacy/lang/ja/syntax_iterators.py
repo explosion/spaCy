@@ -1,4 +1,4 @@
-from typing import Union, Iterator
+from typing import Union, Iterator, Tuple, Set
 
 from ...symbols import NOUN, PROPN, PRON, VERB
 from ...tokens import Doc, Span
@@ -10,13 +10,13 @@ labels = ["nsubj", "nmod", "ddoclike", "nsubjpass", "pcomp", "pdoclike", "doclik
 # fmt: on
 
 
-def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Span]:
+def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Tuple[int, int, int]]:
     """Detect base noun phrases from a dependency parse. Works on Doc and Span."""
     doc = doclike.doc  # Ensure works on both Doc and Span.
     np_deps = [doc.vocab.strings.add(label) for label in labels]
     doc.vocab.strings.add("conj")
     np_label = doc.vocab.strings.add("NP")
-    seen = set()
+    seen: Set[int] = set()
     for i, word in enumerate(doclike):
         if word.pos not in (NOUN, PROPN, PRON):
             continue

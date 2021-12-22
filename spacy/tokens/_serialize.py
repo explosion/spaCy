@@ -1,6 +1,7 @@
-from typing import Iterable, Iterator, Union
+from typing import List, Dict, Set, Iterable, Iterator, Union, Optional
 from pathlib import Path
 import numpy
+from numpy import ndarray
 import zlib
 import srsly
 from thinc.api import NumpyOps
@@ -36,7 +37,7 @@ class DocBin:
         "spans": List[Dict[str, bytes]], # SpanGroups data for each doc
         "spaces": bytes, # Serialized numpy boolean array with spaces data
         "lengths": bytes, # Serialized numpy int32 array with the doc lengths
-        "strings": List[unicode] # List of unique strings in the token data
+        "strings": List[str] # List of unique strings in the token data
         "version": str, # DocBin version number
     }
 
@@ -74,13 +75,13 @@ class DocBin:
         self.version = "0.1"
         self.attrs = [attr for attr in attrs if attr != ORTH and attr != SPACY]
         self.attrs.insert(0, ORTH)  # Ensure ORTH is always attrs[0]
-        self.tokens = []
-        self.spaces = []
-        self.cats = []
-        self.span_groups = []
-        self.user_data = []
-        self.flags = []
-        self.strings = set()
+        self.tokens: List[ndarray] = []
+        self.spaces: List[ndarray] = []
+        self.cats: List[Dict] = []
+        self.span_groups: List[bytes] = []
+        self.user_data: List[Optional[bytes]] = []
+        self.flags: List[Dict] = []
+        self.strings: Set[str] = set()
         self.store_user_data = store_user_data
         for doc in docs:
             self.add(doc)
@@ -116,7 +117,8 @@ class DocBin:
             self.strings.add(token.ent_kb_id_)
             self.strings.add(token.ent_id_)
         self.cats.append(doc.cats)
-        self.user_data.append(srsly.msgpack_dumps(doc.user_data))
+        if self.store_user_data:
+            self.user_data.append(srsly.msgpack_dumps(doc.user_data))
         self.span_groups.append(doc.spans.to_bytes())
         for key, group in doc.spans.items():
             for span in group:
@@ -138,11 +140,11 @@ class DocBin:
         for i in range(len(self.tokens)):
             flags = self.flags[i]
             tokens = self.tokens[i]
-            spaces = self.spaces[i]
+            spaces: Optional[ndarray] = self.spaces[i]
             if flags.get("has_unknown_spaces"):
                 spaces = None
-            doc = Doc(vocab, words=tokens[:, orth_col], spaces=spaces)
-            doc = doc.from_array(self.attrs, tokens)
+            doc = Doc(vocab, words=tokens[:, orth_col], spaces=spaces)  # type: ignore
+            doc = doc.from_array(self.attrs, tokens)  # type: ignore
             doc.cats = self.cats[i]
             if self.span_groups[i]:
                 doc.spans.from_bytes(self.span_groups[i])

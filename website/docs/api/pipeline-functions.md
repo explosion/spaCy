@@ -130,3 +130,25 @@ exceed the transformer model max length.
 | `min_length`   | The minimum length for a token to be split. Defaults to `25`. ~~int~~ |
 | `split_length` | The length of the split tokens. Defaults to `5`. ~~int~~              |
 | **RETURNS**    | The modified `Doc` with the split tokens. ~~Doc~~                     |
+
+## doc_cleaner {#doc_cleaner tag="function" new="3.2.1"}
+
+Clean up `Doc` attributes. Intended for use at the end of pipelines with
+`tok2vec` or `transformer` pipeline components that store tensors and other
+values that can require a lot of memory and frequently aren't needed after the
+whole pipeline has run.
+
+> #### Example
+>
+> ```python
+> config = {"attrs": {"tensor": None}}
+> nlp.add_pipe("doc_cleaner", config=config)
+> doc = nlp("text")
+> assert doc.tensor is None
+> ```
+
+| Setting     | Description                                                                                                                                                                         |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `attrs`     | A dict of the `Doc` attributes and the values to set them to. Defaults to `{"tensor": None, "_.trf_data": None}` to clean up after `tok2vec` and `transformer` components. ~~dict~~ |
+| `silent`    | If `False`, show warnings if attributes aren't found or can't be set. Defaults to `True`. ~~bool~~                                                                                  |
+| **RETURNS** | The modified `Doc` with the modified attributes. ~~Doc~~                                                                                                                            |

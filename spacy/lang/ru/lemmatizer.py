@@ -1,8 +1,9 @@
-from typing import Optional, List, Dict, Tuple
+from typing import Optional, List, Dict, Tuple, Callable
 
 from thinc.api import Model
 
 from ...pipeline import Lemmatizer
+from ...pipeline.lemmatizer import lemmatizer_score
 from ...symbols import POS
 from ...tokens import Token
 from ...vocab import Vocab
@@ -20,6 +21,7 @@ class RussianLemmatizer(Lemmatizer):
         *,
         mode: str = "pymorphy2",
         overwrite: bool = False,
+        scorer: Optional[Callable] = lemmatizer_score,
     ) -> None:
         if mode == "pymorphy2":
             try:
@@ -31,7 +33,9 @@ class RussianLemmatizer(Lemmatizer):
                 ) from None
             if getattr(self, "_morph", None) is None:
                 self._morph = MorphAnalyzer()
-        super().__init__(vocab, model, name, mode=mode, overwrite=overwrite)
+        super().__init__(
+            vocab, model, name, mode=mode, overwrite=overwrite, scorer=scorer
+        )
 
     def pymorphy2_lemmatize(self, token: Token) -> List[str]:
         string = token.text
@@ -56,7 +60,9 @@ class RussianLemmatizer(Lemmatizer):
         if not len(filtered_analyses):
             return [string.lower()]
         if morphology is None or (len(morphology) == 1 and POS in morphology):
-            return list(dict.fromkeys([analysis.normal_form for analysis in filtered_analyses]))
+            return list(
+                dict.fromkeys([analysis.normal_form for analysis in filtered_analyses])
+            )
         if univ_pos in ("ADJ", "DET", "NOUN", "PROPN"):
             features_to_compare = ["Case", "Number", "Gender"]
         elif univ_pos == "NUM":
@@ -87,7 +93,9 @@ class RussianLemmatizer(Lemmatizer):
                 filtered_analyses.append(analysis)
         if not len(filtered_analyses):
             return [string.lower()]
-        return list(dict.fromkeys([analysis.normal_form for analysis in filtered_analyses]))
+        return list(
+            dict.fromkeys([analysis.normal_form for analysis in filtered_analyses])
+        )
 
     def pymorphy2_lookup_lemmatize(self, token: Token) -> List[str]:
         string = token.text

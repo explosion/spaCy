@@ -1016,20 +1016,22 @@ commands:
 
 [Weights & Biases](https://www.wandb.com/) is a popular platform for experiment
 tracking. spaCy integrates with it out-of-the-box via the
-[`WandbLogger`](/api/top-level#WandbLogger), which you can add as the
-`[training.logger]` block of your training [config](/usage/training#config). The
-results of each step are then logged in your project, together with the full
-**training config**. This means that _every_ hyperparameter, registered function
-name and argument will be tracked and you'll be able to see the impact it has on
-your results.
+[`WandbLogger`](https://github.com/explosion/spacy-loggers#wandblogger), which
+you can add as the `[training.logger]` block of your training
+[config](/usage/training#config). The results of each step are then logged in
+your project, together with the full **training config**. This means that
+_every_ hyperparameter, registered function name and argument will be tracked
+and you'll be able to see the impact it has on your results.
 
 > #### Example config
 >
 > ```ini
 > [training.logger]
-> @loggers = "spacy.WandbLogger.v2"
+> @loggers = "spacy.WandbLogger.v3"
 > project_name = "monitor_spacy_training"
 > remove_config_values = ["paths.train", "paths.dev", "corpora.train.path", "corpora.dev.path"]
+> log_dataset_dir = "corpus"
+> model_log_interval = 1000
 > ```
 
 ![Screenshot: Visualized training results](../images/wandb1.jpg)

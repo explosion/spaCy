@@ -83,7 +83,7 @@ Create a blank pipeline of a given language class. This function is the twin of
 
 | Name                                | Description                                                                                                                                                        |
 | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `name`                              | [ISO code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) of the language class to load. ~~str~~                                                           |
+| `name`                              | [IETF language tag](https://www.w3.org/International/articles/language-tags/), such as 'en', of the language class to load. ~~str~~                                |
 | _keyword-only_                      |                                                                                                                                                                    |
 | `vocab`                             | Optional shared vocab to pass in on initialization. If `True` (default), a new `Vocab` object will be created. ~~Union[Vocab, bool]~~                              |
 | `config` <Tag variant="new">3</Tag> | Optional config overrides, either as nested dict or dict keyed by section value in dot notation, e.g. `"components.name.value"`. ~~Union[Dict[str, Any], Config]~~ |
@@ -313,11 +313,12 @@ If a setting is not present in the options, the default value will be used.
 > displacy.serve(doc, style="ent", options=options)
 > ```
 
-| Name                                    | Description                                                                                                                                                                                                                                 |
-| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ents`                                  | Entity types to highlight or `None` for all types (default). ~~Optional[List[str]]~~                                                                                                                                                        |
-| `colors`                                | Color overrides. Entity types should be mapped to color names or values. ~~Dict[str, str]~~                                                                                                                                                 |
-| `template` <Tag variant="new">2.2</Tag> | Optional template to overwrite the HTML used to render entity spans. Should be a format string and can use `{bg}`, `{text}` and `{label}`. See [`templates.py`](%%GITHUB_SPACY/spacy/displacy/templates.py) for examples. ~~Optional[str]~~ |
+| Name                                             | Description                                                                                                                                                                                                                                 |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ents`                                           | Entity types to highlight or `None` for all types (default). ~~Optional[List[str]]~~                                                                                                                                                        |
+| `colors`                                         | Color overrides. Entity types should be mapped to color names or values. ~~Dict[str, str]~~                                                                                                                                                 |
+| `template` <Tag variant="new">2.2</Tag>          | Optional template to overwrite the HTML used to render entity spans. Should be a format string and can use `{bg}`, `{text}` and `{label}`. See [`templates.py`](%%GITHUB_SPACY/spacy/displacy/templates.py) for examples. ~~Optional[str]~~ |
+| `kb_url_template` <Tag variant="new">3.2.1</Tag> | Optional template to construct the KB url for the entity to link to. Expects a python f-string format with single field to fill in. ~~Optional[str]~~                                                                                       |
 
 By default, displaCy comes with colors for all entity types used by
 [spaCy's trained pipelines](/models). If you're using custom entity types, you
@@ -325,6 +326,14 @@ can use the `colors` setting to add your own colors for them. Your application
 or pipeline package can also expose a
 [`spacy_displacy_colors` entry point](/usage/saving-loading#entry-points-displacy)
 to add custom labels and their colors automatically.
+
+By default, displaCy links to `#` for entities without a `kb_id` set on their
+span. If you wish to link an entity to their URL then consider using the
+`kb_url_template` option from above. For example if the `kb_id` on a span is
+`Q95` and this is a Wikidata identifier then this option can be set to
+`https://www.wikidata.org/wiki/{}`. Clicking on your entity in the rendered HTML
+should redirect you to their Wikidata page, in this case
+`https://www.wikidata.org/wiki/Q95`.
 
 ## registry {#registry source="spacy/util.py" new="3"}
 
@@ -373,6 +382,7 @@ factories.
 | `optimizers`      | Registry for functions that create [optimizers](https://thinc.ai/docs/api-optimizers).                                                                                                                                                             |
 | `readers`         | Registry for file and data readers, including training and evaluation data readers like [`Corpus`](/api/corpus).                                                                                                                                   |
 | `schedules`       | Registry for functions that create [schedules](https://thinc.ai/docs/api-schedules).                                                                                                                                                               |
+| `scorers`         | Registry for functions that create scoring methods for user with the [`Scorer`](/api/scorer). Scoring methods are called with `Iterable[Example]` and arbitrary `\*\*kwargs` and return scores as `Dict[str, Any]`.                                |
 | `tokenizers`      | Registry for tokenizer factories. Registered functions should return a callback that receives the `nlp` object and returns a [`Tokenizer`](/api/tokenizer) or a custom callable.                                                                   |
 
 ### spacy-transformers registry {#registry-transformers}
@@ -410,10 +420,13 @@ finished. To log each training step, a
 [`spacy train`](/api/cli#train), including information such as the training loss
 and the accuracy scores on the development set.
 
-There are two built-in logging functions: a logger printing results to the
-console in tabular format (which is the default), and one that also sends the
-results to a [Weights & Biases](https://www.wandb.com/) dashboard. Instead of
-using one of the built-in loggers listed here, you can also
+The built-in, default logger is the ConsoleLogger, which prints results to the
+console in tabular format. The
+[spacy-loggers](https://github.com/explosion/spacy-loggers) package, included as
+a dependency of spaCy, enables other loggers: currently it provides one that
+sends results to a [Weights & Biases](https://www.wandb.com/) dashboard.
+
+Instead of using one of the built-in loggers, you can
 [implement your own](/usage/training#custom-logging).
 
 #### spacy.ConsoleLogger.v1 {#ConsoleLogger tag="registered function"}
@@ -461,64 +474,6 @@ Note that the cumulative loss keeps increasing within one epoch, but should
 start decreasing across epochs.
 
  </Accordion>
-
-#### spacy.WandbLogger.v3 {#WandbLogger tag="registered function"}
-
-> #### Installation
->
-> ```bash
-> $ pip install wandb
-> $ wandb login
-> ```
-
-Built-in logger that sends the results of each training step to the dashboard of
-the [Weights & Biases](https://www.wandb.com/) tool. To use this logger, Weights
-& Biases should be installed, and you should be logged in. The logger will send
-the full config file to W&B, as well as various system information such as
-memory utilization, network traffic, disk IO, GPU statistics, etc. This will
-also include information such as your hostname and operating system, as well as
-the location of your Python executable.
-
-<Infobox variant="warning">
-
-Note that by default, the full (interpolated)
-[training config](/usage/training#config) is sent over to the W&B dashboard. If
-you prefer to **exclude certain information** such as path names, you can list
-those fields in "dot notation" in the `remove_config_values` parameter. These
-fields will then be removed from the config before uploading, but will otherwise
-remain in the config file stored on your local system.
-
-</Infobox>
-
-> #### Example config
->
-> ```ini
-> [training.logger]
-> @loggers = "spacy.WandbLogger.v3"
-> project_name = "monitor_spacy_training"
-> remove_config_values = ["paths.train", "paths.dev", "corpora.train.path", "corpora.dev.path"]
-> log_dataset_dir = "corpus"
-> model_log_interval = 1000
-> ```
-
-| Name                   | Description                                                                                                                                                                                                     |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `project_name`         | The name of the project in the Weights & Biases interface. The project will be created automatically if it doesn't exist yet. ~~str~~                                                                           |
-| `remove_config_values` | A list of values to include from the config before it is uploaded to W&B (default: empty). ~~List[str]~~                                                                                                        |
-| `model_log_interval`   | Steps to wait between logging model checkpoints to W&B dasboard (default: None). ~~Optional[int]~~                                                                                                              |
-| `log_dataset_dir`      | Directory containing dataset to be logged and versioned as W&B artifact (default: None). ~~Optional[str]~~                                                                                                      |
-| `run_name`             | The name of the run. If you don't specify a run_name, the name will be created by wandb library. (default: None ). ~~Optional[str]~~                                                                            |
-| `entity`               | An entity is a username or team name where you're sending runs. If you don't specify an entity, the run will be sent to your default entity, which is usually your username. (default: None). ~~Optional[str]~~ |
-
-<Project id="integrations/wandb">
-
-Get started with tracking your spaCy training runs in Weights & Biases using our
-project template. It trains on the IMDB Movie Review Dataset and includes a
-simple config with the built-in `WandbLogger`, as well as a custom example of
-creating variants of the config for a simple hyperparameter grid search and
-logging the results.
-
-</Project>
 
 ## Readers {#readers}
 
@@ -816,6 +771,26 @@ from the specified model. Intended for use in `[initialize.before_init]`.
 | `tokenizer` | The pipeline to copy the tokenizer from. Defaults to `None`. ~~Optional[str]~~                                          |
 | `vocab`     | The pipeline to copy the vocab from. The vocab includes the lookups and vectors. Defaults to `None`. ~~Optional[str]~~  |
 | **CREATES** | A function that takes the current `nlp` object and modifies its `tokenizer` and `vocab`. ~~Callable[[Language], None]~~ |
+
+### spacy.models_with_nvtx_range.v1 {#models_with_nvtx_range tag="registered function"}
+
+> #### Example config
+>
+> ```ini
+> [nlp]
+> after_pipeline_creation = {"@callbacks":"spacy.models_with_nvtx_range.v1"}
+> ```
+
+Recursively wrap the models in each pipe using
+[NVTX](https://nvidia.github.io/NVTX/) range markers. These markers aid in GPU
+profiling by attributing specific operations to a ~~Model~~'s forward or
+backprop passes.
+
+| Name             | Description                                                                                                                  |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `forward_color`  | Color identifier for forward passes. Defaults to `-1`. ~~int~~                                                               |
+| `backprop_color` | Color identifier for backpropagation passes. Defaults to `-1`. ~~int~~                                                       |
+| **CREATES**      | A function that takes the current `nlp` and wraps forward/backprop passes in NVTX ranges. ~~Callable[[Language], Language]~~ |
 
 ## Training data and alignment {#gold source="spacy/training"}
 

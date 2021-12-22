@@ -5,12 +5,12 @@ from thinc.util import copy_array
 try:
     import cPickle as pickle
 except ImportError:
-    import pickle
+    import pickle  # type: ignore[no-redef]
 
 try:
     import copy_reg
 except ImportError:
-    import copyreg as copy_reg
+    import copyreg as copy_reg  # type: ignore[no-redef]
 
 try:
     from cupy.cuda.stream import Stream as CudaStream
@@ -22,10 +22,10 @@ try:
 except ImportError:
     cupy = None
 
-try:  # Python 3.8+
-    from typing import Literal
-except ImportError:
-    from typing_extensions import Literal  # noqa: F401
+if sys.version_info[:2] >= (3, 8):  # Python 3.8+
+    from typing import Literal, Protocol, runtime_checkable
+else:
+    from typing_extensions import Literal, Protocol, runtime_checkable  # noqa: F401
 
 # Important note: The importlib_metadata "backport" includes functionality
 # that's not part of the built-in importlib.metadata. We should treat this
@@ -33,7 +33,7 @@ except ImportError:
 try:  # Python 3.8+
     import importlib.metadata as importlib_metadata
 except ImportError:
-    from catalogue import _importlib_metadata as importlib_metadata  # noqa: F401
+    from catalogue import _importlib_metadata as importlib_metadata  # type: ignore[no-redef]    # noqa: F401
 
 from thinc.api import Optimizer  # noqa: F401
 

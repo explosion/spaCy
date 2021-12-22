@@ -1,6 +1,15 @@
 import pytest
-from spacy.attrs import intify_attrs, ORTH, NORM, LEMMA, IS_ALPHA
-from spacy.lang.lex_attrs import is_punct, is_ascii, is_currency, like_url, word_shape
+
+from spacy.attrs import IS_ALPHA, LEMMA, NORM, ORTH, intify_attrs
+from spacy.lang.en.stop_words import STOP_WORDS
+from spacy.lang.lex_attrs import is_ascii, is_currency, is_punct, is_stop
+from spacy.lang.lex_attrs import like_url, word_shape
+
+
+@pytest.mark.parametrize("word", ["the"])
+@pytest.mark.issue(1889)
+def test_issue1889(word):
+    assert is_stop(word, STOP_WORDS) == is_stop(word.upper(), STOP_WORDS)
 
 
 @pytest.mark.parametrize("text", ["dog"])
@@ -58,9 +67,10 @@ def test_lex_attrs_is_currency(text, match):
         ("www.google.com", True),
         ("google.com", True),
         ("sydney.com", True),
-        ("2girls1cup.org", True),
+        ("1abc2def.org", True),
         ("http://stupid", True),
         ("www.hi", True),
+        ("example.com/example", True),
         ("dog", False),
         ("1.2", False),
         ("1.a", False),

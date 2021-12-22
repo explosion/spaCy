@@ -6,9 +6,10 @@ import string
 
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
-from ...language import Language
+from ...language import Language, BaseDefaults
 from ...tokens import Doc
 from ...util import DummyTokenizer, registry, load_config_from_str
+from ...vocab import Vocab
 from ... import util
 
 
@@ -24,14 +25,14 @@ use_pyvi = true
 @registry.tokenizers("spacy.vi.VietnameseTokenizer")
 def create_vietnamese_tokenizer(use_pyvi: bool = True):
     def vietnamese_tokenizer_factory(nlp):
-        return VietnameseTokenizer(nlp, use_pyvi=use_pyvi)
+        return VietnameseTokenizer(nlp.vocab, use_pyvi=use_pyvi)
 
     return vietnamese_tokenizer_factory
 
 
 class VietnameseTokenizer(DummyTokenizer):
-    def __init__(self, nlp: Language, use_pyvi: bool = False):
-        self.vocab = nlp.vocab
+    def __init__(self, vocab: Vocab, use_pyvi: bool = False):
+        self.vocab = vocab
         self.use_pyvi = use_pyvi
         if self.use_pyvi:
             try:
@@ -44,6 +45,9 @@ class VietnameseTokenizer(DummyTokenizer):
                     "or install it https://pypi.python.org/pypi/pyvi"
                 )
                 raise ImportError(msg) from None
+
+    def __reduce__(self):
+        return VietnameseTokenizer, (self.vocab, self.use_pyvi)
 
     def __call__(self, text: str) -> Doc:
         if self.use_pyvi:
@@ -141,7 +145,7 @@ class VietnameseTokenizer(DummyTokenizer):
     def to_disk(self, path: Union[str, Path], **kwargs) -> None:
         path = util.ensure_path(path)
         serializers = {"cfg": lambda p: srsly.write_json(p, self._get_config())}
-        return util.to_disk(path, serializers, [])
+        util.to_disk(path, serializers, [])
 
     def from_disk(self, path: Union[str, Path], **kwargs) -> "VietnameseTokenizer":
         path = util.ensure_path(path)
@@ -150,7 +154,7 @@ class VietnameseTokenizer(DummyTokenizer):
         return self
 
 
-class VietnameseDefaults(Language.Defaults):
+class VietnameseDefaults(BaseDefaults):
     config = load_config_from_str(DEFAULT_CONFIG)
     lex_attr_getters = LEX_ATTRS
     stop_words = STOP_WORDS

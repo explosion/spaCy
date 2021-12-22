@@ -1,8 +1,8 @@
 from .stop_words import STOP_WORDS
-from ...language import Language
+from ...language import Language, BaseDefaults
 
 
-class GujaratiDefaults(Language.Defaults):
+class GujaratiDefaults(BaseDefaults):
     stop_words = STOP_WORDS
 
 

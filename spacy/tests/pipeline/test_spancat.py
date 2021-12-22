@@ -1,13 +1,13 @@
 import pytest
 import numpy
 from numpy.testing import assert_array_equal, assert_almost_equal
-from thinc.api import get_current_ops
+from thinc.api import get_current_ops, Ragged
 
 from spacy import util
 from spacy.lang.en import English
 from spacy.language import Language
-from spacy.tokens.doc import SpanGroups
 from spacy.tokens import SpanGroup
+from spacy.tokens._dict_proxies import SpanGroups
 from spacy.training import Example
 from spacy.util import fix_random_seed, registry, make_tempdir
 
@@ -29,6 +29,7 @@ TRAIN_DATA_OVERLAPPING = [
         "I like London and Berlin",
         {"spans": {SPAN_KEY: [(7, 13, "LOC"), (18, 24, "LOC"), (7, 24, "DOUBLE_LOC")]}},
     ),
+    ("", {"spans": {SPAN_KEY: []}}),
 ]
 
 
@@ -114,7 +115,7 @@ def test_make_spangroup(max_positive, nr_results):
     doc = nlp.make_doc("Greater London")
     ngram_suggester = registry.misc.get("spacy.ngram_suggester.v1")(sizes=[1, 2])
     indices = ngram_suggester([doc])[0].dataXd
-    assert_array_equal(indices, numpy.asarray([[0, 1], [1, 2], [0, 2]]))
+    assert_array_equal(OPS.to_numpy(indices), numpy.asarray([[0, 1], [1, 2], [0, 2]]))
     labels = ["Thing", "City", "Person", "GreatCity"]
     scores = numpy.asarray(
         [[0.2, 0.4, 0.3, 0.1], [0.1, 0.6, 0.2, 0.4], [0.8, 0.7, 0.3, 0.9]], dtype="f"
@@ -365,3 +366,31 @@ def test_overfitting_IO_overlapping():
             "London and Berlin",
         }
         assert set([span.label_ for span in spans2]) == {"LOC", "DOUBLE_LOC"}
+
+
+def test_zero_suggestions():
+    # Test with a suggester that returns 0 suggestions
+
+    @registry.misc("test_zero_suggester")
+    def make_zero_suggester():
+        def zero_suggester(docs, *, ops=None):
+            if ops is None:
+                ops = get_current_ops()
+            return Ragged(
+                ops.xp.zeros((0, 0), dtype="i"), ops.xp.zeros((len(docs),), dtype="i")
+            )
+
+        return zero_suggester
+
+    fix_random_seed(0)
+    nlp = English()
+    spancat = nlp.add_pipe(
+        "spancat",
+        config={"suggester": {"@misc": "test_zero_suggester"}, "spans_key": SPAN_KEY},
+    )
+    train_examples = make_examples(nlp)
+    optimizer = nlp.initialize(get_examples=lambda: train_examples)
+    assert spancat.model.get_dim("nO") == 2
+    assert set(spancat.labels) == {"LOC", "PERSON"}
+
+    nlp.update(train_examples, sgd=optimizer)

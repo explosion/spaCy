@@ -17,7 +17,7 @@ from ...errors import Errors
 from thinc.extra.search cimport Beam
 
 cdef weight_t MIN_SCORE = -90000
-cdef attr_t SUBTOK_LABEL = hash_string(u'subtok')
+cdef attr_t SUBTOK_LABEL = hash_string('subtok')
 
 DEF NON_MONOTONIC = True
 
@@ -585,7 +585,10 @@ cdef class ArcEager(TransitionSystem):
             actions[RIGHT][label] = 1
             actions[REDUCE][label] = 1
         for example in kwargs.get('examples', []):
-            heads, labels = example.get_aligned_parse(projectivize=True)
+            # use heads and labels from the reference parse (without regard to
+            # misalignments between the predicted and reference)
+            example_gold_preproc = Example(example.reference, example.reference)
+            heads, labels = example_gold_preproc.get_aligned_parse(projectivize=True)
             for child, (head, label) in enumerate(zip(heads, labels)):
                 if head is None or label is None:
                     continue
@@ -601,7 +604,7 @@ cdef class ArcEager(TransitionSystem):
                     actions[SHIFT][''] += 1
         if min_freq is not None:
             for action, label_freqs in actions.items():
-                for label, freq in list(label_freqs.items()):
+                for label, freq in label_freqs.copy().items():
                     if freq < min_freq:
                         label_freqs.pop(label)
         # Ensure these actions are present

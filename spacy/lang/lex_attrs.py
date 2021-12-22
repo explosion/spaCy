@@ -3,6 +3,7 @@ import unicodedata
 import re
 
 from .. import attrs
+from .tokenizer_exceptions import URL_MATCH
 
 
 _like_email = re.compile(r"([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)").match
@@ -108,6 +109,8 @@ def like_url(text: str) -> bool:
     if tld.endswith("/"):
         return True
     if tld.isalpha() and tld in _tlds:
+        return True
+    if URL_MATCH(text):
         return True
     return False
 

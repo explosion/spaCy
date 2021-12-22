@@ -44,7 +44,7 @@ def validate(schema: Type[BaseModel], obj: Dict[str, Any]) -> List[str]:
         for error in errors:
             err_loc = " -> ".join([str(p) for p in error.get("loc", [])])
             data[err_loc].append(error.get("msg"))
-        return [f"[{loc}] {', '.join(msg)}" for loc, msg in data.items()]
+        return [f"[{loc}] {', '.join(msg)}" for loc, msg in data.items()]  # type: ignore[arg-type]
 
 
 # Initialization
@@ -82,7 +82,7 @@ def get_arg_model(
     except ValueError:
         # Typically happens if the method is part of a Cython module without
         # binding=True. Here we just use an empty model that allows everything.
-        return create_model(name, __config__=ArgSchemaConfigExtra)
+        return create_model(name, __config__=ArgSchemaConfigExtra)  # type: ignore[arg-type, return-value]
     has_variable = False
     for param in sig.parameters.values():
         if param.name in exclude:
@@ -102,8 +102,8 @@ def get_arg_model(
         default = param.default if param.default != param.empty else default_empty
         sig_args[param.name] = (annotation, default)
     is_strict = strict and not has_variable
-    sig_args["__config__"] = ArgSchemaConfig if is_strict else ArgSchemaConfigExtra
-    return create_model(name, **sig_args)
+    sig_args["__config__"] = ArgSchemaConfig if is_strict else ArgSchemaConfigExtra  # type: ignore[assignment]
+    return create_model(name, **sig_args)  # type: ignore[arg-type, return-value]
 
 
 def validate_init_settings(
@@ -198,10 +198,10 @@ class TokenPatternNumber(BaseModel):
 
 
 class TokenPatternOperator(str, Enum):
-    plus: StrictStr = "+"
-    start: StrictStr = "*"
-    question: StrictStr = "?"
-    exclamation: StrictStr = "!"
+    plus: StrictStr = StrictStr("+")
+    start: StrictStr = StrictStr("*")
+    question: StrictStr = StrictStr("?")
+    exclamation: StrictStr = StrictStr("!")
 
 
 StringValue = Union[TokenPatternString, StrictStr]
@@ -222,6 +222,8 @@ class TokenPattern(BaseModel):
     lemma: Optional[StringValue] = None
     shape: Optional[StringValue] = None
     ent_type: Optional[StringValue] = None
+    ent_id: Optional[StringValue] = None
+    ent_kb_id: Optional[StringValue] = None
     norm: Optional[StringValue] = None
     length: Optional[NumberValue] = None
     spacy: Optional[StrictBool] = None
@@ -351,7 +353,8 @@ class ConfigSchemaPretrain(BaseModel):
     # fmt: off
     max_epochs: StrictInt = Field(..., title="Maximum number of epochs to train for")
     dropout: StrictFloat = Field(..., title="Dropout rate")
-    n_save_every: Optional[StrictInt] = Field(..., title="Saving frequency")
+    n_save_every: Optional[StrictInt] = Field(..., title="Saving additional temporary model after n batches within an epoch")
+    n_save_epoch: Optional[StrictInt] = Field(..., title="Saving model after every n epoch")
     optimizer: Optimizer = Field(..., title="The optimizer to use")
     corpus: StrictStr = Field(..., title="Path in the config to the training data")
     batcher: Batcher = Field(..., title="Batcher for the training data")
@@ -385,7 +388,7 @@ class ConfigSchemaInit(BaseModel):
 class ConfigSchema(BaseModel):
     training: ConfigSchemaTraining
     nlp: ConfigSchemaNlp
-    pretraining: Union[ConfigSchemaPretrain, ConfigSchemaPretrainEmpty] = {}
+    pretraining: Union[ConfigSchemaPretrain, ConfigSchemaPretrainEmpty] = {}  # type: ignore[assignment]
     components: Dict[str, Dict[str, Any]]
     corpora: Dict[str, Reader]
     initialize: ConfigSchemaInit

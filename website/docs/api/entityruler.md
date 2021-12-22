@@ -61,6 +61,7 @@ how the component should be configured. You can override its settings via the
 | `validate`            | Whether patterns should be validated (passed to the `Matcher` and `PhraseMatcher`). Defaults to `False`. ~~bool~~                                                                             |
 | `overwrite_ents`      | If existing entities are present, e.g. entities added by the model, overwrite them by matches if necessary. Defaults to `False`. ~~bool~~                                                     |
 | `ent_id_sep`          | Separator used internally for entity IDs. Defaults to `"\|\|"`. ~~str~~                                                                                                                       |
+| `scorer`              | The scoring method. Defaults to [`spacy.scorer.get_ner_prf`](/api/scorer#get_ner_prf). ~~Optional[Callable]~~                                                                                 |
 
 ```python
 %%GITHUB_SPACY/spacy/pipeline/entityruler.py
@@ -209,6 +210,24 @@ of dicts) or a phrase pattern (string). For more details, see the usage guide on
 | ---------- | ---------------------------------------------------------------- |
 | `patterns` | The patterns to add. ~~List[Dict[str, Union[str, List[dict]]]]~~ |
 
+
+## EntityRuler.remove {#remove tag="method" new="3.2.1"}
+
+Remove a pattern by its ID from the entity ruler. A `ValueError` is raised if the ID does not exist.
+
+> #### Example
+>
+> ```python
+> patterns = [{"label": "ORG", "pattern": "Apple", "id": "apple"}]
+> ruler = nlp.add_pipe("entity_ruler")
+> ruler.add_patterns(patterns)
+> ruler.remove("apple")
+> ```
+
+| Name       | Description                                                      |
+| ---------- | ---------------------------------------------------------------- |
+| `id`       | The ID of the pattern rule. ~~str~~ |
+
 ## EntityRuler.to_disk {#to_disk tag="method"}
 
 Save the entity ruler patterns to a directory. The patterns will be saved as
@@ -288,7 +307,7 @@ All labels present in the match patterns.
 | ----------- | -------------------------------------- |
 | **RETURNS** | The string labels. ~~Tuple[str, ...]~~ |
 
-## EntityRuler.ent_ids {#labels tag="property" new="2.2.2"}
+## EntityRuler.ent_ids {#ent_ids tag="property" new="2.2.2"}
 
 All entity IDs present in the `id` properties of the match patterns.
 

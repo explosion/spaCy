@@ -1,9 +1,10 @@
-from typing import Optional, Union, Any, Dict, List, Tuple
+from typing import Optional, Union, Any, Dict, List, Tuple, cast
 import shutil
 from pathlib import Path
 from wasabi import Printer, MarkdownRenderer, get_raw_input
 from thinc.api import Config
 from collections import defaultdict
+from catalogue import RegistryError
 import srsly
 import sys
 
@@ -212,12 +213,21 @@ def get_third_party_dependencies(
         if "factory" in component:
             funcs["factories"].add(component["factory"])
     modules = set()
+    lang = config["nlp"]["lang"]
     for reg_name, func_names in funcs.items():
         for func_name in func_names:
-            func_info = util.registry.find(reg_name, func_name)
-            module_name = func_info.get("module")
+            # Try the lang-specific version and fall back
+            try:
+                func_info = util.registry.find(reg_name, lang + "." + func_name)
+            except RegistryError:
+                try:
+                    func_info = util.registry.find(reg_name, func_name)
+                except RegistryError as regerr:
+                    # lang-specific version being absent is not actually an issue
+                    raise regerr from None
+            module_name = func_info.get("module")  # type: ignore[attr-defined]
             if module_name:  # the code is part of a module, not a --code file
-                modules.add(func_info["module"].split(".")[0])
+                modules.add(func_info["module"].split(".")[0])  # type: ignore[index]
     dependencies = []
     for module_name in modules:
         if module_name in distributions:
@@ -227,7 +237,7 @@ def get_third_party_dependencies(
                 if pkg in own_packages or pkg in exclude:
                     continue
                 version = util.get_package_version(pkg)
-                version_range = util.get_minor_version_range(version)
+                version_range = util.get_minor_version_range(version)  # type: ignore[arg-type]
                 dependencies.append(f"{pkg}{version_range}")
     return dependencies
 
@@ -252,7 +262,7 @@ def create_file(file_path: Path, contents: str) -> None:
 def get_meta(
     model_path: Union[str, Path], existing_meta: Dict[str, Any]
 ) -> Dict[str, Any]:
-    meta = {
+    meta: Dict[str, Any] = {
         "lang": "en",
         "name": "pipeline",
         "version": "0.0.0",
@@ -324,8 +334,8 @@ def generate_readme(meta: Dict[str, Any]) -> str:
     license_name = meta.get("license")
     sources = _format_sources(meta.get("sources"))
     description = meta.get("description")
-    label_scheme = _format_label_scheme(meta.get("labels"))
-    accuracy = _format_accuracy(meta.get("performance"))
+    label_scheme = _format_label_scheme(cast(Dict[str, Any], meta.get("labels")))
+    accuracy = _format_accuracy(cast(Dict[str, Any], meta.get("performance")))
     table_data = [
         (md.bold("Name"), md.code(name)),
         (md.bold("Version"), md.code(version)),
@@ -397,7 +407,7 @@ def _format_label_scheme(data: Dict[str, Any]) -> str:
             continue
         col1 = md.bold(md.code(pipe))
         col2 = ", ".join(
-            [md.code(label.replace("|", "\\|")) for label in labels]
+            [md.code(str(label).replace("|", "\\|")) for label in labels]
         )  # noqa: W605
         label_data.append((col1, col2))
         n_labels += len(labels)
