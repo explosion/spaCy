@@ -26,7 +26,6 @@ from ..attrs cimport LENGTH, POS, LEMMA, TAG, MORPH, DEP, HEAD, SPACY, ENT_IOB
 from ..attrs cimport ENT_TYPE, ENT_ID, ENT_KB_ID, SENT_START, IDX, NORM
 
 from ..attrs import intify_attr, IDS
-from ..attrs import iob_strings
 from ..compat import copy_reg, pickle
 from ..errors import Errors, Warnings
 from ..morphology import Morphology
@@ -298,6 +297,7 @@ cdef class Doc:
         ent_iobs = None
         ent_types = None
         if ents is not None:
+            iob_strings = Token.iob_strings()
             # make valid IOB2 out of IOB1 or IOB2
             for i, ent in enumerate(ents):
                 if ent is "":
@@ -1077,6 +1077,7 @@ cdef class Doc:
                     )
         # Verify ENT_IOB are proper integers
         if ENT_IOB in attrs:
+            iob_strings = Token.iob_strings()
             col = attrs.index(ENT_IOB)
             n_iob_strings = len(iob_strings)
             for i in range(length):
