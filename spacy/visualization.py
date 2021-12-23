@@ -1,9 +1,7 @@
-from os import linesep, truncate
+from os import linesep
 from typing import Union
 import wasabi
-from spacy.tests.lang.ko.test_tokenizer import FULL_TAG_TESTS
 from spacy.tokens import Span, Token, Doc
-from spacy.util import working_dir
 
 
 SPACE = 0
@@ -42,6 +40,10 @@ ROOT_LEFT_CHARS = {
 
 
 class AttributeFormat:
+    """
+    Instructions for rendering information about a token property, e.g. lemma_, ent_type_.
+    """
+
     def __init__(
         self,
         attribute: str,
@@ -55,6 +57,20 @@ class AttributeFormat:
         value_dependent_fg_colors: dict[str, Union[str, int]] = None,
         value_dependent_bg_colors: dict[str, Union[str, int]] = None,
     ):
+        """
+        attribute:                  the token attribute, e.g. lemma_, ._.holmes.lemma
+        name:                       the name to display e.g. in column headers
+        aligns:                     where appropriate the column alignment 'l' (left,
+                                        default), 'r' (right) or 'c' (center).
+        max_width:                  a maximum width to which values of the attribute should be truncated.
+        fg_color:                   the foreground color that should be used to display instances of the attribute
+        bg_color:                   the background color that should be used to display instances of the attribute
+        permitted_values:           a tuple of values of the attribute that should be displayed. If
+                                        permitted_values is not None and a value of the attribute is not
+                                        in permitted_values, the empty string is rendered instead of the value.
+        value_dependent_fg_colors:  a dictionary from values to foreground colors that should be used to display those values.
+        value_dependent_bg_colors:  a dictionary from values to background colors that should be used to display those values.
+        """
         self.attribute = attribute
         self.name = name
         self.aligns = aligns
@@ -70,9 +86,19 @@ class AttributeFormat:
         self,
         token: Token,
         *,
+        right_pad_to_length: int = None,
         ignore_colors: bool = False,
         render_all_colors_within_values: bool = False,
+        whole_row_fg_color: Union[int, str] = None,
+        whole_row_bg_color: Union[int, str] = None,
     ) -> str:
+        """
+        ignore_colors:                      no colors should be rendered, typically because the values are required to calculate widths
+        render_all_colors_within_values:    when rendering a table, self.fg_color and self.bg_color are rendered in Wasabi.
+                                                This argument is set to True when rendering a text to signal that colors should be rendered here.
+        whole_row_fg_color:                 a foreground color used for the whole row. This takes precedence over value_dependent_fg_colors.
+        whole_row_bg_color:                 a background color used for the whole row. This takes precedence over value_dependent_fg_colors.
+        """
         obj = token
         parts = self.attribute.split(".")
         for part in parts[:-1]:
@@ -86,18 +112,26 @@ class AttributeFormat:
             value = value[: self.max_width]
         fg_color = None
         bg_color = None
+        if right_pad_to_length is not None:
+            right_padding = " " * (right_pad_to_length - len(value))
+        else:
+            right_padding = ""
         if not ignore_colors and len(value) > 0:
-            if self.value_dependent_fg_colors is not None:
+            if whole_row_fg_color is not None:
+                fg_color = whole_row_fg_color
+            elif self.value_dependent_fg_colors is not None:
                 fg_color = self.value_dependent_fg_colors.get(value, None)
             if fg_color is None and render_all_colors_within_values:
                 fg_color = self.fg_color
             if self.value_dependent_bg_colors is not None:
                 bg_color = self.value_dependent_bg_colors.get(value, None)
-            if bg_color is None and render_all_colors_within_values:
+            if whole_row_bg_color is not None:
+                bg_color = whole_row_bg_color
+            elif bg_color is None and render_all_colors_within_values:
                 bg_color = self.bg_color
         if fg_color is not None or bg_color is not None:
             value = self.printer.text(value, color=fg_color, bg_color=bg_color)
-        return value
+        return value + right_padding
 
 
 class Visualizer:
@@ -111,7 +145,7 @@ class Visualizer:
         root_right: True if the tree should be rendered with the root on the right-hand side,
                     False if the tree should be rendered with the root on the left-hand side.
 
-        Adapted from https://github.com/KoichiYasuoka/deplacy
+        Algorithm adapted from https://github.com/KoichiYasuoka/deplacy
         """
 
         # Check sent is really a sentence
@@ -328,8 +362,17 @@ class Visualizer:
             ]
 
     def render_table(
-        self, doc: Doc, columns: list[AttributeFormat], spacing: int = 3
+        self, doc: Doc, columns: list[AttributeFormat], spacing: int
     ) -> str:
+        """Renders a document as a table.
+        TODO: specify a specific portion of the document to display.
+
+        columns: the attribute formats of the columns to display.
+                    tree_right and tree_left are magic values for the
+                    attributes that render dependency trees where the
+                    roots are on the left or right respectively.
+        spacing: the number of spaces between each column in the table.
+        """
         return_string = ""
         for sent in doc.sents:
             if "tree_right" in (c.attribute for c in columns):
@@ -346,7 +389,8 @@ class Visualizer:
                 else:
                     if len(sent) > 0:
                         width = max(
-                            len(column.render(token, ignore_colors=True)) for token in sent
+                            len(column.render(token, ignore_colors=True))
+                            for token in sent
                         )
                     else:
                         width = 0
@@ -360,7 +404,7 @@ class Visualizer:
                     if column.attribute == "tree_right"
                     else tree_left[token_index]
                     if column.attribute == "tree_left"
-                    else column.render(token)
+                    else column.render(token, right_pad_to_length=widths[column_index])
                     for column_index, column in enumerate(columns)
                 ]
                 for token_index, token in enumerate(sent)
@@ -388,6 +432,10 @@ class Visualizer:
         return return_string
 
     def render_text(self, doc: Doc, attributes: list[AttributeFormat]) -> str:
+        """Renders a text interspersed with attribute labels.
+        TODO: specify a specific portion of the document to display.
+
+        """
         return_string = ""
         text_attributes = [a for a in attributes if a.attribute == "text"]
         text_attribute = (
@@ -417,8 +465,28 @@ class Visualizer:
         search_attributes: list[AttributeFormat],
         display_columns: list[AttributeFormat],
         group: bool,
-        spacing: int = 3,
+        spacing: int,
+        surrounding_tokens_height: int,
+        surrounding_tokens_fg_color: Union[str, int],
+        surrounding_tokens_bg_color: Union[str, int],
     ) -> str:
+        """Shows all tokens in a document with specific attribute(s), e.g. entity labels, or attribute value(s), e.g. 'GPE'.
+        TODO: specify a specific portion of the document to display.
+
+        search_attributes:              the attribute(s) or attribute value(s) that cause a row to be displayed for a token.
+        display_columns:                the attributes that should be displayed in each row.
+        group:                          True if the rows should be ordered by the search attribute values,
+                                            False if they should retain their in-document order.
+        spacing:                        the number of spaces between each column.
+        surrounding_tokens_height:      a number of rows that should be displayed with information about tokens
+                                            before and after matched tokens. Consecutive matching tokens, e.g.
+                                            tokens belonging to the same named entity, are rendered together as a single group.
+        surrounding_tokens_fg_color:    a foreground color to use for surrounding token rows.
+        surrounding_tokens_bg_color:    a background color to use for surrounding token rows.
+                                            Note that if surrounding_tokens_bg_color is None, any background color defined for the attribute
+                                            will be used instead, which is unlikely to be the desired result.
+        """
+
         def filter(token: Token) -> bool:
             for attribute in search_attributes:
                 value = attribute.render(token, ignore_colors=True)
@@ -426,20 +494,22 @@ class Visualizer:
                     return False
             return True
 
-        tokens = [token for token in doc if filter(token)]
-        if group:
-            tokens.sort(
-                key=(
-                    lambda token: [attribute.render(token, ignore_colors=True)
-                    for attribute in search_attributes]
-                )
+        matched_tokens = [token for token in doc if filter(token)]
+        tokens_to_display_indices = [
+            index
+            for token in matched_tokens
+            for index in range(
+                token.i - surrounding_tokens_height,
+                token.i + surrounding_tokens_height + 1,
             )
-
+            if index >= 0 and index < len(doc)
+        ]
         widths = []
         for column in display_columns:
-            if len(tokens) > 0:
+            if len(tokens_to_display_indices) > 0:
                 width = max(
-                    len(column.render(token, ignore_colors=True)) for token in tokens
+                    len(column.render(doc[i], ignore_colors=True))
+                    for i in tokens_to_display_indices
                 )
             else:
                 width = 0
@@ -447,22 +517,77 @@ class Visualizer:
                 width = min(width, column.max_width)
             width = max(width, len(column.name))
             widths.append(width)
-            data = [
-                [
-                    column.render(token)
-                    for column_index, column in enumerate(display_columns)
-                ]
-                for token in tokens
-            ]
-            if len([1 for c in display_columns if len(c.name) > 0]) > 0:
-                header = [c.name for c in display_columns]
+        if group:
+            matched_tokens.sort(
+                key=(
+                    lambda token: [
+                        attribute.render(token, ignore_colors=True)
+                        for attribute in search_attributes
+                    ]
+                )
+            )
+
+        rows = []
+        token_index_to_display = -1
+        for matched_token_index, matched_token in enumerate(matched_tokens):
+            if surrounding_tokens_height > 0:
+                surrounding_start_index = max(
+                    0, matched_token.i - surrounding_tokens_height
+                )
+                if token_index_to_display + 1 == matched_token.i:
+                    surrounding_start_index = token_index_to_display + 1
+                surrounding_end_index = min(
+                    len(doc), matched_token.i + surrounding_tokens_height + 1
+                )
+                if (
+                    matched_token_index + 1 < len(matched_tokens)
+                    and matched_token.i + 1 == matched_tokens[matched_token_index + 1].i
+                ):
+                    surrounding_end_index = matched_token.i + 1
+
             else:
-                header = None
-            aligns = [c.aligns for c in display_columns]
-            fg_colors = [c.fg_color for c in display_columns]
-            bg_colors = [c.bg_color for c in display_columns]
+                surrounding_start_index = matched_token.i
+                surrounding_end_index = surrounding_start_index + 1
+            for token_index_to_display in range(
+                surrounding_start_index, surrounding_end_index
+            ):
+                if token_index_to_display == matched_token.i:
+                    rows.append(
+                        [
+                            column.render(
+                                matched_token,
+                                right_pad_to_length=widths[column_index],
+                            )
+                            for column_index, column in enumerate(display_columns)
+                        ]
+                    )
+                else:
+                    rows.append(
+                        [
+                            column.render(
+                                doc[token_index_to_display],
+                                whole_row_fg_color=surrounding_tokens_fg_color,
+                                whole_row_bg_color=surrounding_tokens_bg_color,
+                                right_pad_to_length=widths[column_index],
+                            )
+                            for column_index, column in enumerate(display_columns)
+                        ]
+                    )
+            if (
+                matched_token_index + 1 < len(matched_tokens)
+                and token_index_to_display + 1
+                != matched_tokens[matched_token_index + 1].i
+            ):
+                rows.append([])
+        if len([1 for c in display_columns if len(c.name) > 0]) > 0:
+            header = [c.name for c in display_columns]
+        else:
+            header = None
+        aligns = [c.aligns for c in display_columns]
+        fg_colors = [c.fg_color for c in display_columns]
+        bg_colors = [c.bg_color for c in display_columns]
         return wasabi.table(
-            data,
+            rows,
             header=header,
             divider=True,
             aligns=aligns,
