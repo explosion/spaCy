@@ -1,5 +1,4 @@
 import pytest
-import deplacy
 from wasabi.util import supports_ansi
 from spacy.visualization import AttributeFormat, Visualizer
 from spacy.tokens import Span, Doc, Token
