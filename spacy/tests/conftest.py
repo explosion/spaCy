@@ -531,7 +531,7 @@ def fully_featured_doc_two_sentences(en_vocab):
         "She",
         "loved",
         "it",
-        "."
+        ".",
     ]
     lemmas = [
         "sarah",
@@ -547,9 +547,24 @@ def fully_featured_doc_two_sentences(en_vocab):
         "she",
         "love",
         "it",
-        "."
+        ".",
     ]
-    spaces = [False, True, True, True, True, True, True, True, False, True, True, True, False, False]
+    spaces = [
+        False,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        False,
+        True,
+        True,
+        True,
+        False,
+        False,
+    ]
     pos = [
         "PROPN",
         "PART",
@@ -564,9 +579,24 @@ def fully_featured_doc_two_sentences(en_vocab):
         "PRON",
         "VERB",
         "PRON",
-        "PUNCT"
+        "PUNCT",
     ]
-    tags = ["NNP", "POS", "NN", "VBD", "IN", "NNP", "NNP", "IN", "NNP", ".", "PRP", "VBD", "PRP", "."]
+    tags = [
+        "NNP",
+        "POS",
+        "NN",
+        "VBD",
+        "IN",
+        "NNP",
+        "NNP",
+        "IN",
+        "NNP",
+        ".",
+        "PRP",
+        "VBD",
+        "PRP",
+        ".",
+    ]
     morphs = [
         "NounType=prop|Number=sing",
         "Poss=yes",
