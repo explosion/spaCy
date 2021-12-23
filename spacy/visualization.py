@@ -1,5 +1,5 @@
 from os import linesep
-from typing import List, Optional, Union, cast
+from typing import Dict, List, Optional, Union, cast
 import wasabi
 from spacy.tokens import Span, Token, Doc
 
@@ -54,8 +54,8 @@ class AttributeFormat:
         fg_color: Union[str, int, None] = None,
         bg_color: Union[str, int, None] = None,
         permitted_values: Optional[tuple] = None,
-        value_dependent_fg_colors: Optional[dict[str, Union[str, int]]] = None,
-        value_dependent_bg_colors: Optional[dict[str, Union[str, int]]] = None,
+        value_dependent_fg_colors: Optional[Dict[str, Union[str, int]]] = None,
+        value_dependent_bg_colors: Optional[Dict[str, Union[str, int]]] = None,
     ):
         """
         attribute:                  the token attribute, e.g. lemma_, ._.holmes.lemma
@@ -363,7 +363,7 @@ class Visualizer:
             ]
 
     def render_table(
-        self, doc: Doc, columns: list[AttributeFormat], spacing: int
+        self, doc: Doc, columns: List[AttributeFormat], spacing: int
     ) -> str:
         """Renders a document as a table.
         TODO: specify a specific portion of the document to display.
