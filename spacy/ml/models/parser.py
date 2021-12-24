@@ -1,6 +1,6 @@
 from typing import Optional, List, cast
-from thinc.api import Model, chain, list2array, Linear, zero_init, use_ops
-from thinc.types import Floats2d
+from thinc.api import Model, chain, Linear, zero_init, use_ops
+from thinc.types import Floats2d, Ragged
 
 from ...errors import Errors
 from ...compat import Literal
@@ -12,7 +12,7 @@ from ...tokens import Doc
 
 @registry.architectures("spacy.TransitionBasedParser.v2")
 def build_tb_parser_model(
-    tok2vec: Model[List[Doc], List[Floats2d]],
+    tok2vec: Model[List[Doc], Ragged],
     state_type: Literal["parser", "ner"],
     extra_state_tokens: bool,
     hidden_width: int,
@@ -72,7 +72,7 @@ def build_tb_parser_model(
     t2v_width = tok2vec.get_dim("nO") if tok2vec.has_dim("nO") else None
     tok2vec = chain(
         tok2vec,
-        cast(Model[List["Floats2d"], Floats2d], list2array()),
+        ragged2array(),
         Linear(hidden_width, t2v_width),
     )
     tok2vec.set_dim("nO", hidden_width)
@@ -88,6 +88,18 @@ def build_tb_parser_model(
             # Initialize weights at zero, as it's a classification layer.
             upper = _define_upper(nO=nO, nI=None)
     return TransitionModel(tok2vec, lower, upper, resize_output)
+
+
+def ragged2array() -> Model[Ragged, Floats2d]:
+    def _forward(model, X, is_train):
+        lengths = X.lengths
+
+        def backprop(dY):
+            return Ragged(dY, lengths)
+
+        return X.dataXd, backprop
+
+    return Model("ragged2array", _forward)
 
 
 def _define_upper(nO, nI):

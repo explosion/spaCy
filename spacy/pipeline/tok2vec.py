@@ -1,5 +1,6 @@
 from typing import Sequence, Iterable, Optional, Dict, Callable, List, Any
 from thinc.api import Model, set_dropout_rate, Optimizer, Config
+from thinc.types import Ragged
 from itertools import islice
 
 from .trainable_pipe import TrainablePipe
@@ -132,7 +133,8 @@ class Tok2Vec(TrainablePipe):
 
         DOCS: https://spacy.io/api/tok2vec#set_annotations
         """
-        for doc, tokvecs in zip(docs, tokvecses):
+        for i, doc in enumerate(docs):
+            tokvecs = tokvecses[i].dataXd
             assert tokvecs.shape[0] == len(doc)
             doc.tensor = tokvecs
 
@@ -162,7 +164,9 @@ class Tok2Vec(TrainablePipe):
         docs = [eg.predicted for eg in examples]
         set_dropout_rate(self.model, drop)
         tokvecs, bp_tokvecs = self.model.begin_update(docs)
-        d_tokvecs = [self.model.ops.alloc2f(*t2v.shape) for t2v in tokvecs]
+        d_tokvecs = Ragged(
+            self.model.ops.alloc2f(*tokvecs.dataXd.shape), tokvecs.lengths
+        )
         losses.setdefault(self.name, 0.0)
 
         def accumulate_gradient(one_d_tokvecs):
@@ -170,10 +174,11 @@ class Tok2Vec(TrainablePipe):
             to all but the last listener. Only the last one does the backprop.
             """
             nonlocal d_tokvecs
-            for i in range(len(one_d_tokvecs)):
-                d_tokvecs[i] += one_d_tokvecs[i]
-                losses[self.name] += float((one_d_tokvecs[i] ** 2).sum())
-            return [self.model.ops.alloc2f(*t2v.shape) for t2v in tokvecs]
+            d_tokvecs.data += one_d_tokvecs.data
+            losses[self.name] += float((one_d_tokvecs.data ** 2).sum())
+            return Ragged(
+                self.model.ops.alloc2f(*tokvecs.dataXd.shape), tokvecs.lengths
+            )
 
         def backprop(one_d_tokvecs):
             """Callback to actually do the backprop. Passed to last listener."""
@@ -302,7 +307,8 @@ def forward(model: Tok2VecListener, inputs, is_train: bool):
                 outputs.append(model.ops.alloc2f(len(doc), width))
             else:
                 outputs.append(doc.tensor)
-        return outputs, lambda dX: []
+        lengths = model.ops.asarray1i([x.shape[0] for x in outputs])
+        return Ragged(model.ops.flatten(outputs), lengths), lambda dX: []
 
 
 def _empty_backprop(dX):  # for pickling
