@@ -478,7 +478,7 @@ def MaxoutWindowEncoder_ragged(
     model = clone(residual(cnn), depth)  # type: ignore[arg-type]
     model.set_dim("nO", width)
     receptive_field = window_size * depth
-    return with_array(model, pad=receptive_field)  # type: ignore[arg-type]
+    return with_array(model)  # type: ignore[arg-type]
 
 
 @registry.architectures("spacy.MishWindowEncoder.v2")
