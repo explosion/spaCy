@@ -9,6 +9,7 @@ from spacy.compat import pickle
 from spacy.kb import Candidate, KnowledgeBase, get_candidates
 from spacy.lang.en import English
 from spacy.ml import load_kb
+from spacy.pipeline import EntityLinker
 from spacy.scorer import Scorer
 from spacy.tests.util import make_tempdir
 from spacy.tokens import Span
@@ -650,7 +651,7 @@ TRAIN_DATA = [
          "sent_starts": [1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}),
     ("Russ Cochran his reprints include EC Comics.",
         {"links": {(0, 12): {"Q7381115": 1.0, "Q2146908": 0.0}},
-         "entities": [(0, 12, "PERSON")],
+         "entities": [(0, 12, "PERSON"), (34, 43, "ART")],
          "sent_starts": [1, -1, 0, 0, 0, 0, 0, 0]}),
     ("Russ Cochran has been publishing comic art.",
         {"links": {(0, 12): {"Q7381115": 1.0, "Q2146908": 0.0}},
@@ -693,6 +694,7 @@ def test_overfitting_IO():
 
     # Create the Entity Linker component and add it to the pipeline
     entity_linker = nlp.add_pipe("entity_linker", last=True)
+    assert isinstance(entity_linker, EntityLinker)
     entity_linker.set_kb(create_kb)
     assert "Q2146908" in entity_linker.vocab.strings
     assert "Q2146908" in entity_linker.kb.vocab.strings
