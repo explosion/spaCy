@@ -121,7 +121,7 @@ def make_entity_linker(
         get_candidates=get_candidates,
         overwrite=overwrite,
         scorer=scorer,
-        use_gold_ents=use_gold_ents
+        use_gold_ents=use_gold_ents,
     )
 
 
