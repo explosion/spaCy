@@ -57,7 +57,7 @@ def test_add_overlapping_entities(en_vocab):
 
 
 def test_set_ents_span_spreads_sentence_boundary(en_vocab):
-    text = ['You', 'went', 'there', '.', 'Me', 'too']
+    text = ["You", "went", "there", ".", "Me", "too"]
     doc = Doc(en_vocab, words=text)
     assert doc[4].is_sent_start is True
     entity = Span(doc, 2, 5, "PERSON")
@@ -67,7 +67,7 @@ def test_set_ents_span_spreads_sentence_boundary(en_vocab):
 
 
 def test_ents_span_spreads_sentence_boundary(en_vocab):
-    text = ['You', 'went', 'there', '.', 'Me', 'too']
+    text = ["You", "went", "there", ".", "Me", "too"]
     doc = Doc(en_vocab, words=text)
     assert doc[4].is_sent_start is True
     entity = Span(doc, 2, 5, "PERSON")
