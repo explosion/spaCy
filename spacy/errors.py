@@ -192,6 +192,10 @@ class Warnings(metaclass=ErrorsWithCodes):
     W115 = ("Skipping {method}: the floret vector table cannot be modified. "
             "Vectors are calculated from character ngrams.")
     W116 = ("Unable to clean attribute '{attr}'.")
+    W117 = ("Entity span '{ent}' crosses a sentence boundary in this Doc. "
+            "You may want to check this entity span and make sure this is "
+            "what you want."
+            )
 
 
 class Errors(metaclass=ErrorsWithCodes):
