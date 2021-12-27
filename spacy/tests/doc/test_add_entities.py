@@ -54,23 +54,3 @@ def test_add_overlapping_entities(en_vocab):
     new_entity = Span(doc, 0, 1, label=392)
     with pytest.raises(ValueError):
         doc.ents = list(doc.ents) + [new_entity]
-
-
-def test_set_ents_span_spreads_sentence_boundary(en_vocab):
-    text = ["You", "went", "there", ".", "Me", "too"]
-    doc = Doc(en_vocab, words=text)
-    assert doc[4].is_sent_start is True
-    entity = Span(doc, 2, 5, "PERSON")
-
-    with pytest.warns(UserWarning):
-        doc.set_ents([entity])
-
-
-def test_ents_span_spreads_sentence_boundary(en_vocab):
-    text = ["You", "went", "there", ".", "Me", "too"]
-    doc = Doc(en_vocab, words=text)
-    assert doc[4].is_sent_start is True
-    entity = Span(doc, 2, 5, "PERSON")
-
-    with pytest.warns(UserWarning):
-        doc.ents = [entity]

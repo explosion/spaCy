@@ -787,6 +787,15 @@ def test_doc_set_ents(en_tokenizer):
         doc.set_ents([], missing=[doc[1:2]], outside=[doc[1:2]])
 
 
+def test_doc_set_ents_span_spreads_sentence_boundary(en_tokenizer):
+    doc = en_tokenizer("You went there. Me too.")
+    assert doc[4].is_sent_start is True
+    entity = Span(doc, 2, 5, "PERSON")
+
+    with pytest.warns(UserWarning):
+        doc.set_ents([entity])
+
+
 def test_doc_ents_setter():
     """Test that both strings and integers can be used to set entities in
     tuple format via doc.ents."""
@@ -799,6 +808,15 @@ def test_doc_ents_setter():
     ents = ["B-HELLO", "I-HELLO", "O", "B-WORLD", "I-WORLD"]
     doc = Doc(vocab, words=words, ents=ents)
     assert [e.label_ for e in doc.ents] == ["HELLO", "WORLD"]
+
+
+def test_ents_setter_span_spreads_sentence_boundary(en_tokenizer):
+    doc = en_tokenizer("You went there. Me too.")
+    assert doc[4].is_sent_start is True
+    entity = Span(doc, 2, 5, "PERSON")
+
+    with pytest.warns(UserWarning):
+        doc.ents = [entity]
 
 
 def test_doc_morph_setter(en_tokenizer, de_tokenizer):
