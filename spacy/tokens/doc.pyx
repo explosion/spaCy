@@ -788,6 +788,8 @@ cdef class Doc:
         # Set all specified entity information
         for span in entities:
             for i in range(span.start, span.end):
+                if self.c[i].sent_start == 1:
+                    warnings.warn(Warnings.W117.format(ent=span.text))
                 if i == span.start:
                     self.c[i].ent_iob = 3
                 else:
