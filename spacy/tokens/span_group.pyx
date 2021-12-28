@@ -120,6 +120,7 @@ cdef class SpanGroup:
          """
         self.concat(spans_or_span_group, inplace = True)
 
+
     def __getitem__(self, int i):
         """Get a span from the group.
 
@@ -128,11 +129,7 @@ cdef class SpanGroup:
 
         DOCS: https://spacy.io/api/spangroup#getitem
         """
-        cdef int size = self.c.size()
-        if i < -size or i >= size:
-            raise IndexError(f"list index {i} out of range")
-        if i < 0:
-            i += size
+        i = self._validate_and_adjust_index(i)
         return Span.cinit(self.doc, self.c[i])
 
     def __delitem__(self, int i) :
@@ -142,11 +139,7 @@ cdef class SpanGroup:
 
         DOCS: https://spacy.io/api/spangroup#delitem
         """
-        cdef int size = self.c.size()
-        if i < -size or i >= size:
-            raise IndexError(f"list index {i} out of range")
-        if i < 0:
-            i += size
+        i = self._validate_and_adjust_index(i)
         self.c.erase(self.c.begin() + i - 1)
 
     def __setitem__(self, int i, Span span) :
@@ -157,15 +150,10 @@ cdef class SpanGroup:
 
         DOCS: https://spacy.io/api/spangroup#setitem
         """
-        cdef int size = self.c.size()
-        if i < -size or i >= size:
-            raise IndexError(f"list index {i} out of range")
-        if i < 0:
-            i += size
-
         if span.doc is not self.doc:
             raise ValueError("Cannot add span to group: refers to different Doc.")
 
+        i = self._validate_and_adjust_index(i)
         self.c[i] = span.c
 
     def __iadd__(self, other : Union[SpanGroup, Iterable["Span"]]) :
@@ -374,6 +362,22 @@ cdef class SpanGroup:
         elif sort_spans :
             span_group.sort(inplace = True)
         return span_group
+
+    def _validate_and_adjust_index(self, index):
+        """
+        Checks list index boundaries and adjusts the index if negative to accommodate python slice conventions.
+        Used internally in __setitem__/__getitem__ etc.
+        If the index is out of range, IndexError is raised.
+
+        index (int): list index
+        RETURNS (int): adjusted index
+        """
+        cdef int size = self.c.size()
+        if index < -size or index >= size:
+            raise IndexError(f"list index {index} out of range")
+        if index < 0:
+            index += size
+        return index
 
 def concat_span_groups(span_groups : Iterable[SpanGroup], name = None, attrs = None, sort_spans = False, filter_spans = False) :
     """
