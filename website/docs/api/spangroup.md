@@ -123,7 +123,7 @@ Get a span from the group. Note, that a copy of the span is returned, so if any 
 | **RETURNS** | The span at the given index. ~~Span~~ |
 
 
-## SpanGroup.\_\_setitem\_\_ {#setitem tag="method"}
+## SpanGroup.\_\_setitem\_\_ {#setitem tag="method", new="3.2.1"}
 
 Sets a span in the group
 

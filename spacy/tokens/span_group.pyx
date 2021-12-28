@@ -1,3 +1,4 @@
+from typing import Iterable, Tuple, Union, Optional, TYPE_CHECKING
 import weakref
 import struct
 import srsly
@@ -9,8 +10,6 @@ from ..structs cimport SpanC
 from libcpp.algorithm cimport sort as sort_vector
 from libcpp.set cimport set
 from libcpp.utility cimport pair
-
-from typing import Iterable, Tuple, Union, Optional, TYPE_CHECKING
 
 
 cdef class SpanGroup:
