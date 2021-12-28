@@ -162,6 +162,7 @@ class TextCategorizer(TrainablePipe):
     def support_missing_values(self):
         # There are no missing values as the textcat should always
         # predict exactly one label. All other labels are 0.0
+        # Subclasses may override this property to change internal behaviour.
         return False
 
     @property
