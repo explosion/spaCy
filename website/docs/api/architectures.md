@@ -124,6 +124,14 @@ Instead of defining its own `Tok2Vec` instance, a model architecture like
 [Tagger](/api/architectures#tagger) can define a listener as its `tok2vec`
 argument that connects to the shared `tok2vec` component in the pipeline.
 
+Listeners work by caching the `Tok2Vec` output for a given batch of `Doc`s. This
+means that in order for a component to work with the listener, the batch of
+`Doc`s passed to the listener must be the same as the batch of `Doc`s passed to
+the `Tok2Vec`. As a result, any manipulation of the `Doc`s which would affect
+`Tok2Vec` output, such as to create special contexts or remove `Doc`s for which
+no prediction can be made, must happen inside the model, **after** the call to
+the `Tok2Vec` component.
+
 | Name        | Description                                                                                                                                                                                                                                                                                                                          |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `width`     | The width of the vectors produced by the "upstream" [`Tok2Vec`](/api/tok2vec) component. ~~int~~                                                                                                                                                                                                                                     |
@@ -150,7 +158,7 @@ be configured with the `attrs` argument. The suggested attributes are `NORM`,
 `PREFIX`, `SUFFIX` and `SHAPE`. This lets the model take into account some
 subword information, without construction a fully character-based
 representation. If pretrained vectors are available, they can be included in the
-representation as well, with the vectors table will be kept static (i.e. it's
+representation as well, with the vectors table kept static (i.e. it's
 not updated).
 
 | Name                     | Description                                                                                                                                                                                                                                                                                                                                                                                                                                        |
@@ -288,7 +296,7 @@ learned linear projection to control the dimensionality. Unknown tokens are
 mapped to a zero vector. See the documentation on
 [static vectors](/usage/embeddings-transformers#static-vectors) for details.
 
-| Name        |  Description                                                                                                                                                                                                            |
+| Name        | Description                                                                                                                                                                                                             |
 | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `nO`        | The output width of the layer, after the linear projection. ~~Optional[int]~~                                                                                                                                           |
 | `nM`        | The width of the static vectors. ~~Optional[int]~~                                                                                                                                                                      |
@@ -310,7 +318,7 @@ mapped to a zero vector. See the documentation on
 Extract arrays of input features from [`Doc`](/api/doc) objects. Expects a list
 of feature names to extract, which should refer to token attributes.
 
-| Name        |  Description                                                             |
+| Name        | Description                                                              |
 | ----------- | ------------------------------------------------------------------------ |
 | `columns`   | The token attributes to extract. ~~List[Union[int, str]]~~               |
 | **CREATES** | The created feature extraction layer. ~~Model[List[Doc], List[Ints2d]]~~ |

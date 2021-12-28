@@ -348,6 +348,46 @@ class EntityRuler(Pipe):
             self.nlp.vocab, attr=self.phrase_matcher_attr, validate=self._validate
         )
 
+    def remove(self, ent_id: str) -> None:
+        """Remove a pattern by its ent_id if a pattern with this ent_id was added before
+
+        ent_id (str): id of the pattern to be removed
+        RETURNS: None
+        DOCS: https://spacy.io/api/entityruler#remove
+        """
+        label_id_pairs = [
+            (label, eid) for (label, eid) in self._ent_ids.values() if eid == ent_id
+        ]
+        if not label_id_pairs:
+            raise ValueError(Errors.E1024.format(ent_id=ent_id))
+        created_labels = [
+            self._create_label(label, eid) for (label, eid) in label_id_pairs
+        ]
+        # remove the patterns from self.phrase_patterns
+        self.phrase_patterns = defaultdict(
+            list,
+            {
+                label: val
+                for (label, val) in self.phrase_patterns.items()
+                if label not in created_labels
+            },
+        )
+        # remove the patterns from self.token_pattern
+        self.token_patterns = defaultdict(
+            list,
+            {
+                label: val
+                for (label, val) in self.token_patterns.items()
+                if label not in created_labels
+            },
+        )
+        # remove the patterns from self.token_pattern
+        for label in created_labels:
+            if label in self.phrase_matcher:
+                self.phrase_matcher.remove(label)
+            else:
+                self.matcher.remove(label)
+
     def _require_patterns(self) -> None:
         """Raise a warning if this component has no patterns defined."""
         if len(self) == 0:
@@ -431,10 +471,16 @@ class EntityRuler(Pipe):
         path = ensure_path(path)
         self.clear()
         depr_patterns_path = path.with_suffix(".jsonl")
-        if depr_patterns_path.is_file():
+        if path.suffix == ".jsonl":  # user provides a jsonl
+            if path.is_file:
+                patterns = srsly.read_jsonl(path)
+                self.add_patterns(patterns)
+            else:
+                raise ValueError(Errors.E1023.format(path=path))
+        elif depr_patterns_path.is_file():
             patterns = srsly.read_jsonl(depr_patterns_path)
             self.add_patterns(patterns)
-        else:
+        elif path.is_dir():  # path is a valid directory
             cfg = {}
             deserializers_patterns = {
                 "patterns": lambda p: self.add_patterns(
@@ -451,6 +497,8 @@ class EntityRuler(Pipe):
                 self.nlp.vocab, attr=self.phrase_matcher_attr
             )
             from_disk(path, deserializers_patterns, {})
+        else:  # path is not a valid directory or file
+            raise ValueError(Errors.E146.format(path=path))
         return self
 
     def to_disk(

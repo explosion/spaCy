@@ -1,15 +1,18 @@
+import random
+
 import numpy
-from spacy.training import offsets_to_biluo_tags, biluo_tags_to_offsets, Alignment
-from spacy.training import biluo_tags_to_spans, iob_to_biluo
-from spacy.training import Corpus, docs_to_json, Example
-from spacy.training.align import get_alignments
-from spacy.training.converters import json_to_docs
-from spacy.lang.en import English
-from spacy.tokens import Doc, DocBin
-from spacy.util import get_words_and_spaces, minibatch
-from thinc.api import compounding
 import pytest
 import srsly
+from spacy.lang.en import English
+from spacy.tokens import Doc, DocBin
+from spacy.training import Alignment, Corpus, Example, biluo_tags_to_offsets
+from spacy.training import biluo_tags_to_spans, docs_to_json, iob_to_biluo
+from spacy.training import offsets_to_biluo_tags
+from spacy.training.align import get_alignments
+from spacy.training.converters import json_to_docs
+from spacy.util import get_words_and_spaces, load_model_from_path, minibatch
+from spacy.util import load_config_from_str
+from thinc.api import compounding
 
 from ..util import make_tempdir
 
@@ -66,6 +69,207 @@ def merged_dict():
 def vocab():
     nlp = English()
     return nlp.vocab
+
+
+@pytest.mark.issue(999)
+def test_issue999():
+    """Test that adding entities and resuming training works passably OK.
+    There are two issues here:
+    1) We have to re-add labels. This isn't very nice.
+    2) There's no way to set the learning rate for the weight update, so we
+        end up out-of-scale, causing it to learn too fast.
+    """
+    TRAIN_DATA = [
+        ["hey", []],
+        ["howdy", []],
+        ["hey there", []],
+        ["hello", []],
+        ["hi", []],
+        ["i'm looking for a place to eat", []],
+        ["i'm looking for a place in the north of town", [(31, 36, "LOCATION")]],
+        ["show me chinese restaurants", [(8, 15, "CUISINE")]],
+        ["show me chines restaurants", [(8, 14, "CUISINE")]],
+    ]
+    nlp = English()
+    ner = nlp.add_pipe("ner")
+    for _, offsets in TRAIN_DATA:
+        for start, end, label in offsets:
+            ner.add_label(label)
+    nlp.initialize()
+    for itn in range(20):
+        random.shuffle(TRAIN_DATA)
+        for raw_text, entity_offsets in TRAIN_DATA:
+            example = Example.from_dict(
+                nlp.make_doc(raw_text), {"entities": entity_offsets}
+            )
+            nlp.update([example])
+
+    with make_tempdir() as model_dir:
+        nlp.to_disk(model_dir)
+        nlp2 = load_model_from_path(model_dir)
+
+    for raw_text, entity_offsets in TRAIN_DATA:
+        doc = nlp2(raw_text)
+        ents = {(ent.start_char, ent.end_char): ent.label_ for ent in doc.ents}
+        for start, end, label in entity_offsets:
+            if (start, end) in ents:
+                assert ents[(start, end)] == label
+                break
+            else:
+                if entity_offsets:
+                    raise Exception(ents)
+
+
+@pytest.mark.issue(4402)
+def test_issue4402():
+    json_data = {
+        "id": 0,
+        "paragraphs": [
+            {
+                "raw": "How should I cook bacon in an oven?\nI've heard of people cooking bacon in an oven.",
+                "sentences": [
+                    {
+                        "tokens": [
+                            {"id": 0, "orth": "How", "ner": "O"},
+                            {"id": 1, "orth": "should", "ner": "O"},
+                            {"id": 2, "orth": "I", "ner": "O"},
+                            {"id": 3, "orth": "cook", "ner": "O"},
+                            {"id": 4, "orth": "bacon", "ner": "O"},
+                            {"id": 5, "orth": "in", "ner": "O"},
+                            {"id": 6, "orth": "an", "ner": "O"},
+                            {"id": 7, "orth": "oven", "ner": "O"},
+                            {"id": 8, "orth": "?", "ner": "O"},
+                        ],
+                        "brackets": [],
+                    },
+                    {
+                        "tokens": [
+                            {"id": 9, "orth": "\n", "ner": "O"},
+                            {"id": 10, "orth": "I", "ner": "O"},
+                            {"id": 11, "orth": "'ve", "ner": "O"},
+                            {"id": 12, "orth": "heard", "ner": "O"},
+                            {"id": 13, "orth": "of", "ner": "O"},
+                            {"id": 14, "orth": "people", "ner": "O"},
+                            {"id": 15, "orth": "cooking", "ner": "O"},
+                            {"id": 16, "orth": "bacon", "ner": "O"},
+                            {"id": 17, "orth": "in", "ner": "O"},
+                            {"id": 18, "orth": "an", "ner": "O"},
+                            {"id": 19, "orth": "oven", "ner": "O"},
+                            {"id": 20, "orth": ".", "ner": "O"},
+                        ],
+                        "brackets": [],
+                    },
+                ],
+                "cats": [
+                    {"label": "baking", "value": 1.0},
+                    {"label": "not_baking", "value": 0.0},
+                ],
+            },
+            {
+                "raw": "What is the difference between white and brown eggs?\n",
+                "sentences": [
+                    {
+                        "tokens": [
+                            {"id": 0, "orth": "What", "ner": "O"},
+                            {"id": 1, "orth": "is", "ner": "O"},
+                            {"id": 2, "orth": "the", "ner": "O"},
+                            {"id": 3, "orth": "difference", "ner": "O"},
+                            {"id": 4, "orth": "between", "ner": "O"},
+                            {"id": 5, "orth": "white", "ner": "O"},
+                            {"id": 6, "orth": "and", "ner": "O"},
+                            {"id": 7, "orth": "brown", "ner": "O"},
+                            {"id": 8, "orth": "eggs", "ner": "O"},
+                            {"id": 9, "orth": "?", "ner": "O"},
+                        ],
+                        "brackets": [],
+                    },
+                    {"tokens": [{"id": 10, "orth": "\n", "ner": "O"}], "brackets": []},
+                ],
+                "cats": [
+                    {"label": "baking", "value": 0.0},
+                    {"label": "not_baking", "value": 1.0},
+                ],
+            },
+        ],
+    }
+    nlp = English()
+    attrs = ["ORTH", "SENT_START", "ENT_IOB", "ENT_TYPE"]
+    with make_tempdir() as tmpdir:
+        output_file = tmpdir / "test4402.spacy"
+        docs = json_to_docs([json_data])
+        data = DocBin(docs=docs, attrs=attrs).to_bytes()
+        with output_file.open("wb") as file_:
+            file_.write(data)
+        reader = Corpus(output_file)
+        train_data = list(reader(nlp))
+        assert len(train_data) == 2
+
+        split_train_data = []
+        for eg in train_data:
+            split_train_data.extend(eg.split_sents())
+        assert len(split_train_data) == 4
+
+
+CONFIG_7029 = """
+[nlp]
+lang = "en"
+pipeline = ["tok2vec", "tagger"]
+
+[components]
+
+[components.tok2vec]
+factory = "tok2vec"
+
+[components.tok2vec.model]
+@architectures = "spacy.Tok2Vec.v1"
+
+[components.tok2vec.model.embed]
+@architectures = "spacy.MultiHashEmbed.v1"
+width = ${components.tok2vec.model.encode:width}
+attrs = ["NORM","PREFIX","SUFFIX","SHAPE"]
+rows = [5000,2500,2500,2500]
+include_static_vectors = false
+
+[components.tok2vec.model.encode]
+@architectures = "spacy.MaxoutWindowEncoder.v1"
+width = 96
+depth = 4
+window_size = 1
+maxout_pieces = 3
+
+[components.tagger]
+factory = "tagger"
+
+[components.tagger.model]
+@architectures = "spacy.Tagger.v1"
+nO = null
+
+[components.tagger.model.tok2vec]
+@architectures = "spacy.Tok2VecListener.v1"
+width = ${components.tok2vec.model.encode:width}
+upstream = "*"
+"""
+
+
+@pytest.mark.issue(7029)
+def test_issue7029():
+    """Test that an empty document doesn't mess up an entire batch."""
+    TRAIN_DATA = [
+        ("I like green eggs", {"tags": ["N", "V", "J", "N"]}),
+        ("Eat blue ham", {"tags": ["V", "J", "N"]}),
+    ]
+    nlp = English.from_config(load_config_from_str(CONFIG_7029))
+    train_examples = []
+    for t in TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
+    optimizer = nlp.initialize(get_examples=lambda: train_examples)
+    for i in range(50):
+        losses = {}
+        nlp.update(train_examples, sgd=optimizer, losses=losses)
+    texts = ["first", "second", "third", "fourth", "and", "then", "some", ""]
+    docs1 = list(nlp.pipe(texts, batch_size=1))
+    docs2 = list(nlp.pipe(texts, batch_size=4))
+    assert [doc[0].tag_ for doc in docs1[:-1]] == [doc[0].tag_ for doc in docs2[:-1]]
 
 
 def test_gold_biluo_U(en_vocab):

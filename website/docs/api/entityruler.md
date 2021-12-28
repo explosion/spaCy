@@ -210,6 +210,24 @@ of dicts) or a phrase pattern (string). For more details, see the usage guide on
 | ---------- | ---------------------------------------------------------------- |
 | `patterns` | The patterns to add. ~~List[Dict[str, Union[str, List[dict]]]]~~ |
 
+
+## EntityRuler.remove {#remove tag="method" new="3.2.1"}
+
+Remove a pattern by its ID from the entity ruler. A `ValueError` is raised if the ID does not exist.
+
+> #### Example
+>
+> ```python
+> patterns = [{"label": "ORG", "pattern": "Apple", "id": "apple"}]
+> ruler = nlp.add_pipe("entity_ruler")
+> ruler.add_patterns(patterns)
+> ruler.remove("apple")
+> ```
+
+| Name       | Description                                                      |
+| ---------- | ---------------------------------------------------------------- |
+| `id`       | The ID of the pattern rule. ~~str~~ |
+
 ## EntityRuler.to_disk {#to_disk tag="method"}
 
 Save the entity ruler patterns to a directory. The patterns will be saved as
