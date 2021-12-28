@@ -104,7 +104,7 @@ Get the number of spans in the group.
 
 ## SpanGroup.\_\_getitem\_\_ {#getitem tag="method"}
 
-Get a span from the group. Note, that a copy of the span is returned, so if any changes are made to this span, they are not going to be reflected in the corresponsing member of the group. Similarly to `doc.ents`, the group will need to be re-assigned for changes to be applied.
+Get a span from the group. Note, that a copy of the span is returned, so if any changes are made to this span, they are not going to be reflected in the corresponding member of the group. The group will need to be re-assigned for changes to be applied.
 
 > #### Example
 >
