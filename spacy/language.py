@@ -1404,20 +1404,13 @@ class Language:
         for eg in examples:
             self.make_doc(eg.reference.text)
         # apply all pipeline components
-        for name, pipe in self.pipeline:
-            kwargs = component_cfg.get(name, {})
-            kwargs.setdefault("batch_size", batch_size)
-            for doc, eg in zip(
-                _pipe(
-                    (eg.predicted for eg in examples),
-                    proc=pipe,
-                    name=name,
-                    default_error_handler=self.default_error_handler,
-                    kwargs=kwargs,
-                ),
-                examples,
-            ):
-                eg.predicted = doc
+        docs = self.pipe(
+            (eg.predicted for eg in examples),
+            batch_size=batch_size,
+            component_cfg=component_cfg,
+        )
+        for eg, doc in zip(examples, docs):
+            eg.predicted = doc
         end_time = timer()
         results = scorer.score(examples)
         n_words = sum(len(eg.predicted) for eg in examples)

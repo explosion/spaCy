@@ -31,7 +31,7 @@ pytest-timeout>=1.3.0,<2.0.0
 mock>=2.0.0,<3.0.0
 flake8>=3.8.0,<3.10.0
 hypothesis>=3.27.0,<7.0.0
-mypy>=0.910
+mypy==0.910
 types-dataclasses>=0.1.3; python_version < "3.7"
 types-mock>=0.1.1
 types-requests
