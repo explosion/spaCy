@@ -97,7 +97,7 @@ class AttributeFormat:
         render_all_colors_within_values:    when rendering a table, self.fg_color and self.bg_color are rendered in Wasabi.
                                                 This argument is set to True when rendering a text to signal that colors should be rendered here.
         whole_row_fg_color:                 a foreground color used for the whole row. This takes precedence over value_dependent_fg_colors.
-        whole_row_bg_color:                 a background color used for the whole row. This takes precedence over value_dependent_fg_colors.
+        whole_row_bg_color:                 a background color used for the whole row. This takes precedence over value_dependent_bg_colors.
         """
         obj = token
         parts = self.attribute.split(".")
