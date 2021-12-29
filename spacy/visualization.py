@@ -1,5 +1,4 @@
 from typing import Dict, List, Optional, Union, cast
-from os import linesep
 import wasabi
 from wasabi.util import supports_ansi
 from spacy.tokens import Span, Token, Doc
@@ -431,7 +430,7 @@ class Visualizer:
                     bg_colors=bg_colors,
                     spacing=spacing,
                 )
-                + linesep
+                + "\n"
             )
         return return_string
 
