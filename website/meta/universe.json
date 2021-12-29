@@ -27,32 +27,6 @@
             "tags": ["api", "deploy", "production"]
         },
         {
-            "id": "denomme",
-            "title": "denomme : Multilingual Name Detector",
-            "slogan": "Multilingual Name Detection",
-            "description": "A SpaCy extension for Spans to extract multilingual names out of documents trained on XLM-roberta backbone",
-            "github": "meghanabhange/denomme",
-            "pip": "denomme https://denomme.s3.us-east-2.amazonaws.com/xx_denomme-0.3.1/dist/xx_denomme-0.3.1.tar.gz",
-            "code_example": [
-                "from spacy.lang.xx import MultiLanguage",
-                "from denomme.name import person_name_component",
-                "nlp = MultiLanguage()",
-                "nlp.add_pipe('denomme')",
-                "doc = nlp('Hi my name is Meghana S.R Bhange and I want to talk Asha')",
-                "print(doc._.person_name)",
-                "# ['Meghana S.R Bhange', 'Asha']"
-            ],
-            "thumb": "https://i.ibb.co/jwGVWPZ/rainbow-bohemian-logo-removebg-preview.png",
-            "code_language": "python",
-            "author": "Meghana Bhange",
-            "author_links": {
-                "github": "meghanabhange",
-                "twitter": "_aspiringcat"
-            },
-            "category": ["standalone"],
-            "tags": ["person-name-detection"]
-        },
-        {
             "id": "eMFDscore",
             "title": "eMFDscore : Extended Moral Foundation Dictionary Scoring for Python",
             "slogan": "Extended Moral Foundation Dictionary Scoring for Python",
