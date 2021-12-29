@@ -11,25 +11,11 @@ def doc(en_tokenizer):
     doc = en_tokenizer("0 1 2 3 4 5 6")
     matcher = Matcher(en_tokenizer.vocab, validate=True)
 
+# fmt: off
     matcher.add("4", [[{}, {}, {}, {}]])
-    matcher.add(
-        "2",
-        [
-            [
-                {},
-                {},
-            ]
-        ],
-    )
-    matcher.add(
-        "1",
-        [
-            [
-                {},
-            ]
-        ],
-    )
-
+    matcher.add("2", [[{}, {}, ]])
+    matcher.add("1", [[{}, ]])
+# fmt: on
     matches = matcher(doc)
     spans = []
     for match in matches:
