@@ -168,6 +168,43 @@ def test_issue7065_b():
     doc = nlp(text)
     assert doc
 
+def test_no_entities():
+    # Test that having no entities doesn't crash the model
+    TRAIN_DATA = [
+        (
+            "The sky is blue.",
+            {
+                "sent_starts": [1, 0, 0, 0, 0],
+            },
+        )
+    ]
+    nlp = English()
+    vector_length = 3
+    train_examples = []
+    for text, annotation in TRAIN_DATA:
+        doc = nlp(text)
+        train_examples.append(Example.from_dict(doc, annotation))
+
+    def create_kb(vocab):
+        # create artificial KB
+        mykb = KnowledgeBase(vocab, entity_vector_length=vector_length)
+        mykb.add_entity(entity="Q2146908", freq=12, entity_vector=[6, -4, 3])
+        mykb.add_alias("Russ Cochran", ["Q2146908"], [0.9])
+        return mykb
+
+    # Create and train the Entity Linker
+    entity_linker = nlp.add_pipe("entity_linker", last=True)
+    entity_linker.set_kb(create_kb)
+    optimizer = nlp.initialize(get_examples=lambda: train_examples)
+    for i in range(2):
+        losses = {}
+        nlp.update(train_examples, sgd=optimizer, losses=losses)
+
+    # adding additional components that are required for the entity_linker
+    nlp.add_pipe("sentencizer", first=True)
+
+    # this will run the pipeline on the examples and shouldn't crash
+    results = nlp.evaluate(train_examples)
 
 def test_partial_links():
     # Test that having some entities on the doc without gold links, doesn't crash

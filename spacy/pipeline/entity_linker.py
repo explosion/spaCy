@@ -256,6 +256,18 @@ class EntityLinker(TrainablePipe):
             X=doc_sample, Y=self.model.ops.asarray(vector_sample, dtype="float32")
         )
 
+    def batch_has_learnable_example(self, docs):
+        """Check if a batch of Docs contains at least one non-NIL entity.
+
+        If one isn't present, then the update step needs to be skipped.
+        """
+        for doc in docs:
+            for ent in doc.ents:
+                candidates = list(self.get_candidates(self.kb, ent))
+                if candidates:
+                    return True
+        return False
+
     def update(
         self,
         examples: Iterable[Example],
@@ -289,6 +301,10 @@ class EntityLinker(TrainablePipe):
         if self.use_gold_ents:
             for doc, ex in zip(docs, examples):
                 doc.ents = ex.reference.ents
+
+        # make sure we have something to learn from, if not, short-circuit
+        if not self.batch_has_learnable_example(docs):
+            return losses
 
         sentence_encodings, bp_context = self.model.begin_update(docs)
         loss, d_scores = self.get_loss(
