@@ -1,19 +1,30 @@
-import pytest
 import random
+
 import numpy.random
+import pytest
 from numpy.testing import assert_almost_equal
-from thinc.api import fix_random_seed
+from thinc.api import Config, compounding, fix_random_seed, get_current_ops
+from wasabi import msg
+
+import spacy
 from spacy import util
+from spacy.cli.evaluate import print_prf_per_type, print_textcats_auc_per_cat
 from spacy.lang.en import English
 from spacy.language import Language
 from spacy.pipeline import TextCategorizer
-from spacy.tokens import Doc
+from spacy.pipeline.textcat import single_label_bow_config
+from spacy.pipeline.textcat import single_label_cnn_config
+from spacy.pipeline.textcat import single_label_default_config
+from spacy.pipeline.textcat_multilabel import multi_label_bow_config
+from spacy.pipeline.textcat_multilabel import multi_label_cnn_config
+from spacy.pipeline.textcat_multilabel import multi_label_default_config
 from spacy.pipeline.tok2vec import DEFAULT_TOK2VEC_MODEL
 from spacy.scorer import Scorer
+from spacy.tokens import Doc, DocBin
 from spacy.training import Example
+from spacy.training.initialize import init_nlp
 
 from ..util import make_tempdir
-
 
 TRAIN_DATA_SINGLE_LABEL = [
     ("I'm so happy.", {"cats": {"POSITIVE": 1.0, "NEGATIVE": 0.0}}),
@@ -46,6 +57,224 @@ def make_get_examples_multi_label(nlp):
         return train_examples
 
     return get_examples
+
+
+@pytest.mark.issue(3611)
+def test_issue3611():
+    """Test whether adding n-grams in the textcat works even when n > token length of some docs"""
+    unique_classes = ["offensive", "inoffensive"]
+    x_train = [
+        "This is an offensive text",
+        "This is the second offensive text",
+        "inoff",
+    ]
+    y_train = ["offensive", "offensive", "inoffensive"]
+    nlp = spacy.blank("en")
+    # preparing the data
+    train_data = []
+    for text, train_instance in zip(x_train, y_train):
+        cat_dict = {label: label == train_instance for label in unique_classes}
+        train_data.append(Example.from_dict(nlp.make_doc(text), {"cats": cat_dict}))
+    # add a text categorizer component
+    model = {
+        "@architectures": "spacy.TextCatBOW.v1",
+        "exclusive_classes": True,
+        "ngram_size": 2,
+        "no_output_layer": False,
+    }
+    textcat = nlp.add_pipe("textcat", config={"model": model}, last=True)
+    for label in unique_classes:
+        textcat.add_label(label)
+    # training the network
+    with nlp.select_pipes(enable="textcat"):
+        optimizer = nlp.initialize()
+        for i in range(3):
+            losses = {}
+            batches = util.minibatch(train_data, size=compounding(4.0, 32.0, 1.001))
+
+            for batch in batches:
+                nlp.update(examples=batch, sgd=optimizer, drop=0.1, losses=losses)
+
+
+@pytest.mark.issue(4030)
+def test_issue4030():
+    """Test whether textcat works fine with empty doc"""
+    unique_classes = ["offensive", "inoffensive"]
+    x_train = [
+        "This is an offensive text",
+        "This is the second offensive text",
+        "inoff",
+    ]
+    y_train = ["offensive", "offensive", "inoffensive"]
+    nlp = spacy.blank("en")
+    # preparing the data
+    train_data = []
+    for text, train_instance in zip(x_train, y_train):
+        cat_dict = {label: label == train_instance for label in unique_classes}
+        train_data.append(Example.from_dict(nlp.make_doc(text), {"cats": cat_dict}))
+    # add a text categorizer component
+    model = {
+        "@architectures": "spacy.TextCatBOW.v1",
+        "exclusive_classes": True,
+        "ngram_size": 2,
+        "no_output_layer": False,
+    }
+    textcat = nlp.add_pipe("textcat", config={"model": model}, last=True)
+    for label in unique_classes:
+        textcat.add_label(label)
+    # training the network
+    with nlp.select_pipes(enable="textcat"):
+        optimizer = nlp.initialize()
+        for i in range(3):
+            losses = {}
+            batches = util.minibatch(train_data, size=compounding(4.0, 32.0, 1.001))
+
+            for batch in batches:
+                nlp.update(examples=batch, sgd=optimizer, drop=0.1, losses=losses)
+    # processing of an empty doc should result in 0.0 for all categories
+    doc = nlp("")
+    assert doc.cats["offensive"] == 0.0
+    assert doc.cats["inoffensive"] == 0.0
+
+
+@pytest.mark.parametrize(
+    "textcat_config",
+    [
+        single_label_default_config,
+        single_label_bow_config,
+        single_label_cnn_config,
+        multi_label_default_config,
+        multi_label_bow_config,
+        multi_label_cnn_config,
+    ],
+)
+@pytest.mark.issue(5551)
+def test_issue5551(textcat_config):
+    """Test that after fixing the random seed, the results of the pipeline are truly identical"""
+    component = "textcat"
+
+    pipe_cfg = Config().from_str(textcat_config)
+    results = []
+    for i in range(3):
+        fix_random_seed(0)
+        nlp = English()
+        text = "Once hot, form ping-pong-ball-sized balls of the mixture, each weighing roughly 25 g."
+        annots = {"cats": {"Labe1": 1.0, "Label2": 0.0, "Label3": 0.0}}
+        pipe = nlp.add_pipe(component, config=pipe_cfg, last=True)
+        for label in set(annots["cats"]):
+            pipe.add_label(label)
+        # Train
+        nlp.initialize()
+        doc = nlp.make_doc(text)
+        nlp.update([Example.from_dict(doc, annots)])
+        # Store the result of each iteration
+        result = pipe.model.predict([doc])
+        results.append(result[0])
+    # All results should be the same because of the fixed seed
+    assert len(results) == 3
+    ops = get_current_ops()
+    assert_almost_equal(ops.to_numpy(results[0]), ops.to_numpy(results[1]), decimal=5)
+    assert_almost_equal(ops.to_numpy(results[0]), ops.to_numpy(results[2]), decimal=5)
+
+
+CONFIG_ISSUE_6908 = """
+[paths]
+train = "TRAIN_PLACEHOLDER"
+raw = null
+init_tok2vec = null
+vectors = null
+
+[system]
+seed = 0
+gpu_allocator = null
+
+[nlp]
+lang = "en"
+pipeline = ["textcat"]
+tokenizer = {"@tokenizers":"spacy.Tokenizer.v1"}
+disabled = []
+before_creation = null
+after_creation = null
+after_pipeline_creation = null
+batch_size = 1000
+
+[components]
+
+[components.textcat]
+factory = "TEXTCAT_PLACEHOLDER"
+
+[corpora]
+
+[corpora.train]
+@readers = "spacy.Corpus.v1"
+path = ${paths:train}
+
+[corpora.dev]
+@readers = "spacy.Corpus.v1"
+path = ${paths:train}
+
+
+[training]
+train_corpus = "corpora.train"
+dev_corpus = "corpora.dev"
+seed = ${system.seed}
+gpu_allocator = ${system.gpu_allocator}
+frozen_components = []
+before_to_disk = null
+
+[pretraining]
+
+[initialize]
+vectors = ${paths.vectors}
+init_tok2vec = ${paths.init_tok2vec}
+vocab_data = null
+lookups = null
+before_init = null
+after_init = null
+
+[initialize.components]
+
+[initialize.components.textcat]
+labels = ['label1', 'label2']
+
+[initialize.tokenizer]
+"""
+
+
+@pytest.mark.parametrize(
+    "component_name",
+    ["textcat", "textcat_multilabel"],
+)
+@pytest.mark.issue(6908)
+def test_issue6908(component_name):
+    """Test intializing textcat with labels in a list"""
+
+    def create_data(out_file):
+        nlp = spacy.blank("en")
+        doc = nlp.make_doc("Some text")
+        doc.cats = {"label1": 0, "label2": 1}
+        out_data = DocBin(docs=[doc]).to_bytes()
+        with out_file.open("wb") as file_:
+            file_.write(out_data)
+
+    with make_tempdir() as tmp_path:
+        train_path = tmp_path / "train.spacy"
+        create_data(train_path)
+        config_str = CONFIG_ISSUE_6908.replace("TEXTCAT_PLACEHOLDER", component_name)
+        config_str = config_str.replace("TRAIN_PLACEHOLDER", train_path.as_posix())
+        config = util.load_config_from_str(config_str)
+        init_nlp(config)
+
+
+@pytest.mark.issue(7019)
+def test_issue7019():
+    scores = {"LABEL_A": 0.39829102, "LABEL_B": 0.938298329382, "LABEL_C": None}
+    print_textcats_auc_per_cat(msg, scores)
+    scores = {
+        "LABEL_A": {"p": 0.3420302, "r": 0.3929020, "f": 0.49823928932},
+        "LABEL_B": {"p": None, "r": None, "f": None},
+    }
+    print_prf_per_type(msg, scores, name="foo", type="bar")
 
 
 @pytest.mark.skip(reason="Test is flakey when run with others")
