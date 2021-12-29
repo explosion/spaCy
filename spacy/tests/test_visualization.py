@@ -285,13 +285,6 @@ def test_visualization_render_colors(en_vocab):
         deps=["dep"] * 9,
     )
 
-    print(
-        AttributeFormat(
-            "dep_",
-            value_dependent_fg_colors={"dep": 2},
-            value_dependent_bg_colors={"dep": 11},
-        ).render(doc[2])
-    )
     assert (
         AttributeFormat(
             "dep_",
@@ -653,6 +646,7 @@ def test_visualization_spacing(
         Visualizer()
         .render_table(fully_featured_doc_one_sentence, formats, spacing=1)
         .strip()
+        .replace("\r", "")
         == """
   ╔>╔═ poss     Sarah   sarah   PROPN NNP NounType=prop|Number=sing PERSON
   ║ ╚> case     's      's      PART  POS Poss=yes                        
@@ -664,7 +658,9 @@ def test_visualization_spacing(
 ╠══>╔═ prep     via     via     ADP   IN                                  
 ║   ╚> pobj     London  london  PROPN NNP NounType=prop|Number=sing GPE   
 ╚════> punct    .       .       PUNCT .   PunctType=peri
-    """.strip()
+    """.strip().replace(
+            "\r", ""
+        )
     )
 
 
@@ -686,6 +682,7 @@ def test_visualization_minimal_render_table_two_sentences(
         Visualizer()
         .render_table(fully_featured_doc_two_sentences, formats, spacing=3)
         .strip()
+        .replace("\r", "")
         == """
   ╔>╔═   poss       Sarah     sarah     PROPN   NNP   NounType=prop|Number=sing   PERSON
   ║ ╚>   case       's        's        PART    POS   Poss=yes                          
@@ -703,7 +700,9 @@ def test_visualization_minimal_render_table_two_sentences(
 ╠═   ROOT    loved   love   VERB    VBD   Tense=Past|VerbForm=Fin                                  
 ╠>   dobj    it      it     PRON    PRP   Case=Acc|Gender=Neut|Number=Sing|Person=3|PronType=Prs   
 ╚>   punct   .       .      PUNCT   .     PunctType=peri    
-""".strip()
+""".strip().replace(
+            "\r", ""
+        )
     )
 
 
