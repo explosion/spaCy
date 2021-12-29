@@ -1,6 +1,5 @@
 from typing import Dict, List, Optional, Union, cast
 from os import linesep
-from spacy.tests.test_visualization import SUPPORTS_ANSI
 import wasabi
 from wasabi.util import supports_ansi
 from spacy.tokens import Span, Token, Doc
