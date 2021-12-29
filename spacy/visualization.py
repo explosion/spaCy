@@ -1,8 +1,11 @@
 from typing import Dict, List, Optional, Union, cast
 from os import linesep
+from spacy.tests.test_visualization import SUPPORTS_ANSI
 import wasabi
+from wasabi.util import supports_ansi
 from spacy.tokens import Span, Token, Doc
 
+SUPPORTS_ANSI = supports_ansi()
 
 SPACE = 0
 HALF_HORIZONTAL_LINE = 1  # the half is the half further away from the root
@@ -116,7 +119,7 @@ class AttributeFormat:
             right_padding = " " * (right_pad_to_length - len(value))
         else:
             right_padding = ""
-        if not ignore_colors and len(value) > 0:
+        if SUPPORTS_ANSI and not ignore_colors and len(value) > 0:
             if whole_row_fg_color is not None:
                 fg_color = whole_row_fg_color
             elif self.value_dependent_fg_colors is not None:
