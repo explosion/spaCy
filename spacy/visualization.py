@@ -1,5 +1,5 @@
-from os import linesep
 from typing import Dict, List, Optional, Union, cast
+from os import linesep
 import wasabi
 from spacy.tokens import Span, Token, Doc
 
