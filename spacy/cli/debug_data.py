@@ -244,7 +244,9 @@ def debug_data(
                     has_no_neg_warning = True
 
         if gold_train_data["boundary_cross_ents"]:
-            msg.warn(f"{gold_train_data['boundary_cross_ents']} entity spans that cross sentence boundaries")
+            msg.warn(
+                f"{gold_train_data['boundary_cross_ents']} entity spans that cross sentence boundaries"
+            )
             has_boundary_cross_ents_warning = True
 
         if not has_low_data_warning:
