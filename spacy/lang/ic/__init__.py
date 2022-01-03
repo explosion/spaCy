@@ -7,7 +7,7 @@ class IcelandicDefaults(BaseDefaults):
 
 
 class Icelandic(Language):
-    lang = "isl"
+    lang = "ic"
     Defaults = IcelandicDefaults
 
 
