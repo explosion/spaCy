@@ -642,7 +642,7 @@ class Errors(metaclass=ErrorsWithCodes):
     E912 = ("Failed to initialize lemmatizer. Missing lemmatizer table(s) found "
             "for mode '{mode}'. Required tables: {tables}. Found: {found}.")
     E913 = ("Corpus path can't be None. Maybe you forgot to define it in your "
-            "config.cfg or override it on the CLI?")
+            ".cfg file or override it on the CLI?")
     E914 = ("Executing {name} callback failed. Expected the function to "
             "return the nlp object but got: {value}. Maybe you forgot to return "
             "the modified object in your function?")

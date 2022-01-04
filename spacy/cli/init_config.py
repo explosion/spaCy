@@ -27,7 +27,7 @@ class Optimizations(str, Enum):
 @init_cli.command("config")
 def init_config_cli(
     # fmt: off
-    output_file: Path = Arg(..., help="File to save config.cfg to or - for stdout (will only output config and no additional logging info)", allow_dash=True),
+    output_file: Path = Arg(..., help="File to save the config to or - for stdout (will only output config and no additional logging info)", allow_dash=True),
     lang: str = Opt("en", "--lang", "-l", help="Two-letter code of the language to use"),
     pipeline: str = Opt("tagger,parser,ner", "--pipeline", "-p", help="Comma-separated names of trainable pipeline components to include (without 'tok2vec' or 'transformer')"),
     optimize: Optimizations = Opt(Optimizations.efficiency.value, "--optimize", "-o", help="Whether to optimize for efficiency (faster inference, smaller model, lower memory consumption) or higher accuracy (potentially larger and slower model). This will impact the choice of architecture, pretrained weights and related hyperparameters."),
@@ -37,7 +37,7 @@ def init_config_cli(
     # fmt: on
 ):
     """
-    Generate a starter config.cfg for training. Based on your requirements
+    Generate a starter config file for training. Based on your requirements
     specified via the CLI arguments, this command generates a config with the
     optimal settings for your use case. This includes the choice of architecture,
     pretrained weights and related hyperparameters.
@@ -66,15 +66,15 @@ def init_config_cli(
 @init_cli.command("fill-config")
 def init_fill_config_cli(
     # fmt: off
-    base_path: Path = Arg(..., help="Base config to fill", exists=True, dir_okay=False),
-    output_file: Path = Arg("-", help="File to save config.cfg to (or - for stdout)", allow_dash=True),
+    base_path: Path = Arg(..., help="Path to base config to fill", exists=True, dir_okay=False),
+    output_file: Path = Arg("-", help="Path to output .cfg file (or - for stdout)", allow_dash=True),
     pretraining: bool = Opt(False, "--pretraining", "-pt", help="Include config for pretraining (with 'spacy pretrain')"),
     diff: bool = Opt(False, "--diff", "-D", help="Print a visual diff highlighting the changes"),
     code_path: Optional[Path] = Opt(None, "--code-path", "--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
     # fmt: on
 ):
     """
-    Fill partial config.cfg with default values. Will add all missing settings
+    Fill partial config file with default values. Will add all missing settings
     from the default config and will create all objects, check the registered
     functions for their default values and update the base config. This command
     can be used with a config generated via the training quickstart widget:
