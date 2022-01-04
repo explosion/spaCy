@@ -191,13 +191,13 @@ def hu_tokenizer():
 
 
 @pytest.fixture(scope="session")
-def ic_tokenizer():
-    return get_lang_class("ic")().tokenizer
+def id_tokenizer():
+    return get_lang_class("id")().tokenizer
 
 
 @pytest.fixture(scope="session")
-def id_tokenizer():
-    return get_lang_class("id")().tokenizer
+def isl_tokenizer():
+    return get_lang_class("isl")().tokenizer
 
 
 @pytest.fixture(scope="session")
