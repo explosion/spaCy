@@ -1,7 +1,7 @@
 import pytest
 
 
-def test_long_text(ic_tokenizer):
+def test_long_text(isl_tokenizer):
     # Excerpt: European Convention on Human Rights
     text = """
 hafa í huga, að yfirlýsing þessi hefur það markmið að tryggja
@@ -15,12 +15,12 @@ réttlætis og friðar í heiminum og best er tryggt, annars vegar með
 virku, lýðræðislegu stjórnarfari og, hins vegar, almennum skilningi
 og varðveislu þeirra mannréttinda, sem eru grundvöllur frelsisins;
 """
-    tokens = ic_tokenizer(text)
+    tokens = isl_tokenizer(text)
     assert len(tokens) == 120
 
 
 @pytest.mark.xfail
-def test_ordinal_number(ic_tokenizer):
+def test_ordinal_number(isl_tokenizer):
     text = "10. desember 1948"
-    tokens = ic_tokenizer(text)
+    tokens = isl_tokenizer(text)
     assert len(tokens) == 3
