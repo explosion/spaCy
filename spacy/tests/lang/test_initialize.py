@@ -7,7 +7,7 @@ from spacy.util import get_lang_class
 # excluded: ja, ko, th, vi, zh
 LANGUAGES = ["af", "am", "ar", "az", "bg", "bn", "ca", "cs", "da", "de", "el",
              "en", "es", "et", "eu", "fa", "fi", "fr", "ga", "gu", "he", "hi",
-             "hr", "hu", "hy", "id", "is", "it", "kn", "ky", "lb", "lt", "lv",
+             "hr", "hu", "hy", "id", "isl", "it", "kn", "ky", "lb", "lt", "lv",
              "mk", "ml", "mr", "nb", "ne", "nl", "pl", "pt", "ro", "ru", "sa",
              "si", "sk", "sl", "sq", "sr", "sv", "ta", "te", "ti", "tl", "tn",
              "tr", "tt", "uk", "ur", "xx", "yo"]
