@@ -245,7 +245,7 @@ def debug_data(
 
         if gold_train_data["boundary_cross_ents"]:
             msg.warn(
-                f"{gold_train_data['boundary_cross_ents']} entity spans that cross sentence boundaries"
+                f"{gold_train_data['boundary_cross_ents']} entity span(s) crossing sentence boundaries"
             )
             has_boundary_cross_ents_warning = True
 
@@ -256,7 +256,7 @@ def debug_data(
         if not has_ws_ents_error:
             msg.good("No entities consisting of or starting/ending with whitespace")
         if not has_boundary_cross_ents_warning:
-            msg.good("No entity spans crossing sentence boundaries")
+            msg.good("No entities crossing sentence boundaries")
 
         if has_low_data_warning:
             msg.text(
