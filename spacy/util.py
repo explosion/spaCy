@@ -63,7 +63,7 @@ OOV_RANK = numpy.iinfo(numpy.uint64).max
 DEFAULT_OOV_PROB = -20
 LEXEME_NORM_LANGS = ["cs", "da", "de", "el", "en", "id", "lb", "mk", "pt", "ru", "sr", "ta", "th"]
 
-# Default order of sections in the config.cfg. Not all sections needs to exist,
+# Default order of sections in the config file. Not all sections needs to exist,
 # and additional sections are added at the end, in alphabetical order.
 CONFIG_SECTION_ORDER = ["paths", "variables", "system", "nlp", "components", "corpora", "training", "pretraining", "initialize"]
 # fmt: on
@@ -465,7 +465,7 @@ def load_model_from_path(
     """Load a model from a data directory path. Creates Language class with
     pipeline from config.cfg and then calls from_disk() with path.
 
-    model_path (Path): Mmodel path.
+    model_path (Path): Model path.
     meta (Dict[str, Any]): Optional model meta.
     vocab (Vocab / True): Optional vocab to pass in on initialization. If True,
         a new Vocab object will be created.
@@ -642,8 +642,8 @@ def load_config(
             sys.stdin.read(), overrides=overrides, interpolate=interpolate
         )
     else:
-        if not config_path or not config_path.exists() or not config_path.is_file():
-            raise IOError(Errors.E053.format(path=config_path, name="config.cfg"))
+        if not config_path or not config_path.is_file():
+            raise IOError(Errors.E053.format(path=config_path, name="config file"))
         return config.from_disk(
             config_path, overrides=overrides, interpolate=interpolate
         )

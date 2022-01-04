@@ -535,7 +535,7 @@ As of spaCy v3.0, the `meta.json` **isn't** used to construct the language class
 and pipeline anymore and only contains meta information for reference and for
 creating a Python package with [`spacy package`](/api/cli#package). How to set
 up the `nlp` object is now defined in the
-[`config.cfg`](/api/data-formats#config), which includes detailed information
+[config file](/api/data-formats#config), which includes detailed information
 about the pipeline components and their model architectures, and all other
 settings and hyperparameters used to train the pipeline. It's the **single
 source of truth** used for loading a pipeline.
