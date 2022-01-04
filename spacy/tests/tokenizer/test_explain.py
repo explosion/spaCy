@@ -4,7 +4,6 @@ from spacy.util import get_lang_class
 from spacy.tokenizer import Tokenizer
 
 # Only include languages with no external dependencies
-# "is" seems to confuse importlib, so we're also excluding it for now
 # excluded: ja, ru, th, uk, vi, zh, is
 LANGUAGES = [
     pytest.param("fr", marks=pytest.mark.slow()),
@@ -29,6 +28,7 @@ LANGUAGES = [
     pytest.param("hr", marks=pytest.mark.slow()),
     "hu",
     pytest.param("id", marks=pytest.mark.slow()),
+    pytest.param("isl", marks=pytest.mark.slow()),
     pytest.param("it", marks=pytest.mark.slow()),
     pytest.param("kn", marks=pytest.mark.slow()),
     pytest.param("lb", marks=pytest.mark.slow()),
