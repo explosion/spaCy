@@ -550,7 +550,7 @@ def test_spacy_blank():
         ("en", "en"),
         ("fra", "fr"),
         ("fre", "fr"),
-        ("isl", "is"),
+        ("is", "isl"),
         ("iw", "he"),
         ("mo", "ro"),
         ("mul", "xx"),
