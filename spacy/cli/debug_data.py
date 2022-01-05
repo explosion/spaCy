@@ -203,6 +203,7 @@ def debug_data(
         has_low_data_warning = False
         has_no_neg_warning = False
         has_ws_ents_error = False
+        has_boundary_cross_ents_warning = False
 
         msg.divider("Named Entity Recognition")
         msg.info(f"{len(model_labels)} label(s)")
@@ -242,12 +243,20 @@ def debug_data(
                     msg.warn(f"No examples for texts WITHOUT new label '{label}'")
                     has_no_neg_warning = True
 
+        if gold_train_data["boundary_cross_ents"]:
+            msg.warn(
+                f"{gold_train_data['boundary_cross_ents']} entity span(s) crossing sentence boundaries"
+            )
+            has_boundary_cross_ents_warning = True
+
         if not has_low_data_warning:
             msg.good("Good amount of examples for all labels")
         if not has_no_neg_warning:
             msg.good("Examples without occurrences available for all labels")
         if not has_ws_ents_error:
             msg.good("No entities consisting of or starting/ending with whitespace")
+        if not has_boundary_cross_ents_warning:
+            msg.good("No entities crossing sentence boundaries")
 
         if has_low_data_warning:
             msg.text(
@@ -565,6 +574,7 @@ def _compile_gold(
         "words": Counter(),
         "roots": Counter(),
         "ws_ents": 0,
+        "boundary_cross_ents": 0,
         "n_words": 0,
         "n_misaligned_words": 0,
         "words_missing_vectors": Counter(),
@@ -602,6 +612,8 @@ def _compile_gold(
                 if label.startswith(("B-", "U-")):
                     combined_label = label.split("-")[1]
                     data["ner"][combined_label] += 1
+                if gold[i].is_sent_start and label.startswith(("I-", "L-")):
+                    data["boundary_cross_ents"] += 1
                 elif label == "-":
                     data["ner"]["-"] += 1
         if "textcat" in factory_names or "textcat_multilabel" in factory_names:

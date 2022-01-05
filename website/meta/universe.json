@@ -1,6 +1,44 @@
 {
     "resources": [
         {
+            "id": "spacypdfreader",
+            "title": "spadypdfreader",
+            "category": ["pipeline"],
+            "tags": ["PDF"],
+            "slogan": "Easy PDF to text to spaCy text extraction in Python.",
+            "description": "*spacypdfreader* is a Python library that allows you to convert PDF files directly into *spaCy* `Doc` objects. The library provides several built in parsers or bring your own parser. `Doc` objects are annotated with several custom attributes including: `token._.page_number`, `doc._.page_range`, `doc._.first_page`, `doc._.last_page`, `doc._.pdf_file_name`, and `doc._.page(int)`.",
+            "github": "SamEdwardes/spacypdfreader",
+            "pip": "spacypdfreader",
+            "url": "https://samedwardes.github.io/spacypdfreader/",
+            "code_language": "python",
+            "author": "Sam Edwardes",
+            "author_links": {
+                "twitter": "TheReaLSamlam",
+                "github": "SamEdwardes",
+                "website": "https://samedwardes.com"
+            },
+            "code_example": [
+                "import spacy",
+                "from spacypdfreader import pdf_reader",
+                "",
+                "nlp = spacy.load('en_core_web_sm')",
+                "doc = pdf_reader('tests/data/test_pdf_01.pdf', nlp)",
+                "",
+                "# Get the page number of any token.",
+                "print(doc[0]._.page_number)  # 1",
+                "print(doc[-1]._.page_number) # 4",
+                "",
+                "# Get page meta data about the PDF document.",
+                "print(doc._.pdf_file_name)   # 'tests/data/test_pdf_01.pdf'",
+                "print(doc._.page_range)      # (1, 4)",
+                "print(doc._.first_page)      # 1",
+                "print(doc._.last_page)       # 4",
+                "",
+                "# Get all of the text from a specific PDF page.",
+                "print(doc._.page(4))         # 'able to display the destination page (unless...'"
+            ]
+        },
+        {
             "id": "nlpcloud",
             "title": "NLPCloud.io",
             "slogan": "Production-ready API for spaCy models in production",
@@ -25,32 +63,6 @@
             },
             "category": ["apis", "nonpython", "standalone"],
             "tags": ["api", "deploy", "production"]
-        },
-        {
-            "id": "denomme",
-            "title": "denomme : Multilingual Name Detector",
-            "slogan": "Multilingual Name Detection",
-            "description": "A SpaCy extension for Spans to extract multilingual names out of documents trained on XLM-roberta backbone",
-            "github": "meghanabhange/denomme",
-            "pip": "denomme https://denomme.s3.us-east-2.amazonaws.com/xx_denomme-0.3.1/dist/xx_denomme-0.3.1.tar.gz",
-            "code_example": [
-                "from spacy.lang.xx import MultiLanguage",
-                "from denomme.name import person_name_component",
-                "nlp = MultiLanguage()",
-                "nlp.add_pipe('denomme')",
-                "doc = nlp('Hi my name is Meghana S.R Bhange and I want to talk Asha')",
-                "print(doc._.person_name)",
-                "# ['Meghana S.R Bhange', 'Asha']"
-            ],
-            "thumb": "https://i.ibb.co/jwGVWPZ/rainbow-bohemian-logo-removebg-preview.png",
-            "code_language": "python",
-            "author": "Meghana Bhange",
-            "author_links": {
-                "github": "meghanabhange",
-                "twitter": "_aspiringcat"
-            },
-            "category": ["standalone"],
-            "tags": ["person-name-detection"]
         },
         {
             "id": "eMFDscore",
