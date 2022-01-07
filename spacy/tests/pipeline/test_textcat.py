@@ -277,6 +277,21 @@ def test_issue7019():
     print_prf_per_type(msg, scores, name="foo", type="bar")
 
 
+@pytest.mark.issue(9904)
+def test_issue9904():
+    nlp = Language()
+    textcat = nlp.add_pipe("textcat")
+    get_examples = make_get_examples_single_label(nlp)
+    nlp.initialize(get_examples)
+
+    examples = get_examples()
+    scores = textcat.predict([eg.predicted for eg in examples])
+
+    loss = textcat.get_loss(examples, scores)[0]
+    loss_double_bs = textcat.get_loss(examples * 2, scores.repeat(2, axis=0))[0]
+    assert loss == pytest.approx(loss_double_bs)
+
+
 @pytest.mark.skip(reason="Test is flakey when run with others")
 def test_simple_train():
     nlp = Language()
