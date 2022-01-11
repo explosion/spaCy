@@ -139,8 +139,8 @@ def fetch_asset(
         else:
             # If there's not a checksum, make sure the file is a possibly valid size
             if os.path.getsize(dest_path) == 0:
-                os.remove(dest_path)
                 msg.warn(f"Asset exists but with size of 0 bytes, deleting: {dest}")
+                os.remove(dest_path)
     # We might as well support the user here and create parent directories in
     # case the asset dir isn't listed as a dir to create in the project.yml
     if not dest_path.parent.exists():
