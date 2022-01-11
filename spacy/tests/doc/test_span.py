@@ -163,6 +163,7 @@ def test_char_span(doc, i_sent, i, j, text):
         assert span.text == text
 
 
+@pytest.mark.issue(9556)
 def test_modify_span_group(doc):
     group = SpanGroup(doc, spans=doc.ents)
     for span in group:
