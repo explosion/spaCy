@@ -136,9 +136,11 @@ cdef class SpanGroup:
 
         DOCS: https://spacy.io/api/spangroup#to_bytes
         """
+        cdef SpanC* span_c
         output = {"name": self.name, "attrs": self.attrs, "spans": []}
         for i in range(self.c.size()):
             span = self.c[i]
+            span_c = span.get()
             # The struct.pack here is probably overkill, but it might help if
             # you're saving tonnes of spans, and it doesn't really add any
             # complexity. We do take care to specify little-endian byte order
@@ -150,13 +152,13 @@ cdef class SpanGroup:
             # l: int32_t
             output["spans"].append(struct.pack(
                 ">QQQllll",
-                span.get().id,
-                span.get().kb_id,
-                span.get().label,
-                span.get().start,
-                span.get().end,
-                span.get().start_char,
-                span.get().end_char
+                span_c.id,
+                span_c.kb_id,
+                span_c.label,
+                span_c.start,
+                span_c.end,
+                span_c.start_char,
+                span_c.end_char
             ))
         return srsly.msgpack_dumps(output)
 
