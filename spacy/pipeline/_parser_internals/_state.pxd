@@ -188,20 +188,17 @@ cdef cppclass StateC:
 
         # Work backwards through left-arcs to find the arc at the
         # requested index more quickly.
-        cdef int child = -1
         cdef size_t child_index = 0
         it = this._left_arcs.const_rbegin()
-        while it != this._left_arcs.rend() and child_index != idx:
+        while it != this._left_arcs.rend():
             arc = deref(it)
             if arc.head == head and arc.child != -1 and arc.child < head:
-                child = arc.child
                 child_index += 1
+                if child_index == idx:
+                    return arc.child
             incr(it)
 
-        if child_index == idx:
-            return child
-        else:
-            return -1
+        return -1
 
     int R(int head, int idx) nogil const:
         if idx < 1 or this._right_arcs.size() == 0:
