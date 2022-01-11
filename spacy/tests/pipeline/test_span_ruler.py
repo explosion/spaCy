@@ -28,8 +28,7 @@ def patterns():
     ]
 
 
-@pytest.mark.issue(8216)
-def test_span_ruler_fix8216(nlp, patterns):
+def test_span_ruler_add_empty(nlp, patterns):
     """Test that patterns don't get added excessively."""
     ruler = nlp.add_pipe("span_ruler", config={"validate": True})
     ruler.add_patterns(patterns)
