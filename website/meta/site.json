@@ -22,7 +22,8 @@
         "list": "89ad33e698"
     },
     "docSearch": {
-        "apiKey": "371e26ed49d29a27bd36273dfdaf89af",
+        "appId": "Y1LB128RON",
+        "apiKey": "bb601a1daab73e2dc66faf2b79564807",
         "indexName": "spacy"
     },
     "binderUrl": "explosion/spacy-io-binder",
