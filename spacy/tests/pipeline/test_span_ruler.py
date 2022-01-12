@@ -1,19 +1,12 @@
 import pytest
 
+import spacy
 from spacy import registry
-from spacy.language import Language
-from spacy.lang.en import English
-from spacy.pipeline import SpanRuler
 from spacy.errors import MatchPatternError
 from spacy.tests.util import make_tempdir
 from spacy.util import filter_spans
 
 from thinc.api import NumpyOps, get_current_ops
-
-
-@pytest.fixture
-def nlp():
-    return Language()
 
 
 @pytest.fixture
@@ -29,8 +22,31 @@ def patterns():
     ]
 
 
-def test_span_ruler_add_empty(nlp, patterns):
+@pytest.fixture
+def overlapping_patterns():
+    return [
+        {"label": "FOOBAR", "pattern": "foo bar"},
+        {"label": "BARBAZ", "pattern": "bar baz"},
+    ]
+
+
+@pytest.fixture
+def person_org_patterns():
+    return [
+        {"label": "PERSON", "pattern": "Dina"},
+        {"label": "ORG", "pattern": "ACME"},
+        {"label": "ORG", "pattern": "ACM"},
+    ]
+
+
+@pytest.fixture
+def person_org_date_patterns(person_org_patterns):
+    return person_org_patterns + [{"label": "DATE", "pattern": "June 14th"}]
+
+
+def test_span_ruler_add_empty(patterns):
     """Test that patterns don't get added excessively."""
+    nlp = spacy.blank("xx")
     ruler = nlp.add_pipe("span_ruler", config={"validate": True})
     ruler.add_patterns(patterns)
     pattern_count = sum(len(mm) for mm in ruler.matcher._patterns.values())
@@ -40,34 +56,34 @@ def test_span_ruler_add_empty(nlp, patterns):
     assert after_count == pattern_count
 
 
-def test_span_ruler_init(nlp, patterns):
-    ruler = SpanRuler(nlp)
+def test_span_ruler_init(patterns):
+    nlp = spacy.blank("xx")
+    ruler = nlp.add_pipe("span_ruler")
     ruler.add_patterns(patterns)
     assert len(ruler) == len(patterns)
     assert len(ruler.labels) == 4
     assert "HELLO" in ruler
     assert "BYE" in ruler
-    ruler = nlp.add_pipe("span_ruler")
-    ruler.add_patterns(patterns)
     doc = nlp("hello world bye bye")
     assert len(doc.spans["ruler"]) == 2
     assert doc.spans["ruler"][0].label_ == "HELLO"
     assert doc.spans["ruler"][1].label_ == "BYE"
 
 
-def test_span_ruler_no_patterns_warns(nlp):
-    ruler = SpanRuler(nlp)
+def test_span_ruler_no_patterns_warns():
+    nlp = spacy.blank("xx")
+    ruler = nlp.add_pipe("span_ruler")
     assert len(ruler) == 0
     assert len(ruler.labels) == 0
-    nlp.add_pipe("span_ruler")
     assert nlp.pipe_names == ["span_ruler"]
     with pytest.warns(UserWarning):
         doc = nlp("hello world bye bye")
     assert len(doc.spans["ruler"]) == 0
 
 
-def test_span_ruler_init_patterns(nlp, patterns):
+def test_span_ruler_init_patterns(patterns):
     # initialize with patterns
+    nlp = spacy.blank("xx")
     ruler = nlp.add_pipe("span_ruler")
     assert len(ruler.labels) == 0
     ruler.initialize(lambda: [], patterns=patterns)
@@ -89,8 +105,9 @@ def test_span_ruler_init_patterns(nlp, patterns):
     assert doc.spans["ruler"][1].label_ == "BYE"
 
 
-def test_span_ruler_init_clear(nlp, patterns):
+def test_span_ruler_init_clear(patterns):
     """Test that initialization clears patterns."""
+    nlp = spacy.blank("xx")
     ruler = nlp.add_pipe("span_ruler")
     ruler.add_patterns(patterns)
     assert len(ruler.labels) == 4
@@ -98,8 +115,8 @@ def test_span_ruler_init_clear(nlp, patterns):
     assert len(ruler.labels) == 0
 
 
-def test_span_ruler_clear(nlp, patterns):
-    """Test that initialization clears patterns."""
+def test_span_ruler_clear(patterns):
+    nlp = spacy.blank("xx")
     ruler = nlp.add_pipe("span_ruler")
     ruler.add_patterns(patterns)
     assert len(ruler.labels) == 4
@@ -112,7 +129,8 @@ def test_span_ruler_clear(nlp, patterns):
     assert len(doc.spans["ruler"]) == 0
 
 
-def test_span_ruler_existing(nlp, patterns):
+def test_span_ruler_existing(patterns):
+    nlp = spacy.blank("xx")
     ruler = nlp.add_pipe("span_ruler", config={"overwrite": False})
     ruler.add_patterns(patterns)
     doc = nlp.make_doc("OH HELLO WORLD bye bye")
@@ -124,7 +142,8 @@ def test_span_ruler_existing(nlp, patterns):
     assert doc.spans["ruler"][2].label_ == "BYE"
 
 
-def test_span_ruler_existing_overwrite(nlp, patterns):
+def test_span_ruler_existing_overwrite(patterns):
+    nlp = spacy.blank("xx")
     ruler = nlp.add_pipe("span_ruler", config={"overwrite": True})
     ruler.add_patterns(patterns)
     doc = nlp.make_doc("OH HELLO WORLD bye bye")
@@ -136,13 +155,15 @@ def test_span_ruler_existing_overwrite(nlp, patterns):
     assert doc.spans["ruler"][1].label_ == "BYE"
 
 
-def test_span_ruler_serialize_bytes(nlp, patterns):
-    ruler = SpanRuler(nlp)
+def test_span_ruler_serialize_bytes(patterns):
+    nlp = spacy.blank("xx")
+    ruler = nlp.add_pipe("span_ruler")
     ruler.add_patterns(patterns)
     assert len(ruler) == len(patterns)
     assert len(ruler.labels) == 4
     ruler_bytes = ruler.to_bytes()
-    new_ruler = SpanRuler(nlp)
+    new_nlp = spacy.blank("xx")
+    new_ruler = new_nlp.add_pipe("span_ruler")
     assert len(new_ruler) == 0
     assert len(new_ruler.labels) == 0
     new_ruler = new_ruler.from_bytes(ruler_bytes)
@@ -154,13 +175,15 @@ def test_span_ruler_serialize_bytes(nlp, patterns):
     assert sorted(new_ruler.labels) == sorted(ruler.labels)
 
 
-def test_span_ruler_serialize_phrase_matcher_attr_bytes(nlp, patterns):
-    ruler = SpanRuler(nlp, phrase_matcher_attr="LOWER")
+def test_span_ruler_serialize_phrase_matcher_attr_bytes(patterns):
+    nlp = spacy.blank("xx")
+    ruler = nlp.add_pipe("span_ruler", config={"phrase_matcher_attr": "LOWER"})
     ruler.add_patterns(patterns)
     assert len(ruler) == len(patterns)
     assert len(ruler.labels) == 4
     ruler_bytes = ruler.to_bytes()
-    new_ruler = SpanRuler(nlp)
+    new_nlp = spacy.blank("xx")
+    new_ruler = new_nlp.add_pipe("span_ruler")
     assert len(new_ruler) == 0
     assert len(new_ruler.labels) == 0
     assert new_ruler.cfg["phrase_matcher_attr"] is None
@@ -170,9 +193,12 @@ def test_span_ruler_serialize_phrase_matcher_attr_bytes(nlp, patterns):
     assert new_ruler.cfg["phrase_matcher_attr"] == "LOWER"
 
 
-def test_span_ruler_validate(nlp):
-    ruler = SpanRuler(nlp)
-    validated_ruler = SpanRuler(nlp, validate=True)
+def test_span_ruler_validate():
+    nlp = spacy.blank("xx")
+    ruler = nlp.add_pipe("span_ruler")
+    validated_ruler = nlp.add_pipe(
+        "span_ruler", name="validated_span_ruler", config={"validate": True}
+    )
 
     valid_pattern = {"label": "HELLO", "pattern": [{"LOWER": "HELLO"}]}
     invalid_pattern = {"label": "HELLO", "pattern": [{"ASDF": "HELLO"}]}
@@ -189,19 +215,17 @@ def test_span_ruler_validate(nlp):
         validated_ruler.add_patterns([invalid_pattern])
 
 
-def test_span_ruler_properties(nlp, patterns):
-    ruler = SpanRuler(nlp, overwrite=True)
+def test_span_ruler_properties(patterns):
+    nlp = spacy.blank("xx")
+    ruler = nlp.add_pipe("span_ruler", config={"overwrite": True})
     ruler.add_patterns(patterns)
-    assert sorted(ruler.labels) == sorted(["HELLO", "BYE", "COMPLEX", "TECH_ORG"])
+    assert sorted(ruler.labels) == sorted(set([p["label"] for p in patterns]))
 
 
-def test_span_ruler_overlapping_spans(nlp):
-    ruler = SpanRuler(nlp)
-    patterns = [
-        {"label": "FOOBAR", "pattern": "foo bar"},
-        {"label": "BARBAZ", "pattern": "bar baz"},
-    ]
-    ruler.add_patterns(patterns)
+def test_span_ruler_overlapping_spans(overlapping_patterns):
+    nlp = spacy.blank("xx")
+    ruler = nlp.add_pipe("span_ruler")
+    ruler.add_patterns(overlapping_patterns)
     doc = ruler(nlp.make_doc("foo bar baz"))
     assert len(doc.spans["ruler"]) == 2
     assert doc.spans["ruler"][0].label_ == "FOOBAR"
@@ -209,12 +233,13 @@ def test_span_ruler_overlapping_spans(nlp):
 
 
 @pytest.mark.parametrize("n_process", [1, 2])
-def test_span_ruler_multiprocessing(nlp, n_process):
+def test_span_ruler_multiprocessing(n_process):
     if isinstance(get_current_ops, NumpyOps) or n_process < 2:
         texts = ["I enjoy eating Pizza Hut pizza."]
 
         patterns = [{"label": "FASTFOOD", "pattern": "Pizza Hut"}]
 
+        nlp = spacy.blank("xx")
         ruler = nlp.add_pipe("span_ruler")
         ruler.add_patterns(patterns)
 
@@ -223,7 +248,8 @@ def test_span_ruler_multiprocessing(nlp, n_process):
                 assert ent.label_ == "FASTFOOD"
 
 
-def test_span_ruler_serialize_dir(nlp, patterns):
+def test_span_ruler_serialize_dir(patterns):
+    nlp = spacy.blank("xx")
     ruler = nlp.add_pipe("span_ruler")
     ruler.add_patterns(patterns)
     with make_tempdir() as d:
@@ -233,114 +259,94 @@ def test_span_ruler_serialize_dir(nlp, patterns):
             ruler.from_disk(d / "non_existing_dir")  # read from a bad directory
 
 
-def test_span_ruler_remove_basic(nlp):
-    ruler = SpanRuler(nlp)
-    patterns = [
-        {"label": "PERSON", "pattern": "Duygu"},
-        {"label": "ORG", "pattern": "ACME"},
-        {"label": "ORG", "pattern": "ACM"},
-    ]
-    ruler.add_patterns(patterns)
-    doc = ruler(nlp.make_doc("Duygu went to school"))
+def test_span_ruler_remove_basic(person_org_patterns):
+    nlp = spacy.blank("xx")
+    ruler = nlp.add_pipe("span_ruler")
+    ruler.add_patterns(person_org_patterns)
+    doc = ruler(nlp.make_doc("Dina went to school"))
     assert len(ruler.patterns) == 3
     assert len(doc.spans["ruler"]) == 1
     assert doc.spans["ruler"][0].label_ == "PERSON"
-    assert doc.spans["ruler"][0].text == "Duygu"
+    assert doc.spans["ruler"][0].text == "Dina"
     assert "PERSON" in ruler.phrase_matcher
     ruler.remove("PERSON")
-    doc = ruler(nlp.make_doc("Duygu went to school"))
+    doc = ruler(nlp.make_doc("Dina went to school"))
     assert len(doc.spans["ruler"]) == 0
     assert "PERSON" not in ruler.phrase_matcher
     assert len(ruler.patterns) == 2
 
 
-def test_span_ruler_remove_nonexisting_pattern(nlp):
-    ruler = SpanRuler(nlp)
-    patterns = [
-        {"label": "PERSON", "pattern": "Duygu"},
-        {"label": "ORG", "pattern": "ACME"},
-        {"label": "ORG", "pattern": "ACM"},
-    ]
-    ruler.add_patterns(patterns)
+def test_span_ruler_remove_nonexisting_pattern(person_org_patterns):
+    nlp = spacy.blank("xx")
+    ruler = nlp.add_pipe("span_ruler")
+    ruler.add_patterns(person_org_patterns)
     assert len(ruler.patterns) == 3
     with pytest.raises(ValueError):
         ruler.remove("NE")
         assert len(ruler.patterns) == 3
 
 
-def test_span_ruler_remove_several_patterns(nlp):
-    ruler = SpanRuler(nlp)
-    patterns = [
-        {"label": "PERSON", "pattern": "Duygu"},
-        {"label": "ORG", "pattern": "ACME"},
-        {"label": "ORG", "pattern": "ACM"},
-    ]
-    ruler.add_patterns(patterns)
-    doc = ruler(nlp.make_doc("Duygu founded her company ACME."))
+def test_span_ruler_remove_several_patterns(person_org_patterns):
+    nlp = spacy.blank("xx")
+    ruler = nlp.add_pipe("span_ruler")
+    ruler.add_patterns(person_org_patterns)
+    doc = ruler(nlp.make_doc("Dina founded the company ACME."))
     assert len(ruler.patterns) == 3
     assert len(doc.spans["ruler"]) == 2
     assert doc.spans["ruler"][0].label_ == "PERSON"
-    assert doc.spans["ruler"][0].text == "Duygu"
+    assert doc.spans["ruler"][0].text == "Dina"
     assert doc.spans["ruler"][1].label_ == "ORG"
     assert doc.spans["ruler"][1].text == "ACME"
     ruler.remove("PERSON")
-    doc = ruler(nlp.make_doc("Duygu founded her company ACME"))
+    doc = ruler(nlp.make_doc("Dina founded the company ACME"))
     assert len(ruler.patterns) == 2
     assert len(doc.spans["ruler"]) == 1
     assert doc.spans["ruler"][0].label_ == "ORG"
     assert doc.spans["ruler"][0].text == "ACME"
     ruler.remove("ORG")
     with pytest.warns(UserWarning):
-        doc = ruler(nlp.make_doc("Duygu founded her company ACME"))
+        doc = ruler(nlp.make_doc("Dina founded the company ACME"))
         assert len(ruler.patterns) == 0
         assert len(doc.spans["ruler"]) == 0
 
 
-def test_span_ruler_remove_patterns_in_a_row(nlp):
-    ruler = SpanRuler(nlp)
-    patterns = [
-        {"label": "PERSON", "pattern": "Duygu"},
-        {"label": "ORG", "pattern": "ACME"},
-        {"label": "DATE", "pattern": "her birthday"},
-        {"label": "ORG", "pattern": "ACM"},
-    ]
-    ruler.add_patterns(patterns)
-    doc = ruler(nlp.make_doc("Duygu founded her company ACME on her birthday"))
+def test_span_ruler_remove_patterns_in_a_row(person_org_date_patterns):
+    nlp = spacy.blank("xx")
+    ruler = nlp.add_pipe("span_ruler")
+    ruler.add_patterns(person_org_date_patterns)
+    doc = ruler(nlp.make_doc("Dina founded the company ACME on June 14th"))
     assert len(doc.spans["ruler"]) == 3
     assert doc.spans["ruler"][0].label_ == "PERSON"
-    assert doc.spans["ruler"][0].text == "Duygu"
+    assert doc.spans["ruler"][0].text == "Dina"
     assert doc.spans["ruler"][1].label_ == "ORG"
     assert doc.spans["ruler"][1].text == "ACME"
     assert doc.spans["ruler"][2].label_ == "DATE"
-    assert doc.spans["ruler"][2].text == "her birthday"
+    assert doc.spans["ruler"][2].text == "June 14th"
     ruler.remove("ORG")
     ruler.remove("DATE")
-    doc = ruler(nlp.make_doc("Duygu went to school"))
+    doc = ruler(nlp.make_doc("Dina went to school"))
     assert len(doc.spans["ruler"]) == 1
 
 
-def test_span_ruler_remove_all_patterns(nlp):
-    ruler = SpanRuler(nlp)
-    patterns = [
-        {"label": "PERSON", "pattern": "Duygu"},
-        {"label": "ORG", "pattern": "ACME"},
-        {"label": "DATE", "pattern": "her birthday"},
-    ]
-    ruler.add_patterns(patterns)
-    assert len(ruler.patterns) == 3
+def test_span_ruler_remove_all_patterns(person_org_date_patterns):
+    nlp = spacy.blank("xx")
+    ruler = nlp.add_pipe("span_ruler")
+    ruler.add_patterns(person_org_date_patterns)
+    assert len(ruler.patterns) == 4
     ruler.remove("PERSON")
-    assert len(ruler.patterns) == 2
+    assert len(ruler.patterns) == 3
     ruler.remove("ORG")
     assert len(ruler.patterns) == 1
     ruler.remove("DATE")
     assert len(ruler.patterns) == 0
     with pytest.warns(UserWarning):
-        doc = ruler(nlp.make_doc("Duygu founded her company ACME on her birthday"))
+        doc = ruler(nlp.make_doc("Dina founded the company ACME on June 14th"))
         assert len(doc.spans["ruler"]) == 0
 
 
-def test_span_ruler_remove_and_add(nlp):
-    ruler = SpanRuler(nlp)
+def test_span_ruler_remove_and_add():
+    nlp = spacy.blank("xx")
+    ruler = nlp.add_pipe("span_ruler")
     patterns1 = [{"label": "DATE1", "pattern": "last time"}]
     ruler.add_patterns(patterns1)
     doc = ruler(
@@ -394,13 +400,16 @@ def test_span_ruler_remove_and_add(nlp):
     assert len(doc.spans["ruler"]) == 2
 
 
-def test_span_ruler_spans_filter(nlp):
-    ruler = SpanRuler(nlp, spans_filter=filter_spans)
-    patterns = [
-        {"label": "FOOBAR", "pattern": "foo bar"},
-        {"label": "BARBAZ", "pattern": "bar baz"},
-    ]
-    ruler.add_patterns(patterns)
+def test_span_ruler_spans_filter(overlapping_patterns):
+    @registry.misc("test_spans_filter")
+    def test_spans_filter():
+        return filter_spans
+
+    nlp = spacy.blank("xx")
+    ruler = nlp.add_pipe(
+        "span_ruler", config={"spans_filter": {"@misc": "test_spans_filter"}}
+    )
+    ruler.add_patterns(overlapping_patterns)
     doc = ruler(nlp.make_doc("foo bar baz"))
     assert len(doc.spans["ruler"]) == 1
     assert doc.spans["ruler"][0].label_ == "FOOBAR"
