@@ -4,7 +4,7 @@ from numpy.testing import assert_array_equal
 
 from spacy.attrs import ORTH, LENGTH
 from spacy.lang.en import English
-from spacy.tokens import Doc, Span, Token
+from spacy.tokens import Doc, Span, SpanGroup, Token
 from spacy.vocab import Vocab
 from spacy.util import filter_spans
 from thinc.api import get_current_ops
@@ -161,6 +161,18 @@ def test_char_span(doc, i_sent, i, j, text):
         assert not span
     else:
         assert span.text == text
+
+
+@pytest.mark.issue(9556)
+def test_modify_span_group(doc):
+    group = SpanGroup(doc, spans=doc.ents)
+    for span in group:
+        span.start = 0
+        span.label = doc.vocab.strings["TEST"]
+
+    # Span changes must be reflected in the span group
+    assert group[0].start == 0
+    assert group[0].label == doc.vocab.strings["TEST"]
 
 
 def test_spans_sent_spans(doc):
