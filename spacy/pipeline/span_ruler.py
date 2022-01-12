@@ -1,7 +1,6 @@
 import warnings
 from typing import Optional, Union, List, Dict, Tuple, Iterable, Any, Callable
-from typing import Sequence
-from typing import cast
+from typing import Sequence, cast
 from pathlib import Path
 import srsly
 
@@ -23,6 +22,7 @@ PatternType = Dict[str, Union[str, List[Dict[str, Any]]]]
     assigns=["doc.spans"],
     default_config={
         "spans_key": "ruler",
+        "spans_filter": None,
         "phrase_matcher_attr": None,
         "validate": False,
         "overwrite": True,
@@ -38,7 +38,8 @@ PatternType = Dict[str, Union[str, List[Dict[str, Any]]]]
 def make_span_ruler(
     nlp: Language,
     name: str,
-    spans_key: str,
+    spans_key: Optional[str],
+    spans_filter: Optional[Callable[[Iterable[Span]], Iterable[Span]]],
     phrase_matcher_attr: Optional[Union[int, str]],
     validate: bool,
     overwrite: bool,
@@ -48,6 +49,7 @@ def make_span_ruler(
         nlp,
         name,
         spans_key=spans_key,
+        spans_filter=spans_filter,
         phrase_matcher_attr=phrase_matcher_attr,
         validate=validate,
         overwrite=overwrite,
@@ -68,7 +70,8 @@ class SpanRuler(Pipe):
         nlp: Language,
         name: str = "span_ruler",
         *,
-        spans_key: str = "ruler",
+        spans_key: Optional[str] = "ruler",
+        spans_filter: Optional[Callable[[Iterable[Span]], Iterable[Span]]] = None,
         phrase_matcher_attr: Optional[Union[int, str]] = None,
         validate: bool = False,
         overwrite: bool = False,
@@ -85,12 +88,15 @@ class SpanRuler(Pipe):
             passed in automatically from the factory when the component is
             added. Used to disable the current span ruler while creating
             phrase patterns with the nlp object.
-        spans_key (str): The spans key to save the spans under. Defaults to
-            "ruler".
+        spans_key (Optional[str]): The spans key to save the spans under.
+            Defaults to "ruler". If `None`, spans are filtered using
+            `util.filter_spans` and saved to `doc.ents`.
+        spans_filter (Optional[Callable]): The optional method to filter spans
+            before they are assigned. Defaults to `None`.
         phrase_matcher_attr (int / str): Token attribute to match on, passed
-            to the internal PhraseMatcher as `attr`
+            to the internal PhraseMatcher as `attr`.
         validate (bool): Whether patterns should be validated, passed to
-            Matcher and PhraseMatcher as `validate`
+            Matcher and PhraseMatcher as `validate`.
         overwrite (bool): Whether to reset any existing spans under this spans
             key.
         scorer (Optional[Callable]): The scoring method. Defaults to
@@ -106,6 +112,7 @@ class SpanRuler(Pipe):
             "phrase_matcher_attr": phrase_matcher_attr,
             "validate": validate,
         }
+        self.spans_filter = spans_filter
         self.scorer = scorer
         self.clear()
 
@@ -119,8 +126,7 @@ class SpanRuler(Pipe):
 
     @property
     def key(self) -> str:
-        """Key of the doc.spans dict to save the spans under.
-        """
+        """Key of the doc.spans dict to save the spans under."""
         return str(self.cfg["spans_key"])
 
     def __call__(self, doc: Doc) -> Doc:
@@ -148,23 +154,29 @@ class SpanRuler(Pipe):
                 list(self.matcher(doc)) + list(self.phrase_matcher(doc)),
             )
         deduplicated_matches = set(
-            (m_id, start, end) for m_id, start, end in matches if start != end
+            Span(doc, start, end, label=m_id)
+            for m_id, start, end in matches
+            if start != end
         )
-        get_sort_key = lambda m: (m[2] - m[1], m[1])
-        final_matches = sorted(deduplicated_matches, key=get_sort_key)
-        return final_matches
+        return sorted(list(deduplicated_matches))
 
     def set_annotations(self, doc, matches):
         """Modify the document in place"""
-        if not self.key in doc.spans:
+        if self.key and self.key not in doc.spans:
             doc.spans[self.key] = []
-        if self.cfg["overwrite"]:
-            spans = []
+        spans = []
+        if not self.cfg["overwrite"]:
+            if self.key:
+                spans = doc.spans[self.key]
+            else:
+                spans = list(doc.ents)
+        if self.spans_filter:
+            matches = self.spans_filter(matches)
+        spans.extend(matches)
+        if self.key:
+            doc.spans[self.key] = spans
         else:
-            spans = doc.spans[self.key]
-        for match_id, start, end in matches:
-            spans.append(Span(doc, start, end, label=match_id))
-        doc.spans[self.key] = spans
+            doc.ents = util.filter_spans(spans)
 
     @property
     def labels(self) -> Tuple[str, ...]:

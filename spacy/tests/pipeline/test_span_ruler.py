@@ -6,6 +6,7 @@ from spacy.lang.en import English
 from spacy.pipeline import SpanRuler
 from spacy.errors import MatchPatternError
 from spacy.tests.util import make_tempdir
+from spacy.util import filter_spans
 
 from thinc.api import NumpyOps, get_current_ops
 
@@ -391,3 +392,15 @@ def test_span_ruler_remove_and_add(nlp):
     )
     assert len(ruler.patterns) == 2
     assert len(doc.spans["ruler"]) == 2
+
+
+def test_span_ruler_spans_filter(nlp):
+    ruler = SpanRuler(nlp, spans_filter=filter_spans)
+    patterns = [
+        {"label": "FOOBAR", "pattern": "foo bar"},
+        {"label": "BARBAZ", "pattern": "bar baz"},
+    ]
+    ruler.add_patterns(patterns)
+    doc = ruler(nlp.make_doc("foo bar baz"))
+    assert len(doc.spans["ruler"]) == 1
+    assert doc.spans["ruler"][0].label_ == "FOOBAR"
