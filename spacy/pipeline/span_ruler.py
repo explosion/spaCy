@@ -125,9 +125,9 @@ class SpanRuler(Pipe):
         return label in self.matcher or label in self.phrase_matcher
 
     @property
-    def key(self) -> str:
+    def key(self) -> Optional[str]:
         """Key of the doc.spans dict to save the spans under."""
-        return str(self.cfg["spans_key"])
+        return self.cfg["spans_key"]
 
     def __call__(self, doc: Doc) -> Doc:
         """Find matches in document and add them as entities.

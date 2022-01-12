@@ -413,3 +413,13 @@ def test_span_ruler_spans_filter(overlapping_patterns):
     doc = ruler(nlp.make_doc("foo bar baz"))
     assert len(doc.spans["ruler"]) == 1
     assert doc.spans["ruler"][0].label_ == "FOOBAR"
+
+
+def test_span_ruler_ents(overlapping_patterns):
+    nlp = spacy.blank("xx")
+    ruler = nlp.add_pipe("span_ruler", config={"spans_key": None})
+    ruler.add_patterns(overlapping_patterns)
+    doc = ruler(nlp.make_doc("foo bar baz"))
+    assert len(doc.ents) == 1
+    assert doc.ents[0].label_ == "FOOBAR"
+    assert "ruler" not in doc.spans
