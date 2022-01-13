@@ -181,10 +181,10 @@ def intify_attrs(stringy_attrs, strings_map=None, _do_deprecated=False):
     for name, value in stringy_attrs.items():
         int_key = intify_attr(name)
         if int_key is not None:
-            if name == "ENT_IOB":
+            if int_key == ENT_IOB:
                 if value in IOB_STRINGS:
                     value = IOB_STRINGS.index(value)
-                else:
+                elif isinstance(value, str):
                     raise ValueError(Errors.E1025.format(value=value))
             if strings_map is not None and isinstance(value, str):
                 if hasattr(strings_map, "add"):
