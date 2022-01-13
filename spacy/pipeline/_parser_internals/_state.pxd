@@ -1,3 +1,4 @@
+from cython.operator cimport dereference as deref, preincrement as incr
 from libc.string cimport memcpy, memset
 from libc.stdlib cimport calloc, free
 from libc.stdint cimport uint32_t, uint64_t
@@ -184,16 +185,20 @@ cdef cppclass StateC:
     int L(int head, int idx) nogil const:
         if idx < 1 or this._left_arcs.size() == 0:
             return -1
-        cdef vector[int] lefts
-        for i in range(this._left_arcs.size()):
-            arc = this._left_arcs.at(i)
+
+        # Work backwards through left-arcs to find the arc at the
+        # requested index more quickly.
+        cdef size_t child_index = 0
+        it = this._left_arcs.const_rbegin()
+        while it != this._left_arcs.rend():
+            arc = deref(it)
             if arc.head == head and arc.child != -1 and arc.child < head:
-                lefts.push_back(arc.child)
-        idx = (<int>lefts.size()) - idx
-        if idx < 0:
-            return -1
-        else:
-            return lefts.at(idx)
+                child_index += 1
+                if child_index == idx:
+                    return arc.child
+            incr(it)
+
+        return -1
 
     int R(int head, int idx) nogil const:
         if idx < 1 or this._right_arcs.size() == 0:
