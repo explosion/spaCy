@@ -193,6 +193,23 @@ def debug_data(
     else:
         msg.info("No word vectors present in the package")
 
+    if "spancat" in factory_names:
+        # TODO
+        model_labels = _get_labels_from_model(nlp, "spancat")
+        has_low_data_warning = False
+        has_no_neg_warning = False
+        has_ws_ents_error = False
+
+        msg.divider("Span Categorization")
+        msg.info(f"{len(model_labels)} label(s)")
+
+        # Check for empty labels
+        # Check if some model labels are not present in actual dataset
+        # Check for whitespace invalid entity spans (?)
+        # Check for punctuation entity spans
+        # Check for low number of examples per label
+
+    breakpoint()
     if "ner" in factory_names:
         # Get all unique NER labels present in the data
         labels = set(
@@ -573,6 +590,7 @@ def _compile_gold(
         "deps": Counter(),
         "words": Counter(),
         "roots": Counter(),
+        "spancat": dict(),
         "ws_ents": 0,
         "boundary_cross_ents": 0,
         "n_words": 0,
@@ -616,6 +634,12 @@ def _compile_gold(
                     data["boundary_cross_ents"] += 1
                 elif label == "-":
                     data["ner"]["-"] += 1
+        if "spancat" in factory_names:
+            for span_key in list(eg.reference.spans.keys()):
+                if span_key not in data["spancat"]:
+                    data["spancat"][span_key] = Counter()
+                for span in eg.reference.spans[span_key]:
+                    data["spancat"][span_key][span.label_] += 1
         if "textcat" in factory_names or "textcat_multilabel" in factory_names:
             data["cats"].update(gold.cats)
             if any(val not in (0, 1) for val in gold.cats.values()):
