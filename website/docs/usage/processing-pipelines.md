@@ -1479,7 +1479,7 @@ especially useful it you want to pass in a string instead of calling
 ### Example: Pipeline component for GPE entities and country meta data via a REST API {#component-example3}
 
 This example shows the implementation of a pipeline component that fetches
-country meta data via the [REST Countries API](https://restcountries.eu), sets
+country meta data via the [REST Countries API](https://restcountries.com), sets
 entity annotations for countries and sets custom attributes on the `Doc` and
 `Span` – for example, the capital, latitude/longitude coordinates and even the
 country flag.
@@ -1495,7 +1495,7 @@ from spacy.tokens import Doc, Span, Token
 @Language.factory("rest_countries")
 class RESTCountriesComponent:
     def __init__(self, nlp, name, label="GPE"):
-        r = requests.get("https://restcountries.eu/rest/v2/all")
+        r = requests.get("https://restcountries.com/v2/all")
         r.raise_for_status()  # make sure requests raises an error if it fails
         countries = r.json()
         # Convert API response to dict keyed by country name for easy lookup

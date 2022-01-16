@@ -158,7 +158,7 @@ be configured with the `attrs` argument. The suggested attributes are `NORM`,
 `PREFIX`, `SUFFIX` and `SHAPE`. This lets the model take into account some
 subword information, without construction a fully character-based
 representation. If pretrained vectors are available, they can be included in the
-representation as well, with the vectors table will be kept static (i.e. it's
+representation as well, with the vectors table kept static (i.e. it's
 not updated).
 
 | Name                     | Description                                                                                                                                                                                                                                                                                                                                                                                                                                        |
@@ -296,7 +296,7 @@ learned linear projection to control the dimensionality. Unknown tokens are
 mapped to a zero vector. See the documentation on
 [static vectors](/usage/embeddings-transformers#static-vectors) for details.
 
-| Name        |  Description                                                                                                                                                                                                            |
+| Name        | Description                                                                                                                                                                                                             |
 | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `nO`        | The output width of the layer, after the linear projection. ~~Optional[int]~~                                                                                                                                           |
 | `nM`        | The width of the static vectors. ~~Optional[int]~~                                                                                                                                                                      |
@@ -318,7 +318,7 @@ mapped to a zero vector. See the documentation on
 Extract arrays of input features from [`Doc`](/api/doc) objects. Expects a list
 of feature names to extract, which should refer to token attributes.
 
-| Name        |  Description                                                             |
+| Name        | Description                                                              |
 | ----------- | ------------------------------------------------------------------------ |
 | `columns`   | The token attributes to extract. ~~List[Union[int, str]]~~               |
 | **CREATES** | The created feature extraction layer. ~~Model[List[Doc], List[Ints2d]]~~ |

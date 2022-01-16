@@ -123,7 +123,7 @@ def MultiHashEmbed(
     attributes are NORM, PREFIX, SUFFIX and SHAPE. This lets the model take into
     account some subword information, without constructing a fully character-based
     representation. If pretrained vectors are available, they can be included in
-    the representation as well, with the vectors table will be kept static
+    the representation as well, with the vectors table kept static
     (i.e. it's not updated).
 
     The `width` parameter specifies the output width of the layer and the widths

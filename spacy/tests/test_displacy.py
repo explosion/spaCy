@@ -1,8 +1,99 @@
+import numpy
 import pytest
+
 from spacy import displacy
 from spacy.displacy.render import DependencyRenderer, EntityRenderer
-from spacy.tokens import Span, Doc
+from spacy.lang.en import English
 from spacy.lang.fa import Persian
+from spacy.tokens import Span, Doc
+
+
+@pytest.mark.issue(2361)
+def test_issue2361(de_vocab):
+    """Test if < is escaped when rendering"""
+    chars = ("&lt;", "&gt;", "&amp;", "&quot;")
+    words = ["<", ">", "&", '"']
+    doc = Doc(de_vocab, words=words, deps=["dep"] * len(words))
+    html = displacy.render(doc)
+    for char in chars:
+        assert char in html
+
+
+@pytest.mark.issue(2728)
+def test_issue2728(en_vocab):
+    """Test that displaCy ENT visualizer escapes HTML correctly."""
+    doc = Doc(en_vocab, words=["test", "<RELEASE>", "test"])
+    doc.ents = [Span(doc, 0, 1, label="TEST")]
+    html = displacy.render(doc, style="ent")
+    assert "&lt;RELEASE&gt;" in html
+    doc.ents = [Span(doc, 1, 2, label="TEST")]
+    html = displacy.render(doc, style="ent")
+    assert "&lt;RELEASE&gt;" in html
+
+
+@pytest.mark.issue(3288)
+def test_issue3288(en_vocab):
+    """Test that retokenization works correctly via displaCy when punctuation
+    is merged onto the preceeding token and tensor is resized."""
+    words = ["Hello", "World", "!", "When", "is", "this", "breaking", "?"]
+    heads = [1, 1, 1, 4, 4, 6, 4, 4]
+    deps = ["intj", "ROOT", "punct", "advmod", "ROOT", "det", "nsubj", "punct"]
+    doc = Doc(en_vocab, words=words, heads=heads, deps=deps)
+    doc.tensor = numpy.zeros((len(words), 96), dtype="float32")
+    displacy.render(doc)
+
+
+@pytest.mark.issue(3531)
+def test_issue3531():
+    """Test that displaCy renderer doesn't require "settings" key."""
+    example_dep = {
+        "words": [
+            {"text": "But", "tag": "CCONJ"},
+            {"text": "Google", "tag": "PROPN"},
+            {"text": "is", "tag": "VERB"},
+            {"text": "starting", "tag": "VERB"},
+            {"text": "from", "tag": "ADP"},
+            {"text": "behind.", "tag": "ADV"},
+        ],
+        "arcs": [
+            {"start": 0, "end": 3, "label": "cc", "dir": "left"},
+            {"start": 1, "end": 3, "label": "nsubj", "dir": "left"},
+            {"start": 2, "end": 3, "label": "aux", "dir": "left"},
+            {"start": 3, "end": 4, "label": "prep", "dir": "right"},
+            {"start": 4, "end": 5, "label": "pcomp", "dir": "right"},
+        ],
+    }
+    example_ent = {
+        "text": "But Google is starting from behind.",
+        "ents": [{"start": 4, "end": 10, "label": "ORG"}],
+    }
+    dep_html = displacy.render(example_dep, style="dep", manual=True)
+    assert dep_html
+    ent_html = displacy.render(example_ent, style="ent", manual=True)
+    assert ent_html
+
+
+@pytest.mark.issue(3882)
+def test_issue3882(en_vocab):
+    """Test that displaCy doesn't serialize the doc.user_data when making a
+    copy of the Doc.
+    """
+    doc = Doc(en_vocab, words=["Hello", "world"], deps=["dep", "dep"])
+    doc.user_data["test"] = set()
+    displacy.parse_deps(doc)
+
+
+@pytest.mark.issue(5838)
+def test_issue5838():
+    # Displacy's EntityRenderer break line
+    # not working after last entity
+    sample_text = "First line\nSecond line, with ent\nThird line\nFourth line\n"
+    nlp = English()
+    doc = nlp(sample_text)
+    doc.ents = [Span(doc, 7, 8, label="test")]
+    html = displacy.render(doc, style="ent")
+    found = html.count("</br>")
+    assert found == 4
 
 
 def test_displacy_parse_ents(en_vocab):
@@ -12,7 +103,38 @@ def test_displacy_parse_ents(en_vocab):
     ents = displacy.parse_ents(doc)
     assert isinstance(ents, dict)
     assert ents["text"] == "But Google is starting from behind "
-    assert ents["ents"] == [{"start": 4, "end": 10, "label": "ORG"}]
+    assert ents["ents"] == [
+        {"start": 4, "end": 10, "label": "ORG", "kb_id": "", "kb_url": "#"}
+    ]
+
+    doc.ents = [Span(doc, 1, 2, label=doc.vocab.strings["ORG"], kb_id="Q95")]
+    ents = displacy.parse_ents(doc)
+    assert isinstance(ents, dict)
+    assert ents["text"] == "But Google is starting from behind "
+    assert ents["ents"] == [
+        {"start": 4, "end": 10, "label": "ORG", "kb_id": "Q95", "kb_url": "#"}
+    ]
+
+
+def test_displacy_parse_ents_with_kb_id_options(en_vocab):
+    """Test that named entities with kb_id on a Doc are converted into displaCy's format."""
+    doc = Doc(en_vocab, words=["But", "Google", "is", "starting", "from", "behind"])
+    doc.ents = [Span(doc, 1, 2, label=doc.vocab.strings["ORG"], kb_id="Q95")]
+
+    ents = displacy.parse_ents(
+        doc, {"kb_url_template": "https://www.wikidata.org/wiki/{}"}
+    )
+    assert isinstance(ents, dict)
+    assert ents["text"] == "But Google is starting from behind "
+    assert ents["ents"] == [
+        {
+            "start": 4,
+            "end": 10,
+            "label": "ORG",
+            "kb_id": "Q95",
+            "kb_url": "https://www.wikidata.org/wiki/Q95",
+        }
+    ]
 
 
 def test_displacy_parse_deps(en_vocab):

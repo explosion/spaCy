@@ -1,14 +1,15 @@
-import pytest
 import numpy
-from numpy.testing import assert_allclose, assert_equal, assert_almost_equal
-from thinc.api import get_current_ops
+import pytest
+from numpy.testing import assert_allclose, assert_almost_equal, assert_equal
+from thinc.api import NumpyOps, get_current_ops
+
 from spacy.lang.en import English
-from spacy.vocab import Vocab
-from spacy.vectors import Vectors
-from spacy.tokenizer import Tokenizer
 from spacy.strings import hash_string  # type: ignore
+from spacy.tokenizer import Tokenizer
 from spacy.tokens import Doc
 from spacy.training.initialize import convert_vectors
+from spacy.vectors import Vectors
+from spacy.vocab import Vocab
 
 from ..util import add_vecs_to_vocab, get_cosine, make_tempdir
 
@@ -63,6 +64,79 @@ def vocab(en_vocab, vectors):
 @pytest.fixture()
 def tokenizer_v(vocab):
     return Tokenizer(vocab, {}, None, None, None)
+
+
+@pytest.mark.issue(1518)
+def test_issue1518():
+    """Test vectors.resize() works."""
+    vectors = Vectors(shape=(10, 10))
+    vectors.add("hello", row=2)
+    vectors.resize((5, 9))
+
+
+@pytest.mark.issue(1539)
+def test_issue1539():
+    """Ensure vectors.resize() doesn't try to modify dictionary during iteration."""
+    v = Vectors(shape=(10, 10), keys=[5, 3, 98, 100])
+    v.resize((100, 100))
+
+
+@pytest.mark.issue(1807)
+def test_issue1807():
+    """Test vocab.set_vector also adds the word to the vocab."""
+    vocab = Vocab(vectors_name="test_issue1807")
+    assert "hello" not in vocab
+    vocab.set_vector("hello", numpy.ones((50,), dtype="f"))
+    assert "hello" in vocab
+
+
+@pytest.mark.issue(2871)
+def test_issue2871():
+    """Test that vectors recover the correct key for spaCy reserved words."""
+    words = ["dog", "cat", "SUFFIX"]
+    vocab = Vocab(vectors_name="test_issue2871")
+    vocab.vectors.resize(shape=(3, 10))
+    vector_data = numpy.zeros((3, 10), dtype="f")
+    for word in words:
+        _ = vocab[word]  # noqa: F841
+        vocab.set_vector(word, vector_data[0])
+    vocab.vectors.name = "dummy_vectors"
+    assert vocab["dog"].rank == 0
+    assert vocab["cat"].rank == 1
+    assert vocab["SUFFIX"].rank == 2
+    assert vocab.vectors.find(key="dog") == 0
+    assert vocab.vectors.find(key="cat") == 1
+    assert vocab.vectors.find(key="SUFFIX") == 2
+
+
+@pytest.mark.issue(3412)
+def test_issue3412():
+    data = numpy.asarray([[0, 0, 0], [1, 2, 3], [9, 8, 7]], dtype="f")
+    vectors = Vectors(data=data, keys=["A", "B", "C"])
+    keys, best_rows, scores = vectors.most_similar(
+        numpy.asarray([[9, 8, 7], [0, 0, 0]], dtype="f")
+    )
+    assert best_rows[0] == 2
+
+
+@pytest.mark.issue(4725)
+def test_issue4725_2():
+    if isinstance(get_current_ops, NumpyOps):
+        # ensures that this runs correctly and doesn't hang or crash because of the global vectors
+        # if it does crash, it's usually because of calling 'spawn' for multiprocessing (e.g. on Windows),
+        # or because of issues with pickling the NER (cf test_issue4725_1)
+        vocab = Vocab(vectors_name="test_vocab_add_vector")
+        data = numpy.ndarray((5, 3), dtype="f")
+        data[0] = 1.0
+        data[1] = 2.0
+        vocab.set_vector("cat", data[0])
+        vocab.set_vector("dog", data[1])
+        nlp = English(vocab=vocab)
+        nlp.add_pipe("ner")
+        nlp.initialize()
+        docs = ["Kurt is in London."] * 10
+        for _ in nlp.pipe(docs, batch_size=2, n_process=2):
+            pass
 
 
 def test_init_vectors_with_resize_shape(strings, resize_data):
