@@ -331,17 +331,21 @@ class EntityLinker(TrainablePipe):
                     keep_ents.append(eidx)
                 eidx += 1
         entity_encodings = self.model.ops.asarray(entity_encodings, dtype="float32")
-        sentence_encodings = sentence_encodings[keep_ents]
-        if sentence_encodings.shape != entity_encodings.shape:
+        selected_encodings = sentence_encodings[keep_ents]
+        if selected_encodings.shape != entity_encodings.shape:
             err = Errors.E147.format(
                 method="get_loss", msg="gold entities do not match up"
             )
             raise RuntimeError(err)
         # TODO: fix typing issue here
-        gradients = self.distance.get_grad(sentence_encodings, entity_encodings)  # type: ignore
-        loss = self.distance.get_loss(sentence_encodings, entity_encodings)  # type: ignore
+        gradients = self.distance.get_grad(selected_encodings, entity_encodings)  # type: ignore
+        # to match the input size, we need to give a zero gradient for items not in the kb
+        out = self.model.ops.alloc2f(*sentence_encodings.shape)
+        out[keep_ents] = gradients
+
+        loss = self.distance.get_loss(selected_encodings, entity_encodings)  # type: ignore
         loss = loss / len(entity_encodings)
-        return float(loss), gradients
+        return float(loss), out
 
     def predict(self, docs: Iterable[Doc]) -> List[str]:
         """Apply the pipeline's model to a batch of docs, without modifying them.
