@@ -263,7 +263,6 @@ def debug_data(
                 "with whitespace characters are considered invalid."
             )
 
-    breakpoint()
     if "ner" in factory_names:
         # Get all unique NER labels present in the data
         labels = set(
