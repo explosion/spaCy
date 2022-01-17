@@ -194,7 +194,6 @@ def debug_data(
         msg.info("No word vectors present in the package")
 
     if "spancat" in factory_names:
-        # TODO
         model_labels = _get_labels_from_model(nlp, "spancat")
         labels = [list(l.keys()) for l in gold_train_data["spancat"].values()]
         has_low_data_warning = False
@@ -229,6 +228,14 @@ def debug_data(
                         f"Low number of examples for label '{label}' in key '{span_key}' ({count})"
                     )
                     has_low_data_warning = True
+
+                with msg.loading("Analyzing label distribution..."):
+                    neg_docs = _get_examples_without_label(
+                        train_dataset, label, "spancat"
+                    )
+                if neg_docs == 0:
+                    msg.warn(f"No examples for texts WITHOUT new label '{label}'")
+                    has_no_neg_warning = True
 
         if not has_low_data_warning:
             msg.good("Good amount of examples for all labels")
@@ -302,7 +309,7 @@ def debug_data(
                 has_low_data_warning = True
 
                 with msg.loading("Analyzing label distribution..."):
-                    neg_docs = _get_examples_without_label(train_dataset, label)
+                    neg_docs = _get_examples_without_label(train_dataset, label, "ner")
                 if neg_docs == 0:
                     msg.warn(f"No examples for texts WITHOUT new label '{label}'")
                     has_no_neg_warning = True
@@ -685,7 +692,7 @@ def _compile_gold(
             for span_key in list(eg.reference.spans.keys()):
                 if span_key not in data["spancat"]:
                     data["spancat"][span_key] = Counter()
-                for span in eg.reference.spans[span_key]:
+                for i, span in enumerate(eg.reference.spans[span_key]):
                     if span.label_ is None:
                         continue
                     if span.label_ is not None and doc[i].is_space:
@@ -764,14 +771,23 @@ def _format_labels(
     return ", ".join([f"'{l}'" for l in cast(Iterable[str], labels)])
 
 
-def _get_examples_without_label(data: Sequence[Example], label: str) -> int:
+def _get_examples_without_label(
+    data: Sequence[Example], label: str, pipeline: str = "ner"
+) -> int:
     count = 0
     for eg in data:
-        labels = [
-            label.split("-")[1]
-            for label in eg.get_aligned_ner()
-            if label not in ("O", "-", None)
-        ]
+        if pipeline == "ner":
+            labels = [
+                label.split("-")[1]
+                for label in eg.get_aligned_ner()
+                if label not in ("O", "-", None)
+            ]
+
+        if pipeline == "spancat":
+            labels = set(
+                [span.label_ for group in eg.reference.spans.values() for span in group]
+            )
+
         if label not in labels:
             count += 1
     return count
