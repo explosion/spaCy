@@ -1484,6 +1484,14 @@ cdef class Doc:
                 token_data["dep"] = token.dep_
                 token_data["head"] = token.head.i
             data["tokens"].append(token_data)
+        
+        data["spans"] = {}
+        for span_group in self.spans:
+            data["spans"][span_group] = []
+            for span in self.spans[span_group]:
+                span_data = {"start": span.start, "end": span.end, "label": span.label_, "kb_id": span.kb_id}
+                data["spans"][span_group].append(span_data)
+
         if underscore:
             data["_"] = {}
             for attr in underscore:
