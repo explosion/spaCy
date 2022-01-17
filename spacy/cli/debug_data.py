@@ -207,6 +207,9 @@ def debug_data(
         # Check for empty labels
         # Check if some model labels are not present in actual dataset
         msg.text("Labels in train data: ")
+        for span_key, labels in gold_train_data["spancat"].items():
+            msg.text(f"Key: {span_key}, {_format_labels(labels.items(), counts=True)}")
+
         missing_labels = model_labels - set(labels)
         if missing_labels:
             msg.warn(
@@ -214,9 +217,18 @@ def debug_data(
                 "model performance may be degraded for these labels after "
                 f"training: {_format_labels(missing_labels)}."
             )
-        # Check for whitespace invalid entity spans (?)
-        # Check for punctuation entity spans
+        # Check for whitespace invalid entity spans
+        if gold_train_data["ws_ents"]:
+            msg.fail(f"{gold_train_data['ws_ents']} invalid whitespace entity spans")
+            has_ws_ents_error = True
         # Check for low number of examples per label
+        for span_key, labels in gold_train_data["spancat"].items():
+            for label, count in labels.items():
+                if count <= NEW_LABEL_THRESHOLD:
+                    msg.warn(
+                        f"Low number of examples for label '{label}' in key '{span_key}' ({count})"
+                    )
+                    has_low_data_warning = True
 
     breakpoint()
     if "ner" in factory_names:
