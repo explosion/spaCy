@@ -156,6 +156,11 @@ def fr_tokenizer():
 
 
 @pytest.fixture(scope="session")
+def fr_vocab():
+    return get_lang_class("fr")().vocab
+
+
+@pytest.fixture(scope="session")
 def ga_tokenizer():
     return get_lang_class("ga")().tokenizer
 
@@ -203,6 +208,11 @@ def is_tokenizer():
 @pytest.fixture(scope="session")
 def it_tokenizer():
     return get_lang_class("it")().tokenizer
+
+
+@pytest.fixture(scope="session")
+def it_vocab():
+    return get_lang_class("it")().vocab
 
 
 @pytest.fixture(scope="session")
