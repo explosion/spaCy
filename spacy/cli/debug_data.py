@@ -196,6 +196,7 @@ def debug_data(
     if "spancat" in factory_names:
         # TODO
         model_labels = _get_labels_from_model(nlp, "spancat")
+        labels = [list(l.keys()) for l in gold_train_data["spancat"].values()]
         has_low_data_warning = False
         has_no_neg_warning = False
         has_ws_ents_error = False
@@ -205,6 +206,14 @@ def debug_data(
 
         # Check for empty labels
         # Check if some model labels are not present in actual dataset
+        msg.text("Labels in train data: ")
+        missing_labels = model_labels - set(labels)
+        if missing_labels:
+            msg.warn(
+                "Some model labels are not present in the train data. The "
+                "model performance may be degraded for these labels after "
+                f"training: {_format_labels(missing_labels)}."
+            )
         # Check for whitespace invalid entity spans (?)
         # Check for punctuation entity spans
         # Check for low number of examples per label
