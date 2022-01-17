@@ -230,6 +230,32 @@ def debug_data(
                     )
                     has_low_data_warning = True
 
+        if not has_low_data_warning:
+            msg.good("Good amount of examples for all labels")
+        if not has_no_neg_warning:
+            msg.good("Examples without occurrences available for all labels")
+        if not has_ws_ents_error:
+            msg.good("No entities consisting of or starting/ending with whitespace")
+
+        if has_low_data_warning:
+            msg.text(
+                f"To train a new entity type, your data should include at "
+                f"least {NEW_LABEL_THRESHOLD} instances of the new label",
+                show=verbose,
+            )
+        if has_no_neg_warning:
+            msg.text(
+                "Training data should always include examples of entities "
+                "in context, as well as examples without a given entity "
+                "type.",
+                show=verbose,
+            )
+        if has_ws_ents_error:
+            msg.text(
+                "Entity spans consisting of or starting/ending "
+                "with whitespace characters are considered invalid."
+            )
+
     breakpoint()
     if "ner" in factory_names:
         # Get all unique NER labels present in the data
@@ -660,7 +686,14 @@ def _compile_gold(
                 if span_key not in data["spancat"]:
                     data["spancat"][span_key] = Counter()
                 for span in eg.reference.spans[span_key]:
-                    data["spancat"][span_key][span.label_] += 1
+                    if span.label_ is None:
+                        continue
+                    if span.label_ is not None and doc[i].is_space:
+                        data["ws_ents"] += 1
+                    if span.label_ == "-":
+                        data["spancat"][span_key]["-"] += 1
+                    else:
+                        data["spancat"][span_key][span.label_] += 1
         if "textcat" in factory_names or "textcat_multilabel" in factory_names:
             data["cats"].update(gold.cats)
             if any(val not in (0, 1) for val in gold.cats.values()):
