@@ -229,6 +229,33 @@ pipelines.
 | `commands`      | A list of named commands. A command can define an optional help message (shown in the CLI when the user adds `--help`) and the `script`, a list of commands to run. The `deps` and `outputs` let you define the created file the command depends on and produces, respectively. This lets spaCy determine whether a command needs to be re-run because its dependencies or outputs changed. Commands can be run as part of a workflow, or separately with the [`project run`](/api/cli#project-run) command. |
 | `spacy_version` | Optional spaCy version range like `>=3.0.0,<3.1.0` that the project is compatible with. If it's loaded with an incompatible version, an error is raised when the project is loaded.                                                                                                                                                                                                                                                                                                                          |
 
+<Accordion title="Tip: Using Multiline YAML Strings">
+YAML has support for [multi-line strings](https://yaml-multiline.info/),
+so if any of your values are long you can split them up over multiple lines.
+
+The syntax is slightly different for normal values and values in arrays,
+as seen below.
+
+```yaml
+### project.yml
+title: Text Classification Pipeline - GPU
+description: >
+  This project template lets you train a text classification
+  model. It uses the generated training config for a
+  a GPU optimized for accuracy. 
+
+commands:
+  - name: generate_gpu_config
+    script:
+      - >-
+        python -m spacy init config config.cfg 
+        --lang en
+        --pipeline textcat
+        --optimize accuracy
+        --gpu
+```
+</Accordion>
+
 ### Data assets {#data-assets}
 
 Assets are any files that your project might need, like training and development
