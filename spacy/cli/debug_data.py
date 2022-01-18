@@ -699,8 +699,24 @@ def _get_examples_without_label(data: Sequence[Example], label: str) -> int:
     return count
 
 
-def _get_labels_from_model(nlp: Language, pipe_name: str) -> Set[str]:
-    if pipe_name not in nlp.pipe_names:
-        return set()
-    pipe = nlp.get_pipe(pipe_name)
-    return set(pipe.labels)
+def _get_labels_from_model(
+    nlp: Language, factory_name: str
+) -> Union[Set[str], Dict[str, Set[str]]]:
+    pipe_names = [
+        pipe_name
+        for pipe_name in nlp.pipe_names
+        if nlp.get_pipe_meta(pipe_name).factory == factory_name
+    ]
+    if factory_name == "spancat":
+        labels = {}
+        for pipe_name in pipe_names:
+            pipe = nlp.get_pipe(pipe_name)
+            if pipe.cfg["spans_key"] not in labels:
+                labels[pipe.cfg["spans_key"]] = set()
+            labels[pipe.cfg["spans_key"]].update(pipe.labels)
+    else:
+        labels = set()
+        for pipe_name in pipe_names:
+            pipe = nlp.get_pipe(pipe_name)
+            labels.update(pipe.labels)
+    return labels
