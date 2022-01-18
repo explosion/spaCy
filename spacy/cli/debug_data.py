@@ -6,6 +6,7 @@ import sys
 import srsly
 from wasabi import Printer, MESSAGES, msg
 import typer
+import itertools
 
 from ._util import app, Arg, Opt, show_validation_error, parse_config_overrides
 from ._util import import_code, debug_cli
@@ -205,10 +206,12 @@ def debug_data(
 
         # Check if some model labels are not present in actual dataset
         msg.text("Labels in train data: ")
-        for span_key, labels in gold_train_data["spancat"].items():
-            msg.text(f"Key: {span_key}, {_format_labels(labels.items(), counts=True)}")
+        for span_key, data_labels in gold_train_data["spancat"].items():
+            msg.text(
+                f"Key: {span_key}, {_format_labels(data_labels.items(), counts=True)}"
+            )
 
-        missing_labels = model_labels - set(labels)
+        missing_labels = model_labels - set(itertools.chain(*labels))
         if missing_labels:
             msg.warn(
                 "Some model labels are not present in the train data. The "
@@ -767,9 +770,9 @@ def _get_examples_without_label(
             ]
 
         if pipeline == "spancat":
-            labels = set(
-                [span.label_ for group in eg.reference.spans.values() for span in group]
-            )
+            labels = [
+                span.label_ for group in eg.reference.spans.values() for span in group
+            ]
 
         if label not in labels:
             count += 1
