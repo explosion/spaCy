@@ -1183,7 +1183,7 @@ cdef class Doc:
                 token_offset = -1
                 for doc in docs[:-1]:
                     token_offset += len(doc)
-                    if not (len(doc) > 0 and doc[-1].is_space):
+                    if len(doc) > 0 and not doc[-1].is_space:
                         concat_spaces[token_offset] = True
 
         concat_array = numpy.concatenate(arrays)
