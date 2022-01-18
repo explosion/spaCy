@@ -1285,9 +1285,9 @@ class Language:
             )
         except IOError:
             raise IOError(Errors.E884.format(vectors=I["vectors"]))
-        if self.vocab.vectors.data.shape[1] >= 1:
+        if self.vocab.vectors.shape[1] >= 1:
             ops = get_current_ops()
-            self.vocab.vectors.data = ops.asarray(self.vocab.vectors.data)
+            self.vocab.vectors.to_ops(ops)
         if hasattr(self.tokenizer, "initialize"):
             tok_settings = validate_init_settings(
                 self.tokenizer.initialize,  # type: ignore[union-attr]
@@ -1332,8 +1332,8 @@ class Language:
         DOCS: https://spacy.io/api/language#resume_training
         """
         ops = get_current_ops()
-        if self.vocab.vectors.data.shape[1] >= 1:
-            self.vocab.vectors.data = ops.asarray(self.vocab.vectors.data)
+        if self.vocab.vectors.shape[1] >= 1:
+            self.vocab.vectors.to_ops(ops)
         for name, proc in self.pipeline:
             if hasattr(proc, "_rehearsal_model"):
                 proc._rehearsal_model = deepcopy(proc.model)  # type: ignore[attr-defined]

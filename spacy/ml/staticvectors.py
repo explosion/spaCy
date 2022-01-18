@@ -94,7 +94,7 @@ def init(
     nM = model.get_dim("nM") if model.has_dim("nM") else None
     nO = model.get_dim("nO") if model.has_dim("nO") else None
     if X is not None and len(X):
-        nM = X[0].vocab.vectors.data.shape[1]
+        nM = X[0].vocab.vectors.shape[1]
     if Y is not None:
         nO = Y.data.shape[1]
 

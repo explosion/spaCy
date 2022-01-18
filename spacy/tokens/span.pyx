@@ -497,7 +497,7 @@ cdef class Span:
         """
         if "has_vector" in self.doc.user_span_hooks:
             return self.doc.user_span_hooks["has_vector"](self)
-        elif self.vocab.vectors.data.size > 0:
+        elif self.vocab.vectors.size > 0:
             return any(token.has_vector for token in self)
         elif self.doc.tensor.size > 0:
             return True
