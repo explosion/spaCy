@@ -14,7 +14,7 @@ from ..training.initialize import get_sourced_components
 from ..schemas import ConfigSchemaTraining
 from ..pipeline._parser_internals import nonproj
 from ..pipeline._parser_internals.nonproj import DELIMITER
-from ..pipeline import Morphologizer
+from ..pipeline import Morphologizer, SpanCategorizer
 from ..morphology import Morphology
 from ..language import Language
 from ..util import registry, resolve_dot_names
@@ -701,22 +701,31 @@ def _get_examples_without_label(data: Sequence[Example], label: str) -> int:
 
 def _get_labels_from_model(
     nlp: Language, factory_name: str
-) -> Union[Set[str], Dict[str, Set[str]]]:
+) -> Set[str]:
     pipe_names = [
         pipe_name
         for pipe_name in nlp.pipe_names
         if nlp.get_pipe_meta(pipe_name).factory == factory_name
     ]
-    if factory_name == "spancat":
-        labels = {}
-        for pipe_name in pipe_names:
-            pipe = nlp.get_pipe(pipe_name)
-            if pipe.cfg["spans_key"] not in labels:
-                labels[pipe.cfg["spans_key"]] = set()
-            labels[pipe.cfg["spans_key"]].update(pipe.labels)
-    else:
-        labels = set()
-        for pipe_name in pipe_names:
-            pipe = nlp.get_pipe(pipe_name)
-            labels.update(pipe.labels)
+    labels: Set[str] = set()
+    for pipe_name in pipe_names:
+        pipe = nlp.get_pipe(pipe_name)
+        labels.update(pipe.labels)
+    return labels
+
+
+def _get_labels_from_spancat(
+    nlp: Language, factory_name: str
+) -> Dict[str, Set[str]]:
+    pipe_names = [
+        pipe_name
+        for pipe_name in nlp.pipe_names
+        if nlp.get_pipe_meta(pipe_name).factory == factory_name
+    ]
+    labels: Dict[str, Set[str]] = {}
+    for pipe_name in pipe_names:
+        pipe = cast(SpanCategorizer, nlp.get_pipe(pipe_name))
+        if pipe.key not in labels:
+            labels[pipe.key] = set()
+        labels[pipe.key].update(pipe.labels)
     return labels
