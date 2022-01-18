@@ -203,7 +203,6 @@ def debug_data(
         msg.divider("Span Categorization")
         msg.info(f"{len(model_labels)} label(s)")
 
-        # Check for empty labels
         # Check if some model labels are not present in actual dataset
         msg.text("Labels in train data: ")
         for span_key, labels in gold_train_data["spancat"].items():
@@ -216,10 +215,6 @@ def debug_data(
                 "model performance may be degraded for these labels after "
                 f"training: {_format_labels(missing_labels)}."
             )
-        # Check for whitespace invalid entity spans
-        if gold_train_data["ws_ents"]:
-            msg.fail(f"{gold_train_data['ws_ents']} invalid whitespace entity spans")
-            has_ws_ents_error = True
         # Check for low number of examples per label
         for span_key, labels in gold_train_data["spancat"].items():
             for label, count in labels.items():
@@ -241,8 +236,6 @@ def debug_data(
             msg.good("Good amount of examples for all labels")
         if not has_no_neg_warning:
             msg.good("Examples without occurrences available for all labels")
-        if not has_ws_ents_error:
-            msg.good("No entities consisting of or starting/ending with whitespace")
 
         if has_low_data_warning:
             msg.text(
@@ -256,11 +249,6 @@ def debug_data(
                 "in context, as well as examples without a given entity "
                 "type.",
                 show=verbose,
-            )
-        if has_ws_ents_error:
-            msg.text(
-                "Entity spans consisting of or starting/ending "
-                "with whitespace characters are considered invalid."
             )
 
     if "ner" in factory_names:
@@ -694,10 +682,6 @@ def _compile_gold(
                 for i, span in enumerate(eg.reference.spans[span_key]):
                     if span.label_ is None:
                         continue
-                    if span.label_ is not None and doc[i].is_space:
-                        data["ws_ents"] += 1
-                    if span.label_ == "-":
-                        data["spancat"][span_key]["-"] += 1
                     else:
                         data["spancat"][span_key][span.label_] += 1
         if "textcat" in factory_names or "textcat_multilabel" in factory_names:
