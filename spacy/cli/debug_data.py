@@ -211,22 +211,21 @@ def debug_data(
                 f"Key: {spans_key}, {_format_labels(data_labels.items(), counts=True)}"
             )
 
-        missing_labels = model_labels - set(itertools.chain(*labels))
-        if missing_labels:
-            msg.warn(
-                "Some model labels are not present in the train data. The "
-                "model performance may be degraded for these labels after "
-                f"training: {_format_labels(missing_labels)}."
-            )
-        # Check for low number of examples per label
         for span_key, labels in gold_train_data["spancat"].items():
             for label, count in labels.items():
+                # Check for missing labels
+                if label not in model_labels:
+                    msg.warn(
+                        f"Label '{label}' is not present in the model labels for key '{span_key}'. "
+                        "Performance may degrade after training."
+                    )
+                # Check for low number of examples per label
                 if count <= NEW_LABEL_THRESHOLD:
                     msg.warn(
                         f"Low number of examples for label '{label}' in key '{span_key}' ({count})"
                     )
                     has_low_data_warning = True
-
+                # Check for negative examples
                 with msg.loading("Analyzing label distribution..."):
                     neg_docs = _get_examples_without_label(
                         train_dataset, label, "spancat"
