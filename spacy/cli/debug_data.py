@@ -206,9 +206,9 @@ def debug_data(
 
         # Check if some model labels are not present in actual dataset
         msg.text("Labels in train data: ")
-        for span_key, data_labels in gold_train_data["spancat"].items():
+        for spans_key, data_labels in gold_train_data["spancat"].items():
             msg.text(
-                f"Key: {span_key}, {_format_labels(data_labels.items(), counts=True)}"
+                f"Key: {spans_key}, {_format_labels(data_labels.items(), counts=True)}"
             )
 
         missing_labels = model_labels - set(itertools.chain(*labels))
