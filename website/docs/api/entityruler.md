@@ -99,7 +99,7 @@ be a token pattern (list) or a phrase pattern (string). For example:
 ## EntityRuler.initialize {#initialize tag="method" new="3"}
 
 Initialize the component with data and used before training to load in rules
-from a [pattern file](/usage/rule-based-matching/#entitruler-files). This method
+from a [pattern file](/usage/rule-based-matching/#entityruler-files). This method
 is typically called by [`Language.initialize`](/api/language#initialize) and
 lets you customize arguments it receives via the
 [`[initialize.components]`](/api/data-formats#config-initialize) block in the
