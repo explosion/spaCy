@@ -13,6 +13,16 @@ from spacy.vocab import Vocab
 from spacy.symbols import ORTH
 
 
+@pytest.mark.issue(10086)
+def test_issue10086():
+    """Test special case works when part of infix substring."""
+    text = "No--don't see"
+    tokenizer = English().tokenizer
+    doc = tokenizer(text)
+    assert "n't" in [w.text for w in doc]
+    assert "do" in [w.text for w in doc]
+
+
 @pytest.mark.issue(743)
 def test_issue743():
     doc = Doc(Vocab(), ["hello", "world"])
