@@ -758,18 +758,18 @@ def _format_labels(
 
 
 def _get_examples_without_label(
-    data: Sequence[Example], label: str, pipeline: str = "ner"
+    data: Sequence[Example], label: str, component: str = "ner"
 ) -> int:
     count = 0
     for eg in data:
-        if pipeline == "ner":
+        if component == "ner":
             labels = [
                 label.split("-")[1]
                 for label in eg.get_aligned_ner()
                 if label not in ("O", "-", None)
             ]
 
-        if pipeline == "spancat":
+        if component == "spancat":
             labels = [
                 span.label_ for group in eg.reference.spans.values() for span in group
             ]
