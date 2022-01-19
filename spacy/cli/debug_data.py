@@ -196,10 +196,8 @@ def debug_data(
 
     if "spancat" in factory_names:
         model_labels = _get_labels_from_model(nlp, "spancat")
-        labels = [list(l.keys()) for l in gold_train_data["spancat"].values()]
         has_low_data_warning = False
         has_no_neg_warning = False
-        has_ws_ents_error = False
 
         msg.divider("Span Categorization")
         msg.info(f"{len(model_labels)} label(s)")
