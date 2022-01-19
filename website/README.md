@@ -554,6 +554,40 @@ extensions for your code editor. The
 [`.prettierrc`](https://github.com/explosion/spaCy/tree/master/website/.prettierrc)
 file in the root defines the settings used in this codebase.
 
+## Building & Developing the Site with Docker {#docker}
+Sometimes it's hard to get a local environment working due to rapid updates to node dependencies,
+so it may be easier to use docker for building the docs.
+
+If you'd like to do this,
+**be sure you do *not* include your local `node_modules` folder**,
+since there are some dependencies that need to be built for the image system. 
+Rename it before using.
+
+```bash
+docker run -it \
+  -v $(pwd):/spacy-io/website \
+  -p 8000:8000 \
+  ghcr.io/explosion/spacy-io \
+  gatsby develop -H 0.0.0.0
+```
+
+This will allow you to access the built website at http://0.0.0.0:8000/ 
+in your browser, and still edit code in your editor while having the site 
+reflect those changes.
+
+**Note**: On M1 Macs you may need to the image tagged `arm64` (`ghcr.io/explosion/spacy-io:arm64`),
+otherwise you'll see `qemu` segfault during the build.
+
+### Building the Docker Image {#docker-build}
+
+If you'd like to build the image locally, you can do so like this:
+
+```bash
+docker build -t spacy-io .
+```
+
+This will take some time, so if you want to use the prebuilt image you'll save a bit of time.
+
 ## Markdown reference {#markdown}
 
 All page content and page meta lives in the `.md` files in the `/docs`
