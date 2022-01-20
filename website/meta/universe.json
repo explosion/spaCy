@@ -141,7 +141,8 @@
                 "website": "https://www.nr.no/~plison"
             },
             "category": ["pipeline", "standalone", "research", "training"],
-            "tags": []
+            "tags": [],
+            "spacy_version": 3
         },
         {
             "id": "numerizer",
