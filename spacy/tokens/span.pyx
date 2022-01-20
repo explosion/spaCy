@@ -364,8 +364,10 @@ cdef class Span:
             return 0.0
         vector = self.vector
         xp = get_array_module(vector)
-        return xp.dot(vector, other.vector) / (self.vector_norm * other.vector_norm)
-
+        result = xp.dot(vector, other.vector) / (self.vector_norm * other.vector_norm)
+        # ensure we get a scalar back (numpy does this automatically but cupy doesn't)
+        return result.item()
+    
     cpdef np.ndarray to_array(self, object py_attr_ids):
         """Given a list of M attribute IDs, export the tokens to a numpy
         `ndarray` of shape `(N, M)`, where `N` is the length of the document.
