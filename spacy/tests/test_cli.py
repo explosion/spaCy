@@ -669,6 +669,7 @@ def test_is_subpath_of(parent, child, expected):
     assert is_subpath_of(parent, child) == expected
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize(
     "factory_name,pipe_name",
     [
