@@ -769,7 +769,11 @@ def _get_examples_without_label(
             ]
 
         if component == "spancat":
-            labels = [span.label_ for span in eg.reference.spans[spans_key]]
+            labels = (
+                [span.label_ for span in eg.reference.spans[spans_key]]
+                if spans_key in eg.reference.spans
+                else []
+            )
 
         if label not in labels:
             count += 1
