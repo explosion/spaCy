@@ -126,38 +126,26 @@ cdef class Span:
                 return False
             else:
                 return True
+        self_tuple = (self.c.start_char, self.c.end_char, self.c.label, self.c.kb_id, self.doc)
+        other_tuple = (other.c.start_char, other.c.end_char, other.c.label, other.c.kb_id, other.doc)
         # <
         if op == 0:
-            return self.c.start_char < other.c.start_char
+            return self_tuple < other_tuple
         # <=
         elif op == 1:
-            return self.c.start_char <= other.c.start_char
+            return self_tuple <= other_tuple
         # ==
         elif op == 2:
-            # Do the cheap comparisons first
-            return (
-                (self.c.start_char == other.c.start_char) and \
-                (self.c.end_char == other.c.end_char) and \
-                (self.c.label == other.c.label) and \
-                (self.c.kb_id == other.c.kb_id) and \
-                (self.doc == other.doc)
-            )
+            return self_tuple == other_tuple
         # !=
         elif op == 3:
-            # Do the cheap comparisons first
-            return not (
-                (self.c.start_char == other.c.start_char) and \
-                (self.c.end_char == other.c.end_char) and \
-                (self.c.label == other.c.label) and \
-                (self.c.kb_id == other.c.kb_id) and \
-                (self.doc == other.doc)
-            )
+            return self_tuple != other_tuple
         # >
         elif op == 4:
-            return self.c.start_char > other.c.start_char
+            return self_tuple > other_tuple
         # >=
         elif op == 5:
-            return self.c.start_char >= other.c.start_char
+            return self_tuple >= other_tuple
 
     def __hash__(self):
         return hash((self.doc, self.c.start_char, self.c.end_char, self.c.label, self.c.kb_id))

@@ -188,6 +188,7 @@ def conllu_sentence_to_doc(
         id_ = int(id_) - 1
         head = (int(head) - 1) if head not in ("0", "_") else id_
         tag = pos if tag == "_" else tag
+        pos = pos if pos != "_" else ""
         morph = morph if morph != "_" else ""
         dep = "ROOT" if dep == "root" else dep
         lemmas.append(lemma)

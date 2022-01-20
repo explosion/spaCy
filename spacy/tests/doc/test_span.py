@@ -573,6 +573,55 @@ def test_span_with_vectors(doc):
     doc.vocab.vectors = prev_vectors
 
 
+# fmt: off
+def test_span_comparison(doc):
+
+    # Identical start, end, only differ in label and kb_id
+    assert Span(doc, 0, 3) == Span(doc, 0, 3)
+    assert Span(doc, 0, 3, "LABEL") == Span(doc, 0, 3, "LABEL")
+    assert Span(doc, 0, 3, "LABEL", kb_id="KB_ID") == Span(doc, 0, 3, "LABEL", kb_id="KB_ID")
+
+    assert Span(doc, 0, 3) != Span(doc, 0, 3, "LABEL")
+    assert Span(doc, 0, 3) != Span(doc, 0, 3, "LABEL", kb_id="KB_ID")
+    assert Span(doc, 0, 3, "LABEL") != Span(doc, 0, 3, "LABEL", kb_id="KB_ID")
+
+    assert Span(doc, 0, 3) <= Span(doc, 0, 3) and Span(doc, 0, 3) >= Span(doc, 0, 3)
+    assert Span(doc, 0, 3, "LABEL") <= Span(doc, 0, 3, "LABEL") and Span(doc, 0, 3, "LABEL") >= Span(doc, 0, 3, "LABEL")
+    assert Span(doc, 0, 3, "LABEL", kb_id="KB_ID") <= Span(doc, 0, 3, "LABEL", kb_id="KB_ID")
+    assert Span(doc, 0, 3, "LABEL", kb_id="KB_ID") >= Span(doc, 0, 3, "LABEL", kb_id="KB_ID")
+
+    assert (Span(doc, 0, 3) < Span(doc, 0, 3, "", kb_id="KB_ID") < Span(doc, 0, 3, "LABEL") < Span(doc, 0, 3, "LABEL", kb_id="KB_ID"))
+    assert (Span(doc, 0, 3) <= Span(doc, 0, 3, "", kb_id="KB_ID") <= Span(doc, 0, 3, "LABEL") <= Span(doc, 0, 3, "LABEL", kb_id="KB_ID"))
+
+    assert (Span(doc, 0, 3, "LABEL", kb_id="KB_ID") > Span(doc, 0, 3, "LABEL") > Span(doc, 0, 3, "", kb_id="KB_ID") > Span(doc, 0, 3))
+    assert (Span(doc, 0, 3, "LABEL", kb_id="KB_ID") >= Span(doc, 0, 3, "LABEL") >= Span(doc, 0, 3, "", kb_id="KB_ID") >= Span(doc, 0, 3))
+
+    # Different end
+    assert Span(doc, 0, 3, "LABEL", kb_id="KB_ID") < Span(doc, 0, 4, "LABEL", kb_id="KB_ID")
+
+    assert Span(doc, 0, 3, "LABEL", kb_id="KB_ID") < Span(doc, 0, 4)
+    assert Span(doc, 0, 3, "LABEL", kb_id="KB_ID") <= Span(doc, 0, 4)
+    assert Span(doc, 0, 4) > Span(doc, 0, 3, "LABEL", kb_id="KB_ID")
+    assert Span(doc, 0, 4) >= Span(doc, 0, 3, "LABEL", kb_id="KB_ID")
+
+    # Different start
+    assert Span(doc, 0, 3, "LABEL", kb_id="KB_ID") != Span(doc, 1, 3, "LABEL", kb_id="KB_ID")
+
+    assert Span(doc, 0, 3, "LABEL", kb_id="KB_ID") < Span(doc, 1, 3)
+    assert Span(doc, 0, 3, "LABEL", kb_id="KB_ID") <= Span(doc, 1, 3)
+    assert Span(doc, 1, 3) > Span(doc, 0, 3, "LABEL", kb_id="KB_ID")
+    assert Span(doc, 1, 3) >= Span(doc, 0, 3, "LABEL", kb_id="KB_ID")
+
+    # Different start & different end
+    assert Span(doc, 0, 4, "LABEL", kb_id="KB_ID") != Span(doc, 1, 3, "LABEL", kb_id="KB_ID")
+
+    assert Span(doc, 0, 4, "LABEL", kb_id="KB_ID") < Span(doc, 1, 3)
+    assert Span(doc, 0, 4, "LABEL", kb_id="KB_ID") <= Span(doc, 1, 3)
+    assert Span(doc, 1, 3) > Span(doc, 0, 4, "LABEL", kb_id="KB_ID")
+    assert Span(doc, 1, 3) >= Span(doc, 0, 4, "LABEL", kb_id="KB_ID")
+# fmt: on
+
+
 @pytest.mark.parametrize(
     "start,end,expected_sentences,expected_sentences_with_hook",
     [
