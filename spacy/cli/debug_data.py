@@ -715,16 +715,17 @@ def _get_labels_from_model(
 
 
 def _get_labels_from_spancat(
-    nlp: Language, factory_name: str
+    nlp: Language
 ) -> Dict[str, Set[str]]:
     pipe_names = [
         pipe_name
         for pipe_name in nlp.pipe_names
-        if nlp.get_pipe_meta(pipe_name).factory == factory_name
+        if nlp.get_pipe_meta(pipe_name).factory == "spancat"
     ]
     labels: Dict[str, Set[str]] = {}
     for pipe_name in pipe_names:
-        pipe = cast(SpanCategorizer, nlp.get_pipe(pipe_name))
+        pipe = nlp.get_pipe(pipe_name)
+        assert isinstance(pipe, SpanCategorizer)
         if pipe.key not in labels:
             labels[pipe.key] = set()
         labels[pipe.key].update(pipe.labels)

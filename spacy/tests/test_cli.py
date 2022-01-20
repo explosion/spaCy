@@ -688,6 +688,6 @@ def test_get_labels_from_model(factory_name, pipe_name):
     nlp.initialize()
     assert nlp.get_pipe(pipe_name).labels == labels
     if factory_name == "spancat":
-        assert _get_labels_from_spancat(nlp, factory_name)[pipe.key] == set(labels)
+        assert _get_labels_from_spancat(nlp)[pipe.key] == set(labels)
     else:
         assert _get_labels_from_model(nlp, factory_name) == set(labels)
