@@ -554,7 +554,7 @@ extensions for your code editor. The
 [`.prettierrc`](https://github.com/explosion/spaCy/tree/master/website/.prettierrc)
 file in the root defines the settings used in this codebase.
 
-## Building & Developing the Site with Docker {#docker}
+## Building & developing the site with Docker {#docker}
 Sometimes it's hard to get a local environment working due to rapid updates to node dependencies,
 so it may be easier to use docker for building the docs.
 
