@@ -18,7 +18,7 @@ DEFAULT_LABEL_COLORS = {
     "LOC": "#ff9561",
     "PERSON": "#aa9cfc",
     "NORP": "#c887fb",
-    "FACILITY": "#9cc9cc",
+    "FAC": "#9cc9cc",
     "EVENT": "#ffeb80",
     "LAW": "#ff8197",
     "LANGUAGE": "#ff8197",
