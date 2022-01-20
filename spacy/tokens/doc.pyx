@@ -616,7 +616,7 @@ cdef class Doc:
         """
         if "has_vector" in self.user_hooks:
             return self.user_hooks["has_vector"](self)
-        elif self.vocab.vectors.data.size:
+        elif self.vocab.vectors.size:
             return True
         elif self.tensor.size:
             return True
@@ -641,7 +641,7 @@ cdef class Doc:
             if not len(self):
                 self._vector = xp.zeros((self.vocab.vectors_length,), dtype="f")
                 return self._vector
-            elif self.vocab.vectors.data.size > 0:
+            elif self.vocab.vectors.size > 0:
                 self._vector = sum(t.vector for t in self) / len(self)
                 return self._vector
             elif self.tensor.size > 0:
@@ -1183,7 +1183,7 @@ cdef class Doc:
                 token_offset = -1
                 for doc in docs[:-1]:
                     token_offset += len(doc)
-                    if not (len(doc) > 0 and doc[-1].is_space):
+                    if len(doc) > 0 and not doc[-1].is_space:
                         concat_spaces[token_offset] = True
 
         concat_array = numpy.concatenate(arrays)

@@ -567,6 +567,7 @@ def test_doc_api_from_docs(en_tokenizer, de_tokenizer):
         "Merging the docs is fun.",
         "",
         "They don't think alike. ",
+        "",
         "Another doc.",
     ]
     en_texts_without_empty = [t for t in en_texts if len(t)]
@@ -574,9 +575,9 @@ def test_doc_api_from_docs(en_tokenizer, de_tokenizer):
     en_docs = [en_tokenizer(text) for text in en_texts]
     en_docs[0].spans["group"] = [en_docs[0][1:4]]
     en_docs[2].spans["group"] = [en_docs[2][1:4]]
-    en_docs[3].spans["group"] = [en_docs[3][0:1]]
+    en_docs[4].spans["group"] = [en_docs[4][0:1]]
     span_group_texts = sorted(
-        [en_docs[0][1:4].text, en_docs[2][1:4].text, en_docs[3][0:1].text]
+        [en_docs[0][1:4].text, en_docs[2][1:4].text, en_docs[4][0:1].text]
     )
     de_doc = de_tokenizer(de_text)
     Token.set_extension("is_ambiguous", default=False)

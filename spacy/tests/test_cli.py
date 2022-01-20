@@ -12,6 +12,8 @@ from spacy.cli._util import is_subpath_of, load_project_config
 from spacy.cli._util import parse_config_overrides, string_to_list
 from spacy.cli._util import substitute_project_variables
 from spacy.cli._util import validate_project_commands
+from spacy.cli.debug_data import _get_labels_from_model
+from spacy.cli.debug_data import _get_labels_from_spancat
 from spacy.cli.download import get_compatibility, get_version
 from spacy.cli.init_config import RECOMMENDATIONS, init_config, fill_config
 from spacy.cli.package import get_third_party_dependencies
@@ -665,3 +667,28 @@ def test_get_third_party_dependencies():
 )
 def test_is_subpath_of(parent, child, expected):
     assert is_subpath_of(parent, child) == expected
+
+
+@pytest.mark.slow
+@pytest.mark.parametrize(
+    "factory_name,pipe_name",
+    [
+        ("ner", "ner"),
+        ("ner", "my_ner"),
+        ("spancat", "spancat"),
+        ("spancat", "my_spancat"),
+    ],
+)
+def test_get_labels_from_model(factory_name, pipe_name):
+    labels = ("A", "B")
+
+    nlp = English()
+    pipe = nlp.add_pipe(factory_name, name=pipe_name)
+    for label in labels:
+        pipe.add_label(label)
+    nlp.initialize()
+    assert nlp.get_pipe(pipe_name).labels == labels
+    if factory_name == "spancat":
+        assert _get_labels_from_spancat(nlp)[pipe.key] == set(labels)
+    else:
+        assert _get_labels_from_model(nlp, factory_name) == set(labels)
