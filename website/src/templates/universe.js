@@ -126,7 +126,7 @@ const UniverseContent = ({ content = [], categories, theme, pageContext, mdxComp
                     <H3>Found a mistake or something isn't working?</H3>
                     <p>
                         If you've come across a universe project that isn't working or is
-                        incompatible, let us know by{' '}
+                        incompatible with the reported spaCy version, let us know by{' '}
                         <Link to="https://github.com/explosion/spaCy/discussions/new">
                             opening a discussion thread
                         </Link>
