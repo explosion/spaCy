@@ -14,7 +14,7 @@ from ..training.initialize import get_sourced_components
 from ..schemas import ConfigSchemaTraining
 from ..pipeline._parser_internals import nonproj
 from ..pipeline._parser_internals.nonproj import DELIMITER
-from ..pipeline import Morphologizer
+from ..pipeline import Morphologizer, SpanCategorizer
 from ..morphology import Morphology
 from ..language import Language
 from ..util import registry, resolve_dot_names
@@ -699,8 +699,34 @@ def _get_examples_without_label(data: Sequence[Example], label: str) -> int:
     return count
 
 
-def _get_labels_from_model(nlp: Language, pipe_name: str) -> Set[str]:
-    if pipe_name not in nlp.pipe_names:
-        return set()
-    pipe = nlp.get_pipe(pipe_name)
-    return set(pipe.labels)
+def _get_labels_from_model(
+    nlp: Language, factory_name: str
+) -> Set[str]:
+    pipe_names = [
+        pipe_name
+        for pipe_name in nlp.pipe_names
+        if nlp.get_pipe_meta(pipe_name).factory == factory_name
+    ]
+    labels: Set[str] = set()
+    for pipe_name in pipe_names:
+        pipe = nlp.get_pipe(pipe_name)
+        labels.update(pipe.labels)
+    return labels
+
+
+def _get_labels_from_spancat(
+    nlp: Language
+) -> Dict[str, Set[str]]:
+    pipe_names = [
+        pipe_name
+        for pipe_name in nlp.pipe_names
+        if nlp.get_pipe_meta(pipe_name).factory == "spancat"
+    ]
+    labels: Dict[str, Set[str]] = {}
+    for pipe_name in pipe_names:
+        pipe = nlp.get_pipe(pipe_name)
+        assert isinstance(pipe, SpanCategorizer)
+        if pipe.key not in labels:
+            labels[pipe.key] = set()
+        labels[pipe.key].update(pipe.labels)
+    return labels
