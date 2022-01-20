@@ -268,7 +268,7 @@ def test_overfitting_IO(pipe_name):
         train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
         for dep in annotations.get("deps", []):
             parser.add_label(dep)
-    #train_examples = train_examples[:1]
+    # train_examples = train_examples[:1]
     optimizer = nlp.initialize()
     # run overfitting
     for i in range(200):
