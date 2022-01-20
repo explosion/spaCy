@@ -227,6 +227,7 @@ def parser_score(examples, **kwargs):
 
     DOCS: https://spacy.io/api/dependencyparser#score
     """
+
     def has_sents(doc):
         return doc.has_annotation("SENT_START")
 
@@ -234,8 +235,11 @@ def parser_score(examples, **kwargs):
         dep = getattr(token, attr)
         dep = token.vocab.strings.as_string(dep).lower()
         return dep
+
     results = {}
-    results.update(Scorer.score_spans(examples, "sents", has_annotation=has_sents, **kwargs))
+    results.update(
+        Scorer.score_spans(examples, "sents", has_annotation=has_sents, **kwargs)
+    )
     kwargs.setdefault("getter", dep_getter)
     kwargs.setdefault("ignore_labels", ("p", "punct"))
     results.update(Scorer.score_deps(examples, "dep", **kwargs))
