@@ -578,7 +578,7 @@ reflect those changes.
 **Note**: On M1 Macs you may need to the image tagged `arm64` (`ghcr.io/explosion/spacy-io:arm64`),
 otherwise you'll see `qemu` segfault during the build.
 
-### Building the Docker Image {#docker-build}
+### Building the Docker image {#docker-build}
 
 If you'd like to build the image locally, you can do so like this:
 
