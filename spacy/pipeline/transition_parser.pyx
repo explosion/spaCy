@@ -240,6 +240,7 @@ class Parser(TrainablePipe):
     def predict(self, docs):
         if isinstance(docs, Doc):
             docs = [docs]
+        self._ensure_labels_are_added(docs)
         if not any(len(doc) for doc in docs):
             result = self.moves.init_batch(docs)
             return result
@@ -248,14 +249,14 @@ class Parser(TrainablePipe):
         return states_or_beams
 
     def greedy_parse(self, docs, drop=0.):
-        # Deprecated
+        # TODO: Deprecated
         self._resize()
         with _change_attrs(self.model, beam_width=1):
             states, _ = self.model.predict((docs, self.moves))
         return states
 
     def beam_parse(self, docs, int beam_width, float drop=0., beam_density=0.):
-        # Deprecated
+        # TODO: Deprecated
         self._resize()
         with _change_attrs(self.model, beam_width=self.cfg["beam_width"], beam_density=self.cfg["beam_density"]):
             beams, _ = self.model.predict((docs, self.moves))
