@@ -225,7 +225,7 @@ def debug_data(
                 # Check for negative examples
                 with msg.loading("Analyzing label distribution..."):
                     neg_docs = _get_examples_without_label(
-                        train_dataset, label, "spancat"
+                        train_dataset, label, "spancat", spans_key
                     )
                 if neg_docs == 0:
                     msg.warn(f"No examples for texts WITHOUT new label '{label}'")
@@ -754,7 +754,10 @@ def _format_labels(
 
 
 def _get_examples_without_label(
-    data: Sequence[Example], label: str, component: str = "ner"
+    data: Sequence[Example],
+    label: str,
+    component: str = "ner",
+    spans_key: Optional[str] = "sc",
 ) -> int:
     count = 0
     for eg in data:
@@ -766,9 +769,7 @@ def _get_examples_without_label(
             ]
 
         if component == "spancat":
-            labels = [
-                span.label_ for group in eg.reference.spans.values() for span in group
-            ]
+            labels = [span.label_ for span in eg.reference.spans[spans_key]]
 
         if label not in labels:
             count += 1
