@@ -20,6 +20,7 @@ from .doc cimport set_children_from_heads
 
 from .. import parts_of_speech
 from ..errors import Errors, Warnings
+from ..attrs import IOB_STRINGS
 from .underscore import Underscore, get_ext_args
 
 
@@ -745,7 +746,7 @@ cdef class Token:
 
     @classmethod
     def iob_strings(cls):
-        return ("", "I", "O", "B")
+        return IOB_STRINGS
 
     @property
     def ent_iob_(self):

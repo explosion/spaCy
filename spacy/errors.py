@@ -888,10 +888,13 @@ class Errors(metaclass=ErrorsWithCodes):
     E1021 = ("`pos` value \"{pp}\" is not a valid Universal Dependencies tag. "
              "Non-UD tags should use the `tag` property.")
     E1022 = ("Words must be of type str or int, but input is of type '{wtype}'")
-    E1023 = ("Couldn't read EntityRuler from the {path}. This file doesn't exist.")
-    E1024 = ("A pattern with ID \"{ent_id}\" is not present in EntityRuler patterns.")
+    E1023 = ("Couldn't read EntityRuler from the {path}. This file doesn't "
+             "exist.")
+    E1024 = ("A pattern with ID \"{ent_id}\" is not present in EntityRuler "
+             "patterns.")
+    E1025 = ("Cannot intify the value '{value}' as an IOB string. The only "
+             "supported values are: 'I', 'O', 'B' and ''")
     
-
 
 # Deprecated model shortcuts, only used in errors and warnings
 OLD_MODEL_SHORTCUTS = {
