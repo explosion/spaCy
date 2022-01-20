@@ -211,8 +211,9 @@ def forward(model, docs_moves: Tuple[List[Doc], TransitionSystem], is_train: boo
     return (states, all_scores), backprop_parser
 
 
-
-def _forward_reference(model, docs_moves: Tuple[List[Doc], TransitionSystem], is_train: bool):
+def _forward_reference(
+    model, docs_moves: Tuple[List[Doc], TransitionSystem], is_train: bool
+):
     """Slow reference implementation, without the precomputation"""
     nF = model.get_dim("nF")
     tok2vec = model.get_ref("tok2vec")
@@ -300,7 +301,7 @@ def _forward_reference(model, docs_moves: Tuple[List[Doc], TransitionSystem], is
         d_statevecs = model.ops.gemm(d_scores, upper_W)
         # Backprop through the maxout activation
         d_preacts = model.ops.backprop_maxout(d_statevecs, which, nP)
-        d_preacts2f = model.ops.reshape2f(d_preacts, d_preacts.shape[0], nH*nP)
+        d_preacts2f = model.ops.reshape2f(d_preacts, d_preacts.shape[0], nH * nP)
         # Now increment the gradients for the lower layer.
         # The gemm here is (nS, nH*nP) @ (nS, nF*nI)
         model.inc_grad("lower_b", d_preacts2f.sum(axis=0))
