@@ -616,7 +616,7 @@ cdef class Doc:
         """
         if "has_vector" in self.user_hooks:
             return self.user_hooks["has_vector"](self)
-        elif self.vocab.vectors.data.size:
+        elif self.vocab.vectors.size:
             return True
         elif self.tensor.size:
             return True
