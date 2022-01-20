@@ -575,8 +575,10 @@ This will allow you to access the built website at http://0.0.0.0:8000/
 in your browser, and still edit code in your editor while having the site 
 reflect those changes.
 
-**Note**: On M1 Macs you may need to the image tagged `arm64` (`ghcr.io/explosion/spacy-io:arm64`),
-otherwise you'll see `qemu` segfault during the build.
+**Note**: If you're working on a Mac with an M1 processor, 
+you might see segfault errors from `qemu` if you use the default image. 
+To fix this use the arm64 tagged image in the docker run command 
+(ghcr.io/explosion/spacy-io:arm64).
 
 ### Building the Docker image {#docker-build}
 
