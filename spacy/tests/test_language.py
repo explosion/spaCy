@@ -8,7 +8,7 @@ from spacy.vocab import Vocab
 from spacy.training import Example
 from spacy.lang.en import English
 from spacy.lang.de import German
-from spacy.util import registry, ignore_error, raise_error
+from spacy.util import registry, ignore_error, raise_error, find_matching_language
 import spacy
 from thinc.api import CupyOps, NumpyOps, get_current_ops
 
@@ -253,6 +253,38 @@ def test_language_pipe_error_handler_custom(en_vocab, n_process):
                 assert mock_warning.call_count == 2
                 assert len(docs) + mock_warning.call_count == len(texts)
             assert [doc.text for doc in docs] == ["TEXT 111", "TEXT 333", "TEXT 666"]
+
+
+@pytest.mark.parametrize("n_process", [1, 2])
+def test_language_pipe_error_handler_input_as_tuples(en_vocab, n_process):
+    """Test the error handling of nlp.pipe with input as tuples"""
+    Language.component("my_evil_component", func=evil_component)
+    ops = get_current_ops()
+    if isinstance(ops, NumpyOps) or n_process < 2:
+        nlp = English()
+        nlp.add_pipe("my_evil_component")
+        texts = [
+            ("TEXT 111", 111),
+            ("TEXT 222", 222),
+            ("TEXT 333", 333),
+            ("TEXT 342", 342),
+            ("TEXT 666", 666),
+        ]
+        with pytest.raises(ValueError):
+            list(nlp.pipe(texts, as_tuples=True))
+        nlp.set_error_handler(warn_error)
+        logger = logging.getLogger("spacy")
+        with mock.patch.object(logger, "warning") as mock_warning:
+            tuples = list(nlp.pipe(texts, as_tuples=True, n_process=n_process))
+            # HACK/TODO? the warnings in child processes don't seem to be
+            # detected by the mock logger
+            if n_process == 1:
+                mock_warning.assert_called()
+                assert mock_warning.call_count == 2
+                assert len(tuples) + mock_warning.call_count == len(texts)
+            assert (tuples[0][0].text, tuples[0][1]) == ("TEXT 111", 111)
+            assert (tuples[1][0].text, tuples[1][1]) == ("TEXT 333", 333)
+            assert (tuples[2][0].text, tuples[2][1]) == ("TEXT 666", 666)
 
 
 @pytest.mark.parametrize("n_process", [1, 2])
@@ -512,6 +544,55 @@ def test_spacy_blank():
     assert nlp.meta["name"] == "my_custom_model"
 
 
+@pytest.mark.parametrize(
+    "lang,target",
+    [
+        ("en", "en"),
+        ("fra", "fr"),
+        ("fre", "fr"),
+        ("iw", "he"),
+        ("mo", "ro"),
+        ("mul", "xx"),
+        ("no", "nb"),
+        ("pt-BR", "pt"),
+        ("xx", "xx"),
+        ("zh-Hans", "zh"),
+        ("zh-Hant", None),
+        ("zxx", None),
+    ],
+)
+def test_language_matching(lang, target):
+    """
+    Test that we can look up languages by equivalent or nearly-equivalent
+    language codes.
+    """
+    assert find_matching_language(lang) == target
+
+
+@pytest.mark.parametrize(
+    "lang,target",
+    [
+        ("en", "en"),
+        ("fra", "fr"),
+        ("fre", "fr"),
+        ("iw", "he"),
+        ("mo", "ro"),
+        ("mul", "xx"),
+        ("no", "nb"),
+        ("pt-BR", "pt"),
+        ("xx", "xx"),
+        ("zh-Hans", "zh"),
+    ],
+)
+def test_blank_languages(lang, target):
+    """
+    Test that we can get spacy.blank in various languages, including codes
+    that are defined to be equivalent or that match by CLDR language matching.
+    """
+    nlp = spacy.blank(lang)
+    assert nlp.lang == target
+
+
 @pytest.mark.parametrize("value", [False, None, ["x", "y"], Language, Vocab])
 def test_language_init_invalid_vocab(value):
     err_fragment = "invalid value"
@@ -538,6 +619,32 @@ def test_language_source_and_vectors(nlp2):
     assert long_string in nlp2.vocab.strings
     # vectors should remain unmodified
     assert nlp.vocab.vectors.to_bytes() == vectors_bytes
+
+
+@pytest.mark.parametrize("n_process", [1, 2])
+def test_pass_doc_to_pipeline(nlp, n_process):
+    texts = ["cats", "dogs", "guinea pigs"]
+    docs = [nlp.make_doc(text) for text in texts]
+    assert not any(len(doc.cats) for doc in docs)
+    doc = nlp(docs[0])
+    assert doc.text == texts[0]
+    assert len(doc.cats) > 0
+    if isinstance(get_current_ops(), NumpyOps) or n_process < 2:
+        docs = nlp.pipe(docs, n_process=n_process)
+        assert [doc.text for doc in docs] == texts
+        assert all(len(doc.cats) for doc in docs)
+
+
+def test_invalid_arg_to_pipeline(nlp):
+    str_list = ["This is a text.", "This is another."]
+    with pytest.raises(ValueError):
+        nlp(str_list)  # type: ignore
+    assert len(list(nlp.pipe(str_list))) == 2
+    int_list = [1, 2, 3]
+    with pytest.raises(ValueError):
+        list(nlp.pipe(int_list))  # type: ignore
+    with pytest.raises(ValueError):
+        nlp(int_list)  # type: ignore
 
 
 @pytest.mark.skipif(

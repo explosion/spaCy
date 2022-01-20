@@ -9,6 +9,7 @@ from .lex_attrs import LEX_ATTRS
 from ...language import Language, BaseDefaults
 from ...tokens import Doc
 from ...util import DummyTokenizer, registry, load_config_from_str
+from ...vocab import Vocab
 from ... import util
 
 
@@ -24,14 +25,14 @@ use_pyvi = true
 @registry.tokenizers("spacy.vi.VietnameseTokenizer")
 def create_vietnamese_tokenizer(use_pyvi: bool = True):
     def vietnamese_tokenizer_factory(nlp):
-        return VietnameseTokenizer(nlp, use_pyvi=use_pyvi)
+        return VietnameseTokenizer(nlp.vocab, use_pyvi=use_pyvi)
 
     return vietnamese_tokenizer_factory
 
 
 class VietnameseTokenizer(DummyTokenizer):
-    def __init__(self, nlp: Language, use_pyvi: bool = False):
-        self.vocab = nlp.vocab
+    def __init__(self, vocab: Vocab, use_pyvi: bool = False):
+        self.vocab = vocab
         self.use_pyvi = use_pyvi
         if self.use_pyvi:
             try:
@@ -44,6 +45,9 @@ class VietnameseTokenizer(DummyTokenizer):
                     "or install it https://pypi.python.org/pypi/pyvi"
                 )
                 raise ImportError(msg) from None
+
+    def __reduce__(self):
+        return VietnameseTokenizer, (self.vocab, self.use_pyvi)
 
     def __call__(self, text: str) -> Doc:
         if self.use_pyvi:

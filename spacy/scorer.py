@@ -247,18 +247,21 @@ class Scorer:
         missing_values: Set[Any] = MISSING_VALUES,  # type: ignore[assignment]
         **cfg,
     ) -> Dict[str, Any]:
-        """Return PRF scores per feat for a token attribute in UFEATS format.
+        """Return micro PRF and PRF scores per feat for a token attribute in
+        UFEATS format.
 
         examples (Iterable[Example]): Examples to score
         attr (str): The attribute to score.
         getter (Callable[[Token, str], Any]): Defaults to getattr. If provided,
             getter(token, attr) should return the value of the attribute for an
             individual token.
-        missing_values (Set[Any]): Attribute values to treat as missing annotation
-            in the reference annotation.
-        RETURNS (dict): A dictionary containing the per-feat PRF scores under
-            the key attr_per_feat.
+        missing_values (Set[Any]): Attribute values to treat as missing
+            annotation in the reference annotation.
+        RETURNS (dict): A dictionary containing the micro PRF scores under the
+            key attr_micro_p/r/f and the per-feat PRF scores under
+            attr_per_feat.
         """
+        micro_score = PRFScore()
         per_feat = {}
         for example in examples:
             pred_doc = example.predicted
@@ -300,15 +303,24 @@ class Scorer:
                                     pred_per_feat[field] = set()
                                 pred_per_feat[field].add((gold_i, feat))
             for field in per_feat:
+                micro_score.score_set(
+                    pred_per_feat.get(field, set()), gold_per_feat.get(field, set())
+                )
                 per_feat[field].score_set(
                     pred_per_feat.get(field, set()), gold_per_feat.get(field, set())
                 )
-        score_key = f"{attr}_per_feat"
-        if any([len(v) for v in per_feat.values()]):
-            result = {k: v.to_dict() for k, v in per_feat.items()}
-            return {score_key: result}
+        result: Dict[str, Any] = {}
+        if len(micro_score) > 0:
+            result[f"{attr}_micro_p"] = micro_score.precision
+            result[f"{attr}_micro_r"] = micro_score.recall
+            result[f"{attr}_micro_f"] = micro_score.fscore
+            result[f"{attr}_per_feat"] = {k: v.to_dict() for k, v in per_feat.items()}
         else:
-            return {score_key: None}
+            result[f"{attr}_micro_p"] = None
+            result[f"{attr}_micro_r"] = None
+            result[f"{attr}_micro_f"] = None
+            result[f"{attr}_per_feat"] = None
+        return result
 
     @staticmethod
     def score_spans(
@@ -347,14 +359,15 @@ class Scorer:
             pred_doc = example.predicted
             gold_doc = example.reference
             # Option to handle docs without annotation for this attribute
-            if has_annotation is not None:
-                if not has_annotation(gold_doc):
-                    continue
-            # Find all labels in gold and doc
-            labels = set(
-                [k.label_ for k in getter(gold_doc, attr)]
-                + [k.label_ for k in getter(pred_doc, attr)]
-            )
+            if has_annotation is not None and not has_annotation(gold_doc):
+                continue
+            # Find all labels in gold
+            labels = set([k.label_ for k in getter(gold_doc, attr)])
+            # If labeled, find all labels in pred
+            if has_annotation is None or (
+                has_annotation is not None and has_annotation(pred_doc)
+            ):
+                labels |= set([k.label_ for k in getter(pred_doc, attr)])
             # Set up all labels for per type scoring and prepare gold per type
             gold_per_type: Dict[str, Set] = {label: set() for label in labels}
             for label in labels:
@@ -372,16 +385,19 @@ class Scorer:
                 gold_spans.add(gold_span)
                 gold_per_type[span.label_].add(gold_span)
             pred_per_type: Dict[str, Set] = {label: set() for label in labels}
-            for span in example.get_aligned_spans_x2y(
-                getter(pred_doc, attr), allow_overlap
+            if has_annotation is None or (
+                has_annotation is not None and has_annotation(pred_doc)
             ):
-                pred_span: Tuple
-                if labeled:
-                    pred_span = (span.label_, span.start, span.end - 1)
-                else:
-                    pred_span = (span.start, span.end - 1)
-                pred_spans.add(pred_span)
-                pred_per_type[span.label_].add(pred_span)
+                for span in example.get_aligned_spans_x2y(
+                    getter(pred_doc, attr), allow_overlap
+                ):
+                    pred_span: Tuple
+                    if labeled:
+                        pred_span = (span.label_, span.start, span.end - 1)
+                    else:
+                        pred_span = (span.start, span.end - 1)
+                    pred_spans.add(pred_span)
+                    pred_per_type[span.label_].add(pred_span)
             # Scores per label
             if labeled:
                 for k, v in score_per_type.items():
@@ -545,7 +561,7 @@ class Scorer:
 
     @staticmethod
     def score_links(
-        examples: Iterable[Example], *, negative_labels: Iterable[str]
+        examples: Iterable[Example], *, negative_labels: Iterable[str], **cfg
     ) -> Dict[str, Any]:
         """Returns PRF for predicted links on the entity level.
         To disentangle the performance of the NEL from the NER,
@@ -721,7 +737,7 @@ class Scorer:
             }
 
 
-def get_ner_prf(examples: Iterable[Example]) -> Dict[str, Any]:
+def get_ner_prf(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
     """Compute micro-PRF and per-entity PRF scores for a sequence of examples."""
     score_per_type = defaultdict(PRFScore)
     for eg in examples:

@@ -1,9 +1,17 @@
+import gc
+
+import numpy
 import pytest
+from thinc.api import get_current_ops
+
+from spacy.lang.en import English
+from spacy.lang.en.syntax_iterators import noun_chunks
 from spacy.language import Language
 from spacy.pipeline import TrainablePipe
+from spacy.tokens import Doc
 from spacy.training import Example
 from spacy.util import SimpleFrozenList, get_arg_names
-from spacy.lang.en import English
+from spacy.vocab import Vocab
 
 
 @pytest.fixture
@@ -19,6 +27,138 @@ def new_pipe(doc):
 @Language.component("other_pipe")
 def other_pipe(doc):
     return doc
+
+
+@pytest.mark.issue(1506)
+def test_issue1506():
+    def string_generator():
+        for _ in range(10001):
+            yield "It's sentence produced by that bug."
+        for _ in range(10001):
+            yield "I erase some hbdsaj lemmas."
+        for _ in range(10001):
+            yield "I erase lemmas."
+        for _ in range(10001):
+            yield "It's sentence produced by that bug."
+        for _ in range(10001):
+            yield "It's sentence produced by that bug."
+
+    nlp = English()
+    for i, d in enumerate(nlp.pipe(string_generator())):
+        # We should run cleanup more than one time to actually cleanup data.
+        # In first run — clean up only mark strings as «not hitted».
+        if i == 10000 or i == 20000 or i == 30000:
+            gc.collect()
+        for t in d:
+            str(t.lemma_)
+
+
+@pytest.mark.issue(1654)
+def test_issue1654():
+    nlp = Language(Vocab())
+    assert not nlp.pipeline
+
+    @Language.component("component")
+    def component(doc):
+        return doc
+
+    nlp.add_pipe("component", name="1")
+    nlp.add_pipe("component", name="2", after="1")
+    nlp.add_pipe("component", name="3", after="2")
+    assert nlp.pipe_names == ["1", "2", "3"]
+    nlp2 = Language(Vocab())
+    assert not nlp2.pipeline
+    nlp2.add_pipe("component", name="3")
+    nlp2.add_pipe("component", name="2", before="3")
+    nlp2.add_pipe("component", name="1", before="2")
+    assert nlp2.pipe_names == ["1", "2", "3"]
+
+
+@pytest.mark.issue(3880)
+def test_issue3880():
+    """Test that `nlp.pipe()` works when an empty string ends the batch.
+
+    Fixed in v7.0.5 of Thinc.
+    """
+    texts = ["hello", "world", "", ""]
+    nlp = English()
+    nlp.add_pipe("parser").add_label("dep")
+    nlp.add_pipe("ner").add_label("PERSON")
+    nlp.add_pipe("tagger").add_label("NN")
+    nlp.initialize()
+    for doc in nlp.pipe(texts):
+        pass
+
+
+@pytest.mark.issue(5082)
+def test_issue5082():
+    # Ensure the 'merge_entities' pipeline does something sensible for the vectors of the merged tokens
+    nlp = English()
+    vocab = nlp.vocab
+    array1 = numpy.asarray([0.1, 0.5, 0.8], dtype=numpy.float32)
+    array2 = numpy.asarray([-0.2, -0.6, -0.9], dtype=numpy.float32)
+    array3 = numpy.asarray([0.3, -0.1, 0.7], dtype=numpy.float32)
+    array4 = numpy.asarray([0.5, 0, 0.3], dtype=numpy.float32)
+    array34 = numpy.asarray([0.4, -0.05, 0.5], dtype=numpy.float32)
+    vocab.set_vector("I", array1)
+    vocab.set_vector("like", array2)
+    vocab.set_vector("David", array3)
+    vocab.set_vector("Bowie", array4)
+    text = "I like David Bowie"
+    patterns = [
+        {"label": "PERSON", "pattern": [{"LOWER": "david"}, {"LOWER": "bowie"}]}
+    ]
+    ruler = nlp.add_pipe("entity_ruler")
+    ruler.add_patterns(patterns)
+    parsed_vectors_1 = [t.vector for t in nlp(text)]
+    assert len(parsed_vectors_1) == 4
+    ops = get_current_ops()
+    numpy.testing.assert_array_equal(ops.to_numpy(parsed_vectors_1[0]), array1)
+    numpy.testing.assert_array_equal(ops.to_numpy(parsed_vectors_1[1]), array2)
+    numpy.testing.assert_array_equal(ops.to_numpy(parsed_vectors_1[2]), array3)
+    numpy.testing.assert_array_equal(ops.to_numpy(parsed_vectors_1[3]), array4)
+    nlp.add_pipe("merge_entities")
+    parsed_vectors_2 = [t.vector for t in nlp(text)]
+    assert len(parsed_vectors_2) == 3
+    numpy.testing.assert_array_equal(ops.to_numpy(parsed_vectors_2[0]), array1)
+    numpy.testing.assert_array_equal(ops.to_numpy(parsed_vectors_2[1]), array2)
+    numpy.testing.assert_array_equal(ops.to_numpy(parsed_vectors_2[2]), array34)
+
+
+@pytest.mark.issue(5458)
+def test_issue5458():
+    # Test that the noun chuncker does not generate overlapping spans
+    # fmt: off
+    words = ["In", "an", "era", "where", "markets", "have", "brought", "prosperity", "and", "empowerment", "."]
+    vocab = Vocab(strings=words)
+    deps = ["ROOT", "det", "pobj", "advmod", "nsubj", "aux", "relcl", "dobj", "cc", "conj", "punct"]
+    pos = ["ADP", "DET", "NOUN", "ADV", "NOUN", "AUX", "VERB", "NOUN", "CCONJ", "NOUN", "PUNCT"]
+    heads = [0, 2, 0, 9, 6, 6, 2, 6, 7, 7, 0]
+    # fmt: on
+    en_doc = Doc(vocab, words=words, pos=pos, heads=heads, deps=deps)
+    en_doc.noun_chunks_iterator = noun_chunks
+
+    # if there are overlapping spans, this will fail with an E102 error "Can't merge non-disjoint spans"
+    nlp = English()
+    merge_nps = nlp.create_pipe("merge_noun_chunks")
+    merge_nps(en_doc)
+
+
+def test_multiple_predictions():
+    class DummyPipe(TrainablePipe):
+        def __init__(self):
+            self.model = "dummy_model"
+
+        def predict(self, docs):
+            return ([1, 2, 3], [4, 5, 6])
+
+        def set_annotations(self, docs, scores):
+            return docs
+
+    nlp = Language()
+    doc = nlp.make_doc("foo")
+    dummy_pipe = DummyPipe()
+    dummy_pipe(doc)
 
 
 def test_add_pipe_no_name(nlp):

@@ -297,10 +297,12 @@ Score a batch of examples.
 > scores = pipe.score(examples)
 > ```
 
-| Name        | Description                                                                                             |
-| ----------- | ------------------------------------------------------------------------------------------------------- |
-| `examples`  | The examples to score. ~~Iterable[Example]~~                                                            |
-| **RETURNS** | The scores, e.g. produced by the [`Scorer`](/api/scorer). ~~Dict[str, Union[float, Dict[str, float]]]~~ |
+| Name           | Description                                                                                             |
+| -------------- | ------------------------------------------------------------------------------------------------------- |
+| `examples`     | The examples to score. ~~Iterable[Example]~~                                                            |
+| _keyword-only_ |
+| `\*\*kwargs`   | Any additional settings to pass on to the scorer. ~~Any~~                                               |
+| **RETURNS**    | The scores, e.g. produced by the [`Scorer`](/api/scorer). ~~Dict[str, Union[float, Dict[str, float]]]~~ |
 
 ## TrainablePipe.create_optimizer {#create_optimizer tag="method"}
 

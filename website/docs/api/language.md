@@ -1000,6 +1000,11 @@ subclasses like `English` or `German` to make language-specific functionality
 like the [lexical attribute getters](/usage/linguistic-features#language-data)
 available to the loaded object.
 
+Note that if you want to serialize and reload a whole pipeline, using this alone
+won't work, you also need to handle the config. See
+["Serializing the pipeline"](https://spacy.io/usage/saving-loading#pipeline) for
+details.
+
 > #### Example
 >
 > ```python
@@ -1039,7 +1044,7 @@ available to the loaded object.
 | Name             | Description                                                                                                                                                                       |
 | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `Defaults`       | Settings, data and factory methods for creating the `nlp` object and processing pipeline. ~~Defaults~~                                                                            |
-| `lang`           | Two-letter language ID, i.e. [ISO code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes). ~~str~~                                                                           |
+| `lang`           | [IETF language tag](https://www.w3.org/International/articles/language-tags/), such as 'en' for English. ~~str~~                                                                  |
 | `default_config` | Base [config](/usage/training#config) to use for [Language.config](/api/language#config). Defaults to [`default_config.cfg`](%%GITHUB_SPACY/spacy/default_config.cfg). ~~Config~~ |
 
 ## Defaults {#defaults}

@@ -12,7 +12,8 @@ from spacy.training.batchers import minibatch_by_words
 from spacy.lang.en import English
 from spacy.lang.nl import Dutch
 from spacy.language import DEFAULT_CONFIG_PATH
-from spacy.schemas import ConfigSchemaTraining
+from spacy.schemas import ConfigSchemaTraining, TokenPattern, TokenPatternSchema
+from pydantic import ValidationError
 
 from thinc.api import get_current_ops, NumpyOps, CupyOps
 
@@ -28,6 +29,32 @@ def is_admin():
         admin = ctypes.windll.shell32.IsUserAnAdmin() != 0
 
     return admin
+
+
+@pytest.mark.issue(6207)
+def test_issue6207(en_tokenizer):
+    doc = en_tokenizer("zero one two three four five six")
+
+    # Make spans
+    s1 = doc[:4]
+    s2 = doc[3:6]  # overlaps with s1
+    s3 = doc[5:7]  # overlaps with s2, not s1
+
+    result = util.filter_spans((s1, s2, s3))
+    assert s1 in result
+    assert s2 not in result
+    assert s3 in result
+
+
+@pytest.mark.issue(6258)
+def test_issue6258():
+    """Test that the non-empty constraint pattern field is respected"""
+    # These one is valid
+    TokenPatternSchema(pattern=[TokenPattern()])
+    # But an empty pattern list should fail to validate
+    # based on the schema's constraint
+    with pytest.raises(ValidationError):
+        TokenPatternSchema(pattern=[])
 
 
 @pytest.mark.parametrize("text", ["hello/world", "hello world"])
@@ -137,6 +164,12 @@ def test_load_model_blank_shortcut():
     nlp = util.load_model("blank:en")
     assert nlp.lang == "en"
     assert nlp.pipeline == []
+
+    # ImportError for loading an unsupported language
+    with pytest.raises(ImportError):
+        util.load_model("blank:zxx")
+
+    # ImportError for requesting an invalid language code that isn't registered
     with pytest.raises(ImportError):
         util.load_model("blank:fjsfijsdof")
 

@@ -130,8 +130,10 @@ cdef class Lexeme:
             return 0.0
         vector = self.vector
         xp = get_array_module(vector)
-        return (xp.dot(vector, other.vector) / (self.vector_norm * other.vector_norm))
-
+        result = xp.dot(vector, other.vector) / (self.vector_norm * other.vector_norm)
+        # ensure we get a scalar back (numpy does this automatically but cupy doesn't)
+        return result.item()
+    
     @property
     def has_vector(self):
         """RETURNS (bool): Whether a word vector is associated with the object.
@@ -284,7 +286,7 @@ cdef class Lexeme:
         def __get__(self):
             return self.vocab.strings[self.c.lower]
 
-        def __set__(self, unicode x):
+        def __set__(self, str x):
             self.c.lower = self.vocab.strings.add(x)
 
     property norm_:
@@ -294,7 +296,7 @@ cdef class Lexeme:
         def __get__(self):
             return self.vocab.strings[self.c.norm]
 
-        def __set__(self, unicode x):
+        def __set__(self, str x):
             self.norm = self.vocab.strings.add(x)
 
     property shape_:
@@ -304,7 +306,7 @@ cdef class Lexeme:
         def __get__(self):
             return self.vocab.strings[self.c.shape]
 
-        def __set__(self, unicode x):
+        def __set__(self, str x):
             self.c.shape = self.vocab.strings.add(x)
 
     property prefix_:
@@ -314,7 +316,7 @@ cdef class Lexeme:
         def __get__(self):
             return self.vocab.strings[self.c.prefix]
 
-        def __set__(self, unicode x):
+        def __set__(self, str x):
             self.c.prefix = self.vocab.strings.add(x)
 
     property suffix_:
@@ -324,7 +326,7 @@ cdef class Lexeme:
         def __get__(self):
             return self.vocab.strings[self.c.suffix]
 
-        def __set__(self, unicode x):
+        def __set__(self, str x):
             self.c.suffix = self.vocab.strings.add(x)
 
     property lang_:
@@ -332,7 +334,7 @@ cdef class Lexeme:
         def __get__(self):
             return self.vocab.strings[self.c.lang]
 
-        def __set__(self, unicode x):
+        def __set__(self, str x):
             self.c.lang = self.vocab.strings.add(x)
 
     property flags:

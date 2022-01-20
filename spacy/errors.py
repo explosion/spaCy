@@ -1,18 +1,13 @@
 import warnings
 
 
-def add_codes(err_cls):
-    """Add error codes to string messages via class attribute names."""
-
-    class ErrorsWithCodes(err_cls):
-        def __getattribute__(self, code):
-            msg = super(ErrorsWithCodes, self).__getattribute__(code)
-            if code.startswith("__"):  # python system attributes like __class__
-                return msg
-            else:
-                return "[{code}] {msg}".format(code=code, msg=msg)
-
-    return ErrorsWithCodes()
+class ErrorsWithCodes(type):
+    def __getattribute__(self, code):
+        msg = super().__getattribute__(code)
+        if code.startswith("__"):  # python system attributes like __class__
+            return msg
+        else:
+            return "[{code}] {msg}".format(code=code, msg=msg)
 
 
 def setup_default_warnings():
@@ -26,6 +21,9 @@ def setup_default_warnings():
 
     # warn once about lemmatizer without required POS
     filter_warning("once", error_msg=Warnings.W108)
+
+    # floret vector table cannot be modified
+    filter_warning("once", error_msg="[W114]")
 
 
 def filter_warning(action: str, error_msg: str):
@@ -44,8 +42,7 @@ def _escape_warning_msg(msg):
 
 # fmt: off
 
-@add_codes
-class Warnings:
+class Warnings(metaclass=ErrorsWithCodes):
     W005 = ("Doc object not parsed. This means displaCy won't be able to "
             "generate a dependency visualization for it. Make sure the Doc "
             "was processed with a model that supports dependency parsing, and "
@@ -192,10 +189,12 @@ class Warnings:
             "vectors are not identical to current pipeline vectors.")
     W114 = ("Using multiprocessing with GPU models is not recommended and may "
             "lead to errors.")
+    W115 = ("Skipping {method}: the floret vector table cannot be modified. "
+            "Vectors are calculated from character ngrams.")
+    W116 = ("Unable to clean attribute '{attr}'.")
 
 
-@add_codes
-class Errors:
+class Errors(metaclass=ErrorsWithCodes):
     E001 = ("No component '{name}' found in pipeline. Available names: {opts}")
     E002 = ("Can't find factory for '{name}' for language {lang} ({lang_code}). "
             "This usually happens when spaCy calls `nlp.{method}` with a custom "
@@ -284,7 +283,7 @@ class Errors:
             "you forget to call the `set_extension` method?")
     E047 = ("Can't assign a value to unregistered extension attribute "
             "'{name}'. Did you forget to call the `set_extension` method?")
-    E048 = ("Can't import language {lang} from spacy.lang: {err}")
+    E048 = ("Can't import language {lang} or any matching language from spacy.lang: {err}")
     E050 = ("Can't find model '{name}'. It doesn't seem to be a Python "
             "package or a valid path to a data directory.")
     E052 = ("Can't find model directory: {path}")
@@ -518,13 +517,24 @@ class Errors:
     E199 = ("Unable to merge 0-length span at `doc[{start}:{end}]`.")
     E200 = ("Can't yet set {attr} from Span. Vote for this feature on the "
             "issue tracker: http://github.com/explosion/spaCy/issues")
-    E202 = ("Unsupported alignment mode '{mode}'. Supported modes: {modes}.")
+    E202 = ("Unsupported {name} mode '{mode}'. Supported modes: {modes}.")
 
     # New errors added in v3.x
-    E866 = ("A SpanGroup is not functional after the corresponding Doc has "
+    E858 = ("The {mode} vector table does not support this operation. "
+            "{alternative}")
+    E859 = ("The floret vector table cannot be modified.")
+    E860 = ("Can't truncate fasttext-bloom vectors.")
+    E861 = ("No 'keys' should be provided when initializing floret vectors "
+            "with 'minn' and 'maxn'.")
+    E862 = ("'hash_count' must be between 1-4 for floret vectors.")
+    E863 = ("'maxn' must be greater than or equal to 'minn'.")
+    E864 = ("The complete vector table 'data' is required to initialize floret "
+            "vectors.")
+    E865 = ("A SpanGroup is not functional after the corresponding Doc has "
             "been garbage collected. To keep using the spans, make sure that "
             "the corresponding Doc object is still available in the scope of "
             "your function.")
+    E866 = ("Expected a string or 'Doc' as input, but got: {type}.")
     E867 = ("The 'textcat' component requires at least two labels because it "
             "uses mutually exclusive classes where exactly one label is True "
             "for each doc. For binary classification tasks, you can use two "
@@ -632,7 +642,7 @@ class Errors:
     E912 = ("Failed to initialize lemmatizer. Missing lemmatizer table(s) found "
             "for mode '{mode}'. Required tables: {tables}. Found: {found}.")
     E913 = ("Corpus path can't be None. Maybe you forgot to define it in your "
-            "config.cfg or override it on the CLI?")
+            ".cfg file or override it on the CLI?")
     E914 = ("Executing {name} callback failed. Expected the function to "
             "return the nlp object but got: {value}. Maybe you forgot to return "
             "the modified object in your function?")
@@ -878,7 +888,13 @@ class Errors:
     E1021 = ("`pos` value \"{pp}\" is not a valid Universal Dependencies tag. "
              "Non-UD tags should use the `tag` property.")
     E1022 = ("Words must be of type str or int, but input is of type '{wtype}'")
-
+    E1023 = ("Couldn't read EntityRuler from the {path}. This file doesn't "
+             "exist.")
+    E1024 = ("A pattern with ID \"{ent_id}\" is not present in EntityRuler "
+             "patterns.")
+    E1025 = ("Cannot intify the value '{value}' as an IOB string. The only "
+             "supported values are: 'I', 'O', 'B' and ''")
+    
 
 # Deprecated model shortcuts, only used in errors and warnings
 OLD_MODEL_SHORTCUTS = {

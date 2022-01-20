@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 cimport numpy as np
 from libc.math cimport sqrt
 
@@ -366,8 +364,10 @@ cdef class Span:
             return 0.0
         vector = self.vector
         xp = get_array_module(vector)
-        return xp.dot(vector, other.vector) / (self.vector_norm * other.vector_norm)
-
+        result = xp.dot(vector, other.vector) / (self.vector_norm * other.vector_norm)
+        # ensure we get a scalar back (numpy does this automatically but cupy doesn't)
+        return result.item()
+    
     cpdef np.ndarray to_array(self, object py_attr_ids):
         """Given a list of M attribute IDs, export the tokens to a numpy
         `ndarray` of shape `(N, M)`, where `N` is the length of the document.
@@ -406,6 +406,10 @@ cdef class Span:
         """
         if "sent" in self.doc.user_span_hooks:
             return self.doc.user_span_hooks["sent"](self)
+        elif "sents" in self.doc.user_hooks:
+            for sentence in self.doc.user_hooks["sents"](self.doc):
+                if sentence.start <= self.start < sentence.end:
+                    return sentence
         # Use `sent_start` token attribute to find sentence boundaries
         cdef int n = 0
         if self.doc.has_annotation("SENT_START"):
@@ -423,6 +427,47 @@ cdef class Span:
             return self.doc[start:end]
         else:
             raise ValueError(Errors.E030)
+
+    @property
+    def sents(self):
+        """Obtain the sentences that contain this span. If the given span
+        crosses sentence boundaries, return all sentences it is a part of.
+
+        RETURNS (Iterable[Span]): All sentences that the span is a part of.
+
+         DOCS: https://spacy.io/api/span#sents
+        """
+        cdef int start
+        cdef int i
+
+        if "sents" in self.doc.user_span_hooks:
+            yield from self.doc.user_span_hooks["sents"](self)
+        elif "sents" in self.doc.user_hooks:
+            for sentence in self.doc.user_hooks["sents"](self.doc):
+                if sentence.end > self.start:
+                    if sentence.start < self.end or sentence.start == self.start == self.end:
+                        yield sentence
+                    else:
+                        break
+        else:
+            if not self.doc.has_annotation("SENT_START"):
+                raise ValueError(Errors.E030)
+            # Use `sent_start` token attribute to find sentence boundaries
+            # Find start of the 1st sentence of the Span
+            start = self.start
+            while self.doc.c[start].sent_start != 1 and start > 0:
+                start -= 1
+
+            # Now, find all the sentences in the span
+            for i in range(start + 1, self.doc.length):
+                if self.doc.c[i].sent_start == 1:
+                    yield Span(self.doc, start, i)
+                    start = i
+                    if start >= self.end:
+                        break
+            if start < self.end:
+                yield Span(self.doc, start, self.end)
+
 
     @property
     def ents(self):
@@ -454,7 +499,7 @@ cdef class Span:
         """
         if "has_vector" in self.doc.user_span_hooks:
             return self.doc.user_span_hooks["has_vector"](self)
-        elif self.vocab.vectors.data.size > 0:
+        elif self.vocab.vectors.size > 0:
             return any(token.has_vector for token in self)
         elif self.doc.tensor.size > 0:
             return True
@@ -754,7 +799,7 @@ cdef class Span:
         def __get__(self):
             return self.root.ent_id_
 
-        def __set__(self, unicode key):
+        def __set__(self, str key):
             raise NotImplementedError(Errors.E200.format(attr="ent_id_"))
 
     @property
@@ -775,7 +820,7 @@ cdef class Span:
         def __get__(self):
             return self.doc.vocab.strings[self.label]
 
-        def __set__(self, unicode label_):
+        def __set__(self, str label_):
             self.label = self.doc.vocab.strings.add(label_)
 
     property kb_id_:
@@ -783,7 +828,7 @@ cdef class Span:
         def __get__(self):
             return self.doc.vocab.strings[self.kb_id]
 
-        def __set__(self, unicode kb_id_):
+        def __set__(self, str kb_id_):
             self.kb_id = self.doc.vocab.strings.add(kb_id_)
 
 

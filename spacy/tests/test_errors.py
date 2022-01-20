@@ -2,11 +2,10 @@ from inspect import isclass
 
 import pytest
 
-from spacy.errors import add_codes
+from spacy.errors import ErrorsWithCodes
 
 
-@add_codes
-class Errors:
+class Errors(metaclass=ErrorsWithCodes):
     E001 = "error description"
 
 

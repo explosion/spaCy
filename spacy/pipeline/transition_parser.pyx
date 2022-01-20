@@ -49,6 +49,7 @@ class Parser(TrainablePipe):
         beam_update_prob=0.0,
         multitasks=tuple(),
         incorrect_spans_key=None,
+        scorer=None,
     ):
         """Create a Parser.
 
@@ -85,6 +86,7 @@ class Parser(TrainablePipe):
         incorrect_spans_key (Optional[str]): Identifies spans that are known
             to be incorrect entity annotations. The incorrect entity annotations
             can be stored in the span group, under this key.
+        scorer (Optional[Callable]): The scoring method. Defaults to None.
         """
         self.vocab = vocab
         self.name = name
@@ -116,6 +118,7 @@ class Parser(TrainablePipe):
             self.add_multitask_objective(multitask)
 
         self._rehearsal_model = None
+        self.scorer = scorer
 
     def __getnewargs_ex__(self):
         """This allows pickling the Parser and its keyword-only init arguments"""
@@ -210,16 +213,6 @@ class Parser(TrainablePipe):
         # Can't decorate cdef class :(. Workaround.
         with self.model.use_params(params):
             yield
-
-    def __call__(self, Doc doc):
-        """Apply the parser or entity recognizer, setting the annotations onto
-        the `Doc` object.
-
-        doc (Doc): The document to be processed.
-        """
-        states = self.predict([doc])
-        self.set_annotations([doc], states)
-        return doc
 
     def pipe(self, docs, *, int batch_size=256):
         """Process a stream of documents.

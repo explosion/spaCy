@@ -105,6 +105,7 @@ shortcut for this and instantiate the component using its string name and
 | `update_with_oracle_cut_size` | During training, cut long sequences into shorter segments by creating intermediate states based on the gold-standard history. The model is not very sensitive to this parameter, so you usually won't need to change it. Defaults to `100`. ~~int~~                                                 |
 | `learn_tokens`                | Whether to learn to merge subtokens that are split relative to the gold standard. Experimental. Defaults to `False`. ~~bool~~                                                                                                                                                                       |
 | `min_action_freq`             | The minimum frequency of labelled actions to retain. Rarer labelled actions have their label backed-off to "dep". While this primarily affects the label accuracy, it can also affect the attachment structure, as the labels are used to represent the pseudo-projectivity transformation. ~~int~~ |
+| `scorer`                      | The scoring method. Defaults to [`Scorer.score_deps`](/api/scorer#score_deps) for the attribute `"dep"` ignoring the labels `p` and `punct` and [`Scorer.score_spans`](/api/scorer/#score_spans) for the attribute `"sents"`. ~~Optional[Callable]~~                                                |
 
 ## DependencyParser.\_\_call\_\_ {#call tag="method"}
 
@@ -272,21 +273,6 @@ predicted scores.
 | `examples`  | The batch of examples. ~~Iterable[Example]~~                                |
 | `scores`    | Scores representing the model's predictions. ~~StateClass~~                 |
 | **RETURNS** | The loss and the gradient, i.e. `(loss, gradient)`. ~~Tuple[float, float]~~ |
-
-## DependencyParser.score {#score tag="method" new="3"}
-
-Score a batch of examples.
-
-> #### Example
->
-> ```python
-> scores = parser.score(examples)
-> ```
-
-| Name        | Description                                                                                                                                                              |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `examples`  | The examples to score. ~~Iterable[Example]~~                                                                                                                             |
-| **RETURNS** | The scores, produced by [`Scorer.score_spans`](/api/scorer#score_spans) and [`Scorer.score_deps`](/api/scorer#score_deps). ~~Dict[str, Union[float, Dict[str, float]]]~~ |
 
 ## DependencyParser.create_optimizer {#create_optimizer tag="method"}
 

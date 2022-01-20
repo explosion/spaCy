@@ -9,11 +9,10 @@ from .pipe import Pipe
 from ..training import Example
 from ..language import Language
 from ..errors import Errors, Warnings
-from ..util import ensure_path, to_disk, from_disk, SimpleFrozenList
+from ..util import ensure_path, to_disk, from_disk, SimpleFrozenList, registry
 from ..tokens import Doc, Span
 from ..matcher import Matcher, PhraseMatcher
 from ..scorer import get_ner_prf
-from ..training import validate_examples
 
 
 DEFAULT_ENT_ID_SEP = "||"
@@ -28,6 +27,7 @@ PatternType = Dict[str, Union[str, List[Dict[str, Any]]]]
         "validate": False,
         "overwrite_ents": False,
         "ent_id_sep": DEFAULT_ENT_ID_SEP,
+        "scorer": {"@scorers": "spacy.entity_ruler_scorer.v1"},
     },
     default_score_weights={
         "ents_f": 1.0,
@@ -43,6 +43,7 @@ def make_entity_ruler(
     validate: bool,
     overwrite_ents: bool,
     ent_id_sep: str,
+    scorer: Optional[Callable],
 ):
     return EntityRuler(
         nlp,
@@ -51,7 +52,17 @@ def make_entity_ruler(
         validate=validate,
         overwrite_ents=overwrite_ents,
         ent_id_sep=ent_id_sep,
+        scorer=scorer,
     )
+
+
+def entity_ruler_score(examples, **kwargs):
+    return get_ner_prf(examples)
+
+
+@registry.scorers("spacy.entity_ruler_scorer.v1")
+def make_entity_ruler_scorer():
+    return entity_ruler_score
 
 
 class EntityRuler(Pipe):
@@ -75,6 +86,7 @@ class EntityRuler(Pipe):
         overwrite_ents: bool = False,
         ent_id_sep: str = DEFAULT_ENT_ID_SEP,
         patterns: Optional[List[PatternType]] = None,
+        scorer: Optional[Callable] = entity_ruler_score,
     ) -> None:
         """Initialize the entity ruler. If patterns are supplied here, they
         need to be a list of dictionaries with a `"label"` and `"pattern"`
@@ -95,6 +107,8 @@ class EntityRuler(Pipe):
         overwrite_ents (bool): If existing entities are present, e.g. entities
             added by the model, overwrite them by matches if necessary.
         ent_id_sep (str): Separator used internally for entity IDs.
+        scorer (Optional[Callable]): The scoring method. Defaults to
+            spacy.scorer.get_ner_prf.
 
         DOCS: https://spacy.io/api/entityruler#init
         """
@@ -113,6 +127,7 @@ class EntityRuler(Pipe):
         self._ent_ids = defaultdict(tuple)  # type: ignore
         if patterns is not None:
             self.add_patterns(patterns)
+        self.scorer = scorer
 
     def __len__(self) -> int:
         """The number of all patterns added to the entity ruler."""
@@ -333,6 +348,46 @@ class EntityRuler(Pipe):
             self.nlp.vocab, attr=self.phrase_matcher_attr, validate=self._validate
         )
 
+    def remove(self, ent_id: str) -> None:
+        """Remove a pattern by its ent_id if a pattern with this ent_id was added before
+
+        ent_id (str): id of the pattern to be removed
+        RETURNS: None
+        DOCS: https://spacy.io/api/entityruler#remove
+        """
+        label_id_pairs = [
+            (label, eid) for (label, eid) in self._ent_ids.values() if eid == ent_id
+        ]
+        if not label_id_pairs:
+            raise ValueError(Errors.E1024.format(ent_id=ent_id))
+        created_labels = [
+            self._create_label(label, eid) for (label, eid) in label_id_pairs
+        ]
+        # remove the patterns from self.phrase_patterns
+        self.phrase_patterns = defaultdict(
+            list,
+            {
+                label: val
+                for (label, val) in self.phrase_patterns.items()
+                if label not in created_labels
+            },
+        )
+        # remove the patterns from self.token_pattern
+        self.token_patterns = defaultdict(
+            list,
+            {
+                label: val
+                for (label, val) in self.token_patterns.items()
+                if label not in created_labels
+            },
+        )
+        # remove the patterns from self.token_pattern
+        for label in created_labels:
+            if label in self.phrase_matcher:
+                self.phrase_matcher.remove(label)
+            else:
+                self.matcher.remove(label)
+
     def _require_patterns(self) -> None:
         """Raise a warning if this component has no patterns defined."""
         if len(self) == 0:
@@ -362,10 +417,6 @@ class EntityRuler(Pipe):
         if isinstance(ent_id, str):
             label = f"{label}{self.ent_id_sep}{ent_id}"
         return label
-
-    def score(self, examples, **kwargs):
-        validate_examples(examples, "EntityRuler.score")
-        return get_ner_prf(examples)
 
     def from_bytes(
         self, patterns_bytes: bytes, *, exclude: Iterable[str] = SimpleFrozenList()
@@ -420,10 +471,16 @@ class EntityRuler(Pipe):
         path = ensure_path(path)
         self.clear()
         depr_patterns_path = path.with_suffix(".jsonl")
-        if depr_patterns_path.is_file():
+        if path.suffix == ".jsonl":  # user provides a jsonl
+            if path.is_file:
+                patterns = srsly.read_jsonl(path)
+                self.add_patterns(patterns)
+            else:
+                raise ValueError(Errors.E1023.format(path=path))
+        elif depr_patterns_path.is_file():
             patterns = srsly.read_jsonl(depr_patterns_path)
             self.add_patterns(patterns)
-        else:
+        elif path.is_dir():  # path is a valid directory
             cfg = {}
             deserializers_patterns = {
                 "patterns": lambda p: self.add_patterns(
@@ -440,6 +497,8 @@ class EntityRuler(Pipe):
                 self.nlp.vocab, attr=self.phrase_matcher_attr
             )
             from_disk(path, deserializers_patterns, {})
+        else:  # path is not a valid directory or file
+            raise ValueError(Errors.E146.format(path=path))
         return self
 
     def to_disk(

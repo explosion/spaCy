@@ -370,6 +370,7 @@ def test_dependency_matcher_span_user_data(en_tokenizer):
             assert doc_t_i == span_t_i + offset
 
 
+@pytest.mark.issue(9263)
 def test_dependency_matcher_order_issue(en_tokenizer):
     # issue from #9263
     doc = en_tokenizer("I like text")
@@ -415,6 +416,7 @@ def test_dependency_matcher_order_issue(en_tokenizer):
     assert matches == []
 
 
+@pytest.mark.issue(9263)
 def test_dependency_matcher_remove(en_tokenizer):
     # issue from #9263
     doc = en_tokenizer("The red book")

@@ -1,6 +1,6 @@
 # cython: infer_types=True, profile=True, binding=True
 from collections import defaultdict
-from typing import Optional, Iterable
+from typing import Optional, Iterable, Callable
 from thinc.api import Model, Config
 
 from ._parser_internals.transition_system import TransitionSystem
@@ -10,6 +10,7 @@ from ._parser_internals.ner import BiluoPushDown
 from ..language import Language
 from ..scorer import get_ner_prf, PRFScore
 from ..training import validate_examples
+from ..util import registry
 
 
 default_model_config = """
@@ -41,6 +42,7 @@ DEFAULT_NER_MODEL = Config().from_str(default_model_config)["model"]
         "update_with_oracle_cut_size": 100,
         "model": DEFAULT_NER_MODEL,
         "incorrect_spans_key": None,
+        "scorer": {"@scorers": "spacy.ner_scorer.v1"},
     },
     default_score_weights={
         "ents_f": 1.0,
@@ -55,7 +57,8 @@ def make_ner(
     model: Model,
     moves: Optional[TransitionSystem],
     update_with_oracle_cut_size: int,
-    incorrect_spans_key: Optional[str] = None,
+    incorrect_spans_key: Optional[str],
+    scorer: Optional[Callable],
 ):
     """Create a transition-based EntityRecognizer component. The entity recognizer
     identifies non-overlapping labelled spans of tokens.
@@ -83,6 +86,7 @@ def make_ner(
     incorrect_spans_key (Optional[str]): Identifies spans that are known
         to be incorrect entity annotations. The incorrect entity annotations
         can be stored in the span group, under this key.
+    scorer (Optional[Callable]): The scoring method.
     """
     return EntityRecognizer(
         nlp.vocab,
@@ -95,6 +99,7 @@ def make_ner(
         beam_width=1,
         beam_density=0.0,
         beam_update_prob=0.0,
+        scorer=scorer,
     )
 
 
@@ -109,6 +114,7 @@ def make_ner(
         "beam_update_prob": 0.5,
         "beam_width": 32,
         "incorrect_spans_key": None,
+        "scorer": None,
     },
     default_score_weights={
         "ents_f": 1.0,
@@ -126,7 +132,8 @@ def make_beam_ner(
     beam_width: int,
     beam_density: float,
     beam_update_prob: float,
-    incorrect_spans_key: Optional[str] = None,
+    incorrect_spans_key: Optional[str],
+    scorer: Optional[Callable],
 ):
     """Create a transition-based EntityRecognizer component that uses beam-search.
     The entity recognizer identifies non-overlapping labelled spans of tokens.
@@ -162,6 +169,7 @@ def make_beam_ner(
         and are faster to compute.
     incorrect_spans_key (Optional[str]): Optional key into span groups of
         entities known to be non-entities.
+    scorer (Optional[Callable]): The scoring method.
     """
     return EntityRecognizer(
         nlp.vocab,
@@ -174,7 +182,17 @@ def make_beam_ner(
         beam_density=beam_density,
         beam_update_prob=beam_update_prob,
         incorrect_spans_key=incorrect_spans_key,
+        scorer=scorer,
     )
+
+
+def ner_score(examples, **kwargs):
+    return get_ner_prf(examples, **kwargs)
+
+
+@registry.scorers("spacy.ner_scorer.v1")
+def make_ner_scorer():
+    return ner_score
 
 
 class EntityRecognizer(Parser):
@@ -198,6 +216,7 @@ class EntityRecognizer(Parser):
         beam_update_prob=0.0,
         multitasks=tuple(),
         incorrect_spans_key=None,
+        scorer=ner_score,
     ):
         """Create an EntityRecognizer."""
         super().__init__(
@@ -213,6 +232,7 @@ class EntityRecognizer(Parser):
             beam_update_prob=beam_update_prob,
             multitasks=multitasks,
             incorrect_spans_key=incorrect_spans_key,
+            scorer=scorer,
         )
 
     def add_multitask_objective(self, mt_component):
@@ -238,17 +258,6 @@ class EntityRecognizer(Parser):
             if move[0] in ("B", "I", "L", "U")
         )
         return tuple(sorted(labels))
-
-    def score(self, examples, **kwargs):
-        """Score a batch of examples.
-
-        examples (Iterable[Example]): The examples to score.
-        RETURNS (Dict[str, Any]): The NER precision, recall and f-scores.
-
-        DOCS: https://spacy.io/api/entityrecognizer#score
-        """
-        validate_examples(examples, "EntityRecognizer.score")
-        return get_ner_prf(examples)
 
     def scored_ents(self, beams):
         """Return a dictionary of (start, end, label) tuples with corresponding scores

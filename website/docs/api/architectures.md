@@ -82,7 +82,7 @@ consisting of a CNN and a layer-normalized maxout activation function.
 | `width`              | The width of the input and output. These are required to be the same, so that residual connections can be used. Recommended values are `96`, `128` or `300`. ~~int~~                                                                                                          |
 | `depth`              | The number of convolutional layers to use. Recommended values are between `2` and `8`. ~~int~~                                                                                                                                                                                |
 | `embed_size`         | The number of rows in the hash embedding tables. This can be surprisingly small, due to the use of the hash embeddings. Recommended values are between `2000` and `10000`. ~~int~~                                                                                            |
-| `window_size`        | The number of tokens on either side to concatenate during the convolutions. The receptive field of the CNN will be `depth * (window_size * 2 + 1)`, so a 4-layer network with a window size of `2` will be sensitive to 17 words at a time. Recommended value is `1`. ~~int~~ |
+| `window_size`        | The number of tokens on either side to concatenate during the convolutions. The receptive field of the CNN will be `depth * (window_size * 2 + 1)`, so a 4-layer network with a window size of `2` will be sensitive to 20 words at a time. Recommended value is `1`. ~~int~~ |
 | `maxout_pieces`      | The number of pieces to use in the maxout non-linearity. If `1`, the [`Mish`](https://thinc.ai/docs/api-layers#mish) non-linearity is used instead. Recommended values are `1`-`3`. ~~int~~                                                                                   |
 | `subword_features`   | Whether to also embed subword features, specifically the prefix, suffix and word shape. This is recommended for alphabetic languages like English, but not if single-character tokens are used for a language such as Chinese. ~~bool~~                                       |
 | `pretrained_vectors` | Whether to also use static vectors. ~~bool~~                                                                                                                                                                                                                                  |
@@ -124,6 +124,14 @@ Instead of defining its own `Tok2Vec` instance, a model architecture like
 [Tagger](/api/architectures#tagger) can define a listener as its `tok2vec`
 argument that connects to the shared `tok2vec` component in the pipeline.
 
+Listeners work by caching the `Tok2Vec` output for a given batch of `Doc`s. This
+means that in order for a component to work with the listener, the batch of
+`Doc`s passed to the listener must be the same as the batch of `Doc`s passed to
+the `Tok2Vec`. As a result, any manipulation of the `Doc`s which would affect
+`Tok2Vec` output, such as to create special contexts or remove `Doc`s for which
+no prediction can be made, must happen inside the model, **after** the call to
+the `Tok2Vec` component.
+
 | Name        | Description                                                                                                                                                                                                                                                                                                                          |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `width`     | The width of the vectors produced by the "upstream" [`Tok2Vec`](/api/tok2vec) component. ~~int~~                                                                                                                                                                                                                                     |
@@ -150,7 +158,7 @@ be configured with the `attrs` argument. The suggested attributes are `NORM`,
 `PREFIX`, `SUFFIX` and `SHAPE`. This lets the model take into account some
 subword information, without construction a fully character-based
 representation. If pretrained vectors are available, they can be included in the
-representation as well, with the vectors table will be kept static (i.e. it's
+representation as well, with the vectors table kept static (i.e. it's
 not updated).
 
 | Name                     | Description                                                                                                                                                                                                                                                                                                                                                                                                                                        |
@@ -288,7 +296,7 @@ learned linear projection to control the dimensionality. Unknown tokens are
 mapped to a zero vector. See the documentation on
 [static vectors](/usage/embeddings-transformers#static-vectors) for details.
 
-| Name        |  Description                                                                                                                                                                                                            |
+| Name        | Description                                                                                                                                                                                                             |
 | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `nO`        | The output width of the layer, after the linear projection. ~~Optional[int]~~                                                                                                                                           |
 | `nM`        | The width of the static vectors. ~~Optional[int]~~                                                                                                                                                                      |
@@ -310,7 +318,7 @@ mapped to a zero vector. See the documentation on
 Extract arrays of input features from [`Doc`](/api/doc) objects. Expects a list
 of feature names to extract, which should refer to token attributes.
 
-| Name        |  Description                                                             |
+| Name        | Description                                                              |
 | ----------- | ------------------------------------------------------------------------ |
 | `columns`   | The token attributes to extract. ~~List[Union[int, str]]~~               |
 | **CREATES** | The created feature extraction layer. ~~Model[List[Doc], List[Ints2d]]~~ |

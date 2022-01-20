@@ -23,7 +23,7 @@ jobs:
   # defined in .flake8 and overwrites the selected codes.
   - job: "Validate"
     pool:
-      vmImage: "ubuntu-18.04"
+      vmImage: "ubuntu-latest"
     steps:
       - task: UsePythonVersion@0
         inputs:
@@ -39,49 +39,49 @@ jobs:
       matrix:
         # We're only running one platform per Python version to speed up builds
         Python36Linux:
-          imageName: "ubuntu-18.04"
+          imageName: "ubuntu-latest"
           python.version: "3.6"
         #        Python36Windows:
-        #          imageName: "windows-2019"
+        #          imageName: "windows-latest"
         #          python.version: "3.6"
         #        Python36Mac:
-        #          imageName: "macos-10.14"
+        #          imageName: "macos-latest"
         #          python.version: "3.6"
         #        Python37Linux:
-        #          imageName: "ubuntu-18.04"
+        #          imageName: "ubuntu-latest"
         #          python.version: "3.7"
         Python37Windows:
-          imageName: "windows-2019"
+          imageName: "windows-latest"
           python.version: "3.7"
         #        Python37Mac:
-        #          imageName: "macos-10.14"
+        #          imageName: "macos-latest"
         #          python.version: "3.7"
         #        Python38Linux:
-        #          imageName: "ubuntu-18.04"
+        #          imageName: "ubuntu-latest"
         #          python.version: "3.8"
         #        Python38Windows:
-        #          imageName: "windows-2019"
+        #          imageName: "windows-latest"
         #          python.version: "3.8"
         Python38Mac:
-          imageName: "macos-10.14"
+          imageName: "macos-latest"
           python.version: "3.8"
         Python39Linux:
-          imageName: "ubuntu-18.04"
+          imageName: "ubuntu-latest"
           python.version: "3.9"
         #        Python39Windows:
-        #          imageName: "windows-2019"
+        #          imageName: "windows-latest"
         #          python.version: "3.9"
         #        Python39Mac:
-        #          imageName: "macos-10.14"
+        #          imageName: "macos-latest"
         #          python.version: "3.9"
         Python310Linux:
-          imageName: "ubuntu-20.04"
+          imageName: "ubuntu-latest"
           python.version: "3.10"
         Python310Windows:
-          imageName: "windows-2019"
+          imageName: "windows-latest"
           python.version: "3.10"
         Python310Mac:
-          imageName: "macos-10.15"
+          imageName: "macos-latest"
           python.version: "3.10"
       maxParallel: 4
     pool:

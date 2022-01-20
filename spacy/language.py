@@ -115,7 +115,7 @@ class Language:
 
     Defaults (class): Settings, data and factory methods for creating the `nlp`
         object and processing pipeline.
-    lang (str): Two-letter language ID, i.e. ISO code.
+    lang (str): IETF language code, such as 'en'.
 
     DOCS: https://spacy.io/api/language
     """
@@ -228,6 +228,7 @@ class Language:
             "vectors": len(self.vocab.vectors),
             "keys": self.vocab.vectors.n_keys,
             "name": self.vocab.vectors.name,
+            "mode": self.vocab.vectors.mode,
         }
         self._meta["labels"] = dict(self.pipe_labels)
         # TODO: Adding this back to prevent breaking people's code etc., but
@@ -700,7 +701,8 @@ class Language:
         if (
             self.vocab.vectors.shape != source.vocab.vectors.shape
             or self.vocab.vectors.key2row != source.vocab.vectors.key2row
-            or self.vocab.vectors.to_bytes() != source.vocab.vectors.to_bytes()
+            or self.vocab.vectors.to_bytes(exclude=["strings"])
+            != source.vocab.vectors.to_bytes(exclude=["strings"])
         ):
             warnings.warn(Warnings.W113.format(name=source_name))
         if source_name not in source.component_names:
@@ -978,7 +980,7 @@ class Language:
 
     def __call__(
         self,
-        text: str,
+        text: Union[str, Doc],
         *,
         disable: Iterable[str] = SimpleFrozenList(),
         component_cfg: Optional[Dict[str, Dict[str, Any]]] = None,
@@ -987,7 +989,9 @@ class Language:
         and can contain arbitrary whitespace. Alignment into the original string
         is preserved.
 
-        text (str): The text to be processed.
+        text (Union[str, Doc]): If `str`, the text to be processed. If `Doc`,
+            the doc will be passed directly to the pipeline, skipping
+            `Language.make_doc`.
         disable (List[str]): Names of the pipeline components to disable.
         component_cfg (Dict[str, dict]): An optional dictionary with extra
             keyword arguments for specific components.
@@ -995,7 +999,7 @@ class Language:
 
         DOCS: https://spacy.io/api/language#call
         """
-        doc = self.make_doc(text)
+        doc = self._ensure_doc(text)
         if component_cfg is None:
             component_cfg = {}
         for name, proc in self.pipeline:
@@ -1079,6 +1083,20 @@ class Language:
                 Errors.E088.format(length=len(text), max_length=self.max_length)
             )
         return self.tokenizer(text)
+
+    def _ensure_doc(self, doc_like: Union[str, Doc]) -> Doc:
+        """Create a Doc if need be, or raise an error if the input is not a Doc or a string."""
+        if isinstance(doc_like, Doc):
+            return doc_like
+        if isinstance(doc_like, str):
+            return self.make_doc(doc_like)
+        raise ValueError(Errors.E866.format(type=type(doc_like)))
+
+    def _ensure_doc_with_context(self, doc_like: Union[str, Doc], context: Any) -> Doc:
+        """Create a Doc if need be and add as_tuples context, or raise an error if the input is not a Doc or a string."""
+        doc = self._ensure_doc(doc_like)
+        doc._context = context
+        return doc
 
     def update(
         self,
@@ -1267,9 +1285,9 @@ class Language:
             )
         except IOError:
             raise IOError(Errors.E884.format(vectors=I["vectors"]))
-        if self.vocab.vectors.data.shape[1] >= 1:
+        if self.vocab.vectors.shape[1] >= 1:
             ops = get_current_ops()
-            self.vocab.vectors.data = ops.asarray(self.vocab.vectors.data)
+            self.vocab.vectors.to_ops(ops)
         if hasattr(self.tokenizer, "initialize"):
             tok_settings = validate_init_settings(
                 self.tokenizer.initialize,  # type: ignore[union-attr]
@@ -1314,8 +1332,8 @@ class Language:
         DOCS: https://spacy.io/api/language#resume_training
         """
         ops = get_current_ops()
-        if self.vocab.vectors.data.shape[1] >= 1:
-            self.vocab.vectors.data = ops.asarray(self.vocab.vectors.data)
+        if self.vocab.vectors.shape[1] >= 1:
+            self.vocab.vectors.to_ops(ops)
         for name, proc in self.pipeline:
             if hasattr(proc, "_rehearsal_model"):
                 proc._rehearsal_model = deepcopy(proc.model)  # type: ignore[attr-defined]
@@ -1386,20 +1404,13 @@ class Language:
         for eg in examples:
             self.make_doc(eg.reference.text)
         # apply all pipeline components
-        for name, pipe in self.pipeline:
-            kwargs = component_cfg.get(name, {})
-            kwargs.setdefault("batch_size", batch_size)
-            for doc, eg in zip(
-                _pipe(
-                    (eg.predicted for eg in examples),
-                    proc=pipe,
-                    name=name,
-                    default_error_handler=self.default_error_handler,
-                    kwargs=kwargs,
-                ),
-                examples,
-            ):
-                eg.predicted = doc
+        docs = self.pipe(
+            (eg.predicted for eg in examples),
+            batch_size=batch_size,
+            component_cfg=component_cfg,
+        )
+        for eg, doc in zip(examples, docs):
+            eg.predicted = doc
         end_time = timer()
         results = scorer.score(examples)
         n_words = sum(len(eg.predicted) for eg in examples)
@@ -1450,7 +1461,7 @@ class Language:
     @overload
     def pipe(
         self,
-        texts: Iterable[str],
+        texts: Iterable[Union[str, Doc]],
         *,
         as_tuples: Literal[False] = ...,
         batch_size: Optional[int] = ...,
@@ -1463,7 +1474,7 @@ class Language:
     @overload
     def pipe(  # noqa: F811
         self,
-        texts: Iterable[Tuple[str, _AnyContext]],
+        texts: Iterable[Tuple[Union[str, Doc], _AnyContext]],
         *,
         as_tuples: Literal[True] = ...,
         batch_size: Optional[int] = ...,
@@ -1475,7 +1486,9 @@ class Language:
 
     def pipe(  # noqa: F811
         self,
-        texts: Union[Iterable[str], Iterable[Tuple[str, _AnyContext]]],
+        texts: Union[
+            Iterable[Union[str, Doc]], Iterable[Tuple[Union[str, Doc], _AnyContext]]
+        ],
         *,
         as_tuples: bool = False,
         batch_size: Optional[int] = None,
@@ -1485,7 +1498,8 @@ class Language:
     ) -> Union[Iterator[Doc], Iterator[Tuple[Doc, _AnyContext]]]:
         """Process texts as a stream, and yield `Doc` objects in order.
 
-        texts (Iterable[str]): A sequence of texts to process.
+        texts (Iterable[Union[str, Doc]]): A sequence of texts or docs to
+            process.
         as_tuples (bool): If set to True, inputs should be a sequence of
             (text, context) tuples. Output will then be a sequence of
             (doc, context) tuples. Defaults to False.
@@ -1500,23 +1514,24 @@ class Language:
         """
         # Handle texts with context as tuples
         if as_tuples:
-            texts = cast(Iterable[Tuple[str, _AnyContext]], texts)
-            text_context1, text_context2 = itertools.tee(texts)
-            texts = (tc[0] for tc in text_context1)
-            contexts = (tc[1] for tc in text_context2)
+            texts = cast(Iterable[Tuple[Union[str, Doc], _AnyContext]], texts)
+            docs_with_contexts = (
+                self._ensure_doc_with_context(text, context) for text, context in texts
+            )
             docs = self.pipe(
-                texts,
+                docs_with_contexts,
                 batch_size=batch_size,
                 disable=disable,
                 n_process=n_process,
                 component_cfg=component_cfg,
             )
-            for doc, context in zip(docs, contexts):
+            for doc in docs:
+                context = doc._context
+                doc._context = None
                 yield (doc, context)
             return
 
-        # At this point, we know that we're dealing with an iterable of plain texts
-        texts = cast(Iterable[str], texts)
+        texts = cast(Iterable[Union[str, Doc]], texts)
 
         # Set argument defaults
         if n_process == -1:
@@ -1551,7 +1566,7 @@ class Language:
             docs = self._multiprocessing_pipe(texts, pipes, n_process, batch_size)
         else:
             # if n_process == 1, no processes are forked.
-            docs = (self.make_doc(text) for text in texts)
+            docs = (self._ensure_doc(text) for text in texts)
             for pipe in pipes:
                 docs = pipe(docs)
         for doc in docs:
@@ -1570,7 +1585,7 @@ class Language:
 
     def _multiprocessing_pipe(
         self,
-        texts: Iterable[str],
+        texts: Iterable[Union[str, Doc]],
         pipes: Iterable[Callable[..., Iterator[Doc]]],
         n_process: int,
         batch_size: int,
@@ -1596,7 +1611,7 @@ class Language:
         procs = [
             mp.Process(
                 target=_apply_pipes,
-                args=(self.make_doc, pipes, rch, sch, Underscore.get_state()),
+                args=(self._ensure_doc, pipes, rch, sch, Underscore.get_state()),
             )
             for rch, sch in zip(texts_q, bytedocs_send_ch)
         ]
@@ -1609,11 +1624,12 @@ class Language:
             recv.recv() for recv in cycle(bytedocs_recv_ch)
         )
         try:
-            for i, (_, (byte_doc, byte_error)) in enumerate(
+            for i, (_, (byte_doc, byte_context, byte_error)) in enumerate(
                 zip(raw_texts, byte_tuples), 1
             ):
                 if byte_doc is not None:
                     doc = Doc(self.vocab).from_bytes(byte_doc)
+                    doc._context = byte_context
                     yield doc
                 elif byte_error is not None:
                     error = srsly.msgpack_loads(byte_error)
@@ -1800,7 +1816,9 @@ class Language:
                         )
                     if model not in source_nlp_vectors_hashes:
                         source_nlp_vectors_hashes[model] = hash(
-                            source_nlps[model].vocab.vectors.to_bytes()
+                            source_nlps[model].vocab.vectors.to_bytes(
+                                exclude=["strings"]
+                            )
                         )
                     if "_sourced_vectors_hashes" not in nlp.meta:
                         nlp.meta["_sourced_vectors_hashes"] = {}
@@ -2138,7 +2156,7 @@ def _copy_examples(examples: Iterable[Example]) -> List[Example]:
 
 
 def _apply_pipes(
-    make_doc: Callable[[str], Doc],
+    ensure_doc: Callable[[Union[str, Doc]], Doc],
     pipes: Iterable[Callable[..., Iterator[Doc]]],
     receiver,
     sender,
@@ -2146,7 +2164,8 @@ def _apply_pipes(
 ) -> None:
     """Worker for Language.pipe
 
-    make_doc (Callable[[str,] Doc]): Function to create Doc from text.
+    ensure_doc (Callable[[Union[str, Doc]], Doc]): Function to create Doc from text
+        or raise an error if the input is neither a Doc nor a string.
     pipes (Iterable[Pipe]): The components to apply.
     receiver (multiprocessing.Connection): Pipe to receive text. Usually
         created by `multiprocessing.Pipe()`
@@ -2159,16 +2178,16 @@ def _apply_pipes(
     while True:
         try:
             texts = receiver.get()
-            docs = (make_doc(text) for text in texts)
+            docs = (ensure_doc(text) for text in texts)
             for pipe in pipes:
                 docs = pipe(docs)  # type: ignore[arg-type, assignment]
             # Connection does not accept unpickable objects, so send list.
-            byte_docs = [(doc.to_bytes(), None) for doc in docs]
-            padding = [(None, None)] * (len(texts) - len(byte_docs))
+            byte_docs = [(doc.to_bytes(), doc._context, None) for doc in docs]
+            padding = [(None, None, None)] * (len(texts) - len(byte_docs))
             sender.send(byte_docs + padding)  # type: ignore[operator]
         except Exception:
-            error_msg = [(None, srsly.msgpack_dumps(traceback.format_exc()))]
-            padding = [(None, None)] * (len(texts) - 1)
+            error_msg = [(None, None, srsly.msgpack_dumps(traceback.format_exc()))]
+            padding = [(None, None, None)] * (len(texts) - 1)
             sender.send(error_msg + padding)
 
 

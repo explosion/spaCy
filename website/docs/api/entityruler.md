@@ -61,6 +61,7 @@ how the component should be configured. You can override its settings via the
 | `validate`            | Whether patterns should be validated (passed to the `Matcher` and `PhraseMatcher`). Defaults to `False`. ~~bool~~                                                                             |
 | `overwrite_ents`      | If existing entities are present, e.g. entities added by the model, overwrite them by matches if necessary. Defaults to `False`. ~~bool~~                                                     |
 | `ent_id_sep`          | Separator used internally for entity IDs. Defaults to `"\|\|"`. ~~str~~                                                                                                                       |
+| `scorer`              | The scoring method. Defaults to [`spacy.scorer.get_ner_prf`](/api/scorer#get_ner_prf). ~~Optional[Callable]~~                                                                                 |
 
 ```python
 %%GITHUB_SPACY/spacy/pipeline/entityruler.py
@@ -98,9 +99,9 @@ be a token pattern (list) or a phrase pattern (string). For example:
 ## EntityRuler.initialize {#initialize tag="method" new="3"}
 
 Initialize the component with data and used before training to load in rules
-from a file. This method is typically called by
-[`Language.initialize`](/api/language#initialize) and lets you customize
-arguments it receives via the
+from a [pattern file](/usage/rule-based-matching/#entityruler-files). This method
+is typically called by [`Language.initialize`](/api/language#initialize) and
+lets you customize arguments it receives via the
 [`[initialize.components]`](/api/data-formats#config-initialize) block in the
 config.
 
@@ -208,6 +209,24 @@ of dicts) or a phrase pattern (string). For more details, see the usage guide on
 | Name       | Description                                                      |
 | ---------- | ---------------------------------------------------------------- |
 | `patterns` | The patterns to add. ~~List[Dict[str, Union[str, List[dict]]]]~~ |
+
+
+## EntityRuler.remove {#remove tag="method" new="3.2.1"}
+
+Remove a pattern by its ID from the entity ruler. A `ValueError` is raised if the ID does not exist.
+
+> #### Example
+>
+> ```python
+> patterns = [{"label": "ORG", "pattern": "Apple", "id": "apple"}]
+> ruler = nlp.add_pipe("entity_ruler")
+> ruler.add_patterns(patterns)
+> ruler.remove("apple")
+> ```
+
+| Name       | Description                                                      |
+| ---------- | ---------------------------------------------------------------- |
+| `id`       | The ID of the pattern rule. ~~str~~ |
 
 ## EntityRuler.to_disk {#to_disk tag="method"}
 

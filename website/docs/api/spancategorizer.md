@@ -59,6 +59,7 @@ architectures and their arguments and hyperparameters.
 | `spans_key`    | Key of the [`Doc.spans`](/api/doc#spans) dict to save the spans under. During initialization and training, the component will look for spans on the reference document under the same key. Defaults to `"spans"`. ~~str~~                                                                               |
 | `threshold`    | Minimum probability to consider a prediction positive. Spans with a positive prediction will be saved on the Doc. Defaults to `0.5`. ~~float~~                                                                                                                                                          |
 | `max_positive` | Maximum number of labels to consider positive per span. Defaults to `None`, indicating no limit. ~~Optional[int]~~                                                                                                                                                                                      |
+| `scorer`       | The scoring method. Defaults to [`Scorer.score_spans`](/api/scorer#score_spans) for `Doc.spans[spans_key]` with overlapping spans allowed. ~~Optional[Callable]~~                                                                                                                                       |
 
 ```python
 %%GITHUB_SPACY/spacy/pipeline/spancat.py
@@ -256,22 +257,6 @@ predicted scores.
 | `examples`     | The batch of examples. ~~Iterable[Example]~~                                |
 | `spans_scores` | Scores representing the model's predictions. ~~Tuple[Ragged, Floats2d]~~    |
 | **RETURNS**    | The loss and the gradient, i.e. `(loss, gradient)`. ~~Tuple[float, float]~~ |
-
-## SpanCategorizer.score {#score tag="method"}
-
-Score a batch of examples.
-
-> #### Example
->
-> ```python
-> scores = spancat.score(examples)
-> ```
-
-| Name           | Description                                                                                                            |
-| -------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `examples`     | The examples to score. ~~Iterable[Example]~~                                                                           |
-| _keyword-only_ |                                                                                                                        |
-| **RETURNS**    | The scores, produced by [`Scorer.score_spans`](/api/scorer#score_spans). ~~Dict[str, Union[float, Dict[str, float]]]~~ |
 
 ## SpanCategorizer.create_optimizer {#create_optimizer tag="method"}
 

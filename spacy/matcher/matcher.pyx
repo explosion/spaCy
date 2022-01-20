@@ -18,7 +18,7 @@ from ..tokens.doc cimport Doc, get_token_attr_for_matcher
 from ..tokens.span cimport Span
 from ..tokens.token cimport Token
 from ..tokens.morphanalysis cimport MorphAnalysis
-from ..attrs cimport ID, attr_id_t, NULL_ATTR, ORTH, POS, TAG, DEP, LEMMA, MORPH
+from ..attrs cimport ID, attr_id_t, NULL_ATTR, ORTH, POS, TAG, DEP, LEMMA, MORPH, ENT_IOB
 
 from ..schemas import validate_token_pattern
 from ..errors import Errors, MatchPatternError, Warnings
@@ -312,7 +312,7 @@ cdef class Matcher:
         return final_results
 
     def _normalize_key(self, key):
-        if isinstance(key, basestring):
+        if isinstance(key, str):
             return self.vocab.strings.add(key)
         else:
             return key
@@ -360,7 +360,7 @@ cdef find_matches(TokenPatternC** patterns, int n, object doclike, int length, e
     for i, token in enumerate(doclike):
         for name, index in extensions.items():
             value = token._.get(name)
-            if isinstance(value, basestring):
+            if isinstance(value, str):
                 value = token.vocab.strings[value]
             extra_attr_values[i * nr_extra_attr + index] = value
     # Main loop
@@ -786,7 +786,7 @@ def _preprocess_pattern(token_specs, vocab, extensions_table, extra_predicates):
 def _get_attr_values(spec, string_store):
     attr_values = []
     for attr, value in spec.items():
-        if isinstance(attr, basestring):
+        if isinstance(attr, str):
             attr = attr.upper()
             if attr == '_':
                 continue
@@ -797,8 +797,11 @@ def _get_attr_values(spec, string_store):
             if attr == "IS_SENT_START":
                 attr = "SENT_START"
             attr = IDS.get(attr)
-        if isinstance(value, basestring):
-            value = string_store.add(value)
+        if isinstance(value, str):
+            if attr == ENT_IOB and value in Token.iob_strings():
+                value = Token.iob_strings().index(value)
+            else:
+                value = string_store.add(value)
         elif isinstance(value, bool):
             value = int(value)
         elif isinstance(value, int):
@@ -938,7 +941,7 @@ def _get_extra_predicates(spec, extra_predicates, vocab):
     seen_predicates = {pred.key: pred.i for pred in extra_predicates}
     output = []
     for attr, value in spec.items():
-        if isinstance(attr, basestring):
+        if isinstance(attr, str):
             if attr == "_":
                 output.extend(
                     _get_extension_extra_predicates(
@@ -995,7 +998,7 @@ def _get_operators(spec):
               "?": (ZERO_ONE,), "1": (ONE,), "!": (ZERO,)}
     # Fix casing
     spec = {key.upper(): values for key, values in spec.items()
-            if isinstance(key, basestring)}
+            if isinstance(key, str)}
     if "OP" not in spec:
         return (ONE,)
     elif spec["OP"] in lookup:
@@ -1013,7 +1016,7 @@ def _get_extensions(spec, string_store, name2index):
         if isinstance(value, dict):
             # Handle predicates (e.g. "IN", in the extra_predicates, not here.
             continue
-        if isinstance(value, basestring):
+        if isinstance(value, str):
             value = string_store.add(value)
         if name not in name2index:
             name2index[name] = len(name2index)

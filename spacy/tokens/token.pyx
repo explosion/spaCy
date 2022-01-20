@@ -20,6 +20,7 @@ from .doc cimport set_children_from_heads
 
 from .. import parts_of_speech
 from ..errors import Errors, Warnings
+from ..attrs import IOB_STRINGS
 from .underscore import Underscore, get_ext_args
 
 
@@ -209,8 +210,10 @@ cdef class Token:
             return 0.0
         vector = self.vector
         xp = get_array_module(vector)
-        return (xp.dot(vector, other.vector) / (self.vector_norm * other.vector_norm))
-
+        result = xp.dot(vector, other.vector) / (self.vector_norm * other.vector_norm)
+        # ensure we get a scalar back (numpy does this automatically but cupy doesn't)
+        return result.item()
+    
     def has_morph(self):
         """Check whether the token has annotated morph information.
         Return False when the morph annotation is unset/missing.
@@ -267,7 +270,7 @@ cdef class Token:
         """RETURNS (str): The text content of the span (with trailing
             whitespace).
         """
-        cdef unicode orth = self.vocab.strings[self.c.lex.orth]
+        cdef str orth = self.vocab.strings[self.c.lex.orth]
         if self.c.spacy:
             return orth + " "
         else:
@@ -743,7 +746,7 @@ cdef class Token:
 
     @classmethod
     def iob_strings(cls):
-        return ("", "I", "O", "B")
+        return IOB_STRINGS
 
     @property
     def ent_iob_(self):
@@ -820,7 +823,7 @@ cdef class Token:
         def __get__(self):
             return self.vocab.strings[self.norm]
 
-        def __set__(self, unicode norm_):
+        def __set__(self, str norm_):
             self.c.norm = self.vocab.strings.add(norm_)
 
     @property
@@ -858,7 +861,7 @@ cdef class Token:
         def __get__(self):
             return self.vocab.strings[self.c.lemma]
 
-        def __set__(self, unicode lemma_):
+        def __set__(self, str lemma_):
             self.c.lemma = self.vocab.strings.add(lemma_)
 
     property pos_:
@@ -892,7 +895,7 @@ cdef class Token:
         def __get__(self):
             return self.vocab.strings[self.c.dep]
 
-        def __set__(self, unicode label):
+        def __set__(self, str label):
             self.c.dep = self.vocab.strings.add(label)
 
     @property

@@ -1,12 +1,15 @@
-import pytest
 import numpy
-from numpy.testing import assert_allclose, assert_equal
-from thinc.api import get_current_ops
-from spacy.vocab import Vocab
-from spacy.vectors import Vectors
-from spacy.tokenizer import Tokenizer
+import pytest
+from numpy.testing import assert_allclose, assert_almost_equal, assert_equal
+from thinc.api import NumpyOps, get_current_ops
+
+from spacy.lang.en import English
 from spacy.strings import hash_string  # type: ignore
+from spacy.tokenizer import Tokenizer
 from spacy.tokens import Doc
+from spacy.training.initialize import convert_vectors
+from spacy.vectors import Vectors
+from spacy.vocab import Vocab
 
 from ..util import add_vecs_to_vocab, get_cosine, make_tempdir
 
@@ -27,22 +30,6 @@ def vectors():
         ("juice", OPS.asarray([5, 5, 10])),
         ("pie", OPS.asarray([7, 6.3, 8.9])),
     ]
-
-
-@pytest.fixture
-def ngrams_vectors():
-    return [
-        ("apple", OPS.asarray([1, 2, 3])),
-        ("app", OPS.asarray([-0.1, -0.2, -0.3])),
-        ("ppl", OPS.asarray([-0.2, -0.3, -0.4])),
-        ("pl", OPS.asarray([0.7, 0.8, 0.9])),
-    ]
-
-
-@pytest.fixture()
-def ngrams_vocab(en_vocab, ngrams_vectors):
-    add_vecs_to_vocab(en_vocab, ngrams_vectors)
-    return en_vocab
 
 
 @pytest.fixture
@@ -77,6 +64,79 @@ def vocab(en_vocab, vectors):
 @pytest.fixture()
 def tokenizer_v(vocab):
     return Tokenizer(vocab, {}, None, None, None)
+
+
+@pytest.mark.issue(1518)
+def test_issue1518():
+    """Test vectors.resize() works."""
+    vectors = Vectors(shape=(10, 10))
+    vectors.add("hello", row=2)
+    vectors.resize((5, 9))
+
+
+@pytest.mark.issue(1539)
+def test_issue1539():
+    """Ensure vectors.resize() doesn't try to modify dictionary during iteration."""
+    v = Vectors(shape=(10, 10), keys=[5, 3, 98, 100])
+    v.resize((100, 100))
+
+
+@pytest.mark.issue(1807)
+def test_issue1807():
+    """Test vocab.set_vector also adds the word to the vocab."""
+    vocab = Vocab(vectors_name="test_issue1807")
+    assert "hello" not in vocab
+    vocab.set_vector("hello", numpy.ones((50,), dtype="f"))
+    assert "hello" in vocab
+
+
+@pytest.mark.issue(2871)
+def test_issue2871():
+    """Test that vectors recover the correct key for spaCy reserved words."""
+    words = ["dog", "cat", "SUFFIX"]
+    vocab = Vocab(vectors_name="test_issue2871")
+    vocab.vectors.resize(shape=(3, 10))
+    vector_data = numpy.zeros((3, 10), dtype="f")
+    for word in words:
+        _ = vocab[word]  # noqa: F841
+        vocab.set_vector(word, vector_data[0])
+    vocab.vectors.name = "dummy_vectors"
+    assert vocab["dog"].rank == 0
+    assert vocab["cat"].rank == 1
+    assert vocab["SUFFIX"].rank == 2
+    assert vocab.vectors.find(key="dog") == 0
+    assert vocab.vectors.find(key="cat") == 1
+    assert vocab.vectors.find(key="SUFFIX") == 2
+
+
+@pytest.mark.issue(3412)
+def test_issue3412():
+    data = numpy.asarray([[0, 0, 0], [1, 2, 3], [9, 8, 7]], dtype="f")
+    vectors = Vectors(data=data, keys=["A", "B", "C"])
+    keys, best_rows, scores = vectors.most_similar(
+        numpy.asarray([[9, 8, 7], [0, 0, 0]], dtype="f")
+    )
+    assert best_rows[0] == 2
+
+
+@pytest.mark.issue(4725)
+def test_issue4725_2():
+    if isinstance(get_current_ops, NumpyOps):
+        # ensures that this runs correctly and doesn't hang or crash because of the global vectors
+        # if it does crash, it's usually because of calling 'spawn' for multiprocessing (e.g. on Windows),
+        # or because of issues with pickling the NER (cf test_issue4725_1)
+        vocab = Vocab(vectors_name="test_vocab_add_vector")
+        data = numpy.ndarray((5, 3), dtype="f")
+        data[0] = 1.0
+        data[1] = 2.0
+        vocab.set_vector("cat", data[0])
+        vocab.set_vector("dog", data[1])
+        nlp = English(vocab=vocab)
+        nlp.add_pipe("ner")
+        nlp.initialize()
+        docs = ["Kurt is in London."] * 10
+        for _ in nlp.pipe(docs, batch_size=2, n_process=2):
+            pass
 
 
 def test_init_vectors_with_resize_shape(strings, resize_data):
@@ -125,6 +185,7 @@ def test_init_vectors_with_data(strings, data):
 def test_init_vectors_with_shape(strings):
     v = Vectors(shape=(len(strings), 3))
     assert v.shape == (len(strings), 3)
+    assert v.is_full is False
 
 
 def test_get_vector(strings, data):
@@ -178,30 +239,6 @@ def test_vectors_token_vector(tokenizer_v, vectors, text):
     assert all([a == b for a, b in zip(vectors[0][1], doc[0].vector)])
     assert vectors[1][0] == doc[2].text
     assert all([a == b for a, b in zip(vectors[1][1], doc[2].vector)])
-
-
-@pytest.mark.parametrize("text", ["apple"])
-def test_vectors__ngrams_word(ngrams_vocab, ngrams_vectors, text):
-    assert list(ngrams_vocab.get_vector(text)) == list(ngrams_vectors[0][1])
-
-
-@pytest.mark.parametrize("text", ["applpie"])
-def test_vectors__ngrams_subword(ngrams_vocab, ngrams_vectors, text):
-    truth = list(ngrams_vocab.get_vector(text, 1, 6))
-    test = list(
-        [
-            (
-                ngrams_vectors[1][1][i]
-                + ngrams_vectors[2][1][i]
-                + ngrams_vectors[3][1][i]
-            )
-            / 3
-            for i in range(len(ngrams_vectors[1][1]))
-        ]
-    )
-    eps = [abs(truth[i] - test[i]) for i in range(len(truth))]
-    for i in eps:
-        assert i < 1e-6
 
 
 @pytest.mark.parametrize("text", ["apple", "orange"])
@@ -379,3 +416,178 @@ def test_vector_is_oov():
     assert vocab["cat"].is_oov is False
     assert vocab["dog"].is_oov is False
     assert vocab["hamster"].is_oov is True
+
+
+def test_init_vectors_unset():
+    v = Vectors(shape=(10, 10))
+    assert v.is_full is False
+    assert v.shape == (10, 10)
+
+    with pytest.raises(ValueError):
+        v = Vectors(shape=(10, 10), mode="floret")
+
+    v = Vectors(data=OPS.xp.zeros((10, 10)), mode="floret", hash_count=1)
+    assert v.is_full is True
+
+
+def test_vectors_clear():
+    data = OPS.asarray([[4, 2, 2, 2], [4, 2, 2, 2], [1, 1, 1, 1]], dtype="f")
+    v = Vectors(data=data, keys=["A", "B", "C"])
+    assert v.is_full is True
+    assert hash_string("A") in v
+    v.clear()
+    # no keys
+    assert v.key2row == {}
+    assert list(v) == []
+    assert v.is_full is False
+    assert "A" not in v
+    with pytest.raises(KeyError):
+        v["A"]
+
+
+def test_vectors_get_batch():
+    data = OPS.asarray([[4, 2, 2, 2], [4, 2, 2, 2], [1, 1, 1, 1]], dtype="f")
+    v = Vectors(data=data, keys=["A", "B", "C"])
+    # check with mixed int/str keys
+    words = ["C", "B", "A", v.strings["B"]]
+    rows = v.find(keys=words)
+    vecs = OPS.as_contig(v.data[rows])
+    assert_equal(OPS.to_numpy(vecs), OPS.to_numpy(v.get_batch(words)))
+
+
+@pytest.fixture()
+def floret_vectors_hashvec_str():
+    """The full hashvec table from floret with the settings:
+    bucket 10, dim 10, minn 2, maxn 3, hash count 2, hash seed 2166136261,
+    bow <, eow >"""
+    return """10 10 2 3 2 2166136261 < >
+0 -2.2611 3.9302 2.6676 -11.233 0.093715 -10.52 -9.6463 -0.11853 2.101 -0.10145
+1 -3.12 -1.7981 10.7 -6.171 4.4527 10.967 9.073 6.2056 -6.1199 -2.0402
+2 9.5689 5.6721 -8.4832 -1.2249 2.1871 -3.0264 -2.391 -5.3308 -3.2847 -4.0382
+3 3.6268 4.2759 -1.7007 1.5002 5.5266 1.8716 -12.063 0.26314 2.7645 2.4929
+4 -11.683 -7.7068 2.1102 2.214 7.2202 0.69799 3.2173 -5.382 -2.0838 5.0314
+5 -4.3024 8.0241 2.0714 -1.0174 -0.28369 1.7622 7.8797 -1.7795 6.7541 5.6703
+6 8.3574 -5.225 8.6529 8.5605 -8.9465 3.767 -5.4636 -1.4635 -0.98947 -0.58025
+7 -10.01 3.3894 -4.4487 1.1669 -11.904 6.5158 4.3681 0.79913 -6.9131 -8.687
+8 -5.4576 7.1019 -8.8259 1.7189 4.955 -8.9157 -3.8905 -0.60086 -2.1233 5.892
+9 8.0678 -4.4142 3.6236 4.5889 -2.7611 2.4455 0.67096 -4.2822 2.0875 4.6274
+"""
+
+
+@pytest.fixture()
+def floret_vectors_vec_str():
+    """The top 10 rows from floret with the settings above, to verify
+    that the spacy floret vectors are equivalent to the fasttext static
+    vectors."""
+    return """10 10
+, -5.7814 2.6918 0.57029 -3.6985 -2.7079 1.4406 1.0084 1.7463 -3.8625 -3.0565
+. 3.8016 -1.759 0.59118 3.3044 -0.72975 0.45221 -2.1412 -3.8933 -2.1238 -0.47409
+der 0.08224 2.6601 -1.173 1.1549 -0.42821 -0.097268 -2.5589 -1.609 -0.16968 0.84687
+die -2.8781 0.082576 1.9286 -0.33279 0.79488 3.36 3.5609 -0.64328 -2.4152 0.17266
+und 2.1558 1.8606 -1.382 0.45424 -0.65889 1.2706 0.5929 -2.0592 -2.6949 -1.6015
+" -1.1242 1.4588 -1.6263 1.0382 -2.7609 -0.99794 -0.83478 -1.5711 -1.2137 1.0239
+in -0.87635 2.0958 4.0018 -2.2473 -1.2429 2.3474 1.8846 0.46521 -0.506 -0.26653
+von -0.10589 1.196 1.1143 -0.40907 -1.0848 -0.054756 -2.5016 -1.0381 -0.41598 0.36982
+( 0.59263 2.1856 0.67346 1.0769 1.0701 1.2151 1.718 -3.0441 2.7291 3.719
+) 0.13812 3.3267 1.657 0.34729 -3.5459 0.72372 0.63034 -1.6145 1.2733 0.37798
+"""
+
+
+def test_floret_vectors(floret_vectors_vec_str, floret_vectors_hashvec_str):
+    nlp = English()
+    nlp_plain = English()
+    # load both vec and hashvec tables
+    with make_tempdir() as tmpdir:
+        p = tmpdir / "test.hashvec"
+        with open(p, "w") as fileh:
+            fileh.write(floret_vectors_hashvec_str)
+        convert_vectors(nlp, p, truncate=0, prune=-1, mode="floret")
+        p = tmpdir / "test.vec"
+        with open(p, "w") as fileh:
+            fileh.write(floret_vectors_vec_str)
+        convert_vectors(nlp_plain, p, truncate=0, prune=-1)
+
+    word = "der"
+    # ngrams: full padded word + padded 2-grams + padded 3-grams
+    ngrams = nlp.vocab.vectors._get_ngrams(word)
+    assert ngrams == ["<der>", "<d", "de", "er", "r>", "<de", "der", "er>"]
+    # rows: 2 rows per ngram
+    rows = OPS.xp.asarray(
+        [
+            h % nlp.vocab.vectors.shape[0]
+            for ngram in ngrams
+            for h in nlp.vocab.vectors._get_ngram_hashes(ngram)
+        ],
+        dtype="uint32",
+    )
+    assert_equal(
+        OPS.to_numpy(rows),
+        numpy.asarray([5, 6, 7, 5, 8, 2, 8, 9, 3, 3, 4, 6, 7, 3, 0, 2]),
+    )
+    assert len(rows) == len(ngrams) * nlp.vocab.vectors.hash_count
+    # all vectors are equivalent for plain static table vs. hash ngrams
+    for word in nlp_plain.vocab.vectors:
+        word = nlp_plain.vocab.strings.as_string(word)
+        assert_almost_equal(
+            nlp.vocab[word].vector, nlp_plain.vocab[word].vector, decimal=3
+        )
+
+        # every word has a vector
+        assert nlp.vocab[word * 5].has_vector
+
+    # check that single and batched vector lookups are identical
+    words = [s for s in nlp_plain.vocab.vectors]
+    single_vecs = OPS.to_numpy(OPS.asarray([nlp.vocab[word].vector for word in words]))
+    batch_vecs = OPS.to_numpy(nlp.vocab.vectors.get_batch(words))
+    assert_equal(single_vecs, batch_vecs)
+
+    # an empty key returns 0s
+    assert_equal(
+        OPS.to_numpy(nlp.vocab[""].vector),
+        numpy.zeros((nlp.vocab.vectors.shape[0],)),
+    )
+    # an empty batch returns 0s
+    assert_equal(
+        OPS.to_numpy(nlp.vocab.vectors.get_batch([""])),
+        numpy.zeros((1, nlp.vocab.vectors.shape[0])),
+    )
+    # an empty key within a batch returns 0s
+    assert_equal(
+        OPS.to_numpy(nlp.vocab.vectors.get_batch(["a", "", "b"])[1]),
+        numpy.zeros((nlp.vocab.vectors.shape[0],)),
+    )
+
+    # the loaded ngram vector table cannot be modified
+    # except for clear: warning, then return without modifications
+    vector = list(range(nlp.vocab.vectors.shape[1]))
+    orig_bytes = nlp.vocab.vectors.to_bytes(exclude=["strings"])
+    with pytest.warns(UserWarning):
+        nlp.vocab.set_vector("the", vector)
+    assert orig_bytes == nlp.vocab.vectors.to_bytes(exclude=["strings"])
+    with pytest.warns(UserWarning):
+        nlp.vocab[word].vector = vector
+    assert orig_bytes == nlp.vocab.vectors.to_bytes(exclude=["strings"])
+    with pytest.warns(UserWarning):
+        nlp.vocab.vectors.add("the", row=6)
+    assert orig_bytes == nlp.vocab.vectors.to_bytes(exclude=["strings"])
+    with pytest.warns(UserWarning):
+        nlp.vocab.vectors.resize(shape=(100, 10))
+    assert orig_bytes == nlp.vocab.vectors.to_bytes(exclude=["strings"])
+    with pytest.raises(ValueError):
+        nlp.vocab.vectors.clear()
+
+    # data and settings are serialized correctly
+    with make_tempdir() as d:
+        nlp.vocab.to_disk(d)
+        vocab_r = Vocab()
+        vocab_r.from_disk(d)
+        assert nlp.vocab.vectors.to_bytes() == vocab_r.vectors.to_bytes()
+        assert_equal(
+            OPS.to_numpy(nlp.vocab.vectors.data), OPS.to_numpy(vocab_r.vectors.data)
+        )
+        assert_equal(nlp.vocab.vectors._get_cfg(), vocab_r.vectors._get_cfg())
+        assert_almost_equal(
+            OPS.to_numpy(nlp.vocab[word].vector),
+            OPS.to_numpy(vocab_r[word].vector),
+            decimal=6,
+        )

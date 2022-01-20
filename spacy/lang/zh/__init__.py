@@ -11,6 +11,7 @@ from ...scorer import Scorer
 from ...tokens import Doc
 from ...training import validate_examples, Example
 from ...util import DummyTokenizer, registry, load_config_from_str
+from ...vocab import Vocab
 from .lex_attrs import LEX_ATTRS
 from .stop_words import STOP_WORDS
 from ... import util
@@ -48,14 +49,14 @@ class Segmenter(str, Enum):
 @registry.tokenizers("spacy.zh.ChineseTokenizer")
 def create_chinese_tokenizer(segmenter: Segmenter = Segmenter.char):
     def chinese_tokenizer_factory(nlp):
-        return ChineseTokenizer(nlp, segmenter=segmenter)
+        return ChineseTokenizer(nlp.vocab, segmenter=segmenter)
 
     return chinese_tokenizer_factory
 
 
 class ChineseTokenizer(DummyTokenizer):
-    def __init__(self, nlp: Language, segmenter: Segmenter = Segmenter.char):
-        self.vocab = nlp.vocab
+    def __init__(self, vocab: Vocab, segmenter: Segmenter = Segmenter.char):
+        self.vocab = vocab
         self.segmenter = (
             segmenter.value if isinstance(segmenter, Segmenter) else segmenter
         )
