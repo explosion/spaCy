@@ -577,7 +577,7 @@ reflect those changes.
 
 **Note**: If you're working on a Mac with an M1 processor, 
 you might see segfault errors from `qemu` if you use the default image. 
-To fix this use the arm64 tagged image in the docker run command 
+To fix this use the `arm64` tagged image in the `docker run` command 
 (ghcr.io/explosion/spacy-io:arm64).
 
 ### Building the Docker image {#docker-build}
