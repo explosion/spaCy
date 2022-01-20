@@ -181,6 +181,7 @@ def test_issue4267():
         assert token.ent_iob == 2
 
 
+@pytest.mark.xfail(reason="no beam parser yet")
 @pytest.mark.issue(4313)
 def test_issue4313():
     """This should not crash or exit with some strange error code"""
