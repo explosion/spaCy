@@ -67,7 +67,7 @@ class Underscore:
                 return new_default
             return default
 
-    def __setattr__(self, name: str, value: Any) -> Optional[Any]:
+    def __setattr__(self, name: str, value: Any):
         if name not in self._extensions:
             raise AttributeError(Errors.E047.format(name=name))
         default, method, getter, setter = self._extensions[name]
@@ -76,7 +76,7 @@ class Underscore:
         else:
             self._doc.user_data[self._get_key(name)] = value
 
-    def set(self, name: str, value: Any) -> Optional[Any]:
+    def set(self, name: str, value: Any):
         return self.__setattr__(name, value)
 
     def get(self, name: str) -> Any:
@@ -93,7 +93,9 @@ class Underscore:
         return cls.token_extensions, cls.span_extensions, cls.doc_extensions
 
     @classmethod
-    def load_state(cls, state: Tuple[Dict[Any, Any], Dict[Any, Any], Dict[Any, Any]]) -> None:
+    def load_state(
+        cls, state: Tuple[Dict[Any, Any], Dict[Any, Any], Dict[Any, Any]]
+    ) -> None:
         cls.token_extensions, cls.span_extensions, cls.doc_extensions = state
 
 
