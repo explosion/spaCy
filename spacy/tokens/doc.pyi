@@ -11,7 +11,6 @@ from ..vocab import Vocab
 from .underscore import Underscore
 from pathlib import Path
 import numpy as np
-import numpy.typing as npt
 
 class DocMethod(Protocol):
     def __call__(self: Doc, *args: Any, **kwargs: Any) -> Any: ...  # type: ignore[misc]
@@ -27,7 +26,7 @@ class Doc:
     user_hooks: Dict[str, Callable[..., Any]]
     user_token_hooks: Dict[str, Callable[..., Any]]
     user_span_hooks: Dict[str, Callable[..., Any]]
-    tensor: npt.NDArray[np.float_]
+    tensor: np.ndarray[Any, np.dtype[np.float_]]
     user_data: Dict[str, Any]
     has_unknown_spaces: bool
     _context: Any
@@ -145,7 +144,7 @@ class Doc:
     ) -> Doc: ...
     def to_array(
         self, py_attr_ids: Union[int, str, List[Union[int, str]]]
-    ) -> npt.NDArray[np.float_]: ...
+    ) -> np.ndarray[Any, np.dtype[np.float_]]: ...
     @staticmethod
     def from_docs(
         docs: List[Doc],
