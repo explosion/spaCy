@@ -699,9 +699,7 @@ def _get_examples_without_label(data: Sequence[Example], label: str) -> int:
     return count
 
 
-def _get_labels_from_model(
-    nlp: Language, factory_name: str
-) -> Set[str]:
+def _get_labels_from_model(nlp: Language, factory_name: str) -> Set[str]:
     pipe_names = [
         pipe_name
         for pipe_name in nlp.pipe_names
@@ -714,9 +712,7 @@ def _get_labels_from_model(
     return labels
 
 
-def _get_labels_from_spancat(
-    nlp: Language
-) -> Dict[str, Set[str]]:
+def _get_labels_from_spancat(nlp: Language) -> Dict[str, Set[str]]:
     pipe_names = [
         pipe_name
         for pipe_name in nlp.pipe_names

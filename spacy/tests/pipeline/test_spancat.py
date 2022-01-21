@@ -79,7 +79,8 @@ def test_explicit_labels():
     nlp.initialize()
     assert spancat.labels == ("PERSON", "LOC")
 
-#TODO figure out why this is flaky
+
+# TODO figure out why this is flaky
 @pytest.mark.skip(reason="Test is unreliable for unknown reason")
 def test_doc_gc():
     # If the Doc object is garbage collected, the spans won't be functional afterwards
