@@ -1,4 +1,16 @@
-from typing import Any, List, Dict, Literal, Tuple, Optional, Callable, Union, Iterator, Iterable, overload
+from typing import (
+    Any,
+    List,
+    Dict,
+    Tuple,
+    Optional,
+    Callable,
+    Union,
+    Iterator,
+    Iterable,
+    overload,
+)
+from ..compat import Literal
 from ..vocab import Vocab
 from ..tokens import Doc, Span
 
@@ -12,7 +24,9 @@ class Matcher:
         key: Union[str, int],
         patterns: List[List[Dict[str, Any]]],
         *,
-        on_match: Optional[Callable[[Matcher, Doc, int, List[Tuple[Any, ...]]], Any]] = ...,
+        on_match: Optional[
+            Callable[[Matcher, Doc, int, List[Tuple[Any, ...]]], Any]
+        ] = ...,
         greedy: Optional[str] = ...
     ) -> None: ...
     def remove(self, key: str) -> None: ...
@@ -26,7 +40,9 @@ class Matcher:
         batch_size: int = ...,
         return_matches: bool = ...,
         as_tuples: bool = ...,
-    ) -> Union[Iterator[Tuple[Tuple[Doc, Any], Any]], Iterator[Tuple[Doc, Any]], Iterator[Doc]]: ...
+    ) -> Union[
+        Iterator[Tuple[Tuple[Doc, Any], Any]], Iterator[Tuple[Doc, Any]], Iterator[Doc]
+    ]: ...
     @overload
     def __call__(
         self,
