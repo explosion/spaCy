@@ -4,22 +4,22 @@ from typing import Optional, Iterable, Callable
 from thinc.api import Model, Config
 
 from ._parser_internals.transition_system import TransitionSystem
-from .transition_parser cimport Parser
-from ._parser_internals.ner cimport BiluoPushDown
+from .transition_parser import Parser
+from ._parser_internals.ner import BiluoPushDown
 
 from ..language import Language
 from ..scorer import get_ner_prf, PRFScore
+from ..training import validate_examples
 from ..util import registry
 
 
 default_model_config = """
 [model]
-@architectures = "spacy.TransitionBasedParser.v2"
+@architectures = "spacy.TransitionBasedParser.v3"
 state_type = "ner"
 extra_state_tokens = false
 hidden_width = 64
 maxout_pieces = 2
-use_upper = true
 
 [model.tok2vec]
 @architectures = "spacy.HashEmbedCNN.v2"
@@ -44,8 +44,12 @@ DEFAULT_NER_MODEL = Config().from_str(default_model_config)["model"]
         "incorrect_spans_key": None,
         "scorer": {"@scorers": "spacy.ner_scorer.v1"},
     },
-    default_score_weights={"ents_f": 1.0, "ents_p": 0.0, "ents_r": 0.0, "ents_per_type": None},
-
+    default_score_weights={
+        "ents_f": 1.0,
+        "ents_p": 0.0,
+        "ents_r": 0.0,
+        "ents_per_type": None,
+    },
 )
 def make_ner(
     nlp: Language,
@@ -98,6 +102,7 @@ def make_ner(
         scorer=scorer,
     )
 
+
 @Language.factory(
     "beam_ner",
     assigns=["doc.ents", "token.ent_iob", "token.ent_type"],
@@ -111,7 +116,12 @@ def make_ner(
         "incorrect_spans_key": None,
         "scorer": None,
     },
-    default_score_weights={"ents_f": 1.0, "ents_p": 0.0, "ents_r": 0.0, "ents_per_type": None},
+    default_score_weights={
+        "ents_f": 1.0,
+        "ents_p": 0.0,
+        "ents_r": 0.0,
+        "ents_per_type": None,
+    },
 )
 def make_beam_ner(
     nlp: Language,
@@ -185,11 +195,12 @@ def make_ner_scorer():
     return ner_score
 
 
-cdef class EntityRecognizer(Parser):
+class EntityRecognizer(Parser):
     """Pipeline component for named entity recognition.
 
     DOCS: https://spacy.io/api/entityrecognizer
     """
+
     TransitionSystem = BiluoPushDown
 
     def __init__(
@@ -207,15 +218,14 @@ cdef class EntityRecognizer(Parser):
         incorrect_spans_key=None,
         scorer=ner_score,
     ):
-        """Create an EntityRecognizer.
-        """
+        """Create an EntityRecognizer."""
         super().__init__(
             vocab,
             model,
             name,
             moves,
             update_with_oracle_cut_size=update_with_oracle_cut_size,
-            min_action_freq=1,   # not relevant for NER
+            min_action_freq=1,  # not relevant for NER
             learn_tokens=False,  # not relevant for NER
             beam_width=beam_width,
             beam_density=beam_density,
@@ -242,8 +252,11 @@ cdef class EntityRecognizer(Parser):
     def labels(self):
         # Get the labels from the model by looking at the available moves, e.g.
         # B-PERSON, I-PERSON, L-PERSON, U-PERSON
-        labels = set(move.split("-")[1] for move in self.move_names
-                     if move[0] in ("B", "I", "L", "U"))
+        labels = set(
+            move.split("-")[1]
+            for move in self.move_names
+            if move[0] in ("B", "I", "L", "U")
+        )
         return tuple(sorted(labels))
 
     def scored_ents(self, beams):

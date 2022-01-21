@@ -30,12 +30,9 @@ MOD_NAMES = [
     "spacy.vocab",
     "spacy.attrs",
     "spacy.kb",
-    "spacy.ml.parser_model",
     "spacy.morphology",
-    "spacy.pipeline.dep_parser",
     "spacy.pipeline.morphologizer",
     "spacy.pipeline.multitask",
-    "spacy.pipeline.ner",
     "spacy.pipeline.pipe",
     "spacy.pipeline.trainable_pipe",
     "spacy.pipeline.sentencizer",
@@ -205,7 +202,11 @@ def setup_package():
     for name in MOD_NAMES:
         mod_path = name.replace(".", "/") + ".pyx"
         ext = Extension(
-            name, [mod_path], language="c++", include_dirs=include_dirs, extra_compile_args=["-std=c++11"]
+            name,
+            [mod_path],
+            language="c++",
+            include_dirs=include_dirs,
+            extra_compile_args=["-std=c++11"],
         )
         ext_modules.append(ext)
     print("Cythonizing sources")

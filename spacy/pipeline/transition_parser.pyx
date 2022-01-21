@@ -7,30 +7,29 @@ from libcpp.vector cimport vector
 from libc.string cimport memset, memcpy
 from libc.stdlib cimport calloc, free
 import random
+import contextlib
 
 import srsly
-from thinc.api import set_dropout_rate, CupyOps
+from thinc.api import set_dropout_rate, CupyOps, get_array_module
 from thinc.extra.search cimport Beam
 import numpy.random
 import numpy
 import warnings
 
 from ._parser_internals.stateclass cimport StateClass
-from ..ml.parser_model cimport alloc_activations, free_activations
-from ..ml.parser_model cimport predict_states, arg_max_if_valid
-from ..ml.parser_model cimport WeightsC, ActivationsC, SizesC, cpu_log_loss
-from ..ml.parser_model cimport get_c_weights, get_c_sizes
 from ..tokens.doc cimport Doc
 from .trainable_pipe import TrainablePipe
 from ._parser_internals cimport _beam_utils
 from ._parser_internals import _beam_utils
+from ..vocab cimport Vocab
+from ._parser_internals.transition_system cimport TransitionSystem
 
 from ..training import validate_examples, validate_get_examples
 from ..errors import Errors, Warnings
 from .. import util
 
 
-cdef class Parser(TrainablePipe):
+class Parser(TrainablePipe):
     """
     Base class of the DependencyParser and EntityRecognizer.
     """
@@ -129,8 +128,9 @@ cdef class Parser(TrainablePipe):
     @property
     def move_names(self):
         names = []
+        cdef TransitionSystem moves = self.moves
         for i in range(self.moves.n_moves):
-            name = self.moves.move_name(self.moves.c[i].move, self.moves.c[i].label)
+            name = self.moves.move_name(moves.c[i].move, moves.c[i].label)
             # Explicitly removing the internal "U-" token used for blocking entities
             if name != "U-":
                 names.append(name)
@@ -219,9 +219,6 @@ cdef class Parser(TrainablePipe):
 
         stream: The sequence of documents to process.
         batch_size (int): Number of documents to accumulate into a working set.
-        error_handler (Callable[[str, List[Doc], Exception], Any]): Function that
-            deals with a failing batch of documents. The default function just reraises
-            the exception.
 
         YIELDS (Doc): Documents, in order.
         """
@@ -243,79 +240,27 @@ cdef class Parser(TrainablePipe):
     def predict(self, docs):
         if isinstance(docs, Doc):
             docs = [docs]
+        self._ensure_labels_are_added(docs)
         if not any(len(doc) for doc in docs):
             result = self.moves.init_batch(docs)
             return result
-        if self.cfg["beam_width"] == 1:
-            return self.greedy_parse(docs, drop=0.0)
-        else:
-            return self.beam_parse(
-                docs,
-                drop=0.0,
-                beam_width=self.cfg["beam_width"],
-                beam_density=self.cfg["beam_density"]
-            )
+        with _change_attrs(self.model, beam_width=self.cfg["beam_width"], beam_density=self.cfg["beam_density"]):
+            states_or_beams, _ = self.model.predict((docs, self.moves))
+        return states_or_beams
 
     def greedy_parse(self, docs, drop=0.):
-        cdef vector[StateC*] states
-        cdef StateClass state
-        self._ensure_labels_are_added(docs)
-        set_dropout_rate(self.model, drop)
-        batch = self.moves.init_batch(docs)
-        model = self.model.predict(docs)
-        weights = get_c_weights(model)
-        for state in batch:
-            if not state.is_final():
-                states.push_back(state.c)
-        sizes = get_c_sizes(model, states.size())
-        with nogil:
-            self._parseC(&states[0],
-                weights, sizes)
-        model.clear_memory()
-        del model
-        return batch
+        # TODO: Deprecated
+        self._resize()
+        with _change_attrs(self.model, beam_width=1):
+            states, _ = self.model.predict((docs, self.moves))
+        return states
 
     def beam_parse(self, docs, int beam_width, float drop=0., beam_density=0.):
-        cdef Beam beam
-        cdef Doc doc
-        self._ensure_labels_are_added(docs)
-        batch = _beam_utils.BeamBatch(
-            self.moves,
-            self.moves.init_batch(docs),
-            None,
-            beam_width,
-            density=beam_density
-        )
-        model = self.model.predict(docs)
-        while not batch.is_done:
-            states = batch.get_unfinished_states()
-            if not states:
-                break
-            scores = model.predict(states)
-            batch.advance(scores)
-        model.clear_memory()
-        del model
-        return list(batch)
-
-    cdef void _parseC(self, StateC** states,
-            WeightsC weights, SizesC sizes) nogil:
-        cdef int i, j
-        cdef vector[StateC*] unfinished
-        cdef ActivationsC activations = alloc_activations(sizes)
-        while sizes.states >= 1:
-            predict_states(&activations,
-                states, &weights, sizes)
-            # Validate actions, argmax, take action.
-            self.c_transition_batch(states,
-                activations.scores, sizes.classes, sizes.states)
-            for i in range(sizes.states):
-                if not states[i].is_final():
-                    unfinished.push_back(states[i])
-            for i in range(unfinished.size()):
-                states[i] = unfinished[i]
-            sizes.states = unfinished.size()
-            unfinished.clear()
-        free_activations(&activations)
+        # TODO: Deprecated
+        self._resize()
+        with _change_attrs(self.model, beam_width=self.cfg["beam_width"], beam_density=self.cfg["beam_density"]):
+            beams, _ = self.model.predict((docs, self.moves))
+        return beams
 
     def set_annotations(self, docs, states_or_beams):
         cdef StateClass state
@@ -326,35 +271,6 @@ cdef class Parser(TrainablePipe):
             self.moves.set_annotations(state, doc)
             for hook in self.postprocesses:
                 hook(doc)
-
-    def transition_states(self, states, float[:, ::1] scores):
-        cdef StateClass state
-        cdef float* c_scores = &scores[0, 0]
-        cdef vector[StateC*] c_states
-        for state in states:
-            c_states.push_back(state.c)
-        self.c_transition_batch(&c_states[0], c_scores, scores.shape[1], scores.shape[0])
-        return [state for state in states if not state.c.is_final()]
-
-    cdef void c_transition_batch(self, StateC** states, const float* scores,
-            int nr_class, int batch_size) nogil:
-        # n_moves should not be zero at this point, but make sure to avoid zero-length mem alloc
-        with gil:
-            assert self.moves.n_moves > 0, Errors.E924.format(name=self.name)
-        is_valid = <int*>calloc(self.moves.n_moves, sizeof(int))
-        cdef int i, guess
-        cdef Transition action
-        for i in range(batch_size):
-            self.moves.set_valid(is_valid, states[i])
-            guess = arg_max_if_valid(&scores[i*nr_class], is_valid, nr_class)
-            if guess == -1:
-                # This shouldn't happen, but it's hard to raise an error here,
-                # and we don't want to infinite loop. So, force to end state.
-                states[i].force_final()
-            else:
-                action = self.moves.c[guess]
-                action.do(states[i], action.label)
-        free(is_valid)
 
     def update(self, examples, *, drop=0., sgd=None, losses=None):
         cdef StateClass state
@@ -367,166 +283,88 @@ cdef class Parser(TrainablePipe):
         )
         for multitask in self._multitasks:
             multitask.update(examples, drop=drop, sgd=sgd)
+        # We need to take care to act on the whole batch, because we might be
+        # getting vectors via a listener.
         n_examples = len([eg for eg in examples if self.moves.has_gold(eg)])
         if n_examples == 0:
             return losses
         set_dropout_rate(self.model, drop)
-        # The probability we use beam update, instead of falling back to
-        # a greedy update
-        beam_update_prob = self.cfg["beam_update_prob"]
-        if self.cfg['beam_width'] >= 2 and numpy.random.random() < beam_update_prob:
-            return self.update_beam(
-                examples,
-                beam_width=self.cfg["beam_width"],
-                sgd=sgd,
-                losses=losses,
-                beam_density=self.cfg["beam_density"]
-            )
-        max_moves = self.cfg["update_with_oracle_cut_size"]
-        if max_moves >= 1:
-            # Chop sequences into lengths of this many words, to make the
-            # batch uniform length.
-            max_moves = int(random.uniform(max_moves // 2, max_moves * 2))
-            states, golds, _ = self._init_gold_batch(
-                examples,
-                max_length=max_moves
-            )
-        else:
-            states, golds, _ = self.moves.init_gold_batch(examples)
-        if not states:
+        docs = [eg.x for eg in examples if len(eg.x)]
+        (states, scores), backprop_scores = self.model.begin_update((docs, self.moves))
+        if sum(s.shape[0] for s in scores) == 0:
             return losses
-        model, backprop_tok2vec = self.model.begin_update([eg.x for eg in examples])
- 
-        all_states = list(states)
-        states_golds = list(zip(states, golds))
-        n_moves = 0
-        while states_golds:
-            states, golds = zip(*states_golds)
-            scores, backprop = model.begin_update(states)
-            d_scores = self.get_batch_loss(states, golds, scores, losses)
-            # Note that the gradient isn't normalized by the batch size
-            # here, because our "samples" are really the states...But we
-            # can't normalize by the number of states either, as then we'd
-            # be getting smaller gradients for states in long sequences.
-            backprop(d_scores)
-            # Follow the predicted action
-            self.transition_states(states, scores)
-            states_golds = [(s, g) for (s, g) in zip(states, golds) if not s.is_final()]
-            if max_moves >= 1 and n_moves >= max_moves:
-                break
-            n_moves += 1
-
-        backprop_tok2vec(golds)
+        d_scores = self.get_loss((states, scores), examples)
+        backprop_scores((states, d_scores))
         if sgd not in (None, False):
             self.finish_update(sgd)
+        losses[self.name] += (d_scores**2).sum()
         # Ugh, this is annoying. If we're working on GPU, we want to free the
         # memory ASAP. It seems that Python doesn't necessarily get around to
         # removing these in time if we don't explicitly delete? It's confusing.
-        del backprop
-        del backprop_tok2vec
-        model.clear_memory()
-        del model
+        del backprop_scores
         return losses
+
+    def get_loss(self, states_scores, examples):
+        states, scores = states_scores
+        scores = self.model.ops.xp.vstack(scores)
+        costs = self._get_costs_from_histories(
+            examples,
+            [list(state.history) for state in states]
+        )
+        xp = get_array_module(scores)
+        best_costs = costs.min(axis=1, keepdims=True)
+        gscores = scores.copy()
+        min_score = scores.min() - 1000
+        assert costs.shape == scores.shape, (costs.shape, scores.shape)
+        gscores[costs > best_costs] = min_score
+        max_ = scores.max(axis=1, keepdims=True)
+        gmax = gscores.max(axis=1, keepdims=True)
+        exp_scores = xp.exp(scores - max_)
+        exp_gscores = xp.exp(gscores - gmax)
+        Z = exp_scores.sum(axis=1, keepdims=True)
+        gZ = exp_gscores.sum(axis=1, keepdims=True)
+        d_scores = exp_scores / Z
+        d_scores -= (costs <= best_costs) * (exp_gscores / gZ)
+        return d_scores
+
+    def _get_costs_from_histories(self, examples, histories):
+        cdef TransitionSystem moves = self.moves
+        cdef StateClass state
+        cdef int clas
+        cdef int nF = self.model.get_dim("nF")
+        cdef int nO = moves.n_moves
+        cdef int nS = sum([len(history) for history in histories])
+        cdef Pool mem = Pool()
+        is_valid = <int*>mem.alloc(nO, sizeof(int))
+        c_costs = <float*>mem.alloc(nO, sizeof(float))
+        states = moves.init_batch([eg.x for eg in examples])
+        batch = []
+        for eg, s, h in zip(examples, states, histories):
+            if not s.is_final():
+                gold = moves.init_gold(s, eg)
+                batch.append((eg, s, h, gold))
+        output = []
+        while batch:
+            costs = numpy.zeros((len(batch), nO), dtype="f")
+            for i, (eg, state, history, gold) in enumerate(batch):
+                clas = history.pop(0)
+                moves.set_costs(is_valid, c_costs, state.c, gold)
+                action = moves.c[clas]
+                action.do(state.c, action.label)
+                state.c.history.push_back(clas)
+                for j in range(nO):
+                    costs[i, j] = c_costs[j]
+            output.append(costs)
+            batch = [(eg, s, h, g) for eg, s, h, g in batch if len(h) != 0]
+        return self.model.ops.xp.vstack(output)
 
     def rehearse(self, examples, sgd=None, losses=None, **cfg):
         """Perform a "rehearsal" update, to prevent catastrophic forgetting."""
-        if losses is None:
-            losses = {}
-        for multitask in self._multitasks:
-            if hasattr(multitask, 'rehearse'):
-                multitask.rehearse(examples, losses=losses, sgd=sgd)
-        if self._rehearsal_model is None:
-            return None
-        losses.setdefault(self.name, 0.)
-        validate_examples(examples, "Parser.rehearse")
-        docs = [eg.predicted for eg in examples]
-        states = self.moves.init_batch(docs)
-        # This is pretty dirty, but the NER can resize itself in init_batch,
-        # if labels are missing. We therefore have to check whether we need to
-        # expand our model output.
-        self._resize()
-        # Prepare the stepwise model, and get the callback for finishing the batch
-        set_dropout_rate(self._rehearsal_model, 0.0)
-        set_dropout_rate(self.model, 0.0)
-        tutor, _ = self._rehearsal_model.begin_update(docs)
-        model, backprop_tok2vec = self.model.begin_update(docs)
-        n_scores = 0.
-        loss = 0.
-        while states:
-            targets, _ = tutor.begin_update(states)
-            guesses, backprop = model.begin_update(states)
-            d_scores = (guesses - targets) / targets.shape[0]
-            # If all weights for an output are 0 in the original model, don't
-            # supervise that output. This allows us to add classes.
-            loss += (d_scores**2).sum()
-            backprop(d_scores)
-            # Follow the predicted action
-            self.transition_states(states, guesses)
-            states = [state for state in states if not state.is_final()]
-            n_scores += d_scores.size
-        # Do the backprop
-        backprop_tok2vec(docs)
-        if sgd is not None:
-            self.finish_update(sgd)
-        losses[self.name] += loss / n_scores
-        del backprop
-        del backprop_tok2vec
-        model.clear_memory()
-        tutor.clear_memory()
-        del model
-        del tutor
-        return losses
+        raise NotImplementedError
 
     def update_beam(self, examples, *, beam_width,
             drop=0., sgd=None, losses=None, beam_density=0.0):
-        states, golds, _ = self.moves.init_gold_batch(examples)
-        if not states:
-            return losses
-        # Prepare the stepwise model, and get the callback for finishing the batch
-        model, backprop_tok2vec = self.model.begin_update(
-            [eg.predicted for eg in examples])
-        loss = _beam_utils.update_beam(
-            self.moves,
-            states,
-            golds,
-            model,
-            beam_width,
-            beam_density=beam_density,
-        )
-        losses[self.name] += loss
-        backprop_tok2vec(golds)
-        if sgd is not None:
-            self.finish_update(sgd)
-
-    def get_batch_loss(self, states, golds, float[:, ::1] scores, losses):
-        cdef StateClass state
-        cdef Pool mem = Pool()
-        cdef int i
-
-        # n_moves should not be zero at this point, but make sure to avoid zero-length mem alloc
-        assert self.moves.n_moves > 0, Errors.E924.format(name=self.name)
-
-        is_valid = <int*>mem.alloc(self.moves.n_moves, sizeof(int))
-        costs = <float*>mem.alloc(self.moves.n_moves, sizeof(float))
-        cdef np.ndarray d_scores = numpy.zeros((len(states), self.moves.n_moves),
-                                        dtype='f', order='C')
-        c_d_scores = <float*>d_scores.data
-        unseen_classes = self.model.attrs["unseen_classes"]
-        for i, (state, gold) in enumerate(zip(states, golds)):
-            memset(is_valid, 0, self.moves.n_moves * sizeof(int))
-            memset(costs, 0, self.moves.n_moves * sizeof(float))
-            self.moves.set_costs(is_valid, costs, state.c, gold)
-            for j in range(self.moves.n_moves):
-                if costs[j] <= 0.0 and j in unseen_classes:
-                    unseen_classes.remove(j)
-            cpu_log_loss(c_d_scores,
-                costs, is_valid, &scores[i, 0], d_scores.shape[1])
-            c_d_scores += d_scores.shape[1]
-        # Note that we don't normalize this. See comment in update() for why.
-        if losses is not None:
-            losses.setdefault(self.name, 0.)
-            losses[self.name] += (d_scores**2).sum()
-        return d_scores
+        raise NotImplementedError
 
     def set_output(self, nO):
         self.model.attrs["resize_output"](self.model, nO)
@@ -565,7 +403,7 @@ cdef class Parser(TrainablePipe):
             for example in islice(get_examples(), 10):
                 doc_sample.append(example.predicted)
         assert len(doc_sample) > 0, Errors.E923.format(name=self.name)
-        self.model.initialize(doc_sample)
+        self.model.initialize((doc_sample, self.moves))
         if nlp is not None:
             self.init_multitask_objectives(get_examples, nlp.pipeline)
 
@@ -622,44 +460,18 @@ cdef class Parser(TrainablePipe):
                     raise ValueError(Errors.E149) from None
         return self
 
-    def _init_gold_batch(self, examples, max_length):
-        """Make a square batch, of length equal to the shortest transition
-        sequence or a cap. A long
-        doc will get multiple states. Let's say we have a doc of length 2*N,
-        where N is the shortest doc. We'll make two states, one representing
-        long_doc[:N], and another representing long_doc[N:]."""
-        cdef:
-            StateClass start_state
-            StateClass state
-            Transition action
-        all_states = self.moves.init_batch([eg.predicted for eg in examples])
-        states = []
-        golds = []
-        to_cut = []
-        for state, eg in zip(all_states, examples):
-            if self.moves.has_gold(eg) and not state.is_final():
-                gold = self.moves.init_gold(state, eg)
-                if len(eg.x) < max_length:
-                    states.append(state)
-                    golds.append(gold)
-                else:
-                    oracle_actions = self.moves.get_oracle_sequence_from_state(
-                        state.copy(), gold)
-                    to_cut.append((eg, state, gold, oracle_actions))
-        if not to_cut:
-            return states, golds, 0
-        cdef int clas
-        for eg, state, gold, oracle_actions in to_cut:
-            for i in range(0, len(oracle_actions), max_length):
-                start_state = state.copy()
-                for clas in oracle_actions[i:i+max_length]:
-                    action = self.moves.c[clas]
-                    action.do(state.c, action.label)
-                    if state.is_final():
-                        break
-                if self.moves.has_gold(eg, start_state.B(0), state.B(0)):
-                    states.append(start_state)
-                    golds.append(gold)
-                if state.is_final():
-                    break
-        return states, golds, max_length
+
+@contextlib.contextmanager
+def _change_attrs(model, **kwargs):
+    """Temporarily modify a thinc model's attributes."""
+    unset = object()
+    old_attrs = {}
+    for key, value in kwargs.items():
+        old_attrs[key] = model.attrs.get(key, unset)
+        model.attrs[key] = value
+    yield model
+    for key, value in old_attrs.items():
+        if value is unset:
+            model.attrs.pop(key)
+        else:
+            model.attrs[key] = value

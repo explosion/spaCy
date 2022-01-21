@@ -255,7 +255,7 @@ cfg_string_multi = """
     factory = "ner"
 
     [components.ner.model]
-    @architectures = "spacy.TransitionBasedParser.v2"
+    @architectures = "spacy.TransitionBasedParser.v3"
 
     [components.ner.model.tok2vec]
     @architectures = "spacy.Tok2VecListener.v1"

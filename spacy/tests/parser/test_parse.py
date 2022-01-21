@@ -5,9 +5,11 @@ from thinc.api import Adam
 from spacy import registry, util
 from spacy.attrs import DEP, NORM
 from spacy.lang.en import English
-from spacy.tokens import Doc
 from spacy.training import Example
+from spacy.tokens import Doc
 from spacy.vocab import Vocab
+from spacy import util, registry
+from thinc.api import fix_random_seed
 
 from ...pipeline import DependencyParser
 from ...pipeline.dep_parser import DEFAULT_PARSER_MODEL
@@ -57,6 +59,8 @@ PARTIAL_DATA = [
         },
     ),
 ]
+
+PARSERS = ["parser"]  # TODO: Test beam_parser when ready
 
 eps = 0.1
 
@@ -318,7 +322,7 @@ def test_parser_constructor(en_vocab):
     DependencyParser(en_vocab, model)
 
 
-@pytest.mark.parametrize("pipe_name", ["parser", "beam_parser"])
+@pytest.mark.parametrize("pipe_name", PARSERS)
 def test_incomplete_data(pipe_name):
     # Test that the parser works with incomplete information
     nlp = English()
@@ -344,8 +348,9 @@ def test_incomplete_data(pipe_name):
     assert doc[2].head.i == 1
 
 
-@pytest.mark.parametrize("pipe_name", ["parser", "beam_parser"])
+@pytest.mark.parametrize("pipe_name", PARSERS)
 def test_overfitting_IO(pipe_name):
+    fix_random_seed(0)
     # Simple test to try and quickly overfit the dependency parser (normal or beam)
     nlp = English()
     parser = nlp.add_pipe(pipe_name)
@@ -354,6 +359,7 @@ def test_overfitting_IO(pipe_name):
         train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
         for dep in annotations.get("deps", []):
             parser.add_label(dep)
+    # train_examples = train_examples[:1]
     optimizer = nlp.initialize()
     # run overfitting
     for i in range(200):
@@ -395,6 +401,7 @@ def test_overfitting_IO(pipe_name):
     assert_equal(batch_deps_1, no_batch_deps)
 
 
+@pytest.mark.xfail(reason="no beam parser yet")
 def test_beam_parser_scores():
     # Test that we can get confidence values out of the beam_parser pipe
     beam_width = 16
@@ -433,6 +440,7 @@ def test_beam_parser_scores():
             assert 0 - eps <= head_score <= 1 + eps
 
 
+@pytest.mark.xfail(reason="no beam parser yet")
 def test_beam_overfitting_IO():
     # Simple test to try and quickly overfit the Beam dependency parser
     nlp = English()

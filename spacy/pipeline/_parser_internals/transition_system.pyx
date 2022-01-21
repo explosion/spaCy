@@ -1,6 +1,8 @@
 # cython: infer_types=True
 from __future__ import print_function
 from cymem.cymem cimport Pool
+from libc.stdlib cimport calloc, free
+from libcpp.vector cimport vector
 
 from collections import Counter
 import srsly
@@ -73,7 +75,18 @@ cdef class TransitionSystem:
             offset += len(doc)
         return states
 
+    def follow_history(self, doc, history):
+        cdef int clas
+        cdef StateClass state = StateClass(doc)
+        for clas in history:
+            action = self.c[clas]
+            action.do(state.c, action.label)
+            state.c.history.push_back(clas)
+        return state
+
     def get_oracle_sequence(self, Example example, _debug=False):
+        if not self.has_gold(example):
+            return []
         states, golds, _ = self.init_gold_batch([example])
         if not states:
             return []
@@ -85,6 +98,8 @@ cdef class TransitionSystem:
             return self.get_oracle_sequence_from_state(state, gold)
 
     def get_oracle_sequence_from_state(self, StateClass state, gold, _debug=None):
+        if state.is_final():
+            return []
         cdef Pool mem = Pool()
         # n_moves should not be zero at this point, but make sure to avoid zero-length mem alloc
         assert self.n_moves > 0
@@ -110,6 +125,7 @@ cdef class TransitionSystem:
                             "S0 head?", str(state.has_head(state.S(0))),
                         )))
                     action.do(state.c, action.label)
+                    state.c.history.push_back(i)
                     break
             else:
                 if _debug:
@@ -137,6 +153,17 @@ cdef class TransitionSystem:
             raise ValueError(Errors.E170.format(name=name))
         action = self.lookup_transition(name)
         action.do(state.c, action.label)
+        state.c.history.push_back(action.clas)
+
+    def transition_states(self, states, float[:, ::1] scores):
+        assert len(states) == scores.shape[0]
+        cdef StateClass state
+        cdef float* c_scores = &scores[0, 0]
+        cdef vector[StateC*] c_states
+        for state in states:
+            c_states.push_back(state.c)
+        c_transition_batch(self, &c_states[0], c_scores, scores.shape[1], scores.shape[0])
+        return [state for state in states if not state.c.is_final()]
 
     cdef Transition lookup_transition(self, object name) except *:
         raise NotImplementedError
@@ -250,3 +277,31 @@ cdef class TransitionSystem:
             self.cfg.update(msg['cfg'])
         self.initialize_actions(labels)
         return self
+
+
+cdef void c_transition_batch(TransitionSystem moves, StateC** states, const float* scores,
+    int nr_class, int batch_size) nogil:
+    is_valid = <int*>calloc(moves.n_moves, sizeof(int))
+    cdef int i, guess
+    cdef Transition action
+    for i in range(batch_size):
+        moves.set_valid(is_valid, states[i])
+        guess = arg_max_if_valid(&scores[i*nr_class], is_valid, nr_class)
+        if guess == -1:
+            # This shouldn't happen, but it's hard to raise an error here,
+            # and we don't want to infinite loop. So, force to end state.
+            states[i].force_final()
+        else:
+            action = moves.c[guess]
+            action.do(states[i], action.label)
+            states[i].history.push_back(guess)
+    free(is_valid)
+
+
+cdef int arg_max_if_valid(const weight_t* scores, const int* is_valid, int n) nogil:
+    cdef int best = -1
+    for i in range(n):
+        if is_valid[i] >= 1:
+            if best == -1 or scores[i] > scores[best]:
+                best = i
+    return best

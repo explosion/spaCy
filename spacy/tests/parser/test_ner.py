@@ -13,6 +13,7 @@ from spacy.pipeline._parser_internals.ner import BiluoPushDown
 from spacy.training import Example, iob_to_biluo
 from spacy.tokens import Doc, Span
 from spacy.vocab import Vocab
+from thinc.api import fix_random_seed
 import logging
 
 from ..util import make_tempdir
@@ -180,6 +181,7 @@ def test_issue4267():
         assert token.ent_iob == 2
 
 
+@pytest.mark.xfail(reason="no beam parser yet")
 @pytest.mark.issue(4313)
 def test_issue4313():
     """This should not crash or exit with some strange error code"""
@@ -391,7 +393,7 @@ def test_train_empty():
         train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
     ner = nlp.add_pipe("ner", last=True)
     ner.add_label("PERSON")
-    nlp.initialize()
+    nlp.initialize(get_examples=lambda: train_examples)
     for itn in range(2):
         losses = {}
         batches = util.minibatch(train_examples, size=8)
@@ -518,11 +520,11 @@ def test_block_ner():
     assert [token.ent_type_ for token in doc] == expected_types
 
 
-@pytest.mark.parametrize("use_upper", [True, False])
-def test_overfitting_IO(use_upper):
+def test_overfitting_IO():
+    fix_random_seed(1)
     # Simple test to try and quickly overfit the NER component
     nlp = English()
-    ner = nlp.add_pipe("ner", config={"model": {"use_upper": use_upper}})
+    ner = nlp.add_pipe("ner", config={"model": {}})
     train_examples = []
     for text, annotations in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
@@ -533,7 +535,7 @@ def test_overfitting_IO(use_upper):
     for i in range(50):
         losses = {}
         nlp.update(train_examples, sgd=optimizer, losses=losses)
-    assert losses["ner"] < 0.00001
+    assert losses["ner"] < 0.001
 
     # test the trained model
     test_text = "I like London."
@@ -554,7 +556,6 @@ def test_overfitting_IO(use_upper):
         assert ents2[0].label_ == "LOC"
         # Ensure that the predictions are still the same, even after adding a new label
         ner2 = nlp2.get_pipe("ner")
-        assert ner2.model.attrs["has_upper"] == use_upper
         ner2.add_label("RANDOM_NEW_LABEL")
         doc3 = nlp2(test_text)
         ents3 = doc3.ents
@@ -596,6 +597,7 @@ def test_overfitting_IO(use_upper):
     assert ents[1].kb_id == 0
 
 
+@pytest.mark.xfail(reason="no beam parser yet")
 def test_beam_ner_scores():
     # Test that we can get confidence values out of the beam_ner pipe
     beam_width = 16
@@ -631,6 +633,7 @@ def test_beam_ner_scores():
             assert 0 - eps <= score <= 1 + eps
 
 
+@pytest.mark.xfail(reason="no beam parser yet")
 def test_beam_overfitting_IO(neg_key):
     # Simple test to try and quickly overfit the Beam NER component
     nlp = English()

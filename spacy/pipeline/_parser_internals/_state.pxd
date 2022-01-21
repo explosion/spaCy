@@ -33,6 +33,7 @@ cdef cppclass StateC:
     vector[ArcC] _left_arcs
     vector[ArcC] _right_arcs
     vector[libcpp.bool] _unshiftable
+    vector[int] history
     set[int] _sent_starts
     TokenC _empty_token
     int length
@@ -387,3 +388,4 @@ cdef cppclass StateC:
         this._b_i = src._b_i
         this.offset = src.offset
         this._empty_token = src._empty_token
+        this.history = src.history

@@ -772,6 +772,8 @@ cdef class ArcEager(TransitionSystem):
         return list(arcs)
 
     def has_gold(self, Example eg, start=0, end=None):
+        if end is not None and end < 0:
+            end = None
         for word in eg.y[start:end]:
             if word.dep != 0:
                 return True
@@ -857,6 +859,7 @@ cdef class ArcEager(TransitionSystem):
                             state.print_state()
                         )))
                     action.do(state.c, action.label)
+                    state.c.history.push_back(i)
                     break
             else:
                 failed = False

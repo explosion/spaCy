@@ -552,18 +552,17 @@ for a Tok2Vec layer.
 
 ## Parser & NER architectures {#parser}
 
-### spacy.TransitionBasedParser.v2 {#TransitionBasedParser source="spacy/ml/models/parser.py"}
+### spacy.TransitionBasedParser.v3 {#TransitionBasedParser source="spacy/ml/models/parser.py"}
 
 > #### Example Config
 >
 > ```ini
 > [model]
-> @architectures = "spacy.TransitionBasedParser.v2"
+> @architectures = "spacy.TransitionBasedParser.v3"
 > state_type = "ner"
 > extra_state_tokens = false
 > hidden_width = 64
 > maxout_pieces = 2
-> use_upper = true
 >
 > [model.tok2vec]
 > @architectures = "spacy.HashEmbedCNN.v2"
@@ -593,16 +592,15 @@ consists of either two or three subnetworks:
   state representation. If not present, the output from the lower model is used
   as action scores directly.
 
-| Name                 | Description                                                                                                                                                                                                                                                                                                                                                             |
-| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `tok2vec`            | Subnetwork to map tokens into vector representations. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                                                                                                                                                                              |
-| `state_type`         | Which task to extract features for. Possible values are "ner" and "parser". ~~str~~                                                                                                                                                                                                                                                                                     |
-| `extra_state_tokens` | Whether to use an expanded feature set when extracting the state tokens. Slightly slower, but sometimes improves accuracy slightly. Defaults to `False`. ~~bool~~                                                                                                                                                                                                       |
-| `hidden_width`       | The width of the hidden layer. ~~int~~                                                                                                                                                                                                                                                                                                                                  |
-| `maxout_pieces`      | How many pieces to use in the state prediction layer. Recommended values are `1`, `2` or `3`. If `1`, the maxout non-linearity is replaced with a [`Relu`](https://thinc.ai/docs/api-layers#relu) non-linearity if `use_upper` is `True`, and no non-linearity if `False`. ~~int~~                                                                                      |
-| `use_upper`          | Whether to use an additional hidden layer after the state vector in order to predict the action scores. It is recommended to set this to `False` for large pretrained models such as transformers, and `True` for smaller networks. The upper layer is computed on CPU, which becomes a bottleneck on larger GPU-based models, where it's also less necessary. ~~bool~~ |
-| `nO`                 | The number of actions the model will predict between. Usually inferred from data at the beginning of training, or loaded from disk. ~~int~~                                                                                                                                                                                                                             |
-| **CREATES**          | The model using the architecture. ~~Model[List[Docs], List[List[Floats2d]]]~~                                                                                                                                                                                                                                                                                           |
+| Name                 | Description                                                                                                                                                       |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tok2vec`            | Subnetwork to map tokens into vector representations. ~~Model[List[Doc], List[Floats2d]]~~                                                                        |
+| `state_type`         | Which task to extract features for. Possible values are "ner" and "parser". ~~str~~                                                                               |
+| `extra_state_tokens` | Whether to use an expanded feature set when extracting the state tokens. Slightly slower, but sometimes improves accuracy slightly. Defaults to `False`. ~~bool~~ |
+| `hidden_width`       | The width of the hidden layer. ~~int~~                                                                                                                            |
+| `maxout_pieces`      | How many pieces to use in the state prediction layer. Recommended values are `1`, `2` or `3`. ~~int~~                                                             |
+| `nO`                 | The number of actions the model will predict between. Usually inferred from data at the beginning of training, or loaded from disk. ~~int~~                       |
+| **CREATES**          | The model using the architecture. ~~Model[List[Docs], List[List[Floats2d]]]~~                                                                                     |
 
 <Accordion title="spacy.TransitionBasedParser.v1 definition" spaced>
 

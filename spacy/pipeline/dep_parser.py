@@ -4,8 +4,8 @@ from typing import Optional, Iterable, Callable
 from thinc.api import Model, Config
 
 from ._parser_internals.transition_system import TransitionSystem
-from .transition_parser cimport Parser
-from ._parser_internals.arc_eager cimport ArcEager
+from .transition_parser import Parser
+from ._parser_internals.arc_eager import ArcEager
 
 from .functions import merge_subtokens
 from ..language import Language
@@ -17,12 +17,11 @@ from ..util import registry
 
 default_model_config = """
 [model]
-@architectures = "spacy.TransitionBasedParser.v2"
+@architectures = "spacy.TransitionBasedParser.v3"
 state_type = "parser"
 extra_state_tokens = false
 hidden_width = 64
 maxout_pieces = 2
-use_upper = true
 
 [model.tok2vec]
 @architectures = "spacy.HashEmbedCNN.v2"
@@ -121,6 +120,7 @@ def make_parser(
         incorrect_spans_key=None,
         scorer=scorer,
     )
+
 
 @Language.factory(
     "beam_parser",
@@ -227,6 +227,7 @@ def parser_score(examples, **kwargs):
 
     DOCS: https://spacy.io/api/dependencyparser#score
     """
+
     def has_sents(doc):
         return doc.has_annotation("SENT_START")
 
@@ -234,8 +235,11 @@ def parser_score(examples, **kwargs):
         dep = getattr(token, attr)
         dep = token.vocab.strings.as_string(dep).lower()
         return dep
+
     results = {}
-    results.update(Scorer.score_spans(examples, "sents", has_annotation=has_sents, **kwargs))
+    results.update(
+        Scorer.score_spans(examples, "sents", has_annotation=has_sents, **kwargs)
+    )
     kwargs.setdefault("getter", dep_getter)
     kwargs.setdefault("ignore_labels", ("p", "punct"))
     results.update(Scorer.score_deps(examples, "dep", **kwargs))
@@ -248,11 +252,12 @@ def make_parser_scorer():
     return parser_score
 
 
-cdef class DependencyParser(Parser):
+class DependencyParser(Parser):
     """Pipeline component for dependency parsing.
 
     DOCS: https://spacy.io/api/dependencyparser
     """
+
     TransitionSystem = ArcEager
 
     def __init__(
@@ -272,8 +277,7 @@ cdef class DependencyParser(Parser):
         incorrect_spans_key=None,
         scorer=parser_score,
     ):
-        """Create a DependencyParser.
-        """
+        """Create a DependencyParser."""
         super().__init__(
             vocab,
             model,

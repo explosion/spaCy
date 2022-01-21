@@ -157,7 +157,7 @@ cdef class BiluoPushDown(TransitionSystem):
             if token.ent_type:
                 labels.add(token.ent_type_)
         return labels
-    
+
     def move_name(self, int move, attr_t label):
         if move == OUT:
             return 'O'
@@ -307,6 +307,8 @@ cdef class BiluoPushDown(TransitionSystem):
             for span in eg.y.spans.get(neg_key, []):
                 if span.start >= start and span.end <= end:
                     return True
+        if end is not None and end < 0:
+            end = None
         for word in eg.y[start:end]:
             if word.ent_iob != 0:
                 return True
@@ -387,9 +389,9 @@ cdef class Begin:
         elif st.B_(1).ent_iob == 3:
             # If the next word is B, we can't B now
             return False
-        elif st.B_(1).sent_start == 1:
-            # Don't allow entities to extend across sentence boundaries
-            return False
+        #elif st.B_(1).sent_start == 1:
+        #    # Don't allow entities to extend across sentence boundaries
+        #    return False
         # Don't allow entities to start on whitespace
         elif Lexeme.get_struct_attr(st.B_(0).lex, IS_SPACE):
             return False
@@ -465,9 +467,9 @@ cdef class In:
                 # Otherwise, force acceptance, even if we're across a sentence
                 # boundary or the token is whitespace.
                 return True
-        elif st.B(1) != -1 and st.B_(1).sent_start == 1:
-            # Don't allow entities to extend across sentence boundaries
-            return False
+        #elif st.B(1) != -1 and st.B_(1).sent_start == 1:
+        #    # Don't allow entities to extend across sentence boundaries
+        #    return False
         else:
             return True
 
@@ -643,7 +645,7 @@ cdef class Unit:
                 cost += 1
                 break
         return cost
- 
+
 
 
 cdef class Out:
