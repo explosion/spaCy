@@ -1,9 +1,12 @@
-from typing import Dict, Any, List, Optional, Tuple, Union
+from typing import Dict, Any, List, Optional, Tuple, Union, TYPE_CHECKING
 import functools
 import copy
-from . import Doc, Span, Token
-
 from ..errors import Errors
+
+if TYPE_CHECKING:
+    from .doc import Doc
+    from .span import Span
+    from .token import Token
 
 
 class Underscore:
@@ -12,14 +15,14 @@ class Underscore:
     span_extensions: Dict[Any, Any] = {}
     token_extensions: Dict[Any, Any] = {}
     _extensions: Dict[str, Any]
-    _obj: Union[Doc, Span, Token]
+    _obj: Union["Doc", "Span", "Token"]
     _start: Optional[int]
     _end: Optional[int]
 
     def __init__(
         self,
         extensions: Dict[str, Any],
-        obj: Union[Doc, Span, Token],
+        obj: Union["Doc", "Span", "Token"],
         start: Optional[int] = None,
         end: Optional[int] = None,
     ):
