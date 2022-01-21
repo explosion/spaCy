@@ -1,4 +1,4 @@
-from typing import Any, List, Dict, Tuple, Optional, Callable, Union, Iterator, Iterable
+from typing import Any, List, Dict, Literal, Tuple, Optional, Callable, Union, Iterator, Iterable, overload
 from ..vocab import Vocab
 from ..tokens import Doc, Span
 
@@ -12,9 +12,7 @@ class Matcher:
         key: Union[str, int],
         patterns: List[List[Dict[str, Any]]],
         *,
-        on_match: Optional[
-            Callable[[Matcher, Doc, int, List[Tuple[Any, ...]]], Any]
-        ] = ...,
+        on_match: Optional[Callable[[Matcher, Doc, int, List[Tuple[Any, ...]]], Any]] = ...,
         greedy: Optional[str] = ...
     ) -> None: ...
     def remove(self, key: str) -> None: ...
@@ -28,15 +26,23 @@ class Matcher:
         batch_size: int = ...,
         return_matches: bool = ...,
         as_tuples: bool = ...,
-    ) -> Union[
-        Iterator[Tuple[Tuple[Doc, Any], Any]], Iterator[Tuple[Doc, Any]], Iterator[Doc]
-    ]: ...
+    ) -> Union[Iterator[Tuple[Tuple[Doc, Any], Any]], Iterator[Tuple[Doc, Any]], Iterator[Doc]]: ...
+    @overload
     def __call__(
         self,
         doclike: Union[Doc, Span],
         *,
-        as_spans: bool = ...,
+        as_spans: Literal[False] = ...,
         allow_missing: bool = ...,
         with_alignments: bool = ...
-    ) -> Union[List[Tuple[int, int, int]], List[Span]]: ...
+    ) -> List[Tuple[int, int, int]]: ...
+    @overload
+    def __call__(
+        self,
+        doclike: Union[Doc, Span],
+        *,
+        as_spans: Literal[True],
+        allow_missing: bool = ...,
+        with_alignments: bool = ...
+    ) -> List[Span]: ...
     def _normalize_key(self, key: Any) -> Any: ...
