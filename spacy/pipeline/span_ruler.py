@@ -128,6 +128,7 @@ class SpanRuler(Pipe):
         self.spans_filter = spans_filter
         self.ents_filter = ents_filter
         self.scorer = scorer
+        self._match_label_id_map = {}
         self.clear()
 
     def __len__(self) -> int:
@@ -136,7 +137,9 @@ class SpanRuler(Pipe):
 
     def __contains__(self, label: str) -> bool:
         """Whether a label is present in the patterns."""
-        return label in self.matcher or label in self.phrase_matcher
+        for label_id in self._match_label_id_map.values():
+            if label_id["label"] == label:
+                return True
 
     @property
     def key(self) -> Optional[str]:
@@ -168,7 +171,13 @@ class SpanRuler(Pipe):
                 list(self.matcher(doc)) + list(self.phrase_matcher(doc)),
             )
         deduplicated_matches = set(
-            Span(doc, start, end, label=m_id)
+            Span(
+                doc,
+                start,
+                end,
+                label=self._match_label_id_map[m_id]["label"],
+                id=self._match_label_id_map[m_id]["id"],
+            )
             for m_id, start, end in matches
             if start != end
         )
@@ -238,6 +247,7 @@ class SpanRuler(Pipe):
         """Add patterns to the span ruler. A pattern can either be a token
         pattern (list of dicts) or a phrase pattern (string). For example:
         {'label': 'ORG', 'pattern': 'Apple'}
+        {'label': 'ORG', 'pattern': 'Apple', 'id': 'apple'}
         {'label': 'GPE', 'pattern': [{'lower': 'san'}, {'lower': 'francisco'}]}
 
         patterns (list): The patterns to add.
@@ -260,7 +270,13 @@ class SpanRuler(Pipe):
             phrase_pattern_labels = []
             phrase_pattern_texts = []
             for entry in patterns:
-                label = cast(str, entry["label"])
+                p_label = cast(str, entry["label"])
+                p_id = cast(Union[int, str], entry.get("id", 0))
+                label = repr((p_label, p_id))
+                self._match_label_id_map[self.nlp.vocab.strings[label]] = {
+                    "label": p_label,
+                    "id": p_id,
+                }
                 if isinstance(entry["pattern"], str):
                     phrase_pattern_labels.append(label)
                     phrase_pattern_texts.append(entry["pattern"])
@@ -297,10 +313,13 @@ class SpanRuler(Pipe):
         if label not in self:
             raise ValueError(Errors.E857.format(label=label, component=self.name))
         self._patterns = [p for p in self._patterns if p["label"] != label]
-        if label in self.phrase_matcher:
-            self.phrase_matcher.remove(label)
-        if label in self.matcher:
-            self.matcher.remove(label)
+        for m_label in self._match_label_id_map:
+            if self._match_label_id_map[m_label]["label"] == label:
+                m_label_str = self.nlp.vocab.strings.as_string(m_label)
+                if m_label_str in self.phrase_matcher:
+                    self.phrase_matcher.remove(m_label_str)
+                if m_label_str in self.matcher:
+                    self.matcher.remove(m_label_str)
 
     def _require_patterns(self) -> None:
         """Raise a warning if this component has no patterns defined."""

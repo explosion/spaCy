@@ -12,9 +12,9 @@ from thinc.api import NumpyOps, get_current_ops
 @registry.misc("span_ruler_patterns")
 def patterns():
     return [
-        {"label": "HELLO", "pattern": "hello world"},
+        {"label": "HELLO", "pattern": "hello world", "id": "hello1"},
         {"label": "BYE", "pattern": [{"LOWER": "bye"}, {"LOWER": "bye"}]},
-        {"label": "HELLO", "pattern": [{"ORTH": "HELLO"}]},
+        {"label": "HELLO", "pattern": [{"ORTH": "HELLO"}], "id": "hello2"},
         {"label": "COMPLEX", "pattern": [{"ORTH": "foo", "OP": "*"}]},
         {"label": "TECH_ORG", "pattern": "Apple"},
         {"label": "TECH_ORG", "pattern": "Microsoft"},
@@ -66,7 +66,9 @@ def test_span_ruler_init(patterns):
     doc = nlp("hello world bye bye")
     assert len(doc.spans["ruler"]) == 2
     assert doc.spans["ruler"][0].label_ == "HELLO"
+    assert doc.spans["ruler"][0].id_ == "hello1"
     assert doc.spans["ruler"][1].label_ == "BYE"
+    assert doc.spans["ruler"][1].id_ == ""
 
 
 def test_span_ruler_no_patterns_warns():
@@ -138,7 +140,9 @@ def test_span_ruler_existing(patterns):
     assert len(doc.spans["ruler"]) == 3
     assert doc.spans["ruler"][0] == doc[0:2]
     assert doc.spans["ruler"][1].label_ == "HELLO"
+    assert doc.spans["ruler"][1].id_ == "hello2"
     assert doc.spans["ruler"][2].label_ == "BYE"
+    assert doc.spans["ruler"][2].id_ == ""
 
 
 def test_span_ruler_existing_overwrite(patterns):
@@ -267,11 +271,9 @@ def test_span_ruler_remove_basic(person_org_patterns):
     assert len(doc.spans["ruler"]) == 1
     assert doc.spans["ruler"][0].label_ == "PERSON"
     assert doc.spans["ruler"][0].text == "Dina"
-    assert "PERSON" in ruler.phrase_matcher
     ruler.remove("PERSON")
     doc = ruler(nlp.make_doc("Dina went to school"))
     assert len(doc.spans["ruler"]) == 0
-    assert "PERSON" not in ruler.phrase_matcher
     assert len(ruler.patterns) == 2
 
 
