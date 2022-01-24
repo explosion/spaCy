@@ -195,12 +195,12 @@ def debug_data(
         msg.info("No word vectors present in the package")
 
     if "spancat" in factory_names:
-        model_labels = _get_labels_from_model(nlp, "spancat")
+        model_labels = _get_labels_from_spancat(nlp)
         has_low_data_warning = False
         has_no_neg_warning = False
 
         msg.divider("Span Categorization")
-        msg.info(f"{len(model_labels)} label(s)")
+        msg.table(model_labels, header=["Spans Key", "Labels"], divider=True)
 
         msg.text("Labels in train data: ")
         for spans_key, data_labels in gold_train_data["spancat"].items():
@@ -211,9 +211,10 @@ def debug_data(
         for spans_key, data_labels in gold_train_data["spancat"].items():
             for label, count in data_labels.items():
                 # Check for missing labels
-                if label not in model_labels:
+                spans_key_exists = spans_key in model_labels.keys()
+                if (spans_key_exists) and (label not in model_labels[spans_key]):
                     msg.warn(
-                        f"Label '{label}' is not present in the model labels for key '{spans_key}'. "
+                        f"Label '{label}' is not present in the model labels of key '{spans_key}'. "
                         "Performance may degrade after training."
                     )
                 # Check for low number of examples per label
