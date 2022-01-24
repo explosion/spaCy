@@ -4,7 +4,6 @@ import spacy
 from spacy import registry
 from spacy.errors import MatchPatternError
 from spacy.tests.util import make_tempdir
-from spacy.util import filter_spans
 
 from thinc.api import NumpyOps, get_current_ops
 
@@ -401,13 +400,9 @@ def test_span_ruler_remove_and_add():
 
 
 def test_span_ruler_spans_filter(overlapping_patterns):
-    @registry.misc("test_spans_filter")
-    def test_spans_filter():
-        return filter_spans
-
     nlp = spacy.blank("xx")
     ruler = nlp.add_pipe(
-        "span_ruler", config={"spans_filter": {"@misc": "test_spans_filter"}}
+        "span_ruler", config={"spans_filter": {"@misc": "spacy.filter_spans.v1"}}
     )
     ruler.add_patterns(overlapping_patterns)
     doc = ruler(nlp.make_doc("foo bar baz"))
@@ -415,11 +410,30 @@ def test_span_ruler_spans_filter(overlapping_patterns):
     assert doc.spans["ruler"][0].label_ == "FOOBAR"
 
 
-def test_span_ruler_ents(overlapping_patterns):
+def test_span_ruler_ents_default_filter(overlapping_patterns):
     nlp = spacy.blank("xx")
-    ruler = nlp.add_pipe("span_ruler", config={"spans_key": None})
+    ruler = nlp.add_pipe("span_ruler", config={"annotate_ents": True})
     ruler.add_patterns(overlapping_patterns)
     doc = ruler(nlp.make_doc("foo bar baz"))
     assert len(doc.ents) == 1
     assert doc.ents[0].label_ == "FOOBAR"
-    assert "ruler" not in doc.spans
+
+
+def test_span_ruler_ents_bad_filter(overlapping_patterns):
+    @registry.misc("test_pass_through_filter")
+    def make_pass_through_filter():
+        def pass_through_filter(spans):
+            return spans
+        return pass_through_filter
+
+    nlp = spacy.blank("xx")
+    ruler = nlp.add_pipe(
+        "span_ruler",
+        config={
+            "annotate_ents": True,
+            "ents_filter": {"@misc": "test_pass_through_filter"},
+        },
+    )
+    ruler.add_patterns(overlapping_patterns)
+    with pytest.raises(ValueError):
+        doc = ruler(nlp.make_doc("foo bar baz"))

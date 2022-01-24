@@ -520,6 +520,8 @@ class Errors(metaclass=ErrorsWithCodes):
     E202 = ("Unsupported {name} mode '{mode}'. Supported modes: {modes}.")
 
     # New errors added in v3.x
+    E856 = ("Unable to set doc.ents. Check that the 'ents_filter' does not "
+            "permit overlapping spans.")
     E857 = ("Unable to remove: '{label}' not found in '{component}'.")
     E858 = ("The {mode} vector table does not support this operation. "
             "{alternative}")

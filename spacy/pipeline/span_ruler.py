@@ -23,6 +23,8 @@ PatternType = Dict[str, Union[str, List[Dict[str, Any]]]]
     default_config={
         "spans_key": "ruler",
         "spans_filter": None,
+        "annotate_ents": False,
+        "ents_filter": {"@misc": "spacy.filter_spans.v1"},
         "phrase_matcher_attr": None,
         "validate": False,
         "overwrite": True,
@@ -40,6 +42,8 @@ def make_span_ruler(
     name: str,
     spans_key: Optional[str],
     spans_filter: Optional[Callable[[Iterable[Span]], Iterable[Span]]],
+    annotate_ents: bool,
+    ents_filter: Callable[[Iterable[Span]], Iterable[Span]],
     phrase_matcher_attr: Optional[Union[int, str]],
     validate: bool,
     overwrite: bool,
@@ -50,6 +54,8 @@ def make_span_ruler(
         name,
         spans_key=spans_key,
         spans_filter=spans_filter,
+        annotate_ents=annotate_ents,
+        ents_filter=ents_filter,
         phrase_matcher_attr=phrase_matcher_attr,
         validate=validate,
         overwrite=overwrite,
@@ -72,6 +78,8 @@ class SpanRuler(Pipe):
         *,
         spans_key: Optional[str] = "ruler",
         spans_filter: Optional[Callable[[Iterable[Span]], Iterable[Span]]] = None,
+        annotate_ents: bool = False,
+        ents_filter: Callable[[Iterable[Span]], Iterable[Span]] = util.filter_spans,
         phrase_matcher_attr: Optional[Union[int, str]] = None,
         validate: bool = False,
         overwrite: bool = False,
@@ -88,17 +96,21 @@ class SpanRuler(Pipe):
             passed in automatically from the factory when the component is
             added. Used to disable the current span ruler while creating
             phrase patterns with the nlp object.
-        spans_key (Optional[str]): The spans key to save the spans under.
-            Defaults to "ruler". If `None`, spans are filtered using
-            `util.filter_spans` and saved to `doc.ents`.
+        spans_key (Optional[str]): The spans key to save the spans under. If
+            `None`, no spans are saved. Defaults to "ruler".
         spans_filter (Optional[Callable]): The optional method to filter spans
-            before they are assigned. Defaults to `None`.
+            before they are assigned to doc.spans. Defaults to `None`.
+        annotate_ents (bool): Whether to save spans to doc.ents. Defaults to
+            `False`.
+        ents_filter (Callable): The method to filter spans before they are
+            assigned to doc.ents. Defaults to `util.filter_spans`.
         phrase_matcher_attr (int / str): Token attribute to match on, passed
             to the internal PhraseMatcher as `attr`.
         validate (bool): Whether patterns should be validated, passed to
             Matcher and PhraseMatcher as `validate`.
-        overwrite (bool): Whether to reset any existing spans under this spans
-            key.
+        overwrite (bool): Whether to remove any existing spans under this spans
+            key if `spans_key` is set, or to remove any ents under `doc.ents` if
+            annotate_ents is set. Defaults to `True`.
         scorer (Optional[Callable]): The scoring method. Defaults to
             spacy.pipeline.spancat.spancat_score.
 
@@ -108,11 +120,13 @@ class SpanRuler(Pipe):
         self.name = name
         self.cfg = {
             "spans_key": spans_key,
-            "overwrite": overwrite,
+            "annotate_ents": annotate_ents,
             "phrase_matcher_attr": phrase_matcher_attr,
             "validate": validate,
+            "overwrite": overwrite,
         }
         self.spans_filter = spans_filter
+        self.ents_filter = ents_filter
         self.scorer = scorer
         self.clear()
 
@@ -162,21 +176,23 @@ class SpanRuler(Pipe):
 
     def set_annotations(self, doc, matches):
         """Modify the document in place"""
-        if self.key and self.key not in doc.spans:
-            doc.spans[self.key] = []
-        spans = []
-        if not self.cfg["overwrite"]:
-            if self.key:
-                spans = doc.spans[self.key]
-            else:
-                spans = list(doc.ents)
-        if self.spans_filter:
-            matches = self.spans_filter(matches)
-        spans.extend(matches)
+        # set doc.spans if spans_key is set
         if self.key:
+            spans = []
+            if self.key in doc.spans and not self.cfg["overwrite"]:
+                spans = doc.spans[self.key]
+            spans.extend(self.spans_filter(matches) if self.spans_filter else matches)
             doc.spans[self.key] = spans
-        else:
-            doc.ents = util.filter_spans(spans)
+        # set doc.ents if annotate_ents is set
+        if self.cfg["annotate_ents"]:
+            spans = []
+            if not self.cfg["overwrite"]:
+                spans = list(doc.ents)
+            spans.extend(self.ents_filter(matches))
+            try:
+                doc.ents = sorted(spans)
+            except ValueError:
+                raise ValueError(Errors.E856)
 
     @property
     def labels(self) -> Tuple[str, ...]:

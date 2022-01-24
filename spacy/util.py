@@ -1238,6 +1238,11 @@ def filter_spans(spans: Iterable["Span"]) -> List["Span"]:
     return result
 
 
+@registry.misc("spacy.filter_spans.v1")
+def make_filter_spans():
+    return filter_spans
+
+
 def to_bytes(getters: Dict[str, Callable[[], bytes]], exclude: Iterable[str]) -> bytes:
     return srsly.msgpack_dumps(to_dict(getters, exclude))
 
