@@ -128,7 +128,7 @@ class SpanRuler(Pipe):
         self.spans_filter = spans_filter
         self.ents_filter = ents_filter
         self.scorer = scorer
-        self._match_label_id_map = {}
+        self._match_label_id_map: Dict[int, Dict[str, str]] = {}
         self.clear()
 
     def __len__(self) -> int:
@@ -140,6 +140,7 @@ class SpanRuler(Pipe):
         for label_id in self._match_label_id_map.values():
             if label_id["label"] == label:
                 return True
+        return False
 
     @property
     def key(self) -> Optional[str]:
@@ -271,9 +272,9 @@ class SpanRuler(Pipe):
             phrase_pattern_texts = []
             for entry in patterns:
                 p_label = cast(str, entry["label"])
-                p_id = cast(Union[int, str], entry.get("id", 0))
+                p_id = cast(str, entry.get("id", ""))
                 label = repr((p_label, p_id))
-                self._match_label_id_map[self.nlp.vocab.strings[label]] = {
+                self._match_label_id_map[self.nlp.vocab.strings.as_int(label)] = {
                     "label": p_label,
                     "id": p_id,
                 }
