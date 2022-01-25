@@ -170,7 +170,8 @@ def forward(model, docs_moves: Tuple[List[Doc], TransitionSystem], is_train: boo
         scores += upper_b
         scores[:, unseen_mask == 0] = model.ops.xp.nanmin(scores)
         # Transition the states, filtering out any that are finished.
-        next_states = moves.transition_states(next_states, scores)
+        cpu_scores = model.ops.to_numpy(scores)
+        next_states = moves.transition_states(next_states, cpu_scores)
         all_scores.append(scores)
         if is_train:
             # Remember intermediate results for the backprop.
