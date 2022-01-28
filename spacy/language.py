@@ -522,7 +522,7 @@ class Language:
         requires: Iterable[str] = SimpleFrozenList(),
         retokenizes: bool = False,
         func: Optional["Pipe"] = None,
-    ) -> Callable:
+    ) -> Callable[..., Any]:
         """Register a new pipeline component. Can be used for stateless function
         components that don't require a separate factory. Can be used as a
         decorator on a function or classmethod, or called as a function with the
