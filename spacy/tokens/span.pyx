@@ -471,8 +471,9 @@ cdef class Span:
 
     @property
     def ents(self):
-        """The named entities in the span. Returns a tuple of named entity
-        `Span` objects, if the entity recognizer has been applied.
+        """The named entities in the span. It only includes entities that fall
+        completely within the span. Returns a tuple of named entity `Span`
+        objects, if the entity recognizer has been applied.
 
         RETURNS (tuple): Entities in the span, one `Span` per entity.
 
