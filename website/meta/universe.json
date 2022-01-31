@@ -1009,7 +1009,7 @@
                 "print(doc._.sentiment)",
                 "# 'positive'",
                 "print(doc._.sentiment_prob)",
-                "# {'prob': array([0.004, 0.028, 0.969], dtype=float32), 'labels': ['negative', 'neutral', 'positive']}",
+                "# {'prob': array([0.004, 0.028, 0.969], dtype=float32), 'labels': ['negative', 'neutral', 'positive']}"
             ],
             "thumb": "https://raw.githubusercontent.com/KennethEnevoldsen/spacy-wrap/main/docs/_static/icon.png",
             "author": "Kenneth Enevoldsen",
