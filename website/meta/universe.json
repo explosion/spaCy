@@ -990,7 +990,7 @@
                 "import spacy_wrap",
                 "",
                 "nlp = spacy.blank('en')",
-                "config = {",,
+                "config = {",
                 "   'doc_extension_trf_data': 'clf_trf_data',  # document extention for the forward pass",
                 "   'doc_extension_prediction': 'sentiment',  # document extention for the prediction",
                 "   'labels': ['negative', 'neutral', 'positive'],",
