@@ -983,7 +983,7 @@
             "title": "spaCy-wrap",
             "slogan": "For Wrapping fine-tuned transformers in spaCy pipelines",
             "description": "spaCy-wrap is a wrapper library for spaCy for including fine-tuned transformers from Huggingface in your spaCy pipeline allowing inclusion of existing models within existing workflows.",
-            "github": "https://github.com/kennethenevoldsen/spacy-wrap",
+            "github": "kennethenevoldsen/spacy-wrap",
             "pip": "spacy_wrap",
             "code_example": [
                 "import spacy",
