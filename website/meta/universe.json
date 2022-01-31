@@ -1014,7 +1014,7 @@
             "thumb": "https://raw.githubusercontent.com/KennethEnevoldsen/spacy-wrap/main/docs/_static/icon.png",
             "author": "Kenneth Enevoldsen",
             "author_links": {
-                "github": "https://github.com/KennethEnevoldsen",
+                "github": "KennethEnevoldsen",
                 "website": "https://www.kennethenevoldsen.com"
             },
             "category": ["pipeline", "models", "training"],
