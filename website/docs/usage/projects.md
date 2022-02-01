@@ -229,6 +229,41 @@ pipelines.
 | `commands`      | A list of named commands. A command can define an optional help message (shown in the CLI when the user adds `--help`) and the `script`, a list of commands to run. The `deps` and `outputs` let you define the created file the command depends on and produces, respectively. This lets spaCy determine whether a command needs to be re-run because its dependencies or outputs changed. Commands can be run as part of a workflow, or separately with the [`project run`](/api/cli#project-run) command. |
 | `spacy_version` | Optional spaCy version range like `>=3.0.0,<3.1.0` that the project is compatible with. If it's loaded with an incompatible version, an error is raised when the project is loaded.                                                                                                                                                                                                                                                                                                                          |
 
+<Accordion title="Tip: Multi-line YAML syntax for long values">
+
+YAML has [multi-line syntax](https://yaml-multiline.info/) that can be 
+helpful for readability with longer values such as project descriptions or 
+commands that take several arguments.
+
+```yaml
+### project.yml
+title: "Part-of-speech Tagging & Dependency Parsing (Universal Dependencies)"
+description: >
+  This project template lets you train a part-of-speech tagger, 
+  morphologizer and dependency parser from a 
+  [Universal Dependencies](https://universaldependencies.org/) corpus.
+
+# ... 
+
+commands:
+  - name: train
+    script:
+      - >-
+        python -m spacy train 
+        configs/${vars.config}.cfg 
+        --output training/${vars.treebank} 
+        --gpu-id ${vars.gpu} 
+        --paths.train corpus/${vars.treebank}/train.spacy 
+        --paths.dev corpus/${vars.treebank}/dev.spacy 
+        --nlp.lang=${vars.lang}
+```
+
+</Accordion>
+
+
+
+
+
 ### Data assets {#data-assets}
 
 Assets are any files that your project might need, like training and development
