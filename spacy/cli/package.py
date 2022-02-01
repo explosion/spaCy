@@ -109,6 +109,14 @@ def package(
             ", ".join(meta["requirements"]),
         )
     if name is not None:
+        if not name.isidentifier():
+            msg.fail(
+                f"Model name ('{name}') is not a valid python identifier. "
+                "This is required to correctly package the pipeline so it can be imported as a module.",
+                "Valid characters for identifiers are the uppercase and lowercase letters A through Z, "
+                "the underscore _ and, except for the first character, the digits 0 through 9.",
+                exits=1,
+            )
         meta["name"] = name
     if version is not None:
         meta["version"] = version
