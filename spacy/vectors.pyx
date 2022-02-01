@@ -10,7 +10,7 @@ from typing import cast
 import warnings
 from enum import Enum
 import srsly
-from thinc.api import get_array_module, get_current_ops
+from thinc.api import Ops, get_array_module, get_current_ops
 from thinc.backends import get_array_ops
 from thinc.types import Floats2d
 
@@ -146,7 +146,7 @@ cdef class Vectors:
 
         DOCS: https://spacy.io/api/vectors#size
         """
-        return self.data.shape[0] * self.data.shape[1]
+        return self.data.size
 
     @property
     def is_full(self):
@@ -516,6 +516,9 @@ cdef class Vectors:
             [[row2key[row] for row in numpy_rows[i] if row in row2key]
                     for i in range(len(queries)) ], dtype="uint64")
         return (keys, best_rows, scores)
+
+    def to_ops(self, ops: Ops):
+        self.data = ops.asarray(self.data)
 
     def _get_cfg(self):
         if self.mode == Mode.default:

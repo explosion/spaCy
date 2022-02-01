@@ -164,7 +164,7 @@ def load_vectors_into_model(
         len(vectors_nlp.vocab.vectors.keys()) == 0
         and vectors_nlp.vocab.vectors.mode != VectorsMode.floret
     ) or (
-        vectors_nlp.vocab.vectors.data.shape[0] == 0
+        vectors_nlp.vocab.vectors.shape[0] == 0
         and vectors_nlp.vocab.vectors.mode == VectorsMode.floret
     ):
         logger.warning(Warnings.W112.format(name=name))

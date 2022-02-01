@@ -831,6 +831,8 @@ def tokenizer_pseudo_code(
                 infixes = infix_finditer(substring)
                 offset = 0
                 for match in infixes:
+                    if offset == 0 and match.start() == 0:
+                        continue
                     tokens.append(substring[offset : match.start()])
                     tokens.append(substring[match.start() : match.end()])
                     offset = match.end()

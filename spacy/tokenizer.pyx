@@ -683,6 +683,8 @@ cdef class Tokenizer:
                     infixes = infix_finditer(substring)
                     offset = 0
                     for match in infixes:
+                        if offset == 0 and match.start() == 0:
+                            continue
                         if substring[offset : match.start()]:
                             tokens.append(("TOKEN", substring[offset : match.start()]))
                         if substring[match.start() : match.end()]:

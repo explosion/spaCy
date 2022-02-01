@@ -1,6 +1,6 @@
-from typing import List, Tuple, Union, Optional, Callable, Any, Dict
-
-from . import Matcher
+from typing import List, Tuple, Union, Optional, Callable, Any, Dict, overload
+from ..compat import Literal
+from .matcher import Matcher
 from ..vocab import Vocab
 from ..tokens import Doc, Span
 
@@ -21,9 +21,17 @@ class PhraseMatcher:
         ] = ...,
     ) -> None: ...
     def remove(self, key: str) -> None: ...
+    @overload
     def __call__(
         self,
         doclike: Union[Doc, Span],
         *,
-        as_spans: bool = ...,
-    ) -> Union[List[Tuple[int, int, int]], List[Span]]: ...
+        as_spans: Literal[False] = ...,
+    ) -> List[Tuple[int, int, int]]: ...
+    @overload
+    def __call__(
+        self,
+        doclike: Union[Doc, Span],
+        *,
+        as_spans: Literal[True],
+    ) -> List[Span]: ...
