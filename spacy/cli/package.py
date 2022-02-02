@@ -112,19 +112,19 @@ def package(
     if name is not None:
         if not name.isidentifier():
             msg.fail(
-                f"Model name ('{name}') is not a valid python identifier. "
-                "This is required to correctly package the pipeline so it can be imported as a module.",
+                f"Model name ('{name}') is not a valid module name. "
+                "This is required so it can be imported as a module.",
                 "We recommend names that use ASCII A-Z, a-z, _ (underscore), "
-                "and 0-9 (except as the first character). "
+                "and 0-9."
                 "For specific details see: https://docs.python.org/3/reference/lexical_analysis.html#identifiers",
                 exits=1,
             )
         if not _is_permitted_package_name(name):
             msg.fail(
                 f"Model name ('{name}') is not a permitted package name. "
-                "This is required to correctly install the pipeline after packaging.",
+                "This is required to correctly load the model with spacy.load.",
                 "We recommend names that use ASCII A-Z, a-z, _ (underscore), "
-                "and 0-9, and start with a character. "
+                "and 0-9."
                 "For specific details see: https://www.python.org/dev/peps/pep-0426/#name",
                 exits=1,
             )
@@ -192,9 +192,9 @@ def package(
             util.run_command([sys.executable, "setup.py", "bdist_wheel"], capture=False)
         wheel = main_path / "dist" / f"{model_name_v}{WHEEL_SUFFIX}"
         msg.good(f"Successfully created binary wheel", wheel)
-    if _contains_underscore_run(name):
+    if "__" in model_name:
         msg.warn(
-            f"Model name ('{name}') contains a run of underscores. "
+            f"Model name ('{model_name}') contains a run of underscores. "
             "These will be squashed to a single underscore when normalized upon PyPI upload.",
         )
 
@@ -447,14 +447,10 @@ def _format_label_scheme(data: Dict[str, Any]) -> str:
 
 
 def _is_permitted_package_name(package_name: str) -> bool:
+    # regex from: https://www.python.org/dev/peps/pep-0426/#name
     permitted_match = re.search(
         r"^([A-Z0-9]|[A-Z0-9][A-Z0-9._-]*[A-Z0-9])$", package_name, re.IGNORECASE
     )
-    return permitted_match is not None
-
-
-def _contains_underscore_run(package_name: str) -> bool:
-    permitted_match = re.search(r"_{2,}", package_name, re.IGNORECASE)
     return permitted_match is not None
 
 
