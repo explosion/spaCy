@@ -236,7 +236,7 @@ def debug_data(
 
         if has_low_data_warning:
             msg.text(
-                f"To train a new entity type, your data should include at "
+                f"To train a new span type, your data should include at "
                 f"least {NEW_LABEL_THRESHOLD} instances of the new label",
                 show=verbose,
             )
@@ -245,8 +245,8 @@ def debug_data(
 
         if has_no_neg_warning:
             msg.text(
-                "Training data should always include examples of entities "
-                "in context, as well as examples without a given entity "
+                "Training data should always include examples of spans "
+                "in context, as well as examples without a given span "
                 "type.",
                 show=verbose,
             )
