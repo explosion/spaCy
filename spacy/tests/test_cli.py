@@ -18,7 +18,7 @@ from spacy.cli.download import get_compatibility, get_version
 from spacy.cli.init_config import RECOMMENDATIONS, init_config, fill_config
 from spacy.cli.package import (
     get_third_party_dependencies,
-    _contains_multiple_underscores,
+    _contains_underscore_run,
     _is_permitted_package_name,
 )
 from spacy.cli.validate import get_model_pkgs
@@ -710,5 +710,5 @@ def test_permitted_package_names():
 
 
 def test_multiple_underscores():
-    assert _contains_multiple_underscores("my__package") == True
-    assert _contains_multiple_underscores("my_package") == False
+    assert _contains_underscore_run("my__package") == True
+    assert _contains_underscore_run("my_package") == False

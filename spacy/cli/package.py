@@ -192,10 +192,10 @@ def package(
             util.run_command([sys.executable, "setup.py", "bdist_wheel"], capture=False)
         wheel = main_path / "dist" / f"{model_name_v}{WHEEL_SUFFIX}"
         msg.good(f"Successfully created binary wheel", wheel)
-    if _contains_multiple_underscores(name):
+    if _contains_underscore_run(name):
         msg.warn(
-            f"Model name ('{name}') contains multiple sequential underscores. "
-            "This can cause import issues when loading the model.",
+            f"Model name ('{name}') contains a run of underscores. "
+            "These will be squashed to a single underscore when normalized upon PyPI upload.",
         )
 
 
@@ -453,7 +453,7 @@ def _is_permitted_package_name(package_name: str) -> bool:
     return permitted_match is not None
 
 
-def _contains_multiple_underscores(package_name: str) -> bool:
+def _contains_underscore_run(package_name: str) -> bool:
     permitted_match = re.search(r"_{2,}", package_name, re.IGNORECASE)
     return permitted_match is not None
 
