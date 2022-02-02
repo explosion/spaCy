@@ -759,7 +759,7 @@ def _format_labels(
 def _get_examples_without_label(
     data: Sequence[Example],
     label: str,
-    component: str = "ner",
+    component: Literal["ner", "spancat"] = "ner",
     spans_key: Optional[str] = "sc",
 ) -> int:
     count = 0
