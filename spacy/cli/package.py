@@ -122,7 +122,7 @@ def package(
         if not _is_permitted_package_name(name):
             msg.fail(
                 f"Model name ('{name}') is not a permitted package name. "
-                "This is required to correctly package the pipeline.",
+                "This is required to correctly install the pipeline after packaging.",
                 "We recommend names that use ASCII A-Z, a-z, _ (underscore), "
                 "and 0-9, and start with a character. "
                 "For specific details see: https://www.python.org/dev/peps/pep-0426/#name",
