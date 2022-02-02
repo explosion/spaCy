@@ -170,7 +170,7 @@ def package(
         imports="\n".join(f"from . import {m}" for m in imports)
     )
     create_file(package_path / "__init__.py", init_py)
-    msg.good(f"Successfully created package '{model_name_v}'", main_path)
+    msg.good(f"Successfully created package directory '{model_name_v}'", main_path)
     if create_sdist:
         with util.working_dir(main_path):
             util.run_command([sys.executable, "setup.py", "sdist"], capture=False)
