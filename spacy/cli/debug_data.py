@@ -6,7 +6,6 @@ import sys
 import srsly
 from wasabi import Printer, MESSAGES, msg
 import typer
-import itertools
 
 from ._util import app, Arg, Opt, show_validation_error, parse_config_overrides
 from ._util import import_code, debug_cli
