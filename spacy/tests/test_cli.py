@@ -697,8 +697,8 @@ def test_get_labels_from_model(factory_name, pipe_name):
 
 def test_debug_data_compile_gold():
     nlp = English()
-    pred = Doc(nlp.vocab, words=[".", "New", "York", "City"])
-    ref = Doc(nlp.vocab, words=[".", "New York City"], sent_starts=["True", "True"], ents=["O", "B-ENT"])
+    pred = Doc(nlp.vocab, words=["Token", ".", "New", "York", "City"])
+    ref = Doc(nlp.vocab, words=["Token", ".", "New York City"], sent_starts=[True, False, True], ents=["O", "O", "B-ENT"])
     eg = Example(pred, ref)
     data = _compile_gold([eg], ["ner"], nlp, True)
     assert data["boundary_cross_ents"] == 0
