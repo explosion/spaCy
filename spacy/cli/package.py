@@ -7,6 +7,7 @@ from collections import defaultdict
 from catalogue import RegistryError
 import srsly
 import sys
+import re
 
 from ._util import app, Arg, Opt, string_to_list, WHEEL_SUFFIX, SDIST_SUFFIX
 from ..schemas import validate, ModelMetaSchema
@@ -113,8 +114,18 @@ def package(
             msg.fail(
                 f"Model name ('{name}') is not a valid python identifier. "
                 "This is required to correctly package the pipeline so it can be imported as a module.",
-                "Valid characters for identifiers are ASCII A-Z, a-z, _ (underscore) "
-                "and 0-9 (except as the first character)",
+                "We recommend names that use ASCII A-Z, a-z, _ (underscore), "
+                "and 0-9 (except as the first character). "
+                "For specific details see: https://docs.python.org/3/reference/lexical_analysis.html#identifiers",
+                exits=1,
+            )
+        if not _is_permitted_package_name(name):
+            msg.fail(
+                f"Model name ('{name}') is not a permitted package name. "
+                "This is required to correctly package the pipeline.",
+                "We recommend names that use ASCII A-Z, a-z, _ (underscore), "
+                "and 0-9, and start with a character. "
+                "For specific details see: https://www.python.org/dev/peps/pep-0426/#name",
                 exits=1,
             )
         meta["name"] = name
@@ -181,6 +192,11 @@ def package(
             util.run_command([sys.executable, "setup.py", "bdist_wheel"], capture=False)
         wheel = main_path / "dist" / f"{model_name_v}{WHEEL_SUFFIX}"
         msg.good(f"Successfully created binary wheel", wheel)
+    if _contains_multiple_underscores(name):
+        msg.warn(
+            f"Model name ('{name}') contains multiple sequential underscores. "
+            "This can cause import issues when loading the model.",
+        )
 
 
 def has_wheel() -> bool:
@@ -428,6 +444,18 @@ def _format_label_scheme(data: Dict[str, Any]) -> str:
     md.add(md.table(label_data, ["Component", "Labels"]))
     md.add("</details>")
     return md.text
+
+
+def _is_permitted_package_name(package_name: str) -> bool:
+    permitted_match = re.search(
+        r"^([A-Z0-9]|[A-Z0-9][A-Z0-9._-]*[A-Z0-9])$", package_name, re.IGNORECASE
+    )
+    return permitted_match is not None
+
+
+def _contains_multiple_underscores(package_name: str) -> bool:
+    permitted_match = re.search(r"_{2,}", package_name, re.IGNORECASE)
+    return permitted_match is not None
 
 
 TEMPLATE_SETUP = """

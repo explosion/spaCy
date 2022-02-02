@@ -16,7 +16,11 @@ from spacy.cli.debug_data import _get_labels_from_model
 from spacy.cli.debug_data import _get_labels_from_spancat
 from spacy.cli.download import get_compatibility, get_version
 from spacy.cli.init_config import RECOMMENDATIONS, init_config, fill_config
-from spacy.cli.package import get_third_party_dependencies
+from spacy.cli.package import (
+    get_third_party_dependencies,
+    _contains_multiple_underscores,
+    _is_permitted_package_name,
+)
 from spacy.cli.validate import get_model_pkgs
 from spacy.lang.en import English
 from spacy.lang.nl import Dutch
@@ -692,3 +696,19 @@ def test_get_labels_from_model(factory_name, pipe_name):
         assert _get_labels_from_spancat(nlp)[pipe.key] == set(labels)
     else:
         assert _get_labels_from_model(nlp, factory_name) == set(labels)
+
+
+def test_permitted_package_names():
+    # https://www.python.org/dev/peps/pep-0426/#name
+    assert _is_permitted_package_name("Meine_Bäume") == False
+    assert _is_permitted_package_name("_package") == False
+    assert _is_permitted_package_name("package_") == False
+    assert _is_permitted_package_name(".package") == False
+    assert _is_permitted_package_name("package.") == False
+    assert _is_permitted_package_name("-package") == False
+    assert _is_permitted_package_name("package-") == False
+
+
+def test_multiple_underscores():
+    assert _contains_multiple_underscores("my__package") == True
+    assert _contains_multiple_underscores("my_package") == False
