@@ -49,7 +49,7 @@ stride = 96
 factory = "morphologizer"
 
 [components.morphologizer.model]
-@architectures = "spacy.Tagger.v1"
+@architectures = "spacy.Tagger.v2"
 nO = null
 
 [components.morphologizer.model.tok2vec]
@@ -65,7 +65,7 @@ grad_factor = 1.0
 factory = "tagger"
 
 [components.tagger.model]
-@architectures = "spacy.Tagger.v1"
+@architectures = "spacy.Tagger.v2"
 nO = null
 
 [components.tagger.model.tok2vec]
@@ -233,7 +233,7 @@ maxout_pieces = 3
 factory = "morphologizer"
 
 [components.morphologizer.model]
-@architectures = "spacy.Tagger.v1"
+@architectures = "spacy.Tagger.v2"
 nO = null
 
 [components.morphologizer.model.tok2vec]
@@ -246,7 +246,7 @@ width = ${components.tok2vec.model.encode.width}
 factory = "tagger"
 
 [components.tagger.model]
-@architectures = "spacy.Tagger.v1"
+@architectures = "spacy.Tagger.v2"
 nO = null
 
 [components.tagger.model.tok2vec]

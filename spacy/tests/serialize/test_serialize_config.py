@@ -59,7 +59,7 @@ subword_features = true
 factory = "tagger"
 
 [components.tagger.model]
-@architectures = "spacy.Tagger.v1"
+@architectures = "spacy.Tagger.v2"
 
 [components.tagger.model.tok2vec]
 @architectures = "spacy.Tok2VecListener.v1"
@@ -110,7 +110,7 @@ subword_features = true
 factory = "tagger"
 
 [components.tagger.model]
-@architectures = "spacy.Tagger.v1"
+@architectures = "spacy.Tagger.v2"
 
 [components.tagger.model.tok2vec]
 @architectures = "spacy.Tok2VecListener.v1"

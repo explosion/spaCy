@@ -100,7 +100,7 @@ cfg_string = """
     factory = "tagger"
 
     [components.tagger.model]
-    @architectures = "spacy.Tagger.v1"
+    @architectures = "spacy.Tagger.v2"
     nO = null
 
     [components.tagger.model.tok2vec]
@@ -244,7 +244,7 @@ cfg_string_multi = """
     factory = "tagger"
 
     [components.tagger.model]
-    @architectures = "spacy.Tagger.v1"
+    @architectures = "spacy.Tagger.v2"
     nO = null
 
     [components.tagger.model.tok2vec]
@@ -354,7 +354,7 @@ cfg_string_multi_textcat = """
     factory = "tagger"
 
     [components.tagger.model]
-    @architectures = "spacy.Tagger.v1"
+    @architectures = "spacy.Tagger.v2"
     nO = null
 
     [components.tagger.model.tok2vec]
