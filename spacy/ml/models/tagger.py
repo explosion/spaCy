@@ -6,20 +6,7 @@ from ...util import registry
 from ...tokens import Doc
 
 
-@registry.architectures("spacy.Tagger.v1")
-def build_tagger_model_v1(
-    tok2vec: Model[List[Doc], List[Floats2d]], nO: Optional[int] = None
-) -> Model[List[Doc], List[Floats2d]]:
-    return build_tagger_model(tok2vec, nO, normalize=True)
-
-
 @registry.architectures("spacy.Tagger.v2")
-def build_tagger_model_v2(
-    tok2vec: Model[List[Doc], List[Floats2d]], nO: Optional[int] = None, normalize=False
-) -> Model[List[Doc], List[Floats2d]]:
-    return build_tagger_model(tok2vec, nO, normalize=normalize)
-
-
 def build_tagger_model(
     tok2vec: Model[List[Doc], List[Floats2d]], nO: Optional[int] = None, normalize=False
 ) -> Model[List[Doc], List[Floats2d]]:
