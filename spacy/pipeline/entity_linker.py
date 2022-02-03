@@ -6,7 +6,6 @@ import srsly
 import random
 from thinc.api import CosineDistance, Model, Optimizer, Config
 from thinc.api import set_dropout_rate
-import warnings
 
 from ..kb import KnowledgeBase, Candidate
 from ..ml import empty_kb
@@ -17,7 +16,7 @@ from .trainable_pipe import TrainablePipe
 from ..language import Language
 from ..vocab import Vocab
 from ..training import Example, validate_examples, validate_get_examples
-from ..errors import Errors, Warnings
+from ..errors import Errors
 from ..util import SimpleFrozenList, registry
 from .. import util
 from ..scorer import Scorer
