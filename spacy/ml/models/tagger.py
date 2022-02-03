@@ -7,8 +7,21 @@ from ...tokens import Doc
 
 
 @registry.architectures("spacy.Tagger.v1")
-def build_tagger_model(
+def build_tagger_model_v1(
     tok2vec: Model[List[Doc], List[Floats2d]], nO: Optional[int] = None
+) -> Model[List[Doc], List[Floats2d]]:
+    return build_tagger_model(tok2vec, nO, normalize=True)
+
+
+@registry.architectures("spacy.Tagger.v2")
+def build_tagger_model_v2(
+    tok2vec: Model[List[Doc], List[Floats2d]], nO: Optional[int] = None, normalize=False
+) -> Model[List[Doc], List[Floats2d]]:
+    return build_tagger_model(tok2vec, nO, normalize=normalize)
+
+
+def build_tagger_model(
+    tok2vec: Model[List[Doc], List[Floats2d]], nO: Optional[int] = None, normalize=False
 ) -> Model[List[Doc], List[Floats2d]]:
     """Build a tagger model, using a provided token-to-vector component. The tagger
     model simply adds a linear layer with softmax activation to predict scores
@@ -19,7 +32,7 @@ def build_tagger_model(
     """
     # TODO: glorot_uniform_init seems to work a bit better than zero_init here?!
     t2v_width = tok2vec.get_dim("nO") if tok2vec.has_dim("nO") else None
-    output_layer = Softmax(nO, t2v_width, init_W=zero_init, normalize=False)
+    output_layer = Softmax(nO, t2v_width, init_W=zero_init, normalize=normalize)
     softmax = with_array(output_layer)  # type: ignore
     model = chain(tok2vec, softmax)
     model.set_ref("tok2vec", tok2vec)
