@@ -1,8 +1,9 @@
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
-from ...language import Language
+from ...language import Language, BaseDefaults
 from ...tokens import Doc
 from ...util import DummyTokenizer, registry, load_config_from_str
+from ...vocab import Vocab
 
 
 DEFAULT_CONFIG = """
@@ -16,13 +17,13 @@ DEFAULT_CONFIG = """
 @registry.tokenizers("spacy.th.ThaiTokenizer")
 def create_thai_tokenizer():
     def thai_tokenizer_factory(nlp):
-        return ThaiTokenizer(nlp)
+        return ThaiTokenizer(nlp.vocab)
 
     return thai_tokenizer_factory
 
 
 class ThaiTokenizer(DummyTokenizer):
-    def __init__(self, nlp: Language) -> None:
+    def __init__(self, vocab: Vocab) -> None:
         try:
             from pythainlp.tokenize import word_tokenize
         except ImportError:
@@ -31,7 +32,7 @@ class ThaiTokenizer(DummyTokenizer):
                 "https://github.com/PyThaiNLP/pythainlp"
             ) from None
         self.word_tokenize = word_tokenize
-        self.vocab = nlp.vocab
+        self.vocab = vocab
 
     def __call__(self, text: str) -> Doc:
         words = list(self.word_tokenize(text))
@@ -39,7 +40,7 @@ class ThaiTokenizer(DummyTokenizer):
         return Doc(self.vocab, words=words, spaces=spaces)
 
 
-class ThaiDefaults(Language.Defaults):
+class ThaiDefaults(BaseDefaults):
     config = load_config_from_str(DEFAULT_CONFIG)
     lex_attr_getters = LEX_ATTRS
     stop_words = STOP_WORDS

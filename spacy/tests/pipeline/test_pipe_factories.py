@@ -1,4 +1,6 @@
 import pytest
+
+import spacy
 from spacy.language import Language
 from spacy.lang.en import English
 from spacy.lang.de import German
@@ -9,6 +11,37 @@ from thinc.api import Model, Linear, ConfigValidationError
 from pydantic import StrictInt, StrictStr
 
 from ..util import make_tempdir
+
+
+@pytest.mark.issue(5137)
+def test_issue5137():
+    factory_name = "test_issue5137"
+    pipe_name = "my_component"
+
+    @Language.factory(factory_name)
+    class MyComponent:
+        def __init__(self, nlp, name=pipe_name, categories="all_categories"):
+            self.nlp = nlp
+            self.categories = categories
+            self.name = name
+
+        def __call__(self, doc):
+            pass
+
+        def to_disk(self, path, **kwargs):
+            pass
+
+        def from_disk(self, path, **cfg):
+            pass
+
+    nlp = English()
+    my_component = nlp.add_pipe(factory_name, name=pipe_name)
+    assert my_component.categories == "all_categories"
+    with make_tempdir() as tmpdir:
+        nlp.to_disk(tmpdir)
+        overrides = {"components": {pipe_name: {"categories": "my_categories"}}}
+        nlp2 = spacy.load(tmpdir, config=overrides)
+        assert nlp2.get_pipe(pipe_name).categories == "my_categories"
 
 
 def test_pipe_function_component():
@@ -135,8 +168,8 @@ def test_pipe_class_component_defaults():
             self,
             nlp: Language,
             name: str,
-            value1: StrictInt = 10,
-            value2: StrictStr = "hello",
+            value1: StrictInt = StrictInt(10),
+            value2: StrictStr = StrictStr("hello"),
         ):
             self.nlp = nlp
             self.value1 = value1
@@ -196,7 +229,11 @@ def test_pipe_class_component_model_custom():
     @Language.factory(name, default_config=default_config)
     class Component:
         def __init__(
-            self, nlp: Language, model: Model, name: str, value1: StrictInt = 10
+            self,
+            nlp: Language,
+            model: Model,
+            name: str,
+            value1: StrictInt = StrictInt(10),
         ):
             self.nlp = nlp
             self.model = model

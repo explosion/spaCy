@@ -247,6 +247,10 @@ config can be used to configure the split mode to `A`, `B` or `C`.
 split_mode = "A"
 ```
 
+Extra information, such as reading, inflection form, and the SudachiPy
+normalized form, is available in `Token.morph`. For `B` or `C` split modes,
+subtokens are stored in `Doc.user_data["sub_tokens"]`.
+
 <Infobox variant="warning">
 
 If you run into errors related to `sudachipy`, which is currently under active

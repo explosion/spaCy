@@ -1,5 +1,6 @@
 # cython: infer_types=True, profile=True, binding=True
 from itertools import islice
+from typing import Optional, Callable
 
 import srsly
 from thinc.api import Model, SequenceCategoricalCrossentropy, Config
@@ -11,8 +12,11 @@ from ..language import Language
 from ..errors import Errors
 from ..scorer import Scorer
 from ..training import validate_examples, validate_get_examples
+from ..util import registry
 from .. import util
 
+# See #9050
+BACKWARD_OVERWRITE = False
 
 default_model_config = """
 [model]
@@ -34,11 +38,25 @@ DEFAULT_SENTER_MODEL = Config().from_str(default_model_config)["model"]
 @Language.factory(
     "senter",
     assigns=["token.is_sent_start"],
-    default_config={"model": DEFAULT_SENTER_MODEL},
+    default_config={"model": DEFAULT_SENTER_MODEL, "overwrite": False, "scorer": {"@scorers": "spacy.senter_scorer.v1"}},
     default_score_weights={"sents_f": 1.0, "sents_p": 0.0, "sents_r": 0.0},
 )
-def make_senter(nlp: Language, name: str, model: Model):
-    return SentenceRecognizer(nlp.vocab, model, name)
+def make_senter(nlp: Language, name: str, model: Model, overwrite: bool, scorer: Optional[Callable]):
+    return SentenceRecognizer(nlp.vocab, model, name, overwrite=overwrite, scorer=scorer)
+
+
+def senter_score(examples, **kwargs):
+    def has_sents(doc):
+        return doc.has_annotation("SENT_START")
+
+    results = Scorer.score_spans(examples, "sents", has_annotation=has_sents, **kwargs)
+    del results["sents_per_type"]
+    return results
+
+
+@registry.scorers("spacy.senter_scorer.v1")
+def make_senter_scorer():
+    return senter_score
 
 
 class SentenceRecognizer(Tagger):
@@ -46,13 +64,23 @@ class SentenceRecognizer(Tagger):
 
     DOCS: https://spacy.io/api/sentencerecognizer
     """
-    def __init__(self, vocab, model, name="senter"):
+    def __init__(
+        self,
+        vocab,
+        model,
+        name="senter",
+        *,
+        overwrite=BACKWARD_OVERWRITE,
+        scorer=senter_score,
+    ):
         """Initialize a sentence recognizer.
 
         vocab (Vocab): The shared vocabulary.
         model (thinc.api.Model): The Thinc Model powering the pipeline component.
         name (str): The component instance name, used to add entries to the
             losses during training.
+        scorer (Optional[Callable]): The scoring method. Defaults to
+            Scorer.score_spans for the attribute "sents".
 
         DOCS: https://spacy.io/api/sentencerecognizer#init
         """
@@ -60,7 +88,8 @@ class SentenceRecognizer(Tagger):
         self.model = model
         self.name = name
         self._rehearsal_model = None
-        self.cfg = {}
+        self.cfg = {"overwrite": overwrite}
+        self.scorer = scorer
 
     @property
     def labels(self):
@@ -85,13 +114,13 @@ class SentenceRecognizer(Tagger):
         if isinstance(docs, Doc):
             docs = [docs]
         cdef Doc doc
+        cdef bint overwrite = self.cfg["overwrite"]
         for i, doc in enumerate(docs):
             doc_tag_ids = batch_tag_ids[i]
             if hasattr(doc_tag_ids, "get"):
                 doc_tag_ids = doc_tag_ids.get()
             for j, tag_id in enumerate(doc_tag_ids):
-                # Don't clobber existing sentence boundaries
-                if doc.c[j].sent_start == 0:
+                if doc.c[j].sent_start == 0 or overwrite:
                     if tag_id == 1:
                         doc.c[j].sent_start = 1
                     else:
@@ -153,18 +182,3 @@ class SentenceRecognizer(Tagger):
 
     def add_label(self, label, values=None):
         raise NotImplementedError
-
-    def score(self, examples, **kwargs):
-        """Score a batch of examples.
-
-        examples (Iterable[Example]): The examples to score.
-        RETURNS (Dict[str, Any]): The scores, produced by Scorer.score_spans.
-        DOCS: https://spacy.io/api/sentencerecognizer#score
-        """
-        def has_sents(doc):
-            return doc.has_annotation("SENT_START")
-
-        validate_examples(examples, "SentenceRecognizer.score")
-        results = Scorer.score_spans(examples, "sents", has_annotation=has_sents, **kwargs)
-        del results["sents_per_type"]
-        return results

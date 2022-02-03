@@ -82,7 +82,8 @@ for orth in [
 
 for verb in [
     "a",
-    "est" "semble",
+    "est",
+    "semble",
     "indique",
     "moque",
     "passe",
@@ -114,7 +115,7 @@ for s, verb, pronoun in [("s", "est", "il"), ("S", "EST", "IL")]:
     ]
 
 
-_infixes_exc = []
+_infixes_exc = []  # type: ignore[var-annotated]
 orig_elision = "'"
 orig_hyphen = "-"
 

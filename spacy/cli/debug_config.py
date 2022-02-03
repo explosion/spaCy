@@ -25,7 +25,7 @@ def debug_config_cli(
     show_vars: bool = Opt(False, "--show-variables", "-V", help="Show an overview of all variables referenced in the config and their values. This will also reflect variables overwritten on the CLI.")
     # fmt: on
 ):
-    """Debug a config.cfg file and show validation errors. The command will
+    """Debug a config file and show validation errors. The command will
     create all objects in the tree and validate them. Note that some config
     validation errors are blocking and will prevent the rest of the config from
     being resolved. This means that you may not see all validation errors at

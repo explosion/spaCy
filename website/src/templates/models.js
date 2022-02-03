@@ -31,23 +31,26 @@ const COMPONENT_LINKS = {
 
 const MODEL_META = {
     core: 'Vocabulary, syntax, entities, vectors',
-    core_sm: 'Vocabulary, syntax, entities',
+    core_no_vectors: 'Vocabulary, syntax, entities',
     dep: 'Vocabulary, syntax',
     ent: 'Named entities',
+    sent: 'Sentence boundaries',
     pytt: 'PyTorch Transformers',
     trf: 'Transformers',
     vectors: 'Word vectors',
     web: 'written text (blogs, news, comments)',
     news: 'written text (news, media)',
     wiki: 'Wikipedia',
-    uas: 'Unlabelled dependencies',
-    las: 'Labelled dependencies',
-    dep_uas: 'Unlabelled dependencies',
-    dep_las: 'Labelled dependencies',
+    uas: 'Unlabeled dependencies',
+    las: 'Labeled dependencies',
+    dep_uas: 'Unlabeled dependencies',
+    dep_las: 'Labeled dependencies',
     token_acc: 'Tokenization',
     tok: 'Tokenization',
     lemma: 'Lemmatization',
     morph: 'Morphological analysis',
+    lemma_acc: 'Lemmatization',
+    morph_acc: 'Morphological analysis',
     tags_acc: 'Part-of-speech tags (fine grained tags, Token.tag)',
     tag_acc: 'Part-of-speech tags (fine grained tags, Token.tag)',
     tag: 'Part-of-speech tags (fine grained tags, Token.tag)',
@@ -114,8 +117,8 @@ function formatVectors(data) {
     return `${abbrNum(keys)} keys, ${abbrNum(vectors)} unique vectors (${width} dimensions)`
 }
 
-function formatAccuracy(data) {
-    const exclude = ['speed']
+function formatAccuracy(data, lang) {
+    const exclude = (lang !== "ja") ? ['speed'] : ['speed', 'morph_acc']
     if (!data) return []
     return Object.keys(data)
         .map(label => {
@@ -146,8 +149,7 @@ function formatModelMeta(data) {
         license: data.license,
         labels: isEmptyObj(data.labels) ? null : data.labels,
         vectors: formatVectors(data.vectors),
-        // TODO: remove accuracy fallback
-        accuracy: formatAccuracy(data.accuracy || data.performance),
+        accuracy: formatAccuracy(data.performance, data.lang),
     }
 }
 
@@ -195,6 +197,7 @@ const Model = ({
     const [isError, setIsError] = useState(true)
     const [meta, setMeta] = useState({})
     const { type, genre, size } = getModelComponents(name)
+    const display_type = type === 'core' && (size === 'sm' || size === 'trf') ? 'core_no_vectors' : type
     const version = useMemo(() => getLatestVersion(name, compatibility, prereleases), [
         name,
         compatibility,
@@ -231,7 +234,7 @@ const Model = ({
 
     const rows = [
         { label: 'Language', tag: langId, content: langName },
-        { label: 'Type', tag: type, content: MODEL_META[type] },
+        { label: 'Type', tag: type, content: MODEL_META[display_type] },
         { label: 'Genre', tag: genre, content: MODEL_META[genre] },
         { label: 'Size', tag: size, content: meta.sizeFull },
         { label: 'Components', content: components, help: MODEL_META.components },

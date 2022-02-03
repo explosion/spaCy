@@ -4,10 +4,12 @@ import { StaticQuery, graphql } from 'gatsby'
 import { Quickstart, QS } from '../components/quickstart'
 import { repo, DEFAULT_BRANCH } from '../components/util'
 
+const DEFAULT_OS = 'mac'
+const DEFAULT_PLATFORM = 'x86'
 const DEFAULT_MODELS = ['en']
 const DEFAULT_OPT = 'efficiency'
 const DEFAULT_HARDWARE = 'cpu'
-const DEFAULT_CUDA = 'cuda102'
+const DEFAULT_CUDA = 'cuda113'
 const CUDA = {
     '8.0': 'cuda80',
     '9.0': 'cuda90',
@@ -19,11 +21,15 @@ const CUDA = {
     '11.0': 'cuda110',
     '11.1': 'cuda111',
     '11.2': 'cuda112',
+    '11.3': 'cuda113',
+    '11.4': 'cuda114',
 }
 const LANG_EXTRAS = ['ja'] // only for languages with models
 
 const QuickstartInstall = ({ id, title }) => {
     const [train, setTrain] = useState(false)
+    const [platform, setPlatform] = useState(DEFAULT_PLATFORM)
+    const [os, setOs] = useState(DEFAULT_OS)
     const [hardware, setHardware] = useState(DEFAULT_HARDWARE)
     const [cuda, setCuda] = useState(DEFAULT_CUDA)
     const [selectedModels, setModels] = useState(DEFAULT_MODELS)
@@ -33,15 +39,19 @@ const QuickstartInstall = ({ id, title }) => {
         config: v => setTrain(v.includes('train')),
         models: setModels,
         optimize: v => setEfficiency(v.includes('efficiency')),
+        platform: v => setPlatform(v[0]),
+        os: v => setOs(v[0]),
     }
     const showDropdown = {
         hardware: () => hardware === 'gpu',
     }
     const modelExtras = train ? selectedModels.filter(m => LANG_EXTRAS.includes(m)) : []
+    const apple = os === 'mac' && platform === 'arm'
     const pipExtras = [
         hardware === 'gpu' && cuda,
         train && 'transformers',
         train && 'lookups',
+        apple && 'apple',
         ...modelExtras,
     ]
         .filter(e => e)
@@ -62,6 +72,16 @@ const QuickstartInstall = ({ id, title }) => {
                             { id: 'windows', title: 'Windows' },
                             { id: 'linux', title: 'Linux' },
                         ],
+                        defaultValue: DEFAULT_OS,
+                    },
+                    {
+                        id: 'platform',
+                        title: 'Platform',
+                        options: [
+                            { id: 'x86', title: 'x86', checked: true },
+                            { id: 'arm', title: 'ARM / M1' },
+                        ],
+                        defaultValue: DEFAULT_PLATFORM,
                     },
                     {
                         id: 'package',
@@ -93,8 +113,7 @@ const QuickstartInstall = ({ id, title }) => {
                             {
                                 id: 'venv',
                                 title: 'virtual env',
-                                help:
-                                    'Use a virtual environment and install spaCy into a user directory',
+                                help: 'Use a virtual environment',
                             },
                             {
                                 id: 'train',
@@ -145,26 +164,50 @@ const QuickstartInstall = ({ id, title }) => {
                         setters={setters}
                         showDropdown={showDropdown}
                     >
-                        <QS config="venv">python -m venv .env</QS>
-                        <QS config="venv" os="mac">
+                        <QS package="pip" config="venv">
+                            python -m venv .env
+                        </QS>
+                        <QS package="pip" config="venv" os="mac">
                             source .env/bin/activate
                         </QS>
-                        <QS config="venv" os="linux">
+                        <QS package="pip" config="venv" os="linux">
                             source .env/bin/activate
                         </QS>
-                        <QS config="venv" os="windows">
+                        <QS package="pip" config="venv" os="windows">
                             .env\Scripts\activate
+                        </QS>
+                        <QS package="source" config="venv">
+                            python -m venv .env
+                        </QS>
+                        <QS package="source" config="venv" os="mac">
+                            source .env/bin/activate
+                        </QS>
+                        <QS package="source" config="venv" os="linux">
+                            source .env/bin/activate
+                        </QS>
+                        <QS package="source" config="venv" os="windows">
+                            .env\Scripts\activate
+                        </QS>
+                        <QS package="conda" config="venv">
+                            conda create -n venv
+                        </QS>
+                        <QS package="conda" config="venv">
+                            conda activate venv
                         </QS>
                         <QS package="pip">pip install -U pip setuptools wheel</QS>
                         <QS package="source">pip install -U pip setuptools wheel</QS>
                         <QS package="pip">
-                            pip install -U {pkg}
-                            {pipExtras && `[${pipExtras}]`}
+                            {pipExtras
+                                ? `pip install -U '${pkg}[${pipExtras}]'`
+                                : `pip install -U ${pkg}`}
                             {nightly ? ' --pre' : ''}
                         </QS>
                         <QS package="conda">conda install -c conda-forge spacy</QS>
                         <QS package="conda" hardware="gpu">
                             conda install -c conda-forge cupy
+                        </QS>
+                        <QS package="conda" config="train">
+                            conda install -c conda-forge spacy-transformers
                         </QS>
                         <QS package="source">
                             git clone https://github.com/{repo}
@@ -184,9 +227,6 @@ const QuickstartInstall = ({ id, title }) => {
                         </QS>
                         <QS config="train" package="conda" comment prompt={false}>
                             # packages only available via pip
-                        </QS>
-                        <QS config="train" package="conda">
-                            pip install spacy-transformers
                         </QS>
                         <QS config="train" package="conda">
                             pip install spacy-lookups-data

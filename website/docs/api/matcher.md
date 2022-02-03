@@ -44,6 +44,9 @@ rule-based matching are:
 | `SPACY`                                         | Token has a trailing space. ~~bool~~                                                                                      |
 |  `POS`, `TAG`, `MORPH`, `DEP`, `LEMMA`, `SHAPE` | The token's simple and extended part-of-speech tag, morphological analysis, dependency label, lemma, shape. ~~str~~       |
 | `ENT_TYPE`                                      | The token's entity label. ~~str~~                                                                                         |
+| `ENT_IOB`                                       | The IOB part of the token's entity tag. ~~str~~                                                                           |
+| `ENT_ID`                                        | The token's entity ID (`ent_id`). ~~str~~                                                                                 |
+| `ENT_KB_ID`                                     | The token's entity knowledge base ID (`ent_kb_id`). ~~str~~                                                               |
 | `_` <Tag variant="new">2.1</Tag>                | Properties in [custom extension attributes](/usage/processing-pipelines#custom-components-attributes). ~~Dict[str, Any]~~ |
 | `OP`                                            | Operator or quantifier to determine how often to match a token pattern. ~~str~~                                           |
 
@@ -77,13 +80,14 @@ it compares to another value.
 > ]
 > ```
 
-| Attribute                  | Description                                                                                             |
-| -------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `IN`                       | Attribute value is member of a list. ~~Any~~                                                            |
-| `NOT_IN`                   | Attribute value is _not_ member of a list. ~~Any~~                                                      |
-| `ISSUBSET`                 | Attribute values (for `MORPH`) are a subset of a list. ~~Any~~                                          |
-| `ISSUPERSET`               | Attribute values (for `MORPH`) are a superset of a list. ~~Any~~                                        |
-| `==`, `>=`, `<=`, `>`, `<` | Attribute value is equal, greater or equal, smaller or equal, greater or smaller. ~~Union[int, float]~~ |
+| Attribute                  | Description                                                                                              |
+| -------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `IN`                       | Attribute value is member of a list. ~~Any~~                                                             |
+| `NOT_IN`                   | Attribute value is _not_ member of a list. ~~Any~~                                                       |
+| `IS_SUBSET`                | Attribute value (for `MORPH` or custom list attributes) is a subset of a list. ~~Any~~                   |
+| `IS_SUPERSET`              | Attribute value (for `MORPH` or custom list attributes) is a superset of a list. ~~Any~~                 |
+| `INTERSECTS`               | Attribute value (for `MORPH` or custom list attribute) has a non-empty intersection with a list. ~~Any~~ |
+| `==`, `>=`, `<=`, `>`, `<` | Attribute value is equal, greater or equal, smaller or equal, greater or smaller. ~~Union[int, float]~~  |
 
 ## Matcher.\_\_init\_\_ {#init tag="method"}
 

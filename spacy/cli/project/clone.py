@@ -80,9 +80,9 @@ def check_clone(name: str, dest: Path, repo: str) -> None:
     repo (str): URL of the repo to clone from.
     """
     git_err = (
-        f"Cloning spaCy project templates requires Git and the 'git' command. ",
+        f"Cloning spaCy project templates requires Git and the 'git' command. "
         f"To clone a project without Git, copy the files from the '{name}' "
-        f"directory in the {repo} to {dest} manually.",
+        f"directory in the {repo} to {dest} manually."
     )
     get_git_version(error=git_err)
     if not dest:

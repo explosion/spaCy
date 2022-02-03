@@ -95,6 +95,7 @@ GLOSSARY = {
     "XX": "unknown",
     "BES": 'auxiliary "be"',
     "HVS": 'forms of "have"',
+    "_SP": "whitespace",
     # POS Tags (German)
     # TIGER Treebank
     # http://www.ims.uni-stuttgart.de/forschung/ressourcen/korpora/TIGERCorpus/annotation/tiger_introduction.pdf

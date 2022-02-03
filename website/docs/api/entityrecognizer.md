@@ -20,6 +20,24 @@ your entities will be close to their initial tokens. If your entities are long
 and characterized by tokens in their middle, the component will likely not be a
 good fit for your task.
 
+## Assigned Attributes {#assigned-attributes}
+
+Predictions will be saved to `Doc.ents` as a tuple. Each label will also be
+reflected to each underlying token, where it is saved in the `Token.ent_type`
+and `Token.ent_iob` fields. Note that by definition each token can only have one
+label.
+
+When setting `Doc.ents` to create training data, all the spans must be valid and
+non-overlapping, or an error will be thrown.
+
+| Location          | Value                                                             |
+| ----------------- | ----------------------------------------------------------------- |
+| `Doc.ents`        | The annotated spans. ~~Tuple[Span]~~                              |
+| `Token.ent_iob`   | An enum encoding of the IOB part of the named entity tag. ~~int~~ |
+| `Token.ent_iob_`  | The IOB part of the named entity tag. ~~str~~                     |
+| `Token.ent_type`  | The label part of the named entity tag (hash). ~~int~~            |
+| `Token.ent_type_` | The label part of the named entity tag. ~~str~~                   |
+
 ## Config and implementation {#config}
 
 The default config is defined by the pipeline component factory and describes
@@ -47,7 +65,8 @@ architectures and their arguments and hyperparameters.
 | `moves`                       | A list of transition names. Inferred from the data if not provided. Defaults to `None`. ~~Optional[List[str]]~~                                                                                                                                     |
 | `update_with_oracle_cut_size` | During training, cut long sequences into shorter segments by creating intermediate states based on the gold-standard history. The model is not very sensitive to this parameter, so you usually won't need to change it. Defaults to `100`. ~~int~~ |
 | `model`                       | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. Defaults to [TransitionBasedParser](/api/architectures#TransitionBasedParser). ~~Model[List[Doc], List[Floats2d]]~~                                                 |
-| `incorrect_spans_key`         | This key refers to a `SpanGroup` in `doc.spans` that specifies incorrect spans. The NER wiill learn not to predict (exactly) those spans. Defaults to `None`. ~~Optional[str]~~                                                                     |
+| `incorrect_spans_key`         | This key refers to a `SpanGroup` in `doc.spans` that specifies incorrect spans. The NER will learn not to predict (exactly) those spans. Defaults to `None`. ~~Optional[str]~~                                                                      |
+| `scorer`                      | The scoring method. Defaults to [`spacy.scorer.get_ner_prf`](/api/scorer#get_ner_prf). ~~Optional[Callable]~~                                                                                                                                       |
 
 ```python
 %%GITHUB_SPACY/spacy/pipeline/ner.pyx
@@ -250,21 +269,6 @@ predicted scores.
 | `examples`  | The batch of examples. ~~Iterable[Example]~~                                |
 | `scores`    | Scores representing the model's predictions. ~~StateClass~~                 |
 | **RETURNS** | The loss and the gradient, i.e. `(loss, gradient)`. ~~Tuple[float, float]~~ |
-
-## EntityRecognizer.score {#score tag="method" new="3"}
-
-Score a batch of examples.
-
-> #### Example
->
-> ```python
-> scores = ner.score(examples)
-> ```
-
-| Name        | Description                                               |
-| ----------- | --------------------------------------------------------- |
-| `examples`  | The examples to score. ~~Iterable[Example]~~              |
-| **RETURNS** | The scores. ~~Dict[str, Union[float, Dict[str, float]]]~~ |
 
 ## EntityRecognizer.create_optimizer {#create_optimizer tag="method"}
 

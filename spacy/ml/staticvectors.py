@@ -1,11 +1,13 @@
-from typing import List, Tuple, Callable, Optional, cast
+from typing import List, Tuple, Callable, Optional, Sequence, cast
 from thinc.initializers import glorot_uniform_init
 from thinc.util import partial
-from thinc.types import Ragged, Floats2d, Floats1d
+from thinc.types import Ragged, Floats2d, Floats1d, Ints1d
 from thinc.api import Model, Ops, registry
 
 from ..tokens import Doc
 from ..errors import Errors
+from ..vectors import Mode
+from ..vocab import Vocab
 
 
 @registry.layers("spacy.StaticVectors.v2")
@@ -34,22 +36,34 @@ def StaticVectors(
 def forward(
     model: Model[List[Doc], Ragged], docs: List[Doc], is_train: bool
 ) -> Tuple[Ragged, Callable]:
-    if not sum(len(doc) for doc in docs):
+    token_count = sum(len(doc) for doc in docs)
+    if not token_count:
         return _handle_empty(model.ops, model.get_dim("nO"))
-    key_attr = model.attrs["key_attr"]
-    W = cast(Floats2d, model.ops.as_contig(model.get_param("W")))
-    V = cast(Floats2d, model.ops.asarray(docs[0].vocab.vectors.data))
-    rows = model.ops.flatten(
-        [doc.vocab.vectors.find(keys=doc.to_array(key_attr)) for doc in docs]
+    key_attr: int = model.attrs["key_attr"]
+    keys: Ints1d = model.ops.flatten(
+        cast(Sequence, [doc.to_array(key_attr) for doc in docs])
     )
+    vocab: Vocab = docs[0].vocab
+    W = cast(Floats2d, model.ops.as_contig(model.get_param("W")))
+    if vocab.vectors.mode == Mode.default:
+        V = cast(Floats2d, model.ops.asarray(vocab.vectors.data))
+        rows = vocab.vectors.find(keys=keys)
+        V = model.ops.as_contig(V[rows])
+    elif vocab.vectors.mode == Mode.floret:
+        V = cast(Floats2d, vocab.vectors.get_batch(keys))
+        V = model.ops.as_contig(V)
+    else:
+        raise RuntimeError(Errors.E896)
     try:
-        vectors_data = model.ops.gemm(model.ops.as_contig(V[rows]), W, trans2=True)
+        vectors_data = model.ops.gemm(V, W, trans2=True)
     except ValueError:
         raise RuntimeError(Errors.E896)
-    # Convert negative indices to 0-vectors (TODO: more options for UNK tokens)
-    vectors_data[rows < 0] = 0
+    if vocab.vectors.mode == Mode.default:
+        # Convert negative indices to 0-vectors
+        # TODO: more options for UNK tokens
+        vectors_data[rows < 0] = 0
     output = Ragged(
-        vectors_data, model.ops.asarray([len(doc) for doc in docs], dtype="i")
+        vectors_data, model.ops.asarray([len(doc) for doc in docs], dtype="i")  # type: ignore
     )
     mask = None
     if is_train:
@@ -62,7 +76,9 @@ def forward(
             d_output.data *= mask
         model.inc_grad(
             "W",
-            model.ops.gemm(d_output.data, model.ops.as_contig(V[rows]), trans1=True),
+            model.ops.gemm(
+                cast(Floats2d, d_output.data), model.ops.as_contig(V), trans1=True
+            ),
         )
         return []
 
@@ -78,7 +94,7 @@ def init(
     nM = model.get_dim("nM") if model.has_dim("nM") else None
     nO = model.get_dim("nO") if model.has_dim("nO") else None
     if X is not None and len(X):
-        nM = X[0].vocab.vectors.data.shape[1]
+        nM = X[0].vocab.vectors.shape[1]
     if Y is not None:
         nO = Y.data.shape[1]
 
@@ -97,4 +113,7 @@ def _handle_empty(ops: Ops, nO: int):
 
 
 def _get_drop_mask(ops: Ops, nO: int, rate: Optional[float]) -> Optional[Floats1d]:
-    return ops.get_dropout_mask((nO,), rate) if rate is not None else None
+    if rate is not None:
+        mask = ops.get_dropout_mask((nO,), rate)
+        return mask  # type: ignore
+    return None

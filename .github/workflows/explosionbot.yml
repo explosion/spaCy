@@ -1,0 +1,27 @@
+name: Explosion Bot
+
+on:
+  issue_comment:
+    types:
+      - created
+      - edited
+
+jobs:
+  explosion-bot:
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
+      - uses: actions/checkout@v1
+      - uses: actions/setup-python@v1
+      - name: Install and run explosion-bot
+        run: |
+          pip install git+https://${{ secrets.EXPLOSIONBOT_TOKEN }}@github.com/explosion/explosion-bot
+          python -m explosionbot
+        env:
+          INPUT_TOKEN: ${{ secrets.EXPLOSIONBOT_TOKEN }}
+          INPUT_BK_TOKEN: ${{ secrets.BUILDKITE_SECRET }}
+          ENABLED_COMMANDS: "test_gpu,test_slow"
+          ALLOWED_TEAMS: "spaCy"

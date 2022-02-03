@@ -1,15 +1,15 @@
-from typing import Optional, Any, Dict
+from typing import Iterator, Any, Dict
 
 from .stop_words import STOP_WORDS
 from .tag_map import TAG_MAP
 from .lex_attrs import LEX_ATTRS
-from ...language import Language
+from ...language import Language, BaseDefaults
 from ...tokens import Doc
-from ...compat import copy_reg
 from ...scorer import Scorer
 from ...symbols import POS
 from ...training import validate_examples
 from ...util import DummyTokenizer, registry, load_config_from_str
+from ...vocab import Vocab
 
 
 DEFAULT_CONFIG = """
@@ -23,16 +23,19 @@ DEFAULT_CONFIG = """
 @registry.tokenizers("spacy.ko.KoreanTokenizer")
 def create_tokenizer():
     def korean_tokenizer_factory(nlp):
-        return KoreanTokenizer(nlp)
+        return KoreanTokenizer(nlp.vocab)
 
     return korean_tokenizer_factory
 
 
 class KoreanTokenizer(DummyTokenizer):
-    def __init__(self, nlp: Optional[Language] = None):
-        self.vocab = nlp.vocab
-        MeCab = try_mecab_import()
+    def __init__(self, vocab: Vocab):
+        self.vocab = vocab
+        MeCab = try_mecab_import()  # type: ignore[func-returns-value]
         self.mecab_tokenizer = MeCab("-F%f[0],%f[7]")
+
+    def __reduce__(self):
+        return KoreanTokenizer, (self.vocab,)
 
     def __del__(self):
         self.mecab_tokenizer.__del__()
@@ -49,7 +52,7 @@ class KoreanTokenizer(DummyTokenizer):
         doc.user_data["full_tags"] = [dt["tag"] for dt in dtokens]
         return doc
 
-    def detailed_tokens(self, text: str) -> Dict[str, Any]:
+    def detailed_tokens(self, text: str) -> Iterator[Dict[str, Any]]:
         # 품사 태그(POS)[0], 의미 부류(semantic class)[1],	종성 유무(jongseong)[2], 읽기(reading)[3],
         # 타입(type)[4], 첫번째 품사(start pos)[5],	마지막 품사(end pos)[6], 표현(expression)[7], *
         for node in self.mecab_tokenizer.parse(text, as_nodes=True):
@@ -68,7 +71,7 @@ class KoreanTokenizer(DummyTokenizer):
         return Scorer.score_tokenization(examples)
 
 
-class KoreanDefaults(Language.Defaults):
+class KoreanDefaults(BaseDefaults):
     config = load_config_from_str(DEFAULT_CONFIG)
     lex_attr_getters = LEX_ATTRS
     stop_words = STOP_WORDS
@@ -105,11 +108,5 @@ def check_spaces(text, tokens):
     if start > 0:
         yield False
 
-
-def pickle_korean(instance):
-    return Korean, tuple()
-
-
-copy_reg.pickle(Korean, pickle_korean)
 
 __all__ = ["Korean"]

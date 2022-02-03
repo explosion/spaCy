@@ -15,7 +15,7 @@ def info_cli(
     model: Optional[str] = Arg(None, help="Optional loadable spaCy pipeline"),
     markdown: bool = Opt(False, "--markdown", "-md", help="Generate Markdown for GitHub issues"),
     silent: bool = Opt(False, "--silent", "-s", "-S", help="Don't print anything (just return)"),
-    exclude: Optional[str] = Opt("labels", "--exclude", "-e", help="Comma-separated keys to exclude from the print-out"),
+    exclude: str = Opt("labels", "--exclude", "-e", help="Comma-separated keys to exclude from the print-out"),
     # fmt: on
 ):
     """
@@ -61,7 +61,7 @@ def info(
     return raw_data
 
 
-def info_spacy() -> Dict[str, any]:
+def info_spacy() -> Dict[str, Any]:
     """Generate info about the current spaCy intallation.
 
     RETURNS (dict): The spaCy info.

@@ -193,6 +193,7 @@ def test_models_update_consistently(seed, dropout, model_func, kwargs, get_X):
     assert_array_almost_equal(
         model1.ops.to_numpy(get_all_params(model1)),
         model2.ops.to_numpy(get_all_params(model2)),
+        decimal=5,
     )
 
 
@@ -211,7 +212,7 @@ def test_empty_docs(model_func, kwargs):
 
 
 def test_init_extract_spans():
-    model = extract_spans().initialize()
+    extract_spans().initialize()
 
 
 def test_extract_spans_span_indices():

@@ -18,12 +18,21 @@ for exc_data in [
     {ORTH: "nov.", NORM: "novembre"},
     {ORTH: "dec.", NORM: "desembre"},
     {ORTH: "Dr.", NORM: "doctor"},
+    {ORTH: "Dra.", NORM: "doctora"},
     {ORTH: "Sr.", NORM: "senyor"},
     {ORTH: "Sra.", NORM: "senyora"},
     {ORTH: "Srta.", NORM: "senyoreta"},
     {ORTH: "núm", NORM: "número"},
     {ORTH: "St.", NORM: "sant"},
     {ORTH: "Sta.", NORM: "santa"},
+    {ORTH: "pl.", NORM: "plaça"},
+    {ORTH: "à."},
+    {ORTH: "è."},
+    {ORTH: "é."},
+    {ORTH: "í."},
+    {ORTH: "ò."},
+    {ORTH: "ó."},
+    {ORTH: "ú."},
     {ORTH: "'l"},
     {ORTH: "'ls"},
     {ORTH: "'m"},
@@ -33,6 +42,18 @@ for exc_data in [
     {ORTH: "'t"},
 ]:
     _exc[exc_data[ORTH]] = [exc_data]
+
+_exc["del"] = [{ORTH: "d", NORM: "de"}, {ORTH: "el"}]
+_exc["dels"] = [{ORTH: "d", NORM: "de"}, {ORTH: "els"}]
+
+_exc["al"] = [{ORTH: "a"}, {ORTH: "l", NORM: "el"}]
+_exc["als"] = [{ORTH: "a"}, {ORTH: "ls", NORM: "els"}]
+
+_exc["pel"] = [{ORTH: "p", NORM: "per"}, {ORTH: "el"}]
+_exc["pels"] = [{ORTH: "p", NORM: "per"}, {ORTH: "els"}]
+
+_exc["holahola"] = [{ORTH: "holahola", NORM: "cocacola"}]
+
 
 # Times
 _exc["12m."] = [{ORTH: "12"}, {ORTH: "m.", NORM: "p.m."}]

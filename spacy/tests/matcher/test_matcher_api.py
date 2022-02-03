@@ -270,6 +270,16 @@ def test_matcher_subset_value_operator(en_vocab):
     doc[0].tag_ = "A"
     assert len(matcher(doc)) == 0
 
+    # IS_SUBSET with a list value
+    Token.set_extension("ext", default=[])
+    matcher = Matcher(en_vocab)
+    pattern = [{"_": {"ext": {"IS_SUBSET": ["A", "B"]}}}]
+    matcher.add("M", [pattern])
+    doc = Doc(en_vocab, words=["a", "b", "c"])
+    doc[0]._.ext = ["A"]
+    doc[1]._.ext = ["C", "D"]
+    assert len(matcher(doc)) == 2
+
 
 def test_matcher_superset_value_operator(en_vocab):
     matcher = Matcher(en_vocab)
@@ -307,6 +317,72 @@ def test_matcher_superset_value_operator(en_vocab):
     doc = Doc(en_vocab, words=["a", "b", "c"])
     doc[0].tag_ = "A"
     assert len(matcher(doc)) == 3
+
+    # IS_SUPERSET with a list value
+    Token.set_extension("ext", default=[])
+    matcher = Matcher(en_vocab)
+    pattern = [{"_": {"ext": {"IS_SUPERSET": ["A"]}}}]
+    matcher.add("M", [pattern])
+    doc = Doc(en_vocab, words=["a", "b", "c"])
+    doc[0]._.ext = ["A", "B"]
+    assert len(matcher(doc)) == 1
+
+
+def test_matcher_intersect_value_operator(en_vocab):
+    matcher = Matcher(en_vocab)
+    pattern = [{"MORPH": {"INTERSECTS": ["Feat=Val", "Feat2=Val2", "Feat3=Val3"]}}]
+    matcher.add("M", [pattern])
+    doc = Doc(en_vocab, words=["a", "b", "c"])
+    assert len(matcher(doc)) == 0
+    doc[0].set_morph("Feat=Val")
+    assert len(matcher(doc)) == 1
+    doc[0].set_morph("Feat=Val|Feat2=Val2")
+    assert len(matcher(doc)) == 1
+    doc[0].set_morph("Feat=Val|Feat2=Val2|Feat3=Val3")
+    assert len(matcher(doc)) == 1
+    doc[0].set_morph("Feat=Val|Feat2=Val2|Feat3=Val3|Feat4=Val4")
+    assert len(matcher(doc)) == 1
+
+    # INTERSECTS with a single value is the same as IN
+    matcher = Matcher(en_vocab)
+    pattern = [{"TAG": {"INTERSECTS": ["A", "B"]}}]
+    matcher.add("M", [pattern])
+    doc = Doc(en_vocab, words=["a", "b", "c"])
+    doc[0].tag_ = "A"
+    assert len(matcher(doc)) == 1
+
+    # INTERSECTS with an empty pattern list matches nothing
+    matcher = Matcher(en_vocab)
+    pattern = [{"TAG": {"INTERSECTS": []}}]
+    matcher.add("M", [pattern])
+    doc = Doc(en_vocab, words=["a", "b", "c"])
+    doc[0].tag_ = "A"
+    assert len(matcher(doc)) == 0
+
+    # INTERSECTS with a list value
+    Token.set_extension("ext", default=[])
+    matcher = Matcher(en_vocab)
+    pattern = [{"_": {"ext": {"INTERSECTS": ["A", "C"]}}}]
+    matcher.add("M", [pattern])
+    doc = Doc(en_vocab, words=["a", "b", "c"])
+    doc[0]._.ext = ["A", "B"]
+    assert len(matcher(doc)) == 1
+
+    # INTERSECTS with an empty pattern list matches nothing
+    matcher = Matcher(en_vocab)
+    pattern = [{"_": {"ext": {"INTERSECTS": []}}}]
+    matcher.add("M", [pattern])
+    doc = Doc(en_vocab, words=["a", "b", "c"])
+    doc[0]._.ext = ["A", "B"]
+    assert len(matcher(doc)) == 0
+
+    # INTERSECTS with an empty value matches nothing
+    matcher = Matcher(en_vocab)
+    pattern = [{"_": {"ext": {"INTERSECTS": ["A", "B"]}}}]
+    matcher.add("M", [pattern])
+    doc = Doc(en_vocab, words=["a", "b", "c"])
+    doc[0]._.ext = []
+    assert len(matcher(doc)) == 0
 
 
 def test_matcher_morph_handling(en_vocab):
@@ -500,6 +576,16 @@ def test_matcher_callback(en_vocab):
     mock.assert_called_once_with(matcher, doc, 0, matches)
 
 
+def test_matcher_callback_with_alignments(en_vocab):
+    mock = Mock()
+    matcher = Matcher(en_vocab)
+    pattern = [{"ORTH": "test"}]
+    matcher.add("Rule", [pattern], on_match=mock)
+    doc = Doc(en_vocab, words=["This", "is", "a", "test", "."])
+    matches = matcher(doc, with_alignments=True)
+    mock.assert_called_once_with(matcher, doc, 0, matches)
+
+
 def test_matcher_span(matcher):
     text = "JavaScript is good but Java is better"
     doc = Doc(matcher.vocab, words=text.split())
@@ -556,3 +642,30 @@ def test_matcher_no_zero_length(en_vocab):
     matcher = Matcher(en_vocab)
     matcher.add("TEST", [[{"TAG": "C", "OP": "?"}]])
     assert len(matcher(doc)) == 0
+
+
+def test_matcher_ent_iob_key(en_vocab):
+    """Test that patterns with ent_iob works correctly."""
+    matcher = Matcher(en_vocab)
+    matcher.add("Rule", [[{"ENT_IOB": "I"}]])
+    doc1 = Doc(en_vocab, words=["I", "visited", "New", "York", "and", "California"])
+    doc1.ents = [Span(doc1, 2, 4, label="GPE"), Span(doc1, 5, 6, label="GPE")]
+    doc2 = Doc(en_vocab, words=["I", "visited", "my", "friend", "Alicia"])
+    doc2.ents = [Span(doc2, 4, 5, label="PERSON")]
+    matches1 = [doc1[start:end].text for _, start, end in matcher(doc1)]
+    matches2 = [doc2[start:end].text for _, start, end in matcher(doc2)]
+    assert len(matches1) == 1
+    assert matches1[0] == "York"
+    assert len(matches2) == 0
+
+    matcher = Matcher(en_vocab)  # Test iob pattern with operators
+    matcher.add("Rule", [[{"ENT_IOB": "I", "OP": "+"}]])
+    doc = Doc(
+        en_vocab, words=["I", "visited", "my", "friend", "Anna", "Maria", "Esperanza"]
+    )
+    doc.ents = [Span(doc, 4, 7, label="PERSON")]
+    matches = [doc[start:end].text for _, start, end in matcher(doc)]
+    assert len(matches) == 3
+    assert matches[0] == "Maria"
+    assert matches[1] == "Maria Esperanza"
+    assert matches[2] == "Esperanza"

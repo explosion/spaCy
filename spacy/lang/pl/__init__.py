@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Callable
 
 from thinc.api import Model
 
@@ -8,7 +8,7 @@ from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
 from .lemmatizer import PolishLemmatizer
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
-from ...language import Language
+from ...language import Language, BaseDefaults
 
 
 TOKENIZER_EXCEPTIONS = {
@@ -16,7 +16,7 @@ TOKENIZER_EXCEPTIONS = {
 }
 
 
-class PolishDefaults(Language.Defaults):
+class PolishDefaults(BaseDefaults):
     tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     prefixes = TOKENIZER_PREFIXES
     infixes = TOKENIZER_INFIXES
@@ -33,13 +33,25 @@ class Polish(Language):
 @Polish.factory(
     "lemmatizer",
     assigns=["token.lemma"],
-    default_config={"model": None, "mode": "pos_lookup", "overwrite": False},
+    default_config={
+        "model": None,
+        "mode": "pos_lookup",
+        "overwrite": False,
+        "scorer": {"@scorers": "spacy.lemmatizer_scorer.v1"},
+    },
     default_score_weights={"lemma_acc": 1.0},
 )
 def make_lemmatizer(
-    nlp: Language, model: Optional[Model], name: str, mode: str, overwrite: bool
+    nlp: Language,
+    model: Optional[Model],
+    name: str,
+    mode: str,
+    overwrite: bool,
+    scorer: Optional[Callable],
 ):
-    return PolishLemmatizer(nlp.vocab, model, name, mode=mode, overwrite=overwrite)
+    return PolishLemmatizer(
+        nlp.vocab, model, name, mode=mode, overwrite=overwrite, scorer=scorer
+    )
 
 
 __all__ = ["Polish"]

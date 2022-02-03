@@ -44,7 +44,7 @@ markup is correct.
     "id": "unique-project-id",
     "title": "Project title",
     "slogan": "A short summary",
-    "description": "A longer description – *Mardown allowed!*",
+    "description": "A longer description – *Markdown allowed!*",
     "github": "user/repo",
     "pip": "package-name",
     "code_example": [

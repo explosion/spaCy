@@ -140,29 +140,28 @@ Changes to `.py` files will be effective immediately.
 
 📖 **For more details and instructions, see the documentation on [compiling spaCy from source](https://spacy.io/usage/#source) and the [quickstart widget](https://spacy.io/usage/#section-quickstart) to get the right commands for your platform and Python version.**
 
-### Contributor agreement
-
-If you've made a contribution to spaCy, you should fill in the
-[spaCy contributor agreement](.github/CONTRIBUTOR_AGREEMENT.md) to ensure that
-your contribution can be used across the project. If you agree to be bound by
-the terms of the agreement, fill in the [template](.github/CONTRIBUTOR_AGREEMENT.md)
-and include it with your pull request, or submit it separately to
-[`.github/contributors/`](/.github/contributors). The name of the file should be
-your GitHub username, with the extension `.md`. For example, the user
-example_user would create the file `.github/contributors/example_user.md`.
-
 ### Fixing bugs
 
 When fixing a bug, first create an
-[issue](https://github.com/explosion/spaCy/issues) if one does not already exist.
-The description text can be very short – we don't want to make this too
+[issue](https://github.com/explosion/spaCy/issues) if one does not already
+exist.  The description text can be very short – we don't want to make this too
 bureaucratic.
 
-Next, create a test file named `test_issue[ISSUE NUMBER].py` in the
-[`spacy/tests/regression`](spacy/tests/regression) folder. Test for the bug
-you're fixing, and make sure the test fails. Next, add and commit your test file
-referencing the issue number in the commit message. Finally, fix the bug, make
-sure your test passes and reference the issue in your commit message.
+Next, add a test to the relevant file in the
+[`spacy/tests`](spacy/tests)folder. Then add a [pytest
+mark](https://docs.pytest.org/en/6.2.x/example/markers.html#working-with-custom-markers),
+`@pytest.mark.issue(NUMBER)`, to reference the issue number.
+
+```python
+# Assume you're fixing Issue #1234
+@pytest.mark.issue(1234)
+def test_issue1234():
+    ...
+```
+
+Test for the bug you're fixing, and make sure the test fails. Next, add and
+commit your test file. Finally, fix the bug, make sure your test passes and
+reference the issue number in your pull request description.
 
 📖 **For more information on how to add tests, check out the [tests README](spacy/tests/README.md).**
 
@@ -184,7 +183,6 @@ Each time a `git commit` is initiated, `black` and `flake8` will run automatical
 
 In case of error, or when `black` modified a file, the modified file needs to be `git add` once again and a new
 `git commit` has to be issued.
-
 
 ### Code formatting
 
@@ -414,14 +412,7 @@ all test files and test functions need to be prefixed with `test_`.
 When adding tests, make sure to use descriptive names, keep the code short and
 concise and only test for one behavior at a time. Try to `parametrize` test
 cases wherever possible, use our pre-defined fixtures for spaCy components and
-avoid unnecessary imports.
-
-Extensive tests that take a long time should be marked with `@pytest.mark.slow`.
-Tests that require the model to be loaded should be marked with
-`@pytest.mark.models`. Loading the models is expensive and not necessary if
-you're not actually testing the model performance. If all you need is a `Doc`
-object with annotations like heads, POS tags or the dependency parse, you can
-use the `Doc` constructor to construct it manually.
+avoid unnecessary imports. Extensive tests that take a long time should be marked with `@pytest.mark.slow`.
 
 📖 **For more guidelines and information on how to add tests, check out the [tests README](spacy/tests/README.md).**
 
@@ -438,7 +429,7 @@ simply click on the "Suggest edits" button at the bottom of a page.
 ## Publishing spaCy extensions and plugins
 
 We're very excited about all the new possibilities for **community extensions**
-and plugins in spaCy v2.0, and we can't wait to see what you build with it!
+and plugins in spaCy v3.0, and we can't wait to see what you build with it!
 
 - An extension or plugin should add substantial functionality, be
   **well-documented** and **open-source**. It should be available for users to download

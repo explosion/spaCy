@@ -81,6 +81,17 @@ cdef class Pipe:
 
         DOCS: https://spacy.io/api/pipe#score
         """
+        if hasattr(self, "scorer") and self.scorer is not None:
+            scorer_kwargs = {}
+            # use default settings from cfg (e.g., threshold)
+            if hasattr(self, "cfg") and isinstance(self.cfg, dict):
+                scorer_kwargs.update(self.cfg)
+            # override self.cfg["labels"] with self.labels
+            if hasattr(self, "labels"):
+                scorer_kwargs["labels"] = self.labels
+            # override with kwargs settings
+            scorer_kwargs.update(kwargs)
+            return self.scorer(examples, **scorer_kwargs)
         return {}
 
     @property
@@ -88,7 +99,7 @@ cdef class Pipe:
         return False
 
     @property
-    def labels(self) -> Optional[Tuple[str]]:
+    def labels(self) -> Tuple[str, ...]:
         return tuple()
 
     @property
@@ -115,7 +126,7 @@ cdef class Pipe:
         """
         self.error_handler = error_handler
 
-    def get_error_handler(self) -> Optional[Callable]:
+    def get_error_handler(self) -> Callable:
         """Retrieve the error handler function.
 
         RETURNS (Callable): The error handler, or if it's not set a default function that just reraises.

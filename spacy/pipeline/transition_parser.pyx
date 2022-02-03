@@ -49,7 +49,8 @@ cdef class Parser(TrainablePipe):
         beam_density=0.0,
         beam_update_prob=0.0,
         multitasks=tuple(),
-        incorrect_spans_key=None
+        incorrect_spans_key=None,
+        scorer=None,
     ):
         """Create a Parser.
 
@@ -86,6 +87,7 @@ cdef class Parser(TrainablePipe):
         incorrect_spans_key (Optional[str]): Identifies spans that are known
             to be incorrect entity annotations. The incorrect entity annotations
             can be stored in the span group, under this key.
+        scorer (Optional[Callable]): The scoring method. Defaults to None.
         """
         self.vocab = vocab
         self.name = name
@@ -117,6 +119,7 @@ cdef class Parser(TrainablePipe):
             self.add_multitask_objective(multitask)
 
         self._rehearsal_model = None
+        self.scorer = scorer
 
     def __getnewargs_ex__(self):
         """This allows pickling the Parser and its keyword-only init arguments"""
@@ -569,7 +572,7 @@ cdef class Parser(TrainablePipe):
     def to_disk(self, path, exclude=tuple()):
         serializers = {
             "model": lambda p: (self.model.to_disk(p) if self.model is not True else True),
-            "vocab": lambda p: self.vocab.to_disk(p),
+            "vocab": lambda p: self.vocab.to_disk(p, exclude=exclude),
             "moves": lambda p: self.moves.to_disk(p, exclude=["strings"]),
             "cfg": lambda p: srsly.write_json(p, self.cfg)
         }
@@ -577,7 +580,7 @@ cdef class Parser(TrainablePipe):
 
     def from_disk(self, path, exclude=tuple()):
         deserializers = {
-            "vocab": lambda p: self.vocab.from_disk(p),
+            "vocab": lambda p: self.vocab.from_disk(p, exclude=exclude),
             "moves": lambda p: self.moves.from_disk(p, exclude=["strings"]),
             "cfg": lambda p: self.cfg.update(srsly.read_json(p)),
             "model": lambda p: None,
@@ -597,7 +600,7 @@ cdef class Parser(TrainablePipe):
     def to_bytes(self, exclude=tuple()):
         serializers = {
             "model": lambda: (self.model.to_bytes()),
-            "vocab": lambda: self.vocab.to_bytes(),
+            "vocab": lambda: self.vocab.to_bytes(exclude=exclude),
             "moves": lambda: self.moves.to_bytes(exclude=["strings"]),
             "cfg": lambda: srsly.json_dumps(self.cfg, indent=2, sort_keys=True)
         }
@@ -605,7 +608,7 @@ cdef class Parser(TrainablePipe):
 
     def from_bytes(self, bytes_data, exclude=tuple()):
         deserializers = {
-            "vocab": lambda b: self.vocab.from_bytes(b),
+            "vocab": lambda b: self.vocab.from_bytes(b, exclude=exclude),
             "moves": lambda b: self.moves.from_bytes(b, exclude=["strings"]),
             "cfg": lambda b: self.cfg.update(srsly.json_loads(b)),
             "model": lambda b: None,

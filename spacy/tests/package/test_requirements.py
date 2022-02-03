@@ -11,6 +11,11 @@ def test_build_dependencies():
         "mock",
         "flake8",
         "hypothesis",
+        "pre-commit",
+        "mypy",
+        "types-dataclasses",
+        "types-mock",
+        "types-requests",
     ]
     # ignore language-specific packages that shouldn't be installed by all
     libs_ignore_setup = [
@@ -20,6 +25,7 @@ def test_build_dependencies():
         "sudachipy",
         "sudachidict_core",
         "spacy-pkuseg",
+        "thinc-apple-ops",
     ]
 
     # check requirements.txt

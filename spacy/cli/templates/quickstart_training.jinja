@@ -16,7 +16,10 @@ gpu_allocator = null
 
 [nlp]
 lang = "{{ lang }}"
-{%- if "tagger" in components or "morphologizer" in components or "parser" in components or "ner" in components or "entity_linker" in components or (("textcat" in components or "textcat_multilabel" in components) and optimize == "accuracy") -%}
+{%- set has_textcat = ("textcat" in components or "textcat_multilabel" in components) -%}
+{%- set with_accuracy = optimize == "accuracy" -%}
+{%- set has_accurate_textcat = has_textcat and with_accuracy -%}
+{%- if ("tagger" in components or "morphologizer" in components or "parser" in components or "ner" in components or "entity_linker" in components or has_accurate_textcat) -%}
 {%- set full_pipeline = ["transformer" if use_transformer else "tok2vec"] + components %}
 {%- else -%}
 {%- set full_pipeline = components %}
@@ -32,7 +35,7 @@ batch_size = {{ 128 if hardware == "gpu" else 1000 }}
 factory = "transformer"
 
 [components.transformer.model]
-@architectures = "spacy-transformers.TransformerModel.v1"
+@architectures = "spacy-transformers.TransformerModel.v3"
 name = "{{ transformer["name"] }}"
 tokenizer_config = {"use_fast": true}
 
@@ -198,7 +201,7 @@ no_output_layer = false
 
 {# NON-TRANSFORMER PIPELINE #}
 {% else -%}
-
+{% if "tok2vec" in full_pipeline -%}
 [components.tok2vec]
 factory = "tok2vec"
 
@@ -223,6 +226,7 @@ width = {{ 96 if optimize == "efficiency" else 256 }}
 depth = {{ 4 if optimize == "efficiency" else 8 }}
 window_size = 1
 maxout_pieces = 3
+{% endif -%}
 
 {% if "morphologizer" in components %}
 [components.morphologizer]

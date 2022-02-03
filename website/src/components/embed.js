@@ -3,6 +3,7 @@ import PropTypes from 'prop-types'
 import classNames from 'classnames'
 
 import Link from './link'
+import Button from './button'
 import { InlineCode } from './code'
 import { markdownToReact } from './util'
 
@@ -104,4 +105,23 @@ const Image = ({ src, alt, title, ...props }) => {
     )
 }
 
-export { YouTube, SoundCloud, Iframe, Image }
+const GoogleSheet = ({ id, link, height, button = 'View full table' }) => {
+    return (
+        <figure className={classes.root}>
+            <iframe
+                title={id}
+                scrolling="no"
+                className={classes.googleSheet}
+                height={height}
+                src={`https://docs.google.com/spreadsheets/d/e/${id}/pubhtml?widget=true&amp;headers=false`}
+            />
+            {link && (
+                <Button href={`https://docs.google.com/spreadsheets/d/${link}/view`}>
+                    {button}
+                </Button>
+            )}
+        </figure>
+    )
+}
+
+export { YouTube, SoundCloud, Iframe, Image, GoogleSheet }

@@ -31,6 +31,8 @@ def pretrain(
     allocator = config["training"]["gpu_allocator"]
     if use_gpu >= 0 and allocator:
         set_gpu_allocator(allocator)
+    # ignore in pretraining because we're creating it now
+    config["initialize"]["init_tok2vec"] = None
     nlp = load_model_from_config(config)
     _config = nlp.config.interpolate()
     P = registry.resolve(_config["pretraining"], schema=ConfigSchemaPretrain)
@@ -41,14 +43,20 @@ def pretrain(
     optimizer = P["optimizer"]
     # Load in pretrained weights to resume from
     if resume_path is not None:
-        _resume_model(model, resume_path, epoch_resume, silent=silent)
+        epoch_resume = _resume_model(model, resume_path, epoch_resume, silent=silent)
     else:
         # Without '--resume-path' the '--epoch-resume' argument is ignored
         epoch_resume = 0
+
     objective = model.attrs["loss"]
     # TODO: move this to logger function?
     tracker = ProgressTracker(frequency=10000)
-    msg.divider(f"Pre-training tok2vec layer - starting at epoch {epoch_resume}")
+    if P["n_save_epoch"]:
+        msg.divider(
+            f"Pre-training tok2vec layer - starting at epoch {epoch_resume} - saving every {P['n_save_epoch']} epoch"
+        )
+    else:
+        msg.divider(f"Pre-training tok2vec layer - starting at epoch {epoch_resume}")
     row_settings = {"widths": (3, 10, 10, 6, 4), "aligns": ("r", "r", "r", "r", "r")}
     msg.row(("#", "# Words", "Total Loss", "Loss", "w/s"), **row_settings)
 
@@ -77,7 +85,12 @@ def pretrain(
                 msg.row(progress, **row_settings)
             if P["n_save_every"] and (batch_id % P["n_save_every"] == 0):
                 _save_model(epoch, is_temp=True)
-        _save_model(epoch)
+
+        if P["n_save_epoch"]:
+            if epoch % P["n_save_epoch"] == 0 or epoch == P["max_epochs"] - 1:
+                _save_model(epoch)
+        else:
+            _save_model(epoch)
         tracker.epoch_loss = 0.0
 
 
@@ -92,21 +105,26 @@ def ensure_docs(examples_or_docs: Iterable[Union[Doc, Example]]) -> List[Doc]:
 
 
 def _resume_model(
-    model: Model, resume_path: Path, epoch_resume: int, silent: bool = True
-) -> None:
+    model: Model, resume_path: Path, epoch_resume: Optional[int], silent: bool = True
+) -> int:
     msg = Printer(no_print=silent)
     msg.info(f"Resume training tok2vec from: {resume_path}")
     with resume_path.open("rb") as file_:
         weights_data = file_.read()
         model.get_ref("tok2vec").from_bytes(weights_data)
-    # Parse the epoch number from the given weight file
-    model_name = re.search(r"model\d+\.bin", str(resume_path))
-    if model_name:
-        # Default weight file name so read epoch_start from it by cutting off 'model' and '.bin'
-        epoch_resume = int(model_name.group(0)[5:][:-4]) + 1
-        msg.info(f"Resuming from epoch: {epoch_resume}")
-    else:
-        msg.info(f"Resuming from epoch: {epoch_resume}")
+
+    if epoch_resume is None:
+        # Parse the epoch number from the given weight file
+        model_name = re.search(r"model\d+\.bin", str(resume_path))
+        if model_name:
+            # Default weight file name so read epoch_start from it by cutting off 'model' and '.bin'
+            epoch_resume = int(model_name.group(0)[5:][:-4]) + 1
+        else:
+            # No epoch given and couldn't infer it
+            raise ValueError(Errors.E1020)
+
+    msg.info(f"Resuming from epoch: {epoch_resume}")
+    return epoch_resume
 
 
 def make_update(

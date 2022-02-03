@@ -1,4 +1,5 @@
-from typing import List, Sequence, Dict, Any, Tuple, Optional, Set
+from typing import Any, Dict, Iterable, List, Optional, Sequence, Set, Tuple, Union
+from typing import cast, overload
 from pathlib import Path
 from collections import Counter
 import sys
@@ -13,10 +14,11 @@ from ..training.initialize import get_sourced_components
 from ..schemas import ConfigSchemaTraining
 from ..pipeline._parser_internals import nonproj
 from ..pipeline._parser_internals.nonproj import DELIMITER
-from ..pipeline import Morphologizer
+from ..pipeline import Morphologizer, SpanCategorizer
 from ..morphology import Morphology
 from ..language import Language
 from ..util import registry, resolve_dot_names
+from ..compat import Literal
 from .. import util
 
 
@@ -101,12 +103,13 @@ def debug_data(
     # Create the gold corpus to be able to better analyze data
     dot_names = [T["train_corpus"], T["dev_corpus"]]
     train_corpus, dev_corpus = resolve_dot_names(config, dot_names)
+
+    nlp.initialize(lambda: train_corpus(nlp))
+    msg.good("Pipeline can be initialized with data")
+
     train_dataset = list(train_corpus(nlp))
     dev_dataset = list(dev_corpus(nlp))
     msg.good("Corpus is loadable")
-
-    nlp.initialize(lambda: train_dataset)
-    msg.good("Pipeline can be initialized with data")
 
     # Create all gold data here to avoid iterating over the train_dataset constantly
     gold_train_data = _compile_gold(train_dataset, factory_names, nlp, make_proj=True)
@@ -200,7 +203,7 @@ def debug_data(
         has_low_data_warning = False
         has_no_neg_warning = False
         has_ws_ents_error = False
-        has_punct_ents_warning = False
+        has_boundary_cross_ents_warning = False
 
         msg.divider("Named Entity Recognition")
         msg.info(f"{len(model_labels)} label(s)")
@@ -227,10 +230,6 @@ def debug_data(
             msg.fail(f"{gold_train_data['ws_ents']} invalid whitespace entity spans")
             has_ws_ents_error = True
 
-        if gold_train_data["punct_ents"]:
-            msg.warn(f"{gold_train_data['punct_ents']} entity span(s) with punctuation")
-            has_punct_ents_warning = True
-
         for label in labels:
             if label_counts[label] <= NEW_LABEL_THRESHOLD:
                 msg.warn(
@@ -244,14 +243,20 @@ def debug_data(
                     msg.warn(f"No examples for texts WITHOUT new label '{label}'")
                     has_no_neg_warning = True
 
+        if gold_train_data["boundary_cross_ents"]:
+            msg.warn(
+                f"{gold_train_data['boundary_cross_ents']} entity span(s) crossing sentence boundaries"
+            )
+            has_boundary_cross_ents_warning = True
+
         if not has_low_data_warning:
             msg.good("Good amount of examples for all labels")
         if not has_no_neg_warning:
             msg.good("Examples without occurrences available for all labels")
         if not has_ws_ents_error:
             msg.good("No entities consisting of or starting/ending with whitespace")
-        if not has_punct_ents_warning:
-            msg.good("No entities consisting of or starting/ending with punctuation")
+        if not has_boundary_cross_ents_warning:
+            msg.good("No entities crossing sentence boundaries")
 
         if has_low_data_warning:
             msg.text(
@@ -268,14 +273,8 @@ def debug_data(
             )
         if has_ws_ents_error:
             msg.text(
-                "As of spaCy v2.1.0, entity spans consisting of or starting/ending "
-                "with whitespace characters are considered invalid."
-            )
-
-        if has_punct_ents_warning:
-            msg.text(
                 "Entity spans consisting of or starting/ending "
-                "with punctuation can not be trained with a noise level > 0."
+                "with whitespace characters are considered invalid."
             )
 
     if "textcat" in factory_names:
@@ -377,10 +376,11 @@ def debug_data(
 
     if "tagger" in factory_names:
         msg.divider("Part-of-speech Tagging")
-        labels = [label for label in gold_train_data["tags"]]
+        label_list = [label for label in gold_train_data["tags"]]
         model_labels = _get_labels_from_model(nlp, "tagger")
-        msg.info(f"{len(labels)} label(s) in train data")
-        missing_labels = model_labels - set(labels)
+        msg.info(f"{len(label_list)} label(s) in train data")
+        labels = set(label_list)
+        missing_labels = model_labels - labels
         if missing_labels:
             msg.warn(
                 "Some model labels are not present in the train data. The "
@@ -394,10 +394,11 @@ def debug_data(
 
     if "morphologizer" in factory_names:
         msg.divider("Morphologizer (POS+Morph)")
-        labels = [label for label in gold_train_data["morphs"]]
+        label_list = [label for label in gold_train_data["morphs"]]
         model_labels = _get_labels_from_model(nlp, "morphologizer")
-        msg.info(f"{len(labels)} label(s) in train data")
-        missing_labels = model_labels - set(labels)
+        msg.info(f"{len(label_list)} label(s) in train data")
+        labels = set(label_list)
+        missing_labels = model_labels - labels
         if missing_labels:
             msg.warn(
                 "Some model labels are not present in the train data. The "
@@ -564,7 +565,7 @@ def _compile_gold(
     nlp: Language,
     make_proj: bool,
 ) -> Dict[str, Any]:
-    data = {
+    data: Dict[str, Any] = {
         "ner": Counter(),
         "cats": Counter(),
         "tags": Counter(),
@@ -573,7 +574,7 @@ def _compile_gold(
         "words": Counter(),
         "roots": Counter(),
         "ws_ents": 0,
-        "punct_ents": 0,
+        "boundary_cross_ents": 0,
         "n_words": 0,
         "n_misaligned_words": 0,
         "words_missing_vectors": Counter(),
@@ -608,19 +609,11 @@ def _compile_gold(
                 if label.startswith(("B-", "U-", "L-")) and doc[i].is_space:
                     # "Illegal" whitespace entity
                     data["ws_ents"] += 1
-                if label.startswith(("B-", "U-", "L-")) and doc[i].text in [
-                    ".",
-                    "'",
-                    "!",
-                    "?",
-                    ",",
-                ]:
-                    # punctuation entity: could be replaced by whitespace when training with noise,
-                    # so add a warning to alert the user to this unexpected side effect.
-                    data["punct_ents"] += 1
                 if label.startswith(("B-", "U-")):
                     combined_label = label.split("-")[1]
                     data["ner"][combined_label] += 1
+                if gold[i].is_sent_start and label.startswith(("I-", "L-")):
+                    data["boundary_cross_ents"] += 1
                 elif label == "-":
                     data["ner"]["-"] += 1
         if "textcat" in factory_names or "textcat_multilabel" in factory_names:
@@ -669,10 +662,28 @@ def _compile_gold(
     return data
 
 
-def _format_labels(labels: List[Tuple[str, int]], counts: bool = False) -> str:
+@overload
+def _format_labels(labels: Iterable[str], counts: Literal[False] = False) -> str:
+    ...
+
+
+@overload
+def _format_labels(
+    labels: Iterable[Tuple[str, int]],
+    counts: Literal[True],
+) -> str:
+    ...
+
+
+def _format_labels(
+    labels: Union[Iterable[str], Iterable[Tuple[str, int]]],
+    counts: bool = False,
+) -> str:
     if counts:
-        return ", ".join([f"'{l}' ({c})" for l, c in labels])
-    return ", ".join([f"'{l}'" for l in labels])
+        return ", ".join(
+            [f"'{l}' ({c})" for l, c in cast(Iterable[Tuple[str, int]], labels)]
+        )
+    return ", ".join([f"'{l}'" for l in cast(Iterable[str], labels)])
 
 
 def _get_examples_without_label(data: Sequence[Example], label: str) -> int:
@@ -688,8 +699,30 @@ def _get_examples_without_label(data: Sequence[Example], label: str) -> int:
     return count
 
 
-def _get_labels_from_model(nlp: Language, pipe_name: str) -> Set[str]:
-    if pipe_name not in nlp.pipe_names:
-        return set()
-    pipe = nlp.get_pipe(pipe_name)
-    return set(pipe.labels)
+def _get_labels_from_model(nlp: Language, factory_name: str) -> Set[str]:
+    pipe_names = [
+        pipe_name
+        for pipe_name in nlp.pipe_names
+        if nlp.get_pipe_meta(pipe_name).factory == factory_name
+    ]
+    labels: Set[str] = set()
+    for pipe_name in pipe_names:
+        pipe = nlp.get_pipe(pipe_name)
+        labels.update(pipe.labels)
+    return labels
+
+
+def _get_labels_from_spancat(nlp: Language) -> Dict[str, Set[str]]:
+    pipe_names = [
+        pipe_name
+        for pipe_name in nlp.pipe_names
+        if nlp.get_pipe_meta(pipe_name).factory == "spancat"
+    ]
+    labels: Dict[str, Set[str]] = {}
+    for pipe_name in pipe_names:
+        pipe = nlp.get_pipe(pipe_name)
+        assert isinstance(pipe, SpanCategorizer)
+        if pipe.key not in labels:
+            labels[pipe.key] = set()
+        labels[pipe.key].update(pipe.labels)
+    return labels

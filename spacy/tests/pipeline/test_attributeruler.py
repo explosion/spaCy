@@ -32,24 +32,6 @@ def pattern_dicts():
     ]
 
 
-@registry.misc("attribute_ruler_patterns")
-def attribute_ruler_patterns():
-    return [
-        {
-            "patterns": [[{"ORTH": "a"}], [{"ORTH": "irrelevant"}]],
-            "attrs": {"LEMMA": "the", "MORPH": "Case=Nom|Number=Plur"},
-        },
-        # one pattern sets the lemma
-        {"patterns": [[{"ORTH": "test"}]], "attrs": {"LEMMA": "cat"}},
-        # another pattern sets the morphology
-        {
-            "patterns": [[{"ORTH": "test"}]],
-            "attrs": {"MORPH": "Case=Nom|Number=Sing"},
-            "index": 0,
-        },
-    ]
-
-
 @pytest.fixture
 def tag_map():
     return {
@@ -121,7 +103,25 @@ def test_attributeruler_init_patterns(nlp, pattern_dicts):
     assert doc.has_annotation("LEMMA")
     assert doc.has_annotation("MORPH")
     nlp.remove_pipe("attribute_ruler")
+
     # initialize with patterns from misc registry
+    @registry.misc("attribute_ruler_patterns")
+    def attribute_ruler_patterns():
+        return [
+            {
+                "patterns": [[{"ORTH": "a"}], [{"ORTH": "irrelevant"}]],
+                "attrs": {"LEMMA": "the", "MORPH": "Case=Nom|Number=Plur"},
+            },
+            # one pattern sets the lemma
+            {"patterns": [[{"ORTH": "test"}]], "attrs": {"LEMMA": "cat"}},
+            # another pattern sets the morphology
+            {
+                "patterns": [[{"ORTH": "test"}]],
+                "attrs": {"MORPH": "Case=Nom|Number=Sing"},
+                "index": 0,
+            },
+        ]
+
     nlp.config["initialize"]["components"]["attribute_ruler"] = {
         "patterns": {"@misc": "attribute_ruler_patterns"}
     }
@@ -162,6 +162,26 @@ def test_attributeruler_score(nlp, pattern_dicts):
     assert scores["lemma_acc"] == pytest.approx(0.2)
     # no morphs are set
     assert scores["morph_acc"] is None
+    nlp.remove_pipe("attribute_ruler")
+
+    # test with custom scorer
+    @registry.misc("weird_scorer.v1")
+    def make_weird_scorer():
+        def weird_scorer(examples, weird_score, **kwargs):
+            return {"weird_score": weird_score}
+
+        return weird_scorer
+
+    ruler = nlp.add_pipe(
+        "attribute_ruler", config={"scorer": {"@misc": "weird_scorer.v1"}}
+    )
+    ruler.initialize(lambda: [], patterns=pattern_dicts)
+    scores = nlp.evaluate(dev_examples, scorer_cfg={"weird_score": 0.12345})
+    assert scores["weird_score"] == 0.12345
+    assert "token_acc" in scores
+    assert "lemma_acc" not in scores
+    scores = nlp.evaluate(dev_examples, scorer_cfg={"weird_score": 0.23456})
+    assert scores["weird_score"] == 0.23456
 
 
 def test_attributeruler_rule_order(nlp):
