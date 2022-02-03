@@ -158,8 +158,8 @@ be configured with the `attrs` argument. The suggested attributes are `NORM`,
 `PREFIX`, `SUFFIX` and `SHAPE`. This lets the model take into account some
 subword information, without construction a fully character-based
 representation. If pretrained vectors are available, they can be included in the
-representation as well, with the vectors table kept static (i.e. it's
-not updated).
+representation as well, with the vectors table kept static (i.e. it's not
+updated).
 
 | Name                     | Description                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -632,10 +632,10 @@ model simply adds a linear layer with softmax activation to predict scores given
 the token vectors.
 
 | Name        | Description                                                                                |
-|-------------|--------------------------------------------------------------------------------------------|
+| ----------- | ------------------------------------------------------------------------------------------ |
 | `tok2vec`   | Subnetwork to map tokens into vector representations. ~~Model[List[Doc], List[Floats2d]]~~ |
 | `nO`        | The number of tags to output. Inferred from the data if `None`. ~~Optional[int]~~          |
-| `normalize` | Normalize probabilities during inference. Defaults to `False`. ~~bool~~           |
+| `normalize` | Normalize probabilities during inference. Defaults to `False`. ~~bool~~                    |
 | **CREATES** | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                     |
 
 <Accordion title="Previous versions of spacy.Tagger" spaced>
@@ -646,7 +646,6 @@ the token vectors.
 The other arguments are shared between all versions.
 
 </Accordion>
-
 
 ## Text classification architectures {#textcat source="spacy/ml/models/textcat.py"}
 
