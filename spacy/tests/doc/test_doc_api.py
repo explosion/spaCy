@@ -718,7 +718,7 @@ def test_has_annotation_sents(en_vocab):
         assert not doc.has_annotation(attr, require_complete=True)
 
     # The first token (index 0) is always assumed to be a sentence start,
-    # and ignored by the check in doc.has_annotatin
+    # and ignored by the check in doc.has_annotation
 
     doc[1].is_sent_start = False
     for attr in attrs:
