@@ -702,3 +702,9 @@ def test_debug_data_compile_gold():
     eg = Example(pred, ref)
     data = _compile_gold([eg], ["ner"], nlp, True)
     assert data["boundary_cross_ents"] == 0
+
+    pred = Doc(nlp.vocab, words=["Token", ".", "New", "York", "City"])
+    ref = Doc(nlp.vocab, words=["Token", ".", "New York City"], sent_starts=[True, False, True], ents=["O", "B-ENT", "I-ENT"])
+    eg = Example(pred, ref)
+    data = _compile_gold([eg], ["ner"], nlp, True)
+    assert data["boundary_cross_ents"] == 1
