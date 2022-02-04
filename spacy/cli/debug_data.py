@@ -603,7 +603,7 @@ def _compile_gold(
                 if nlp.vocab.strings[word] not in nlp.vocab.vectors:
                     data["words_missing_vectors"].update([word])
         if "ner" in factory_names:
-            sent_starts = eg.get_aligned("SENT_START")
+            sent_starts = eg.get_aligned_sent_starts()
             for i, label in enumerate(eg.get_aligned_ner()):
                 if label is None:
                     continue
@@ -613,17 +613,7 @@ def _compile_gold(
                 if label.startswith(("B-", "U-")):
                     combined_label = label.split("-")[1]
                     data["ner"][combined_label] += 1
-                if (
-                    i > 0
-                    and label.startswith(("I-", "L-"))
-                    and sent_starts[i - 1] != True
-                    and sent_starts[i] == True
-                ):
-                    # Checking the previous token is a minor hack to work
-                    # around the case where SENT_START is aligned as True to
-                    # multiple tokens when the sentence-initial reference token
-                    # is split into multiple tokens in the predicted doc.
-                    # TODO: remove after Example.get_aligned is modified.
+                if sent_starts[i] == True and label.startswith(("I-", "L-")):
                     data["boundary_cross_ents"] += 1
                 elif label == "-":
                     data["ner"]["-"] += 1
