@@ -131,7 +131,7 @@ class Language:
         self,
         vocab: Union[Vocab, bool] = True,
         *,
-        max_length: int = 10 ** 6,
+        max_length: int = 10**6,
         meta: Dict[str, Any] = {},
         create_tokenizer: Optional[Callable[["Language"], Callable[[str], Doc]]] = None,
         batch_size: int = 1000,
