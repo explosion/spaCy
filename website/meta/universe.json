@@ -141,7 +141,8 @@
                 "website": "https://www.nr.no/~plison"
             },
             "category": ["pipeline", "standalone", "research", "training"],
-            "tags": []
+            "tags": [],
+            "spacy_version": 3
         },
         {
             "id": "numerizer",
@@ -976,6 +977,48 @@
             },
             "category": ["pipeline"],
             "tags": ["pipeline", "danish"]
+        },
+        {
+            "id": "spacy-wrap",
+            "title": "spaCy-wrap",
+            "slogan": "For Wrapping fine-tuned transformers in spaCy pipelines",
+            "description": "spaCy-wrap is a wrapper library for spaCy for including fine-tuned transformers from Huggingface in your spaCy pipeline allowing inclusion of existing models within existing workflows.",
+            "github": "kennethenevoldsen/spacy-wrap",
+            "pip": "spacy_wrap",
+            "code_example": [
+                "import spacy",
+                "import spacy_wrap",
+                "",
+                "nlp = spacy.blank('en')",
+                "config = {",
+                "   'doc_extension_trf_data': 'clf_trf_data',  # document extention for the forward pass",
+                "   'doc_extension_prediction': 'sentiment',  # document extention for the prediction",
+                "   'labels': ['negative', 'neutral', 'positive'],",
+                "   'model': {",
+                "       'name': 'cardiffnlp/twitter-roberta-base-sentiment',  # the model name or path of huggingface model",
+                "},",
+                "}",
+                "",
+                "transformer = nlp.add_pipe('classification_transformer', config=config)",
+                "transformer.model.initialize()",
+                "",
+                "doc = nlp('spaCy is a wonderful tool')",
+                "",
+                "print(doc._.clf_trf_data)",
+                "# TransformerData(wordpieces=...",
+                "print(doc._.sentiment)",
+                "# 'positive'",
+                "print(doc._.sentiment_prob)",
+                "# {'prob': array([0.004, 0.028, 0.969], dtype=float32), 'labels': ['negative', 'neutral', 'positive']}"
+            ],
+            "thumb": "https://raw.githubusercontent.com/KennethEnevoldsen/spacy-wrap/main/docs/_static/icon.png",
+            "author": "Kenneth Enevoldsen",
+            "author_links": {
+                "github": "KennethEnevoldsen",
+                "website": "https://www.kennethenevoldsen.com"
+            },
+            "category": ["pipeline", "models", "training"],
+            "tags": ["pipeline", "models", "transformers"]
         },
         {
             "id": "textdescriptives",

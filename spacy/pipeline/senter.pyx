@@ -100,6 +100,10 @@ class SentenceRecognizer(Tagger):
         return tuple(["I", "S"])
 
     @property
+    def hide_labels(self):
+        return True
+
+    @property
     def label_data(self):
         return None
 

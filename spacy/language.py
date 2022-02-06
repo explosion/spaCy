@@ -354,12 +354,15 @@ class Language:
     @property
     def pipe_labels(self) -> Dict[str, List[str]]:
         """Get the labels set by the pipeline components, if available (if
-        the component exposes a labels property).
+        the component exposes a labels property and the labels are not
+        hidden).
 
         RETURNS (Dict[str, List[str]]): Labels keyed by component name.
         """
         labels = {}
         for name, pipe in self._components:
+            if hasattr(pipe, "hide_labels") and pipe.hide_labels is True:
+                continue
             if hasattr(pipe, "labels"):
                 labels[name] = list(pipe.labels)
         return SimpleFrozenDict(labels)
@@ -522,7 +525,7 @@ class Language:
         requires: Iterable[str] = SimpleFrozenList(),
         retokenizes: bool = False,
         func: Optional["Pipe"] = None,
-    ) -> Callable:
+    ) -> Callable[..., Any]:
         """Register a new pipeline component. Can be used for stateless function
         components that don't require a separate factory. Can be used as a
         decorator on a function or classmethod, or called as a function with the
