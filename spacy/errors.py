@@ -520,7 +520,7 @@ class Errors(metaclass=ErrorsWithCodes):
     E202 = ("Unsupported {name} mode '{mode}'. Supported modes: {modes}.")
 
     # New errors added in v3.x
-    E857 = ("Entry \"{name}\" not found in edit tree lemmatizer labels.")
+    E857 = ("Entry '{name}' not found in edit tree lemmatizer labels.")
     E858 = ("The {mode} vector table does not support this operation. "
             "{alternative}")
     E859 = ("The floret vector table cannot be modified.")
