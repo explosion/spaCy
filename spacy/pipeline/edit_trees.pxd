@@ -1,8 +1,9 @@
 from libc.stdint cimport uint32_t, uint64_t
-from spacy.typedefs cimport attr_t, hash_t, len_t
-from spacy.strings cimport StringStore
 from libcpp.unordered_map cimport unordered_map
 from libcpp.vector cimport vector
+
+from ..typedefs cimport attr_t, hash_t, len_t
+from ..strings cimport StringStore
 
 cdef extern from "<algorithm>" namespace "std" nogil:
     void swap[T](T& a, T& b) except +  # Only available in Cython 3.
