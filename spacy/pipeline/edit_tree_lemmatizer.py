@@ -214,6 +214,10 @@ class EditTreeLemmatizer(TrainablePipe):
         return tuple(self.cfg["labels"])
 
     @property
+    def hide_labels(self) -> bool:
+        return True
+
+    @property
     def label_data(self):
         trees = []
         for tree_id in range(len(self.trees)):
