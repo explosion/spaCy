@@ -44,7 +44,6 @@ streaming.
 | `max_length`    | Maximum document length. Longer documents will be split into sentences, if sentence boundaries are available. Defaults to `0` for no limit. ~~int~~                                                                                                                                      |
 | `limit`         | Limit corpus to a subset of examples, e.g. for debugging. Defaults to `0` for no limit. ~~int~~                                                                                                                                                                                          |
 | `augmenter`     | Apply some simply data augmentation, where we replace tokens with variations. This is especially useful for punctuation and case replacement, to help generalize beyond corpora that don't have smart-quotes, or only have smart quotes, etc. Defaults to `None`. ~~Optional[Callable]~~ |
-| `shuffle`       | Whether to shuffle the examples. Defaults to `False`. |
 
 ```python
 %%GITHUB_SPACY/spacy/training/corpus.py
