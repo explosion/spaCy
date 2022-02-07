@@ -201,10 +201,11 @@ def debug_data(
         msg.divider("Span Categorization")
         msg.table(model_labels_spancat, header=["Spans Key", "Labels"], divider=True)
 
-        msg.text("Labels in train data: ")
+        msg.text("Label counts in train data: ", show=verbose)
         for spans_key, data_labels in gold_train_data["spancat"].items():
             msg.text(
-                f"Key: {spans_key}, {_format_labels(data_labels.items(), counts=True)}"
+                f"Key: {spans_key}, {_format_labels(data_labels.items(), counts=True)}",
+                show=verbose,
             )
         # Data checks: only take the spans keys in the actual spancat components
         data_labels_in_component = {
