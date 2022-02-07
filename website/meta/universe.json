@@ -958,7 +958,7 @@
             "title": "Augmenty",
             "slogan": "The cherry on top of your NLP pipeline",
             "description": "Augmenty is an augmentation library based on spaCy for augmenting texts. Augmenty differs from other augmentation libraries in that it corrects (as far as possible) the token, sentence and document labels under the augmentation.",
-            "github": "https://github.com/kennethenevoldsen/augmenty",
+            "github": "kennethenevoldsen/augmenty",
             "pip": "augmenty",
             "code_example": [
                 "import spacy",
