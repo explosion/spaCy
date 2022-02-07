@@ -78,15 +78,6 @@ def test_initialized_short(nlp):
     print(doc.spans)
 
 
-def test_initialized_2(nlp):
-    nlp.add_pipe("coref")
-    nlp.initialize()
-    assert nlp.pipe_names == ["coref"]
-    text = "She gave me her pen."
-    # TODO: This crashes though it works when using intermediate var 'doc' !
-    print(nlp(text).spans)
-
-
 def test_coref_serialization(nlp):
     # Test that the coref component can be serialized
     nlp.add_pipe("coref", last=True)
