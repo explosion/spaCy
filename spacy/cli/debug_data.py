@@ -603,6 +603,7 @@ def _compile_gold(
                 if nlp.vocab.strings[word] not in nlp.vocab.vectors:
                     data["words_missing_vectors"].update([word])
         if "ner" in factory_names:
+            sent_starts = eg.get_aligned_sent_starts()
             for i, label in enumerate(eg.get_aligned_ner()):
                 if label is None:
                     continue
@@ -612,7 +613,7 @@ def _compile_gold(
                 if label.startswith(("B-", "U-")):
                     combined_label = label.split("-")[1]
                     data["ner"][combined_label] += 1
-                if gold[i].is_sent_start and label.startswith(("I-", "L-")):
+                if sent_starts[i] == True and label.startswith(("I-", "L-")):
                     data["boundary_cross_ents"] += 1
                 elif label == "-":
                     data["ner"]["-"] += 1
