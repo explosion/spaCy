@@ -190,12 +190,13 @@ def package(
     if create_wheel:
         with util.working_dir(main_path):
             util.run_command([sys.executable, "setup.py", "bdist_wheel"], capture=False)
-        wheel = main_path / "dist" / f"{model_name_v}{WHEEL_SUFFIX}"
+        wheel_name_squashed = re.sub("_+", "_", model_name_v)
+        wheel = main_path / "dist" / f"{wheel_name_squashed}{WHEEL_SUFFIX}"
         msg.good(f"Successfully created binary wheel", wheel)
     if "__" in model_name:
         msg.warn(
             f"Model name ('{model_name}') contains a run of underscores. "
-            "These will be squashed to a single underscore when normalized upon PyPI upload.",
+            "Runs of underscores are not significant in installed package names.",
         )
 
 
