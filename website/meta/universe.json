@@ -968,7 +968,7 @@
                 "",
                 "docs = nlp.pipe(['Augmenty is a great tool for text augmentation'])",
                 "",
-                "ent_dict = {'ORG': [['spaCy'], ['spaCy', 'Universe']]}"
+                "ent_dict = {'ORG': [['spaCy'], ['spaCy', 'Universe']]}",
                 "entity_augmenter = augmenty.load('ents_replace.v1',",
                 "                                 ent_dict = ent_dict, level=1)",
                 "",
