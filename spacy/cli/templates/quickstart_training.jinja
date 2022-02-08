@@ -6,6 +6,11 @@ can help generate the best possible configuration, given a user's requirements. 
 [paths]
 train = null
 dev = null
+{% if use_transformer or optimize == "efficiency" or not word_vectors -%}
+vectors = null
+{% else -%}
+vectors = "{{ word_vectors }}"
+{% endif -%}
 
 [system]
 {% if use_transformer -%}
@@ -421,8 +426,4 @@ compound = 1.001
 {% endif %}
 
 [initialize]
-{% if use_transformer or optimize == "efficiency" or not word_vectors -%}
 vectors = ${paths.vectors}
-{% else -%}
-vectors = "{{ word_vectors }}"
-{% endif -%}

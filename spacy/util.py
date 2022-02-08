@@ -871,7 +871,6 @@ def get_package_path(name: str) -> Path:
     name (str): Package name.
     RETURNS (Path): Path to installed package.
     """
-    name = name.lower()  # use lowercase version to be safe
     # Here we're importing the module just to find it. This is worryingly
     # indirect, but it's otherwise very difficult to find the package.
     pkg = importlib.import_module(name)

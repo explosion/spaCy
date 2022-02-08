@@ -281,7 +281,7 @@ class TextCategorizer(TrainablePipe):
         bp_scores(gradient)
         if sgd is not None:
             self.finish_update(sgd)
-        losses[self.name] += (gradient ** 2).sum()
+        losses[self.name] += (gradient**2).sum()
         return losses
 
     def _examples_to_truth(
@@ -315,7 +315,7 @@ class TextCategorizer(TrainablePipe):
         not_missing = self.model.ops.asarray(not_missing)  # type: ignore
         d_scores = (scores - truths) / scores.shape[0]
         d_scores *= not_missing
-        mean_square_error = (d_scores ** 2).sum(axis=1).mean()
+        mean_square_error = (d_scores**2).sum(axis=1).mean()
         return float(mean_square_error), d_scores
 
     def add_label(self, label: str) -> int:
