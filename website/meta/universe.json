@@ -954,6 +954,37 @@
             "tags": ["lemmatizer", "danish"]
         },
         {
+            "id": "augmenty",
+            "title": "Augmenty",
+            "slogan": "The cherry on top of your NLP pipeline",
+            "description": "Augmenty is an augmentation library based on spaCy for augmenting texts. Augmenty differs from other augmentation libraries in that it corrects (as far as possible) the token, sentence and document labels under the augmentation.",
+            "github": "kennethenevoldsen/augmenty",
+            "pip": "augmenty",
+            "code_example": [
+                "import spacy",
+                "import augmenty",
+                "",
+                "nlp = spacy.load('en_core_web_md')",
+                "",
+                "docs = nlp.pipe(['Augmenty is a great tool for text augmentation'])",
+                "",
+                "ent_dict = {'ORG': [['spaCy'], ['spaCy', 'Universe']]}",
+                "entity_augmenter = augmenty.load('ents_replace.v1',",
+                "                                 ent_dict = ent_dict, level=1)",
+                "",
+                "for doc in augmenty.docs(docs, augmenter=entity_augmenter, nlp=nlp):",
+                "    print(doc)"
+            ],
+            "thumb": "https://github.com/KennethEnevoldsen/augmenty/blob/master/img/icon.png?raw=true",
+            "author": "Kenneth Enevoldsen",
+            "author_links": {
+                "github": "kennethenevoldsen",
+                "website": "https://www.kennethenevoldsen.com"
+            },
+            "category": ["training", "research"],
+            "tags": ["training", "research", "augmentation"]
+        },
+        {
             "id": "dacy",
             "title": "DaCy",
             "slogan": "An efficient Pipeline for Danish NLP",
