@@ -14,7 +14,7 @@ class PhraseMatcher:
     def add(
         self,
         key: str,
-        docs: List[List[Dict[str, Any]]],
+        docs: List[Doc],
         *,
         on_match: Optional[
             Callable[[Matcher, Doc, int, List[Tuple[Any, ...]]], Any]
