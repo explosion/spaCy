@@ -213,6 +213,12 @@ format, train a pipeline, evaluate it and export metrics, package it and spin up
 a quick web demo. It looks pretty similar to a config file used to define CI
 pipelines.
 
+> #### Tip: Multi-line YAML syntax for long values
+>
+> YAML has [multi-line syntax](https://yaml-multiline.info/) that can be 
+> helpful for readability with longer values such as project descriptions or 
+> commands that take several arguments.
+
 ```yaml
 %%GITHUB_PROJECTS/pipelines/tagger_parser_ud/project.yml
 ```
