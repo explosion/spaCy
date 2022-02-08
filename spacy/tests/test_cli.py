@@ -16,10 +16,8 @@ from spacy.cli.debug_data import _get_labels_from_model
 from spacy.cli.debug_data import _get_labels_from_spancat
 from spacy.cli.download import get_compatibility, get_version
 from spacy.cli.init_config import RECOMMENDATIONS, init_config, fill_config
-from spacy.cli.package import (
-    get_third_party_dependencies,
-    _is_permitted_package_name,
-)
+from spacy.cli.package import get_third_party_dependencies
+from spacy.cli.package import _is_permitted_package_name
 from spacy.cli.validate import get_model_pkgs
 from spacy.lang.en import English
 from spacy.lang.nl import Dutch
