@@ -1,4 +1,4 @@
-STOP_WORDS = sorted(sorted(list(filter(None, list(set(
+STOP_WORDS = set(
     """
 а авось ага агу аж ай али алло ау ах
 
@@ -101,4 +101,5 @@ STOP_WORDS = sorted(sorted(list(filter(None, list(set(
 эй эка экий этак этакий эх
 
 я явно явных яко якобы якоже
-""".split()))))), key=len, reverse=True)
+""".split()
+)
