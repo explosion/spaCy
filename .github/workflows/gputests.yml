@@ -1,3 +1,5 @@
+name: Weekly GPU tests
+
 on:
   schedule:
     - cron: '0 1 * * MON'
@@ -15,5 +17,4 @@ jobs:
           PIPELINE: explosion-ai/spacy-slow-gpu-tests
           BRANCH: ${{ matrix.branch }}
           MESSAGE: ":github: Weekly GPU + slow tests - triggered from a GitHub Action"
-        secrets:
           BUILDKITE_API_ACCESS_TOKEN: ${{ secrets.BUILDKITE_SECRET }}
