@@ -137,6 +137,7 @@ cdef vector[int] _heads_to_c(heads):
         if head == None:
             c_heads.push_back(-1)
         else:
+            assert head < len(heads)
             c_heads.push_back(head)
     return c_heads
 
