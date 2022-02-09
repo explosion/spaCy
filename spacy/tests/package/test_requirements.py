@@ -12,6 +12,7 @@ def test_build_dependencies():
         "flake8",
         "hypothesis",
         "pre-commit",
+        "black",
         "mypy",
         "types-dataclasses",
         "types-mock",

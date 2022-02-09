@@ -12,7 +12,7 @@ from spacy.cli._util import is_subpath_of, load_project_config
 from spacy.cli._util import parse_config_overrides, string_to_list
 from spacy.cli._util import substitute_project_variables
 from spacy.cli._util import validate_project_commands
-from spacy.cli.debug_data import _get_labels_from_model
+from spacy.cli.debug_data import _compile_gold, _get_labels_from_model
 from spacy.cli.debug_data import _get_labels_from_spancat
 from spacy.cli.download import get_compatibility, get_version
 from spacy.cli.init_config import RECOMMENDATIONS, init_config, fill_config
@@ -22,6 +22,7 @@ from spacy.lang.en import English
 from spacy.lang.nl import Dutch
 from spacy.language import Language
 from spacy.schemas import ProjectConfigSchema, RecommendationSchema, validate
+from spacy.tokens import Doc
 from spacy.training import Example, docs_to_json, offsets_to_biluo_tags
 from spacy.training.converters import conll_ner_to_docs, conllu_to_docs
 from spacy.training.converters import iob_to_docs
@@ -692,3 +693,18 @@ def test_get_labels_from_model(factory_name, pipe_name):
         assert _get_labels_from_spancat(nlp)[pipe.key] == set(labels)
     else:
         assert _get_labels_from_model(nlp, factory_name) == set(labels)
+
+
+def test_debug_data_compile_gold():
+    nlp = English()
+    pred = Doc(nlp.vocab, words=["Token", ".", "New", "York", "City"])
+    ref = Doc(nlp.vocab, words=["Token", ".", "New York City"], sent_starts=[True, False, True], ents=["O", "O", "B-ENT"])
+    eg = Example(pred, ref)
+    data = _compile_gold([eg], ["ner"], nlp, True)
+    assert data["boundary_cross_ents"] == 0
+
+    pred = Doc(nlp.vocab, words=["Token", ".", "New", "York", "City"])
+    ref = Doc(nlp.vocab, words=["Token", ".", "New York City"], sent_starts=[True, False, True], ents=["O", "B-ENT", "I-ENT"])
+    eg = Example(pred, ref)
+    data = _compile_gold([eg], ["ner"], nlp, True)
+    assert data["boundary_cross_ents"] == 1
