@@ -3792,6 +3792,39 @@
                 "twitter": "jboy"
             },
             "category": ["visualizers", "standalone"]
+        },
+        {
+            "id": "tmtoolkit",
+            "slogan": "Text mining and topic modeling toolkit",
+            "description": "tmtoolkit is a set of tools for text mining and topic modeling with Python developed especially for the use in the social sciences, in journalism or related disciplines. It aims for easy installation, extensive documentation and a clear programming interface while offering good performance on large datasets by the means of vectorized operations (via NumPy) and parallel computation (using Python’s multiprocessing module and the loky package).",
+            "github": "WZBSocialScienceCenter/tmtoolkit",
+            "code_example": [
+                "from tmtoolkit.corpus import Corpus, tokens_table, lemmatize, to_lowercase, dtm",
+                "from tmtoolkit.bow.bow_stats import tfidf, sorted_terms_table",
+                "# load built-in sample dataset and use 4 worker processes",
+                "corp = Corpus.from_builtin_corpus('en-News100', max_workers=4)",
+                "# investigate corpus as dataframe",
+                "toktbl = tokens_table(corp)",
+                "print(toktbl)",
+                "# apply some text normalization",
+                "lemmatize(corp)",
+                "to_lowercase(corp)",
+                "# build sparse document-token matrix (DTM)",
+                "# document labels identify rows, vocabulary tokens identify columns",
+                "mat, doc_labels, vocab = dtm(corp, return_doc_labels=True, return_vocab=True)",
+                "# apply tf-idf transformation to DTM",
+                "# operation is applied on sparse matrix and uses few memory",
+                "tfidf_mat = tfidf(mat)",
+                "# show top 5 tokens per document ranked by tf-idf",
+                "top_tokens = sorted_terms_table(tfidf_mat, vocab, doc_labels, top_n=5)",
+                "print(top_tokens)"
+            ],
+            "author": "Markus Konrad / WZB Social Science Center",
+            "author_links": {
+                "github": "internaut",
+                "twitter": "_knrd"
+            },
+            "category": ["scientific", "standalone"]
         }
     ],
 
