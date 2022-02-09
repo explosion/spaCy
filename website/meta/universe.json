@@ -3769,6 +3769,29 @@
             },
             "category": ["pipeline"],
             "tags": ["pipeline", "nlp", "sentiment"]
+        },
+        {
+            "id": "textnets",
+            "slogan": "Text analysis with networks",
+            "description": "textnets represents collections of texts as networks of documents and words. This provides novel possibilities for the visualization and analysis of texts.",
+            "github": "jboynyc/textnets",
+            "image": "https://user-images.githubusercontent.com/2187261/152641425-6c0fb41c-b8e0-44fb-a52a-7c1ba24eba1e.png",
+            "code_example": [
+                "import textnets as tn",
+                "",
+                "corpus = tn.Corpus(tn.examples.moon_landing)",
+                "t = tn.Textnet(corpus.tokenized(), min_docs=1)",
+                "t.plot(label_nodes=True,",
+                "       show_clusters=True,",
+                "       scale_nodes_by=\"birank\",",
+                "       scale_edges_by=\"weight\")"
+            ],
+            "author": "John Boy",
+            "author_links": {
+                "github": "jboynyc",
+                "twitter": "jboy"
+            },
+            "category": ["visualizers", "standalone"]
         }
     ],
 
