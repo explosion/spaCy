@@ -36,6 +36,16 @@
         box-sizing: content-box
         vertical-align: top
 
+.emoji:before
+    content: attr(data-emoji)
+    padding-right: 0.75em
+    padding-top: 0
+    margin-left: -2.5em
+    width: 1.75em
+    text-align: right
+    font-size: 1em
+    position: static
+
 .li-icon
     text-indent: calc(-20px - 0.55em)
 

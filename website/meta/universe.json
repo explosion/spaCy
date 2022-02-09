@@ -954,6 +954,37 @@
             "tags": ["lemmatizer", "danish"]
         },
         {
+            "id": "augmenty",
+            "title": "Augmenty",
+            "slogan": "The cherry on top of your NLP pipeline",
+            "description": "Augmenty is an augmentation library based on spaCy for augmenting texts. Augmenty differs from other augmentation libraries in that it corrects (as far as possible) the token, sentence and document labels under the augmentation.",
+            "github": "kennethenevoldsen/augmenty",
+            "pip": "augmenty",
+            "code_example": [
+                "import spacy",
+                "import augmenty",
+                "",
+                "nlp = spacy.load('en_core_web_md')",
+                "",
+                "docs = nlp.pipe(['Augmenty is a great tool for text augmentation'])",
+                "",
+                "ent_dict = {'ORG': [['spaCy'], ['spaCy', 'Universe']]}",
+                "entity_augmenter = augmenty.load('ents_replace.v1',",
+                "                                 ent_dict = ent_dict, level=1)",
+                "",
+                "for doc in augmenty.docs(docs, augmenter=entity_augmenter, nlp=nlp):",
+                "    print(doc)"
+            ],
+            "thumb": "https://github.com/KennethEnevoldsen/augmenty/blob/master/img/icon.png?raw=true",
+            "author": "Kenneth Enevoldsen",
+            "author_links": {
+                "github": "kennethenevoldsen",
+                "website": "https://www.kennethenevoldsen.com"
+            },
+            "category": ["training", "research"],
+            "tags": ["training", "research", "augmentation"]
+        },
+        {
             "id": "dacy",
             "title": "DaCy",
             "slogan": "An efficient Pipeline for Danish NLP",
@@ -977,6 +1008,48 @@
             },
             "category": ["pipeline"],
             "tags": ["pipeline", "danish"]
+        },
+        {
+            "id": "spacy-wrap",
+            "title": "spaCy-wrap",
+            "slogan": "For Wrapping fine-tuned transformers in spaCy pipelines",
+            "description": "spaCy-wrap is a wrapper library for spaCy for including fine-tuned transformers from Huggingface in your spaCy pipeline allowing inclusion of existing models within existing workflows.",
+            "github": "kennethenevoldsen/spacy-wrap",
+            "pip": "spacy_wrap",
+            "code_example": [
+                "import spacy",
+                "import spacy_wrap",
+                "",
+                "nlp = spacy.blank('en')",
+                "config = {",
+                "   'doc_extension_trf_data': 'clf_trf_data',  # document extention for the forward pass",
+                "   'doc_extension_prediction': 'sentiment',  # document extention for the prediction",
+                "   'labels': ['negative', 'neutral', 'positive'],",
+                "   'model': {",
+                "       'name': 'cardiffnlp/twitter-roberta-base-sentiment',  # the model name or path of huggingface model",
+                "},",
+                "}",
+                "",
+                "transformer = nlp.add_pipe('classification_transformer', config=config)",
+                "transformer.model.initialize()",
+                "",
+                "doc = nlp('spaCy is a wonderful tool')",
+                "",
+                "print(doc._.clf_trf_data)",
+                "# TransformerData(wordpieces=...",
+                "print(doc._.sentiment)",
+                "# 'positive'",
+                "print(doc._.sentiment_prob)",
+                "# {'prob': array([0.004, 0.028, 0.969], dtype=float32), 'labels': ['negative', 'neutral', 'positive']}"
+            ],
+            "thumb": "https://raw.githubusercontent.com/KennethEnevoldsen/spacy-wrap/main/docs/_static/icon.png",
+            "author": "Kenneth Enevoldsen",
+            "author_links": {
+                "github": "KennethEnevoldsen",
+                "website": "https://www.kennethenevoldsen.com"
+            },
+            "category": ["pipeline", "models", "training"],
+            "tags": ["pipeline", "models", "transformers"]
         },
         {
             "id": "textdescriptives",
@@ -3696,6 +3769,29 @@
             },
             "category": ["pipeline"],
             "tags": ["pipeline", "nlp", "sentiment"]
+        },
+        {
+            "id": "textnets",
+            "slogan": "Text analysis with networks",
+            "description": "textnets represents collections of texts as networks of documents and words. This provides novel possibilities for the visualization and analysis of texts.",
+            "github": "jboynyc/textnets",
+            "image": "https://user-images.githubusercontent.com/2187261/152641425-6c0fb41c-b8e0-44fb-a52a-7c1ba24eba1e.png",
+            "code_example": [
+                "import textnets as tn",
+                "",
+                "corpus = tn.Corpus(tn.examples.moon_landing)",
+                "t = tn.Textnet(corpus.tokenized(), min_docs=1)",
+                "t.plot(label_nodes=True,",
+                "       show_clusters=True,",
+                "       scale_nodes_by=\"birank\",",
+                "       scale_edges_by=\"weight\")"
+            ],
+            "author": "John Boy",
+            "author_links": {
+                "github": "jboynyc",
+                "twitter": "jboy"
+            },
+            "category": ["visualizers", "standalone"]
         }
     ],
 
