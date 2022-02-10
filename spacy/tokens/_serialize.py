@@ -11,7 +11,8 @@ from ..vocab import Vocab
 from ..compat import copy_reg
 from ..attrs import SPACY, ORTH, intify_attr, IDS
 from ..errors import Errors
-from ..util import ensure_path, SimpleFrozenList, MSGPACK_SERIALIZED_EMPTY_LIST
+from ..util import ensure_path, SimpleFrozenList
+from ._dict_proxies import MSGPACK_SERIALIZED_EMPTY_LIST
 
 # fmt: off
 ALL_ATTRS = ("ORTH", "NORM", "TAG", "HEAD", "DEP", "ENT_IOB", "ENT_TYPE", "ENT_KB_ID", "ENT_ID", "LEMMA", "MORPH", "POS", "SENT_START")

@@ -1675,6 +1675,3 @@ def packages_distributions() -> Dict[str, List[str]]:
         for pkg in (dist.read_text("top_level.txt") or "").split():
             pkg_to_dist[pkg].append(dist.metadata["Name"])
     return dict(pkg_to_dist)
-
-
-MSGPACK_SERIALIZED_EMPTY_LIST = srsly.msgpack_dumps([])
