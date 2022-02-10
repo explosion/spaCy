@@ -11,13 +11,11 @@ from ..vocab import Vocab
 from ..compat import copy_reg
 from ..attrs import SPACY, ORTH, intify_attr, IDS
 from ..errors import Errors
-from ..util import ensure_path, SimpleFrozenList
+from ..util import ensure_path, SimpleFrozenList, MSGPACK_SERIALIZED_EMPTY_LIST
 
 # fmt: off
 ALL_ATTRS = ("ORTH", "NORM", "TAG", "HEAD", "DEP", "ENT_IOB", "ENT_TYPE", "ENT_KB_ID", "ENT_ID", "LEMMA", "MORPH", "POS", "SENT_START")
 # fmt: on
-
-SERIALIZED_EMPTY_LIST = b"\x90"
 
 
 class DocBin:
@@ -148,7 +146,7 @@ class DocBin:
             doc = Doc(vocab, words=tokens[:, orth_col], spaces=spaces)  # type: ignore
             doc = doc.from_array(self.attrs, tokens)  # type: ignore
             doc.cats = self.cats[i]
-            if self.span_groups[i] != SERIALIZED_EMPTY_LIST:
+            if self.span_groups[i] != MSGPACK_SERIALIZED_EMPTY_LIST:
                 doc.spans.from_bytes(self.span_groups[i])
             else:
                 doc.spans.clear()

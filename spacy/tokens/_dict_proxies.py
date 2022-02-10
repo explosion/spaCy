@@ -5,6 +5,7 @@ import srsly
 
 from .span_group import SpanGroup
 from ..errors import Errors
+from ..util import MSGPACK_SERIALIZED_EMPTY_LIST
 
 if TYPE_CHECKING:
     # This lets us add type hints for mypy etc. without causing circular imports
@@ -43,6 +44,8 @@ class SpanGroups(UserDict):
     def to_bytes(self) -> bytes:
         # We don't need to serialize this as a dict, because the groups
         # know their names.
+        if self._is_empty():
+            return MSGPACK_SERIALIZED_EMPTY_LIST
         msg = [value.to_bytes() for value in self.values()]
         return srsly.msgpack_dumps(msg)
 
@@ -60,3 +63,6 @@ class SpanGroups(UserDict):
         if doc is None:
             raise ValueError(Errors.E866)
         return doc
+
+    def _is_empty(self) -> bool:
+        return len(self.values()) == 0
