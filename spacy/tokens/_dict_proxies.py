@@ -50,7 +50,11 @@ class SpanGroups(UserDict):
         return srsly.msgpack_dumps(msg)
 
     def from_bytes(self, bytes_data: bytes) -> "SpanGroups":
-        msg = srsly.msgpack_loads(bytes_data)
+        msg = (
+            []
+            if bytes_data == MSGPACK_SERIALIZED_EMPTY_LIST
+            else srsly.msgpack_loads(bytes_data)
+        )
         self.clear()
         doc = self._ensure_doc()
         for value_bytes in msg:
