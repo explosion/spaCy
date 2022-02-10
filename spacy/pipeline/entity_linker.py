@@ -246,8 +246,11 @@ class EntityLinker(TrainablePipe):
         assert len(doc_sample) > 0, Errors.E923.format(name=self.name)
         assert len(vector_sample) > 0, Errors.E923.format(name=self.name)
 
-        # XXX This is a hack. Also `has_annotation` doesn't seem to work as expected?
-        # Check that there are some entities in the batch
+        # XXX In order for size estimation to work, there has to be at least
+        # one entity. It's not used for training so it doesn't have to be real,
+        # so we add a fake one if none are present.
+        # We can't use Doc.has_annotation here because it can be True for docs
+        # that have been through an NER component but got no entities.
         has_annotations = any([doc.ents for doc in doc_sample])
         if not has_annotations:
             doc = doc_sample[0]
