@@ -176,7 +176,8 @@ class EntityLinker(TrainablePipe):
             produces a list of candidates, given a certain knowledge base and a textual mention.
         scorer (Optional[Callable]): The scoring method. Defaults to
             Scorer.score_links.
-        use_gold_ents (bool): Whether to copy entities from gold docs or not.
+        use_gold_ents (bool): Whether to copy entities from gold docs or not. If false, another
+            component must provide entity annotations.
 
         DOCS: https://spacy.io/api/entitylinker#init
         """
