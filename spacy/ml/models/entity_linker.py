@@ -32,7 +32,7 @@ def build_nel_encoder(
 
 
 def build_span_maker(n_sents: int = 0) -> Model:
-    model: Model = Model("candidate_docs", forward=span_maker_forward)
+    model: Model = Model("span_maker", forward=span_maker_forward)
     model.attrs["n_sents"] = n_sents
     return model
 
