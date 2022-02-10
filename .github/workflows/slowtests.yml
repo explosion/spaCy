@@ -7,15 +7,18 @@ on:
 jobs:
   daily-slowtests:
     strategy:
+      fail-fast: false
       matrix:
         branch: [master, develop, v4]
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v1
       - name: Get commits from past 24 hours
         id: check_commits
         run: |
           today=$(date '+%Y-%m-%d %H:%M:%S')
-          yesterday=$(date -v-1d '+%Y-%m-%d %H:%M:%S')
+          yesterday=$(date -d "yesterday" '+%Y-%m-%d %H:%M:%S')
           if git log --after=$yesterday --before=$today | grep commit ; then
             echo "::set-output name=run_tests::true"
           else
