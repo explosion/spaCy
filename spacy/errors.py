@@ -483,7 +483,7 @@ class Errors(metaclass=ErrorsWithCodes):
             "components, since spans are only views of the Doc. Use Doc and "
             "Token attributes (or custom extension attributes) only and remove "
             "the following: {attrs}")
-    E181 = ("Received invalid attributes for unkown object {obj}: {attrs}. "
+    E181 = ("Received invalid attributes for unknown object {obj}: {attrs}. "
             "Only Doc and Token attributes are supported.")
     E182 = ("Received invalid attribute declaration: {attr}\nDid you forget "
             "to define the attribute? For example: `{attr}.???`")
