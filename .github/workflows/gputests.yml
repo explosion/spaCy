@@ -7,6 +7,7 @@ on:
 jobs:
   weekly-gputests:
     strategy:
+      fail-fast: false
       matrix:
         branch: [master, develop, v4]
     runs-on: ubuntu-latest
