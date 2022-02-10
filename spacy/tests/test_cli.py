@@ -17,6 +17,7 @@ from spacy.cli.debug_data import _get_labels_from_spancat
 from spacy.cli.download import get_compatibility, get_version
 from spacy.cli.init_config import RECOMMENDATIONS, init_config, fill_config
 from spacy.cli.package import get_third_party_dependencies
+from spacy.cli.package import _is_permitted_package_name
 from spacy.cli.validate import get_model_pkgs
 from spacy.lang.en import English
 from spacy.lang.nl import Dutch
@@ -695,6 +696,17 @@ def test_get_labels_from_model(factory_name, pipe_name):
         assert _get_labels_from_model(nlp, factory_name) == set(labels)
 
 
+def test_permitted_package_names():
+    # https://www.python.org/dev/peps/pep-0426/#name
+    assert _is_permitted_package_name("Meine_Bäume") == False
+    assert _is_permitted_package_name("_package") == False
+    assert _is_permitted_package_name("package_") == False
+    assert _is_permitted_package_name(".package") == False
+    assert _is_permitted_package_name("package.") == False
+    assert _is_permitted_package_name("-package") == False
+    assert _is_permitted_package_name("package-") == False
+
+    
 def test_debug_data_compile_gold():
     nlp = English()
     pred = Doc(nlp.vocab, words=["Token", ".", "New", "York", "City"])
