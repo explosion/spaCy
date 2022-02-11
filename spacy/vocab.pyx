@@ -283,7 +283,7 @@ cdef class Vocab:
 
     @property
     def vectors_length(self):
-        return self.vectors.data.shape[1]
+        return self.vectors.shape[1]
 
     def reset_vectors(self, *, width=None, shape=None):
         """Drop the current vector table. Because all vectors must be the same
@@ -294,7 +294,7 @@ cdef class Vocab:
         elif shape is not None:
             self.vectors = Vectors(strings=self.strings, shape=shape)
         else:
-            width = width if width is not None else self.vectors.data.shape[1]
+            width = width if width is not None else self.vectors.shape[1]
             self.vectors = Vectors(strings=self.strings, shape=(self.vectors.shape[0], width))
 
     def prune_vectors(self, nr_row, batch_size=1024):

@@ -421,7 +421,7 @@ def test_vector_is_oov():
 def test_init_vectors_unset():
     v = Vectors(shape=(10, 10))
     assert v.is_full is False
-    assert v.data.shape == (10, 10)
+    assert v.shape == (10, 10)
 
     with pytest.raises(ValueError):
         v = Vectors(shape=(10, 10), mode="floret")
@@ -514,7 +514,7 @@ def test_floret_vectors(floret_vectors_vec_str, floret_vectors_hashvec_str):
     # rows: 2 rows per ngram
     rows = OPS.xp.asarray(
         [
-            h % nlp.vocab.vectors.data.shape[0]
+            h % nlp.vocab.vectors.shape[0]
             for ngram in ngrams
             for h in nlp.vocab.vectors._get_ngram_hashes(ngram)
         ],
@@ -544,17 +544,17 @@ def test_floret_vectors(floret_vectors_vec_str, floret_vectors_hashvec_str):
     # an empty key returns 0s
     assert_equal(
         OPS.to_numpy(nlp.vocab[""].vector),
-        numpy.zeros((nlp.vocab.vectors.data.shape[0],)),
+        numpy.zeros((nlp.vocab.vectors.shape[0],)),
     )
     # an empty batch returns 0s
     assert_equal(
         OPS.to_numpy(nlp.vocab.vectors.get_batch([""])),
-        numpy.zeros((1, nlp.vocab.vectors.data.shape[0])),
+        numpy.zeros((1, nlp.vocab.vectors.shape[0])),
     )
     # an empty key within a batch returns 0s
     assert_equal(
         OPS.to_numpy(nlp.vocab.vectors.get_batch(["a", "", "b"])[1]),
-        numpy.zeros((nlp.vocab.vectors.data.shape[0],)),
+        numpy.zeros((nlp.vocab.vectors.shape[0],)),
     )
 
     # the loaded ngram vector table cannot be modified

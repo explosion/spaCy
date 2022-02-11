@@ -131,7 +131,7 @@ class Language:
         self,
         vocab: Union[Vocab, bool] = True,
         *,
-        max_length: int = 10 ** 6,
+        max_length: int = 10**6,
         meta: Dict[str, Any] = {},
         create_tokenizer: Optional[Callable[["Language"], Callable[[str], Doc]]] = None,
         batch_size: int = 1000,
@@ -354,12 +354,15 @@ class Language:
     @property
     def pipe_labels(self) -> Dict[str, List[str]]:
         """Get the labels set by the pipeline components, if available (if
-        the component exposes a labels property).
+        the component exposes a labels property and the labels are not
+        hidden).
 
         RETURNS (Dict[str, List[str]]): Labels keyed by component name.
         """
         labels = {}
         for name, pipe in self._components:
+            if hasattr(pipe, "hide_labels") and pipe.hide_labels is True:
+                continue
             if hasattr(pipe, "labels"):
                 labels[name] = list(pipe.labels)
         return SimpleFrozenDict(labels)
@@ -522,7 +525,7 @@ class Language:
         requires: Iterable[str] = SimpleFrozenList(),
         retokenizes: bool = False,
         func: Optional["Pipe"] = None,
-    ) -> Callable:
+    ) -> Callable[..., Any]:
         """Register a new pipeline component. Can be used for stateless function
         components that don't require a separate factory. Can be used as a
         decorator on a function or classmethod, or called as a function with the
@@ -1285,9 +1288,9 @@ class Language:
             )
         except IOError:
             raise IOError(Errors.E884.format(vectors=I["vectors"]))
-        if self.vocab.vectors.data.shape[1] >= 1:
+        if self.vocab.vectors.shape[1] >= 1:
             ops = get_current_ops()
-            self.vocab.vectors.data = ops.asarray(self.vocab.vectors.data)
+            self.vocab.vectors.to_ops(ops)
         if hasattr(self.tokenizer, "initialize"):
             tok_settings = validate_init_settings(
                 self.tokenizer.initialize,  # type: ignore[union-attr]
@@ -1332,8 +1335,8 @@ class Language:
         DOCS: https://spacy.io/api/language#resume_training
         """
         ops = get_current_ops()
-        if self.vocab.vectors.data.shape[1] >= 1:
-            self.vocab.vectors.data = ops.asarray(self.vocab.vectors.data)
+        if self.vocab.vectors.shape[1] >= 1:
+            self.vocab.vectors.to_ops(ops)
         for name, proc in self.pipeline:
             if hasattr(proc, "_rehearsal_model"):
                 proc._rehearsal_model = deepcopy(proc.model)  # type: ignore[attr-defined]

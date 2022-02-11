@@ -9,6 +9,7 @@ from spacy.tokenizer import Tokenizer
 from spacy.tokens import Doc
 from spacy.training import Example
 from spacy.util import compile_prefix_regex, compile_suffix_regex, ensure_path
+from spacy.util import compile_infix_regex
 from spacy.vocab import Vocab
 from spacy.symbols import ORTH
 
@@ -502,4 +503,21 @@ def test_tokenizer_prefix_suffix_overlap_lookbehind(en_vocab):
     tokens = [t.text for t in tokenizer("a10.")]
     assert tokens == ["a", "10", "."]
     explain_tokens = [t[1] for t in tokenizer.explain("a10.")]
+    assert tokens == explain_tokens
+
+
+def test_tokenizer_infix_prefix(en_vocab):
+    # the prefix and suffix matches overlap in the suffix lookbehind
+    infixes = ["±"]
+    suffixes = ["%"]
+    infix_re = compile_infix_regex(infixes)
+    suffix_re = compile_suffix_regex(suffixes)
+    tokenizer = Tokenizer(
+        en_vocab,
+        infix_finditer=infix_re.finditer,
+        suffix_search=suffix_re.search,
+    )
+    tokens = [t.text for t in tokenizer("±10%")]
+    assert tokens == ["±10", "%"]
+    explain_tokens = [t[1] for t in tokenizer.explain("±10%")]
     assert tokens == explain_tokens

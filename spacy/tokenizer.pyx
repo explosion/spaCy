@@ -45,10 +45,12 @@ cdef class Tokenizer:
             `re.compile(string).search` to match suffixes.
         `infix_finditer` (callable): A function matching the signature of
             `re.compile(string).finditer` to find infixes.
-        token_match (callable): A boolean function matching strings to be
+        token_match (callable): A function matching the signature of
+            `re.compile(string).match`, for matching strings to be
             recognized as tokens.
-        url_match (callable): A boolean function matching strings to be
-            recognized as tokens after considering prefixes and suffixes.
+        url_match (callable): A function matching the signature of
+            `re.compile(string).match`, for matching strings to be
+            recognized as urls.
 
         EXAMPLE:
             >>> tokenizer = Tokenizer(nlp.vocab)
@@ -681,6 +683,8 @@ cdef class Tokenizer:
                     infixes = infix_finditer(substring)
                     offset = 0
                     for match in infixes:
+                        if offset == 0 and match.start() == 0:
+                            continue
                         if substring[offset : match.start()]:
                             tokens.append(("TOKEN", substring[offset : match.start()]))
                         if substring[match.start() : match.end()]:
