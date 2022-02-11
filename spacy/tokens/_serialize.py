@@ -12,7 +12,7 @@ from ..compat import copy_reg
 from ..attrs import SPACY, ORTH, intify_attr, IDS
 from ..errors import Errors
 from ..util import ensure_path, SimpleFrozenList
-from ._dict_proxies import MSGPACK_SERIALIZED_EMPTY_LIST
+from ._dict_proxies import SpanGroups
 
 # fmt: off
 ALL_ATTRS = ("ORTH", "NORM", "TAG", "HEAD", "DEP", "ENT_IOB", "ENT_TYPE", "ENT_KB_ID", "ENT_ID", "LEMMA", "MORPH", "POS", "SENT_START")
@@ -147,7 +147,7 @@ class DocBin:
             doc = Doc(vocab, words=tokens[:, orth_col], spaces=spaces)  # type: ignore
             doc = doc.from_array(self.attrs, tokens)  # type: ignore
             doc.cats = self.cats[i]
-            if self.span_groups[i] != MSGPACK_SERIALIZED_EMPTY_LIST:
+            if self.span_groups[i] != SpanGroups._serialized_empty_bytes:
                 doc.spans.from_bytes(self.span_groups[i])
             else:
                 doc.spans.clear()
