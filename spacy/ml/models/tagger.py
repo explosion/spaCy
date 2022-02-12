@@ -1,5 +1,5 @@
 from typing import Optional, List
-from thinc.api import zero_init, with_array, Softmax, chain, Model
+from thinc.api import zero_init, with_array, Softmax_v2, chain, Model
 from thinc.types import Floats2d
 
 from ...util import registry
@@ -19,7 +19,9 @@ def build_tagger_model(
     """
     # TODO: glorot_uniform_init seems to work a bit better than zero_init here?!
     t2v_width = tok2vec.get_dim("nO") if tok2vec.has_dim("nO") else None
-    output_layer = Softmax(nO, t2v_width, init_W=zero_init, normalize=normalize)
+    output_layer = Softmax_v2(
+        nO, t2v_width, init_W=zero_init, normalize_outputs=normalize
+    )
     softmax = with_array(output_layer)  # type: ignore
     model = chain(tok2vec, softmax)
     model.set_ref("tok2vec", tok2vec)
