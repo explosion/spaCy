@@ -147,7 +147,7 @@ class DocBin:
             doc = Doc(vocab, words=tokens[:, orth_col], spaces=spaces)  # type: ignore
             doc = doc.from_array(self.attrs, tokens)  # type: ignore
             doc.cats = self.cats[i]
-            if self.span_groups[i] != SpanGroups._serialized_empty_bytes:
+            if self.span_groups[i] != SpanGroups._EMPTY_BYTES:
                 doc.spans.from_bytes(self.span_groups[i])
             else:
                 doc.spans.clear()
