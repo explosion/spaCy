@@ -3799,6 +3799,9 @@
             "description": "tmtoolkit is a set of tools for text mining and topic modeling with Python developed especially for the use in the social sciences, in journalism or related disciplines. It aims for easy installation, extensive documentation and a clear programming interface while offering good performance on large datasets by the means of vectorized operations (via NumPy) and parallel computation (using Python’s multiprocessing module and the loky package).",
             "github": "WZBSocialScienceCenter/tmtoolkit",
             "code_example": [
+                "# Note: This requires these setup steps:",
+                "#   pip install tmtoolkit[recommended]",
+                "#   python -m tmtoolkit setup en",
                 "from tmtoolkit.corpus import Corpus, tokens_table, lemmatize, to_lowercase, dtm",
                 "from tmtoolkit.bow.bow_stats import tfidf, sorted_terms_table",
                 "# load built-in sample dataset and use 4 worker processes",
