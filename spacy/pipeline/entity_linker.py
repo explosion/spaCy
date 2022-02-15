@@ -256,23 +256,40 @@ class EntityLinker(TrainablePipe):
         if not has_annotations:
             doc = doc_sample[0]
             ent = doc[0:1]
-            ent.label_ = "PERSON"
+            ent.label_ = "XXX"
             doc.ents = (ent,)
 
         self.model.initialize(
             X=doc_sample, Y=self.model.ops.asarray(vector_sample, dtype="float32")
         )
 
-    def batch_has_learnable_example(self, docs):
-        """Check if a batch of Docs contains at least one non-NIL entity.
+        if not has_annotations:
+            # Clean up dummy annotation
+            doc.ents = []
+
+    def batch_has_learnable_example(self, examples):
+        """Check if a batch contains a learnable example.
+
+        A learnable example must:
+
+        1. match a gold entity
+        2. have non-NIL output from the KB function
 
         If one isn't present, then the update step needs to be skipped.
         """
-        for doc in docs:
-            for ent in doc.ents:
+        for eg in examples:
+            gold_ents = {}
+            for ent in eg.reference.ents:
+                gold_ents[(ent.start_char, ent.end_char)] = ent.label_
+
+            for ent in eg.predicted.ents:
+                if (ent.start_char, ent.end_char) not in gold_ents:
+                    # no match
+                    continue
                 candidates = list(self.get_candidates(self.kb, ent))
                 if candidates:
                     return True
+
         return False
 
     def update(
@@ -310,7 +327,7 @@ class EntityLinker(TrainablePipe):
                 doc.ents = ex.reference.ents
 
         # make sure we have something to learn from, if not, short-circuit
-        if not self.batch_has_learnable_example(docs):
+        if not self.batch_has_learnable_example(examples):
             return losses
 
         sentence_encodings, bp_context = self.model.begin_update(docs)
@@ -326,19 +343,33 @@ class EntityLinker(TrainablePipe):
     def get_loss(self, examples: Iterable[Example], sentence_encodings: Floats2d):
         validate_examples(examples, "EntityLinker.get_loss")
         entity_encodings = []
-        eidx = 0
-        keep_ents = []
+        eidx = 0 # indices in gold entities to keep
+        keep_ents = [] # indices in sentence_encodings to keep
+        offset = 0 # offset into sentence_encodings for current doc
+
+
         for eg in examples:
             kb_ids = eg.get_aligned("ENT_KB_ID", as_string=True)
+            pred_ents = {}
+            for ii, ent in enumerate(eg.predicted.ents):
+                # This has to use char indices in case tokenization changes
+                # XXX should label equivalence be required?
+                pred_ents[(ent.start_char, ent.end_char)] = ii + offset
+
+            offset += len(pred_ents)
+
             for ent in eg.reference.ents:
+                if not self.use_gold_ents:
+                    if (ent.start_char, ent.end_char) not in pred_ents:
+                        continue
                 kb_id = kb_ids[ent.start]
                 if kb_id:
                     entity_encoding = self.kb.get_vector(kb_id)
                     entity_encodings.append(entity_encoding)
-                    keep_ents.append(eidx)
-                eidx += 1
+                    keep_ents.append( pred_ents[(ent.start_char, ent.end_char)] )
         entity_encodings = self.model.ops.asarray(entity_encodings, dtype="float32")
         selected_encodings = sentence_encodings[keep_ents]
+
         if selected_encodings.shape != entity_encodings.shape:
             err = Errors.E147.format(
                 method="get_loss", msg="gold entities do not match up"
