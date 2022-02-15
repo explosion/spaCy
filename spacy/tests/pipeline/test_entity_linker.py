@@ -10,6 +10,7 @@ from spacy.kb import Candidate, KnowledgeBase, get_candidates
 from spacy.lang.en import English
 from spacy.ml import load_kb
 from spacy.pipeline import EntityLinker
+from spacy.pipeline.legacy import EntityLinker_v1
 from spacy.pipeline.tok2vec import DEFAULT_TOK2VEC_MODEL
 from spacy.scorer import Scorer
 from spacy.tests.util import make_tempdir
@@ -997,10 +998,76 @@ def test_legacy_architectures(name, config):
         return mykb
 
     entity_linker = nlp.add_pipe(name, config={"model": config})
-    assert isinstance(entity_linker, EntityLinker)
+    if config["@architectures"] == "spacy.EntityLinker.v1":
+        assert isinstance(entity_linker, EntityLinker_v1)
+    else:
+        assert isinstance(entity_linker, EntityLinker)
     entity_linker.set_kb(create_kb)
     optimizer = nlp.initialize(get_examples=lambda: train_examples)
 
     for i in range(2):
         losses = {}
         nlp.update(train_examples, sgd=optimizer, losses=losses)
+
+    @pytest.mark.parametrize("patterns", [
+        # perfect case
+        [{"label": "CHARACTER", "pattern": "Kirby"}],
+        # typo for false negative
+        [{"label": "PERSON", "pattern": "Korby"}],
+        # random stuff for false positive
+        [{"label": "IS", "pattern": "is"}, {"label": "COLOR", "pattern": "pink"}],
+        ]
+    )
+    def test_no_gold_ents(patterns):
+        # test that annotating components work
+        TRAIN_DATA = [
+            (
+                "Kirby is pink",
+                {
+                    "links": {(0, 5): {"Q613241": 1.0}},
+                    "entities": [(0, 5, "CHARACTER")],
+                    "sent_starts": [1, 0, 0],
+                },
+            )
+        ]
+        nlp = English()
+        vector_length = 3
+        train_examples = []
+        for text, annotation in TRAIN_DATA:
+            doc = nlp(text)
+            train_examples.append(Example.from_dict(doc, annotation))
+
+        # Create a ruler to mark entities
+        ruler = nlp.add_pipe("entity_ruler")
+        ruler.add_patterns(patterns)
+
+        # Apply ruler to examples. In a real pipeline this would be an annotating component.
+        for eg in train_examples:
+            eg.predicted = ruler(eg.predicted)
+
+        def create_kb(vocab):
+            # create artificial KB
+            mykb = KnowledgeBase(vocab, entity_vector_length=vector_length)
+            mykb.add_entity(entity="Q613241", freq=12, entity_vector=[6, -4, 3])
+            mykb.add_alias("Kirby", ["Q613241"], [0.9])
+            # Placeholder
+            mykb.add_entity(entity="pink", freq=12, entity_vector=[7, 2, -5])
+            mykb.add_alias("pink", ["pink"], [0.9])
+            return mykb
+
+
+        # Create and train the Entity Linker
+        entity_linker = nlp.add_pipe("entity_linker", config={"use_gold_ents": False}, last=True)
+        entity_linker.set_kb(create_kb)
+        assert entity_linker.use_gold_ents == False
+
+        optimizer = nlp.initialize(get_examples=lambda: train_examples)
+        for i in range(2):
+            losses = {}
+            nlp.update(train_examples, sgd=optimizer, losses=losses)
+
+        # adding additional components that are required for the entity_linker
+        nlp.add_pipe("sentencizer", first=True)
+
+        # this will run the pipeline on the examples and shouldn't crash
+        results = nlp.evaluate(train_examples)
