@@ -19,7 +19,7 @@ jobs:
         run: |
           today=$(date '+%Y-%m-%d %H:%M:%S')
           yesterday=$(date -d "yesterday" '+%Y-%m-%d %H:%M:%S')
-          if git log --after=$yesterday --before=$today | grep commit ; then
+          if git log --after="$yesterday" --before="$today" | grep commit ; then
             echo "::set-output name=run_tests::true"
           else
             echo "::set-output name=run_tests::false"
