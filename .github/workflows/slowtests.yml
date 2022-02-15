@@ -3,9 +3,6 @@ name: Daily slow tests
 on:
   schedule:
     - cron: '0 0 * * *'
-  push:
-    branches:
-      - "rfd-datemath-debugging"
 
 jobs:
   daily-slowtests:
