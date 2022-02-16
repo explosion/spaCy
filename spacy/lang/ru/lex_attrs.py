@@ -110,6 +110,8 @@ i ii iii iv vi vii viii ix xi xii xiii xiv xv xvi xvii xviii xix xx xxi xxii xxi
 def like_num(text):
     if text.startswith(("+", "-", "±", "~")):
         text = text[1:]
+    if text.endswith("%"):
+        text = text[:-1]
     text = text.replace(",", "").replace(".", "")
     if text.isdigit():
         return True
