@@ -31,6 +31,7 @@ def create_tokenizer():
 class KoreanTokenizer(DummyTokenizer):
     def __init__(self, vocab: Vocab):
         self.vocab = vocab
+        self._mecab = try_mecab_import()  # type: ignore[func-returns-value]
         self._mecab_tokenizer = None
 
     @property
@@ -42,8 +43,7 @@ class KoreanTokenizer(DummyTokenizer):
         # to be imported and there's no way to pass a custom config to
         # `init vectors`.
         if self._mecab_tokenizer is None:
-            MeCab = try_mecab_import()  # type: ignore[func-returns-value]
-            self._mecab_tokenizer = MeCab("-F%f[0],%f[7]")
+            self._mecab_tokenizer = self._mecab("-F%f[0],%f[7]")
         return self._mecab_tokenizer
 
     def __reduce__(self):
@@ -99,7 +99,8 @@ def try_mecab_import() -> None:
         return MeCab
     except ImportError:
         raise ImportError(
-            "Korean support requires [mecab-ko](https://bitbucket.org/eunjeon/mecab-ko/src/master/README.md), "
+            "The Korean tokenizer (\"spacy.ko.KoreanTokenizer\") requires "
+            "[mecab-ko](https://bitbucket.org/eunjeon/mecab-ko/src/master/README.md), "
             "[mecab-ko-dic](https://bitbucket.org/eunjeon/mecab-ko-dic), "
             "and [natto-py](https://github.com/buruzaemon/natto-py)"
         ) from None
