@@ -44,21 +44,16 @@ def conllu_to_docs(
         yield Doc.from_docs(sent_docs_to_merge)
 
 
-def has_ner(input_data, ner_tag_pattern):
+def has_ner(lines, ner_tag_pattern):
     """
     Check the MISC column for NER tags.
     """
-    for sent in input_data.strip().split("\n\n"):
-        lines = sent.strip().split("\n")
-        if lines:
-            while lines[0].startswith("#"):
-                lines.pop(0)
-            for line in lines:
-                parts = line.split("\t")
-                id_, word, lemma, pos, tag, morph, head, dep, _1, misc = parts
-                for misc_part in misc.split("|"):
-                    if re.match(ner_tag_pattern, misc_part):
-                        return True
+    for line in lines:
+        parts = line.split("\t")
+        id_, word, lemma, pos, tag, morph, head, dep, _1, misc = parts
+        for misc_part in misc.split("|"):
+            if re.match(ner_tag_pattern, misc_part):
+                return True
     return False
 
 
@@ -213,8 +208,10 @@ def conllu_sentence_to_doc(
         doc[i]._.merged_morph = morphs[i]
         doc[i]._.merged_lemma = lemmas[i]
         doc[i]._.merged_spaceafter = spaces[i]
-    ents = get_entities(lines, ner_tag_pattern, ner_map)
-    doc.ents = biluo_tags_to_spans(doc, ents)
+    ents = None
+    if has_ner(lines, ner_tag_pattern):
+        ents = get_entities(lines, ner_tag_pattern, ner_map)
+        doc.ents = biluo_tags_to_spans(doc, ents)
 
     if merge_subtokens:
         doc = merge_conllu_subtokens(lines, doc)
@@ -246,7 +243,8 @@ def conllu_sentence_to_doc(
         deps=deps,
         heads=heads,
     )
-    doc_x.ents = [Span(doc_x, ent.start, ent.end, label=ent.label) for ent in doc.ents]
+    if ents is not None:
+        doc_x.ents = [Span(doc_x, ent.start, ent.end, label=ent.label) for ent in doc.ents]
 
     return doc_x
 
