@@ -1,6 +1,6 @@
 # cython: infer_types=True, profile=True, binding=True
-from itertools import islice
 from typing import Optional, Callable
+from itertools import islice
 
 import srsly
 from thinc.api import Model, SequenceCategoricalCrossentropy, Config

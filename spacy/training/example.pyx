@@ -159,20 +159,17 @@ cdef class Example:
         gold_values = self.reference.to_array([field])
         output = [None] * len(self.predicted)
         for token in self.predicted:
-            if token.is_space:
+            values = gold_values[align[token.i].dataXd]
+            values = values.ravel()
+            if len(values) == 0:
                 output[token.i] = None
+            elif len(values) == 1:
+                output[token.i] = values[0]
+            elif len(set(list(values))) == 1:
+                # If all aligned tokens have the same value, use it.
+                output[token.i] = values[0]
             else:
-                values = gold_values[align[token.i].dataXd]
-                values = values.ravel()
-                if len(values) == 0:
-                    output[token.i] = None
-                elif len(values) == 1:
-                    output[token.i] = values[0]
-                elif len(set(list(values))) == 1:
-                    # If all aligned tokens have the same value, use it.
-                    output[token.i] = values[0]
-                else:
-                    output[token.i] = None
+                output[token.i] = None
         if as_string and field not in ["ENT_IOB", "SENT_START"]:
             output = [vocab.strings[o] if o is not None else o for o in output]
         return output
