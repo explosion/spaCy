@@ -11,12 +11,14 @@ trigger:
     exclude:
       - "website/*"
       - "*.md"
+      - ".github/workflows/*"
 pr:
-   paths:
+  paths:
     exclude:
       - "*.md"
       - "website/docs/*"
       - "website/src/*"
+      - ".github/workflows/*"
 
 jobs:
   # Perform basic checks for most important errors (syntax etc.) Uses the config

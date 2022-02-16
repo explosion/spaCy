@@ -378,7 +378,7 @@ class SpanCategorizer(TrainablePipe):
         # If the prediction is 0.9 and it's false, the gradient will be
         # 0.9 (0.9 - 0.0)
         d_scores = scores - target
-        loss = float((d_scores ** 2).sum())
+        loss = float((d_scores**2).sum())
         return loss, d_scores
 
     def initialize(

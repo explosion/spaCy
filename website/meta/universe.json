@@ -954,6 +954,37 @@
             "tags": ["lemmatizer", "danish"]
         },
         {
+            "id": "augmenty",
+            "title": "Augmenty",
+            "slogan": "The cherry on top of your NLP pipeline",
+            "description": "Augmenty is an augmentation library based on spaCy for augmenting texts. Augmenty differs from other augmentation libraries in that it corrects (as far as possible) the token, sentence and document labels under the augmentation.",
+            "github": "kennethenevoldsen/augmenty",
+            "pip": "augmenty",
+            "code_example": [
+                "import spacy",
+                "import augmenty",
+                "",
+                "nlp = spacy.load('en_core_web_md')",
+                "",
+                "docs = nlp.pipe(['Augmenty is a great tool for text augmentation'])",
+                "",
+                "ent_dict = {'ORG': [['spaCy'], ['spaCy', 'Universe']]}",
+                "entity_augmenter = augmenty.load('ents_replace.v1',",
+                "                                 ent_dict = ent_dict, level=1)",
+                "",
+                "for doc in augmenty.docs(docs, augmenter=entity_augmenter, nlp=nlp):",
+                "    print(doc)"
+            ],
+            "thumb": "https://github.com/KennethEnevoldsen/augmenty/blob/master/img/icon.png?raw=true",
+            "author": "Kenneth Enevoldsen",
+            "author_links": {
+                "github": "kennethenevoldsen",
+                "website": "https://www.kennethenevoldsen.com"
+            },
+            "category": ["training", "research"],
+            "tags": ["training", "research", "augmentation"]
+        },
+        {
             "id": "dacy",
             "title": "DaCy",
             "slogan": "An efficient Pipeline for Danish NLP",
@@ -3738,6 +3769,65 @@
             },
             "category": ["pipeline"],
             "tags": ["pipeline", "nlp", "sentiment"]
+        },
+        {
+            "id": "textnets",
+            "slogan": "Text analysis with networks",
+            "description": "textnets represents collections of texts as networks of documents and words. This provides novel possibilities for the visualization and analysis of texts.",
+            "github": "jboynyc/textnets",
+            "image": "https://user-images.githubusercontent.com/2187261/152641425-6c0fb41c-b8e0-44fb-a52a-7c1ba24eba1e.png",
+            "code_example": [
+                "import textnets as tn",
+                "",
+                "corpus = tn.Corpus(tn.examples.moon_landing)",
+                "t = tn.Textnet(corpus.tokenized(), min_docs=1)",
+                "t.plot(label_nodes=True,",
+                "       show_clusters=True,",
+                "       scale_nodes_by=\"birank\",",
+                "       scale_edges_by=\"weight\")"
+            ],
+            "author": "John Boy",
+            "author_links": {
+                "github": "jboynyc",
+                "twitter": "jboy"
+            },
+            "category": ["visualizers", "standalone"]
+        },
+        {
+            "id": "tmtoolkit",
+            "slogan": "Text mining and topic modeling toolkit",
+            "description": "tmtoolkit is a set of tools for text mining and topic modeling with Python developed especially for the use in the social sciences, in journalism or related disciplines. It aims for easy installation, extensive documentation and a clear programming interface while offering good performance on large datasets by the means of vectorized operations (via NumPy) and parallel computation (using Python’s multiprocessing module and the loky package).",
+            "github": "WZBSocialScienceCenter/tmtoolkit",
+            "code_example": [
+                "# Note: This requires these setup steps:",
+                "#   pip install tmtoolkit[recommended]",
+                "#   python -m tmtoolkit setup en",
+                "from tmtoolkit.corpus import Corpus, tokens_table, lemmatize, to_lowercase, dtm",
+                "from tmtoolkit.bow.bow_stats import tfidf, sorted_terms_table",
+                "# load built-in sample dataset and use 4 worker processes",
+                "corp = Corpus.from_builtin_corpus('en-News100', max_workers=4)",
+                "# investigate corpus as dataframe",
+                "toktbl = tokens_table(corp)",
+                "print(toktbl)",
+                "# apply some text normalization",
+                "lemmatize(corp)",
+                "to_lowercase(corp)",
+                "# build sparse document-token matrix (DTM)",
+                "# document labels identify rows, vocabulary tokens identify columns",
+                "mat, doc_labels, vocab = dtm(corp, return_doc_labels=True, return_vocab=True)",
+                "# apply tf-idf transformation to DTM",
+                "# operation is applied on sparse matrix and uses few memory",
+                "tfidf_mat = tfidf(mat)",
+                "# show top 5 tokens per document ranked by tf-idf",
+                "top_tokens = sorted_terms_table(tfidf_mat, vocab, doc_labels, top_n=5)",
+                "print(top_tokens)"
+            ],
+            "author": "Markus Konrad / WZB Social Science Center",
+            "author_links": {
+                "github": "internaut",
+                "twitter": "_knrd"
+            },
+            "category": ["scientific", "standalone"]
         }
     ],
 
