@@ -44,16 +44,21 @@ def conllu_to_docs(
         yield Doc.from_docs(sent_docs_to_merge)
 
 
-def has_ner(lines, ner_tag_pattern):
+def has_ner(input_data, ner_tag_pattern):
     """
     Check the MISC column for NER tags.
     """
-    for line in lines:
-        parts = line.split("\t")
-        id_, word, lemma, pos, tag, morph, head, dep, _1, misc = parts
-        for misc_part in misc.split("|"):
-            if re.match(ner_tag_pattern, misc_part):
-                return True
+    for sent in input_data.strip().split("\n\n"):
+        lines = sent.strip().split("\n")
+        if lines:
+            while lines[0].startswith("#"):
+                lines.pop(0)
+            for line in lines:
+                parts = line.split("\t")
+                id_, word, lemma, pos, tag, morph, head, dep, _1, misc = parts
+                for misc_part in misc.split("|"):
+                    if re.match(ner_tag_pattern, misc_part):
+                        return True
     return False
 
 
@@ -66,6 +71,7 @@ def read_conllx(
 ):
     """Yield docs, one for each sentence"""
     vocab = Vocab()  # need vocab to make a minimal Doc
+    set_ents = has_ner(input_data, ner_tag_pattern)
     for sent in input_data.strip().split("\n\n"):
         lines = sent.strip().split("\n")
         if lines:
@@ -78,6 +84,7 @@ def read_conllx(
                 merge_subtokens=merge_subtokens,
                 append_morphology=append_morphology,
                 ner_map=ner_map,
+                set_ents=set_ents,
             )
             yield doc
 
@@ -128,6 +135,7 @@ def conllu_sentence_to_doc(
     merge_subtokens=False,
     append_morphology=False,
     ner_map=None,
+    set_ents=False,
 ):
     """Create an Example from the lines for one CoNLL-U sentence, merging
     subtokens and appending morphology to tags if required.
@@ -209,7 +217,7 @@ def conllu_sentence_to_doc(
         doc[i]._.merged_lemma = lemmas[i]
         doc[i]._.merged_spaceafter = spaces[i]
     ents = None
-    if has_ner(lines, ner_tag_pattern):
+    if set_ents:
         ents = get_entities(lines, ner_tag_pattern, ner_map)
         doc.ents = biluo_tags_to_spans(doc, ents)
 

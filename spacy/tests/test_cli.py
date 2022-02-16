@@ -34,7 +34,7 @@ from .util import make_tempdir
 
 
 @pytest.mark.issue(4665)
-def test_convert_conllu_empty_heads_ner():
+def test_cli_converters_conllu_empty_heads_ner():
     """
     conllu_to_docs should not raise an exception if the HEAD column contains an
     underscore
