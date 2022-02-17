@@ -242,7 +242,7 @@ class EntityRenderer:
     style = "ent"
 
     def __init__(self, options: Dict[str, Any] = {}) -> None:
-        """Initialise dependency renderer.
+        """Initialise entity renderer.
 
         options (dict): Visualiser-specific options (colors, ents)
         """
