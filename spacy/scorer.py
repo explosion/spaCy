@@ -228,7 +228,7 @@ class Scorer:
                 if token.orth_.isspace():
                     continue
                 if align.x2y.lengths[token.i] == 1:
-                    gold_i = align.x2y[token.i].dataXd[0, 0]
+                    gold_i = align.x2y[token.i][0]
                     if gold_i not in missing_indices:
                         pred_tags.add((gold_i, getter(token, attr)))
             tag_score.score_set(pred_tags, gold_tags)
@@ -287,7 +287,7 @@ class Scorer:
                 if token.orth_.isspace():
                     continue
                 if align.x2y.lengths[token.i] == 1:
-                    gold_i = align.x2y[token.i].dataXd[0, 0]
+                    gold_i = align.x2y[token.i][0]
                     if gold_i not in missing_indices:
                         value = getter(token, attr)
                         morph = gold_doc.vocab.strings[value]
@@ -694,13 +694,13 @@ class Scorer:
                 if align.x2y.lengths[token.i] != 1:
                     gold_i = None  # type: ignore
                 else:
-                    gold_i = align.x2y[token.i].dataXd[0, 0]
+                    gold_i = align.x2y[token.i][0]
                 if gold_i not in missing_indices:
                     dep = getter(token, attr)
                     head = head_getter(token, head_attr)
                     if dep not in ignore_labels and token.orth_.strip():
                         if align.x2y.lengths[head.i] == 1:
-                            gold_head = align.x2y[head.i].dataXd[0, 0]
+                            gold_head = align.x2y[head.i][0]
                         else:
                             gold_head = None
                         # None is indistinct, so we can't just add it to the set
@@ -750,7 +750,7 @@ def get_ner_prf(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
         for pred_ent in eg.x.ents:
             if pred_ent.label_ not in score_per_type:
                 score_per_type[pred_ent.label_] = PRFScore()
-            indices = align_x2y[pred_ent.start : pred_ent.end].dataXd.ravel()
+            indices = align_x2y[pred_ent.start : pred_ent.end]
             if len(indices):
                 g_span = eg.y[indices[0] : indices[-1] + 1]
                 # Check we aren't missing annotation on this span. If so,
