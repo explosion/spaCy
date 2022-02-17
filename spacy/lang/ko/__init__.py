@@ -31,14 +31,23 @@ def create_tokenizer():
 class KoreanTokenizer(DummyTokenizer):
     def __init__(self, vocab: Vocab):
         self.vocab = vocab
-        MeCab = try_mecab_import()  # type: ignore[func-returns-value]
-        self.mecab_tokenizer = MeCab("-F%f[0],%f[7]")
+        self._mecab = try_mecab_import()  # type: ignore[func-returns-value]
+        self._mecab_tokenizer = None
+
+    @property
+    def mecab_tokenizer(self):
+        # This is a property so that initializing a pipeline with blank:ko is
+        # possible without actually requiring mecab-ko, e.g. to run
+        # `spacy init vectors ko` for a pipeline that will have a different
+        # tokenizer in the end. The languages need to match for the vectors
+        # to be imported and there's no way to pass a custom config to
+        # `init vectors`.
+        if self._mecab_tokenizer is None:
+            self._mecab_tokenizer = self._mecab("-F%f[0],%f[7]")
+        return self._mecab_tokenizer
 
     def __reduce__(self):
         return KoreanTokenizer, (self.vocab,)
-
-    def __del__(self):
-        self.mecab_tokenizer.__del__()
 
     def __call__(self, text: str) -> Doc:
         dtokens = list(self.detailed_tokens(text))
@@ -90,7 +99,8 @@ def try_mecab_import() -> None:
         return MeCab
     except ImportError:
         raise ImportError(
-            "Korean support requires [mecab-ko](https://bitbucket.org/eunjeon/mecab-ko/src/master/README.md), "
+            "The Korean tokenizer (\"spacy.ko.KoreanTokenizer\") requires "
+            "[mecab-ko](https://bitbucket.org/eunjeon/mecab-ko/src/master/README.md), "
             "[mecab-ko-dic](https://bitbucket.org/eunjeon/mecab-ko-dic), "
             "and [natto-py](https://github.com/buruzaemon/natto-py)"
         ) from None
