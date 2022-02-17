@@ -228,6 +228,19 @@ def ko_tokenizer():
 
 
 @pytest.fixture(scope="session")
+def ko_tokenizer_tokenizer():
+    config = {
+        "nlp": {
+            "tokenizer": {
+                "@tokenizers": "spacy.Tokenizer.v1",
+            }
+        }
+    }
+    nlp = get_lang_class("ko").from_config(config)
+    return nlp.tokenizer
+
+
+@pytest.fixture(scope="session")
 def lb_tokenizer():
     return get_lang_class("lb")().tokenizer
 
