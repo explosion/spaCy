@@ -610,9 +610,12 @@ def test_span_sents_not_parsed(doc_not_parsed):
 
 def test_span_group_copy(doc):
     doc.spans["test"] = [doc[0:1], doc[2:4]]
+    assert len(doc.spans["test"]) == 2
     doc_copy = doc.copy()
     # check that the spans were indeed copied
-    assert len(doc_copy.spans) > 0
+    assert len(doc_copy.spans["test"]) == 2
+    # add a new span to the original doc
     doc.spans["test"].append(doc[3:4])
+    assert len(doc.spans["test"]) == 3
     # check that the copy spans were not modified and this is an isolated doc
-    assert len(doc.spans["test"]) != len(doc_copy.spans["test"])
+    assert len(doc_copy.spans["test"]) == 2
