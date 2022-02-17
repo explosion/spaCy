@@ -44,6 +44,9 @@ cdef class AlignmentArray:
                 return self._data[0:0]
             start = start[0]
             end = ends[idx][-1]
+        else:
+            msg = "AlignmentArray only supports int and slice indexing"
+            raise ValueError(msg)
 
         return self._data[start:end]
 

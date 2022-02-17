@@ -926,7 +926,9 @@ def test_alignment_array():
     assert list(a[:3]) == [0, 1, 2, 3]
     assert list(a[:]) == list(a.data)
     with pytest.raises(ValueError, match=r"only a step of 1 is supported"):
-        assert list(a[:4:-1]) == [0, 1, 2]
+        a[:4:-1]
+    with pytest.raises(ValueError, match=r"AlignmentArray only supports.*indexing"):
+        a[[0, 1, 3]]
 
     a = AlignmentArray([[], [1, 2, 3], [4, 5]])
     assert list(a[0]) == []
