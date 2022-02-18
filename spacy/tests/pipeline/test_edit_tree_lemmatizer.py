@@ -5,7 +5,7 @@ import hypothesis.strategies as st
 from spacy import util
 from spacy.lang.en import English
 from spacy.language import Language
-from spacy.pipeline.edit_trees import EditTrees
+from spacy.pipeline._edit_tree_internals.edit_trees import EditTrees
 from spacy.training import Example
 from spacy.strings import StringStore
 from spacy.util import make_tempdir

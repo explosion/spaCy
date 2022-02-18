@@ -9,7 +9,7 @@ import srsly
 from thinc.api import Config, Model, SequenceCategoricalCrossentropy
 from thinc.types import Floats2d, Ints1d, Ints2d
 
-from .edit_trees import EditTrees
+from ._edit_tree_internals.edit_trees import EditTrees
 from ._edit_tree_internals.schemas import validate_edit_tree
 from .lemmatizer import lemmatizer_score
 from .trainable_pipe import TrainablePipe

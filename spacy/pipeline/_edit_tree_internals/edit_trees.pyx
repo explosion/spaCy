@@ -8,12 +8,12 @@ from libcpp.vector cimport vector
 
 from pathlib import Path
 
-from ..typedefs cimport hash_t
+from ...typedefs cimport hash_t
 
-from .. import util
-from ..errors import Errors
-from ..strings import StringStore
-from ._edit_tree_internals.schemas import validate_edit_tree
+from ... import util
+from ...errors import Errors
+from ...strings import StringStore
+from .schemas import validate_edit_tree
 
 
 NULL_TREE_ID = UINT32_MAX
