@@ -280,6 +280,29 @@ class EntityLinker(TrainablePipe):
 
         return False
 
+    def get_matching_ents(self, example, check_label = True):
+        """Return entities that are shared between predicted and reference docs.
+
+        If `check_label` is True, entities must have matching labels to be
+        kept. Otherwise only the character indices need to match.
+        """
+        gold = {}
+        for ent in example.reference:
+            gold[(ent.start_char, ent.end_char)] = ent.label_
+
+        keep = []
+        for ent in example.predicted:
+            key = (ent.start_char, ent.end_char)
+            if key not in gold:
+                continue
+
+            if check_label and ent.label_ != gold[key]:
+                continue
+
+            keep.append(ent)
+
+        return keep
+
     def update(
         self,
         examples: Iterable[Example],
@@ -318,8 +341,7 @@ class EntityLinker(TrainablePipe):
                 doc.ents = ex.reference.ents
             else:
                 # only keep matching ents
-                ents, _ = ex.get_aligned_ents_and_ner()
-                doc.ents = ents
+                doc.ents = self.get_matching_ents(ex)
 
         # make sure we have something to learn from, if not, short-circuit
         if not self.batch_has_learnable_example(examples):
