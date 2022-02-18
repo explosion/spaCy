@@ -20,7 +20,6 @@ from ..vocab import Vocab
 from .. import util
 
 
-
 default_model_config = """
 [model]
 @architectures = "spacy.Tagger.v1"
@@ -149,7 +148,9 @@ class EditTreeLemmatizer(TrainablePipe):
         if not any(len(doc) for doc in docs):
             # Handle cases where there are no tokens in any docs.
             n_labels = len(self.cfg["labels"])
-            guesses: List[Ints2d] = [self.model.ops.alloc((0, n_labels), dtype="i") for doc in docs]
+            guesses: List[Ints2d] = [
+                self.model.ops.alloc((0, n_labels), dtype="i") for doc in docs
+            ]
             assert len(guesses) == len(docs)
             return guesses
 
@@ -218,7 +219,7 @@ class EditTreeLemmatizer(TrainablePipe):
         return True
 
     @property
-    def label_data(self)  -> Dict:
+    def label_data(self) -> Dict:
         trees = []
         for tree_id in range(len(self.trees)):
             tree = self.trees[tree_id]
