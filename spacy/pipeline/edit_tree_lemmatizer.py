@@ -198,7 +198,6 @@ class EditTreeLemmatizer(TrainablePipe):
                     # the special identifier -1 is used. Otherwise the tree
                     # is guaranteed to be applicable.
                     if tree_id == -1:
-                        # TODO: generalize with a getter setting
                         if self.backoff is not None:
                             doc[j].lemma = getattr(doc[j], self.backoff)
                     else:
