@@ -251,7 +251,7 @@ def conllu_sentence_to_doc(
         deps=deps,
         heads=heads,
     )
-    if ents is not None:
+    if set_ents:
         doc_x.ents = [Span(doc_x, ent.start, ent.end, label=ent.label) for ent in doc.ents]
 
     return doc_x
