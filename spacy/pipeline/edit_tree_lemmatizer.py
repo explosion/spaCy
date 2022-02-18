@@ -10,6 +10,7 @@ from thinc.api import Config, Model, SequenceCategoricalCrossentropy
 from thinc.types import Floats2d, Ints1d, Ints2d
 
 from .edit_trees import EditTrees
+from ._edit_tree_internals.schemas import validate_edit_tree
 from .lemmatizer import lemmatizer_score
 from .trainable_pipe import TrainablePipe
 from ..errors import Errors
@@ -218,10 +219,10 @@ class EditTreeLemmatizer(TrainablePipe):
         trees = []
         for tree_id in range(len(self.trees)):
             tree = self.trees[tree_id]
-            if not tree["is_match_node"]:
-                subst_node = tree["inner"]["subst_node"]
-                subst_node["orig"] = self.vocab.strings[subst_node["orig"]]
-                subst_node["subst"] = self.vocab.strings[subst_node["subst"]]
+            if "orig" in tree:
+                tree["orig"] = self.vocab.strings[tree["orig"]]
+            if "subst" in tree:
+                tree["subst"] = self.vocab.strings[tree["subst"]]
             trees.append(tree)
         return dict(trees=trees, labels=tuple(self.cfg["labels"]))
 
@@ -324,15 +325,19 @@ class EditTreeLemmatizer(TrainablePipe):
             raise ValueError(Errors.E857.format(name="trees"))
 
         self.cfg["labels"] = list(labels["labels"])
+        trees = []
+        for tree in labels["trees"]:
+            errors = validate_edit_tree(tree)
+            if errors:
+                raise ValueError(Errors.E1026.format(errors="\n".join(errors)))
 
-        # Do not modify the caller's data structures.
-        trees = deepcopy(labels["trees"])
+            tree = dict(tree)
+            if "orig" in tree:
+                tree["orig"] = self.vocab.strings[tree["orig"]]
+            if "orig" in tree:
+                tree["subst"] = self.vocab.strings[tree["subst"]]
 
-        for tree in trees:
-            if not tree["is_match_node"]:
-                subst_node = tree["inner"]["subst_node"]
-                subst_node["orig"] = self.vocab.strings[subst_node["orig"]]
-                subst_node["subst"] = self.vocab.strings[subst_node["subst"]]
+            trees.append(tree)
 
         self.trees.from_json(trees)
 

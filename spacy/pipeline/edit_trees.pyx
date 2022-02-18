@@ -11,7 +11,9 @@ from pathlib import Path
 from ..typedefs cimport hash_t
 
 from .. import util
+from ..errors import Errors
 from ..strings import StringStore
+from ._edit_tree_internals.schemas import validate_edit_tree
 
 
 NULL_TREE_ID = UINT32_MAX
@@ -206,15 +208,20 @@ cdef class EditTrees:
 
         return f"(m {match_node.prefix_len} {match_node.suffix_len} {prefix_tree} {suffix_tree})"
 
-    def from_json(self, trees: list, *) -> "EditTrees":
-        self.trees = trees
+    def from_json(self, trees: list) -> "EditTrees":
+        self.trees.clear()
+
+        for tree in trees:
+            tree = _dict2tree(tree)
+            self.trees.push_back(tree)
+
         self._rebuild_tree_map()
 
     def from_bytes(self, bytes_data: bytes, *) -> "EditTrees":
         def deserialize_trees(tree_dicts):
             cdef EditTreeC c_tree
             for tree_dict in tree_dicts:
-                c_tree = tree_dict
+                c_tree = _dict2tree(tree_dict)
                 self.trees.push_back(c_tree)
 
         deserializers = {}
@@ -278,9 +285,21 @@ def unpickle_edittrees(strings, trees_data):
 
 
 def _tree2dict(tree):
-    tree = dict(tree)
     if tree["is_match_node"]:
-        del tree["inner"]["subst_node"]
+        tree = tree["inner"]["match_node"]
     else:
-        del tree["inner"]["match_node"]
-    return(tree)
+        tree = tree["inner"]["subst_node"]
+    return(dict(tree))
+
+def _dict2tree(tree):
+    errors = validate_edit_tree(tree)
+    if errors:
+        raise ValueError(Errors.E1026.format(errors="\n".join(errors)))
+
+    tree = dict(tree)
+    if "prefix_len" in tree:
+        tree = {"is_match_node": True, "inner": {"match_node": tree}}
+    else:
+        tree = {"is_match_node": False, "inner": {"subst_node": tree}}
+
+    return tree
