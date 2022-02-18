@@ -93,7 +93,7 @@ class EditTreeLemmatizer(TrainablePipe):
         scorer: Optional[Callable] = lemmatizer_score,
     ):
         """
-        Construct and edit tree lemmatizer.
+        Construct an edit tree lemmatizer.
 
         backoff (Optional[str]): backoff to use when the predicted edit trees
             are not applicable. Must be an attribute of Token or None (leave the
@@ -118,7 +118,7 @@ class EditTreeLemmatizer(TrainablePipe):
         self.scorer = scorer
 
     def get_loss(
-        self, examples: Iterable[Example], scores
+        self, examples: Iterable[Example], scores: List[Floats2d]
     ) -> Tuple[float, List[Floats2d]]:
         validate_examples(examples, "EditTreeLemmatizer.get_loss")
         loss_func = SequenceCategoricalCrossentropy(normalize=False, missing_value=-1)
@@ -218,7 +218,7 @@ class EditTreeLemmatizer(TrainablePipe):
         return True
 
     @property
-    def label_data(self):
+    def label_data(self)  -> Dict:
         trees = []
         for tree_id in range(len(self.trees)):
             tree = self.trees[tree_id]
