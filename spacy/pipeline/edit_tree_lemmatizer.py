@@ -144,22 +144,20 @@ class EditTreeLemmatizer(TrainablePipe):
 
         return float(loss), d_scores
 
-    def predict(self, docs: Sequence[Doc]) -> List[Ints2d]:
+    def predict(self, docs: Iterable[Doc]) -> List[Ints2d]:
+        n_docs = len(list(docs))
         if not any(len(doc) for doc in docs):
             # Handle cases where there are no tokens in any docs.
             n_labels = len(self.cfg["labels"])
             guesses: List[Ints2d] = [
                 self.model.ops.alloc((0, n_labels), dtype="i") for doc in docs
             ]
-            assert len(guesses) == len(docs)
+            assert len(guesses) == n_docs
             return guesses
-
         scores = self.model.predict(docs)
-        assert len(scores) == len(docs)
-
+        assert len(scores) == n_docs
         guesses = self._scores2guesses(docs, scores)
-        assert len(guesses) == len(docs)
-
+        assert len(guesses) == n_docs
         return guesses
 
     def _scores2guesses(self, docs, scores):
@@ -188,10 +186,7 @@ class EditTreeLemmatizer(TrainablePipe):
 
         return guesses
 
-    def set_annotations(self, docs, batch_tree_ids):
-        if isinstance(docs, Doc):
-            docs = [docs]
-
+    def set_annotations(self, docs: Iterable[Doc], batch_tree_ids):
         for i, doc in enumerate(docs):
             doc_tree_ids = batch_tree_ids[i]
             if hasattr(doc_tree_ids, "get"):
