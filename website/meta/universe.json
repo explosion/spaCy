@@ -256,7 +256,7 @@
             },
             "category": ["pipeline"],
             "tags": ["sentiment", "textblob"]
-                },
+        },
         {
             "id": "spacy-ray",
             "title": "spacy-ray",
