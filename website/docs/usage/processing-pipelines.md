@@ -1088,6 +1088,7 @@ class AcronymComponent:
     # other methods here...
 
     def to_disk(self, path, exclude=tuple()):
+        path.mkdir()
         srsly.write_json(path / "data.json", self.data)
 
     def from_disk(self, path, exclude=tuple()):

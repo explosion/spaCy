@@ -218,6 +218,7 @@ class CustomComponent:
 
     def to_disk(self, path, exclude=tuple()):
         # This will receive the directory path + /my_component
+        path.mkdir()
         data_path = path / "data.json"
         with data_path.open("w", encoding="utf8") as f:
             f.write(json.dumps(self.data))
@@ -468,6 +469,7 @@ component exposes a `to_disk` method, it will be called with the disk path.
 
 ```python
 def to_disk(self, path, exclude=tuple()):
+    path.mkdir()
     snek_path = path / "snek.txt"
     with snek_path.open("w", encoding="utf8") as snek_file:
         snek_file.write(self.snek)
