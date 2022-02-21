@@ -1,5 +1,6 @@
 from typing import Iterator, Any, Dict
 
+from .punctuation import TOKENIZER_INFIXES
 from .stop_words import STOP_WORDS
 from .tag_map import TAG_MAP
 from .lex_attrs import LEX_ATTRS
@@ -85,6 +86,7 @@ class KoreanDefaults(BaseDefaults):
     lex_attr_getters = LEX_ATTRS
     stop_words = STOP_WORDS
     writing_system = {"direction": "ltr", "has_case": False, "has_letters": False}
+    infixes = TOKENIZER_INFIXES
 
 
 class Korean(Language):
