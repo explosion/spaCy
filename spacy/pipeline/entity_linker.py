@@ -93,7 +93,7 @@ def make_entity_linker(
     scorer (Optional[Callable]): The scoring method.
     """
 
-    if not model.attrs.get("entity_linker_2", False):
+    if not model.attrs.get("include_span_maker", False):
         # The only difference in arguments here is that use_gold_ents is not available
         return EntityLinker_v1(
             nlp.vocab,

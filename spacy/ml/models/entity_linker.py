@@ -29,7 +29,7 @@ def build_nel_encoder(
         model.set_ref("output_layer", output_layer)
         model.set_ref("tok2vec", tok2vec)
     # flag to show this isn't legacy
-    model.attrs["entity_linker_2"] = True
+    model.attrs["include_span_maker"] = True
     return model
 
 
