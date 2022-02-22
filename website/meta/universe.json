@@ -255,7 +255,8 @@
                 "website": "https://samedwardes.com"
             },
             "category": ["pipeline"],
-            "tags": ["sentiment", "textblob"]
+            "tags": ["sentiment", "textblob"],
+            "spacy_version": 3
         },
         {
             "id": "spacy-ray",
