@@ -1,5 +1,6 @@
+# XXX This file is a stub due to issues with "is" as a reserve word. See:
+# https://github.com/explosion/spaCy/pull/9972
 from ..isl import *
 import warnings
-warnings.warn("spacy.lang.is is deprecated, use lang.isl instead", DeprecationWarning)
 
 __all__ = ["Icelandic"]
