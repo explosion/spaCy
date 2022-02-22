@@ -68,7 +68,7 @@ class SpanRenderer:
         self.top_offset_step = options.get("top_offset_step", 17)
 
         # Set up which templates will be used
-        template: Dict[str, Any] = options.get("span_template")
+        template = options.get("template")
         if template:
             self.span_template = template["span"]
             self.span_slice_template = template["slice"]
@@ -126,11 +126,11 @@ class SpanRenderer:
         spans (list): Individual entity spans and their start, end, label, kb_id and kb_url.
         title (str / None): Document title set in Doc.user_data['title'].
         """
-        per_token_info: List[Dict[str, Any]] = []
+        per_token_info = []
         for idx, token in enumerate(tokens):
             # Identify if a token belongs to a Span (and which) and if it's a
             # start token of said Span. We'll use this for the final HTML render
-            token_markup = {}
+            token_markup: Dict[str, Any] = {}
             token_markup["text"] = token
             entities = []
             for span in spans:
