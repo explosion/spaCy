@@ -5,57 +5,71 @@ from typing import List
 from spacy.training import Example
 
 
-NER_TRAIN = [
+TRAIN_DATA = [
     (
         'Who is Kofi Annan?',
         {
             'entities': [(7, 18, 'PERSON')],
-            'tags': ['PRON', 'AUX', 'PROPN', 'PRON', 'PUNCT']
+            'tags': ['PRON', 'AUX', 'PROPN', 'PRON', 'PUNCT'],
+            'heads': [1, 1, 3, 1, 1],
+            'deps': ['attr', 'ROOT', 'compound', 'nsubj', 'punct']
         }
     ),
     (
         'Who is Steve Jobs?',
         {
             'entities': [(7, 17, 'PERSON')],
-            'tags': ['PRON', 'AUX', 'PROPN', 'PRON', 'PUNCT']
+            'tags': ['PRON', 'AUX', 'PROPN', 'PRON', 'PUNCT'],
+            'heads': [1, 1, 3, 1, 1],
+            'deps': ['attr', 'ROOT', 'compound', 'nsubj', 'punct']
         }
     ),
     (
         'Bob is a nice person.',
         {
             'entities': [(0, 3, 'PERSON')],
-            'tags': ['PROPN', 'AUX', 'DET', 'ADJ', 'NOUN', 'PUNCT']
+            'tags': ['PROPN', 'AUX', 'DET', 'ADJ', 'NOUN', 'PUNCT'],
+            'heads': [1, 1, 4, 4, 1, 1],
+            'deps': ['nsubj', 'ROOT', 'det', 'amod', 'attr', 'punct']
         }
     ),
     (
         'Hi Anil, how are you?',
         {
             'entities': [(3, 7, 'PERSON')],
-            'tags': ['INTJ', 'PROPN', 'PUNCT', 'ADV', 'AUX', 'PRON', 'PUNCT']
+            'tags': ['INTJ', 'PROPN', 'PUNCT', 'ADV', 'AUX', 'PRON', 'PUNCT'],
+            'deps': ['intj', 'npadvmod', 'punct', 'advmod', 'ROOT', 'nsubj', 'punct'],
+            'heads': [4, 0, 4, 4, 4, 4, 4]
         }
     ),
     (
         'I like London and Berlin.',
         {
             'entities': [(7, 13, 'LOC'), (18, 24, 'LOC')],
-            'tags': ['PROPN', 'VERB', 'PROPN', 'CCONJ', 'PROPN', 'PUNCT']
+            'tags': ['PROPN', 'VERB', 'PROPN', 'CCONJ', 'PROPN', 'PUNCT'],
+            'deps': ['nsubj', 'ROOT', 'dobj', 'cc', 'conj', 'punct'],
+            'heads': [1, 1, 1, 2, 2, 1]
         }
     )
 ]
 
-NER_REHEARSE = [
+REHEARSE_DATA = [
     (
         'Hi Anil',
         {
             'entities': [(3, 7, 'PERSON')],
-            'tags': ['INTJ', 'PROPN']
+            'tags': ['INTJ', 'PROPN'],
+            'deps': ['ROOT', 'npadvmod'],
+            'heads': [0, 0]
         }
     ),
     (
         'Hi Ravish, how you doing?',
         {
             'entities': [(3, 9, 'PERSON')],
-            'tags': ['INTJ', 'PROPN', 'PUNCT', 'ADV', 'AUX', 'PRON', 'PUNCT']
+            'tags': ['INTJ', 'PROPN', 'PUNCT', 'ADV', 'AUX', 'PRON', 'PUNCT'],
+            'deps': ['intj', 'ROOT', 'punct', 'advmod', 'nsubj', 'advcl', 'punct'],
+            'heads': [1, 1, 1, 5, 5, 1, 1]
         }
     ),
     # UTENCIL new label
@@ -63,15 +77,12 @@ NER_REHEARSE = [
         'Natasha bought new forks.',
         {
             'entities': [(0, 7, 'PERSON'), (19, 24, 'UTENSIL')],
-            'tags': ['PROPN', 'VERB', 'ADJ', 'NOUN', 'PUNCT']
+            'tags': ['PROPN', 'VERB', 'ADJ', 'NOUN', 'PUNCT'],
+            'deps': ['nsubj', 'ROOT', 'amod', 'dobj', 'punct'],
+            'heads': [1, 1, 3, 1, 1]
         }
     )
 ]
-
-DATA = {
-    'ner': (NER_TRAIN, NER_REHEARSE),
-    'tagger': (NER_TRAIN, NER_REHEARSE)
-}
 
 
 def _add_ner_label(ner, data):
@@ -86,6 +97,12 @@ def _add_tagger_label(tagger, data):
             tagger.add_label(tag)
 
 
+def _add_parser_label(parser, data):
+    for _, annotations in data:
+        for dep in annotations.get('deps'):
+            parser.add_label(dep)
+
+
 def _opt_loop(
         nlp,
         component: str,
@@ -98,13 +115,15 @@ def _opt_loop(
         _add_ner_label(pipe, data)
     elif component == 'tagger':
         _add_tagger_label(pipe, data)
+    elif component == 'parser':
+        _add_tagger_label(pipe, data)
     else:
         raise NotImplementedError
 
     if rehearse:
         optimizer = nlp.resume_training()
     else:
-        optimizer = nlp.begin_training()
+        optimizer = nlp.initialize()
 
     for _ in range(5):
         for text, annotation in data:
@@ -117,10 +136,12 @@ def _opt_loop(
     return nlp
 
 
-@pytest.mark.parametrize("component", ['ner', 'tagger'])
-def test_rehearse_ner(component):
+@pytest.mark.parametrize("component", ['ner', 'tagger', 'parser'])
+def test_rehearse(component):
     nlp = spacy.blank("en")
     nlp.add_pipe(component)
-    train_data, rehearse_data = DATA[component]
-    nlp = _opt_loop(nlp, component, train_data, False)
-    _opt_loop(nlp, component, rehearse_data, True)
+    nlp = _opt_loop(nlp, component, TRAIN_DATA, False)
+    _opt_loop(nlp, component, REHEARSE_DATA, True)
+
+
+test_rehearse('parser')
