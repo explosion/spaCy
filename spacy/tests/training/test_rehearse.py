@@ -162,7 +162,6 @@ def _optimize(
 
 @pytest.mark.parametrize("component", ['ner', 'tagger', 'parser', 'textcat_multilabel'])
 def test_rehearse(component):
-    print(component)
     nlp = spacy.blank("en")
     nlp.add_pipe(component)
     nlp = _optimize(nlp, component, TRAIN_DATA, False)
