@@ -86,7 +86,7 @@ REHEARSE_DATA = [
             'cats': {'greeting': 1.0, 'question': 1.0}
         }
     ),
-    # UTENCIL new label
+    # UTENSIL new label
     (
         'Natasha bought new forks.',
         {
