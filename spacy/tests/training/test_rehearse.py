@@ -167,6 +167,3 @@ def test_rehearse(component):
     nlp.add_pipe(component)
     nlp = _optimize(nlp, component, TRAIN_DATA, False)
     _optimize(nlp, component, REHEARSE_DATA, True)
-
-
-test_rehearse('textcat_multilabel')
