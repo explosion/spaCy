@@ -227,11 +227,11 @@
         },
         {
             "id": "spacy-textblob",
-            "title": "spaCyTextBlob",
-            "slogan": "Easy sentiment analysis for spaCy using TextBlob. Now supports spaCy 3.0!",
-            "thumb": "https://github.com/SamEdwardes/spaCyTextBlob/raw/main/website/static/img/logo-thumb-square-250x250.png",
-            "description": "spaCyTextBlob is a pipeline component that enables sentiment analysis using the [TextBlob](https://github.com/sloria/TextBlob) library. It will add the additional extensions `._.polarity`, `._.subjectivity`, and `._.assessments` to `Doc`, `Span`, and `Token` objects. For spaCy 2 please use `pip install pip install spacytextblob==0.1.7`",
-            "github": "SamEdwardes/spaCyTextBlob",
+            "title": "spacytextblob",
+            "slogan": "A TextBlob sentiment analysis pipeline component for spaCy.",
+            "thumb": "https://github.com/SamEdwardes/spacytextblob/raw/main/docs/static/img/logo-thumb-square-250x250.png",
+            "description": "spacytextblob is a pipeline component that enables sentiment analysis using the [TextBlob](https://github.com/sloria/TextBlob) library. It will add the additional extension `._.blob` to `Doc`, `Span`, and `Token` objects.",
+            "github": "SamEdwardes/spacytextblob",
             "pip": "spacytextblob",
             "code_example": [
                 "import spacy",
@@ -241,9 +241,10 @@
                 "nlp.add_pipe('spacytextblob')",
                 "text = 'I had a really horrible day. It was the worst day ever! But every now and then I have a really good day that makes me happy.'",
                 "doc = nlp(text)",
-                "doc._.polarity      # Polarity: -0.125",
-                "doc._.subjectivity  # Sujectivity: 0.9",
-                "doc._.assessments   # Assessments: [(['really', 'horrible'], -1.0, 1.0, None), (['worst', '!'], -1.0, 1.0, None), (['really', 'good'], 0.7, 0.6000000000000001, None), (['happy'], 0.8, 1.0, None)]"
+                "doc._.blob.polarity                            # Polarity: -0.125",
+                "doc._.blob.subjectivity                        # Subjectivity: 0.9",
+                "doc._.blob.sentiment_assessments.assessments   # Assessments: [(['really', 'horrible'], -1.0, 1.0, None), (['worst', '!'], -1.0, 1.0, None), (['really', 'good'], 0.7, 0.6000000000000001, None), (['happy'], 0.8, 1.0, None)]",
+                "doc._.blob.ngrams()                            # [WordList(['I', 'had', 'a']), WordList(['had', 'a', 'really']), WordList(['a', 'really', 'horrible']), WordList(['really', 'horrible', 'day']), WordList(['horrible', 'day', 'It']), WordList(['day', 'It', 'was']), WordList(['It', 'was', 'the']), WordList(['was', 'the', 'worst']), WordList(['the', 'worst', 'day']), WordList(['worst', 'day', 'ever']), WordList(['day', 'ever', 'But']), WordList(['ever', 'But', 'every']), WordList(['But', 'every', 'now']), WordList(['every', 'now', 'and']), WordList(['now', 'and', 'then']), WordList(['and', 'then', 'I']), WordList(['then', 'I', 'have']), WordList(['I', 'have', 'a']), WordList(['have', 'a', 'really']), WordList(['a', 'really', 'good']), WordList(['really', 'good', 'day']), WordList(['good', 'day', 'that']), WordList(['day', 'that', 'makes']), WordList(['that', 'makes', 'me']), WordList(['makes', 'me', 'happy'])]"
             ],
             "code_language": "python",
             "url": "https://spacytextblob.netlify.app/",
@@ -254,7 +255,8 @@
                 "website": "https://samedwardes.com"
             },
             "category": ["pipeline"],
-            "tags": ["sentiment", "textblob"]
+            "tags": ["sentiment", "textblob"],
+            "spacy_version": 3
         },
         {
             "id": "spacy-ray",
