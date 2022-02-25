@@ -142,7 +142,7 @@ def build_cloze_characters_multi_task_model(
         cast(Model[List["Floats2d"], Floats2d], list2array()),
         Maxout(nO=hidden_size, nP=maxout_pieces),
         LayerNorm(nI=hidden_size),
-        MultiSoftmax([256] * nr_char, nI=hidden_size),  # type: ignore[arg-type]
+        MultiSoftmax(tuple([256] * nr_char), nI=hidden_size),
     )
     model = build_masked_language_model(vocab, chain(tok2vec, output_layer))
     model.set_ref("tok2vec", tok2vec)

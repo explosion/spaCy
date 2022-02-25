@@ -1,7 +1,7 @@
 from typing import List, Dict, Callable, Tuple, Optional, Iterable, Any, cast
 from thinc.api import Config, Model, get_current_ops, set_dropout_rate, Ops
 from thinc.api import Optimizer
-from thinc.types import Ragged, Ints2d, Floats2d, Ints1d
+from thinc.types import Ragged, Ints2d, Floats2d, Ints1d, ArrayXd
 
 import numpy
 
@@ -75,7 +75,7 @@ def build_ngram_suggester(sizes: List[int]) -> Suggester:
                 if spans:
                     assert spans[-1].ndim == 2, spans[-1].shape
             lengths.append(length)
-        lengths_array = cast(Ints1d, ops.asarray(lengths, dtype="i"))
+        lengths_array = ops.asarray1i(lengths, dtype="i")
         if len(spans) > 0:
             output = Ragged(ops.xp.vstack(spans), lengths_array)
         else:
@@ -113,7 +113,7 @@ def make_spancat(
     nlp: Language,
     name: str,
     suggester: Suggester,
-    model: Model[Tuple[List[Doc], Ragged], Floats2d],
+    model: Model[Tuple[Iterable[Doc], Ragged], Floats2d],
     spans_key: str,
     scorer: Optional[Callable],
     threshold: float,
@@ -126,7 +126,7 @@ def make_spancat(
     suggester (Callable[[Iterable[Doc], Optional[Ops]], Ragged]): A function that suggests spans.
         Spans are returned as a ragged array with two integer columns, for the
         start and end positions.
-    model (Model[Tuple[List[Doc], Ragged], Floats2d]): A model instance that
+    model (Model[Tuple[Iterable[Doc], Ragged], Floats2d]): A model instance that
         is given a list of documents and (start, end) indices representing
         candidate span offsets. The model predicts a probability for each category
         for each span.
@@ -178,7 +178,7 @@ class SpanCategorizer(TrainablePipe):
     def __init__(
         self,
         vocab: Vocab,
-        model: Model[Tuple[List[Doc], Ragged], Floats2d],
+        model: Model[Tuple[Iterable[Doc], Ragged], Floats2d],
         suggester: Suggester,
         name: str = "spancat",
         *,
@@ -269,7 +269,7 @@ class SpanCategorizer(TrainablePipe):
         DOCS: https://spacy.io/api/spancategorizer#predict
         """
         indices = self.suggester(docs, ops=self.model.ops)
-        scores = self.model.predict((docs, indices))  # type: ignore
+        scores = self.model.predict((docs, indices))
         return indices, scores
 
     def set_annotations(self, docs: Iterable[Doc], indices_scores) -> None:
@@ -325,6 +325,7 @@ class SpanCategorizer(TrainablePipe):
         set_dropout_rate(self.model, drop)
         scores, backprop_scores = self.model.begin_update((docs, spans))
         loss, d_scores = self.get_loss(examples, (spans, scores))
+        # TODO: the types do not seem to make sense here
         backprop_scores(d_scores)  # type: ignore
         if sgd is not None:
             self.finish_update(sgd)
@@ -369,7 +370,7 @@ class SpanCategorizer(TrainablePipe):
             # The target is a flat array for all docs. Track the position
             # we're at within the flat array.
             offset += spans.lengths[i]
-        target = self.model.ops.asarray(target, dtype="f")  # type: ignore
+        target = self.model.ops.asarray(cast(ArrayXd, target), dtype="f")
         # The target will have the values 0 (for untrue predictions) or 1
         # (for true predictions).
         # The scores should be in the range [0, 1].

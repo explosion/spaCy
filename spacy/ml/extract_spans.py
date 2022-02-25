@@ -1,6 +1,6 @@
-from typing import Tuple, Callable
+from typing import Tuple, Callable, cast
 from thinc.api import Model, to_numpy
-from thinc.types import Ragged, Ints1d
+from thinc.types import Ragged, Ints1d, FloatsXd
 
 from ..util import registry
 
@@ -29,7 +29,9 @@ def forward(
     assert spans.dataXd.ndim == 2
     indices = _get_span_indices(ops, spans, X.lengths)
     if len(indices) > 0:
-        Y = Ragged(X.dataXd[indices], spans.dataXd[:, 1] - spans.dataXd[:, 0])  # type: ignore[arg-type, index]
+        Y = Ragged(
+            X.dataXd[indices], cast(Ints1d, spans.dataXd[:, 1] - spans.dataXd[:, 0])
+        )
     else:
         Y = Ragged(
             ops.xp.zeros(X.dataXd.shape, dtype=X.dataXd.dtype),
@@ -40,7 +42,7 @@ def forward(
 
     def backprop_windows(dY: Ragged) -> Tuple[Ragged, Ragged]:
         dX = Ragged(ops.alloc2f(*x_shape), x_lengths)
-        ops.scatter_add(dX.dataXd, indices, dY.dataXd)  # type: ignore[arg-type]
+        ops.scatter_add(cast(FloatsXd, dX.dataXd), indices, cast(FloatsXd, dY.dataXd))
         return (dX, spans)
 
     return Y, backprop_windows
@@ -57,7 +59,7 @@ def _get_span_indices(ops, spans: Ragged, lengths: Ints1d) -> Ints1d:
     for i, length in enumerate(lengths):
         spans_i = spans[i].dataXd + offset
         for j in range(spans_i.shape[0]):
-            indices.append(ops.xp.arange(spans_i[j, 0], spans_i[j, 1]))  # type: ignore[call-overload, index]
+            indices.append(ops.xp.arange(spans_i[j, 0], spans_i[j, 1]))  # type: ignore[call-overload]
         offset += length
     return ops.flatten(indices, dtype="i", ndim_if_empty=1)
 

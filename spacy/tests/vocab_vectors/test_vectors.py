@@ -4,7 +4,7 @@ from numpy.testing import assert_allclose, assert_almost_equal, assert_equal
 from thinc.api import NumpyOps, get_current_ops
 
 from spacy.lang.en import English
-from spacy.strings import hash_string  # type: ignore
+from spacy.strings import hash_string  # type:ignore[attr-defined]
 from spacy.tokenizer import Tokenizer
 from spacy.tokens import Doc
 from spacy.training.initialize import convert_vectors

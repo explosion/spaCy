@@ -1,4 +1,4 @@
-from typing import List, Mapping, NoReturn, Union, Dict, Any, Set
+from typing import List, Mapping, NoReturn, Union, Dict, Any, Set, cast
 from typing import Optional, Iterable, Callable, Tuple, Type
 from typing import Iterator, Type, Pattern, Generator, TYPE_CHECKING
 from types import ModuleType
@@ -391,7 +391,7 @@ def get_module_path(module: ModuleType) -> Path:
     """
     if not hasattr(module, "__module__"):
         raise ValueError(Errors.E169.format(module=repr(module)))
-    return Path(sys.modules[module.__module__].__file__).parent
+    return Path(cast(str, sys.modules[module.__module__].__file__)).parent
 
 
 def load_model(
@@ -874,7 +874,7 @@ def get_package_path(name: str) -> Path:
     # Here we're importing the module just to find it. This is worryingly
     # indirect, but it's otherwise very difficult to find the package.
     pkg = importlib.import_module(name)
-    return Path(pkg.__file__).parent
+    return Path(cast(str, pkg.__file__)).parent
 
 
 def replace_model_node(model: Model, target: Model, replacement: Model) -> None:

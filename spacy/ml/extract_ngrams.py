@@ -1,5 +1,7 @@
+from typing import cast
 from thinc.api import Model
 
+from thinc.types import Ints1d
 from ..util import registry
 from ..attrs import LOWER
 
@@ -16,10 +18,10 @@ def forward(model: Model, docs, is_train: bool):
     batch_keys = []
     batch_vals = []
     for doc in docs:
-        unigrams = model.ops.asarray(doc.to_array([model.attrs["attr"]]))
+        unigrams = cast(Ints1d, model.ops.asarray(doc.to_array([model.attrs["attr"]])))
         ngrams = [unigrams]
         for n in range(2, model.attrs["ngram_size"] + 1):
-            ngrams.append(model.ops.ngrams(n, unigrams))  # type: ignore[arg-type]
+            ngrams.append(model.ops.ngrams(n, unigrams))
         keys = model.ops.xp.concatenate(ngrams)
         keys, vals = model.ops.xp.unique(keys, return_counts=True)
         batch_keys.append(keys)

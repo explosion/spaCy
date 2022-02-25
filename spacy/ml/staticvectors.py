@@ -41,12 +41,12 @@ def forward(
         return _handle_empty(model.ops, model.get_dim("nO"))
     key_attr: int = model.attrs["key_attr"]
     keys: Ints1d = model.ops.flatten(
-        cast(Sequence, [doc.to_array(key_attr) for doc in docs])
+        cast(List[Ints1d], [doc.to_array(key_attr) for doc in docs])
     )
     vocab: Vocab = docs[0].vocab
     W = cast(Floats2d, model.ops.as_contig(model.get_param("W")))
     if vocab.vectors.mode == Mode.default:
-        V = cast(Floats2d, model.ops.asarray(vocab.vectors.data))
+        V = model.ops.asarray2f(vocab.vectors.data)
         rows = vocab.vectors.find(keys=keys)
         V = model.ops.as_contig(V[rows])
     elif vocab.vectors.mode == Mode.floret:
@@ -63,7 +63,7 @@ def forward(
         # TODO: more options for UNK tokens
         vectors_data[rows < 0] = 0
     output = Ragged(
-        vectors_data, model.ops.asarray([len(doc) for doc in docs], dtype="i")  # type: ignore
+        vectors_data, model.ops.asarray1i([len(doc) for doc in docs], dtype="i")
     )
     mask = None
     if is_train:
@@ -115,5 +115,5 @@ def _handle_empty(ops: Ops, nO: int):
 def _get_drop_mask(ops: Ops, nO: int, rate: Optional[float]) -> Optional[Floats1d]:
     if rate is not None:
         mask = ops.get_dropout_mask((nO,), rate)
-        return mask  # type: ignore
+        return mask  # type: ignore[return-value]
     return None

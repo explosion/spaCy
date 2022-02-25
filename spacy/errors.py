@@ -1,3 +1,4 @@
+from typing import Literal, Union
 import warnings
 
 
@@ -26,7 +27,17 @@ def setup_default_warnings():
     filter_warning("once", error_msg="[W114]")
 
 
-def filter_warning(action: str, error_msg: str):
+def filter_warning(
+    action: Union[
+        Literal["default"],
+        Literal["error"],
+        Literal["ignore"],
+        Literal["always"],
+        Literal["module"],
+        Literal["once"],
+    ],
+    error_msg: str,
+):
     """Customize how spaCy should handle a certain warning.
 
     error_msg (str): e.g. "W006", or a full error message

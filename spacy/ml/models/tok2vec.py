@@ -1,5 +1,5 @@
 from typing import Optional, List, Union, cast
-from thinc.types import Floats2d, Ints2d, Ragged
+from thinc.types import Floats2d, Ints1d, Ints2d, Ragged, ArrayXd
 from thinc.api import chain, clone, concatenate, with_array, with_padded
 from thinc.api import Model, noop, list2ragged, ragged2list, HashEmbed
 from thinc.api import expand_window, residual, Maxout, Mish, PyTorchLSTM
@@ -159,7 +159,7 @@ def MultiHashEmbed(
     embeddings = [make_hash_embed(i) for i in range(len(attrs))]
     concat_size = width * (len(embeddings) + include_static_vectors)
     max_out: Model[Ragged, Ragged] = with_array(
-        Maxout(width, concat_size, nP=3, dropout=0.0, normalize=True)  # type: ignore
+        Maxout(width, concat_size, nP=3, dropout=0.0, normalize=True)
     )
     if include_static_vectors:
         feature_extractor: Model[List[Doc], Ragged] = chain(
@@ -173,7 +173,7 @@ def MultiHashEmbed(
                 StaticVectors(width, dropout=0.0),
             ),
             max_out,
-            cast(Model[Ragged, List[Floats2d]], ragged2list()),
+            ragged2list(),
         )
     else:
         model = chain(
@@ -181,7 +181,7 @@ def MultiHashEmbed(
             cast(Model[List[Ints2d], Ragged], list2ragged()),
             with_array(concatenate(*embeddings)),
             max_out,
-            cast(Model[Ragged, List[Floats2d]], ragged2list()),
+            ragged2list(),
         )
     return model
 
@@ -231,13 +231,14 @@ def CharacterEmbed(
     )
     feature_extractor: Model[List[Doc], Ragged] = chain(
         FeatureExtractor([feature]),
-        cast(Model[List[Ints2d], Ragged], list2ragged()),
-        with_array(HashEmbed(nO=width, nV=rows, column=0, seed=5)),  # type: ignore
+        list2ragged(),
+        # TODO: the typing does not seem to make sense here
+        with_array(HashEmbed(nO=width, nV=rows, column=0, seed=5)),  # type:ignore
     )
     max_out: Model[Ragged, Ragged]
     if include_static_vectors:
         max_out = with_array(
-            Maxout(width, nM * nC + (2 * width), nP=3, normalize=True, dropout=0.0)  # type: ignore
+            Maxout(width, nM * nC + (2 * width), nP=3, normalize=True, dropout=0.0)
         )
         model = chain(
             concatenate(
@@ -246,11 +247,11 @@ def CharacterEmbed(
                 StaticVectors(width, dropout=0.0),
             ),
             max_out,
-            cast(Model[Ragged, List[Floats2d]], ragged2list()),
+            ragged2list(),
         )
     else:
         max_out = with_array(
-            Maxout(width, nM * nC + width, nP=3, normalize=True, dropout=0.0)  # type: ignore
+            Maxout(width, nM * nC + width, nP=3, normalize=True, dropout=0.0)
         )
         model = chain(
             concatenate(
@@ -258,7 +259,7 @@ def CharacterEmbed(
                 feature_extractor,
             ),
             max_out,
-            cast(Model[Ragged, List[Floats2d]], ragged2list()),
+            ragged2list(),
         )
     return model
 
@@ -280,7 +281,7 @@ def MaxoutWindowEncoder(
     depth (int): The number of convolutional layers. Recommended value is 4.
     """
     cnn = chain(
-        expand_window(window_size=window_size),
+        cast(Model[Floats2d, Floats2d], expand_window(window_size=window_size)),
         Maxout(
             nO=width,
             nI=width * ((window_size * 2) + 1),
@@ -289,10 +290,10 @@ def MaxoutWindowEncoder(
             normalize=True,
         ),
     )
-    model = clone(residual(cnn), depth)  # type: ignore[arg-type]
+    model = clone(residual(cnn), depth)
     model.set_dim("nO", width)
     receptive_field = window_size * depth
-    return with_array(model, pad=receptive_field)  # type: ignore[arg-type]
+    return with_array(model, pad=receptive_field)
 
 
 @registry.architectures("spacy.MishWindowEncoder.v2")
@@ -310,12 +311,12 @@ def MishWindowEncoder(
     depth (int): The number of convolutional layers. Recommended value is 4.
     """
     cnn = chain(
-        expand_window(window_size=window_size),
+        cast(Model[Floats2d, Floats2d], expand_window(window_size=window_size)),
         Mish(nO=width, nI=width * ((window_size * 2) + 1), dropout=0.0, normalize=True),
     )
-    model = clone(residual(cnn), depth)  # type: ignore[arg-type]
+    model = clone(residual(cnn), depth)
     model.set_dim("nO", width)
-    return with_array(model)  # type: ignore[arg-type]
+    return with_array(model)
 
 
 @registry.architectures("spacy.TorchBiLSTMEncoder.v1")

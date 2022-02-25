@@ -1,4 +1,4 @@
-from typing import Iterable, Tuple, Optional, Dict, List, Callable, Any
+from typing import Iterable, Tuple, Optional, Dict, List, Callable, Any, cast
 from thinc.api import get_array_module, Model, Optimizer, set_dropout_rate, Config
 from thinc.types import Floats2d
 import numpy
@@ -293,18 +293,20 @@ class TextCategorizer(TrainablePipe):
 
     def _examples_to_truth(
         self, examples: Iterable[Example]
-    ) -> Tuple[numpy.ndarray, numpy.ndarray]:
+    ) -> Tuple[Floats2d, Floats2d]:
         nr_examples = len(list(examples))
-        truths = numpy.zeros((nr_examples, len(self.labels)), dtype="f")
-        not_missing = numpy.ones((nr_examples, len(self.labels)), dtype="f")
+        truths = cast(Floats2d, numpy.zeros((nr_examples, len(self.labels)), dtype="f"))
+        not_missing = cast(
+            Floats2d, numpy.ones((nr_examples, len(self.labels)), dtype="f")
+        )
         for i, eg in enumerate(examples):
             for j, label in enumerate(self.labels):
                 if label in eg.reference.cats:
                     truths[i, j] = eg.reference.cats[label]
                 elif self.support_missing_values:
                     not_missing[i, j] = 0.0
-        truths = self.model.ops.asarray(truths)  # type: ignore
-        return truths, not_missing  # type: ignore
+        truths = self.model.ops.asarray2f(truths)
+        return truths, not_missing
 
     def get_loss(self, examples: Iterable[Example], scores) -> Tuple[float, float]:
         """Find the loss and gradient of loss for the batch of documents and
@@ -319,7 +321,7 @@ class TextCategorizer(TrainablePipe):
         validate_examples(examples, "TextCategorizer.get_loss")
         self._validate_categories(examples)
         truths, not_missing = self._examples_to_truth(examples)
-        not_missing = self.model.ops.asarray(not_missing)  # type: ignore
+        not_missing = self.model.ops.asarray(not_missing)
         d_scores = scores - truths
         d_scores *= not_missing
         mean_square_error = (d_scores**2).mean()

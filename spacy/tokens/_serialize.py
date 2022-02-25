@@ -1,10 +1,11 @@
-from typing import List, Dict, Set, Iterable, Iterator, Union, Optional
+from typing import List, Dict, Set, Iterable, Iterator, Union, Optional, cast
 from pathlib import Path
 import numpy
 from numpy import ndarray
 import zlib
 import srsly
 from thinc.api import NumpyOps
+from thinc.types import Ints2d
 
 from .doc import Doc
 from ..vocab import Vocab
@@ -140,12 +141,12 @@ class DocBin:
         orth_col = self.attrs.index(ORTH)
         for i in range(len(self.tokens)):
             flags = self.flags[i]
-            tokens = self.tokens[i]
+            tokens = cast(Ints2d, self.tokens[i])
             spaces: Optional[ndarray] = self.spaces[i]
             if flags.get("has_unknown_spaces"):
                 spaces = None
             doc = Doc(vocab, words=tokens[:, orth_col], spaces=spaces)  # type: ignore
-            doc = doc.from_array(self.attrs, tokens)  # type: ignore
+            doc = doc.from_array(self.attrs, tokens)
             doc.cats = self.cats[i]
             if self.span_groups[i] != SpanGroups._EMPTY_BYTES:
                 doc.spans.from_bytes(self.span_groups[i])

@@ -1153,7 +1153,7 @@ class Language:
         for name, proc in self.pipeline:
             # ignore statements are used here because mypy ignores hasattr
             if name not in exclude and hasattr(proc, "update"):
-                proc.update(examples, sgd=None, losses=losses, **component_cfg[name])  # type: ignore
+                proc.update(examples, sgd=None, losses=losses, **component_cfg[name])  # type: ignore[attr-defined]
             if sgd not in (None, False):
                 if (
                     name not in exclude

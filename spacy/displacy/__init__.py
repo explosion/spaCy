@@ -54,8 +54,8 @@ def render(
         raise ValueError(Errors.E096)
     renderer_func, converter = factories[style]
     renderer = renderer_func(options=options)
-    parsed = [converter(doc, options) for doc in docs] if not manual else docs  # type: ignore
-    _html["parsed"] = renderer.render(parsed, page=page, minify=minify).strip()  # type: ignore
+    parsed = [converter(doc, options) for doc in docs] if not manual else docs  # type: ignore[arg-type]
+    _html["parsed"] = renderer.render(parsed, page=page, minify=minify).strip()  # type: ignore[attr-defined]
     html = _html["parsed"]
     if RENDER_WRAPPER is not None:
         html = RENDER_WRAPPER(html)
