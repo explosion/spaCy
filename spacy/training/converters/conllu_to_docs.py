@@ -253,7 +253,9 @@ def conllu_sentence_to_doc(
         heads=heads,
     )
     if set_ents:
-        doc_x.ents = [Span(doc_x, ent.start, ent.end, label=ent.label) for ent in doc.ents]
+        doc_x.ents = [
+            Span(doc_x, ent.start, ent.end, label=ent.label) for ent in doc.ents
+        ]
 
     return doc_x
 
