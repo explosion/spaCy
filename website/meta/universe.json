@@ -2620,7 +2620,7 @@
                 "",
                 "nlp = spacy.load('en_core_web_md')",
                 "",
-                "classification_type = \"spacy_few_shot\"".
+                "classification_type = \"spacy_few_shot\"",
                 "if classification_type == \"spacy_few_shot\":",
                 "    nlp.add_pipe(\"text_categorizer\", ",
                 "        config={\"data\": data, \"model\": \"spacy\"}",
@@ -2635,7 +2635,7 @@
                 "    )",
                 "",
                 "print(nlp(\"I am looking for kitchen appliances.\")._.cats)",
-                "print([doc._.cats for doc in nlp.pipe([\"I am looking for kitchen appliances.\"])]"    
+                "print([doc._.cats for doc in nlp.pipe([\"I am looking for kitchen appliances.\"])])"    
             ],
             "author": "David Berenstein",
             "author_links": {
