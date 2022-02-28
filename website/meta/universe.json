@@ -2640,9 +2640,11 @@
             ],
             "author": "David Berenstein",
             "author_links": {
-                "github": "davidberenstein1957"
+                "github": "davidberenstein1957",
+                "website": "https://www.linkedin.com/in/david-berenstein-1bab11105/"
             },
             "category": ["pipeline", "standalone"]
+            "tags": ["classification", "zer-shot", "few-shot", "sentence-transformers", "huggingface"]
         },
         {
             "id": "blackstone",
