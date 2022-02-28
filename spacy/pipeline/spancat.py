@@ -78,7 +78,7 @@ def build_ngram_suggester(sizes: List[int]) -> Suggester:
         if len(spans) > 0:
             output = Ragged(ops.xp.vstack(spans), lengths_array)
         else:
-            output = Ragged(ops.xp.zeros((0, 0)), lengths_array)
+            output = Ragged(ops.xp.zeros((0, 0), dtype="i"), lengths_array)
 
         assert output.dataXd.ndim == 2
         return output

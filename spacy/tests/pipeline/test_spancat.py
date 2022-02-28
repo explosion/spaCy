@@ -1,7 +1,7 @@
 import pytest
 import numpy
 from numpy.testing import assert_array_equal, assert_almost_equal
-from thinc.api import get_current_ops
+from thinc.api import get_current_ops, Ragged
 
 from spacy import util
 from spacy.lang.en import English
@@ -29,6 +29,7 @@ TRAIN_DATA_OVERLAPPING = [
         "I like London and Berlin",
         {"spans": {SPAN_KEY: [(7, 13, "LOC"), (18, 24, "LOC"), (7, 24, "DOUBLE_LOC")]}},
     ),
+    ("", {"spans": {SPAN_KEY: []}}),
 ]
 
 
@@ -365,3 +366,31 @@ def test_overfitting_IO_overlapping():
             "London and Berlin",
         }
         assert set([span.label_ for span in spans2]) == {"LOC", "DOUBLE_LOC"}
+
+
+def test_zero_suggestions():
+    # Test with a suggester that returns 0 suggestions
+
+    @registry.misc("test_zero_suggester")
+    def make_zero_suggester():
+        def zero_suggester(docs, *, ops=None):
+            if ops is None:
+                ops = get_current_ops()
+            return Ragged(
+                ops.xp.zeros((0, 0), dtype="i"), ops.xp.zeros((len(docs),), dtype="i")
+            )
+
+        return zero_suggester
+
+    fix_random_seed(0)
+    nlp = English()
+    spancat = nlp.add_pipe(
+        "spancat",
+        config={"suggester": {"@misc": "test_zero_suggester"}, "spans_key": SPAN_KEY},
+    )
+    train_examples = make_examples(nlp)
+    optimizer = nlp.initialize(get_examples=lambda: train_examples)
+    assert spancat.model.get_dim("nO") == 2
+    assert set(spancat.labels) == {"LOC", "PERSON"}
+
+    nlp.update(train_examples, sgd=optimizer)
