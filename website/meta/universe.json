@@ -2635,7 +2635,7 @@
                 "    config={\"data\": list(data.keys()), \"cat_type\": \"zero\", \"model\": \"facebook/bart-large-mnli\"}",
                 ")",
                 "",
-                "nlp(\"I am looking for kitchen appliances.\")._.cats",
+                "print(nlp(\"I am looking for kitchen appliances.\")._.cats)",
                 "nlp.pipe([\"I am looking for kitchen appliances.\"])"    
             ],
             "author": "David Berenstein",
