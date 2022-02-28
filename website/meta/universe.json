@@ -2601,7 +2601,7 @@
         },
         {
             "id": "classyclassification",
-            "slogan": "A python library for classy few-shot and zero-shot classification within Spacy.",
+            "slogan": "A Python library for classy few-shot and zero-shot classification within spaCy.",
             "description": "Huggingface does offer some nice models for few/zero-shot classification, but these are not tailored to multi-lingual approaches. Rasa NLU has a nice approach for this, but its too embedded in their codebase for easy usage outside of Rasa/chatbots. Additionally, it made sense to integrate sentence-transformers and Huggingface zero-shot, instead of default word embeddings. Finally, I decided to integrate with spaCy, since training a custom spaCy TextCategorizer seems like a lot of hassle if you want something quick and dirty.",
             "github": "davidberenstein1957/classy-classification",
             "pip": "classy-classification",
