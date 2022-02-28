@@ -2620,23 +2620,22 @@
                 "",
                 "nlp = spacy.load('en_core_web_md')",
                 "",
-                "# few-shot using spacy internal embeddings via md or lg model",
-                "nlp.add_pipe(\"text_categorizer\", ",
-                "    config={\"data\": data, \"model\": \"spacy\"}",
-                ")",
-                "",
-                "# few-shot using sentence-transformers",
-                "nlp.add_pipe(\"text_categorizer\", ",
-                "    config={\"data\": data, \"model\": \"sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2\"}",
-                ")",
-                "",
-                "# zero-shot using huggingface",
-                "nlp.add_pipe(\"text_categorizer\", ",
-                "    config={\"data\": list(data.keys()), \"cat_type\": \"zero\", \"model\": \"facebook/bart-large-mnli\"}",
-                ")",
+                "classification_type = \"spacy_few_shot\"".
+                "if classification_type == \"spacy_few_shot\":",
+                "    nlp.add_pipe(\"text_categorizer\", ",
+                "        config={\"data\": data, \"model\": \"spacy\"}",
+                "    )",
+                "elif classification_type == \"sentence_transformer_few_shot\":",
+                "    nlp.add_pipe(\"text_categorizer\", ",
+                "        config={\"data\": data, \"model\": \"sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2\"}",
+                "    )",
+                "elif classification_type == \"huggingface_zero_shot\":",
+                "    nlp.add_pipe(\"text_categorizer\", ",
+                "        config={\"data\": list(data.keys()), \"cat_type\": \"zero\", \"model\": \"facebook/bart-large-mnli\"}",
+                "    )",
                 "",
                 "print(nlp(\"I am looking for kitchen appliances.\")._.cats)",
-                "nlp.pipe([\"I am looking for kitchen appliances.\"])"    
+                "print([doc._.cats for doc in nlp.pipe([\"I am looking for kitchen appliances.\"])]"    
             ],
             "author": "David Berenstein",
             "author_links": {
@@ -2644,7 +2643,8 @@
                 "website": "https://www.linkedin.com/in/david-berenstein-1bab11105/"
             },
             "category": ["pipeline", "standalone"],
-            "tags": ["classification", "zero-shot", "few-shot", "sentence-transformers", "huggingface"]
+            "tags": ["classification", "zero-shot", "few-shot", "sentence-transformers", "huggingface"],
+            "spacy_version": 3
         },
         {
             "id": "blackstone",
