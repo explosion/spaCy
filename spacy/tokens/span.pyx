@@ -126,38 +126,26 @@ cdef class Span:
                 return False
             else:
                 return True
+        self_tuple = (self.c.start_char, self.c.end_char, self.c.label, self.c.kb_id, self.doc)
+        other_tuple = (other.c.start_char, other.c.end_char, other.c.label, other.c.kb_id, other.doc)
         # <
         if op == 0:
-            return self.c.start_char < other.c.start_char
+            return self_tuple < other_tuple
         # <=
         elif op == 1:
-            return self.c.start_char <= other.c.start_char
+            return self_tuple <= other_tuple
         # ==
         elif op == 2:
-            # Do the cheap comparisons first
-            return (
-                (self.c.start_char == other.c.start_char) and \
-                (self.c.end_char == other.c.end_char) and \
-                (self.c.label == other.c.label) and \
-                (self.c.kb_id == other.c.kb_id) and \
-                (self.doc == other.doc)
-            )
+            return self_tuple == other_tuple
         # !=
         elif op == 3:
-            # Do the cheap comparisons first
-            return not (
-                (self.c.start_char == other.c.start_char) and \
-                (self.c.end_char == other.c.end_char) and \
-                (self.c.label == other.c.label) and \
-                (self.c.kb_id == other.c.kb_id) and \
-                (self.doc == other.doc)
-            )
+            return self_tuple != other_tuple
         # >
         elif op == 4:
-            return self.c.start_char > other.c.start_char
+            return self_tuple > other_tuple
         # >=
         elif op == 5:
-            return self.c.start_char >= other.c.start_char
+            return self_tuple >= other_tuple
 
     def __hash__(self):
         return hash((self.doc, self.c.start_char, self.c.end_char, self.c.label, self.c.kb_id))
@@ -364,8 +352,10 @@ cdef class Span:
             return 0.0
         vector = self.vector
         xp = get_array_module(vector)
-        return xp.dot(vector, other.vector) / (self.vector_norm * other.vector_norm)
-
+        result = xp.dot(vector, other.vector) / (self.vector_norm * other.vector_norm)
+        # ensure we get a scalar back (numpy does this automatically but cupy doesn't)
+        return result.item()
+    
     cpdef np.ndarray to_array(self, object py_attr_ids):
         """Given a list of M attribute IDs, export the tokens to a numpy
         `ndarray` of shape `(N, M)`, where `N` is the length of the document.
@@ -404,6 +394,10 @@ cdef class Span:
         """
         if "sent" in self.doc.user_span_hooks:
             return self.doc.user_span_hooks["sent"](self)
+        elif "sents" in self.doc.user_hooks:
+            for sentence in self.doc.user_hooks["sents"](self.doc):
+                if sentence.start <= self.start < sentence.end:
+                    return sentence
         # Use `sent_start` token attribute to find sentence boundaries
         cdef int n = 0
         if self.doc.has_annotation("SENT_START"):
@@ -423,9 +417,50 @@ cdef class Span:
             raise ValueError(Errors.E030)
 
     @property
+    def sents(self):
+        """Obtain the sentences that contain this span. If the given span
+        crosses sentence boundaries, return all sentences it is a part of.
+
+        RETURNS (Iterable[Span]): All sentences that the span is a part of.
+
+         DOCS: https://spacy.io/api/span#sents
+        """
+        cdef int start
+        cdef int i
+
+        if "sents" in self.doc.user_span_hooks:
+            yield from self.doc.user_span_hooks["sents"](self)
+        elif "sents" in self.doc.user_hooks:
+            for sentence in self.doc.user_hooks["sents"](self.doc):
+                if sentence.end > self.start:
+                    if sentence.start < self.end or sentence.start == self.start == self.end:
+                        yield sentence
+                    else:
+                        break
+        else:
+            if not self.doc.has_annotation("SENT_START"):
+                raise ValueError(Errors.E030)
+            # Use `sent_start` token attribute to find sentence boundaries
+            # Find start of the 1st sentence of the Span
+            start = self.start
+            while self.doc.c[start].sent_start != 1 and start > 0:
+                start -= 1
+
+            # Now, find all the sentences in the span
+            for i in range(start + 1, self.doc.length):
+                if self.doc.c[i].sent_start == 1:
+                    yield Span(self.doc, start, i)
+                    start = i
+                    if start >= self.end:
+                        break
+            if start < self.end:
+                yield Span(self.doc, start, self.end)
+
+
+    @property
     def ents(self):
-        """The named entities in the span. Returns a tuple of named entity
-        `Span` objects, if the entity recognizer has been applied.
+        """The named entities that fall completely within the span. Returns
+        a tuple of `Span` objects.
 
         RETURNS (tuple): Entities in the span, one `Span` per entity.
 
@@ -452,7 +487,7 @@ cdef class Span:
         """
         if "has_vector" in self.doc.user_span_hooks:
             return self.doc.user_span_hooks["has_vector"](self)
-        elif self.vocab.vectors.data.size > 0:
+        elif self.vocab.vectors.size > 0:
             return any(token.has_vector for token in self)
         elif self.doc.tensor.size > 0:
             return True

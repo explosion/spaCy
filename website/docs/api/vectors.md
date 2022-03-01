@@ -327,9 +327,9 @@ will be counted individually. In `floret` mode, the keys table is not used.
 > assert vectors.n_keys == 0
 > ```
 
-| Name        | Description                                  |
-| ----------- | -------------------------------------------- |
-| **RETURNS** | The number of all keys in the table. ~~int~~ |
+| Name        | Description                                                                   |
+| ----------- | ----------------------------------------------------------------------------- |
+| **RETURNS** | The number of all keys in the table. Returns `-1` for floret vectors. ~~int~~ |
 
 ## Vectors.most_similar {#most_similar tag="method"}
 
@@ -348,7 +348,7 @@ supported for `floret` mode.
 > ```
 
 | Name           | Description                                                                 |
-| -------------- | --------------------------------------------------------------------------- |
+| -------------- | --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
 | `queries`      | An array with one or more vectors. ~~numpy.ndarray~~                        |
 | _keyword-only_ |                                                                             |
 | `batch_size`   | The batch size to use. Default to `1024`. ~~int~~                           |
@@ -370,6 +370,23 @@ Get the vectors for the provided keys efficiently as a batch.
 | Name   | Description                             |
 | ------ | --------------------------------------- |
 | `keys` | The keys. ~~Iterable[Union[int, str]]~~ |
+
+## Vectors.to_ops {#to_ops tag="method"}
+
+Change the embedding matrix to use different Thinc ops.
+
+> #### Example
+>
+> ```python
+> from thinc.api import NumpyOps
+>
+> vectors.to_ops(NumpyOps())
+>
+> ```
+
+| Name  | Description                                              |
+| ----- | -------------------------------------------------------- |
+| `ops` | The Thinc ops to switch the embedding matrix to. ~~Ops~~ |
 
 ## Vectors.to_disk {#to_disk tag="method"}
 

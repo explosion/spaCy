@@ -304,7 +304,7 @@ ancestor is found, e.g. if span excludes a necessary ancestor.
 
 ## Doc.has_annotation {#has_annotation tag="method"}
 
-Check whether the doc contains annotation on a token attribute.
+Check whether the doc contains annotation on a [`Token` attribute](/api/token#attributes).
 
 <Infobox title="Changed in v3.0" variant="warning">
 

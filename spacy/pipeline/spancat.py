@@ -1,8 +1,9 @@
-import numpy
 from typing import List, Dict, Callable, Tuple, Optional, Iterable, Any, cast
 from thinc.api import Config, Model, get_current_ops, set_dropout_rate, Ops
 from thinc.api import Optimizer
 from thinc.types import Ragged, Ints2d, Floats2d, Ints1d
+
+import numpy
 
 from ..compat import Protocol, runtime_checkable
 from ..scorer import Scorer
@@ -377,7 +378,7 @@ class SpanCategorizer(TrainablePipe):
         # If the prediction is 0.9 and it's false, the gradient will be
         # 0.9 (0.9 - 0.0)
         d_scores = scores - target
-        loss = float((d_scores ** 2).sum())
+        loss = float((d_scores**2).sum())
         return loss, d_scores
 
     def initialize(
@@ -412,7 +413,7 @@ class SpanCategorizer(TrainablePipe):
         self._require_labels()
         if subbatch:
             docs = [eg.x for eg in subbatch]
-            spans = self.suggester(docs)
+            spans = build_ngram_suggester(sizes=[1])(docs)
             Y = self.model.ops.alloc2f(spans.dataXd.shape[0], len(self.labels))
             self.model.initialize(X=(docs, spans), Y=Y)
         else:

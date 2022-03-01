@@ -6,11 +6,14 @@ import { replaceEmoji } from './icon'
 
 export const Ol = props => <ol className={classes.ol} {...props} />
 export const Ul = props => <ul className={classes.ul} {...props} />
-export const Li = ({ children, ...props }) => {
+export const Li = ({ children, emoji, ...props }) => {
     const { hasIcon, content } = replaceEmoji(children)
-    const liClassNames = classNames(classes.li, { [classes.liIcon]: hasIcon })
+    const liClassNames = classNames(classes.li, {
+        [classes.liIcon]: hasIcon,
+        [classes.emoji]: emoji,
+    })
     return (
-        <li className={liClassNames} {...props}>
+        <li data-emoji={emoji} className={liClassNames} {...props}>
             {content}
         </li>
     )
