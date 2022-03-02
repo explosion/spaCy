@@ -293,6 +293,11 @@ def pl_tokenizer():
 
 
 @pytest.fixture(scope="session")
+def pl_vocab():
+    return get_lang_class("pl")().vocab
+
+
+@pytest.fixture(scope="session")
 def pt_tokenizer():
     return get_lang_class("pt")().tokenizer
 
