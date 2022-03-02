@@ -117,6 +117,7 @@ def make_spancat(
     scorer: Optional[Callable],
     threshold: float,
     max_positive: Optional[int],
+    save_candidates: bool = False,
 ) -> "SpanCategorizer":
     """Create a SpanCategorizer component. The span categorizer consists of two
     parts: a suggester function that proposes candidate spans, and a labeller
@@ -147,6 +148,7 @@ def make_spancat(
         max_positive=max_positive,
         name=name,
         scorer=scorer,
+        save_candidates=save_candidates,
     )
 
 
@@ -185,6 +187,7 @@ class SpanCategorizer(TrainablePipe):
         threshold: float = 0.5,
         max_positive: Optional[int] = None,
         scorer: Optional[Callable] = spancat_score,
+        save_candidates: bool = False,
     ) -> None:
         """Initialize the span categorizer.
         vocab (Vocab): The shared vocabulary.
@@ -203,6 +206,7 @@ class SpanCategorizer(TrainablePipe):
         scorer (Optional[Callable]): The scoring method. Defaults to
             Scorer.score_spans for the Doc.spans[spans_key] with overlapping
             spans allowed.
+        save_candidates (bool): Whether the candidates produced by the suggester should be saved seperately for debugging or further processing
 
         DOCS: https://spacy.io/api/spancategorizer#init
         """
@@ -217,6 +221,7 @@ class SpanCategorizer(TrainablePipe):
         self.model = model
         self.name = name
         self.scorer = scorer
+        self.save_candidates = save_candidates
 
     @property
     def key(self) -> str:
@@ -284,6 +289,8 @@ class SpanCategorizer(TrainablePipe):
         offset = 0
         for i, doc in enumerate(docs):
             indices_i = indices[i].dataXd
+            if self.save_candidates:
+                doc.user_data["candidates_indices"] = indices_i
             doc.spans[self.key] = self._make_span_group(
                 doc, indices_i, scores[offset : offset + indices.lengths[i]], labels  # type: ignore[arg-type]
             )
