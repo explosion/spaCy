@@ -11,8 +11,9 @@ trigger:
     exclude:
       - "website/*"
       - "*.md"
+      - ".github/workflows/*"
 pr:
-   paths:
+  paths:
     exclude:
       - "*.md"
       - "website/docs/*"

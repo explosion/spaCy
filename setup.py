@@ -81,7 +81,6 @@ COPY_FILES = {
     ROOT / "setup.cfg": PACKAGE_ROOT / "tests" / "package",
     ROOT / "pyproject.toml": PACKAGE_ROOT / "tests" / "package",
     ROOT / "requirements.txt": PACKAGE_ROOT / "tests" / "package",
-    ROOT / "website" / "meta" / "universe.json": PACKAGE_ROOT / "tests" / "universe",
 }
 
 
