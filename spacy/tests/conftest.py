@@ -222,6 +222,11 @@ def ja_tokenizer():
 
 
 @pytest.fixture(scope="session")
+def hsb_tokenizer():
+    return get_lang_class("hsb")().tokenizer
+
+
+@pytest.fixture(scope="session")
 def ko_tokenizer():
     pytest.importorskip("natto")
     return get_lang_class("ko")().tokenizer
