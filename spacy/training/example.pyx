@@ -256,6 +256,29 @@ cdef class Example:
         x_ents, x_tags = self.get_aligned_ents_and_ner()
         return x_tags
 
+    def get_matching_ents(self, check_label=True):
+        """Return entities that are shared between predicted and reference docs.
+
+        If `check_label` is True, entities must have matching labels to be
+        kept. Otherwise only the character indices need to match.
+        """
+        gold = {}
+        for ent in self.reference:
+            gold[(ent.start_char, ent.end_char)] = ent.label
+
+        keep = []
+        for ent in self.predicted:
+            key = (ent.start_char, ent.end_char)
+            if key not in gold:
+                continue
+
+            if check_label and ent.label != gold[key]:
+                continue
+
+            keep.append(ent)
+
+        return keep
+
     def to_dict(self):
         return {
             "doc_annotation": {
