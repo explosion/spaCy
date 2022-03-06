@@ -1,4 +1,4 @@
-from .coref import *
+from .coref import * #noqa
 from .entity_linker import *  # noqa
 from .multi_task import *  # noqa
 from .parser import *  # noqa
