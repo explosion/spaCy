@@ -521,3 +521,20 @@ def test_tokenizer_infix_prefix(en_vocab):
     assert tokens == ["±10", "%"]
     explain_tokens = [t[1] for t in tokenizer.explain("±10%")]
     assert tokens == explain_tokens
+
+
+@pytest.mark.issue(10086)
+def test_issue10086(en_tokenizer):
+    """Test special case works when part of infix substring."""
+    text = "No--don't see"
+
+    # without heuristics: do n't
+    en_tokenizer.with_faster_rules_heuristics = False
+    doc = en_tokenizer(text)
+    assert "n't" in [w.text for w in doc]
+    assert "do" in [w.text for w in doc]
+
+    # with (default) heuristics: don't
+    en_tokenizer.with_faster_rules_heuristics = True
+    doc = en_tokenizer(text)
+    assert "don't" in [w.text for w in doc]
