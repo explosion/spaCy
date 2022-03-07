@@ -1,6 +1,6 @@
+from typing import Any, Dict, List, Optional, Union
 import uuid
 import itertools
-from typing import Any, Dict, List, Optional, Tuple, Union, Set
 
 from ..errors import Errors
 from ..util import escape_html, minify_html, registry
