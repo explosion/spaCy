@@ -620,6 +620,8 @@ cdef class Tokenizer:
     def _reload_special_cases(self):
         self._flush_cache()
         self._flush_specials()
+        self._cache = PreshMap()
+        self._specials = PreshMap()
         self._load_special_cases(self._rules)
 
     def explain(self, text):
