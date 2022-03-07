@@ -204,8 +204,8 @@ The span visualizer lets you customize the following `options`:
 | `kb_url_template` | Optional template to construct the KB url for the entity to link to. Expects a python f-string format with single field to fill in ~~Optional[str]~~                    |
 | `colors`          | Color overrides. Entity types should be mapped to color names or values. ~~Dict[str, str]~~ |
 
-Because spans can be stored across different `spans_key`, you need to supply
-which key should displaCy render (with `sc` as the default). 
+Because spans can be stored across different keys in `doc.spans`, you need to specify
+which one displaCy should use with `spans_key` (`sc` is the default). 
 
 > #### Options example
 >
