@@ -117,7 +117,7 @@ def make_spancat(
     spans_key: str,
     scorer: Optional[Callable],
     threshold: float,
-    max_positive: Optional[int]
+    max_positive: Optional[int],
 ) -> "SpanCategorizer":
     """Create a SpanCategorizer component. The span categorizer consists of two
     parts: a suggester function that proposes candidate spans, and a labeller
@@ -147,7 +147,7 @@ def make_spancat(
         threshold=threshold,
         max_positive=max_positive,
         name=name,
-        scorer=scorer
+        scorer=scorer,
     )
 
 
@@ -185,7 +185,7 @@ class SpanCategorizer(TrainablePipe):
         spans_key: str = "spans",
         threshold: float = 0.5,
         max_positive: Optional[int] = None,
-        scorer: Optional[Callable] = spancat_score
+        scorer: Optional[Callable] = spancat_score,
     ) -> None:
         """Initialize the span categorizer.
         vocab (Vocab): The shared vocabulary.
@@ -274,13 +274,16 @@ class SpanCategorizer(TrainablePipe):
 
     def suggest_candidates(self, docs: Iterable[Doc]):
         """Use the suggester to produce a list of span candidate indices
-        
+
         docs (Iterable[Doc]): The documents to predict.
         RETURNS: A list of indices.
 
         DOCS: WIP
         """
-        return self.suggester(docs, ops=self.model.ops)
+        suggester_output = self.suggester(docs, ops=self.model.ops)
+        candidates = self.model.ops.unflatten(suggester_output.dataXd, suggester_output.lengths)  # type: ignore
+
+        return candidates
 
     def set_annotations(self, docs: Iterable[Doc], indices_scores) -> None:
         """Modify a batch of Doc objects, using pre-computed scores.
@@ -388,7 +391,7 @@ class SpanCategorizer(TrainablePipe):
         # If the prediction is 0.9 and it's false, the gradient will be
         # 0.9 (0.9 - 0.0)
         d_scores = scores - target
-        loss = float((d_scores**2).sum())
+        loss = float((d_scores ** 2).sum())
         return loss, d_scores
 
     def initialize(

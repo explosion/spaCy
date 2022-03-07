@@ -403,7 +403,7 @@ def test_suggest_candidates():
     nlp = Language()
     spancat = nlp.add_pipe("spancat", config={"spans_key": SPAN_KEY})
     train_examples = make_examples(nlp)
-    optimizer = nlp.initialize(get_examples=lambda: train_examples)
+    nlp.initialize(get_examples=lambda: train_examples)
     texts = [
         "Just a sentence.",
         "I like London and Berlin",
@@ -412,5 +412,6 @@ def test_suggest_candidates():
     ]
     docs = [nlp(text) for text in texts]
     candidates = spancat.suggest_candidates(docs)
-    print(candidates)
 
+    assert len(candidates) == len(texts)
+    assert type(candidates) == list
