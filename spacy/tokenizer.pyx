@@ -299,7 +299,7 @@ cdef class Tokenizer:
         spans = [doc[match.start:match.end] for match in filtered]
         cdef bint modify_in_place = True
         cdef int curr_length = doc.length
-        cdef int max_length
+        cdef int max_length = 0
         cdef int span_length_diff = 0
         span_data = {}
         for span in spans:
