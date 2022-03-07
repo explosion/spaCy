@@ -97,3 +97,7 @@ def test_overfitting_IO():
     ]
     assert_equal(batch_deps_1, batch_deps_2)
     assert_equal(batch_deps_1, no_batch_deps)
+
+    # test internal pipe labels vs. Language.pipe_labels with hidden labels
+    assert nlp.get_pipe("senter").labels == ("I", "S")
+    assert "senter" not in nlp.pipe_labels

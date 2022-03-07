@@ -156,6 +156,11 @@ def fr_tokenizer():
 
 
 @pytest.fixture(scope="session")
+def fr_vocab():
+    return get_lang_class("fr")().vocab
+
+
+@pytest.fixture(scope="session")
 def ga_tokenizer():
     return get_lang_class("ga")().tokenizer
 
@@ -206,6 +211,11 @@ def it_tokenizer():
 
 
 @pytest.fixture(scope="session")
+def it_vocab():
+    return get_lang_class("it")().vocab
+
+
+@pytest.fixture(scope="session")
 def ja_tokenizer():
     pytest.importorskip("sudachipy")
     return get_lang_class("ja")().tokenizer
@@ -215,6 +225,19 @@ def ja_tokenizer():
 def ko_tokenizer():
     pytest.importorskip("natto")
     return get_lang_class("ko")().tokenizer
+
+
+@pytest.fixture(scope="session")
+def ko_tokenizer_tokenizer():
+    config = {
+        "nlp": {
+            "tokenizer": {
+                "@tokenizers": "spacy.Tokenizer.v1",
+            }
+        }
+    }
+    nlp = get_lang_class("ko").from_config(config)
+    return nlp.tokenizer
 
 
 @pytest.fixture(scope="session")

@@ -6,6 +6,11 @@ can help generate the best possible configuration, given a user's requirements. 
 [paths]
 train = null
 dev = null
+{% if use_transformer or optimize == "efficiency" or not word_vectors -%}
+vectors = null
+{% else -%}
+vectors = "{{ word_vectors }}"
+{% endif -%}
 
 [system]
 {% if use_transformer -%}
@@ -126,7 +131,7 @@ incl_context = true
 incl_prior = true
 
 [components.entity_linker.model]
-@architectures = "spacy.EntityLinker.v1"
+@architectures = "spacy.EntityLinker.v2"
 nO = null
 
 [components.entity_linker.model.tok2vec]
@@ -298,7 +303,7 @@ incl_context = true
 incl_prior = true
 
 [components.entity_linker.model]
-@architectures = "spacy.EntityLinker.v1"
+@architectures = "spacy.EntityLinker.v2"
 nO = null
 
 [components.entity_linker.model.tok2vec]
@@ -421,8 +426,4 @@ compound = 1.001
 {% endif %}
 
 [initialize]
-{% if use_transformer or optimize == "efficiency" or not word_vectors -%}
 vectors = ${paths.vectors}
-{% else -%}
-vectors = "{{ word_vectors }}"
-{% endif -%}

@@ -483,7 +483,7 @@ class Errors(metaclass=ErrorsWithCodes):
             "components, since spans are only views of the Doc. Use Doc and "
             "Token attributes (or custom extension attributes) only and remove "
             "the following: {attrs}")
-    E181 = ("Received invalid attributes for unkown object {obj}: {attrs}. "
+    E181 = ("Received invalid attributes for unknown object {obj}: {attrs}. "
             "Only Doc and Token attributes are supported.")
     E182 = ("Received invalid attribute declaration: {attr}\nDid you forget "
             "to define the attribute? For example: `{attr}.???`")
@@ -566,9 +566,6 @@ class Errors(metaclass=ErrorsWithCodes):
     E879 = ("Unexpected type for 'spans' data. Provide a dictionary mapping keys to "
             "a list of spans, with each span represented by a tuple (start_char, end_char). "
             "The tuple can be optionally extended with a label and a KB ID.")
-    E880 = ("The 'wandb' library could not be found - did you install it? "
-            "Alternatively, specify the 'ConsoleLogger' in the 'training.logger' "
-            "config section, instead of the 'WandbLogger'.")
     E884 = ("The pipeline could not be initialized because the vectors "
             "could not be found at '{vectors}'. If your pipeline was already "
             "initialized/trained before, call 'resume_training' instead of 'initialize', "
@@ -888,10 +885,13 @@ class Errors(metaclass=ErrorsWithCodes):
     E1021 = ("`pos` value \"{pp}\" is not a valid Universal Dependencies tag. "
              "Non-UD tags should use the `tag` property.")
     E1022 = ("Words must be of type str or int, but input is of type '{wtype}'")
-    E1023 = ("Couldn't read EntityRuler from the {path}. This file doesn't exist.")
-    E1024 = ("A pattern with ID \"{ent_id}\" is not present in EntityRuler patterns.")
+    E1023 = ("Couldn't read EntityRuler from the {path}. This file doesn't "
+             "exist.")
+    E1024 = ("A pattern with ID \"{ent_id}\" is not present in EntityRuler "
+             "patterns.")
+    E1025 = ("Cannot intify the value '{value}' as an IOB string. The only "
+             "supported values are: 'I', 'O', 'B' and ''")
     
-
 
 # Deprecated model shortcuts, only used in errors and warnings
 OLD_MODEL_SHORTCUTS = {

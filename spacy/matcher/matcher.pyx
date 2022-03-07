@@ -18,7 +18,7 @@ from ..tokens.doc cimport Doc, get_token_attr_for_matcher
 from ..tokens.span cimport Span
 from ..tokens.token cimport Token
 from ..tokens.morphanalysis cimport MorphAnalysis
-from ..attrs cimport ID, attr_id_t, NULL_ATTR, ORTH, POS, TAG, DEP, LEMMA, MORPH
+from ..attrs cimport ID, attr_id_t, NULL_ATTR, ORTH, POS, TAG, DEP, LEMMA, MORPH, ENT_IOB
 
 from ..schemas import validate_token_pattern
 from ..errors import Errors, MatchPatternError, Warnings
@@ -798,7 +798,10 @@ def _get_attr_values(spec, string_store):
                 attr = "SENT_START"
             attr = IDS.get(attr)
         if isinstance(value, str):
-            value = string_store.add(value)
+            if attr == ENT_IOB and value in Token.iob_strings():
+                value = Token.iob_strings().index(value)
+            else:
+                value = string_store.add(value)
         elif isinstance(value, bool):
             value = int(value)
         elif isinstance(value, int):

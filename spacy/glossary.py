@@ -310,7 +310,6 @@ GLOSSARY = {
     "re": "repeated element",
     "rs": "reported speech",
     "sb": "subject",
-    "sb": "subject",
     "sbp": "passivized subject (PP)",
     "sp": "subject or predicate",
     "svp": "separable verb prefix",

@@ -567,6 +567,7 @@ def test_doc_api_from_docs(en_tokenizer, de_tokenizer):
         "Merging the docs is fun.",
         "",
         "They don't think alike. ",
+        "",
         "Another doc.",
     ]
     en_texts_without_empty = [t for t in en_texts if len(t)]
@@ -574,9 +575,9 @@ def test_doc_api_from_docs(en_tokenizer, de_tokenizer):
     en_docs = [en_tokenizer(text) for text in en_texts]
     en_docs[0].spans["group"] = [en_docs[0][1:4]]
     en_docs[2].spans["group"] = [en_docs[2][1:4]]
-    en_docs[3].spans["group"] = [en_docs[3][0:1]]
+    en_docs[4].spans["group"] = [en_docs[4][0:1]]
     span_group_texts = sorted(
-        [en_docs[0][1:4].text, en_docs[2][1:4].text, en_docs[3][0:1].text]
+        [en_docs[0][1:4].text, en_docs[2][1:4].text, en_docs[4][0:1].text]
     )
     de_doc = de_tokenizer(de_text)
     Token.set_extension("is_ambiguous", default=False)
@@ -683,6 +684,7 @@ def test_has_annotation(en_vocab):
     attrs = ("TAG", "POS", "MORPH", "LEMMA", "DEP", "HEAD", "ENT_IOB", "ENT_TYPE")
     for attr in attrs:
         assert not doc.has_annotation(attr)
+        assert not doc.has_annotation(attr, require_complete=True)
 
     doc[0].tag_ = "A"
     doc[0].pos_ = "X"
@@ -703,6 +705,27 @@ def test_has_annotation(en_vocab):
     doc[1].dep_ = "dep"
     doc.ents = [Span(doc, 0, 2, label="HELLO")]
 
+    for attr in attrs:
+        assert doc.has_annotation(attr)
+        assert doc.has_annotation(attr, require_complete=True)
+
+
+def test_has_annotation_sents(en_vocab):
+    doc = Doc(en_vocab, words=["Hello", "beautiful", "world"])
+    attrs = ("SENT_START", "IS_SENT_START", "IS_SENT_END")
+    for attr in attrs:
+        assert not doc.has_annotation(attr)
+        assert not doc.has_annotation(attr, require_complete=True)
+
+    # The first token (index 0) is always assumed to be a sentence start,
+    # and ignored by the check in doc.has_annotation
+
+    doc[1].is_sent_start = False
+    for attr in attrs:
+        assert doc.has_annotation(attr)
+        assert not doc.has_annotation(attr, require_complete=True)
+
+    doc[2].is_sent_start = False
     for attr in attrs:
         assert doc.has_annotation(attr)
         assert doc.has_annotation(attr, require_complete=True)
