@@ -1,8 +1,5 @@
 blank_issues_enabled: false
 contact_links:
-  - name: ⚠️ Python 3.10 Support
-    url: https://github.com/explosion/spaCy/discussions/9418
-    about: Python 3.10 wheels haven't been released yet, see the link for details.
   - name: 🗯 Discussions Forum
     url: https://github.com/explosion/spaCy/discussions
     about: Install issues, usage questions, general discussion and anything else that isn't a bug report.
