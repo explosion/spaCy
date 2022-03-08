@@ -202,7 +202,7 @@ the data to and from a JSON file.
 > rules _with_ the component data.
 
 ```python
-### {highlight="14-19,21-26"}
+### {highlight="16-23,25-30"}
 from spacy.util import ensure_path
 
 @Language.factory("my_component")

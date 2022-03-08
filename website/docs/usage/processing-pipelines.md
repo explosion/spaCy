@@ -1081,7 +1081,7 @@ on [serialization methods](/usage/saving-loading/#serialization-methods).
 > directory.
 
 ```python
-### Custom serialization methods {highlight="6-7,9-11"}
+### Custom serialization methods {highlight="7-11,13-15"}
 import srsly
 from spacy.util import ensure_path
 
