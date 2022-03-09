@@ -104,7 +104,7 @@ Get the number of spans in the group.
 
 ## SpanGroup.\_\_getitem\_\_ {#getitem tag="method"}
 
-Get a span from the group.
+Get a span from the group. Note, that a copy of the span is returned, so if any changes are made to this span, they are not going to be reflected in the corresponding member of the group. The group will need to be re-assigned for changes to be applied.
 
 > #### Example
 >
@@ -113,12 +113,55 @@ Get a span from the group.
 > doc.spans["errors"] = [doc[0:1], doc[2:4]]
 > span = doc.spans["errors"][1]
 > assert span.text == "goi ng"
+> span.label_ = 'LABEL'
+> assert doc.spans["errors"][1] != 'LABEL' # The span within the group was not updated
 > ```
 
 | Name        | Description                           |
 | ----------- | ------------------------------------- |
 | `i`         | The item index. ~~int~~               |
 | **RETURNS** | The span at the given index. ~~Span~~ |
+
+
+## SpanGroup.\_\_setitem\_\_ {#setitem tag="method", new="3.2.1"}
+
+Sets a span in the group
+
+> #### Example
+>
+> ```python
+> doc = nlp("Their goi ng home")
+> doc.spans["errors"] = [doc[0:1], doc[2:4]]
+> span = doc[0:2]
+> doc.spans["errors"][0] = span
+> assert doc.spans["errors"][0].text == "Their goi"
+> ```
+
+| Name        | Description                           |
+| ----------- | ------------------------------------- |
+| `i`         | The item index. ~~int~~               |
+| `span`      | The new value.  ~~Span~~              |
+| **RETURNS** | Does not return anything |
+
+
+## SpanGroup.\_\_delitem\_\_ {#delitem tag="method"}
+
+Deletes a span from the group
+
+> #### Example
+>
+> ```python
+> doc = nlp("Their goi ng home")
+> doc.spans["errors"] = [doc[0:1], doc[2:4]]
+> del doc.spans[0]
+> assert len(doc.spans["errors"]) == 1
+> ```
+
+| Name        | Description                           |
+| ----------- | ------------------------------------- |
+| `i`         | The item index. ~~int~~               |
+| **RETURNS** | Does not return anything |
+
 
 ## SpanGroup.append {#append tag="method"}
 
@@ -140,7 +183,7 @@ Add a [`Span`](/api/span) object to the group. The span must refer to the same
 
 ## SpanGroup.extend {#extend tag="method"}
 
-Add multiple [`Span`](/api/span) objects to the group. All spans must refer to
+Add multiple [`Span`](/api/span) objects or contents of another `SpanGroup` to the group. All spans must refer to
 the same [`Doc`](/api/doc) object as the span group.
 
 > #### Example
@@ -150,6 +193,8 @@ the same [`Doc`](/api/doc) object as the span group.
 > doc.spans["errors"] = []
 > doc.spans["errors"].extend([doc[2:4], doc[0:1]])
 > assert len(doc.spans["errors"]) == 2
+> span_group = SpanGroup([doc[1:4], doc[0:3])
+> doc.spans["errors"].extend(span_group)
 > ```
 
 | Name    | Description                          |
@@ -193,3 +238,158 @@ it.
 | ------------ | ------------------------------------- |
 | `bytes_data` | The data to load from. ~~bytes~~      |
 | **RETURNS**  | The `SpanGroup` object. ~~SpanGroup~~ |
+
+
+
+## SpanGroup.sort {#sort tag="method"}
+
+Sort spans in the group. Sorts by (span.start, span.end) by default. Gives an option to sort by span.start first, and then descending by length
+
+> #### Example
+>
+> ```python
+> from spacy.tokens import SpanGroup
+>
+> doc = nlp("Their goi ng home")
+> doc.spans["errors"] = [doc[2:4], doc[0:3]]
+> new_group = doc.spans["errors"].sort()
+> # Inplace
+> doc.spans["errors"].sort(inplace = True)
+> # Prefer longest when start is the same
+> doc.spans["errors"].sort(inplace = True, prefer_longest = True)
+> ```
+
+| Name         | Description                           |
+| ------------ | ------------------------------------- |
+| `inplace`    | Indicates if the sort should be performed inplace or on a copy.   ~~bool~~  |
+| `prefer_longest`| Sort order (Always sort by span.start first, if this flag is on, then longest spans come first).   ~~bool~~|
+| **RETURNS**  | The `SpanGroup` object. Either `self ` or a copy, depending on `inplace` value.    ~~SpanGroup~~|
+
+## SpanGroup.clone {#clone tag="method"}
+
+Creates a copy of `self` efficiently
+
+> #### Example
+>
+> ```python
+> from spacy.tokens import SpanGroup
+>
+> doc = nlp("Their goi ng home")
+> doc.spans["errors"] = [doc[2:4], doc[0:3]]
+> new_group = doc.spans["errors"].clone()
+> ```
+
+| Name         | Description                           |
+| ------------ | ------------------------------------- |
+| **RETURNS**  | The `SpanGroup` object.    ~~SpanGroup~~|
+
+## SpanGroup.filter_spans {#filter_spans tag="method"}
+
+Filter a sequence of spans and remove duplicates or overlaps. When spans overlap, the (first) longest span is preferred over shorter spans.
+
+> #### Example
+>
+> ```python
+> from spacy.tokens import SpanGroup
+>
+> doc = nlp("Their goi ng home")
+> doc.spans["errors"] = [doc[2:4], doc[0:3]]
+> new_group = doc.spans["errors"].filter_spans()
+> # Inplace
+> doc.spans["errors"].filter_spans(inplace = True)
+> ```
+
+| Name         | Description                           |
+| ------------ | ------------------------------------- |
+| `inplace`    | Indicates if the operation should be performed inplace or on a copy.    ~~bool~~  |
+| **RETURNS**  | The `SpanGroup` object. Either `self ` or a copy, depending on `inplace` value.    ~~SpanGroup~~|
+
+
+## SpanGroup.get_overlaps {#get_overlaps tag="method"}
+
+Selects spans from self that are overlapping with the given span. Returns a copy of self with selected spans only.
+
+> #### Example
+>
+> ```python
+> from spacy.tokens import SpanGroup
+>
+> doc = nlp("Their goi ng home")
+> doc.spans["errors"] = [doc[2:4], doc[0:3]]
+> new_group = doc.spans["errors"].get_overlaps()
+> # Full overlaps only
+> new_group = doc.spans["errors"].filter_spans(exclude_partial = True)
+> # Do not exclude given span (if it is in the group)
+> new_group = doc.spans["errors"].filter_spans(exclude_self = False)
+> ```
+
+| Name         | Description                           |
+| ------------ | ------------------------------------- |
+| `exclude_self`| Indicates if the given span should be excluded from the result, if that span belongs to the group. The equality is determined by value (compatible with `Span.__richcmp__`). Default is `True`.    ~~bool~~  |
+| `exclude_partial`| Indicates if partial overlaps should be included in the result. If `False` then only spans containing the given span are inclluded in the result. Default is `False`.    ~~bool~~ |
+| **RETURNS**  | The `SpanGroup` object.    ~~SpanGroup~~|
+
+
+## SpanGroup.concat {#concat tag="method"}
+
+Concatenates given SpanGroup with self, either in place or creating a copy. Optionally sorts and filters spans. Preserves the name of self, updates attrs only with values that are not in self.
+
+> #### Example
+>
+> ```python
+> from spacy.tokens import SpanGroup
+>
+> doc = nlp("Their goi ng home")
+> doc.spans["errors"] = [doc[2:4], doc[0:3]]
+> new_group = doc.spans["errors"].concat([doc[3:4], doc[2:3]])
+> # Inplace
+> doc.spans["errors"].concat(new_group, inplace = True)
+> ```
+
+| Name         | Description                           |
+| ------------ | ------------------------------------- |
+| `other`      | The SpanGroup or Iterable of Span to be concatenated with.  ~~SpanGroup~~|
+| `sort_spans` | Indicates if result span group shpould be sorted. Default is `False`.    ~~bool~~ |
+| `filter_spans`| Indicates if result span group shpould be filtered. Default is `False`.    ~~bool~~ |
+| `inplace`    | Indicates if the operation should be performed in place. Default is `False`.    ~~bool~~ |
+| **RETURNS**  | The `SpanGroup` object. Either `self` or a copy, depending on `inplace` argument.    ~~SpanGroup~~|
+
+## SpanGroup.\_\_add\_\_ {#add tag="method"}
+
+Appends an iterable of `Spans` or content of a `SpanGroup` to self and returns the result in a new `SpanGroup`. Equivalent to `concat` with `inplace = False`
+
+> #### Example
+>
+> ```python
+> doc = nlp("Their goi ng home")
+> doc.spans["errors"] = [doc[0:1], doc[2:4]]
+> span_group = doc.spans["errors"] + [doc[3:4], doc[2:3]]
+> assert len(span_group) == 4 
+> ```
+
+| Name        | Description                           |
+| ----------- | ------------------------------------- |
+| `other`     | A `SpanGroup` or an Iterable of `Span`. ~~SpanGroup~~               |
+| **RETURNS** | A new `SpanGroup`. ~~SpanGroup~~ |
+
+
+
+## SpanGroup.\_\_iadd\_\_ {#iadd tag="method"}
+
+Appends an iterable of `Spans` or content of a `SpanGroup` to self. Equivalent to `concat` with `inplace = True`
+
+> #### Example
+>
+> ```python
+> doc = nlp("Their goi ng home")
+> doc.spans["errors"] = [doc[0:1], doc[2:4]]
+> doc.spans["errors"] += [doc[3:4], doc[2:3]]
+> assert len(doc.spans["errors"]) == 4 
+> ```
+
+| Name        | Description                           |
+| ----------- | ------------------------------------- |
+| `other`     | A `SpanGroup` or an Iterable of `Span`. ~~SpanGroup~~               |
+| **RETURNS** | `self`. ~~SpanGroup~~ |
+
+
