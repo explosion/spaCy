@@ -226,7 +226,6 @@ cdef class Parser(TrainablePipe):
         YIELDS (Doc): Documents, in order.
         """
         cdef Doc doc
-        error_handler = self.get_error_handler()
         for batch in util.minibatch(docs, size=batch_size):
             batch_in_order = list(batch)
             try:
@@ -237,6 +236,7 @@ cdef class Parser(TrainablePipe):
                     self.set_annotations(subbatch, parse_states)
                 yield from batch_in_order
             except Exception as e:
+                error_handler = self.get_error_handler()
                 error_handler(self.name, self, batch_in_order, e)
 
 
