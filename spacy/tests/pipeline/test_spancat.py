@@ -411,7 +411,7 @@ def test_suggest_candidates():
         "I eat ham.",
     ]
     docs = [nlp(text) for text in texts]
-    candidates = spancat.suggest_candidates(docs)
+    output = spancat.suggest_candidates(docs)
 
-    assert len(candidates) == len(texts)
-    assert type(candidates) == list
+    assert len(output) == len(texts)
+    assert type(output[0].spans["candidates"]) == SpanGroup

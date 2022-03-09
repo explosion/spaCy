@@ -272,18 +272,23 @@ class SpanCategorizer(TrainablePipe):
         scores = self.model.predict((docs, indices))  # type: ignore
         return indices, scores
 
-    def suggest_candidates(self, docs: Iterable[Doc]):
-        """Use the suggester to produce a list of span candidate indices
+    def suggest_candidates(
+        self, docs: Iterable[Doc], spankey: str = "candidates"
+    ) -> List[Doc]:
+        """Use the spancat suggester to add a list of span candidates to a list of docs
 
         docs (Iterable[Doc]): The documents to predict.
-        RETURNS: A list of indices.
+        RETURNS: A list of Docs.
 
         DOCS: WIP
         """
         suggester_output = self.suggester(docs, ops=self.model.ops)
-        candidates = self.model.ops.unflatten(suggester_output.dataXd, suggester_output.lengths)  # type: ignore
 
-        return candidates
+        for candidates, doc in zip(suggester_output, docs):
+            doc.spans[spankey] = []
+            for index in candidates.dataXd:
+                doc.spans[spankey].append(doc[index[0] : index[1]])
+        return docs
 
     def set_annotations(self, docs: Iterable[Doc], indices_scores) -> None:
         """Modify a batch of Doc objects, using pre-computed scores.
@@ -391,7 +396,7 @@ class SpanCategorizer(TrainablePipe):
         # If the prediction is 0.9 and it's false, the gradient will be
         # 0.9 (0.9 - 0.0)
         d_scores = scores - target
-        loss = float((d_scores ** 2).sum())
+        loss = float((d_scores**2).sum())
         return loss, d_scores
 
     def initialize(
