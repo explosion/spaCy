@@ -511,7 +511,7 @@ cdef class Doc:
     def doc(self):
         return self
 
-    def char_span(self, int start_idx, int end_idx, label=0, kb_id=0, vector=None, alignment_mode="strict", id=0):
+    def char_span(self, int start_idx, int end_idx, label=0, kb_id=0, vector=None, alignment_mode="strict", span_id=0):
         """Create a `Span` object from the slice
         `doc.text[start_idx : end_idx]`. Returns None if no valid `Span` can be
         created.
@@ -570,7 +570,7 @@ cdef class Doc:
                 start += 1
         # Currently we have the token index, we want the range-end index
         end += 1
-        cdef Span span = Span(self, start, end, label=label, kb_id=kb_id, id=id, vector=vector)
+        cdef Span span = Span(self, start, end, label=label, kb_id=kb_id, span_id=span_id, vector=vector)
         return span
 
     def similarity(self, other):
@@ -719,20 +719,20 @@ cdef class Doc:
                 elif token.ent_iob == 2 or token.ent_iob == 0 or \
                         (token.ent_iob == 3 and token.ent_type == 0):
                     if start != -1:
-                        output.append(Span(self, start, i, label=label, kb_id=kb_id, id=ent_id))
+                        output.append(Span(self, start, i, label=label, kb_id=kb_id, span_id=ent_id))
                     start = -1
                     label = 0
                     kb_id = 0
                     ent_id = 0
                 elif token.ent_iob == 3:
                     if start != -1:
-                        output.append(Span(self, start, i, label=label, kb_id=kb_id, id=ent_id))
+                        output.append(Span(self, start, i, label=label, kb_id=kb_id, span_id=ent_id))
                     start = i
                     label = token.ent_type
                     kb_id = token.ent_kb_id
                     ent_id = token.ent_id
             if start != -1:
-                output.append(Span(self, start, self.length, label=label, kb_id=kb_id, id=ent_id))
+                output.append(Span(self, start, self.length, label=label, kb_id=kb_id, span_id=ent_id))
             # remove empty-label spans
             output = [o for o in output if o.label_ != ""]
             return tuple(output)
@@ -748,7 +748,7 @@ cdef class Doc:
                 entity_type_, kb_id, ent_start, ent_end, ent_id = get_entity_info(ent_info)
                 if isinstance(entity_type_, str):
                     self.vocab.strings.add(entity_type_)
-                span = Span(self, ent_start, ent_end, label=entity_type_, kb_id=kb_id, id=ent_id)
+                span = Span(self, ent_start, ent_end, label=entity_type_, kb_id=kb_id, span_id=ent_id)
                 ent_spans.append(span)
             self.set_ents(ent_spans, default=SetEntsDefault.outside)
 
@@ -1208,7 +1208,7 @@ cdef class Doc:
                         span_tuple[1],
                         label=span_tuple[2],
                         kb_id=span_tuple[3],
-                        id=span_tuple[4],
+                        span_id=span_tuple[4],
                 )
                 text = span_tuple[5]
                 if span is not None and span.text == text:

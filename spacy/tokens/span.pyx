@@ -80,7 +80,7 @@ cdef class Span:
         return Underscore.span_extensions.pop(name)
 
     def __cinit__(self, Doc doc, int start, int end, label=0, vector=None,
-                  vector_norm=None, kb_id=0, id=0):
+                  vector_norm=None, kb_id=0, span_id=0):
         """Create a `Span` object from the slice `doc[start : end]`.
 
         doc (Doc): The parent document.
@@ -101,8 +101,8 @@ cdef class Span:
             label = doc.vocab.strings.add(label)
         if isinstance(kb_id, str):
             kb_id = doc.vocab.strings.add(kb_id)
-        if isinstance(id, str):
-            id = doc.vocab.strings.add(id)
+        if isinstance(span_id, str):
+            span_id = doc.vocab.strings.add(span_id)
         if label not in doc.vocab.strings:
             raise ValueError(Errors.E084.format(label=label))
 
@@ -114,7 +114,7 @@ cdef class Span:
         self.c = SpanC(
             label=label,
             kb_id=kb_id,
-            id=id,
+            id=span_id,
             start=start,
             end=end,
             start_char=start_char,

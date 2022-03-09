@@ -177,7 +177,7 @@ class SpanRuler(Pipe):
                 start,
                 end,
                 label=self._match_label_id_map[m_id]["label"],
-                id=self._match_label_id_map[m_id]["id"],
+                span_id=self._match_label_id_map[m_id]["id"],
             )
             for m_id, start, end in matches
             if start != end

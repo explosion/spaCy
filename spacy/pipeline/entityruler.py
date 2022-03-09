@@ -182,7 +182,7 @@ class EntityRuler(Pipe):
             if start not in seen_tokens and end - 1 not in seen_tokens:
                 if match_id in self._ent_ids:
                     label, ent_id = self._ent_ids[match_id]
-                    span = Span(doc, start, end, label=label, id=ent_id)
+                    span = Span(doc, start, end, label=label, span_id=ent_id)
                 else:
                     span = Span(doc, start, end, label=match_id)
                 new_entities.append(span)
