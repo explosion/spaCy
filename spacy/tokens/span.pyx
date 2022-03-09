@@ -86,11 +86,14 @@ cdef class Span:
         doc (Doc): The parent document.
         start (int): The index of the first token of the span.
         end (int): The index of the first token after the span.
-        label (int or str): A label to attach to the Span, e.g. for named entities.
+        label (Union[int, str]): A label to attach to the Span, e.g. for named
+            entities.
         vector (ndarray[ndim=1, dtype='float32']): A meaning representation
             of the span.
         vector_norm (float): The L2 norm of the span's vector representation.
-        kb_id (uint64): An identifier from a Knowledge Base to capture the meaning of a named entity.
+        kb_id (Union[int, str]): An identifier from a Knowledge Base to capture
+            the meaning of a named entity.
+        span_id (Union[int, str]): An identifier to associate with the span.
 
         DOCS: https://spacy.io/api/span#init
         """

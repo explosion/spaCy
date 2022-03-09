@@ -27,6 +27,7 @@ Create a `Span` object from the slice `doc[start : end]`.
 | `vector`      | A meaning representation of the span. ~~numpy.ndarray[ndim=1, dtype=float32]~~          |
 | `vector_norm` | The L2 norm of the document's vector representation. ~~float~~                          |
 | `kb_id`       | A knowledge base ID to attach to the span, e.g. for named entities. ~~Union[str, int]~~ |
+| `span_id`     | An ID to associate with the span ~~Union[str, int]~~                                    |
 
 ## Span.\_\_getitem\_\_ {#getitem tag="method"}
 
@@ -520,12 +521,13 @@ sent = doc[sent.start : max(sent.end, span.end)]
 
 ## Span.sents {#sents tag="property" model="sentences" new="3.2.1"}
 
-Returns a generator over the sentences the span belongs to. This property is only available
-when [sentence boundaries](/usage/linguistic-features#sbd) have been set on the
-document by the `parser`, `senter`, `sentencizer` or some custom function. It
-will raise an error otherwise.
+Returns a generator over the sentences the span belongs to. This property is
+only available when [sentence boundaries](/usage/linguistic-features#sbd) have
+been set on the document by the `parser`, `senter`, `sentencizer` or some custom
+function. It will raise an error otherwise.
 
-If the span happens to cross sentence boundaries, all sentences the span overlaps with will be returned.
+If the span happens to cross sentence boundaries, all sentences the span
+overlaps with will be returned.
 
 > #### Example
 >
