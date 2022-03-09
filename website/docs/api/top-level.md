@@ -423,7 +423,7 @@ and the accuracy scores on the development set.
 The built-in, default logger is the ConsoleLogger, which prints results to the
 console in tabular format. The
 [spacy-loggers](https://github.com/explosion/spacy-loggers) package, included as
-a dependency of spaCy, enables other loggers: currently it provides one that
+a dependency of spaCy, enables other loggers, such as one that
 sends results to a [Weights & Biases](https://www.wandb.com/) dashboard.
 
 Instead of using one of the built-in loggers, you can
