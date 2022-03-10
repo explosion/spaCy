@@ -125,7 +125,7 @@ changes to be reflected in the span group.
 | `i`         | The item index. ~~int~~               |
 | **RETURNS** | The span at the given index. ~~Span~~ |
 
-## SpanGroup.\_\_setitem\_\_ {#setitem tag="method", new="3.3.0"}
+## SpanGroup.\_\_setitem\_\_ {#setitem tag="method", new="3.3"}
 
 Set a span in the span group.
 
@@ -145,7 +145,7 @@ Set a span in the span group.
 | `span`      | The new value. ~~Span~~  |
 | **RETURNS** | Does not return anything |
 
-## SpanGroup.\_\_delitem\_\_ {#delitem tag="method", new="3.3.0"}
+## SpanGroup.\_\_delitem\_\_ {#delitem tag="method", new="3.3"}
 
 Delete a span from the span group.
 
@@ -162,7 +162,7 @@ Delete a span from the span group.
 | ---- | ----------------------- |
 | `i`  | The item index. ~~int~~ |
 
-## SpanGroup.\_\_add\_\_ {#add tag="method", new="3.3.0"}
+## SpanGroup.\_\_add\_\_ {#add tag="method", new="3.3"}
 
 Concatenate the current span group with another span group and returns the
 result in a new span group. Any `attrs` from the first span group will have
@@ -183,7 +183,7 @@ precedence over `attrs` in the second.
 | `other`     | The span group or spans to concatenate. ~~Union[SpanGroup, Iterable[Span]]~~ |
 | **RETURNS** | The new span group. ~~SpanGroup~~                                            |
 
-## SpanGroup.\_\_iadd\_\_ {#iadd tag="method", new="3.3.0"}
+## SpanGroup.\_\_iadd\_\_ {#iadd tag="method", new="3.3"}
 
 Append an iterable of spans or the content of a span group to the current span
 group. Any `attrs` in the other span group will be added for keys that are not
