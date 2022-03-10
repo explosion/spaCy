@@ -280,7 +280,7 @@ class SpanCategorizer(TrainablePipe):
         docs (Iterable[Doc]): The documents to modify.
         candidates_key (str): Key of the Doc.spans dict to save the candidate spans under.
 
-        DOCS: WIP
+        DOCS: https://spacy.io/api/spancategorizer#set_candidates
         """
         suggester_output = self.suggester(docs, ops=self.model.ops)
 

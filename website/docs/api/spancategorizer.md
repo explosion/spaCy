@@ -239,7 +239,7 @@ Delegates to [`predict`](/api/spancategorizer#predict) and
 | `losses`       | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~ |
 | **RETURNS**    | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                    |
 
-## SpanCategorizer.set_candidates {#set_candidates tag="method"}
+## SpanCategorizer.set_candidates {#set_candidates tag="method", new="3.3"}
 
 Use the suggester to add a list of [`Span`](/api/span) candidates to a list of [`Doc`](/api/doc) objects.
 
