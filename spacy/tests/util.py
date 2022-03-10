@@ -94,14 +94,3 @@ def assert_packed_msg_equal(b1, b2):
     for (k1, v1), (k2, v2) in zip(sorted(msg1.items()), sorted(msg2.items())):
         assert k1 == k2
         assert v1 == v2
-
-
-def span_lists_equal(spans_1, spans_2):
-    """Compares two lists of spans or two SpanGroups"""
-    result = len(spans_1) == len(spans_2)
-    if result:
-        for span_1, span_2 in zip(spans_1, spans_2):
-            result &= span_1 == span_2
-            if not result:
-                break
-    return result

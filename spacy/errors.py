@@ -520,6 +520,9 @@ class Errors(metaclass=ErrorsWithCodes):
     E202 = ("Unsupported {name} mode '{mode}'. Supported modes: {modes}.")
 
     # New errors added in v3.x
+    E856 = ("Invalid {obj}: {obj} is not from the same doc.")
+    E857 = ("Error accessing span at position {i}: out of bounds in span group "
+            "of length {length}.")
     E858 = ("The {mode} vector table does not support this operation. "
             "{alternative}")
     E859 = ("The floret vector table cannot be modified.")
