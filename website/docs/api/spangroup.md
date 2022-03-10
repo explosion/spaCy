@@ -242,9 +242,9 @@ group.
 | ------- | ------------------------------------ |
 | `spans` | The spans to add. ~~Iterable[Span]~~ |
 
-## SpanGroup.copy {#copy tag="method"}
+## SpanGroup.copy {#copy tag="method", new="3.3"}
 
-Returns a copy of the span group.
+Return a copy of the span group.
 
 > #### Example
 >
