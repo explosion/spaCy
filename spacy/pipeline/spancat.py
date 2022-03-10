@@ -275,7 +275,8 @@ class SpanCategorizer(TrainablePipe):
     def set_candidates(
         self, docs: Iterable[Doc], *, candidates_key: str = "candidates"
     ) -> None:
-        """Use the spancat suggester to add a list of span candidates to a list of docs
+        """Use the spancat suggester to add a list of span candidates to a list of docs.
+        This method is intended to be used for debugging purposes.
 
         docs (Iterable[Doc]): The documents to modify.
         candidates_key (str): Key of the Doc.spans dict to save the candidate spans under.

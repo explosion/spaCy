@@ -241,7 +241,7 @@ Delegates to [`predict`](/api/spancategorizer#predict) and
 
 ## SpanCategorizer.set_candidates {#set_candidates tag="method", new="3.3"}
 
-Use the suggester to add a list of [`Span`](/api/span) candidates to a list of [`Doc`](/api/doc) objects.
+Use the suggester to add a list of [`Span`](/api/span) candidates to a list of [`Doc`](/api/doc) objects. This method is intended to be used for debugging purposes.
 
 > #### Example
 >
