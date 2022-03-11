@@ -6,7 +6,6 @@ import srsly
 
 from spacy.errors import Errors
 from .span cimport Span
-from ..structs cimport SpanC
 
 
 cdef class SpanGroup:
