@@ -3,8 +3,12 @@
         {
             "id": "spacypdfreader",
             "title": "spadypdfreader",
-            "category": ["pipeline"],
-            "tags": ["PDF"],
+            "category": [
+                "pipeline"
+            ],
+            "tags": [
+                "PDF"
+            ],
             "slogan": "Easy PDF to text to spaCy text extraction in Python.",
             "description": "*spacypdfreader* is a Python library that allows you to convert PDF files directly into *spaCy* `Doc` objects. The library provides several built in parsers or bring your own parser. `Doc` objects are annotated with several custom attributes including: `token._.page_number`, `doc._.page_range`, `doc._.first_page`, `doc._.last_page`, `doc._.pdf_file_name`, and `doc._.page(int)`.",
             "github": "SamEdwardes/spacypdfreader",
@@ -61,8 +65,16 @@
                 "twitter": "cloud_nlp",
                 "website": "https://nlpcloud.io"
             },
-            "category": ["apis", "nonpython", "standalone"],
-            "tags": ["api", "deploy", "production"]
+            "category": [
+                "apis",
+                "nonpython",
+                "standalone"
+            ],
+            "tags": [
+                "api",
+                "deploy",
+                "production"
+            ]
         },
         {
             "id": "eMFDscore",
@@ -87,8 +99,15 @@
                 "github": "medianeuroscience",
                 "twitter": "medianeuro"
             },
-            "category": ["research", "teaching"],
-            "tags": ["morality", "dictionary", "sentiment"]
+            "category": [
+                "research",
+                "teaching"
+            ],
+            "tags": [
+                "morality",
+                "dictionary",
+                "sentiment"
+            ]
         },
         {
             "id": "skweak",
@@ -140,7 +159,12 @@
                 "github": "plison",
                 "website": "https://www.nr.no/~plison"
             },
-            "category": ["pipeline", "standalone", "research", "training"],
+            "category": [
+                "pipeline",
+                "standalone",
+                "research",
+                "training"
+            ],
             "tags": [],
             "spacy_version": 3
         },
@@ -164,7 +188,9 @@
                 "github": "jaidevd",
                 "twitter": "jaidevd"
             },
-            "category": ["standalone"]
+            "category": [
+                "standalone"
+            ]
         },
         {
             "id": "spikex",
@@ -190,7 +216,10 @@
                 "for span in doc._.wiki_spans:",
                 "   print(span._.wiki_pages)"
             ],
-            "category": ["pipeline", "standalone"],
+            "category": [
+                "pipeline",
+                "standalone"
+            ],
             "author": "Erre Quadro",
             "author_links": {
                 "github": "erre-quadro",
@@ -217,7 +246,10 @@
                 "# inspect the raw data from DBpedia spotlight",
                 "print(doc.ents[0]._.dbpedia_raw_result)"
             ],
-            "category": ["models", "pipeline"],
+            "category": [
+                "models",
+                "pipeline"
+            ],
             "author": "Martino Mensio",
             "author_links": {
                 "twitter": "MartinoMensio",
@@ -254,8 +286,13 @@
                 "github": "SamEdwardes",
                 "website": "https://samedwardes.com"
             },
-            "category": ["pipeline"],
-            "tags": ["sentiment", "textblob"],
+            "category": [
+                "pipeline"
+            ],
+            "tags": [
+                "sentiment",
+                "textblob"
+            ],
             "spacy_version": 3
         },
         {
@@ -265,7 +302,9 @@
             "description": "[Ray](https://ray.io/) is a fast and simple framework for building and running **distributed applications**. This very lightweight extension package lets you use Ray for parallel and distributed training with spaCy. If `spacy-ray` is installed in the same environment as spaCy, it will automatically add `spacy ray` commands to your spaCy CLI.",
             "github": "explosion/spacy-ray",
             "pip": "spacy-ray",
-            "category": ["training"],
+            "category": [
+                "training"
+            ],
             "author": "Explosion / Anyscale",
             "thumb": "https://i.imgur.com/7so6ZpS.png"
         },
@@ -286,7 +325,10 @@
                 "# use the similarity method that is based on the vectors, on Doc, Span or Token",
                 "print(doc_1.similarity(doc_2[0:7]))"
             ],
-            "category": ["models", "pipeline"],
+            "category": [
+                "models",
+                "pipeline"
+            ],
             "author": "Martino Mensio",
             "author_links": {
                 "twitter": "MartinoMensio",
@@ -301,7 +343,9 @@
             "github": "explosion/spacy-streamlit",
             "description": "This package contains utilities for visualizing spaCy models and building interactive spaCy-powered apps with [Streamlit](https://streamlit.io). It includes various building blocks you can use in your own Streamlit app, like visualizers for **syntactic dependencies**, **named entities**, **text classification**, **semantic similarity** via word vectors, token attributes, and more.",
             "pip": "spacy-streamlit",
-            "category": ["visualizers"],
+            "category": [
+                "visualizers"
+            ],
             "thumb": "https://i.imgur.com/mhEjluE.jpg",
             "image": "https://user-images.githubusercontent.com/13643239/85388081-f2da8700-b545-11ea-9bd4-e303d3c5763c.png",
             "code_example": [
@@ -344,8 +388,13 @@
                 "twitter": "gandersen101",
                 "github": "gandersen101"
             },
-            "category": ["pipeline"],
-            "tags": ["fuzzy-matching", "regex"]
+            "category": [
+                "pipeline"
+            ],
+            "tags": [
+                "fuzzy-matching",
+                "regex"
+            ]
         },
         {
             "id": "spacy-universal-sentence-encoder",
@@ -364,7 +413,10 @@
                 "# use the similarity method that is based on the vectors, on Doc, Span or Token",
                 "print(doc_1.similarity(doc_2[0:7]))"
             ],
-            "category": ["models", "pipeline"],
+            "category": [
+                "models",
+                "pipeline"
+            ],
             "author": "Martino Mensio",
             "author_links": {
                 "twitter": "MartinoMensio",
@@ -391,7 +443,10 @@
                 "emb = lang[words]",
                 "emb.plot_interactive(x_axis='man', y_axis='woman')"
             ],
-            "category": ["visualizers", "research"],
+            "category": [
+                "visualizers",
+                "research"
+            ],
             "author": "Vincent D. Warmerdam",
             "author_links": {
                 "twitter": "fishnets88",
@@ -434,7 +489,10 @@
                 "# This is where we attach our pre-trained model as a pipeline step.",
                 "attach_sklearn_categoriser(nlp, pipe_name='silly_sentiment', estimator=pipe)"
             ],
-            "category": ["pipeline", "training"],
+            "category": [
+                "pipeline",
+                "training"
+            ],
             "author": "Vincent D. Warmerdam",
             "author_links": {
                 "twitter": "fishnets88",
@@ -462,7 +520,12 @@
                 "    print(token.text, token.lemma_, token.pos_, token.dep_, token.ent_type_)",
                 "print(doc.ents)"
             ],
-            "category": ["pipeline", "standalone", "models", "research"],
+            "category": [
+                "pipeline",
+                "standalone",
+                "models",
+                "research"
+            ],
             "author": "Explosion",
             "author_links": {
                 "twitter": "explosion_ai",
@@ -489,7 +552,12 @@
                 "for token in doc:",
                 "    print(token.text, token.lemma_, token.pos_, token.dep_)"
             ],
-            "category": ["pipeline", "standalone", "models", "research"],
+            "category": [
+                "pipeline",
+                "standalone",
+                "models",
+                "research"
+            ],
             "author": "TakeLab",
             "author_links": {
                 "github": "TakeLab",
@@ -513,8 +581,12 @@
                 "github": "neelkamath",
                 "website": "https://neelkamath.com"
             },
-            "category": ["apis"],
-            "tags": ["docker"]
+            "category": [
+                "apis"
+            ],
+            "tags": [
+                "docker"
+            ]
         },
         {
             "id": "nlp-architect",
@@ -523,21 +595,30 @@
             "github": "NervanaSystems/nlp-architect",
             "pip": "nlp-architect",
             "thumb": "https://i.imgur.com/vMideRx.png",
-            "category": ["standalone", "research"],
-            "tags": ["pytorch"]
+            "category": [
+                "standalone",
+                "research"
+            ],
+            "tags": [
+                "pytorch"
+            ]
         },
         {
             "id": "NeuroNER",
             "title": "NeuroNER",
             "slogan": "Named-entity recognition using neural networks",
             "github": "Franck-Dernoncourt/NeuroNER",
-            "category": ["models"],
+            "category": [
+                "models"
+            ],
             "pip": "pyneuroner[cpu]",
             "code_example": [
                 "from neuroner import neuromodel",
                 "nn = neuromodel.NeuroNER(train_model=False, use_pretrained_model=True)"
             ],
-            "tags": ["standalone"]
+            "tags": [
+                "standalone"
+            ]
         },
         {
             "id": "NLPre",
@@ -555,7 +636,10 @@
                 "    text = f(text)",
                 "print(text)"
             ],
-            "category": ["scientific", "biomedical"],
+            "category": [
+                "scientific",
+                "biomedical"
+            ],
             "author": "Travis Hoppe",
             "author_links": {
                 "github": "thoppe",
@@ -588,8 +672,13 @@
             "author_links": {
                 "github": "gunthercox"
             },
-            "category": ["conversational", "standalone"],
-            "tags": ["chatbots"]
+            "category": [
+                "conversational",
+                "standalone"
+            ],
+            "tags": [
+                "chatbots"
+            ]
         },
         {
             "id": "saber",
@@ -605,8 +694,13 @@
                 "saber.annotate('The phosphorylation of Hdm2 by MK2 promotes the ubiquitination of p53.')"
             ],
             "author": "Bader Lab, University of Toronto",
-            "category": ["scientific"],
-            "tags": ["keras", "biomedical"]
+            "category": [
+                "scientific"
+            ],
+            "tags": [
+                "keras",
+                "biomedical"
+            ]
         },
         {
             "id": "alibi",
@@ -622,7 +716,10 @@
                 "explainer.explain(x)"
             ],
             "author": "Seldon",
-            "category": ["standalone", "research"]
+            "category": [
+                "standalone",
+                "research"
+            ]
         },
         {
             "id": "spacymoji",
@@ -630,8 +727,13 @@
             "github": "ines/spacymoji",
             "description": "spaCy extension and pipeline component for adding emoji meta data to `Doc` objects. Detects emoji consisting of one or more unicode characters, and can optionally merge multi-char emoji (combined pictures, emoji with skin tone modifiers) into one token. Human-readable emoji descriptions are added as a custom attribute, and an optional lookup table can be provided for your own descriptions. The extension sets the custom `Doc`, `Token` and `Span` attributes `._.is_emoji`, `._.emoji_desc`, `._.has_emoji` and `._.emoji`.",
             "pip": "spacymoji",
-            "category": ["pipeline"],
-            "tags": ["emoji", "unicode"],
+            "category": [
+                "pipeline"
+            ],
+            "tags": [
+                "emoji",
+                "unicode"
+            ],
             "thumb": "https://i.imgur.com/XOTYIgn.jpg",
             "code_example": [
                 "import spacy",
@@ -675,8 +777,14 @@
                 "# ('Germany', 'Q183', 'LOC', 'sovereign state in Central Europe', 2.1099332471902863)",
                 "## Check also span._.types, span._.aliases, span._.rank"
             ],
-            "category": ["models", "pipeline"],
-            "tags": ["NER", "NEL"],
+            "category": [
+                "models",
+                "pipeline"
+            ],
+            "tags": [
+                "NER",
+                "NEL"
+            ],
             "author": "Renat Shigapov",
             "author_links": {
                 "twitter": "_shigapov",
@@ -706,8 +814,12 @@
                 "github": "tokestermw",
                 "twitter": "plusepsilon"
             },
-            "category": ["pipeline"],
-            "tags": ["spellcheck"]
+            "category": [
+                "pipeline"
+            ],
+            "tags": [
+                "spellcheck"
+            ]
         },
         {
             "id": "spacy_grammar",
@@ -729,7 +841,9 @@
                 "github": "tokestermw",
                 "twitter": "plusepsilon"
             },
-            "category": ["pipeline"]
+            "category": [
+                "pipeline"
+            ]
         },
         {
             "id": "spacy_kenlm",
@@ -753,7 +867,9 @@
                 "github": "tokestermw",
                 "twitter": "plusepsilon"
             },
-            "category": ["pipeline"]
+            "category": [
+                "pipeline"
+            ]
         },
         {
             "id": "spacy_readability",
@@ -777,7 +893,9 @@
             "author_links": {
                 "github": "mholtzscher"
             },
-            "category": ["pipeline"]
+            "category": [
+                "pipeline"
+            ]
         },
         {
             "id": "spacy-sentence-segmenter",
@@ -796,7 +914,9 @@
             "author_links": {
                 "github": "tc64"
             },
-            "category": ["pipeline"]
+            "category": [
+                "pipeline"
+            ]
         },
         {
             "id": "spacy_cld",
@@ -821,7 +941,9 @@
             "author_links": {
                 "github": "nickdavidhaynes"
             },
-            "category": ["pipeline"]
+            "category": [
+                "pipeline"
+            ]
         },
         {
             "id": "spacy-lookup",
@@ -849,7 +971,9 @@
             "author_links": {
                 "github": "mpuig"
             },
-            "category": ["pipeline"]
+            "category": [
+                "pipeline"
+            ]
         },
         {
             "id": "spacy-iwnlp",
@@ -872,8 +996,13 @@
             "author_links": {
                 "github": "Liebeck"
             },
-            "category": ["pipeline"],
-            "tags": ["lemmatizer", "german"]
+            "category": [
+                "pipeline"
+            ],
+            "tags": [
+                "lemmatizer",
+                "german"
+            ]
         },
         {
             "id": "spacy-sentiws",
@@ -897,8 +1026,13 @@
             "author_links": {
                 "github": "Liebeck"
             },
-            "category": ["pipeline"],
-            "tags": ["sentiment", "german"]
+            "category": [
+                "pipeline"
+            ],
+            "tags": [
+                "sentiment",
+                "german"
+            ]
         },
         {
             "id": "spacy-lefff",
@@ -923,8 +1057,14 @@
             "author_links": {
                 "github": "sammous"
             },
-            "category": ["pipeline"],
-            "tags": ["pos", "lemmatizer", "french"]
+            "category": [
+                "pipeline"
+            ],
+            "tags": [
+                "pos",
+                "lemmatizer",
+                "french"
+            ]
         },
         {
             "id": "lemmy",
@@ -952,8 +1092,13 @@
             "author_links": {
                 "github": "sorenlind"
             },
-            "category": ["pipeline"],
-            "tags": ["lemmatizer", "danish"]
+            "category": [
+                "pipeline"
+            ],
+            "tags": [
+                "lemmatizer",
+                "danish"
+            ]
         },
         {
             "id": "augmenty",
@@ -983,8 +1128,15 @@
                 "github": "kennethenevoldsen",
                 "website": "https://www.kennethenevoldsen.com"
             },
-            "category": ["training", "research"],
-            "tags": ["training", "research", "augmentation"]
+            "category": [
+                "training",
+                "research"
+            ],
+            "tags": [
+                "training",
+                "research",
+                "augmentation"
+            ]
         },
         {
             "id": "dacy",
@@ -1008,8 +1160,13 @@
                 "github": "centre-for-humanities-computing",
                 "website": "https://chcaa.io/#/"
             },
-            "category": ["pipeline"],
-            "tags": ["pipeline", "danish"]
+            "category": [
+                "pipeline"
+            ],
+            "tags": [
+                "pipeline",
+                "danish"
+            ]
         },
         {
             "id": "spacy-wrap",
@@ -1050,8 +1207,16 @@
                 "github": "KennethEnevoldsen",
                 "website": "https://www.kennethenevoldsen.com"
             },
-            "category": ["pipeline", "models", "training"],
-            "tags": ["pipeline", "models", "transformers"]
+            "category": [
+                "pipeline",
+                "models",
+                "training"
+            ],
+            "tags": [
+                "pipeline",
+                "models",
+                "transformers"
+            ]
         },
         {
             "id": "textdescriptives",
@@ -1073,8 +1238,15 @@
             "author_links": {
                 "github": "HLasse"
             },
-            "category": ["pipeline"],
-            "tags": ["pipeline", "readability", "syntactic complexity", "descriptive statistics"]
+            "category": [
+                "pipeline"
+            ],
+            "tags": [
+                "pipeline",
+                "readability",
+                "syntactic complexity",
+                "descriptive statistics"
+            ]
         },
         {
             "id": "wmd-relax",
@@ -1097,7 +1269,9 @@
                 "twitter": "sourcedtech",
                 "website": "https://sourced.tech"
             },
-            "category": ["pipeline"]
+            "category": [
+                "pipeline"
+            ]
         },
         {
             "id": "neuralcoref",
@@ -1122,8 +1296,14 @@
             "author_links": {
                 "github": "huggingface"
             },
-            "category": ["standalone", "conversational", "models"],
-            "tags": ["coref"]
+            "category": [
+                "standalone",
+                "conversational",
+                "models"
+            ],
+            "tags": [
+                "coref"
+            ]
         },
         {
             "id": "neuralcoref-vizualizer",
@@ -1134,8 +1314,14 @@
             "image": "https://i.imgur.com/3yy4Qyf.png",
             "thumb": "https://i.imgur.com/j6FO9O6.jpg",
             "github": "huggingface/neuralcoref",
-            "category": ["visualizers", "conversational"],
-            "tags": ["coref", "chatbots"],
+            "category": [
+                "visualizers",
+                "conversational"
+            ],
+            "tags": [
+                "coref",
+                "chatbots"
+            ],
             "author": "Hugging Face",
             "author_links": {
                 "github": "huggingface"
@@ -1154,7 +1340,9 @@
                 "twitter": "MarkNeumannnn",
                 "github": "DeNeutoy"
             },
-            "category": ["visualizers"]
+            "category": [
+                "visualizers"
+            ]
         },
         {
             "id": "matcher-explorer",
@@ -1170,7 +1358,9 @@
                 "github": "ines",
                 "website": "https://ines.io"
             },
-            "category": ["visualizers"]
+            "category": [
+                "visualizers"
+            ]
         },
         {
             "id": "displacy",
@@ -1186,7 +1376,9 @@
                 "github": "ines",
                 "website": "https://ines.io"
             },
-            "category": ["visualizers"]
+            "category": [
+                "visualizers"
+            ]
         },
         {
             "id": "displacy-ent",
@@ -1202,7 +1394,9 @@
                 "github": "ines",
                 "website": "https://ines.io"
             },
-            "category": ["visualizers"]
+            "category": [
+                "visualizers"
+            ]
         },
         {
             "id": "explacy",
@@ -1221,7 +1415,9 @@
             "author_links": {
                 "github": "tylerneylon"
             },
-            "category": ["visualizers"]
+            "category": [
+                "visualizers"
+            ]
         },
         {
             "id": "deplacy",
@@ -1241,7 +1437,9 @@
             "author_links": {
                 "github": "KoichiYasuoka"
             },
-            "category": ["visualizers"]
+            "category": [
+                "visualizers"
+            ]
         },
         {
             "id": "scattertext",
@@ -1264,7 +1462,9 @@
                 "github": "JasonKessler",
                 "twitter": "jasonkessler"
             },
-            "category": ["visualizers"]
+            "category": [
+                "visualizers"
+            ]
         },
         {
             "id": "rasa",
@@ -1279,8 +1479,12 @@
             "author_links": {
                 "github": "RasaHQ"
             },
-            "category": ["conversational"],
-            "tags": ["chatbots"]
+            "category": [
+                "conversational"
+            ],
+            "tags": [
+                "chatbots"
+            ]
         },
         {
             "id": "mindmeld",
@@ -1290,8 +1494,13 @@
             "github": "cisco/mindmeld",
             "pip": "mindmeld",
             "thumb": "https://www.mindmeld.com/img/mindmeld-logo.png",
-            "category": ["conversational", "ner"],
-            "tags": ["chatbots"],
+            "category": [
+                "conversational",
+                "ner"
+            ],
+            "tags": [
+                "chatbots"
+            ],
             "author": "Cisco",
             "author_links": {
                 "github": "cisco/mindmeld",
@@ -1316,8 +1525,13 @@
                 "...    fields={'sentence_tokenized': ('text', data.Field(sequential=True)),",
                 "...            'sentiment_gold': ('labels', data.Field(sequential=False))})"
             ],
-            "category": ["standalone", "research"],
-            "tags": ["pytorch"]
+            "category": [
+                "standalone",
+                "research"
+            ],
+            "tags": [
+                "pytorch"
+            ]
         },
         {
             "id": "allennlp",
@@ -1334,7 +1548,10 @@
                 "twitter": "allenai_org",
                 "website": "http://allenai.org"
             },
-            "category": ["standalone", "research"]
+            "category": [
+                "standalone",
+                "research"
+            ]
         },
         {
             "id": "scispacy",
@@ -1350,7 +1567,11 @@
                 "twitter": "allenai_org",
                 "website": "http://allenai.org"
             },
-            "category": ["scientific", "models", "research"]
+            "category": [
+                "scientific",
+                "models",
+                "research"
+            ]
         },
         {
             "id": "textacy",
@@ -1364,7 +1585,9 @@
                 "github": "bdewilde",
                 "twitter": "bjdewilde"
             },
-            "category": ["standalone"]
+            "category": [
+                "standalone"
+            ]
         },
         {
             "id": "textpipe",
@@ -1377,8 +1600,13 @@
                 "github": "textpipe",
                 "website": "https://github.com/textpipe/textpipe/blob/master/CONTRIBUTORS.md"
             },
-            "category": ["standalone"],
-            "tags": ["text-processing", "named-entity-recognition"],
+            "category": [
+                "standalone"
+            ],
+            "tags": [
+                "text-processing",
+                "named-entity-recognition"
+            ],
             "thumb": "https://avatars0.githubusercontent.com/u/40492530",
             "code_example": [
                 "from textpipe import doc, pipeline",
@@ -1413,7 +1641,10 @@
                 "github": "ahalterman",
                 "twitter": "ahalterman"
             },
-            "category": ["standalone", "scientific"]
+            "category": [
+                "standalone",
+                "scientific"
+            ]
         },
         {
             "id": "kindred",
@@ -1438,7 +1669,10 @@
             "author_links": {
                 "github": "jakelever"
             },
-            "category": ["standalone", "scientific"]
+            "category": [
+                "standalone",
+                "scientific"
+            ]
         },
         {
             "id": "sense2vec",
@@ -1465,8 +1699,14 @@
                 "#  (('computer vision', 'NOUN'), 0.8636297),",
                 "#  (('deep learning', 'NOUN'), 0.8573361)]"
             ],
-            "category": ["pipeline", "standalone", "visualizers"],
-            "tags": ["vectors"],
+            "category": [
+                "pipeline",
+                "standalone",
+                "visualizers"
+            ],
+            "tags": [
+                "vectors"
+            ],
             "author": "Explosion",
             "author_links": {
                 "twitter": "explosion_ai",
@@ -1491,7 +1731,9 @@
             ],
             "code_language": "r",
             "author": "Kenneth Benoit & Aki Matsuo",
-            "category": ["nonpython"]
+            "category": [
+                "nonpython"
+            ]
         },
         {
             "id": "cleannlp",
@@ -1504,7 +1746,9 @@
             "author_links": {
                 "github": "statsmaths"
             },
-            "category": ["nonpython"]
+            "category": [
+                "nonpython"
+            ]
         },
         {
             "id": "spacy-cpp",
@@ -1523,7 +1767,9 @@
             "author_links": {
                 "github": "d99kris"
             },
-            "category": ["nonpython"]
+            "category": [
+                "nonpython"
+            ]
         },
         {
             "id": "spaCy.jl",
@@ -1534,7 +1780,9 @@
                 "github": "jekbradbury",
                 "twitter": "jekbradbury"
             },
-            "category": ["nonpython"]
+            "category": [
+                "nonpython"
+            ]
         },
         {
             "id": "ruby-spacy",
@@ -1562,8 +1810,12 @@
                 "github": "yohasebe",
                 "twitter": "yohasebe"
             },
-            "category": ["nonpython"],
-            "tags": ["ruby"]
+            "category": [
+                "nonpython"
+            ],
+            "tags": [
+                "ruby"
+            ]
         },
         {
             "id": "spacy_api",
@@ -1580,7 +1832,9 @@
             "author_links": {
                 "github": "kootenpv"
             },
-            "category": ["apis"]
+            "category": [
+                "apis"
+            ]
         },
         {
             "id": "spacy-api-docker",
@@ -1603,7 +1857,9 @@
             "author_links": {
                 "github": "jgontrum"
             },
-            "category": ["apis"]
+            "category": [
+                "apis"
+            ]
         },
         {
             "id": "languagecrunch",
@@ -1618,7 +1874,9 @@
             "author_links": {
                 "github": "artpar"
             },
-            "category": ["apis"]
+            "category": [
+                "apis"
+            ]
         },
         {
             "id": "spacy-nlp",
@@ -1637,7 +1895,10 @@
             "author_links": {
                 "github": "kengz"
             },
-            "category": ["apis", "nonpython"]
+            "category": [
+                "apis",
+                "nonpython"
+            ]
         },
         {
             "id": "prodigy",
@@ -1655,7 +1916,10 @@
                 "✨ Starting the web server on port 8080..."
             ],
             "code_language": "bash",
-            "category": ["standalone", "training"],
+            "category": [
+                "standalone",
+                "training"
+            ],
             "author": "Explosion",
             "author_links": {
                 "twitter": "explosion_ai",
@@ -1675,7 +1939,9 @@
                 "github": "DragonComputer",
                 "website": "http://dragon.computer"
             },
-            "category": ["standalone"]
+            "category": [
+                "standalone"
+            ]
         },
         {
             "id": "prefect",
@@ -1700,7 +1966,9 @@
             "author_links": {
                 "website": "https://prefect.io"
             },
-            "category": ["standalone"]
+            "category": [
+                "standalone"
+            ]
         },
         {
             "id": "graphbrain",
@@ -1711,7 +1979,9 @@
             "pip": "graphbrain",
             "thumb": "https://i.imgur.com/cct9W1E.png",
             "author": "Graphbrain",
-            "category": ["standalone"]
+            "category": [
+                "standalone"
+            ]
         },
         {
             "type": "education",
@@ -1722,7 +1992,9 @@
             "cover": "https://i.imgur.com/w0iycjl.jpg",
             "url": "https://nostarch.com/NLPPython",
             "author": "Yuli Vasiliev",
-            "category": ["books"]
+            "category": [
+                "books"
+            ]
         },
         {
             "type": "education",
@@ -1733,7 +2005,9 @@
             "cover": "https://covers.oreillystatic.com/images/0636920030515/lrg.jpg",
             "url": "http://shop.oreilly.com/product/0636920030515.do",
             "author": "Andreas Müller, Sarah Guido",
-            "category": ["books"]
+            "category": [
+                "books"
+            ]
         },
         {
             "type": "education",
@@ -1745,7 +2019,9 @@
             "cover": "https://i.imgur.com/AOmzZu8.png",
             "url": "https://www.amazon.com/Text-Analytics-Python-Real-World-Actionable/dp/148422387X",
             "author": "Dipanjan Sarkar",
-            "category": ["books"]
+            "category": [
+                "books"
+            ]
         },
         {
             "type": "education",
@@ -1757,7 +2033,9 @@
             "cover": "https://i.imgur.com/5F4mkt7.jpg",
             "url": "https://www.amazon.com/Practical-Machine-Learning-Python-Problem-Solvers/dp/1484232062",
             "author": "Dipanjan Sarkar, Raghav Bali, Tushar Sharma",
-            "category": ["books"]
+            "category": [
+                "books"
+            ]
         },
         {
             "type": "education",
@@ -1768,7 +2046,9 @@
             "cover": "https://i.imgur.com/aleMf1Y.jpg",
             "url": "https://www.amazon.com/Natural-Language-Processing-Computational-Linguistics-ebook/dp/B07BWH779J",
             "author": "Bhargav Srinivasa-Desikan",
-            "category": ["books"]
+            "category": [
+                "books"
+            ]
         },
         {
             "type": "education",
@@ -1784,7 +2064,9 @@
                 "github": "DuyguA",
                 "website": "https://www.linkedin.com/in/duygu-altinok-4021389a"
             },
-            "category": ["books"]
+            "category": [
+                "books"
+            ]
         },
         {
             "type": "education",
@@ -1800,7 +2082,9 @@
                 "github": "aapatel09",
                 "website": "https://www.ankurapatel.io"
             },
-            "category": ["books"]
+            "category": [
+                "books"
+            ]
         },
         {
             "type": "education",
@@ -1811,7 +2095,9 @@
             "url": "https://www.safaribooksonline.com/library/view/learning-path-mastering/9781491986653/",
             "thumb": "https://i.imgur.com/9MIgMAc.jpg",
             "author": "Aaron Kramer",
-            "category": ["courses"]
+            "category": [
+                "courses"
+            ]
         },
         {
             "type": "education",
@@ -1821,7 +2107,9 @@
             "url": "http://spacy.pythonhumanities.com/",
             "thumb": "https://spacy.pythonhumanities.com/_static/freecodecamp_small.jpg",
             "author": "Dr. W.J.B. Mattingly",
-            "category": ["courses"]
+            "category": [
+                "courses"
+            ]
         },
         {
             "type": "education",
@@ -1838,7 +2126,9 @@
                 "github": "ines",
                 "website": "https://ines.io"
             },
-            "category": ["courses"]
+            "category": [
+                "courses"
+            ]
         },
         {
             "type": "education",
@@ -1855,7 +2145,9 @@
                 "github": "thiippal",
                 "website": "https://www.mv.helsinki.fi/home/thiippal/"
             },
-            "category": ["courses"]
+            "category": [
+                "courses"
+            ]
         },
         {
             "type": "education",
@@ -1870,7 +2162,9 @@
                 "github": "honnibal",
                 "website": "https://explosion.ai"
             },
-            "category": ["videos"]
+            "category": [
+                "videos"
+            ]
         },
         {
             "type": "education",
@@ -1885,7 +2179,9 @@
                 "website": "https://explosion.ai"
             },
             "youtube": "jpWqz85F_4Y",
-            "category": ["videos"]
+            "category": [
+                "videos"
+            ]
         },
         {
             "type": "education",
@@ -1895,7 +2191,9 @@
             "description": "Academic and industry research in Natural Language Processing (NLP) has progressed at an accelerating pace over the last several years. Members of the Python community have been hard at work moving cutting-edge research out of papers and into open source, \"batteries included\" software libraries that can be applied to practical problems. We'll explore some of these tools for modern NLP in Python.",
             "author": "Patrick Harrison",
             "youtube": "6zm9NC9uRkk",
-            "category": ["videos"]
+            "category": [
+                "videos"
+            ]
         },
         {
             "type": "education",
@@ -1909,7 +2207,9 @@
                 "github": "ines"
             },
             "youtube": "THduWAnG97k",
-            "category": ["videos"]
+            "category": [
+                "videos"
+            ]
         },
         {
             "type": "education",
@@ -1923,7 +2223,9 @@
                 "github": "ines"
             },
             "youtube": "K1elwpgDdls",
-            "category": ["videos"]
+            "category": [
+                "videos"
+            ]
         },
         {
             "type": "education",
@@ -1936,7 +2238,9 @@
                 "twitter": "Mariacamilagl30"
             },
             "youtube": "RNiLVCE5d4k",
-            "category": ["videos"]
+            "category": [
+                "videos"
+            ]
         },
         {
             "type": "education",
@@ -1950,7 +2254,9 @@
                 "github": "koaning"
             },
             "youtube": "WnGPv6HnBok",
-            "category": ["videos"]
+            "category": [
+                "videos"
+            ]
         },
         {
             "type": "education",
@@ -1964,7 +2270,9 @@
                 "github": "koaning"
             },
             "youtube": "KL4-Mpgbahw",
-            "category": ["videos"]
+            "category": [
+                "videos"
+            ]
         },
         {
             "type": "education",
@@ -1978,7 +2286,9 @@
                 "github": "koaning"
             },
             "youtube": "4V0JDdohxAk",
-            "category": ["videos"]
+            "category": [
+                "videos"
+            ]
         },
         {
             "type": "education",
@@ -1992,7 +2302,9 @@
                 "github": "koaning"
             },
             "youtube": "IqOJU1-_Fi0",
-            "category": ["videos"]
+            "category": [
+                "videos"
+            ]
         },
         {
             "type": "education",
@@ -2006,7 +2318,9 @@
                 "github": "koaning"
             },
             "youtube": "f4sqeLRzkPg",
-            "category": ["videos"]
+            "category": [
+                "videos"
+            ]
         },
         {
             "type": "education",
@@ -2020,7 +2334,9 @@
                 "github": "svlandeg"
             },
             "youtube": "PW3RJM8tDGo",
-            "category": ["videos"]
+            "category": [
+                "videos"
+            ]
         },
         {
             "type": "education",
@@ -2034,7 +2350,9 @@
                 "github": "guadi1994"
             },
             "youtube": "88zcQODyuko",
-            "category": ["videos"]
+            "category": [
+                "videos"
+            ]
         },
         {
             "type": "education",
@@ -2048,7 +2366,9 @@
                 "github": "DeNeutoy"
             },
             "youtube": "2_HSKDALwuw",
-            "category": ["videos"]
+            "category": [
+                "videos"
+            ]
         },
         {
             "type": "education",
@@ -2063,7 +2383,9 @@
             "author_links": {
                 "website": "https://soundcloud.com/nlp-highlights"
             },
-            "category": ["podcasts"]
+            "category": [
+                "podcasts"
+            ]
         },
         {
             "type": "education",
@@ -2079,7 +2401,9 @@
             "author_links": {
                 "website": "https://www.podcastinit.com"
             },
-            "category": ["podcasts"]
+            "category": [
+                "podcasts"
+            ]
         },
         {
             "type": "education",
@@ -2095,7 +2419,9 @@
             "author_links": {
                 "website": "https://www.podcastinit.com"
             },
-            "category": ["podcasts"]
+            "category": [
+                "podcasts"
+            ]
         },
         {
             "type": "education",
@@ -2110,7 +2436,9 @@
             "author_links": {
                 "website": "https://talkpython.fm/"
             },
-            "category": ["podcasts"]
+            "category": [
+                "podcasts"
+            ]
         },
         {
             "type": "education",
@@ -2126,7 +2454,9 @@
             "author_links": {
                 "website": "https://twimlai.com"
             },
-            "category": ["podcasts"]
+            "category": [
+                "podcasts"
+            ]
         },
         {
             "type": "education",
@@ -2142,7 +2472,9 @@
                 "website": "https://www.analyticsvidhya.com",
                 "twitter": "analyticsvidhya"
             },
-            "category": ["podcasts"]
+            "category": [
+                "podcasts"
+            ]
         },
         {
             "type": "education",
@@ -2157,7 +2489,9 @@
                 "website": "https://changelog.com/practicalai",
                 "twitter": "https://twitter.com/PracticalAIFM"
             },
-            "category": ["podcasts"]
+            "category": [
+                "podcasts"
+            ]
         },
         {
             "type": "education",
@@ -2169,7 +2503,9 @@
                 "github": "svlandeg"
             },
             "youtube": "8u57WSXVpmw",
-            "category": ["videos"]
+            "category": [
+                "videos"
+            ]
         },
         {
             "id": "adam_qas",
@@ -2191,8 +2527,13 @@
                 "github": "5hirish",
                 "website": "https://shirishkadam.com/"
             },
-            "category": ["standalone"],
-            "tags": ["question-answering", "elasticsearch"]
+            "category": [
+                "standalone"
+            ],
+            "tags": [
+                "question-answering",
+                "elasticsearch"
+            ]
         },
         {
             "id": "epitator",
@@ -2229,7 +2570,10 @@
                 "github": "ecohealthalliance",
                 "website": " https://ecohealthalliance.org/"
             },
-            "category": ["scientific", "standalone"]
+            "category": [
+                "scientific",
+                "standalone"
+            ]
         },
         {
             "id": "self-attentive-parser",
@@ -2257,7 +2601,10 @@
                 "github": "nikitakit",
                 "website": " http://kitaev.io"
             },
-            "category": ["research", "pipeline"]
+            "category": [
+                "research",
+                "pipeline"
+            ]
         },
         {
             "id": "excelcy",
@@ -2280,8 +2627,12 @@
             "author_links": {
                 "github": "kororo"
             },
-            "category": ["training"],
-            "tags": ["excel"]
+            "category": [
+                "training"
+            ],
+            "tags": [
+                "excel"
+            ]
         },
         {
             "id": "spacy-graphql",
@@ -2290,8 +2641,12 @@
             "github": "ines/spacy-graphql",
             "description": "A very simple and experimental app that lets you query spaCy's linguistic annotations using [GraphQL](https://graphql.org/). The API currently supports most token attributes, named entities, sentences and text categories (if available as `doc.cats`, i.e. if you added a text classifier to a model). The `meta` field will return the model meta data. Models are only loaded once and kept in memory.",
             "url": "https://explosion.ai/demos/spacy-graphql",
-            "category": ["apis"],
-            "tags": ["graphql"],
+            "category": [
+                "apis"
+            ],
+            "tags": [
+                "graphql"
+            ],
             "thumb": "https://i.imgur.com/xC7zpTO.png",
             "code_example": [
                 "{",
@@ -2349,8 +2704,12 @@
                 "github": "ines",
                 "website": "https://ines.io"
             },
-            "category": ["nonpython"],
-            "tags": ["javascript"]
+            "category": [
+                "nonpython"
+            ],
+            "tags": [
+                "javascript"
+            ]
         },
         {
             "id": "spacy-raspberry",
@@ -2363,8 +2722,12 @@
             "author_links": {
                 "github": "boehm-e"
             },
-            "category": ["apis"],
-            "tags": ["raspberrypi"]
+            "category": [
+                "apis"
+            ],
+            "tags": [
+                "raspberrypi"
+            ]
         },
         {
             "id": "spacy-wordnet",
@@ -2372,7 +2735,10 @@
             "slogan": "WordNet meets spaCy",
             "description": "`spacy-wordnet` creates annotations that easily allow the use of WordNet and [WordNet Domains](http://wndomains.fbk.eu/) by using the [NLTK WordNet interface](http://www.nltk.org/howto/wordnet.html)",
             "github": "recognai/spacy-wordnet",
-            "tags": ["wordnet", "synsets"],
+            "tags": [
+                "wordnet",
+                "synsets"
+            ],
             "thumb": "https://i.imgur.com/ud4C7cj.png",
             "code_example": [
                 "import spacy",
@@ -2400,7 +2766,9 @@
                 "twitter": "recogn_ai",
                 "website": "https://recogn.ai"
             },
-            "category": ["pipeline"]
+            "category": [
+                "pipeline"
+            ]
         },
         {
             "id": "spacy-conll",
@@ -2434,8 +2802,15 @@
                 "website": "http://bramvanroy.be"
             },
             "github": "BramVanroy/spacy_conll",
-            "category": ["standalone", "pipeline"],
-            "tags": ["linguistics", "computational linguistics", "conll"]
+            "category": [
+                "standalone",
+                "pipeline"
+            ],
+            "tags": [
+                "linguistics",
+                "computational linguistics",
+                "conll"
+            ]
         },
         {
             "id": "spacy-langdetect",
@@ -2463,8 +2838,12 @@
                 "website": "https://abhijit-2592.github.io/"
             },
             "github": "Abhijit-2592/spacy-langdetect",
-            "category": ["pipeline"],
-            "tags": ["language-detection"]
+            "category": [
+                "pipeline"
+            ],
+            "tags": [
+                "language-detection"
+            ]
         },
         {
             "id": "ludwig",
@@ -2481,7 +2860,10 @@
                 "twitter": "w4nderlus7",
                 "website": "http://w4nderlu.st"
             },
-            "category": ["standalone", "research"]
+            "category": [
+                "standalone",
+                "research"
+            ]
         },
         {
             "id": "pic2phrase_bot",
@@ -2495,7 +2877,10 @@
             "author_links": {
                 "twitter": "VasilievYuli"
             },
-            "category": ["standalone", "conversational"]
+            "category": [
+                "standalone",
+                "conversational"
+            ]
         },
         {
             "id": "gracyql",
@@ -2504,8 +2889,12 @@
             "github": "oterrier/gracyql",
             "description": "An example of a basic [Starlette](https://github.com/encode/starlette) app using [Spacy](https://github.com/explosion/spaCy) and [Graphene](https://github.com/graphql-python/graphene). The main goal is to be able to use the amazing power of spaCy from other languages and retrieving only the information you need thanks to the GraphQL query definition. The GraphQL schema tries to mimic as much as possible the original Spacy API with classes Doc, Span and Token.",
             "thumb": "https://i.imgur.com/xC7zpTO.png",
-            "category": ["apis"],
-            "tags": ["graphql"],
+            "category": [
+                "apis"
+            ],
+            "tags": [
+                "graphql"
+            ],
             "code_example": [
                 "query ParserDisabledQuery {",
                 "  nlp(model: \"en\", disable: [\"parser\", \"ner\"]) {",
@@ -2551,8 +2940,12 @@
             "author_links": {
                 "github": "bjascob"
             },
-            "category": ["pipeline"],
-            "tags": ["inflection"]
+            "category": [
+                "pipeline"
+            ],
+            "tags": [
+                "inflection"
+            ]
         },
         {
             "id": "lemminflect",
@@ -2574,8 +2967,13 @@
             "author_links": {
                 "github": "bjascob"
             },
-            "category": ["pipeline"],
-            "tags": ["inflection", "lemmatizer"]
+            "category": [
+                "pipeline"
+            ],
+            "tags": [
+                "inflection",
+                "lemmatizer"
+            ]
         },
         {
             "id": "amrlib",
@@ -2597,12 +2995,15 @@
             "author_links": {
                 "github": "bjascob"
             },
-            "category": ["pipeline"]
+            "category": [
+                "pipeline"
+            ]
         },
         {
             "id": "classyclassification",
-            "slogan": "A Python library for classy few-shot and zero-shot classification within spaCy.",
-            "description": "Huggingface does offer some nice models for few/zero-shot classification, but these are not tailored to multi-lingual approaches. Rasa NLU has a nice approach for this, but its too embedded in their codebase for easy usage outside of Rasa/chatbots. Additionally, it made sense to integrate sentence-transformers and Huggingface zero-shot, instead of default word embeddings. Finally, I decided to integrate with spaCy, since training a custom spaCy TextCategorizer seems like a lot of hassle if you want something quick and dirty.",
+            "title": "Classy Classification",
+            "slogan": "Have you every struggled with needing a Spacy TextCategorizer but didn't have the time to train one from scratch?. Classy Classification is the way to go!",
+            "description": "Have you every struggled with needing a [Spacy TextCategorizer](https://spacy.io/api/textcategorizer) but didn't have the time to train one from scratch? Classy Classification is the way to go! For few-shot classification using [sentence-transformers](https://github.com/UKPLab/sentence-transformers) or [spaCy models](https://spacy.io/usage/models), provide a dictionary with labels and examples, or just provide a list of labels for zero shot-classification with [Hugginface zero-shot classifiers](https://huggingface.co/models?pipeline_tag=zero-shot-classification).",
             "github": "davidberenstein1957/classy-classification",
             "pip": "classy-classification",
             "code_example": [
@@ -2619,31 +3020,34 @@
                 "}",
                 "",
                 "nlp = spacy.load('en_core_web_md')",
-                "",
-                "classification_type = \"spacy_few_shot\"",
-                "if classification_type == \"spacy_few_shot\":",
-                "    nlp.add_pipe(\"text_categorizer\", ",
-                "        config={\"data\": data, \"model\": \"spacy\"}",
-                "    )",
-                "elif classification_type == \"sentence_transformer_few_shot\":",
-                "    nlp.add_pipe(\"text_categorizer\", ",
-                "        config={\"data\": data, \"model\": \"sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2\"}",
-                "    )",
-                "elif classification_type == \"huggingface_zero_shot\":",
-                "    nlp.add_pipe(\"text_categorizer\", ",
-                "        config={\"data\": list(data.keys()), \"cat_type\": \"zero\", \"model\": \"facebook/bart-large-mnli\"}",
-                "    )",
+                "nlp.add_pipe(\"text_categorizer\", ",
+                "    config={",
+                "        \"data\": data,",
+                "        \"model\": \"spacy\"",
+                "    }",
+                ")",
                 "",
                 "print(nlp(\"I am looking for kitchen appliances.\")._.cats)",
-                "print([doc._.cats for doc in nlp.pipe([\"I am looking for kitchen appliances.\"])])"    
+                "# Output:",
+                "#",
+                "# [{\"label\": \"furniture\", \"score\": 0.21}, {\"label\": \"kitchen\", \"score\": 0.79}]"
             ],
             "author": "David Berenstein",
             "author_links": {
                 "github": "davidberenstein1957",
                 "website": "https://www.linkedin.com/in/david-berenstein-1bab11105/"
             },
-            "category": ["pipeline", "standalone"],
-            "tags": ["classification", "zero-shot", "few-shot", "sentence-transformers", "huggingface"],
+            "category": [
+                "pipeline",
+                "standalone"
+            ],
+            "tags": [
+                "classification",
+                "zero-shot",
+                "few-shot",
+                "sentence-transformers",
+                "huggingface"
+            ],
             "spacy_version": 3
         },
         {
@@ -2661,7 +3065,11 @@
                 "twitter": "ICLRanD",
                 "website": "https://research.iclr.co.uk"
             },
-            "category": ["scientific", "models", "research"]
+            "category": [
+                "scientific",
+                "models",
+                "research"
+            ]
         },
         {
             "id": "NGym",
@@ -2673,8 +3081,12 @@
             "image": "https://github.com/d5555/NeuralGym/raw/master/NGym.png",
             "thumb": "https://github.com/d5555/NeuralGym/raw/master/NGym/web.png",
             "author": "d5555",
-            "category": ["training"],
-            "tags": ["windows"]
+            "category": [
+                "training"
+            ],
+            "tags": [
+                "windows"
+            ]
         },
         {
             "id": "holmes",
@@ -2684,8 +3096,14 @@
             "url": "https://github.com/msg-systems/holmes-extractor",
             "description": "Holmes is a Python 3 library that supports a number of use cases involving information extraction from English and German texts, including chatbot, structural extraction, topic matching and supervised document classification. There is a [website demonstrating intelligent search based on topic matching](https://holmes-demo.xt.msg.team).",
             "pip": "holmes-extractor",
-            "category": ["conversational", "standalone"],
-            "tags": ["chatbots", "text-processing"],
+            "category": [
+                "conversational",
+                "standalone"
+            ],
+            "tags": [
+                "chatbots",
+                "text-processing"
+            ],
             "thumb": "https://raw.githubusercontent.com/msg-systems/holmes-extractor/master/docs/holmes_thumbnail.png",
             "code_example": [
                 "import holmes_extractor as holmes",
@@ -2706,8 +3124,15 @@
             "url": "https://github.com/msg-systems/coreferee",
             "description": "Coreferee is a pipeline plugin that performs coreference resolution for English, German and Polish. It is designed so that it is easy to add support for new languages and optimised for limited training data. It uses a mixture of neural networks and programmed rules. Please note you will need to [install models](https://github.com/msg-systems/coreferee#getting-started) before running the code example.",
             "pip": "coreferee",
-            "category": ["pipeline", "models", "standalone"],
-            "tags": ["coreference-resolution", "anaphora"],
+            "category": [
+                "pipeline",
+                "models",
+                "standalone"
+            ],
+            "tags": [
+                "coreference-resolution",
+                "anaphora"
+            ],
             "code_example": [
                 "import coreferee, spacy",
                 "nlp = spacy.load('en_core_web_trf')",
@@ -2739,7 +3164,11 @@
             "github": "explosion/spacy-transformers",
             "url": "https://explosion.ai/blog/spacy-transformers",
             "pip": "spacy-transformers",
-            "category": ["pipeline", "models", "research"],
+            "category": [
+                "pipeline",
+                "models",
+                "research"
+            ],
             "code_example": [
                 "import spacy",
                 "",
@@ -2762,7 +3191,10 @@
             "thumb": "https://i.imgur.com/j6FO9O6.jpg",
             "url": "https://github.com/explosion/spacy-huggingface-hub",
             "pip": "spacy-huggingface-hub",
-            "category": ["pipeline", "models"],
+            "category": [
+                "pipeline",
+                "models"
+            ],
             "author": "Explosion",
             "author_links": {
                 "twitter": "explosion_ai",
@@ -2777,7 +3209,11 @@
             "github": "mmxgn/spacy-clausie",
             "url": "https://github.com/mmxgn/spacy-clausie",
             "description": "ClausIE, a novel, clause-based approach to open information extraction, which extracts relations and their arguments from natural language text",
-            "category": ["pipeline", "scientific", "research"],
+            "category": [
+                "pipeline",
+                "scientific",
+                "research"
+            ],
             "code_example": [
                 "import spacy",
                 "import claucy",
@@ -2788,7 +3224,7 @@
                 "doc = nlp(\"AE died in Princeton in 1955.\")",
                 "",
                 "print(doc._.clauses)",
-                "# Output:",       
+                "# Output:",
                 "# <SV, AE, died, None, None, None, [in Princeton, in 1955]>",
                 "",
                 "propositions = doc._.clauses[0].to_propositions(as_text=True)",
@@ -2808,7 +3244,7 @@
             "description": "Collection of NLP visualizations for NER and syntax tree markup. Similar to [displaCy](https://explosion.ai/demos/displacy) and [displaCy ENT](https://explosion.ai/demos/displacy-ent).",
             "github": "natasha/ipymarkup",
             "image": "https://github.com/natasha/ipymarkup/blob/master/table.png?raw=true",
-            "pip":"pip install ipymarkup",
+            "pip": "pip install ipymarkup",
             "code_example": [
                 "from ipymarkup import show_span_ascii_markup, show_dep_ascii_markup",
                 "",
@@ -2820,7 +3256,9 @@
             "author_links": {
                 "github": "kuk"
             },
-            "category": ["visualizers"]
+            "category": [
+                "visualizers"
+            ]
         },
         {
             "id": "negspacy",
@@ -2830,8 +3268,14 @@
             "url": "https://github.com/jenojp/negspacy",
             "description": "negspacy is a spaCy pipeline component that evaluates whether Named Entities are negated in text. It adds an extension to 'Span' objects.",
             "pip": "negspacy",
-            "category": ["pipeline", "scientific"],
-            "tags": ["negation", "text-processing"],
+            "category": [
+                "pipeline",
+                "scientific"
+            ],
+            "tags": [
+                "negation",
+                "text-processing"
+            ],
             "thumb": "https://github.com/jenojp/negspacy/blob/master/docs/thumb.png?raw=true",
             "image": "https://github.com/jenojp/negspacy/blob/master/docs/icon.png?raw=true",
             "code_example": [
@@ -2858,8 +3302,14 @@
             "github": "dumitrescustefan/ronec",
             "url": "https://github.com/dumitrescustefan/ronec",
             "description": "The corpus holds 5127 sentences, annotated with 16 classes, with a total of 26376 annotated entities. The corpus comes into two formats: BRAT and CONLLUP.",
-            "category": ["standalone", "models"],
-            "tags": ["ner", "romanian"],
+            "category": [
+                "standalone",
+                "models"
+            ],
+            "tags": [
+                "ner",
+                "romanian"
+            ],
             "thumb": "https://raw.githubusercontent.com/dumitrescustefan/ronec/master/res/thumb.png",
             "code_example": [
                 "# to train a new model on ronec",
@@ -2887,7 +3337,10 @@
             "description": "This package provide a wrapper for the Numeric Fused-Head in English. It provides another information layer on numbers that refer to another entity which is not obvious from the syntactic tree.",
             "github": "yanaiela/num_fh",
             "pip": "num_fh",
-            "category": ["pipeline", "research"],
+            "category": [
+                "pipeline",
+                "research"
+            ],
             "code_example": [
                 "import spacy",
                 "from num_fh import NFH",
@@ -2916,7 +3369,10 @@
             "description": "This spaCy project trains an NER model and a custom Text Classification model with Clause Segmentation and Blinding capabilities to analyze supplement reviews and their potential effects on health.",
             "github": "explosion/healthsea",
             "thumb": "https://github.com/explosion/healthsea/blob/main/img/Jellyfish.png",
-            "category": ["pipeline", "research"],
+            "category": [
+                "pipeline",
+                "research"
+            ],
             "code_example": [
                 "import spacy",
                 "",
@@ -2965,7 +3421,9 @@
             "url": "https://aka.ms/presidio",
             "image": "https://raw.githubusercontent.com/microsoft/presidio/master/docs/assets/before-after.png",
             "github": "microsoft/presidio",
-            "category": ["standalone"],
+            "category": [
+                "standalone"
+            ],
             "thumb": "https://avatars0.githubusercontent.com/u/6154722",
             "author": "Microsoft",
             "author_links": {
@@ -2979,7 +3437,9 @@
             "description": "This package features data-science related tasks for developing new recognizers for Microsoft Presidio. It is used for the evaluation of the entire system, as well as for evaluating specific PII recognizers or PII detection models. Anyone interested in evaluating an existing Microsoft Presidio instance, a specific PII recognizer or to develop new models or logic for detecting PII could leverage the preexisting work in this package. Additionally, anyone interested in generating new data based on previous datasets (e.g. to increase the coverage of entity values) for Named Entity Recognition models could leverage the data generator contained in this package.",
             "url": "https://aka.ms/presidio-research",
             "github": "microsoft/presidio-research",
-            "category": ["standalone"],
+            "category": [
+                "standalone"
+            ],
             "thumb": "https://avatars0.githubusercontent.com/u/6154722",
             "author": "Microsoft",
             "author_links": {
@@ -2993,8 +3453,12 @@
             "github": "nipunsadvilkar/pySBD",
             "description": "pySBD is 'real-world' sentence segmenter which extracts reasonable sentences when the format and domain of the input text are unknown. It is a rules-based algorithm based on [The Golden Rules](https://s3.amazonaws.com/tm-town-nlp-resources/golden_rules.txt) - a set of tests to check accuracy of segmenter in regards to edge case scenarios developed by [TM-Town](https://www.tm-town.com/) dev team. pySBD is python port of ruby gem [Pragmatic Segmenter](https://github.com/diasks2/pragmatic_segmenter).",
             "pip": "pysbd",
-            "category": ["scientific"],
-            "tags": ["sentence segmentation"],
+            "category": [
+                "scientific"
+            ],
+            "tags": [
+                "sentence segmentation"
+            ],
             "code_example": [
                 "from pysbd.utils import PySBDFactory",
                 "",
@@ -3020,7 +3484,9 @@
             "url": "https://github.com/microsoft/cookiecutter-spacy-fastapi",
             "image": "https://raw.githubusercontent.com/microsoft/cookiecutter-spacy-fastapi/master/images/cookiecutter-docs.png",
             "github": "microsoft/cookiecutter-spacy-fastapi",
-            "category": ["apis"],
+            "category": [
+                "apis"
+            ],
             "thumb": "https://avatars0.githubusercontent.com/u/6154722",
             "author": "Microsoft",
             "author_links": {
@@ -3034,8 +3500,13 @@
             "github": "yash1994/dframcy",
             "description": "DframCy is a light-weight utility module to integrate Pandas Dataframe to spaCy's linguistic annotation and training tasks.",
             "pip": "dframcy",
-            "category": ["pipeline", "training"],
-            "tags": ["pandas"],
+            "category": [
+                "pipeline",
+                "training"
+            ],
+            "tags": [
+                "pandas"
+            ],
             "code_example": [
                 "import spacy",
                 "from dframcy import DframCy",
@@ -3085,8 +3556,16 @@
                 "github": "ceteri",
                 "website": "https://derwen.ai/paco"
             },
-            "category": ["pipeline"],
-            "tags": ["phrase extraction", "ner", "summarization", "graph algorithms", "textrank"]
+            "category": [
+                "pipeline"
+            ],
+            "tags": [
+                "phrase extraction",
+                "ner",
+                "summarization",
+                "graph algorithms",
+                "textrank"
+            ]
         },
         {
             "id": "spacy_syllables",
@@ -3120,8 +3599,13 @@
             "author_links": {
                 "github": "sloev"
             },
-            "category": ["pipeline"],
-            "tags": ["syllables", "multilingual"]
+            "category": [
+                "pipeline"
+            ],
+            "tags": [
+                "syllables",
+                "multilingual"
+            ]
         },
         {
             "id": "gobbli",
@@ -3159,7 +3643,9 @@
                 "",
                 "predict_output = clf.predict(predict_input)"
             ],
-            "category": ["standalone"]
+            "category": [
+                "standalone"
+            ]
         },
         {
             "id": "spacy_fastlang",
@@ -3182,7 +3668,9 @@
             "author_links": {
                 "github": "thomasthiebaud"
             },
-            "category": ["pipeline"]
+            "category": [
+                "pipeline"
+            ]
         },
         {
             "id": "mlflow",
@@ -3200,7 +3688,10 @@
                 "twitter": "databricks",
                 "website": "https://databricks.com/"
             },
-            "category": ["standalone", "apis"],
+            "category": [
+                "standalone",
+                "apis"
+            ],
             "code_example": [
                 "import mlflow",
                 "import mlflow.spacy",
@@ -3253,8 +3744,13 @@
                 "github": "kevinlu1248",
                 "website": "https://github.com/kevinlu1248/pyate"
             },
-            "category": ["pipeline", "research"],
-            "tags": ["term_extraction"]
+            "category": [
+                "pipeline",
+                "research"
+            ],
+            "tags": [
+                "term_extraction"
+            ]
         },
         {
             "id": "contextualSpellCheck",
@@ -3283,8 +3779,18 @@
                 "github": "r1j1t",
                 "website": "https://github.com/R1j1t"
             },
-            "category": ["pipeline", "conversational", "research"],
-            "tags": ["spell check", "correction", "preprocessing", "translation", "correction"]
+            "category": [
+                "pipeline",
+                "conversational",
+                "research"
+            ],
+            "tags": [
+                "spell check",
+                "correction",
+                "preprocessing",
+                "translation",
+                "correction"
+            ]
         },
         {
             "id": "texthero",
@@ -3310,7 +3816,9 @@
                 "github": "jbesomi",
                 "website": "https://besomi.ai"
             },
-            "category": ["standalone"]
+            "category": [
+                "standalone"
+            ]
         },
         {
             "id": "cov-bsv",
@@ -3329,8 +3837,18 @@
                 "print(doc._.cov_classification)",
                 "cov_bsv.visualize_doc(doc)"
             ],
-            "category": ["pipeline", "standalone", "biomedical", "scientific"],
-            "tags": ["clinical", "epidemiology", "covid-19", "surveillance"],
+            "category": [
+                "pipeline",
+                "standalone",
+                "biomedical",
+                "scientific"
+            ],
+            "tags": [
+                "clinical",
+                "epidemiology",
+                "covid-19",
+                "surveillance"
+            ],
             "author": "Alec Chapman",
             "author_links": {
                 "github": "abchapman93"
@@ -3358,8 +3876,14 @@
                 "    print(ent, ent._.is_negated, ent._.is_family, ent._.is_historical)",
                 "medspacy.visualization.visualize_ent(doc)"
             ],
-            "category": ["biomedical", "scientific", "research"],
-            "tags": ["clinical"],
+            "category": [
+                "biomedical",
+                "scientific",
+                "research"
+            ],
+            "tags": [
+                "clinical"
+            ],
             "author": "medspacy",
             "author_links": {
                 "github": "medspacy"
@@ -3394,8 +3918,15 @@
                 "r = nlp(\"She was wearing a short wide-cut dress\")",
                 "print(list([{\"label\": e.label_, \"text\": e.text} for e in r.ents]))"
             ],
-            "category": ["standalone"],
-            "tags": ["dsl", "language-patterns", "language-rules", "nlp"],
+            "category": [
+                "standalone"
+            ],
+            "tags": [
+                "dsl",
+                "language-patterns",
+                "language-rules",
+                "nlp"
+            ],
             "author": "Šarūnas Navickas",
             "author_links": {
                 "github": "zaibacu"
@@ -3424,8 +3955,15 @@
             "author_links": {
                 "github": "revuel"
             },
-            "category": ["scientific", "research", "standalone"],
-            "tags": ["Evolutionary Computation", "Grammatical Evolution"]
+            "category": [
+                "scientific",
+                "research",
+                "standalone"
+            ],
+            "tags": [
+                "Evolutionary Computation",
+                "Grammatical Evolution"
+            ]
         },
         {
             "id": "SpacyDotNet",
@@ -3479,7 +4017,9 @@
             "author_links": {
                 "github": "AMArostegui"
             },
-            "category": ["nonpython"]
+            "category": [
+                "nonpython"
+            ]
         },
         {
             "id": "ruts",
@@ -3505,8 +4045,14 @@
                 "twitter": "shk_sergey",
                 "github": "SergeyShk"
             },
-            "category": ["pipeline", "standalone"],
-            "tags": ["Text Analytics", "Russian"]
+            "category": [
+                "pipeline",
+                "standalone"
+            ],
+            "tags": [
+                "Text Analytics",
+                "Russian"
+            ]
         },
         {
             "id": "trunajod",
@@ -3540,8 +4086,16 @@
             "author_links": {
                 "github": "dpalmasan"
             },
-            "category": ["research", "standalone", "scientific"],
-            "tags": ["Text Analytics", "Coherence", "Cohesion"]
+            "category": [
+                "research",
+                "standalone",
+                "scientific"
+            ],
+            "tags": [
+                "Text Analytics",
+                "Coherence",
+                "Cohesion"
+            ]
         },
         {
             "id": "lingfeat",
@@ -3583,7 +4137,7 @@
                 "",
                 "#Lexico Semantic (LxSem) Features",
                 "TTRF = LingFeat.TTRF_() #Type Token Ratio Features",
-                "VarF = LingFeat.VarF_() #Noun/Verb/Adj/Adv Variation Features", 
+                "VarF = LingFeat.VarF_() #Noun/Verb/Adj/Adv Variation Features",
                 "PsyF = LingFeat.PsyF_() #Psycholinguistic Difficulty of Words (AoA Kuperman)",
                 "WoLF = LingFeat.WorF_() #Word Familiarity from Frequency Count (SubtlexUS)",
                 "",
@@ -3599,8 +4153,19 @@
                 "github": "brucewlee",
                 "website": "https://brucewlee.github.io/"
             },
-            "category": ["research", "scientific"],
-            "tags": ["Readability", "Simplification", "Feature Extraction", "Syntax", "Discourse", "Semantics", "Lexical"]
+            "category": [
+                "research",
+                "scientific"
+            ],
+            "tags": [
+                "Readability",
+                "Simplification",
+                "Feature Extraction",
+                "Syntax",
+                "Discourse",
+                "Semantics",
+                "Lexical"
+            ]
         },
         {
             "id": "hmrb",
@@ -3676,8 +4241,17 @@
                 "twitter": "bodak",
                 "website": "https://github.com/babylonhealth/"
             },
-            "category": ["pipeline", "standalone", "scientific", "biomedical"],
-            "tags": ["babylonhealth", "rule-engine", "matcher"]
+            "category": [
+                "pipeline",
+                "standalone",
+                "scientific",
+                "biomedical"
+            ],
+            "tags": [
+                "babylonhealth",
+                "rule-engine",
+                "matcher"
+            ]
         },
         {
             "id": "forte",
@@ -3708,8 +4282,13 @@
                 "github": "asyml",
                 "website": "https://petuum.com"
             },
-            "category": ["pipeline", "standalone"],
-            "tags": ["pipeline"]
+            "category": [
+                "pipeline",
+                "standalone"
+            ],
+            "tags": [
+                "pipeline"
+            ]
         },
         {
             "id": "spacy-api-docker-v3",
@@ -3732,7 +4311,9 @@
             "author_links": {
                 "github": "bbieniek"
             },
-            "category": ["apis"]
+            "category": [
+                "apis"
+            ]
         },
         {
             "id": "phruzz_matcher",
@@ -3775,8 +4356,17 @@
                 "twitter": "vallotin",
                 "website": "https://fiqus.coop/"
             },
-            "category": ["pipeline", "research", "standalone"],
-            "tags": ["spacy", "python", "nlp", "ner"]
+            "category": [
+                "pipeline",
+                "research",
+                "standalone"
+            ],
+            "tags": [
+                "spacy",
+                "python",
+                "nlp",
+                "ner"
+            ]
         },
         {
             "id": "WordDumb",
@@ -3791,7 +4381,9 @@
             "author_links": {
                 "github": "xxyzz"
             },
-            "category": ["standalone"]
+            "category": [
+                "standalone"
+            ]
         },
         {
             "id": "eng_spacysentiment",
@@ -3816,8 +4408,14 @@
                 "github": "Vishnunkumar",
                 "twitter": "vishnun_uchiha"
             },
-            "category": ["pipeline"],
-            "tags": ["pipeline", "nlp", "sentiment"]
+            "category": [
+                "pipeline"
+            ],
+            "tags": [
+                "pipeline",
+                "nlp",
+                "sentiment"
+            ]
         },
         {
             "id": "textnets",
@@ -3840,7 +4438,10 @@
                 "github": "jboynyc",
                 "twitter": "jboy"
             },
-            "category": ["visualizers", "standalone"]
+            "category": [
+                "visualizers",
+                "standalone"
+            ]
         },
         {
             "id": "tmtoolkit",
@@ -3876,10 +4477,12 @@
                 "github": "internaut",
                 "twitter": "_knrd"
             },
-            "category": ["scientific", "standalone"]
+            "category": [
+                "scientific",
+                "standalone"
+            ]
         }
     ],
-
     "categories": [
         {
             "label": "Projects",
