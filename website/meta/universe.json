@@ -3019,6 +3019,7 @@
                 "                \"Do you also have some ovens.\"]",
                 "}",
                 "",
+                "# see github repo for examples on sentence-transformers and Huggingface",
                 "nlp = spacy.load('en_core_web_md')",
                 "nlp.add_pipe(\"text_categorizer\", ",
                 "    config={",
