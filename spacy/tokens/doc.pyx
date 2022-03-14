@@ -1457,7 +1457,7 @@ cdef class Doc:
         underscore (list): Optional list of string names of custom doc._.
         attributes. Attribute values need to be JSON-serializable. Values will
         be added to an "_" key in the data, e.g. "_": {"foo": "bar"}.
-        RETURNS (dict): The data in spaCy's JSON format.
+        RETURNS (dict): The data in JSON format.
         """
         data = {"text": self.text}
         if self.has_annotation("ENT_IOB"):
@@ -1486,6 +1486,15 @@ cdef class Doc:
                 token_data["dep"] = token.dep_
                 token_data["head"] = token.head.i
             data["tokens"].append(token_data)
+        
+        if self.spans:
+            data["spans"] = {}
+            for span_group in self.spans:
+                data["spans"][span_group] = []
+                for span in self.spans[span_group]:
+                    span_data = {"start": span.start_char, "end": span.end_char, "label": span.label_, "kb_id": span.kb_id_}
+                    data["spans"][span_group].append(span_data)
+
         if underscore:
             data["_"] = {}
             for attr in underscore:
