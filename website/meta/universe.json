@@ -2603,7 +2603,7 @@
             "id": "classyclassification",
             "title": "Classy Classification",
             "slogan": "Have you ever struggled with needing a spaCy TextCategorizer but didn't have the time to train one from scratch? Classy Classification is the way to go!",
-            "description": "Have you ever struggled with needing a [spaCy TextCategorizer](https://spacy.io/api/textcategorizer) but didn't have the time to train one from scratch? Classy Classification is the way to go! For few-shot classification using [sentence-transformers](https://github.com/UKPLab/sentence-transformers) or [spaCy models](https://spacy.io/usage/models), provide a dictionary with labels and examples, or just provide a list of labels for zero shot-classification with [Hugginface zero-shot classifiers](https://huggingface.co/models?pipeline_tag=zero-shot-classification).",
+            "description": "Have you ever struggled with needing a [spaCy TextCategorizer](https://spacy.io/api/textcategorizer) but didn't have the time to train one from scratch? Classy Classification is the way to go! For few-shot classification using [sentence-transformers](https://github.com/UKPLab/sentence-transformers) or [spaCy models](https://spacy.io/usage/models), provide a dictionary with labels and examples, or just provide a list of labels for zero shot-classification with [Huggingface zero-shot classifiers](https://huggingface.co/models?pipeline_tag=zero-shot-classification).",
             "github": "davidberenstein1957/classy-classification",
             "pip": "classy-classification",
             "code_example": [
