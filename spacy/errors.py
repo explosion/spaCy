@@ -895,6 +895,7 @@ class Errors(metaclass=ErrorsWithCodes):
              "patterns.")
     E1025 = ("Cannot intify the value '{value}' as an IOB string. The only "
              "supported values are: 'I', 'O', 'B' and ''")
+    E1026 = ("Edit tree has an invalid format:\n{errors}")
     
 
 # Deprecated model shortcuts, only used in errors and warnings

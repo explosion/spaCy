@@ -9,7 +9,8 @@ import srsly
 from thinc.api import Config, Model, SequenceCategoricalCrossentropy
 from thinc.types import Floats2d, Ints1d, Ints2d
 
-from .edit_trees import EditTrees
+from ._edit_tree_internals.edit_trees import EditTrees
+from ._edit_tree_internals.schemas import validate_edit_tree
 from .lemmatizer import lemmatizer_score
 from .trainable_pipe import TrainablePipe
 from ..errors import Errors
@@ -18,7 +19,6 @@ from ..tokens import Doc
 from ..training import Example, validate_examples, validate_get_examples
 from ..vocab import Vocab
 from .. import util
-
 
 
 default_model_config = """
@@ -93,7 +93,7 @@ class EditTreeLemmatizer(TrainablePipe):
         scorer: Optional[Callable] = lemmatizer_score,
     ):
         """
-        Construct and edit tree lemmatizer.
+        Construct an edit tree lemmatizer.
 
         backoff (Optional[str]): backoff to use when the predicted edit trees
             are not applicable. Must be an attribute of Token or None (leave the
@@ -118,7 +118,7 @@ class EditTreeLemmatizer(TrainablePipe):
         self.scorer = scorer
 
     def get_loss(
-        self, examples: Iterable[Example], scores
+        self, examples: Iterable[Example], scores: List[Floats2d]
     ) -> Tuple[float, List[Floats2d]]:
         validate_examples(examples, "EditTreeLemmatizer.get_loss")
         loss_func = SequenceCategoricalCrossentropy(normalize=False, missing_value=-1)
@@ -145,20 +145,20 @@ class EditTreeLemmatizer(TrainablePipe):
 
         return float(loss), d_scores
 
-    def predict(self, docs: Sequence[Doc]) -> List[Ints2d]:
+    def predict(self, docs: Iterable[Doc]) -> List[Ints2d]:
+        n_docs = len(list(docs))
         if not any(len(doc) for doc in docs):
             # Handle cases where there are no tokens in any docs.
             n_labels = len(self.cfg["labels"])
-            guesses: List[Ints2d] = [self.model.ops.alloc((0, n_labels), dtype="i") for doc in docs]
-            assert len(guesses) == len(docs)
+            guesses: List[Ints2d] = [
+                self.model.ops.alloc((0, n_labels), dtype="i") for doc in docs
+            ]
+            assert len(guesses) == n_docs
             return guesses
-
         scores = self.model.predict(docs)
-        assert len(scores) == len(docs)
-
+        assert len(scores) == n_docs
         guesses = self._scores2guesses(docs, scores)
-        assert len(guesses) == len(docs)
-
+        assert len(guesses) == n_docs
         return guesses
 
     def _scores2guesses(self, docs, scores):
@@ -187,10 +187,7 @@ class EditTreeLemmatizer(TrainablePipe):
 
         return guesses
 
-    def set_annotations(self, docs, batch_tree_ids):
-        if isinstance(docs, Doc):
-            docs = [docs]
-
+    def set_annotations(self, docs: Iterable[Doc], batch_tree_ids):
         for i, doc in enumerate(docs):
             doc_tree_ids = batch_tree_ids[i]
             if hasattr(doc_tree_ids, "get"):
@@ -201,7 +198,6 @@ class EditTreeLemmatizer(TrainablePipe):
                     # the special identifier -1 is used. Otherwise the tree
                     # is guaranteed to be applicable.
                     if tree_id == -1:
-                        # TODO: generalize with a getter setting
                         if self.backoff is not None:
                             doc[j].lemma = getattr(doc[j], self.backoff)
                     else:
@@ -218,14 +214,14 @@ class EditTreeLemmatizer(TrainablePipe):
         return True
 
     @property
-    def label_data(self):
+    def label_data(self) -> Dict:
         trees = []
         for tree_id in range(len(self.trees)):
             tree = self.trees[tree_id]
-            if not tree["is_match_node"]:
-                subst_node = tree["inner"]["subst_node"]
-                subst_node["orig"] = self.vocab.strings[subst_node["orig"]]
-                subst_node["subst"] = self.vocab.strings[subst_node["subst"]]
+            if "orig" in tree:
+                tree["orig"] = self.vocab.strings[tree["orig"]]
+            if "subst" in tree:
+                tree["subst"] = self.vocab.strings[tree["subst"]]
             trees.append(tree)
         return dict(trees=trees, labels=tuple(self.cfg["labels"]))
 
@@ -328,15 +324,19 @@ class EditTreeLemmatizer(TrainablePipe):
             raise ValueError(Errors.E857.format(name="trees"))
 
         self.cfg["labels"] = list(labels["labels"])
+        trees = []
+        for tree in labels["trees"]:
+            errors = validate_edit_tree(tree)
+            if errors:
+                raise ValueError(Errors.E1026.format(errors="\n".join(errors)))
 
-        # Do not modify the caller's data structures.
-        trees = deepcopy(labels["trees"])
+            tree = dict(tree)
+            if "orig" in tree:
+                tree["orig"] = self.vocab.strings[tree["orig"]]
+            if "orig" in tree:
+                tree["subst"] = self.vocab.strings[tree["subst"]]
 
-        for tree in trees:
-            if not tree["is_match_node"]:
-                subst_node = tree["inner"]["subst_node"]
-                subst_node["orig"] = self.vocab.strings[subst_node["orig"]]
-                subst_node["subst"] = self.vocab.strings[subst_node["subst"]]
+            trees.append(tree)
 
         self.trees.from_json(trees)
 
