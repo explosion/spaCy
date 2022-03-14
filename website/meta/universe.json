@@ -1,6 +1,73 @@
 {
     "resources": [
         {
+            "id": "scrubadub_spacy",
+            "title": "scrubadub_spacy",
+            "category": ["pipeline"],
+            "tags": [""],
+            "slogan": "Clean personally identifiable information from dirty dirty text using spaCy.",
+            "description": "scrubadub removes personally identifiable information from text. scrubadub_spacy is an extension that uses spaCy NLP models to remove personal information from text.",
+            "github": "LeapBeyond/scrubadub_spacy",
+            "pip": "scrubadub-spacy",
+            "url": "https://github.com/LeapBeyond/scrubadub_spacy",
+            "code_language": "python",
+            "author": "Thomas Bird",
+            "author_links": {
+                "twitter": "thomasbird",
+                "github": "thomasbird",
+                "website": "http://thomasbird.com"
+            },
+            "code_example": [
+                "import scrubadub, scrubadub_spacy",
+                "scrubber = scrubadub.Scrubber()",
+                "scrubber.add_detector(scrubadub_spacy.detectors.SpacyEntityDetector)",
+                "print(scrubber.clean(\"My name is Philip, I work at Explosion in Berlin, and my eMail is philip@explosion.ai btw. my super secret twitter login is username: philipvollet password: g-dragon180888\"))",
+                "# My name is {{NAME}}, I work at {{ORGANIZATION}} in {{LOCATION}}, and my eMail is {{EMAIL}} btw. my super secret twitter login is username: {{USERNAME}} password: {{PASSWORD}}"
+            ]
+        },
+        {
+            "id": "spacy-setfit-textcat",
+            "title": "spacy-setfit-textcat",
+            "category": ["research"],
+            "tags": ["SetFit", "Few-Shot"],
+            "slogan": "spaCy Project: Experiments with SetFit & Few-Shot Classification",
+            "description": "This project is an experiment with spaCy and few-shot text classification using SetFit",
+            "github": "pmbaumgartner/spacy-setfit-textcat",
+            "url": "https://github.com/LeapBeyond/scrubadub_spacy",
+            "code_language": "python",
+            "author": "Peter Baumgartner",
+            "author_links": {
+                "twitter" : "https://twitter.com/pmbaumgartner",
+                "github": "https://github.com/pmbaumgartner",
+                "website": "https://www.peterbaumgartner.com/"
+            },
+            "code_example": [
+                "https://colab.research.google.com/drive/1CvGEZC0I9_v8gWrBxSJQ4Z8JGPJz-HYb?usp=sharing"
+            ]
+        },
+        {
+            "id": "spacy-experimental",
+            "title": "spacy-experimental",
+            "category": ["extension"],
+            "tags": [""],
+            "slogan": "Cutting-edge experimental spaCy components and features",
+            "description": "This package includes experimental components and features for spaCy v3.x, for example model architectures, pipeline components and utilities.",
+            "github": "explosion/spacy-experimental",
+            "pip": "spacy-experimental",
+            "url": "https://github.com/explosion/spacy-experimental",
+            "code_language": "python",
+            "author": "Explosion",
+            "author_links": {
+                "twitter" : "https://twitter.com/explosion_ai",
+                "github": "https://github.com/explosion",
+                "website": "https://explosion.ai/"
+            },
+            "code_example": [
+                "python -m pip install -U pip setuptools wheel",
+                "python -m pip install spacy-experimental"
+            ]
+        },
+        {
             "id": "spacypdfreader",
             "title": "spadypdfreader",
             "category": ["pipeline"],
@@ -441,6 +508,80 @@
                 "github": "koaning",
                 "website": "https://koaning.io"
             }
+        },
+        {
+            "id": "Klayers",
+            "title": "Klayers",
+            "category": ["pipeline"],
+            "tags": ["AWS"],
+            "slogan": "Python Packages as AWS Lambda Layers",
+            "description": "A collection of Python Packages as AWS Lambda(λ) Layers",
+            "github": "keithrozario/Klayers",
+            "pip": "",
+            "url": "https://github.com/keithrozario/Klayers",
+            "code_language": "python",
+            "author": "Explosion",
+            "author_links": {
+                "twitter" : "https://twitter.com/explosion_ai",
+                "github": "https://github.com/explosion",
+                "website": "https://explosion.ai/"
+            },
+            "code_example": [
+                "# SAM Template",
+                "MyLambdaFunction:",
+                "    Type: AWS::Serverless::Function",
+                "    Handler: 02_pipeline/spaCy.main",
+                "    Description: Name Entity Extraction",
+                "    Runtime: python3.8",
+                "    Layers:",
+                "        - arn:aws:lambda:${self:provider.region}:113088814899:layer:Klayers-python37-spacy:18"
+            ]
+        },
+        {
+            "type": "education",
+            "id": "video-spacys-ner-model-alt",
+            "title": "Named Entity Recognition (NER) using spaCy",
+            "slogan": "",
+            "description": "",
+            "youtube": "Gn_PjruUtrc",
+            "author": "Applied Language Technology",
+            "author_links": {
+                "twitter": "HelsinkiNLP",
+                "github": "Applied-Language-Technology",
+                "website": "https://applied-language-technology.mooc.fi/"
+            },
+            "category": ["videos"]
+        },
+        {
+            "id": "HuSpaCy",
+            "title": "HuSpaCy",
+            "category": ["models"],
+            "tags": ["Hungarian"],
+            "slogan": "HuSpaCy: industrial-strength Hungarian natural language processing",
+            "description": "HuSpaCy is a spaCy model and a library providing industrial-strength Hungarian language processing facilities.",
+            "github": "huspacy/huspacy",
+            "pip": "huspacy",
+            "url": "https://github.com/LeapBeyond/scrubadub_spacy",
+            "code_language": "python",
+            "author": "SzegedAI",
+            "author_links": {
+                "github": "https://szegedai.github.io/",
+                "website": "https://u-szeged.hu/english"
+            },
+            "code_example": [
+                "# Load the model using huspacy",
+                "import huspacy",
+                "nlp = huspacy.load()\n",
+                
+                "# Load the mode using spacy.load()",
+                "import spacy",
+                "nlp = spacy.load(\"hu_core_news_lg\")\n",
+                "# Load the model directly as a module",
+                "import hu_core_news_lg",
+                "nlp = hu_core_news_lg.load()\n",
+                "# Either way you get the same model and can start processing texts.",
+                "doc = nlp(\"Csiribiri csiribiri zabszalma - négy csillag közt alszom ma.\")"
+            ]
         },
         {
             "id": "spacy-stanza",
