@@ -241,7 +241,9 @@ Delegates to [`predict`](/api/spancategorizer#predict) and
 
 ## SpanCategorizer.set_candidates {#set_candidates tag="method", new="3.3"}
 
-Use the suggester to add a list of [`Span`](/api/span) candidates to a list of [`Doc`](/api/doc) objects. This method is intended to be used for debugging purposes.
+Use the suggester to add a list of [`Span`](/api/span) candidates to a list of
+[`Doc`](/api/doc) objects. This method is intended to be used for debugging
+purposes.
 
 > #### Example
 >
@@ -250,9 +252,9 @@ Use the suggester to add a list of [`Span`](/api/span) candidates to a list of [
 > spancat.set_candidates(docs, "candidates")
 > ```
 
-| Name     | Description                                               |
-| -------- | --------------------------------------------------------- |
-| `docs`   | The documents to modify. ~~Iterable[Doc]~~                |
+| Name             | Description                                                          |
+| ---------------- | -------------------------------------------------------------------- |
+| `docs`           | The documents to modify. ~~Iterable[Doc]~~                           |
 | `candidates_key` | Key of the Doc.spans dict to save the candidate spans under. ~~str~~ |
 
 ## SpanCategorizer.get_loss {#get_loss tag="method"}
