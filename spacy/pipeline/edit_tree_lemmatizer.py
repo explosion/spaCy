@@ -39,7 +39,7 @@ DEFAULT_EDIT_TREE_LEMMATIZER_MODEL = Config().from_str(default_model_config)["mo
 
 
 @Language.factory(
-    "edit_tree_lemmatizer",
+    "trainable_lemmatizer",
     assigns=["token.lemma"],
     requires=[],
     default_config={
@@ -84,7 +84,7 @@ class EditTreeLemmatizer(TrainablePipe):
         self,
         vocab: Vocab,
         model: Model,
-        name: str = "edit_tree_lemmatizer",
+        name: str = "trainable_lemmatizer",
         *,
         backoff: Optional[str] = "orth",
         min_tree_freq: int = 3,

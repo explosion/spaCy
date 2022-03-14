@@ -32,7 +32,7 @@ PARTIAL_DATA = [
 
 def test_initialize_examples():
     nlp = Language()
-    lemmatizer = nlp.add_pipe("edit_tree_lemmatizer")
+    lemmatizer = nlp.add_pipe("trainable_lemmatizer")
     train_examples = []
     for t in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
@@ -50,7 +50,7 @@ def test_initialize_examples():
 
 def test_initialize_from_labels():
     nlp = Language()
-    lemmatizer = nlp.add_pipe("edit_tree_lemmatizer")
+    lemmatizer = nlp.add_pipe("trainable_lemmatizer")
     lemmatizer.min_tree_freq = 1
     train_examples = []
     for t in TRAIN_DATA:
@@ -58,7 +58,7 @@ def test_initialize_from_labels():
     nlp.initialize(get_examples=lambda: train_examples)
 
     nlp2 = Language()
-    lemmatizer2 = nlp2.add_pipe("edit_tree_lemmatizer")
+    lemmatizer2 = nlp2.add_pipe("trainable_lemmatizer")
     lemmatizer2.initialize(
         get_examples=lambda: train_examples,
         labels=lemmatizer.label_data,
@@ -73,7 +73,7 @@ def test_no_data():
         ("I'm so angry", {"cats": {"POSITIVE": 0.0, "NEGATIVE": 1.0}}),
     ]
     nlp = English()
-    nlp.add_pipe("edit_tree_lemmatizer")
+    nlp.add_pipe("trainable_lemmatizer")
     nlp.add_pipe("textcat")
 
     train_examples = []
@@ -87,7 +87,7 @@ def test_no_data():
 def test_incomplete_data():
     # Test that the lemmatizer works with incomplete information
     nlp = English()
-    lemmatizer = nlp.add_pipe("edit_tree_lemmatizer")
+    lemmatizer = nlp.add_pipe("trainable_lemmatizer")
     lemmatizer.min_tree_freq = 1
     train_examples = []
     for t in PARTIAL_DATA:
@@ -96,7 +96,7 @@ def test_incomplete_data():
     for i in range(50):
         losses = {}
         nlp.update(train_examples, sgd=optimizer, losses=losses)
-    assert losses["edit_tree_lemmatizer"] < 0.00001
+    assert losses["trainable_lemmatizer"] < 0.00001
 
     # test the trained model
     test_text = "She likes blue eggs"
@@ -107,7 +107,7 @@ def test_incomplete_data():
 
 def test_overfitting_IO():
     nlp = English()
-    lemmatizer = nlp.add_pipe("edit_tree_lemmatizer")
+    lemmatizer = nlp.add_pipe("trainable_lemmatizer")
     lemmatizer.min_tree_freq = 1
     train_examples = []
     for t in TRAIN_DATA:
@@ -118,7 +118,7 @@ def test_overfitting_IO():
     for i in range(50):
         losses = {}
         nlp.update(train_examples, sgd=optimizer, losses=losses)
-    assert losses["edit_tree_lemmatizer"] < 0.00001
+    assert losses["trainable_lemmatizer"] < 0.00001
 
     test_text = "She likes blue eggs"
     doc = nlp(test_text)
@@ -140,7 +140,7 @@ def test_overfitting_IO():
     # Check model after a {to,from}_bytes roundtrip
     nlp_bytes = nlp.to_bytes()
     nlp3 = English()
-    nlp3.add_pipe("edit_tree_lemmatizer")
+    nlp3.add_pipe("trainable_lemmatizer")
     nlp3.from_bytes(nlp_bytes)
     doc3 = nlp3(test_text)
     assert doc3[0].lemma_ == "she"
@@ -160,14 +160,14 @@ def test_overfitting_IO():
 
 def test_lemmatizer_requires_labels():
     nlp = English()
-    nlp.add_pipe("edit_tree_lemmatizer")
+    nlp.add_pipe("trainable_lemmatizer")
     with pytest.raises(ValueError):
         nlp.initialize()
 
 
 def test_lemmatizer_label_data():
     nlp = English()
-    lemmatizer = nlp.add_pipe("edit_tree_lemmatizer")
+    lemmatizer = nlp.add_pipe("trainable_lemmatizer")
     lemmatizer.min_tree_freq = 1
     train_examples = []
     for t in TRAIN_DATA:
@@ -176,7 +176,7 @@ def test_lemmatizer_label_data():
     nlp.initialize(get_examples=lambda: train_examples)
 
     nlp2 = English()
-    lemmatizer2 = nlp2.add_pipe("edit_tree_lemmatizer")
+    lemmatizer2 = nlp2.add_pipe("trainable_lemmatizer")
     lemmatizer2.initialize(
         get_examples=lambda: train_examples, labels=lemmatizer.label_data
     )
