@@ -18,6 +18,7 @@ from ..vocab import Vocab
 from ..ml.models.coref_util import (
     create_gold_scores,
     MentionClusters,
+    create_head_span_idxs,
     get_clusters_from_doc,
     get_predicted_clusters,
     DEFAULT_CLUSTER_PREFIX,
@@ -26,7 +27,8 @@ from ..ml.models.coref_util import (
 
 from ..coref_scorer import Evaluator, get_cluster_info, b_cubed, muc, ceafe
 
-default_config = """
+# TODO remove this - kept for reference for now
+old_default_config = """
 [model]
 @architectures = "spacy.Coref.v1"
 max_span_width = 20
@@ -38,6 +40,35 @@ antecedent_limit = 50
 
 [model.get_mentions]
 @misc = "spacy.CorefCandidateGenerator.v1"
+
+[model.tok2vec]
+@architectures = "spacy.Tok2Vec.v2"
+
+[model.tok2vec.embed]
+@architectures = "spacy.MultiHashEmbed.v1"
+width = 64
+rows = [2000, 2000, 1000, 1000, 1000, 1000]
+attrs = ["ORTH", "LOWER", "PREFIX", "SUFFIX", "SHAPE", "ID"]
+include_static_vectors = false
+
+[model.tok2vec.encode]
+@architectures = "spacy.MaxoutWindowEncoder.v2"
+width = ${model.tok2vec.embed.width}
+window_size = 1
+maxout_pieces = 3
+depth = 2
+"""
+
+default_config = """
+[model]
+@architectures = "spacy.WLCoref.v1"
+embedding_size = 20
+hidden_size = 1024
+n_hidden_layers = 1
+dropout = 0.3
+rough_k = 50
+a_scoring_batch_size = 512
+sp_embedding_size = 64
 
 [model.tok2vec]
 @architectures = "spacy.Tok2Vec.v2"
@@ -210,7 +241,9 @@ class CoreferenceResolver(TrainablePipe):
         inputs = [example.predicted for example in examples]
         preds, backprop = self.model.begin_update(inputs)
         score_matrix, mention_idx = preds
+
         loss, d_scores = self.get_loss(examples, score_matrix, mention_idx)
+        # TODO check shape here
         backprop((d_scores, mention_idx))
 
         if sgd is not None:
@@ -292,15 +325,24 @@ class CoreferenceResolver(TrainablePipe):
         offset = 0
         gradients = []
         total_loss = 0
+        #TODO change this
+        # 1. do not handle batching (add it back later)
+        # 2. don't do index conversion (no mentions, just word indices)
+        # 3. convert words to spans (if necessary) in gold and predictions
+   
+        # massage score matrix to be shaped correctly
+        score_matrix = [ (score_matrix, None) ]
         for example, (cscores, cidx) in zip(examples, score_matrix):
 
             ll = cscores.shape[0]
             hi = offset + ll
 
             clusters = get_clusters_from_doc(example.reference)
-            gscores = create_gold_scores(mention_idx[offset:hi], clusters)
+            span_idxs = create_head_span_idxs(ops, len(example.predicted))
+            gscores = create_gold_scores(span_idxs, clusters)
             gscores = ops.asarray2f(gscores)
-            top_gscores = xp.take_along_axis(gscores, cidx, axis=1)
+            #top_gscores = xp.take_along_axis(gscores, cidx, axis=1)
+            top_gscores = xp.take_along_axis(gscores, mention_idx, axis=1)
             # now add the placeholder
             gold_placeholder = ~top_gscores.any(axis=1).T
             gold_placeholder = xp.expand_dims(gold_placeholder, 1)
@@ -319,6 +361,8 @@ class CoreferenceResolver(TrainablePipe):
 
             offset = hi
 
+        # Undo the wrapping
+        gradients = gradients[0][0]
         return total_loss, gradients
 
     def initialize(

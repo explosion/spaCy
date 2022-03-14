@@ -193,6 +193,11 @@ def select_non_crossing_spans(
     #     selected.append(selected[0])  # this seems a bit weird?
     return selected
 
+def create_head_span_idxs(ops, doclen: int):
+    """Helper function to create single-token span indices."""
+    aa = ops.xp.arange(0, doclen)
+    bb = ops.xp.arange(0, doclen) + 1
+    return ops.asarray2i([aa, bb]).T
 
 def get_clusters_from_doc(doc) -> List[List[Tuple[int, int]]]:
     """Given a Doc, convert the cluster spans to simple int tuple lists."""
@@ -201,7 +206,13 @@ def get_clusters_from_doc(doc) -> List[List[Tuple[int, int]]]:
         cluster = []
         for span in val:
             # TODO check that there isn't an off-by-one error here
-            cluster.append((span.start, span.end))
+            #cluster.append((span.start, span.end))
+            # TODO This conversion should be happening earlier in processing
+            head_i = span.root.i
+            cluster.append( (head_i, head_i + 1) )
+
+        # don't want duplicates
+        cluster = list(set(cluster))
         out.append(cluster)
     return out
 
@@ -210,7 +221,11 @@ def create_gold_scores(
     ments: Ints2d, clusters: List[List[Tuple[int, int]]]
 ) -> List[List[bool]]:
     """Given mentions considered for antecedents and gold clusters,
-    construct a gold score matrix. This does not include the placeholder."""
+    construct a gold score matrix. This does not include the placeholder.
+
+    In the gold matrix, the value of a true antecedent is True, and otherwise
+    it is False. These will be converted to 1/0 values later.
+    """
     # make a mapping of mentions to cluster id
     # id is not important but equality will be
     ment2cid = {}

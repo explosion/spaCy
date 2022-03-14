@@ -4,7 +4,7 @@ import warnings
 from thinc.api import Model, Linear, Relu, Dropout
 from thinc.api import chain, noop, Embed, add, tuplify, concatenate
 from thinc.api import reduce_first, reduce_last, reduce_mean
-from thinc.api import PyTorchWrapper
+from thinc.api import PyTorchWrapper, ArgsKwargs
 from thinc.types import Floats2d, Floats1d, Ints1d, Ints2d, Ragged
 from typing import List, Callable, Tuple, Any
 from ...tokens import Doc
@@ -455,6 +455,7 @@ def pairwise_product(bilinear, dropout, vecs: Floats2d, is_train):
 from typing import List, Tuple
 
 import torch
+from thinc.util import xp2torch, torch2xp
 
 # TODO rename this to coref_util
 from .coref_util_wl import add_dummy
@@ -475,6 +476,7 @@ def build_wl_coref_model(
     # span predictor embeddings
     sp_embedding_size: int = 64,
     ):
+    dim = tok2vec.get_dim("nO")
     
     with Model.define_operators({">>": chain}):
         # TODO chain tok2vec with these models
@@ -483,6 +485,7 @@ def build_wl_coref_model(
         coref_scorer = PyTorchWrapper(
             CorefScorer(
                 device,
+                dim,
                 embedding_size,
                 hidden_size,
                 n_hidden_layers,
@@ -513,11 +516,20 @@ def build_wl_coref_model(
 
 def convert_coref_scorer_inputs(
     model: Model,
-    X: Floats2d,
+    X: List[Floats2d],
     is_train: bool
 ):
-    word_features = xp2torch(X, requires_grad=False)
-    return ArgsKwargs(args=(word_features, ), kwargs={}), lambda dX: []
+    # The input here is List[Floats2d], one for each doc
+    # just use the first
+    # TODO real batching
+    X = X[0]
+
+    word_features = xp2torch(X, requires_grad=is_train)
+    def backprop(args: ArgsKwargs) -> List[Floats2d]:
+        # convert to xp and wrap in list
+        gradients = torch2xp(args.args[0])
+        return [gradients]
+    return ArgsKwargs(args=(word_features, ), kwargs={}), backprop
 
 
 def convert_coref_scorer_outputs(
@@ -529,7 +541,7 @@ def convert_coref_scorer_outputs(
     scores, indices = outputs
 
     def convert_for_torch_backward(dY: Floats2d) -> ArgsKwargs:
-        dY_t = xp2torch(dY)
+        dY_t = xp2torch(dY[0])
         return ArgsKwargs(
             args=([scores],),
             kwargs={"grad_tensors": [dY_t]},
@@ -633,6 +645,7 @@ class CorefScorer(torch.nn.Module):
     def __init__(
         self,
         device: str,
+        dim: int, # tok2vec size
         dist_emb_size: int,
         hidden_size: int,
         n_layers: int,
@@ -650,7 +663,8 @@ class CorefScorer(torch.nn.Module):
         """
         # device, dist_emb_size, hidden_size, n_layers, dropout_rate
         self.pw = DistancePairwiseEncoder(dist_emb_size, dropout_rate).to(device)
-        bert_emb = 1024
+        #TODO clean this up
+        bert_emb = dim
         pair_emb = bert_emb * 3 + self.pw.shape
         self.a_scorer = AnaphoricityScorer(
             pair_emb,
