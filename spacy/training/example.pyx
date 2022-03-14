@@ -159,20 +159,17 @@ cdef class Example:
         gold_values = self.reference.to_array([field])
         output = [None] * len(self.predicted)
         for token in self.predicted:
-            if token.is_space:
+            values = gold_values[align[token.i].dataXd]
+            values = values.ravel()
+            if len(values) == 0:
                 output[token.i] = None
+            elif len(values) == 1:
+                output[token.i] = values[0]
+            elif len(set(list(values))) == 1:
+                # If all aligned tokens have the same value, use it.
+                output[token.i] = values[0]
             else:
-                values = gold_values[align[token.i].dataXd]
-                values = values.ravel()
-                if len(values) == 0:
-                    output[token.i] = None
-                elif len(values) == 1:
-                    output[token.i] = values[0]
-                elif len(set(list(values))) == 1:
-                    # If all aligned tokens have the same value, use it.
-                    output[token.i] = values[0]
-                else:
-                    output[token.i] = None
+                output[token.i] = None
         if as_string and field not in ["ENT_IOB", "SENT_START"]:
             output = [vocab.strings[o] if o is not None else o for o in output]
         return output
@@ -258,6 +255,29 @@ cdef class Example:
     def get_aligned_ner(self):
         x_ents, x_tags = self.get_aligned_ents_and_ner()
         return x_tags
+
+    def get_matching_ents(self, check_label=True):
+        """Return entities that are shared between predicted and reference docs.
+
+        If `check_label` is True, entities must have matching labels to be
+        kept. Otherwise only the character indices need to match.
+        """
+        gold = {}
+        for ent in self.reference.ents:
+            gold[(ent.start_char, ent.end_char)] = ent.label
+
+        keep = []
+        for ent in self.predicted.ents:
+            key = (ent.start_char, ent.end_char)
+            if key not in gold:
+                continue
+
+            if check_label and ent.label != gold[key]:
+                continue
+
+            keep.append(ent)
+
+        return keep
 
     def to_dict(self):
         return {

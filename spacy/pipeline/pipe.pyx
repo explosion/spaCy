@@ -103,6 +103,10 @@ cdef class Pipe:
         return tuple()
 
     @property
+    def hide_labels(self) -> bool:
+        return False
+
+    @property
     def label_data(self):
         """Optional JSON-serializable data that would be sufficient to recreate
         the label set if provided to the `pipe.initialize()` method.

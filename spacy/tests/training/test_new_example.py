@@ -421,3 +421,13 @@ def test_Example_missing_heads():
     # Ensure that the missing head doesn't create an artificial new sentence start
     expected = [True, False, False, False, False, False]
     assert example.get_aligned_sent_starts() == expected
+
+
+def test_Example_aligned_whitespace(en_vocab):
+    words = ["a", " ", "b"]
+    tags = ["A", "SPACE", "B"]
+    predicted = Doc(en_vocab, words=words)
+    reference = Doc(en_vocab, words=words, tags=tags)
+
+    example = Example(predicted, reference)
+    assert example.get_aligned("TAG", as_string=True) == tags

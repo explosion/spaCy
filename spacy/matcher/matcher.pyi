@@ -1,4 +1,6 @@
-from typing import Any, List, Dict, Tuple, Optional, Callable, Union, Iterator, Iterable
+from typing import Any, List, Dict, Tuple, Optional, Callable, Union
+from typing import Iterator, Iterable, overload
+from ..compat import Literal
 from ..vocab import Vocab
 from ..tokens import Doc, Span
 
@@ -31,12 +33,22 @@ class Matcher:
     ) -> Union[
         Iterator[Tuple[Tuple[Doc, Any], Any]], Iterator[Tuple[Doc, Any]], Iterator[Doc]
     ]: ...
+    @overload
     def __call__(
         self,
         doclike: Union[Doc, Span],
         *,
-        as_spans: bool = ...,
+        as_spans: Literal[False] = ...,
         allow_missing: bool = ...,
         with_alignments: bool = ...
-    ) -> Union[List[Tuple[int, int, int]], List[Span]]: ...
+    ) -> List[Tuple[int, int, int]]: ...
+    @overload
+    def __call__(
+        self,
+        doclike: Union[Doc, Span],
+        *,
+        as_spans: Literal[True],
+        allow_missing: bool = ...,
+        with_alignments: bool = ...
+    ) -> List[Span]: ...
     def _normalize_key(self, key: Any) -> Any: ...

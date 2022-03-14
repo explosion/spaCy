@@ -420,6 +420,8 @@ cdef class Doc:
         cdef int range_start = 0
         if attr == "IS_SENT_START" or attr == self.vocab.strings["IS_SENT_START"]:
             attr = SENT_START
+        elif attr == "IS_SENT_END" or attr == self.vocab.strings["IS_SENT_END"]:
+            attr = SENT_START
         attr = intify_attr(attr)
         # adjust attributes
         if attr == HEAD:

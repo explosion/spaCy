@@ -15,9 +15,9 @@ import {
 } from '../components/landing'
 import { H2 } from '../components/typography'
 import { InlineCode } from '../components/code'
+import { Ul, Li } from '../components/list'
 import Button from '../components/button'
 import Link from '../components/link'
-import { YouTube } from '../components/embed'
 
 import QuickstartTraining from './quickstart-training'
 import Project from './project'
@@ -25,6 +25,7 @@ import Features from './features'
 import courseImage from '../../docs/images/course.jpg'
 import prodigyImage from '../../docs/images/prodigy_overview.jpg'
 import projectsImage from '../../docs/images/projects.png'
+import tailoredPipelinesImage from '../../docs/images/spacy-tailored-pipelines_wide.png'
 
 import Benchmarks from 'usage/_benchmarks-models.md'
 
@@ -104,23 +105,45 @@ const Landing = ({ data }) => {
 
             <LandingBannerGrid>
                 <LandingBanner
-                    label="New in v3.0"
-                    title="Transformer-based pipelines, new training system, project templates &amp; more"
-                    to="/usage/v3"
-                    button="See what's new"
+                    to="https://explosion.ai/spacy-tailored-pipelines"
+                    button="Learn more"
+                    background="#E4F4F9"
+                    color="#1e1935"
                     small
                 >
-                    spaCy v3.0 features all new <strong>transformer-based pipelines</strong> that
-                    bring spaCy's accuracy right up to the current <strong>state-of-the-art</strong>
-                    . You can use any pretrained transformer to train your own pipelines, and even
-                    share one transformer between multiple components with{' '}
-                    <strong>multi-task learning</strong>. Training is now fully configurable and
-                    extensible, and you can define your own custom models using{' '}
-                    <strong>PyTorch</strong>, <strong>TensorFlow</strong> and other frameworks. The
-                    new spaCy projects system lets you describe whole{' '}
-                    <strong>end-to-end workflows</strong> in a single file, giving you an easy path
-                    from prototype to production, and making it easy to clone and adapt
-                    best-practice projects for your own use cases.
+                    <Link to="https://explosion.ai/spacy-tailored-pipelines" hidden>
+                        <img src={tailoredPipelinesImage} alt="spaCy Tailored Pipelines" />
+                    </Link>
+                    <strong>
+                        Get a custom spaCy pipeline, tailor-made for your NLP problem by spaCy's
+                        core developers.
+                    </strong>
+                    <br />
+                    <br />
+                    <Ul>
+                        <Li emoji="🔥">
+                            <strong>Streamlined.</strong> Nobody knows spaCy better than we do. Send
+                            us your pipeline requirements and we'll be ready to start producing your
+                            solution in no time at all.
+                        </Li>
+                        <Li emoji="🐿 ">
+                            <strong>Production ready.</strong> spaCy pipelines are robust and easy
+                            to deploy. You'll get a complete spaCy project folder which is ready to{' '}
+                            <InlineCode>spacy project run</InlineCode>.
+                        </Li>
+                        <Li emoji="🔮">
+                            <strong>Predictable.</strong> You'll know exactly what you're going to
+                            get and what it's going to cost. We quote fees up-front, let you try
+                            before you buy, and don't charge for over-runs at our end — all the risk
+                            is on us.
+                        </Li>
+                        <Li emoji="🛠">
+                            <strong>Maintainable.</strong> spaCy is an industry standard, and we'll
+                            deliver your pipeline with full code, data, tests and documentation, so
+                            your team can retrain, update and extend the solution as your
+                            requirements change.
+                        </Li>
+                    </Ul>
                 </LandingBanner>
 
                 <LandingBanner
@@ -206,8 +229,20 @@ const Landing = ({ data }) => {
             </LandingGrid>
 
             <LandingBannerGrid>
-                <LandingBanner background="#0099dd" color="#ffffff" small>
-                    <YouTube id="9k_EfV7Cns0" />
+                <LandingBanner
+                    label="New in v3.0"
+                    title="Transformer-based pipelines, new training system, project templates &amp; more"
+                    to="/usage/v3"
+                    button="See what's new"
+                    small
+                >
+                    spaCy v3.0 features all new <strong>transformer-based pipelines</strong> that
+                    bring spaCy's accuracy right up to the current <strong>state-of-the-art</strong>
+                    . You can use any pretrained transformer to train your own pipelines, and even
+                    share one transformer between multiple components with{' '}
+                    <strong>multi-task learning</strong>. Training is now fully configurable and
+                    extensible, and you can define your own custom models using{' '}
+                    <strong>PyTorch</strong>, <strong>TensorFlow</strong> and other frameworks.
                 </LandingBanner>
                 <LandingBanner
                     to="https://course.spacy.io"

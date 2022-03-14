@@ -1081,13 +1081,17 @@ on [serialization methods](/usage/saving-loading/#serialization-methods).
 > directory.
 
 ```python
-### Custom serialization methods {highlight="6-7,9-11"}
+### Custom serialization methods {highlight="7-11,13-15"}
 import srsly
+from spacy.util import ensure_path
 
 class AcronymComponent:
     # other methods here...
 
     def to_disk(self, path, exclude=tuple()):
+        path = ensure_path(path)
+        if not path.exists():
+            path.mkdir()
         srsly.write_json(path / "data.json", self.data)
 
     def from_disk(self, path, exclude=tuple()):

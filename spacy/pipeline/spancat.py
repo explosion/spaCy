@@ -378,7 +378,7 @@ class SpanCategorizer(TrainablePipe):
         # If the prediction is 0.9 and it's false, the gradient will be
         # 0.9 (0.9 - 0.0)
         d_scores = scores - target
-        loss = float((d_scores ** 2).sum())
+        loss = float((d_scores**2).sum())
         return loss, d_scores
 
     def initialize(
@@ -413,7 +413,7 @@ class SpanCategorizer(TrainablePipe):
         self._require_labels()
         if subbatch:
             docs = [eg.x for eg in subbatch]
-            spans = self.suggester(docs)
+            spans = build_ngram_suggester(sizes=[1])(docs)
             Y = self.model.ops.alloc2f(spans.dataXd.shape[0], len(self.labels))
             self.model.initialize(X=(docs, spans), Y=Y)
         else:
