@@ -355,7 +355,8 @@ cdef class Vocab:
     def get_vector(self, orth):
         """Retrieve a vector for a word in the vocabulary. Words can be looked
         up by string or int ID. If the current vectors do not contain an entry
-        for the word, a 0-vector in the same number of dimensions is returned.
+        for the word, a 0-vector with the same number of dimensions as the
+        current vectors is returned.
 
         orth (int / unicode): The hash value of a word, or its unicode string.
         RETURNS (numpy.ndarray or cupy.ndarray): A word vector. Size

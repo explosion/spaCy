@@ -170,7 +170,7 @@ cosines are calculated in minibatches to reduce memory usage.
 Retrieve a vector for a word in the vocabulary. Words can be looked up by string
 or hash value. If the current vectors do not contain an entry for the word, a
 0-vector with the same number of dimensions
-([`Vocab.vectors_length`](#attributes)) is returned.
+([`Vocab.vectors_length`](#attributes)) as the current vectors is returned.
 
 > #### Example
 >
