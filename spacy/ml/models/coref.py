@@ -700,6 +700,7 @@ class CorefScorer(torch.nn.Module):
         """
         # words           [n_words, span_emb]
         # cluster_ids     [n_words]
+        self.lstm.flatten_parameters() # XXX without this there's a warning
         word_features = torch.unsqueeze(word_features, dim=0)
         words, _ = self.lstm(word_features)
         words = words.squeeze()
