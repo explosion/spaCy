@@ -27,37 +27,6 @@ from ..ml.models.coref_util import (
 
 from ..coref_scorer import Evaluator, get_cluster_info, b_cubed, muc, ceafe
 
-# TODO remove this - kept for reference for now
-old_default_config = """
-[model]
-@architectures = "spacy.Coref.v1"
-max_span_width = 20
-mention_limit = 3900
-mention_limit_ratio = 0.4
-dropout = 0.3
-hidden = 1000
-antecedent_limit = 50
-
-[model.get_mentions]
-@misc = "spacy.CorefCandidateGenerator.v1"
-
-[model.tok2vec]
-@architectures = "spacy.Tok2Vec.v2"
-
-[model.tok2vec.embed]
-@architectures = "spacy.MultiHashEmbed.v1"
-width = 64
-rows = [2000, 2000, 1000, 1000, 1000, 1000]
-attrs = ["ORTH", "LOWER", "PREFIX", "SUFFIX", "SHAPE", "ID"]
-include_static_vectors = false
-
-[model.tok2vec.encode]
-@architectures = "spacy.MaxoutWindowEncoder.v2"
-width = ${model.tok2vec.embed.width}
-window_size = 1
-maxout_pieces = 3
-depth = 2
-"""
 
 default_config = """
 [model]
