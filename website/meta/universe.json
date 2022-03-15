@@ -377,10 +377,10 @@
             "title": "whatlies",
             "slogan": "Make interactive visualisations to figure out 'what lies' in word embeddings.",
             "description": "This small library offers tools to make visualisation easier of both word embeddings as well as operations on them. It has support for spaCy prebuilt models as a first class citizen but also offers support for sense2vec. There's a convenient API to perform linear algebra as well as support for popular transformations like PCA/UMAP/etc.",
-            "github": "rasahq/whatlies",
+            "github": "koaning/whatlies",
             "pip": "whatlies",
             "thumb": "https://i.imgur.com/rOkOiLv.png",
-            "image": "https://raw.githubusercontent.com/RasaHQ/whatlies/master/docs/gif-two.gif",
+            "image": "https://raw.githubusercontent.com/koaning/whatlies/master/docs/gif-two.gif",
             "code_example": [
                 "from whatlies import EmbeddingSet",
                 "from whatlies.language import SpacyLanguage",

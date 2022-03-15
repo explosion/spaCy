@@ -211,23 +211,23 @@ PyTorch as a dependency below, but it may not find the best version for your
 setup.
 
 ```bash
-### Example: Install PyTorch 1.7.1 for CUDA 10.1 with pip
+### Example: Install PyTorch 1.11.0 for CUDA 11.3 with pip
 # See: https://pytorch.org/get-started/locally/
-$ pip install torch==1.7.1+cu101 torchvision==0.8.2+cu101 torchaudio==0.7.2 -f https://download.pytorch.org/whl/torch_stable.html
+$ pip install torch==1.11.0+cu113 torchvision==0.12.0+cu113 torchaudio==0.11.0+cu113 -f https://download.pytorch.org/whl/cu113/torch_stable.html
 ```
 
 Next, install spaCy with the extras for your CUDA version and transformers. The
-CUDA extra (e.g., `cuda92`, `cuda102`, `cuda111`) installs the correct version
-of [`cupy`](https://docs.cupy.dev/en/stable/install.html#installing-cupy), which
+CUDA extra (e.g., `cuda102`, `cuda113`) installs the correct version of
+[`cupy`](https://docs.cupy.dev/en/stable/install.html#installing-cupy), which
 is just like `numpy`, but for GPU. You may also need to set the `CUDA_PATH`
 environment variable if your CUDA runtime is installed in a non-standard
-location. Putting it all together, if you had installed CUDA 10.2 in
+location. Putting it all together, if you had installed CUDA 11.3 in
 `/opt/nvidia/cuda`, you would run:
 
 ```bash
 ### Installation with CUDA
 $ export CUDA_PATH="/opt/nvidia/cuda"
-$ pip install -U %%SPACY_PKG_NAME[cuda102,transformers]%%SPACY_PKG_FLAGS
+$ pip install -U %%SPACY_PKG_NAME[cuda113,transformers]%%SPACY_PKG_FLAGS
 ```
 
 For [`transformers`](https://huggingface.co/transformers/) v4.0.0+ and models
