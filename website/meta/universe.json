@@ -2655,7 +2655,7 @@
             "id": "conciseconcepts",
             "title": "Concise Concepts",
             "slogan": "Concise Concepts uses few-shot NER based on word embedding similarity to get you going with easy!",
-            "description": "When wanting to apply NER to concise concepts, it is really easy to come up with examples, but pretty difficult to train an entire pipeline. Concise Concepts uses few-shot NER based on word embedding similarity to get you going with easy!",
+            "description": "When wanting to apply NER to concise concepts, it is really easy to come up with examples, but it takes some effort to train an entire pipeline. Concise Concepts uses few-shot NER based on word embedding similarity to get you going with easy!",
             "github": "pandora-intelligence/concise-concepts",
             "pip": "concise-concepts",
             "code_example": [
