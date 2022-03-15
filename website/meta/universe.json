@@ -2665,7 +2665,7 @@
                 "data = {",
                 "    \"fruit\": [\"apple\", \"pear\", \"orange\"],",
                 "    \"vegetable\": [\"broccoli\", \"spinach\", \"tomato\"],",
-                "    \"meat\": [\"chicken\", \"beef\", \"pork\", \"fish\", \"lamb\"]",
+                "    \"meat\": [\"beef\", \"pork\", \"fish\", \"lamb\"]",
                 "}",
                 "",
                 "text = \"\"\"",
