@@ -634,7 +634,7 @@ cdef class Vectors:
                 return self.data.to_bytes()
             else:
                 ops = get_current_ops()
-                return srsly.msgpack_dumps(ops.to_numpy(self.data, byteorder="<"))
+                return srsly.msgpack_dumps(ops.to_numpy(self.data, byte_order="<"))
 
         serializers = {
             "strings": lambda: self.strings.to_bytes(),
