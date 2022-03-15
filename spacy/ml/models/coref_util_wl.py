@@ -4,6 +4,7 @@ from typing import List, Set, Dict, Tuple
 from thinc.types import Ints1d
 from dataclasses import dataclass
 from ...tokens import Doc
+from ...language import Language
 
 import torch
 
@@ -37,37 +38,7 @@ def add_dummy(tensor: torch.Tensor, eps: bool = False):
     output = torch.cat((dummy, tensor), dim=1)
     return output
 
-def make_head_only_clusters(examples):
-    """Replace coref clusters with head-only clusters.
 
-    This destructively modifies the docs.
-    """
-
-    #TODO what if all clusters are eliminated?
-    for eg in examples:
-        final = [] # save out clusters here
-        for key, sg in eg.reference.spans.items():
-            if not key.startswith("coref_clusters_"):
-                continue
-
-            heads = [span.root.i for span in sg]
-            heads = list(set(heads))
-            head_spans = [eg.reference[hh:hh+1] for hh in heads]
-            if len(heads) > 1:
-                final.append(head_spans)
-
-        # now delete the existing clusters
-        keys = list(eg.reference.spans.keys())
-        for key in keys:
-            if not key.startswith("coref_clusters_"):
-                continue
-
-            del eg.reference.spans[key]
-
-        # now add the new spangroups
-        for ii, spans in enumerate(final):
-            #TODO support alternate keys
-            eg.reference.spans[f"coref_clusters_{ii}"] = spans
 
 # TODO replace with spaCy config
 @dataclass
