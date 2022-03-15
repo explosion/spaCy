@@ -858,13 +858,13 @@ into the "real world". This requires 3 main components:
 - A machine learning [`Model`](https://thinc.ai/docs/api-model) that picks the
   most plausible ID from the set of candidates.
 
-### spacy.EntityLinker.v1 {#EntityLinker}
+### spacy.EntityLinker.v2 {#EntityLinker}
 
 > #### Example Config
 >
 > ```ini
 > [model]
-> @architectures = "spacy.EntityLinker.v1"
+> @architectures = "spacy.EntityLinker.v2"
 > nO = null
 >
 > [model.tok2vec]

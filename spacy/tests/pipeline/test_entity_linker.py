@@ -9,6 +9,9 @@ from spacy.compat import pickle
 from spacy.kb import Candidate, KnowledgeBase, get_candidates
 from spacy.lang.en import English
 from spacy.ml import load_kb
+from spacy.pipeline import EntityLinker
+from spacy.pipeline.legacy import EntityLinker_v1
+from spacy.pipeline.tok2vec import DEFAULT_TOK2VEC_MODEL
 from spacy.scorer import Scorer
 from spacy.tests.util import make_tempdir
 from spacy.tokens import Span
@@ -166,6 +169,45 @@ def test_issue7065_b():
     # test the trained model - this should not throw E148
     doc = nlp(text)
     assert doc
+
+
+def test_no_entities():
+    # Test that having no entities doesn't crash the model
+    TRAIN_DATA = [
+        (
+            "The sky is blue.",
+            {
+                "sent_starts": [1, 0, 0, 0, 0],
+            },
+        )
+    ]
+    nlp = English()
+    vector_length = 3
+    train_examples = []
+    for text, annotation in TRAIN_DATA:
+        doc = nlp(text)
+        train_examples.append(Example.from_dict(doc, annotation))
+
+    def create_kb(vocab):
+        # create artificial KB
+        mykb = KnowledgeBase(vocab, entity_vector_length=vector_length)
+        mykb.add_entity(entity="Q2146908", freq=12, entity_vector=[6, -4, 3])
+        mykb.add_alias("Russ Cochran", ["Q2146908"], [0.9])
+        return mykb
+
+    # Create and train the Entity Linker
+    entity_linker = nlp.add_pipe("entity_linker", last=True)
+    entity_linker.set_kb(create_kb)
+    optimizer = nlp.initialize(get_examples=lambda: train_examples)
+    for i in range(2):
+        losses = {}
+        nlp.update(train_examples, sgd=optimizer, losses=losses)
+
+    # adding additional components that are required for the entity_linker
+    nlp.add_pipe("sentencizer", first=True)
+
+    # this will run the pipeline on the examples and shouldn't crash
+    results = nlp.evaluate(train_examples)
 
 
 def test_partial_links():
@@ -650,7 +692,7 @@ TRAIN_DATA = [
          "sent_starts": [1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}),
     ("Russ Cochran his reprints include EC Comics.",
         {"links": {(0, 12): {"Q7381115": 1.0, "Q2146908": 0.0}},
-         "entities": [(0, 12, "PERSON")],
+         "entities": [(0, 12, "PERSON"), (34, 43, "ART")],
          "sent_starts": [1, -1, 0, 0, 0, 0, 0, 0]}),
     ("Russ Cochran has been publishing comic art.",
         {"links": {(0, 12): {"Q7381115": 1.0, "Q2146908": 0.0}},
@@ -693,6 +735,7 @@ def test_overfitting_IO():
 
     # Create the Entity Linker component and add it to the pipeline
     entity_linker = nlp.add_pipe("entity_linker", last=True)
+    assert isinstance(entity_linker, EntityLinker)
     entity_linker.set_kb(create_kb)
     assert "Q2146908" in entity_linker.vocab.strings
     assert "Q2146908" in entity_linker.kb.vocab.strings
@@ -922,3 +965,113 @@ def test_scorer_links():
 
     assert scores["nel_micro_p"] == 2 / 3
     assert scores["nel_micro_r"] == 2 / 4
+
+
+# fmt: off
+@pytest.mark.parametrize(
+    "name,config",
+    [
+        ("entity_linker", {"@architectures": "spacy.EntityLinker.v1", "tok2vec": DEFAULT_TOK2VEC_MODEL}),
+        ("entity_linker", {"@architectures": "spacy.EntityLinker.v2", "tok2vec": DEFAULT_TOK2VEC_MODEL}),
+    ],
+)
+# fmt: on
+def test_legacy_architectures(name, config):
+    # Ensure that the legacy architectures still work
+    vector_length = 3
+    nlp = English()
+
+    train_examples = []
+    for text, annotation in TRAIN_DATA:
+        doc = nlp.make_doc(text)
+        train_examples.append(Example.from_dict(doc, annotation))
+
+    def create_kb(vocab):
+        mykb = KnowledgeBase(vocab, entity_vector_length=vector_length)
+        mykb.add_entity(entity="Q2146908", freq=12, entity_vector=[6, -4, 3])
+        mykb.add_entity(entity="Q7381115", freq=12, entity_vector=[9, 1, -7])
+        mykb.add_alias(
+            alias="Russ Cochran",
+            entities=["Q2146908", "Q7381115"],
+            probabilities=[0.5, 0.5],
+        )
+        return mykb
+
+    entity_linker = nlp.add_pipe(name, config={"model": config})
+    if config["@architectures"] == "spacy.EntityLinker.v1":
+        assert isinstance(entity_linker, EntityLinker_v1)
+    else:
+        assert isinstance(entity_linker, EntityLinker)
+    entity_linker.set_kb(create_kb)
+    optimizer = nlp.initialize(get_examples=lambda: train_examples)
+
+    for i in range(2):
+        losses = {}
+        nlp.update(train_examples, sgd=optimizer, losses=losses)
+
+
+@pytest.mark.parametrize(
+    "patterns",
+    [
+        # perfect case
+        [{"label": "CHARACTER", "pattern": "Kirby"}],
+        # typo for false negative
+        [{"label": "PERSON", "pattern": "Korby"}],
+        # random stuff for false positive
+        [{"label": "IS", "pattern": "is"}, {"label": "COLOR", "pattern": "pink"}],
+    ],
+)
+def test_no_gold_ents(patterns):
+    # test that annotating components work
+    TRAIN_DATA = [
+        (
+            "Kirby is pink",
+            {
+                "links": {(0, 5): {"Q613241": 1.0}},
+                "entities": [(0, 5, "CHARACTER")],
+                "sent_starts": [1, 0, 0],
+            },
+        )
+    ]
+    nlp = English()
+    vector_length = 3
+    train_examples = []
+    for text, annotation in TRAIN_DATA:
+        doc = nlp(text)
+        train_examples.append(Example.from_dict(doc, annotation))
+
+    # Create a ruler to mark entities
+    ruler = nlp.add_pipe("entity_ruler")
+    ruler.add_patterns(patterns)
+
+    # Apply ruler to examples. In a real pipeline this would be an annotating component.
+    for eg in train_examples:
+        eg.predicted = ruler(eg.predicted)
+
+    def create_kb(vocab):
+        # create artificial KB
+        mykb = KnowledgeBase(vocab, entity_vector_length=vector_length)
+        mykb.add_entity(entity="Q613241", freq=12, entity_vector=[6, -4, 3])
+        mykb.add_alias("Kirby", ["Q613241"], [0.9])
+        # Placeholder
+        mykb.add_entity(entity="pink", freq=12, entity_vector=[7, 2, -5])
+        mykb.add_alias("pink", ["pink"], [0.9])
+        return mykb
+
+    # Create and train the Entity Linker
+    entity_linker = nlp.add_pipe(
+        "entity_linker", config={"use_gold_ents": False}, last=True
+    )
+    entity_linker.set_kb(create_kb)
+    assert entity_linker.use_gold_ents == False
+
+    optimizer = nlp.initialize(get_examples=lambda: train_examples)
+    for i in range(2):
+        losses = {}
+        nlp.update(train_examples, sgd=optimizer, losses=losses)
+
+    # adding additional components that are required for the entity_linker
+    nlp.add_pipe("sentencizer", first=True)
+
+    # this will run the pipeline on the examples and shouldn't crash
+    results = nlp.evaluate(train_examples)
