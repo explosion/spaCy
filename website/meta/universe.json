@@ -2601,8 +2601,9 @@
         },
         {
             "id": "classyclassification",
-            "slogan": "A Python library for classy few-shot and zero-shot classification within spaCy.",
-            "description": "Huggingface does offer some nice models for few/zero-shot classification, but these are not tailored to multi-lingual approaches. Rasa NLU has a nice approach for this, but its too embedded in their codebase for easy usage outside of Rasa/chatbots. Additionally, it made sense to integrate sentence-transformers and Huggingface zero-shot, instead of default word embeddings. Finally, I decided to integrate with spaCy, since training a custom spaCy TextCategorizer seems like a lot of hassle if you want something quick and dirty.",
+            "title": "Classy Classification",
+            "slogan": "Have you ever struggled with needing a spaCy TextCategorizer but didn't have the time to train one from scratch? Classy Classification is the way to go!",
+            "description": "Have you ever struggled with needing a [spaCy TextCategorizer](https://spacy.io/api/textcategorizer) but didn't have the time to train one from scratch? Classy Classification is the way to go! For few-shot classification using [sentence-transformers](https://github.com/UKPLab/sentence-transformers) or [spaCy models](https://spacy.io/usage/models), provide a dictionary with labels and examples, or just provide a list of labels for zero shot-classification with [Huggingface zero-shot classifiers](https://huggingface.co/models?pipeline_tag=zero-shot-classification).",
             "github": "davidberenstein1957/classy-classification",
             "pip": "classy-classification",
             "code_example": [
@@ -2618,32 +2619,36 @@
                 "                \"Do you also have some ovens.\"]",
                 "}",
                 "",
+                "# see github repo for examples on sentence-transformers and Huggingface",
                 "nlp = spacy.load('en_core_web_md')",
-                "",
-                "classification_type = \"spacy_few_shot\"",
-                "if classification_type == \"spacy_few_shot\":",
-                "    nlp.add_pipe(\"text_categorizer\", ",
-                "        config={\"data\": data, \"model\": \"spacy\"}",
-                "    )",
-                "elif classification_type == \"sentence_transformer_few_shot\":",
-                "    nlp.add_pipe(\"text_categorizer\", ",
-                "        config={\"data\": data, \"model\": \"sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2\"}",
-                "    )",
-                "elif classification_type == \"huggingface_zero_shot\":",
-                "    nlp.add_pipe(\"text_categorizer\", ",
-                "        config={\"data\": list(data.keys()), \"cat_type\": \"zero\", \"model\": \"facebook/bart-large-mnli\"}",
-                "    )",
+                "nlp.add_pipe(\"text_categorizer\", ",
+                "    config={",
+                "        \"data\": data,",
+                "        \"model\": \"spacy\"",
+                "    }",
+                ")",
                 "",
                 "print(nlp(\"I am looking for kitchen appliances.\")._.cats)",
-                "print([doc._.cats for doc in nlp.pipe([\"I am looking for kitchen appliances.\"])])"    
+                "# Output:",
+                "#",
+                "# [{\"label\": \"furniture\", \"score\": 0.21}, {\"label\": \"kitchen\", \"score\": 0.79}]"
             ],
             "author": "David Berenstein",
             "author_links": {
                 "github": "davidberenstein1957",
                 "website": "https://www.linkedin.com/in/david-berenstein-1bab11105/"
             },
-            "category": ["pipeline", "standalone"],
-            "tags": ["classification", "zero-shot", "few-shot", "sentence-transformers", "huggingface"],
+            "category": [
+                "pipeline",
+                "standalone"
+            ],
+            "tags": [
+                "classification",
+                "zero-shot",
+                "few-shot",
+                "sentence-transformers",
+                "huggingface"
+            ],
             "spacy_version": 3
         },
         {
