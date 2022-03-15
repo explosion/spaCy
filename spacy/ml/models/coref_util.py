@@ -1,13 +1,43 @@
 from thinc.types import Ints2d
 from spacy.tokens import Doc
-from typing import List, Tuple, Callable, Any
+from typing import List, Tuple, Callable, Any, Set, Dict
 from ...util import registry
+import torch
 
 # type alias to make writing this less tedious
 MentionClusters = List[List[Tuple[int, int]]]
 
 DEFAULT_CLUSTER_PREFIX = "coref_clusters"
 
+EPSILON = 1e-7
+
+class GraphNode:
+    def __init__(self, node_id: int):
+        self.id = node_id
+        self.links: Set[GraphNode] = set()
+        self.visited = False
+
+    def link(self, another: "GraphNode"):
+        self.links.add(another)
+        another.links.add(self)
+
+    def __repr__(self) -> str:
+        return str(self.id)
+
+
+def add_dummy(tensor: torch.Tensor, eps: bool = False):
+    """ Prepends zeros (or a very small value if eps is True)
+    to the first (not zeroth) dimension of tensor.
+    """
+    kwargs = dict(device=tensor.device, dtype=tensor.dtype)
+    shape: List[int] = list(tensor.shape)
+    shape[1] = 1
+    if not eps:
+        dummy = torch.zeros(shape, **kwargs)          # type: ignore
+    else:
+        dummy = torch.full(shape, EPSILON, **kwargs)  # type: ignore
+    output = torch.cat((dummy, tensor), dim=1)
+    return output
 
 def doc2clusters(doc: Doc, prefix=DEFAULT_CLUSTER_PREFIX) -> MentionClusters:
     """Given a doc, give the mention clusters.

@@ -458,7 +458,7 @@ import torch
 from thinc.util import xp2torch, torch2xp
 
 # TODO rename this to coref_util
-from .coref_util_wl import add_dummy
+from .coref_util import add_dummy
 
 # TODO rename to plain coref
 @registry.architectures("spacy.WLCoref.v1")
