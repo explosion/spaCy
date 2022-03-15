@@ -567,7 +567,7 @@ cdef class Vectors:
             # in order to not rely on this, wrap in context manager.
             ops = get_current_ops()
             with path.open("wb") as _file:
-                save_array(ops.to_numpy(self.data, byteorder="<"), _file)
+                save_array(ops.to_numpy(self.data, byte_order="<"), _file)
 
         serializers = {
             "strings": lambda p: self.strings.to_disk(p.with_suffix(".json")),
