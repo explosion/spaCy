@@ -2652,6 +2652,59 @@
             "spacy_version": 3
         },
         {
+            "id": "conciseconcepts",
+            "title": "Concise Concepts",
+            "slogan": "Concise Concepts uses few-shot NER based on word embedding similarity to get you going with easy!",
+            "description": "When wanting to apply NER to concise concepts, it is really easy to come up with examples, but pretty difficult to train an entire pipeline. Concise Concepts uses few-shot NER based on word embedding similarity to get you going with easy!",
+            "github": "pandora-intelligence/concise-concepts",
+            "pip": "concise-concepts",
+            "code_example": [
+                "import spacy",
+                "import concise_concepts",
+                "",
+                "data = {",
+                "    \"fruit\": [\"apple\", \"pear\", \"orange\"],",
+                "    \"vegetable\": [\"broccoli\", \"spinach\", \"tomato\"],",
+                "    \"meat\": [\"chicken\", \"beef\", \"pork\", \"fish\", \"lamb\"]",
+                "}",
+                "",
+                "text = \"\"\"",
+                "    Heat the oil in a large pan and add the Onion, celery and carrots.",
+                "    Then, cook over a medium–low heat for 10 minutes, or until softened.",
+                "    Add the courgette, garlic, red peppers and oregano and cook for 2–3 minutes.",
+                "    Later, add some oranges and chickens.\"\"\"",
+                "",
+                "# use any model that has internal spacy embeddings", 
+                "nlp = spacy.load('en_core_web_lg')",
+                "nlp.add_pipe(\"concise_concepts\", ",
+                "    config={\"data\": data}",
+                ")",
+                "doc = nlp(text)",
+                "",
+                "print([(ent.text, ent.label_) for ent in doc.ents])",
+                "# Output:",
+                "#",
+                "# [(\"Onion\", \"VEGETABLE\"), (\"Celery\", \"VEGETABLE\"), (\"carrots\", \"VEGETABLE\"),",
+                "#  (\"garlic\", \"VEGETABLE\"), (\"red peppers\", \"VEGETABLE\"), (\"oranges\", \"FRUIT\"),",
+                "#  (\"chickens\", \"MEAT\")]"
+            ],
+            "author": "David Berenstein",
+            "author_links": {
+                "github": "davidberenstein1957",
+                "website": "https://www.linkedin.com/in/david-berenstein-1bab11105/"
+            },
+            "category": [
+                "pipeline",
+                "standalone"
+            ],
+            "tags": [
+                "ner",
+                "few-shot",
+                "gensim"
+            ],
+            "spacy_version": 3
+        },
+        {
             "id": "blackstone",
             "title": "Blackstone",
             "slogan": "A spaCy pipeline and model for NLP on unstructured legal text",
