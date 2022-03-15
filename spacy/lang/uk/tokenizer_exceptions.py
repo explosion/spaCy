@@ -6,19 +6,30 @@ from ...util import update_exc
 _exc = {}
 
 for exc_data in [
+    {ORTH: "обл.", NORM: "область"},
+    {ORTH: "р-н.", NORM: "район"},
+    {ORTH: "р-н", NORM: "район"},
+    {ORTH: "м.", NORM: "місто"},
     {ORTH: "вул.", NORM: "вулиця"},
-    {ORTH: "ім.", NORM: "імені"},
     {ORTH: "просп.", NORM: "проспект"},
+    {ORTH: "пр-кт", NORM: "проспект"},
     {ORTH: "бул.", NORM: "бульвар"},
     {ORTH: "пров.", NORM: "провулок"},
     {ORTH: "пл.", NORM: "площа"},
+    {ORTH: "майд.", NORM: "майдан"},
+    {ORTH: "мкр.", NORM: "мікрорайон"},
+    {ORTH: "ст.", NORM: "станція"},
+    {ORTH: "ж/м", NORM: "житловий масив"},
+    {ORTH: "наб.", NORM: "набережна"},
+    {ORTH: "в/ч", NORM: "військова частина"},
+    {ORTH: "в/м", NORM: "військове містечко"},
+    {ORTH: "оз.", NORM: "озеро"},
+    {ORTH: "ім.", NORM: "імені"},
     {ORTH: "г.", NORM: "гора"},
     {ORTH: "п.", NORM: "пан"},
-    {ORTH: "м.", NORM: "місто"},
     {ORTH: "проф.", NORM: "професор"},
     {ORTH: "акад.", NORM: "академік"},
     {ORTH: "доц.", NORM: "доцент"},
-    {ORTH: "оз.", NORM: "озеро"},
 ]:
     _exc[exc_data[ORTH]] = [exc_data]
 

@@ -79,6 +79,7 @@ train/test skew.
 | `max_length`    | Maximum document length. Longer documents will be split into sentences, if sentence boundaries are available. Defaults to `0` for no limit. ~~int~~ |
 | `limit`         | Limit corpus to a subset of examples, e.g. for debugging. Defaults to `0` for no limit. ~~int~~                                                     |
 | `augmenter`     | Optional data augmentation callback. ~~Callable[[Language, Example], Iterable[Example]]~~                                                           |
+| `shuffle`       | Whether to shuffle the examples. Defaults to `False`. ~~bool~~                                                                                      |
 
 ## Corpus.\_\_call\_\_ {#call tag="method"}
 

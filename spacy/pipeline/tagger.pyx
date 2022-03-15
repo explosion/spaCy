@@ -27,7 +27,7 @@ BACKWARD_OVERWRITE = False
 
 default_model_config = """
 [model]
-@architectures = "spacy.Tagger.v1"
+@architectures = "spacy.Tagger.v2"
 
 [model.tok2vec]
 @architectures = "spacy.HashEmbedCNN.v2"
@@ -225,6 +225,7 @@ class Tagger(TrainablePipe):
 
         DOCS: https://spacy.io/api/tagger#rehearse
         """
+        loss_func = SequenceCategoricalCrossentropy()
         if losses is None:
             losses = {}
         losses.setdefault(self.name, 0.0)
@@ -236,12 +237,12 @@ class Tagger(TrainablePipe):
             # Handle cases where there are no tokens in any docs.
             return losses
         set_dropout_rate(self.model, drop)
-        guesses, backprop = self.model.begin_update(docs)
-        target = self._rehearsal_model(examples)
-        gradient = guesses - target
-        backprop(gradient)
+        tag_scores, bp_tag_scores = self.model.begin_update(docs)
+        tutor_tag_scores, _ = self._rehearsal_model.begin_update(docs)
+        grads, loss = loss_func(tag_scores, tutor_tag_scores)
+        bp_tag_scores(grads)
         self.finish_update(sgd)
-        losses[self.name] += (gradient**2).sum()
+        losses[self.name] += loss
         return losses
 
     def get_loss(self, examples, scores):

@@ -257,8 +257,8 @@ shape `(N, M)`, where `N` is the length of the document. The values will be
 
 ## Span.ents {#ents tag="property" new="2.0.13" model="ner"}
 
-The named entities in the span. Returns a tuple of named entity `Span` objects,
-if the entity recognizer has been applied.
+The named entities that fall completely within the span. Returns a tuple of
+`Span` objects.
 
 > #### Example
 >

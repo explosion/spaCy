@@ -643,6 +643,10 @@ cdef class Tokenizer:
         for substring in text.split():
             suffixes = []
             while substring:
+                if substring in special_cases:
+                    tokens.extend(("SPECIAL-" + str(i + 1), self.vocab.strings[e[ORTH]]) for i, e in enumerate(special_cases[substring]))
+                    substring = ''
+                    continue
                 while prefix_search(substring) or suffix_search(substring):
                     if token_match(substring):
                         tokens.append(("TOKEN_MATCH", substring))
@@ -683,6 +687,8 @@ cdef class Tokenizer:
                     infixes = infix_finditer(substring)
                     offset = 0
                     for match in infixes:
+                        if offset == 0 and match.start() == 0:
+                            continue
                         if substring[offset : match.start()]:
                             tokens.append(("TOKEN", substring[offset : match.start()]))
                         if substring[match.start() : match.end()]:

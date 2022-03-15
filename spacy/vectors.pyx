@@ -170,6 +170,8 @@ cdef class Vectors:
 
         DOCS: https://spacy.io/api/vectors#n_keys
         """
+        if self.mode == Mode.floret:
+            return -1
         return len(self.key2row)
 
     def __reduce__(self):

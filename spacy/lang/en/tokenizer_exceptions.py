@@ -447,7 +447,6 @@ for exc_data in [
     {ORTH: "La.", NORM: "Louisiana"},
     {ORTH: "Mar.", NORM: "March"},
     {ORTH: "Mass.", NORM: "Massachusetts"},
-    {ORTH: "May.", NORM: "May"},
     {ORTH: "Mich.", NORM: "Michigan"},
     {ORTH: "Minn.", NORM: "Minnesota"},
     {ORTH: "Miss.", NORM: "Mississippi"},
