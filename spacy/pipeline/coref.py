@@ -91,32 +91,6 @@ DEFAULT_MODEL = Config().from_str(default_config)["model"]
 
 DEFAULT_CLUSTERS_PREFIX = "coref_clusters"
 
-@Language.component("span2head")
-def make_head_only_clusters(doc, old_key="coref_clusters", new_key="coref_head_clusters"):
-    """Create coref head clusters from span clusters.
-
-    The old clusters are left alone, and the new clusters are added under a different key.
-    """
-    final = [] 
-    for key, sg in doc.spans.items():
-        if not key.startswith("{old_key}_"):
-            continue
-
-        heads = [span.root.i for span in sg]
-        heads = sorted(list(set(heads)))
-        head_spans = [doc[hh:hh+1] for hh in heads]
-        #print("===== headifying =====")
-        #print(sg)
-        #print(head_spans)
-        # singletons are skipped
-        if len(heads) > 1:
-            final.append(head_spans)
-
-    # now add the new spangroups
-    for ii, spans in enumerate(final):
-        doc.spans[f"{new_key}_{ii}"] = spans
-    return doc
-
 @Language.factory(
     "coref",
     assigns=["doc.spans"],
