@@ -4,24 +4,22 @@
             "id": "scrubadub_spacy",
             "title": "scrubadub_spacy",
             "category": ["pipeline"],
-            "tags": [""],
-            "slogan": "Clean personally identifiable information from dirty dirty text using spaCy.",
+            "slogan": "Remove personally identifiable information from text using spaCy.",
             "description": "scrubadub removes personally identifiable information from text. scrubadub_spacy is an extension that uses spaCy NLP models to remove personal information from text.",
             "github": "LeapBeyond/scrubadub_spacy",
             "pip": "scrubadub-spacy",
             "url": "https://github.com/LeapBeyond/scrubadub_spacy",
             "code_language": "python",
-            "author": "Thomas Bird",
+            "author": "Leap Beyond",
             "author_links": {
-                "twitter": "thomasbird",
-                "github": "thomasbird",
-                "website": "http://thomasbird.com"
+                "github": "https://github.com/LeapBeyond",
+                "website": "https://leapbeyond.ai"
             },
             "code_example": [
                 "import scrubadub, scrubadub_spacy",
                 "scrubber = scrubadub.Scrubber()",
                 "scrubber.add_detector(scrubadub_spacy.detectors.SpacyEntityDetector)",
-                "print(scrubber.clean(\"My name is Philip, I work at Explosion in Berlin, and my eMail is philip@explosion.ai btw. my super secret twitter login is username: philipvollet password: g-dragon180888\"))",
+                "print(scrubber.clean(\"My name is Alex, I work at LifeGuard in London, and my eMail is alex@lifeguard.com btw. my super secret twitter login is username: alex_2000 password: g-dragon180888\"))",
                 "# My name is {{NAME}}, I work at {{ORGANIZATION}} in {{LOCATION}}, and my eMail is {{EMAIL}} btw. my super secret twitter login is username: {{USERNAME}} password: {{PASSWORD}}"
             ]
         },
@@ -33,7 +31,7 @@
             "slogan": "spaCy Project: Experiments with SetFit & Few-Shot Classification",
             "description": "This project is an experiment with spaCy and few-shot text classification using SetFit",
             "github": "pmbaumgartner/spacy-setfit-textcat",
-            "url": "https://github.com/LeapBeyond/scrubadub_spacy",
+            "url": "https://github.com/pmbaumgartner/spacy-setfit-textcat",
             "code_language": "python",
             "author": "Peter Baumgartner",
             "author_links": {
@@ -49,7 +47,6 @@
             "id": "spacy-experimental",
             "title": "spacy-experimental",
             "category": ["extension"],
-            "tags": [""],
             "slogan": "Cutting-edge experimental spaCy components and features",
             "description": "This package includes experimental components and features for spaCy v3.x, for example model architectures, pipeline components and utilities.",
             "github": "explosion/spacy-experimental",
@@ -525,11 +522,11 @@
             "pip": "",
             "url": "https://github.com/keithrozario/Klayers",
             "code_language": "python",
-            "author": "Explosion",
+            "author": "Keith Rozario",
             "author_links": {
-                "twitter" : "https://twitter.com/explosion_ai",
-                "github": "https://github.com/explosion",
-                "website": "https://explosion.ai/"
+                "twitter" : "https://twitter.com/keithrozario",
+                "github": "https://github.com/keithrozario",
+                "website": "https://www.keithrozario.com"
             },
             "code_example": [
                 "# SAM Template",
@@ -547,7 +544,7 @@
             "id": "video-spacys-ner-model-alt",
             "title": "Named Entity Recognition (NER) using spaCy",
             "slogan": "",
-            "description": "",
+            "description": "In this video, I show you how to do named entity recognition using the spaCy library for Python.",
             "youtube": "Gn_PjruUtrc",
             "author": "Applied Language Technology",
             "author_links": {
@@ -566,7 +563,7 @@
             "description": "HuSpaCy is a spaCy model and a library providing industrial-strength Hungarian language processing facilities.",
             "github": "huspacy/huspacy",
             "pip": "huspacy",
-            "url": "https://github.com/LeapBeyond/scrubadub_spacy",
+            "url": "https://github.com/huspacy/huspacy",
             "code_language": "python",
             "author": "SzegedAI",
             "author_links": {
@@ -576,13 +573,17 @@
             "code_example": [
                 "# Load the model using huspacy",
                 "import huspacy",
-                "nlp = huspacy.load()\n",
-                
+                "",
+                "nlp = huspacy.load()",
+                "",
                 "# Load the mode using spacy.load()",
                 "import spacy",
-                "nlp = spacy.load(\"hu_core_news_lg\")\n",
+                "",
+                "nlp = spacy.load(\"hu_core_news_lg\")",
+                "",
                 "# Load the model directly as a module",
                 "import hu_core_news_lg",
+                "",
                 "nlp = hu_core_news_lg.load()\n",
                 "# Either way you get the same model and can start processing texts.",
                 "doc = nlp(\"Csiribiri csiribiri zabszalma - négy csillag közt alszom ma.\")"
@@ -782,7 +783,7 @@
             "code_example": [
                 "import spacy",
                 "from spacymoji import Emoji",
-
+                "",
                 "nlp = spacy.load(\"en_core_web_sm\")",
                 "nlp.add_pipe(\"emoji\", first=True)",
                 "doc = nlp(\"This is a test 😻 👍🏿\")",
