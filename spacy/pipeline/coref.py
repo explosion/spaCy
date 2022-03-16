@@ -30,7 +30,7 @@ from ..coref_scorer import Evaluator, get_cluster_info, b_cubed, muc, ceafe
 
 default_config = """
 [model]
-@architectures = "spacy.WLCoref.v1"
+@architectures = "spacy.Coref.v1"
 embedding_size = 20
 hidden_size = 1024
 n_hidden_layers = 1
