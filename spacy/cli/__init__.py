@@ -14,6 +14,7 @@ from .pretrain import pretrain  # noqa: F401
 from .debug_data import debug_data  # noqa: F401
 from .debug_config import debug_config  # noqa: F401
 from .debug_model import debug_model  # noqa: F401
+from .debug_diff import debug_diff  # noqa: F401
 from .evaluate import evaluate  # noqa: F401
 from .convert import convert  # noqa: F401
 from .init_pipeline import init_pipeline_cli  # noqa: F401

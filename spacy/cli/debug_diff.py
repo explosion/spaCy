@@ -1,21 +1,36 @@
 from typing import Optional
+
+import typer
 from wasabi import Printer, diff_strings
 from pathlib import Path
 from thinc.api import Config
 
-from ._util import debug_cli, Arg, Opt, show_validation_error
+from ._util import debug_cli, Arg, Opt, show_validation_error, parse_config_overrides
 from ..util import load_config
-from ..cli.init_config import init_config, Optimizations
+from .init_config import init_config, Optimizations
 
 
-@debug_cli.command("diff")
-def diff_config(
+@debug_cli.command(
+    "diff",
+    context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
+)
+def debug_diff_cli(
     # fmt: off
+    ctx: typer.Context,
     config_path: Path = Arg(..., help="Path to config file", exists=True, allow_dash=True),
     compare_to: Optional[Path] = Opt(..., help="Path to another config file to diff against", exists=True, allow_dash=True),
     optimize: Optimizations = Opt(Optimizations.efficiency.value, "--optimize", "-o", help="Whether the user config was optimized for efficiency or accuracy."),
     pretraining: bool = Opt(False, "--pretraining", "--pt", help="Whether to compare on a config with pretraining involved")
     # fmt: on
+):
+    """Show a diff of a config file with respect to a default configuration."""
+    debug_diff(
+        config_path, compare_to=compare_to, optimize=optimize, pretraining=pretraining
+    )
+
+
+def debug_diff(
+    config_path: Path, compare_to: Optional[Path], optimize: str, pretraining: bool
 ):
     msg = Printer()
     with show_validation_error(hint_fill=False):
