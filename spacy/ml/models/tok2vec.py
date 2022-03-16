@@ -293,7 +293,7 @@ def MaxoutWindowEncoder(
     model = clone(residual(cnn), depth)
     model.set_dim("nO", width)
     receptive_field = window_size * depth
-    return with_array(model, pad=receptive_field)
+    return cast(Model[List[Floats2d], List[Floats2d]], with_array(model, pad=receptive_field))
 
 
 @registry.architectures("spacy.MishWindowEncoder.v2")
@@ -316,7 +316,7 @@ def MishWindowEncoder(
     )
     model = clone(residual(cnn), depth)
     model.set_dim("nO", width)
-    return with_array(model)
+    return cast(Model[List[Floats2d], List[Floats2d]], with_array(model))
 
 
 @registry.architectures("spacy.TorchBiLSTMEncoder.v1")
