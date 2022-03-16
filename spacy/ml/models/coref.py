@@ -32,7 +32,12 @@ def build_wl_coref_model(
     # span predictor embeddings
     sp_embedding_size: int = 64,
     ):
-    dim = tok2vec.get_dim("nO")
+    # TODO fix this
+    try:
+        dim = tok2vec.get_dim("nO")
+    except ValueError:
+        # happens with transformer listener
+        dim = 768
     
     with Model.define_operators({">>": chain}):
         # TODO chain tok2vec with these models
