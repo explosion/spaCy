@@ -16,7 +16,6 @@ from thinc.util import xp2torch, torch2xp
 
 from .coref_util import add_dummy
 
-# TODO rename to plain coref
 @registry.architectures("spacy.Coref.v1")
 def build_wl_coref_model(
     tok2vec: Model[List[Doc], List[Floats2d]],
