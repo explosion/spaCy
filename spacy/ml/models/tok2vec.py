@@ -183,7 +183,7 @@ def MultiHashEmbed(
             max_out,
             ragged2list(),
         )
-    return model
+    return cast(Model[List[Doc], List[Floats2d]], model)
 
 
 @registry.architectures("spacy.CharacterEmbed.v2")
@@ -261,7 +261,7 @@ def CharacterEmbed(
             max_out,
             ragged2list(),
         )
-    return model
+    return cast(Model[List[Doc], List[Floats2d]], model)
 
 
 @registry.architectures("spacy.MaxoutWindowEncoder.v2")
