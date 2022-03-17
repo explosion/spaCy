@@ -26,7 +26,7 @@ def debug_diff_cli(
 ):
     """Show a diff of a config file with respect to a default configuration."""
     debug_diff(
-        config_path,
+        config_path=config_path,
         compare_to=compare_to,
         gpu=gpu,
         optimize=optimize,
@@ -44,22 +44,25 @@ def debug_diff(
     msg = Printer()
     with show_validation_error(hint_fill=False):
         user_config = load_config(config_path)
-        # Attempt to recreate a default config based from user-defined input
         if compare_to:
             other_config = load_config(compare_to)
         else:
+            # Recreate a default config based from user's config
+            lang = user_config["nlp"]["lang"]
+            pipeline = list(user_config["nlp"]["pipeline"])
+            msg.info(f"Found user-defined language: '{lang}'")
+            msg.info(f"Found user-defined pipelines: {pipeline}")
             other_config = init_config(
+                lang=lang,
+                pipeline=pipeline,
                 optimize=optimize.value,
-                lang=user_config["nlp"]["lang"],
                 gpu=gpu,
-                pipeline=list(user_config["nlp"]["pipeline"]),
                 pretraining=pretraining,
                 silent=True,
             )
 
     user = user_config.to_str()
     other = other_config.to_str()
-
     if user == other:
         msg.warn("No diff to show: configs are identical")
     else:
