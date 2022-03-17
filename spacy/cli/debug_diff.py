@@ -38,7 +38,7 @@ def debug_diff(
     config_path: Path,
     compare_to: Optional[Path],
     gpu: bool,
-    optimize: str,
+    optimize: Optimizations,
     pretraining: bool,
 ):
     msg = Printer()
