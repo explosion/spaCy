@@ -24,7 +24,14 @@ def debug_diff_cli(
     pretraining: bool = Opt(False, "--pretraining", "--pt", help="Whether to compare on a config with pretraining involved")
     # fmt: on
 ):
-    """Show a diff of a config file with respect to a default configuration."""
+    """Show a diff of a config file with respect to spaCy's defaults. If
+    additional settings were used in the creation of the config file, then you
+    must supply these as extra parameters to the command. The generated diff
+    can also be used when posting to the discussion forum to provide more
+    information for the maintainers.
+
+    DOCS: https://spacy.io/api/cli#debug-diff
+    """
     debug_diff(
         config_path=config_path,
         compare_to=compare_to,
