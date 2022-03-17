@@ -3917,7 +3917,7 @@
                 "github": "aphp",
                 "website": "https://github.com/aphp"
             },
-            "category": ["biomedical", "scientific", "research", "pipeline", "standalone"],
+            "category": ["biomedical", "scientific", "research", "pipeline"],
             "tags": ["clinical"]
         }
     ],
