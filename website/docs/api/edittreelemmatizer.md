@@ -1,7 +1,7 @@
 ---
 title: EditTreeLemmatizer
 tag: class
-source: spacy/pipeline/edit_tree_lemmatizer.pyx
+source: spacy/pipeline/edit_tree_lemmatizer.py
 new: 3.3
 teaser: 'Pipeline component for lemmatization'
 api_base_class: /api/pipe
