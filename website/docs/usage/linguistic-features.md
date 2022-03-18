@@ -126,7 +126,7 @@ spaCy provides two pipeline components for lemmatization:
    lemmatization methods in a configurable component. An individual language can
    extend the `Lemmatizer` as part of its [language data](#language-data).
 2. The [`EditTreeLemmatizer`](/api/edittreelemmatizer)
-   <Tag variant="new">3.2</Tag> component provides a trainable lemmatizer.
+   <Tag variant="new">3.3</Tag> component provides a trainable lemmatizer.
 
 ```python
 ### {executable="true"}
