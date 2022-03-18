@@ -70,7 +70,7 @@ def test_issue4190():
             suffix_search=suffix_re.search,
             infix_finditer=infix_re.finditer,
             token_match=nlp.tokenizer.token_match,
-            with_faster_rules_heuristics=False,
+            faster_heuristics=False,
         )
         nlp.tokenizer = new_tokenizer
 
@@ -91,7 +91,7 @@ def test_issue4190():
     doc_2 = nlp_2(test_string)
     result_2 = [token.text for token in doc_2]
     assert result_1b == result_2
-    assert nlp_2.tokenizer.with_faster_rules_heuristics is False
+    assert nlp_2.tokenizer.faster_heuristics is False
 
 
 def test_serialize_custom_tokenizer(en_vocab, en_tokenizer):

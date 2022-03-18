@@ -34,7 +34,7 @@ cdef class Tokenizer:
     """
     def __init__(self, Vocab vocab, rules=None, prefix_search=None,
                  suffix_search=None, infix_finditer=None, token_match=None,
-                 url_match=None, with_faster_rules_heuristics=True):
+                 url_match=None, faster_heuristics=True):
         """Create a `Tokenizer`, to create `Doc` objects given unicode text.
 
         vocab (Vocab): A storage container for lexical types.
@@ -51,7 +51,7 @@ cdef class Tokenizer:
         url_match (callable): A function matching the signature of
             `re.compile(string).match`, for matching strings to be
             recognized as urls.
-        with_faster_rules_heuristics (bool): Whether to restrict the final
+        faster_heuristics (bool): Whether to restrict the final
             Matcher-based pass for rules to those containing affixes or space.
             Defaults to True.
 
@@ -69,7 +69,7 @@ cdef class Tokenizer:
         self.suffix_search = suffix_search
         self.infix_finditer = infix_finditer
         self.vocab = vocab
-        self.with_faster_rules_heuristics = with_faster_rules_heuristics
+        self.faster_heuristics = faster_heuristics
         self._rules = {}
         self._special_matcher = PhraseMatcher(self.vocab)
         self._load_special_cases(rules)
@@ -126,12 +126,12 @@ cdef class Tokenizer:
             self._specials = PreshMap()
             self._load_special_cases(rules)
 
-    property with_faster_rules_heuristics:
+    property faster_heuristics:
         def __get__(self):
-            return bool(self._with_faster_rules_heuristics)
+            return bool(self._faster_heuristics)
 
-        def __set__(self, with_faster_rules_heuristics):
-            self._with_faster_rules_heuristics = bool(with_faster_rules_heuristics)
+        def __set__(self, faster_heuristics):
+            self._faster_heuristics = bool(faster_heuristics)
             self._reload_special_cases()
 
     def __reduce__(self):
@@ -614,7 +614,7 @@ cdef class Tokenizer:
             self.mem.free(stale_special)
         self._rules[string] = substrings
         self._flush_cache()
-        if not self.with_faster_rules_heuristics or self.find_prefix(string) or self.find_infix(string) or self.find_suffix(string) or " " in string:
+        if not self.faster_heuristics or self.find_prefix(string) or self.find_infix(string) or self.find_suffix(string) or " " in string:
             self._special_matcher.add(string, None, self._tokenize_affixes(string, False))
 
     def _reload_special_cases(self):
@@ -790,7 +790,7 @@ cdef class Tokenizer:
             "token_match": lambda: _get_regex_pattern(self.token_match),
             "url_match": lambda: _get_regex_pattern(self.url_match),
             "exceptions": lambda: dict(sorted(self._rules.items())),
-            "with_faster_rules_heuristics": lambda: self.with_faster_rules_heuristics,
+            "faster_heuristics": lambda: self.faster_heuristics,
         }
         return util.to_bytes(serializers, exclude)
 
@@ -812,7 +812,7 @@ cdef class Tokenizer:
             "token_match": lambda b: data.setdefault("token_match", b),
             "url_match": lambda b: data.setdefault("url_match", b),
             "exceptions": lambda b: data.setdefault("rules", b),
-            "with_faster_rules_heuristics": lambda b: data.setdefault("with_faster_rules_heuristics", b),
+            "faster_heuristics": lambda b: data.setdefault("faster_heuristics", b),
         }
         # reset all properties and flush all caches (through rules),
         # reset rules first so that _reload_special_cases is trivial/fast as
@@ -836,8 +836,8 @@ cdef class Tokenizer:
             self.url_match = re.compile(data["url_match"]).match
         if "rules" in data and isinstance(data["rules"], dict):
             self.rules = data["rules"]
-        if "with_faster_rules_heuristics" in data:
-            self.with_faster_rules_heuristics = data["with_faster_rules_heuristics"]
+        if "faster_heuristics" in data:
+            self.faster_heuristics = data["faster_heuristics"]
         return self
 
 

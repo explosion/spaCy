@@ -529,13 +529,13 @@ def test_issue10086(en_tokenizer):
     text = "No--don't see"
 
     # without heuristics: do n't
-    en_tokenizer.with_faster_rules_heuristics = False
+    en_tokenizer.faster_heuristics = False
     doc = en_tokenizer(text)
     assert "n't" in [w.text for w in doc]
     assert "do" in [w.text for w in doc]
 
     # with (default) heuristics: don't
-    en_tokenizer.with_faster_rules_heuristics = True
+    en_tokenizer.faster_heuristics = True
     doc = en_tokenizer(text)
     assert "don't" in [w.text for w in doc]
 

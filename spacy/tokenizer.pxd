@@ -24,7 +24,7 @@ cdef class Tokenizer:
     cdef object _rules
     cdef PhraseMatcher _special_matcher
     # TODO convert to bool in v4
-    cdef int _with_faster_rules_heuristics
+    cdef int _faster_heuristics
     # TODO next one is unused and should be removed in v4
     # https://github.com/explosion/spaCy/pull/9150
     cdef int _unused_int2
