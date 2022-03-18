@@ -95,7 +95,8 @@ You can use the `as_tuples` option to pass additional context along with each
 doc when using [`nlp.pipe`](/api/language#pipe). If `as_tuples` is `True`, then
 the input should be a sequence of `(text, context)` tuples and the output will
 be a sequence of `(doc, context)` tuples. For example, you can pass metadata in
-the context and save it in a [custom attribute](#custom-components-attributes):
+the context and save it in a [custom attribute](#custom-components-attributes)
+or retrieve it from a custom component using the `doc._context` attribute:
 
 ```python
 ### {executable="true"}
