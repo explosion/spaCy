@@ -799,6 +799,10 @@ def tokenizer_pseudo_code(
     for substring in text.split():
         suffixes = []
         while substring:
+            if substring in special_cases:
+                tokens.extend(special_cases[substring])
+                substring = ""
+                continue
             while prefix_search(substring) or suffix_search(substring):
                 if token_match(substring):
                     tokens.append(substring)
@@ -851,20 +855,22 @@ def tokenizer_pseudo_code(
 The algorithm can be summarized as follows:
 
 1. Iterate over space-separated substrings.
-2. Look for a token match. If there is a match, stop processing and keep this
-   token.
-3. Check whether we have an explicitly defined special case for this substring.
+2. Check whether we have an explicitly defined special case for this substring.
    If we do, use it.
-4. Otherwise, try to consume one prefix. If we consumed a prefix, go back to #2,
+3. Look for a token match. If there is a match, stop processing and keep this
+   token.
+4. Check whether we have an explicitly defined special case for this substring.
+   If we do, use it.
+5. Otherwise, try to consume one prefix. If we consumed a prefix, go back to #3,
    so that the token match and special cases always get priority.
-5. If we didn't consume a prefix, try to consume a suffix and then go back to
-   #2.
-6. If we can't consume a prefix or a suffix, look for a URL match.
-7. If there's no URL match, then look for a special case.
-8. Look for "infixes" – stuff like hyphens etc. and split the substring into
+6. If we didn't consume a prefix, try to consume a suffix and then go back to
+   #3.
+7. If we can't consume a prefix or a suffix, look for a URL match.
+8. If there's no URL match, then look for a special case.
+9. Look for "infixes" – stuff like hyphens etc. and split the substring into
    tokens on all infixes.
-9. Once we can't consume any more of the string, handle it as a single token.
-10. Make a final pass over the text to check for special cases that include
+10. Once we can't consume any more of the string, handle it as a single token.
+11. Make a final pass over the text to check for special cases that include
     spaces or that were missed due to the incremental processing of affixes.
 
 </Accordion>

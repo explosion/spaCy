@@ -192,6 +192,10 @@ class Warnings(metaclass=ErrorsWithCodes):
     W115 = ("Skipping {method}: the floret vector table cannot be modified. "
             "Vectors are calculated from character ngrams.")
     W116 = ("Unable to clean attribute '{attr}'.")
+    W117 = ("No spans to visualize found in Doc object with spans_key: '{spans_key}'. If this is "
+            "surprising to you, make sure the Doc was processed using a model "
+            "that supports span categorization, and check the `doc.spans[spans_key]` "
+            "property manually if necessary.")
 
 
 class Errors(metaclass=ErrorsWithCodes):

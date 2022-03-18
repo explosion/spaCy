@@ -25,7 +25,7 @@ BACKWARD_EXTEND = False
 
 default_model_config = """
 [model]
-@architectures = "spacy.Tagger.v1"
+@architectures = "spacy.Tagger.v2"
 
 [model.tok2vec]
 @architectures = "spacy.Tok2Vec.v2"
