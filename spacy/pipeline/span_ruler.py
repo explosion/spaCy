@@ -1,6 +1,6 @@
 import warnings
 from typing import Optional, Union, List, Dict, Tuple, Iterable, Any, Callable
-from typing import Sequence, cast
+from typing import Sequence, Set, cast
 from pathlib import Path
 import srsly
 
@@ -9,7 +9,7 @@ from .spancat import spancat_score
 from ..training import Example
 from ..language import Language
 from ..errors import Errors, Warnings
-from ..util import ensure_path, SimpleFrozenList
+from ..util import ensure_path, SimpleFrozenList, registry
 from ..tokens import Doc, Span
 from ..matcher import Matcher, PhraseMatcher
 from .. import util
@@ -24,7 +24,7 @@ PatternType = Dict[str, Union[str, List[Dict[str, Any]]]]
         "spans_key": "ruler",
         "spans_filter": None,
         "annotate_ents": False,
-        "ents_filter": {"@misc": "spacy.filter_spans.v1"},
+        "ents_filter": {"@misc": "spacy.first_longest_spans_filter.v1"},
         "phrase_matcher_attr": None,
         "validate": False,
         "overwrite": True,
@@ -43,7 +43,7 @@ def make_span_ruler(
     spans_key: Optional[str],
     spans_filter: Optional[Callable[[Iterable[Span]], Iterable[Span]]],
     annotate_ents: bool,
-    ents_filter: Callable[[Iterable[Span]], Iterable[Span]],
+    ents_filter: Callable[[Iterable[Span], Iterable[Span]], Iterable[Span]],
     phrase_matcher_attr: Optional[Union[int, str]],
     validate: bool,
     overwrite: bool,
@@ -63,6 +63,35 @@ def make_span_ruler(
     )
 
 
+def overwrite_overlapping_ents_filter(entities: Iterable[Span], spans: Iterable[Span]) -> List[Span]:
+    """Merge entities and spans into one list without overlaps by allowing
+    spans to overwrite any entities that they overlap with. Priority is given
+    to the earlier spans in the provided spans. Intended to replicate the
+    overwrite_ents behavior from the EntityRuler.
+
+    entities (Iterable[Span]): The entities, already filtered for overlaps.
+    spans (Iterable[Span]): The spans to merge, may contain overlaps.
+    RETURNS (List[Span]): Filtered list of non-overlapping spans.
+    """
+    entities = list(entities)
+    new_entities = []
+    seen_tokens: Set[int] = set()
+    for span in spans:
+        start = span.start
+        end = span.end
+        # check for end - 1 here because boundaries are inclusive
+        if start not in seen_tokens and end - 1 not in seen_tokens:
+            new_entities.append(span)
+            entities = [e for e in entities if not (e.start < end and e.end > start)]
+            seen_tokens.update(range(start, end))
+    return entities + new_entities
+
+
+@registry.misc("spacy.overwrite_overlapping_ents_filter.v1")
+def make_overwrite_overlapping_ents_filter():
+    return overwrite_overlapping_ents_filter
+
+
 class SpanRuler(Pipe):
     """The SpanRuler lets you add spans to the `Doc.spans` using token-based
     rules or exact phrase matches.
@@ -79,7 +108,9 @@ class SpanRuler(Pipe):
         spans_key: Optional[str] = "ruler",
         spans_filter: Optional[Callable[[Iterable[Span]], Iterable[Span]]] = None,
         annotate_ents: bool = False,
-        ents_filter: Callable[[Iterable[Span]], Iterable[Span]] = util.filter_spans,
+        ents_filter: Callable[
+            [Iterable[Span], Iterable[Span]], Iterable[Span]
+        ] = util.filter_chain_spans,
         phrase_matcher_attr: Optional[Union[int, str]] = None,
         validate: bool = False,
         overwrite: bool = False,
@@ -102,15 +133,16 @@ class SpanRuler(Pipe):
             before they are assigned to doc.spans. Defaults to `None`.
         annotate_ents (bool): Whether to save spans to doc.ents. Defaults to
             `False`.
-        ents_filter (Callable): The method to filter spans before they are
-            assigned to doc.ents. Defaults to `util.filter_spans`.
+        ents_filter (Callable[[Iterable[Span], Iterable[Span]], List[Span]]):
+            The method to filter spans before they are assigned to doc.ents.
+            Defaults to `util.filter_chain_spans`.
         phrase_matcher_attr (int / str): Token attribute to match on, passed
             to the internal PhraseMatcher as `attr`.
         validate (bool): Whether patterns should be validated, passed to
             Matcher and PhraseMatcher as `validate`.
         overwrite (bool): Whether to remove any existing spans under this spans
             key if `spans_key` is set, or to remove any ents under `doc.ents` if
-            annotate_ents is set. Defaults to `True`.
+            `annotate_ents` is set. Defaults to `True`.
         scorer (Optional[Callable]): The scoring method. Defaults to
             spacy.pipeline.spancat.spancat_score.
 
@@ -198,7 +230,7 @@ class SpanRuler(Pipe):
             spans = []
             if not self.cfg["overwrite"]:
                 spans = list(doc.ents)
-            spans.extend(self.ents_filter(matches))
+            spans = self.ents_filter(spans, matches)
             try:
                 doc.ents = sorted(spans)
             except ValueError:

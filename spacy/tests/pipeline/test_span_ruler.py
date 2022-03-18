@@ -3,6 +3,7 @@ import pytest
 import spacy
 from spacy import registry
 from spacy.errors import MatchPatternError
+from spacy.tokens import Span
 from spacy.tests.util import make_tempdir
 
 from thinc.api import NumpyOps, get_current_ops
@@ -404,7 +405,7 @@ def test_span_ruler_remove_and_add():
 def test_span_ruler_spans_filter(overlapping_patterns):
     nlp = spacy.blank("xx")
     ruler = nlp.add_pipe(
-        "span_ruler", config={"spans_filter": {"@misc": "spacy.filter_spans.v1"}}
+        "span_ruler", config={"spans_filter": {"@misc": "spacy.first_longest_spans_filter.v1"}}
     )
     ruler.add_patterns(overlapping_patterns)
     doc = ruler(nlp.make_doc("foo bar baz"))
@@ -421,11 +422,24 @@ def test_span_ruler_ents_default_filter(overlapping_patterns):
     assert doc.ents[0].label_ == "FOOBAR"
 
 
+def test_span_ruler_ents_overwrite_filter(overlapping_patterns):
+    nlp = spacy.blank("xx")
+    ruler = nlp.add_pipe("span_ruler", config={"annotate_ents": True, "overwrite": False, "ents_filter": {"@misc": "spacy.overwrite_overlapping_ents_filter.v1"}})
+    ruler.add_patterns(overlapping_patterns)
+    # overlapping ents are clobbered, non-overlapping ents are preserved
+    doc = nlp.make_doc("foo bar baz a b c")
+    doc.ents = [Span(doc, 1, 3, label="BARBAZ"), Span(doc, 3, 6, label="ABC")]
+    doc = ruler(doc)
+    assert len(doc.ents) == 2
+    assert doc.ents[0].label_ == "FOOBAR"
+    assert doc.ents[1].label_ == "ABC"
+
+
 def test_span_ruler_ents_bad_filter(overlapping_patterns):
     @registry.misc("test_pass_through_filter")
     def make_pass_through_filter():
-        def pass_through_filter(spans):
-            return spans
+        def pass_through_filter(spans1, spans2):
+            return spans1 + spans2
         return pass_through_filter
 
     nlp = spacy.blank("xx")
@@ -438,4 +452,4 @@ def test_span_ruler_ents_bad_filter(overlapping_patterns):
     )
     ruler.add_patterns(overlapping_patterns)
     with pytest.raises(ValueError):
-        doc = ruler(nlp.make_doc("foo bar baz"))
+        ruler(nlp.make_doc("foo bar baz"))
