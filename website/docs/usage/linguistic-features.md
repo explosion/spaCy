@@ -203,9 +203,9 @@ acquired from [WordNet](https://wordnet.princeton.edu/).
 ### Trainable lemmatizer
 
 The [`EditTreeLemmatizer`](/api/edittreelemmatizer) can learn form-to-lemma
-transformations a training set that includes lemma annotations. This removes the
-need to write language-specific rules and can (in many cases) provide higher
-accuracies than lookup and rule-based lemmatizers.
+transformations from a training corpus that includes lemma annotations. This
+removes the need to write language-specific rules and can (in many cases)
+provide higher accuracies than lookup and rule-based lemmatizers.
 
 ```python
 import spacy

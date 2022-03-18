@@ -358,9 +358,14 @@ Load the pipe from a bytestring. Modifies the object in place and returns it.
 
 ## EditTreeLemmatizer.labels {#labels tag="property"}
 
-The labels currently added to the component. **Warning:** the
-`EditTreeLemmatizer` labels are not useful by themselves, since they are
+The labels currently added to the component.
+
+<Infobox variant="warning" title="Interpretability of the labels">
+
+The `EditTreeLemmatizer` labels are not useful by themselves, since they are
 identifiers of edit trees.
+
+</Infobox>
 
 | Name        | Description                                            |
 | ----------- | ------------------------------------------------------ |
