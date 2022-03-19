@@ -39,6 +39,15 @@ def add_dummy(tensor: torch.Tensor, eps: bool = False):
     output = torch.cat((dummy, tensor), dim=1)
     return output
 
+def get_sentence_ids(doc):
+    out = []
+    sent_id = -1
+    for tok in doc:
+        if tok.is_sent_start:
+            sent_id += 1
+        out.append(sent_id)
+    return out
+
 def doc2clusters(doc: Doc, prefix=DEFAULT_CLUSTER_PREFIX) -> MentionClusters:
     """Given a doc, give the mention clusters.
 

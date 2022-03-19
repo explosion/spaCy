@@ -14,7 +14,7 @@ from ..extract_spans import extract_spans
 import torch
 from thinc.util import xp2torch, torch2xp
 
-from .coref_util import add_dummy
+from .coref_util import add_dummy, get_sentence_ids
 
 @registry.architectures("spacy.Coref.v1")
 def build_wl_coref_model(
@@ -74,6 +74,33 @@ def build_wl_coref_model(
     # and just return words as spans.
     return coref_model
 
+@registry.architectures("spacy.SpanPredictor.v1")
+def build_span_predictor(
+    tok2vec: Model[List[Doc], List[Floats2d]],
+    hidden_size: int = 1024,
+    dist_emb_size: int = 64,
+    ):
+    # TODO fix this
+    try:
+        dim = tok2vec.get_dim("nO")
+    except ValueError:
+        # happens with transformer listener
+        dim = 768
+
+    with Model.define_operators({">>": chain, "&": tuplify}):
+        # TODO fix device - should be automatic
+        device = "cuda:0"
+        span_predictor = PyTorchWrapper(
+            SpanPredictor(hidden_size, dist_emb_size, device),
+            convert_inputs=convert_span_predictor_inputs
+        )
+        # TODO use proper parameter for prefix
+        head_info = build_get_head_metadata("coref_head_clusters")
+        model = (tok2vec & head_info) >> span_predictor
+
+    return model
+
+
 def convert_coref_scorer_inputs(
     model: Model,
     X: List[Floats2d],
@@ -83,6 +110,7 @@ def convert_coref_scorer_inputs(
     # just use the first
     # TODO real batching
     X = X[0]
+
 
     word_features = xp2torch(X, requires_grad=is_train)
     def backprop(args: ArgsKwargs) -> List[Floats2d]:
@@ -116,10 +144,15 @@ def convert_span_predictor_inputs(
     X: Tuple[Ints1d, Floats2d, Ints1d],
     is_train: bool
 ):
-    sent_id = xp2torch(X[0], requires_grad=False)
-    word_features = xp2torch(X[1], requires_grad=False)
-    head_ids = xp2torch(X[2], requires_grad=False)
-    argskwargs = ArgsKwargs(args=(sent_id, word_features, head_ids), kwargs={})
+    tok2vec, (sent_ids, head_ids) = X
+    # Normally we shoudl use the input is_train, but for these two it's not relevant
+    sent_ids = xp2torch(sent_ids[0], requires_grad=False)
+    head_ids = xp2torch(head_ids[0], requires_grad=False)
+
+    word_features = xp2torch(tok2vec[0], requires_grad=is_train)
+
+    argskwargs = ArgsKwargs(args=(sent_ids, word_features, head_ids), kwargs={})
+    # TODO actually support backprop
     return argskwargs, lambda dX: []
 
 # TODO This probably belongs in the component, not the model.
@@ -188,6 +221,36 @@ def _clusterize(
             assert len(cluster) > 1
             clusters.append(sorted(cluster))
     return sorted(clusters)
+
+def build_get_head_metadata(prefix):
+    # TODO this name is awful, fix it
+    model = Model("HeadDataProvider", attrs={"prefix": prefix}, forward=head_data_forward)
+    return model
+
+def head_data_forward(model, docs, is_train):
+    """A layer to generate the extra data needed for the span predictor.
+    """
+    sent_ids = []
+    head_ids = []
+    prefix = model.attrs["prefix"]
+
+    for doc in docs:
+        sids = model.ops.asarray2i(get_sentence_ids(doc))
+        sent_ids.append(sids)
+        heads = []
+        for key, sg in doc.spans.items():
+            if not key.startswith(prefix):
+                continue
+            for span in sg:
+                # TODO warn if spans are more than one token
+                heads.append(span[0].i)
+        heads = model.ops.asarray2i(heads)
+        head_ids.append(heads)
+    
+    # each of these is a list with one entry per doc
+    # backprop is just a placeholder
+    # TODO it would probably be better to have a list of tuples than two lists of arrays
+    return (sent_ids, head_ids), lambda x: []
 
 
 class CorefScorer(torch.nn.Module):
@@ -492,6 +555,7 @@ class SpanPredictor(torch.nn.Module):
         emb_ids[(emb_ids < 0) + (emb_ids > 126)] = 127
         # Obtain "same sentence" boolean mask, [n_heads, n_words]
         sent_id = torch.tensor(sent_id, device=words.device)
+        heads_ids = heads_ids.long()
         same_sent = (sent_id[heads_ids].unsqueeze(1) == sent_id.unsqueeze(0))
 
         # To save memory, only pass candidates from one sentence for each head
@@ -506,7 +570,7 @@ class SpanPredictor(torch.nn.Module):
         ), dim=1)
 
         lengths = same_sent.sum(dim=1)
-        padding_mask = torch.arange(0, lengths.max(), device=words.device).unsqueeze(0)
+        padding_mask = torch.arange(0, lengths.max().item(), device=words.device).unsqueeze(0)
         padding_mask = (padding_mask < lengths.unsqueeze(1))  # [n_heads, max_sent_len]
 
         # [n_heads, max_sent_len, input_size * 2 + distance_emb_size]
