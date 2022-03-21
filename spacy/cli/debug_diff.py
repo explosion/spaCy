@@ -73,4 +73,4 @@ def debug_diff(
     if user == other:
         msg.warn("No diff to show: configs are identical")
     else:
-        print(diff_strings(user, other))
+        print(diff_strings(other, user))
