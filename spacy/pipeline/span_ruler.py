@@ -315,7 +315,9 @@ class SpanRuler(Pipe):
             if start != end
         )
         if self.sort_key:
-            return sorted(list(deduplicated_matches), key=self.sort_key, reverse=self.sort_reverse)
+            return sorted(
+                list(deduplicated_matches), key=self.sort_key, reverse=self.sort_reverse
+            )
         else:
             return sorted(list(deduplicated_matches), reverse=self.sort_reverse)
 
@@ -438,9 +440,7 @@ class SpanRuler(Pipe):
     def clear(self) -> None:
         """Reset all patterns."""
         self._patterns: List[PatternType] = []
-        self.matcher: Matcher = Matcher(
-            self.nlp.vocab, validate=self.validate
-        )
+        self.matcher: Matcher = Matcher(self.nlp.vocab, validate=self.validate)
         self.phrase_matcher: PhraseMatcher = PhraseMatcher(
             self.nlp.vocab,
             attr=self.phrase_matcher_attr,

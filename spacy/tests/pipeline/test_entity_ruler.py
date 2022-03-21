@@ -71,7 +71,11 @@ def test_issue4849(entity_ruler_factory):
         {"label": "PERSON", "pattern": "joe biden", "id": "joe-biden"},
         {"label": "PERSON", "pattern": "bernie sanders", "id": "bernie-sanders"},
     ]
-    ruler = nlp.add_pipe(entity_ruler_factory, name="entity_ruler", config={"phrase_matcher_attr": "LOWER"})
+    ruler = nlp.add_pipe(
+        entity_ruler_factory,
+        name="entity_ruler",
+        config={"phrase_matcher_attr": "LOWER"},
+    )
     ruler.add_patterns(patterns)
     text = """
     The left is starting to take aim at Democratic front-runner Joe Biden.
@@ -146,7 +150,9 @@ def test_issue8168(entity_ruler_factory):
 @pytest.mark.parametrize("entity_ruler_factory", ENTITY_RULERS)
 def test_entity_ruler_fix8216(nlp, patterns, entity_ruler_factory):
     """Test that patterns don't get added excessively."""
-    ruler = nlp.add_pipe(entity_ruler_factory, name="entity_ruler", config={"validate": True})
+    ruler = nlp.add_pipe(
+        entity_ruler_factory, name="entity_ruler", config={"validate": True}
+    )
     ruler.add_patterns(patterns)
     pattern_count = sum(len(mm) for mm in ruler.matcher._patterns.values())
     assert pattern_count > 0
@@ -247,7 +253,9 @@ def test_entity_ruler_existing(nlp, patterns, entity_ruler_factory):
 
 @pytest.mark.parametrize("entity_ruler_factory", ENTITY_RULERS)
 def test_entity_ruler_existing_overwrite(nlp, patterns, entity_ruler_factory):
-    ruler = nlp.add_pipe(entity_ruler_factory, name="entity_ruler", config={"overwrite_ents": True})
+    ruler = nlp.add_pipe(
+        entity_ruler_factory, name="entity_ruler", config={"overwrite_ents": True}
+    )
     ruler.add_patterns(patterns)
     nlp.add_pipe("add_ent", before="entity_ruler")
     doc = nlp("OH HELLO WORLD bye bye")
@@ -259,7 +267,9 @@ def test_entity_ruler_existing_overwrite(nlp, patterns, entity_ruler_factory):
 
 @pytest.mark.parametrize("entity_ruler_factory", ENTITY_RULERS)
 def test_entity_ruler_existing_complex(nlp, patterns, entity_ruler_factory):
-    ruler = nlp.add_pipe(entity_ruler_factory, name="entity_ruler", config={"overwrite_ents": True})
+    ruler = nlp.add_pipe(
+        entity_ruler_factory, name="entity_ruler", config={"overwrite_ents": True}
+    )
     ruler.add_patterns(patterns)
     nlp.add_pipe("add_ent", before="entity_ruler")
     doc = nlp("foo foo bye bye")
@@ -272,7 +282,9 @@ def test_entity_ruler_existing_complex(nlp, patterns, entity_ruler_factory):
 
 @pytest.mark.parametrize("entity_ruler_factory", ENTITY_RULERS)
 def test_entity_ruler_entity_id(nlp, patterns, entity_ruler_factory):
-    ruler = nlp.add_pipe(entity_ruler_factory, name="entity_ruler", config={"overwrite_ents": True})
+    ruler = nlp.add_pipe(
+        entity_ruler_factory, name="entity_ruler", config={"overwrite_ents": True}
+    )
     ruler.add_patterns(patterns)
     doc = nlp("Apple is a technology company")
     assert len(doc.ents) == 1
@@ -312,7 +324,9 @@ def test_entity_ruler_serialize_bytes(nlp, patterns, entity_ruler_factory):
 
 
 @pytest.mark.parametrize("entity_ruler_factory", ENTITY_RULERS)
-def test_entity_ruler_serialize_phrase_matcher_attr_bytes(nlp, patterns, entity_ruler_factory):
+def test_entity_ruler_serialize_phrase_matcher_attr_bytes(
+    nlp, patterns, entity_ruler_factory
+):
     ruler = EntityRuler(nlp, phrase_matcher_attr="LOWER", patterns=patterns)
     assert len(ruler) == len(patterns)
     assert len(ruler.labels) == 4

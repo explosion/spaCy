@@ -387,7 +387,8 @@ def test_span_ruler_remove_and_add():
 def test_span_ruler_spans_filter(overlapping_patterns):
     nlp = spacy.blank("xx")
     ruler = nlp.add_pipe(
-        "span_ruler", config={"spans_filter": {"@misc": "spacy.first_longest_spans_filter.v1"}}
+        "span_ruler",
+        config={"spans_filter": {"@misc": "spacy.first_longest_spans_filter.v1"}},
     )
     ruler.add_patterns(overlapping_patterns)
     doc = ruler(nlp.make_doc("foo bar baz"))
@@ -406,7 +407,14 @@ def test_span_ruler_ents_default_filter(overlapping_patterns):
 
 def test_span_ruler_ents_overwrite_filter(overlapping_patterns):
     nlp = spacy.blank("xx")
-    ruler = nlp.add_pipe("span_ruler", config={"annotate_ents": True, "overwrite": False, "ents_filter": {"@misc": "spacy.overwrite_overlapping_ents_filter.v1"}})
+    ruler = nlp.add_pipe(
+        "span_ruler",
+        config={
+            "annotate_ents": True,
+            "overwrite": False,
+            "ents_filter": {"@misc": "spacy.overwrite_overlapping_ents_filter.v1"},
+        },
+    )
     ruler.add_patterns(overlapping_patterns)
     # overlapping ents are clobbered, non-overlapping ents are preserved
     doc = nlp.make_doc("foo bar baz a b c")
@@ -422,6 +430,7 @@ def test_span_ruler_ents_bad_filter(overlapping_patterns):
     def make_pass_through_filter():
         def pass_through_filter(spans1, spans2):
             return spans1 + spans2
+
         return pass_through_filter
 
     nlp = spacy.blank("xx")
