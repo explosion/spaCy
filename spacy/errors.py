@@ -894,7 +894,7 @@ class Errors(metaclass=ErrorsWithCodes):
     E1022 = ("Words must be of type str or int, but input is of type '{wtype}'")
     E1023 = ("Couldn't read EntityRuler from the {path}. This file doesn't "
              "exist.")
-    E1024 = ("A pattern with ID \"{ent_id}\" is not present in EntityRuler "
+    E1024 = ("A pattern with ID '{ent_id}' is not present in '{component}' "
              "patterns.")
     E1025 = ("Cannot intify the value '{value}' as an IOB string. The only "
              "supported values are: 'I', 'O', 'B' and ''")

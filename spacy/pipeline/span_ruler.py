@@ -18,6 +18,52 @@ PatternType = Dict[str, Union[str, List[Dict[str, Any]]]]
 
 
 @Language.factory(
+    "future_entity_ruler",
+    assigns=["doc.ents"],
+    default_config={
+        "phrase_matcher_attr": None,
+        "validate": False,
+        "overwrite_ents": False,
+        "scorer": {"@scorers": "spacy.entity_ruler_scorer.v1"},
+        "ent_id_sep": "__unused__",
+    },
+    default_score_weights={
+        "ents_f": 1.0,
+        "ents_p": 0.0,
+        "ents_r": 0.0,
+        "ents_per_type": None,
+    },
+)
+def make_entity_ruler(
+    nlp: Language,
+    name: str,
+    phrase_matcher_attr: Optional[Union[int, str]],
+    validate: bool,
+    overwrite_ents: bool,
+    scorer: Optional[Callable],
+    ent_id_sep: str,
+):
+    if overwrite_ents:
+        ents_filter = overwrite_overlapping_ents_filter
+    else:
+        ents_filter = preserve_existing_ents_filter
+    return SpanRuler(
+        nlp,
+        name,
+        spans_key=None,
+        spans_filter=None,
+        annotate_ents=True,
+        ents_filter=ents_filter,
+        phrase_matcher_attr=phrase_matcher_attr,
+        validate=validate,
+        overwrite=False,
+        sort_key=first_longest_span_sort_key,
+        sort_reverse=True,
+        scorer=scorer,
+    )
+
+
+@Language.factory(
     "span_ruler",
     assigns=["doc.spans"],
     default_config={
@@ -28,6 +74,8 @@ PatternType = Dict[str, Union[str, List[Dict[str, Any]]]]
         "phrase_matcher_attr": None,
         "validate": False,
         "overwrite": True,
+        "sort_key": None,
+        "sort_reverse": False,
         "scorer": {"@scorers": "spacy.spancat_scorer.v1"},
     },
     default_score_weights={
@@ -47,6 +95,8 @@ def make_span_ruler(
     phrase_matcher_attr: Optional[Union[int, str]],
     validate: bool,
     overwrite: bool,
+    sort_key: Optional[Callable[[Span], Any]],
+    sort_reverse: bool,
     scorer: Optional[Callable],
 ):
     return SpanRuler(
@@ -59,15 +109,19 @@ def make_span_ruler(
         phrase_matcher_attr=phrase_matcher_attr,
         validate=validate,
         overwrite=overwrite,
+        sort_key=sort_key,
+        sort_reverse=sort_reverse,
         scorer=scorer,
     )
 
 
-def overwrite_overlapping_ents_filter(entities: Iterable[Span], spans: Iterable[Span]) -> List[Span]:
+def overwrite_overlapping_ents_filter(
+    entities: Iterable[Span], spans: Iterable[Span]
+) -> List[Span]:
     """Merge entities and spans into one list without overlaps by allowing
     spans to overwrite any entities that they overlap with. Priority is given
     to the earlier spans in the provided spans. Intended to replicate the
-    overwrite_ents behavior from the EntityRuler.
+    overwrite_ents=True behavior from the EntityRuler.
 
     entities (Iterable[Span]): The entities, already filtered for overlaps.
     spans (Iterable[Span]): The spans to merge, may contain overlaps.
@@ -92,6 +146,45 @@ def make_overwrite_overlapping_ents_filter():
     return overwrite_overlapping_ents_filter
 
 
+def preserve_existing_ents_filter(
+    entities: Iterable[Span], spans: Iterable[Span]
+) -> List[Span]:
+    """Merge entities and spans into one list without overlaps by prioritizing
+    existing entities. Intended to replicate the overwrite_ents=False behavior
+    from the EntityRuler.
+
+    entities (Iterable[Span]): The entities, already filtered for overlaps.
+    spans (Iterable[Span]): The spans to merge, may contain overlaps.
+    RETURNS (List[Span]): Filtered list of non-overlapping spans.
+    """
+    entities = list(entities)
+    new_entities = []
+    seen_tokens: Set[int] = set()
+    seen_tokens.update(*(range(ent.start, ent.end) for ent in entities))
+    for span in spans:
+        start = span.start
+        end = span.end
+        # check for end - 1 here because boundaries are inclusive
+        if start not in seen_tokens and end - 1 not in seen_tokens:
+            new_entities.append(span)
+            seen_tokens.update(range(start, end))
+    return entities + new_entities
+
+
+@registry.misc("spacy.preserve_existing_ents_filter.v1")
+def make_preverse_existing__ents_filter():
+    return preserve_existing_ents_filter
+
+
+def first_longest_span_sort_key(m):
+    return (m.end - m.start, -m.start)
+
+
+@registry.misc("spacy.first_longest_span_sort_key.v1")
+def make_first_longest_span_sort_key():
+    return first_longest_span_sort_key
+
+
 class SpanRuler(Pipe):
     """The SpanRuler lets you add spans to the `Doc.spans` using token-based
     rules or exact phrase matches.
@@ -114,6 +207,8 @@ class SpanRuler(Pipe):
         phrase_matcher_attr: Optional[Union[int, str]] = None,
         validate: bool = False,
         overwrite: bool = False,
+        sort_key: Optional[Callable[[Span], Any]] = None,
+        sort_reverse: bool = True,
         scorer: Optional[Callable] = spancat_score,
     ) -> None:
         """Initialize the span ruler. If patterns are supplied here, they
@@ -143,6 +238,11 @@ class SpanRuler(Pipe):
         overwrite (bool): Whether to remove any existing spans under this spans
             key if `spans_key` is set, or to remove any ents under `doc.ents` if
             `annotate_ents` is set. Defaults to `True`.
+        sort_key (Optional[Callable]): The sort key to use with `sorted` to
+            determine the order of the matched spans before filtering. Defaults
+            to `None` for default `Span` comparison.
+        sort_reverse (bool): Whether to reverse the sorted matched spans before
+            filtering. Defaults to `False`.
         scorer (Optional[Callable]): The scoring method. Defaults to
             spacy.pipeline.spancat.spancat_score.
 
@@ -150,15 +250,15 @@ class SpanRuler(Pipe):
         """
         self.nlp = nlp
         self.name = name
-        self.cfg = {
-            "spans_key": spans_key,
-            "annotate_ents": annotate_ents,
-            "phrase_matcher_attr": phrase_matcher_attr,
-            "validate": validate,
-            "overwrite": overwrite,
-        }
+        self.spans_key = spans_key
+        self.annotate_ents = annotate_ents
+        self.phrase_matcher_attr = phrase_matcher_attr
+        self.validate = validate
+        self.overwrite = overwrite
         self.spans_filter = spans_filter
         self.ents_filter = ents_filter
+        self.sort_key = sort_key
+        self.sort_reverse = sort_reverse
         self.scorer = scorer
         self._match_label_id_map: Dict[int, Dict[str, str]] = {}
         self.clear()
@@ -177,7 +277,7 @@ class SpanRuler(Pipe):
     @property
     def key(self) -> Optional[str]:
         """Key of the doc.spans dict to save the spans under."""
-        return cast(Optional[str], self.cfg["spans_key"])
+        return self.spans_key
 
     def __call__(self, doc: Doc) -> Doc:
         """Find matches in document and add them as entities.
@@ -214,27 +314,38 @@ class SpanRuler(Pipe):
             for m_id, start, end in matches
             if start != end
         )
-        return sorted(list(deduplicated_matches))
+        if self.sort_key:
+            return sorted(list(deduplicated_matches), key=self.sort_key, reverse=self.sort_reverse)
+        else:
+            return sorted(list(deduplicated_matches), reverse=self.sort_reverse)
 
     def set_annotations(self, doc, matches):
         """Modify the document in place"""
         # set doc.spans if spans_key is set
         if self.key:
             spans = []
-            if self.key in doc.spans and not self.cfg["overwrite"]:
+            if self.key in doc.spans and not self.overwrite:
                 spans = doc.spans[self.key]
             spans.extend(self.spans_filter(matches) if self.spans_filter else matches)
             doc.spans[self.key] = spans
         # set doc.ents if annotate_ents is set
-        if self.cfg["annotate_ents"]:
+        if self.annotate_ents:
             spans = []
-            if not self.cfg["overwrite"]:
+            if not self.overwrite:
                 spans = list(doc.ents)
             spans = self.ents_filter(spans, matches)
             try:
                 doc.ents = sorted(spans)
             except ValueError:
                 raise ValueError(Errors.E856)
+
+    @property
+    def token_patterns(self) -> List[PatternType]:
+        return [p for p in self._patterns if not isinstance(p["pattern"], str)]
+
+    @property
+    def phrase_patterns(self) -> List[PatternType]:
+        return [p for p in self._patterns if isinstance(p["pattern"], str)]
 
     @property
     def labels(self) -> Tuple[str, ...]:
@@ -328,12 +439,12 @@ class SpanRuler(Pipe):
         """Reset all patterns."""
         self._patterns: List[PatternType] = []
         self.matcher: Matcher = Matcher(
-            self.nlp.vocab, validate=cast(bool, self.cfg["validate"])
+            self.nlp.vocab, validate=self.validate
         )
         self.phrase_matcher: PhraseMatcher = PhraseMatcher(
             self.nlp.vocab,
-            attr=cast(Optional[Union[int, str]], self.cfg["phrase_matcher_attr"]),
-            validate=cast(bool, self.cfg["validate"]),
+            attr=self.phrase_matcher_attr,
+            validate=self.validate,
         )
 
     def remove(self, label: str) -> None:
@@ -348,6 +459,22 @@ class SpanRuler(Pipe):
         self._patterns = [p for p in self._patterns if p["label"] != label]
         for m_label in self._match_label_id_map:
             if self._match_label_id_map[m_label]["label"] == label:
+                m_label_str = self.nlp.vocab.strings.as_string(m_label)
+                if m_label_str in self.phrase_matcher:
+                    self.phrase_matcher.remove(m_label_str)
+                if m_label_str in self.matcher:
+                    self.matcher.remove(m_label_str)
+
+    def remove_by_id(self, pattern_id: str) -> None:
+        """Remove a pattern by its pattern ID.
+
+        pattern_id (str): ID of the pattern to be removed.
+        RETURNS: None
+        DOCS: https://spacy.io/api/spanruler#remove
+        """
+        self._patterns = [p for p in self._patterns if p.get("id") != pattern_id]
+        for m_label in self._match_label_id_map:
+            if self._match_label_id_map[m_label]["id"] == pattern_id:
                 m_label_str = self.nlp.vocab.strings.as_string(m_label)
                 if m_label_str in self.phrase_matcher:
                     self.phrase_matcher.remove(m_label_str)
@@ -371,7 +498,6 @@ class SpanRuler(Pipe):
         """
         self.clear()
         deserializers = {
-            "cfg": lambda b: self.cfg.update(srsly.json_loads(b)),
             "patterns": lambda b: self.add_patterns(srsly.json_loads(b)),
         }
         util.from_bytes(bytes_data, deserializers, exclude)
@@ -385,7 +511,6 @@ class SpanRuler(Pipe):
         DOCS: https://spacy.io/api/spanruler#to_bytes
         """
         serializers = {
-            "cfg": lambda: srsly.json_dumps(self.cfg),
             "patterns": lambda: srsly.json_dumps(self.patterns),
         }
         return util.to_bytes(serializers, exclude)
@@ -404,7 +529,6 @@ class SpanRuler(Pipe):
         self.clear()
         path = ensure_path(path)
         deserializers = {
-            "cfg": lambda p: self.cfg.update(srsly.read_json(p)),
             "patterns": lambda p: self.add_patterns(srsly.read_jsonl(p)),
         }
         util.from_disk(path, deserializers, {})
@@ -421,7 +545,6 @@ class SpanRuler(Pipe):
         """
         path = ensure_path(path)
         serializers = {
-            "cfg": lambda p: srsly.write_json(p, self.cfg),
             "patterns": lambda p: srsly.write_jsonl(p, self.patterns),
         }
         util.to_disk(path, serializers, {})
