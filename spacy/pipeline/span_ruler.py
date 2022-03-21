@@ -172,7 +172,7 @@ def preserve_existing_ents_filter(
 
 
 @registry.misc("spacy.preserve_existing_ents_filter.v1")
-def make_preverse_existing__ents_filter():
+def make_preverse_existing_ents_filter():
     return preserve_existing_ents_filter
 
 
