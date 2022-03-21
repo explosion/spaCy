@@ -3882,6 +3882,48 @@
                 "twitter": "_knrd"
             },
             "category": ["scientific", "standalone"]
+        },
+        {
+            "id": "edsnlp",
+            "title": "EDS-NLP",
+            "slogan": "spaCy components to extract information from clinical notes written in French.",
+            "description": "EDS-NLP provides a set of rule-based spaCy components to extract information for French clinical notes. It also features _qualifier_ pipelines that detect negations, speculations and family context, among other modalities. Check out the [demo](https://aphp.github.io/edsnlp/demo/)!",
+            "github": "aphp/edsnlp",
+            "pip": "edsnlp",
+            "code_example": [
+                "import spacy",
+                "",
+                "nlp = spacy.blank(\"fr\")",
+                "",
+                "terms = dict(",
+                "    covid=[\"covid\", \"coronavirus\"],",
+                ")",
+                "",
+                "# Sentencizer component, needed for negation detection",
+                "nlp.add_pipe(\"eds.sentences\")",
+                "# Matcher component",
+                "nlp.add_pipe(\"eds.matcher\", config=dict(terms=terms))",
+                "# Negation detection",
+                "nlp.add_pipe(\"eds.negation\")",
+                "",
+                "# Process your text in one call !",
+                "doc = nlp(\"Le patient est atteint de covid\")",
+                "",
+                "doc.ents",
+                "# Out: (covid,)",
+                "",
+                "doc.ents[0]._.negation",
+                "# Out: False"
+            ],
+            "code_language": "python",
+            "url": "https://aphp.github.io/edsnlp/",
+            "author": "AP-HP",
+            "author_links": {
+                "github": "aphp",
+                "website": "https://github.com/aphp"
+            },
+            "category": ["biomedical", "scientific", "research", "pipeline"],
+            "tags": ["clinical"]
         }
     ],
 
