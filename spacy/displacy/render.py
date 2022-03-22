@@ -270,7 +270,7 @@ class DependencyRenderer:
         RETURNS (str): Rendered SVG markup.
         """
         self.levels = self.get_levels(arcs)
-        self.highest_level = len(self.levels)
+        self.highest_level = max(self.levels.values(), default=0)
         self.offset_y = self.distance / 2 * self.highest_level + self.arrow_stroke
         self.width = self.offset_x + len(words) * self.distance
         self.height = self.offset_y + 3 * self.word_spacing
@@ -330,7 +330,7 @@ class DependencyRenderer:
         if start < 0 or end < 0:
             error_args = dict(start=start, end=end, label=label, dir=direction)
             raise ValueError(Errors.E157.format(**error_args))
-        level = self.levels.index(end - start) + 1
+        level = self.levels[(start, end, label)]
         x_start = self.offset_x + start * self.distance + self.arrow_spacing
         if self.direction == "rtl":
             x_start = self.width - x_start
@@ -346,7 +346,7 @@ class DependencyRenderer:
         y_curve = self.offset_y - level * self.distance / 2
         if self.compact:
             y_curve = self.offset_y - level * self.distance / 6
-        if y_curve == 0 and len(self.levels) > 5:
+        if y_curve == 0 and max(self.levels.values(), default=0) > 5:
             y_curve = -self.distance
         arrowhead = self.get_arrowhead(direction, x_start, y, x_end)
         arc = self.get_arc(x_start, y, y_curve, x_end)
@@ -395,10 +395,21 @@ class DependencyRenderer:
         Used to calculate arrow heights dynamically and without wasting space.
 
         args (list): Individual arcs and their start, end, direction and label.
-        RETURNS (list): Arc levels sorted from lowest to highest.
+        RETURNS (dict): Arc levels keyed by (start, end, label).
         """
-        levels = set(map(lambda arc: arc["end"] - arc["start"], arcs))
-        return sorted(list(levels))
+        length = max([arc["end"] for arc in arcs], default=0)
+        max_level = [0] * length
+        levels = {}
+
+        for arc in sorted(arcs, key=lambda arc: arc["end"] - arc["start"]):
+            level = max(max_level[arc["start"] : arc["end"]]) + 1
+
+            for i in range(arc["start"], arc["end"]):
+                max_level[i] = level
+
+            levels[(arc["start"], arc["end"], arc["label"])] = level
+
+        return levels
 
 
 class EntityRenderer:
