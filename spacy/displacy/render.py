@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 import uuid
 import itertools
 
@@ -390,7 +390,7 @@ class DependencyRenderer:
             p1, p2, p3 = (end, end + self.arrow_width - 2, end - self.arrow_width + 2)
         return f"M{p1},{y + 2} L{p2},{y - self.arrow_width} {p3},{y - self.arrow_width}"
 
-    def get_levels(self, arcs: List[Dict[str, Any]]) -> List[int]:
+    def get_levels(self, arcs: List[Dict[str, Any]]) -> Dict[Tuple[int, int, str], int]:
         """Calculate available arc height "levels".
         Used to calculate arrow heights dynamically and without wasting space.
 
