@@ -244,8 +244,12 @@ cdef class Matcher:
                         pipe = "parser"
                     error_msg = Errors.E155.format(pipe=pipe, attr=self.vocab.strings.as_string(attr))
                     raise ValueError(error_msg)
-        matches = find_matches(&self.patterns[0], self.patterns.size(), doclike, length,
-                                extensions=self._extensions, predicates=self._extra_predicates, with_alignments=with_alignments)
+
+        if self.patterns.empty():
+            matches = []
+        else:
+            matches = find_matches(&self.patterns[0], self.patterns.size(), doclike, length,
+                                    extensions=self._extensions, predicates=self._extra_predicates, with_alignments=with_alignments)
         final_matches = []
         pairs_by_id = {}
         # For each key, either add all matches, or only the filtered,
