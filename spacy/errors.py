@@ -524,9 +524,8 @@ class Errors(metaclass=ErrorsWithCodes):
     E202 = ("Unsupported {name} mode '{mode}'. Supported modes: {modes}.")
 
     # New errors added in v3.x
-    E856 = ("Unable to set doc.ents. Check that the 'ents_filter' does not "
+    E857 = ("Unable to set doc.ents. Check that the 'ents_filter' does not "
             "permit overlapping spans.")
-    E857 = ("Unable to remove: '{label}' not found in '{component}'.")
     E858 = ("The {mode} vector table does not support this operation. "
             "{alternative}")
     E859 = ("The floret vector table cannot be modified.")
@@ -894,8 +893,8 @@ class Errors(metaclass=ErrorsWithCodes):
     E1022 = ("Words must be of type str or int, but input is of type '{wtype}'")
     E1023 = ("Couldn't read EntityRuler from the {path}. This file doesn't "
              "exist.")
-    E1024 = ("A pattern with ID '{ent_id}' is not present in '{component}' "
-             "patterns.")
+    E1024 = ("A pattern with {attr_type} '{label}' is not present in "
+             "'{component}' patterns.")
     E1025 = ("Cannot intify the value '{value}' as an IOB string. The only "
              "supported values are: 'I', 'O', 'B' and ''")
     

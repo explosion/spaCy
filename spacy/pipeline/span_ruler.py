@@ -339,7 +339,7 @@ class SpanRuler(Pipe):
             try:
                 doc.ents = sorted(spans)
             except ValueError:
-                raise ValueError(Errors.E856)
+                raise ValueError(Errors.E857)
 
     @property
     def token_patterns(self) -> List[PatternType]:
@@ -455,7 +455,9 @@ class SpanRuler(Pipe):
         DOCS: https://spacy.io/api/spanruler#remove
         """
         if label not in self:
-            raise ValueError(Errors.E857.format(label=label, component=self.name))
+            raise ValueError(
+                Errors.E1024.format(attr_type="label", label=label, component=self.name)
+            )
         self._patterns = [p for p in self._patterns if p["label"] != label]
         for m_label in self._match_label_id_map:
             if self._match_label_id_map[m_label]["label"] == label:
@@ -472,7 +474,14 @@ class SpanRuler(Pipe):
         RETURNS: None
         DOCS: https://spacy.io/api/spanruler#remove
         """
+        orig_len = len(self)
         self._patterns = [p for p in self._patterns if p.get("id") != pattern_id]
+        if orig_len == len(self):
+            raise ValueError(
+                Errors.E1024.format(
+                    attr_type="ID", label=pattern_id, component=self.name
+                )
+            )
         for m_label in self._match_label_id_map:
             if self._match_label_id_map[m_label]["id"] == pattern_id:
                 m_label_str = self.nlp.vocab.strings.as_string(m_label)

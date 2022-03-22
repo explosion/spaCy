@@ -5,6 +5,7 @@ from spacy.tokens import Doc, Span
 from spacy.language import Language
 from spacy.lang.en import English
 from spacy.pipeline import EntityRuler, EntityRecognizer, merge_entities
+from spacy.pipeline import SpanRuler
 from spacy.pipeline.ner import DEFAULT_NER_MODEL
 from spacy.errors import MatchPatternError
 from spacy.tests.util import make_tempdir
@@ -485,7 +486,10 @@ def test_entity_ruler_remove_nonexisting_pattern(nlp, entity_ruler_factory):
     assert len(ruler.patterns) == 3
     with pytest.raises(ValueError):
         ruler.remove("nepattern")
-        assert len(ruler.patterns) == 3
+    if isinstance(ruler, SpanRuler):
+        with pytest.raises(ValueError):
+            ruler.remove_by_id("nepattern")
+
 
 
 @pytest.mark.parametrize("entity_ruler_factory", ENTITY_RULERS)

@@ -267,7 +267,8 @@ def test_span_ruler_remove_nonexisting_pattern(person_org_patterns):
     assert len(ruler.patterns) == 3
     with pytest.raises(ValueError):
         ruler.remove("NE")
-        assert len(ruler.patterns) == 3
+    with pytest.raises(ValueError):
+        ruler.remove_by_id("NE")
 
 
 def test_span_ruler_remove_several_patterns(person_org_patterns):
