@@ -635,7 +635,7 @@ can also be used when posting to the discussion forum to provide more
 information for the maintainers.
 
 ```cli
-$ python -m spacy debug diff [config_path] [--compare-to] [--optimize] [--gpu] [--pretraining] 
+$ python -m spacy debug diff [config_path] [--compare-to] [--optimize] [--gpu] [--pretraining] [--markdown]
 ```
 
 > #### Example
@@ -852,6 +852,7 @@ after_init = null
 | `optimize`, `-o`     | `"efficiency"` or `"accuracy"`. Whether the config was optimized for efficiency (faster inference, smaller model, lower memory consumption) or higher accuracy (potentially larger and slower model). Defaults to `"efficiency"`. ~~str (option)~~ |
 | `gpu`, `-G`          | Whether the config was made to run on a GPU. ~~bool (flag)~~                                                                                                                                                                                       |
 | `pretraining`, `-pt` | Include config for pretraining (with [`spacy pretrain`](/api/cli#pretrain)). Defaults to `False`. ~~bool (flag)~~                                                                                                                                  |
+| `markdown`, `-md` | Generate Markdown for Github issues. Defaults to `False`. ~~bool (flag)~~                                                                                                                                  |
 | **PRINTS**           | Diff between the two config files                                                                                                                                                                                                                  |
 
 

@@ -1,7 +1,7 @@
 from typing import Optional
 
 import typer
-from wasabi import Printer, diff_strings
+from wasabi import Printer, diff_strings, MarkdownRenderer
 from pathlib import Path
 from thinc.api import Config
 
@@ -21,7 +21,8 @@ def debug_diff_cli(
     compare_to: Optional[Path] = Opt(None, help="Path to another config file to diff against", exists=True, allow_dash=True),
     optimize: Optimizations = Opt(Optimizations.efficiency.value, "--optimize", "-o", help="Whether the user config was optimized for efficiency or accuracy."),
     gpu: bool = Opt(False, "--gpu", "-G", help="Whether the original config can run on a GPU"),
-    pretraining: bool = Opt(False, "--pretraining", "--pt", help="Whether to compare on a config with pretraining involved")
+    pretraining: bool = Opt(False, "--pretraining", "--pt", help="Whether to compare on a config with pretraining involved"),
+    markdown: bool = Opt(False, "--markdown", "-md", help="Generate Markdown for GitHub issues")
     # fmt: on
 ):
     """Show a diff of a config file with respect to spaCy's defaults. If
@@ -38,6 +39,7 @@ def debug_diff_cli(
         gpu=gpu,
         optimize=optimize,
         pretraining=pretraining,
+        markdown=markdown,
     )
 
 
@@ -47,6 +49,7 @@ def debug_diff(
     gpu: bool,
     optimize: Optimizations,
     pretraining: bool,
+    markdown: bool,
 ):
     msg = Printer()
     with show_validation_error(hint_fill=False):
@@ -70,7 +73,15 @@ def debug_diff(
 
     user = user_config.to_str()
     other = other_config.to_str()
+
     if user == other:
         msg.warn("No diff to show: configs are identical")
     else:
-        print(diff_strings(other, user))
+        diff_text = diff_strings(other, user, add_symbols=True)
+        if markdown:
+            md = MarkdownRenderer()
+            md.add(md.title("Config Diff"))
+            md.add(md.code_block(diff_text, "diff"))
+            print(md.text)
+        else:
+            print(diff_text)
