@@ -356,7 +356,7 @@ class SpanRuler(Pipe):
         return [p for p in self._patterns if isinstance(p["pattern"], str)]
 
     @property
-    def labels(self) -> Tuple[str, ...]:
+    def labels(self) -> Tuple[str]:
         """All labels present in the match patterns.
 
         RETURNS (set): The string labels.
@@ -364,6 +364,18 @@ class SpanRuler(Pipe):
         DOCS: https://spacy.io/api/spanruler#labels
         """
         return tuple(sorted(set([cast(str, p["label"]) for p in self._patterns])))
+
+    @property
+    def ids(self) -> Tuple[str]:
+        """All IDs present in the match patterns.
+
+        RETURNS (set): The string IDs.
+
+        DOCS: https://spacy.io/api/spanruler#ids
+        """
+        return tuple(
+            sorted(set([cast(str, p.get("id")) for p in self._patterns]) - set([None]))
+        )
 
     def initialize(
         self,
