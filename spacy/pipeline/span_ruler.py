@@ -448,7 +448,11 @@ class SpanRuler(Pipe):
                 self.phrase_matcher.add(label, [pattern])
 
     def clear(self) -> None:
-        """Reset all patterns."""
+        """Reset all patterns.
+
+        RETURNS: None
+        DOCS: https://spacy.io/api/spanruler#clear
+        """
         self._patterns: List[PatternType] = []
         self.matcher: Matcher = Matcher(self.nlp.vocab, validate=self.validate)
         self.phrase_matcher: PhraseMatcher = PhraseMatcher(
@@ -482,7 +486,7 @@ class SpanRuler(Pipe):
 
         pattern_id (str): ID of the pattern to be removed.
         RETURNS: None
-        DOCS: https://spacy.io/api/spanruler#remove
+        DOCS: https://spacy.io/api/spanruler#remove_by_id
         """
         orig_len = len(self)
         self._patterns = [p for p in self._patterns if p.get("id") != pattern_id]
@@ -537,10 +541,9 @@ class SpanRuler(Pipe):
     def from_disk(
         self, path: Union[str, Path], *, exclude: Iterable[str] = SimpleFrozenList()
     ) -> "SpanRuler":
-        """Load the span ruler from a file. Expects a file containing
-        newline-delimited JSON (JSONL) with one entry per line.
+        """Load the span ruler from a directory.
 
-        path (str / Path): The JSONL file to load.
+        path (Union[str, Path]): A path to a directory.
         RETURNS (SpanRuler): The loaded span ruler.
 
         DOCS: https://spacy.io/api/spanruler#from_disk
@@ -558,7 +561,7 @@ class SpanRuler(Pipe):
     ) -> None:
         """Save the span ruler patterns to a directory.
 
-        path (str / Path): The JSONL file to save.
+        path (Union[str, Path]): A path to a directory.
 
         DOCS: https://spacy.io/api/spanruler#to_disk
         """
