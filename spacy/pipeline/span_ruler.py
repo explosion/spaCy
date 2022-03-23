@@ -348,14 +348,6 @@ class SpanRuler(Pipe):
                 raise ValueError(Errors.E857)
 
     @property
-    def token_patterns(self) -> List[PatternType]:
-        return [p for p in self._patterns if not isinstance(p["pattern"], str)]
-
-    @property
-    def phrase_patterns(self) -> List[PatternType]:
-        return [p for p in self._patterns if isinstance(p["pattern"], str)]
-
-    @property
     def labels(self) -> Tuple[str]:
         """All labels present in the match patterns.
 
