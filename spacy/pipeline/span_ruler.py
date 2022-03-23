@@ -89,7 +89,7 @@ def make_span_ruler(
     nlp: Language,
     name: str,
     spans_key: Optional[str],
-    spans_filter: Optional[Callable[[Iterable[Span]], Iterable[Span]]],
+    spans_filter: Optional[Callable[[Iterable[Span], Iterable[Span]], Iterable[Span]]],
     annotate_ents: bool,
     ents_filter: Callable[[Iterable[Span], Iterable[Span]], Iterable[Span]],
     phrase_matcher_attr: Optional[Union[int, str]],
@@ -199,7 +199,9 @@ class SpanRuler(Pipe):
         name: str = "span_ruler",
         *,
         spans_key: Optional[str] = "ruler",
-        spans_filter: Optional[Callable[[Iterable[Span]], Iterable[Span]]] = None,
+        spans_filter: Optional[
+            Callable[[Iterable[Span], Iterable[Span]], Iterable[Span]]
+        ] = None,
         annotate_ents: bool = False,
         ents_filter: Callable[
             [Iterable[Span], Iterable[Span]], Iterable[Span]
@@ -224,15 +226,17 @@ class SpanRuler(Pipe):
             phrase patterns with the nlp object.
         spans_key (Optional[str]): The spans key to save the spans under. If
             `None`, no spans are saved. Defaults to "ruler".
-        spans_filter (Optional[Callable]): The optional method to filter spans
-            before they are assigned to doc.spans. Defaults to `None`.
+        spans_filter (Optional[Callable[[Iterable[Span], Iterable[Span]], List[Span]]):
+            The optional method to filter spans before they are assigned to
+            doc.spans. Defaults to `None`.
         annotate_ents (bool): Whether to save spans to doc.ents. Defaults to
             `False`.
         ents_filter (Callable[[Iterable[Span], Iterable[Span]], List[Span]]):
             The method to filter spans before they are assigned to doc.ents.
             Defaults to `util.filter_chain_spans`.
-        phrase_matcher_attr (int / str): Token attribute to match on, passed
-            to the internal PhraseMatcher as `attr`.
+        phrase_matcher_attr (Optional[Union[int, str]]): Token attribute to
+            match on, passed to the internal PhraseMatcher as `attr`. Defaults
+            to `None`.
         validate (bool): Whether patterns should be validated, passed to
             Matcher and PhraseMatcher as `validate`.
         overwrite (bool): Whether to remove any existing spans under this spans
@@ -328,7 +332,9 @@ class SpanRuler(Pipe):
             spans = []
             if self.key in doc.spans and not self.overwrite:
                 spans = doc.spans[self.key]
-            spans.extend(self.spans_filter(matches) if self.spans_filter else matches)
+            spans.extend(
+                self.spans_filter(spans, matches) if self.spans_filter else matches
+            )
             doc.spans[self.key] = spans
         # set doc.ents if annotate_ents is set
         if self.annotate_ents:
