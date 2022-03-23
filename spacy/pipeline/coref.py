@@ -3,7 +3,7 @@ import warnings
 
 from thinc.types import Floats2d, Floats3d, Ints2d
 from thinc.api import Model, Config, Optimizer, CategoricalCrossentropy
-from thinc.api import set_dropout_rate
+from thinc.api import set_dropout_rate, to_categorical
 from itertools import islice
 from statistics import mean
 
@@ -513,10 +513,8 @@ class SpanPredictor(TrainablePipe):
         total_loss = 0
 
         for eg in examples:
-            preds, backprop = self.model.begin_update([eg.predicted])
-            score_matrix, mention_idx = preds
-
-            loss, d_scores = self.get_loss([eg], score_matrix, mention_idx)
+            span_scores, backprop = self.model.begin_update([eg.predicted])
+            loss, d_scores = self.get_loss([eg], span_scores)
             total_loss += loss
             # TODO check shape here
             backprop((d_scores, mention_idx))
@@ -573,8 +571,10 @@ class SpanPredictor(TrainablePipe):
             for cluster in gold:
                 for mention in cluster:
                     starts.append(mention[0])
-                    ends.append(mention[1])
-
+                    # XXX I think this was missing here
+                    ends.append(mention[1] - 1)
+            starts = self.model.ops.xp.asarray(starts)
+            ends = self.model.ops.xp.asarray(ends)
             start_scores = span_scores[:, :, 0]
             end_scores = span_scores[:, :, 1]
             n_classes = start_scores.shape[1]
