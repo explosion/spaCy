@@ -348,7 +348,7 @@ class SpanRuler(Pipe):
                 raise ValueError(Errors.E857)
 
     @property
-    def labels(self) -> Tuple[str]:
+    def labels(self) -> Tuple[str, ...]:
         """All labels present in the match patterns.
 
         RETURNS (set): The string labels.
@@ -358,7 +358,7 @@ class SpanRuler(Pipe):
         return tuple(sorted(set([cast(str, p["label"]) for p in self._patterns])))
 
     @property
-    def ids(self) -> Tuple[str]:
+    def ids(self) -> Tuple[str, ...]:
         """All IDs present in the match patterns.
 
         RETURNS (set): The string IDs.
