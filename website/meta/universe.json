@@ -2606,6 +2606,7 @@
             "description": "Have you ever struggled with needing a [spaCy TextCategorizer](https://spacy.io/api/textcategorizer) but didn't have the time to train one from scratch? Classy Classification is the way to go! For few-shot classification using [sentence-transformers](https://github.com/UKPLab/sentence-transformers) or [spaCy models](https://spacy.io/usage/models), provide a dictionary with labels and examples, or just provide a list of labels for zero shot-classification with [Huggingface zero-shot classifiers](https://huggingface.co/models?pipeline_tag=zero-shot-classification).",
             "github": "davidberenstein1957/classy-classification",
             "pip": "classy-classification",
+            "thumb": "https://raw.githubusercontent.com/Pandora-Intelligence/classy-classification/master/logo.png",
             "code_example": [
                 "import spacy",
                 "import classy_classification",
@@ -2658,8 +2659,11 @@
             "description": "When wanting to apply NER to concise concepts, it is really easy to come up with examples, but it takes some effort to train an entire pipeline. Concise Concepts uses few-shot NER based on word embedding similarity to get you going with easy!",
             "github": "pandora-intelligence/concise-concepts",
             "pip": "concise-concepts",
+            "thumb": "https://raw.githubusercontent.com/Pandora-Intelligence/concise-concepts/master/img/logo.png",
+            "image": "https://raw.githubusercontent.com/Pandora-Intelligence/concise-concepts/master/img/example.png",
             "code_example": [
                 "import spacy",
+                "from spacy import displacy",
                 "import concise_concepts",
                 "",
                 "data = {",
@@ -2681,12 +2685,10 @@
                 ")",
                 "doc = nlp(text)",
                 "",
-                "print([(ent.text, ent.label_) for ent in doc.ents])",
-                "# Output:",
-                "#",
-                "# [(\"Onion\", \"VEGETABLE\"), (\"Celery\", \"VEGETABLE\"), (\"carrots\", \"VEGETABLE\"),",
-                "#  (\"garlic\", \"VEGETABLE\"), (\"red peppers\", \"VEGETABLE\"), (\"oranges\", \"FRUIT\"),",
-                "#  (\"chickens\", \"MEAT\")]"
+                "options = {\"colors\": {\"fruit\": \"darkorange\", \"vegetable\": \"limegreen\", \"meat\": \"salmon\"},",
+                "           \"ents\": [\"fruit", \"vegetable\", \"meat\"]}",
+                "",
+                "displacy.render(doc, style=\"ent\", options=options)"
             ],
             "author": "David Berenstein",
             "author_links": {
@@ -2695,7 +2697,6 @@
             },
             "category": [
                 "pipeline",
-                "standalone"
             ],
             "tags": [
                 "ner",
