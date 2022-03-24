@@ -53,7 +53,6 @@ def build_wl_coref_model(
             convert_inputs=convert_coref_scorer_inputs,
             convert_outputs=convert_coref_scorer_outputs
         )
-
         coref_model = tok2vec >> coref_scorer
         # XXX just ignore this until the coref scorer is integrated
         span_predictor = PyTorchWrapper(
@@ -62,7 +61,6 @@ def build_wl_coref_model(
                 hidden_size,
                 sp_embedding_size,
             ),
-            
             convert_inputs=convert_span_predictor_inputs
         )
     # TODO combine models so output is uniform (just one forward pass)
@@ -84,14 +82,15 @@ def build_span_predictor(
         dim = 768
 
     with Model.define_operators({">>": chain, "&": tuplify}):
-        # TODO fix device - should be automatic
-        device = "cuda:0"
         span_predictor = PyTorchWrapper(
-            SpanPredictor(dim, dist_emb_size, device),
+            SpanPredictor(dim, dist_emb_size),
             convert_inputs=convert_span_predictor_inputs
         )
         # TODO use proper parameter for prefix
-        head_info = build_get_head_metadata("coref_head_clusters")
+        head_info = build_get_head_metadata(
+            "span_coref_head_clusters",
+            "coref_head_clusters"
+        )
         model = (tok2vec & head_info) >> span_predictor
 
     return model
@@ -148,7 +147,7 @@ def convert_span_predictor_inputs(
 
     argskwargs = ArgsKwargs(args=(sent_ids, word_features, head_ids), kwargs={})
     # TODO actually support backprop
-    return argskwargs, lambda dX: []
+    return argskwargs, lambda dX: [[]]
 
 # TODO This probably belongs in the component, not the model.
 def predict_span_clusters(span_predictor: Model,
@@ -217,18 +216,27 @@ def _clusterize(
             clusters.append(sorted(cluster))
     return sorted(clusters)
 
-def build_get_head_metadata(prefix):
+
+def build_get_head_metadata(update_prefix, predict_prefix):
     # TODO this name is awful, fix it
-    model = Model("HeadDataProvider", attrs={"prefix": prefix}, forward=head_data_forward)
+    model = Model("HeadDataProvider",
+                  attrs={
+                      "update_prefix": update_prefix,
+                      "predict_prefix": predict_prefix
+                  },
+                  forward=head_data_forward)
     return model
+
 
 def head_data_forward(model, docs, is_train):
     """A layer to generate the extra data needed for the span predictor.
     """
     sent_ids = []
     head_ids = []
-    prefix = model.attrs["prefix"]
-
+    if is_train:
+        prefix = model.attrs["update_prefix"]
+    else:
+        prefix = model.attrs["predict_prefix"]
     for doc in docs:
         sids = model.ops.asarray2i(get_sentence_ids(doc))
         sent_ids.append(sids)
@@ -241,7 +249,7 @@ def head_data_forward(model, docs, is_train):
                 heads.append(span[0].i)
         heads = model.ops.asarray2i(heads)
         head_ids.append(heads)
-    
+
     # each of these is a list with one entry per doc
     # backprop is just a placeholder
     # TODO it would probably be better to have a list of tuples than two lists of arrays
@@ -557,11 +565,9 @@ class SpanPredictor(torch.nn.Module):
             words[cols],
             self.emb(emb_ids[rows, cols]),
         ), dim=1)
-        input(len(heads_ids))
         lengths = same_sent.sum(dim=1)
         padding_mask = torch.arange(0, lengths.max().item(), device=words.device).unsqueeze(0)
         padding_mask = (padding_mask < lengths.unsqueeze(1))  # [n_heads, max_sent_len]
-        input(padding_mask.shape)
         # [n_heads, max_sent_len, input_size * 2 + distance_emb_size]
         # This is necessary to allow the convolution layer to look at several
         # word scores

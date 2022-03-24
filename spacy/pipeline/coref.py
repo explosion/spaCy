@@ -417,6 +417,7 @@ DEFAULT_SPAN_PREDICTOR_MODEL = Config().from_str(default_span_predictor_config)[
         default_config={
             "model": DEFAULT_SPAN_PREDICTOR_MODEL,
             "input_prefix": "coref_head_clusters",
+            "target_prefix": "span_head_target_clusters",
             "output_prefix": "coref_clusters",
             },
     default_score_weights={"span_predictor_f": 1.0, "span_predictor_p": None, "span_predictor_r": None},
@@ -426,6 +427,7 @@ def make_span_predictor(
         name: str,
         model,
         input_prefix: str = "coref_head_clusters",
+        target_prefix: str = "span_head_target_clusters",
         output_prefix: str = "coref_clusters",
 ) -> "SpanPredictor":
     """Create a SpanPredictor component."""
@@ -444,12 +446,14 @@ class SpanPredictor(TrainablePipe):
         name: str = "span_predictor",
         *,
         input_prefix: str = "coref_head_clusters",
+        target_prefix: str = "span_coref_head_clusters",
         output_prefix: str = "coref_clusters",
     ) -> None:
         self.vocab = vocab
         self.model = model
         self.name = name
         self.input_prefix = input_prefix
+        self.target_prefix = target_prefix
         self.output_prefix = output_prefix
 
         self.cfg = {}
@@ -511,13 +515,18 @@ class SpanPredictor(TrainablePipe):
         set_dropout_rate(self.model, drop)
 
         total_loss = 0
-
-        for eg in examples:
-            span_scores, backprop = self.model.begin_update([eg.predicted])
+        docs = [eg.predicted for eg in examples]
+        for doc, eg in zip(docs, examples):
+            # replicates the EntityLinker's behaviour and
+            # copies annotations over https://bit.ly/3iweDcW
+            for key, sg in eg.reference.spans.items():
+                if key.startswith(self.target_prefix):
+                    doc.spans[key] = [doc[span.start:span.end] for span in sg]
+            span_scores, backprop = self.model.begin_update([doc])
             loss, d_scores = self.get_loss([eg], span_scores)
             total_loss += loss
             # TODO check shape here
-            backprop((d_scores, mention_idx))
+            backprop(d_scores)
 
         if sgd is not None:
             self.finish_update(sgd)
@@ -564,7 +573,7 @@ class SpanPredictor(TrainablePipe):
         for eg in examples:
 
             # get gold data
-            gold = doc2clusters(eg.reference, self.output_prefix)
+            gold = doc2clusters(eg.predicted, self.target_prefix)
             # flatten the gold data
             starts = []
             ends = []
@@ -605,6 +614,7 @@ class SpanPredictor(TrainablePipe):
                 doc = ex.predicted
                 assert len(doc) > 2, "Coreference requires at least two tokens"
                 doc.spans[f"{self.input_prefix}_0"] = [doc[0:1], doc[1:2]]
+                doc.spans[f"{self.target_prefix}_0"] = [doc[0:1], doc[1:2]]
             X.append(ex.predicted)
             Y.append(ex.reference)
 
