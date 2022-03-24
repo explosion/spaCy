@@ -16,8 +16,7 @@ pr:
   paths:
     exclude:
       - "*.md"
-      - "website/docs/*"
-      - "website/src/*"
+      - "website/**"
       - ".github/workflows/*"
 
 jobs:
