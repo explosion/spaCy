@@ -417,7 +417,6 @@ DEFAULT_SPAN_PREDICTOR_MODEL = Config().from_str(default_span_predictor_config)[
         default_config={
             "model": DEFAULT_SPAN_PREDICTOR_MODEL,
             "input_prefix": "coref_head_clusters",
-            "target_prefix": "span_head_target_clusters",
             "output_prefix": "coref_clusters",
             },
     default_score_weights={"span_predictor_f": 1.0, "span_predictor_p": None, "span_predictor_r": None},
@@ -427,7 +426,6 @@ def make_span_predictor(
         name: str,
         model,
         input_prefix: str = "coref_head_clusters",
-        target_prefix: str = "span_head_target_clusters",
         output_prefix: str = "coref_clusters",
 ) -> "SpanPredictor":
     """Create a SpanPredictor component."""
@@ -446,14 +444,12 @@ class SpanPredictor(TrainablePipe):
         name: str = "span_predictor",
         *,
         input_prefix: str = "coref_head_clusters",
-        target_prefix: str = "span_coref_head_clusters",
         output_prefix: str = "coref_clusters",
     ) -> None:
         self.vocab = vocab
         self.model = model
         self.name = name
         self.input_prefix = input_prefix
-        self.target_prefix = target_prefix
         self.output_prefix = output_prefix
 
         self.cfg = {}
@@ -519,8 +515,9 @@ class SpanPredictor(TrainablePipe):
         for doc, eg in zip(docs, examples):
             # replicates the EntityLinker's behaviour and
             # copies annotations over https://bit.ly/3iweDcW
+            # takes 'coref_head_clusters' from the reference.
             for key, sg in eg.reference.spans.items():
-                if key.startswith(self.target_prefix):
+                if key.startswith(self.input_prefix):
                     doc.spans[key] = [doc[span.start:span.end] for span in sg]
             span_scores, backprop = self.model.begin_update([doc])
             loss, d_scores = self.get_loss([eg], span_scores)
@@ -573,7 +570,7 @@ class SpanPredictor(TrainablePipe):
         for eg in examples:
 
             # get gold data
-            gold = doc2clusters(eg.predicted, self.target_prefix)
+            gold = doc2clusters(eg.predicted, self.input_prefix)
             # flatten the gold data
             starts = []
             ends = []
@@ -614,7 +611,6 @@ class SpanPredictor(TrainablePipe):
                 doc = ex.predicted
                 assert len(doc) > 2, "Coreference requires at least two tokens"
                 doc.spans[f"{self.input_prefix}_0"] = [doc[0:1], doc[1:2]]
-                doc.spans[f"{self.target_prefix}_0"] = [doc[0:1], doc[1:2]]
             X.append(ex.predicted)
             Y.append(ex.reference)
 
