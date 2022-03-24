@@ -49,6 +49,12 @@ def test_ko_empty_doc(ko_tokenizer):
     assert len(tokens) == 0
 
 
+@pytest.mark.issue(10535)
+def test_ko_tokenizer_unknown_tag(ko_tokenizer):
+    tokens = ko_tokenizer("미닛 리피터")
+    assert tokens[1].pos_ == "X"
+
+
 # fmt: off
 SPACY_TOKENIZER_TESTS = [
     ("있다.", "있다 ."),
