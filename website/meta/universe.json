@@ -2686,7 +2686,7 @@
                 "doc = nlp(text)",
                 "",
                 "options = {\"colors\": {\"fruit\": \"darkorange\", \"vegetable\": \"limegreen\", \"meat\": \"salmon\"},",
-                "           \"ents\": [\"fruit", \"vegetable\", \"meat\"]}",
+                "           \"ents\": [\"fruit\", \"vegetable\", \"meat\"]}",
                 "",
                 "displacy.render(doc, style=\"ent\", options=options)"
             ],
@@ -2696,7 +2696,7 @@
                 "website": "https://www.linkedin.com/in/david-berenstein-1bab11105/"
             },
             "category": [
-                "pipeline",
+                "pipeline"
             ],
             "tags": [
                 "ner",
