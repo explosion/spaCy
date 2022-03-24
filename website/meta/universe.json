@@ -2606,6 +2606,7 @@
             "description": "Have you ever struggled with needing a [spaCy TextCategorizer](https://spacy.io/api/textcategorizer) but didn't have the time to train one from scratch? Classy Classification is the way to go! For few-shot classification using [sentence-transformers](https://github.com/UKPLab/sentence-transformers) or [spaCy models](https://spacy.io/usage/models), provide a dictionary with labels and examples, or just provide a list of labels for zero shot-classification with [Huggingface zero-shot classifiers](https://huggingface.co/models?pipeline_tag=zero-shot-classification).",
             "github": "davidberenstein1957/classy-classification",
             "pip": "classy-classification",
+            "thumb": "https://raw.githubusercontent.com/Pandora-Intelligence/classy-classification/master/logo.png",
             "code_example": [
                 "import spacy",
                 "import classy_classification",
@@ -2648,6 +2649,59 @@
                 "few-shot",
                 "sentence-transformers",
                 "huggingface"
+            ],
+            "spacy_version": 3
+        },
+        {
+            "id": "conciseconcepts",
+            "title": "Concise Concepts",
+            "slogan": "Concise Concepts uses few-shot NER based on word embedding similarity to get you going with easy!",
+            "description": "When wanting to apply NER to concise concepts, it is really easy to come up with examples, but it takes some effort to train an entire pipeline. Concise Concepts uses few-shot NER based on word embedding similarity to get you going with easy!",
+            "github": "pandora-intelligence/concise-concepts",
+            "pip": "concise-concepts",
+            "thumb": "https://raw.githubusercontent.com/Pandora-Intelligence/concise-concepts/master/img/logo.png",
+            "image": "https://raw.githubusercontent.com/Pandora-Intelligence/concise-concepts/master/img/example.png",
+            "code_example": [
+                "import spacy",
+                "from spacy import displacy",
+                "import concise_concepts",
+                "",
+                "data = {",
+                "    \"fruit\": [\"apple\", \"pear\", \"orange\"],",
+                "    \"vegetable\": [\"broccoli\", \"spinach\", \"tomato\"],",
+                "    \"meat\": [\"beef\", \"pork\", \"fish\", \"lamb\"]",
+                "}",
+                "",
+                "text = \"\"\"",
+                "    Heat the oil in a large pan and add the Onion, celery and carrots.",
+                "    Then, cook over a medium–low heat for 10 minutes, or until softened.",
+                "    Add the courgette, garlic, red peppers and oregano and cook for 2–3 minutes.",
+                "    Later, add some oranges and chickens.\"\"\"",
+                "",
+                "# use any model that has internal spacy embeddings", 
+                "nlp = spacy.load('en_core_web_lg')",
+                "nlp.add_pipe(\"concise_concepts\", ",
+                "    config={\"data\": data}",
+                ")",
+                "doc = nlp(text)",
+                "",
+                "options = {\"colors\": {\"fruit\": \"darkorange\", \"vegetable\": \"limegreen\", \"meat\": \"salmon\"},",
+                "           \"ents\": [\"fruit\", \"vegetable\", \"meat\"]}",
+                "",
+                "displacy.render(doc, style=\"ent\", options=options)"
+            ],
+            "author": "David Berenstein",
+            "author_links": {
+                "github": "davidberenstein1957",
+                "website": "https://www.linkedin.com/in/david-berenstein-1bab11105/"
+            },
+            "category": [
+                "pipeline"
+            ],
+            "tags": [
+                "ner",
+                "few-shot",
+                "gensim"
             ],
             "spacy_version": 3
         },
