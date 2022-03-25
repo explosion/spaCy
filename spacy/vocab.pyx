@@ -1,6 +1,7 @@
 # cython: profile=True
 from libc.string cimport memcpy
 
+import numpy
 import srsly
 from thinc.api import get_array_module, get_current_ops
 import functools
@@ -309,7 +310,8 @@ cdef class Vocab:
             sorted(list({row for row in self.vectors.key2row.values()}))
         )
         # deduplicate data and remap keys
-        data = xp.unique(self.vectors.data[filled], axis=0)
+        data = numpy.unique(ops.to_numpy(self.vectors.data[filled]), axis=0)
+        data = ops.asarray(data)
         if data.shape == self.vectors.data.shape:
             # nothing to deduplicate
             return

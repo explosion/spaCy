@@ -189,10 +189,10 @@ or hash value. If the current vectors do not contain an entry for the word, a
 > nlp.vocab.get_vector("apple")
 > ```
 
-| Name                                | Description                                                                                                            |
-| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `orth`                              | The hash value of a word, or its unicode string. ~~Union[int, str]~~                                                   |
-| **RETURNS**                         | A word vector. Size and shape are determined by the `Vocab.vectors` instance. ~~numpy.ndarray[ndim=1, dtype=float32]~~ |
+| Name        | Description                                                                                                            |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `orth`      | The hash value of a word, or its unicode string. ~~Union[int, str]~~                                                   |
+| **RETURNS** | A word vector. Size and shape are determined by the `Vocab.vectors` instance. ~~numpy.ndarray[ndim=1, dtype=float32]~~ |
 
 ## Vocab.set_vector {#set_vector tag="method" new="2"}
 
