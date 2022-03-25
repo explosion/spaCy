@@ -7,7 +7,7 @@ Example sentences to test spaCy and its language models.
 
 
 sentences = [
-    "Apple načrtuje nakup britanskga startupa za 1 bilijon dolarjev",
+    "Apple načrtuje nakup britanskega startupa za 1 bilijon dolarjev",
     "France Prešeren je umrl 8. februarja 1849 v Kranju",
     "Staro ljubljansko letališče Moste bo obnovila družba BTC",
     "London je največje mesto v Združenem kraljestvu.",
