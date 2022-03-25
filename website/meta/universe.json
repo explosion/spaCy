@@ -516,7 +516,7 @@
             "title": "Klayers",
             "category": ["pipeline"],
             "tags": ["AWS"],
-            "slogan": "Python Packages as AWS Lambda Layers",
+            "slogan": "spaCy as a AWS Lambda Layer",
             "description": "A collection of Python Packages as AWS Lambda(λ) Layers",
             "github": "keithrozario/Klayers",
             "pip": "",
