@@ -45,6 +45,24 @@ def test_ents_reset(en_vocab):
     assert [t.ent_iob_ for t in doc] == orig_iobs
 
 
+def test_ent_remove(en_vocab):
+    """Ensure that removing entities clears token attributes"""
+    text = ["Louisiana", "Office", "of", "Conservation"]
+    doc = Doc(en_vocab, words=text)
+    entity = Span(doc, 0, 4, label=391)
+    doc.ents = [entity]
+    for tok in entity:
+        tok.ent_id_ = "TEST"
+
+    print(doc.ents)
+    for tok in doc:
+        print(tok, tok.ent_id)
+    doc.ents = []
+    for tok in doc:
+        print(tok, tok.ent_id)
+        assert tok.ent_id == 0
+
+
 def test_add_overlapping_entities(en_vocab):
     text = ["Louisiana", "Office", "of", "Conservation"]
     doc = Doc(en_vocab, words=text)
