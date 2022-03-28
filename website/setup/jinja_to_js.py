@@ -206,7 +206,6 @@ class JinjaToJS(object):
         self.environment = Environment(
             loader=FileSystemLoader(template_root),
             autoescape=True,
-            extensions=["jinja2.ext.with_", "jinja2.ext.autoescape"],
         )
         self.output = StringIO()
         self.stored_names = set()

@@ -70,7 +70,7 @@ factory = "ner"
 factory = "tagger"
 
 [components.tagger.model]
-@architectures = "spacy.Tagger.v1"
+@architectures = "spacy.Tagger.v2"
 nO = null
 
 [components.tagger.model.tok2vec]

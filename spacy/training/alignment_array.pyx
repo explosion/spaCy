@@ -38,14 +38,14 @@ cdef class AlignmentArray:
             end = ends[idx]
         elif isinstance(idx, slice):
             if not (idx.step is None or idx.step == 1):
-                raise ValueError(Errors.E1026)
+                raise ValueError(Errors.E1027)
             start = starts[idx]
             if len(starts) == 0:
                 return self._data[0:0]
             start = start[0]
             end = ends[idx][-1]
         else:
-            raise ValueError(Errors.E1027)
+            raise ValueError(Errors.E1028)
 
         return self._data[start:end]
 

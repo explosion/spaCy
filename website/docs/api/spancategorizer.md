@@ -239,6 +239,24 @@ Delegates to [`predict`](/api/spancategorizer#predict) and
 | `losses`       | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~ |
 | **RETURNS**    | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                    |
 
+## SpanCategorizer.set_candidates {#set_candidates tag="method", new="3.3"}
+
+Use the suggester to add a list of [`Span`](/api/span) candidates to a list of
+[`Doc`](/api/doc) objects. This method is intended to be used for debugging
+purposes.
+
+> #### Example
+>
+> ```python
+> spancat = nlp.add_pipe("spancat")
+> spancat.set_candidates(docs, "candidates")
+> ```
+
+| Name             | Description                                                          |
+| ---------------- | -------------------------------------------------------------------- |
+| `docs`           | The documents to modify. ~~Iterable[Doc]~~                           |
+| `candidates_key` | Key of the Doc.spans dict to save the candidate spans under. ~~str~~ |
+
 ## SpanCategorizer.get_loss {#get_loss tag="method"}
 
 Find the loss and gradient of loss for the batch of documents and their

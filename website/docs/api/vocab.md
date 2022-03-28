@@ -168,22 +168,19 @@ cosines are calculated in minibatches to reduce memory usage.
 ## Vocab.get_vector {#get_vector tag="method" new="2"}
 
 Retrieve a vector for a word in the vocabulary. Words can be looked up by string
-or hash value. If no vectors data is loaded, a `ValueError` is raised. If `minn`
-is defined, then the resulting vector uses [FastText](https://fasttext.cc/)'s
-subword features by average over n-grams of `orth` (introduced in spaCy `v2.1`).
+or hash value. If the current vectors do not contain an entry for the word, a
+0-vector with the same number of dimensions
+([`Vocab.vectors_length`](#attributes)) as the current vectors is returned.
 
 > #### Example
 >
 > ```python
 > nlp.vocab.get_vector("apple")
-> nlp.vocab.get_vector("apple", minn=1, maxn=5)
 > ```
 
 | Name                                | Description                                                                                                            |
 | ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | `orth`                              | The hash value of a word, or its unicode string. ~~Union[int, str]~~                                                   |
-| `minn` <Tag variant="new">2.1</Tag> | Minimum n-gram length used for FastText's n-gram computation. Defaults to the length of `orth`. ~~int~~                |
-| `maxn` <Tag variant="new">2.1</Tag> | Maximum n-gram length used for FastText's n-gram computation. Defaults to the length of `orth`. ~~int~~                |
 | **RETURNS**                         | A word vector. Size and shape are determined by the `Vocab.vectors` instance. ~~numpy.ndarray[ndim=1, dtype=float32]~~ |
 
 ## Vocab.set_vector {#set_vector tag="method" new="2"}

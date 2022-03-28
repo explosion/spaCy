@@ -71,6 +71,7 @@ def read_conllx(
 ):
     """Yield docs, one for each sentence"""
     vocab = Vocab()  # need vocab to make a minimal Doc
+    set_ents = has_ner(input_data, ner_tag_pattern)
     for sent in input_data.strip().split("\n\n"):
         lines = sent.strip().split("\n")
         if lines:
@@ -83,6 +84,7 @@ def read_conllx(
                 merge_subtokens=merge_subtokens,
                 append_morphology=append_morphology,
                 ner_map=ner_map,
+                set_ents=set_ents,
             )
             yield doc
 
@@ -133,6 +135,7 @@ def conllu_sentence_to_doc(
     merge_subtokens=False,
     append_morphology=False,
     ner_map=None,
+    set_ents=False,
 ):
     """Create an Example from the lines for one CoNLL-U sentence, merging
     subtokens and appending morphology to tags if required.
@@ -214,8 +217,10 @@ def conllu_sentence_to_doc(
         doc[i]._.merged_morph = morphs[i]
         doc[i]._.merged_lemma = lemmas[i]
         doc[i]._.merged_spaceafter = spaces[i]
-    ents = get_entities(lines, ner_tag_pattern, ner_map)
-    doc.ents = biluo_tags_to_spans(doc, ents)
+    ents = None
+    if set_ents:
+        ents = get_entities(lines, ner_tag_pattern, ner_map)
+        doc.ents = biluo_tags_to_spans(doc, ents)
 
     if merge_subtokens:
         doc = merge_conllu_subtokens(lines, doc)
@@ -247,7 +252,10 @@ def conllu_sentence_to_doc(
         deps=deps,
         heads=heads,
     )
-    doc_x.ents = [Span(doc_x, ent.start, ent.end, label=ent.label) for ent in doc.ents]
+    if set_ents:
+        doc_x.ents = [
+            Span(doc_x, ent.start, ent.end, label=ent.label) for ent in doc.ents
+        ]
 
     return doc_x
 

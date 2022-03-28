@@ -535,6 +535,10 @@ def test_floret_vectors(floret_vectors_vec_str, floret_vectors_hashvec_str):
         # every word has a vector
         assert nlp.vocab[word * 5].has_vector
 
+    # n_keys is -1 for floret
+    assert nlp_plain.vocab.vectors.n_keys > 0
+    assert nlp.vocab.vectors.n_keys == -1
+
     # check that single and batched vector lookups are identical
     words = [s for s in nlp_plain.vocab.vectors]
     single_vecs = OPS.to_numpy(OPS.asarray([nlp.vocab[word].vector for word in words]))
