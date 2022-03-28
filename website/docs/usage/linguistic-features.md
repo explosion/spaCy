@@ -120,10 +120,13 @@ print(doc[2].pos_)  # 'PRON'
 
 ## Lemmatization {#lemmatization model="lemmatizer" new="3"}
 
-The [`Lemmatizer`](/api/lemmatizer) is a pipeline component that provides lookup
-and rule-based lemmatization methods in a configurable component. An individual
-language can extend the `Lemmatizer` as part of its
-[language data](#language-data).
+spaCy provides two pipeline components for lemmatization:
+
+1. The [`Lemmatizer`](/api/lemmatizer) component provides lookup and rule-based
+   lemmatization methods in a configurable component. An individual language can
+   extend the `Lemmatizer` as part of its [language data](#language-data).
+2. The [`EditTreeLemmatizer`](/api/edittreelemmatizer)
+   <Tag variant="new">3.3</Tag> component provides a trainable lemmatizer.
 
 ```python
 ### {executable="true"}
@@ -196,6 +199,20 @@ light of the previously assigned coarse-grained part-of-speech and morphological
 information, without consulting the context of the token. The rule-based
 lemmatizer also accepts list-based exception files. For English, these are
 acquired from [WordNet](https://wordnet.princeton.edu/).
+
+### Trainable lemmatizer
+
+The [`EditTreeLemmatizer`](/api/edittreelemmatizer) can learn form-to-lemma
+transformations from a training corpus that includes lemma annotations. This
+removes the need to write language-specific rules and can (in many cases)
+provide higher accuracies than lookup and rule-based lemmatizers.
+
+```python
+import spacy
+
+nlp = spacy.blank("de")
+nlp.add_pipe("trainable_lemmatizer", name="lemmatizer")
+```
 
 ## Dependency Parsing {#dependency-parse model="parser"}
 
@@ -1189,7 +1206,7 @@ class WhitespaceTokenizer:
             spaces = spaces[0:-1]
         else:
            spaces[-1] = False
-            
+
         return Doc(self.vocab, words=words, spaces=spaces)
 
 nlp = spacy.blank("en")
@@ -1269,8 +1286,8 @@ hyperparameters, pipeline and tokenizer used for constructing and training the
 pipeline. The `[nlp.tokenizer]` block refers to a **registered function** that
 takes the `nlp` object and returns a tokenizer. Here, we're registering a
 function called `whitespace_tokenizer` in the
-[`@tokenizers` registry](/api/top-level#registry). To make sure spaCy knows how to
-construct your tokenizer during training, you can pass in your Python file by
+[`@tokenizers` registry](/api/top-level#registry). To make sure spaCy knows how
+to construct your tokenizer during training, you can pass in your Python file by
 setting `--code functions.py` when you run [`spacy train`](/api/cli#train).
 
 > #### config.cfg
