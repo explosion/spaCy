@@ -2706,7 +2706,7 @@
             "spacy_version": 3
         },
         {
-            "id": "conciseconcepts",
+            "id": "crosslingualcoreference",
             "title": "Crosslingual Coreference",
             "slogan": "One multi-lingual coreference model to rule them all!",
             "description": "Coreference is amazing but the data required for training a model is very scarce. In our case, the available training for non-English languages also data proved to be poorly annotated. Crosslingual Coreference therefore uses the assumption a trained model with English data and cross-lingual embeddings should work for other languages with similar sentence structure. Verified to work quite well for at least (EN, NL, DK, FR, DE).",
