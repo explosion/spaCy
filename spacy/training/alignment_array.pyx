@@ -1,4 +1,5 @@
 from typing import List
+from ..errors import Errors
 import numpy
 
 
@@ -37,16 +38,14 @@ cdef class AlignmentArray:
             end = ends[idx]
         elif isinstance(idx, slice):
             if not (idx.step is None or idx.step == 1):
-                msg = "only a step of 1 is supported when slicing AlignmentArray"
-                raise ValueError(msg)
+                raise ValueError(Errors.E1026)
             start = starts[idx]
             if len(starts) == 0:
                 return self._data[0:0]
             start = start[0]
             end = ends[idx][-1]
         else:
-            msg = "AlignmentArray only supports int and slice indexing"
-            raise ValueError(msg)
+            raise ValueError(Errors.E1027)
 
         return self._data[start:end]
 

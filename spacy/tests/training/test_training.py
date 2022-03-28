@@ -925,9 +925,11 @@ def test_alignment_array():
     assert list(a[1:]) == [3, 4, 5, 6, 7, 8, 9]
     assert list(a[:3]) == [0, 1, 2, 3]
     assert list(a[:]) == list(a.data)
-    with pytest.raises(ValueError, match=r"only a step of 1 is supported"):
+    with pytest.raises(ValueError, match=r"only supports slicing with a step of 1"):
         a[:4:-1]
-    with pytest.raises(ValueError, match=r"AlignmentArray only supports.*indexing"):
+    with pytest.raises(
+        ValueError, match=r"only supports indexing using an int or a slice"
+    ):
         a[[0, 1, 3]]
 
     a = AlignmentArray([[], [1, 2, 3], [4, 5]])
