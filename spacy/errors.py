@@ -524,6 +524,7 @@ class Errors(metaclass=ErrorsWithCodes):
     E202 = ("Unsupported {name} mode '{mode}'. Supported modes: {modes}.")
 
     # New errors added in v3.x
+    E857 = ("Entry '{name}' not found in edit tree lemmatizer labels.")
     E858 = ("The {mode} vector table does not support this operation. "
             "{alternative}")
     E859 = ("The floret vector table cannot be modified.")
@@ -895,6 +896,7 @@ class Errors(metaclass=ErrorsWithCodes):
              "patterns.")
     E1025 = ("Cannot intify the value '{value}' as an IOB string. The only "
              "supported values are: 'I', 'O', 'B' and ''")
+    E1026 = ("Edit tree has an invalid format:\n{errors}")
     
 
 # Deprecated model shortcuts, only used in errors and warnings

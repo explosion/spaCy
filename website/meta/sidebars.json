@@ -93,6 +93,7 @@
                 "items": [
                     { "text": "AttributeRuler", "url": "/api/attributeruler" },
                     { "text": "DependencyParser", "url": "/api/dependencyparser" },
+                    { "text": "EditTreeLemmatizer", "url": "/api/edittreelemmatizer" },
                     { "text": "EntityLinker", "url": "/api/entitylinker" },
                     { "text": "EntityRecognizer", "url": "/api/entityrecognizer" },
                     { "text": "EntityRuler", "url": "/api/entityruler" },
