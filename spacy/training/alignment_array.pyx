@@ -4,7 +4,7 @@ import numpy
 
 
 cdef class AlignmentArray:
-    """AlignmentArray is a simplified version of Ragged with two simplfications:
+    """AlignmentArray is similar to Thinc's Ragged with two simplfications:
     indexing returns numpy arrays and this type can only be used for CPU arrays.
     However, these changes make AlginmentArray more efficient for indexing in a
     tight loop."""
