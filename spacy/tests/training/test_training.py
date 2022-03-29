@@ -925,6 +925,9 @@ def test_alignment_array():
     assert list(a[1:]) == [3, 4, 5, 6, 7, 8, 9]
     assert list(a[:3]) == [0, 1, 2, 3]
     assert list(a[:]) == list(a.data)
+    assert list(a[0:0]) == []
+    assert list(a[3:3]) == []
+    assert list(a[-1:-1]) == []
     with pytest.raises(ValueError, match=r"only supports slicing with a step of 1"):
         a[:4:-1]
     with pytest.raises(

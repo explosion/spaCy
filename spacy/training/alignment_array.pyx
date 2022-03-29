@@ -40,7 +40,7 @@ cdef class AlignmentArray:
             if not (idx.step is None or idx.step == 1):
                 raise ValueError(Errors.E1027)
             start = starts[idx]
-            if len(starts) == 0:
+            if len(start) == 0:
                 return self._data[0:0]
             start = start[0]
             end = ends[idx][-1]
