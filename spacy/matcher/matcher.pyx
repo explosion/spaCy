@@ -252,6 +252,10 @@ cdef class Matcher:
         # non-overlapping ones this `match` can be either (start, end) or
         # (start, end, alignments) depending on `with_alignments=` option.
         for key, *match in matches:
+            # Adjust span matches to doc offsets
+            if isinstance(doclike, Span):
+                match[0] += doclike.start
+                match[1] += doclike.start
             span_filter = self._filter.get(key)
             if span_filter is not None:
                 pairs = pairs_by_id.get(key, [])
@@ -282,9 +286,6 @@ cdef class Matcher:
         if as_spans:
             final_results = []
             for key, start, end, *_ in final_matches:
-                if isinstance(doclike, Span):
-                    start += doclike.start
-                    end += doclike.start
                 final_results.append(Span(doc, start, end, label=key))
         elif with_alignments:
             # convert alignments List[Dict[str, int]] --> List[int]
