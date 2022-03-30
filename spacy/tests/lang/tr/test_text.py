@@ -45,3 +45,7 @@ def test_tr_lex_attrs_like_number_cardinal_ordinal(word):
 def test_tr_lex_attrs_capitals(word):
     assert like_num(word)
     assert like_num(word.upper())
+
+@pytest.mark.parametrize("test_word_typo", ["milyoncu"])
+def test_issue1234(test_word_typo):
+    assert like_num(test_word_typo)
