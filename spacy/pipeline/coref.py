@@ -636,14 +636,14 @@ class SpanPredictor(TrainablePipe):
                 evaluator.update(cluster_info)
 
             score = {
-                "coref_f": evaluator.get_f1(),
-                "coref_p": evaluator.get_precision(),
-                "coref_r": evaluator.get_recall(),
+                "coref_span_f": evaluator.get_f1(),
+                "coref_span_p": evaluator.get_precision(),
+                "coref_span_r": evaluator.get_recall(),
             }
             scores.append(score)
 
         out = {}
         for field in ("f", "p", "r"):
-            fname = f"coref_{field}"
+            fname = f"coref_span_{field}"
             out[fname] = mean([ss[fname] for ss in scores])
         return out
