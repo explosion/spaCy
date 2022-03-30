@@ -528,7 +528,7 @@ class Errors(metaclass=ErrorsWithCodes):
     E858 = ("The {mode} vector table does not support this operation. "
             "{alternative}")
     E859 = ("The floret vector table cannot be modified.")
-    E860 = ("Can't truncate fasttext-bloom vectors.")
+    E860 = ("Can't truncate floret vectors.")
     E861 = ("No 'keys' should be provided when initializing floret vectors "
             "with 'minn' and 'maxn'.")
     E862 = ("'hash_count' must be between 1-4 for floret vectors.")
