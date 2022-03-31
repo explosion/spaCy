@@ -11,5 +11,5 @@ sentences = [
     "Mi so tu jara derje spodoba.",
     "Kotre nowniny chceće měć?",
     "Tak ako w slědnem lěśe jo teke lětosa jano doma zapustowaś móžno.",
-    "Zwóstanjo pótakem hyšći wjele źěła."
+    "Zwóstanjo pótakem hyšći wjele źěła.",
 ]

@@ -1,5 +1,5 @@
 import pytest
-from spacy.tokens import Doc
+from spacy.tokens import Doc, Span
 
 
 @pytest.fixture()
@@ -60,3 +60,13 @@ def test_doc_to_json_underscore_error_serialize(doc):
     Doc.set_extension("json_test4", method=lambda doc: doc.text)
     with pytest.raises(ValueError):
         doc.to_json(underscore=["json_test4"])
+
+
+def test_doc_to_json_span(doc):
+    """Test that Doc.to_json() includes spans"""
+    doc.spans["test"] = [Span(doc, 0, 2, "test"), Span(doc, 0, 1, "test")]
+    json_doc = doc.to_json()
+    assert "spans" in json_doc
+    assert len(json_doc["spans"]) == 1
+    assert len(json_doc["spans"]["test"]) == 2
+    assert json_doc["spans"]["test"][0]["start"] == 0

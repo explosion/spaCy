@@ -167,6 +167,59 @@ This feature is especially handy if you're using displaCy to compare performance
 at different stages of a process, e.g. during training. Here you could use the
 title for a brief description of the text example and the number of iterations.
 
+## Visualizing spans {#span}
+
+The span visualizer, `span`, highlights overlapping spans in a text.
+
+```python
+### Span example
+import spacy
+from spacy import displacy
+from spacy.tokens import Span
+
+text = "Welcome to the Bank of China."
+
+nlp = spacy.blank("en")
+doc = nlp(text)
+
+doc.spans["sc"] = [
+    Span(doc, 3, 6, "ORG"), 
+    Span(doc, 5, 6, "GPE"),
+]
+
+displacy.serve(doc, style="span")
+```
+
+import DisplacySpanHtml from 'images/displacy-span.html'
+
+<Iframe title="displaCy visualizer for entities" html={DisplacySpanHtml} height={180} />
+
+
+The span visualizer lets you customize the following `options`:
+
+| Argument | Description                                                                                                                                             |
+|-----------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `spans_key`       | Which spans key to render spans from. Default is `"sc"`. ~~str~~                                                                                                   |
+| `templates`       | Dictionary containing the keys `"span"`, `"slice"`, and `"start"`. These dictate how the overall span, a span slice, and the starting token will be rendered. ~~Optional[Dict[str, str]~~ |
+| `kb_url_template` | Optional template to construct the KB url for the entity to link to. Expects a python f-string format with single field to fill in ~~Optional[str]~~                    |
+| `colors`          | Color overrides. Entity types should be mapped to color names or values. ~~Dict[str, str]~~ |
+
+Because spans can be stored across different keys in `doc.spans`, you need to specify
+which one displaCy should use with `spans_key` (`sc` is the default). 
+
+> #### Options example
+>
+> ```python
+> doc.spans["custom"] = [Span(doc, 3, 6, "BANK")]
+> options = {"spans_key": "custom"}
+> displacy.serve(doc, style="span", options=options)
+
+import DisplacySpanCustomHtml from 'images/displacy-span-custom.html'
+
+<Iframe title="displaCy visualizer for spans (custom spans_key)" html={DisplacySpanCustomHtml} height={225} />
+
+
+
 ## Using displaCy in Jupyter notebooks {#jupyter}
 
 displaCy is able to detect whether you're working in a

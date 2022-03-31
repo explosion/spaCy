@@ -11,5 +11,5 @@ sentences = [
     "Jogo pśewóźowarce stej groniłej, až how w serbskich stronach njama Santa Claus nic pytaś.",
     "A ten sobuźěłaśeŕ Statneje biblioteki w Barlinju jo pśimjeł drogotne knigły bźez rukajcowu z nagima rukoma!",
     "Take wobchadanje z našym kulturnym derbstwom zewšym njejźo.",
-    "Wopśimjeśe drugich pśinoskow jo było na wusokem niwowje, ako pśecej."
+    "Wopśimjeśe drugich pśinoskow jo było na wusokem niwowje, ako pśecej.",
 ]

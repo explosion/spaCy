@@ -1009,14 +1009,17 @@ def test_legacy_architectures(name, config):
         losses = {}
         nlp.update(train_examples, sgd=optimizer, losses=losses)
 
-@pytest.mark.parametrize("patterns", [
-    # perfect case
-    [{"label": "CHARACTER", "pattern": "Kirby"}],
-    # typo for false negative
-    [{"label": "PERSON", "pattern": "Korby"}],
-    # random stuff for false positive
-    [{"label": "IS", "pattern": "is"}, {"label": "COLOR", "pattern": "pink"}],
-    ]
+
+@pytest.mark.parametrize(
+    "patterns",
+    [
+        # perfect case
+        [{"label": "CHARACTER", "pattern": "Kirby"}],
+        # typo for false negative
+        [{"label": "PERSON", "pattern": "Korby"}],
+        # random stuff for false positive
+        [{"label": "IS", "pattern": "is"}, {"label": "COLOR", "pattern": "pink"}],
+    ],
 )
 def test_no_gold_ents(patterns):
     # test that annotating components work
@@ -1055,9 +1058,10 @@ def test_no_gold_ents(patterns):
         mykb.add_alias("pink", ["pink"], [0.9])
         return mykb
 
-
     # Create and train the Entity Linker
-    entity_linker = nlp.add_pipe("entity_linker", config={"use_gold_ents": False}, last=True)
+    entity_linker = nlp.add_pipe(
+        "entity_linker", config={"use_gold_ents": False}, last=True
+    )
     entity_linker.set_kb(create_kb)
     assert entity_linker.use_gold_ents == False
 

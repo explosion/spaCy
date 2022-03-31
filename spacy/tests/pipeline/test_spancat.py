@@ -397,3 +397,25 @@ def test_zero_suggestions():
     assert set(spancat.labels) == {"LOC", "PERSON"}
 
     nlp.update(train_examples, sgd=optimizer)
+
+
+def test_set_candidates():
+    nlp = Language()
+    spancat = nlp.add_pipe("spancat", config={"spans_key": SPAN_KEY})
+    train_examples = make_examples(nlp)
+    nlp.initialize(get_examples=lambda: train_examples)
+    texts = [
+        "Just a sentence.",
+        "I like London and Berlin",
+        "I like Berlin",
+        "I eat ham.",
+    ]
+
+    docs = [nlp(text) for text in texts]
+    spancat.set_candidates(docs)
+
+    assert len(docs) == len(texts)
+    assert type(docs[0].spans["candidates"]) == SpanGroup
+    assert len(docs[0].spans["candidates"]) == 9
+    assert docs[0].spans["candidates"][0].text == "Just"
+    assert docs[0].spans["candidates"][4].text == "Just a"

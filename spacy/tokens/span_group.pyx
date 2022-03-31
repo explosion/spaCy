@@ -124,7 +124,7 @@ cdef class SpanGroup:
         DOCS: https://spacy.io/api/spangroup#setitem
         """
         if span.doc is not self.doc:
-            raise ValueError(Errors.E856.format(obj="span"))
+            raise ValueError(Errors.E855.format(obj="span"))
 
         i = self._normalize_index(i)
         self.c[i] = span.c
@@ -167,7 +167,7 @@ cdef class SpanGroup:
         DOCS: https://spacy.io/api/spangroup#append
         """
         if span.doc is not self.doc:
-            raise ValueError(Errors.E856.format(obj="span"))
+            raise ValueError(Errors.E855.format(obj="span"))
         self.push_back(span.c)
 
     def extend(self, spans_or_span_group: Union[SpanGroup, Iterable["Span"]]):
@@ -279,7 +279,7 @@ cdef class SpanGroup:
         if isinstance(other, SpanGroup):
             other_group = other
             if other_group.doc is not self.doc:
-                raise ValueError(Errors.E856.format(obj="span group"))
+                raise ValueError(Errors.E855.format(obj="span group"))
 
             other_attrs = deepcopy(other_group.attrs)
             span_group.attrs.update({
@@ -294,7 +294,7 @@ cdef class SpanGroup:
                 span_group.c.reserve(self.c.size() + len(other))
             for span in other:
                 if span.doc is not self.doc:
-                    raise ValueError(Errors.E856.format(obj="span"))
+                    raise ValueError(Errors.E855.format(obj="span"))
                 span_group.c.push_back(span.c)
 
         return span_group
@@ -307,7 +307,7 @@ cdef class SpanGroup:
         """
         cdef int length = self.c.size()
         if i < -length or i >= length:
-            raise IndexError(Errors.E857.format(i=i, length=length))
+            raise IndexError(Errors.E856.format(i=i, length=length))
         if i < 0:
             i += length
         return i

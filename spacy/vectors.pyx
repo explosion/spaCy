@@ -565,8 +565,9 @@ cdef class Vectors:
             # the source of numpy.save indicates that the file object is closed after use.
             # but it seems that somehow this does not happen, as ResourceWarnings are raised here.
             # in order to not rely on this, wrap in context manager.
+            ops = get_current_ops()
             with path.open("wb") as _file:
-                save_array(self.data, _file)
+                save_array(ops.to_numpy(self.data, byte_order="<"), _file)
 
         serializers = {
             "strings": lambda p: self.strings.to_disk(p.with_suffix(".json")),
@@ -602,6 +603,7 @@ cdef class Vectors:
             ops = get_current_ops()
             if path.exists():
                 self.data = ops.xp.load(str(path))
+            self.to_ops(ops)
 
         def load_settings(path):
             if path.exists():
@@ -631,7 +633,8 @@ cdef class Vectors:
             if hasattr(self.data, "to_bytes"):
                 return self.data.to_bytes()
             else:
-                return srsly.msgpack_dumps(self.data)
+                ops = get_current_ops()
+                return srsly.msgpack_dumps(ops.to_numpy(self.data, byte_order="<"))
 
         serializers = {
             "strings": lambda: self.strings.to_bytes(),
@@ -656,6 +659,8 @@ cdef class Vectors:
             else:
                 xp = get_array_module(self.data)
                 self.data = xp.asarray(srsly.msgpack_loads(b))
+                ops = get_current_ops()
+                self.to_ops(ops)
 
         deserializers = {
             "strings": lambda b: self.strings.from_bytes(b),
