@@ -143,7 +143,6 @@ Set a span in the span group.
 | ----------- | ------------------------ |
 | `i`         | The item index. ~~int~~  |
 | `span`      | The new value. ~~Span~~  |
-| **RETURNS** | Does not return anything |
 
 ## SpanGroup.\_\_delitem\_\_ {#delitem tag="method", new="3.3"}
 
@@ -164,7 +163,7 @@ Delete a span from the span group.
 
 ## SpanGroup.\_\_add\_\_ {#add tag="method", new="3.3"}
 
-Concatenate the current span group with another span group and returns the
+Concatenate the current span group with another span group and return the
 result in a new span group. Any `attrs` from the first span group will have
 precedence over `attrs` in the second.
 
@@ -258,7 +257,7 @@ Return a copy of the span group.
 
 | Name        | Description                           |
 | ----------- | ------------------------------------- |
-| **RETURNS** | The `SpanGroup` object. ~~SpanGroup~~ |
+| **RETURNS** | A copy of the `SpanGroup` object. ~~SpanGroup~~ |
 
 ## SpanGroup.to_bytes {#to_bytes tag="method"}
 

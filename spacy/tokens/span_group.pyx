@@ -92,7 +92,7 @@ cdef class SpanGroup:
         """
         return self.c.size()
 
-    def __getitem__(self, int i):
+    def __getitem__(self, int i) -> Span:
         """Get a span from the group. Note that a copy of the span is returned,
         so if any changes are made to this span, they are not reflected in the
         corresponding member of the span group.
@@ -105,7 +105,7 @@ cdef class SpanGroup:
         i = self._normalize_index(i)
         return Span.cinit(self.doc, self.c[i])
 
-    def __delitem__(self, int i) :
+    def __delitem__(self, int i):
         """Delete a span from the span group at index i.
 
         i (int): The item index.
@@ -115,7 +115,7 @@ cdef class SpanGroup:
         i = self._normalize_index(i)
         self.c.erase(self.c.begin() + i - 1)
 
-    def __setitem__(self, int i, Span span) :
+    def __setitem__(self, int i, Span span):
         """Set a span in the span group.
 
         i (int): The item index.
@@ -129,7 +129,7 @@ cdef class SpanGroup:
         i = self._normalize_index(i)
         self.c[i] = span.c
 
-    def __iadd__(self, other: Union[SpanGroup, Iterable["Span"]]) :
+    def __iadd__(self, other: Union[SpanGroup, Iterable["Span"]]) -> SpanGroup:
         """Operator +=. Append a span group or spans to this group and return
         the current span group.
 
@@ -140,14 +140,13 @@ cdef class SpanGroup:
 
         DOCS: https://spacy.io/api/spangroup#iadd
         """
-        self._concat(other, inplace=True)
-        return self
+        return self._concat(other, inplace=True)
 
-    def __add__(self, other: SpanGroup):
+    def __add__(self, other: SpanGroup) -> SpanGroup:
         """Operator +. Concatenate a span group with this group and return a
         new span group.
 
-        other (SpanGroup): The SpanGroup or spans to add.
+        other (SpanGroup): The SpanGroup to add.
 
         RETURNS (SpanGroup): The concatenated SpanGroup.
 
@@ -242,7 +241,7 @@ cdef class SpanGroup:
     cdef void push_back(self, SpanC span) nogil:
         self.c.push_back(span)
 
-    def copy(self) :
+    def copy(self)  -> SpanGroup:
         """Clones the span group.
 
         RETURNS (SpanGroup): A copy of the span group.
@@ -261,7 +260,7 @@ cdef class SpanGroup:
         other: Union[SpanGroup, Iterable["Span"]],
         *,
         inplace: bool = False,
-    ):
+    ) -> SpanGroup:
         """Concatenates the current span group with the provided span group or
         spans, either in place or creating a copy. Preserves the name of self,
         updates attrs only with values that are not in self.
@@ -300,7 +299,7 @@ cdef class SpanGroup:
 
         return span_group
 
-    def _normalize_index(self, int i):
+    def _normalize_index(self, int i) -> int:
         """Checks list index boundaries and adjusts the index if negative.
 
         i (int): The index.
