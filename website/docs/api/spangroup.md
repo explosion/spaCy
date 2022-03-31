@@ -139,10 +139,10 @@ Set a span in the span group.
 > assert doc.spans["errors"][0].text == "Their goi"
 > ```
 
-| Name        | Description              |
-| ----------- | ------------------------ |
-| `i`         | The item index. ~~int~~  |
-| `span`      | The new value. ~~Span~~  |
+| Name   | Description             |
+| ------ | ----------------------- |
+| `i`    | The item index. ~~int~~ |
+| `span` | The new value. ~~Span~~ |
 
 ## SpanGroup.\_\_delitem\_\_ {#delitem tag="method", new="3.3"}
 
@@ -163,9 +163,9 @@ Delete a span from the span group.
 
 ## SpanGroup.\_\_add\_\_ {#add tag="method", new="3.3"}
 
-Concatenate the current span group with another span group and return the
-result in a new span group. Any `attrs` from the first span group will have
-precedence over `attrs` in the second.
+Concatenate the current span group with another span group and return the result
+in a new span group. Any `attrs` from the first span group will have precedence
+over `attrs` in the second.
 
 > #### Example
 >
@@ -237,9 +237,9 @@ group.
 > doc.spans["errors"].extend(span_group)
 > ```
 
-| Name    | Description                          |
-| ------- | ------------------------------------ |
-| `spans` | The spans to add. ~~Iterable[Span]~~ |
+| Name    | Description                                              |
+| ------- | -------------------------------------------------------- |
+| `spans` | The spans to add. ~~Union[SpanGroup, Iterable["Span"]]~~ |
 
 ## SpanGroup.copy {#copy tag="method", new="3.3"}
 
@@ -255,8 +255,8 @@ Return a copy of the span group.
 > new_group = doc.spans["errors"].copy()
 > ```
 
-| Name        | Description                           |
-| ----------- | ------------------------------------- |
+| Name        | Description                                     |
+| ----------- | ----------------------------------------------- |
 | **RETURNS** | A copy of the `SpanGroup` object. ~~SpanGroup~~ |
 
 ## SpanGroup.to_bytes {#to_bytes tag="method"}

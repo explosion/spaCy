@@ -174,7 +174,7 @@ cdef class SpanGroup:
         """Add multiple spans or contents of another SpanGroup to the group.
         All spans must refer to the same Doc object as the span group.
 
-        spans (Iterable[Span]): The spans to add.
+        spans (Union[SpanGroup, Iterable["Span"]]): The spans to add.
 
         DOCS: https://spacy.io/api/spangroup#extend
         """
