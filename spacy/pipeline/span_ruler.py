@@ -1,6 +1,6 @@
-import warnings
 from typing import Optional, Union, List, Dict, Tuple, Iterable, Any, Callable
 from typing import Sequence, Set, cast
+import warnings
 from pathlib import Path
 import srsly
 
@@ -240,7 +240,7 @@ class SpanRuler(Pipe):
         validate (bool): Whether patterns should be validated, passed to
             Matcher and PhraseMatcher as `validate`.
         overwrite (bool): Whether to remove any existing spans under this spans
-            key if `spans_key` is set, or to remove any ents under `doc.ents` if
+            key if `spans_key` is set, and/or to remove any ents under `doc.ents` if
             `annotate_ents` is set. Defaults to `True`.
         sort_key (Optional[Callable]): The sort key to use with `sorted` to
             determine the order of the matched spans before filtering. Defaults
