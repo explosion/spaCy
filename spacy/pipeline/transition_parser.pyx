@@ -298,7 +298,7 @@ class Parser(TrainablePipe):
         backprop_scores((states, d_scores))
         if sgd not in (None, False):
             self.finish_update(sgd)
-        losses[self.name] += (d_scores**2).sum()
+        losses[self.name] += float((d_scores**2).sum())
         # Ugh, this is annoying. If we're working on GPU, we want to free the
         # memory ASAP. It seems that Python doesn't necessarily get around to
         # removing these in time if we don't explicitly delete? It's confusing.
