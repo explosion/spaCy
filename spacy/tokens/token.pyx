@@ -487,8 +487,6 @@ cdef class Token:
 
         RETURNS (bool / None): Whether the token starts a sentence.
             None if unknown.
-
-        DOCS: https://spacy.io/api/token#is_sent_start
         """
         def __get__(self):
             if self.c.sent_start == 0:

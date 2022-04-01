@@ -10,18 +10,18 @@ avresti avrete avrà avrò avuta avute avuti avuto
 
 basta bene benissimo brava bravo
 
-casa caso cento certa certe certi certo che chi chicchessia chiunque ci
+casa caso cento certa certe certi certo che chi chicchessia chiunque ci c'
 ciascuna ciascuno cima cio cioe circa citta città co codesta codesti codesto
 cogli coi col colei coll coloro colui come cominci comunque con concernente
 conciliarsi conclusione consiglio contro cortesia cos cosa cosi così cui
 
-da dagl dagli dai dal dall dalla dalle dallo dappertutto davanti degl degli
-dei del dell della delle dello dentro detto deve di dice dietro dire
+d' da dagl dagli dai dal dall dall' dalla dalle dallo dappertutto davanti degl degli
+dei del dell dell' della delle dello dentro detto deve di dice dietro dire
 dirimpetto diventa diventare diventato dopo dov dove dovra dovrà dovunque due
 dunque durante
 
-ebbe ebbero ebbi ecc ecco ed effettivamente egli ella entrambi eppure era
-erano eravamo eravate eri ero esempio esse essendo esser essere essi ex
+e ebbe ebbero ebbi ecc ecco ed effettivamente egli ella entrambi eppure era
+erano eravamo eravate eri ero esempio esse essendo esser essere essi ex è
 
 fa faccia facciamo facciano facciate faccio facemmo facendo facesse facessero
 facessi facessimo faceste facesti faceva facevamo facevano facevate facevi
@@ -30,21 +30,21 @@ fareste faresti farete farà farò fatto favore fece fecero feci fin finalmente
 finche fine fino forse forza fosse fossero fossi fossimo foste fosti fra
 frattempo fu fui fummo fuori furono futuro generale
 
-gia già giacche giorni giorno gli gliela gliele glieli glielo gliene governo
+gia già giacche giorni giorno gli gl' gliela gliele glieli glielo gliene governo
 grande grazie gruppo
 
 ha haha hai hanno ho
 
 ieri il improvviso in inc infatti inoltre insieme intanto intorno invece io
 
-la là lasciato lato lavoro le lei li lo lontano loro lui lungo luogo
+l' la là lasciato lato lavoro le lei li lo lontano loro lui lungo luogo
 
-ma macche magari maggior mai male malgrado malissimo mancanza marche me
+m' ma macche magari maggior mai male malgrado malissimo mancanza marche me
 medesimo mediante meglio meno mentre mesi mezzo mi mia mie miei mila miliardi
 milioni minimi ministro mio modo molti moltissimo molto momento mondo mosto
 
-nazionale ne negl negli nei nel nell nella nelle nello nemmeno neppure nessun
-nessuna nessuno niente no noi non nondimeno nonostante nonsia nostra nostre
+nazionale ne negl negli nei nel nell nella nelle nello nemmeno neppure nessun nessun'
+nessuna nessuno nient' niente no noi non nondimeno nonostante nonsia nostra nostre
 nostri nostro novanta nove nulla nuovo
 
 od oggi ogni ognuna ognuno oltre oppure ora ore osi ossia ottanta otto
@@ -56,12 +56,12 @@ potrebbe preferibilmente presa press prima primo principalmente probabilmente
 proprio puo può pure purtroppo
 
 qualche qualcosa qualcuna qualcuno quale quali qualunque quando quanta quante
-quanti quanto quantunque quasi quattro quel quella quelle quelli quello quest
+quanti quanto quantunque quasi quattro quel quel' quella quelle quelli quello quest quest'
 questa queste questi questo qui quindi
 
 realmente recente recentemente registrazione relativo riecco salvo
 
-sara sarà sarai saranno sarebbe sarebbero sarei saremmo saremo sareste
+s' sara sarà sarai saranno sarebbe sarebbero sarei saremmo saremo sareste
 saresti sarete saro sarò scola scopo scorso se secondo seguente seguito sei
 sembra sembrare sembrato sembri sempre senza sette si sia siamo siano siate
 siete sig solito solo soltanto sono sopra sotto spesso srl sta stai stando
@@ -72,12 +72,12 @@ steste stesti stette stettero stetti stia stiamo stiano stiate sto su sua
 subito successivamente successivo sue sugl sugli sui sul sull sulla sulle
 sullo suo suoi
 
-tale tali talvolta tanto te tempo ti titolo tra tranne tre trenta
+t' tale tali talvolta tanto te tempo ti titolo tra tranne tre trenta
 troppo trovato tu tua tue tuo tuoi tutta tuttavia tutte tutti tutto
 
-uguali ulteriore ultimo un una uno uomo
+uguali ulteriore ultimo un un' una uno uomo
 
-va vale vari varia varie vario verso vi via vicino visto vita voi volta volte
+v' va vale vari varia varie vario verso vi via vicino visto vita voi volta volte
 vostra vostre vostri vostro
 """.split()
 )

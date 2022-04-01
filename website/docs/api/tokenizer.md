@@ -44,15 +44,16 @@ how to construct a custom tokenizer with different tokenization rules, see the
 > tokenizer = nlp.tokenizer
 > ```
 
-| Name             | Description                                                                                                                                                                   |
-| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `vocab`          | A storage container for lexical types. ~~Vocab~~                                                                                                                              |
-| `rules`          | Exceptions and special-cases for the tokenizer. ~~Optional[Dict[str, List[Dict[int, str]]]]~~                                                                                 |
-| `prefix_search`  | A function matching the signature of `re.compile(string).search` to match prefixes. ~~Optional[Callable[[str], Optional[Match]]]~~                                            |
-| `suffix_search`  | A function matching the signature of `re.compile(string).search` to match suffixes. ~~Optional[Callable[[str], Optional[Match]]]~~                                            |
-| `infix_finditer` | A function matching the signature of `re.compile(string).finditer` to find infixes. ~~Optional[Callable[[str], Iterator[Match]]]~~                                            |
-| `token_match`    | A function matching the signature of `re.compile(string).match` to find token matches. ~~Optional[Callable[[str], Optional[Match]]]~~                                         |
-| `url_match`      | A function matching the signature of `re.compile(string).match` to find token matches after considering prefixes and suffixes. ~~Optional[Callable[[str], Optional[Match]]]~~ |
+| Name                                               | Description                                                                                                                                                                   |
+| -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vocab`                                            | A storage container for lexical types. ~~Vocab~~                                                                                                                              |
+| `rules`                                            | Exceptions and special-cases for the tokenizer. ~~Optional[Dict[str, List[Dict[int, str]]]]~~                                                                                 |
+| `prefix_search`                                    | A function matching the signature of `re.compile(string).search` to match prefixes. ~~Optional[Callable[[str], Optional[Match]]]~~                                            |
+| `suffix_search`                                    | A function matching the signature of `re.compile(string).search` to match suffixes. ~~Optional[Callable[[str], Optional[Match]]]~~                                            |
+| `infix_finditer`                                   | A function matching the signature of `re.compile(string).finditer` to find infixes. ~~Optional[Callable[[str], Iterator[Match]]]~~                                            |
+| `token_match`                                      | A function matching the signature of `re.compile(string).match` to find token matches. ~~Optional[Callable[[str], Optional[Match]]]~~                                         |
+| `url_match`                                        | A function matching the signature of `re.compile(string).match` to find token matches after considering prefixes and suffixes. ~~Optional[Callable[[str], Optional[Match]]]~~ |
+| `faster_heuristics` <Tag variant="new">3.3.0</Tag> | Whether to restrict the final `Matcher`-based pass for rules to those containing affixes or space. Defaults to `True`. ~~bool~~                                               |
 
 ## Tokenizer.\_\_call\_\_ {#call tag="method"}
 

@@ -47,3 +47,29 @@ def test_ko_tokenizer_pos(ko_tokenizer, text, expected_pos):
 def test_ko_empty_doc(ko_tokenizer):
     tokens = ko_tokenizer("")
     assert len(tokens) == 0
+
+
+@pytest.mark.issue(10535)
+def test_ko_tokenizer_unknown_tag(ko_tokenizer):
+    tokens = ko_tokenizer("미닛 리피터")
+    assert tokens[1].pos_ == "X"
+
+
+# fmt: off
+SPACY_TOKENIZER_TESTS = [
+    ("있다.", "있다 ."),
+    ("'예'는", "' 예 ' 는"),
+    ("부 (富) 는", "부 ( 富 ) 는"),
+    ("부(富)는", "부 ( 富 ) 는"),
+    ("1982~1983.", "1982 ~ 1983 ."),
+    ("사과·배·복숭아·수박은 모두 과일이다.", "사과 · 배 · 복숭아 · 수박은 모두 과일이다 ."),
+    ("그렇구나~", "그렇구나~"),
+    ("『9시 반의 당구』,", "『 9시 반의 당구 』 ,"),
+]
+# fmt: on
+
+
+@pytest.mark.parametrize("text,expected_tokens", SPACY_TOKENIZER_TESTS)
+def test_ko_spacy_tokenizer(ko_tokenizer_tokenizer, text, expected_tokens):
+    tokens = [token.text for token in ko_tokenizer_tokenizer(text)]
+    assert tokens == expected_tokens.split()

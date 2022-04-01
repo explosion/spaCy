@@ -228,7 +228,7 @@ class Scorer:
                 if token.orth_.isspace():
                     continue
                 if align.x2y.lengths[token.i] == 1:
-                    gold_i = align.x2y[token.i].dataXd[0, 0]
+                    gold_i = align.x2y[token.i][0]
                     if gold_i not in missing_indices:
                         pred_tags.add((gold_i, getter(token, attr)))
             tag_score.score_set(pred_tags, gold_tags)
@@ -287,7 +287,7 @@ class Scorer:
                 if token.orth_.isspace():
                     continue
                 if align.x2y.lengths[token.i] == 1:
-                    gold_i = align.x2y[token.i].dataXd[0, 0]
+                    gold_i = align.x2y[token.i][0]
                     if gold_i not in missing_indices:
                         value = getter(token, attr)
                         morph = gold_doc.vocab.strings[value]
@@ -445,7 +445,8 @@ class Scorer:
             getter(doc, attr) should return the values for the individual doc.
         labels (Iterable[str]): The set of possible labels. Defaults to [].
         multi_label (bool): Whether the attribute allows multiple labels.
-            Defaults to True.
+            Defaults to True. When set to False (exclusive labels), missing
+            gold labels are interpreted as 0.0.
         positive_label (str): The positive label for a binary task with
             exclusive classes. Defaults to None.
         threshold (float): Cutoff to consider a prediction "positive". Defaults
@@ -484,13 +485,15 @@ class Scorer:
 
             for label in labels:
                 pred_score = pred_cats.get(label, 0.0)
-                gold_score = gold_cats.get(label, 0.0)
+                gold_score = gold_cats.get(label)
+                if not gold_score and not multi_label:
+                    gold_score = 0.0
                 if gold_score is not None:
                     auc_per_type[label].score_set(pred_score, gold_score)
             if multi_label:
                 for label in labels:
                     pred_score = pred_cats.get(label, 0.0)
-                    gold_score = gold_cats.get(label, 0.0)
+                    gold_score = gold_cats.get(label)
                     if gold_score is not None:
                         if pred_score >= threshold and gold_score > 0:
                             f_per_type[label].tp += 1
@@ -502,16 +505,15 @@ class Scorer:
                 # Get the highest-scoring for each.
                 pred_label, pred_score = max(pred_cats.items(), key=lambda it: it[1])
                 gold_label, gold_score = max(gold_cats.items(), key=lambda it: it[1])
-                if gold_score is not None:
-                    if pred_label == gold_label and pred_score >= threshold:
-                        f_per_type[pred_label].tp += 1
-                    else:
-                        f_per_type[gold_label].fn += 1
-                        if pred_score >= threshold:
-                            f_per_type[pred_label].fp += 1
+                if pred_label == gold_label and pred_score >= threshold:
+                    f_per_type[pred_label].tp += 1
+                else:
+                    f_per_type[gold_label].fn += 1
+                    if pred_score >= threshold:
+                        f_per_type[pred_label].fp += 1
             elif gold_cats:
                 gold_label, gold_score = max(gold_cats, key=lambda it: it[1])
-                if gold_score is not None and gold_score > 0:
+                if gold_score > 0:
                     f_per_type[gold_label].fn += 1
             elif pred_cats:
                 pred_label, pred_score = max(pred_cats.items(), key=lambda it: it[1])
@@ -692,13 +694,13 @@ class Scorer:
                 if align.x2y.lengths[token.i] != 1:
                     gold_i = None  # type: ignore
                 else:
-                    gold_i = align.x2y[token.i].dataXd[0, 0]
+                    gold_i = align.x2y[token.i][0]
                 if gold_i not in missing_indices:
                     dep = getter(token, attr)
                     head = head_getter(token, head_attr)
                     if dep not in ignore_labels and token.orth_.strip():
                         if align.x2y.lengths[head.i] == 1:
-                            gold_head = align.x2y[head.i].dataXd[0, 0]
+                            gold_head = align.x2y[head.i][0]
                         else:
                             gold_head = None
                         # None is indistinct, so we can't just add it to the set
@@ -748,7 +750,7 @@ def get_ner_prf(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
         for pred_ent in eg.x.ents:
             if pred_ent.label_ not in score_per_type:
                 score_per_type[pred_ent.label_] = PRFScore()
-            indices = align_x2y[pred_ent.start : pred_ent.end].dataXd.ravel()
+            indices = align_x2y[pred_ent.start : pred_ent.end]
             if len(indices):
                 g_span = eg.y[indices[0] : indices[-1] + 1]
                 # Check we aren't missing annotation on this span. If so,

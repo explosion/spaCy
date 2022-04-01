@@ -360,7 +360,7 @@ def download_file(src: Union[str, "Pathy"], dest: Path, *, force: bool = False) 
     src = str(src)
     with smart_open.open(src, mode="rb", ignore_ext=True) as input_file:
         with dest.open(mode="wb") as output_file:
-            output_file.write(input_file.read())
+            shutil.copyfileobj(input_file, output_file)
 
 
 def ensure_pathy(path):

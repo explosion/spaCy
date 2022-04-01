@@ -455,6 +455,39 @@ def test_vectors_get_batch():
     assert_equal(OPS.to_numpy(vecs), OPS.to_numpy(v.get_batch(words)))
 
 
+def test_vectors_deduplicate():
+    data = OPS.asarray([[1, 1], [2, 2], [3, 4], [1, 1], [3, 4]], dtype="f")
+    v = Vectors(data=data, keys=["a1", "b1", "c1", "a2", "c2"])
+    vocab = Vocab()
+    vocab.vectors = v
+    # duplicate vectors do not use the same keys
+    assert (
+        vocab.vectors.key2row[v.strings["a1"]] != vocab.vectors.key2row[v.strings["a2"]]
+    )
+    assert (
+        vocab.vectors.key2row[v.strings["c1"]] != vocab.vectors.key2row[v.strings["c2"]]
+    )
+    vocab.deduplicate_vectors()
+    # there are three unique vectors
+    assert vocab.vectors.shape[0] == 3
+    # the uniqued data is the same as the deduplicated data
+    assert_equal(
+        numpy.unique(OPS.to_numpy(vocab.vectors.data), axis=0),
+        OPS.to_numpy(vocab.vectors.data),
+    )
+    # duplicate vectors use the same keys now
+    assert (
+        vocab.vectors.key2row[v.strings["a1"]] == vocab.vectors.key2row[v.strings["a2"]]
+    )
+    assert (
+        vocab.vectors.key2row[v.strings["c1"]] == vocab.vectors.key2row[v.strings["c2"]]
+    )
+    # deduplicating again makes no changes
+    vocab_b = vocab.to_bytes()
+    vocab.deduplicate_vectors()
+    assert vocab_b == vocab.to_bytes()
+
+
 @pytest.fixture()
 def floret_vectors_hashvec_str():
     """The full hashvec table from floret with the settings:
@@ -534,6 +567,10 @@ def test_floret_vectors(floret_vectors_vec_str, floret_vectors_hashvec_str):
 
         # every word has a vector
         assert nlp.vocab[word * 5].has_vector
+
+    # n_keys is -1 for floret
+    assert nlp_plain.vocab.vectors.n_keys > 0
+    assert nlp.vocab.vectors.n_keys == -1
 
     # check that single and batched vector lookups are identical
     words = [s for s in nlp_plain.vocab.vectors]
