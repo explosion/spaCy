@@ -120,10 +120,13 @@ print(doc[2].pos_)  # 'PRON'
 
 ## Lemmatization {#lemmatization model="lemmatizer" new="3"}
 
-The [`Lemmatizer`](/api/lemmatizer) is a pipeline component that provides lookup
-and rule-based lemmatization methods in a configurable component. An individual
-language can extend the `Lemmatizer` as part of its
-[language data](#language-data).
+spaCy provides two pipeline components for lemmatization:
+
+1. The [`Lemmatizer`](/api/lemmatizer) component provides lookup and rule-based
+   lemmatization methods in a configurable component. An individual language can
+   extend the `Lemmatizer` as part of its [language data](#language-data).
+2. The [`EditTreeLemmatizer`](/api/edittreelemmatizer)
+   <Tag variant="new">3.3</Tag> component provides a trainable lemmatizer.
 
 ```python
 ### {executable="true"}
@@ -196,6 +199,20 @@ light of the previously assigned coarse-grained part-of-speech and morphological
 information, without consulting the context of the token. The rule-based
 lemmatizer also accepts list-based exception files. For English, these are
 acquired from [WordNet](https://wordnet.princeton.edu/).
+
+### Trainable lemmatizer
+
+The [`EditTreeLemmatizer`](/api/edittreelemmatizer) can learn form-to-lemma
+transformations from a training corpus that includes lemma annotations. This
+removes the need to write language-specific rules and can (in many cases)
+provide higher accuracies than lookup and rule-based lemmatizers.
+
+```python
+import spacy
+
+nlp = spacy.blank("de")
+nlp.add_pipe("trainable_lemmatizer", name="lemmatizer")
+```
 
 ## Dependency Parsing {#dependency-parse model="parser"}
 
@@ -799,6 +816,10 @@ def tokenizer_pseudo_code(
     for substring in text.split():
         suffixes = []
         while substring:
+            if substring in special_cases:
+                tokens.extend(special_cases[substring])
+                substring = ""
+                continue
             while prefix_search(substring) or suffix_search(substring):
                 if token_match(substring):
                     tokens.append(substring)
@@ -831,6 +852,8 @@ def tokenizer_pseudo_code(
                 infixes = infix_finditer(substring)
                 offset = 0
                 for match in infixes:
+                    if offset == 0 and match.start() == 0:
+                        continue
                     tokens.append(substring[offset : match.start()])
                     tokens.append(substring[match.start() : match.end()])
                     offset = match.end()
@@ -849,20 +872,22 @@ def tokenizer_pseudo_code(
 The algorithm can be summarized as follows:
 
 1. Iterate over space-separated substrings.
-2. Look for a token match. If there is a match, stop processing and keep this
-   token.
-3. Check whether we have an explicitly defined special case for this substring.
+2. Check whether we have an explicitly defined special case for this substring.
    If we do, use it.
-4. Otherwise, try to consume one prefix. If we consumed a prefix, go back to #2,
+3. Look for a token match. If there is a match, stop processing and keep this
+   token.
+4. Check whether we have an explicitly defined special case for this substring.
+   If we do, use it.
+5. Otherwise, try to consume one prefix. If we consumed a prefix, go back to #3,
    so that the token match and special cases always get priority.
-5. If we didn't consume a prefix, try to consume a suffix and then go back to
-   #2.
-6. If we can't consume a prefix or a suffix, look for a URL match.
-7. If there's no URL match, then look for a special case.
-8. Look for "infixes" – stuff like hyphens etc. and split the substring into
+6. If we didn't consume a prefix, try to consume a suffix and then go back to
+   #3.
+7. If we can't consume a prefix or a suffix, look for a URL match.
+8. If there's no URL match, then look for a special case.
+9. Look for "infixes" – stuff like hyphens etc. and split the substring into
    tokens on all infixes.
-9. Once we can't consume any more of the string, handle it as a single token.
-10. Make a final pass over the text to check for special cases that include
+10. Once we can't consume any more of the string, handle it as a single token.
+11. Make a final pass over the text to check for special cases that include
     spaces or that were missed due to the incremental processing of affixes.
 
 </Accordion>
@@ -1181,7 +1206,7 @@ class WhitespaceTokenizer:
             spaces = spaces[0:-1]
         else:
            spaces[-1] = False
-            
+
         return Doc(self.vocab, words=words, spaces=spaces)
 
 nlp = spacy.blank("en")
@@ -1261,8 +1286,8 @@ hyperparameters, pipeline and tokenizer used for constructing and training the
 pipeline. The `[nlp.tokenizer]` block refers to a **registered function** that
 takes the `nlp` object and returns a tokenizer. Here, we're registering a
 function called `whitespace_tokenizer` in the
-[`@tokenizers` registry](/api/top-level#registry). To make sure spaCy knows how to
-construct your tokenizer during training, you can pass in your Python file by
+[`@tokenizers` registry](/api/top-level#registry). To make sure spaCy knows how
+to construct your tokenizer during training, you can pass in your Python file by
 setting `--code functions.py` when you run [`spacy train`](/api/cli#train).
 
 > #### config.cfg

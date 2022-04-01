@@ -1,8 +1,8 @@
-from itertools import islice
 from typing import Iterable, Optional, Dict, List, Callable, Any
-
-from thinc.api import Model, Config
 from thinc.types import Floats2d
+from thinc.api import Model, Config
+
+from itertools import islice
 
 from ..language import Language
 from ..training import Example, validate_get_examples
@@ -157,6 +157,10 @@ class MultiLabel_TextCategorizer(TextCategorizer):
         cfg = {"labels": [], "threshold": threshold}
         self.cfg = dict(cfg)
         self.scorer = scorer
+
+    @property
+    def support_missing_values(self):
+        return True
 
     def initialize(  # type: ignore[override]
         self,

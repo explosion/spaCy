@@ -1,8 +1,8 @@
-from itertools import islice
 from typing import Iterable, Tuple, Optional, Dict, List, Callable, Any
 from thinc.api import get_array_module, Model, Optimizer, set_dropout_rate, Config
 from thinc.types import Floats2d
 import numpy
+from itertools import islice
 
 from .trainable_pipe import TrainablePipe
 from ..language import Language
@@ -159,6 +159,13 @@ class TextCategorizer(TrainablePipe):
         self.scorer = scorer
 
     @property
+    def support_missing_values(self):
+        # There are no missing values as the textcat should always
+        # predict exactly one label. All other labels are 0.0
+        # Subclasses may override this property to change internal behaviour.
+        return False
+
+    @property
     def labels(self) -> Tuple[str]:
         """RETURNS (Tuple[str]): The labels currently added to the component.
 
@@ -276,12 +283,12 @@ class TextCategorizer(TrainablePipe):
             return losses
         set_dropout_rate(self.model, drop)
         scores, bp_scores = self.model.begin_update(docs)
-        target = self._rehearsal_model(examples)
+        target, _ = self._rehearsal_model.begin_update(docs)
         gradient = scores - target
         bp_scores(gradient)
         if sgd is not None:
             self.finish_update(sgd)
-        losses[self.name] += (gradient ** 2).sum()
+        losses[self.name] += (gradient**2).sum()
         return losses
 
     def _examples_to_truth(
@@ -294,7 +301,7 @@ class TextCategorizer(TrainablePipe):
             for j, label in enumerate(self.labels):
                 if label in eg.reference.cats:
                     truths[i, j] = eg.reference.cats[label]
-                else:
+                elif self.support_missing_values:
                     not_missing[i, j] = 0.0
         truths = self.model.ops.asarray(truths)  # type: ignore
         return truths, not_missing  # type: ignore
@@ -313,9 +320,9 @@ class TextCategorizer(TrainablePipe):
         self._validate_categories(examples)
         truths, not_missing = self._examples_to_truth(examples)
         not_missing = self.model.ops.asarray(not_missing)  # type: ignore
-        d_scores = (scores - truths) / scores.shape[0]
+        d_scores = scores - truths
         d_scores *= not_missing
-        mean_square_error = (d_scores ** 2).sum(axis=1).mean()
+        mean_square_error = (d_scores**2).mean()
         return float(mean_square_error), d_scores
 
     def add_label(self, label: str) -> int:

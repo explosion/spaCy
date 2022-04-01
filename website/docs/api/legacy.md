@@ -248,23 +248,6 @@ the others, but may not be as accurate, especially if texts are short.
 
 ## Loggers {#loggers}
 
-These functions are available from `@spacy.registry.loggers`.
+Logging utilities for spaCy are implemented in the [`spacy-loggers`](https://github.com/explosion/spacy-loggers) repo, and the functions are typically available from `@spacy.registry.loggers`.
 
-### spacy.WandbLogger.v1 {#WandbLogger_v1}
-
-The first version of the [`WandbLogger`](/api/top-level#WandbLogger) did not yet
-support the `log_dataset_dir` and `model_log_interval` arguments.
-
-> #### Example config
->
-> ```ini
-> [training.logger]
-> @loggers = "spacy.WandbLogger.v1"
-> project_name = "monitor_spacy_training"
-> remove_config_values = ["paths.train", "paths.dev", "corpora.train.path", "corpora.dev.path"]
-> ```
->
-> | Name                   | Description                                                                                                                           |
-> | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-> | `project_name`         | The name of the project in the Weights & Biases interface. The project will be created automatically if it doesn't exist yet. ~~str~~ |
-> | `remove_config_values` | A list of values to include from the config before it is uploaded to W&B (default: empty). ~~List[str]~~                              |
+More documentation can be found in that repo's [readme](https://github.com/explosion/spacy-loggers/blob/main/README.md) file.

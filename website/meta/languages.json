@@ -114,7 +114,12 @@
         {
             "code": "fi",
             "name": "Finnish",
-            "has_examples": true
+            "has_examples": true,
+            "models": [
+                "fi_core_news_sm",
+                "fi_core_news_md",
+                "fi_core_news_lg"
+            ]
         },
         {
             "code": "fr",
@@ -227,7 +232,12 @@
                 }
             ],
             "example": "이것은 문장입니다.",
-            "has_examples": true
+            "has_examples": true,
+            "models": [
+                "ko_core_news_sm",
+                "ko_core_news_md",
+                "ko_core_news_lg"
+            ]
         },
         {
             "code": "ky",
@@ -388,7 +398,12 @@
         {
             "code": "sv",
             "name": "Swedish",
-            "has_examples": true
+            "has_examples": true,
+            "models": [
+                "sv_core_news_sm",
+                "sv_core_news_md",
+                "sv_core_news_lg"
+            ]
         },
         {
             "code": "ta",

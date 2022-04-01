@@ -11,7 +11,7 @@ from spacy.lang.en import English
 from thinc.api import Config, get_current_ops
 from numpy.testing import assert_array_equal
 
-from ..util import get_batch, make_tempdir
+from ..util import get_batch, make_tempdir, add_vecs_to_vocab
 
 
 def test_empty_doc():
@@ -100,7 +100,7 @@ cfg_string = """
     factory = "tagger"
 
     [components.tagger.model]
-    @architectures = "spacy.Tagger.v1"
+    @architectures = "spacy.Tagger.v2"
     nO = null
 
     [components.tagger.model.tok2vec]
@@ -140,9 +140,25 @@ TRAIN_DATA = [
 ]
 
 
-def test_tok2vec_listener():
+@pytest.mark.parametrize("with_vectors", (False, True))
+def test_tok2vec_listener(with_vectors):
     orig_config = Config().from_str(cfg_string)
+    orig_config["components"]["tok2vec"]["model"]["embed"][
+        "include_static_vectors"
+    ] = with_vectors
     nlp = util.load_model_from_config(orig_config, auto_fill=True, validate=True)
+
+    if with_vectors:
+        ops = get_current_ops()
+        vectors = [
+            ("apple", ops.asarray([1, 2, 3])),
+            ("orange", ops.asarray([-1, -2, -3])),
+            ("and", ops.asarray([-1, -1, -1])),
+            ("juice", ops.asarray([5, 5, 10])),
+            ("pie", ops.asarray([7, 6.3, 8.9])),
+        ]
+        add_vecs_to_vocab(nlp.vocab, vectors)
+
     assert nlp.pipe_names == ["tok2vec", "tagger"]
     tagger = nlp.get_pipe("tagger")
     tok2vec = nlp.get_pipe("tok2vec")
@@ -168,6 +184,9 @@ def test_tok2vec_listener():
     doc_tensor = tagger_tok2vec.predict([doc])[0]
     ops = get_current_ops()
     assert_array_equal(ops.to_numpy(doc.tensor), ops.to_numpy(doc_tensor))
+
+    # test with empty doc
+    doc = nlp("")
 
     # TODO: should this warn or error?
     nlp.select_pipes(disable="tok2vec")
@@ -244,7 +263,7 @@ cfg_string_multi = """
     factory = "tagger"
 
     [components.tagger.model]
-    @architectures = "spacy.Tagger.v1"
+    @architectures = "spacy.Tagger.v2"
     nO = null
 
     [components.tagger.model.tok2vec]
@@ -354,7 +373,7 @@ cfg_string_multi_textcat = """
     factory = "tagger"
 
     [components.tagger.model]
-    @architectures = "spacy.Tagger.v1"
+    @architectures = "spacy.Tagger.v2"
     nO = null
 
     [components.tagger.model.tok2vec]
