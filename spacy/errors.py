@@ -524,6 +524,9 @@ class Errors(metaclass=ErrorsWithCodes):
     E202 = ("Unsupported {name} mode '{mode}'. Supported modes: {modes}.")
 
     # New errors added in v3.x
+    E855 = ("Invalid {obj}: {obj} is not from the same doc.")
+    E856 = ("Error accessing span at position {i}: out of bounds in span group "
+            "of length {length}.")
     E857 = ("Entry '{name}' not found in edit tree lemmatizer labels.")
     E858 = ("The {mode} vector table does not support this operation. "
             "{alternative}")
