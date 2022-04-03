@@ -159,7 +159,7 @@ cdef class Example:
         gold_values = self.reference.to_array([field])
         output = [None] * len(self.predicted)
         for token in self.predicted:
-            values = gold_values[align[token.i].dataXd]
+            values = gold_values[align[token.i]]
             values = values.ravel()
             if len(values) == 0:
                 output[token.i] = None
@@ -190,9 +190,9 @@ cdef class Example:
             deps = [d if has_deps[i] else deps[i] for i, d in enumerate(proj_deps)]
         for cand_i in range(self.x.length):
             if cand_to_gold.lengths[cand_i] == 1:
-                gold_i = cand_to_gold[cand_i].dataXd[0, 0]
+                gold_i = cand_to_gold[cand_i][0]
                 if gold_to_cand.lengths[heads[gold_i]] == 1:
-                    aligned_heads[cand_i] = int(gold_to_cand[heads[gold_i]].dataXd[0, 0])
+                    aligned_heads[cand_i] = int(gold_to_cand[heads[gold_i]][0])
                     aligned_deps[cand_i] = deps[gold_i]
         return aligned_heads, aligned_deps
 
@@ -204,7 +204,7 @@ cdef class Example:
             align = self.alignment.y2x
             sent_starts = [False] * len(self.x)
             for y_sent in self.y.sents:
-                x_start = int(align[y_sent.start].dataXd[0])
+                x_start = int(align[y_sent.start][0])
                 sent_starts[x_start] = True
             return sent_starts
         else:
@@ -220,7 +220,7 @@ cdef class Example:
         seen = set()
         output = []
         for span in spans:
-            indices = align[span.start : span.end].data.ravel()
+            indices = align[span.start : span.end]
             if not allow_overlap:
                 indices = [idx for idx in indices if idx not in seen]
             if len(indices) >= 1:
@@ -316,7 +316,7 @@ cdef class Example:
         seen_indices = set()
         output = []
         for y_sent in self.reference.sents:
-            indices = align[y_sent.start : y_sent.end].data.ravel()
+            indices = align[y_sent.start : y_sent.end]
             indices = [idx for idx in indices if idx not in seen_indices]
             if indices:
                 x_sent = self.predicted[indices[0] : indices[-1] + 1]

@@ -524,11 +524,14 @@ class Errors(metaclass=ErrorsWithCodes):
     E202 = ("Unsupported {name} mode '{mode}'. Supported modes: {modes}.")
 
     # New errors added in v3.x
+    E855 = ("Invalid {obj}: {obj} is not from the same doc.")
+    E856 = ("Error accessing span at position {i}: out of bounds in span group "
+            "of length {length}.")
     E857 = ("Entry '{name}' not found in edit tree lemmatizer labels.")
     E858 = ("The {mode} vector table does not support this operation. "
             "{alternative}")
     E859 = ("The floret vector table cannot be modified.")
-    E860 = ("Can't truncate fasttext-bloom vectors.")
+    E860 = ("Can't truncate floret vectors.")
     E861 = ("No 'keys' should be provided when initializing floret vectors "
             "with 'minn' and 'maxn'.")
     E862 = ("'hash_count' must be between 1-4 for floret vectors.")
@@ -897,6 +900,8 @@ class Errors(metaclass=ErrorsWithCodes):
     E1025 = ("Cannot intify the value '{value}' as an IOB string. The only "
              "supported values are: 'I', 'O', 'B' and ''")
     E1026 = ("Edit tree has an invalid format:\n{errors}")
+    E1027 = ("AlignmentArray only supports slicing with a step of 1.")
+    E1028 = ("AlignmentArray only supports indexing using an int or a slice.")
     
 
 # Deprecated model shortcuts, only used in errors and warnings
