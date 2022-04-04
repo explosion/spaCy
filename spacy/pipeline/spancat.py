@@ -2,6 +2,7 @@ from typing import List, Dict, Callable, Tuple, Optional, Iterable, Any, cast
 from thinc.api import Config, Model, get_current_ops, set_dropout_rate, Ops
 from thinc.api import Optimizer
 from thinc.types import Ragged, Ints2d, Floats2d, Ints1d
+from thinc.util import is_cupy_array
 
 import numpy
 
@@ -337,12 +338,15 @@ class SpanCategorizer(TrainablePipe):
             # Handle cases where there are no tokens in any docs.
             return losses
         docs = [eg.predicted for eg in examples]
+        references = [eg.reference for eg in examples]
         spans = self.suggester(docs, ops=self.model.ops)
+        gold_spans = self._ensure_gold_spans(references, spans, ops=self.model.ops)
+
         if spans.lengths.sum() == 0:
             return losses
         set_dropout_rate(self.model, drop)
-        scores, backprop_scores = self.model.begin_update((docs, spans))
-        loss, d_scores = self.get_loss(examples, (spans, scores))
+        scores, backprop_scores = self.model.begin_update((docs, gold_spans))
+        loss, d_scores = self.get_loss(examples, (gold_spans, scores))
         backprop_scores(d_scores)  # type: ignore
         if sgd is not None:
             self.finish_update(sgd)
@@ -445,6 +449,49 @@ class SpanCategorizer(TrainablePipe):
         return eg.get_aligned_spans_y2x(
             eg.reference.spans.get(self.key, []), allow_overlap=True
         )
+
+    def _ensure_gold_spans(self, docs: Iterable[Doc], suggester_spans: Ragged, ops: Optional[Ops] = None) -> Ragged:
+        """Ensure that all gold span indices are present in the spans list produced by the suggester
+        docs (Iterable[Doc]]): Reference docs from example.reference
+        spans (Ragged): Spans produced by the suggester
+
+        RETURNS (Ragged): List of spans with 100% coverage of all gold span annotations
+        """
+        if ops is None:
+            ops = get_current_ops()
+        spans = []
+        lengths = []
+        for reference_doc, suggester_doc in zip(docs,suggester_spans): # type: ignore
+            cache = set()
+            length = 0
+            for span in reference_doc.spans[self.key]:
+                spans.append((span.start,span.end))
+                cache.add((span.start,span.end))
+                length += 1
+
+            for span in suggester_doc.dataXd:
+
+                if is_cupy_array(span[0]):
+                    start = span[0].item()
+                    end = span[1].item()
+                else:
+                    start = span[0]
+                    end = span[1]
+
+                if (start,end) not in cache:
+                    spans.append((start,end))
+                    length += 1 
+            lengths.append(length)
+
+        lengths_array = cast(Ints1d, ops.asarray(lengths, dtype="i"))
+        spans = list(spans)
+
+        if len(spans) > 0:
+            output = Ragged(ops.asarray(spans, dtype="i"), lengths_array)
+        else:
+            output = Ragged(ops.xp.zeros((0, 0), dtype="i"), lengths_array)
+
+        return output
 
     def _make_span_group(
         self, doc: Doc, indices: Ints2d, scores: Floats2d, labels: List[str]
