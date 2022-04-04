@@ -2405,7 +2405,7 @@
         {
             "id": "spacy-conll",
             "title": "spacy_conll",
-            "slogan": "Parsing from and to CoNLL-U format with spacy, spacy-stanza and spacy-udpipe",
+            "slogan": "Parsing from and to CoNLL-U format with `spacy`, `spacy-stanza` and `spacy-udpipe`",
             "description": "This module allows you to parse text into CoNLL-U format or read ConLL-U into a spaCy Doc. You can use it as a command line tool, or embed it in your own scripts by adding it as a custom pipeline component to a spaCy, spacy-stanza, or spacy-udpipe pipeline. It also provides an easy-to-use function to quickly initialize any spacy-wrapped parser. CoNLL-related properties are added to Doc elements, sentence Spans, and Tokens.",
             "code_example": [
                 "from spacy_conll import init_parser",
