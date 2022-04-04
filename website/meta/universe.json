@@ -2405,16 +2405,15 @@
         {
             "id": "spacy-conll",
             "title": "spacy_conll",
-            "slogan": "Parsing to CoNLL with spaCy, spacy-stanza, and spacy-udpipe",
-            "description": "This module allows you to parse text into CoNLL-U format. You can use it as a command line tool, or embed it in your own scripts by adding it as a custom pipeline component to a spaCy, spacy-stanfordnlp, spacy-stanza, or spacy-udpipe pipeline. It also provides an easy-to-use function to quickly initialize a parser. CoNLL-related properties are added to Doc elements, sentence Spans, and Tokens.",
+            "slogan": "Parsing from and to CoNLL-U format with `spacy`, `spacy-stanza` and `spacy-udpipe`",
+            "description": "This module allows you to parse text into CoNLL-U format or read ConLL-U into a spaCy `Doc`. You can use it as a command line tool, or embed it in your own scripts by adding it as a custom pipeline component to a `spacy`, `spacy-stanza` or `spacy-udpipe` pipeline. It also provides an easy-to-use function to quickly initialize any spaCy-wrapped parser. CoNLL-related properties are added to `Doc` elements, `Span` sentences, and `Token` objects.",
             "code_example": [
                 "from spacy_conll import init_parser",
                 "",
                 "",
                 "# Initialise English parser, already including the ConllFormatter as a pipeline component.",
                 "# Indicate that we want to get the CoNLL headers in the string output.",
-                "# `use_gpu` and `verbose` are specific to stanza (and stanfordnlp). These keywords arguments",
-                "# are passed onto their Pipeline() initialisation",
+                "# `use_gpu` and `verbose` are specific to stanza. These keywords arguments are passed onto their Pipeline() initialisation",
                 "nlp = init_parser(\"en\",",
                 "                  \"stanza\",",
                 "                  parser_opts={\"use_gpu\": True, \"verbose\": False},",
@@ -2435,7 +2434,7 @@
             },
             "github": "BramVanroy/spacy_conll",
             "category": ["standalone", "pipeline"],
-            "tags": ["linguistics", "computational linguistics", "conll"]
+            "tags": ["linguistics", "computational linguistics", "conll", "conll-u"]
         },
         {
             "id": "spacy-langdetect",
