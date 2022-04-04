@@ -233,7 +233,7 @@ also want to keep an eye on unused declared variables or repeated
 (i.e. overwritten) dictionary keys. If your code was formatted with `black`
 (see above), you shouldn't see any formatting-related warnings.
 
-The [`.flake8`](.flake8) config defines the configuration we use for this
+The `flake8` section in [`setup.cfg`](setup.cfg) defines the configuration we use for this
 codebase. For example, we're not super strict about the line length, and we're
 excluding very large files like lemmatization and tokenizer exception tables.
 
