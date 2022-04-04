@@ -400,7 +400,7 @@ class SpanCategorizer(TrainablePipe):
         # If the prediction is 0.9 and it's false, the gradient will be
         # 0.9 (0.9 - 0.0)
         d_scores = scores - target
-        loss = float((d_scores**2).sum())
+        loss = float((d_scores ** 2).sum())
         return loss, d_scores
 
     def initialize(
@@ -450,7 +450,9 @@ class SpanCategorizer(TrainablePipe):
             eg.reference.spans.get(self.key, []), allow_overlap=True
         )
 
-    def _ensure_gold_spans(self, docs: Iterable[Doc], suggester_spans: Ragged, ops: Optional[Ops] = None) -> Ragged:
+    def _ensure_gold_spans(
+        self, docs: Iterable[Doc], suggester_spans: Ragged, ops: Optional[Ops] = None
+    ) -> Ragged:
         """Ensure that all gold span indices are present in the spans list produced by the suggester
         docs (Iterable[Doc]]): Reference docs from example.reference
         spans (Ragged): Spans produced by the suggester
@@ -461,12 +463,12 @@ class SpanCategorizer(TrainablePipe):
             ops = get_current_ops()
         spans = []
         lengths = []
-        for reference_doc, suggester_doc in zip(docs,suggester_spans): # type: ignore
+        for reference_doc, suggester_doc in zip(docs, suggester_spans):  # type: ignore
             cache = set()
             length = 0
             for span in reference_doc.spans[self.key]:
-                spans.append((span.start,span.end))
-                cache.add((span.start,span.end))
+                spans.append((span.start, span.end))
+                cache.add((span.start, span.end))
                 length += 1
 
             for span in suggester_doc.dataXd:
@@ -478,9 +480,9 @@ class SpanCategorizer(TrainablePipe):
                     start = span[0]
                     end = span[1]
 
-                if (start,end) not in cache:
-                    spans.append((start,end))
-                    length += 1 
+                if (start, end) not in cache:
+                    spans.append((start, end))
+                    length += 1
             lengths.append(length)
 
         lengths_array = cast(Ints1d, ops.asarray(lengths, dtype="i"))

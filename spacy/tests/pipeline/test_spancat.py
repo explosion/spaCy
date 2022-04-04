@@ -420,6 +420,7 @@ def test_set_candidates():
     assert docs[0].spans["candidates"][0].text == "Just"
     assert docs[0].spans["candidates"][4].text == "Just a"
 
+
 def test_ensure_gold_spans():
     nlp = Language()
     spancat = nlp.add_pipe("spancat", config={"spans_key": SPAN_KEY})
@@ -430,12 +431,12 @@ def test_ensure_gold_spans():
     docs[0].spans[SPAN_KEY] = [docs[0][2:4]]
     docs[1].spans[SPAN_KEY] = [docs[1][2:5]]
 
-    suggester = registry.misc.get(
-        "spacy.ngram_range_suggester.v1"
-    )(min_size=1, max_size=1)
+    suggester = registry.misc.get("spacy.ngram_range_suggester.v1")(
+        min_size=1, max_size=1
+    )
 
     spans = suggester(docs)
-    gold_spans = spancat._ensure_gold_spans(docs,spans)
+    gold_spans = spancat._ensure_gold_spans(docs, spans)
 
     assert type(gold_spans) == Ragged
-    assert len(gold_spans.data) == len(spans.data)+2
+    assert len(gold_spans.data) == len(spans.data) + 2
