@@ -144,7 +144,7 @@ Changes to `.py` files will be effective immediately.
 
 When fixing a bug, first create an
 [issue](https://github.com/explosion/spaCy/issues) if one does not already
-exist.  The description text can be very short – we don't want to make this too
+exist. The description text can be very short – we don't want to make this too
 bureaucratic.
 
 Next, add a test to the relevant file in the
