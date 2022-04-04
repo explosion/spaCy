@@ -64,12 +64,12 @@ steps:
     displayName: "Run GPU tests"
     condition: eq(${{ parameters.gpu }}, true)
 
-#  - script: |
-#      python -m spacy download ca_core_news_sm
-#      python -m spacy download ca_core_news_md
-#      python -c "import spacy; nlp=spacy.load('ca_core_news_sm'); doc=nlp('test')"
-#    displayName: 'Test download CLI'
-#    condition: eq(variables['python_version'], '3.8')
+  - script: |
+      python -m spacy download ca_core_news_sm
+      python -m spacy download ca_core_news_md
+      python -c "import spacy; nlp=spacy.load('ca_core_news_sm'); doc=nlp('test')"
+    displayName: 'Test download CLI'
+    condition: eq(variables['python_version'], '3.8')
 
   - script: |
       python -m spacy convert extra/example_data/ner_example_data/ner-token-per-line-conll2003.json .
@@ -93,17 +93,17 @@ steps:
     displayName: 'Test train CLI'
     condition: eq(variables['python_version'], '3.8')
 
-#  - script: |
-#      python -c "import spacy; config = spacy.util.load_config('ner.cfg'); config['components']['ner'] = {'source': 'ca_core_news_sm'}; config.to_disk('ner_source_sm.cfg')"
-#      PYTHONWARNINGS="error,ignore::DeprecationWarning" python -m spacy assemble ner_source_sm.cfg output_dir
-#    displayName: 'Test assemble CLI'
-#    condition: eq(variables['python_version'], '3.8')
-#
-#  - script: |
-#      python -c "import spacy; config = spacy.util.load_config('ner.cfg'); config['components']['ner'] = {'source': 'ca_core_news_md'}; config.to_disk('ner_source_md.cfg')"
-#      python -m spacy assemble ner_source_md.cfg output_dir 2>&1 | grep -q W113
-#    displayName: 'Test assemble CLI vectors warning'
-#    condition: eq(variables['python_version'], '3.8')
+  - script: |
+      python -c "import spacy; config = spacy.util.load_config('ner.cfg'); config['components']['ner'] = {'source': 'ca_core_news_sm'}; config.to_disk('ner_source_sm.cfg')"
+      PYTHONWARNINGS="error,ignore::DeprecationWarning" python -m spacy assemble ner_source_sm.cfg output_dir
+    displayName: 'Test assemble CLI'
+    condition: eq(variables['python_version'], '3.8')
+
+  - script: |
+      python -c "import spacy; config = spacy.util.load_config('ner.cfg'); config['components']['ner'] = {'source': 'ca_core_news_md'}; config.to_disk('ner_source_md.cfg')"
+      python -m spacy assemble ner_source_md.cfg output_dir 2>&1 | grep -q W113
+    displayName: 'Test assemble CLI vectors warning'
+    condition: eq(variables['python_version'], '3.8')
 
   - script: |
       python .github/validate_universe_json.py website/meta/universe.json
