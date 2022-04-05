@@ -1036,7 +1036,7 @@
                 "doc = nlp('Die Dummheit der Unterwerfung blüht in hübschen Farben.')",
                 "",
                 "for token in doc:",
-                "    print('{}, {}, {}'.format(token.text, token..sentiws, token.pos))"
+                "    print('{}, {}, {}'.format(token.text, token..sentiws, token.pos_))"
             ],
             "author": "Matthias Liebeck",
             "author_links": {
