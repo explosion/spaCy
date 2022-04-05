@@ -77,10 +77,9 @@ def debug_diff(
     if user == other:
         msg.warn("No diff to show: configs are identical")
     else:
-        diff_text = diff_strings(other, user, add_symbols=True)
+        diff_text = diff_strings(other, user, add_symbols=markdown)
         if markdown:
             md = MarkdownRenderer()
-            md.add(md.title("Config Diff"))
             md.add(md.code_block(diff_text, "diff"))
             print(md.text)
         else:
