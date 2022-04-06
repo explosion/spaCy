@@ -628,11 +628,11 @@ will not be available.
 
 ### debug diff-config {#debug-diff tag="command"}
 
-Show a diff of a config file with respect to spaCy's defaults or another config file. If
-additional settings were used in the creation of the config file, then you
-must supply these as extra parameters to the command when comparing to the default settings. The generated diff
-can also be used when posting to the discussion forum to provide more
-information for the maintainers.
+Show a diff of a config file with respect to spaCy's defaults or another config
+file. If additional settings were used in the creation of the config file, then
+you must supply these as extra parameters to the command when comparing to the
+default settings. The generated diff can also be used when posting to the
+discussion forum to provide more information for the maintainers.
 
 ```cli
 $ python -m spacy debug diff-config [config_path] [--compare-to] [--optimize] [--gpu] [--pretraining] [--markdown]
@@ -842,20 +842,18 @@ after_init = null
 
 [initialize.tokenizer]
 ```
+
 </Accordion>
 
-
-| Name                 | Description                                                                                                                                                                                                                                        |
-|----------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `config_path`        | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters. ~~Union[Path, str] \(positional)~~                                                                                                            |
-| `compare_to`         | Path to another config file to diff against, or `None` to compare against default settings. ~~Optional[Union[Path, str] \(option)~~                                                                                                                                                                |
+| Name                 | Description                                                                                                                                                                                                                                                                                               |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `config_path`        | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters. ~~Union[Path, str] \(positional)~~                                                                                                                                                                  |
+| `compare_to`         | Path to another config file to diff against, or `None` to compare against default settings. ~~Optional[Union[Path, str] \(option)~~                                                                                                                                                                       |
 | `optimize`, `-o`     | `"efficiency"` or `"accuracy"`. Whether the config was optimized for efficiency (faster inference, smaller model, lower memory consumption) or higher accuracy (potentially larger and slower model). Only relevant when comparing against a default config. Defaults to `"efficiency"`. ~~str (option)~~ |
 | `gpu`, `-G`          | Whether the config was made to run on a GPU. Only relevant when comparing against a default config. ~~bool (flag)~~                                                                                                                                                                                       |
 | `pretraining`, `-pt` | Include config for pretraining (with [`spacy pretrain`](/api/cli#pretrain)). Only relevant when comparing against a default config. Defaults to `False`. ~~bool (flag)~~                                                                                                                                  |
-| `markdown`, `-md` | Generate Markdown for Github issues. Defaults to `False`. ~~bool (flag)~~                                                                                                                                  |
-| **PRINTS**           | Diff between the two config files.                                                                                                                                                                                                                  |
-
-
+| `markdown`, `-md`    | Generate Markdown for Github issues. Defaults to `False`. ~~bool (flag)~~                                                                                                                                                                                                                                 |
+| **PRINTS**           | Diff between the two config files.                                                                                                                                                                                                                                                                        |
 
 ### debug profile {#debug-profile tag="command"}
 
