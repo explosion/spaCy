@@ -11,7 +11,7 @@ from .init_config import init_config, Optimizations
 
 
 @debug_cli.command(
-    "diff",
+    "diff-config",
     context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
 )
 def debug_diff_cli(

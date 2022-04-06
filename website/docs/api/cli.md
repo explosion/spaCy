@@ -626,7 +626,7 @@ will not be available.
 | overrides                  | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--paths.train ./train.spacy`. ~~Any (option/flag)~~                         |
 | **PRINTS**                 | Debugging information.                                                                                                                                                                                             |
 
-### debug diff {#debug-diff tag="command"}
+### debug diff-config {#debug-diff tag="command"}
 
 Show a diff of a config file with respect to spaCy's defaults or another config file. If
 additional settings were used in the creation of the config file, then you
@@ -635,13 +635,13 @@ can also be used when posting to the discussion forum to provide more
 information for the maintainers.
 
 ```cli
-$ python -m spacy debug diff [config_path] [--compare-to] [--optimize] [--gpu] [--pretraining] [--markdown]
+$ python -m spacy debug diff-config [config_path] [--compare-to] [--optimize] [--gpu] [--pretraining] [--markdown]
 ```
 
 > #### Example
 >
 > ```cli
-> $ python -m spacy debug diff ./config.cfg
+> $ python -m spacy debug diff-config ./config.cfg
 > ```
 
 <Accordion title="Example output" spaced>
