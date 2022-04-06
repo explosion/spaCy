@@ -90,17 +90,16 @@ Main changes from spaCy v2 models:
 In the `sm`/`md`/`lg` models:
 
 - The `tagger`, `morphologizer` and `parser` components listen to the `tok2vec`
-  component.
+  component. If the lemmatizer is trainable (v3.3+), `lemmatizer` also listens
+  to `tok2vec`.
 - The `attribute_ruler` maps `token.tag` to `token.pos` if there is no
   `morphologizer`. The `attribute_ruler` additionally makes sure whitespace is
   tagged consistently and copies `token.pos` to `token.tag` if there is no
   tagger. For English, the attribute ruler can improve its mapping from
   `token.tag` to `token.pos` if dependency parses from a `parser` are present,
   but the parser is not required.
-- The `lemmatizer` component for many languages (Catalan, Dutch, English,
-  French, Greek, Italian Macedonian, Norwegian, Polish and Spanish) requires
-  `token.pos` annotation from either `tagger`+`attribute_ruler` or
-  `morphologizer`.
+- The `lemmatizer` component for many languages requires `token.pos` annotation
+  from either `tagger`+`attribute_ruler` or `morphologizer`.
 - The `ner` component is independent with its own internal tok2vec layer.
 
 ### Transformer pipeline design {#design-trf}
@@ -133,10 +132,14 @@ nlp = spacy.load("en_core_web_trf", disable=["tagger", "attribute_ruler", "lemma
 <Infobox variant="warning" title="Rule-based and POS-lookup lemmatizers require
 Token.pos">
 
-The lemmatizer depends on `tagger`+`attribute_ruler` or `morphologizer` for
-Catalan, Dutch, English, French, Greek, Italian, Macedonian, Norwegian, Polish
-and Spanish. If you disable any of these components, you'll see lemmatizer
-warnings unless the lemmatizer is also disabled.
+The lemmatizer depends on `tagger`+`attribute_ruler` or `morphologizer` for a
+number of languages. If you disable any of these components, you'll see
+lemmatizer warnings unless the lemmatizer is also disabled.
+
+**v3.3**: Catalan, English, French, Russian and Spanish
+
+**v3.0-v3.2**: Catalan, Dutch, English, French, Greek, Italian, Macedonian,
+Norwegian, Polish, Russian and Spanish
 
 </Infobox>
 
@@ -154,10 +157,31 @@ nlp.enable_pipe("senter")
 The `senter` component is ~10&times; faster than the parser and more accurate
 than the rule-based `sentencizer`.
 
+#### Switch from trainable lemmatizer to default lemmatizer
+
+A number of v3.3 pipelines use a new trainable lemmatizer. You can check whether
+the lemmatizer is trainable:
+
+```python
+nlp = spacy.load("de_core_web_sm")
+assert nlp.get_pipe("lemmatizer").is_trainable
+```
+
+If you'd like to switch to a non-trainable lemmatizer that's similar to a v3.2
+or earlier, you can replace the trainable lemmatizer with the default
+non-trainable lemmatizer:
+
+```python
+# Requirements: pip install spacy-lookups-data
+nlp = spacy.load("de_core_web_sm")
+nlp.remove_pipe("lemmatizer")
+nlp.add_pipe("lemmatizer").initialize()
+```
+
 #### Switch from rule-based to lookup lemmatization
 
 For the Dutch, English, French, Greek, Macedonian, Norwegian and Spanish
-pipelines, you can switch from the default rule-based lemmatizer to a lookup
+pipelines, you can swap out a trainable or rule-based lemmatizer for a lookup
 lemmatizer:
 
 ```python
