@@ -30,10 +30,16 @@ into three components:
    tagging, parsing, lemmatization and named entity recognition, or `dep` for
    only tagging, parsing and lemmatization).
 2. **Genre:** Type of text the pipeline is trained on, e.g. `web` or `news`.
-3. **Size:** Package size indicator, `sm`, `md`, `lg` or `trf` (`sm`: no word
-   vectors, `md`: reduced word vector table with 20k unique vectors for ~500k
-   words, `lg`: large word vector table with ~500k entries, `trf`: transformer
-   pipeline without static word vectors)
+3. **Size:** Package size indicator, `sm`, `md`, `lg` or `trf`.
+
+   `sm` and `trf` pipelines have no static word vectors.
+
+   For pipelines with default vectors, `md` has a reduced word vector table with
+   20k unique vectors for ~500k words and `lg` has a large word vector table
+   with ~500k entries.
+
+   For pipelines with floret vectors, `md` vector tables have 50k entries and
+   `lg` vector tables have 200k entries.
 
 For example, [`en_core_web_sm`](/models/en#en_core_web_sm) is a small English
 pipeline trained on written web text (blogs, news, comments), that includes
@@ -102,6 +108,30 @@ In the `sm`/`md`/`lg` models:
   from either `tagger`+`attribute_ruler` or `morphologizer`.
 - The `ner` component is independent with its own internal tok2vec layer.
 
+#### CNN/CPU pipelines with floret vectors
+
+The Finnish, Korean and Swedish `md` and `lg` pipelines use
+[floret vectors](/usage/v3-2#vectors) instead of default vectors. If you're
+running a trained pipeline on texts and working with [`Doc`](/api/doc) objects,
+you shouldn't notice any difference with floret vectors. With floret vectors no
+tokens are out-of-vocabulary, so [`Token.is_oov`](/api/token#attributes) will
+return `True` for all tokens.
+
+If you access vectors directly for similarity comparisons, there are a few
+differences because floret vectors don't include a fixed word list like the
+vector keys for default vectors.
+
+- If your workflow iterates over the vector keys, you need to use an external
+  word list instead:
+
+  ```diff
+  - lexemes = [nlp.vocab[orth] for orth in nlp.vocab.vectors]
+  + lexemes = [nlp.vocab[word] for word in external_word_list]
+  ```
+
+- [`Vectors.most_similar`](/api/vectors#most_similar) is not supported because
+  there's no fixed list of vectors to compare your vectors to.
+
 ### Transformer pipeline design {#design-trf}
 
 In the transformer (`trf`) models, the `tagger`, `parser` and `ner` (if present)
@@ -167,9 +197,9 @@ nlp = spacy.load("de_core_web_sm")
 assert nlp.get_pipe("lemmatizer").is_trainable
 ```
 
-If you'd like to switch to a non-trainable lemmatizer that's similar to a v3.2
-or earlier, you can replace the trainable lemmatizer with the default
-non-trainable lemmatizer:
+If you'd like to switch to a non-trainable lemmatizer that's similar to v3.2 or
+earlier, you can replace the trainable lemmatizer with the default non-trainable
+lemmatizer:
 
 ```python
 # Requirements: pip install spacy-lookups-data
