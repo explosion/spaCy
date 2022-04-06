@@ -177,7 +177,16 @@ def test_ta_tokenizer_basic(ta_tokenizer, text, expected_tokens):
     ],
 )
 def test_ta_tokenizer_special_case(ta_tokenizer, text, expected_tokens):
+    # Add a special rule to tokenize the initialism "யு.கே." (U.K., as
+    # in the country) as a single token.
+
+    # This modifies the global fixture instance of the tokenizer, meaning
+    # that the change will persist until the end of the active pytest
+    # session. However, given the scope of this change, it should not cause
+    # any side-effects in any of the other tokenizer tests for this language.
+
     ta_tokenizer.add_special_case("யு.கே.", [{ORTH: "யு.கே."}])
+
     tokens = ta_tokenizer(text)
-    token_list = [token.text for token in tokens if not token.is_space]
+    token_list = [token.text for token in tokens]
     assert expected_tokens == token_list
