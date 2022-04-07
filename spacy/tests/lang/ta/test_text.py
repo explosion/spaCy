@@ -21,5 +21,5 @@ def test_ta_sentencizer(text, num_sents):
     nlp = Tamil()
     nlp.add_pipe("sentencizer")
 
-    doc = next(nlp.pipe([text]))
+    doc = nlp(text)
     assert len(list(doc.sents)) == num_sents
