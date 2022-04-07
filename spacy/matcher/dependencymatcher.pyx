@@ -82,10 +82,10 @@ cdef class DependencyMatcher:
             "$-": self._imm_left_sib,
             "$++": self._right_sib,
             "$--": self._left_sib,
-            ">.*": self._right_child,
-            ">;*": self._left_child,
-            "<.*": self._right_parent,
-            "<;*": self._left_parent,
+            ">++": self._right_child,
+            ">--": self._left_child,
+            "<++": self._right_parent,
+            "<--": self._left_parent,
         }
 
     def __reduce__(self):
@@ -434,16 +434,12 @@ cdef class DependencyMatcher:
         return [doc[child.i] for child in doc[node].children if child.i < node]
 
     def _right_parent(self, doc, node):
-        if doc[node].head == doc[node]:
-            return []
-        elif doc[node].head.i > node:
+        if doc[node].head.i > node:
             return [doc[node].head]
         return []
     
     def _left_parent(self, doc, node):
-        if doc[node].head == doc[node]:
-            return []
-        elif doc[node].head.i < node:
+        if doc[node].head.i < node:
             return [doc[node].head]
         return []
 
