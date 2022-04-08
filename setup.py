@@ -42,6 +42,7 @@ MOD_NAMES = [
     "spacy.pipeline.tagger",
     "spacy.pipeline.transition_parser",
     "spacy.pipeline._parser_internals.arc_eager",
+    "spacy.pipeline._parser_internals.batch",
     "spacy.pipeline._parser_internals.ner",
     "spacy.pipeline._parser_internals.nonproj",
     "spacy.pipeline._parser_internals._state",
