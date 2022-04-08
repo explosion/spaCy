@@ -5,6 +5,7 @@ new: 2
 menu:
   - ['Dependencies', 'dep']
   - ['Named Entities', 'ent']
+  - ['Spans', 'span']
   - ['Jupyter Notebooks', 'jupyter']
   - ['Rendering HTML', 'html']
   - ['Web app usage', 'webapp']
