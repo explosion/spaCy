@@ -2705,6 +2705,66 @@
             "spacy_version": 3
         },
         {
+            "id": "crosslingualcoreference",
+            "title": "Crosslingual Coreference",
+            "slogan": "One multi-lingual coreference model to rule them all!",
+            "description": "Coreference is amazing but the data required for training a model is very scarce. In our case, the available training for non-English languages also data proved to be poorly annotated. Crosslingual Coreference therefore uses the assumption a trained model with English data and cross-lingual embeddings should work for other languages with similar sentence structure. Verified to work quite well for at least (EN, NL, DK, FR, DE).",
+            "github": "pandora-intelligence/crosslingual-coreference",
+            "pip": "crosslingual-coreference",
+            "thumb": "https://raw.githubusercontent.com/Pandora-Intelligence/crosslingual-coreference/master/img/logo.png",
+            "image": "https://raw.githubusercontent.com/Pandora-Intelligence/crosslingual-coreference/master/img/example_total.png",
+            "code_example": [
+                "import spacy",
+                "import crosslingual_coreference",
+                "",
+                "text = \"\"\"",
+                "    Do not forget about Momofuku Ando!",
+                "    He created instant noodles in Osaka.",
+                "    At that location, Nissin was founded.",
+                "    Many students survived by eating these noodles, but they don't even know him.\"\"\"",
+                "",
+                "# use any model that has internal spacy embeddings", 
+                "nlp = spacy.load('en_core_web_sm')",
+                "nlp.add_pipe(",
+                "    \"xx_coref\", config={\"chunk_size\": 2500, \"chunk_overlap\": 2, \"device\": 0})",
+                ")",
+                "",
+                "doc = nlp(text)",
+                "",
+                "print(doc._.coref_clusters)",
+                "# Output",
+                "#",
+                "# [[[4, 5], [7, 7], [27, 27], [36, 36]],",
+                "# [[12, 12], [15, 16]],",
+                "# [[9, 10], [27, 28]],",
+                "# [[22, 23], [31, 31]]]",
+                "print(doc._.resolved_text)",
+                "# Output",
+                "#",
+                "# Do not forget about Momofuku Ando!",
+                "# Momofuku Ando created instant noodles in Osaka.",
+                "# At Osaka, Nissin was founded.",
+                "# Many students survived by eating instant noodles,",
+                "# but Many students don't even know Momofuku Ando."
+            ],
+            "author": "David Berenstein",
+            "author_links": {
+                "github": "davidberenstein1957",
+                "website": "https://www.linkedin.com/in/david-berenstein-1bab11105/"
+            },
+            "category": [
+                "pipeline",
+                "standalone"
+            ],
+            "tags": [
+                "coreference",
+                "multi-lingual",
+                "cross-lingual",
+                "allennlp"
+            ],
+            "spacy_version": 3
+        },
+        {
             "id": "blackstone",
             "title": "Blackstone",
             "slogan": "A spaCy pipeline and model for NLP on unstructured legal text",
