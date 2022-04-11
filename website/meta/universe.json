@@ -1503,17 +1503,6 @@
             "category": ["nonpython"]
         },
         {
-            "id": "spaCy.jl",
-            "slogan": "Julia interface for spaCy (work in progress)",
-            "github": "jekbradbury/SpaCy.jl",
-            "author": "James Bradbury",
-            "author_links": {
-                "github": "jekbradbury",
-                "twitter": "jekbradbury"
-            },
-            "category": ["nonpython"]
-        },
-        {
             "id": "ruby-spacy",
             "title": "ruby-spacy",
             "slogan": "Wrapper module for using spaCy from Ruby via PyCall",
