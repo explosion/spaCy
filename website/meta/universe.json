@@ -2194,30 +2194,6 @@
             "category": ["research", "pipeline"]
         },
         {
-            "id": "excelcy",
-            "title": "ExcelCy",
-            "slogan": "Excel Integration with spaCy. Training NER using XLSX from PDF, DOCX, PPT, PNG or JPG.",
-            "description": "ExcelCy is a toolkit to integrate Excel to spaCy NLP training experiences. Training NER using XLSX from PDF, DOCX, PPT, PNG or JPG. ExcelCy has pipeline to match Entity with PhraseMatcher or Matcher in regular expression.",
-            "url": "https://github.com/kororo/excelcy",
-            "github": "kororo/excelcy",
-            "pip": "excelcy",
-            "code_example": [
-                "from excelcy import ExcelCy",
-                "# collect sentences, annotate Entities and train NER using spaCy",
-                "excelcy = ExcelCy.execute(file_path='https://github.com/kororo/excelcy/raw/master/tests/data/test_data_01.xlsx')",
-                "# use the nlp object as per spaCy API",
-                "doc = excelcy.nlp('Google rebrands its business apps')",
-                "# or save it for faster bootstrap for application",
-                "excelcy.nlp.to_disk('/model')"
-            ],
-            "author": "Robertus Johansyah",
-            "author_links": {
-                "github": "kororo"
-            },
-            "category": ["training"],
-            "tags": ["excel"]
-        },
-        {
             "id": "spacy-graphql",
             "title": "spacy-graphql",
             "slogan": "Query spaCy's linguistic annotations using GraphQL",
