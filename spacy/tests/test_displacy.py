@@ -97,7 +97,7 @@ def test_issue5447():
         {"start": 0, "end": 1, "label": "nsubj", "dir": "left"},
         {"start": 2, "end": 3, "label": "det", "dir": "left"},
         {"start": 2, "end": 3, "label": "overlap", "dir": "left"},
-        {"start": 2, "end": 3, "label": "overlap", "dir": "left"},
+        {"end": 3, "label": "overlap", "start": 2, "dir": "left"},
         {"start": 1, "end": 3, "label": "attr", "dir": "left"},
     ]
     renderer.render([{"words": words, "arcs": arcs}])
