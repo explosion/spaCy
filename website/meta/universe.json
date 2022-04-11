@@ -1555,21 +1555,6 @@
             "category": ["apis"]
         },
         {
-            "id": "languagecrunch",
-            "slogan": "NLP server for spaCy, WordNet and NeuralCoref as a Docker image",
-            "github": "artpar/languagecrunch",
-            "code_example": [
-                "docker run -it -p 8080:8080 artpar/languagecrunch",
-                "curl http://localhost:8080/nlp/parse?`echo -n \"The new twitter is so weird. Seriously. Why is there a new twitter? What was wrong with the old one? Fix it now.\" | python -c \"import urllib, sys; print(urllib.urlencode({'sentence': sys.stdin.read()}))\"`"
-            ],
-            "code_language": "bash",
-            "author": "Parth Mudgal",
-            "author_links": {
-                "github": "artpar"
-            },
-            "category": ["apis"]
-        },
-        {
             "id": "spacy-nlp",
             "slogan": " Expose spaCy NLP text parsing to Node.js (and other languages) via Socket.IO",
             "github": "kengz/spacy-nlp",
