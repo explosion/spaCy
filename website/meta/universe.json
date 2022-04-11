@@ -1077,29 +1077,6 @@
             "tags": ["pipeline", "readability", "syntactic complexity", "descriptive statistics"]
         },
         {
-            "id": "wmd-relax",
-            "slogan": "Calculates word mover's distance insanely fast",
-            "description": "Calculates Word Mover's Distance as described in [From Word Embeddings To Document Distances](http://www.cs.cornell.edu/~kilian/papers/wmd_metric.pdf) by Matt Kusner, Yu Sun, Nicholas Kolkin and Kilian Weinberger.\n\n⚠️ **This package is currently only compatible with spaCy v.1x.**",
-            "github": "src-d/wmd-relax",
-            "thumb": "https://i.imgur.com/f91C3Lf.jpg",
-            "code_example": [
-                "import spacy",
-                "import wmd",
-                "",
-                "nlp = spacy.load('en', create_pipeline=wmd.WMD.create_spacy_pipeline)",
-                "doc1 = nlp(\"Politician speaks to the media in Illinois.\")",
-                "doc2 = nlp(\"The president greets the press in Chicago.\")",
-                "print(doc1.similarity(doc2))"
-            ],
-            "author": "source{d}",
-            "author_links": {
-                "github": "src-d",
-                "twitter": "sourcedtech",
-                "website": "https://sourced.tech"
-            },
-            "category": ["pipeline"]
-        },
-        {
             "id": "neuralcoref",
             "slogan": "State-of-the-art coreference resolution based on neural nets and spaCy",
             "description": "This coreference resolution module is based on the super fast [spaCy](https://spacy.io/) parser and uses the neural net scoring model described in [Deep Reinforcement Learning for Mention-Ranking Coreference Models](http://cs.stanford.edu/people/kevclark/resources/clark-manning-emnlp2016-deep.pdf) by Kevin Clark and Christopher D. Manning, EMNLP 2016. Since ✨Neuralcoref v2.0, you can train the coreference resolution system on your own dataset — e.g., another language than English! — **provided you have an annotated dataset**. Note that to use neuralcoref with spaCy > 2.1.0, you'll have to install neuralcoref from source.",
