@@ -21,13 +21,13 @@ cdef class SpanGroup:
         >>> doc.spans["errors"] = SpanGroup(
             doc,
             name="errors",
-            spans=[doc[0:1], doc[2:4]],
+            spans=[doc[0:1], doc[1:3]],
             attrs={"annotator": "matt"}
         )
 
         Construction 2
         >>> doc = nlp("Their goi ng home")
-        >>> doc.spans["errors"] = [doc[0:1], doc[2:4]]
+        >>> doc.spans["errors"] = [doc[0:1], doc[1:3]]
         >>> assert isinstance(doc.spans["errors"], SpanGroup)
 
     DOCS: https://spacy.io/api/spangroup

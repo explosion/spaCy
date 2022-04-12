@@ -585,7 +585,7 @@ objects or a [`SpanGroup`](/api/spangroup) to a given key.
 >
 > ```python
 > doc = nlp("Their goi ng home")
-> doc.spans["errors"] = [doc[0:1], doc[2:4]]
+> doc.spans["errors"] = [doc[0:1], doc[1:3]]
 > ```
 
 | Name        | Description                                                        |
