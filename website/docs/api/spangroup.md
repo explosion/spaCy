@@ -78,7 +78,7 @@ Check whether the span group contains overlapping spans.
 > doc = nlp("Their goi ng home")
 > doc.spans["errors"] = [doc[0:1], doc[2:4]]
 > assert not doc.spans["errors"].has_overlap
-> doc.spans["errors"].append(doc[1:2])
+> doc.spans["errors"].append(doc[1:3])
 > assert doc.spans["errors"].has_overlap
 > ```
 
@@ -113,11 +113,11 @@ changes to be reflected in the span group.
 >
 > ```python
 > doc = nlp("Their goi ng home")
-> doc.spans["errors"] = [doc[0:1], doc[2:4]]
+> doc.spans["errors"] = [doc[0:1], doc[1:3]]
 > span = doc.spans["errors"][1]
 > assert span.text == "goi ng"
 > span.label_ = 'LABEL'
-> assert doc.spans["errors"][1] != 'LABEL' # The span within the group was not updated
+> assert doc.spans["errors"][1].label_ != 'LABEL' # The span within the group was not updated
 > ```
 
 | Name        | Description                           |
