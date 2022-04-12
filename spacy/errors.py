@@ -197,8 +197,8 @@ class Warnings(metaclass=ErrorsWithCodes):
             "that supports span categorization, and check the `doc.spans[spans_key]` "
             "property manually if necessary.")
     W118 = ("Term '{term}' not found in glossary. It may however be explained in documentation "
-            "for the corpora used to train the language. Please examine the contents of "
-            "`nlp.meta[\"sources\"]` where such documentation may be linked.")
+            "for the corpora used to train the language. Please check "
+            "`nlp.meta[\"sources\"]` for any relevant links.")
 
 
 class Errors(metaclass=ErrorsWithCodes):
