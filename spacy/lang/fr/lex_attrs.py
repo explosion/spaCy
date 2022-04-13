@@ -3,7 +3,7 @@ from ...attrs import LIKE_NUM
 
 _num_words = set(
     """
-zero un deux trois quatre cinq six sept huit neuf dix
+zero un une deux trois quatre cinq six sept huit neuf dix
 onze douze treize quatorze quinze seize dix-sept dix-huit dix-neuf
 vingt trente quarante cinquante soixante soixante-dix septante quatre-vingt huitante quatre-vingt-dix nonante
 cent mille mil million milliard billion quadrillion quintillion
