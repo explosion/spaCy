@@ -3,7 +3,7 @@ import warnings
 
 from thinc.types import Floats2d, Floats3d, Ints2d
 from thinc.api import Model, Config, Optimizer, CategoricalCrossentropy
-from thinc.api import set_dropout_rate
+from thinc.api import set_dropout_rate, to_categorical
 from itertools import islice
 from statistics import mean
 
@@ -130,7 +130,6 @@ class CoreferenceResolver(TrainablePipe):
 
         DOCS: https://spacy.io/api/coref#predict (TODO)
         """
-        #print("DOCS", docs)
         out = []
         for doc in docs:
             scores, idxs = self.model.predict([doc])
@@ -212,7 +211,6 @@ class CoreferenceResolver(TrainablePipe):
             # TODO check this causes no issues (in practice it runs)
             preds, backprop = self.model.begin_update([eg.predicted])
             score_matrix, mention_idx = preds
-
             loss, d_scores = self.get_loss([eg], score_matrix, mention_idx)
             total_loss += loss
             # TODO check shape here
@@ -366,9 +364,7 @@ class CoreferenceResolver(TrainablePipe):
             for ex in examples:
                 p_clusters = doc2clusters(ex.predicted, self.span_cluster_prefix)
                 g_clusters = doc2clusters(ex.reference, self.span_cluster_prefix)
-
                 cluster_info = get_cluster_info(p_clusters, g_clusters)
-
                 evaluator.update(cluster_info)
 
             score = {
@@ -460,27 +456,29 @@ class SpanPredictor(TrainablePipe):
         out = []
         for doc in docs:
             # TODO check shape here
-            span_scores = self.model.predict(doc)
-            span_scores = span_scores[0]
-            # the information about clustering has to come from the input docs
-            # first let's convert the scores to a list of span idxs
-            start_scores = span_scores[:, :, 0]
-            end_scores = span_scores[:, :, 1]
-            starts = start_scores.argmax(axis=1)
-            ends = end_scores.argmax(axis=1)
+            span_scores = self.model.predict([doc])
+            if span_scores.size:
+                # the information about clustering has to come from the input docs
+                # first let's convert the scores to a list of span idxs
+                start_scores = span_scores[:, :, 0]
+                end_scores = span_scores[:, :, 1]
+                starts = start_scores.argmax(axis=1)
+                ends = end_scores.argmax(axis=1)
 
-            # TODO check start < end
+                # TODO check start < end
 
-            # get the old clusters (shape will be preserved)
-            clusters = doc2clusters(doc, self.input_prefix)
-            cidx = 0
-            out_clusters = []
-            for cluster in clusters:
-                ncluster = []
-                for mention in cluster:
-                    ncluster.append( (starts[cidx], ends[cidx]) )
-                    cidx += 1
-                out_clusters.append(ncluster)
+                # get the old clusters (shape will be preserved)
+                clusters = doc2clusters(doc, self.input_prefix)
+                cidx = 0
+                out_clusters = []
+                for cluster in clusters:
+                    ncluster = []
+                    for mention in cluster:
+                        ncluster.append((starts[cidx], ends[cidx]))
+                        cidx += 1
+                    out_clusters.append(ncluster)
+            else:
+                out_clusters = []
             out.append(out_clusters)
         return out
 
@@ -505,21 +503,21 @@ class SpanPredictor(TrainablePipe):
             losses = {}
         losses.setdefault(self.name, 0.0)
         validate_examples(examples, "SpanPredictor.update")
-        if not any(len(eg.predicted) if eg.predicted else 0 for eg in examples):
+        if not any(len(eg.reference) if eg.reference else 0 for eg in examples):
             # Handle cases where there are no tokens in any docs.
             return losses
         set_dropout_rate(self.model, drop)
 
         total_loss = 0
-
         for eg in examples:
-            preds, backprop = self.model.begin_update([eg.predicted])
-            score_matrix, mention_idx = preds
-
-            loss, d_scores = self.get_loss([eg], score_matrix, mention_idx)
-            total_loss += loss
-            # TODO check shape here
-            backprop((d_scores, mention_idx))
+            span_scores, backprop = self.model.begin_update([eg.predicted])
+            # FIXME, this only happens once in the first 1000 docs of OntoNotes
+            # and I'm not sure yet why.
+            if span_scores.size:
+                loss, d_scores = self.get_loss([eg], span_scores)
+                total_loss += loss
+                # TODO check shape here
+                backprop((d_scores))
 
         if sgd is not None:
             self.finish_update(sgd)
@@ -562,19 +560,17 @@ class SpanPredictor(TrainablePipe):
         assert len(examples) == 1, "Only fake batching is supported."
         # starts and ends are gold starts and ends (Ints1d)
         # span_scores is a Floats3d. What are the axes? mention x token x start/end
-
         for eg in examples:
-
-            # get gold data
-            gold = doc2clusters(eg.reference, self.output_prefix)
-            # flatten the gold data
             starts = []
             ends = []
-            for cluster in gold:
-                for mention in cluster:
-                    starts.append(mention[0])
-                    ends.append(mention[1])
+            for key, sg in eg.reference.spans.items():
+                if key.startswith(self.output_prefix):
+                    for mention in sg:
+                        starts.append(mention.start)
+                        ends.append(mention.end)
 
+            starts = self.model.ops.xp.asarray(starts)
+            ends = self.model.ops.xp.asarray(ends)
             start_scores = span_scores[:, :, 0]
             end_scores = span_scores[:, :, 1]
             n_classes = start_scores.shape[1]
@@ -594,7 +590,7 @@ class SpanPredictor(TrainablePipe):
         *,
         nlp: Optional[Language] = None,
     ) -> None:
-        validate_get_examples(get_examples, "CoreferenceResolver.initialize")
+        validate_get_examples(get_examples, "SpanPredictor.initialize")
 
         X = []
         Y = []
@@ -612,31 +608,33 @@ class SpanPredictor(TrainablePipe):
         self.model.initialize(X=X, Y=Y)
 
     def score(self, examples, **kwargs):
-        """Score a batch of examples."""
-        # TODO This is basically the same as the main coref component - factor out?
-
+        """
+        Evaluate on reconstructing the correct spans around
+        gold heads.
+        """
         scores = []
-        for metric in (b_cubed, muc, ceafe):
-            evaluator = Evaluator(metric)
+        xp = self.model.ops.xp
+        for eg in examples:
+            starts = []
+            ends = []
+            pred_starts = []
+            pred_ends = []
+            ref = eg.reference
+            pred = eg.predicted
+            for key, gold_sg in ref.spans.items():
+                if key.startswith(self.output_prefix):
+                    pred_sg = pred.spans[key]
+                    for gold_mention, pred_mention in zip(gold_sg, pred_sg):
+                        starts.append(gold_mention.start)
+                        ends.append(gold_mention.end)
+                        pred_starts.append(pred_mention.start)
+                        pred_ends.append(pred_mention.end)
 
-            for ex in examples:
-                # XXX this is the only different part
-                p_clusters = doc2clusters(ex.predicted, self.output_prefix)
-                g_clusters = doc2clusters(ex.reference, self.output_prefix)
-
-                cluster_info = get_cluster_info(p_clusters, g_clusters)
-
-                evaluator.update(cluster_info)
-
-            score = {
-                "coref_f": evaluator.get_f1(),
-                "coref_p": evaluator.get_precision(),
-                "coref_r": evaluator.get_recall(),
-            }
-            scores.append(score)
-
-        out = {}
-        for field in ("f", "p", "r"):
-            fname = f"coref_{field}"
-            out[fname] = mean([ss[fname] for ss in scores])
-        return out
+            starts = xp.asarray(starts)
+            ends = xp.asarray(ends)
+            pred_starts = xp.asarray(pred_starts)
+            pred_ends = xp.asarray(pred_ends)
+            correct = (starts == pred_starts) * (ends == pred_ends)
+            accuracy = correct.mean()
+            scores.append(float(accuracy))
+        return {"span_accuracy": mean(scores)}
