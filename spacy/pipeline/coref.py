@@ -415,7 +415,7 @@ DEFAULT_SPAN_PREDICTOR_MODEL = Config().from_str(default_span_predictor_config)[
             "input_prefix": "coref_head_clusters",
             "output_prefix": "coref_clusters",
             },
-    default_score_weights={"span_predictor_f": 1.0, "span_predictor_p": None, "span_predictor_r": None},
+    default_score_weights={"span_accuracy": 1.0},
     )
 def make_span_predictor(
         nlp: Language,
