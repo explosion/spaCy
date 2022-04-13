@@ -25,7 +25,7 @@ from ..ml.models.coref_util import (
     doc2clusters,
 )
 
-from ..coref_scorer import Evaluator, get_cluster_info, b_cubed, muc, ceafe
+from ..coref_scorer import Evaluator, get_cluster_info, lea
 
 
 default_config = """
@@ -349,36 +349,30 @@ class CoreferenceResolver(TrainablePipe):
         assert len(X) > 0, Errors.E923.format(name=self.name)
         self.model.initialize(X=X, Y=Y)
 
-    # TODO This mirrors the evaluation used in prior work, but we don't want to
-    # include this in the final release. The metrics all have fundamental
-    # issues and the current implementation requires scipy.
     def score(self, examples, **kwargs):
-        """Score a batch of examples."""
+        """Score a batch of examples using LEA.
 
-        # NOTE traditionally coref uses the average of b_cubed, muc, and ceaf.
-        # we need to handle the average ourselves.
-        scores = []
-        for metric in (b_cubed, muc, ceafe):
-            evaluator = Evaluator(metric)
+        For details on how LEA works and why to use it see the paper:
 
-            for ex in examples:
-                p_clusters = doc2clusters(ex.predicted, self.span_cluster_prefix)
-                g_clusters = doc2clusters(ex.reference, self.span_cluster_prefix)
-                cluster_info = get_cluster_info(p_clusters, g_clusters)
-                evaluator.update(cluster_info)
+        Which Coreference Evaluation Metric Do You Trust? A Proposal for a Link-based Entity Aware Metric
+        Moosavi and Strube, 2016
+        https://api.semanticscholar.org/CorpusID:17606580
+        """
 
-            score = {
-                "coref_f": evaluator.get_f1(),
-                "coref_p": evaluator.get_precision(),
-                "coref_r": evaluator.get_recall(),
-            }
-            scores.append(score)
+        evaluator = Evaluator(lea)
 
-        out = {}
-        for field in ("f", "p", "r"):
-            fname = f"coref_{field}"
-            out[fname] = mean([ss[fname] for ss in scores])
-        return out
+        for ex in examples:
+            p_clusters = doc2clusters(ex.predicted, self.span_cluster_prefix)
+            g_clusters = doc2clusters(ex.reference, self.span_cluster_prefix)
+            cluster_info = get_cluster_info(p_clusters, g_clusters)
+            evaluator.update(cluster_info)
+
+        score = {
+            "coref_f": evaluator.get_f1(),
+            "coref_p": evaluator.get_precision(),
+            "coref_r": evaluator.get_recall(),
+        }
+        return score
 
 
 default_span_predictor_config = """
