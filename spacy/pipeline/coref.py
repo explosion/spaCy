@@ -567,7 +567,9 @@ class SpanPredictor(TrainablePipe):
                 if key.startswith(self.output_prefix):
                     for mention in sg:
                         starts.append(mention.start)
-                        ends.append(mention.end)
+                        # TODO check: Is the -1 here correct?
+                        # In Akos's env it works without, but in Paul's it doesn't.
+                        ends.append(mention.end - 1)
 
             starts = self.model.ops.xp.asarray(starts)
             ends = self.model.ops.xp.asarray(ends)
