@@ -592,23 +592,6 @@
             "tags": ["chatbots"]
         },
         {
-            "id": "saber",
-            "title": "saber",
-            "slogan": "Deep-learning based tool for information extraction in the biomedical domain",
-            "github": "BaderLab/saber",
-            "pip": "saber",
-            "thumb": "https://raw.githubusercontent.com/BaderLab/saber/master/docs/img/saber_logo.png",
-            "code_example": [
-                "from saber.saber import Saber",
-                "saber = Saber()",
-                "saber.load('PRGE')",
-                "saber.annotate('The phosphorylation of Hdm2 by MK2 promotes the ubiquitination of p53.')"
-            ],
-            "author": "Bader Lab, University of Toronto",
-            "category": ["scientific"],
-            "tags": ["keras", "biomedical"]
-        },
-        {
             "id": "alibi",
             "title": "alibi",
             "slogan": "Algorithms for monitoring and explaining machine learning models ",
@@ -1077,29 +1060,6 @@
             "tags": ["pipeline", "readability", "syntactic complexity", "descriptive statistics"]
         },
         {
-            "id": "wmd-relax",
-            "slogan": "Calculates word mover's distance insanely fast",
-            "description": "Calculates Word Mover's Distance as described in [From Word Embeddings To Document Distances](http://www.cs.cornell.edu/~kilian/papers/wmd_metric.pdf) by Matt Kusner, Yu Sun, Nicholas Kolkin and Kilian Weinberger.\n\n⚠️ **This package is currently only compatible with spaCy v.1x.**",
-            "github": "src-d/wmd-relax",
-            "thumb": "https://i.imgur.com/f91C3Lf.jpg",
-            "code_example": [
-                "import spacy",
-                "import wmd",
-                "",
-                "nlp = spacy.load('en', create_pipeline=wmd.WMD.create_spacy_pipeline)",
-                "doc1 = nlp(\"Politician speaks to the media in Illinois.\")",
-                "doc2 = nlp(\"The president greets the press in Chicago.\")",
-                "print(doc1.similarity(doc2))"
-            ],
-            "author": "source{d}",
-            "author_links": {
-                "github": "src-d",
-                "twitter": "sourcedtech",
-                "website": "https://sourced.tech"
-            },
-            "category": ["pipeline"]
-        },
-        {
             "id": "neuralcoref",
             "slogan": "State-of-the-art coreference resolution based on neural nets and spaCy",
             "description": "This coreference resolution module is based on the super fast [spaCy](https://spacy.io/) parser and uses the neural net scoring model described in [Deep Reinforcement Learning for Mention-Ranking Coreference Models](http://cs.stanford.edu/people/kevclark/resources/clark-manning-emnlp2016-deep.pdf) by Kevin Clark and Christopher D. Manning, EMNLP 2016. Since ✨Neuralcoref v2.0, you can train the coreference resolution system on your own dataset — e.g., another language than English! — **provided you have an annotated dataset**. Note that to use neuralcoref with spaCy > 2.1.0, you'll have to install neuralcoref from source.",
@@ -1526,17 +1486,6 @@
             "category": ["nonpython"]
         },
         {
-            "id": "spaCy.jl",
-            "slogan": "Julia interface for spaCy (work in progress)",
-            "github": "jekbradbury/SpaCy.jl",
-            "author": "James Bradbury",
-            "author_links": {
-                "github": "jekbradbury",
-                "twitter": "jekbradbury"
-            },
-            "category": ["nonpython"]
-        },
-        {
             "id": "ruby-spacy",
             "title": "ruby-spacy",
             "slogan": "Wrapper module for using spaCy from Ruby via PyCall",
@@ -1602,21 +1551,6 @@
             "author": "Johannes Gontrum",
             "author_links": {
                 "github": "jgontrum"
-            },
-            "category": ["apis"]
-        },
-        {
-            "id": "languagecrunch",
-            "slogan": "NLP server for spaCy, WordNet and NeuralCoref as a Docker image",
-            "github": "artpar/languagecrunch",
-            "code_example": [
-                "docker run -it -p 8080:8080 artpar/languagecrunch",
-                "curl http://localhost:8080/nlp/parse?`echo -n \"The new twitter is so weird. Seriously. Why is there a new twitter? What was wrong with the old one? Fix it now.\" | python -c \"import urllib, sys; print(urllib.urlencode({'sentence': sys.stdin.read()}))\"`"
-            ],
-            "code_language": "bash",
-            "author": "Parth Mudgal",
-            "author_links": {
-                "github": "artpar"
             },
             "category": ["apis"]
         },
@@ -2195,43 +2129,6 @@
             "tags": ["question-answering", "elasticsearch"]
         },
         {
-            "id": "epitator",
-            "title": "EpiTator",
-            "thumb": "https://i.imgur.com/NYFY1Km.jpg",
-            "slogan": "Extracts case counts, resolved location/species/disease names, date ranges and more",
-            "description": "EcoHealth Alliance uses EpiTator to catalog the what, where and when of infectious disease case counts reported in online news. Each of these aspects is extracted using independent annotators than can be applied to other domains. EpiTator organizes annotations by creating \"AnnoTiers\" for each type. AnnoTiers have methods for manipulating, combining and searching annotations. For instance, the `with_following_spans_from()` method can be used to create a new tier that combines a tier of one type (such as numbers), with another (say, kitchenware). The resulting tier will contain all the phrases in the document that match that pattern, like \"5 plates\" or \"2 cups.\"\n\nAnother commonly used method is `group_spans_by_containing_span()` which can be used to do things like find all the spaCy tokens in all the GeoNames a document mentions. spaCy tokens, named entities, sentences and noun chunks are exposed through the spaCy annotator which will create a AnnoTier for each. These are basis of many of the other annotators. EpiTator also includes an annotator for extracting tables embedded in free text articles. Another neat feature is that the lexicons used for entity resolution are all stored in an embedded sqlite database so there is no need to run any external services in order to use EpiTator.",
-            "url": "https://github.com/ecohealthalliance/EpiTator",
-            "github": "ecohealthalliance/EpiTator",
-            "pip": "EpiTator",
-            "code_example": [
-                "from epitator.annotator import AnnoDoc",
-                "from epitator.geoname_annotator import GeonameAnnotator",
-                "",
-                "doc = AnnoDoc('Where is Chiang Mai?')",
-                "geoname_annotier = doc.require_tiers('geonames', via=GeonameAnnotator)",
-                "geoname = geoname_annotier.spans[0].metadata['geoname']",
-                "geoname['name']",
-                "# = 'Chiang Mai'",
-                "geoname['geonameid']",
-                "# = '1153671'",
-                "geoname['latitude']",
-                "# = 18.79038",
-                "geoname['longitude']",
-                "# = 98.98468",
-                "",
-                "from epitator.spacy_annotator import SpacyAnnotator",
-                "spacy_token_tier = doc.require_tiers('spacy.tokens', via=SpacyAnnotator)",
-                "list(geoname_annotier.group_spans_by_containing_span(spacy_token_tier))",
-                "# = [(AnnoSpan(9-19, Chiang Mai), [AnnoSpan(9-15, Chiang), AnnoSpan(16-19, Mai)])]"
-            ],
-            "author": "EcoHealth Alliance",
-            "author_links": {
-                "github": "ecohealthalliance",
-                "website": " https://ecohealthalliance.org/"
-            },
-            "category": ["scientific", "standalone"]
-        },
-        {
             "id": "self-attentive-parser",
             "title": "Berkeley Neural Parser",
             "slogan": "Constituency Parsing with a Self-Attentive Encoder (ACL 2018)",
@@ -2258,30 +2155,6 @@
                 "website": " http://kitaev.io"
             },
             "category": ["research", "pipeline"]
-        },
-        {
-            "id": "excelcy",
-            "title": "ExcelCy",
-            "slogan": "Excel Integration with spaCy. Training NER using XLSX from PDF, DOCX, PPT, PNG or JPG.",
-            "description": "ExcelCy is a toolkit to integrate Excel to spaCy NLP training experiences. Training NER using XLSX from PDF, DOCX, PPT, PNG or JPG. ExcelCy has pipeline to match Entity with PhraseMatcher or Matcher in regular expression.",
-            "url": "https://github.com/kororo/excelcy",
-            "github": "kororo/excelcy",
-            "pip": "excelcy",
-            "code_example": [
-                "from excelcy import ExcelCy",
-                "# collect sentences, annotate Entities and train NER using spaCy",
-                "excelcy = ExcelCy.execute(file_path='https://github.com/kororo/excelcy/raw/master/tests/data/test_data_01.xlsx')",
-                "# use the nlp object as per spaCy API",
-                "doc = excelcy.nlp('Google rebrands its business apps')",
-                "# or save it for faster bootstrap for application",
-                "excelcy.nlp.to_disk('/model')"
-            ],
-            "author": "Robertus Johansyah",
-            "author_links": {
-                "github": "kororo"
-            },
-            "category": ["training"],
-            "tags": ["excel"]
         },
         {
             "id": "spacy-graphql",
@@ -2495,41 +2368,6 @@
                 "twitter": "VasilievYuli"
             },
             "category": ["standalone", "conversational"]
-        },
-        {
-            "id": "gracyql",
-            "title": "gracyql",
-            "slogan": "A thin GraphQL wrapper around spacy",
-            "github": "oterrier/gracyql",
-            "description": "An example of a basic [Starlette](https://github.com/encode/starlette) app using [Spacy](https://github.com/explosion/spaCy) and [Graphene](https://github.com/graphql-python/graphene). The main goal is to be able to use the amazing power of spaCy from other languages and retrieving only the information you need thanks to the GraphQL query definition. The GraphQL schema tries to mimic as much as possible the original Spacy API with classes Doc, Span and Token.",
-            "thumb": "https://i.imgur.com/xC7zpTO.png",
-            "category": ["apis"],
-            "tags": ["graphql"],
-            "code_example": [
-                "query ParserDisabledQuery {",
-                "  nlp(model: \"en\", disable: [\"parser\", \"ner\"]) {",
-                "    doc(text: \"I live in Grenoble, France\") {",
-                "      text",
-                "      tokens {",
-                "        id",
-                "        pos",
-                "        lemma",
-                "        dep",
-                "      }",
-                "      ents {",
-                "        start",
-                "        end",
-                "        label",
-                "      }",
-                "    }",
-                "  }",
-                "}"
-            ],
-            "code_language": "json",
-            "author": "Olivier Terrier",
-            "author_links": {
-                "github": "oterrier"
-            }
         },
         {
             "id": "pyInflect",
