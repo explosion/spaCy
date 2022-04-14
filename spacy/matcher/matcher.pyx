@@ -692,10 +692,6 @@ cdef int8_t get_is_match(PatternStateC state,
 
 cdef int8_t get_is_final(PatternStateC state) nogil:
     if state.pattern[1].quantifier == FINAL_ID:
-        id_attr = state.pattern[1].attrs[0]
-        if id_attr.attr != ID:
-            with gil:
-                raise ValueError(Errors.E074.format(attr=ID, bad_attr=id_attr.attr))
         return 1
     else:
         return 0
