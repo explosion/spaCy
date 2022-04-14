@@ -13,7 +13,7 @@ sextillion septillion octillion nonillion decillion
 
 _ordinal_words = set(
     """
-premier deuxième second troisième quatrième cinquième sixième septième huitième neuvième dixième
+premier première deuxième second seconde troisième quatrième cinquième sixième septième huitième neuvième dixième
 onzième douzième treizième quatorzième quinzième seizième dix-septième dix-huitième dix-neuvième
 vingtième trentième quarantième cinquantième soixantième soixante-dixième septantième quatre-vingtième huitantième quatre-vingt-dixième nonantième
 centième millième millionnième milliardième billionnième quadrillionnième quintillionnième
