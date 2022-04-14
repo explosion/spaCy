@@ -21,7 +21,7 @@ Create a `SpanGroup`.
 >
 > ```python
 > doc = nlp("Their goi ng home")
-> spans = [doc[0:1], doc[2:4]]
+> spans = [doc[0:1], doc[1:3]]
 >
 > # Construction 1
 > from spacy.tokens import SpanGroup
@@ -60,7 +60,7 @@ the scope of your function.
 >
 > ```python
 > doc = nlp("Their goi ng home")
-> doc.spans["errors"] = [doc[0:1], doc[2:4]]
+> doc.spans["errors"] = [doc[0:1], doc[1:3]]
 > assert doc.spans["errors"].doc == doc
 > ```
 
@@ -76,9 +76,9 @@ Check whether the span group contains overlapping spans.
 >
 > ```python
 > doc = nlp("Their goi ng home")
-> doc.spans["errors"] = [doc[0:1], doc[2:4]]
+> doc.spans["errors"] = [doc[0:1], doc[1:3]]
 > assert not doc.spans["errors"].has_overlap
-> doc.spans["errors"].append(doc[1:2])
+> doc.spans["errors"].append(doc[2:4])
 > assert doc.spans["errors"].has_overlap
 > ```
 
@@ -94,7 +94,7 @@ Get the number of spans in the group.
 >
 > ```python
 > doc = nlp("Their goi ng home")
-> doc.spans["errors"] = [doc[0:1], doc[2:4]]
+> doc.spans["errors"] = [doc[0:1], doc[1:3]]
 > assert len(doc.spans["errors"]) == 2
 > ```
 
@@ -113,11 +113,11 @@ changes to be reflected in the span group.
 >
 > ```python
 > doc = nlp("Their goi ng home")
-> doc.spans["errors"] = [doc[0:1], doc[2:4]]
+> doc.spans["errors"] = [doc[0:1], doc[1:3]]
 > span = doc.spans["errors"][1]
 > assert span.text == "goi ng"
 > span.label_ = 'LABEL'
-> assert doc.spans["errors"][1] != 'LABEL' # The span within the group was not updated
+> assert doc.spans["errors"][1].label_ != 'LABEL' # The span within the group was not updated
 > ```
 
 | Name        | Description                           |
@@ -133,7 +133,7 @@ Set a span in the span group.
 >
 > ```python
 > doc = nlp("Their goi ng home")
-> doc.spans["errors"] = [doc[0:1], doc[2:4]]
+> doc.spans["errors"] = [doc[0:1], doc[1:3]]
 > span = doc[0:2]
 > doc.spans["errors"][0] = span
 > assert doc.spans["errors"][0].text == "Their goi"
@@ -152,7 +152,7 @@ Delete a span from the span group.
 >
 > ```python
 > doc = nlp("Their goi ng home")
-> doc.spans["errors"] = [doc[0:1], doc[2:4]]
+> doc.spans["errors"] = [doc[0:1], doc[1:3]]
 > del doc.spans[0]
 > assert len(doc.spans["errors"]) == 1
 > ```
@@ -171,8 +171,8 @@ over `attrs` in the second.
 >
 > ```python
 > doc = nlp("Their goi ng home")
-> doc.spans["errors"] = [doc[0:1], doc[2:4]]
-> doc.spans["other"] = [doc[0:2], doc[1:3]]
+> doc.spans["errors"] = [doc[0:1], doc[1:3]]
+> doc.spans["other"] = [doc[0:2], doc[2:4]]
 > span_group = doc.spans["errors"] + doc.spans["other"]
 > assert len(span_group) == 4
 > ```
@@ -192,7 +192,7 @@ already present in the current span group.
 >
 > ```python
 > doc = nlp("Their goi ng home")
-> doc.spans["errors"] = [doc[0:1], doc[2:4]]
+> doc.spans["errors"] = [doc[0:1], doc[1:3]]
 > doc.spans["errors"] += [doc[3:4], doc[2:3]]
 > assert len(doc.spans["errors"]) == 4
 > ```
@@ -212,7 +212,7 @@ Add a [`Span`](/api/span) object to the group. The span must refer to the same
 > ```python
 > doc = nlp("Their goi ng home")
 > doc.spans["errors"] = [doc[0:1]]
-> doc.spans["errors"].append(doc[2:4])
+> doc.spans["errors"].append(doc[1:3])
 > assert len(doc.spans["errors"]) == 2
 > ```
 
@@ -231,7 +231,7 @@ group.
 > ```python
 > doc = nlp("Their goi ng home")
 > doc.spans["errors"] = []
-> doc.spans["errors"].extend([doc[2:4], doc[0:1]])
+> doc.spans["errors"].extend([doc[1:3], doc[0:1]])
 > assert len(doc.spans["errors"]) == 2
 > span_group = SpanGroup([doc[1:4], doc[0:3])
 > doc.spans["errors"].extend(span_group)
@@ -251,7 +251,7 @@ Return a copy of the span group.
 > from spacy.tokens import SpanGroup
 >
 > doc = nlp("Their goi ng home")
-> doc.spans["errors"] = [doc[2:4], doc[0:3]]
+> doc.spans["errors"] = [doc[1:3], doc[0:3]]
 > new_group = doc.spans["errors"].copy()
 > ```
 
@@ -267,7 +267,7 @@ Serialize the span group to a bytestring.
 >
 > ```python
 > doc = nlp("Their goi ng home")
-> doc.spans["errors"] = [doc[0:1], doc[2:4]]
+> doc.spans["errors"] = [doc[0:1], doc[1:3]]
 > group_bytes = doc.spans["errors"].to_bytes()
 > ```
 
@@ -286,7 +286,7 @@ it.
 > from spacy.tokens import SpanGroup
 >
 > doc = nlp("Their goi ng home")
-> doc.spans["errors"] = [doc[0:1], doc[2:4]]
+> doc.spans["errors"] = [doc[0:1], doc[1:3]]
 > group_bytes = doc.spans["errors"].to_bytes()
 > new_group = SpanGroup()
 > new_group.from_bytes(group_bytes)
