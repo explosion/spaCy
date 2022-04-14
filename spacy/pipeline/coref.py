@@ -633,4 +633,4 @@ class SpanPredictor(TrainablePipe):
             correct = (starts == pred_starts) * (ends == pred_ends)
             accuracy = correct.mean()
             scores.append(float(accuracy))
-        return {"span_accuracy": mean(scores)}
+        return {"span_accuracy": 100 * mean(scores)}
