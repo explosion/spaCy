@@ -690,14 +690,14 @@ cdef int8_t get_is_match(PatternStateC state,
     return True
 
 
-cdef int8_t get_is_final(PatternStateC state) nogil:
+cdef inline int8_t get_is_final(PatternStateC state) nogil:
     if state.pattern[1].quantifier == FINAL_ID:
         return 1
     else:
         return 0
 
 
-cdef int8_t get_quantifier(PatternStateC state) nogil:
+cdef inline int8_t get_quantifier(PatternStateC state) nogil:
     return state.pattern.quantifier
 
 
