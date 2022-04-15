@@ -53,3 +53,6 @@ cdef class TransitionSystem:
 
     cdef int set_costs(self, int* is_valid, weight_t* costs,
                        const StateC* state, gold) except -1
+
+cdef void c_transition_batch(TransitionSystem moves, StateC** states, const float* scores,
+        int nr_class, int batch_size) nogil

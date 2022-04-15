@@ -1,10 +1,14 @@
 from typing import List, Tuple, Any, Optional, cast
 from thinc.api import Ops, Model, normal_init, chain, list2array, Linear
 from thinc.api import uniform_init, glorot_uniform_init, zero_init
+from thinc.api import CupyOps
 from thinc.types import Floats1d, Floats2d, Floats3d, Ints2d, Floats4d
 import numpy
+
+from .models.parser_c import forward_cpu
 from ..pipeline._parser_internals import _beam_utils
 from ..pipeline._parser_internals.batch import GreedyBatch
+from ..pipeline._parser_internals.stateclass import StateClass
 from ..tokens.doc import Doc
 from ..util import registry
 
@@ -133,27 +137,36 @@ def init(
 
 
 def forward(model, docs_moves: Tuple[List[Doc], TransitionSystem], is_train: bool):
-    nF = model.get_dim("nF")
-    tok2vec = model.get_ref("tok2vec")
+    beam_width = model.attrs.get("beam_width", 1)
     lower_pad = model.get_param("lower_pad")
-    lower_W = model.get_param("lower_W")
-    lower_b = model.get_param("lower_b")
-    upper_W = model.get_param("upper_W")
-    upper_b = model.get_param("upper_b")
-    nH = model.get_dim("nH")
-    nP = model.get_dim("nP")
-    nO = model.get_dim("nO")
-    nI = model.get_dim("nI")
+    tok2vec = model.get_ref("tok2vec")
 
-    beam_width = model.attrs["beam_width"]
-    beam_density = model.attrs["beam_density"]
-
-    ops = model.ops
     docs, moves = docs_moves
     states = moves.init_batch(docs)
     tokvecs, backprop_tok2vec = tok2vec(docs, is_train)
     tokvecs = model.ops.xp.vstack((tokvecs, lower_pad))
     feats, backprop_feats = _forward_precomputable_affine(model, tokvecs, is_train)
+    seen_mask = _get_seen_mask(model)
+
+    if beam_width == 1 and not is_train and not isinstance(model.ops, CupyOps):
+        return forward_cpu(model, moves, states, feats, seen_mask), lambda _: []
+    else:
+        return forward_thinc(model, moves, states, tokvecs, backprop_tok2vec, feats, backprop_feats, seen_mask, is_train)
+
+
+def forward_thinc(model: Model, moves: TransitionSystem, states: List[StateClass], tokvecs, backprop_tok2vec, feats, backprop_feats, seen_mask, is_train: bool):
+    nF = model.get_dim("nF")
+    lower_b = model.get_param("lower_b")
+    upper_W = model.get_param("upper_W")
+    upper_b = model.get_param("upper_b")
+    nH = model.get_dim("nH")
+    nP = model.get_dim("nP")
+
+    beam_width = model.attrs["beam_width"]
+    beam_density = model.attrs["beam_density"]
+
+    ops = model.ops
+
     all_ids = []
     all_which = []
     all_statevecs = []
@@ -164,8 +177,7 @@ def forward(model, docs_moves: Tuple[List[Doc], TransitionSystem], is_train: boo
         batch = _beam_utils.BeamBatch(
             moves, states, None, width=beam_width, density=beam_density
         )
-    seen_mask = _get_seen_mask(model)
-    arange = model.ops.xp.arange(nF)
+    arange = ops.xp.arange(nF)
     while not batch.is_done:
         ids = numpy.zeros((len(batch.get_unfinished_states()), nF), dtype="i")
         for i, state in enumerate(batch.get_unfinished_states()):
@@ -174,16 +186,16 @@ def forward(model, docs_moves: Tuple[List[Doc], TransitionSystem], is_train: boo
         # to create the state vectors.
         preacts2f = feats[ids, arange].sum(axis=1)  # type: ignore
         preacts2f += lower_b
-        preacts = model.ops.reshape3f(preacts2f, preacts2f.shape[0], nH, nP)
+        preacts = ops.reshape3f(preacts2f, preacts2f.shape[0], nH, nP)
         assert preacts.shape[0] == len(batch.get_unfinished_states()), preacts.shape
         statevecs, which = ops.maxout(preacts)
         # Multiply the state-vector by the scores weights and add the bias,
         # to get the logits.
-        scores = model.ops.gemm(statevecs, upper_W, trans2=True)
+        scores = ops.gemm(statevecs, upper_W, trans2=True)
         scores += upper_b
-        scores[:, seen_mask] = model.ops.xp.nanmin(scores)
+        scores[:, seen_mask] = ops.xp.nanmin(scores)
         # Transition the states, filtering out any that are finished.
-        cpu_scores = model.ops.to_numpy(scores)
+        cpu_scores = ops.to_numpy(scores)
         batch.advance(cpu_scores)
         all_scores.append(scores)
         if is_train:
@@ -193,10 +205,9 @@ def forward(model, docs_moves: Tuple[List[Doc], TransitionSystem], is_train: boo
             all_which.append(which)
 
     def backprop_parser(d_states_d_scores):
-        d_tokvecs = model.ops.alloc2f(tokvecs.shape[0], tokvecs.shape[1])
-        ids = model.ops.xp.vstack(all_ids)
+        ids = ops.xp.vstack(all_ids)
         which = ops.xp.vstack(all_which)
-        statevecs = model.ops.xp.vstack(all_statevecs)
+        statevecs = ops.xp.vstack(all_statevecs)
         _, d_scores = d_states_d_scores
         if model.attrs.get("unseen_classes"):
             # If we have a negative gradient (i.e. the probability should
@@ -209,18 +220,18 @@ def forward(model, docs_moves: Tuple[List[Doc], TransitionSystem], is_train: boo
         # Calculate the gradients for the parameters of the upper layer.
         # The weight gemm is (nS, nO) @ (nS, nH).T
         model.inc_grad("upper_b", d_scores.sum(axis=0))
-        model.inc_grad("upper_W", model.ops.gemm(d_scores, statevecs, trans1=True))
+        model.inc_grad("upper_W", ops.gemm(d_scores, statevecs, trans1=True))
         # Now calculate d_statevecs, by backproping through the upper linear layer.
         # This gemm is (nS, nO) @ (nO, nH)
-        d_statevecs = model.ops.gemm(d_scores, upper_W)
+        d_statevecs = ops.gemm(d_scores, upper_W)
         # Backprop through the maxout activation
-        d_preacts = model.ops.backprop_maxout(d_statevecs, which, nP)
-        d_preacts2f = model.ops.reshape2f(d_preacts, d_preacts.shape[0], nH * nP)
+        d_preacts = ops.backprop_maxout(d_statevecs, which, nP)
+        d_preacts2f = ops.reshape2f(d_preacts, d_preacts.shape[0], nH * nP)
         model.inc_grad("lower_b", d_preacts2f.sum(axis=0))
         # We don't need to backprop the summation, because we pass back the IDs instead
         d_state_features = backprop_feats((d_preacts2f, ids))
-        d_tokvecs = model.ops.alloc2f(tokvecs.shape[0], tokvecs.shape[1])
-        model.ops.scatter_add(d_tokvecs, ids, d_state_features)
+        d_tokvecs = ops.alloc2f(tokvecs.shape[0], tokvecs.shape[1])
+        ops.scatter_add(d_tokvecs, ids, d_state_features)
         model.inc_grad("lower_pad", d_tokvecs[-1])
         return (backprop_tok2vec(d_tokvecs[:-1]), None)
 
