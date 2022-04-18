@@ -216,11 +216,14 @@ def debug_data(
                 f"Key: {spans_key}, {_format_labels(data_labels.items(), counts=True)}",
                 show=verbose,
             )
+
         # Data checks: only take the spans keys in the actual spancat components
         data_labels_in_component = {
             spans_key: gold_train_data["spancat"][spans_key]
             for spans_key in model_labels_spancat.keys()
         }
+
+        breakpoint()
         for spans_key, data_labels in data_labels_in_component.items():
             for label, count in data_labels.items():
                 # Check for missing labels
@@ -692,14 +695,14 @@ def _compile_gold(
                 elif label == "-":
                     data["ner"]["-"] += 1
         if "spancat" in factory_names:
-            for span_key in list(eg.reference.spans.keys()):
-                if span_key not in data["spancat"]:
-                    data["spancat"][span_key] = Counter()
-                for i, span in enumerate(eg.reference.spans[span_key]):
+            for spans_key in list(eg.reference.spans.keys()):
+                if spans_key not in data["spancat"]:
+                    data["spancat"][spans_key] = Counter()
+                for i, span in enumerate(eg.reference.spans[spans_key]):
                     if span.label_ is None:
                         continue
                     else:
-                        data["spancat"][span_key][span.label_] += 1
+                        data["spancat"][spans_key][span.label_] += 1
         if "textcat" in factory_names or "textcat_multilabel" in factory_names:
             data["cats"].update(gold.cats)
             if any(val not in (0, 1) for val in gold.cats.values()):
@@ -824,3 +827,7 @@ def _get_labels_from_spancat(nlp: Language) -> Dict[str, Set[str]]:
             labels[pipe.key] = set()
         labels[pipe.key].update(pipe.labels)
     return labels
+
+
+def _get_span_characteristics() -> Dict[str, Any]:
+    pass
