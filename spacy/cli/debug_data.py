@@ -204,6 +204,7 @@ def debug_data(
         msg.info("No word vectors present in the package")
 
     if "spancat" in factory_names:
+        breakpoint()
         model_labels_spancat = _get_labels_from_spancat(nlp)
         has_low_data_warning = False
         has_no_neg_warning = False
@@ -255,7 +256,8 @@ def debug_data(
                     for label, l in gold_train_data["spans_length"][spans_key].items()
                 }
 
-            msg.table(span_length, header=("Spans Key", "Length"), divider=True)
+            msg.info(f"Span characteristics for spans_key `{spans_key}`")
+            msg.table(span_length, header=("Span Type", "Length"), divider=True)
 
         if has_low_data_warning:
             msg.text(
@@ -658,8 +660,8 @@ def _compile_gold(
         "roots": Counter(),
         "spancat": dict(),
         "spans_length": dict(),
-        "span_distinctiveness": dict(),
-        "bound_distinctiveness": dict(),
+        "spans_per_type": dict(),
+        "sb_per_type": dict(),
         "ws_ents": 0,
         "boundary_cross_ents": 0,
         "n_words": 0,
@@ -714,6 +716,7 @@ def _compile_gold(
                         continue
                     else:
                         data["spancat"][spans_key][span.label_] += 1
+
                 # Obtain the span length
                 if spans_key not in data["spans_length"]:
                     data["spans_length"][spans_key] = dict()
@@ -724,6 +727,41 @@ def _compile_gold(
                         data["spans_length"][spans_key][span.label_] = []
                     else:
                         data["spans_length"][spans_key][span.label_].append(len(span))
+
+                # Obtain spans per span type
+                if spans_key not in data["spans_per_type"]:
+                    data["spans_per_type"][spans_key] = dict()
+                for span in gold.spans[spans_key]:
+                    if span.label_ not in data["spans_per_type"][spans_key]:
+                        data["spans_per_type"][spans_key][span.label_] = []
+                    else:
+                        data["spans_per_type"][spans_key][span.label_].append(span)
+
+                # Obtain boundary tokens per span type
+                window_size = 1
+                if spans_key not in data["sb_per_type"]:
+                    data["sb_per_type"][spans_key] = dict()
+                for span in gold.spans[spans_key]:
+                    if span.label_ not in data["sb_per_type"][spans_key]:
+                        # Creating a data structure that holds the start and
+                        # end tokens for each span type
+                        data["sb_per_type"][spans_key][span.label_] = {
+                            "start": [],
+                            "end": [],
+                        }
+                    else:
+                        for offset in range(window_size):
+                            sb_start_idx = span.start - (offset + 1)
+                            if sb_start_idx >= 0:
+                                data["sb_per_type"][spans_key][span.label_][
+                                    "start"
+                                ].append(gold[sb_start_idx : sb_start_idx + 1])
+
+                            sb_end_idx = span.end + (offset + 1)
+                            if sb_end_idx < len(gold):
+                                data["sb_per_type"][spans_key][span.label_][
+                                    "end"
+                                ].append(gold[sb_end_idx : sb_end_idx + 1])
 
         if "textcat" in factory_names or "textcat_multilabel" in factory_names:
             data["cats"].update(gold.cats)
@@ -854,3 +892,11 @@ def _get_labels_from_spancat(nlp: Language) -> Dict[str, Set[str]]:
 def _gmean(l: List) -> float:
     """Compute geometric mean of a list"""
     return math.exp(math.fsum(math.log(i) for i in l) / len(l))
+
+
+# def _get_token_distribution(docs, normalize: bool = True) -> Counter:
+#     word_counts = Counter()
+#     for doc in texts:
+#         for token in text:
+#             word_count
+#     pass
