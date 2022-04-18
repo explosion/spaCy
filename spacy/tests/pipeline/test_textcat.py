@@ -277,6 +277,21 @@ def test_issue7019():
     print_prf_per_type(msg, scores, name="foo", type="bar")
 
 
+@pytest.mark.issue(9904)
+def test_issue9904():
+    nlp = Language()
+    textcat = nlp.add_pipe("textcat")
+    get_examples = make_get_examples_single_label(nlp)
+    nlp.initialize(get_examples)
+
+    examples = get_examples()
+    scores = textcat.predict([eg.predicted for eg in examples])
+
+    loss = textcat.get_loss(examples, scores)[0]
+    loss_double_bs = textcat.get_loss(examples * 2, scores.repeat(2, axis=0))[0]
+    assert loss == pytest.approx(loss_double_bs)
+
+
 @pytest.mark.skip(reason="Test is flakey when run with others")
 def test_simple_train():
     nlp = Language()
@@ -723,6 +738,72 @@ def test_textcat_evaluation():
 
     assert scores["cats_micro_p"] == 4 / 5
     assert scores["cats_micro_r"] == 4 / 6
+
+
+@pytest.mark.parametrize(
+    "multi_label,spring_p",
+    [(True, 1 / 1), (False, 1 / 2)],
+)
+def test_textcat_eval_missing(multi_label: bool, spring_p: float):
+    """
+    multi-label: the missing 'spring' in gold_doc_2 doesn't incur a penalty
+    exclusive labels: the missing 'spring' in gold_doc_2 is interpreted as 0.0"""
+    train_examples = []
+    nlp = English()
+
+    ref1 = nlp("one")
+    ref1.cats = {"winter": 0.0, "summer": 0.0, "autumn": 0.0, "spring": 1.0}
+    pred1 = nlp("one")
+    pred1.cats = {"winter": 0.0, "summer": 0.0, "autumn": 0.0, "spring": 1.0}
+    train_examples.append(Example(ref1, pred1))
+
+    ref2 = nlp("two")
+    # reference 'spring' is missing, pred 'spring' is 1
+    ref2.cats = {"winter": 0.0, "summer": 0.0, "autumn": 1.0}
+    pred2 = nlp("two")
+    pred2.cats = {"winter": 0.0, "summer": 0.0, "autumn": 0.0, "spring": 1.0}
+    train_examples.append(Example(pred2, ref2))
+
+    scores = Scorer().score_cats(
+        train_examples,
+        "cats",
+        labels=["winter", "summer", "spring", "autumn"],
+        multi_label=multi_label,
+    )
+    assert scores["cats_f_per_type"]["spring"]["p"] == spring_p
+    assert scores["cats_f_per_type"]["spring"]["r"] == 1 / 1
+
+
+@pytest.mark.parametrize(
+    "multi_label,expected_loss",
+    [(True, 0), (False, 0.125)],
+)
+def test_textcat_loss(multi_label: bool, expected_loss: float):
+    """
+    multi-label: the missing 'spring' in gold_doc_2 doesn't incur an increase in loss
+    exclusive labels: the missing 'spring' in gold_doc_2 is interpreted as 0.0 and adds to the loss"""
+    train_examples = []
+    nlp = English()
+
+    doc1 = nlp("one")
+    cats1 = {"winter": 0.0, "summer": 0.0, "autumn": 0.0, "spring": 1.0}
+    train_examples.append(Example.from_dict(doc1, {"cats": cats1}))
+
+    doc2 = nlp("two")
+    cats2 = {"winter": 0.0, "summer": 0.0, "autumn": 1.0}
+    train_examples.append(Example.from_dict(doc2, {"cats": cats2}))
+
+    if multi_label:
+        textcat = nlp.add_pipe("textcat_multilabel")
+    else:
+        textcat = nlp.add_pipe("textcat")
+    textcat.initialize(lambda: train_examples)
+    assert isinstance(textcat, TextCategorizer)
+    scores = textcat.model.ops.asarray(
+        [[0.0, 0.0, 0.0, 1.0], [0.0, 0.0, 1.0, 1.0]], dtype="f"  # type: ignore
+    )
+    loss, d_scores = textcat.get_loss(train_examples, scores)
+    assert loss == expected_loss
 
 
 def test_textcat_threshold():

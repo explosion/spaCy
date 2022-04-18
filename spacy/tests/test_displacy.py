@@ -83,6 +83,27 @@ def test_issue3882(en_vocab):
     displacy.parse_deps(doc)
 
 
+@pytest.mark.issue(5447)
+def test_issue5447():
+    """Test that overlapping arcs get separate levels, unless they're identical."""
+    renderer = DependencyRenderer()
+    words = [
+        {"text": "This", "tag": "DT"},
+        {"text": "is", "tag": "VBZ"},
+        {"text": "a", "tag": "DT"},
+        {"text": "sentence.", "tag": "NN"},
+    ]
+    arcs = [
+        {"start": 0, "end": 1, "label": "nsubj", "dir": "left"},
+        {"start": 2, "end": 3, "label": "det", "dir": "left"},
+        {"start": 2, "end": 3, "label": "overlap", "dir": "left"},
+        {"end": 3, "label": "overlap", "start": 2, "dir": "left"},
+        {"start": 1, "end": 3, "label": "attr", "dir": "left"},
+    ]
+    renderer.render([{"words": words, "arcs": arcs}])
+    assert renderer.highest_level == 3
+
+
 @pytest.mark.issue(5838)
 def test_issue5838():
     # Displacy's EntityRenderer break line
@@ -94,6 +115,92 @@ def test_issue5838():
     html = displacy.render(doc, style="ent")
     found = html.count("</br>")
     assert found == 4
+
+
+def test_displacy_parse_spans(en_vocab):
+    """Test that spans on a Doc are converted into displaCy's format."""
+    doc = Doc(en_vocab, words=["Welcome", "to", "the", "Bank", "of", "China"])
+    doc.spans["sc"] = [Span(doc, 3, 6, "ORG"), Span(doc, 5, 6, "GPE")]
+    spans = displacy.parse_spans(doc)
+    assert isinstance(spans, dict)
+    assert spans["text"] == "Welcome to the Bank of China "
+    assert spans["spans"] == [
+        {
+            "start": 15,
+            "end": 28,
+            "start_token": 3,
+            "end_token": 6,
+            "label": "ORG",
+            "kb_id": "",
+            "kb_url": "#",
+        },
+        {
+            "start": 23,
+            "end": 28,
+            "start_token": 5,
+            "end_token": 6,
+            "label": "GPE",
+            "kb_id": "",
+            "kb_url": "#",
+        },
+    ]
+
+
+def test_displacy_parse_spans_with_kb_id_options(en_vocab):
+    """Test that spans with kb_id on a Doc are converted into displaCy's format"""
+    doc = Doc(en_vocab, words=["Welcome", "to", "the", "Bank", "of", "China"])
+    doc.spans["sc"] = [
+        Span(doc, 3, 6, "ORG", kb_id="Q790068"),
+        Span(doc, 5, 6, "GPE", kb_id="Q148"),
+    ]
+
+    spans = displacy.parse_spans(
+        doc, {"kb_url_template": "https://wikidata.org/wiki/{}"}
+    )
+    assert isinstance(spans, dict)
+    assert spans["text"] == "Welcome to the Bank of China "
+    assert spans["spans"] == [
+        {
+            "start": 15,
+            "end": 28,
+            "start_token": 3,
+            "end_token": 6,
+            "label": "ORG",
+            "kb_id": "Q790068",
+            "kb_url": "https://wikidata.org/wiki/Q790068",
+        },
+        {
+            "start": 23,
+            "end": 28,
+            "start_token": 5,
+            "end_token": 6,
+            "label": "GPE",
+            "kb_id": "Q148",
+            "kb_url": "https://wikidata.org/wiki/Q148",
+        },
+    ]
+
+
+def test_displacy_parse_spans_different_spans_key(en_vocab):
+    """Test that spans in a different spans key will be parsed"""
+    doc = Doc(en_vocab, words=["Welcome", "to", "the", "Bank", "of", "China"])
+    doc.spans["sc"] = [Span(doc, 3, 6, "ORG"), Span(doc, 5, 6, "GPE")]
+    doc.spans["custom"] = [Span(doc, 3, 6, "BANK")]
+    spans = displacy.parse_spans(doc, options={"spans_key": "custom"})
+
+    assert isinstance(spans, dict)
+    assert spans["text"] == "Welcome to the Bank of China "
+    assert spans["spans"] == [
+        {
+            "start": 15,
+            "end": 28,
+            "start_token": 3,
+            "end_token": 6,
+            "label": "BANK",
+            "kb_id": "",
+            "kb_url": "#",
+        }
+    ]
 
 
 def test_displacy_parse_ents(en_vocab):

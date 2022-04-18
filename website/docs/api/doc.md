@@ -304,7 +304,7 @@ ancestor is found, e.g. if span excludes a necessary ancestor.
 
 ## Doc.has_annotation {#has_annotation tag="method"}
 
-Check whether the doc contains annotation on a token attribute.
+Check whether the doc contains annotation on a [`Token` attribute](/api/token#attributes).
 
 <Infobox title="Changed in v3.0" variant="warning">
 
@@ -585,7 +585,7 @@ objects or a [`SpanGroup`](/api/spangroup) to a given key.
 >
 > ```python
 > doc = nlp("Their goi ng home")
-> doc.spans["errors"] = [doc[0:1], doc[2:4]]
+> doc.spans["errors"] = [doc[0:1], doc[1:3]]
 > ```
 
 | Name        | Description                                                        |

@@ -485,13 +485,16 @@ def load_model_from_path(
     config_path = model_path / "config.cfg"
     overrides = dict_to_dot(config)
     config = load_config(config_path, overrides=overrides)
-    nlp = load_model_from_config(config, vocab=vocab, disable=disable, exclude=exclude)
+    nlp = load_model_from_config(
+        config, vocab=vocab, disable=disable, exclude=exclude, meta=meta
+    )
     return nlp.from_disk(model_path, exclude=exclude, overrides=overrides)
 
 
 def load_model_from_config(
     config: Union[Dict[str, Any], Config],
     *,
+    meta: Dict[str, Any] = SimpleFrozenDict(),
     vocab: Union["Vocab", bool] = True,
     disable: Iterable[str] = SimpleFrozenList(),
     exclude: Iterable[str] = SimpleFrozenList(),
@@ -529,6 +532,7 @@ def load_model_from_config(
         exclude=exclude,
         auto_fill=auto_fill,
         validate=validate,
+        meta=meta,
     )
     return nlp
 
@@ -871,7 +875,6 @@ def get_package_path(name: str) -> Path:
     name (str): Package name.
     RETURNS (Path): Path to installed package.
     """
-    name = name.lower()  # use lowercase version to be safe
     # Here we're importing the module just to find it. This is worryingly
     # indirect, but it's otherwise very difficult to find the package.
     pkg = importlib.import_module(name)

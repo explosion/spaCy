@@ -159,20 +159,17 @@ cdef class Example:
         gold_values = self.reference.to_array([field])
         output = [None] * len(self.predicted)
         for token in self.predicted:
-            if token.is_space:
+            values = gold_values[align[token.i]]
+            values = values.ravel()
+            if len(values) == 0:
                 output[token.i] = None
+            elif len(values) == 1:
+                output[token.i] = values[0]
+            elif len(set(list(values))) == 1:
+                # If all aligned tokens have the same value, use it.
+                output[token.i] = values[0]
             else:
-                values = gold_values[align[token.i].dataXd]
-                values = values.ravel()
-                if len(values) == 0:
-                    output[token.i] = None
-                elif len(values) == 1:
-                    output[token.i] = values[0]
-                elif len(set(list(values))) == 1:
-                    # If all aligned tokens have the same value, use it.
-                    output[token.i] = values[0]
-                else:
-                    output[token.i] = None
+                output[token.i] = None
         if as_string and field not in ["ENT_IOB", "SENT_START"]:
             output = [vocab.strings[o] if o is not None else o for o in output]
         return output
@@ -193,9 +190,9 @@ cdef class Example:
             deps = [d if has_deps[i] else deps[i] for i, d in enumerate(proj_deps)]
         for cand_i in range(self.x.length):
             if cand_to_gold.lengths[cand_i] == 1:
-                gold_i = cand_to_gold[cand_i].dataXd[0, 0]
+                gold_i = cand_to_gold[cand_i][0]
                 if gold_to_cand.lengths[heads[gold_i]] == 1:
-                    aligned_heads[cand_i] = int(gold_to_cand[heads[gold_i]].dataXd[0, 0])
+                    aligned_heads[cand_i] = int(gold_to_cand[heads[gold_i]][0])
                     aligned_deps[cand_i] = deps[gold_i]
         return aligned_heads, aligned_deps
 
@@ -207,7 +204,7 @@ cdef class Example:
             align = self.alignment.y2x
             sent_starts = [False] * len(self.x)
             for y_sent in self.y.sents:
-                x_start = int(align[y_sent.start].dataXd[0])
+                x_start = int(align[y_sent.start][0])
                 sent_starts[x_start] = True
             return sent_starts
         else:
@@ -223,7 +220,7 @@ cdef class Example:
         seen = set()
         output = []
         for span in spans:
-            indices = align[span.start : span.end].data.ravel()
+            indices = align[span.start : span.end]
             if not allow_overlap:
                 indices = [idx for idx in indices if idx not in seen]
             if len(indices) >= 1:
@@ -258,6 +255,29 @@ cdef class Example:
     def get_aligned_ner(self):
         x_ents, x_tags = self.get_aligned_ents_and_ner()
         return x_tags
+
+    def get_matching_ents(self, check_label=True):
+        """Return entities that are shared between predicted and reference docs.
+
+        If `check_label` is True, entities must have matching labels to be
+        kept. Otherwise only the character indices need to match.
+        """
+        gold = {}
+        for ent in self.reference.ents:
+            gold[(ent.start_char, ent.end_char)] = ent.label
+
+        keep = []
+        for ent in self.predicted.ents:
+            key = (ent.start_char, ent.end_char)
+            if key not in gold:
+                continue
+
+            if check_label and ent.label != gold[key]:
+                continue
+
+            keep.append(ent)
+
+        return keep
 
     def to_dict(self):
         return {
@@ -296,7 +316,7 @@ cdef class Example:
         seen_indices = set()
         output = []
         for y_sent in self.reference.sents:
-            indices = align[y_sent.start : y_sent.end].data.ravel()
+            indices = align[y_sent.start : y_sent.end]
             indices = [idx for idx in indices if idx not in seen_indices]
             if indices:
                 x_sent = self.predicted[indices[0] : indices[-1] + 1]

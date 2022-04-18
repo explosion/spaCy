@@ -1,6 +1,7 @@
 from .attributeruler import AttributeRuler
 from .coref import CoreferenceResolver
 from .dep_parser import DependencyParser
+from .edit_tree_lemmatizer import EditTreeLemmatizer
 from .entity_linker import EntityLinker
 from .ner import EntityRecognizer
 from .entityruler import EntityRuler

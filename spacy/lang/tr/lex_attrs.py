@@ -53,7 +53,7 @@ _ordinal_words = [
     "doksanıncı",
     "yüzüncü",
     "bininci",
-    "mliyonuncu",
+    "milyonuncu",
     "milyarıncı",
     "trilyonuncu",
     "katrilyonuncu",
