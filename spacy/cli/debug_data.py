@@ -6,6 +6,7 @@ import sys
 import srsly
 from wasabi import Printer, MESSAGES, msg
 import typer
+import math
 
 from ._util import app, Arg, Opt, show_validation_error, parse_config_overrides
 from ._util import import_code, debug_cli
@@ -222,8 +223,6 @@ def debug_data(
             spans_key: gold_train_data["spancat"][spans_key]
             for spans_key in model_labels_spancat.keys()
         }
-
-        breakpoint()
         for spans_key, data_labels in data_labels_in_component.items():
             for label, count in data_labels.items():
                 # Check for missing labels
@@ -249,6 +248,14 @@ def debug_data(
                 if neg_docs == 0:
                     msg.warn(f"No examples for texts WITHOUT new label '{label}'")
                     has_no_neg_warning = True
+
+            with msg.loading("Obtaining span characteristics..."):
+                span_length = {
+                    label: _gmean(l)
+                    for label, l in gold_train_data["spans_length"][spans_key].items()
+                }
+
+            msg.table(span_length, header=("Spans Key", "Length"), divider=True)
 
         if has_low_data_warning:
             msg.text(
@@ -650,6 +657,9 @@ def _compile_gold(
         "words": Counter(),
         "roots": Counter(),
         "spancat": dict(),
+        "spans_length": dict(),
+        "span_distinctiveness": dict(),
+        "bound_distinctiveness": dict(),
         "ws_ents": 0,
         "boundary_cross_ents": 0,
         "n_words": 0,
@@ -696,6 +706,7 @@ def _compile_gold(
                     data["ner"]["-"] += 1
         if "spancat" in factory_names:
             for spans_key in list(eg.reference.spans.keys()):
+                # Obtain the span frequency
                 if spans_key not in data["spancat"]:
                     data["spancat"][spans_key] = Counter()
                 for i, span in enumerate(eg.reference.spans[spans_key]):
@@ -703,6 +714,17 @@ def _compile_gold(
                         continue
                     else:
                         data["spancat"][spans_key][span.label_] += 1
+                # Obtain the span length
+                if spans_key not in data["spans_length"]:
+                    data["spans_length"][spans_key] = dict()
+                for span in gold.spans[spans_key]:
+                    if span.label_ is None:
+                        continue
+                    elif span.label_ not in data["spans_length"][spans_key]:
+                        data["spans_length"][spans_key][span.label_] = []
+                    else:
+                        data["spans_length"][spans_key][span.label_].append(len(span))
+
         if "textcat" in factory_names or "textcat_multilabel" in factory_names:
             data["cats"].update(gold.cats)
             if any(val not in (0, 1) for val in gold.cats.values()):
@@ -829,5 +851,6 @@ def _get_labels_from_spancat(nlp: Language) -> Dict[str, Set[str]]:
     return labels
 
 
-def _get_span_characteristics() -> Dict[str, Any]:
-    pass
+def _gmean(l: List) -> float:
+    """Compute geometric mean of a list"""
+    return math.exp(math.fsum(math.log(i) for i in l) / len(l))
