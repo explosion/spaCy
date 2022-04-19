@@ -285,11 +285,15 @@ def debug_data(
                 "Span Distinctiveness",
                 "Boundary Distinctiveness",
             )
+            metrics = [span_length, span_distinctiveness, sb_distinctiveness]
             span_char = _compile_span_characteristics(
-                span_data=[span_length, span_distinctiveness, sb_distinctiveness],
+                span_data=metrics,
                 labels=data_labels,
             )
-            msg.table(span_char, header=headers, divider=True)
+            # Compute for weighted average (by frequency)
+            wgt_avg = [_wgt_average(metric, data_labels) for metric in metrics]
+            _wgt_avg_row = ["Wgt. Average"] + [str(w) for w in wgt_avg]
+            msg.table(span_char, footer=_wgt_avg_row, header=headers, divider=True)
 
         if has_low_data_warning:
             msg.text(
@@ -955,3 +959,10 @@ def _compile_span_characteristics(
     """Compile into one list for easier reporting"""
     d = {label: [label] + list(d[label] for d in span_data) for label in labels}
     return list(d.values())
+
+
+def _wgt_average(metric: Dict[str, float], frequencies: Counter) -> float:
+    total = 0.0
+    for span_type, value in metric.items():
+        total += total + (value * frequencies[span_type])
+    return total / sum(frequencies.values())
