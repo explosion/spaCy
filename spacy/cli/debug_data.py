@@ -943,7 +943,7 @@ def _get_distribution(docs, normalize: bool = True) -> Counter:
 
 def _get_kl_divergence(p: Counter, q: Counter) -> float:
     """Compute the Kullback-Leibler divergence from two frequency distributions"""
-    total = 0
+    total = 0.0
     for word, p_word in p.items():
         total += p_word * math.log(p_word / q[word])
     return total
@@ -954,4 +954,4 @@ def _compile_span_characteristics(
 ) -> List[Any]:
     """Compile into one list for easier reporting"""
     d = {label: [label] + list(d[label] for d in span_data) for label in labels}
-    return d.values()
+    return list(d.values())
