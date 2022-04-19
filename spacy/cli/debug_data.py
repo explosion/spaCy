@@ -255,6 +255,16 @@ def debug_data(
                     label: _gmean(l)
                     for label, l in gold_train_data["spans_length"][spans_key].items()
                 }
+                p_spans = {
+                    label: _get_distribution(spans, normalize=True)
+                    for label, spans in gold_train_data["spans_per_type"][
+                        spans_key
+                    ].items()
+                }
+                p_bounds = {
+                    label: _get_distribution(sb["start"] + sb["end"], normalize=True)
+                    for label, sb in gold_train_data["sb_per_type"][spans_key].items()
+                }
 
             msg.info(f"Span characteristics for spans_key `{spans_key}`")
             msg.table(span_length, header=("Span Type", "Length"), divider=True)
@@ -894,9 +904,14 @@ def _gmean(l: List) -> float:
     return math.exp(math.fsum(math.log(i) for i in l) / len(l))
 
 
-# def _get_token_distribution(docs, normalize: bool = True) -> Counter:
-#     word_counts = Counter()
-#     for doc in texts:
-#         for token in text:
-#             word_count
-#     pass
+def _get_distribution(docs, normalize: bool = True) -> Counter:
+    word_counts: Counter = Counter()
+    for doc in docs:
+        for token in doc:
+            # Normalize the text
+            t = token.text.lower().replace("``", '"').replace("''", '"')
+            word_counts[t] += 1
+    if normalize:
+        total = sum(word_counts.values(), 0.0)
+        word_counts = Counter({k: v / total for k, v in word_counts.items()})
+    return word_counts
