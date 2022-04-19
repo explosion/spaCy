@@ -204,7 +204,6 @@ def debug_data(
         msg.info("No word vectors present in the package")
 
     if "spancat" in factory_names:
-        breakpoint()
         model_labels_spancat = _get_labels_from_spancat(nlp)
         has_low_data_warning = False
         has_no_neg_warning = False
@@ -255,6 +254,10 @@ def debug_data(
                     label: _gmean(l)
                     for label, l in gold_train_data["spans_length"][spans_key].items()
                 }
+                # Get relevant distributions: corpus, spans, span boundaries
+                p_corpus = _get_distribution(
+                    [eg.reference for eg in train_dataset], normalize=True
+                )
                 p_spans = {
                     label: _get_distribution(spans, normalize=True)
                     for label, spans in gold_train_data["spans_per_type"][
@@ -265,9 +268,28 @@ def debug_data(
                     label: _get_distribution(sb["start"] + sb["end"], normalize=True)
                     for label, sb in gold_train_data["sb_per_type"][spans_key].items()
                 }
+                # Compute for the span characteristics
+                span_distinctiveness = {
+                    label: _get_kl_divergence(freq_dist, p_corpus)
+                    for label, freq_dist in p_spans.items()
+                }
+                sb_distinctiveness = {
+                    label: _get_kl_divergence(freq_dist, p_corpus)
+                    for label, freq_dist in p_bounds.items()
+                }
 
             msg.info(f"Span characteristics for spans_key `{spans_key}`")
-            msg.table(span_length, header=("Span Type", "Length"), divider=True)
+            headers = (
+                "Span Type",
+                "Span Length",
+                "Span Distinctiveness",
+                "Boundary Distinctiveness",
+            )
+            span_char = _compile_span_characteristics(
+                span_data=[span_length, span_distinctiveness, sb_distinctiveness],
+                labels=data_labels,
+            )
+            msg.table(span_char, header=headers, divider=True)
 
         if has_low_data_warning:
             msg.text(
@@ -671,6 +693,7 @@ def _compile_gold(
         "spancat": dict(),
         "spans_length": dict(),
         "spans_per_type": dict(),
+        "p_corpus": Counter(),
         "sb_per_type": dict(),
         "ws_ents": 0,
         "boundary_cross_ents": 0,
@@ -905,6 +928,7 @@ def _gmean(l: List) -> float:
 
 
 def _get_distribution(docs, normalize: bool = True) -> Counter:
+    """Get the frequency distribution given a set of Docs"""
     word_counts: Counter = Counter()
     for doc in docs:
         for token in doc:
@@ -915,3 +939,19 @@ def _get_distribution(docs, normalize: bool = True) -> Counter:
         total = sum(word_counts.values(), 0.0)
         word_counts = Counter({k: v / total for k, v in word_counts.items()})
     return word_counts
+
+
+def _get_kl_divergence(p: Counter, q: Counter) -> float:
+    """Compute the Kullback-Leibler divergence from two frequency distributions"""
+    total = 0
+    for word, p_word in p.items():
+        total += p_word * math.log(p_word / q[word])
+    return total
+
+
+def _compile_span_characteristics(
+    span_data: List[Dict], labels: List[str]
+) -> List[Any]:
+    """Compile into one list for easier reporting"""
+    d = {label: [label] + list(d[label] for d in span_data) for label in labels}
+    return d.values()
