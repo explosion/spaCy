@@ -16,8 +16,8 @@ from spacy.cli._util import substitute_project_variables
 from spacy.cli._util import validate_project_commands
 from spacy.cli.debug_data import _compile_gold, _get_labels_from_model
 from spacy.cli.debug_data import _get_labels_from_spancat
-from spacy.cli.debug_data import _gmean, _get_distribution, _get_kl_divergence
-from spacy.cli.debug_data import _compile_span_characteristics, _wgt_average
+from spacy.cli.debug_data import _get_distribution, _get_kl_divergence
+from spacy.cli.debug_data import _compile_span_characteristics
 from spacy.cli.download import get_compatibility, get_version
 from spacy.cli.init_config import RECOMMENDATIONS, init_config, fill_config
 from spacy.cli.package import get_third_party_dependencies
@@ -754,11 +754,6 @@ def test_debug_data_compile_gold_for_spans():
 
     data = _compile_gold([eg], ["spancat"], nlp, True)
 
-    print(pred.spans)
-    print(eg.reference.spans)
-    for i in ["spancat", "spans_length", "spans_per_type", "sb_per_type"]:
-        print(f"{i} -> {data[i]}")
-
     assert data["spancat"][spans_key] == Counter({"ORG": 1, "GPE": 1})
     assert data["spans_length"][spans_key] == {"ORG": [3], "GPE": [1]}
     assert data["spans_per_type"][spans_key] == {
@@ -772,7 +767,15 @@ def test_debug_data_compile_gold_for_spans():
 
 
 def test_frequency_distribution_is_correct():
-    pass
+    nlp = English()
+    docs = [
+        Doc(nlp.vocab, words=["Bank", "of", "China"]),
+        Doc(nlp.vocab, words=["China"]),
+    ]
+
+    expected = Counter({"china": 0.5, "bank": 0.25, "of": 0.25})
+    freq_distribution = _get_distribution(docs, normalize=True)
+    assert freq_distribution == expected
 
 
 def test_kl_divergence_computation_is_correct():
