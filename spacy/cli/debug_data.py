@@ -697,7 +697,6 @@ def _compile_gold(
         "spancat": dict(),
         "spans_length": dict(),
         "spans_per_type": dict(),
-        "p_corpus": Counter(),
         "sb_per_type": dict(),
         "ws_ents": 0,
         "boundary_cross_ents": 0,
@@ -760,10 +759,9 @@ def _compile_gold(
                 for span in gold.spans[spans_key]:
                     if span.label_ is None:
                         continue
-                    elif span.label_ not in data["spans_length"][spans_key]:
+                    if span.label_ not in data["spans_length"][spans_key]:
                         data["spans_length"][spans_key][span.label_] = []
-                    else:
-                        data["spans_length"][spans_key][span.label_].append(len(span))
+                    data["spans_length"][spans_key][span.label_].append(len(span))
 
                 # Obtain spans per span type
                 if spans_key not in data["spans_per_type"]:
@@ -771,8 +769,7 @@ def _compile_gold(
                 for span in gold.spans[spans_key]:
                     if span.label_ not in data["spans_per_type"][spans_key]:
                         data["spans_per_type"][spans_key][span.label_] = []
-                    else:
-                        data["spans_per_type"][spans_key][span.label_].append(span)
+                    data["spans_per_type"][spans_key][span.label_].append(span)
 
                 # Obtain boundary tokens per span type
                 window_size = 1
@@ -786,19 +783,18 @@ def _compile_gold(
                             "start": [],
                             "end": [],
                         }
-                    else:
-                        for offset in range(window_size):
-                            sb_start_idx = span.start - (offset + 1)
-                            if sb_start_idx >= 0:
-                                data["sb_per_type"][spans_key][span.label_][
-                                    "start"
-                                ].append(gold[sb_start_idx : sb_start_idx + 1])
+                    for offset in range(window_size):
+                        sb_start_idx = span.start - (offset + 1)
+                        if sb_start_idx >= 0:
+                            data["sb_per_type"][spans_key][span.label_]["start"].append(
+                                gold[sb_start_idx : sb_start_idx + 1]
+                            )
 
-                            sb_end_idx = span.end + (offset + 1)
-                            if sb_end_idx < len(gold):
-                                data["sb_per_type"][spans_key][span.label_][
-                                    "end"
-                                ].append(gold[sb_end_idx : sb_end_idx + 1])
+                        sb_end_idx = span.end + (offset + 1)
+                        if sb_end_idx <= len(gold):
+                            data["sb_per_type"][spans_key][span.label_]["end"].append(
+                                gold[sb_end_idx - 1 : sb_end_idx]
+                            )
 
         if "textcat" in factory_names or "textcat_multilabel" in factory_names:
             data["cats"].update(gold.cats)
@@ -931,6 +927,13 @@ def _gmean(l: List) -> float:
     return math.exp(math.fsum(math.log(i) for i in l) / len(l))
 
 
+def _wgt_average(metric: Dict[str, float], frequencies: Counter) -> float:
+    total = 0.0
+    for span_type, value in metric.items():
+        total += total + (value * frequencies[span_type])
+    return total / sum(frequencies.values())
+
+
 def _get_distribution(docs, normalize: bool = True) -> Counter:
     """Get the frequency distribution given a set of Docs"""
     word_counts: Counter = Counter()
@@ -959,10 +962,3 @@ def _compile_span_characteristics(
     """Compile into one list for easier reporting"""
     d = {label: [label] + list(d[label] for d in span_data) for label in labels}
     return list(d.values())
-
-
-def _wgt_average(metric: Dict[str, float], frequencies: Counter) -> float:
-    total = 0.0
-    for span_type, value in metric.items():
-        total += total + (value * frequencies[span_type])
-    return total / sum(frequencies.values())

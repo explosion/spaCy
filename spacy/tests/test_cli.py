@@ -1,4 +1,6 @@
 import os
+import math
+from typing import Counter
 
 import pytest
 import srsly
@@ -14,6 +16,8 @@ from spacy.cli._util import substitute_project_variables
 from spacy.cli._util import validate_project_commands
 from spacy.cli.debug_data import _compile_gold, _get_labels_from_model
 from spacy.cli.debug_data import _get_labels_from_spancat
+from spacy.cli.debug_data import _gmean, _get_distribution, _get_kl_divergence
+from spacy.cli.debug_data import _compile_span_characteristics, _wgt_average
 from spacy.cli.download import get_compatibility, get_version
 from spacy.cli.init_config import RECOMMENDATIONS, init_config, fill_config
 from spacy.cli.package import get_third_party_dependencies
@@ -24,6 +28,7 @@ from spacy.lang.nl import Dutch
 from spacy.language import Language
 from spacy.schemas import ProjectConfigSchema, RecommendationSchema, validate
 from spacy.tokens import Doc
+from spacy.tokens.span import Span
 from spacy.training import Example, docs_to_json, offsets_to_biluo_tags
 from spacy.training.converters import conll_ner_to_docs, conllu_to_docs
 from spacy.training.converters import iob_to_docs
@@ -735,3 +740,44 @@ def test_debug_data_compile_gold():
     eg = Example(pred, ref)
     data = _compile_gold([eg], ["ner"], nlp, True)
     assert data["boundary_cross_ents"] == 1
+
+
+def test_debug_data_compile_gold_for_spans():
+    nlp = English()
+    spans_key = "sc"
+
+    pred = Doc(nlp.vocab, words=["Welcome", "to", "the", "Bank", "of", "China", "."])
+    pred.spans[spans_key] = [Span(pred, 3, 6, "ORG"), Span(pred, 5, 6, "GPE")]
+    ref = Doc(nlp.vocab, words=["Welcome", "to", "the", "Bank", "of", "China", "."])
+    ref.spans[spans_key] = [Span(ref, 3, 6, "ORG"), Span(ref, 5, 6, "GPE")]
+    eg = Example(pred, ref)
+
+    data = _compile_gold([eg], ["spancat"], nlp, True)
+
+    print(pred.spans)
+    print(eg.reference.spans)
+    for i in ["spancat", "spans_length", "spans_per_type", "sb_per_type"]:
+        print(f"{i} -> {data[i]}")
+
+    assert data["spancat"][spans_key] == Counter({"ORG": 1, "GPE": 1})
+    assert data["spans_length"][spans_key] == {"ORG": [3], "GPE": [1]}
+    assert data["spans_per_type"][spans_key] == {
+        "ORG": [Span(ref, 3, 6, "ORG")],
+        "GPE": [Span(ref, 5, 6, "GPE")],
+    }
+    assert data["sb_per_type"][spans_key] == {
+        "ORG": {"start": [ref[2:3]], "end": [ref[6:7]]},
+        "GPE": {"start": [ref[4:5]], "end": [ref[6:7]]},
+    }
+
+
+def test_frequency_distribution_is_correct():
+    pass
+
+
+def test_kl_divergence_computation_is_correct():
+    pass
+
+
+def test_compiled_span_chars_retains_label():
+    pass
