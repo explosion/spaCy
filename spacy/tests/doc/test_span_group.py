@@ -119,6 +119,18 @@ def test_span_group_set_item(doc, other_doc):
         span_group[index] = span
 
 
+@pytest.mark.issue(10670)
+def test_issue10670(en_tokenizer):
+    # Start with a doc that we know has no 'test' SpanGroup
+    doc = en_tokenizer("0 1 2 3 4 5 6")
+    span1 = doc[0:1]
+    span2 = doc[1:2]
+    doc.spans.setdefault("test", []).append(span1)
+    assert set(doc.spans["test"]) == {span1}
+    doc.spans.setdefault("test", []).append(span2)
+    assert set(doc.spans["test"]) == {span1, span2}
+
+
 def test_span_group_has_overlap(doc):
     span_group = doc.spans["SPANS"]
     assert span_group.has_overlap

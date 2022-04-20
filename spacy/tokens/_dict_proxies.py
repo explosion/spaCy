@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 # Why inherit from UserDict instead of dict here?
 # Well, the 'dict' class doesn't necessarily delegate everything nicely,
 # for performance reasons. The UserDict is slower but better behaved.
-# See https://treyhunner.com/2019/04/why-you-shouldnt-inherit-from-list-and-dict-in-python/0ww
+# See https://treyhunner.com/2019/04/why-you-shouldnt-inherit-from-list-and-dict-in-python/
 class SpanGroups(UserDict):
     """A dict-like proxy held by the Doc, to control access to span groups."""
 
@@ -28,11 +28,21 @@ class SpanGroups(UserDict):
         self.doc_ref = weakref.ref(doc)
         UserDict.__init__(self, items)  # type: ignore[arg-type]
 
-    def __setitem__(self, key: str, value: Union[SpanGroup, Iterable["Span"]]) -> None:
+    def __setitem__(  # type: ignore[override]
+        self, key: str, value: Union[SpanGroup, Iterable["Span"]]
+    ) -> SpanGroup:
         if not isinstance(value, SpanGroup):
             value = self._make_span_group(key, value)
         assert value.doc is self.doc_ref()
         UserDict.__setitem__(self, key, value)
+        return value
+
+    def setdefault(
+        self, key: str, default: Union[SpanGroup, Iterable["Span"]] = tuple()
+    ) -> SpanGroup:
+        if key in self:
+            return self[key]
+        return self.__setitem__(key, default)
 
     def _make_span_group(self, name: str, spans: Iterable["Span"]) -> SpanGroup:
         doc = self._ensure_doc()
