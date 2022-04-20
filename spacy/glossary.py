@@ -19,6 +19,7 @@ def explain(term):
         warnings.warn(Warnings.W118.format(term=term))
 
 
+# dummy comment
 GLOSSARY = {
     # POS tags
     # Universal POS Tags
