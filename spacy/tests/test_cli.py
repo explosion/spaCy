@@ -779,8 +779,8 @@ def test_frequency_distribution_is_correct():
 
 
 def test_kl_divergence_computation_is_correct():
-    pass
-
-
-def test_compiled_span_chars_retains_label():
-    pass
+    p = Counter({"a": 0.5, "b": 0.25})
+    q = Counter({"a": 0.25, "b": 0.50, "c": 0.15, "d": 0.10})
+    result = _get_kl_divergence(p, q)
+    expected = 0.1733
+    assert math.isclose(result, expected, rel_tol=1e-3)
