@@ -1,7 +1,7 @@
 from typing import List, Tuple, Any, Optional, cast
-from thinc.api import Ops, Model, normal_init, chain, list2array, Linear
+from thinc.api import Model, normal_init, chain, list2array, Linear
 from thinc.api import uniform_init, glorot_uniform_init, zero_init
-from thinc.api import CupyOps
+from thinc.api import NumpyOps
 from thinc.types import Floats1d, Floats2d, Floats3d, Ints2d, Floats4d
 import numpy
 
@@ -148,7 +148,7 @@ def forward(model, docs_moves: Tuple[List[Doc], TransitionSystem], is_train: boo
     feats, backprop_feats = _forward_precomputable_affine(model, tokvecs, is_train)
     seen_mask = _get_seen_mask(model)
 
-    if beam_width == 1 and not is_train and not isinstance(model.ops, CupyOps):
+    if beam_width == 1 and not is_train and isinstance(model.ops, NumpyOps):
         return forward_cpu(model, moves, states, feats, seen_mask), lambda _: []
     else:
         return forward_thinc(model, moves, states, tokvecs, backprop_tok2vec, feats, backprop_feats, seen_mask, is_train)
