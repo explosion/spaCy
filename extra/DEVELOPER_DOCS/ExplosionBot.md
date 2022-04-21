@@ -24,6 +24,10 @@ Some things to note:
 ```
 @explosion-bot please test_gpu --thinc-branch develop
 ```
+You can also specify a branch from an unmerged PR:
+```
+@explosion-bot please test_gpu --thinc-branch refs/pull/633/head
+```
 
 ## Troubleshooting
 
