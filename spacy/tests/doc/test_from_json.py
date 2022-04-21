@@ -6,7 +6,7 @@ def test_json_to_doc(doc):
     new_tokens = [token for token in new_doc]
     assert new_doc.text == doc.text
     assert len(new_tokens) == len([token for token in doc])
-    assert doc.text == "c d e "
+    assert new_doc.text == doc.text == "c d e "
     assert len(new_tokens) == 3
     assert new_tokens[0].pos_ == "VERB"
     assert new_tokens[0].tag_ == "VBP"
