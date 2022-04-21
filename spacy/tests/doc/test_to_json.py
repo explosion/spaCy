@@ -2,27 +2,6 @@ import pytest
 from spacy.tokens import Doc, Span
 
 
-@pytest.fixture()
-def doc(en_vocab):
-    words = ["c", "d", "e"]
-    pos = ["VERB", "NOUN", "NOUN"]
-    tags = ["VBP", "NN", "NN"]
-    heads = [0, 0, 0]
-    deps = ["ROOT", "dobj", "dobj"]
-    ents = ["O", "B-ORG", "O"]
-    morphs = ["Feat1=A", "Feat1=B", "Feat1=A|Feat2=D"]
-    return Doc(
-        en_vocab,
-        words=words,
-        pos=pos,
-        tags=tags,
-        heads=heads,
-        deps=deps,
-        ents=ents,
-        morphs=morphs,
-    )
-
-
 def test_doc_to_json(doc):
     json_doc = doc.to_json()
     assert json_doc["text"] == "c d e "
@@ -31,8 +10,10 @@ def test_doc_to_json(doc):
     assert json_doc["tokens"][0]["tag"] == "VBP"
     assert json_doc["tokens"][0]["dep"] == "ROOT"
     assert len(json_doc["ents"]) == 1
-    assert json_doc["ents"][0]["start"] == 2  # character offset!
-    assert json_doc["ents"][0]["end"] == 3  # character offset!
+    assert json_doc["ents"][0]["start_char"] == 2
+    assert json_doc["ents"][0]["end_char"] == 3
+    assert json_doc["ents"][0]["start"] == 1
+    assert json_doc["ents"][0]["end"] == 2
     assert json_doc["ents"][0]["label"] == "ORG"
 
 

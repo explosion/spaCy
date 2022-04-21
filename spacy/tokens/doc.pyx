@@ -1471,23 +1471,51 @@ cdef class Doc:
         RETURNS (Doc): A doc instance corresponding to the specified JSON representation.
         """
 
-        words = ["c", "d", "e"]
-        pos = ["VERB", "NOUN", "NOUN"]
-        tags = ["VBP", "NN", "NN"]
-        heads = [0, 0, 0]
-        deps = ["ROOT", "dobj", "dobj"]
-        ents = ["O", "B-ORG", "O"]
-        morphs = ["Feat1=A", "Feat1=B", "Feat1=A|Feat2=D"]
+        words = []
+        token_annotations = {
+            # For each annotation type: store (1) annotation type required to include it, (2) list of annotations for
+            # this type.
+            annotation_type: {"req": annotation_type if annotation_type != "head" else "dep", "values": None}
+            for annotation_type in ("tag", "pos", "morph", "lemma", "dep", "head")
+        }
+
+        # Gather token-level properties.
+        for token in doc_json["tokens"]:
+            words.append(doc_json["text"][token["start"]: token["end"]])
+            for annotation_type in token_annotations:
+                # Assuming all tokens have exactly the same set of attributes.
+                if token_annotations[annotation_type]["req"] in token:
+                    if token_annotations[annotation_type]["values"] is None:
+                        token_annotations[annotation_type]["values"] = []
+                    token_annotations[annotation_type]["values"].append(token[annotation_type])
+
+        # Create Doc instance.
         doc = Doc(
             vocab,
             words=words,
-            pos=pos,
-            tags=tags,
-            heads=heads,
-            deps=deps,
-            ents=ents,
-            morphs=morphs,
+            tags=token_annotations["tag"]["values"],
+            pos=token_annotations["pos"]["values"],
+            morphs=token_annotations["morph"]["values"],
+            lemmas=token_annotations["lemma"]["values"],
+            heads=token_annotations["head"]["values"],
+            deps=token_annotations["dep"]["values"],
         )
+
+        # Complement other document-level properties (cats, spans, ents).
+        doc.cats = doc_json.get("cats", doc.cats)
+        for span_group in doc_json.get("spans", {}):
+            doc.spans[span_group] = [
+                Span(doc=doc, start=span["start"], end=span["end"], label=span["label"], kb_id=span["kb_id"])
+                for span in doc_json["spans"][span_group]
+            ]
+        if "ents" in doc_json:
+            doc.ents = [(ent["label"], ent["start"], ent["end"]) for ent in doc_json["ents"]]
+
+        # Add custom attributes.
+        for attr in doc_json.get("_", {}):
+            if not Doc.has_extension(attr):
+                Doc.set_extension(attr)
+            doc._.set(attr, doc_json["_"][attr])
 
         return doc
 
@@ -1501,8 +1529,13 @@ cdef class Doc:
         """
         data = {"text": self.text}
         if self.has_annotation("ENT_IOB"):
-            data["ents"] = [{"start": ent.start_char, "end": ent.end_char,
-                            "label": ent.label_} for ent in self.ents]
+            data["ents"] = [{
+                "start_char": ent.start_char,
+                "end_char": ent.end_char,
+                "start": ent.start,
+                "end": ent.end,
+                "label": ent.label_
+            } for ent in self.ents]
         if self.has_annotation("SENT_START"):
             sents = list(self.sents)
             data["sents"] = [{"start": sent.start_char, "end": sent.end_char}
@@ -1532,7 +1565,14 @@ cdef class Doc:
             for span_group in self.spans:
                 data["spans"][span_group] = []
                 for span in self.spans[span_group]:
-                    span_data = {"start": span.start_char, "end": span.end_char, "label": span.label_, "kb_id": span.kb_id_}
+                    span_data = {
+                        "start_char": span.start_char,
+                        "end_char": span.end_char,
+                        "start": span.start,
+                        "end": span.end,
+                        "label": span.label_,
+                        "kb_id": span.kb_id_
+                    }
                     data["spans"][span_group].append(span_data)
 
         if underscore:
