@@ -17,6 +17,8 @@ State = Any  # TODO
 def TransitionModel(
     *,
     tok2vec: Model[List[Doc], List[Floats2d]],
+    beam_width: int = 1,
+    beam_density: float = 0.0,
     state_tokens: int,
     hidden_width: int,
     maxout_pieces: int,
@@ -51,6 +53,8 @@ def TransitionModel(
             "nF": state_tokens,
         },
         attrs={
+            "beam_width": beam_width,
+            "beam_density": beam_density,
             "unseen_classes": set(unseen_classes),
             "resize_output": resize_output,
         },
@@ -141,8 +145,8 @@ def forward(model, docs_moves: Tuple[List[Doc], TransitionSystem], is_train: boo
     nO = model.get_dim("nO")
     nI = model.get_dim("nI")
 
-    beam_width = model.attrs.get("beam_width", 1)
-    beam_density = model.attrs.get("beam_density", 0.0)
+    beam_width = model.attrs["beam_width"]
+    beam_density = model.attrs["beam_density"]
 
     ops = model.ops
     docs, moves = docs_moves
