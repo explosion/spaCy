@@ -158,7 +158,7 @@ def forward(model, docs_moves: Tuple[List[Doc], TransitionSystem], is_train: boo
         batch = GreedyBatch(moves, states, None)
     else:
         batch = _beam_utils.BeamBatch(
-            moves, states, None, beam_width, density=beam_density
+            moves, states, None, width=beam_width, density=beam_density
         )
     seen_mask = _get_seen_mask(model)
     arange = model.ops.xp.arange(nF)
