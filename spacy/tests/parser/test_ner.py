@@ -181,7 +181,6 @@ def test_issue4267():
         assert token.ent_iob == 2
 
 
-@pytest.mark.xfail(reason="no beam parser yet")
 @pytest.mark.issue(4313)
 def test_issue4313():
     """This should not crash or exit with some strange error code"""
@@ -597,7 +596,6 @@ def test_overfitting_IO():
     assert ents[1].kb_id == 0
 
 
-@pytest.mark.xfail(reason="no beam parser yet")
 def test_beam_ner_scores():
     # Test that we can get confidence values out of the beam_ner pipe
     beam_width = 16
@@ -633,7 +631,6 @@ def test_beam_ner_scores():
             assert 0 - eps <= score <= 1 + eps
 
 
-@pytest.mark.xfail(reason="no beam parser yet")
 def test_beam_overfitting_IO(neg_key):
     # Simple test to try and quickly overfit the Beam NER component
     nlp = English()
