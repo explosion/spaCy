@@ -1117,8 +1117,8 @@ cdef class Doc:
             whenever the first doc does not end in whitespace.
         attrs (list): Optional list of attribute ID ints or attribute name
             strings.
-        exclude (list): List of attributes to exclude. Supported attributes:
-            `spans`, `tensor`, `user_data`.
+        exclude (Iterable[str]): Doc attributes to exclude. Supported
+            attributes: `spans`, `tensor`, `user_data`.
         RETURNS (Doc): A doc that contains the concatenated docs, or None if no
             docs were given.
 
