@@ -1471,6 +1471,8 @@ cdef class Doc:
         RETURNS (Doc): A doc instance corresponding to the specified JSON representation.
         """
 
+        from spacy.training.example import _add_entities_to_doc, _add_spans_to_doc
+
         words = []
         token_annotations = {
             # For each annotation type: store (1) annotation type required to include it, (2) list of annotations for
@@ -1503,13 +1505,19 @@ cdef class Doc:
 
         # Complement other document-level properties (cats, spans, ents).
         doc.cats = doc_json.get("cats", doc.cats)
-        for span_group in doc_json.get("spans", {}):
-            doc.spans[span_group] = [
-                Span(doc=doc, start=span["start"], end=span["end"], label=span["label"], kb_id=span["kb_id"])
-                for span in doc_json["spans"][span_group]
-            ]
+        if "spans" in doc_json:
+            _add_spans_to_doc(
+                doc,
+                {
+                    span_group: [
+                        (span["start"], span["end"], span["label"], span["kb_id"])
+                        for span in doc_json["spans"][span_group]
+                    ]
+                    for span_group in doc_json["spans"]
+                }
+            )
         if "ents" in doc_json:
-            doc.ents = [(ent["label"], ent["start"], ent["end"]) for ent in doc_json["ents"]]
+            _add_entities_to_doc(doc, [(ent["start"], ent["end"], ent["label"]) for ent in doc_json["ents"]])
 
         # Add custom attributes.
         for attr in doc_json.get("_", {}):
@@ -1529,17 +1537,10 @@ cdef class Doc:
         """
         data = {"text": self.text}
         if self.has_annotation("ENT_IOB"):
-            data["ents"] = [{
-                "start_char": ent.start_char,
-                "end_char": ent.end_char,
-                "start": ent.start,
-                "end": ent.end,
-                "label": ent.label_
-            } for ent in self.ents]
+            data["ents"] = [{"start": ent.start_char, "end": ent.end_char, "label": ent.label_} for ent in self.ents]
         if self.has_annotation("SENT_START"):
             sents = list(self.sents)
-            data["sents"] = [{"start": sent.start_char, "end": sent.end_char}
-                             for sent in sents]
+            data["sents"] = [{"start": sent.start_char, "end": sent.end_char} for sent in sents]
         if self.cats:
             data["cats"] = self.cats
         data["tokens"] = []
@@ -1566,12 +1567,7 @@ cdef class Doc:
                 data["spans"][span_group] = []
                 for span in self.spans[span_group]:
                     span_data = {
-                        "start_char": span.start_char,
-                        "end_char": span.end_char,
-                        "start": span.start,
-                        "end": span.end,
-                        "label": span.label_,
-                        "kb_id": span.kb_id_
+                        "start": span.start_char, "end": span.end_char, "label": span.label_, "kb_id": span.kb_id_
                     }
                     data["spans"][span_group].append(span_data)
 
