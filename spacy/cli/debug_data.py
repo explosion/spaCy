@@ -928,9 +928,7 @@ def _gmean(l: List) -> float:
 
 
 def _wgt_average(metric: Dict[str, float], frequencies: Counter) -> float:
-    total = 0.0
-    for span_type, value in metric.items():
-        total += total + (value * frequencies[span_type])
+    total = sum(value * frequencies[span_type] for span_type, value in metric.items())
     return total / sum(frequencies.values())
 
 
