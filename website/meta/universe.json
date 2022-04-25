@@ -3212,7 +3212,7 @@
                 "",
                 "assert nlp.pipe_names == [\"tok2vec\", \"tagger\", \"syllables\", \"parser\",  \"attribute_ruler\", \"lemmatizer\", \"ner\"]",
                 "doc = nlp(\"terribly long\")",
-                "data = [(token.text, token..syllables, token..syllables_count) for token in doc]",
+                "data = [(token.text, token._.syllables, token._.syllables_count) for token in doc]",
                 "assert data == [(\"terribly\", [\"ter\", \"ri\", \"bly\"], 3), (\"long\", [\"long\"], 1)]"
             ],
             "thumb": "https://raw.githubusercontent.com/sloev/spacy-syllables/master/logo.png",
