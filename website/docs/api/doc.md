@@ -399,14 +399,14 @@ Concatenate multiple `Doc` objects to form a new one. Raises an error if the
 >        [str(ent) for doc in docs for ent in doc.ents]
 > ```
 
-| Name                | Description                                                                                                       |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `docs`              | A list of `Doc` objects. ~~List[Doc]~~                                                                            |
-| `ensure_whitespace` | Insert a space between two adjacent docs whenever the first doc does not end in whitespace. ~~bool~~              |
-| `attrs`             | Optional list of attribute ID ints or attribute name strings. ~~Optional[List[Union[str, int]]]~~                 |
-| _keyword-only_      |                                                                                                                   |
-| `exclude`           | String names of Doc attributes to exclude. Supported: `spans`, `tensor`, `user_data`. ~~Iterable[str]~~           |
-| **RETURNS**         | The new `Doc` object that is containing the other docs or `None`, if `docs` is empty or `None`. ~~Optional[Doc]~~ |
+| Name                                   | Description                                                                                                       |
+| -------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `docs`                                 | A list of `Doc` objects. ~~List[Doc]~~                                                                            |
+| `ensure_whitespace`                    | Insert a space between two adjacent docs whenever the first doc does not end in whitespace. ~~bool~~              |
+| `attrs`                                | Optional list of attribute ID ints or attribute name strings. ~~Optional[List[Union[str, int]]]~~                 |
+| _keyword-only_                         |                                                                                                                   |
+| `exclude` <Tag variant="new">3.3</Tag> | String names of Doc attributes to exclude. Supported: `spans`, `tensor`, `user_data`. ~~Iterable[str]~~           |
+| **RETURNS**                            | The new `Doc` object that is containing the other docs or `None`, if `docs` is empty or `None`. ~~Optional[Doc]~~ |
 
 ## Doc.to_disk {#to_disk tag="method" new="2"}
 
