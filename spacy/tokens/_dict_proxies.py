@@ -48,16 +48,16 @@ class SpanGroups(UserDict):
         # know their names.
         if len(self) == 0:
             return self._EMPTY_BYTES
-        msg = [value.to_bytes() for value in self.values()]
+        msg = {key: value.to_bytes() for key, value in self.items()}
         return srsly.msgpack_dumps(msg)
 
     def from_bytes(self, bytes_data: bytes) -> "SpanGroups":
-        msg = [] if bytes_data == self._EMPTY_BYTES else srsly.msgpack_loads(bytes_data)
+        msg = {} if bytes_data == self._EMPTY_BYTES else srsly.msgpack_loads(bytes_data)
         self.clear()
         doc = self._ensure_doc()
-        for value_bytes in msg:
+        for key, value_bytes in msg.items():
             group = SpanGroup(doc).from_bytes(value_bytes)
-            self[group.name] = group
+            self[key] = group
         return self
 
     def _ensure_doc(self) -> "Doc":

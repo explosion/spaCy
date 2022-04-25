@@ -4,7 +4,7 @@ from numpy.testing import assert_array_equal
 
 from spacy.attrs import ORTH, LENGTH
 from spacy.lang.en import English
-from spacy.tokens import Doc, Span, Token
+from spacy.tokens import Doc, Span, SpanGroup, Token
 from spacy.vocab import Vocab
 from spacy.util import filter_spans
 from thinc.api import get_current_ops
@@ -668,3 +668,34 @@ def test_span_group_copy(doc):
     assert len(doc.spans["test"]) == 3
     # check that the copy spans were not modified and this is an isolated doc
     assert len(doc_copy.spans["test"]) == 2
+
+
+@pytest.mark.issue(10685)
+def test_issue10685(en_tokenizer):
+    """Test `SpanGroups` de/serialization"""
+    # Start with a Doc with no SpanGroups
+    doc = en_tokenizer("Will it blend?")
+
+    # Test empty `SpanGroups` de/serialization:
+    assert len(doc.spans) == 0
+    doc.spans.from_bytes(doc.spans.to_bytes())
+    assert len(doc.spans) == 0
+
+    # Test non-empty `SpanGroups` de/serialization:
+    doc.spans["test"] = SpanGroup(doc, name="test", spans=[doc[0:1]])
+    doc.spans["test2"] = SpanGroup(doc, name="test", spans=[doc[1:2]])
+
+    def assert_spangroups():
+        assert len(doc.spans) == 2
+        assert doc.spans["test"].name == "test"
+        assert doc.spans["test2"].name == "test"
+        assert set(doc.spans["test"]) == {doc[0:1]}
+        assert set(doc.spans["test2"]) == {doc[1:2]}
+
+    # Sanity check the currently-expected behavior
+    assert_spangroups()
+
+    # Now test serialization/deserialization:
+    doc.spans.from_bytes(doc.spans.to_bytes())
+
+    assert_spangroups()
