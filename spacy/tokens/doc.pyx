@@ -1506,10 +1506,14 @@ cdef class Doc:
 
         if "spans" in doc_json:
             for span_group in doc_json["spans"]:
-                doc.spans[span_group] = [
-                    doc.char_span(span["start"], span["end"], span["label"], span["kb_id"])
-                    for span in doc_json["spans"][span_group]
-                ]
+                spans = []
+                for json_span in doc_json["spans"][span_group]:
+                    span = doc.char_span(json_span["start"], json_span["end"], json_span["label"], json_span["kb_id"])
+                    if not doc.has_annotation("DEP"):
+                        for i, token in enumerate(span):
+                            token.is_sent_start = i == 0
+                    spans.append(span)
+                doc.spans[span_group] = spans
 
         if "ents" in doc_json:
             doc.ents = [doc.char_span(ent["start"], ent["end"], ent["label"]) for ent in doc_json["ents"]]
