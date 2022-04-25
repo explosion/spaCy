@@ -1471,8 +1471,6 @@ cdef class Doc:
         RETURNS (Doc): A doc instance corresponding to the specified JSON representation.
         """
 
-        from spacy.training.example import _add_entities_to_doc, _add_spans_to_doc
-
         words = []
         token_annotations = {
             # For each annotation type: store (1) annotation type required to include it, (2) list of annotations for
@@ -1505,19 +1503,16 @@ cdef class Doc:
 
         # Complement other document-level properties (cats, spans, ents).
         doc.cats = doc_json.get("cats", doc.cats)
+
         if "spans" in doc_json:
-            _add_spans_to_doc(
-                doc,
-                {
-                    span_group: [
-                        (span["start"], span["end"], span["label"], span["kb_id"])
-                        for span in doc_json["spans"][span_group]
-                    ]
-                    for span_group in doc_json["spans"]
-                }
-            )
+            for span_group in doc_json["spans"]:
+                doc.spans[span_group] = [
+                    doc.char_span(span["start"], span["end"], span["label"], span["kb_id"])
+                    for span in doc_json["spans"][span_group]
+                ]
+
         if "ents" in doc_json:
-            _add_entities_to_doc(doc, [(ent["start"], ent["end"], ent["label"]) for ent in doc_json["ents"]])
+            doc.ents = [doc.char_span(ent["start"], ent["end"], ent["label"]) for ent in doc_json["ents"]]
 
         # Add custom attributes.
         for attr in doc_json.get("_", {}):
