@@ -44,20 +44,37 @@ class SpanGroups(UserDict):
         return SpanGroups(doc).from_bytes(self.to_bytes())
 
     def to_bytes(self) -> bytes:
-        # We don't need to serialize this as a dict, because the groups
-        # know their names.
+        # We should serialize this as a dict, even though groups know their names:
+        # if a group has the same .name as another group in `self`,
+        # we need to know which key will map to which group. (See #10685)
         if len(self) == 0:
             return self._EMPTY_BYTES
         msg = {key: value.to_bytes() for key, value in self.items()}
         return srsly.msgpack_dumps(msg)
 
     def from_bytes(self, bytes_data: bytes) -> "SpanGroups":
-        msg = {} if bytes_data == self._EMPTY_BYTES else srsly.msgpack_loads(bytes_data)
         self.clear()
         doc = self._ensure_doc()
-        for key, value_bytes in msg.items():
-            group = SpanGroup(doc).from_bytes(value_bytes)
-            self[key] = group
+        # backwards-compatibility: bytes_data may be one of:
+        # b'', a serialized empty list, a serialized list of SpanGroup bytes,
+        # (and now it may be) a serialized dict mapping keys to SpanGroup bytes
+        if bytes_data and bytes_data != self._EMPTY_BYTES:
+            msg = srsly.msgpack_loads(bytes_data)
+            if isinstance(msg, dict):
+                for key, value_bytes in msg.items():
+                    group = SpanGroup(doc).from_bytes(value_bytes)
+                    self[key] = group
+            elif isinstance(msg, list):
+                # TODO: Display a warning if `msg` contains `SpanGroup`s
+                #       that have the same .name (attribute)? Because currently
+                #       --and in the past (we maintain backwards-compatibility)--
+                #       only 1 SpanGroup per .name is loaded. (See #10685)
+                for value_bytes in msg:
+                    group = SpanGroup(doc).from_bytes(value_bytes)
+                    self[group.name] = group
+            # TODO: Raise exception if `msg` is neither dict nor list?
+            #       (Or should we just use `else` instead of the `elif` above
+            #        (and quietly ignore any (invalid) non-dict/list data)?)
         return self
 
     def _ensure_doc(self) -> "Doc":
