@@ -279,21 +279,17 @@ def debug_data(
                 }
 
             msg.info(f"Span characteristics for spans_key `{spans_key}`")
-            headers = (
-                "Span Type",
-                "Span Length",
-                "Span Distinctiveness",
-                "Boundary Distinctiveness",
-            )
+            msg.info("SD = Span Distinctiveness, BD = Boundary Distinctiveness")
+            headers = ("Span Type", "Length", "SD", "BD")
             metrics = [span_length, span_distinctiveness, sb_distinctiveness]
-            span_char = _compile_span_characteristics(
+            span_row = _create_span_row(
                 span_data=metrics,
                 labels=data_labels,
             )
             # Compute for weighted average (by frequency)
             wgt_avg = [_wgt_average(metric, data_labels) for metric in metrics]
-            _wgt_avg_row = ["Wgt. Average"] + [str(w) for w in wgt_avg]
-            msg.table(span_char, footer=_wgt_avg_row, header=headers, divider=True)
+            _wgt_avg_row = ["Wgt. Average"] + [str(round(w, 2)) for w in wgt_avg]
+            msg.table(span_row, footer=_wgt_avg_row, header=headers, divider=True)
 
         if has_low_data_warning:
             msg.text(
@@ -954,9 +950,9 @@ def _get_kl_divergence(p: Counter, q: Counter) -> float:
     return total
 
 
-def _compile_span_characteristics(
-    span_data: List[Dict], labels: List[str]
-) -> List[Any]:
+def _create_span_row(span_data: List[Dict], labels: List[str]) -> List[Any]:
     """Compile into one list for easier reporting"""
-    d = {label: [label] + list(d[label] for d in span_data) for label in labels}
+    d = {
+        label: [label] + list(round(d[label], 2) for d in span_data) for label in labels
+    }
     return list(d.values())
