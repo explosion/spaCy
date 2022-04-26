@@ -17,7 +17,7 @@ from spacy.cli._util import validate_project_commands
 from spacy.cli.debug_data import _compile_gold, _get_labels_from_model
 from spacy.cli.debug_data import _get_labels_from_spancat
 from spacy.cli.debug_data import _get_distribution, _get_kl_divergence
-from spacy.cli.debug_data import _create_span_row
+from spacy.cli.debug_data import _format_span_row
 from spacy.cli.download import get_compatibility, get_version
 from spacy.cli.init_config import RECOMMENDATIONS, init_config, fill_config
 from spacy.cli.package import get_third_party_dependencies

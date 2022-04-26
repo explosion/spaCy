@@ -31,6 +31,10 @@ DEP_LABEL_THRESHOLD = 20
 # Minimum number of expected examples to train a new pipeline
 BLANK_MODEL_MIN_THRESHOLD = 100
 BLANK_MODEL_THRESHOLD = 2000
+# Arbitrary threshold where SpanCat performs well
+SPAN_DISTINCT_THRESHOLD = 1
+# Arbitrary threshold where SpanCat performs well
+BOUNDARY_DISTINCT_THRESHOLD = 1
 
 
 @debug_cli.command(
@@ -254,6 +258,13 @@ def debug_data(
                     label: _gmean(l)
                     for label, l in gold_train_data["spans_length"][spans_key].items()
                 }
+                min_lengths = [
+                    min(l) for l in gold_train_data["spans_length"][spans_key].values()
+                ]
+                max_lengths = [
+                    max(l) for l in gold_train_data["spans_length"][spans_key].values()
+                ]
+
                 # Get relevant distributions: corpus, spans, span boundaries
                 p_corpus = _get_distribution(
                     [eg.reference for eg in train_dataset], normalize=True
@@ -282,7 +293,7 @@ def debug_data(
             msg.info("SD = Span Distinctiveness, BD = Boundary Distinctiveness")
             headers = ("Span Type", "Length", "SD", "BD")
             metrics = [span_length, span_distinctiveness, sb_distinctiveness]
-            span_row = _create_span_row(
+            span_row = _format_span_row(
                 span_data=metrics,
                 labels=data_labels,
             )
@@ -290,6 +301,45 @@ def debug_data(
             wgt_avg = [_wgt_average(metric, data_labels) for metric in metrics]
             _wgt_avg_row = ["Wgt. Average"] + [str(round(w, 2)) for w in wgt_avg]
             msg.table(span_row, footer=_wgt_avg_row, header=headers, divider=True)
+
+            avg_length, avg_sd, avg_bd = wgt_avg
+            msg.info(
+                f"It's recommended to use a maximum of {math.ceil(avg_length)} ngrams "
+                "when you're using the n-gram suggester function "
+                f"(avg={round(avg_length,2)}, "
+                f"min={min(min_lengths)}, max={max(max_lengths)})",
+                show=verbose,
+            )
+
+            if avg_sd < SPAN_DISTINCT_THRESHOLD:
+                msg.warn("Spans may not be distinct from the rest of the corpus")
+            else:
+                msg.good("Spans are distinct from the rest of the corpus")
+            all_span_tokens: Counter = sum(p_spans.values(), Counter())
+            most_common_spans = [w for w, _ in all_span_tokens.most_common(10)]
+            msg.text(
+                "10 most common span tokens: {}".format(
+                    _format_labels(most_common_spans)
+                ),
+                show=verbose,
+            )
+
+            if avg_bd < BOUNDARY_DISTINCT_THRESHOLD:
+                msg.warn(
+                    "Boundary tokens may not be distinct from the rest of the corpus"
+                )
+            else:
+                msg.good(
+                    "Span boundary tokens are distinct from the rest of the corpus"
+                )
+            all_span_bound_tokens: Counter = sum(p_bounds.values(), Counter())
+            most_common_bounds = [w for w, _ in all_span_bound_tokens.most_common(10)]
+            msg.text(
+                "10 most common span boundary tokens: {}".format(
+                    _format_labels(most_common_bounds)
+                ),
+                show=verbose,
+            )
 
         if has_low_data_warning:
             msg.text(
@@ -950,7 +1000,7 @@ def _get_kl_divergence(p: Counter, q: Counter) -> float:
     return total
 
 
-def _create_span_row(span_data: List[Dict], labels: List[str]) -> List[Any]:
+def _format_span_row(span_data: List[Dict], labels: List[str]) -> List[Any]:
     """Compile into one list for easier reporting"""
     d = {
         label: [label] + list(round(d[label], 2) for d in span_data) for label in labels
