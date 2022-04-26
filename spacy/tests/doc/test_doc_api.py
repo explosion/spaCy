@@ -1,6 +1,7 @@
 import weakref
 
 import numpy
+from numpy.testing import assert_array_equal
 import pytest
 from thinc.api import NumpyOps, get_current_ops
 
@@ -634,6 +635,14 @@ def test_doc_api_from_docs(en_tokenizer, de_tokenizer):
     assert "group" in m_doc.spans
     assert span_group_texts == sorted([s.text for s in m_doc.spans["group"]])
 
+    # can exclude spans
+    m_doc = Doc.from_docs(en_docs, exclude=["spans"])
+    assert "group" not in m_doc.spans
+
+    # can exclude user_data
+    m_doc = Doc.from_docs(en_docs, exclude=["user_data"])
+    assert m_doc.user_data == {}
+
     # can merge empty docs
     doc = Doc.from_docs([en_tokenizer("")] * 10)
 
@@ -646,6 +655,20 @@ def test_doc_api_from_docs(en_tokenizer, de_tokenizer):
     m_doc = Doc.from_docs(en_docs)
     assert "group" in m_doc.spans
     assert len(m_doc.spans["group"]) == 0
+
+    # with tensor
+    ops = get_current_ops()
+    for doc in en_docs:
+        doc.tensor = ops.asarray([[len(t.text), 0.0] for t in doc])
+    m_doc = Doc.from_docs(en_docs)
+    assert_array_equal(
+        ops.to_numpy(m_doc.tensor),
+        ops.to_numpy(ops.xp.vstack([doc.tensor for doc in en_docs if len(doc)])),
+    )
+
+    # can exclude tensor
+    m_doc = Doc.from_docs(en_docs, exclude=["tensor"])
+    assert m_doc.tensor.shape == (0,)
 
 
 def test_doc_api_from_docs_ents(en_tokenizer):
