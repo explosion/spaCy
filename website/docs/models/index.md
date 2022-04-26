@@ -189,7 +189,7 @@ than the rule-based `sentencizer`.
 
 #### Switch from trainable lemmatizer to default lemmatizer
 
-A number of v3.3 pipelines use a new trainable lemmatizer. You can check whether
+Since v3.3, a number of pipelines use a trainable lemmatizer. You can check whether
 the lemmatizer is trainable:
 
 ```python
