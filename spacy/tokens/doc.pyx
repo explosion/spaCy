@@ -1482,7 +1482,7 @@ cdef class Doc:
 
         # Gather token-level properties.
         for token in doc_json["tokens"]:
-            words.append(doc_json["text"][token["start"]: token["end"]])
+            words.append(doc_json["text"][token["start"]:token["end"]])
             for annotation_type in token_annotations:
                 # Assuming all tokens have exactly the same set of attributes.
                 if token_annotations[annotation_type]["req"] in token:
@@ -1495,7 +1495,9 @@ cdef class Doc:
         cdef const LexemeC* lex
         cdef str orth_
         cdef bint has_space
-        _, spaces = get_words_and_spaces(words, doc_json["text"])
+        reconstructed_words, spaces = get_words_and_spaces(words, doc_json["text"])
+        assert words == reconstructed_words
+
         for i, token in enumerate(doc_json["tokens"]):
             has_space = spaces[i]
             orth_ = doc_json["text"][token["start"]:token["end"]]
@@ -1516,13 +1518,6 @@ cdef class Doc:
             token_annotations["head"]["values"] = [0] * len(token_annotations["dep"]["values"])
         if token_annotations["head"]["values"] and not token_annotations["dep"]["values"]:
             raise ValueError(Errors.E1017)
-        sent_starts = None
-        if doc_json["sents"] is not None and not token_annotations["dep"]["values"]:
-            sent_start_idx = {s["start"] for s in doc_json["sents"]}
-            sent_starts = [
-                1 if is_sent_start else -1
-                for is_sent_start in [token["start"] in sent_start_idx for token in doc_json["tokens"]]
-            ]
         if token_annotations["pos"]["values"] is not None:
             for pp in set(token_annotations["pos"]["values"]):
                 if pp not in parts_of_speech.IDS:
@@ -1530,30 +1525,27 @@ cdef class Doc:
 
         headings = []
         values = []
-        annotations = [
-            *[token_annotations[key]["values"] for key in annotation_types],
-            sent_starts
-        ]
-        possible_headings = [POS, HEAD, DEP, LEMMA, TAG, MORPH, SENT_START]
+        annotations = [token_annotations[key]["values"] for key in annotation_types]
+        possible_headings = [POS, HEAD, DEP, LEMMA, TAG, MORPH]
         for a, annot in enumerate(annotations):
             if annot is not None:
                 if len(annot) != len(words):
                     raise ValueError(Errors.E189)
                 headings.append(possible_headings[a])
-                if annot is not token_annotations["head"]["values"] and annot is not sent_starts:
+                if annot is not token_annotations["head"]["values"]:
                     values.extend(annot)
         for value in values:
             if value is not None:
                 self.vocab.strings.add(value)
 
-        # if there are any other annotations, set them
+        # If there are any other annotations, set them.
         if headings:
             attrs = self.to_array(headings)
 
             j = 0
             for annot in annotations:
                 if annot:
-                    if annot is token_annotations["head"]["values"] or annot is sent_starts:
+                    if annot is token_annotations["head"]["values"]:
                         for i in range(len(words)):
                             if attrs.ndim == 1:
                                 attrs[i] = annot[i]
@@ -1580,12 +1572,20 @@ cdef class Doc:
         # Complement other document-level properties (cats, spans, ents).
         self.cats = doc_json.get("cats", self.cats)
 
+        # Set sentence boundaries, if dependency parser not available but sentences are specified in JSON.
+        if not self.has_annotation("DEP"):
+            for sent in doc_json.get("sents", {}):
+                for t in self.char_span(sent["start"], sent["end"]):
+                    self[t.i].is_sent_start = t.i == 0
+
         if "spans" in doc_json:
             for span_group in doc_json.get("spans", {}):
-                self.spans[span_group] = [
+                spans = [
                     self.char_span(span["start"], span["end"], span["label"], span["kb_id"])
                     for span in doc_json["spans"][span_group]
                 ]
+                assert all([span is not None for span in spans])
+                self.spans[span_group] = spans
 
         if "ents" in doc_json:
             self.ents = [self.char_span(ent["start"], ent["end"], ent["label"]) for ent in doc_json["ents"]]
@@ -1615,7 +1615,7 @@ cdef class Doc:
         if self.cats:
             data["cats"] = self.cats
         data["tokens"] = []
-        attrs = ["TAG", "MORPH", "POS", "LEMMA", "DEP", "SENT_START"]
+        attrs = ["TAG", "MORPH", "POS", "LEMMA", "DEP"]
         include_annotation = {attr: self.has_annotation(attr) for attr in attrs}
         for token in self:
             token_data = {"id": token.i, "start": token.idx, "end": token.idx + len(token)}
