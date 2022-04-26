@@ -35,17 +35,18 @@ def test_issue10685(en_tokenizer):
 
 
 @pytest.mark.parametrize(
-    "spans_bytes,expected_spangroups",
+    "spans_bytes,expected_spangroups,expected_warning",
     [
         # The following 3 bytestrings were generated from `doc = nlp("Will it blend?")`
         # (via `doc.spans.to_bytes()`) from a version of spaCy that serialized
         # `SpanGroups` as a list of SpanGroup bytes.
         # Empty doc.spans:
-        (b"\x90", {}),
+        (b"\x90", {}, False),
         # `doc.spans['test']  = SpanGroup(doc, name='test', spans=[doc[0:1]])`:
         (
             b"\x91\xc4C\x83\xa4name\xa4test\xa5attrs\x80\xa5spans\x91\xc4(\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x04",
             {"test": {"name": "test", "spans": [(0, 1)]}},
+            False,
         ),
         # `doc.spans['test']  = SpanGroup(doc, name='test', spans=[doc[0:1]])` and
         # `doc.spans['test2'] = SpanGroup(doc, name='test', spans=[doc[1:2]])`:
@@ -54,10 +55,13 @@ def test_issue10685(en_tokenizer):
         (
             b"\x92\xc4C\x83\xa4name\xa4test\xa5attrs\x80\xa5spans\x91\xc4(\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x04\xc4C\x83\xa4name\xa4test\xa5attrs\x80\xa5spans\x91\xc4(\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x02\x00\x00\x00\x05\x00\x00\x00\x07",
             {"test": {"name": "test", "spans": [(1, 2)]}},
+            True,
         ),
     ],
 )
-def test_deserialize_spangroups_compat(en_tokenizer, spans_bytes, expected_spangroups):
+def test_deserialize_spangroups_compat(
+    en_tokenizer, spans_bytes, expected_spangroups, expected_warning
+):
     """Test backwards-compatibility of `SpanGroups` deserialization.
     This uses serializations (bytes) from a prior version of spaCy.
 
@@ -67,10 +71,16 @@ def test_deserialize_spangroups_compat(en_tokenizer, spans_bytes, expected_spang
         to a SpanGroup's "args", where a SpanGroup's args are given as a dict:
           {"name": "${SpanGroup.name}",
            "spans": [(span0_start_token_idx, span0_end_token_idx), ...]}
+    expected_warning (bool): Whether a warning is to be expected from .from_bytes()
+        --i.e. if more than 1 SpanGroup has the same .name within the `SpanGroups`.
     """
     doc = en_tokenizer("Will it blend?")
 
-    doc.spans.from_bytes(spans_bytes)
+    if expected_warning:
+        with pytest.warns(UserWarning):
+            doc.spans.from_bytes(spans_bytes)
+    else:
+        doc.spans.from_bytes(spans_bytes)
 
     assert len(doc.spans) == len(expected_spangroups)
     for name, spangroup_args in expected_spangroups.items():

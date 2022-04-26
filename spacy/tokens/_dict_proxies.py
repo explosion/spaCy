@@ -1,10 +1,11 @@
 from typing import Iterable, Tuple, Union, Optional, TYPE_CHECKING
+import warnings
 import weakref
 from collections import UserDict
 import srsly
 
 from .span_group import SpanGroup
-from ..errors import Errors
+from ..errors import Errors, Warnings
 
 
 if TYPE_CHECKING:
@@ -65,13 +66,16 @@ class SpanGroups(UserDict):
                     group = SpanGroup(doc).from_bytes(value_bytes)
                     self[key] = group
             elif isinstance(msg, list):
-                # TODO: Display a warning if `msg` contains `SpanGroup`s
-                #       that have the same .name (attribute)? Because currently
-                #       --and in the past (we maintain backwards-compatibility)--
-                #       only 1 SpanGroup per .name is loaded. (See #10685)
                 for value_bytes in msg:
                     group = SpanGroup(doc).from_bytes(value_bytes)
-                    self[group.name] = group
+                    group_name = group.name
+                    if group_name in self:
+                        # Display a warning if `msg` contains `SpanGroup`s
+                        # that have the same .name (attribute).
+                        # Because, for `SpanGroups` serialized as lists,
+                        # only 1 SpanGroup per .name is loaded. (See #10685)
+                        warnings.warn(Warnings.W119.format(group_name=group_name))
+                    self[group_name] = group
             # TODO: Raise exception if `msg` is neither dict nor list?
             #       (Or should we just use `else` instead of the `elif` above
             #        (and quietly ignore any (invalid) non-dict/list data)?)
