@@ -47,7 +47,7 @@ cdef cppclass StateC:
         this._heads.resize(length)
         this._unshiftable.resize(length)
 
-        # Reserve memoray ahead of time to minimize allocations during parsing.
+        # Reserve memory ahead of time to minimize allocations during parsing.
         # The initial capacity set here ideally reflects the expected average-case/majority usage.
         init_capacity = 20
         this._stack.reserve(init_capacity)
