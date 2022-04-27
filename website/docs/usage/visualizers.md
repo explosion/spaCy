@@ -342,9 +342,7 @@ want to visualize output from other libraries, like [NLTK](http://www.nltk.org)
 or
 [SyntaxNet](https://github.com/tensorflow/models/tree/master/research/syntaxnet).
 If you set `manual=True` on either `render()` or `serve()`, you can pass in data
-in displaCy's format (instead of `Doc` objects). When setting `ents` manually,
-make sure to supply them in the right order, i.e. starting with the lowest start
-position.
+in displaCy's format as a dictionary (instead of `Doc` objects).
 
 > #### Example
 >
