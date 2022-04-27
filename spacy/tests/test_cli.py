@@ -17,7 +17,8 @@ from spacy.cli._util import validate_project_commands
 from spacy.cli.debug_data import _compile_gold, _get_labels_from_model
 from spacy.cli.debug_data import _get_labels_from_spancat
 from spacy.cli.debug_data import _get_distribution, _get_kl_divergence
-from spacy.cli.debug_data import _format_span_row
+from spacy.cli.debug_data import _get_span_characteristics
+from spacy.cli.debug_data import _print_span_characteristics
 from spacy.cli.download import get_compatibility, get_version
 from spacy.cli.init_config import RECOMMENDATIONS, init_config, fill_config
 from spacy.cli.package import get_third_party_dependencies
@@ -784,3 +785,43 @@ def test_kl_divergence_computation_is_correct():
     result = _get_kl_divergence(p, q)
     expected = 0.1733
     assert math.isclose(result, expected, rel_tol=1e-3)
+
+
+def test_get_span_characteristics_return_value():
+    nlp = English()
+    spans_key = "sc"
+
+    pred = Doc(nlp.vocab, words=["Welcome", "to", "the", "Bank", "of", "China", "."])
+    pred.spans[spans_key] = [Span(pred, 3, 6, "ORG"), Span(pred, 5, 6, "GPE")]
+    ref = Doc(nlp.vocab, words=["Welcome", "to", "the", "Bank", "of", "China", "."])
+    ref.spans[spans_key] = [Span(ref, 3, 6, "ORG"), Span(ref, 5, 6, "GPE")]
+    eg = Example(pred, ref)
+
+    examples = [eg]
+    data = _compile_gold(examples, ["spancat"], nlp, True)
+    span_characteristics = _get_span_characteristics(
+        examples=examples, compiled_gold=data, spans_key=spans_key
+    )
+
+    assert {"sd", "bd", "lengths"}.issubset(span_characteristics.keys())
+    assert span_characteristics["min_length"] == 1
+    assert span_characteristics["max_length"] == 3
+
+
+def test_ensure_print_span_characteristics_wont_fail():
+    """Test if interface between two methods aren't destroyed if refactored"""
+    nlp = English()
+    spans_key = "sc"
+
+    pred = Doc(nlp.vocab, words=["Welcome", "to", "the", "Bank", "of", "China", "."])
+    pred.spans[spans_key] = [Span(pred, 3, 6, "ORG"), Span(pred, 5, 6, "GPE")]
+    ref = Doc(nlp.vocab, words=["Welcome", "to", "the", "Bank", "of", "China", "."])
+    ref.spans[spans_key] = [Span(ref, 3, 6, "ORG"), Span(ref, 5, 6, "GPE")]
+    eg = Example(pred, ref)
+
+    examples = [eg]
+    data = _compile_gold(examples, ["spancat"], nlp, True)
+    span_characteristics = _get_span_characteristics(
+        examples=examples, compiled_gold=data, spans_key=spans_key
+    )
+    _print_span_characteristics(span_characteristics)
