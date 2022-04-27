@@ -971,27 +971,27 @@ def _format_span_row(span_data: List[Dict], labels: List[str]) -> List[Any]:
 
 
 def _get_span_characteristics(
-    train_dataset: List[Example], gold_train_data: Dict[str, Any], spans_key: str
+    examples: List[Example], compiled_gold: Dict[str, Any], spans_key: str
 ) -> Dict[str, Any]:
     """Obtain all span characteristics"""
-    data_labels = gold_train_data["spancat"][spans_key]
+    data_labels = compiled_gold["spancat"][spans_key]
     # Get lengths
     span_length = {
         label: _gmean(l)
-        for label, l in gold_train_data["spans_length"][spans_key].items()
+        for label, l in compiled_gold["spans_length"][spans_key].items()
     }
-    min_lengths = [min(l) for l in gold_train_data["spans_length"][spans_key].values()]
-    max_lengths = [max(l) for l in gold_train_data["spans_length"][spans_key].values()]
+    min_lengths = [min(l) for l in compiled_gold["spans_length"][spans_key].values()]
+    max_lengths = [max(l) for l in compiled_gold["spans_length"][spans_key].values()]
 
     # Get relevant distributions: corpus, spans, span boundaries
-    p_corpus = _get_distribution([eg.reference for eg in train_dataset], normalize=True)
+    p_corpus = _get_distribution([eg.reference for eg in examples], normalize=True)
     p_spans = {
         label: _get_distribution(spans, normalize=True)
-        for label, spans in gold_train_data["spans_per_type"][spans_key].items()
+        for label, spans in compiled_gold["spans_per_type"][spans_key].items()
     }
     p_bounds = {
         label: _get_distribution(sb["start"] + sb["end"], normalize=True)
-        for label, sb in gold_train_data["sb_per_type"][spans_key].items()
+        for label, sb in compiled_gold["sb_per_type"][spans_key].items()
     }
 
     # Compute for actual span characteristics
