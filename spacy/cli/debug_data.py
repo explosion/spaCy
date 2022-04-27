@@ -254,68 +254,31 @@ def debug_data(
                     has_no_neg_warning = True
 
             with msg.loading("Obtaining span characteristics..."):
-                span_length = {
-                    label: _gmean(l)
-                    for label, l in gold_train_data["spans_length"][spans_key].items()
-                }
-                min_lengths = [
-                    min(l) for l in gold_train_data["spans_length"][spans_key].values()
-                ]
-                max_lengths = [
-                    max(l) for l in gold_train_data["spans_length"][spans_key].values()
-                ]
-
-                # Get relevant distributions: corpus, spans, span boundaries
-                p_corpus = _get_distribution(
-                    [eg.reference for eg in train_dataset], normalize=True
+                span_characteristics = _get_span_characteristics(
+                    train_dataset, gold_train_data, spans_key, data_labels
                 )
-                p_spans = {
-                    label: _get_distribution(spans, normalize=True)
-                    for label, spans in gold_train_data["spans_per_type"][
-                        spans_key
-                    ].items()
-                }
-                p_bounds = {
-                    label: _get_distribution(sb["start"] + sb["end"], normalize=True)
-                    for label, sb in gold_train_data["sb_per_type"][spans_key].items()
-                }
-                # Compute for the span characteristics
-                span_distinctiveness = {
-                    label: _get_kl_divergence(freq_dist, p_corpus)
-                    for label, freq_dist in p_spans.items()
-                }
-                sb_distinctiveness = {
-                    label: _get_kl_divergence(freq_dist, p_corpus)
-                    for label, freq_dist in p_bounds.items()
-                }
 
             msg.info(f"Span characteristics for spans_key `{spans_key}`")
             msg.info("SD = Span Distinctiveness, BD = Boundary Distinctiveness")
-            headers = ("Span Type", "Length", "SD", "BD")
-            metrics = [span_length, span_distinctiveness, sb_distinctiveness]
-            span_row = _format_span_row(
-                span_data=metrics,
-                labels=data_labels,
-            )
-            # Compute for weighted average (by frequency)
-            wgt_avg = [_wgt_average(metric, data_labels) for metric in metrics]
-            _wgt_avg_row = ["Wgt. Average"] + [str(round(w, 2)) for w in wgt_avg]
-            msg.table(span_row, footer=_wgt_avg_row, header=headers, divider=True)
+            _print_span_characteristics(span_characteristics)
 
-            avg_length, avg_sd, avg_bd = wgt_avg
             msg.info(
-                f"It's recommended to use a maximum of {math.ceil(avg_length)} ngrams "
+                "It's recommended to use a maximum of "
+                f"{math.ceil(span_characteristics['avg_length'])} ngrams "
                 "when you're using the n-gram suggester function "
-                f"(avg={round(avg_length,2)}, "
-                f"min={min(min_lengths)}, max={max(max_lengths)})",
+                f"(avg={round(span_characteristics['avg_length'],2)}, "
+                f"min={span_characteristics['min_length']}, max={span_characteristics['max_length']})",
                 show=verbose,
             )
 
-            if avg_sd < SPAN_DISTINCT_THRESHOLD:
+            # Add report regarding span characteristics
+            if span_characteristics["avg_sd"] < SPAN_DISTINCT_THRESHOLD:
                 msg.warn("Spans may not be distinct from the rest of the corpus")
             else:
                 msg.good("Spans are distinct from the rest of the corpus")
-            all_span_tokens: Counter = sum(p_spans.values(), Counter())
+
+            p_spans = span_characteristics["p_spans"].values()
+            all_span_tokens: Counter = sum(p_spans, Counter())
             most_common_spans = [w for w, _ in all_span_tokens.most_common(10)]
             msg.text(
                 "10 most common span tokens: {}".format(
@@ -324,15 +287,14 @@ def debug_data(
                 show=verbose,
             )
 
-            if avg_bd < BOUNDARY_DISTINCT_THRESHOLD:
-                msg.warn(
-                    "Boundary tokens may not be distinct from the rest of the corpus"
-                )
+            # Add report regarding span boundary characteristics
+            if span_characteristics["avg_bd"] < BOUNDARY_DISTINCT_THRESHOLD:
+                msg.warn("Boundary tokens are not distinct from the rest of the corpus")
             else:
-                msg.good(
-                    "Span boundary tokens are distinct from the rest of the corpus"
-                )
-            all_span_bound_tokens: Counter = sum(p_bounds.values(), Counter())
+                msg.good("Boundary tokens are distinct from the rest of the corpus")
+
+            p_bounds = span_characteristics["p_bounds"].values()
+            all_span_bound_tokens: Counter = sum(p_bounds, Counter())
             most_common_bounds = [w for w, _ in all_span_bound_tokens.most_common(10)]
             msg.text(
                 "10 most common span boundary tokens: {}".format(
@@ -1006,3 +968,73 @@ def _format_span_row(span_data: List[Dict], labels: List[str]) -> List[Any]:
         label: [label] + list(round(d[label], 2) for d in span_data) for label in labels
     }
     return list(d.values())
+
+
+def _get_span_characteristics(
+    train_dataset: List, gold_train_data: Dict, spans_key: str, data_labels: Counter
+) -> Dict[str, Any]:
+    """Obtain all span characteristics"""
+    # Get lengths
+    span_length = {
+        label: _gmean(l)
+        for label, l in gold_train_data["spans_length"][spans_key].items()
+    }
+    min_lengths = [min(l) for l in gold_train_data["spans_length"][spans_key].values()]
+    max_lengths = [max(l) for l in gold_train_data["spans_length"][spans_key].values()]
+
+    # Get relevant distributions: corpus, spans, span boundaries
+    p_corpus = _get_distribution([eg.reference for eg in train_dataset], normalize=True)
+    p_spans = {
+        label: _get_distribution(spans, normalize=True)
+        for label, spans in gold_train_data["spans_per_type"][spans_key].items()
+    }
+    p_bounds = {
+        label: _get_distribution(sb["start"] + sb["end"], normalize=True)
+        for label, sb in gold_train_data["sb_per_type"][spans_key].items()
+    }
+
+    # Compute for actual span characteristics
+    span_distinctiveness = {
+        label: _get_kl_divergence(freq_dist, p_corpus)
+        for label, freq_dist in p_spans.items()
+    }
+    sb_distinctiveness = {
+        label: _get_kl_divergence(freq_dist, p_corpus)
+        for label, freq_dist in p_bounds.items()
+    }
+
+    return {
+        "sd": span_distinctiveness,
+        "bd": sb_distinctiveness,
+        "lengths": span_length,
+        "min_length": min(min_lengths),
+        "max_length": max(max_lengths),
+        "avg_sd": _wgt_average(span_distinctiveness, data_labels),
+        "avg_bd": _wgt_average(sb_distinctiveness, data_labels),
+        "avg_length": _wgt_average(span_length, data_labels),
+        "labels": list(data_labels.keys()),
+        "p_spans": p_spans,
+        "p_bounds": p_bounds,
+    }
+
+
+def _print_span_characteristics(span_characteristics: Dict[str, Any]):
+    """Print all span characteristics into a table"""
+    headers = ("Span Type", "Length", "SD", "BD")
+    # Prepare table data with all span characteristics
+    table_data = [
+        span_characteristics["lengths"],
+        span_characteristics["sd"],
+        span_characteristics["bd"],
+    ]
+    table = _format_span_row(
+        span_data=table_data, labels=span_characteristics["labels"]
+    )
+    # Prepare table footer with weighted averages
+    footer_data = [
+        span_characteristics["avg_length"],
+        span_characteristics["avg_sd"],
+        span_characteristics["avg_bd"],
+    ]
+    footer = ["Wgt. Average"] + [str(round(f, 2)) for f in footer_data]
+    msg.table(table, footer=footer, header=headers, divider=True)
