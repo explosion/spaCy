@@ -204,7 +204,10 @@ lemmatizer:
 ```python
 # Requirements: pip install spacy-lookups-data
 nlp = spacy.load("de_core_web_sm")
+# Remove existing lemmatizer
 nlp.remove_pipe("lemmatizer")
+# Add non-trainable lemmatizer from language defaults
+# and load lemmatizer tables from spacy-lookups-data
 nlp.add_pipe("lemmatizer").initialize()
 ```
 
