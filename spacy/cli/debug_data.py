@@ -255,7 +255,7 @@ def debug_data(
 
             with msg.loading("Obtaining span characteristics..."):
                 span_characteristics = _get_span_characteristics(
-                    train_dataset, gold_train_data, spans_key, data_labels
+                    train_dataset, gold_train_data, spans_key
                 )
 
             msg.info(f"Span characteristics for spans_key `{spans_key}`")
@@ -971,9 +971,10 @@ def _format_span_row(span_data: List[Dict], labels: List[str]) -> List[Any]:
 
 
 def _get_span_characteristics(
-    train_dataset: List, gold_train_data: Dict, spans_key: str, data_labels: Counter
+    train_dataset: List[Example], gold_train_data: Dict[str, Any], spans_key: str
 ) -> Dict[str, Any]:
     """Obtain all span characteristics"""
+    data_labels = gold_train_data["spancat"][spans_key]
     # Get lengths
     span_length = {
         label: _gmean(l)
