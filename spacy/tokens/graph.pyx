@@ -19,7 +19,7 @@ from .token import Token
 cdef class Edge:
     cdef readonly Graph graph
     cdef readonly int i
-
+    
     def __init__(self, Graph graph, int i):
         self.graph = graph
         self.i = i
@@ -35,7 +35,7 @@ cdef class Edge:
     @property
     def head(self) -> "Node":
         return Node(self.graph, self.graph.c.edges[self.i].head)
-
+    
     @property
     def tail(self) -> "Tail":
         return Node(self.graph, self.graph.c.edges[self.i].tail)
@@ -61,7 +61,7 @@ cdef class Node:
     def __init__(self, Graph graph, int i):
         """A reference to a node of an annotation graph. Each node is made up of
         an ordered set of zero or more token indices.
-
+        
         Node references are usually created by the Graph object itself, or from
         the Node or Edge objects. You usually won't need to instantiate this
         class yourself.
@@ -100,13 +100,13 @@ cdef class Node:
     @property
     def is_none(self) -> bool:
         """Whether the node is a special value, indicating 'none'.
-
+        
         The NoneNode type is returned by the Graph, Edge and Node objects when
         there is no match to a query. It has the same API as Node, but it always
         returns NoneNode, NoneEdge or empty lists for its queries.
         """
         return False
-
+ 
     @property
     def doc(self) -> "Doc":
         """The Doc object that the graph refers to."""
@@ -121,27 +121,27 @@ cdef class Node:
     def head(self, i=None, label=None) -> "Node":
         """Get the head of the first matching edge, searching by index, label,
         both or neither.
-
+        
         For instance, `node.head(i=1)` will get the head of the second edge that
         this node is a tail of. `node.head(i=1, label="ARG0")` will further
-        check that the second edge has the label `"ARG0"`.
-
-        If no matching node can be found, the graph's NoneNode is returned.
+        check that the second edge has the label `"ARG0"`. 
+        
+        If no matching node can be found, the graph's NoneNode is returned. 
         """
         return self.headed(i=i, label=label)
-
+    
     def tail(self, i=None, label=None) -> "Node":
         """Get the tail of the first matching edge, searching by index, label,
         both or neither.
-
-        If no matching node can be found, the graph's NoneNode is returned.
+ 
+        If no matching node can be found, the graph's NoneNode is returned. 
         """
         return self.tailed(i=i, label=label).tail
 
     def sibling(self, i=None, label=None):
         """Get the first matching sibling node. Two nodes are siblings if they
         are both tails of the same head.
-        If no matching node can be found, the graph's NoneNode is returned.
+        If no matching node can be found, the graph's NoneNode is returned. 
         """
         if i is None:
             siblings = self.siblings(label=label)
@@ -162,7 +162,7 @@ cdef class Node:
         cdef vector[int] edge_indices
         self._find_edges(edge_indices, "head", label)
         return [Node(self.graph, self.graph.c.edges[i].head) for i in edge_indices]
-
+     
     def tails(self, label=None) -> List["Node"]:
         """Find all matching tails of this node."""
         cdef vector[int] edge_indices
@@ -191,7 +191,7 @@ cdef class Node:
             return NoneEdge(self.graph)
         else:
             return Edge(self.graph, idx)
-
+    
     def tailed(self, i=None, label=None) -> Edge:
         """Find the first matching edge tailed by this node.
         If no matching edge can be found, the graph's NoneEdge is returned.
@@ -274,7 +274,7 @@ cdef class NoneEdge(Edge):
     def __init__(self, graph):
         self.graph = graph
         self.i = -1
-
+   
     @property
     def doc(self) -> "Doc":
         return self.graph.doc
@@ -282,7 +282,7 @@ cdef class NoneEdge(Edge):
     @property
     def head(self) -> "NoneNode":
         return NoneNode(self.graph)
-
+    
     @property
     def tail(self) -> "NoneNode":
         return NoneNode(self.graph)
@@ -310,7 +310,7 @@ cdef class NoneNode(Node):
 
     def __len__(self):
         return 0
-
+ 
     @property
     def is_none(self):
         return -1
@@ -330,15 +330,15 @@ cdef class NoneNode(Node):
         return self
 
     def walk_heads(self):
-        yield from []
-
+        yield from [] 
+    
     def walk_tails(self):
-        yield from []
-
+        yield from [] 
+ 
 
 cdef class Graph:
     """A set of directed labelled relationships between sets of tokens.
-
+    
     EXAMPLE:
         Construction 1
         >>> graph = Graph(doc, name="srl")
@@ -378,7 +378,7 @@ cdef class Graph:
             be labelled with the empty string (""). If `labels` is not `None`,
             it must have the same length as the `edges` argument.
         weights (Optional[List[float]]): A list of weights for the provided edges.
-            If None, all of the edges specified by the edges argument will
+            If None, all of the edges specified by the edges argument will 
             have the weight 0.0. If `weights` is not `None`, it must have the
             same length as the `edges` argument.
         """
@@ -429,7 +429,7 @@ cdef class Graph:
 
     def add_edge(self, head, tail, *, label="", weight=None) -> Edge:
         """Add an edge to the graph, connecting two groups of tokens.
-
+       
         If there is already an edge for the (head, tail, label) triple, it will
         be returned, and no new edge will be created. The weight of the edge
         will be updated if a weight is specified.
@@ -469,17 +469,17 @@ cdef class Graph:
     def has_edge(self, head, tail, label) -> bool:
         """Check whether a (head, tail, label) triple is an edge in the graph."""
         return not self.get_edge(head, tail, label=label).is_none
-
+    
     def add_node(self, indices) -> Node:
         """Add a node to the graph and return it. Nodes refer to ordered sets
         of token indices.
-
+        
         This method is idempotent: if there is already a node for the given
         indices, it is returned without a new node being created.
         """
         if isinstance(indices, Node):
             return indices
-        cdef vector[int32_t] node
+        cdef vector[int32_t] node 
         node.reserve(len(indices))
         for idx in indices:
             node.push_back(idx)
@@ -493,7 +493,7 @@ cdef class Graph:
         """
         if isinstance(indices, Node):
             return indices
-        cdef vector[int32_t] node
+        cdef vector[int32_t] node 
         node.reserve(len(indices))
         for idx in indices:
             node.push_back(idx)
@@ -503,7 +503,7 @@ cdef class Graph:
         else:
             print("Get node", indices, node_index)
             return Node(self, node_index)
-
+ 
     def has_node(self, tuple indices) -> bool:
         """Check whether the graph has a node for the given indices."""
         return not self.get_node(indices).is_none
@@ -563,7 +563,7 @@ cdef int add_node(GraphC* graph, vector[int32_t]& node) nogil:
         graph.roots.insert(index)
         graph.node_map.insert(pair[hash_t, int](key, index))
         return index
-
+ 
 
 cdef int get_node(const GraphC* graph, vector[int32_t] node) nogil:
     key = hash64(&node[0], node.size() * sizeof(node[0]), 0)
@@ -583,7 +583,7 @@ cdef int get_head_nodes(vector[int]& output, const GraphC* graph, int node) nogi
     if todo == 0:
         return 0
     output.reserve(output.size() + todo)
-    start = graph.first_head[node]
+    start = graph.first_head[node] 
     end = graph.edges.size()
     for i in range(start, end):
         if todo <= 0:
@@ -599,7 +599,7 @@ cdef int get_tail_nodes(vector[int]& output, const GraphC* graph, int node) nogi
     if todo == 0:
         return 0
     output.reserve(output.size() + todo)
-    start = graph.first_tail[node]
+    start = graph.first_tail[node] 
     end = graph.edges.size()
     for i in range(start, end):
         if todo <= 0:
@@ -628,7 +628,7 @@ cdef int get_head_edges(vector[int]& output, const GraphC* graph, int node) nogi
     if todo == 0:
         return 0
     output.reserve(output.size() + todo)
-    start = graph.first_head[node]
+    start = graph.first_head[node] 
     end = graph.edges.size()
     for i in range(start, end):
         if todo <= 0:
@@ -644,7 +644,7 @@ cdef int get_tail_edges(vector[int]& output, const GraphC* graph, int node) nogi
     if todo == 0:
         return 0
     output.reserve(output.size() + todo)
-    start = graph.first_tail[node]
+    start = graph.first_tail[node] 
     end = graph.edges.size()
     for i in range(start, end):
         if todo <= 0:
