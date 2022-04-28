@@ -5,6 +5,7 @@ new: 2
 menu:
   - ['Dependencies', 'dep']
   - ['Named Entities', 'ent']
+  - ['Spans', 'span']
   - ['Jupyter Notebooks', 'jupyter']
   - ['Rendering HTML', 'html']
   - ['Web app usage', 'webapp']
@@ -192,7 +193,7 @@ displacy.serve(doc, style="span")
 
 import DisplacySpanHtml from 'images/displacy-span.html'
 
-<Iframe title="displaCy visualizer for entities" html={DisplacySpanHtml} height={180} />
+<Iframe title="displaCy visualizer for overlapping spans" html={DisplacySpanHtml} height={180} />
 
 
 The span visualizer lets you customize the following `options`:

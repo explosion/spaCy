@@ -621,7 +621,7 @@ relative clauses.
 
 To customize the noun chunk iterator in a loaded pipeline, modify
 [`nlp.vocab.get_noun_chunks`](/api/vocab#attributes). If the `noun_chunk`
-[syntax iterator](/usage/adding-languages#language-data) has not been
+[syntax iterator](/usage/linguistic-features#language-data) has not been
 implemented for the given language, a `NotImplementedError` is raised.
 
 > #### Example
