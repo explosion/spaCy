@@ -484,7 +484,6 @@ cdef class Graph:
         for idx in indices:
             node.push_back(idx)
         i = add_node(&self.c, node)
-        print("Add node", indices, i)
         return Node(self, i)
 
     def get_node(self, indices) -> Node:
@@ -501,7 +500,6 @@ cdef class Graph:
         if node_index < 0:
             return NoneNode(self)
         else:
-            print("Get node", indices, node_index)
             return Node(self, node_index)
  
     def has_node(self, tuple indices) -> bool:
