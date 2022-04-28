@@ -2086,7 +2086,8 @@
             },
             "youtube": "f4sqeLRzkPg",
             "category": ["videos"]
-        },{
+        },
+        {
             "type": "education",
             "id": "video-intro-to-nlp-episode-6",
             "title": "Intro to NLP with spaCy (6)",
@@ -2099,7 +2100,8 @@
             },
             "youtube": "k77RrmMaKEI",
             "category": ["videos"]
-        },{
+        },
+        {
             "type": "education",
             "id": "video-spacy-irl-entity-linking",
             "title": "Entity Linking functionality in spaCy",
