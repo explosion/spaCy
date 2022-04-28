@@ -255,7 +255,7 @@ cdef cppclass StateC:
             return 0
         elif this._sent[word].sent_start == 1:
             return 1
-        elif this._sent_starts.count(word) >= 1:
+        elif this._sent_starts.const_find(word) != this._sent_starts.const_end():
             return 1
         else:
             return 0
