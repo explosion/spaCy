@@ -2099,8 +2099,7 @@
             },
             "youtube": "k77RrmMaKEI",
             "category": ["videos"]
-        }
-        {
+        },{
             "type": "education",
             "id": "video-spacy-irl-entity-linking",
             "title": "Entity Linking functionality in spaCy",
