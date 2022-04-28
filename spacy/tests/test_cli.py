@@ -584,7 +584,6 @@ def test_download_compatibility():
         assert get_minor_version(about.__version__) == get_minor_version(version)
 
 
-@pytest.mark.skip(reason="Temporarily skip for dev version")
 def test_validate_compatibility_table():
     spec = SpecifierSet("==" + about.__version__)
     spec.prereleases = False
