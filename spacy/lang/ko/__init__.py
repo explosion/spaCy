@@ -1,12 +1,13 @@
 from typing import Iterator, Any, Dict
 
+from .punctuation import TOKENIZER_INFIXES
 from .stop_words import STOP_WORDS
 from .tag_map import TAG_MAP
 from .lex_attrs import LEX_ATTRS
 from ...language import Language, BaseDefaults
 from ...tokens import Doc
 from ...scorer import Scorer
-from ...symbols import POS
+from ...symbols import POS, X
 from ...training import validate_examples
 from ...util import DummyTokenizer, registry, load_config_from_str
 from ...vocab import Vocab
@@ -31,14 +32,23 @@ def create_tokenizer():
 class KoreanTokenizer(DummyTokenizer):
     def __init__(self, vocab: Vocab):
         self.vocab = vocab
-        MeCab = try_mecab_import()  # type: ignore[func-returns-value]
-        self.mecab_tokenizer = MeCab("-F%f[0],%f[7]")
+        self._mecab = try_mecab_import()  # type: ignore[func-returns-value]
+        self._mecab_tokenizer = None
+
+    @property
+    def mecab_tokenizer(self):
+        # This is a property so that initializing a pipeline with blank:ko is
+        # possible without actually requiring mecab-ko, e.g. to run
+        # `spacy init vectors ko` for a pipeline that will have a different
+        # tokenizer in the end. The languages need to match for the vectors
+        # to be imported and there's no way to pass a custom config to
+        # `init vectors`.
+        if self._mecab_tokenizer is None:
+            self._mecab_tokenizer = self._mecab("-F%f[0],%f[7]")
+        return self._mecab_tokenizer
 
     def __reduce__(self):
         return KoreanTokenizer, (self.vocab,)
-
-    def __del__(self):
-        self.mecab_tokenizer.__del__()
 
     def __call__(self, text: str) -> Doc:
         dtokens = list(self.detailed_tokens(text))
@@ -47,7 +57,10 @@ class KoreanTokenizer(DummyTokenizer):
         for token, dtoken in zip(doc, dtokens):
             first_tag, sep, eomi_tags = dtoken["tag"].partition("+")
             token.tag_ = first_tag  # stem(어간) or pre-final(선어말 어미)
-            token.pos = TAG_MAP[token.tag_][POS]
+            if token.tag_ in TAG_MAP:
+                token.pos = TAG_MAP[token.tag_][POS]
+            else:
+                token.pos = X
             token.lemma_ = dtoken["lemma"]
         doc.user_data["full_tags"] = [dt["tag"] for dt in dtokens]
         return doc
@@ -76,6 +89,7 @@ class KoreanDefaults(BaseDefaults):
     lex_attr_getters = LEX_ATTRS
     stop_words = STOP_WORDS
     writing_system = {"direction": "ltr", "has_case": False, "has_letters": False}
+    infixes = TOKENIZER_INFIXES
 
 
 class Korean(Language):
@@ -90,7 +104,8 @@ def try_mecab_import() -> None:
         return MeCab
     except ImportError:
         raise ImportError(
-            "Korean support requires [mecab-ko](https://bitbucket.org/eunjeon/mecab-ko/src/master/README.md), "
+            'The Korean tokenizer ("spacy.ko.KoreanTokenizer") requires '
+            "[mecab-ko](https://bitbucket.org/eunjeon/mecab-ko/src/master/README.md), "
             "[mecab-ko-dic](https://bitbucket.org/eunjeon/mecab-ko-dic), "
             "and [natto-py](https://github.com/buruzaemon/natto-py)"
         ) from None

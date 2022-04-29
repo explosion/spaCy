@@ -1,6 +1,6 @@
 # cython: infer_types=True, profile=True, binding=True
-from itertools import islice
 from typing import Optional, Callable
+from itertools import islice
 
 import srsly
 from thinc.api import Model, SequenceCategoricalCrossentropy, Config
@@ -20,7 +20,7 @@ BACKWARD_OVERWRITE = False
 
 default_model_config = """
 [model]
-@architectures = "spacy.Tagger.v1"
+@architectures = "spacy.Tagger.v2"
 
 [model.tok2vec]
 @architectures = "spacy.HashEmbedCNN.v2"

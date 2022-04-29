@@ -1222,8 +1222,9 @@ class Language:
             component_cfg = {}
         grads = {}
 
-        def get_grads(W, dW, key=None):
+        def get_grads(key, W, dW):
             grads[key] = (W, dW)
+            return W, dW
 
         get_grads.learn_rate = sgd.learn_rate  # type: ignore[attr-defined, union-attr]
         get_grads.b1 = sgd.b1  # type: ignore[attr-defined, union-attr]
@@ -1236,7 +1237,7 @@ class Language:
                 examples, sgd=get_grads, losses=losses, **component_cfg.get(name, {})
             )
         for key, (W, dW) in grads.items():
-            sgd(W, dW, key=key)  # type: ignore[call-arg, misc]
+            sgd(key, W, dW)  # type: ignore[call-arg, misc]
         return losses
 
     def begin_training(

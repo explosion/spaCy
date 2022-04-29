@@ -34,7 +34,11 @@ only.
 Predictions will be saved to `doc.cats` as a dictionary, where the key is the
 name of the category and the value is a score between 0 and 1 (inclusive). For
 `textcat` (exclusive categories), the scores will sum to 1, while for
-`textcat_multilabel` there is no particular guarantee about their sum.
+`textcat_multilabel` there is no particular guarantee about their sum. This also
+means that for `textcat`, missing values are equated to a value of 0 (i.e.
+`False`) and are counted as such towards the loss and scoring metrics. This is
+not the case for `textcat_multilabel`, where missing values in the gold standard
+data do not influence the loss or accuracy calculations.
 
 Note that when assigning values to create training data, the score of each
 category must be 0 or 1. Using other values, for example to create a document

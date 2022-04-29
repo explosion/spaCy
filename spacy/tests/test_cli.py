@@ -34,7 +34,7 @@ from .util import make_tempdir
 
 
 @pytest.mark.issue(4665)
-def test_issue4665():
+def test_cli_converters_conllu_empty_heads_ner():
     """
     conllu_to_docs should not raise an exception if the HEAD column contains an
     underscore
@@ -59,7 +59,11 @@ def test_issue4665():
 17	.	_	PUNCT	.	_	_	punct	_	_
 18	]	_	PUNCT	-RRB-	_	_	punct	_	_
 """
-    conllu_to_docs(input_data)
+    docs = list(conllu_to_docs(input_data))
+    # heads are all 0
+    assert not all([t.head.i for t in docs[0]])
+    # NER is unset
+    assert not docs[0].has_annotation("ENT_IOB")
 
 
 @pytest.mark.issue(4924)
@@ -213,7 +217,6 @@ def test_cli_converters_conllu_to_docs_subtokens():
     sent = converted[0]["paragraphs"][0]["sentences"][0]
     assert len(sent["tokens"]) == 4
     tokens = sent["tokens"]
-    print(tokens)
     assert [t["orth"] for t in tokens] == ["Dommer", "FE", "avstår", "."]
     assert [t["tag"] for t in tokens] == [
         "NOUN__Definite=Ind|Gender=Masc|Number=Sing",
@@ -706,17 +709,27 @@ def test_permitted_package_names():
     assert _is_permitted_package_name("-package") == False
     assert _is_permitted_package_name("package-") == False
 
-    
+
 def test_debug_data_compile_gold():
     nlp = English()
     pred = Doc(nlp.vocab, words=["Token", ".", "New", "York", "City"])
-    ref = Doc(nlp.vocab, words=["Token", ".", "New York City"], sent_starts=[True, False, True], ents=["O", "O", "B-ENT"])
+    ref = Doc(
+        nlp.vocab,
+        words=["Token", ".", "New York City"],
+        sent_starts=[True, False, True],
+        ents=["O", "O", "B-ENT"],
+    )
     eg = Example(pred, ref)
     data = _compile_gold([eg], ["ner"], nlp, True)
     assert data["boundary_cross_ents"] == 0
 
     pred = Doc(nlp.vocab, words=["Token", ".", "New", "York", "City"])
-    ref = Doc(nlp.vocab, words=["Token", ".", "New York City"], sent_starts=[True, False, True], ents=["O", "B-ENT", "I-ENT"])
+    ref = Doc(
+        nlp.vocab,
+        words=["Token", ".", "New York City"],
+        sent_starts=[True, False, True],
+        ents=["O", "B-ENT", "I-ENT"],
+    )
     eg = Example(pred, ref)
     data = _compile_gold([eg], ["ner"], nlp, True)
     assert data["boundary_cross_ents"] == 1

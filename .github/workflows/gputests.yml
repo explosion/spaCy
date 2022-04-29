@@ -9,7 +9,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        branch: [master, develop, v4]
+        branch: [master, v4]
     runs-on: ubuntu-latest
     steps:
       - name: Trigger buildkite build
