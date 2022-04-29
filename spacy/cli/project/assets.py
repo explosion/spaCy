@@ -12,6 +12,9 @@ from .._util import project_cli, Arg, Opt, PROJECT_FILE, load_project_config
 from .._util import get_checksum, download_file, git_checkout, get_git_version
 from .._util import SimpleFrozenDict, parse_config_overrides
 
+# Whether assets are optional if 'optional' is not set.
+OPTIONAL_DEFAULT = False
+
 
 @project_cli.command(
     "assets",
@@ -60,7 +63,7 @@ def project_assets(
     assets = [
         asset
         for asset in config.get("assets", [])
-        if download_all or not asset.get("optional", False)
+        if download_all or not asset.get("optional", OPTIONAL_DEFAULT)
     ]
     if not assets:
         msg.warn(
