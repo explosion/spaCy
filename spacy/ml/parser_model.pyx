@@ -10,7 +10,7 @@ import numpy
 import numpy.random
 from thinc.api import Model, CupyOps, NumpyOps
 
-from .. import util
+from .. import util, Errors
 from ..typedefs cimport weight_t, class_t, hash_t
 from ..pipeline._parser_internals.stateclass cimport StateClass
 
@@ -411,7 +411,7 @@ cdef class precompute_hiddens:
         elif name == "nO":
             return self.nO
         else:
-            raise ValueError(f"Dimension {name} invalid -- only nO, nF, nP")
+            raise ValueError(Errors.E1033.format(name=name))
 
     def set_dim(self, name, value):
         if name == "nF":
@@ -421,7 +421,7 @@ cdef class precompute_hiddens:
         elif name == "nO":
             self.nO = value
         else:
-            raise ValueError(f"Dimension {name} invalid -- only nO, nF, nP")
+            raise ValueError(Errors.E1033.format(name=name))
 
     def __call__(self, X, bint is_train):
         if is_train:

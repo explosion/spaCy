@@ -9,6 +9,8 @@ cimport cython
 import weakref
 from preshed.maps cimport map_get_unless_missing
 from murmurhash.mrmr cimport hash64
+
+from .. import Errors
 from ..typedefs cimport hash_t
 from ..strings import get_string_id
 from ..structs cimport EdgeC, GraphC
@@ -68,7 +70,7 @@ cdef class Node:
         """
         cdef int length = graph.c.nodes.size()
         if i >= length or -i >= length:
-            raise IndexError(f"Node index {i} out of bounds ({length})")
+            raise IndexError(Errors.E1034.format(i=i, length=length))
         if i < 0:
             i += length
         self.graph = graph
@@ -88,7 +90,7 @@ cdef class Node:
         """Get a token index from the node's set of tokens."""
         length = self.graph.c.nodes[self.i].size()
         if i >= length or -i >= length:
-            raise IndexError(f"Token index {i} out of bounds ({length})")
+            raise IndexError(Errors.E1035.format(i=i, length=length))
         if i < 0:
             i += length
         return self.graph.c.nodes[self.i][i]
@@ -306,7 +308,7 @@ cdef class NoneNode(Node):
         self.i = -1
 
     def __getitem__(self, int i):
-        raise IndexError("Cannot index into NoneNode.")
+        raise IndexError(Errors.E1036)
 
     def __len__(self):
         return 0
