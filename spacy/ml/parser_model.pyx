@@ -10,7 +10,8 @@ import numpy
 import numpy.random
 from thinc.api import Model, CupyOps, NumpyOps
 
-from .. import util, Errors
+from .. import util
+from ..errors import Errors
 from ..typedefs cimport weight_t, class_t, hash_t
 from ..pipeline._parser_internals.stateclass cimport StateClass
 
