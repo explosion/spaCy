@@ -126,17 +126,30 @@ def test_issue6839(en_vocab):
 def test_issue10643(en_vocab):
     """Ensure overlapping terms can be removed from PhraseMatcher"""
 
-    # words = ["Only", "save", "out", "the", "binary", "data", "for", "the", "individual", "components", "."]
-    # doc = Doc(en_vocab, words=words)
-    terms = [Doc(en_vocab, words=["binary"]), Doc(en_vocab, words=["binary", "data"])]
+    # fmt: off
+    words = ["Only", "save", "out", "the", "binary", "data", "for", "the", "individual", "components", "."]
+    # fmt: on
+    doc = Doc(en_vocab, words=words)
+    terms = {
+        "0": Doc(en_vocab, words=["binary"]),
+        "1": Doc(en_vocab, words=["binary", "data"]),
+    }
     matcher = PhraseMatcher(en_vocab)
-    for match_id, term in enumerate(terms):
-        matcher.add(str(match_id), [term])
-    # matches = matcher(doc)
-    for match_id in range(len(terms)):
-        matcher.remove(str(match_id))
+    for match_id, term in terms.items():
+        matcher.add(match_id, [term])
 
+    matches = matcher(doc)
+    assert matches == [(en_vocab.strings["0"], 4, 5), (en_vocab.strings["1"], 4, 6)]
+
+    matcher.remove("0")
+    assert len(matcher) == 1
+    new_matches = matcher(doc)
+    assert new_matches == [(en_vocab.strings["1"], 4, 6)]
+
+    matcher.remove("1")
     assert len(matcher) == 0
+    no_matches = matcher(doc)
+    assert not no_matches
 
 
 def test_matcher_phrase_matcher(en_vocab):
