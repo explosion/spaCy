@@ -122,6 +122,23 @@ def test_issue6839(en_vocab):
     assert matches
 
 
+@pytest.mark.issue(10643)
+def test_issue10643(en_vocab):
+    """Ensure overlapping terms can be removed from PhraseMatcher"""
+
+    # words = ["Only", "save", "out", "the", "binary", "data", "for", "the", "individual", "components", "."]
+    # doc = Doc(en_vocab, words=words)
+    terms = [Doc(en_vocab, words=["binary"]), Doc(en_vocab, words=["binary", "data"])]
+    matcher = PhraseMatcher(en_vocab)
+    for match_id, term in enumerate(terms):
+        matcher.add(str(match_id), [term])
+    # matches = matcher(doc)
+    for match_id in range(len(terms)):
+        matcher.remove(str(match_id))
+
+    assert len(matcher) == 0
+
+
 def test_matcher_phrase_matcher(en_vocab):
     doc = Doc(en_vocab, words=["I", "like", "Google", "Now", "best"])
     # intermediate phrase
