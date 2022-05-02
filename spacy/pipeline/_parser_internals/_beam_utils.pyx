@@ -10,6 +10,7 @@ from thinc.extra.search cimport MaxViolation
 from ...typedefs cimport hash_t, class_t
 from .transition_system cimport TransitionSystem, Transition
 from ...errors import Errors
+from .batch cimport Batch
 from .stateclass cimport StateC, StateClass
 
 
@@ -27,7 +28,7 @@ cdef int check_final_state(void* _state, void* extra_args) except -1:
     return state.is_final()
 
 
-cdef class BeamBatch(object):
+cdef class BeamBatch(Batch):
     cdef public TransitionSystem moves
     cdef public object states
     cdef public object docs
