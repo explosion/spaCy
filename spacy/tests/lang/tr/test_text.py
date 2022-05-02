@@ -41,7 +41,7 @@ def test_tr_lex_attrs_like_number_cardinal_ordinal(word):
     assert like_num(word)
 
 
-@pytest.mark.parametrize("word", ["beş", "yedi", "yedinci", "birinci"])
+@pytest.mark.parametrize("word", ["beş", "yedi", "yedinci", "birinci", "milyonuncu"])
 def test_tr_lex_attrs_capitals(word):
     assert like_num(word)
     assert like_num(word.upper())

@@ -214,16 +214,9 @@ const QuickstartInstall = ({ id, title }) => {
                             {nightly ? ` --branch ${DEFAULT_BRANCH}` : ''}
                         </QS>
                         <QS package="source">cd spaCy</QS>
-                        <QS package="source" os="linux">
-                            export PYTHONPATH=`pwd`
-                        </QS>
-                        <QS package="source" os="windows">
-                            set PYTHONPATH=C:\path\to\spaCy
-                        </QS>
                         <QS package="source">pip install -r requirements.txt</QS>
-                        <QS package="source">python setup.py build_ext --inplace</QS>
                         <QS package="source">
-                            pip install {train || hardware == 'gpu' ? `'.[${pipExtras}]'` : '.'}
+                            pip install --no-build-isolation --editable {train || hardware == 'gpu' ? `'.[${pipExtras}]'` : '.'}
                         </QS>
                         <QS config="train" package="conda" comment prompt={false}>
                             # packages only available via pip

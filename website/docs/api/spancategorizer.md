@@ -56,7 +56,7 @@ architectures and their arguments and hyperparameters.
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `suggester`    | A function that [suggests spans](#suggesters). Spans are returned as a ragged array with two integer columns, for the start and end positions. Defaults to [`ngram_suggester`](#ngram_suggester). ~~Callable[[Iterable[Doc], Optional[Ops]], Ragged]~~                                                  |
 | `model`        | A model instance that is given a a list of documents and `(start, end)` indices representing candidate span offsets. The model predicts a probability for each category for each span. Defaults to [SpanCategorizer](/api/architectures#SpanCategorizer). ~~Model[Tuple[List[Doc], Ragged], Floats2d]~~ |
-| `spans_key`    | Key of the [`Doc.spans`](/api/doc#spans) dict to save the spans under. During initialization and training, the component will look for spans on the reference document under the same key. Defaults to `"spans"`. ~~str~~                                                                               |
+| `spans_key`    | Key of the [`Doc.spans`](/api/doc#spans) dict to save the spans under. During initialization and training, the component will look for spans on the reference document under the same key. Defaults to `"sc"`. ~~str~~                                                                               |
 | `threshold`    | Minimum probability to consider a prediction positive. Spans with a positive prediction will be saved on the Doc. Defaults to `0.5`. ~~float~~                                                                                                                                                          |
 | `max_positive` | Maximum number of labels to consider positive per span. Defaults to `None`, indicating no limit. ~~Optional[int]~~                                                                                                                                                                                      |
 | `scorer`       | The scoring method. Defaults to [`Scorer.score_spans`](/api/scorer#score_spans) for `Doc.spans[spans_key]` with overlapping spans allowed. ~~Optional[Callable]~~                                                                                                                                       |
@@ -93,7 +93,7 @@ shortcut for this and instantiate the component using its string name and
 | `suggester`    | A function that [suggests spans](#suggesters). Spans are returned as a ragged array with two integer columns, for the start and end positions. ~~Callable[[Iterable[Doc], Optional[Ops]], Ragged]~~                                  |
 | `name`         | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~                                                                                                                                  |
 | _keyword-only_ |                                                                                                                                                                                                                                      |
-| `spans_key`    | Key of the [`Doc.spans`](/api/doc#sans) dict to save the spans under. During initialization and training, the component will look for spans on the reference document under the same key. Defaults to `"spans"`. ~~str~~             |
+| `spans_key`    | Key of the [`Doc.spans`](/api/doc#sans) dict to save the spans under. During initialization and training, the component will look for spans on the reference document under the same key. Defaults to `"sc"`. ~~str~~             |
 | `threshold`    | Minimum probability to consider a prediction positive. Spans with a positive prediction will be saved on the Doc. Defaults to `0.5`. ~~float~~                                                                                       |
 | `max_positive` | Maximum number of labels to consider positive per span. Defaults to `None`, indicating no limit. ~~Optional[int]~~                                                                                                                   |
 
@@ -238,6 +238,24 @@ Delegates to [`predict`](/api/spancategorizer#predict) and
 | `sgd`          | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~            |
 | `losses`       | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~ |
 | **RETURNS**    | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                    |
+
+## SpanCategorizer.set_candidates {#set_candidates tag="method", new="3.3"}
+
+Use the suggester to add a list of [`Span`](/api/span) candidates to a list of
+[`Doc`](/api/doc) objects. This method is intended to be used for debugging
+purposes.
+
+> #### Example
+>
+> ```python
+> spancat = nlp.add_pipe("spancat")
+> spancat.set_candidates(docs, "candidates")
+> ```
+
+| Name             | Description                                                          |
+| ---------------- | -------------------------------------------------------------------- |
+| `docs`           | The documents to modify. ~~Iterable[Doc]~~                           |
+| `candidates_key` | Key of the Doc.spans dict to save the candidate spans under. ~~str~~ |
 
 ## SpanCategorizer.get_loss {#get_loss tag="method"}
 

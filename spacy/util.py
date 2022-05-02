@@ -485,13 +485,16 @@ def load_model_from_path(
     config_path = model_path / "config.cfg"
     overrides = dict_to_dot(config)
     config = load_config(config_path, overrides=overrides)
-    nlp = load_model_from_config(config, vocab=vocab, disable=disable, exclude=exclude)
+    nlp = load_model_from_config(
+        config, vocab=vocab, disable=disable, exclude=exclude, meta=meta
+    )
     return nlp.from_disk(model_path, exclude=exclude, overrides=overrides)
 
 
 def load_model_from_config(
     config: Union[Dict[str, Any], Config],
     *,
+    meta: Dict[str, Any] = SimpleFrozenDict(),
     vocab: Union["Vocab", bool] = True,
     disable: Iterable[str] = SimpleFrozenList(),
     exclude: Iterable[str] = SimpleFrozenList(),
@@ -529,6 +532,7 @@ def load_model_from_config(
         exclude=exclude,
         auto_fill=auto_fill,
         validate=validate,
+        meta=meta,
     )
     return nlp
 

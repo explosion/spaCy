@@ -217,7 +217,6 @@ def test_cli_converters_conllu_to_docs_subtokens():
     sent = converted[0]["paragraphs"][0]["sentences"][0]
     assert len(sent["tokens"]) == 4
     tokens = sent["tokens"]
-    print(tokens)
     assert [t["orth"] for t in tokens] == ["Dommer", "FE", "avstår", "."]
     assert [t["tag"] for t in tokens] == [
         "NOUN__Definite=Ind|Gender=Masc|Number=Sing",

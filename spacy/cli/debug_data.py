@@ -19,6 +19,7 @@ from ..morphology import Morphology
 from ..language import Language
 from ..util import registry, resolve_dot_names
 from ..compat import Literal
+from ..vectors import Mode as VectorsMode
 from .. import util
 
 
@@ -170,26 +171,34 @@ def debug_data(
         show=verbose,
     )
     if len(nlp.vocab.vectors):
-        msg.info(
-            f"{len(nlp.vocab.vectors)} vectors ({nlp.vocab.vectors.n_keys} "
-            f"unique keys, {nlp.vocab.vectors_length} dimensions)"
-        )
-        n_missing_vectors = sum(gold_train_data["words_missing_vectors"].values())
-        msg.warn(
-            "{} words in training data without vectors ({:.0f}%)".format(
-                n_missing_vectors,
-                100 * (n_missing_vectors / gold_train_data["n_words"]),
-            ),
-        )
-        msg.text(
-            "10 most common words without vectors: {}".format(
-                _format_labels(
-                    gold_train_data["words_missing_vectors"].most_common(10),
-                    counts=True,
-                )
-            ),
-            show=verbose,
-        )
+        if nlp.vocab.vectors.mode == VectorsMode.floret:
+            msg.info(
+                f"floret vectors with {len(nlp.vocab.vectors)} vectors, "
+                f"{nlp.vocab.vectors_length} dimensions, "
+                f"{nlp.vocab.vectors.minn}-{nlp.vocab.vectors.maxn} char "
+                f"n-gram subwords"
+            )
+        else:
+            msg.info(
+                f"{len(nlp.vocab.vectors)} vectors ({nlp.vocab.vectors.n_keys} "
+                f"unique keys, {nlp.vocab.vectors_length} dimensions)"
+            )
+            n_missing_vectors = sum(gold_train_data["words_missing_vectors"].values())
+            msg.warn(
+                "{} words in training data without vectors ({:.0f}%)".format(
+                    n_missing_vectors,
+                    100 * (n_missing_vectors / gold_train_data["n_words"]),
+                ),
+            )
+            msg.text(
+                "10 most common words without vectors: {}".format(
+                    _format_labels(
+                        gold_train_data["words_missing_vectors"].most_common(10),
+                        counts=True,
+                    )
+                ),
+                show=verbose,
+            )
     else:
         msg.info("No word vectors present in the package")
 
