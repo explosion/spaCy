@@ -2089,6 +2089,20 @@
         },
         {
             "type": "education",
+            "id": "video-intro-to-nlp-episode-6",
+            "title": "Intro to NLP with spaCy (6)",
+            "slogan": "Episode 6: Moving to spaCy v3",
+            "description": "In this new video series, data science instructor Vincent Warmerdam gets started with spaCy, an open-source library for Natural Language Processing in Python. His mission: building a system to automatically detect programming languages in large volumes of text. Follow his process from the first idea to a prototype all the way to data collection and training a statistical named entity recogntion model from scratch.",
+            "author": "Vincent Warmerdam",
+            "author_links": {
+                "twitter": "fishnets88",
+                "github": "koaning"
+            },
+            "youtube": "k77RrmMaKEI",
+            "category": ["videos"]
+        },
+        {
+            "type": "education",
             "id": "video-spacy-irl-entity-linking",
             "title": "Entity Linking functionality in spaCy",
             "slogan": "spaCy IRL 2019",
