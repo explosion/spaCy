@@ -40,7 +40,8 @@ def forward(
     if not token_count:
         return _handle_empty(model.ops, model.get_dim("nO"))
     key_attr: int = model.attrs["key_attr"]
-    keys: Ints1d = model.ops.flatten(
+    # temporary workaround to allow Thinc PR #599
+    keys: Ints1d = model.ops.flatten(  # type: ignore[assignment]
         cast(Sequence, [doc.to_array(key_attr) for doc in docs])
     )
     vocab: Vocab = docs[0].vocab
