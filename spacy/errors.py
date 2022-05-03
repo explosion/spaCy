@@ -899,6 +899,7 @@ class Errors(metaclass=ErrorsWithCodes):
     E1026 = ("Edit tree has an invalid format:\n{errors}")
     E1027 = ("AlignmentArray only supports slicing with a step of 1.")
     E1028 = ("AlignmentArray only supports indexing using an int or a slice.")
+    E1029 = ("Backprop is not supported when is_train is not set.")
     
 
 # Deprecated model shortcuts, only used in errors and warnings

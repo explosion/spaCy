@@ -36,6 +36,3 @@ cdef struct ActivationsC:
     int* is_valid
     int _curr_size
     int _max_size
-
-
-cpdef forward_cpu(model: Model, TransitionSystem moves, states: List[StateClass], np.ndarray feats, np.ndarray[np.npy_bool, ndim=1] seen_mask)

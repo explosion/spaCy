@@ -12,6 +12,7 @@ from thinc.backends.linalg cimport Vec, VecVec
 from thinc.backends.cblas cimport CBlas
 from thinc.types import Floats1d, Floats2d, Floats3d, Ints2d, Floats4d
 
+from ..errors import Errors
 from ..pipeline._parser_internals import _beam_utils
 from ..pipeline._parser_internals.batch import GreedyBatch
 from ..pipeline._parser_internals.transition_system cimport c_transition_batch, TransitionSystem
@@ -155,7 +156,7 @@ def forward(model, docs_moves: Tuple[List[Doc], TransitionSystem], is_train: boo
     seen_mask = _get_seen_mask(model)
 
     if beam_width == 1 and not is_train and isinstance(model.ops, NumpyOps):
-        return forward_cpu(model, moves, states, feats, seen_mask), lambda _: []
+        return forward_cpu(model, moves, states, feats, seen_mask)
     else:
         return forward_thinc(model, moves, states, tokvecs, backprop_tok2vec, feats, backprop_feats, seen_mask, is_train)
 
@@ -468,8 +469,8 @@ def _lsuv_init(model: Model):
     return model
 
 
-cpdef forward_cpu(model: Model, TransitionSystem moves, states: List[StateClass], np.ndarray feats,
-                  np.ndarray[np.npy_bool, ndim=1] seen_mask):
+def forward_cpu(model: Model, TransitionSystem moves, states: List[StateClass], np.ndarray feats,
+                np.ndarray[np.npy_bool, ndim=1] seen_mask):
     cdef vector[StateC*] c_states
     cdef StateClass state
     for state in states:
@@ -484,8 +485,11 @@ cpdef forward_cpu(model: Model, TransitionSystem moves, states: List[StateClass]
     with nogil:
         _parseC(cblas, moves, &c_states[0], weights, sizes)
 
+    def backprop(dY):
+        raise ValueError(Errors.E1029)
+
     # TODO: scores
-    return states, []
+    return (states, []), backprop
 
 cdef void _parseC(CBlas cblas, TransitionSystem moves, StateC** states,
                   WeightsC weights, SizesC sizes) nogil:
