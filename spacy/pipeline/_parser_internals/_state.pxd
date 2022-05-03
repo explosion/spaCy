@@ -6,7 +6,6 @@ cimport libcpp
 from libcpp.unordered_map cimport unordered_map
 from libcpp.vector cimport vector
 from libcpp.set cimport set
-from cpython.exc cimport PyErr_CheckSignals, PyErr_SetFromErrno
 from murmurhash.mrmr cimport hash64
 
 from ...vocab cimport EMPTY_LEXEME
