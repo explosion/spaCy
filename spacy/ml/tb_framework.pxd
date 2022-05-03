@@ -31,7 +31,6 @@ cdef struct WeightsC:
 cdef struct ActivationsC:
     int* token_ids
     float* unmaxed
-    float* scores
     float* hiddens
     int* is_valid
     int _curr_size

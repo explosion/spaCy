@@ -1,5 +1,6 @@
 # cython: infer_types=True, cdivision=True, boundscheck=False
 from typing import List, Tuple, Any, Optional, cast
+from cpython.ref cimport PyObject
 from libc.string cimport memset, memcpy
 from libc.stdlib cimport calloc, free, realloc
 from libcpp.vector cimport vector
@@ -482,33 +483,39 @@ def forward_cpu(model: Model, TransitionSystem moves, states: List[StateClass], 
     cdef int n_tokens = feats.shape[0] - 1
     sizes = get_c_sizes(model, c_states.size(), n_tokens)
     cdef CBlas cblas = model.ops.cblas()
-    with nogil:
-        _parseC(cblas, moves, &c_states[0], weights, sizes)
+    scores = _parseC(cblas, moves, &c_states[0], weights, sizes)
 
     def backprop(dY):
         raise ValueError(Errors.E1029)
 
-    # TODO: scores
-    return (states, []), backprop
+    return (states, scores), backprop
 
-cdef void _parseC(CBlas cblas, TransitionSystem moves, StateC** states,
-                  WeightsC weights, SizesC sizes) nogil:
+cdef list _parseC(CBlas cblas, TransitionSystem moves, StateC** states,
+                  WeightsC weights, SizesC sizes):
     cdef int i, j
     cdef vector[StateC *] unfinished
     cdef ActivationsC activations = alloc_activations(sizes)
+    cdef np.ndarray step_scores
+
+    scores = []
     while sizes.states >= 1:
-        predict_states(cblas, &activations, states, &weights, sizes)
-        # Validate actions, argmax, take action.
-        c_transition_batch(moves, states, activations.scores, sizes.classes,
-           sizes.states)
-        for i in range(sizes.states):
-            if not states[i].is_final():
-                unfinished.push_back(states[i])
-        for i in range(unfinished.size()):
-            states[i] = unfinished[i]
+        step_scores = numpy.empty((sizes.states, sizes.classes), dtype="f")
+        with nogil:
+            predict_states(cblas, &activations, <float*>step_scores.data, states, &weights, sizes)
+            # Validate actions, argmax, take action.
+            c_transition_batch(moves, states, <const float*>step_scores.data, sizes.classes,
+            sizes.states)
+            for i in range(sizes.states):
+                if not states[i].is_final():
+                    unfinished.push_back(states[i])
+            for i in range(unfinished.size()):
+                states[i] = unfinished[i]
         sizes.states = unfinished.size()
+        scores.append(step_scores)
         unfinished.clear()
     free_activations(&activations)
+
+    return scores
 
 
 cdef WeightsC get_c_weights(model, const float* feats, np.ndarray[np.npy_bool, ndim=1] seen_mask) except *:
@@ -547,7 +554,6 @@ cdef ActivationsC alloc_activations(SizesC n) nogil:
 
 cdef void free_activations(const ActivationsC* A) nogil:
     free(A.token_ids)
-    free(A.scores)
     free(A.unmaxed)
     free(A.hiddens)
     free(A.is_valid)
@@ -559,7 +565,6 @@ cdef void resize_activations(ActivationsC* A, SizesC n) nogil:
         return
     if A._max_size == 0:
         A.token_ids = <int*>calloc(n.states * n.feats, sizeof(A.token_ids[0]))
-        A.scores = <float*>calloc(n.states * n.classes, sizeof(A.scores[0]))
         A.unmaxed = <float*>calloc(n.states * n.hiddens * n.pieces, sizeof(A.unmaxed[0]))
         A.hiddens = <float*>calloc(n.states * n.hiddens, sizeof(A.hiddens[0]))
         A.is_valid = <int*>calloc(n.states * n.classes, sizeof(A.is_valid[0]))
@@ -567,8 +572,6 @@ cdef void resize_activations(ActivationsC* A, SizesC n) nogil:
     else:
         A.token_ids = <int*>realloc(A.token_ids,
             n.states * n.feats * sizeof(A.token_ids[0]))
-        A.scores = <float*>realloc(A.scores,
-            n.states * n.classes * sizeof(A.scores[0]))
         A.unmaxed = <float*>realloc(A.unmaxed,
             n.states * n.hiddens * n.pieces * sizeof(A.unmaxed[0]))
         A.hiddens = <float*>realloc(A.hiddens,
@@ -579,7 +582,7 @@ cdef void resize_activations(ActivationsC* A, SizesC n) nogil:
     A._curr_size = n.states
 
 
-cdef void predict_states(CBlas cblas, ActivationsC* A, StateC** states, const WeightsC* W, SizesC n) nogil:
+cdef void predict_states(CBlas cblas, ActivationsC* A, float* scores, StateC** states, const WeightsC* W, SizesC n) nogil:
     cdef double one = 1.0
     resize_activations(A, n)
     for i in range(n.states):
@@ -594,27 +597,26 @@ cdef void predict_states(CBlas cblas, ActivationsC* A, StateC** states, const We
             which = Vec.arg_max(&A.unmaxed[index], n.pieces)
             A.hiddens[i*n.hiddens + j] = A.unmaxed[index + which]
     if W.hidden_weights == NULL:
-        memcpy(A.scores, A.hiddens, n.states * n.classes * sizeof(float))
+        memcpy(scores, A.hiddens, n.states * n.classes * sizeof(float))
     else:
         # Compute hidden-to-output
         cblas.sgemm()(False, True, n.states, n.classes, n.hiddens,
                       1.0, <const float *>A.hiddens, n.hiddens,
                       <const float *>W.hidden_weights, n.hiddens,
-                      0.0, <float *>A.scores, n.classes)
+                      0.0, scores, n.classes)
         # Add bias
         for i in range(n.states):
-            VecVec.add_i(&A.scores[i*n.classes],
-                W.hidden_bias, 1., n.classes)
+            VecVec.add_i(&scores[i*n.classes], W.hidden_bias, 1., n.classes)
     # Set unseen classes to minimum value
     i = 0
-    min_ = A.scores[0]
+    min_ = scores[0]
     for i in range(1, n.states * n.classes):
-        if A.scores[i] < min_:
-            min_ = A.scores[i]
+        if scores[i] < min_:
+            min_ = scores[i]
     for i in range(n.states):
         for j in range(n.classes):
             if W.seen_mask[j]:
-                A.scores[i*n.classes+j] = min_
+                scores[i*n.classes+j] = min_
 
 
 cdef void sum_state_features(CBlas cblas, float* output,
