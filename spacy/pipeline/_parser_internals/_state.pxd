@@ -41,7 +41,7 @@ cdef cppclass StateC:
     int offset
     int _b_i
 
-    __init__(const TokenC* sent, int length) nogil:
+    __init__(const TokenC* sent, int length) nogil except +:
         cdef int init_capacity
 
         this._heads.resize(length)
