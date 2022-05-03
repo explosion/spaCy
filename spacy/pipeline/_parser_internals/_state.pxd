@@ -43,12 +43,12 @@ cdef cppclass StateC:
     __init__(const TokenC* sent, int length) nogil except +:
         cdef int init_capacity
 
-        this._heads.resize(length)
-        this._unshiftable.resize(length)
+        this._heads.resize(length, -1)
+        this._unshiftable.resize(length, False)
 
         # Reserve memory ahead of time to minimize allocations during parsing.
         # The initial capacity set here ideally reflects the expected average-case/majority usage.
-        init_capacity = 20
+        init_capacity = 32
         this._stack.reserve(init_capacity)
         this._rebuffer.reserve(init_capacity)
         this._ents.reserve(init_capacity)
@@ -60,9 +60,6 @@ cdef cppclass StateC:
         this.offset = 0
         this.length = length
         this._b_i = 0
-        for i in range(length):
-            this._heads[i] = -1
-            this._unshiftable[i] = 0
         memset(&this._empty_token, 0, sizeof(TokenC))
         this._empty_token.lex = &EMPTY_LEXEME
 
