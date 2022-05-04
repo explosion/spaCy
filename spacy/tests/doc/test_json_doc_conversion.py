@@ -25,7 +25,7 @@ def doc(en_vocab):
 
 
 @pytest.fixture()
-def doc_without_dependency_parser(en_vocab):
+def doc_without_deps(en_vocab):
     words = ["c", "d", "e"]
     pos = ["VERB", "NOUN", "NOUN"]
     tags = ["VBP", "NN", "NN"]
