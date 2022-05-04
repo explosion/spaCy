@@ -41,14 +41,12 @@ cdef cppclass StateC:
     int _b_i
 
     __init__(const TokenC* sent, int length) nogil except +:
-        cdef int init_capacity
-
         this._heads.resize(length, -1)
         this._unshiftable.resize(length, False)
 
         # Reserve memory ahead of time to minimize allocations during parsing.
         # The initial capacity set here ideally reflects the expected average-case/majority usage.
-        init_capacity = 32
+        cdef int init_capacity = 32
         this._stack.reserve(init_capacity)
         this._rebuffer.reserve(init_capacity)
         this._ents.reserve(init_capacity)
@@ -135,18 +133,14 @@ cdef cppclass StateC:
                 ids[i] = -1
 
     int S(int i) nogil const:
-        cdef int stack_size
-
-        stack_size = this._stack.size()
+        cdef int stack_size = this._stack.size()
         if i >= stack_size or i < 0:
             return -1
         else:
             return this._stack[stack_size - (i+1)]
 
     int B(int i) nogil const:
-        cdef int buf_size
-
-        buf_size = this._rebuffer.size()
+        cdef int buf_size = this._rebuffer.size()
         if i < 0:
             return -1
         elif i < buf_size:
