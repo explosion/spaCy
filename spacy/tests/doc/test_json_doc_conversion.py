@@ -39,7 +39,7 @@ def doc_without_deps(en_vocab):
         tags=tags,
         ents=ents,
         morphs=morphs,
-        sent_starts=[True, False, False],
+        sent_starts=[True, False, True],
     )
 
 
