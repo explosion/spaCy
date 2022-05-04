@@ -133,7 +133,7 @@ def test_json_to_doc_spans(doc):
     assert new_doc.spans["test"][0].start == 0
 
 
-def test_json_to_doc_sents(doc, doc_without_dependency_parser):
+def test_json_to_doc_sents(doc, doc_without_deps):
     """Test that Doc.from_json() includes correct.sents."""
     for test_doc in (doc, doc_without_dependency_parser):
         new_doc = Doc.from_json(doc.vocab, test_doc.to_json())
