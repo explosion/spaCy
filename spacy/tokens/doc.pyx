@@ -1472,23 +1472,24 @@ cdef class Doc:
         ### Token-level properties ###
 
         words = []
-        annotation_types = ("pos", "head", "dep", "lemma", "tag", "morph")
+        # Map annotation type IDs to their string equivalents.
+        annot_types = {POS: "pos", HEAD: "head", DEP: "dep", LEMMA: "lemma", TAG: "tag", MORPH: "morph"}
         token_annotations = {
             # For each annotation type: store (1) annotation type required to include it, (2) list of annotations for
             # this type.
-            annotation_type: {"req": annotation_type if annotation_type != "head" else "dep", "values": None}
-            for annotation_type in annotation_types
+            annot_type_id: {"req": annot_type_id if annot_type_id != HEAD else DEP, "values": None}
+            for annot_type_id in annot_types
         }
 
         # Gather token-level properties.
         for token in doc_json["tokens"]:
             words.append(doc_json["text"][token["start"]:token["end"]])
-            for annotation_type in token_annotations:
+            for annot_type_id, token_annot_data in token_annotations.items():
                 # Assuming all tokens have exactly the same set of attributes.
-                if token_annotations[annotation_type]["req"] in token:
-                    if token_annotations[annotation_type]["values"] is None:
-                        token_annotations[annotation_type]["values"] = []
-                    token_annotations[annotation_type]["values"].append(token[annotation_type])
+                if annot_types[token_annot_data["req"]] in token:
+                    if token_annot_data["values"] is None:
+                        token_annot_data["values"] = []
+                    token_annot_data["values"].append(token[annot_types[annot_type_id]])
 
         # Initialize doc instance.
         start = 0
@@ -1505,29 +1506,29 @@ cdef class Doc:
             self.push_back(lex, has_space)
 
         # Set remaining token-level attributes via Doc.from_array().
-        if token_annotations["head"]["values"] is not None:
-            token_annotations["head"]["values"] = [
-                head - i if head is not None else 0 for i, head in enumerate(token_annotations["head"]["values"])
+        if token_annotations[HEAD]["values"] is not None:
+            token_annotations[HEAD]["values"] = [
+                head - i if head is not None else 0 for i, head in enumerate(token_annotations[HEAD]["values"])
             ]
-        if token_annotations["dep"]["values"] is not None:
+        if token_annotations[DEP]["values"] is not None:
             deps = []
-            for dep in token_annotations["dep"]["values"]:
+            for dep in token_annotations[DEP]["values"]:
                 if dep is None:
                     raise ValueError(Errors)
                 deps.append(dep)
-            token_annotations["dep"]["values"] = deps if len(deps) else None
+            token_annotations[DEP]["values"] = deps if len(deps) else None
 
-        if token_annotations["dep"]["values"] and not token_annotations["head"]["values"]:
-            token_annotations["head"]["values"] = [0] * len(token_annotations["dep"]["values"])
-        if token_annotations["head"]["values"] and not token_annotations["dep"]["values"]:
+        if token_annotations[DEP]["values"] and not token_annotations[HEAD]["values"]:
+            token_annotations[HEAD]["values"] = [0] * len(token_annotations[DEP]["values"])
+        if token_annotations[HEAD]["values"] and not token_annotations[HEAD]["values"]:
             raise ValueError(Errors.E1017)
-        if token_annotations["pos"]["values"] is not None:
-            for pp in set(token_annotations["pos"]["values"]):
+        if token_annotations[POS]["values"] is not None:
+            for pp in set(token_annotations[POS]["values"]):
                 if pp not in parts_of_speech.IDS:
                     raise ValueError(Errors.E1021.format(pp=pp))
 
         headings = []
-        annotations = [token_annotations[key]["values"] for key in annotation_types]
+        annotations = [token_annotations[key]["values"] for key in annot_types]
         possible_headings = [POS, HEAD, DEP, LEMMA, TAG, MORPH]
         for a, annot in enumerate(annotations):
             if annot is not None:
@@ -1538,24 +1539,24 @@ cdef class Doc:
         # If there are any other annotations, set them.
         if headings:
             attrs = self.to_array(headings)
-
             j = 0
+
             for annot in annotations:
                 if annot:
-                    if annot is not token_annotations["head"]["values"]:
+                    if annot is not token_annotations[HEAD]["values"]:
                         for i in range(len(annot)):
                             if annot[i] is not None:
                                 self.vocab.strings.add(annot[i])
 
-                    if annot is token_annotations["head"]["values"]:
+                    if annot is token_annotations[HEAD]["values"]:
                         for i in range(len(words)):
                             if attrs.ndim == 1:
                                 attrs[i] = annot[i]
                             else:
                                 attrs[i, j] = annot[i]
-                    elif annot is token_annotations["morph"]["values"]:
+                    elif annot is token_annotations[MORPH]["values"]:
                         for i in range(len(words)):
-                            morph_key = self.vocab.morphology.add(token_annotations["morph"]["values"][i])
+                            morph_key = self.vocab.morphology.add(token_annotations[MORPH]["values"][i])
                             if attrs.ndim == 1:
                                 attrs[i] = morph_key
                             else:
