@@ -1510,10 +1510,13 @@ cdef class Doc:
                 head - i if head is not None else 0 for i, head in enumerate(token_annotations["head"]["values"])
             ]
         if token_annotations["dep"]["values"] is not None:
-            MISSING_DEP_ = self.vocab.strings[MISSING_DEP]
-            token_annotations["dep"]["values"] = [
-                dep if dep is not None else MISSING_DEP_ for dep in token_annotations["dep"]["values"]
-            ]
+            deps = []
+            for dep in token_annotations["dep"]["values"]:
+                if dep is None:
+                    raise ValueError(Errors)
+                deps.append(dep)
+            token_annotations["dep"]["values"] = deps if len(deps) else None
+
         if token_annotations["dep"]["values"] and not token_annotations["head"]["values"]:
             token_annotations["head"]["values"] = [0] * len(token_annotations["dep"]["values"])
         if token_annotations["head"]["values"] and not token_annotations["dep"]["values"]:
@@ -1524,7 +1527,6 @@ cdef class Doc:
                     raise ValueError(Errors.E1021.format(pp=pp))
 
         headings = []
-        values = []
         annotations = [token_annotations[key]["values"] for key in annotation_types]
         possible_headings = [POS, HEAD, DEP, LEMMA, TAG, MORPH]
         for a, annot in enumerate(annotations):
@@ -1532,11 +1534,6 @@ cdef class Doc:
                 if len(annot) != len(words):
                     raise ValueError(Errors.E189)
                 headings.append(possible_headings[a])
-                if annot is not token_annotations["head"]["values"]:
-                    values.extend(annot)
-        for value in values:
-            if value is not None:
-                self.vocab.strings.add(value)
 
         # If there are any other annotations, set them.
         if headings:
@@ -1545,6 +1542,11 @@ cdef class Doc:
             j = 0
             for annot in annotations:
                 if annot:
+                    if annot is not token_annotations["head"]["values"]:
+                        for i in range(len(annot)):
+                            if annot[i] is not None:
+                                self.vocab.strings.add(annot[i])
+
                     if annot is token_annotations["head"]["values"]:
                         for i in range(len(words)):
                             if attrs.ndim == 1:
@@ -1580,11 +1582,12 @@ cdef class Doc:
 
         if "spans" in doc_json:
             for span_group in doc_json.get("spans", {}):
-                spans = [
-                    self.char_span(span["start"], span["end"], span["label"], span["kb_id"])
-                    for span in doc_json["spans"][span_group]
-                ]
-                assert all([span is not None for span in spans])
+                spans = []
+                for span in doc_json["spans"][span_group]:
+                    char_span = self.char_span(span["start"], span["end"], span["label"], span["kb_id"])
+                    if char_span is None:
+                        raise ValueError(Errors.E1038)
+                    spans.append(char_span)
                 self.spans[span_group] = spans
 
         if "ents" in doc_json:

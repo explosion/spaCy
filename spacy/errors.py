@@ -913,6 +913,8 @@ class Errors(metaclass=ErrorsWithCodes):
     E1034 = ("Node index {i} out of bounds ({length})")
     E1035 = ("Token index {i} out of bounds ({length})")
     E1036 = ("Cannot index into NoneNode")
+    E1037 = ("Annotation is ill-formed.")
+    E1038 = ("Error(s) in span offsets.")
 
 
 # Deprecated model shortcuts, only used in errors and warnings
