@@ -871,18 +871,18 @@ cdef class Doc:
 
         DOCS: https://spacy.io/api/doc#sents
         """
-        # if not self.has_annotation("SENT_START"):
-        #     raise ValueError(Errors.E030)
-        # if "sents" in self.user_hooks:
-        #     yield from self.user_hooks["sents"](self)
-        # else:
-        start = 0
-        for i in range(1, self.length):
-            if self.c[i].sent_start == 1:
-                yield Span(self, start, i)
-                start = i
-        if start != self.length:
-            yield Span(self, start, self.length)
+        if not self.has_annotation("SENT_START"):
+            raise ValueError(Errors.E030)
+        if "sents" in self.user_hooks:
+            yield from self.user_hooks["sents"](self)
+        else:
+            start = 0
+            for i in range(1, self.length):
+                if self.c[i].sent_start == 1:
+                    yield Span(self, start, i)
+                    start = i
+            if start != self.length:
+                yield Span(self, start, self.length)
 
     @property
     def lang(self):
