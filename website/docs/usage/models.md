@@ -27,6 +27,35 @@ import QuickstartModels from 'widgets/quickstart-models.js'
 
 <QuickstartModels title="Quickstart" id="quickstart" description="Install a default trained pipeline package, get the code to load it from within spaCy and an example to test it. For more options, see the section on available packages below." />
 
+### Usage note
+
+> If lemmatization rules are available for your language, make sure to install
+> spaCy with the `lookups` option, or install
+> [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data)
+> separately in the same environment:
+>
+> ```bash
+> $ pip install -U %%SPACY_PKG_NAME[lookups]%%SPACY_PKG_FLAGS
+> ```
+
+If a trained pipeline is available for a language, you can download it using the
+[`spacy download`](/api/cli#download) command as shown above. In order to use
+languages that don't yet come with a trained pipeline, you have to import them
+directly, or use [`spacy.blank`](/api/top-level#spacy.blank):
+
+```python
+from spacy.lang.yo import Yoruba
+nlp = Yoruba()  # use directly
+nlp = spacy.blank("yo")  # blank instance
+```
+
+A blank pipeline is typically just a tokenizer. You might want to create a blank
+pipeline when you only need a tokenizer, when you want to add more components
+from scratch, or for testing purposes. Initializing the language object directly
+yields the same result as generating it using `spacy.blank()`. In both cases the
+default configuration for the chosen language is loaded, and no pretrained
+components will be available.
+
 ## Language support {#languages}
 
 spaCy currently provides support for the following languages. You can help by
@@ -36,28 +65,6 @@ and extending the tokenization patterns.
 contribute to development. Also see the
 [training documentation](/usage/training) for how to train your own pipelines on
 your data.
-
-> #### Usage note
->
-> If a trained pipeline is available for a language, you can download it using
-> the [`spacy download`](/api/cli#download) command. In order to use languages
-> that don't yet come with a trained pipeline, you have to import them directly,
-> or use [`spacy.blank`](/api/top-level#spacy.blank):
->
-> ```python
-> from spacy.lang.fi import Finnish
-> nlp = Finnish()  # use directly
-> nlp = spacy.blank("fi")  # blank instance
-> ```
->
-> If lemmatization rules are available for your language, make sure to install
-> spaCy with the `lookups` option, or install
-> [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data)
-> separately in the same environment:
->
-> ```bash
-> $ pip install -U %%SPACY_PKG_NAME[lookups]%%SPACY_PKG_FLAGS
-> ```
 
 import Languages from 'widgets/languages.js'
 
