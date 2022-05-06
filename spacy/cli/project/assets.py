@@ -67,7 +67,7 @@ def project_assets(
     ]
     if not assets:
         msg.warn(
-            f"No assets specified in {PROJECT_FILE} (if assets are marked as optional, download them with --all)",
+            f"No assets specified in {PROJECT_FILE} (if assets are marked as optional, download them with --extra)",
             exits=0,
         )
     msg.info(f"Fetching {len(assets)} asset(s)")
