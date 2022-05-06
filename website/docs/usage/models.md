@@ -49,9 +49,12 @@ nlp = Ukrainian()  # use directly
 nlp = spacy.blank("uk")  # blank instance
 ```
 
-Initializing the language object directly yields the same result as generating
-it using `spacy.blank()`. In both cases the default configuration for the chosen
-language is loaded, and no pretrained components will be available.
+A blank pipeline is typically just a tokenizer. You might want to create a blank
+pipeline when you only need a tokenizer, when you want to add more components
+from scratch, or for testing purposes. Initializing the language object directly
+yields the same result as generating it using `spacy.blank()`. In both cases the
+default configuration for the chosen language is loaded, and no pretrained
+components will be available.
 
 ## Language support {#languages}
 
