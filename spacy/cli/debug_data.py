@@ -35,6 +35,8 @@ BLANK_MODEL_THRESHOLD = 2000
 SPAN_DISTINCT_THRESHOLD = 1
 # Arbitrary threshold where SpanCat performs well
 BOUNDARY_DISTINCT_THRESHOLD = 1
+# Arbitrary threshold for filtering span lengths during reporting (percentage)
+SPAN_LENGTH_THRESHOLD_PERCENTAGE = 90
 
 
 @debug_cli.command(
@@ -262,13 +264,18 @@ def debug_data(
             msg.info("SD = Span Distinctiveness, BD = Boundary Distinctiveness")
             _print_span_characteristics(span_characteristics)
 
+            span_freqs = _get_spans_length_freq_dist(
+                gold_train_data["spans_length"][spans_key]
+            )
+            _span_freqs = [(str(k), int(v)) for k, v in span_freqs.items()]
+
             msg.info(
-                "It's recommended to use a maximum of "
-                f"{math.ceil(span_characteristics['avg_length'])} ngrams "
-                "when you're using the n-gram suggester function "
-                f"(avg={round(span_characteristics['avg_length'],2)}, "
-                f"min={span_characteristics['min_length']}, max={span_characteristics['max_length']})",
-                show=verbose,
+                f"{SPAN_LENGTH_THRESHOLD_PERCENTAGE}% of spans have up to "
+                f"{max(span_freqs.keys())} n-grams "
+                f"(min={span_characteristics['min_length']}, max={span_characteristics['max_length']}). "
+                f"Most common span lengths are: {_format_freqs(_span_freqs)}. "
+                "If you are using the n-gram suggester, note that there are speed / memory tradeoffs "
+                "when you include all outliers."
             )
 
             # Add report regarding span characteristics
@@ -874,6 +881,12 @@ def _format_labels(
     return ", ".join([f"'{l}'" for l in cast(Iterable[str], labels)])
 
 
+def _format_freqs(freqs: Iterable[Tuple[str, int]]) -> str:
+    return ", ".join(
+        [f"'{l}' ({c}%)" for l, c in cast(Iterable[Tuple[str, int]], freqs)]
+    )
+
+
 def _get_examples_without_label(
     data: Sequence[Example],
     label: str,
@@ -1039,3 +1052,40 @@ def _print_span_characteristics(span_characteristics: Dict[str, Any]):
     ]
     footer = ["Wgt. Average"] + [str(round(f, 2)) for f in footer_data]
     msg.table(table, footer=footer, header=headers, divider=True)
+
+
+def _get_spans_length_freq_dist(
+    length_dict: Dict, threshold=SPAN_LENGTH_THRESHOLD_PERCENTAGE
+) -> Dict[int, float]:
+    """Get frequency distribution of spans length under a certain threshold"""
+
+    all_span_lengths = []
+    for _, lengths in length_dict.items():
+        all_span_lengths.extend(lengths)
+
+    freq_dist: Counter = Counter()
+    for i in all_span_lengths:
+        if freq_dist.get(i):
+            freq_dist[i] += 1
+        else:
+            freq_dist[i] = 1
+
+    # We will be working with percentages instead of raw counts
+    freq_dist_percentage = {}
+    for span_length, count in freq_dist.most_common():
+        percentage = (count / len(all_span_lengths)) * 100.0
+        percentage = round(percentage, 2)
+        freq_dist_percentage[span_length] = percentage
+
+    # We're going to filter all the span lengths that fall
+    # under a percentage threshold when summed.
+    total = 0.0
+    freq_dist_filtered = {}
+    for span_length, dist in freq_dist_percentage.items():
+        total += dist
+        if total >= threshold:
+            break
+        else:
+            freq_dist_filtered[span_length] = dist
+
+    return freq_dist_filtered
