@@ -44,9 +44,9 @@ languages that don't yet come with a trained pipeline, you have to import them
 directly, or use [`spacy.blank`](/api/top-level#spacy.blank):
 
 ```python
-from spacy.lang.fi import Finnish
-nlp = Finnish()  # use directly
-nlp = spacy.blank("fi")  # blank instance
+from spacy.lang.uk import Ukrainian
+nlp = Ukrainian()  # use directly
+nlp = spacy.blank("uk")  # blank instance
 ```
 
 Initializing the language object directly yields the same result as generating
