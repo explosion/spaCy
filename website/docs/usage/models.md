@@ -44,9 +44,9 @@ languages that don't yet come with a trained pipeline, you have to import them
 directly, or use [`spacy.blank`](/api/top-level#spacy.blank):
 
 ```python
-from spacy.lang.uk import Ukrainian
-nlp = Ukrainian()  # use directly
-nlp = spacy.blank("uk")  # blank instance
+from spacy.lang.yo import Yoruba
+nlp = Yoruba()  # use directly
+nlp = spacy.blank("yo")  # blank instance
 ```
 
 A blank pipeline is typically just a tokenizer. You might want to create a blank
