@@ -1,5 +1,6 @@
 import os
 import math
+from random import sample
 from typing import Counter
 
 import pytest
@@ -19,6 +20,7 @@ from spacy.cli.debug_data import _get_labels_from_spancat
 from spacy.cli.debug_data import _get_distribution, _get_kl_divergence
 from spacy.cli.debug_data import _get_span_characteristics
 from spacy.cli.debug_data import _print_span_characteristics
+from spacy.cli.debug_data import _get_spans_length_freq_dist
 from spacy.cli.download import get_compatibility, get_version
 from spacy.cli.init_config import RECOMMENDATIONS, init_config, fill_config
 from spacy.cli.package import get_third_party_dependencies
@@ -825,3 +827,26 @@ def test_ensure_print_span_characteristics_wont_fail():
         examples=examples, compiled_gold=data, spans_key=spans_key
     )
     _print_span_characteristics(span_characteristics)
+
+
+@pytest.mark.parametrize("threshold", [70, 80, 85, 90, 95])
+def test_span_length_freq_dist_threshold_must_be_correct(threshold):
+    sample_span_lengths = {
+        "span_type_1": [1, 4, 4, 5],
+        "span_type_2": [5, 3, 3, 2],
+        "span_type_3": [3, 1, 3, 3],
+    }
+    span_freqs = _get_spans_length_freq_dist(sample_span_lengths, threshold)
+    assert sum(span_freqs.values()) <= threshold
+
+
+def test_span_length_freq_dist_output_must_be_correct():
+    sample_span_lengths = {
+        "span_type_1": [1, 4, 4, 5],
+        "span_type_2": [5, 3, 3, 2],
+        "span_type_3": [3, 1, 3, 3],
+    }
+    threshold = 90
+    span_freqs = _get_spans_length_freq_dist(sample_span_lengths, threshold)
+    assert sum(span_freqs.values()) <= threshold
+    assert list(span_freqs.keys()) == [3, 1, 4]
