@@ -54,31 +54,33 @@ class SpanGroups(UserDict):
         return srsly.msgpack_dumps(msg)
 
     def from_bytes(self, bytes_data: bytes) -> "SpanGroups":
+        msg = (
+            []
+            if not bytes_data or bytes_data == self._EMPTY_BYTES
+            else srsly.msgpack_loads(bytes_data)
+        )
         self.clear()
         doc = self._ensure_doc()
         # backwards-compatibility: bytes_data may be one of:
         # b'', a serialized empty list, a serialized list of SpanGroup bytes,
         # (and now it may be) a serialized dict mapping keys to SpanGroup bytes
-        if bytes_data and bytes_data != self._EMPTY_BYTES:
-            msg = srsly.msgpack_loads(bytes_data)
-            if isinstance(msg, dict):
-                for key, value_bytes in msg.items():
-                    group = SpanGroup(doc).from_bytes(value_bytes)
-                    self[key] = group
-            elif isinstance(msg, list):
-                for value_bytes in msg:
-                    group = SpanGroup(doc).from_bytes(value_bytes)
-                    group_name = group.name
-                    if group_name in self:
-                        # Display a warning if `msg` contains `SpanGroup`s
-                        # that have the same .name (attribute).
-                        # Because, for `SpanGroups` serialized as lists,
-                        # only 1 SpanGroup per .name is loaded. (See #10685)
-                        warnings.warn(Warnings.W119.format(group_name=group_name))
-                    self[group_name] = group
-            # TODO: Raise exception if `msg` is neither dict nor list?
-            #       (Or should we just use `else` instead of the `elif` above
-            #        (and quietly ignore any (invalid) non-dict/list data)?)
+        if isinstance(msg, list):
+            for value_bytes in msg:
+                group = SpanGroup(doc).from_bytes(value_bytes)
+                if group.name in self:
+                    # Display a warning if `msg` contains `SpanGroup`s
+                    # that have the same .name (attribute).
+                    # Because, for `SpanGroups` serialized as lists,
+                    # only 1 SpanGroup per .name is loaded. (See #10685)
+                    warnings.warn(
+                        Warnings.W119.format(group_name=group.name, group_values=group)
+                    )
+                    continue
+                self[group.name] = group
+        else:
+            for key, value_bytes in msg.items():
+                group = SpanGroup(doc).from_bytes(value_bytes)
+                self[key] = group
         return self
 
     def _ensure_doc(self) -> "Doc":

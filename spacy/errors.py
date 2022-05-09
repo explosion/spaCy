@@ -199,8 +199,11 @@ class Warnings(metaclass=ErrorsWithCodes):
     W118 = ("Term '{term}' not found in glossary. It may however be explained in documentation "
             "for the corpora used to train the language. Please check "
             "`nlp.meta[\"sources\"]` for any relevant links.")
-    W119 = ("SpanGroup with the name '{group_name}' is already present in the Doc's SpanGroups. "
-            "Only the last SpanGroup with that name will be loaded in the `doc.spans`.")
+    W119 = ("Unable to load all spans in Doc.spans: more than one span group "
+            "with the name '{group_name}' was found in the saved spans data. "
+            "Only the first span group will be loaded under "
+            "Doc.spans['{group_name}']. Skipping span group with values: "
+            "{group_values}")
 
 
 class Errors(metaclass=ErrorsWithCodes):
