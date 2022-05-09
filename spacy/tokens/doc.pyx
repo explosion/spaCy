@@ -1473,7 +1473,7 @@ cdef class Doc:
 
         words = []
         # Map annotation type IDs to their string equivalents.
-        annot_types = {POS: "pos", HEAD: "head", DEP: "dep", LEMMA: "lemma", TAG: "tag", MORPH: "morph"}
+        annot_types = {t: self.vocab.strings[t].lower() for t in (POS, HEAD, DEP, LEMMA, TAG, MORPH)}
         token_annotations_reqs = {
             annot_type_id: annot_type_id if annot_type_id != HEAD else DEP for annot_type_id in annot_types
         }
