@@ -12,7 +12,7 @@ from .._util import project_cli, Arg, Opt, PROJECT_FILE, load_project_config
 from .._util import get_checksum, download_file, git_checkout, get_git_version
 from .._util import SimpleFrozenDict, parse_config_overrides
 
-# Whether assets are optional if 'optional' is not set.
+# Whether assets are extra if `extra` is not set.
 OPTIONAL_DEFAULT = False
 
 
