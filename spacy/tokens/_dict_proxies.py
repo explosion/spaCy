@@ -43,6 +43,11 @@ class SpanGroups(UserDict):
             doc = self._ensure_doc()
         return SpanGroups(doc).from_bytes(self.to_bytes())
 
+    def setdefault(self, key, default=None):
+        if not isinstance(default, SpanGroup):
+            raise ValueError("SpanGroups.setdefault only supports default values with type SpanGroup, received type '{default_type}'.".format(default_type=type(default)))
+        return super().setdefault(key, default=default)
+
     def to_bytes(self) -> bytes:
         # We don't need to serialize this as a dict, because the groups
         # know their names.

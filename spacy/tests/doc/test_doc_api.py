@@ -11,7 +11,7 @@ from spacy.lang.en import English
 from spacy.lang.xx import MultiLanguage
 from spacy.language import Language
 from spacy.lexeme import Lexeme
-from spacy.tokens import Doc, Span, Token
+from spacy.tokens import Doc, Span, SpanGroup, Token
 from spacy.vocab import Vocab
 
 from .test_underscore import clean_underscore  # noqa: F401
@@ -964,3 +964,12 @@ def test_doc_spans_copy(en_tokenizer):
     assert weakref.ref(doc1) == doc1.spans.doc_ref
     doc2 = doc1.copy()
     assert weakref.ref(doc2) == doc2.spans.doc_ref
+
+
+def test_doc_spans_setdefault(en_tokenizer):
+    doc = en_tokenizer("Some text about Colombia and the Czech Republic")
+    with pytest.raises(ValueError):
+        doc.spans.setdefault("key")
+    with pytest.raises(ValueError):
+        doc.spans.setdefault("key", default=[])
+    doc.spans.setdefault("key", default=SpanGroup(doc))
