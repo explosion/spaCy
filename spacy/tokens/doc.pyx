@@ -1539,6 +1539,8 @@ cdef class Doc:
         # If there are any other annotations, set them.
         if headings:
             attrs = self.to_array(headings)
+            if attrs.ndim == 1:
+                attrs = numpy.reshape(attrs, (attrs.size, 1))
             j = 0
 
             for annot in annotations:
