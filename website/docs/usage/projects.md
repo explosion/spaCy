@@ -109,9 +109,9 @@ checkout" feature to avoid downloading the whole repository.
 
 Sometimes your project configuration may include large assets that you don't
 necessarily want to download every time you run `spacy project assets`. That's
-why assets can be marked as [`optional`](#data-assets-url) - by default,
-optional assets are not downloaded. If they are to be included in the download,
-run `spacy project assets --extra`.
+why assets can be marked as [`extra`](#data-assets-url) - by default, these
+assets are not downloaded. If they should be, run
+`spacy project assets --extra`.
 
 ### 3. Run a command {#run}
 
@@ -268,7 +268,7 @@ dependencies to use certain protocols.
 >     checksum: '63373dd656daa1fd3043ce166a59474c'
 >   # Optional download from Google Cloud Storage bucket
 >   - dest: 'assets/development.spacy'
->     optional: True
+>     extra: True
 >     url: 'gs://your-bucket/corpora'
 >     checksum: '5113dc04e03f079525edd8df3f4f39e3'
 > ```
@@ -276,7 +276,7 @@ dependencies to use certain protocols.
 | Name          | Description                                                                                                                                                                      |
 | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `dest`        | The destination path to save the downloaded asset to (relative to the project directory), including the file name.                                                               |
-| `optional`    | Optional flag determining whether this is an optional asset. False by default. Optional assets are only downloaded if `spacy project assets` is run with `--extra`.              |
+| `extra`       | Optional flag determining whether this asset is downloaded only if `spacy project assets` is run with `--extra`. `False` by default.                                             |
 | `url`         | The URL to download from, using the respective protocol.                                                                                                                         |
 | `checksum`    | Optional checksum of the file. If provided, it will be used to verify that the file matches and downloads will be skipped if a local file with the same checksum already exists. |
 | `description` | Optional asset description, used in [auto-generated docs](#custom-docs).                                                                                                         |

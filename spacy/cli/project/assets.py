@@ -63,11 +63,11 @@ def project_assets(
     assets = [
         asset
         for asset in config.get("assets", [])
-        if extra or not asset.get("optional", OPTIONAL_DEFAULT)
+        if extra or not asset.get("extra", OPTIONAL_DEFAULT)
     ]
     if not assets:
         msg.warn(
-            f"No assets specified in {PROJECT_FILE} (if assets are marked as optional, download them with --extra)",
+            f"No assets specified in {PROJECT_FILE} (if assets are marked as extra, download them with --extra)",
             exits=0,
         )
     msg.info(f"Fetching {len(assets)} asset(s)")
