@@ -915,6 +915,7 @@ class Errors(metaclass=ErrorsWithCodes):
     E1036 = ("Cannot index into NoneNode")
     E1037 = ("Annotation is ill-formed.")
     E1038 = ("Error(s) in {obj} offsets.")
+    E1039 = ("Token properties are inconsistent in document's JSON representation: {inconsistent_props}.")
 
 
 # Deprecated model shortcuts, only used in errors and warnings

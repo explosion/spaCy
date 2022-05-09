@@ -166,3 +166,11 @@ def test_json_to_doc_spaces():
     doc = spacy.blank("en")("This is just brilliant.")
     new_doc = Doc(doc.vocab).from_json(doc.to_json())
     assert doc.text == new_doc.text
+
+
+def test_json_to_doc_attribute_consistency(doc):
+    """Test that Doc.from_json() raises an exception if tokens don't all have the same set of properties."""
+    doc_json = doc.to_json()
+    doc_json["tokens"][1].pop("morph")
+    with pytest.raises(ValueError):
+        Doc(doc.vocab).from_json(doc_json)

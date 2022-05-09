@@ -1,4 +1,6 @@
 # cython: infer_types=True, bounds_check=False, profile=True
+from typing import Set
+
 cimport cython
 cimport numpy as np
 from libc.string cimport memcpy
@@ -191,7 +193,6 @@ cdef class Doc:
         ents=None,
     ):
         """Create a Doc object.
-
         vocab (Vocab): A vocabulary object, which must match any models you
             want to use (e.g. tokenizer, parser, entity recognizer).
         words (Optional[List[Union[str, int]]]): A list of unicode strings or
@@ -220,7 +221,6 @@ cdef class Doc:
         ents (Optional[List[str]]): A list of unicode strings, of the same
             length as words, as IOB tags to assign as token.ent_iob and
             token.ent_type. Defaults to None.
-
         DOCS: https://spacy.io/api/doc#init
         """
         self.vocab = vocab
@@ -1474,22 +1474,29 @@ cdef class Doc:
         words = []
         # Map annotation type IDs to their string equivalents.
         annot_types = {POS: "pos", HEAD: "head", DEP: "dep", LEMMA: "lemma", TAG: "tag", MORPH: "morph"}
-        token_annotations = {
-            # For each annotation type: store (1) annotation type required to include it, (2) list of annotations for
-            # this type.
-            annot_type_id: {"req": annot_type_id if annot_type_id != HEAD else DEP, "values": None}
-            for annot_type_id in annot_types
+        token_annotations_reqs = {
+            annot_type_id: annot_type_id if annot_type_id != HEAD else DEP for annot_type_id in annot_types
         }
+        token_annotations = {annot_type_id: None for annot_type_id in annot_types}
 
         # Gather token-level properties.
         for token in doc_json["tokens"]:
             words.append(doc_json["text"][token["start"]:token["end"]])
-            for annot_type_id, token_annot_data in token_annotations.items():
+            for annot_type_id in token_annotations:
                 # Assuming all tokens have exactly the same set of attributes.
-                if annot_types[token_annot_data["req"]] in token:
-                    if token_annot_data["values"] is None:
-                        token_annot_data["values"] = []
-                    token_annot_data["values"].append(token[annot_types[annot_type_id]])
+                if annot_types[token_annotations_reqs[annot_type_id]] in token:
+                    if token_annotations[annot_type_id] is None:
+                        token_annotations[annot_type_id] = []
+                    token_annotations[annot_type_id].append(token[annot_types[annot_type_id]])
+
+        # Assert all tokens have exactly the same set of attributes.
+        inconsistent_props: Set[str] = set()
+        for annot_type_id in token_annotations:
+            if token_annotations[annot_type_id]:
+                if len(token_annotations[annot_type_id]) != len(words):
+                    inconsistent_props.add(annot_types[annot_type_id])
+        if len(inconsistent_props):
+            raise ValueError(Errors.E1039.format(inconsistent_props=inconsistent_props))
 
         # Initialize doc instance.
         start = 0
@@ -1506,71 +1513,72 @@ cdef class Doc:
             self.push_back(lex, has_space)
 
         # Set remaining token-level attributes via Doc.from_array().
-        if token_annotations[HEAD]["values"] is not None:
-            token_annotations[HEAD]["values"] = [
-                head - i if head is not None else 0 for i, head in enumerate(token_annotations[HEAD]["values"])
+        if token_annotations[HEAD] is not None:
+            token_annotations[HEAD] = [
+                head - i if head is not None else 0 for i, head in enumerate(token_annotations[HEAD])
             ]
-        if token_annotations[DEP]["values"] is not None:
+        if token_annotations[DEP] is not None:
             deps = []
-            for dep in token_annotations[DEP]["values"]:
+            for dep in token_annotations[DEP]:
                 if dep is None:
                     raise ValueError(Errors)
                 deps.append(dep)
-            token_annotations[DEP]["values"] = deps if len(deps) else None
+            token_annotations[DEP] = deps if len(deps) else None
 
-        if token_annotations[DEP]["values"] and not token_annotations[HEAD]["values"]:
-            token_annotations[HEAD]["values"] = [0] * len(token_annotations[DEP]["values"])
-        if token_annotations[HEAD]["values"] and not token_annotations[HEAD]["values"]:
+        if token_annotations[DEP] and not token_annotations[HEAD]:
+            token_annotations[HEAD] = [0] * len(token_annotations[DEP])
+        if token_annotations[HEAD] and not token_annotations[HEAD]:
             raise ValueError(Errors.E1017)
-        if token_annotations[POS]["values"] is not None:
-            for pp in set(token_annotations[POS]["values"]):
+        if token_annotations[POS] is not None:
+            for pp in set(token_annotations[POS]):
                 if pp not in parts_of_speech.IDS:
                     raise ValueError(Errors.E1021.format(pp=pp))
 
-        headings = []
-        annotations = [token_annotations[key]["values"] for key in annot_types]
+        attrs = []
+        annotations = [token_annotations[key] for key in annot_types]
         possible_headings = [POS, HEAD, DEP, LEMMA, TAG, MORPH]
         for a, annot in enumerate(annotations):
             if annot is not None:
                 if len(annot) != len(words):
                     raise ValueError(Errors.E189)
-                headings.append(possible_headings[a])
+                attrs.append(possible_headings[a])
 
         # If there are any other annotations, set them.
-        if headings:
-            attrs = self.to_array(headings)
-            if attrs.ndim == 1:
-                attrs = numpy.reshape(attrs, (attrs.size, 1))
+        if attrs:
+            array = self.to_array(attrs)
+            if array.ndim == 1:
+                array = numpy.reshape(array, (array.size, 1))
             j = 0
 
             for annot in annotations:
                 if annot:
-                    if annot is not token_annotations[HEAD]["values"]:
+                    if annot is not token_annotations[HEAD]:
                         for i in range(len(annot)):
                             if annot[i] is not None:
                                 self.vocab.strings.add(annot[i])
 
-                    if annot is token_annotations[HEAD]["values"]:
+                    if annot is token_annotations[HEAD]:
                         for i in range(len(words)):
-                            if attrs.ndim == 1:
-                                attrs[i] = annot[i]
+                            if array.ndim == 1:
+                                array[i] = annot[i]
                             else:
-                                attrs[i, j] = annot[i]
-                    elif annot is token_annotations[MORPH]["values"]:
+                                array[i, j] = annot[i]
+                    elif annot is token_annotations[MORPH]:
                         for i in range(len(words)):
-                            morph_key = self.vocab.morphology.add(token_annotations[MORPH]["values"][i])
-                            if attrs.ndim == 1:
-                                attrs[i] = morph_key
+                            morph_key = self.vocab.morphology.add(token_annotations[MORPH][i])
+                            if array.ndim == 1:
+                                array[i] = morph_key
                             else:
-                                attrs[i, j] = morph_key
+                                array[i, j] = morph_key
                     else:
                         for i in range(len(words)):
-                            if attrs.ndim == 1:
-                                attrs[i] = self.vocab.strings[annot[i]]
+                            vocab_key = self.vocab.strings.add(annot[i])
+                            if array.ndim == 1:
+                                array[i] = vocab_key
                             else:
-                                attrs[i, j] = self.vocab.strings[annot[i]]
+                                array[i, j] = vocab_key
                     j += 1
-            self.from_array(headings, attrs)
+            self.from_array(attrs, array)
 
         ### Span/document properties ###
 
