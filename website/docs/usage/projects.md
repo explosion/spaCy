@@ -108,7 +108,7 @@ replacing the `url` string with a `git` block. spaCy will use Git's "sparse
 checkout" feature to avoid downloading the whole repository.
 
 Sometimes your project configuration may include large assets that you don't
-necessarily want to download every time you run `spacy project assets`. That's
+necessarily want to download when you run `spacy project assets`. That's
 why assets can be marked as [`optional`](#data-assets-url) - by default,
 optional assets are not downloaded. If they are to be included in the download,
 run `spacy project assets --extra`.
