@@ -249,8 +249,14 @@ def validate_project_commands(config: Dict[str, Any]) -> None:
                 workflow_list = cast(List[str], step_or_list)
                 if len(workflow_list) < 2:
                     msg.fail(
-                    f"Invalid multiprocessing group within '{workflow_name}'",
+                    f"Invalid multiprocessing group within '{workflow_name}'.",
                     f"A multiprocessing group must reference at least two commands.",
+                    exits=1,
+                )
+                if len(workflow_list) != len(set(workflow_list)):
+                    msg.fail(
+                    f"A multiprocessing group within '{workflow_name}' contains a command more than once.",
+                    f"This is not permitted because it is then not possible to determine when to rerun.",
                     exits=1,
                 )
                 for step in workflow_list:

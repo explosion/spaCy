@@ -19,6 +19,7 @@ from spacy.cli.init_config import RECOMMENDATIONS, init_config, fill_config
 from spacy.cli.package import get_third_party_dependencies
 from spacy.cli.package import _is_permitted_package_name
 from spacy.cli.validate import get_model_pkgs
+from spacy.cli.project.run import project_run
 from spacy.lang.en import English
 from spacy.lang.nl import Dutch
 from spacy.language import Language
@@ -440,6 +441,7 @@ def test_project_config_multiprocessing_good_case():
     [
         {"all": ["command1", ["command2"], "command3"]},
         {"all": ["command1", ["command2", "command4"]]},
+        {"all": ["command1", ["command2", "command2"]]},
     ],
 )
 def test_project_config_multiprocessing_bad_case(workflows):
@@ -455,6 +457,60 @@ def test_project_config_multiprocessing_bad_case(workflows):
         srsly.write_yaml(d / "project.yml", project)
         with pytest.raises(SystemExit):
             load_project_config(d)
+
+
+def test_project_run_multiprocessing_good_case():
+    with make_tempdir() as d:
+
+        pscript = """
+import sys, os
+from time import sleep
+
+_, d_path, in_filename, out_filename, first_flag_filename, second_flag_filename = sys.argv
+with open(os.sep.join((d_path, out_filename)), 'w') as out_file:
+    out_file.write("")
+while True:
+    if os.path.exists(os.sep.join((d_path, in_filename))):
+        break
+    sleep(0.1)
+if not os.path.exists(os.sep.join((d_path, first_flag_filename))):    
+    with open(os.sep.join((d_path, first_flag_filename)), 'w') as first_flag_file:
+        first_flag_file.write("")
+else: # should never happen because of skipping
+    with open(os.sep.join((d_path, second_flag_filename)), 'w') as second_flag_file:
+        second_flag_file.write("")
+        """
+
+        pscript_loc = os.sep.join((str(d), "pscript.py"))
+        with open(pscript_loc, "w") as pscript_file:
+            pscript_file.write(pscript)
+        os.chmod(pscript_loc, 0o777)
+        project = {
+            "commands": [
+                {
+                    "name": "commandA",
+                    "script": [
+                        " ".join(("python", pscript_loc, str(d), "a", "b", "c", "d"))
+                    ],
+                    "outputs": [" ".join((str(d), "c"))],
+                },
+                {
+                    "name": "commandB",
+                    "script": [
+                        " ".join(("python", pscript_loc, str(d), "b", "a", "e", "f"))
+                    ],
+                    "outputs": [" ".join((str(d), "e"))],
+                },
+            ],
+            "workflows": {"all": [["commandA", "commandB"], ["commandA", "commandB"]]},
+        }
+        srsly.write_yaml(d / "project.yml", project)
+        load_project_config(d)
+        project_run(d, "all")
+        assert os.path.exists(os.sep.join((str(d), "c")))
+        assert os.path.exists(os.sep.join((str(d), "e")))
+        assert not os.path.exists(os.sep.join((str(d), "d")))
+        assert not os.path.exists(os.sep.join((str(d), "f")))
 
 
 @pytest.mark.parametrize(
