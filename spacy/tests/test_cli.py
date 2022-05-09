@@ -421,6 +421,42 @@ def test_project_config_interpolation(int_value):
         substitute_project_variables(project)
 
 
+def test_project_config_multiprocessing_good_case():
+    project = {
+        "commands": [
+            {"name": "command1", "script": ["echo", "command1"]},
+            {"name": "command2", "script": ["echo", "command2"]},
+            {"name": "command3", "script": ["echo", "command3"]},
+        ],
+        "workflows": {"all": ["command1", ["command2", "command3"]]},
+    }
+    with make_tempdir() as d:
+        srsly.write_yaml(d / "project.yml", project)
+        load_project_config(d)
+
+
+@pytest.mark.parametrize(
+    "workflows",
+    [
+        {"all": ["command1", ["command2"], "command3"]},
+        {"all": ["command1", ["command2", "command4"]]},
+    ],
+)
+def test_project_config_multiprocessing_bad_case(workflows):
+    project = {
+        "commands": [
+            {"name": "command1", "script": ["echo", "command1"]},
+            {"name": "command2", "script": ["echo", "command2"]},
+            {"name": "command3", "script": ["echo", "command3"]},
+        ],
+        "workflows": workflows,
+    }
+    with make_tempdir() as d:
+        srsly.write_yaml(d / "project.yml", project)
+        with pytest.raises(SystemExit):
+            load_project_config(d)
+
+
 @pytest.mark.parametrize(
     "greeting",
     [342, "everyone", "tout le monde", pytest.param("42", marks=pytest.mark.xfail)],

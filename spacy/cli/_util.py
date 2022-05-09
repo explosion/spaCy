@@ -1,5 +1,5 @@
 from typing import Dict, Any, Union, List, Optional, Tuple, Iterable
-from typing import TYPE_CHECKING, overload
+from typing import TYPE_CHECKING, overload, cast
 import sys
 import shutil
 from pathlib import Path
@@ -151,6 +151,7 @@ def load_project_config(
         config = srsly.read_yaml(config_path)
     except ValueError as e:
         msg.fail(invalid_err, e, exits=1)
+    print(config)
     errors = validate(ProjectConfigSchema, config)
     if errors:
         msg.fail(invalid_err)
@@ -221,18 +222,9 @@ def validate_project_commands(config: Dict[str, Any]) -> None:
 
     config (Dict[str, Any]): The loaded config.
     """
-    command_names = [cmd["name"] for cmd in config.get("commands", [])]
-    workflows = config.get("workflows", {})
-    duplicates = set([cmd for cmd in command_names if command_names.count(cmd) > 1])
-    if duplicates:
-        err = f"Duplicate commands defined in {PROJECT_FILE}: {', '.join(duplicates)}"
-        msg.fail(err, exits=1)
-    for workflow_name, workflow_steps in workflows.items():
-        if workflow_name in command_names:
-            err = f"Can't use workflow name '{workflow_name}': name already exists as a command"
-            msg.fail(err, exits=1)
-        for step in workflow_steps:
-            if step not in command_names:
+
+    def verify_workflow_step(step: str):
+        if step not in command_names:
                 msg.fail(
                     f"Unknown command specified in workflow '{workflow_name}': {step}",
                     f"Workflows can only refer to commands defined in the 'commands' "
@@ -240,6 +232,30 @@ def validate_project_commands(config: Dict[str, Any]) -> None:
                     exits=1,
                 )
 
+    command_names = [cmd["name"] for cmd in config.get("commands", [])]
+    workflows = config.get("workflows", {})
+    duplicates = set([cmd for cmd in command_names if command_names.count(cmd) > 1])
+    if duplicates:
+        err = f"Duplicate commands defined in {PROJECT_FILE}: {', '.join(duplicates)}"
+        msg.fail(err, exits=1)
+    for workflow_name, workflow_step_or_lists in workflows.items():
+        if workflow_name in command_names:
+            err = f"Can't use workflow name '{workflow_name}': name already exists as a command"
+            msg.fail(err, exits=1)
+        for step_or_list in workflow_step_or_lists:
+            if isinstance(step_or_list, str):
+                verify_workflow_step(step_or_list)
+            else:
+                workflow_list = cast(List[str], step_or_list)
+                if len(workflow_list) < 2:
+                    msg.fail(
+                    f"Invalid multiprocessing group within '{workflow_name}'",
+                    f"A multiprocessing group must reference at least two commands.",
+                    exits=1,
+                )
+                for step in workflow_list:
+                    verify_workflow_step(step)
+        
 
 def get_hash(data, exclude: Iterable[str] = tuple()) -> str:
     """Get the hash for a JSON-serializable object.
