@@ -1,6 +1,7 @@
 from typing import Optional, List, Dict, Sequence, Any, Iterable, cast
 from pathlib import Path
 from multiprocessing import Process, Lock
+from multiprocessing.synchronize import Lock as Lock_t
 from wasabi import msg
 from wasabi.util import locale_escape
 import sys
@@ -51,7 +52,7 @@ def project_run(
     force: bool = False,
     dry: bool = False,
     capture: bool = False,
-    mult_group_mutex: Optional[Lock] = None,
+    mult_group_mutex: Optional[Lock_t] = None,
 ) -> None:
     """Run a named script defined in the project.yml. If the script is part
     of the default pipeline (defined in the "run" section), DVC is used to
@@ -89,7 +90,8 @@ def project_run(
                     mult_group_mutex=mult_group_mutex,
                 )
             else:
-                processes = [Process(
+                processes = [
+                    Process(
                         target=project_run,
                         args=(project_dir, cmd),
                         kwargs={
@@ -98,7 +100,10 @@ def project_run(
                             "dry": dry,
                             "capture": capture,
                             "mult_group_mutex": mult_group_mutex,
-                        }) for cmd in cmdOrMultiprocessingGroup]
+                        },
+                    )
+                    for cmd in cmdOrMultiprocessingGroup
+                ]
                 for process in processes:
                     process.start()
                 for process in processes:
@@ -238,7 +243,7 @@ def check_rerun(
     *,
     check_spacy_version: bool = True,
     check_spacy_commit: bool = False,
-    mult_group_mutex: Lock,
+    mult_group_mutex: Lock_t,
 ) -> bool:
     """Check if a command should be rerun because its settings or inputs/outputs
     changed.
@@ -286,7 +291,9 @@ def check_rerun(
 
 
 def update_lockfile(
-    project_dir: Path, command: Dict[str, Any], mult_group_mutex: Lock
+    project_dir: Path,
+    command: Dict[str, Any],
+    mult_group_mutex: Lock_t,
 ) -> None:
     """Update the lockfile after running a command. Will create a lockfile if
     it doesn't yet exist and will add an entry for the current command, its
