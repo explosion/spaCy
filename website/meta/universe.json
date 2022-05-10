@@ -1,6 +1,70 @@
 {
     "resources": [
         {
+            "id": "scrubadub_spacy",
+            "title": "scrubadub_spacy",
+            "category": ["pipeline"],
+            "slogan": "Remove personally identifiable information from text using spaCy.",
+            "description": "scrubadub removes personally identifiable information from text. scrubadub_spacy is an extension that uses spaCy NLP models to remove personal information from text.",
+            "github": "LeapBeyond/scrubadub_spacy",
+            "pip": "scrubadub-spacy",
+            "url": "https://github.com/LeapBeyond/scrubadub_spacy",
+            "code_language": "python",
+            "author": "Leap Beyond",
+            "author_links": {
+                "github": "https://github.com/LeapBeyond",
+                "website": "https://leapbeyond.ai"
+            },
+            "code_example": [
+                "import scrubadub, scrubadub_spacy",
+                "scrubber = scrubadub.Scrubber()",
+                "scrubber.add_detector(scrubadub_spacy.detectors.SpacyEntityDetector)",
+                "print(scrubber.clean(\"My name is Alex, I work at LifeGuard in London, and my eMail is alex@lifeguard.com btw. my super secret twitter login is username: alex_2000 password: g-dragon180888\"))",
+                "# My name is {{NAME}}, I work at {{ORGANIZATION}} in {{LOCATION}}, and my eMail is {{EMAIL}} btw. my super secret twitter login is username: {{USERNAME}} password: {{PASSWORD}}"
+            ]
+        },
+        {
+            "id": "spacy-setfit-textcat",
+            "title": "spacy-setfit-textcat",
+            "category": ["research"],
+            "tags": ["SetFit", "Few-Shot"],
+            "slogan": "spaCy Project: Experiments with SetFit & Few-Shot Classification",
+            "description": "This project is an experiment with spaCy and few-shot text classification using SetFit",
+            "github": "pmbaumgartner/spacy-setfit-textcat",
+            "url": "https://github.com/pmbaumgartner/spacy-setfit-textcat",
+            "code_language": "python",
+            "author": "Peter Baumgartner",
+            "author_links": {
+                "twitter" : "https://twitter.com/pmbaumgartner",
+                "github": "https://github.com/pmbaumgartner",
+                "website": "https://www.peterbaumgartner.com/"
+            },
+            "code_example": [
+                "https://colab.research.google.com/drive/1CvGEZC0I9_v8gWrBxSJQ4Z8JGPJz-HYb?usp=sharing"
+            ]
+        },
+        {
+            "id": "spacy-experimental",
+            "title": "spacy-experimental",
+            "category": ["extension"],
+            "slogan": "Cutting-edge experimental spaCy components and features",
+            "description": "This package includes experimental components and features for spaCy v3.x, for example model architectures, pipeline components and utilities.",
+            "github": "explosion/spacy-experimental",
+            "pip": "spacy-experimental",
+            "url": "https://github.com/explosion/spacy-experimental",
+            "code_language": "python",
+            "author": "Explosion",
+            "author_links": {
+                "twitter" : "https://twitter.com/explosion_ai",
+                "github": "https://github.com/explosion",
+                "website": "https://explosion.ai/"
+            },
+            "code_example": [
+                "python -m pip install -U pip setuptools wheel",
+                "python -m pip install spacy-experimental"
+            ]
+        },
+        {
             "id": "spacypdfreader",
             "title": "spadypdfreader",
             "category": ["pipeline"],
@@ -227,11 +291,11 @@
         },
         {
             "id": "spacy-textblob",
-            "title": "spaCyTextBlob",
-            "slogan": "Easy sentiment analysis for spaCy using TextBlob. Now supports spaCy 3.0!",
-            "thumb": "https://github.com/SamEdwardes/spaCyTextBlob/raw/main/website/static/img/logo-thumb-square-250x250.png",
-            "description": "spaCyTextBlob is a pipeline component that enables sentiment analysis using the [TextBlob](https://github.com/sloria/TextBlob) library. It will add the additional extensions `._.polarity`, `._.subjectivity`, and `._.assessments` to `Doc`, `Span`, and `Token` objects. For spaCy 2 please use `pip install pip install spacytextblob==0.1.7`",
-            "github": "SamEdwardes/spaCyTextBlob",
+            "title": "spacytextblob",
+            "slogan": "A TextBlob sentiment analysis pipeline component for spaCy.",
+            "thumb": "https://github.com/SamEdwardes/spacytextblob/raw/main/docs/static/img/logo-thumb-square-250x250.png",
+            "description": "spacytextblob is a pipeline component that enables sentiment analysis using the [TextBlob](https://github.com/sloria/TextBlob) library. It will add the additional extension `._.blob` to `Doc`, `Span`, and `Token` objects.",
+            "github": "SamEdwardes/spacytextblob",
             "pip": "spacytextblob",
             "code_example": [
                 "import spacy",
@@ -241,9 +305,10 @@
                 "nlp.add_pipe('spacytextblob')",
                 "text = 'I had a really horrible day. It was the worst day ever! But every now and then I have a really good day that makes me happy.'",
                 "doc = nlp(text)",
-                "doc._.polarity      # Polarity: -0.125",
-                "doc._.subjectivity  # Sujectivity: 0.9",
-                "doc._.assessments   # Assessments: [(['really', 'horrible'], -1.0, 1.0, None), (['worst', '!'], -1.0, 1.0, None), (['really', 'good'], 0.7, 0.6000000000000001, None), (['happy'], 0.8, 1.0, None)]"
+                "doc._.blob.polarity                            # Polarity: -0.125",
+                "doc._.blob.subjectivity                        # Subjectivity: 0.9",
+                "doc._.blob.sentiment_assessments.assessments   # Assessments: [(['really', 'horrible'], -1.0, 1.0, None), (['worst', '!'], -1.0, 1.0, None), (['really', 'good'], 0.7, 0.6000000000000001, None), (['happy'], 0.8, 1.0, None)]",
+                "doc._.blob.ngrams()                            # [WordList(['I', 'had', 'a']), WordList(['had', 'a', 'really']), WordList(['a', 'really', 'horrible']), WordList(['really', 'horrible', 'day']), WordList(['horrible', 'day', 'It']), WordList(['day', 'It', 'was']), WordList(['It', 'was', 'the']), WordList(['was', 'the', 'worst']), WordList(['the', 'worst', 'day']), WordList(['worst', 'day', 'ever']), WordList(['day', 'ever', 'But']), WordList(['ever', 'But', 'every']), WordList(['But', 'every', 'now']), WordList(['every', 'now', 'and']), WordList(['now', 'and', 'then']), WordList(['and', 'then', 'I']), WordList(['then', 'I', 'have']), WordList(['I', 'have', 'a']), WordList(['have', 'a', 'really']), WordList(['a', 'really', 'good']), WordList(['really', 'good', 'day']), WordList(['good', 'day', 'that']), WordList(['day', 'that', 'makes']), WordList(['that', 'makes', 'me']), WordList(['makes', 'me', 'happy'])]"
             ],
             "code_language": "python",
             "url": "https://spacytextblob.netlify.app/",
@@ -254,7 +319,8 @@
                 "website": "https://samedwardes.com"
             },
             "category": ["pipeline"],
-            "tags": ["sentiment", "textblob"]
+            "tags": ["sentiment", "textblob"],
+            "spacy_version": 3
         },
         {
             "id": "spacy-ray",
@@ -325,15 +391,20 @@
             "pip": "spaczz",
             "code_example": [
                 "import spacy",
-                "from spaczz.pipeline import SpaczzRuler",
+                "from spaczz.matcher import FuzzyMatcher",
                 "",
-                "nlp = spacy.blank('en')",
-                "ruler = SpaczzRuler(nlp)",
-                "ruler.add_patterns([{'label': 'PERSON', 'pattern': 'Bill Gates', 'type': 'fuzzy'}])",
-                "nlp.add_pipe(ruler)",
+                "nlp = spacy.blank(\"en\")",
+                "text = \"\"\"Grint Anderson created spaczz in his home at 555 Fake St,",
+                "Apt 5 in Nashv1le, TN 55555-1234 in the US.\"\"\"  # Spelling errors intentional.",
+                "doc = nlp(text)",
                 "",
-                "doc = nlp('Oops, I spelled Bill Gatez wrong.')",
-                "print([(ent.text, ent.start, ent.end, ent.label_) for ent in doc.ents])"
+                "matcher = FuzzyMatcher(nlp.vocab)",
+                "matcher.add(\"NAME\", [nlp(\"Grant Andersen\")])",
+                "matcher.add(\"GPE\", [nlp(\"Nashville\")])",
+                "matches = matcher(doc)",
+                "",
+                "for match_id, start, end, ratio in matches:",
+                "    print(match_id, doc[start:end], ratio)"
             ],
             "code_language": "python",
             "url": "https://spaczz.readthedocs.io/en/latest/",
@@ -375,10 +446,10 @@
             "title": "whatlies",
             "slogan": "Make interactive visualisations to figure out 'what lies' in word embeddings.",
             "description": "This small library offers tools to make visualisation easier of both word embeddings as well as operations on them. It has support for spaCy prebuilt models as a first class citizen but also offers support for sense2vec. There's a convenient API to perform linear algebra as well as support for popular transformations like PCA/UMAP/etc.",
-            "github": "rasahq/whatlies",
+            "github": "koaning/whatlies",
             "pip": "whatlies",
             "thumb": "https://i.imgur.com/rOkOiLv.png",
-            "image": "https://raw.githubusercontent.com/RasaHQ/whatlies/master/docs/gif-two.gif",
+            "image": "https://raw.githubusercontent.com/koaning/whatlies/master/docs/gif-two.gif",
             "code_example": [
                 "from whatlies import EmbeddingSet",
                 "from whatlies.language import SpacyLanguage",
@@ -439,6 +510,84 @@
                 "github": "koaning",
                 "website": "https://koaning.io"
             }
+        },
+        {
+            "id": "Klayers",
+            "title": "Klayers",
+            "category": ["pipeline"],
+            "tags": ["AWS"],
+            "slogan": "spaCy as a AWS Lambda Layer",
+            "description": "A collection of Python Packages as AWS Lambda(λ) Layers",
+            "github": "keithrozario/Klayers",
+            "pip": "",
+            "url": "https://github.com/keithrozario/Klayers",
+            "code_language": "python",
+            "author": "Keith Rozario",
+            "author_links": {
+                "twitter" : "https://twitter.com/keithrozario",
+                "github": "https://github.com/keithrozario",
+                "website": "https://www.keithrozario.com"
+            },
+            "code_example": [
+                "# SAM Template",
+                "MyLambdaFunction:",
+                "    Type: AWS::Serverless::Function",
+                "    Handler: 02_pipeline/spaCy.main",
+                "    Description: Name Entity Extraction",
+                "    Runtime: python3.8",
+                "    Layers:",
+                "        - arn:aws:lambda:${self:provider.region}:113088814899:layer:Klayers-python37-spacy:18"
+            ]
+        },
+        {
+            "type": "education",
+            "id": "video-spacys-ner-model-alt",
+            "title": "Named Entity Recognition (NER) using spaCy",
+            "slogan": "",
+            "description": "In this video, I show you how to do named entity recognition using the spaCy library for Python.",
+            "youtube": "Gn_PjruUtrc",
+            "author": "Applied Language Technology",
+            "author_links": {
+                "twitter": "HelsinkiNLP",
+                "github": "Applied-Language-Technology",
+                "website": "https://applied-language-technology.mooc.fi/"
+            },
+            "category": ["videos"]
+        },
+        {
+            "id": "HuSpaCy",
+            "title": "HuSpaCy",
+            "category": ["models"],
+            "tags": ["Hungarian"],
+            "slogan": "HuSpaCy: industrial-strength Hungarian natural language processing",
+            "description": "HuSpaCy is a spaCy model and a library providing industrial-strength Hungarian language processing facilities.",
+            "github": "huspacy/huspacy",
+            "pip": "huspacy",
+            "url": "https://github.com/huspacy/huspacy",
+            "code_language": "python",
+            "author": "SzegedAI",
+            "author_links": {
+                "github": "https://szegedai.github.io/",
+                "website": "https://u-szeged.hu/english"
+            },
+            "code_example": [
+                "# Load the model using huspacy",
+                "import huspacy",
+                "",
+                "nlp = huspacy.load()",
+                "",
+                "# Load the mode using spacy.load()",
+                "import spacy",
+                "",
+                "nlp = spacy.load(\"hu_core_news_lg\")",
+                "",
+                "# Load the model directly as a module",
+                "import hu_core_news_lg",
+                "",
+                "nlp = hu_core_news_lg.load()\n",
+                "# Either way you get the same model and can start processing texts.",
+                "doc = nlp(\"Csiribiri csiribiri zabszalma - négy csillag közt alszom ma.\")"
+            ]
         },
         {
             "id": "spacy-stanza",
@@ -590,23 +739,6 @@
             "tags": ["chatbots"]
         },
         {
-            "id": "saber",
-            "title": "saber",
-            "slogan": "Deep-learning based tool for information extraction in the biomedical domain",
-            "github": "BaderLab/saber",
-            "pip": "saber",
-            "thumb": "https://raw.githubusercontent.com/BaderLab/saber/master/docs/img/saber_logo.png",
-            "code_example": [
-                "from saber.saber import Saber",
-                "saber = Saber()",
-                "saber.load('PRGE')",
-                "saber.annotate('The phosphorylation of Hdm2 by MK2 promotes the ubiquitination of p53.')"
-            ],
-            "author": "Bader Lab, University of Toronto",
-            "category": ["scientific"],
-            "tags": ["keras", "biomedical"]
-        },
-        {
             "id": "alibi",
             "title": "alibi",
             "slogan": "Algorithms for monitoring and explaining machine learning models ",
@@ -635,18 +767,17 @@
                 "import spacy",
                 "from spacymoji import Emoji",
                 "",
-                "nlp = spacy.load('en')",
-                "emoji = Emoji(nlp)",
-                "nlp.add_pipe(emoji, first=True)",
+                "nlp = spacy.load(\"en_core_web_sm\")",
+                "nlp.add_pipe(\"emoji\", first=True)",
+                "doc = nlp(\"This is a test 😻 👍🏿\")",
                 "",
-                "doc = nlp('This is a test 😻 👍🏿')",
-                "assert doc._.has_emoji == True",
-                "assert doc[2:5]._.has_emoji == True",
-                "assert doc[0]._.is_emoji == False",
-                "assert doc[4]._.is_emoji == True",
-                "assert doc[5]._.emoji_desc == 'thumbs up dark skin tone'",
+                "assert doc._.has_emoji is True",
+                "assert doc[2:5]._.has_emoji is True",
+                "assert doc[0]._.is_emoji is False",
+                "assert doc[4]._.is_emoji is True",
+                "assert doc[5]._.emoji_desc == \"thumbs up dark skin tone\"",
                 "assert len(doc._.emoji) == 2",
-                "assert doc._.emoji[1] == ('👍🏿', 5, 'thumbs up dark skin tone')"
+                "assert doc._.emoji[1] == (\"👍🏿\", 5, \"thumbs up dark skin tone\")"
             ],
             "author": "Ines Montani",
             "author_links": {
@@ -883,9 +1014,8 @@
                 "import spacy",
                 "from spacy_sentiws import spaCySentiWS",
                 "",
-                "nlp = spacy.load('de')",
-                "sentiws = spaCySentiWS(sentiws_path='data/sentiws/')",
-                "nlp.add_pipe(sentiws)",
+                "nlp = spacy.load('de_core_news_sm')",
+                "nlp.add_pipe('sentiws', config={'sentiws_path': 'data/sentiws'})",
                 "doc = nlp('Die Dummheit der Unterwerfung blüht in hübschen Farben.')",
                 "",
                 "for token in doc:",
@@ -952,6 +1082,37 @@
             },
             "category": ["pipeline"],
             "tags": ["lemmatizer", "danish"]
+        },
+        {
+            "id": "augmenty",
+            "title": "Augmenty",
+            "slogan": "The cherry on top of your NLP pipeline",
+            "description": "Augmenty is an augmentation library based on spaCy for augmenting texts. Augmenty differs from other augmentation libraries in that it corrects (as far as possible) the token, sentence and document labels under the augmentation.",
+            "github": "kennethenevoldsen/augmenty",
+            "pip": "augmenty",
+            "code_example": [
+                "import spacy",
+                "import augmenty",
+                "",
+                "nlp = spacy.load('en_core_web_md')",
+                "",
+                "docs = nlp.pipe(['Augmenty is a great tool for text augmentation'])",
+                "",
+                "ent_dict = {'ORG': [['spaCy'], ['spaCy', 'Universe']]}",
+                "entity_augmenter = augmenty.load('ents_replace.v1',",
+                "                                 ent_dict = ent_dict, level=1)",
+                "",
+                "for doc in augmenty.docs(docs, augmenter=entity_augmenter, nlp=nlp):",
+                "    print(doc)"
+            ],
+            "thumb": "https://github.com/KennethEnevoldsen/augmenty/blob/master/img/icon.png?raw=true",
+            "author": "Kenneth Enevoldsen",
+            "author_links": {
+                "github": "kennethenevoldsen",
+                "website": "https://www.kennethenevoldsen.com"
+            },
+            "category": ["training", "research"],
+            "tags": ["training", "research", "augmentation"]
         },
         {
             "id": "dacy",
@@ -1042,29 +1203,6 @@
             },
             "category": ["pipeline"],
             "tags": ["pipeline", "readability", "syntactic complexity", "descriptive statistics"]
-        },
-        {
-            "id": "wmd-relax",
-            "slogan": "Calculates word mover's distance insanely fast",
-            "description": "Calculates Word Mover's Distance as described in [From Word Embeddings To Document Distances](http://www.cs.cornell.edu/~kilian/papers/wmd_metric.pdf) by Matt Kusner, Yu Sun, Nicholas Kolkin and Kilian Weinberger.\n\n⚠️ **This package is currently only compatible with spaCy v.1x.**",
-            "github": "src-d/wmd-relax",
-            "thumb": "https://i.imgur.com/f91C3Lf.jpg",
-            "code_example": [
-                "import spacy",
-                "import wmd",
-                "",
-                "nlp = spacy.load('en', create_pipeline=wmd.WMD.create_spacy_pipeline)",
-                "doc1 = nlp(\"Politician speaks to the media in Illinois.\")",
-                "doc2 = nlp(\"The president greets the press in Chicago.\")",
-                "print(doc1.similarity(doc2))"
-            ],
-            "author": "source{d}",
-            "author_links": {
-                "github": "src-d",
-                "twitter": "sourcedtech",
-                "website": "https://sourced.tech"
-            },
-            "category": ["pipeline"]
         },
         {
             "id": "neuralcoref",
@@ -1493,17 +1631,6 @@
             "category": ["nonpython"]
         },
         {
-            "id": "spaCy.jl",
-            "slogan": "Julia interface for spaCy (work in progress)",
-            "github": "jekbradbury/SpaCy.jl",
-            "author": "James Bradbury",
-            "author_links": {
-                "github": "jekbradbury",
-                "twitter": "jekbradbury"
-            },
-            "category": ["nonpython"]
-        },
-        {
             "id": "ruby-spacy",
             "title": "ruby-spacy",
             "slogan": "Wrapper module for using spaCy from Ruby via PyCall",
@@ -1569,21 +1696,6 @@
             "author": "Johannes Gontrum",
             "author_links": {
                 "github": "jgontrum"
-            },
-            "category": ["apis"]
-        },
-        {
-            "id": "languagecrunch",
-            "slogan": "NLP server for spaCy, WordNet and NeuralCoref as a Docker image",
-            "github": "artpar/languagecrunch",
-            "code_example": [
-                "docker run -it -p 8080:8080 artpar/languagecrunch",
-                "curl http://localhost:8080/nlp/parse?`echo -n \"The new twitter is so weird. Seriously. Why is there a new twitter? What was wrong with the old one? Fix it now.\" | python -c \"import urllib, sys; print(urllib.urlencode({'sentence': sys.stdin.read()}))\"`"
-            ],
-            "code_language": "bash",
-            "author": "Parth Mudgal",
-            "author_links": {
-                "github": "artpar"
             },
             "category": ["apis"]
         },
@@ -1977,6 +2089,20 @@
         },
         {
             "type": "education",
+            "id": "video-intro-to-nlp-episode-6",
+            "title": "Intro to NLP with spaCy (6)",
+            "slogan": "Episode 6: Moving to spaCy v3",
+            "description": "In this new video series, data science instructor Vincent Warmerdam gets started with spaCy, an open-source library for Natural Language Processing in Python. His mission: building a system to automatically detect programming languages in large volumes of text. Follow his process from the first idea to a prototype all the way to data collection and training a statistical named entity recogntion model from scratch.",
+            "author": "Vincent Warmerdam",
+            "author_links": {
+                "twitter": "fishnets88",
+                "github": "koaning"
+            },
+            "youtube": "k77RrmMaKEI",
+            "category": ["videos"]
+        },
+        {
+            "type": "education",
             "id": "video-spacy-irl-entity-linking",
             "title": "Entity Linking functionality in spaCy",
             "slogan": "spaCy IRL 2019",
@@ -2162,43 +2288,6 @@
             "tags": ["question-answering", "elasticsearch"]
         },
         {
-            "id": "epitator",
-            "title": "EpiTator",
-            "thumb": "https://i.imgur.com/NYFY1Km.jpg",
-            "slogan": "Extracts case counts, resolved location/species/disease names, date ranges and more",
-            "description": "EcoHealth Alliance uses EpiTator to catalog the what, where and when of infectious disease case counts reported in online news. Each of these aspects is extracted using independent annotators than can be applied to other domains. EpiTator organizes annotations by creating \"AnnoTiers\" for each type. AnnoTiers have methods for manipulating, combining and searching annotations. For instance, the `with_following_spans_from()` method can be used to create a new tier that combines a tier of one type (such as numbers), with another (say, kitchenware). The resulting tier will contain all the phrases in the document that match that pattern, like \"5 plates\" or \"2 cups.\"\n\nAnother commonly used method is `group_spans_by_containing_span()` which can be used to do things like find all the spaCy tokens in all the GeoNames a document mentions. spaCy tokens, named entities, sentences and noun chunks are exposed through the spaCy annotator which will create a AnnoTier for each. These are basis of many of the other annotators. EpiTator also includes an annotator for extracting tables embedded in free text articles. Another neat feature is that the lexicons used for entity resolution are all stored in an embedded sqlite database so there is no need to run any external services in order to use EpiTator.",
-            "url": "https://github.com/ecohealthalliance/EpiTator",
-            "github": "ecohealthalliance/EpiTator",
-            "pip": "EpiTator",
-            "code_example": [
-                "from epitator.annotator import AnnoDoc",
-                "from epitator.geoname_annotator import GeonameAnnotator",
-                "",
-                "doc = AnnoDoc('Where is Chiang Mai?')",
-                "geoname_annotier = doc.require_tiers('geonames', via=GeonameAnnotator)",
-                "geoname = geoname_annotier.spans[0].metadata['geoname']",
-                "geoname['name']",
-                "# = 'Chiang Mai'",
-                "geoname['geonameid']",
-                "# = '1153671'",
-                "geoname['latitude']",
-                "# = 18.79038",
-                "geoname['longitude']",
-                "# = 98.98468",
-                "",
-                "from epitator.spacy_annotator import SpacyAnnotator",
-                "spacy_token_tier = doc.require_tiers('spacy.tokens', via=SpacyAnnotator)",
-                "list(geoname_annotier.group_spans_by_containing_span(spacy_token_tier))",
-                "# = [(AnnoSpan(9-19, Chiang Mai), [AnnoSpan(9-15, Chiang), AnnoSpan(16-19, Mai)])]"
-            ],
-            "author": "EcoHealth Alliance",
-            "author_links": {
-                "github": "ecohealthalliance",
-                "website": " https://ecohealthalliance.org/"
-            },
-            "category": ["scientific", "standalone"]
-        },
-        {
             "id": "self-attentive-parser",
             "title": "Berkeley Neural Parser",
             "slogan": "Constituency Parsing with a Self-Attentive Encoder (ACL 2018)",
@@ -2225,30 +2314,6 @@
                 "website": " http://kitaev.io"
             },
             "category": ["research", "pipeline"]
-        },
-        {
-            "id": "excelcy",
-            "title": "ExcelCy",
-            "slogan": "Excel Integration with spaCy. Training NER using XLSX from PDF, DOCX, PPT, PNG or JPG.",
-            "description": "ExcelCy is a toolkit to integrate Excel to spaCy NLP training experiences. Training NER using XLSX from PDF, DOCX, PPT, PNG or JPG. ExcelCy has pipeline to match Entity with PhraseMatcher or Matcher in regular expression.",
-            "url": "https://github.com/kororo/excelcy",
-            "github": "kororo/excelcy",
-            "pip": "excelcy",
-            "code_example": [
-                "from excelcy import ExcelCy",
-                "# collect sentences, annotate Entities and train NER using spaCy",
-                "excelcy = ExcelCy.execute(file_path='https://github.com/kororo/excelcy/raw/master/tests/data/test_data_01.xlsx')",
-                "# use the nlp object as per spaCy API",
-                "doc = excelcy.nlp('Google rebrands its business apps')",
-                "# or save it for faster bootstrap for application",
-                "excelcy.nlp.to_disk('/model')"
-            ],
-            "author": "Robertus Johansyah",
-            "author_links": {
-                "github": "kororo"
-            },
-            "category": ["training"],
-            "tags": ["excel"]
         },
         {
             "id": "spacy-graphql",
@@ -2372,18 +2437,17 @@
         {
             "id": "spacy-conll",
             "title": "spacy_conll",
-            "slogan": "Parsing to CoNLL with spaCy, spacy-stanza, and spacy-udpipe",
-            "description": "This module allows you to parse text into CoNLL-U format. You can use it as a command line tool, or embed it in your own scripts by adding it as a custom pipeline component to a spaCy, spacy-stanfordnlp, spacy-stanza, or spacy-udpipe pipeline. It also provides an easy-to-use function to quickly initialize a parser. CoNLL-related properties are added to Doc elements, sentence Spans, and Tokens.",
+            "slogan": "Parsing from and to CoNLL-U format with `spacy`, `spacy-stanza` and `spacy-udpipe`",
+            "description": "This module allows you to parse text into CoNLL-U format or read ConLL-U into a spaCy `Doc`. You can use it as a command line tool, or embed it in your own scripts by adding it as a custom pipeline component to a `spacy`, `spacy-stanza` or `spacy-udpipe` pipeline. It also provides an easy-to-use function to quickly initialize any spaCy-wrapped parser. CoNLL-related properties are added to `Doc` elements, `Span` sentences, and `Token` objects.",
             "code_example": [
                 "from spacy_conll import init_parser",
                 "",
                 "",
                 "# Initialise English parser, already including the ConllFormatter as a pipeline component.",
                 "# Indicate that we want to get the CoNLL headers in the string output.",
-                "# `use_gpu` and `verbose` are specific to stanza (and stanfordnlp). These keywords arguments",
-                "# are passed onto their Pipeline() initialisation",
-                "nlp = init_parser(\"stanza\",",
-                "                  \"en\",",
+                "# `use_gpu` and `verbose` are specific to stanza. These keywords arguments are passed onto their Pipeline() initialisation",
+                "nlp = init_parser(\"en\",",
+                "                  \"stanza\",",
                 "                  parser_opts={\"use_gpu\": True, \"verbose\": False},",
                 "                  include_headers=True)",
                 "# Parse a given string",
@@ -2402,7 +2466,7 @@
             },
             "github": "BramVanroy/spacy_conll",
             "category": ["standalone", "pipeline"],
-            "tags": ["linguistics", "computational linguistics", "conll"]
+            "tags": ["linguistics", "computational linguistics", "conll", "conll-u"]
         },
         {
             "id": "spacy-langdetect",
@@ -2463,41 +2527,6 @@
                 "twitter": "VasilievYuli"
             },
             "category": ["standalone", "conversational"]
-        },
-        {
-            "id": "gracyql",
-            "title": "gracyql",
-            "slogan": "A thin GraphQL wrapper around spacy",
-            "github": "oterrier/gracyql",
-            "description": "An example of a basic [Starlette](https://github.com/encode/starlette) app using [Spacy](https://github.com/explosion/spaCy) and [Graphene](https://github.com/graphql-python/graphene). The main goal is to be able to use the amazing power of spaCy from other languages and retrieving only the information you need thanks to the GraphQL query definition. The GraphQL schema tries to mimic as much as possible the original Spacy API with classes Doc, Span and Token.",
-            "thumb": "https://i.imgur.com/xC7zpTO.png",
-            "category": ["apis"],
-            "tags": ["graphql"],
-            "code_example": [
-                "query ParserDisabledQuery {",
-                "  nlp(model: \"en\", disable: [\"parser\", \"ner\"]) {",
-                "    doc(text: \"I live in Grenoble, France\") {",
-                "      text",
-                "      tokens {",
-                "        id",
-                "        pos",
-                "        lemma",
-                "        dep",
-                "      }",
-                "      ents {",
-                "        start",
-                "        end",
-                "        label",
-                "      }",
-                "    }",
-                "  }",
-                "}"
-            ],
-            "code_language": "json",
-            "author": "Olivier Terrier",
-            "author_links": {
-                "github": "oterrier"
-            }
         },
         {
             "id": "pyInflect",
@@ -2567,6 +2596,172 @@
             "category": ["pipeline"]
         },
         {
+            "id": "classyclassification",
+            "title": "Classy Classification",
+            "slogan": "Have you ever struggled with needing a spaCy TextCategorizer but didn't have the time to train one from scratch? Classy Classification is the way to go!",
+            "description": "Have you ever struggled with needing a [spaCy TextCategorizer](https://spacy.io/api/textcategorizer) but didn't have the time to train one from scratch? Classy Classification is the way to go! For few-shot classification using [sentence-transformers](https://github.com/UKPLab/sentence-transformers) or [spaCy models](https://spacy.io/usage/models), provide a dictionary with labels and examples, or just provide a list of labels for zero shot-classification with [Huggingface zero-shot classifiers](https://huggingface.co/models?pipeline_tag=zero-shot-classification).",
+            "github": "davidberenstein1957/classy-classification",
+            "pip": "classy-classification",
+            "thumb": "https://raw.githubusercontent.com/Pandora-Intelligence/classy-classification/master/logo.png",
+            "code_example": [
+                "import spacy",
+                "import classy_classification",
+                "",
+                "data = {",
+                "    \"furniture\": [\"This text is about chairs.\",",
+                "               \"Couches, benches and televisions.\",",
+                "               \"I really need to get a new sofa.\"],",
+                "    \"kitchen\": [\"There also exist things like fridges.\",",
+                "                \"I hope to be getting a new stove today.\",",
+                "                \"Do you also have some ovens.\"]",
+                "}",
+                "",
+                "# see github repo for examples on sentence-transformers and Huggingface",
+                "nlp = spacy.load('en_core_web_md')",
+                "nlp.add_pipe(\"text_categorizer\", ",
+                "    config={",
+                "        \"data\": data,",
+                "        \"model\": \"spacy\"",
+                "    }",
+                ")",
+                "",
+                "print(nlp(\"I am looking for kitchen appliances.\")._.cats)",
+                "# Output:",
+                "#",
+                "# [{\"label\": \"furniture\", \"score\": 0.21}, {\"label\": \"kitchen\", \"score\": 0.79}]"
+            ],
+            "author": "David Berenstein",
+            "author_links": {
+                "github": "davidberenstein1957",
+                "website": "https://www.linkedin.com/in/david-berenstein-1bab11105/"
+            },
+            "category": [
+                "pipeline",
+                "standalone"
+            ],
+            "tags": [
+                "classification",
+                "zero-shot",
+                "few-shot",
+                "sentence-transformers",
+                "huggingface"
+            ],
+            "spacy_version": 3
+        },
+        {
+            "id": "conciseconcepts",
+            "title": "Concise Concepts",
+            "slogan": "Concise Concepts uses few-shot NER based on word embedding similarity to get you going with easy!",
+            "description": "When wanting to apply NER to concise concepts, it is really easy to come up with examples, but it takes some effort to train an entire pipeline. Concise Concepts uses few-shot NER based on word embedding similarity to get you going with easy!",
+            "github": "pandora-intelligence/concise-concepts",
+            "pip": "concise-concepts",
+            "thumb": "https://raw.githubusercontent.com/Pandora-Intelligence/concise-concepts/master/img/logo.png",
+            "image": "https://raw.githubusercontent.com/Pandora-Intelligence/concise-concepts/master/img/example.png",
+            "code_example": [
+                "import spacy",
+                "from spacy import displacy",
+                "import concise_concepts",
+                "",
+                "data = {",
+                "    \"fruit\": [\"apple\", \"pear\", \"orange\"],",
+                "    \"vegetable\": [\"broccoli\", \"spinach\", \"tomato\"],",
+                "    \"meat\": [\"beef\", \"pork\", \"fish\", \"lamb\"]",
+                "}",
+                "",
+                "text = \"\"\"",
+                "    Heat the oil in a large pan and add the Onion, celery and carrots.",
+                "    Then, cook over a medium–low heat for 10 minutes, or until softened.",
+                "    Add the courgette, garlic, red peppers and oregano and cook for 2–3 minutes.",
+                "    Later, add some oranges and chickens.\"\"\"",
+                "",
+                "# use any model that has internal spacy embeddings", 
+                "nlp = spacy.load('en_core_web_lg')",
+                "nlp.add_pipe(\"concise_concepts\", ",
+                "    config={\"data\": data}",
+                ")",
+                "doc = nlp(text)",
+                "",
+                "options = {\"colors\": {\"fruit\": \"darkorange\", \"vegetable\": \"limegreen\", \"meat\": \"salmon\"},",
+                "           \"ents\": [\"fruit\", \"vegetable\", \"meat\"]}",
+                "",
+                "displacy.render(doc, style=\"ent\", options=options)"
+            ],
+            "author": "David Berenstein",
+            "author_links": {
+                "github": "davidberenstein1957",
+                "website": "https://www.linkedin.com/in/david-berenstein-1bab11105/"
+            },
+            "category": [
+                "pipeline"
+            ],
+            "tags": [
+                "ner",
+                "few-shot",
+                "gensim"
+            ],
+            "spacy_version": 3
+        },
+        {
+            "id": "crosslingualcoreference",
+            "title": "Crosslingual Coreference",
+            "slogan": "One multi-lingual coreference model to rule them all!",
+            "description": "Coreference is amazing but the data required for training a model is very scarce. In our case, the available training for non-English languages also data proved to be poorly annotated. Crosslingual Coreference therefore uses the assumption a trained model with English data and cross-lingual embeddings should work for other languages with similar sentence structure. Verified to work quite well for at least (EN, NL, DK, FR, DE).",
+            "github": "pandora-intelligence/crosslingual-coreference",
+            "pip": "crosslingual-coreference",
+            "thumb": "https://raw.githubusercontent.com/Pandora-Intelligence/crosslingual-coreference/master/img/logo.png",
+            "image": "https://raw.githubusercontent.com/Pandora-Intelligence/crosslingual-coreference/master/img/example_total.png",
+            "code_example": [
+                "import spacy",
+                "import crosslingual_coreference",
+                "",
+                "text = \"\"\"",
+                "    Do not forget about Momofuku Ando!",
+                "    He created instant noodles in Osaka.",
+                "    At that location, Nissin was founded.",
+                "    Many students survived by eating these noodles, but they don't even know him.\"\"\"",
+                "",
+                "# use any model that has internal spacy embeddings", 
+                "nlp = spacy.load('en_core_web_sm')",
+                "nlp.add_pipe(",
+                "    \"xx_coref\", config={\"chunk_size\": 2500, \"chunk_overlap\": 2, \"device\": 0})",
+                ")",
+                "",
+                "doc = nlp(text)",
+                "",
+                "print(doc._.coref_clusters)",
+                "# Output",
+                "#",
+                "# [[[4, 5], [7, 7], [27, 27], [36, 36]],",
+                "# [[12, 12], [15, 16]],",
+                "# [[9, 10], [27, 28]],",
+                "# [[22, 23], [31, 31]]]",
+                "print(doc._.resolved_text)",
+                "# Output",
+                "#",
+                "# Do not forget about Momofuku Ando!",
+                "# Momofuku Ando created instant noodles in Osaka.",
+                "# At Osaka, Nissin was founded.",
+                "# Many students survived by eating instant noodles,",
+                "# but Many students don't even know Momofuku Ando."
+            ],
+            "author": "David Berenstein",
+            "author_links": {
+                "github": "davidberenstein1957",
+                "website": "https://www.linkedin.com/in/david-berenstein-1bab11105/"
+            },
+            "category": [
+                "pipeline",
+                "standalone"
+            ],
+            "tags": [
+                "coreference",
+                "multi-lingual",
+                "cross-lingual",
+                "allennlp"
+            ],
+            "spacy_version": 3
+        },
+        {
             "id": "blackstone",
             "title": "Blackstone",
             "slogan": "A spaCy pipeline and model for NLP on unstructured legal text",
@@ -2622,9 +2817,9 @@
             "id": "coreferee",
             "title": "Coreferee",
             "slogan": "Coreference resolution for multiple languages",
-            "github": "msg-systems/coreferee",
-            "url": "https://github.com/msg-systems/coreferee",
-            "description": "Coreferee is a pipeline plugin that performs coreference resolution for English, German and Polish. It is designed so that it is easy to add support for new languages and optimised for limited training data. It uses a mixture of neural networks and programmed rules. Please note you will need to [install models](https://github.com/msg-systems/coreferee#getting-started) before running the code example.",
+            "github": "explosion/coreferee",
+            "url": "https://github.com/explosion/coreferee",
+            "description": "Coreferee is a pipeline plugin that performs coreference resolution for English, French, German and Polish. It is designed so that it is easy to add support for new languages and optimised for limited training data. It uses a mixture of neural networks and programmed rules. Please note you will need to [install models](https://github.com/explosion/coreferee#getting-started) before running the code example.",
             "pip": "coreferee",
             "category": ["pipeline", "models", "standalone"],
             "tags": ["coreference-resolution", "anaphora"],
@@ -2982,18 +3177,25 @@
                 "import spacy",
                 "import pytextrank",
                 "",
-                "nlp = spacy.load('en_core_web_sm')",
+                "# example text",
+                "text = \"\"\"Compatibility of systems of linear constraints over the set of natural numbers.",
+                "Criteria of compatibility of a system of linear Diophantine equations, strict inequations,",
+                "and nonstrict inequations are considered. Upper bounds for components of a minimal set of",
+                "solutions and algorithms of construction of minimal generating sets of solutions for all types",
+                "of systems are given. These criteria and the corresponding algorithms for constructing a minimal",
+                "supporting set of solutions can be used in solving all the considered types systems and systems of mixed types.\"\"\"",
                 "",
-                "tr = pytextrank.TextRank()",
-                "nlp.add_pipe(tr.PipelineComponent, name='textrank', last=True)",
+                "# load a spaCy model, depending on language, scale, etc.",
+                "nlp = spacy.load(\"en_core_web_sm\")",
+                "# add PyTextRank to the spaCy pipeline",
+                "nlp.add_pipe(\"textrank\")",
                 "",
-                "text = 'Compatibility of systems of linear constraints over the set of natural numbers. Criteria of compatibility of a system of linear Diophantine equations, strict inequations, and nonstrict inequations are considered.'",
                 "doc = nlp(text)",
-                "",
                 "# examine the top-ranked phrases in the document",
-                "for p in doc._.phrases:",
-                "    print('{:.4f} {:5d}  {}'.format(p.rank, p.count, p.text))",
-                "    print(p.chunks)"
+                "for phrase in doc._.phrases:",
+                "    print(phrase.text)",
+                "    print(phrase.rank, phrase.count)",
+                "    print(phrase.chunks)"
             ],
             "code_language": "python",
             "url": "https://github.com/DerwenAI/pytextrank/wiki",
@@ -3019,21 +3221,13 @@
                 "import spacy",
                 "from spacy_syllables import SpacySyllables",
                 "",
-                "nlp = spacy.load('en_core_web_sm')",
-                "syllables = SpacySyllables(nlp)",
-                "nlp.add_pipe(syllables, after='tagger')",
+                "nlp = spacy.load(\"en_core_web_sm\")",
+                "nlp.add_pipe(\"syllables\", after=\"tagger\")",
                 "",
-                "doc = nlp('terribly long')",
-                "",
-                "data = [",
-                "    (token.text, token._.syllables, token._.syllables_count)",
-                "    for token in doc",
-                "]",
-                "",
-                "assert data == [",
-                "    ('terribly', ['ter', 'ri', 'bly'], 3),",
-                "    ('long', ['long'], 1)",
-                "]"
+                "assert nlp.pipe_names == [\"tok2vec\", \"tagger\", \"syllables\", \"parser\",  \"attribute_ruler\", \"lemmatizer\", \"ner\"]",
+                "doc = nlp(\"terribly long\")",
+                "data = [(token.text, token._.syllables, token._.syllables_count) for token in doc]",
+                "assert data == [(\"terribly\", [\"ter\", \"ri\", \"bly\"], 3), (\"long\", [\"long\"], 1)]"
             ],
             "thumb": "https://raw.githubusercontent.com/sloev/spacy-syllables/master/logo.png",
             "author": "Johannes Valbjørn",
@@ -3738,6 +3932,107 @@
             },
             "category": ["pipeline"],
             "tags": ["pipeline", "nlp", "sentiment"]
+        },
+        {
+            "id": "textnets",
+            "slogan": "Text analysis with networks",
+            "description": "textnets represents collections of texts as networks of documents and words. This provides novel possibilities for the visualization and analysis of texts.",
+            "github": "jboynyc/textnets",
+            "image": "https://user-images.githubusercontent.com/2187261/152641425-6c0fb41c-b8e0-44fb-a52a-7c1ba24eba1e.png",
+            "code_example": [
+                "import textnets as tn",
+                "",
+                "corpus = tn.Corpus(tn.examples.moon_landing)",
+                "t = tn.Textnet(corpus.tokenized(), min_docs=1)",
+                "t.plot(label_nodes=True,",
+                "       show_clusters=True,",
+                "       scale_nodes_by=\"birank\",",
+                "       scale_edges_by=\"weight\")"
+            ],
+            "author": "John Boy",
+            "author_links": {
+                "github": "jboynyc",
+                "twitter": "jboy"
+            },
+            "category": ["visualizers", "standalone"]
+        },
+        {
+            "id": "tmtoolkit",
+            "slogan": "Text mining and topic modeling toolkit",
+            "description": "tmtoolkit is a set of tools for text mining and topic modeling with Python developed especially for the use in the social sciences, in journalism or related disciplines. It aims for easy installation, extensive documentation and a clear programming interface while offering good performance on large datasets by the means of vectorized operations (via NumPy) and parallel computation (using Python’s multiprocessing module and the loky package).",
+            "github": "WZBSocialScienceCenter/tmtoolkit",
+            "code_example": [
+                "# Note: This requires these setup steps:",
+                "#   pip install tmtoolkit[recommended]",
+                "#   python -m tmtoolkit setup en",
+                "from tmtoolkit.corpus import Corpus, tokens_table, lemmatize, to_lowercase, dtm",
+                "from tmtoolkit.bow.bow_stats import tfidf, sorted_terms_table",
+                "# load built-in sample dataset and use 4 worker processes",
+                "corp = Corpus.from_builtin_corpus('en-News100', max_workers=4)",
+                "# investigate corpus as dataframe",
+                "toktbl = tokens_table(corp)",
+                "print(toktbl)",
+                "# apply some text normalization",
+                "lemmatize(corp)",
+                "to_lowercase(corp)",
+                "# build sparse document-token matrix (DTM)",
+                "# document labels identify rows, vocabulary tokens identify columns",
+                "mat, doc_labels, vocab = dtm(corp, return_doc_labels=True, return_vocab=True)",
+                "# apply tf-idf transformation to DTM",
+                "# operation is applied on sparse matrix and uses few memory",
+                "tfidf_mat = tfidf(mat)",
+                "# show top 5 tokens per document ranked by tf-idf",
+                "top_tokens = sorted_terms_table(tfidf_mat, vocab, doc_labels, top_n=5)",
+                "print(top_tokens)"
+            ],
+            "author": "Markus Konrad / WZB Social Science Center",
+            "author_links": {
+                "github": "internaut",
+                "twitter": "_knrd"
+            },
+            "category": ["scientific", "standalone"]
+        },
+        {
+            "id": "edsnlp",
+            "title": "EDS-NLP",
+            "slogan": "spaCy components to extract information from clinical notes written in French.",
+            "description": "EDS-NLP provides a set of rule-based spaCy components to extract information for French clinical notes. It also features _qualifier_ pipelines that detect negations, speculations and family context, among other modalities. Check out the [demo](https://aphp.github.io/edsnlp/demo/)!",
+            "github": "aphp/edsnlp",
+            "pip": "edsnlp",
+            "code_example": [
+                "import spacy",
+                "",
+                "nlp = spacy.blank(\"fr\")",
+                "",
+                "terms = dict(",
+                "    covid=[\"covid\", \"coronavirus\"],",
+                ")",
+                "",
+                "# Sentencizer component, needed for negation detection",
+                "nlp.add_pipe(\"eds.sentences\")",
+                "# Matcher component",
+                "nlp.add_pipe(\"eds.matcher\", config=dict(terms=terms))",
+                "# Negation detection",
+                "nlp.add_pipe(\"eds.negation\")",
+                "",
+                "# Process your text in one call !",
+                "doc = nlp(\"Le patient est atteint de covid\")",
+                "",
+                "doc.ents",
+                "# Out: (covid,)",
+                "",
+                "doc.ents[0]._.negation",
+                "# Out: False"
+            ],
+            "code_language": "python",
+            "url": "https://aphp.github.io/edsnlp/",
+            "author": "AP-HP",
+            "author_links": {
+                "github": "aphp",
+                "website": "https://github.com/aphp"
+            },
+            "category": ["biomedical", "scientific", "research", "pipeline"],
+            "tags": ["clinical"]
         }
     ],
 

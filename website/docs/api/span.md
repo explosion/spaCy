@@ -283,8 +283,9 @@ objects, if the document has been syntactically parsed. A base noun phrase, or
 it – so no NP-level coordination, no prepositional phrases, and no relative
 clauses.
 
-If the `noun_chunk` [syntax iterator](/usage/adding-languages#language-data) has
-not been implemeted for the given language, a `NotImplementedError` is raised.
+If the `noun_chunk` [syntax iterator](/usage/linguistic-features#language-data)
+has not been implemeted for the given language, a `NotImplementedError` is
+raised.
 
 > #### Example
 >
@@ -520,12 +521,13 @@ sent = doc[sent.start : max(sent.end, span.end)]
 
 ## Span.sents {#sents tag="property" model="sentences" new="3.2.1"}
 
-Returns a generator over the sentences the span belongs to. This property is only available
-when [sentence boundaries](/usage/linguistic-features#sbd) have been set on the
-document by the `parser`, `senter`, `sentencizer` or some custom function. It
-will raise an error otherwise.
+Returns a generator over the sentences the span belongs to. This property is
+only available when [sentence boundaries](/usage/linguistic-features#sbd) have
+been set on the document by the `parser`, `senter`, `sentencizer` or some custom
+function. It will raise an error otherwise.
 
-If the span happens to cross sentence boundaries, all sentences the span overlaps with will be returned.
+If the span happens to cross sentence boundaries, all sentences the span
+overlaps with will be returned.
 
 > #### Example
 >

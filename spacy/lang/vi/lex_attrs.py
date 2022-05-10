@@ -2,22 +2,29 @@ from ...attrs import LIKE_NUM
 
 
 _num_words = [
-    "không",
-    "một",
-    "hai",
-    "ba",
-    "bốn",
-    "năm",
-    "sáu",
-    "bảy",
-    "bẩy",
-    "tám",
-    "chín",
-    "mười",
-    "chục",
-    "trăm",
-    "nghìn",
-    "tỷ",
+    "không",  # Zero
+    "một",  # One
+    "mốt",  # Also one, irreplacable in niché cases for unit digit such as "51"="năm mươi mốt"
+    "hai",  # Two
+    "ba",  # Three
+    "bốn",  # Four
+    "tư",  # Also four, used in certain cases for unit digit such as "54"="năm mươi tư"
+    "năm",  # Five
+    "lăm",  # Also five, irreplacable in niché cases for unit digit such as "55"="năm mươi lăm"
+    "sáu",  # Six
+    "bảy",  # Seven
+    "bẩy",  # Also seven, old fashioned
+    "tám",  # Eight
+    "chín",  # Nine
+    "mười",  # Ten
+    "chục",  # Also ten, used for counting in tens such as "20 eggs"="hai chục trứng"
+    "trăm",  # Hundred
+    "nghìn",  # Thousand
+    "ngàn",  # Also thousand, used in the south
+    "vạn",  # Ten thousand
+    "triệu",  # Million
+    "tỷ",  # Billion
+    "tỉ",  # Also billion, used in combinatorics such as "tỉ_phú"="billionaire"
 ]
 
 

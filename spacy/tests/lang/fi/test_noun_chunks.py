@@ -107,7 +107,17 @@ FI_NP_TEST_EXAMPLES = [
     (
         "New York tunnetaan kaupunkina, joka ei koskaan nuku",
         ["PROPN", "PROPN", "VERB", "NOUN", "PUNCT", "PRON", "AUX", "ADV", "VERB"],
-        ["obj", "flat:name", "ROOT", "obl", "punct", "nsubj", "aux", "advmod", "acl:relcl"],
+        [
+            "obj",
+            "flat:name",
+            "ROOT",
+            "obl",
+            "punct",
+            "nsubj",
+            "aux",
+            "advmod",
+            "acl:relcl",
+        ],
         [2, -1, 0, -1, 4, 3, 2, 1, -5],
         ["New York", "kaupunkina"],
     ),
@@ -130,7 +140,12 @@ FI_NP_TEST_EXAMPLES = [
         ["NOUN", "VERB", "NOUN", "NOUN", "ADJ", "NOUN"],
         ["nsubj", "ROOT", "obj", "obl", "amod", "obl"],
         [1, 0, -1, -1, 1, -3],
-        ["sairaanhoitopiirit", "leikkaustoimintaa", "alueellaan", "useammassa sairaalassa"],
+        [
+            "sairaanhoitopiirit",
+            "leikkaustoimintaa",
+            "alueellaan",
+            "useammassa sairaalassa",
+        ],
     ),
     (
         "Lain mukaan varhaiskasvatus on suunnitelmallista toimintaa",

@@ -23,9 +23,10 @@ cdef class Tokenizer:
     cdef object _infix_finditer
     cdef object _rules
     cdef PhraseMatcher _special_matcher
-    # TODO next two are unused and should be removed in v4
+    # TODO convert to bool in v4
+    cdef int _faster_heuristics
+    # TODO next one is unused and should be removed in v4
     # https://github.com/explosion/spaCy/pull/9150
-    cdef int _unused_int1
     cdef int _unused_int2
 
     cdef Doc _tokenize_affixes(self, str string, bint with_special_cases)

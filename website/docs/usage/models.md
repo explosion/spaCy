@@ -27,6 +27,35 @@ import QuickstartModels from 'widgets/quickstart-models.js'
 
 <QuickstartModels title="Quickstart" id="quickstart" description="Install a default trained pipeline package, get the code to load it from within spaCy and an example to test it. For more options, see the section on available packages below." />
 
+### Usage note
+
+> If lemmatization rules are available for your language, make sure to install
+> spaCy with the `lookups` option, or install
+> [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data)
+> separately in the same environment:
+>
+> ```bash
+> $ pip install -U %%SPACY_PKG_NAME[lookups]%%SPACY_PKG_FLAGS
+> ```
+
+If a trained pipeline is available for a language, you can download it using the
+[`spacy download`](/api/cli#download) command as shown above. In order to use
+languages that don't yet come with a trained pipeline, you have to import them
+directly, or use [`spacy.blank`](/api/top-level#spacy.blank):
+
+```python
+from spacy.lang.yo import Yoruba
+nlp = Yoruba()  # use directly
+nlp = spacy.blank("yo")  # blank instance
+```
+
+A blank pipeline is typically just a tokenizer. You might want to create a blank
+pipeline when you only need a tokenizer, when you want to add more components
+from scratch, or for testing purposes. Initializing the language object directly
+yields the same result as generating it using `spacy.blank()`. In both cases the
+default configuration for the chosen language is loaded, and no pretrained
+components will be available.
+
 ## Language support {#languages}
 
 spaCy currently provides support for the following languages. You can help by
@@ -36,28 +65,6 @@ and extending the tokenization patterns.
 contribute to development. Also see the
 [training documentation](/usage/training) for how to train your own pipelines on
 your data.
-
-> #### Usage note
->
-> If a trained pipeline is available for a language, you can download it using
-> the [`spacy download`](/api/cli#download) command. In order to use languages
-> that don't yet come with a trained pipeline, you have to import them directly,
-> or use [`spacy.blank`](/api/top-level#spacy.blank):
->
-> ```python
-> from spacy.lang.fi import Finnish
-> nlp = Finnish()  # use directly
-> nlp = spacy.blank("fi")  # blank instance
-> ```
->
-> If lemmatization rules are available for your language, make sure to install
-> spaCy with the `lookups` option, or install
-> [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data)
-> separately in the same environment:
->
-> ```bash
-> $ pip install -U %%SPACY_PKG_NAME[lookups]%%SPACY_PKG_FLAGS
-> ```
 
 import Languages from 'widgets/languages.js'
 
@@ -259,6 +266,45 @@ used for training the current [Japanese pipelines](/models/ja).
 
 </Infobox>
 
+### Korean language support {#korean}
+
+> #### mecab-ko tokenizer
+>
+> ```python
+> nlp = spacy.blank("ko")
+> ```
+
+The default MeCab-based Korean tokenizer requires:
+
+- [mecab-ko](https://bitbucket.org/eunjeon/mecab-ko/src/master/README.md)
+- [mecab-ko-dic](https://bitbucket.org/eunjeon/mecab-ko-dic)
+- [natto-py](https://github.com/buruzaemon/natto-py)
+
+For some Korean datasets and tasks, the
+[rule-based tokenizer](/usage/linguistic-features#tokenization) is better-suited
+than MeCab. To configure a Korean pipeline with the rule-based tokenizer:
+
+> #### Rule-based tokenizer
+>
+> ```python
+> config = {"nlp": {"tokenizer": {"@tokenizers": "spacy.Tokenizer.v1"}}}
+> nlp = spacy.blank("ko", config=config)
+> ```
+
+```ini
+### config.cfg
+[nlp]
+lang = "ko"
+tokenizer = {"@tokenizers" = "spacy.Tokenizer.v1"}
+```
+
+<Infobox>
+
+The [Korean trained pipelines](/models/ko) use the rule-based tokenizer, so no
+additional dependencies are required.
+
+</Infobox>
+
 ## Installing and using trained pipelines {#download}
 
 The easiest way to download a trained pipeline is via spaCy's
@@ -417,10 +463,10 @@ doc = nlp("This is a sentence.")
 <Infobox title="Tip: Preview model info" emoji="💡">
 
 You can use the [`info`](/api/cli#info) command or
-[`spacy.info()`](/api/top-level#spacy.info) method to print a pipeline
-package's meta data before loading it. Each `Language` object with a loaded
-pipeline also exposes the pipeline's meta data as the attribute `meta`. For
-example, `nlp.meta['version']` will return the package version.
+[`spacy.info()`](/api/top-level#spacy.info) method to print a pipeline package's
+meta data before loading it. Each `Language` object with a loaded pipeline also
+exposes the pipeline's meta data as the attribute `meta`. For example,
+`nlp.meta['version']` will return the package version.
 
 </Infobox>
 

@@ -63,4 +63,4 @@ def _get_span_indices(ops, spans: Ragged, lengths: Ints1d) -> Ints1d:
 
 
 def _ensure_cpu(spans: Ragged, lengths: Ints1d) -> Tuple[Ragged, Ints1d]:
-    return (Ragged(to_numpy(spans.dataXd), to_numpy(spans.lengths)), to_numpy(lengths))
+    return Ragged(to_numpy(spans.dataXd), to_numpy(spans.lengths)), to_numpy(lengths)

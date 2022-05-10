@@ -85,7 +85,7 @@ def get_characters_loss(ops, docs, prediction, nr_char):
     target = ops.asarray(to_categorical(target_ids, n_classes=256), dtype="f")
     target = target.reshape((-1, 256 * nr_char))
     diff = prediction - target
-    loss = (diff ** 2).sum()
+    loss = (diff**2).sum()
     d_target = diff / float(prediction.shape[0])
     return loss, d_target
 
