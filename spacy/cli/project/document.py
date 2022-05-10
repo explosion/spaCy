@@ -76,7 +76,9 @@ def project_document(
             if isinstance(step, str):
                 rendered_steps.append(md.code(step))
             else:
-                rendered_steps.append('[' + ', '.join(md.code(p_step) for p_step in step) + ']')
+                rendered_steps.append(
+                    "[" + ", ".join(md.code(p_step) for p_step in step) + "]"
+                )
         data.append([md.code(n), " &rarr; ".join(rendered_steps)])
     if data:
         md.add(md.title(3, "Workflows", "⏭"))

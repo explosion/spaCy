@@ -225,12 +225,12 @@ def validate_project_commands(config: Dict[str, Any]) -> None:
 
     def verify_workflow_step(step: str):
         if step not in command_names:
-                msg.fail(
-                    f"Unknown command specified in workflow '{workflow_name}': {step}",
-                    f"Workflows can only refer to commands defined in the 'commands' "
-                    f"section of the {PROJECT_FILE}.",
-                    exits=1,
-                )
+            msg.fail(
+                f"Unknown command specified in workflow '{workflow_name}': {step}",
+                f"Workflows can only refer to commands defined in the 'commands' "
+                f"section of the {PROJECT_FILE}.",
+                exits=1,
+            )
 
     command_names = [cmd["name"] for cmd in config.get("commands", [])]
     workflows = config.get("workflows", {})
@@ -249,19 +249,19 @@ def validate_project_commands(config: Dict[str, Any]) -> None:
                 workflow_list = cast(List[str], step_or_list)
                 if len(workflow_list) < 2:
                     msg.fail(
-                    f"Invalid multiprocessing group within '{workflow_name}'.",
-                    f"A multiprocessing group must reference at least two commands.",
-                    exits=1,
-                )
+                        f"Invalid multiprocessing group within '{workflow_name}'.",
+                        f"A multiprocessing group must reference at least two commands.",
+                        exits=1,
+                    )
                 if len(workflow_list) != len(set(workflow_list)):
                     msg.fail(
-                    f"A multiprocessing group within '{workflow_name}' contains a command more than once.",
-                    f"This is not permitted because it is then not possible to determine when to rerun.",
-                    exits=1,
-                )
+                        f"A multiprocessing group within '{workflow_name}' contains a command more than once.",
+                        f"This is not permitted because it is then not possible to determine when to rerun.",
+                        exits=1,
+                    )
                 for step in workflow_list:
                     verify_workflow_step(step)
-        
+
 
 def get_hash(data, exclude: Iterable[str] = tuple()) -> str:
     """Get the hash for a JSON-serializable object.
