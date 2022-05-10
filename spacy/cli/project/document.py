@@ -14,8 +14,8 @@ can be executed using [`spacy project run [name]`]({DOCS_URL}/api/cli#project-ru
 Commands are only re-run if their inputs have changed."""
 INTRO_WORKFLOWS = f"""The following workflows are defined by the project. They
 can be executed using [`spacy project run [name]`]({DOCS_URL}/api/cli#project-run)
-and will run the specified commands in order. Commands are only re-run if their
-inputs have changed."""
+and will run the specified commands in order. Commands grouped within square brackets
+are run in parallel. Commands are only re-run if their inputs have changed."""
 INTRO_ASSETS = f"""The following assets are defined by the project. They can
 be fetched by running [`spacy project assets`]({DOCS_URL}/api/cli#project-assets)
 in the project directory."""
@@ -69,7 +69,15 @@ def project_document(
         md.add(md.table(data, ["Command", "Description"]))
     # Workflows
     wfs = config.get("workflows", {}).items()
-    data = [(md.code(n), " &rarr; ".join(md.code(w) for w in stp)) for n, stp in wfs]
+    data = []
+    for n, steps in wfs:
+        rendered_steps = []
+        for step in steps:
+            if isinstance(step, str):
+                rendered_steps.append(md.code(step))
+            else:
+                rendered_steps.append('[' + ', '.join(md.code(p_step) for p_step in step) + ']')
+        data.append([md.code(n), " &rarr; ".join(rendered_steps)])
     if data:
         md.add(md.title(3, "Workflows", "⏭"))
         md.add(INTRO_WORKFLOWS)

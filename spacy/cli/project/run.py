@@ -154,7 +154,12 @@ def print_run_help(project_dir: Path, subcommand: Optional[str] = None) -> None:
             if help_text:
                 print(f"\n{help_text}\n")
         elif subcommand in workflows:
-            steps = workflows[subcommand]
+            steps = []
+            for cmdOrMultiprocessingGroup in workflows[subcommand]:
+                if isinstance(cmdOrMultiprocessingGroup, str):
+                    steps.append(cmdOrMultiprocessingGroup)
+                else:
+                    steps.extend(cmdOrMultiprocessingGroup)
             print(f"\nWorkflow consisting of {len(steps)} commands:")
             steps_data = [
                 (f"{i + 1}. {step}", commands[step].get("help", ""))

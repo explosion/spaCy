@@ -144,7 +144,7 @@ skipped. You can also set `--force` to force re-running a command, or `--dry` to
 perform a "dry run" and see what would happen (without actually running the
 script).
 
-### 4. Run a workflow {#run-workfow}
+### 4. Run a workflow {#run-workflow}
 
 > #### project.yml
 >
@@ -153,6 +153,9 @@ script).
 >   all:
 >     - preprocess
 >     - train
+>     -
+>         - multiprocessingGroupCommand1
+>         - multiprocessingGroupCommand2
 >     - package
 > ```
 
@@ -167,6 +170,11 @@ defined in the `project.yml`, and executes the commands it specifies, in order:
 ```cli
 $ python -m spacy project run all
 ```
+
+Sometimes it makes sense to execute two or more commands in parallel. A group
+of commands executed at once is known as a multiprocessing group; a multiprocessing group 
+is defined by indenting the commands it contains. You are responsible for making sure that no 
+deadlocks, race conditions or other issues can arise from the parallel execution.
 
 Using the expected [dependencies and outputs](#deps-outputs) defined in the
 commands, spaCy can determine whether to re-run a command (if its inputs or
@@ -231,7 +239,7 @@ pipelines.
 | `env`           | A dictionary of variables, mapped to the names of environment variables that will be read in when running the project. For example, `${env.name}` will use the value of the environment variable defined as `name`.                                                                                                                                                                                                                                                                                          |
 | `directories`   | An optional list of [directories](#project-files) that should be created in the project for assets, training outputs, metrics etc. spaCy will make sure that these directories always exist.                                                                                                                                                                                                                                                                                                                 |
 | `assets`        | A list of assets that can be fetched with the [`project assets`](/api/cli#project-assets) command. `url` defines a URL or local path, `dest` is the destination file relative to the project directory, and an optional `checksum` ensures that an error is raised if the file's checksum doesn't match. Instead of `url`, you can also provide a `git` block with the keys `repo`, `branch` and `path`, to download from a Git repo.                                                                        |
-| `workflows`     | A dictionary of workflow names, mapped to a list of command names, to execute in order. Workflows can be run with the [`project run`](/api/cli#project-run) command.                                                                                                                                                                                                                                                                                                                                         |
+| `workflows`     | A dictionary of workflow names, mapped to a list of command names, to execute in order. Nested lists represent groups of commands to execute concurrently. Workflows can be run with the [`project run`](/api/cli#project-run) command.                                                                                                                                                                                                                                                                                                                                         |
 | `commands`      | A list of named commands. A command can define an optional help message (shown in the CLI when the user adds `--help`) and the `script`, a list of commands to run. The `deps` and `outputs` let you define the created file the command depends on and produces, respectively. This lets spaCy determine whether a command needs to be re-run because its dependencies or outputs changed. Commands can be run as part of a workflow, or separately with the [`project run`](/api/cli#project-run) command. |
 | `spacy_version` | Optional spaCy version range like `>=3.0.0,<3.1.0` that the project is compatible with. If it's loaded with an incompatible version, an error is raised when the project is loaded.                                                                                                                                                                                                                                                                                                                          |
 

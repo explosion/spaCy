@@ -1,5 +1,5 @@
 """This module contains helpers and subcommands for integrating spaCy projects
-with Data Version Controk (DVC). https://dvc.org"""
+with Data Version Control (DVC). https://dvc.org"""
 from typing import Dict, Any, List, Optional, Iterable
 import subprocess
 from pathlib import Path
@@ -105,7 +105,13 @@ def update_dvc_config(
         dvc_config_path.unlink()
     dvc_commands = []
     config_commands = {cmd["name"]: cmd for cmd in config.get("commands", [])}
-    for name in workflows[workflow]:
+    names = []
+    for cmdOrMultiprocessingGroup in workflows[workflow]:
+        if isinstance(cmdOrMultiprocessingGroup, str):
+            names.append(cmdOrMultiprocessingGroup)
+        else:
+            names.extend(cmdOrMultiprocessingGroup)
+    for name in names:
         command = config_commands[name]
         deps = command.get("deps", [])
         outputs = command.get("outputs", [])
