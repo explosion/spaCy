@@ -2,7 +2,7 @@ from typing import List
 
 from libc.stdint cimport int8_t
 cimport numpy as np
-from thinc.model import Model
+from thinc.api import Model
 
 from spacy.pipeline._parser_internals.stateclass import StateClass
 from spacy.pipeline._parser_internals.transition_system cimport TransitionSystem
