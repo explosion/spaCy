@@ -341,6 +341,7 @@ def test_project_config_validation_full():
         "assets": [
             {
                 "dest": "x",
+                "extra": True,
                 "url": "https://example.com",
                 "checksum": "63373dd656daa1fd3043ce166a59474c",
             },
@@ -351,6 +352,12 @@ def test_project_config_validation_full():
                     "branch": "develop",
                     "path": "y",
                 },
+            },
+            {
+                "dest": "z",
+                "extra": False,
+                "url": "https://example.com",
+                "checksum": "63373dd656daa1fd3043ce166a59474c",
             },
         ],
         "commands": [
