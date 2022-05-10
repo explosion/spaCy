@@ -151,7 +151,6 @@ def load_project_config(
         config = srsly.read_yaml(config_path)
     except ValueError as e:
         msg.fail(invalid_err, e, exits=1)
-    print(config)
     errors = validate(ProjectConfigSchema, config)
     if errors:
         msg.fail(invalid_err)
@@ -223,7 +222,7 @@ def validate_project_commands(config: Dict[str, Any]) -> None:
     config (Dict[str, Any]): The loaded config.
     """
 
-    def verify_workflow_step(step: str):
+    def verify_workflow_step(workflow_name: str, step: str) -> None:
         if step not in command_names:
             msg.fail(
                 f"Unknown command specified in workflow '{workflow_name}': {step}",
@@ -244,7 +243,7 @@ def validate_project_commands(config: Dict[str, Any]) -> None:
             msg.fail(err, exits=1)
         for step_or_list in workflow_step_or_lists:
             if isinstance(step_or_list, str):
-                verify_workflow_step(step_or_list)
+                verify_workflow_step(workflow_name, step_or_list)
             else:
                 workflow_list = cast(List[str], step_or_list)
                 if len(workflow_list) < 2:
@@ -260,7 +259,7 @@ def validate_project_commands(config: Dict[str, Any]) -> None:
                         exits=1,
                     )
                 for step in workflow_list:
-                    verify_workflow_step(step)
+                    verify_workflow_step(workflow_name, step)
 
 
 def get_hash(data, exclude: Iterable[str] = tuple()) -> str:
