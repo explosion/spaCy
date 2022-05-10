@@ -12,6 +12,7 @@ from spacy.vocab import Vocab
 from ...pipeline import DependencyParser
 from ...pipeline.dep_parser import DEFAULT_PARSER_MODEL
 from ..util import apply_transition_sequence, make_tempdir
+from ...pipeline.tok2vec import DEFAULT_TOK2VEC_MODEL
 
 TRAIN_DATA = [
     (
@@ -393,6 +394,34 @@ def test_overfitting_IO(pipe_name):
     no_batch_deps = [doc.to_array([DEP]) for doc in [nlp(text) for text in texts]]
     assert_equal(batch_deps_1, batch_deps_2)
     assert_equal(batch_deps_1, no_batch_deps)
+
+
+# fmt: off
+@pytest.mark.slow
+@pytest.mark.parametrize("pipe_name", ["parser", "beam_parser"])
+@pytest.mark.parametrize(
+    "parser_config",
+    [
+        # TransitionBasedParser V1
+        ({"@architectures": "spacy.TransitionBasedParser.v1", "tok2vec": DEFAULT_TOK2VEC_MODEL, "state_type": "parser", "extra_state_tokens": False, "hidden_width": 64, "maxout_pieces": 2, "use_upper": True}),
+        # TransitionBasedParser V2
+        ({"@architectures": "spacy.TransitionBasedParser.v2", "tok2vec": DEFAULT_TOK2VEC_MODEL, "state_type": "parser", "extra_state_tokens": False, "hidden_width": 64, "maxout_pieces": 2, "use_upper": True}),
+    ],
+)
+# fmt: on
+def test_parser_configs(pipe_name, parser_config):
+    pipe_config = {"model": parser_config}
+    nlp = English()
+    parser = nlp.add_pipe(pipe_name, config=pipe_config)
+    train_examples = []
+    for text, annotations in TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
+        for dep in annotations.get("deps", []):
+            parser.add_label(dep)
+    optimizer = nlp.initialize()
+    for i in range(5):
+        losses = {}
+        nlp.update(train_examples, sgd=optimizer, losses=losses)
 
 
 def test_beam_parser_scores():
