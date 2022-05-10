@@ -968,8 +968,9 @@ def test_doc_spans_copy(en_tokenizer):
 
 def test_doc_spans_setdefault(en_tokenizer):
     doc = en_tokenizer("Some text about Colombia and the Czech Republic")
-    with pytest.raises(ValueError):
-        doc.spans.setdefault("key")
-    with pytest.raises(ValueError):
-        doc.spans.setdefault("key", default=[])
-    doc.spans.setdefault("key", default=SpanGroup(doc))
+    doc.spans.setdefault("key1")
+    assert len(doc.spans["key1"]) == 0
+    doc.spans.setdefault("key2", default=[doc[0:1]])
+    assert len(doc.spans["key2"]) == 1
+    doc.spans.setdefault("key3", default=SpanGroup(doc, spans=[doc[0:1], doc[1:2]]))
+    assert len(doc.spans["key3"]) == 2

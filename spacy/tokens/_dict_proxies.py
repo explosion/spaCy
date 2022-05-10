@@ -45,7 +45,11 @@ class SpanGroups(UserDict):
 
     def setdefault(self, key, default=None):
         if not isinstance(default, SpanGroup):
-            raise ValueError("SpanGroups.setdefault only supports default values with type SpanGroup, received type '{default_type}'.".format(default_type=type(default)))
+            if default is None:
+                spans = []
+            else:
+                spans = default
+            default = self._make_span_group(key, spans)
         return super().setdefault(key, default=default)
 
     def to_bytes(self) -> bytes:
