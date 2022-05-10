@@ -13,7 +13,7 @@ from .._util import get_checksum, download_file, git_checkout, get_git_version
 from .._util import SimpleFrozenDict, parse_config_overrides
 
 # Whether assets are extra if `extra` is not set.
-OPTIONAL_DEFAULT = False
+EXTRA_DEFAULT = False
 
 
 @project_cli.command(
@@ -63,7 +63,7 @@ def project_assets(
     assets = [
         asset
         for asset in config.get("assets", [])
-        if extra or not asset.get("extra", OPTIONAL_DEFAULT)
+        if extra or not asset.get("extra", EXTRA_DEFAULT)
     ]
     if not assets:
         msg.warn(
