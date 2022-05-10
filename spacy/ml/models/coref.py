@@ -3,7 +3,7 @@ import torch
 
 from thinc.api import Model, chain
 from thinc.api import PyTorchWrapper, ArgsKwargs
-from thinc.types import Floats2d, Ints2d
+from thinc.types import Floats2d, Ints2d, Ints1d
 from thinc.util import xp2torch, torch2xp
 
 from ...tokens import Doc
@@ -50,7 +50,11 @@ def build_wl_coref_model(
     return coref_model
 
 
-def convert_coref_scorer_inputs(model: Model, X: List[Floats2d], is_train: bool):
+def convert_coref_scorer_inputs(
+    model: Model,
+    X: List[Floats2d],
+    is_train: bool
+):
     # The input here is List[Floats2d], one for each doc
     # just use the first
     # TODO real batching
@@ -62,7 +66,7 @@ def convert_coref_scorer_inputs(model: Model, X: List[Floats2d], is_train: bool)
         gradients = torch2xp(args.args[0])
         return [gradients]
 
-    return ArgsKwargs(args=(word_features,), kwargs={}), backprop
+    return ArgsKwargs(args=(word_features, ), kwargs={}), backprop
 
 
 def convert_coref_scorer_outputs(model: Model, inputs_outputs, is_train: bool):
@@ -108,11 +112,19 @@ class CorefScorer(torch.nn.Module):
         n_layers: Numbers of layers in the AnaphoricityScorer.
         dropout_rate: Dropout probability to apply across all modules.
         roughk: Number of candidates the RoughScorer returns.
-        batch_size: Internal batch-size for the more expensive AnaphoricityScorer.
+        batch_size: Internal batch-size for the more expensive scorer.
         """
         self.dropout = torch.nn.Dropout(dropout_rate)
         self.batch_size = batch_size
         # Modules
+        self.pw = DistancePairwiseEncoder(dist_emb_size, dropout_rate)
+        pair_emb = dim * 3 + self.pw.shape
+        self.a_scorer = AnaphoricityScorer(
+            pair_emb,
+            hidden_size,
+            n_layers,
+            dropout_rate
+        )
         self.lstm = torch.nn.LSTM(
             input_size=dim,
             hidden_size=dim,
@@ -125,11 +137,13 @@ class CorefScorer(torch.nn.Module):
             pair_emb, hidden_size, n_layers, dropout_rate
         )
 
-    def forward(self, word_features: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+    def forward(
+        self, word_features: torch.Tensor
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         1. LSTM encodes the incoming word_features.
         2. The RoughScorer scores and prunes the candidates.
-        3. The DistancePairwiseEncoder embeds the distance between remaning pairs.
+        3. The DistancePairwiseEncoder embeds the distances between pairs.
         4. The AnaphoricityScorer scores all pairs in mini-batches.
 
         word_features: torch.Tensor containing word encodings
@@ -299,6 +313,7 @@ class RoughScorer(torch.nn.Module):
         top_scores, indices = torch.topk(
             rough_scores, k=min(self.k, len(rough_scores)), dim=1, sorted=False
         )
+
         return top_scores, indices
 
 
@@ -324,10 +339,11 @@ class DistancePairwiseEncoder(torch.nn.Module):
 
     def forward(
         self,
-        top_indices: torch.Tensor,
+        top_indices: torch.Tensor
     ) -> torch.Tensor:
         word_ids = torch.arange(0, top_indices.size(0))
-        distance = (word_ids.unsqueeze(1) - word_ids[top_indices]).clamp_min_(min=1)
+        distance = (word_ids.unsqueeze(1) - word_ids[top_indices]
+                    ).clamp_min_(min=1)
         log_distance = distance.to(torch.float).log2().floor_()
         log_distance = log_distance.clamp_max_(max=6).to(torch.long)
         distance = torch.where(distance < 5, distance - 1, log_distance + 2)
