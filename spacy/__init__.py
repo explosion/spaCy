@@ -32,7 +32,9 @@ def load(
     *,
     vocab: Union[Vocab, bool] = True,
     disable: Iterable[str] = util.SimpleFrozenList(),
+    enable: Iterable[str] = util.SimpleFrozenList(),
     exclude: Iterable[str] = util.SimpleFrozenList(),
+    include: Iterable[str] = util.SimpleFrozenList(),
     config: Union[Dict[str, Any], Config] = util.SimpleFrozenDict(),
 ) -> Language:
     """Load a spaCy model from an installed package or a local path.
@@ -42,14 +44,24 @@ def load(
     disable (Iterable[str]): Names of pipeline components to disable. Disabled
         pipes will be loaded but they won't be run unless you explicitly
         enable them by calling nlp.enable_pipe.
+        enable (Iterable[str]): Names of pipeline components to enable. All other
+            pipes will be disabled (and can be enabled using `nlp.enable_pipe`).
     exclude (Iterable[str]): Names of pipeline components to exclude. Excluded
         components won't be loaded.
+    include (Iterable[str]): Names of pipeline components to include. All other
+        components will be excluded.
     config (Dict[str, Any] / Config): Config overrides as nested dict or dict
         keyed by section values in dot notation.
     RETURNS (Language): The loaded nlp object.
     """
     return util.load_model(
-        name, vocab=vocab, disable=disable, exclude=exclude, config=config
+        name,
+        vocab=vocab,
+        disable=disable,
+        enable=enable,
+        exclude=exclude,
+        include=include,
+        config=config,
     )
 
 

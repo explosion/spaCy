@@ -199,6 +199,7 @@ class Warnings(metaclass=ErrorsWithCodes):
     W118 = ("Term '{term}' not found in glossary. It may however be explained in documentation "
             "for the corpora used to train the language. Please check "
             "`nlp.meta[\"sources\"]` for any relevant links.")
+    W120 = ("Argument `{arg1}` doesn't have any effect when `{arg2}` is also set.")
 
 
 class Errors(metaclass=ErrorsWithCodes):

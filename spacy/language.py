@@ -1,4 +1,4 @@
-from typing import Iterator, Optional, Any, Dict, Callable, Iterable
+from typing import Iterator, Optional, Any, Dict, Callable, Iterable, Collection
 from typing import Union, Tuple, List, Set, Pattern, Sequence
 from typing import NoReturn, TYPE_CHECKING, TypeVar, cast, overload
 
@@ -1668,7 +1668,9 @@ class Language:
         *,
         vocab: Union[Vocab, bool] = True,
         disable: Iterable[str] = SimpleFrozenList(),
+        enable: Iterable[str] = SimpleFrozenList(),
         exclude: Iterable[str] = SimpleFrozenList(),
+        include: Iterable[str] = SimpleFrozenList(),
         meta: Dict[str, Any] = SimpleFrozenDict(),
         auto_fill: bool = True,
         validate: bool = True,
@@ -1682,8 +1684,12 @@ class Language:
         disable (Iterable[str]): Names of pipeline components to disable.
             Disabled pipes will be loaded but they won't be run unless you
             explicitly enable them by calling nlp.enable_pipe.
+        enable (Iterable[str]): Names of pipeline components to enable. All other
+            pipes will be disabled (and can be enabled using `nlp.enable_pipe`).
         exclude (Iterable[str]): Names of pipeline components to exclude.
             Excluded components won't be loaded.
+        include (Iterable[str]): Names of pipeline components to include. All other
+            components will be excluded.
         meta (Dict[str, Any]): Meta overrides for nlp.meta.
         auto_fill (bool): Automatically fill in missing values in config based
             on defaults and function argument annotations.
@@ -1761,6 +1767,9 @@ class Language:
         interpolated = filled.interpolate() if not filled.is_interpolated else filled
         pipeline = interpolated.get("components", {})
         sourced = util.get_sourced_components(interpolated)
+        exclude = cls._resolve_component_activation_status(
+            exclude, include, config["nlp"]["pipeline"], "exclude"
+        )
         # If components are loaded from a source (existing models), we cache
         # them here so they're only loaded once
         source_nlps = {}
@@ -1835,8 +1844,18 @@ class Language:
         # Restore the original vocab after sourcing if necessary
         if vocab_b is not None:
             nlp.vocab.from_bytes(vocab_b)
-        disabled_pipes = [*config["nlp"]["disabled"], *disable]
+
+        # Resolve disabled/enabled settings.
+        # todo @RM ensure "enabled" is in config
+        disabled_pipes = cls._resolve_component_activation_status(
+            [*config["nlp"]["disabled"], *disable],
+            [*config["nlp"].get("enabled", []), *enable],
+            config["nlp"]["pipeline"],
+            "disable",
+        )
         nlp._disabled = set(p for p in disabled_pipes if p not in exclude)
+        # print(enable, enabled_pipes, disable, disabled_pipes, exclude, nlp._disabled)
+
         nlp.batch_size = config["nlp"]["batch_size"]
         nlp.config = filled if auto_fill else config
         if after_pipeline_creation is not None:
@@ -1961,7 +1980,11 @@ class Language:
                 tok2vec.remove_listener(listener, pipe_name)
 
     def to_disk(
-        self, path: Union[str, Path], *, exclude: Iterable[str] = SimpleFrozenList()
+        self,
+        path: Union[str, Path],
+        *,
+        exclude: Iterable[str] = SimpleFrozenList(),
+        include: Iterable[str] = SimpleFrozenList(),
     ) -> None:
         """Save the current state to a directory.  If a model is loaded, this
         will include the model.
@@ -1969,9 +1992,20 @@ class Language:
         path (str / Path): Path to a directory, which will be created if
             it doesn't exist.
         exclude (Iterable[str]): Names of components or serialization fields to exclude.
+        include (Iterable[str]): Names of pipeline components to include. All other
+            components will be excluded.
 
         DOCS: https://spacy.io/api/language#to_disk
         """
+
+        if len(include):
+            exclude = [
+                pipe_name
+                for pipe_name, _ in self._components
+                if pipe_name not in include
+            ]
+            warnings.warn(Warnings.W120.format(arg1="include", arg2="exclude"))
+
         path = util.ensure_path(path)
         serializers = {}
         serializers["tokenizer"] = lambda p: self.tokenizer.to_disk(  # type: ignore[union-attr]
@@ -1988,11 +2022,52 @@ class Language:
         serializers["vocab"] = lambda p: self.vocab.to_disk(p, exclude=exclude)
         util.to_disk(path, serializers, exclude)
 
+    @staticmethod
+    def _resolve_component_activation_status(
+        inactive: Iterable[str],
+        active: Iterable[str],
+        component_names: Collection[str],
+        arg_type: str,
+    ) -> Iterable[str]:
+        """
+        Merges arguments in spacy.load(), lang_cls.from_config() etc. reflecting components' activation status.
+        `inactive` can be the values passed as `excluded` or `disabled`, `active` the values of `included` or `enabled`.
+        The resolution logic is the same: `active` takes precedence over `inactive` - so if the former is set, all other
+        components are assumed to be disabled, independently from the value of `inactive`. If `active` is empty, only
+        those component whose names are included in `inactive` are assumed to be disabled.
+
+        inactive (Iterable[str]): Names of inactive components or serialization fields (i.e. to be excluded or
+                                  disabled).
+        active (Iterable[str]): Names of active pipeline components (i.e. to be included or enabled).
+        component_names (Iterable[str]): Names of all pipeline components.
+        arg_type (str): One of (exclude, disable). Used only to generate fitting warning message in case of possibly
+                                                   ambiguous values for `inactive`/`active`.
+
+        RETURNS (Collection[str]): Names of components to exclude from pipeline w.r.t. specified includes and excludes.
+        """
+
+        assert arg_type in ("exclude", "disable")
+
+        if active:
+            if inactive:
+                warnings.warn(
+                    Warnings.W120.format(
+                        arg1="include" if arg_type == "exclude" else "enable",
+                        arg2=arg_type,
+                    )
+                )
+            inactive = [
+                pipe_name for pipe_name in component_names if pipe_name not in active
+            ]
+
+        return inactive
+
     def from_disk(
         self,
         path: Union[str, Path],
         *,
         exclude: Iterable[str] = SimpleFrozenList(),
+        include: Iterable[str] = SimpleFrozenList(),
         overrides: Dict[str, Any] = SimpleFrozenDict(),
     ) -> "Language":
         """Loads state from a directory. Modifies the object in place and
@@ -2001,10 +2076,18 @@ class Language:
 
         path (str / Path): A path to a directory.
         exclude (Iterable[str]): Names of components or serialization fields to exclude.
+        include (Iterable[str]): Names of pipeline components to include. All other
+            components will be excluded.
+
         RETURNS (Language): The modified `Language` object.
 
         DOCS: https://spacy.io/api/language#from_disk
         """
+
+        # Derive list of excluded components w.r.t. list of components to include.
+        exclude = self._resolve_component_activation_status(
+            exclude, include, self.component_names, "exclude"
+        )
 
         def deserialize_meta(path: Path) -> None:
             if path.exists():

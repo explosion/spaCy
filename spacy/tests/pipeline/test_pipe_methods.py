@@ -4,13 +4,14 @@ import numpy
 import pytest
 from thinc.api import get_current_ops
 
+import spacy
 from spacy.lang.en import English
 from spacy.lang.en.syntax_iterators import noun_chunks
 from spacy.language import Language
 from spacy.pipeline import TrainablePipe
 from spacy.tokens import Doc
 from spacy.training import Example
-from spacy.util import SimpleFrozenList, get_arg_names
+from spacy.util import SimpleFrozenList, get_arg_names, make_tempdir
 from spacy.vocab import Vocab
 
 
@@ -602,3 +603,74 @@ def test_update_with_annotates():
             assert results[component] == "".join(eg.predicted.text for eg in examples)
         for component in components - set(components_to_annotate):
             assert results[component] == ""
+
+
+def test_load_disable_enable() -> None:
+    """
+    Tests spacy.load() with dis-/enabling components.
+    """
+
+    # Testing `disable`.
+    to_exclude = ["parser", "tagger"]
+    nlp = spacy.load("en_core_web_sm", disable=to_exclude)
+    assert all([comp_name in nlp.disabled for comp_name in to_exclude])
+
+    # Testing `enable`.
+    to_include = ["tagger", "parser"]
+    nlp = spacy.load("en_core_web_sm", enable=to_include)
+    assert all(
+        [
+            (comp_name in nlp.disabled) is (comp_name not in to_include)
+            for comp_name in nlp.component_names
+        ]
+    )
+
+
+def test_load_exclude_include() -> None:
+    """
+    Tests spacy.load() with ex-/including components.
+    """
+
+    base_nlp = spacy.load("en_core_web_sm")
+
+    # Testing `exclude`.
+    to_exclude = ["parser", "tagger"]
+
+    nlp = spacy.load("en_core_web_sm", exclude=to_exclude)
+    assert all([comp_name not in nlp.component_names for comp_name in to_exclude])
+
+    with make_tempdir() as d:
+        base_nlp.to_disk(d, exclude=to_exclude)
+        nlp = English().from_disk(d)
+        assert all([comp_name not in nlp.component_names for comp_name in to_exclude])
+
+    with make_tempdir() as d:
+        base_nlp.to_disk(d)
+        assert all(
+            [
+                comp_name
+                not in English().from_disk(d, exclude=to_exclude).component_names
+                for comp_name in to_exclude
+            ]
+        )
+
+    # Testing `include`.
+    to_include = ["tagger", "parser"]
+
+    assert (
+        to_include == spacy.load("en_core_web_sm", include=to_include).component_names
+    )
+
+    with make_tempdir() as d:
+        base_nlp.to_disk(d, include=to_include)
+        assert to_include == English().from_disk(d).component_names
+
+    with make_tempdir() as d:
+        base_nlp.to_disk(d)
+        assert all(
+            [
+                comp_name
+                not in English().from_disk(d, include=to_include).component_names
+                for comp_name in to_include
+            ]
+        )
