@@ -10,6 +10,7 @@ from ...tokens import Doc
 from ...util import registry
 from .coref_util import get_sentence_ids
 
+
 @registry.architectures("spacy.SpanPredictor.v1")
 def build_span_predictor(
     tok2vec: Model[List[Doc], List[Floats2d]],
@@ -33,6 +34,7 @@ def build_span_predictor(
         model = (tok2vec & head_info) >> span_predictor
 
     return model
+
 
 def convert_span_predictor_inputs(
     model: Model, X: Tuple[Ints1d, Floats2d, Ints1d], is_train: bool
@@ -88,6 +90,38 @@ def predict_span_clusters(
     }
 
     return [[head2span[head] for head in cluster] for cluster in clusters]
+
+
+def build_get_head_metadata(prefix):
+    # TODO this name is awful, fix it
+    model = Model(
+        "HeadDataProvider", attrs={"prefix": prefix}, forward=head_data_forward
+    )
+    return model
+
+
+def head_data_forward(model, docs, is_train):
+    """A layer to generate the extra data needed for the span predictor."""
+    sent_ids = []
+    head_ids = []
+    prefix = model.attrs["prefix"]
+    for doc in docs:
+        sids = model.ops.asarray2i(get_sentence_ids(doc))
+        sent_ids.append(sids)
+        heads = []
+        for key, sg in doc.spans.items():
+            if not key.startswith(prefix):
+                continue
+            for span in sg:
+                # TODO warn if spans are more than one token
+                heads.append(span[0].i)
+        heads = model.ops.asarray2i(heads)
+        head_ids.append(heads)
+    # each of these is a list with one entry per doc
+    # backprop is just a placeholder
+    # TODO it would probably be better to have a list of tuples than two lists of arrays
+    return (sent_ids, head_ids), lambda x: []
+
 
 # TODO this should maybe have a different name from the component
 class SpanPredictor(torch.nn.Module):
@@ -181,35 +215,3 @@ class SpanPredictor(torch.nn.Module):
             valid_positions = torch.stack((valid_starts, valid_ends), dim=2)
             return scores + valid_positions
         return scores
-
-
-def build_get_head_metadata(prefix):
-    # TODO this name is awful, fix it
-    model = Model(
-        "HeadDataProvider", attrs={"prefix": prefix}, forward=head_data_forward
-    )
-    return model
-
-
-def head_data_forward(model, docs, is_train):
-    """A layer to generate the extra data needed for the span predictor."""
-    sent_ids = []
-    head_ids = []
-    prefix = model.attrs["prefix"]
-    for doc in docs:
-        sids = model.ops.asarray2i(get_sentence_ids(doc))
-        sent_ids.append(sids)
-        heads = []
-        for key, sg in doc.spans.items():
-            if not key.startswith(prefix):
-                continue
-            for span in sg:
-                # TODO warn if spans are more than one token
-                heads.append(span[0].i)
-        heads = model.ops.asarray2i(heads)
-        head_ids.append(heads)
-    # each of these is a list with one entry per doc
-    # backprop is just a placeholder
-    # TODO it would probably be better to have a list of tuples than two lists of arrays
-    return (sent_ids, head_ids), lambda x: []
-

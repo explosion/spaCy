@@ -64,7 +64,6 @@ def build_wl_coref_model(
     return coref_model
 
 
-
 def convert_coref_scorer_inputs(model: Model, X: List[Floats2d], is_train: bool):
     # The input here is List[Floats2d], one for each doc
     # just use the first
@@ -96,7 +95,6 @@ def convert_coref_scorer_outputs(model: Model, inputs_outputs, is_train: bool):
     return (scores_xp, indices_xp), convert_for_torch_backward
 
 
-
 # TODO add docstring for this, maybe move to utils.
 # This might belong in the component.
 def _clusterize(model, scores: Floats2d, top_indices: Ints2d):
@@ -124,7 +122,6 @@ def _clusterize(model, scores: Floats2d, top_indices: Ints2d):
             assert len(cluster) > 1
             clusters.append(sorted(cluster))
     return sorted(clusters)
-
 
 
 class CorefScorer(torch.nn.Module):
@@ -370,8 +367,6 @@ class RoughScorer(torch.nn.Module):
             rough_scores, k=min(self.k, len(rough_scores)), dim=1, sorted=False
         )
         return top_scores, indices
-
-
 
 
 class DistancePairwiseEncoder(torch.nn.Module):

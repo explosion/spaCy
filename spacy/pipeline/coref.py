@@ -84,7 +84,6 @@ def make_coref(
     )
 
 
-
 class CoreferenceResolver(TrainablePipe):
     """Pipeline component for coreference resolution.
 
@@ -318,7 +317,7 @@ class CoreferenceResolver(TrainablePipe):
             log_marg = ops.softmax(cscores + ops.xp.log(top_gscores), axis=1)
         log_norm = ops.softmax(cscores, axis=1)
         grad = log_norm - log_marg
-        #gradients.append((grad, cidx))
+        # gradients.append((grad, cidx))
         loss = float((grad**2).sum())
 
         return loss, grad
@@ -373,5 +372,3 @@ class CoreferenceResolver(TrainablePipe):
             "coref_r": evaluator.get_recall(),
         }
         return score
-
-

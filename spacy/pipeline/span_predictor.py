@@ -46,26 +46,30 @@ depth = 2
 """
 DEFAULT_SPAN_PREDICTOR_MODEL = Config().from_str(default_span_predictor_config)["model"]
 
+
 @Language.factory(
-        "span_predictor",
-        assigns=["doc.spans"],
-        requires=["doc.spans"],
-        default_config={
-            "model": DEFAULT_SPAN_PREDICTOR_MODEL,
-            "input_prefix": "coref_head_clusters",
-            "output_prefix": "coref_clusters",
-            },
+    "span_predictor",
+    assigns=["doc.spans"],
+    requires=["doc.spans"],
+    default_config={
+        "model": DEFAULT_SPAN_PREDICTOR_MODEL,
+        "input_prefix": "coref_head_clusters",
+        "output_prefix": "coref_clusters",
+    },
     default_score_weights={"span_accuracy": 1.0},
-    )
+)
 def make_span_predictor(
-        nlp: Language,
-        name: str,
-        model,
-        input_prefix: str = "coref_head_clusters",
-        output_prefix: str = "coref_clusters",
+    nlp: Language,
+    name: str,
+    model,
+    input_prefix: str = "coref_head_clusters",
+    output_prefix: str = "coref_clusters",
 ) -> "SpanPredictor":
     """Create a SpanPredictor component."""
-    return SpanPredictor(nlp.vocab, model, name, input_prefix=input_prefix, output_prefix=output_prefix)
+    return SpanPredictor(
+        nlp.vocab, model, name, input_prefix=input_prefix, output_prefix=output_prefix
+    )
+
 
 class SpanPredictor(TrainablePipe):
     """Pipeline component to resolve one-token spans to full spans.
@@ -125,7 +129,7 @@ class SpanPredictor(TrainablePipe):
     def set_annotations(self, docs: Iterable[Doc], clusters_by_doc) -> None:
         for doc, clusters in zip(docs, clusters_by_doc):
             for ii, cluster in enumerate(clusters):
-                spans = [doc[mm[0]:mm[1]] for mm in cluster]
+                spans = [doc[mm[0] : mm[1]] for mm in cluster]
                 doc.spans[f"{self.output_prefix}_{ii}"] = spans
 
     def update(
@@ -218,10 +222,10 @@ class SpanPredictor(TrainablePipe):
             end_probs = ops.softmax(end_scores, axis=1)
             start_targets = to_categorical(starts, n_classes)
             end_targets = to_categorical(ends, n_classes)
-            start_grads = (start_probs - start_targets)
-            end_grads = (end_probs - end_targets)
+            start_grads = start_probs - start_targets
+            end_grads = end_probs - end_targets
             grads = ops.xp.stack((start_grads, end_grads), axis=2)
-            loss = float((grads ** 2).sum())
+            loss = float((grads**2).sum())
         return loss, grads
 
     def initialize(
