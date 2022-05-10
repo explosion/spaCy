@@ -21,17 +21,18 @@ def test_issue10685(en_tokenizer):
     def assert_spangroups():
         assert len(doc.spans) == 2
         assert doc.spans["test"].name == "test"
-        assert doc.spans["test2"].name == "test"
         assert set(doc.spans["test"]) == {doc[0:1]}
         assert set(doc.spans["test2"]) == {doc[1:2]}
 
     # Sanity check the currently-expected behavior
     assert_spangroups()
+    assert doc.spans["test2"].name == "test"
 
     # Now test serialization/deserialization:
     doc.spans.from_bytes(doc.spans.to_bytes())
 
     assert_spangroups()
+    assert doc.spans["test2"].name == "test2"
 
 
 @pytest.mark.parametrize(
