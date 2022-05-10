@@ -1552,31 +1552,15 @@ cdef class Doc:
 
             for annot in annotations:
                 if annot:
-                    if annot is not token_annotations[HEAD]:
-                        for i in range(len(annot)):
-                            if annot[i] is not None:
-                                self.vocab.strings.add(annot[i])
-
                     if annot is token_annotations[HEAD]:
                         for i in range(len(words)):
-                            if array.ndim == 1:
-                                array[i] = annot[i]
-                            else:
-                                array[i, j] = annot[i]
+                            array[i, j] = annot[i]
                     elif annot is token_annotations[MORPH]:
                         for i in range(len(words)):
-                            morph_key = self.vocab.morphology.add(token_annotations[MORPH][i])
-                            if array.ndim == 1:
-                                array[i] = morph_key
-                            else:
-                                array[i, j] = morph_key
+                            array[i, j] = self.vocab.morphology.add(token_annotations[MORPH][i])
                     else:
                         for i in range(len(words)):
-                            vocab_key = self.vocab.strings.add(annot[i])
-                            if array.ndim == 1:
-                                array[i] = vocab_key
-                            else:
-                                array[i, j] = vocab_key
+                            array[i, j] = self.vocab.strings.add(annot[i])
                     j += 1
             self.from_array(attrs, array)
 
