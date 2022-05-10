@@ -145,7 +145,7 @@ def init(
 
 
 def forward(model, docs_moves: Tuple[List[Doc], TransitionSystem], is_train: bool):
-    beam_width = model.attrs.get("beam_width", 1)
+    beam_width = model.attrs["beam_width"]
     lower_pad = model.get_param("lower_pad")
     tok2vec = model.get_ref("tok2vec")
 
