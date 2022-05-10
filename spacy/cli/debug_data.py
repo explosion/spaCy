@@ -264,16 +264,18 @@ def debug_data(
             msg.info("SD = Span Distinctiveness, BD = Boundary Distinctiveness")
             _print_span_characteristics(span_characteristics)
 
-            span_freqs = _get_spans_length_freq_dist(
+            _span_freqs = _get_spans_length_freq_dist(
                 gold_train_data["spans_length"][spans_key]
             )
-            _span_freqs = [(str(k), int(v)) for k, v in span_freqs.items()]
+            # Sort the span frequencies by the n-gram length for better presentation
+            _span_freqs = dict(sorted(_span_freqs.items()))
+            span_freqs = [(str(k), int(v)) for k, v in _span_freqs.items()]
 
             msg.info(
                 f"{SPAN_LENGTH_THRESHOLD_PERCENTAGE}% of spans have up to "
-                f"{max(span_freqs.keys())} n-grams "
+                f"{max(_span_freqs.keys())} n-grams "
                 f"(min={span_characteristics['min_length']}, max={span_characteristics['max_length']}). "
-                f"Most common span lengths are: {_format_freqs(_span_freqs)}. "
+                f"Most common span lengths are: {_format_freqs(span_freqs)}. "
                 "If you are using the n-gram suggester, note that there are speed / memory tradeoffs "
                 "when you include all outliers."
             )
@@ -882,9 +884,7 @@ def _format_labels(
 
 
 def _format_freqs(freqs: Iterable[Tuple[str, int]]) -> str:
-    return ", ".join(
-        [f"'{l}' ({c}%)" for l, c in cast(Iterable[Tuple[str, int]], freqs)]
-    )
+    return ", ".join([f"{l} ({c}%)" for l, c in cast(Iterable[Tuple[str, int]], freqs)])
 
 
 def _get_examples_without_label(
