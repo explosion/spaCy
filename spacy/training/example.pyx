@@ -1,5 +1,5 @@
 from collections.abc import Iterable as IterableInstance
-import numpy
+import numpy as np
 from murmurhash.mrmr cimport hash64
 
 from ..tokens.doc cimport Doc
@@ -176,23 +176,46 @@ cdef class Example:
     def get_aligned_parse(self, projectivize=True):
         cand_to_gold = self.alignment.x2y
         gold_to_cand = self.alignment.y2x
-        aligned_heads = [None] * self.x.length
-        aligned_deps = [None] * self.x.length
-        has_deps = [token.has_dep() for token in self.y]
-        has_heads = [token.has_head() for token in self.y]
         heads = [token.head.i for token in self.y]
         deps = [token.dep_ for token in self.y]
+
         if projectivize:
             proj_heads, proj_deps = nonproj.projectivize(heads, deps)
+            has_deps = [token.has_dep() for token in self.y]
+            has_heads = [token.has_head() for token in self.y]
+
             # ensure that missing data remains missing
             heads = [h if has_heads[i] else heads[i] for i, h in enumerate(proj_heads)]
             deps = [d if has_deps[i] else deps[i] for i, d in enumerate(proj_deps)]
-        for cand_i in range(self.x.length):
-            if cand_to_gold.lengths[cand_i] == 1:
-                gold_i = cand_to_gold[cand_i][0]
-                if gold_to_cand.lengths[heads[gold_i]] == 1:
-                    aligned_heads[cand_i] = int(gold_to_cand[heads[gold_i]][0])
-                    aligned_deps[cand_i] = deps[gold_i]
+
+        # Select all candidate tokens that are aligned to a single gold token.
+        c2g_single_toks = np.where(cand_to_gold.lengths == 1)[0]
+
+        # Fetch all aligned gold token incides.
+        if c2g_single_toks.shape == cand_to_gold.lengths.shape:
+            # This the most likely case.
+            gold_i = cand_to_gold[0:cand_to_gold.lengths.shape[0]].squeeze()
+        else:
+            gold_i = np.vectorize(lambda x: cand_to_gold[int(x)][0])(c2g_single_toks).squeeze()
+
+        # Fetch indices of all gold heads for the aligned gold tokens.
+        heads = np.asarray(heads, dtype='i')
+        gold_head_i = heads[gold_i]
+
+        # Select all gold tokens that are heads of the previously selected 
+        # gold tokens (and are aligned to a single candidate token).
+        g2c_len_heads = gold_to_cand.lengths[gold_head_i]
+        g2c_len_heads = np.where(g2c_len_heads == 1)[0]
+        g2c_i = np.vectorize(lambda x: gold_to_cand[int(x)][0])(gold_head_i[g2c_len_heads]).squeeze()
+
+        # Update head/dep alignments with the above.
+        aligned_heads = np.full((self.x.length), None)
+        aligned_heads[c2g_single_toks[g2c_len_heads]] = g2c_i
+
+        deps = np.asarray(deps)
+        aligned_deps = np.full((self.x.length), None)
+        aligned_deps[c2g_single_toks] = deps[gold_i]
+
         return aligned_heads, aligned_deps
 
     def get_aligned_sent_starts(self):
@@ -371,7 +394,7 @@ def _annot2array(vocab, tok_annot, doc_annot):
                 types = set([type(v) for v in value])
                 raise TypeError(Errors.E969.format(field=key, types=types)) from None
             values.append([vocab.strings.add(v) for v in value])
-    array = numpy.asarray(values, dtype="uint64")
+    array = np.asarray(values, dtype="uint64")
     return attrs, array.T
 
 
