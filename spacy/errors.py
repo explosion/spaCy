@@ -28,14 +28,7 @@ def setup_default_warnings():
 
 
 def filter_warning(
-    action: Union[
-        Literal["default"],
-        Literal["error"],
-        Literal["ignore"],
-        Literal["always"],
-        Literal["module"],
-        Literal["once"],
-    ],
+    action: Literal["default", "error", "ignore", "always", "module", "once"],
     error_msg: str,
 ):
     """Customize how spaCy should handle a certain warning.
