@@ -163,10 +163,10 @@ cdef class Example:
             if len(values) == 0:
                 output[token.i] = None
             elif len(values) == 1:
-                output[token.i] = values[0]
+                output[token.i] = values.item()
             elif len(set(list(values))) == 1:
                 # If all aligned tokens have the same value, use it.
-                output[token.i] = values[0]
+                output[token.i] = values[0].item()
             else:
                 output[token.i] = None
         if as_string and field not in ["ENT_IOB", "SENT_START"]:
