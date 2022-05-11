@@ -3,7 +3,7 @@ import torch
 
 from thinc.api import Model, chain, tuplify
 from thinc.api import PyTorchWrapper, ArgsKwargs
-from thinc.types import Floats2d, Ints1d, Ints2d
+from thinc.types import Floats2d, Ints1d
 from thinc.util import xp2torch, torch2xp
 
 from ...tokens import Doc
@@ -40,10 +40,9 @@ def convert_span_predictor_inputs(
     model: Model, X: Tuple[Ints1d, Floats2d, Ints1d], is_train: bool
 ):
     tok2vec, (sent_ids, head_ids) = X
-    # Normally we shoudl use the input is_train, but for these two it's not relevant
+    # Normally we should use the input is_train, but for these two it's not relevant
 
     def backprop(args: ArgsKwargs) -> List[Floats2d]:
-        # convert to xp and wrap in list
         gradients = torch2xp(args.args[1])
         return [[gradients], None]
 
@@ -55,7 +54,6 @@ def convert_span_predictor_inputs(
         head_ids = xp2torch(head_ids[0], requires_grad=False)
 
     argskwargs = ArgsKwargs(args=(sent_ids, word_features, head_ids), kwargs={})
-    # TODO actually support backprop
     return argskwargs, backprop
 
 
@@ -66,15 +64,13 @@ def predict_span_clusters(
     """
     Predicts span clusters based on the word clusters.
 
-    Args:
-        doc (Doc): the document data
-        words (torch.Tensor): [n_words, emb_size] matrix containing
-            embeddings for each of the words in the text
-        clusters (List[List[int]]): a list of clusters where each cluster
-            is a list of word indices
+    span_predictor: a SpanPredictor instance
+    sent_ids: For each word indicates, which sentence it appears in.
+    words: Features for words.
+    clusters: Clusters inferred by the CorefScorer.
 
     Returns:
-        List[List[Span]]: span clusters
+        List[List[Tuple[int, int]]: span clusters
     """
     if not clusters:
         return []
@@ -141,29 +137,29 @@ class SpanPredictor(torch.nn.Module):
             # this use of dist_emb_size looks wrong but it was 64...?
             torch.nn.Linear(256, dist_emb_size),
         )
+        # TODO make the Convs also parametrizeable
         self.conv = torch.nn.Sequential(
             torch.nn.Conv1d(64, 4, 3, 1, 1), torch.nn.Conv1d(4, 2, 3, 1, 1)
         )
+        # TODO make embeddings size a parameter
         self.emb = torch.nn.Embedding(128, dist_emb_size)  # [-63, 63] + too_far
 
     def forward(
-        self,  # type: ignore  # pylint: disable=arguments-differ  #35566 in pytorch
+        self,
         sent_id,
         words: torch.Tensor,
         heads_ids: torch.Tensor,
     ) -> torch.Tensor:
         """
-        Calculates span start/end scores of words for each span head in
-        heads_ids
+        Calculates span start/end scores of words for each span
+        for each head.
 
-        Args:
-            doc (Doc): the document data
-            words (torch.Tensor): contextual embeddings for each word in the
-                document, [n_words, emb_size]
-            heads_ids (torch.Tensor): word indices of span heads
+        sent_id: Sentence id of each word.
+        words: features for each word in the document.
+        heads_ids: word indices of span heads
 
         Returns:
-            torch.Tensor: span start/end scores, [n_heads, n_words, 2]
+            torch.Tensor: span start/end scores, (n_heads x n_words x 2)
         """
         # If we don't receive heads, return empty
         if heads_ids.nelement() == 0:
@@ -176,13 +172,13 @@ class SpanPredictor(torch.nn.Module):
         emb_ids = relative_positions + 63
         # "too_far"
         emb_ids[(emb_ids < 0) + (emb_ids > 126)] = 127
-        # Obtain "same sentence" boolean mask, [n_heads, n_words]
+        # Obtain "same sentence" boolean mask: (n_heads x n_words)
         heads_ids = heads_ids.long()
         same_sent = sent_id[heads_ids].unsqueeze(1) == sent_id.unsqueeze(0)
         # To save memory, only pass candidates from one sentence for each head
         # pair_matrix contains concatenated span_head_emb + candidate_emb + distance_emb
         # for each candidate among the words in the same sentence as span_head
-        # [n_heads, input_size * 2 + distance_emb_size]
+        # (n_heads x input_size * 2 x distance_emb_size)
         rows, cols = same_sent.nonzero(as_tuple=True)
         pair_matrix = torch.cat(
             (
@@ -194,17 +190,17 @@ class SpanPredictor(torch.nn.Module):
         )
         lengths = same_sent.sum(dim=1)
         padding_mask = torch.arange(0, lengths.max().item()).unsqueeze(0)
-        padding_mask = padding_mask < lengths.unsqueeze(1)  # [n_heads, max_sent_len]
-        # [n_heads, max_sent_len, input_size * 2 + distance_emb_size]
+        # (n_heads x max_sent_len)
+        padding_mask = padding_mask < lengths.unsqueeze(1)
+        # (n_heads x max_sent_len x input_size * 2 + distance_emb_size)
         # This is necessary to allow the convolution layer to look at several
         # word scores
         padded_pairs = torch.zeros(*padding_mask.shape, pair_matrix.shape[-1])
         padded_pairs[padding_mask] = pair_matrix
-
-        res = self.ffnn(padded_pairs)  # [n_heads, n_candidates, last_layer_output]
+        res = self.ffnn(padded_pairs)  # (n_heads x n_candidates x last_layer_output)
         res = self.conv(res.permute(0, 2, 1)).permute(
             0, 2, 1
-        )  # [n_heads, n_candidates, 2]
+        )  # (n_heads x n_candidates, 2)
 
         scores = torch.full((heads_ids.shape[0], words.shape[0], 2), float("-inf"))
         scores[rows, cols] = res[padding_mask]

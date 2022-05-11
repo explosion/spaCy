@@ -350,9 +350,7 @@ class CoreferenceResolver(TrainablePipe):
 
     def score(self, examples, **kwargs):
         """Score a batch of examples using LEA.
-
         For details on how LEA works and why to use it see the paper:
-
         Which Coreference Evaluation Metric Do You Trust? A Proposal for a Link-based Entity Aware Metric
         Moosavi and Strube, 2016
         https://api.semanticscholar.org/CorpusID:17606580
