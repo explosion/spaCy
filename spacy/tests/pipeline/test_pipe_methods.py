@@ -610,20 +610,28 @@ def test_load_disable_enable() -> None:
     Tests spacy.load() with dis-/enabling components.
     """
 
-    # Testing `disable`.
-    to_exclude = ["parser", "tagger"]
-    nlp = spacy.load("en_core_web_sm", disable=to_exclude)
-    assert all([comp_name in nlp.disabled for comp_name in to_exclude])
+    base_nlp = English()
+    for pipe in ("sentencizer", "tagger", "parser"):
+        base_nlp.add_pipe(pipe)
 
-    # Testing `enable`.
-    to_include = ["tagger", "parser"]
-    nlp = spacy.load("en_core_web_sm", enable=to_include)
-    assert all(
-        [
-            (comp_name in nlp.disabled) is (comp_name not in to_include)
-            for comp_name in nlp.component_names
-        ]
-    )
+    with make_tempdir() as tmp_dir:
+        base_nlp.to_disk(tmp_dir)
+
+        # Testing `disable`.
+        to_disable = ["parser", "tagger"]
+
+        nlp = spacy.load(tmp_dir, disable=to_disable)
+        assert all([comp_name in nlp.disabled for comp_name in to_disable])
+
+        # Testing `enable`.
+        to_enable = ["tagger", "parser"]
+        nlp = spacy.load(tmp_dir, enable=to_enable)
+        assert all(
+            [
+                (comp_name in nlp.disabled) is (comp_name not in to_enable)
+                for comp_name in nlp.component_names
+            ]
+        )
 
 
 def test_load_exclude_include() -> None:
@@ -631,12 +639,11 @@ def test_load_exclude_include() -> None:
     Tests spacy.load() with ex-/including components.
     """
 
-    base_nlp = spacy.load("en_core_web_sm")
+    base_nlp = English()
+    for pipe in ("sentencizer", "tagger", "parser"):
+        base_nlp.add_pipe(pipe)
 
-    #######################
-    # Testing `exclude`.
-    #######################
-
+    to_include = ["tagger", "parser"]
     to_exclude = ["parser", "tagger"]
     check_excludes = lambda loaded_nlp, ref_nlp: all(
         [
@@ -645,37 +652,22 @@ def test_load_exclude_include() -> None:
         ]
     )
 
-    assert check_excludes(spacy.load("en_core_web_sm", exclude=to_exclude), base_nlp)
+    with make_tempdir() as tmp_dir:
+        base_nlp.to_disk(tmp_dir)
+        assert check_excludes(spacy.load(tmp_dir, exclude=to_exclude), base_nlp)
+        assert to_include == spacy.load(tmp_dir, include=to_include).component_names
 
-    with make_tempdir() as d:
-        base_nlp.to_disk(d, exclude=to_exclude)
-        assert check_excludes(spacy.load(d, exclude=to_exclude), base_nlp)
+    with make_tempdir() as tmp_dir:
+        base_nlp.to_disk(tmp_dir, exclude=to_exclude)
+        assert check_excludes(spacy.load(tmp_dir, exclude=to_exclude), base_nlp)
         # Loading a pipeline stored with excludes without stating the same excludes yields a FileNotFoundError. Excluded
         # components are not stored, yet attempted to load if not specified as excluded on load.
         with pytest.raises(FileNotFoundError):
-            spacy.load(d)
+            spacy.load(tmp_dir)
 
-    with make_tempdir() as d:
-        base_nlp.to_disk(d)
-        assert check_excludes(spacy.load(d, exclude=to_exclude), base_nlp)
-
-    #######################
-    # Testing `include`.
-    #######################
-
-    to_include = ["tagger", "parser"]
-
-    assert (
-        to_include == spacy.load("en_core_web_sm", include=to_include).component_names
-    )
-
-    with make_tempdir() as d:
-        base_nlp.to_disk(d, include=to_include)
-        assert to_include == spacy.load(d, include=to_include).component_names
+    with make_tempdir() as tmp_dir:
+        base_nlp.to_disk(tmp_dir, include=to_include)
+        assert to_include == spacy.load(tmp_dir, include=to_include).component_names
         # Same as with exclude=...: includes are just rephrased excludes, so they need to be specified on load.
-        with pytest.raises(FileNotFoundError):
-            spacy.load(d)
-
-    with make_tempdir() as d:
-        base_nlp.to_disk(d)
-        assert to_include == spacy.load(d, include=to_include).component_names
+        with pytest.raises(ValueError):
+            spacy.load(tmp_dir)
