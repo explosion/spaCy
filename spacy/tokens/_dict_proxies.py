@@ -50,13 +50,9 @@ class SpanGroups(UserDict):
         # names in internal copies before serializing if necessary. (See #10685)
         if len(self) == 0:
             return self._EMPTY_BYTES
-        renamed_groups = dict(self.items())
-        for key, group in renamed_groups.items():
-            if key != group.name:
-                renamed_groups[key] = group.copy()
-                renamed_groups[key].name = key
-            assert key == renamed_groups[key].name
-        msg = [value.to_bytes() for value in renamed_groups.values()]
+        msg = {}
+        for key, value in self.items():
+            msg.setdefault(value.to_bytes(), []).append(key)
         return srsly.msgpack_dumps(msg)
 
     def from_bytes(self, bytes_data: bytes) -> "SpanGroups":
@@ -69,18 +65,23 @@ class SpanGroups(UserDict):
         )
         self.clear()
         doc = self._ensure_doc()
-        for value_bytes in msg:
-            group = SpanGroup(doc).from_bytes(value_bytes)
-            if group.name in self:
-                # Display a warning if `msg` contains `SpanGroup`s
-                # that have the same .name (attribute).
-                # Because, for `SpanGroups` serialized as lists,
-                # only 1 SpanGroup per .name is loaded. (See #10685)
-                warnings.warn(
-                    Warnings.W119.format(group_name=group.name, group_values=group)
-                )
-                continue
-            self[group.name] = group
+        if isinstance(msg, list):
+            for value_bytes in msg:
+                group = SpanGroup(doc).from_bytes(value_bytes)
+                if group.name in self:
+                    # Display a warning if `msg` contains `SpanGroup`s
+                    # that have the same .name (attribute).
+                    # Because, for `SpanGroups` serialized as lists,
+                    # only 1 SpanGroup per .name is loaded. (See #10685)
+                    warnings.warn(
+                        Warnings.W119.format(group_name=group.name, group_values=self[group.name])
+                    )
+                self[group.name] = group
+        else:
+            for value_bytes, keys in msg.items():
+                group = SpanGroup(doc).from_bytes(value_bytes)
+                for key in keys:
+                    self[key] = group
         return self
 
     def _ensure_doc(self) -> "Doc":

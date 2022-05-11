@@ -201,7 +201,7 @@ class Warnings(metaclass=ErrorsWithCodes):
             "`nlp.meta[\"sources\"]` for any relevant links.")
     W119 = ("Unable to load all spans in Doc.spans: more than one span group "
             "with the name '{group_name}' was found in the saved spans data. "
-            "Only the first span group will be loaded under "
+            "Only the last span group will be loaded under "
             "Doc.spans['{group_name}']. Skipping span group with values: "
             "{group_values}")
 
