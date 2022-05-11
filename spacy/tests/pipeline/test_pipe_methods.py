@@ -633,28 +633,36 @@ def test_load_exclude_include() -> None:
 
     base_nlp = spacy.load("en_core_web_sm")
 
+    #######################
     # Testing `exclude`.
-    to_exclude = ["parser", "tagger"]
+    #######################
 
-    nlp = spacy.load("en_core_web_sm", exclude=to_exclude)
-    assert all([comp_name not in nlp.component_names for comp_name in to_exclude])
+    to_exclude = ["parser", "tagger"]
+    check_excludes = lambda loaded_nlp, ref_nlp: all(
+        [
+            (comp_name in loaded_nlp.component_names) is (comp_name not in to_exclude)
+            for comp_name in ref_nlp.component_names
+        ]
+    )
+
+    assert check_excludes(spacy.load("en_core_web_sm", exclude=to_exclude), base_nlp)
 
     with make_tempdir() as d:
         base_nlp.to_disk(d, exclude=to_exclude)
-        nlp = English().from_disk(d)
-        assert all([comp_name not in nlp.component_names for comp_name in to_exclude])
+        assert check_excludes(spacy.load(d, exclude=to_exclude), base_nlp)
+        # Loading a pipeline stored with excludes without stating the same excludes yields a FileNotFoundError. Excluded
+        # components are not stored, yet attempted to load if not specified as excluded on load.
+        with pytest.raises(FileNotFoundError):
+            spacy.load(d)
 
     with make_tempdir() as d:
         base_nlp.to_disk(d)
-        assert all(
-            [
-                comp_name
-                not in English().from_disk(d, exclude=to_exclude).component_names
-                for comp_name in to_exclude
-            ]
-        )
+        assert check_excludes(spacy.load(d, exclude=to_exclude), base_nlp)
 
+    #######################
     # Testing `include`.
+    #######################
+
     to_include = ["tagger", "parser"]
 
     assert (
@@ -663,14 +671,11 @@ def test_load_exclude_include() -> None:
 
     with make_tempdir() as d:
         base_nlp.to_disk(d, include=to_include)
-        assert to_include == English().from_disk(d).component_names
+        assert to_include == spacy.load(d, include=to_include).component_names
+        # Same as with exclude=...: includes are just rephrased excludes, so they need to be specified on load.
+        with pytest.raises(FileNotFoundError):
+            spacy.load(d)
 
     with make_tempdir() as d:
         base_nlp.to_disk(d)
-        assert all(
-            [
-                comp_name
-                not in English().from_disk(d, include=to_include).component_names
-                for comp_name in to_include
-            ]
-        )
+        assert to_include == spacy.load(d, include=to_include).component_names

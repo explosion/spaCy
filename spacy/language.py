@@ -1854,7 +1854,6 @@ class Language:
             "disable",
         )
         nlp._disabled = set(p for p in disabled_pipes if p not in exclude)
-        # print(enable, enabled_pipes, disable, disabled_pipes, exclude, nlp._disabled)
 
         nlp.batch_size = config["nlp"]["batch_size"]
         nlp.config = filled if auto_fill else config
@@ -1998,14 +1997,9 @@ class Language:
         DOCS: https://spacy.io/api/language#to_disk
         """
 
-        if len(include):
-            exclude = [
-                pipe_name
-                for pipe_name, _ in self._components
-                if pipe_name not in include
-            ]
-            warnings.warn(Warnings.W120.format(arg1="include", arg2="exclude"))
-
+        exclude = self._resolve_component_activation_status(
+            exclude, include, self.component_names, "exclude"
+        )
         path = util.ensure_path(path)
         serializers = {}
         serializers["tokenizer"] = lambda p: self.tokenizer.to_disk(  # type: ignore[union-attr]
