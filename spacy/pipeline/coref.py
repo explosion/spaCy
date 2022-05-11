@@ -33,9 +33,9 @@ default_config = """
 @architectures = "spacy.Coref.v1"
 embedding_size = 20
 hidden_size = 1024
-n_hidden_layers = 1
+depth = 1
 dropout = 0.3
-rough_k = 50
+rough_candidates = 50
 a_scoring_batch_size = 512
 sp_embedding_size = 64
 

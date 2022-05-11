@@ -26,6 +26,7 @@ default_span_predictor_config = """
 @architectures = "spacy.SpanPredictor.v1"
 hidden_size = 1024
 dist_emb_size = 64
+prefix = coref_head_clusters
 
 [model.tok2vec]
 @architectures = "spacy.Tok2Vec.v2"

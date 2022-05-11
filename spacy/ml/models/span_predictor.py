@@ -16,6 +16,7 @@ def build_span_predictor(
     tok2vec: Model[List[Doc], List[Floats2d]],
     hidden_size: int = 1024,
     dist_emb_size: int = 64,
+    prefix: str = "coref_head_clusters"
 ):
     # TODO fix this
     try:
@@ -30,7 +31,7 @@ def build_span_predictor(
             convert_inputs=convert_span_predictor_inputs,
         )
         # TODO use proper parameter for prefix
-        head_info = build_get_head_metadata("coref_head_clusters")
+        head_info = build_get_head_metadata(prefix)
         model = (tok2vec & head_info) >> span_predictor
 
     return model

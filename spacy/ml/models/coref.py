@@ -16,10 +16,10 @@ def build_wl_coref_model(
     tok2vec: Model[List[Doc], List[Floats2d]],
     embedding_size: int = 20,
     hidden_size: int = 1024,
-    n_hidden_layers: int = 1,  # TODO rename to "depth"?
+    depth: int = 1,
     dropout: float = 0.3,
     # pairs to keep per mention after rough scoring
-    rough_k: int = 50,
+    rough_candidates: int = 50,
     # TODO is this not a training loop setting?
     a_scoring_batch_size: int = 512,
     # span predictor embeddings
@@ -38,9 +38,9 @@ def build_wl_coref_model(
                 dim,
                 embedding_size,
                 hidden_size,
-                n_hidden_layers,
+                depth,
                 dropout,
-                rough_k,
+                rough_candidates,
                 a_scoring_batch_size,
             ),
             convert_inputs=convert_coref_scorer_inputs,
