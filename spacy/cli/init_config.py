@@ -1,6 +1,9 @@
+from pprint import pprint
 from typing import Optional, List, Tuple
 from enum import Enum
 from pathlib import Path
+
+import typer.models
 from wasabi import Printer, diff_strings
 from thinc.api import Config
 import srsly
@@ -44,20 +47,37 @@ def init_config_cli(
 
     DOCS: https://spacy.io/api/cli#init-config
     """
-    pipeline = string_to_list(pipeline)
+
+    # Force default values for arguments, if Typer hasn't resolved them yet (might occur on calls from Python).
+    # Mandatory arguments are assigned ... as default value in Typer, hence we ignore those.
+    optional_args = {
+        arg_name: arg_value.default
+        if any(
+            [
+                isinstance(arg_value, typer_type)
+                for typer_type in (typer.models.OptionInfo, typer.models.ArgumentInfo)
+            ]
+        )
+        and arg_value.default != Ellipsis
+        else arg_value
+        for arg_name, arg_value in locals().items()
+    }
+
+    optional_args["pipeline"] = string_to_list(optional_args["pipeline"])
     is_stdout = str(output_file) == "-"
-    if not is_stdout and output_file.exists() and not force_overwrite:
+    if not is_stdout and output_file.exists() and not optional_args["force_overwrite"]:
         msg = Printer()
         msg.fail(
             "The provided output file already exists. To force overwriting the config file, set the --force or -F flag.",
             exits=1,
         )
+
     config = init_config(
-        lang=lang,
-        pipeline=pipeline,
-        optimize=optimize.value,
-        gpu=gpu,
-        pretraining=pretraining,
+        lang=optional_args["lang"],
+        pipeline=optional_args["pipeline"],
+        optimize=optional_args["optimize"],
+        gpu=optional_args["gpu"],
+        pretraining=optional_args["pretraining"],
         silent=is_stdout,
     )
     save_config(config, output_file, is_stdout=is_stdout)
