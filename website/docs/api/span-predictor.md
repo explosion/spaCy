@@ -1,33 +1,32 @@
 ---
-title: CoreferenceResolver
+title: SpanPredictor
 tag: class
-source: spacy/pipeline/coref.py
+source: spacy/pipeline/span_predictor.py
 new: 3.4
-teaser: 'Pipeline component for word-level coreference resolution'
+teaser: 'Pipeline component for resolving tokens into spans'
 api_base_class: /api/pipe
-api_string_name: coref
+api_string_name: span_predictor
 api_trainable: true
 ---
 
-A `CoreferenceResolver` component groups tokens into clusters that refer to the
-same thing. Clusters are represented as SpanGroups that start with a prefix
-(`coref_clusters_` by default).
+A `SpanPredictor` component takes in tokens (represented as `Span`s of length
 
-A `CoreferenceResolver` component can be paired with a
-[`SpanPredictor`](/api/spanpredictor) to expand single tokens to spans.
+1. and resolves them into `Span`s of arbitrary length. The initial use case is
+   as a post-processing step on word-level [coreference resolution](/api/coref).
+   The input and output keys used to store `Span`s are configurable.
 
 ## Assigned Attributes {#assigned-attributes}
 
-Predictions will be saved to `Doc.spans` as a [`SpanGroup`](/api/spangroup). The
-span key will be a prefix plus a serial number referring to the coreference
-cluster, starting from zero.
+Predictions will be saved to `Doc.spans` as [`SpanGroup`s](/api/spangroup).
 
-The span key prefix defaults to `"coreference_clusters"`, but can be passed as a
-parameter.
+Input token spans will be read in using an input prefix, by default
+`"coref_head_clusters"`, and output spans will be saved using an output prefix
+(default `"coref_clusters"`) plus a serial number starting from zero. The
+prefixes are configurable.
 
-| Location                                   | Value                                                                     |
-| ------------------------------------------ | ------------------------------------------------------------------------- |
-| `Doc.spans[prefix + "_" + cluster_number]` | One coreference cluster, represented as single-token spans. ~~SpanGroup~~ |
+| Location                                          | Value                                       |
+| ------------------------------------------------- | ------------------------------------------- |
+| `Doc.spans[output_prefix + "_" + cluster_number]` | One group of predicted spans. ~~SpanGroup~~ |
 
 ## Config and implementation {#config}
 
@@ -41,68 +40,69 @@ architectures and their arguments and hyperparameters.
 > #### Example
 >
 > ```python
-> from spacy.pipeline.coref import DEFAULT_COREF_MODEL
+> from spacy.pipeline.span_predictor import DEFAULT_SPAN_PREDICTOR_MODEL
 > config={
->     "model": DEFAULT_COREF_MODEL,
+>     "model": DEFAULT_SPAN_PREDICTOR_MODEL,
 >     "span_cluster_prefix": DEFAULT_CLUSTER_PREFIX,
 > },
-> nlp.add_pipe("coref", config=config)
+> nlp.add_pipe("span_predictor", config=config)
 > ```
 
-| Setting               | Description                                                                                                                              |
-| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `model`               | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. Defaults to [Coref](/api/architectures#Coref). ~~Model~~ |
-| `span_cluster_prefix` | The prefix for the keys for clusters saved to `doc.spans`. Defaults to `coref_clusters`. ~~str~~                                         |
+| Setting         | Description                                                                                                                                              |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `model`         | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. Defaults to [SpanPredictor](/api/architectures#SpanPredictor). ~~Model~~ |
+| `input_prefix`  | The prefix to use for input `SpanGroup`s. Defaults to `coref_head_clusters`. ~~str~~                                                                     |
+| `output_prefix` | The prefix for predicted `SpanGroup`s. Defaults to `coref_clusters`. ~~str~~                                                                             |
 
 ```python
-%%GITHUB_SPACY/spacy/pipeline/coref.py
+%%GITHUB_SPACY/spacy/pipeline/span_predictor.py
 ```
 
-## CoreferenceResolver.\_\_init\_\_ {#init tag="method"}
+## SpanPredictor.\_\_init\_\_ {#init tag="method"}
 
 > #### Example
 >
 > ```python
 > # Construction via add_pipe with default model
-> coref = nlp.add_pipe("coref")
+> span_predictor = nlp.add_pipe("span_predictor")
 >
 > # Construction via add_pipe with custom model
-> config = {"model": {"@architectures": "my_coref.v1"}}
-> coref = nlp.add_pipe("coref", config=config)
+> config = {"model": {"@architectures": "my_span_predictor.v1"}}
+> span_predictor = nlp.add_pipe("span_predictor", config=config)
 >
 > # Construction from class
-> from spacy.pipeline import CoreferenceResolver
-> coref = CoreferenceResolver(nlp.vocab, model)
+> from spacy.pipeline import SpanPredictor
+> span_predictor = SpanPredictor(nlp.vocab, model)
 > ```
 
 Create a new pipeline instance. In your application, you would normally use a
 shortcut for this and instantiate the component using its string name and
 [`nlp.add_pipe`](/api/language#add_pipe).
 
-| Name                  | Description                                                                                         |
-| --------------------- | --------------------------------------------------------------------------------------------------- |
-| `vocab`               | The shared vocabulary. ~~Vocab~~                                                                    |
-| `model`               | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. ~~Model~~           |
-| `name`                | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~ |
-| _keyword-only_        |                                                                                                     |
-| `span_cluster_prefix` | The prefix for the key for saving clusters of spans. ~~bool~~                                       |
+| Name            | Description                                                                                         |
+| --------------- | --------------------------------------------------------------------------------------------------- |
+| `vocab`         | The shared vocabulary. ~~Vocab~~                                                                    |
+| `model`         | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. ~~Model~~           |
+| `name`          | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~ |
+| _keyword-only_  |                                                                                                     |
+| `input_prefix`  | The prefix to use for input `SpanGroup`s. Defaults to `coref_head_clusters`. ~~str~~                |
+| `output_prefix` | The prefix for predicted `SpanGroup`s. Defaults to `coref_clusters`. ~~str~~                        |
 
-## CoreferenceResolver.\_\_call\_\_ {#call tag="method"}
+## SpanPredictor.\_\_call\_\_ {#call tag="method"}
 
 Apply the pipe to one document. The document is modified in place and returned.
 This usually happens under the hood when the `nlp` object is called on a text
 and all pipeline components are applied to the `Doc` in order. Both
-[`__call__`](/api/coref#call) and [`pipe`](/api/coref#pipe) delegate to the
-[`predict`](/api/coref#predict) and
-[`set_annotations`](/api/coref#set_annotations) methods.
+[`__call__`](#call) and [`pipe`](#pipe) delegate to the [`predict`](#predict)
+and [`set_annotations`](#set_annotations) methods.
 
 > #### Example
 >
 > ```python
 > doc = nlp("This is a sentence.")
-> coref = nlp.add_pipe("coref")
+> span_predictor = nlp.add_pipe("span_predictor")
 > # This usually happens under the hood
-> processed = coref(doc)
+> processed = span_predictor(doc)
 > ```
 
 | Name        | Description                      |
@@ -110,19 +110,20 @@ and all pipeline components are applied to the `Doc` in order. Both
 | `doc`       | The document to process. ~~Doc~~ |
 | **RETURNS** | The processed document. ~~Doc~~  |
 
-## CoreferenceResolver.pipe {#pipe tag="method"}
+## SpanPredictor.pipe {#pipe tag="method"}
 
 Apply the pipe to a stream of documents. This usually happens under the hood
 when the `nlp` object is called on a text and all pipeline components are
-applied to the `Doc` in order. Both [`__call__`](/api/coref#call) and
-[`pipe`](/api/coref#pipe) delegate to the [`predict`](/api/coref#predict) and
-[`set_annotations`](/api/coref#set_annotations) methods.
+applied to the `Doc` in order. Both [`__call__`](/api/span-predictor#call) and
+[`pipe`](/api/span-predictor#pipe) delegate to the
+[`predict`](/api/span-predictor#predict) and
+[`set_annotations`](/api/span-predictor#set_annotations) methods.
 
 > #### Example
 >
 > ```python
-> coref = nlp.add_pipe("coref")
-> for doc in coref.pipe(docs, batch_size=50):
+> span_predictor = nlp.add_pipe("span_predictor")
+> for doc in span_predictor.pipe(docs, batch_size=50):
 >     pass
 > ```
 
@@ -133,7 +134,7 @@ applied to the `Doc` in order. Both [`__call__`](/api/coref#call) and
 | `batch_size`   | The number of documents to buffer. Defaults to `128`. ~~int~~ |
 | **YIELDS**     | The processed documents in order. ~~Doc~~                     |
 
-## CoreferenceResolver.initialize {#initialize tag="method"}
+## SpanPredictor.initialize {#initialize tag="method"}
 
 Initialize the component for training. `get_examples` should be a function that
 returns an iterable of [`Example`](/api/example) objects. The data examples are
@@ -147,8 +148,8 @@ by [`Language.initialize`](/api/language#initialize).
 > #### Example
 >
 > ```python
-> coref = nlp.add_pipe("coref")
-> coref.initialize(lambda: [], nlp=nlp)
+> span_predictor = nlp.add_pipe("span_predictor")
+> span_predictor.initialize(lambda: [], nlp=nlp)
 > ```
 
 | Name           | Description                                                                                                                           |
@@ -157,54 +158,55 @@ by [`Language.initialize`](/api/language#initialize).
 | _keyword-only_ |                                                                                                                                       |
 | `nlp`          | The current `nlp` object. Defaults to `None`. ~~Optional[Language]~~                                                                  |
 
-## CoreferenceResolver.predict {#predict tag="method"}
+## SpanPredictor.predict {#predict tag="method"}
 
 Apply the component's model to a batch of [`Doc`](/api/doc) objects, without
-modifying them. Clusters are returned as a list of `MentionClusters`, one for
+modifying them. Predictions are returned as a list of `MentionClusters`, one for
 each input `Doc`. A `MentionClusters` instance is just a list of lists of pairs
-of `int`s, where each item corresponds to a cluster, and the `int`s correspond
-to token indices.
+of `int`s, where each item corresponds to an input `SpanGroup`, and the `int`s
+correspond to token indices.
 
 > #### Example
 >
 > ```python
-> coref = nlp.add_pipe("coref")
-> clusters = coref.predict([doc1, doc2])
+> span_predictor = nlp.add_pipe("span_predictor")
+> spans = span_predictor.predict([doc1, doc2])
 > ```
 
-| Name        | Description                                                                  |
-| ----------- | ---------------------------------------------------------------------------- |
-| `docs`      | The documents to predict. ~~Iterable[Doc]~~                                  |
-| **RETURNS** | The predicted coreference clusters for the `docs`. ~~List[MentionClusters]~~ |
+| Name        | Description                                                   |
+| ----------- | ------------------------------------------------------------- |
+| `docs`      | The documents to predict. ~~Iterable[Doc]~~                   |
+| **RETURNS** | The predicted spans for the `Doc`s. ~~List[MentionClusters]~~ |
 
-## CoreferenceResolver.set_annotations {#set_annotations tag="method"}
+## SpanPredictor.set_annotations {#set_annotations tag="method"}
 
-Modify a batch of documents, saving coreference clusters in `Doc.spans`.
+Modify a batch of documents, saving predictions using the output prefix in
+`Doc.spans`.
 
 > #### Example
 >
 > ```python
-> coref = nlp.add_pipe("coref")
-> clusters = coref.predict([doc1, doc2])
-> coref.set_annotations([doc1, doc2], clusters)
+> span_predictor = nlp.add_pipe("span_predictor")
+> spans = span_predictor.predict([doc1, doc2])
+> span_predictor.set_annotations([doc1, doc2], spans)
 > ```
 
-| Name       | Description                                                                  |
-| ---------- | ---------------------------------------------------------------------------- |
-| `docs`     | The documents to modify. ~~Iterable[Doc]~~                                   |
-| `clusters` | The predicted coreference clusters for the `docs`. ~~List[MentionClusters]~~ |
+| Name    | Description                                                   |
+| ------- | ------------------------------------------------------------- |
+| `docs`  | The documents to modify. ~~Iterable[Doc]~~                    |
+| `spans` | The predicted spans for the `docs`. ~~List[MentionClusters]~~ |
 
-## CoreferenceResolver.update {#update tag="method"}
+## SpanPredictor.update {#update tag="method"}
 
 Learn from a batch of [`Example`](/api/example) objects. Delegates to
-[`predict`](/api/coref#predict).
+[`predict`](/api/span-predictor#predict).
 
 > #### Example
 >
 > ```python
-> coref = nlp.add_pipe("coref")
+> span_predictor = nlp.add_pipe("span_predictor")
 > optimizer = nlp.initialize()
-> losses = coref.update(examples, sgd=optimizer)
+> losses = span_predictor.update(examples, sgd=optimizer)
 > ```
 
 | Name           | Description                                                                                                              |
@@ -216,22 +218,22 @@ Learn from a batch of [`Example`](/api/example) objects. Delegates to
 | `losses`       | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~ |
 | **RETURNS**    | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                    |
 
-## CoreferenceResolver.create_optimizer {#create_optimizer tag="method"}
+## SpanPredictor.create_optimizer {#create_optimizer tag="method"}
 
 Create an optimizer for the pipeline component.
 
 > #### Example
 >
 > ```python
-> coref = nlp.add_pipe("coref")
-> optimizer = coref.create_optimizer()
+> span_predictor = nlp.add_pipe("span_predictor")
+> optimizer = span_predictor.create_optimizer()
 > ```
 
 | Name        | Description                  |
 | ----------- | ---------------------------- |
 | **RETURNS** | The optimizer. ~~Optimizer~~ |
 
-## CoreferenceResolver.use_params {#use_params tag="method, contextmanager"}
+## SpanPredictor.use_params {#use_params tag="method, contextmanager"}
 
 Modify the pipe's model, to use the given parameter values. At the end of the
 context, the original parameters are restored.
@@ -239,24 +241,24 @@ context, the original parameters are restored.
 > #### Example
 >
 > ```python
-> coref = nlp.add_pipe("coref")
-> with coref.use_params(optimizer.averages):
->     coref.to_disk("/best_model")
+> span_predictor = nlp.add_pipe("span_predictor")
+> with span_predictor.use_params(optimizer.averages):
+>     span_predictor.to_disk("/best_model")
 > ```
 
 | Name     | Description                                        |
 | -------- | -------------------------------------------------- |
 | `params` | The parameter values to use in the model. ~~dict~~ |
 
-## CoreferenceResolver.to_disk {#to_disk tag="method"}
+## SpanPredictor.to_disk {#to_disk tag="method"}
 
 Serialize the pipe to disk.
 
 > #### Example
 >
 > ```python
-> coref = nlp.add_pipe("coref")
-> coref.to_disk("/path/to/coref")
+> span_predictor = nlp.add_pipe("span_predictor")
+> span_predictor.to_disk("/path/to/span_predictor")
 > ```
 
 | Name           | Description                                                                                                                                |
@@ -265,15 +267,15 @@ Serialize the pipe to disk.
 | _keyword-only_ |                                                                                                                                            |
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~                                                |
 
-## CoreferenceResolver.from_disk {#from_disk tag="method"}
+## SpanPredictor.from_disk {#from_disk tag="method"}
 
 Load the pipe from disk. Modifies the object in place and returns it.
 
 > #### Example
 >
 > ```python
-> coref = nlp.add_pipe("coref")
-> coref.from_disk("/path/to/coref")
+> span_predictor = nlp.add_pipe("span_predictor")
+> span_predictor.from_disk("/path/to/span_predictor")
 > ```
 
 | Name           | Description                                                                                     |
@@ -281,35 +283,35 @@ Load the pipe from disk. Modifies the object in place and returns it.
 | `path`         | A path to a directory. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
 | _keyword-only_ |                                                                                                 |
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~     |
-| **RETURNS**    | The modified `CoreferenceResolver` object. ~~CoreferenceResolver~~                              |
+| **RETURNS**    | The modified `SpanPredictor` object. ~~SpanPredictor~~                                          |
 
-## CoreferenceResolver.to_bytes {#to_bytes tag="method"}
+## SpanPredictor.to_bytes {#to_bytes tag="method"}
 
 > #### Example
 >
 > ```python
-> coref = nlp.add_pipe("coref")
-> coref_bytes = coref.to_bytes()
+> span_predictor = nlp.add_pipe("span_predictor")
+> span_predictor_bytes = span_predictor.to_bytes()
 > ```
 
-Serialize the pipe to a bytestring, including the `KnowledgeBase`.
+Serialize the pipe to a bytestring.
 
 | Name           | Description                                                                                 |
 | -------------- | ------------------------------------------------------------------------------------------- |
 | _keyword-only_ |                                                                                             |
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
-| **RETURNS**    | The serialized form of the `CoreferenceResolver` object. ~~bytes~~                          |
+| **RETURNS**    | The serialized form of the `SpanPredictor` object. ~~bytes~~                                |
 
-## CoreferenceResolver.from_bytes {#from_bytes tag="method"}
+## SpanPredictor.from_bytes {#from_bytes tag="method"}
 
 Load the pipe from a bytestring. Modifies the object in place and returns it.
 
 > #### Example
 >
 > ```python
-> coref_bytes = coref.to_bytes()
-> coref = nlp.add_pipe("coref")
-> coref.from_bytes(coref_bytes)
+> span_predictor_bytes = span_predictor.to_bytes()
+> span_predictor = nlp.add_pipe("span_predictor")
+> span_predictor.from_bytes(span_predictor_bytes)
 > ```
 
 | Name           | Description                                                                                 |
@@ -317,7 +319,7 @@ Load the pipe from a bytestring. Modifies the object in place and returns it.
 | `bytes_data`   | The data to load from. ~~bytes~~                                                            |
 | _keyword-only_ |                                                                                             |
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
-| **RETURNS**    | The `CoreferenceResolver` object. ~~CoreferenceResolver~~                                   |
+| **RETURNS**    | The `SpanPredictor` object. ~~SpanPredictor~~                                               |
 
 ## Serialization fields {#serialization-fields}
 
@@ -328,7 +330,7 @@ serialization by passing in the string names via the `exclude` argument.
 > #### Example
 >
 > ```python
-> data = coref.to_disk("/path", exclude=["vocab"])
+> data = span_predictor.to_disk("/path", exclude=["vocab"])
 > ```
 
 | Name    | Description                                                    |
