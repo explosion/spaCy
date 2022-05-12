@@ -216,7 +216,7 @@ cdef class Example:
         aligned_deps = np.full((self.x.length), None)
         aligned_deps[c2g_single_toks] = deps[gold_i]
 
-        return aligned_heads, aligned_deps
+        return aligned_heads.tolist(), aligned_deps.tolist()
 
     def get_aligned_sent_starts(self):
         """Get list of SENT_START attributes aligned to the predicted tokenization.
