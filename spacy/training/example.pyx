@@ -1,5 +1,5 @@
 from collections.abc import Iterable as IterableInstance
-import numpy as np
+import numpy
 from murmurhash.mrmr cimport hash64
 
 from ..tokens.doc cimport Doc
@@ -189,31 +189,31 @@ cdef class Example:
             deps = [d if has_deps[i] else deps[i] for i, d in enumerate(proj_deps)]
 
         # Select all candidate tokens that are aligned to a single gold token.
-        c2g_single_toks = np.where(cand_to_gold.lengths == 1)[0]
+        c2g_single_toks = numpy.where(cand_to_gold.lengths == 1)[0]
 
         # Fetch all aligned gold token incides.
         if c2g_single_toks.shape == cand_to_gold.lengths.shape:
             # This the most likely case.
             gold_i = cand_to_gold[0:cand_to_gold.lengths.shape[0]].squeeze()
         else:
-            gold_i = np.vectorize(lambda x: cand_to_gold[int(x)][0])(c2g_single_toks).squeeze()
+            gold_i = numpy.vectorize(lambda x: cand_to_gold[int(x)][0])(c2g_single_toks).squeeze()
 
         # Fetch indices of all gold heads for the aligned gold tokens.
-        heads = np.asarray(heads, dtype='i')
+        heads = numpy.asarray(heads, dtype='i')
         gold_head_i = heads[gold_i]
 
         # Select all gold tokens that are heads of the previously selected 
         # gold tokens (and are aligned to a single candidate token).
         g2c_len_heads = gold_to_cand.lengths[gold_head_i]
-        g2c_len_heads = np.where(g2c_len_heads == 1)[0]
-        g2c_i = np.vectorize(lambda x: gold_to_cand[int(x)][0])(gold_head_i[g2c_len_heads]).squeeze()
+        g2c_len_heads = numpy.where(g2c_len_heads == 1)[0]
+        g2c_i = numpy.vectorize(lambda x: gold_to_cand[int(x)][0])(gold_head_i[g2c_len_heads]).squeeze()
 
         # Update head/dep alignments with the above.
-        aligned_heads = np.full((self.x.length), None)
+        aligned_heads = numpy.full((self.x.length), None)
         aligned_heads[c2g_single_toks[g2c_len_heads]] = g2c_i
 
-        deps = np.asarray(deps)
-        aligned_deps = np.full((self.x.length), None)
+        deps = numpy.asarray(deps)
+        aligned_deps = numpy.full((self.x.length), None)
         aligned_deps[c2g_single_toks] = deps[gold_i]
 
         return aligned_heads.tolist(), aligned_deps.tolist()
@@ -394,7 +394,7 @@ def _annot2array(vocab, tok_annot, doc_annot):
                 types = set([type(v) for v in value])
                 raise TypeError(Errors.E969.format(field=key, types=types)) from None
             values.append([vocab.strings.add(v) for v in value])
-    array = np.asarray(values, dtype="uint64")
+    array = numpy.asarray(values, dtype="uint64")
     return attrs, array.T
 
 
