@@ -46,8 +46,9 @@ class SpanGroups(UserDict):
 
     def to_bytes(self) -> bytes:
         # We don't need to serialize this as a dict, because each group has
-        # a name. However the group names may not match the keys, so fix the
-        # names in internal copies before serializing if necessary. (See #10685)
+        # a name. However the group names may not match the keys, so track
+        # the SpanGroups keys directly rather than relying on the SpanGroup
+        # names (See #10685)
         if len(self) == 0:
             return self._EMPTY_BYTES
         msg = {}
