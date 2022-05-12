@@ -5,6 +5,7 @@ new: 2
 menu:
   - ['Dependencies', 'dep']
   - ['Named Entities', 'ent']
+  - ['Spans', 'span']
   - ['Jupyter Notebooks', 'jupyter']
   - ['Rendering HTML', 'html']
   - ['Web app usage', 'webapp']
@@ -192,7 +193,7 @@ displacy.serve(doc, style="span")
 
 import DisplacySpanHtml from 'images/displacy-span.html'
 
-<Iframe title="displaCy visualizer for entities" html={DisplacySpanHtml} height={180} />
+<Iframe title="displaCy visualizer for overlapping spans" html={DisplacySpanHtml} height={180} />
 
 
 The span visualizer lets you customize the following `options`:
@@ -342,9 +343,7 @@ want to visualize output from other libraries, like [NLTK](http://www.nltk.org)
 or
 [SyntaxNet](https://github.com/tensorflow/models/tree/master/research/syntaxnet).
 If you set `manual=True` on either `render()` or `serve()`, you can pass in data
-in displaCy's format (instead of `Doc` objects). When setting `ents` manually,
-make sure to supply them in the right order, i.e. starting with the lowest start
-position.
+in displaCy's format as a dictionary (instead of `Doc` objects).
 
 > #### Example
 >

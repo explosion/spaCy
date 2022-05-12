@@ -263,7 +263,7 @@ Render a dependency parse tree or named entity visualization.
 
 | Name        | Description                                                                                                                                                                            |
 | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `docs`      | Document(s) or span(s) to visualize. ~~Union[Iterable[Union[Doc, Span]], Doc, Span]~~                                                                                                  |
+| `docs`      | Document(s) or span(s) to visualize. ~~Union[Iterable[Union[Doc, Span, dict]], Doc, Span, dict]~~                                                                                      |
 | `style`     | Visualization style, `"dep"` or `"ent"`. Defaults to `"dep"`. ~~str~~                                                                                                                  |
 | `page`      | Render markup as full HTML page. Defaults to `True`. ~~bool~~                                                                                                                          |
 | `minify`    | Minify HTML markup. Defaults to `False`. ~~bool~~                                                                                                                                      |

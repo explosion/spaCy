@@ -44,6 +44,15 @@ class SpanGroups(UserDict):
             doc = self._ensure_doc()
         return SpanGroups(doc).from_bytes(self.to_bytes())
 
+    def setdefault(self, key, default=None):
+        if not isinstance(default, SpanGroup):
+            if default is None:
+                spans = []
+            else:
+                spans = default
+            default = self._make_span_group(key, spans)
+        return super().setdefault(key, default=default)
+
     def to_bytes(self) -> bytes:
         # We don't need to serialize this as a dict, because each group has
         # a name. However the group names may not match the keys, so track
@@ -75,7 +84,7 @@ class SpanGroups(UserDict):
                     # Because, for `SpanGroups` serialized as lists,
                     # only 1 SpanGroup per .name is loaded. (See #10685)
                     warnings.warn(
-                        Warnings.W119.format(group_name=group.name, group_values=self[group.name])
+                        Warnings.W120.format(group_name=group.name, group_values=self[group.name])
                     )
                 self[group.name] = group
         else:

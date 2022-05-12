@@ -338,3 +338,18 @@ def test_displacy_options_case():
     assert "green" in result[1] and "bar" in result[1]
     assert "red" in result[2] and "FOO" in result[2]
     assert "green" in result[3] and "BAR" in result[3]
+
+
+@pytest.mark.issue(10672)
+def test_displacy_manual_sorted_entities():
+    doc = {
+        "text": "But Google is starting from behind.",
+        "ents": [
+            {"start": 14, "end": 22, "label": "SECOND"},
+            {"start": 4, "end": 10, "label": "FIRST"},
+        ],
+        "title": None,
+    }
+
+    html = displacy.render(doc, style="ent", manual=True)
+    assert html.find("FIRST") < html.find("SECOND")

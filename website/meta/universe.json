@@ -2089,6 +2089,20 @@
         },
         {
             "type": "education",
+            "id": "video-intro-to-nlp-episode-6",
+            "title": "Intro to NLP with spaCy (6)",
+            "slogan": "Episode 6: Moving to spaCy v3",
+            "description": "In this new video series, data science instructor Vincent Warmerdam gets started with spaCy, an open-source library for Natural Language Processing in Python. His mission: building a system to automatically detect programming languages in large volumes of text. Follow his process from the first idea to a prototype all the way to data collection and training a statistical named entity recogntion model from scratch.",
+            "author": "Vincent Warmerdam",
+            "author_links": {
+                "twitter": "fishnets88",
+                "github": "koaning"
+            },
+            "youtube": "k77RrmMaKEI",
+            "category": ["videos"]
+        },
+        {
+            "type": "education",
             "id": "video-spacy-irl-entity-linking",
             "title": "Entity Linking functionality in spaCy",
             "slogan": "spaCy IRL 2019",
@@ -2803,9 +2817,9 @@
             "id": "coreferee",
             "title": "Coreferee",
             "slogan": "Coreference resolution for multiple languages",
-            "github": "msg-systems/coreferee",
-            "url": "https://github.com/msg-systems/coreferee",
-            "description": "Coreferee is a pipeline plugin that performs coreference resolution for English, German and Polish. It is designed so that it is easy to add support for new languages and optimised for limited training data. It uses a mixture of neural networks and programmed rules. Please note you will need to [install models](https://github.com/msg-systems/coreferee#getting-started) before running the code example.",
+            "github": "explosion/coreferee",
+            "url": "https://github.com/explosion/coreferee",
+            "description": "Coreferee is a pipeline plugin that performs coreference resolution for English, French, German and Polish. It is designed so that it is easy to add support for new languages and optimised for limited training data. It uses a mixture of neural networks and programmed rules. Please note you will need to [install models](https://github.com/explosion/coreferee#getting-started) before running the code example.",
             "pip": "coreferee",
             "category": ["pipeline", "models", "standalone"],
             "tags": ["coreference-resolution", "anaphora"],

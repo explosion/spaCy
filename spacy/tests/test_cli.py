@@ -217,7 +217,6 @@ def test_cli_converters_conllu_to_docs_subtokens():
     sent = converted[0]["paragraphs"][0]["sentences"][0]
     assert len(sent["tokens"]) == 4
     tokens = sent["tokens"]
-    print(tokens)
     assert [t["orth"] for t in tokens] == ["Dommer", "FE", "avstår", "."]
     assert [t["tag"] for t in tokens] == [
         "NOUN__Definite=Ind|Gender=Masc|Number=Sing",
@@ -342,6 +341,7 @@ def test_project_config_validation_full():
         "assets": [
             {
                 "dest": "x",
+                "extra": True,
                 "url": "https://example.com",
                 "checksum": "63373dd656daa1fd3043ce166a59474c",
             },
@@ -352,6 +352,12 @@ def test_project_config_validation_full():
                     "branch": "develop",
                     "path": "y",
                 },
+            },
+            {
+                "dest": "z",
+                "extra": False,
+                "url": "https://example.com",
+                "checksum": "63373dd656daa1fd3043ce166a59474c",
             },
         ],
         "commands": [
@@ -585,7 +591,6 @@ def test_download_compatibility():
         assert get_minor_version(about.__version__) == get_minor_version(version)
 
 
-@pytest.mark.skip(reason="Temporarily skip for dev version")
 def test_validate_compatibility_table():
     spec = SpecifierSet("==" + about.__version__)
     spec.prereleases = False
