@@ -1,4 +1,4 @@
-from typing import Iterable, Tuple, Union, Optional, TYPE_CHECKING
+from typing import Dict, Iterable, List, Tuple, Union, Optional, TYPE_CHECKING
 import warnings
 import weakref
 from collections import UserDict
@@ -51,7 +51,7 @@ class SpanGroups(UserDict):
         # names (See #10685)
         if len(self) == 0:
             return self._EMPTY_BYTES
-        msg = {}
+        msg: Dict[bytes, List[int]] = {}
         for key, value in self.items():
             msg.setdefault(value.to_bytes(), []).append(key)
         return srsly.msgpack_dumps(msg)
