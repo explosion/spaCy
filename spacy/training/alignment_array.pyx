@@ -6,24 +6,26 @@ import numpy
 cdef class AlignmentArray:
     """AlignmentArray is similar to Thinc's Ragged with two simplfications:
     indexing returns numpy arrays and this type can only be used for CPU arrays.
-    However, these changes make AlginmentArray more efficient for indexing in a
+    However, these changes make AlignmentArray more efficient for indexing in a
     tight loop."""
 
     __slots__ = []
 
     def __init__(self, alignment: List[List[int]]):
-        self._lengths = None
-        self._starts_ends = numpy.zeros(len(alignment) + 1, dtype="i")
-
         cdef int data_len = 0
         cdef int outer_len
         cdef int idx
+
+        starts_ends = [0] * (len(alignment) + 1)
         for idx, outer in enumerate(alignment):
             outer_len = len(outer)
-            self._starts_ends[idx + 1] = self._starts_ends[idx] + outer_len
+            starts_ends[idx + 1] = starts_ends[idx] + outer_len
             data_len += outer_len
 
+        self._lengths = None
+        self._starts_ends = numpy.asarray(starts_ends, dtype='i')
         self._data = numpy.empty(data_len, dtype="i")
+
         idx = 0
         for outer in alignment:
             for inner in outer:
