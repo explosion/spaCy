@@ -117,7 +117,7 @@ def build_cloze_multi_task_model(
     vocab: "Vocab", tok2vec: Model, maxout_pieces: int, hidden_size: int
 ) -> Model:
     nO = vocab.vectors.shape[1]
-    output_layer: Model[List["Floats2d"], Floats2d] = chain(
+    output_layer = chain(
         cast(Model[List["Floats2d"], Floats2d], list2array()),
         Maxout(
             nO=hidden_size,
