@@ -17,6 +17,7 @@ def build_span_predictor(
     hidden_size: int = 1024,
     dist_emb_size: int = 64,
 ):
+    # TODO add model return types
     # TODO fix this
     try:
         dim = tok2vec.get_dim("nO")

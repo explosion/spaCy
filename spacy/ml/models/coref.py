@@ -22,9 +22,8 @@ def build_wl_coref_model(
     rough_k: int = 50,
     # TODO is this not a training loop setting?
     a_scoring_batch_size: int = 512,
-    # span predictor embeddings
-    sp_embedding_size: int = 64,
 ):
+    # TODO add model return types
     # TODO fix this
     try:
         dim = tok2vec.get_dim("nO")
