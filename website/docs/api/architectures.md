@@ -922,3 +922,66 @@ A function that takes as input a [`KnowledgeBase`](/api/kb) and a
 plausible [`Candidate`](/api/kb/#candidate) objects. The default
 `CandidateGenerator` simply uses the text of a mention to find its potential
 aliases in the `KnowledgeBase`. Note that this function is case-dependent.
+
+## Coreference Architectures
+
+A [`CoreferenceResolver`](/api/coref) component identifies tokens that refer to
+the same entity. A [`SpanPredictor`](/api/span-predictor) component infers spans
+from single tokens. Together these components can be used to reproduce
+traditional coreference models. You can also omit the `SpanPredictor` for faster
+performance if working with only token-level clusters is acceptable.
+
+### spacy.Coref.v1 {#Coref}
+
+> #### Example Config
+>
+> ```ini
+>
+> [model]
+> @architectures = "spacy.Coref.v1"
+> embedding_size = 20
+> dropout = 0.3
+> hidden_size = 1024
+> n_hidden_layers = 2
+> rough_k = 50
+> a_scoring_batch_size = 512
+>
+> [model.tok2vec]
+> @architectures = "spacy-transformers.TransformerListener.v1"
+> grad_factor = 1.0
+> upstream = "transformer"
+> pooling = {"@layers":"reduce_mean.v1"}
+> ```
+
+The `Coref` model architecture is a Thinc `Model`.
+
+| Name                   | Description                                                                                                                                                                              |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tok2vec`              | The [`tok2vec`](#tok2vec) layer of the model. ~~Model~~                                                                                                                                  |
+| `embedding_size`       | ~~int~~                                                                                                                                                                                  |
+| `dropout`              | The dropout to use internally. Unlike some Thinc models, this has separate dropout for the internal PyTorch layers. ~~float~~                                                            |
+| `hidden_size`          | Size of the main internal layers. ~~int~~                                                                                                                                                |
+| `n_hidden_layers`      | Depth of the internal network. ~~int~~                                                                                                                                                   |
+| `rough_k`              | How many candidate antecedents to keep after rough scoring. This has a significant effect on memory usage. Typical values would be 50 to 200, or higher for very long documents. ~~int~~ |
+| `a_scoring_batch_size` | Internal batch size. ~~int~~                                                                                                                                                             |
+| **CREATES**            | The model using the architecture. ~~Model[List[Doc], Floats2d]~~                                                                                                                         |
+
+### spacy.SpanPredictor.v1 {#SpanPredictor}
+
+> #### Example Config
+>
+> ```ini
+>
+> [model]
+> @architectures = "spacy.SpanPredictor.v1"
+> hidden_size = 1024
+> dist_emb_size = 64
+>
+> [model.tok2vec]
+> @architectures = "spacy-transformers.TransformerListener.v1"
+> grad_factor = 1.0
+> upstream = "transformer"
+> pooling = {"@layers":"reduce_mean.v1"}
+> ```
+
+The `SpanPredictor` model architecture is a Thinc `Model`.
