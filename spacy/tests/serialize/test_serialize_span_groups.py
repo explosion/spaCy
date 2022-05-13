@@ -60,7 +60,7 @@ def test_issue10685(en_tokenizer):
         ),
     ],
 )
-def test_deserialize_spangroups_compat(
+def test_deserialize_span_groups_compat(
     en_tokenizer, spans_bytes, expected_spangroups, expected_warning
 ):
     """Test backwards-compatibility of `SpanGroups` deserialization.
@@ -70,8 +70,8 @@ def test_deserialize_spangroups_compat(
     expected_spangroups (dict):
         Dict mapping every expected (after deserialization) `SpanGroups` key
         to a SpanGroup's "args", where a SpanGroup's args are given as a dict:
-          {"name": "${SpanGroup.name}",
-           "spans": [(span0_start_token_idx, span0_end_token_idx), ...]}
+          {"name": span_group.name,
+           "spans": [(span0.start, span0.end), ...]}
     expected_warning (bool): Whether a warning is to be expected from .from_bytes()
         --i.e. if more than 1 SpanGroup has the same .name within the `SpanGroups`.
     """
@@ -90,7 +90,7 @@ def test_deserialize_spangroups_compat(
         assert set(doc.spans[name]) == spans
 
 
-def test_span_groups_serialize_same_id(en_tokenizer):
+def test_span_groups_serialization(en_tokenizer):
     doc = en_tokenizer("0 1 2 3 4 5 6")
     span_groups = SpanGroups(doc)
     spans = [doc[0:2], doc[1:3]]
@@ -105,4 +105,3 @@ def test_span_groups_serialize_same_id(en_tokenizer):
             span == reloaded_span
             for span, reloaded_span in zip(span_groups[key], reloaded_span_groups[key])
         )
-    assert reloaded_span_groups["key1"] is reloaded_span_groups["key2"]
