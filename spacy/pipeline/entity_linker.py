@@ -237,7 +237,8 @@ class EntityLinker(TrainablePipe):
         for example in islice(get_examples(), 10):
             doc = example.x
             if self.use_gold_ents:
-                doc.ents = example.y.ents
+                ents, _ = example.get_aligned_ents_and_ner()
+                doc.ents = ents
             doc_sample.append(doc)
             vector_sample.append(self.model.ops.alloc1f(nO))
         assert len(doc_sample) > 0, Errors.E923.format(name=self.name)
@@ -312,7 +313,8 @@ class EntityLinker(TrainablePipe):
 
         for doc, ex in zip(docs, examples):
             if self.use_gold_ents:
-                doc.ents = ex.reference.ents
+                ents, _ = ex.get_aligned_ents_and_ner()
+                doc.ents = ents
             else:
                 # only keep matching ents
                 doc.ents = ex.get_matching_ents()
@@ -345,7 +347,7 @@ class EntityLinker(TrainablePipe):
         for eg in examples:
             kb_ids = eg.get_aligned("ENT_KB_ID", as_string=True)
 
-            for ent in eg.reference.ents:
+            for ent in eg.get_matching_ents():
                 kb_id = kb_ids[ent.start]
                 if kb_id:
                     entity_encoding = self.kb.get_vector(kb_id)
@@ -356,8 +358,8 @@ class EntityLinker(TrainablePipe):
         entity_encodings = self.model.ops.asarray(entity_encodings, dtype="float32")
         selected_encodings = sentence_encodings[keep_ents]
 
-        # If the entity encodings list is empty, then
-        if selected_encodings.shape != entity_encodings.shape:
+        if (selected_encodings.shape != entity_encodings.shape and
+                selected_encodings.size > 0 and entity_encodings.size > 0):
             err = Errors.E147.format(
                 method="get_loss", msg="gold entities do not match up"
             )
