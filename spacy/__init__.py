@@ -48,8 +48,7 @@ def load(
             pipes will be disabled (and can be enabled using `nlp.enable_pipe`).
     exclude (Iterable[str]): Names of pipeline components to exclude. Excluded
         components won't be loaded.
-    include (Iterable[str]): Names of pipeline components to include. All other
-        components will be excluded.
+    include (Iterable[str]): Names of pipeline components to include. All other components will not be loaded.
     config (Dict[str, Any] / Config): Config overrides as nested dict or dict
         keyed by section values in dot notation.
     RETURNS (Language): The loaded nlp object.

@@ -335,6 +335,7 @@ class ConfigSchemaNlp(BaseModel):
     lang: StrictStr = Field(..., title="The base language to use")
     pipeline: List[StrictStr] = Field(..., title="The pipeline component names in order")
     disabled: List[StrictStr] = Field(..., title="Pipeline components to disable by default")
+    enabled: List[StrictStr] = Field(..., title="Pipeline components to enable (all others are disabled)")
     tokenizer: Callable = Field(..., title="The tokenizer to use")
     before_creation: Optional[Callable[[Type["Language"]], Type["Language"]]] = Field(..., title="Optional callback to modify Language class before initialization")
     after_creation: Optional[Callable[["Language"], "Language"]] = Field(..., title="Optional callback to modify nlp object after creation and before the pipeline is constructed")

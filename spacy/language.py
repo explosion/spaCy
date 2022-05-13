@@ -1846,10 +1846,9 @@ class Language:
             nlp.vocab.from_bytes(vocab_b)
 
         # Resolve disabled/enabled settings.
-        # todo @RM ensure "enabled" is in config
         disabled_pipes = cls._resolve_component_activation_status(
             [*config["nlp"]["disabled"], *disable],
-            [*config["nlp"].get("enabled", []), *enable],
+            [*config["nlp"]["enabled"], *enable],
             config["nlp"]["pipeline"],
             "disable",
         )
@@ -2041,20 +2040,27 @@ class Language:
         """
 
         assert arg_type in ("exclude", "disable")
+        # This function might be called (e.g. from within spacy.load()) that with components already excluded from the
+        # pipeline To ensure the proper resolution of component activation status nonetheless, we remove all specified
+        # components not present in the pipeline.
+        inactive = [comp_name for comp_name in inactive if comp_name in component_names]
+        inactive_after_resolution = inactive
 
         if active:
-            if inactive:
-                warnings.warn(
-                    Warnings.W120.format(
-                        arg1="include" if arg_type == "exclude" else "enable",
-                        arg2=arg_type,
-                    )
-                )
-            inactive = [
+            inactive_after_resolution = [
                 pipe_name for pipe_name in component_names if pipe_name not in active
             ]
+            if inactive and inactive != inactive_after_resolution:
+                raise ValueError(
+                    Errors.E1037.format(
+                        arg1="include" if arg_type == "exclude" else "enable",
+                        arg2=arg_type,
+                        arg1_values=active,
+                        arg2_values=inactive,
+                    )
+                )
 
-        return inactive
+        return inactive_after_resolution
 
     def from_disk(
         self,
