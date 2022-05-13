@@ -155,6 +155,15 @@ cdef class TransitionSystem:
         action.do(state.c, action.label)
         state.c.history.push_back(action.clas)
 
+    def apply_actions(self, states, const int[::1] actions):
+        assert len(states) == actions.shape[0]
+        cdef StateClass state
+        cdef vector[StateC*] c_states
+        for state in states:
+            c_states.push_back(state.c)
+        c_apply_actions(self, &c_states[0], &actions[0], actions.shape[0])
+        return [state for state in states if not state.c.is_final()]
+
     def transition_states(self, states, float[:, ::1] scores):
         assert len(states) == scores.shape[0]
         cdef StateClass state
@@ -277,6 +286,18 @@ cdef class TransitionSystem:
             self.cfg.update(msg['cfg'])
         self.initialize_actions(labels)
         return self
+
+
+cdef void c_apply_actions(TransitionSystem moves, StateC** states, const int* actions,
+    int batch_size) nogil:
+        cdef int i
+        cdef Transition action
+        cdef StateC* state
+        for i in range(batch_size):
+            state = states[i]
+            action = moves.c[actions[i]]
+            action.do(state, action.label)
+            state.history.push_back(action.clas)
 
 
 cdef void c_transition_batch(TransitionSystem moves, StateC** states, const float* scores,
