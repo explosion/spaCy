@@ -66,7 +66,8 @@ class SpanGroups(UserDict):
 
     def from_bytes(self, bytes_data: bytes) -> "SpanGroups":
         # backwards-compatibility: bytes_data may be one of:
-        # b'', a serialized empty list, or a serialized list of SpanGroup bytes
+        # b'', a serialized empty list, a serialized list of SpanGroup bytes
+        # or a serialized dict of SpanGroup bytes -> keys
         msg = (
             []
             if not bytes_data or bytes_data == self._EMPTY_BYTES
