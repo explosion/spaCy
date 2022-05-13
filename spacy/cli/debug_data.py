@@ -276,8 +276,9 @@ def debug_data(
                 f"{max(_span_freqs.keys())} n-grams "
                 f"(min={span_characteristics['min_length']}, max={span_characteristics['max_length']}). "
                 f"Most common span lengths are: {_format_freqs(span_freqs)}. "
-                "If you are using the n-gram suggester, note that there are speed / memory tradeoffs "
-                "when you include all outliers."
+                "If you are using the n-gram suggester, note that omitting "
+                "infrequent n-gram lengths can greatly improve speed and " 
+                "memory usage with only a small effect on recall."
             )
 
             # Add report regarding span characteristics
