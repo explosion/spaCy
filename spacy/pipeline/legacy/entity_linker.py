@@ -219,8 +219,8 @@ class EntityLinker_v1(TrainablePipe):
                 method="get_loss", msg="gold entities do not match up"
             )
             raise RuntimeError(err)
-        gradients = self.distance.get_grad(sentence_encodings, entity_encodings) 
-        loss = self.distance.get_loss(sentence_encodings, entity_encodings) 
+        gradients = self.distance.get_grad(sentence_encodings, entity_encodings)
+        loss = self.distance.get_loss(sentence_encodings, entity_encodings)
         loss = loss / len(entity_encodings)
         return float(loss), gradients
 

@@ -294,7 +294,7 @@ def find_matching_language(lang: str) -> Optional[str]:
 
     # Find out which language modules we have
     possible_languages = []
-    for modinfo in pkgutil.iter_modules(spacy.lang.__path__): # type: ignore[attr-defined]
+    for modinfo in pkgutil.iter_modules(spacy.lang.__path__):  # type: ignore[attr-defined]
         code = modinfo.name
         if code == "xx":
             # Temporarily make 'xx' into a valid language code

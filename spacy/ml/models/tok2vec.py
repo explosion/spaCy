@@ -232,7 +232,7 @@ def CharacterEmbed(
     feature_extractor: Model[List[Doc], Ragged] = chain(
         FeatureExtractor([feature]),
         cast(Model[List[Ints2d], Ragged], list2ragged()),
-        with_array(HashEmbed(nO=width, nV=rows, column=0, seed=5)), # type: ignore[misc]
+        with_array(HashEmbed(nO=width, nV=rows, column=0, seed=5)),  # type: ignore[misc]
     )
     max_out: Model[Ragged, Ragged]
     if include_static_vectors:

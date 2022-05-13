@@ -59,7 +59,7 @@ def build_simple_cnn_text_classifier(
             resizable_layer=resizable_layer,
         )
     model.set_ref("tok2vec", tok2vec)
-    model.set_dim("nO", cast(int, nO)) 
+    model.set_dim("nO", cast(int, nO))
     model.attrs["multi_label"] = not exclusive_classes
     return model
 
@@ -85,7 +85,7 @@ def build_bow_text_classifier(
         if not no_output_layer:
             fill_defaults["b"] = NEG_VALUE
             output_layer = softmax_activation() if exclusive_classes else Logistic()
-        resizable_layer: Model[Floats2d, Floats2d] = resizable(  
+        resizable_layer: Model[Floats2d, Floats2d] = resizable(
             sparse_linear,
             resize_layer=partial(resize_linear_weighted, fill_defaults=fill_defaults),
         )
@@ -164,7 +164,7 @@ def build_text_classifier_lowdata(
             >> list2ragged()
             >> ParametricAttention(width)
             >> reduce_sum()
-            >> residual(Relu(width, width)) ** 2  
+            >> residual(Relu(width, width)) ** 2
             >> Linear(nO, width)
         )
         if dropout:
