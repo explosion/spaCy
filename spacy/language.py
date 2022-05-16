@@ -1848,7 +1848,7 @@ class Language:
         # Resolve disabled/enabled settings.
         disabled_pipes = cls._resolve_component_activation_status(
             [*config["nlp"]["disabled"], *disable],
-            [*config["nlp"]["enabled"], *enable],
+            [*config["nlp"].get("enabled", []), *enable],
             config["nlp"]["pipeline"],
             "disable",
         )
