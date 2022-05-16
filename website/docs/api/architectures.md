@@ -939,12 +939,12 @@ performance if working with only token-level clusters is acceptable.
 >
 > [model]
 > @architectures = "spacy.Coref.v1"
-> embedding_size = 20
+> distance_embedding_size = 20
 > dropout = 0.3
 > hidden_size = 1024
-> n_hidden_layers = 2
-> rough_k = 50
-> a_scoring_batch_size = 512
+> depth = 2
+> antecedent_limit = 50
+> antecedent_batch_size = 512
 >
 > [model.tok2vec]
 > @architectures = "spacy-transformers.TransformerListener.v1"
@@ -955,16 +955,16 @@ performance if working with only token-level clusters is acceptable.
 
 The `Coref` model architecture is a Thinc `Model`.
 
-| Name                   | Description                                                                                                                                                                              |
-| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `tok2vec`              | The [`tok2vec`](#tok2vec) layer of the model. ~~Model~~                                                                                                                                  |
-| `embedding_size`       | ~~int~~                                                                                                                                                                                  |
-| `dropout`              | The dropout to use internally. Unlike some Thinc models, this has separate dropout for the internal PyTorch layers. ~~float~~                                                            |
-| `hidden_size`          | Size of the main internal layers. ~~int~~                                                                                                                                                |
-| `n_hidden_layers`      | Depth of the internal network. ~~int~~                                                                                                                                                   |
-| `rough_k`              | How many candidate antecedents to keep after rough scoring. This has a significant effect on memory usage. Typical values would be 50 to 200, or higher for very long documents. ~~int~~ |
-| `a_scoring_batch_size` | Internal batch size. ~~int~~                                                                                                                                                             |
-| **CREATES**            | The model using the architecture. ~~Model[List[Doc], Floats2d]~~                                                                                                                         |
+| Name                      | Description                                                                                                                                                                              |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tok2vec`                 | The [`tok2vec`](#tok2vec) layer of the model. ~~Model~~                                                                                                                                  |
+| `distance_embedding_size` | A representation of the distance between candidates. ~~int~~                                                                                                                             |
+| `dropout`                 | The dropout to use internally. Unlike some Thinc models, this has separate dropout for the internal PyTorch layers. ~~float~~                                                            |
+| `hidden_size`             | Size of the main internal layers. ~~int~~                                                                                                                                                |
+| `depth`                   | Depth of the internal network. ~~int~~                                                                                                                                                   |
+| `antecedent_limit`        | How many candidate antecedents to keep after rough scoring. This has a significant effect on memory usage. Typical values would be 50 to 200, or higher for very long documents. ~~int~~ |
+| `antecedent_batch_size`   | Internal batch size. ~~int~~                                                                                                                                                             |
+| **CREATES**               | The model using the architecture. ~~Model[List[Doc], Floats2d]~~                                                                                                                         |
 
 ### spacy.SpanPredictor.v1 {#SpanPredictor}
 
@@ -985,3 +985,14 @@ The `Coref` model architecture is a Thinc `Model`.
 > ```
 
 The `SpanPredictor` model architecture is a Thinc `Model`.
+
+| Name                      | Description                                                                                                                                                                              |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tok2vec`                 | The [`tok2vec`](#tok2vec) layer of the model. ~~Model~~                                                                                                                                  |
+| `distance_embedding_size` | A representation of the distance between two candidates. ~~int~~                                                                                                                         |
+| `dropout`                 | The dropout to use internally. Unlike some Thinc models, this has separate dropout for the internal PyTorch layers. ~~float~~                                                            |
+| `hidden_size`             | Size of the main internal layers. ~~int~~                                                                                                                                                |
+| `depth`                   | Depth of the internal network. ~~int~~                                                                                                                                                   |
+| `antecedent_limit`        | How many candidate antecedents to keep after rough scoring. This has a significant effect on memory usage. Typical values would be 50 to 200, or higher for very long documents. ~~int~~ |
+| `antecedent_batch_size`   | Internal batch size. ~~int~~                                                                                                                                                             |
+| **CREATES**               | The model using the architecture. ~~Model[List[Doc], TupleFloats2d]~~                                                                                                                    |
