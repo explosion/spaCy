@@ -5,6 +5,7 @@ import hypothesis
 import hypothesis.strategies
 import pytest
 
+import spacy
 from spacy.tokenizer import Tokenizer
 from spacy.util import get_lang_class
 
@@ -121,7 +122,7 @@ def test_tokenizer_explain_fuzzy(lang: str, sentence: str) -> None:
     text (str): Fuzzily generated sentence to tokenize.
     """
 
-    tokenizer = get_lang_class(lang)().tokenizer
+    tokenizer = spacy.blank(lang).tokenizer
     tokens = [t.text for t in tokenizer(sentence) if not t.is_space]
     debug_tokens = [t[1] for t in tokenizer.explain(sentence)]
     assert tokens == debug_tokens, f"{tokens}, {debug_tokens}, {sentence}"
