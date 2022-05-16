@@ -267,18 +267,23 @@ def debug_data(
             _span_freqs = _get_spans_length_freq_dist(
                 gold_train_data["spans_length"][spans_key]
             )
-            # Sort the span frequencies by the n-gram length for better presentation
-            _span_freqs = dict(sorted(_span_freqs.items()))
-            span_freqs = [(str(k), int(v)) for k, v in _span_freqs.items()]
+            _filtered_span_freqs = _filter_spans_length_freq_dist(
+                _span_freqs, threshold=SPAN_LENGTH_THRESHOLD_PERCENTAGE
+            )
 
             msg.info(
-                f"{SPAN_LENGTH_THRESHOLD_PERCENTAGE}% of spans have up to "
+                f"Around {SPAN_LENGTH_THRESHOLD_PERCENTAGE}% of spans have up to "
                 f"{max(_span_freqs.keys())} n-grams "
                 f"(min={span_characteristics['min_length']}, max={span_characteristics['max_length']}). "
-                f"Most common span lengths are: {_format_freqs(span_freqs)}. "
+                f"Most common span lengths are: {_format_freqs(_filtered_span_freqs)}. "
                 "If you are using the n-gram suggester, note that omitting "
-                "infrequent n-gram lengths can greatly improve speed and " 
+                "infrequent n-gram lengths can greatly improve speed and "
                 "memory usage with only a small effect on recall."
+            )
+
+            msg.text(
+                f"Full distribution of span lengths: {_format_freqs(_span_freqs)}",
+                show=verbose,
             )
 
             # Add report regarding span characteristics
@@ -884,8 +889,14 @@ def _format_labels(
     return ", ".join([f"'{l}'" for l in cast(Iterable[str], labels)])
 
 
-def _format_freqs(freqs: Iterable[Tuple[str, int]]) -> str:
-    return ", ".join([f"{l} ({c}%)" for l, c in cast(Iterable[Tuple[str, int]], freqs)])
+def _format_freqs(freqs: Dict[int, float], sort: bool = True) -> str:
+    if sort:
+        freqs = dict(sorted(freqs.items()))
+
+    _freqs = [(str(k), v) for k, v in freqs.items()]
+    return ", ".join(
+        [f"{l} ({c}%)" for l, c in cast(Iterable[Tuple[str, float]], _freqs)]
+    )
 
 
 def _get_examples_without_label(
@@ -1059,7 +1070,6 @@ def _get_spans_length_freq_dist(
     length_dict: Dict, threshold=SPAN_LENGTH_THRESHOLD_PERCENTAGE
 ) -> Dict[int, float]:
     """Get frequency distribution of spans length under a certain threshold"""
-
     all_span_lengths = []
     for _, lengths in length_dict.items():
         all_span_lengths.extend(lengths)
@@ -1078,8 +1088,17 @@ def _get_spans_length_freq_dist(
         percentage = round(percentage, 2)
         freq_dist_percentage[span_length] = percentage
 
-    # We're going to filter all the span lengths that fall
-    # under a percentage threshold when summed.
+    return freq_dist_percentage
+
+
+def _filter_spans_length_freq_dist(
+    freq_dist: Dict[int, float], threshold: int
+) -> Dict[int, float]:
+    """Filter frequency distribution with respect to a threshold
+
+    We're going to filter all the span lengths that fall
+    around a percentage threshold when summed.
+    """
     total = 0.0
     freq_dist_filtered = {}
     for span_length, dist in freq_dist_percentage.items():
