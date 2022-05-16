@@ -1997,7 +1997,7 @@ class Language:
         """
 
         exclude = self._resolve_component_activation_status(
-            exclude, include, self.component_names, "exclude"
+            exclude, include, self.pipe_names, "exclude"
         )
         path = util.ensure_path(path)
         serializers = {}
@@ -2017,21 +2017,22 @@ class Language:
 
     @staticmethod
     def _resolve_component_activation_status(
-        inactive: Iterable[str],
-        active: Iterable[str],
-        component_names: Collection[str],
+        deactivate: Iterable[str],
+        activate: Iterable[str],
+        pipe_names: Collection[str],
         arg_type: str,
     ) -> Iterable[str]:
         """
         Merges arguments in spacy.load(), lang_cls.from_config() etc. reflecting components' activation status.
-        `inactive` can be the values passed as `excluded` or `disabled`, `active` the values of `included` or `enabled`.
-        The resolution logic is the same: `active` takes precedence over `inactive` - so if the former is set, all other
-        components are assumed to be disabled, independently from the value of `inactive`. If `active` is empty, only
-        those component whose names are included in `inactive` are assumed to be disabled.
+        `deactivate` can be the values passed as `excluded` or `disabled`, `activate` the values of `included` or
+        `enabled`.
+        The resolution logic is the same: `activate` takes precedence over `deactivate` - so if the former is set, all
+        other components are assumed to be disabled, independently from the value of `deactivate`. If `activate` is
+        empty, only those component whose names are included in `deactivate` are assumed to be disabled.
 
-        inactive (Iterable[str]): Names of inactive components or serialization fields (i.e. to be excluded or
-                                  disabled).
-        active (Iterable[str]): Names of active pipeline components (i.e. to be included or enabled).
+        deactivate (Iterable[str]): Names of components or serialization fields to deactivate (i.e. to be excluded or
+                                    disabled).
+        activate (Iterable[str]): Names of pipeline components to activate (i.e. to be included or enabled).
         component_names (Iterable[str]): Names of all pipeline components.
         arg_type (str): One of (exclude, disable). Used only to generate fitting warning message in case of possibly
                                                    ambiguous values for `inactive`/`active`.
@@ -2040,27 +2041,41 @@ class Language:
         """
 
         assert arg_type in ("exclude", "disable")
-        # This function might be called (e.g. from within spacy.load()) that with components already excluded from the
-        # pipeline To ensure the proper resolution of component activation status nonetheless, we remove all specified
-        # components not present in the pipeline.
-        inactive = [comp_name for comp_name in inactive if comp_name in component_names]
-        inactive_after_resolution = inactive
+        if deactivate is not None and isinstance(deactivate, str):
+            deactivate = [deactivate]
 
-        if active:
-            inactive_after_resolution = [
-                pipe_name for pipe_name in component_names if pipe_name not in active
+        serialization_fields = [
+            "text",
+            "sentiment",
+            "tensor",
+            "user_data",
+            "user_data_keys",
+            "user_data_values",
+        ]
+        other_fields = ["strings", "lookups"]
+        supported_fields = [*pipe_names, *serialization_fields, *other_fields]
+        # To ensure the proper resolution of component activation status, we remove all specified components not present
+        # in the pipeline.
+        deactivate = [
+            field_name for field_name in deactivate if field_name in supported_fields
+        ]
+        to_deactivate = deactivate
+
+        if activate:
+            to_deactivate = [
+                pipe_name for pipe_name in pipe_names if pipe_name not in activate
             ]
-            if inactive and inactive != inactive_after_resolution:
+            if deactivate and deactivate != to_deactivate:
                 raise ValueError(
                     Errors.E1037.format(
                         arg1="include" if arg_type == "exclude" else "enable",
                         arg2=arg_type,
-                        arg1_values=active,
-                        arg2_values=inactive,
+                        arg1_values=activate,
+                        arg2_values=deactivate,
                     )
                 )
 
-        return inactive_after_resolution
+        return to_deactivate
 
     def from_disk(
         self,
@@ -2086,7 +2101,7 @@ class Language:
 
         # Derive list of excluded components w.r.t. list of components to include.
         exclude = self._resolve_component_activation_status(
-            exclude, include, self.component_names, "exclude"
+            exclude, include, self.pipe_names, "exclude"
         )
 
         def deserialize_meta(path: Path) -> None:

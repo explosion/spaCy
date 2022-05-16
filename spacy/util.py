@@ -518,7 +518,6 @@ def load_model_from_path(
         include=include,
         meta=meta,
     )
-    # Note that at at this point `nlp` has already excluded any component
     return nlp.from_disk(
         model_path, exclude=exclude, include=include, overrides=overrides
     )
