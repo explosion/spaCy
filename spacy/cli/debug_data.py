@@ -273,7 +273,7 @@ def debug_data(
 
             msg.info(
                 f"At least {SPAN_LENGTH_THRESHOLD_PERCENTAGE}% of spans have up to "
-                f"{max(_span_freqs.keys())} n-grams "
+                f"{max(_filtered_span_freqs.keys())} n-grams "
                 f"(min={span_characteristics['min_length']}, max={span_characteristics['max_length']}). "
                 f"Most common span lengths are: {_format_freqs(_filtered_span_freqs)}. "
                 "If you are using the n-gram suggester, note that omitting "
