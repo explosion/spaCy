@@ -272,7 +272,7 @@ def debug_data(
             )
 
             msg.info(
-                f"Around {SPAN_LENGTH_THRESHOLD_PERCENTAGE}% of spans have up to "
+                f"At least {SPAN_LENGTH_THRESHOLD_PERCENTAGE}% of spans have up to "
                 f"{max(_span_freqs.keys())} n-grams "
                 f"(min={span_characteristics['min_length']}, max={span_characteristics['max_length']}). "
                 f"Most common span lengths are: {_format_freqs(_filtered_span_freqs)}. "
@@ -1100,12 +1100,11 @@ def _filter_spans_length_freq_dist(
     around a percentage threshold when summed.
     """
     total = 0.0
-    freq_dist_filtered = {}
-    for span_length, dist in freq_dist_percentage.items():
-        total += dist
+    filtered_freq_dist = {}
+    for span_length, dist in freq_dist.items():
         if total >= threshold:
             break
         else:
-            freq_dist_filtered[span_length] = dist
-
-    return freq_dist_filtered
+            filtered_freq_dist[span_length] = dist
+        total += dist
+    return filtered_freq_dist

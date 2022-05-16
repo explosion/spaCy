@@ -837,7 +837,7 @@ def test_span_length_freq_dist_threshold_must_be_correct(threshold):
         "span_type_3": [3, 1, 3, 3],
     }
     span_freqs = _get_spans_length_freq_dist(sample_span_lengths, threshold)
-    assert sum(span_freqs.values()) <= threshold
+    assert sum(span_freqs.values()) >= threshold
 
 
 def test_span_length_freq_dist_output_must_be_correct():
@@ -848,5 +848,5 @@ def test_span_length_freq_dist_output_must_be_correct():
     }
     threshold = 90
     span_freqs = _get_spans_length_freq_dist(sample_span_lengths, threshold)
-    assert sum(span_freqs.values()) <= threshold
-    assert list(span_freqs.keys()) == [3, 1, 4]
+    assert sum(span_freqs.values()) >= threshold
+    assert list(span_freqs.keys()) == [3, 1, 4, 5, 2]
