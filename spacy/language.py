@@ -2044,16 +2044,7 @@ class Language:
         if deactivate is not None and isinstance(deactivate, str):
             deactivate = [deactivate]
 
-        serialization_fields = [
-            "text",
-            "sentiment",
-            "tensor",
-            "user_data",
-            "user_data_keys",
-            "user_data_values",
-        ]
-        other_fields = ["strings", "lookups"]
-        supported_fields = [*pipe_names, *serialization_fields, *other_fields]
+        supported_fields = [*pipe_names, *["strings", "lookups"]]
         # To ensure the proper resolution of component activation status, we remove all specified components not present
         # in the pipeline.
         deactivate = [
