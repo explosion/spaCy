@@ -58,8 +58,6 @@ LANGUAGES = [
     pytest.param("ur", marks=pytest.mark.slow()),
 ]
 
-LANGUAGES_WITH_CUSTOM_TOKENIZERS = {"ja", "ko", "th", "vi", "zh"}
-
 
 @pytest.mark.parametrize("lang", LANGUAGES)
 def test_tokenizer_explain(lang):
@@ -113,8 +111,8 @@ def sentence_strategy(draw: hypothesis.strategies.DrawFn, max_n_words: int = 4) 
     return " ".join([token for token_pair in sentence for token in token_pair])
 
 
+@pytest.mark.xfail
 @pytest.mark.parametrize("lang", LANGUAGES)
-@hypothesis.settings(deadline=1500)
 @hypothesis.given(sentence=sentence_strategy())
 def test_tokenizer_explain_fuzzy(lang: str, sentence: str) -> None:
     """
@@ -122,10 +120,6 @@ def test_tokenizer_explain_fuzzy(lang: str, sentence: str) -> None:
     lang (str): Language to test.
     text (str): Fuzzily generated sentence to tokenize.
     """
-
-    # Skip languages with random tokenizers.
-    if lang in LANGUAGES_WITH_CUSTOM_TOKENIZERS:
-        return
 
     tokenizer = get_lang_class(lang)().tokenizer
     tokens = [t.text for t in tokenizer(sentence) if not t.is_space]
