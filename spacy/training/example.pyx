@@ -194,7 +194,7 @@ cdef class Example:
         # Fetch all aligned gold token incides.
         if c2g_single_toks.shape == cand_to_gold.lengths.shape:
             # This the most likely case.
-            gold_i = cand_to_gold[0:cand_to_gold.lengths.shape[0]].squeeze()
+            gold_i = cand_to_gold[:].squeeze()
         else:
             gold_i = numpy.vectorize(lambda x: cand_to_gold[int(x)][0])(c2g_single_toks).squeeze()
 
