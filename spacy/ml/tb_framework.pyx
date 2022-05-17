@@ -166,7 +166,6 @@ def _forward_greedy_cpu(model: Model, TransitionSystem moves, states: List[State
     for state in states:
         if not state.is_final():
             c_states.push_back(state.c)
-    cdef object featsp = feats
     weights = get_c_weights(model, <float *> feats.data, seen_mask)
     # Precomputed features have rows for each token, plus one for padding.
     cdef int n_tokens = feats.shape[0] - 1
@@ -515,13 +514,13 @@ def _lsuv_init(model: Model):
 
 
 cdef WeightsC get_c_weights(model, const float* feats, np.ndarray[np.npy_bool, ndim=1] seen_mask) except *:
-    cdef np.ndarray lower_bias = model.get_param("lower_b")
+    cdef np.ndarray lower_b = model.get_param("lower_b")
     cdef np.ndarray upper_W = model.get_param("upper_W")
     cdef np.ndarray upper_b = model.get_param("upper_b")
 
     cdef WeightsC output
     output.feat_weights = feats
-    output.feat_bias = <const float*>lower_bias.data
+    output.feat_bias = <const float*>lower_b.data
     output.hidden_weights = <const float *> upper_W.data
     output.hidden_bias = <const float *> upper_b.data
     output.seen_mask = <const int8_t*> seen_mask.data
@@ -579,7 +578,6 @@ cdef void resize_activations(ActivationsC* A, SizesC n) nogil:
 
 
 cdef void predict_states(CBlas cblas, ActivationsC* A, float* scores, StateC** states, const WeightsC* W, SizesC n) nogil:
-    cdef double one = 1.0
     resize_activations(A, n)
     for i in range(n.states):
         states[i].set_context_tokens(&A.token_ids[i*n.feats], n.feats)
