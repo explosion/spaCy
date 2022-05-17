@@ -142,7 +142,6 @@ def init(
     # model = _lsuv_init(model)
     return model
 
-
 def forward(model, docs_moves: Tuple[List[Doc], TransitionSystem], is_train: bool):
     beam_width = model.attrs["beam_width"]
     lower_pad = model.get_param("lower_pad")
@@ -160,6 +159,52 @@ def forward(model, docs_moves: Tuple[List[Doc], TransitionSystem], is_train: boo
     else:
         return _forward_fallback(model, moves, states, tokvecs, backprop_tok2vec, feats, backprop_feats, seen_mask, is_train)
 
+def _forward_greedy_cpu(model: Model, TransitionSystem moves, states: List[StateClass], np.ndarray feats,
+                        np.ndarray[np.npy_bool, ndim=1] seen_mask):
+    cdef vector[StateC *] c_states
+    cdef StateClass state
+    for state in states:
+        if not state.is_final():
+            c_states.push_back(state.c)
+    cdef object featsp = feats
+    weights = get_c_weights(model, <float *> feats.data, seen_mask)
+    # Precomputed features have rows for each token, plus one for padding.
+    cdef int n_tokens = feats.shape[0] - 1
+    sizes = get_c_sizes(model, c_states.size(), n_tokens)
+    cdef CBlas cblas = model.ops.cblas()
+    scores = _parseC(cblas, moves, &c_states[0], weights, sizes)
+
+    def backprop(dY):
+        raise ValueError(Errors.E1029)
+
+    return (states, scores), backprop
+
+cdef list _parseC(CBlas cblas, TransitionSystem moves, StateC** states,
+                  WeightsC weights, SizesC sizes):
+    cdef int i, j
+    cdef vector[StateC *] unfinished
+    cdef ActivationsC activations = alloc_activations(sizes)
+    cdef np.ndarray step_scores
+
+    scores = []
+    while sizes.states >= 1:
+        step_scores = numpy.empty((sizes.states, sizes.classes), dtype="f")
+        with nogil:
+            predict_states(cblas, &activations, <float *> step_scores.data, states, &weights, sizes)
+            # Validate actions, argmax, take action.
+            c_transition_batch(moves, states, <const float *> step_scores.data, sizes.classes,
+                               sizes.states)
+            for i in range(sizes.states):
+                if not states[i].is_final():
+                    unfinished.push_back(states[i])
+            for i in range(unfinished.size()):
+                states[i] = unfinished[i]
+        sizes.states = unfinished.size()
+        scores.append(step_scores)
+        unfinished.clear()
+    free_activations(&activations)
+
+    return scores
 
 def _forward_fallback(model: Model, moves: TransitionSystem, states: List[StateClass], tokvecs, backprop_tok2vec, feats, backprop_feats, seen_mask, is_train: bool):
     nF = model.get_dim("nF")
@@ -467,54 +512,6 @@ def _lsuv_init(model: Model):
         else:
             break
     return model
-
-
-def _forward_greedy_cpu(model: Model, TransitionSystem moves, states: List[StateClass], np.ndarray feats,
-                np.ndarray[np.npy_bool, ndim=1] seen_mask):
-    cdef vector[StateC*] c_states
-    cdef StateClass state
-    for state in states:
-        if not state.is_final():
-            c_states.push_back(state.c)
-    cdef object featsp = feats
-    weights = get_c_weights(model, <float*>feats.data, seen_mask)
-    # Precomputed features have rows for each token, plus one for padding.
-    cdef int n_tokens = feats.shape[0] - 1
-    sizes = get_c_sizes(model, c_states.size(), n_tokens)
-    cdef CBlas cblas = model.ops.cblas()
-    scores = _parseC(cblas, moves, &c_states[0], weights, sizes)
-
-    def backprop(dY):
-        raise ValueError(Errors.E1029)
-
-    return (states, scores), backprop
-
-cdef list _parseC(CBlas cblas, TransitionSystem moves, StateC** states,
-                  WeightsC weights, SizesC sizes):
-    cdef int i, j
-    cdef vector[StateC *] unfinished
-    cdef ActivationsC activations = alloc_activations(sizes)
-    cdef np.ndarray step_scores
-
-    scores = []
-    while sizes.states >= 1:
-        step_scores = numpy.empty((sizes.states, sizes.classes), dtype="f")
-        with nogil:
-            predict_states(cblas, &activations, <float*>step_scores.data, states, &weights, sizes)
-            # Validate actions, argmax, take action.
-            c_transition_batch(moves, states, <const float*>step_scores.data, sizes.classes,
-            sizes.states)
-            for i in range(sizes.states):
-                if not states[i].is_final():
-                    unfinished.push_back(states[i])
-            for i in range(unfinished.size()):
-                states[i] = unfinished[i]
-        sizes.states = unfinished.size()
-        scores.append(step_scores)
-        unfinished.clear()
-    free_activations(&activations)
-
-    return scores
 
 
 cdef WeightsC get_c_weights(model, const float* feats, np.ndarray[np.npy_bool, ndim=1] seen_mask) except *:
