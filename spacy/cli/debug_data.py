@@ -223,7 +223,6 @@ def debug_data(
                 f"Key: {spans_key}, {_format_labels(data_labels.items(), counts=True)}",
                 show=verbose,
             )
-
         # Data checks: only take the spans keys in the actual spancat components
         data_labels_in_component = {
             spans_key: gold_train_data["spancat"][spans_key]
@@ -260,7 +259,7 @@ def debug_data(
                     train_dataset, gold_train_data, spans_key
                 )
 
-            msg.info(f"Span characteristics for spans_key `{spans_key}`")
+            msg.info(f"Span characteristics for spans_key '{spans_key}'")
             msg.info("SD = Span Distinctiveness, BD = Boundary Distinctiveness")
             _print_span_characteristics(span_characteristics)
 
@@ -275,10 +274,10 @@ def debug_data(
                 f"At least {SPAN_LENGTH_THRESHOLD_PERCENTAGE}% of spans have up to "
                 f"{max(_filtered_span_freqs.keys())} n-grams "
                 f"(min={span_characteristics['min_length']}, max={span_characteristics['max_length']}). "
-                f"Most common span lengths are: {_format_freqs(_filtered_span_freqs)}. "
+                f"The most common span lengths are: {_format_freqs(_filtered_span_freqs)}. "
                 "If you are using the n-gram suggester, note that omitting "
                 "infrequent n-gram lengths can greatly improve speed and "
-                "memory usage with only a small effect on recall."
+                "memory usage."
             )
 
             msg.text(
