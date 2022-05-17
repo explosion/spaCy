@@ -150,74 +150,79 @@ cdef class Example:
                 self._y_sig = y_sig
                 return self._cached_alignment
 
+
+    def _get_aligned_vectorized(self, align, gold_values):
+        # Fast path for Doc attributes/fields that are predominantly a single value,
+        # i.e., TAG, POS, MORPH.
+        x2y_single_toks = []
+        x2y_single_toks_i = []
+
+        x2y_multiple_toks = []
+        x2y_multiple_toks_i = []
+
+        # Gather indices of gold tokens aligned to the candidate tokens into two buckets.
+        #   Bucket 1: All tokens that have a one-to-one alignment.
+        #   Bucket 2: All tokens that have a one-to-many alignment.
+        for idx, token in enumerate(self.predicted):
+            aligned_gold_i = align[token.i]
+            if len(aligned_gold_i) == 1:
+                x2y_single_toks.append(aligned_gold_i.item())
+                x2y_single_toks_i.append(idx)
+            else:
+                x2y_multiple_toks.append(aligned_gold_i)
+                x2y_multiple_toks_i.append(idx)
+
+        # Map elements of the first bucket directly to the output array.
+        output = numpy.full(len(self.predicted), None)
+        output[x2y_single_toks_i] = gold_values[x2y_single_toks].squeeze()
+
+        # Collapse many-to-one alignments into one-to-one alignments if they
+        # share the same value. Map to None in all other cases.
+        for i in range(len(x2y_multiple_toks)):
+            aligned_gold_values = gold_values[x2y_multiple_toks[i]]
+
+            # If all aligned tokens have the same value, use it.
+            x2y_multiple_toks[i] = aligned_gold_values[0].item() \
+                if len(set(list(aligned_gold_values))) == 1 else None
+
+        output[x2y_multiple_toks_i] = x2y_multiple_toks
+
+        return output.tolist()
+
+
+    def _get_aligned_non_vectorized(self, align, gold_values):
+        # Slower path for fields that return multiple values (resulting
+        # in ragged arrays that cannot be vectorized trivially).
+        output = [None] * len(self.predicted)
+
+        for token in self.predicted:
+            aligned_gold_i = align[token.i]
+            values_org = gold_values[aligned_gold_i]
+            values = values_org.ravel()
+            if len(values) == 0:
+                output[token.i] = None
+            elif len(values) == 1:
+                output[token.i] = values.item()
+            elif len(set(list(values))) == 1:
+                # If all aligned tokens have the same value, use it.
+                output[token.i] = values[0].item()
+            else:
+                output[token.i] = None
+
+        return output
+
+
     def get_aligned(self, field, as_string=False):
         """Return an aligned array for a token attribute."""
         align = self.alignment.x2y
         gold_values = self.reference.to_array([field])
 
-        def _vectorized():
-            # Fast path for Doc attributes/fields that are predominantly a single value,
-            # i.e., TAG, POS, MORPH.
-            x2y_single_toks = []
-            x2y_single_toks_i = []
-
-            x2y_multiple_toks = []
-            x2y_multiple_toks_i = []
-
-            # Gather indices of gold tokens aligned to the candidate tokens into two buckets.
-            #   Bucket 1: All tokens that have a one-to-one alignment.
-            #   Bucket 2: All tokens that have a one-to-many alignment.
-            for idx, token in enumerate(self.predicted):
-                aligned_gold_i = align[token.i]
-                if len(aligned_gold_i) == 1:
-                    x2y_single_toks.append(aligned_gold_i.item())
-                    x2y_single_toks_i.append(idx)
-                else:
-                    x2y_multiple_toks.append(aligned_gold_i)
-                    x2y_multiple_toks_i.append(idx)
-
-            # Map elements of the first bucket directly to the output array.
-            output = numpy.full(len(self.predicted), None)
-            output[x2y_single_toks_i] = gold_values[x2y_single_toks].squeeze()
-
-            # Collapse many-to-one alignments into one-to-one alignments if they
-            # share the same value. Map to None in all other cases.
-            for i in range(len(x2y_multiple_toks)):
-                aligned_gold_values = gold_values[x2y_multiple_toks[i]]
-
-                # If all aligned tokens have the same value, use it.
-                x2y_multiple_toks[i] = aligned_gold_values[0].item() \
-                    if len(set(list(aligned_gold_values))) == 1 else None
-
-            output[x2y_multiple_toks_i] = x2y_multiple_toks
-
-            return output.tolist()
-
-        def _non_vectorized():
-            # Slower path for fields that return multiple values (resulting
-            # in ragged arrays that cannot be vectorized trivially).
-            output = [None] * len(self.predicted)
-
-            for token in self.predicted:
-                aligned_gold_i = align[token.i]
-                values_org = gold_values[aligned_gold_i]
-                values = values_org.ravel()
-                if len(values) == 0:
-                    output[token.i] = None
-                elif len(values) == 1:
-                    output[token.i] = values.item()
-                elif len(set(list(values))) == 1:
-                    # If all aligned tokens have the same value, use it.
-                    output[token.i] = values[0].item()
-                else:
-                    output[token.i] = None
-
-            return output
-
+        if len(gold_values.shape) == 1:
+            output = self._get_aligned_vectorized(align, gold_values)
+        else:
+            output = self._get_aligned_non_vectorized(align, gold_values)
 
         vocab = self.reference.vocab
-        output = _vectorized() if len(gold_values.shape) == 1 else _non_vectorized()
-
         if as_string and field not in ["ENT_IOB", "SENT_START"]:
             output = [vocab.strings[o] if o is not None else o for o in output]
 
