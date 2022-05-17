@@ -31,13 +31,12 @@ from ..coref_scorer import Evaluator, get_cluster_info, lea
 default_config = """
 [model]
 @architectures = "spacy.Coref.v1"
-embedding_size = 20
+distance_embedding_size = 20
 hidden_size = 1024
 depth = 1
 dropout = 0.3
-rough_candidates = 50
-a_scoring_batch_size = 512
-sp_embedding_size = 64
+antecedent_limit = 50
+antecedent_batch_size = 512
 
 [model.tok2vec]
 @architectures = "spacy.Tok2Vec.v2"

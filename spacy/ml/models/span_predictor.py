@@ -18,6 +18,7 @@ def build_span_predictor(
     dist_emb_size: int = 64,
     prefix: str = "coref_head_clusters"
 ):
+    # TODO add model return types
     # TODO fix this
     try:
         dim = tok2vec.get_dim("nO")
