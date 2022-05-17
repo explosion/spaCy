@@ -1,13 +1,4 @@
-from typing import List
-
 from libc.stdint cimport int8_t
-cimport numpy as np
-from thinc.api import Model
-
-from ..pipeline._parser_internals._state cimport StateC
-from ..pipeline._parser_internals.stateclass import StateClass
-from ..pipeline._parser_internals.transition_system cimport TransitionSystem
-from ..typedefs cimport weight_t, hash_t
 
 
 cdef struct SizesC:

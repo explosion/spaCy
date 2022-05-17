@@ -1,6 +1,5 @@
 # cython: infer_types=True, cdivision=True, boundscheck=False
 from typing import List, Tuple, Any, Optional, cast
-from cpython.ref cimport PyObject
 from libc.string cimport memset, memcpy
 from libc.stdlib cimport calloc, free, realloc
 from libcpp.vector cimport vector
@@ -17,7 +16,7 @@ from ..errors import Errors
 from ..pipeline._parser_internals import _beam_utils
 from ..pipeline._parser_internals.batch import GreedyBatch
 from ..pipeline._parser_internals.transition_system cimport c_transition_batch, TransitionSystem
-from ..pipeline._parser_internals.stateclass cimport StateClass
+from ..pipeline._parser_internals.stateclass cimport StateC, StateClass
 from ..tokens.doc import Doc
 from ..util import registry
 
