@@ -157,12 +157,12 @@ def forward(model, docs_moves: Tuple[List[Doc], TransitionSystem], is_train: boo
     seen_mask = _get_seen_mask(model)
 
     if beam_width == 1 and not is_train and isinstance(model.ops, NumpyOps):
-        return forward_cpu(model, moves, states, feats, seen_mask)
+        return _forward_greedy_cpu(model, moves, states, feats, seen_mask)
     else:
-        return forward_thinc(model, moves, states, tokvecs, backprop_tok2vec, feats, backprop_feats, seen_mask, is_train)
+        return _forward_fallback(model, moves, states, tokvecs, backprop_tok2vec, feats, backprop_feats, seen_mask, is_train)
 
 
-def forward_thinc(model: Model, moves: TransitionSystem, states: List[StateClass], tokvecs, backprop_tok2vec, feats, backprop_feats, seen_mask, is_train: bool):
+def _forward_fallback(model: Model, moves: TransitionSystem, states: List[StateClass], tokvecs, backprop_tok2vec, feats, backprop_feats, seen_mask, is_train: bool):
     nF = model.get_dim("nF")
     lower_b = model.get_param("lower_b")
     upper_W = model.get_param("upper_W")
@@ -470,7 +470,7 @@ def _lsuv_init(model: Model):
     return model
 
 
-def forward_cpu(model: Model, TransitionSystem moves, states: List[StateClass], np.ndarray feats,
+def _forward_greedy_cpu(model: Model, TransitionSystem moves, states: List[StateClass], np.ndarray feats,
                 np.ndarray[np.npy_bool, ndim=1] seen_mask):
     cdef vector[StateC*] c_states
     cdef StateClass state
