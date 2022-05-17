@@ -346,7 +346,7 @@ def _forward_reference(
     return (states, all_scores), backprop_parser
 
 
-def _get_seen_mask(model: Model) -> Floats1d:
+def _get_seen_mask(model: Model) -> numpy.array[bool, 1]:
     mask = model.ops.xp.zeros(model.get_dim("nO"), dtype="bool")
     for class_ in model.attrs.get("unseen_classes", set()):
         mask[class_] = True
