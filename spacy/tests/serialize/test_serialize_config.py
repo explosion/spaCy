@@ -264,9 +264,11 @@ def test_serialize_custom_nlp():
         model = nlp2.get_pipe("parser").model
         assert model.get_ref("tok2vec") is not None
         assert model.has_param("lower_W")
-        assert model.has_param("upper_W")
         assert model.has_param("lower_b")
-        assert model.has_param("upper_b")
+        upper = model.get_ref("upper")
+        assert upper is not None
+        assert upper.has_param("W")
+        assert upper.has_param("b")
 
 
 @pytest.mark.parametrize("parser_config_string", [parser_config_string_upper])
@@ -284,9 +286,11 @@ def test_serialize_parser(parser_config_string):
         model = nlp2.get_pipe("parser").model
         assert model.get_ref("tok2vec") is not None
         assert model.has_param("lower_W")
-        assert model.has_param("upper_W")
         assert model.has_param("lower_b")
-        assert model.has_param("upper_b")
+        upper = model.get_ref("upper")
+        assert upper is not None
+        assert upper.has_param("b")
+        assert upper.has_param("W")
 
 
 def test_config_nlp_roundtrip():

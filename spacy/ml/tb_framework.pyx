@@ -45,18 +45,28 @@ def TransitionModel(
     tok2vec_projected = chain(tok2vec, list2array(), Linear(hidden_width, t2v_width))  # type: ignore
     tok2vec_projected.set_dim("nO", hidden_width)
 
+    # Fixme: we use `upper` as a container for the upper layer's
+    # weights and biases. Thinc optimizers cannot handle resizing
+    # of parameters. So, when the parser model is resized, we
+    # construct a new `upper` layer, which has a different key in
+    # the optimizer. Once the optimizer supports parameter resizing,
+    # we can replace the `upper` layer by `upper_W` and `upper_b`
+    # parameters in this model.
+    upper = Linear(nO=None, nI=hidden_width, init_W=zero_init)
+
     return Model(
         name="parser_model",
         forward=forward,
         init=init,
-        layers=[tok2vec_projected],
-        refs={"tok2vec": tok2vec_projected},
+        layers=[tok2vec_projected, upper],
+        refs={
+            "tok2vec": tok2vec_projected,
+            "upper": upper,
+        },
         params={
             "lower_W": None,  # Floats2d W for the hidden layer
             "lower_b": None,  # Floats1d bias for the hidden layer
             "lower_pad": None,  # Floats1d padding for the hidden layer
-            "upper_W": None,  # Floats2d W for the output layer
-            "upper_b": None,  # Floats1d bias for the output layer
         },
         dims={
             "nO": None,  # Output size
@@ -76,29 +86,31 @@ def TransitionModel(
 
 def resize_output(model: Model, new_nO: int) -> Model:
     old_nO = model.maybe_get_dim("nO")
+    upper = model.get_ref("upper")
     if old_nO is None:
         model.set_dim("nO", new_nO)
+        upper.set_dim("nO", new_nO)
+        upper.initialize()
         return model
     elif new_nO <= old_nO:
         return model
-    elif model.has_param("upper_W"):
+    elif upper.has_param("W"):
         nH = model.get_dim("nH")
-        new_W = model.ops.alloc2f(new_nO, nH)
-        new_b = model.ops.alloc1f(new_nO)
-        old_W = model.get_param("upper_W")
-        old_b = model.get_param("upper_b")
+        new_upper = Linear(nO=new_nO, nI=nH, init_W=zero_init)
+        new_upper.initialize()
+        new_W = new_upper.get_param("W")
+        new_b = new_upper.get_param("b")
+        old_W = upper.get_param("W")
+        old_b = upper.get_param("b")
         new_W[:old_nO] = old_W  # type: ignore
         new_b[:old_nO] = old_b  # type: ignore
         for i in range(old_nO, new_nO):
             model.attrs["unseen_classes"].add(i)
-        model.set_param("upper_W", new_W)
-        model.set_param("upper_b", new_b)
+        upper = new_upper
+        model.layers[-1] = upper
+        model.set_ref("upper", upper)
     # TODO: Avoid this private intrusion
     model._dims["nO"] = new_nO
-    if model.has_grad("upper_W"):
-        model.set_grad("upper_W", model.get_param("upper_W") * 0)
-    if model.has_grad("upper_b"):
-        model.set_grad("upper_b", model.get_param("upper_b") * 0)
     return model
 
 
@@ -115,9 +127,7 @@ def init(
     inferred_nO = _infer_nO(Y)
     if inferred_nO is not None:
         current_nO = model.maybe_get_dim("nO")
-        if current_nO is None:
-            model.set_dim("nO", inferred_nO)
-        elif current_nO != inferred_nO:
+        if current_nO is None or current_nO != inferred_nO:
             model.attrs["resize_output"](model, inferred_nO)
     nO = model.get_dim("nO")
     nP = model.get_dim("nP")
@@ -129,9 +139,6 @@ def init(
     Wl = ops.alloc2f(nH * nP, nF * nI)
     bl = ops.alloc1f(nH * nP)
     padl = ops.alloc1f(nI)
-    Wu = ops.alloc2f(nO, nH)
-    bu = ops.alloc1f(nO)
-    Wu = zero_init(ops, Wu.shape)
     # Wl = zero_init(ops, Wl.shape)
     Wl = glorot_uniform_init(ops, Wl.shape)
     padl = uniform_init(ops, padl.shape)  # type: ignore
@@ -139,8 +146,6 @@ def init(
     model.set_param("lower_W", Wl)
     model.set_param("lower_b", bl)
     model.set_param("lower_pad", padl)
-    model.set_param("upper_W", Wu)
-    model.set_param("upper_b", bu)
     # model = _lsuv_init(model)
     return model
 
@@ -229,9 +234,8 @@ cdef list _parseC(CBlas cblas, TransitionSystem moves, StateC** states,
 def _forward_fallback(model: Model, moves: TransitionSystem, states: List[StateClass], tokvecs, backprop_tok2vec, feats, backprop_feats, seen_mask, is_train: bool,
                   actions: Optional[List[Ints1d]]=None):
     nF = model.get_dim("nF")
+    upper = model.get_ref("upper")
     lower_b = model.get_param("lower_b")
-    upper_W = model.get_param("upper_W")
-    upper_b = model.get_param("upper_b")
     nH = model.get_dim("nH")
     nP = model.get_dim("nP")
 
@@ -262,10 +266,9 @@ def _forward_fallback(model: Model, moves: TransitionSystem, states: List[StateC
         preacts = ops.reshape3f(preacts2f, preacts2f.shape[0], nH, nP)
         assert preacts.shape[0] == len(batch.get_unfinished_states()), preacts.shape
         statevecs, which = ops.maxout(preacts)
-        # Multiply the state-vector by the scores weights and add the bias,
-        # to get the logits.
-        scores = ops.gemm(statevecs, upper_W, trans2=True)
-        scores += upper_b
+        # We don't use upper's backprop, since we want to backprop for
+        # all states at once, rather than a single state.
+        scores = upper.predict(statevecs)
         scores[:, seen_mask] = ops.xp.nanmin(scores)
         # Transition the states, filtering out any that are finished.
         cpu_scores = ops.to_numpy(scores)
@@ -296,10 +299,11 @@ def _forward_fallback(model: Model, moves: TransitionSystem, states: List[StateC
         d_scores *= seen_mask == False
         # Calculate the gradients for the parameters of the upper layer.
         # The weight gemm is (nS, nO) @ (nS, nH).T
-        model.inc_grad("upper_b", d_scores.sum(axis=0))
-        model.inc_grad("upper_W", ops.gemm(d_scores, statevecs, trans1=True))
+        upper.inc_grad("b", d_scores.sum(axis=0))
+        upper.inc_grad("W", ops.gemm(d_scores, statevecs, trans1=True))
         # Now calculate d_statevecs, by backproping through the upper linear layer.
         # This gemm is (nS, nO) @ (nO, nH)
+        upper_W = upper.get_param("W")
         d_statevecs = ops.gemm(d_scores, upper_W)
         # Backprop through the maxout activation
         d_preacts = ops.backprop_maxout(d_statevecs, which, nP)
@@ -321,11 +325,10 @@ def _forward_reference(
     """Slow reference implementation, without the precomputation"""
     nF = model.get_dim("nF")
     tok2vec = model.get_ref("tok2vec")
+    upper = model.get_ref("upper")
     lower_pad = model.get_param("lower_pad")
     lower_W = model.get_param("lower_W")
     lower_b = model.get_param("lower_b")
-    upper_W = model.get_param("upper_W")
-    upper_b = model.get_param("upper_b")
     nH = model.get_dim("nH")
     nP = model.get_dim("nP")
     nO = model.get_dim("nO")
@@ -356,10 +359,9 @@ def _forward_reference(
         preacts2f += lower_b
         preacts = model.ops.reshape3f(preacts2f, preacts2f.shape[0], nH, nP)
         statevecs, which = ops.maxout(preacts)
-        # Multiply the state-vector by the scores weights and add the bias,
-        # to get the logits.
-        scores = model.ops.gemm(statevecs, upper_W, trans2=True)
-        scores += upper_b
+        # We don't use upper's backprop, since we want to backprop for
+        # all states at once, rather than a single state.
+        scores = upper.predict(statevecs)
         scores[:, seen_mask] = model.ops.xp.nanmin(scores)
         # Transition the states, filtering out any that are finished.
         next_states = moves.transition_states(next_states, scores)
@@ -392,10 +394,11 @@ def _forward_reference(
         assert d_scores.shape == (nS, nO), d_scores.shape
         # Calculate the gradients for the parameters of the upper layer.
         # The weight gemm is (nS, nO) @ (nS, nH).T
-        model.inc_grad("upper_b", d_scores.sum(axis=0))
-        model.inc_grad("upper_W", model.ops.gemm(d_scores, statevecs, trans1=True))
+        upper.inc_grad("b", d_scores.sum(axis=0))
+        upper.inc_grad("W", model.ops.gemm(d_scores, statevecs, trans1=True))
         # Now calculate d_statevecs, by backproping through the upper linear layer.
         # This gemm is (nS, nO) @ (nO, nH)
+        upper_W = upper.get_param("W")
         d_statevecs = model.ops.gemm(d_scores, upper_W)
         # Backprop through the maxout activation
         d_preacts = model.ops.backprop_maxout(d_statevecs, which, nP)
@@ -540,9 +543,10 @@ def _lsuv_init(model: Model):
 
 
 cdef WeightsC get_c_weights(model, const float* feats, np.ndarray[np.npy_bool, ndim=1] seen_mask) except *:
+    upper = model.get_ref("upper")
     cdef np.ndarray lower_b = model.get_param("lower_b")
-    cdef np.ndarray upper_W = model.get_param("upper_W")
-    cdef np.ndarray upper_b = model.get_param("upper_b")
+    cdef np.ndarray upper_W = upper.get_param("W")
+    cdef np.ndarray upper_b = upper.get_param("b")
 
     cdef WeightsC output
     output.feat_weights = feats
