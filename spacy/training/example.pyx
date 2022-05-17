@@ -182,8 +182,10 @@ cdef class Example:
             aligned_gold_values = gold_values[x2y_multiple_toks[i]]
 
             # If all aligned tokens have the same value, use it.
-            x2y_multiple_toks[i] = aligned_gold_values[0].item() \
-                if len(set(list(aligned_gold_values))) == 1 else None
+            if len(set(list(aligned_gold_values))) == 1:
+                x2y_multiple_toks[i] = aligned_gold_values[0].item()
+            else:
+                x2y_multiple_toks[i] = None
 
         output[x2y_multiple_toks_i] = x2y_multiple_toks
 
