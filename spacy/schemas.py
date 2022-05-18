@@ -485,3 +485,29 @@ class RecommendationSchema(BaseModel):
     word_vectors: Optional[str] = None
     transformer: Optional[RecommendationTrf] = None
     has_letters: bool = True
+
+
+class DocJSONSchema(BaseModel):
+    """
+    JSON/dict format for JSON representation of Doc objects.
+    """
+
+    cats: Optional[Dict[StrictStr, StrictFloat]] = Field(
+        ..., title="Categories with corresponding probabilities"
+    )
+    ents: Optional[
+        Dict[StrictStr, List[Dict[StrictStr, Union[StrictInt, StrictStr]]]]
+    ] = Field(..., title="Information on entities")
+    sents: Optional[List[Dict[StrictStr, StrictInt]]] = Field(
+        ..., title="Indices of sentences' start and end indices"
+    )
+    text: StrictStr = Field(..., title="Document text")
+    spans: Dict[StrictStr, List[Dict[StrictStr, Union[StrictStr, StrictInt]]]] = Field(
+        ..., title="Span information - end/start indices, label, KB ID"
+    )
+    tokens: List[Dict[StrictStr, Union[StrictStr, StrictInt]]] = Field(
+        ..., title="Token information - ID, start, annotations"
+    )
+    _: Optional[Dict[StrictStr, Any]] = Field(
+        ..., title="Any custom data stored in the document's _ attribute"
+    )
