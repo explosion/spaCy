@@ -744,7 +744,7 @@ def test_debug_data_compile_gold():
     assert data["boundary_cross_ents"] == 1
 
 
-def test_init_config_from_python_without_optional_args() -> None:
+def test_init_config_from_python_without_optional_args():
     """
     Tests calling init_config_cli() from Python with optional arguments not set. This should detect bugs related to
     Typer not automatically setting default values for arguments when decorated functions are called from Python instead
