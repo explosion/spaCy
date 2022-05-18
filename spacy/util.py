@@ -391,9 +391,8 @@ def get_module_path(module: ModuleType) -> Path:
     """
     if not hasattr(module, "__module__"):
         raise ValueError(Errors.E169.format(module=repr(module)))
-    return Path(
-        cast(Union[str, os.PathLike[str]], sys.modules[module.__module__].__file__)
-    ).parent
+    file_path = Path(cast(os.PathLike[str], sys.modules[module.__module__].__file__))
+    return file_path.parent
 
 
 def load_model(
