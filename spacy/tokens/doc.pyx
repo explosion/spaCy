@@ -1504,7 +1504,6 @@ cdef class Doc:
         # Initialize doc instance.
         start = 0
         cdef const LexemeC* lex
-        cdef str orth_
         cdef bint has_space
         reconstructed_words, spaces = get_words_and_spaces(words, doc_json["text"])
         assert words == reconstructed_words
