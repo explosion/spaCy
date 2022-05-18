@@ -2046,10 +2046,10 @@ class Language:
         to_deactivate = deactivate
 
         if activate:
-            to_deactivate = [
+            to_deactivate = tuple(
                 pipe_name for pipe_name in pipe_names if pipe_name not in activate
-            ]
-            if deactivate and set(deactivate) != {*to_deactivate, *deactivate}:
+            )
+            if deactivate and tuple(pipe_name for pipe_name in deactivate if pipe_name in pipe_names) != to_deactivate:
                 raise ValueError(
                     Errors.E1037.format(
                         arg1="include" if arg_type == "exclude" else "enable",
