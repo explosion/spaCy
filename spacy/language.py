@@ -2043,20 +2043,13 @@ class Language:
         assert arg_type in ("exclude", "disable")
         if deactivate is not None and isinstance(deactivate, str):
             deactivate = [deactivate]
-
-        supported_fields = [*pipe_names, *["strings", "lookups"]]
-        # To ensure the proper resolution of component activation status, we remove all specified components not present
-        # in the pipeline.
-        deactivate = [
-            field_name for field_name in deactivate if field_name in supported_fields
-        ]
         to_deactivate = deactivate
 
         if activate:
             to_deactivate = [
                 pipe_name for pipe_name in pipe_names if pipe_name not in activate
             ]
-            if deactivate and deactivate != to_deactivate:
+            if deactivate and set(deactivate) != {*to_deactivate, *deactivate}:
                 raise ValueError(
                     Errors.E1037.format(
                         arg1="include" if arg_type == "exclude" else "enable",
