@@ -1570,7 +1570,7 @@ cdef class Doc:
         ### Span/document properties ###
 
         # Complement other document-level properties (cats, spans, ents).
-        self.cats = doc_json.get("cats", self.cats)
+        self.cats = doc_json.get("cats", {})
 
         # Set sentence boundaries, if dependency parser not available but sentences are specified in JSON.
         if not self.has_annotation("DEP"):
