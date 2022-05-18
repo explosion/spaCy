@@ -1513,7 +1513,7 @@ cdef class Doc:
         # Set remaining token-level attributes via Doc.from_array().
         if HEAD in token_annotations:
             token_annotations[HEAD] = [
-                head - i if head is not None else 0 for i, head in enumerate(token_annotations[HEAD])
+                head - i for i, head in enumerate(token_annotations[HEAD])
             ]
         if DEP in token_annotations:
             deps = []
