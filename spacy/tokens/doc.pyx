@@ -1475,20 +1475,18 @@ cdef class Doc:
         token_attrs_ids = (POS, HEAD, DEP, LEMMA, TAG, MORPH)
         # Map annotation type IDs to their string equivalents.
         token_attrs = {t: self.vocab.strings[t].lower() for t in token_attrs_ids}
-        token_annotations_reqs = {
-            token_attr_id: token_attr_id if token_attr_id != HEAD else DEP for token_attr_id in token_attrs
-        }
         token_annotations = {}
 
         # Gather token-level properties.
-        for token in doc_json["tokens"]:
-            words.append(doc_json["text"][token["start"]:token["end"]])
-            for annot_type_id in token_attrs:
-                # Assuming all tokens have exactly the same set of attributes.
-                if token_attrs[token_annotations_reqs[annot_type_id]] in token:
-                    if annot_type_id not in token_annotations:
-                        token_annotations[annot_type_id] = []
-                    token_annotations[annot_type_id].append(token[token_attrs[annot_type_id]])
+        for token_json in doc_json["tokens"]:
+            words.append(doc_json["text"][token_json["start"]:token_json["end"]])
+            for attr, attr_json in token_attrs.items():
+                if attr_json in token_json:
+                    if token_json["id"] == 0 and attr not in token_annotations:
+                        token_annotations[attr] = []
+                    elif attr not in token_annotations:
+                        raise ValueError("Something about how partial token annotation is not supported.")
+                    token_annotations[attr].append(token_json[attr_json])
 
         # Assert all tokens have exactly the same set of attributes.
         inconsistent_props: Set[str] = set()
@@ -1516,12 +1514,9 @@ cdef class Doc:
                 head - i for i, head in enumerate(token_annotations[HEAD])
             ]
         if DEP in token_annotations:
-            deps = []
-            for dep in token_annotations[DEP]:
-                if dep is None:
-                    raise ValueError(Errors)
-                deps.append(dep)
-            token_annotations[DEP] = deps if len(deps) else None
+            if DEP in token_annotations[DEP]:
+                if None in token_annotations[DEP]:
+                    raise ValueError(Errors.E1040)
 
         if DEP in token_annotations and HEAD not in token_annotations:
             token_annotations[HEAD] = [0] * len(token_annotations[DEP])
@@ -1533,12 +1528,11 @@ cdef class Doc:
                     raise ValueError(Errors.E1021.format(pp=pp))
 
         attrs = []
-        annotations = [token_annotations[key] for key in token_attrs_ids if key in token_annotations]
-        for heading in token_attrs_ids:
-            if heading in token_annotations:
-                if len(token_annotations[heading]) != len(words):
+        for attr in token_attrs.keys():
+            if attr in token_annotations:
+                if len(token_annotations[attr]) != len(words):
                     raise ValueError(Errors.E189)
-                attrs.append(heading)
+                attrs.append(attr)
 
         # If there are any other annotations, set them.
         if attrs:
@@ -1547,18 +1541,16 @@ cdef class Doc:
                 array = numpy.reshape(array, (array.size, 1))
             j = 0
 
-            for annot in annotations:
-                if annot:
-                    if annot is token_annotations.get(HEAD):
-                        for i in range(len(words)):
-                            array[i, j] = annot[i]
-                    elif annot is token_annotations.get(MORPH):
-                        for i in range(len(words)):
-                            array[i, j] = self.vocab.morphology.add(token_annotations[MORPH][i])
-                    else:
-                        for i in range(len(words)):
-                            array[i, j] = self.vocab.strings.add(annot[i])
-                    j += 1
+            for j, (attr, annot) in enumerate(token_annotations.items()):
+                if attr is HEAD:
+                    for i in range(len(words)):
+                        array[i, j] = annot[i]
+                elif attr is MORPH:
+                    for i in range(len(words)):
+                        array[i, j] = self.vocab.morphology.add(annot[i])
+                else:
+                    for i in range(len(words)):
+                        array[i, j] = self.vocab.strings.add(annot[i])
             self.from_array(attrs, array)
 
         ### Span/document properties ###
