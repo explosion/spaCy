@@ -23,6 +23,7 @@ Options.docstrings = True
 
 PACKAGES = find_packages()
 MOD_NAMES = [
+    "spacy.training.alignment_array",
     "spacy.training.example",
     "spacy.parts_of_speech",
     "spacy.strings",
@@ -33,6 +34,7 @@ MOD_NAMES = [
     "spacy.ml.parser_model",
     "spacy.morphology",
     "spacy.pipeline.dep_parser",
+    "spacy.pipeline._edit_tree_internals.edit_trees",
     "spacy.pipeline.morphologizer",
     "spacy.pipeline.multitask",
     "spacy.pipeline.ner",
@@ -81,7 +83,6 @@ COPY_FILES = {
     ROOT / "setup.cfg": PACKAGE_ROOT / "tests" / "package",
     ROOT / "pyproject.toml": PACKAGE_ROOT / "tests" / "package",
     ROOT / "requirements.txt": PACKAGE_ROOT / "tests" / "package",
-    ROOT / "website" / "meta" / "universe.json": PACKAGE_ROOT / "tests" / "universe",
 }
 
 

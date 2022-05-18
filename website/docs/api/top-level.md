@@ -263,7 +263,7 @@ Render a dependency parse tree or named entity visualization.
 
 | Name        | Description                                                                                                                                                                            |
 | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `docs`      | Document(s) or span(s) to visualize. ~~Union[Iterable[Union[Doc, Span]], Doc, Span]~~                                                                                                  |
+| `docs`      | Document(s) or span(s) to visualize. ~~Union[Iterable[Union[Doc, Span, dict]], Doc, Span, dict]~~                                                                                      |
 | `style`     | Visualization style, `"dep"` or `"ent"`. Defaults to `"dep"`. ~~str~~                                                                                                                  |
 | `page`      | Render markup as full HTML page. Defaults to `True`. ~~bool~~                                                                                                                          |
 | `minify`    | Minify HTML markup. Defaults to `False`. ~~bool~~                                                                                                                                      |
@@ -320,12 +320,31 @@ If a setting is not present in the options, the default value will be used.
 | `template` <Tag variant="new">2.2</Tag>          | Optional template to overwrite the HTML used to render entity spans. Should be a format string and can use `{bg}`, `{text}` and `{label}`. See [`templates.py`](%%GITHUB_SPACY/spacy/displacy/templates.py) for examples. ~~Optional[str]~~ |
 | `kb_url_template` <Tag variant="new">3.2.1</Tag> | Optional template to construct the KB url for the entity to link to. Expects a python f-string format with single field to fill in. ~~Optional[str]~~                                                                                       |
 
-By default, displaCy comes with colors for all entity types used by
-[spaCy's trained pipelines](/models). If you're using custom entity types, you
-can use the `colors` setting to add your own colors for them. Your application
-or pipeline package can also expose a
-[`spacy_displacy_colors` entry point](/usage/saving-loading#entry-points-displacy)
-to add custom labels and their colors automatically.
+
+#### Span Visualizer options {#displacy_options-span}
+
+> #### Example
+>
+> ```python
+> options = {"spans_key": "sc"}
+> displacy.serve(doc, style="span", options=options)
+> ```
+
+| Name            | Description                                                                                                                                             |
+|-----------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `spans_key`       | Which spans key to render spans from. Default is `"sc"`. ~~str~~                                                                                                   |
+| `templates`       | Dictionary containing the keys `"span"`, `"slice"`, and `"start"`. These dictate how the overall span, a span slice, and the starting token will be rendered. ~~Optional[Dict[str, str]~~ |
+| `kb_url_template` | Optional template to construct the KB url for the entity to link to. Expects a python f-string format with single field to fill in ~~Optional[str]~~                    |
+| `colors`          | Color overrides. Entity types should be mapped to color names or values. ~~Dict[str, str]~~ |
+
+
+By default, displaCy comes with colors for all entity types used by [spaCy's
+trained pipelines](/models) for both entity and span visualizer. If you're
+using custom entity types, you can use the `colors` setting to add your own
+colors for them. Your application or pipeline package can also expose a
+[`spacy_displacy_colors` entry
+point](/usage/saving-loading#entry-points-displacy) to add custom labels and
+their colors automatically.
 
 By default, displaCy links to `#` for entities without a `kb_id` set on their
 span. If you wish to link an entity to their URL then consider using the
@@ -334,6 +353,7 @@ span. If you wish to link an entity to their URL then consider using the
 `https://www.wikidata.org/wiki/{}`. Clicking on your entity in the rendered HTML
 should redirect you to their Wikidata page, in this case
 `https://www.wikidata.org/wiki/Q95`.
+
 
 ## registry {#registry source="spacy/util.py" new="3"}
 
@@ -423,7 +443,7 @@ and the accuracy scores on the development set.
 The built-in, default logger is the ConsoleLogger, which prints results to the
 console in tabular format. The
 [spacy-loggers](https://github.com/explosion/spacy-loggers) package, included as
-a dependency of spaCy, enables other loggers: currently it provides one that
+a dependency of spaCy, enables other loggers, such as one that
 sends results to a [Weights & Biases](https://www.wandb.com/) dashboard.
 
 Instead of using one of the built-in loggers, you can

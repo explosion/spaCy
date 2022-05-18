@@ -303,22 +303,23 @@ available pipeline components and component functions.
 > ruler = nlp.add_pipe("entity_ruler")
 > ```
 
-| String name          | Component                                            | Description                                                                               |
-| -------------------- | ---------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| `tagger`             | [`Tagger`](/api/tagger)                              | Assign part-of-speech-tags.                                                               |
-| `parser`             | [`DependencyParser`](/api/dependencyparser)          | Assign dependency labels.                                                                 |
-| `ner`                | [`EntityRecognizer`](/api/entityrecognizer)          | Assign named entities.                                                                    |
-| `entity_linker`      | [`EntityLinker`](/api/entitylinker)                  | Assign knowledge base IDs to named entities. Should be added after the entity recognizer. |
-| `entity_ruler`       | [`EntityRuler`](/api/entityruler)                    | Assign named entities based on pattern rules and dictionaries.                            |
-| `textcat`            | [`TextCategorizer`](/api/textcategorizer)            | Assign text categories: exactly one category is predicted per document.                   |
-| `textcat_multilabel` | [`MultiLabel_TextCategorizer`](/api/textcategorizer) | Assign text categories in a multi-label setting: zero, one or more labels per document.   |
-| `lemmatizer`         | [`Lemmatizer`](/api/lemmatizer)                      | Assign base forms to words.                                                               |
-| `morphologizer`      | [`Morphologizer`](/api/morphologizer)                | Assign morphological features and coarse-grained POS tags.                                |
-| `attribute_ruler`    | [`AttributeRuler`](/api/attributeruler)              | Assign token attribute mappings and rule-based exceptions.                                |
-| `senter`             | [`SentenceRecognizer`](/api/sentencerecognizer)      | Assign sentence boundaries.                                                               |
-| `sentencizer`        | [`Sentencizer`](/api/sentencizer)                    | Add rule-based sentence segmentation without the dependency parse.                        |
-| `tok2vec`            | [`Tok2Vec`](/api/tok2vec)                            | Assign token-to-vector embeddings.                                                        |
-| `transformer`        | [`Transformer`](/api/transformer)                    | Assign the tokens and outputs of a transformer model.                                     |
+| String name            | Component                                            | Description                                                                               |
+| ---------------------- | ---------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `tagger`               | [`Tagger`](/api/tagger)                              | Assign part-of-speech-tags.                                                               |
+| `parser`               | [`DependencyParser`](/api/dependencyparser)          | Assign dependency labels.                                                                 |
+| `ner`                  | [`EntityRecognizer`](/api/entityrecognizer)          | Assign named entities.                                                                    |
+| `entity_linker`        | [`EntityLinker`](/api/entitylinker)                  | Assign knowledge base IDs to named entities. Should be added after the entity recognizer. |
+| `entity_ruler`         | [`EntityRuler`](/api/entityruler)                    | Assign named entities based on pattern rules and dictionaries.                            |
+| `textcat`              | [`TextCategorizer`](/api/textcategorizer)            | Assign text categories: exactly one category is predicted per document.                   |
+| `textcat_multilabel`   | [`MultiLabel_TextCategorizer`](/api/textcategorizer) | Assign text categories in a multi-label setting: zero, one or more labels per document.   |
+| `lemmatizer`           | [`Lemmatizer`](/api/lemmatizer)                      | Assign base forms to words using rules and lookups.                                       |
+| `trainable_lemmatizer` | [`EditTreeLemmatizer`](/api/edittreelemmatizer)      | Assign base forms to words.                                                               |
+| `morphologizer`        | [`Morphologizer`](/api/morphologizer)                | Assign morphological features and coarse-grained POS tags.                                |
+| `attribute_ruler`      | [`AttributeRuler`](/api/attributeruler)              | Assign token attribute mappings and rule-based exceptions.                                |
+| `senter`               | [`SentenceRecognizer`](/api/sentencerecognizer)      | Assign sentence boundaries.                                                               |
+| `sentencizer`          | [`Sentencizer`](/api/sentencizer)                    | Add rule-based sentence segmentation without the dependency parse.                        |
+| `tok2vec`              | [`Tok2Vec`](/api/tok2vec)                            | Assign token-to-vector embeddings.                                                        |
+| `transformer`          | [`Transformer`](/api/transformer)                    | Assign the tokens and outputs of a transformer model.                                     |
 
 ### Disabling, excluding and modifying components {#disabling}
 
@@ -1081,13 +1082,17 @@ on [serialization methods](/usage/saving-loading/#serialization-methods).
 > directory.
 
 ```python
-### Custom serialization methods {highlight="6-7,9-11"}
+### Custom serialization methods {highlight="7-11,13-15"}
 import srsly
+from spacy.util import ensure_path
 
 class AcronymComponent:
     # other methods here...
 
     def to_disk(self, path, exclude=tuple()):
+        path = ensure_path(path)
+        if not path.exists():
+            path.mkdir()
         srsly.write_json(path / "data.json", self.data)
 
     def from_disk(self, path, exclude=tuple()):
@@ -1479,7 +1484,7 @@ especially useful it you want to pass in a string instead of calling
 ### Example: Pipeline component for GPE entities and country meta data via a REST API {#component-example3}
 
 This example shows the implementation of a pipeline component that fetches
-country meta data via the [REST Countries API](https://restcountries.eu), sets
+country meta data via the [REST Countries API](https://restcountries.com), sets
 entity annotations for countries and sets custom attributes on the `Doc` and
 `Span` – for example, the capital, latitude/longitude coordinates and even the
 country flag.
@@ -1495,7 +1500,7 @@ from spacy.tokens import Doc, Span, Token
 @Language.factory("rest_countries")
 class RESTCountriesComponent:
     def __init__(self, nlp, name, label="GPE"):
-        r = requests.get("https://restcountries.eu/rest/v2/all")
+        r = requests.get("https://restcountries.com/v2/all")
         r.raise_for_status()  # make sure requests raises an error if it fails
         countries = r.json()
         # Convert API response to dict keyed by country name for easy lookup

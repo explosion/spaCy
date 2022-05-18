@@ -12,6 +12,7 @@ TEST_PATTERNS = [
     ([{"IS_PUNCT": True, "OP": "$"}], 1, 1),
     ([{"_": "foo"}], 1, 1),
     ('[{"TEXT": "foo"}, {"LOWER": "bar"}]', 1, 1),
+    ([{"ENT_IOB": "foo"}], 1, 1),
     ([1, 2, 3], 3, 1),
     # Bad patterns flagged outside of Matcher
     ([{"_": {"foo": "bar", "baz": {"IN": "foo"}}}], 2, 0),  # prev: (1, 0)

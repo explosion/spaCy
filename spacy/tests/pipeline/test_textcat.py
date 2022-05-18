@@ -277,6 +277,21 @@ def test_issue7019():
     print_prf_per_type(msg, scores, name="foo", type="bar")
 
 
+@pytest.mark.issue(9904)
+def test_issue9904():
+    nlp = Language()
+    textcat = nlp.add_pipe("textcat")
+    get_examples = make_get_examples_single_label(nlp)
+    nlp.initialize(get_examples)
+
+    examples = get_examples()
+    scores = textcat.predict([eg.predicted for eg in examples])
+
+    loss = textcat.get_loss(examples, scores)[0]
+    loss_double_bs = textcat.get_loss(examples * 2, scores.repeat(2, axis=0))[0]
+    assert loss == pytest.approx(loss_double_bs)
+
+
 @pytest.mark.skip(reason="Test is flakey when run with others")
 def test_simple_train():
     nlp = Language()
@@ -367,6 +382,7 @@ def test_implicit_label(name, get_examples):
 
 
 # fmt: off
+@pytest.mark.slow
 @pytest.mark.parametrize(
     "name,textcat_config",
     [
@@ -375,7 +391,10 @@ def test_implicit_label(name, get_examples):
         ("textcat", {"@architectures": "spacy.TextCatBOW.v1", "exclusive_classes": True, "no_output_layer": True, "ngram_size": 3}),
         ("textcat_multilabel", {"@architectures": "spacy.TextCatBOW.v1", "exclusive_classes": False, "no_output_layer": False, "ngram_size": 3}),
         ("textcat_multilabel", {"@architectures": "spacy.TextCatBOW.v1", "exclusive_classes": False, "no_output_layer": True, "ngram_size": 3}),
-        # ENSEMBLE
+        # ENSEMBLE V1
+        ("textcat", {"@architectures": "spacy.TextCatEnsemble.v1", "exclusive_classes": False, "pretrained_vectors": None, "width": 64, "embed_size": 2000, "conv_depth": 2, "window_size": 1, "ngram_size": 1, "dropout": None}),
+        ("textcat_multilabel", {"@architectures": "spacy.TextCatEnsemble.v1", "exclusive_classes": False, "pretrained_vectors": None, "width": 64, "embed_size": 2000, "conv_depth": 2, "window_size": 1, "ngram_size": 1, "dropout": None}),
+        # ENSEMBLE V2
         ("textcat", {"@architectures": "spacy.TextCatEnsemble.v2", "tok2vec": DEFAULT_TOK2VEC_MODEL, "linear_model": {"@architectures": "spacy.TextCatBOW.v1", "exclusive_classes": True, "no_output_layer": False, "ngram_size": 3}}),
         ("textcat", {"@architectures": "spacy.TextCatEnsemble.v2", "tok2vec": DEFAULT_TOK2VEC_MODEL, "linear_model": {"@architectures": "spacy.TextCatBOW.v1", "exclusive_classes": True, "no_output_layer": True, "ngram_size": 3}}),
         ("textcat_multilabel", {"@architectures": "spacy.TextCatEnsemble.v2", "tok2vec": DEFAULT_TOK2VEC_MODEL, "linear_model": {"@architectures": "spacy.TextCatBOW.v1", "exclusive_classes": False, "no_output_layer": False, "ngram_size": 3}}),
@@ -628,15 +647,28 @@ def test_overfitting_IO_multi():
 
 
 # fmt: off
+@pytest.mark.slow
 @pytest.mark.parametrize(
     "name,train_data,textcat_config",
     [
+        # BOW V1
+        ("textcat_multilabel", TRAIN_DATA_MULTI_LABEL, {"@architectures": "spacy.TextCatBOW.v1", "exclusive_classes": False, "ngram_size": 1, "no_output_layer": False}),
+        ("textcat", TRAIN_DATA_SINGLE_LABEL, {"@architectures": "spacy.TextCatBOW.v1", "exclusive_classes": True, "ngram_size": 4, "no_output_layer": False}),
+        # ENSEMBLE V1
+        ("textcat_multilabel", TRAIN_DATA_MULTI_LABEL, {"@architectures": "spacy.TextCatEnsemble.v1", "exclusive_classes": False, "pretrained_vectors": None, "width": 64, "embed_size": 2000, "conv_depth": 2, "window_size": 1, "ngram_size": 1, "dropout": None}),
+        ("textcat", TRAIN_DATA_SINGLE_LABEL, {"@architectures": "spacy.TextCatEnsemble.v1", "exclusive_classes": False, "pretrained_vectors": None, "width": 64, "embed_size": 2000, "conv_depth": 2, "window_size": 1, "ngram_size": 1, "dropout": None}),
+        # CNN V1
+        ("textcat", TRAIN_DATA_SINGLE_LABEL, {"@architectures": "spacy.TextCatCNN.v1", "tok2vec": DEFAULT_TOK2VEC_MODEL, "exclusive_classes": True}),
+        ("textcat_multilabel", TRAIN_DATA_MULTI_LABEL, {"@architectures": "spacy.TextCatCNN.v1", "tok2vec": DEFAULT_TOK2VEC_MODEL, "exclusive_classes": False}),
+        # BOW V2
         ("textcat_multilabel", TRAIN_DATA_MULTI_LABEL, {"@architectures": "spacy.TextCatBOW.v2", "exclusive_classes": False, "ngram_size": 1, "no_output_layer": False}),
         ("textcat", TRAIN_DATA_SINGLE_LABEL, {"@architectures": "spacy.TextCatBOW.v2", "exclusive_classes": True, "ngram_size": 4, "no_output_layer": False}),
         ("textcat_multilabel", TRAIN_DATA_MULTI_LABEL, {"@architectures": "spacy.TextCatBOW.v2", "exclusive_classes": False, "ngram_size": 3, "no_output_layer": True}),
         ("textcat", TRAIN_DATA_SINGLE_LABEL, {"@architectures": "spacy.TextCatBOW.v2", "exclusive_classes": True, "ngram_size": 2, "no_output_layer": True}),
+        # ENSEMBLE V2
         ("textcat_multilabel", TRAIN_DATA_MULTI_LABEL, {"@architectures": "spacy.TextCatEnsemble.v2", "tok2vec": DEFAULT_TOK2VEC_MODEL, "linear_model": {"@architectures": "spacy.TextCatBOW.v2", "exclusive_classes": False, "ngram_size": 1, "no_output_layer": False}}),
         ("textcat", TRAIN_DATA_SINGLE_LABEL, {"@architectures": "spacy.TextCatEnsemble.v2", "tok2vec": DEFAULT_TOK2VEC_MODEL, "linear_model": {"@architectures": "spacy.TextCatBOW.v2", "exclusive_classes": True, "ngram_size": 5, "no_output_layer": False}}),
+        # CNN V2
         ("textcat", TRAIN_DATA_SINGLE_LABEL, {"@architectures": "spacy.TextCatCNN.v2", "tok2vec": DEFAULT_TOK2VEC_MODEL, "exclusive_classes": True}),
         ("textcat_multilabel", TRAIN_DATA_MULTI_LABEL, {"@architectures": "spacy.TextCatCNN.v2", "tok2vec": DEFAULT_TOK2VEC_MODEL, "exclusive_classes": False}),
     ],

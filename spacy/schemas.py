@@ -1,5 +1,6 @@
 from typing import Dict, List, Union, Optional, Any, Callable, Type, Tuple
 from typing import Iterable, TypeVar, TYPE_CHECKING
+from .compat import Literal
 from enum import Enum
 from pydantic import BaseModel, Field, ValidationError, validator, create_model
 from pydantic import StrictStr, StrictInt, StrictFloat, StrictBool
@@ -209,6 +210,7 @@ NumberValue = Union[TokenPatternNumber, StrictInt, StrictFloat]
 UnderscoreValue = Union[
     TokenPatternString, TokenPatternNumber, str, int, float, list, bool
 ]
+IobValue = Literal["", "I", "O", "B", 0, 1, 2, 3]
 
 
 class TokenPattern(BaseModel):
@@ -222,6 +224,7 @@ class TokenPattern(BaseModel):
     lemma: Optional[StringValue] = None
     shape: Optional[StringValue] = None
     ent_type: Optional[StringValue] = None
+    ent_iob: Optional[IobValue] = None
     ent_id: Optional[StringValue] = None
     ent_kb_id: Optional[StringValue] = None
     norm: Optional[StringValue] = None

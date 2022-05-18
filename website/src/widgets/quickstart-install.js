@@ -113,8 +113,7 @@ const QuickstartInstall = ({ id, title }) => {
                             {
                                 id: 'venv',
                                 title: 'virtual env',
-                                help:
-                                    'Use a virtual environment and install spaCy into a user directory',
+                                help: 'Use a virtual environment',
                             },
                             {
                                 id: 'train',
@@ -165,48 +164,62 @@ const QuickstartInstall = ({ id, title }) => {
                         setters={setters}
                         showDropdown={showDropdown}
                     >
-                        <QS config="venv">python -m venv .env</QS>
-                        <QS config="venv" os="mac">
+                        <QS package="pip" config="venv">
+                            python -m venv .env
+                        </QS>
+                        <QS package="pip" config="venv" os="mac">
                             source .env/bin/activate
                         </QS>
-                        <QS config="venv" os="linux">
+                        <QS package="pip" config="venv" os="linux">
                             source .env/bin/activate
                         </QS>
-                        <QS config="venv" os="windows">
+                        <QS package="pip" config="venv" os="windows">
                             .env\Scripts\activate
+                        </QS>
+                        <QS package="source" config="venv">
+                            python -m venv .env
+                        </QS>
+                        <QS package="source" config="venv" os="mac">
+                            source .env/bin/activate
+                        </QS>
+                        <QS package="source" config="venv" os="linux">
+                            source .env/bin/activate
+                        </QS>
+                        <QS package="source" config="venv" os="windows">
+                            .env\Scripts\activate
+                        </QS>
+                        <QS package="conda" config="venv">
+                            conda create -n venv
+                        </QS>
+                        <QS package="conda" config="venv">
+                            conda activate venv
                         </QS>
                         <QS package="pip">pip install -U pip setuptools wheel</QS>
                         <QS package="source">pip install -U pip setuptools wheel</QS>
                         <QS package="pip">
-                            pip install -U {pkg}
-                            {pipExtras && `[${pipExtras}]`}
+                            {pipExtras
+                                ? `pip install -U '${pkg}[${pipExtras}]'`
+                                : `pip install -U ${pkg}`}
                             {nightly ? ' --pre' : ''}
                         </QS>
                         <QS package="conda">conda install -c conda-forge spacy</QS>
                         <QS package="conda" hardware="gpu">
                             conda install -c conda-forge cupy
                         </QS>
+                        <QS package="conda" config="train">
+                            conda install -c conda-forge spacy-transformers
+                        </QS>
                         <QS package="source">
                             git clone https://github.com/{repo}
                             {nightly ? ` --branch ${DEFAULT_BRANCH}` : ''}
                         </QS>
                         <QS package="source">cd spaCy</QS>
-                        <QS package="source" os="linux">
-                            export PYTHONPATH=`pwd`
-                        </QS>
-                        <QS package="source" os="windows">
-                            set PYTHONPATH=C:\path\to\spaCy
-                        </QS>
                         <QS package="source">pip install -r requirements.txt</QS>
-                        <QS package="source">python setup.py build_ext --inplace</QS>
                         <QS package="source">
-                            pip install {train || hardware == 'gpu' ? `'.[${pipExtras}]'` : '.'}
+                            pip install --no-build-isolation --editable {train || hardware == 'gpu' ? `'.[${pipExtras}]'` : '.'}
                         </QS>
                         <QS config="train" package="conda" comment prompt={false}>
                             # packages only available via pip
-                        </QS>
-                        <QS config="train" package="conda">
-                            pip install spacy-transformers
                         </QS>
                         <QS config="train" package="conda">
                             pip install spacy-lookups-data

@@ -421,7 +421,7 @@ def test_vector_is_oov():
 def test_init_vectors_unset():
     v = Vectors(shape=(10, 10))
     assert v.is_full is False
-    assert v.data.shape == (10, 10)
+    assert v.shape == (10, 10)
 
     with pytest.raises(ValueError):
         v = Vectors(shape=(10, 10), mode="floret")
@@ -453,6 +453,39 @@ def test_vectors_get_batch():
     rows = v.find(keys=words)
     vecs = OPS.as_contig(v.data[rows])
     assert_equal(OPS.to_numpy(vecs), OPS.to_numpy(v.get_batch(words)))
+
+
+def test_vectors_deduplicate():
+    data = OPS.asarray([[1, 1], [2, 2], [3, 4], [1, 1], [3, 4]], dtype="f")
+    v = Vectors(data=data, keys=["a1", "b1", "c1", "a2", "c2"])
+    vocab = Vocab()
+    vocab.vectors = v
+    # duplicate vectors do not use the same keys
+    assert (
+        vocab.vectors.key2row[v.strings["a1"]] != vocab.vectors.key2row[v.strings["a2"]]
+    )
+    assert (
+        vocab.vectors.key2row[v.strings["c1"]] != vocab.vectors.key2row[v.strings["c2"]]
+    )
+    vocab.deduplicate_vectors()
+    # there are three unique vectors
+    assert vocab.vectors.shape[0] == 3
+    # the uniqued data is the same as the deduplicated data
+    assert_equal(
+        numpy.unique(OPS.to_numpy(vocab.vectors.data), axis=0),
+        OPS.to_numpy(vocab.vectors.data),
+    )
+    # duplicate vectors use the same keys now
+    assert (
+        vocab.vectors.key2row[v.strings["a1"]] == vocab.vectors.key2row[v.strings["a2"]]
+    )
+    assert (
+        vocab.vectors.key2row[v.strings["c1"]] == vocab.vectors.key2row[v.strings["c2"]]
+    )
+    # deduplicating again makes no changes
+    vocab_b = vocab.to_bytes()
+    vocab.deduplicate_vectors()
+    assert vocab_b == vocab.to_bytes()
 
 
 @pytest.fixture()
@@ -514,7 +547,7 @@ def test_floret_vectors(floret_vectors_vec_str, floret_vectors_hashvec_str):
     # rows: 2 rows per ngram
     rows = OPS.xp.asarray(
         [
-            h % nlp.vocab.vectors.data.shape[0]
+            h % nlp.vocab.vectors.shape[0]
             for ngram in ngrams
             for h in nlp.vocab.vectors._get_ngram_hashes(ngram)
         ],
@@ -535,6 +568,10 @@ def test_floret_vectors(floret_vectors_vec_str, floret_vectors_hashvec_str):
         # every word has a vector
         assert nlp.vocab[word * 5].has_vector
 
+    # n_keys is -1 for floret
+    assert nlp_plain.vocab.vectors.n_keys > 0
+    assert nlp.vocab.vectors.n_keys == -1
+
     # check that single and batched vector lookups are identical
     words = [s for s in nlp_plain.vocab.vectors]
     single_vecs = OPS.to_numpy(OPS.asarray([nlp.vocab[word].vector for word in words]))
@@ -544,17 +581,17 @@ def test_floret_vectors(floret_vectors_vec_str, floret_vectors_hashvec_str):
     # an empty key returns 0s
     assert_equal(
         OPS.to_numpy(nlp.vocab[""].vector),
-        numpy.zeros((nlp.vocab.vectors.data.shape[0],)),
+        numpy.zeros((nlp.vocab.vectors.shape[0],)),
     )
     # an empty batch returns 0s
     assert_equal(
         OPS.to_numpy(nlp.vocab.vectors.get_batch([""])),
-        numpy.zeros((1, nlp.vocab.vectors.data.shape[0])),
+        numpy.zeros((1, nlp.vocab.vectors.shape[0])),
     )
     # an empty key within a batch returns 0s
     assert_equal(
         OPS.to_numpy(nlp.vocab.vectors.get_batch(["a", "", "b"])[1]),
-        numpy.zeros((nlp.vocab.vectors.data.shape[0],)),
+        numpy.zeros((nlp.vocab.vectors.shape[0],)),
     )
 
     # the loaded ngram vector table cannot be modified

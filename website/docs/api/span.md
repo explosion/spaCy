@@ -257,8 +257,8 @@ shape `(N, M)`, where `N` is the length of the document. The values will be
 
 ## Span.ents {#ents tag="property" new="2.0.13" model="ner"}
 
-The named entities in the span. Returns a tuple of named entity `Span` objects,
-if the entity recognizer has been applied.
+The named entities that fall completely within the span. Returns a tuple of
+`Span` objects.
 
 > #### Example
 >
@@ -283,8 +283,9 @@ objects, if the document has been syntactically parsed. A base noun phrase, or
 it – so no NP-level coordination, no prepositional phrases, and no relative
 clauses.
 
-If the `noun_chunk` [syntax iterator](/usage/adding-languages#language-data) has
-not been implemeted for the given language, a `NotImplementedError` is raised.
+If the `noun_chunk` [syntax iterator](/usage/linguistic-features#language-data)
+has not been implemeted for the given language, a `NotImplementedError` is
+raised.
 
 > #### Example
 >
@@ -520,12 +521,13 @@ sent = doc[sent.start : max(sent.end, span.end)]
 
 ## Span.sents {#sents tag="property" model="sentences" new="3.2.1"}
 
-Returns a generator over the sentences the span belongs to. This property is only available
-when [sentence boundaries](/usage/linguistic-features#sbd) have been set on the
-document by the `parser`, `senter`, `sentencizer` or some custom function. It
-will raise an error otherwise.
+Returns a generator over the sentences the span belongs to. This property is
+only available when [sentence boundaries](/usage/linguistic-features#sbd) have
+been set on the document by the `parser`, `senter`, `sentencizer` or some custom
+function. It will raise an error otherwise.
 
-If the span happens to cross sentence boundaries, all sentences the span overlaps with will be returned.
+If the span happens to cross sentence boundaries, all sentences the span
+overlaps with will be returned.
 
 > #### Example
 >

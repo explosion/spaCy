@@ -18,7 +18,7 @@ from ..tokens.doc cimport Doc, get_token_attr_for_matcher
 from ..tokens.span cimport Span
 from ..tokens.token cimport Token
 from ..tokens.morphanalysis cimport MorphAnalysis
-from ..attrs cimport ID, attr_id_t, NULL_ATTR, ORTH, POS, TAG, DEP, LEMMA, MORPH
+from ..attrs cimport ID, attr_id_t, NULL_ATTR, ORTH, POS, TAG, DEP, LEMMA, MORPH, ENT_IOB
 
 from ..schemas import validate_token_pattern
 from ..errors import Errors, MatchPatternError, Warnings
@@ -244,8 +244,12 @@ cdef class Matcher:
                         pipe = "parser"
                     error_msg = Errors.E155.format(pipe=pipe, attr=self.vocab.strings.as_string(attr))
                     raise ValueError(error_msg)
-        matches = find_matches(&self.patterns[0], self.patterns.size(), doclike, length,
-                                extensions=self._extensions, predicates=self._extra_predicates, with_alignments=with_alignments)
+
+        if self.patterns.empty():
+            matches = []
+        else:
+            matches = find_matches(&self.patterns[0], self.patterns.size(), doclike, length,
+                                    extensions=self._extensions, predicates=self._extra_predicates, with_alignments=with_alignments)
         final_matches = []
         pairs_by_id = {}
         # For each key, either add all matches, or only the filtered,
@@ -687,18 +691,14 @@ cdef int8_t get_is_match(PatternStateC state,
     return True
 
 
-cdef int8_t get_is_final(PatternStateC state) nogil:
+cdef inline int8_t get_is_final(PatternStateC state) nogil:
     if state.pattern[1].quantifier == FINAL_ID:
-        id_attr = state.pattern[1].attrs[0]
-        if id_attr.attr != ID:
-            with gil:
-                raise ValueError(Errors.E074.format(attr=ID, bad_attr=id_attr.attr))
         return 1
     else:
         return 0
 
 
-cdef int8_t get_quantifier(PatternStateC state) nogil:
+cdef inline int8_t get_quantifier(PatternStateC state) nogil:
     return state.pattern.quantifier
 
 
@@ -799,7 +799,10 @@ def _get_attr_values(spec, string_store):
                 attr = "SENT_START"
             attr = IDS.get(attr)
         if isinstance(value, str):
-            value = string_store.add(value)
+            if attr == ENT_IOB and value in Token.iob_strings():
+                value = Token.iob_strings().index(value)
+            else:
+                value = string_store.add(value)
         elif isinstance(value, bool):
             value = int(value)
         elif isinstance(value, int):

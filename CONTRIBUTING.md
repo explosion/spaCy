@@ -144,7 +144,7 @@ Changes to `.py` files will be effective immediately.
 
 When fixing a bug, first create an
 [issue](https://github.com/explosion/spaCy/issues) if one does not already
-exist.  The description text can be very short – we don't want to make this too
+exist. The description text can be very short – we don't want to make this too
 bureaucratic.
 
 Next, add a test to the relevant file in the
@@ -233,7 +233,7 @@ also want to keep an eye on unused declared variables or repeated
 (i.e. overwritten) dictionary keys. If your code was formatted with `black`
 (see above), you shouldn't see any formatting-related warnings.
 
-The [`.flake8`](.flake8) config defines the configuration we use for this
+The `flake8` section in [`setup.cfg`](setup.cfg) defines the configuration we use for this
 codebase. For example, we're not super strict about the line length, and we're
 excluding very large files like lemmatization and tokenizer exception tables.
 

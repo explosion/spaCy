@@ -130,39 +130,26 @@ cdef class Span:
 
         cdef SpanC* span_c = self.span_c()
         cdef SpanC* other_span_c = other.span_c()
-
+        self_tuple = (span_c.start_char, span_c.end_char, span_c.label, span_c.kb_id, self.doc)
+        other_tuple = (other_span_c.start_char, other_span_c.end_char, other_span_c.label, other_span_c.kb_id, other.doc)
         # <
         if op == 0:
-            return span_c.start_char < other_span_c.start_char
+            return self_tuple < other_tuple
         # <=
         elif op == 1:
-            return span_c.start_char <= other_span_c.start_char
+            return self_tuple <= other_tuple
         # ==
         elif op == 2:
-            # Do the cheap comparisons first
-            return (
-                (span_c.start_char == other_span_c.start_char) and \
-                (span_c.end_char == other_span_c.end_char) and \
-                (span_c.label == other_span_c.label) and \
-                (span_c.kb_id == other_span_c.kb_id) and \
-                (self.doc == other.doc)
-            )
+            return self_tuple == other_tuple
         # !=
         elif op == 3:
-            # Do the cheap comparisons first
-            return not (
-                (span_c.start_char == other_span_c.start_char) and \
-                (span_c.end_char == other_span_c.end_char) and \
-                (span_c.label == other_span_c.label) and \
-                (span_c.kb_id == other_span_c.kb_id) and \
-                (self.doc == other.doc)
-            )
+            return self_tuple != other_tuple
         # >
         elif op == 4:
-            return span_c.start_char > other_span_c.start_char
+            return self_tuple > other_tuple
         # >=
         elif op == 5:
-            return span_c.start_char >= other_span_c.start_char
+            return self_tuple >= other_tuple
 
     def __hash__(self):
         cdef SpanC* span_c = self.span_c()
@@ -376,8 +363,10 @@ cdef class Span:
             return 0.0
         vector = self.vector
         xp = get_array_module(vector)
-        return xp.dot(vector, other.vector) / (self.vector_norm * other.vector_norm)
-
+        result = xp.dot(vector, other.vector) / (self.vector_norm * other.vector_norm)
+        # ensure we get a scalar back (numpy does this automatically but cupy doesn't)
+        return result.item()
+    
     cpdef np.ndarray to_array(self, object py_attr_ids):
         """Given a list of M attribute IDs, export the tokens to a numpy
         `ndarray` of shape `(N, M)`, where `N` is the length of the document.
@@ -484,8 +473,8 @@ cdef class Span:
 
     @property
     def ents(self):
-        """The named entities in the span. Returns a tuple of named entity
-        `Span` objects, if the entity recognizer has been applied.
+        """The named entities that fall completely within the span. Returns
+        a tuple of `Span` objects.
 
         RETURNS (tuple): Entities in the span, one `Span` per entity.
 
@@ -515,7 +504,7 @@ cdef class Span:
         """
         if "has_vector" in self.doc.user_span_hooks:
             return self.doc.user_span_hooks["has_vector"](self)
-        elif self.vocab.vectors.data.size > 0:
+        elif self.vocab.vectors.size > 0:
             return any(token.has_vector for token in self)
         elif self.doc.tensor.size > 0:
             return True
@@ -760,7 +749,7 @@ cdef class Span:
 
         def __set__(self, int start):
             if start < 0:
-                raise IndexError("TODO")
+                raise IndexError(Errors.E1032.format(var="start", forbidden="< 0", value=start))
             self.span_c().start = start
 
     property end:
@@ -769,7 +758,7 @@ cdef class Span:
 
         def __set__(self, int end):
             if end < 0:
-                raise IndexError("TODO")
+                raise IndexError(Errors.E1032.format(var="end", forbidden="< 0", value=end))
             self.span_c().end = end
 
     property start_char:
@@ -778,7 +767,7 @@ cdef class Span:
 
         def __set__(self, int start_char):
             if start_char < 0:
-                raise IndexError("TODO")
+                raise IndexError(Errors.E1032.format(var="start_char", forbidden="< 0", value=start_char))
             self.span_c().start_char = start_char
 
     property end_char:
@@ -787,7 +776,7 @@ cdef class Span:
 
         def __set__(self, int end_char):
             if end_char < 0:
-                raise IndexError("TODO")
+                raise IndexError(Errors.E1032.format(var="end_char", forbidden="< 0", value=end_char))
             self.span_c().end_char = end_char
 
     property label:

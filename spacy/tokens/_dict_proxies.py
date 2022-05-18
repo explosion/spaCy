@@ -6,6 +6,7 @@ import srsly
 from .span_group import SpanGroup
 from ..errors import Errors
 
+
 if TYPE_CHECKING:
     # This lets us add type hints for mypy etc. without causing circular imports
     from .doc import Doc  # noqa: F401
@@ -18,6 +19,8 @@ if TYPE_CHECKING:
 # See https://treyhunner.com/2019/04/why-you-shouldnt-inherit-from-list-and-dict-in-python/0ww
 class SpanGroups(UserDict):
     """A dict-like proxy held by the Doc, to control access to span groups."""
+
+    _EMPTY_BYTES = srsly.msgpack_dumps([])
 
     def __init__(
         self, doc: "Doc", items: Iterable[Tuple[str, SpanGroup]] = tuple()
@@ -40,14 +43,25 @@ class SpanGroups(UserDict):
             doc = self._ensure_doc()
         return SpanGroups(doc).from_bytes(self.to_bytes())
 
+    def setdefault(self, key, default=None):
+        if not isinstance(default, SpanGroup):
+            if default is None:
+                spans = []
+            else:
+                spans = default
+            default = self._make_span_group(key, spans)
+        return super().setdefault(key, default=default)
+
     def to_bytes(self) -> bytes:
         # We don't need to serialize this as a dict, because the groups
         # know their names.
+        if len(self) == 0:
+            return self._EMPTY_BYTES
         msg = [value.to_bytes() for value in self.values()]
         return srsly.msgpack_dumps(msg)
 
     def from_bytes(self, bytes_data: bytes) -> "SpanGroups":
-        msg = srsly.msgpack_loads(bytes_data)
+        msg = [] if bytes_data == self._EMPTY_BYTES else srsly.msgpack_loads(bytes_data)
         self.clear()
         doc = self._ensure_doc()
         for value_bytes in msg:

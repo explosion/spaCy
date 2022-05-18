@@ -34,7 +34,7 @@ Construct a `Doc` object. The most common way to get a `Doc` object is via the
 | Name                                     | Description                                                                                                                                                                                        |
 | ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `vocab`                                  | A storage container for lexical types. ~~Vocab~~                                                                                                                                                   |
-| `words`                                  | A list of strings or integer hash values to add to the document as words. ~~Optional[List[Union[str,int]]]~~                                                                                                 |
+| `words`                                  | A list of strings or integer hash values to add to the document as words. ~~Optional[List[Union[str,int]]]~~                                                                                       |
 | `spaces`                                 | A list of boolean values indicating whether each word has a subsequent space. Must have the same length as `words`, if specified. Defaults to a sequence of `True`. ~~Optional[List[bool]]~~       |
 | _keyword-only_                           |                                                                                                                                                                                                    |
 | `user\_data`                             | Optional extra data to attach to the Doc. ~~Dict~~                                                                                                                                                 |
@@ -304,7 +304,8 @@ ancestor is found, e.g. if span excludes a necessary ancestor.
 
 ## Doc.has_annotation {#has_annotation tag="method"}
 
-Check whether the doc contains annotation on a token attribute.
+Check whether the doc contains annotation on a
+[`Token` attribute](/api/token#attributes).
 
 <Infobox title="Changed in v3.0" variant="warning">
 
@@ -398,12 +399,14 @@ Concatenate multiple `Doc` objects to form a new one. Raises an error if the
 >        [str(ent) for doc in docs for ent in doc.ents]
 > ```
 
-| Name                | Description                                                                                                       |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `docs`              | A list of `Doc` objects. ~~List[Doc]~~                                                                            |
-| `ensure_whitespace` | Insert a space between two adjacent docs whenever the first doc does not end in whitespace. ~~bool~~              |
-| `attrs`             | Optional list of attribute ID ints or attribute name strings. ~~Optional[List[Union[str, int]]]~~                 |
-| **RETURNS**         | The new `Doc` object that is containing the other docs or `None`, if `docs` is empty or `None`. ~~Optional[Doc]~~ |
+| Name                                   | Description                                                                                                       |
+| -------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `docs`                                 | A list of `Doc` objects. ~~List[Doc]~~                                                                            |
+| `ensure_whitespace`                    | Insert a space between two adjacent docs whenever the first doc does not end in whitespace. ~~bool~~              |
+| `attrs`                                | Optional list of attribute ID ints or attribute name strings. ~~Optional[List[Union[str, int]]]~~                 |
+| _keyword-only_                         |                                                                                                                   |
+| `exclude` <Tag variant="new">3.3</Tag> | String names of Doc attributes to exclude. Supported: `spans`, `tensor`, `user_data`. ~~Iterable[str]~~           |
+| **RETURNS**                            | The new `Doc` object that is containing the other docs or `None`, if `docs` is empty or `None`. ~~Optional[Doc]~~ |
 
 ## Doc.to_disk {#to_disk tag="method" new="2"}
 
@@ -585,7 +588,7 @@ objects or a [`SpanGroup`](/api/spangroup) to a given key.
 >
 > ```python
 > doc = nlp("Their goi ng home")
-> doc.spans["errors"] = [doc[0:1], doc[2:4]]
+> doc.spans["errors"] = [doc[0:1], doc[1:3]]
 > ```
 
 | Name        | Description                                                        |
@@ -618,7 +621,7 @@ relative clauses.
 
 To customize the noun chunk iterator in a loaded pipeline, modify
 [`nlp.vocab.get_noun_chunks`](/api/vocab#attributes). If the `noun_chunk`
-[syntax iterator](/usage/adding-languages#language-data) has not been
+[syntax iterator](/usage/linguistic-features#language-data) has not been
 implemented for the given language, a `NotImplementedError` is raised.
 
 > #### Example
