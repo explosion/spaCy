@@ -1565,7 +1565,7 @@ cdef class Doc:
                     self[t.i].is_sent_start = t.i == 0
 
         if "spans" in doc_json:
-            for span_group in doc_json.get("spans", {}):
+            for span_group in doc_json.get["spans"]:
                 spans = []
                 for span in doc_json["spans"][span_group]:
                     char_span = self.char_span(span["start"], span["end"], span["label"], span["kb_id"])
