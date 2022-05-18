@@ -1478,26 +1478,26 @@ cdef class Doc:
             for t in (POS, HEAD, DEP, LEMMA, TAG, MORPH)
         }
         token_annotations_reqs = {
-            annot_type_id: annot_type_id if annot_type_id != HEAD else DEP for annot_type_id in annot_types
+            annot_type_id: annot_type_id if annot_type_id != HEAD else DEP for annot_type_id in token_attrs
         }
-        token_annotations = {annot_type_id: None for annot_type_id in annot_types}
+        token_annotations = {annot_type_id: None for annot_type_id in token_attrs}
 
         # Gather token-level properties.
         for token in doc_json["tokens"]:
             words.append(doc_json["text"][token["start"]:token["end"]])
             for annot_type_id in token_annotations:
                 # Assuming all tokens have exactly the same set of attributes.
-                if annot_types[token_annotations_reqs[annot_type_id]] in token:
+                if token_attrs[token_annotations_reqs[annot_type_id]] in token:
                     if token_annotations[annot_type_id] is None:
                         token_annotations[annot_type_id] = []
-                    token_annotations[annot_type_id].append(token[annot_types[annot_type_id]])
+                    token_annotations[annot_type_id].append(token[token_attrs[annot_type_id]])
 
         # Assert all tokens have exactly the same set of attributes.
         inconsistent_props: Set[str] = set()
         for annot_type_id in token_annotations:
             if token_annotations[annot_type_id]:
                 if len(token_annotations[annot_type_id]) != len(words):
-                    inconsistent_props.add(annot_types[annot_type_id])
+                    inconsistent_props.add(token_attrs[annot_type_id])
         if len(inconsistent_props):
             raise ValueError(Errors.E1039.format(inconsistent_props=inconsistent_props))
 
@@ -1538,7 +1538,7 @@ cdef class Doc:
                     raise ValueError(Errors.E1021.format(pp=pp))
 
         attrs = []
-        annotations = [token_annotations[key] for key in annot_types]
+        annotations = [token_annotations[key] for key in token_attrs]
         possible_headings = [POS, HEAD, DEP, LEMMA, TAG, MORPH]
         for a, annot in enumerate(annotations):
             if annot is not None:
