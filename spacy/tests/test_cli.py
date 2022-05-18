@@ -1,5 +1,4 @@
 import os
-from pathlib import Path
 
 import pytest
 import srsly
@@ -17,7 +16,7 @@ from spacy.cli.debug_data import _compile_gold, _get_labels_from_model
 from spacy.cli.debug_data import _get_labels_from_spancat
 from spacy.cli.download import get_compatibility, get_version
 from spacy.cli.init_config import RECOMMENDATIONS, init_config, fill_config
-from spacy.cli.init_config import init_config_cli, Optimizations,
+from spacy.cli.init_config import init_config_cli, Optimizations
 from spacy.cli.package import get_third_party_dependencies
 from spacy.cli.package import _is_permitted_package_name
 from spacy.cli.validate import get_model_pkgs
@@ -744,11 +743,12 @@ def test_debug_data_compile_gold():
     assert data["boundary_cross_ents"] == 1
 
 
+@pytest.mark.issue(10727)
 def test_init_config_from_python_without_optional_args():
     """
     Tests calling init_config_cli() from Python with optional arguments not set. This should detect bugs related to
     Typer not automatically setting default values for arguments when decorated functions are called from Python instead
-    from the CLI. See also https://github.com/explosion/spaCy/issues/10727.
+    from the CLI.
     """
 
     with make_tempdir() as temp_dir:
