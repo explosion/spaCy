@@ -1582,7 +1582,8 @@ cdef class Doc:
                 ents.append(char_span)
             self.ents = ents
 
-        # Add custom attributes.
+        # Add custom attributes. Note that only Doc extensions are currently considered, Token and Span extensions are
+        # not yet supported.
         for attr in doc_json.get("_", {}):
             if not Doc.has_extension(attr):
                 Doc.set_extension(attr)
