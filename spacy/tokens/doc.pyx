@@ -1509,10 +1509,8 @@ cdef class Doc:
         reconstructed_words, spaces = get_words_and_spaces(words, doc_json["text"])
         assert words == reconstructed_words
 
-        for i, token in enumerate(doc_json["tokens"]):
-            has_space = spaces[i]
-            orth_ = doc_json["text"][token["start"]:token["end"]]
-            lex = self.vocab.get(self.mem, orth_)
+        for word, has_space in zip(words, spaces):
+            lex = self.vocab.get(self.mem, word)
             self.push_back(lex, has_space)
 
         # Set remaining token-level attributes via Doc.from_array().
