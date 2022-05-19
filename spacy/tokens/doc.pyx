@@ -1489,13 +1489,13 @@ cdef class Doc:
                     token_annotations[attr].append(token_json[attr_json])
 
         # Assert all tokens have exactly the same set of attributes.
-        inconsistent_props: Set[str] = set()
-        for annot_type_id in token_annotations:
-            if token_annotations[annot_type_id]:
-                if len(token_annotations[annot_type_id]) != len(words):
-                    inconsistent_props.add(token_attrs[annot_type_id])
-        if len(inconsistent_props):
-            raise ValueError(Errors.E1039.format(inconsistent_props=inconsistent_props))
+        partial_attrs: Set[str] = set()
+        for attr in token_annotations:
+            if token_annotations[attr]:
+                if len(token_annotations[attr]) != len(words):
+                    partial_attrs.add(token_attrs[attr])
+        if len(partial_attrs):
+            raise ValueError(Errors.E1039.format(partial_attrs=partial_attrs))
 
         # Initialize doc instance.
         start = 0
