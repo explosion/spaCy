@@ -358,6 +358,11 @@ class EntityLinker(TrainablePipe):
         entity_encodings = self.model.ops.asarray(entity_encodings, dtype="float32")
         selected_encodings = sentence_encodings[keep_ents]
 
+        # if there are no matches, short circuit
+        if not keep_ents:
+            out = self.model.ops.alloc2f(*sentence_encodings.shape)
+            return 0, out
+
         if (selected_encodings.shape != entity_encodings.shape and
                 selected_encodings.size > 0 and entity_encodings.size > 0):
             err = Errors.E147.format(
