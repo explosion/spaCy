@@ -23,7 +23,7 @@ def create_pretrain_vectors(
     maxout_pieces: int, hidden_size: int, loss: str
 ) -> Callable[["Vocab", Model], Model]:
     def create_vectors_objective(vocab: "Vocab", tok2vec: Model) -> Model:
-        if vocab.vectors.data.shape[1] == 0:
+        if vocab.vectors.shape[1] == 0:
             raise ValueError(Errors.E875)
         model = build_cloze_multi_task_model(
             vocab, tok2vec, hidden_size=hidden_size, maxout_pieces=maxout_pieces
@@ -85,7 +85,7 @@ def get_characters_loss(ops, docs, prediction, nr_char):
     target = ops.asarray(to_categorical(target_ids, n_classes=256), dtype="f")
     target = target.reshape((-1, 256 * nr_char))
     diff = prediction - target
-    loss = (diff ** 2).sum()
+    loss = (diff**2).sum()
     d_target = diff / float(prediction.shape[0])
     return loss, d_target
 
@@ -116,7 +116,7 @@ def build_multi_task_model(
 def build_cloze_multi_task_model(
     vocab: "Vocab", tok2vec: Model, maxout_pieces: int, hidden_size: int
 ) -> Model:
-    nO = vocab.vectors.data.shape[1]
+    nO = vocab.vectors.shape[1]
     output_layer = chain(
         cast(Model[List["Floats2d"], Floats2d], list2array()),
         Maxout(

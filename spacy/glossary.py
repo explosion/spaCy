@@ -1,3 +1,7 @@
+import warnings
+from .errors import Warnings
+
+
 def explain(term):
     """Get a description for a given POS tag, dependency label or entity type.
 
@@ -11,6 +15,8 @@ def explain(term):
     """
     if term in GLOSSARY:
         return GLOSSARY[term]
+    else:
+        warnings.warn(Warnings.W118.format(term=term))
 
 
 GLOSSARY = {
@@ -309,7 +315,6 @@ GLOSSARY = {
     "rc": "relative clause",
     "re": "repeated element",
     "rs": "reported speech",
-    "sb": "subject",
     "sb": "subject",
     "sbp": "passivized subject (PP)",
     "sp": "subject or predicate",

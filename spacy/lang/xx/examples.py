@@ -59,7 +59,7 @@ sentences = [
     "Czy w ciągu ostatnich 48 godzin spożyłeś leki zawierające paracetamol?",
     "Kto ma ochotę zapoznać się z innymi niż w książkach przygodami Muminków i ich przyjaciół, temu polecam komiks Tove Jansson „Muminki i morze”.",
     "Apple está querendo comprar uma startup do Reino Unido por 100 milhões de dólares.",
-    "Carros autônomos empurram a responsabilidade do seguro para os fabricantes.."
+    "Carros autônomos empurram a responsabilidade do seguro para os fabricantes..",
     "São Francisco considera banir os robôs de entrega que andam pelas calçadas.",
     "Londres é a maior cidade do Reino Unido.",
     # Translations from English:

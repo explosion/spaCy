@@ -11,7 +11,7 @@ from enum import Enum
 import itertools
 import numpy
 import srsly
-from thinc.api import get_array_module
+from thinc.api import get_array_module, get_current_ops
 from thinc.util import copy_array
 import warnings
 
@@ -420,6 +420,8 @@ cdef class Doc:
         cdef int range_start = 0
         if attr == "IS_SENT_START" or attr == self.vocab.strings["IS_SENT_START"]:
             attr = SENT_START
+        elif attr == "IS_SENT_END" or attr == self.vocab.strings["IS_SENT_END"]:
+            attr = SENT_START
         attr = intify_attr(attr)
         # adjust attributes
         if attr == HEAD:
@@ -616,7 +618,7 @@ cdef class Doc:
         """
         if "has_vector" in self.user_hooks:
             return self.user_hooks["has_vector"](self)
-        elif self.vocab.vectors.data.size:
+        elif self.vocab.vectors.size:
             return True
         elif self.tensor.size:
             return True
@@ -641,7 +643,7 @@ cdef class Doc:
             if not len(self):
                 self._vector = xp.zeros((self.vocab.vectors_length,), dtype="f")
                 return self._vector
-            elif self.vocab.vectors.data.size > 0:
+            elif self.vocab.vectors.size > 0:
                 self._vector = sum(t.vector for t in self) / len(self)
                 return self._vector
             elif self.tensor.size > 0:
@@ -1106,14 +1108,19 @@ cdef class Doc:
         return self
 
     @staticmethod
-    def from_docs(docs, ensure_whitespace=True, attrs=None):
+    def from_docs(docs, ensure_whitespace=True, attrs=None, *, exclude=tuple()):
         """Concatenate multiple Doc objects to form a new one. Raises an error
         if the `Doc` objects do not all share the same `Vocab`.
 
         docs (list): A list of Doc objects.
-        ensure_whitespace (bool): Insert a space between two adjacent docs whenever the first doc does not end in whitespace.
-        attrs (list): Optional list of attribute ID ints or attribute name strings.
-        RETURNS (Doc): A doc that contains the concatenated docs, or None if no docs were given.
+        ensure_whitespace (bool): Insert a space between two adjacent docs
+            whenever the first doc does not end in whitespace.
+        attrs (list): Optional list of attribute ID ints or attribute name
+            strings.
+        exclude (Iterable[str]): Doc attributes to exclude. Supported
+            attributes: `spans`, `tensor`, `user_data`.
+        RETURNS (Doc): A doc that contains the concatenated docs, or None if no
+            docs were given.
 
         DOCS: https://spacy.io/api/doc#from_docs
         """
@@ -1143,31 +1150,33 @@ cdef class Doc:
             concat_words.extend(t.text for t in doc)
             concat_spaces.extend(bool(t.whitespace_) for t in doc)
 
-            for key, value in doc.user_data.items():
-                if isinstance(key, tuple) and len(key) == 4 and key[0] == "._.":
-                    data_type, name, start, end = key
-                    if start is not None or end is not None:
-                        start += char_offset
-                        if end is not None:
-                            end += char_offset
-                        concat_user_data[(data_type, name, start, end)] = copy.copy(value)
+            if "user_data" not in exclude:
+                for key, value in doc.user_data.items():
+                    if isinstance(key, tuple) and len(key) == 4 and key[0] == "._.":
+                        data_type, name, start, end = key
+                        if start is not None or end is not None:
+                            start += char_offset
+                            if end is not None:
+                                end += char_offset
+                            concat_user_data[(data_type, name, start, end)] = copy.copy(value)
+                        else:
+                            warnings.warn(Warnings.W101.format(name=name))
                     else:
-                        warnings.warn(Warnings.W101.format(name=name))
-                else:
-                    warnings.warn(Warnings.W102.format(key=key, value=value))
-            for key in doc.spans:
-                # if a spans key is in any doc, include it in the merged doc
-                # even if it is empty
-                if key not in concat_spans:
-                    concat_spans[key] = []
-                for span in doc.spans[key]:
-                    concat_spans[key].append((
-                        span.start_char + char_offset,
-                        span.end_char + char_offset,
-                        span.label,
-                        span.kb_id,
-                        span.text, # included as a check
-                    ))
+                        warnings.warn(Warnings.W102.format(key=key, value=value))
+            if "spans" not in exclude:
+                for key in doc.spans:
+                    # if a spans key is in any doc, include it in the merged doc
+                    # even if it is empty
+                    if key not in concat_spans:
+                        concat_spans[key] = []
+                    for span in doc.spans[key]:
+                        concat_spans[key].append((
+                            span.start_char + char_offset,
+                            span.end_char + char_offset,
+                            span.label,
+                            span.kb_id,
+                            span.text, # included as a check
+                        ))
             char_offset += len(doc.text)
             if len(doc) > 0 and ensure_whitespace and not doc[-1].is_space and not bool(doc[-1].whitespace_):
                 char_offset += 1
@@ -1183,7 +1192,7 @@ cdef class Doc:
                 token_offset = -1
                 for doc in docs[:-1]:
                     token_offset += len(doc)
-                    if not (len(doc) > 0 and doc[-1].is_space):
+                    if len(doc) > 0 and not doc[-1].is_space:
                         concat_spaces[token_offset] = True
 
         concat_array = numpy.concatenate(arrays)
@@ -1207,6 +1216,10 @@ cdef class Doc:
                     concat_doc.spans[key].append(span)
                 else:
                     raise ValueError(Errors.E873.format(key=key, text=text))
+
+        if "tensor" not in exclude and any(len(doc) for doc in docs):
+            ops = get_current_ops()
+            concat_doc.tensor = ops.xp.vstack([ops.asarray(doc.tensor) for doc in docs if len(doc)])
 
         return concat_doc
 
@@ -1455,7 +1468,7 @@ cdef class Doc:
         underscore (list): Optional list of string names of custom doc._.
         attributes. Attribute values need to be JSON-serializable. Values will
         be added to an "_" key in the data, e.g. "_": {"foo": "bar"}.
-        RETURNS (dict): The data in spaCy's JSON format.
+        RETURNS (dict): The data in JSON format.
         """
         data = {"text": self.text}
         if self.has_annotation("ENT_IOB"):
@@ -1484,6 +1497,15 @@ cdef class Doc:
                 token_data["dep"] = token.dep_
                 token_data["head"] = token.head.i
             data["tokens"].append(token_data)
+        
+        if self.spans:
+            data["spans"] = {}
+            for span_group in self.spans:
+                data["spans"][span_group] = []
+                for span in self.spans[span_group]:
+                    span_data = {"start": span.start_char, "end": span.end_char, "label": span.label_, "kb_id": span.kb_id_}
+                    data["spans"][span_group].append(span_data)
+
         if underscore:
             data["_"] = {}
             for attr in underscore:

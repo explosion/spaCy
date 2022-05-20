@@ -1,6 +1,7 @@
 # cython: profile=True
 from libc.string cimport memcpy
 
+import numpy
 import srsly
 from thinc.api import get_array_module, get_current_ops
 import functools
@@ -283,7 +284,7 @@ cdef class Vocab:
 
     @property
     def vectors_length(self):
-        return self.vectors.data.shape[1]
+        return self.vectors.shape[1]
 
     def reset_vectors(self, *, width=None, shape=None):
         """Drop the current vector table. Because all vectors must be the same
@@ -294,8 +295,35 @@ cdef class Vocab:
         elif shape is not None:
             self.vectors = Vectors(strings=self.strings, shape=shape)
         else:
-            width = width if width is not None else self.vectors.data.shape[1]
+            width = width if width is not None else self.vectors.shape[1]
             self.vectors = Vectors(strings=self.strings, shape=(self.vectors.shape[0], width))
+
+    def deduplicate_vectors(self):
+        if self.vectors.mode != VectorsMode.default:
+            raise ValueError(Errors.E858.format(
+                mode=self.vectors.mode,
+                alternative=""
+            ))
+        ops = get_current_ops()
+        xp = get_array_module(self.vectors.data)
+        filled = xp.asarray(
+            sorted(list({row for row in self.vectors.key2row.values()}))
+        )
+        # deduplicate data and remap keys
+        data = numpy.unique(ops.to_numpy(self.vectors.data[filled]), axis=0)
+        data = ops.asarray(data)
+        if data.shape == self.vectors.data.shape:
+            # nothing to deduplicate
+            return
+        row_by_bytes = {row.tobytes(): i for i, row in enumerate(data)}
+        key2row = {
+            key: row_by_bytes[self.vectors.data[row].tobytes()]
+            for key, row in self.vectors.key2row.items()
+        }
+        # replace vectors with deduplicated version
+        self.vectors = Vectors(strings=self.strings, data=data, name=self.vectors.name)
+        for key, row in key2row.items():
+            self.vectors.add(key, row=row)
 
     def prune_vectors(self, nr_row, batch_size=1024):
         """Reduce the current vector table to `nr_row` unique entries. Words
@@ -325,7 +353,10 @@ cdef class Vocab:
         DOCS: https://spacy.io/api/vocab#prune_vectors
         """
         if self.vectors.mode != VectorsMode.default:
-            raise ValueError(Errors.E866)
+            raise ValueError(Errors.E858.format(
+                mode=self.vectors.mode,
+                alternative=""
+            ))
         ops = get_current_ops()
         xp = get_array_module(self.vectors.data)
         # Make sure all vectors are in the vocab
@@ -354,8 +385,9 @@ cdef class Vocab:
 
     def get_vector(self, orth):
         """Retrieve a vector for a word in the vocabulary. Words can be looked
-        up by string or int ID. If no vectors data is loaded, ValueError is
-        raised.
+        up by string or int ID. If the current vectors do not contain an entry
+        for the word, a 0-vector with the same number of dimensions as the
+        current vectors is returned.
 
         orth (int / unicode): The hash value of a word, or its unicode string.
         RETURNS (numpy.ndarray or cupy.ndarray): A word vector. Size

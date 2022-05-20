@@ -349,23 +349,6 @@ A sequence containing the token and all the token's syntactic descendants.
 | ---------- | ------------------------------------------------------------------------------------ |
 | **YIELDS** | A descendant token such that `self.is_ancestor(token)` or `token == self`. ~~Token~~ |
 
-## Token.is_sent_start {#is_sent_start tag="property" new="2"}
-
-A boolean value indicating whether the token starts a sentence. `None` if
-unknown. Defaults to `True` for the first token in the `Doc`.
-
-> #### Example
->
-> ```python
-> doc = nlp("Give it back! He pleaded.")
-> assert doc[4].is_sent_start
-> assert not doc[5].is_sent_start
-> ```
-
-| Name        | Description                                             |
-| ----------- | ------------------------------------------------------- |
-| **RETURNS** | Whether the token starts a sentence. ~~Optional[bool]~~ |
-
 ## Token.has_vector {#has_vector tag="property" model="vectors"}
 
 A boolean value indicating whether a word vector is associated with the token.
@@ -465,6 +448,8 @@ The L2 norm of the token's vector representation.
 | `is_punct`                                   | Is the token punctuation? ~~bool~~                                                                                                                                                                                                                                   |
 | `is_left_punct`                              | Is the token a left punctuation mark, e.g. `"("` ? ~~bool~~                                                                                                                                                                                                          |
 | `is_right_punct`                             | Is the token a right punctuation mark, e.g. `")"` ? ~~bool~~                                                                                                                                                                                                         |
+| `is_sent_start`                              | Does the token start a sentence? ~~bool~~ or `None` if unknown. Defaults to `True` for the first token in the `Doc`.                                                                                                                                                 |
+| `is_sent_end`                                | Does the token end a sentence? ~~bool~~ or `None` if unknown.                                                                                                                                                                                                        |
 | `is_space`                                   | Does the token consist of whitespace characters? Equivalent to `token.text.isspace()`. ~~bool~~                                                                                                                                                                      |
 | `is_bracket`                                 | Is the token a bracket? ~~bool~~                                                                                                                                                                                                                                     |
 | `is_quote`                                   | Is the token a quotation mark? ~~bool~~                                                                                                                                                                                                                              |

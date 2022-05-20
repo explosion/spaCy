@@ -93,8 +93,8 @@ def test_parser_pseudoprojectivity(en_vocab):
     assert nonproj.is_decorated("X") is False
     nonproj._lift(0, tree)
     assert tree == [2, 2, 2]
-    assert nonproj._get_smallest_nonproj_arc(nonproj_tree) == 7
-    assert nonproj._get_smallest_nonproj_arc(nonproj_tree2) == 10
+    assert nonproj.get_smallest_nonproj_arc_slow(nonproj_tree) == 7
+    assert nonproj.get_smallest_nonproj_arc_slow(nonproj_tree2) == 10
     # fmt: off
     proj_heads, deco_labels = nonproj.projectivize(nonproj_tree, labels)
     assert proj_heads == [1, 2, 2, 4, 5, 2, 7, 5, 2]

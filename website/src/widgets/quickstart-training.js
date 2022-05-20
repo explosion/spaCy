@@ -10,7 +10,7 @@ const DEFAULT_LANG = 'en'
 const DEFAULT_HARDWARE = 'cpu'
 const DEFAULT_OPT = 'efficiency'
 const DEFAULT_TEXTCAT_EXCLUSIVE = true
-const COMPONENTS = ['tagger', 'morphologizer', 'parser', 'ner', 'textcat']
+const COMPONENTS = ['tagger', 'morphologizer', 'trainable_lemmatizer', 'parser', 'ner', 'spancat', 'textcat']
 const COMMENT = `# This is an auto-generated partial config. To use it with 'spacy train'
 # you can run spacy init fill-config to auto-fill all default settings:
 # python -m spacy init fill-config ./base_config.cfg ./config.cfg`

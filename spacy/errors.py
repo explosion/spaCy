@@ -192,6 +192,14 @@ class Warnings(metaclass=ErrorsWithCodes):
     W115 = ("Skipping {method}: the floret vector table cannot be modified. "
             "Vectors are calculated from character ngrams.")
     W116 = ("Unable to clean attribute '{attr}'.")
+    W117 = ("No spans to visualize found in Doc object with spans_key: '{spans_key}'. If this is "
+            "surprising to you, make sure the Doc was processed using a model "
+            "that supports span categorization, and check the `doc.spans[spans_key]` "
+            "property manually if necessary.")
+    W118 = ("Term '{term}' not found in glossary. It may however be explained in documentation "
+            "for the corpora used to train the language. Please check "
+            "`nlp.meta[\"sources\"]` for any relevant links.")
+    W119 = ("Overriding pipe name in `config` is not supported. Ignoring override '{name_in_config}'.")
 
 
 class Errors(metaclass=ErrorsWithCodes):
@@ -483,7 +491,7 @@ class Errors(metaclass=ErrorsWithCodes):
             "components, since spans are only views of the Doc. Use Doc and "
             "Token attributes (or custom extension attributes) only and remove "
             "the following: {attrs}")
-    E181 = ("Received invalid attributes for unkown object {obj}: {attrs}. "
+    E181 = ("Received invalid attributes for unknown object {obj}: {attrs}. "
             "Only Doc and Token attributes are supported.")
     E182 = ("Received invalid attribute declaration: {attr}\nDid you forget "
             "to define the attribute? For example: `{attr}.???`")
@@ -520,10 +528,14 @@ class Errors(metaclass=ErrorsWithCodes):
     E202 = ("Unsupported {name} mode '{mode}'. Supported modes: {modes}.")
 
     # New errors added in v3.x
+    E855 = ("Invalid {obj}: {obj} is not from the same doc.")
+    E856 = ("Error accessing span at position {i}: out of bounds in span group "
+            "of length {length}.")
+    E857 = ("Entry '{name}' not found in edit tree lemmatizer labels.")
     E858 = ("The {mode} vector table does not support this operation. "
             "{alternative}")
     E859 = ("The floret vector table cannot be modified.")
-    E860 = ("Can't truncate fasttext-bloom vectors.")
+    E860 = ("Can't truncate floret vectors.")
     E861 = ("No 'keys' should be provided when initializing floret vectors "
             "with 'minn' and 'maxn'.")
     E862 = ("'hash_count' must be between 1-4 for floret vectors.")
@@ -566,9 +578,6 @@ class Errors(metaclass=ErrorsWithCodes):
     E879 = ("Unexpected type for 'spans' data. Provide a dictionary mapping keys to "
             "a list of spans, with each span represented by a tuple (start_char, end_char). "
             "The tuple can be optionally extended with a label and a KB ID.")
-    E880 = ("The 'wandb' library could not be found - did you install it? "
-            "Alternatively, specify the 'ConsoleLogger' in the 'training.logger' "
-            "config section, instead of the 'WandbLogger'.")
     E884 = ("The pipeline could not be initialized because the vectors "
             "could not be found at '{vectors}'. If your pipeline was already "
             "initialized/trained before, call 'resume_training' instead of 'initialize', "
@@ -888,9 +897,23 @@ class Errors(metaclass=ErrorsWithCodes):
     E1021 = ("`pos` value \"{pp}\" is not a valid Universal Dependencies tag. "
              "Non-UD tags should use the `tag` property.")
     E1022 = ("Words must be of type str or int, but input is of type '{wtype}'")
-    E1023 = ("Couldn't read EntityRuler from the {path}. This file doesn't exist.")
-    E1024 = ("A pattern with ID \"{ent_id}\" is not present in EntityRuler patterns.")
-    
+    E1023 = ("Couldn't read EntityRuler from the {path}. This file doesn't "
+             "exist.")
+    E1024 = ("A pattern with ID \"{ent_id}\" is not present in EntityRuler "
+             "patterns.")
+    E1025 = ("Cannot intify the value '{value}' as an IOB string. The only "
+             "supported values are: 'I', 'O', 'B' and ''")
+    E1026 = ("Edit tree has an invalid format:\n{errors}")
+    E1027 = ("AlignmentArray only supports slicing with a step of 1.")
+    E1028 = ("AlignmentArray only supports indexing using an int or a slice.")
+    E1029 = ("Edit tree cannot be applied to form.")
+    E1030 = ("Edit tree identifier out of range.")
+    E1031 = ("Could not find gold transition - see logs above.")
+    E1032 = ("`{var}` should not be {forbidden}, but received {value}.")
+    E1033 = ("Dimension {name} invalid -- only nO, nF, nP")
+    E1034 = ("Node index {i} out of bounds ({length})")
+    E1035 = ("Token index {i} out of bounds ({length})")
+    E1036 = ("Cannot index into NoneNode")
 
 
 # Deprecated model shortcuts, only used in errors and warnings
