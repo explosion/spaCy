@@ -17,6 +17,7 @@ from thinc.api import get_array_module, get_current_ops
 from thinc.util import copy_array
 import warnings
 
+import spacy.schemas
 from .span cimport Span
 from .token cimport MISSING_DEP
 from ._dict_proxies import SpanGroups
@@ -1469,6 +1470,9 @@ cdef class Doc:
         validate (bool): Flag indicating whether the the schema of `doc_json` should be validated.
         RETURNS (Doc): A doc instance corresponding to the specified JSON representation.
         """
+
+        if validate:
+            assert spacy.schemas.validate(spacy.schemas.DocJSONSchema, doc_json)
 
         ### Token-level properties ###
 

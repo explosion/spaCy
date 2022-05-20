@@ -98,7 +98,7 @@ def test_doc_to_json_span(doc):
 
 
 def test_json_to_doc(doc):
-    new_doc = Doc(doc.vocab).from_json(doc.to_json())
+    new_doc = Doc(doc.vocab).from_json(doc.to_json(), validate=True)
     new_tokens = [token for token in new_doc]
     assert new_doc.text == doc.text == "c d e "
     assert len(new_tokens) == len([token for token in doc]) == 3
@@ -122,8 +122,7 @@ def test_json_to_doc_underscore(doc):
     doc._.json_test1 = "hello world"
     doc._.json_test2 = [1, 2, 3]
     json_doc = doc.to_json(underscore=["json_test1", "json_test2"])
-    assert schemas.validate(schemas.DocJSONSchema, json_doc)
-    new_doc = Doc(doc.vocab).from_json(json_doc)
+    new_doc = Doc(doc.vocab).from_json(json_doc, validate=True)
     assert all([new_doc.has_extension(f"json_test{i}") for i in range(1, 3)])
     assert new_doc._.json_test1 == "hello world"
     assert new_doc._.json_test2 == [1, 2, 3]
@@ -136,8 +135,7 @@ def test_json_to_doc_spans(doc):
         Span(doc, 0, 1, label="test", kb_id=7),
     ]
     json_doc = doc.to_json()
-    assert schemas.validate(schemas.DocJSONSchema, json_doc)
-    new_doc = Doc(doc.vocab).from_json(json_doc)
+    new_doc = Doc(doc.vocab).from_json(json_doc, validate=True)
     assert len(new_doc.spans) == 1
     assert len(new_doc.spans["test"]) == 2
     for i in range(2):
@@ -151,8 +149,7 @@ def test_json_to_doc_sents(doc, doc_without_deps):
     """Test that Doc.from_json() includes correct.sents."""
     for test_doc in (doc, doc_without_deps):
         json_doc = test_doc.to_json()
-        assert schemas.validate(schemas.DocJSONSchema, json_doc)
-        new_doc = Doc(doc.vocab).from_json(json_doc)
+        new_doc = Doc(doc.vocab).from_json(json_doc, validate=True)
         assert [sent.text for sent in doc.sents] == [
             sent.text for sent in new_doc.sents
         ]
@@ -166,8 +163,7 @@ def test_json_to_doc_cats(doc):
     cats = {"A": 0.3, "B": 0.7}
     doc.cats = cats
     json_doc = doc.to_json()
-    assert schemas.validate(schemas.DocJSONSchema, json_doc)
-    new_doc = Doc(doc.vocab).from_json(json_doc)
+    new_doc = Doc(doc.vocab).from_json(json_doc, validate=True)
     assert new_doc.cats == cats
 
 
@@ -175,8 +171,7 @@ def test_json_to_doc_spaces():
     """Test that Doc.from_json() preserves spaces correctly."""
     doc = spacy.blank("en")("This is just brilliant.")
     json_doc = doc.to_json()
-    assert schemas.validate(schemas.DocJSONSchema, json_doc)
-    new_doc = Doc(doc.vocab).from_json(json_doc)
+    new_doc = Doc(doc.vocab).from_json(json_doc, validate=True)
     assert doc.text == new_doc.text
 
 
