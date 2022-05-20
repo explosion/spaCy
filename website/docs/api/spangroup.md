@@ -233,7 +233,7 @@ group.
 > doc.spans["errors"] = []
 > doc.spans["errors"].extend([doc[1:3], doc[0:1]])
 > assert len(doc.spans["errors"]) == 2
-> span_group = SpanGroup([doc[1:4], doc[0:3])
+> span_group = SpanGroup(doc, spans=[doc[1:4], doc[0:3]])
 > doc.spans["errors"].extend(span_group)
 > ```
 
