@@ -492,14 +492,14 @@ else: # should never happen because of skipping
                     "script": [
                         " ".join(("python", pscript_loc, str(d), "a", "b", "c", "d"))
                     ],
-                    "outputs": [" ".join((str(d), "c"))],
+                    "outputs": [os.sep.join((str(d), "f"))],
                 },
                 {
                     "name": "commandB",
                     "script": [
                         " ".join(("python", pscript_loc, str(d), "b", "a", "e", "f"))
                     ],
-                    "outputs": [" ".join((str(d), "e"))],
+                    "outputs": [os.sep.join((str(d), "e"))],
                 },
             ],
             "workflows": {"all": [["commandA", "commandB"], ["commandA", "commandB"]]},

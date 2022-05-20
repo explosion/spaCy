@@ -110,6 +110,8 @@ def update_dvc_config(
         if isinstance(cmdOrMultiprocessingGroup, str):
             names.append(cmdOrMultiprocessingGroup)
         else:
+            assert isinstance(cmdOrMultiprocessingGroup, list)
+            assert isinstance(cmdOrMultiprocessingGroup[0], str)
             names.extend(cmdOrMultiprocessingGroup)
     for name in names:
         command = config_commands[name]

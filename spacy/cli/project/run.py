@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict, Sequence, Any, Iterable, cast
+from typing import Optional, List, Dict, Sequence, Any, Iterable, Union, Tuple
 from pathlib import Path
 from multiprocessing import Process, Lock
 from multiprocessing.synchronize import Lock as Lock_t
@@ -133,6 +133,18 @@ def project_run(
                     update_lockfile(current_dir, cmd, mult_group_mutex=mult_group_mutex)
 
 
+def _get_workflow_steps(workflow_items: List[Union[str, List[str]]]) -> List[str]:
+    steps: List[str] = []
+    for workflow_item in workflow_items:
+        if isinstance(workflow_item, str):
+            steps.append(workflow_item)
+        else:
+            assert isinstance(workflow_item, list)
+            assert isinstance(workflow_item[0], str)
+            steps.extend(workflow_item)
+    return steps
+
+
 def print_run_help(project_dir: Path, subcommand: Optional[str] = None) -> None:
     """Simulate a CLI help prompt using the info available in the project.yml.
 
@@ -154,12 +166,7 @@ def print_run_help(project_dir: Path, subcommand: Optional[str] = None) -> None:
             if help_text:
                 print(f"\n{help_text}\n")
         elif subcommand in workflows:
-            steps = []
-            for cmdOrMultiprocessingGroup in workflows[subcommand]:
-                if isinstance(cmdOrMultiprocessingGroup, str):
-                    steps.append(cmdOrMultiprocessingGroup)
-                else:
-                    steps.extend(cmdOrMultiprocessingGroup)
+            steps = _get_workflow_steps(workflows[subcommand])
             print(f"\nWorkflow consisting of {len(steps)} commands:")
             steps_data = [
                 (f"{i + 1}. {step}", commands[step].get("help", ""))
@@ -180,7 +187,12 @@ def print_run_help(project_dir: Path, subcommand: Optional[str] = None) -> None:
         if workflows:
             print(f"Available workflows in {PROJECT_FILE}")
             print(f"Usage: {COMMAND} project run [WORKFLOW] {project_loc}")
-            msg.table([(name, " -> ".join(steps)) for name, steps in workflows.items()])
+            msg.table(
+                [
+                    (name, " -> ".join(_get_workflow_steps(workflow_items)))
+                    for name, workflow_items in workflows.items()
+                ]
+            )
 
 
 def run_commands(

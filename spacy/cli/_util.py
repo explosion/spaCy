@@ -215,6 +215,16 @@ def validate_project_version(config: Dict[str, Any]) -> None:
         msg.fail(err, exits=1)
 
 
+def verify_workflow_step(workflow_name: str, commands: List[str], step: str) -> None:
+    if step not in commands:
+        msg.fail(
+            f"Unknown command specified in workflow '{workflow_name}': {step}",
+            f"Workflows can only refer to commands defined in the 'commands' "
+            f"section of the {PROJECT_FILE}.",
+            exits=1,
+        )
+
+
 def validate_project_commands(config: Dict[str, Any]) -> None:
     """Check that project commands and workflows are valid, don't contain
     duplicates, don't clash  and only refer to commands that exist.
@@ -222,44 +232,37 @@ def validate_project_commands(config: Dict[str, Any]) -> None:
     config (Dict[str, Any]): The loaded config.
     """
 
-    def verify_workflow_step(workflow_name: str, step: str) -> None:
-        if step not in command_names:
-            msg.fail(
-                f"Unknown command specified in workflow '{workflow_name}': {step}",
-                f"Workflows can only refer to commands defined in the 'commands' "
-                f"section of the {PROJECT_FILE}.",
-                exits=1,
-            )
-
-    command_names = [cmd["name"] for cmd in config.get("commands", [])]
+    commands = [cmd["name"] for cmd in config.get("commands", [])]
     workflows = config.get("workflows", {})
-    duplicates = set([cmd for cmd in command_names if command_names.count(cmd) > 1])
+    duplicates = set([cmd for cmd in commands if commands.count(cmd) > 1])
     if duplicates:
         err = f"Duplicate commands defined in {PROJECT_FILE}: {', '.join(duplicates)}"
         msg.fail(err, exits=1)
-    for workflow_name, workflow_step_or_lists in workflows.items():
-        if workflow_name in command_names:
+    for workflow_name, workflow_items in workflows.items():
+        if workflow_name in commands:
             err = f"Can't use workflow name '{workflow_name}': name already exists as a command"
             msg.fail(err, exits=1)
-        for step_or_list in workflow_step_or_lists:
+        for step_or_list in workflow_items:
             if isinstance(step_or_list, str):
-                verify_workflow_step(workflow_name, step_or_list)
+                verify_workflow_step(workflow_name, commands, step_or_list)
             else:
-                workflow_list = cast(List[str], step_or_list)
-                if len(workflow_list) < 2:
+                assert isinstance(step_or_list, list)
+                assert isinstance(step_or_list[0], str)
+                steps = cast(List[str], step_or_list)
+                if len(steps) < 2:
                     msg.fail(
                         f"Invalid multiprocessing group within '{workflow_name}'.",
                         f"A multiprocessing group must reference at least two commands.",
                         exits=1,
                     )
-                if len(workflow_list) != len(set(workflow_list)):
+                if len(steps) != len(set(steps)):
                     msg.fail(
                         f"A multiprocessing group within '{workflow_name}' contains a command more than once.",
                         f"This is not permitted because it is then not possible to determine when to rerun.",
                         exits=1,
                     )
-                for step in workflow_list:
-                    verify_workflow_step(workflow_name, step)
+                for step in steps:
+                    verify_workflow_step(workflow_name, commands, step)
 
 
 def get_hash(data, exclude: Iterable[str] = tuple()) -> str:
