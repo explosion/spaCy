@@ -913,7 +913,7 @@ class Errors(metaclass=ErrorsWithCodes):
     E1034 = ("Node index {i} out of bounds ({length})")
     E1035 = ("Token index {i} out of bounds ({length})")
     E1036 = ("Cannot index into NoneNode")
-    E1037 = ("Document JSON representation doesn't adhere to schema: {message}")
+    E1037 = ("Invalid JSON input: {message}")
     E1038 = ("The {obj} start or end annotations (start: {start}, end: {end}) "
              "could not be aligned to token boundaries.")
     E1039 = ("Doc.from_json requires all tokens to have the same attributes. "
