@@ -363,8 +363,7 @@ class EntityLinker(TrainablePipe):
             out = self.model.ops.alloc2f(*sentence_encodings.shape)
             return 0, out
 
-        if (selected_encodings.shape != entity_encodings.shape and
-                selected_encodings.size > 0 and entity_encodings.size > 0):
+        if selected_encodings.shape != entity_encodings.shape:
             err = Errors.E147.format(
                 method="get_loss", msg="gold entities do not match up"
             )
