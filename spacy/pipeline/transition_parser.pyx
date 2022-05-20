@@ -9,7 +9,7 @@ from libc.stdlib cimport calloc, free
 import random
 
 import srsly
-from thinc.api import set_dropout_rate, CupyOps
+from thinc.api import get_ops, set_dropout_rate, CupyOps
 from thinc.extra.search cimport Beam
 import numpy.random
 import numpy
@@ -259,7 +259,12 @@ cdef class Parser(TrainablePipe):
     def greedy_parse(self, docs, drop=0.):
         cdef vector[StateC*] states
         cdef StateClass state
-        cdef CBlas cblas = self.model.ops.cblas()
+        ops = self.model.ops
+        cdef CBlas cblas
+        if isinstance(ops, CupyOps):
+            cblas = get_ops("cpu").cblas()
+        else:
+            cblas = self.model.ops.cblas()
         self._ensure_labels_are_added(docs)
         set_dropout_rate(self.model, drop)
         batch = self.moves.init_batch(docs)
