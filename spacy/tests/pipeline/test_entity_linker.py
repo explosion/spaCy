@@ -6,7 +6,7 @@ from numpy.testing import assert_equal
 from spacy import registry, util
 from spacy.attrs import ENT_KB_ID
 from spacy.compat import pickle
-from spacy.kb import Candidate, KnowledgeBase, get_candidates
+from spacy.kb import Candidate, KnowledgeBase, get_candidates, get_candidates_lowercase
 from spacy.lang.en import English
 from spacy.ml import load_kb
 from spacy.pipeline import EntityLinker
@@ -465,6 +465,11 @@ def test_candidate_generation(nlp):
     assert len(get_candidates(mykb, adam_ent)) == 1
     assert len(get_candidates(mykb, Adam_ent)) == 0  # default case sensitive
     assert len(get_candidates(mykb, shrubbery_ent)) == 0
+
+    # check the case insensitive function
+    assert len(get_candidates_lowercase(mykb, adam_ent)) == 1
+    assert len(get_candidates_lowercase(mykb, Adam_ent)) == 1
+    assert len(get_candidates_lowercase(mykb, shrubbery_ent)) == 0
 
     # test the content of the candidates
     assert get_candidates(mykb, adam_ent)[0].entity_ == "Q2"

@@ -77,6 +77,15 @@ def get_candidates(KnowledgeBase kb, span) -> Iterator[Candidate]:
     return kb.get_alias_candidates(span.text)
 
 
+def get_candidates_lowercase(KnowledgeBase kb, span) -> Iterator[Candidate]:
+    """
+    Return candidate entities for a given span using the text of the span in lowercase.
+
+    This is the same as `get_candidates`, but is intended for case-insensitive retrieval.
+    """
+    return kb.get_alias_candidates(span.text.lower())
+
+
 cdef class KnowledgeBase:
     """A `KnowledgeBase` instance stores unique identifiers for entities and their textual aliases,
     to support entity linking of named entities to real-world concepts.
@@ -290,7 +299,7 @@ cdef class KnowledgeBase:
         """
         Return candidate entities for an alias. Each candidate defines the entity, the original alias,
         and the prior probability of that alias resolving to that entity.
-        If the alias is not known in the KB, and empty list is returned.
+        If the alias is not known in the KB, an empty list is returned.
         """
         cdef hash_t alias_hash = self.vocab.strings[alias]
         if not alias_hash in self._alias_index:

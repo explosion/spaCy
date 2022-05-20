@@ -98,3 +98,8 @@ def empty_kb(entity_vector_length: int) -> Callable[[Vocab], KnowledgeBase]:
 @registry.misc("spacy.CandidateGenerator.v1")
 def create_candidates() -> Callable[[KnowledgeBase, Span], Iterable[Candidate]]:
     return get_candidates
+
+
+@registry.misc("spacy.CaselessCandidateGenerator.v1")
+def create_candidates() -> Callable[[KnowledgeBase, Span], Iterable[Candidate]]:
+    return get_candidates_lowercase
