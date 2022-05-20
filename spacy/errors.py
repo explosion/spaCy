@@ -918,7 +918,6 @@ class Errors(metaclass=ErrorsWithCodes):
              "could not be aligned to token boundaries.")
     E1039 = ("Doc.from_json requires all tokens to have the same attributes. "
              "Some tokens do not contain annotation for: {partial_attrs}")
-    E1040 = ("DEP attribute mustn't be None in specified token annotations.")
 
 
 # Deprecated model shortcuts, only used in errors and warnings
