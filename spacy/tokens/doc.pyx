@@ -1510,10 +1510,6 @@ cdef class Doc:
             token_annotations[HEAD] = [
                 head - i for i, head in enumerate(token_annotations[HEAD])
             ]
-        if DEP in token_annotations:
-            if DEP in token_annotations[DEP]:
-                if None in token_annotations[DEP]:
-                    raise ValueError(Errors.E1040)
 
         if DEP in token_annotations and HEAD not in token_annotations:
             token_annotations[HEAD] = [0] * len(token_annotations[DEP])
