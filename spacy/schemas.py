@@ -493,21 +493,21 @@ class DocJSONSchema(BaseModel):
     """
 
     cats: Optional[Dict[StrictStr, StrictFloat]] = Field(
-        ..., title="Categories with corresponding probabilities"
+        None, title="Categories with corresponding probabilities"
     )
-    ents: Optional[
-        Dict[StrictStr, List[Dict[StrictStr, Union[StrictInt, StrictStr]]]]
-    ] = Field(..., title="Information on entities")
+    ents: Optional[List[Dict[StrictStr, Union[StrictInt, StrictStr]]]] = Field(
+        None, title="Information on entities"
+    )
     sents: Optional[List[Dict[StrictStr, StrictInt]]] = Field(
-        ..., title="Indices of sentences' start and end indices"
+        None, title="Indices of sentences' start and end indices"
     )
     text: StrictStr = Field(..., title="Document text")
     spans: Dict[StrictStr, List[Dict[StrictStr, Union[StrictStr, StrictInt]]]] = Field(
-        ..., title="Span information - end/start indices, label, KB ID"
+        None, title="Span information - end/start indices, label, KB ID"
     )
     tokens: List[Dict[StrictStr, Union[StrictStr, StrictInt]]] = Field(
         ..., title="Token information - ID, start, annotations"
     )
     _: Optional[Dict[StrictStr, Any]] = Field(
-        ..., title="Any custom data stored in the document's _ attribute"
+        None, title="Any custom data stored in the document's _ attribute"
     )

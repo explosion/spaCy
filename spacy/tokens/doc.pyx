@@ -1472,7 +1472,8 @@ cdef class Doc:
         """
 
         if validate:
-            assert spacy.schemas.validate(spacy.schemas.DocJSONSchema, doc_json)
+            if spacy.schemas.validate(spacy.schemas.DocJSONSchema, doc_json):
+                raise ValueError(Errors.E1037)
 
         ### Token-level properties ###
 

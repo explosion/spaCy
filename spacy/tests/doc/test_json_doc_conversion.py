@@ -56,7 +56,7 @@ def test_doc_to_json(doc):
     assert json_doc["ents"][0]["start"] == 2  # character offset!
     assert json_doc["ents"][0]["end"] == 3  # character offset!
     assert json_doc["ents"][0]["label"] == "ORG"
-    assert schemas.validate(schemas.DocJSONSchema, json_doc)
+    assert not schemas.validate(schemas.DocJSONSchema, json_doc)
 
 
 def test_doc_to_json_underscore(doc):
@@ -68,7 +68,7 @@ def test_doc_to_json_underscore(doc):
     assert "_" in json_doc
     assert json_doc["_"]["json_test1"] == "hello world"
     assert json_doc["_"]["json_test2"] == [1, 2, 3]
-    assert schemas.validate(schemas.DocJSONSchema, json_doc)
+    assert not schemas.validate(schemas.DocJSONSchema, json_doc)
 
 
 def test_doc_to_json_underscore_error_attr(doc):
@@ -94,7 +94,7 @@ def test_doc_to_json_span(doc):
     assert len(json_doc["spans"]) == 1
     assert len(json_doc["spans"]["test"]) == 2
     assert json_doc["spans"]["test"][0]["start"] == 0
-    assert schemas.validate(schemas.DocJSONSchema, json_doc)
+    assert not schemas.validate(schemas.DocJSONSchema, json_doc)
 
 
 def test_json_to_doc(doc):
@@ -181,3 +181,11 @@ def test_json_to_doc_attribute_consistency(doc):
     doc_json["tokens"][1].pop("morph")
     with pytest.raises(ValueError):
         Doc(doc.vocab).from_json(doc_json)
+
+
+def test_json_to_doc_validation_error(doc):
+    """Test that Doc.from_json() raises an exception if tokens don't all have the same set of properties."""
+    doc_json = doc.to_json()
+    doc_json.pop("tokens")
+    with pytest.raises(ValueError):
+        Doc(doc.vocab).from_json(doc_json, validate=True)
