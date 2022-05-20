@@ -391,7 +391,7 @@ def get_module_path(module: ModuleType) -> Path:
     """
     if not hasattr(module, "__module__"):
         raise ValueError(Errors.E169.format(module=repr(module)))
-    file_path = Path(cast(os.PathLike[str], sys.modules[module.__module__].__file__))
+    file_path = Path(cast(os.PathLike, sys.modules[module.__module__].__file__))
     return file_path.parent
 
 
@@ -879,7 +879,7 @@ def get_package_path(name: str) -> Path:
     # Here we're importing the module just to find it. This is worryingly
     # indirect, but it's otherwise very difficult to find the package.
     pkg = importlib.import_module(name)
-    return Path(cast(Union[str, os.PathLike[str]], pkg.__file__)).parent
+    return Path(cast(Union[str, os.PathLike], pkg.__file__)).parent
 
 
 def replace_model_node(model: Model, target: Model, replacement: Model) -> None:
