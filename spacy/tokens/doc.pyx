@@ -426,9 +426,7 @@ cdef class Doc:
         attr = intify_attr(attr)
         if attr is None:
             raise ValueError(
-                f"\"{input_attr}\" is not a valid value for attr.\n"
-                "Please consult https://spacy.io/api/token#attributes "
-                "for more information!"
+                Errors.E1037.format(attr=input_attr)
             )
         # adjust attributes
         if attr == HEAD:
