@@ -1569,7 +1569,7 @@ cdef class Doc:
             for span in doc_json["spans"][span_group]:
                 char_span = self.char_span(span["start"], span["end"], span["label"], span["kb_id"])
                 if char_span is None:
-                    raise ValueError(Errors.E1038.format(obj="span"))
+                    raise ValueError(Errors.E1038.format(obj="span", start=span["start"], end=span["end"]))
                 spans.append(char_span)
             self.spans[span_group] = spans
 
@@ -1578,7 +1578,7 @@ cdef class Doc:
             for ent in doc_json["ents"]:
                 char_span = self.char_span(ent["start"], ent["end"], ent["label"])
                 if char_span is None:
-                    raise ValueError(Errors.E1038.format(obj="entity"))
+                    raise ValueError(Errors.E1038.format(obj="entity"), start=ent["start"], end=ent["end"])
                 ents.append(char_span)
             self.ents = ents
 
