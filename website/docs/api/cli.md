@@ -455,7 +455,7 @@ File       /path/to/thinc/thinc/schedules.py (line 91)
 
 Analyze, debug and validate your training and development data. Get useful
 stats, and find problems like invalid entity annotations, cyclic dependencies,
-low data labels and more. 
+low data labels and more.
 
 <Infobox title="New in v3.0" variant="warning">
 
@@ -466,20 +466,17 @@ takes the same arguments as `train` and reads settings off the
 
 </Infobox>
 
-
 <Infobox title="Notes on span characteristics" emoji="💡">
 
 If your pipeline contains a `spancat` component, then this command will also
 report span characteristics such as the average span length and the span (or
 span boundary) distinctiveness. The distinctiveness measure shows how different
 the tokens are with respect to the rest of the corpus using the KL-divergence of
-the token distributions. To learn more, you can check Papay et al.'s work on
+the token distributions. To learn more, you can check out Papay et al.'s work on
 [*Dissecting Span Identification Tasks with Performance Prediction* (EMNLP
 2020)](https://aclanthology.org/2020.emnlp-main.396/).
 
 </Infobox>
-
-
 
 ```cli
 $ python -m spacy debug data [config_path] [--code] [--ignore-warnings] [--verbose] [--no-format] [overrides]
