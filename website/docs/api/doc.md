@@ -495,7 +495,7 @@ deprecated [`JSON training format`](/api/data-formats#json-input).
 
 | Name         | Description                                                                                                                                                                                                      |
 | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `underscore` | Optional list of string names of custom `doc._.attributes`. Attribute values need to be JSON-serializable. Values will be added to an `"_"` key in the data, e.g. `"_": {"foo": "bar"}`. ~~Optional[List[str]]~~ |
+| `underscore` | Optional list of string names of custom `Doc` attributes. Attribute values need to be JSON-serializable. Values will be added to an `"_"` key in the data, e.g. `"_": {"foo": "bar"}`. ~~Optional[List[str]]~~ |
 | **RETURNS**  | The data in JSON format. ~~Dict[str, Any]~~                                                                                                                                                                      |
 
 ## Doc.from_json {#from_json tag="method" new="3.3.1"}
