@@ -11,8 +11,10 @@ from .._util import git_checkout, get_git_version
 
 DEFAULT_REPO = about.__projects__
 DEFAULT_PROJECTS_BRANCH = about.__projects_branch__
-DEFAULT_BRANCH = "master"
+DEFAULT_BRANCHES = ["main", "master"]
 
+class ProjectCloneException(Exception):
+    pass
 
 @project_cli.command("clone")
 def project_clone_cli(
@@ -33,10 +35,17 @@ def project_clone_cli(
     """
     if dest is None:
         dest = Path.cwd() / Path(name).parts[-1]
-    if branch is None:
-        # If it's a user repo, we want to default to other branch
-        branch = DEFAULT_PROJECTS_BRANCH if repo == DEFAULT_REPO else DEFAULT_BRANCH
-    project_clone(name, dest, repo=repo, branch=branch, sparse_checkout=sparse_checkout)
+    clone = lambda branch: project_clone(name, dest, repo=repo, branch=branch, sparse_checkout=sparse_checkout)
+    if branch is None and repo == DEFAULT_REPO:
+        return clone(DEFAULT_PROJECTS_BRANCH)
+    for branch in DEFAULT_BRANCHES:
+        try:
+            clone(branch)
+            return
+        except:
+            pass
+    raise ProjectCloneException(f"Couldn't clone {repo} from any of these branches: {DEFAULT_BRANCHES}")
+
 
 
 def project_clone(
