@@ -15,6 +15,7 @@ from ...util import SimpleFrozenList, is_minor_version_match, ENV_VARS
 from ...util import check_bool_env_var, SimpleFrozenDict
 from .._util import PROJECT_FILE, PROJECT_LOCK, load_project_config, get_hash
 from .._util import get_checksum, project_cli, Arg, Opt, COMMAND, parse_config_overrides
+from .._util import get_workflow_steps
 
 
 @project_cli.command(
@@ -78,11 +79,11 @@ def project_run(
     validate_subcommand(list(commands.keys()), list(workflows.keys()), subcommand)
     if subcommand in workflows:
         msg.info(f"Running workflow '{subcommand}'")
-        for cmdOrMultiprocessingGroup in workflows[subcommand]:
-            if isinstance(cmdOrMultiprocessingGroup, str):
+        for workflow_item in workflows[subcommand]:
+            if isinstance(workflow_item, str):
                 project_run(
                     project_dir,
-                    cmdOrMultiprocessingGroup,
+                    workflow_item,
                     overrides=overrides,
                     force=force,
                     dry=dry,
@@ -90,6 +91,8 @@ def project_run(
                     mult_group_mutex=mult_group_mutex,
                 )
             else:
+                assert isinstance(workflow_item, list)
+                assert isinstance(workflow_item[0], str)
                 processes = [
                     Process(
                         target=project_run,
@@ -102,7 +105,7 @@ def project_run(
                             "mult_group_mutex": mult_group_mutex,
                         },
                     )
-                    for cmd in cmdOrMultiprocessingGroup
+                    for cmd in workflow_item
                 ]
                 for process in processes:
                     process.start()
@@ -133,18 +136,6 @@ def project_run(
                     update_lockfile(current_dir, cmd, mult_group_mutex=mult_group_mutex)
 
 
-def _get_workflow_steps(workflow_items: List[Union[str, List[str]]]) -> List[str]:
-    steps: List[str] = []
-    for workflow_item in workflow_items:
-        if isinstance(workflow_item, str):
-            steps.append(workflow_item)
-        else:
-            assert isinstance(workflow_item, list)
-            assert isinstance(workflow_item[0], str)
-            steps.extend(workflow_item)
-    return steps
-
-
 def print_run_help(project_dir: Path, subcommand: Optional[str] = None) -> None:
     """Simulate a CLI help prompt using the info available in the project.yml.
 
@@ -166,7 +157,7 @@ def print_run_help(project_dir: Path, subcommand: Optional[str] = None) -> None:
             if help_text:
                 print(f"\n{help_text}\n")
         elif subcommand in workflows:
-            steps = _get_workflow_steps(workflows[subcommand])
+            steps = get_workflow_steps(workflows[subcommand])
             print(f"\nWorkflow consisting of {len(steps)} commands:")
             steps_data = [
                 (f"{i + 1}. {step}", commands[step].get("help", ""))
@@ -189,7 +180,7 @@ def print_run_help(project_dir: Path, subcommand: Optional[str] = None) -> None:
             print(f"Usage: {COMMAND} project run [WORKFLOW] {project_loc}")
             msg.table(
                 [
-                    (name, " -> ".join(_get_workflow_steps(workflow_items)))
+                    (name, " -> ".join(get_workflow_steps(workflow_items)))
                     for name, workflow_items in workflows.items()
                 ]
             )

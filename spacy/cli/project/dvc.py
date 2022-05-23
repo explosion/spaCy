@@ -6,7 +6,7 @@ from pathlib import Path
 from wasabi import msg
 
 from .._util import PROJECT_FILE, load_project_config, get_hash, project_cli
-from .._util import Arg, Opt, NAME, COMMAND
+from .._util import Arg, Opt, NAME, COMMAND, get_workflow_steps
 from ...util import working_dir, split_command, join_command, run_command
 from ...util import SimpleFrozenList
 
@@ -105,21 +105,15 @@ def update_dvc_config(
         dvc_config_path.unlink()
     dvc_commands = []
     config_commands = {cmd["name"]: cmd for cmd in config.get("commands", [])}
-    names = []
-    for cmdOrMultiprocessingGroup in workflows[workflow]:
-        if isinstance(cmdOrMultiprocessingGroup, str):
-            names.append(cmdOrMultiprocessingGroup)
-        else:
-            assert isinstance(cmdOrMultiprocessingGroup, list)
-            assert isinstance(cmdOrMultiprocessingGroup[0], str)
-            names.extend(cmdOrMultiprocessingGroup)
-    for name in names:
+    processed_step = False
+    for name in get_workflow_steps(workflows[workflow]):
         command = config_commands[name]
         deps = command.get("deps", [])
         outputs = command.get("outputs", [])
         outputs_no_cache = command.get("outputs_no_cache", [])
         if not deps and not outputs and not outputs_no_cache:
             continue
+        processed_step = True
         # Default to the working dir as the project path since dvc.yaml is auto-generated
         # and we don't want arbitrary paths in there
         project_cmd = ["python", "-m", NAME, "project", "run", name]
@@ -131,6 +125,11 @@ def update_dvc_config(
             dvc_cmd.append("--always-changed")
         full_cmd = [*dvc_cmd, *deps_cmd, *outputs_cmd, *outputs_nc_cmd, *project_cmd]
         dvc_commands.append(join_command(full_cmd))
+    if not processed_step:
+        msg.fail(
+            f"A DVC workflow must have at least one dependency or output",
+            exits=1,
+        )
     with working_dir(path):
         dvc_flags = {"--verbose": verbose, "--quiet": silent}
         run_dvc_commands(dvc_commands, flags=dvc_flags)

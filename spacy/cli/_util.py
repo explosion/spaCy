@@ -242,13 +242,13 @@ def validate_project_commands(config: Dict[str, Any]) -> None:
         if workflow_name in commands:
             err = f"Can't use workflow name '{workflow_name}': name already exists as a command"
             msg.fail(err, exits=1)
-        for step_or_list in workflow_items:
-            if isinstance(step_or_list, str):
-                verify_workflow_step(workflow_name, commands, step_or_list)
+        for workflow_item in workflow_items:
+            if isinstance(workflow_item, str):
+                verify_workflow_step(workflow_name, commands, workflow_item)
             else:
-                assert isinstance(step_or_list, list)
-                assert isinstance(step_or_list[0], str)
-                steps = cast(List[str], step_or_list)
+                assert isinstance(workflow_item, list)
+                assert isinstance(workflow_item[0], str)
+                steps = cast(List[str], workflow_item)
                 if len(steps) < 2:
                     msg.fail(
                         f"Invalid multiprocessing group within '{workflow_name}'.",
@@ -580,3 +580,15 @@ def setup_gpu(use_gpu: int, silent=None) -> None:
         local_msg.info("Using CPU")
         if has_cupy and gpu_is_available():
             local_msg.info("To switch to GPU 0, use the option: --gpu-id 0")
+
+
+def get_workflow_steps(workflow_items: List[Union[str, List[str]]]) -> List[str]:
+    steps: List[str] = []
+    for workflow_item in workflow_items:
+        if isinstance(workflow_item, str):
+            steps.append(workflow_item)
+        else:
+            assert isinstance(workflow_item, list)
+            assert isinstance(workflow_item[0], str)
+            steps.extend(workflow_item)
+    return steps

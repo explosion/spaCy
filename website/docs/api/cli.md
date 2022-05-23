@@ -1455,8 +1455,10 @@ Auto-generate [Data Version Control](https://dvc.org) (DVC) config file. Calls
 the hood to generate the `dvc.yaml`. A DVC project can only define one pipeline,
 so you need to specify one workflow defined in the
 [`project.yml`](/usage/projects#project-yml). If no workflow is specified, the
-first defined workflow is used. The DVC config will only be updated if the
-`project.yml` changed. For details, see the
+first defined workflow is used. Note that any multiprocessing groups in the spaCy
+config file will be flattened out and defined for sequential execution in the DVC config file
+as DVC does not support multiprocessing in the same way as spaCy. The DVC config will only be updated 
+if the `project.yml` changed. For details, see the
 [DVC integration](/usage/projects#dvc) docs.
 
 <Infobox variant="warning">
