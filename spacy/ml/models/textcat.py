@@ -93,7 +93,8 @@ def build_bow_text_classifier(
         model = with_cpu(model, model.ops)
         if output_layer:
             model = model >> with_cpu(output_layer, output_layer.ops)
-    model.set_dim("nO", cast(int, nO))
+    if nO is not None:
+        model.set_dim("nO", cast(int, nO))
     model.set_ref("output_layer", sparse_linear)
     model.attrs["multi_label"] = not exclusive_classes
     model.attrs["resize_output"] = partial(
@@ -129,7 +130,7 @@ def build_text_classifier_v2(
             output_layer = Linear(nO=nO, nI=nO_double) >> Logistic()
         model = (linear_model | cnn_model) >> output_layer
         model.set_ref("tok2vec", tok2vec)
-    if model.has_dim("nO") is not False:
+    if model.has_dim("nO") is not False and nO is not None:
         model.set_dim("nO", cast(int, nO))
     model.set_ref("output_layer", linear_model.get_ref("output_layer"))
     model.set_ref("attention_layer", attention_layer)
