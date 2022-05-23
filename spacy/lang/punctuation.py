@@ -48,7 +48,7 @@ TOKENIZER_INFIXES = (
 
 # Some languages written with the Cyrillic alphabet permit the use of diacritics
 # to mark stressed syllables in words where stress is distinctive. Such languages
-# should use 'CYRILLIC_TOKENIZER_INFIXES' in place of 'TOKENIZER_INFIXES.
+# should use 'CYRILLIC_TOKENIZER_INFIXES' in place of 'TOKENIZER_INFIXES'.
 CYRILLIC_TOKENIZER_INFIXES = list(TOKENIZER_INFIXES) + [
     r"(?<=[{a}][{d}])\.".format(a=ALPHA, d=COMBINING_DIACRITICS),
     r"(?<=[{a}][{d}]),(?=[{a}])".format(a=ALPHA, d=COMBINING_DIACRITICS),
