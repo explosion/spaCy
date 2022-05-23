@@ -14,7 +14,7 @@ from ..language import DEFAULT_CONFIG_PRETRAIN_PATH
 from ..schemas import RecommendationSchema
 from ._util import init_cli, Arg, Opt, show_validation_error, COMMAND
 from ._util import string_to_list, import_code
-
+from ..util import SimpleFrozenList
 
 ROOT = Path(__file__).parent / "templates"
 TEMPLATE_PATH = ROOT / "quickstart_training.jinja"
@@ -26,16 +26,31 @@ class Optimizations(str, Enum):
     accuracy = "accuracy"
 
 
+class InitDefaultValues:
+    """
+    Default values for initialization. Dedicated class to allow synchronized default values for init_config_cli() and
+    init_config(), i.e. initialization calls via CLI respectively Python.
+    """
+
+    output_file: Path = ...
+    lang = "en"
+    pipeline = SimpleFrozenList(["tagger", "parser", "ner"])
+    optimize = Optimizations.efficiency.value
+    gpu = False
+    pretraining = False
+    force_overwrite = False
+
+
 @init_cli.command("config")
 def init_config_cli(
     # fmt: off
     output_file: Path = Arg(..., help="File to save the config to or - for stdout (will only output config and no additional logging info)", allow_dash=True),
-    lang: str = Opt("en", "--lang", "-l", help="Two-letter code of the language to use"),
-    pipeline: str = Opt("tagger,parser,ner", "--pipeline", "-p", help="Comma-separated names of trainable pipeline components to include (without 'tok2vec' or 'transformer')"),
-    optimize: Optimizations = Opt(Optimizations.efficiency.value, "--optimize", "-o", help="Whether to optimize for efficiency (faster inference, smaller model, lower memory consumption) or higher accuracy (potentially larger and slower model). This will impact the choice of architecture, pretrained weights and related hyperparameters."),
-    gpu: bool = Opt(False, "--gpu", "-G", help="Whether the model can run on GPU. This will impact the choice of architecture, pretrained weights and related hyperparameters."),
-    pretraining: bool = Opt(False, "--pretraining", "-pt", help="Include config for pretraining (with 'spacy pretrain')"),
-    force_overwrite: bool = Opt(False, "--force", "-F", help="Force overwriting the output file"),
+    lang: str = Opt(InitDefaultValues.lang, "--lang", "-l", help="Two-letter code of the language to use"),
+    pipeline: str = Opt(",".join(InitDefaultValues.pipeline), "--pipeline", "-p", help="Comma-separated names of trainable pipeline components to include (without 'tok2vec' or 'transformer')"),
+    optimize: Optimizations = Opt(InitDefaultValues.optimize, "--optimize", "-o", help="Whether to optimize for efficiency (faster inference, smaller model, lower memory consumption) or higher accuracy (potentially larger and slower model). This will impact the choice of architecture, pretrained weights and related hyperparameters."),
+    gpu: bool = Opt(InitDefaultValues.gpu, "--gpu", "-G", help="Whether the model can run on GPU. This will impact the choice of architecture, pretrained weights and related hyperparameters."),
+    pretraining: bool = Opt(InitDefaultValues.pretraining, "--pretraining", "-pt", help="Include config for pretraining (with 'spacy pretrain')"),
+    force_overwrite: bool = Opt(InitDefaultValues.force_overwrite, "--force", "-F", help="Force overwriting the output file"),
     # fmt: on
 ):
     """
@@ -47,24 +62,9 @@ def init_config_cli(
     DOCS: https://spacy.io/api/cli#init-config
     """
 
-    # Force default values for arguments, if Typer hasn't resolved them yet (might occur on calls from Python).
-    # Mandatory arguments are assigned ... as default value in Typer, hence we ignore those.
-    optional_args = {
-        arg_name: arg_value.default
-        if any(
-            [
-                isinstance(arg_value, typer_type)
-                for typer_type in (typer.models.OptionInfo, typer.models.ArgumentInfo)
-            ]
-        )
-        and arg_value.default != Ellipsis
-        else arg_value
-        for arg_name, arg_value in locals().items()
-    }
-
-    optional_args["pipeline"] = string_to_list(optional_args["pipeline"])
+    pipeline = string_to_list(pipeline)
     is_stdout = str(output_file) == "-"
-    if not is_stdout and output_file.exists() and not optional_args["force_overwrite"]:
+    if not is_stdout and output_file.exists() and not force_overwrite:
         msg = Printer()
         msg.fail(
             "The provided output file already exists. To force overwriting the config file, set the --force or -F flag.",
@@ -72,11 +72,11 @@ def init_config_cli(
         )
 
     config = init_config(
-        lang=optional_args["lang"],
-        pipeline=optional_args["pipeline"],
-        optimize=optional_args["optimize"],
-        gpu=optional_args["gpu"],
-        pretraining=optional_args["pretraining"],
+        lang=lang,
+        pipeline=pipeline,
+        optimize=optimize,
+        gpu=gpu,
+        pretraining=pretraining,
         silent=is_stdout,
     )
     save_config(config, output_file, is_stdout=is_stdout)
@@ -152,11 +152,11 @@ def fill_config(
 
 def init_config(
     *,
-    lang: str,
-    pipeline: List[str],
-    optimize: str,
-    gpu: bool,
-    pretraining: bool = False,
+    lang: str = InitDefaultValues.lang,
+    pipeline: List[str] = InitDefaultValues.pipeline,
+    optimize: str = InitDefaultValues.optimize,
+    gpu: bool = InitDefaultValues.gpu,
+    pretraining: bool = InitDefaultValues.pretraining,
     silent: bool = True,
 ) -> Config:
     msg = Printer(no_print=silent)

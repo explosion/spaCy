@@ -746,13 +746,14 @@ def test_debug_data_compile_gold():
 @pytest.mark.issue(10727)
 def test_init_config_from_python_without_optional_args():
     """
-    Tests calling init_config_cli() from Python with optional arguments not set. This should detect bugs related to
-    Typer not automatically setting default values for arguments when decorated functions are called from Python instead
+    Tests calling init_config_cli() from Python with optional arguments not set. This should detect whether Typer
+    automatically sets default values for arguments when decorated functions are called from Python instead
     from the CLI.
     """
 
-    with make_tempdir() as temp_dir:
-        init_config_cli(output_file=temp_dir / "config.cfg")
+    with pytest.raises(AttributeError):
+        with make_tempdir() as temp_dir:
+            init_config_cli(output_file=temp_dir / "config.cfg")
 
     with make_tempdir() as temp_dir:
         init_config_cli(
