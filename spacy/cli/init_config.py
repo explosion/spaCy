@@ -34,7 +34,7 @@ class InitDefaultValues:
     output_file: Path = ...  # type: ignore
     lang = "en"
     pipeline = SimpleFrozenList(["tagger", "parser", "ner"])
-    optimize = Optimizations.efficiency.value
+    optimize = Optimizations.efficiency
     gpu = False
     pretraining = False
     force_overwrite = False
@@ -73,7 +73,7 @@ def init_config_cli(
     config = init_config(
         lang=lang,
         pipeline=pipeline,
-        optimize=optimize,
+        optimize=optimize.value,
         gpu=gpu,
         pretraining=pretraining,
         silent=is_stdout,
