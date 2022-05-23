@@ -36,7 +36,9 @@ def project_clone_cli(
     if dest is None:
         dest = Path.cwd() / Path(name).parts[-1]
     clone = lambda branch: project_clone(name, dest, repo=repo, branch=branch, sparse_checkout=sparse_checkout)
-    if branch is None and repo == DEFAULT_REPO:
+    if branch is not None:
+        return clone(branch)
+    if repo == DEFAULT_REPO:
         return clone(DEFAULT_PROJECTS_BRANCH)
     for branch in DEFAULT_BRANCHES:
         try:
