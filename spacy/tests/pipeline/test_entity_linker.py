@@ -1072,8 +1072,8 @@ def test_no_gold_ents(patterns):
     # this will run the pipeline on the examples and shouldn't crash
     results = nlp.evaluate(train_examples)
 
+@pytest.mark.issue(9575)
 def test_tokenization_mismatch():
-    # https://github.com/explosion/spaCy/issues/9575
     nlp = English()
     # include a matching entity so that update isn't skipped
     doc1 = Doc(nlp.vocab, words=["Kirby", "123456"], spaces=[True, False], ents=["B-CHARACTER", "B-CARDINAL"])
