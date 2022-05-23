@@ -223,6 +223,7 @@ cdef class Doc:
         ents (Optional[List[str]]): A list of unicode strings, of the same
             length as words, as IOB tags to assign as token.ent_iob and
             token.ent_type. Defaults to None.
+
         DOCS: https://spacy.io/api/doc#init
         """
         self.vocab = vocab
