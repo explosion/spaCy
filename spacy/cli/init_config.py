@@ -2,7 +2,6 @@ from typing import Optional, List, Tuple
 from enum import Enum
 from pathlib import Path
 
-import typer.models
 from wasabi import Printer, diff_strings
 from thinc.api import Config
 import srsly
@@ -32,7 +31,7 @@ class InitDefaultValues:
     init_config(), i.e. initialization calls via CLI respectively Python.
     """
 
-    output_file: Path = ...
+    output_file: Path = ...  # type: ignore
     lang = "en"
     pipeline = SimpleFrozenList(["tagger", "parser", "ner"])
     optimize = Optimizations.efficiency.value
