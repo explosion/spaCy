@@ -178,12 +178,12 @@ def print_run_help(project_dir: Path, subcommand: Optional[str] = None) -> None:
         if workflows:
             print(f"Available workflows in {PROJECT_FILE}")
             print(f"Usage: {COMMAND} project run [WORKFLOW] {project_loc}")
-            msg.table(
-                [
+            table_entries: List[Tuple[str, str]] = []
+            for name, workflow_items in workflows.items():
+                table_entries.append(
                     (name, " -> ".join(get_workflow_steps(workflow_items)))
-                    for name, workflow_items in workflows.items()
-                ]
-            )
+                )
+            msg.table(table_entries)
 
 
 def run_commands(
