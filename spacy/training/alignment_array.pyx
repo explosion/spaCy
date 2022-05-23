@@ -16,20 +16,23 @@ cdef class AlignmentArray:
         cdef int outer_len
         cdef int idx
 
-        starts_ends = [0] * (len(alignment) + 1)
+        self._starts_ends = numpy.zeros(len(alignment) + 1, dtype='int32')
+        cdef int* starts_ends_ptr = <int*>self._starts_ends.data
+
         for idx, outer in enumerate(alignment):
             outer_len = len(outer)
-            starts_ends[idx + 1] = starts_ends[idx] + outer_len
+            starts_ends_ptr[idx + 1] = starts_ends_ptr[idx] + outer_len
             data_len += outer_len
 
         self._lengths = None
-        self._starts_ends = numpy.asarray(starts_ends, dtype='i')
-        self._data = numpy.empty(data_len, dtype="i")
+        self._data = numpy.empty(data_len, dtype="int32")
 
         idx = 0
+        cdef int* data_ptr = <int*>self._data.data
+
         for outer in alignment:
             for inner in outer:
-                self._data[idx] = inner
+                data_ptr[idx] = inner
                 idx += 1
 
     def __getitem__(self, idx):
