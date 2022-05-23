@@ -42,8 +42,7 @@ def project_clone_cli(
         return clone(DEFAULT_PROJECTS_BRANCH)
     for branch in DEFAULT_BRANCHES:
         try:
-            clone(branch)
-            return
+            return clone(branch)
         except:
             pass
     raise ProjectCloneException(f"Couldn't clone {repo} from any of these branches: {DEFAULT_BRANCHES}")
