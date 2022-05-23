@@ -417,6 +417,12 @@ def load_model(
         keyed by section values in dot notation.
     RETURNS (Language): The loaded nlp object.
     """
+    # todo @RM possible workaround for resolution:
+    #   - add "internal" keywords to supported component names - e.g. "strings", "vectors", ... (?) -> for native
+    #     full resolution support of internal stuff.
+    #   - figure out list of all fields:
+    #       - how to get all possible/customized fields?
+    #       - alternative: add optional "custom_fields" arg (usefulness of "include" rather limited then though)
     kwargs = {
         "vocab": vocab,
         "disable": disable,
