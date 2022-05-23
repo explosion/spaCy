@@ -1,5 +1,4 @@
 from typing import Optional, Callable
-from numpy import indices
 from thinc.api import Model
 
 from .stop_words import STOP_WORDS
