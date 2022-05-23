@@ -7,7 +7,7 @@ from thinc.backends.linalg cimport Vec, VecVec
 
 import numpy
 import numpy.random
-from thinc.api import Model, CupyOps, NumpyOps
+from thinc.api import Model, CupyOps, NumpyOps, get_ops
 
 from .. import util
 from ..errors import Errors
@@ -438,7 +438,11 @@ cdef class precompute_hiddens:
         # - Output from backward on GPU
         bp_hiddens = self._bp_hiddens
 
-        cdef CBlas cblas = self.ops.cblas()
+        cdef CBlas cblas
+        if isinstance(self.ops, CupyOps):
+            cblas = get_ops("cpu").cblas()
+        else:
+            cblas = self.ops.cblas()
 
         feat_weights = self.get_feat_weights()
         cdef int[:, ::1] ids = token_ids
