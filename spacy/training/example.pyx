@@ -12,7 +12,7 @@ from .iob_utils import biluo_tags_to_spans
 from ..errors import Errors, Warnings
 from ..pipeline._parser_internals import nonproj
 from ..tokens.token cimport MISSING_DEP
-from ..util import logger, to_ternary_int
+from ..util import logger, to_ternary_int, all_equal
 
 
 cpdef Doc annotations_to_doc(vocab, tok_annot, doc_annot):
@@ -182,7 +182,7 @@ cdef class Example:
             aligned_gold_values = gold_values[x2y_multiple_toks[i]]
 
             # If all aligned tokens have the same value, use it.
-            if len(set(list(aligned_gold_values))) == 1:
+            if all_equal(aligned_gold_values):
                 x2y_multiple_toks[i] = aligned_gold_values[0].item()
             else:
                 x2y_multiple_toks[i] = None
@@ -199,13 +199,12 @@ cdef class Example:
 
         for token in self.predicted:
             aligned_gold_i = align[token.i]
-            values_org = gold_values[aligned_gold_i]
-            values = values_org.ravel()
+            values = gold_values[aligned_gold_i].ravel()
             if len(values) == 0:
                 output[token.i] = None
             elif len(values) == 1:
                 output[token.i] = values.item()
-            elif len(set(list(values))) == 1:
+            elif all_equal(values):
                 # If all aligned tokens have the same value, use it.
                 output[token.i] = values[0].item()
             else:
