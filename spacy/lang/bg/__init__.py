@@ -2,6 +2,7 @@ from .stop_words import STOP_WORDS
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .lex_attrs import LEX_ATTRS
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
+from ..punctuation import CYRILLIC_TOKENIZER_INFIXES
 
 from ...language import Language, BaseDefaults
 from ...attrs import LANG
@@ -16,6 +17,7 @@ class BulgarianDefaults(BaseDefaults):
 
     stop_words = STOP_WORDS
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
+    infixes = CYRILLIC_TOKENIZER_INFIXES
 
 
 class Bulgarian(Language):
