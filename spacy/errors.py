@@ -916,6 +916,7 @@ class Errors(metaclass=ErrorsWithCodes):
     E1036 = ("Cannot index into NoneNode")
     E1037 = ("Invalid attribute value '{attr}'.")
 
+
 # Deprecated model shortcuts, only used in errors and warnings
 OLD_MODEL_SHORTCUTS = {
     "en": "en_core_web_sm", "de": "de_core_news_sm", "es": "es_core_news_sm",
