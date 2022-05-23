@@ -234,10 +234,10 @@ class EntityLinker(TrainablePipe):
         nO = self.kb.entity_vector_length
         doc_sample = []
         vector_sample = []
-        for example in islice(get_examples(), 10):
-            doc = example.x
+        for eg in islice(get_examples(), 10):
+            doc = eg.x
             if self.use_gold_ents:
-                ents, _ = example.get_aligned_ents_and_ner()
+                ents, _ = eg.get_aligned_ents_and_ner()
                 doc.ents = ents
             doc_sample.append(doc)
             vector_sample.append(self.model.ops.alloc1f(nO))
