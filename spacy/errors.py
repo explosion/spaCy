@@ -914,9 +914,7 @@ class Errors(metaclass=ErrorsWithCodes):
     E1034 = ("Node index {i} out of bounds ({length})")
     E1035 = ("Token index {i} out of bounds ({length})")
     E1036 = ("Cannot index into NoneNode")
-    E1037 = ("\"{attr}\" is not a valid value for attr.\n"
-             "Please consult https://spacy.io/api/token#attributes "
-             "for more information!")
+    E1037 = ("Invalid attribute value '{attr}'.")
 
 # Deprecated model shortcuts, only used in errors and warnings
 OLD_MODEL_SHORTCUTS = {
