@@ -194,6 +194,7 @@ cdef class Doc:
         ents=None,
     ):
         """Create a Doc object.
+
         vocab (Vocab): A vocabulary object, which must match any models you
             want to use (e.g. tokenizer, parser, entity recognizer).
         words (Optional[List[Union[str, int]]]): A list of unicode strings or
