@@ -59,7 +59,8 @@ def build_simple_cnn_text_classifier(
             resizable_layer=resizable_layer,
         )
     model.set_ref("tok2vec", tok2vec)
-    model.set_dim("nO", cast(int, nO))
+    if nO is not None:
+        model.set_dim("nO", cast(int, nO))
     model.attrs["multi_label"] = not exclusive_classes
     return model
 
