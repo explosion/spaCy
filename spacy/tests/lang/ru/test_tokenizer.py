@@ -140,7 +140,7 @@ def test_ru_tokenizer_splits_bracket_period(ru_tokenizer):
         "рекоменду̍я подда̍ть жару̍-самого̍ Баргамота",
     ],
 )
-def test_ru_tokenizer_handles_final_diacritics_2(ru_tokenizer, text):
+def test_ru_tokenizer_handles_final_diacritics(ru_tokenizer, text):
     tokens = ru_tokenizer(text)
     assert tokens[2].text in ("жару́", "ЖАРУ́", "жару̍")
     assert tokens[3].text in punctuation

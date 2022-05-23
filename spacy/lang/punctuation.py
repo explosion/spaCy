@@ -39,7 +39,7 @@ TOKENIZER_INFIXES = (
         r"(?<=[{al}{q}])\.(?=[{au}{q}])".format(
             al=ALPHA_LOWER, au=ALPHA_UPPER, q=CONCAT_QUOTES
         ),
-        r"(?<=[{a}])(?:{p})(?=[{a}])".format(a=ALPHA, p=PUNCT),
+        r"(?<=[{a}]),(?=[{a}])".format(a=ALPHA),
         r"(?<=[{a}])(?:{h})(?=[{a}])".format(a=ALPHA, h=HYPHENS),
         r"(?<=[{a}0-9])[:<>=/](?=[{a}])".format(a=ALPHA),
     ]
@@ -51,8 +51,9 @@ TOKENIZER_INFIXES = (
 # should use 'CYRILLIC_TOKENIZER_INFIXES' in place of 'TOKENIZER_INFIXES.
 CYRILLIC_TOKENIZER_INFIXES = list(TOKENIZER_INFIXES) + [
     r"(?<=[{a}][{d}])\.".format(a=ALPHA, d=COMBINING_DIACRITICS),
-    r"(?<=[{a}][{d}])(?:{p})(?=[{a}])".format(a=ALPHA, d=COMBINING_DIACRITICS, p=PUNCT),
+    r"(?<=[{a}][{d}]),(?=[{a}])".format(a=ALPHA, d=COMBINING_DIACRITICS),
     r"(?<=[{a}][{d}])(?:{h})(?=[{a}])".format(
         a=ALPHA, d=COMBINING_DIACRITICS, h=HYPHENS
     ),
+    r"(?<=[{a}0-9][{d}])[:<>=/](?=[{a}])".format(a=ALPHA, d=COMBINING_DIACRITICS),
 ]
