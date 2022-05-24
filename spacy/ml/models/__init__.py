@@ -7,10 +7,8 @@ from .textcat import *  # noqa
 from .tok2vec import *  # noqa
 
 # some models require Torch
-try:
-    import torch
+from thinc.util import has_torch
+if has_torch:
     from .coref import * #noqa
     from .span_predictor import * #noqa
-except ImportError:
-    pass
 
