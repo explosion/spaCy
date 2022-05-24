@@ -185,6 +185,7 @@ class CorefScorer(torch.nn.Module):
         return coref_scores, top_indices
 
 
+EPSILON = 1e-7
 # Note this function is kept here to keep a torch dep out of coref_util.
 def add_dummy(tensor: torch.Tensor, eps: bool = False):
     """Prepends zeros (or a very small value if eps is True)

@@ -8,8 +8,6 @@ MentionClusters = List[List[Tuple[int, int]]]
 
 DEFAULT_CLUSTER_PREFIX = "coref_clusters"
 
-EPSILON = 1e-7
-
 class GraphNode:
     def __init__(self, node_id: int):
         self.id = node_id
