@@ -1,6 +1,7 @@
 from typing import List
 from ..errors import Errors
 import numpy
+from libc.stdint cimport int32_t
 
 
 cdef class AlignmentArray:
@@ -17,7 +18,7 @@ cdef class AlignmentArray:
         cdef int idx
 
         self._starts_ends = numpy.zeros(len(alignment) + 1, dtype='int32')
-        cdef int* starts_ends_ptr = <int*>self._starts_ends.data
+        cdef int32_t* starts_ends_ptr = <int32_t*>self._starts_ends.data
 
         for idx, outer in enumerate(alignment):
             outer_len = len(outer)
@@ -28,7 +29,7 @@ cdef class AlignmentArray:
         self._data = numpy.empty(data_len, dtype="int32")
 
         idx = 0
-        cdef int* data_ptr = <int*>self._data.data
+        cdef int32_t* data_ptr = <int32_t*>self._data.data
 
         for outer in alignment:
             for inner in outer:
