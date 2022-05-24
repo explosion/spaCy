@@ -199,6 +199,7 @@ class Warnings(metaclass=ErrorsWithCodes):
     W118 = ("Term '{term}' not found in glossary. It may however be explained in documentation "
             "for the corpora used to train the language. Please check "
             "`nlp.meta[\"sources\"]` for any relevant links.")
+    W119 = ("Overriding pipe name in `config` is not supported. Ignoring override '{name_in_config}'.")
 
 
 class Errors(metaclass=ErrorsWithCodes):

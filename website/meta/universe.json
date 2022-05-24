@@ -298,6 +298,10 @@
             "github": "SamEdwardes/spacytextblob",
             "pip": "spacytextblob",
             "code_example": [
+                "# the following installations are required",
+                "# python -m textblob.download_corpora",
+                "# python -m spacy download en_core_web_sm",
+                "",
                 "import spacy",
                 "from spacytextblob.spacytextblob import SpacyTextBlob",
                 "",
