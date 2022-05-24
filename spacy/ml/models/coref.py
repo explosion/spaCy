@@ -1,10 +1,9 @@
 from typing import List, Tuple
-import torch
 
 from thinc.api import Model, chain
 from thinc.api import PyTorchWrapper, ArgsKwargs
 from thinc.types import Floats2d, Ints2d, Ints1d
-from thinc.util import xp2torch, torch2xp
+from thinc.util import torch, xp2torch, torch2xp
 
 from ...tokens import Doc
 from ...util import registry
