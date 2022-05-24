@@ -1682,6 +1682,7 @@ def packages_distributions() -> Dict[str, List[str]]:
 
 
 def all_equal(iterable):
-    """Return True if all the elements are equal to each other, False otherwise."""
+    """Return True if all the elements are equal to each other
+    (or if the input is an empty sequence), False otherwise."""
     g = itertools.groupby(iterable)
     return next(g, True) and not next(g, False)
