@@ -31,7 +31,6 @@ class InitDefaultValues:
     init_config(), i.e. initialization calls via CLI respectively Python.
     """
 
-    output_file: Path = ...  # type: ignore
     lang = "en"
     pipeline = SimpleFrozenList(["tagger", "parser", "ner"])
     optimize = Optimizations.efficiency
