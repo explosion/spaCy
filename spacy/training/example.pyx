@@ -165,10 +165,12 @@ cdef class Example:
         #   Bucket 2: All tokens that have a one-to-many alignment.
         for idx, token in enumerate(self.predicted):
             aligned_gold_i = align[token.i]
-            if len(aligned_gold_i) == 1:
+            aligned_gold_len = len(aligned_gold_i)
+
+            if aligned_gold_len == 1:
                 x2y_single_toks.append(aligned_gold_i.item())
                 x2y_single_toks_i.append(idx)
-            else:
+            elif aligned_gold_len > 1:
                 x2y_multiple_toks.append(aligned_gold_i)
                 x2y_multiple_toks_i.append(idx)
 
@@ -200,15 +202,11 @@ cdef class Example:
         for token in self.predicted:
             aligned_gold_i = align[token.i]
             values = gold_values[aligned_gold_i].ravel()
-            if len(values) == 0:
-                output[token.i] = None
-            elif len(values) == 1:
+            if len(values) == 1:
                 output[token.i] = values.item()
             elif all_equal(values):
                 # If all aligned tokens have the same value, use it.
                 output[token.i] = values[0].item()
-            else:
-                output[token.i] = None
 
         return output
 
