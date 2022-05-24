@@ -1672,6 +1672,7 @@ def to_ternary_int(val) -> int:
 # See licenses/3rd_party_licenses.txt
 def packages_distributions() -> Dict[str, List[str]]:
     """Return a mapping of top-level packages to their distributions. We're
+    inlining this helper from the importlib_metadata "backport" here, since
     it's not available in the builtin importlib.metadata.
     """
     pkg_to_dist = defaultdict(list)
