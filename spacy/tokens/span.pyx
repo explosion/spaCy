@@ -736,7 +736,7 @@ cdef class Span:
 
         def __set__(self, int start):
             if start < 0:
-                raise IndexError("TODO")
+                raise IndexError(Errors.E1032.format(var="start", forbidden="< 0", value=start))
             self.c.start = start
 
     property end:
@@ -745,7 +745,7 @@ cdef class Span:
 
         def __set__(self, int end):
             if end < 0:
-                raise IndexError("TODO")
+                raise IndexError(Errors.E1032.format(var="end", forbidden="< 0", value=end))
             self.c.end = end
 
     property start_char:
@@ -754,7 +754,7 @@ cdef class Span:
 
         def __set__(self, int start_char):
             if start_char < 0:
-                raise IndexError("TODO")
+                raise IndexError(Errors.E1032.format(var="start_char", forbidden="< 0", value=start_char))
             self.c.start_char = start_char
 
     property end_char:
@@ -763,7 +763,7 @@ cdef class Span:
 
         def __set__(self, int end_char):
             if end_char < 0:
-                raise IndexError("TODO")
+                raise IndexError(Errors.E1032.format(var="end_char", forbidden="< 0", value=end_char))
             self.c.end_char = end_char
 
     property label:

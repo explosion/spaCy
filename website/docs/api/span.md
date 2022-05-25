@@ -284,8 +284,9 @@ objects, if the document has been syntactically parsed. A base noun phrase, or
 it – so no NP-level coordination, no prepositional phrases, and no relative
 clauses.
 
-If the `noun_chunk` [syntax iterator](/usage/adding-languages#language-data) has
-not been implemeted for the given language, a `NotImplementedError` is raised.
+If the `noun_chunk` [syntax iterator](/usage/linguistic-features#language-data)
+has not been implemeted for the given language, a `NotImplementedError` is
+raised.
 
 > #### Example
 >

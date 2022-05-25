@@ -345,7 +345,7 @@ class SpanRuler(Pipe):
             try:
                 doc.ents = sorted(spans)
             except ValueError:
-                raise ValueError(Errors.E856)
+                raise ValueError(Errors.E854)
 
     @property
     def labels(self) -> Tuple[str, ...]:
