@@ -1,6 +1,21 @@
 {
     "resources": [
         {
+            "type": "education",
+            "id": "spacy-shorts-playlist",
+            "title": "spaCy shorts playlist",
+            "slogan": "",
+            "description": "A YouTube playlist with tips and hints for spaCy, hosted by Explosion.",
+            "youtube": "OoZ-H_8vRnc&list=PLBmcuObd5An6Ym94Bu7AdYa-3XW6esdyu",
+            "author": "Explosion",
+            "author_links": {
+                "twitter" : "https://twitter.com/explosion_ai",
+                "github": "https://github.com/explosion",
+                "website": "https://explosion.ai/"
+            },
+            "category": ["videos"]
+        },
+        {
             "id": "scrubadub_spacy",
             "title": "scrubadub_spacy",
             "category": ["pipeline"],
