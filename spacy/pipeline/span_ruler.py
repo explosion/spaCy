@@ -44,9 +44,9 @@ def make_entity_ruler(
     ent_id_sep: str,
 ):
     if overwrite_ents:
-        ents_filter = overwrite_overlapping_ents_filter
+        ents_filter = prioritize_new_ents_filter
     else:
-        ents_filter = preserve_existing_ents_filter
+        ents_filter = prioritize_existing_ents_filter
     return SpanRuler(
         nlp,
         name,
@@ -107,7 +107,7 @@ def make_span_ruler(
     )
 
 
-def overwrite_overlapping_ents_filter(
+def prioritize_new_ents_filter(
     entities: Iterable[Span], spans: Iterable[Span]
 ) -> List[Span]:
     """Merge entities and spans into one list without overlaps by allowing
@@ -133,12 +133,12 @@ def overwrite_overlapping_ents_filter(
     return entities + new_entities
 
 
-@registry.misc("spacy.overwrite_overlapping_ents_filter.v1")
-def make_overwrite_overlapping_ents_filter():
-    return overwrite_overlapping_ents_filter
+@registry.misc("spacy.prioritize_new_ents_filter.v1")
+def make_prioritize_new_ents_filter():
+    return prioritize_new_ents_filter
 
 
-def preserve_existing_ents_filter(
+def prioritize_existing_ents_filter(
     entities: Iterable[Span], spans: Iterable[Span]
 ) -> List[Span]:
     """Merge entities and spans into one list without overlaps by prioritizing
@@ -164,9 +164,9 @@ def preserve_existing_ents_filter(
     return entities + new_entities
 
 
-@registry.misc("spacy.preserve_existing_ents_filter.v1")
+@registry.misc("spacy.prioritize_existing_ents_filter.v1")
 def make_preverse_existing_ents_filter():
-    return preserve_existing_ents_filter
+    return prioritize_existing_ents_filter
 
 
 class SpanRuler(Pipe):

@@ -413,7 +413,7 @@ def test_span_ruler_ents_overwrite_filter(overlapping_patterns):
         config={
             "annotate_ents": True,
             "overwrite": False,
-            "ents_filter": {"@misc": "spacy.overwrite_overlapping_ents_filter.v1"},
+            "ents_filter": {"@misc": "spacy.prioritize_new_ents_filter.v1"},
         },
     )
     ruler.add_patterns(overlapping_patterns)
