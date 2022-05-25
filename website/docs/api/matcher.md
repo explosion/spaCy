@@ -30,26 +30,26 @@ pattern keys correspond to a number of
 [`Token` attributes](/api/token#attributes). The supported attributes for
 rule-based matching are:
 
-| Attribute                                       |  Description                                                                                                              |
-| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `ORTH`                                          | The exact verbatim text of a token. ~~str~~                                                                               |
-| `TEXT` <Tag variant="new">2.1</Tag>             | The exact verbatim text of a token. ~~str~~                                                                               |
-| `NORM`                                          | The normalized form of the token text. ~~str~~                                                                            |
-| `LOWER`                                         | The lowercase form of the token text. ~~str~~                                                                             |
-|  `LENGTH`                                       | The length of the token text. ~~int~~                                                                                     |
-|  `IS_ALPHA`, `IS_ASCII`, `IS_DIGIT`             | Token text consists of alphabetic characters, ASCII characters, digits. ~~bool~~                                          |
-|  `IS_LOWER`, `IS_UPPER`, `IS_TITLE`             | Token text is in lowercase, uppercase, titlecase. ~~bool~~                                                                |
-|  `IS_PUNCT`, `IS_SPACE`, `IS_STOP`              | Token is punctuation, whitespace, stop word. ~~bool~~                                                                     |
-|  `IS_SENT_START`                                | Token is start of sentence. ~~bool~~                                                                                      |
-|  `LIKE_NUM`, `LIKE_URL`, `LIKE_EMAIL`           | Token text resembles a number, URL, email. ~~bool~~                                                                       |
-| `SPACY`                                         | Token has a trailing space. ~~bool~~                                                                                      |
-|  `POS`, `TAG`, `MORPH`, `DEP`, `LEMMA`, `SHAPE` | The token's simple and extended part-of-speech tag, morphological analysis, dependency label, lemma, shape. ~~str~~       |
-| `ENT_TYPE`                                      | The token's entity label. ~~str~~                                                                                         |
-| `ENT_IOB`                                       | The IOB part of the token's entity tag. ~~str~~                                                                           |
-| `ENT_ID`                                        | The token's entity ID (`ent_id`). ~~str~~                                                                                 |
-| `ENT_KB_ID`                                     | The token's entity knowledge base ID (`ent_kb_id`). ~~str~~                                                               |
-| `_` <Tag variant="new">2.1</Tag>                | Properties in [custom extension attributes](/usage/processing-pipelines#custom-components-attributes). ~~Dict[str, Any]~~ |
-| `OP`                                            | Operator or quantifier to determine how often to match a token pattern. ~~str~~                                           |
+| Attribute                                      | Description                                                                                                               |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `ORTH`                                         | The exact verbatim text of a token. ~~str~~                                                                               |
+| `TEXT` <Tag variant="new">2.1</Tag>            | The exact verbatim text of a token. ~~str~~                                                                               |
+| `NORM`                                         | The normalized form of the token text. ~~str~~                                                                            |
+| `LOWER`                                        | The lowercase form of the token text. ~~str~~                                                                             |
+| `LENGTH`                                       | The length of the token text. ~~int~~                                                                                     |
+| `IS_ALPHA`, `IS_ASCII`, `IS_DIGIT`             | Token text consists of alphabetic characters, ASCII characters, digits. ~~bool~~                                          |
+| `IS_LOWER`, `IS_UPPER`, `IS_TITLE`             | Token text is in lowercase, uppercase, titlecase. ~~bool~~                                                                |
+| `IS_PUNCT`, `IS_SPACE`, `IS_STOP`              | Token is punctuation, whitespace, stop word. ~~bool~~                                                                     |
+| `IS_SENT_START`                                | Token is start of sentence. ~~bool~~                                                                                      |
+| `LIKE_NUM`, `LIKE_URL`, `LIKE_EMAIL`           | Token text resembles a number, URL, email. ~~bool~~                                                                       |
+| `SPACY`                                        | Token has a trailing space. ~~bool~~                                                                                      |
+| `POS`, `TAG`, `MORPH`, `DEP`, `LEMMA`, `SHAPE` | The token's simple and extended part-of-speech tag, morphological analysis, dependency label, lemma, shape. ~~str~~       |
+| `ENT_TYPE`                                     | The token's entity label. ~~str~~                                                                                         |
+| `ENT_IOB`                                      | The IOB part of the token's entity tag. ~~str~~                                                                           |
+| `ENT_ID`                                       | The token's entity ID (`ent_id`). ~~str~~                                                                                 |
+| `ENT_KB_ID`                                    | The token's entity knowledge base ID (`ent_kb_id`). ~~str~~                                                               |
+| `_` <Tag variant="new">2.1</Tag>               | Properties in [custom extension attributes](/usage/processing-pipelines#custom-components-attributes). ~~Dict[str, Any]~~ |
+| `OP`                                           | Operator or quantifier to determine how often to match a token pattern. ~~str~~                                           |
 
 Operators and quantifiers define **how often** a token pattern should be
 matched:

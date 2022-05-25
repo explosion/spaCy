@@ -37,13 +37,13 @@ streaming.
 > augmenter = null
 > ```
 
-| Name            | Description                                                                                                                                                                                                                                                                              |
-| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `path`          | The directory or filename to read from. Expects data in spaCy's binary [`.spacy` format](/api/data-formats#binary-training). ~~Path~~                                                                                                                                                    |
-|  `gold_preproc` | Whether to set up the Example object with gold-standard sentences and tokens for the predictions. See [`Corpus`](/api/corpus#init) for details. ~~bool~~                                                                                                                                 |
-| `max_length`    | Maximum document length. Longer documents will be split into sentences, if sentence boundaries are available. Defaults to `0` for no limit. ~~int~~                                                                                                                                      |
-| `limit`         | Limit corpus to a subset of examples, e.g. for debugging. Defaults to `0` for no limit. ~~int~~                                                                                                                                                                                          |
-| `augmenter`     | Apply some simply data augmentation, where we replace tokens with variations. This is especially useful for punctuation and case replacement, to help generalize beyond corpora that don't have smart-quotes, or only have smart quotes, etc. Defaults to `None`. ~~Optional[Callable]~~ |
+| Name           | Description                                                                                                                                                                                                                                                                              |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `path`         | The directory or filename to read from. Expects data in spaCy's binary [`.spacy` format](/api/data-formats#binary-training). ~~Path~~                                                                                                                                                    |
+| `gold_preproc` | Whether to set up the Example object with gold-standard sentences and tokens for the predictions. See [`Corpus`](/api/corpus#init) for details. ~~bool~~                                                                                                                                 |
+| `max_length`   | Maximum document length. Longer documents will be split into sentences, if sentence boundaries are available. Defaults to `0` for no limit. ~~int~~                                                                                                                                      |
+| `limit`        | Limit corpus to a subset of examples, e.g. for debugging. Defaults to `0` for no limit. ~~int~~                                                                                                                                                                                          |
+| `augmenter`    | Apply some simply data augmentation, where we replace tokens with variations. This is especially useful for punctuation and case replacement, to help generalize beyond corpora that don't have smart-quotes, or only have smart quotes, etc. Defaults to `None`. ~~Optional[Callable]~~ |
 
 ```python
 %%GITHUB_SPACY/spacy/training/corpus.py
@@ -71,15 +71,15 @@ train/test skew.
 > corpus = Corpus("./data", limit=10)
 > ```
 
-| Name            | Description                                                                                                                                         |
-| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `path`          | The directory or filename to read from. ~~Union[str, Path]~~                                                                                        |
-| _keyword-only_  |                                                                                                                                                     |
-|  `gold_preproc` | Whether to set up the Example object with gold-standard sentences and tokens for the predictions. Defaults to `False`. ~~bool~~                     |
-| `max_length`    | Maximum document length. Longer documents will be split into sentences, if sentence boundaries are available. Defaults to `0` for no limit. ~~int~~ |
-| `limit`         | Limit corpus to a subset of examples, e.g. for debugging. Defaults to `0` for no limit. ~~int~~                                                     |
-| `augmenter`     | Optional data augmentation callback. ~~Callable[[Language, Example], Iterable[Example]]~~                                                           |
-| `shuffle`       | Whether to shuffle the examples. Defaults to `False`. ~~bool~~                                                                                      |
+| Name           | Description                                                                                                                                         |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `path`         | The directory or filename to read from. ~~Union[str, Path]~~                                                                                        |
+| _keyword-only_ |                                                                                                                                                     |
+| `gold_preproc` | Whether to set up the Example object with gold-standard sentences and tokens for the predictions. Defaults to `False`. ~~bool~~                     |
+| `max_length`   | Maximum document length. Longer documents will be split into sentences, if sentence boundaries are available. Defaults to `0` for no limit. ~~int~~ |
+| `limit`        | Limit corpus to a subset of examples, e.g. for debugging. Defaults to `0` for no limit. ~~int~~                                                     |
+| `augmenter`    | Optional data augmentation callback. ~~Callable[[Language, Example], Iterable[Example]]~~                                                           |
+| `shuffle`      | Whether to shuffle the examples. Defaults to `False`. ~~bool~~                                                                                      |
 
 ## Corpus.\_\_call\_\_ {#call tag="method"}
 
