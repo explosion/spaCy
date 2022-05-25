@@ -449,10 +449,10 @@ class Errors(metaclass=ErrorsWithCodes):
             "same, but found '{nlp}' and '{vocab}' respectively.")
     E152 = ("The attribute {attr} is not supported for token patterns. "
             "Please use the option `validate=True` with the Matcher, PhraseMatcher, "
-            "or EntityRuler for more details.")
+            "EntityRuler or AttributeRuler for more details.")
     E153 = ("The value type {vtype} is not supported for token patterns. "
             "Please use the option validate=True with Matcher, PhraseMatcher, "
-            "or EntityRuler for more details.")
+            "EntityRuler or AttributeRuler for more details.")
     E154 = ("One of the attributes or values is not supported for token "
             "patterns. Please use the option `validate=True` with the Matcher, "
             "PhraseMatcher, or EntityRuler for more details.")
@@ -918,6 +918,7 @@ class Errors(metaclass=ErrorsWithCodes):
     E1034 = ("Node index {i} out of bounds ({length})")
     E1035 = ("Token index {i} out of bounds ({length})")
     E1036 = ("Cannot index into NoneNode")
+    E1037 = ("Invalid attribute value '{attr}'.")
 
 
 # Deprecated model shortcuts, only used in errors and warnings
