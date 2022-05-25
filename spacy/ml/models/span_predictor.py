@@ -48,7 +48,7 @@ def build_span_predictor(
 
 
 def convert_span_predictor_inputs(
-    model: Model, X: Tuple[Ints1d, Floats2d, Ints1d], is_train: bool
+    model: Model, X: Tuple[Ints1d, Tuple[Floats2d, Ints1d]], is_train: bool
 ):
     tok2vec, (sent_ids, head_ids) = X
     # Normally we should use the input is_train, but for these two it's not relevant

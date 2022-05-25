@@ -29,8 +29,8 @@ def build_wl_coref_model(
         dim = 768
 
     with Model.define_operators({">>": chain}):
-        coref_scorer = PyTorchWrapper(
-            CorefScorer(
+        coref_clusterer = PyTorchWrapper(
+            CorefClusterer(
                 dim,
                 distance_embedding_size,
                 hidden_size,
@@ -39,14 +39,14 @@ def build_wl_coref_model(
                 antecedent_limit,
                 antecedent_batch_size,
             ),
-            convert_inputs=convert_coref_scorer_inputs,
-            convert_outputs=convert_coref_scorer_outputs,
+            convert_inputs=convert_coref_clusterer_inputs,
+            convert_outputs=convert_coref_clusterer_outputs,
         )
-        coref_model = tok2vec >> coref_scorer
+        coref_model = tok2vec >> coref_clusterer
     return coref_model
 
 
-def convert_coref_scorer_inputs(
+def convert_coref_clusterer_inputs(
     model: Model,
     X: List[Floats2d],
     is_train: bool
@@ -65,7 +65,7 @@ def convert_coref_scorer_inputs(
     return ArgsKwargs(args=(word_features, ), kwargs={}), backprop
 
 
-def convert_coref_scorer_outputs(model: Model, inputs_outputs, is_train: bool):
+def convert_coref_clusterer_outputs(model: Model, inputs_outputs, is_train: bool):
     _, outputs = inputs_outputs
     scores, indices = outputs
 
@@ -81,7 +81,7 @@ def convert_coref_scorer_outputs(model: Model, inputs_outputs, is_train: bool):
     return (scores_xp, indices_xp), convert_for_torch_backward
 
 
-class CorefScorer(torch.nn.Module):
+class CorefClusterer(torch.nn.Module):
     """
     Combines all coref modules together to find coreferent token pairs.
     Submodules (in the order of their usage in the pipeline):

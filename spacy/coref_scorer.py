@@ -9,14 +9,14 @@ def get_cluster_info(predicted_clusters, gold_clusters):
     return (gold_clusters, predicted_clusters, g2p, p2g)
 
 
-def get_markable_assignments(inp_clusters, out_clusters):
+def get_markable_assignments(in_clusters, out_clusters):
     markable_cluster_ids = {}
     out_dic = {}
     for cluster_id, cluster in enumerate(out_clusters):
         for m in cluster:
             out_dic[m] = cluster_id
 
-    for cluster in inp_clusters:
+    for cluster in in_clusters:
         for im in cluster:
             for om in out_dic:
                 if im == om:
