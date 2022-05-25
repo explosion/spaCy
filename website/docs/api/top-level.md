@@ -320,7 +320,6 @@ If a setting is not present in the options, the default value will be used.
 | `template` <Tag variant="new">2.2</Tag>          | Optional template to overwrite the HTML used to render entity spans. Should be a format string and can use `{bg}`, `{text}` and `{label}`. See [`templates.py`](%%GITHUB_SPACY/spacy/displacy/templates.py) for examples. ~~Optional[str]~~ |
 | `kb_url_template` <Tag variant="new">3.2.1</Tag> | Optional template to construct the KB url for the entity to link to. Expects a python f-string format with single field to fill in. ~~Optional[str]~~                                                                                       |
 
-
 #### Span Visualizer options {#displacy_options-span}
 
 > #### Example
@@ -330,21 +329,19 @@ If a setting is not present in the options, the default value will be used.
 > displacy.serve(doc, style="span", options=options)
 > ```
 
-| Name            | Description                                                                                                                                             |
-|-----------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `spans_key`       | Which spans key to render spans from. Default is `"sc"`. ~~str~~                                                                                                   |
+| Name              | Description                                                                                                                                                                               |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `spans_key`       | Which spans key to render spans from. Default is `"sc"`. ~~str~~                                                                                                                          |
 | `templates`       | Dictionary containing the keys `"span"`, `"slice"`, and `"start"`. These dictate how the overall span, a span slice, and the starting token will be rendered. ~~Optional[Dict[str, str]~~ |
-| `kb_url_template` | Optional template to construct the KB url for the entity to link to. Expects a python f-string format with single field to fill in ~~Optional[str]~~                    |
-| `colors`          | Color overrides. Entity types should be mapped to color names or values. ~~Dict[str, str]~~ |
+| `kb_url_template` | Optional template to construct the KB url for the entity to link to. Expects a python f-string format with single field to fill in ~~Optional[str]~~                                      |
+| `colors`          | Color overrides. Entity types should be mapped to color names or values. ~~Dict[str, str]~~                                                                                               |
 
-
-By default, displaCy comes with colors for all entity types used by [spaCy's
-trained pipelines](/models) for both entity and span visualizer. If you're
-using custom entity types, you can use the `colors` setting to add your own
-colors for them. Your application or pipeline package can also expose a
-[`spacy_displacy_colors` entry
-point](/usage/saving-loading#entry-points-displacy) to add custom labels and
-their colors automatically.
+By default, displaCy comes with colors for all entity types used by
+[spaCy's trained pipelines](/models) for both entity and span visualizer. If
+you're using custom entity types, you can use the `colors` setting to add your
+own colors for them. Your application or pipeline package can also expose a
+[`spacy_displacy_colors` entry point](/usage/saving-loading#entry-points-displacy)
+to add custom labels and their colors automatically.
 
 By default, displaCy links to `#` for entities without a `kb_id` set on their
 span. If you wish to link an entity to their URL then consider using the
@@ -353,7 +350,6 @@ span. If you wish to link an entity to their URL then consider using the
 `https://www.wikidata.org/wiki/{}`. Clicking on your entity in the rendered HTML
 should redirect you to their Wikidata page, in this case
 `https://www.wikidata.org/wiki/Q95`.
-
 
 ## registry {#registry source="spacy/util.py" new="3"}
 
@@ -443,8 +439,8 @@ and the accuracy scores on the development set.
 The built-in, default logger is the ConsoleLogger, which prints results to the
 console in tabular format. The
 [spacy-loggers](https://github.com/explosion/spacy-loggers) package, included as
-a dependency of spaCy, enables other loggers, such as one that
-sends results to a [Weights & Biases](https://www.wandb.com/) dashboard.
+a dependency of spaCy, enables other loggers, such as one that sends results to
+a [Weights & Biases](https://www.wandb.com/) dashboard.
 
 Instead of using one of the built-in loggers, you can
 [implement your own](/usage/training#custom-logging).
@@ -583,14 +579,14 @@ the [`Corpus`](/api/corpus) class.
 > limit = 0
 > ```
 
-| Name            | Description                                                                                                                                                                                                                                                                              |
-| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `path`          | The directory or filename to read from. Expects data in spaCy's binary [`.spacy` format](/api/data-formats#binary-training). ~~Union[str, Path]~~                                                                                                                                        |
-|  `gold_preproc` | Whether to set up the Example object with gold-standard sentences and tokens for the predictions. See [`Corpus`](/api/corpus#init) for details. ~~bool~~                                                                                                                                 |
-| `max_length`    | Maximum document length. Longer documents will be split into sentences, if sentence boundaries are available. Defaults to `0` for no limit. ~~int~~                                                                                                                                      |
-| `limit`         | Limit corpus to a subset of examples, e.g. for debugging. Defaults to `0` for no limit. ~~int~~                                                                                                                                                                                          |
-| `augmenter`     | Apply some simply data augmentation, where we replace tokens with variations. This is especially useful for punctuation and case replacement, to help generalize beyond corpora that don't have smart-quotes, or only have smart quotes, etc. Defaults to `None`. ~~Optional[Callable]~~ |
-| **CREATES**     | The corpus reader. ~~Corpus~~                                                                                                                                                                                                                                                            |
+| Name           | Description                                                                                                                                                                                                                                                                              |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `path`         | The directory or filename to read from. Expects data in spaCy's binary [`.spacy` format](/api/data-formats#binary-training). ~~Union[str, Path]~~                                                                                                                                        |
+| `gold_preproc` | Whether to set up the Example object with gold-standard sentences and tokens for the predictions. See [`Corpus`](/api/corpus#init) for details. ~~bool~~                                                                                                                                 |
+| `max_length`   | Maximum document length. Longer documents will be split into sentences, if sentence boundaries are available. Defaults to `0` for no limit. ~~int~~                                                                                                                                      |
+| `limit`        | Limit corpus to a subset of examples, e.g. for debugging. Defaults to `0` for no limit. ~~int~~                                                                                                                                                                                          |
+| `augmenter`    | Apply some simply data augmentation, where we replace tokens with variations. This is especially useful for punctuation and case replacement, to help generalize beyond corpora that don't have smart-quotes, or only have smart quotes, etc. Defaults to `None`. ~~Optional[Callable]~~ |
+| **CREATES**    | The corpus reader. ~~Corpus~~                                                                                                                                                                                                                                                            |
 
 #### spacy.JsonlCorpus.v1 {#jsonlcorpus tag="registered function"}
 

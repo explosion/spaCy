@@ -104,7 +104,7 @@ def get_arg_model(
         sig_args[param.name] = (annotation, default)
     is_strict = strict and not has_variable
     sig_args["__config__"] = ArgSchemaConfig if is_strict else ArgSchemaConfigExtra  # type: ignore[assignment]
-    return create_model(name, **sig_args)  # type: ignore[arg-type, return-value]
+    return create_model(name, **sig_args)  # type: ignore[call-overload, arg-type, return-value]
 
 
 def validate_init_settings(

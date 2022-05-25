@@ -115,7 +115,7 @@ The Finnish, Korean and Swedish `md` and `lg` pipelines use
 running a trained pipeline on texts and working with [`Doc`](/api/doc) objects,
 you shouldn't notice any difference with floret vectors. With floret vectors no
 tokens are out-of-vocabulary, so [`Token.is_oov`](/api/token#attributes) will
-return `True` for all tokens.
+return `False` for all tokens.
 
 If you access vectors directly for similarity comparisons, there are a few
 differences because floret vectors don't include a fixed word list like the

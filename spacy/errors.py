@@ -1,4 +1,5 @@
 import warnings
+from .compat import Literal
 
 
 class ErrorsWithCodes(type):
@@ -26,7 +27,10 @@ def setup_default_warnings():
     filter_warning("once", error_msg="[W114]")
 
 
-def filter_warning(action: str, error_msg: str):
+def filter_warning(
+    action: Literal["default", "error", "ignore", "always", "module", "once"],
+    error_msg: str,
+):
     """Customize how spaCy should handle a certain warning.
 
     error_msg (str): e.g. "W006", or a full error message
@@ -199,6 +203,7 @@ class Warnings(metaclass=ErrorsWithCodes):
     W118 = ("Term '{term}' not found in glossary. It may however be explained in documentation "
             "for the corpora used to train the language. Please check "
             "`nlp.meta[\"sources\"]` for any relevant links.")
+    W119 = ("Overriding pipe name in `config` is not supported. Ignoring override '{name_in_config}'.")
 
 
 class Errors(metaclass=ErrorsWithCodes):
