@@ -417,6 +417,7 @@ cdef class Doc:
         """
 
         # empty docs are always annotated
+        input_attr = attr
         if self.length == 0:
             return True
         cdef int i
@@ -426,6 +427,10 @@ cdef class Doc:
         elif attr == "IS_SENT_END" or attr == self.vocab.strings["IS_SENT_END"]:
             attr = SENT_START
         attr = intify_attr(attr)
+        if attr is None:
+            raise ValueError(
+                Errors.E1037.format(attr=input_attr)
+            )
         # adjust attributes
         if attr == HEAD:
             # HEAD does not have an unset state, so rely on DEP
