@@ -127,8 +127,7 @@ def overwrite_overlapping_ents_filter(
     for span in spans:
         start = span.start
         end = span.end
-        # check for end - 1 here because boundaries are inclusive
-        if start not in seen_tokens and end - 1 not in seen_tokens:
+        if all(token.i not in seen_tokens for token in span):
             new_entities.append(span)
             entities = [e for e in entities if not (e.start < end and e.end > start)]
             seen_tokens.update(range(start, end))
@@ -160,8 +159,7 @@ def preserve_existing_ents_filter(
     for span in spans:
         start = span.start
         end = span.end
-        # check for end - 1 here because boundaries are inclusive
-        if start not in seen_tokens and end - 1 not in seen_tokens:
+        if all(token.i not in seen_tokens for token in span):
             new_entities.append(span)
             seen_tokens.update(range(start, end))
     return entities + new_entities
