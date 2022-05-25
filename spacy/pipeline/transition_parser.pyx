@@ -264,7 +264,7 @@ cdef class Parser(TrainablePipe):
         if isinstance(ops, CupyOps):
             cblas = get_ops("cpu").cblas()
         else:
-            cblas = self.model.ops.cblas()
+            cblas = ops.cblas()
         self._ensure_labels_are_added(docs)
         set_dropout_rate(self.model, drop)
         batch = self.moves.init_batch(docs)
