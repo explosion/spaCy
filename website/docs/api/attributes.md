@@ -35,18 +35,16 @@ including:
 
 All methods automatically convert between the string version of an ID (`"DEP"`)
 and the internal integer symbols (`DEP`). The internal IDs can be imported from
-`spacy.attrs` or retrieved from the [`StringStore`](/api/stringstore).
-
-The corresponding [`Token` attributes](/api/token#attributes) can be accessed
-using the attribute name in lowercase, e.g. `token.orth` or `token.length`.
-
-String attributes are stored internally as integer hash values from the
-[`StringStore`](/api/stringstore). The integer value is accessed as `Token.attr`
-e.g. `token.dep` while the string value is accessed by appending `_` as in
-`token.dep_`.
-
-A map from string attribute names to internal attribute IDs is stored in
+`spacy.attrs` or retrieved from the [`StringStore`](/api/stringstore). A map
+from string attribute names to internal attribute IDs is stored in
 `spacy.attrs.IDS`.
+
+The corresponding [`Token` object attributes](/api/token#attributes) can be
+accessed using the same names in lowercase, e.g. `token.orth` or `token.length`.
+For attributes that represent string values, the internal integer ID is
+accessed as `Token.attr`, e.g. `token.dep`, while the string value can be
+retrieved by appending `_` as in `token.dep_`.
+
 
 | Attribute    | Description                                                                                                                                                   |
 | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
