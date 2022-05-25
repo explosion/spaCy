@@ -1,5 +1,4 @@
 import gc
-import itertools
 
 import numpy
 import pytest
@@ -653,53 +652,3 @@ def test_load_disable_enable() -> None:
         # Inconsistent enable/disable combination.
         with pytest.raises(ValueError):
             spacy.load(tmp_dir, enable=to_enable, disable=["parser"])
-
-
-def test_load_exclude_include() -> None:
-    """
-    Tests spacy.load() with ex-/including components.
-    """
-
-    comp_names = ("tagger", "parser", "sentencizer")
-    base_nlp = English()
-    for pipe in comp_names:
-        base_nlp.add_pipe(pipe)
-
-    to_include = [comp_names[0]]
-    to_exclude = comp_names[1:]
-    check_excludes = lambda loaded_nlp, ref_nlp: all(
-        [
-            (comp_name in loaded_nlp.component_names) is (comp_name not in to_exclude)
-            for comp_name in ref_nlp.component_names
-        ]
-    )
-
-    for exclude_on_load, include_on_load in itertools.product(
-        [False, True], [False, True]
-    ):
-        with make_tempdir() as tmp_dir:
-            base_nlp.to_disk(
-                tmp_dir,
-                exclude=to_exclude if exclude_on_load else [],
-                include=to_include if include_on_load else [],
-            )
-
-            assert check_excludes(spacy.load(tmp_dir, exclude=to_exclude), base_nlp)
-            assert to_include == spacy.load(tmp_dir, include=to_include).component_names
-            # Consistent `exclude`/`include` combination.
-            assert (
-                to_include
-                == spacy.load(
-                    tmp_dir, include=to_include, exclude=to_exclude
-                ).component_names
-            )
-            # Inconsistent `exclude`/`include` combination.
-            with pytest.raises(ValueError):
-                spacy.load(tmp_dir, include=to_include, exclude=to_include)
-            # Trying to load all components without re-specifying excludes fails.
-            if exclude_on_load:
-                with pytest.raises(FileNotFoundError):
-                    spacy.load(tmp_dir)
-            # Incomplete `exclude` value not consistent with `include` should raise error.
-            with pytest.raises(ValueError):
-                spacy.load(tmp_dir, include=["tagger"], exclude=["parser"])

@@ -1670,7 +1670,6 @@ class Language:
         disable: Iterable[str] = SimpleFrozenList(),
         enable: Iterable[str] = SimpleFrozenList(),
         exclude: Iterable[str] = SimpleFrozenList(),
-        include: Iterable[str] = SimpleFrozenList(),
         meta: Dict[str, Any] = SimpleFrozenDict(),
         auto_fill: bool = True,
         validate: bool = True,
@@ -1688,8 +1687,6 @@ class Language:
             pipes will be disabled (and can be enabled using `nlp.enable_pipe`).
         exclude (Iterable[str]): Names of pipeline components to exclude.
             Excluded components won't be loaded.
-        include (Iterable[str]): Names of pipeline components to include. All other
-            components will be excluded.
         meta (Dict[str, Any]): Meta overrides for nlp.meta.
         auto_fill (bool): Automatically fill in missing values in config based
             on defaults and function argument annotations.
@@ -1767,9 +1764,6 @@ class Language:
         interpolated = filled.interpolate() if not filled.is_interpolated else filled
         pipeline = interpolated.get("components", {})
         sourced = util.get_sourced_components(interpolated)
-        exclude = cls._resolve_component_activation_status(
-            exclude, include, config["nlp"]["pipeline"], "exclude"
-        )
         # If components are loaded from a source (existing models), we cache
         # them here so they're only loaded once
         source_nlps = {}
@@ -1846,11 +1840,10 @@ class Language:
             nlp.vocab.from_bytes(vocab_b)
 
         # Resolve disabled/enabled settings.
-        disabled_pipes = cls._resolve_component_activation_status(
+        disabled_pipes = cls._resolve_component_status(
             [*config["nlp"]["disabled"], *disable],
             [*config["nlp"].get("enabled", []), *enable],
             config["nlp"]["pipeline"],
-            "disable",
         )
         nlp._disabled = set(p for p in disabled_pipes if p not in exclude)
 
@@ -1978,11 +1971,7 @@ class Language:
                 tok2vec.remove_listener(listener, pipe_name)
 
     def to_disk(
-        self,
-        path: Union[str, Path],
-        *,
-        exclude: Iterable[str] = SimpleFrozenList(),
-        include: Iterable[str] = SimpleFrozenList(),
+        self, path: Union[str, Path], *, exclude: Iterable[str] = SimpleFrozenList()
     ) -> None:
         """Save the current state to a directory.  If a model is loaded, this
         will include the model.
@@ -1990,15 +1979,10 @@ class Language:
         path (str / Path): Path to a directory, which will be created if
             it doesn't exist.
         exclude (Iterable[str]): Names of components or serialization fields to exclude.
-        include (Iterable[str]): Names of pipeline components to include. All other
-            components will be excluded.
 
         DOCS: https://spacy.io/api/language#to_disk
         """
 
-        exclude = self._resolve_component_activation_status(
-            exclude, include, self.pipe_names, "exclude"
-        )
         path = util.ensure_path(path)
         serializers = {}
         serializers["tokenizer"] = lambda p: self.tokenizer.to_disk(  # type: ignore[union-attr]
@@ -2016,57 +2000,48 @@ class Language:
         util.to_disk(path, serializers, exclude)
 
     @staticmethod
-    def _resolve_component_activation_status(
-        deactivate: Iterable[str],
-        activate: Iterable[str],
-        pipe_names: Collection[str],
-        arg_type: str,
-    ) -> Iterable[str]:
+    def _resolve_component_status(
+        disable: Iterable[str], enable: Iterable[str], pipe_names: Collection[str]
+    ) -> Tuple[str, ...]:
         """
-        Merges arguments in spacy.load(), lang_cls.from_config() etc. reflecting components' activation status.
-        `deactivate` can be the values passed as `excluded` or `disabled`, `activate` the values of `included` or
-        `enabled`.
-        The resolution logic is the same: `activate` takes precedence over `deactivate` - so if the former is set, all
-        other components are assumed to be disabled, independently from the value of `deactivate`. If `activate` is
-        empty, only those component whose names are included in `deactivate` are assumed to be disabled.
+        Derives whether (1) `disable` and `enable` values are consistent and (2) resolves those to a single set of
+        disabled components.
+        `enable` takes precedence over `disable` - so if the former is set, all other components are assumed to be
+        disabled, independently of the value of `disable`. If `enable` is empty, only those component whose names are
+        included in `disable` are assumed to be disabled.
 
-        deactivate (Iterable[str]): Names of components or serialization fields to deactivate (i.e. to be excluded or
-                                    disabled).
-        activate (Iterable[str]): Names of pipeline components to activate (i.e. to be included or enabled).
-        component_names (Iterable[str]): Names of all pipeline components.
-        arg_type (str): One of (exclude, disable). Used only to generate fitting warning message in case of possibly
-                                                   ambiguous values for `inactive`/`active`.
+        disable (Iterable[str]): Names of components or serialization fields to disable.
+        enable (Iterable[str]): Names of pipeline components to enable.
+        pipe_names (Iterable[str]): Names of all pipeline components.
 
-        RETURNS (Collection[str]): Names of components to exclude from pipeline w.r.t. specified includes and excludes.
+        RETURNS (Tuple[str, ...]): Names of components to exclude from pipeline w.r.t. specified includes and excludes.
         """
 
-        assert arg_type in ("exclude", "disable")
-        if deactivate is not None and isinstance(deactivate, str):
-            deactivate = [deactivate]
-        to_deactivate = deactivate
+        if disable is not None and isinstance(disable, str):
+            disable = [disable]
+        to_disable = disable
 
-        if activate:
-            to_deactivate = tuple(
-                pipe_name for pipe_name in pipe_names if pipe_name not in activate
-            )
-            if deactivate and tuple(pipe_name for pipe_name in deactivate if pipe_name in pipe_names) != to_deactivate:
+        if enable:
+            to_disable = [
+                pipe_name for pipe_name in pipe_names if pipe_name not in enable
+            ]
+            if disable and disable != to_disable:
                 raise ValueError(
                     Errors.E1037.format(
-                        arg1="include" if arg_type == "exclude" else "enable",
-                        arg2=arg_type,
-                        arg1_values=activate,
-                        arg2_values=deactivate,
+                        arg1="enable",
+                        arg2="disable",
+                        arg1_values=enable,
+                        arg2_values=disable,
                     )
                 )
 
-        return to_deactivate
+        return tuple(to_disable)
 
     def from_disk(
         self,
         path: Union[str, Path],
         *,
         exclude: Iterable[str] = SimpleFrozenList(),
-        include: Iterable[str] = SimpleFrozenList(),
         overrides: Dict[str, Any] = SimpleFrozenDict(),
     ) -> "Language":
         """Loads state from a directory. Modifies the object in place and
@@ -2075,18 +2050,11 @@ class Language:
 
         path (str / Path): A path to a directory.
         exclude (Iterable[str]): Names of components or serialization fields to exclude.
-        include (Iterable[str]): Names of pipeline components to include. All other
-            components will be excluded.
 
         RETURNS (Language): The modified `Language` object.
 
         DOCS: https://spacy.io/api/language#from_disk
         """
-
-        # Derive list of excluded components w.r.t. list of components to include.
-        exclude = self._resolve_component_activation_status(
-            exclude, include, self.pipe_names, "exclude"
-        )
 
         def deserialize_meta(path: Path) -> None:
             if path.exists():
