@@ -8,18 +8,20 @@ Syntax iterators: Functions that compute views of a Doc object based on its synt
 Tokenizer exception: Special-case rules for the tokenizer, for example, contractions like “ebye'mizannyo” and abbreviations with punctuation, like “Owek.”.
 
 '''
-import spacy
-from spacy.language import Language
-from stop_words import STOP_WORDS
 
-class LugandaDefaults(Language.Defaults):
+from .stop_words import STOP_WORDS
+#from .lex_attrs import LEX_ATTRS
+from ...language import Language, BaseDefaults
+
+
+class LugandaDefaults(BaseDefaults):
+    #lex_attr_getters = LEX_ATTRS
     stop_words = STOP_WORDS
 
-@spacy.registry.languages("lg")
+
 class Luganda(Language):
-    """docstring for ."""
-    lang="lg"
-    Defaults=LugandaDefaults
-# nlp2 = Luganda()
-# print(nlp2.lang, [token.is_stop for token in nlp2("wa ne lwa")])
-__all__=["Luganda"]
+    lang = "lg"
+    Defaults = LugandaDefaults
+
+
+__all__ = ["Luganda"]
