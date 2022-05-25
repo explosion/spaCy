@@ -181,7 +181,7 @@ def _optimize(nlp, component: str, data: List, rehearse: bool):
     elif component == "tagger":
         _add_tagger_label(pipe, data)
     elif component == "parser":
-        _add_tagger_label(pipe, data)
+        _add_parser_label(pipe, data)
     elif component == "textcat_multilabel":
         _add_textcat_label(pipe, data)
     else:
