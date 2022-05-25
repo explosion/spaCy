@@ -1,4 +1,5 @@
 import warnings
+from .compat import Literal
 
 
 class ErrorsWithCodes(type):
@@ -26,7 +27,10 @@ def setup_default_warnings():
     filter_warning("once", error_msg="[W114]")
 
 
-def filter_warning(action: str, error_msg: str):
+def filter_warning(
+    action: Literal["default", "error", "ignore", "always", "module", "once"],
+    error_msg: str,
+):
     """Customize how spaCy should handle a certain warning.
 
     error_msg (str): e.g. "W006", or a full error message

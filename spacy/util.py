@@ -1,4 +1,4 @@
-from typing import List, Mapping, NoReturn, Union, Dict, Any, Set
+from typing import List, Mapping, NoReturn, Union, Dict, Any, Set, cast
 from typing import Optional, Iterable, Callable, Tuple, Type
 from typing import Iterator, Type, Pattern, Generator, TYPE_CHECKING
 from types import ModuleType
@@ -294,7 +294,7 @@ def find_matching_language(lang: str) -> Optional[str]:
 
     # Find out which language modules we have
     possible_languages = []
-    for modinfo in pkgutil.iter_modules(spacy.lang.__path__):  # type: ignore
+    for modinfo in pkgutil.iter_modules(spacy.lang.__path__):  # type: ignore[attr-defined]
         code = modinfo.name
         if code == "xx":
             # Temporarily make 'xx' into a valid language code
@@ -391,7 +391,8 @@ def get_module_path(module: ModuleType) -> Path:
     """
     if not hasattr(module, "__module__"):
         raise ValueError(Errors.E169.format(module=repr(module)))
-    return Path(sys.modules[module.__module__].__file__).parent
+    file_path = Path(cast(os.PathLike, sys.modules[module.__module__].__file__))
+    return file_path.parent
 
 
 def load_model(
@@ -878,7 +879,7 @@ def get_package_path(name: str) -> Path:
     # Here we're importing the module just to find it. This is worryingly
     # indirect, but it's otherwise very difficult to find the package.
     pkg = importlib.import_module(name)
-    return Path(pkg.__file__).parent
+    return Path(cast(Union[str, os.PathLike], pkg.__file__)).parent
 
 
 def replace_model_node(model: Model, target: Model, replacement: Model) -> None:
@@ -1675,7 +1676,7 @@ def packages_distributions() -> Dict[str, List[str]]:
     it's not available in the builtin importlib.metadata.
     """
     pkg_to_dist = defaultdict(list)
-    for dist in importlib_metadata.distributions():  # type: ignore[attr-defined]
+    for dist in importlib_metadata.distributions():
         for pkg in (dist.read_text("top_level.txt") or "").split():
             pkg_to_dist[pkg].append(dist.metadata["Name"])
     return dict(pkg_to_dist)
