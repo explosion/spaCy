@@ -55,8 +55,6 @@ how the component should be configured. You can override its settings via the
 | `phrase_matcher_attr` | Token attribute to match on, passed to the internal PhraseMatcher as `attr`. Defaults to `None`. ~~Optional[Union[int, str]]~~                                                          |
 | `validate`            | Whether patterns should be validated, passed to Matcher and PhraseMatcher as `validate`. Defaults to `False`. ~~bool~~                                                                  |
 | `overwrite`           | Whether to remove any existing spans under `Doc.spans[spans key]` if `spans_key` is set, or to remove any ents under `Doc.ents` if `annotate_ents` is set. Defaults to `True`. ~~bool~~ |
-| `sort_key`            | The sort key to use with `sorted` to determine the order of the matched spans before filtering. Defaults to `None` for default `Span` comparison. ~~Optional[Callable]~~                |
-| `sort_reverse`        | Whether to reverse the sorted matched spans before filtering. Defaults to `False`. ~~bool~~                                                                                             |
 | `scorer`              | The scoring method. Defaults to [`Scorer.score_spans`](/api/scorer#score_spans) for `Doc.spans[spans_key]` with overlapping spans allowed. ~~Optional[Callable]~~                       |
 
 ```python
@@ -93,8 +91,6 @@ token pattern (list) or a phrase pattern (string). For example:
 | `phrase_matcher_attr` | Token attribute to match on, passed to the internal PhraseMatcher as `attr`. Defaults to `None`. ~~Optional[Union[int, str]]~~                                                                                                      |
 | `validate`            | Whether patterns should be validated, passed to Matcher and PhraseMatcher as `validate`. Defaults to `False`. ~~bool~~                                                                                                              |
 | `overwrite`           | Whether to remove any existing spans under `Doc.spans[spans key]` if `spans_key` is set, or to remove any ents under `Doc.ents` if `annotate_ents` is set. Defaults to `True`. ~~bool~~                                             |
-| `sort_key`            | The sort key to use with `sorted` to determine the order of the matched spans before filtering. Defaults to `None` for default `Span` comparison. ~~Optional[Callable]~~                                                            |
-| `sort_reverse`        | Whether to reverse the sorted matched spans before filtering. Defaults to `False`. ~~bool~~                                                                                                                                         |
 | `scorer`              | The scoring method. Defaults to [`Scorer.score_spans`](/api/scorer#score_spans) for `Doc.spans[spans_key]` with overlapping spans allowed. ~~Optional[Callable]~~                                                                   |
 
 ## SpanRuler.initialize {#initialize tag="method"}
