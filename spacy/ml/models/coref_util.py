@@ -1,6 +1,6 @@
+from typing import List, Tuple, Set, Dict, cast
 from thinc.types import Ints2d
 from spacy.tokens import Doc
-from typing import List, Tuple, Set
 
 # type alias to make writing this less tedious
 MentionClusters = List[List[Tuple[int, int]]]
@@ -111,9 +111,9 @@ def select_non_crossing_spans(
     Nested spans are allowed.
     """
     # ported from Model._extract_top_spans
-    selected = []
-    start_to_max_end = {}
-    end_to_min_start = {}
+    selected: List[int] = []
+    start_to_max_end: Dict[int, int] = {}
+    end_to_min_start: Dict[int, int] = {}
 
     for idx in idxs:
         if len(selected) >= limit or idx > len(starts):
@@ -188,7 +188,7 @@ def create_gold_scores(
     """
     # make a mapping of mentions to cluster id
     # id is not important but equality will be
-    ment2cid = {}
+    ment2cid: Dict[Tuple[int, int], int] = {}
     for cid, cluster in enumerate(clusters):
         for ment in cluster:
             ment2cid[ment] = cid
@@ -196,7 +196,7 @@ def create_gold_scores(
     ll = len(ments)
     out = []
     # The .tolist() call is necessary with cupy but not numpy
-    mentuples = [tuple(mm.tolist()) for mm in ments]
+    mentuples = [cast(Tuple[int, int], tuple(mm.tolist())) for mm in ments]
     for ii, ment in enumerate(mentuples):
         if ment not in ment2cid:
             # this is not in a cluster so it has no antecedent
