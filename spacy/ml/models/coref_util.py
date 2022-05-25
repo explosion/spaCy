@@ -1,7 +1,6 @@
 from thinc.types import Ints2d
 from spacy.tokens import Doc
-from typing import List, Tuple, Callable, Any, Set, Dict
-from ...util import registry
+from typing import List, Tuple, Set
 
 # type alias to make writing this less tedious
 MentionClusters = List[List[Tuple[int, int]]]
