@@ -799,7 +799,9 @@ cdef class Doc:
                     self.c[i].ent_iob = 1
                 self.c[i].ent_type = span.label
                 self.c[i].ent_kb_id = span.kb_id
-                self.c[i].ent_id = span.id
+                # for backwards compatibility in v3, only set ent_id from
+                # span.id if it's set, otherwise don't override
+                self.c[i].ent_id = span.id if span.id else self.c[i].ent_id
         for span in blocked:
             for i in range(span.start, span.end):
                 self.c[i].ent_iob = 3
