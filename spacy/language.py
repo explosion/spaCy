@@ -2053,7 +2053,6 @@ class Language:
 
         path (str / Path): A path to a directory.
         exclude (Iterable[str]): Names of components or serialization fields to exclude.
-
         RETURNS (Language): The modified `Language` object.
 
         DOCS: https://spacy.io/api/language#from_disk
