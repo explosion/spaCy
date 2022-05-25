@@ -561,7 +561,9 @@ overlaps with will be returned.
 | `lemma_`                                | The span's lemma. Equivalent to `"".join(token.text_with_ws for token in span)`. ~~str~~                                      |
 | `kb_id`                                 | The hash value of the knowledge base ID referred to by the span. ~~int~~                                                      |
 | `kb_id_`                                | The knowledge base ID referred to by the span. ~~str~~                                                                        |
-| `ent_id`                                | The hash value of the named entity the token is an instance of. ~~int~~                                                       |
-| `ent_id_`                               | The string ID of the named entity the token is an instance of. ~~str~~                                                        |
+| `ent_id`                                | The hash value of the named entity the root token is an instance of. ~~int~~                                                  |
+| `ent_id_`                               | The string ID of the named entity the root token is an instance of. ~~str~~                                                   |
+| `id`                                    | The hash value of the span's ID. ~~int~~                                                                                      |
+| `id_`                                   | The span's ID. ~~str~~                                                                                                        |
 | `sentiment`                             | A scalar value indicating the positivity or negativity of the span. ~~float~~                                                 |
 | `_`                                     | User space for adding custom [attribute extensions](/usage/processing-pipelines#custom-components-attributes). ~~Underscore~~ |
