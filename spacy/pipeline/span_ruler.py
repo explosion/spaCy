@@ -170,15 +170,6 @@ def make_preverse_existing_ents_filter():
     return preserve_existing_ents_filter
 
 
-def first_longest_span_sort_key(m):
-    return (m.end - m.start, -m.start)
-
-
-@registry.misc("spacy.first_longest_span_sort_key.v1")
-def make_first_longest_span_sort_key():
-    return first_longest_span_sort_key
-
-
 class SpanRuler(Pipe):
     """The SpanRuler lets you add spans to the `Doc.spans` using token-based
     rules or exact phrase matches.
