@@ -919,8 +919,8 @@ class Errors(metaclass=ErrorsWithCodes):
     E1035 = ("Token index {i} out of bounds ({length})")
     E1036 = ("Cannot index into NoneNode")
     E1037 = ("Invalid attribute value '{attr}'.")
-    E1038 = ("Function was called with `{arg1}`={arg1_values} and `{arg2}`={arg2_values} but that information is "
-             "conflicting.")
+    E1038 = ("Function was called with `{arg1}`={arg1_values} and "
+             "`{arg2}`={arg2_values} but these arguments are conflicting.")
 
 
 # Deprecated model shortcuts, only used in errors and warnings
