@@ -1,14 +1,12 @@
 from typing import List, Tuple
-import torch
 
 from thinc.api import Model, chain
 from thinc.api import PyTorchWrapper, ArgsKwargs
 from thinc.types import Floats2d, Ints2d, Ints1d
-from thinc.util import xp2torch, torch2xp
+from thinc.util import torch, xp2torch, torch2xp
 
 from ...tokens import Doc
 from ...util import registry
-from .coref_util import add_dummy
 
 
 @registry.architectures("spacy.Coref.v1")
@@ -184,6 +182,23 @@ class CorefScorer(torch.nn.Module):
 
         coref_scores = torch.cat(a_scores_lst, dim=0)
         return coref_scores, top_indices
+
+
+EPSILON = 1e-7
+# Note this function is kept here to keep a torch dep out of coref_util.
+def add_dummy(tensor: torch.Tensor, eps: bool = False):
+    """Prepends zeros (or a very small value if eps is True)
+    to the first (not zeroth) dimension of tensor.
+    """
+    kwargs = dict(device=tensor.device, dtype=tensor.dtype)
+    shape: List[int] = list(tensor.shape)
+    shape[1] = 1
+    if not eps:
+        dummy = torch.zeros(shape, **kwargs)  # type: ignore
+    else:
+        dummy = torch.full(shape, EPSILON, **kwargs)  # type: ignore
+    output = torch.cat((dummy, tensor), dim=1)
+    return output
 
 
 class AnaphoricityScorer(torch.nn.Module):
