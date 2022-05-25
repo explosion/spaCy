@@ -57,8 +57,6 @@ def make_entity_ruler(
         phrase_matcher_attr=phrase_matcher_attr,
         validate=validate,
         overwrite=False,
-        sort_key=first_longest_span_sort_key,
-        sort_reverse=True,
         scorer=scorer,
     )
 
@@ -74,8 +72,6 @@ def make_entity_ruler(
         "phrase_matcher_attr": None,
         "validate": False,
         "overwrite": True,
-        "sort_key": None,
-        "sort_reverse": False,
         "scorer": {"@scorers": "spacy.spancat_scorer.v1"},
     },
     default_score_weights={
@@ -95,8 +91,6 @@ def make_span_ruler(
     phrase_matcher_attr: Optional[Union[int, str]],
     validate: bool,
     overwrite: bool,
-    sort_key: Optional[Callable[[Span], Any]],
-    sort_reverse: bool,
     scorer: Optional[Callable],
 ):
     return SpanRuler(
@@ -109,8 +103,6 @@ def make_span_ruler(
         phrase_matcher_attr=phrase_matcher_attr,
         validate=validate,
         overwrite=overwrite,
-        sort_key=sort_key,
-        sort_reverse=sort_reverse,
         scorer=scorer,
     )
 
@@ -127,6 +119,8 @@ def overwrite_overlapping_ents_filter(
     spans (Iterable[Span]): The spans to merge, may contain overlaps.
     RETURNS (List[Span]): Filtered list of non-overlapping spans.
     """
+    get_sort_key = lambda span: (span.end - span.start, -span.start)
+    spans = sorted(spans, key=get_sort_key, reverse=True)
     entities = list(entities)
     new_entities = []
     seen_tokens: Set[int] = set()
@@ -157,6 +151,8 @@ def preserve_existing_ents_filter(
     spans (Iterable[Span]): The spans to merge, may contain overlaps.
     RETURNS (List[Span]): Filtered list of non-overlapping spans.
     """
+    get_sort_key = lambda span: (span.end - span.start, -span.start)
+    spans = sorted(spans, key=get_sort_key, reverse=True)
     entities = list(entities)
     new_entities = []
     seen_tokens: Set[int] = set()
@@ -209,8 +205,6 @@ class SpanRuler(Pipe):
         phrase_matcher_attr: Optional[Union[int, str]] = None,
         validate: bool = False,
         overwrite: bool = False,
-        sort_key: Optional[Callable[[Span], Any]] = None,
-        sort_reverse: bool = True,
         scorer: Optional[Callable] = spancat_score,
     ) -> None:
         """Initialize the span ruler. If patterns are supplied here, they
@@ -242,11 +236,6 @@ class SpanRuler(Pipe):
         overwrite (bool): Whether to remove any existing spans under this spans
             key if `spans_key` is set, and/or to remove any ents under `doc.ents` if
             `annotate_ents` is set. Defaults to `True`.
-        sort_key (Optional[Callable]): The sort key to use with `sorted` to
-            determine the order of the matched spans before filtering. Defaults
-            to `None` for default `Span` comparison.
-        sort_reverse (bool): Whether to reverse the sorted matched spans before
-            filtering. Defaults to `False`.
         scorer (Optional[Callable]): The scoring method. Defaults to
             spacy.pipeline.spancat.spancat_score.
 
@@ -261,8 +250,6 @@ class SpanRuler(Pipe):
         self.overwrite = overwrite
         self.spans_filter = spans_filter
         self.ents_filter = ents_filter
-        self.sort_key = sort_key
-        self.sort_reverse = sort_reverse
         self.scorer = scorer
         self._match_label_id_map: Dict[int, Dict[str, str]] = {}
         self.clear()
@@ -318,12 +305,7 @@ class SpanRuler(Pipe):
             for m_id, start, end in matches
             if start != end
         )
-        if self.sort_key:
-            return sorted(
-                list(deduplicated_matches), key=self.sort_key, reverse=self.sort_reverse
-            )
-        else:
-            return sorted(list(deduplicated_matches), reverse=self.sort_reverse)
+        return sorted(list(deduplicated_matches))
 
     def set_annotations(self, doc, matches):
         """Modify the document in place"""
