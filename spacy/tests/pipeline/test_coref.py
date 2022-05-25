@@ -8,8 +8,7 @@ from spacy.tests.util import make_tempdir
 from spacy.pipeline.coref import DEFAULT_CLUSTERS_PREFIX
 from spacy.ml.models.coref_util import (
     select_non_crossing_spans,
-    get_candidate_mentions,
-    get_sentence_map,
+    get_sentence_ids,
 )
 
 # fmt: off
@@ -159,22 +158,7 @@ def test_crossing_spans():
     guess = sorted(guess)
     assert gold == guess
 
-
-def test_mention_generator(snlp):
-    nlp = snlp
-    doc = nlp("I like text.")  # four tokens
-    max_width = 20
-    mentions = get_candidate_mentions(doc, max_width)
-    assert len(mentions[0]) == 10
-
-    # check multiple sentences
-    doc = nlp("I like text. This is text.")  # eight tokens, two sents
-    max_width = 20
-    mentions = get_candidate_mentions(doc, max_width)
-    assert len(mentions[0]) == 20
-
-
 def test_sentence_map(snlp):
     doc = snlp("I like text. This is text.")
-    sm = get_sentence_map(doc)
+    sm = get_sentence_ids(doc)
     assert sm == [0, 0, 0, 0, 1, 1, 1, 1]
