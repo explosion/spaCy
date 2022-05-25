@@ -1477,7 +1477,7 @@ cdef class Doc:
         if validate:
             schema_validation_message = spacy.schemas.validate(spacy.schemas.DocJSONSchema, doc_json)
             if schema_validation_message:
-                raise ValueError(Errors.E1037.format(message=schema_validation_message))
+                raise ValueError(Errors.E1038.format(message=schema_validation_message))
 
         ### Token-level properties ###
 
@@ -1533,7 +1533,7 @@ cdef class Doc:
                     partial_attrs.add(token_attrs[attr])
                 attrs.append(attr)
         if len(partial_attrs):
-            raise ValueError(Errors.E1039.format(partial_attrs=partial_attrs))
+            raise ValueError(Errors.E1040.format(partial_attrs=partial_attrs))
 
         # If there are any other annotations, set them.
         if attrs:
@@ -1570,7 +1570,7 @@ cdef class Doc:
             for span in doc_json["spans"][span_group]:
                 char_span = self.char_span(span["start"], span["end"], span["label"], span["kb_id"])
                 if char_span is None:
-                    raise ValueError(Errors.E1038.format(obj="span", start=span["start"], end=span["end"]))
+                    raise ValueError(Errors.E1039.format(obj="span", start=span["start"], end=span["end"]))
                 spans.append(char_span)
             self.spans[span_group] = spans
 
@@ -1579,7 +1579,7 @@ cdef class Doc:
             for ent in doc_json["ents"]:
                 char_span = self.char_span(ent["start"], ent["end"], ent["label"])
                 if char_span is None:
-                    raise ValueError(Errors.E1038.format(obj="entity"), start=ent["start"], end=ent["end"])
+                    raise ValueError(Errors.E1039.format(obj="entity"), start=ent["start"], end=ent["end"])
                 ents.append(char_span)
             self.ents = ents
 
