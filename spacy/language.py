@@ -2006,18 +2006,19 @@ class Language:
     def _resolve_component_status(
         disable: Iterable[str], enable: Iterable[str], pipe_names: Collection[str]
     ) -> Tuple[str, ...]:
-        """
-        Derives whether (1) `disable` and `enable` values are consistent and (2) resolves those to a single set of
-        disabled components.
-        `enable` takes precedence over `disable` - so if the former is set, all other components are assumed to be
-        disabled, independently of the value of `disable`. If `enable` is empty, only those component whose names are
-        included in `disable` are assumed to be disabled.
+        """Derives whether (1) `disable` and `enable` values are consistent and (2)
+        resolves those to a single set of disabled components. `enable` takes precedence
+        over `disable` - so if the former is set, all other components are assumed to be
+        disabled, independently of the value of `disable`. If `enable` is empty, only
+        those component whose names are included in `disable` are assumed to be
+        disabled.
 
         disable (Iterable[str]): Names of components or serialization fields to disable.
         enable (Iterable[str]): Names of pipeline components to enable.
         pipe_names (Iterable[str]): Names of all pipeline components.
 
-        RETURNS (Tuple[str, ...]): Names of components to exclude from pipeline w.r.t. specified includes and excludes.
+        RETURNS (Tuple[str, ...]): Names of components to exclude from pipeline w.r.t.
+                                   specified includes and excludes.
         """
 
         if disable is not None and isinstance(disable, str):
