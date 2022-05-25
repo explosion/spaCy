@@ -1,20 +1,22 @@
 from typing import Optional, Union, List, Dict, Tuple, Iterable, Any, Callable
 from typing import Sequence, Set, cast
 import warnings
+from functools import partial
 from pathlib import Path
 import srsly
 
 from .pipe import Pipe
-from .spancat import spancat_score
 from ..training import Example
 from ..language import Language
 from ..errors import Errors, Warnings
 from ..util import ensure_path, SimpleFrozenList, registry
 from ..tokens import Doc, Span
+from ..scorer import Scorer
 from ..matcher import Matcher, PhraseMatcher
 from .. import util
 
 PatternType = Dict[str, Union[str, List[Dict[str, Any]]]]
+DEFAULT_SPANS_KEY = "ruler"
 
 
 @Language.factory(
@@ -65,20 +67,23 @@ def make_entity_ruler(
     "span_ruler",
     assigns=["doc.spans"],
     default_config={
-        "spans_key": "ruler",
+        "spans_key": DEFAULT_SPANS_KEY,
         "spans_filter": None,
         "annotate_ents": False,
         "ents_filter": {"@misc": "spacy.first_longest_spans_filter.v1"},
         "phrase_matcher_attr": None,
         "validate": False,
         "overwrite": True,
-        "scorer": {"@scorers": "spacy.spancat_scorer.v1"},
+        "scorer": {
+            "@scorers": "spacy.overlapping_labeled_spans_scorer.v1",
+            "spans_key": DEFAULT_SPANS_KEY,
+        },
     },
     default_score_weights={
-        "spans_ruler_f": 1.0,
-        "spans_ruler_p": 0.0,
-        "spans_ruler_r": 0.0,
-        "spans_ruler_per_type": None,
+        f"spans_{DEFAULT_SPANS_KEY}_f": 1.0,
+        f"spans_{DEFAULT_SPANS_KEY}_p": 0.0,
+        f"spans_{DEFAULT_SPANS_KEY}_r": 0.0,
+        f"spans_{DEFAULT_SPANS_KEY}_per_type": None,
     },
 )
 def make_span_ruler(
@@ -169,6 +174,25 @@ def make_preverse_existing_ents_filter():
     return prioritize_existing_ents_filter
 
 
+def overlapping_labeled_spans_score(
+    examples: Iterable[Example], *, spans_key=DEFAULT_SPANS_KEY, **kwargs
+) -> Dict[str, Any]:
+    kwargs = dict(kwargs)
+    attr_prefix = f"spans_"
+    kwargs.setdefault("attr", f"{attr_prefix}{spans_key}")
+    kwargs.setdefault("allow_overlap", True)
+    kwargs.setdefault(
+        "getter", lambda doc, key: doc.spans.get(key[len(attr_prefix) :], [])
+    )
+    kwargs.setdefault("has_annotation", lambda doc: spans_key in doc.spans)
+    return Scorer.score_spans(examples, **kwargs)
+
+
+@registry.scorers("spacy.overlapping_labeled_spans_scorer.v1")
+def make_overlapping_labeled_spans_scorer(spans_key: str = DEFAULT_SPANS_KEY):
+    return partial(overlapping_labeled_spans_score, spans_key=spans_key)
+
+
 class SpanRuler(Pipe):
     """The SpanRuler lets you add spans to the `Doc.spans` using token-based
     rules or exact phrase matches.
@@ -182,7 +206,7 @@ class SpanRuler(Pipe):
         nlp: Language,
         name: str = "span_ruler",
         *,
-        spans_key: Optional[str] = "ruler",
+        spans_key: Optional[str] = DEFAULT_SPANS_KEY,
         spans_filter: Optional[
             Callable[[Iterable[Span], Iterable[Span]], Iterable[Span]]
         ] = None,
@@ -193,7 +217,9 @@ class SpanRuler(Pipe):
         phrase_matcher_attr: Optional[Union[int, str]] = None,
         validate: bool = False,
         overwrite: bool = False,
-        scorer: Optional[Callable] = spancat_score,
+        scorer: Optional[Callable] = partial(
+            overlapping_labeled_spans_score, spans_key=DEFAULT_SPANS_KEY
+        ),
     ) -> None:
         """Initialize the span ruler. If patterns are supplied here, they
         need to be a list of dictionaries with a `"label"` and `"pattern"`
@@ -225,7 +251,7 @@ class SpanRuler(Pipe):
             key if `spans_key` is set, and/or to remove any ents under `doc.ents` if
             `annotate_ents` is set. Defaults to `True`.
         scorer (Optional[Callable]): The scoring method. Defaults to
-            spacy.pipeline.spancat.spancat_score.
+            spacy.pipeline.span_ruler.overlapping_labeled_spans_score.
 
         DOCS: https://spacy.io/api/spanruler#init
         """

@@ -4,6 +4,7 @@ import spacy
 from spacy import registry
 from spacy.errors import MatchPatternError
 from spacy.tokens import Span
+from spacy.training import Example
 from spacy.tests.util import make_tempdir
 
 from thinc.api import NumpyOps, get_current_ops
@@ -216,6 +217,23 @@ def test_span_ruler_overlapping_spans(overlapping_patterns):
     assert len(doc.spans["ruler"]) == 2
     assert doc.spans["ruler"][0].label_ == "FOOBAR"
     assert doc.spans["ruler"][1].label_ == "BARBAZ"
+
+
+def test_span_ruler_scorer(overlapping_patterns):
+    nlp = spacy.blank("xx")
+    ruler = nlp.add_pipe("span_ruler")
+    ruler.add_patterns(overlapping_patterns)
+    text = "foo bar baz"
+    pred_doc = ruler(nlp.make_doc(text))
+    assert len(pred_doc.spans["ruler"]) == 2
+    assert pred_doc.spans["ruler"][0].label_ == "FOOBAR"
+    assert pred_doc.spans["ruler"][1].label_ == "BARBAZ"
+
+    ref_doc = nlp.make_doc(text)
+    ref_doc.spans["ruler"] = [Span(ref_doc, 0, 2, label="FOOBAR")]
+    scores = nlp.evaluate([Example(pred_doc, ref_doc)])
+    assert scores["spans_ruler_p"] == 0.5
+    assert scores["spans_ruler_r"] == 1.0
 
 
 @pytest.mark.parametrize("n_process", [1, 2])
