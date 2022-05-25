@@ -59,7 +59,6 @@ def init_config_cli(
 
     DOCS: https://spacy.io/api/cli#init-config
     """
-
     pipeline = string_to_list(pipeline)
     is_stdout = str(output_file) == "-"
     if not is_stdout and output_file.exists() and not force_overwrite:
