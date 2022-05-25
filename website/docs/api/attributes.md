@@ -70,7 +70,7 @@ A map from string attribute names to internal attribute IDs is stored in
 | `LIKE_NUM`   | Token text resembles a number. ~~bool~~                                                                                                                       |
 | `LIKE_URL`   | Token text resembles a URL. ~~bool~~                                                                                                                          |
 | `LOWER`      | The lowercase form of the token text. ~~str~~                                                                                                                 |
-| `MORPH`      | The token's orphological analysis. ~~MorphAnalysis~~                                                                                                          |
+| `MORPH`      | The token's morphological analysis. ~~MorphAnalysis~~                                                                                                         |
 | `NORM`       | The normalized form of the token text. ~~str~~                                                                                                                |
 | `ORTH`       | The exact verbatim text of a token. ~~str~~                                                                                                                   |
 | `POS`        | The token's universal part of speech (UPOS). ~~str~~                                                                                                          |
