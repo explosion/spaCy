@@ -27,7 +27,7 @@ Create a `Span` object from the slice `doc[start : end]`.
 | `vector`      | A meaning representation of the span. ~~numpy.ndarray[ndim=1, dtype=float32]~~          |
 | `vector_norm` | The L2 norm of the document's vector representation. ~~float~~                          |
 | `kb_id`       | A knowledge base ID to attach to the span, e.g. for named entities. ~~Union[str, int]~~ |
-| `span_id`     | An ID to associate with the span ~~Union[str, int]~~                                    |
+| `span_id`     | An ID to associate with the span. ~~Union[str, int]~~                                   |
 
 ## Span.\_\_getitem\_\_ {#getitem tag="method"}
 
