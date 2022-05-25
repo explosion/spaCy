@@ -18,7 +18,7 @@ def build_span_predictor(
     conv_channels: int = 4,
     window_size: int = 1,
     max_distance: int = 128,
-    prefix: str = "coref_head_clusters"
+    prefix: str = "coref_head_clusters",
 ):
     # TODO add model return types
     # TODO fix this
@@ -36,7 +36,7 @@ def build_span_predictor(
                 distance_embedding_size,
                 conv_channels,
                 window_size,
-                max_distance
+                max_distance,
             ),
             convert_inputs=convert_span_predictor_inputs,
         )
@@ -133,20 +133,17 @@ def head_data_forward(model, docs, is_train):
 # TODO this should maybe have a different name from the component
 class SpanPredictor(torch.nn.Module):
     def __init__(
-            self,
-            input_size: int,
-            hidden_size: int,
-            dist_emb_size: int,
-            conv_channels: int,
-            window_size: int,
-            max_distance: int
-
+        self,
+        input_size: int,
+        hidden_size: int,
+        dist_emb_size: int,
+        conv_channels: int,
+        window_size: int,
+        max_distance: int,
     ):
         super().__init__()
         if max_distance % 2 != 0:
-            raise ValueError(
-                "max_distance has to be an even number"
-            )
+            raise ValueError("max_distance has to be an even number")
         # input size = single token size
         # 64 = probably distance emb size
         # TODO check that dist_emb_size use is correct
@@ -164,7 +161,7 @@ class SpanPredictor(torch.nn.Module):
         kernel_size = window_size * 2 + 1
         self.conv = torch.nn.Sequential(
             torch.nn.Conv1d(dist_emb_size, conv_channels, kernel_size, 1, 1),
-            torch.nn.Conv1d(conv_channels, 2, kernel_size, 1, 1)
+            torch.nn.Conv1d(conv_channels, 2, kernel_size, 1, 1),
         )
         # TODO make embeddings size a parameter
         self.max_distance = max_distance

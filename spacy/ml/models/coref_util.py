@@ -7,6 +7,7 @@ MentionClusters = List[List[Tuple[int, int]]]
 
 DEFAULT_CLUSTER_PREFIX = "coref_clusters"
 
+
 class GraphNode:
     def __init__(self, node_id: int):
         self.id = node_id
@@ -29,6 +30,7 @@ def get_sentence_ids(doc):
             sent_id += 1
         out.append(sent_id)
     return out
+
 
 def doc2clusters(doc: Doc, prefix=DEFAULT_CLUSTER_PREFIX) -> MentionClusters:
     """Given a doc, give the mention clusters.
@@ -100,7 +102,6 @@ def get_predicted_clusters(
     return predicted_clusters
 
 
-
 def select_non_crossing_spans(
     idxs: List[int], starts: List[int], ends: List[int], limit: int
 ) -> List[int]:
@@ -150,11 +151,13 @@ def select_non_crossing_spans(
     #     selected.append(selected[0])  # this seems a bit weird?
     return selected
 
+
 def create_head_span_idxs(ops, doclen: int):
     """Helper function to create single-token span indices."""
     aa = ops.xp.arange(0, doclen)
     bb = ops.xp.arange(0, doclen) + 1
     return ops.asarray2i([aa, bb]).T
+
 
 def get_clusters_from_doc(doc) -> List[List[Tuple[int, int]]]:
     """Given a Doc, convert the cluster spans to simple int tuple lists."""
@@ -163,10 +166,10 @@ def get_clusters_from_doc(doc) -> List[List[Tuple[int, int]]]:
         cluster = []
         for span in val:
             # TODO check that there isn't an off-by-one error here
-            #cluster.append((span.start, span.end))
+            # cluster.append((span.start, span.end))
             # TODO This conversion should be happening earlier in processing
             head_i = span.root.i
-            cluster.append( (head_i, head_i + 1) )
+            cluster.append((head_i, head_i + 1))
 
         # don't want duplicates
         cluster = list(set(cluster))

@@ -46,11 +46,7 @@ def build_wl_coref_model(
     return coref_model
 
 
-def convert_coref_clusterer_inputs(
-    model: Model,
-    X: List[Floats2d],
-    is_train: bool
-):
+def convert_coref_clusterer_inputs(model: Model, X: List[Floats2d], is_train: bool):
     # The input here is List[Floats2d], one for each doc
     # just use the first
     # TODO real batching
@@ -62,7 +58,7 @@ def convert_coref_clusterer_inputs(
         gradients = torch2xp(args.args[0])
         return [gradients]
 
-    return ArgsKwargs(args=(word_features, ), kwargs={}), backprop
+    return ArgsKwargs(args=(word_features,), kwargs={}), backprop
 
 
 def convert_coref_clusterer_outputs(model: Model, inputs_outputs, is_train: bool):
@@ -115,12 +111,7 @@ class CorefClusterer(torch.nn.Module):
         # Modules
         self.pw = DistancePairwiseEncoder(dist_emb_size, dropout)
         pair_emb = dim * 3 + self.pw.shape
-        self.a_scorer = AnaphoricityScorer(
-            pair_emb,
-            hidden_size,
-            n_layers,
-            dropout
-        )
+        self.a_scorer = AnaphoricityScorer(pair_emb, hidden_size, n_layers, dropout)
         self.lstm = torch.nn.LSTM(
             input_size=dim,
             hidden_size=dim,
@@ -129,13 +120,9 @@ class CorefClusterer(torch.nn.Module):
         self.rough_scorer = RoughScorer(dim, dropout, roughk)
         self.pw = DistancePairwiseEncoder(dist_emb_size, dropout)
         pair_emb = dim * 3 + self.pw.shape
-        self.a_scorer = AnaphoricityScorer(
-            pair_emb, hidden_size, n_layers, dropout
-        )
+        self.a_scorer = AnaphoricityScorer(pair_emb, hidden_size, n_layers, dropout)
 
-    def forward(
-        self, word_features: torch.Tensor
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    def forward(self, word_features: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         1. LSTM encodes the incoming word_features.
         2. The RoughScorer scores and prunes the candidates.
@@ -350,13 +337,9 @@ class DistancePairwiseEncoder(torch.nn.Module):
         self.dropout = torch.nn.Dropout(dropout)
         self.shape = emb_size
 
-    def forward(
-        self,
-        top_indices: torch.Tensor
-    ) -> torch.Tensor:
+    def forward(self, top_indices: torch.Tensor) -> torch.Tensor:
         word_ids = torch.arange(0, top_indices.size(0))
-        distance = (word_ids.unsqueeze(1) - word_ids[top_indices]
-                    ).clamp_min_(min=1)
+        distance = (word_ids.unsqueeze(1) - word_ids[top_indices]).clamp_min_(min=1)
         log_distance = distance.to(torch.float).log2().floor_()
         log_distance = log_distance.clamp_max_(max=6).to(torch.long)
         distance = torch.where(distance < 5, distance - 1, log_distance + 2)
