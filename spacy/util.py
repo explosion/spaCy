@@ -1,5 +1,6 @@
-from typing import List, Mapping, NoReturn, Union, Dict, Any, Set
-from typing import Optional, Iterable, Callable, Tuple, Iterator, Type, Pattern, Generator, TYPE_CHECKING
+from typing import List, Mapping, NoReturn, Union, Dict, Any, Set, cast
+from typing import Optional, Iterable, Callable, Tuple, Type
+from typing import Iterator, Type, Pattern, Generator, TYPE_CHECKING
 from types import ModuleType
 import os
 import importlib
@@ -11,7 +12,6 @@ from thinc.api import NumpyOps, get_current_ops, Adam, Config, Optimizer
 from thinc.api import ConfigValidationError, Model
 import functools
 import itertools
-import numpy.random
 import numpy
 import srsly
 import catalogue

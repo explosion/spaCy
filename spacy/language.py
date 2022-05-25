@@ -2027,7 +2027,7 @@ class Language:
             ]
             if disable and disable != to_disable:
                 raise ValueError(
-                    Errors.E1037.format(
+                    Errors.E1038.format(
                         arg1="enable",
                         arg2="disable",
                         arg1_values=enable,
