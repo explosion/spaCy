@@ -1349,7 +1349,8 @@ cdef class Doc:
             "cats": lambda: self.cats,
             "spans": lambda: self.spans.to_bytes(),
             "strings": lambda: list(strings),
-            "has_unknown_spaces": lambda: self.has_unknown_spaces
+            "has_unknown_spaces": lambda: self.has_unknown_spaces,
+            "context": lambda: self._context
         }
         if "user_data" not in exclude and self.user_data:
             user_data_keys, user_data_values = list(zip(*self.user_data.items()))
@@ -1393,6 +1394,9 @@ cdef class Doc:
                 self.vocab.strings.add(s)
         if "has_unknown_spaces" not in exclude and "has_unknown_spaces" in msg:
             self.has_unknown_spaces = msg["has_unknown_spaces"]
+        if "context" not in exclude and "context" in msg:
+            self._context = msg["context"]
+
         start = 0
         cdef const LexemeC* lex
         cdef str orth_
