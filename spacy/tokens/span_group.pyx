@@ -1,10 +1,11 @@
+from typing import Iterable, Tuple, Union, Optional, TYPE_CHECKING
 import weakref
 import struct
+from copy import deepcopy
 import srsly
 
 from spacy.errors import Errors
 from .span cimport Span
-from libc.stdint cimport uint64_t, uint32_t, int32_t
 
 
 cdef class SpanGroup:
@@ -20,13 +21,13 @@ cdef class SpanGroup:
         >>> doc.spans["errors"] = SpanGroup(
             doc,
             name="errors",
-            spans=[doc[0:1], doc[2:4]],
+            spans=[doc[0:1], doc[1:3]],
             attrs={"annotator": "matt"}
         )
 
         Construction 2
         >>> doc = nlp("Their goi ng home")
-        >>> doc.spans["errors"] = [doc[0:1], doc[2:4]]
+        >>> doc.spans["errors"] = [doc[0:1], doc[1:3]]
         >>> assert isinstance(doc.spans["errors"], SpanGroup)
 
     DOCS: https://spacy.io/api/spangroup
@@ -48,6 +49,8 @@ cdef class SpanGroup:
         self.name = name
         self.attrs = dict(attrs) if attrs is not None else {}
         cdef Span span
+        if len(spans) :
+            self.c.reserve(len(spans))
         for span in spans:
             self.push_back(span.c)
 
@@ -89,6 +92,72 @@ cdef class SpanGroup:
         """
         return self.c.size()
 
+    def __getitem__(self, int i) -> Span:
+        """Get a span from the group. Note that a copy of the span is returned,
+        so if any changes are made to this span, they are not reflected in the
+        corresponding member of the span group.
+
+        i (int): The item index.
+        RETURNS (Span): The span at the given index.
+
+        DOCS: https://spacy.io/api/spangroup#getitem
+        """
+        i = self._normalize_index(i)
+        return Span.cinit(self.doc, self.c[i])
+
+    def __delitem__(self, int i):
+        """Delete a span from the span group at index i.
+
+        i (int): The item index.
+
+        DOCS: https://spacy.io/api/spangroup#delitem
+        """
+        i = self._normalize_index(i)
+        self.c.erase(self.c.begin() + i - 1)
+
+    def __setitem__(self, int i, Span span):
+        """Set a span in the span group.
+
+        i (int): The item index.
+        span (Span): The span.
+
+        DOCS: https://spacy.io/api/spangroup#setitem
+        """
+        if span.doc is not self.doc:
+            raise ValueError(Errors.E855.format(obj="span"))
+
+        i = self._normalize_index(i)
+        self.c[i] = span.c
+
+    def __iadd__(self, other: Union[SpanGroup, Iterable["Span"]]) -> SpanGroup:
+        """Operator +=. Append a span group or spans to this group and return
+        the current span group.
+
+        other (Union[SpanGroup, Iterable["Span"]]): The SpanGroup or spans to
+            add.
+
+        RETURNS (SpanGroup): The current span group.
+
+        DOCS: https://spacy.io/api/spangroup#iadd
+        """
+        return self._concat(other, inplace=True)
+
+    def __add__(self, other: SpanGroup) -> SpanGroup:
+        """Operator +. Concatenate a span group with this group and return a
+        new span group.
+
+        other (SpanGroup): The SpanGroup to add.
+
+        RETURNS (SpanGroup): The concatenated SpanGroup.
+
+        DOCS: https://spacy.io/api/spangroup#add
+        """
+        # For Cython 0.x and __add__, you cannot rely on `self` as being `self`
+        # or being the right type, so both types need to be checked explicitly.
+        if isinstance(self, SpanGroup) and isinstance(other, SpanGroup):
+            return self._concat(other)
+        return NotImplemented
+
     def append(self, Span span):
         """Add a span to the group. The span must refer to the same Doc
         object as the span group.
@@ -98,35 +167,18 @@ cdef class SpanGroup:
         DOCS: https://spacy.io/api/spangroup#append
         """
         if span.doc is not self.doc:
-            raise ValueError("Cannot add span to group: refers to different Doc.")
+            raise ValueError(Errors.E855.format(obj="span"))
         self.push_back(span.c)
 
-    def extend(self, spans):
-        """Add multiple spans to the group. All spans must refer to the same
-        Doc object as the span group.
+    def extend(self, spans_or_span_group: Union[SpanGroup, Iterable["Span"]]):
+        """Add multiple spans or contents of another SpanGroup to the group.
+        All spans must refer to the same Doc object as the span group.
 
-        spans (Iterable[Span]): The spans to add.
+        spans (Union[SpanGroup, Iterable["Span"]]): The spans to add.
 
         DOCS: https://spacy.io/api/spangroup#extend
         """
-        cdef Span span
-        for span in spans:
-            self.append(span)
-
-    def __getitem__(self, int i):
-        """Get a span from the group.
-
-        i (int): The item index.
-        RETURNS (Span): The span at the given index.
-
-        DOCS: https://spacy.io/api/spangroup#getitem
-        """
-        cdef int size = self.c.size()
-        if i < -size or i >= size:
-            raise IndexError(f"list index {i} out of range")
-        if i < 0:
-            i += size
-        return Span.cinit(self.doc, self.c[i])
+        self._concat(spans_or_span_group, inplace=True)
 
     def to_bytes(self):
         """Serialize the SpanGroup's contents to a byte string.
@@ -136,6 +188,7 @@ cdef class SpanGroup:
         DOCS: https://spacy.io/api/spangroup#to_bytes
         """
         output = {"name": self.name, "attrs": self.attrs, "spans": []}
+        cdef int i
         for i in range(self.c.size()):
             span = self.c[i]
             # The struct.pack here is probably overkill, but it might help if
@@ -187,3 +240,74 @@ cdef class SpanGroup:
 
     cdef void push_back(self, SpanC span) nogil:
         self.c.push_back(span)
+
+    def copy(self)  -> SpanGroup:
+        """Clones the span group.
+
+        RETURNS (SpanGroup): A copy of the span group.
+
+        DOCS: https://spacy.io/api/spangroup#copy
+        """
+        return SpanGroup(
+            self.doc,
+            name=self.name,
+            attrs=deepcopy(self.attrs),
+            spans=list(self),
+        )
+
+    def _concat(
+        self,
+        other: Union[SpanGroup, Iterable["Span"]],
+        *,
+        inplace: bool = False,
+    ) -> SpanGroup:
+        """Concatenates the current span group with the provided span group or
+        spans, either in place or creating a copy. Preserves the name of self,
+        updates attrs only with values that are not in self.
+
+        other (Union[SpanGroup, Iterable[Span]]): The spans to append.
+        inplace (bool): Indicates whether the operation should be performed in
+            place on the current span group.
+
+        RETURNS (SpanGroup): Either a new SpanGroup or the current SpanGroup
+        depending on the value of inplace.
+        """
+        cdef SpanGroup span_group = self if inplace else self.copy()
+        cdef SpanGroup other_group
+        cdef Span span
+
+        if isinstance(other, SpanGroup):
+            other_group = other
+            if other_group.doc is not self.doc:
+                raise ValueError(Errors.E855.format(obj="span group"))
+
+            other_attrs = deepcopy(other_group.attrs)
+            span_group.attrs.update({
+                key: value for key, value in other_attrs.items() \
+                if key not in span_group.attrs
+            })
+            if len(other_group):
+                span_group.c.reserve(span_group.c.size() + other_group.c.size())
+                span_group.c.insert(span_group.c.end(), other_group.c.begin(), other_group.c.end())
+        else:
+            if len(other):
+                span_group.c.reserve(self.c.size() + len(other))
+            for span in other:
+                if span.doc is not self.doc:
+                    raise ValueError(Errors.E855.format(obj="span"))
+                span_group.c.push_back(span.c)
+
+        return span_group
+
+    def _normalize_index(self, int i) -> int:
+        """Checks list index boundaries and adjusts the index if negative.
+
+        i (int): The index.
+        RETURNS (int): The adjusted index.
+        """
+        cdef int length = self.c.size()
+        if i < -length or i >= length:
+            raise IndexError(Errors.E856.format(i=i, length=length))
+        if i < 0:
+            i += length
+        return i

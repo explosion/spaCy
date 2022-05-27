@@ -3,7 +3,7 @@ from ...attrs import LIKE_NUM
 
 _num_words = set(
     """
-zero un deux trois quatre cinq six sept huit neuf dix
+zero un une deux trois quatre cinq six sept huit neuf dix
 onze douze treize quatorze quinze seize dix-sept dix-huit dix-neuf
 vingt trente quarante cinquante soixante soixante-dix septante quatre-vingt huitante quatre-vingt-dix nonante
 cent mille mil million milliard billion quadrillion quintillion
@@ -13,7 +13,7 @@ sextillion septillion octillion nonillion decillion
 
 _ordinal_words = set(
     """
-premier deuxième second troisième quatrième cinquième sixième septième huitième neuvième dixième
+premier première deuxième second seconde troisième quatrième cinquième sixième septième huitième neuvième dixième
 onzième douzième treizième quatorzième quinzième seizième dix-septième dix-huitième dix-neuvième
 vingtième trentième quarantième cinquantième soixantième soixante-dixième septantième quatre-vingtième huitantième quatre-vingt-dixième nonantième
 centième millième millionnième milliardième billionnième quadrillionnième quintillionnième
