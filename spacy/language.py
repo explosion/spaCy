@@ -1575,8 +1575,10 @@ class Language:
 
             # Serialize Doc inputs to bytes to avoid incurring
             # pickling overhead when they are passed child processes.
-            texts = self._serialize_doc_to_bytes(texts)
-            docs = self._multiprocessing_pipe(texts, pipes, n_process, batch_size)
+            strings_or_bytes = self._serialize_doc_to_bytes(texts)
+            docs = self._multiprocessing_pipe(
+                strings_or_bytes, pipes, n_process, batch_size
+            )
         else:
             # if n_process == 1, no processes are forked.
             docs = (self._ensure_doc(text) for text in texts)
@@ -1587,7 +1589,7 @@ class Language:
 
     def _serialize_doc_to_bytes(
         self, texts: Iterable[Union[str, Doc]]
-    ) -> Iterable[Union[str, Doc, bytes]]:
+    ) -> Iterable[Union[str, bytes]]:
         for doc_like in texts:
             if isinstance(doc_like, Doc):
                 yield doc_like.to_bytes()
@@ -1607,7 +1609,7 @@ class Language:
 
     def _multiprocessing_pipe(
         self,
-        texts: Iterable[Union[str, Doc, bytes]],
+        texts: Iterable[Union[str, bytes]],
         pipes: Iterable[Callable[..., Iterator[Doc]]],
         n_process: int,
         batch_size: int,
