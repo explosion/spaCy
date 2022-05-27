@@ -355,7 +355,7 @@ class EntityLinker(TrainablePipe):
                     keep_ents.append(eidx)
 
                 eidx += 1
-        entity_encodings = self.model.ops.asarray(entity_encodings, dtype="float32")
+        entity_encodings = self.model.ops.asarray2f(entity_encodings, dtype="float32")
         selected_encodings = sentence_encodings[keep_ents]
 
         # if there are no matches, short circuit
@@ -368,13 +368,12 @@ class EntityLinker(TrainablePipe):
                 method="get_loss", msg="gold entities do not match up"
             )
             raise RuntimeError(err)
-        # TODO: fix typing issue here
-        gradients = self.distance.get_grad(selected_encodings, entity_encodings)  # type: ignore
+        gradients = self.distance.get_grad(selected_encodings, entity_encodings)
         # to match the input size, we need to give a zero gradient for items not in the kb
         out = self.model.ops.alloc2f(*sentence_encodings.shape)
         out[keep_ents] = gradients
 
-        loss = self.distance.get_loss(selected_encodings, entity_encodings)  # type: ignore
+        loss = self.distance.get_loss(selected_encodings, entity_encodings)
         loss = loss / len(entity_encodings)
         return float(loss), out
 
