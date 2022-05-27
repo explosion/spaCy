@@ -1568,7 +1568,7 @@ cdef class Doc:
         if not self.has_annotation("DEP"):
             for sent in doc_json.get("sents", {}):
                 for t in self.char_span(sent["start"], sent["end"]):
-                    self[t.i].is_sent_start = t.i == 0
+                    self[t.i].is_sent_start = t.idx == sent["start"]
 
         for span_group in doc_json.get("spans", {}):
             spans = []
