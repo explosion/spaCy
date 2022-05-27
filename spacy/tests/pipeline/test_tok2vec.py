@@ -1,13 +1,13 @@
 import pytest
 from spacy.ml.models.tok2vec import build_Tok2Vec_model
-from spacy.ml.models.tok2vec import MultiHashEmbed, CharacterEmbed
-from spacy.ml.models.tok2vec import MishWindowEncoder, MaxoutWindowEncoder
+from spacy.ml.models.tok2vec import MultiHashEmbed, MaxoutWindowEncoder
 from spacy.pipeline.tok2vec import Tok2Vec, Tok2VecListener
 from spacy.vocab import Vocab
 from spacy.tokens import Doc
 from spacy.training import Example
 from spacy import util
 from spacy.lang.en import English
+from spacy.util import registry
 from thinc.api import Config, get_current_ops
 from numpy.testing import assert_array_equal
 
@@ -55,24 +55,41 @@ def test_tok2vec_batch_sizes(batch_size, width, embed_size):
         assert doc_vec.shape == (len(doc), width)
 
 
+@pytest.mark.slow
+@pytest.mark.parametrize("width", [8])
 @pytest.mark.parametrize(
-    "width,embed_arch,embed_config,encode_arch,encode_config",
+    "embed_arch,embed_config",
     # fmt: off
     [
-        (8, MultiHashEmbed, {"rows": [100, 100], "attrs": ["SHAPE", "LOWER"], "include_static_vectors": False}, MaxoutWindowEncoder, {"window_size": 1, "maxout_pieces": 3, "depth": 2}),
-        (8, MultiHashEmbed, {"rows": [100, 20], "attrs": ["ORTH", "PREFIX"], "include_static_vectors": False}, MishWindowEncoder, {"window_size": 1, "depth": 6}),
-        (8, CharacterEmbed, {"rows": 100, "nM": 64, "nC": 8, "include_static_vectors": False}, MaxoutWindowEncoder, {"window_size": 1, "maxout_pieces": 3, "depth": 3}),
-        (8, CharacterEmbed, {"rows": 100, "nM": 16, "nC": 2, "include_static_vectors": False}, MishWindowEncoder, {"window_size": 1, "depth": 3}),
+        ("spacy.MultiHashEmbed.v1", {"rows": [100, 100], "attrs": ["SHAPE", "LOWER"], "include_static_vectors": False}),
+        ("spacy.MultiHashEmbed.v1", {"rows": [100, 20], "attrs": ["ORTH", "PREFIX"], "include_static_vectors": False}),
+        ("spacy.CharacterEmbed.v1", {"rows": 100, "nM": 64, "nC": 8, "include_static_vectors": False}),
+        ("spacy.CharacterEmbed.v1", {"rows": 100, "nM": 16, "nC": 2, "include_static_vectors": False}),
     ],
     # fmt: on
 )
-def test_tok2vec_configs(width, embed_arch, embed_config, encode_arch, encode_config):
+@pytest.mark.parametrize(
+    "tok2vec_arch,encode_arch,encode_config",
+    # fmt: off
+    [
+        ("spacy.Tok2Vec.v1", "spacy.MaxoutWindowEncoder.v1", {"window_size": 1, "maxout_pieces": 3, "depth": 2}),
+        ("spacy.Tok2Vec.v2", "spacy.MaxoutWindowEncoder.v2", {"window_size": 1, "maxout_pieces": 3, "depth": 2}),
+        ("spacy.Tok2Vec.v1", "spacy.MishWindowEncoder.v1", {"window_size": 1, "depth": 6}),
+        ("spacy.Tok2Vec.v2", "spacy.MishWindowEncoder.v2", {"window_size": 1, "depth": 6}),
+    ],
+    # fmt: on
+)
+def test_tok2vec_configs(
+    width, tok2vec_arch, embed_arch, embed_config, encode_arch, encode_config
+):
+    embed = registry.get("architectures", embed_arch)
+    encode = registry.get("architectures", encode_arch)
+    tok2vec_model = registry.get("architectures", tok2vec_arch)
+
     embed_config["width"] = width
     encode_config["width"] = width
     docs = get_batch(3)
-    tok2vec = build_Tok2Vec_model(
-        embed_arch(**embed_config), encode_arch(**encode_config)
-    )
+    tok2vec = tok2vec_model(embed(**embed_config), encode(**encode_config))
     tok2vec.initialize(docs)
     vectors, backprop = tok2vec.begin_update(docs)
     assert len(vectors) == len(docs)

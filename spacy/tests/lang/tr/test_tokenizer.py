@@ -694,5 +694,4 @@ TESTS = ABBREV_TESTS + URL_TESTS + NUMBER_TESTS + PUNCT_TESTS + GENERAL_TESTS
 def test_tr_tokenizer_handles_allcases(tr_tokenizer, text, expected_tokens):
     tokens = tr_tokenizer(text)
     token_list = [token.text for token in tokens if not token.is_space]
-    print(token_list)
     assert expected_tokens == token_list
