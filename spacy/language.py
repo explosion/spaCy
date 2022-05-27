@@ -1574,7 +1574,7 @@ class Language:
                 warnings.warn(Warnings.W114)
 
             # Serialize Doc inputs to bytes to avoid incurring
-            # pickling overhead when they are passed child processes.
+            # pickling overhead when they are passed to child processes.
             strings_or_bytes = self._serialize_doc_to_bytes(texts)
             docs = self._multiprocessing_pipe(
                 strings_or_bytes, pipes, n_process, batch_size
