@@ -358,6 +358,11 @@ def sv_tokenizer():
 
 
 @pytest.fixture(scope="session")
+def ta_tokenizer():
+    return get_lang_class("ta")().tokenizer
+
+
+@pytest.fixture(scope="session")
 def th_tokenizer():
     pytest.importorskip("pythainlp")
     return get_lang_class("th")().tokenizer
