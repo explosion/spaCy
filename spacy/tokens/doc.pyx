@@ -1500,7 +1500,7 @@ cdef class Doc:
                     if token_json["id"] == 0 and attr not in token_annotations:
                         token_annotations[attr] = []
                     elif attr not in token_annotations:
-                        raise ValueError("Something about how partial token annotation is not supported.")
+                        raise ValueError(Errors.E1041)
                     token_annotations[attr].append(token_json[attr_json])
 
         # Initialize doc instance.
@@ -1567,8 +1567,13 @@ cdef class Doc:
         # Set sentence boundaries, if dependency parser not available but sentences are specified in JSON.
         if not self.has_annotation("DEP"):
             for sent in doc_json.get("sents", {}):
-                for t in self.char_span(sent["start"], sent["end"]):
-                    self[t.i].is_sent_start = t.idx == sent["start"]
+                char_span = self.char_span(sent["start"], sent["end"])
+                if char_span is None:
+                    raise ValueError(Errors.E1039.format(obj="sentence", start=sent["start"], end=sent["end"]))
+                self[char_span[0].i].is_sent_start = True
+                for t in self.char_span(sent["start"], sent["end"])[1:]:
+                    self[t.i].is_sent_start = False
+
 
         for span_group in doc_json.get("spans", {}):
             spans = []
