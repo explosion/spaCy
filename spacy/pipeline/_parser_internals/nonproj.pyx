@@ -90,7 +90,7 @@ cdef int _has_head_as_ancestor(int tokenid, int head, const vector[int]& heads) 
             return 0
         ancestor = heads[ancestor]
         # Found cycle
-        if seen_tokens.count(ancestor):
+        if seen_tokens.find(ancestor) != seen_tokens.const_end():
             return -1
         seen_tokens.insert(ancestor)
         cnt += 1
