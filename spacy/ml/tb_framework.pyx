@@ -45,7 +45,7 @@ def TransitionModel(
     tok2vec_projected = chain(tok2vec, list2array(), Linear(hidden_width, t2v_width))  # type: ignore
     tok2vec_projected.set_dim("nO", hidden_width)
 
-    # Fixme: we use `upper` as a container for the upper layer's
+    # FIXME: we use `upper` as a container for the upper layer's
     # weights and biases. Thinc optimizers cannot handle resizing
     # of parameters. So, when the parser model is resized, we
     # construct a new `upper` layer, which has a different key in
