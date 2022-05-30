@@ -50,15 +50,15 @@ def is_nonproj_arc(tokenid, heads):
     return _is_nonproj_arc(tokenid, c_heads)
 
 
-cdef bool _is_nonproj_arc(int tokenid, const vector[int]& heads) nogil:
+cdef int _is_nonproj_arc(int tokenid, const vector[int]& heads) nogil:
     # definition (e.g. Havelka 2007): an arc h -> d, h < d is non-projective
     # if there is a token k, h < k < d such that h is not
     # an ancestor of k. Same for h -> d, h > d
     head = heads[tokenid]
     if head == tokenid:  # root arcs cannot be non-projective
-        return False
+        return 0
     elif head < 0:  # unattached tokens cannot be non-projective
-        return False
+        return 0
     
     cdef int start, end
     if head < tokenid:
@@ -66,14 +66,18 @@ cdef bool _is_nonproj_arc(int tokenid, const vector[int]& heads) nogil:
     else:
         start, end = (tokenid+1, head)
     for k in range(start, end):
-        if _has_head_as_ancestor(k, head, heads):
+        has_head = _has_head_as_ancestor(k, head, heads)
+        if has_head == 1:
             continue
-        else:  # head not in ancestors: d -> h is non-projective
-            return True
-    return False
+        elif has_head == 0:  # head not in ancestors: d -> h is non-projective
+            return 1
+        # -1 means "found cycle".
+        elif has_head == -1:
+            return -1
+    return 0
 
 
-cdef bool _has_head_as_ancestor(int tokenid, int head, const vector[int]& heads) nogil:
+cdef int _has_head_as_ancestor(int tokenid, int head, const vector[int]& heads) nogil:
     ancestor = tokenid
     cnt = 0
     cdef cppset[int] seen_tokens
@@ -81,17 +85,18 @@ cdef bool _has_head_as_ancestor(int tokenid, int head, const vector[int]& heads)
     while cnt < heads.size():
         # Reached the head or a disconnected node
         if heads[ancestor] == head or heads[ancestor] < 0:
-            return True
+            return 1
         # Reached the root
         if heads[ancestor] == ancestor:
-            return False
+            return 0
         ancestor = heads[ancestor]
+        # Found cycle
         if seen_tokens.count(ancestor):
-            raise ValueError(f"Found cycle in input: {heads}")
+            return -1
         seen_tokens.insert(ancestor)
         cnt += 1
 
-    return False
+    return 0
 
 
 def is_nonproj_tree(heads):
@@ -133,10 +138,14 @@ def projectivize(heads, labels):
     cdef int smallest_np_arc = _get_smallest_nonproj_arc(c_proj_heads)
     if smallest_np_arc == -1:  # this sentence is already projective
         return proj_heads, copy(labels)
+    if smallest_np_arc == -2:
+        raise ValueError(f"Found cycle in heads: {heads}")
     while smallest_np_arc != -1:
         new_head = _lift(smallest_np_arc, proj_heads)
         c_proj_heads[smallest_np_arc] = new_head
         smallest_np_arc = _get_smallest_nonproj_arc(c_proj_heads)
+        if smallest_np_arc == -2:
+            raise ValueError(f"Found cycle in heads: {heads}")
     deco_labels = _decorate(heads, proj_heads, labels)
     return proj_heads, deco_labels
 
@@ -191,6 +200,7 @@ cdef int _get_smallest_nonproj_arc(const vector[int]& heads) nogil:
     # where size is defined as the distance between dep and head
     # and ties are broken left to right
     cdef int smallest_size = INT_MAX
+    # -1 means its already projective.
     cdef int smallest_np_arc = -1
     cdef int size
     cdef int tokenid
@@ -199,7 +209,11 @@ cdef int _get_smallest_nonproj_arc(const vector[int]& heads) nogil:
     for tokenid in range(heads.size()):
         head = heads[tokenid]
         size = abs(tokenid-head)
-        if size < smallest_size and _is_nonproj_arc(tokenid, heads):
+        nonproj_arc = _is_nonproj_arc(tokenid, heads)
+        # -2 means "contains cycles".
+        if nonproj_arc == -1:
+            return -2
+        if size < smallest_size and nonproj_arc == 1:
             smallest_size = size
             smallest_np_arc = tokenid
     return smallest_np_arc
