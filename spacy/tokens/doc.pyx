@@ -1570,9 +1570,9 @@ cdef class Doc:
                 char_span = self.char_span(sent["start"], sent["end"])
                 if char_span is None:
                     raise ValueError(Errors.E1039.format(obj="sentence", start=sent["start"], end=sent["end"]))
-                self[char_span[0].i].is_sent_start = True
-                for t in self.char_span(sent["start"], sent["end"])[1:]:
-                    self[t.i].is_sent_start = False
+                char_span[0].is_sent_start = True
+                for token in char_span[1:]:
+                    token.is_sent_start = False
 
 
         for span_group in doc_json.get("spans", {}):
