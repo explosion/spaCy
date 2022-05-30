@@ -138,13 +138,13 @@ def projectivize(heads, labels):
     if smallest_np_arc == -1:  # this sentence is already projective
         return proj_heads, copy(labels)
     if smallest_np_arc == -2:
-        raise ValueError(f"Found cycle in heads: {heads}")
+        raise ValueError(Errors.E1038.format(heads=heads))
     while smallest_np_arc != -1:
         new_head = _lift(smallest_np_arc, proj_heads)
         c_proj_heads[smallest_np_arc] = new_head
         smallest_np_arc = _get_smallest_nonproj_arc(c_proj_heads)
         if smallest_np_arc == -2:
-            raise ValueError(f"Found cycle in heads: {heads}")
+            raise ValueError(Errors.E1038.format(heads=heads))
     deco_labels = _decorate(heads, proj_heads, labels)
     return proj_heads, deco_labels
 
