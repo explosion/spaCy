@@ -159,8 +159,10 @@ cdef class TransitionSystem:
         assert len(states) == actions.shape[0]
         cdef StateClass state
         cdef vector[StateC*] c_states
-        for state in states:
-            c_states.push_back(state.c)
+        c_states.resize(len(states))
+        cdef int i
+        for (i, state) in enumerate(states):
+            c_states[i] = state.c
         c_apply_actions(self, &c_states[0], &actions[0], actions.shape[0])
         return [state for state in states if not state.c.is_final()]
 

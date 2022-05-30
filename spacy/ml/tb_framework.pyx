@@ -184,7 +184,6 @@ def _forward_greedy_cpu(model: Model, TransitionSystem moves, states: List[State
     for state in states:
         if not state.is_final():
             c_states.push_back(state.c)
-    cdef object featsp = feats
     weights = get_c_weights(model, <float*>feats.data, seen_mask)
     # Precomputed features have rows for each token, plus one for padding.
     cdef int n_tokens = feats.shape[0] - 1
