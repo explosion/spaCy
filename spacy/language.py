@@ -9,6 +9,7 @@ import functools
 from contextlib import contextmanager
 from copy import deepcopy
 from pathlib import Path
+from threading import Thread
 import warnings
 from thinc.api import get_current_ops, Config, CupyOps, Optimizer
 import srsly
@@ -1600,7 +1601,7 @@ class Language:
         # raw_texts is used later to stop iteration.
         texts, raw_texts = itertools.tee(texts)
         # for sending texts to worker
-        texts_q: List[mp.Queue] = [mp.Queue() for _ in range(n_process)]
+        texts_q: List[mp.Queue] = [mp.Queue(maxsize=batch_size) for _ in range(n_process)]
         # for receiving byte-encoded docs from worker
         bytedocs_recv_ch, bytedocs_send_ch = zip(
             *[mp.Pipe(False) for _ in range(n_process)]
@@ -1611,9 +1612,11 @@ class Language:
         # This is necessary to properly handle infinite length of texts.
         # (In this case, all data cannot be sent to the workers at once)
         sender = _Sender(batch_texts, texts_q, chunk_size=n_process)
-        # send twice to make process busy
-        sender.send()
-        sender.send()
+        # Creating a thread that will in continue read texts from batch_texts iterator
+        # and send them to queues. This is made to avoid blocking thread while reading
+        # and writing from queue if the batch is not full
+        sender_th = Thread(target=sender.send)
+        sender_th.start()
 
         procs = [
             mp.Process(
@@ -1631,9 +1634,7 @@ class Language:
             recv.recv() for recv in cycle(bytedocs_recv_ch)
         )
         try:
-            for i, (_, (byte_doc, byte_context, byte_error)) in enumerate(
-                zip(raw_texts, byte_tuples), 1
-            ):
+            for byte_doc, byte_context, byte_error in byte_tuples:
                 if byte_doc is not None:
                     doc = Doc(self.vocab).from_bytes(byte_doc)
                     doc._context = byte_context
@@ -1643,10 +1644,8 @@ class Language:
                     self.default_error_handler(
                         None, None, None, ValueError(Errors.E871.format(error=error))
                     )
-                if i % batch_size == 0:
-                    # tell `sender` that one batch was consumed.
-                    sender.step()
         finally:
+            sender_th.join()
             for proc in procs:
                 proc.terminate()
 
@@ -2204,16 +2203,14 @@ class _Sender:
     def __init__(
         self, data: Iterable[Any], queues: List[mp.Queue], chunk_size: int
     ) -> None:
-        self.data = iter(data)
-        self.queues = iter(cycle(queues))
+        self.data = data
+        self.queues = cycle(queues)
         self.chunk_size = chunk_size
         self.count = 0
 
     def send(self) -> None:
         """Send chunk_size items from self.data to channels."""
-        for item, q in itertools.islice(
-            zip(self.data, cycle(self.queues)), self.chunk_size
-        ):
+        for item, q in zip(self.data, self.queues):
             # cycle channels so that distribute the texts evenly
             q.put(item)
 
