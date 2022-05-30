@@ -239,7 +239,7 @@ browser. Will run a simple web server.
 | Name      | Description                                                                                                                                                       |
 | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `docs`    | Document(s) or span(s) to visualize. ~~Union[Iterable[Union[Doc, Span]], Doc, Span]~~                                                                             |
-| `style`   | Visualization style, `"dep"` or `"ent"`. Defaults to `"dep"`. ~~str~~                                                                                             |
+| `style`   | Visualization style, `"dep"`, `"ent"` or `"span"` <Tag variant="new">3.3</Tag>. Defaults to `"dep"`. ~~str~~                                                                                             |
 | `page`    | Render markup as full HTML page. Defaults to `True`. ~~bool~~                                                                                                     |
 | `minify`  | Minify HTML markup. Defaults to `False`. ~~bool~~                                                                                                                 |
 | `options` | [Visualizer-specific options](#displacy_options), e.g. colors. ~~Dict[str, Any]~~                                                                                 |
@@ -264,7 +264,7 @@ Render a dependency parse tree or named entity visualization.
 | Name        | Description                                                                                                                                                                            |
 | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `docs`      | Document(s) or span(s) to visualize. ~~Union[Iterable[Union[Doc, Span, dict]], Doc, Span, dict]~~                                                                                      |
-| `style`     | Visualization style, `"dep"` or `"ent"`. Defaults to `"dep"`. ~~str~~                                                                                                                  |
+| `style`     | Visualization style,`"dep"`, `"ent"` or `"span"` <Tag variant="new">3.3</Tag>. Defaults to `"dep"`. ~~str~~                                                                                                                  |
 | `page`      | Render markup as full HTML page. Defaults to `True`. ~~bool~~                                                                                                                          |
 | `minify`    | Minify HTML markup. Defaults to `False`. ~~bool~~                                                                                                                                      |
 | `options`   | [Visualizer-specific options](#displacy_options), e.g. colors. ~~Dict[str, Any]~~                                                                                                      |
