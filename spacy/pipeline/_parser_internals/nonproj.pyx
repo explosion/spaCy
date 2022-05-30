@@ -8,6 +8,7 @@ from libc.limits cimport INT_MAX
 from libc.stdlib cimport abs
 from libcpp cimport bool
 from libcpp.vector cimport vector
+from libcpp.set cimport set as cppset
 
 from ...tokens.doc cimport Doc, set_children_from_heads
 
@@ -75,10 +76,19 @@ cdef bool _is_nonproj_arc(int tokenid, const vector[int]& heads) nogil:
 cdef bool _has_head_as_ancestor(int tokenid, int head, const vector[int]& heads) nogil:
     ancestor = tokenid
     cnt = 0
+    cdef cppset[int] seen_tokens
+    seen_tokens.insert(ancestor)
     while cnt < heads.size():
+        # Reached the head or a disconnected node
         if heads[ancestor] == head or heads[ancestor] < 0:
             return True
+        # Reached the root
+        if heads[ancestor] == ancestor:
+            return False
         ancestor = heads[ancestor]
+        if seen_tokens.count(ancestor):
+            raise ValueError(f"Found cycle in input: {heads}")
+        seen_tokens.insert(ancestor)
         cnt += 1
 
     return False
