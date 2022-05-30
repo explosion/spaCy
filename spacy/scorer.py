@@ -1145,6 +1145,11 @@ def _auc(x, y):
     return area
 
 
+# The following implementations of get_cluster_info(), get_markable_assignments,
+# and ClusterEvaluator are adapted from coval, which is distributed under the
+# MIT License.
+# Copyright 2018 Nafise Sadat Moosavi
+# See licenses/3rd_party_licenses.txt
 def get_cluster_info(predicted_clusters, gold_clusters):
     p2g = get_markable_assignments(predicted_clusters, gold_clusters)
     g2p = get_markable_assignments(gold_clusters, predicted_clusters)
