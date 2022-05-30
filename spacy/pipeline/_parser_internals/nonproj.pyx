@@ -8,8 +8,7 @@ from libc.limits cimport INT_MAX
 from libc.stdlib cimport abs
 from libcpp cimport bool
 from libcpp.vector cimport vector
-from libcpp.set cimport set as cppset
-
+from libcpp.unordered_set cimport unordered_set
 from ...tokens.doc cimport Doc, set_children_from_heads
 
 from ...errors import Errors
@@ -80,7 +79,7 @@ cdef int _is_nonproj_arc(int tokenid, const vector[int]& heads) nogil:
 cdef int _has_head_as_ancestor(int tokenid, int head, const vector[int]& heads) nogil:
     ancestor = tokenid
     cnt = 0
-    cdef cppset[int] seen_tokens
+    cdef unordered_set[int] seen_tokens
     seen_tokens.insert(ancestor)
     while cnt < heads.size():
         # Reached the head or a disconnected node
