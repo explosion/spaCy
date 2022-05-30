@@ -1500,7 +1500,7 @@ cdef class Doc:
                     if token_json["id"] == 0 and attr not in token_annotations:
                         token_annotations[attr] = []
                     elif attr not in token_annotations:
-                        raise ValueError(Errors.E1041)
+                        raise ValueError(Errors.E1040.format(partial_attrs=attr))
                     token_annotations[attr].append(token_json[attr_json])
 
         # Initialize doc instance.
