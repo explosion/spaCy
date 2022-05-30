@@ -921,6 +921,7 @@ class Errors(metaclass=ErrorsWithCodes):
     E1037 = ("Invalid attribute value '{attr}'.")
     E1038 = ("Backprop is not supported when is_train is not set.")
 
+
 # Deprecated model shortcuts, only used in errors and warnings
 OLD_MODEL_SHORTCUTS = {
     "en": "en_core_web_sm", "de": "de_core_news_sm", "es": "es_core_news_sm",
