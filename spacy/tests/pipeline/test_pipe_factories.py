@@ -119,6 +119,7 @@ def test_pipe_class_component_config():
             self.value1 = value1
             self.value2 = value2
             self.is_base = True
+            self.name = name
 
         def __call__(self, doc: Doc) -> Doc:
             return doc
@@ -141,12 +142,16 @@ def test_pipe_class_component_config():
         nlp.add_pipe(name)
     with pytest.raises(ConfigValidationError):  # invalid config
         nlp.add_pipe(name, config={"value1": "10", "value2": "hello"})
-    nlp.add_pipe(name, config={"value1": 10, "value2": "hello"})
+    with pytest.warns(UserWarning):
+        nlp.add_pipe(
+            name, config={"value1": 10, "value2": "hello", "name": "wrong_name"}
+        )
     pipe = nlp.get_pipe(name)
     assert isinstance(pipe.nlp, Language)
     assert pipe.value1 == 10
     assert pipe.value2 == "hello"
     assert pipe.is_base is True
+    assert pipe.name == name
 
     nlp_en = English()
     with pytest.raises(ConfigValidationError):  # invalid config

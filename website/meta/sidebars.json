@@ -11,7 +11,8 @@
                     { "text": "spaCy 101", "url": "/usage/spacy-101" },
                     { "text": "New in v3.0", "url": "/usage/v3" },
                     { "text": "New in v3.1", "url": "/usage/v3-1" },
-                    { "text": "New in v3.2", "url": "/usage/v3-2" }
+                    { "text": "New in v3.2", "url": "/usage/v3-2" },
+                    { "text": "New in v3.3", "url": "/usage/v3-3" }
                 ]
             },
             {

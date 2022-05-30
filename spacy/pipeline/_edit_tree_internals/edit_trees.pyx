@@ -132,7 +132,7 @@ cdef class EditTrees:
             could not be applied to the form.
         """
         if tree_id >= self.trees.size():
-            raise IndexError("Edit tree identifier out of range")
+            raise IndexError(Errors.E1030)
 
         lemma_pieces = []
         try:
@@ -154,7 +154,7 @@ cdef class EditTrees:
             match_node = tree.inner.match_node
 
             if match_node.prefix_len + match_node.suffix_len > len(form_part):
-                raise ValueError("Edit tree cannot be applied to form")
+                raise ValueError(Errors.E1029)
 
             suffix_start = len(form_part) - match_node.suffix_len
 
@@ -169,7 +169,7 @@ cdef class EditTrees:
             if form_part == self.strings[tree.inner.subst_node.orig]:
                 lemma_pieces.append(self.strings[tree.inner.subst_node.subst])
             else:
-                raise ValueError("Edit tree cannot be applied to form")
+                raise ValueError(Errors.E1029)
 
     cpdef unicode tree_to_str(self, uint32_t tree_id):
         """Return the tree as a string. The tree tree string is formatted
@@ -187,7 +187,7 @@ cdef class EditTrees:
         """
 
         if tree_id >= self.trees.size():
-            raise IndexError("Edit tree identifier out of range")
+            raise IndexError(Errors.E1030)
 
         cdef EditTreeC tree = self.trees[tree_id]
         cdef SubstNodeC subst_node

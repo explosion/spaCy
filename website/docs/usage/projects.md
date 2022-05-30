@@ -94,9 +94,8 @@ also use any private repo you have access to with Git.
 Assets are data files your project needs – for example, the training and
 evaluation data or pretrained vectors and embeddings to initialize your model
 with. Each project template comes with a `project.yml` that defines the assets
-to download and where to put them. The
-[`spacy project assets`](/api/cli#project-assets) will fetch the project assets
-for you:
+to download and where to put them. The [`spacy project assets`](/api/cli#run)
+will fetch the project assets for you:
 
 ```cli
 $ cd some_example_project
@@ -107,6 +106,11 @@ Asset URLs can be a number of different protocols: HTTP, HTTPS, FTP, SSH, and
 even cloud storage such as GCS and S3. You can also fetch assets using git, by
 replacing the `url` string with a `git` block. spaCy will use Git's "sparse
 checkout" feature to avoid downloading the whole repository.
+
+Sometimes your project configuration may include large assets that you don't
+necessarily want to download when you run `spacy project assets`. That's why
+assets can be marked as [`extra`](#data-assets-url) - by default, these assets
+are not downloaded. If they should be, run `spacy project assets --extra`.
 
 ### 3. Run a command {#run}
 
@@ -215,19 +219,27 @@ pipelines.
 
 > #### Tip: Multi-line YAML syntax for long values
 >
-> YAML has [multi-line syntax](https://yaml-multiline.info/) that can be 
-> helpful for readability with longer values such as project descriptions or 
-> commands that take several arguments.
+> YAML has [multi-line syntax](https://yaml-multiline.info/) that can be helpful
+> for readability with longer values such as project descriptions or commands
+> that take several arguments.
 
 ```yaml
 %%GITHUB_PROJECTS/pipelines/tagger_parser_ud/project.yml
 ```
+> #### Tip: Overriding variables on the CLI
+>
+> If you want to override one or more variables on the CLI and are not already specifying a
+> project directory, you need to add `.` as a placeholder:
+>
+> ```
+> python -m spacy project run test . --vars.foo bar
+> ```
 
 | Section         | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `title`         | An optional project title used in `--help` message and [auto-generated docs](#custom-docs).                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | `description`   | An optional project description used in [auto-generated docs](#custom-docs).                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| `vars`          | A dictionary of variables that can be referenced in paths, URLs and scripts, just like [`config.cfg` variables](/usage/training#config-interpolation). For example, `${vars.name}` will use the value of the variable `name`. Variables need to be defined in the section `vars`, but can be a nested dict, so you're able to reference `${vars.model.name}`.                                                                                                                                                |
+| `vars`          | A dictionary of variables that can be referenced in paths, URLs and scripts and overriden on the CLI, just like [`config.cfg` variables](/usage/training#config-interpolation). For example, `${vars.name}` will use the value of the variable `name`. Variables need to be defined in the section `vars`, but can be a nested dict, so you're able to reference `${vars.model.name}`.                                                                                                                                                |
 | `env`           | A dictionary of variables, mapped to the names of environment variables that will be read in when running the project. For example, `${env.name}` will use the value of the environment variable defined as `name`.                                                                                                                                                                                                                                                                                          |
 | `directories`   | An optional list of [directories](#project-files) that should be created in the project for assets, training outputs, metrics etc. spaCy will make sure that these directories always exist.                                                                                                                                                                                                                                                                                                                 |
 | `assets`        | A list of assets that can be fetched with the [`project assets`](/api/cli#project-assets) command. `url` defines a URL or local path, `dest` is the destination file relative to the project directory, and an optional `checksum` ensures that an error is raised if the file's checksum doesn't match. Instead of `url`, you can also provide a `git` block with the keys `repo`, `branch` and `path`, to download from a Git repo.                                                                        |
@@ -261,8 +273,9 @@ dependencies to use certain protocols.
 >   - dest: 'assets/training.spacy'
 >     url: 'https://example.com/data.spacy'
 >     checksum: '63373dd656daa1fd3043ce166a59474c'
->   # Download from Google Cloud Storage bucket
+>   # Optional download from Google Cloud Storage bucket
 >   - dest: 'assets/development.spacy'
+>     extra: True
 >     url: 'gs://your-bucket/corpora'
 >     checksum: '5113dc04e03f079525edd8df3f4f39e3'
 > ```
@@ -270,6 +283,7 @@ dependencies to use certain protocols.
 | Name          | Description                                                                                                                                                                      |
 | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `dest`        | The destination path to save the downloaded asset to (relative to the project directory), including the file name.                                                               |
+| `extra`       | Optional flag determining whether this asset is downloaded only if `spacy project assets` is run with `--extra`. `False` by default.                                             |
 | `url`         | The URL to download from, using the respective protocol.                                                                                                                         |
 | `checksum`    | Optional checksum of the file. If provided, it will be used to verify that the file matches and downloads will be skipped if a local file with the same checksum already exists. |
 | `description` | Optional asset description, used in [auto-generated docs](#custom-docs).                                                                                                         |
@@ -294,12 +308,12 @@ files you need and not the whole repo.
 >     description: 'The training data (5000 examples)'
 > ```
 
-| Name          | Description                                                                                                                                                                                          |
-| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `dest`        | The destination path to save the downloaded asset to (relative to the project directory), including the file name.                                                                                   |
+| Name          | Description                                                                                                                                                                                                                           |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `dest`        | The destination path to save the downloaded asset to (relative to the project directory), including the file name.                                                                                                                    |
 | `git`         | `repo`: The URL of the repo to download from.<br />`path`: Path of the file or directory to download, relative to the repo root. "" specifies the root directory.<br />`branch`: The branch to download from. Defaults to `"master"`. |
-| `checksum`    | Optional checksum of the file. If provided, it will be used to verify that the file matches and downloads will be skipped if a local file with the same checksum already exists.                     |
-| `description` | Optional asset description, used in [auto-generated docs](#custom-docs).                                                                                                                             |
+| `checksum`    | Optional checksum of the file. If provided, it will be used to verify that the file matches and downloads will be skipped if a local file with the same checksum already exists.                                                      |
+| `description` | Optional asset description, used in [auto-generated docs](#custom-docs).                                                                                                                                                              |
 
 #### Working with private assets {#data-asets-private}
 

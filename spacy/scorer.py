@@ -477,7 +477,7 @@ class Scorer:
                     score_per_type[label] = PRFScore()
             # Find all instances, for all and per type
             gold_instances = set()
-            gold_per_type = {label: set() for label in labels}
+            gold_per_type: Dict[str, Set] = {label: set() for label in labels}
             for gold_cluster in gold_clusters:
                 for span1 in gold_cluster:
                     for span2 in gold_cluster:
@@ -486,7 +486,7 @@ class Scorer:
                             span1.start == span2.start and span1.end < span2.end
                         ):
                             if include_label:
-                                gold_rel = (
+                                gold_rel: Tuple = (
                                     span1.label_,
                                     span1.start,
                                     span1.end - 1,
@@ -505,7 +505,7 @@ class Scorer:
                             if span1.label_ == span2.label_:
                                 gold_per_type[span1.label_].add(gold_rel)
             pred_instances = set()
-            pred_per_type = {label: set() for label in labels}
+            pred_per_type: Dict[str, Set] = {label: set() for label in labels}
             for pred_cluster in pred_clusters:
                 for span1 in pred_cluster:
                     for span2 in pred_cluster:
@@ -513,7 +513,7 @@ class Scorer:
                             span1.start == span2.start and span1.end < span2.end
                         ):
                             if include_label:
-                                pred_rel = (
+                                pred_rel: Tuple = (
                                     span1.label_,
                                     span1.start,
                                     span1.end - 1,
@@ -539,7 +539,7 @@ class Scorer:
             # Score for all labels
             score.score_set(pred_instances, gold_instances)
         # Assemble final result
-        final_scores = {
+        final_scores: Dict[str, Optional[float]] = {
             f"{attr}_p": None,
             f"{attr}_r": None,
             f"{attr}_f": None,

@@ -1,4 +1,5 @@
 import warnings
+from .compat import Literal
 
 
 class ErrorsWithCodes(type):
@@ -26,7 +27,10 @@ def setup_default_warnings():
     filter_warning("once", error_msg="[W114]")
 
 
-def filter_warning(action: str, error_msg: str):
+def filter_warning(
+    action: Literal["default", "error", "ignore", "always", "module", "once"],
+    error_msg: str,
+):
     """Customize how spaCy should handle a certain warning.
 
     error_msg (str): e.g. "W006", or a full error message
@@ -199,6 +203,7 @@ class Warnings(metaclass=ErrorsWithCodes):
     W118 = ("Term '{term}' not found in glossary. It may however be explained in documentation "
             "for the corpora used to train the language. Please check "
             "`nlp.meta[\"sources\"]` for any relevant links.")
+    W119 = ("Overriding pipe name in `config` is not supported. Ignoring override '{name_in_config}'.")
 
 
 class Errors(metaclass=ErrorsWithCodes):
@@ -444,10 +449,10 @@ class Errors(metaclass=ErrorsWithCodes):
             "same, but found '{nlp}' and '{vocab}' respectively.")
     E152 = ("The attribute {attr} is not supported for token patterns. "
             "Please use the option `validate=True` with the Matcher, PhraseMatcher, "
-            "or EntityRuler for more details.")
+            "EntityRuler or AttributeRuler for more details.")
     E153 = ("The value type {vtype} is not supported for token patterns. "
             "Please use the option validate=True with Matcher, PhraseMatcher, "
-            "or EntityRuler for more details.")
+            "EntityRuler or AttributeRuler for more details.")
     E154 = ("One of the attributes or values is not supported for token "
             "patterns. Please use the option `validate=True` with the Matcher, "
             "PhraseMatcher, or EntityRuler for more details.")
@@ -905,7 +910,16 @@ class Errors(metaclass=ErrorsWithCodes):
     E1026 = ("Edit tree has an invalid format:\n{errors}")
     E1027 = ("AlignmentArray only supports slicing with a step of 1.")
     E1028 = ("AlignmentArray only supports indexing using an int or a slice.")
-    
+    E1029 = ("Edit tree cannot be applied to form.")
+    E1030 = ("Edit tree identifier out of range.")
+    E1031 = ("Could not find gold transition - see logs above.")
+    E1032 = ("`{var}` should not be {forbidden}, but received {value}.")
+    E1033 = ("Dimension {name} invalid -- only nO, nF, nP")
+    E1034 = ("Node index {i} out of bounds ({length})")
+    E1035 = ("Token index {i} out of bounds ({length})")
+    E1036 = ("Cannot index into NoneNode")
+    E1037 = ("Invalid attribute value '{attr}'.")
+
 
 # Deprecated model shortcuts, only used in errors and warnings
 OLD_MODEL_SHORTCUTS = {
