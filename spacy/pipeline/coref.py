@@ -24,7 +24,7 @@ from ..ml.models.coref_util import (
     doc2clusters,
 )
 
-from ..coref_scorer import Evaluator, get_cluster_info, lea
+from ..scorer import ClusterEvaluator, get_cluster_info, lea
 
 
 default_config = """
@@ -314,7 +314,7 @@ class CoreferenceResolver(TrainablePipe):
         https://api.semanticscholar.org/CorpusID:17606580
         """
 
-        evaluator = Evaluator(lea)
+        evaluator = ClusterEvaluator(lea)
 
         for ex in examples:
             p_clusters = doc2clusters(ex.predicted, self.span_cluster_prefix)
