@@ -84,8 +84,10 @@ def test_parser_pseudoprojectivity(en_vocab):
     tree = [1, 2, 2]
     nonproj_tree = [1, 2, 2, 4, 5, 2, 7, 4, 2]
     nonproj_tree2 = [9, 1, 3, 1, 5, 6, 9, 8, 6, 1, 6, 12, 13, 10, 1]
+    cyclic_tree = [1, 2, 2, 4, 5, 3, 2]
     labels = ["det", "nsubj", "root", "det", "dobj", "aux", "nsubj", "acl", "punct"]
     labels2 = ["advmod", "root", "det", "nsubj", "advmod", "det", "dobj", "det", "nmod", "aux", "nmod", "advmod", "det", "amod", "punct"]
+    cyclic_labels = ["det", "nsubj", "root", "det", "dobj", "aux", "punct"]
     # fmt: on
     assert nonproj.decompose("X||Y") == ("X", "Y")
     assert nonproj.decompose("X") == ("X", "")
@@ -97,6 +99,8 @@ def test_parser_pseudoprojectivity(en_vocab):
     assert nonproj.get_smallest_nonproj_arc_slow(nonproj_tree2) == 10
     # fmt: off
     proj_heads, deco_labels = nonproj.projectivize(nonproj_tree, labels)
+    with pytest.raises(ValueError):
+        nonproj.projectivize(cyclic_tree, cyclic_labels)
     assert proj_heads == [1, 2, 2, 4, 5, 2, 7, 5, 2]
     assert deco_labels == ["det", "nsubj", "root", "det", "dobj", "aux",
                            "nsubj", "acl||dobj", "punct"]
