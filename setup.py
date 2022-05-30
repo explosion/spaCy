@@ -31,6 +31,7 @@ MOD_NAMES = [
     "spacy.vocab",
     "spacy.attrs",
     "spacy.kb",
+    "spacy.ml.tb_framework",
     "spacy.morphology",
     "spacy.pipeline._edit_tree_internals.edit_trees",
     "spacy.pipeline.morphologizer",
