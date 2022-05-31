@@ -1,3 +1,4 @@
+from multiprocessing import dummy
 from typing import Iterator, Optional, Any, Dict, Callable, Iterable
 from typing import Union, Tuple, List, Set, Pattern, Sequence
 from typing import NoReturn, TYPE_CHECKING, TypeVar, cast, overload
@@ -1101,12 +1102,6 @@ class Language:
             return Doc(self.vocab).from_bytes(doc_like)
         raise ValueError(Errors.E1038.format(type=type(doc_like)))
 
-    def _ensure_doc_with_context(self, doc_like: Union[str, Doc], context: Any) -> Doc:
-        """Create a Doc if need be and add as_tuples context, or raise an error if the input is not a Doc or a string."""
-        doc = self._ensure_doc(doc_like)
-        doc._context = context
-        return doc
-
     def update(
         self,
         examples: Iterable[Example],
@@ -1522,27 +1517,6 @@ class Language:
 
         DOCS: https://spacy.io/api/language#pipe
         """
-        # Handle texts with context as tuples
-        if as_tuples:
-            texts = cast(Iterable[Tuple[Union[str, Doc], _AnyContext]], texts)
-            docs_with_contexts = (
-                self._ensure_doc_with_context(text, context) for text, context in texts
-            )
-            docs = self.pipe(
-                docs_with_contexts,
-                batch_size=batch_size,
-                disable=disable,
-                n_process=n_process,
-                component_cfg=component_cfg,
-            )
-            for doc in docs:
-                context = doc._context
-                doc._context = None
-                yield (doc, context)
-            return
-
-        texts = cast(Iterable[Union[str, Doc]], texts)
-
         # Set argument defaults
         if n_process == -1:
             n_process = mp.cpu_count()
@@ -1569,32 +1543,54 @@ class Language:
             )
             pipes.append(f)
 
+        # Normalize input to always contain a context object.
+        if not as_tuples:
+            texts = cast(Iterable[Union[str, Doc]], texts)
+            texts_with_ctx: Iterable[
+                Tuple[Union[str, Doc], _AnyContext]
+            ] = self._add_dummy_context_to_text(texts)
+        else:
+            texts = cast(Iterable[Tuple[Union[str, Doc], _AnyContext]], texts)
+            texts_with_ctx = texts
+
         if n_process != 1:
             if self._has_gpu_model(disable):
                 warnings.warn(Warnings.W114)
 
             # Serialize Doc inputs to bytes to avoid incurring
             # pickling overhead when they are passed to child processes.
-            strings_or_bytes = self._serialize_doc_to_bytes(texts)
-            docs = self._multiprocessing_pipe(
-                strings_or_bytes, pipes, n_process, batch_size
+            serialized_texts_with_ctx = self._serialize_doc_to_bytes(texts_with_ctx)
+
+            processed_docs_with_ctx = self._multiprocessing_pipe(
+                serialized_texts_with_ctx, pipes, n_process, batch_size
             )
         else:
             # if n_process == 1, no processes are forked.
-            docs = (self._ensure_doc(text) for text in texts)
-            for pipe in pipes:
-                docs = pipe(docs)
-        for doc in docs:
-            yield doc
+            processed_docs_with_ctx = _process_texts_with_pipes(
+                texts_with_ctx, self._ensure_doc, pipes
+            )  # type: ignore
+
+        for doc, ctx in processed_docs_with_ctx:
+            if as_tuples:
+                yield (doc, ctx)
+            else:
+                yield doc
+
+    def _add_dummy_context_to_text(
+        self, texts: Iterable[Union[str, Doc]]
+    ) -> Iterable[Tuple[Union[str, Doc], _AnyContext]]:
+        dummy_ctx = cast(_AnyContext, None)
+        for doc_like in texts:
+            yield (doc_like, dummy_ctx)
 
     def _serialize_doc_to_bytes(
-        self, texts: Iterable[Union[str, Doc]]
-    ) -> Iterable[Union[str, bytes]]:
-        for doc_like in texts:
+        self, texts: Iterable[Tuple[Union[str, Doc], _AnyContext]]
+    ) -> Iterable[Tuple[Union[str, bytes], _AnyContext]]:
+        for doc_like, context in texts:
             if isinstance(doc_like, Doc):
-                yield doc_like.to_bytes()
+                yield (doc_like.to_bytes(), context)
             else:
-                yield doc_like
+                yield (doc_like, context)
 
     def _has_gpu_model(self, disable: Iterable[str]):
         for name, proc in self.pipeline:
@@ -1609,11 +1605,11 @@ class Language:
 
     def _multiprocessing_pipe(
         self,
-        texts: Iterable[Union[str, bytes]],
+        texts: Iterable[Tuple[Union[str, bytes], _AnyContext]],
         pipes: Iterable[Callable[..., Iterator[Doc]]],
         n_process: int,
         batch_size: int,
-    ) -> Iterator[Doc]:
+    ) -> Iterator[Tuple[Doc, _AnyContext]]:
         # raw_texts is used later to stop iteration.
         texts, raw_texts = itertools.tee(texts)
         # for sending texts to worker
@@ -1648,15 +1644,14 @@ class Language:
             recv.recv() for recv in cycle(bytedocs_recv_ch)
         )
         try:
-            for i, (_, (byte_doc, byte_context, byte_error)) in enumerate(
+            for i, (_, (byte_doc, context, error)) in enumerate(
                 zip(raw_texts, byte_tuples), 1
             ):
                 if byte_doc is not None:
                     doc = Doc(self.vocab).from_bytes(byte_doc)
-                    doc._context = byte_context
-                    yield doc
-                elif byte_error is not None:
-                    error = srsly.msgpack_loads(byte_error)
+                    yield (doc, context)
+                elif error is not None:
+                    error = srsly.msgpack_loads(error)
                     self.default_error_handler(
                         None, None, None, ValueError(Errors.E871.format(error=error))
                     )
@@ -2179,8 +2174,38 @@ def _copy_examples(examples: Iterable[Example]) -> List[Example]:
     return [Example(eg.x.copy(), eg.y) for eg in examples]
 
 
+def _process_texts_with_pipes(
+    texts_with_ctx: Iterable[Tuple[Union[str, Doc, bytes], _AnyContext]],
+    ensure_doc: Callable[[Union[str, Doc, bytes]], Doc],
+    pipes: Iterable[Callable[..., Iterator[Doc]]],
+) -> Iterable[Tuple[Doc, _AnyContext]]:
+    def preprocess(
+        texts_with_ctx: Iterable[Tuple[Union[str, Doc, bytes], _AnyContext]]
+    ) -> Iterable[Doc]:
+        # Since custom error handlers can potentially skip documents during
+        # the pipeline processing stage, we cannot assume that the contexts
+        # are always aligned to their source documents. So, we have to store
+        # the former in the latter directly.
+        for doc_like, context in texts_with_ctx:
+            doc = ensure_doc(doc_like)
+            doc._context = context
+            yield doc
+
+    def postprocess(docs: Iterable[Doc]) -> Iterable[Tuple[Doc, _AnyContext]]:
+        # Retrieve the previously stored context object and yield a tuple.
+        for doc in docs:
+            context = doc._context
+            doc._context = None
+            yield (doc, context)
+
+    docs = preprocess(texts_with_ctx)
+    for pipe in pipes:
+        docs = pipe(docs)  # type: ignore[arg-type, assignment]
+    return postprocess(docs)
+
+
 def _apply_pipes(
-    ensure_doc: Callable[[Union[str, Doc]], Doc],
+    ensure_doc: Callable[[Union[str, Doc, bytes]], Doc],
     pipes: Iterable[Callable[..., Iterator[Doc]]],
     receiver,
     sender,
@@ -2201,17 +2226,17 @@ def _apply_pipes(
     Underscore.load_state(underscore_state)
     while True:
         try:
-            texts = receiver.get()
-            docs = (ensure_doc(text) for text in texts)
-            for pipe in pipes:
-                docs = pipe(docs)  # type: ignore[arg-type, assignment]
+            texts_with_ctx = receiver.get()
+            docs_with_ctx = _process_texts_with_pipes(texts_with_ctx, ensure_doc, pipes)
             # Connection does not accept unpickable objects, so send list.
-            byte_docs = [(doc.to_bytes(), doc._context, None) for doc in docs]
-            padding = [(None, None, None)] * (len(texts) - len(byte_docs))
+            byte_docs = [
+                (doc.to_bytes(), context, None) for doc, context in docs_with_ctx
+            ]
+            padding = [(None, None, None)] * (len(texts_with_ctx) - len(byte_docs))
             sender.send(byte_docs + padding)  # type: ignore[operator]
         except Exception:
             error_msg = [(None, None, srsly.msgpack_dumps(traceback.format_exc()))]
-            padding = [(None, None, None)] * (len(texts) - 1)
+            padding = [(None, None, None)] * (len(texts_with_ctx) - 1)
             sender.send(error_msg + padding)
 
 
