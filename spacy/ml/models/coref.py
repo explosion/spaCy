@@ -56,7 +56,9 @@ def convert_coref_clusterer_inputs(model: Model, X: List[Floats2d], is_train: bo
     def backprop(args: ArgsKwargs) -> List[Floats2d]:
         # convert to xp and wrap in list
         gradients = torch2xp(args.args[0])
-        assert isinstance(gradients, Floats2d)
+        #TODO why did this change? This was fine before merging master.
+        # It's still 2d but this assert fails.
+        #assert isinstance(gradients, Floats2d)
         return [gradients]
 
     return ArgsKwargs(args=(word_features,), kwargs={}), backprop

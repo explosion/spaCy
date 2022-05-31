@@ -2,12 +2,14 @@ from typing import Optional, Iterable, Dict, Set, List, Any, Callable, Tuple
 from typing import TYPE_CHECKING
 import numpy as np
 from collections import defaultdict
+from statistics import mean
 
 from .training import Example
 from .tokens import Token, Doc, Span
 from .errors import Errors
 from .util import get_lang_class, SimpleFrozenList
 from .morphology import Morphology
+
 
 if TYPE_CHECKING:
     # This lets us add type hints for mypy etc. without causing circular imports
@@ -873,6 +875,67 @@ class Scorer:
                 f"{attr}_las_per_type": None,
             }
 
+    @staticmethod
+    def score_coref_clusters(examples: Iterable[Example], **cfg):
+        """Score a batch of examples using LEA.
+
+        For details on how LEA works and why to use it see the paper:
+        Which Coreference Evaluation Metric Do You Trust? A Proposal for a Link-based Entity Aware Metric
+        Moosavi and Strube, 2016
+        https://api.semanticscholar.org/CorpusID:17606580
+        """
+
+        span_cluster_prefix = cfg["span_cluster_prefix"]
+
+        evaluator = ClusterEvaluator(lea)
+
+        for ex in examples:
+            p_clusters = doc2clusters(ex.predicted, span_cluster_prefix)
+            g_clusters = doc2clusters(ex.reference, span_cluster_prefix)
+            cluster_info = get_cluster_info(p_clusters, g_clusters)
+            evaluator.update(cluster_info)
+
+        score = {
+            "coref_f": evaluator.get_f1(),
+            "coref_p": evaluator.get_precision(),
+            "coref_r": evaluator.get_recall(),
+        }
+        return score
+
+    @staticmethod
+    def score_span_predictions(examples: Iterable[Example], **cfg):
+        """Evaluate reconstruction of the correct spans from gold heads.
+        """
+        scores = []
+        output_prefix = cfg["output_prefix"]
+        for eg in examples:
+            starts = []
+            ends = []
+            pred_starts = []
+            pred_ends = []
+            ref = eg.reference
+            pred = eg.predicted
+            for key, gold_sg in ref.spans.items():
+                if key.startswith(output_prefix):
+                    pred_sg = pred.spans[key]
+                    for gold_mention, pred_mention in zip(gold_sg, pred_sg):
+                        starts.append(gold_mention.start)
+                        ends.append(gold_mention.end)
+                        pred_starts.append(pred_mention.start)
+                        pred_ends.append(pred_mention.end)
+
+
+            # TODO check logic
+            # see how many are perfect
+            cs = [a == b for a, b in zip(starts, pred_starts)]
+            ce = [a == b for a, b in zip(ends, pred_ends)]
+            correct = [int(a and b) for a, b in zip(cs, ce)]
+            accuracy = sum(correct) / len(correct)
+
+            scores.append(float(accuracy))
+        out_key = f"span_{output_prefix}_accuracy"
+        return {out_key: mean(scores)}
+
 
 def get_ner_prf(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
     """Compute micro-PRF and per-entity PRF scores for a sequence of examples."""
@@ -1255,12 +1318,6 @@ class ClusterEvaluator:
 
 
 def lea(input_clusters, output_clusters, mention_to_gold):
-    """
-    LEA is a metric for scoring coref clusters design to avoid pitfals of prior
-    methods. Proposed in Moosavi and Strube 2016.
-
-    https://api.semanticscholar.org/CorpusID:17606580
-    """
     num, den = 0, 0
 
     for c in input_clusters:
@@ -1289,3 +1346,22 @@ def lea(input_clusters, output_clusters, mention_to_gold):
         den += len(c)
 
     return num, den
+
+
+# This is coref related, but not from coval.
+# def doc2clusters(doc: Doc, prefix) -> MentionClusters:
+def doc2clusters(doc, prefix):
+    """Given a doc, give the mention clusters.
+
+    This is used for scoring.
+    """
+    out = []
+    for name, val in doc.spans.items():
+        if not name.startswith(prefix):
+            continue
+
+        cluster = []
+        for mention in val:
+            cluster.append((mention.start, mention.end))
+        out.append(cluster)
+    return out

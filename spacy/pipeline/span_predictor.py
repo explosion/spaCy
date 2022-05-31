@@ -5,20 +5,19 @@ from thinc.types import Floats2d, Floats3d, Ints2d
 from thinc.api import Model, Config, Optimizer, CategoricalCrossentropy
 from thinc.api import set_dropout_rate, to_categorical
 from itertools import islice
-from statistics import mean
 
 from .trainable_pipe import TrainablePipe
 from ..language import Language
 from ..training import Example, validate_examples, validate_get_examples
 from ..errors import Errors
-from ..scorer import Scorer
+from ..scorer import Scorer, doc2clusters
 from ..tokens import Doc
 from ..vocab import Vocab
+from ..util import registry
 
 from ..ml.models.coref_util import (
     MentionClusters,
     DEFAULT_CLUSTER_PREFIX,
-    doc2clusters,
 )
 
 default_span_predictor_config = """
@@ -51,6 +50,15 @@ depth = 2
 DEFAULT_SPAN_PREDICTOR_MODEL = Config().from_str(default_span_predictor_config)["model"]
 
 
+def span_predictor_scorer(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
+    return Scorer.score_span_predictions(examples, **kwargs)
+
+
+@registry.scorers("spacy.span_predictor_scorer.v1")
+def make_span_predictor_scorer():
+    return span_predictor_scorer
+
+
 @Language.factory(
     "span_predictor",
     assigns=["doc.spans"],
@@ -59,6 +67,7 @@ DEFAULT_SPAN_PREDICTOR_MODEL = Config().from_str(default_span_predictor_config)[
         "model": DEFAULT_SPAN_PREDICTOR_MODEL,
         "input_prefix": "coref_head_clusters",
         "output_prefix": "coref_clusters",
+        "scorer": {"@scorers": "spacy.span_predictor_scorer.v1"},
     },
     default_score_weights={"span_accuracy": 1.0},
 )
@@ -68,10 +77,16 @@ def make_span_predictor(
     model,
     input_prefix: str = "coref_head_clusters",
     output_prefix: str = "coref_clusters",
+    scorer: Optional[Callable] = span_predictor_scorer,
 ) -> "SpanPredictor":
     """Create a SpanPredictor component."""
     return SpanPredictor(
-        nlp.vocab, model, name, input_prefix=input_prefix, output_prefix=output_prefix
+        nlp.vocab,
+        model,
+        name,
+        input_prefix=input_prefix,
+        output_prefix=output_prefix,
+        scorer=scorer,
     )
 
 
@@ -89,6 +104,7 @@ class SpanPredictor(TrainablePipe):
         *,
         input_prefix: str = "coref_head_clusters",
         output_prefix: str = "coref_clusters",
+        scorer: Optional[Callable] = span_predictor_scorer,
     ) -> None:
         self.vocab = vocab
         self.model = model
@@ -96,7 +112,10 @@ class SpanPredictor(TrainablePipe):
         self.input_prefix = input_prefix
         self.output_prefix = output_prefix
 
-        self.cfg: Dict[str, Any] = {}
+        self.scorer = scorer
+        self.cfg: Dict[str, Any] = {
+            "output_prefix": output_prefix,
+        }
 
     def predict(self, docs: Iterable[Doc]) -> List[MentionClusters]:
         # for now pretend there's just one doc
@@ -254,35 +273,3 @@ class SpanPredictor(TrainablePipe):
 
         assert len(X) > 0, Errors.E923.format(name=self.name)
         self.model.initialize(X=X, Y=Y)
-
-    def score(self, examples, **kwargs):
-        """
-        Evaluate on reconstructing the correct spans around
-        gold heads.
-        """
-        scores = []
-        xp = self.model.ops.xp
-        for eg in examples:
-            starts = []
-            ends = []
-            pred_starts = []
-            pred_ends = []
-            ref = eg.reference
-            pred = eg.predicted
-            for key, gold_sg in ref.spans.items():
-                if key.startswith(self.output_prefix):
-                    pred_sg = pred.spans[key]
-                    for gold_mention, pred_mention in zip(gold_sg, pred_sg):
-                        starts.append(gold_mention.start)
-                        ends.append(gold_mention.end)
-                        pred_starts.append(pred_mention.start)
-                        pred_ends.append(pred_mention.end)
-
-            starts = xp.asarray(starts)
-            ends = xp.asarray(ends)
-            pred_starts = xp.asarray(pred_starts)
-            pred_ends = xp.asarray(pred_ends)
-            correct = (starts == pred_starts) * (ends == pred_ends)
-            accuracy = correct.mean()
-            scores.append(float(accuracy))
-        return {"span_accuracy": mean(scores)}

@@ -32,23 +32,6 @@ def get_sentence_ids(doc):
     return out
 
 
-def doc2clusters(doc: Doc, prefix=DEFAULT_CLUSTER_PREFIX) -> MentionClusters:
-    """Given a doc, give the mention clusters.
-
-    This is useful for scoring.
-    """
-    out = []
-    for name, val in doc.spans.items():
-        if not name.startswith(prefix):
-            continue
-
-        cluster = []
-        for mention in val:
-            cluster.append((mention.start, mention.end))
-        out.append(cluster)
-    return out
-
-
 # from model.py, refactored to be non-member
 def get_predicted_antecedents(xp, antecedent_idx, antecedent_scores):
     """Get the ID of the antecedent for each span. -1 if no antecedent."""
