@@ -5,8 +5,8 @@ from spacy import util
 from spacy.training import Example
 from spacy.lang.en import English
 from spacy.tests.util import make_tempdir
-from spacy.pipeline.coref import DEFAULT_CLUSTERS_PREFIX
 from spacy.ml.models.coref_util import (
+    DEFAULT_CLUSTER_PREFIX,
     select_non_crossing_spans,
     get_sentence_ids,
 )
@@ -17,12 +17,12 @@ TRAIN_DATA = [
         "Yes, I noticed that many friends around me received it. It seems that almost everyone received this SMS.",
         {
             "spans": {
-                f"{DEFAULT_CLUSTERS_PREFIX}_1": [
+                f"{DEFAULT_CLUSTER_PREFIX}_1": [
                     (5, 6, "MENTION"),      # I
                     (40, 42, "MENTION"),    # me
 
                 ],
-                f"{DEFAULT_CLUSTERS_PREFIX}_2": [
+                f"{DEFAULT_CLUSTER_PREFIX}_2": [
                     (52, 54, "MENTION"),     # it
                     (95, 103, "MENTION"),    # this SMS
                 ]
