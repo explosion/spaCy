@@ -1350,7 +1350,6 @@ cdef class Doc:
             "spans": lambda: self.spans.to_bytes(),
             "strings": lambda: list(strings),
             "has_unknown_spaces": lambda: self.has_unknown_spaces,
-            "context": lambda: self._context
         }
         if "user_data" not in exclude and self.user_data:
             user_data_keys, user_data_values = list(zip(*self.user_data.items()))
@@ -1394,8 +1393,6 @@ cdef class Doc:
                 self.vocab.strings.add(s)
         if "has_unknown_spaces" not in exclude and "has_unknown_spaces" in msg:
             self.has_unknown_spaces = msg["has_unknown_spaces"]
-        if "context" not in exclude and "context" in msg:
-            self._context = msg["context"]
 
         start = 0
         cdef const LexemeC* lex
@@ -1741,18 +1738,17 @@ cdef int [:,:] _get_lca_matrix(Doc doc, int start, int end):
 def pickle_doc(doc):
     bytes_data = doc.to_bytes(exclude=["vocab", "user_data", "user_hooks"])
     hooks_and_data = (doc.user_data, doc.user_hooks, doc.user_span_hooks,
-                      doc.user_token_hooks, doc._context)
+                      doc.user_token_hooks)
     return (unpickle_doc, (doc.vocab, srsly.pickle_dumps(hooks_and_data), bytes_data))
 
 
 def unpickle_doc(vocab, hooks_and_data, bytes_data):
-    user_data, doc_hooks, span_hooks, token_hooks, _context = srsly.pickle_loads(hooks_and_data)
+    user_data, doc_hooks, span_hooks, token_hooks = srsly.pickle_loads(hooks_and_data)
 
     doc = Doc(vocab, user_data=user_data).from_bytes(bytes_data, exclude=["user_data"])
     doc.user_hooks.update(doc_hooks)
     doc.user_span_hooks.update(span_hooks)
     doc.user_token_hooks.update(token_hooks)
-    doc._context = _context
     return doc
 
 
