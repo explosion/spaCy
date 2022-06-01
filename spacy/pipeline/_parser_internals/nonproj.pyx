@@ -90,10 +90,9 @@ cdef pair[bool, bool] _has_head_as_ancestor(int tokenid, int head, const vector[
     # (False, False) if it does not have head as an ancestor,
     # (False, True) when there is a cycle.
     ancestor = tokenid
-    cnt = 0
     cdef unordered_set[int] seen_tokens
     seen_tokens.insert(ancestor)
-    while cnt < heads.size():
+    while True:
         # Reached the head or a disconnected node
         if heads[ancestor] == head or heads[ancestor] < 0:
             return pair[bool, bool](True, False)
@@ -105,7 +104,6 @@ cdef pair[bool, bool] _has_head_as_ancestor(int tokenid, int head, const vector[
         # Found cycle
         if not result.second:
             return pair[bool, bool](False, True)
-        cnt += 1
 
     return pair[bool, bool](False, False)
 
