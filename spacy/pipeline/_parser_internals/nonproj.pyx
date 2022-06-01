@@ -99,6 +99,7 @@ cdef string heads_to_string(const vector[int]& heads) nogil:
 
     cycle_str.append("Found cycle in dependency graph: [")
 
+    # FIXME: Rewrite using ostringstream when available in Cython.
     citer = heads.const_begin()
     while citer != heads.const_end():
         if citer != heads.const_begin():
