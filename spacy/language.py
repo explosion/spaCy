@@ -1,4 +1,3 @@
-from multiprocessing import dummy
 from typing import Iterator, Optional, Any, Dict, Callable, Iterable
 from typing import Union, Tuple, List, Set, Pattern, Sequence
 from typing import NoReturn, TYPE_CHECKING, TypeVar, cast, overload
@@ -1105,7 +1104,7 @@ class Language:
     def _ensure_doc_with_context(
         self, doc_like: Union[str, Doc, bytes], context: _AnyContext
     ) -> Doc:
-        """Call _ensure_doc to generate a Doc object, if not already present, and set its context object."""
+        """Call _ensure_doc to generate a Doc and set its context object."""
         doc = self._ensure_doc(doc_like)
         doc._context = context
         return doc
@@ -1543,6 +1542,8 @@ class Language:
                 yield (doc, context)
             return
 
+        texts = cast(Iterable[Union[str, Doc]], texts)
+
         # Set argument defaults
         if n_process == -1:
             n_process = mp.cpu_count()
@@ -1569,8 +1570,6 @@ class Language:
             )
             pipes.append(f)
 
-        texts = cast(Iterable[Union[str, Doc]], texts)
-
         if n_process != 1:
             if self._has_gpu_model(disable):
                 warnings.warn(Warnings.W114)
@@ -1591,7 +1590,6 @@ class Language:
         # Serialize Doc inputs to bytes to avoid incurring pickling
         # overhead when they are passed to child processes. Also yield
         # any context objects they might have separately (as they are not serialized).
-
         for doc_like in texts:
             if isinstance(doc_like, Doc):
                 yield (doc_like.to_bytes(), doc_like._context)
@@ -1616,8 +1614,6 @@ class Language:
         n_process: int,
         batch_size: int,
     ) -> Iterable[Doc]:
-        # Serialize Doc inputs to bytes to avoid incurring
-        # pickling overhead when they are passed to child processes.
         serialized_texts_with_ctx = self._prepare_doc_for_ipc(texts)
         # raw_texts is used later to stop iteration.
         texts, raw_texts = itertools.tee(serialized_texts_with_ctx)
@@ -2188,36 +2184,6 @@ def _copy_examples(examples: Iterable[Example]) -> List[Example]:
     Language.update.
     """
     return [Example(eg.x.copy(), eg.y) for eg in examples]
-
-
-def _process_texts_with_pipes(
-    texts_with_ctx: Iterable[Tuple[Union[str, Doc, bytes], _AnyContext]],
-    ensure_doc: Callable[[Union[str, Doc, bytes]], Doc],
-    pipes: Iterable[Callable[..., Iterator[Doc]]],
-) -> Iterable[Tuple[Doc, _AnyContext]]:
-    def preprocess(
-        texts_with_ctx: Iterable[Tuple[Union[str, Doc, bytes], _AnyContext]]
-    ) -> Iterable[Doc]:
-        # Since custom error handlers can potentially skip documents during
-        # the pipeline processing stage, we cannot assume that the contexts
-        # are always aligned to their source documents. So, we have to store
-        # the former in the latter directly.
-        for doc_like, context in texts_with_ctx:
-            doc = ensure_doc(doc_like)
-            doc._context = context
-            yield doc
-
-    def postprocess(docs: Iterable[Doc]) -> Iterable[Tuple[Doc, _AnyContext]]:
-        # Retrieve the previously stored context object and yield a tuple.
-        for doc in docs:
-            context = doc._context
-            doc._context = None
-            yield (doc, context)
-
-    docs = preprocess(texts_with_ctx)
-    for pipe in pipes:
-        docs = pipe(docs)  # type: ignore[arg-type, assignment]
-    return postprocess(docs)
 
 
 def _apply_pipes(
