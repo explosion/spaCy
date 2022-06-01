@@ -75,8 +75,9 @@ cdef pair[bool, bool] _is_nonproj_arc(int tokenid, const vector[int]& heads) nog
         start, end = (tokenid+1, head)
     for k in range(start, end):
         has_head = _has_head_as_ancestor(k, head, heads)
+        # Do we have a cycle?
         if has_head.second:
-            return has_head
+            return pair[bool, bool](False, True)
         if has_head.first:
             continue
         else:  # head not in ancestors: d -> h is non-projective
