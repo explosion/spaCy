@@ -1592,9 +1592,9 @@ class Language:
         # any context objects they might have separately (as they are not serialized).
         for doc_like in texts:
             if isinstance(doc_like, Doc):
-                yield (doc_like.to_bytes(), doc_like._context)
+                yield (doc_like.to_bytes(), cast(_AnyContext, doc_like._context))
             else:
-                yield (doc_like, None)
+                yield (doc_like, cast(_AnyContext, None))
 
     def _has_gpu_model(self, disable: Iterable[str]):
         for name, proc in self.pipeline:
@@ -1613,10 +1613,10 @@ class Language:
         pipes: Iterable[Callable[..., Iterator[Doc]]],
         n_process: int,
         batch_size: int,
-    ) -> Iterable[Doc]:
-        serialized_texts_with_ctx = self._prepare_doc_for_ipc(texts)
+    ) -> Iterator[Doc]:
+        serialized_texts_with_ctx = self._prepare_doc_for_ipc(texts)  # type: ignore
         # raw_texts is used later to stop iteration.
-        texts, raw_texts = itertools.tee(serialized_texts_with_ctx)
+        texts_itr, raw_texts = itertools.tee(serialized_texts_with_ctx)
         # for sending texts to worker
         texts_q: List[mp.Queue] = [mp.Queue() for _ in range(n_process)]
         # for receiving byte-encoded docs from worker
@@ -1624,7 +1624,7 @@ class Language:
             *[mp.Pipe(False) for _ in range(n_process)]
         )
 
-        batch_texts = util.minibatch(texts, batch_size)
+        batch_texts = util.minibatch(texts_itr, batch_size)
         # Sender sends texts to the workers.
         # This is necessary to properly handle infinite length of texts.
         # (In this case, all data cannot be sent to the workers at once)
@@ -2187,7 +2187,7 @@ def _copy_examples(examples: Iterable[Example]) -> List[Example]:
 
 
 def _apply_pipes(
-    ensure_doc: Callable[[Union[str, Doc, bytes]], Doc],
+    ensure_doc: Callable[[Union[str, Doc, bytes], _AnyContext], Doc],
     pipes: Iterable[Callable[..., Iterator[Doc]]],
     receiver,
     sender,
@@ -2213,7 +2213,7 @@ def _apply_pipes(
                 ensure_doc(doc_like, context) for doc_like, context in texts_with_ctx
             )
             for pipe in pipes:
-                docs = pipe(docs)
+                docs = pipe(docs)  # type: ignore[arg-type, assignment]
             # Connection does not accept unpickable objects, so send list.
             byte_docs = [(doc.to_bytes(), doc._context, None) for doc in docs]
             padding = [(None, None, None)] * (len(texts_with_ctx) - len(byte_docs))
