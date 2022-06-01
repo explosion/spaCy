@@ -919,7 +919,6 @@ class Errors(metaclass=ErrorsWithCodes):
     E1035 = ("Token index {i} out of bounds ({length})")
     E1036 = ("Cannot index into NoneNode")
     E1037 = ("Invalid attribute value '{attr}'.")
-    E1038 = ("Found cycle in heads: {heads}")
 
 
 # Deprecated model shortcuts, only used in errors and warnings
