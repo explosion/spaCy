@@ -198,7 +198,7 @@ cdef class Example:
 
     def get_aligned_sent_starts(self):
         """Get list of SENT_START attributes aligned to the predicted tokenization.
-        If the reference has not sentence starts, return a list of None values.
+        If the reference does not have sentence starts, return a list of None values.
         """
         if self.y.has_annotation("SENT_START"):
             align = self.alignment.y2x
