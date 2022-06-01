@@ -1568,7 +1568,7 @@ class Language:
             # if n_process == 1, no processes are forked.
             processed_docs_with_ctx = _process_texts_with_pipes(
                 texts_with_ctx, self._ensure_doc, pipes
-            )  # type: ignore
+            )
 
         for doc, ctx in processed_docs_with_ctx:
             if as_tuples:
@@ -1609,7 +1609,7 @@ class Language:
         pipes: Iterable[Callable[..., Iterator[Doc]]],
         n_process: int,
         batch_size: int,
-    ) -> Iterator[Tuple[Doc, _AnyContext]]:
+    ) -> Iterable[Tuple[Doc, _AnyContext]]:
         # raw_texts is used later to stop iteration.
         texts, raw_texts = itertools.tee(texts)
         # for sending texts to worker
