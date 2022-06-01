@@ -99,7 +99,7 @@ def test_parser_pseudoprojectivity(en_vocab):
     assert nonproj.get_smallest_nonproj_arc_slow(nonproj_tree2) == 10
     # fmt: off
     proj_heads, deco_labels = nonproj.projectivize(nonproj_tree, labels)
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r'Found cycle in dependency graph: \[1, 2, 2, 4, 5, 3, 2\]'):
         nonproj.projectivize(cyclic_tree, cyclic_labels)
     assert proj_heads == [1, 2, 2, 4, 5, 2, 7, 5, 2]
     assert deco_labels == ["det", "nsubj", "root", "det", "dobj", "aux",
