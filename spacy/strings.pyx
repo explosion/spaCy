@@ -3,6 +3,7 @@ cimport cython
 from libc.string cimport memcpy
 from libcpp.set cimport set
 from libc.stdint cimport uint32_t
+from libcpp cimport bool
 from murmurhash.mrmr cimport hash64, hash32
 
 import srsly
@@ -14,6 +15,13 @@ from .symbols import NAMES as SYMBOLS_BY_INT
 from .errors import Errors
 from . import util
 
+# Not particularly elegant, but this is faster than `isinstance(key, numbers.Integral)`
+cdef inline int try_coerce_to_hash(object key, hash_t* out_hash):
+    try:
+        out_hash[0] = key
+        return True
+    except:
+        return False
 
 def get_string_id(key):
     """Get a string ID, handling the reserved symbols correctly. If the key is
@@ -22,15 +30,28 @@ def get_string_id(key):
     This function optimises for convenience over performance, so shouldn't be
     used in tight loops.
     """
-    if not isinstance(key, str):
-        return key
-    elif key in SYMBOLS_BY_STR:
-        return SYMBOLS_BY_STR[key]
+    cdef hash_t hash    
+    if isinstance(key, str):
+        symbol = SYMBOLS_BY_STR.get(key, None)
+        if symbol is not None:
+            return symbol
+        else:
+            chars = key.encode("utf8")
+            return hash_utf8(chars, len(chars))
+    elif try_coerce_to_hash(key, &hash):
+        # Coerce the integral key to the expected primitive hash type.
+        # This ensures that custom/overloaded "primitive" data types
+        # such as those implemented by numpy are not inadvertently used 
+        # downsteam (as these are internally implemented as custom PyObjects 
+        # whose comparison operators can incur a significant overhead).
+        return hash
     elif not key:
         return 0
     else:
-        chars = key.encode("utf8")
-        return hash_utf8(chars, len(chars))
+        return key
+        raise ValueError(Errors.E1039.format(input=key,
+                                             expected_types=', '.join(['str', 'int']),
+                                             invalid_type=type(key)))
 
 
 cpdef hash_t hash_string(str string) except 0:
@@ -110,28 +131,33 @@ cdef class StringStore:
         string_or_id (bytes, str or uint64): The value to encode.
         Returns (str / uint64): The value to be retrieved.
         """
-        if isinstance(string_or_id, str) and len(string_or_id) == 0:
-            return 0
-        elif string_or_id == 0:
-            return ""
-        elif string_or_id in SYMBOLS_BY_STR:
-            return SYMBOLS_BY_STR[string_or_id]
-        cdef hash_t key
+        cdef hash_t id
         if isinstance(string_or_id, str):
-            key = hash_string(string_or_id)
-            return key
-        elif isinstance(string_or_id, bytes):
-            key = hash_utf8(string_or_id, len(string_or_id))
-            return key
-        elif string_or_id < len(SYMBOLS_BY_INT):
-            return SYMBOLS_BY_INT[string_or_id]
-        else:
-            key = string_or_id
-            utf8str = <Utf8Str*>self._map.get(key)
-            if utf8str is NULL:
-                raise KeyError(Errors.E018.format(hash_value=string_or_id))
+            if len(string_or_id) == 0:
+                return 0
+
+            symbol = SYMBOLS_BY_STR.get(string_or_id, None)
+            if symbol is not None:
+                return symbol
             else:
-                return decode_Utf8Str(utf8str)
+                return hash_string(string_or_id)
+        elif isinstance(string_or_id, bytes):
+            return hash_utf8(string_or_id, len(string_or_id))
+        elif try_coerce_to_hash(string_or_id, &id):
+            if id == 0:
+                return ""
+            elif id < len(SYMBOLS_BY_INT):
+                return SYMBOLS_BY_INT[id]
+            else:
+                utf8str = <Utf8Str*>self._map.get(id)
+                if utf8str is NULL:
+                    raise KeyError(Errors.E018.format(hash_value=id))
+                else:
+                    return decode_Utf8Str(utf8str)
+        else:
+            raise ValueError(Errors.E1039.format(input=string_or_id,
+                                                 expected_types=', '.join(['str', 'bytes', 'int']),
+                                                 invalid_type=type(string_or_id)))
 
     def as_int(self, key):
         """If key is an int, return it; otherwise, get the int value."""
@@ -174,30 +200,29 @@ cdef class StringStore:
         """
         return self.keys.size()
 
-    def __contains__(self, string not None):
-        """Check whether a string is in the store.
+    def __contains__(self, string_or_id not None):
+        """Check whether a string or ID is in the store.
 
-        string (str): The string to check.
+        string_or_id (str or int): The string to check.
         RETURNS (bool): Whether the store contains the string.
         """
-        cdef hash_t key
-        if isinstance(string, int) or isinstance(string, long):
-            if string == 0:
+        cdef hash_t id
+        if isinstance(string_or_id, str):
+            if len(string_or_id) == 0:
                 return True
-            key = string
-        elif len(string) == 0:
-            return True
-        elif string in SYMBOLS_BY_STR:
-            return True
-        elif isinstance(string, str):
-            key = hash_string(string)
+            elif string_or_id in SYMBOLS_BY_STR:
+                return True
+            id = hash_string(string_or_id)
+        elif try_coerce_to_hash(string_or_id, &id):
+            pass
         else:
-            string = string.encode("utf8")
-            key = hash_utf8(string, len(string))
-        if key < len(SYMBOLS_BY_INT):
+            raise ValueError(Errors.E1039.format(input=string_or_id,
+                                                 expected_types=', '.join(['str', 'int']),
+                                                 invalid_type=type(string_or_id)))
+        if id < len(SYMBOLS_BY_INT):
             return True
         else:
-            return self._map.get(key) is not NULL
+            return self._map.get(id) is not NULL
 
     def __iter__(self):
         """Iterate over the strings in the store, in order.
