@@ -184,7 +184,7 @@ def test_json_to_doc_attribute_consistency(doc):
 
 
 def test_json_to_doc_validation_error(doc):
-    """Test that Doc.from_json() raises an exception if tokens don't all have the same set of properties."""
+    """Test that Doc.from_json() raises an exception when validating invalid input."""
     doc_json = doc.to_json()
     doc_json.pop("tokens")
     with pytest.raises(ValueError):
