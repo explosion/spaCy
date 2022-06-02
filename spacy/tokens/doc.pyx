@@ -17,7 +17,6 @@ from thinc.api import get_array_module, get_current_ops
 from thinc.util import copy_array
 import warnings
 
-import spacy.schemas
 from .span cimport Span
 from .token cimport MISSING_DEP
 from ._dict_proxies import SpanGroups
@@ -34,6 +33,7 @@ from ..errors import Errors, Warnings
 from ..morphology import Morphology
 from .. import util
 from .. import parts_of_speech
+from .. import schemas
 from .underscore import Underscore, get_ext_args
 from ._retokenize import Retokenizer
 from ._serialize import ALL_ATTRS as DOCBIN_ALL_ATTRS
@@ -1488,7 +1488,7 @@ cdef class Doc:
         """
 
         if validate:
-            schema_validation_message = spacy.schemas.validate(spacy.schemas.DocJSONSchema, doc_json)
+            schema_validation_message = schemas.validate(schemas.DocJSONSchema, doc_json)
             if schema_validation_message:
                 raise ValueError(Errors.E1038.format(message=schema_validation_message))
 
