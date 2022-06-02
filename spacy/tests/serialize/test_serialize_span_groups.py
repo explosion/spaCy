@@ -116,7 +116,7 @@ def test_deserialize_span_groups_compat(
     en_tokenizer, spans_bytes, doc_text, expected_spangroups, expected_warning
 ):
     """Test backwards-compatibility of `SpanGroups` deserialization.
-    This uses serializations (bytes) from a prior version of spaCy.
+    This uses serializations (bytes) from a prior version of spaCy (before 3.3.1).
 
     spans_bytes (bytes): Serialized `SpanGroups` object.
     doc_text (str): Doc text.
