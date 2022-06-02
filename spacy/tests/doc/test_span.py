@@ -428,10 +428,19 @@ def test_span_string_label_kb_id(doc):
     assert span.kb_id == doc.vocab.strings["Q342"]
 
 
+def test_span_string_label_id(doc):
+    span = Span(doc, 0, 1, label="hello", span_id="Q342")
+    assert span.label_ == "hello"
+    assert span.label == doc.vocab.strings["hello"]
+    assert span.id_ == "Q342"
+    assert span.id == doc.vocab.strings["Q342"]
+
+
 def test_span_attrs_writable(doc):
     span = Span(doc, 0, 1)
     span.label_ = "label"
     span.kb_id_ = "kb_id"
+    span.id_ = "id"
 
 
 def test_span_ents_property(doc):
@@ -619,6 +628,9 @@ def test_span_comparison(doc):
     assert Span(doc, 0, 4, "LABEL", kb_id="KB_ID") <= Span(doc, 1, 3)
     assert Span(doc, 1, 3) > Span(doc, 0, 4, "LABEL", kb_id="KB_ID")
     assert Span(doc, 1, 3) >= Span(doc, 0, 4, "LABEL", kb_id="KB_ID")
+
+    # Different id
+    assert Span(doc, 1, 3, span_id="AAA") < Span(doc, 1, 3, span_id="BBB")
 # fmt: on
 
 

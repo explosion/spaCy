@@ -290,7 +290,7 @@ Load the pipe from a bytestring. Modifies the object in place and returns it.
 >
 > ```python
 > ruler_bytes = ruler.to_bytes()
-> ruler = nlp.add_pipe("enity_ruler")
+> ruler = nlp.add_pipe("entity_ruler")
 > ruler.from_bytes(ruler_bytes)
 > ```
 
