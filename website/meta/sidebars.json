@@ -103,6 +103,7 @@
                     { "text": "SentenceRecognizer", "url": "/api/sentencerecognizer" },
                     { "text": "Sentencizer", "url": "/api/sentencizer" },
                     { "text": "SpanCategorizer", "url": "/api/spancategorizer" },
+                    { "text": "SpanRuler", "url": "/api/spanruler" },
                     { "text": "Tagger", "url": "/api/tagger" },
                     { "text": "TextCategorizer", "url": "/api/textcategorizer" },
                     { "text": "Tok2Vec", "url": "/api/tok2vec" },

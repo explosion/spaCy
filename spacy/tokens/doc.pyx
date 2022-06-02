@@ -516,7 +516,7 @@ cdef class Doc:
     def doc(self):
         return self
 
-    def char_span(self, int start_idx, int end_idx, label=0, kb_id=0, vector=None, alignment_mode="strict"):
+    def char_span(self, int start_idx, int end_idx, label=0, kb_id=0, vector=None, alignment_mode="strict", span_id=0):
         """Create a `Span` object from the slice
         `doc.text[start_idx : end_idx]`. Returns None if no valid `Span` can be
         created.
@@ -575,7 +575,7 @@ cdef class Doc:
                 start += 1
         # Currently we have the token index, we want the range-end index
         end += 1
-        cdef Span span = Span(self, start, end, label=label, kb_id=kb_id, vector=vector)
+        cdef Span span = Span(self, start, end, label=label, kb_id=kb_id, span_id=span_id, vector=vector)
         return span
 
     def similarity(self, other):
@@ -713,6 +713,7 @@ cdef class Doc:
             cdef int start = -1
             cdef attr_t label = 0
             cdef attr_t kb_id = 0
+            cdef attr_t ent_id = 0
             output = []
             for i in range(self.length):
                 token = &self.c[i]
@@ -723,18 +724,20 @@ cdef class Doc:
                 elif token.ent_iob == 2 or token.ent_iob == 0 or \
                         (token.ent_iob == 3 and token.ent_type == 0):
                     if start != -1:
-                        output.append(Span(self, start, i, label=label, kb_id=kb_id))
+                        output.append(Span(self, start, i, label=label, kb_id=kb_id, span_id=ent_id))
                     start = -1
                     label = 0
                     kb_id = 0
+                    ent_id = 0
                 elif token.ent_iob == 3:
                     if start != -1:
-                        output.append(Span(self, start, i, label=label, kb_id=kb_id))
+                        output.append(Span(self, start, i, label=label, kb_id=kb_id, span_id=ent_id))
                     start = i
                     label = token.ent_type
                     kb_id = token.ent_kb_id
+                    ent_id = token.ent_id
             if start != -1:
-                output.append(Span(self, start, self.length, label=label, kb_id=kb_id))
+                output.append(Span(self, start, self.length, label=label, kb_id=kb_id, span_id=ent_id))
             # remove empty-label spans
             output = [o for o in output if o.label_ != ""]
             return tuple(output)
@@ -743,14 +746,14 @@ cdef class Doc:
             # TODO:
             # 1. Test basic data-driven ORTH gazetteer
             # 2. Test more nuanced date and currency regex
-            cdef attr_t entity_type, kb_id
+            cdef attr_t entity_type, kb_id, ent_id
             cdef int ent_start, ent_end
             ent_spans = []
             for ent_info in ents:
-                entity_type_, kb_id, ent_start, ent_end = get_entity_info(ent_info)
+                entity_type_, kb_id, ent_start, ent_end, ent_id = get_entity_info(ent_info)
                 if isinstance(entity_type_, str):
                     self.vocab.strings.add(entity_type_)
-                span = Span(self, ent_start, ent_end, label=entity_type_, kb_id=kb_id)
+                span = Span(self, ent_start, ent_end, label=entity_type_, kb_id=kb_id, span_id=ent_id)
                 ent_spans.append(span)
             self.set_ents(ent_spans, default=SetEntsDefault.outside)
 
@@ -801,6 +804,9 @@ cdef class Doc:
                     self.c[i].ent_iob = 1
                 self.c[i].ent_type = span.label
                 self.c[i].ent_kb_id = span.kb_id
+                # for backwards compatibility in v3, only set ent_id from
+                # span.id if it's set, otherwise don't override
+                self.c[i].ent_id = span.id if span.id else self.c[i].ent_id
         for span in blocked:
             for i in range(span.start, span.end):
                 self.c[i].ent_iob = 3
@@ -1180,6 +1186,7 @@ cdef class Doc:
                             span.end_char + char_offset,
                             span.label,
                             span.kb_id,
+                            span.id,
                             span.text, # included as a check
                         ))
             char_offset += len(doc.text)
@@ -1215,8 +1222,9 @@ cdef class Doc:
                         span_tuple[1],
                         label=span_tuple[2],
                         kb_id=span_tuple[3],
+                        span_id=span_tuple[4],
                 )
-                text = span_tuple[4]
+                text = span_tuple[5]
                 if span is not None and span.text == text:
                     concat_doc.spans[key].append(span)
                 else:
@@ -1772,16 +1780,18 @@ def fix_attributes(doc, attributes):
 
 
 def get_entity_info(ent_info):
+    ent_kb_id = 0
+    ent_id = 0
     if isinstance(ent_info, Span):
         ent_type = ent_info.label
         ent_kb_id = ent_info.kb_id
         start = ent_info.start
         end = ent_info.end
+        ent_id = ent_info.id
     elif len(ent_info) == 3:
         ent_type, start, end = ent_info
-        ent_kb_id = 0
     elif len(ent_info) == 4:
         ent_type, ent_kb_id, start, end = ent_info
     else:
         ent_id, ent_kb_id, ent_type, start, end = ent_info
-    return ent_type, ent_kb_id, start, end
+    return ent_type, ent_kb_id, start, end, ent_id
