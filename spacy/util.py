@@ -1242,6 +1242,15 @@ def filter_spans(spans: Iterable["Span"]) -> List["Span"]:
     return result
 
 
+def filter_chain_spans(*spans: Iterable["Span"]) -> List["Span"]:
+    return filter_spans(itertools.chain(*spans))
+
+
+@registry.misc("spacy.first_longest_spans_filter.v1")
+def make_first_longest_spans_filter():
+    return filter_chain_spans
+
+
 def to_bytes(getters: Dict[str, Callable[[], bytes]], exclude: Iterable[str]) -> bytes:
     return srsly.msgpack_dumps(to_dict(getters, exclude))
 
