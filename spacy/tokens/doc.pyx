@@ -1393,7 +1393,6 @@ cdef class Doc:
                 self.vocab.strings.add(s)
         if "has_unknown_spaces" not in exclude and "has_unknown_spaces" in msg:
             self.has_unknown_spaces = msg["has_unknown_spaces"]
-
         start = 0
         cdef const LexemeC* lex
         cdef str orth_

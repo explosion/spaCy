@@ -1580,21 +1580,8 @@ class Language:
             docs = (self._ensure_doc(text) for text in texts)
             for pipe in pipes:
                 docs = pipe(docs)
-
         for doc in docs:
             yield doc
-
-    def _prepare_doc_for_ipc(
-        self, texts: Iterable[Union[str, Doc]]
-    ) -> Iterable[Tuple[Union[str, bytes], _AnyContext]]:
-        # Serialize Doc inputs to bytes to avoid incurring pickling
-        # overhead when they are passed to child processes. Also yield
-        # any context objects they might have separately (as they are not serialized).
-        for doc_like in texts:
-            if isinstance(doc_like, Doc):
-                yield (doc_like.to_bytes(), cast(_AnyContext, doc_like._context))
-            else:
-                yield (doc_like, cast(_AnyContext, None))
 
     def _has_gpu_model(self, disable: Iterable[str]):
         for name, proc in self.pipeline:
@@ -1614,9 +1601,21 @@ class Language:
         n_process: int,
         batch_size: int,
     ) -> Iterator[Doc]:
-        serialized_texts_with_ctx = self._prepare_doc_for_ipc(texts)  # type: ignore
+        def prepare_doc(
+            texts: Iterable[Union[str, Doc]]
+        ) -> Iterable[Tuple[Union[str, bytes], _AnyContext]]:
+            # Serialize Doc inputs to bytes to avoid incurring pickling
+            # overhead when they are passed to child processes. Also yield
+            # any context objects they might have separately (as they are not serialized).
+            for doc_like in texts:
+                if isinstance(doc_like, Doc):
+                    yield (doc_like.to_bytes(), cast(_AnyContext, doc_like._context))
+                else:
+                    yield (doc_like, cast(_AnyContext, None))
+
+        serialized_texts_with_ctx = prepare_doc(texts)  # type: ignore
         # raw_texts is used later to stop iteration.
-        texts_itr, raw_texts = itertools.tee(serialized_texts_with_ctx)
+        texts, raw_texts = itertools.tee(serialized_texts_with_ctx)  # type: ignore
         # for sending texts to worker
         texts_q: List[mp.Queue] = [mp.Queue() for _ in range(n_process)]
         # for receiving byte-encoded docs from worker
@@ -1624,7 +1623,7 @@ class Language:
             *[mp.Pipe(False) for _ in range(n_process)]
         )
 
-        batch_texts = util.minibatch(texts_itr, batch_size)
+        batch_texts = util.minibatch(texts, batch_size)
         # Sender sends texts to the workers.
         # This is necessary to properly handle infinite length of texts.
         # (In this case, all data cannot be sent to the workers at once)
