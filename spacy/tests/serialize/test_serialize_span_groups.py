@@ -134,6 +134,7 @@ def test_deserialize_span_groups_compat(
         with pytest.warns(UserWarning):
             doc.spans.from_bytes(spans_bytes)
     else:
+        # TODO: explicitly check for lack of a warning
         doc.spans.from_bytes(spans_bytes)
 
     assert doc.spans.keys() == expected_spangroups.keys()
