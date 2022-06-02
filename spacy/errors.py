@@ -921,6 +921,11 @@ class Errors(metaclass=ErrorsWithCodes):
     E1035 = ("Token index {i} out of bounds ({length})")
     E1036 = ("Cannot index into NoneNode")
     E1037 = ("Invalid attribute value '{attr}'.")
+    E1038 = ("Invalid JSON input: {message}")
+    E1039 = ("The {obj} start or end annotations (start: {start}, end: {end}) "
+             "could not be aligned to token boundaries.")
+    E1040 = ("Doc.from_json requires all tokens to have the same attributes. "
+             "Some tokens do not contain annotation for: {partial_attrs}")
 
 
 # Deprecated model shortcuts, only used in errors and warnings
