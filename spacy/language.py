@@ -1099,7 +1099,7 @@ class Language:
             return self.make_doc(doc_like)
         if isinstance(doc_like, bytes):
             return Doc(self.vocab).from_bytes(doc_like)
-        raise ValueError(Errors.E1038.format(type=type(doc_like)))
+        raise ValueError(Errors.E1041.format(type=type(doc_like)))
 
     def _ensure_doc_with_context(
         self, doc_like: Union[str, Doc, bytes], context: _AnyContext

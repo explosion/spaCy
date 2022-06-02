@@ -532,6 +532,8 @@ class Errors(metaclass=ErrorsWithCodes):
     E202 = ("Unsupported {name} mode '{mode}'. Supported modes: {modes}.")
 
     # New errors added in v3.x
+    E854 = ("Unable to set doc.ents. Check that the 'ents_filter' does not "
+            "permit overlapping spans.")
     E855 = ("Invalid {obj}: {obj} is not from the same doc.")
     E856 = ("Error accessing span at position {i}: out of bounds in span group "
             "of length {length}.")
@@ -903,8 +905,8 @@ class Errors(metaclass=ErrorsWithCodes):
     E1022 = ("Words must be of type str or int, but input is of type '{wtype}'")
     E1023 = ("Couldn't read EntityRuler from the {path}. This file doesn't "
              "exist.")
-    E1024 = ("A pattern with ID \"{ent_id}\" is not present in EntityRuler "
-             "patterns.")
+    E1024 = ("A pattern with {attr_type} '{label}' is not present in "
+             "'{component}' patterns.")
     E1025 = ("Cannot intify the value '{value}' as an IOB string. The only "
              "supported values are: 'I', 'O', 'B' and ''")
     E1026 = ("Edit tree has an invalid format:\n{errors}")
@@ -919,7 +921,12 @@ class Errors(metaclass=ErrorsWithCodes):
     E1035 = ("Token index {i} out of bounds ({length})")
     E1036 = ("Cannot index into NoneNode")
     E1037 = ("Invalid attribute value '{attr}'.")
-    E1038 = ("Expected a string, Doc, or bytes as input, but got: {type}")
+    E1038 = ("Invalid JSON input: {message}")
+    E1039 = ("The {obj} start or end annotations (start: {start}, end: {end}) "
+             "could not be aligned to token boundaries.")
+    E1040 = ("Doc.from_json requires all tokens to have the same attributes. "
+             "Some tokens do not contain annotation for: {partial_attrs}")
+    E1041 = ("Expected a string, Doc, or bytes as input, but got: {type}")
 
 
 # Deprecated model shortcuts, only used in errors and warnings

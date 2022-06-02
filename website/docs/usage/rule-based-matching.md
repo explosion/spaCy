@@ -6,6 +6,7 @@ menu:
   - ['Phrase Matcher', 'phrasematcher']
   - ['Dependency Matcher', 'dependencymatcher']
   - ['Entity Ruler', 'entityruler']
+  - ['Span Ruler', 'spanruler']
   - ['Models & Rules', 'models-rules']
 ---
 
@@ -1445,6 +1446,108 @@ patterns = [{"label": "TEST", "pattern": str(i)} for i in range(100000)]
 with nlp.select_pipes(enable="tagger"):
     ruler.add_patterns(patterns)
 ```
+
+## Rule-based span matching {#spanruler new="3.3"}
+
+The [`SpanRuler`](/api/spanruler) is a generalized version of the entity ruler
+that lets you add spans to `doc.spans` or `doc.ents` based on pattern
+dictionaries, which makes it easy to combine rule-based and statistical pipeline
+components.
+
+### Span patterns {#spanruler-patterns}
+
+The [pattern format](#entityruler-patterns) is the same as for the entity ruler:
+
+1. **Phrase patterns** for exact string matches (string).
+
+   ```python
+   {"label": "ORG", "pattern": "Apple"}
+   ```
+
+2. **Token patterns** with one dictionary describing one token (list).
+
+   ```python
+   {"label": "GPE", "pattern": [{"LOWER": "san"}, {"LOWER": "francisco"}]}
+   ```
+
+### Using the span ruler {#spanruler-usage}
+
+The [`SpanRuler`](/api/spanruler) is a pipeline component that's typically added
+via [`nlp.add_pipe`](/api/language#add_pipe). When the `nlp` object is called on
+a text, it will find matches in the `doc` and add them as spans to
+`doc.spans["ruler"]`, using the specified pattern label as the entity label.
+Unlike in `doc.ents`, overlapping matches are allowed in `doc.spans`, so no
+filtering is required, but optional filtering and sorting can be applied to the
+spans before they're saved.
+
+```python
+### {executable="true"}
+import spacy
+
+nlp = spacy.blank("en")
+ruler = nlp.add_pipe("span_ruler")
+patterns = [{"label": "ORG", "pattern": "Apple"},
+            {"label": "GPE", "pattern": [{"LOWER": "san"}, {"LOWER": "francisco"}]}]
+ruler.add_patterns(patterns)
+
+doc = nlp("Apple is opening its first big office in San Francisco.")
+print([(span.text, span.label_) for span in doc.spans["ruler"]])
+```
+
+The span ruler is designed to integrate with spaCy's existing pipeline
+components and enhance the [SpanCategorizer](/api/spancat) and
+[EntityRecognizer](/api/entityrecognizer). The `overwrite` setting determines
+whether the existing annotation in `doc.spans` or `doc.ents` is preserved.
+Because overlapping entities are not allowed for `doc.ents`, the entities are
+always filtered, using [`util.filter_spans`](/api/top-level#util.filter_spans)
+by default. See the [`SpanRuler` API docs](/api/spanruler) for more information
+about how to customize the sorting and filtering of matched spans.
+
+```python
+### {executable="true"}
+import spacy
+
+nlp = spacy.load("en_core_web_sm")
+# only annotate doc.ents, not doc.spans
+config = {"spans_key": None, "annotate_ents": True, "overwrite": False}
+ruler = nlp.add_pipe("span_ruler", config=config)
+patterns = [{"label": "ORG", "pattern": "MyCorp Inc."}]
+ruler.add_patterns(patterns)
+
+doc = nlp("MyCorp Inc. is a company in the U.S.")
+print([(ent.text, ent.label_) for ent in doc.ents])
+```
+
+### Using pattern files {#spanruler-files}
+
+You can save patterns in a JSONL file (newline-delimited JSON) to load with
+[`SpanRuler.initialize`](/api/spanruler#initialize) or
+[`SpanRuler.add_patterns`](/api/spanruler#add_patterns).
+
+```json
+### patterns.jsonl
+{"label": "ORG", "pattern": "Apple"}
+{"label": "GPE", "pattern": [{"LOWER": "san"}, {"LOWER": "francisco"}]}
+```
+
+```python
+import srsly
+
+patterns = srsly.read_jsonl("patterns.jsonl")
+ruler = nlp.add_pipe("span_ruler")
+ruler.add_patterns(patterns)
+```
+
+<Infobox title="Important note" variant="warning">
+
+Unlike the entity ruler, the span ruler cannot load patterns on initialization
+with `SpanRuler(patterns=patterns)` or directly from a JSONL file path with
+`SpanRuler.from_disk(jsonl_path)`. Patterns should be loaded from the JSONL file
+separately and then added through
+[`SpanRuler.initialize`](/api/spanruler#initialize]) or
+[`SpanRuler.add_patterns`](/api/spanruler#add_patterns) as shown above.
+
+</Infobox>
 
 ## Combining models and rules {#models-rules}
 
