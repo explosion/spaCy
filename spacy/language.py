@@ -1601,7 +1601,7 @@ class Language:
         n_process: int,
         batch_size: int,
     ) -> Iterator[Doc]:
-        def prepare_doc(
+        def prepare_input(
             texts: Iterable[Union[str, Doc]]
         ) -> Iterable[Tuple[Union[str, bytes], _AnyContext]]:
             # Serialize Doc inputs to bytes to avoid incurring pickling
@@ -1613,7 +1613,7 @@ class Language:
                 else:
                     yield (doc_like, cast(_AnyContext, None))
 
-        serialized_texts_with_ctx = prepare_doc(texts)  # type: ignore
+        serialized_texts_with_ctx = prepare_input(texts)  # type: ignore
         # raw_texts is used later to stop iteration.
         texts, raw_texts = itertools.tee(serialized_texts_with_ctx)  # type: ignore
         # for sending texts to worker
