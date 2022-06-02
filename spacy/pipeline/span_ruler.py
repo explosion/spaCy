@@ -181,6 +181,7 @@ def overlapping_labeled_spans_score(
     attr_prefix = f"spans_"
     kwargs.setdefault("attr", f"{attr_prefix}{spans_key}")
     kwargs.setdefault("allow_overlap", True)
+    kwargs.setdefault("labeled", True)
     kwargs.setdefault(
         "getter", lambda doc, key: doc.spans.get(key[len(attr_prefix) :], [])
     )
