@@ -27,6 +27,7 @@ Create a `Span` object from the slice `doc[start : end]`.
 | `vector`      | A meaning representation of the span. ~~numpy.ndarray[ndim=1, dtype=float32]~~          |
 | `vector_norm` | The L2 norm of the document's vector representation. ~~float~~                          |
 | `kb_id`       | A knowledge base ID to attach to the span, e.g. for named entities. ~~Union[str, int]~~ |
+| `span_id`     | An ID to associate with the span. ~~Union[str, int]~~                                   |
 
 ## Span.\_\_getitem\_\_ {#getitem tag="method"}
 
@@ -560,7 +561,9 @@ overlaps with will be returned.
 | `lemma_`                                | The span's lemma. Equivalent to `"".join(token.text_with_ws for token in span)`. ~~str~~                                      |
 | `kb_id`                                 | The hash value of the knowledge base ID referred to by the span. ~~int~~                                                      |
 | `kb_id_`                                | The knowledge base ID referred to by the span. ~~str~~                                                                        |
-| `ent_id`                                | The hash value of the named entity the token is an instance of. ~~int~~                                                       |
-| `ent_id_`                               | The string ID of the named entity the token is an instance of. ~~str~~                                                        |
+| `ent_id`                                | The hash value of the named entity the root token is an instance of. ~~int~~                                                  |
+| `ent_id_`                               | The string ID of the named entity the root token is an instance of. ~~str~~                                                   |
+| `id`                                    | The hash value of the span's ID. ~~int~~                                                                                      |
+| `id_`                                   | The span's ID. ~~str~~                                                                                                        |
 | `sentiment`                             | A scalar value indicating the positivity or negativity of the span. ~~float~~                                                 |
 | `_`                                     | User space for adding custom [attribute extensions](/usage/processing-pipelines#custom-components-attributes). ~~Underscore~~ |
