@@ -1654,15 +1654,15 @@ class Language:
             recv.recv() for recv in cycle(bytedocs_recv_ch)
         )
         try:
-            for i, (_, (byte_doc, context, error)) in enumerate(
+            for i, (_, (byte_doc, context, byte_error)) in enumerate(
                 zip(raw_texts, byte_tuples), 1
             ):
                 if byte_doc is not None:
                     doc = Doc(self.vocab).from_bytes(byte_doc)
                     doc._context = context
                     yield doc
-                elif error is not None:
-                    error = srsly.msgpack_loads(error)
+                elif byte_error is not None:
+                    error = srsly.msgpack_loads(byte_error)
                     self.default_error_handler(
                         None, None, None, ValueError(Errors.E871.format(error=error))
                     )
