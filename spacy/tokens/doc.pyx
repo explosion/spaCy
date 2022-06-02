@@ -1349,7 +1349,7 @@ cdef class Doc:
             "cats": lambda: self.cats,
             "spans": lambda: self.spans.to_bytes(),
             "strings": lambda: list(strings),
-            "has_unknown_spaces": lambda: self.has_unknown_spaces,
+            "has_unknown_spaces": lambda: self.has_unknown_spaces
         }
         if "user_data" not in exclude and self.user_data:
             user_data_keys, user_data_values = list(zip(*self.user_data.items()))
