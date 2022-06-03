@@ -491,7 +491,6 @@ def test_entity_ruler_remove_nonexisting_pattern(nlp, entity_ruler_factory):
             ruler.remove_by_id("nepattern")
 
 
-
 @pytest.mark.parametrize("entity_ruler_factory", ENTITY_RULERS)
 def test_entity_ruler_remove_several_patterns(nlp, entity_ruler_factory):
     ruler = nlp.add_pipe(entity_ruler_factory, name="entity_ruler")
