@@ -55,7 +55,7 @@ COMBINING_DIACRITICS_TOKENIZER_SUFFIXES = list(TOKENIZER_SUFFIXES) + [
 ]
 
 COMBINING_DIACRITICS_TOKENIZER_INFIXES = list(TOKENIZER_INFIXES) + [
-    r"(?<=[{al}][{d}])\.(?=[{au}])".format(
+    r"(?<=[{al}][{d}])\.(?=[{au}{q}])".format(
         al=ALPHA_LOWER, au=ALPHA_UPPER, q=CONCAT_QUOTES, d=COMBINING_DIACRITICS
     ),
     r"(?<=[{a}][{d}]),(?=[{a}])".format(a=ALPHA, d=COMBINING_DIACRITICS),
