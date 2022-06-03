@@ -11,6 +11,8 @@ from spacy.ml.models.coref_util import (
     get_sentence_ids,
 )
 
+from thinc.util import has_torch
+
 # fmt: off
 TRAIN_DATA = [
     (
@@ -45,18 +47,20 @@ def snlp():
     return en
 
 
+@pytest.mark.skipif(not has_torch, reason="Torch not available")
 def test_add_pipe(nlp):
     nlp.add_pipe("coref")
     assert nlp.pipe_names == ["coref"]
 
 
+@pytest.mark.skipif(not has_torch, reason="Torch not available")
 def test_not_initialized(nlp):
     nlp.add_pipe("coref")
     text = "She gave me her pen."
     with pytest.raises(ValueError):
         nlp(text)
 
-
+@pytest.mark.skipif(not has_torch, reason="Torch not available")
 def test_initialized(nlp):
     nlp.add_pipe("coref")
     nlp.initialize()
@@ -68,6 +72,7 @@ def test_initialized(nlp):
         assert len(v) <= 15
 
 
+@pytest.mark.skipif(not has_torch, reason="Torch not available")
 def test_initialized_short(nlp):
     nlp.add_pipe("coref")
     nlp.initialize()
@@ -77,6 +82,7 @@ def test_initialized_short(nlp):
     print(doc.spans)
 
 
+@pytest.mark.skipif(not has_torch, reason="Torch not available")
 def test_coref_serialization(nlp):
     # Test that the coref component can be serialized
     nlp.add_pipe("coref", last=True)
@@ -101,6 +107,7 @@ def test_coref_serialization(nlp):
         # assert spans_result == spans_result2
 
 
+@pytest.mark.skipif(not has_torch, reason="Torch not available")
 def test_overfitting_IO(nlp):
     # Simple test to try and quickly overfit the senter - ensuring the ML models work correctly
     train_examples = []
@@ -147,6 +154,7 @@ def test_overfitting_IO(nlp):
     # assert_equal(batch_deps_1, no_batch_deps)
 
 
+@pytest.mark.skipif(not has_torch, reason="Torch not available")
 def test_crossing_spans():
     starts = [6, 10, 0, 1, 0, 1, 0, 1, 2, 2, 2]
     ends = [12, 12, 2, 3, 3, 4, 4, 4, 3, 4, 5]
@@ -158,6 +166,7 @@ def test_crossing_spans():
     guess = sorted(guess)
     assert gold == guess
 
+@pytest.mark.skipif(not has_torch, reason="Torch not available")
 def test_sentence_map(snlp):
     doc = snlp("I like text. This is text.")
     sm = get_sentence_ids(doc)
