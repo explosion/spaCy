@@ -114,4 +114,4 @@ steps:
       ${{ parameters.prefix }} python -m pip install "thinc-apple-ops>=0.1.0.dev0"
       ${{ parameters.prefix }} python -m pytest --pyargs spacy
     displayName: "Run CPU tests with thinc-apple-ops"
-    condition: and(startsWith(variables['imageName'], 'macos'), eq(variables['python.version'], '3.9'))
+    condition: and(startsWith(variables['imageName'], 'macos'), eq(variables['python.version'], '3.10'))
