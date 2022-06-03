@@ -24,7 +24,7 @@ TOKENIZER_SUFFIXES = (
         r"(?<=°[FfCcKk])\.",
         r"(?<=[0-9])(?:{c})".format(c=CURRENCY),
         r"(?<=[0-9])(?:{u})".format(u=UNITS),
-        r"(?<=[0-9{al}{e}{p}(?:{q})])\.".format(
+        r"(?<=[0-9{al}{e}{p}{q}])\.".format(
             al=ALPHA_LOWER, e=r"%²\-\+", q=CONCAT_QUOTES, p=PUNCT
         ),
         r"(?<=[{au}][{au}])\.".format(au=ALPHA_UPPER),
@@ -46,14 +46,21 @@ TOKENIZER_INFIXES = (
 )
 
 
-# Some languages written with the Cyrillic alphabet permit the use of diacritics
+# Some languages e.g. written with the Cyrillic alphabet permit the use of diacritics
 # to mark stressed syllables in words where stress is distinctive. Such languages
-# should use 'CYRILLIC_TOKENIZER_INFIXES' in place of 'TOKENIZER_INFIXES'.
-CYRILLIC_TOKENIZER_INFIXES = list(TOKENIZER_INFIXES) + [
+# should use the COMBINING_DIACRITICS... suffix and infix regex lists in
+# place of the standard ones.
+COMBINING_DIACRITICS_TOKENIZER_SUFFIXES = list(TOKENIZER_SUFFIXES) + [
     r"(?<=[{a}][{d}])\.".format(a=ALPHA, d=COMBINING_DIACRITICS),
+]
+
+COMBINING_DIACRITICS_TOKENIZER_INFIXES = list(TOKENIZER_INFIXES) + [
+    r"(?<=[{al}][{d}])\.(?=[{au}])".format(
+        al=ALPHA_LOWER, au=ALPHA_UPPER, q=CONCAT_QUOTES, d=COMBINING_DIACRITICS
+    ),
     r"(?<=[{a}][{d}]),(?=[{a}])".format(a=ALPHA, d=COMBINING_DIACRITICS),
     r"(?<=[{a}][{d}])(?:{h})(?=[{a}])".format(
         a=ALPHA, d=COMBINING_DIACRITICS, h=HYPHENS
     ),
-    r"(?<=[{a}0-9][{d}])[:<>=/](?=[{a}])".format(a=ALPHA, d=COMBINING_DIACRITICS),
+    r"(?<=[{a}][{d}])[:<>=/](?=[{a}])".format(a=ALPHA, d=COMBINING_DIACRITICS),
 ]
