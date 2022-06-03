@@ -48,23 +48,24 @@ def build_span_predictor(
 
 
 def convert_span_predictor_inputs(
-    model: Model, X: Tuple[Ints1d, Tuple[Floats2d, Ints1d]], is_train: bool
+    model: Model, X: Tuple[List[Floats2d], Tuple[List[Ints1d], List[Ints1d]]], is_train: bool
 ):
     tok2vec, (sent_ids, head_ids) = X
     # Normally we should use the input is_train, but for these two it's not relevant
-
-    def backprop(args: ArgsKwargs) -> List[Floats2d]:
+    # TODO fix the type here, or remove it
+    def backprop(args: ArgsKwargs): #-> Tuple[List[Floats2d], None]:
         gradients = torch2xp(args.args[1])
+        # The sent_ids and head_ids are None because no gradients
         return [[gradients], None]
 
     word_features = xp2torch(tok2vec[0], requires_grad=is_train)
-    sent_ids = xp2torch(sent_ids[0], requires_grad=False)
+    sent_ids_tensor = xp2torch(sent_ids[0], requires_grad=False)
     if not head_ids[0].size:
-        head_ids = torch.empty(size=(0,))
+        head_ids_tensor = torch.empty(size=(0,))
     else:
-        head_ids = xp2torch(head_ids[0], requires_grad=False)
+        head_ids_tensor = xp2torch(head_ids[0], requires_grad=False)
 
-    argskwargs = ArgsKwargs(args=(sent_ids, word_features, head_ids), kwargs={})
+    argskwargs = ArgsKwargs(args=(sent_ids_tensor, word_features, head_ids_tensor), kwargs={})
     return argskwargs, backprop
 
 

@@ -53,7 +53,8 @@ def convert_coref_clusterer_inputs(model: Model, X: List[Floats2d], is_train: bo
     X = X[0]
     word_features = xp2torch(X, requires_grad=is_train)
 
-    def backprop(args: ArgsKwargs) -> List[Floats2d]:
+    # TODO fix or remove type annotations
+    def backprop(args: ArgsKwargs): #-> List[Floats2d]:
         # convert to xp and wrap in list
         gradients = torch2xp(args.args[0])
         #TODO why did this change? This was fine before merging master.
