@@ -1,6 +1,26 @@
 {
     "resources": [
         {
+            "id": "spacy-report",
+            "title": "spacy-report",
+            "slogan": "Generates interactive reports for spaCy models.",
+            "description": "The goal of spacy-report is to offer static reports for spaCy models that help users make better decisions on how the models can be used.",
+            "github": "koaning/spacy-report",
+            "pip": "spacy-report",
+            "thumb": "https://github.com/koaning/spacy-report/raw/main/icon.png",
+            "image": "https://raw.githubusercontent.com/koaning/spacy-report/main/gif.gif",
+            "code_example": [
+                "python -m spacy report textcat training/model-best/ corpus/train.spacy corpus/dev.spacy"
+            ],
+            "category": ["visualizers", "research"],
+            "author": "Vincent D. Warmerdam",
+            "author_links": {
+                "twitter": "fishnets88",
+                "github": "koaning",
+                "website": "https://koaning.io"
+            }
+        },
+        {
             "id": "scrubadub_spacy",
             "title": "scrubadub_spacy",
             "category": ["pipeline"],
