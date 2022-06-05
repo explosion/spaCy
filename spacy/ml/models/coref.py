@@ -19,19 +19,15 @@ def build_wl_coref_model(
     # pairs to keep per mention after rough scoring
     antecedent_limit: int = 50,
     antecedent_batch_size: int = 512,
+    tok2vec_size: int = 768,  # tok2vec size
 ):
     # TODO add model return types
-    # TODO fix this
-    try:
-        dim = tok2vec.get_dim("nO")
-    except ValueError:
-        # happens with transformer listener
-        dim = 768
+    # dim = tok2vec.maybe_get_dim("n0")
 
     with Model.define_operators({">>": chain}):
         coref_clusterer = PyTorchWrapper(
             CorefClusterer(
-                dim,
+                tok2vec_size,
                 distance_embedding_size,
                 hidden_size,
                 depth,
@@ -56,7 +52,7 @@ def convert_coref_clusterer_inputs(model: Model, X: List[Floats2d], is_train: bo
     def backprop(args: ArgsKwargs) -> List[Floats2d]:
         # convert to xp and wrap in list
         gradients = torch2xp(args.args[0])
-        assert isinstance(gradients, Floats2d)
+        # assert isinstance(gradients, Floats2d)
         return [gradients]
 
     return ArgsKwargs(args=(word_features,), kwargs={}), backprop
@@ -89,11 +85,11 @@ class CorefClusterer(torch.nn.Module):
 
     def __init__(
         self,
-        dim: int,  # tok2vec size
+        dim: int,
         dist_emb_size: int,
         hidden_size: int,
         n_layers: int,
-        dropout: float,
+        dropout_rate: float,
         roughk: int,
         batch_size: int,
     ):
@@ -109,19 +105,19 @@ class CorefClusterer(torch.nn.Module):
         """
         self.dropout = torch.nn.Dropout(dropout)
         self.batch_size = batch_size
-        # Modules
         self.pw = DistancePairwiseEncoder(dist_emb_size, dropout)
+
         pair_emb = dim * 3 + self.pw.shape
-        self.a_scorer = AnaphoricityScorer(pair_emb, hidden_size, n_layers, dropout)
+        self.a_scorer = AnaphoricityScorer(
+            pair_emb, hidden_size, n_layers, dropout_rate
+        )
         self.lstm = torch.nn.LSTM(
             input_size=dim,
             hidden_size=dim,
             batch_first=True,
         )
-        self.rough_scorer = RoughScorer(dim, dropout, roughk)
-        self.pw = DistancePairwiseEncoder(dist_emb_size, dropout)
-        pair_emb = dim * 3 + self.pw.shape
-        self.a_scorer = AnaphoricityScorer(pair_emb, hidden_size, n_layers, dropout)
+
+        self.rough_scorer = RoughScorer(dim, dropout_rate, roughk)
 
     def forward(self, word_features: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         """
