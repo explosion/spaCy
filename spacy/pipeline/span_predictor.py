@@ -24,6 +24,7 @@ from ..ml.models.coref_util import (
 default_span_predictor_config = """
 [model]
 @architectures = "spacy.SpanPredictor.v1"
+tok2vec_size = 768
 hidden_size = 1024
 distance_embedding_size = 64
 conv_channels = 4

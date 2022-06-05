@@ -13,6 +13,7 @@ from .coref_util import get_sentence_ids
 @registry.architectures("spacy.SpanPredictor.v1")
 def build_span_predictor(
     tok2vec: Model[List[Doc], List[Floats2d]],
+    tok2vec_size: int = 768
     hidden_size: int = 1024,
     distance_embedding_size: int = 64,
     conv_channels: int = 4,
@@ -21,17 +22,11 @@ def build_span_predictor(
     prefix: str = "coref_head_clusters",
 ):
     # TODO add model return types
-    # TODO fix this
-    try:
-        dim = tok2vec.get_dim("nO")
-    except ValueError:
-        # happens with transformer listener
-        dim = 768
 
     with Model.define_operators({">>": chain, "&": tuplify}):
         span_predictor = PyTorchWrapper(
             SpanPredictor(
-                dim,
+                tok2vec_size,
                 hidden_size,
                 distance_embedding_size,
                 conv_channels,
