@@ -10,7 +10,7 @@
             "thumb": "https://github.com/koaning/spacy-report/raw/main/icon.png",
             "image": "https://raw.githubusercontent.com/koaning/spacy-report/main/gif.gif",
             "code_example": [
-                "python -m spacy report textcat training/model-best/ corpus/train.spacy corpus/dev.spacy",
+                "python -m spacy report textcat training/model-best/ corpus/train.spacy corpus/dev.spacy"
             ],
             "category": ["visualizers", "research"],
             "author": "Vincent D. Warmerdam",
