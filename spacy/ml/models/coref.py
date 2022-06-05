@@ -89,7 +89,7 @@ class CorefClusterer(torch.nn.Module):
         dist_emb_size: int,
         hidden_size: int,
         n_layers: int,
-        dropout_rate: float,
+        dropout: float,
         roughk: int,
         batch_size: int,
     ):
@@ -109,7 +109,7 @@ class CorefClusterer(torch.nn.Module):
 
         pair_emb = dim * 3 + self.pw.shape
         self.a_scorer = AnaphoricityScorer(
-            pair_emb, hidden_size, n_layers, dropout_rate
+            pair_emb, hidden_size, n_layers, dropout
         )
         self.lstm = torch.nn.LSTM(
             input_size=dim,
@@ -117,7 +117,7 @@ class CorefClusterer(torch.nn.Module):
             batch_first=True,
         )
 
-        self.rough_scorer = RoughScorer(dim, dropout_rate, roughk)
+        self.rough_scorer = RoughScorer(dim, dropout, roughk)
 
     def forward(self, word_features: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         """
