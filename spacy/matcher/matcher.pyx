@@ -374,7 +374,6 @@ cdef find_matches(TokenPatternC** patterns, int n, object doclike, int length, e
             states.push_back(PatternStateC(patterns[j], i, 0))
         if with_alignments != 0:
             align_states.resize(states.size())
-            #why change alignstates to the same size as states
         transition_states(states, matches, align_states, align_matches, predicate_cache,
             doclike[i], extra_attr_values, predicates, with_alignments)
         extra_attr_values += nr_extra_attr
