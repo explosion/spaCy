@@ -3,8 +3,10 @@ from spacy.matcher import Matcher
 from spacy.errors import MatchPatternError
 from spacy.schemas import validate_token_pattern
 
-# (pattern, num errors with validation, num errors identified with minimal
-#  checks)
+#
+#  errors_validation = num errors with validation
+#  errors_minial = num errors identified with minimal checks
+#  ([{pattern}], errors_validation, errors_minial)
 TEST_PATTERNS = [
     # Bad patterns flagged in all cases
     ([{"XX": "foo"}], 1, 1),
@@ -14,6 +16,8 @@ TEST_PATTERNS = [
     ('[{"TEXT": "foo"}, {"LOWER": "bar"}]', 1, 1),
     ([{"ENT_IOB": "foo"}], 1, 1),
     ([1, 2, 3], 3, 1),
+    ([{"TEXT": "foo", "OP": "{,}"}], 1, 1),
+    ([{"TEXT": "foo", "OP": "{,4}4"}], 1, 1),
     # Bad patterns flagged outside of Matcher
     ([{"_": {"foo": "bar", "baz": {"IN": "foo"}}}], 2, 0),  # prev: (1, 0)
     # Bad patterns not flagged with minimal checks
@@ -38,6 +42,7 @@ TEST_PATTERNS = [
     ([{"SENT_START": True}], 0, 0),
     ([{"ENT_ID": "STRING"}], 0, 0),
     ([{"ENT_KB_ID": "STRING"}], 0, 0),
+    ([{"TEXT": "ha", "OP": "{3}"}], 0, 0),
 ]
 
 
