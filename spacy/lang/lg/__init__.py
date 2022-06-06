@@ -10,12 +10,12 @@ Tokenizer exception: Special-case rules for the tokenizer, for example, contract
 '''
 
 from .stop_words import STOP_WORDS
-#from .lex_attrs import LEX_ATTRS
+from .lex_attrs import LEX_ATTRS
 from ...language import Language, BaseDefaults
 
 
 class LugandaDefaults(BaseDefaults):
-    #lex_attr_getters = LEX_ATTRS
+    lex_attr_getters = LEX_ATTRS
     stop_words = STOP_WORDS
 
 
