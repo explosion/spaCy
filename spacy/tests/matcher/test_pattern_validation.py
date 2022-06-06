@@ -5,8 +5,8 @@ from spacy.schemas import validate_token_pattern
 
 #
 #  errors_validation = num errors with validation
-#  errors_minial = num errors identified with minimal checks
-#  ([{pattern}], errors_validation, errors_minial)
+#  errors_minimal = num errors identified with minimal checks
+#  ([{pattern}], errors_validation, errors_minimal)
 TEST_PATTERNS = [
     # Bad patterns flagged in all cases
     ([{"XX": "foo"}], 1, 1),

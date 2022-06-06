@@ -786,6 +786,7 @@ def _preprocess_pattern(token_specs, vocab, extensions_table, extra_predicates):
 def _get_attr_values(spec, string_store):
     attr_values = []
     for attr, value in spec.items():
+        input_attr = attr
         if isinstance(attr, str):
             attr = attr.upper()
             if attr == '_':
@@ -814,7 +815,7 @@ def _get_attr_values(spec, string_store):
             attr_values.append((attr, value))
         else:
             # should be caught in validation
-            raise ValueError(Errors.E152.format(attr=attr))
+            raise ValueError(Errors.E152.format(attr=input_attr))
     return attr_values
 
 

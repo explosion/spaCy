@@ -104,7 +104,7 @@ def get_arg_model(
         sig_args[param.name] = (annotation, default)
     is_strict = strict and not has_variable
     sig_args["__config__"] = ArgSchemaConfig if is_strict else ArgSchemaConfigExtra  # type: ignore[assignment]
-    return create_model(name, **sig_args)  # type: ignore[arg-type, return-value]
+    return create_model(name, **sig_args)  # type: ignore[call-overload, arg-type, return-value]
 
 
 def validate_init_settings(
@@ -139,8 +139,6 @@ def validate_init_settings(
 
 
 # Matcher token patterns
-
-#here needs checking
 def validate_token_pattern(obj: list) -> List[str]:
     # Try to convert non-string keys (e.g. {ORTH: "foo"} -> {"ORTH": "foo"})
     get_key = lambda k: NAMES[k] if isinstance(k, int) and k < len(NAMES) else k
@@ -488,3 +486,29 @@ class RecommendationSchema(BaseModel):
     word_vectors: Optional[str] = None
     transformer: Optional[RecommendationTrf] = None
     has_letters: bool = True
+
+
+class DocJSONSchema(BaseModel):
+    """
+    JSON/dict format for JSON representation of Doc objects.
+    """
+
+    cats: Optional[Dict[StrictStr, StrictFloat]] = Field(
+        None, title="Categories with corresponding probabilities"
+    )
+    ents: Optional[List[Dict[StrictStr, Union[StrictInt, StrictStr]]]] = Field(
+        None, title="Information on entities"
+    )
+    sents: Optional[List[Dict[StrictStr, StrictInt]]] = Field(
+        None, title="Indices of sentences' start and end indices"
+    )
+    text: StrictStr = Field(..., title="Document text")
+    spans: Dict[StrictStr, List[Dict[StrictStr, Union[StrictStr, StrictInt]]]] = Field(
+        None, title="Span information - end/start indices, label, KB ID"
+    )
+    tokens: List[Dict[StrictStr, Union[StrictStr, StrictInt]]] = Field(
+        ..., title="Token information - ID, start, annotations"
+    )
+    _: Optional[Dict[StrictStr, Any]] = Field(
+        None, title="Any custom data stored in the document's _ attribute"
+    )
