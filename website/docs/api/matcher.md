@@ -115,9 +115,7 @@ Find all token sequences matching the supplied patterns on the `Doc` or `Span`.
 
 Note that if a single label has multiple patterns associated with it, the
 returned matches don't provide a way to tell which pattern was responsible for
-the match. If that information is necessary, separate labels should be used for
-each pattern. For example, the [`EntityRuler`](/api/entityruler) uses a
-separator to store labels and entity IDs as the labels passed to the `Matcher`.
+the match.
 
 > #### Example
 >
