@@ -87,6 +87,7 @@ class EntityRuler(Pipe):
         ent_id_sep: str = DEFAULT_ENT_ID_SEP,
         patterns: Optional[List[PatternType]] = None,
         scorer: Optional[Callable] = entity_ruler_score,
+        disable_pipes: Optional[List[str]] = [],
     ) -> None:
         """Initialize the entity ruler. If patterns are supplied here, they
         need to be a list of dictionaries with a `"label"` and `"pattern"`
@@ -128,6 +129,7 @@ class EntityRuler(Pipe):
         if patterns is not None:
             self.add_patterns(patterns)
         self.scorer = scorer
+        self.disable_pipes = disable_pipes
 
     def __len__(self) -> int:
         """The number of all patterns added to the entity ruler."""
@@ -294,7 +296,9 @@ class EntityRuler(Pipe):
             subsequent_pipes = [pipe for pipe in self.nlp.pipe_names[current_index:]]
         except ValueError:
             subsequent_pipes = []
-        with self.nlp.select_pipes(disable=subsequent_pipes):
+
+        disable = list(set(subsequent_pipes + self.disable_pipes))
+        with self.nlp.select_pipes(disable=disable):
             token_patterns = []
             phrase_pattern_labels = []
             phrase_pattern_texts = []
