@@ -824,7 +824,7 @@ cdef class ArcEager(TransitionSystem):
             for i in range(self.n_moves):
                 print(self.get_class_name(i), is_valid[i], costs[i])
             print("Gold sent starts?", is_sent_start(&gold_state, state.B(0)), is_sent_start(&gold_state, state.B(1)))
-            raise ValueError("Could not find gold transition - see logs above.")
+            raise ValueError(Errors.E1031)
 
     def get_oracle_sequence_from_state(self, StateClass state, ArcEagerGold gold, _debug=None):
         cdef int i

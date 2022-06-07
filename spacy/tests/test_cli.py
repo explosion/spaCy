@@ -1,4 +1,7 @@
 import os
+import math
+from random import sample
+from typing import Counter
 
 import pytest
 import srsly
@@ -14,6 +17,10 @@ from spacy.cli._util import substitute_project_variables
 from spacy.cli._util import validate_project_commands
 from spacy.cli.debug_data import _compile_gold, _get_labels_from_model
 from spacy.cli.debug_data import _get_labels_from_spancat
+from spacy.cli.debug_data import _get_distribution, _get_kl_divergence
+from spacy.cli.debug_data import _get_span_characteristics
+from spacy.cli.debug_data import _print_span_characteristics
+from spacy.cli.debug_data import _get_spans_length_freq_dist
 from spacy.cli.download import get_compatibility, get_version
 from spacy.cli.init_config import RECOMMENDATIONS, init_config, fill_config
 from spacy.cli.package import get_third_party_dependencies
@@ -24,6 +31,7 @@ from spacy.lang.nl import Dutch
 from spacy.language import Language
 from spacy.schemas import ProjectConfigSchema, RecommendationSchema, validate
 from spacy.tokens import Doc
+from spacy.tokens.span import Span
 from spacy.training import Example, docs_to_json, offsets_to_biluo_tags
 from spacy.training.converters import conll_ner_to_docs, conllu_to_docs
 from spacy.training.converters import iob_to_docs
@@ -341,6 +349,7 @@ def test_project_config_validation_full():
         "assets": [
             {
                 "dest": "x",
+                "extra": True,
                 "url": "https://example.com",
                 "checksum": "63373dd656daa1fd3043ce166a59474c",
             },
@@ -351,6 +360,12 @@ def test_project_config_validation_full():
                     "branch": "develop",
                     "path": "y",
                 },
+            },
+            {
+                "dest": "z",
+                "extra": False,
+                "url": "https://example.com",
+                "checksum": "63373dd656daa1fd3043ce166a59474c",
             },
         ],
         "commands": [
@@ -733,3 +748,110 @@ def test_debug_data_compile_gold():
     eg = Example(pred, ref)
     data = _compile_gold([eg], ["ner"], nlp, True)
     assert data["boundary_cross_ents"] == 1
+
+
+def test_debug_data_compile_gold_for_spans():
+    nlp = English()
+    spans_key = "sc"
+
+    pred = Doc(nlp.vocab, words=["Welcome", "to", "the", "Bank", "of", "China", "."])
+    pred.spans[spans_key] = [Span(pred, 3, 6, "ORG"), Span(pred, 5, 6, "GPE")]
+    ref = Doc(nlp.vocab, words=["Welcome", "to", "the", "Bank", "of", "China", "."])
+    ref.spans[spans_key] = [Span(ref, 3, 6, "ORG"), Span(ref, 5, 6, "GPE")]
+    eg = Example(pred, ref)
+
+    data = _compile_gold([eg], ["spancat"], nlp, True)
+
+    assert data["spancat"][spans_key] == Counter({"ORG": 1, "GPE": 1})
+    assert data["spans_length"][spans_key] == {"ORG": [3], "GPE": [1]}
+    assert data["spans_per_type"][spans_key] == {
+        "ORG": [Span(ref, 3, 6, "ORG")],
+        "GPE": [Span(ref, 5, 6, "GPE")],
+    }
+    assert data["sb_per_type"][spans_key] == {
+        "ORG": {"start": [ref[2:3]], "end": [ref[6:7]]},
+        "GPE": {"start": [ref[4:5]], "end": [ref[6:7]]},
+    }
+
+
+def test_frequency_distribution_is_correct():
+    nlp = English()
+    docs = [
+        Doc(nlp.vocab, words=["Bank", "of", "China"]),
+        Doc(nlp.vocab, words=["China"]),
+    ]
+
+    expected = Counter({"china": 0.5, "bank": 0.25, "of": 0.25})
+    freq_distribution = _get_distribution(docs, normalize=True)
+    assert freq_distribution == expected
+
+
+def test_kl_divergence_computation_is_correct():
+    p = Counter({"a": 0.5, "b": 0.25})
+    q = Counter({"a": 0.25, "b": 0.50, "c": 0.15, "d": 0.10})
+    result = _get_kl_divergence(p, q)
+    expected = 0.1733
+    assert math.isclose(result, expected, rel_tol=1e-3)
+
+
+def test_get_span_characteristics_return_value():
+    nlp = English()
+    spans_key = "sc"
+
+    pred = Doc(nlp.vocab, words=["Welcome", "to", "the", "Bank", "of", "China", "."])
+    pred.spans[spans_key] = [Span(pred, 3, 6, "ORG"), Span(pred, 5, 6, "GPE")]
+    ref = Doc(nlp.vocab, words=["Welcome", "to", "the", "Bank", "of", "China", "."])
+    ref.spans[spans_key] = [Span(ref, 3, 6, "ORG"), Span(ref, 5, 6, "GPE")]
+    eg = Example(pred, ref)
+
+    examples = [eg]
+    data = _compile_gold(examples, ["spancat"], nlp, True)
+    span_characteristics = _get_span_characteristics(
+        examples=examples, compiled_gold=data, spans_key=spans_key
+    )
+
+    assert {"sd", "bd", "lengths"}.issubset(span_characteristics.keys())
+    assert span_characteristics["min_length"] == 1
+    assert span_characteristics["max_length"] == 3
+
+
+def test_ensure_print_span_characteristics_wont_fail():
+    """Test if interface between two methods aren't destroyed if refactored"""
+    nlp = English()
+    spans_key = "sc"
+
+    pred = Doc(nlp.vocab, words=["Welcome", "to", "the", "Bank", "of", "China", "."])
+    pred.spans[spans_key] = [Span(pred, 3, 6, "ORG"), Span(pred, 5, 6, "GPE")]
+    ref = Doc(nlp.vocab, words=["Welcome", "to", "the", "Bank", "of", "China", "."])
+    ref.spans[spans_key] = [Span(ref, 3, 6, "ORG"), Span(ref, 5, 6, "GPE")]
+    eg = Example(pred, ref)
+
+    examples = [eg]
+    data = _compile_gold(examples, ["spancat"], nlp, True)
+    span_characteristics = _get_span_characteristics(
+        examples=examples, compiled_gold=data, spans_key=spans_key
+    )
+    _print_span_characteristics(span_characteristics)
+
+
+@pytest.mark.parametrize("threshold", [70, 80, 85, 90, 95])
+def test_span_length_freq_dist_threshold_must_be_correct(threshold):
+    sample_span_lengths = {
+        "span_type_1": [1, 4, 4, 5],
+        "span_type_2": [5, 3, 3, 2],
+        "span_type_3": [3, 1, 3, 3],
+    }
+    span_freqs = _get_spans_length_freq_dist(sample_span_lengths, threshold)
+    assert sum(span_freqs.values()) >= threshold
+
+
+def test_span_length_freq_dist_output_must_be_correct():
+    sample_span_lengths = {
+        "span_type_1": [1, 4, 4, 5],
+        "span_type_2": [5, 3, 3, 2],
+        "span_type_3": [3, 1, 3, 3],
+    }
+    threshold = 90
+    span_freqs = _get_spans_length_freq_dist(sample_span_lengths, threshold)
+    assert sum(span_freqs.values()) >= threshold
+    assert list(span_freqs.keys()) == [3, 1, 4, 5, 2]
