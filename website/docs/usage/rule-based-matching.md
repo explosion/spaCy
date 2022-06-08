@@ -1447,7 +1447,7 @@ with nlp.select_pipes(enable="tagger"):
     ruler.add_patterns(patterns)
 ```
 
-## Rule-based span matching {#spanruler new="3.3"}
+## Rule-based span matching {#spanruler new="3.3.1"}
 
 The [`SpanRuler`](/api/spanruler) is a generalized version of the entity ruler
 that lets you add spans to `doc.spans` or `doc.ents` based on pattern
