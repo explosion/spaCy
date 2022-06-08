@@ -1,4 +1,5 @@
 import pytest
+import numpy
 from numpy.testing import assert_equal
 from thinc.api import Adam
 
@@ -173,6 +174,57 @@ def test_parser_parse_one_word_sentence(en_vocab, en_parser, words):
     with en_parser.step_through(doc) as _:  # noqa: F841
         pass
     assert doc[0].dep != 0
+
+
+def test_parser_apply_actions(en_vocab, en_parser):
+    words = ["I", "ate", "pizza"]
+    words2 = ["Eat", "more", "pizza", "!"]
+    doc1 = Doc(en_vocab, words=words)
+    doc2 = Doc(en_vocab, words=words2)
+    docs = [doc1, doc2]
+
+    moves = en_parser.moves
+    moves.add_action(0, "")
+    moves.add_action(1, "")
+    moves.add_action(2, "nsubj")
+    moves.add_action(3, "obj")
+    moves.add_action(2, "amod")
+
+    actions = [
+        numpy.array([0, 0], dtype="i"),
+        numpy.array([2, 0], dtype="i"),
+        numpy.array([0, 4], dtype="i"),
+        numpy.array([3, 3], dtype="i"),
+        numpy.array([1, 1], dtype="i"),
+        numpy.array([1, 1], dtype="i"),
+        numpy.array([0], dtype="i"),
+        numpy.array([1], dtype="i"),
+    ]
+
+    states = moves.init_batch(docs)
+    active_states = states
+
+    for step_actions in actions:
+        active_states = moves.apply_actions(active_states, step_actions)
+
+    assert len(active_states) == 0
+
+    for (state, doc) in zip(states, docs):
+        moves.set_annotations(state, doc)
+
+    assert docs[0][0].head.i == 1
+    assert docs[0][0].dep_ == "nsubj"
+    assert docs[0][1].head.i == 1
+    assert docs[0][1].dep_ == "ROOT"
+    assert docs[0][2].head.i == 1
+    assert docs[0][2].dep_ == "obj"
+
+    assert docs[1][0].head.i == 0
+    assert docs[1][0].dep_ == "ROOT"
+    assert docs[1][1].head.i == 2
+    assert docs[1][1].dep_ == "amod"
+    assert docs[1][2].head.i == 0
+    assert docs[1][2].dep_ == "obj"
 
 
 @pytest.mark.skip(

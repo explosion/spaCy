@@ -1,5 +1,6 @@
 # cython: infer_types=True, cdivision=True, boundscheck=False, binding=True
 from __future__ import print_function
+from typing import List
 from cymem.cymem cimport Pool
 cimport numpy as np
 from itertools import islice
@@ -12,11 +13,12 @@ import contextlib
 import srsly
 from thinc.api import set_dropout_rate, CupyOps, get_array_module
 from thinc.extra.search cimport Beam
+from thinc.types import Ints1d
 import numpy.random
 import numpy
 import warnings
 
-from ._parser_internals.stateclass cimport StateClass
+from ._parser_internals.stateclass cimport StateC, StateClass
 from ..tokens.doc cimport Doc
 from .trainable_pipe import TrainablePipe
 from ._parser_internals cimport _beam_utils
@@ -359,7 +361,42 @@ class Parser(TrainablePipe):
 
     def rehearse(self, examples, sgd=None, losses=None, **cfg):
         """Perform a "rehearsal" update, to prevent catastrophic forgetting."""
-        raise NotImplementedError
+        if losses is None:
+            losses = {}
+        for multitask in self._multitasks:
+            if hasattr(multitask, 'rehearse'):
+                multitask.rehearse(examples, losses=losses, sgd=sgd)
+        if self._rehearsal_model is None:
+            return None
+        losses.setdefault(self.name, 0.0)
+        validate_examples(examples, "Parser.rehearse")
+        docs = [eg.predicted for eg in examples]
+        # This is pretty dirty, but the NER can resize itself in init_batch,
+        # if labels are missing. We therefore have to check whether we need to
+        # expand our model output.
+        self._resize()
+        # Prepare the stepwise model, and get the callback for finishing the batch
+        set_dropout_rate(self._rehearsal_model, 0.0)
+        set_dropout_rate(self.model, 0.0)
+        (student_states, student_scores), backprop_scores = self.model.begin_update((docs, self.moves))
+        actions = states2actions(student_states)
+        _, teacher_scores = self._rehearsal_model.predict((docs, self.moves, actions))
+
+        teacher_scores = self.model.ops.xp.vstack(teacher_scores)
+        student_scores = self.model.ops.xp.vstack(student_scores)
+        assert teacher_scores.shape == student_scores.shape
+
+        d_scores = (student_scores - teacher_scores) / teacher_scores.shape[0]
+        # If all weights for an output are 0 in the original model, don't
+        # supervise that output. This allows us to add classes.
+        loss = (d_scores**2).sum() / d_scores.size
+        backprop_scores((student_states, d_scores))
+
+        if sgd is not None:
+            self.finish_update(sgd)
+        losses[self.name] += loss
+
+        return losses
 
     def update_beam(self, examples, *, beam_width,
             drop=0., sgd=None, losses=None, beam_density=0.0):
@@ -474,3 +511,26 @@ def _change_attrs(model, **kwargs):
             model.attrs.pop(key)
         else:
             model.attrs[key] = value
+
+
+def states2actions(states: List[StateClass]) -> List[Ints1d]:
+    cdef int step
+    cdef StateClass state
+    cdef StateC* c_state
+    actions = []
+    while True:
+        step = len(actions)
+
+        step_actions = []
+        for state in states:
+            c_state = state.c
+            if step < c_state.history.size():
+                step_actions.append(c_state.history[step])
+
+        # We are done if we have exhausted all histories.
+        if len(step_actions) == 0:
+            break
+
+        actions.append(numpy.array(step_actions, dtype="i"))
+
+    return actions

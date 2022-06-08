@@ -203,8 +203,7 @@ def _optimize(nlp, component: str, data: List, rehearse: bool):
     return nlp
 
 
-# Fixme: reenable ner and parser when rehearsal is implemented.
-@pytest.mark.parametrize("component", ["tagger", "textcat_multilabel"])
+@pytest.mark.parametrize("component", ["ner", "tagger", "parser", "textcat_multilabel"])
 def test_rehearse(component):
     nlp = spacy.blank("en")
     nlp.add_pipe(component)
