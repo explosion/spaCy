@@ -106,9 +106,8 @@ def resize_output(model: Model, new_nO: int) -> Model:
         new_b[:old_nO] = old_b  # type: ignore
         for i in range(old_nO, new_nO):
             model.attrs["unseen_classes"].add(i)
-        upper = new_upper
-        model.layers[-1] = upper
-        model.set_ref("upper", upper)
+        model.layers[-1] = new_upper
+        model.set_ref("upper", new_upper)
     # TODO: Avoid this private intrusion
     model._dims["nO"] = new_nO
     return model
