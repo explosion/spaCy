@@ -174,7 +174,7 @@ def forward(model, docs_moves: InT, is_train: bool):
     if beam_width == 1 and not is_train and isinstance(model.ops, NumpyOps):
         return _forward_greedy_cpu(model, moves, states, feats, seen_mask, actions=actions)
     else:
-        return _forward_fallback(model, moves, states, tokvecs, backprop_tok2vec, feats, backprop_feats, seen_mask, is_train, actions)
+        return _forward_fallback(model, moves, states, tokvecs, backprop_tok2vec, feats, backprop_feats, seen_mask, is_train, actions=actions)
 
 
 def _forward_greedy_cpu(model: Model, TransitionSystem moves, states: List[StateClass], np.ndarray feats,

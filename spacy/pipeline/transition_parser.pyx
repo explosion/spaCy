@@ -368,7 +368,7 @@ class Parser(TrainablePipe):
                 multitask.rehearse(examples, losses=losses, sgd=sgd)
         if self._rehearsal_model is None:
             return None
-        losses.setdefault(self.name, 0.)
+        losses.setdefault(self.name, 0.0)
         validate_examples(examples, "Parser.rehearse")
         docs = [eg.predicted for eg in examples]
         # This is pretty dirty, but the NER can resize itself in init_batch,
