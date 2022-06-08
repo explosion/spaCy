@@ -30,6 +30,7 @@ from ..coref_scorer import Evaluator, get_cluster_info, lea
 default_config = """
 [model]
 @architectures = "spacy.Coref.v1"
+tok2vec_size = 768
 distance_embedding_size = 20
 hidden_size = 1024
 depth = 1
