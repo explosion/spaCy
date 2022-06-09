@@ -1,7 +1,6 @@
 from typing import Optional, List, Tuple
 from enum import Enum
 from pathlib import Path
-
 from wasabi import Printer, diff_strings
 from thinc.api import Config
 import srsly
@@ -67,7 +66,6 @@ def init_config_cli(
             "The provided output file already exists. To force overwriting the config file, set the --force or -F flag.",
             exits=1,
         )
-
     config = init_config(
         lang=lang,
         pipeline=pipeline,
