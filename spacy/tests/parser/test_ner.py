@@ -534,7 +534,7 @@ def test_overfitting_IO():
     for i in range(50):
         losses = {}
         nlp.update(train_examples, sgd=optimizer, losses=losses)
-    assert losses["ner"] < 0.001
+    assert losses["ner"] < 0.00001
 
     # test the trained model
     test_text = "I like London."
