@@ -123,7 +123,6 @@ def test_ner_labels_added_implicitly_on_predict():
     assert "D" in ner.labels
 
 
-@pytest.mark.skip(reason="Not yet supported")
 def test_ner_labels_added_implicitly_on_beam_parse():
     nlp = Language()
     ner = nlp.add_pipe("beam_ner")
