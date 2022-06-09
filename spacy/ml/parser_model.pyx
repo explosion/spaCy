@@ -4,11 +4,10 @@ from libc.math cimport exp
 from libc.string cimport memset, memcpy
 from libc.stdlib cimport calloc, free, realloc
 from thinc.backends.linalg cimport Vec, VecVec
-cimport blis.cy
 
 import numpy
 import numpy.random
-from thinc.api import Model, CupyOps, NumpyOps
+from thinc.api import Model, CupyOps, NumpyOps, get_ops
 
 from .. import util
 from ..errors import Errors
@@ -91,7 +90,7 @@ cdef void resize_activations(ActivationsC* A, SizesC n) nogil:
     A._curr_size = n.states
 
 
-cdef void predict_states(ActivationsC* A, StateC** states,
+cdef void predict_states(CBlas cblas, ActivationsC* A, StateC** states,
         const WeightsC* W, SizesC n) nogil:
     cdef double one = 1.0
     resize_activations(A, n)
@@ -99,7 +98,7 @@ cdef void predict_states(ActivationsC* A, StateC** states,
         states[i].set_context_tokens(&A.token_ids[i*n.feats], n.feats)
     memset(A.unmaxed, 0, n.states * n.hiddens * n.pieces * sizeof(float))
     memset(A.hiddens, 0, n.states * n.hiddens * sizeof(float))
-    sum_state_features(A.unmaxed,
+    sum_state_features(cblas, A.unmaxed,
         W.feat_weights, A.token_ids, n.states, n.feats, n.hiddens * n.pieces)
     for i in range(n.states):
         VecVec.add_i(&A.unmaxed[i*n.hiddens*n.pieces],
@@ -113,12 +112,10 @@ cdef void predict_states(ActivationsC* A, StateC** states,
         memcpy(A.scores, A.hiddens, n.states * n.classes * sizeof(float))
     else:
         # Compute hidden-to-output
-        blis.cy.gemm(blis.cy.NO_TRANSPOSE, blis.cy.TRANSPOSE,
-            n.states, n.classes, n.hiddens, one,
-            <float*>A.hiddens, n.hiddens, 1,
-            <float*>W.hidden_weights, n.hiddens, 1,
-            one,
-            <float*>A.scores, n.classes, 1)
+        cblas.sgemm()(False, True, n.states, n.classes, n.hiddens,
+            1.0, <const float *>A.hiddens, n.hiddens,
+            <const float *>W.hidden_weights, n.hiddens,
+            0.0, A.scores, n.classes)
         # Add bias
         for i in range(n.states):
             VecVec.add_i(&A.scores[i*n.classes],
@@ -135,7 +132,7 @@ cdef void predict_states(ActivationsC* A, StateC** states,
                 A.scores[i*n.classes+j] = min_
 
 
-cdef void sum_state_features(float* output,
+cdef void sum_state_features(CBlas cblas, float* output,
         const float* cached, const int* token_ids, int B, int F, int O) nogil:
     cdef int idx, b, f, i
     cdef const float* feature
@@ -150,9 +147,7 @@ cdef void sum_state_features(float* output,
             else:
                 idx = token_ids[f] * id_stride + f*O
                 feature = &cached[idx]
-            blis.cy.axpyv(blis.cy.NO_CONJUGATE, O, one,
-                <float*>feature, 1,
-                &output[b*O], 1)
+            cblas.saxpy()(O, one, <const float*>feature, 1, &output[b*O], 1)
         token_ids += F
 
 
@@ -443,9 +438,15 @@ cdef class precompute_hiddens:
         # - Output from backward on GPU
         bp_hiddens = self._bp_hiddens
 
+        cdef CBlas cblas
+        if isinstance(self.ops, CupyOps):
+            cblas = get_ops("cpu").cblas()
+        else:
+            cblas = self.ops.cblas()
+
         feat_weights = self.get_feat_weights()
         cdef int[:, ::1] ids = token_ids
-        sum_state_features(<float*>state_vector.data,
+        sum_state_features(cblas, <float*>state_vector.data,
             feat_weights, &ids[0,0],
             token_ids.shape[0], self.nF, self.nO*self.nP)
         state_vector += self.bias

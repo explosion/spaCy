@@ -1,6 +1,6 @@
 from typing import List, Mapping, NoReturn, Union, Dict, Any, Set, cast
 from typing import Optional, Iterable, Callable, Tuple, Type
-from typing import Iterator, Type, Pattern, Generator, TYPE_CHECKING
+from typing import Iterator, Pattern, Generator, TYPE_CHECKING
 from types import ModuleType
 import os
 import importlib
@@ -1267,6 +1267,15 @@ def filter_spans(spans: Iterable["Span"]) -> List["Span"]:
             seen_tokens.update(range(span.start, span.end))
     result = sorted(result, key=lambda span: span.start)
     return result
+
+
+def filter_chain_spans(*spans: Iterable["Span"]) -> List["Span"]:
+    return filter_spans(itertools.chain(*spans))
+
+
+@registry.misc("spacy.first_longest_spans_filter.v1")
+def make_first_longest_spans_filter():
+    return filter_chain_spans
 
 
 def to_bytes(getters: Dict[str, Callable[[], bytes]], exclude: Iterable[str]) -> bytes:

@@ -161,7 +161,7 @@ Load state from a binary string.
 > #### Example
 >
 > ```python
-> fron spacy.strings import StringStore
+> from spacy.strings import StringStore
 > store_bytes = stringstore.to_bytes()
 > new_store = StringStore().from_bytes(store_bytes)
 > ```
