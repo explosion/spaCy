@@ -118,7 +118,6 @@ def test_beam_advance_too_few_scores(beam, scores):
         beam.advance(scores[:-1])
 
 
-@pytest.mark.xfail(reason="no beam parser yet")
 def test_beam_parse(examples, beam_width):
     nlp = Language()
     parser = nlp.add_pipe("beam_parser")
@@ -129,7 +128,6 @@ def test_beam_parse(examples, beam_width):
     parser(doc)
 
 
-@pytest.mark.xfail(reason="no beam parser yet")
 @hypothesis.given(hyp=hypothesis.strategies.data())
 def test_beam_density(moves, examples, beam_width, hyp):
     beam_density = float(hyp.draw(hypothesis.strategies.floats(0.0, 1.0, width=32)))
