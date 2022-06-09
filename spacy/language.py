@@ -2007,11 +2007,8 @@ class Language:
         disable: Iterable[str], enable: Iterable[str], pipe_names: Collection[str]
     ) -> Tuple[str, ...]:
         """Derives whether (1) `disable` and `enable` values are consistent and (2)
-        resolves those to a single set of disabled components. `enable` takes precedence
-        over `disable` - so if the former is set, all other components are assumed to be
-        disabled, independently of the value of `disable`. If `enable` is empty, only
-        those component whose names are included in `disable` are assumed to be
-        disabled.
+        resolves those to a single set of disabled components. Raises an error in
+        case of inconsistency.
 
         disable (Iterable[str]): Names of components or serialization fields to disable.
         enable (Iterable[str]): Names of pipeline components to enable.
