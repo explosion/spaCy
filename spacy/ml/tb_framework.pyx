@@ -188,15 +188,15 @@ def _forward_greedy_cpu(model: Model, TransitionSystem moves, states: List[State
     cdef int n_tokens = feats.shape[0] - 1
     sizes = get_c_sizes(model, c_states.size(), n_tokens)
     cdef CBlas cblas = model.ops.cblas()
-    scores = _parseC(cblas, moves, &c_states[0], weights, sizes, actions=actions)
+    scores = _parse_batch(cblas, moves, &c_states[0], weights, sizes, actions=actions)
 
     def backprop(dY):
         raise ValueError(Errors.E1038)
 
     return (states, scores), backprop
 
-cdef list _parseC(CBlas cblas, TransitionSystem moves, StateC** states,
-                  WeightsC weights, SizesC sizes, actions: Optional[List[Ints1d]]=None):
+cdef list _parse_batch(CBlas cblas, TransitionSystem moves, StateC** states,
+                       WeightsC weights, SizesC sizes, actions: Optional[List[Ints1d]]=None):
     cdef int i, j
     cdef vector[StateC *] unfinished
     cdef ActivationsC activations = alloc_activations(sizes)
