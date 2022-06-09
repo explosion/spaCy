@@ -3,7 +3,6 @@ cimport cython
 from libc.string cimport memcpy
 from libcpp.set cimport set
 from libc.stdint cimport uint32_t
-from libcpp cimport bool
 from murmurhash.mrmr cimport hash64, hash32
 
 import srsly
@@ -16,7 +15,7 @@ from .errors import Errors
 from . import util
 
 # Not particularly elegant, but this is faster than `isinstance(key, numbers.Integral)`
-cdef inline bool try_coerce_to_hash(object key, hash_t* out_hash):
+cdef inline bint _try_coerce_to_hash(object key, hash_t* out_hash):
     try:
         out_hash[0] = key
         return True
@@ -41,7 +40,7 @@ def get_string_id(key):
         else:
             chars = key.encode("utf8")
             return hash_utf8(chars, len(chars))
-    elif try_coerce_to_hash(key, &hash):
+    elif _try_coerce_to_hash(key, &hash):
         # Coerce the integral key to the expected primitive hash type.
         # This ensures that custom/overloaded "primitive" data types
         # such as those implemented by numpy are not inadvertently used 
@@ -130,7 +129,7 @@ cdef class StringStore:
         string_or_id (bytes, str or uint64): The value to encode.
         Returns (str / uint64): The value to be retrieved.
         """
-        cdef hash_t id
+        cdef hash_t hash
         cdef Utf8Str* utf8str = NULL
 
         if isinstance(string_or_id, str):
@@ -144,13 +143,13 @@ cdef class StringStore:
                 return hash_string(string_or_id)
         elif isinstance(string_or_id, bytes):
             return hash_utf8(string_or_id, len(string_or_id))
-        elif try_coerce_to_hash(string_or_id, &id):
-            if id == 0:
+        elif _try_coerce_to_hash(string_or_id, &hash):
+            if hash == 0:
                 return ""
-            elif id < len(SYMBOLS_BY_INT):
-                return SYMBOLS_BY_INT[id]
+            elif hash < len(SYMBOLS_BY_INT):
+                return SYMBOLS_BY_INT[hash]
             else:
-                utf8str = <Utf8Str*>self._map.get(id)
+                utf8str = <Utf8Str*>self._map.get(hash)
         else:
             # TODO: Raise an error instead
             utf8str = <Utf8Str*>self._map.get(string_or_id)
@@ -207,23 +206,23 @@ cdef class StringStore:
         string_or_id (str or int): The string to check.
         RETURNS (bool): Whether the store contains the string.
         """
-        cdef hash_t id
+        cdef hash_t hash
         if isinstance(string_or_id, str):
             if len(string_or_id) == 0:
                 return True
             elif string_or_id in SYMBOLS_BY_STR:
                 return True
-            id = hash_string(string_or_id)
-        elif try_coerce_to_hash(string_or_id, &id):
+            hash = hash_string(string_or_id)
+        elif _try_coerce_to_hash(string_or_id, &hash):
             pass
         else:
             # TODO: Raise an error instead
             return self._map.get(string_or_id) is not NULL
 
-        if id < len(SYMBOLS_BY_INT):
+        if hash < len(SYMBOLS_BY_INT):
             return True
         else:
-            return self._map.get(id) is not NULL
+            return self._map.get(hash) is not NULL
 
     def __iter__(self):
         """Iterate over the strings in the store, in order.
