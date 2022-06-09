@@ -919,7 +919,6 @@ class Errors(metaclass=ErrorsWithCodes):
     E1035 = ("Token index {i} out of bounds ({length})")
     E1036 = ("Cannot index into NoneNode")
     E1037 = ("Invalid attribute value '{attr}'.")
-    E1039 = ("StringStore keys must have one of the following types: '{expected_types}', but input '{input}' is of type '{invalid_type}'.")
 
 
 # Deprecated model shortcuts, only used in errors and warnings

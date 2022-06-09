@@ -32,6 +32,9 @@ def get_string_id(key):
     """
     cdef hash_t hash    
     if isinstance(key, str):
+        if len(key) == 0:
+            return 0
+
         symbol = SYMBOLS_BY_STR.get(key, None)
         if symbol is not None:
             return symbol
@@ -45,13 +48,9 @@ def get_string_id(key):
         # downsteam (as these are internally implemented as custom PyObjects 
         # whose comparison operators can incur a significant overhead).
         return hash
-    elif not key:
-        return 0
     else:
+        # TODO: Raise an error instead
         return key
-        raise ValueError(Errors.E1039.format(input=key,
-                                             expected_types=', '.join(['str', 'int']),
-                                             invalid_type=type(key)))
 
 
 cpdef hash_t hash_string(str string) except 0:
@@ -132,6 +131,8 @@ cdef class StringStore:
         Returns (str / uint64): The value to be retrieved.
         """
         cdef hash_t id
+        cdef Utf8Str* utf8str = NULL
+
         if isinstance(string_or_id, str):
             if len(string_or_id) == 0:
                 return 0
@@ -150,14 +151,14 @@ cdef class StringStore:
                 return SYMBOLS_BY_INT[id]
             else:
                 utf8str = <Utf8Str*>self._map.get(id)
-                if utf8str is NULL:
-                    raise KeyError(Errors.E018.format(hash_value=id))
-                else:
-                    return decode_Utf8Str(utf8str)
         else:
-            raise ValueError(Errors.E1039.format(input=string_or_id,
-                                                 expected_types=', '.join(['str', 'bytes', 'int']),
-                                                 invalid_type=type(string_or_id)))
+            # TODO: Raise an error instead
+            utf8str = <Utf8Str*>self._map.get(string_or_id)
+
+        if utf8str is NULL:
+            raise KeyError(Errors.E018.format(hash_value=string_or_id))
+        else:
+            return decode_Utf8Str(utf8str)
 
     def as_int(self, key):
         """If key is an int, return it; otherwise, get the int value."""
@@ -216,9 +217,9 @@ cdef class StringStore:
         elif try_coerce_to_hash(string_or_id, &id):
             pass
         else:
-            raise ValueError(Errors.E1039.format(input=string_or_id,
-                                                 expected_types=', '.join(['str', 'int']),
-                                                 invalid_type=type(string_or_id)))
+            # TODO: Raise an error instead
+            return self._map.get(string_or_id) is not NULL
+
         if id < len(SYMBOLS_BY_INT):
             return True
         else:
