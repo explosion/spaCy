@@ -183,10 +183,10 @@ def _forward_greedy_cpu(model: Model, TransitionSystem moves, states: List[State
     for state in states:
         if not state.is_final():
             c_states.push_back(state.c)
-    weights = get_c_weights(model, <float*>feats.data, seen_mask)
+    weights = _get_c_weights(model, <float*>feats.data, seen_mask)
     # Precomputed features have rows for each token, plus one for padding.
     cdef int n_tokens = feats.shape[0] - 1
-    sizes = get_c_sizes(model, c_states.size(), n_tokens)
+    sizes = _get_c_sizes(model, c_states.size(), n_tokens)
     cdef CBlas cblas = model.ops.cblas()
     scores = _parse_batch(cblas, moves, &c_states[0], weights, sizes, actions=actions)
 
@@ -199,7 +199,7 @@ cdef list _parse_batch(CBlas cblas, TransitionSystem moves, StateC** states,
                        WeightsC weights, SizesC sizes, actions: Optional[List[Ints1d]]=None):
     cdef int i, j
     cdef vector[StateC *] unfinished
-    cdef ActivationsC activations = alloc_activations(sizes)
+    cdef ActivationsC activations = _alloc_activations(sizes)
     cdef np.ndarray step_scores
     cdef np.ndarray step_actions
 
@@ -208,7 +208,7 @@ cdef list _parse_batch(CBlas cblas, TransitionSystem moves, StateC** states,
         step_scores = numpy.empty((sizes.states, sizes.classes), dtype="f")
         step_actions = actions[0] if actions is not None else None
         with nogil:
-            predict_states(cblas, &activations, <float*>step_scores.data, states, &weights, sizes)
+            _predict_states(cblas, &activations, <float*>step_scores.data, states, &weights, sizes)
             if actions is None:
                 # Validate actions, argmax, take action.
                 c_transition_batch(moves, states, <const float*>step_scores.data, sizes.classes,
@@ -224,7 +224,7 @@ cdef list _parse_batch(CBlas cblas, TransitionSystem moves, StateC** states,
         scores.append(step_scores)
         unfinished.clear()
         actions = actions[1:] if actions is not None else None
-    free_activations(&activations)
+    _free_activations(&activations)
 
     return scores
 
@@ -540,7 +540,7 @@ def _lsuv_init(model: Model):
     return model
 
 
-cdef WeightsC get_c_weights(model, const float* feats, np.ndarray[np.npy_bool, ndim=1] seen_mask) except *:
+cdef WeightsC _get_c_weights(model, const float* feats, np.ndarray[np.npy_bool, ndim=1] seen_mask) except *:
     upper = model.get_ref("upper")
     cdef np.ndarray lower_b = model.get_param("lower_b")
     cdef np.ndarray upper_W = upper.get_param("W")
@@ -556,7 +556,7 @@ cdef WeightsC get_c_weights(model, const float* feats, np.ndarray[np.npy_bool, n
     return output
 
 
-cdef SizesC get_c_sizes(model, int batch_size, int tokens) except *:
+cdef SizesC _get_c_sizes(model, int batch_size, int tokens) except *:
     cdef SizesC output
     output.states = batch_size
     output.classes = model.get_dim("nO")
@@ -568,21 +568,21 @@ cdef SizesC get_c_sizes(model, int batch_size, int tokens) except *:
     return output
 
 
-cdef ActivationsC alloc_activations(SizesC n) nogil:
+cdef ActivationsC _alloc_activations(SizesC n) nogil:
     cdef ActivationsC A
     memset(&A, 0, sizeof(A))
-    resize_activations(&A, n)
+    _resize_activations(&A, n)
     return A
 
 
-cdef void free_activations(const ActivationsC* A) nogil:
+cdef void _free_activations(const ActivationsC* A) nogil:
     free(A.token_ids)
     free(A.unmaxed)
     free(A.hiddens)
     free(A.is_valid)
 
 
-cdef void resize_activations(ActivationsC* A, SizesC n) nogil:
+cdef void _resize_activations(ActivationsC* A, SizesC n) nogil:
     if n.states <= A._max_size:
         A._curr_size = n.states
         return
@@ -605,12 +605,12 @@ cdef void resize_activations(ActivationsC* A, SizesC n) nogil:
     A._curr_size = n.states
 
 
-cdef void predict_states(CBlas cblas, ActivationsC* A, float* scores, StateC** states, const WeightsC* W, SizesC n) nogil:
-    resize_activations(A, n)
+cdef void _predict_states(CBlas cblas, ActivationsC* A, float* scores, StateC** states, const WeightsC* W, SizesC n) nogil:
+    _resize_activations(A, n)
     for i in range(n.states):
         states[i].set_context_tokens(&A.token_ids[i*n.feats], n.feats)
     memset(A.unmaxed, 0, n.states * n.hiddens * n.pieces * sizeof(float))
-    sum_state_features(cblas, A.unmaxed, W.feat_weights, A.token_ids, n)
+    _sum_state_features(cblas, A.unmaxed, W.feat_weights, A.token_ids, n)
     for i in range(n.states):
         VecVec.add_i(&A.unmaxed[i*n.hiddens*n.pieces],
             W.feat_bias, 1., n.hiddens * n.pieces)
@@ -641,7 +641,7 @@ cdef void predict_states(CBlas cblas, ActivationsC* A, float* scores, StateC** s
                 scores[i*n.classes+j] = min_
 
 
-cdef void sum_state_features(CBlas cblas, float* output,
+cdef void _sum_state_features(CBlas cblas, float* output,
         const float* cached, const int* token_ids, SizesC n) nogil:
     cdef int idx, b, f, i
     cdef const float* feature
