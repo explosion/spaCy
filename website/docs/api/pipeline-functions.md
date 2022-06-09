@@ -7,6 +7,7 @@ menu:
   - ['merge_entities', 'merge_entities']
   - ['merge_subtokens', 'merge_subtokens']
   - ['token_splitter', 'token_splitter']
+  - ['doc_cleaner', 'doc_cleaner']
 ---
 
 ## merge_noun_chunks {#merge_noun_chunks tag="function"}

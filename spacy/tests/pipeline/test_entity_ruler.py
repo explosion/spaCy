@@ -5,11 +5,14 @@ from spacy.tokens import Doc, Span
 from spacy.language import Language
 from spacy.lang.en import English
 from spacy.pipeline import EntityRuler, EntityRecognizer, merge_entities
+from spacy.pipeline import SpanRuler
 from spacy.pipeline.ner import DEFAULT_NER_MODEL
 from spacy.errors import MatchPatternError
 from spacy.tests.util import make_tempdir
 
 from thinc.api import NumpyOps, get_current_ops
+
+ENTITY_RULERS = ["entity_ruler", "future_entity_ruler"]
 
 
 @pytest.fixture
@@ -37,12 +40,14 @@ def add_ent_component(doc):
 
 
 @pytest.mark.issue(3345)
-def test_issue3345():
+@pytest.mark.parametrize("entity_ruler_factory", ENTITY_RULERS)
+def test_issue3345(entity_ruler_factory):
     """Test case where preset entity crosses sentence boundary."""
     nlp = English()
     doc = Doc(nlp.vocab, words=["I", "live", "in", "New", "York"])
     doc[4].is_sent_start = True
-    ruler = EntityRuler(nlp, patterns=[{"label": "GPE", "pattern": "New York"}])
+    ruler = nlp.add_pipe(entity_ruler_factory, name="entity_ruler")
+    ruler.add_patterns([{"label": "GPE", "pattern": "New York"}])
     cfg = {"model": DEFAULT_NER_MODEL}
     model = registry.resolve(cfg, validate=True)["model"]
     ner = EntityRecognizer(doc.vocab, model)
@@ -60,13 +65,18 @@ def test_issue3345():
 
 
 @pytest.mark.issue(4849)
-def test_issue4849():
+@pytest.mark.parametrize("entity_ruler_factory", ENTITY_RULERS)
+def test_issue4849(entity_ruler_factory):
     nlp = English()
     patterns = [
         {"label": "PERSON", "pattern": "joe biden", "id": "joe-biden"},
         {"label": "PERSON", "pattern": "bernie sanders", "id": "bernie-sanders"},
     ]
-    ruler = nlp.add_pipe("entity_ruler", config={"phrase_matcher_attr": "LOWER"})
+    ruler = nlp.add_pipe(
+        entity_ruler_factory,
+        name="entity_ruler",
+        config={"phrase_matcher_attr": "LOWER"},
+    )
     ruler.add_patterns(patterns)
     text = """
     The left is starting to take aim at Democratic front-runner Joe Biden.
@@ -86,10 +96,11 @@ def test_issue4849():
 
 
 @pytest.mark.issue(5918)
-def test_issue5918():
+@pytest.mark.parametrize("entity_ruler_factory", ENTITY_RULERS)
+def test_issue5918(entity_ruler_factory):
     # Test edge case when merging entities.
     nlp = English()
-    ruler = nlp.add_pipe("entity_ruler")
+    ruler = nlp.add_pipe(entity_ruler_factory, name="entity_ruler")
     patterns = [
         {"label": "ORG", "pattern": "Digicon Inc"},
         {"label": "ORG", "pattern": "Rotan Mosle Inc's"},
@@ -114,9 +125,10 @@ def test_issue5918():
 
 
 @pytest.mark.issue(8168)
-def test_issue8168():
+@pytest.mark.parametrize("entity_ruler_factory", ENTITY_RULERS)
+def test_issue8168(entity_ruler_factory):
     nlp = English()
-    ruler = nlp.add_pipe("entity_ruler")
+    ruler = nlp.add_pipe(entity_ruler_factory, name="entity_ruler")
     patterns = [
         {"label": "ORG", "pattern": "Apple"},
         {
@@ -131,14 +143,17 @@ def test_issue8168():
         },
     ]
     ruler.add_patterns(patterns)
-
-    assert ruler._ent_ids == {8043148519967183733: ("GPE", "san-francisco")}
+    doc = nlp("San Francisco San Fran")
+    assert all(t.ent_id_ == "san-francisco" for t in doc)
 
 
 @pytest.mark.issue(8216)
-def test_entity_ruler_fix8216(nlp, patterns):
+@pytest.mark.parametrize("entity_ruler_factory", ENTITY_RULERS)
+def test_entity_ruler_fix8216(nlp, patterns, entity_ruler_factory):
     """Test that patterns don't get added excessively."""
-    ruler = nlp.add_pipe("entity_ruler", config={"validate": True})
+    ruler = nlp.add_pipe(
+        entity_ruler_factory, name="entity_ruler", config={"validate": True}
+    )
     ruler.add_patterns(patterns)
     pattern_count = sum(len(mm) for mm in ruler.matcher._patterns.values())
     assert pattern_count > 0
@@ -147,13 +162,16 @@ def test_entity_ruler_fix8216(nlp, patterns):
     assert after_count == pattern_count
 
 
-def test_entity_ruler_init(nlp, patterns):
-    ruler = EntityRuler(nlp, patterns=patterns)
+@pytest.mark.parametrize("entity_ruler_factory", ENTITY_RULERS)
+def test_entity_ruler_init(nlp, patterns, entity_ruler_factory):
+    ruler = nlp.add_pipe(entity_ruler_factory, name="entity_ruler")
+    ruler.add_patterns(patterns)
     assert len(ruler) == len(patterns)
     assert len(ruler.labels) == 4
     assert "HELLO" in ruler
     assert "BYE" in ruler
-    ruler = nlp.add_pipe("entity_ruler")
+    nlp.remove_pipe("entity_ruler")
+    ruler = nlp.add_pipe(entity_ruler_factory, name="entity_ruler")
     ruler.add_patterns(patterns)
     doc = nlp("hello world bye bye")
     assert len(doc.ents) == 2
@@ -161,20 +179,23 @@ def test_entity_ruler_init(nlp, patterns):
     assert doc.ents[1].label_ == "BYE"
 
 
-def test_entity_ruler_no_patterns_warns(nlp):
-    ruler = EntityRuler(nlp)
+@pytest.mark.parametrize("entity_ruler_factory", ENTITY_RULERS)
+def test_entity_ruler_no_patterns_warns(nlp, entity_ruler_factory):
+    ruler = nlp.add_pipe(entity_ruler_factory, name="entity_ruler")
     assert len(ruler) == 0
     assert len(ruler.labels) == 0
-    nlp.add_pipe("entity_ruler")
+    nlp.remove_pipe("entity_ruler")
+    nlp.add_pipe(entity_ruler_factory, name="entity_ruler")
     assert nlp.pipe_names == ["entity_ruler"]
     with pytest.warns(UserWarning):
         doc = nlp("hello world bye bye")
     assert len(doc.ents) == 0
 
 
-def test_entity_ruler_init_patterns(nlp, patterns):
+@pytest.mark.parametrize("entity_ruler_factory", ENTITY_RULERS)
+def test_entity_ruler_init_patterns(nlp, patterns, entity_ruler_factory):
     # initialize with patterns
-    ruler = nlp.add_pipe("entity_ruler")
+    ruler = nlp.add_pipe(entity_ruler_factory, name="entity_ruler")
     assert len(ruler.labels) == 0
     ruler.initialize(lambda: [], patterns=patterns)
     assert len(ruler.labels) == 4
@@ -186,7 +207,7 @@ def test_entity_ruler_init_patterns(nlp, patterns):
     nlp.config["initialize"]["components"]["entity_ruler"] = {
         "patterns": {"@misc": "entity_ruler_patterns"}
     }
-    ruler = nlp.add_pipe("entity_ruler")
+    ruler = nlp.add_pipe(entity_ruler_factory, name="entity_ruler")
     assert len(ruler.labels) == 0
     nlp.initialize()
     assert len(ruler.labels) == 4
@@ -195,18 +216,20 @@ def test_entity_ruler_init_patterns(nlp, patterns):
     assert doc.ents[1].label_ == "BYE"
 
 
-def test_entity_ruler_init_clear(nlp, patterns):
+@pytest.mark.parametrize("entity_ruler_factory", ENTITY_RULERS)
+def test_entity_ruler_init_clear(nlp, patterns, entity_ruler_factory):
     """Test that initialization clears patterns."""
-    ruler = nlp.add_pipe("entity_ruler")
+    ruler = nlp.add_pipe(entity_ruler_factory, name="entity_ruler")
     ruler.add_patterns(patterns)
     assert len(ruler.labels) == 4
     ruler.initialize(lambda: [])
     assert len(ruler.labels) == 0
 
 
-def test_entity_ruler_clear(nlp, patterns):
+@pytest.mark.parametrize("entity_ruler_factory", ENTITY_RULERS)
+def test_entity_ruler_clear(nlp, patterns, entity_ruler_factory):
     """Test that initialization clears patterns."""
-    ruler = nlp.add_pipe("entity_ruler")
+    ruler = nlp.add_pipe(entity_ruler_factory, name="entity_ruler")
     ruler.add_patterns(patterns)
     assert len(ruler.labels) == 4
     doc = nlp("hello world")
@@ -218,8 +241,9 @@ def test_entity_ruler_clear(nlp, patterns):
     assert len(doc.ents) == 0
 
 
-def test_entity_ruler_existing(nlp, patterns):
-    ruler = nlp.add_pipe("entity_ruler")
+@pytest.mark.parametrize("entity_ruler_factory", ENTITY_RULERS)
+def test_entity_ruler_existing(nlp, patterns, entity_ruler_factory):
+    ruler = nlp.add_pipe(entity_ruler_factory, name="entity_ruler")
     ruler.add_patterns(patterns)
     nlp.add_pipe("add_ent", before="entity_ruler")
     doc = nlp("OH HELLO WORLD bye bye")
@@ -228,8 +252,11 @@ def test_entity_ruler_existing(nlp, patterns):
     assert doc.ents[1].label_ == "BYE"
 
 
-def test_entity_ruler_existing_overwrite(nlp, patterns):
-    ruler = nlp.add_pipe("entity_ruler", config={"overwrite_ents": True})
+@pytest.mark.parametrize("entity_ruler_factory", ENTITY_RULERS)
+def test_entity_ruler_existing_overwrite(nlp, patterns, entity_ruler_factory):
+    ruler = nlp.add_pipe(
+        entity_ruler_factory, name="entity_ruler", config={"overwrite_ents": True}
+    )
     ruler.add_patterns(patterns)
     nlp.add_pipe("add_ent", before="entity_ruler")
     doc = nlp("OH HELLO WORLD bye bye")
@@ -239,8 +266,11 @@ def test_entity_ruler_existing_overwrite(nlp, patterns):
     assert doc.ents[1].label_ == "BYE"
 
 
-def test_entity_ruler_existing_complex(nlp, patterns):
-    ruler = nlp.add_pipe("entity_ruler", config={"overwrite_ents": True})
+@pytest.mark.parametrize("entity_ruler_factory", ENTITY_RULERS)
+def test_entity_ruler_existing_complex(nlp, patterns, entity_ruler_factory):
+    ruler = nlp.add_pipe(
+        entity_ruler_factory, name="entity_ruler", config={"overwrite_ents": True}
+    )
     ruler.add_patterns(patterns)
     nlp.add_pipe("add_ent", before="entity_ruler")
     doc = nlp("foo foo bye bye")
@@ -251,8 +281,11 @@ def test_entity_ruler_existing_complex(nlp, patterns):
     assert len(doc.ents[1]) == 2
 
 
-def test_entity_ruler_entity_id(nlp, patterns):
-    ruler = nlp.add_pipe("entity_ruler", config={"overwrite_ents": True})
+@pytest.mark.parametrize("entity_ruler_factory", ENTITY_RULERS)
+def test_entity_ruler_entity_id(nlp, patterns, entity_ruler_factory):
+    ruler = nlp.add_pipe(
+        entity_ruler_factory, name="entity_ruler", config={"overwrite_ents": True}
+    )
     ruler.add_patterns(patterns)
     doc = nlp("Apple is a technology company")
     assert len(doc.ents) == 1
@@ -260,18 +293,21 @@ def test_entity_ruler_entity_id(nlp, patterns):
     assert doc.ents[0].ent_id_ == "a1"
 
 
-def test_entity_ruler_cfg_ent_id_sep(nlp, patterns):
+@pytest.mark.parametrize("entity_ruler_factory", ENTITY_RULERS)
+def test_entity_ruler_cfg_ent_id_sep(nlp, patterns, entity_ruler_factory):
     config = {"overwrite_ents": True, "ent_id_sep": "**"}
-    ruler = nlp.add_pipe("entity_ruler", config=config)
+    ruler = nlp.add_pipe(entity_ruler_factory, name="entity_ruler", config=config)
     ruler.add_patterns(patterns)
-    assert "TECH_ORG**a1" in ruler.phrase_patterns
     doc = nlp("Apple is a technology company")
+    if isinstance(ruler, EntityRuler):
+        assert "TECH_ORG**a1" in ruler.phrase_patterns
     assert len(doc.ents) == 1
     assert doc.ents[0].label_ == "TECH_ORG"
     assert doc.ents[0].ent_id_ == "a1"
 
 
-def test_entity_ruler_serialize_bytes(nlp, patterns):
+@pytest.mark.parametrize("entity_ruler_factory", ENTITY_RULERS)
+def test_entity_ruler_serialize_bytes(nlp, patterns, entity_ruler_factory):
     ruler = EntityRuler(nlp, patterns=patterns)
     assert len(ruler) == len(patterns)
     assert len(ruler.labels) == 4
@@ -288,7 +324,10 @@ def test_entity_ruler_serialize_bytes(nlp, patterns):
     assert sorted(new_ruler.labels) == sorted(ruler.labels)
 
 
-def test_entity_ruler_serialize_phrase_matcher_attr_bytes(nlp, patterns):
+@pytest.mark.parametrize("entity_ruler_factory", ENTITY_RULERS)
+def test_entity_ruler_serialize_phrase_matcher_attr_bytes(
+    nlp, patterns, entity_ruler_factory
+):
     ruler = EntityRuler(nlp, phrase_matcher_attr="LOWER", patterns=patterns)
     assert len(ruler) == len(patterns)
     assert len(ruler.labels) == 4
@@ -303,8 +342,9 @@ def test_entity_ruler_serialize_phrase_matcher_attr_bytes(nlp, patterns):
     assert new_ruler.phrase_matcher_attr == "LOWER"
 
 
-def test_entity_ruler_validate(nlp):
-    ruler = EntityRuler(nlp)
+@pytest.mark.parametrize("entity_ruler_factory", ENTITY_RULERS)
+def test_entity_ruler_validate(nlp, entity_ruler_factory):
+    ruler = nlp.add_pipe(entity_ruler_factory, name="entity_ruler")
     validated_ruler = EntityRuler(nlp, validate=True)
 
     valid_pattern = {"label": "HELLO", "pattern": [{"LOWER": "HELLO"}]}
@@ -322,32 +362,35 @@ def test_entity_ruler_validate(nlp):
         validated_ruler.add_patterns([invalid_pattern])
 
 
-def test_entity_ruler_properties(nlp, patterns):
+@pytest.mark.parametrize("entity_ruler_factory", ENTITY_RULERS)
+def test_entity_ruler_properties(nlp, patterns, entity_ruler_factory):
     ruler = EntityRuler(nlp, patterns=patterns, overwrite_ents=True)
     assert sorted(ruler.labels) == sorted(["HELLO", "BYE", "COMPLEX", "TECH_ORG"])
     assert sorted(ruler.ent_ids) == ["a1", "a2"]
 
 
-def test_entity_ruler_overlapping_spans(nlp):
-    ruler = EntityRuler(nlp)
+@pytest.mark.parametrize("entity_ruler_factory", ENTITY_RULERS)
+def test_entity_ruler_overlapping_spans(nlp, entity_ruler_factory):
+    ruler = nlp.add_pipe(entity_ruler_factory, name="entity_ruler")
     patterns = [
         {"label": "FOOBAR", "pattern": "foo bar"},
         {"label": "BARBAZ", "pattern": "bar baz"},
     ]
     ruler.add_patterns(patterns)
-    doc = ruler(nlp.make_doc("foo bar baz"))
+    doc = nlp("foo bar baz")
     assert len(doc.ents) == 1
     assert doc.ents[0].label_ == "FOOBAR"
 
 
 @pytest.mark.parametrize("n_process", [1, 2])
-def test_entity_ruler_multiprocessing(nlp, n_process):
+@pytest.mark.parametrize("entity_ruler_factory", ENTITY_RULERS)
+def test_entity_ruler_multiprocessing(nlp, n_process, entity_ruler_factory):
     if isinstance(get_current_ops, NumpyOps) or n_process < 2:
         texts = ["I enjoy eating Pizza Hut pizza."]
 
         patterns = [{"label": "FASTFOOD", "pattern": "Pizza Hut", "id": "1234"}]
 
-        ruler = nlp.add_pipe("entity_ruler")
+        ruler = nlp.add_pipe(entity_ruler_factory, name="entity_ruler")
         ruler.add_patterns(patterns)
 
         for doc in nlp.pipe(texts, n_process=2):
@@ -355,8 +398,9 @@ def test_entity_ruler_multiprocessing(nlp, n_process):
                 assert ent.ent_id_ == "1234"
 
 
-def test_entity_ruler_serialize_jsonl(nlp, patterns):
-    ruler = nlp.add_pipe("entity_ruler")
+@pytest.mark.parametrize("entity_ruler_factory", ENTITY_RULERS)
+def test_entity_ruler_serialize_jsonl(nlp, patterns, entity_ruler_factory):
+    ruler = nlp.add_pipe(entity_ruler_factory, name="entity_ruler")
     ruler.add_patterns(patterns)
     with make_tempdir() as d:
         ruler.to_disk(d / "test_ruler.jsonl")
@@ -365,8 +409,9 @@ def test_entity_ruler_serialize_jsonl(nlp, patterns):
             ruler.from_disk(d / "non_existing.jsonl")  # read from a bad jsonl file
 
 
-def test_entity_ruler_serialize_dir(nlp, patterns):
-    ruler = nlp.add_pipe("entity_ruler")
+@pytest.mark.parametrize("entity_ruler_factory", ENTITY_RULERS)
+def test_entity_ruler_serialize_dir(nlp, patterns, entity_ruler_factory):
+    ruler = nlp.add_pipe(entity_ruler_factory, name="entity_ruler")
     ruler.add_patterns(patterns)
     with make_tempdir() as d:
         ruler.to_disk(d / "test_ruler")
@@ -375,52 +420,65 @@ def test_entity_ruler_serialize_dir(nlp, patterns):
             ruler.from_disk(d / "non_existing_dir")  # read from a bad directory
 
 
-def test_entity_ruler_remove_basic(nlp):
-    ruler = EntityRuler(nlp)
+@pytest.mark.parametrize("entity_ruler_factory", ENTITY_RULERS)
+def test_entity_ruler_remove_basic(nlp, entity_ruler_factory):
+    ruler = nlp.add_pipe(entity_ruler_factory, name="entity_ruler")
     patterns = [
-        {"label": "PERSON", "pattern": "Duygu", "id": "duygu"},
+        {"label": "PERSON", "pattern": "Dina", "id": "dina"},
         {"label": "ORG", "pattern": "ACME", "id": "acme"},
         {"label": "ORG", "pattern": "ACM"},
     ]
     ruler.add_patterns(patterns)
-    doc = ruler(nlp.make_doc("Duygu went to school"))
+    doc = nlp("Dina went to school")
     assert len(ruler.patterns) == 3
     assert len(doc.ents) == 1
+    if isinstance(ruler, EntityRuler):
+        assert "PERSON||dina" in ruler.phrase_matcher
     assert doc.ents[0].label_ == "PERSON"
-    assert doc.ents[0].text == "Duygu"
-    assert "PERSON||duygu" in ruler.phrase_matcher
-    ruler.remove("duygu")
-    doc = ruler(nlp.make_doc("Duygu went to school"))
+    assert doc.ents[0].text == "Dina"
+    if isinstance(ruler, EntityRuler):
+        ruler.remove("dina")
+    else:
+        ruler.remove_by_id("dina")
+    doc = nlp("Dina went to school")
     assert len(doc.ents) == 0
-    assert "PERSON||duygu" not in ruler.phrase_matcher
+    if isinstance(ruler, EntityRuler):
+        assert "PERSON||dina" not in ruler.phrase_matcher
     assert len(ruler.patterns) == 2
 
 
-def test_entity_ruler_remove_same_id_multiple_patterns(nlp):
-    ruler = EntityRuler(nlp)
+@pytest.mark.parametrize("entity_ruler_factory", ENTITY_RULERS)
+def test_entity_ruler_remove_same_id_multiple_patterns(nlp, entity_ruler_factory):
+    ruler = nlp.add_pipe(entity_ruler_factory, name="entity_ruler")
     patterns = [
-        {"label": "PERSON", "pattern": "Duygu", "id": "duygu"},
-        {"label": "ORG", "pattern": "DuyguCorp", "id": "duygu"},
+        {"label": "PERSON", "pattern": "Dina", "id": "dina"},
+        {"label": "ORG", "pattern": "DinaCorp", "id": "dina"},
         {"label": "ORG", "pattern": "ACME", "id": "acme"},
     ]
     ruler.add_patterns(patterns)
-    doc = ruler(nlp.make_doc("Duygu founded DuyguCorp and ACME."))
+    doc = nlp("Dina founded DinaCorp and ACME.")
     assert len(ruler.patterns) == 3
-    assert "PERSON||duygu" in ruler.phrase_matcher
-    assert "ORG||duygu" in ruler.phrase_matcher
+    if isinstance(ruler, EntityRuler):
+        assert "PERSON||dina" in ruler.phrase_matcher
+        assert "ORG||dina" in ruler.phrase_matcher
     assert len(doc.ents) == 3
-    ruler.remove("duygu")
-    doc = ruler(nlp.make_doc("Duygu founded DuyguCorp and ACME."))
+    if isinstance(ruler, EntityRuler):
+        ruler.remove("dina")
+    else:
+        ruler.remove_by_id("dina")
+    doc = nlp("Dina founded DinaCorp and ACME.")
     assert len(ruler.patterns) == 1
-    assert "PERSON||duygu" not in ruler.phrase_matcher
-    assert "ORG||duygu" not in ruler.phrase_matcher
+    if isinstance(ruler, EntityRuler):
+        assert "PERSON||dina" not in ruler.phrase_matcher
+        assert "ORG||dina" not in ruler.phrase_matcher
     assert len(doc.ents) == 1
 
 
-def test_entity_ruler_remove_nonexisting_pattern(nlp):
-    ruler = EntityRuler(nlp)
+@pytest.mark.parametrize("entity_ruler_factory", ENTITY_RULERS)
+def test_entity_ruler_remove_nonexisting_pattern(nlp, entity_ruler_factory):
+    ruler = nlp.add_pipe(entity_ruler_factory, name="entity_ruler")
     patterns = [
-        {"label": "PERSON", "pattern": "Duygu", "id": "duygu"},
+        {"label": "PERSON", "pattern": "Dina", "id": "dina"},
         {"label": "ORG", "pattern": "ACME", "id": "acme"},
         {"label": "ORG", "pattern": "ACM"},
     ]
@@ -428,82 +486,108 @@ def test_entity_ruler_remove_nonexisting_pattern(nlp):
     assert len(ruler.patterns) == 3
     with pytest.raises(ValueError):
         ruler.remove("nepattern")
-        assert len(ruler.patterns) == 3
+    if isinstance(ruler, SpanRuler):
+        with pytest.raises(ValueError):
+            ruler.remove_by_id("nepattern")
 
 
-def test_entity_ruler_remove_several_patterns(nlp):
-    ruler = EntityRuler(nlp)
+@pytest.mark.parametrize("entity_ruler_factory", ENTITY_RULERS)
+def test_entity_ruler_remove_several_patterns(nlp, entity_ruler_factory):
+    ruler = nlp.add_pipe(entity_ruler_factory, name="entity_ruler")
     patterns = [
-        {"label": "PERSON", "pattern": "Duygu", "id": "duygu"},
+        {"label": "PERSON", "pattern": "Dina", "id": "dina"},
         {"label": "ORG", "pattern": "ACME", "id": "acme"},
         {"label": "ORG", "pattern": "ACM"},
     ]
     ruler.add_patterns(patterns)
-    doc = ruler(nlp.make_doc("Duygu founded her company ACME."))
+    doc = nlp("Dina founded her company ACME.")
     assert len(ruler.patterns) == 3
     assert len(doc.ents) == 2
     assert doc.ents[0].label_ == "PERSON"
-    assert doc.ents[0].text == "Duygu"
+    assert doc.ents[0].text == "Dina"
     assert doc.ents[1].label_ == "ORG"
     assert doc.ents[1].text == "ACME"
-    ruler.remove("duygu")
-    doc = ruler(nlp.make_doc("Duygu founded her company ACME"))
+    if isinstance(ruler, EntityRuler):
+        ruler.remove("dina")
+    else:
+        ruler.remove_by_id("dina")
+    doc = nlp("Dina founded her company ACME")
     assert len(ruler.patterns) == 2
     assert len(doc.ents) == 1
     assert doc.ents[0].label_ == "ORG"
     assert doc.ents[0].text == "ACME"
-    ruler.remove("acme")
-    doc = ruler(nlp.make_doc("Duygu founded her company ACME"))
+    if isinstance(ruler, EntityRuler):
+        ruler.remove("acme")
+    else:
+        ruler.remove_by_id("acme")
+    doc = nlp("Dina founded her company ACME")
     assert len(ruler.patterns) == 1
     assert len(doc.ents) == 0
 
 
-def test_entity_ruler_remove_patterns_in_a_row(nlp):
-    ruler = EntityRuler(nlp)
+@pytest.mark.parametrize("entity_ruler_factory", ENTITY_RULERS)
+def test_entity_ruler_remove_patterns_in_a_row(nlp, entity_ruler_factory):
+    ruler = nlp.add_pipe(entity_ruler_factory, name="entity_ruler")
     patterns = [
-        {"label": "PERSON", "pattern": "Duygu", "id": "duygu"},
+        {"label": "PERSON", "pattern": "Dina", "id": "dina"},
         {"label": "ORG", "pattern": "ACME", "id": "acme"},
         {"label": "DATE", "pattern": "her birthday", "id": "bday"},
         {"label": "ORG", "pattern": "ACM"},
     ]
     ruler.add_patterns(patterns)
-    doc = ruler(nlp.make_doc("Duygu founded her company ACME on her birthday"))
+    doc = nlp("Dina founded her company ACME on her birthday")
     assert len(doc.ents) == 3
     assert doc.ents[0].label_ == "PERSON"
-    assert doc.ents[0].text == "Duygu"
+    assert doc.ents[0].text == "Dina"
     assert doc.ents[1].label_ == "ORG"
     assert doc.ents[1].text == "ACME"
     assert doc.ents[2].label_ == "DATE"
     assert doc.ents[2].text == "her birthday"
-    ruler.remove("duygu")
-    ruler.remove("acme")
-    ruler.remove("bday")
-    doc = ruler(nlp.make_doc("Duygu went to school"))
+    if isinstance(ruler, EntityRuler):
+        ruler.remove("dina")
+        ruler.remove("acme")
+        ruler.remove("bday")
+    else:
+        ruler.remove_by_id("dina")
+        ruler.remove_by_id("acme")
+        ruler.remove_by_id("bday")
+    doc = nlp("Dina went to school")
     assert len(doc.ents) == 0
 
 
-def test_entity_ruler_remove_all_patterns(nlp):
-    ruler = EntityRuler(nlp)
+@pytest.mark.parametrize("entity_ruler_factory", ENTITY_RULERS)
+def test_entity_ruler_remove_all_patterns(nlp, entity_ruler_factory):
+    ruler = nlp.add_pipe(entity_ruler_factory, name="entity_ruler")
     patterns = [
-        {"label": "PERSON", "pattern": "Duygu", "id": "duygu"},
+        {"label": "PERSON", "pattern": "Dina", "id": "dina"},
         {"label": "ORG", "pattern": "ACME", "id": "acme"},
         {"label": "DATE", "pattern": "her birthday", "id": "bday"},
     ]
     ruler.add_patterns(patterns)
     assert len(ruler.patterns) == 3
-    ruler.remove("duygu")
+    if isinstance(ruler, EntityRuler):
+        ruler.remove("dina")
+    else:
+        ruler.remove_by_id("dina")
     assert len(ruler.patterns) == 2
-    ruler.remove("acme")
+    if isinstance(ruler, EntityRuler):
+        ruler.remove("acme")
+    else:
+        ruler.remove_by_id("acme")
     assert len(ruler.patterns) == 1
-    ruler.remove("bday")
+    if isinstance(ruler, EntityRuler):
+        ruler.remove("bday")
+    else:
+        ruler.remove_by_id("bday")
     assert len(ruler.patterns) == 0
     with pytest.warns(UserWarning):
-        doc = ruler(nlp.make_doc("Duygu founded her company ACME on her birthday"))
+        doc = nlp("Dina founded her company ACME on her birthday")
         assert len(doc.ents) == 0
 
 
-def test_entity_ruler_remove_and_add(nlp):
-    ruler = EntityRuler(nlp)
+@pytest.mark.parametrize("entity_ruler_factory", ENTITY_RULERS)
+def test_entity_ruler_remove_and_add(nlp, entity_ruler_factory):
+    ruler = nlp.add_pipe(entity_ruler_factory, name="entity_ruler")
     patterns = [{"label": "DATE", "pattern": "last time"}]
     ruler.add_patterns(patterns)
     doc = ruler(
@@ -524,7 +608,10 @@ def test_entity_ruler_remove_and_add(nlp):
     assert doc.ents[0].text == "last time"
     assert doc.ents[1].label_ == "DATE"
     assert doc.ents[1].text == "this time"
-    ruler.remove("ttime")
+    if isinstance(ruler, EntityRuler):
+        ruler.remove("ttime")
+    else:
+        ruler.remove_by_id("ttime")
     doc = ruler(
         nlp.make_doc("I saw him last time we met, this time he brought some flowers")
     )
@@ -547,7 +634,10 @@ def test_entity_ruler_remove_and_add(nlp):
     )
     assert len(ruler.patterns) == 3
     assert len(doc.ents) == 3
-    ruler.remove("ttime")
+    if isinstance(ruler, EntityRuler):
+        ruler.remove("ttime")
+    else:
+        ruler.remove_by_id("ttime")
     doc = ruler(
         nlp.make_doc(
             "I saw him last time we met, this time he brought some flowers, another time some chocolate."

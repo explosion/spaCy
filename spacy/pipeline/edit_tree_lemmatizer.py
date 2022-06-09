@@ -138,7 +138,7 @@ class EditTreeLemmatizer(TrainablePipe):
 
             truths.append(eg_truths)
 
-        d_scores, loss = loss_func(scores, truths)  # type: ignore
+        d_scores, loss = loss_func(scores, truths)
         if self.model.ops.xp.isnan(loss):
             raise ValueError(Errors.E910.format(name=self.name))
 

@@ -221,7 +221,7 @@ dependency tree.
 
 ## Token.ancestors {#ancestors tag="property" model="parser"}
 
-The rightmost token of this token's syntactic descendants.
+A sequence of the token's syntactic ancestors (parents, grandparents, etc).
 
 > #### Example
 >

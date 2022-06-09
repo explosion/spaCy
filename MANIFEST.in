@@ -1,4 +1,4 @@
-recursive-include spacy *.pyi *.pyx *.pxd *.txt *.cfg *.jinja *.toml
+recursive-include spacy *.pyi *.pyx *.pxd *.txt *.cfg *.jinja *.toml *.hh
 include LICENSE
 include README.md
 include pyproject.toml
