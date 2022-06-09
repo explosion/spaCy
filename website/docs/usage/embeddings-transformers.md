@@ -530,7 +530,8 @@ models, which can **improve the accuracy** of your components.
 Word vectors in spaCy are "static" in the sense that they are not learned
 parameters of the statistical models, and spaCy itself does not feature any
 algorithms for learning word vector tables. You can train a word vectors table
-using tools such as [Gensim](https://radimrehurek.com/gensim/),
+using tools such as [floret](https://github.com/explosion/floret),
+[Gensim](https://radimrehurek.com/gensim/),
 [FastText](https://fasttext.cc/) or
 [GloVe](https://nlp.stanford.edu/projects/glove/), or download existing
 pretrained vectors. The [`init vectors`](/api/cli#init-vectors) command lets you

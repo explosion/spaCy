@@ -9,7 +9,7 @@ from libc.stdlib cimport calloc, free
 import random
 
 import srsly
-from thinc.api import set_dropout_rate, CupyOps
+from thinc.api import get_ops, set_dropout_rate, CupyOps
 from thinc.extra.search cimport Beam
 import numpy.random
 import numpy
@@ -259,6 +259,12 @@ cdef class Parser(TrainablePipe):
     def greedy_parse(self, docs, drop=0.):
         cdef vector[StateC*] states
         cdef StateClass state
+        ops = self.model.ops
+        cdef CBlas cblas
+        if isinstance(ops, CupyOps):
+            cblas = get_ops("cpu").cblas()
+        else:
+            cblas = ops.cblas()
         self._ensure_labels_are_added(docs)
         set_dropout_rate(self.model, drop)
         batch = self.moves.init_batch(docs)
@@ -269,8 +275,7 @@ cdef class Parser(TrainablePipe):
                 states.push_back(state.c)
         sizes = get_c_sizes(model, states.size())
         with nogil:
-            self._parseC(&states[0],
-                weights, sizes)
+            self._parseC(cblas, &states[0], weights, sizes)
         model.clear_memory()
         del model
         return batch
@@ -297,14 +302,13 @@ cdef class Parser(TrainablePipe):
         del model
         return list(batch)
 
-    cdef void _parseC(self, StateC** states,
+    cdef void _parseC(self, CBlas cblas, StateC** states,
             WeightsC weights, SizesC sizes) nogil:
         cdef int i, j
         cdef vector[StateC*] unfinished
         cdef ActivationsC activations = alloc_activations(sizes)
         while sizes.states >= 1:
-            predict_states(&activations,
-                states, &weights, sizes)
+            predict_states(cblas, &activations, states, &weights, sizes)
             # Validate actions, argmax, take action.
             self.c_transition_batch(states,
                 activations.scores, sizes.classes, sizes.states)

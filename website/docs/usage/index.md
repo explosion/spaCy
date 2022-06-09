@@ -129,15 +129,14 @@ machine learning library, [Thinc](https://thinc.ai). For GPU support, we've been
 grateful to use the work of Chainer's [CuPy](https://cupy.chainer.org) module,
 which provides a numpy-compatible interface for GPU arrays.
 
-spaCy can be installed on GPU by specifying `spacy[cuda]`, `spacy[cuda90]`,
-`spacy[cuda91]`, `spacy[cuda92]`, `spacy[cuda100]`, `spacy[cuda101]`,
-`spacy[cuda102]`, `spacy[cuda110]`, `spacy[cuda111]` or `spacy[cuda112]`. If you
-know your cuda version, using the more explicit specifier allows cupy to be
-installed via wheel, saving some compilation time. The specifiers should install
+spaCy can be installed for a CUDA-compatible GPU by specifying `spacy[cuda]`,
+`spacy[cuda102]`, `spacy[cuda112]`, `spacy[cuda113]`, etc. If you know your
+CUDA version, using the more explicit specifier allows CuPy to be installed via
+wheel, saving some compilation time. The specifiers should install
 [`cupy`](https://cupy.chainer.org).
 
 ```bash
-$ pip install -U %%SPACY_PKG_NAME[cuda92]%%SPACY_PKG_FLAGS
+$ pip install -U %%SPACY_PKG_NAME[cuda113]%%SPACY_PKG_FLAGS
 ```
 
 Once you have a GPU-enabled installation, the best way to activate it is to call
