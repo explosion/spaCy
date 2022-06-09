@@ -16,7 +16,7 @@ from .errors import Errors
 from . import util
 
 # Not particularly elegant, but this is faster than `isinstance(key, numbers.Integral)`
-cdef inline int try_coerce_to_hash(object key, hash_t* out_hash):
+cdef inline bool try_coerce_to_hash(object key, hash_t* out_hash):
     try:
         out_hash[0] = key
         return True
