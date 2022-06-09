@@ -1985,7 +1985,6 @@ class Language:
 
         DOCS: https://spacy.io/api/language#to_disk
         """
-
         path = util.ensure_path(path)
         serializers = {}
         serializers["tokenizer"] = lambda p: self.tokenizer.to_disk(  # type: ignore[union-attr]
