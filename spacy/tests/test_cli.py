@@ -751,28 +751,6 @@ def test_debug_data_compile_gold():
     assert data["boundary_cross_ents"] == 1
 
 
-@pytest.mark.issue(10727)
-def test_init_config_from_python_without_optional_args():
-    """
-    Tests calling init_config_cli() from Python with optional arguments not set. This should detect whether Typer
-    automatically sets default values for arguments when decorated functions are called from Python instead
-    from the CLI.
-    """
-
-    with pytest.raises(AttributeError):
-        with make_tempdir() as temp_dir:
-            init_config_cli(output_file=temp_dir / "config.cfg")
-
-    with make_tempdir() as temp_dir:
-        init_config_cli(
-            output_file=temp_dir / "config.cfg",
-            lang="en",
-            pipeline="ner",
-            optimize=Optimizations.efficiency,
-            gpu=False,
-            pretraining=False,
-        )
-
 def test_debug_data_compile_gold_for_spans():
     nlp = English()
     spans_key = "sc"
