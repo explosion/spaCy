@@ -10,8 +10,10 @@ from jinja2 import Template
 from .. import util
 from ..language import DEFAULT_CONFIG_PRETRAIN_PATH
 from ..schemas import RecommendationSchema
+from ..util import SimpleFrozenList
 from ._util import init_cli, Arg, Opt, show_validation_error, COMMAND
 from ._util import string_to_list, import_code
+
 from ..util import SimpleFrozenList
 
 ROOT = Path(__file__).parent / "templates"
