@@ -27,6 +27,7 @@ PatternType = Dict[str, Union[str, List[Dict[str, Any]]]]
         "validate": False,
         "overwrite_ents": False,
         "ent_id_sep": DEFAULT_ENT_ID_SEP,
+        "disable_pipes": [],
         "scorer": {"@scorers": "spacy.entity_ruler_scorer.v1"},
     },
     default_score_weights={
@@ -43,6 +44,7 @@ def make_entity_ruler(
     validate: bool,
     overwrite_ents: bool,
     ent_id_sep: str,
+    disable_pipes: List[str],
     scorer: Optional[Callable],
 ):
     return EntityRuler(
@@ -52,6 +54,7 @@ def make_entity_ruler(
         validate=validate,
         overwrite_ents=overwrite_ents,
         ent_id_sep=ent_id_sep,
+        disable_pipes=disable_pipes,
         scorer=scorer,
     )
 
@@ -85,9 +88,9 @@ class EntityRuler(Pipe):
         validate: bool = False,
         overwrite_ents: bool = False,
         ent_id_sep: str = DEFAULT_ENT_ID_SEP,
+        disable_pipes: List[str] = [],
         patterns: Optional[List[PatternType]] = None,
         scorer: Optional[Callable] = entity_ruler_score,
-        disable_pipes: Optional[List[str]] = [],
     ) -> None:
         """Initialize the entity ruler. If patterns are supplied here, they
         need to be a list of dictionaries with a `"label"` and `"pattern"`
@@ -126,10 +129,10 @@ class EntityRuler(Pipe):
         )
         self.ent_id_sep = ent_id_sep
         self._ent_ids = defaultdict(tuple)  # type: ignore
+        self.disable_pipes = disable_pipes
         if patterns is not None:
             self.add_patterns(patterns)
         self.scorer = scorer
-        self.disable_pipes = disable_pipes
 
     def __len__(self) -> int:
         """The number of all patterns added to the entity ruler."""
