@@ -198,12 +198,12 @@ import DisplacySpanHtml from 'images/displacy-span.html'
 
 The span visualizer lets you customize the following `options`:
 
-| Argument          | Description                                                                                                                                                                               |
-| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `spans_key`       | Which spans key to render spans from. Default is `"sc"`. ~~str~~                                                                                                                          |
+| Argument | Description                                                                                                                                             |
+|-----------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `spans_key`       | Which spans key to render spans from. Default is `"sc"`. ~~str~~                                                                                                   |
 | `templates`       | Dictionary containing the keys `"span"`, `"slice"`, and `"start"`. These dictate how the overall span, a span slice, and the starting token will be rendered. ~~Optional[Dict[str, str]~~ |
-| `kb_url_template` | Optional template to construct the KB url for the entity to link to. Expects a python f-string format with single field to fill in ~~Optional[str]~~                                      |
-| `colors`          | Color overrides. Entity types should be mapped to color names or values. ~~Dict[str, str]~~                                                                                               |
+| `kb_url_template` | Optional template to construct the KB url for the entity to link to. Expects a python f-string format with single field to fill in ~~Optional[str]~~                    |
+| `colors`          | Color overrides. Entity types should be mapped to color names or values. ~~Dict[str, str]~~ |
 
 Because spans can be stored across different keys in `doc.spans`, you need to specify
 which one displaCy should use with `spans_key` (`sc` is the default). 
