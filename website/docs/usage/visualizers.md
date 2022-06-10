@@ -393,15 +393,6 @@ functions for converting `Doc` objects to displaCy's format for use with `manual
 ```
 
 ```python
-### ENT input with knowledge base links
-{
-    "text": "But Google is starting from behind.",
-    "ents": [{"start": 4, "end": 10, "label": "ORG", "kb_id": "Q95", "kb_url": "https://www.wikidata.org/entity/Q95"}],
-    "title": None
-}
-```
-
-```python
 ### SPANS input with knowledge base links
 {
     "text": "But Google is starting from behind.",
