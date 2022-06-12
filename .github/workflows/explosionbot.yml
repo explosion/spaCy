@@ -6,6 +6,9 @@ on:
       - created
       - edited
 
+permissions:
+  contents: read
+
 jobs:
   explosion-bot:
     runs-on: ubuntu-18.04

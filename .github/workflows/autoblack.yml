@@ -7,8 +7,14 @@ on:
   schedule:
     - cron: '0 8 * * 5'  # every Friday at 8am UTC
 
+permissions:
+  contents: read
+
 jobs:
   autoblack:
+    permissions:
+      contents: write  # for peter-evans/create-pull-request to create branch
+      pull-requests: write  # for peter-evans/create-pull-request to create a PR
     if: github.repository_owner == 'explosion'
     runs-on: ubuntu-latest
     steps:
