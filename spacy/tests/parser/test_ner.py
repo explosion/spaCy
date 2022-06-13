@@ -108,8 +108,8 @@ def test_issue2385():
     tags2 = ("I-ORG", "I-ORG", "B-ORG")
     assert iob_to_biluo(tags2) == ["B-ORG", "L-ORG", "U-ORG"]
     # maintain support for iob2 format
-    tags3 = ("B-PERSON-1", "I-PERSON-1", "B-PERSON-1")
-    assert iob_to_biluo(tags3) == ["B-PERSON-1", "L-PERSON-1", "U-PERSON-1"]
+    tags3 = ("B-PERSON", "I-PERSON", "B-PERSON")
+    assert iob_to_biluo(tags3) == ["B-PERSON", "L-PERSON", "U-PERSON"]
     # ensure it works with hyphens in the name
     tags4 = ("B-MULTI-PERSON", "I-MULTI-PERSON", "B-MULTI-PERSON")
     assert iob_to_biluo(tags4) == ["B-MULTI-PERSON", "L-MULTI-PERSON", "U-MULTI-PERSON"]
