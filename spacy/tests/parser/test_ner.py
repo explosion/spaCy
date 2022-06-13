@@ -108,8 +108,11 @@ def test_issue2385():
     tags2 = ("I-ORG", "I-ORG", "B-ORG")
     assert iob_to_biluo(tags2) == ["B-ORG", "L-ORG", "U-ORG"]
     # maintain support for iob2 format
-    tags3 = ("B-PERSON", "I-PERSON", "B-PERSON")
-    assert iob_to_biluo(tags3) == ["B-PERSON", "L-PERSON", "U-PERSON"]
+    tags3 = ("B-PERSON-1", "I-PERSON-1", "B-PERSON-1")
+    assert iob_to_biluo(tags3) == ["B-PERSON-1", "L-PERSON-1", "U-PERSON-1"]
+    # ensure it works with hyphens in the name
+    tags4 = ("B-MULTI-PERSON", "I-MULTI-PERSON", "B-MULTI-PERSON")
+    assert iob_to_biluo(tags4) == ["B-MULTI-PERSON", "L-MULTI-PERSON", "U-MULTI-PERSON"]
 
 
 @pytest.mark.issue(2800)
@@ -152,6 +155,19 @@ def test_issue3209():
     model.attrs["resize_output"](model, ner.moves.n_moves)
     nlp2.from_bytes(nlp.to_bytes())
     assert ner2.move_names == move_names
+
+
+def test_labels_from_BILUO():
+    """Test that labels are inferred incorrectly when there's a - in label.
+    """
+    nlp = English()
+    ner = nlp.add_pipe("ner")
+    ner.add_label("LARGE-ANIMAL")
+    nlp.initialize()
+    move_names = ["O", "B-LARGE-ANIMAL", "I-LARGE-ANIMAL", "L-LARGE-ANIMAL", "U-LARGE-ANIMAL"]
+    labels = {"LARGE-ANIMAL"}
+    assert ner.move_names == move_names
+    assert set(ner.labels) == labels
 
 
 @pytest.mark.issue(4267)

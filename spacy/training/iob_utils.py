@@ -218,6 +218,10 @@ def tags_to_entities(tags: Iterable[str]) -> List[Tuple[str, int, int]]:
     return entities
 
 
+def strip_bilu_prefix(label: str):
+    return "-".join(label.split("-")[1:])
+
+
 # Fallbacks to make backwards-compat easier
 offsets_from_biluo_tags = biluo_tags_to_offsets
 spans_from_biluo_tags = biluo_tags_to_spans
