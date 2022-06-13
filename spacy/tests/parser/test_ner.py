@@ -158,7 +158,7 @@ def test_issue3209():
 
 
 def test_labels_from_BILUO():
-    """Test that labels are inferred incorrectly when there's a - in label.
+    """Test that labels are inferred correctly when there's a - in label.
     """
     nlp = English()
     ner = nlp.add_pipe("ner")
