@@ -24,7 +24,7 @@ TOKENIZER_SUFFIXES = (
         r"(?<=°[FfCcKk])\.",
         r"(?<=[0-9])(?:{c})".format(c=CURRENCY),
         r"(?<=[0-9])(?:{u})".format(u=UNITS),
-        r"(?<=[0-9{al}{e}{p}{q}])\.".format(
+        r"(?<=[0-9{al}{e}{p}(?:{q})])\.".format(
             al=ALPHA_LOWER, e=r"%²\-\+", q=CONCAT_QUOTES, p=PUNCT
         ),
         r"(?<=[{au}][{au}])\.".format(au=ALPHA_UPPER),
