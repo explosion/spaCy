@@ -15,7 +15,7 @@ from ...kb import KnowledgeBase, Candidate
 from ...ml import empty_kb
 from ...tokens import Doc, Span
 from ..pipe import deserialize_config
-from ..trainable_pipe import TrainablePipe
+from ..trainable_pipe import TrainablePipe, trainable_pipe_nvtx_range
 from ...language import Language
 from ...vocab import Vocab
 from ...training import Example, validate_examples, validate_get_examples
@@ -103,6 +103,7 @@ class EntityLinker_v1(TrainablePipe):
         if len(self.kb) == 0:
             raise ValueError(Errors.E139.format(name=self.name))
 
+    @trainable_pipe_nvtx_range
     def initialize(
         self,
         get_examples: Callable[[], Iterable[Example]],
@@ -138,6 +139,7 @@ class EntityLinker_v1(TrainablePipe):
             X=doc_sample, Y=self.model.ops.asarray(vector_sample, dtype="float32")
         )
 
+    @trainable_pipe_nvtx_range
     def update(
         self,
         examples: Iterable[Example],
@@ -203,6 +205,7 @@ class EntityLinker_v1(TrainablePipe):
         losses[self.name] += loss
         return losses
 
+    @trainable_pipe_nvtx_range
     def get_loss(self, examples: Iterable[Example], sentence_encodings: Floats2d):
         validate_examples(examples, "EntityLinker_v1.get_loss")
         entity_encodings = []
@@ -224,6 +227,7 @@ class EntityLinker_v1(TrainablePipe):
         loss = loss / len(entity_encodings)
         return float(loss), gradients
 
+    @trainable_pipe_nvtx_range
     def predict(self, docs: Iterable[Doc]) -> List[str]:
         """Apply the pipeline's model to a batch of docs, without modifying them.
         Returns the KB IDs for each entity in each doc, including NIL if there is
@@ -312,6 +316,7 @@ class EntityLinker_v1(TrainablePipe):
             raise RuntimeError(err)
         return final_kb_ids
 
+    @trainable_pipe_nvtx_range
     def set_annotations(self, docs: Iterable[Doc], kb_ids: List[str]) -> None:
         """Modify a batch of documents, using pre-computed scores.
 
@@ -419,8 +424,10 @@ class EntityLinker_v1(TrainablePipe):
         util.from_disk(path, deserialize, exclude)
         return self
 
+    @trainable_pipe_nvtx_range
     def rehearse(self, examples, *, sgd=None, losses=None, **config):
         raise NotImplementedError
 
+    @trainable_pipe_nvtx_range
     def add_label(self, label):
         raise NotImplementedError

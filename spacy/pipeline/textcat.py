@@ -4,7 +4,7 @@ from thinc.types import Floats2d
 import numpy
 from itertools import islice
 
-from .trainable_pipe import TrainablePipe
+from .trainable_pipe import TrainablePipe, trainable_pipe_nvtx_range
 from ..language import Language
 from ..training import Example, validate_examples, validate_get_examples
 from ..errors import Errors
@@ -181,6 +181,7 @@ class TextCategorizer(TrainablePipe):
         """
         return self.labels  # type: ignore[return-value]
 
+    @trainable_pipe_nvtx_range
     def predict(self, docs: Iterable[Doc]):
         """Apply the pipeline's model to a batch of docs, without modifying them.
 
@@ -199,6 +200,7 @@ class TextCategorizer(TrainablePipe):
         scores = self.model.ops.asarray(scores)
         return scores
 
+    @trainable_pipe_nvtx_range
     def set_annotations(self, docs: Iterable[Doc], scores) -> None:
         """Modify a batch of Doc objects, using pre-computed scores.
 
@@ -211,6 +213,7 @@ class TextCategorizer(TrainablePipe):
             for j, label in enumerate(self.labels):
                 doc.cats[label] = float(scores[i, j])
 
+    @trainable_pipe_nvtx_range
     def update(
         self,
         examples: Iterable[Example],
@@ -248,6 +251,7 @@ class TextCategorizer(TrainablePipe):
         losses[self.name] += loss
         return losses
 
+    @trainable_pipe_nvtx_range
     def rehearse(
         self,
         examples: Iterable[Example],
@@ -306,6 +310,7 @@ class TextCategorizer(TrainablePipe):
         truths = self.model.ops.asarray(truths)  # type: ignore
         return truths, not_missing  # type: ignore
 
+    @trainable_pipe_nvtx_range
     def get_loss(self, examples: Iterable[Example], scores) -> Tuple[float, float]:
         """Find the loss and gradient of loss for the batch of documents and
         their predicted scores.
@@ -325,6 +330,7 @@ class TextCategorizer(TrainablePipe):
         mean_square_error = (d_scores**2).mean()
         return float(mean_square_error), d_scores
 
+    @trainable_pipe_nvtx_range
     def add_label(self, label: str) -> int:
         """Add a new label to the pipe.
 
@@ -344,6 +350,7 @@ class TextCategorizer(TrainablePipe):
         self.vocab.strings.add(label)
         return 1
 
+    @trainable_pipe_nvtx_range
     def initialize(
         self,
         get_examples: Callable[[], Iterable[Example]],

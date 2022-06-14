@@ -12,7 +12,7 @@ from thinc.types import Floats2d, Ints1d, Ints2d
 from ._edit_tree_internals.edit_trees import EditTrees
 from ._edit_tree_internals.schemas import validate_edit_tree
 from .lemmatizer import lemmatizer_score
-from .trainable_pipe import TrainablePipe
+from .trainable_pipe import TrainablePipe, trainable_pipe_nvtx_range
 from ..errors import Errors
 from ..language import Language
 from ..tokens import Doc
@@ -117,6 +117,7 @@ class EditTreeLemmatizer(TrainablePipe):
         self.cfg: Dict[str, Any] = {"labels": []}
         self.scorer = scorer
 
+    @trainable_pipe_nvtx_range
     def get_loss(
         self, examples: Iterable[Example], scores: List[Floats2d]
     ) -> Tuple[float, List[Floats2d]]:
@@ -144,6 +145,7 @@ class EditTreeLemmatizer(TrainablePipe):
 
         return float(loss), d_scores
 
+    @trainable_pipe_nvtx_range
     def predict(self, docs: Iterable[Doc]) -> List[Ints2d]:
         n_docs = len(list(docs))
         if not any(len(doc) for doc in docs):
@@ -186,6 +188,7 @@ class EditTreeLemmatizer(TrainablePipe):
 
         return guesses
 
+    @trainable_pipe_nvtx_range
     def set_annotations(self, docs: Iterable[Doc], batch_tree_ids):
         for i, doc in enumerate(docs):
             doc_tree_ids = batch_tree_ids[i]
@@ -224,6 +227,7 @@ class EditTreeLemmatizer(TrainablePipe):
             trees.append(tree)
         return dict(trees=trees, labels=tuple(self.cfg["labels"]))
 
+    @trainable_pipe_nvtx_range
     def initialize(
         self,
         get_examples: Callable[[], Iterable[Example]],

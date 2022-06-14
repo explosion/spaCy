@@ -8,7 +8,7 @@ import numpy
 from ..compat import Protocol, runtime_checkable
 from ..scorer import Scorer
 from ..language import Language
-from .trainable_pipe import TrainablePipe
+from .trainable_pipe import TrainablePipe, trainable_pipe_nvtx_range
 from ..tokens import Doc, SpanGroup, Span
 from ..vocab import Vocab
 from ..training import Example, validate_examples
@@ -227,6 +227,7 @@ class SpanCategorizer(TrainablePipe):
         """
         return str(self.cfg["spans_key"])
 
+    @trainable_pipe_nvtx_range
     def add_label(self, label: str) -> int:
         """Add a new label to the pipe.
 
@@ -260,6 +261,7 @@ class SpanCategorizer(TrainablePipe):
         """
         return list(self.labels)
 
+    @trainable_pipe_nvtx_range
     def predict(self, docs: Iterable[Doc]):
         """Apply the pipeline's model to a batch of docs, without modifying them.
 
@@ -272,6 +274,7 @@ class SpanCategorizer(TrainablePipe):
         scores = self.model.predict((docs, indices))  # type: ignore
         return indices, scores
 
+    @trainable_pipe_nvtx_range
     def set_candidates(
         self, docs: Iterable[Doc], *, candidates_key: str = "candidates"
     ) -> None:
@@ -290,6 +293,7 @@ class SpanCategorizer(TrainablePipe):
             for index in candidates.dataXd:
                 doc.spans[candidates_key].append(doc[index[0] : index[1]])
 
+    @trainable_pipe_nvtx_range
     def set_annotations(self, docs: Iterable[Doc], indices_scores) -> None:
         """Modify a batch of Doc objects, using pre-computed scores.
 
@@ -308,6 +312,7 @@ class SpanCategorizer(TrainablePipe):
             )
             offset += indices.lengths[i]
 
+    @trainable_pipe_nvtx_range
     def update(
         self,
         examples: Iterable[Example],
@@ -349,6 +354,7 @@ class SpanCategorizer(TrainablePipe):
         losses[self.name] += loss
         return losses
 
+    @trainable_pipe_nvtx_range
     def get_loss(
         self, examples: Iterable[Example], spans_scores: Tuple[Ragged, Floats2d]
     ) -> Tuple[float, float]:
@@ -399,6 +405,7 @@ class SpanCategorizer(TrainablePipe):
         loss = float((d_scores**2).sum())
         return loss, d_scores
 
+    @trainable_pipe_nvtx_range
     def initialize(
         self,
         get_examples: Callable[[], Iterable[Example]],
