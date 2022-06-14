@@ -218,7 +218,7 @@ def tags_to_entities(tags: Iterable[str]) -> List[Tuple[str, int, int]]:
     return entities
 
 
-def strip_bilu_prefix(label: str):
+def strip_bilu_prefix(label: str) -> str:
     return "-".join(label.split("-")[1:])
 
 
