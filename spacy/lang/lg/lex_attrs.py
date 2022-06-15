@@ -1,3 +1,5 @@
+from ...attrs import LIKE_NUM
+
 _num_words=[
 "nnooti" # Zero
 "zeero",#zero
