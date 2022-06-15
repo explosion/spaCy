@@ -11,7 +11,7 @@ from ..tokens.doc cimport Doc
 from ..morphology cimport Morphology
 from ..vocab cimport Vocab
 
-from .trainable_pipe import TrainablePipe, trainable_pipe_nvtx_range
+from .trainable_pipe import TrainablePipe
 from .pipe import deserialize_config
 from ..language import Language
 from ..attrs import POS, ID
@@ -126,7 +126,6 @@ class Tagger(TrainablePipe):
         """Data about the labels currently added to the component."""
         return tuple(self.cfg["labels"])
 
-    @trainable_pipe_nvtx_range
     def predict(self, docs):
         """Apply the pipeline's model to a batch of docs, without modifying them.
 
@@ -156,7 +155,6 @@ class Tagger(TrainablePipe):
             guesses.append(doc_guesses)
         return guesses
 
-    @trainable_pipe_nvtx_range
     def set_annotations(self, docs, batch_tag_ids):
         """Modify a batch of documents, using pre-computed scores.
 
@@ -179,7 +177,6 @@ class Tagger(TrainablePipe):
                 if doc.c[j].tag == 0 or overwrite:
                     doc.c[j].tag = self.vocab.strings[labels[tag_id]]
 
-    @trainable_pipe_nvtx_range
     def update(self, examples, *, drop=0., sgd=None, losses=None):
         """Learn from a batch of documents and gold-standard information,
         updating the pipe's model. Delegates to predict and get_loss.
@@ -213,7 +210,6 @@ class Tagger(TrainablePipe):
         losses[self.name] += loss
         return losses
 
-    @trainable_pipe_nvtx_range
     def rehearse(self, examples, *, drop=0., sgd=None, losses=None):
         """Perform a "rehearsal" update from a batch of data. Rehearsal updates
         teach the current model to make predictions similar to an initial model,
@@ -249,7 +245,6 @@ class Tagger(TrainablePipe):
         losses[self.name] += loss
         return losses
 
-    @trainable_pipe_nvtx_range
     def get_loss(self, examples, scores):
         """Find the loss and gradient of loss for the batch of documents and
         their predicted scores.
@@ -274,7 +269,6 @@ class Tagger(TrainablePipe):
             raise ValueError(Errors.E910.format(name=self.name))
         return float(loss), d_scores
 
-    @trainable_pipe_nvtx_range
     def initialize(self, get_examples, *, nlp=None, labels=None):
         """Initialize the pipe for training, using a representative set
         of data examples.
@@ -313,7 +307,6 @@ class Tagger(TrainablePipe):
         assert len(label_sample) > 0, Errors.E923.format(name=self.name)
         self.model.initialize(X=doc_sample, Y=label_sample)
 
-    @trainable_pipe_nvtx_range
     def add_label(self, label):
         """Add a new label to the pipe.
 

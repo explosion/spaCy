@@ -6,7 +6,7 @@ from thinc.api import set_dropout_rate
 
 from ..tokens.doc cimport Doc
 
-from .trainable_pipe import TrainablePipe, trainable_pipe_nvtx_range
+from .trainable_pipe import TrainablePipe
 from .tagger import Tagger
 from ..training import validate_examples
 from ..language import Language
@@ -78,11 +78,9 @@ class MultitaskObjective(Tagger):
     def labels(self, value):
         self.cfg["labels"] = value
 
-    @trainable_pipe_nvtx_range
     def set_annotations(self, docs, dep_ids):
         pass
 
-    @trainable_pipe_nvtx_range
     def initialize(self, get_examples, nlp=None, labels=None):
         if not hasattr(get_examples, "__call__"):
             err = Errors.E930.format(name="MultitaskObjective", obj=type(get_examples))
@@ -97,13 +95,11 @@ class MultitaskObjective(Tagger):
                         self.labels[label] = len(self.labels)
         self.model.initialize()   # TODO: fix initialization by defining X and Y
 
-    @trainable_pipe_nvtx_range
     def predict(self, docs):
         tokvecs = self.model.get_ref("tok2vec")(docs)
         scores = self.model.get_ref("softmax")(tokvecs)
         return tokvecs, scores
 
-    @trainable_pipe_nvtx_range
     def get_loss(self, examples, scores):
         cdef int idx = 0
         correct = numpy.zeros((scores.shape[0],), dtype="i")
@@ -178,23 +174,19 @@ class ClozeMultitask(TrainablePipe):
         self.cfg = cfg
         self.distance = CosineDistance(ignore_zeros=True, normalize=False)  # TODO: in config
 
-    @trainable_pipe_nvtx_range
     def set_annotations(self, docs, dep_ids):
         pass
 
-    @trainable_pipe_nvtx_range
     def initialize(self, get_examples, nlp=None):
         self.model.initialize()  # TODO: fix initialization by defining X and Y
         X = self.model.ops.alloc((5, self.model.get_ref("tok2vec").get_dim("nO")))
         self.model.output_layer.initialize(X)
 
-    @trainable_pipe_nvtx_range
     def predict(self, docs):
         tokvecs = self.model.get_ref("tok2vec")(docs)
         vectors = self.model.get_ref("output_layer")(tokvecs)
         return tokvecs, vectors
 
-    @trainable_pipe_nvtx_range
     def get_loss(self, examples, vectors, prediction):
         validate_examples(examples, "ClozeMultitask.get_loss")
         # The simplest way to implement this would be to vstack the
@@ -207,11 +199,9 @@ class ClozeMultitask(TrainablePipe):
         loss = self.distance.get_loss(prediction, target)
         return float(loss), gradient
 
-    @trainable_pipe_nvtx_range
     def update(self, examples, *, drop=0., sgd=None, losses=None):
         pass
 
-    @trainable_pipe_nvtx_range
     def rehearse(self, examples, drop=0., sgd=None, losses=None):
         if losses is not None and self.name not in losses:
             losses[self.name] = 0.
@@ -227,6 +217,5 @@ class ClozeMultitask(TrainablePipe):
             losses[self.name] += loss
         return losses
 
-    @trainable_pipe_nvtx_range
     def add_label(self, label):
         raise NotImplementedError

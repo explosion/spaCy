@@ -21,7 +21,7 @@ from ..ml.parser_model cimport predict_states, arg_max_if_valid
 from ..ml.parser_model cimport WeightsC, ActivationsC, SizesC, cpu_log_loss
 from ..ml.parser_model cimport get_c_weights, get_c_sizes
 from ..tokens.doc cimport Doc
-from .trainable_pipe import TrainablePipe, trainable_pipe_nvtx_range
+from .trainable_pipe import TrainablePipe
 from ._parser_internals cimport _beam_utils
 from ._parser_internals import _beam_utils
 
@@ -159,7 +159,6 @@ cdef class Parser(TrainablePipe):
     def incorrect_spans_key(self):
         return self.cfg["incorrect_spans_key"]
 
-    @trainable_pipe_nvtx_range
     def add_label(self, label):
         resized = False
         for action in self.moves.action_types:
@@ -215,7 +214,6 @@ cdef class Parser(TrainablePipe):
         with self.model.use_params(params):
             yield
 
-    @trainable_pipe_nvtx_range
     def pipe(self, docs, *, int batch_size=256):
         """Process a stream of documents.
 
@@ -242,7 +240,6 @@ cdef class Parser(TrainablePipe):
                 error_handler(self.name, self, batch_in_order, e)
 
 
-    @trainable_pipe_nvtx_range
     def predict(self, docs):
         if isinstance(docs, Doc):
             docs = [docs]
@@ -259,7 +256,6 @@ cdef class Parser(TrainablePipe):
                 beam_density=self.cfg["beam_density"]
             )
 
-    @trainable_pipe_nvtx_range
     def greedy_parse(self, docs, drop=0.):
         cdef vector[StateC*] states
         cdef StateClass state
@@ -284,7 +280,6 @@ cdef class Parser(TrainablePipe):
         del model
         return batch
 
-    @trainable_pipe_nvtx_range
     def beam_parse(self, docs, int beam_width, float drop=0., beam_density=0.):
         cdef Beam beam
         cdef Doc doc
@@ -326,7 +321,6 @@ cdef class Parser(TrainablePipe):
             unfinished.clear()
         free_activations(&activations)
 
-    @trainable_pipe_nvtx_range
     def set_annotations(self, docs, states_or_beams):
         cdef StateClass state
         cdef Beam beam
@@ -337,7 +331,6 @@ cdef class Parser(TrainablePipe):
             for hook in self.postprocesses:
                 hook(doc)
 
-    @trainable_pipe_nvtx_range
     def transition_states(self, states, float[:, ::1] scores):
         cdef StateClass state
         cdef float* c_scores = &scores[0, 0]
@@ -367,7 +360,6 @@ cdef class Parser(TrainablePipe):
                 action.do(states[i], action.label)
         free(is_valid)
 
-    @trainable_pipe_nvtx_range
     def update(self, examples, *, drop=0., sgd=None, losses=None):
         cdef StateClass state
         if losses is None:
@@ -440,7 +432,6 @@ cdef class Parser(TrainablePipe):
         del model
         return losses
 
-    @trainable_pipe_nvtx_range
     def rehearse(self, examples, sgd=None, losses=None, **cfg):
         """Perform a "rehearsal" update, to prevent catastrophic forgetting."""
         if losses is None:
@@ -490,7 +481,6 @@ cdef class Parser(TrainablePipe):
         del tutor
         return losses
 
-    @trainable_pipe_nvtx_range
     def update_beam(self, examples, *, beam_width,
             drop=0., sgd=None, losses=None, beam_density=0.0):
         states, golds, _ = self.moves.init_gold_batch(examples)
@@ -512,7 +502,6 @@ cdef class Parser(TrainablePipe):
         if sgd is not None:
             self.finish_update(sgd)
 
-    @trainable_pipe_nvtx_range
     def get_batch_loss(self, states, golds, float[:, ::1] scores, losses):
         cdef StateClass state
         cdef Pool mem = Pool()
@@ -546,7 +535,6 @@ cdef class Parser(TrainablePipe):
     def set_output(self, nO):
         self.model.attrs["resize_output"](self.model, nO)
 
-    @trainable_pipe_nvtx_range
     def initialize(self, get_examples, nlp=None, labels=None):
         validate_get_examples(get_examples, "Parser.initialize")
         util.check_lexeme_norms(self.vocab, "parser or NER")

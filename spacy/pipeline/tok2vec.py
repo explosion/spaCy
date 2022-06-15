@@ -2,7 +2,7 @@ from typing import Sequence, Iterable, Optional, Dict, Callable, List, Any
 from thinc.api import Model, set_dropout_rate, Optimizer, Config
 from itertools import islice
 
-from .trainable_pipe import TrainablePipe, trainable_pipe_nvtx_range
+from .trainable_pipe import TrainablePipe
 from ..training import Example, validate_examples, validate_get_examples
 from ..tokens import Doc
 from ..vocab import Vocab
@@ -109,7 +109,6 @@ class Tok2Vec(TrainablePipe):
                 if isinstance(node, Tok2VecListener) and node.upstream_name in names:
                     self.add_listener(node, component.name)
 
-    @trainable_pipe_nvtx_range
     def predict(self, docs: Iterable[Doc]):
         """Apply the pipeline's model to a batch of docs, without modifying them.
         Returns a single tensor for a batch of documents.
@@ -129,7 +128,6 @@ class Tok2Vec(TrainablePipe):
             listener.receive(batch_id, tokvecs, _empty_backprop)
         return tokvecs
 
-    @trainable_pipe_nvtx_range
     def set_annotations(self, docs: Sequence[Doc], tokvecses) -> None:
         """Modify a batch of documents, using pre-computed scores.
 
@@ -142,7 +140,6 @@ class Tok2Vec(TrainablePipe):
             assert tokvecs.shape[0] == len(doc)
             doc.tensor = tokvecs
 
-    @trainable_pipe_nvtx_range
     def update(
         self,
         examples: Iterable[Example],
@@ -197,11 +194,9 @@ class Tok2Vec(TrainablePipe):
             self.listeners[-1].receive(batch_id, tokvecs, backprop)
         return losses
 
-    @trainable_pipe_nvtx_range
     def get_loss(self, examples, scores) -> None:
         pass
 
-    @trainable_pipe_nvtx_range
     def initialize(
         self,
         get_examples: Callable[[], Iterable[Example]],
