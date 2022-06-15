@@ -1,9 +1,7 @@
 # cython: infer_types=True, profile=True
-import functools
 from typing import Iterable, Iterator, Optional, Dict, Tuple, Callable
 import srsly
 from thinc.api import set_dropout_rate, Model, Optimizer
-from thinc.util import use_nvtx_range
 
 from ..tokens.doc cimport Doc
 
@@ -14,19 +12,6 @@ from .. import util
 from ..vocab import Vocab
 from ..language import Language
 from ..training import Example
-
-
-def trainable_pipe_nvtx_range(func):
-    """Decorator meant to used on `TrainablePipe` methods to annotate
-    them in nVidia Nsight profile using the NVTX API.
-    """
-
-    @functools.wraps(func)
-    def inner(self, *args, **kwargs):
-        with use_nvtx_range(f"{self.name} {func.__name__}"):
-            return func(self, *args, **kwargs)
-
-    return inner
 
 
 cdef class TrainablePipe(Pipe):
@@ -70,7 +55,6 @@ cdef class TrainablePipe(Pipe):
         except Exception as e:
             error_handler(self.name, self, [doc], e)
 
-    @trainable_pipe_nvtx_range
     def pipe(self, stream: Iterable[Doc], *, batch_size: int=128) -> Iterator[Doc]:
         """Apply the pipe to a stream of documents. This usually happens under
         the hood when the nlp object is called on a text and all components are
@@ -115,7 +99,6 @@ cdef class TrainablePipe(Pipe):
         """
         raise NotImplementedError(Errors.E931.format(parent="TrainablePipe", method="set_annotations", name=self.name))
 
-    @trainable_pipe_nvtx_range
     def update(self,
                examples: Iterable["Example"],
                *,
@@ -152,7 +135,6 @@ cdef class TrainablePipe(Pipe):
         losses[self.name] += loss
         return losses
 
-    @trainable_pipe_nvtx_range
     def rehearse(self,
                  examples: Iterable[Example],
                  *,
@@ -258,7 +240,6 @@ cdef class TrainablePipe(Pipe):
         with self.model.use_params(params):
             yield
 
-    @trainable_pipe_nvtx_range
     def finish_update(self, sgd: Optimizer) -> None:
         """Update parameters using the current parameter gradients.
         The Optimizer instance contains the functionality to perform
