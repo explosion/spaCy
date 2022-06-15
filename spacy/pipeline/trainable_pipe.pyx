@@ -1,6 +1,5 @@
-# cython: infer_types=True, profile=True, binding = True
+# cython: infer_types=True, profile=True
 import functools
-import inspect
 from typing import Iterable, Iterator, Optional, Dict, Tuple, Callable
 import srsly
 from thinc.api import set_dropout_rate, Model, Optimizer
@@ -27,7 +26,6 @@ def trainable_pipe_nvtx_range(func):
         with use_nvtx_range(f"{self.name} {func.__name__}"):
             return func(self, *args, **kwargs)
 
-    inner.__signature__ = inspect.signature(func)
     return inner
 
 
