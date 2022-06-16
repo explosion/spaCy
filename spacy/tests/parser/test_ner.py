@@ -314,7 +314,7 @@ def test_oracle_moves_missing_B(en_vocab):
         elif tag == "O":
             moves.add_action(move_types.index("O"), "")
         else:
-            action, label = tag.split("-")
+            action, label = tag.split("-", 1)
             moves.add_action(move_types.index("B"), label)
             moves.add_action(move_types.index("I"), label)
             moves.add_action(move_types.index("L"), label)
@@ -340,7 +340,7 @@ def test_oracle_moves_whitespace(en_vocab):
         elif tag == "O":
             moves.add_action(move_types.index("O"), "")
         else:
-            action, label = tag.split("-")
+            action, label = tag.split("-", 1)
             moves.add_action(move_types.index(action), label)
     moves.get_oracle_sequence(example)
 

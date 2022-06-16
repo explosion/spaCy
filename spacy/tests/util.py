@@ -40,7 +40,7 @@ def apply_transition_sequence(parser, doc, sequence):
     desired state."""
     for action_name in sequence:
         if "-" in action_name:
-            move, label = action_name.split("-")
+            move, label = action_name.split("-", 1)
             parser.add_label(label)
     with parser.step_through(doc) as stepwise:
         for transition in sequence:

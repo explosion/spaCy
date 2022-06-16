@@ -218,8 +218,8 @@ def tags_to_entities(tags: Iterable[str]) -> List[Tuple[str, int, int]]:
     return entities
 
 
-def strip_bilu_prefix(label: str) -> str:
-    return "-".join(label.split("-")[1:])
+def remove_bilu_prefix(label: str) -> str:
+    return label.split("-", 1)[1]
 
 
 # Fallbacks to make backwards-compat easier
