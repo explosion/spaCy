@@ -3,11 +3,10 @@ from typing import Optional
 import random
 import itertools
 from functools import partial
-from pydantic import BaseModel, StrictStr
 
 from ..util import registry
 from .example import Example
-from ..training import split_bilu_label
+from .iob_utils import split_bilu_label
 
 if TYPE_CHECKING:
     from ..language import Language  # noqa: F401
