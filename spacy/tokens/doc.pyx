@@ -38,6 +38,7 @@ from .underscore import Underscore, get_ext_args
 from ._retokenize import Retokenizer
 from ._serialize import ALL_ATTRS as DOCBIN_ALL_ATTRS
 from ..util import get_words_and_spaces
+from ..training import split_bilu_label
 
 DEF PADDING = 5
 
@@ -330,7 +331,7 @@ cdef class Doc:
                 else:
                     if len(ent) < 3 or ent[1] != "-":
                         raise ValueError(Errors.E177.format(tag=ent))
-                    ent_iob, ent_type = ent.split("-", 1)
+                    ent_iob, ent_type = split_bilu_label(ent)
                     if ent_iob not in iob_strings:
                         raise ValueError(Errors.E177.format(tag=ent))
                     ent_iob = iob_strings.index(ent_iob)

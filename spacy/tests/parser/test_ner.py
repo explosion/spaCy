@@ -10,7 +10,7 @@ from spacy.lang.it import Italian
 from spacy.language import Language
 from spacy.lookups import Lookups
 from spacy.pipeline._parser_internals.ner import BiluoPushDown
-from spacy.training import Example, iob_to_biluo
+from spacy.training import Example, iob_to_biluo, split_bilu_label
 from spacy.tokens import Doc, Span
 from spacy.vocab import Vocab
 import logging
@@ -314,7 +314,7 @@ def test_oracle_moves_missing_B(en_vocab):
         elif tag == "O":
             moves.add_action(move_types.index("O"), "")
         else:
-            action, label = tag.split("-", 1)
+            action, label = split_bilu_label(tag)
             moves.add_action(move_types.index("B"), label)
             moves.add_action(move_types.index("I"), label)
             moves.add_action(move_types.index("L"), label)
@@ -340,7 +340,7 @@ def test_oracle_moves_whitespace(en_vocab):
         elif tag == "O":
             moves.add_action(move_types.index("O"), "")
         else:
-            action, label = tag.split("-", 1)
+            action, label = split_bilu_label(tag)
             moves.add_action(move_types.index(action), label)
     moves.get_oracle_sequence(example)
 
