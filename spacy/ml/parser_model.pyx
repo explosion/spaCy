@@ -4,6 +4,7 @@ from libc.math cimport exp
 from libc.string cimport memset, memcpy
 from libc.stdlib cimport calloc, free, realloc
 from thinc.backends.linalg cimport Vec, VecVec
+from thinc.backends.cblas cimport saxpy, sgemm
 
 import numpy
 import numpy.random
@@ -112,7 +113,7 @@ cdef void predict_states(CBlas cblas, ActivationsC* A, StateC** states,
         memcpy(A.scores, A.hiddens, n.states * n.classes * sizeof(float))
     else:
         # Compute hidden-to-output
-        cblas.sgemm()(False, True, n.states, n.classes, n.hiddens,
+        sgemm(cblas)(False, True, n.states, n.classes, n.hiddens,
             1.0, <const float *>A.hiddens, n.hiddens,
             <const float *>W.hidden_weights, n.hiddens,
             0.0, A.scores, n.classes)
@@ -147,7 +148,7 @@ cdef void sum_state_features(CBlas cblas, float* output,
             else:
                 idx = token_ids[f] * id_stride + f*O
                 feature = &cached[idx]
-            cblas.saxpy()(O, one, <const float*>feature, 1, &output[b*O], 1)
+            saxpy(cblas)(O, one, <const float*>feature, 1, &output[b*O], 1)
         token_ids += F
 
 
