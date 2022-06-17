@@ -21,10 +21,10 @@ var fs = require('fs');
 const universe = require('./meta/universe.json')
 
 fs.readdir("meta/universe", function(err, files){
+    if(err){
+        console.log(`Something went wrong while scanning folder ${files}.`)
+    }
     files.forEach(function(f){
-        if(err){
-            console.log(`Something went wrong while scanning folder ${f}.`)
-        }
         fs.readFile("meta/universe/" + f, 'utf-8', function(err, blob){
             if(err){
                 console.log(`Something went while wrong reading in ${f}.`)
