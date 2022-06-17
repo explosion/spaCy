@@ -93,14 +93,14 @@ cdef class KnowledgeBase:
         self.vocab = vocab
         self._create_empty_vectors(dummy_hash=self.vocab.strings[""])
 
-    def initialize_entities(self, int64_t nr_entities):
+    def _initialize_entities(self, int64_t nr_entities):
         self._entry_index = PreshMap(nr_entities + 1)
         self._entries = entry_vec(nr_entities + 1)
 
-    def initialize_vectors(self, int64_t nr_entities):
+    def _initialize_vectors(self, int64_t nr_entities):
         self._vectors_table = float_matrix(nr_entities + 1)
 
-    def initialize_aliases(self, int64_t nr_aliases):
+    def _initialize_aliases(self, int64_t nr_aliases):
         self._alias_index = PreshMap(nr_aliases + 1)
         self._aliases_table = alias_vec(nr_aliases + 1)
 
@@ -155,8 +155,8 @@ cdef class KnowledgeBase:
             raise ValueError(Errors.E140)
 
         nr_entities = len(set(entity_list))
-        self.initialize_entities(nr_entities)
-        self.initialize_vectors(nr_entities)
+        self._initialize_entities(nr_entities)
+        self._initialize_vectors(nr_entities)
 
         i = 0
         cdef KBEntryC entry
@@ -388,9 +388,9 @@ cdef class KnowledgeBase:
             nr_entities = header[0]
             nr_aliases = header[1]
             entity_vector_length = header[2]
-            self.initialize_entities(nr_entities)
-            self.initialize_vectors(nr_entities)
-            self.initialize_aliases(nr_aliases)
+            self._initialize_entities(nr_entities)
+            self._initialize_vectors(nr_entities)
+            self._initialize_aliases(nr_aliases)
             self.entity_vector_length = entity_vector_length
 
         def deserialize_vectors(b):
@@ -512,8 +512,8 @@ cdef class KnowledgeBase:
         cdef int64_t entity_vector_length
         reader.read_header(&nr_entities, &entity_vector_length)
 
-        self.initialize_entities(nr_entities)
-        self.initialize_vectors(nr_entities)
+        self._initialize_entities(nr_entities)
+        self._initialize_vectors(nr_entities)
         self.entity_vector_length = entity_vector_length
 
         # STEP 1: load entity vectors
@@ -552,7 +552,7 @@ cdef class KnowledgeBase:
         # STEP 3: load aliases
         cdef int64_t nr_aliases
         reader.read_alias_length(&nr_aliases)
-        self.initialize_aliases(nr_aliases)
+        self._initialize_aliases(nr_aliases)
 
         cdef int64_t nr_candidates
         cdef vector[int64_t] entry_indices
