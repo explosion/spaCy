@@ -1,0 +1,20 @@
+{
+    "id": "spacy-setfit-textcat",
+    "title": "spacy-setfit-textcat",
+    "category": ["research"],
+    "tags": ["SetFit", "Few-Shot"],
+    "slogan": "spaCy Project: Experiments with SetFit & Few-Shot Classification",
+    "description": "This project is an experiment with spaCy and few-shot text classification using SetFit",
+    "github": "pmbaumgartner/spacy-setfit-textcat",
+    "url": "https://github.com/pmbaumgartner/spacy-setfit-textcat",
+    "code_language": "python",
+    "author": "Peter Baumgartner",
+    "author_links": {
+        "twitter" : "https://twitter.com/pmbaumgartner",
+        "github": "https://github.com/pmbaumgartner",
+        "website": "https://www.peterbaumgartner.com/"
+    },
+    "code_example": [
+        "https://colab.research.google.com/drive/1CvGEZC0I9_v8gWrBxSJQ4Z8JGPJz-HYb?usp=sharing"
+    ]
+}
