@@ -15,7 +15,29 @@ const codeBlocksPlugin = require('./src/plugins/remark-code-blocks.js')
 const site = require('./meta/site.json')
 const sidebars = require('./meta/sidebars.json')
 const models = require('./meta/languages.json')
+
+// Combine all the small universe files.
+var fs = require('fs');
 const universe = require('./meta/universe.json')
+
+fs.readdir("meta/universe", function(err, files){
+    files.forEach(function(f){
+        if(err){
+            console.log(`Something went wrong while scanning folder ${f}.`)
+        }
+        fs.readFile("meta/universe/" + f, 'utf-8', function(err, blob){
+            if(err){
+                console.log(`Something went while wrong reading in ${f}.`)
+            }
+            var jsonBlob = JSON.parse(blob);
+            // Need to check in order to prevent duplicates
+            var seenBefore = universe['resources'].map(d => d['id']).includes(jsonBlob['id']);
+            if(! seenBefore){
+                universe['resources'].push(jsonBlob);
+            }
+        });
+    });
+});
 
 const DEFAULT_TEMPLATE = path.resolve('./src/templates/index.js')
 

@@ -1,0 +1,23 @@
+{
+    "id": "scrubadub_spacy",
+    "title": "scrubadub_spacy",
+    "category": ["pipeline"],
+    "slogan": "Remove personally identifiable information from text using spaCy.",
+    "description": "scrubadub removes personally identifiable information from text. scrubadub_spacy is an extension that uses spaCy NLP models to remove personal information from text.",
+    "github": "LeapBeyond/scrubadub_spacy",
+    "pip": "scrubadub-spacy",
+    "url": "https://github.com/LeapBeyond/scrubadub_spacy",
+    "code_language": "python",
+    "author": "Leap Beyond",
+    "author_links": {
+        "github": "https://github.com/LeapBeyond",
+        "website": "https://leapbeyond.ai"
+    },
+    "code_example": [
+        "import scrubadub, scrubadub_spacy",
+        "scrubber = scrubadub.Scrubber()",
+        "scrubber.add_detector(scrubadub_spacy.detectors.SpacyEntityDetector)",
+        "print(scrubber.clean(\"My name is Alex, I work at LifeGuard in London, and my eMail is alex@lifeguard.com btw. my super secret twitter login is username: alex_2000 password: g-dragon180888\"))",
+        "# My name is {{NAME}}, I work at {{ORGANIZATION}} in {{LOCATION}}, and my eMail is {{EMAIL}} btw. my super secret twitter login is username: {{USERNAME}} password: {{PASSWORD}}"
+    ]
+}
