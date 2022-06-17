@@ -23,7 +23,7 @@ def forward(model, X, is_train):
     nI = model.get_dim("nI")
     W = model.get_param("W")
     # Preallocate array for layer output, including padding.
-    Yf = model.ops.alloc2f(X.shape[0]  + 1, nF * nO * nP, zeros=False)
+    Yf = model.ops.alloc2f(X.shape[0] + 1, nF * nO * nP, zeros=False)
     model.ops.gemm(X, W.reshape((nF * nO * nP, nI)), trans2=True, out=Yf[1:])
     Yf = Yf.reshape((Yf.shape[0], nF, nO, nP))
     Yf[0] = model.get_param("pad")
