@@ -10,7 +10,7 @@ import math
 
 from ._util import app, Arg, Opt, show_validation_error, parse_config_overrides
 from ._util import import_code, debug_cli
-from ..training import Example
+from ..training import Example, remove_bilu_prefix
 from ..training.initialize import get_sourced_components
 from ..schemas import ConfigSchemaTraining
 from ..pipeline._parser_internals import nonproj
@@ -758,9 +758,9 @@ def _compile_gold(
                     # "Illegal" whitespace entity
                     data["ws_ents"] += 1
                 if label.startswith(("B-", "U-")):
-                    combined_label = label.split("-")[1]
+                    combined_label = remove_bilu_prefix(label)
                     data["ner"][combined_label] += 1
-                if sent_starts[i] == True and label.startswith(("I-", "L-")):
+                if sent_starts[i] and label.startswith(("I-", "L-")):
                     data["boundary_cross_ents"] += 1
                 elif label == "-":
                     data["ner"]["-"] += 1
@@ -908,7 +908,7 @@ def _get_examples_without_label(
     for eg in data:
         if component == "ner":
             labels = [
-                label.split("-")[1]
+                remove_bilu_prefix(label)
                 for label in eg.get_aligned_ner()
                 if label not in ("O", "-", None)
             ]
