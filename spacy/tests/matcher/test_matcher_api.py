@@ -680,3 +680,38 @@ def test_matcher_ent_iob_key(en_vocab):
     assert matches[0] == "Maria"
     assert matches[1] == "Maria Esperanza"
     assert matches[2] == "Esperanza"
+
+
+def test_matcher_min_max_operator(en_vocab):
+    # Exactly n matches {n}
+    doc = Doc(
+        en_vocab, words=["foo", "bar", "foo", "foo", "bar",
+                         "foo", "foo", "foo", "bar", "bar"]
+    )
+    matcher = Matcher(en_vocab)
+    pattern = [{"ORTH": "foo", "OP": "{3}"}]
+    matcher.add("TEST", [pattern])
+
+    matches1 = [doc[start:end].text for _, start, end in matcher(doc)]
+    assert len(matches1) == 1
+
+    # At least n matches {n,}
+    matcher = Matcher(en_vocab)
+    pattern = [{"ORTH": "foo", "OP": "{2,}"}]
+    matcher.add("TEST", [pattern])
+    matches2 = [doc[start:end].text for _, start, end in matcher(doc)]
+    assert len(matches2) == 4
+
+    # At most m matches {,m}
+    matcher = Matcher(en_vocab)
+    pattern = [{"ORTH": "foo", "OP": "{,2}"}]
+    matcher.add("TEST", [pattern])
+    matches3 = [doc[start:end].text for _, start, end in matcher(doc)]
+    assert len(matches3) == 9
+
+    # At least n matches and most m matches {n,m}
+    matcher = Matcher(en_vocab)
+    pattern = [{"ORTH": "foo", "OP": "{2,3}"}]
+    matcher.add("TEST", [pattern])
+    matches4 = [doc[start:end].text for _, start, end in matcher(doc)]
+    assert len(matches4) == 4

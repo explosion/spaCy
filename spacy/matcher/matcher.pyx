@@ -1004,8 +1004,30 @@ def _get_operators(spec):
         return (ONE,)
     elif spec["OP"] in lookup:
         return lookup[spec["OP"]]
+
+    #Min_max {n,m}
+    elif spec["OP"].startswith("{") and spec["OP"].endswith("}"):
+        # {n}  --> {n,n}  exactly n                 ONE,(n)
+        # {n,m}--> {n,m}  min of n, max of m        ONE,(n),ZERO_ONE,(m)
+        # {,m} --> {0,m}  min of zero, max of m     ZERO_ONE,(m)
+        # {n,} --> {n,∞} min of n, max of inf       ONE,(n),ZERO_PLUS
+
+        min_max = spec["OP"][1:-1]
+        min_max = min_max if "," in min_max else f"{min_max},{min_max}"
+        n,m = min_max.split(",")
+
+        #1. Either n or m is a blank string and the other is numeric -->isdigit
+        #2. Both are numeric and n <= m
+        if (not n.isdecimal() and not m. isdecimal()) or (n.isdecimal() and m. isdecimal() and int(n) > int(m)):
+            keys = ", ".join(lookup.keys()) + ", {n}, {n,m}, {n,}, {,m} where n and m are integers and n <= m "
+            raise ValueError(Errors.E011.format(op=spec["OP"], opts=keys))
+
+        # if n is empty string, zero would be used
+        head = tuple(ONE for __ in range(int(n or 0)))
+        tail = tuple(ZERO_ONE for __ in range(int(m) - int(n or 0))) if m else (ZERO_PLUS,)
+        return head + tail
     else:
-        keys = ", ".join(lookup.keys())
+        keys = ", ".join(lookup.keys()) + ", {n}, {n,m}, {n,}, {,m} where n and m are integers and n <= m "
         raise ValueError(Errors.E011.format(op=spec["OP"], opts=keys))
 
 
