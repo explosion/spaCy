@@ -3,7 +3,7 @@ from typing import Iterable, TypeVar, TYPE_CHECKING
 from .compat import Literal
 from enum import Enum
 from pydantic import BaseModel, Field, ValidationError, validator, create_model
-from pydantic import StrictStr, StrictInt, StrictFloat, StrictBool
+from pydantic import StrictStr, StrictInt, StrictFloat, StrictBool, constr
 from pydantic.main import ModelMetaclass
 from thinc.api import Optimizer, ConfigValidationError, Model
 from thinc.config import Promise
@@ -198,13 +198,15 @@ class TokenPatternNumber(BaseModel):
         return v
 
 
-class TokenPatternOperator(str, Enum):
+class TokenPatternOperatorSimple(str, Enum):
     plus: StrictStr = StrictStr("+")
-    start: StrictStr = StrictStr("*")
+    star: StrictStr = StrictStr("*")
     question: StrictStr = StrictStr("?")
     exclamation: StrictStr = StrictStr("!")
 
 
+TokenPatternOperatorMinMax = constr(regex=r"^({\d+}|{\d+,\d*}|{\d*,\d+})$", strict=True)
+TokenPatternOperator = Union[TokenPatternOperatorSimple, TokenPatternOperatorMinMax]
 StringValue = Union[TokenPatternString, StrictStr]
 NumberValue = Union[TokenPatternNumber, StrictInt, StrictFloat]
 UnderscoreValue = Union[

@@ -17,6 +17,8 @@ TEST_PATTERNS = [
     # Bad patterns flagged outside of Matcher
     ([{"_": {"foo": "bar", "baz": {"IN": "foo"}}}], 2, 0),  # prev: (1, 0)
     # Bad patterns not flagged with minimal checks
+    ([{"TEXT": "foo", "OP": "{,}"}], 1, 1),
+    ([{"TEXT": "foo", "OP": "{,4}4"}], 1, 1),
     ([{"LENGTH": "2", "TEXT": 2}, {"LOWER": "test"}], 2, 0),
     ([{"LENGTH": {"IN": [1, 2, "3"]}}, {"POS": {"IN": "VERB"}}], 4, 0),  # prev: (2, 0)
     ([{"LENGTH": {"VALUE": 5}}], 2, 0),  # prev: (1, 0)
@@ -38,6 +40,7 @@ TEST_PATTERNS = [
     ([{"SENT_START": True}], 0, 0),
     ([{"ENT_ID": "STRING"}], 0, 0),
     ([{"ENT_KB_ID": "STRING"}], 0, 0),
+    ([{"TEXT": "ha", "OP": "{3}"}], 0, 0),
 ]
 
 
