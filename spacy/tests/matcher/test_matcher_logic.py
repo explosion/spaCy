@@ -699,13 +699,19 @@ def test_matcher_with_alignments_greedy_longest(en_vocab):
         ("aaaa", "a a a a a?", [0, 1, 2, 3]),
         ("aaab", "a+ a b", [0, 0, 1, 2]),
         ("aaab", "a+ a+ b", [0, 0, 1, 2]),
+        ("aaab", "a+? b", [0, 1]),
+        ("aaab", "a*? b", [1]),
     ]
     for string, pattern_str, result in cases:
         matcher = Matcher(en_vocab)
         doc = Doc(matcher.vocab, words=list(string))
         pattern = []
         for part in pattern_str.split():
-            if part.endswith("+"):
+            if part[-2:] == "+?":
+                pattern.append({"ORTH": part[0], "OP": "+?"})
+            elif part[-2:] == "*?":
+                pattern.append({"ORTH": part[0], "OP": "*?"})
+            elif part.endswith("+"):
                 pattern.append({"ORTH": part[0], "OP": "+"})
             elif part.endswith("*"):
                 pattern.append({"ORTH": part[0], "OP": "*"})
@@ -722,7 +728,7 @@ def test_matcher_with_alignments_greedy_longest(en_vocab):
         assert expected == result, (string, pattern_str, s, e, n_matches)
 
 
-def test_matcher_with_alignments_nongreedy(en_vocab):
+def test_matcher_with_alignments_non_greedy(en_vocab):
     cases = [
         (0, "aaab", "a* b", [[0, 1], [0, 0, 1], [0, 0, 0, 1], [1]]),
         (1, "baab", "b a* b", [[0, 1, 1, 2]]),
@@ -752,13 +758,19 @@ def test_matcher_with_alignments_nongreedy(en_vocab):
         (15, "aaaa", "a a a a a?", [[0, 1, 2, 3]]),
         (16, "aaab", "a+ a b", [[0, 1, 2], [0, 0, 1, 2]]),
         (17, "aaab", "a+ a+ b", [[0, 1, 2], [0, 0, 1, 2]]),
+        (18, "aaab", "a+? b", [[0, 1], [1]]),
+        (19, "aaab", "a*? b", [[1]]),
     ]
     for case_id, string, pattern_str, results in cases:
         matcher = Matcher(en_vocab)
         doc = Doc(matcher.vocab, words=list(string))
         pattern = []
         for part in pattern_str.split():
-            if part.endswith("+"):
+            if part[-2:] == "+?":
+                pattern.append({"ORTH": part[0], "OP": "+?"})
+            elif part[-2:] == "*?":
+                pattern.append({"ORTH": part[0], "OP": "*?"})
+            elif part.endswith("+"):
                 pattern.append({"ORTH": part[0], "OP": "+"})
             elif part.endswith("*"):
                 pattern.append({"ORTH": part[0], "OP": "*"})
@@ -774,3 +786,37 @@ def test_matcher_with_alignments_nongreedy(en_vocab):
         for _, s, e, expected in matches:
             assert expected in results, (case_id, string, pattern_str, s, e, n_matches)
             assert len(expected) == e - s
+
+
+def test_matcher_non_greedy_operator(en_vocab):
+    cases = [
+        (0, "aaabbab", "a*? b+?", 3),
+        (1, "aaabbab", "a*? b*?", 0),
+        (2, "aaabbab", "a* b*?", 7),
+        (3, "aaabbab", "a*? b*", 4),
+        (4, "aabbc", "a* b*? c*?", 3),
+        (5, "aabbc", "a* b*? c*", 4),
+        (6, "aabbc", "a* b*? c", 5),
+        (7, "aabbc", "a+? b*? c", 1),
+
+    ]
+    for case_id, string, pattern_str, result in cases:
+        matcher = Matcher(en_vocab)
+        doc = Doc(matcher.vocab, words=list(string))
+        pattern = []
+        for part in pattern_str.split():
+            if part[-2:] == "+?":
+                pattern.append({"ORTH": part[0], "OP": "+?"})
+            elif part[-2:] == "*?":
+                pattern.append({"ORTH": part[0], "OP": "*?"})
+            elif part.endswith("+"):
+                pattern.append({"ORTH": part[0], "OP": "+"})
+            elif part.endswith("*"):
+                pattern.append({"ORTH": part[0], "OP": "*"})
+            elif part.endswith("?"):
+                pattern.append({"ORTH": part[0], "OP": "?"})
+            else:
+                pattern.append({"ORTH": part})
+        matcher.add("PATTERN", [pattern])
+        matches = matcher(doc)
+        assert len(matches) == result

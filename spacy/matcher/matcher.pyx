@@ -90,6 +90,8 @@ cdef class Matcher:
         '?': Make the pattern optional, by allowing it to match 0 or 1 times.
         '+': Require the pattern to match 1 or more times.
         '*': Allow the pattern to zero or more times.
+        '+?': Require the pattern to match non-greedily 1 or more times.
+        '*?': Allow the pattern to match non-greedily 0 or more times.
 
         The + and * operators return all possible matches (not just the greedy
         ones). However, the "greedy" argument can filter the final matches
@@ -427,31 +429,32 @@ cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& match
         if with_alignments != 0:
             align_state = align_states[i]
             align_states[q] = align_state
-        while action in (RETRY, RETRY_ADVANCE, RETRY_EXTEND):
+        while action in (RETRY, RETRY_ADVANCE, RETRY_EXTEND, RETRY_OR_EXTEND):
             # Update alignment before the transition of current state
             # 'MatchAlignmentC' maps 'original token index of current pattern' to 'current matching length'
             if with_alignments != 0:
                 align_states[q].push_back(MatchAlignmentC(states[q].pattern.token_idx, states[q].length))
-            if action == RETRY_EXTEND:
+            if action in [RETRY_EXTEND, RETRY_OR_EXTEND]:
                 # This handles the 'extend'
-                new_states.push_back(
-                    PatternStateC(pattern=states[q].pattern, start=state.start,
-                                  length=state.length+1))
+                new_states.push_back(PatternStateC(pattern=states[q].pattern, start=state.start, length=state.length+1))
                 if with_alignments != 0:
                     align_new_states.push_back(align_states[q])
             if action == RETRY_ADVANCE:
                 # This handles the 'advance'
-                new_states.push_back(
-                    PatternStateC(pattern=states[q].pattern+1, start=state.start,
-                                  length=state.length+1))
+                new_states.push_back(PatternStateC(pattern=states[q].pattern+1, start=state.start, length=state.length+1))
                 if with_alignments != 0:
                     align_new_states.push_back(align_states[q])
             states[q].pattern += 1
             if states[q].pattern.nr_py != 0:
-                update_predicate_cache(cached_py_predicates,
-                    states[q].pattern, token, py_predicates)
-            action = get_action(states[q], token.c, extra_attrs,
-                                cached_py_predicates)
+                update_predicate_cache(cached_py_predicates, states[q].pattern, token, py_predicates)
+            next_action = get_action(states[q], token.c, extra_attrs, cached_py_predicates)
+            if next_action == MATCH and action == RETRY_OR_EXTEND:
+                new_states.pop_back()
+                if with_alignments != 0:
+                    align_new_states.pop_back()
+
+            action = next_action
+
         # Update alignment before the transition of current state
         if with_alignments != 0:
             align_states[q].push_back(MatchAlignmentC(states[q].pattern.token_idx, states[q].length))
@@ -596,6 +599,15 @@ cdef action_t get_action(PatternStateC state,
         1000 (note: Don't include last token!)
       No, non-final:
         0010
+    0-:
+      Yes, final:
+        1000 (note: Don't include last token!)
+      Yes, non-final:
+        0011 (note: Retry or Extend) 
+      No, final:
+        1000 (note: Don't include last token!)
+      No, non-final:
+        0010
     ?:
       Yes, final:
         1000
@@ -616,6 +628,7 @@ cdef action_t get_action(PatternStateC state,
     MATCH_EXTEND = 1001
     RETRY_ADVANCE = 0110
     RETRY_EXTEND = 0011
+    RETRY_OR_EXTEND = 0022 # If Match after Retry, does not Extend
     MATCH_REJECT = 2000 # Match, but don't include last token
     MATCH_DOUBLE = 3000 # Match both with and without last token
 
@@ -653,6 +666,19 @@ cdef action_t get_action(PatternStateC state,
       else:
           # No, non-final 0010
           return RETRY
+    elif quantifier == ZERO_MINUS:
+        if is_final or is_continuous(state):
+            # Yes/No, final: 2000 (note: Don't include last token!)
+            return MATCH_REJECT
+        # or is_continuous(state)
+        elif is_match and not is_final and not is_first(state) and not is_continuous2(state):
+            # Yes, non-final: 0022
+            # If *? is not the first token, perform RETRY_OR_EXTEND,
+            # else ignore the token by skipping EXTEND
+            return RETRY_OR_EXTEND
+        else:
+            # No, non-final 0010
+            return RETRY
     elif quantifier == ZERO_ONE:
       if is_match and is_final:
           # Yes, final: 3000
@@ -696,6 +722,27 @@ cdef inline int8_t get_is_final(PatternStateC state) nogil:
     else:
         return 0
 
+
+cdef inline int8_t is_first(PatternStateC state) nogil:
+    if state.pattern.token_idx == 0:
+        return 1
+    else:
+        return 0
+
+
+cdef inline int8_t is_continuous(PatternStateC state) nogil:
+    while not get_is_final(state):
+        state.pattern += 1
+        if state.pattern.quantifier not in [ZERO_MINUS]:
+            return 0
+    return 1
+
+cdef inline int8_t is_continuous2(PatternStateC state) nogil:
+    while not get_is_final(state):
+        state.pattern += 1
+        if state.pattern.quantifier not in [ZERO_PLUS, ZERO_MINUS]:
+            return 0
+    return 1
 
 cdef inline int8_t get_quantifier(PatternStateC state) nogil:
     return state.pattern.quantifier
@@ -996,7 +1043,8 @@ def _get_extension_extra_predicates(spec, extra_predicates, predicate_types,
 def _get_operators(spec):
     # Support 'syntactic sugar' operator '+', as combination of ONE, ZERO_PLUS
     lookup = {"*": (ZERO_PLUS,), "+": (ONE, ZERO_PLUS),
-              "?": (ZERO_ONE,), "1": (ONE,), "!": (ZERO,)}
+              "?": (ZERO_ONE,), "*?": (ZERO_MINUS,),
+              "+?": (ONE,), "1": (ONE,), "!": (ZERO,)}
     # Fix casing
     spec = {key.upper(): values for key, values in spec.items()
             if isinstance(key, str)}

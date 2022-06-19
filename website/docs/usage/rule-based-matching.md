@@ -374,12 +374,14 @@ punctuation marks, or specify optional tokens. Note that there are no nested or
 scoped quantifiers – instead, you can build those behaviors with `on_match`
 callbacks.
 
-| OP  | Description                                                      |
-| --- | ---------------------------------------------------------------- |
-| `!` | Negate the pattern, by requiring it to match exactly 0 times.    |
-| `?` | Make the pattern optional, by allowing it to match 0 or 1 times. |
-| `+` | Require the pattern to match 1 or more times.                    |
-| `*` | Allow the pattern to match zero or more times.                   |
+| OP    | Description                                                      |
+|-------| ---------------------------------------------------------------- |
+| `!`   | Negate the pattern, by requiring it to match exactly 0 times.    |
+| `?`   | Make the pattern optional, by allowing it to match 0 or 1 times. |
+| `+`   | Require the pattern to match 1 or more times.                    |
+| `*`   | Allow the pattern to match zero or more times.                   |
+| `+?`  | Require the pattern to match non-greedily 1 or more times.       |
+| `*?`  | Allow the pattern to match non-greedily 0 or more times.         |
 
 > #### Example
 >
