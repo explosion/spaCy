@@ -546,7 +546,7 @@ else: # should never happen because of skipping
         assert not os.path.exists(os.sep.join((str(d), "f")))
 
 
-@pytest.mark.parametrize("max_parallel_processes", [2, 3, 4])
+@pytest.mark.parametrize("max_parallel_processes", [2, 3, 4, 5, 6])
 def test_project_run_multiprocessing_max_processes_good_case(max_parallel_processes):
     with make_tempdir() as d:
 
@@ -565,8 +565,16 @@ def test_project_run_multiprocessing_max_processes_good_case(max_parallel_proces
                     "name": "commandC",
                     "script": [" ".join(("touch", os.sep.join((str(d), "C"))))],
                 },
+                {
+                    "name": "commandD",
+                    "script": [" ".join(("touch", os.sep.join((str(d), "D"))))],
+                },
+                {
+                    "name": "commandE",
+                    "script": [" ".join(("touch", os.sep.join((str(d), "E"))))],
+                },
             ],
-            "workflows": {"all": [{"parallel": ["commandA", "commandB", "commandC"]}]},
+            "workflows": {"all": [{"parallel": ["commandA", "commandB", "commandC", "commandD", "commandE"]}]},
         }
         srsly.write_yaml(d / "project.yml", project)
         load_project_config(d)
@@ -574,6 +582,8 @@ def test_project_run_multiprocessing_max_processes_good_case(max_parallel_proces
         assert os.path.exists(os.sep.join((str(d), "A")))
         assert os.path.exists(os.sep.join((str(d), "B")))
         assert os.path.exists(os.sep.join((str(d), "C")))
+        assert os.path.exists(os.sep.join((str(d), "D")))
+        assert os.path.exists(os.sep.join((str(d), "E")))
 
 
 @pytest.mark.parametrize(
