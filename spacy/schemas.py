@@ -1,4 +1,3 @@
-import re
 from typing import Dict, List, Union, Optional, Any, Callable, Type, Tuple
 from typing import Iterable, TypeVar, TYPE_CHECKING
 from .compat import Literal
@@ -10,6 +9,7 @@ from thinc.api import Optimizer, ConfigValidationError, Model
 from thinc.config import Promise
 from collections import defaultdict
 import inspect
+import re
 
 from .attrs import NAMES
 from .lookups import Lookups
