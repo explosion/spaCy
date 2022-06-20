@@ -1,6 +1,6 @@
 from typing import Optional, List, Dict, Sequence, Any, Iterable, Union, Tuple
 from pathlib import Path
-from multiprocessing import Process, Lock
+from multiprocessing import Process, Lock, Queue
 from multiprocessing.synchronize import Lock as Lock_t
 from wasabi import msg
 from wasabi.util import locale_escape
@@ -15,7 +15,6 @@ from ...util import SimpleFrozenList, is_minor_version_match, ENV_VARS
 from ...util import check_bool_env_var, SimpleFrozenDict
 from .._util import PROJECT_FILE, PROJECT_LOCK, load_project_config, get_hash
 from .._util import get_checksum, project_cli, Arg, Opt, COMMAND, parse_config_overrides
-from .._util import get_workflow_steps
 
 
 @project_cli.command(
@@ -54,6 +53,7 @@ def project_run(
     dry: bool = False,
     capture: bool = False,
     mult_group_mutex: Optional[Lock_t] = None,
+    completion_queue: Optional[Queue] = None,
 ) -> None:
     """Run a named script defined in the project.yml. If the script is part
     of the default pipeline (defined in the "run" section), DVC is used to
@@ -76,6 +76,7 @@ def project_run(
     config = load_project_config(project_dir, overrides=overrides)
     commands = {cmd["name"]: cmd for cmd in config.get("commands", [])}
     workflows = config.get("workflows", {})
+    max_parallel_processes = config.get("max_parallel_processes")
     validate_subcommand(list(commands.keys()), list(workflows.keys()), subcommand)
     if subcommand in workflows:
         msg.info(f"Running workflow '{subcommand}'")
@@ -91,8 +92,11 @@ def project_run(
                     mult_group_mutex=mult_group_mutex,
                 )
             else:
-                assert isinstance(workflow_item, list)
-                assert isinstance(workflow_item[0], str)
+                assert isinstance(workflow_item, dict)
+                assert len(workflow_item) == 1
+                steps_list = workflow_item["parallel"]
+                assert isinstance(steps_list[0], str)
+                completion_queue = Queue(len(steps_list))
                 processes = [
                     Process(
                         target=project_run,
@@ -103,14 +107,26 @@ def project_run(
                             "dry": dry,
                             "capture": capture,
                             "mult_group_mutex": mult_group_mutex,
+                            "completion_queue": completion_queue,
                         },
                     )
-                    for cmd in workflow_item
+                    for cmd in steps_list
                 ]
-                for process in processes:
-                    process.start()
-                for process in processes:
-                    process.join()
+                num_processes = len(processes)
+                if (
+                    max_parallel_processes is not None
+                    and max_parallel_processes < num_processes
+                ):
+                    num_processes = max_parallel_processes
+                process_iterator = iter(processes)
+                for _ in range(num_processes):
+                    next(process_iterator).start()
+                for _ in range(len(steps_list)):
+                    completion_queue.get()
+                    next_process = next(process_iterator, None)
+                    if next_process is not None:
+                        next_process.start()
+
     else:
         cmd = commands[subcommand]
         for dep in cmd.get("deps", []):
@@ -134,6 +150,8 @@ def project_run(
                 run_commands(cmd["script"], dry=dry, capture=capture)
                 if not dry:
                     update_lockfile(current_dir, cmd, mult_group_mutex=mult_group_mutex)
+            if completion_queue is not None:
+                completion_queue.put(None)
 
 
 def print_run_help(project_dir: Path, subcommand: Optional[str] = None) -> None:
@@ -157,12 +175,36 @@ def print_run_help(project_dir: Path, subcommand: Optional[str] = None) -> None:
             if help_text:
                 print(f"\n{help_text}\n")
         elif subcommand in workflows:
-            steps = get_workflow_steps(workflows[subcommand])
+            steps: List[Tuple[str, str]] = []
+            contains_parallel = False
+            for workflow_item in workflows[subcommand]:
+                if isinstance(workflow_item, str):
+                    steps.append((" ", workflow_item))
+                else:
+                    contains_parallel = True
+                    assert isinstance(workflow_item, dict)
+                    assert len(workflow_item) == 1
+                    steps_list = workflow_item["parallel"]
+                    assert isinstance(steps_list[0], str)
+                    for i, step in enumerate(steps_list):
+                        if i == 0:
+                            parallel_char = "╔"
+                        elif i + 1 == len(steps_list):
+                            parallel_char = "╚"
+                        else:
+                            parallel_char = "║"
+                        steps.append((parallel_char, step))
             print(f"\nWorkflow consisting of {len(steps)} commands:")
-            steps_data = [
-                (f"{i + 1}. {step}", commands[step].get("help", ""))
-                for i, step in enumerate(steps)
-            ]
+            if contains_parallel:
+                steps_data = [
+                    (f"{i + 1}. {step[0]} {step[1]}", commands[step[1]].get("help", ""))
+                    for i, step in enumerate(steps)
+                ]
+            else:
+                steps_data = [
+                    (f"{i + 1}. {step[1]}", commands[step[1]].get("help", ""))
+                    for i, step in enumerate(steps)
+                ]
             msg.table(steps_data)
             help_cmd = f"{COMMAND} project run [COMMAND] {project_loc} --help"
             print(f"For command details, run: {help_cmd}")
@@ -180,9 +222,16 @@ def print_run_help(project_dir: Path, subcommand: Optional[str] = None) -> None:
             print(f"Usage: {COMMAND} project run [WORKFLOW] {project_loc}")
             table_entries: List[Tuple[str, str]] = []
             for name, workflow_items in workflows.items():
-                table_entries.append(
-                    (name, " -> ".join(get_workflow_steps(workflow_items)))
-                )
+                descriptions: List[str] = []
+                for workflow_item in workflow_items:
+                    if isinstance(workflow_item, str):
+                        descriptions.append(workflow_item)
+                    else:
+                        assert isinstance(workflow_item, dict)
+                        assert len(workflow_item) == 1
+                        steps_list = workflow_item["parallel"]
+                        descriptions.append("parallel[" + ", ".join(steps_list) + "]")
+                table_entries.append((name, " -> ".join(descriptions)))
             msg.table(table_entries)
 
 

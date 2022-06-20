@@ -77,7 +77,9 @@ def project_document(
                 rendered_steps.append(md.code(step))
             else:
                 rendered_steps.append(
-                    "[" + ", ".join(md.code(p_step) for p_step in step) + "]"
+                    "["
+                    + ", ".join(md.code(p_step) for p_step in step["parallel"])
+                    + "]"
                 )
         data.append([md.code(n), " &rarr; ".join(rendered_steps)])
     if data:

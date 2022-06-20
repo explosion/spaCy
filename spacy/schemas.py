@@ -458,10 +458,11 @@ class ProjectConfigSchema(BaseModel):
     vars: Dict[StrictStr, Any] = Field({}, title="Optional variables to substitute in commands")
     env: Dict[StrictStr, Any] = Field({}, title="Optional variable names to substitute in commands, mapped to environment variable names")
     assets: List[Union[ProjectConfigAssetURL, ProjectConfigAssetGit]] = Field([], title="Data assets")
-    workflows: Dict[StrictStr, List[Union[StrictStr, List[StrictStr]]]] = Field({}, title="Named workflows, mapped to list of project commands to run in order")
+    workflows: Dict[StrictStr, List[Union[StrictStr, Dict[Literal["parallel"], List[StrictStr]]]]] = Field({}, title="Named workflows, mapped to list of project commands to run in order")
     commands: List[ProjectConfigCommand] = Field([], title="Project command shortcuts")
     title: Optional[str] = Field(None, title="Project title")
     spacy_version: Optional[StrictStr] = Field(None, title="spaCy version range that the project is compatible with")
+    max_parallel_processes: Optional[int] = Field(None, title="Maximum number of permitted parallel processes")
     # fmt: on
 
     class Config:

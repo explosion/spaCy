@@ -429,7 +429,7 @@ def test_project_config_multiprocessing_good_case():
             {"name": "command2", "script": ["echo", "command2"]},
             {"name": "command3", "script": ["echo", "command3"]},
         ],
-        "workflows": {"all": ["command1", ["command2", "command3"]]},
+        "workflows": {"all": ["command1", {"parallel": ["command2", "command3"]}]},
     }
     with make_tempdir() as d:
         srsly.write_yaml(d / "project.yml", project)
@@ -439,12 +439,13 @@ def test_project_config_multiprocessing_good_case():
 @pytest.mark.parametrize(
     "workflows",
     [
-        {"all": ["command1", ["command2"], "command3"]},
-        {"all": ["command1", ["command2", "command4"]]},
-        {"all": ["command1", ["command2", "command2"]]},
+        {"all": ["command1", {"parallel": ["command2"]}, "command3"]},
+        {"all": ["command1", {"parallel": ["command2", "command4"]}]},
+        {"all": ["command1", {"parallel": ["command2", "command2"]}]},
+        {"all": ["command1", {"serial": ["command2", "command3"]}]},
     ],
 )
-def test_project_config_multiprocessing_bad_case(workflows):
+def test_project_config_multiprocessing_bad_case_workflows(workflows):
     project = {
         "commands": [
             {"name": "command1", "script": ["echo", "command1"]},
@@ -457,6 +458,33 @@ def test_project_config_multiprocessing_bad_case(workflows):
         srsly.write_yaml(d / "project.yml", project)
         with pytest.raises(SystemExit):
             load_project_config(d)
+
+
+@pytest.mark.parametrize("max_parallel_processes", [-1, 0, 1])
+def test_project_config_multiprocessing_max_processes_bad_case(max_parallel_processes):
+    with make_tempdir() as d:
+        project = {
+            "max_parallel_processes": max_parallel_processes,
+            "commands": [
+                {
+                    "name": "commandA",
+                    "script": [" ".join(("touch", os.sep.join((str(d), "A"))))],
+                },
+                {
+                    "name": "commandB",
+                    "script": [" ".join(("touch", os.sep.join((str(d), "B"))))],
+                },
+                {
+                    "name": "commandC",
+                    "script": [" ".join(("touch", os.sep.join((str(d), "C"))))],
+                },
+            ],
+            "workflows": {"all": [{"parallel": ["commandA", "commandB", "commandC"]}]},
+        }
+        with make_tempdir() as d:
+            srsly.write_yaml(d / "project.yml", project)
+            with pytest.raises(SystemExit):
+                load_project_config(d)
 
 
 def test_project_run_multiprocessing_good_case():
@@ -502,7 +530,12 @@ else: # should never happen because of skipping
                     "outputs": [os.sep.join((str(d), "e"))],
                 },
             ],
-            "workflows": {"all": [["commandA", "commandB"], ["commandA", "commandB"]]},
+            "workflows": {
+                "all": [
+                    {"parallel": ["commandA", "commandB"]},
+                    {"parallel": ["commandB", "commandA"]},
+                ]
+            },
         }
         srsly.write_yaml(d / "project.yml", project)
         load_project_config(d)
@@ -511,6 +544,36 @@ else: # should never happen because of skipping
         assert os.path.exists(os.sep.join((str(d), "e")))
         assert not os.path.exists(os.sep.join((str(d), "d")))
         assert not os.path.exists(os.sep.join((str(d), "f")))
+
+
+@pytest.mark.parametrize("max_parallel_processes", [2, 3, 4])
+def test_project_run_multiprocessing_max_processes_good_case(max_parallel_processes):
+    with make_tempdir() as d:
+
+        project = {
+            "max_parallel_processes": max_parallel_processes,
+            "commands": [
+                {
+                    "name": "commandA",
+                    "script": [" ".join(("touch", os.sep.join((str(d), "A"))))],
+                },
+                {
+                    "name": "commandB",
+                    "script": [" ".join(("touch", os.sep.join((str(d), "B"))))],
+                },
+                {
+                    "name": "commandC",
+                    "script": [" ".join(("touch", os.sep.join((str(d), "C"))))],
+                },
+            ],
+            "workflows": {"all": [{"parallel": ["commandA", "commandB", "commandC"]}]},
+        }
+        srsly.write_yaml(d / "project.yml", project)
+        load_project_config(d)
+        project_run(d, "all")
+        assert os.path.exists(os.sep.join((str(d), "A")))
+        assert os.path.exists(os.sep.join((str(d), "B")))
+        assert os.path.exists(os.sep.join((str(d), "C")))
 
 
 @pytest.mark.parametrize(

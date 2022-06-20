@@ -6,7 +6,7 @@ from pathlib import Path
 from wasabi import msg
 
 from .._util import PROJECT_FILE, load_project_config, get_hash, project_cli
-from .._util import Arg, Opt, NAME, COMMAND, get_workflow_steps
+from .._util import Arg, Opt, NAME, COMMAND
 from ...util import working_dir, split_command, join_command, run_command
 from ...util import SimpleFrozenList
 
@@ -106,7 +106,12 @@ def update_dvc_config(
     dvc_commands = []
     config_commands = {cmd["name"]: cmd for cmd in config.get("commands", [])}
     processed_step = False
-    for name in get_workflow_steps(workflows[workflow]):
+    for name in workflows[workflow]:
+        if isinstance(name, dict) and "parallel" in name:
+            msg.fail(
+                f"A DVC workflow may not contain parallel groups",
+                exits=1,
+            )
         command = config_commands[name]
         deps = command.get("deps", [])
         outputs = command.get("outputs", [])

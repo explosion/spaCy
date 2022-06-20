@@ -157,6 +157,7 @@ def load_project_config(
         print("\n".join(errors))
         sys.exit(1)
     validate_project_version(config)
+    validate_max_parallel_processes(config)
     validate_project_commands(config)
     # Make sure directories defined in config exist
     for subdir in config.get("directories", []):
@@ -199,7 +200,7 @@ def substitute_project_variables(
 
 
 def validate_project_version(config: Dict[str, Any]) -> None:
-    """If the project defines a compatible spaCy version range, chec that it's
+    """If the project defines a compatible spaCy version range, check that it's
     compatible with the current version of spaCy.
 
     config (Dict[str, Any]): The loaded config.
@@ -211,6 +212,21 @@ def validate_project_version(config: Dict[str, Any]) -> None:
             f"that's not compatible with the version of spaCy you're running "
             f"({about.__version__}). You can edit version requirement in the "
             f"{PROJECT_FILE} to load it, but the project may not run as expected."
+        )
+        msg.fail(err, exits=1)
+
+
+def validate_max_parallel_processes(config: Dict[str, Any]) -> None:
+    """If the project defines a maximum number of parallel processes, check that the
+    value is within the permitted range.
+
+    config (Dict[str, Any]): The loaded config.
+    """
+    max_parallel_processes = config.get("max_parallel_processes", None)
+    if max_parallel_processes is not None and max_parallel_processes < 2:
+        err = (
+            f"The {PROJECT_FILE} specifies a value for max_parallel_processes ({max_parallel_processes}) "
+            f"that is less than 2."
         )
         msg.fail(err, exits=1)
 
@@ -246,18 +262,20 @@ def validate_project_commands(config: Dict[str, Any]) -> None:
             if isinstance(workflow_item, str):
                 verify_workflow_step(workflow_name, commands, workflow_item)
             else:
-                assert isinstance(workflow_item, list)
-                assert isinstance(workflow_item[0], str)
-                steps = cast(List[str], workflow_item)
+                assert isinstance(workflow_item, dict)
+                assert len(workflow_item) == 1
+                steps_list = workflow_item["parallel"]
+                assert isinstance(steps_list[0], str)
+                steps = cast(List[str], steps_list)
                 if len(steps) < 2:
                     msg.fail(
-                        f"Invalid multiprocessing group within '{workflow_name}'.",
-                        f"A multiprocessing group must reference at least two commands.",
+                        f"Invalid parallel group within '{workflow_name}'.",
+                        f"A parallel group must reference at least two commands.",
                         exits=1,
                     )
                 if len(steps) != len(set(steps)):
                     msg.fail(
-                        f"A multiprocessing group within '{workflow_name}' contains a command more than once.",
+                        f"A parallel group within '{workflow_name}' contains a command more than once.",
                         f"This is not permitted because it is then not possible to determine when to rerun.",
                         exits=1,
                     )
@@ -580,15 +598,3 @@ def setup_gpu(use_gpu: int, silent=None) -> None:
         local_msg.info("Using CPU")
         if has_cupy and gpu_is_available():
             local_msg.info("To switch to GPU 0, use the option: --gpu-id 0")
-
-
-def get_workflow_steps(workflow_items: List[Union[str, List[str]]]) -> List[str]:
-    steps: List[str] = []
-    for workflow_item in workflow_items:
-        if isinstance(workflow_item, str):
-            steps.append(workflow_item)
-        else:
-            assert isinstance(workflow_item, list)
-            assert isinstance(workflow_item[0], str)
-            steps.extend(workflow_item)
-    return steps
