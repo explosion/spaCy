@@ -169,9 +169,8 @@ defined in the `project.yml`, and executes the commands it specifies, in order:
 $ python -m spacy project run all
 ```
 
-Sometimes it makes sense to execute two or more commands in parallel. A group
-of commands executed in parallel is defined using the `parallel` keyword mapping to 
-the commands specified as a list. You are responsible for making sure that no 
+A group of commands to be executed in parallel is defined using the `parallel` keyword 
+mapping to the commands specified as a list. You are responsible for making sure that no 
 deadlocks, race conditions or other issues can arise from the parallel execution.
 
 Using the expected [dependencies and outputs](#deps-outputs) defined in the
