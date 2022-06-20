@@ -11,7 +11,7 @@
                 "import spacy",
                 "text = 'Victor Hugo and Honoré de Balzac are French writers who lived in Paris.'",
                 "nlp = spacy.load('en_core_web_sm')",
-                "nlp.add_pipe('spacyfishing')",
+                "nlp.add_pipe('entityfishing')",
                 "doc = nlp(text)",
                 "for span in doc.ents:",
                 "    print((ent.text, ent.label_, ent._.kb_qid, ent._.url_wikidata, ent._.nerd_score))",
