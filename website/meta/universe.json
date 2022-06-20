@@ -1,6 +1,35 @@
 {
     "resources": [
         {
+            "id": "spacyfishing",
+            "title": "spaCy fishing",
+            "slogan": "Named entity disambiguation and linking on Wikidata in spaCy with Entity-Fishing.",
+            "description": "A spaCy wrapper of Entity-Fishing for named entity disambiguation and linking against a Wikidata knowledge base.",
+            "github": "Lucaterre/spacyfishing",
+            "pip": "spacyfishing",
+            "code_example": [
+                "import spacy",
+                "text = 'Victor Hugo and Honoré de Balzac are French writers who lived in Paris.'",
+                "nlp = spacy.load('en_core_web_sm')",
+                "nlp.add_pipe('spacyfishing')",
+                "doc = nlp(text)",
+                "for span in doc.ents:",
+                "    print((ent.text, ent.label_, ent._.kb_qid, ent._.url_wikidata, ent._.nerd_score))",
+                "# ('Victor Hugo', 'PERSON', 'Q535', 'https://www.wikidata.org/wiki/Q535', 0.972)",
+                "# ('Honoré de Balzac', 'PERSON', 'Q9711', 'https://www.wikidata.org/wiki/Q9711', 0.9724)",
+                "# ('French', 'NORP', 'Q121842', 'https://www.wikidata.org/wiki/Q121842', 0.3739)",
+                "# ('Paris', 'GPE', 'Q90', 'https://www.wikidata.org/wiki/Q90', 0.5652)",
+                "## Set parameter `extra_info` to `True` and check also span._.description, span._.src_description, span._.normal_term, span._.other_ids"
+            ],
+            "category": ["models", "pipeline"],
+            "tags": ["NER", "NEL"],
+            "author": "Lucas Terriel",
+            "author_links": {
+                "twitter": "TerreLuca",
+                "github": "Lucaterre"
+            }
+        },
+        {
             "id": "aim-spacy",
             "title": "Aim-spaCy",
             "slogan": "Aim-spaCy is an Aim-based spaCy experiment tracker.",
