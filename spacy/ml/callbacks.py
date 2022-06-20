@@ -1,9 +1,9 @@
+from typing import Type, Callable, Dict, TYPE_CHECKING, List, Optional
 import functools
 import inspect
 import types
-from typing import Type, Callable, Dict, TYPE_CHECKING, List, Optional
 import warnings
-from spacy.errors import Warnings
+from ..errors import Warnings
 
 from thinc.layers import with_nvtx_range
 from thinc.model import Model, wrap_model_recursive
@@ -37,7 +37,7 @@ def models_with_nvtx_range(nlp, forward_color: int, backprop_color: int):
         if hasattr(pipe, "is_trainable") and pipe.is_trainable
     ]
 
-    # We need process all models jointly to avoid wrapping callbacks twice.
+    # We need to process all models jointly to avoid wrapping callbacks twice.
     models: Model = Model(
         "wrap_with_nvtx_range",
         forward=lambda model, X, is_train: ...,
@@ -84,7 +84,7 @@ def pipes_with_nvtx_range(
         for name in DEFAULT_ANNOTATABLE_PIPE_METHODS + extra_funcs:
             func = getattr(pipe, name, None)
             if func is None:
-                if name not in DEFAULT_ANNOTATABLE_PIPE_METHODS:
+                if name in extra_funcs:
                     warnings.warn(Warnings.W121.format(method=name, pipe=pipe.name))
                 continue
 
