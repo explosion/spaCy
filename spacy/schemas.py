@@ -1,9 +1,10 @@
+import re
 from typing import Dict, List, Union, Optional, Any, Callable, Type, Tuple
 from typing import Iterable, TypeVar, TYPE_CHECKING
 from .compat import Literal
 from enum import Enum
 from pydantic import BaseModel, Field, ValidationError, validator, create_model
-from pydantic import StrictStr, StrictInt, StrictFloat, StrictBool, constr
+from pydantic import StrictStr, StrictInt, StrictFloat, StrictBool, ConstrainedStr
 from pydantic.main import ModelMetaclass
 from thinc.api import Optimizer, ConfigValidationError, Model
 from thinc.config import Promise
@@ -205,7 +206,10 @@ class TokenPatternOperatorSimple(str, Enum):
     exclamation: StrictStr = StrictStr("!")
 
 
-TokenPatternOperatorMinMax = constr(regex=r"^({\d+}|{\d+,\d*}|{\d*,\d+})$", strict=True)
+class TokenPatternOperatorMinMax(ConstrainedStr):
+    regex = re.compile("^({\d+}|{\d+,\d*}|{\d*,\d+})$")
+
+
 TokenPatternOperator = Union[TokenPatternOperatorSimple, TokenPatternOperatorMinMax]
 StringValue = Union[TokenPatternString, StrictStr]
 NumberValue = Union[TokenPatternNumber, StrictInt, StrictFloat]
