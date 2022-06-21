@@ -2,7 +2,7 @@
 title: SpanRuler
 tag: class
 source: spacy/pipeline/span_ruler.py
-new: 3.3.1
+new: 3.3
 teaser: 'Pipeline component for rule-based span and named entity recognition'
 api_string_name: span_ruler
 api_trainable: false
