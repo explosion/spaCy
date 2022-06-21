@@ -26,4 +26,4 @@ cdef class StringStore:
     cdef public PreshMap _map
 
     cdef const Utf8Str* intern_unicode(self, str py_string)
-    cdef const Utf8Str* _intern_utf8(self, char* utf8_string, int length)
+    cdef const Utf8Str* _intern_utf8(self, char* utf8_string, int length, hash_t* precalculated_hash)

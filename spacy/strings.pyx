@@ -179,19 +179,22 @@ cdef class StringStore:
         string (str): The string to add.
         RETURNS (uint64): The string's hash value.
         """
+        cdef hash_t hash
         if isinstance(string, str):
             if string in SYMBOLS_BY_STR:
                 return SYMBOLS_BY_STR[string]
-            key = hash_string(string)
-            self.intern_unicode(string)
+
+            string = string.encode("utf8")
+            hash = hash_utf8(string, len(string))
+            self._intern_utf8(string, len(string), &hash)
         elif isinstance(string, bytes):
             if string in SYMBOLS_BY_STR:
                 return SYMBOLS_BY_STR[string]
-            key = hash_utf8(string, len(string))
-            self._intern_utf8(string, len(string))
+            hash = hash_utf8(string, len(string))
+            self._intern_utf8(string, len(string), &hash)
         else:
             raise TypeError(Errors.E017.format(value_type=type(string)))
-        return key
+        return hash
 
     def __len__(self):
         """The number of strings in the store.
@@ -297,13 +300,13 @@ cdef class StringStore:
     cdef const Utf8Str* intern_unicode(self, str py_string):
         # 0 means missing, but we don't bother offsetting the index.
         cdef bytes byte_string = py_string.encode("utf8")
-        return self._intern_utf8(byte_string, len(byte_string))
+        return self._intern_utf8(byte_string, len(byte_string), NULL)
 
     @cython.final
-    cdef const Utf8Str* _intern_utf8(self, char* utf8_string, int length):
+    cdef const Utf8Str* _intern_utf8(self, char* utf8_string, int length, hash_t* precalculated_hash):
         # TODO: This function's API/behaviour is an unholy mess...
         # 0 means missing, but we don't bother offsetting the index.
-        cdef hash_t key = hash_utf8(utf8_string, length)
+        cdef hash_t key = precalculated_hash[0] if precalculated_hash is not NULL else hash_utf8(utf8_string, length)
         cdef Utf8Str* value = <Utf8Str*>self._map.get(key)
         if value is not NULL:
             return value
