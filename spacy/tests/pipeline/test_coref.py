@@ -79,7 +79,6 @@ def test_initialized_short(nlp):
     assert nlp.pipe_names == ["coref"]
     text = "Hi there"
     doc = nlp(text)
-    print(doc.spans)
 
 
 @pytest.mark.skipif(not has_torch, reason="Torch not available")

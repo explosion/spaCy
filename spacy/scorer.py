@@ -925,7 +925,6 @@ class Scorer:
                         pred_ends.append(pred_mention.end)
 
 
-            # TODO check logic
             # see how many are perfect
             cs = [a == b for a, b in zip(starts, pred_starts)]
             ce = [a == b for a, b in zip(ends, pred_ends)]
@@ -1349,7 +1348,6 @@ def lea(input_clusters, output_clusters, mention_to_gold):
 
 
 # This is coref related, but not from coval.
-# def doc2clusters(doc: Doc, prefix) -> MentionClusters:
 def doc2clusters(doc: Doc, prefix: str) -> List[Tuple[int, int]]:
     """Given a doc, give the mention clusters.
 
