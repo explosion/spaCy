@@ -57,7 +57,7 @@ def test_add_pipe(nlp):
 def test_not_initialized(nlp):
     nlp.add_pipe("coref")
     text = "She gave me her pen."
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="E109"):
         nlp(text)
 
 @pytest.mark.skipif(not has_torch, reason="Torch not available")
