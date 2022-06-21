@@ -3,12 +3,12 @@ import functools
 import inspect
 import types
 import warnings
-from ..errors import Warnings
 
 from thinc.layers import with_nvtx_range
 from thinc.model import Model, wrap_model_recursive
 from thinc.util import use_nvtx_range
 
+from ..errors import Warnings
 from ..util import registry
 
 if TYPE_CHECKING:
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from ..language import Language  # noqa: F401
 
 
-DEFAULT_ANNOTATABLE_PIPE_METHODS = [
+DEFAULT_NVTX_ANNOTATABLE_PIPE_METHODS = [
     "pipe",
     "predict",
     "set_annotations",
@@ -81,7 +81,7 @@ def pipes_with_nvtx_range(
         else:
             extra_funcs = []
 
-        for name in DEFAULT_ANNOTATABLE_PIPE_METHODS + extra_funcs:
+        for name in DEFAULT_NVTX_ANNOTATABLE_PIPE_METHODS + extra_funcs:
             func = getattr(pipe, name, None)
             if func is None:
                 if name in extra_funcs:
