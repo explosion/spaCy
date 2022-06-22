@@ -209,8 +209,7 @@ from spacy.util import ensure_path
 
 @Language.factory("my_component")
 class CustomComponent:
-    def __init__(self, nlp: Language, name: str = "my_component") -> None:
-        self.nlp = nlp
+    def __init__(self, nlp: Language, name: str = "my_component"):
         self.name = name
         self.data = []
 
