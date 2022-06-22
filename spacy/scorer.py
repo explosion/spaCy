@@ -1348,7 +1348,7 @@ def lea(input_clusters, output_clusters, mention_to_gold):
 
 
 # This is coref related, but not from coval.
-def doc2clusters(doc: Doc, prefix: str) -> List[Tuple[int, int]]:
+def doc2clusters(doc: Doc, prefix: str) -> List[List[Tuple[int, int]]]:
     """Given a doc, give the mention clusters.
 
     This is used for scoring.
