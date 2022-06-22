@@ -13,6 +13,7 @@ from ..training import Example, validate_examples, validate_get_examples
 from ..errors import Errors
 from ..tokens import Doc
 from ..vocab import Vocab
+from ..util import registry
 
 from ..ml.models.coref_util import (
     create_gold_scores,
@@ -21,10 +22,9 @@ from ..ml.models.coref_util import (
     get_clusters_from_doc,
     get_predicted_clusters,
     DEFAULT_CLUSTER_PREFIX,
-    doc2clusters,
 )
 
-from ..coref_scorer import Evaluator, get_cluster_info, lea
+from ..scorer import Scorer
 
 
 default_config = """
@@ -57,7 +57,14 @@ depth = 2
 """
 DEFAULT_COREF_MODEL = Config().from_str(default_config)["model"]
 
-DEFAULT_CLUSTERS_PREFIX = "coref_clusters"
+
+def coref_scorer(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
+    return Scorer.score_coref_clusters(examples, **kwargs)
+
+
+@registry.scorers("spacy.coref_scorer.v1")
+def make_coref_scorer():
+    return coref_scorer
 
 
 @Language.factory(
@@ -67,6 +74,7 @@ DEFAULT_CLUSTERS_PREFIX = "coref_clusters"
     default_config={
         "model": DEFAULT_COREF_MODEL,
         "span_cluster_prefix": DEFAULT_CLUSTER_PREFIX,
+        "scorer": {"@scorers": "spacy.coref_scorer.v1"},
     },
     default_score_weights={"coref_f": 1.0, "coref_p": None, "coref_r": None},
 )
@@ -74,12 +82,13 @@ def make_coref(
     nlp: Language,
     name: str,
     model,
-    span_cluster_prefix: str = "coref",
+    scorer: Optional[Callable],
+    span_cluster_prefix: str,
 ) -> "CoreferenceResolver":
     """Create a CoreferenceResolver component."""
 
     return CoreferenceResolver(
-        nlp.vocab, model, name, span_cluster_prefix=span_cluster_prefix
+        nlp.vocab, model, name, span_cluster_prefix=span_cluster_prefix, scorer=scorer
     )
 
 
@@ -96,7 +105,8 @@ class CoreferenceResolver(TrainablePipe):
         name: str = "coref",
         *,
         span_mentions: str = "coref_mentions",
-        span_cluster_prefix: str,
+        span_cluster_prefix: str = DEFAULT_CLUSTER_PREFIX,
+        scorer: Optional[Callable] = coref_scorer,
     ) -> None:
         """Initialize a coreference resolution component.
 
@@ -118,7 +128,8 @@ class CoreferenceResolver(TrainablePipe):
         self.span_cluster_prefix = span_cluster_prefix
         self._rehearsal_model = None
 
-        self.cfg: Dict[str, Any] = {}
+        self.cfg: Dict[str, Any] = {"span_cluster_prefix": span_cluster_prefix}
+        self.scorer = scorer
 
     def predict(self, docs: Iterable[Doc]) -> List[MentionClusters]:
         """Apply the pipeline's model to a batch of docs, without modifying them.
@@ -276,7 +287,6 @@ class CoreferenceResolver(TrainablePipe):
             log_marg = ops.softmax(score_matrix + ops.xp.log(top_gscores), axis=1)
         log_norm = ops.softmax(score_matrix, axis=1)
         grad = log_norm - log_marg
-        # gradients.append((grad, cidx))
         loss = float((grad**2).sum())
 
         return loss, grad
@@ -306,26 +316,3 @@ class CoreferenceResolver(TrainablePipe):
 
         assert len(X) > 0, Errors.E923.format(name=self.name)
         self.model.initialize(X=X, Y=Y)
-
-    def score(self, examples, **kwargs):
-        """Score a batch of examples using LEA.
-        For details on how LEA works and why to use it see the paper:
-        Which Coreference Evaluation Metric Do You Trust? A Proposal for a Link-based Entity Aware Metric
-        Moosavi and Strube, 2016
-        https://api.semanticscholar.org/CorpusID:17606580
-        """
-
-        evaluator = Evaluator(lea)
-
-        for ex in examples:
-            p_clusters = doc2clusters(ex.predicted, self.span_cluster_prefix)
-            g_clusters = doc2clusters(ex.reference, self.span_cluster_prefix)
-            cluster_info = get_cluster_info(p_clusters, g_clusters)
-            evaluator.update(cluster_info)
-
-        score = {
-            "coref_f": evaluator.get_f1(),
-            "coref_p": evaluator.get_precision(),
-            "coref_r": evaluator.get_recall(),
-        }
-        return score

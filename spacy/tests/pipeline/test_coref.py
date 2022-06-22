@@ -5,11 +5,13 @@ from spacy import util
 from spacy.training import Example
 from spacy.lang.en import English
 from spacy.tests.util import make_tempdir
-from spacy.pipeline.coref import DEFAULT_CLUSTERS_PREFIX
 from spacy.ml.models.coref_util import (
+    DEFAULT_CLUSTER_PREFIX,
     select_non_crossing_spans,
     get_sentence_ids,
 )
+
+from thinc.util import has_torch
 
 # fmt: off
 TRAIN_DATA = [
@@ -17,12 +19,12 @@ TRAIN_DATA = [
         "Yes, I noticed that many friends around me received it. It seems that almost everyone received this SMS.",
         {
             "spans": {
-                f"{DEFAULT_CLUSTERS_PREFIX}_1": [
+                f"{DEFAULT_CLUSTER_PREFIX}_1": [
                     (5, 6, "MENTION"),      # I
                     (40, 42, "MENTION"),    # me
 
                 ],
-                f"{DEFAULT_CLUSTERS_PREFIX}_2": [
+                f"{DEFAULT_CLUSTER_PREFIX}_2": [
                     (52, 54, "MENTION"),     # it
                     (95, 103, "MENTION"),    # this SMS
                 ]
@@ -45,18 +47,20 @@ def snlp():
     return en
 
 
+@pytest.mark.skipif(not has_torch, reason="Torch not available")
 def test_add_pipe(nlp):
     nlp.add_pipe("coref")
     assert nlp.pipe_names == ["coref"]
 
 
+@pytest.mark.skipif(not has_torch, reason="Torch not available")
 def test_not_initialized(nlp):
     nlp.add_pipe("coref")
     text = "She gave me her pen."
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="E109"):
         nlp(text)
 
-
+@pytest.mark.skipif(not has_torch, reason="Torch not available")
 def test_initialized(nlp):
     nlp.add_pipe("coref")
     nlp.initialize()
@@ -68,15 +72,16 @@ def test_initialized(nlp):
         assert len(v) <= 15
 
 
+@pytest.mark.skipif(not has_torch, reason="Torch not available")
 def test_initialized_short(nlp):
     nlp.add_pipe("coref")
     nlp.initialize()
     assert nlp.pipe_names == ["coref"]
     text = "Hi there"
     doc = nlp(text)
-    print(doc.spans)
 
 
+@pytest.mark.skipif(not has_torch, reason="Torch not available")
 def test_coref_serialization(nlp):
     # Test that the coref component can be serialized
     nlp.add_pipe("coref", last=True)
@@ -101,6 +106,7 @@ def test_coref_serialization(nlp):
         # assert spans_result == spans_result2
 
 
+@pytest.mark.skipif(not has_torch, reason="Torch not available")
 def test_overfitting_IO(nlp):
     # Simple test to try and quickly overfit the senter - ensuring the ML models work correctly
     train_examples = []
@@ -147,6 +153,7 @@ def test_overfitting_IO(nlp):
     # assert_equal(batch_deps_1, no_batch_deps)
 
 
+@pytest.mark.skipif(not has_torch, reason="Torch not available")
 def test_crossing_spans():
     starts = [6, 10, 0, 1, 0, 1, 0, 1, 2, 2, 2]
     ends = [12, 12, 2, 3, 3, 4, 4, 4, 3, 4, 5]
@@ -158,6 +165,7 @@ def test_crossing_spans():
     guess = sorted(guess)
     assert gold == guess
 
+@pytest.mark.skipif(not has_torch, reason="Torch not available")
 def test_sentence_map(snlp):
     doc = snlp("I like text. This is text.")
     sm = get_sentence_ids(doc)

@@ -7,8 +7,9 @@ from numpy.testing import assert_array_equal, assert_array_almost_equal
 import numpy
 from spacy.ml.models import build_Tok2Vec_model, MultiHashEmbed, MaxoutWindowEncoder
 from spacy.ml.models import build_bow_text_classifier, build_simple_cnn_text_classifier
+from spacy.ml.models import build_spancat_model
 if has_torch:
-    from spacy.ml.models import build_spancat_model, build_wl_coref_model
+    from spacy.ml.models import build_wl_coref_model, build_span_predictor
 from spacy.ml.staticvectors import StaticVectors
 from spacy.ml.extract_spans import extract_spans, _get_span_indices
 from spacy.lang.en import English
