@@ -1,4 +1,5 @@
 from typing import List, Dict, Callable, Tuple, Optional, Iterable, Any, cast
+from typing import Union
 from thinc.api import Config, Model, get_current_ops, set_dropout_rate, Ops
 from thinc.api import Optimizer
 from thinc.types import Ragged, Ints2d, Floats2d, Ints1d
@@ -106,6 +107,7 @@ def build_ngram_range_suggester(min_size: int, max_size: int) -> Suggester:
         "model": DEFAULT_SPANCAT_MODEL,
         "suggester": {"@misc": "spacy.ngram_suggester.v1", "sizes": [1, 2, 3]},
         "scorer": {"@scorers": "spacy.spancat_scorer.v1"},
+        "store_activations": False,
     },
     default_score_weights={"spans_sc_f": 1.0, "spans_sc_p": 0.0, "spans_sc_r": 0.0},
 )
@@ -118,6 +120,7 @@ def make_spancat(
     scorer: Optional[Callable],
     threshold: float,
     max_positive: Optional[int],
+    store_activations: Union[bool, List[str]],
 ) -> "SpanCategorizer":
     """Create a SpanCategorizer component. The span categorizer consists of two
     parts: a suggester function that proposes candidate spans, and a labeller
@@ -148,6 +151,7 @@ def make_spancat(
         max_positive=max_positive,
         name=name,
         scorer=scorer,
+        store_activations=store_activations,
     )
 
 
@@ -186,6 +190,7 @@ class SpanCategorizer(TrainablePipe):
         threshold: float = 0.5,
         max_positive: Optional[int] = None,
         scorer: Optional[Callable] = spancat_score,
+        store_activations=False,
     ) -> None:
         """Initialize the span categorizer.
         vocab (Vocab): The shared vocabulary.
@@ -218,6 +223,7 @@ class SpanCategorizer(TrainablePipe):
         self.model = model
         self.name = name
         self.scorer = scorer
+        self.store_activations = store_activations
 
     @property
     def key(self) -> str:
@@ -270,7 +276,7 @@ class SpanCategorizer(TrainablePipe):
         """
         indices = self.suggester(docs, ops=self.model.ops)
         scores = self.model.predict((docs, indices))  # type: ignore
-        return indices, scores
+        return {"indices": indices, "scores": scores}
 
     def set_candidates(
         self, docs: Iterable[Doc], *, candidates_key: str = "candidates"
@@ -290,7 +296,7 @@ class SpanCategorizer(TrainablePipe):
             for index in candidates.dataXd:
                 doc.spans[candidates_key].append(doc[index[0] : index[1]])
 
-    def set_annotations(self, docs: Iterable[Doc], indices_scores) -> None:
+    def set_annotations(self, docs: Iterable[Doc], activations) -> None:
         """Modify a batch of Doc objects, using pre-computed scores.
 
         docs (Iterable[Doc]): The documents to modify.
@@ -299,10 +305,19 @@ class SpanCategorizer(TrainablePipe):
         DOCS: https://spacy.io/api/spancategorizer#set_annotations
         """
         labels = self.labels
-        indices, scores = indices_scores
+
+        indices = activations["indices"]
+        scores = activations["scores"]
         offset = 0
         for i, doc in enumerate(docs):
             indices_i = indices[i].dataXd
+            doc.activations[self.name] = {}
+            if "indices" in self.store_activations:
+                doc.activations[self.name]["indices"] = indices_i
+            if "scores" in self.store_activations:
+                doc.activations[self.name]["scores"] = scores[
+                    offset : offset + indices.lengths[i]
+                ]
             doc.spans[self.key] = self._make_span_group(
                 doc, indices_i, scores[offset : offset + indices.lengths[i]], labels  # type: ignore[arg-type]
             )
@@ -474,3 +489,7 @@ class SpanCategorizer(TrainablePipe):
                     spans.append(Span(doc, start, end, label=labels[j]))
 
         return spans
+
+    @property
+    def activations(self):
+        return ["indices", "scores"]

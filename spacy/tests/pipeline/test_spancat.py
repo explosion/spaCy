@@ -419,3 +419,29 @@ def test_set_candidates():
     assert len(docs[0].spans["candidates"]) == 9
     assert docs[0].spans["candidates"][0].text == "Just"
     assert docs[0].spans["candidates"][4].text == "Just a"
+
+
+def test_store_activations():
+    # Simple test to try and quickly overfit the spancat component - ensuring the ML models work correctly
+    nlp = English()
+    spancat = nlp.add_pipe("spancat", config={"spans_key": SPAN_KEY})
+    train_examples = make_examples(nlp)
+    optimizer = nlp.initialize(get_examples=lambda: train_examples)
+    nO = spancat.model.get_dim("nO")
+    assert nO == 2
+    assert set(spancat.labels) == {"LOC", "PERSON"}
+
+    doc = nlp("This is a test.")
+    assert len(list(doc.activations["spancat"].keys())) == 0
+
+    spancat.store_activations = True
+    doc = nlp("This is a test.")
+    assert set(doc.activations["spancat"].keys()) == {"indices", "scores"}
+    assert doc.activations["spancat"]["indices"].shape == (12, 2)
+    assert doc.activations["spancat"]["scores"].shape == (12, nO)
+    spancat.store_activations = True
+
+    spancat.store_activations = ["scores"]
+    doc = nlp("This is a test.")
+    assert set(doc.activations["spancat"].keys()) == {"scores"}
+    assert doc.activations["spancat"]["scores"].shape == (12, nO)

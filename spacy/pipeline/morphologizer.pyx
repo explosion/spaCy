@@ -1,5 +1,5 @@
 # cython: infer_types=True, profile=True, binding=True
-from typing import Optional, Union, Dict, Callable
+from typing import Callable, Dict, List, Optional, Union
 import srsly
 from thinc.api import SequenceCategoricalCrossentropy, Model, Config
 from itertools import islice
@@ -52,7 +52,13 @@ DEFAULT_MORPH_MODEL = Config().from_str(default_model_config)["model"]
 @Language.factory(
     "morphologizer",
     assigns=["token.morph", "token.pos"],
-    default_config={"model": DEFAULT_MORPH_MODEL, "overwrite": True, "extend": False, "scorer": {"@scorers": "spacy.morphologizer_scorer.v1"}},
+    default_config={
+        "model": DEFAULT_MORPH_MODEL,
+        "overwrite": True,
+        "extend": False,
+        "scorer": {"@scorers": "spacy.morphologizer_scorer.v1"},
+        "store_activations": False
+    },
     default_score_weights={"pos_acc": 0.5, "morph_acc": 0.5, "morph_per_feat": None},
 )
 def make_morphologizer(
@@ -62,8 +68,10 @@ def make_morphologizer(
     overwrite: bool,
     extend: bool,
     scorer: Optional[Callable],
+    store_activations: Union[bool, List[str]],
 ):
-    return Morphologizer(nlp.vocab, model, name, overwrite=overwrite, extend=extend, scorer=scorer)
+    return Morphologizer(nlp.vocab, model, name, overwrite=overwrite, extend=extend, scorer=scorer,
+                         store_activations=store_activations)
 
 
 def morphologizer_score(examples, **kwargs):
@@ -95,6 +103,7 @@ class Morphologizer(Tagger):
         overwrite: bool = BACKWARD_OVERWRITE,
         extend: bool = BACKWARD_EXTEND,
         scorer: Optional[Callable] = morphologizer_score,
+        store_activations=False,
     ):
         """Initialize a morphologizer.
 
@@ -124,6 +133,7 @@ class Morphologizer(Tagger):
         }
         self.cfg = dict(sorted(cfg.items()))
         self.scorer = scorer
+        self.store_activations = store_activations
 
     @property
     def labels(self):
@@ -234,6 +244,9 @@ class Morphologizer(Tagger):
         cdef bint extend = self.cfg["extend"]
         labels = self.labels
         for i, doc in enumerate(docs):
+            doc.activations[self.name] = {}
+            for activation in self.store_activations:
+                doc.activations[self.name][activation] = activations[activation][i]
             doc_tag_ids = batch_tag_ids[i]
             if hasattr(doc_tag_ids, "get"):
                 doc_tag_ids = doc_tag_ids.get()
