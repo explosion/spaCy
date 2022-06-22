@@ -217,7 +217,7 @@ class Morphologizer(Tagger):
         assert len(label_sample) > 0, Errors.E923.format(name=self.name)
         self.model.initialize(X=doc_sample, Y=label_sample)
 
-    def set_annotations(self, docs, batch_tag_ids):
+    def set_annotations(self, docs, scores_guesses):
         """Modify a batch of documents, using pre-computed scores.
 
         docs (Iterable[Doc]): The documents to modify.
@@ -225,6 +225,7 @@ class Morphologizer(Tagger):
 
         DOCS: https://spacy.io/api/morphologizer#set_annotations
         """
+        _, batch_tag_ids = scores_guesses
         if isinstance(docs, Doc):
             docs = [docs]
         cdef Doc doc
