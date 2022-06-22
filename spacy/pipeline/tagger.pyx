@@ -50,7 +50,7 @@ DEFAULT_TAGGER_MODEL = Config().from_str(default_model_config)["model"]
         "overwrite": False,
         "scorer": {"@scorers": "spacy.tagger_scorer.v1"},
         "neg_prefix": "!",
-        "store_activations": False
+        "store_activations": False,
     },
     default_score_weights={"tag_acc": 1.0},
 )
@@ -70,7 +70,8 @@ def make_tagger(
         in size, and be normalized as probabilities (all scores between 0 and 1,
         with the rows summing to 1).
     """
-    return Tagger(nlp.vocab, model, name, overwrite=overwrite, scorer=scorer, neg_prefix=neg_prefix, store_activations=store_activations)
+    return Tagger(nlp.vocab, model, name, overwrite=overwrite, scorer=scorer, neg_prefix=neg_prefix,
+                  store_activations=store_activations)
 
 
 def tagger_score(examples, **kwargs):
