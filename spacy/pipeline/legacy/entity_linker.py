@@ -54,6 +54,7 @@ class EntityLinker_v1(TrainablePipe):
         get_candidates: Callable[[KnowledgeBase, Span], Iterable[Candidate]],
         overwrite: bool = BACKWARD_OVERWRITE,
         scorer: Optional[Callable] = entity_linker_score,
+        abstention_threshold: float = 0,
     ) -> None:
         """Initialize an entity linker.
 
@@ -70,6 +71,8 @@ class EntityLinker_v1(TrainablePipe):
             produces a list of candidates, given a certain knowledge base and a textual mention.
         scorer (Optional[Callable]): The scoring method. Defaults to
             Scorer.score_links.
+        abstention_threshold (Optional[float]): Confidence threshold for entity predictions. If confidence is below the
+            threshold, prediction is discarded. If None, predictions are made regardless of confidence.
 
         DOCS: https://spacy.io/api/entitylinker#init
         """
@@ -87,6 +90,7 @@ class EntityLinker_v1(TrainablePipe):
         # create an empty KB by default. If you want to load a predefined one, specify it in 'initialize'.
         self.kb = empty_kb(entity_vector_length)(self.vocab)
         self.scorer = scorer
+        self.abstention_threshold = abstention_threshold
 
     def set_kb(self, kb_loader: Callable[[Vocab], KnowledgeBase]):
         """Define the KB of this pipe by providing a function that will
@@ -270,9 +274,8 @@ class EntityLinker_v1(TrainablePipe):
                         if not candidates:
                             # no prediction possible for this entity - setting to NIL
                             final_kb_ids.append(self.NIL)
-                        elif len(candidates) == 1:
+                        elif len(candidates) == 1 and self.abstention_threshold is None:
                             # shortcut for efficiency reasons: take the 1 candidate
-                            # TODO: thresholding
                             final_kb_ids.append(candidates[0].entity_)
                         else:
                             random.shuffle(candidates)
@@ -301,8 +304,11 @@ class EntityLinker_v1(TrainablePipe):
                                 if sims.shape != prior_probs.shape:
                                     raise ValueError(Errors.E161)
                                 scores = prior_probs + sims - (prior_probs * sims)
-                            # TODO: thresholding
-                            best_index = scores.argmax().item()
+                            best_index = (
+                                xp.where(scores >= self.abstention_threshold)[0]
+                                .argmax()
+                                .item()
+                            )
                             best_candidate = candidates[best_index]
                             final_kb_ids.append(best_candidate.entity_)
         if not (len(final_kb_ids) == entity_count):

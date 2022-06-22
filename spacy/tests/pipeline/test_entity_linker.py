@@ -1,4 +1,4 @@
-from typing import Callable, Iterable
+from typing import Callable, Iterable, Dict, Any
 
 import pytest
 from numpy.testing import assert_equal
@@ -1115,3 +1115,69 @@ def test_tokenization_mismatch():
 
     nlp.add_pipe("sentencizer", first=True)
     results = nlp.evaluate(train_examples)
+
+
+@pytest.mark.parametrize(
+    "name,config",
+    [
+        (
+            "entity_linker",
+            {
+                "@architectures": "spacy.EntityLinker.v1",
+                "tok2vec": DEFAULT_TOK2VEC_MODEL,
+            },
+        ),
+        (
+            "entity_linker",
+            {
+                "@architectures": "spacy.EntityLinker.v2",
+                "tok2vec": DEFAULT_TOK2VEC_MODEL,
+            },
+        ),
+    ],
+)
+def test_abstention_threshold(name: str, config: Dict[str, Any]):
+    """Tests abstention threshold."""
+    # todo @RM
+    #   - add abstention threshold to v1
+    #   - add test with scores < threshold (lower Mahler priors and/or don't train)
+    #   - incorporate name and config, run tests for all model architectures (ditch v2?)
+    #   - cleanup
+    #   - documentation update
+    nlp = English()
+    vector_length = 3
+    nlp.add_pipe("sentencizer")
+    text = "Mahler 's Symphony No. 8 was beautiful."
+    entities = [(0, 6, "PERSON")]
+    links = {(0, 6): {"Q7304": 1.0}}
+    sent_starts = [1, -1, 0, 0, 0, 0, 0, 0, 0]
+    doc = nlp(text)
+    train_examples = [
+        Example.from_dict(
+            doc, {"entities": entities, "links": links, "sent_starts": sent_starts}
+        )
+    ]
+
+    def create_kb(vocab):
+        # create artificial KB
+        mykb = KnowledgeBase(vocab, entity_vector_length=vector_length)
+        mykb.add_entity(entity="Q7304", freq=12, entity_vector=[6, -4, 3])
+        mykb.add_alias(alias="Mahler", entities=["Q7304"], probabilities=[1])
+        return mykb
+
+    # Create the Entity Linker component and add it to the pipeline
+    entity_linker = nlp.add_pipe(
+        "entity_linker", last=True, config={"abstention_threshold": 0.5}
+    )
+    entity_linker.set_kb(create_kb)
+    optimizer = nlp.initialize(get_examples=lambda: train_examples)
+    for i in range(1):
+        losses = {}
+        nlp.update(train_examples, sgd=optimizer, losses=losses)
+
+    # Add a custom rule-based component to mimick NER
+    patterns = [{"label": "PERSON", "pattern": [{"LOWER": "mahler"}]}]
+    ruler = nlp.add_pipe("entity_ruler", before="entity_linker")
+    ruler.add_patterns(patterns)
+    doc = nlp(text)
+    print(doc.ents)
