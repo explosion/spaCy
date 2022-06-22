@@ -1,3 +1,4 @@
+from typing import cast
 import random
 
 import numpy.random
@@ -11,7 +12,7 @@ from spacy import util
 from spacy.cli.evaluate import print_prf_per_type, print_textcats_auc_per_cat
 from spacy.lang.en import English
 from spacy.language import Language
-from spacy.pipeline import TextCategorizer
+from spacy.pipeline import TextCategorizer, TrainablePipe
 from spacy.pipeline.textcat import single_label_bow_config
 from spacy.pipeline.textcat import single_label_cnn_config
 from spacy.pipeline.textcat import single_label_default_config
@@ -871,3 +872,53 @@ def test_textcat_multi_threshold():
 
     scores = nlp.evaluate(train_examples, scorer_cfg={"threshold": 0})
     assert scores["cats_f_per_type"]["POSITIVE"]["r"] == 1.0
+
+
+def test_store_activations():
+    fix_random_seed(0)
+    nlp = English()
+    textcat = cast(TrainablePipe, nlp.add_pipe("textcat"))
+
+    train_examples = []
+    for text, annotations in TRAIN_DATA_SINGLE_LABEL:
+        train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
+    nlp.initialize(get_examples=lambda: train_examples)
+    nO = textcat.model.get_dim("nO")
+
+    doc = nlp("This is a test.")
+    assert len(list(doc.activations["textcat"].keys())) == 0
+
+    textcat.store_activations = True
+    doc = nlp("This is a test.")
+    assert list(doc.activations["textcat"].keys()) == ["probs"]
+    assert doc.activations["textcat"]["probs"].shape == (nO,)
+
+    textcat.store_activations = ["probs"]
+    doc = nlp("This is a test.")
+    assert list(doc.activations["textcat"].keys()) == ["probs"]
+    assert doc.activations["textcat"]["probs"].shape == (nO,)
+
+
+def test_store_activations_multi():
+    fix_random_seed(0)
+    nlp = English()
+    textcat = cast(TrainablePipe, nlp.add_pipe("textcat_multilabel"))
+
+    train_examples = []
+    for text, annotations in TRAIN_DATA_MULTI_LABEL:
+        train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
+    nlp.initialize(get_examples=lambda: train_examples)
+    nO = textcat.model.get_dim("nO")
+
+    doc = nlp("This is a test.")
+    assert len(list(doc.activations["textcat_multilabel"].keys())) == 0
+
+    textcat.store_activations = True
+    doc = nlp("This is a test.")
+    assert list(doc.activations["textcat_multilabel"].keys()) == ["probs"]
+    assert doc.activations["textcat_multilabel"]["probs"].shape == (nO,)
+
+    textcat.store_activations = ["probs"]
+    doc = nlp("This is a test.")
+    assert list(doc.activations["textcat_multilabel"].keys()) == ["probs"]
+    assert doc.activations["textcat_multilabel"]["probs"].shape == (nO,)

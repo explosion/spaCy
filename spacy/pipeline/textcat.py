@@ -1,4 +1,4 @@
-from typing import Iterable, Tuple, Optional, Dict, List, Callable, Any
+from typing import Iterable, Tuple, Optional, Dict, List, Callable, Any, Union
 from thinc.api import get_array_module, Model, Optimizer, set_dropout_rate, Config
 from thinc.types import Floats2d
 import numpy
@@ -75,6 +75,7 @@ subword_features = true
         "threshold": 0.5,
         "model": DEFAULT_SINGLE_TEXTCAT_MODEL,
         "scorer": {"@scorers": "spacy.textcat_scorer.v1"},
+        "store_activations": False,
     },
     default_score_weights={
         "cats_score": 1.0,
@@ -96,6 +97,7 @@ def make_textcat(
     model: Model[List[Doc], List[Floats2d]],
     threshold: float,
     scorer: Optional[Callable],
+    store_activations: Union[bool, List[str]],
 ) -> "TextCategorizer":
     """Create a TextCategorizer component. The text categorizer predicts categories
     over a whole document. It can learn one or more labels, and the labels are considered
@@ -106,7 +108,14 @@ def make_textcat(
     threshold (float): Cutoff to consider a prediction "positive".
     scorer (Optional[Callable]): The scoring method.
     """
-    return TextCategorizer(nlp.vocab, model, name, threshold=threshold, scorer=scorer)
+    return TextCategorizer(
+        nlp.vocab,
+        model,
+        name,
+        threshold=threshold,
+        scorer=scorer,
+        store_activations=store_activations,
+    )
 
 
 def textcat_score(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
@@ -137,6 +146,7 @@ class TextCategorizer(TrainablePipe):
         *,
         threshold: float,
         scorer: Optional[Callable] = textcat_score,
+        store_activations=False,
     ) -> None:
         """Initialize a text categorizer for single-label classification.
 
@@ -157,6 +167,7 @@ class TextCategorizer(TrainablePipe):
         cfg = {"labels": [], "threshold": threshold, "positive_label": None}
         self.cfg = dict(cfg)
         self.scorer = scorer
+        self.store_activations = store_activations
 
     @property
     def support_missing_values(self):
@@ -208,6 +219,9 @@ class TextCategorizer(TrainablePipe):
         DOCS: https://spacy.io/api/textcategorizer#set_annotations
         """
         for i, doc in enumerate(docs):
+            doc.activations[self.name] = {}
+            if "probs" in self.store_activations:
+                doc.activations[self.name]["probs"] = scores[i]
             for j, label in enumerate(self.labels):
                 doc.cats[label] = float(scores[i, j])
 
@@ -398,3 +412,7 @@ class TextCategorizer(TrainablePipe):
         for ex in examples:
             if list(ex.reference.cats.values()).count(1.0) > 1:
                 raise ValueError(Errors.E895.format(value=ex.reference.cats))
+
+    @property
+    def activations(self):
+        return ["probs"]
