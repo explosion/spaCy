@@ -1,5 +1,5 @@
 # cython: infer_types=True, profile=True, binding=True
-from typing import Callable, Optional
+from typing import Callable, List, Optional, Union
 import numpy
 import srsly
 from thinc.api import Model, set_dropout_rate, SequenceCategoricalCrossentropy, Config
@@ -61,7 +61,7 @@ def make_tagger(
     overwrite: bool,
     scorer: Optional[Callable],
     neg_prefix: str,
-    store_activations: bool,
+    store_activations: Union[bool, List[str]],
 ):
     """Construct a part-of-speech tagger component.
 
@@ -148,12 +148,12 @@ class Tagger(TrainablePipe):
             n_labels = len(self.labels)
             guesses = [self.model.ops.alloc((0, n_labels)) for doc in docs]
             assert len(guesses) == len(docs)
-            return guesses, guesses
+            return {"probs": guesses, "guesses": guesses}
         scores = self.model.predict(docs)
         assert len(scores) == len(docs), (len(scores), len(docs))
         guesses = self._scores2guesses(scores)
         assert len(guesses) == len(docs)
-        return scores, guesses
+        return {"probs": scores, "guesses": guesses}
 
     def _scores2guesses(self, scores):
         guesses = []
@@ -164,7 +164,7 @@ class Tagger(TrainablePipe):
             guesses.append(doc_guesses)
         return guesses
 
-    def set_annotations(self, docs, scores_guesses):
+    def set_annotations(self, docs, activations):
         """Modify a batch of documents, using pre-computed scores.
 
         docs (Iterable[Doc]): The documents to modify.
@@ -172,7 +172,7 @@ class Tagger(TrainablePipe):
 
         DOCS: https://spacy.io/api/tagger#set_annotations
         """
-        _, batch_tag_ids = scores_guesses
+        batch_tag_ids = activations["guesses"]
         if isinstance(docs, Doc):
             docs = [docs]
         cdef Doc doc
@@ -180,11 +180,9 @@ class Tagger(TrainablePipe):
         cdef bint overwrite = self.cfg["overwrite"]
         labels = self.labels
         for i, doc in enumerate(docs):
-            if self.store_activations:
-                doc.activations[self.name] = {
-                    "probs": scores_guesses[0][i],
-                    "guesses": scores_guesses[1][i],
-                }
+            doc.activations[self.name] = {}
+            for activation in self.store_activations:
+                doc.activations[self.name][activation] = activations[activation][i]
             doc_tag_ids = batch_tag_ids[i]
             if hasattr(doc_tag_ids, "get"):
                 doc_tag_ids = doc_tag_ids.get()
@@ -338,3 +336,7 @@ class Tagger(TrainablePipe):
         self.cfg["labels"].append(label)
         self.vocab.strings.add(label)
         return 1
+
+    @property
+    def activations(self):
+        return ["probs", "guesses"]

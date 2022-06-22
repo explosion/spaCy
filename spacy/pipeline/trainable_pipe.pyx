@@ -2,11 +2,12 @@
 from typing import Iterable, Iterator, Optional, Dict, Tuple, Callable
 import srsly
 from thinc.api import set_dropout_rate, Model, Optimizer
+import warnings
 
 from ..tokens.doc cimport Doc
 
 from ..training import validate_examples
-from ..errors import Errors
+from ..errors import Errors, Warnings
 from .pipe import Pipe, deserialize_config
 from .. import util
 from ..vocab import Vocab
@@ -342,3 +343,29 @@ cdef class TrainablePipe(Pipe):
         deserialize["model"] = load_model
         util.from_disk(path, deserialize, exclude)
         return self
+
+    @property
+    def activations(self):
+        raise NotImplementedError(Errors.E931.format(parent="TrainablePipe", method="activations", name=self.name))
+
+    @property
+    def store_activations(self):
+        return self._store_activations
+
+    @store_activations.setter
+    def store_activations(self, activations):
+        known_activations = self.activations
+        if isinstance(activations, list):
+            self._store_activations = []
+            for activation in activations:
+                if activation in known_activations:
+                    self._store_activations.append(activation)
+                else:
+                    warnings.warn(Warnings.W121.format(activation=activation, pipe_name=self.name))
+        elif isinstance(activations, bool):
+            if activations:
+                self._store_activations = list(known_activations)
+            else:
+                self._store_activations = []
+        else:
+            raise ValueError(Errors.E1043)

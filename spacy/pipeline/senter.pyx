@@ -1,5 +1,5 @@
 # cython: infer_types=True, profile=True, binding=True
-from typing import Optional, Callable
+from typing import Optional, Callable, List, Union
 from itertools import islice
 
 import srsly
@@ -46,7 +46,12 @@ DEFAULT_SENTER_MODEL = Config().from_str(default_model_config)["model"]
     },
     default_score_weights={"sents_f": 1.0, "sents_p": 0.0, "sents_r": 0.0},
 )
-def make_senter(nlp: Language, name: str, model: Model, overwrite: bool, scorer: Optional[Callable], store_activations: bool):
+def make_senter(nlp: Language,
+                name: str,
+                model: Model,
+                overwrite: bool,
+                scorer: Optional[Callable],
+                store_activations: Union[bool, List[str]]):
     return SentenceRecognizer(nlp.vocab, model, name, overwrite=overwrite, scorer=scorer, store_activations=store_activations)
 
 
@@ -114,7 +119,7 @@ class SentenceRecognizer(Tagger):
     def label_data(self):
         return None
 
-    def set_annotations(self, docs, scores_guesses):
+    def set_annotations(self, docs, activations):
         """Modify a batch of documents, using pre-computed scores.
 
         docs (Iterable[Doc]): The documents to modify.
@@ -122,17 +127,15 @@ class SentenceRecognizer(Tagger):
 
         DOCS: https://spacy.io/api/sentencerecognizer#set_annotations
         """
-        _, batch_tag_ids = scores_guesses
+        batch_tag_ids = activations["guesses"]
         if isinstance(docs, Doc):
             docs = [docs]
         cdef Doc doc
         cdef bint overwrite = self.cfg["overwrite"]
         for i, doc in enumerate(docs):
-            if self.store_activations:
-                doc.activations[self.name] = {
-                    "probs": scores_guesses[0][i],
-                    "guesses": scores_guesses[1][i],
-                }
+            doc.activations[self.name] = {}
+            for activation in self.store_activations:
+                doc.activations[self.name][activation] = activations[activation][i]
             doc_tag_ids = batch_tag_ids[i]
             if hasattr(doc_tag_ids, "get"):
                 doc_tag_ids = doc_tag_ids.get()
@@ -199,3 +202,7 @@ class SentenceRecognizer(Tagger):
 
     def add_label(self, label, values=None):
         raise NotImplementedError
+
+    @property
+    def activations(self):
+        return ["probs", "guesses"]

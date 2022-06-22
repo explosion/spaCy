@@ -6,4 +6,4 @@ cdef class TrainablePipe(Pipe):
     cdef public object model
     cdef public object cfg
     cdef public object scorer
-    cdef public bint store_activations
+    cdef object _store_activations
