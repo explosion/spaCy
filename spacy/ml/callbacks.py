@@ -1,4 +1,4 @@
-from typing import Type, Callable, Dict, TYPE_CHECKING, List, Optional
+from typing import Type, Callable, Dict, TYPE_CHECKING, List, Optional, Set
 import functools
 import inspect
 import types
@@ -37,17 +37,15 @@ def models_with_nvtx_range(nlp, forward_color: int, backprop_color: int):
         if hasattr(pipe, "is_trainable") and pipe.is_trainable
     ]
 
-    # We need to process all models jointly to avoid wrapping callbacks twice.
-    models: Model = Model(
-        "wrap_with_nvtx_range",
-        forward=lambda model, X, is_train: ...,
-        layers=[pipe.model for pipe in pipes],
-    )
-
-    for node in models.walk():
-        with_nvtx_range(
-            node, forward_color=forward_color, backprop_color=backprop_color
-        )
+    seen_models: Set[int] = set()
+    for pipe in pipes:
+        for node in pipe.model.walk():
+            if id(node) in seen_models:
+                continue
+            seen_models.add(id(node))
+            with_nvtx_range(
+                node, forward_color=forward_color, backprop_color=backprop_color
+            )
 
     return nlp
 
@@ -64,12 +62,11 @@ def create_models_with_nvtx_range(
 
 
 def nvtx_range_wrapper_for_pipe_method(self, func, *args, **kwargs):
-    func_name = (
-        func.func.__name__ if isinstance(func, functools.partial) else func.__name__
-    )
-
-    with use_nvtx_range(f"pipe '{self.name}' - {func_name}"):
+    if isinstance(func, functools.partial):
         return func(*args, **kwargs)
+    else:
+        with use_nvtx_range(f"{self.name} {func.__name__}"):
+            return func(*args, **kwargs)
 
 
 def pipes_with_nvtx_range(
