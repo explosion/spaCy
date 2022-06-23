@@ -62,7 +62,7 @@ of relations, see the usage guide on
 
 </Infobox>
 
-### Operators
+### Operators {#operators}
 
 The following operators are supported by the `DependencyMatcher`, most of which
 come directly from
