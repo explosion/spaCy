@@ -127,8 +127,8 @@ class Morphologizer(Tagger):
 
     @property
     def labels(self):
-        """RETURNS (Tuple[str]): The labels currently added to the component."""
-        return tuple(self.cfg["labels_morph"].keys())
+        """RETURNS (Iterable[str]): The labels currently added to the component."""
+        return self.cfg["labels_morph"].keys()
 
     @property
     def label_data(self) -> Dict[str, Dict[str, Union[str, float, int, None]]]:
@@ -231,13 +231,16 @@ class Morphologizer(Tagger):
         cdef Vocab vocab = self.vocab
         cdef bint overwrite = self.cfg["overwrite"]
         cdef bint extend = self.cfg["extend"]
-        labels = self.labels
+
+        # We need random access for the upcoming ops, so we need to 
+        # we need to allocate a compatible container out of the iterable.
+        labels = tuple(self.labels)
         for i, doc in enumerate(docs):
             doc_tag_ids = batch_tag_ids[i]
             if hasattr(doc_tag_ids, "get"):
                 doc_tag_ids = doc_tag_ids.get()
             for j, tag_id in enumerate(doc_tag_ids):
-                morph = labels[tag_id]
+                morph = labels[int(tag_id)]
                 # set morph
                 if doc.c[j].morph == 0 or overwrite or extend:
                     if overwrite and extend:
@@ -270,7 +273,7 @@ class Morphologizer(Tagger):
         DOCS: https://spacy.io/api/morphologizer#get_loss
         """
         validate_examples(examples, "Morphologizer.get_loss")
-        loss_func = SequenceCategoricalCrossentropy(names=self.labels, normalize=False)
+        loss_func = SequenceCategoricalCrossentropy(names=tuple(self.labels), normalize=False)
         truths = []
         for eg in examples:
             eg_truths = []

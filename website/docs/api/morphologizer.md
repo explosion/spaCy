@@ -401,7 +401,7 @@ coarse-grained POS as the feature `POS`.
 
 | Name        | Description                                            |
 | ----------- | ------------------------------------------------------ |
-| **RETURNS** | The labels added to the component. ~~Tuple[str, ...]~~ |
+| **RETURNS** | The labels added to the component. ~~Iterable[str, ...]~~ |
 
 ## Morphologizer.label_data {#label_data tag="property" new="3"}
 
