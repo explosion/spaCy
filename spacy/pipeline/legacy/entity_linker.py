@@ -304,10 +304,14 @@ class EntityLinker_v1(TrainablePipe):
                                 if sims.shape != prior_probs.shape:
                                     raise ValueError(Errors.E161)
                                 scores = prior_probs + sims - (prior_probs * sims)
-                            scores = xp.where(scores >= self.abstention_threshold)[0]
+                            meets_abst_threshold = xp.where(
+                                scores >= self.abstention_threshold
+                            )[0]
                             best_candidate_entity_ = (
-                                candidates[scores.argmax().item()].entity_
-                                if scores.size
+                                candidates[
+                                    meets_abst_threshold[scores.argmax().item()]
+                                ].entity_
+                                if meets_abst_threshold.size
                                 else EntityLinker_v1.NIL
                             )
                             final_kb_ids.append(best_candidate_entity_)

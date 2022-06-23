@@ -56,7 +56,7 @@ DEFAULT_NEL_MODEL = Config().from_str(default_model_config)["model"]
         "overwrite": True,
         "scorer": {"@scorers": "spacy.entity_linker_scorer.v1"},
         "use_gold_ents": True,
-        "abstention_threshold": None,
+        "abstention_threshold": 0,
     },
     default_score_weights={
         "nel_micro_f": 1.0,
@@ -472,10 +472,14 @@ class EntityLinker(TrainablePipe):
                             if sims.shape != prior_probs.shape:
                                 raise ValueError(Errors.E161)
                             scores = prior_probs + sims - (prior_probs * sims)
-                        scores = xp.where(scores >= self.abstention_threshold)[0]
+                        meets_abst_threshold = xp.where(
+                            scores >= self.abstention_threshold
+                        )[0]
                         best_candidate_entity_ = (
-                            candidates[scores.argmax().item()].entity_
-                            if scores.size
+                            candidates[
+                                meets_abst_threshold[scores.argmax().item()]
+                            ].entity_
+                            if meets_abst_threshold.size
                             else EntityLinker.NIL
                         )
                         final_kb_ids.append(best_candidate_entity_)

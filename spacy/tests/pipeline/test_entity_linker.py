@@ -766,7 +766,7 @@ def test_overfitting_IO():
         doc = nlp(text)
         for ent in doc.ents:
             predictions.append(ent.kb_id_)
-    assert predictions == GOLD_entities
+    assert sorted(predictions) == sorted(GOLD_entities)
 
     # Also test the results are still the same after IO
     with make_tempdir() as tmp_dir:
@@ -1154,19 +1154,18 @@ def test_abstention_threshold(meet_threshold: bool, config: Dict[str, Any]):
         mykb.add_alias(
             alias="Mahler",
             entities=[entity_id],
-            probabilities=[1 if meet_threshold else 0.5],
+            probabilities=[1 if meet_threshold else 0.1],
         )
         return mykb
 
     # Create the Entity Linker component and add it to the pipeline
     entity_linker = nlp.add_pipe(
-        "entity_linker", last=True, config={"abstention_threshold": 1, "model": config}
+        "entity_linker",
+        last=True,
+        config={"abstention_threshold": 0.99, "model": config},
     )
     entity_linker.set_kb(create_kb)
-    optimizer = nlp.initialize(get_examples=lambda: train_examples)
-    for i in range(1):
-        losses = {}
-        nlp.update(train_examples, sgd=optimizer, losses=losses)
+    nlp.initialize(get_examples=lambda: train_examples)
 
     # Add a custom rule-based component to mimick NER
     ruler = nlp.add_pipe("entity_ruler", before="entity_linker")
