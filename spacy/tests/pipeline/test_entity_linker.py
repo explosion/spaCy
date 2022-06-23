@@ -1,7 +1,8 @@
-from typing import Callable, Iterable
+from typing import Callable, Iterable, cast
 
 import pytest
 from numpy.testing import assert_equal
+from thinc.types import Ragged
 
 from spacy import registry, util
 from spacy.attrs import ENT_KB_ID
@@ -9,7 +10,7 @@ from spacy.compat import pickle
 from spacy.kb import Candidate, KnowledgeBase, get_candidates
 from spacy.lang.en import English
 from spacy.ml import load_kb
-from spacy.pipeline import EntityLinker
+from spacy.pipeline import EntityLinker, TrainablePipe
 from spacy.pipeline.legacy import EntityLinker_v1
 from spacy.pipeline.tok2vec import DEFAULT_TOK2VEC_MODEL
 from spacy.scorer import Scorer
@@ -1115,3 +1116,79 @@ def test_tokenization_mismatch():
 
     nlp.add_pipe("sentencizer", first=True)
     results = nlp.evaluate(train_examples)
+
+
+def test_store_activations():
+    nlp = English()
+    vector_length = 3
+    assert "Q2146908" not in nlp.vocab.strings
+
+    # Convert the texts to docs to make sure we have doc.ents set for the training examples
+    train_examples = []
+    for text, annotation in TRAIN_DATA:
+        doc = nlp(text)
+        train_examples.append(Example.from_dict(doc, annotation))
+
+    def create_kb(vocab):
+        # create artificial KB - assign same prior weight to the two russ cochran's
+        # Q2146908 (Russ Cochran): American golfer
+        # Q7381115 (Russ Cochran): publisher
+        mykb = KnowledgeBase(vocab, entity_vector_length=vector_length)
+        mykb.add_entity(entity="Q2146908", freq=12, entity_vector=[6, -4, 3])
+        mykb.add_entity(entity="Q7381115", freq=12, entity_vector=[9, 1, -7])
+        mykb.add_alias(
+            alias="Russ Cochran",
+            entities=["Q2146908", "Q7381115"],
+            probabilities=[0.5, 0.5],
+        )
+        return mykb
+
+    # Create the Entity Linker component and add it to the pipeline
+    entity_linker = cast(TrainablePipe, nlp.add_pipe("entity_linker", last=True))
+    assert isinstance(entity_linker, EntityLinker)
+    entity_linker.set_kb(create_kb)
+    assert "Q2146908" in entity_linker.vocab.strings
+    assert "Q2146908" in entity_linker.kb.vocab.strings
+
+    # initialize the NEL pipe
+    optimizer = nlp.initialize(get_examples=lambda: train_examples)
+
+    for i in range(2):
+        losses = {}
+        nlp.update(train_examples, sgd=optimizer, losses=losses)
+
+    nO = entity_linker.model.get_dim("nO")
+
+    nlp.add_pipe("sentencizer", first=True)
+    patterns = [
+        {"label": "PERSON", "pattern": [{"LOWER": "russ"}, {"LOWER": "cochran"}]},
+        {"label": "ORG", "pattern": [{"LOWER": "ec"}, {"LOWER": "comics"}]},
+    ]
+    ruler = nlp.add_pipe("entity_ruler", before="entity_linker")
+    ruler.add_patterns(patterns)
+
+    doc = nlp("Russ Cochran was a publisher")
+    assert len(doc.activations["entity_linker"].keys()) == 0
+
+    entity_linker.store_activations = True
+    doc = nlp("Russ Cochran was a publisher")
+    assert set(doc.activations["entity_linker"].keys()) == {"ents", "scores"}
+    ents = doc.activations["entity_linker"]["ents"]
+    assert isinstance(ents, Ragged)
+    assert ents.data.shape == (2, 1)
+    assert ents.data.dtype == "uint64"
+    assert ents.lengths.shape == (1,)
+    scores = doc.activations["entity_linker"]["scores"]
+    assert isinstance(scores, Ragged)
+    assert scores.data.shape == (2, 1)
+    assert scores.data.dtype == "float32"
+    assert scores.lengths.shape == (1,)
+
+    entity_linker.store_activations = ["scores"]
+    doc = nlp("Russ Cochran was a publisher")
+    assert set(doc.activations["entity_linker"].keys()) == {"scores"}
+    scores = doc.activations["entity_linker"]["scores"]
+    assert isinstance(scores, Ragged)
+    assert scores.data.shape == (2, 1)
+    assert scores.data.dtype == "float32"
+    assert scores.lengths.shape == (1,)

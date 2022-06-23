@@ -1,5 +1,7 @@
 from typing import Optional, Iterable, Callable, Dict, Union, List, Any
-from thinc.types import Floats2d
+from typing import cast
+from numpy import dtype
+from thinc.types import Floats2d, Ragged
 from pathlib import Path
 from itertools import islice
 import srsly
@@ -20,6 +22,9 @@ from ..errors import Errors
 from ..util import SimpleFrozenList, registry
 from .. import util
 from ..scorer import Scorer
+
+
+ActivationsT = Dict[str, Union[List[Ragged], List[str]]]
 
 # See #9050
 BACKWARD_OVERWRITE = True
@@ -56,6 +61,7 @@ DEFAULT_NEL_MODEL = Config().from_str(default_model_config)["model"]
         "overwrite": True,
         "scorer": {"@scorers": "spacy.entity_linker_scorer.v1"},
         "use_gold_ents": True,
+        "store_activations": False,
     },
     default_score_weights={
         "nel_micro_f": 1.0,
@@ -77,6 +83,7 @@ def make_entity_linker(
     overwrite: bool,
     scorer: Optional[Callable],
     use_gold_ents: bool,
+    store_activations: Union[bool, List[str]],
 ):
     """Construct an EntityLinker component.
 
@@ -121,6 +128,7 @@ def make_entity_linker(
         overwrite=overwrite,
         scorer=scorer,
         use_gold_ents=use_gold_ents,
+        store_activations=store_activations,
     )
 
 
@@ -156,6 +164,7 @@ class EntityLinker(TrainablePipe):
         overwrite: bool = BACKWARD_OVERWRITE,
         scorer: Optional[Callable] = entity_linker_score,
         use_gold_ents: bool,
+        store_activations=False,
     ) -> None:
         """Initialize an entity linker.
 
@@ -192,6 +201,7 @@ class EntityLinker(TrainablePipe):
         self.kb = empty_kb(entity_vector_length)(self.vocab)
         self.scorer = scorer
         self.use_gold_ents = use_gold_ents
+        self.store_activations = store_activations
 
     def set_kb(self, kb_loader: Callable[[Vocab], KnowledgeBase]):
         """Define the KB of this pipe by providing a function that will
@@ -377,7 +387,7 @@ class EntityLinker(TrainablePipe):
         loss = loss / len(entity_encodings)
         return float(loss), out
 
-    def predict(self, docs: Iterable[Doc]) -> List[str]:
+    def predict(self, docs: Iterable[Doc]) -> ActivationsT:
         """Apply the pipeline's model to a batch of docs, without modifying them.
         Returns the KB IDs for each entity in each doc, including NIL if there is
         no prediction.
@@ -390,13 +400,21 @@ class EntityLinker(TrainablePipe):
         self.validate_kb()
         entity_count = 0
         final_kb_ids: List[str] = []
-        xp = self.model.ops.xp
+        ops = self.model.ops
+        xp = ops.xp
+        docs_ents: List[Ragged] = []
+        docs_scores: List[Ragged] = []
         if not docs:
-            return final_kb_ids
+            return {"kb_ids": final_kb_ids, "ents": docs_ents, "scores": docs_scores}
         if isinstance(docs, Doc):
             docs = [docs]
-        for i, doc in enumerate(docs):
+        for doc in docs:
+            doc_ents = []
+            doc_scores = []
+            doc_scores_lens: List[int] = []
             if len(doc) == 0:
+                doc_scores.append(Ragged(ops.alloc1f(0), ops.alloc1i(0)))
+                doc_ents.append(Ragged(xp.zeros(0, dtype="uint64"), ops.alloc1i(0)))
                 continue
             sentences = [s for s in doc.sents]
             # Looping through each entity (TODO: rewrite)
@@ -419,11 +437,17 @@ class EntityLinker(TrainablePipe):
                 if ent.label_ in self.labels_discard:
                     # ignoring this entity - setting to NIL
                     final_kb_ids.append(self.NIL)
+                    self._add_activations(
+                        doc_scores, doc_scores_lens, doc_ents, [0.0], [0]
+                    )
                 else:
                     candidates = list(self.get_candidates(self.kb, ent))
                     if not candidates:
                         # no prediction possible for this entity - setting to NIL
                         final_kb_ids.append(self.NIL)
+                        self._add_activations(
+                            doc_scores, doc_scores_lens, doc_ents, [0.0], [0]
+                        )
                     elif len(candidates) == 1:
                         # shortcut for efficiency reasons: take the 1 candidate
                         # TODO: thresholding
@@ -456,30 +480,48 @@ class EntityLinker(TrainablePipe):
                                 raise ValueError(Errors.E161)
                             scores = prior_probs + sims - (prior_probs * sims)
                         # TODO: thresholding
+                        self._add_activations(
+                            doc_scores,
+                            doc_scores_lens,
+                            doc_ents,
+                            scores,
+                            [c.entity for c in candidates],
+                        )
                         best_index = scores.argmax().item()
                         best_candidate = candidates[best_index]
                         final_kb_ids.append(best_candidate.entity_)
+            self._add_doc_activations(
+                docs_scores, docs_ents, doc_scores, doc_scores_lens, doc_ents
+            )
         if not (len(final_kb_ids) == entity_count):
             err = Errors.E147.format(
                 method="predict", msg="result variables not of equal length"
             )
             raise RuntimeError(err)
-        return final_kb_ids
+        return {"kb_ids": final_kb_ids, "ents": docs_ents, "scores": docs_scores}
 
-    def set_annotations(self, docs: Iterable[Doc], kb_ids: List[str]) -> None:
+    def set_annotations(self, docs: Iterable[Doc], activations: ActivationsT) -> None:
         """Modify a batch of documents, using pre-computed scores.
 
         docs (Iterable[Doc]): The documents to modify.
-        kb_ids (List[str]): The IDs to set, produced by EntityLinker.predict.
+        activations (List[str]): The activations used for setting annotations, produced
+                                 by EntityLinker.predict.
 
         DOCS: https://spacy.io/api/entitylinker#set_annotations
         """
+        kb_ids = cast(List[str], activations["kb_ids"])
         count_ents = len([ent for doc in docs for ent in doc.ents])
         if count_ents != len(kb_ids):
             raise ValueError(Errors.E148.format(ents=count_ents, ids=len(kb_ids)))
         i = 0
         overwrite = self.cfg["overwrite"]
-        for doc in docs:
+        for j, doc in enumerate(docs):
+            doc.activations[self.name] = {}
+            for activation in self.store_activations:
+                # We only copy activations that are Ragged.
+                doc.activations[self.name][activation] = cast(
+                    Ragged, activations[activation][j]
+                )
             for ent in doc.ents:
                 kb_id = kb_ids[i]
                 i += 1
@@ -578,3 +620,30 @@ class EntityLinker(TrainablePipe):
 
     def add_label(self, label):
         raise NotImplementedError
+
+    @property
+    def activations(self):
+        return ["ents", "scores"]
+
+    def _add_doc_activations(
+        self, docs_scores, docs_ents, doc_scores, doc_scores_lens, doc_ents
+    ):
+        if len(self.store_activations) == 0:
+            return
+        ops = self.model.ops
+        docs_scores.append(
+            Ragged(ops.flatten(doc_scores), ops.asarray1i(doc_scores_lens))
+        )
+        docs_ents.append(
+            Ragged(
+                ops.flatten(doc_ents, dtype="uint64"), ops.asarray1i(doc_scores_lens)
+            )
+        )
+
+    def _add_activations(self, doc_scores, doc_scores_lens, doc_ents, scores, ents):
+        if len(self.store_activations) == 0:
+            return
+        ops = self.model.ops
+        doc_scores.append(ops.asarray1f(scores))
+        doc_scores_lens.append(doc_scores[-1].shape[0])
+        doc_ents.append(ops.xp.array(ents, dtype="uint64"))

@@ -1,3 +1,4 @@
+from typing import cast
 import pickle
 import pytest
 from hypothesis import given
@@ -6,6 +7,7 @@ from spacy import util
 from spacy.lang.en import English
 from spacy.language import Language
 from spacy.pipeline._edit_tree_internals.edit_trees import EditTrees
+from spacy.pipeline.trainable_pipe import TrainablePipe
 from spacy.training import Example
 from spacy.strings import StringStore
 from spacy.util import make_tempdir
@@ -278,3 +280,28 @@ def test_empty_strings():
     no_change = trees.add("xyz", "xyz")
     empty = trees.add("", "")
     assert no_change == empty
+
+
+def test_store_activations():
+    nlp = English()
+    lemmatizer = cast(TrainablePipe, nlp.add_pipe("trainable_lemmatizer"))
+    lemmatizer.min_tree_freq = 1
+    train_examples = []
+    for t in TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
+    nlp.initialize(get_examples=lambda: train_examples)
+    nO = lemmatizer.model.get_dim("nO")
+
+    doc = nlp("This is a test.")
+    assert len(list(doc.activations["trainable_lemmatizer"].keys())) == 0
+
+    lemmatizer.store_activations = True
+    doc = nlp("This is a test.")
+    assert list(doc.activations["trainable_lemmatizer"].keys()) == ["probs", "guesses"]
+    assert doc.activations["trainable_lemmatizer"]["probs"].shape == (5, nO)
+    assert doc.activations["trainable_lemmatizer"]["guesses"].shape == (5,)
+
+    lemmatizer.store_activations = ["probs"]
+    doc = nlp("This is a test.")
+    assert list(doc.activations["trainable_lemmatizer"].keys()) == ["probs"]
+    assert doc.activations["trainable_lemmatizer"]["probs"].shape == (5, nO)
