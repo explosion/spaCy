@@ -47,7 +47,7 @@ cdef class Morphology:
             if self.VALUE_SEP in attr_value:
                 values = attr_value.split(self.VALUE_SEP)
                 values.sort()
-                    attr_value = values
+                attr_value = values
         else:
             warnings.warn(Warnings.W100.format(feature={attr_key: attr_value}))
             return None
@@ -133,9 +133,9 @@ cdef class Morphology:
         for field, values in feats.items():
             field_key = self.strings.add(field)
             if isinstance(values, list):
-            for value in values:
-                value_key = self.strings.add(field + self.FIELD_SEP + value)
-                field_feature_pairs.append((field_key, value_key))
+                for value in values:
+                    value_key = self.strings.add(field + self.FIELD_SEP + value)
+                    field_feature_pairs.append((field_key, value_key))
             else:
                 value_key = self.strings.add(field + self.FIELD_SEP + values)
                 field_feature_pairs.append((field_key, value_key))
@@ -187,11 +187,20 @@ cdef class Morphology:
         return self._normalize_features(features)   
 
     @staticmethod
-    def feats_to_dict(feats):
+    def feats_to_dict(feats, *, sort_values=True):
         if not feats or feats == Morphology.EMPTY_MORPH:
             return {}
-        return {field: Morphology.VALUE_SEP.join(sorted(values.split(Morphology.VALUE_SEP))) for field, values in
-                [feat.split(Morphology.FIELD_SEP) for feat in feats.split(Morphology.FEATURE_SEP)]}
+
+        out = {}
+        for feat in feats.split(Morphology.FEATURE_SEP):
+            field, values = feat.split(Morphology.FIELD_SEP)
+            if sort_values:
+                values = values.split(Morphology.VALUE_SEP)
+                values.sort()
+                values = Morphology.VALUE_SEP.join(values)
+
+            out[field] = values
+        return out
 
     @staticmethod
     def dict_to_feats(feats_dict):

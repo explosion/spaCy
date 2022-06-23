@@ -151,7 +151,7 @@ class Morphologizer(Tagger):
         # normalize label
         norm_label = self.vocab.morphology.normalize_features(label)
         # extract separate POS and morph tags
-        label_dict = Morphology.feats_to_dict(label)
+        label_dict = Morphology.feats_to_dict(label, sort_values=False)
         pos = label_dict.get(self.POS_FEAT, "")
         if self.POS_FEAT in label_dict:
             label_dict.pop(self.POS_FEAT)
@@ -189,7 +189,7 @@ class Morphologizer(Tagger):
                         continue
                     morph = str(token.morph)
                     # create and add the combined morph+POS label
-                    morph_dict = Morphology.feats_to_dict(morph)
+                    morph_dict = Morphology.feats_to_dict(morph, sort_values=False)
                     if pos:
                         morph_dict[self.POS_FEAT] = pos
                     norm_label = self.vocab.strings[self.vocab.morphology.add(morph_dict)]
@@ -206,7 +206,7 @@ class Morphologizer(Tagger):
             for i, token in enumerate(example.reference):
                 pos = token.pos_
                 morph = str(token.morph)
-                morph_dict = Morphology.feats_to_dict(morph)
+                morph_dict = Morphology.feats_to_dict(morph, sort_values=False)
                 if pos:
                     morph_dict[self.POS_FEAT] = pos
                 norm_label = self.vocab.strings[self.vocab.morphology.add(morph_dict)]
@@ -243,14 +243,14 @@ class Morphologizer(Tagger):
                     if overwrite and extend:
                         # morphologizer morph overwrites any existing features
                         # while extending
-                        extended_morph = Morphology.feats_to_dict(self.vocab.strings[doc.c[j].morph])
-                        extended_morph.update(Morphology.feats_to_dict(self.cfg["labels_morph"].get(morph, 0)))
+                        extended_morph = Morphology.feats_to_dict(self.vocab.strings[doc.c[j].morph], sort_values=False)
+                        extended_morph.update(Morphology.feats_to_dict(self.cfg["labels_morph"].get(morph, 0), sort_values=False))
                         doc.c[j].morph = self.vocab.morphology.add(extended_morph)
                     elif extend:
                         # existing features are preserved and any new features
                         # are added
-                        extended_morph = Morphology.feats_to_dict(self.cfg["labels_morph"].get(morph, 0))
-                        extended_morph.update(Morphology.feats_to_dict(self.vocab.strings[doc.c[j].morph]))
+                        extended_morph = Morphology.feats_to_dict(self.cfg["labels_morph"].get(morph, 0), sort_values=False)
+                        extended_morph.update(Morphology.feats_to_dict(self.vocab.strings[doc.c[j].morph], sort_values=False))
                         doc.c[j].morph = self.vocab.morphology.add(extended_morph)
                     else:
                         # clobber
@@ -291,7 +291,7 @@ class Morphologizer(Tagger):
                     label = None
                 # Otherwise, generate the combined label
                 else:
-                    label_dict = Morphology.feats_to_dict(morph)
+                    label_dict = Morphology.feats_to_dict(morph, sort_values=False)
                     if pos:
                         label_dict[self.POS_FEAT] = pos
                     label = self.vocab.strings[self.vocab.morphology.add(label_dict)]
