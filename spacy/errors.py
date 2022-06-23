@@ -934,6 +934,7 @@ class Errors(metaclass=ErrorsWithCodes):
     E1041 = ("Expected a string, Doc, or bytes as input, but got: {type}")
     E1042 = ("Function was called with `{arg1}`={arg1_values} and "
              "`{arg2}`={arg2_values} but these arguments are conflicting.")
+    E1043 = ("Expected None or a value in range [0, 1] for abstention threshold, but got {value}.")
 
 
 # Deprecated model shortcuts, only used in errors and warnings

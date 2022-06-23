@@ -188,10 +188,8 @@ class EntityLinker(TrainablePipe):
         DOCS: https://spacy.io/api/entitylinker#init
         """
 
-        # todo @RM replace with proper Error.
-        assert abstention_threshold is None or (
-            0 <= abstention_threshold <= 1
-        ), "Abstention threshold has to be None or in range [0, 1]."
+        if abstention_threshold is not None and not (0 <= abstention_threshold <= 1):
+            raise ValueError(Errors.E1043)
 
         self.vocab = vocab
         self.model = model
