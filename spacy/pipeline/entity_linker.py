@@ -56,7 +56,7 @@ DEFAULT_NEL_MODEL = Config().from_str(default_model_config)["model"]
         "overwrite": True,
         "scorer": {"@scorers": "spacy.entity_linker_scorer.v1"},
         "use_gold_ents": True,
-        "abstention_threshold": 0,
+        "abstention_threshold": None,
     },
     default_score_weights={
         "nel_micro_f": 1.0,
@@ -78,7 +78,7 @@ def make_entity_linker(
     overwrite: bool,
     scorer: Optional[Callable],
     use_gold_ents: bool,
-    abstention_threshold: float = 0,
+    abstention_threshold: Optional[float] = 0,
 ):
     """Construct an EntityLinker component.
 
@@ -96,7 +96,7 @@ def make_entity_linker(
     use_gold_ents (bool): Whether to copy entities from gold docs or not. If false, another
         component must provide entity annotations.
     abstention_threshold (Optional[float]): Confidence threshold for entity predictions. If confidence is below the
-        threshold, prediction is discarded.
+        threshold, prediction is discarded. If None, predictions scores are not checked.
     """
 
     if not model.attrs.get("include_span_maker", False):
@@ -164,7 +164,7 @@ class EntityLinker(TrainablePipe):
         overwrite: bool = BACKWARD_OVERWRITE,
         scorer: Optional[Callable] = entity_linker_score,
         use_gold_ents: bool,
-        abstention_threshold: float = 0,
+        abstention_threshold: Optional[float] = None,
     ) -> None:
         """Initialize an entity linker.
 
@@ -184,15 +184,14 @@ class EntityLinker(TrainablePipe):
         use_gold_ents (bool): Whether to copy entities from gold docs or not. If false, another
             component must provide entity annotations.
         abstention_threshold (Optional[float]): Confidence threshold for entity predictions. If confidence is below the
-            threshold, prediction is discarded. If None, predictions are made regardless of confidence.
-
+            threshold, prediction is discarded. If None, predictions scores are not checked.
         DOCS: https://spacy.io/api/entitylinker#init
         """
 
         # todo @RM replace with proper Error.
-        assert (
+        assert abstention_threshold is None or (
             0 <= abstention_threshold <= 1
-        ), "Abstention threshold has to be in range [0, 1]."
+        ), "Abstention threshold has to be None or in range [0, 1]."
 
         self.vocab = vocab
         self.model = model
@@ -472,9 +471,11 @@ class EntityLinker(TrainablePipe):
                             if sims.shape != prior_probs.shape:
                                 raise ValueError(Errors.E161)
                             scores = prior_probs + sims - (prior_probs * sims)
-                        meets_abst_threshold = xp.where(
-                            scores >= self.abstention_threshold
-                        )[0]
+                        meets_abst_threshold = (
+                            xp.where(scores >= self.abstention_threshold)[0]
+                            if self.abstention_threshold is not None
+                            else xp.arange(len(scores))
+                        )
                         best_candidate_entity_ = (
                             candidates[
                                 meets_abst_threshold[scores.argmax().item()]

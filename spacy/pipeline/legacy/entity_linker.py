@@ -71,9 +71,8 @@ class EntityLinker_v1(TrainablePipe):
             produces a list of candidates, given a certain knowledge base and a textual mention.
         scorer (Optional[Callable]): The scoring method. Defaults to
             Scorer.score_links.
-        abstention_threshold (float): Confidence threshold for entity predictions. If confidence is below the
-            threshold, prediction is discarded. If None, predictions are made regardless of confidence.
-
+        abstention_threshold (Optional[float]): Confidence threshold for entity predictions. If confidence is below the
+            threshold, prediction is discarded. If None, predictions scores are not checked.
         DOCS: https://spacy.io/api/entitylinker#init
         """
         self.vocab = vocab
@@ -304,9 +303,11 @@ class EntityLinker_v1(TrainablePipe):
                                 if sims.shape != prior_probs.shape:
                                     raise ValueError(Errors.E161)
                                 scores = prior_probs + sims - (prior_probs * sims)
-                            meets_abst_threshold = xp.where(
-                                scores >= self.abstention_threshold
-                            )[0]
+                            meets_abst_threshold = (
+                                xp.where(scores >= self.abstention_threshold)[0]
+                                if self.abstention_threshold is not None
+                                else xp.arange(len(scores))
+                            )
                             best_candidate_entity_ = (
                                 candidates[
                                     meets_abst_threshold[scores.argmax().item()]
