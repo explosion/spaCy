@@ -84,7 +84,7 @@
             "code_language": "python",
             "author": "Leap Beyond",
             "author_links": {
-                "github": "https://github.com/LeapBeyond",
+                "github": "LeapBeyond",
                 "website": "https://leapbeyond.ai"
             },
             "code_example": [
@@ -107,8 +107,8 @@
             "code_language": "python",
             "author": "Peter Baumgartner",
             "author_links": {
-                "twitter" : "https://twitter.com/pmbaumgartner",
-                "github": "https://github.com/pmbaumgartner",
+                "twitter" : "pmbaumgartner",
+                "github": "pmbaumgartner",
                 "website": "https://www.peterbaumgartner.com/"
             },
             "code_example": [
@@ -127,8 +127,8 @@
             "code_language": "python",
             "author": "Explosion",
             "author_links": {
-                "twitter" : "https://twitter.com/explosion_ai",
-                "github": "https://github.com/explosion",
+                "twitter" : "explosion_ai",
+                "github": "explosion",
                 "website": "https://explosion.ai/"
             },
             "code_example": [
@@ -600,8 +600,8 @@
             "code_language": "python",
             "author": "Keith Rozario",
             "author_links": {
-                "twitter" : "https://twitter.com/keithrozario",
-                "github": "https://github.com/keithrozario",
+                "twitter" : "keithrozario",
+                "github": "keithrozario",
                 "website": "https://www.keithrozario.com"
             },
             "code_example": [
@@ -2324,7 +2324,7 @@
             "author": "Daniel Whitenack & Chris Benson",
             "author_links": {
                 "website": "https://changelog.com/practicalai",
-                "twitter": "https://twitter.com/PracticalAIFM"
+                "twitter": "PracticalAIFM"
             },
             "category": ["podcasts"]
         },
