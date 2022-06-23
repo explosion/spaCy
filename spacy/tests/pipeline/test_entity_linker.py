@@ -1164,12 +1164,12 @@ def test_abstention_threshold(meet_threshold: bool, config: Dict[str, Any]):
         last=True,
         config={"abstention_threshold": 0.99, "model": config},
     )
-    entity_linker.set_kb(create_kb)
+    entity_linker.set_kb(create_kb)  # type: ignore
     nlp.initialize(get_examples=lambda: train_examples)
 
     # Add a custom rule-based component to mimick NER
     ruler = nlp.add_pipe("entity_ruler", before="entity_linker")
-    ruler.add_patterns([{"label": "PERSON", "pattern": [{"LOWER": "mahler"}]}])
+    ruler.add_patterns([{"label": "PERSON", "pattern": [{"LOWER": "mahler"}]}])  # type: ignore
     doc = nlp(text)
 
     assert len(doc.ents) == 1
