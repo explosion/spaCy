@@ -54,7 +54,7 @@ class EntityLinker_v1(TrainablePipe):
         get_candidates: Callable[[KnowledgeBase, Span], Iterable[Candidate]],
         overwrite: bool = BACKWARD_OVERWRITE,
         scorer: Optional[Callable] = entity_linker_score,
-        abstention_threshold: float = 0,
+        abstention_threshold: float = None,
     ) -> None:
         """Initialize an entity linker.
 

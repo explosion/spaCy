@@ -78,7 +78,7 @@ def make_entity_linker(
     overwrite: bool,
     scorer: Optional[Callable],
     use_gold_ents: bool,
-    abstention_threshold: Optional[float] = 0,
+    abstention_threshold: Optional[float] = None,
 ):
     """Construct an EntityLinker component.
 
