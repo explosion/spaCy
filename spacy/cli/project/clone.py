@@ -44,7 +44,7 @@ def project_clone_cli(
         if branch is None:
             default_branches_msg = ", ".join(f"'{b}'" for b in DEFAULT_BRANCHES)
             msg.fail(
-                "No branch provided and attempted default  "
+                "No branch provided and attempted default "
                 f"branches {default_branches_msg} do not exist.",
                 exits=1,
             )
