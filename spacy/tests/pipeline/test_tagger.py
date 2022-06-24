@@ -222,6 +222,9 @@ def test_store_activations():
         train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
     nlp.initialize(get_examples=lambda: train_examples)
 
+    doc = nlp("This is a test.")
+    assert len(list(doc.activations["tagger"].keys())) == 0
+
     tagger.store_activations = True
     doc = nlp("This is a test.")
     assert "tagger" in doc.activations

@@ -115,12 +115,16 @@ def test_store_activations():
         train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
 
     nlp.initialize(get_examples=lambda: train_examples)
+    nO = senter.model.get_dim("nO")
+
+    doc = nlp("This is a test.")
+    assert len(list(doc.activations["senter"].keys())) == 0
 
     senter.store_activations = True
     doc = nlp("This is a test.")
     assert "senter" in doc.activations
     assert set(doc.activations["senter"].keys()) == {"guesses", "probs"}
-    assert doc.activations["senter"]["probs"].shape == (5, 2)
+    assert doc.activations["senter"]["probs"].shape == (5, nO)
     assert doc.activations["senter"]["guesses"].shape == (5,)
 
     senter.store_activations = ["probs"]
