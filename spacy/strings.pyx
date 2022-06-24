@@ -29,7 +29,7 @@ def get_string_id(key):
     This function optimises for convenience over performance, so shouldn't be
     used in tight loops.
     """
-    cdef hash_t hash    
+    cdef hash_t str_hash    
     if isinstance(key, str):
         if len(key) == 0:
             return 0
@@ -40,13 +40,13 @@ def get_string_id(key):
         else:
             chars = key.encode("utf8")
             return hash_utf8(chars, len(chars))
-    elif _try_coerce_to_hash(key, &hash):
+    elif _try_coerce_to_hash(key, &str_hash):
         # Coerce the integral key to the expected primitive hash type.
         # This ensures that custom/overloaded "primitive" data types
         # such as those implemented by numpy are not inadvertently used 
         # downsteam (as these are internally implemented as custom PyObjects 
         # whose comparison operators can incur a significant overhead).
-        return hash
+        return str_hash
     else:
         # TODO: Raise an error instead
         return key
@@ -129,13 +129,14 @@ cdef class StringStore:
         string_or_id (bytes, str or uint64): The value to encode.
         Returns (str / uint64): The value to be retrieved.
         """
-        cdef hash_t hash
+        cdef hash_t str_hash
         cdef Utf8Str* utf8str = NULL
 
         if isinstance(string_or_id, str):
             if len(string_or_id) == 0:
                 return 0
 
+            # Return early if the string is found in the symbols LUT.
             symbol = SYMBOLS_BY_STR.get(string_or_id, None)
             if symbol is not None:
                 return symbol
@@ -143,13 +144,13 @@ cdef class StringStore:
                 return hash_string(string_or_id)
         elif isinstance(string_or_id, bytes):
             return hash_utf8(string_or_id, len(string_or_id))
-        elif _try_coerce_to_hash(string_or_id, &hash):
-            if hash == 0:
+        elif _try_coerce_to_hash(string_or_id, &str_hash):
+            if str_hash == 0:
                 return ""
-            elif hash < len(SYMBOLS_BY_INT):
-                return SYMBOLS_BY_INT[hash]
+            elif str_hash < len(SYMBOLS_BY_INT):
+                return SYMBOLS_BY_INT[str_hash]
             else:
-                utf8str = <Utf8Str*>self._map.get(hash)
+                utf8str = <Utf8Str*>self._map.get(str_hash)
         else:
             # TODO: Raise an error instead
             utf8str = <Utf8Str*>self._map.get(string_or_id)
@@ -179,22 +180,22 @@ cdef class StringStore:
         string (str): The string to add.
         RETURNS (uint64): The string's hash value.
         """
-        cdef hash_t hash
+        cdef hash_t str_hash
         if isinstance(string, str):
             if string in SYMBOLS_BY_STR:
                 return SYMBOLS_BY_STR[string]
 
             string = string.encode("utf8")
-            hash = hash_utf8(string, len(string))
-            self._intern_utf8(string, len(string), &hash)
+            str_hash = hash_utf8(string, len(string))
+            self._intern_utf8(string, len(string), &str_hash)
         elif isinstance(string, bytes):
             if string in SYMBOLS_BY_STR:
                 return SYMBOLS_BY_STR[string]
-            hash = hash_utf8(string, len(string))
-            self._intern_utf8(string, len(string), &hash)
+            str_hash = hash_utf8(string, len(string))
+            self._intern_utf8(string, len(string), &str_hash)
         else:
             raise TypeError(Errors.E017.format(value_type=type(string)))
-        return hash
+        return str_hash
 
     def __len__(self):
         """The number of strings in the store.
@@ -209,23 +210,23 @@ cdef class StringStore:
         string_or_id (str or int): The string to check.
         RETURNS (bool): Whether the store contains the string.
         """
-        cdef hash_t hash
+        cdef hash_t str_hash
         if isinstance(string_or_id, str):
             if len(string_or_id) == 0:
                 return True
             elif string_or_id in SYMBOLS_BY_STR:
                 return True
-            hash = hash_string(string_or_id)
-        elif _try_coerce_to_hash(string_or_id, &hash):
+            str_hash = hash_string(string_or_id)
+        elif _try_coerce_to_hash(string_or_id, &str_hash):
             pass
         else:
             # TODO: Raise an error instead
             return self._map.get(string_or_id) is not NULL
 
-        if hash < len(SYMBOLS_BY_INT):
+        if str_hash < len(SYMBOLS_BY_INT):
             return True
         else:
-            return self._map.get(hash) is not NULL
+            return self._map.get(str_hash) is not NULL
 
     def __iter__(self):
         """Iterate over the strings in the store, in order.
