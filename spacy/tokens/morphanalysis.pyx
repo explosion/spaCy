@@ -26,12 +26,6 @@ cdef class MorphAnalysis:
             self.c = <const MorphAnalysisC*>&EMPTY_MORPH_TAG
 
     @classmethod
-    def from_features(cls, Vocab vocab, features):
-        """Create a morphological analysis from the given features."""
-        cdef hash_t key = vocab.morphology.add(features)
-        return cls.from_id(vocab, key)
-
-    @classmethod
     def from_id(cls, Vocab vocab, hash_t key):
         """Create a morphological analysis from a given ID."""
         cdef MorphAnalysis morph = MorphAnalysis(vocab)
