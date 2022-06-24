@@ -359,7 +359,7 @@ Module     spacy.language
 File       /path/to/spacy/language.py (line 64)
 ℹ [components.ner.model]
 Registry   @architectures
-Name       spacy.TransitionBasedParser.v1
+Name       spacy.TransitionBasedParser.v3
 Module     spacy.ml.models.parser
 File       /path/to/spacy/ml/models/parser.py (line 11)
 ℹ [components.ner.model.tok2vec]
@@ -369,7 +369,7 @@ Module     spacy.ml.models.tok2vec
 File       /path/to/spacy/ml/models/tok2vec.py (line 16)
 ℹ [components.parser.model]
 Registry   @architectures
-Name       spacy.TransitionBasedParser.v1
+Name       spacy.TransitionBasedParser.v3
 Module     spacy.ml.models.parser
 File       /path/to/spacy/ml/models/parser.py (line 11)
 ℹ [components.parser.model.tok2vec]
@@ -695,7 +695,7 @@ scorer = {"@scorers":"spacy.ner_scorer.v1"}
 update_with_oracle_cut_size = 100
 
 [components.ner.model]
-@architectures = "spacy.TransitionBasedParser.v2"
+@architectures = "spacy.TransitionBasedParser.v3"
 state_type = "ner"
 extra_state_tokens = false
 - hidden_width = 64
@@ -718,7 +718,7 @@ scorer = {"@scorers":"spacy.parser_scorer.v1"}
 update_with_oracle_cut_size = 100
 
 [components.parser.model]
-@architectures = "spacy.TransitionBasedParser.v2"
+@architectures = "spacy.TransitionBasedParser.v3"
 state_type = "parser"
 extra_state_tokens = false
 hidden_width = 128

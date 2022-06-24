@@ -222,12 +222,6 @@ the others, but may not be as accurate, especially if texts are short.
 | `nO`                | Output dimension, determined by the number of different labels. If not set, the [`TextCategorizer`](/api/textcategorizer) component will set it when `initialize` is called. ~~Optional[int]~~ |
 | **CREATES**         | The model using the architecture. ~~Model[List[Doc], Floats2d]~~                                                                                                                               |
 
-### spacy.TransitionBasedParser.v1 {#TransitionBasedParser_v1}
-
-Identical to
-[`spacy.TransitionBasedParser.v2`](/api/architectures#TransitionBasedParser)
-except the `use_upper` was set to `True` by default.
-
 ## Layers {#layers}
 
 These functions are available from `@spacy.registry.layers`.

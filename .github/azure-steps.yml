@@ -64,7 +64,7 @@ steps:
     displayName: "Run GPU tests"
     condition: eq(${{ parameters.gpu }}, true)
 
-  # Disabled in parser refactor branch, requires spacy.TransitionBasedParser.v2.
+  # Re-enable when we have models trained for spacy.TransitionBasedParser.v3.
   #- script: |
   #     python -m spacy download ca_core_news_sm
   #     python -m spacy download ca_core_news_md
@@ -94,14 +94,14 @@ steps:
     displayName: 'Test train CLI'
     condition: eq(variables['python_version'], '3.8')
 
-  # Disabled in parser refactor branch, requires spacy.TransitionBasedParser.v2.
+  # Re-enable when we have models trained for spacy.TransitionBasedParser.v3.
   # - script: |
   #     python -c "import spacy; config = spacy.util.load_config('ner.cfg'); config['components']['ner'] = {'source': 'ca_core_news_sm'}; config.to_disk('ner_source_sm.cfg')"
   #     PYTHONWARNINGS="error,ignore::DeprecationWarning" python -m spacy assemble ner_source_sm.cfg output_dir
   #   displayName: 'Test assemble CLI'
   #   condition: eq(variables['python_version'], '3.8')
 
-  # Disabled in parser refactor branch, requires spacy.TransitionBasedParser.v2.
+  # Re-enable when we have models trained for spacy.TransitionBasedParser.v3.
   # - script: |
   #     python -c "import spacy; config = spacy.util.load_config('ner.cfg'); config['components']['ner'] = {'source': 'ca_core_news_md'}; config.to_disk('ner_source_md.cfg')"
   #     python -m spacy assemble ner_source_md.cfg output_dir 2>&1 | grep -q W113
