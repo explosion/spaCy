@@ -80,17 +80,20 @@ cdef class Span:
         return Underscore.span_extensions.pop(name)
 
     def __cinit__(self, Doc doc, int start, int end, label=0, vector=None,
-                  vector_norm=None, kb_id=0):
+                  vector_norm=None, kb_id=0, span_id=0):
         """Create a `Span` object from the slice `doc[start : end]`.
 
         doc (Doc): The parent document.
         start (int): The index of the first token of the span.
         end (int): The index of the first token after the span.
-        label (int or str): A label to attach to the Span, e.g. for named entities.
+        label (Union[int, str]): A label to attach to the Span, e.g. for named
+            entities.
         vector (ndarray[ndim=1, dtype='float32']): A meaning representation
             of the span.
         vector_norm (float): The L2 norm of the span's vector representation.
-        kb_id (uint64): An identifier from a Knowledge Base to capture the meaning of a named entity.
+        kb_id (Union[int, str]): An identifier from a Knowledge Base to capture
+            the meaning of a named entity.
+        span_id (Union[int, str]): An identifier to associate with the span.
 
         DOCS: https://spacy.io/api/span#init
         """
@@ -101,6 +104,8 @@ cdef class Span:
             label = doc.vocab.strings.add(label)
         if isinstance(kb_id, str):
             kb_id = doc.vocab.strings.add(kb_id)
+        if isinstance(span_id, str):
+            span_id = doc.vocab.strings.add(span_id)
         if label not in doc.vocab.strings:
             raise ValueError(Errors.E084.format(label=label))
 
@@ -112,6 +117,7 @@ cdef class Span:
         self.c = SpanC(
             label=label,
             kb_id=kb_id,
+            id=span_id,
             start=start,
             end=end,
             start_char=start_char,
@@ -126,8 +132,8 @@ cdef class Span:
                 return False
             else:
                 return True
-        self_tuple = (self.c.start_char, self.c.end_char, self.c.label, self.c.kb_id, self.doc)
-        other_tuple = (other.c.start_char, other.c.end_char, other.c.label, other.c.kb_id, other.doc)
+        self_tuple = (self.c.start_char, self.c.end_char, self.c.label, self.c.kb_id, self.id, self.doc)
+        other_tuple = (other.c.start_char, other.c.end_char, other.c.label, other.c.kb_id, other.id, other.doc)
         # <
         if op == 0:
             return self_tuple < other_tuple
@@ -148,7 +154,7 @@ cdef class Span:
             return self_tuple >= other_tuple
 
     def __hash__(self):
-        return hash((self.doc, self.c.start_char, self.c.end_char, self.c.label, self.c.kb_id))
+        return hash((self.doc, self.c.start_char, self.c.end_char, self.c.label, self.c.kb_id, self.c.id))
 
     def __len__(self):
         """Get the number of tokens in the span.
@@ -632,7 +638,7 @@ cdef class Span:
         else:
             return self.doc[root]
 
-    def char_span(self, int start_idx, int end_idx, label=0, kb_id=0, vector=None):
+    def char_span(self, int start_idx, int end_idx, label=0, kb_id=0, vector=None, id=0):
         """Create a `Span` object from the slice `span.text[start : end]`.
 
         start (int): The index of the first character of the span.
@@ -774,6 +780,13 @@ cdef class Span:
         def __set__(self, attr_t kb_id):
             self.c.kb_id = kb_id
 
+    property id:
+        def __get__(self):
+            return self.c.id
+
+        def __set__(self, attr_t id):
+            self.c.id = id
+
     property ent_id:
         """RETURNS (uint64): The entity ID."""
         def __get__(self):
@@ -812,12 +825,20 @@ cdef class Span:
             self.label = self.doc.vocab.strings.add(label_)
 
     property kb_id_:
-        """RETURNS (str): The named entity's KB ID."""
+        """RETURNS (str): The span's KB ID."""
         def __get__(self):
             return self.doc.vocab.strings[self.kb_id]
 
         def __set__(self, str kb_id_):
             self.kb_id = self.doc.vocab.strings.add(kb_id_)
+
+    property id_:
+        """RETURNS (str): The span's ID."""
+        def __get__(self):
+            return self.doc.vocab.strings[self.id]
+
+        def __set__(self, str id_):
+            self.id = self.doc.vocab.strings.add(id_)
 
 
 cdef int _count_words_to_root(const TokenC* token, int sent_length) except -1:
