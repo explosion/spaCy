@@ -56,7 +56,7 @@ DEFAULT_NEL_MODEL = Config().from_str(default_model_config)["model"]
         "overwrite": True,
         "scorer": {"@scorers": "spacy.entity_linker_scorer.v1"},
         "use_gold_ents": True,
-        "abstention_threshold": None,
+        "threshold": None,
     },
     default_score_weights={
         "nel_micro_f": 1.0,
@@ -78,7 +78,7 @@ def make_entity_linker(
     overwrite: bool,
     scorer: Optional[Callable],
     use_gold_ents: bool,
-    abstention_threshold: Optional[float] = None,
+    threshold: Optional[float] = None,
 ):
     """Construct an EntityLinker component.
 
@@ -95,8 +95,8 @@ def make_entity_linker(
     scorer (Optional[Callable]): The scoring method.
     use_gold_ents (bool): Whether to copy entities from gold docs or not. If false, another
         component must provide entity annotations.
-    abstention_threshold (Optional[float]): Confidence threshold for entity predictions. If confidence is below the
-        threshold, prediction is discarded. If None, predictions scores are not checked.
+    threshold (Optional[float]): Confidence threshold for entity predictions. If confidence is below the threshold,
+        prediction is discarded. If None, predictions scores are not checked.
     """
 
     if not model.attrs.get("include_span_maker", False):
@@ -113,7 +113,6 @@ def make_entity_linker(
             get_candidates=get_candidates,
             overwrite=overwrite,
             scorer=scorer,
-            abstention_threshold=abstention_threshold,
         )
     return EntityLinker(
         nlp.vocab,
@@ -128,7 +127,7 @@ def make_entity_linker(
         overwrite=overwrite,
         scorer=scorer,
         use_gold_ents=use_gold_ents,
-        abstention_threshold=abstention_threshold,
+        threshold=threshold,
     )
 
 
@@ -164,7 +163,7 @@ class EntityLinker(TrainablePipe):
         overwrite: bool = BACKWARD_OVERWRITE,
         scorer: Optional[Callable] = entity_linker_score,
         use_gold_ents: bool,
-        abstention_threshold: Optional[float] = None,
+        threshold: Optional[float] = None,
     ) -> None:
         """Initialize an entity linker.
 
@@ -183,12 +182,12 @@ class EntityLinker(TrainablePipe):
             Scorer.score_links.
         use_gold_ents (bool): Whether to copy entities from gold docs or not. If false, another
             component must provide entity annotations.
-        abstention_threshold (Optional[float]): Confidence threshold for entity predictions. If confidence is below the
+        threshold (Optional[float]): Confidence threshold for entity predictions. If confidence is below the
             threshold, prediction is discarded. If None, predictions scores are not checked.
         DOCS: https://spacy.io/api/entitylinker#init
         """
 
-        if abstention_threshold is not None and not (0 <= abstention_threshold <= 1):
+        if threshold is not None and not (0 <= threshold <= 1):
             raise ValueError(Errors.E1043)
 
         self.vocab = vocab
@@ -206,7 +205,7 @@ class EntityLinker(TrainablePipe):
         self.kb = empty_kb(entity_vector_length)(self.vocab)
         self.scorer = scorer
         self.use_gold_ents = use_gold_ents
-        self.abstention_threshold = abstention_threshold
+        self.threshold = threshold
 
     def set_kb(self, kb_loader: Callable[[Vocab], KnowledgeBase]):
         """Define the KB of this pipe by providing a function that will
@@ -439,7 +438,7 @@ class EntityLinker(TrainablePipe):
                     if not candidates:
                         # no prediction possible for this entity - setting to NIL
                         final_kb_ids.append(self.NIL)
-                    elif len(candidates) == 1 and self.abstention_threshold == 0:
+                    elif len(candidates) == 1 and self.threshold is None:
                         # shortcut for efficiency reasons: take the 1 candidate
                         final_kb_ids.append(candidates[0].entity_)
                     else:
@@ -469,19 +468,11 @@ class EntityLinker(TrainablePipe):
                             if sims.shape != prior_probs.shape:
                                 raise ValueError(Errors.E161)
                             scores = prior_probs + sims - (prior_probs * sims)
-                        meets_abst_threshold = (
-                            xp.where(scores >= self.abstention_threshold)[0]
-                            if self.abstention_threshold is not None
-                            else xp.arange(len(scores))
-                        )
-                        best_candidate_entity_ = (
-                            candidates[
-                                meets_abst_threshold[scores.argmax().item()]
-                            ].entity_
-                            if meets_abst_threshold.size
+                        final_kb_ids.append(
+                            candidates[scores.argmax().item()].entity_
+                            if self.threshold is None or scores.max() >= self.threshold
                             else EntityLinker.NIL
                         )
-                        final_kb_ids.append(best_candidate_entity_)
         if not (len(final_kb_ids) == entity_count):
             err = Errors.E147.format(
                 method="predict", msg="result variables not of equal length"

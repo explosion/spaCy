@@ -766,7 +766,7 @@ def test_overfitting_IO():
         doc = nlp(text)
         for ent in doc.ents:
             predictions.append(ent.kb_id_)
-    assert sorted(predictions) == sorted(GOLD_entities)
+    assert predictions == GOLD_entities
 
     # Also test the results are still the same after IO
     with make_tempdir() as tmp_dir:
@@ -1121,9 +1121,7 @@ def test_tokenization_mismatch():
 @pytest.mark.parametrize(
     "meet_threshold,config",
     [
-        (False, {"@architectures": "spacy.EntityLinker.v1", "tok2vec": DEFAULT_TOK2VEC_MODEL}),
         (False, {"@architectures": "spacy.EntityLinker.v2", "tok2vec": DEFAULT_TOK2VEC_MODEL}),
-        (True, {"@architectures": "spacy.EntityLinker.v1", "tok2vec": DEFAULT_TOK2VEC_MODEL}),
         (True, {"@architectures": "spacy.EntityLinker.v2", "tok2vec": DEFAULT_TOK2VEC_MODEL}),
     ],
 )
@@ -1154,7 +1152,7 @@ def test_abstention_threshold(meet_threshold: bool, config: Dict[str, Any]):
         mykb.add_alias(
             alias="Mahler",
             entities=[entity_id],
-            probabilities=[1 if meet_threshold else 0.1],
+            probabilities=[1 if meet_threshold else 0.01],
         )
         return mykb
 
@@ -1162,7 +1160,7 @@ def test_abstention_threshold(meet_threshold: bool, config: Dict[str, Any]):
     entity_linker = nlp.add_pipe(
         "entity_linker",
         last=True,
-        config={"abstention_threshold": 0.99, "model": config},
+        config={"threshold": 0.99, "model": config},
     )
     entity_linker.set_kb(create_kb)  # type: ignore
     nlp.initialize(get_examples=lambda: train_examples)
