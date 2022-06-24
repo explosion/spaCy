@@ -51,7 +51,7 @@ def project_clone_cli(
     else:
         if not git_repo_branch_exists(repo, branch):
             msg.fail(f"repo: {repo} (branch: {branch}) does not exist.", exits=1)
-
+    assert isinstance(branch, str)
     project_clone(name, dest, repo=repo, branch=branch, sparse_checkout=sparse_checkout)
 
 
