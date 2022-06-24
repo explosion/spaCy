@@ -462,7 +462,7 @@ def git_sparse_checkout(repo, subpath, dest, branch):
         shutil.move(str(source_path), str(dest))
 
 
-def git_repo_branch_exists(repo: str, branch: str):
+def git_repo_branch_exists(repo: str, branch: str) -> bool:
     """Uses 'git ls-remote' to check if a repository and branch exists
 
     repo (str): URL to get repo.
