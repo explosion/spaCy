@@ -27,7 +27,7 @@ DisplacyDepsArcs = TypedDict(
 DisplacyDepsData = TypedDict(
     "DisplacyDepsData",
     {
-        "arcs": List[DisplacyDepsWords],
+        "arcs": List[DisplacyDepsArcs],
         "words": List[DisplacyDepsWords],
         "settings": Dict[str, Any],
     },
@@ -55,7 +55,7 @@ DisplacySpan = TypedDict(
     },
 )
 DisplacySpanData = TypedDict(
-    "SpanData",
+    "DisplacySpanData",
     {
         "text": str,
         "spans": List[DisplacySpan],
