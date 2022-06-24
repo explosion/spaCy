@@ -9,7 +9,7 @@ from thinc.api import Model, normal_init, chain, list2array, Linear
 from thinc.api import uniform_init, glorot_uniform_init, zero_init
 from thinc.api import NumpyOps
 from thinc.backends.linalg cimport Vec, VecVec
-from thinc.backends.cblas cimport CBlas
+from thinc.backends.cblas cimport CBlas, saxpy, sgemm
 from thinc.types import Floats1d, Floats2d, Floats3d, Floats4d
 from thinc.types import Ints1d, Ints2d
 
@@ -522,7 +522,7 @@ cdef void _predict_states(CBlas cblas, ActivationsC* A, float* scores, StateC** 
         memcpy(scores, A.hiddens, n.states * n.classes * sizeof(float))
     else:
         # Compute hidden-to-output
-        cblas.sgemm()(False, True, n.states, n.classes, n.hiddens,
+        sgemm(cblas)(False, True, n.states, n.classes, n.hiddens,
                       1.0, <const float *>A.hiddens, n.hiddens,
                       <const float *>W.hidden_weights, n.hiddens,
                       0.0, scores, n.classes)
@@ -559,5 +559,5 @@ cdef void _sum_state_features(CBlas cblas, float* output,
             else:
                 idx = token_ids[f] * id_stride + f*O
                 feature = &cached[idx]
-            cblas.saxpy()(O, one, <const float*>feature, 1, &output[b*O], 1)
+            saxpy(cblas)(O, one, <const float*>feature, 1, &output[b*O], 1)
         token_ids += F
