@@ -4,17 +4,66 @@ spaCy's built in visualization suite for dependencies and named entities.
 DOCS: https://spacy.io/api/top-level#displacy
 USAGE: https://spacy.io/usage/visualizers
 """
-from typing import Union, Iterable, Optional, Dict, Any, Callable
+from typing import Union, Iterable, Optional, Dict, Any, Callable, List
 import warnings
 
 from .render import DependencyRenderer, EntityRenderer, SpanRenderer
 from ..tokens import Doc, Span
 from ..errors import Errors, Warnings
 from ..util import is_in_jupyter
+from ..compat import TypedDict
 
 
 _html = {}
 RENDER_WRAPPER = None
+
+
+DisplacyDepsWords = TypedDict(
+    "DisplacyDepsWords", {"text": str, "tag": str, "lemma": Optional[str]}
+)
+DisplacyDepsArcs = TypedDict(
+    "DisplacyDepsArcs", {"start": int, "end": int, "label": str, "dir": str}
+)
+DisplacyDepsData = TypedDict(
+    "DisplacyDepsData",
+    {
+        "arcs": List[DisplacyDepsWords],
+        "words": List[DisplacyDepsWords],
+        "settings": Dict[str, Any],
+    },
+)
+
+DisplacyEnt = TypedDict(
+    "DisplacyEnt", {"start": int, "end": int, "label": str, "kb_id": str, "kb_url": str}
+)
+DisplacyEntData = TypedDict(
+    "DisplacyEntData",
+    {"text": str, "ents": List[DisplacyEnt], "title": str, "settings": Dict[str, Any]},
+)
+
+
+DisplacySpan = TypedDict(
+    "DisplacySpan",
+    {
+        "start": int,
+        "end": int,
+        "start_token": int,
+        "end_token": int,
+        "label": str,
+        "kb_id": str,
+        "kb_url": str,
+    },
+)
+DisplacySpanData = TypedDict(
+    "SpanData",
+    {
+        "text": str,
+        "spans": List[DisplacySpan],
+        "title": str,
+        "settings": Dict[str, Any],
+        "tokens": List[str],
+    },
+)
 
 
 def render(
@@ -120,10 +169,10 @@ def app(environ, start_response):
     return [res]
 
 
-def parse_deps(orig_doc: Doc, options: Dict[str, Any] = {}) -> Dict[str, Any]:
+def parse_deps(orig_doc: Doc, options: Dict[str, Any] = {}) -> DisplacyDepsData:
     """Generate dependency parse in {'words': [], 'arcs': []} format.
 
-    doc (Doc): Document do parse.
+    doc (Doc): Document to parse.
     RETURNS (dict): Generated dependency parse keyed by words and arcs.
     """
     doc = Doc(orig_doc.vocab).from_bytes(
@@ -157,7 +206,7 @@ def parse_deps(orig_doc: Doc, options: Dict[str, Any] = {}) -> Dict[str, Any]:
                 retokenizer.merge(span, attrs=attrs)  # type: ignore[arg-type]
     fine_grained = options.get("fine_grained")
     add_lemma = options.get("add_lemma")
-    words = [
+    words: List[DisplacyDepsWords] = [
         {
             "text": w.text,
             "tag": w.tag_ if fine_grained else w.pos_,
@@ -165,7 +214,7 @@ def parse_deps(orig_doc: Doc, options: Dict[str, Any] = {}) -> Dict[str, Any]:
         }
         for w in doc
     ]
-    arcs = []
+    arcs: List[DisplacyDepsArcs] = []
     for word in doc:
         if word.i < word.head.i:
             arcs.append(
@@ -183,7 +232,7 @@ def parse_deps(orig_doc: Doc, options: Dict[str, Any] = {}) -> Dict[str, Any]:
     return {"words": words, "arcs": arcs, "settings": get_doc_settings(orig_doc)}
 
 
-def parse_ents(doc: Doc, options: Dict[str, Any] = {}) -> Dict[str, Any]:
+def parse_ents(doc: Doc, options: Dict[str, Any] = {}) -> DisplacyEntData:
     """Generate named entities in [{start: i, end: i, label: 'label'}] format.
 
     doc (Doc): Document to parse.
@@ -191,7 +240,7 @@ def parse_ents(doc: Doc, options: Dict[str, Any] = {}) -> Dict[str, Any]:
     RETURNS (dict): Generated entities keyed by text (original text) and ents.
     """
     kb_url_template = options.get("kb_url_template", None)
-    ents = [
+    ents: List[DisplacyEnt] = [
         {
             "start": ent.start_char,
             "end": ent.end_char,
@@ -208,7 +257,7 @@ def parse_ents(doc: Doc, options: Dict[str, Any] = {}) -> Dict[str, Any]:
     return {"text": doc.text, "ents": ents, "title": title, "settings": settings}
 
 
-def parse_spans(doc: Doc, options: Dict[str, Any] = {}) -> Dict[str, Any]:
+def parse_spans(doc: Doc, options: Dict[str, Any] = {}) -> DisplacySpanData:
     """Generate spans in [{start: i, end: i, label: 'label'}] format.
 
     doc (Doc): Document to parse.
@@ -217,7 +266,7 @@ def parse_spans(doc: Doc, options: Dict[str, Any] = {}) -> Dict[str, Any]:
     """
     kb_url_template = options.get("kb_url_template", None)
     spans_key = options.get("spans_key", "sc")
-    spans = [
+    spans: List[DisplacySpan] = [
         {
             "start": span.start_char,
             "end": span.end_char,
