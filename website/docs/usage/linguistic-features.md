@@ -1899,7 +1899,7 @@ access to some nice Latin vectors. You can then pass the directory path to
 > ```
 
 ```cli
-$ wget https://s3-us-west-1.amazonaws.com/fasttext-vectors/word-vectors-v2/cc.la.300.vec.gz
+$ wget https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.la.300.vec.gz
 $ python -m spacy init vectors en cc.la.300.vec.gz /tmp/la_vectors_wiki_lg
 ```
 

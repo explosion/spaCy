@@ -476,6 +476,17 @@ def test_matcher_extension_set_membership(en_vocab):
     assert len(matches) == 0
 
 
+@pytest.mark.xfail(reason="IN predicate must handle sequence values in extensions")
+def test_matcher_extension_in_set_predicate(en_vocab):
+    matcher = Matcher(en_vocab)
+    Token.set_extension("ext", default=[])
+    pattern = [{"_": {"ext": {"IN": ["A", "C"]}}}]
+    matcher.add("M", [pattern])
+    doc = Doc(en_vocab, words=["a", "b", "c"])
+    doc[0]._.ext = ["A", "B"]
+    assert len(matcher(doc)) == 1
+
+
 def test_matcher_basic_check(en_vocab):
     matcher = Matcher(en_vocab)
     # Potential mistake: pass in pattern instead of list of patterns

@@ -362,6 +362,18 @@ nlp = spacy.load("en_core_web_sm", disable=["tagger", "parser"])
 nlp.enable_pipe("tagger")
 ```
 
+In addition to `disable`, `spacy.load()` also accepts `enable`. If `enable` is
+set, all components except for those in `enable` are disabled.
+
+```python
+# Load the complete pipeline, but disable all components except for tok2vec and tagger
+nlp = spacy.load("en_core_web_sm", enable=["tok2vec", "tagger"])
+# Has the same effect, as NER is already not part of enabled set of components
+nlp = spacy.load("en_core_web_sm", enable=["tok2vec", "tagger"], disable=["ner"])
+# Will raise an error, as the sets of enabled and disabled components are conflicting
+nlp = spacy.load("en_core_web_sm", enable=["ner"], disable=["ner"])
+```
+
 <Infobox variant="warning" title="Changed in v3.0">
 
 As of v3.0, the `disable` keyword argument specifies components to load but

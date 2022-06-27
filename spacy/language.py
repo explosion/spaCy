@@ -1,4 +1,4 @@
-from typing import Iterator, Optional, Any, Dict, Callable, Iterable
+from typing import Iterator, Optional, Any, Dict, Callable, Iterable, Collection
 from typing import Union, Tuple, List, Set, Pattern, Sequence
 from typing import NoReturn, TYPE_CHECKING, TypeVar, cast, overload
 
@@ -1694,6 +1694,7 @@ class Language:
         *,
         vocab: Union[Vocab, bool] = True,
         disable: Iterable[str] = SimpleFrozenList(),
+        enable: Iterable[str] = SimpleFrozenList(),
         exclude: Iterable[str] = SimpleFrozenList(),
         meta: Dict[str, Any] = SimpleFrozenDict(),
         auto_fill: bool = True,
@@ -1708,6 +1709,8 @@ class Language:
         disable (Iterable[str]): Names of pipeline components to disable.
             Disabled pipes will be loaded but they won't be run unless you
             explicitly enable them by calling nlp.enable_pipe.
+        enable (Iterable[str]): Names of pipeline components to enable. All other
+            pipes will be disabled (and can be enabled using `nlp.enable_pipe`).
         exclude (Iterable[str]): Names of pipeline components to exclude.
             Excluded components won't be loaded.
         meta (Dict[str, Any]): Meta overrides for nlp.meta.
@@ -1861,8 +1864,15 @@ class Language:
         # Restore the original vocab after sourcing if necessary
         if vocab_b is not None:
             nlp.vocab.from_bytes(vocab_b)
-        disabled_pipes = [*config["nlp"]["disabled"], *disable]
+
+        # Resolve disabled/enabled settings.
+        disabled_pipes = cls._resolve_component_status(
+            [*config["nlp"]["disabled"], *disable],
+            [*config["nlp"].get("enabled", []), *enable],
+            config["nlp"]["pipeline"],
+        )
         nlp._disabled = set(p for p in disabled_pipes if p not in exclude)
+
         nlp.batch_size = config["nlp"]["batch_size"]
         nlp.config = filled if auto_fill else config
         if after_pipeline_creation is not None:
@@ -2013,6 +2023,42 @@ class Language:
             serializers[name] = lambda p, proc=proc: proc.to_disk(p, exclude=["vocab"])  # type: ignore[misc]
         serializers["vocab"] = lambda p: self.vocab.to_disk(p, exclude=exclude)
         util.to_disk(path, serializers, exclude)
+
+    @staticmethod
+    def _resolve_component_status(
+        disable: Iterable[str], enable: Iterable[str], pipe_names: Collection[str]
+    ) -> Tuple[str, ...]:
+        """Derives whether (1) `disable` and `enable` values are consistent and (2)
+        resolves those to a single set of disabled components. Raises an error in
+        case of inconsistency.
+
+        disable (Iterable[str]): Names of components or serialization fields to disable.
+        enable (Iterable[str]): Names of pipeline components to enable.
+        pipe_names (Iterable[str]): Names of all pipeline components.
+
+        RETURNS (Tuple[str, ...]): Names of components to exclude from pipeline w.r.t.
+                                   specified includes and excludes.
+        """
+
+        if disable is not None and isinstance(disable, str):
+            disable = [disable]
+        to_disable = disable
+
+        if enable:
+            to_disable = [
+                pipe_name for pipe_name in pipe_names if pipe_name not in enable
+            ]
+            if disable and disable != to_disable:
+                raise ValueError(
+                    Errors.E1042.format(
+                        arg1="enable",
+                        arg2="disable",
+                        arg1_values=enable,
+                        arg2_values=disable,
+                    )
+                )
+
+        return tuple(to_disable)
 
     def from_disk(
         self,
