@@ -840,5 +840,6 @@ def test_matcher_non_greedy_operator(en_vocab):
         matches = matcher(doc, as_spans=True)
         assert len(matches) == results_len
         for i in range(len(matches)):
+            print(i)
             assert matches[i].text == results[i]
 
