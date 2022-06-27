@@ -111,7 +111,7 @@ steps:
     condition: eq(variables['python_version'], '3.8')
 
   - script: |
-      ${{ parameters.prefix }} python -m pip install thinc-apple-ops
+      ${{ parameters.prefix }} python -m pip install --pre thinc-apple-ops
       ${{ parameters.prefix }} python -m pytest --pyargs spacy
     displayName: "Run CPU tests with thinc-apple-ops"
-    condition: and(startsWith(variables['imageName'], 'macos'), eq(variables['python.version'], '3.9'))
+    condition: and(startsWith(variables['imageName'], 'macos'), eq(variables['python.version'], '3.10'))

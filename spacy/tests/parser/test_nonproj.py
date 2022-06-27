@@ -49,7 +49,9 @@ def test_parser_contains_cycle(tree, cyclic_tree, partial_tree, multirooted_tree
     assert contains_cycle(multirooted_tree) is None
 
 
-def test_parser_is_nonproj_arc(cyclic_tree, nonproj_tree, partial_tree, multirooted_tree):
+def test_parser_is_nonproj_arc(
+    cyclic_tree, nonproj_tree, partial_tree, multirooted_tree
+):
     assert is_nonproj_arc(0, nonproj_tree) is False
     assert is_nonproj_arc(1, nonproj_tree) is False
     assert is_nonproj_arc(2, nonproj_tree) is False
@@ -62,7 +64,9 @@ def test_parser_is_nonproj_arc(cyclic_tree, nonproj_tree, partial_tree, multiroo
     assert is_nonproj_arc(7, partial_tree) is False
     assert is_nonproj_arc(17, multirooted_tree) is False
     assert is_nonproj_arc(16, multirooted_tree) is True
-    with pytest.raises(ValueError, match=r'Found cycle in dependency graph: \[1, 2, 2, 4, 5, 3, 2\]'):
+    with pytest.raises(
+        ValueError, match=r"Found cycle in dependency graph: \[1, 2, 2, 4, 5, 3, 2\]"
+    ):
         is_nonproj_arc(6, cyclic_tree)
 
 
@@ -73,7 +77,9 @@ def test_parser_is_nonproj_tree(
     assert is_nonproj_tree(nonproj_tree) is True
     assert is_nonproj_tree(partial_tree) is False
     assert is_nonproj_tree(multirooted_tree) is True
-    with pytest.raises(ValueError, match=r'Found cycle in dependency graph: \[1, 2, 2, 4, 5, 3, 2\]'):
+    with pytest.raises(
+        ValueError, match=r"Found cycle in dependency graph: \[1, 2, 2, 4, 5, 3, 2\]"
+    ):
         is_nonproj_tree(cyclic_tree)
 
 

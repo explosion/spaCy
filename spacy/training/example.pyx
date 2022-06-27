@@ -9,7 +9,7 @@ from ..tokens.span import Span
 from ..attrs import IDS
 from .alignment import Alignment
 from .iob_utils import biluo_to_iob, offsets_to_biluo_tags, doc_to_biluo_tags
-from .iob_utils import biluo_tags_to_spans
+from .iob_utils import biluo_tags_to_spans, remove_bilu_prefix
 from ..errors import Errors, Warnings
 from ..pipeline._parser_internals import nonproj
 from ..tokens.token cimport MISSING_DEP
@@ -519,7 +519,7 @@ def _parse_ner_tags(biluo_or_offsets, vocab, words, spaces):
         else:
             ent_iobs.append(iob_tag.split("-")[0])
             if iob_tag.startswith("I") or iob_tag.startswith("B"):
-                ent_types.append(iob_tag.split("-", 1)[1])
+                ent_types.append(remove_bilu_prefix(iob_tag))
             else:
                 ent_types.append("")
     return ent_iobs, ent_types

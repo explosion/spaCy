@@ -1,6 +1,29 @@
 {
     "resources": [
         {
+            "id": "aim-spacy",
+            "title": "Aim-spaCy",
+            "slogan": "Aim-spaCy is an Aim-based spaCy experiment tracker.",
+            "description": "Aim-spaCy helps to easily collect, store and explore training logs for spaCy, including: hyper-parameters, metrics and displaCy visualizations",
+            "github": "aimhubio/aim-spacy",
+            "pip": "aim-spacy",
+            "code_example": [
+                "https://github.com/aimhubio/aim-spacy/tree/master/examples"
+            ],
+            "code_language": "python",
+            "url": "https://aimstack.io/spacy",
+            "thumb": "https://user-images.githubusercontent.com/13848158/172912427-ee9327ea-3cd8-47fa-8427-6c0d36cd831f.png",
+            "image": "https://user-images.githubusercontent.com/13848158/136364717-0939222c-55b6-44f0-ad32-d9ab749546e4.png",
+            "author": "AimStack",
+            "author_links": {
+                "twitter": "aimstackio",
+                "github": "aimhubio",
+                "website": "https://aimstack.io"
+            },
+            "category": ["visualizers"],
+            "tags": ["experiment-tracking", "visualization"]
+        },
+        {
             "id": "spacy-report",
             "title": "spacy-report",
             "slogan": "Generates interactive reports for spaCy models.",
