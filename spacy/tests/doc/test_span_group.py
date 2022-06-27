@@ -99,8 +99,10 @@ def test_span_group_set_item(doc, other_doc):
     span.label_ = "NEW LABEL"
     span.kb_id = doc.vocab.strings["KB_ID"]
 
-    assert span_group[index].label != span.label
-    assert span_group[index].kb_id != span.kb_id
+    # Indexing a span group returns a span in which C
+    # data is shared.
+    assert span_group[index].label == span.label
+    assert span_group[index].kb_id == span.kb_id
 
     span_group[index] = span
     assert span_group[index].start == span.start
