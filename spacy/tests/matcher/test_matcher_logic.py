@@ -699,8 +699,8 @@ def test_matcher_with_alignments_greedy_longest(en_vocab):
         ("aaaa", "a a a a a?", [0, 1, 2, 3]),
         ("aaab", "a+ a b", [0, 0, 1, 2]),
         ("aaab", "a+ a+ b", [0, 0, 1, 2]),
-        ("aaab", "a+? b", [0, 1]),
-        ("aaab", "a*? b", [1]),
+        ("aaab", "a+? b", [0, 0, 0, 1]),
+        ("aaab", "a*? b", [0, 0, 0, 1]),
     ]
     for string, pattern_str, result in cases:
         matcher = Matcher(en_vocab)
@@ -758,8 +758,8 @@ def test_matcher_with_alignments_non_greedy(en_vocab):
         (15, "aaaa", "a a a a a?", [[0, 1, 2, 3]]),
         (16, "aaab", "a+ a b", [[0, 1, 2], [0, 0, 1, 2]]),
         (17, "aaab", "a+ a+ b", [[0, 1, 2], [0, 0, 1, 2]]),
-        (18, "aaab", "a+? b", [[0, 1], [1]]),
-        (19, "aaab", "a*? b", [[1]]),
+        (18, "aaab", "a+? b", [[0, 0, 0, 1], [0, 0, 1], [0, 1]]),
+        (19, "aaab", "a*? b", [[0, 0, 0, 1], [0, 0, 1], [0, 1], [1]]),
     ]
     for case_id, string, pattern_str, results in cases:
         matcher = Matcher(en_vocab)
@@ -776,6 +776,8 @@ def test_matcher_with_alignments_non_greedy(en_vocab):
                 pattern.append({"ORTH": part[0], "OP": "*"})
             elif part.endswith("?"):
                 pattern.append({"ORTH": part[0], "OP": "?"})
+            elif part.endswith("!"):
+                pattern.append({"ORTH": part[0], "OP": "!"})
             else:
                 pattern.append({"ORTH": part})
 
@@ -790,17 +792,32 @@ def test_matcher_with_alignments_non_greedy(en_vocab):
 
 def test_matcher_non_greedy_operator(en_vocab):
     cases = [
-        (0, "aaabbab", "a*? b+?", 3),
-        (1, "aaabbab", "a*? b*?", 0),
-        (2, "aaabbab", "a* b*?", 7),
-        (3, "aaabbab", "a*? b*", 4),
-        (4, "aabbc", "a* b*? c*?", 3),
-        (5, "aabbc", "a* b*? c*", 4),
-        (6, "aabbc", "a* b*? c", 5),
-        (7, "aabbc", "a+? b*? c", 1),
+        (0, "aabbab", "a*? b", ["a a b", "a b", "b", "b", "a b", "b"], 6),
+        (1, "aabbab", "a+? b", ["a b", "a a b", "a b"], 3),
+        (2, "aabbab", "a*? b+?", ["a a b", "a b", "b", "b", "a b", "b"], 6),
+        (3, "aabbab", "a*? b*?", [], 0),
+        (4, "aabbab", "a* b*?", ["a", "a a", "a", "a"], 4),
+        (5, "aabbab", "a*? b*", ["a a b", "a b", "b", "a a b b", "a b b", "b b", "b", "a b", "b"], 9),
+        (6, "aabbc", "a* b*? c*?", ["a", "a a", 'a'], 3),
+        (7, "aabbc", "a* b*? c", ["a a b b c", "a b b c", "b b c", "b c", "c"], 5),
+
+        (8, "abc", "a* b*? c*", ["a", "a b c", "b c", "c"], 4),
+        # in spaCy, quantifier "*" returns __all__possible__ matches which is different from regex
+        # in spaCy, quantifier "*?" is designed to return only the non-greedy results from all possible matches
+        # Result 1: a
+        # Result 2: a b c
+        # Result 3: c
+        # Among the 3 results, Result 2 might be contentious to some, but we argue that this should be the correct
+        # behaviour since 'a' and 'c' are matches thus the longest, first possible string "a b c"
+        # should be one of the results
+
+        (9, "aabbc", "a+? b*? c", ["a b b c", "a a b b c"], 2),
+        (10, "aabbc", "a+? b+? c", ["a b b c", "a a b b c"], 2),
+        (11, "abbc", "a* b*? c?", ["a", "a b b c", "b b c", "b c", "c"], 5),
+        (12, "aabbc", "d! b*? c", ["b c", "b b c", "a b b c"], 3),
 
     ]
-    for case_id, string, pattern_str, result in cases:
+    for case_id, string, pattern_str, results, results_len in cases:
         matcher = Matcher(en_vocab)
         doc = Doc(matcher.vocab, words=list(string))
         pattern = []
@@ -815,8 +832,13 @@ def test_matcher_non_greedy_operator(en_vocab):
                 pattern.append({"ORTH": part[0], "OP": "*"})
             elif part.endswith("?"):
                 pattern.append({"ORTH": part[0], "OP": "?"})
+            elif part.endswith("!"):
+                pattern.append({"ORTH": part[0], "OP": "!"})
             else:
                 pattern.append({"ORTH": part})
         matcher.add("PATTERN", [pattern])
-        matches = matcher(doc)
-        assert len(matches) == result
+        matches = matcher(doc, as_spans=True)
+        assert len(matches) == results_len
+        for i in range(len(matches)):
+            assert matches[i].text == results[i]
+
