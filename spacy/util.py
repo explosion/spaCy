@@ -1716,3 +1716,10 @@ def packages_distributions() -> Dict[str, List[str]]:
         for pkg in (dist.read_text("top_level.txt") or "").split():
             pkg_to_dist[pkg].append(dist.metadata["Name"])
     return dict(pkg_to_dist)
+
+
+def all_equal(iterable):
+    """Return True if all the elements are equal to each other
+    (or if the input is an empty sequence), False otherwise."""
+    g = itertools.groupby(iterable)
+    return next(g, True) and not next(g, False)
