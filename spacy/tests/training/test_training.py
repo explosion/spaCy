@@ -689,17 +689,16 @@ def test_projectivize(en_tokenizer):
     assert proj_labels == deps
 
     # Test documents with no alignments
-    doc_a = Doc(doc.vocab).from_json(
-        json.loads(
-            '{"text": "Double-Jointed", "tokens": [{"id": 0, "start": 0, "end": 14, "head": 0, "dep": "ROOT"}]}'
-        )
+    doc_a = Doc(
+        doc.vocab, words=["Double-Jointed"], spaces=[False], deps=["ROOT"], heads=[0]
     )
-    doc_b = Doc(doc.vocab).from_json(
-        json.loads(
-            '{"text": "Double-Jointed", "tokens": [{"id": 0, "start": 0, "end": 6, "dep": "amod", "head": 2}, {"id": 1, "start": 6, "end": 7, "dep": "punct", "head": 2}, {"id": 2, "start": 7, "end": 14, "dep": "ROOT", "head": 2}]}'
-        )
+    doc_b = Doc(
+        doc.vocab,
+        words=["Double", "-", "Jointed"],
+        spaces=[True, True, True],
+        deps=["amod", "punct", "ROOT"],
+        heads=[2, 2, 2],
     )
-
     example = Example(doc_a, doc_b)
     proj_heads, proj_deps = example.get_aligned_parse(projectivize=True)
     assert proj_heads == [None]
@@ -930,7 +929,7 @@ def test_split_sents(merged_dict):
     assert token_annotation_2["SENT_START"] == [1, 0, 0, 0]
 
 
-def test_alignment():
+def test_alignment(en_tokenizer):
     other_tokens = ["i", "listened", "to", "obama", "'", "s", "podcasts", "."]
     spacy_tokens = ["i", "listened", "to", "obama", "'s", "podcasts", "."]
     align = Alignment.from_strings(other_tokens, spacy_tokens)
