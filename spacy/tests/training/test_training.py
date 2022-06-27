@@ -1,5 +1,5 @@
 import random
-
+import json
 import numpy
 import pytest
 import srsly
@@ -678,6 +678,32 @@ def test_projectivize(en_tokenizer):
     nonproj_heads, nonproj_labels = example.get_aligned_parse(projectivize=False)
     assert proj_heads == [3, 2, 3, 3, 3]
     assert nonproj_heads == [3, 2, 3, 3, 2]
+
+    # Test single token documents
+    doc = en_tokenizer("Conrail")
+    heads = [0]
+    deps = ["dep"]
+    example = Example.from_dict(doc, {"heads": heads, "deps": deps})
+    proj_heads, proj_labels = example.get_aligned_parse(projectivize=True)
+    assert proj_heads == heads
+    assert proj_labels == deps
+
+    # Test documents with no alignments
+    doc_a = Doc(doc.vocab).from_json(
+        json.loads(
+            '{"text": "Double-Jointed", "tokens": [{"id": 0, "start": 0, "end": 14, "head": 0, "dep": "ROOT"}]}'
+        )
+    )
+    doc_b = Doc(doc.vocab).from_json(
+        json.loads(
+            '{"text": "Double-Jointed", "tokens": [{"id": 0, "start": 0, "end": 6, "dep": "amod", "head": 2}, {"id": 1, "start": 6, "end": 7, "dep": "punct", "head": 2}, {"id": 2, "start": 7, "end": 14, "dep": "ROOT", "head": 2}]}'
+        )
+    )
+
+    example = Example(doc_a, doc_b)
+    proj_heads, proj_deps = example.get_aligned_parse(projectivize=True)
+    assert proj_heads == [None]
+    assert proj_deps == [None]
 
 
 def test_iob_to_biluo():
