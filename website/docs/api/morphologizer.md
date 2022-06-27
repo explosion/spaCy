@@ -48,6 +48,7 @@ architectures and their arguments and hyperparameters.
 | `overwrite` <Tag variant="new">3.2</Tag> | Whether the values of existing features are overwritten. Defaults to `True`. ~~bool~~                                                                                                                                                                                  |
 | `extend` <Tag variant="new">3.2</Tag>    | Whether existing feature types (whose values may or may not be overwritten depending on `overwrite`) are preserved. Defaults to `False`. ~~bool~~                                                                                                                      |
 | `scorer` <Tag variant="new">3.2</Tag>    | The scoring method. Defaults to [`Scorer.score_token_attr`](/api/scorer#score_token_attr) for the attributes `"pos"` and `"morph"` and [`Scorer.score_token_attr_per_feat`](/api/scorer#score_token_attr_per_feat) for the attribute `"morph"`. ~~Optional[Callable]~~ |
+| `store_activations`                      | Store activations in `Doc` when annotating. Supported activations are `"probs"` and `"guesses"`. ~~Union[bool, list[str]]~~                                                                                                                                            |
 
 ```python
 %%GITHUB_SPACY/spacy/pipeline/morphologizer.pyx

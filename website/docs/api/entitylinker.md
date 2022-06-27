@@ -63,6 +63,7 @@ architectures and their arguments and hyperparameters.
 | `get_candidates`                         | Function that generates plausible candidates for a given `Span` object. Defaults to [CandidateGenerator](/api/architectures#CandidateGenerator), a function looking up exact, case-dependent aliases in the KB. ~~Callable[[KnowledgeBase, Span], Iterable[Candidate]]~~ |
 | `overwrite` <Tag variant="new">3.2</Tag> | Whether existing annotation is overwritten. Defaults to `True`. ~~bool~~                                                                                                                                                                                                 |
 | `scorer` <Tag variant="new">3.2</Tag>    | The scoring method. Defaults to [`Scorer.score_links`](/api/scorer#score_links). ~~Optional[Callable]~~                                                                                                                                                                  |
+| `store_activations`                      | Store activations in `Doc` when annotating. Supported activations are `"ents"` and `"scores"`. ~~Union[bool, list[str]]~~                                                                                                                                                |
 
 ```python
 %%GITHUB_SPACY/spacy/pipeline/entity_linker.py
