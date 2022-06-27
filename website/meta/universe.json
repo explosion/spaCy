@@ -1,6 +1,58 @@
 {
     "resources": [
         {
+            "id": "spacyfishing",
+            "title": "spaCy fishing",
+            "slogan": "Named entity disambiguation and linking on Wikidata in spaCy with Entity-Fishing.",
+            "description": "A spaCy wrapper of Entity-Fishing for named entity disambiguation and linking against a Wikidata knowledge base.",
+            "github": "Lucaterre/spacyfishing",
+            "pip": "spacyfishing",
+            "code_example": [
+                "import spacy",
+                "text = 'Victor Hugo and Honoré de Balzac are French writers who lived in Paris.'",
+                "nlp = spacy.load('en_core_web_sm')",
+                "nlp.add_pipe('entityfishing')",
+                "doc = nlp(text)",
+                "for span in doc.ents:",
+                "    print((ent.text, ent.label_, ent._.kb_qid, ent._.url_wikidata, ent._.nerd_score))",
+                "# ('Victor Hugo', 'PERSON', 'Q535', 'https://www.wikidata.org/wiki/Q535', 0.972)",
+                "# ('Honoré de Balzac', 'PERSON', 'Q9711', 'https://www.wikidata.org/wiki/Q9711', 0.9724)",
+                "# ('French', 'NORP', 'Q121842', 'https://www.wikidata.org/wiki/Q121842', 0.3739)",
+                "# ('Paris', 'GPE', 'Q90', 'https://www.wikidata.org/wiki/Q90', 0.5652)",
+                "## Set parameter `extra_info` to `True` and check also span._.description, span._.src_description, span._.normal_term, span._.other_ids"
+            ],
+            "category": ["models", "pipeline"],
+            "tags": ["NER", "NEL"],
+            "author": "Lucas Terriel",
+            "author_links": {
+                "twitter": "TerreLuca",
+                "github": "Lucaterre"
+            }
+        },
+        {
+            "id": "aim-spacy",
+            "title": "Aim-spaCy",
+            "slogan": "Aim-spaCy is an Aim-based spaCy experiment tracker.",
+            "description": "Aim-spaCy helps to easily collect, store and explore training logs for spaCy, including: hyper-parameters, metrics and displaCy visualizations",
+            "github": "aimhubio/aim-spacy",
+            "pip": "aim-spacy",
+            "code_example": [
+                "https://github.com/aimhubio/aim-spacy/tree/master/examples"
+            ],
+            "code_language": "python",
+            "url": "https://aimstack.io/spacy",
+            "thumb": "https://user-images.githubusercontent.com/13848158/172912427-ee9327ea-3cd8-47fa-8427-6c0d36cd831f.png",
+            "image": "https://user-images.githubusercontent.com/13848158/136364717-0939222c-55b6-44f0-ad32-d9ab749546e4.png",
+            "author": "AimStack",
+            "author_links": {
+                "twitter": "aimstackio",
+                "github": "aimhubio",
+                "website": "https://aimstack.io"
+            },
+            "category": ["visualizers"],
+            "tags": ["experiment-tracking", "visualization"]
+        },
+        {
             "id": "spacy-report",
             "title": "spacy-report",
             "slogan": "Generates interactive reports for spaCy models.",
@@ -32,7 +84,7 @@
             "code_language": "python",
             "author": "Leap Beyond",
             "author_links": {
-                "github": "https://github.com/LeapBeyond",
+                "github": "LeapBeyond",
                 "website": "https://leapbeyond.ai"
             },
             "code_example": [
@@ -55,8 +107,8 @@
             "code_language": "python",
             "author": "Peter Baumgartner",
             "author_links": {
-                "twitter" : "https://twitter.com/pmbaumgartner",
-                "github": "https://github.com/pmbaumgartner",
+                "twitter" : "pmbaumgartner",
+                "github": "pmbaumgartner",
                 "website": "https://www.peterbaumgartner.com/"
             },
             "code_example": [
@@ -75,8 +127,8 @@
             "code_language": "python",
             "author": "Explosion",
             "author_links": {
-                "twitter" : "https://twitter.com/explosion_ai",
-                "github": "https://github.com/explosion",
+                "twitter" : "explosion_ai",
+                "github": "explosion",
                 "website": "https://explosion.ai/"
             },
             "code_example": [
@@ -548,8 +600,8 @@
             "code_language": "python",
             "author": "Keith Rozario",
             "author_links": {
-                "twitter" : "https://twitter.com/keithrozario",
-                "github": "https://github.com/keithrozario",
+                "twitter" : "keithrozario",
+                "github": "keithrozario",
                 "website": "https://www.keithrozario.com"
             },
             "code_example": [
@@ -2272,7 +2324,7 @@
             "author": "Daniel Whitenack & Chris Benson",
             "author_links": {
                 "website": "https://changelog.com/practicalai",
-                "twitter": "https://twitter.com/PracticalAIFM"
+                "twitter": "PracticalAIFM"
             },
             "category": ["podcasts"]
         },

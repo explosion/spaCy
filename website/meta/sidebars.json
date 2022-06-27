@@ -124,6 +124,7 @@
             {
                 "label": "Other",
                 "items": [
+                    { "text": "Attributes", "url": "/api/attributes" },
                     { "text": "Corpus", "url": "/api/corpus" },
                     { "text": "KnowledgeBase", "url": "/api/kb" },
                     { "text": "Lookups", "url": "/api/lookups" },
