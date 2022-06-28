@@ -64,8 +64,11 @@ class SpanRenderer:
         # Set up how the text and labels will be rendered
         self.direction = DEFAULT_DIR
         self.lang = DEFAULT_LANG
+        # These values are in px
         self.top_offset = options.get("top_offset", 40)
-        self.top_offset_step = options.get("top_offset_step", 17)
+        # This is how far under the top offset the span labels appear
+        self.span_label_offset = options.get("span_label_offset", 20)
+        self.offset_step = options.get("top_offset_step", 17)
 
         # Set up which templates will be used
         template = options.get("template")
@@ -161,8 +164,16 @@ class SpanRenderer:
             if entities:
                 slices = self._get_span_slices(token["entities"])
                 starts = self._get_span_starts(token["entities"])
+                total_height = (
+                    self.top_offset
+                    + self.span_label_offset
+                    + (self.offset_step * (len(entities) - 1))
+                )
                 markup += self.span_template.format(
-                    text=token["text"], span_slices=slices, span_starts=starts
+                    text=token["text"],
+                    span_slices=slices,
+                    span_starts=starts,
+                    total_height=total_height,
                 )
             else:
                 markup += escape_html(token["text"] + " ")
@@ -171,7 +182,7 @@ class SpanRenderer:
     def _get_span_slices(self, entities: List[Dict]) -> str:
         """Get the rendered markup of all Span slices"""
         span_slices = []
-        for entity, step in zip(entities, itertools.count(step=self.top_offset_step)):
+        for entity, step in zip(entities, itertools.count(step=self.offset_step)):
             color = self.colors.get(entity["label"].upper(), self.default_color)
             span_slice = self.span_slice_template.format(
                 bg=color, top_offset=self.top_offset + step
@@ -182,7 +193,7 @@ class SpanRenderer:
     def _get_span_starts(self, entities: List[Dict]) -> str:
         """Get the rendered markup of all Span start tokens"""
         span_starts = []
-        for entity, step in zip(entities, itertools.count(step=self.top_offset_step)):
+        for entity, step in zip(entities, itertools.count(step=self.offset_step)):
             color = self.colors.get(entity["label"].upper(), self.default_color)
             span_start = (
                 self.span_start_template.format(
