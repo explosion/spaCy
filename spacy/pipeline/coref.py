@@ -267,7 +267,19 @@ class CoreferenceResolver(TrainablePipe):
         example = list(examples)[0]
         cidx = mention_idx
 
-        clusters = get_clusters_from_doc(example.reference)
+        clusters_by_char = get_clusters_from_doc(example.reference)
+        # convert to token clusters, and give up if necessary
+        clusters = []
+        for cluster in clusters_by_char:
+            cc = []
+            for start_char, end_char in cluster:
+                span = example.predicted.char_span(start_char, end_char)
+                if span is None:
+                    # TODO log more details
+                    raise IndexError(Errors.E1038)
+                cc.append( (span.start, span.end) )
+            clusters.append(cc)
+
         span_idxs = create_head_span_idxs(ops, len(example.predicted))
         gscores = create_gold_scores(span_idxs, clusters)
         # TODO fix type here. This is bools but asarray2f wants ints.

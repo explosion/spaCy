@@ -143,16 +143,18 @@ def create_head_span_idxs(ops, doclen: int):
 
 
 def get_clusters_from_doc(doc) -> List[List[Tuple[int, int]]]:
-    """Given a Doc, convert the cluster spans to simple int tuple lists."""
+    """Given a Doc, convert the cluster spans to simple int tuple lists. The 
+    ints are char spans, to be tokenization independent.
+    """
     out = []
     for key, val in doc.spans.items():
         cluster = []
         for span in val:
-            # TODO check that there isn't an off-by-one error here
-            # cluster.append((span.start, span.end))
-            # TODO This conversion should be happening earlier in processing
+
             head_i = span.root.i
-            cluster.append((head_i, head_i + 1))
+            head = doc[head_i]
+            char_span = (head.idx, head.idx + len(head))
+            cluster.append(char_span)
 
         # don't want duplicates
         cluster = list(set(cluster))
