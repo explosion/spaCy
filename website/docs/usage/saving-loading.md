@@ -203,11 +203,14 @@ the data to and from a JSON file.
 
 ```python
 ### {highlight="16-23,25-30"}
+import json
+from spacy import Language
 from spacy.util import ensure_path
 
 @Language.factory("my_component")
 class CustomComponent:
-    def __init__(self):
+    def __init__(self, nlp: Language, name: str = "my_component"):
+        self.name = name
         self.data = []
 
     def __call__(self, doc):
@@ -231,7 +234,7 @@ class CustomComponent:
         # This will receive the directory path + /my_component
         data_path = path / "data.json"
         with data_path.open("r", encoding="utf8") as f:
-            self.data = json.loads(f)
+            self.data = json.load(f)
         return self
 ```
 

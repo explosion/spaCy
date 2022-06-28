@@ -5,6 +5,7 @@ import srsly
 from spacy.tokens import Doc
 from spacy.vocab import Vocab
 from spacy.util import make_tempdir  # noqa: F401
+from spacy.training import split_bilu_label
 from thinc.api import get_current_ops
 
 
@@ -40,7 +41,7 @@ def apply_transition_sequence(parser, doc, sequence):
     desired state."""
     for action_name in sequence:
         if "-" in action_name:
-            move, label = action_name.split("-")
+            move, label = split_bilu_label(action_name)
             parser.add_label(label)
     with parser.step_through(doc) as stepwise:
         for transition in sequence:

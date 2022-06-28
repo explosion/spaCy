@@ -12,6 +12,7 @@ from ..language import Language
 from ._parser_internals import nonproj
 from ._parser_internals.nonproj import DELIMITER
 from ..scorer import Scorer
+from ..training import remove_bilu_prefix
 from ..util import registry
 
 
@@ -314,7 +315,7 @@ cdef class DependencyParser(Parser):
         # Get the labels from the model by looking at the available moves
         for move in self.move_names:
             if "-" in move:
-                label = move.split("-")[1]
+                label = remove_bilu_prefix(move)
                 if DELIMITER in label:
                     label = label.split(DELIMITER)[1]
                 labels.add(label)
