@@ -1126,7 +1126,7 @@ def test_tokenization_mismatch():
     ],
 )
 # fmt: on
-def test_abstention_threshold(meet_threshold: bool, config: Dict[str, Any]):
+def test_threshold(meet_threshold: bool, config: Dict[str, Any]):
     """Tests abstention threshold.
     meet_threshold (bool): Whether to configure NEL setup so that confidence threshold is met.
     config (Dict[str, Any]): NEL architecture config.
