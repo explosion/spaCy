@@ -14,7 +14,6 @@ cdef enum action_t:
     ADVANCE = 0100
     RETRY = 0010
     EXTEND = 0001
-    REMOVE_EXTEND = 0002
     RETRY_EXTEND = 0011
     RETRY_OR_EXTEND = 0022
     RETRY_ADVANCE = 0110

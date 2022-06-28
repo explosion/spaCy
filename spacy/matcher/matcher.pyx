@@ -462,7 +462,6 @@ cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& match
             if states[q].pattern.nr_py != 0:
                 update_predicate_cache(cached_py_predicates, states[q].pattern, token, py_predicates)
             next_action = get_action(states[q], token.c, extra_attrs, cached_py_predicates)
-            # TODO: action = function(next_action, action,state)
             # if action == RETRY_OR_EXTEND:
             #     if next_action == MATCH:
             #         # Stop the extension once there is a match
@@ -493,22 +492,24 @@ cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& match
             #         next_action = MATCH
             # To account for *? and +?
             if get_quantifier(state) == ZERO_MINUS:
-                if action == RETRY_OR_EXTEND and next_action == MATCH:
-                    # Stop the extension once there is a match
-                    new_states.pop_back()
-                    if with_alignments != 0:
-                        align_new_states.pop_back()
-
-                elif next_action == MATCH_REJECT:
-                    # Remove matches that end with *? token
-                    next_action = REJECT
-                elif action == RETRY and next_action == MATCH_EXTEND:
-                    next_action = EXTEND
-                    # This handles the 'extend' without matching
-                    # Remove matches that end with *? token
-                elif action == RETRY and next_action == MATCH_DOUBLE:
-                    # Remove matches that end with *? token for operator '?'
-                    next_action = MATCH
+                next_action = \
+                    get_non_greedy_action(state, action, next_action, new_states, align_new_states, with_alignments)
+                # if action == RETRY_OR_EXTEND and next_action == MATCH:
+                #     # Stop the extension once there is a match
+                #     new_states.pop_back()
+                #     if with_alignments != 0:
+                #         align_new_states.pop_back()
+                #
+                # elif next_action == MATCH_REJECT:
+                #     # Remove matches that end with *? token
+                #     next_action = REJECT
+                # elif action == RETRY and next_action == MATCH_EXTEND:
+                #     next_action = EXTEND
+                #     # This handles the 'extend' without matching
+                #     # Remove matches that end with *? token
+                # elif action == RETRY and next_action == MATCH_DOUBLE:
+                #     # Remove matches that end with *? token for operator '?'
+                #     next_action = MATCH
 
             action = next_action
 
@@ -818,6 +819,35 @@ cdef int8_t get_is_match(PatternStateC state,
             return 0
     return True
 
+
+cdef action_t get_non_greedy_action(PatternStateC state, action_t action, action_t next_action,
+                                    vector[PatternStateC]& new_states,
+                                    vector[vector[MatchAlignmentC]]& align_new_states,
+                                    bint with_alignments) nogil:
+    if action == RETRY_OR_EXTEND and next_action == MATCH:
+        with gil:
+            print("RETRY_OR_EXTEND MATCH")
+        # Stop the extension once there is a match
+        new_states.pop_back()
+        if with_alignments != 0:
+            align_new_states.pop_back()
+        return MATCH
+    elif next_action == MATCH_REJECT:
+        with gil:
+            print("MATCH REJECT REJECT")
+        # Remove matches that end with *? token
+        return REJECT
+    elif action == RETRY and next_action == MATCH_EXTEND:
+        with gil:
+            print("RETRY< MATCH EXTEND EXTEND")
+        # This handles the 'extend' without matching
+        # Remove matches that end with *? token
+        return EXTEND
+    elif action == RETRY and next_action == MATCH_DOUBLE:
+        # Remove matches that end with *? token for operator '?'
+        return MATCH
+    else:
+        return next_action
 
 cdef inline int8_t get_is_final(PatternStateC state) nogil:
     if state.pattern[1].quantifier == FINAL_ID:
