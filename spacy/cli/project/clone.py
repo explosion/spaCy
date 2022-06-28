@@ -33,7 +33,7 @@ def project_clone_cli(
     """
     if dest is None:
         dest = Path.cwd() / Path(name).parts[-1]
-    if repo == DEFAULT_REPO:
+    if repo == DEFAULT_REPO and branch is None:
         branch = DEFAULT_PROJECTS_BRANCH
 
     if branch is None:
