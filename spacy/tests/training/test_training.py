@@ -929,7 +929,7 @@ def test_split_sents(merged_dict):
     assert token_annotation_2["SENT_START"] == [1, 0, 0, 0]
 
 
-def test_alignment(en_tokenizer):
+def test_alignment():
     other_tokens = ["i", "listened", "to", "obama", "'", "s", "podcasts", "."]
     spacy_tokens = ["i", "listened", "to", "obama", "'s", "podcasts", "."]
     align = Alignment.from_strings(other_tokens, spacy_tokens)
