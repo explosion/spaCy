@@ -202,10 +202,15 @@ the data to and from a JSON file.
 > rules _with_ the component data.
 
 ```python
-### {highlight="14-18,20-25"}
+### {highlight="16-23,25-30"}
+import json
+from spacy import Language
+from spacy.util import ensure_path
+
 @Language.factory("my_component")
 class CustomComponent:
-    def __init__(self):
+    def __init__(self, nlp: Language, name: str = "my_component"):
+        self.name = name
         self.data = []
 
     def __call__(self, doc):
@@ -218,6 +223,9 @@ class CustomComponent:
 
     def to_disk(self, path, exclude=tuple()):
         # This will receive the directory path + /my_component
+        path = ensure_path(path)
+        if not path.exists():
+            path.mkdir()
         data_path = path / "data.json"
         with data_path.open("w", encoding="utf8") as f:
             f.write(json.dumps(self.data))
@@ -226,7 +234,7 @@ class CustomComponent:
         # This will receive the directory path + /my_component
         data_path = path / "data.json"
         with data_path.open("r", encoding="utf8") as f:
-            self.data = json.loads(f)
+            self.data = json.load(f)
         return self
 ```
 
@@ -467,7 +475,12 @@ pipeline package. When you save out a pipeline using `nlp.to_disk` and the
 component exposes a `to_disk` method, it will be called with the disk path.
 
 ```python
+from spacy.util import ensure_path
+
 def to_disk(self, path, exclude=tuple()):
+    path = ensure_path(path)
+    if not path.exists():
+        path.mkdir()
     snek_path = path / "snek.txt"
     with snek_path.open("w", encoding="utf8") as snek_file:
         snek_file.write(self.snek)

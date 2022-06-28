@@ -8,10 +8,11 @@ import Title from '../components/title'
 import Grid from '../components/grid'
 import Button from '../components/button'
 import Icon from '../components/icon'
+import Tag from '../components/tag'
 import CodeBlock, { InlineCode } from '../components/code'
 import Aside from '../components/aside'
 import Sidebar from '../components/sidebar'
-import Section from '../components/section'
+import Section, { Hr } from '../components/section'
 import Main from '../components/main'
 import Footer from '../components/footer'
 import { H3, H5, Label, InlineList } from '../components/typography'
@@ -122,6 +123,18 @@ const UniverseContent = ({ content = [], categories, theme, pageContext, mdxComp
                     </Section>
                 )}
                 <section className="search-exclude">
+                    <H3>Found a mistake or something isn't working?</H3>
+                    <p>
+                        If you've come across a universe project that isn't working or is
+                        incompatible with the reported spaCy version, let us know by{' '}
+                        <Link to="https://github.com/explosion/spaCy/discussions/new">
+                            opening a discussion thread
+                        </Link>
+                        .
+                    </p>
+                </section>
+                <Hr />
+                <section className="search-exclude">
                     <H3>Submit your project</H3>
                     <p>
                         If you have a project that you want the spaCy community to make use of, you
@@ -168,25 +181,41 @@ UniverseContent.propTypes = {
     mdxComponents: PropTypes.object,
 }
 
+const SpaCyVersion = ({ version }) => {
+    const versions = !Array.isArray(version) ? [version] : version
+    return versions.map((v, i) => (
+        <>
+            <Tag tooltip={`This project is compatible with spaCy v${v}`}>spaCy v{v}</Tag>{' '}
+        </>
+    ))
+}
+
 const Project = ({ data, components }) => (
     <>
         <Title title={data.title || data.id} teaser={data.slogan} image={data.thumb}>
-            {data.github && (
+            {(data.github || data.spacy_version) && (
                 <p>
-                    <Link to={`https://github.com/${data.github}`} hidden>
-                        {[
-                            `release/${data.github}/all.svg?style=flat-square`,
-                            `license/${data.github}.svg?style=flat-square`,
-                            `stars/${data.github}.svg?style=social&label=Stars`,
-                        ].map((url, i) => (
-                            <img
-                                style={{ borderRadius: '1em', marginRight: '0.5rem' }}
-                                key={i}
-                                src={`https://img.shields.io/github/${url}`}
-                                alt=""
-                            />
-                        ))}
-                    </Link>
+                    {data.spacy_version && <SpaCyVersion version={data.spacy_version} />}
+                    {data.github && (
+                        <Link to={`https://github.com/${data.github}`} hidden>
+                            {[
+                                `release/${data.github}/all.svg?style=flat-square`,
+                                `license/${data.github}.svg?style=flat-square`,
+                                `stars/${data.github}.svg?style=social&label=Stars`,
+                            ].map((url, i) => (
+                                <img
+                                    style={{
+                                        borderRadius: '1em',
+                                        marginRight: '0.5rem',
+                                        verticalAlign: 'middle',
+                                    }}
+                                    key={i}
+                                    src={`https://img.shields.io/github/${url}`}
+                                    alt=""
+                                />
+                            ))}
+                        </Link>
+                    )}
                 </p>
             )}
         </Title>
@@ -335,6 +364,7 @@ const query = graphql`
                         url
                         github
                         description
+                        spacy_version
                         pip
                         cran
                         category

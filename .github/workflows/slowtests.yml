@@ -1,0 +1,38 @@
+name: Daily slow tests
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+  daily-slowtests:
+    strategy:
+      fail-fast: false
+      matrix:
+        branch: [master, v4]
+    if: github.repository_owner == 'explosion'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+        with:
+          ref: ${{ matrix.branch }}
+      - name: Get commits from past 24 hours
+        id: check_commits
+        run: |
+          today=$(date '+%Y-%m-%d %H:%M:%S')
+          yesterday=$(date -d "yesterday" '+%Y-%m-%d %H:%M:%S')
+          if git log --after="$yesterday" --before="$today" | grep commit ; then
+            echo "::set-output name=run_tests::true"
+          else
+            echo "::set-output name=run_tests::false"
+          fi
+
+      - name: Trigger buildkite build
+        if: steps.check_commits.outputs.run_tests == 'true'
+        uses: buildkite/trigger-pipeline-action@v1.2.0
+        env:
+          PIPELINE: explosion-ai/spacy-slow-tests
+          BRANCH: ${{ matrix.branch }}
+          MESSAGE: ":github: Daily slow tests - triggered from a GitHub Action"
+          BUILDKITE_API_ACCESS_TOKEN: ${{ secrets.BUILDKITE_SECRET }}

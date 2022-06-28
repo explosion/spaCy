@@ -247,7 +247,7 @@ a consistent format. There are no command-line arguments that need to be set,
 and no hidden defaults. However, there can still be scenarios where you may want
 to override config settings when you run [`spacy train`](/api/cli#train). This
 includes **file paths** to vectors or other resources that shouldn't be
-hard-code in a config file, or **system-dependent settings**.
+hard-coded in a config file, or **system-dependent settings**.
 
 For cases like this, you can set additional command-line options starting with
 `--` that correspond to the config section and value to override. For example,
@@ -730,7 +730,7 @@ with the name of the respective [registry](/api/top-level#registry), e.g.
 `@spacy.registry.architectures`, and a string name to assign to your function.
 Registering custom functions allows you to **plug in models** defined in PyTorch
 or TensorFlow, make **custom modifications** to the `nlp` object, create custom
-optimizers or schedules, or **stream in data** and preprocesses it on the fly
+optimizers or schedules, or **stream in data** and preprocess it on the fly
 while training.
 
 Each custom function can have any number of arguments that are passed in via the

@@ -4,6 +4,13 @@ for doing pseudo-projective parsing implementation uses the HEAD decoration
 scheme.
 """
 from copy import copy
+from cython.operator cimport preincrement as incr, dereference as deref
+from libc.limits cimport INT_MAX
+from libc.stdlib cimport abs
+from libcpp cimport bool
+from libcpp.string cimport string, to_string
+from libcpp.vector cimport vector
+from libcpp.unordered_set cimport unordered_set
 
 from ...tokens.doc cimport Doc, set_children_from_heads
 
@@ -41,34 +48,73 @@ def contains_cycle(heads):
 
 
 def is_nonproj_arc(tokenid, heads):
+    cdef vector[int] c_heads = _heads_to_c(heads)
+    return _is_nonproj_arc(tokenid, c_heads)
+
+
+cdef bool _is_nonproj_arc(int tokenid, const vector[int]& heads) nogil except *:
     # definition (e.g. Havelka 2007): an arc h -> d, h < d is non-projective
     # if there is a token k, h < k < d such that h is not
     # an ancestor of k. Same for h -> d, h > d
     head = heads[tokenid]
     if head == tokenid:  # root arcs cannot be non-projective
         return False
-    elif head is None:  # unattached tokens cannot be non-projective
+    elif head < 0:  # unattached tokens cannot be non-projective
         return False
-    
+
     cdef int start, end
     if head < tokenid:
         start, end = (head+1, tokenid)
     else:
         start, end = (tokenid+1, head)
     for k in range(start, end):
-        for ancestor in ancestors(k, heads):
-            if ancestor is None:  # for unattached tokens/subtrees
-                break
-            elif ancestor == head:  # normal case: k dominated by h
-                break
-        else:  # head not in ancestors: d -> h is non-projective
+        if not _has_head_as_ancestor(k, head, heads):
             return True
     return False
 
 
+cdef bool _has_head_as_ancestor(int tokenid, int head, const vector[int]& heads) nogil except *:
+    ancestor = tokenid
+    cdef unordered_set[int] seen_tokens
+    seen_tokens.insert(ancestor)
+    while True:
+        # Reached the head or a disconnected node
+        if heads[ancestor] == head or heads[ancestor] < 0:
+            return True
+        # Reached the root
+        if heads[ancestor] == ancestor:
+            return False
+        ancestor = heads[ancestor]
+        result = seen_tokens.insert(ancestor)
+        # Found cycle
+        if not result.second:
+            raise_domain_error(heads_to_string(heads))
+
+    return False
+
+
+cdef string heads_to_string(const vector[int]& heads) nogil:
+    cdef vector[int].const_iterator citer
+    cdef string cycle_str
+
+    cycle_str.append("Found cycle in dependency graph: [")
+
+    # FIXME: Rewrite using ostringstream when available in Cython.
+    citer = heads.const_begin()
+    while citer != heads.const_end():
+        if citer != heads.const_begin():
+            cycle_str.append(", ")
+        cycle_str.append(to_string(deref(citer)))
+        incr(citer)
+    cycle_str.append("]")
+
+    return cycle_str
+
+
 def is_nonproj_tree(heads):
+    cdef vector[int] c_heads = _heads_to_c(heads)
     # a tree is non-projective if at least one arc is non-projective
-    return any(is_nonproj_arc(word, heads) for word in range(len(heads)))
+    return any(_is_nonproj_arc(word, c_heads) for word in range(len(heads)))
 
 
 def decompose(label):
@@ -98,14 +144,29 @@ def projectivize(heads, labels):
     # tree, i.e. connected and cycle-free. Returns a new pair (heads, labels)
     # which encode a projective and decorated tree.
     proj_heads = copy(heads)
-    smallest_np_arc = _get_smallest_nonproj_arc(proj_heads)
-    if smallest_np_arc is None:  # this sentence is already projective
+
+    cdef int new_head
+    cdef vector[int] c_proj_heads = _heads_to_c(proj_heads)
+    cdef int smallest_np_arc = _get_smallest_nonproj_arc(c_proj_heads)
+    if smallest_np_arc == -1:  # this sentence is already projective
         return proj_heads, copy(labels)
-    while smallest_np_arc is not None:
-        _lift(smallest_np_arc, proj_heads)
-        smallest_np_arc = _get_smallest_nonproj_arc(proj_heads)
+    while smallest_np_arc != -1:
+        new_head = _lift(smallest_np_arc, proj_heads)
+        c_proj_heads[smallest_np_arc] = new_head
+        smallest_np_arc = _get_smallest_nonproj_arc(c_proj_heads)
     deco_labels = _decorate(heads, proj_heads, labels)
     return proj_heads, deco_labels
+
+
+cdef vector[int] _heads_to_c(heads):
+    cdef vector[int] c_heads;
+    for head in heads:
+        if head == None:
+            c_heads.push_back(-1)
+        else:
+            assert head < len(heads)
+            c_heads.push_back(head)
+    return c_heads
 
 
 cpdef deprojectivize(Doc doc):
@@ -137,27 +198,39 @@ def _decorate(heads, proj_heads, labels):
             deco_labels.append(labels[tokenid])
     return deco_labels
 
+def get_smallest_nonproj_arc_slow(heads):
+    cdef vector[int] c_heads = _heads_to_c(heads)
+    return _get_smallest_nonproj_arc(c_heads)
 
-def _get_smallest_nonproj_arc(heads):
+
+cdef int _get_smallest_nonproj_arc(const vector[int]& heads) nogil except -2:
     # return the smallest non-proj arc or None
     # where size is defined as the distance between dep and head
     # and ties are broken left to right
-    smallest_size = float('inf')
-    smallest_np_arc = None
-    for tokenid, head in enumerate(heads):
+    cdef int smallest_size = INT_MAX
+    # -1 means its already projective.
+    cdef int smallest_np_arc = -1
+    cdef int size
+    cdef int tokenid
+    cdef int head
+
+    for tokenid in range(heads.size()):
+        head = heads[tokenid]
         size = abs(tokenid-head)
-        if size < smallest_size and is_nonproj_arc(tokenid, heads):
+        if size < smallest_size and _is_nonproj_arc(tokenid, heads):
             smallest_size = size
             smallest_np_arc = tokenid
     return smallest_np_arc
 
 
-def _lift(tokenid, heads):
+cpdef int _lift(tokenid, heads):
     # reattaches a word to it's grandfather
     head = heads[tokenid]
     ghead = heads[head]
+    cdef int new_head = ghead if head != ghead else tokenid
     # attach to ghead if head isn't attached to root else attach to root
-    heads[tokenid] = ghead if head != ghead else tokenid
+    heads[tokenid] = new_head
+    return new_head
 
 
 def _find_new_head(token, headlabel):

@@ -10,6 +10,7 @@ from jinja2 import Template
 from .. import util
 from ..language import DEFAULT_CONFIG_PRETRAIN_PATH
 from ..schemas import RecommendationSchema
+from ..util import SimpleFrozenList
 from ._util import init_cli, Arg, Opt, show_validation_error, COMMAND
 from ._util import string_to_list, import_code
 
@@ -24,16 +25,30 @@ class Optimizations(str, Enum):
     accuracy = "accuracy"
 
 
+class InitValues:
+    """
+    Default values for initialization. Dedicated class to allow synchronized default values for init_config_cli() and
+    init_config(), i.e. initialization calls via CLI respectively Python.
+    """
+
+    lang = "en"
+    pipeline = SimpleFrozenList(["tagger", "parser", "ner"])
+    optimize = Optimizations.efficiency
+    gpu = False
+    pretraining = False
+    force_overwrite = False
+
+
 @init_cli.command("config")
 def init_config_cli(
     # fmt: off
     output_file: Path = Arg(..., help="File to save the config to or - for stdout (will only output config and no additional logging info)", allow_dash=True),
-    lang: str = Opt("en", "--lang", "-l", help="Two-letter code of the language to use"),
-    pipeline: str = Opt("tagger,parser,ner", "--pipeline", "-p", help="Comma-separated names of trainable pipeline components to include (without 'tok2vec' or 'transformer')"),
-    optimize: Optimizations = Opt(Optimizations.efficiency.value, "--optimize", "-o", help="Whether to optimize for efficiency (faster inference, smaller model, lower memory consumption) or higher accuracy (potentially larger and slower model). This will impact the choice of architecture, pretrained weights and related hyperparameters."),
-    gpu: bool = Opt(False, "--gpu", "-G", help="Whether the model can run on GPU. This will impact the choice of architecture, pretrained weights and related hyperparameters."),
-    pretraining: bool = Opt(False, "--pretraining", "-pt", help="Include config for pretraining (with 'spacy pretrain')"),
-    force_overwrite: bool = Opt(False, "--force", "-F", help="Force overwriting the output file"),
+    lang: str = Opt(InitValues.lang, "--lang", "-l", help="Two-letter code of the language to use"),
+    pipeline: str = Opt(",".join(InitValues.pipeline), "--pipeline", "-p", help="Comma-separated names of trainable pipeline components to include (without 'tok2vec' or 'transformer')"),
+    optimize: Optimizations = Opt(InitValues.optimize, "--optimize", "-o", help="Whether to optimize for efficiency (faster inference, smaller model, lower memory consumption) or higher accuracy (potentially larger and slower model). This will impact the choice of architecture, pretrained weights and related hyperparameters."),
+    gpu: bool = Opt(InitValues.gpu, "--gpu", "-G", help="Whether the model can run on GPU. This will impact the choice of architecture, pretrained weights and related hyperparameters."),
+    pretraining: bool = Opt(InitValues.pretraining, "--pretraining", "-pt", help="Include config for pretraining (with 'spacy pretrain')"),
+    force_overwrite: bool = Opt(InitValues.force_overwrite, "--force", "-F", help="Force overwriting the output file"),
     # fmt: on
 ):
     """
@@ -133,11 +148,11 @@ def fill_config(
 
 def init_config(
     *,
-    lang: str,
-    pipeline: List[str],
-    optimize: str,
-    gpu: bool,
-    pretraining: bool = False,
+    lang: str = InitValues.lang,
+    pipeline: List[str] = InitValues.pipeline,
+    optimize: str = InitValues.optimize,
+    gpu: bool = InitValues.gpu,
+    pretraining: bool = InitValues.pretraining,
     silent: bool = True,
 ) -> Config:
     msg = Printer(no_print=silent)

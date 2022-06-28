@@ -1,0 +1,22 @@
+name: Weekly GPU tests
+
+on:
+  schedule:
+    - cron: '0 1 * * MON'
+
+jobs:
+  weekly-gputests:
+    strategy:
+      fail-fast: false
+      matrix:
+        branch: [master, v4]
+    if: github.repository_owner == 'explosion'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger buildkite build
+        uses: buildkite/trigger-pipeline-action@v1.2.0
+        env:
+          PIPELINE: explosion-ai/spacy-slow-gpu-tests
+          BRANCH: ${{ matrix.branch }}
+          MESSAGE: ":github: Weekly GPU + slow tests - triggered from a GitHub Action"
+          BUILDKITE_API_ACCESS_TOKEN: ${{ secrets.BUILDKITE_SECRET }}

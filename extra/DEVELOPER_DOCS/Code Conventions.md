@@ -137,7 +137,7 @@ If any of the TODOs you've added are important and should be fixed soon, you sho
 
 ## Type hints
 
-We use Python type hints across the `.py` files wherever possible. This makes it easy to understand what a function expects and returns, and modern editors will be able to show this information to you when you call an annotated function. Type hints are not currently used in the `.pyx` (Cython) code, except for definitions of registered functions and component factories, where they're used for config validation.
+We use Python type hints across the `.py` files wherever possible. This makes it easy to understand what a function expects and returns, and modern editors will be able to show this information to you when you call an annotated function. Type hints are not currently used in the `.pyx` (Cython) code, except for definitions of registered functions and component factories, where they're used for config validation. Ideally when developing, run `mypy spacy` on the code base to inspect any issues.
 
 If possible, you should always use the more descriptive type hints like `List[str]` or even `List[Any]` instead of only `list`. We also annotate arguments and return types of `Callable` – although, you can simplify this if the type otherwise gets too verbose (e.g. functions that return factories to create callbacks). Remember that `Callable` takes two values: a **list** of the argument type(s) in order, and the return values.
 
@@ -153,6 +153,13 @@ def create_callback(some_arg: bool) -> Callable[[str, int], List[str]]:
         ...
 
     return callback
+```
+
+For typing variables, we prefer the explicit format.
+
+```diff
+- var = value    # type: Type
++ var: Type = value
 ```
 
 For model architectures, Thinc also provides a collection of [custom types](https://thinc.ai/docs/api-types), including more specific types for arrays and model inputs/outputs. Even outside of static type checking, using these types will make the code a lot easier to read and follow, since it's always clear what array types are expected (and what might go wrong if the output is different from the expected type).
@@ -447,6 +454,10 @@ When adding tests, make sure to use descriptive names and only test for one beha
 Regression tests are tests that refer to bugs reported in specific issues. They should live in the relevant module of the test suite, named according to the issue number (e.g., `test_issue1234.py`), and [marked](https://docs.pytest.org/en/6.2.x/example/markers.html#working-with-custom-markers) appropriately (e.g. `@pytest.mark.issue(1234)`). This system allows us to relate tests for specific bugs back to the original reported issue, which is especially useful if we introduce a regression and a previously passing regression tests suddenly fails again. When fixing a bug, it's often useful to create a regression test for it first. 
 
 The test suite also provides [fixtures](https://github.com/explosion/spaCy/blob/master/spacy/tests/conftest.py) for different language tokenizers that can be used as function arguments of the same name and will be passed in automatically. Those should only be used for tests related to those specific languages. We also have [test utility functions](https://github.com/explosion/spaCy/blob/master/spacy/tests/util.py) for common operations, like creating a temporary file.
+
+### Testing Cython Code
+
+If you're developing Cython code (`.pyx` files), those extensions will need to be built before the test runner can test that code - otherwise it's going to run the tests with stale code from the last time the extension was built. You can build the extensions locally with `python setup.py build_ext -i`.
 
 ### Constructing objects and state
 

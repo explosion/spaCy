@@ -1,4 +1,5 @@
 import pytest
+from spacy.attrs import intify_attrs, ENT_IOB
 
 from spacy.attrs import IS_ALPHA, LEMMA, NORM, ORTH, intify_attrs
 from spacy.lang.en.stop_words import STOP_WORDS
@@ -31,6 +32,38 @@ def test_attrs_do_deprecated(text):
         {"F": text, "is_alpha": True}, strings_map={text: 10}, _do_deprecated=True
     )
     assert int_attrs == {ORTH: 10, IS_ALPHA: True}
+
+
+def test_attrs_ent_iob_intify():
+    int_attrs = intify_attrs({"ENT_IOB": ""})
+    assert int_attrs == {ENT_IOB: 0}
+
+    int_attrs = intify_attrs({"ENT_IOB": "I"})
+    assert int_attrs == {ENT_IOB: 1}
+
+    int_attrs = intify_attrs({"ENT_IOB": "O"})
+    assert int_attrs == {ENT_IOB: 2}
+
+    int_attrs = intify_attrs({"ENT_IOB": "B"})
+    assert int_attrs == {ENT_IOB: 3}
+
+    int_attrs = intify_attrs({ENT_IOB: ""})
+    assert int_attrs == {ENT_IOB: 0}
+
+    int_attrs = intify_attrs({ENT_IOB: "I"})
+    assert int_attrs == {ENT_IOB: 1}
+
+    int_attrs = intify_attrs({ENT_IOB: "O"})
+    assert int_attrs == {ENT_IOB: 2}
+
+    int_attrs = intify_attrs({ENT_IOB: "B"})
+    assert int_attrs == {ENT_IOB: 3}
+
+    with pytest.raises(ValueError):
+        int_attrs = intify_attrs({"ENT_IOB": "XX"})
+
+    with pytest.raises(ValueError):
+        int_attrs = intify_attrs({ENT_IOB: "XX"})
 
 
 @pytest.mark.parametrize("text,match", [(",", True), (" ", False), ("a", False)])

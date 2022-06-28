@@ -466,6 +466,18 @@ takes the same arguments as `train` and reads settings off the
 
 </Infobox>
 
+<Infobox title="Notes on span characteristics" emoji="💡">
+
+If your pipeline contains a `spancat` component, then this command will also
+report span characteristics such as the average span length and the span (or
+span boundary) distinctiveness. The distinctiveness measure shows how different
+the tokens are with respect to the rest of the corpus using the KL-divergence of
+the token distributions. To learn more, you can check out Papay et al.'s work on
+[*Dissecting Span Identification Tasks with Performance Prediction* (EMNLP
+2020)](https://aclanthology.org/2020.emnlp-main.396/).
+
+</Infobox>
+
 ```cli
 $ python -m spacy debug data [config_path] [--code] [--ignore-warnings] [--verbose] [--no-format] [overrides]
 ```
@@ -625,6 +637,235 @@ will not be available.
 | `--help`, `-h`             | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                                         |
 | overrides                  | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--paths.train ./train.spacy`. ~~Any (option/flag)~~                         |
 | **PRINTS**                 | Debugging information.                                                                                                                                                                                             |
+
+### debug diff-config {#debug-diff tag="command"}
+
+Show a diff of a config file with respect to spaCy's defaults or another config
+file. If additional settings were used in the creation of the config file, then
+you must supply these as extra parameters to the command when comparing to the
+default settings. The generated diff can also be used when posting to the
+discussion forum to provide more information for the maintainers.
+
+```cli
+$ python -m spacy debug diff-config [config_path] [--compare-to] [--optimize] [--gpu] [--pretraining] [--markdown]
+```
+
+> #### Example
+>
+> ```cli
+> $ python -m spacy debug diff-config ./config.cfg
+> ```
+
+<Accordion title="Example output" spaced>
+
+```
+ℹ Found user-defined language: 'en'
+ℹ Found user-defined pipelines: ['tok2vec', 'tagger', 'parser',
+'ner']
+[paths]
++ train = "./data/train.spacy"
++ dev = "./data/dev.spacy"
+- train = null
+- dev = null
+vectors = null
+init_tok2vec = null
+
+[system]
+gpu_allocator = null
++ seed = 42
+- seed = 0
+
+[nlp]
+lang = "en"
+pipeline = ["tok2vec","tagger","parser","ner"]
+batch_size = 1000
+disabled = []
+before_creation = null
+after_creation = null
+after_pipeline_creation = null
+tokenizer = {"@tokenizers":"spacy.Tokenizer.v1"}
+
+[components]
+
+[components.ner]
+factory = "ner"
+incorrect_spans_key = null
+moves = null
+scorer = {"@scorers":"spacy.ner_scorer.v1"}
+update_with_oracle_cut_size = 100
+
+[components.ner.model]
+@architectures = "spacy.TransitionBasedParser.v2"
+state_type = "ner"
+extra_state_tokens = false
+- hidden_width = 64
++ hidden_width = 36
+maxout_pieces = 2
+use_upper = true
+nO = null
+
+[components.ner.model.tok2vec]
+@architectures = "spacy.Tok2VecListener.v1"
+width = ${components.tok2vec.model.encode.width}
+upstream = "*"
+
+[components.parser]
+factory = "parser"
+learn_tokens = false
+min_action_freq = 30
+moves = null
+scorer = {"@scorers":"spacy.parser_scorer.v1"}
+update_with_oracle_cut_size = 100
+
+[components.parser.model]
+@architectures = "spacy.TransitionBasedParser.v2"
+state_type = "parser"
+extra_state_tokens = false
+hidden_width = 128
+maxout_pieces = 3
+use_upper = true
+nO = null
+
+[components.parser.model.tok2vec]
+@architectures = "spacy.Tok2VecListener.v1"
+width = ${components.tok2vec.model.encode.width}
+upstream = "*"
+
+[components.tagger]
+factory = "tagger"
+neg_prefix = "!"
+overwrite = false
+scorer = {"@scorers":"spacy.tagger_scorer.v1"}
+
+[components.tagger.model]
+@architectures = "spacy.Tagger.v1"
+nO = null
+
+[components.tagger.model.tok2vec]
+@architectures = "spacy.Tok2VecListener.v1"
+width = ${components.tok2vec.model.encode.width}
+upstream = "*"
+
+[components.tok2vec]
+factory = "tok2vec"
+
+[components.tok2vec.model]
+@architectures = "spacy.Tok2Vec.v2"
+
+[components.tok2vec.model.embed]
+@architectures = "spacy.MultiHashEmbed.v2"
+width = ${components.tok2vec.model.encode.width}
+attrs = ["NORM","PREFIX","SUFFIX","SHAPE"]
+rows = [5000,2500,2500,2500]
+include_static_vectors = false
+
+[components.tok2vec.model.encode]
+@architectures = "spacy.MaxoutWindowEncoder.v2"
+width = 96
+depth = 4
+window_size = 1
+maxout_pieces = 3
+
+[corpora]
+
+[corpora.dev]
+@readers = "spacy.Corpus.v1"
+path = ${paths.dev}
+max_length = 0
+gold_preproc = false
+limit = 0
+augmenter = null
+
+[corpora.train]
+@readers = "spacy.Corpus.v1"
+path = ${paths.train}
+max_length = 0
+gold_preproc = false
+limit = 0
+augmenter = null
+
+[training]
+dev_corpus = "corpora.dev"
+train_corpus = "corpora.train"
+seed = ${system.seed}
+gpu_allocator = ${system.gpu_allocator}
+dropout = 0.1
+accumulate_gradient = 1
+patience = 1600
+max_epochs = 0
+max_steps = 20000
+eval_frequency = 200
+frozen_components = []
+annotating_components = []
+before_to_disk = null
+
+[training.batcher]
+@batchers = "spacy.batch_by_words.v1"
+discard_oversize = false
+tolerance = 0.2
+get_length = null
+
+[training.batcher.size]
+@schedules = "compounding.v1"
+start = 100
+stop = 1000
+compound = 1.001
+t = 0.0
+
+[training.logger]
+@loggers = "spacy.ConsoleLogger.v1"
+progress_bar = false
+
+[training.optimizer]
+@optimizers = "Adam.v1"
+beta1 = 0.9
+beta2 = 0.999
+L2_is_weight_decay = true
+L2 = 0.01
+grad_clip = 1.0
+use_averages = false
+eps = 0.00000001
+learn_rate = 0.001
+
+[training.score_weights]
+tag_acc = 0.33
+dep_uas = 0.17
+dep_las = 0.17
+dep_las_per_type = null
+sents_p = null
+sents_r = null
+sents_f = 0.0
+ents_f = 0.33
+ents_p = 0.0
+ents_r = 0.0
+ents_per_type = null
+
+[pretraining]
+
+[initialize]
+vectors = ${paths.vectors}
+init_tok2vec = ${paths.init_tok2vec}
+vocab_data = null
+lookups = null
+before_init = null
+after_init = null
+
+[initialize.components]
+
+[initialize.tokenizer]
+```
+
+</Accordion>
+
+| Name                 | Description                                                                                                                                                                                                                                                                                               |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `config_path`        | Path to [training config](/api/data-formats#config) file containing all settings and hyperparameters. ~~Union[Path, str] \(positional)~~                                                                                                                                                                  |
+| `compare_to`         | Path to another config file to diff against, or `None` to compare against default settings. ~~Optional[Union[Path, str] \(option)~~                                                                                                                                                                       |
+| `optimize`, `-o`     | `"efficiency"` or `"accuracy"`. Whether the config was optimized for efficiency (faster inference, smaller model, lower memory consumption) or higher accuracy (potentially larger and slower model). Only relevant when comparing against a default config. Defaults to `"efficiency"`. ~~str (option)~~ |
+| `gpu`, `-G`          | Whether the config was made to run on a GPU. Only relevant when comparing against a default config. ~~bool (flag)~~                                                                                                                                                                                       |
+| `pretraining`, `-pt` | Include config for pretraining (with [`spacy pretrain`](/api/cli#pretrain)). Only relevant when comparing against a default config. Defaults to `False`. ~~bool (flag)~~                                                                                                                                  |
+| `markdown`, `-md`    | Generate Markdown for Github issues. Defaults to `False`. ~~bool (flag)~~                                                                                                                                                                                                                                 |
+| **PRINTS**           | Diff between the two config files.                                                                                                                                                                                                                                                                        |
 
 ### debug profile {#debug-profile tag="command"}
 
@@ -1094,7 +1335,7 @@ $ python -m spacy project run [subcommand] [project_dir] [--force] [--dry]
 | `subcommand`    | Name of the command or workflow to run. ~~str (positional)~~                            |
 | `project_dir`   | Path to project directory. Defaults to current working directory. ~~Path (positional)~~ |
 | `--force`, `-F` | Force re-running steps, even if nothing changed. ~~bool (flag)~~                        |
-| `--dry`, `-D`   |  Perform a dry run and don't execute scripts. ~~bool (flag)~~                           |
+| `--dry`, `-D`   | Perform a dry run and don't execute scripts. ~~bool (flag)~~                            |
 | `--help`, `-h`  | Show help message and available arguments. ~~bool (flag)~~                              |
 | **EXECUTES**    | The command defined in the `project.yml`.                                               |
 
@@ -1212,12 +1453,12 @@ For more examples, see the templates in our
 
 </Accordion>
 
-| Name                 | Description                                                                                                                                                                                             |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `project_dir`        | Path to project directory. Defaults to current working directory. ~~Path (positional)~~                                                                                                                 |
-| `--output`, `-o`     | Path to output file or `-` for stdout (default). If a file is specified and it already exists and contains auto-generated docs, only the auto-generated docs section is replaced. ~~Path (positional)~~ |
-|  `--no-emoji`, `-NE` | Don't use emoji in the titles. ~~bool (flag)~~                                                                                                                                                          |
-| **CREATES**          | The Markdown-formatted project documentation.                                                                                                                                                           |
+| Name                | Description                                                                                                                                                                                             |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `project_dir`       | Path to project directory. Defaults to current working directory. ~~Path (positional)~~                                                                                                                 |
+| `--output`, `-o`    | Path to output file or `-` for stdout (default). If a file is specified and it already exists and contains auto-generated docs, only the auto-generated docs section is replaced. ~~Path (positional)~~ |
+| `--no-emoji`, `-NE` | Don't use emoji in the titles. ~~bool (flag)~~                                                                                                                                                          |
+| **CREATES**         | The Markdown-formatted project documentation.                                                                                                                                                           |
 
 ### project dvc {#project-dvc tag="command"}
 
@@ -1256,7 +1497,7 @@ $ python -m spacy project dvc [project_dir] [workflow] [--force] [--verbose]
 | `project_dir`     | Path to project directory. Defaults to current working directory. ~~Path (positional)~~                       |
 | `workflow`        | Name of workflow defined in `project.yml`. Defaults to first workflow if not set. ~~Optional[str] \(option)~~ |
 | `--force`, `-F`   | Force-updating config file. ~~bool (flag)~~                                                                   |
-| `--verbose`, `-V` |  Print more output generated by DVC. ~~bool (flag)~~                                                          |
+| `--verbose`, `-V` | Print more output generated by DVC. ~~bool (flag)~~                                                           |
 | `--help`, `-h`    | Show help message and available arguments. ~~bool (flag)~~                                                    |
 | **CREATES**       | A `dvc.yaml` file in the project directory, based on the steps defined in the given workflow.                 |
 
@@ -1347,5 +1588,5 @@ $ python -m spacy huggingface-hub push [whl_path] [--org] [--msg] [--local-repo]
 | `--org`, `-o`        | Optional name of organization to which the pipeline should be uploaded. ~~str (option)~~                                                        |
 | `--msg`, `-m`        | Commit message to use for update. Defaults to `"Update spaCy pipeline"`. ~~str (option)~~                                                       |
 | `--local-repo`, `-l` | Local path to the model repository (will be created if it doesn't exist). Defaults to `hub` in the current working directory. ~~Path (option)~~ |
-| `--verbose`, `-V`    | Output additional info for debugging, e.g. the full generated hub metadata. ~~bool (flag)~~                                                     |
+| `--verbose`, `-V`    | Output additional info for debugging, e.g. the full generated hub metadata. ~~bool (flag)~~                                                     |
 | **UPLOADS**          | The pipeline to the hub.                                                                                                                        |

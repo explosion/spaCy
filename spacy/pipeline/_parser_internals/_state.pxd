@@ -1,7 +1,9 @@
+from cython.operator cimport dereference as deref, preincrement as incr
 from libc.string cimport memcpy, memset
 from libc.stdlib cimport calloc, free
 from libc.stdint cimport uint32_t, uint64_t
 cimport libcpp
+from libcpp.unordered_map cimport unordered_map
 from libcpp.vector cimport vector
 from libcpp.set cimport set
 from cpython.exc cimport PyErr_CheckSignals, PyErr_SetFromErrno
@@ -29,8 +31,8 @@ cdef cppclass StateC:
     vector[int] _stack
     vector[int] _rebuffer
     vector[SpanC] _ents
-    vector[ArcC] _left_arcs
-    vector[ArcC] _right_arcs
+    unordered_map[int, vector[ArcC]] _left_arcs
+    unordered_map[int, vector[ArcC]] _right_arcs
     vector[libcpp.bool] _unshiftable
     set[int] _sent_starts
     TokenC _empty_token
@@ -159,15 +161,22 @@ cdef cppclass StateC:
         else:
             return &this._sent[i]
 
-    void get_arcs(vector[ArcC]* arcs) nogil const:
-        for i in range(this._left_arcs.size()):
-            arc = this._left_arcs.at(i)
-            if arc.head != -1 and arc.child != -1:
-                arcs.push_back(arc)
-        for i in range(this._right_arcs.size()):
-            arc = this._right_arcs.at(i)
-            if arc.head != -1 and arc.child != -1:
-                arcs.push_back(arc)
+    void map_get_arcs(const unordered_map[int, vector[ArcC]] &heads_arcs, vector[ArcC]* out) nogil const:
+        cdef const vector[ArcC]* arcs
+        head_arcs_it = heads_arcs.const_begin()
+        while head_arcs_it != heads_arcs.const_end():
+            arcs = &deref(head_arcs_it).second
+            arcs_it = arcs.const_begin()
+            while arcs_it != arcs.const_end():
+                arc = deref(arcs_it)
+                if arc.head != -1 and arc.child != -1:
+                    out.push_back(arc)
+                incr(arcs_it)
+            incr(head_arcs_it)
+
+    void get_arcs(vector[ArcC]* out) nogil const:
+        this.map_get_arcs(this._left_arcs, out)
+        this.map_get_arcs(this._right_arcs, out)
 
     int H(int child) nogil const:
         if child >= this.length or child < 0:
@@ -181,33 +190,35 @@ cdef cppclass StateC:
         else:
             return this._ents.back().start
 
+    int nth_child(const unordered_map[int, vector[ArcC]]& heads_arcs, int head, int idx) nogil const:
+        if idx < 1:
+            return -1
+
+        head_arcs_it = heads_arcs.const_find(head)
+        if head_arcs_it == heads_arcs.const_end():
+            return -1
+
+        cdef const vector[ArcC]* arcs = &deref(head_arcs_it).second
+
+        # Work backwards through arcs to find the arc at the
+        # requested index more quickly.
+        cdef size_t child_index = 0
+        arcs_it = arcs.const_rbegin()
+        while arcs_it != arcs.const_rend() and child_index != idx:
+            arc = deref(arcs_it)
+            if arc.child != -1:
+                child_index += 1
+                if child_index == idx:
+                    return arc.child
+            incr(arcs_it)
+
+        return -1
+
     int L(int head, int idx) nogil const:
-        if idx < 1 or this._left_arcs.size() == 0:
-            return -1
-        cdef vector[int] lefts
-        for i in range(this._left_arcs.size()):
-            arc = this._left_arcs.at(i)
-            if arc.head == head and arc.child != -1 and arc.child < head:
-                lefts.push_back(arc.child)
-        idx = (<int>lefts.size()) - idx
-        if idx < 0:
-            return -1
-        else:
-            return lefts.at(idx)
+        return this.nth_child(this._left_arcs, head, idx)
 
     int R(int head, int idx) nogil const:
-        if idx < 1 or this._right_arcs.size() == 0:
-            return -1
-        cdef vector[int] rights
-        for i in range(this._right_arcs.size()):
-            arc = this._right_arcs.at(i)
-            if arc.head == head and arc.child != -1 and arc.child > head:
-                rights.push_back(arc.child)
-        idx = (<int>rights.size()) - idx
-        if idx < 0:
-            return -1
-        else:
-            return rights.at(idx)
+        return this.nth_child(this._right_arcs, head, idx)
 
     bint empty() nogil const:
         return this._stack.size() == 0
@@ -248,22 +259,29 @@ cdef cppclass StateC:
 
     int r_edge(int word) nogil const:
         return word
- 
-    int n_L(int head) nogil const:
+
+    int n_arcs(const unordered_map[int, vector[ArcC]] &heads_arcs, int head) nogil const:
         cdef int n = 0
-        for i in range(this._left_arcs.size()):
-            arc = this._left_arcs.at(i) 
-            if arc.head == head and arc.child != -1 and arc.child < arc.head:
+        head_arcs_it = heads_arcs.const_find(head)
+        if head_arcs_it == heads_arcs.const_end():
+            return n
+
+        cdef const vector[ArcC]* arcs = &deref(head_arcs_it).second
+        arcs_it = arcs.const_begin()
+        while arcs_it != arcs.end():
+            arc = deref(arcs_it)
+            if arc.child != -1:
                 n += 1
+            incr(arcs_it)
+
         return n
 
+
+    int n_L(int head) nogil const:
+        return n_arcs(this._left_arcs, head)
+
     int n_R(int head) nogil const:
-        cdef int n = 0
-        for i in range(this._right_arcs.size()):
-            arc = this._right_arcs.at(i) 
-            if arc.head == head and arc.child != -1 and arc.child > arc.head:
-                n += 1
-        return n
+        return n_arcs(this._right_arcs, head)
 
     bint stack_is_connected() nogil const:
         return False
@@ -323,19 +341,20 @@ cdef cppclass StateC:
         arc.child = child
         arc.label = label
         if head > child:
-            this._left_arcs.push_back(arc)
+            this._left_arcs[arc.head].push_back(arc)
         else:
-            this._right_arcs.push_back(arc)
+            this._right_arcs[arc.head].push_back(arc)
         this._heads[child] = head
 
-    void del_arc(int h_i, int c_i) nogil:
-        cdef vector[ArcC]* arcs
-        if h_i > c_i:
-            arcs = &this._left_arcs
-        else:
-            arcs = &this._right_arcs
+    void map_del_arc(unordered_map[int, vector[ArcC]]* heads_arcs, int h_i, int c_i) nogil:
+        arcs_it = heads_arcs.find(h_i)
+        if arcs_it == heads_arcs.end():
+            return
+
+        arcs = &deref(arcs_it).second
         if arcs.size() == 0:
             return
+
         arc = arcs.back()
         if arc.head == h_i and arc.child == c_i:
             arcs.pop_back()
@@ -347,6 +366,12 @@ cdef cppclass StateC:
                     arc.child = -1
                     arc.label = 0
                     break
+
+    void del_arc(int h_i, int c_i) nogil:
+        if h_i > c_i:
+            this.map_del_arc(&this._left_arcs, h_i, c_i)
+        else:
+            this.map_del_arc(&this._right_arcs, h_i, c_i)
 
     SpanC get_ent() nogil const:
         cdef SpanC ent

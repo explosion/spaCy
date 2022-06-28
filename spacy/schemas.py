@@ -1,5 +1,6 @@
 from typing import Dict, List, Union, Optional, Any, Callable, Type, Tuple
 from typing import Iterable, TypeVar, TYPE_CHECKING
+from .compat import Literal
 from enum import Enum
 from pydantic import BaseModel, Field, ValidationError, validator, create_model
 from pydantic import StrictStr, StrictInt, StrictFloat, StrictBool
@@ -103,7 +104,7 @@ def get_arg_model(
         sig_args[param.name] = (annotation, default)
     is_strict = strict and not has_variable
     sig_args["__config__"] = ArgSchemaConfig if is_strict else ArgSchemaConfigExtra  # type: ignore[assignment]
-    return create_model(name, **sig_args)  # type: ignore[arg-type, return-value]
+    return create_model(name, **sig_args)  # type: ignore[call-overload, arg-type, return-value]
 
 
 def validate_init_settings(
@@ -209,6 +210,7 @@ NumberValue = Union[TokenPatternNumber, StrictInt, StrictFloat]
 UnderscoreValue = Union[
     TokenPatternString, TokenPatternNumber, str, int, float, list, bool
 ]
+IobValue = Literal["", "I", "O", "B", 0, 1, 2, 3]
 
 
 class TokenPattern(BaseModel):
@@ -222,6 +224,7 @@ class TokenPattern(BaseModel):
     lemma: Optional[StringValue] = None
     shape: Optional[StringValue] = None
     ent_type: Optional[StringValue] = None
+    ent_iob: Optional[IobValue] = None
     ent_id: Optional[StringValue] = None
     ent_kb_id: Optional[StringValue] = None
     norm: Optional[StringValue] = None
@@ -482,3 +485,29 @@ class RecommendationSchema(BaseModel):
     word_vectors: Optional[str] = None
     transformer: Optional[RecommendationTrf] = None
     has_letters: bool = True
+
+
+class DocJSONSchema(BaseModel):
+    """
+    JSON/dict format for JSON representation of Doc objects.
+    """
+
+    cats: Optional[Dict[StrictStr, StrictFloat]] = Field(
+        None, title="Categories with corresponding probabilities"
+    )
+    ents: Optional[List[Dict[StrictStr, Union[StrictInt, StrictStr]]]] = Field(
+        None, title="Information on entities"
+    )
+    sents: Optional[List[Dict[StrictStr, StrictInt]]] = Field(
+        None, title="Indices of sentences' start and end indices"
+    )
+    text: StrictStr = Field(..., title="Document text")
+    spans: Dict[StrictStr, List[Dict[StrictStr, Union[StrictStr, StrictInt]]]] = Field(
+        None, title="Span information - end/start indices, label, KB ID"
+    )
+    tokens: List[Dict[StrictStr, Union[StrictStr, StrictInt]]] = Field(
+        ..., title="Token information - ID, start, annotations"
+    )
+    _: Optional[Dict[StrictStr, Any]] = Field(
+        None, title="Any custom data stored in the document's _ attribute"
+    )

@@ -100,6 +100,11 @@ def de_vocab():
 
 
 @pytest.fixture(scope="session")
+def dsb_tokenizer():
+    return get_lang_class("dsb")().tokenizer
+
+
+@pytest.fixture(scope="session")
 def el_tokenizer():
     return get_lang_class("el")().tokenizer
 
@@ -222,9 +227,27 @@ def ja_tokenizer():
 
 
 @pytest.fixture(scope="session")
+def hsb_tokenizer():
+    return get_lang_class("hsb")().tokenizer
+
+
+@pytest.fixture(scope="session")
 def ko_tokenizer():
     pytest.importorskip("natto")
     return get_lang_class("ko")().tokenizer
+
+
+@pytest.fixture(scope="session")
+def ko_tokenizer_tokenizer():
+    config = {
+        "nlp": {
+            "tokenizer": {
+                "@tokenizers": "spacy.Tokenizer.v1",
+            }
+        }
+    }
+    nlp = get_lang_class("ko").from_config(config)
+    return nlp.tokenizer
 
 
 @pytest.fixture(scope="session")
@@ -332,6 +355,11 @@ def sq_tokenizer():
 @pytest.fixture(scope="session")
 def sv_tokenizer():
     return get_lang_class("sv")().tokenizer
+
+
+@pytest.fixture(scope="session")
+def ta_tokenizer():
+    return get_lang_class("ta")().tokenizer
 
 
 @pytest.fixture(scope="session")

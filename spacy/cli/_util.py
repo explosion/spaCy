@@ -12,7 +12,7 @@ from click.parser import split_arg_string
 from typer.main import get_command
 from contextlib import contextmanager
 from thinc.api import Config, ConfigValidationError, require_gpu
-from thinc.util import has_cupy, gpu_is_available
+from thinc.util import gpu_is_available
 from configparser import InterpolationError
 import os
 
@@ -360,7 +360,7 @@ def download_file(src: Union[str, "Pathy"], dest: Path, *, force: bool = False) 
     src = str(src)
     with smart_open.open(src, mode="rb", ignore_ext=True) as input_file:
         with dest.open(mode="wb") as output_file:
-            output_file.write(input_file.read())
+            shutil.copyfileobj(input_file, output_file)
 
 
 def ensure_pathy(path):
@@ -554,5 +554,5 @@ def setup_gpu(use_gpu: int, silent=None) -> None:
         require_gpu(use_gpu)
     else:
         local_msg.info("Using CPU")
-        if has_cupy and gpu_is_available():
+        if gpu_is_available():
             local_msg.info("To switch to GPU 0, use the option: --gpu-id 0")

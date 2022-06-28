@@ -99,9 +99,9 @@ be a token pattern (list) or a phrase pattern (string). For example:
 ## EntityRuler.initialize {#initialize tag="method" new="3"}
 
 Initialize the component with data and used before training to load in rules
-from a file. This method is typically called by
-[`Language.initialize`](/api/language#initialize) and lets you customize
-arguments it receives via the
+from a [pattern file](/usage/rule-based-matching/#entityruler-files). This method
+is typically called by [`Language.initialize`](/api/language#initialize) and
+lets you customize arguments it receives via the
 [`[initialize.components]`](/api/data-formats#config-initialize) block in the
 config.
 
@@ -290,7 +290,7 @@ Load the pipe from a bytestring. Modifies the object in place and returns it.
 >
 > ```python
 > ruler_bytes = ruler.to_bytes()
-> ruler = nlp.add_pipe("enity_ruler")
+> ruler = nlp.add_pipe("entity_ruler")
 > ruler.from_bytes(ruler_bytes)
 > ```
 

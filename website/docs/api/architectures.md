@@ -104,7 +104,7 @@ consisting of a CNN and a layer-normalized maxout activation function.
 > factory = "tagger"
 >
 > [components.tagger.model]
-> @architectures = "spacy.Tagger.v1"
+> @architectures = "spacy.Tagger.v2"
 >
 > [components.tagger.model.tok2vec]
 > @architectures = "spacy.Tok2VecListener.v1"
@@ -158,8 +158,8 @@ be configured with the `attrs` argument. The suggested attributes are `NORM`,
 `PREFIX`, `SUFFIX` and `SHAPE`. This lets the model take into account some
 subword information, without construction a fully character-based
 representation. If pretrained vectors are available, they can be included in the
-representation as well, with the vectors table kept static (i.e. it's
-not updated).
+representation as well, with the vectors table kept static (i.e. it's not
+updated).
 
 | Name                     | Description                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -587,7 +587,7 @@ consists of either two or three subnetworks:
   run once for each batch.
 - **lower**: Construct a feature-specific vector for each `(token, feature)`
   pair. This is also run once for each batch. Constructing the state
-  representation is then simply a matter of summing the component features and
+  representation is then a matter of summing the component features and
   applying the non-linearity.
 - **upper** (optional): A feed-forward network that predicts scores from the
   state representation. If not present, the output from the lower model is used
@@ -613,28 +613,39 @@ same signature, but the `use_upper` argument was `True` by default.
 
 ## Tagging architectures {#tagger source="spacy/ml/models/tagger.py"}
 
-### spacy.Tagger.v1 {#Tagger}
+### spacy.Tagger.v2 {#Tagger}
 
 > #### Example Config
 >
 > ```ini
 > [model]
-> @architectures = "spacy.Tagger.v1"
+> @architectures = "spacy.Tagger.v2"
 > nO = null
+> normalize = false
 >
 > [model.tok2vec]
 > # ...
 > ```
 
 Build a tagger model, using a provided token-to-vector component. The tagger
-model simply adds a linear layer with softmax activation to predict scores given
+model adds a linear layer with softmax activation to predict scores given
 the token vectors.
 
 | Name        | Description                                                                                |
 | ----------- | ------------------------------------------------------------------------------------------ |
 | `tok2vec`   | Subnetwork to map tokens into vector representations. ~~Model[List[Doc], List[Floats2d]]~~ |
 | `nO`        | The number of tags to output. Inferred from the data if `None`. ~~Optional[int]~~          |
+| `normalize` | Normalize probabilities during inference. Defaults to `False`. ~~bool~~                    |
 | **CREATES** | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                     |
+
+<Accordion title="Previous versions of spacy.Tagger" spaced>
+
+- The `normalize` argument was added in `spacy.Tagger.v2`. `spacy.Tagger.v1`
+  always normalizes probabilities during inference.
+
+The other arguments are shared between all versions.
+
+</Accordion>
 
 ## Text classification architectures {#textcat source="spacy/ml/models/textcat.py"}
 
@@ -858,13 +869,13 @@ into the "real world". This requires 3 main components:
 - A machine learning [`Model`](https://thinc.ai/docs/api-model) that picks the
   most plausible ID from the set of candidates.
 
-### spacy.EntityLinker.v1 {#EntityLinker}
+### spacy.EntityLinker.v2 {#EntityLinker}
 
 > #### Example Config
 >
 > ```ini
 > [model]
-> @architectures = "spacy.EntityLinker.v1"
+> @architectures = "spacy.EntityLinker.v2"
 > nO = null
 >
 > [model.tok2vec]
@@ -909,5 +920,5 @@ A function that reads an existing `KnowledgeBase` from file.
 A function that takes as input a [`KnowledgeBase`](/api/kb) and a
 [`Span`](/api/span) object denoting a named entity, and returns a list of
 plausible [`Candidate`](/api/kb/#candidate) objects. The default
-`CandidateGenerator` simply uses the text of a mention to find its potential
+`CandidateGenerator` uses the text of a mention to find its potential
 aliases in the `KnowledgeBase`. Note that this function is case-dependent.

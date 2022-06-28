@@ -20,6 +20,7 @@ from .doc cimport set_children_from_heads
 
 from .. import parts_of_speech
 from ..errors import Errors, Warnings
+from ..attrs import IOB_STRINGS
 from .underscore import Underscore, get_ext_args
 
 
@@ -209,8 +210,10 @@ cdef class Token:
             return 0.0
         vector = self.vector
         xp = get_array_module(vector)
-        return (xp.dot(vector, other.vector) / (self.vector_norm * other.vector_norm))
-
+        result = xp.dot(vector, other.vector) / (self.vector_norm * other.vector_norm)
+        # ensure we get a scalar back (numpy does this automatically but cupy doesn't)
+        return result.item()
+    
     def has_morph(self):
         """Check whether the token has annotated morph information.
         Return False when the morph annotation is unset/missing.
@@ -484,8 +487,6 @@ cdef class Token:
 
         RETURNS (bool / None): Whether the token starts a sentence.
             None if unknown.
-
-        DOCS: https://spacy.io/api/token#is_sent_start
         """
         def __get__(self):
             if self.c.sent_start == 0:
@@ -743,7 +744,7 @@ cdef class Token:
 
     @classmethod
     def iob_strings(cls):
-        return ("", "I", "O", "B")
+        return IOB_STRINGS
 
     @property
     def ent_iob_(self):

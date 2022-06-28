@@ -103,11 +103,22 @@ and residual connections.
 | `depth`       | The number of convolutional layers. Recommended value is `4`. ~~int~~                                                                                                                                          |
 | **CREATES**   | The model using the architecture. ~~Model[Floats2d, Floats2d]~~                                                                                                                                                |
 
-### spacy.TransitionBasedParser.v1 {#TransitionBasedParser_v1}
+### spacy.HashEmbedCNN.v1 {#HashEmbedCNN_v1}
 
-Identical to
-[`spacy.TransitionBasedParser.v2`](/api/architectures#TransitionBasedParser)
-except the `use_upper` was set to `True` by default.
+Identical to [`spacy.HashEmbedCNN.v2`](/api/architectures#HashEmbedCNN) except
+using [`spacy.StaticVectors.v1`](#StaticVectors_v1) if vectors are included.
+
+### spacy.MultiHashEmbed.v1 {#MultiHashEmbed_v1}
+
+Identical to [`spacy.MultiHashEmbed.v2`](/api/architectures#MultiHashEmbed)
+except with [`spacy.StaticVectors.v1`](#StaticVectors_v1) if vectors are
+included.
+
+### spacy.CharacterEmbed.v1 {#CharacterEmbed_v1}
+
+Identical to [`spacy.CharacterEmbed.v2`](/api/architectures#CharacterEmbed)
+except using [`spacy.StaticVectors.v1`](#StaticVectors_v1) if vectors are
+included.
 
 ### spacy.TextCatEnsemble.v1 {#TextCatEnsemble_v1}
 
@@ -146,41 +157,6 @@ network has an internal CNN Tok2Vec layer and uses attention.
 | `dropout`            | The dropout rate. ~~float~~                                                                                                                                                                    |
 | `nO`                 | Output dimension, determined by the number of different labels. If not set, the [`TextCategorizer`](/api/textcategorizer) component will set it when `initialize` is called. ~~Optional[int]~~ |
 | **CREATES**          | The model using the architecture. ~~Model[List[Doc], Floats2d]~~                                                                                                                               |
-
-### spacy.HashEmbedCNN.v1 {#HashEmbedCNN_v1}
-
-Identical to [`spacy.HashEmbedCNN.v2`](/api/architectures#HashEmbedCNN) except
-using [`spacy.StaticVectors.v1`](#StaticVectors_v1) if vectors are included.
-
-### spacy.MultiHashEmbed.v1 {#MultiHashEmbed_v1}
-
-Identical to [`spacy.MultiHashEmbed.v2`](/api/architectures#MultiHashEmbed)
-except with [`spacy.StaticVectors.v1`](#StaticVectors_v1) if vectors are
-included.
-
-### spacy.CharacterEmbed.v1 {#CharacterEmbed_v1}
-
-Identical to [`spacy.CharacterEmbed.v2`](/api/architectures#CharacterEmbed)
-except using [`spacy.StaticVectors.v1`](#StaticVectors_v1) if vectors are
-included.
-
-## Layers {#layers}
-
-These functions are available from `@spacy.registry.layers`.
-
-### spacy.StaticVectors.v1 {#StaticVectors_v1}
-
-Identical to [`spacy.StaticVectors.v2`](/api/architectures#StaticVectors) except
-for the handling of tokens without vectors.
-
-<Infobox title="Bugs for tokens without vectors" variant="warning">
-
-`spacy.StaticVectors.v1` maps tokens without vectors to the final row in the
-vectors table, which causes the model predictions to change if new vectors are
-added to an existing vectors table. See more details in
-[issue #7662](https://github.com/explosion/spaCy/issues/7662#issuecomment-813925655).
-
-</Infobox>
 
 ### spacy.TextCatCNN.v1 {#TextCatCNN_v1}
 
@@ -246,25 +222,35 @@ the others, but may not be as accurate, especially if texts are short.
 | `nO`                | Output dimension, determined by the number of different labels. If not set, the [`TextCategorizer`](/api/textcategorizer) component will set it when `initialize` is called. ~~Optional[int]~~ |
 | **CREATES**         | The model using the architecture. ~~Model[List[Doc], Floats2d]~~                                                                                                                               |
 
+### spacy.TransitionBasedParser.v1 {#TransitionBasedParser_v1}
+
+Identical to
+[`spacy.TransitionBasedParser.v2`](/api/architectures#TransitionBasedParser)
+except the `use_upper` was set to `True` by default.
+
+## Layers {#layers}
+
+These functions are available from `@spacy.registry.layers`.
+
+### spacy.StaticVectors.v1 {#StaticVectors_v1}
+
+Identical to [`spacy.StaticVectors.v2`](/api/architectures#StaticVectors) except
+for the handling of tokens without vectors.
+
+<Infobox title="Bugs for tokens without vectors" variant="warning">
+
+`spacy.StaticVectors.v1` maps tokens without vectors to the final row in the
+vectors table, which causes the model predictions to change if new vectors are
+added to an existing vectors table. See more details in
+[issue #7662](https://github.com/explosion/spaCy/issues/7662#issuecomment-813925655).
+
+</Infobox>
+
 ## Loggers {#loggers}
 
-These functions are available from `@spacy.registry.loggers`.
+Logging utilities for spaCy are implemented in the
+[`spacy-loggers`](https://github.com/explosion/spacy-loggers) repo, and the
+functions are typically available from `@spacy.registry.loggers`.
 
-### spacy.WandbLogger.v1 {#WandbLogger_v1}
-
-The first version of the [`WandbLogger`](/api/top-level#WandbLogger) did not yet
-support the `log_dataset_dir` and `model_log_interval` arguments.
-
-> #### Example config
->
-> ```ini
-> [training.logger]
-> @loggers = "spacy.WandbLogger.v1"
-> project_name = "monitor_spacy_training"
-> remove_config_values = ["paths.train", "paths.dev", "corpora.train.path", "corpora.dev.path"]
-> ```
->
-> | Name                   | Description                                                                                                                           |
-> | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-> | `project_name`         | The name of the project in the Weights & Biases interface. The project will be created automatically if it doesn't exist yet. ~~str~~ |
-> | `remove_config_values` | A list of values to include from the config before it is uploaded to W&B (default: empty). ~~List[str]~~                              |
+More documentation can be found in that repo's
+[readme](https://github.com/explosion/spacy-loggers/blob/main/README.md) file.
