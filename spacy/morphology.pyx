@@ -2,8 +2,7 @@
 import numpy
 import warnings
 from cython.operator cimport dereference as deref
-from libcpp.memory cimport unique_ptr
-from libcpp.utility cimport move
+from libcpp.memory cimport shared_ptr
 
 from .errors import Warnings
 from . import symbols
@@ -31,12 +30,12 @@ cdef class Morphology:
         tags -= set([""])
         return (unpickle_morphology, (self.strings, sorted(tags)), None, None)
 
-    cdef const MorphAnalysisC* _lookup_tag(self, hash_t tag_hash):
+    cdef shared_ptr[MorphAnalysisC] _lookup_tag(self, hash_t tag_hash):
         match = self.tags.find(tag_hash)
         if match != self.tags.const_end():
-            return deref(match).second.get()
+            return deref(match).second
         else:
-            return NULL
+            return shared_ptr[MorphAnalysisC]()
 
     def _normalize_attr(self, attr_key, attr_value):
         if isinstance(attr_key, (int, str)) and isinstance(attr_value, (int, str)):
@@ -94,15 +93,15 @@ cdef class Morphology:
         Returns the hash of the new analysis.
         """
         cdef hash_t hash = 0
-        cdef const MorphAnalysisC* tag = NULL
+        cdef shared_ptr[MorphAnalysisC] tag
         if isinstance(features, str):
             if features == "":
                 features = self.EMPTY_MORPH
 
             hash = self.strings[features]
             tag = self._lookup_tag(hash)
-            if tag is not NULL:
-                return tag.key
+            if tag:
+                return deref(tag).key
 
             features = self._str_to_normalized_feat_dict(features)
         elif isinstance(features, dict):
@@ -116,8 +115,8 @@ cdef class Morphology:
         norm_feats_string = self._normalized_feat_dict_to_str(features)
         hash = self.strings.add(norm_feats_string)
         tag = self._lookup_tag(hash)
-        if tag is not NULL:
-            return tag.key
+        if tag:
+            return deref(tag).key
 
         self._intern_morph_tag(hash, features)
         return hash
@@ -141,7 +140,7 @@ cdef class Morphology:
                 field_feature_pairs.append((field_key, value_key))
 
         num_features = len(field_feature_pairs)
-        cdef unique_ptr[MorphAnalysisC] tag = unique_ptr[MorphAnalysisC](new MorphAnalysisC())
+        cdef shared_ptr[MorphAnalysisC] tag = shared_ptr[MorphAnalysisC](new MorphAnalysisC())
         deref(tag).key = tag_key
         deref(tag).features.resize(num_features)
 
@@ -149,16 +148,16 @@ cdef class Morphology:
             deref(tag).features[i].field = field_feature_pairs[i][0]
             deref(tag).features[i].value = field_feature_pairs[i][1]
 
-        self.tags[tag_key] = move(tag)
+        self.tags[tag_key] = tag
 
     cdef str get_morph_str(self, hash_t morph_key):
-        cdef const MorphAnalysisC* tag = self._lookup_tag(morph_key)
-        if tag is NULL:
+        cdef shared_ptr[MorphAnalysisC] tag = self._lookup_tag(morph_key)
+        if not tag:
             return ""
         else:
-            return self.strings[tag.key]
+            return self.strings[deref(tag).key]
 
-    cdef const MorphAnalysisC* get_morph_c(self, hash_t morph_key):
+    cdef shared_ptr[MorphAnalysisC] get_morph_c(self, hash_t morph_key):
         return self._lookup_tag(morph_key)
 
     cdef str _normalize_features(self, features):
@@ -184,7 +183,7 @@ cdef class Morphology:
         return self.get_morph_str(morph_key)
 
     def normalize_features(self, features):
-        return self._normalize_features(features)   
+        return self._normalize_features(features)
 
     @staticmethod
     def feats_to_dict(feats, *, sort_values=True):
@@ -209,34 +208,34 @@ cdef class Morphology:
         return Morphology.FEATURE_SEP.join(sorted([Morphology.FIELD_SEP.join([field, Morphology.VALUE_SEP.join(sorted(values.split(Morphology.VALUE_SEP)))]) for field, values in feats_dict.items()]))
 
 
-cdef int check_feature(const MorphAnalysisC* morph, attr_t feature) nogil:
+cdef int check_feature(const shared_ptr[MorphAnalysisC] morph, attr_t feature) nogil:
     cdef int i
-    for i in range(morph.features.size()):
-        if morph.features[i].value == feature:
+    for i in range(deref(morph).features.size()):
+        if deref(morph).features[i].value == feature:
             return True
     return False
 
 
-cdef list list_features(const MorphAnalysisC* morph):
+cdef list list_features(const shared_ptr[MorphAnalysisC] morph):
     cdef int i
     features = []
-    for i in range(morph.features.size()):
-        features.append(morph.features[i].value)
+    for i in range(deref(morph).features.size()):
+        features.append(deref(morph).features[i].value)
     return features
 
 
-cdef np.ndarray get_by_field(const MorphAnalysisC* morph, attr_t field):
-    cdef np.ndarray results = numpy.zeros((morph.features.size(),), dtype="uint64")
+cdef np.ndarray get_by_field(const shared_ptr[MorphAnalysisC] morph, attr_t field):
+    cdef np.ndarray results = numpy.zeros((deref(morph).features.size(),), dtype="uint64")
     n = get_n_by_field(<uint64_t*>results.data, morph, field)
     return results[:n]
 
 
-cdef int get_n_by_field(attr_t* results, const MorphAnalysisC* morph, attr_t field) nogil:
+cdef int get_n_by_field(attr_t* results, const shared_ptr[MorphAnalysisC] morph, attr_t field) nogil:
     cdef int n_results = 0
     cdef int i
-    for i in range(morph.features.size()):
-        if morph.features[i].field == field:
-            results[n_results] = morph.features[i].value
+    for i in range(deref(morph).features.size()):
+        if deref(morph).features[i].field == field:
+            results[n_results] = deref(morph).features[i].value
             n_results += 1
     return n_results
 

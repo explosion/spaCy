@@ -2,8 +2,7 @@ cimport numpy as np
 from libc.stdint cimport uint32_t, uint64_t
 from libcpp.unordered_map cimport unordered_map
 from libcpp.vector cimport vector
-from libcpp.memory cimport unique_ptr
-from libcpp.utility cimport move
+from libcpp.memory cimport shared_ptr
 
 from .strings cimport StringStore
 from .typedefs cimport attr_t, hash_t
@@ -27,16 +26,16 @@ cdef cppclass MorphAnalysisC:
 
 cdef class Morphology:
     cdef readonly StringStore strings
-    cdef unordered_map[hash_t, unique_ptr[MorphAnalysisC]] tags
+    cdef unordered_map[hash_t, shared_ptr[MorphAnalysisC]] tags
 
-    cdef const MorphAnalysisC* _lookup_tag(self, hash_t tag_hash)
+    cdef shared_ptr[MorphAnalysisC] _lookup_tag(self, hash_t tag_hash)
     cdef void _intern_morph_tag(self, hash_t tag_key, feats)
     cdef hash_t _add(self, features)
     cdef str _normalize_features(self, features)
     cdef str get_morph_str(self, hash_t morph_key)
-    cdef const MorphAnalysisC* get_morph_c(self, hash_t morph_key)
+    cdef shared_ptr[MorphAnalysisC] get_morph_c(self, hash_t morph_key)
 
-cdef int check_feature(const MorphAnalysisC* morph, attr_t feature) nogil
-cdef list list_features(const MorphAnalysisC* morph)
-cdef np.ndarray get_by_field(const MorphAnalysisC* morph, attr_t field)
-cdef int get_n_by_field(attr_t* results, const MorphAnalysisC* morph, attr_t field) nogil
+cdef int check_feature(const shared_ptr[MorphAnalysisC] morph, attr_t feature) nogil
+cdef list list_features(const shared_ptr[MorphAnalysisC] morph)
+cdef np.ndarray get_by_field(const shared_ptr[MorphAnalysisC] morph, attr_t field)
+cdef int get_n_by_field(attr_t* results, const shared_ptr[MorphAnalysisC] morph, attr_t field) nogil

@@ -6,9 +6,11 @@ from ..morphology import Morphology
 from ..vocab cimport Vocab
 from ..typedefs cimport hash_t, attr_t
 from ..morphology cimport list_features, check_feature, get_by_field, MorphAnalysisC
+from libcpp.memory cimport shared_ptr
+from cython.operator cimport dereference as deref
 
 
-cdef MorphAnalysisC EMPTY_MORPH_TAG = MorphAnalysisC()
+cdef shared_ptr[MorphAnalysisC] EMPTY_MORPH_TAG = shared_ptr[MorphAnalysisC](new MorphAnalysisC())
 
 
 cdef class MorphAnalysis:
@@ -19,11 +21,11 @@ cdef class MorphAnalysis:
         self._init_c(self.key)
 
     cdef void _init_c(self, hash_t key):
-        cdef const MorphAnalysisC* analysis = self.vocab.morphology.get_morph_c(key)
-        if analysis is not NULL:
+        cdef shared_ptr[MorphAnalysisC] analysis = self.vocab.morphology.get_morph_c(key)
+        if analysis:
             self.c = analysis
         else:
-            self.c = <const MorphAnalysisC*>&EMPTY_MORPH_TAG
+            self.c = EMPTY_MORPH_TAG
 
     @classmethod
     def from_id(cls, Vocab vocab, hash_t key):
@@ -47,7 +49,7 @@ cdef class MorphAnalysis:
 
     def __len__(self):
         """The number of features in the analysis."""
-        return self.c.features.size()
+        return deref(self.c).features.size()
 
     def __hash__(self):
         return self.key
@@ -71,7 +73,7 @@ cdef class MorphAnalysis:
         """Produce a json serializable representation as a UD FEATS-style
         string.
         """
-        morph_string = self.vocab.strings[self.c.key]
+        morph_string = self.vocab.strings[deref(self.c).key]
         if morph_string == self.vocab.morphology.EMPTY_MORPH:
             return ""
         return morph_string
