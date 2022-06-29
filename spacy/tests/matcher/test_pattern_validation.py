@@ -14,11 +14,17 @@ TEST_PATTERNS = [
     ('[{"TEXT": "foo"}, {"LOWER": "bar"}]', 1, 1),
     ([{"ENT_IOB": "foo"}], 1, 1),
     ([1, 2, 3], 3, 1),
+    ([{"TEXT": "foo", "OP": "{,}"}], 1, 1),
+    ([{"TEXT": "foo", "OP": "{,4}4"}], 1, 1),
+    ([{"TEXT": "foo", "OP": "{a,3}"}], 1, 1),
+    ([{"TEXT": "foo", "OP": "{a}"}], 1, 1),
+    ([{"TEXT": "foo", "OP": "{,a}"}], 1, 1),
+    ([{"TEXT": "foo", "OP": "{1,2,3}"}], 1, 1),
+    ([{"TEXT": "foo", "OP": "{1, 3}"}], 1, 1),
+    ([{"TEXT": "foo", "OP": "{-2}"}], 1, 1),
     # Bad patterns flagged outside of Matcher
     ([{"_": {"foo": "bar", "baz": {"IN": "foo"}}}], 2, 0),  # prev: (1, 0)
     # Bad patterns not flagged with minimal checks
-    ([{"TEXT": "foo", "OP": "{,}"}], 1, 1),
-    ([{"TEXT": "foo", "OP": "{,4}4"}], 1, 1),
     ([{"LENGTH": "2", "TEXT": 2}, {"LOWER": "test"}], 2, 0),
     ([{"LENGTH": {"IN": [1, 2, "3"]}}, {"POS": {"IN": "VERB"}}], 4, 0),  # prev: (2, 0)
     ([{"LENGTH": {"VALUE": 5}}], 2, 0),  # prev: (1, 0)
