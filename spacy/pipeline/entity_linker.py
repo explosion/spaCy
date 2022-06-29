@@ -188,7 +188,14 @@ class EntityLinker(TrainablePipe):
         """
 
         if threshold is not None and not (0 <= threshold <= 1):
-            raise ValueError(Errors.E1043)
+            raise ValueError(
+                Errors.E1043.format(
+                    range_start=0,
+                    range_end=1,
+                    metric="EntityLinker threshold",
+                    value=threshold,
+                )
+            )
 
         self.vocab = vocab
         self.model = model
