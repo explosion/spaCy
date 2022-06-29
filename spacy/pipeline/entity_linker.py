@@ -183,7 +183,7 @@ class EntityLinker(TrainablePipe):
         use_gold_ents (bool): Whether to copy entities from gold docs or not. If false, another
             component must provide entity annotations.
         threshold (Optional[float]): Confidence threshold for entity predictions. If confidence is below the
-            threshold, prediction is discarded. If None, predictions scores are not checked.
+            threshold, prediction is discarded. If None, predictions are not filtered by any threshold.
         DOCS: https://spacy.io/api/entitylinker#init
         """
 
