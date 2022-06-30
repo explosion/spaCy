@@ -333,7 +333,7 @@ def unpickle_matcher(vocab, patterns, callbacks):
 
 
 cdef find_matches(TokenPatternC** patterns, int n, object doclike, int length, extensions=None, predicates=tuple(), bint with_alignments=0):
-    """Find matches in a doc, with a compiled array of patcterns. Matches are
+    """Find matches in a doc, with a compiled array of patterns. Matches are
     returned as a list of (id, start, end) tuples or (id, start, end, alignments) tuples (if with_alignments != 0)
 
     To augment the compiled patterns, we optionally also take two Python lists.
@@ -376,23 +376,12 @@ cdef find_matches(TokenPatternC** patterns, int n, object doclike, int length, e
             states.push_back(PatternStateC(patterns[j], i, 0))
         if with_alignments != 0:
             align_states.resize(states.size())
-        print("TS------------------------------------------------")
-        transition_states(states, matches, align_states, align_matches, predicate_cache,
-            doclike[i], extra_attr_values, predicates, with_alignments)
-        print("matches size-------------------------",matches.size())
+        transition_states(states, matches, align_states, align_matches, predicate_cache,doclike[i], extra_attr_values,
+                          predicates, with_alignments)
         extra_attr_values += nr_extra_attr
         predicate_cache += len(predicates)
     # Handle matches that end in 0-width patterns
-    print("TS matches size-------------------------", matches.size())
-    for i in range(matches.size()):
-        match = (
-            matches[i].pattern_id,
-            matches[i].start,
-            matches[i].start + matches[i].length
-        )
-        print(match)
     finish_states(matches, states, align_matches, align_states, with_alignments)
-    print("FS matches size-------------------------", matches.size())
     seen = set()
     for i in range(matches.size()):
         match = (
@@ -400,7 +389,6 @@ cdef find_matches(TokenPatternC** patterns, int n, object doclike, int length, e
             matches[i].start,
             matches[i].start+matches[i].length
         )
-        print(match)
         # We need to deduplicate, because we could otherwise arrive at the same
         # match through two paths, e.g. .?.? matching 'a'. Are we matching the
         # first .?, or the second .? -- it doesn't matter, it's just one match.
@@ -410,10 +398,8 @@ cdef find_matches(TokenPatternC** patterns, int n, object doclike, int length, e
                 # since the length of align_matches equals to that of match, we can share same 'i'
                 output.append(match + (align_matches[i],))
             else:
-                print("added to output",match)
                 output.append(match)
             seen.add(match)
-    print("OUTPUT matches size-------------------------", len(output))
     return output
 
 
@@ -434,7 +420,6 @@ cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& match
         # Keep only a subset of states (the active ones). Index q is the
         # states which are still alive. If we reject a state, we overwrite
         # it in the states list, because q doesn't advance.
-        print("TS Loop")
         state = states[i]
         states[q] = state
         # Separate from states, performance is guaranteed for users who only need basic options (without alignments).
@@ -450,7 +435,6 @@ cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& match
             if action in [RETRY_EXTEND, RETRY_OR_EXTEND]:
                 # This handles the 'extend'
                 new_states.push_back(PatternStateC(pattern=states[q].pattern, start=state.start, length=state.length+1))
-                print("----EXTEND:token_idx start, len",state.pattern.token_idx,state.start,state.length)
                 if with_alignments != 0:
                     align_new_states.push_back(align_states[q])
             if action == RETRY_ADVANCE:
@@ -465,9 +449,7 @@ cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& match
             # To account for *? and +?
             if get_quantifier(state) == ZERO_MINUS:
                 next_action = cast_to_non_greedy_action(state, action, next_action, new_states, align_new_states, with_alignments)
-
             action = next_action
-
         # Update alignment before the transition of current state
         if with_alignments != 0:
             align_states[q].push_back(MatchAlignmentC(states[q].pattern.token_idx, states[q].length))
@@ -483,7 +465,6 @@ cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& match
         else:
             ent_id = get_ent_id(state.pattern)
             if action == MATCH:
-                print("MATCH Start, Len", state.start, state.length+1)
                 matches.push_back(MatchC(pattern_id=ent_id, start=state.start, length=state.length+1))
                 # `align_matches` always corresponds to `matches` 1:1
                 if with_alignments != 0:
@@ -502,13 +483,11 @@ cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& match
                 if with_alignments != 0:
                     align_matches.push_back(align_states[q])
             elif action == MATCH_REJECT:
-                print("MATCH_REJECT Start, Len", state.start, state.length)
                 matches.push_back(MatchC(pattern_id=ent_id, start=state.start, length=state.length))
                 # `align_matches` always corresponds to `matches` 1:1
                 if with_alignments != 0:
                     align_matches.push_back(align_states[q])
             elif action == MATCH_EXTEND:
-                print("MATCH_EXTEND Start, Len", state.start, state.length)
                 matches.push_back(MatchC(pattern_id=ent_id, start=state.start, length=state.length))
                 # `align_matches` always corresponds to `matches` 1:1
                 if with_alignments != 0:
@@ -516,7 +495,6 @@ cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& match
                 states[q].length += 1
                 q += 1
             elif action == MATCH_ADVANCE:
-                print("MATCH_ADVANCE Start, Len", state.start, state.length + 1)
                 matches.push_back(MatchC(pattern_id=ent_id, start=state.start, length=state.length + 1))
                 # `align_matches` always corresponds to `matches` 1:1
                 if with_alignments != 0:
@@ -524,7 +502,6 @@ cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& match
                 states[q].pattern += 1
                 states[q].length += 1
                 q += 1
-        print("TS LOOP PASSED")
     states.resize(q)
     for i in range(new_states.size()):
         states.push_back(new_states[i])
@@ -562,25 +539,14 @@ cdef void finish_states(vector[MatchC]& matches, vector[PatternStateC]& states,
     """Handle states that end in zero-width patterns."""
     cdef PatternStateC state
     cdef vector[MatchAlignmentC] align_state
-    print("______FS states size",states.size())
     for i in range(states.size()):
-
         state = states[i]
-        print("------------------------------------")
-        print("state: start len token_index",state.start, state.length, state.pattern.token_idx)
-        print("== ZERO_PLUS",state.pattern.quantifier == ZERO_PLUS)
-        print("pattern-1 == ONE", (state.pattern-1).quantifier == ONE)
-        print("== ZERO_MINUS", state.pattern.quantifier == ZERO_MINUS)
-        if is_non_greedy_star(state) : #or has_star_end(state)
+        if is_non_greedy_star(state):
             continue
-
         if with_alignments != 0:
             align_state = align_states[i]
         while get_quantifier(state) in (ZERO_PLUS, ZERO_MINUS, ZERO_ONE):
             # Update alignment before the transition of current state
-            print("-------TS STATE:token_idx start, len", state.pattern.token_idx, state.start, state.length)
-
-
             if with_alignments != 0:
                 align_state.push_back(MatchAlignmentC(state.pattern.token_idx, state.length))
             is_final = get_is_final(state)
@@ -596,11 +562,10 @@ cdef void finish_states(vector[MatchC]& matches, vector[PatternStateC]& states,
                 state.pattern += 1
 
 
-cdef action_t get_action(PatternStateC state, const TokenC* token, const attr_t* extra_attrs,
-                         const int8_t* predicate_matches) nogil:
+cdef action_t get_action(PatternStateC state, const TokenC* token, const attr_t* extra_attrs,const int8_t* predicate_matches) nogil:
     """We need to consider:
     a) Does the token match the specification? [Yes, No]
-    b) What's the quantifier? [1, 0+, 0-, 1-, ?]
+    b) What's the quantifier? [1, 0+, 0-, ?]
     c) Is this the last specification? [final, non-final]
 
     We can transition in the following ways:
@@ -677,91 +642,59 @@ cdef action_t get_action(PatternStateC state, const TokenC* token, const attr_t*
     if quantifier == ONE:
       if is_match and is_final:
           # Yes, final: 1000
-          with gil:
-              print("1, MATCH")
           return MATCH
       elif is_match and not is_final and has_star_tail(state) and is_non_greedy_plus(state):
           # Yes, non-final: 0011
-          with gil:
-              print("1-,MATCH_ADVANCE")
           return MATCH_ADVANCE
       elif is_match and not is_final:
           # Yes, non-final: 0100
-          with gil:
-              print("1, ADVANCE")
           return ADVANCE
       elif not is_match and is_final:
           # No, final: 0000
-          with gil:
-              print("1, REJECT1")
           return REJECT
       else:
-          with gil:
-              print("1,REJECT2")
           return REJECT
     elif quantifier == ZERO_PLUS:
       if is_match and is_final:
           # Yes, final: 1001
-          with gil:
-              print("0+,MATCH_EXTEND")
           return MATCH_EXTEND
       elif is_match and not is_final:
           # Yes, non-final: 0011
-          with gil:
-              print("0+,RETRY_EXTEND")
           return RETRY_EXTEND
       elif not is_match and is_final:
           # No, final 2000 (note: Don't include last token!)
-          with gil:
-              print("0+,MATCH_REJECT")
           return MATCH_REJECT
       else:
           # No, non-final 0010
-          with gil:
-              print("0+,RETRY")
           return RETRY
     elif quantifier == ZERO_MINUS:
         if is_final or has_non_greedy_tail(state):
             # Yes/No, final: 2000 (note: Don't include last token!)
-            with gil:
-                print("0-,MATCH_REJECT")
             return MATCH_REJECT
         elif is_match:
             # Yes, non-final: 0022
             # If there is a match, further extensions are skipped so that the behaviour is non-greedy
-            with gil:
-                print("0-,RETRY_OR_EXTEND")
             return RETRY_OR_EXTEND
         else:
             # No, non-final 0010
-            with gil:
-                print("0-,RETRY2")
             return RETRY
     elif quantifier == ZERO_ONE:
       if is_match and is_final:
           # Yes, final: 3000
           # To cater for a pattern ending in "?", we need to add
           # a match both with and without the last token
-          with gil:
-            print("0-1, MATCH_DOUBLE")
           return MATCH_DOUBLE
       elif is_match and not is_final:
           # Yes, non-final: 0110
           # We need both branches here, consider a pair like:
           # pattern: .?b string: b
           # If we 'ADVANCE' on the .?, we miss the match.
-          with gil:
-            print("0-1, RETRY_ADVANCE")
           return RETRY_ADVANCE
       elif not is_match and is_final:
           # No, final 2000 (note: Don't include last token!)
-          with gil:
-            print("0-1, MATCH_REJECT")
           return MATCH_REJECT
       else:
           # No, non-final 0010
-          with gil:
-            print("0-1, RETRY")
           return RETRY
 
 
@@ -787,22 +720,16 @@ cdef action_t cast_to_non_greedy_action(PatternStateC state, action_t action, ac
                                         vector[vector[MatchAlignmentC]]& align_new_states,
                                         bint with_alignments) nogil:
     if action == RETRY_OR_EXTEND and next_action == MATCH:
-        with gil:
-            print("RETRY_OR_EXTEND MATCH")
         # Stop the extension once there is a match
         new_states.pop_back()
         if with_alignments != 0:
             align_new_states.pop_back()
         return MATCH
-    # elif next_action == MATCH_REJECT and is_non_greedy_star(state):
     elif next_action == MATCH_REJECT:
-        with gil:
-            print("MATCH REJECT REJECT")
         # Remove matches that end with *? token
         return REJECT
     elif action == RETRY and next_action == MATCH_EXTEND:
         with gil:
-            print("RETRY< MATCH EXTEND EXTEND")
         # This handles the 'extend' without matching
         # Remove matches that end with *? token
         return EXTEND
@@ -811,6 +738,7 @@ cdef action_t cast_to_non_greedy_action(PatternStateC state, action_t action, ac
         return MATCH
     else:
         return next_action
+
 
 cdef inline int8_t get_is_final(PatternStateC state) nogil:
     if state.pattern[1].quantifier == FINAL_ID:
@@ -823,7 +751,6 @@ cdef inline int8_t has_non_greedy_tail(PatternStateC state) nogil:
     while not get_is_final(state):
         state.pattern += 1
         if state.pattern.quantifier != ZERO_MINUS:
-
             return 0
     return 1
 
@@ -831,11 +758,14 @@ cdef inline int8_t has_non_greedy_tail(PatternStateC state) nogil:
 cdef inline int8_t get_quantifier(PatternStateC state) nogil:
     return state.pattern.quantifier
 
+
 cdef inline int8_t is_non_greedy_plus(PatternStateC state) nogil:
-    if (state.pattern + 1).quantifier == ZERO_MINUS and get_quantifier(state) == ONE and (state.pattern + 1).token_idx == state.pattern.token_idx:
+    if (state.pattern + 1).quantifier == ZERO_MINUS and get_quantifier(state) == ONE \
+            and (state.pattern + 1).token_idx == state.pattern.token_idx:
         return 1
     else:
         return 0
+
 
 cdef inline int8_t is_non_greedy_star(PatternStateC state) nogil:
     if (state.pattern - 1).quantifier != ONE and get_quantifier(state) == ZERO_MINUS:
@@ -845,8 +775,6 @@ cdef inline int8_t is_non_greedy_star(PatternStateC state) nogil:
 
 
 cdef inline int8_t has_star_tail(PatternStateC state) nogil:
-    """ 
-    """
     while not get_is_final(state):
         state.pattern += 1
         if get_quantifier(state) not in [ZERO_PLUS, ZERO_MINUS]:

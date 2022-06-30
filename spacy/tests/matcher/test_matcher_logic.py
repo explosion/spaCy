@@ -796,12 +796,14 @@ def test_matcher_non_greedy_operator(en_vocab):
         (1, "aabbab", "a+? b", ["a b", "a a b", "a b"]),
         (2, "aabbab", "a*? b+?", ["a a b", "a b", "b", "b", "a b", "b"]),
         (3, "aabbab", "a*? b*?", []),
-        (4, "aabbab", "a* b*?", ["a", "a a", "a", "a"]),
-        (5, "aabbab", "a*? b*", ["a a b", "a b", "b", "a a b b", "a b b", "b b", "b", "a b", "b"]),
-        (6, "aabbc", "a* b*? c*?", ["a", "a a", 'a']),
-        (7, "aabbc", "a* b*? c", ["a a b b c", "a b b c", "b b c", "b c", "c"]),
+        (4, "aabbab", "b*? b*?", []),
+        (5, "aabbab", "b+? b+?", ["b b"]),
+        (6, "aabbab", "a* b*?", ["a", "a a", "a", "a"]),
+        (7, "aabbab", "a*? b*", ["a a b", "a b", "b", "a a b b", "a b b", "b b", "b", "a b", "b"]),
+        (8, "aabbc", "a* b*? c*?", ["a", "a a", 'a']),
+        (9, "aabbc", "a* b*? c", ["a a b b c", "a b b c", "b b c", "b c", "c"]),
 
-        (8, "abc", "a* b*? c*", ["a", "a b c", "b c", "c"]),
+        (10, "abc", "a* b*? c*", ["a", "a b c", "b c", "c"]),
         # in spaCy, quantifier "*" returns __all__possible__ matches which is different from regex
         # in spaCy, quantifier "*?" is designed to return only the non-greedy results from all possible matches
         # Result 1: a
@@ -811,13 +813,13 @@ def test_matcher_non_greedy_operator(en_vocab):
         # behaviour since 'a' and 'c' are matches thus the longest, first possible string "a b c"
         # should be one of the results
 
-        (9, "aabbc", "a+? b*? c", ["a b b c", "a a b b c"]),
-        (10, "aabbc", "a+? b+? c", ["a b b c", "a a b b c"]),
-        (11, "abbc", "a* b*? c?", ["a", "a b b c", "b b c", "b c", "c"]),
-        (12, "aabbc", "d! b*? c", ["b c", "b b c", "a b b c"]),
-        (13, "abbxb", "a*? b+? c*", ["a b", "b", "b", "b"]),
-        (14, "abbcbc", "a*? b+? c*", ["a b", "b", "b", "b c", "a b b c",  "b b c", "b", "b c"]),
-        (15, "abbcbc", "a*? b+? c", ["b c", "a b b c", "b b c", "b c"]),
+        (11, "aabbc", "a+? b*? c", ["a b b c", "a a b b c"]),
+        (12, "aabbc", "a+? b+? c", ["a b b c", "a a b b c"]),
+        (13, "abbc", "a* b*? c?", ["a", "a b b c", "b b c", "b c", "c"]),
+        (14, "aabbc", "d! b*? c", ["b c", "b b c", "a b b c"]),
+        (15, "abbxb", "a*? b+? c*", ["a b", "b", "b", "b"]),
+        (16, "abbcbc", "a*? b+? c*", ["a b", "b", "b", "b c", "a b b c",  "b b c", "b", "b c"]),
+        (17, "abbcbc", "a*? b+? c", ["b c", "a b b c", "b b c", "b c"]),
 
     ]
     for case_id, string, pattern_str, results in cases:

@@ -29,7 +29,6 @@ cdef enum quantifier_t:
     ZERO_PLUS
     ZERO_MINUS
     ONE
-    ONE_MINUS
     FINAL_ID
 
 
