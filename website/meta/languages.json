@@ -162,7 +162,12 @@
         {
             "code": "hr",
             "name": "Croatian",
-            "has_examples": true
+            "has_examples": true,
+            "models": [
+                "hr_core_news_sm",
+                "hr_core_news_md",
+                "hr_core_news_lg"
+            ]
         },
         {
             "code": "hsb",
