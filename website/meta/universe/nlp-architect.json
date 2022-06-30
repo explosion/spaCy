@@ -1,0 +1,1 @@
+{"id": "nlp-architect", "title": "NLP Architect", "slogan": "Python lib for exploring Deep NLP & NLU by Intel AI", "github": "NervanaSystems/nlp-architect", "pip": "nlp-architect", "thumb": "https://i.imgur.com/vMideRx.png", "category": ["standalone", "research"], "tags": ["pytorch"]}
