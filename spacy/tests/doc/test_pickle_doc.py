@@ -5,11 +5,9 @@ from spacy.compat import pickle
 def test_pickle_single_doc():
     nlp = Language()
     doc = nlp("pickle roundtrip")
-    doc._context = 3
     data = pickle.dumps(doc, 1)
     doc2 = pickle.loads(data)
     assert doc2.text == "pickle roundtrip"
-    assert doc2._context == 3
 
 
 def test_list_of_docs_pickles_efficiently():

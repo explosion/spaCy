@@ -40,17 +40,15 @@ def forward(
     if not token_count:
         return _handle_empty(model.ops, model.get_dim("nO"))
     key_attr: int = model.attrs["key_attr"]
-    keys: Ints1d = model.ops.flatten(
-        cast(Sequence, [doc.to_array(key_attr) for doc in docs])
-    )
+    keys = model.ops.flatten([cast(Ints1d, doc.to_array(key_attr)) for doc in docs])
     vocab: Vocab = docs[0].vocab
     W = cast(Floats2d, model.ops.as_contig(model.get_param("W")))
     if vocab.vectors.mode == Mode.default:
-        V = cast(Floats2d, model.ops.asarray(vocab.vectors.data))
+        V = model.ops.asarray(vocab.vectors.data)
         rows = vocab.vectors.find(keys=keys)
         V = model.ops.as_contig(V[rows])
     elif vocab.vectors.mode == Mode.floret:
-        V = cast(Floats2d, vocab.vectors.get_batch(keys))
+        V = vocab.vectors.get_batch(keys)
         V = model.ops.as_contig(V)
     else:
         raise RuntimeError(Errors.E896)
@@ -62,9 +60,7 @@ def forward(
         # Convert negative indices to 0-vectors
         # TODO: more options for UNK tokens
         vectors_data[rows < 0] = 0
-    output = Ragged(
-        vectors_data, model.ops.asarray([len(doc) for doc in docs], dtype="i")  # type: ignore
-    )
+    output = Ragged(vectors_data, model.ops.asarray1i([len(doc) for doc in docs]))
     mask = None
     if is_train:
         mask = _get_drop_mask(model.ops, W.shape[0], model.attrs.get("dropout_rate"))
@@ -77,7 +73,9 @@ def forward(
         model.inc_grad(
             "W",
             model.ops.gemm(
-                cast(Floats2d, d_output.data), model.ops.as_contig(V), trans1=True
+                cast(Floats2d, d_output.data),
+                cast(Floats2d, model.ops.as_contig(V)),
+                trans1=True,
             ),
         )
         return []

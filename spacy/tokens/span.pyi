@@ -48,7 +48,8 @@ class Span:
         label: Union[str, int] = ...,
         vector: Optional[Floats1d] = ...,
         vector_norm: Optional[float] = ...,
-        kb_id: Optional[int] = ...,
+        kb_id: Union[str, int] = ...,
+        span_id: Union[str, int] = ...,
     ) -> None: ...
     def __richcmp__(self, other: Span, op: int) -> bool: ...
     def __hash__(self) -> int: ...

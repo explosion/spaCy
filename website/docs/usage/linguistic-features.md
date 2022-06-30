@@ -48,7 +48,7 @@ but do not change its part-of-speech. We say that a **lemma** (root form) is
 **inflected** (modified/combined) with one or more **morphological features** to
 create a surface form. Here are some examples:
 
-| Context                                  | Surface | Lemma | POS    |  Morphological Features                  |
+| Context                                  | Surface | Lemma | POS    | Morphological Features                   |
 | ---------------------------------------- | ------- | ----- | ------ | ---------------------------------------- |
 | I was reading the paper                  | reading | read  | `VERB` | `VerbForm=Ger`                           |
 | I don't watch the news, I read the paper | read    | read  | `VERB` | `VerbForm=Fin`, `Mood=Ind`, `Tense=Pres` |
@@ -430,7 +430,7 @@ for token in doc:
     print(token.text, token.pos_, token.dep_, token.head.text)
 ```
 
-| Text                                |  POS   | Dep     | Head text |
+| Text                                | POS    | Dep     | Head text |
 | ----------------------------------- | ------ | ------- | --------- |
 | Credit and mortgage account holders | `NOUN` | `nsubj` | submit    |
 | must                                | `VERB` | `aux`   | submit    |

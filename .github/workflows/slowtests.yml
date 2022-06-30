@@ -10,6 +10,7 @@ jobs:
       fail-fast: false
       matrix:
         branch: [master, v4]
+    if: github.repository_owner == 'explosion'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
