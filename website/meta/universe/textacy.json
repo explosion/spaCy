@@ -1,1 +1,16 @@
-{"id": "textacy", "slogan": "NLP, before and after spaCy", "description": "`textacy` is a Python library for performing a variety of natural language processing (NLP) tasks, built on the high-performance `spacy` library. With the fundamentals \u2013 tokenization, part-of-speech tagging, dependency parsing, etc. \u2013 delegated to another library, `textacy` focuses on the tasks that come before and follow after.", "github": "chartbeat-labs/textacy", "pip": "textacy", "url": "https://github.com/chartbeat-labs/textacy", "author": "Burton DeWilde", "author_links": {"github": "bdewilde", "twitter": "bjdewilde"}, "category": ["standalone"]}
+{
+    "id": "textacy",
+    "slogan": "NLP, before and after spaCy",
+    "description": "`textacy` is a Python library for performing a variety of natural language processing (NLP) tasks, built on the high-performance `spacy` library. With the fundamentals \u2013 tokenization, part-of-speech tagging, dependency parsing, etc. \u2013 delegated to another library, `textacy` focuses on the tasks that come before and follow after.",
+    "github": "chartbeat-labs/textacy",
+    "pip": "textacy",
+    "url": "https://github.com/chartbeat-labs/textacy",
+    "author": "Burton DeWilde",
+    "author_links": {
+        "github": "bdewilde",
+        "twitter": "bjdewilde"
+    },
+    "category": [
+        "standalone"
+    ]
+}

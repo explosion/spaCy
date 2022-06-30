@@ -1,1 +1,26 @@
-{"id": "torchtext", "title": "torchtext", "slogan": "Data loaders and abstractions for text and NLP", "github": "pytorch/text", "pip": "torchtext", "thumb": "https://i.imgur.com/WFkxuPo.png", "code_example": [">>> pos = data.TabularDataset(", "...    path='data/pos/pos_wsj_train.tsv', format='tsv',", "...    fields=[('text', data.Field()),", "...            ('labels', data.Field())])", "...", ">>> sentiment = data.TabularDataset(", "...    path='data/sentiment/train.json', format='json',", "...    fields={'sentence_tokenized': ('text', data.Field(sequential=True)),", "...            'sentiment_gold': ('labels', data.Field(sequential=False))})"], "category": ["standalone", "research"], "tags": ["pytorch"]}
+{
+    "id": "torchtext",
+    "title": "torchtext",
+    "slogan": "Data loaders and abstractions for text and NLP",
+    "github": "pytorch/text",
+    "pip": "torchtext",
+    "thumb": "https://i.imgur.com/WFkxuPo.png",
+    "code_example": [
+        ">>> pos = data.TabularDataset(",
+        "...    path='data/pos/pos_wsj_train.tsv', format='tsv',",
+        "...    fields=[('text', data.Field()),",
+        "...            ('labels', data.Field())])",
+        "...",
+        ">>> sentiment = data.TabularDataset(",
+        "...    path='data/sentiment/train.json', format='json',",
+        "...    fields={'sentence_tokenized': ('text', data.Field(sequential=True)),",
+        "...            'sentiment_gold': ('labels', data.Field(sequential=False))})"
+    ],
+    "category": [
+        "standalone",
+        "research"
+    ],
+    "tags": [
+        "pytorch"
+    ]
+}

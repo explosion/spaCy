@@ -10,7 +10,10 @@
     "code_example": [
         "python -m spacy report textcat training/model-best/ corpus/train.spacy corpus/dev.spacy"
     ],
-    "category": ["visualizers", "research"],
+    "category": [
+        "visualizers",
+        "research"
+    ],
     "author": "Vincent D. Warmerdam",
     "author_links": {
         "twitter": "fishnets88",

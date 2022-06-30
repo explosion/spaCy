@@ -1,7 +1,9 @@
 {
     "id": "scrubadub_spacy",
     "title": "scrubadub_spacy",
-    "category": ["pipeline"],
+    "category": [
+        "pipeline"
+    ],
     "slogan": "Remove personally identifiable information from text using spaCy.",
     "description": "scrubadub removes personally identifiable information from text. scrubadub_spacy is an extension that uses spaCy NLP models to remove personal information from text.",
     "github": "LeapBeyond/scrubadub_spacy",

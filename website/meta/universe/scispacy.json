@@ -1,1 +1,20 @@
-{"id": "scispacy", "title": "scispaCy", "slogan": "A full spaCy pipeline and models for scientific/biomedical documents", "github": "allenai/scispacy", "pip": "scispacy", "thumb": "https://i.imgur.com/dJQSclW.png", "url": "https://allenai.github.io/scispacy/", "author": " Allen Institute for Artificial Intelligence", "author_links": {"github": "allenai", "twitter": "allenai_org", "website": "http://allenai.org"}, "category": ["scientific", "models", "research"]}
+{
+    "id": "scispacy",
+    "title": "scispaCy",
+    "slogan": "A full spaCy pipeline and models for scientific/biomedical documents",
+    "github": "allenai/scispacy",
+    "pip": "scispacy",
+    "thumb": "https://i.imgur.com/dJQSclW.png",
+    "url": "https://allenai.github.io/scispacy/",
+    "author": " Allen Institute for Artificial Intelligence",
+    "author_links": {
+        "github": "allenai",
+        "twitter": "allenai_org",
+        "website": "http://allenai.org"
+    },
+    "category": [
+        "scientific",
+        "models",
+        "research"
+    ]
+}

@@ -1,1 +1,16 @@
-{"id": "dragonfire", "title": "Dragonfire", "slogan": "An open-source virtual assistant for Ubuntu based Linux distributions", "github": "DragonComputer/Dragonfire", "thumb": "https://i.imgur.com/5fqguKS.jpg", "image": "https://raw.githubusercontent.com/DragonComputer/Dragonfire/master/docs/img/demo.gif", "author": "Dragon Computer", "author_links": {"github": "DragonComputer", "website": "http://dragon.computer"}, "category": ["standalone"]}
+{
+    "id": "dragonfire",
+    "title": "Dragonfire",
+    "slogan": "An open-source virtual assistant for Ubuntu based Linux distributions",
+    "github": "DragonComputer/Dragonfire",
+    "thumb": "https://i.imgur.com/5fqguKS.jpg",
+    "image": "https://raw.githubusercontent.com/DragonComputer/Dragonfire/master/docs/img/demo.gif",
+    "author": "Dragon Computer",
+    "author_links": {
+        "github": "DragonComputer",
+        "website": "http://dragon.computer"
+    },
+    "category": [
+        "standalone"
+    ]
+}

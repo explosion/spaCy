@@ -1,1 +1,25 @@
-{"id": "spacy-api-docker", "slogan": "spaCy REST API, wrapped in a Docker container", "github": "jgontrum/spacy-api-docker", "url": "https://hub.docker.com/r/jgontrum/spacyapi/", "thumb": "https://i.imgur.com/NRnDKyj.jpg", "code_example": ["version: '2'", "", "services:", "  spacyapi:", "    image: jgontrum/spacyapi:en_v2", "    ports:", "      - \"127.0.0.1:8080:80\"", "    restart: always"], "code_language": "docker", "author": "Johannes Gontrum", "author_links": {"github": "jgontrum"}, "category": ["apis"]}
+{
+    "id": "spacy-api-docker",
+    "slogan": "spaCy REST API, wrapped in a Docker container",
+    "github": "jgontrum/spacy-api-docker",
+    "url": "https://hub.docker.com/r/jgontrum/spacyapi/",
+    "thumb": "https://i.imgur.com/NRnDKyj.jpg",
+    "code_example": [
+        "version: '2'",
+        "",
+        "services:",
+        "  spacyapi:",
+        "    image: jgontrum/spacyapi:en_v2",
+        "    ports:",
+        "      - \"127.0.0.1:8080:80\"",
+        "    restart: always"
+    ],
+    "code_language": "docker",
+    "author": "Johannes Gontrum",
+    "author_links": {
+        "github": "jgontrum"
+    },
+    "category": [
+        "apis"
+    ]
+}

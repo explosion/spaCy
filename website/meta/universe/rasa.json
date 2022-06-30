@@ -1,1 +1,20 @@
-{"id": "rasa", "title": "Rasa", "slogan": "Turn natural language into structured data", "description": "Machine learning tools for developers to build, improve, and deploy contextual chatbots and assistants. Powered by open source.", "github": "RasaHQ/rasa", "pip": "rasa", "thumb": "https://i.imgur.com/TyZnpwL.png", "url": "https://rasa.com/", "author": "Rasa", "author_links": {"github": "RasaHQ"}, "category": ["conversational"], "tags": ["chatbots"]}
+{
+    "id": "rasa",
+    "title": "Rasa",
+    "slogan": "Turn natural language into structured data",
+    "description": "Machine learning tools for developers to build, improve, and deploy contextual chatbots and assistants. Powered by open source.",
+    "github": "RasaHQ/rasa",
+    "pip": "rasa",
+    "thumb": "https://i.imgur.com/TyZnpwL.png",
+    "url": "https://rasa.com/",
+    "author": "Rasa",
+    "author_links": {
+        "github": "RasaHQ"
+    },
+    "category": [
+        "conversational"
+    ],
+    "tags": [
+        "chatbots"
+    ]
+}

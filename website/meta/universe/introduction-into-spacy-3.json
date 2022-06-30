@@ -1,1 +1,12 @@
-{"type": "education", "id": "introduction-into-spacy-3", "title": "Introduction to spaCy 3", "slogan": "A free course for beginners by Dr. W.J.B. Mattingly", "url": "http://spacy.pythonhumanities.com/", "thumb": "https://spacy.pythonhumanities.com/_static/freecodecamp_small.jpg", "author": "Dr. W.J.B. Mattingly", "category": ["courses"]}
+{
+    "type": "education",
+    "id": "introduction-into-spacy-3",
+    "title": "Introduction to spaCy 3",
+    "slogan": "A free course for beginners by Dr. W.J.B. Mattingly",
+    "url": "http://spacy.pythonhumanities.com/",
+    "thumb": "https://spacy.pythonhumanities.com/_static/freecodecamp_small.jpg",
+    "author": "Dr. W.J.B. Mattingly",
+    "category": [
+        "courses"
+    ]
+}

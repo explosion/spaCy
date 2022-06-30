@@ -1,1 +1,18 @@
-{"type": "education", "id": "podcast-init2", "title": "Podcast.__init__ #256: An Open Source Toolchain For NLP From Explosion AI", "slogan": "March 2020", "description": "The state of the art in natural language processing is a constantly moving target. With the rise of deep learning, previously cutting edge techniques have given way to robust language models. Through it all the team at Explosion AI have built a strong presence with the trifecta of spaCy, Thinc, and Prodigy to support fast and flexible data labeling to feed deep learning models and performant and scalable text processing. In this episode founder and open source author Matthew Honnibal shares his experience growing a business around cutting edge open source libraries for the machine learning developent process.", "iframe": "https://cdn.podlove.org/web-player/share.html?episode=https%3A%2F%2Fwww.pythonpodcast.com%2F%3Fpodlove_player4%3D614", "iframe_height": 200, "thumb": "https://i.imgur.com/rpo6BuY.png", "url": "https://www.pythonpodcast.com/explosion-ai-natural-language-processing-episode-256/", "author": "Tobias Macey", "author_links": {"website": "https://www.podcastinit.com"}, "category": ["podcasts"]}
+{
+    "type": "education",
+    "id": "podcast-init2",
+    "title": "Podcast.__init__ #256: An Open Source Toolchain For NLP From Explosion AI",
+    "slogan": "March 2020",
+    "description": "The state of the art in natural language processing is a constantly moving target. With the rise of deep learning, previously cutting edge techniques have given way to robust language models. Through it all the team at Explosion AI have built a strong presence with the trifecta of spaCy, Thinc, and Prodigy to support fast and flexible data labeling to feed deep learning models and performant and scalable text processing. In this episode founder and open source author Matthew Honnibal shares his experience growing a business around cutting edge open source libraries for the machine learning developent process.",
+    "iframe": "https://cdn.podlove.org/web-player/share.html?episode=https%3A%2F%2Fwww.pythonpodcast.com%2F%3Fpodlove_player4%3D614",
+    "iframe_height": 200,
+    "thumb": "https://i.imgur.com/rpo6BuY.png",
+    "url": "https://www.pythonpodcast.com/explosion-ai-natural-language-processing-episode-256/",
+    "author": "Tobias Macey",
+    "author_links": {
+        "website": "https://www.podcastinit.com"
+    },
+    "category": [
+        "podcasts"
+    ]
+}

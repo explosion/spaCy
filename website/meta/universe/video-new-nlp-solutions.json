@@ -1,1 +1,17 @@
-{"type": "education", "id": "video-new-nlp-solutions", "title": "Building new NLP solutions with spaCy and Prodigy", "slogan": "PyData Berlin 2018", "description": "In this talk, I will discuss how to address some of the most likely causes of failure for new Natural Language Processing (NLP) projects. My main recommendation is to take an iterative approach: don't assume you know what your pipeline should look like, let alone your annotation schemes or model architectures.", "author": "Matthew Honnibal", "author_links": {"twitter": "honnibal", "github": "honnibal", "website": "https://explosion.ai"}, "youtube": "jpWqz85F_4Y", "category": ["videos"]}
+{
+    "type": "education",
+    "id": "video-new-nlp-solutions",
+    "title": "Building new NLP solutions with spaCy and Prodigy",
+    "slogan": "PyData Berlin 2018",
+    "description": "In this talk, I will discuss how to address some of the most likely causes of failure for new Natural Language Processing (NLP) projects. My main recommendation is to take an iterative approach: don't assume you know what your pipeline should look like, let alone your annotation schemes or model architectures.",
+    "author": "Matthew Honnibal",
+    "author_links": {
+        "twitter": "honnibal",
+        "github": "honnibal",
+        "website": "https://explosion.ai"
+    },
+    "youtube": "jpWqz85F_4Y",
+    "category": [
+        "videos"
+    ]
+}

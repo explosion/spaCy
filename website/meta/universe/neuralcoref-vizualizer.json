@@ -1,1 +1,22 @@
-{"id": "neuralcoref-vizualizer", "title": "Neuralcoref Visualizer", "slogan": "State-of-the-art coreference resolution based on neural nets and spaCy", "description": "In short, coreference is the fact that two or more expressions in a text \u2013 like pronouns or nouns \u2013 link to the same person or thing. It is a classical Natural language processing task, that has seen a revival of interest in the past two years as several research groups applied cutting-edge deep-learning and reinforcement-learning techniques to it. It is also one of the key building blocks to building conversational Artificial intelligences.", "url": "https://huggingface.co/coref/", "image": "https://i.imgur.com/3yy4Qyf.png", "thumb": "https://i.imgur.com/j6FO9O6.jpg", "github": "huggingface/neuralcoref", "category": ["visualizers", "conversational"], "tags": ["coref", "chatbots"], "author": "Hugging Face", "author_links": {"github": "huggingface"}}
+{
+    "id": "neuralcoref-vizualizer",
+    "title": "Neuralcoref Visualizer",
+    "slogan": "State-of-the-art coreference resolution based on neural nets and spaCy",
+    "description": "In short, coreference is the fact that two or more expressions in a text \u2013 like pronouns or nouns \u2013 link to the same person or thing. It is a classical Natural language processing task, that has seen a revival of interest in the past two years as several research groups applied cutting-edge deep-learning and reinforcement-learning techniques to it. It is also one of the key building blocks to building conversational Artificial intelligences.",
+    "url": "https://huggingface.co/coref/",
+    "image": "https://i.imgur.com/3yy4Qyf.png",
+    "thumb": "https://i.imgur.com/j6FO9O6.jpg",
+    "github": "huggingface/neuralcoref",
+    "category": [
+        "visualizers",
+        "conversational"
+    ],
+    "tags": [
+        "coref",
+        "chatbots"
+    ],
+    "author": "Hugging Face",
+    "author_links": {
+        "github": "huggingface"
+    }
+}

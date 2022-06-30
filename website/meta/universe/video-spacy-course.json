@@ -1,1 +1,16 @@
-{"type": "education", "id": "video-spacy-course", "title": "Advanced NLP with spaCy \u00b7 A free online course", "description": "spaCy is a modern Python library for industrial-strength Natural Language Processing. In this free and interactive online course, you'll learn how to use spaCy to build advanced natural language understanding systems, using both rule-based and machine learning approaches.", "url": "https://course.spacy.io/en", "author": "Ines Montani", "author_links": {"twitter": "_inesmontani", "github": "ines"}, "youtube": "THduWAnG97k", "category": ["videos"]}
+{
+    "type": "education",
+    "id": "video-spacy-course",
+    "title": "Advanced NLP with spaCy \u00b7 A free online course",
+    "description": "spaCy is a modern Python library for industrial-strength Natural Language Processing. In this free and interactive online course, you'll learn how to use spaCy to build advanced natural language understanding systems, using both rule-based and machine learning approaches.",
+    "url": "https://course.spacy.io/en",
+    "author": "Ines Montani",
+    "author_links": {
+        "twitter": "_inesmontani",
+        "github": "ines"
+    },
+    "youtube": "THduWAnG97k",
+    "category": [
+        "videos"
+    ]
+}

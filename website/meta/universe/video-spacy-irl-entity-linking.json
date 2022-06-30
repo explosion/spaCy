@@ -1,1 +1,16 @@
-{"type": "education", "id": "video-spacy-irl-entity-linking", "title": "Entity Linking functionality in spaCy", "slogan": "spaCy IRL 2019", "url": "https://www.youtube.com/playlist?list=PLBmcuObd5An4UC6jvK_-eSl6jCvP1gwXc", "author": "Sofie Van Landeghem", "author_links": {"twitter": "OxyKodit", "github": "svlandeg"}, "youtube": "PW3RJM8tDGo", "category": ["videos"]}
+{
+    "type": "education",
+    "id": "video-spacy-irl-entity-linking",
+    "title": "Entity Linking functionality in spaCy",
+    "slogan": "spaCy IRL 2019",
+    "url": "https://www.youtube.com/playlist?list=PLBmcuObd5An4UC6jvK_-eSl6jCvP1gwXc",
+    "author": "Sofie Van Landeghem",
+    "author_links": {
+        "twitter": "OxyKodit",
+        "github": "svlandeg"
+    },
+    "youtube": "PW3RJM8tDGo",
+    "category": [
+        "videos"
+    ]
+}

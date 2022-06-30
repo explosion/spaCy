@@ -1,1 +1,33 @@
-{"id": "Chatterbot", "title": "Chatterbot", "slogan": "A machine-learning based conversational dialog engine for creating chat bots", "github": "gunthercox/ChatterBot", "pip": "chatterbot", "thumb": "https://i.imgur.com/eyAhwXk.jpg", "code_example": ["from chatterbot import ChatBot", "from chatterbot.trainers import ListTrainer", "# Create a new chat bot named Charlie", "chatbot = ChatBot('Charlie')", "trainer = ListTrainer(chatbot)", "trainer.train([", "'Hi, can I help you?',", "'Sure, I would like to book a flight to Iceland.',", "'Your flight has been booked.'", "])", "", "response = chatbot.get_response('I would like to book a flight.')"], "author": "Gunther Cox", "author_links": {"github": "gunthercox"}, "category": ["conversational", "standalone"], "tags": ["chatbots"]}
+{
+    "id": "Chatterbot",
+    "title": "Chatterbot",
+    "slogan": "A machine-learning based conversational dialog engine for creating chat bots",
+    "github": "gunthercox/ChatterBot",
+    "pip": "chatterbot",
+    "thumb": "https://i.imgur.com/eyAhwXk.jpg",
+    "code_example": [
+        "from chatterbot import ChatBot",
+        "from chatterbot.trainers import ListTrainer",
+        "# Create a new chat bot named Charlie",
+        "chatbot = ChatBot('Charlie')",
+        "trainer = ListTrainer(chatbot)",
+        "trainer.train([",
+        "'Hi, can I help you?',",
+        "'Sure, I would like to book a flight to Iceland.',",
+        "'Your flight has been booked.'",
+        "])",
+        "",
+        "response = chatbot.get_response('I would like to book a flight.')"
+    ],
+    "author": "Gunther Cox",
+    "author_links": {
+        "github": "gunthercox"
+    },
+    "category": [
+        "conversational",
+        "standalone"
+    ],
+    "tags": [
+        "chatbots"
+    ]
+}

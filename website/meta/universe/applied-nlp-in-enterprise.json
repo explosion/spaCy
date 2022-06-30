@@ -1,1 +1,18 @@
-{"type": "education", "id": "applied-nlp-in-enterprise", "title": "Applied Natural Language Processing in the Enterprise: Teaching Machines to Read, Write, and Understand", "slogan": "O'Reilly, 2021", "description": "Natural language processing (NLP) is one of the hottest topics in AI today. Having lagged behind other deep learning fields such as computer vision for years, NLP only recently gained mainstream popularity. Even though Google, Facebook, and OpenAI have open sourced large pretrained language models to make NLP easier, many organizations today still struggle with developing and productionizing NLP applications. This hands-on guide helps you learn the field quickly.", "github": "nlpbook/nlpbook", "cover": "https://i.imgur.com/6RxLBvf.jpg", "url": "https://www.amazon.com/dp/149206257X", "author": "Ankur A. Patel", "author_links": {"github": "aapatel09", "website": "https://www.ankurapatel.io"}, "category": ["books"]}
+{
+    "type": "education",
+    "id": "applied-nlp-in-enterprise",
+    "title": "Applied Natural Language Processing in the Enterprise: Teaching Machines to Read, Write, and Understand",
+    "slogan": "O'Reilly, 2021",
+    "description": "Natural language processing (NLP) is one of the hottest topics in AI today. Having lagged behind other deep learning fields such as computer vision for years, NLP only recently gained mainstream popularity. Even though Google, Facebook, and OpenAI have open sourced large pretrained language models to make NLP easier, many organizations today still struggle with developing and productionizing NLP applications. This hands-on guide helps you learn the field quickly.",
+    "github": "nlpbook/nlpbook",
+    "cover": "https://i.imgur.com/6RxLBvf.jpg",
+    "url": "https://www.amazon.com/dp/149206257X",
+    "author": "Ankur A. Patel",
+    "author_links": {
+        "github": "aapatel09",
+        "website": "https://www.ankurapatel.io"
+    },
+    "category": [
+        "books"
+    ]
+}

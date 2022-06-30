@@ -1,1 +1,13 @@
-{"type": "education", "id": "packt-nlp-computational-linguistics", "title": "Natural Language Processing and Computational Linguistics", "slogan": "Packt, 2018", "description": "This book shows you how to use natural language processing, and computational linguistics algorithms, to make inferences and gain insights about data you have. These algorithms are based on statistical machine learning and artificial intelligence techniques. The tools to work with these algorithms are available to you right now - with Python, and tools like Gensim and spaCy.", "cover": "https://i.imgur.com/aleMf1Y.jpg", "url": "https://www.amazon.com/Natural-Language-Processing-Computational-Linguistics-ebook/dp/B07BWH779J", "author": "Bhargav Srinivasa-Desikan", "category": ["books"]}
+{
+    "type": "education",
+    "id": "packt-nlp-computational-linguistics",
+    "title": "Natural Language Processing and Computational Linguistics",
+    "slogan": "Packt, 2018",
+    "description": "This book shows you how to use natural language processing, and computational linguistics algorithms, to make inferences and gain insights about data you have. These algorithms are based on statistical machine learning and artificial intelligence techniques. The tools to work with these algorithms are available to you right now - with Python, and tools like Gensim and spaCy.",
+    "cover": "https://i.imgur.com/aleMf1Y.jpg",
+    "url": "https://www.amazon.com/Natural-Language-Processing-Computational-Linguistics-ebook/dp/B07BWH779J",
+    "author": "Bhargav Srinivasa-Desikan",
+    "category": [
+        "books"
+    ]
+}

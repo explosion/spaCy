@@ -1,1 +1,42 @@
-{"id": "spacy-conll", "title": "spacy_conll", "slogan": "Parsing from and to CoNLL-U format with `spacy`, `spacy-stanza` and `spacy-udpipe`", "description": "This module allows you to parse text into CoNLL-U format or read ConLL-U into a spaCy `Doc`. You can use it as a command line tool, or embed it in your own scripts by adding it as a custom pipeline component to a `spacy`, `spacy-stanza` or `spacy-udpipe` pipeline. It also provides an easy-to-use function to quickly initialize any spaCy-wrapped parser. CoNLL-related properties are added to `Doc` elements, `Span` sentences, and `Token` objects.", "code_example": ["from spacy_conll import init_parser", "", "", "# Initialise English parser, already including the ConllFormatter as a pipeline component.", "# Indicate that we want to get the CoNLL headers in the string output.", "# `use_gpu` and `verbose` are specific to stanza. These keywords arguments are passed onto their Pipeline() initialisation", "nlp = init_parser(\"en\",", "                  \"stanza\",", "                  parser_opts={\"use_gpu\": True, \"verbose\": False},", "                  include_headers=True)", "# Parse a given string", "doc = nlp(\"A cookie is a baked or cooked food that is typically small, flat and sweet. It usually contains flour, sugar and some type of oil or fat.\")", "", "# Get the CoNLL representation of the whole document, including headers", "conll = doc._.conll_str", "print(conll)"], "code_language": "python", "author": "Bram Vanroy", "author_links": {"github": "BramVanroy", "twitter": "BramVanroy", "website": "http://bramvanroy.be"}, "github": "BramVanroy/spacy_conll", "category": ["standalone", "pipeline"], "tags": ["linguistics", "computational linguistics", "conll", "conll-u"]}
+{
+    "id": "spacy-conll",
+    "title": "spacy_conll",
+    "slogan": "Parsing from and to CoNLL-U format with `spacy`, `spacy-stanza` and `spacy-udpipe`",
+    "description": "This module allows you to parse text into CoNLL-U format or read ConLL-U into a spaCy `Doc`. You can use it as a command line tool, or embed it in your own scripts by adding it as a custom pipeline component to a `spacy`, `spacy-stanza` or `spacy-udpipe` pipeline. It also provides an easy-to-use function to quickly initialize any spaCy-wrapped parser. CoNLL-related properties are added to `Doc` elements, `Span` sentences, and `Token` objects.",
+    "code_example": [
+        "from spacy_conll import init_parser",
+        "",
+        "",
+        "# Initialise English parser, already including the ConllFormatter as a pipeline component.",
+        "# Indicate that we want to get the CoNLL headers in the string output.",
+        "# `use_gpu` and `verbose` are specific to stanza. These keywords arguments are passed onto their Pipeline() initialisation",
+        "nlp = init_parser(\"en\",",
+        "                  \"stanza\",",
+        "                  parser_opts={\"use_gpu\": True, \"verbose\": False},",
+        "                  include_headers=True)",
+        "# Parse a given string",
+        "doc = nlp(\"A cookie is a baked or cooked food that is typically small, flat and sweet. It usually contains flour, sugar and some type of oil or fat.\")",
+        "",
+        "# Get the CoNLL representation of the whole document, including headers",
+        "conll = doc._.conll_str",
+        "print(conll)"
+    ],
+    "code_language": "python",
+    "author": "Bram Vanroy",
+    "author_links": {
+        "github": "BramVanroy",
+        "twitter": "BramVanroy",
+        "website": "http://bramvanroy.be"
+    },
+    "github": "BramVanroy/spacy_conll",
+    "category": [
+        "standalone",
+        "pipeline"
+    ],
+    "tags": [
+        "linguistics",
+        "computational linguistics",
+        "conll",
+        "conll-u"
+    ]
+}

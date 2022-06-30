@@ -1,1 +1,23 @@
-{"id": "spacy-experimental", "title": "spacy-experimental", "category": ["extension"], "slogan": "Cutting-edge experimental spaCy components and features", "description": "This package includes experimental components and features for spaCy v3.x, for example model architectures, pipeline components and utilities.", "github": "explosion/spacy-experimental", "pip": "spacy-experimental", "url": "https://github.com/explosion/spacy-experimental", "code_language": "python", "author": "Explosion", "author_links": {"twitter": "https://twitter.com/explosion_ai", "github": "https://github.com/explosion", "website": "https://explosion.ai/"}, "code_example": ["python -m pip install -U pip setuptools wheel", "python -m pip install spacy-experimental"]}
+{
+    "id": "spacy-experimental",
+    "title": "spacy-experimental",
+    "category": [
+        "extension"
+    ],
+    "slogan": "Cutting-edge experimental spaCy components and features",
+    "description": "This package includes experimental components and features for spaCy v3.x, for example model architectures, pipeline components and utilities.",
+    "github": "explosion/spacy-experimental",
+    "pip": "spacy-experimental",
+    "url": "https://github.com/explosion/spacy-experimental",
+    "code_language": "python",
+    "author": "Explosion",
+    "author_links": {
+        "twitter": "https://twitter.com/explosion_ai",
+        "github": "https://github.com/explosion",
+        "website": "https://explosion.ai/"
+    },
+    "code_example": [
+        "python -m pip install -U pip setuptools wheel",
+        "python -m pip install spacy-experimental"
+    ]
+}

@@ -1,1 +1,28 @@
-{"id": "lemminflect", "slogan": "A Python module for English lemmatization and inflection", "description": "LemmInflect uses a dictionary approach to lemmatize English words and inflect them into forms specified by a user supplied [Universal Dependencies](https://universaldependencies.org/u/pos/) or [Penn Treebank](https://www.ling.upenn.edu/courses/Fall_2003/ling001/penn_treebank_pos.html) tag.  The library works with out-of-vocabulary (OOV) words by applying neural network techniques to classify word forms and choose the appropriate morphing rules. The system acts as a standalone module or as an extension to spaCy.", "github": "bjascob/LemmInflect", "pip": "lemminflect", "thumb": "https://raw.githubusercontent.com/bjascob/LemmInflect/master/docs/img/icons8-citrus-80.png", "code_example": ["import spacy", "import lemminflect", "", "nlp = spacy.load('en_core_web_sm')", "doc = nlp('I am testing this example.')", "doc[2]._.lemma()         # 'test'", "doc[4]._.inflect('NNS')  # 'examples'"], "author": "Brad Jascob", "author_links": {"github": "bjascob"}, "category": ["pipeline"], "tags": ["inflection", "lemmatizer"]}
+{
+    "id": "lemminflect",
+    "slogan": "A Python module for English lemmatization and inflection",
+    "description": "LemmInflect uses a dictionary approach to lemmatize English words and inflect them into forms specified by a user supplied [Universal Dependencies](https://universaldependencies.org/u/pos/) or [Penn Treebank](https://www.ling.upenn.edu/courses/Fall_2003/ling001/penn_treebank_pos.html) tag.  The library works with out-of-vocabulary (OOV) words by applying neural network techniques to classify word forms and choose the appropriate morphing rules. The system acts as a standalone module or as an extension to spaCy.",
+    "github": "bjascob/LemmInflect",
+    "pip": "lemminflect",
+    "thumb": "https://raw.githubusercontent.com/bjascob/LemmInflect/master/docs/img/icons8-citrus-80.png",
+    "code_example": [
+        "import spacy",
+        "import lemminflect",
+        "",
+        "nlp = spacy.load('en_core_web_sm')",
+        "doc = nlp('I am testing this example.')",
+        "doc[2]._.lemma()         # 'test'",
+        "doc[4]._.inflect('NNS')  # 'examples'"
+    ],
+    "author": "Brad Jascob",
+    "author_links": {
+        "github": "bjascob"
+    },
+    "category": [
+        "pipeline"
+    ],
+    "tags": [
+        "inflection",
+        "lemmatizer"
+    ]
+}

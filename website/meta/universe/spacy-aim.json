@@ -18,6 +18,11 @@
         "github": "aimhubio",
         "website": "https://aimstack.io"
     },
-    "category": ["visualizers"],
-    "tags": ["experiment-tracking", "visualization"]
+    "category": [
+        "visualizers"
+    ],
+    "tags": [
+        "experiment-tracking",
+        "visualization"
+    ]
 }

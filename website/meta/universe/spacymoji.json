@@ -1,1 +1,37 @@
-{"id": "spacymoji", "slogan": "Emoji handling and meta data as a spaCy pipeline component", "github": "ines/spacymoji", "description": "spaCy extension and pipeline component for adding emoji meta data to `Doc` objects. Detects emoji consisting of one or more unicode characters, and can optionally merge multi-char emoji (combined pictures, emoji with skin tone modifiers) into one token. Human-readable emoji descriptions are added as a custom attribute, and an optional lookup table can be provided for your own descriptions. The extension sets the custom `Doc`, `Token` and `Span` attributes `._.is_emoji`, `._.emoji_desc`, `._.has_emoji` and `._.emoji`.", "pip": "spacymoji", "category": ["pipeline"], "tags": ["emoji", "unicode"], "thumb": "https://i.imgur.com/XOTYIgn.jpg", "code_example": ["import spacy", "from spacymoji import Emoji", "", "nlp = spacy.load(\"en_core_web_sm\")", "nlp.add_pipe(\"emoji\", first=True)", "doc = nlp(\"This is a test \ud83d\ude3b \ud83d\udc4d\ud83c\udfff\")", "", "assert doc._.has_emoji is True", "assert doc[2:5]._.has_emoji is True", "assert doc[0]._.is_emoji is False", "assert doc[4]._.is_emoji is True", "assert doc[5]._.emoji_desc == \"thumbs up dark skin tone\"", "assert len(doc._.emoji) == 2", "assert doc._.emoji[1] == (\"\ud83d\udc4d\ud83c\udfff\", 5, \"thumbs up dark skin tone\")"], "author": "Ines Montani", "author_links": {"twitter": "_inesmontani", "github": "ines", "website": "https://ines.io"}}
+{
+    "id": "spacymoji",
+    "slogan": "Emoji handling and meta data as a spaCy pipeline component",
+    "github": "ines/spacymoji",
+    "description": "spaCy extension and pipeline component for adding emoji meta data to `Doc` objects. Detects emoji consisting of one or more unicode characters, and can optionally merge multi-char emoji (combined pictures, emoji with skin tone modifiers) into one token. Human-readable emoji descriptions are added as a custom attribute, and an optional lookup table can be provided for your own descriptions. The extension sets the custom `Doc`, `Token` and `Span` attributes `._.is_emoji`, `._.emoji_desc`, `._.has_emoji` and `._.emoji`.",
+    "pip": "spacymoji",
+    "category": [
+        "pipeline"
+    ],
+    "tags": [
+        "emoji",
+        "unicode"
+    ],
+    "thumb": "https://i.imgur.com/XOTYIgn.jpg",
+    "code_example": [
+        "import spacy",
+        "from spacymoji import Emoji",
+        "",
+        "nlp = spacy.load(\"en_core_web_sm\")",
+        "nlp.add_pipe(\"emoji\", first=True)",
+        "doc = nlp(\"This is a test \ud83d\ude3b \ud83d\udc4d\ud83c\udfff\")",
+        "",
+        "assert doc._.has_emoji is True",
+        "assert doc[2:5]._.has_emoji is True",
+        "assert doc[0]._.is_emoji is False",
+        "assert doc[4]._.is_emoji is True",
+        "assert doc[5]._.emoji_desc == \"thumbs up dark skin tone\"",
+        "assert len(doc._.emoji) == 2",
+        "assert doc._.emoji[1] == (\"\ud83d\udc4d\ud83c\udfff\", 5, \"thumbs up dark skin tone\")"
+    ],
+    "author": "Ines Montani",
+    "author_links": {
+        "twitter": "_inesmontani",
+        "github": "ines",
+        "website": "https://ines.io"
+    }
+}

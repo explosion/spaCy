@@ -1,1 +1,21 @@
-{"id": "spacy-cpp", "slogan": "C++ wrapper library for spaCy", "description": "The goal of spacy-cpp is to expose the functionality of spaCy to C++ applications, and to provide an API that is similar to that of spaCy, enabling rapid development in Python and simple porting to C++.", "github": "d99kris/spacy-cpp", "code_example": ["Spacy::Spacy spacy;", "auto nlp = spacy.load(\"en_core_web_sm\");", "auto doc = nlp.parse(\"This is a sentence.\");", "for (auto& token : doc.tokens())", "    std::cout << token.text() << \" [\" << token.pos_() << \"]\\n\";"], "code_language": "cpp", "author": "Kristofer Berggren", "author_links": {"github": "d99kris"}, "category": ["nonpython"]}
+{
+    "id": "spacy-cpp",
+    "slogan": "C++ wrapper library for spaCy",
+    "description": "The goal of spacy-cpp is to expose the functionality of spaCy to C++ applications, and to provide an API that is similar to that of spaCy, enabling rapid development in Python and simple porting to C++.",
+    "github": "d99kris/spacy-cpp",
+    "code_example": [
+        "Spacy::Spacy spacy;",
+        "auto nlp = spacy.load(\"en_core_web_sm\");",
+        "auto doc = nlp.parse(\"This is a sentence.\");",
+        "for (auto& token : doc.tokens())",
+        "    std::cout << token.text() << \" [\" << token.pos_() << \"]\\n\";"
+    ],
+    "code_language": "cpp",
+    "author": "Kristofer Berggren",
+    "author_links": {
+        "github": "d99kris"
+    },
+    "category": [
+        "nonpython"
+    ]
+}

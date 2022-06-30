@@ -1,1 +1,17 @@
-{"type": "education", "id": "video-spacys-ner-model", "title": "spaCy's NER model", "slogan": "Incremental parsing with bloom embeddings and residual CNNs", "description": "spaCy v2.0's Named Entity Recognition system features a sophisticated word embedding strategy using subword features and \"Bloom\" embeddings, a deep convolutional neural network with residual connections, and a novel transition-based approach to named entity parsing. The system is designed to give a good balance of efficiency, accuracy and adaptability. In this talk, I sketch out the components of the system, explaining the intuition behind the various choices. I also give a brief introduction to the named entity recognition problem, with an overview of what else Explosion AI is working on, and why.", "youtube": "sqDHBH9IjRU", "author": "Matthew Honnibal", "author_links": {"twitter": "honnibal", "github": "honnibal", "website": "https://explosion.ai"}, "category": ["videos"]}
+{
+    "type": "education",
+    "id": "video-spacys-ner-model",
+    "title": "spaCy's NER model",
+    "slogan": "Incremental parsing with bloom embeddings and residual CNNs",
+    "description": "spaCy v2.0's Named Entity Recognition system features a sophisticated word embedding strategy using subword features and \"Bloom\" embeddings, a deep convolutional neural network with residual connections, and a novel transition-based approach to named entity parsing. The system is designed to give a good balance of efficiency, accuracy and adaptability. In this talk, I sketch out the components of the system, explaining the intuition behind the various choices. I also give a brief introduction to the named entity recognition problem, with an overview of what else Explosion AI is working on, and why.",
+    "youtube": "sqDHBH9IjRU",
+    "author": "Matthew Honnibal",
+    "author_links": {
+        "twitter": "honnibal",
+        "github": "honnibal",
+        "website": "https://explosion.ai"
+    },
+    "category": [
+        "videos"
+    ]
+}

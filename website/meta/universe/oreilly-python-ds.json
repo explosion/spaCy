@@ -1,1 +1,13 @@
-{"type": "education", "id": "oreilly-python-ds", "title": "Introduction to Machine Learning with Python: A Guide for Data Scientists", "slogan": "O'Reilly, 2016", "description": "Machine learning has become an integral part of many commercial applications and research projects, but this field is not exclusive to large companies with extensive research teams. If you use Python, even as a beginner, this book will teach you practical ways to build your own machine learning solutions. With all the data available today, machine learning applications are limited only by your imagination.", "cover": "https://covers.oreillystatic.com/images/0636920030515/lrg.jpg", "url": "http://shop.oreilly.com/product/0636920030515.do", "author": "Andreas M\u00fcller, Sarah Guido", "category": ["books"]}
+{
+    "type": "education",
+    "id": "oreilly-python-ds",
+    "title": "Introduction to Machine Learning with Python: A Guide for Data Scientists",
+    "slogan": "O'Reilly, 2016",
+    "description": "Machine learning has become an integral part of many commercial applications and research projects, but this field is not exclusive to large companies with extensive research teams. If you use Python, even as a beginner, this book will teach you practical ways to build your own machine learning solutions. With all the data available today, machine learning applications are limited only by your imagination.",
+    "cover": "https://covers.oreillystatic.com/images/0636920030515/lrg.jpg",
+    "url": "http://shop.oreilly.com/product/0636920030515.do",
+    "author": "Andreas M\u00fcller, Sarah Guido",
+    "category": [
+        "books"
+    ]
+}

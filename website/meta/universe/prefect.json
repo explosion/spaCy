@@ -1,1 +1,27 @@
-{"id": "prefect", "title": "Prefect", "slogan": "Workflow management system designed for modern infrastructure", "github": "PrefectHQ/prefect", "pip": "prefect", "thumb": "https://i.imgur.com/oLTwr0e.png", "code_example": ["from prefect import Flow", "from prefect.tasks.spacy.spacy_tasks import SpacyNLP", "import spacy", "", "nlp = spacy.load(\"en_core_web_sm\")", "", "with Flow(\"Natural Language Processing\") as flow:", "    doc = SpacyNLP(text=\"This is some text\", nlp=nlp)", "", "flow.run()"], "author": "Prefect", "author_links": {"website": "https://prefect.io"}, "category": ["standalone"]}
+{
+    "id": "prefect",
+    "title": "Prefect",
+    "slogan": "Workflow management system designed for modern infrastructure",
+    "github": "PrefectHQ/prefect",
+    "pip": "prefect",
+    "thumb": "https://i.imgur.com/oLTwr0e.png",
+    "code_example": [
+        "from prefect import Flow",
+        "from prefect.tasks.spacy.spacy_tasks import SpacyNLP",
+        "import spacy",
+        "",
+        "nlp = spacy.load(\"en_core_web_sm\")",
+        "",
+        "with Flow(\"Natural Language Processing\") as flow:",
+        "    doc = SpacyNLP(text=\"This is some text\", nlp=nlp)",
+        "",
+        "flow.run()"
+    ],
+    "author": "Prefect",
+    "author_links": {
+        "website": "https://prefect.io"
+    },
+    "category": [
+        "standalone"
+    ]
+}

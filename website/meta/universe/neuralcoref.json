@@ -1,1 +1,32 @@
-{"id": "neuralcoref", "slogan": "State-of-the-art coreference resolution based on neural nets and spaCy", "description": "This coreference resolution module is based on the super fast [spaCy](https://spacy.io/) parser and uses the neural net scoring model described in [Deep Reinforcement Learning for Mention-Ranking Coreference Models](http://cs.stanford.edu/people/kevclark/resources/clark-manning-emnlp2016-deep.pdf) by Kevin Clark and Christopher D. Manning, EMNLP 2016. Since \u2728Neuralcoref v2.0, you can train the coreference resolution system on your own dataset\u200a\u2014\u200ae.g., another language than English!\u200a\u2014\u200a**provided you have an annotated dataset**. Note that to use neuralcoref with spaCy > 2.1.0, you'll have to install neuralcoref from source.", "github": "huggingface/neuralcoref", "thumb": "https://i.imgur.com/j6FO9O6.jpg", "code_example": ["import spacy", "import neuralcoref", "", "nlp = spacy.load('en')", "neuralcoref.add_to_pipe(nlp)", "doc1 = nlp('My sister has a dog. She loves him.')", "print(doc1._.coref_clusters)", "", "doc2 = nlp('Angela lives in Boston. She is quite happy in that city.')", "for ent in doc2.ents:", "    print(ent._.coref_cluster)"], "author": "Hugging Face", "author_links": {"github": "huggingface"}, "category": ["standalone", "conversational", "models"], "tags": ["coref"]}
+{
+    "id": "neuralcoref",
+    "slogan": "State-of-the-art coreference resolution based on neural nets and spaCy",
+    "description": "This coreference resolution module is based on the super fast [spaCy](https://spacy.io/) parser and uses the neural net scoring model described in [Deep Reinforcement Learning for Mention-Ranking Coreference Models](http://cs.stanford.edu/people/kevclark/resources/clark-manning-emnlp2016-deep.pdf) by Kevin Clark and Christopher D. Manning, EMNLP 2016. Since \u2728Neuralcoref v2.0, you can train the coreference resolution system on your own dataset\u200a\u2014\u200ae.g., another language than English!\u200a\u2014\u200a**provided you have an annotated dataset**. Note that to use neuralcoref with spaCy > 2.1.0, you'll have to install neuralcoref from source.",
+    "github": "huggingface/neuralcoref",
+    "thumb": "https://i.imgur.com/j6FO9O6.jpg",
+    "code_example": [
+        "import spacy",
+        "import neuralcoref",
+        "",
+        "nlp = spacy.load('en')",
+        "neuralcoref.add_to_pipe(nlp)",
+        "doc1 = nlp('My sister has a dog. She loves him.')",
+        "print(doc1._.coref_clusters)",
+        "",
+        "doc2 = nlp('Angela lives in Boston. She is quite happy in that city.')",
+        "for ent in doc2.ents:",
+        "    print(ent._.coref_cluster)"
+    ],
+    "author": "Hugging Face",
+    "author_links": {
+        "github": "huggingface"
+    },
+    "category": [
+        "standalone",
+        "conversational",
+        "models"
+    ],
+    "tags": [
+        "coref"
+    ]
+}

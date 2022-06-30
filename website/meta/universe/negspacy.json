@@ -1,1 +1,35 @@
-{"id": "negspacy", "title": "negspaCy", "slogan": "spaCy pipeline object for negating concepts in text based on the NegEx algorithm.", "github": "jenojp/negspacy", "url": "https://github.com/jenojp/negspacy", "description": "negspacy is a spaCy pipeline component that evaluates whether Named Entities are negated in text. It adds an extension to 'Span' objects.", "pip": "negspacy", "category": ["pipeline", "scientific"], "tags": ["negation", "text-processing"], "thumb": "https://github.com/jenojp/negspacy/blob/master/docs/thumb.png?raw=true", "image": "https://github.com/jenojp/negspacy/blob/master/docs/icon.png?raw=true", "code_example": ["import spacy", "from negspacy.negation import Negex", "", "nlp = spacy.load(\"en_core_web_sm\")", "nlp.add_pipe(\"negex\", config={\"ent_types\":[\"PERSON\",\"ORG\"]})", "", "doc = nlp(\"She does not like Steve Jobs but likes Apple products.\")", "for e in doc.ents:", "    print(e.text, e._.negex)"], "author": "Jeno Pizarro", "author_links": {"github": "jenojp", "twitter": "jenojp"}}
+{
+    "id": "negspacy",
+    "title": "negspaCy",
+    "slogan": "spaCy pipeline object for negating concepts in text based on the NegEx algorithm.",
+    "github": "jenojp/negspacy",
+    "url": "https://github.com/jenojp/negspacy",
+    "description": "negspacy is a spaCy pipeline component that evaluates whether Named Entities are negated in text. It adds an extension to 'Span' objects.",
+    "pip": "negspacy",
+    "category": [
+        "pipeline",
+        "scientific"
+    ],
+    "tags": [
+        "negation",
+        "text-processing"
+    ],
+    "thumb": "https://github.com/jenojp/negspacy/blob/master/docs/thumb.png?raw=true",
+    "image": "https://github.com/jenojp/negspacy/blob/master/docs/icon.png?raw=true",
+    "code_example": [
+        "import spacy",
+        "from negspacy.negation import Negex",
+        "",
+        "nlp = spacy.load(\"en_core_web_sm\")",
+        "nlp.add_pipe(\"negex\", config={\"ent_types\":[\"PERSON\",\"ORG\"]})",
+        "",
+        "doc = nlp(\"She does not like Steve Jobs but likes Apple products.\")",
+        "for e in doc.ents:",
+        "    print(e.text, e._.negex)"
+    ],
+    "author": "Jeno Pizarro",
+    "author_links": {
+        "github": "jenojp",
+        "twitter": "jenojp"
+    }
+}

@@ -1,1 +1,26 @@
-{"id": "spacy_readability", "slogan": "Add text readability meta data to Doc objects", "description": "spaCy v2.0 pipeline component for calculating readability scores of of text. Provides scores for Flesh-Kincaid grade level, Flesh-Kincaid reading ease, and Dale-Chall.", "github": "mholtzscher/spacy_readability", "pip": "spacy-readability", "code_example": ["import spacy", "from spacy_readability import Readability", "", "nlp = spacy.load('en')", "read = Readability(nlp)", "nlp.add_pipe(read, last=True)", "doc = nlp(\"I am some really difficult text to read because I use obnoxiously large words.\")", "doc._.flesch_kincaid_grade_level", "doc._.flesch_kincaid_reading_ease", "doc._.dale_chall"], "author": "Michael Holtzscher", "author_links": {"github": "mholtzscher"}, "category": ["pipeline"]}
+{
+    "id": "spacy_readability",
+    "slogan": "Add text readability meta data to Doc objects",
+    "description": "spaCy v2.0 pipeline component for calculating readability scores of of text. Provides scores for Flesh-Kincaid grade level, Flesh-Kincaid reading ease, and Dale-Chall.",
+    "github": "mholtzscher/spacy_readability",
+    "pip": "spacy-readability",
+    "code_example": [
+        "import spacy",
+        "from spacy_readability import Readability",
+        "",
+        "nlp = spacy.load('en')",
+        "read = Readability(nlp)",
+        "nlp.add_pipe(read, last=True)",
+        "doc = nlp(\"I am some really difficult text to read because I use obnoxiously large words.\")",
+        "doc._.flesch_kincaid_grade_level",
+        "doc._.flesch_kincaid_reading_ease",
+        "doc._.dale_chall"
+    ],
+    "author": "Michael Holtzscher",
+    "author_links": {
+        "github": "mholtzscher"
+    },
+    "category": [
+        "pipeline"
+    ]
+}

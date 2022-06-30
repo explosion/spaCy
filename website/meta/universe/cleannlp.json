@@ -1,1 +1,15 @@
-{"id": "cleannlp", "title": "CleanNLP", "slogan": "A tidy data model for NLP in R", "description": "The cleanNLP package is designed to make it as painless as possible to turn raw text into feature-rich data frames. the package offers four backends that can be used for parsing text: `tokenizers`, `udpipe`, `spacy` and `corenlp`.", "github": "statsmaths/cleanNLP", "cran": "cleanNLP", "author": "Taylor B. Arnold", "author_links": {"github": "statsmaths"}, "category": ["nonpython"]}
+{
+    "id": "cleannlp",
+    "title": "CleanNLP",
+    "slogan": "A tidy data model for NLP in R",
+    "description": "The cleanNLP package is designed to make it as painless as possible to turn raw text into feature-rich data frames. the package offers four backends that can be used for parsing text: `tokenizers`, `udpipe`, `spacy` and `corenlp`.",
+    "github": "statsmaths/cleanNLP",
+    "cran": "cleanNLP",
+    "author": "Taylor B. Arnold",
+    "author_links": {
+        "github": "statsmaths"
+    },
+    "category": [
+        "nonpython"
+    ]
+}

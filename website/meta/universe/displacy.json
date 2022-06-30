@@ -1,1 +1,18 @@
-{"id": "displacy", "title": "displaCy", "slogan": "A modern syntactic dependency visualizer", "description": "Visualize spaCy's guess at the syntactic structure of a sentence. Arrows point from children to heads, and are labelled by their relation type.", "url": "https://explosion.ai/demos/displacy", "thumb": "https://i.imgur.com/nxDcHaL.jpg", "image": "https://explosion.ai/assets/img/demos/displacy.png", "author": "Ines Montani", "author_links": {"twitter": "_inesmontani", "github": "ines", "website": "https://ines.io"}, "category": ["visualizers"]}
+{
+    "id": "displacy",
+    "title": "displaCy",
+    "slogan": "A modern syntactic dependency visualizer",
+    "description": "Visualize spaCy's guess at the syntactic structure of a sentence. Arrows point from children to heads, and are labelled by their relation type.",
+    "url": "https://explosion.ai/demos/displacy",
+    "thumb": "https://i.imgur.com/nxDcHaL.jpg",
+    "image": "https://explosion.ai/assets/img/demos/displacy.png",
+    "author": "Ines Montani",
+    "author_links": {
+        "twitter": "_inesmontani",
+        "github": "ines",
+        "website": "https://ines.io"
+    },
+    "category": [
+        "visualizers"
+    ]
+}
