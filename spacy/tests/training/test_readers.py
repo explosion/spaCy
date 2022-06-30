@@ -60,11 +60,12 @@ def test_readers():
     assert isinstance(extra_corpus, Callable)
 
 
+# TODO: enable IMDB test once Stanford servers are back up and running
 @pytest.mark.slow
 @pytest.mark.parametrize(
     "reader,additional_config",
     [
-        ("ml_datasets.imdb_sentiment.v1", {"train_limit": 10, "dev_limit": 10}),
+        #        ("ml_datasets.imdb_sentiment.v1", {"train_limit": 10, "dev_limit": 10}),
         ("ml_datasets.dbpedia.v1", {"train_limit": 10, "dev_limit": 10}),
         ("ml_datasets.cmu_movies.v1", {"limit": 10, "freq_cutoff": 200, "split": 0.8}),
     ],
