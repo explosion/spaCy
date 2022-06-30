@@ -792,16 +792,16 @@ def test_matcher_with_alignments_non_greedy(en_vocab):
 
 def test_matcher_non_greedy_operator(en_vocab):
     cases = [
-        (0, "aabbab", "a*? b", ["a a b", "a b", "b", "b", "a b", "b"], 6),
-        (1, "aabbab", "a+? b", ["a b", "a a b", "a b"], 3),
-        (2, "aabbab", "a*? b+?", ["a a b", "a b", "b", "b", "a b", "b"], 6),
-        (3, "aabbab", "a*? b*?", [], 0),
-        (4, "aabbab", "a* b*?", ["a", "a a", "a", "a"], 4),
-        (5, "aabbab", "a*? b*", ["a a b", "a b", "b", "a a b b", "a b b", "b b", "b", "a b", "b"], 9),
-        (6, "aabbc", "a* b*? c*?", ["a", "a a", 'a'], 3),
-        (7, "aabbc", "a* b*? c", ["a a b b c", "a b b c", "b b c", "b c", "c"], 5),
+        (0, "aabbab", "a*? b", ["a a b", "a b", "b", "b", "a b", "b"]),
+        (1, "aabbab", "a+? b", ["a b", "a a b", "a b"]),
+        (2, "aabbab", "a*? b+?", ["a a b", "a b", "b", "b", "a b", "b"]),
+        (3, "aabbab", "a*? b*?", []),
+        (4, "aabbab", "a* b*?", ["a", "a a", "a", "a"]),
+        (5, "aabbab", "a*? b*", ["a a b", "a b", "b", "a a b b", "a b b", "b b", "b", "a b", "b"]),
+        (6, "aabbc", "a* b*? c*?", ["a", "a a", 'a']),
+        (7, "aabbc", "a* b*? c", ["a a b b c", "a b b c", "b b c", "b c", "c"]),
 
-        (8, "abc", "a* b*? c*", ["a", "a b c", "b c", "c"], 4),
+        (8, "abc", "a* b*? c*", ["a", "a b c", "b c", "c"]),
         # in spaCy, quantifier "*" returns __all__possible__ matches which is different from regex
         # in spaCy, quantifier "*?" is designed to return only the non-greedy results from all possible matches
         # Result 1: a
@@ -811,13 +811,16 @@ def test_matcher_non_greedy_operator(en_vocab):
         # behaviour since 'a' and 'c' are matches thus the longest, first possible string "a b c"
         # should be one of the results
 
-        (9, "aabbc", "a+? b*? c", ["a b b c", "a a b b c"], 2),
-        (10, "aabbc", "a+? b+? c", ["a b b c", "a a b b c"], 2),
-        (11, "abbc", "a* b*? c?", ["a", "a b b c", "b b c", "b c", "c"], 5),
-        (12, "aabbc", "d! b*? c", ["b c", "b b c", "a b b c"], 3),
+        (9, "aabbc", "a+? b*? c", ["a b b c", "a a b b c"]),
+        (10, "aabbc", "a+? b+? c", ["a b b c", "a a b b c"]),
+        (11, "abbc", "a* b*? c?", ["a", "a b b c", "b b c", "b c", "c"]),
+        (12, "aabbc", "d! b*? c", ["b c", "b b c", "a b b c"]),
+        (13, "abbxb", "a*? b+? c*", ["a b", "b", "b", "b"]),
+        (14, "abbcbc", "a*? b+? c*", ["a b", "b", "b", "b c", "a b b c",  "b b c", "b", "b c"]),
+        (15, "abbcbc", "a*? b+? c", ["b c", "a b b c", "b b c", "b c"]),
 
     ]
-    for case_id, string, pattern_str, results, results_len in cases:
+    for case_id, string, pattern_str, results in cases:
         matcher = Matcher(en_vocab)
         doc = Doc(matcher.vocab, words=list(string))
         pattern = []
@@ -838,7 +841,7 @@ def test_matcher_non_greedy_operator(en_vocab):
                 pattern.append({"ORTH": part})
         matcher.add("PATTERN", [pattern])
         matches = matcher(doc, as_spans=True)
-        assert len(matches) == results_len
+        assert len(matches) == len(results)
         for i in range(len(matches)):
             print(i)
             assert matches[i].text == results[i]
