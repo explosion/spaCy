@@ -209,6 +209,9 @@ class Warnings(metaclass=ErrorsWithCodes):
             "Only the last span group will be loaded under "
             "Doc.spans['{group_name}']. Skipping span group with values: "
             "{group_values}")
+    W121 = ("Attempting to trace non-existent method '{method}' in pipe '{pipe}'")
+    W122 = ("Couldn't trace method '{method}' in pipe '{pipe}'. This can happen if the pipe class "
+            "is a Cython extension type.")
 
 
 class Errors(metaclass=ErrorsWithCodes):
