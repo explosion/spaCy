@@ -361,7 +361,7 @@ def debug_data(
             if label != "-"
         ]
         labels_with_counts = _format_labels(labels_with_counts, counts=True)
-        msg.text(f"Labels in train data: {_format_labels(labels)}", show=verbose)
+        msg.text(f"Labels in train data: {labels_with_counts}", show=verbose)
         missing_labels = model_labels - labels
         if missing_labels:
             msg.warn(
