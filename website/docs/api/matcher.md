@@ -69,6 +69,8 @@ matched:
 | `?`     | Make the pattern optional, by allowing it to match 0 or 1 times.       |
 | `+`     | Require the pattern to match 1 or more times.                          |
 | `*`     | Allow the pattern to match 0 or more times.                            |
+| `+?`    | Require the pattern to match non-greedily 1 or more times.             |
+| `*?`    | Allow the pattern to match non-greedily 0 or more times.               |
 | `{n}`   | Require the pattern to match exactly _n_ times.                        |
 | `{n,m}` | Require the pattern to match at least _n_ but not more than _m_ times. |
 | `{n,}`  | Require the pattern to match at least _n_ times.                       |
