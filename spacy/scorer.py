@@ -916,6 +916,10 @@ class Scorer:
             ref = eg.reference
             pred = eg.predicted
             for key, gold_sg in ref.spans.items():
+                #TODO it might be better to do something like pred.spans.get(key, [])
+                if len(gold_sg) == 0:
+                    # if there are no spans there's nothing to predict
+                    continue
                 if key.startswith(output_prefix):
                     pred_sg = pred.spans[key]
                     for gold_mention, pred_mention in zip(gold_sg, pred_sg):
@@ -924,6 +928,9 @@ class Scorer:
                         pred_starts.append(pred_mention.start)
                         pred_ends.append(pred_mention.end)
 
+            # it's possible there are no heads to predict from, in which case, skip
+            if len(starts) == 0:
+                continue
 
             # see how many are perfect
             cs = [a == b for a, b in zip(starts, pred_starts)]
@@ -933,7 +940,13 @@ class Scorer:
 
             scores.append(float(accuracy))
         out_key = f"span_{output_prefix}_accuracy"
-        return {out_key: mean(scores)}
+
+        # it is possible there was nothing to score
+        final = 0.0
+        if len(scores) > 0:
+            final = mean(scores)
+
+        return {out_key: final}
 
 
 def get_ner_prf(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
