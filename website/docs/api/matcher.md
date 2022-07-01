@@ -74,7 +74,7 @@ matched:
 | `{n}`   | Require the pattern to match exactly _n_ times.                        |
 | `{n,m}` | Require the pattern to match at least _n_ but not more than _m_ times. |
 | `{n,}`  | Require the pattern to match at least _n_ times.                       |
-| `{,m}`  | Require the pattern to match at most _                                 
+| `{,m}`  | Require the pattern to match at most _m_ times.                        |                        
 Token patterns can also map to a **dictionary of properties** instead of a
 single value to indicate whether the expected value is a member of a list or how
 it compares to another value.
