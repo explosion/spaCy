@@ -733,9 +733,12 @@ cdef int8_t get_is_match(PatternStateC state,
 cdef action_t cast_to_non_greedy_action(action_t action, action_t next_action, vector[PatternStateC]& new_states,
                                         vector[vector[MatchAlignmentC]]& align_new_states, bint with_alignments) nogil:
     """Cast "next_action" to another "action" that demonstrates non-greedy behaviour.
-    
+
     To cast "next_action" to a non-greedy action, the "next_action"s that we have to modify are
     MATCH, MATCH REJECT, MATCH_EXTEND, MATCH_DOUBLE.
+    
+    cast_to_non_greedy_action() is required and cannot be merged with get_action() as there is a need for the 
+    comparison of the 2 different actions from different patterns.
     
     next_action = MATCH, action = RETRY_OR_EXTEND
     - Removed the extension when there is a MATCH
