@@ -726,4 +726,4 @@ def test_matcher_non_greedy_operator(en_vocab):
     pattern = [{"ORTH": "a", "OP": "*?"}, {"ORTH": "B", "OP": "+?"}]
     matcher.add("Non-greedy", [pattern])
     matches = [doc[start:end].text for _, start, end in matcher(doc)]
-    assert len(matches) == 3
+    assert len(matches) == 7
