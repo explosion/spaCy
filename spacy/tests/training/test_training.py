@@ -671,13 +671,13 @@ def test_gold_ner_missing_tags(en_tokenizer):
 
 def test_projectivize(en_tokenizer):
     doc = en_tokenizer("He pretty quickly walks away")
-    heads = [3, 2, 3, 0, 2]
+    heads = [3, 2, 3, 3, 2]
     deps = ["dep"] * len(heads)
     example = Example.from_dict(doc, {"heads": heads, "deps": deps})
     proj_heads, proj_labels = example.get_aligned_parse(projectivize=True)
     nonproj_heads, nonproj_labels = example.get_aligned_parse(projectivize=False)
-    assert proj_heads == [3, 2, 3, 0, 3]
-    assert nonproj_heads == [3, 2, 3, 0, 2]
+    assert proj_heads == [3, 2, 3, 3, 3]
+    assert nonproj_heads == [3, 2, 3, 3, 2]
 
 
 def test_iob_to_biluo():

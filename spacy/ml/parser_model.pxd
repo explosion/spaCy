@@ -1,4 +1,5 @@
 from libc.string cimport memset, memcpy
+from thinc.backends.cblas cimport CBlas
 from ..typedefs cimport weight_t, hash_t
 from ..pipeline._parser_internals._state cimport StateC
 
@@ -38,7 +39,7 @@ cdef ActivationsC alloc_activations(SizesC n) nogil
 
 cdef void free_activations(const ActivationsC* A) nogil
 
-cdef void predict_states(ActivationsC* A, StateC** states,
+cdef void predict_states(CBlas cblas, ActivationsC* A, StateC** states,
         const WeightsC* W, SizesC n) nogil
  
 cdef int arg_max_if_valid(const weight_t* scores, const int* is_valid, int n) nogil

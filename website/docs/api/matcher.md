@@ -113,6 +113,10 @@ string where an integer is expected) or unexpected property names.
 
 Find all token sequences matching the supplied patterns on the `Doc` or `Span`.
 
+Note that if a single label has multiple patterns associated with it, the
+returned matches don't provide a way to tell which pattern was responsible for
+the match.
+
 > #### Example
 >
 > ```python
@@ -131,7 +135,7 @@ Find all token sequences matching the supplied patterns on the `Doc` or `Span`.
 | _keyword-only_                                   |                                                                                                                                                                                                                                                                                                          |
 | `as_spans` <Tag variant="new">3</Tag>            | Instead of tuples, return a list of [`Span`](/api/span) objects of the matches, with the `match_id` assigned as the span label. Defaults to `False`. ~~bool~~                                                                                                                                            |
 | `allow_missing` <Tag variant="new">3</Tag>       | Whether to skip checks for missing annotation for attributes included in patterns. Defaults to `False`. ~~bool~~                                                                                                                                                                                         |
-| `with_alignments` <Tag variant="new">3.0.6</Tag> | Return match alignment information as part of the match tuple as `List[int]` with the same length as the matched span. Each entry denotes the corresponding index of the token pattern. If `as_spans` is set to `True`, this setting is ignored. Defaults to `False`. ~~bool~~                           |
+| `with_alignments` <Tag variant="new">3.0.6</Tag> | Return match alignment information as part of the match tuple as `List[int]` with the same length as the matched span. Each entry denotes the corresponding index of the token in the pattern. If `as_spans` is set to `True`, this setting is ignored. Defaults to `False`. ~~bool~~                    |
 | **RETURNS**                                      | A list of `(match_id, start, end)` tuples, describing the matches. A match tuple describes a span `doc[start:end`]. The `match_id` is the ID of the added match pattern. If `as_spans` is set to `True`, a list of `Span` objects is returned instead. ~~Union[List[Tuple[int, int, int]], List[Span]]~~ |
 
 ## Matcher.\_\_len\_\_ {#len tag="method" new="2"}

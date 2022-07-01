@@ -1,33 +1,39 @@
 from typing import List
 from ..errors import Errors
 import numpy
+from libc.stdint cimport int32_t
 
 
 cdef class AlignmentArray:
     """AlignmentArray is similar to Thinc's Ragged with two simplfications:
     indexing returns numpy arrays and this type can only be used for CPU arrays.
-    However, these changes make AlginmentArray more efficient for indexing in a
+    However, these changes make AlignmentArray more efficient for indexing in a
     tight loop."""
 
     __slots__ = []
 
     def __init__(self, alignment: List[List[int]]):
-        self._lengths = None
-        self._starts_ends = numpy.zeros(len(alignment) + 1, dtype="i")
-
         cdef int data_len = 0
         cdef int outer_len
         cdef int idx
+
+        self._starts_ends = numpy.zeros(len(alignment) + 1, dtype='int32')
+        cdef int32_t* starts_ends_ptr = <int32_t*>self._starts_ends.data
+
         for idx, outer in enumerate(alignment):
             outer_len = len(outer)
-            self._starts_ends[idx + 1] = self._starts_ends[idx] + outer_len
+            starts_ends_ptr[idx + 1] = starts_ends_ptr[idx] + outer_len
             data_len += outer_len
 
-        self._data = numpy.empty(data_len, dtype="i")
+        self._lengths = None
+        self._data = numpy.empty(data_len, dtype="int32")
+
         idx = 0
+        cdef int32_t* data_ptr = <int32_t*>self._data.data
+
         for outer in alignment:
             for inner in outer:
-                self._data[idx] = inner
+                data_ptr[idx] = inner
                 idx += 1
 
     def __getitem__(self, idx):
