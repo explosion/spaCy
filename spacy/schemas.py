@@ -202,6 +202,8 @@ class TokenPatternNumber(BaseModel):
 class TokenPatternOperatorSimple(str, Enum):
     plus: StrictStr = StrictStr("+")
     star: StrictStr = StrictStr("*")
+    plus_question: StrictStr = StrictStr("+?")
+    star_question: StrictStr = StrictStr("*?")
     question: StrictStr = StrictStr("?")
     exclamation: StrictStr = StrictStr("!")
 
