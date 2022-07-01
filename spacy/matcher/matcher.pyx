@@ -452,7 +452,7 @@ cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& match
             next_action = get_action(states[q], token.c, extra_attrs, cached_py_predicates)
             # To account for *? and +?
             if get_quantifier(state) == ZERO_MINUS:
-                next_action = cast_to_non_greedy_action(state, action, next_action, new_states, align_new_states, with_alignments)
+                next_action = cast_to_non_greedy_action(action, next_action, new_states, align_new_states, with_alignments)
             action = next_action
         # Update alignment before the transition of current state
         if with_alignments != 0:
@@ -546,6 +546,7 @@ cdef void finish_states(vector[MatchC]& matches, vector[PatternStateC]& states,
     for i in range(states.size()):
         state = states[i]
         if is_non_greedy_star(state):
+            # if the final pattern token is a *?, remove the match by skipping it.
             continue
         if with_alignments != 0:
             align_state = align_states[i]
@@ -579,7 +580,8 @@ cdef action_t get_action(PatternStateC state, const TokenC* token, const attr_t*
     d) Do we add a state with (same state, next token)?
 
     We'll code the actions as boolean strings, so 0000 means no to all 4,
-    1000 means match but no states added, etc.
+    1000 means match but no states added, 
+    and numbers other than 1 represents special actions etc.
     
     1:
       Yes, final:
@@ -601,20 +603,20 @@ cdef action_t get_action(PatternStateC state, const TokenC* token, const attr_t*
         0010
     0-:
       Yes, final:
-        1000 (note: Don't include last token!)
+        2000 (note: Don't include last token!)
       Yes, non-final:
-        0011 (note: Retry or Extend) 
+        0022 (note: Retry or Extend) 
       No, final:
-        1000 (note: Don't include last token!)
+        2000 (note: Don't include last token!)
       No, non-final:
         0010
     ?:
       Yes, final:
-        1000
+        3000
       Yes, non-final:
         0100
       No, final:
-        1000 (note: Don't include last token!)
+        2000 (note: Don't include last token!)
       No, non-final:
         0010
 
@@ -630,7 +632,7 @@ cdef action_t get_action(PatternStateC state, const TokenC* token, const attr_t*
     MATCH_ADVANCE = 1100
     RETRY_ADVANCE = 0110
     RETRY_EXTEND = 0011
-    RETRY_OR_EXTEND = 0022 # If Match after Retry, does not Extend
+    RETRY_OR_EXTEND = 0022 # If there is a Match after Retry, does not Extend
     MATCH_REJECT = 2000 # Match, but don't include last token
     MATCH_DOUBLE = 3000 # Match both with and without last token
 
@@ -647,8 +649,14 @@ cdef action_t get_action(PatternStateC state, const TokenC* token, const attr_t*
       if is_match and is_final:
           # Yes, final: 1000
           return MATCH
-      elif is_match and not is_final and has_star_tail(state) and is_non_greedy_plus(state):
-          # Yes, non-final: 0011
+      elif is_non_greedy_plus(state) and has_star_tail(state) and is_match and not is_final :
+          # Yes, non-final: 1100
+          # Modification for +?:
+          # Having MATCH_ADVANCE handles the match at the 'ONE' part of the token instead of relying on MATCH_REJECT
+          # and other actions from other tokens to produce a match.
+          # is_non_greedy_plus() verifies that the current state's pattern is +?
+          # has_star_tail() verifies the remaining pattern tokens are either * or *?,
+          # so that it is valid for the current match to exist.
           return MATCH_ADVANCE
       elif is_match and not is_final:
           # Yes, non-final: 0100
@@ -678,6 +686,9 @@ cdef action_t get_action(PatternStateC state, const TokenC* token, const attr_t*
         elif is_match:
             # Yes, non-final: 0022
             # If there is a match, further extensions are skipped so that the behaviour is non-greedy
+            # pattern: b*?b string: b b
+            # We do not extend on first b to exhibit non-greedy behaviour
+            # such that "b" is matched but "b b" is not matched
             return RETRY_OR_EXTEND
         else:
             # No, non-final 0010
@@ -719,10 +730,39 @@ cdef int8_t get_is_match(PatternStateC state,
     return True
 
 
-cdef action_t cast_to_non_greedy_action(PatternStateC state, action_t action, action_t next_action,
-                                        vector[PatternStateC]& new_states,
-                                        vector[vector[MatchAlignmentC]]& align_new_states,
-                                        bint with_alignments) nogil:
+cdef action_t cast_to_non_greedy_action(action_t action, action_t next_action, vector[PatternStateC]& new_states,
+                                        vector[vector[MatchAlignmentC]]& align_new_states, bint with_alignments) nogil:
+    """Cast "next_action" to another "action" that demonstrates non-greedy behaviour.
+    
+    To cast "next_action" to a non-greedy action, the "next_action"s that we have to modify are
+    MATCH, MATCH REJECT, MATCH_EXTEND, MATCH_DOUBLE.
+    
+    next_action = MATCH, action = RETRY_OR_EXTEND
+    - Removed the extension when there is a MATCH
+    
+    next_action = MATCH_REJECT
+    - Cast MATCH_REJECT TO REJECT
+    - Remove the match since it ends with the '*?' pattern token and removes the current state
+    - 'state' is ZERO_MINUS so the previous doc token matched the ZERO_MINUS pattern token
+    - E.g. pattern = "a*? b*", doc = "a a"
+    - MATCH_REJECT will add 'a' to the matches in transition_states()
+    - and casting MATCH_REJECT to EXTEND removes such results.
+    
+    next_action = MATCH_EXTEND, action = RETRY (where the RETRY came from ZERO_MINUS quantifier)
+    - Cast MATCH_EXTEND to EXTEND
+    - Remove the match since it ends with the '*?' pattern token
+    - E.g. pattern = "a*? b*" doc = "a b"
+    - MATCH_EXTEND will add 'a' to the matches in transition_states() 
+    - and casting MATCH_EXTEND to EXTEND removes such results.
+    
+    next_action = MATCH_DOUBLE after action = RETRY (where the RETRY came from ZERO_MINUS quantifier)
+    - Cast MATCH_DOUBLE to MATCH
+    - MATCH_DOUBLE adds 2 matches, one with the last token and one without the token, casting the action to MATCH
+    - removes the match without the last token which is the match that ends with a '*?' pattern token.
+    - E.g. pattern = "a* b?" doc = "a b"
+    - MATCH_DOUBLE will add add the following 2 matches ['a' and 'a b'] 
+    - and casting MATCH_DOUBLE to MATCH removes 'a'.
+    """
     if action == RETRY_OR_EXTEND and next_action == MATCH:
         # Stop the extension once there is a match
         new_states.pop_back()
@@ -731,9 +771,9 @@ cdef action_t cast_to_non_greedy_action(PatternStateC state, action_t action, ac
         return MATCH
     elif next_action == MATCH_REJECT:
         # Remove matches that end with *? token
+        # MATCH_REJECT will result in matches that end with the *? token since the
         return REJECT
     elif action == RETRY and next_action == MATCH_EXTEND:
-        with gil:
         # This handles the 'extend' without matching
         # Remove matches that end with *? token
         return EXTEND
@@ -751,19 +791,12 @@ cdef inline int8_t get_is_final(PatternStateC state) nogil:
         return 0
 
 
-cdef inline int8_t has_non_greedy_tail(PatternStateC state) nogil:
-    while not get_is_final(state):
-        state.pattern += 1
-        if state.pattern.quantifier != ZERO_MINUS:
-            return 0
-    return 1
-
-
 cdef inline int8_t get_quantifier(PatternStateC state) nogil:
     return state.pattern.quantifier
 
 
 cdef inline int8_t is_non_greedy_plus(PatternStateC state) nogil:
+    """Verify whether current state pattern is '+?'"""
     if (state.pattern + 1).quantifier == ZERO_MINUS and get_quantifier(state) == ONE \
             and (state.pattern + 1).token_idx == state.pattern.token_idx:
         return 1
@@ -772,6 +805,7 @@ cdef inline int8_t is_non_greedy_plus(PatternStateC state) nogil:
 
 
 cdef inline int8_t is_non_greedy_star(PatternStateC state) nogil:
+    """Verify whether current state pattern is '*?'"""
     if (state.pattern - 1).quantifier != ONE and get_quantifier(state) == ZERO_MINUS:
         return 1
     else:
@@ -779,9 +813,19 @@ cdef inline int8_t is_non_greedy_star(PatternStateC state) nogil:
 
 
 cdef inline int8_t has_star_tail(PatternStateC state) nogil:
+    """Verify whether all remaining patterns are either '*' or '*?'"""
     while not get_is_final(state):
         state.pattern += 1
         if get_quantifier(state) not in [ZERO_PLUS, ZERO_MINUS]:
+            return 0
+    return 1
+
+
+cdef inline int8_t has_non_greedy_tail(PatternStateC state) nogil:
+    """Verify whether all remaining patterns are '*?'"""
+    while not get_is_final(state):
+        state.pattern += 1
+        if state.pattern.quantifier != ZERO_MINUS:
             return 0
     return 1
 
