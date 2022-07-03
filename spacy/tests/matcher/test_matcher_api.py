@@ -685,8 +685,8 @@ def test_matcher_ent_iob_key(en_vocab):
 def test_matcher_min_max_operator(en_vocab):
     # Exactly n matches {n}
     doc = Doc(
-        en_vocab, words=["foo", "bar", "foo", "foo", "bar",
-                         "foo", "foo", "foo", "bar", "bar"]
+        en_vocab,
+        words=["foo", "bar", "foo", "foo", "bar", "foo", "foo", "foo", "bar", "bar"],
     )
     matcher = Matcher(en_vocab)
     pattern = [{"ORTH": "foo", "OP": "{3}"}]
