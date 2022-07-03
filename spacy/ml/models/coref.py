@@ -25,7 +25,6 @@ def build_wl_coref_model(
     tok2vec_size: int = 768,  # tok2vec size
 ):
     # TODO add model return types
-    tok2vec_size = 64
 
     with Model.define_operators({">>": chain}):
         coref_clusterer = PyTorchWrapper(

@@ -44,6 +44,8 @@ TRAIN_DATA = [
 ]
 # fmt: on
 
+CONFIG = {"model": {"@architectures": "spacy.SpanPredictor.v1", "tok2vec_size": 64}}
+
 
 @pytest.fixture
 def nlp():
@@ -74,7 +76,7 @@ def test_not_initialized(nlp):
 @pytest.mark.skipif(not has_torch, reason="Torch not available")
 def test_span_predictor_serialization(nlp):
     # Test that the span predictor component can be serialized
-    nlp.add_pipe("span_predictor", last=True)
+    nlp.add_pipe("span_predictor", last=True, config=CONFIG)
     nlp.initialize()
     assert nlp.pipe_names == ["span_predictor"]
     text = "She gave me her pen."
@@ -96,7 +98,7 @@ def test_overfitting_IO(nlp):
     for text, annot in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(text), annot))
 
-    nlp.add_pipe("span_predictor")
+    nlp.add_pipe("span_predictor", config=CONFIG)
     optimizer = nlp.initialize()
     test_text = TRAIN_DATA[0][0]
     doc = nlp(test_text)
