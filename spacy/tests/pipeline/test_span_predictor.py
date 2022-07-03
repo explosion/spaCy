@@ -21,22 +21,22 @@ TRAIN_DATA = [
         {
             "spans": {
                 f"{DEFAULT_CLUSTER_PREFIX}_1": [
-                    (0, 11, "MENTION"),      # John Smith
-                    (38, 41, "MENTION"),     # he
+                    (0, 10, "MENTION"),      # John Smith
+                    (38, 40, "MENTION"),     # he
 
                 ],
                 f"{DEFAULT_CLUSTER_PREFIX}_2": [
                     (25, 33, "MENTION"),     # red ball
-                    (47, 50, "MENTION"),     # it
+                    (47, 49, "MENTION"),     # it
                 ],
                 f"coref_head_clusters_1": [
-                    (5, 11, "MENTION"),      # Smith
-                    (38, 41, "MENTION"),     # he
+                    (5, 10, "MENTION"),      # Smith
+                    (38, 40, "MENTION"),     # he
 
                 ],
                 f"coref_head_clusters_2": [
                     (29, 33, "MENTION"),     # red ball
-                    (47, 50, "MENTION"),     # it
+                    (47, 49, "MENTION"),     # it
                 ]
             }
         },
@@ -129,3 +129,75 @@ def test_overfitting_IO(nlp):
     docs3 = [nlp(text) for text in texts]
     assert spans2ints(docs1[0]) == spans2ints(docs2[0])
     assert spans2ints(docs1[0]) == spans2ints(docs3[0])
+
+
+@pytest.mark.skipif(not has_torch, reason="Torch not available")
+def test_tokenization_mismatch(nlp):
+    train_examples = []
+    for text, annot in TRAIN_DATA:
+        eg = Example.from_dict(nlp.make_doc(text), annot)
+        ref = eg.reference
+        char_spans = {}
+        for key, cluster in ref.spans.items():
+            char_spans[key] = []
+            for span in cluster:
+                char_spans[key].append((span[0].idx, span[-1].idx + len(span[-1])))
+        with ref.retokenize() as retokenizer:
+            # merge "picked up"
+            retokenizer.merge(ref[2:4])
+
+        # Note this works because it's the same doc and we know the keys
+        for key, _ in ref.spans.items():
+            spans = char_spans[key]
+            ref.spans[key] = [ref.char_span(*span) for span in spans]
+
+        # Finally, copy over the head spans to the pred
+        pred = eg.predicted
+        for key, val in ref.spans.items():
+            if key.startswith("coref_head_clusters"):
+                spans = char_spans[key]
+                pred.spans[key] = [pred.char_span(*span) for span in spans]
+
+        train_examples.append(eg)
+
+    nlp.add_pipe("span_predictor", config=CONFIG)
+    optimizer = nlp.initialize()
+    test_text = TRAIN_DATA[0][0]
+    doc = nlp(test_text)
+
+    for i in range(100):
+        losses = {}
+        nlp.update(train_examples, sgd=optimizer, losses=losses)
+        doc = nlp(test_text)
+
+    # test the trained model; need to use doc with head spans on it already
+    test_doc = train_examples[0].predicted
+    doc = nlp(test_doc)
+
+    # XXX DEBUG
+    print("SPANS", len(doc.spans))
+    for key, val in doc.spans.items():
+        print(key, val)
+        print("...")
+
+    # Also test the results are still the same after IO
+    with make_tempdir() as tmp_dir:
+        nlp.to_disk(tmp_dir)
+        nlp2 = util.load_model_from_path(tmp_dir)
+        doc2 = nlp2(test_text)
+
+    # Make sure that running pipe twice, or comparing to call, always amounts to the same predictions
+    texts = [
+        test_text,
+        "I noticed many friends around me",
+        "They received it. They received the SMS.",
+    ]
+
+    # save the docs so they don't get garbage collected
+    docs1 = list(nlp.pipe(texts))
+    docs2 = list(nlp.pipe(texts))
+    docs3 = [nlp(text) for text in texts]
+    assert spans2ints(docs1[0]) == spans2ints(docs2[0])
+    assert spans2ints(docs1[0]) == spans2ints(docs3[0])
+    assert False
+
