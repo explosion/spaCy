@@ -9,6 +9,7 @@ from spacy.ml.models.coref_util import (
     DEFAULT_CLUSTER_PREFIX,
     select_non_crossing_spans,
     get_sentence_ids,
+    spans2ints,
 )
 
 from thinc.util import has_torch
@@ -35,16 +36,6 @@ TRAIN_DATA = [
 # fmt: on
 
 
-def spans2ints(doc):
-    """Convert doc.spans to nested list of ints for comparison.
-    The ints are token indices.
-
-    This is useful for checking consistency of predictions.
-    """
-    out = []
-    for key, cluster in doc.spans.items():
-        out.append([(ss.start, ss.end) for ss in cluster])
-    return out
 
 
 @pytest.fixture

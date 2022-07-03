@@ -143,7 +143,7 @@ def create_head_span_idxs(ops, doclen: int):
 
 
 def get_clusters_from_doc(doc) -> List[List[Tuple[int, int]]]:
-    """Given a Doc, convert the cluster spans to simple int tuple lists. The 
+    """Given a Doc, convert the cluster spans to simple int tuple lists. The
     ints are char spans, to be tokenization independent.
     """
     out = []
@@ -202,4 +202,16 @@ def create_gold_scores(
         out.append(row)
 
     # caller needs to convert to array, and add placeholder
+    return out
+
+
+def spans2ints(doc):
+    """Convert doc.spans to nested list of ints for comparison.
+    The ints are token indices.
+
+    This is useful for checking consistency of predictions.
+    """
+    out = []
+    for key, cluster in doc.spans.items():
+        out.append([(ss.start, ss.end) for ss in cluster])
     return out
