@@ -207,11 +207,13 @@ def create_gold_scores(
 
 def spans2ints(doc):
     """Convert doc.spans to nested list of ints for comparison.
-    The ints are token indices.
+    The ints are character indices, and the spans groups are sorted by key first.
 
     This is useful for checking consistency of predictions.
     """
     out = []
-    for key, cluster in doc.spans.items():
-        out.append([(ss.start, ss.end) for ss in cluster])
+    keys = sorted([key for key in doc.spans])
+    for key in keys:
+        cluster = doc.spans[key]
+        out.append([(ss.start_char, ss.end_char) for ss in cluster])
     return out
