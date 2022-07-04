@@ -1275,21 +1275,6 @@
             }
         },
         {
-            "id": "spacy-vis",
-            "slogan": "A visualisation tool for spaCy using Hierplane",
-            "description": "A visualiser for spaCy annotations. This visualisation uses the [Hierplane](https://allenai.github.io/hierplane/) Library to render the dependency parse from spaCy's models. It also includes visualisation of entities and POS tags within nodes.",
-            "github": "DeNeutoy/spacy-vis",
-            "url": "http://spacyvis.allennlp.org/spacy-parser",
-            "thumb": "https://i.imgur.com/DAG9QFd.jpg",
-            "image": "https://raw.githubusercontent.com/DeNeutoy/spacy-vis/master/img/example.gif",
-            "author": "Mark Neumann",
-            "author_links": {
-                "twitter": "MarkNeumannnn",
-                "github": "DeNeutoy"
-            },
-            "category": ["visualizers"]
-        },
-        {
             "id": "matcher-explorer",
             "title": "Rule-based Matcher Explorer",
             "slogan": "Test spaCy's rule-based Matcher by creating token patterns interactively",
