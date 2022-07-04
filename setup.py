@@ -126,6 +126,8 @@ class build_ext_options:
 
 class build_ext_subclass(build_ext, build_ext_options):
     def build_extensions(self):
+        if not self.parallel:
+            self.parallel = int(os.environ.get("SPACY_NUM_BUILD_JOBS", 1))
         build_ext_options.build_options(self)
         build_ext.build_extensions(self)
 
