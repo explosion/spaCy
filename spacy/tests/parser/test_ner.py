@@ -158,13 +158,18 @@ def test_issue3209():
 
 
 def test_labels_from_BILUO():
-    """Test that labels are inferred correctly when there's a - in label.
-    """
+    """Test that labels are inferred correctly when there's a - in label."""
     nlp = English()
     ner = nlp.add_pipe("ner")
     ner.add_label("LARGE-ANIMAL")
     nlp.initialize()
-    move_names = ["O", "B-LARGE-ANIMAL", "I-LARGE-ANIMAL", "L-LARGE-ANIMAL", "U-LARGE-ANIMAL"]
+    move_names = [
+        "O",
+        "B-LARGE-ANIMAL",
+        "I-LARGE-ANIMAL",
+        "L-LARGE-ANIMAL",
+        "U-LARGE-ANIMAL",
+    ]
     labels = {"LARGE-ANIMAL"}
     assert ner.move_names == move_names
     assert set(ner.labels) == labels
