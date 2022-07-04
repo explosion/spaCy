@@ -968,34 +968,6 @@
             "category": ["pipeline"]
         },
         {
-            "id": "spacy-lookup",
-            "slogan": "A powerful entity matcher for very large dictionaries, using the FlashText module",
-            "description": "spaCy v2.0 extension and pipeline component for adding Named Entities metadata to `Doc` objects. Detects Named Entities using dictionaries. The extension sets the custom `Doc`, `Token` and `Span` attributes `._.is_entity`, `._.entity_type`, `._.has_entities` and `._.entities`. Named Entities are matched using the python module `flashtext`, and looked up in the data provided by different dictionaries.",
-            "github": "mpuig/spacy-lookup",
-            "pip": "spacy-lookup",
-            "code_example": [
-                "import spacy",
-                "from spacy_lookup import Entity",
-                "",
-                "nlp = spacy.load('en')",
-                "entity = Entity(keywords_list=['python', 'product manager', 'java platform'])",
-                "nlp.add_pipe(entity, last=True)",
-                "",
-                "doc = nlp(\"I am a product manager for a java and python.\")",
-                "assert doc._.has_entities == True",
-                "assert doc[0]._.is_entity == False",
-                "assert doc[3]._.entity_desc == 'product manager'",
-                "assert doc[3]._.is_entity == True",
-                "",
-                "print([(token.text, token._.canonical) for token in doc if token._.is_entity])"
-            ],
-            "author": "Marc Puig",
-            "author_links": {
-                "github": "mpuig"
-            },
-            "category": ["pipeline"]
-        },
-        {
             "id": "spacy-iwnlp",
             "slogan": "German lemmatization with IWNLP",
             "description": "This package uses the [spaCy 2.0 extensions](https://spacy.io/usage/processing-pipelines#extensions) to add [IWNLP-py](https://github.com/Liebeck/iwnlp-py) as German lemmatizer directly into your spaCy pipeline.",
