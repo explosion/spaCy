@@ -2907,35 +2907,6 @@
             "author": "Stefan Daniel Dumitrescu, Andrei-Marius Avram"
         },
         {
-            "id": "num_fh",
-            "title": "Numeric Fused-Head",
-            "slogan": "Numeric Fused-Head Identificaiton and Resolution in English",
-            "description": "This package provide a wrapper for the Numeric Fused-Head in English. It provides another information layer on numbers that refer to another entity which is not obvious from the syntactic tree.",
-            "github": "yanaiela/num_fh",
-            "pip": "num_fh",
-            "category": ["pipeline", "research"],
-            "code_example": [
-                "import spacy",
-                "from num_fh import NFH",
-                "nlp = spacy.load('en_core_web_sm')",
-                "nfh = NFH(nlp)",
-                "nlp.add_pipe(nfh, first=False)",
-                "doc = nlp(\"I told you two, that only one of them is the one who will get 2 or 3 icecreams\")",
-                "",
-                "assert doc[16]._.is_nfh == True",
-                "assert doc[18]._.is_nfh == False",
-                "assert doc[3]._.is_deter_nfh == True",
-                "assert doc[16]._.is_deter_nfh == False",
-                "assert len(doc._.nfh) == 4"
-            ],
-            "author": "Yanai Elazar",
-            "author_links": {
-                "github": "yanaiela",
-                "twitter": "yanaiela",
-                "website": "https://yanaiela.github.io"
-            }
-        },
-        {
             "id": "Healthsea",
             "title": "Healthsea",
             "slogan": "Healthsea: an end-to-end spaCy pipeline for exploring health supplement effects",
