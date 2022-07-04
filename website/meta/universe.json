@@ -889,28 +889,6 @@
             }
         },
         {
-            "id": "spacy_grammar",
-            "slogan": "Language Tool style grammar handling with spaCy",
-            "description": "This packages leverages the [Matcher API](https://spacy.io/docs/usage/rule-based-matching) in spaCy to quickly match on spaCy tokens not dissimilar to regex. It  reads a `grammar.yml` file to load up custom patterns and returns the results inside `Doc`, `Span`, and `Token`. It is extensible through adding rules to `grammar.yml` (though currently only the simple string matching is implemented).",
-            "github": "tokestermw/spacy_grammar",
-            "code_example": [
-                "import spacy",
-                "from spacy_grammar.grammar import Grammar",
-                "",
-                "nlp = spacy.load('en')",
-                "grammar = Grammar(nlp)",
-                "nlp.add_pipe(grammar)",
-                "doc = nlp('I can haz cheeseburger.')",
-                "doc._.has_grammar_error  # True"
-            ],
-            "author": "Motoki Wu",
-            "author_links": {
-                "github": "tokestermw",
-                "twitter": "plusepsilon"
-            },
-            "category": ["pipeline"]
-        },
-        {
             "id": "spacy_kenlm",
             "slogan": "KenLM extension for spaCy 2.0",
             "github": "tokestermw/spacy_kenlm",
