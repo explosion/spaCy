@@ -2356,35 +2356,6 @@
             "tags": ["linguistics", "computational linguistics", "conll", "conll-u"]
         },
         {
-            "id": "spacy-langdetect",
-            "title": "spacy-langdetect",
-            "slogan": "A fully customizable language detection pipeline for spaCy",
-            "description": "This module allows you to add language detection capabilites to your spaCy pipeline. Also supports custom language detectors!",
-            "pip": "spacy-langdetect",
-            "code_example": [
-                "import spacy",
-                "from spacy_langdetect import LanguageDetector",
-                "nlp = spacy.load('en')",
-                "nlp.add_pipe(LanguageDetector(), name='language_detector', last=True)",
-                "text = 'This is an english text.'",
-                "doc = nlp(text)",
-                "# document level language detection. Think of it like average language of the document!",
-                "print(doc._.language)",
-                "# sentence level language detection",
-                "for sent in doc.sents:",
-                "   print(sent, sent._.language)"
-            ],
-            "code_language": "python",
-            "author": "Abhijit Balaji",
-            "author_links": {
-                "github": "Abhijit-2592",
-                "website": "https://abhijit-2592.github.io/"
-            },
-            "github": "Abhijit-2592/spacy-langdetect",
-            "category": ["pipeline"],
-            "tags": ["language-detection"]
-        },
-        {
             "id": "ludwig",
             "title": "Ludwig",
             "slogan": "A code-free deep learning toolbox",
