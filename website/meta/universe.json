@@ -750,19 +750,6 @@
             "tags": ["pytorch"]
         },
         {
-            "id": "NeuroNER",
-            "title": "NeuroNER",
-            "slogan": "Named-entity recognition using neural networks",
-            "github": "Franck-Dernoncourt/NeuroNER",
-            "category": ["models"],
-            "pip": "pyneuroner[cpu]",
-            "code_example": [
-                "from neuroner import neuromodel",
-                "nn = neuromodel.NeuroNER(train_model=False, use_pretrained_model=True)"
-            ],
-            "tags": ["standalone"]
-        },
-        {
             "id": "NLPre",
             "title": "NLPre",
             "slogan": "Natural Language Preprocessing Library for health data and more",
