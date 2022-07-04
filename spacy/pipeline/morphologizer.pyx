@@ -232,8 +232,8 @@ class Morphologizer(Tagger):
         cdef bint overwrite = self.cfg["overwrite"]
         cdef bint extend = self.cfg["extend"]
 
-        # We need random access for the upcoming ops, so we need to 
-        # we need to allocate a compatible container out of the iterable.
+        # We require random access for the upcoming ops, so we need
+        # to allocate a compatible container out of the iterable.
         labels = tuple(self.labels)
         for i, doc in enumerate(docs):
             doc_tag_ids = batch_tag_ids[i]

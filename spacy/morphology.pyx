@@ -1,6 +1,7 @@
 # cython: infer_types
 import numpy
 import warnings
+from typing import Union, Tuple, List, Dict
 from cython.operator cimport dereference as deref
 from libcpp.memory cimport shared_ptr
 
@@ -37,7 +38,7 @@ cdef class Morphology:
         else:
             return shared_ptr[MorphAnalysisC]()
 
-    def _normalize_attr(self, attr_key, attr_value):
+    def _normalize_attr(self, attr_key : Union[int, str], attr_value : Union[int, str]) -> Tuple[str, Union[str, List[str]]]:
         if isinstance(attr_key, (int, str)) and isinstance(attr_value, (int, str)):
             attr_key = self.strings.as_string(attr_key)
             attr_value = self.strings.as_string(attr_value)
@@ -53,7 +54,7 @@ cdef class Morphology:
 
         return attr_key, attr_value
 
-    def _str_to_normalized_feat_dict(self, feats):
+    def _str_to_normalized_feat_dict(self, feats: str) -> Dict[str, str]:
         if not feats or feats == self.EMPTY_MORPH:
             return {}
 
@@ -67,7 +68,7 @@ cdef class Morphology:
         out.sort(key=lambda x: x[0])
         return dict(out)
 
-    def _dict_to_normalized_feat_dict(self, feats):
+    def _dict_to_normalized_feat_dict(self, feats: Dict[Union[int, str], Union[int, str]]) -> Dict[str, str]:
         out = []
         for field, values in feats.items():
             normalized_attr = self._normalize_attr(field, values)
@@ -78,7 +79,7 @@ cdef class Morphology:
         return dict(out)
 
 
-    def _normalized_feat_dict_to_str(self, feats):
+    def _normalized_feat_dict_to_str(self, feats: Dict[str, str]) -> str:
         norm_feats_string = self.FEATURE_SEP.join([
                 self.FIELD_SEP.join([field, self.VALUE_SEP.join(values) if isinstance(values, list) else values])
             for field, values in feats.items()
@@ -92,14 +93,14 @@ cdef class Morphology:
         FEATS format as a string or in the tag map dict format.
         Returns the hash of the new analysis.
         """
-        cdef hash_t hash = 0
+        cdef hash_t tag_hash = 0
         cdef shared_ptr[MorphAnalysisC] tag
         if isinstance(features, str):
             if features == "":
                 features = self.EMPTY_MORPH
 
-            hash = self.strings[features]
-            tag = self._lookup_tag(hash)
+            tag_hash = self.strings[features]
+            tag = self._lookup_tag(tag_hash)
             if tag:
                 return deref(tag).key
 
@@ -113,13 +114,13 @@ cdef class Morphology:
         # the hash key for the tag is either the hash of the normalized UFEATS
         # string or the hash of an empty placeholder
         norm_feats_string = self._normalized_feat_dict_to_str(features)
-        hash = self.strings.add(norm_feats_string)
-        tag = self._lookup_tag(hash)
+        tag_hash = self.strings.add(norm_feats_string)
+        tag = self._lookup_tag(tag_hash)
         if tag:
             return deref(tag).key
 
-        self._intern_morph_tag(hash, features)
-        return hash
+        self._intern_morph_tag(tag_hash, features)
+        return tag_hash
 
     cdef void _intern_morph_tag(self, hash_t tag_key, feats):
         # intified ("Field", "Field=Value") pairs where fields with multiple values have
