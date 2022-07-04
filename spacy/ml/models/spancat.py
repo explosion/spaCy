@@ -19,6 +19,14 @@ def build_linear_logistic(nO=None, nI=None) -> Model[Floats2d, Floats2d]:
     return chain(Linear(nO=nO, nI=nI, init_W=glorot_uniform_init), Logistic())
 
 
+@registry.layers("spacy.Softmax.v1")
+def build_softmax(nO=None, nI=None) -> Model[Floats2d, Floats2d]:
+    """An output layer for span classification. Uses a softmax layer for
+    exclusive classes
+    """
+    return chain(Softmax(nO=nO, nI=nI, init_W=glorot_uniform_init))
+
+
 @registry.layers("spacy.mean_max_reducer.v1")
 def build_mean_max_reducer(hidden_size: int) -> Model[Ragged, Floats2d]:
     """Reduce sequences by concatenating their mean and max pooled vectors,
