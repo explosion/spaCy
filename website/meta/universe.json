@@ -2213,29 +2213,6 @@
             "category": ["videos"]
         },
         {
-            "id": "adam_qas",
-            "title": "ADAM: Question Answering System",
-            "slogan": "A question answering system that extracts answers from Wikipedia to questions posed in natural language.",
-            "github": "5hirish/adam_qas",
-            "pip": "qas",
-            "code_example": [
-                "git clone https://github.com/5hirish/adam_qas.git",
-                "cd adam_qas",
-                "pip install -r requirements.txt",
-                "python -m qas.adam 'When was linux kernel version 4.0 released ?'"
-            ],
-            "code_language": "bash",
-            "thumb": "https://shirishkadam.files.wordpress.com/2018/04/mini_alleviate.png",
-            "author": "Shirish Kadam",
-            "author_links": {
-                "twitter": "5hirish",
-                "github": "5hirish",
-                "website": "https://shirishkadam.com/"
-            },
-            "category": ["standalone"],
-            "tags": ["question-answering", "elasticsearch"]
-        },
-        {
             "id": "self-attentive-parser",
             "title": "Berkeley Neural Parser",
             "slogan": "Constituency Parsing with a Self-Attentive Encoder (ACL 2018)",
