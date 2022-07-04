@@ -9,7 +9,7 @@ from spacy.ml.models.coref_util import (
     DEFAULT_CLUSTER_PREFIX,
     select_non_crossing_spans,
     get_sentence_ids,
-    spans2ints,
+    _spans_to_offsets,
 )
 
 from thinc.util import has_torch
@@ -88,7 +88,7 @@ def test_span_predictor_serialization(nlp):
         assert nlp2.pipe_names == ["span_predictor"]
         doc2 = nlp2(text)
 
-        assert spans2ints(doc) == spans2ints(doc2)
+        assert _spans_to_offsets(doc) == _spans_to_offsets(doc2)
 
 
 @pytest.mark.skipif(not has_torch, reason="Torch not available")
@@ -122,7 +122,7 @@ def test_overfitting_IO(nlp):
     # test the trained model, using the pred since it has heads
     doc = nlp(train_examples[0].predicted)
     # XXX This actually tests that it can overfit
-    assert spans2ints(doc) == spans2ints(train_examples[0].reference)
+    assert _spans_to_offsets(doc) == _spans_to_offsets(train_examples[0].reference)
 
     # Also test the results are still the same after IO
     with make_tempdir() as tmp_dir:
@@ -140,8 +140,8 @@ def test_overfitting_IO(nlp):
     docs1 = list(nlp.pipe(texts))
     docs2 = list(nlp.pipe(texts))
     docs3 = [nlp(text) for text in texts]
-    assert spans2ints(docs1[0]) == spans2ints(docs2[0])
-    assert spans2ints(docs1[0]) == spans2ints(docs3[0])
+    assert _spans_to_offsets(docs1[0]) == _spans_to_offsets(docs2[0])
+    assert _spans_to_offsets(docs1[0]) == _spans_to_offsets(docs3[0])
 
 
 @pytest.mark.skipif(not has_torch, reason="Torch not available")
@@ -187,7 +187,7 @@ def test_tokenization_mismatch(nlp):
     test_doc = train_examples[0].predicted
     doc = nlp(test_doc)
     # XXX This actually tests that it can overfit
-    assert spans2ints(doc) == spans2ints(train_examples[0].reference)
+    assert _spans_to_offsets(doc) == _spans_to_offsets(train_examples[0].reference)
 
     # Also test the results are still the same after IO
     with make_tempdir() as tmp_dir:
@@ -206,6 +206,6 @@ def test_tokenization_mismatch(nlp):
     docs1 = list(nlp.pipe(texts))
     docs2 = list(nlp.pipe(texts))
     docs3 = [nlp(text) for text in texts]
-    assert spans2ints(docs1[0]) == spans2ints(docs2[0])
-    assert spans2ints(docs1[0]) == spans2ints(docs3[0])
+    assert _spans_to_offsets(docs1[0]) == _spans_to_offsets(docs2[0])
+    assert _spans_to_offsets(docs1[0]) == _spans_to_offsets(docs3[0])
 
