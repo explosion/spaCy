@@ -2357,20 +2357,6 @@
             "tags": ["javascript"]
         },
         {
-            "id": "spacy-raspberry",
-            "title": "spacy-raspberry",
-            "slogan": "64bit Raspberry Pi image for spaCy and neuralcoref",
-            "github": "boehm-e/spacy-raspberry",
-            "thumb": "https://i.imgur.com/VCJMrE6.png",
-            "image": "https://raw.githubusercontent.com/boehm-e/spacy-raspberry/master/imgs/preview.png",
-            "author": "Erwan Boehm",
-            "author_links": {
-                "github": "boehm-e"
-            },
-            "category": ["apis"],
-            "tags": ["raspberrypi"]
-        },
-        {
             "id": "spacy-wordnet",
             "title": "spacy-wordnet",
             "slogan": "WordNet meets spaCy",
