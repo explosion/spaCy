@@ -876,30 +876,6 @@
             }
         },
         {
-            "id": "spacy_kenlm",
-            "slogan": "KenLM extension for spaCy 2.0",
-            "github": "tokestermw/spacy_kenlm",
-            "pip": "spacy_kenlm",
-            "code_example": [
-                "import spacy",
-                "from spacy_kenlm import spaCyKenLM",
-                "",
-                "nlp = spacy.load('en_core_web_sm')",
-                "spacy_kenlm = spaCyKenLM()  # default model from test.arpa",
-                "nlp.add_pipe(spacy_kenlm)",
-                "doc = nlp('How are you?')",
-                "doc._.kenlm_score # doc score",
-                "doc[:2]._.kenlm_score # span score",
-                "doc[2]._.kenlm_score # token score"
-            ],
-            "author": "Motoki Wu",
-            "author_links": {
-                "github": "tokestermw",
-                "twitter": "plusepsilon"
-            },
-            "category": ["pipeline"]
-        },
-        {
             "id": "spacy_readability",
             "slogan": "Add text readability meta data to Doc objects",
             "description": "spaCy v2.0 pipeline component for calculating readability scores of of text. Provides scores for Flesh-Kincaid grade level, Flesh-Kincaid reading ease, and Dale-Chall.",
