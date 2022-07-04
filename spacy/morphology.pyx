@@ -1,7 +1,7 @@
 # cython: infer_types
 import numpy
 import warnings
-from typing import Union, Tuple, List, Dict
+from typing import Union, Tuple, List, Dict, Optional
 from cython.operator cimport dereference as deref
 from libcpp.memory cimport shared_ptr
 
@@ -38,7 +38,7 @@ cdef class Morphology:
         else:
             return shared_ptr[MorphAnalysisC]()
 
-    def _normalize_attr(self, attr_key : Union[int, str], attr_value : Union[int, str]) -> Tuple[str, Union[str, List[str]]]:
+    def _normalize_attr(self, attr_key : Union[int, str], attr_value : Union[int, str]) -> Optional[Tuple[str, Union[str, List[str]]]]:
         if isinstance(attr_key, (int, str)) and isinstance(attr_value, (int, str)):
             attr_key = self.strings.as_string(attr_key)
             attr_value = self.strings.as_string(attr_value)
