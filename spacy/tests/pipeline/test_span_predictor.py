@@ -106,7 +106,7 @@ def test_overfitting_IO(nlp):
         pred = eg.predicted
         for key, spans in ref.spans.items():
             if key.startswith("coref_head_clusters"):
-                pred.spans[key] = [pred[span.start:span.end] for span in spans]
+                pred.spans[key] = [pred[span.start : span.end] for span in spans]
 
         train_examples.append(eg)
     nlp.add_pipe("span_predictor", config=CONFIG)
@@ -209,3 +209,19 @@ def test_tokenization_mismatch(nlp):
     assert _spans_to_offsets(docs1[0]) == _spans_to_offsets(docs2[0])
     assert _spans_to_offsets(docs1[0]) == _spans_to_offsets(docs3[0])
 
+
+@pytest.mark.skipif(not has_torch, reason="Torch not available")
+def test_whitespace_mismatch(nlp):
+    train_examples = []
+    for text, annot in TRAIN_DATA:
+        eg = Example.from_dict(nlp.make_doc(text), annot)
+        eg.predicted = nlp.make_doc("  " + text)
+        train_examples.append(eg)
+
+    nlp.add_pipe("span_predictor", config=CONFIG)
+    optimizer = nlp.initialize()
+    test_text = TRAIN_DATA[0][0]
+    doc = nlp(test_text)
+
+    with pytest.raises(ValueError, match="whitespace"):
+        nlp.update(train_examples, sgd=optimizer)

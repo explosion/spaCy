@@ -178,6 +178,13 @@ class SpanPredictor(TrainablePipe):
 
         total_loss = 0
         for eg in examples:
+            if eg.x.text != eg.y.text:
+                # TODO assign error number
+                raise ValueError(
+                    """Text, including whitespace, must match between reference and
+                    predicted docs in span predictor training.
+                    """
+                )
             span_scores, backprop = self.model.begin_update([eg.predicted])
             # FIXME, this only happens once in the first 1000 docs of OntoNotes
             # and I'm not sure yet why.

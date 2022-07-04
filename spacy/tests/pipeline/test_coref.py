@@ -218,3 +218,20 @@ def test_sentence_map(snlp):
     doc = snlp("I like text. This is text.")
     sm = get_sentence_ids(doc)
     assert sm == [0, 0, 0, 0, 1, 1, 1, 1]
+
+
+@pytest.mark.skipif(not has_torch, reason="Torch not available")
+def test_whitespace_mismatch(nlp):
+    train_examples = []
+    for text, annot in TRAIN_DATA:
+        eg = Example.from_dict(nlp.make_doc(text), annot)
+        eg.predicted = nlp.make_doc("  " + text)
+        train_examples.append(eg)
+
+    nlp.add_pipe("coref", config=CONFIG)
+    optimizer = nlp.initialize()
+    test_text = TRAIN_DATA[0][0]
+    doc = nlp(test_text)
+
+    with pytest.raises(ValueError, match="whitespace"):
+        nlp.update(train_examples, sgd=optimizer)

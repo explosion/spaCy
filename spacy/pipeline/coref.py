@@ -218,6 +218,13 @@ class CoreferenceResolver(TrainablePipe):
         total_loss = 0
 
         for eg in examples:
+            if eg.x.text != eg.y.text:
+                # TODO assign error number
+                raise ValueError(
+                    """Text, including whitespace, must match between reference and
+                    predicted docs in coref training.
+                    """
+                )
             # TODO check this causes no issues (in practice it runs)
             preds, backprop = self.model.begin_update([eg.predicted])
             score_matrix, mention_idx = preds
@@ -277,7 +284,7 @@ class CoreferenceResolver(TrainablePipe):
                 if span is None:
                     # TODO log more details
                     raise IndexError(Errors.E1043)
-                cc.append( (span.start, span.end) )
+                cc.append((span.start, span.end))
             clusters.append(cc)
 
         span_idxs = create_head_span_idxs(ops, len(example.predicted))
