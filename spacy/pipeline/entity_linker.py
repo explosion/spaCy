@@ -192,7 +192,6 @@ class EntityLinker(TrainablePipe):
                 Errors.E1043.format(
                     range_start=0,
                     range_end=1,
-                    metric="EntityLinker threshold",
                     value=threshold,
                 )
             )
