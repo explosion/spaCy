@@ -750,30 +750,6 @@
             "tags": ["pytorch"]
         },
         {
-            "id": "NLPre",
-            "title": "NLPre",
-            "slogan": "Natural Language Preprocessing Library for health data and more",
-            "github": "NIHOPA/NLPre",
-            "pip": "nlpre",
-            "code_example": [
-                "from nlpre import titlecaps, dedash, identify_parenthetical_phrases",
-                "from nlpre import replace_acronyms, replace_from_dictionary",
-                "ABBR = identify_parenthetical_phrases()(text)",
-                "parsers = [dedash(), titlecaps(), replace_acronyms(ABBR),",
-                "        replace_from_dictionary(prefix='MeSH_')]",
-                "for f in parsers:",
-                "    text = f(text)",
-                "print(text)"
-            ],
-            "category": ["scientific", "biomedical"],
-            "author": "Travis Hoppe",
-            "author_links": {
-                "github": "thoppe",
-                "twitter": "metasemantic",
-                "website": "http://thoppe.github.io/"
-            }
-        },
-        {
             "id": "Chatterbot",
             "title": "Chatterbot",
             "slogan": "A machine-learning based conversational dialog engine for creating chat bots",
