@@ -889,32 +889,6 @@
             }
         },
         {
-            "id": "spacy_hunspell",
-            "slogan": "Add spellchecking and spelling suggestions to your spaCy pipeline using Hunspell",
-            "description": "This package uses the [spaCy 2.0 extensions](https://spacy.io/usage/processing-pipelines#extensions) to add [Hunspell](http://hunspell.github.io) support for spellchecking.",
-            "github": "tokestermw/spacy_hunspell",
-            "pip": "spacy_hunspell",
-            "code_example": [
-                "import spacy",
-                "from spacy_hunspell import spaCyHunSpell",
-                "",
-                "nlp = spacy.load('en_core_web_sm')",
-                "hunspell = spaCyHunSpell(nlp, 'mac')",
-                "nlp.add_pipe(hunspell)",
-                "doc = nlp('I can haz cheezeburger.')",
-                "haz = doc[2]",
-                "haz._.hunspell_spell  # False",
-                "haz._.hunspell_suggest  # ['ha', 'haze', 'hazy', 'has', 'hat', 'had', 'hag', 'ham', 'hap', 'hay', 'haw', 'ha z']"
-            ],
-            "author": "Motoki Wu",
-            "author_links": {
-                "github": "tokestermw",
-                "twitter": "plusepsilon"
-            },
-            "category": ["pipeline"],
-            "tags": ["spellcheck"]
-        },
-        {
             "id": "spacy_grammar",
             "slogan": "Language Tool style grammar handling with spaCy",
             "description": "This packages leverages the [Matcher API](https://spacy.io/docs/usage/rule-based-matching) in spaCy to quickly match on spaCy tokens not dissimilar to regex. It  reads a `grammar.yml` file to load up custom patterns and returns the results inside `Doc`, `Span`, and `Token`. It is extensible through adding rules to `grammar.yml` (though currently only the simple string matching is implemented).",
