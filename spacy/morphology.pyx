@@ -137,6 +137,10 @@ cdef class Morphology:
                     value_key = self.strings.add(field + self.FIELD_SEP + value)
                     field_feature_pairs.append((field_key, value_key))
             else:
+                # We could box scalar values into a list and use a common
+                # code path to generate features but that incurs a small 
+                # but measurable allocation/iteration overhead (as this
+                # branch is taken often enough).
                 value_key = self.strings.add(field + self.FIELD_SEP + values)
                 field_feature_pairs.append((field_key, value_key))
 
