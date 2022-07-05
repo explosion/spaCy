@@ -24,7 +24,7 @@ def build_softmax(nO=None, nI=None) -> Model[Floats2d, Floats2d]:
     """An output layer for span classification. Uses a softmax layer for
     exclusive classes
     """
-    return chain(Softmax(nO=nO, nI=nI, init_W=glorot_uniform_init))
+    return Softmax(nO=nO, nI=nI, init_W=glorot_uniform_init)
 
 
 @registry.layers("spacy.mean_max_reducer.v1")
