@@ -60,7 +60,7 @@ cdef class Morphology:
 
         out = []
         for feat in feats.split(self.FEATURE_SEP):
-            field, values = feat.split(self.FIELD_SEP)
+            field, values = feat.split(self.FIELD_SEP, 1)
             normalized_attr = self._normalize_attr(field, values)
             if normalized_attr is None:
                 continue
@@ -197,7 +197,7 @@ cdef class Morphology:
 
         out = {}
         for feat in feats.split(Morphology.FEATURE_SEP):
-            field, values = feat.split(Morphology.FIELD_SEP)
+            field, values = feat.split(Morphology.FIELD_SEP, 1)
             if sort_values:
                 values = values.split(Morphology.VALUE_SEP)
                 values.sort()
