@@ -587,6 +587,7 @@ cdef void finish_states(vector[MatchC]& matches, vector[PatternStateC]& states,
             else:
                 state.pattern += 1
 
+
 cdef action_t get_action(PatternStateC state,
         const TokenC* token, const attr_t* extra_attrs,
         const int8_t* predicate_matches) nogil:
@@ -861,7 +862,7 @@ cdef TokenPatternC* init_pattern(Pool mem, attr_t entity_id, object token_specs)
             pattern[i].attrs[j].attr = attr
             pattern[i].attrs[j].value = value
         if len(extensions) > 0:
-            pattern[i].extra_attrs = <IndexValueC*> em.alloc(len(extensions), sizeof(IndexValueC))
+            pattern[i].extra_attrs = <IndexValueC*>mem.alloc(len(extensions), sizeof(IndexValueC))
         for j, (index, value) in enumerate(extensions):
             pattern[i].extra_attrs[j].index = index
             pattern[i].extra_attrs[j].value = value
