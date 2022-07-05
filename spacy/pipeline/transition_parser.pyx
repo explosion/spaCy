@@ -30,7 +30,7 @@ from ..errors import Errors, Warnings
 from .. import util
 
 
-_NUMPY_OPS = NumpyOps()
+NUMPY_OPS = NumpyOps()
 
 
 cdef class Parser(TrainablePipe):
@@ -265,7 +265,7 @@ cdef class Parser(TrainablePipe):
         ops = self.model.ops
         cdef CBlas cblas
         if isinstance(ops, CupyOps):
-            cblas = _NUMPY_OPS.cblas()
+            cblas = NUMPY_OPS.cblas()
         else:
             cblas = ops.cblas()
         self._ensure_labels_are_added(docs)
