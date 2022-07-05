@@ -130,7 +130,7 @@ cdef class Matcher:
         for pattern in patterns:
             try:
                 specs = _preprocess_pattern(pattern, self.vocab,
-                                            self._extensions, self._extra_predicates)
+                    self._extensions, self._extra_predicates)
                 self.patterns.push_back(init_pattern(self.mem, key, specs))
                 for spec in specs:
                     for attr, _ in spec[1]:
@@ -269,8 +269,8 @@ cdef class Matcher:
                 pairs_by_id[key] = pairs
             else:
                 final_matches.append((key, *match))
-        matched = <char*> tmp_pool.alloc(length, sizeof(char))
-        empty = <char*> tmp_pool.alloc(length, sizeof(char))
+        matched = <char*>tmp_pool.alloc(length, sizeof(char))
+        empty = <char*>tmp_pool.alloc(length, sizeof(char))
         for key, pairs in pairs_by_id.items():
             memset(matched, 0, length * sizeof(matched[0]))
             span_filter = self._filter.get(key)
@@ -335,6 +335,7 @@ def unpickle_matcher(vocab, patterns, callbacks):
         matcher.add(key, pattern, on_match=callback)
     return matcher
 
+
 cdef find_matches(TokenPatternC** patterns, int n, object doclike, int length, extensions=None, predicates=tuple(), bint with_alignments=0):
     """Find matches in a doc, with a compiled array of patterns. Matches are
     returned as a list of (id, start, end) tuples or (id, start, end, alignments) tuples (if with_alignments != 0)
@@ -359,13 +360,13 @@ cdef find_matches(TokenPatternC** patterns, int n, object doclike, int length, e
         # avoid any processing or mem alloc if the document is empty
         return output
     if len(predicates) > 0:
-        predicate_cache = <int8_t*> mem.alloc(length * len(predicates), sizeof(int8_t))
+        predicate_cache = <int8_t*>mem.alloc(length * len(predicates), sizeof(int8_t))
     if extensions is not None and len(extensions) >= 1:
         nr_extra_attr = max(extensions.values()) + 1
-        extra_attr_values = <attr_t*> mem.alloc(length * nr_extra_attr, sizeof(attr_t))
+        extra_attr_values = <attr_t*>mem.alloc(length * nr_extra_attr, sizeof(attr_t))
     else:
         nr_extra_attr = 0
-        extra_attr_values = <attr_t*> mem.alloc(length, sizeof(attr_t))
+        extra_attr_values = <attr_t*>mem.alloc(length, sizeof(attr_t))
     for i, token in enumerate(doclike):
         for name, index in extensions.items():
             value = token._.get(name)
@@ -380,7 +381,7 @@ cdef find_matches(TokenPatternC** patterns, int n, object doclike, int length, e
         if with_alignments != 0:
             align_states.resize(states.size())
         transition_states(states, matches, align_states, align_matches, predicate_cache,
-                          doclike[i], extra_attr_values, predicates, with_alignments)
+            doclike[i], extra_attr_values, predicates, with_alignments)
         extra_attr_values += nr_extra_attr
         predicate_cache += len(predicates)
     # Handle matches that end in 0-width patterns
@@ -408,8 +409,8 @@ cdef find_matches(TokenPatternC** patterns, int n, object doclike, int length, e
 
 cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& matches,
                             vector[vector[MatchAlignmentC]]& align_states, vector[vector[MatchAlignmentC]]& align_matches,
-                            int8_t * cached_py_predicates,
-        Token token, const attr_t * extra_attrs, py_predicates, bint with_alignments) except *:
+                            int8_t* cached_py_predicates,
+        Token token, const attr_t* extra_attrs, py_predicates, bint with_alignments) except *:
     cdef int q = 0
     cdef vector[PatternStateC] new_states
     cdef vector[vector[MatchAlignmentC]] align_new_states
@@ -441,14 +442,14 @@ cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& match
                 # This handles the 'extend'
                 new_states.push_back(
                     PatternStateC(pattern=states[q].pattern, start=state.start,
-                                  length=state.length + 1))
+                                  length=state.length+1))
                 if with_alignments != 0:
                     align_new_states.push_back(align_states[q])
             if action == RETRY_ADVANCE:
                 # This handles the 'advance'
                 new_states.push_back(
-                    PatternStateC(pattern=states[q].pattern + 1, start=state.start,
-                                  length=state.length + 1))
+                    PatternStateC(pattern=states[q].pattern+1, start=state.start,
+                                  length=state.length+1))
                 if with_alignments != 0:
                     align_new_states.push_back(align_states[q])
             states[q].pattern += 1
@@ -479,7 +480,7 @@ cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& match
             if action == MATCH:
                 matches.push_back(
                     MatchC(pattern_id=ent_id, start=state.start,
-                            length=state.length + 1))
+                            length=state.length+1))
                 # `align_matches` always corresponds to `matches` 1:1
                 if with_alignments != 0:
                     align_matches.push_back(align_states[q])
@@ -496,7 +497,7 @@ cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& match
                 # push match with last token
                 matches.push_back(
                     MatchC(pattern_id=ent_id, start=state.start,
-                            length=state.length + 1))
+                            length=state.length+1))
                 # `align_matches` always corresponds to `matches` 1:1
                 if with_alignments != 0:
                     align_matches.push_back(align_states[q])
@@ -534,6 +535,7 @@ cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& match
         align_states.resize(q)
         for i in range(align_new_states.size()):
             align_states.push_back(align_new_states[i])
+
 
 cdef int update_predicate_cache(int8_t* cache,
         const TokenPatternC* pattern, Token token, predicates) except -1:
@@ -811,6 +813,7 @@ cdef inline int8_t get_is_final(PatternStateC state) nogil:
     else:
         return 0
 
+
 cdef inline int8_t get_quantifier(PatternStateC state) nogil:
     return state.pattern.quantifier
 
@@ -846,25 +849,25 @@ cdef inline int8_t has_non_greedy_tail(PatternStateC state) nogil:
     return 1
 
 cdef TokenPatternC* init_pattern(Pool mem, attr_t entity_id, object token_specs) except NULL:
-    pattern = <TokenPatternC*> mem.alloc(len(token_specs) + 1, sizeof(TokenPatternC))
+    pattern = <TokenPatternC*>mem.alloc(len(token_specs) + 1, sizeof(TokenPatternC))
     cdef int i, index
     for i, (quantifier, spec, extensions, predicates, token_idx) in enumerate(token_specs):
         pattern[i].quantifier = quantifier
         # Ensure attrs refers to a null pointer if nr_attr == 0
         if len(spec) > 0:
-            pattern[i].attrs = <AttrValueC*> mem.alloc(len(spec), sizeof(AttrValueC))
+            pattern[i].attrs = <AttrValueC*>mem.alloc(len(spec), sizeof(AttrValueC))
         pattern[i].nr_attr = len(spec)
         for j, (attr, value) in enumerate(spec):
             pattern[i].attrs[j].attr = attr
             pattern[i].attrs[j].value = value
         if len(extensions) > 0:
-            pattern[i].extra_attrs = <IndexValueC*> mem.alloc(len(extensions), sizeof(IndexValueC))
+            pattern[i].extra_attrs = <IndexValueC*> em.alloc(len(extensions), sizeof(IndexValueC))
         for j, (index, value) in enumerate(extensions):
             pattern[i].extra_attrs[j].index = index
             pattern[i].extra_attrs[j].value = value
         pattern[i].nr_extra_attr = len(extensions)
         if len(predicates) > 0:
-            pattern[i].py_predicates = <int32_t*> mem.alloc(len(predicates), sizeof(int32_t))
+            pattern[i].py_predicates = <int32_t*>mem.alloc(len(predicates), sizeof(int32_t))
         for j, index in enumerate(predicates):
             pattern[i].py_predicates[j] = index
         pattern[i].nr_py = len(predicates)
@@ -874,7 +877,7 @@ cdef TokenPatternC* init_pattern(Pool mem, attr_t entity_id, object token_specs)
     # Use quantifier to identify final ID pattern node (rather than previous
     # uninitialized quantifier == 0/ZERO + nr_attr == 0 + non-zero-length attrs)
     pattern[i].quantifier = FINAL_ID
-    pattern[i].attrs = <AttrValueC*> mem.alloc(1, sizeof(AttrValueC))
+    pattern[i].attrs = <AttrValueC*>mem.alloc(1, sizeof(AttrValueC))
     pattern[i].attrs[0].attr = ID
     pattern[i].attrs[0].value = entity_id
     pattern[i].nr_attr = 1
