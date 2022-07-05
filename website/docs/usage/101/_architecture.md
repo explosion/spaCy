@@ -45,10 +45,11 @@ components for different language processing tasks and also allows adding
 | ----------------------------------------------- | ------------------------------------------------------------------------------------------- |
 | [`AttributeRuler`](/api/attributeruler)         | Set token attributes using matcher rules.                                                   |
 | [`DependencyParser`](/api/dependencyparser)     | Predict syntactic dependencies.                                                             |
+| [`EditTreeLemmatizer`](/api/edittreelemmatizer) | Predict base forms of words.                                                                |
 | [`EntityLinker`](/api/entitylinker)             | Disambiguate named entities to nodes in a knowledge base.                                   |
 | [`EntityRecognizer`](/api/entityrecognizer)     | Predict named entities, e.g. persons or products.                                           |
 | [`EntityRuler`](/api/entityruler)               | Add entity spans to the `Doc` using token-based rules or exact phrase matches.              |
-| [`Lemmatizer`](/api/lemmatizer)                 | Determine the base forms of words.                                                          |
+| [`Lemmatizer`](/api/lemmatizer)                 | Determine the base forms of words using rules and lookups.                                  |
 | [`Morphologizer`](/api/morphologizer)           | Predict morphological features and coarse-grained part-of-speech tags.                      |
 | [`SentenceRecognizer`](/api/sentencerecognizer) | Predict sentence boundaries.                                                                |
 | [`Sentencizer`](/api/sentencizer)               | Implement rule-based sentence boundary detection that doesn't require the dependency parse. |

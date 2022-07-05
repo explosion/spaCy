@@ -184,7 +184,7 @@ def test_overfitting_IO():
                 token.pos_ = ""
             token.set_morph(None)
     optimizer = nlp.initialize(get_examples=lambda: train_examples)
-    print(nlp.get_pipe("morphologizer").labels)
+    assert nlp.get_pipe("morphologizer").labels is not None
     for i in range(50):
         losses = {}
         nlp.update(train_examples, sgd=optimizer, losses=losses)

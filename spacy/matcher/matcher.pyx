@@ -256,6 +256,10 @@ cdef class Matcher:
         # non-overlapping ones this `match` can be either (start, end) or
         # (start, end, alignments) depending on `with_alignments=` option.
         for key, *match in matches:
+            # Adjust span matches to doc offsets
+            if isinstance(doclike, Span):
+                match[0] += doclike.start
+                match[1] += doclike.start
             span_filter = self._filter.get(key)
             if span_filter is not None:
                 pairs = pairs_by_id.get(key, [])
@@ -286,9 +290,6 @@ cdef class Matcher:
         if as_spans:
             final_results = []
             for key, start, end, *_ in final_matches:
-                if isinstance(doclike, Span):
-                    start += doclike.start
-                    end += doclike.start
                 final_results.append(Span(doc, start, end, label=key))
         elif with_alignments:
             # convert alignments List[Dict[str, int]] --> List[int]
@@ -690,18 +691,14 @@ cdef int8_t get_is_match(PatternStateC state,
     return True
 
 
-cdef int8_t get_is_final(PatternStateC state) nogil:
+cdef inline int8_t get_is_final(PatternStateC state) nogil:
     if state.pattern[1].quantifier == FINAL_ID:
-        id_attr = state.pattern[1].attrs[0]
-        if id_attr.attr != ID:
-            with gil:
-                raise ValueError(Errors.E074.format(attr=ID, bad_attr=id_attr.attr))
         return 1
     else:
         return 0
 
 
-cdef int8_t get_quantifier(PatternStateC state) nogil:
+cdef inline int8_t get_quantifier(PatternStateC state) nogil:
     return state.pattern.quantifier
 
 
@@ -790,6 +787,7 @@ def _preprocess_pattern(token_specs, vocab, extensions_table, extra_predicates):
 def _get_attr_values(spec, string_store):
     attr_values = []
     for attr, value in spec.items():
+        input_attr = attr
         if isinstance(attr, str):
             attr = attr.upper()
             if attr == '_':
@@ -818,7 +816,7 @@ def _get_attr_values(spec, string_store):
             attr_values.append((attr, value))
         else:
             # should be caught in validation
-            raise ValueError(Errors.E152.format(attr=attr))
+            raise ValueError(Errors.E152.format(attr=input_attr))
     return attr_values
 
 

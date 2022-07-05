@@ -120,8 +120,8 @@ const AlertSpace = ({ nightly, legacy }) => {
 }
 
 const navAlert = (
-    <Link to="/usage/v3-2" hidden>
-        <strong>💥 Out now:</strong> spaCy v3.2
+    <Link to="/usage/v3-3" hidden>
+        <strong>💥 Out now:</strong> spaCy v3.3
     </Link>
 )
 

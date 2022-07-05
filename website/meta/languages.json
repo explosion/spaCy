@@ -63,6 +63,11 @@
             "has_examples": true
         },
         {
+            "code": "dsb",
+            "name": "Lower Sorbian",
+	    "has_examples": true
+        },
+        {
             "code": "el",
             "name": "Greek",
             "models": [
@@ -158,6 +163,11 @@
             "code": "hr",
             "name": "Croatian",
             "has_examples": true
+        },
+        {
+            "code": "hsb",
+            "name": "Upper Sorbian",
+	    "has_examples": true
         },
         {
             "code": "hu",

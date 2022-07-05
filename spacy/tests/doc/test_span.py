@@ -4,7 +4,7 @@ from numpy.testing import assert_array_equal
 
 from spacy.attrs import ORTH, LENGTH
 from spacy.lang.en import English
-from spacy.tokens import Doc, Span, Token
+from spacy.tokens import Doc, Span, SpanGroup, Token
 from spacy.vocab import Vocab
 from spacy.util import filter_spans
 from thinc.api import get_current_ops
@@ -161,6 +161,18 @@ def test_char_span(doc, i_sent, i, j, text):
         assert not span
     else:
         assert span.text == text
+
+
+@pytest.mark.issue(9556)
+def test_modify_span_group(doc):
+    group = SpanGroup(doc, spans=doc.ents)
+    for span in group:
+        span.start = 0
+        span.label = doc.vocab.strings["TEST"]
+
+    # Span changes must be reflected in the span group
+    assert group[0].start == 0
+    assert group[0].label == doc.vocab.strings["TEST"]
 
 
 def test_spans_sent_spans(doc):
@@ -428,10 +440,19 @@ def test_span_string_label_kb_id(doc):
     assert span.kb_id == doc.vocab.strings["Q342"]
 
 
+def test_span_string_label_id(doc):
+    span = Span(doc, 0, 1, label="hello", span_id="Q342")
+    assert span.label_ == "hello"
+    assert span.label == doc.vocab.strings["hello"]
+    assert span.id_ == "Q342"
+    assert span.id == doc.vocab.strings["Q342"]
+
+
 def test_span_attrs_writable(doc):
     span = Span(doc, 0, 1)
     span.label_ = "label"
     span.kb_id_ = "kb_id"
+    span.id_ = "id"
 
 
 def test_span_ents_property(doc):
@@ -619,6 +640,9 @@ def test_span_comparison(doc):
     assert Span(doc, 0, 4, "LABEL", kb_id="KB_ID") <= Span(doc, 1, 3)
     assert Span(doc, 1, 3) > Span(doc, 0, 4, "LABEL", kb_id="KB_ID")
     assert Span(doc, 1, 3) >= Span(doc, 0, 4, "LABEL", kb_id="KB_ID")
+
+    # Different id
+    assert Span(doc, 1, 3, span_id="AAA") < Span(doc, 1, 3, span_id="BBB")
 # fmt: on
 
 

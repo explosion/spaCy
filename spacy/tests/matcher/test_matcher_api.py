@@ -476,6 +476,17 @@ def test_matcher_extension_set_membership(en_vocab):
     assert len(matches) == 0
 
 
+@pytest.mark.xfail(reason="IN predicate must handle sequence values in extensions")
+def test_matcher_extension_in_set_predicate(en_vocab):
+    matcher = Matcher(en_vocab)
+    Token.set_extension("ext", default=[])
+    pattern = [{"_": {"ext": {"IN": ["A", "C"]}}}]
+    matcher.add("M", [pattern])
+    doc = Doc(en_vocab, words=["a", "b", "c"])
+    doc[0]._.ext = ["A", "B"]
+    assert len(matcher(doc)) == 1
+
+
 def test_matcher_basic_check(en_vocab):
     matcher = Matcher(en_vocab)
     # Potential mistake: pass in pattern instead of list of patterns
@@ -591,9 +602,16 @@ def test_matcher_span(matcher):
     doc = Doc(matcher.vocab, words=text.split())
     span_js = doc[:3]
     span_java = doc[4:]
-    assert len(matcher(doc)) == 2
-    assert len(matcher(span_js)) == 1
-    assert len(matcher(span_java)) == 1
+    doc_matches = matcher(doc)
+    span_js_matches = matcher(span_js)
+    span_java_matches = matcher(span_java)
+    assert len(doc_matches) == 2
+    assert len(span_js_matches) == 1
+    assert len(span_java_matches) == 1
+
+    # match offsets always refer to the doc
+    assert doc_matches[0] == span_js_matches[0]
+    assert doc_matches[1] == span_java_matches[0]
 
 
 def test_matcher_as_spans(matcher):

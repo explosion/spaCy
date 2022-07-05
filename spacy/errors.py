@@ -1,4 +1,5 @@
 import warnings
+from .compat import Literal
 
 
 class ErrorsWithCodes(type):
@@ -26,7 +27,10 @@ def setup_default_warnings():
     filter_warning("once", error_msg="[W114]")
 
 
-def filter_warning(action: str, error_msg: str):
+def filter_warning(
+    action: Literal["default", "error", "ignore", "always", "module", "once"],
+    error_msg: str,
+):
     """Customize how spaCy should handle a certain warning.
 
     error_msg (str): e.g. "W006", or a full error message
@@ -196,6 +200,15 @@ class Warnings(metaclass=ErrorsWithCodes):
             "surprising to you, make sure the Doc was processed using a model "
             "that supports span categorization, and check the `doc.spans[spans_key]` "
             "property manually if necessary.")
+    W118 = ("Term '{term}' not found in glossary. It may however be explained in documentation "
+            "for the corpora used to train the language. Please check "
+            "`nlp.meta[\"sources\"]` for any relevant links.")
+    W119 = ("Overriding pipe name in `config` is not supported. Ignoring override '{name_in_config}'.")
+    W120 = ("Unable to load all spans in Doc.spans: more than one span group "
+            "with the name '{group_name}' was found in the saved spans data. "
+            "Only the last span group will be loaded under "
+            "Doc.spans['{group_name}']. Skipping span group with values: "
+            "{group_values}")
 
 
 class Errors(metaclass=ErrorsWithCodes):
@@ -441,10 +454,10 @@ class Errors(metaclass=ErrorsWithCodes):
             "same, but found '{nlp}' and '{vocab}' respectively.")
     E152 = ("The attribute {attr} is not supported for token patterns. "
             "Please use the option `validate=True` with the Matcher, PhraseMatcher, "
-            "or EntityRuler for more details.")
+            "EntityRuler or AttributeRuler for more details.")
     E153 = ("The value type {vtype} is not supported for token patterns. "
             "Please use the option validate=True with Matcher, PhraseMatcher, "
-            "or EntityRuler for more details.")
+            "EntityRuler or AttributeRuler for more details.")
     E154 = ("One of the attributes or values is not supported for token "
             "patterns. Please use the option `validate=True` with the Matcher, "
             "PhraseMatcher, or EntityRuler for more details.")
@@ -524,10 +537,16 @@ class Errors(metaclass=ErrorsWithCodes):
     E202 = ("Unsupported {name} mode '{mode}'. Supported modes: {modes}.")
 
     # New errors added in v3.x
+    E854 = ("Unable to set doc.ents. Check that the 'ents_filter' does not "
+            "permit overlapping spans.")
+    E855 = ("Invalid {obj}: {obj} is not from the same doc.")
+    E856 = ("Error accessing span at position {i}: out of bounds in span group "
+            "of length {length}.")
+    E857 = ("Entry '{name}' not found in edit tree lemmatizer labels.")
     E858 = ("The {mode} vector table does not support this operation. "
             "{alternative}")
     E859 = ("The floret vector table cannot be modified.")
-    E860 = ("Can't truncate fasttext-bloom vectors.")
+    E860 = ("Can't truncate floret vectors.")
     E861 = ("No 'keys' should be provided when initializing floret vectors "
             "with 'minn' and 'maxn'.")
     E862 = ("'hash_count' must be between 1-4 for floret vectors.")
@@ -891,11 +910,31 @@ class Errors(metaclass=ErrorsWithCodes):
     E1022 = ("Words must be of type str or int, but input is of type '{wtype}'")
     E1023 = ("Couldn't read EntityRuler from the {path}. This file doesn't "
              "exist.")
-    E1024 = ("A pattern with ID \"{ent_id}\" is not present in EntityRuler "
-             "patterns.")
+    E1024 = ("A pattern with {attr_type} '{label}' is not present in "
+             "'{component}' patterns.")
     E1025 = ("Cannot intify the value '{value}' as an IOB string. The only "
              "supported values are: 'I', 'O', 'B' and ''")
-    
+    E1026 = ("Edit tree has an invalid format:\n{errors}")
+    E1027 = ("AlignmentArray only supports slicing with a step of 1.")
+    E1028 = ("AlignmentArray only supports indexing using an int or a slice.")
+    E1029 = ("Edit tree cannot be applied to form.")
+    E1030 = ("Edit tree identifier out of range.")
+    E1031 = ("Could not find gold transition - see logs above.")
+    E1032 = ("`{var}` should not be {forbidden}, but received {value}.")
+    E1033 = ("Dimension {name} invalid -- only nO, nF, nP")
+    E1034 = ("Node index {i} out of bounds ({length})")
+    E1035 = ("Token index {i} out of bounds ({length})")
+    E1036 = ("Cannot index into NoneNode")
+    E1037 = ("Invalid attribute value '{attr}'.")
+    E1038 = ("Invalid JSON input: {message}")
+    E1039 = ("The {obj} start or end annotations (start: {start}, end: {end}) "
+             "could not be aligned to token boundaries.")
+    E1040 = ("Doc.from_json requires all tokens to have the same attributes. "
+             "Some tokens do not contain annotation for: {partial_attrs}")
+    E1041 = ("Expected a string, Doc, or bytes as input, but got: {type}")
+    E1042 = ("Function was called with `{arg1}`={arg1_values} and "
+             "`{arg2}`={arg2_values} but these arguments are conflicting.")
+
 
 # Deprecated model shortcuts, only used in errors and warnings
 OLD_MODEL_SHORTCUTS = {
