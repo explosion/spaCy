@@ -36,7 +36,7 @@ Some things to note:
   @explosion-bot please test_gpu --run-on spacy-transformers --run-on-branch master --spacy-branch current_pr
   ```
 
-  This will launch the GPU pipeline for the `spacy-transformers` repo, use the current PR's branch to build spaCy, and execute the tests in the `master` branch of the former.
+  This will launch the GPU pipeline for the `spacy-transformers` repo on its `master` branch, using the current spaCy PR's branch to build spaCy.
 
 - General info about supported commands.
 
