@@ -1,0 +1,21 @@
+name: spaCy universe project alert
+
+on:
+  push:
+    paths:
+      - "website/meta/universe.json"
+  schedule:
+    - cron: "0 9 * * 5"
+  workflow_dispatch:
+    inputs:
+      tags:
+        description: "Manual trigger"
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
