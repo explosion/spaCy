@@ -211,7 +211,9 @@ class SpanRenderer:
             # the span starts vertically so we can extend it horizontally,
             # past other spans that might have already ended
             color = self.colors.get(entity["label"].upper(), self.default_color)
-            top_offset = self.top_offset + (self.offset_step * entity["render_slot"])
+            top_offset = self.top_offset + (
+                self.offset_step * (entity["render_slot"] - 1)
+            )
             span_slice = self.span_slice_template.format(
                 bg=color,
                 top_offset=top_offset,
@@ -224,7 +226,9 @@ class SpanRenderer:
         span_starts = []
         for entity in entities:
             color = self.colors.get(entity["label"].upper(), self.default_color)
-            top_offset = self.top_offset + (self.offset_step * entity["render_slot"])
+            top_offset = self.top_offset + (
+                self.offset_step * (entity["render_slot"] - 1)
+            )
             span_start = (
                 self.span_start_template.format(
                     bg=color,
