@@ -5,6 +5,7 @@ from thinc.types import Floats2d, Floats3d, Ints2d
 from thinc.api import Model, Config, Optimizer, CategoricalCrossentropy
 from thinc.api import set_dropout_rate, to_categorical
 from itertools import islice
+import srsly
 
 from .trainable_pipe import TrainablePipe
 from ..language import Language
@@ -13,7 +14,7 @@ from ..errors import Errors
 from ..scorer import Scorer, doc2clusters
 from ..tokens import Doc
 from ..vocab import Vocab
-from ..util import registry
+from ..util import registry, from_bytes, from_disk
 
 from ..ml.models.coref_util import (
     MentionClusters,
@@ -23,7 +24,6 @@ from ..ml.models.coref_util import (
 default_span_predictor_config = """
 [model]
 @architectures = "spacy.SpanPredictor.v1"
-tok2vec_size = 768
 hidden_size = 1024
 distance_embedding_size = 64
 conv_channels = 4
@@ -274,3 +274,51 @@ class SpanPredictor(TrainablePipe):
 
         assert len(X) > 0, Errors.E923.format(name=self.name)
         self.model.initialize(X=X, Y=Y)
+
+
+    def from_bytes(self, bytes_data, *, exclude=tuple()):
+        deserializers = {
+            "cfg": lambda b: self.cfg.update(srsly.json_loads(b)),
+            "vocab": lambda b: self.vocab.from_bytes(b, exclude=exclude),
+        }
+        from_bytes(bytes_data, deserializers, exclude)
+
+        self._initialize_from_disk()
+
+        model_deserializers = {
+            "model": lambda b: self.model.from_bytes(b),
+        }
+        from_bytes(bytes_data, model_deserializers, exclude)
+
+        return self
+
+    def from_disk(self, path, exclude=tuple()):
+        def load_model(p):
+            try:
+                with open(p, "rb") as mfile:
+                    self.model.from_bytes(mfile.read())
+            except AttributeError:
+                raise ValueError(Errors.E149) from None
+
+        deserializers = {
+            "cfg": lambda p: self.cfg.update(srsly.read_json(p)),
+            "vocab": lambda p: self.vocab.from_disk(p, exclude=exclude),
+        }
+        from_disk(path, deserializers, exclude)
+
+        self._initialize_from_disk()
+
+        model_deserializers = {
+            "model": load_model,
+        }
+        from_disk(path, model_deserializers, exclude)
+
+        return self
+
+    def _initialize_from_disk(self):
+        # The PyTorch model is constructed lazily, so we need to
+        # explicitly initialize the model before deserialization.
+        model = self.model.get_ref("span_predictor")
+        if model.has_dim("nI") is None:
+            model.set_dim("nI", self.cfg["nI"])
+        self.model.initialize()
