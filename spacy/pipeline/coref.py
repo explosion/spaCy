@@ -233,7 +233,12 @@ class CoreferenceResolver(TrainablePipe):
         return losses
 
     def rehearse(self, examples, *, sgd=None, losses=None, **config):
-        raise NotImplementedError
+        # TODO this should be added later
+        raise NotImplementedError(
+            Errors.E931.format(
+                parent="CoreferenceResolver", method="add_label", name=self.name
+            )
+        )
 
     def add_label(self, label: str) -> int:
         """Technically this method should be implemented from TrainablePipe,
