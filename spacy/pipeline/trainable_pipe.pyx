@@ -361,11 +361,11 @@ cdef class TrainablePipe(Pipe):
                 if activation in known_activations:
                     self._store_activations.append(activation)
                 else:
-                    warnings.warn(Warnings.W121.format(activation=activation, pipe_name=self.name))
+                    warnings.warn(Warnings.W400.format(activation=activation, pipe_name=self.name))
         elif isinstance(activations, bool):
             if activations:
                 self._store_activations = list(known_activations)
             else:
                 self._store_activations = []
         else:
-            raise ValueError(Errors.E1043)
+            raise ValueError(Errors.E1400)

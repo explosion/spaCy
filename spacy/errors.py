@@ -209,7 +209,7 @@ class Warnings(metaclass=ErrorsWithCodes):
             "Only the last span group will be loaded under "
             "Doc.spans['{group_name}']. Skipping span group with values: "
             "{group_values}")
-    W121 = ("Activation '{activation}' is unknown for pipe '{pipe_name}'")
+    W400 = ("Activation '{activation}' is unknown for pipe '{pipe_name}'")
 
 
 class Errors(metaclass=ErrorsWithCodes):
@@ -935,7 +935,7 @@ class Errors(metaclass=ErrorsWithCodes):
     E1041 = ("Expected a string, Doc, or bytes as input, but got: {type}")
     E1042 = ("Function was called with `{arg1}`={arg1_values} and "
              "`{arg2}`={arg2_values} but these arguments are conflicting.")
-    E1043 = ("store_activations attribute must be set to List[str] or bool")
+    E1400 = ("store_activations attribute must be set to List[str] or bool")
 
 
 # Deprecated model shortcuts, only used in errors and warnings
