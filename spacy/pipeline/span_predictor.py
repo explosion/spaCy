@@ -29,7 +29,7 @@ distance_embedding_size = 64
 conv_channels = 4
 window_size = 1
 max_distance = 128
-prefix = coref_head_clusters
+prefix = "coref_head_clusters"
 
 [model.tok2vec]
 @architectures = "spacy.Tok2Vec.v2"
