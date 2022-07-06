@@ -35,7 +35,6 @@ def build_span_predictor(
             ),
             convert_inputs=convert_span_predictor_inputs,
         )
-        # TODO use proper parameter for prefix
         head_info = build_get_head_metadata(prefix)
         model = (tok2vec & head_info) >> span_predictor
 
@@ -96,7 +95,6 @@ def predict_span_clusters(
 
 
 def build_get_head_metadata(prefix):
-    # TODO this name is awful, fix it
     model = Model(
         "HeadDataProvider", attrs={"prefix": prefix}, forward=head_data_forward
     )
@@ -142,7 +140,6 @@ class SpanPredictor(torch.nn.Module):
             raise ValueError("max_distance has to be an even number")
         # input size = single token size
         # 64 = probably distance emb size
-        # TODO check that dist_emb_size use is correct
         self.ffnn = torch.nn.Sequential(
             torch.nn.Linear(input_size * 2 + dist_emb_size, hidden_size),
             torch.nn.ReLU(),
@@ -159,7 +156,6 @@ class SpanPredictor(torch.nn.Module):
             torch.nn.Conv1d(dist_emb_size, conv_channels, kernel_size, 1, 1),
             torch.nn.Conv1d(conv_channels, 2, kernel_size, 1, 1),
         )
-        # TODO make embeddings size a parameter
         self.max_distance = max_distance
         # handle distances between +-(max_distance - 2 / 2)
         self.emb = torch.nn.Embedding(max_distance, dist_emb_size)
