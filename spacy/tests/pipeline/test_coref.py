@@ -9,7 +9,7 @@ from spacy.ml.models.coref_util import (
     DEFAULT_CLUSTER_PREFIX,
     select_non_crossing_spans,
     get_sentence_ids,
-    _spans_to_offsets,
+    get_clusters_from_doc,
 )
 
 from thinc.util import has_torch
@@ -101,7 +101,7 @@ def test_coref_serialization(nlp):
         assert nlp2.pipe_names == ["coref"]
         doc2 = nlp2(text)
 
-        assert _spans_to_offsets(doc) == _spans_to_offsets(doc2)
+        assert get_clusters_from_doc(doc) == get_clusters_from_doc(doc2)
 
 
 @pytest.mark.skipif(not has_torch, reason="Torch not available")
@@ -140,8 +140,8 @@ def test_overfitting_IO(nlp):
     docs1 = list(nlp.pipe(texts))
     docs2 = list(nlp.pipe(texts))
     docs3 = [nlp(text) for text in texts]
-    assert _spans_to_offsets(docs1[0]) == _spans_to_offsets(docs2[0])
-    assert _spans_to_offsets(docs1[0]) == _spans_to_offsets(docs3[0])
+    assert get_clusters_from_doc(docs1[0]) == get_clusters_from_doc(docs2[0])
+    assert get_clusters_from_doc(docs1[0]) == get_clusters_from_doc(docs3[0])
 
 
 @pytest.mark.skipif(not has_torch, reason="Torch not available")
@@ -196,8 +196,8 @@ def test_tokenization_mismatch(nlp):
     docs1 = list(nlp.pipe(texts))
     docs2 = list(nlp.pipe(texts))
     docs3 = [nlp(text) for text in texts]
-    assert _spans_to_offsets(docs1[0]) == _spans_to_offsets(docs2[0])
-    assert _spans_to_offsets(docs1[0]) == _spans_to_offsets(docs3[0])
+    assert get_clusters_from_doc(docs1[0]) == get_clusters_from_doc(docs2[0])
+    assert get_clusters_from_doc(docs1[0]) == get_clusters_from_doc(docs3[0])
 
 
 @pytest.mark.skipif(not has_torch, reason="Torch not available")
