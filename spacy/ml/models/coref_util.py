@@ -143,7 +143,7 @@ def create_head_span_idxs(ops, doclen: int):
 
 
 def get_clusters_from_doc(doc) -> List[List[Tuple[int, int]]]:
-    """Given a Doc, convert the cluster spans to simple int tuple lists. The
+    """Convert the span clusters in a Doc to simple integer tuple lists. The
     ints are char spans, to be tokenization independent.
     """
     out = []
