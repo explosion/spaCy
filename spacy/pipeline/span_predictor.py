@@ -275,6 +275,12 @@ class SpanPredictor(TrainablePipe):
         assert len(X) > 0, Errors.E923.format(name=self.name)
         self.model.initialize(X=X, Y=Y)
 
+        # Store the input dimensionality. nI and nO are not stored explicitly
+        # for PyTorch models. This makes it tricky to reconstruct the model
+        # during deserialization. So, besides storing the labels, we also
+        # store the number of inputs.
+        span_predictor = self.model.get_ref("span_predictor")
+        self.cfg["nI"] = span_predictor.get_dim("nI")
 
     def from_bytes(self, bytes_data, *, exclude=tuple()):
         deserializers = {
