@@ -22,7 +22,6 @@ def build_wl_coref_model(
     # pairs to keep per mention after rough scoring
     antecedent_limit: int = 50,
     antecedent_batch_size: int = 512,
-    tok2vec_size: int = 768,  # tok2vec size
 ):
     # TODO add model return types
 
