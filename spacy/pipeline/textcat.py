@@ -107,6 +107,8 @@ def make_textcat(
         scores for each category.
     threshold (float): Cutoff to consider a prediction "positive".
     scorer (Optional[Callable]): The scoring method.
+    store_activations (Union[bool, List[str]]): Model activations to store in
+        Doc when annotating. supported activations is: "probs".
     """
     return TextCategorizer(
         nlp.vocab,

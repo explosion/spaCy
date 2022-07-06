@@ -141,6 +141,8 @@ def make_spancat(
         0.5.
     max_positive (Optional[int]): Maximum number of labels to consider positive
         per span. Defaults to None, indicating no limit.
+    store_activations (Union[bool, List[str]]): Model activations to store in
+        Doc when annotating. supported activations are: "indices" and "scores".
     """
     return SpanCategorizer(
         nlp.vocab,

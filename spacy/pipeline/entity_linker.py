@@ -98,6 +98,8 @@ def make_entity_linker(
     get_candidates (Callable[[KnowledgeBase, "Span"], Iterable[Candidate]]): Function that
         produces a list of candidates, given a certain knowledge base and a textual mention.
     scorer (Optional[Callable]): The scoring method.
+    store_activations (Union[bool, List[str]]): Model activations to store in
+        Doc when annotating. supported activations are: "ents" and "scores".
     """
 
     if not model.attrs.get("include_span_maker", False):

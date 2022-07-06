@@ -92,6 +92,8 @@ class SentenceRecognizer(Tagger):
             losses during training.
         scorer (Optional[Callable]): The scoring method. Defaults to
             Scorer.score_spans for the attribute "sents".
+        store_activations (Union[bool, List[str]]): Model activations to store in
+            Doc when annotating. supported activations are: "probs" and "guesses".
 
         DOCS: https://spacy.io/api/sentencerecognizer#init
         """

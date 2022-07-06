@@ -114,6 +114,8 @@ class Morphologizer(Tagger):
         scorer (Optional[Callable]): The scoring method. Defaults to
             Scorer.score_token_attr for the attributes "pos" and "morph" and
             Scorer.score_token_attr_per_feat for the attribute "morph".
+        store_activations (Union[bool, List[str]]): Model activations to store in
+            Doc when annotating. supported activations are: "probs" and "guesses".
 
         DOCS: https://spacy.io/api/morphologizer#init
         """

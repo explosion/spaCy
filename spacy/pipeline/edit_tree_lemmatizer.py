@@ -109,6 +109,8 @@ class EditTreeLemmatizer(TrainablePipe):
             frequency in the training data.
         overwrite (bool): overwrite existing lemma annotations.
         top_k (int): try to apply at most the k most probable edit trees.
+        store_activations (Union[bool, List[str]]): Model activations to store in
+            Doc when annotating. supported activations are: "probs" and "guesses".
         """
         self.vocab = vocab
         self.model = model
