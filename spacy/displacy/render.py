@@ -135,7 +135,7 @@ class SpanRenderer:
         spans = sorted(spans, key=lambda s: s["start_token"])
         for s in spans:
             # this is the vertical 'slot' that the span will be rendered in
-            # vertical_position = span_label_offset + (slot * offset_step)
+            # vertical_position = span_label_offset + (offset_step * (slot - 1))
             s["render_slot"] = 0
         for idx, token in enumerate(tokens):
             # Identify if a token belongs to a Span (and which) and if it's a
@@ -206,7 +206,7 @@ class SpanRenderer:
         """Get the rendered markup of all Span slices"""
         span_slices = []
         for entity in entities:
-            # ratner than iterate over multiples of offset_step, we use entity['render_slot']
+            # rather than iterate over multiples of offset_step, we use entity['render_slot']
             # to determine the vertical position, since that tells where
             # the span starts vertically so we can extend it horizontally,
             # past other spans that might have already ended
