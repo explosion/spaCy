@@ -62,7 +62,6 @@ def coref_init(model: Model, X=None, Y=None):
     antecedent_batch_size = model.attrs["antecedent_batch_size"]
     distance_embedding_size = model.attrs["distance_embedding_size"]
 
-    PyTorchWrapper = registry.get("layers", "PyTorchWrapper.v2")
     model._layers = [
         PyTorchWrapper(
             CorefClusterer(
