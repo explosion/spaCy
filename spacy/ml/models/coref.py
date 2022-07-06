@@ -44,8 +44,9 @@ def build_wl_coref_model(
             },
         )
 
-        coref_model = tok2vec >> coref_clusterer
-    return coref_model
+        model = tok2vec >> coref_clusterer
+        model.set_ref("coref_clusterer", coref_clusterer)
+    return model
 
 
 def coref_init(model: Model, X=None, Y=None):
