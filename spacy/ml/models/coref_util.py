@@ -205,7 +205,7 @@ def create_gold_scores(
     return out
 
 
-def _spans_to_offsets(doc):
+def _spans_to_offsets(doc: Doc) -> List[List[Tuple[int, int]]]:
     """Convert doc.spans to nested list of ints for comparison.
     The ints are character indices, and the spans groups are sorted by key first.
 

@@ -154,7 +154,7 @@ def test_tokenization_mismatch(nlp):
         for key, cluster in ref.spans.items():
             char_spans[key] = []
             for span in cluster:
-                char_spans[key].append((span[0].idx, span[-1].idx + len(span[-1])))
+                char_spans[key].append((span.start_char, span.end_char))
         with ref.retokenize() as retokenizer:
             # merge "picked up"
             retokenizer.merge(ref[2:4])
