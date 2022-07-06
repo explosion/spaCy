@@ -750,43 +750,6 @@
             "tags": ["pytorch"]
         },
         {
-            "id": "NeuroNER",
-            "title": "NeuroNER",
-            "slogan": "Named-entity recognition using neural networks",
-            "github": "Franck-Dernoncourt/NeuroNER",
-            "category": ["models"],
-            "pip": "pyneuroner[cpu]",
-            "code_example": [
-                "from neuroner import neuromodel",
-                "nn = neuromodel.NeuroNER(train_model=False, use_pretrained_model=True)"
-            ],
-            "tags": ["standalone"]
-        },
-        {
-            "id": "NLPre",
-            "title": "NLPre",
-            "slogan": "Natural Language Preprocessing Library for health data and more",
-            "github": "NIHOPA/NLPre",
-            "pip": "nlpre",
-            "code_example": [
-                "from nlpre import titlecaps, dedash, identify_parenthetical_phrases",
-                "from nlpre import replace_acronyms, replace_from_dictionary",
-                "ABBR = identify_parenthetical_phrases()(text)",
-                "parsers = [dedash(), titlecaps(), replace_acronyms(ABBR),",
-                "        replace_from_dictionary(prefix='MeSH_')]",
-                "for f in parsers:",
-                "    text = f(text)",
-                "print(text)"
-            ],
-            "category": ["scientific", "biomedical"],
-            "author": "Travis Hoppe",
-            "author_links": {
-                "github": "thoppe",
-                "twitter": "metasemantic",
-                "website": "http://thoppe.github.io/"
-            }
-        },
-        {
             "id": "Chatterbot",
             "title": "Chatterbot",
             "slogan": "A machine-learning based conversational dialog engine for creating chat bots",
@@ -889,78 +852,6 @@
             }
         },
         {
-            "id": "spacy_hunspell",
-            "slogan": "Add spellchecking and spelling suggestions to your spaCy pipeline using Hunspell",
-            "description": "This package uses the [spaCy 2.0 extensions](https://spacy.io/usage/processing-pipelines#extensions) to add [Hunspell](http://hunspell.github.io) support for spellchecking.",
-            "github": "tokestermw/spacy_hunspell",
-            "pip": "spacy_hunspell",
-            "code_example": [
-                "import spacy",
-                "from spacy_hunspell import spaCyHunSpell",
-                "",
-                "nlp = spacy.load('en_core_web_sm')",
-                "hunspell = spaCyHunSpell(nlp, 'mac')",
-                "nlp.add_pipe(hunspell)",
-                "doc = nlp('I can haz cheezeburger.')",
-                "haz = doc[2]",
-                "haz._.hunspell_spell  # False",
-                "haz._.hunspell_suggest  # ['ha', 'haze', 'hazy', 'has', 'hat', 'had', 'hag', 'ham', 'hap', 'hay', 'haw', 'ha z']"
-            ],
-            "author": "Motoki Wu",
-            "author_links": {
-                "github": "tokestermw",
-                "twitter": "plusepsilon"
-            },
-            "category": ["pipeline"],
-            "tags": ["spellcheck"]
-        },
-        {
-            "id": "spacy_grammar",
-            "slogan": "Language Tool style grammar handling with spaCy",
-            "description": "This packages leverages the [Matcher API](https://spacy.io/docs/usage/rule-based-matching) in spaCy to quickly match on spaCy tokens not dissimilar to regex. It  reads a `grammar.yml` file to load up custom patterns and returns the results inside `Doc`, `Span`, and `Token`. It is extensible through adding rules to `grammar.yml` (though currently only the simple string matching is implemented).",
-            "github": "tokestermw/spacy_grammar",
-            "code_example": [
-                "import spacy",
-                "from spacy_grammar.grammar import Grammar",
-                "",
-                "nlp = spacy.load('en')",
-                "grammar = Grammar(nlp)",
-                "nlp.add_pipe(grammar)",
-                "doc = nlp('I can haz cheeseburger.')",
-                "doc._.has_grammar_error  # True"
-            ],
-            "author": "Motoki Wu",
-            "author_links": {
-                "github": "tokestermw",
-                "twitter": "plusepsilon"
-            },
-            "category": ["pipeline"]
-        },
-        {
-            "id": "spacy_kenlm",
-            "slogan": "KenLM extension for spaCy 2.0",
-            "github": "tokestermw/spacy_kenlm",
-            "pip": "spacy_kenlm",
-            "code_example": [
-                "import spacy",
-                "from spacy_kenlm import spaCyKenLM",
-                "",
-                "nlp = spacy.load('en_core_web_sm')",
-                "spacy_kenlm = spaCyKenLM()  # default model from test.arpa",
-                "nlp.add_pipe(spacy_kenlm)",
-                "doc = nlp('How are you?')",
-                "doc._.kenlm_score # doc score",
-                "doc[:2]._.kenlm_score # span score",
-                "doc[2]._.kenlm_score # token score"
-            ],
-            "author": "Motoki Wu",
-            "author_links": {
-                "github": "tokestermw",
-                "twitter": "plusepsilon"
-            },
-            "category": ["pipeline"]
-        },
-        {
             "id": "spacy_readability",
             "slogan": "Add text readability meta data to Doc objects",
             "description": "spaCy v2.0 pipeline component for calculating readability scores of of text. Provides scores for Flesh-Kincaid grade level, Flesh-Kincaid reading ease, and Dale-Chall.",
@@ -1025,34 +916,6 @@
             "author": "Nicholas D Haynes",
             "author_links": {
                 "github": "nickdavidhaynes"
-            },
-            "category": ["pipeline"]
-        },
-        {
-            "id": "spacy-lookup",
-            "slogan": "A powerful entity matcher for very large dictionaries, using the FlashText module",
-            "description": "spaCy v2.0 extension and pipeline component for adding Named Entities metadata to `Doc` objects. Detects Named Entities using dictionaries. The extension sets the custom `Doc`, `Token` and `Span` attributes `._.is_entity`, `._.entity_type`, `._.has_entities` and `._.entities`. Named Entities are matched using the python module `flashtext`, and looked up in the data provided by different dictionaries.",
-            "github": "mpuig/spacy-lookup",
-            "pip": "spacy-lookup",
-            "code_example": [
-                "import spacy",
-                "from spacy_lookup import Entity",
-                "",
-                "nlp = spacy.load('en')",
-                "entity = Entity(keywords_list=['python', 'product manager', 'java platform'])",
-                "nlp.add_pipe(entity, last=True)",
-                "",
-                "doc = nlp(\"I am a product manager for a java and python.\")",
-                "assert doc._.has_entities == True",
-                "assert doc[0]._.is_entity == False",
-                "assert doc[3]._.entity_desc == 'product manager'",
-                "assert doc[3]._.is_entity == True",
-                "",
-                "print([(token.text, token._.canonical) for token in doc if token._.is_entity])"
-            ],
-            "author": "Marc Puig",
-            "author_links": {
-                "github": "mpuig"
             },
             "category": ["pipeline"]
         },
@@ -1321,21 +1184,6 @@
             "author_links": {
                 "github": "huggingface"
             }
-        },
-        {
-            "id": "spacy-vis",
-            "slogan": "A visualisation tool for spaCy using Hierplane",
-            "description": "A visualiser for spaCy annotations. This visualisation uses the [Hierplane](https://allenai.github.io/hierplane/) Library to render the dependency parse from spaCy's models. It also includes visualisation of entities and POS tags within nodes.",
-            "github": "DeNeutoy/spacy-vis",
-            "url": "http://spacyvis.allennlp.org/spacy-parser",
-            "thumb": "https://i.imgur.com/DAG9QFd.jpg",
-            "image": "https://raw.githubusercontent.com/DeNeutoy/spacy-vis/master/img/example.gif",
-            "author": "Mark Neumann",
-            "author_links": {
-                "twitter": "MarkNeumannnn",
-                "github": "DeNeutoy"
-            },
-            "category": ["visualizers"]
         },
         {
             "id": "matcher-explorer",
@@ -2341,29 +2189,6 @@
             "category": ["videos"]
         },
         {
-            "id": "adam_qas",
-            "title": "ADAM: Question Answering System",
-            "slogan": "A question answering system that extracts answers from Wikipedia to questions posed in natural language.",
-            "github": "5hirish/adam_qas",
-            "pip": "qas",
-            "code_example": [
-                "git clone https://github.com/5hirish/adam_qas.git",
-                "cd adam_qas",
-                "pip install -r requirements.txt",
-                "python -m qas.adam 'When was linux kernel version 4.0 released ?'"
-            ],
-            "code_language": "bash",
-            "thumb": "https://shirishkadam.files.wordpress.com/2018/04/mini_alleviate.png",
-            "author": "Shirish Kadam",
-            "author_links": {
-                "twitter": "5hirish",
-                "github": "5hirish",
-                "website": "https://shirishkadam.com/"
-            },
-            "category": ["standalone"],
-            "tags": ["question-answering", "elasticsearch"]
-        },
-        {
             "id": "self-attentive-parser",
             "title": "Berkeley Neural Parser",
             "slogan": "Constituency Parsing with a Self-Attentive Encoder (ACL 2018)",
@@ -2461,20 +2286,6 @@
             "tags": ["javascript"]
         },
         {
-            "id": "spacy-raspberry",
-            "title": "spacy-raspberry",
-            "slogan": "64bit Raspberry Pi image for spaCy and neuralcoref",
-            "github": "boehm-e/spacy-raspberry",
-            "thumb": "https://i.imgur.com/VCJMrE6.png",
-            "image": "https://raw.githubusercontent.com/boehm-e/spacy-raspberry/master/imgs/preview.png",
-            "author": "Erwan Boehm",
-            "author_links": {
-                "github": "boehm-e"
-            },
-            "category": ["apis"],
-            "tags": ["raspberrypi"]
-        },
-        {
             "id": "spacy-wordnet",
             "title": "spacy-wordnet",
             "slogan": "WordNet meets spaCy",
@@ -2543,35 +2354,6 @@
             "github": "BramVanroy/spacy_conll",
             "category": ["standalone", "pipeline"],
             "tags": ["linguistics", "computational linguistics", "conll", "conll-u"]
-        },
-        {
-            "id": "spacy-langdetect",
-            "title": "spacy-langdetect",
-            "slogan": "A fully customizable language detection pipeline for spaCy",
-            "description": "This module allows you to add language detection capabilites to your spaCy pipeline. Also supports custom language detectors!",
-            "pip": "spacy-langdetect",
-            "code_example": [
-                "import spacy",
-                "from spacy_langdetect import LanguageDetector",
-                "nlp = spacy.load('en')",
-                "nlp.add_pipe(LanguageDetector(), name='language_detector', last=True)",
-                "text = 'This is an english text.'",
-                "doc = nlp(text)",
-                "# document level language detection. Think of it like average language of the document!",
-                "print(doc._.language)",
-                "# sentence level language detection",
-                "for sent in doc.sents:",
-                "   print(sent, sent._.language)"
-            ],
-            "code_language": "python",
-            "author": "Abhijit Balaji",
-            "author_links": {
-                "github": "Abhijit-2592",
-                "website": "https://abhijit-2592.github.io/"
-            },
-            "github": "Abhijit-2592/spacy-langdetect",
-            "category": ["pipeline"],
-            "tags": ["language-detection"]
         },
         {
             "id": "ludwig",
@@ -3070,35 +2852,6 @@
                 "\tprint(ent.text, ent.start_char, ent.end_char, ent.label_)"
             ],
             "author": "Stefan Daniel Dumitrescu, Andrei-Marius Avram"
-        },
-        {
-            "id": "num_fh",
-            "title": "Numeric Fused-Head",
-            "slogan": "Numeric Fused-Head Identificaiton and Resolution in English",
-            "description": "This package provide a wrapper for the Numeric Fused-Head in English. It provides another information layer on numbers that refer to another entity which is not obvious from the syntactic tree.",
-            "github": "yanaiela/num_fh",
-            "pip": "num_fh",
-            "category": ["pipeline", "research"],
-            "code_example": [
-                "import spacy",
-                "from num_fh import NFH",
-                "nlp = spacy.load('en_core_web_sm')",
-                "nfh = NFH(nlp)",
-                "nlp.add_pipe(nfh, first=False)",
-                "doc = nlp(\"I told you two, that only one of them is the one who will get 2 or 3 icecreams\")",
-                "",
-                "assert doc[16]._.is_nfh == True",
-                "assert doc[18]._.is_nfh == False",
-                "assert doc[3]._.is_deter_nfh == True",
-                "assert doc[16]._.is_deter_nfh == False",
-                "assert len(doc._.nfh) == 4"
-            ],
-            "author": "Yanai Elazar",
-            "author_links": {
-                "github": "yanaiela",
-                "twitter": "yanaiela",
-                "website": "https://yanaiela.github.io"
-            }
         },
         {
             "id": "Healthsea",
