@@ -27,4 +27,5 @@ jobs:
         run: |
           pip install slack-sdk==3.17.2 aiohttp==3.8.1
           echo "$CHANNEL"
+          echo "$SLACK_BOT_TOKEN"
           python .github/spacy_universe_alert.py "$GITHUB_CONTEXT"
