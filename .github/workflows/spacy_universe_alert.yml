@@ -27,4 +27,4 @@ jobs:
         run: |
           pip install slack_sdk aiohttp
           echo "$CHANNEL"
-          python .github/validate_universe_json.py "$GITHUB_CONTEXT"
+          python .github/spacy_universe_alert.py "$GITHUB_CONTEXT"
