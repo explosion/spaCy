@@ -1,15 +1,10 @@
 name: spaCy universe project alert
 
 on:
-  push:
+  pull_request:
     paths:
       - "website/meta/universe.json"
-  schedule:
-    - cron: "0 9 * * 5"
-  workflow_dispatch:
-    inputs:
-      tags:
-        description: "Manual trigger"
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -18,4 +13,18 @@ jobs:
       - name: Dump GitHub context
         env:
           GITHUB_CONTEXT: ${{ toJson(github) }}
-        run: echo "$GITHUB_CONTEXT"
+          PR_NUMBER: ${{github.event.number}}
+        run: |
+          echo "$GITHUB_CONTEXT"
+
+      - uses: actions/checkout@v1
+      - uses: actions/setup-python@v1
+      - name: Install Bernadette app dependency and send an alert
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+          CHANNEL: "#alerts-universe"
+        run: |
+          pip install slack_sdk aiohttp
+          echo "$CHANNEL"
+          python .github/validate_universe_json.py "$GITHUB_CONTEXT"
