@@ -1,4 +1,4 @@
-from typing import Callable, Iterable
+from typing import Callable, Iterable, Dict, Any
 
 import pytest
 from numpy.testing import assert_equal
@@ -207,7 +207,7 @@ def test_no_entities():
     nlp.add_pipe("sentencizer", first=True)
 
     # this will run the pipeline on the examples and shouldn't crash
-    results = nlp.evaluate(train_examples)
+    nlp.evaluate(train_examples)
 
 
 def test_partial_links():
@@ -1063,7 +1063,7 @@ def test_no_gold_ents(patterns):
         "entity_linker", config={"use_gold_ents": False}, last=True
     )
     entity_linker.set_kb(create_kb)
-    assert entity_linker.use_gold_ents == False
+    assert entity_linker.use_gold_ents is False
 
     optimizer = nlp.initialize(get_examples=lambda: train_examples)
     for i in range(2):
@@ -1074,7 +1074,7 @@ def test_no_gold_ents(patterns):
     nlp.add_pipe("sentencizer", first=True)
 
     # this will run the pipeline on the examples and shouldn't crash
-    results = nlp.evaluate(train_examples)
+    nlp.evaluate(train_examples)
 
 
 @pytest.mark.issue(9575)
@@ -1114,4 +1114,61 @@ def test_tokenization_mismatch():
         nlp.update(train_examples, sgd=optimizer, losses=losses)
 
     nlp.add_pipe("sentencizer", first=True)
-    results = nlp.evaluate(train_examples)
+    nlp.evaluate(train_examples)
+
+
+# fmt: off
+@pytest.mark.parametrize(
+    "meet_threshold,config",
+    [
+        (False, {"@architectures": "spacy.EntityLinker.v2", "tok2vec": DEFAULT_TOK2VEC_MODEL}),
+        (True, {"@architectures": "spacy.EntityLinker.v2", "tok2vec": DEFAULT_TOK2VEC_MODEL}),
+    ],
+)
+# fmt: on
+def test_threshold(meet_threshold: bool, config: Dict[str, Any]):
+    """Tests abstention threshold.
+    meet_threshold (bool): Whether to configure NEL setup so that confidence threshold is met.
+    config (Dict[str, Any]): NEL architecture config.
+    """
+    nlp = English()
+    nlp.add_pipe("sentencizer")
+    text = "Mahler's Symphony No. 8 was beautiful."
+    entities = [(0, 6, "PERSON")]
+    links = {(0, 6): {"Q7304": 1.0}}
+    sent_starts = [1, -1, 0, 0, 0, 0, 0, 0, 0]
+    entity_id = "Q7304"
+    doc = nlp(text)
+    train_examples = [
+        Example.from_dict(
+            doc, {"entities": entities, "links": links, "sent_starts": sent_starts}
+        )
+    ]
+
+    def create_kb(vocab):
+        # create artificial KB
+        mykb = KnowledgeBase(vocab, entity_vector_length=3)
+        mykb.add_entity(entity=entity_id, freq=12, entity_vector=[6, -4, 3])
+        mykb.add_alias(
+            alias="Mahler",
+            entities=[entity_id],
+            probabilities=[1 if meet_threshold else 0.01],
+        )
+        return mykb
+
+    # Create the Entity Linker component and add it to the pipeline
+    entity_linker = nlp.add_pipe(
+        "entity_linker",
+        last=True,
+        config={"threshold": 0.99, "model": config},
+    )
+    entity_linker.set_kb(create_kb)  # type: ignore
+    nlp.initialize(get_examples=lambda: train_examples)
+
+    # Add a custom rule-based component to mimick NER
+    ruler = nlp.add_pipe("entity_ruler", before="entity_linker")
+    ruler.add_patterns([{"label": "PERSON", "pattern": [{"LOWER": "mahler"}]}])  # type: ignore
+    doc = nlp(text)
+
+    assert len(doc.ents) == 1
+    assert doc.ents[0].kb_id_ == entity_id if meet_threshold else EntityLinker.NIL
