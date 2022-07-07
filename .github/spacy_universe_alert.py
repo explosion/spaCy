@@ -6,7 +6,8 @@ from datetime import datetime
 from slack_sdk.web.client import WebClient
 
 CHANNEL = "#alerts-universe"
-SLACK_TOKEN = os.environ.get("SLACK_BOT_TOKEN")
+SLACK_TOKEN = os.environ.get("SLACK_BOT_TOKEN", "ENV VAR not available!")
+print(SLACK_TOKEN)
 DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 
 client = WebClient(SLACK_TOKEN)
