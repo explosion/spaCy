@@ -2695,7 +2695,7 @@
             "slogan": "Information extraction from English and German texts based on predicate logic",
             "github": "explosion/holmes-extractor",
             "url": "https://github.com/explosion/holmes-extractor",
-            "description": "Holmes is a Python 3 library that supports a number of use cases involving information extraction from English and German texts, including chatbot, structural extraction, topic matching and supervised document classification. There is a [website demonstrating intelligent search based on topic matching](https://demo.holmes.prod.demos.explosion.services).",
+            "description": "Holmes is a Python 3 library that supports a number of use cases involving information extraction from English and German texts, including chatbot, structural extraction, topic matching and supervised document classification. There is a [website demonstrating intelligent search based on topic matching](https://holmes-demo.explosion.services).",
             "pip": "holmes-extractor",
             "category": ["pipeline", "standalone"],
             "tags": ["chatbots", "text-processing"],
