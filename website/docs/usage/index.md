@@ -195,6 +195,42 @@ How to install compilers and related build tools:
   [Visual Studio Express](https://www.visualstudio.com/vs/visual-studio-express/)
   that matches the version that was used to compile your Python interpreter.
 
+#### Using build constraints when compiling from source
+
+If you install spaCy from source or with `pip` for platforms where there are not
+binary wheels on PyPI, you may need to use build constraints if any package in
+your environment requires an older version of `numpy`.
+
+If `numpy` gets downgraded from the most recent release at any point after
+you've compiled `spacy`, you might see an error that looks like this:
+
+```none
+numpy.ndarray size changed, may indicate binary incompatibility.
+```
+
+To fix this, create a new virtual environment and install `spacy` and all of its
+dependencies using build constraints.
+[Build constraints](https://pip.pypa.io/en/stable/user_guide/#constraints-files)
+specify an older version of `numpy` that is only used while compiling `spacy`,
+and then your runtime environment can use any newer version of `numpy` and still
+be compatible. In addition, use `--no-cache-dir` to ignore any previously cached
+wheels so that all relevant packages are recompiled from scratch:
+
+```shell
+PIP_CONSTRAINT=https://raw.githubusercontent.com/explosion/spacy/master/build-constraints.txt \
+pip install spacy --no-cache-dir
+```
+
+Our build constraints currently specify the oldest supported `numpy` available
+on PyPI for `x86_64` and `aarch64`. Depending on your platform and environment,
+you may want to customize the specific versions of `numpy`. For other platforms,
+you can have a look at SciPy's
+[`oldest-supported-numpy`](https://github.com/scipy/oldest-supported-numpy/blob/main/setup.cfg)
+package to see what the oldest recommended versions of `numpy` are.
+
+(_Warning_: don't use `pip install -c constraints.txt` instead of
+`PIP_CONSTRAINT`, since this isn't applied to the isolated build environments.)
+
 #### Additional options for developers {#source-developers}
 
 Some additional options may be useful for spaCy developers who are editing the
