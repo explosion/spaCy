@@ -126,8 +126,8 @@ class build_ext_options:
 
 class build_ext_subclass(build_ext, build_ext_options):
     def build_extensions(self):
-        if not self.parallel:
-            self.parallel = int(os.environ.get("SPACY_NUM_BUILD_JOBS", 1))
+        if self.parallel is None and os.environ.get("SPACY_NUM_BUILD_JOBS") is not None:
+            self.parallel = int(os.environ.get("SPACY_NUM_BUILD_JOBS"))
         build_ext_options.build_options(self)
         build_ext.build_extensions(self)
 
@@ -208,7 +208,11 @@ def setup_package():
     for name in MOD_NAMES:
         mod_path = name.replace(".", "/") + ".pyx"
         ext = Extension(
-            name, [mod_path], language="c++", include_dirs=include_dirs, extra_compile_args=["-std=c++11"]
+            name,
+            [mod_path],
+            language="c++",
+            include_dirs=include_dirs,
+            extra_compile_args=["-std=c++11"],
         )
         ext_modules.append(ext)
     print("Cythonizing sources")

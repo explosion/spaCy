@@ -130,8 +130,8 @@ grateful to use the work of Chainer's [CuPy](https://cupy.chainer.org) module,
 which provides a numpy-compatible interface for GPU arrays.
 
 spaCy can be installed for a CUDA-compatible GPU by specifying `spacy[cuda]`,
-`spacy[cuda102]`, `spacy[cuda112]`, `spacy[cuda113]`, etc. If you know your
-CUDA version, using the more explicit specifier allows CuPy to be installed via
+`spacy[cuda102]`, `spacy[cuda112]`, `spacy[cuda113]`, etc. If you know your CUDA
+version, using the more explicit specifier allows CuPy to be installed via
 wheel, saving some compilation time. The specifiers should install
 [`cupy`](https://cupy.chainer.org).
 
@@ -236,24 +236,32 @@ package to see what the oldest recommended versions of `numpy` are.
 Some additional options may be useful for spaCy developers who are editing the
 source code and recompiling frequently.
 
-- Install in editable mode. Changes to `.py` files will be reflected as soon as
-  the files are saved, but edits to Cython files (`.pxd`, `.pyx`) will require
-  the `pip install` or `python setup.py build_ext` command below to be run
-  again. Before installing in editable mode, be sure you have removed any
-  previous installs with `pip uninstall spacy`, which you may need to run
-  multiple times to remove all traces of earlier installs.
+- Install in editable mode. Changes to `.py` files will be reflected as soon
+  as the files are saved, but edits to Cython files (`.pxd`, `.pyx`) will
+  require the `pip install` command below to be run again. Before installing in
+  editable mode, be sure you have removed any previous installs with
+  `pip uninstall spacy`, which you may need to run multiple times to remove all
+  traces of earlier installs.
 
   ```bash
   $ pip install -r requirements.txt
   $ pip install --no-build-isolation --editable .
   ```
 
-- Build in parallel using `N` CPUs to speed up compilation and then install in
-  editable mode:
+- Build in parallel. Starting in v3.4.0, you can specify the number of
+  build jobs with the environment variable `SPACY_NUM_BUILD_JOBS`:
 
   ```bash
   $ pip install -r requirements.txt
-  $ python setup.py build_ext --inplace -j N
+  $ SPACY_NUM_BUILD_JOBS=4 pip install --no-build-isolation --editable .
+  ```
+
+- For editable mode and parallel builds with `python setup.py` instead of `pip`
+  (no longer recommended):
+
+  ```bash
+  $ pip install -r requirements.txt
+  $ python setup.py build_ext --inplace -j 4
   $ python setup.py develop
   ```
 
