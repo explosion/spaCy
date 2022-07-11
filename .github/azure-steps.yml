@@ -40,7 +40,7 @@ steps:
 
   - bash: |
       ${{ parameters.prefix }} SDIST=$(python -c "import os;print(os.listdir('./dist')[-1])" 2>&1)
-      ${{ parameters.prefix }} python -m pip install dist/$SDIST
+      ${{ parameters.prefix }} SPACY_NUM_BUILD_JOBS=2 python -m pip install dist/$SDIST
     displayName: "Install from sdist"
 
   - script: |
