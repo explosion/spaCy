@@ -17,17 +17,26 @@ from thinc.util import has_torch
 # fmt: off
 TRAIN_DATA = [
     (
-        "Yes, I noticed that many friends around me received it. It seems that almost everyone received this SMS.",
+        "John Smith picked up the red ball and he threw it away.",
         {
             "spans": {
                 f"{DEFAULT_CLUSTER_PREFIX}_1": [
-                    (5, 6, "MENTION"),      # I
-                    (40, 42, "MENTION"),    # me
+                    (0, 10, "MENTION"),      # John Smith
+                    (38, 40, "MENTION"),     # he
 
                 ],
                 f"{DEFAULT_CLUSTER_PREFIX}_2": [
-                    (52, 54, "MENTION"),     # it
-                    (95, 103, "MENTION"),    # this SMS
+                    (25, 33, "MENTION"),     # red ball
+                    (47, 49, "MENTION"),     # it
+                ],
+                f"coref_head_clusters_1": [
+                    (5, 10, "MENTION"),      # Smith
+                    (38, 40, "MENTION"),     # he
+
+                ],
+                f"coref_head_clusters_2": [
+                    (29, 33, "MENTION"),     # red ball
+                    (47, 49, "MENTION"),     # it
                 ]
             }
         },
@@ -35,8 +44,7 @@ TRAIN_DATA = [
 ]
 # fmt: on
 
-
-CONFIG = {"model": {"@architectures": "spacy.Coref.v1", "tok2vec_size": 64}}
+CONFIG = {"model": {"@architectures": "spacy.SpanPredictor.v1", "tok2vec_size": 64}}
 
 
 @pytest.fixture
@@ -53,52 +61,31 @@ def snlp():
 
 @pytest.mark.skipif(not has_torch, reason="Torch not available")
 def test_add_pipe(nlp):
-    nlp.add_pipe("coref")
-    assert nlp.pipe_names == ["coref"]
+    nlp.add_pipe("span_predictor")
+    assert nlp.pipe_names == ["span_predictor"]
 
 
 @pytest.mark.skipif(not has_torch, reason="Torch not available")
 def test_not_initialized(nlp):
-    nlp.add_pipe("coref")
+    nlp.add_pipe("span_predictor")
     text = "She gave me her pen."
     with pytest.raises(ValueError, match="E109"):
         nlp(text)
 
 
 @pytest.mark.skipif(not has_torch, reason="Torch not available")
-def test_initialized(nlp):
-    nlp.add_pipe("coref", config=CONFIG)
+def test_span_predictor_serialization(nlp):
+    # Test that the span predictor component can be serialized
+    nlp.add_pipe("span_predictor", last=True, config=CONFIG)
     nlp.initialize()
-    assert nlp.pipe_names == ["coref"]
-    text = "She gave me her pen."
-    doc = nlp(text)
-    for k, v in doc.spans.items():
-        # Ensure there are no "She, She, She, She, She, ..." problems
-        assert len(v) <= 15
-
-
-@pytest.mark.skipif(not has_torch, reason="Torch not available")
-def test_initialized_short(nlp):
-    nlp.add_pipe("coref", config=CONFIG)
-    nlp.initialize()
-    assert nlp.pipe_names == ["coref"]
-    text = "Hi there"
-    doc = nlp(text)
-
-
-@pytest.mark.skipif(not has_torch, reason="Torch not available")
-def test_coref_serialization(nlp):
-    # Test that the coref component can be serialized
-    nlp.add_pipe("coref", last=True, config=CONFIG)
-    nlp.initialize()
-    assert nlp.pipe_names == ["coref"]
+    assert nlp.pipe_names == ["span_predictor"]
     text = "She gave me her pen."
     doc = nlp(text)
 
     with make_tempdir() as tmp_dir:
         nlp.to_disk(tmp_dir)
         nlp2 = spacy.load(tmp_dir)
-        assert nlp2.pipe_names == ["coref"]
+        assert nlp2.pipe_names == ["span_predictor"]
         doc2 = nlp2(text)
 
         assert get_clusters_from_doc(doc) == get_clusters_from_doc(doc2)
@@ -111,19 +98,31 @@ def test_overfitting_IO(nlp):
     for text, annot in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(text), annot))
 
-    nlp.add_pipe("coref", config=CONFIG)
+    train_examples = []
+    for text, annot in TRAIN_DATA:
+        eg = Example.from_dict(nlp.make_doc(text), annot)
+        ref = eg.reference
+        # Finally, copy over the head spans to the pred
+        pred = eg.predicted
+        for key, spans in ref.spans.items():
+            if key.startswith("coref_head_clusters"):
+                pred.spans[key] = [pred[span.start : span.end] for span in spans]
+
+        train_examples.append(eg)
+    nlp.add_pipe("span_predictor", config=CONFIG)
     optimizer = nlp.initialize()
     test_text = TRAIN_DATA[0][0]
     doc = nlp(test_text)
 
-    # Needs ~12 epochs to converge
     for i in range(15):
         losses = {}
         nlp.update(train_examples, sgd=optimizer, losses=losses)
         doc = nlp(test_text)
 
-    # test the trained model
-    doc = nlp(test_text)
+    # test the trained model, using the pred since it has heads
+    doc = nlp(train_examples[0].predicted)
+    # XXX This actually tests that it can overfit
+    assert get_clusters_from_doc(doc) == get_clusters_from_doc(train_examples[0].reference)
 
     # Also test the results are still the same after IO
     with make_tempdir() as tmp_dir:
@@ -137,6 +136,7 @@ def test_overfitting_IO(nlp):
         "I noticed many friends around me",
         "They received it. They received the SMS.",
     ]
+    # XXX Note these have no predictions because they have no input spans
     docs1 = list(nlp.pipe(texts))
     docs2 = list(nlp.pipe(texts))
     docs3 = [nlp(text) for text in texts]
@@ -154,19 +154,26 @@ def test_tokenization_mismatch(nlp):
         for key, cluster in ref.spans.items():
             char_spans[key] = []
             for span in cluster:
-                char_spans[key].append((span[0].idx, span[-1].idx + len(span[-1])))
+                char_spans[key].append((span.start_char, span.end_char))
         with ref.retokenize() as retokenizer:
-            # merge "many friends"
-            retokenizer.merge(ref[5:7])
+            # merge "picked up"
+            retokenizer.merge(ref[2:4])
 
         # Note this works because it's the same doc and we know the keys
         for key, _ in ref.spans.items():
             spans = char_spans[key]
             ref.spans[key] = [ref.char_span(*span) for span in spans]
 
+        # Finally, copy over the head spans to the pred
+        pred = eg.predicted
+        for key, val in ref.spans.items():
+            if key.startswith("coref_head_clusters"):
+                spans = char_spans[key]
+                pred.spans[key] = [pred.char_span(*span) for span in spans]
+
         train_examples.append(eg)
 
-    nlp.add_pipe("coref", config=CONFIG)
+    nlp.add_pipe("span_predictor", config=CONFIG)
     optimizer = nlp.initialize()
     test_text = TRAIN_DATA[0][0]
     doc = nlp(test_text)
@@ -176,8 +183,11 @@ def test_tokenization_mismatch(nlp):
         nlp.update(train_examples, sgd=optimizer, losses=losses)
         doc = nlp(test_text)
 
-    # test the trained model
-    doc = nlp(test_text)
+    # test the trained model; need to use doc with head spans on it already
+    test_doc = train_examples[0].predicted
+    doc = nlp(test_doc)
+    # XXX This actually tests that it can overfit
+    assert get_clusters_from_doc(doc) == get_clusters_from_doc(train_examples[0].reference)
 
     # Also test the results are still the same after IO
     with make_tempdir() as tmp_dir:
@@ -201,26 +211,6 @@ def test_tokenization_mismatch(nlp):
 
 
 @pytest.mark.skipif(not has_torch, reason="Torch not available")
-def test_crossing_spans():
-    starts = [6, 10, 0, 1, 0, 1, 0, 1, 2, 2, 2]
-    ends = [12, 12, 2, 3, 3, 4, 4, 4, 3, 4, 5]
-    idxs = list(range(len(starts)))
-    limit = 5
-
-    gold = sorted([0, 1, 2, 4, 6])
-    guess = select_non_crossing_spans(idxs, starts, ends, limit)
-    guess = sorted(guess)
-    assert gold == guess
-
-
-@pytest.mark.skipif(not has_torch, reason="Torch not available")
-def test_sentence_map(snlp):
-    doc = snlp("I like text. This is text.")
-    sm = get_sentence_ids(doc)
-    assert sm == [0, 0, 0, 0, 1, 1, 1, 1]
-
-
-@pytest.mark.skipif(not has_torch, reason="Torch not available")
 def test_whitespace_mismatch(nlp):
     train_examples = []
     for text, annot in TRAIN_DATA:
@@ -228,7 +218,7 @@ def test_whitespace_mismatch(nlp):
         eg.predicted = nlp.make_doc("  " + text)
         train_examples.append(eg)
 
-    nlp.add_pipe("coref", config=CONFIG)
+    nlp.add_pipe("span_predictor", config=CONFIG)
     optimizer = nlp.initialize()
     test_text = TRAIN_DATA[0][0]
     doc = nlp(test_text)
