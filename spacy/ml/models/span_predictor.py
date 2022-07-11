@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List, Tuple, cast
 
 from thinc.api import Model, chain, tuplify
 from thinc.api import PyTorchWrapper, ArgsKwargs
@@ -35,7 +35,6 @@ def build_span_predictor(
             ),
             convert_inputs=convert_span_predictor_inputs,
         )
-        # TODO use proper parameter for prefix
         head_info = build_get_head_metadata(prefix)
         model = (tok2vec & head_info) >> span_predictor
 
@@ -43,15 +42,17 @@ def build_span_predictor(
 
 
 def convert_span_predictor_inputs(
-    model: Model, X: Tuple[List[Floats2d], Tuple[List[Ints1d], List[Ints1d]]], is_train: bool
+    model: Model,
+    X: Tuple[List[Floats2d], Tuple[List[Ints1d], List[Ints1d]]],
+    is_train: bool,
 ):
     tok2vec, (sent_ids, head_ids) = X
     # Normally we should use the input is_train, but for these two it's not relevant
     # TODO fix the type here, or remove it
-    def backprop(args: ArgsKwargs): #-> Tuple[List[Floats2d], None]:
-        gradients = torch2xp(args.args[1])
+    def backprop(args: ArgsKwargs) -> Tuple[List[Floats2d], None]:
+        gradients = cast(Floats2d, torch2xp(args.args[1]))
         # The sent_ids and head_ids are None because no gradients
-        return [[gradients], None]
+        return ([gradients], None)
 
     word_features = xp2torch(tok2vec[0], requires_grad=is_train)
     sent_ids_tensor = xp2torch(sent_ids[0], requires_grad=False)
@@ -96,7 +97,6 @@ def predict_span_clusters(
 
 
 def build_get_head_metadata(prefix):
-    # TODO this name is awful, fix it
     model = Model(
         "HeadDataProvider", attrs={"prefix": prefix}, forward=head_data_forward
     )
@@ -142,7 +142,6 @@ class SpanPredictor(torch.nn.Module):
             raise ValueError("max_distance has to be an even number")
         # input size = single token size
         # 64 = probably distance emb size
-        # TODO check that dist_emb_size use is correct
         self.ffnn = torch.nn.Sequential(
             torch.nn.Linear(input_size * 2 + dist_emb_size, hidden_size),
             torch.nn.ReLU(),
@@ -159,7 +158,6 @@ class SpanPredictor(torch.nn.Module):
             torch.nn.Conv1d(dist_emb_size, conv_channels, kernel_size, 1, 1),
             torch.nn.Conv1d(conv_channels, 2, kernel_size, 1, 1),
         )
-        # TODO make embeddings size a parameter
         self.max_distance = max_distance
         # handle distances between +-(max_distance - 2 / 2)
         self.emb = torch.nn.Embedding(max_distance, dist_emb_size)
@@ -211,9 +209,7 @@ class SpanPredictor(torch.nn.Module):
             dim=1,
         )
         lengths = same_sent.sum(dim=1)
-        padding_mask = torch.arange(
-            0, lengths.max().item(), device=device
-        ).unsqueeze(0)
+        padding_mask = torch.arange(0, lengths.max().item(), device=device).unsqueeze(0)
         # (n_heads x max_sent_len)
         padding_mask = padding_mask < lengths.unsqueeze(1)
         # (n_heads x max_sent_len x input_size * 2 + distance_emb_size)
