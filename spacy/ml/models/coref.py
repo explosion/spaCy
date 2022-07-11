@@ -25,6 +25,7 @@ def build_wl_coref_model(
     tok2vec_size: int = 768,  # tok2vec size
 ) -> Model[List[Doc], Tuple[Floats2d, Ints2d]]:
 
+
     with Model.define_operators({">>": chain}):
         coref_clusterer = PyTorchWrapper(
             CorefClusterer(
