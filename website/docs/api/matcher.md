@@ -59,15 +59,20 @@ matched:
 > [
 >   {"POS": "ADJ", "OP": "*"},
 >   {"POS": "NOUN", "OP": "+"}
+>   {"POS": "PROPN", "OP": "{2}"}
 > ]
 > ```
 
-| OP  | Description                                                      |
-| --- | ---------------------------------------------------------------- |
-| `!` | Negate the pattern, by requiring it to match exactly 0 times.    |
-| `?` | Make the pattern optional, by allowing it to match 0 or 1 times. |
-| `+` | Require the pattern to match 1 or more times.                    |
-| `*` | Allow the pattern to match 0 or more times.                      |
+| OP      | Description                                                            |
+|---------|------------------------------------------------------------------------|
+| `!`     | Negate the pattern, by requiring it to match exactly 0 times.          |
+| `?`     | Make the pattern optional, by allowing it to match 0 or 1 times.       |
+| `+`     | Require the pattern to match 1 or more times.                          |
+| `*`     | Allow the pattern to match 0 or more times.                            |
+| `{n}`   | Require the pattern to match exactly _n_ times.                        |
+| `{n,m}` | Require the pattern to match at least _n_ but not more than _m_ times. |
+| `{n,}`  | Require the pattern to match at least _n_ times.                       |
+| `{,m}`  | Require the pattern to match at most _m_ times.                        |
 
 Token patterns can also map to a **dictionary of properties** instead of a
 single value to indicate whether the expected value is a member of a list or how
