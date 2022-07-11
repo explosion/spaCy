@@ -441,7 +441,7 @@ cdef class precompute_hiddens:
 
         cdef CBlas cblas
         if isinstance(self.ops, CupyOps):
-            cblas = get_ops("cpu").cblas()
+            cblas = NUMPY_OPS.cblas()
         else:
             cblas = self.ops.cblas()
 

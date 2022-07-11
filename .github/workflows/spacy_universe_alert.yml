@@ -1,0 +1,30 @@
+name: spaCy universe project alert
+
+on:
+  pull_request_target:
+    paths:
+      - "website/meta/universe.json"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+          PR_NUMBER: ${{github.event.number}}
+        run: |
+          echo "$GITHUB_CONTEXT"
+
+      - uses: actions/checkout@v1
+      - uses: actions/setup-python@v1
+      - name: Install Bernadette app dependency and send an alert
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+          CHANNEL: "#alerts-universe"
+        run: |
+          pip install slack-sdk==3.17.2 aiohttp==3.8.1
+          echo "$CHANNEL"
+          python .github/spacy_universe_alert.py "$GITHUB_CONTEXT"
