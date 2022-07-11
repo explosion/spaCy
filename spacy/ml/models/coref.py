@@ -22,11 +22,11 @@ def build_wl_coref_model(
     # pairs to keep per mention after rough scoring
     antecedent_limit: int = 50,
     antecedent_batch_size: int = 512,
-    nI = None
+    nI=None,
 ) -> Model[List[Doc], Tuple[Floats2d, Ints2d]]:
 
     with Model.define_operators({">>": chain}):
-        coref_clusterer = Model(
+        coref_clusterer: Model[List[Floats2d], Tuple[Floats2d, Ints2d]] = Model(
             "coref_clusterer",
             forward=coref_forward,
             init=coref_init,
@@ -80,6 +80,7 @@ def coref_init(model: Model, X=None, Y=None):
 
 def coref_forward(model: Model, X, is_train: bool):
     return model.layers[0](X, is_train)
+
 
 def convert_coref_clusterer_inputs(model: Model, X: List[Floats2d], is_train: bool):
     # The input here is List[Floats2d], one for each doc

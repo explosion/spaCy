@@ -25,7 +25,7 @@ def build_span_predictor(
     nI = None
 
     with Model.define_operators({">>": chain, "&": tuplify}):
-        span_predictor = Model(
+        span_predictor: Model[List[Floats2d], List[Floats2d]] = Model(
             "span_predictor",
             forward=span_predictor_forward,
             init=span_predictor_init,
@@ -43,6 +43,7 @@ def build_span_predictor(
         model.set_ref("span_predictor", span_predictor)
 
     return model
+
 
 def span_predictor_init(model: Model, X=None, Y=None):
     if model.layers:
@@ -72,8 +73,10 @@ def span_predictor_init(model: Model, X=None, Y=None):
         # TODO maybe we need mixed precision and grad scaling?
     ]
 
+
 def span_predictor_forward(model: Model, X, is_train: bool):
     return model.layers[0](X, is_train)
+
 
 def convert_span_predictor_inputs(
     model: Model,
@@ -95,7 +98,9 @@ def convert_span_predictor_inputs(
     else:
         head_ids_tensor = xp2torch(head_ids[0], requires_grad=False)
 
-    argskwargs = ArgsKwargs(args=(sent_ids_tensor, word_features, head_ids_tensor), kwargs={})
+    argskwargs = ArgsKwargs(
+        args=(sent_ids_tensor, word_features, head_ids_tensor), kwargs={}
+    )
     return argskwargs, backprop
 
 
