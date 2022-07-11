@@ -29,7 +29,7 @@ distance_embedding_size = 64
 conv_channels = 4
 window_size = 1
 max_distance = 128
-prefix = coref_head_clusters
+prefix = "coref_head_clusters"
 
 [model.tok2vec]
 @architectures = "spacy.Tok2Vec.v2"
@@ -95,6 +95,8 @@ class SpanPredictor(TrainablePipe):
     """Pipeline component to resolve one-token spans to full spans.
 
     Used in coreference resolution.
+
+    DOCS: https://spacy.io/api/span_predictor
     """
 
     def __init__(
@@ -119,6 +121,14 @@ class SpanPredictor(TrainablePipe):
         }
 
     def predict(self, docs: Iterable[Doc]) -> List[MentionClusters]:
+        """Apply the pipeline's model to a batch of docs, without modifying them.
+        Return the list of predicted span clusters.
+
+        docs (Iterable[Doc]): The documents to predict.
+        RETURNS (List[MentionClusters]): The model's prediction for each document.
+
+        DOCS: https://spacy.io/api/span_predictor#predict
+        """
         # for now pretend there's just one doc
 
         out = []
@@ -151,6 +161,13 @@ class SpanPredictor(TrainablePipe):
         return out
 
     def set_annotations(self, docs: Iterable[Doc], clusters_by_doc) -> None:
+        """Modify a batch of Doc objects, using pre-computed scores.
+
+        docs (Iterable[Doc]): The documents to modify.
+        clusters: The span clusters, produced by SpanPredictor.predict.
+
+        DOCS: https://spacy.io/api/span_predictor#set_annotations
+        """
         for doc, clusters in zip(docs, clusters_by_doc):
             for ii, cluster in enumerate(clusters):
                 spans = [doc[mm[0] : mm[1]] for mm in cluster]
@@ -166,6 +183,15 @@ class SpanPredictor(TrainablePipe):
     ) -> Dict[str, float]:
         """Learn from a batch of documents and gold-standard information,
         updating the pipe's model. Delegates to predict and get_loss.
+
+        examples (Iterable[Example]): A batch of Example objects.
+        drop (float): The dropout rate.
+        sgd (thinc.api.Optimizer): The optimizer.
+        losses (Dict[str, float]): Optional record of the loss during training.
+            Updated using the component name as the key.
+        RETURNS (Dict[str, float]): The updated losses dictionary.
+
+        DOCS: https://spacy.io/api/span_predictor#update
         """
         if losses is None:
             losses = {}
@@ -178,6 +204,13 @@ class SpanPredictor(TrainablePipe):
 
         total_loss = 0
         for eg in examples:
+            if eg.x.text != eg.y.text:
+                # TODO assign error number
+                raise ValueError(
+                    """Text, including whitespace, must match between reference and
+                    predicted docs in span predictor training.
+                    """
+                )
             span_scores, backprop = self.model.begin_update([eg.predicted])
             # FIXME, this only happens once in the first 1000 docs of OntoNotes
             # and I'm not sure yet why.
@@ -222,6 +255,15 @@ class SpanPredictor(TrainablePipe):
         examples: Iterable[Example],
         span_scores: Floats3d,
     ):
+        """Find the loss and gradient of loss for the batch of documents and
+        their predicted scores.
+
+        examples (Iterable[Examples]): The batch of examples.
+        scores: Scores representing the model's predictions.
+        RETURNS (Tuple[float, float]): The loss and the gradient.
+
+        DOCS: https://spacy.io/api/span_predictor#get_loss
+        """
         ops = self.model.ops
 
         # NOTE This is doing fake batching, and should always get a list of one example
@@ -231,16 +273,29 @@ class SpanPredictor(TrainablePipe):
         for eg in examples:
             starts = []
             ends = []
+            keeps = []
+            sidx = 0
             for key, sg in eg.reference.spans.items():
                 if key.startswith(self.output_prefix):
-                    for mention in sg:
-                        starts.append(mention.start)
-                        ends.append(mention.end)
+                    for ii, mention in enumerate(sg):
+                        sidx += 1
+                        # convert to span in pred
+                        sch, ech = (mention.start_char, mention.end_char)
+                        span = eg.predicted.char_span(sch, ech)
+                        # TODO add to errors.py
+                        if span is None:
+                            warnings.warn("Could not align gold span in span predictor, skipping")
+                            continue
+                        starts.append(span.start)
+                        ends.append(span.end)
+                        keeps.append(sidx - 1)
 
             starts = self.model.ops.xp.asarray(starts)
             ends = self.model.ops.xp.asarray(ends)
-            start_scores = span_scores[:, :, 0]
-            end_scores = span_scores[:, :, 1]
+            start_scores = span_scores[:, :, 0][keeps]
+            end_scores = span_scores[:, :, 1][keeps]
+
+
             n_classes = start_scores.shape[1]
             start_probs = ops.softmax(start_scores, axis=1)
             end_probs = ops.softmax(end_scores, axis=1)
@@ -248,7 +303,14 @@ class SpanPredictor(TrainablePipe):
             end_targets = to_categorical(ends, n_classes)
             start_grads = start_probs - start_targets
             end_grads = end_probs - end_targets
-            grads = ops.xp.stack((start_grads, end_grads), axis=2)
+            # now return to original shape, with 0s
+            final_start_grads = ops.alloc2f(*span_scores[:, :, 0].shape)
+            final_start_grads[keeps] = start_grads
+            final_end_grads = ops.alloc2f(*final_start_grads.shape)
+            final_end_grads[keeps] = end_grads
+            # XXX Note this only works with fake batching
+            grads = ops.xp.stack((final_start_grads, final_end_grads), axis=2)
+
             loss = float((grads**2).sum())
         return loss, grads
 
@@ -258,6 +320,15 @@ class SpanPredictor(TrainablePipe):
         *,
         nlp: Optional[Language] = None,
     ) -> None:
+        """Initialize the pipe for training, using a representative set
+        of data examples.
+
+        get_examples (Callable[[], Iterable[Example]]): Function that
+            returns a representative sample of gold-standard Example objects.
+        nlp (Language): The current nlp object the component is part of.
+
+        DOCS: https://spacy.io/api/span_predictor#initialize
+        """
         validate_get_examples(get_examples, "SpanPredictor.initialize")
 
         X = []
@@ -267,6 +338,7 @@ class SpanPredictor(TrainablePipe):
             if not ex.predicted.spans:
                 # set placeholder for shape inference
                 doc = ex.predicted
+                # TODO should be able to check if there are some valid docs in the batch
                 assert len(doc) > 2, "Coreference requires at least two tokens"
                 doc.spans[f"{self.input_prefix}_0"] = [doc[0:1], doc[1:2]]
             X.append(ex.predicted)

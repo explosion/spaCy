@@ -383,7 +383,7 @@ class EntityLinker(TrainablePipe):
         no prediction.
 
         docs (Iterable[Doc]): The documents to predict.
-        RETURNS (List[str]): The models prediction for each document.
+        RETURNS (List[str]): The model's prediction for each document.
 
         DOCS: https://spacy.io/api/entitylinker#predict
         """

@@ -1,8 +1,8 @@
-from typing import List, Tuple
+from typing import List, Tuple, Callable, cast
 
 from thinc.api import Model, chain, get_width
 from thinc.api import PyTorchWrapper, ArgsKwargs
-from thinc.types import Floats2d
+from thinc.types import Floats2d, Ints2d
 from thinc.util import torch, xp2torch, torch2xp
 
 from ...tokens import Doc
@@ -22,10 +22,8 @@ def build_wl_coref_model(
     # pairs to keep per mention after rough scoring
     antecedent_limit: int = 50,
     antecedent_batch_size: int = 512,
-):
-    # TODO add model return types
-
     nI = None
+) -> Model[List[Doc], Tuple[Floats2d, Ints2d]]:
 
     with Model.define_operators({">>": chain}):
         coref_clusterer = Model(
@@ -83,7 +81,6 @@ def coref_init(model: Model, X=None, Y=None):
 def coref_forward(model: Model, X, is_train: bool):
     return model.layers[0](X, is_train)
 
-
 def convert_coref_clusterer_inputs(model: Model, X: List[Floats2d], is_train: bool):
     # The input here is List[Floats2d], one for each doc
     # just use the first
@@ -91,16 +88,17 @@ def convert_coref_clusterer_inputs(model: Model, X: List[Floats2d], is_train: bo
     X = X[0]
     word_features = xp2torch(X, requires_grad=is_train)
 
-    # TODO fix or remove type annotations
-    def backprop(args: ArgsKwargs):  # -> List[Floats2d]:
+    def backprop(args: ArgsKwargs) -> List[Floats2d]:
         # convert to xp and wrap in list
-        gradients = torch2xp(args.args[0])
+        gradients = cast(Floats2d, torch2xp(args.args[0]))
         return [gradients]
 
     return ArgsKwargs(args=(word_features,), kwargs={}), backprop
 
 
-def convert_coref_clusterer_outputs(model: Model, inputs_outputs, is_train: bool):
+def convert_coref_clusterer_outputs(
+    model: Model, inputs_outputs, is_train: bool
+) -> Tuple[Tuple[Floats2d, Ints2d], Callable]:
     _, outputs = inputs_outputs
     scores, indices = outputs
 
@@ -111,8 +109,8 @@ def convert_coref_clusterer_outputs(model: Model, inputs_outputs, is_train: bool
             kwargs={"grad_tensors": [dY_t]},
         )
 
-    scores_xp = torch2xp(scores)
-    indices_xp = torch2xp(indices)
+    scores_xp = cast(Floats2d, torch2xp(scores))
+    indices_xp = cast(Ints2d, torch2xp(indices))
     return (scores_xp, indices_xp), convert_for_torch_backward
 
 
