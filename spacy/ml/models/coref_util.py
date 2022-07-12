@@ -147,7 +147,9 @@ def get_clusters_from_doc(doc) -> List[List[Tuple[int, int]]]:
     ints are char spans, to be tokenization independent.
     """
     out = []
-    for key, val in doc.spans.items():
+    keys = sorted(list(doc.spans.keys()))
+    for key in keys:
+        val = doc.spans[key]
         cluster = []
         for span in val:
 
