@@ -104,37 +104,6 @@ def convert_span_predictor_inputs(
     return argskwargs, backprop
 
 
-# TODO This probably belongs in the component, not the model.
-def predict_span_clusters(
-    span_predictor: Model, sent_ids: Ints1d, words: Floats2d, clusters: List[Ints1d]
-):
-    """
-    Predicts span clusters based on the word clusters.
-
-    span_predictor: a SpanPredictor instance
-    sent_ids: For each word indicates, which sentence it appears in.
-    words: Features for words.
-    clusters: Clusters inferred by the CorefScorer.
-
-    Returns:
-        List[List[Tuple[int, int]]: span clusters
-    """
-    if not clusters:
-        return []
-
-    xp = span_predictor.ops.xp
-    heads_ids = xp.asarray(sorted(i for cluster in clusters for i in cluster))
-    scores = span_predictor.predict((sent_ids, words, heads_ids))
-    starts = scores[:, :, 0].argmax(axis=1).tolist()
-    ends = (scores[:, :, 1].argmax(axis=1) + 1).tolist()
-
-    head2span = {
-        head: (start, end) for head, start, end in zip(heads_ids.tolist(), starts, ends)
-    }
-
-    return [[head2span[head] for head in cluster] for cluster in clusters]
-
-
 def build_get_head_metadata(prefix):
     model = Model(
         "HeadDataProvider", attrs={"prefix": prefix}, forward=head_data_forward
