@@ -1,6 +1,6 @@
 from typing import List, Tuple, Callable, cast
 
-from thinc.api import Model, chain
+from thinc.api import Model, chain, get_width
 from thinc.api import PyTorchWrapper, ArgsKwargs
 from thinc.types import Floats2d, Ints2d
 from thinc.util import torch, xp2torch, torch2xp
@@ -22,13 +22,48 @@ def build_wl_coref_model(
     # pairs to keep per mention after rough scoring
     antecedent_limit: int = 50,
     antecedent_batch_size: int = 512,
-    tok2vec_size: int = 768,  # tok2vec size
+    nI=None,
 ) -> Model[List[Doc], Tuple[Floats2d, Ints2d]]:
 
     with Model.define_operators({">>": chain}):
-        coref_clusterer = PyTorchWrapper(
+        coref_clusterer: Model[List[Floats2d], Tuple[Floats2d, Ints2d]] = Model(
+            "coref_clusterer",
+            forward=coref_forward,
+            init=coref_init,
+            dims={"nI": nI},
+            attrs={
+                "distance_embedding_size": distance_embedding_size,
+                "hidden_size": hidden_size,
+                "depth": depth,
+                "dropout": dropout,
+                "antecedent_limit": antecedent_limit,
+                "antecedent_batch_size": antecedent_batch_size,
+            },
+        )
+
+        model = tok2vec >> coref_clusterer
+        model.set_ref("coref_clusterer", coref_clusterer)
+    return model
+
+
+def coref_init(model: Model, X=None, Y=None):
+    if model.layers:
+        return
+
+    if X is not None and model.has_dim("nI") is None:
+        model.set_dim("nI", get_width(X))
+
+    hidden_size = model.attrs["hidden_size"]
+    depth = model.attrs["depth"]
+    dropout = model.attrs["dropout"]
+    antecedent_limit = model.attrs["antecedent_limit"]
+    antecedent_batch_size = model.attrs["antecedent_batch_size"]
+    distance_embedding_size = model.attrs["distance_embedding_size"]
+
+    model._layers = [
+        PyTorchWrapper(
             CorefClusterer(
-                tok2vec_size,
+                model.get_dim("nI"),
                 distance_embedding_size,
                 hidden_size,
                 depth,
@@ -39,9 +74,12 @@ def build_wl_coref_model(
             convert_inputs=convert_coref_clusterer_inputs,
             convert_outputs=convert_coref_clusterer_outputs,
         )
-        coref_model = tok2vec >> coref_clusterer
-    return coref_model
+        # TODO maybe we need mixed precision and grad scaling?
+    ]
 
+
+def coref_forward(model: Model, X, is_train: bool):
+    return model.layers[0](X, is_train)
 
 def convert_coref_clusterer_inputs(model: Model, X: List[Floats2d], is_train: bool):
     # The input here is List[Floats2d], one for each doc

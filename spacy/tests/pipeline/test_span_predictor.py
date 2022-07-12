@@ -44,8 +44,6 @@ TRAIN_DATA = [
 ]
 # fmt: on
 
-CONFIG = {"model": {"@architectures": "spacy.SpanPredictor.v1", "tok2vec_size": 64}}
-
 
 @pytest.fixture
 def nlp():
@@ -76,7 +74,7 @@ def test_not_initialized(nlp):
 @pytest.mark.skipif(not has_torch, reason="Torch not available")
 def test_span_predictor_serialization(nlp):
     # Test that the span predictor component can be serialized
-    nlp.add_pipe("span_predictor", last=True, config=CONFIG)
+    nlp.add_pipe("span_predictor", last=True)
     nlp.initialize()
     assert nlp.pipe_names == ["span_predictor"]
     text = "She gave me her pen."
@@ -109,7 +107,7 @@ def test_overfitting_IO(nlp):
                 pred.spans[key] = [pred[span.start : span.end] for span in spans]
 
         train_examples.append(eg)
-    nlp.add_pipe("span_predictor", config=CONFIG)
+    nlp.add_pipe("span_predictor")
     optimizer = nlp.initialize()
     test_text = TRAIN_DATA[0][0]
     doc = nlp(test_text)
@@ -173,7 +171,7 @@ def test_tokenization_mismatch(nlp):
 
         train_examples.append(eg)
 
-    nlp.add_pipe("span_predictor", config=CONFIG)
+    nlp.add_pipe("span_predictor")
     optimizer = nlp.initialize()
     test_text = TRAIN_DATA[0][0]
     doc = nlp(test_text)
@@ -218,7 +216,7 @@ def test_whitespace_mismatch(nlp):
         eg.predicted = nlp.make_doc("  " + text)
         train_examples.append(eg)
 
-    nlp.add_pipe("span_predictor", config=CONFIG)
+    nlp.add_pipe("span_predictor")
     optimizer = nlp.initialize()
     test_text = TRAIN_DATA[0][0]
     doc = nlp(test_text)

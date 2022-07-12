@@ -1,6 +1,6 @@
 from typing import List, Tuple, cast
 
-from thinc.api import Model, chain, tuplify
+from thinc.api import Model, chain, tuplify, get_width
 from thinc.api import PyTorchWrapper, ArgsKwargs
 from thinc.types import Floats2d, Ints1d
 from thinc.util import torch, xp2torch, torch2xp
@@ -13,7 +13,6 @@ from .coref_util import get_sentence_ids
 @registry.architectures("spacy.SpanPredictor.v1")
 def build_span_predictor(
     tok2vec: Model[List[Doc], List[Floats2d]],
-    tok2vec_size: int = 768,
     hidden_size: int = 1024,
     distance_embedding_size: int = 64,
     conv_channels: int = 4,
@@ -23,10 +22,46 @@ def build_span_predictor(
 ):
     # TODO add model return types
 
+    nI = None
+
     with Model.define_operators({">>": chain, "&": tuplify}):
-        span_predictor = PyTorchWrapper(
+        span_predictor: Model[List[Floats2d], List[Floats2d]] = Model(
+            "span_predictor",
+            forward=span_predictor_forward,
+            init=span_predictor_init,
+            dims={"nI": nI},
+            attrs={
+                "distance_embedding_size": distance_embedding_size,
+                "hidden_size": hidden_size,
+                "conv_channels": conv_channels,
+                "window_size": window_size,
+                "max_distance": max_distance,
+            },
+        )
+        head_info = build_get_head_metadata(prefix)
+        model = (tok2vec & head_info) >> span_predictor
+        model.set_ref("span_predictor", span_predictor)
+
+    return model
+
+
+def span_predictor_init(model: Model, X=None, Y=None):
+    if model.layers:
+        return
+
+    if X is not None and model.has_dim("nI") is None:
+        model.set_dim("nI", get_width(X))
+
+    hidden_size = model.attrs["hidden_size"]
+    distance_embedding_size = model.attrs["distance_embedding_size"]
+    conv_channels = model.attrs["conv_channels"]
+    window_size = model.attrs["window_size"]
+    max_distance = model.attrs["max_distance"]
+
+    model._layers = [
+        PyTorchWrapper(
             SpanPredictor(
-                tok2vec_size,
+                model.get_dim("nI"),
                 hidden_size,
                 distance_embedding_size,
                 conv_channels,
@@ -35,10 +70,12 @@ def build_span_predictor(
             ),
             convert_inputs=convert_span_predictor_inputs,
         )
-        head_info = build_get_head_metadata(prefix)
-        model = (tok2vec & head_info) >> span_predictor
+        # TODO maybe we need mixed precision and grad scaling?
+    ]
 
-    return model
+
+def span_predictor_forward(model: Model, X, is_train: bool):
+    return model.layers[0](X, is_train)
 
 
 def convert_span_predictor_inputs(
@@ -61,7 +98,9 @@ def convert_span_predictor_inputs(
     else:
         head_ids_tensor = xp2torch(head_ids[0], requires_grad=False)
 
-    argskwargs = ArgsKwargs(args=(sent_ids_tensor, word_features, head_ids_tensor), kwargs={})
+    argskwargs = ArgsKwargs(
+        args=(sent_ids_tensor, word_features, head_ids_tensor), kwargs={}
+    )
     return argskwargs, backprop
 
 
