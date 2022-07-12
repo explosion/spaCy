@@ -81,7 +81,6 @@ def coref_init(model: Model, X=None, Y=None):
 def coref_forward(model: Model, X, is_train: bool):
     return model.layers[0](X, is_train)
 
-
 def convert_coref_clusterer_inputs(model: Model, X: List[Floats2d], is_train: bool):
     # The input here is List[Floats2d], one for each doc
     # just use the first
