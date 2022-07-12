@@ -119,6 +119,8 @@ class Span:
     kb_id: int
     ent_id: int
     ent_id_: str
+    id: int
+    id_: str
     @property
     def orth_(self) -> str: ...
     @property
