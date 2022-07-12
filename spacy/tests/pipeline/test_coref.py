@@ -36,9 +36,6 @@ TRAIN_DATA = [
 # fmt: on
 
 
-CONFIG = {"model": {"@architectures": "spacy.Coref.v1", "tok2vec_size": 64}}
-
-
 @pytest.fixture
 def nlp():
     return English()
@@ -67,7 +64,7 @@ def test_not_initialized(nlp):
 
 @pytest.mark.skipif(not has_torch, reason="Torch not available")
 def test_initialized(nlp):
-    nlp.add_pipe("coref", config=CONFIG)
+    nlp.add_pipe("coref")
     nlp.initialize()
     assert nlp.pipe_names == ["coref"]
     text = "She gave me her pen."
@@ -79,7 +76,7 @@ def test_initialized(nlp):
 
 @pytest.mark.skipif(not has_torch, reason="Torch not available")
 def test_initialized_short(nlp):
-    nlp.add_pipe("coref", config=CONFIG)
+    nlp.add_pipe("coref")
     nlp.initialize()
     assert nlp.pipe_names == ["coref"]
     text = "Hi there"
@@ -89,7 +86,7 @@ def test_initialized_short(nlp):
 @pytest.mark.skipif(not has_torch, reason="Torch not available")
 def test_coref_serialization(nlp):
     # Test that the coref component can be serialized
-    nlp.add_pipe("coref", last=True, config=CONFIG)
+    nlp.add_pipe("coref", last=True)
     nlp.initialize()
     assert nlp.pipe_names == ["coref"]
     text = "She gave me her pen."
@@ -111,7 +108,7 @@ def test_overfitting_IO(nlp):
     for text, annot in TRAIN_DATA:
         train_examples.append(Example.from_dict(nlp.make_doc(text), annot))
 
-    nlp.add_pipe("coref", config=CONFIG)
+    nlp.add_pipe("coref")
     optimizer = nlp.initialize()
     test_text = TRAIN_DATA[0][0]
     doc = nlp(test_text)
@@ -166,7 +163,7 @@ def test_tokenization_mismatch(nlp):
 
         train_examples.append(eg)
 
-    nlp.add_pipe("coref", config=CONFIG)
+    nlp.add_pipe("coref")
     optimizer = nlp.initialize()
     test_text = TRAIN_DATA[0][0]
     doc = nlp(test_text)
@@ -228,7 +225,7 @@ def test_whitespace_mismatch(nlp):
         eg.predicted = nlp.make_doc("  " + text)
         train_examples.append(eg)
 
-    nlp.add_pipe("coref", config=CONFIG)
+    nlp.add_pipe("coref")
     optimizer = nlp.initialize()
     test_text = TRAIN_DATA[0][0]
     doc = nlp(test_text)
