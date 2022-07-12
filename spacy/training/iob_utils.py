@@ -1,4 +1,4 @@
-from typing import List, Dict, Tuple, Iterable, Union, Iterator
+from typing import List, Dict, Tuple, Iterable, Union, Iterator, cast
 import warnings
 
 from ..errors import Errors, Warnings
@@ -216,6 +216,14 @@ def tags_to_entities(tags: Iterable[str]) -> List[Tuple[str, int, int]]:
         else:
             raise ValueError(Errors.E068.format(tag=tag))
     return entities
+
+
+def split_bilu_label(label: str) -> Tuple[str, str]:
+    return cast(Tuple[str, str], label.split("-", 1))
+
+
+def remove_bilu_prefix(label: str) -> str:
+    return label.split("-", 1)[1]
 
 
 # Fallbacks to make backwards-compat easier

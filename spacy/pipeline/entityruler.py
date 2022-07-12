@@ -159,10 +159,8 @@ class EntityRuler(Pipe):
         self._require_patterns()
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", message="\\[W036")
-            matches = cast(
-                List[Tuple[int, int, int]],
-                list(self.matcher(doc)) + list(self.phrase_matcher(doc)),
-            )
+            matches = list(self.matcher(doc)) + list(self.phrase_matcher(doc))
+
         final_matches = set(
             [(m_id, start, end) for m_id, start, end in matches if start != end]
         )

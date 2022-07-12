@@ -1,4 +1,5 @@
 import warnings
+from .compat import Literal
 
 
 class ErrorsWithCodes(type):
@@ -26,7 +27,10 @@ def setup_default_warnings():
     filter_warning("once", error_msg="[W114]")
 
 
-def filter_warning(action: str, error_msg: str):
+def filter_warning(
+    action: Literal["default", "error", "ignore", "always", "module", "once"],
+    error_msg: str,
+):
     """Customize how spaCy should handle a certain warning.
 
     error_msg (str): e.g. "W006", or a full error message
@@ -205,6 +209,9 @@ class Warnings(metaclass=ErrorsWithCodes):
             "Only the last span group will be loaded under "
             "Doc.spans['{group_name}']. Skipping span group with values: "
             "{group_values}")
+    W121 = ("Attempting to trace non-existent method '{method}' in pipe '{pipe}'")
+    W122 = ("Couldn't trace method '{method}' in pipe '{pipe}'. This can happen if the pipe class "
+            "is a Cython extension type.")
 
 
 class Errors(metaclass=ErrorsWithCodes):
@@ -928,6 +935,10 @@ class Errors(metaclass=ErrorsWithCodes):
     E1040 = ("Doc.from_json requires all tokens to have the same attributes. "
              "Some tokens do not contain annotation for: {partial_attrs}")
     E1041 = ("Expected a string, Doc, or bytes as input, but got: {type}")
+    E1042 = ("Function was called with `{arg1}`={arg1_values} and "
+             "`{arg2}`={arg2_values} but these arguments are conflicting.")
+    E1043 = ("Expected None or a value in range [{range_start}, {range_end}] for entity linker threshold, but got "
+             "{value}.")
 
 
 # Deprecated model shortcuts, only used in errors and warnings

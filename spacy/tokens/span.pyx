@@ -354,7 +354,8 @@ cdef class Span:
         if self.vocab.vectors.n_keys == 0:
             warnings.warn(Warnings.W007.format(obj="Span"))
         if self.vector_norm == 0.0 or other.vector_norm == 0.0:
-            warnings.warn(Warnings.W008.format(obj="Span"))
+            if not self.has_vector or not other.has_vector:
+                warnings.warn(Warnings.W008.format(obj="Span"))
             return 0.0
         vector = self.vector
         xp = get_array_module(vector)
