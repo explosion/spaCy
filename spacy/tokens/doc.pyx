@@ -1602,12 +1602,26 @@ cdef class Doc:
                 ents.append(char_span)
             self.ents = ents
 
-        # Add custom attributes. Note that only Doc extensions are currently considered, Token and Span extensions are
-        # not yet supported.
-        for attr in doc_json.get("_", {}):
+        # Add custom attributes for the whole doc
+        for attr in doc_json["_"]["docs"]:
             if not Doc.has_extension(attr):
                 Doc.set_extension(attr)
-            self._.set(attr, doc_json["_"][attr])
+            self._.set(attr, doc_json["_"]["docs"][attr])
+
+        # Add custom attributes for all tokens
+        for json_token, token in zip(doc_json["_"]["tokens"], self):
+            for attr in json_token["_"]:
+                if not Token.has_extension(attr):
+                    Token.set_extension(attr)
+            token._.set(attr, json_token["_"][attr])
+
+        # Add custom attributes for all spans
+        for spangroup in doc_json["_"]["spans"]:
+            for json_span, span in zip(doc_json["_"]["spans"][spangroup], self.spans[spangroup]):
+                for attr in json_span["_"]:
+                    if not Span.has_extension(attr):
+                        Span.set_extension(attr)
+                span._.set(attr, json_span["_"][attr])
 
         return self
 
@@ -1667,7 +1681,6 @@ cdef class Doc:
             # Tokens
             for token in self:
                 token_data = {"id": token.i, "_":{}}
-                attr_flag = False
                 for attr in underscore:
                     if token.has_extension(attr):
                         attr_flag = True
@@ -1675,15 +1688,13 @@ cdef class Doc:
                         if not srsly.is_json_serializable(value):
                             raise ValueError(Errors.E107.format(attr=attr, value=repr(value)))
                         token_data["_"][attr] = value
-                if attr_flag:
-                    data["_"]["tokens"].append(token_data)
+                data["_"]["tokens"].append(token_data)
                 
             # Spans
             for span_group in self.spans:
                 data["_"]["spans"][span_group] = []
                 for span in self.spans[span_group]:
                     span_data = {"start": span.start_char, "end": span.end_char, "_":{}}
-                    attr_flag = False
                     for attr in underscore:
                         if span.has_extension(attr):
                             attr_flag = True
@@ -1691,8 +1702,7 @@ cdef class Doc:
                             if not srsly.is_json_serializable(value):
                                 raise ValueError(Errors.E107.format(attr=attr, value=repr(value)))
                             span_data["_"][attr] = value
-                    if attr_flag:
-                        data["_"]["spans"][span_group].append(span_data)
+                    data["_"]["spans"][span_group].append(span_data)
 
 
         return data

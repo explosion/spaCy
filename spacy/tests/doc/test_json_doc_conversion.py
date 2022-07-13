@@ -125,18 +125,24 @@ def test_json_to_doc(doc):
 
 
 def test_json_to_doc_underscore(doc):
-    if not Doc.has_extension("json_test1"):
-        Doc.set_extension("json_test1", default=False)
-    if not Doc.has_extension("json_test2"):
-        Doc.set_extension("json_test2", default=False)
+    Doc.set_extension("json_test1", default=False)
+    Doc.set_extension("json_test2", default=False)
+    Token.set_extension("token_test", default=False)
+    Span.set_extension("span_test", default=False)
 
     doc._.json_test1 = "hello world"
     doc._.json_test2 = [1, 2, 3]
-    json_doc = doc.to_json(underscore=["json_test1", "json_test2"])
+    doc[0:1]._.span_test = "span_attribute"
+    doc[0]._.token_test = 117
+    doc.spans["span_group"] = [doc[0:1]]
+
+    json_doc = doc.to_json(underscore=["json_test1", "json_test2","token_test","span_test"])
     new_doc = Doc(doc.vocab).from_json(json_doc, validate=True)
     assert all([new_doc.has_extension(f"json_test{i}") for i in range(1, 3)])
     assert new_doc._.json_test1 == "hello world"
     assert new_doc._.json_test2 == [1, 2, 3]
+    assert new_doc[0]._.token_test == 117
+    assert new_doc.spans["span_group"][0]._.span_test == "span_attribute"
 
 
 def test_json_to_doc_spans(doc):
