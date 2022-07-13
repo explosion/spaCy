@@ -11,11 +11,13 @@ Tokenizer exception: Special-case rules for the tokenizer, for example, contract
 
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
+from .punctuation import TOKENIZER_INFIXES
 from ...language import Language, BaseDefaults
 
 
 class LugandaDefaults(BaseDefaults):
     lex_attr_getters = LEX_ATTRS
+    infixes = TOKENIZER_INFIXES
     stop_words = STOP_WORDS
 
 
