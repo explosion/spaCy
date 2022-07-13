@@ -1683,7 +1683,6 @@ cdef class Doc:
                 token_data = {"id": token.i, "_":{}}
                 for attr in underscore:
                     if token.has_extension(attr):
-                        attr_flag = True
                         value = token._.get(attr)
                         if not srsly.is_json_serializable(value):
                             raise ValueError(Errors.E107.format(attr=attr, value=repr(value)))
@@ -1694,10 +1693,9 @@ cdef class Doc:
             for span_group in self.spans:
                 data["_"]["spans"][span_group] = []
                 for span in self.spans[span_group]:
-                    span_data = {"start": span.start_char, "end": span.end_char, "_":{}}
+                    span_data = {"start": span.start_char, "end": span.end_char, "span_group":span_group, "_":{}}
                     for attr in underscore:
                         if span.has_extension(attr):
-                            attr_flag = True
                             value = span._.get(attr)
                             if not srsly.is_json_serializable(value):
                                 raise ValueError(Errors.E107.format(attr=attr, value=repr(value)))
