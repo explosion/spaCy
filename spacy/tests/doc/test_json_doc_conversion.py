@@ -1,7 +1,7 @@
 import pytest
 import spacy
 from spacy import schemas
-from spacy.tokens import Doc, Span
+from spacy.tokens import Doc, Span, Token
 
 
 @pytest.fixture()
@@ -62,12 +62,23 @@ def test_doc_to_json(doc):
 def test_doc_to_json_underscore(doc):
     Doc.set_extension("json_test1", default=False)
     Doc.set_extension("json_test2", default=False)
+    Token.set_extension("token_test", default=False)
+    Span.set_extension("span_test", default=False)
+
     doc._.json_test1 = "hello world"
     doc._.json_test2 = [1, 2, 3]
-    json_doc = doc.to_json(underscore=["json_test1", "json_test2"])
+    doc[0:1]._.span_test = "span_attribute"
+    doc[0]._.token_test = 117
+    doc.spans["span_group"] = [doc[0:1]]
+
+    json_doc = doc.to_json(underscore=["json_test1", "json_test2", "token_test", "span_test"])
     assert "_" in json_doc
     assert json_doc["_"]["json_test1"] == "hello world"
     assert json_doc["_"]["json_test2"] == [1, 2, 3]
+    assert "_" in json_doc["spans"]["span_group"][0]
+    assert json_doc["spans"]["span_group"][0]["_"]["span_test"] == "span_attribute"
+    assert "_" in json_doc["tokens"][0]
+    assert json_doc["tokens"][0]["_"]["token_test"] == 117
     assert not schemas.validate(schemas.DocJSONSchema, json_doc)
 
 
