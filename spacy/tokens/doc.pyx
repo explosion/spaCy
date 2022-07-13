@@ -1643,16 +1643,6 @@ cdef class Doc:
             if include_annotation["DEP"]:
                 token_data["dep"] = token.dep_
                 token_data["head"] = token.head.i
-
-            if underscore:
-                token_data["_"] = {}
-                for attr in underscore:
-                    if token.has_extension(attr):
-                        value = token._.get(attr)
-                        if not srsly.is_json_serializable(value):
-                            raise ValueError(Errors.E107.format(attr=attr, value=repr(value)))
-                        token_data["_"][attr] = value
-
             data["tokens"].append(token_data)
         
         if self.spans:
@@ -1661,26 +1651,50 @@ cdef class Doc:
                 data["spans"][span_group] = []
                 for span in self.spans[span_group]:
                     span_data = {"start": span.start_char, "end": span.end_char, "label": span.label_, "kb_id": span.kb_id_}
-                    
-                    if underscore:
-                        span_data["_"] = {}
-                        for attr in underscore:
-                            if span.has_extension(attr):
-                                value = span._.get(attr)
-                                if not srsly.is_json_serializable(value):
-                                    raise ValueError(Errors.E107.format(attr=attr, value=repr(value)))
-                                span_data["_"][attr] = value
-
                     data["spans"][span_group].append(span_data)
 
         if underscore:
-            data["_"] = {}
+            data["_"] = {"docs":{}, "tokens":[], "spans":{}}
+
+            # Docs
             for attr in underscore:
                 if self.has_extension(attr):
                     value = self._.get(attr)
                     if not srsly.is_json_serializable(value):
                         raise ValueError(Errors.E107.format(attr=attr, value=repr(value)))
-                    data["_"][attr] = value
+                    data["_"]["docs"][attr] = value
+
+            # Tokens
+            for token in self:
+                token_data = {"id": token.i, "_":{}}
+                attr_flag = False
+                for attr in underscore:
+                    if token.has_extension(attr):
+                        attr_flag = True
+                        value = token._.get(attr)
+                        if not srsly.is_json_serializable(value):
+                            raise ValueError(Errors.E107.format(attr=attr, value=repr(value)))
+                        token_data["_"][attr] = value
+                if attr_flag:
+                    data["_"]["tokens"].append(token_data)
+                
+            # Spans
+            for span_group in self.spans:
+                data["_"]["spans"][span_group] = []
+                for span in self.spans[span_group]:
+                    span_data = {"start": span.start_char, "end": span.end_char, "_":{}}
+                    attr_flag = False
+                    for attr in underscore:
+                        if span.has_extension(attr):
+                            attr_flag = True
+                            value = span._.get(attr)
+                            if not srsly.is_json_serializable(value):
+                                raise ValueError(Errors.E107.format(attr=attr, value=repr(value)))
+                            span_data["_"][attr] = value
+                    if attr_flag:
+                        data["_"]["spans"][span_group].append(span_data)
+
+
         return data
 
     def to_utf8_array(self, int nr_char=-1):

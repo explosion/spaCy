@@ -72,13 +72,13 @@ def test_doc_to_json_underscore(doc):
     doc.spans["span_group"] = [doc[0:1]]
 
     json_doc = doc.to_json(underscore=["json_test1", "json_test2", "token_test", "span_test"])
+
     assert "_" in json_doc
-    assert json_doc["_"]["json_test1"] == "hello world"
-    assert json_doc["_"]["json_test2"] == [1, 2, 3]
-    assert "_" in json_doc["spans"]["span_group"][0]
-    assert json_doc["spans"]["span_group"][0]["_"]["span_test"] == "span_attribute"
-    assert "_" in json_doc["tokens"][0]
-    assert json_doc["tokens"][0]["_"]["token_test"] == 117
+    assert json_doc["_"]["docs"]["json_test1"] == "hello world"
+    assert json_doc["_"]["docs"]["json_test2"] == [1, 2, 3]
+    assert json_doc["_"]["spans"]["span_group"][0]["_"]["span_test"] == "span_attribute"
+    assert json_doc["_"]["tokens"][0]["_"]["token_test"] == 117
+
     assert not schemas.validate(schemas.DocJSONSchema, json_doc)
 
 
