@@ -715,3 +715,35 @@ def test_matcher_min_max_operator(en_vocab):
     matcher.add("TEST", [pattern])
     matches4 = [doc[start:end].text for _, start, end in matcher(doc)]
     assert len(matches4) == 4
+
+
+def test_is_first_token(en_vocab):
+    matcher = Matcher(en_vocab)
+    words = ["This",  "is", "a", "long", "long", "long", "sentence", "."]
+    doc = Doc(matcher.vocab, words=words)
+    pattern = [[{"IS_FIRST_TOKEN": True}]]
+    matcher.add("IS_FIRST_TOKEN", pattern)
+
+    matches = matcher(doc, as_spans=True)
+    assert len(matches) == 1
+    assert matches[0].text == "This"
+
+    matches = matcher(doc[2:7], as_spans=True)
+    assert len(matches) == 1
+    assert matches[0].text == "a"
+
+
+def test_is_last_token(en_vocab):
+    matcher = Matcher(en_vocab)
+    words = ["This",  "is", "a", "long", "long", "long", "sentence", "."]
+    doc = Doc(matcher.vocab, words=words)
+    pattern = [[{"IS_LAST_TOKEN": True}]]
+    matcher.add("IS_LAST_TOKEN", pattern)
+
+    matches = matcher(doc, as_spans=True)
+    assert len(matches) == 1
+    assert matches[0].text == "."
+
+    matches = matcher(doc[2:7], as_spans=True)
+    assert len(matches) == 1
+    assert matches[0].text == "sentence"
