@@ -1602,26 +1602,29 @@ cdef class Doc:
                 ents.append(char_span)
             self.ents = ents
 
-        # Add custom attributes for the whole doc
-        for attr in doc_json["_"]["docs"]:
+        # Add custom attributes for the whole Doc object.
+        for attr in doc_json.get("_", {}):
             if not Doc.has_extension(attr):
                 Doc.set_extension(attr)
-            self._.set(attr, doc_json["_"]["docs"][attr])
+            self._.set(attr, doc_json["_"][attr])
 
-        # Add custom attributes for all tokens
-        for json_token, token in zip(doc_json["_"]["tokens"], self):
-            for attr in json_token["_"]:
+        for user_key in doc_json.get("user_data", {}):
+            attr = user_key[1]
+            start_index = user_key[2]
+            end_index = user_key[3]
+            value = doc_json["user_data"][user_key]
+
+            # Token-level attributes
+            if start_index is not None and end_index is None:
                 if not Token.has_extension(attr):
                     Token.set_extension(attr)
-            token._.set(attr, json_token["_"][attr])
+                self[start_index]._.set(attr, value)
 
-        # Add custom attributes for all spans
-        for spangroup in doc_json["_"]["spans"]:
-            for json_span, span in zip(doc_json["_"]["spans"][spangroup], self.spans[spangroup]):
-                for attr in json_span["_"]:
-                    if not Span.has_extension(attr):
-                        Span.set_extension(attr)
-                span._.set(attr, json_span["_"][attr])
+            # Span-level attributes
+            elif start_index is not None and end_index is not None:
+                if not Span.has_extension(attr):
+                    Span.set_extension(attr)
+                self[start_index:end_index]._.set(attr, value)
 
         return self
 
@@ -1668,39 +1671,23 @@ cdef class Doc:
                     data["spans"][span_group].append(span_data)
 
         if underscore:
-            data["_"] = {"docs":{}, "tokens":[], "spans":{}}
-
-            # Docs
+            data["_"] = {}
             for attr in underscore:
-                if self.has_extension(attr):
-                    value = self._.get(attr)
+                if not self.has_extension(attr):
+                    raise ValueError(Errors.E106.format(attr=attr, opts=underscore))
+                value = self._.get(attr)
+                if not srsly.is_json_serializable(value):
+                    raise ValueError(Errors.E107.format(attr=attr, value=repr(value)))
+                data["_"][attr] = value
+            
+            if self.user_data:
+                data["user_data"] = {}
+                for data_key in self.user_data:
+                    value = self.user_data[data_key]
                     if not srsly.is_json_serializable(value):
                         raise ValueError(Errors.E107.format(attr=attr, value=repr(value)))
-                    data["_"]["docs"][attr] = value
-
-            # Tokens
-            for token in self:
-                token_data = {"id": token.i, "_":{}}
-                for attr in underscore:
-                    if token.has_extension(attr):
-                        value = token._.get(attr)
-                        if not srsly.is_json_serializable(value):
-                            raise ValueError(Errors.E107.format(attr=attr, value=repr(value)))
-                        token_data["_"][attr] = value
-                data["_"]["tokens"].append(token_data)
-                
-            # Spans
-            for span_group in self.spans:
-                data["_"]["spans"][span_group] = []
-                for span in self.spans[span_group]:
-                    span_data = {"start": span.start_char, "end": span.end_char, "span_group":span_group, "_":{}}
-                    for attr in underscore:
-                        if span.has_extension(attr):
-                            value = span._.get(attr)
-                            if not srsly.is_json_serializable(value):
-                                raise ValueError(Errors.E107.format(attr=attr, value=repr(value)))
-                            span_data["_"][attr] = value
-                    data["_"]["spans"][span_group].append(span_data)
+                    data["user_data"][data_key] = value
+        return data
 
 
         return data

@@ -517,3 +517,7 @@ class DocJSONSchema(BaseModel):
     _: Optional[Dict[StrictStr, Any]] = Field(
         None, title="Any custom data stored in the document's _ attribute"
     )
+    user_data: Optional[Dict[Tuple[StrictStr, StrictStr, Union[StrictInt,None], Union[StrictInt,None]], Any]] = Field(
+        None, title="Any user data stored in the document"
+    )
+

@@ -71,14 +71,14 @@ def test_doc_to_json_underscore(doc):
     doc[0]._.token_test = 117
     doc.spans["span_group"] = [doc[0:1]]
 
-    json_doc = doc.to_json(underscore=["json_test1", "json_test2", "token_test", "span_test"])
+    json_doc = doc.to_json(underscore=["json_test1", "json_test2"])
 
     assert "_" in json_doc
-    assert json_doc["_"]["docs"]["json_test1"] == "hello world"
-    assert json_doc["_"]["docs"]["json_test2"] == [1, 2, 3]
-    assert json_doc["_"]["spans"]["span_group"][0]["_"]["span_test"] == "span_attribute"
-    assert json_doc["_"]["tokens"][0]["_"]["token_test"] == 117
-
+    assert json_doc["_"]["json_test1"] == "hello world"
+    assert json_doc["_"]["json_test2"] == [1, 2, 3]
+    assert "user_data" in json_doc
+    assert json_doc["user_data"][('._.', 'token_test', 0, None)] == 117
+    assert json_doc["user_data"][('._.', 'span_test', 0, 1)] == "span_attribute"
     assert not schemas.validate(schemas.DocJSONSchema, json_doc)
 
 
@@ -136,14 +136,14 @@ def test_json_to_doc_underscore(doc):
     doc[0]._.token_test = 117
     doc.spans["span_group"] = [doc[0:1]]
 
-    json_doc = doc.to_json(underscore=["json_test1", "json_test2","token_test","span_test"])
+    json_doc = doc.to_json(underscore=["json_test1", "json_test2"])
     new_doc = Doc(doc.vocab).from_json(json_doc, validate=True)
+
     assert all([new_doc.has_extension(f"json_test{i}") for i in range(1, 3)])
     assert new_doc._.json_test1 == "hello world"
     assert new_doc._.json_test2 == [1, 2, 3]
     assert new_doc[0]._.token_test == 117
-    assert new_doc.spans["span_group"][0]._.span_test == "span_attribute"
-
+    assert new_doc[0:1]._.span_test == "span_attribute"
 
 def test_json_to_doc_spans(doc):
     """Test that Doc.from_json() includes correct.spans."""
