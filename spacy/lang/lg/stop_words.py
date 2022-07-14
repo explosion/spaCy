@@ -1,6 +1,6 @@
-#stopwords as whitespace-seperated list
-STOP_WORDS=set(
-"""
+# stopwords as whitespace-separated list
+STOP_WORDS = set(
+    """
 abadde abalala abamu abangi abava ajja ali alina ani anti ateekeddwa atewamu
 atya awamu aweebwa ayinza ba baali babadde babalina bajja
 bajjanewankubade bali balina bandi bangi bano bateekeddwa baweebwa bayina bebombi beera bibye
@@ -18,7 +18,27 @@ wabweru wadde waggulunnina wakati waliwobangi waliyo wandi wange wano wansi weeb
 ye yenna yennyini yina yonna ziba zijja zonna
 """.split()
 )
-contractions = ["b'","bw'" "by'","eky'","ey'","ez'","g'","gw'","gy'","ky'","lw'","ly'","n'","ng'","olw'","ow'","w'", "y'","z'"]
+contractions = [
+    "b'",
+    "bw'",
+    "by'",
+    "eky'",
+    "ey'",
+    "ez'",
+    "g'",
+    "gw'",
+    "gy'",
+    "ky'",
+    "lw'",
+    "ly'",
+    "n'",
+    "ng'",
+    "olw'",
+    "ow'",
+    "w'",
+    "y'",
+    "z'",
+]
 STOP_WORDS.update(contractions)
 for apostrophe in ["‘", "’"]:
     for stopword in contractions:
