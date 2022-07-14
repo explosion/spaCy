@@ -684,10 +684,11 @@ cdef int8_t get_is_match(PatternStateC state, const TokenC* token, const attr_t*
         for attr in spec.attrs[:spec.nr_attr]:
             # Since IS_FIRST_TOKEN and IS_LAST_TOKEN are not token attributes and dependent on the doc or span used in
             # matcher,we would need a separate condition to check for them.
-            if attr.attr == IS_FIRST_TOKEN and (idx == 0) != attr.value:
-                return 0
-            elif attr.attr == IS_LAST_TOKEN and (idx == final_idx) != attr.value:
-                return 0
+            if attr.attr in [IS_FIRST_TOKEN, IS_LAST_TOKEN]:
+                if attr.attr == IS_FIRST_TOKEN and (idx == 0) != attr.value:
+                    return 0
+                elif attr.attr == IS_LAST_TOKEN and (idx == final_idx) != attr.value:
+                    return 0
             elif get_token_attr_for_matcher(token, attr.attr) != attr.value:
                 return 0
     for i in range(spec.nr_extra_attr):
