@@ -684,9 +684,10 @@ cdef int8_t get_is_match(PatternStateC state, const TokenC* token, const attr_t*
         for attr in spec.attrs[:spec.nr_attr]:
             # Since IS_FIRST_TOKEN and IS_LAST_TOKEN are not token attributes and dependent on the doc or span used in
             # matcher,we would need a separate condition to check for them.
-            if attr.attr in [IS_FIRST_TOKEN, IS_LAST_TOKEN]:
-                if is_first_or_last_token(attr.attr, idx, final_idx) != attr.value:
-                    return 0
+            if attr.attr == IS_FIRST_TOKEN and (idx == 0) != attr.value:
+                return 0
+            elif attr.attr == IS_LAST_TOKEN and (idx == final_idx) != attr.value:
+                return 0
             elif get_token_attr_for_matcher(token, attr.attr) != attr.value:
                 return 0
     for i in range(spec.nr_extra_attr):
@@ -705,16 +706,6 @@ cdef inline int8_t get_is_final(PatternStateC state) nogil:
 cdef inline int8_t get_quantifier(PatternStateC state) nogil:
     return state.pattern.quantifier
 
-cdef inline attr_t is_first_or_last_token(attr_id_t feat_name, int idx, int final_idx) nogil:
-    """
-    Checks whether token is the first or last token in the doc or span
-    """
-    if feat_name== IS_FIRST_TOKEN and idx == 0:
-        return True
-    elif feat_name == IS_LAST_TOKEN and idx == final_idx:
-        return True
-    else:
-        return False
 
 cdef TokenPatternC* init_pattern(Pool mem, attr_t entity_id, object token_specs) except NULL:
     pattern = <TokenPatternC*>mem.alloc(len(token_specs) + 1, sizeof(TokenPatternC))
