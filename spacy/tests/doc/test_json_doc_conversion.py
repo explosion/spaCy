@@ -125,10 +125,14 @@ def test_json_to_doc(doc):
 
 
 def test_json_to_doc_underscore(doc):
-    Doc.set_extension("json_test1", default=False, force=True)
-    Doc.set_extension("json_test2", default=False, force=True)
-    Token.set_extension("token_test", default=False, force=True)
-    Span.set_extension("span_test", default=False, force=True)
+    if not Doc.has_extension("json_test1"):
+        Doc.set_extension("json_test1", default=False)
+    if not Doc.has_extension("json_test2"):
+        Doc.set_extension("json_test2", default=False)
+    if not Token.has_extension("token_test"):
+        Token.set_extension("token_test", default=False, force=True)
+    if not Span.has_extension("span_test"):
+        Span.set_extension("span_test", default=False, force=True)
 
     doc._.json_test1 = "hello world"
     doc._.json_test2 = [1, 2, 3]
