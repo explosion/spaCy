@@ -351,10 +351,9 @@ class SpanishLemmatizer(Lemmatizer):
             possible_lemma = re.sub(old + "$", new, word)
             if possible_lemma != word:
                 possible_lemmas.append(possible_lemma)
+                
+        selected_lemmas = list(filter(lambda lemma:lemma in index, possible_lemmas))
 
-        for lemma in possible_lemmas:
-            if lemma in index:
-                selected_lemmas.append(lemma)
         if len(selected_lemmas) == 0:
             # If none of the possible lemmas are in the lookup list,
             # apply vocalic alternation rules and search in the lookup list
