@@ -229,10 +229,8 @@ class SpanishLemmatizer(Lemmatizer):
                     ):
                         additional_lemmas.append(re.sub(old, new, possible_lemma))
         possible_lemmas.extend(additional_lemmas)
+        selected_lemmas = list(filter(lambda lemma:lemma in index, possible_lemmas))
 
-        for lemma in possible_lemmas:
-            if lemma in index:
-                selected_lemmas.append(lemma)
         # If one or more of the created possible lemmas are in the lookup list,
         # return all of them
         if len(selected_lemmas) > 0:
