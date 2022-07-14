@@ -58,20 +58,38 @@ def test_doc_to_json(doc):
     assert json_doc["ents"][0]["label"] == "ORG"
     assert not schemas.validate(schemas.DocJSONSchema, json_doc)
 
-
 def test_doc_to_json_underscore(doc):
-    Doc.set_extension("json_test1", default=False)
-    Doc.set_extension("json_test2", default=False)
-    Token.set_extension("token_test", default=False)
-    Span.set_extension("span_test", default=False)
+    if not Doc.has_extension("json_test1"):
+        Doc.set_extension("json_test1", default=False)
+    if not Doc.has_extension("json_test2"):
+        Doc.set_extension("json_test2", default=False)
+    doc._.json_test1 = "hello world"
+    doc._.json_test2 = [1, 2, 3]
+
+
+    json_doc = doc.to_json(underscore=["json_test1", "json_test2"])
+    assert "_" in json_doc
+    assert json_doc["_"]["json_test1"] == "hello world"
+    assert json_doc["_"]["json_test2"] == [1, 2, 3]
+    assert not schemas.validate(schemas.DocJSONSchema, json_doc)
+
+
+def test_doc_to_json_with_token_span_attributes(doc):
+    if not Doc.has_extension("json_test1"):
+        Doc.set_extension("json_test1", default=False)
+    if not Doc.has_extension("json_test2"):
+        Doc.set_extension("json_test2", default=False)
+    if not Token.has_extension("token_test"):
+        Token.set_extension("token_test", default=False, force=True)
+    if not Span.has_extension("span_test"):
+        Span.set_extension("span_test", default=False, force=True)
 
     doc._.json_test1 = "hello world"
     doc._.json_test2 = [1, 2, 3]
     doc[0:1]._.span_test = "span_attribute"
     doc[0]._.token_test = 117
     doc.spans["span_group"] = [doc[0:1]]
-
-    json_doc = doc.to_json(underscore=["json_test1", "json_test2"])
+    json_doc = doc.to_json(underscore=["json_test1", "json_test2","token_test","span_test"])
 
     assert "_" in json_doc
     assert json_doc["_"]["json_test1"] == "hello world"
@@ -82,7 +100,7 @@ def test_doc_to_json_underscore(doc):
     assert not schemas.validate(schemas.DocJSONSchema, json_doc)
 
 
-def test_doc_to_json_underscore_error_attr(doc):
+def test_doc_to_json_with_token_span_attributes_error(doc):
     """Test that Doc.to_json() raises an error if a custom attribute doesn't
     exist in the ._ space."""
     with pytest.raises(ValueError):
@@ -123,8 +141,21 @@ def test_json_to_doc(doc):
     assert new_doc.ents[0].end == 2
     assert new_doc.ents[0].label_ == "ORG"
 
-
 def test_json_to_doc_underscore(doc):
+    if not Doc.has_extension("json_test1"):
+        Doc.set_extension("json_test1", default=False)
+    if not Doc.has_extension("json_test2"):
+        Doc.set_extension("json_test2", default=False)
+
+    doc._.json_test1 = "hello world"
+    doc._.json_test2 = [1, 2, 3]
+    json_doc = doc.to_json(underscore=["json_test1", "json_test2"])
+    new_doc = Doc(doc.vocab).from_json(json_doc, validate=True)
+    assert all([new_doc.has_extension(f"json_test{i}") for i in range(1, 3)])
+    assert new_doc._.json_test1 == "hello world"
+    assert new_doc._.json_test2 == [1, 2, 3]
+
+def test_json_to_doc_with_token_span_attributes(doc):
     if not Doc.has_extension("json_test1"):
         Doc.set_extension("json_test1", default=False)
     if not Doc.has_extension("json_test2"):
@@ -140,7 +171,7 @@ def test_json_to_doc_underscore(doc):
     doc[0]._.token_test = 117
     doc.spans["span_group"] = [doc[0:1]]
 
-    json_doc = doc.to_json(underscore=["json_test1", "json_test2"])
+    json_doc = doc.to_json(underscore=["json_test1", "json_test2","token_test","span_test"])
     new_doc = Doc(doc.vocab).from_json(json_doc, validate=True)
 
     assert all([new_doc.has_extension(f"json_test{i}") for i in range(1, 3)])

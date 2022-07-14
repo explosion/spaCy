@@ -1671,22 +1671,28 @@ cdef class Doc:
                     data["spans"][span_group].append(span_data)
 
         if underscore:
+            user_keys = []
+            if self.user_data:
+                data["user_data"] = {}
+                for data_key in self.user_data:
+                    if data_key[1] in underscore and data_key[2] is not None:
+                        user_keys.append(data_key[1])
+                        value = self.user_data[data_key]
+                        if not srsly.is_json_serializable(value):
+                            raise ValueError(Errors.E107.format(attr=data_key[1], value=repr(value)))
+                        data["user_data"][data_key] = value
+            
             data["_"] = {}
             for attr in underscore:
+                if attr in user_keys:
+                    continue
                 if not self.has_extension(attr):
                     raise ValueError(Errors.E106.format(attr=attr, opts=underscore))
                 value = self._.get(attr)
                 if not srsly.is_json_serializable(value):
                     raise ValueError(Errors.E107.format(attr=attr, value=repr(value)))
                 data["_"][attr] = value
-            
-            if self.user_data:
-                data["user_data"] = {}
-                for data_key in self.user_data:
-                    value = self.user_data[data_key]
-                    if not srsly.is_json_serializable(value):
-                        raise ValueError(Errors.E107.format(attr=attr, value=repr(value)))
-                    data["user_data"][data_key] = value
+
         return data
 
 
