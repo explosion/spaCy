@@ -89,6 +89,8 @@ IDS = {
     "LANG": LANG,
     "MORPH": MORPH,
     "IDX": IDX,
+    "IS_FIRST_TOKEN": IS_FIRST_TOKEN,
+    "IS_LAST_TOKEN": IS_LAST_TOKEN,
 }
 
 

@@ -96,3 +96,5 @@ cdef enum attr_id_t:
 
     IDX
     SENT_END
+    IS_FIRST_TOKEN
+    IS_LAST_TOKEN

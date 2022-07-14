@@ -467,3 +467,5 @@ cdef enum symbol_t:
 
     IDX
     _
+    IS_FIRST_TOKEN
+    IS_LAST_TOKEN

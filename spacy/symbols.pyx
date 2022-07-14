@@ -466,6 +466,8 @@ IDS = {
     "LAW": LAW,
     "MORPH": MORPH,
     "_": _,
+    "IS_FIRST_TOKEN": IS_FIRST_TOKEN,
+    "IS_LAST_TOKEN": IS_LAST_TOKEN,
 }
 
 

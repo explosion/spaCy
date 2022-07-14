@@ -18,7 +18,7 @@ from ..tokens.doc cimport Doc, get_token_attr_for_matcher
 from ..tokens.span cimport Span
 from ..tokens.token cimport Token
 from ..tokens.morphanalysis cimport MorphAnalysis
-from ..attrs cimport ID, attr_id_t, NULL_ATTR, ORTH, POS, TAG, DEP, LEMMA, MORPH, ENT_IOB
+from ..attrs cimport ID, attr_id_t, NULL_ATTR, ORTH, POS, TAG, DEP, LEMMA, MORPH, ENT_IOB, IS_FIRST_TOKEN, IS_LAST_TOKEN
 
 from ..schemas import validate_token_pattern
 from ..errors import Errors, MatchPatternError, Warnings
@@ -379,7 +379,7 @@ cdef find_matches(TokenPatternC** patterns, int n, object doclike, int length, e
         if with_alignments != 0:
             align_states.resize(states.size())
         transition_states(states, matches, align_states, align_matches, predicate_cache,
-            doclike[i], extra_attr_values, predicates, with_alignments)
+            doclike[i], extra_attr_values, predicates, with_alignments, i, length-1)
         extra_attr_values += nr_extra_attr
         predicate_cache += len(predicates)
     # Handle matches that end in 0-width patterns
@@ -407,8 +407,8 @@ cdef find_matches(TokenPatternC** patterns, int n, object doclike, int length, e
 
 cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& matches,
                             vector[vector[MatchAlignmentC]]& align_states, vector[vector[MatchAlignmentC]]& align_matches,
-                            int8_t* cached_py_predicates,
-        Token token, const attr_t* extra_attrs, py_predicates, bint with_alignments) except *:
+                            int8_t* cached_py_predicates, Token token, const attr_t* extra_attrs, py_predicates,
+                            bint with_alignments, int idx, int final_idx) except *:
     cdef int q = 0
     cdef vector[PatternStateC] new_states
     cdef vector[vector[MatchAlignmentC]] align_new_states
@@ -417,8 +417,7 @@ cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& match
         if states[i].pattern.nr_py >= 1:
             update_predicate_cache(cached_py_predicates,
                 states[i].pattern, token, py_predicates)
-        action = get_action(states[i], token.c, extra_attrs,
-                            cached_py_predicates)
+        action = get_action(states[i], token.c, extra_attrs, cached_py_predicates, idx, final_idx)
         if action == REJECT:
             continue
         # Keep only a subset of states (the active ones). Index q is the
@@ -454,8 +453,7 @@ cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& match
             if states[q].pattern.nr_py != 0:
                 update_predicate_cache(cached_py_predicates,
                     states[q].pattern, token, py_predicates)
-            action = get_action(states[q], token.c, extra_attrs,
-                                cached_py_predicates)
+            action = get_action(states[q], token.c, extra_attrs, cached_py_predicates, idx, final_idx)
         # Update alignment before the transition of current state
         if with_alignments != 0:
             align_states[q].push_back(MatchAlignmentC(states[q].pattern.token_idx, states[q].length))
@@ -565,9 +563,8 @@ cdef void finish_states(vector[MatchC]& matches, vector[PatternStateC]& states,
                 state.pattern += 1
 
 
-cdef action_t get_action(PatternStateC state,
-        const TokenC* token, const attr_t* extra_attrs,
-        const int8_t* predicate_matches) nogil:
+cdef action_t get_action(PatternStateC state, const TokenC* token, const attr_t* extra_attrs,
+                         const int8_t* predicate_matches, int idx, int final_idx) nogil:
     """We need to consider:
     a) Does the token match the specification? [Yes, No]
     b) What's the quantifier? [1, 0+, ?]
@@ -626,7 +623,7 @@ cdef action_t get_action(PatternStateC state,
     Problem: If a quantifier is matching, we're adding a lot of open partials
     """
     cdef int8_t is_match
-    is_match = get_is_match(state, token, extra_attrs, predicate_matches)
+    is_match = get_is_match(state, token, extra_attrs, predicate_matches, idx, final_idx)
     quantifier = get_quantifier(state)
     is_final = get_is_final(state)
     if quantifier == ZERO:
@@ -677,16 +674,20 @@ cdef action_t get_action(PatternStateC state,
           return RETRY
 
 
-cdef int8_t get_is_match(PatternStateC state,
-        const TokenC* token, const attr_t* extra_attrs,
-        const int8_t* predicate_matches) nogil:
+cdef int8_t get_is_match(PatternStateC state, const TokenC* token, const attr_t* extra_attrs,
+                         const int8_t* predicate_matches, int idx, int final_idx) nogil:
     for i in range(state.pattern.nr_py):
         if predicate_matches[state.pattern.py_predicates[i]] == -1:
             return 0
     spec = state.pattern
     if spec.nr_attr > 0:
         for attr in spec.attrs[:spec.nr_attr]:
-            if get_token_attr_for_matcher(token, attr.attr) != attr.value:
+            # Since IS_FIRST_TOKEN and IS_LAST_TOKEN are not token attributes and dependent on the doc or span used in
+            # matcher,we would need a separate condition to check for them.
+            if attr.attr in [IS_FIRST_TOKEN, IS_LAST_TOKEN]:
+                if is_first_or_last_token(attr.attr, idx, final_idx) != attr.value:
+                    return 0
+            elif get_token_attr_for_matcher(token, attr.attr) != attr.value:
                 return 0
     for i in range(spec.nr_extra_attr):
         if spec.extra_attrs[i].value != extra_attrs[spec.extra_attrs[i].index]:
@@ -704,6 +705,16 @@ cdef inline int8_t get_is_final(PatternStateC state) nogil:
 cdef inline int8_t get_quantifier(PatternStateC state) nogil:
     return state.pattern.quantifier
 
+cdef inline attr_t is_first_or_last_token(attr_id_t feat_name, int idx, int final_idx) nogil:
+    """
+    Checks whether token is the first or last token in the doc or span
+    """
+    if feat_name== IS_FIRST_TOKEN and idx == 0:
+        return True
+    elif feat_name == IS_LAST_TOKEN and idx == final_idx:
+        return True
+    else:
+        return False
 
 cdef TokenPatternC* init_pattern(Pool mem, attr_t entity_id, object token_specs) except NULL:
     pattern = <TokenPatternC*>mem.alloc(len(token_specs) + 1, sizeof(TokenPatternC))
