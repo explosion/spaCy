@@ -48,7 +48,7 @@ rule-based matching are:
 | `ENT_IOB`                                      | The IOB part of the token's entity tag. ~~str~~                                                                           |
 | `ENT_ID`                                       | The token's entity ID (`ent_id`). ~~str~~                                                                                 |
 | `ENT_KB_ID`                                    | The token's entity knowledge base ID (`ent_kb_id`). ~~str~~                                                               |
-| `IS_FIRST_TOKEN`, `IS_LAST_TOKEN`              | The first or last token of the doc or span. ~~str~~                                                                       |
+| `IS_FIRST_TOKEN`, `IS_LAST_TOKEN`              | Token is the first or last token of doc presented to matcher. ~~str~~                                                     |
 | `_` <Tag variant="new">2.1</Tag>               | Properties in [custom extension attributes](/usage/processing-pipelines#custom-components-attributes). ~~Dict[str, Any]~~ |
 | `OP`                                           | Operator or quantifier to determine how often to match a token pattern. ~~str~~                                           |
 
