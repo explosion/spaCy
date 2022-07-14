@@ -1,3 +1,4 @@
+import multiprocessing
 from typing import Optional, List, Dict, Sequence, Any, Iterable, Literal, Tuple, Union
 from time import time
 from os import kill, environ
@@ -157,6 +158,7 @@ def project_run_mult_group(
     mult_group_status_queue = Queue()
     max_parallel_processes = config.get("max_parallel_processes")
     check_spacy_commit = check_bool_env_var(ENV_VARS.PROJECT_USE_GIT_VERSION)
+    multiprocessing.set_start_method("spawn")
     DISPLAY_STATUS = sys.stdout.isatty() and supports_ansi()
     with working_dir(project_dir) as current_dir:
         for cmd_info in cmd_infos:
