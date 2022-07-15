@@ -127,8 +127,8 @@ class Morphologizer(Tagger):
 
     @property
     def labels(self):
-        """RETURNS (Tuple[str]): The labels currently added to the component."""
-        return tuple(self.cfg["labels_morph"].keys())
+        """RETURNS (Iterable[str]): The labels currently added to the component."""
+        return self.cfg["labels_morph"].keys()
 
     @property
     def label_data(self) -> Dict[str, Dict[str, Union[str, float, int, None]]]:
@@ -151,7 +151,7 @@ class Morphologizer(Tagger):
         # normalize label
         norm_label = self.vocab.morphology.normalize_features(label)
         # extract separate POS and morph tags
-        label_dict = Morphology.feats_to_dict(label)
+        label_dict = Morphology.feats_to_dict(label, sort_values=False)
         pos = label_dict.get(self.POS_FEAT, "")
         if self.POS_FEAT in label_dict:
             label_dict.pop(self.POS_FEAT)
@@ -189,7 +189,7 @@ class Morphologizer(Tagger):
                         continue
                     morph = str(token.morph)
                     # create and add the combined morph+POS label
-                    morph_dict = Morphology.feats_to_dict(morph)
+                    morph_dict = Morphology.feats_to_dict(morph, sort_values=False)
                     if pos:
                         morph_dict[self.POS_FEAT] = pos
                     norm_label = self.vocab.strings[self.vocab.morphology.add(morph_dict)]
@@ -206,7 +206,7 @@ class Morphologizer(Tagger):
             for i, token in enumerate(example.reference):
                 pos = token.pos_
                 morph = str(token.morph)
-                morph_dict = Morphology.feats_to_dict(morph)
+                morph_dict = Morphology.feats_to_dict(morph, sort_values=False)
                 if pos:
                     morph_dict[self.POS_FEAT] = pos
                 norm_label = self.vocab.strings[self.vocab.morphology.add(morph_dict)]
@@ -231,26 +231,29 @@ class Morphologizer(Tagger):
         cdef Vocab vocab = self.vocab
         cdef bint overwrite = self.cfg["overwrite"]
         cdef bint extend = self.cfg["extend"]
-        labels = self.labels
+
+        # We require random access for the upcoming ops, so we need
+        # to allocate a compatible container out of the iterable.
+        labels = tuple(self.labels)
         for i, doc in enumerate(docs):
             doc_tag_ids = batch_tag_ids[i]
             if hasattr(doc_tag_ids, "get"):
                 doc_tag_ids = doc_tag_ids.get()
             for j, tag_id in enumerate(doc_tag_ids):
-                morph = labels[tag_id]
+                morph = labels[int(tag_id)]
                 # set morph
                 if doc.c[j].morph == 0 or overwrite or extend:
                     if overwrite and extend:
                         # morphologizer morph overwrites any existing features
                         # while extending
-                        extended_morph = Morphology.feats_to_dict(self.vocab.strings[doc.c[j].morph])
-                        extended_morph.update(Morphology.feats_to_dict(self.cfg["labels_morph"].get(morph, 0)))
+                        extended_morph = Morphology.feats_to_dict(self.vocab.strings[doc.c[j].morph], sort_values=False)
+                        extended_morph.update(Morphology.feats_to_dict(self.cfg["labels_morph"].get(morph, 0), sort_values=False))
                         doc.c[j].morph = self.vocab.morphology.add(extended_morph)
                     elif extend:
                         # existing features are preserved and any new features
                         # are added
-                        extended_morph = Morphology.feats_to_dict(self.cfg["labels_morph"].get(morph, 0))
-                        extended_morph.update(Morphology.feats_to_dict(self.vocab.strings[doc.c[j].morph]))
+                        extended_morph = Morphology.feats_to_dict(self.cfg["labels_morph"].get(morph, 0), sort_values=False)
+                        extended_morph.update(Morphology.feats_to_dict(self.vocab.strings[doc.c[j].morph], sort_values=False))
                         doc.c[j].morph = self.vocab.morphology.add(extended_morph)
                     else:
                         # clobber
@@ -270,7 +273,7 @@ class Morphologizer(Tagger):
         DOCS: https://spacy.io/api/morphologizer#get_loss
         """
         validate_examples(examples, "Morphologizer.get_loss")
-        loss_func = SequenceCategoricalCrossentropy(names=self.labels, normalize=False)
+        loss_func = SequenceCategoricalCrossentropy(names=tuple(self.labels), normalize=False)
         truths = []
         for eg in examples:
             eg_truths = []
@@ -291,7 +294,7 @@ class Morphologizer(Tagger):
                     label = None
                 # Otherwise, generate the combined label
                 else:
-                    label_dict = Morphology.feats_to_dict(morph)
+                    label_dict = Morphology.feats_to_dict(morph, sort_values=False)
                     if pos:
                         label_dict[self.POS_FEAT] = pos
                     label = self.vocab.strings[self.vocab.morphology.add(label_dict)]
