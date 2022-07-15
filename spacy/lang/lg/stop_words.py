@@ -17,7 +17,27 @@ wabweru wadde waggulunnina wakati waliwobangi waliyo wandi wange wano wansi weeb
 ye yenna yennyini yina yonna ziba zijja zonna
 """.split()
 )
-contractions = ["b'","bw'" "by'","eky'","ey'","ez'","g'","gw'","gy'","ky'","lw'","ly'","n'","ng'","olw'","ow'","w'", "y'","z'"]
+contractions = [
+    "b'",
+    "bw'",
+    "by'",
+    "eky'",
+    "ey'",
+    "ez'",
+    "g'",
+    "gw'",
+    "gy'",
+    "ky'",
+    "lw'",
+    "ly'",
+    "n'",
+    "ng'",
+    "olw'",
+    "ow'",
+    "w'",
+    "y'",
+    "z'",
+]
 STOP_WORDS.update(contractions)
 for apostrophe in ["‘", "’"]:
     for stopword in contractions:
