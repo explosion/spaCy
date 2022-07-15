@@ -1,4 +1,3 @@
-#stopwords as whitespace-seperated list
 STOP_WORDS=set(
 """
 abadde abalala abamu abangi abava ajja ali alina ani anti ateekeddwa atewamu
