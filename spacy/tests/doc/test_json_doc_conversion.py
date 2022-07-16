@@ -99,6 +99,21 @@ def test_doc_to_json_with_token_span_attributes(doc):
     assert json_doc["user_data"][('._.', 'span_test', 0, 1)] == "span_attribute"
     assert not schemas.validate(schemas.DocJSONSchema, json_doc)
 
+def test_doc_to_json_with_token_span_attributes_missing_underscore(doc):
+    if not Token.has_extension("token_test"):
+        Token.set_extension("token_test", default=False, force=True)
+    if not Span.has_extension("span_test"):
+        Span.set_extension("span_test", default=False, force=True)
+
+    doc[0:1]._.span_test = "span_attribute"
+    doc[0]._.token_test = 117
+    json_doc = doc.to_json(underscore=["span_test"])
+
+    assert "user_data" in json_doc
+    assert json_doc["user_data"][('._.', 'span_test', 0, 1)] == "span_attribute"
+    assert ('._.', 'token_test', 0, None) not in json_doc["user_data"]
+    assert not schemas.validate(schemas.DocJSONSchema, json_doc)
+
 
 def test_doc_to_json_with_token_span_attributes_error(doc):
     """Test that Doc.to_json() raises an error if a custom attribute doesn't
