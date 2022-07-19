@@ -1,5 +1,5 @@
 import os
-
+from time import time
 import pytest
 import srsly
 from spacy.cli._util import load_project_config
@@ -181,3 +181,52 @@ def test_project_run_multiprocessing_max_processes_good_case(max_parallel_proces
         assert os.path.exists(os.sep.join((str(d), "C")))
         assert os.path.exists(os.sep.join((str(d), "D")))
         assert os.path.exists(os.sep.join((str(d), "E")))
+
+
+def test_project_run_multiprocessing_failure():
+    with make_tempdir() as d:
+
+        pscript = """
+import sys
+from time import sleep
+
+_, sleep_secs, rc = sys.argv
+sleep(int(sleep_secs))
+sys.exit(int(rc))
+        """
+
+        pscript_loc = os.sep.join((str(d), "pscript.py"))
+        with open(pscript_loc, "w") as pscript_file:
+            pscript_file.write(pscript)
+        os.chmod(pscript_loc, 0o777)
+        project = {
+            "commands": [
+                {
+                    "name": "commandA",
+                    "script": [" ".join(("python", pscript_loc, "15", "0"))],
+                },
+                {
+                    "name": "commandB",
+                    "script": [" ".join(("python", pscript_loc, "0", "1"))],
+                },
+                {
+                    "name": "commandC",
+                    "script": [" ".join(("python", pscript_loc, "10", "0"))],
+                },
+            ],
+            "workflows": {
+                "all": [
+                    {"parallel": ["commandA", "commandB", "commandC"]},
+                    "commandC",
+                ]
+            },
+        }
+        srsly.write_yaml(d / "project.yml", project)
+        load_project_config(d)
+        start = time()
+        with pytest.raises(SystemExit) as rc_e:
+            project_run(d, "all")
+        assert rc_e.value.code == 1
+        assert (
+            time() - start < 5
+        ), "Test took too long, subprocesses seem not have been terminated"
