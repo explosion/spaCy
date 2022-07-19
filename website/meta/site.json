@@ -19,7 +19,7 @@
     "newsletter": {
         "user": "spacy.us12",
         "id": "83b0498b1e7fa3c91ce68c3f1",
-        "list": "89ad33e698"
+        "list": "ecc82e0493"
     },
     "docSearch": {
         "appId": "Y1LB128RON",
@@ -28,7 +28,7 @@
     },
     "binderUrl": "explosion/spacy-io-binder",
     "binderBranch": "spacy.io",
-    "binderVersion": "3.0",
+    "binderVersion": "3.4",
     "sections": [
         { "id": "usage", "title": "Usage Documentation", "theme": "blue" },
         { "id": "models", "title": "Models Documentation", "theme": "blue" },

@@ -10,6 +10,7 @@ from ...strings cimport hash_string
 from ...structs cimport TokenC
 from ...tokens.doc cimport Doc, set_children_from_heads
 from ...tokens.token cimport MISSING_DEP
+from ...training import split_bilu_label
 from ...training.example cimport Example
 from .stateclass cimport StateClass
 from ._state cimport StateC, ArcC
@@ -218,7 +219,7 @@ def _get_aligned_sent_starts(example):
         sent_starts = [False] * len(example.x)
         seen_words = set()
         for y_sent in example.y.sents:
-            x_indices = list(align[y_sent.start : y_sent.end].dataXd)
+            x_indices = list(align[y_sent.start : y_sent.end])
             if any(x_idx in seen_words for x_idx in x_indices):
                 # If there are any tokens in X that align across two sentences,
                 # regard the sentence annotations as missing, as we can't
@@ -687,7 +688,7 @@ cdef class ArcEager(TransitionSystem):
             return self.c[name_or_id]
         name = name_or_id
         if '-' in name:
-            move_str, label_str = name.split('-', 1)
+            move_str, label_str = split_bilu_label(name)
             label = self.strings[label_str]
         else:
             move_str = name
@@ -824,7 +825,7 @@ cdef class ArcEager(TransitionSystem):
             for i in range(self.n_moves):
                 print(self.get_class_name(i), is_valid[i], costs[i])
             print("Gold sent starts?", is_sent_start(&gold_state, state.B(0)), is_sent_start(&gold_state, state.B(1)))
-            raise ValueError("Could not find gold transition - see logs above.")
+            raise ValueError(Errors.E1031)
 
     def get_oracle_sequence_from_state(self, StateClass state, ArcEagerGold gold, _debug=None):
         cdef int i

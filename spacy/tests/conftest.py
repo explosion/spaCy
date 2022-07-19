@@ -1,5 +1,11 @@
 import pytest
 from spacy.util import get_lang_class
+from hypothesis import settings
+
+# Functionally disable deadline settings for tests
+# to prevent spurious test failures in CI builds.
+settings.register_profile("no_deadlines", deadline=2 * 60 * 1000)  # in ms
+settings.load_profile("no_deadlines")
 
 
 def pytest_addoption(parser):
@@ -355,6 +361,11 @@ def sq_tokenizer():
 @pytest.fixture(scope="session")
 def sv_tokenizer():
     return get_lang_class("sv")().tokenizer
+
+
+@pytest.fixture(scope="session")
+def ta_tokenizer():
+    return get_lang_class("ta")().tokenizer
 
 
 @pytest.fixture(scope="session")

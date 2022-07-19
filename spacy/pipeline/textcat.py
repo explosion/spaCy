@@ -192,7 +192,7 @@ class TextCategorizer(TrainablePipe):
         if not any(len(doc) for doc in docs):
             # Handle cases where there are no tokens in any docs.
             tensors = [doc.tensor for doc in docs]
-            xp = get_array_module(tensors)
+            xp = self.model.ops.xp
             scores = xp.zeros((len(list(docs)), len(self.labels)))
             return scores
         scores = self.model.predict(docs)

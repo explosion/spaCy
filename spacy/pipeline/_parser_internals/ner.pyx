@@ -13,6 +13,7 @@ from ...typedefs cimport weight_t, attr_t
 from ...lexeme cimport Lexeme
 from ...attrs cimport IS_SPACE
 from ...structs cimport TokenC, SpanC
+from ...training import split_bilu_label
 from ...training.example cimport Example
 from .stateclass cimport StateClass
 from ._state cimport StateC
@@ -182,7 +183,7 @@ cdef class BiluoPushDown(TransitionSystem):
         if name == '-' or name == '' or name is None:
             return Transition(clas=0, move=MISSING, label=0, score=0)
         elif '-' in name:
-            move_str, label_str = name.split('-', 1)
+            move_str, label_str = split_bilu_label(name)
             # Deprecated, hacky way to denote 'not this entity'
             if label_str.startswith('!'):
                 raise ValueError(Errors.E869.format(label=name))

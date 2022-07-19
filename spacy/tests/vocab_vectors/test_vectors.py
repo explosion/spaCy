@@ -318,17 +318,15 @@ def test_vectors_lexeme_doc_similarity(vocab, text):
 @pytest.mark.parametrize("text", [["apple", "orange", "juice"]])
 def test_vectors_span_span_similarity(vocab, text):
     doc = Doc(vocab, words=text)
-    with pytest.warns(UserWarning):
-        assert doc[0:2].similarity(doc[1:3]) == doc[1:3].similarity(doc[0:2])
-        assert -1.0 < doc[0:2].similarity(doc[1:3]) < 1.0
+    assert doc[0:2].similarity(doc[1:3]) == doc[1:3].similarity(doc[0:2])
+    assert -1.0 < doc[0:2].similarity(doc[1:3]) < 1.0
 
 
 @pytest.mark.parametrize("text", [["apple", "orange", "juice"]])
 def test_vectors_span_doc_similarity(vocab, text):
     doc = Doc(vocab, words=text)
-    with pytest.warns(UserWarning):
-        assert doc[0:2].similarity(doc) == doc.similarity(doc[0:2])
-        assert -1.0 < doc[0:2].similarity(doc) < 1.0
+    assert doc[0:2].similarity(doc) == doc.similarity(doc[0:2])
+    assert -1.0 < doc[0:2].similarity(doc) < 1.0
 
 
 @pytest.mark.parametrize(
@@ -453,6 +451,39 @@ def test_vectors_get_batch():
     rows = v.find(keys=words)
     vecs = OPS.as_contig(v.data[rows])
     assert_equal(OPS.to_numpy(vecs), OPS.to_numpy(v.get_batch(words)))
+
+
+def test_vectors_deduplicate():
+    data = OPS.asarray([[1, 1], [2, 2], [3, 4], [1, 1], [3, 4]], dtype="f")
+    v = Vectors(data=data, keys=["a1", "b1", "c1", "a2", "c2"])
+    vocab = Vocab()
+    vocab.vectors = v
+    # duplicate vectors do not use the same keys
+    assert (
+        vocab.vectors.key2row[v.strings["a1"]] != vocab.vectors.key2row[v.strings["a2"]]
+    )
+    assert (
+        vocab.vectors.key2row[v.strings["c1"]] != vocab.vectors.key2row[v.strings["c2"]]
+    )
+    vocab.deduplicate_vectors()
+    # there are three unique vectors
+    assert vocab.vectors.shape[0] == 3
+    # the uniqued data is the same as the deduplicated data
+    assert_equal(
+        numpy.unique(OPS.to_numpy(vocab.vectors.data), axis=0),
+        OPS.to_numpy(vocab.vectors.data),
+    )
+    # duplicate vectors use the same keys now
+    assert (
+        vocab.vectors.key2row[v.strings["a1"]] == vocab.vectors.key2row[v.strings["a2"]]
+    )
+    assert (
+        vocab.vectors.key2row[v.strings["c1"]] == vocab.vectors.key2row[v.strings["c2"]]
+    )
+    # deduplicating again makes no changes
+    vocab_b = vocab.to_bytes()
+    vocab.deduplicate_vectors()
+    assert vocab_b == vocab.to_bytes()
 
 
 @pytest.fixture()

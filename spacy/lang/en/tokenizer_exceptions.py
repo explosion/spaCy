@@ -35,7 +35,7 @@ for pron in ["i"]:
 
         _exc[orth + "m"] = [
             {ORTH: orth, NORM: pron},
-            {ORTH: "m", "tenspect": 1, "number": 1},
+            {ORTH: "m"},
         ]
 
         _exc[orth + "'ma"] = [
@@ -139,26 +139,27 @@ for pron in ["he", "she", "it"]:
 
 # W-words, relative pronouns, prepositions etc.
 
-for word in [
-    "who",
-    "what",
-    "when",
-    "where",
-    "why",
-    "how",
-    "there",
-    "that",
-    "this",
-    "these",
-    "those",
+for word, morph in [
+    ("who", None),
+    ("what", None),
+    ("when", None),
+    ("where", None),
+    ("why", None),
+    ("how", None),
+    ("there", None),
+    ("that", "Number=Sing|Person=3"),
+    ("this", "Number=Sing|Person=3"),
+    ("these", "Number=Plur|Person=3"),
+    ("those", "Number=Plur|Person=3"),
 ]:
     for orth in [word, word.title()]:
-        _exc[orth + "'s"] = [
-            {ORTH: orth, NORM: word},
-            {ORTH: "'s", NORM: "'s"},
-        ]
+        if morph != "Number=Plur|Person=3":
+            _exc[orth + "'s"] = [
+                {ORTH: orth, NORM: word},
+                {ORTH: "'s", NORM: "'s"},
+            ]
 
-        _exc[orth + "s"] = [{ORTH: orth, NORM: word}, {ORTH: "s"}]
+            _exc[orth + "s"] = [{ORTH: orth, NORM: word}, {ORTH: "s"}]
 
         _exc[orth + "'ll"] = [
             {ORTH: orth, NORM: word},
@@ -182,25 +183,26 @@ for word in [
             {ORTH: "ve", NORM: "have"},
         ]
 
-        _exc[orth + "'re"] = [
-            {ORTH: orth, NORM: word},
-            {ORTH: "'re", NORM: "are"},
-        ]
+        if morph != "Number=Sing|Person=3":
+            _exc[orth + "'re"] = [
+                {ORTH: orth, NORM: word},
+                {ORTH: "'re", NORM: "are"},
+            ]
 
-        _exc[orth + "re"] = [
-            {ORTH: orth, NORM: word},
-            {ORTH: "re", NORM: "are"},
-        ]
+            _exc[orth + "re"] = [
+                {ORTH: orth, NORM: word},
+                {ORTH: "re", NORM: "are"},
+            ]
 
-        _exc[orth + "'ve"] = [
-            {ORTH: orth, NORM: word},
-            {ORTH: "'ve"},
-        ]
+            _exc[orth + "'ve"] = [
+                {ORTH: orth, NORM: word},
+                {ORTH: "'ve"},
+            ]
 
-        _exc[orth + "ve"] = [
-            {ORTH: orth},
-            {ORTH: "ve", NORM: "have"},
-        ]
+            _exc[orth + "ve"] = [
+                {ORTH: orth},
+                {ORTH: "ve", NORM: "have"},
+            ]
 
         _exc[orth + "'d"] = [
             {ORTH: orth, NORM: word},

@@ -9,13 +9,14 @@ api_trainable: false
 ---
 
 Component for assigning base forms to tokens using rules based on part-of-speech
-tags, or lookup tables. Functionality to train the component is coming soon.
-Different [`Language`](/api/language) subclasses can implement their own
-lemmatizer components via
+tags, or lookup tables. Different [`Language`](/api/language) subclasses can
+implement their own lemmatizer components via
 [language-specific factories](/usage/processing-pipelines#factories-language).
 The default data used is provided by the
 [`spacy-lookups-data`](https://github.com/explosion/spacy-lookups-data)
 extension package.
+
+For a trainable lemmatizer, see [`EditTreeLemmatizer`](/api/edittreelemmatizer).
 
 <Infobox variant="warning" title="New in v3.0">
 
@@ -117,7 +118,7 @@ shortcut for this and instantiate the component using its string name and
 | `name`         | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~ |
 | _keyword-only_ |                                                                                                     |
 | mode           | The lemmatizer mode, e.g. `"lookup"` or `"rule"`. Defaults to `"lookup"`. ~~str~~                   |
-| overwrite      | Whether to overwrite existing lemmas. ~~bool~                                                       |
+| overwrite      | Whether to overwrite existing lemmas. ~~bool~~                                                      |
 
 ## Lemmatizer.\_\_call\_\_ {#call tag="method"}
 
