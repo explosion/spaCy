@@ -9,9 +9,9 @@ import typer
 from .parallel import project_run_parallel_group
 from ...util import working_dir, run_command, split_command, is_cwd, join_command
 from ...util import SimpleFrozenList, ENV_VARS
-from ...util import check_bool_env_var, SimpleFrozenDict, check_deps
+from ...util import check_bool_env_var, SimpleFrozenDict
 from .._util import PROJECT_FILE, load_project_config, check_rerun, update_lockfile
-from .._util import project_cli, Arg, Opt, COMMAND, parse_config_overrides
+from .._util import project_cli, Arg, Opt, COMMAND, parse_config_overrides, check_deps
 
 
 @project_cli.command(
