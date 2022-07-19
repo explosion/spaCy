@@ -1,9 +1,9 @@
 from typing import Any, List, Optional, Dict, Union, cast
+import os
 import sys
 from pathlib import Path
 from time import time
 from multiprocessing import Manager, Queue, Process, set_start_method
-from os import kill, environ, linesep, mkdir, sep
 from shutil import rmtree
 from signal import SIGTERM
 from subprocess import STDOUT, Popen, TimeoutExpired
@@ -24,7 +24,9 @@ subprocesses for these OS level commands in order, and sends status information 
 execution back to the main process.
 
 The main process maintains a state machine for each spaCy projects command/worker process. The meaning
-of the states is documented alongside the _PARALLEL_COMMAND_STATES code.
+of the states is documented alongside the _PARALLEL_COMMAND_STATES code. Note that the distinction
+between the states 'failed' and 'terminated' is not meaningful on Windows, so that both are displayed
+as 'failed/terminated' on Windows systems.
 """
 
 # Use spawn to create worker processes on all OSs for consistency
@@ -57,7 +59,7 @@ class _ParallelCommandState:
         if transitions is not None:
             self.transitions = transitions
         else:
-            self.transitions =  []
+            self.transitions = []
 
 
 _PARALLEL_COMMAND_STATES = (
@@ -116,7 +118,9 @@ class _ParallelCommandInfo:
         if state_str == "running" and self.os_cmd_ind is not None:
             number_of_os_cmds = len(self.cmd["script"])
             state_str = f"{state_str} ({self.os_cmd_ind + 1}/{number_of_os_cmds})"
-        # we know we have ANSI commands because otherwise 
+        elif state_str in ("failed", "terminated") and os.name == "nt":
+            state_str = "failed/terminated"
+        # we know we have ANSI commands because otherwise
         # the status table would not be displayed in the first place
         return color(state_str, self.state.display_color)
 
@@ -160,7 +164,7 @@ def project_run_parallel_group(
             ):
                 cmd_info.change_state("not rerun")
         rmtree(PARALLEL_LOGGING_DIR_NAME, ignore_errors=True)
-        mkdir(PARALLEL_LOGGING_DIR_NAME)
+        os.mkdir(PARALLEL_LOGGING_DIR_NAME)
         processes: List[Process] = []
         proc_to_cmd_infos: Dict[Process, _ParallelCommandInfo] = {}
         num_processes = 0
@@ -200,7 +204,7 @@ def project_run_parallel_group(
 
         msg.info(
             "Temporary logs are being written to "
-            + sep.join((str(current_dir), PARALLEL_LOGGING_DIR_NAME))
+            + os.sep.join((str(current_dir), PARALLEL_LOGGING_DIR_NAME))
         )
         first = True
         while any(
@@ -260,7 +264,7 @@ def project_run_parallel_group(
                     c for c in cmd_infos if c.state.name == "running"
                 ):
                     try:
-                        kill(cast(int, other_cmd_info.pid), SIGTERM)
+                        os.kill(cast(int, other_cmd_info.pid), SIGTERM)
                     except:
                         pass
                 for other_cmd_info in (
@@ -307,7 +311,7 @@ def _project_run_parallel_cmd(
     type contains different additional fields."""
     # we can use the command name as a unique log filename because a parallel
     # group is not allowed to contain the same command more than once
-    log_file_name = sep.join(
+    log_file_name = os.sep.join(
         (current_dir, PARALLEL_LOGGING_DIR_NAME, cmd_info.cmd_name + ".log")
     )
     file_not_found = False
@@ -322,7 +326,7 @@ def _project_run_parallel_cmd(
                 command = [sys.executable, "-m", "pip", *command[1:]]
             logfile.write(
                 bytes(
-                    f"Running command: {join_command(command)}" + linesep,
+                    f"Running command: {join_command(command)}" + os.linesep,
                     encoding="utf8",
                 )
             )
@@ -332,7 +336,7 @@ def _project_run_parallel_cmd(
                         command,
                         stdout=logfile,
                         stderr=STDOUT,
-                        env=environ.copy(),
+                        env=os.environ.copy(),
                         encoding="utf8",
                     )
                 except FileNotFoundError:
@@ -371,23 +375,23 @@ def _project_run_parallel_cmd(
                         )
                     else:
                         break
+
                 if sp.returncode != 0:
-                    if sp.returncode > 0:
-                        logfile.write(
-                            bytes(
-                                linesep + f"Failed (rc={sp.returncode})" + linesep,
-                                encoding="UTF-8",
-                            )
-                        )
+                    if os.name == "nt":
+                        status = "Failed/terminated"
+                    elif sp.returncode > 0:
+                        status = "Failed"
                     else:
-                        logfile.write(
-                            bytes(
-                                linesep + f"Terminated (rc={sp.returncode})" + linesep,
-                                encoding="UTF-8",
-                            )
+                        status = "Terminated"
+
+                    logfile.write(
+                        bytes(
+                            os.linesep + f"{status} (rc={sp.returncode})" + os.linesep,
+                            encoding="UTF-8",
                         )
+                    )
                     break
-            else: # dry run
+            else:  # dry run
                 parallel_group_status_queue.put(
                     {
                         "type": "started",

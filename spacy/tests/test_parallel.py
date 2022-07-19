@@ -227,7 +227,10 @@ sys.exit(int(rc))
         start = time()
         with pytest.raises(SystemExit) as rc_e:
             project_run(d, "all")
-        assert rc_e.value.code == 1
+        if os.name == "nt":
+            assert rc_e.value.code == 15
+        else:
+            assert rc_e.value.code == 1        
         assert (
             time() - start < 5
         ), "Test took too long, subprocesses seem not have been terminated"
