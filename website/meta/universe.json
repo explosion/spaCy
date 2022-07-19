@@ -545,6 +545,37 @@
             }
         },
         {
+            "id": "bertopic",
+            "title": "BERTopic",
+            "slogan": "Leveraging BERT and c-TF-IDF to create easily interpretable topics.",
+            "description": "BERTopic is a topic modeling technique that leverages embedding models and c-TF-IDF to create dense clusters allowing for easily interpretable topics whilst keeping important words in the topic descriptions. BERTopic supports guided, (semi-) supervised, hierarchical, and dynamic topic modeling.",
+            "github": "maartengr/bertopic",
+            "pip": "bertopic",
+            "thumb": "https://i.imgur.com/Rx2LfBm.png",
+            "image": "https://raw.githubusercontent.com/MaartenGr/BERTopic/master/images/topic_visualization.gif",
+            "code_example": [
+                "import spacy",
+                "from bertopic import BERTopic",
+                "from sklearn.datasets import fetch_20newsgroups",
+                "",
+                "docs = fetch_20newsgroups(subset='all',  remove=('headers', 'footers', 'quotes'))['data']",
+                "nlp = spacy.load('en_core_web_md', exclude=['tagger', 'parser', 'ner', 'attribute_ruler', 'lemmatizer'])",
+                "",
+                "topic_model = BERTopic(embedding_model=nlp)",
+                "topics, probs = topic_model.fit_transform(docs)",
+                "",
+                "fig = topic_model.visualize_topics()",
+                "fig.show()"
+            ],
+            "category": ["visualizers", "training"],
+            "author": "Maarten Grootendorst",
+            "author_links": {
+                "twitter": "maartengr",
+                "github": "maartengr",
+                "website": "https://maartengrootendorst.com"
+            }
+        },
+        {
             "id": "tokenwiser",
             "title": "tokenwiser",
             "slogan": "Connect vowpal-wabbit & scikit-learn models to spaCy to run simple classification benchmarks. Comes with many utility functions for spaCy pipelines.",
