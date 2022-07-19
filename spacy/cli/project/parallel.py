@@ -1,4 +1,5 @@
-from typing import Any, List, Literal, Optional, Dict
+from typing import Any, List, Literal, Optional, Dict, Union, cast
+import sys
 from pathlib import Path
 from time import time
 import multiprocessing
@@ -7,12 +8,13 @@ from os import kill, environ, linesep, mkdir, sep
 from shutil import rmtree
 from signal import SIGTERM
 from subprocess import STDOUT, Popen, TimeoutExpired
+from wasabi import msg
 from wasabi.util import color, supports_ansi
 
-from ...util import SimpleFrozenDict, load_project_config, working_dir
-from ...util import check_bool_env_var
+from .._util import check_rerun, check_deps, update_lockfile, load_project_config
+from ...util import SimpleFrozenDict, working_dir
+from ...util import check_bool_env_var, ENV_VARS, split_command, join_command
 from ...errors import Errors
-
 
 
 # How often the worker processes managing the commands in a parallel group
@@ -34,8 +36,10 @@ DISPLAY_STATUS_COLORS = {
     "hung": "red",
     "cancelled": "red",
 }
-class ParallelCommandInfo:
-    def __init__(self, cmd_name: str, cmd: str, cmd_ind: int):
+
+
+class _ParallelCommandInfo:
+    def __init__(self, cmd_name: str, cmd: Dict, cmd_ind: int):
         self.cmd_name = cmd_name
         self.cmd = cmd
         self.cmd_ind = cmd_ind
@@ -59,21 +63,26 @@ class ParallelCommandInfo:
 
     @property
     def disp_status(self) -> str:
-        status = self.status
-        status_color = DISPLAY_STATUS_COLORS[status]
-        if status == "running":
-            status = f"{status} ({self.os_cmd_ind + 1}/{self.len_os_cmds})"
-        return color(status, status_color)
+        status_str = str(self.status)
+        status_color = DISPLAY_STATUS_COLORS[status_str]
+        if status_str == "running" and self.os_cmd_ind is not None:
+            status_str = f"{status_str} ({self.os_cmd_ind + 1}/{self.len_os_cmds})"
+        return color(status_str, status_color)
 
-def start_process(process:Process, proc_to_cmd_infos: Dict[Process, ParallelCommandInfo]) -> None:
+
+def _start_process(
+    process: Process, proc_to_cmd_infos: Dict[Process, _ParallelCommandInfo]
+) -> None:
     cmd_info = proc_to_cmd_infos[process]
     if cmd_info.status == "pending":
         cmd_info.status = "starting"
+        cmd_info.last_status_time = int(time())
         process.start()
+
 
 def project_run_parallel_group(
     project_dir: Path,
-    cmd_infos: List[ParallelCommandInfo],
+    cmd_names: List[str],
     *,
     overrides: Dict[str, Any] = SimpleFrozenDict(),
     force: bool = False,
@@ -90,11 +99,18 @@ def project_run_parallel_group(
     dry (bool): Perform a dry run and don't execute commands.
     """
     config = load_project_config(project_dir, overrides=overrides)
+    commands = {cmd["name"]: cmd for cmd in config.get("commands", [])}
+
     parallel_group_status_queue = MultiprocessingManager().Queue()
     max_parallel_processes = config.get("max_parallel_processes")
     check_spacy_commit = check_bool_env_var(ENV_VARS.PROJECT_USE_GIT_VERSION)
     multiprocessing.set_start_method("spawn", force=True)
     DISPLAY_STATUS = sys.stdout.isatty() and supports_ansi()
+    cmd_infos = [
+        _ParallelCommandInfo(cmd_name, commands[cmd_name], cmd_ind)
+        for cmd_ind, cmd_name in enumerate(cmd_names)
+    ]
+
     with working_dir(project_dir) as current_dir:
         for cmd_info in cmd_infos:
             check_deps(cmd_info.cmd, cmd_info.cmd_name, project_dir, dry)
@@ -107,14 +123,14 @@ def project_run_parallel_group(
                 cmd_info.status = "not rerun"
         rmtree(PARALLEL_LOGGING_DIR_NAME, ignore_errors=True)
         mkdir(PARALLEL_LOGGING_DIR_NAME)
-        processes : List[Process] = []
-        proc_to_cmd_infos: Dict[Process, ParallelCommandInfo] = {}
+        processes: List[Process] = []
+        proc_to_cmd_infos: Dict[Process, _ParallelCommandInfo] = {}
         num_processes = 0
         for cmd_info in cmd_infos:
             if cmd_info.status == "not rerun":
                 continue
             process = Process(
-                target=project_run_parallel_cmd,
+                target=_project_run_parallel_cmd,
                 args=(cmd_info,),
                 kwargs={
                     "dry": dry,
@@ -132,7 +148,7 @@ def project_run_parallel_group(
             num_processes = max_parallel_processes
         process_iterator = iter(processes)
         for _ in range(num_processes):
-            start_process(next(process_iterator), proc_to_cmd_infos)
+            _start_process(next(process_iterator), proc_to_cmd_infos)
         divider_parallel_descriptor = parallel_descriptor = (
             "parallel[" + ", ".join(cmd_info.cmd_name for cmd_info in cmd_infos) + "]"
         )
@@ -157,10 +173,12 @@ def project_run_parallel_group(
                     other_cmd_info.status = "hung"
                 for other_cmd_info in (c for c in cmd_infos if c.status == "pending"):
                     other_cmd_info.status = "cancelled"
-            cmd_info = cmd_infos[mess["cmd_ind"]]
+            cmd_info = cmd_infos[cast(int, mess["cmd_ind"])]
             if mess["status"] in ("started", "alive"):
                 cmd_info.last_status_time = int(time())
-            for other_cmd_info in (c for c in cmd_infos if c.status == "running"):
+            for other_cmd_info in (
+                c for c in cmd_infos if c.status in ("starting", "running")
+            ):
                 if (
                     other_cmd_info.last_status_time is not None
                     and time() - other_cmd_info.last_status_time
@@ -169,26 +187,26 @@ def project_run_parallel_group(
                     other_cmd_info.status = "hung"
             if mess["status"] == "started":
                 cmd_info.status = "running"
-                cmd_info.os_cmd_ind = mess["os_cmd_ind"]
-                cmd_info.pid = mess["pid"]
+                cmd_info.os_cmd_ind = cast(int, mess["os_cmd_ind"])
+                cmd_info.pid = cast(int, mess["pid"])
             if mess["status"] == "completed":
-                cmd_info.rc = mess["rc"]
+                cmd_info.rc = cast(int, mess["rc"])
                 if cmd_info.rc == 0:
                     cmd_info.status = "succeeded"
                     if not dry:
                         update_lockfile(current_dir, cmd_info.cmd)
                     working_process = next(process_iterator, None)
                     if working_process is not None:
-                        start_process(working_process, proc_to_cmd_infos)
+                        _start_process(working_process, proc_to_cmd_infos)
                 elif cmd_info.rc > 0:
                     cmd_info.status = "failed"
                 else:
                     cmd_info.status = "killed"
-                cmd_info.output = mess["output"]
+                cmd_info.output = cast(str, mess["output"])
             if any(c for c in cmd_infos if c.status in ("failed", "killed", "hung")):
                 for other_cmd_info in (c for c in cmd_infos if c.status == "running"):
                     try:
-                        kill(other_cmd_info.pid, SIGTERM)
+                        kill(cast(int, other_cmd_info.pid), SIGTERM)
                     except:
                         pass
                 for other_cmd_info in (c for c in cmd_infos if c.status == "pending"):
@@ -219,8 +237,8 @@ def project_run_parallel_group(
             sys.exit(-1)
 
 
-def project_run_parallel_cmd(
-    cmd_info: ParallelCommandInfo,
+def _project_run_parallel_cmd(
+    cmd_info: _ParallelCommandInfo,
     *,
     dry: bool,
     current_dir: str,

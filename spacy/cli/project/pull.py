@@ -4,8 +4,7 @@ from wasabi import msg
 from .remote_storage import RemoteStorage
 from .remote_storage import get_command_hash
 from .._util import project_cli, Arg, logger
-from .._util import load_project_config
-from .run import update_lockfile
+from .._util import load_project_config, update_lockfile
 
 
 @project_cli.command("pull")
@@ -38,7 +37,6 @@ def project_pull(project_dir: Path, remote: str, *, verbose: bool = False):
     # We use a while loop here because we don't know how the commands
     # will be ordered. A command might need dependencies from one that's later
     # in the list.
-    mult_group_mutex = multiprocessing.Lock()
     while commands:
         for i, cmd in enumerate(list(commands)):
             logger.debug(f"CMD: {cmd['name']}.")
@@ -54,7 +52,7 @@ def project_pull(project_dir: Path, remote: str, *, verbose: bool = False):
 
                 out_locs = [project_dir / out for out in cmd.get("outputs", [])]
                 if all(loc.exists() for loc in out_locs):
-                    update_lockfile(project_dir, cmd, mult_group_mutex=mult_group_mutex)
+                    update_lockfile(project_dir, cmd)
                 # We remove the command from the list here, and break, so that
                 # we iterate over the loop again.
                 commands.pop(i)
