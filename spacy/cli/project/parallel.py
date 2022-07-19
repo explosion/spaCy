@@ -68,7 +68,7 @@ _PARALLEL_COMMAND_STATES = (
     _ParallelCommandState("not rerun", "blue"),
     # The main process has spawned a worker process for the command but not yet received
     # an acknowledgement
-    _ParallelCommandState("starting", "green", ["running", "hung"]),
+    _ParallelCommandState("starting", "green", ["running", "failed", "hung"]),
     # The command is running
     _ParallelCommandState(
         "running", "green", ["running", "succeeded", "failed", "terminated", "hung"]
@@ -102,7 +102,7 @@ class _ParallelCommandInfo:
         self.last_keepalive_time: Optional[int] = None
         self.os_cmd_ind: Optional[int] = None
         self.rc: Optional[int] = None
-        self.output: Optional[str] = None
+        self.console_output: Optional[str] = None
 
     def change_state(self, new_state: str):
         assert new_state in self.state.transitions, (
@@ -116,6 +116,8 @@ class _ParallelCommandInfo:
         if state_str == "running" and self.os_cmd_ind is not None:
             number_of_os_cmds = len(self.cmd["script"])
             state_str = f"{state_str} ({self.os_cmd_ind + 1}/{number_of_os_cmds})"
+        # we know we have ANSI commands because otherwise 
+        # the status table would not be displayed in the first place
         return color(state_str, self.state.display_color)
 
 
@@ -128,11 +130,11 @@ def project_run_parallel_group(
     dry: bool = False,
 ) -> None:
     """Run a parallel group of commands. Note that because of the challenges of managing
-    parallel output streams it is not possible to specify a value for 'capture'. Essentially,
-    with parallel groups 'capture==True'.
+    parallel console output streams it is not possible to specify a value for 'capture' as
+    when executing commands serially. Essentially, with parallel groups 'capture==True'.
 
     project_dir (Path): Path to project directory.
-    cmd_infos: a list of objects containing information about he commands to run.
+    cmd_names: the names of the spaCy projects commands to run.
     overrides (Dict[str, Any]): Optional config overrides.
     force (bool): Force re-running, even if nothing changed.
     dry (bool): Perform a dry run and don't execute commands.
@@ -249,7 +251,7 @@ def project_run_parallel_group(
                     cmd_info.change_state("failed")
                 else:
                     cmd_info.change_state("terminated")
-                cmd_info.output = cast(str, mess["output"])
+                cmd_info.console_output = cast(str, mess["console_output"])
             if any(
                 c for c in cmd_infos if c.state.name in ("failed", "terminated", "hung")
             ):
@@ -280,7 +282,7 @@ def project_run_parallel_group(
             if cmd_info.state.name == "not rerun":
                 msg.info(f"Skipping '{cmd_info.cmd_name}': nothing changed")
             else:
-                print(cmd_info.output)
+                print(cmd_info.console_output)
         process_rcs = [c.rc for c in cmd_infos if c.rc is not None]
         if len(process_rcs) > 0:
             group_rc = max(process_rcs)
@@ -385,6 +387,16 @@ def _project_run_parallel_cmd(
                             )
                         )
                     break
+            else: # dry run
+                parallel_group_status_queue.put(
+                    {
+                        "type": "started",
+                        "cmd_ind": cmd_info.cmd_ind,
+                        "os_cmd_ind": os_cmd_ind,
+                        "pid": -1,
+                    }
+                )
+
     with open(log_file_name, "r") as logfile:
         if file_not_found:
             rc = 1
@@ -397,7 +409,7 @@ def _project_run_parallel_cmd(
                 "type": "completed",
                 "cmd_ind": cmd_info.cmd_ind,
                 "rc": rc,
-                "output": logfile.read(),
+                "console_output": logfile.read(),
             }
         )
 

@@ -183,7 +183,8 @@ def test_project_run_multiprocessing_max_processes_good_case(max_parallel_proces
         assert os.path.exists(os.sep.join((str(d), "E")))
 
 
-def test_project_run_multiprocessing_failure():
+@pytest.mark.parametrize("failing_command", ["python", "someNotExistentOSCommand"])
+def test_project_run_multiprocessing_failure(failing_command:str):
     with make_tempdir() as d:
 
         pscript = """
@@ -207,7 +208,7 @@ sys.exit(int(rc))
                 },
                 {
                     "name": "commandB",
-                    "script": [" ".join(("python", pscript_loc, "0", "1"))],
+                    "script": [" ".join((failing_command, pscript_loc, "0", "1"))],
                 },
                 {
                     "name": "commandC",
