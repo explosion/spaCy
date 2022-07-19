@@ -7,11 +7,11 @@ import typer
 
 
 from .parallel import project_run_parallel_group
-from .._util import project_cli, Arg, Opt, COMMAND, parse_config_overrides, check_deps
-from .._util import PROJECT_FILE, load_project_config, check_rerun, update_lockfile
 from ...util import working_dir, run_command, split_command, is_cwd, join_command
 from ...util import SimpleFrozenList, ENV_VARS
-from ...util import check_bool_env_var, SimpleFrozenDict
+from ...util import check_bool_env_var, SimpleFrozenDict, check_deps
+from .._util import PROJECT_FILE, load_project_config, check_rerun, update_lockfile
+from .._util import project_cli, Arg, Opt, COMMAND, parse_config_overrides
 
 
 @project_cli.command(
@@ -117,42 +117,6 @@ def project_run(
                     update_lockfile(current_dir, cmd)
 
 
-def run_commands(
-    commands: Iterable[str] = SimpleFrozenList(),
-    silent: bool = False,
-    dry: bool = False,
-    capture: bool = False,
-) -> None:
-    """Run a sequence of commands in a subprocess, in order.
-
-    commands (List[str]): The string commands.
-    silent (bool): Don't print the commands.
-    dry (bool): Perform a dry run and don't execute anything.
-    capture (bool): Whether to capture the output and errors of individual commands.
-        If False, the stdout and stderr will not be redirected, and if there's an error,
-        sys.exit will be called with the return code. You should use capture=False
-        when you want to turn over execution to the command, and capture=True
-        when you want to run the command more like a function.
-    """
-    for c in commands:
-        command = split_command(c)
-        # Not sure if this is needed or a good idea. Motivation: users may often
-        # use commands in their config that reference "python" and we want to
-        # make sure that it's always executing the same Python that spaCy is
-        # executed with and the pip in the same env, not some other Python/pip.
-        # Also ensures cross-compatibility if user 1 writes "python3" (because
-        # that's how it's set up on their system), and user 2 without the
-        # shortcut tries to re-run the command.
-        if len(command) and command[0] in ("python", "python3"):
-            command[0] = sys.executable
-        elif len(command) and command[0] in ("pip", "pip3"):
-            command = [sys.executable, "-m", "pip", *command[1:]]
-        if not silent:
-            print(f"Running command: {join_command(command)}")
-        if not dry:
-            run_command(command, capture=capture)
-
-
 def print_run_help(project_dir: Path, subcommand: Optional[str] = None) -> None:
     """Simulate a CLI help prompt using the info available in the project.yml.
 
@@ -232,6 +196,42 @@ def print_run_help(project_dir: Path, subcommand: Optional[str] = None) -> None:
                         descriptions.append("parallel[" + ", ".join(steps_list) + "]")
                 table_entries.append((name, " -> ".join(descriptions)))
             msg.table(table_entries)
+
+
+def run_commands(
+    commands: Iterable[str] = SimpleFrozenList(),
+    silent: bool = False,
+    dry: bool = False,
+    capture: bool = False,
+) -> None:
+    """Run a sequence of commands in a subprocess, in order.
+
+    commands (List[str]): The string commands.
+    silent (bool): Don't print the commands.
+    dry (bool): Perform a dry run and don't execute anything.
+    capture (bool): Whether to capture the output and errors of individual commands.
+        If False, the stdout and stderr will not be redirected, and if there's an error,
+        sys.exit will be called with the return code. You should use capture=False
+        when you want to turn over execution to the command, and capture=True
+        when you want to run the command more like a function.
+    """
+    for c in commands:
+        command = split_command(c)
+        # Not sure if this is needed or a good idea. Motivation: users may often
+        # use commands in their config that reference "python" and we want to
+        # make sure that it's always executing the same Python that spaCy is
+        # executed with and the pip in the same env, not some other Python/pip.
+        # Also ensures cross-compatibility if user 1 writes "python3" (because
+        # that's how it's set up on their system), and user 2 without the
+        # shortcut tries to re-run the command.
+        if len(command) and command[0] in ("python", "python3"):
+            command[0] = sys.executable
+        elif len(command) and command[0] in ("pip", "pip3"):
+            command = [sys.executable, "-m", "pip", *command[1:]]
+        if not silent:
+            print(f"Running command: {join_command(command)}")
+        if not dry:
+            run_command(command, capture=capture)
 
 
 def validate_subcommand(

@@ -1,4 +1,3 @@
-import multiprocessing
 from pathlib import Path
 from wasabi import msg
 from .remote_storage import RemoteStorage
