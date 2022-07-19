@@ -1609,10 +1609,10 @@ cdef class Doc:
             self._.set(attr, doc_json["_"][attr])
 
         for user_key in doc_json.get("user_data", {}):
-            attr = user_key[1]
-            start_index = user_key[2]
-            end_index = user_key[3]
-            value = doc_json["user_data"][user_key]
+            attr = user_key
+            start_index = doc_json["user_data"][attr]["start_index"]
+            end_index = doc_json["user_data"][attr]["end_index"]
+            value = doc_json["user_data"][attr]["attribute_value"]
 
             # Token-level attributes
             if start_index is not None and end_index is None:
@@ -1675,13 +1675,13 @@ cdef class Doc:
             if self.user_data:
                 data["user_data"] = {}
                 for data_key in self.user_data:
-                    if data_key[1] in underscore and data_key[2] is not None:
-                        user_keys.append(data_key[1])
+                    if data_key[1] not in data["user_data"] and data_key[1] in underscore and data_key[2] is not None:
                         value = self.user_data[data_key]
                         if not srsly.is_json_serializable(value):
                             raise ValueError(Errors.E107.format(attr=data_key[1], value=repr(value)))
-                        data["user_data"][data_key] = value
-            
+                        data["user_data"][data_key[1]] = {"start_index": data_key[2], "end_index": data_key[3], "attribute_value":value}
+                        user_keys.append(data_key[1])
+
             data["_"] = {}
             for attr in underscore:
                 if attr in user_keys:
