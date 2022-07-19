@@ -1696,8 +1696,6 @@ cdef class Doc:
         return data
 
 
-        return data
-
     def to_utf8_array(self, int nr_char=-1):
         """Encode word strings to utf8, and export to a fixed-width array
         of characters. Characters are placed into the array in the order:

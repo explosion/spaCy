@@ -115,6 +115,7 @@ def test_doc_to_json_underscore(doc):
     assert json_doc["_"]["json_test1"] == "hello world"
     assert json_doc["_"]["json_test2"] == [1, 2, 3]
     assert not schemas.validate(schemas.DocJSONSchema, json_doc)
+    assert srsly.json_loads(srsly.json_dumps(json_doc))
 
 
 def test_doc_to_json_with_token_span_attributes(doc):
@@ -143,6 +144,7 @@ def test_doc_to_json_with_token_span_attributes(doc):
     assert json_doc["user_data"]["token_test"]["attribute_value"] == 117
     assert json_doc["user_data"]["span_test"]["attribute_value"] == "span_attribute"
     assert not schemas.validate(schemas.DocJSONSchema, json_doc)
+    assert srsly.json_loads(srsly.json_dumps(json_doc))
 
 
 def test_doc_to_json_with_token_span_attributes_missing(doc):
@@ -161,7 +163,7 @@ def test_doc_to_json_with_token_span_attributes_missing(doc):
     assert not schemas.validate(schemas.DocJSONSchema, json_doc)
 
 
-def test_doc_to_json_with_token_span_attributes_error(doc):
+def test_doc_to_json_underscore_error_attr(doc):
     """Test that Doc.to_json() raises an error if a custom attribute doesn't
     exist in the ._ space."""
     with pytest.raises(ValueError):
