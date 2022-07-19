@@ -564,7 +564,8 @@
                 "topic_model = BERTopic(embedding_model=nlp)",
                 "topics, probs = topic_model.fit_transform(docs)",
                 "",
-                "topic_model.visualize_topics()"
+                "fig = topic_model.visualize_topics()",
+                "fig.show()"
             ],
             "category": ["visualizers", "training"],
             "author": "Maarten Grootendorst",
