@@ -171,7 +171,9 @@ $ python -m spacy project run all
 
 A group of commands to be executed in parallel is defined using the `parallel` keyword 
 mapping to the commands specified as a list. You are responsible for making sure that no 
-deadlocks, race conditions or other issues can arise from the parallel execution.
+deadlocks, race conditions or other issues can arise from the parallel execution. Note that
+the individual operating-system level commands within each spaCy project command are still
+executed in series.
 
 Using the expected [dependencies and outputs](#deps-outputs) defined in the
 commands, spaCy can determine whether to re-run a command (if its inputs or
