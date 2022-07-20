@@ -119,6 +119,9 @@ class _ParallelCommandInfo:
             number_of_os_cmds = len(self.cmd["script"])
             state_str = f"{state_str} ({self.os_cmd_ind + 1}/{number_of_os_cmds})"
         elif state_str in ("failed", "terminated") and os.name == "nt":
+            # not used at present as the status table isn't displayed on Windows,
+            # but may be relevant in the future if Windows becomes able to handle
+            # ANSI commands as standard
             state_str = "failed/terminated"
         # we know we have ANSI commands because otherwise
         # the status table would not be displayed in the first place
