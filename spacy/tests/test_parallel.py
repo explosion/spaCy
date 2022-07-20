@@ -228,9 +228,11 @@ sys.exit(int(rc))
         with pytest.raises(SystemExit) as rc_e:
             project_run(d, "all")
         if os.name == "nt":
+            # because in Windows the terminated process has rc=15 rather than rc=-15,
+            # 15 is the highest rc rather than 1.
             assert rc_e.value.code == 15
         else:
             assert rc_e.value.code == 1        
         assert (
             time() - start < 5
-        ), "Test took too long, subprocesses seem not have been terminated"
+        ), "Test took too long, subprocess seems not to have been terminated"
