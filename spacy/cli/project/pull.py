@@ -3,7 +3,8 @@ from wasabi import msg
 from .remote_storage import RemoteStorage
 from .remote_storage import get_command_hash
 from .._util import project_cli, Arg, logger
-from .._util import load_project_config, update_lockfile
+from .._util import load_project_config
+from .run import update_lockfile
 
 
 @project_cli.command("pull")
