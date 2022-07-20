@@ -160,12 +160,12 @@ def print_run_help(project_dir: Path, subcommand: Optional[str] = None) -> None:
             print(f"\nWorkflow consisting of {len(steps)} commands:")
             if contains_parallel:
                 steps_data = [
-                    (f"{i + 1}. {step[0]} {step[1]}", commands[step[1]].get("help", ""))
+                    (f"{i + 1}.", f"{step[0]} {step[1]}", commands[step[1]].get("help", ""))
                     for i, step in enumerate(steps)
                 ]
             else:
                 steps_data = [
-                    (f"{i + 1}. {step[1]}", commands[step[1]].get("help", ""))
+                    (f"{i + 1}.", f"{step[1]}", commands[step[1]].get("help", ""))
                     for i, step in enumerate(steps)
                 ]
             msg.table(steps_data)
