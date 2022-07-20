@@ -279,8 +279,8 @@ def validate_project_commands(config: Dict[str, Any]) -> None:
                     )
                 if len(steps) != len(set(steps)):
                     msg.fail(
-                        f"A parallel group within '{workflow_name}' contains a command more than once.",
-                        f"This is not permitted because it is then not possible to determine when to rerun.",
+                        f"Invalid parallel group within '{workflow_name}'.",
+                        f"A parallel group may not contain a command more than once.",
                         exits=1,
                     )
                 for step in steps:
