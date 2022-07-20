@@ -159,16 +159,17 @@ def print_run_help(project_dir: Path, subcommand: Optional[str] = None) -> None:
                         steps.append((parallel_char, step))
             print(f"\nWorkflow consisting of {len(steps)} commands:")
             if contains_parallel:
-                steps_data = [
+                parallel_steps_data = [
                     (f"{i + 1}.", f"{step[0]} {step[1]}", commands[step[1]].get("help", ""))
                     for i, step in enumerate(steps)
                 ]
+                msg.table(parallel_steps_data)
             else:
                 steps_data = [
                     (f"{i + 1}. {step[1]}", commands[step[1]].get("help", ""))
                     for i, step in enumerate(steps)
                 ]
-            msg.table(steps_data)
+                msg.table(steps_data)
             help_cmd = f"{COMMAND} project run [COMMAND] {project_loc} --help"
             print(f"For command details, run: {help_cmd}")
     else:
