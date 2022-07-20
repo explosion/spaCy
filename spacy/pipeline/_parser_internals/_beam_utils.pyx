@@ -207,7 +207,7 @@ def update_beam(TransitionSystem moves, states, golds, model, int width, beam_de
     return loss
 
 
-def _lowest_score_has_cost(beam: Beam) -> bool:
+def _lowest_score_has_cost(Beam beam) -> bool:
     """Check whether the lowest-scoring candidate
     in a parse is marked as non-gold, i.e. it has a cost
     > 0."""
