@@ -15,7 +15,7 @@ Commands are only re-run if their inputs have changed."""
 INTRO_WORKFLOWS = f"""The following workflows are defined by the project. They
 can be executed using [`spacy project run [name]`]({DOCS_URL}/api/cli#project-run)
 and will run the specified commands in order. Commands grouped within square brackets
-preceded by 'parallel' are run in parallel. Commands are only re-run if their inputs 
+are run in parallel. Commands are only re-run if their inputs 
 have changed."""
 INTRO_ASSETS = f"""The following assets are defined by the project. They can
 be fetched by running [`spacy project assets`]({DOCS_URL}/api/cli#project-assets)
@@ -78,7 +78,7 @@ def project_document(
                 rendered_steps.append(md.code(step))
             else:
                 rendered_steps.append(
-                    "parallel["
+                    "["
                     + ", ".join(md.code(p_step) for p_step in step["parallel"])
                     + "]"
                 )
