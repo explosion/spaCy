@@ -672,6 +672,15 @@ def update_lockfile(
     srsly.write_yaml(lock_path, data)
 
 
+def check_deps(cmd: Dict, cmd_name: str, project_dir: Path, dry: bool):
+    for dep in cmd.get("deps", []):
+        if not (project_dir / dep).exists():
+            err = f"Missing dependency specified by command '{cmd_name}': {dep}"
+            err_help = "Maybe you forgot to run the 'project assets' command or a previous step?"
+            err_kwargs = {"exits": 1} if not dry else {}
+            msg.fail(err, err_help, **err_kwargs)
+
+
 def _get_lock_entry(project_dir: Path, command: Dict[str, Any]) -> Dict[str, Any]:
     """Get a lockfile entry for a given command. An entry includes the command,
     the script (command steps) and a list of dependencies and outputs with
@@ -711,12 +720,3 @@ def _get_fileinfo(
         md5 = get_checksum(file_path) if file_path.exists() else None
         data.append({"path": path, "md5": md5})
     return data
-
-
-def check_deps(cmd: Dict, cmd_name: str, project_dir: Path, dry: bool):
-    for dep in cmd.get("deps", []):
-        if not (project_dir / dep).exists():
-            err = f"Missing dependency specified by command '{cmd_name}': {dep}"
-            err_help = "Maybe you forgot to run the 'project assets' command or a previous step?"
-            err_kwargs = {"exits": 1} if not dry else {}
-            msg.fail(err, err_help, **err_kwargs)
