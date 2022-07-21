@@ -192,7 +192,7 @@ def test_doc_to_json_span(doc):
 def test_json_to_doc(doc):
     json_doc = doc.to_json()
     json_doc = srsly.json_loads(srsly.json_dumps(json_doc))
-    new_doc = Doc(doc.vocab).from_json(doc.to_json(), validate=True)
+    new_doc = Doc(doc.vocab).from_json(json_doc, validate=True)
     new_tokens = [token for token in new_doc]
     assert new_doc.text == doc.text == "c d e "
     assert len(new_tokens) == len([token for token in doc]) == 3
