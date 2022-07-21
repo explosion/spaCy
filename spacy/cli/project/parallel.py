@@ -302,8 +302,10 @@ def project_run_parallel_group(
         if len(process_rcs) > 0:
             group_rc = max(process_rcs)
             if group_rc > 0:
+                msg.fail("A command in the parallel group failed.")
                 sys.exit(group_rc)
         if any(c for c in cmd_infos if c.state.name in ("hung", "terminated")):
+            msg.fail("Command(s) in the parallel group hung or were terminated.")
             sys.exit(-1)
 
 
