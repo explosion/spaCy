@@ -19,7 +19,8 @@ def download_cli(
     ctx: typer.Context,
     model: str = Arg(..., help="Name of pipeline package to download"),
     direct: bool = Opt(False, "--direct", "-d", "-D", help="Force direct download of name + version"),
-    sdist: bool = Opt(False, "--sdist", "-S", help="Download sdist (.tar.gz) archive instead of pre-built binary wheel")
+    sdist: bool = Opt(False, "--sdist", "-S", help="Download sdist (.tar.gz) archive instead of pre-built binary wheel"),
+    dry_run: bool = Opt(False, "--dry-run", "-n", help="Print the URL of the file to download without downloading it")
     # fmt: on
 ):
     """
@@ -29,13 +30,22 @@ def download_cli(
     additional arguments provided to this command will be passed to `pip install`
     on package installation.
 
+    If the --dry-run flag is set, the URL of the pipeline to download will be
+    printed, but nothing will actually be downloaded.
+
     DOCS: https://spacy.io/api/cli#download
     AVAILABLE PACKAGES: https://spacy.io/models
     """
-    download(model, direct, sdist, *ctx.args)
+    download(model, direct, sdist, dry_run, *ctx.args)
 
 
-def download(model: str, direct: bool = False, sdist: bool = False, *pip_args) -> None:
+def download(
+    model: str,
+    direct: bool = False,
+    sdist: bool = False,
+    dry_run: bool = False,
+    *pip_args,
+) -> None:
     if (
         not (is_package("spacy") or is_package("spacy-nightly"))
         and "--no-deps" not in pip_args
@@ -55,7 +65,6 @@ def download(model: str, direct: bool = False, sdist: bool = False, *pip_args) -
         components = model.split("-")
         model_name = "".join(components[:-1])
         version = components[-1]
-        download_model(dl_tpl.format(m=model_name, v=version, s=suffix), pip_args)
     else:
         model_name = model
         if model in OLD_MODEL_SHORTCUTS:
@@ -66,7 +75,14 @@ def download(model: str, direct: bool = False, sdist: bool = False, *pip_args) -
             model_name = OLD_MODEL_SHORTCUTS[model]
         compatibility = get_compatibility()
         version = get_version(model_name, compatibility)
-        download_model(dl_tpl.format(m=model_name, v=version, s=suffix), pip_args)
+
+    filename = dl_tpl.format(m=model_name, v=version, s=suffix)
+    download_url = about.__download_url__ + "/" + filename
+    if dry_run:
+        msg.good(f"The download URL for {model} is:", download_url)
+        return
+
+    download_model(filename, pip_args)
     msg.good(
         "Download and installation successful",
         f"You can now load the package via spacy.load('{model_name}')",
