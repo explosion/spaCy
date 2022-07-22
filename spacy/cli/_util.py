@@ -247,7 +247,7 @@ def verify_workflow_step(workflow_name: str, commands: List[str], step: str) -> 
 
 def validate_project_commands(config: Dict[str, Any]) -> None:
     """Check that project commands and workflows are valid, don't contain
-    duplicates, don't clash  and only refer to commands that exist.
+    duplicates, don't clash and only refer to commands that exist.
 
     config (Dict[str, Any]): The loaded config.
     """
