@@ -184,7 +184,7 @@ def test_project_run_multiprocessing_max_processes_good_case(max_parallel_proces
 
 
 @pytest.mark.parametrize("failing_command", ["python", "someNotExistentOSCommand"])
-def test_project_run_multiprocessing_failure(failing_command:str):
+def test_project_run_multiprocessing_failure(failing_command: str):
     with make_tempdir() as d:
 
         pscript = """
