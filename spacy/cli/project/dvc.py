@@ -105,7 +105,6 @@ def update_dvc_config(
         dvc_config_path.unlink()
     dvc_commands = []
     config_commands = {cmd["name"]: cmd for cmd in config.get("commands", [])}
-    processed_step = False
     for name in workflows[workflow]:
         if isinstance(name, dict) and "parallel" in name:
             msg.fail(
@@ -118,7 +117,6 @@ def update_dvc_config(
         outputs_no_cache = command.get("outputs_no_cache", [])
         if not deps and not outputs and not outputs_no_cache:
             continue
-        processed_step = True
         # Default to the working dir as the project path since dvc.yaml is auto-generated
         # and we don't want arbitrary paths in there
         project_cmd = ["python", "-m", NAME, "project", "run", name]
@@ -130,7 +128,7 @@ def update_dvc_config(
             dvc_cmd.append("--always-changed")
         full_cmd = [*dvc_cmd, *deps_cmd, *outputs_cmd, *outputs_nc_cmd, *project_cmd]
         dvc_commands.append(join_command(full_cmd))
-    if not processed_step:
+    if len(dvc_commands) == 0:
         msg.fail(
             f"A DVC workflow must have at least one dependency or output",
             exits=1,

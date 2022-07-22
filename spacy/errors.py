@@ -913,6 +913,7 @@ class Errors(metaclass=ErrorsWithCodes):
     E1034 = ("Node index {i} out of bounds ({length})")
     E1035 = ("Token index {i} out of bounds ({length})")
     E1036 = ("Cannot index into NoneNode")
+    E1037 = ("Illegal transition from {old_state} to {new_state}.")
 
 
 # Deprecated model shortcuts, only used in errors and warnings
