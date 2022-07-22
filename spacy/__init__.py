@@ -32,6 +32,7 @@ def load(
     *,
     vocab: Union[Vocab, bool] = True,
     disable: Iterable[str] = util.SimpleFrozenList(),
+    enable: Iterable[str] = util.SimpleFrozenList(),
     exclude: Iterable[str] = util.SimpleFrozenList(),
     config: Union[Dict[str, Any], Config] = util.SimpleFrozenDict(),
 ) -> Language:
@@ -42,6 +43,8 @@ def load(
     disable (Iterable[str]): Names of pipeline components to disable. Disabled
         pipes will be loaded but they won't be run unless you explicitly
         enable them by calling nlp.enable_pipe.
+    enable (Iterable[str]): Names of pipeline components to enable. All other
+        pipes will be disabled (but can be enabled later using nlp.enable_pipe).
     exclude (Iterable[str]): Names of pipeline components to exclude. Excluded
         components won't be loaded.
     config (Dict[str, Any] / Config): Config overrides as nested dict or dict
@@ -49,7 +52,12 @@ def load(
     RETURNS (Language): The loaded nlp object.
     """
     return util.load_model(
-        name, vocab=vocab, disable=disable, exclude=exclude, config=config
+        name,
+        vocab=vocab,
+        disable=disable,
+        enable=enable,
+        exclude=exclude,
+        config=config,
     )
 
 

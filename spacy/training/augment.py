@@ -3,10 +3,10 @@ from typing import Optional
 import random
 import itertools
 from functools import partial
-from pydantic import BaseModel, StrictStr
 
 from ..util import registry
 from .example import Example
+from .iob_utils import split_bilu_label
 
 if TYPE_CHECKING:
     from ..language import Language  # noqa: F401
@@ -278,10 +278,8 @@ def make_whitespace_variant(
             ent_prev = doc_dict["entities"][position - 1]
             ent_next = doc_dict["entities"][position]
             if "-" in ent_prev and "-" in ent_next:
-                ent_iob_prev = ent_prev.split("-")[0]
-                ent_type_prev = ent_prev.split("-", 1)[1]
-                ent_iob_next = ent_next.split("-")[0]
-                ent_type_next = ent_next.split("-", 1)[1]
+                ent_iob_prev, ent_type_prev = split_bilu_label(ent_prev)
+                ent_iob_next, ent_type_next = split_bilu_label(ent_next)
                 if (
                     ent_iob_prev in ("B", "I")
                     and ent_iob_next in ("I", "L")

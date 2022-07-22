@@ -206,7 +206,8 @@ cdef class Token:
         if self.vocab.vectors.n_keys == 0:
             warnings.warn(Warnings.W007.format(obj="Token"))
         if self.vector_norm == 0 or other.vector_norm == 0:
-            warnings.warn(Warnings.W008.format(obj="Token"))
+            if not self.has_vector or not other.has_vector:
+                warnings.warn(Warnings.W008.format(obj="Token"))
             return 0.0
         vector = self.vector
         xp = get_array_module(vector)

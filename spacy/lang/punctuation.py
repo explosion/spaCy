@@ -1,5 +1,5 @@
 from .char_classes import LIST_PUNCT, LIST_ELLIPSES, LIST_QUOTES, LIST_CURRENCY
-from .char_classes import LIST_ICONS, HYPHENS, CURRENCY, UNITS
+from .char_classes import LIST_ICONS, HYPHENS, CURRENCY, UNITS, COMBINING_DIACRITICS
 from .char_classes import CONCAT_QUOTES, ALPHA_LOWER, ALPHA_UPPER, ALPHA, PUNCT
 
 
@@ -44,3 +44,23 @@ TOKENIZER_INFIXES = (
         r"(?<=[{a}0-9])[:<>=/](?=[{a}])".format(a=ALPHA),
     ]
 )
+
+
+# Some languages e.g. written with the Cyrillic alphabet permit the use of diacritics
+# to mark stressed syllables in words where stress is distinctive. Such languages
+# should use the COMBINING_DIACRITICS... suffix and infix regex lists in
+# place of the standard ones.
+COMBINING_DIACRITICS_TOKENIZER_SUFFIXES = list(TOKENIZER_SUFFIXES) + [
+    r"(?<=[{a}][{d}])\.".format(a=ALPHA, d=COMBINING_DIACRITICS),
+]
+
+COMBINING_DIACRITICS_TOKENIZER_INFIXES = list(TOKENIZER_INFIXES) + [
+    r"(?<=[{al}][{d}])\.(?=[{au}{q}])".format(
+        al=ALPHA_LOWER, au=ALPHA_UPPER, q=CONCAT_QUOTES, d=COMBINING_DIACRITICS
+    ),
+    r"(?<=[{a}][{d}]),(?=[{a}])".format(a=ALPHA, d=COMBINING_DIACRITICS),
+    r"(?<=[{a}][{d}])(?:{h})(?=[{a}])".format(
+        a=ALPHA, d=COMBINING_DIACRITICS, h=HYPHENS
+    ),
+    r"(?<=[{a}][{d}])[:<>=/](?=[{a}])".format(a=ALPHA, d=COMBINING_DIACRITICS),
+]

@@ -86,10 +86,14 @@ cdef class Matcher:
         is a dictionary mapping attribute IDs to values, and optionally a
         quantifier operator under the key "op". The available quantifiers are:
 
-        '!': Negate the pattern, by requiring it to match exactly 0 times.
-        '?': Make the pattern optional, by allowing it to match 0 or 1 times.
-        '+': Require the pattern to match 1 or more times.
-        '*': Allow the pattern to zero or more times.
+        '!':      Negate the pattern, by requiring it to match exactly 0 times.
+        '?':      Make the pattern optional, by allowing it to match 0 or 1 times.
+        '+':      Require the pattern to match 1 or more times.
+        '*':      Allow the pattern to zero or more times.
+        '{n}':    Require the pattern to match exactly _n_ times.
+        '{n,m}':  Require the pattern to match at least _n_ but not more than _m_ times.
+        '{n,}':   Require the pattern to match at least _n_ times.
+        '{,m}':   Require the pattern to match at most _m_ times.
 
         The + and * operators return all possible matches (not just the greedy
         ones). However, the "greedy" argument can filter the final matches
@@ -786,6 +790,7 @@ def _preprocess_pattern(token_specs, vocab, extensions_table, extra_predicates):
 def _get_attr_values(spec, string_store):
     attr_values = []
     for attr, value in spec.items():
+        input_attr = attr
         if isinstance(attr, str):
             attr = attr.upper()
             if attr == '_':
@@ -814,7 +819,7 @@ def _get_attr_values(spec, string_store):
             attr_values.append((attr, value))
         else:
             # should be caught in validation
-            raise ValueError(Errors.E152.format(attr=attr))
+            raise ValueError(Errors.E152.format(attr=input_attr))
     return attr_values
 
 
@@ -1003,8 +1008,29 @@ def _get_operators(spec):
         return (ONE,)
     elif spec["OP"] in lookup:
         return lookup[spec["OP"]]
+    #Min_max {n,m}
+    elif spec["OP"].startswith("{") and spec["OP"].endswith("}"):
+        # {n}  --> {n,n}  exactly n                 ONE,(n)
+        # {n,m}--> {n,m}  min of n, max of m        ONE,(n),ZERO_ONE,(m)
+        # {,m} --> {0,m}  min of zero, max of m     ZERO_ONE,(m)
+        # {n,} --> {n,∞} min of n, max of inf       ONE,(n),ZERO_PLUS
+
+        min_max = spec["OP"][1:-1]
+        min_max = min_max if "," in min_max else f"{min_max},{min_max}"
+        n, m = min_max.split(",")
+
+        #1. Either n or m is a blank string and the other is numeric -->isdigit
+        #2. Both are numeric and n <= m
+        if (not n.isdecimal() and not m.isdecimal()) or (n.isdecimal() and m.isdecimal() and int(n) > int(m)):
+            keys = ", ".join(lookup.keys()) + ", {n}, {n,m}, {n,}, {,m} where n and m are integers and n <= m "
+            raise ValueError(Errors.E011.format(op=spec["OP"], opts=keys))
+
+        # if n is empty string, zero would be used
+        head = tuple(ONE for __ in range(int(n or 0)))
+        tail = tuple(ZERO_ONE for __ in range(int(m) - int(n or 0))) if m else (ZERO_PLUS,)
+        return head + tail
     else:
-        keys = ", ".join(lookup.keys())
+        keys = ", ".join(lookup.keys()) + ", {n}, {n,m}, {n,}, {,m} where n and m are integers and n <= m "
         raise ValueError(Errors.E011.format(op=spec["OP"], opts=keys))
 
 

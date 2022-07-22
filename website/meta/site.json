@@ -28,7 +28,7 @@
     },
     "binderUrl": "explosion/spacy-io-binder",
     "binderBranch": "spacy.io",
-    "binderVersion": "3.0",
+    "binderVersion": "3.4",
     "sections": [
         { "id": "usage", "title": "Usage Documentation", "theme": "blue" },
         { "id": "models", "title": "Models Documentation", "theme": "blue" },

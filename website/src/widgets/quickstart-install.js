@@ -23,6 +23,9 @@ const CUDA = {
     '11.2': 'cuda112',
     '11.3': 'cuda113',
     '11.4': 'cuda114',
+    '11.5': 'cuda115',
+    '11.6': 'cuda116',
+    '11.7': 'cuda117',
 }
 const LANG_EXTRAS = ['ja'] // only for languages with models
 
@@ -48,7 +51,7 @@ const QuickstartInstall = ({ id, title }) => {
     const modelExtras = train ? selectedModels.filter(m => LANG_EXTRAS.includes(m)) : []
     const apple = os === 'mac' && platform === 'arm'
     const pipExtras = [
-        hardware === 'gpu' && cuda,
+        (hardware === 'gpu' && (platform !== 'arm' || os === 'linux')) && cuda,
         train && 'transformers',
         train && 'lookups',
         apple && 'apple',
