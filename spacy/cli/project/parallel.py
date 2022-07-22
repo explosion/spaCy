@@ -265,7 +265,7 @@ def project_run_parallel_group(
                     c for c in cmd_infos if c.state.name == "running"
                 ):
                     try:
-                        os.kill(other_cmd_info.pid, SIGTERM)
+                        os.kill(cast(int, other_cmd_info.pid), SIGTERM)
                     except:
                         # the subprocess the main process is trying to kill could already
                         # have completed, and the message from the worker process notifying
