@@ -4028,8 +4028,8 @@
             "title": "English Interpretation Sentence Pattern",
             "slogan": "English interpretation for accurate translation from English to Japanese",
             "description": "returns which sentence type the input sentence is and which is the subject, verb, object, and adjective so on.",
-            "github": "https://github.com/lll-lll-lll-lll/sent-pattern",
-            "pip": "pip install sent-pattern",
+            "github": "lll-lll-lll-lll/sent-pattern",
+            "pip": "sent-pattern",
             "code_example": [
                 "import spacy",
                 "nlp = spacy.load('en_core_web_lg')",
