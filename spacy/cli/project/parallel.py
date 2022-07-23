@@ -26,7 +26,7 @@ subprocesses for these OS level commands serially, and sends status information 
 execution back to the main process.
 
 The main process maintains a state machine for each spaCy projects command/worker process. The meaning
-of the states is documented alongside the _PARALLEL_COMMAND_STATES code. Note that the distinction
+of the states is documented alongside the _ParallelCommandInfo.STATES code. Note that the distinction
 between the states 'failed' and 'terminated' is not meaningful on Windows, so that both are displayed
 as 'failed/terminated' on Windows systems.
 """
