@@ -22,6 +22,7 @@
                 "## Set parameter `extra_info` to `True` and check also span._.description, span._.src_description, span._.normal_term, span._.other_ids"
             ],
             "category": ["models", "pipeline"],
+            "image": "https://raw.githubusercontent.com/Lucaterre/spacyfishing/main/docs/spacyfishing-logo-resized.png",
             "tags": ["NER", "NEL"],
             "author": "Lucas Terriel",
             "author_links": {
