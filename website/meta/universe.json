@@ -4027,7 +4027,7 @@
             "id": "sent-pattern",
             "title": "English Interpretation Sentence Pattern",
             "slogan": "English interpretation for accurate translation from English to Japanese",
-            "description": "returns which sentence type the input sentence is and which is the subject, verb, object, and adjective so on.",
+            "description": "This package categorizes English sentences into one of five basic sentence patterns and identifies the subject, verb, object, and other components. The five basic sentence patterns are based on C. T. Onions's Advanced English Syntax and are frequently used when teaching English in Japan.",
             "github": "lll-lll-lll-lll/sent-pattern",
             "pip": "sent-pattern",
             "code_example": [
