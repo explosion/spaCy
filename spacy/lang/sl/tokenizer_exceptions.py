@@ -6,7 +6,6 @@ from ...util import update_exc
 _exc: Dict[str, List[Dict]] = {}
 
 _other_exc = {
-    "...": [{ORTH: "."}, {ORTH: "."}, {ORTH: "."}],
     "t.i.": [{ORTH: "t.", NORM: "tako"}, {ORTH: "i.", NORM: "imenovano"}],
     "t.j.": [{ORTH: "t.", NORM: "to"}, {ORTH: "j.", NORM: "je"}],
     "T.j.": [{ORTH: "T.", NORM: "to"}, {ORTH: "j.", NORM: "je"}],
@@ -37,10 +36,10 @@ _exc.update(_other_exc)
 for exc_data in [
     {ORTH: "adm.", NORM: "administracija"},
     {ORTH: "aer.", NORM: "aeronavtika"},
-    {ORTH: "agr.", NORM: "agronomija, agrotehnika"},
+    {ORTH: "agr.", NORM: "agronomija"},
     {ORTH: "amer.", NORM: "ameriško"},
     {ORTH: "anat.", NORM: "anatomija"},
-    {ORTH: "angl.", NORM: "angleški, angleško"},
+    {ORTH: "angl.", NORM: "angleški"},
     {ORTH: "ant.", NORM: "antonim"},
     {ORTH: "antr.", NORM: "antropologija"},
     {ORTH: "apr.", NORM: "april"},
@@ -49,66 +48,63 @@ for exc_data in [
     {ORTH: "arhit.", NORM: "arhitektura"},
     {ORTH: "avg.", NORM: "avgust"},
     {ORTH: "avstr.", NORM: "avstrijsko"},
-    {ORTH: "avt.", NORM: "avtomobilizem, avtomehanika"},
+    {ORTH: "avt.", NORM: "avtomobilizem"},
     {ORTH: "bibl.", NORM: "biblijsko"},
     {ORTH: "biokem.", NORM: "biokemija"},
     {ORTH: "biol.", NORM: "biologija"},
-    {ORTH: "bolg.", NORM: "bolgarski, bolgarsko"},
+    {ORTH: "bolg.", NORM: "bolgarski"},
     {ORTH: "bot.", NORM: "botanika"},
-    {ORTH: "cit.", NORM: "citatni zapis besede"},
+    {ORTH: "cit.", NORM: "citat"},
     {ORTH: "daj.", NORM: "dajalnik"},
     {ORTH: "del.", NORM: "deležnik"},
-    {ORTH: "dol.", NORM: "določna oblika"},
     {ORTH: "ed.", NORM: "ednina"},
-    {ORTH: "etn.", NORM: "etnografija, etnologija"},
-    {ORTH: "farm.", NORM: "farmacija, farmakologija"},
+    {ORTH: "etn.", NORM: "etnografija"},
+    {ORTH: "farm.", NORM: "farmacija"},
     {ORTH: "filat.", NORM: "filatelija"},
-    {ORTH: "film.", NORM: "filmski izraz"},
     {ORTH: "filoz.", NORM: "filozofija"},
     {ORTH: "fin.", NORM: "finančništvo"},
     {ORTH: "fiz.", NORM: "fizika"},
     {ORTH: "fot.", NORM: "fotografija"},
-    {ORTH: "fr.", NORM: "francoski, francosko"},
+    {ORTH: "fr.", NORM: "francoski"},
     {ORTH: "friz.", NORM: "frizerstvo"},
-    {ORTH: "gastr.", NORM: "gastronomija, kuharstvo"},
+    {ORTH: "gastr.", NORM: "gastronomija"},
     {ORTH: "geogr.", NORM: "geografija"},
     {ORTH: "geol.", NORM: "geologija"},
     {ORTH: "geom.", NORM: "geometrija"},
-    {ORTH: "germ.", NORM: "germanski, germansko"},
+    {ORTH: "germ.", NORM: "germanski"},
     {ORTH: "gl.", NORM: "glej"},
     {ORTH: "glag.", NORM: "glagolski"},
     {ORTH: "glasb.", NORM: "glasba"},
     {ORTH: "gled.", NORM: "gledališče"},
     {ORTH: "gost.", NORM: "gostinstvo"},
     {ORTH: "gozd.", NORM: "gozdarstvo"},
-    {ORTH: "gr.", NORM: "grški, grško"},
+    {ORTH: "gr.", NORM: "grški"},
     {ORTH: "grad.", NORM: "gradbeništvo"},
     {ORTH: "hebr.", NORM: "hebrejsko"},
     {ORTH: "hrv.", NORM: "hrvaško"},
-    {ORTH: "ide.", NORM: "praindoevropsko"},
+    {ORTH: "ide.", NORM: "indoevropsko"},
     {ORTH: "igr.", NORM: "igre"},
     {ORTH: "im.", NORM: "imenovalnik"},
     {ORTH: "iron.", NORM: "ironično"},
-    {ORTH: "it.", NORM: "italijanski, italijansko"},
+    {ORTH: "it.", NORM: "italijanski"},
     {ORTH: "itd.", NORM: "in tako dalje"},
     {ORTH: "itn.", NORM: "in tako naprej"},
     {ORTH: "ipd.", NORM: "in podobno"},
     {ORTH: "jap.", NORM: "japonsko"},
     {ORTH: "jul.", NORM: "julij"},
     {ORTH: "jun.", NORM: "junij"},
-    {ORTH: "jur.", NORM: "juridišni izraz"},
     {ORTH: "kit.", NORM: "kitajsko"},
     {ORTH: "knj.", NORM: "knjižno"},
     {ORTH: "knjiž.", NORM: "knjižno"},
     {ORTH: "kor.", NORM: "koreografija"},
-    {ORTH: "lat.", NORM: "latinski, latinsko"},
+    {ORTH: "lat.", NORM: "latinski"},
     {ORTH: "les.", NORM: "lesna stroka"},
     {ORTH: "lingv.", NORM: "lingvistika"},
-    {ORTH: "lit.", NORM: "literarna teorija"},
+    {ORTH: "lit.", NORM: "literarni"},
     {ORTH: "ljubk.", NORM: "ljubkovalno"},
     {ORTH: "lov.", NORM: "lovstvo"},
-    {ORTH: "m.", NORM: "moški spol"},
-    {ORTH: "mak.", NORM: "makedonski, makedonsko"},
+    {ORTH: "m.", NORM: "moški"},
+    {ORTH: "mak.", NORM: "makedonski"},
     {ORTH: "mar.", NORM: "marec"},
     {ORTH: "mat.", NORM: "matematika"},
     {ORTH: "med.", NORM: "medicina"},
@@ -124,14 +120,13 @@ for exc_data in [
     {ORTH: "nar.", NORM: "narečno"},
     {ORTH: "nav.", NORM: "navadno"},
     {ORTH: "nedol.", NORM: "nedoločnik"},
-    {ORTH: "nedov.", NORM: "nedovršni glagol"},
+    {ORTH: "nedov.", NORM: "nedovršni"},
     {ORTH: "neprav.", NORM: "nepravilno"},
-    {ORTH: "nepreh.", NORM: "neprehodna raba (glagola)"},
+    {ORTH: "nepreh.", NORM: "neprehodno"},
     {ORTH: "neskl.", NORM: "nesklonljiv(o)"},
     {ORTH: "nestrok.", NORM: "nestrokovno"},
     {ORTH: "num.", NORM: "numizmatika"},
     {ORTH: "npr.", NORM: "na primer"},
-    {ORTH: "obl.", NORM: "oblačilna stroka"},
     {ORTH: "obrt.", NORM: "obrtništvo"},
     {ORTH: "okt.", NORM: "oktober"},
     {ORTH: "or.", NORM: "orodnik"},
@@ -142,26 +137,25 @@ for exc_data in [
     {ORTH: "papir.", NORM: "papirništvo"},
     {ORTH: "ped.", NORM: "pedagogika"},
     {ORTH: "pisar.", NORM: "pisarniško"},
-    {ORTH: "podr.", NORM: "vez"},
     {ORTH: "pog.", NORM: "pogovorno"},
     {ORTH: "polit.", NORM: "politika"},
     {ORTH: "polj.", NORM: "poljsko"},
     {ORTH: "poljud.", NORM: "poljudno"},
     {ORTH: "preg.", NORM: "pregovor"},
-    {ORTH: "preh.", NORM: "prehodna raba (glagola)"},
+    {ORTH: "preh.", NORM: "prehodno"},
     {ORTH: "pren.", NORM: "preneseno"},
-    {ORTH: "prid.", NORM: "pridevnik, pridevniška raba"},
+    {ORTH: "prid.", NORM: "pridevnik"},
     {ORTH: "prim.", NORM: "primerjaj"},
-    {ORTH: "prisl.", NORM: "prislov, prislovna raba"},
+    {ORTH: "prisl.", NORM: "prislov"},
     {ORTH: "psih.", NORM: "psihologija"},
     {ORTH: "psiht.", NORM: "psihiatrija"},
-    {ORTH: "rad.", NORM: "radiotehnika, radiotelevizija"},
+    {ORTH: "rad.", NORM: "radiotehnika"},
     {ORTH: "rač.", NORM: "računalništvo"},
     {ORTH: "rib.", NORM: "ribištvo"},
     {ORTH: "rod.", NORM: "rodilnik"},
     {ORTH: "rus.", NORM: "rusko"},
-    {ORTH: "s.", NORM: "srednji spol"},
-    {ORTH: "sam.", NORM: "samostalniška raba"},
+    {ORTH: "s.", NORM: "srednji"},
+    {ORTH: "sam.", NORM: "samostalniški"},
     {ORTH: "sed.", NORM: "sedanjik"},
     {ORTH: "sep.", NORM: "september"},
     {ORTH: "slabš.", NORM: "slabšalno"},
@@ -176,11 +170,11 @@ for exc_data in [
     {ORTH: "tj.", NORM: "to je"},
     {ORTH: "tož.", NORM: "tožilnik"},
     {ORTH: "trg.", NORM: "trgovina"},
-    {ORTH: "ukr.", NORM: "ukrajinsko"},
+    {ORTH: "ukr.", NORM: "ukrajinski"},
     {ORTH: "um.", NORM: "umetnost"},
     {ORTH: "vel.", NORM: "velelnik"},
     {ORTH: "vet.", NORM: "veterina"},
-    {ORTH: "vez.", NORM: "veznik, veznižka raba"},
+    {ORTH: "vez.", NORM: "veznik"},
     {ORTH: "vn.", NORM: "visokonemško"},
     {ORTH: "voj.", NORM: "vojska"},
     {ORTH: "vrtn.", NORM: "vrtnarstvo"},
@@ -191,17 +185,17 @@ for exc_data in [
     {ORTH: "zgod.", NORM: "zgodovina"},
     {ORTH: "zool.", NORM: "zoologija"},
     {ORTH: "čeb.", NORM: "čebelarstvo"},
-    {ORTH: "češ.", NORM: "češki, češko"},
+    {ORTH: "češ.", NORM: "češki"},
     {ORTH: "člov.", NORM: "človeškost"},
-    {ORTH: "šah.", NORM: "šahovski izraz"},
+    {ORTH: "šah.", NORM: "šahovski"},
     {ORTH: "šalj.", NORM: "šaljivo"},
-    {ORTH: "šp.", NORM: "španski, špansko"},
+    {ORTH: "šp.", NORM: "španski"},
     {ORTH: "špan.", NORM: "špansko"},
-    {ORTH: "šport.", NORM: "športni izraz"},
+    {ORTH: "šport.", NORM: "športni"},
     {ORTH: "štev.", NORM: "števnik"},
     {ORTH: "šved.", NORM: "švedsko"},
     {ORTH: "švic.", NORM: "švicarsko"},
-    {ORTH: "ž.", NORM: "ženski spol"},
+    {ORTH: "ž.", NORM: "ženski"},
     {ORTH: "žarg.", NORM: "žargonsko"},
     {ORTH: "žel.", NORM: "železnica"},
     {ORTH: "živ.", NORM: "živost"}
@@ -209,7 +203,9 @@ for exc_data in [
     _exc[exc_data[ORTH]] = [exc_data]
 
 
-abbrv = """Co. Ch. DIPL. DR. Dr. Ev. Inc. Jr. Kr. Mag. M. MR. Mr. Mt. Murr. Npr. OZ. Opr. Osn. Prim. Roj. ST. Sim. Sp. Sred. St. Sv. Škofl. Tel. UR. Zb. 
+abbrv = """
+Co. Ch. DIPL. DR. Dr. Ev. Inc. Jr. Kr. Mag. M. MR. Mr. Mt. Murr. Npr. OZ. 
+Opr. Osn. Prim. Roj. ST. Sim. Sp. Sred. St. Sv. Škofl. Tel. UR. Zb. 
 a. aa. ab. abc. abit. abl. abs. abt. acc. accel. add. adj. adv. aet. afr. akad. al. alban. all. alleg. 
 alp. alt. alter. alžir. am. an. andr. ang. anh. anon. ans. antrop. apoc. app. approx. apt. ar. arc. arch. 
 arh. arr. as. asist. assist. assoc. asst. astr. attn. aug. avstral. az. b. bab. bal. bbl. bd. belg. bioinf. 
@@ -217,24 +213,24 @@ biomed. bk. bl. bn. borg. bp. br. braz. brit. bros. broš. bt. bu. c. ca. cal. c
 cat. cath. cc. cca. cd. cdr. cdre. cent. cerkv. cert. cf. cfr. ch. chap. chem. chr. chs. cic. circ. civ. cl.
 cm. cmd. cnr. co. cod. col. coll. colo. com. comp. con. conc. cond. conn. cons. cont. coop. corr. cost. cp.
 cpl. cr. crd. cres. cresc. ct. cu. d. dan. dat. davč. ddr. dec. ded. def. dem. dent. dept. dia. dip. dipl. 
-dir. disp. diss. div. do. doc. dok. doo. dop. dott. dr. dram. druž. družb. drž. dt. duh. dur. dvr. dwt. e.
+dir. disp. diss. div. do. doc. dok. dol. doo. dop. dott. dr. dram. druž. družb. drž. dt. duh. dur. dvr. dwt. e.
 ea. ecc. eccl. eccles. econ. edn. egipt. egr. ekon. eksp. el. em. enc. eng. eo. ep. err. esp. esq. est.
 et. etc. etnogr. etnol. ev. evfem. evr. ex. exc. excl. exp. expl. ext. exx. f. fa. facs. fak. faks. fas.
-fasc. fco. fcp. feb. febr. fec. fed. fem. ff. fff. fid. fig. fil. fiziol. fiziot. flam. fm. fo. fol. folk.
+fasc. fco. fcp. feb. febr. fec. fed. fem. ff. fff. fid. fig. fil. film. fiziol. fiziot. flam. fm. fo. fol. folk.
 frag. fran. franc. fsc. g. ga. gal. gdč. ge. gen. geod. geog. geotehnol. gg. gimn. glas. glav. gnr. go. gor.
 gosp. gp. graf. gram. gren. grš. gs. h. hab. hf. hist. ho. hort. i. ia. ib. ibid. id. idr. idridr. ill. imen.
 imp. impf. impr. in. inc. incl. ind. indus. inf. inform. ing. init. ins. int. inv. inšp. inštr. inž. is. islam.
 ist. ital. iur. iz. izbr. izd. izg. izgr. izr. izv. j. jak. jam. jan. jav. je. jez. jr. jsl. jud. jug.
-jugoslovan. juž. jv. jz. k. kal. kan. kand. kat. kdo. kem. kip. kmet. kol. kom. komp. konf. kont. kost. kov. 
+jugoslovan. jur. juž. jv. jz. k. kal. kan. kand. kat. kdo. kem. kip. kmet. kol. kom. komp. konf. kont. kost. kov. 
 kp. kpfw. kr. kraj. krat. kub. kult. kv. kval. l. la. lab. lb. ld. let. lib. lik. litt. lj. ljud. ll. loc. log. 
 loč. lt. ma. madž. mag. manag. manjš. masc. mass. mater. max. maxmax. mb. md. mech. medic. medij. medn. 
 mehč. mem. menedž. mes. mess. metal. meteor. meteorol. mex. mi. mikr. mil. minn. mio. misc. miss. mit. mk. 
 mkt. ml. mlad. mlle. mlr. mm. mme. množ. mo. moj. moš. možn. mr. mrd. mrs. ms. msc. msgr. mt. murr. mus. mut. 
 n. na. nad. nadalj. nadom. nagl. nakl. namer. nan. naniz. nasl. nat. navt. nač. ned. nem. nik. nizoz. nm. nn. 
-no. nom. norv. notr. nov. novogr. ns. o. ob. obd. obj. oblač. oblik. obr. obraz. obs. obst. obt. obč. oc. 
+no. nom. norv. notr. nov. novogr. ns. o. ob. obd. obj. oblač. obl. oblik. obr. obraz. obs. obst. obt. obč. oc. 
 oct. od. odd. odg. odn. odst. odv. oec. off. ok. okla. okr. ont. oo. op. opis. opp. opr. orch. ord. ore. oreg. 
 org. orient. orig. ork. ort. oseb. osn. ot. ozir. ošk. p. pag. par. para. parc. parl. part. past. pat. pdk. 
-pen. perf. pert. perz. pesn. pet. pev. pf. pfc. ph. pharm. phil. pis. pl. po. pod. podaljš. pogl. pogoj. pojm. 
+pen. perf. pert. perz. pesn. pet. pev. pf. pfc. ph. pharm. phil. pis. pl. po. pod. podr. podaljš. pogl. pogoj. pojm. 
 pok. pokr. pol. poljed. poljub. polu. pom. pomen. pon. ponov. pop. por. port. pos. posl. posn. pov. pp. ppl. pr. 
 praet. prav. pravopis. pravosl. preb. pred. predl. predm. predp. preds. pref. pregib. prel. prem. premen. prep. 
 pres. pret. prev. pribl. prih. pril. primerj. primor. prip. pripor. prir. prist. priv. proc. prof. prog. proiz. 
@@ -258,3 +254,4 @@ for orth in abbrv:
 
 
 TOKENIZER_EXCEPTIONS = update_exc(BASE_EXCEPTIONS, _exc)
+

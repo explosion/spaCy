@@ -4,10 +4,12 @@ from ..char_classes import CONCAT_QUOTES, ALPHA_LOWER, ALPHA_UPPER, ALPHA
 from ..char_classes import merge_chars
 from ..punctuation import TOKENIZER_PREFIXES as BASE_TOKENIZER_PREFIXES
 
-_prefixes = ["•", "\-", "\/", "'"] + BASE_TOKENIZER_PREFIXES
+INCLUDE_SPECIAL = ["\\+", "\\/", "\\•", "\\¯", "\\=", "\\×"] + HYPHENS.split("|")
+
+_prefixes = INCLUDE_SPECIAL + BASE_TOKENIZER_PREFIXES
 
 _suffixes = (
-        ["—", "–", "\-", "\:", "\+", "\/", "=", "×", "\$", "•", "¯", "%"]
+        INCLUDE_SPECIAL
         + LIST_PUNCT
         + LIST_ELLIPSES
         + LIST_QUOTES
@@ -24,7 +26,7 @@ _suffixes = (
         ]
 )
 
-# a list of all suffixes following a hyphen that are not to be split (eg. BTC-jev)
+# a list of all suffixes following a hyphen that are shouldn't split (eg. BTC-jev)
 CONCAT_QUOTES = CONCAT_QUOTES.replace("\'", "")
 HYPHENS_PERMITTED = "((a)|(evemu)|(evskega)|(i)|(jevega)|(jevska)|(jevskimi)|(jinemu)|(oma)|(ovim)|" \
                     "(ovski)|(e)|(evi)|(evskem)|(ih)|(jevem)|(jevske)|(jevsko)|(jini)|(ov)|(ovima)|" \
@@ -49,12 +51,13 @@ _infixes = (
         LIST_ELLIPSES
         + LIST_ICONS
         + [
-            r"(?<=[{a}0-9])[\/\"\+\*\^\”\„\»\«\{{\}}\#\(\)](?=[{a}0-9])".format(a=ALPHA),
-            r"(?<=[{a}])[{q}{p}\+\/](?=[{a}])".format(a=ALPHA, q=CONCAT_QUOTES, p=PUNCT),
+            # r"(?<=[{a}0-9])[\/](?=[{a}0-9])".format(a=ALPHA),
+            # r"(?<=[{a}])[{q}{p}](?=[{a}])".format(a=ALPHA, q=CONCAT_QUOTES, p=PUNCT),
+            r"(?<=[0-9])[+\-\*^](?=[0-9-])",
             r"(?<=[{al}{q}])\.(?=[{au}{q}])".format(al=ALPHA_LOWER, au=ALPHA_UPPER, q=CONCAT_QUOTES),
             r"(?<=[{a}]),(?=[{a}])".format(a=ALPHA),
             r"(?<=[{a}0-9])(?:{h})(?!{hp}$)".format(a=ALPHA, h=HYPHENS, hp=HYPHENS_PERMITTED),
-            r"(?<=[{a}0-9])[:<>=/](?=[{a}])".format(a=ALPHA),
+            r"(?<=[{a}0-9])[:<>=/](?=[{a}])".format(a=ALPHA)
         ]
 )
 
@@ -62,3 +65,4 @@ _infixes = (
 TOKENIZER_PREFIXES = _prefixes
 TOKENIZER_SUFFIXES = _suffixes
 TOKENIZER_INFIXES = _infixes
+
