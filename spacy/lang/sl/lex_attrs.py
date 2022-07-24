@@ -104,6 +104,7 @@ _currency_words = set(
     tolar tolarja tolarji tolarju tolarjem tolarjev tolarjema tolarjih tolarje tol
     dinar dinarja dinarji dinarju dinarjem dinarjev dinarjema dinarjih dinarje din
     funt funta funti funtu funtom funtov funtoma funtih funte gpb
+    forint forinta forinti forintu forintom forintov forintoma forintih forinte
     zlot zlota zloti zlotu zlotom zlotov zlotoma zlotih zlote 
     rupij rupija rupiji rupiju rupijem rupijev rupijema rupijih rupije
     jen jena jeni jenu jenom jenov jenoma jenih jene
