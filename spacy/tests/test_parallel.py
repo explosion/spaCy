@@ -8,6 +8,7 @@ from .util import make_tempdir
 
 
 def test_project_config_multiprocessing_good_case():
+    """Confirms that a correct parallel command group is loaded from the project file."""
     project = {
         "commands": [
             {"name": "command1", "script": ["echo", "command1"]},
@@ -31,6 +32,14 @@ def test_project_config_multiprocessing_good_case():
     ],
 )
 def test_project_config_multiprocessing_bad_case_workflows(workflows):
+    """Confirms that parallel command groups that do not obey various rules
+    result in errors:
+
+    - a parallel group with only one command
+    - a parallel group with a non-existent command
+    - a parallel group containing the same command more than once
+    - a parallel group whose dictionary name is not 'parallel'
+    """
     project = {
         "commands": [
             {"name": "command1", "script": ["echo", "command1"]},
@@ -47,6 +56,13 @@ def test_project_config_multiprocessing_bad_case_workflows(workflows):
 
 @pytest.mark.parametrize("max_parallel_processes", [-1, 0, 1])
 def test_project_config_multiprocessing_max_processes_bad_case(max_parallel_processes):
+    """Confirms that invalid max_parallel_processes values are not accepted:
+
+    - negative value
+    - zero
+    - 1 (because the commands in the group can then be executed serially)
+    """
+
     with make_tempdir() as d:
         project = {
             "max_parallel_processes": max_parallel_processes,
@@ -73,6 +89,13 @@ def test_project_config_multiprocessing_max_processes_bad_case(max_parallel_proc
 
 
 def test_project_run_multiprocessing_good_case():
+    """Executes a parallel command group. The script pscript.py writes to a file, then polls until
+    a second file exists. It is executed twice by commands in a parallel group that write
+    and read opposite files, thus proving that the commands are being executed simultaneously. It
+    then checks if a file f exists, writes to f if f does not already exist and writes to a
+    second file if f does already exist. Although the workflow is run twice, the fact that both
+    commands should be skipped on the second run mean that these second files should never be written.
+    """
     with make_tempdir() as d:
 
         pscript = """
@@ -106,6 +129,7 @@ else: # should never happen because of skipping
                         " ".join(("python", pscript_loc, str(d), "a", "b", "c", "d"))
                     ],
                     "outputs": [os.sep.join((str(d), "f"))],
+                    # output should work even if file doesn't exist
                 },
                 {
                     "name": "commandB",
@@ -133,6 +157,9 @@ else: # should never happen because of skipping
 
 @pytest.mark.parametrize("max_parallel_processes", [2, 3, 4, 5, 6])
 def test_project_run_multiprocessing_max_processes_good_case(max_parallel_processes):
+    """Confirms that no errors are thrown when a parallel group is executed
+    with various values of max_parallel_processes.
+    """
     with make_tempdir() as d:
 
         project = {
@@ -185,6 +212,12 @@ def test_project_run_multiprocessing_max_processes_good_case(max_parallel_proces
 
 @pytest.mark.parametrize("failing_command", ["python", "someNotExistentOSCommand"])
 def test_project_run_multiprocessing_failure(failing_command: str):
+    """Confirms that when one command in a parallel group fails, the other commands
+    are terminated. The script has two arguments: the number of seconds for which
+    to sleep, and the return code. One command in a group is terminated immediately
+    with a non-zero return code, the other two commands after several seconds with
+    zero return codes. Measuring the execution length for the whole group shows
+    whether or not the sleeping processes were successfully terminated."""
     with make_tempdir() as d:
 
         pscript = """
@@ -232,7 +265,7 @@ sys.exit(int(rc))
             # 15 is the highest rc rather than 1.
             assert rc_e.value.code == 15
         else:
-            assert rc_e.value.code == 1        
+            assert rc_e.value.code == 1
         assert (
             time() - start < 5
         ), "Test took too long, subprocess seems not to have been terminated"

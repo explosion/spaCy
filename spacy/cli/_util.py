@@ -266,11 +266,7 @@ def validate_project_commands(config: Dict[str, Any]) -> None:
             if isinstance(workflow_item, str):
                 verify_workflow_step(workflow_name, commands, workflow_item)
             else:
-                assert isinstance(workflow_item, dict)
-                assert len(workflow_item) == 1
-                steps_list = workflow_item["parallel"]
-                assert isinstance(steps_list[0], str)
-                steps = cast(List[str], steps_list)
+                steps = cast(List[str], workflow_item["parallel"])
                 if len(steps) < 2:
                     msg.fail(
                         f"Invalid parallel group within '{workflow_name}'.",
