@@ -3935,6 +3935,21 @@
             },
             "category": ["biomedical", "scientific", "research", "pipeline"],
             "tags": ["clinical"]
+        },
+        {
+            "id": "sent-pattern",
+            "title": "English Interpretation Sentence Pattern",
+            "slogan": "English interpretation for accurate translation from English to Japanese",
+            "description": "This package categorizes English sentences into one of five basic sentence patterns and identifies the subject, verb, object, and other components. The five basic sentence patterns are based on C. T. Onions's Advanced English Syntax and are frequently used when teaching English in Japan.",
+            "github": "lll-lll-lll-lll/sent-pattern",
+            "pip": "sent-pattern",
+            "author": "Shunpei Nakayama",
+            "author_links": {
+                "twitter": "ExZ79575296",
+                "github": "lll-lll-lll-lll"
+            },
+            "category": ["pipeline"],
+            "tags": ["interpretation", "ja"]
         }
     ],
 
@@ -4023,37 +4038,6 @@
                     "description": "Episodes about spaCy or interviews with the spaCy team"
                 }
             ]
-        },
-        {
-            "id": "sent-pattern",
-            "title": "English Interpretation Sentence Pattern",
-            "slogan": "English interpretation for accurate translation from English to Japanese",
-            "description": "This package categorizes English sentences into one of five basic sentence patterns and identifies the subject, verb, object, and other components. The five basic sentence patterns are based on C. T. Onions's Advanced English Syntax and are frequently used when teaching English in Japan.",
-            "github": "lll-lll-lll-lll/sent-pattern",
-            "pip": "sent-pattern",
-            "code_example": [
-                "import spacy",
-                "nlp = spacy.load('en_core_web_lg')",
-                "",
-                "nlp.add_pipe('sent_pattern')",
-                "text = 'he gives me something'",
-                "pattern = doc._.sentpattern",
-                "",
-                "print(pattern)",
-                "# FourthSentencePattern (class)",
-                "print(pattern.subject.root)",
-                "# he (Token)",
-                "print(pattern.verb.root)",
-                "# give (Token)"
-            ],
-            "code_language": "python",
-            "author": "Shunpei Nakayama",
-            "author_links": {
-                "twitter": "ExZ79575296",
-                "github": "lll-lll-lll-lll"
-            },
-            "category": ["pipeline"],
-            "tags": ["interpretation", "ja"]
         }
     ]
 }
