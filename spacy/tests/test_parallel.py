@@ -237,7 +237,7 @@ sys.exit(int(rc))
             "commands": [
                 {
                     "name": "commandA",
-                    "script": [" ".join(("python", pscript_loc, "15", "0"))],
+                    "script": [" ".join(("python", pscript_loc, "25", "0"))],
                 },
                 {
                     "name": "commandB",
@@ -245,7 +245,7 @@ sys.exit(int(rc))
                 },
                 {
                     "name": "commandC",
-                    "script": [" ".join(("python", pscript_loc, "10", "0"))],
+                    "script": [" ".join(("python", pscript_loc, "20", "0"))],
                 },
             ],
             "workflows": {
@@ -267,5 +267,5 @@ sys.exit(int(rc))
         else:
             assert rc_e.value.code == 1
         assert (
-            time() - start < 5
+            time() - start < 15
         ), "Test took too long, subprocess seems not to have been terminated"
