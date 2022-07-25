@@ -34,8 +34,8 @@ discussion forum.
 
 ## JSON format
 
-To add a project, fork this repository, edit the [`universe.json`](meta/universe.json)
-and add an object of the following format to the list of `"resources"`. Before
+To add a project, fork this repository, add a file in the [`universe`](meta/universe)
+folder and add an object of the following format to the list of `"resources"`. Before
 you submit your pull request, make sure to use a linter to verify that your
 markup is correct.
 
