@@ -19,7 +19,7 @@ from pathlib import Path
 from time import time
 from multiprocessing import Manager, Queue, get_context
 from multiprocessing.context import SpawnProcess
-from shutil import rmtree
+from tempfile import mkdtemp
 from signal import SIGTERM
 from subprocess import STDOUT, Popen, TimeoutExpired
 from dataclasses import dataclass, field
@@ -37,10 +37,6 @@ mp_context = get_context("spawn")
 # How often the worker processes managing the commands in a parallel group
 # send keepalive messages to the main process (seconds)
 PARALLEL_GROUP_STATUS_INTERVAL = 1
-
-# The dirname where the temporary logfiles for a parallel group are written
-# before being copied to stdout when the group has completed
-PARALLEL_LOGGING_DIR_NAME = "parrTmp"
 
 # The maximum permissible width of divider text describing a parallel command group
 MAX_WIDTH_DIVIDER = 60
@@ -150,10 +146,9 @@ def project_run_parallel_group(
         _ParallelCommandInfo(cmd_name, commands[cmd_name], cmd_index)
         for cmd_index, cmd_name in enumerate(cmd_names)
     ]
+    temp_log_dir = mkdtemp()
 
     with working_dir(project_dir) as current_dir:
-        rmtree(PARALLEL_LOGGING_DIR_NAME, ignore_errors=True)
-        os.mkdir(PARALLEL_LOGGING_DIR_NAME)
 
         divider_parallel_descriptor = parallel_descriptor = (
             "parallel[" + ", ".join(cmd_info.cmd_name for cmd_info in cmd_infos) + "]"
@@ -166,10 +161,7 @@ def project_run_parallel_group(
         if not DISPLAY_STATUS_TABLE and len(parallel_descriptor) > MAX_WIDTH_DIVIDER:
             # reprint the descriptor if it was too long and had to be cut short
             print(parallel_descriptor)
-        msg.info(
-            "Temporary logs are being written to "
-            + os.sep.join((str(current_dir), PARALLEL_LOGGING_DIR_NAME))
-        )
+        msg.info("Temporary logs are being written to " + temp_log_dir)
 
         parallel_group_status_queue = Manager().Queue()
 
@@ -193,7 +185,7 @@ def project_run_parallel_group(
                 args=(cmd_info,),
                 kwargs={
                     "dry": dry,
-                    "current_dir": str(current_dir),
+                    "temp_log_dir": temp_log_dir,
                     "parallel_group_status_queue": parallel_group_status_queue,
                 },
             )
@@ -334,7 +326,7 @@ def _project_run_parallel_cmd(
     cmd_info: _ParallelCommandInfo,
     *,
     dry: bool,
-    current_dir: str,
+    temp_log_dir: str,
     parallel_group_status_queue: Queue,
 ) -> None:
     """Run a single spaCy projects command as a worker process.
@@ -345,9 +337,7 @@ def _project_run_parallel_cmd(
     type contains different additional fields."""
     # we can use the command name as a unique log filename because a parallel
     # group is not allowed to contain the same command more than once
-    log_file_name = os.sep.join(
-        (current_dir, PARALLEL_LOGGING_DIR_NAME, cmd_info.cmd_name + ".log")
-    )
+    log_file_name = os.sep.join((temp_log_dir, cmd_info.cmd_name + ".log"))
     file_not_found = False
     # buffering=0: make sure output is not lost if a subprocess is terminated
     with open(log_file_name, "wb", buffering=0) as logfile:
