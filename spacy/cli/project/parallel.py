@@ -339,7 +339,7 @@ def _project_run_parallel_cmd(
 ) -> None:
     """Run a single spaCy projects command as a worker process.
 
-    Communicates with the main process via queue messages whose type is determined 
+    Communicates with the main process via queue messages whose type is determined
     by the entry 'mess_type' and that are structured as dictionaries. Possible
     values of 'mess_type' are 'started', 'completed' and 'keepalive'. Each dictionary
     type contains different additional fields."""
@@ -356,7 +356,7 @@ def _project_run_parallel_cmd(
             if len(command) and command[0] in ("python", "python3"):
                 # -u: prevent buffering within Python
                 command = [sys.executable, "-u", *command[1:]]
-            elif len(command) and command[0].startswith("python3"): # e.g. python3.10
+            elif len(command) and command[0].startswith("python3"):  # e.g. python3.10
                 command = [command[0], "-u", *command[1:]]
             elif len(command) and command[0] in ("pip", "pip3"):
                 command = [sys.executable, "-m", "pip", *command[1:]]
