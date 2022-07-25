@@ -304,6 +304,11 @@
             "name": "Marathi"
         },
         {
+            "code": "mt",
+            "name": "Maltese",
+            "has_examples": true
+        },
+        {
             "code": "nb",
             "name": "Norwegian Bokmål",
             "example": "Dette er en setning.",
