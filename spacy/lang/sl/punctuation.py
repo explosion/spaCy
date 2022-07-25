@@ -19,11 +19,11 @@ _suffixes = (
             r"(?<=[0-9])(?:{c})".format(c=CURRENCY),
             r"(?<=[0-9])(?:{u})".format(u=UNITS),
             r"(?<=[{al}{e}{p}(?:{q})])\.".format(al=ALPHA_LOWER, e=r"%²\-\+", q=CONCAT_QUOTES, p=PUNCT),
-            r"(?<=[{au}][{au}])\.".format(au=ALPHA_UPPER)
+            r"(?<=[{au}][{au}])\.".format(au=ALPHA_UPPER),
+            # split initials like J.K. Rowling
+            r"(?<=[A-Z]\.)(?:[A-Z].)"
         ]
 )
-
-print(LIST_PUNCT)
 
 # a list of all suffixes following a hyphen that are shouldn't split (eg. BTC-jev)
 # source: Obeliks tokenizer - https://github.com/clarinsi/obeliks/blob/master/obeliks/res/TokRulesPart1.txt
