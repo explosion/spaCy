@@ -1,8 +1,8 @@
-from ..char_classes import LIST_ELLIPSES, LIST_ICONS, HYPHENS, LIST_PUNCT, LIST_QUOTES, CURRENCY, UNITS, PUNCT, \
-    LIST_CURRENCY, CONCAT_QUOTES
+from ..char_classes import LIST_ELLIPSES, LIST_ICONS, HYPHENS, LIST_PUNCT, LIST_QUOTES, CURRENCY, UNITS, PUNCT, LIST_CURRENCY, CONCAT_QUOTES
 from ..char_classes import CONCAT_QUOTES, ALPHA_LOWER, ALPHA_UPPER, ALPHA
 from ..char_classes import merge_chars
 from ..punctuation import TOKENIZER_PREFIXES as BASE_TOKENIZER_PREFIXES
+
 
 INCLUDE_SPECIAL = ["\\+", "\\/", "\\•", "\\¯", "\\=", "\\×"] + HYPHENS.split("|")
 
@@ -19,14 +19,14 @@ _suffixes = (
             r"(?<=[0-9])(?:{c})".format(c=CURRENCY),
             r"(?<=[0-9])(?:{u})".format(u=UNITS),
             r"(?<=[{al}{e}{p}(?:{q})])\.".format(al=ALPHA_LOWER, e=r"%²\-\+", q=CONCAT_QUOTES, p=PUNCT),
-            r"(?<=[{au}][{au}])\.".format(au=ALPHA_UPPER),
-            r"(?<=[{a}][{au}])\.".format(a=ALPHA, au=ALPHA_UPPER),
-            # split initials like J.K. Rowling
-            r"(?<=[A-Z]\.)(?:[A-Z].)",
+            r"(?<=[{au}][{au}])\.".format(au=ALPHA_UPPER)
         ]
 )
 
+print(LIST_PUNCT)
+
 # a list of all suffixes following a hyphen that are shouldn't split (eg. BTC-jev)
+# source: Obeliks tokenizer - https://github.com/clarinsi/obeliks/blob/master/obeliks/res/TokRulesPart1.txt
 CONCAT_QUOTES = CONCAT_QUOTES.replace("\'", "")
 HYPHENS_PERMITTED = "((a)|(evemu)|(evskega)|(i)|(jevega)|(jevska)|(jevskimi)|(jinemu)|(oma)|(ovim)|" \
                     "(ovski)|(e)|(evi)|(evskem)|(ih)|(jevem)|(jevske)|(jevsko)|(jini)|(ov)|(ovima)|" \
@@ -51,12 +51,10 @@ _infixes = (
         LIST_ELLIPSES
         + LIST_ICONS
         + [
-            # r"(?<=[{a}0-9])[\/](?=[{a}0-9])".format(a=ALPHA),
-            # r"(?<=[{a}])[{q}{p}](?=[{a}])".format(a=ALPHA, q=CONCAT_QUOTES, p=PUNCT),
             r"(?<=[0-9])[+\-\*^](?=[0-9-])",
             r"(?<=[{al}{q}])\.(?=[{au}{q}])".format(al=ALPHA_LOWER, au=ALPHA_UPPER, q=CONCAT_QUOTES),
             r"(?<=[{a}]),(?=[{a}])".format(a=ALPHA),
-            r"(?<=[{a}0-9])(?:{h})(?!{hp}$)".format(a=ALPHA, h=HYPHENS, hp=HYPHENS_PERMITTED),
+            r"(?<=[{a}0-9])(?:{h})(?!{hp}$)(?=[{a}])".format(a=ALPHA, h=HYPHENS, hp=HYPHENS_PERMITTED),
             r"(?<=[{a}0-9])[:<>=/](?=[{a}])".format(a=ALPHA)
         ]
 )
