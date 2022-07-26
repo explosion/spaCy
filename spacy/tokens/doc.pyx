@@ -1608,8 +1608,7 @@ cdef class Doc:
                 Doc.set_extension(attr)
             self._.set(attr, doc_json["_"][attr])
 
-        for user_key in doc_json.get("user_data", {}):
-            attr = user_key
+        for attr in doc_json.get("user_data", {}):
             start_index = doc_json["user_data"][attr]["start_index"]
             end_index = doc_json["user_data"][attr]["end_index"]
             value = doc_json["user_data"][attr]["attribute_value"]
@@ -1675,12 +1674,13 @@ cdef class Doc:
             if self.user_data:
                 data["user_data"] = {}
                 for data_key in self.user_data:
-                    if data_key[1] not in data["user_data"] and data_key[1] in underscore and data_key[2] is not None:
+                    attr = data_key[1]
+                    if attr not in data["user_data"] and attr in underscore and data_key[2] is not None:
                         value = self.user_data[data_key]
                         if not srsly.is_json_serializable(value):
-                            raise ValueError(Errors.E107.format(attr=data_key[1], value=repr(value)))
-                        data["user_data"][data_key[1]] = {"start_index": data_key[2], "end_index": data_key[3], "attribute_value":value}
-                        user_keys.append(data_key[1])
+                            raise ValueError(Errors.E107.format(attr=attr, value=repr(value)))
+                        data["user_data"][attr] = {"start_index": data_key[2], "end_index": data_key[3], "attribute_value":value}
+                        user_keys.append(attr)
 
             data["_"] = {}
             for attr in underscore:

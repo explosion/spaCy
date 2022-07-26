@@ -147,7 +147,7 @@ def test_doc_to_json_with_token_span_attributes(doc):
     assert srsly.json_loads(srsly.json_dumps(json_doc)) == json_doc
 
 
-def test_doc_to_json_with_token_span_attributes_missing(doc):
+def test_doc_to_json_with_token_attributes_missing(doc):
     if not Token.has_extension("token_test"):
         Token.set_extension("token_test", default=False, force=True)
     if not Span.has_extension("span_test"):
