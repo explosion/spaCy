@@ -22,6 +22,7 @@
                 "## Set parameter `extra_info` to `True` and check also span._.description, span._.src_description, span._.normal_term, span._.other_ids"
             ],
             "category": ["models", "pipeline"],
+            "image": "https://raw.githubusercontent.com/Lucaterre/spacyfishing/main/docs/spacyfishing-logo-resized.png",
             "tags": ["NER", "NEL"],
             "author": "Lucas Terriel",
             "author_links": {
@@ -542,6 +543,37 @@
                 "twitter": "fishnets88",
                 "github": "koaning",
                 "website": "https://koaning.io"
+            }
+        },
+        {
+            "id": "bertopic",
+            "title": "BERTopic",
+            "slogan": "Leveraging BERT and c-TF-IDF to create easily interpretable topics.",
+            "description": "BERTopic is a topic modeling technique that leverages embedding models and c-TF-IDF to create dense clusters allowing for easily interpretable topics whilst keeping important words in the topic descriptions. BERTopic supports guided, (semi-) supervised, hierarchical, and dynamic topic modeling.",
+            "github": "maartengr/bertopic",
+            "pip": "bertopic",
+            "thumb": "https://i.imgur.com/Rx2LfBm.png",
+            "image": "https://raw.githubusercontent.com/MaartenGr/BERTopic/master/images/topic_visualization.gif",
+            "code_example": [
+                "import spacy",
+                "from bertopic import BERTopic",
+                "from sklearn.datasets import fetch_20newsgroups",
+                "",
+                "docs = fetch_20newsgroups(subset='all',  remove=('headers', 'footers', 'quotes'))['data']",
+                "nlp = spacy.load('en_core_web_md', exclude=['tagger', 'parser', 'ner', 'attribute_ruler', 'lemmatizer'])",
+                "",
+                "topic_model = BERTopic(embedding_model=nlp)",
+                "topics, probs = topic_model.fit_transform(docs)",
+                "",
+                "fig = topic_model.visualize_topics()",
+                "fig.show()"
+            ],
+            "category": ["visualizers", "training"],
+            "author": "Maarten Grootendorst",
+            "author_links": {
+                "twitter": "maartengr",
+                "github": "maartengr",
+                "website": "https://maartengrootendorst.com"
             }
         },
         {
@@ -3903,6 +3935,21 @@
             },
             "category": ["biomedical", "scientific", "research", "pipeline"],
             "tags": ["clinical"]
+        },
+        {
+            "id": "sent-pattern",
+            "title": "English Interpretation Sentence Pattern",
+            "slogan": "English interpretation for accurate translation from English to Japanese",
+            "description": "This package categorizes English sentences into one of five basic sentence patterns and identifies the subject, verb, object, and other components. The five basic sentence patterns are based on C. T. Onions's Advanced English Syntax and are frequently used when teaching English in Japan.",
+            "github": "lll-lll-lll-lll/sent-pattern",
+            "pip": "sent-pattern",
+            "author": "Shunpei Nakayama",
+            "author_links": {
+                "twitter": "ExZ79575296",
+                "github": "lll-lll-lll-lll"
+            },
+            "category": ["pipeline"],
+            "tags": ["interpretation", "ja"]
         }
     ],
 
