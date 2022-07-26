@@ -61,7 +61,7 @@ def pretrain_cli(
         # TODO: What's the solution here? How do we handle optional blocks?
         msg.fail("The [pretraining] block in your config is empty", exits=1)
     if not output_dir.exists():
-        output_dir.mkdir()
+        output_dir.mkdir(parents=True)
         msg.good(f"Created output directory: {output_dir}")
     # Save non-interpolated config
     raw_config.to_disk(output_dir / "config.cfg")
