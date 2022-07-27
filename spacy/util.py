@@ -795,7 +795,7 @@ def get_model_lower_version(constraint: str) -> Optional[str]:
     return None
 
 
-def is_prerelease_version(version: str) -> str:
+def is_prerelease_version(version: str) -> bool:
     """Check whether a version is a prerelease version.
 
     version (str): The version, e.g. "3.0.0.dev1".

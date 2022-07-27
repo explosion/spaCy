@@ -76,7 +76,7 @@ def download(model: str, direct: bool = False, sdist: bool = False, *pip_args) -
 
 def get_compatibility() -> dict:
     if is_prerelease_version(about.__version__):
-        version = about.__version__
+        version: Optional[str] = about.__version__
     else:
         version = get_minor_version(about.__version__)
     r = requests.get(about.__compatibility__)
