@@ -1,5 +1,7 @@
-from typing import Optional, List, Dict, Sequence, Any, Iterable
+from typing import Optional, List, Dict, Sequence, Any, Iterable, Tuple
 from pathlib import Path
+
+import pkg_resources
 from wasabi import msg
 from wasabi.util import locale_escape
 import sys
@@ -71,6 +73,26 @@ def project_run(
     commands = {cmd["name"]: cmd for cmd in config.get("commands", [])}
     workflows = config.get("workflows", {})
     validate_subcommand(list(commands.keys()), list(workflows.keys()), subcommand)
+
+    failed_pkgs, conflict_pkgs = _validate_requirements(project_dir)
+    if len(failed_pkgs):
+        err_kwargs = {"exits": 1} if not dry else {}
+        msg.fail(
+            f"The following requirements could not be validated:\n{failed_pkgs}.",
+            "Make sure your Python environment is set up correctly and you installed all requirements specified in "
+            "your project's requirements.txt.",
+            **err_kwargs,
+        )
+    if len(conflict_pkgs):
+        err_kwargs = {"exits": 1} if not dry else {}
+        failed_pkgs_str = "\n".join(failed_pkgs)
+        msg.warn(
+            f"The following depencency conflicts were detected:\n{failed_pkgs_str}",
+            "Make sure your Python environment is set up correctly. Double-check whether your project's "
+            "requirements.txt specify the correct versions for all dependencies.",
+            **err_kwargs,
+        )
+
     if subcommand in workflows:
         msg.info(f"Running workflow '{subcommand}'")
         for cmd in workflows[subcommand]:
@@ -91,6 +113,7 @@ def project_run(
                 err_kwargs = {"exits": 1} if not dry else {}
                 msg.fail(err, err_help, **err_kwargs)
         check_spacy_commit = check_bool_env_var(ENV_VARS.PROJECT_USE_GIT_VERSION)
+
         with working_dir(project_dir) as current_dir:
             msg.divider(subcommand)
             rerun = check_rerun(current_dir, cmd, check_spacy_commit=check_spacy_commit)
@@ -308,3 +331,26 @@ def get_fileinfo(project_dir: Path, paths: List[str]) -> List[Dict[str, Optional
         md5 = get_checksum(file_path) if file_path.exists() else None
         data.append({"path": path, "md5": md5})
     return data
+
+
+def _validate_requirements(projects_path: Path) -> Tuple[List[str], List[str]]:
+    """Checks whether requirements are installed and free of version conflicts.
+    projects_path (Path): Project path.
+    RETURNS (Tuple[List[str], List[str]]): (1) List of packages whose import failed, (2) packages with version
+        conflicts.
+    """
+
+    with (projects_path / "requirements.txt").open() as requirements_file:
+        failed_pkgs: List[str] = []
+        conflicting_pkgs: List[str] = []
+
+        for req in requirements_file:
+            req = req.replace("\n", "")
+            try:
+                pkg_resources.require(req)
+            except pkg_resources.DistributionNotFound:
+                failed_pkgs.append(req)
+            except pkg_resources.VersionConflict:
+                conflicting_pkgs.append(req)
+
+        return failed_pkgs, conflicting_pkgs
