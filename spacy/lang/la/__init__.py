@@ -1,5 +1,8 @@
+from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
+
 class LatinDefaults(BaseDefaults):
-    pass
+    tokenizer_exceptions = TOKENIZER_EXCEPTIONS
+
 
 class Latin(Language):
     lang = "la"
