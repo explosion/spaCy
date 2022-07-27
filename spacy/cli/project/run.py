@@ -85,11 +85,11 @@ def project_run(
         )
     if len(conflict_pkgs):
         err_kwargs = {"exits": 1} if not dry else {}
-        failed_pkgs_str = "\n".join(failed_pkgs)
+        conflict_pkgs_str = "\n".join(conflict_pkgs)
         msg.warn(
-            f"The following depencency conflicts were detected:\n{failed_pkgs_str}",
+            f"The following depencency conflicts were detected:\n{conflict_pkgs_str}",
             "Make sure your Python environment is set up correctly. Double-check whether your project's "
-            "requirements.txt specify the correct versions for all dependencies.",
+            "requirements.txt specifies the correct versions for all dependencies.",
             **err_kwargs,
         )
 
