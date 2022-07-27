@@ -54,7 +54,7 @@ steps:
     condition: eq(${{ parameters.gpu }}, true)
 
   - script: |
-      ${{ parameters.prefix }} python -m pytest --pyargs spacy -s -k"test_pretraining_tok2vec_characters"
+      ${{ parameters.prefix }} python -m pytest --pyargs spacy -s
     displayName: "Run CPU tests"
     condition: eq(${{ parameters.gpu }}, false)
 
