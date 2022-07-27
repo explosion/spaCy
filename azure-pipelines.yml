@@ -40,12 +40,12 @@ jobs:
     strategy:
       matrix:
         # We're only running one platform per Python version to speed up builds
-        Python36Linux:
-          imageName: "ubuntu-latest"
+        #Python36Linux:
+        #  imageName: "ubuntu-latest"
+        #  python.version: "3.6"
+        Python36Windows:
+          imageName: "windows-latest"
           python.version: "3.6"
-        #        Python36Windows:
-        #          imageName: "windows-latest"
-        #          python.version: "3.6"
         #        Python36Mac:
         #          imageName: "macos-latest"
         #          python.version: "3.6"
@@ -61,30 +61,30 @@ jobs:
         #        Python38Linux:
         #          imageName: "ubuntu-latest"
         #          python.version: "3.8"
-        #        Python38Windows:
-        #          imageName: "windows-latest"
-        #          python.version: "3.8"
-        Python38Mac:
-          imageName: "macos-latest"
+        Python38Windows:
+          imageName: "windows-latest"
           python.version: "3.8"
-        Python39Linux:
-          imageName: "ubuntu-latest"
+        #Python38Mac:
+        #  imageName: "macos-latest"
+        #  python.version: "3.8"
+        #Python39Linux:
+        #  imageName: "ubuntu-latest"
+        #  python.version: "3.9"
+        Python39Windows:
+          imageName: "windows-latest"
           python.version: "3.9"
-        #        Python39Windows:
-        #          imageName: "windows-latest"
-        #          python.version: "3.9"
         #        Python39Mac:
         #          imageName: "macos-latest"
         #          python.version: "3.9"
-        Python310Linux:
-          imageName: "ubuntu-latest"
-          python.version: "3.10"
+        #Python310Linux:
+        #  imageName: "ubuntu-latest"
+        #  python.version: "3.10"
         Python310Windows:
           imageName: "windows-latest"
           python.version: "3.10"
-        Python310Mac:
-          imageName: "macos-latest"
-          python.version: "3.10"
+        #Python310Mac:
+        #  imageName: "macos-latest"
+        #  python.version: "3.10"
       maxParallel: 4
     pool:
       vmImage: $(imageName)
