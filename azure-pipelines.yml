@@ -44,7 +44,7 @@ jobs:
         #  imageName: "ubuntu-latest"
         #  python.version: "3.6"
         Python36Windows:
-          imageName: "windows-latest"
+          imageName: "windows-2019"
           python.version: "3.6"
         #        Python36Mac:
         #          imageName: "macos-latest"
