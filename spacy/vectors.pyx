@@ -336,10 +336,10 @@ cdef class Vectors:
         xp = get_array_module(self.data)
         if key is not None:
             key = get_string_id(key)
-            return self.key2row.get(key, -1)
+            return self.key2row.get(int(key), -1)
         elif keys is not None:
             keys = [get_string_id(key) for key in keys]
-            rows = [self.key2row.get(key, -1) for key in keys]
+            rows = [self.key2row.get(int(key), -1) for key in keys]
             return xp.asarray(rows, dtype="i")
         else:
             row2key = {row: key for key, row in self.key2row.items()}
