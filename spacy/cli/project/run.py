@@ -74,24 +74,8 @@ def project_run(
     workflows = config.get("workflows", {})
     validate_subcommand(list(commands.keys()), list(workflows.keys()), subcommand)
 
-    failed_pkgs, conflict_pkgs = _validate_requirements(project_dir)
-    if len(failed_pkgs):
-        err_kwargs = {"exits": 1} if not dry else {}
-        msg.fail(
-            f"The following requirements could not be validated:\n{failed_pkgs}.",
-            "Make sure your Python environment is set up correctly and you installed all requirements specified in "
-            "your project's requirements.txt.",
-            **err_kwargs,
-        )
-    if len(conflict_pkgs):
-        err_kwargs = {"exits": 1} if not dry else {}
-        conflict_pkgs_str = "\n".join(conflict_pkgs)
-        msg.warn(
-            f"The following depencency conflicts were detected:\n{conflict_pkgs_str}",
-            "Make sure your Python environment is set up correctly. Double-check whether your project's "
-            "requirements.txt specifies the correct versions for all dependencies.",
-            **err_kwargs,
-        )
+    with (project_dir / "requirements.txt").open() as requirements_file:
+        _validate_requirements([req.replace("\n", "") for req in requirements_file])
 
     if subcommand in workflows:
         msg.info(f"Running workflow '{subcommand}'")
@@ -332,24 +316,36 @@ def get_fileinfo(project_dir: Path, paths: List[str]) -> List[Dict[str, Optional
     return data
 
 
-def _validate_requirements(projects_path: Path) -> Tuple[List[str], List[str]]:
+def _validate_requirements(requirements: List[str]) -> Tuple[bool, bool]:
     """Checks whether requirements are installed and free of version conflicts.
-    projects_path (Path): Project path.
-    RETURNS (Tuple[List[str], List[str]]): (1) List of packages whose import failed, (2) packages with version
-        conflicts.
+    requirements (List[str]): List of requirements.
+    RETURNS (Tuple[bool, bool]): Whether (1) any packages couldn't be imported, (2) any packages with version conflicts
+        exist.
     """
 
-    with (projects_path / "requirements.txt").open() as requirements_file:
-        failed_pkgs: List[str] = []
-        conflicting_pkgs: List[str] = []
+    failed_pkgs: List[str] = []
+    conflicting_pkgs: List[str] = []
 
-        for req in requirements_file:
-            req = req.replace("\n", "")
-            try:
-                pkg_resources.require(req)
-            except pkg_resources.DistributionNotFound:
-                failed_pkgs.append(req)
-            except pkg_resources.VersionConflict:
-                conflicting_pkgs.append(req)
+    for req in requirements:
+        try:
+            pkg_resources.require(req)
+        except pkg_resources.DistributionNotFound:
+            failed_pkgs.append(req)
+        except pkg_resources.VersionConflict:
+            conflicting_pkgs.append(req)
 
-        return failed_pkgs, conflicting_pkgs
+    if len(failed_pkgs):
+        msg.warn(
+            f"The following requirements could not be validated:\n{failed_pkgs}.",
+            "Make sure your Python environment is set up correctly and you installed all requirements specified in "
+            "your project's requirements.txt.",
+        )
+    if len(conflicting_pkgs):
+        conflict_pkgs_str = "\n".join(conflicting_pkgs)
+        msg.warn(
+            f"The following depencency conflicts were detected:\n{conflict_pkgs_str}",
+            "Make sure your Python environment is set up correctly. Ensure whether your project's "
+            "requirements.txt specifies the correct versions for all dependencies.",
+        )
+
+    return len(failed_pkgs) > 0, len(conflicting_pkgs) > 0
