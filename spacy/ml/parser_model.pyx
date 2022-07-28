@@ -347,7 +347,7 @@ cdef class precompute_hiddens:
     cdef bint _is_synchronized
     cdef public object ops
     cdef public object numpy_ops
-    cdef public object cpu_ops
+    cdef public object _cpu_ops
     cdef np.ndarray _features
     cdef np.ndarray _cached
     cdef np.ndarray bias
@@ -378,7 +378,7 @@ cdef class precompute_hiddens:
         self.nO = cached.shape[2]
         self.ops = lower_model.ops
         self.numpy_ops = NumpyOps()
-        self.cpu_ops = get_ops("cpu") if isinstance(self.ops, CupyOps) else self.ops
+        self._cpu_ops = get_ops("cpu") if isinstance(self.ops, CupyOps) else self.ops
         assert activation in (None, "relu", "maxout")
         self.activation = activation
         self._is_synchronized = False
@@ -441,7 +441,7 @@ cdef class precompute_hiddens:
         # - Output from backward on GPU
         bp_hiddens = self._bp_hiddens
 
-        cdef CBlas cblas = self.cpu_ops.cblas()
+        cdef CBlas cblas = self._cpu_ops.cblas()
 
         feat_weights = self.get_feat_weights()
         cdef int[:, ::1] ids = token_ids
