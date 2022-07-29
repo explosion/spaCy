@@ -9,7 +9,7 @@ from libc.stdlib cimport calloc, free
 import random
 
 import srsly
-from thinc.api import get_ops, set_dropout_rate, CupyOps
+from thinc.api import get_ops, set_dropout_rate, CupyOps, NumpyOps
 from thinc.extra.search cimport Beam
 import numpy.random
 import numpy
@@ -28,6 +28,9 @@ from ._parser_internals import _beam_utils
 from ..training import validate_examples, validate_get_examples
 from ..errors import Errors, Warnings
 from .. import util
+
+
+NUMPY_OPS = NumpyOps()
 
 
 cdef class Parser(TrainablePipe):

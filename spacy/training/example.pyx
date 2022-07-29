@@ -249,9 +249,9 @@ cdef class Example:
         # Fetch all aligned gold token incides.
         if c2g_single_toks.shape == cand_to_gold.lengths.shape:
             # This the most likely case.
-            gold_i = cand_to_gold[:].squeeze()
+            gold_i = cand_to_gold[:]
         else:
-            gold_i = numpy.vectorize(lambda x: cand_to_gold[int(x)][0])(c2g_single_toks).squeeze()
+            gold_i = numpy.vectorize(lambda x: cand_to_gold[int(x)][0], otypes='i')(c2g_single_toks)
 
         # Fetch indices of all gold heads for the aligned gold tokens.
         heads = numpy.asarray(heads, dtype='i')
@@ -261,7 +261,7 @@ cdef class Example:
         # gold tokens (and are aligned to a single candidate token).
         g2c_len_heads = gold_to_cand.lengths[gold_head_i]
         g2c_len_heads = numpy.where(g2c_len_heads == 1)[0]
-        g2c_i = numpy.vectorize(lambda x: gold_to_cand[int(x)][0])(gold_head_i[g2c_len_heads]).squeeze()
+        g2c_i = numpy.vectorize(lambda x: gold_to_cand[int(x)][0], otypes='i')(gold_head_i[g2c_len_heads]).squeeze()
 
         # Update head/dep alignments with the above.
         aligned_heads = numpy.full((self.x.length), None)
