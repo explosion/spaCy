@@ -1608,22 +1608,25 @@ cdef class Doc:
                 Doc.set_extension(attr)
             self._.set(attr, doc_json["_"][attr])
 
-        for attr in doc_json.get("user_data", {}):
-            start_index = doc_json["user_data"][attr]["start_index"]
-            end_index = doc_json["user_data"][attr]["end_index"]
-            value = doc_json["user_data"][attr]["attribute_value"]
+        if doc_json.get("user_data", {}):
+            for token_attr in doc_json["user_data"]["tokens"]:
+                token_start = doc_json["user_data"]["tokens"][token_attr]["token_start"]
+                value = doc_json["user_data"]["tokens"][token_attr]["value"]
 
-            # Token-level attributes
-            if start_index is not None and end_index is None:
-                if not Token.has_extension(attr):
-                    Token.set_extension(attr)
-                self[start_index]._.set(attr, value)
+                if not Token.has_extension(token_attr):
+                    Token.set_extension(token_attr)
+                self[token_start]._.set(token_attr, value)
 
-            # Span-level attributes
-            elif start_index is not None and end_index is not None:
+            for span_attr in doc_json["user_data"]["spans"]:
+                token_start = doc_json["user_data"]["spans"][span_attr]["token_start"]
+                token_end = doc_json["user_data"]["spans"][span_attr]["token_end"]
+                value = doc_json["user_data"]["spans"][span_attr]["value"]
+
                 if not Span.has_extension(attr):
                     Span.set_extension(attr)
-                self[start_index:end_index]._.set(attr, value)
+                self[token_start:token_end]._.set(attr, value)
+
+       
 
         return self
 
@@ -1670,28 +1673,40 @@ cdef class Doc:
                     data["spans"][span_group].append(span_data)
 
         if underscore:
-            user_keys = []
+            doc_keys = set()
+            user_keys = set()
             if self.user_data:
-                data["user_data"] = {}
+                data["user_data"] = {"spans":{}, "tokens":{}}
                 for data_key in self.user_data:
-                    attr = data_key[1]
-                    if attr not in data["user_data"] and attr in underscore and data_key[2] is not None:
-                        value = self.user_data[data_key]
-                        if not srsly.is_json_serializable(value):
-                            raise ValueError(Errors.E107.format(attr=attr, value=repr(value)))
-                        data["user_data"][attr] = {"start_index": data_key[2], "end_index": data_key[3], "attribute_value":value}
-                        user_keys.append(attr)
+                    if type(data_key) == tuple and data_key[0] == "._.":
+                        _, attr, start, end = data_key
+                        if attr in underscore:
+                            value = self.user_data[data_key]
+                            if not srsly.is_json_serializable(value):
+                                raise ValueError(Errors.E107.format(attr=attr, value=repr(value)))
+                            # Check if doc attribute
+                            if start is None:
+                                doc_keys.add(attr)
+                                continue
+                            # Check if token attribute
+                            elif end is None:
+                                if attr not in data["user_data"]["tokens"]:
+                                    data["user_data"]["tokens"][attr] = {"token_start": start, "value":value}
+                            # Else span attribute
+                            else:
+                                if attr not in data["user_data"]["spans"]:
+                                    data["user_data"]["spans"][attr] = {"token_start": start, "token_end": end, "value":value}
+                            user_keys.add(attr)
 
             data["_"] = {}
             for attr in underscore:
-                if attr in user_keys:
-                    continue
-                if not self.has_extension(attr):
+                if self.has_extension(attr):
+                    value = self._.get(attr)
+                    if not srsly.is_json_serializable(value):
+                        raise ValueError(Errors.E107.format(attr=attr, value=repr(value)))
+                    data["_"][attr] = value
+                elif attr not in user_keys:
                     raise ValueError(Errors.E106.format(attr=attr, opts=underscore))
-                value = self._.get(attr)
-                if not srsly.is_json_serializable(value):
-                    raise ValueError(Errors.E107.format(attr=attr, value=repr(value)))
-                data["_"][attr] = value
 
         return data
 

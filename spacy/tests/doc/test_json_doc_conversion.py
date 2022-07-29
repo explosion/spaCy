@@ -124,9 +124,9 @@ def test_doc_to_json_with_token_span_attributes(doc):
     if not Doc.has_extension("json_test2"):
         Doc.set_extension("json_test2", default=False)
     if not Token.has_extension("token_test"):
-        Token.set_extension("token_test", default=False, force=True)
+        Token.set_extension("token_test", default=False)
     if not Span.has_extension("span_test"):
-        Span.set_extension("span_test", default=False, force=True)
+        Span.set_extension("span_test", default=False)
 
     doc._.json_test1 = "hello world"
     doc._.json_test2 = [1, 2, 3]
@@ -141,25 +141,73 @@ def test_doc_to_json_with_token_span_attributes(doc):
     assert json_doc["_"]["json_test1"] == "hello world"
     assert json_doc["_"]["json_test2"] == [1, 2, 3]
     assert "user_data" in json_doc
-    assert json_doc["user_data"]["token_test"]["attribute_value"] == 117
-    assert json_doc["user_data"]["span_test"]["attribute_value"] == "span_attribute"
+    assert json_doc["user_data"]["tokens"]["token_test"]["value"] == 117
+    assert json_doc["user_data"]["spans"]["span_test"]["value"] == "span_attribute"
+    assert not schemas.validate(schemas.DocJSONSchema, json_doc)
+    assert srsly.json_loads(srsly.json_dumps(json_doc)) == json_doc
+
+
+def test_doc_to_json_with_custom_user_data(doc):
+    if not Doc.has_extension("json_test"):
+        Doc.set_extension("json_test", default=False)
+    if not Token.has_extension("token_test"):
+        Token.set_extension("token_test", default=False)
+    if not Span.has_extension("span_test"):
+        Span.set_extension("span_test", default=False)
+
+    doc._.json_test = "hello world"
+    doc[0:1]._.span_test = "span_attribute"
+    doc[0]._.token_test = 117
+    json_doc = doc.to_json(underscore=["json_test", "token_test", "span_test"])
+    doc.user_data["user_data_test"] = 10
+    doc.user_data[("user_data_test2", True)] = 10
+
+    assert "_" in json_doc
+    assert json_doc["_"]["json_test"] == "hello world"
+    assert "user_data" in json_doc
+    assert json_doc["user_data"]["tokens"]["token_test"]["value"] == 117
+    assert json_doc["user_data"]["spans"]["span_test"]["value"] == "span_attribute"
+    assert not schemas.validate(schemas.DocJSONSchema, json_doc)
+    assert srsly.json_loads(srsly.json_dumps(json_doc)) == json_doc
+
+
+def test_doc_to_json_with_token_span_same_identifier(doc):
+    if not Doc.has_extension("my_ext"):
+        Doc.set_extension("my_ext", default=False)
+    if not Doc.has_extension("my_ext"):
+        Doc.set_extension("my_ext", default=False)
+    if not Token.has_extension("my_ext"):
+        Token.set_extension("my_ext", default=False)
+    if not Span.has_extension("my_ext"):
+        Span.set_extension("my_ext", default=False)
+
+    doc._.my_ext = "hello world"
+    doc[0:1]._.my_ext = "span_attribute"
+    doc[0]._.my_ext = 117
+    json_doc = doc.to_json(underscore=["my_ext"])
+
+    assert "_" in json_doc
+    assert json_doc["_"]["my_ext"] == "hello world"
+    assert "user_data" in json_doc
+    assert json_doc["user_data"]["tokens"]["my_ext"]["value"] == 117
+    assert json_doc["user_data"]["spans"]["my_ext"]["value"] == "span_attribute"
     assert not schemas.validate(schemas.DocJSONSchema, json_doc)
     assert srsly.json_loads(srsly.json_dumps(json_doc)) == json_doc
 
 
 def test_doc_to_json_with_token_attributes_missing(doc):
     if not Token.has_extension("token_test"):
-        Token.set_extension("token_test", default=False, force=True)
+        Token.set_extension("token_test", default=False)
     if not Span.has_extension("span_test"):
-        Span.set_extension("span_test", default=False, force=True)
+        Span.set_extension("span_test", default=False)
 
     doc[0:1]._.span_test = "span_attribute"
     doc[0]._.token_test = 117
     json_doc = doc.to_json(underscore=["span_test"])
 
     assert "user_data" in json_doc
-    assert json_doc["user_data"]["span_test"]["attribute_value"] == "span_attribute"
-    assert "token_test" not in json_doc["user_data"]
+    assert json_doc["user_data"]["spans"]["span_test"]["value"] == "span_attribute"
+    assert "token_test" not in json_doc["user_data"]["tokens"]
     assert not schemas.validate(schemas.DocJSONSchema, json_doc)
 
 
@@ -244,9 +292,9 @@ def test_json_to_doc_with_token_span_attributes(doc):
     if not Doc.has_extension("json_test2"):
         Doc.set_extension("json_test2", default=False)
     if not Token.has_extension("token_test"):
-        Token.set_extension("token_test", default=False, force=True)
+        Token.set_extension("token_test", default=False)
     if not Span.has_extension("span_test"):
-        Span.set_extension("span_test", default=False, force=True)
+        Span.set_extension("span_test", default=False)
 
     doc._.json_test1 = "hello world"
     doc._.json_test2 = [1, 2, 3]
