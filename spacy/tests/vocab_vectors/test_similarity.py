@@ -1,6 +1,7 @@
 import pytest
 import numpy
 from spacy.tokens import Doc
+from spacy.vocab import Vocab
 
 from ..util import get_cosine, add_vecs_to_vocab
 
@@ -71,19 +72,17 @@ def test_vectors_similarity_DD(vocab, vectors):
 def test_vectors_similarity_TD(vocab, vectors):
     [(word1, vec1), (word2, vec2)] = vectors
     doc = Doc(vocab, words=[word1, word2])
-    with pytest.warns(UserWarning):
-        assert isinstance(doc.similarity(doc[0]), float)
-        assert isinstance(doc[0].similarity(doc), float)
-        assert doc.similarity(doc[0]) == doc[0].similarity(doc)
+    assert isinstance(doc.similarity(doc[0]), float)
+    assert isinstance(doc[0].similarity(doc), float)
+    assert doc.similarity(doc[0]) == doc[0].similarity(doc)
 
 
 def test_vectors_similarity_TS(vocab, vectors):
     [(word1, vec1), (word2, vec2)] = vectors
     doc = Doc(vocab, words=[word1, word2])
-    with pytest.warns(UserWarning):
-        assert isinstance(doc[:2].similarity(doc[0]), float)
-        assert isinstance(doc[0].similarity(doc[-2]), float)
-        assert doc[:2].similarity(doc[0]) == doc[0].similarity(doc[:2])
+    assert isinstance(doc[:2].similarity(doc[0]), float)
+    assert isinstance(doc[0].similarity(doc[:2]), float)
+    assert doc[:2].similarity(doc[0]) == doc[0].similarity(doc[:2])
 
 
 def test_vectors_similarity_DS(vocab, vectors):
@@ -91,3 +90,21 @@ def test_vectors_similarity_DS(vocab, vectors):
     doc = Doc(vocab, words=[word1, word2])
     assert isinstance(doc.similarity(doc[:2]), float)
     assert doc.similarity(doc[:2]) == doc[:2].similarity(doc)
+
+
+def test_vectors_similarity_no_vectors():
+    vocab = Vocab()
+    doc1 = Doc(vocab, words=["a", "b"])
+    doc2 = Doc(vocab, words=["c", "d", "e"])
+    with pytest.warns(UserWarning):
+        doc1.similarity(doc2)
+    with pytest.warns(UserWarning):
+        doc1.similarity(doc2[1])
+    with pytest.warns(UserWarning):
+        doc1.similarity(doc2[:2])
+    with pytest.warns(UserWarning):
+        doc2.similarity(doc1)
+    with pytest.warns(UserWarning):
+        doc2[1].similarity(doc1)
+    with pytest.warns(UserWarning):
+        doc2[:2].similarity(doc1)

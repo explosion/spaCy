@@ -271,7 +271,8 @@ except:  # noqa: E722
 
 ### Python conventions
 
-All Python code must be written **compatible with Python 3.6+**.
+All Python code must be written **compatible with Python 3.6+**. More detailed
+code conventions can be found in the [developer docs](https://github.com/explosion/spaCy/blob/master/extra/DEVELOPER_DOCS/Code%20Conventions.md).
 
 #### I/O and handling paths
 
