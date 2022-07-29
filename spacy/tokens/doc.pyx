@@ -1622,9 +1622,9 @@ cdef class Doc:
                 token_end = doc_json["user_data"]["spans"][span_attr]["token_end"]
                 value = doc_json["user_data"]["spans"][span_attr]["value"]
 
-                if not Span.has_extension(attr):
-                    Span.set_extension(attr)
-                self[token_start:token_end]._.set(attr, value)
+                if not Span.has_extension(span_attr):
+                    Span.set_extension(span_attr)
+                self[token_start:token_end]._.set(span_attr, value)
 
        
 
