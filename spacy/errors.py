@@ -209,6 +209,9 @@ class Warnings(metaclass=ErrorsWithCodes):
             "Only the last span group will be loaded under "
             "Doc.spans['{group_name}']. Skipping span group with values: "
             "{group_values}")
+    W121 = ("Attempting to trace non-existent method '{method}' in pipe '{pipe}'")
+    W122 = ("Couldn't trace method '{method}' in pipe '{pipe}'. This can happen if the pipe class "
+            "is a Cython extension type.")
     W400 = ("Activation '{activation}' is unknown for pipe '{pipe_name}'")
 
 
@@ -935,6 +938,8 @@ class Errors(metaclass=ErrorsWithCodes):
     E1041 = ("Expected a string, Doc, or bytes as input, but got: {type}")
     E1042 = ("Function was called with `{arg1}`={arg1_values} and "
              "`{arg2}`={arg2_values} but these arguments are conflicting.")
+    E1043 = ("Expected None or a value in range [{range_start}, {range_end}] for entity linker threshold, but got "
+             "{value}.")
     E1400 = ("store_activations attribute must be set to List[str] or bool")
 
 

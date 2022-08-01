@@ -9,7 +9,7 @@ from libc.stdlib cimport calloc, free
 import random
 
 import srsly
-from thinc.api import get_ops, set_dropout_rate, CupyOps
+from thinc.api import get_ops, set_dropout_rate, CupyOps, NumpyOps
 from thinc.extra.search cimport Beam
 import numpy.random
 import numpy
@@ -28,6 +28,9 @@ from ._parser_internals import _beam_utils
 from ..training import validate_examples, validate_get_examples
 from ..errors import Errors, Warnings
 from .. import util
+
+
+NUMPY_OPS = NumpyOps()
 
 
 cdef class Parser(TrainablePipe):
@@ -120,6 +123,7 @@ cdef class Parser(TrainablePipe):
 
         self._rehearsal_model = None
         self.scorer = scorer
+        self._cpu_ops = get_ops("cpu") if isinstance(self.model.ops, CupyOps) else self.model.ops
 
     def __getnewargs_ex__(self):
         """This allows pickling the Parser and its keyword-only init arguments"""
@@ -259,12 +263,7 @@ cdef class Parser(TrainablePipe):
     def greedy_parse(self, docs, drop=0.):
         cdef vector[StateC*] states
         cdef StateClass state
-        ops = self.model.ops
-        cdef CBlas cblas
-        if isinstance(ops, CupyOps):
-            cblas = get_ops("cpu").cblas()
-        else:
-            cblas = ops.cblas()
+        cdef CBlas cblas = self._cpu_ops.cblas()
         self._ensure_labels_are_added(docs)
         set_dropout_rate(self.model, drop)
         batch = self.moves.init_batch(docs)

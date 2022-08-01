@@ -61,6 +61,7 @@ DEFAULT_NEL_MODEL = Config().from_str(default_model_config)["model"]
         "overwrite": True,
         "scorer": {"@scorers": "spacy.entity_linker_scorer.v1"},
         "use_gold_ents": True,
+        "threshold": None,
         "store_activations": False,
     },
     default_score_weights={
@@ -83,6 +84,7 @@ def make_entity_linker(
     overwrite: bool,
     scorer: Optional[Callable],
     use_gold_ents: bool,
+    threshold: Optional[float] = None,
     store_activations: Union[bool, List[str]],
 ):
     """Construct an EntityLinker component.
@@ -98,6 +100,10 @@ def make_entity_linker(
     get_candidates (Callable[[KnowledgeBase, "Span"], Iterable[Candidate]]): Function that
         produces a list of candidates, given a certain knowledge base and a textual mention.
     scorer (Optional[Callable]): The scoring method.
+    use_gold_ents (bool): Whether to copy entities from gold docs or not. If false, another
+        component must provide entity annotations.
+    threshold (Optional[float]): Confidence threshold for entity predictions. If confidence is below the threshold,
+        prediction is discarded. If None, predictions are not filtered by any threshold.
     store_activations (Union[bool, List[str]]): Model activations to store in
         Doc when annotating. supported activations are: "ents" and "scores".
     """
@@ -130,6 +136,7 @@ def make_entity_linker(
         overwrite=overwrite,
         scorer=scorer,
         use_gold_ents=use_gold_ents,
+        threshold=threshold,
         store_activations=store_activations,
     )
 
@@ -166,6 +173,7 @@ class EntityLinker(TrainablePipe):
         overwrite: bool = BACKWARD_OVERWRITE,
         scorer: Optional[Callable] = entity_linker_score,
         use_gold_ents: bool,
+        threshold: Optional[float] = None,
         store_activations=False,
     ) -> None:
         """Initialize an entity linker.
@@ -185,9 +193,20 @@ class EntityLinker(TrainablePipe):
             Scorer.score_links.
         use_gold_ents (bool): Whether to copy entities from gold docs or not. If false, another
             component must provide entity annotations.
-
+        threshold (Optional[float]): Confidence threshold for entity predictions. If confidence is below the
+            threshold, prediction is discarded. If None, predictions are not filtered by any threshold.
         DOCS: https://spacy.io/api/entitylinker#init
         """
+
+        if threshold is not None and not (0 <= threshold <= 1):
+            raise ValueError(
+                Errors.E1043.format(
+                    range_start=0,
+                    range_end=1,
+                    value=threshold,
+                )
+            )
+
         self.vocab = vocab
         self.model = model
         self.name = name
@@ -203,6 +222,7 @@ class EntityLinker(TrainablePipe):
         self.kb = empty_kb(entity_vector_length)(self.vocab)
         self.scorer = scorer
         self.use_gold_ents = use_gold_ents
+        self.threshold = threshold
         self.store_activations = store_activations
 
     def set_kb(self, kb_loader: Callable[[Vocab], KnowledgeBase]):
@@ -450,10 +470,12 @@ class EntityLinker(TrainablePipe):
                         self._add_activations(
                             doc_scores, doc_scores_lens, doc_ents, [0.0], [0]
                         )
-                    elif len(candidates) == 1:
+                    elif len(candidates) == 1 and self.threshold is None:
                         # shortcut for efficiency reasons: take the 1 candidate
-                        # TODO: thresholding
                         final_kb_ids.append(candidates[0].entity_)
+                        self._add_activations(
+                            doc_scores, doc_scores_lens, doc_ents, [1.0], [candidates[0].entity_]
+                        )
                     else:
                         random.shuffle(candidates)
                         # set all prior probabilities to 0 if incl_prior=False
@@ -481,7 +503,11 @@ class EntityLinker(TrainablePipe):
                             if sims.shape != prior_probs.shape:
                                 raise ValueError(Errors.E161)
                             scores = prior_probs + sims - (prior_probs * sims)
-                        # TODO: thresholding
+                        final_kb_ids.append(
+                            candidates[scores.argmax().item()].entity_
+                            if self.threshold is None or scores.max() >= self.threshold
+                            else EntityLinker.NIL
+                        )
                         self._add_activations(
                             doc_scores,
                             doc_scores_lens,
@@ -489,9 +515,6 @@ class EntityLinker(TrainablePipe):
                             scores,
                             [c.entity for c in candidates],
                         )
-                        best_index = scores.argmax().item()
-                        best_candidate = candidates[best_index]
-                        final_kb_ids.append(best_candidate.entity_)
             self._add_doc_activations(
                 docs_scores, docs_ents, doc_scores, doc_scores_lens, doc_ents
             )
