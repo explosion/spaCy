@@ -63,6 +63,12 @@ steps:
     displayName: "Run GPU tests"
     condition: eq(${{ parameters.gpu }}, true)
 
+  - script: |
+      ${{ parameters.prefix }} python -m pip install --pre thinc-apple-ops
+      ${{ parameters.prefix }} python -m pytest --pyargs spacy
+    displayName: "Run CPU tests with thinc-apple-ops"
+    condition: and(startsWith(variables['imageName'], 'macos'), eq(variables['python.version'], '3.10'))
+    
     #  - script: |
     #      python -m spacy download ca_core_news_sm
     #      python -m spacy download ca_core_news_md
@@ -109,8 +115,4 @@ steps:
     #    displayName: 'Test website/meta/universe.json'
     #    condition: eq(variables['python_version'], '3.8')
     #
-    #  - script: |
-    #      ${{ parameters.prefix }} python -m pip install --pre thinc-apple-ops
-    #      ${{ parameters.prefix }} python -m pytest --pyargs spacy
-    #    displayName: "Run CPU tests with thinc-apple-ops"
-    #    condition: and(startsWith(variables['imageName'], 'macos'), eq(variables['python.version'], '3.10'))
+
