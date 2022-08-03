@@ -76,6 +76,10 @@ def test_tok2vec_batch_sizes(batch_size, width, embed_size):
         ("spacy.Tok2Vec.v2", "spacy.MaxoutWindowEncoder.v2", {"window_size": 1, "maxout_pieces": 3, "depth": 2}),
         ("spacy.Tok2Vec.v1", "spacy.MishWindowEncoder.v1", {"window_size": 1, "depth": 6}),
         ("spacy.Tok2Vec.v2", "spacy.MishWindowEncoder.v2", {"window_size": 1, "depth": 6}),
+        ("spacy.Tok2Vec.v2", "spacy.WindowEncoder.v1", {"layer": "gelu", "window_size": 1, "depth": 6}),
+        ("spacy.Tok2Vec.v2", "spacy.WindowEncoder.v1", {"layer": "mish", "window_size": 1, "depth": 6}),
+        ("spacy.Tok2Vec.v2", "spacy.WindowEncoder.v1", {"layer": "relu", "window_size": 1, "depth": 6}),
+        ("spacy.Tok2Vec.v2", "spacy.WindowEncoder.v1", {"layer": "swish", "window_size": 1, "depth": 6}),
     ],
     # fmt: on
 )
