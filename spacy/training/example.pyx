@@ -361,7 +361,7 @@ cdef class Example:
             "doc_annotation": {
                 "cats": dict(self.reference.cats),
                 "entities": doc_to_biluo_tags(self.reference),
-                "spans": dict(self.reference.spans),
+                "spans": self._spans_to_dict(),
                 "links": self._links_to_dict()
             },
             "token_annotation": {
@@ -376,6 +376,18 @@ cdef class Example:
                 "SENT_START": [int(bool(t.is_sent_start)) for t in self.reference]
             }
         }
+
+    def _spans_to_dict(self):
+        span_dict = {}
+        for key in self.reference.spans:
+            span_tuples = []
+            for span in self.reference.spans[key]: 
+                span_tuple = (span.start_char, span.end_char, span.label, span.kb_id)
+                span_tuples.append(span_tuple)
+            span_dict[key] = span_tuples
+
+        return span_dict
+
 
     def _links_to_dict(self):
         links = {}

@@ -445,7 +445,6 @@ def test_Example_aligned_whitespace(en_vocab):
         }
     ],
 )
-
 @pytest.mark.issue("11260")
 def test_issue11260(annots):
     vocab = Vocab()
@@ -456,9 +455,21 @@ def test_issue11260(annots):
 
     output_dict = example.to_dict()
     assert "spans" in output_dict["doc_annotation"]
-    assert len(output_dict["doc_annotation"]["spans"]["cities"]) == 1
-    assert len(output_dict["doc_annotation"]["spans"]["people"]) == 1
-    assert output_dict["doc_annotation"]["spans"]["people"][0].text == "I"
-    assert output_dict["doc_annotation"]["spans"]["cities"][0].text == "New York"
+    assert output_dict["doc_annotation"]["spans"]["cities"] == [(7, 15, "LOC")]
+    assert output_dict["doc_annotation"]["spans"]["people"] == [(0, 1, "PERSON")]
 
+    output_example = Example.from_dict(predicted, output_dict)
 
+    assert len(list(output_example.reference.spans["cities"])) == len(
+        list(example.reference.spans["cities"])
+    )
+    assert len(list(output_example.reference.spans["people"])) == len(
+        list(example.reference.spans["people"])
+    )
+    for span in example.reference.spans["cities"]:
+        assert span.label_ == "LOC"
+        assert span.text == "New York"
+    for span in example.reference.spans["people"]:
+        assert span.label_ == "PERSON"
+        assert span.text == "I"
+        assert span.start == 0
