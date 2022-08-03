@@ -175,7 +175,7 @@ applied to the `Doc` in order. Both [`__call__`](/api/transformer#call) and
 
 Initialize the component for training and return an
 [`Optimizer`](https://thinc.ai/docs/api-optimizers). `get_examples` should be a
-function that returns an iterable of [`Example`](/api/example) objects. The data
+function that returns an iterable of [`Example`](/api/example) objects. **At least one example should be supplied.** The data
 examples are used to **initialize the model** of the component and can either be
 the full training data or a representative sample. Initialization includes
 validating the network,
@@ -187,12 +187,12 @@ by [`Language.initialize`](/api/language#initialize).
 >
 > ```python
 > trf = nlp.add_pipe("transformer")
-> trf.initialize(lambda: iter([]), nlp=nlp)
+> trf.initialize(lambda: examples, nlp=nlp)
 > ```
 
 | Name           | Description                                                                                                                           |
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `get_examples` | Function that returns gold-standard annotations in the form of [`Example`](/api/example) objects. ~~Callable[[], Iterable[Example]]~~ |
+| `get_examples` | Function that returns gold-standard annotations in the form of [`Example`](/api/example) objects. Must contain at least one `Example`. ~~Callable[[], Iterable[Example]]~~ |
 | _keyword-only_ |                                                                                                                                       |
 | `nlp`          | The current `nlp` object. Defaults to `None`. ~~Optional[Language]~~                                                                  |
 
