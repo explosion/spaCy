@@ -1,7 +1,7 @@
 # This file is present to provide a prior version of the EntityLinker component
 # for backwards compatability. For details see #9669.
 
-from typing import Optional, Iterable, Callable, Dict, Union, List, Any
+from typing import Optional, Iterable, Callable, Dict, Union, List, Any, Iterator
 from thinc.types import Floats2d
 from pathlib import Path
 from itertools import islice
@@ -11,7 +11,7 @@ from thinc.api import CosineDistance, Model, Optimizer
 from thinc.api import set_dropout_rate
 import warnings
 
-from ...kb import KnowledgeBase, Candidate
+from ...kb_base import BaseKnowledgeBase, Candidate
 from ...ml import empty_kb
 from ...tokens import Doc, Span
 from ..pipe import deserialize_config
@@ -51,7 +51,7 @@ class EntityLinker_v1(TrainablePipe):
         incl_prior: bool,
         incl_context: bool,
         entity_vector_length: int,
-        get_candidates: Callable[[KnowledgeBase, Span], Iterable[Candidate]],
+        get_candidates: Callable[[BaseKnowledgeBase, Span], Iterator[Candidate]],
         overwrite: bool = BACKWARD_OVERWRITE,
         scorer: Optional[Callable] = entity_linker_score,
     ) -> None:
@@ -68,8 +68,7 @@ class EntityLinker_v1(TrainablePipe):
         entity_vector_length (int): Size of encoding vectors in the KB.
         get_candidates (Callable[[KnowledgeBase, Span], Iterable[Candidate]]): Function that
             produces a list of candidates, given a certain knowledge base and a textual mention.
-        scorer (Optional[Callable]): The scoring method. Defaults to
-            Scorer.score_links.
+        scorer (Optional[Callable]): The scoring method. Defaults to Scorer.score_links.
         DOCS: https://spacy.io/api/entitylinker#init
         """
         self.vocab = vocab
@@ -87,7 +86,7 @@ class EntityLinker_v1(TrainablePipe):
         self.kb = empty_kb(entity_vector_length)(self.vocab)
         self.scorer = scorer
 
-    def set_kb(self, kb_loader: Callable[[Vocab], KnowledgeBase]):
+    def set_kb(self, kb_loader: Callable[[Vocab], BaseKnowledgeBase]):
         """Define the KB of this pipe by providing a function that will
         create it using this object's vocab."""
         if not callable(kb_loader):
@@ -107,7 +106,7 @@ class EntityLinker_v1(TrainablePipe):
         get_examples: Callable[[], Iterable[Example]],
         *,
         nlp: Optional[Language] = None,
-        kb_loader: Optional[Callable[[Vocab], KnowledgeBase]] = None,
+        kb_loader: Optional[Callable[[Vocab], BaseKnowledgeBase]] = None,
     ):
         """Initialize the pipe for training, using a representative set
         of data examples.

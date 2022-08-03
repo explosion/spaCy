@@ -1,11 +1,17 @@
 from pathlib import Path
-from typing import Optional, Callable, Iterable, List, Tuple
+from typing import Optional, Callable, Iterable, List, Tuple, Iterator, Union, Type
 from thinc.types import Floats2d
-from thinc.api import chain, clone, list2ragged, reduce_mean, residual
-from thinc.api import Model, Maxout, Linear, noop, tuplify, Ragged
+from thinc.api import chain, list2ragged, reduce_mean, residual
+from thinc.api import Model, Maxout, Linear, tuplify, Ragged
 
 from ...util import registry
-from ...kb import KnowledgeBase, Candidate, get_candidates
+from ...kb_base import (
+    BaseKnowledgeBase,
+    Candidate,
+    get_candidates,
+    get_candidates_batch,
+)
+from ...kb import KnowledgeBase
 from ...vocab import Vocab
 from ...tokens import Span, Doc
 from ..extract_spans import extract_spans
@@ -77,10 +83,18 @@ def span_maker_forward(model, docs: List[Doc], is_train) -> Tuple[Ragged, Callab
     return outputs, lambda x: []
 
 
+@registry.misc("spacy.KBType.v1")
+def get_kb_type() -> Type[BaseKnowledgeBase]:
+    """Returns KB type."""
+    return KnowledgeBase
+
+
 @registry.misc("spacy.KBFromFile.v1")
-def load_kb(kb_path: Path) -> Callable[[Vocab], KnowledgeBase]:
-    def kb_from_file(vocab):
-        kb = KnowledgeBase(vocab, entity_vector_length=1)
+def load_kb(
+    kb_path: Path,
+) -> Callable[[Vocab, Type[BaseKnowledgeBase]], BaseKnowledgeBase]:
+    def kb_from_file(vocab: Vocab, kb_type: Type[BaseKnowledgeBase] = KnowledgeBase):
+        kb = kb_type(vocab, entity_vector_length=1)
         kb.from_disk(kb_path)
         return kb
 
@@ -88,13 +102,27 @@ def load_kb(kb_path: Path) -> Callable[[Vocab], KnowledgeBase]:
 
 
 @registry.misc("spacy.EmptyKB.v1")
-def empty_kb(entity_vector_length: int) -> Callable[[Vocab], KnowledgeBase]:
-    def empty_kb_factory(vocab):
-        return KnowledgeBase(vocab=vocab, entity_vector_length=entity_vector_length)
+def empty_kb(
+    entity_vector_length: int,
+) -> Callable[[Vocab, Type[BaseKnowledgeBase]], BaseKnowledgeBase]:
+    def empty_kb_factory(
+        vocab: Vocab, kb_type: Type[BaseKnowledgeBase] = KnowledgeBase
+    ):
+        # Use in-memory, lexically matching KB as default.
+        return kb_type(vocab=vocab, entity_vector_length=entity_vector_length)
 
     return empty_kb_factory
 
 
 @registry.misc("spacy.CandidateGenerator.v1")
-def create_candidates() -> Callable[[KnowledgeBase, Span], Iterable[Candidate]]:
+def create_candidates() -> Callable[
+    [BaseKnowledgeBase, Union[Span, str]], Iterator[Candidate]
+]:
     return get_candidates
+
+
+@registry.misc("spacy.CandidateBatchGenerator.v1")
+def create_candidates_batch() -> Callable[
+    [BaseKnowledgeBase, Iterable[Union[Span, str]]], Iterable[Iterator[Candidate]]
+]:
+    return get_candidates_batch
