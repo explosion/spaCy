@@ -20,4 +20,3 @@ class Slovenian(Language):
 
 
 __all__ = ["Slovenian"]
-

@@ -4,7 +4,7 @@ import unicodedata
 
 
 _num_words = set(
-	"""
+    """
 	nula ničla nič ena dva tri štiri pet šest sedem osem
 	devet deset enajst dvanajst trinajst štirinajst petnajst
 	šestnajst sedemnajst osemnajst devetnajst dvajset trideset štirideset
@@ -23,7 +23,7 @@ _num_words = set(
 )
 
 _ordinal_words = set(
-	"""
+    """
 	prvi drugi tretji četrti peti šesti sedmi osmi
 	deveti deseti enajsti dvanajsti trinajsti štirinajsti
 	petnajsti šestnajsti sedemnajsti osemnajsti devetnajsti
@@ -97,7 +97,7 @@ _ordinal_words = set(
 )
 
 _currency_words = set(
-	"""
+    """
 	evro evra evru evrom evrov evroma evrih evrom evre evri evr eur
 	cent centa centu cenom centov centoma centih centom cente centi
 	dolar dolarja dolarji dolarju dolarjem dolarjev dolarjema dolarjih dolarje usd
@@ -115,30 +115,31 @@ _currency_words = set(
 
 
 def like_num(text):
-	if text.startswith(("+", "-", "±", "~")):
-	    text = text[1:]
-	text = text.replace(",", "").replace(".", "")
-	if text.isdigit():
-	    return True
-	if text.count("/") == 1:
-	    num, denom = text.split("/")
-	    if num.isdigit() and denom.isdigit():
-	        return True
-	text_lower = text.lower()
-	if text_lower in _num_words:
-	    return True
-	if text_lower in _ordinal_words:
-	    return True
-	return False
+    if text.startswith(("+", "-", "±", "~")):
+        text = text[1:]
+    text = text.replace(",", "").replace(".", "")
+    if text.isdigit():
+        return True
+    if text.count("/") == 1:
+        num, denom = text.split("/")
+        if num.isdigit() and denom.isdigit():
+            return True
+    text_lower = text.lower()
+    if text_lower in _num_words:
+        return True
+    if text_lower in _ordinal_words:
+        return True
+    return False
+
 
 def is_currency(text):
-	text_lower = text.lower()
-	if text in _currency_words:
-	    return True
-	for char in text:
-	    if unicodedata.category(char) != "Sc":
-	        return False
-	return True
+    text_lower = text.lower()
+    if text in _currency_words:
+        return True
+    for char in text:
+        if unicodedata.category(char) != "Sc":
+            return False
+    return True
 
 
 LEX_ATTRS = {LIKE_NUM: like_num, IS_CURRENCY: is_currency}

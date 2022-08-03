@@ -9,10 +9,26 @@ _other_exc = {
     "t.i.": [{ORTH: "t.", NORM: "tako"}, {ORTH: "i.", NORM: "imenovano"}],
     "t.j.": [{ORTH: "t.", NORM: "to"}, {ORTH: "j.", NORM: "je"}],
     "T.j.": [{ORTH: "T.", NORM: "to"}, {ORTH: "j.", NORM: "je"}],
-    "d.o.o.": [{ORTH: "d.", NORM: "družba"}, {ORTH: "o.", NORM: "omejeno"}, {ORTH: "o.", NORM: "odgovornostjo"}],
-    "D.O.O.": [{ORTH: "D.", NORM: "družba"}, {ORTH: "O.", NORM: "omejeno"}, {ORTH: "O.", NORM: "odgovornostjo"}],
-    "d.n.o.": [{ORTH: "d.", NORM: "družba"}, {ORTH: "n.", NORM: "neomejeno"}, {ORTH: "o.", NORM: "odgovornostjo"}],
-    "D.N.O.": [{ORTH: "D.", NORM: "družba"}, {ORTH: "N.", NORM: "neomejeno"}, {ORTH: "O.", NORM: "odgovornostjo"}],
+    "d.o.o.": [
+        {ORTH: "d.", NORM: "družba"},
+        {ORTH: "o.", NORM: "omejeno"},
+        {ORTH: "o.", NORM: "odgovornostjo"},
+    ],
+    "D.O.O.": [
+        {ORTH: "D.", NORM: "družba"},
+        {ORTH: "O.", NORM: "omejeno"},
+        {ORTH: "O.", NORM: "odgovornostjo"},
+    ],
+    "d.n.o.": [
+        {ORTH: "d.", NORM: "družba"},
+        {ORTH: "n.", NORM: "neomejeno"},
+        {ORTH: "o.", NORM: "odgovornostjo"},
+    ],
+    "D.N.O.": [
+        {ORTH: "D.", NORM: "družba"},
+        {ORTH: "N.", NORM: "neomejeno"},
+        {ORTH: "O.", NORM: "odgovornostjo"},
+    ],
     "d.d.": [{ORTH: "d.", NORM: "delniška"}, {ORTH: "d.", NORM: "družba"}],
     "D.D.": [{ORTH: "D.", NORM: "delniška"}, {ORTH: "D.", NORM: "družba"}],
     "s.p.": [{ORTH: "s.", NORM: "samostojni"}, {ORTH: "p.", NORM: "podjetnik"}],
@@ -27,7 +43,7 @@ _other_exc = {
     "le-ta": [{ORTH: "le"}, {ORTH: "-"}, {ORTH: "ta"}],
     "Le-ta": [{ORTH: "Le"}, {ORTH: "-"}, {ORTH: "ta"}],
     "le-tega": [{ORTH: "le"}, {ORTH: "-"}, {ORTH: "tega"}],
-    "Le-tega": [{ORTH: "Le"}, {ORTH: "-"}, {ORTH: "tega"}]
+    "Le-tega": [{ORTH: "Le"}, {ORTH: "-"}, {ORTH: "tega"}],
 }
 
 _exc.update(_other_exc)
@@ -198,7 +214,7 @@ for exc_data in [
     {ORTH: "ž.", NORM: "ženski"},
     {ORTH: "žarg.", NORM: "žargonsko"},
     {ORTH: "žel.", NORM: "železnica"},
-    {ORTH: "živ.", NORM: "živost"}
+    {ORTH: "živ.", NORM: "živost"},
 ]:
     _exc[exc_data[ORTH]] = [exc_data]
 
@@ -254,4 +270,3 @@ for orth in abbrv:
 
 
 TOKENIZER_EXCEPTIONS = update_exc(BASE_EXCEPTIONS, _exc)
-
