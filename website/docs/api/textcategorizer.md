@@ -84,6 +84,7 @@ architectures and their arguments and hyperparameters.
 | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `threshold` | Cutoff to consider a prediction "positive", relevant when printing accuracy results. ~~float~~                                                                   |
 | `model`     | A model instance that predicts scores for each category. Defaults to [TextCatEnsemble](/api/architectures#TextCatEnsemble). ~~Model[List[Doc], List[Floats2d]]~~ |
+| `scorer`    | The scoring method. Defaults to [`Scorer.score_cats`](/api/scorer#score_cats) for the attribute `"cats"`. ~~Optional[Callable]~~                                 |
 
 ```python
 %%GITHUB_SPACY/spacy/pipeline/textcat.py
