@@ -438,7 +438,7 @@ cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& match
             # 'MatchAlignmentC' maps 'original token index of current pattern' to 'current matching length'
             if with_alignments != 0:
                 align_states[q].push_back(MatchAlignmentC(states[q].pattern.token_idx, states[q].length))
-            if action in [RETRY_EXTEND, RETRY_OR_EXTEND]:
+            if action in (RETRY_EXTEND, RETRY_OR_EXTEND):
                 # This handles the 'extend'
                 new_states.push_back(
                     PatternStateC(pattern=states[q].pattern, start=state.start,
@@ -511,7 +511,7 @@ cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& match
             elif action == MATCH_EXTEND:
                 matches.push_back(
                     MatchC(pattern_id=ent_id, start=state.start,
-                            length=state.length))
+                           length=state.length))
                 # `align_matches` always corresponds to `matches` 1:1
                 if with_alignments != 0:
                     align_matches.push_back(align_states[q])
@@ -603,7 +603,7 @@ cdef action_t get_action(PatternStateC state,
     d) Do we add a state with (same state, next token)?
 
     We'll code the actions as boolean strings, so 0000 means no to all 4,
-    1000 means match but no states added, 
+    1000 means match but no states added,
     and numbers other than 1 represents special actions etc.
 
     1:
@@ -628,7 +628,7 @@ cdef action_t get_action(PatternStateC state,
       Yes, final:
         2000 (note: Don't include last token!)
       Yes, non-final:
-        0022 (note: Retry or Extend) 
+        0022 (note: Retry or Extend)
       No, final:
         2000 (note: Don't include last token!)
       No, non-final:
@@ -669,72 +669,73 @@ cdef action_t get_action(PatternStateC state,
         is_match = not is_match
         quantifier = ONE
     if quantifier == ONE:
-        if is_match and is_final:
-            # Yes, final: 1000
-            return MATCH
-        elif is_non_greedy_plus(state) and has_star_tail(state) and is_match and not is_final:
-            # Yes, non-final: 1100
-            # Modification for +?:
-            # Having MATCH_ADVANCE handles the match at the 'ONE' part of the token instead of relying on MATCH_REJECT
-            # and other actions from other tokens to produce a match.
-            # is_non_greedy_plus() verifies that the current state's pattern is +?
-            # has_star_tail() verifies the remaining pattern tokens are either * or *?,
-            # so that it is valid for the current match to exist.
-            # TODO if this impacts the performance, "ONE_MINUS" could be created
-            return MATCH_ADVANCE
-        elif is_match and not is_final:
-            # Yes, non-final: 0100
-            return ADVANCE
-        elif not is_match and is_final:
-            # No, final: 0000
-            return REJECT
-        else:
-            return REJECT
+      if is_match and is_final:
+          # Yes, final: 1000
+          return MATCH
+      elif is_non_greedy_plus(state) and has_star_tail(state) and is_match and not is_final:
+          # Yes, non-final: 1100
+          # Modification for +?:
+          # Having MATCH_ADVANCE handles the match at the 'ONE' part of the token instead of relying on MATCH_REJECT
+          # and other actions from other tokens to produce a match.
+          # is_non_greedy_plus() verifies that the current state's pattern is +?
+          # has_star_tail() verifies the remaining pattern tokens are either * or *?,
+          # so that it is valid for the current match to exist.
+          # TODO if this impacts the performance, "ONE_MINUS" could be created
+          return MATCH_ADVANCE
+      elif is_match and not is_final:
+          # Yes, non-final: 0100
+          return ADVANCE
+      elif not is_match and is_final:
+          # No, final: 0000
+          return REJECT
+      else:
+          return REJECT
     elif quantifier == ZERO_PLUS:
-        if is_match and is_final:
-            # Yes, final: 1001
-            return MATCH_EXTEND
-        elif is_match and not is_final:
-            # Yes, non-final: 0011
-            return RETRY_EXTEND
-        elif not is_match and is_final:
-            # No, final 2000 (note: Don't include last token!)
-            return MATCH_REJECT
-        else:
-            # No, non-final 0010
-            return RETRY
+      if is_match and is_final:
+          # Yes, final: 1001
+          return MATCH_EXTEND
+      elif is_match and not is_final:
+          # Yes, non-final: 0011
+          return RETRY_EXTEND
+      elif not is_match and is_final:
+          # No, final 2000 (note: Don't include last token!)
+          return MATCH_REJECT
+      else:
+          # No, non-final 0010
+          return RETRY
     elif quantifier == ZERO_MINUS:
-        if is_final or has_non_greedy_tail(state):
-            # Yes/No, final: 2000 (note: Don't include last token!)
-            return MATCH_REJECT
-        elif is_match:
-            # Yes, non-final: 0022
-            # If there is a match, further extensions are skipped so that the behaviour is non-greedy
-            # pattern: b*?b string: b b
-            # We do not extend on first b to exhibit non-greedy behaviour
-            # such that "b" is matched but "b b" is not matched
-            return RETRY_OR_EXTEND
-        else:
-            # No, non-final 0010
-            return RETRY
+      if is_final or has_non_greedy_tail(state):
+          # Yes/No, final: 2000 (note: Don't include last token!)
+          return MATCH_REJECT
+      elif is_match:
+          # Yes, non-final: 0022
+          # If there is a match, further extensions are skipped so that the behaviour is non-greedy
+          # pattern: b*?b string: b b
+          # We do not extend on first b to exhibit non-greedy behaviour
+          # such that "b" is matched but "b b" is not matched
+          return RETRY_OR_EXTEND
+      else:
+          # No, non-final 0010
+          return RETRY
     elif quantifier == ZERO_ONE:
-        if is_match and is_final:
-            # Yes, final: 3000
-            # To cater for a pattern ending in "?", we need to add
-            # a match both with and without the last token
-            return MATCH_DOUBLE
-        elif is_match and not is_final:
-            # Yes, non-final: 0110
-            # We need both branches here, consider a pair like:
-            # pattern: .?b string: b
-            # If we 'ADVANCE' on the .?, we miss the match.
-            return RETRY_ADVANCE
-        elif not is_match and is_final:
-            # No, final 2000 (note: Don't include last token!)
-            return MATCH_REJECT
-        else:
-            # No, non-final 0010
-            return RETRY
+      if is_match and is_final:
+          # Yes, final: 3000
+          # To cater for a pattern ending in "?", we need to add
+          # a match both with and without the last token
+          return MATCH_DOUBLE
+      elif is_match and not is_final:
+          # Yes, non-final: 0110
+          # We need both branches here, consider a pair like:
+          # pattern: .?b string: b
+          # If we 'ADVANCE' on the .?, we miss the match.
+          return RETRY_ADVANCE
+      elif not is_match and is_final:
+          # No, final 2000 (note: Don't include last token!)
+          return MATCH_REJECT
+      else:
+          # No, non-final 0010
+          return RETRY
+
 
 cdef int8_t get_is_match(PatternStateC state,
         const TokenC* token, const attr_t* extra_attrs,
@@ -759,7 +760,7 @@ cdef action_t cast_to_non_greedy_action(action_t action, action_t next_action, v
     To cast "next_action" to a non-greedy action, the "next_action"s that we have to modify are
     MATCH, MATCH REJECT, MATCH_EXTEND, MATCH_DOUBLE.
 
-    cast_to_non_greedy_action() is required and cannot be merged with get_action() as there is a need for the 
+    cast_to_non_greedy_action() is required and cannot be merged with get_action() as there is a need for the
     comparison of the 2 different actions from different patterns.
 
     next_action = MATCH, action = RETRY_OR_EXTEND
@@ -777,7 +778,7 @@ cdef action_t cast_to_non_greedy_action(action_t action, action_t next_action, v
     - Cast MATCH_EXTEND to EXTEND
     - Remove the match since it ends with the '*?' pattern token
     - E.g. pattern = "a*? b*" doc = "a b"
-    - MATCH_EXTEND will add 'a' to the matches in transition_states() 
+    - MATCH_EXTEND will add 'a' to the matches in transition_states()
     - and casting MATCH_EXTEND to EXTEND removes such results.
 
     next_action = MATCH_DOUBLE after action = RETRY (where the RETRY came from ZERO_MINUS quantifier)
@@ -785,7 +786,7 @@ cdef action_t cast_to_non_greedy_action(action_t action, action_t next_action, v
     - MATCH_DOUBLE adds 2 matches, one with the last token and one without the token, casting the action to MATCH
     - removes the match without the last token which is the match that ends with a '*?' pattern token.
     - E.g. pattern = "a* b?" doc = "a b"
-    - MATCH_DOUBLE will add add the following 2 matches ['a' and 'a b'] 
+    - MATCH_DOUBLE will add the following 2 matches ['a' and 'a b']
     - and casting MATCH_DOUBLE to MATCH removes 'a'.
     """
     if action == RETRY_OR_EXTEND and next_action == MATCH:
