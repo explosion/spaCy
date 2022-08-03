@@ -3,6 +3,7 @@ import spacy
 from spacy import schemas
 from spacy.tokens import Doc, Span, Token
 import srsly
+from .test_underscore import clean_underscore  # noqa: F401
 
 
 @pytest.fixture()
@@ -103,10 +104,8 @@ def test_doc_to_json(doc):
 
 
 def test_doc_to_json_underscore(doc):
-    if not Doc.has_extension("json_test1"):
-        Doc.set_extension("json_test1", default=False)
-    if not Doc.has_extension("json_test2"):
-        Doc.set_extension("json_test2", default=False)
+    Doc.set_extension("json_test1", default=False)
+    Doc.set_extension("json_test2", default=False)
     doc._.json_test1 = "hello world"
     doc._.json_test2 = [1, 2, 3]
 
@@ -119,14 +118,10 @@ def test_doc_to_json_underscore(doc):
 
 
 def test_doc_to_json_with_token_span_attributes(doc):
-    if not Doc.has_extension("json_test1"):
-        Doc.set_extension("json_test1", default=False)
-    if not Doc.has_extension("json_test2"):
-        Doc.set_extension("json_test2", default=False)
-    if not Token.has_extension("token_test"):
-        Token.set_extension("token_test", default=False)
-    if not Span.has_extension("span_test"):
-        Span.set_extension("span_test", default=False)
+    Doc.set_extension("json_test1", default=False)
+    Doc.set_extension("json_test2", default=False)
+    Token.set_extension("token_test", default=False)
+    Span.set_extension("span_test", default=False)
 
     doc._.json_test1 = "hello world"
     doc._.json_test2 = [1, 2, 3]
@@ -148,12 +143,9 @@ def test_doc_to_json_with_token_span_attributes(doc):
 
 
 def test_doc_to_json_with_custom_user_data(doc):
-    if not Doc.has_extension("json_test"):
-        Doc.set_extension("json_test", default=False)
-    if not Token.has_extension("token_test"):
-        Token.set_extension("token_test", default=False)
-    if not Span.has_extension("span_test"):
-        Span.set_extension("span_test", default=False)
+    Doc.set_extension("json_test", default=False)
+    Token.set_extension("token_test", default=False)
+    Span.set_extension("span_test", default=False)
 
     doc._.json_test = "hello world"
     doc[0:1]._.span_test = "span_attribute"
@@ -172,14 +164,9 @@ def test_doc_to_json_with_custom_user_data(doc):
 
 
 def test_doc_to_json_with_token_span_same_identifier(doc):
-    if not Doc.has_extension("my_ext"):
-        Doc.set_extension("my_ext", default=False)
-    if not Doc.has_extension("my_ext"):
-        Doc.set_extension("my_ext", default=False)
-    if not Token.has_extension("my_ext"):
-        Token.set_extension("my_ext", default=False)
-    if not Span.has_extension("my_ext"):
-        Span.set_extension("my_ext", default=False)
+    Doc.set_extension("my_ext", default=False)
+    Token.set_extension("my_ext", default=False)
+    Span.set_extension("my_ext", default=False)
 
     doc._.my_ext = "hello world"
     doc[0:1]._.my_ext = "span_attribute"
@@ -196,10 +183,8 @@ def test_doc_to_json_with_token_span_same_identifier(doc):
 
 
 def test_doc_to_json_with_token_attributes_missing(doc):
-    if not Token.has_extension("token_test"):
-        Token.set_extension("token_test", default=False)
-    if not Span.has_extension("span_test"):
-        Span.set_extension("span_test", default=False)
+    Token.set_extension("token_test", default=False)
+    Span.set_extension("span_test", default=False)
 
     doc[0:1]._.span_test = "span_attribute"
     doc[0]._.token_test = 117
@@ -241,18 +226,18 @@ def test_json_to_doc(doc):
     json_doc = doc.to_json()
     json_doc = srsly.json_loads(srsly.json_dumps(json_doc))
     new_doc = Doc(doc.vocab).from_json(json_doc, validate=True)
-    new_tokens = [token for token in new_doc]
     assert new_doc.text == doc.text == "c d e "
-    assert len(new_tokens) == len([token for token in doc]) == 3
-    assert new_tokens[0].pos == doc[0].pos
-    assert new_tokens[0].tag == doc[0].tag
-    assert new_tokens[0].dep == doc[0].dep
-    assert new_tokens[0].head.idx == doc[0].head.idx
-    assert new_tokens[0].lemma == doc[0].lemma
+    assert len(new_doc) == len(doc) == 3
+    assert new_doc[0].pos == doc[0].pos
+    assert new_doc[0].tag == doc[0].tag
+    assert new_doc[0].dep == doc[0].dep
+    assert new_doc[0].head.idx == doc[0].head.idx
+    assert new_doc[0].lemma == doc[0].lemma
     assert len(new_doc.ents) == 1
     assert new_doc.ents[0].start == 1
     assert new_doc.ents[0].end == 2
     assert new_doc.ents[0].label_ == "ORG"
+    assert doc.to_bytes() == new_doc.to_bytes()
 
 
 def test_json_to_doc_compat(doc, doc_json):
@@ -272,10 +257,8 @@ def test_json_to_doc_compat(doc, doc_json):
 
 
 def test_json_to_doc_underscore(doc):
-    if not Doc.has_extension("json_test1"):
-        Doc.set_extension("json_test1", default=False)
-    if not Doc.has_extension("json_test2"):
-        Doc.set_extension("json_test2", default=False)
+    Doc.set_extension("json_test1", default=False)
+    Doc.set_extension("json_test2", default=False)
 
     doc._.json_test1 = "hello world"
     doc._.json_test2 = [1, 2, 3]
@@ -284,17 +267,14 @@ def test_json_to_doc_underscore(doc):
     assert all([new_doc.has_extension(f"json_test{i}") for i in range(1, 3)])
     assert new_doc._.json_test1 == "hello world"
     assert new_doc._.json_test2 == [1, 2, 3]
+    assert doc.to_bytes() == new_doc.to_bytes()
 
 
 def test_json_to_doc_with_token_span_attributes(doc):
-    if not Doc.has_extension("json_test1"):
-        Doc.set_extension("json_test1", default=False)
-    if not Doc.has_extension("json_test2"):
-        Doc.set_extension("json_test2", default=False)
-    if not Token.has_extension("token_test"):
-        Token.set_extension("token_test", default=False)
-    if not Span.has_extension("span_test"):
-        Span.set_extension("span_test", default=False)
+    Doc.set_extension("json_test1", default=False)
+    Doc.set_extension("json_test2", default=False)
+    Token.set_extension("token_test", default=False)
+    Span.set_extension("span_test", default=False)
 
     doc._.json_test1 = "hello world"
     doc._.json_test2 = [1, 2, 3]
@@ -313,6 +293,7 @@ def test_json_to_doc_with_token_span_attributes(doc):
     assert new_doc._.json_test2 == [1, 2, 3]
     assert new_doc[0]._.token_test == 117
     assert new_doc[0:1]._.span_test == "span_attribute"
+    assert doc.to_bytes() == new_doc.to_bytes()
 
 
 def test_json_to_doc_spans(doc):

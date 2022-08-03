@@ -1625,9 +1625,6 @@ cdef class Doc:
                 if not Span.has_extension(span_attr):
                     Span.set_extension(span_attr)
                 self[token_start:token_end]._.set(span_attr, value)
-
-       
-
         return self
 
     def to_json(self, underscore=None):
@@ -1673,43 +1670,37 @@ cdef class Doc:
                     data["spans"][span_group].append(span_data)
 
         if underscore:
-            doc_keys = set()
             user_keys = set()
+            data["_"] = {}
             if self.user_data:
                 data["user_data"] = {"spans":{}, "tokens":{}}
                 for data_key in self.user_data:
-                    if type(data_key) == tuple and data_key[0] == "._.":
-                        _, attr, start, end = data_key
+                    if type(data_key) == tuple and len(data_key) >= 4 and data_key[0] == "._.":
+                        attr = data_key[1]
+                        start = data_key[2]
+                        end = data_key[3]
                         if attr in underscore:
+                            user_keys.add(attr)
                             value = self.user_data[data_key]
                             if not srsly.is_json_serializable(value):
                                 raise ValueError(Errors.E107.format(attr=attr, value=repr(value)))
                             # Check if doc attribute
                             if start is None:
-                                doc_keys.add(attr)
-                                continue
+                                data["_"][attr] = value
                             # Check if token attribute
                             elif end is None:
                                 if attr not in data["user_data"]["tokens"]:
-                                    data["user_data"]["tokens"][attr] = {"token_start": start, "value":value}
+                                    data["user_data"]["tokens"][attr] = {"token_start": start, "token_end": end, "value":value}
                             # Else span attribute
                             else:
                                 if attr not in data["user_data"]["spans"]:
                                     data["user_data"]["spans"][attr] = {"token_start": start, "token_end": end, "value":value}
-                            user_keys.add(attr)
 
-            data["_"] = {}
             for attr in underscore:
-                if self.has_extension(attr):
-                    value = self._.get(attr)
-                    if not srsly.is_json_serializable(value):
-                        raise ValueError(Errors.E107.format(attr=attr, value=repr(value)))
-                    data["_"][attr] = value
-                elif attr not in user_keys:
+                if attr not in user_keys:
                     raise ValueError(Errors.E106.format(attr=attr, opts=underscore))
 
         return data
-
 
     def to_utf8_array(self, int nr_char=-1):
         """Encode word strings to utf8, and export to a fixed-width array

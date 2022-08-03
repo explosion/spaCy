@@ -389,7 +389,7 @@ class Errors(metaclass=ErrorsWithCodes):
             "consider using doc.spans instead.")
     E106 = ("Can't find `doc._.{attr}` attribute specified in the underscore "
             "settings: {opts}")
-    E107 = ("Value of `doc._.{attr}` is not JSON-serializable: {value}")
+    E107 = ("Value of custom attribute `{attr}` is not JSON-serializable: {value}")
     E109 = ("Component '{name}' could not be run. Did you forget to "
             "call `initialize()`?")
     E110 = ("Invalid displaCy render wrapper. Expected callable, got: {obj}")
