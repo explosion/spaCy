@@ -3,7 +3,7 @@
         {
             "id": "concepcy",
             "title": "concepCy",
-            "slogan": "",
+            "slogan": "A multilingual knowledge graph in spaCy",
             "description": "A spaCy wrapper for ConceptNet, a freely-available semantic network designed to help computers understand the meaning of words.",
             "github": "JulesBelveze/concepcy",
             "pip": "concepcy",
