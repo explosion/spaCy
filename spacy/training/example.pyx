@@ -361,6 +361,7 @@ cdef class Example:
             "doc_annotation": {
                 "cats": dict(self.reference.cats),
                 "entities": doc_to_biluo_tags(self.reference),
+                "spans": dict(self.reference.spans),
                 "links": self._links_to_dict()
             },
             "token_annotation": {

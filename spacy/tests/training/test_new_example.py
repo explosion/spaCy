@@ -431,3 +431,34 @@ def test_Example_aligned_whitespace(en_vocab):
 
     example = Example(predicted, reference)
     assert example.get_aligned("TAG", as_string=True) == tags
+
+
+@pytest.mark.parametrize(
+    "annots",
+    [
+        {
+            "words": ["I", "like", "New", "York", "."],
+            "spans": {
+                "cities": [(7, 15, "LOC")],
+                "people": [(0, 1, "PERSON")],
+            },
+        }
+    ],
+)
+
+@pytest.mark.issue("11260")
+def test_issue11260(annots):
+    vocab = Vocab()
+    predicted = Doc(vocab, words=annots["words"])
+    example = Example.from_dict(predicted, annots)
+    assert len(list(example.reference.spans["cities"])) == 1
+    assert len(list(example.reference.spans["people"])) == 1
+
+    output_dict = example.to_dict()
+    assert "spans" in output_dict["doc_annotation"]
+    assert len(output_dict["doc_annotation"]["spans"]["cities"]) == 1
+    assert len(output_dict["doc_annotation"]["spans"]["people"]) == 1
+    assert output_dict["doc_annotation"]["spans"]["people"][0].text == "I"
+    assert output_dict["doc_annotation"]["spans"]["cities"][0].text == "New York"
+
+
