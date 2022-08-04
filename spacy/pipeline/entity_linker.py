@@ -185,7 +185,7 @@ class EntityLinker(TrainablePipe):
         incl_prior: bool,
         incl_context: bool,
         entity_vector_length: int,
-        get_candidates: Callable[[BaseKnowledgeBase, Span], Iterable[Candidate]],
+        get_candidates: Callable[[BaseKnowledgeBase, Span], Iterator[Candidate]],
         get_candidates_batch: Callable[
             [BaseKnowledgeBase, Iterable[Union[Span, str]]],
             Iterable[Iterator[Candidate]],
@@ -270,9 +270,9 @@ class EntityLinker(TrainablePipe):
 
         # Support backwards compatibility for custom loaders.
         try:
-            self.kb = kb_loader(self.vocab, self.kb_type)
+            self.kb = kb_loader(self.vocab, self.kb_type)  # type: ignore
         except TypeError:
-            self.kb = kb_loader(self.vocab)
+            self.kb = kb_loader(self.vocab)  # type: ignore
 
     def validate_kb(self) -> None:
         # Raise an error if the knowledge base is not initialized.
@@ -485,7 +485,8 @@ class EntityLinker(TrainablePipe):
                     for idx in range(len(ent_batch))
                     if ent_batch[idx].label_ not in self.labels_discard
                 ]
-                batch_candidates = (
+
+                batch_candidates = list(
                     self.get_candidates_batch(
                         self.kb, [ent_batch[idx] for idx in valid_ent_idx]
                     )
