@@ -485,7 +485,7 @@ class EntityLinker(TrainablePipe):
                     for idx in range(len(ent_batch))
                     if ent_batch[idx].label_ not in self.labels_discard
                 ]
-                candidates = (
+                batch_candidates = (
                     self.get_candidates_batch(
                         self.kb, [ent_batch[idx] for idx in valid_ent_idx]
                     )
@@ -519,7 +519,7 @@ class EntityLinker(TrainablePipe):
                         # ignoring this entity - setting to NIL
                         final_kb_ids.append(self.NIL)
                     else:
-                        candidates = list(candidates[j])
+                        candidates = list(batch_candidates[j])
                         if not candidates:
                             # no prediction possible for this entity - setting to NIL
                             final_kb_ids.append(self.NIL)

@@ -490,7 +490,7 @@ def test_el_pipe_configuration(nlp):
     # run an EL pipe without a trained context encoder, to check the candidate generation step only
     entity_linker = nlp.add_pipe("entity_linker", config={"incl_context": False})
     entity_linker.set_kb(create_kb)
-    # # With the default get_candidates function, matching is case-sensitive
+    # With the default get_candidates function, matching is case-sensitive
     text = "Douglas and douglas are not the same."
     doc = nlp(text)
     assert doc[0].ent_kb_id_ == "NIL"

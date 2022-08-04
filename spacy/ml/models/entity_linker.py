@@ -108,7 +108,6 @@ def empty_kb(
     def empty_kb_factory(
         vocab: Vocab, kb_type: Type[BaseKnowledgeBase] = KnowledgeBase
     ):
-        # Use in-memory, lexically matching KB as default.
         return kb_type(vocab=vocab, entity_vector_length=entity_vector_length)
 
     return empty_kb_factory
