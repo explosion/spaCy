@@ -1,15 +1,32 @@
 ---
-title: SpanPredictor
-tag: class
-source: spacy/pipeline/span_predictor.py
+title: SpanResolver
+tag: class,experimental
+source: spacy-experimental/coref/span_resolver_component.py
 new: 3.4
 teaser: 'Pipeline component for resolving tokens into spans'
 api_base_class: /api/pipe
-api_string_name: span_predictor
+api_string_name: span_resolver
 api_trainable: true
 ---
 
-A `SpanPredictor` component takes in tokens (represented as `Span`s of length
+> #### Installation
+>
+> ```bash
+> $ pip install -U spacy-experimental
+> ```
+
+<Infobox title="Important note" variant="warning">
+
+This component not yet integrated into spaCy core, and is available via the extension package
+[`spacy-experimental`](https://github.com/explosion/spacy-transformers). It
+exposes the component via entry points, so if you have the package installed,
+using `factory = "span_resolver"` in your
+[training config](/usage/training#config) or `nlp.add_pipe("span_resolver")` will
+work out-of-the-box.
+
+</Infobox>
+
+A `SpanResolver` component takes in tokens (represented as `Span`s of length
 
 1. and resolves them into `Span`s of arbitrary length. The initial use case is
    as a post-processing step on word-level [coreference resolution](/api/coref).
@@ -40,39 +57,39 @@ architectures and their arguments and hyperparameters.
 > #### Example
 >
 > ```python
-> from spacy.pipeline.span_predictor import DEFAULT_SPAN_PREDICTOR_MODEL
+> from spacy.pipeline.span_resolver import DEFAULT_span_resolver_MODEL
 > config={
->     "model": DEFAULT_SPAN_PREDICTOR_MODEL,
+>     "model": DEFAULT_span_resolver_MODEL,
 >     "span_cluster_prefix": DEFAULT_CLUSTER_PREFIX,
 > },
-> nlp.add_pipe("span_predictor", config=config)
+> nlp.add_pipe("span_resolver", config=config)
 > ```
 
 | Setting         | Description                                                                                                                                              |
 | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `model`         | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. Defaults to [SpanPredictor](/api/architectures#SpanPredictor). ~~Model~~ |
+| `model`         | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. Defaults to [SpanResolver](/api/architectures#SpanResolver). ~~Model~~ |
 | `input_prefix`  | The prefix to use for input `SpanGroup`s. Defaults to `coref_head_clusters`. ~~str~~                                                                     |
 | `output_prefix` | The prefix for predicted `SpanGroup`s. Defaults to `coref_clusters`. ~~str~~                                                                             |
 
 ```python
-%%GITHUB_SPACY/spacy/pipeline/span_predictor.py
+%%GITHUB_SPACY/spacy/pipeline/span_resolver.py
 ```
 
-## SpanPredictor.\_\_init\_\_ {#init tag="method"}
+## SpanResolver.\_\_init\_\_ {#init tag="method"}
 
 > #### Example
 >
 > ```python
 > # Construction via add_pipe with default model
-> span_predictor = nlp.add_pipe("span_predictor")
+> span_resolver = nlp.add_pipe("span_resolver")
 >
 > # Construction via add_pipe with custom model
-> config = {"model": {"@architectures": "my_span_predictor.v1"}}
-> span_predictor = nlp.add_pipe("span_predictor", config=config)
+> config = {"model": {"@architectures": "my_span_resolver.v1"}}
+> span_resolver = nlp.add_pipe("span_resolver", config=config)
 >
 > # Construction from class
-> from spacy.pipeline import SpanPredictor
-> span_predictor = SpanPredictor(nlp.vocab, model)
+> from spacy.pipeline import SpanResolver
+> span_resolver = SpanResolver(nlp.vocab, model)
 > ```
 
 Create a new pipeline instance. In your application, you would normally use a
@@ -88,7 +105,7 @@ shortcut for this and instantiate the component using its string name and
 | `input_prefix`  | The prefix to use for input `SpanGroup`s. Defaults to `coref_head_clusters`. ~~str~~                |
 | `output_prefix` | The prefix for predicted `SpanGroup`s. Defaults to `coref_clusters`. ~~str~~                        |
 
-## SpanPredictor.\_\_call\_\_ {#call tag="method"}
+## SpanResolver.\_\_call\_\_ {#call tag="method"}
 
 Apply the pipe to one document. The document is modified in place and returned.
 This usually happens under the hood when the `nlp` object is called on a text
@@ -100,9 +117,9 @@ and [`set_annotations`](#set_annotations) methods.
 >
 > ```python
 > doc = nlp("This is a sentence.")
-> span_predictor = nlp.add_pipe("span_predictor")
+> span_resolver = nlp.add_pipe("span_resolver")
 > # This usually happens under the hood
-> processed = span_predictor(doc)
+> processed = span_resolver(doc)
 > ```
 
 | Name        | Description                      |
@@ -110,20 +127,20 @@ and [`set_annotations`](#set_annotations) methods.
 | `doc`       | The document to process. ~~Doc~~ |
 | **RETURNS** | The processed document. ~~Doc~~  |
 
-## SpanPredictor.pipe {#pipe tag="method"}
+## SpanResolver.pipe {#pipe tag="method"}
 
 Apply the pipe to a stream of documents. This usually happens under the hood
 when the `nlp` object is called on a text and all pipeline components are
-applied to the `Doc` in order. Both [`__call__`](/api/span-predictor#call) and
-[`pipe`](/api/span-predictor#pipe) delegate to the
-[`predict`](/api/span-predictor#predict) and
-[`set_annotations`](/api/span-predictor#set_annotations) methods.
+applied to the `Doc` in order. Both [`__call__`](/api/span-resolver#call) and
+[`pipe`](/api/span-resolver#pipe) delegate to the
+[`predict`](/api/span-resolver#predict) and
+[`set_annotations`](/api/span-resolver#set_annotations) methods.
 
 > #### Example
 >
 > ```python
-> span_predictor = nlp.add_pipe("span_predictor")
-> for doc in span_predictor.pipe(docs, batch_size=50):
+> span_resolver = nlp.add_pipe("span_resolver")
+> for doc in span_resolver.pipe(docs, batch_size=50):
 >     pass
 > ```
 
@@ -134,7 +151,7 @@ applied to the `Doc` in order. Both [`__call__`](/api/span-predictor#call) and
 | `batch_size`   | The number of documents to buffer. Defaults to `128`. ~~int~~ |
 | **YIELDS**     | The processed documents in order. ~~Doc~~                     |
 
-## SpanPredictor.initialize {#initialize tag="method"}
+## SpanResolver.initialize {#initialize tag="method"}
 
 Initialize the component for training. `get_examples` should be a function that
 returns an iterable of [`Example`](/api/example) objects. The data examples are
@@ -148,8 +165,8 @@ by [`Language.initialize`](/api/language#initialize).
 > #### Example
 >
 > ```python
-> span_predictor = nlp.add_pipe("span_predictor")
-> span_predictor.initialize(lambda: [], nlp=nlp)
+> span_resolver = nlp.add_pipe("span_resolver")
+> span_resolver.initialize(lambda: [], nlp=nlp)
 > ```
 
 | Name           | Description                                                                                                                           |
@@ -158,7 +175,7 @@ by [`Language.initialize`](/api/language#initialize).
 | _keyword-only_ |                                                                                                                                       |
 | `nlp`          | The current `nlp` object. Defaults to `None`. ~~Optional[Language]~~                                                                  |
 
-## SpanPredictor.predict {#predict tag="method"}
+## SpanResolver.predict {#predict tag="method"}
 
 Apply the component's model to a batch of [`Doc`](/api/doc) objects, without
 modifying them. Predictions are returned as a list of `MentionClusters`, one for
@@ -169,8 +186,8 @@ correspond to token indices.
 > #### Example
 >
 > ```python
-> span_predictor = nlp.add_pipe("span_predictor")
-> spans = span_predictor.predict([doc1, doc2])
+> span_resolver = nlp.add_pipe("span_resolver")
+> spans = span_resolver.predict([doc1, doc2])
 > ```
 
 | Name        | Description                                                   |
@@ -178,7 +195,7 @@ correspond to token indices.
 | `docs`      | The documents to predict. ~~Iterable[Doc]~~                   |
 | **RETURNS** | The predicted spans for the `Doc`s. ~~List[MentionClusters]~~ |
 
-## SpanPredictor.set_annotations {#set_annotations tag="method"}
+## SpanResolver.set_annotations {#set_annotations tag="method"}
 
 Modify a batch of documents, saving predictions using the output prefix in
 `Doc.spans`.
@@ -186,9 +203,9 @@ Modify a batch of documents, saving predictions using the output prefix in
 > #### Example
 >
 > ```python
-> span_predictor = nlp.add_pipe("span_predictor")
-> spans = span_predictor.predict([doc1, doc2])
-> span_predictor.set_annotations([doc1, doc2], spans)
+> span_resolver = nlp.add_pipe("span_resolver")
+> spans = span_resolver.predict([doc1, doc2])
+> span_resolver.set_annotations([doc1, doc2], spans)
 > ```
 
 | Name    | Description                                                   |
@@ -196,17 +213,17 @@ Modify a batch of documents, saving predictions using the output prefix in
 | `docs`  | The documents to modify. ~~Iterable[Doc]~~                    |
 | `spans` | The predicted spans for the `docs`. ~~List[MentionClusters]~~ |
 
-## SpanPredictor.update {#update tag="method"}
+## SpanResolver.update {#update tag="method"}
 
 Learn from a batch of [`Example`](/api/example) objects. Delegates to
-[`predict`](/api/span-predictor#predict).
+[`predict`](/api/span-resolver#predict).
 
 > #### Example
 >
 > ```python
-> span_predictor = nlp.add_pipe("span_predictor")
+> span_resolver = nlp.add_pipe("span_resolver")
 > optimizer = nlp.initialize()
-> losses = span_predictor.update(examples, sgd=optimizer)
+> losses = span_resolver.update(examples, sgd=optimizer)
 > ```
 
 | Name           | Description                                                                                                              |
@@ -218,22 +235,22 @@ Learn from a batch of [`Example`](/api/example) objects. Delegates to
 | `losses`       | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~ |
 | **RETURNS**    | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                    |
 
-## SpanPredictor.create_optimizer {#create_optimizer tag="method"}
+## SpanResolver.create_optimizer {#create_optimizer tag="method"}
 
 Create an optimizer for the pipeline component.
 
 > #### Example
 >
 > ```python
-> span_predictor = nlp.add_pipe("span_predictor")
-> optimizer = span_predictor.create_optimizer()
+> span_resolver = nlp.add_pipe("span_resolver")
+> optimizer = span_resolver.create_optimizer()
 > ```
 
 | Name        | Description                  |
 | ----------- | ---------------------------- |
 | **RETURNS** | The optimizer. ~~Optimizer~~ |
 
-## SpanPredictor.use_params {#use_params tag="method, contextmanager"}
+## SpanResolver.use_params {#use_params tag="method, contextmanager"}
 
 Modify the pipe's model, to use the given parameter values. At the end of the
 context, the original parameters are restored.
@@ -241,24 +258,24 @@ context, the original parameters are restored.
 > #### Example
 >
 > ```python
-> span_predictor = nlp.add_pipe("span_predictor")
-> with span_predictor.use_params(optimizer.averages):
->     span_predictor.to_disk("/best_model")
+> span_resolver = nlp.add_pipe("span_resolver")
+> with span_resolver.use_params(optimizer.averages):
+>     span_resolver.to_disk("/best_model")
 > ```
 
 | Name     | Description                                        |
 | -------- | -------------------------------------------------- |
 | `params` | The parameter values to use in the model. ~~dict~~ |
 
-## SpanPredictor.to_disk {#to_disk tag="method"}
+## SpanResolver.to_disk {#to_disk tag="method"}
 
 Serialize the pipe to disk.
 
 > #### Example
 >
 > ```python
-> span_predictor = nlp.add_pipe("span_predictor")
-> span_predictor.to_disk("/path/to/span_predictor")
+> span_resolver = nlp.add_pipe("span_resolver")
+> span_resolver.to_disk("/path/to/span_resolver")
 > ```
 
 | Name           | Description                                                                                                                                |
@@ -267,15 +284,15 @@ Serialize the pipe to disk.
 | _keyword-only_ |                                                                                                                                            |
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~                                                |
 
-## SpanPredictor.from_disk {#from_disk tag="method"}
+## SpanResolver.from_disk {#from_disk tag="method"}
 
 Load the pipe from disk. Modifies the object in place and returns it.
 
 > #### Example
 >
 > ```python
-> span_predictor = nlp.add_pipe("span_predictor")
-> span_predictor.from_disk("/path/to/span_predictor")
+> span_resolver = nlp.add_pipe("span_resolver")
+> span_resolver.from_disk("/path/to/span_resolver")
 > ```
 
 | Name           | Description                                                                                     |
@@ -283,15 +300,15 @@ Load the pipe from disk. Modifies the object in place and returns it.
 | `path`         | A path to a directory. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
 | _keyword-only_ |                                                                                                 |
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~     |
-| **RETURNS**    | The modified `SpanPredictor` object. ~~SpanPredictor~~                                          |
+| **RETURNS**    | The modified `SpanResolver` object. ~~SpanResolver~~                                          |
 
-## SpanPredictor.to_bytes {#to_bytes tag="method"}
+## SpanResolver.to_bytes {#to_bytes tag="method"}
 
 > #### Example
 >
 > ```python
-> span_predictor = nlp.add_pipe("span_predictor")
-> span_predictor_bytes = span_predictor.to_bytes()
+> span_resolver = nlp.add_pipe("span_resolver")
+> span_resolver_bytes = span_resolver.to_bytes()
 > ```
 
 Serialize the pipe to a bytestring.
@@ -300,18 +317,18 @@ Serialize the pipe to a bytestring.
 | -------------- | ------------------------------------------------------------------------------------------- |
 | _keyword-only_ |                                                                                             |
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
-| **RETURNS**    | The serialized form of the `SpanPredictor` object. ~~bytes~~                                |
+| **RETURNS**    | The serialized form of the `SpanResolver` object. ~~bytes~~                                |
 
-## SpanPredictor.from_bytes {#from_bytes tag="method"}
+## SpanResolver.from_bytes {#from_bytes tag="method"}
 
 Load the pipe from a bytestring. Modifies the object in place and returns it.
 
 > #### Example
 >
 > ```python
-> span_predictor_bytes = span_predictor.to_bytes()
-> span_predictor = nlp.add_pipe("span_predictor")
-> span_predictor.from_bytes(span_predictor_bytes)
+> span_resolver_bytes = span_resolver.to_bytes()
+> span_resolver = nlp.add_pipe("span_resolver")
+> span_resolver.from_bytes(span_resolver_bytes)
 > ```
 
 | Name           | Description                                                                                 |
@@ -319,7 +336,7 @@ Load the pipe from a bytestring. Modifies the object in place and returns it.
 | `bytes_data`   | The data to load from. ~~bytes~~                                                            |
 | _keyword-only_ |                                                                                             |
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
-| **RETURNS**    | The `SpanPredictor` object. ~~SpanPredictor~~                                               |
+| **RETURNS**    | The `SpanResolver` object. ~~SpanResolver~~                                               |
 
 ## Serialization fields {#serialization-fields}
 
@@ -330,7 +347,7 @@ serialization by passing in the string names via the `exclude` argument.
 > #### Example
 >
 > ```python
-> data = span_predictor.to_disk("/path", exclude=["vocab"])
+> data = span_resolver.to_disk("/path", exclude=["vocab"])
 > ```
 
 | Name    | Description                                                    |

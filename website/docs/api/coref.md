@@ -1,13 +1,30 @@
 ---
 title: CoreferenceResolver
-tag: class
-source: spacy/pipeline/coref.py
+tag: class,experimental
+source: spacy-experimental/coref/coref_component.py
 new: 3.4
 teaser: 'Pipeline component for word-level coreference resolution'
 api_base_class: /api/pipe
 api_string_name: coref
 api_trainable: true
 ---
+
+> #### Installation
+>
+> ```bash
+> $ pip install -U spacy-experimental
+> ```
+
+<Infobox title="Important note" variant="warning">
+
+This component not yet integrated into spaCy core, and is available via the extension package
+[`spacy-experimental`](https://github.com/explosion/spacy-transformers). It
+exposes the component via entry points, so if you have the package installed,
+using `factory = "coref"` in your
+[training config](/usage/training#config) or `nlp.add_pipe("coref")` will
+work out-of-the-box.
+
+</Infobox>
 
 A `CoreferenceResolver` component groups tokens into clusters that refer to the
 same thing. Clusters are represented as SpanGroups that start with a prefix
