@@ -382,7 +382,7 @@ cdef class Example:
         for key in self.reference.spans:
             span_tuples = []
             for span in self.reference.spans[key]: 
-                span_tuple = (span.start_char, span.end_char, span.label, span.kb_id)
+                span_tuple = (span.start_char, span.end_char, span.label_, span.kb_id_)
                 span_tuples.append(span_tuple)
             span_dict[key] = span_tuples
 

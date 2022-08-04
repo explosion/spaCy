@@ -455,8 +455,8 @@ def test_issue11260(annots):
 
     output_dict = example.to_dict()
     assert "spans" in output_dict["doc_annotation"]
-    assert output_dict["doc_annotation"]["spans"]["cities"] == [(7, 15, "LOC")]
-    assert output_dict["doc_annotation"]["spans"]["people"] == [(0, 1, "PERSON")]
+    assert output_dict["doc_annotation"]["spans"]["cities"] == [(7, 15, "LOC", "")]
+    assert output_dict["doc_annotation"]["spans"]["people"] == [(0, 1, "PERSON", "")]
 
     output_example = Example.from_dict(predicted, output_dict)
 
