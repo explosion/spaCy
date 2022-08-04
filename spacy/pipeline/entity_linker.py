@@ -474,7 +474,11 @@ class EntityLinker(TrainablePipe):
                         # shortcut for efficiency reasons: take the 1 candidate
                         final_kb_ids.append(candidates[0].entity_)
                         self._add_activations(
-                            doc_scores, doc_scores_lens, doc_ents, [1.0], [candidates[0].entity_]
+                            doc_scores,
+                            doc_scores_lens,
+                            doc_ents,
+                            [1.0],
+                            [candidates[0].entity_],
                         )
                     else:
                         random.shuffle(candidates)
@@ -541,12 +545,11 @@ class EntityLinker(TrainablePipe):
         i = 0
         overwrite = self.cfg["overwrite"]
         for j, doc in enumerate(docs):
-            doc.activations[self.name] = {}
-            for activation in self.store_activations:
-                # We only copy activations that are Ragged.
-                doc.activations[self.name][activation] = cast(
-                    Ragged, activations[activation][j]
-                )
+            # We only copy activations that are Ragged.
+            stored_activations = {
+                key: cast(Ragged, activations[key][i]) for key in self.store_activations
+            }
+            doc.activations[self.name] = stored_activations
             for ent in doc.ents:
                 kb_id = kb_ids[i]
                 i += 1
