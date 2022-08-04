@@ -490,7 +490,7 @@ def test_el_pipe_configuration(nlp):
     # run an EL pipe without a trained context encoder, to check the candidate generation step only
     entity_linker = nlp.add_pipe("entity_linker", config={"incl_context": False})
     entity_linker.set_kb(create_kb)
-    # With the default get_candidates function, matching is case-sensitive
+    # # With the default get_candidates function, matching is case-sensitive
     text = "Douglas and douglas are not the same."
     doc = nlp(text)
     assert doc[0].ent_kb_id_ == "NIL"
@@ -500,9 +500,18 @@ def test_el_pipe_configuration(nlp):
     def get_lowercased_candidates(kb, span):
         return kb.get_alias_candidates(span.text.lower())
 
+    def get_lowercased_candidates_batch(kb, spans):
+        return [get_lowercased_candidates(kb, span) for span in spans]
+
     @registry.misc("spacy.LowercaseCandidateGenerator.v1")
     def create_candidates() -> Callable[[KnowledgeBase, "Span"], Iterable[Candidate]]:
         return get_lowercased_candidates
+
+    @registry.misc("spacy.LowercaseCandidateBatchGenerator.v1")
+    def create_candidates_batch() -> Callable[
+        [KnowledgeBase, Iterable["Span"]], Iterable[Iterable[Candidate]]
+    ]:
+        return get_lowercased_candidates_batch
 
     # replace the pipe with a new one with with a different candidate generator
     entity_linker = nlp.replace_pipe(
@@ -511,6 +520,9 @@ def test_el_pipe_configuration(nlp):
         config={
             "incl_context": False,
             "get_candidates": {"@misc": "spacy.LowercaseCandidateGenerator.v1"},
+            "get_candidates_batch": {
+                "@misc": "spacy.LowercaseCandidateBatchGenerator.v1"
+            },
         },
     )
     entity_linker.set_kb(create_kb)

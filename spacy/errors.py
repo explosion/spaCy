@@ -939,6 +939,7 @@ class Errors(metaclass=ErrorsWithCodes):
              "`{arg2}`={arg2_values} but these arguments are conflicting.")
     E1043 = ("Expected None or a value in range [{range_start}, {range_end}] for entity linker threshold, but got "
              "{value}.")
+    E1044 = ("Expected `candidates_batch_size` to be >= 1, but got: {value}")
 
 
 # Deprecated model shortcuts, only used in errors and warnings

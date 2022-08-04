@@ -253,6 +253,9 @@ class EntityLinker(TrainablePipe):
         self.candidates_batch_size = candidates_batch_size
         self.threshold = threshold
 
+        if candidates_batch_size < 1:
+            raise ValueError(Errors.E1044)
+
     def set_kb(
         self,
         kb_loader: Union[
@@ -474,13 +477,24 @@ class EntityLinker(TrainablePipe):
             for ent_idx in range(0, len(doc.ents), self.candidates_batch_size):
                 ent_batch = doc.ents[ent_idx : ent_idx + self.candidates_batch_size]
 
-                # Look up candidate for entity batch.
-                batch_candidates = self.get_candidates_batch(
-                    self.kb,
-                    [ent for ent in ent_batch if ent.label_ not in self.labels_discard],
+                # Look up candidate entities.
+                valid_ent_idx = [
+                    idx
+                    for idx in range(len(ent_batch))
+                    if ent_batch[idx].label_ not in self.labels_discard
+                ]
+                candidates = (
+                    self.get_candidates_batch(
+                        self.kb, [ent_batch[idx] for idx in valid_ent_idx]
+                    )
+                    if self.candidates_batch_size > 1
+                    else [
+                        self.get_candidates(self.kb, ent_batch[idx])
+                        for idx in valid_ent_idx
+                    ]
                 )
 
-                for ent, ent_candidates in zip(ent_batch, batch_candidates):
+                for j, ent in enumerate(ent_batch):
                     sent_index = sentences.index(ent.sent)
                     assert sent_index >= 0
 
@@ -502,8 +516,7 @@ class EntityLinker(TrainablePipe):
                         # ignoring this entity - setting to NIL
                         final_kb_ids.append(self.NIL)
                     else:
-                        # candidates = list(self.get_candidates(self.kb, ent))
-                        candidates = list(ent_candidates)
+                        candidates = list(candidates[j])
                         if not candidates:
                             # no prediction possible for this entity - setting to NIL
                             final_kb_ids.append(self.NIL)

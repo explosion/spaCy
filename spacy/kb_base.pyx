@@ -1,11 +1,8 @@
 # cython: infer_types=True, profile=True
 
 # todo
-#   - adapt EntityLinker to use batched methods
-#       - add batch_size parameter to EntityLinker config
-#   - write dummy class + test it
 #   - submit PR
-#   - add tests
+#   - add tests (w/ dummy class)
 #   - update docs
 from pathlib import Path
 from typing import Iterable, Tuple, Iterator, Union
