@@ -118,7 +118,7 @@ shortcut for this and instantiate the component using its string name and
 | `name`         | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~ |
 | _keyword-only_ |                                                                                                     |
 | mode           | The lemmatizer mode, e.g. `"lookup"` or `"rule"`. Defaults to `"lookup"`. ~~str~~                   |
-| overwrite      | Whether to overwrite existing lemmas. ~~bool~                                                       |
+| overwrite      | Whether to overwrite existing lemmas. ~~bool~~                                                      |
 
 ## Lemmatizer.\_\_call\_\_ {#call tag="method"}
 

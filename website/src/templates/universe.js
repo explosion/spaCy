@@ -142,10 +142,10 @@ const UniverseContent = ({ content = [], categories, theme, pageContext, mdxComp
                         The Universe database is open-source and collected in a simple JSON file.
                         For more details on the formats and available fields, see the documentation.
                         Looking for inspiration your own spaCy plugin or extension? Check out the
-                        <Link to={github() + '/labels/project%20idea'} hideIcon ws>
-                            <InlineCode>project idea</InlineCode>
+                        <Link to={"https://github.com/explosion/spaCy/discussions/categories/new-features-project-ideas/"} hideIcon ws>
+                            project idea
                         </Link>
-                        label on the issue tracker.
+                        section in Discussions.
                     </p>
 
                     <InlineList>

@@ -30,26 +30,26 @@ pattern keys correspond to a number of
 [`Token` attributes](/api/token#attributes). The supported attributes for
 rule-based matching are:
 
-| Attribute                                       |  Description                                                                                                              |
-| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `ORTH`                                          | The exact verbatim text of a token. ~~str~~                                                                               |
-| `TEXT` <Tag variant="new">2.1</Tag>             | The exact verbatim text of a token. ~~str~~                                                                               |
-| `NORM`                                          | The normalized form of the token text. ~~str~~                                                                            |
-| `LOWER`                                         | The lowercase form of the token text. ~~str~~                                                                             |
-|  `LENGTH`                                       | The length of the token text. ~~int~~                                                                                     |
-|  `IS_ALPHA`, `IS_ASCII`, `IS_DIGIT`             | Token text consists of alphabetic characters, ASCII characters, digits. ~~bool~~                                          |
-|  `IS_LOWER`, `IS_UPPER`, `IS_TITLE`             | Token text is in lowercase, uppercase, titlecase. ~~bool~~                                                                |
-|  `IS_PUNCT`, `IS_SPACE`, `IS_STOP`              | Token is punctuation, whitespace, stop word. ~~bool~~                                                                     |
-|  `IS_SENT_START`                                | Token is start of sentence. ~~bool~~                                                                                      |
-|  `LIKE_NUM`, `LIKE_URL`, `LIKE_EMAIL`           | Token text resembles a number, URL, email. ~~bool~~                                                                       |
-| `SPACY`                                         | Token has a trailing space. ~~bool~~                                                                                      |
-|  `POS`, `TAG`, `MORPH`, `DEP`, `LEMMA`, `SHAPE` | The token's simple and extended part-of-speech tag, morphological analysis, dependency label, lemma, shape. ~~str~~       |
-| `ENT_TYPE`                                      | The token's entity label. ~~str~~                                                                                         |
-| `ENT_IOB`                                       | The IOB part of the token's entity tag. ~~str~~                                                                           |
-| `ENT_ID`                                        | The token's entity ID (`ent_id`). ~~str~~                                                                                 |
-| `ENT_KB_ID`                                     | The token's entity knowledge base ID (`ent_kb_id`). ~~str~~                                                               |
-| `_` <Tag variant="new">2.1</Tag>                | Properties in [custom extension attributes](/usage/processing-pipelines#custom-components-attributes). ~~Dict[str, Any]~~ |
-| `OP`                                            | Operator or quantifier to determine how often to match a token pattern. ~~str~~                                           |
+| Attribute                                      | Description                                                                                                               |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `ORTH`                                         | The exact verbatim text of a token. ~~str~~                                                                               |
+| `TEXT` <Tag variant="new">2.1</Tag>            | The exact verbatim text of a token. ~~str~~                                                                               |
+| `NORM`                                         | The normalized form of the token text. ~~str~~                                                                            |
+| `LOWER`                                        | The lowercase form of the token text. ~~str~~                                                                             |
+| `LENGTH`                                       | The length of the token text. ~~int~~                                                                                     |
+| `IS_ALPHA`, `IS_ASCII`, `IS_DIGIT`             | Token text consists of alphabetic characters, ASCII characters, digits. ~~bool~~                                          |
+| `IS_LOWER`, `IS_UPPER`, `IS_TITLE`             | Token text is in lowercase, uppercase, titlecase. ~~bool~~                                                                |
+| `IS_PUNCT`, `IS_SPACE`, `IS_STOP`              | Token is punctuation, whitespace, stop word. ~~bool~~                                                                     |
+| `IS_SENT_START`                                | Token is start of sentence. ~~bool~~                                                                                      |
+| `LIKE_NUM`, `LIKE_URL`, `LIKE_EMAIL`           | Token text resembles a number, URL, email. ~~bool~~                                                                       |
+| `SPACY`                                        | Token has a trailing space. ~~bool~~                                                                                      |
+| `POS`, `TAG`, `MORPH`, `DEP`, `LEMMA`, `SHAPE` | The token's simple and extended part-of-speech tag, morphological analysis, dependency label, lemma, shape. ~~str~~       |
+| `ENT_TYPE`                                     | The token's entity label. ~~str~~                                                                                         |
+| `ENT_IOB`                                      | The IOB part of the token's entity tag. ~~str~~                                                                           |
+| `ENT_ID`                                       | The token's entity ID (`ent_id`). ~~str~~                                                                                 |
+| `ENT_KB_ID`                                    | The token's entity knowledge base ID (`ent_kb_id`). ~~str~~                                                               |
+| `_` <Tag variant="new">2.1</Tag>               | Properties in [custom extension attributes](/usage/processing-pipelines#custom-components-attributes). ~~Dict[str, Any]~~ |
+| `OP`                                           | Operator or quantifier to determine how often to match a token pattern. ~~str~~                                           |
 
 Operators and quantifiers define **how often** a token pattern should be
 matched:
@@ -59,15 +59,20 @@ matched:
 > [
 >   {"POS": "ADJ", "OP": "*"},
 >   {"POS": "NOUN", "OP": "+"}
+>   {"POS": "PROPN", "OP": "{2}"}
 > ]
 > ```
 
-| OP  | Description                                                      |
-| --- | ---------------------------------------------------------------- |
-| `!` | Negate the pattern, by requiring it to match exactly 0 times.    |
-| `?` | Make the pattern optional, by allowing it to match 0 or 1 times. |
-| `+` | Require the pattern to match 1 or more times.                    |
-| `*` | Allow the pattern to match 0 or more times.                      |
+| OP      | Description                                                            |
+|---------|------------------------------------------------------------------------|
+| `!`     | Negate the pattern, by requiring it to match exactly 0 times.          |
+| `?`     | Make the pattern optional, by allowing it to match 0 or 1 times.       |
+| `+`     | Require the pattern to match 1 or more times.                          |
+| `*`     | Allow the pattern to match 0 or more times.                            |
+| `{n}`   | Require the pattern to match exactly _n_ times.                        |
+| `{n,m}` | Require the pattern to match at least _n_ but not more than _m_ times. |
+| `{n,}`  | Require the pattern to match at least _n_ times.                       |
+| `{,m}`  | Require the pattern to match at most _m_ times.                        |
 
 Token patterns can also map to a **dictionary of properties** instead of a
 single value to indicate whether the expected value is a member of a list or how
@@ -113,6 +118,10 @@ string where an integer is expected) or unexpected property names.
 
 Find all token sequences matching the supplied patterns on the `Doc` or `Span`.
 
+Note that if a single label has multiple patterns associated with it, the
+returned matches don't provide a way to tell which pattern was responsible for
+the match.
+
 > #### Example
 >
 > ```python
@@ -131,7 +140,7 @@ Find all token sequences matching the supplied patterns on the `Doc` or `Span`.
 | _keyword-only_                                   |                                                                                                                                                                                                                                                                                                          |
 | `as_spans` <Tag variant="new">3</Tag>            | Instead of tuples, return a list of [`Span`](/api/span) objects of the matches, with the `match_id` assigned as the span label. Defaults to `False`. ~~bool~~                                                                                                                                            |
 | `allow_missing` <Tag variant="new">3</Tag>       | Whether to skip checks for missing annotation for attributes included in patterns. Defaults to `False`. ~~bool~~                                                                                                                                                                                         |
-| `with_alignments` <Tag variant="new">3.0.6</Tag> | Return match alignment information as part of the match tuple as `List[int]` with the same length as the matched span. Each entry denotes the corresponding index of the token pattern. If `as_spans` is set to `True`, this setting is ignored. Defaults to `False`. ~~bool~~                           |
+| `with_alignments` <Tag variant="new">3.0.6</Tag> | Return match alignment information as part of the match tuple as `List[int]` with the same length as the matched span. Each entry denotes the corresponding index of the token in the pattern. If `as_spans` is set to `True`, this setting is ignored. Defaults to `False`. ~~bool~~                    |
 | **RETURNS**                                      | A list of `(match_id, start, end)` tuples, describing the matches. A match tuple describes a span `doc[start:end`]. The `match_id` is the ID of the added match pattern. If `as_spans` is set to `True`, a list of `Span` objects is returned instead. ~~Union[List[Tuple[int, int, int]], List[Span]]~~ |
 
 ## Matcher.\_\_len\_\_ {#len tag="method" new="2"}
@@ -190,7 +199,7 @@ will be overwritten.
 >    [{"LOWER": "hello"}, {"LOWER": "world"}],
 >    [{"ORTH": "Google"}, {"ORTH": "Maps"}]
 > ]
-> matcher.add("TEST_PATTERNS", patterns)
+> matcher.add("TEST_PATTERNS", patterns, on_match=on_match)
 > doc = nlp("HELLO WORLD on Google Maps.")
 > matches = matcher(doc)
 > ```

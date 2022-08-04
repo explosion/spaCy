@@ -6,6 +6,7 @@ menu:
   - ['Phrase Matcher', 'phrasematcher']
   - ['Dependency Matcher', 'dependencymatcher']
   - ['Entity Ruler', 'entityruler']
+  - ['Span Ruler', 'spanruler']
   - ['Models & Rules', 'models-rules']
 ---
 
@@ -158,23 +159,23 @@ The available token pattern keys correspond to a number of
 [`Token` attributes](/api/token#attributes). The supported attributes for
 rule-based matching are:
 
-| Attribute                                       |  Description                                                                                                                                                                                                                                                                                              |
-| ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ORTH`                                          | The exact verbatim text of a token. ~~str~~                                                                                                                                                                                                                                                               |
-| `TEXT` <Tag variant="new">2.1</Tag>             | The exact verbatim text of a token. ~~str~~                                                                                                                                                                                                                                                               |
-| `NORM`                                          | The normalized form of the token text. ~~str~~                                                                                                                                                                                                                                                            |
-| `LOWER`                                         | The lowercase form of the token text. ~~str~~                                                                                                                                                                                                                                                             |
-|  `LENGTH`                                       | The length of the token text. ~~int~~                                                                                                                                                                                                                                                                     |
-|  `IS_ALPHA`, `IS_ASCII`, `IS_DIGIT`             | Token text consists of alphabetic characters, ASCII characters, digits. ~~bool~~                                                                                                                                                                                                                          |
-|  `IS_LOWER`, `IS_UPPER`, `IS_TITLE`             | Token text is in lowercase, uppercase, titlecase. ~~bool~~                                                                                                                                                                                                                                                |
-|  `IS_PUNCT`, `IS_SPACE`, `IS_STOP`              | Token is punctuation, whitespace, stop word. ~~bool~~                                                                                                                                                                                                                                                     |
-|  `IS_SENT_START`                                | Token is start of sentence. ~~bool~~                                                                                                                                                                                                                                                                      |
-|  `LIKE_NUM`, `LIKE_URL`, `LIKE_EMAIL`           | Token text resembles a number, URL, email. ~~bool~~                                                                                                                                                                                                                                                       |
-| `SPACY`                                         | Token has a trailing space. ~~bool~~                                                                                                                                                                                                                                                                      |
-|  `POS`, `TAG`, `MORPH`, `DEP`, `LEMMA`, `SHAPE` | The token's simple and extended part-of-speech tag, morphological analysis, dependency label, lemma, shape. Note that the values of these attributes are case-sensitive. For a list of available part-of-speech tags and dependency labels, see the [Annotation Specifications](/api/annotation). ~~str~~ |
-| `ENT_TYPE`                                      | The token's entity label. ~~str~~                                                                                                                                                                                                                                                                         |
-| `_` <Tag variant="new">2.1</Tag>                | Properties in [custom extension attributes](/usage/processing-pipelines#custom-components-attributes). ~~Dict[str, Any]~~                                                                                                                                                                                 |
-| `OP`                                            | [Operator or quantifier](#quantifiers) to determine how often to match a token pattern. ~~str~~                                                                                                                                                                                                           |
+| Attribute                                      | Description                                                                                                                                                                                                                                                                                               |
+| ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ORTH`                                         | The exact verbatim text of a token. ~~str~~                                                                                                                                                                                                                                                               |
+| `TEXT` <Tag variant="new">2.1</Tag>            | The exact verbatim text of a token. ~~str~~                                                                                                                                                                                                                                                               |
+| `NORM`                                         | The normalized form of the token text. ~~str~~                                                                                                                                                                                                                                                            |
+| `LOWER`                                        | The lowercase form of the token text. ~~str~~                                                                                                                                                                                                                                                             |
+| `LENGTH`                                       | The length of the token text. ~~int~~                                                                                                                                                                                                                                                                     |
+| `IS_ALPHA`, `IS_ASCII`, `IS_DIGIT`             | Token text consists of alphabetic characters, ASCII characters, digits. ~~bool~~                                                                                                                                                                                                                          |
+| `IS_LOWER`, `IS_UPPER`, `IS_TITLE`             | Token text is in lowercase, uppercase, titlecase. ~~bool~~                                                                                                                                                                                                                                                |
+| `IS_PUNCT`, `IS_SPACE`, `IS_STOP`              | Token is punctuation, whitespace, stop word. ~~bool~~                                                                                                                                                                                                                                                     |
+| `IS_SENT_START`                                | Token is start of sentence. ~~bool~~                                                                                                                                                                                                                                                                      |
+| `LIKE_NUM`, `LIKE_URL`, `LIKE_EMAIL`           | Token text resembles a number, URL, email. ~~bool~~                                                                                                                                                                                                                                                       |
+| `SPACY`                                        | Token has a trailing space. ~~bool~~                                                                                                                                                                                                                                                                      |
+| `POS`, `TAG`, `MORPH`, `DEP`, `LEMMA`, `SHAPE` | The token's simple and extended part-of-speech tag, morphological analysis, dependency label, lemma, shape. Note that the values of these attributes are case-sensitive. For a list of available part-of-speech tags and dependency labels, see the [Annotation Specifications](/api/annotation). ~~str~~ |
+| `ENT_TYPE`                                     | The token's entity label. ~~str~~                                                                                                                                                                                                                                                                         |
+| `_` <Tag variant="new">2.1</Tag>               | Properties in [custom extension attributes](/usage/processing-pipelines#custom-components-attributes). ~~Dict[str, Any]~~                                                                                                                                                                                 |
+| `OP`                                           | [Operator or quantifier](#quantifiers) to determine how often to match a token pattern. ~~str~~                                                                                                                                                                                                           |
 
 <Accordion title="Does it matter if the attribute names are uppercase or lowercase?">
 
@@ -373,12 +374,16 @@ punctuation marks, or specify optional tokens. Note that there are no nested or
 scoped quantifiers – instead, you can build those behaviors with `on_match`
 callbacks.
 
-| OP  | Description                                                      |
-| --- | ---------------------------------------------------------------- |
-| `!` | Negate the pattern, by requiring it to match exactly 0 times.    |
-| `?` | Make the pattern optional, by allowing it to match 0 or 1 times. |
-| `+` | Require the pattern to match 1 or more times.                    |
-| `*` | Allow the pattern to match zero or more times.                   |
+| OP      | Description                                                            |
+|---------|------------------------------------------------------------------------|
+| `!`     | Negate the pattern, by requiring it to match exactly 0 times.          |
+| `?`     | Make the pattern optional, by allowing it to match 0 or 1 times.       |
+| `+`     | Require the pattern to match 1 or more times.                          |
+| `*`     | Allow the pattern to match zero or more times.                         |
+| `{n}`   | Require the pattern to match exactly _n_ times.                        |
+| `{n,m}` | Require the pattern to match at least _n_ but not more than _m_ times. |
+| `{n,}`  | Require the pattern to match at least _n_ times.                       |
+| `{,m}`  | Require the pattern to match at most _m_ times.                        |
 
 > #### Example
 >
@@ -1445,6 +1450,108 @@ patterns = [{"label": "TEST", "pattern": str(i)} for i in range(100000)]
 with nlp.select_pipes(enable="tagger"):
     ruler.add_patterns(patterns)
 ```
+
+## Rule-based span matching {#spanruler new="3.3.1"}
+
+The [`SpanRuler`](/api/spanruler) is a generalized version of the entity ruler
+that lets you add spans to `doc.spans` or `doc.ents` based on pattern
+dictionaries, which makes it easy to combine rule-based and statistical pipeline
+components.
+
+### Span patterns {#spanruler-patterns}
+
+The [pattern format](#entityruler-patterns) is the same as for the entity ruler:
+
+1. **Phrase patterns** for exact string matches (string).
+
+   ```python
+   {"label": "ORG", "pattern": "Apple"}
+   ```
+
+2. **Token patterns** with one dictionary describing one token (list).
+
+   ```python
+   {"label": "GPE", "pattern": [{"LOWER": "san"}, {"LOWER": "francisco"}]}
+   ```
+
+### Using the span ruler {#spanruler-usage}
+
+The [`SpanRuler`](/api/spanruler) is a pipeline component that's typically added
+via [`nlp.add_pipe`](/api/language#add_pipe). When the `nlp` object is called on
+a text, it will find matches in the `doc` and add them as spans to
+`doc.spans["ruler"]`, using the specified pattern label as the entity label.
+Unlike in `doc.ents`, overlapping matches are allowed in `doc.spans`, so no
+filtering is required, but optional filtering and sorting can be applied to the
+spans before they're saved.
+
+```python
+### {executable="true"}
+import spacy
+
+nlp = spacy.blank("en")
+ruler = nlp.add_pipe("span_ruler")
+patterns = [{"label": "ORG", "pattern": "Apple"},
+            {"label": "GPE", "pattern": [{"LOWER": "san"}, {"LOWER": "francisco"}]}]
+ruler.add_patterns(patterns)
+
+doc = nlp("Apple is opening its first big office in San Francisco.")
+print([(span.text, span.label_) for span in doc.spans["ruler"]])
+```
+
+The span ruler is designed to integrate with spaCy's existing pipeline
+components and enhance the [SpanCategorizer](/api/spancat) and
+[EntityRecognizer](/api/entityrecognizer). The `overwrite` setting determines
+whether the existing annotation in `doc.spans` or `doc.ents` is preserved.
+Because overlapping entities are not allowed for `doc.ents`, the entities are
+always filtered, using [`util.filter_spans`](/api/top-level#util.filter_spans)
+by default. See the [`SpanRuler` API docs](/api/spanruler) for more information
+about how to customize the sorting and filtering of matched spans.
+
+```python
+### {executable="true"}
+import spacy
+
+nlp = spacy.load("en_core_web_sm")
+# only annotate doc.ents, not doc.spans
+config = {"spans_key": None, "annotate_ents": True, "overwrite": False}
+ruler = nlp.add_pipe("span_ruler", config=config)
+patterns = [{"label": "ORG", "pattern": "MyCorp Inc."}]
+ruler.add_patterns(patterns)
+
+doc = nlp("MyCorp Inc. is a company in the U.S.")
+print([(ent.text, ent.label_) for ent in doc.ents])
+```
+
+### Using pattern files {#spanruler-files}
+
+You can save patterns in a JSONL file (newline-delimited JSON) to load with
+[`SpanRuler.initialize`](/api/spanruler#initialize) or
+[`SpanRuler.add_patterns`](/api/spanruler#add_patterns).
+
+```json
+### patterns.jsonl
+{"label": "ORG", "pattern": "Apple"}
+{"label": "GPE", "pattern": [{"LOWER": "san"}, {"LOWER": "francisco"}]}
+```
+
+```python
+import srsly
+
+patterns = srsly.read_jsonl("patterns.jsonl")
+ruler = nlp.add_pipe("span_ruler")
+ruler.add_patterns(patterns)
+```
+
+<Infobox title="Important note" variant="warning">
+
+Unlike the entity ruler, the span ruler cannot load patterns on initialization
+with `SpanRuler(patterns=patterns)` or directly from a JSONL file path with
+`SpanRuler.from_disk(jsonl_path)`. Patterns should be loaded from the JSONL file
+separately and then added through
+[`SpanRuler.initialize`](/api/spanruler#initialize]) or
+[`SpanRuler.add_patterns`](/api/spanruler#add_patterns) as shown above.
+
+</Infobox>
 
 ## Combining models and rules {#models-rules}
 

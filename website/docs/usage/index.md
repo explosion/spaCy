@@ -129,15 +129,14 @@ machine learning library, [Thinc](https://thinc.ai). For GPU support, we've been
 grateful to use the work of Chainer's [CuPy](https://cupy.chainer.org) module,
 which provides a numpy-compatible interface for GPU arrays.
 
-spaCy can be installed on GPU by specifying `spacy[cuda]`, `spacy[cuda90]`,
-`spacy[cuda91]`, `spacy[cuda92]`, `spacy[cuda100]`, `spacy[cuda101]`,
-`spacy[cuda102]`, `spacy[cuda110]`, `spacy[cuda111]` or `spacy[cuda112]`. If you
-know your cuda version, using the more explicit specifier allows cupy to be
-installed via wheel, saving some compilation time. The specifiers should install
+spaCy can be installed for a CUDA-compatible GPU by specifying `spacy[cuda]`,
+`spacy[cuda102]`, `spacy[cuda112]`, `spacy[cuda113]`, etc. If you know your CUDA
+version, using the more explicit specifier allows CuPy to be installed via
+wheel, saving some compilation time. The specifiers should install
 [`cupy`](https://cupy.chainer.org).
 
 ```bash
-$ pip install -U %%SPACY_PKG_NAME[cuda92]%%SPACY_PKG_FLAGS
+$ pip install -U %%SPACY_PKG_NAME[cuda113]%%SPACY_PKG_FLAGS
 ```
 
 Once you have a GPU-enabled installation, the best way to activate it is to call
@@ -196,29 +195,73 @@ How to install compilers and related build tools:
   [Visual Studio Express](https://www.visualstudio.com/vs/visual-studio-express/)
   that matches the version that was used to compile your Python interpreter.
 
+#### Using build constraints when compiling from source
+
+If you install spaCy from source or with `pip` for platforms where there are not
+binary wheels on PyPI, you may need to use build constraints if any package in
+your environment requires an older version of `numpy`.
+
+If `numpy` gets downgraded from the most recent release at any point after
+you've compiled `spacy`, you might see an error that looks like this:
+
+```none
+numpy.ndarray size changed, may indicate binary incompatibility.
+```
+
+To fix this, create a new virtual environment and install `spacy` and all of its
+dependencies using build constraints.
+[Build constraints](https://pip.pypa.io/en/stable/user_guide/#constraints-files)
+specify an older version of `numpy` that is only used while compiling `spacy`,
+and then your runtime environment can use any newer version of `numpy` and still
+be compatible. In addition, use `--no-cache-dir` to ignore any previously cached
+wheels so that all relevant packages are recompiled from scratch:
+
+```shell
+PIP_CONSTRAINT=https://raw.githubusercontent.com/explosion/spacy/master/build-constraints.txt \
+pip install spacy --no-cache-dir
+```
+
+Our build constraints currently specify the oldest supported `numpy` available
+on PyPI for `x86_64` and `aarch64`. Depending on your platform and environment,
+you may want to customize the specific versions of `numpy`. For other platforms,
+you can have a look at SciPy's
+[`oldest-supported-numpy`](https://github.com/scipy/oldest-supported-numpy/blob/main/setup.cfg)
+package to see what the oldest recommended versions of `numpy` are.
+
+(_Warning_: don't use `pip install -c constraints.txt` instead of
+`PIP_CONSTRAINT`, since this isn't applied to the isolated build environments.)
+
 #### Additional options for developers {#source-developers}
 
 Some additional options may be useful for spaCy developers who are editing the
 source code and recompiling frequently.
 
-- Install in editable mode. Changes to `.py` files will be reflected as soon as
-  the files are saved, but edits to Cython files (`.pxd`, `.pyx`) will require
-  the `pip install` or `python setup.py build_ext` command below to be run
-  again. Before installing in editable mode, be sure you have removed any
-  previous installs with `pip uninstall spacy`, which you may need to run
-  multiple times to remove all traces of earlier installs.
+- Install in editable mode. Changes to `.py` files will be reflected as soon
+  as the files are saved, but edits to Cython files (`.pxd`, `.pyx`) will
+  require the `pip install` command below to be run again. Before installing in
+  editable mode, be sure you have removed any previous installs with
+  `pip uninstall spacy`, which you may need to run multiple times to remove all
+  traces of earlier installs.
 
   ```bash
   $ pip install -r requirements.txt
   $ pip install --no-build-isolation --editable .
   ```
 
-- Build in parallel using `N` CPUs to speed up compilation and then install in
-  editable mode:
+- Build in parallel. Starting in v3.4.0, you can specify the number of
+  build jobs with the environment variable `SPACY_NUM_BUILD_JOBS`:
 
   ```bash
   $ pip install -r requirements.txt
-  $ python setup.py build_ext --inplace -j N
+  $ SPACY_NUM_BUILD_JOBS=4 pip install --no-build-isolation --editable .
+  ```
+
+- For editable mode and parallel builds with `python setup.py` instead of `pip`
+  (no longer recommended):
+
+  ```bash
+  $ pip install -r requirements.txt
+  $ python setup.py build_ext --inplace -j 4
   $ python setup.py develop
   ```
 

@@ -9,11 +9,11 @@ from ..tokens.span import Span
 from ..attrs import IDS
 from .alignment import Alignment
 from .iob_utils import biluo_to_iob, offsets_to_biluo_tags, doc_to_biluo_tags
-from .iob_utils import biluo_tags_to_spans
+from .iob_utils import biluo_tags_to_spans, remove_bilu_prefix
 from ..errors import Errors, Warnings
 from ..pipeline._parser_internals import nonproj
 from ..tokens.token cimport MISSING_DEP
-from ..util import logger, to_ternary_int
+from ..util import logger, to_ternary_int, all_equal
 
 
 cpdef Doc annotations_to_doc(vocab, tok_annot, doc_annot):
@@ -151,54 +151,131 @@ cdef class Example:
                 self._y_sig = y_sig
                 return self._cached_alignment
 
+
+    def _get_aligned_vectorized(self, align, gold_values):
+        # Fast path for Doc attributes/fields that are predominantly a single value,
+        # i.e., TAG, POS, MORPH.
+        x2y_single_toks = []
+        x2y_single_toks_i = []
+
+        x2y_multiple_toks = []
+        x2y_multiple_toks_i = []
+
+        # Gather indices of gold tokens aligned to the candidate tokens into two buckets.
+        #   Bucket 1: All tokens that have a one-to-one alignment.
+        #   Bucket 2: All tokens that have a one-to-many alignment.
+        for idx, token in enumerate(self.predicted):
+            aligned_gold_i = align[token.i]
+            aligned_gold_len = len(aligned_gold_i)
+
+            if aligned_gold_len == 1:
+                x2y_single_toks.append(aligned_gold_i.item())
+                x2y_single_toks_i.append(idx)
+            elif aligned_gold_len > 1:
+                x2y_multiple_toks.append(aligned_gold_i)
+                x2y_multiple_toks_i.append(idx)
+
+        # Map elements of the first bucket directly to the output array.
+        output = numpy.full(len(self.predicted), None)
+        output[x2y_single_toks_i] = gold_values[x2y_single_toks].squeeze()
+
+        # Collapse many-to-one alignments into one-to-one alignments if they
+        # share the same value. Map to None in all other cases.
+        for i in range(len(x2y_multiple_toks)):
+            aligned_gold_values = gold_values[x2y_multiple_toks[i]]
+
+            # If all aligned tokens have the same value, use it.
+            if all_equal(aligned_gold_values):
+                x2y_multiple_toks[i] = aligned_gold_values[0].item()
+            else:
+                x2y_multiple_toks[i] = None
+
+        output[x2y_multiple_toks_i] = x2y_multiple_toks
+
+        return output.tolist()
+
+
+    def _get_aligned_non_vectorized(self, align, gold_values):
+        # Slower path for fields that return multiple values (resulting
+        # in ragged arrays that cannot be vectorized trivially).
+        output = [None] * len(self.predicted)
+
+        for token in self.predicted:
+            aligned_gold_i = align[token.i]
+            values = gold_values[aligned_gold_i].ravel()
+            if len(values) == 1:
+                output[token.i] = values.item()
+            elif all_equal(values):
+                # If all aligned tokens have the same value, use it.
+                output[token.i] = values[0].item()
+
+        return output
+
+
     def get_aligned(self, field, as_string=False):
         """Return an aligned array for a token attribute."""
         align = self.alignment.x2y
+        gold_values = self.reference.to_array([field])
+
+        if len(gold_values.shape) == 1:
+            output = self._get_aligned_vectorized(align, gold_values)
+        else:
+            output = self._get_aligned_non_vectorized(align, gold_values)
 
         vocab = self.reference.vocab
-        gold_values = self.reference.to_array([field])
-        output = [None] * len(self.predicted)
-        for token in self.predicted:
-            values = gold_values[align[token.i]]
-            values = values.ravel()
-            if len(values) == 0:
-                output[token.i] = None
-            elif len(values) == 1:
-                output[token.i] = values[0]
-            elif len(set(list(values))) == 1:
-                # If all aligned tokens have the same value, use it.
-                output[token.i] = values[0]
-            else:
-                output[token.i] = None
         if as_string and field not in ["ENT_IOB", "SENT_START"]:
             output = [vocab.strings[o] if o is not None else o for o in output]
+
         return output
 
     def get_aligned_parse(self, projectivize=True):
         cand_to_gold = self.alignment.x2y
         gold_to_cand = self.alignment.y2x
-        aligned_heads = [None] * self.x.length
-        aligned_deps = [None] * self.x.length
-        has_deps = [token.has_dep() for token in self.y]
-        has_heads = [token.has_head() for token in self.y]
         heads = [token.head.i for token in self.y]
         deps = [token.dep_ for token in self.y]
+
         if projectivize:
             proj_heads, proj_deps = nonproj.projectivize(heads, deps)
+            has_deps = [token.has_dep() for token in self.y]
+            has_heads = [token.has_head() for token in self.y]
+
             # ensure that missing data remains missing
             heads = [h if has_heads[i] else heads[i] for i, h in enumerate(proj_heads)]
             deps = [d if has_deps[i] else deps[i] for i, d in enumerate(proj_deps)]
-        for cand_i in range(self.x.length):
-            if cand_to_gold.lengths[cand_i] == 1:
-                gold_i = cand_to_gold[cand_i][0]
-                if gold_to_cand.lengths[heads[gold_i]] == 1:
-                    aligned_heads[cand_i] = int(gold_to_cand[heads[gold_i]][0])
-                    aligned_deps[cand_i] = deps[gold_i]
-        return aligned_heads, aligned_deps
+
+        # Select all candidate tokens that are aligned to a single gold token.
+        c2g_single_toks = numpy.where(cand_to_gold.lengths == 1)[0]
+
+        # Fetch all aligned gold token incides.
+        if c2g_single_toks.shape == cand_to_gold.lengths.shape:
+            # This the most likely case.
+            gold_i = cand_to_gold[:]
+        else:
+            gold_i = numpy.vectorize(lambda x: cand_to_gold[int(x)][0], otypes='i')(c2g_single_toks)
+
+        # Fetch indices of all gold heads for the aligned gold tokens.
+        heads = numpy.asarray(heads, dtype='i')
+        gold_head_i = heads[gold_i]
+
+        # Select all gold tokens that are heads of the previously selected 
+        # gold tokens (and are aligned to a single candidate token).
+        g2c_len_heads = gold_to_cand.lengths[gold_head_i]
+        g2c_len_heads = numpy.where(g2c_len_heads == 1)[0]
+        g2c_i = numpy.vectorize(lambda x: gold_to_cand[int(x)][0], otypes='i')(gold_head_i[g2c_len_heads]).squeeze()
+
+        # Update head/dep alignments with the above.
+        aligned_heads = numpy.full((self.x.length), None)
+        aligned_heads[c2g_single_toks[g2c_len_heads]] = g2c_i
+
+        deps = numpy.asarray(deps)
+        aligned_deps = numpy.full((self.x.length), None)
+        aligned_deps[c2g_single_toks] = deps[gold_i]
+
+        return aligned_heads.tolist(), aligned_deps.tolist()
 
     def get_aligned_sent_starts(self):
         """Get list of SENT_START attributes aligned to the predicted tokenization.
-        If the reference has not sentence starts, return a list of None values.
+        If the reference does not have sentence starts, return a list of None values.
         """
         if self.y.has_annotation("SENT_START"):
             align = self.alignment.y2x
@@ -519,7 +596,7 @@ def _parse_ner_tags(biluo_or_offsets, vocab, words, spaces):
         else:
             ent_iobs.append(iob_tag.split("-")[0])
             if iob_tag.startswith("I") or iob_tag.startswith("B"):
-                ent_types.append(iob_tag.split("-", 1)[1])
+                ent_types.append(remove_bilu_prefix(iob_tag))
             else:
                 ent_types.append("")
     return ent_iobs, ent_types
