@@ -225,14 +225,14 @@ def test_store_activations():
     doc = nlp("This is a test.")
     assert len(list(doc.activations["tagger"].keys())) == 0
 
-    tagger.store_activations = True
+    tagger.set_store_activations(True)
     doc = nlp("This is a test.")
     assert "tagger" in doc.activations
     assert set(doc.activations["tagger"].keys()) == {"guesses", "probs"}
     assert doc.activations["tagger"]["probs"].shape == (5, len(TAGS))
     assert doc.activations["tagger"]["guesses"].shape == (5,)
 
-    tagger.store_activations = ["probs"]
+    tagger.set_store_activations(["probs"])
     doc = nlp("This is a test.")
     assert set(doc.activations["tagger"].keys()) == {"probs"}
     assert doc.activations["tagger"]["probs"].shape == (5, len(TAGS))

@@ -82,7 +82,7 @@ class SentenceRecognizer(Tagger):
         *,
         overwrite=BACKWARD_OVERWRITE,
         scorer=senter_score,
-        store_activations=False,
+        store_activations: Union[bool, List[str]] = False,
     ):
         """Initialize a sentence recognizer.
 
@@ -103,7 +103,7 @@ class SentenceRecognizer(Tagger):
         self._rehearsal_model = None
         self.cfg = {"overwrite": overwrite}
         self.scorer = scorer
-        self.store_activations = store_activations
+        self.set_store_activations(store_activations)
 
     @property
     def labels(self):

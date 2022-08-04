@@ -352,8 +352,7 @@ cdef class TrainablePipe(Pipe):
     def store_activations(self):
         return self._store_activations
 
-    @store_activations.setter
-    def store_activations(self, activations):
+    def set_store_activations(self, activations):
         known_activations = self.activations
         if isinstance(activations, list):
             self._store_activations = []

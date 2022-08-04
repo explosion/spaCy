@@ -103,7 +103,7 @@ class Morphologizer(Tagger):
         overwrite: bool = BACKWARD_OVERWRITE,
         extend: bool = BACKWARD_EXTEND,
         scorer: Optional[Callable] = morphologizer_score,
-        store_activations=False,
+        store_activations: Union[bool, List[str]] = False,
     ):
         """Initialize a morphologizer.
 
@@ -135,7 +135,7 @@ class Morphologizer(Tagger):
         }
         self.cfg = dict(sorted(cfg.items()))
         self.scorer = scorer
-        self.store_activations = store_activations
+        self.set_store_activations(store_activations)
 
     @property
     def labels(self):

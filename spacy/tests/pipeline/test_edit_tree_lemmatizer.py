@@ -295,13 +295,13 @@ def test_store_activations():
     doc = nlp("This is a test.")
     assert len(list(doc.activations["trainable_lemmatizer"].keys())) == 0
 
-    lemmatizer.store_activations = True
+    lemmatizer.set_store_activations(True)
     doc = nlp("This is a test.")
     assert list(doc.activations["trainable_lemmatizer"].keys()) == ["probs", "guesses"]
     assert doc.activations["trainable_lemmatizer"]["probs"].shape == (5, nO)
     assert doc.activations["trainable_lemmatizer"]["guesses"].shape == (5,)
 
-    lemmatizer.store_activations = ["probs"]
+    lemmatizer.set_store_activations(["probs"])
     doc = nlp("This is a test.")
     assert list(doc.activations["trainable_lemmatizer"].keys()) == ["probs"]
     assert doc.activations["trainable_lemmatizer"]["probs"].shape == (5, nO)

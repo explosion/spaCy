@@ -174,7 +174,7 @@ class EntityLinker(TrainablePipe):
         scorer: Optional[Callable] = entity_linker_score,
         use_gold_ents: bool,
         threshold: Optional[float] = None,
-        store_activations=False,
+        store_activations: Union[bool, List[str]] = False,
     ) -> None:
         """Initialize an entity linker.
 
@@ -223,7 +223,7 @@ class EntityLinker(TrainablePipe):
         self.scorer = scorer
         self.use_gold_ents = use_gold_ents
         self.threshold = threshold
-        self.store_activations = store_activations
+        self.set_store_activations(store_activations)
 
     def set_kb(self, kb_loader: Callable[[Vocab], KnowledgeBase]):
         """Define the KB of this pipe by providing a function that will

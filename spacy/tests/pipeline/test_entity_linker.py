@@ -1227,7 +1227,7 @@ def test_store_activations():
     doc = nlp("Russ Cochran was a publisher")
     assert len(doc.activations["entity_linker"].keys()) == 0
 
-    entity_linker.store_activations = True
+    entity_linker.set_store_activations(True)
     doc = nlp("Russ Cochran was a publisher")
     assert set(doc.activations["entity_linker"].keys()) == {"ents", "scores"}
     ents = doc.activations["entity_linker"]["ents"]
@@ -1241,7 +1241,7 @@ def test_store_activations():
     assert scores.data.dtype == "float32"
     assert scores.lengths.shape == (1,)
 
-    entity_linker.store_activations = ["scores"]
+    entity_linker.set_store_activations(["scores"])
     doc = nlp("Russ Cochran was a publisher")
     assert set(doc.activations["entity_linker"].keys()) == {"scores"}
     scores = doc.activations["entity_linker"]["scores"]

@@ -97,7 +97,7 @@ class Tagger(TrainablePipe):
         overwrite=BACKWARD_OVERWRITE,
         scorer=tagger_score,
         neg_prefix="!",
-        store_activations=False,
+        store_activations: Union[bool, List[str]] = False,
     ):
         """Initialize a part-of-speech tagger.
 
@@ -119,7 +119,7 @@ class Tagger(TrainablePipe):
         cfg = {"labels": [], "overwrite": overwrite, "neg_prefix": neg_prefix}
         self.cfg = dict(sorted(cfg.items()))
         self.scorer = scorer
-        self.store_activations = store_activations
+        self.set_store_activations(store_activations)
 
     @property
     def labels(self):

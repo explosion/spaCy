@@ -213,14 +213,14 @@ def test_store_activations():
     doc = nlp("This is a test.")
     assert len(list(doc.activations["morphologizer"].keys())) == 0
 
-    morphologizer.store_activations = True
+    morphologizer.set_store_activations(True)
     doc = nlp("This is a test.")
     assert "morphologizer" in doc.activations
     assert set(doc.activations["morphologizer"].keys()) == {"guesses", "probs"}
     assert doc.activations["morphologizer"]["probs"].shape == (5, 6)
     assert doc.activations["morphologizer"]["guesses"].shape == (5,)
 
-    morphologizer.store_activations = ["probs"]
+    morphologizer.set_store_activations(["probs"])
     doc = nlp("This is a test.")
     assert "morphologizer" in doc.activations
     assert set(doc.activations["morphologizer"].keys()) == {"probs"}

@@ -97,7 +97,7 @@ class EditTreeLemmatizer(TrainablePipe):
         overwrite: bool = False,
         top_k: int = 1,
         scorer: Optional[Callable] = lemmatizer_score,
-        store_activations=False,
+        store_activations: Union[bool, List[str]] = False,
     ):
         """
         Construct an edit tree lemmatizer.
@@ -125,7 +125,7 @@ class EditTreeLemmatizer(TrainablePipe):
 
         self.cfg: Dict[str, Any] = {"labels": []}
         self.scorer = scorer
-        self.store_activations = store_activations  # type: ignore
+        self.set_store_activations(store_activations)
 
     def get_loss(
         self, examples: Iterable[Example], scores: List[Floats2d]

@@ -148,7 +148,7 @@ class TextCategorizer(TrainablePipe):
         *,
         threshold: float,
         scorer: Optional[Callable] = textcat_score,
-        store_activations=False,
+        store_activations: Union[bool, List[str]] = False,
     ) -> None:
         """Initialize a text categorizer for single-label classification.
 
@@ -169,7 +169,7 @@ class TextCategorizer(TrainablePipe):
         cfg = {"labels": [], "threshold": threshold, "positive_label": None}
         self.cfg = dict(cfg)
         self.scorer = scorer
-        self.store_activations = store_activations
+        self.set_store_activations(store_activations)
 
     @property
     def support_missing_values(self):

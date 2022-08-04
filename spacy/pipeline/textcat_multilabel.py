@@ -146,7 +146,7 @@ class MultiLabel_TextCategorizer(TextCategorizer):
         *,
         threshold: float,
         scorer: Optional[Callable] = textcat_multilabel_score,
-        store_activations=False,
+        store_activations: Union[bool, List[str]] = False,
     ) -> None:
         """Initialize a text categorizer for multi-label classification.
 
@@ -167,7 +167,7 @@ class MultiLabel_TextCategorizer(TextCategorizer):
         cfg = {"labels": [], "threshold": threshold}
         self.cfg = dict(cfg)
         self.scorer = scorer
-        self.store_activations = store_activations
+        self.set_store_activations(store_activations)
 
     @property
     def support_missing_values(self):

@@ -192,7 +192,7 @@ class SpanCategorizer(TrainablePipe):
         threshold: float = 0.5,
         max_positive: Optional[int] = None,
         scorer: Optional[Callable] = spancat_score,
-        store_activations=False,
+        store_activations: Union[bool, List[str]] = False,
     ) -> None:
         """Initialize the span categorizer.
         vocab (Vocab): The shared vocabulary.
@@ -225,7 +225,7 @@ class SpanCategorizer(TrainablePipe):
         self.model = model
         self.name = name
         self.scorer = scorer
-        self.store_activations = store_activations
+        self.set_store_activations(store_activations)
 
     @property
     def key(self) -> str:
