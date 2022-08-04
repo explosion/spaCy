@@ -923,15 +923,15 @@ plausible [`Candidate`](/api/kb/#candidate) objects. The default
 `CandidateGenerator` uses the text of a mention to find its potential aliases in
 the `KnowledgeBase`. Note that this function is case-dependent.
 
-## Coreference Architectures
+## Coreference Architectures {#coref-architectures tag="experimental" new="3.4"}
 
 A [`CoreferenceResolver`](/api/coref) component identifies tokens that refer to
-the same entity. A [`SpanPredictor`](/api/span-predictor) component infers spans
+the same entity. A [`SpanResolver`](/api/span-resolver) component infers spans
 from single tokens. Together these components can be used to reproduce
-traditional coreference models. You can also omit the `SpanPredictor` for faster
+traditional coreference models. You can also omit the `SpanResolver` for faster
 performance if working with only token-level clusters is acceptable.
 
-### spacy.Coref.v1 {#Coref}
+### spacy.Coref.v1 {#Coref tag="experimental"}
 
 > #### Example Config
 >
@@ -966,14 +966,14 @@ The `Coref` model architecture is a Thinc `Model`.
 | `antecedent_batch_size`   | Internal batch size. ~~int~~                                                                                                                                                             |
 | **CREATES**               | The model using the architecture. ~~Model[List[Doc], Floats2d]~~                                                                                                                         |
 
-### spacy.SpanPredictor.v1 {#SpanPredictor}
+### spacy.SpanResolver.v1 {#SpanResolver tag="experimental"}
 
 > #### Example Config
 >
 > ```ini
 >
 > [model]
-> @architectures = "spacy.SpanPredictor.v1"
+> @architectures = "spacy.SpanResolver.v1"
 > hidden_size = 1024
 > distance_embedding_size = 64
 > conv_channels = 4
@@ -988,7 +988,7 @@ The `Coref` model architecture is a Thinc `Model`.
 > pooling = {"@layers":"reduce_mean.v1"}
 > ```
 
-The `SpanPredictor` model architecture is a Thinc `Model`.
+The `SpanResolver` model architecture is a Thinc `Model`.
 
 | Name                      | Description                                                                                                                   |
 | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
