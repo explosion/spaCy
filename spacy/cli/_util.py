@@ -12,7 +12,7 @@ from click.parser import split_arg_string
 from typer.main import get_command
 from contextlib import contextmanager
 from thinc.api import Config, ConfigValidationError, require_gpu
-from thinc.util import has_cupy, gpu_is_available
+from thinc.util import gpu_is_available
 from configparser import InterpolationError
 import os
 
@@ -462,6 +462,23 @@ def git_sparse_checkout(repo, subpath, dest, branch):
         shutil.move(str(source_path), str(dest))
 
 
+def git_repo_branch_exists(repo: str, branch: str) -> bool:
+    """Uses 'git ls-remote' to check if a repository and branch exists
+
+    repo (str): URL to get repo.
+    branch (str): Branch on repo to check.
+    RETURNS (bool): True if repo:branch exists.
+    """
+    get_git_version()
+    cmd = f"git ls-remote {repo} {branch}"
+    # We might be tempted to use `--exit-code` with `git ls-remote`, but
+    # `run_command` handles the `returncode` for us, so we'll rely on
+    # the fact that stdout returns '' if the requested branch doesn't exist
+    ret = run_command(cmd, capture=True)
+    exists = ret.stdout != ""
+    return exists
+
+
 def get_git_version(
     error: str = "Could not run 'git'. Make sure it's installed and the executable is available.",
 ) -> Tuple[int, int]:
@@ -554,5 +571,5 @@ def setup_gpu(use_gpu: int, silent=None) -> None:
         require_gpu(use_gpu)
     else:
         local_msg.info("Using CPU")
-        if has_cupy and gpu_is_available():
+        if gpu_is_available():
             local_msg.info("To switch to GPU 0, use the option: --gpu-id 0")

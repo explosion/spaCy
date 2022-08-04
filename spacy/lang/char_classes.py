@@ -258,6 +258,10 @@ ALPHA = group_chars(
 ALPHA_LOWER = group_chars(_lower + _uncased)
 ALPHA_UPPER = group_chars(_upper + _uncased)
 
+_combining_diacritics = r"\u0300-\u036f"
+
+COMBINING_DIACRITICS = _combining_diacritics
+
 _units = (
     "km km² km³ m m² m³ dm dm² dm³ cm cm² cm³ mm mm² mm³ ha µm nm yd in ft "
     "kg g mg µg t lb oz m/s km/h kmh mph hPa Pa mbar mb MB kb KB gb GB tb "

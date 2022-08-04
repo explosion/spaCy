@@ -1,4 +1,6 @@
 # cython: infer_types=True, bounds_check=False, profile=True
+from typing import Set
+
 cimport cython
 cimport numpy as np
 from libc.string cimport memcpy
@@ -31,10 +33,11 @@ from ..errors import Errors, Warnings
 from ..morphology import Morphology
 from .. import util
 from .. import parts_of_speech
+from .. import schemas
 from .underscore import Underscore, get_ext_args
 from ._retokenize import Retokenizer
 from ._serialize import ALL_ATTRS as DOCBIN_ALL_ATTRS
-
+from ..util import get_words_and_spaces
 
 DEF PADDING = 5
 
@@ -414,6 +417,7 @@ cdef class Doc:
         """
 
         # empty docs are always annotated
+        input_attr = attr
         if self.length == 0:
             return True
         cdef int i
@@ -423,6 +427,10 @@ cdef class Doc:
         elif attr == "IS_SENT_END" or attr == self.vocab.strings["IS_SENT_END"]:
             attr = SENT_START
         attr = intify_attr(attr)
+        if attr is None:
+            raise ValueError(
+                Errors.E1037.format(attr=input_attr)
+            )
         # adjust attributes
         if attr == HEAD:
             # HEAD does not have an unset state, so rely on DEP
@@ -511,7 +519,7 @@ cdef class Doc:
     def doc(self):
         return self
 
-    def char_span(self, int start_idx, int end_idx, label=0, kb_id=0, vector=None, alignment_mode="strict"):
+    def char_span(self, int start_idx, int end_idx, label=0, kb_id=0, vector=None, alignment_mode="strict", span_id=0):
         """Create a `Span` object from the slice
         `doc.text[start_idx : end_idx]`. Returns None if no valid `Span` can be
         created.
@@ -570,7 +578,7 @@ cdef class Doc:
                 start += 1
         # Currently we have the token index, we want the range-end index
         end += 1
-        cdef Span span = Span(self, start, end, label=label, kb_id=kb_id, vector=vector)
+        cdef Span span = Span(self, start, end, label=label, kb_id=kb_id, span_id=span_id, vector=vector)
         return span
 
     def similarity(self, other):
@@ -599,7 +607,8 @@ cdef class Doc:
         if self.vocab.vectors.n_keys == 0:
             warnings.warn(Warnings.W007.format(obj="Doc"))
         if self.vector_norm == 0 or other.vector_norm == 0:
-            warnings.warn(Warnings.W008.format(obj="Doc"))
+            if not self.has_vector or not other.has_vector:
+                warnings.warn(Warnings.W008.format(obj="Doc"))
             return 0.0
         vector = self.vector
         xp = get_array_module(vector)
@@ -619,7 +628,7 @@ cdef class Doc:
         if "has_vector" in self.user_hooks:
             return self.user_hooks["has_vector"](self)
         elif self.vocab.vectors.size:
-            return True
+            return any(token.has_vector for token in self)
         elif self.tensor.size:
             return True
         else:
@@ -708,6 +717,7 @@ cdef class Doc:
             cdef int start = -1
             cdef attr_t label = 0
             cdef attr_t kb_id = 0
+            cdef attr_t ent_id = 0
             output = []
             for i in range(self.length):
                 token = &self.c[i]
@@ -718,18 +728,20 @@ cdef class Doc:
                 elif token.ent_iob == 2 or token.ent_iob == 0 or \
                         (token.ent_iob == 3 and token.ent_type == 0):
                     if start != -1:
-                        output.append(Span(self, start, i, label=label, kb_id=kb_id))
+                        output.append(Span(self, start, i, label=label, kb_id=kb_id, span_id=ent_id))
                     start = -1
                     label = 0
                     kb_id = 0
+                    ent_id = 0
                 elif token.ent_iob == 3:
                     if start != -1:
-                        output.append(Span(self, start, i, label=label, kb_id=kb_id))
+                        output.append(Span(self, start, i, label=label, kb_id=kb_id, span_id=ent_id))
                     start = i
                     label = token.ent_type
                     kb_id = token.ent_kb_id
+                    ent_id = token.ent_id
             if start != -1:
-                output.append(Span(self, start, self.length, label=label, kb_id=kb_id))
+                output.append(Span(self, start, self.length, label=label, kb_id=kb_id, span_id=ent_id))
             # remove empty-label spans
             output = [o for o in output if o.label_ != ""]
             return tuple(output)
@@ -738,14 +750,14 @@ cdef class Doc:
             # TODO:
             # 1. Test basic data-driven ORTH gazetteer
             # 2. Test more nuanced date and currency regex
-            cdef attr_t entity_type, kb_id
+            cdef attr_t entity_type, kb_id, ent_id
             cdef int ent_start, ent_end
             ent_spans = []
             for ent_info in ents:
-                entity_type_, kb_id, ent_start, ent_end = get_entity_info(ent_info)
+                entity_type_, kb_id, ent_start, ent_end, ent_id = get_entity_info(ent_info)
                 if isinstance(entity_type_, str):
                     self.vocab.strings.add(entity_type_)
-                span = Span(self, ent_start, ent_end, label=entity_type_, kb_id=kb_id)
+                span = Span(self, ent_start, ent_end, label=entity_type_, kb_id=kb_id, span_id=ent_id)
                 ent_spans.append(span)
             self.set_ents(ent_spans, default=SetEntsDefault.outside)
 
@@ -796,6 +808,9 @@ cdef class Doc:
                     self.c[i].ent_iob = 1
                 self.c[i].ent_type = span.label
                 self.c[i].ent_kb_id = span.kb_id
+                # for backwards compatibility in v3, only set ent_id from
+                # span.id if it's set, otherwise don't override
+                self.c[i].ent_id = span.id if span.id else self.c[i].ent_id
         for span in blocked:
             for i in range(span.start, span.end):
                 self.c[i].ent_iob = 3
@@ -1175,6 +1190,7 @@ cdef class Doc:
                             span.end_char + char_offset,
                             span.label,
                             span.kb_id,
+                            span.id,
                             span.text, # included as a check
                         ))
             char_offset += len(doc.text)
@@ -1210,8 +1226,9 @@ cdef class Doc:
                         span_tuple[1],
                         label=span_tuple[2],
                         kb_id=span_tuple[3],
+                        span_id=span_tuple[4],
                 )
-                text = span_tuple[4]
+                text = span_tuple[5]
                 if span is not None and span.text == text:
                     concat_doc.spans[key].append(span)
                 else:
@@ -1462,6 +1479,138 @@ cdef class Doc:
                 remove_label_if_necessary(attributes[i])
                 retokenizer.merge(span, attributes[i])
 
+    def from_json(self, doc_json, *, validate=False):
+        """Convert a JSON document generated by Doc.to_json() to a Doc.
+
+        doc_json (Dict): JSON representation of doc object to load.
+        validate (bool): Whether to validate `doc_json` against the expected schema.
+            Defaults to False.
+        RETURNS (Doc): A doc instance corresponding to the specified JSON representation.
+        """
+
+        if validate:
+            schema_validation_message = schemas.validate(schemas.DocJSONSchema, doc_json)
+            if schema_validation_message:
+                raise ValueError(Errors.E1038.format(message=schema_validation_message))
+
+        ### Token-level properties ###
+
+        words = []
+        token_attrs_ids = (POS, HEAD, DEP, LEMMA, TAG, MORPH)
+        # Map annotation type IDs to their string equivalents.
+        token_attrs = {t: self.vocab.strings[t].lower() for t in token_attrs_ids}
+        token_annotations = {}
+
+        # Gather token-level properties.
+        for token_json in doc_json["tokens"]:
+            words.append(doc_json["text"][token_json["start"]:token_json["end"]])
+            for attr, attr_json in token_attrs.items():
+                if attr_json in token_json:
+                    if token_json["id"] == 0 and attr not in token_annotations:
+                        token_annotations[attr] = []
+                    elif attr not in token_annotations:
+                        raise ValueError(Errors.E1040.format(partial_attrs=attr))
+                    token_annotations[attr].append(token_json[attr_json])
+
+        # Initialize doc instance.
+        start = 0
+        cdef const LexemeC* lex
+        cdef bint has_space
+        reconstructed_words, spaces = get_words_and_spaces(words, doc_json["text"])
+        assert words == reconstructed_words
+
+        for word, has_space in zip(words, spaces):
+            lex = self.vocab.get(self.mem, word)
+            self.push_back(lex, has_space)
+
+        # Set remaining token-level attributes via Doc.from_array().
+        if HEAD in token_annotations:
+            token_annotations[HEAD] = [
+                head - i for i, head in enumerate(token_annotations[HEAD])
+            ]
+
+        if DEP in token_annotations and HEAD not in token_annotations:
+            token_annotations[HEAD] = [0] * len(token_annotations[DEP])
+        if HEAD in token_annotations and DEP not in token_annotations:
+            raise ValueError(Errors.E1017)
+        if POS in token_annotations:
+            for pp in set(token_annotations[POS]):
+                if pp not in parts_of_speech.IDS:
+                    raise ValueError(Errors.E1021.format(pp=pp))
+
+        # Collect token attributes, assert all tokens have exactly the same set of attributes.
+        attrs = []
+        partial_attrs: Set[str] = set()
+        for attr in token_attrs.keys():
+            if attr in token_annotations:
+                if len(token_annotations[attr]) != len(words):
+                    partial_attrs.add(token_attrs[attr])
+                attrs.append(attr)
+        if len(partial_attrs):
+            raise ValueError(Errors.E1040.format(partial_attrs=partial_attrs))
+
+        # If there are any other annotations, set them.
+        if attrs:
+            array = self.to_array(attrs)
+            if array.ndim == 1:
+                array = numpy.reshape(array, (array.size, 1))
+            j = 0
+
+            for j, (attr, annot) in enumerate(token_annotations.items()):
+                if attr is HEAD:
+                    for i in range(len(words)):
+                        array[i, j] = annot[i]
+                elif attr is MORPH:
+                    for i in range(len(words)):
+                        array[i, j] = self.vocab.morphology.add(annot[i])
+                else:
+                    for i in range(len(words)):
+                        array[i, j] = self.vocab.strings.add(annot[i])
+            self.from_array(attrs, array)
+
+        ### Span/document properties ###
+
+        # Complement other document-level properties (cats, spans, ents).
+        self.cats = doc_json.get("cats", {})
+
+        # Set sentence boundaries, if dependency parser not available but sentences are specified in JSON.
+        if not self.has_annotation("DEP"):
+            for sent in doc_json.get("sents", {}):
+                char_span = self.char_span(sent["start"], sent["end"])
+                if char_span is None:
+                    raise ValueError(Errors.E1039.format(obj="sentence", start=sent["start"], end=sent["end"]))
+                char_span[0].is_sent_start = True
+                for token in char_span[1:]:
+                    token.is_sent_start = False
+
+
+        for span_group in doc_json.get("spans", {}):
+            spans = []
+            for span in doc_json["spans"][span_group]:
+                char_span = self.char_span(span["start"], span["end"], span["label"], span["kb_id"])
+                if char_span is None:
+                    raise ValueError(Errors.E1039.format(obj="span", start=span["start"], end=span["end"]))
+                spans.append(char_span)
+            self.spans[span_group] = spans
+
+        if "ents" in doc_json:
+            ents = []
+            for ent in doc_json["ents"]:
+                char_span = self.char_span(ent["start"], ent["end"], ent["label"])
+                if char_span is None:
+                    raise ValueError(Errors.E1039.format(obj="entity"), start=ent["start"], end=ent["end"])
+                ents.append(char_span)
+            self.ents = ents
+
+        # Add custom attributes. Note that only Doc extensions are currently considered, Token and Span extensions are
+        # not yet supported.
+        for attr in doc_json.get("_", {}):
+            if not Doc.has_extension(attr):
+                Doc.set_extension(attr)
+            self._.set(attr, doc_json["_"][attr])
+
+        return self
+
     def to_json(self, underscore=None):
         """Convert a Doc to JSON.
 
@@ -1472,12 +1621,10 @@ cdef class Doc:
         """
         data = {"text": self.text}
         if self.has_annotation("ENT_IOB"):
-            data["ents"] = [{"start": ent.start_char, "end": ent.end_char,
-                            "label": ent.label_} for ent in self.ents]
+            data["ents"] = [{"start": ent.start_char, "end": ent.end_char, "label": ent.label_} for ent in self.ents]
         if self.has_annotation("SENT_START"):
             sents = list(self.sents)
-            data["sents"] = [{"start": sent.start_char, "end": sent.end_char}
-                             for sent in sents]
+            data["sents"] = [{"start": sent.start_char, "end": sent.end_char} for sent in sents]
         if self.cats:
             data["cats"] = self.cats
         data["tokens"] = []
@@ -1503,7 +1650,9 @@ cdef class Doc:
             for span_group in self.spans:
                 data["spans"][span_group] = []
                 for span in self.spans[span_group]:
-                    span_data = {"start": span.start_char, "end": span.end_char, "label": span.label_, "kb_id": span.kb_id_}
+                    span_data = {
+                        "start": span.start_char, "end": span.end_char, "label": span.label_, "kb_id": span.kb_id_
+                    }
                     data["spans"][span_group].append(span_data)
 
         if underscore:
@@ -1732,18 +1881,17 @@ cdef int [:,:] _get_lca_matrix(Doc doc, int start, int end):
 def pickle_doc(doc):
     bytes_data = doc.to_bytes(exclude=["vocab", "user_data", "user_hooks"])
     hooks_and_data = (doc.user_data, doc.user_hooks, doc.user_span_hooks,
-                      doc.user_token_hooks, doc._context)
+                      doc.user_token_hooks)
     return (unpickle_doc, (doc.vocab, srsly.pickle_dumps(hooks_and_data), bytes_data))
 
 
 def unpickle_doc(vocab, hooks_and_data, bytes_data):
-    user_data, doc_hooks, span_hooks, token_hooks, _context = srsly.pickle_loads(hooks_and_data)
+    user_data, doc_hooks, span_hooks, token_hooks = srsly.pickle_loads(hooks_and_data)
 
     doc = Doc(vocab, user_data=user_data).from_bytes(bytes_data, exclude=["user_data"])
     doc.user_hooks.update(doc_hooks)
     doc.user_span_hooks.update(span_hooks)
     doc.user_token_hooks.update(token_hooks)
-    doc._context = _context
     return doc
 
 
@@ -1767,16 +1915,18 @@ def fix_attributes(doc, attributes):
 
 
 def get_entity_info(ent_info):
+    ent_kb_id = 0
+    ent_id = 0
     if isinstance(ent_info, Span):
         ent_type = ent_info.label
         ent_kb_id = ent_info.kb_id
         start = ent_info.start
         end = ent_info.end
+        ent_id = ent_info.id
     elif len(ent_info) == 3:
         ent_type, start, end = ent_info
-        ent_kb_id = 0
     elif len(ent_info) == 4:
         ent_type, ent_kb_id, start, end = ent_info
     else:
         ent_id, ent_kb_id, ent_type, start, end = ent_info
-    return ent_type, ent_kb_id, start, end
+    return ent_type, ent_kb_id, start, end, ent_id

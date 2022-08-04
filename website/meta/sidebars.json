@@ -12,7 +12,9 @@
                     { "text": "New in v3.0", "url": "/usage/v3" },
                     { "text": "New in v3.1", "url": "/usage/v3-1" },
                     { "text": "New in v3.2", "url": "/usage/v3-2" },
-                    { "text": "New in v3.3", "url": "/usage/v3-3" }
+                    { "text": "New in v3.2", "url": "/usage/v3-2" },
+                    { "text": "New in v3.3", "url": "/usage/v3-3" },
+                    { "text": "New in v3.4", "url": "/usage/v3-4" }
                 ]
             },
             {
@@ -103,6 +105,7 @@
                     { "text": "SentenceRecognizer", "url": "/api/sentencerecognizer" },
                     { "text": "Sentencizer", "url": "/api/sentencizer" },
                     { "text": "SpanCategorizer", "url": "/api/spancategorizer" },
+                    { "text": "SpanRuler", "url": "/api/spanruler" },
                     { "text": "Tagger", "url": "/api/tagger" },
                     { "text": "TextCategorizer", "url": "/api/textcategorizer" },
                     { "text": "Tok2Vec", "url": "/api/tok2vec" },
@@ -123,6 +126,7 @@
             {
                 "label": "Other",
                 "items": [
+                    { "text": "Attributes", "url": "/api/attributes" },
                     { "text": "Corpus", "url": "/api/corpus" },
                     { "text": "KnowledgeBase", "url": "/api/kb" },
                     { "text": "Lookups", "url": "/api/lookups" },
