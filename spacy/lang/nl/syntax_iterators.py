@@ -39,14 +39,14 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Tuple[int, int, int]]:
     # Label NP for the Span to identify it as Noun-Phrase
     span_label = doc.vocab.strings.add("NP")
 
-    start_span = -1
+    end_span = -1
     # Only NOUNS and PRONOUNS matter
     for i, word in enumerate(filter(lambda x: x.pos in [PRON, NOUN], doclike)):
         # For NOUNS
         # Pick children from syntactic parse (only those with certain dependencies)
         if word.pos == NOUN:
             # Prevent nested chunks from being produced
-            if word.left_edge.i <= start_span:
+            if word.left_edge.i <= end_span:
                 continue
             # Some debugging. It happens that VERBS are POS-TAGGED as NOUNS
             # We check if the word has a "nsubj", if it's the case, we eliminate it
@@ -68,7 +68,7 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Tuple[int, int, int]]:
         # PRONOUNS only if it is the subject of a verb
         elif word.pos == PRON:
             # Prevent nested chunks from being produced
-            if word.left_edge.i <= start_span:
+            if word.left_edge.i <= end_span:
                 continue
             if word.dep in pronoun_deps:
                 start_span = word.i
