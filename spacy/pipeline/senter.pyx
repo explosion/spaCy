@@ -126,7 +126,7 @@ class SentenceRecognizer(Tagger):
         """Modify a batch of documents, using pre-computed scores.
 
         docs (Iterable[Doc]): The documents to modify.
-        batch_tag_ids: The IDs to set, produced by SentenceRecognizer.predict.
+        activations (Dict): The activations used for setting annotations, produced by SentenceRecognizer.predict.
 
         DOCS: https://spacy.io/api/sentencerecognizer#set_annotations
         """

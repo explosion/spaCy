@@ -171,7 +171,7 @@ class Tagger(TrainablePipe):
         """Modify a batch of documents, using pre-computed scores.
 
         docs (Iterable[Doc]): The documents to modify.
-        batch_tag_ids: The IDs to set, produced by Tagger.predict.
+        activations (Dict): The activations used for setting annotations, produced by Tagger.predict.
 
         DOCS: https://spacy.io/api/tagger#set_annotations
         """
