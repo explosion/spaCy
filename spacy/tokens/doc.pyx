@@ -1699,7 +1699,6 @@ cdef class Doc:
             for attr in underscore:
                 if attr not in user_keys:
                     raise ValueError(Errors.E106.format(attr=attr, opts=underscore))
-
         return data
 
     def to_utf8_array(self, int nr_char=-1):

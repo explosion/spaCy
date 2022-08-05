@@ -9,6 +9,7 @@ from .test_underscore import clean_underscore  # noqa: F401
 @pytest.fixture()
 def doc(en_vocab):
     words = ["c", "d", "e"]
+    spaces = [True, True, True]
     pos = ["VERB", "NOUN", "NOUN"]
     tags = ["VBP", "NN", "NN"]
     heads = [0, 0, 1]
@@ -19,6 +20,7 @@ def doc(en_vocab):
     return Doc(
         en_vocab,
         words=words,
+        spaces=spaces,
         pos=pos,
         tags=tags,
         heads=heads,
@@ -223,7 +225,6 @@ def test_doc_to_json_span(doc):
 
 
 def test_json_to_doc(doc):
-    doc.has_unknown_spaces = False
     json_doc = doc.to_json()
     json_doc = srsly.json_loads(srsly.json_dumps(json_doc))
     new_doc = Doc(doc.vocab).from_json(json_doc, validate=True)
@@ -260,7 +261,6 @@ def test_json_to_doc_compat(doc, doc_json):
 def test_json_to_doc_underscore(doc):
     Doc.set_extension("json_test1", default=False)
     Doc.set_extension("json_test2", default=False)
-    doc.has_unknown_spaces = False
     doc._.json_test1 = "hello world"
     doc._.json_test2 = [1, 2, 3]
     json_doc = doc.to_json(underscore=["json_test1", "json_test2"])
@@ -292,6 +292,10 @@ def test_json_to_doc_with_token_span_attributes(doc):
     assert new_doc._.json_test2 == [1, 2, 3]
     assert new_doc[0]._.token_test == 117
     assert new_doc[0:1]._.span_test == "span_attribute"
+    assert new_doc.user_data == doc.user_data
+    assert new_doc.to_bytes(exclude=["user_data"]) == doc.to_bytes(
+        exclude=["user_data"]
+    )
 
 
 def test_json_to_doc_spans(doc):
