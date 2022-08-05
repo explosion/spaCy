@@ -286,7 +286,7 @@ def test_issue9904():
     nlp.initialize(get_examples)
 
     examples = get_examples()
-    scores = textcat.predict([eg.predicted for eg in examples])
+    scores = textcat.predict([eg.predicted for eg in examples])["probs"]
 
     loss = textcat.get_loss(examples, scores)[0]
     loss_double_bs = textcat.get_loss(examples * 2, scores.repeat(2, axis=0))[0]
