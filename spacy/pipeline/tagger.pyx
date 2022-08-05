@@ -183,10 +183,9 @@ class Tagger(TrainablePipe):
         cdef bint overwrite = self.cfg["overwrite"]
         labels = self.labels
         for i, doc in enumerate(docs):
-            stored_activations = {
-                key: activations[key][i] for key in self.store_activations
-            }
-            doc.activations[self.name] = stored_activations
+            doc.activations[self.name] = {}
+            for activation in self.store_activations:
+                doc.activations[self.name][activation] = activations[activation][i]
             doc_tag_ids = batch_tag_ids[i]
             if hasattr(doc_tag_ids, "get"):
                 doc_tag_ids = doc_tag_ids.get()

@@ -202,10 +202,9 @@ class EditTreeLemmatizer(TrainablePipe):
     def set_annotations(self, docs: Iterable[Doc], activations: ActivationsT):
         batch_tree_ids = activations["guesses"]
         for i, doc in enumerate(docs):
-            stored_activations = {
-                key: activations[key][i] for key in self.store_activations
-            }
-            doc.activations[self.name] = stored_activations
+            doc.activations[self.name] = {}
+            for activation in self.store_activations:
+                doc.activations[self.name][activation] = activations[activation][i]
             doc_tree_ids = batch_tree_ids[i]
             if hasattr(doc_tree_ids, "get"):
                 doc_tree_ids = doc_tree_ids.get()
