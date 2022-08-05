@@ -298,7 +298,9 @@ class SpanCategorizer(TrainablePipe):
             for index in candidates.dataXd:
                 doc.spans[candidates_key].append(doc[index[0] : index[1]])
 
-    def set_annotations(self, docs: Iterable[Doc], activations) -> None:
+    def set_annotations(
+        self, docs: Iterable[Doc], activations: Dict[str, Union[Floats2d, Ragged]]
+    ) -> None:
         """Modify a batch of Doc objects, using pre-computed scores.
 
         docs (Iterable[Doc]): The documents to modify.
@@ -309,7 +311,9 @@ class SpanCategorizer(TrainablePipe):
         labels = self.labels
 
         indices = activations["indices"]
-        scores = activations["scores"]
+        assert isinstance(indices, Ragged)
+        scores = cast(Floats2d, activations["scores"])
+
         offset = 0
         for i, doc in enumerate(docs):
             indices_i = indices[i].dataXd

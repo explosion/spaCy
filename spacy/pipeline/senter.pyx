@@ -1,9 +1,10 @@
 # cython: infer_types=True, profile=True, binding=True
-from typing import Optional, Callable, List, Union
+from typing import Dict, Iterable, Optional, Callable, List, Union
 from itertools import islice
 
 import srsly
 from thinc.api import Model, SequenceCategoricalCrossentropy, Config
+from thinc.types import Floats2d, Ints1d
 
 from ..tokens.doc cimport Doc
 
@@ -121,7 +122,7 @@ class SentenceRecognizer(Tagger):
     def label_data(self):
         return None
 
-    def set_annotations(self, docs, activations):
+    def set_annotations(self, docs: Iterable[Doc], activations: Dict[str, Union[List[Floats2d], List[Ints1d]]]):
         """Modify a batch of documents, using pre-computed scores.
 
         docs (Iterable[Doc]): The documents to modify.

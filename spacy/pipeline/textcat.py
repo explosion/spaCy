@@ -212,7 +212,7 @@ class TextCategorizer(TrainablePipe):
         scores = self.model.ops.asarray(scores)
         return scores
 
-    def set_annotations(self, docs: Iterable[Doc], scores) -> None:
+    def set_annotations(self, docs: Iterable[Doc], scores: Floats2d) -> None:
         """Modify a batch of Doc objects, using pre-computed scores.
 
         docs (Iterable[Doc]): The documents to modify.

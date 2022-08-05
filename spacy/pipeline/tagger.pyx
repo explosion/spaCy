@@ -1,9 +1,9 @@
 # cython: infer_types=True, profile=True, binding=True
-from typing import Callable, List, Optional, Union
+from typing import Callable, Dict, Iterable, List, Optional, Union
 import numpy
 import srsly
 from thinc.api import Model, set_dropout_rate, SequenceCategoricalCrossentropy, Config
-from thinc.types import Floats2d
+from thinc.types import Floats2d, Ints1d
 import warnings
 from itertools import islice
 
@@ -167,7 +167,7 @@ class Tagger(TrainablePipe):
             guesses.append(doc_guesses)
         return guesses
 
-    def set_annotations(self, docs, activations):
+    def set_annotations(self, docs: Iterable[Doc], activations: Dict[str, Union[List[Floats2d], List[Ints1d]]]):
         """Modify a batch of documents, using pre-computed scores.
 
         docs (Iterable[Doc]): The documents to modify.

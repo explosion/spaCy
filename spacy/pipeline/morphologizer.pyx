@@ -1,7 +1,8 @@
 # cython: infer_types=True, profile=True, binding=True
-from typing import Callable, Dict, List, Optional, Union
+from typing import Callable, Dict, Iterable, List, Optional, Union
 import srsly
 from thinc.api import SequenceCategoricalCrossentropy, Model, Config
+from thinc.types import Floats2d, Ints1d
 from itertools import islice
 
 from ..tokens.doc cimport Doc
@@ -229,7 +230,7 @@ class Morphologizer(Tagger):
         assert len(label_sample) > 0, Errors.E923.format(name=self.name)
         self.model.initialize(X=doc_sample, Y=label_sample)
 
-    def set_annotations(self, docs, activations):
+    def set_annotations(self, docs: Iterable[Doc], activations: Dict[str, Union[Floats2d, Ints1d]]):
         """Modify a batch of documents, using pre-computed scores.
 
         docs (Iterable[Doc]): The documents to modify.
