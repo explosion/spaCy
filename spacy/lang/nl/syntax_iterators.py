@@ -68,8 +68,6 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Tuple[int, int, int]]:
         # PRONOUNS only if it is the subject of a verb
         elif word.pos == PRON:
             # Prevent nested chunks from being produced
-            if word.left_edge.i <= end_span:
-                continue
             if word.dep in pronoun_deps:
                 start_span = word.i
                 end_span = word.i + 1
