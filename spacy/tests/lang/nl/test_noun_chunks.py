@@ -1,5 +1,6 @@
-from spacy.tokens import Doc
 import pytest
+from spacy.tokens import Doc
+from spacy.util import filter_spans
 
 
 @pytest.fixture
@@ -207,3 +208,18 @@ def test_chunking(nl_sample, nl_reference_chunking):
     """
     chunks = [s.text.lower() for s in nl_sample.noun_chunks]
     assert chunks == nl_reference_chunking
+
+
+@pytest.mark.issue(10846)
+def test_no_overlapping_chunks(nl_vocab):
+    # fmt: off
+    doc = Doc(
+        nl_vocab,
+        words=["okt", "opvlamming", "panuveitiss", "Oculo", "sinistra", ">", "Oculo", "dextra", "en", "alghele", "malaise", "moe", ",", "tattoos", "opgezet", ".", "17-03-2020", "Ozurdex", "Oculo", "dextra", "et", "sinistra", ",", "opvlamming", "onder", "humir", "luchtweg", "ondanks", "wekelijks", "ada", "vele", "corpus", "vitreum", "(", "glasvocht", ")", "troebelingen", "beschreven"],
+        deps=["parataxis", "ROOT", "ROOT", "flat", "flat", "flat", "nsubj", "appos", "cc", "conj", "obj", "ROOT", "punct", "obj", "conj", "punct", "nummod", "ROOT", "nmod:poss", "appos", "flat", "flat", "punct", "appos", "case", "nmod", "ROOT", "case", "advmod", "nmod", "amod", "nsubj", "nmod", "punct", "nmod", "punct", "nsubj:pass", "ROOT"],
+        heads=[1, 1, 2, 2, 2, 2, 11, 6, 9, 7, 11, 11, 14, 14, 11, 11, 17, 17, 26, 18, 18, 18, 23, 18, 25, 23, 26, 32, 29, 32, 31, 29, 26, 34, 32, 34, 37, 37],
+        pos=["NOUN", "NOUN", "PROPN", "PROPN", "ADJ", "PUNCT", "PROPN", "NOUN", "CCONJ", "ADJ", "NOUN", "ADJ", "PUNCT", "ADJ", "VERB", "PUNCT", "NUM", "NOUN", "NOUN", "VERB", "PROPN", "PROPN", "PUNCT", "NOUN", "ADP", "PROPN", "NOUN", "ADP", "ADJ", "PROPN", "ADV", "NOUN", "NOUN", "PUNCT", "NOUN", "PUNCT", "NOUN", "VERB", ],
+    )
+    # fmt: on
+    chunks = list(doc.noun_chunks)
+    assert filter_spans(chunks) == chunks
