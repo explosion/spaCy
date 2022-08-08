@@ -39,10 +39,8 @@ from spacy.training.converters import iob_to_docs
 from spacy.pipeline import TextCategorizer, Pipe
 from spacy.util import ENV_VARS, get_minor_version, load_model_from_config, load_config
 
-# from ..cli.init_pipeline import _init_labels
-# from .util import make_tempdir
-from spacy.cli.init_pipeline import _init_labels
-from spacy.tests.util import make_tempdir
+from ..cli.init_pipeline import _init_labels
+from .util import make_tempdir
 
 
 @pytest.mark.issue(4665)
