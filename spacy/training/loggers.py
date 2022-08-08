@@ -29,29 +29,34 @@ def setup_table(
 @registry.loggers("spacy.ConsoleLogger.v2")
 def console_logger(
     progress_bar: bool = False,
-    print_progress: bool = True,
-    output_file: Union[str, Path] = None,
+    console_output: bool = True,
+    output_file: Optional[Union[str, Path]] = None,
 ):
-    """The ConsoleLogger.v2 prints out training logs in the console and saves them into a jsonl file, with both options being optional.
-    print_progress (bool): Whether the logger should print the logs.
+    """The ConsoleLogger.v2 prints out training logs in the console and/or saves them to a jsonl file.
     progress_bar (bool): Whether the logger should print the progress bar.
-    output_file (Union[str, Path]): Where the logger should save the training logs to.
+    console_output (bool): Whether the logger should print the logs.
+    output_file (Optional[Union[str, Path]]): The file to save the training logs to.
     """
-    if output_file:
-        output_file = util.ensure_path(output_file)
-        if output_file.is_file():
-            output_file = util.ensure_path(output_file.stem + ".jsonl")
-            if output_file.exists():
-                output_file.unlink()
-        if not output_file.parents[0].exists():
-            output_file.parents[0].mkdir(parents=True)
 
     def setup_printer(
         nlp: "Language", stdout: IO = sys.stdout, stderr: IO = sys.stderr
     ) -> Tuple[Callable[[Optional[Dict[str, Any]]], None], Callable[[], None]]:
         write = lambda text: print(text, file=stdout, flush=True)
         msg = Printer(no_print=True)
-        if not print_progress:
+
+        if output_file:
+            output_file = util.ensure_path(output_file)
+            if output_file.is_file():
+                if not output_file.parents[0].exists():
+                    output_file.parents[0].mkdir(parents=True)
+                    write(msg.info(f"Created directory {output_file.parents[0]}"))
+                if not output_file.exists():
+                    file_ = (output_file).open("a")
+                else:
+                    write(msg.warn(f"The log file {output_file} already exists."))
+                    output_file = None
+
+        if not console_output:
             write(msg.info(f"Printing to console is disabled"))
         if output_file:
             write(msg.info(f"Saving logs to {output_file}"))
@@ -70,7 +75,7 @@ def console_logger(
             cols=["E", "#"] + loss_cols + score_cols + ["Score"],
             widths=[3, 6] + [8 for _ in loss_cols] + [6 for _ in score_cols] + [6],
         )
-        if print_progress:
+        if console_output:
             write(msg.row(table_header, widths=table_widths, spacing=spacing))
             write(msg.row(["-" * width for width in table_widths], spacing=spacing))
         progress = None
@@ -120,12 +125,11 @@ def console_logger(
                 "score": float(info["score"]),
             }
             if output_file:
-                with (output_file).open("a") as file_:
-                    file_.write(srsly.json_dumps(log_data) + "\n")
+                file_.write(srsly.json_dumps(log_data) + "\n")
 
             if progress is not None:
                 progress.close()
-            if print_progress:
+            if console_output:
                 write(
                     msg.row(
                         data, widths=table_widths, aligns=table_aligns, spacing=spacing
