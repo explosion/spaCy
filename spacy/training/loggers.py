@@ -34,9 +34,22 @@ def console_logger(
 ):
     """The ConsoleLogger.v2 prints out training logs in the console and/or saves them to a jsonl file.
     progress_bar (bool): Whether the logger should print the progress bar.
-    console_output (bool): Whether the logger should print the logs.
+    console_output (bool): Whether the logger should print the logs on the console.
     output_file (Optional[Union[str, Path]]): The file to save the training logs to.
     """
+
+    _mkdir_info = False
+    _log_exist = False
+
+    if output_file:
+        output_file = util.ensure_path(output_file)
+        if output_file.is_file():
+            if not output_file.parents[0].exists():
+                output_file.parents[0].mkdir(parents=True)
+                _mkdir_info = True
+            else:
+                _log_exist = True
+                output_file = None
 
     def setup_printer(
         nlp: "Language", stdout: IO = sys.stdout, stderr: IO = sys.stderr
@@ -44,22 +57,13 @@ def console_logger(
         write = lambda text: print(text, file=stdout, flush=True)
         msg = Printer(no_print=True)
 
-        if output_file:
-            output_file = util.ensure_path(output_file)
-            if output_file.is_file():
-                if not output_file.parents[0].exists():
-                    output_file.parents[0].mkdir(parents=True)
-                    write(msg.info(f"Created directory {output_file.parents[0]}"))
-                if not output_file.exists():
-                    file_ = (output_file).open("a")
-                else:
-                    write(msg.warn(f"The log file {output_file} already exists."))
-                    output_file = None
-
-        if not console_output:
-            write(msg.info(f"Printing to console is disabled"))
+        if _mkdir_info:
+            write(msg.info(f"Created directory {output_file.parents[0]}"))
+        if _log_exist:
+            write(msg.warn(f"The log file {output_file} already exists."))
         if output_file:
             write(msg.info(f"Saving logs to {output_file}"))
+
         # ensure that only trainable components are logged
         logged_pipes = [
             name
@@ -70,12 +74,13 @@ def console_logger(
         score_weights = nlp.config["training"]["score_weights"]
         score_cols = [col for col, value in score_weights.items() if value is not None]
         loss_cols = [f"Loss {pipe}" for pipe in logged_pipes]
-        spacing = 2
-        table_header, table_widths, table_aligns = setup_table(
-            cols=["E", "#"] + loss_cols + score_cols + ["Score"],
-            widths=[3, 6] + [8 for _ in loss_cols] + [6 for _ in score_cols] + [6],
-        )
+
         if console_output:
+            spacing = 2
+            table_header, table_widths, table_aligns = setup_table(
+                cols=["E", "#"] + loss_cols + score_cols + ["Score"],
+                widths=[3, 6] + [8 for _ in loss_cols] + [6 for _ in score_cols] + [6],
+            )
             write(msg.row(table_header, widths=table_widths, spacing=spacing))
             write(msg.row(["-" * width for width in table_widths], spacing=spacing))
         progress = None
@@ -125,7 +130,8 @@ def console_logger(
                 "score": float(info["score"]),
             }
             if output_file:
-                file_.write(srsly.json_dumps(log_data) + "\n")
+                with (output_file).open("a") as file_:
+                    file_.write(srsly.json_dumps(log_data) + "\n")
 
             if progress is not None:
                 progress.close()
