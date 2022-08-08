@@ -37,19 +37,13 @@ def console_logger(
     console_output (bool): Whether the logger should print the logs on the console.
     output_file (Optional[Union[str, Path]]): The file to save the training logs to.
     """
-
-    _mkdir_info = False
     _log_exist = False
-
     if output_file:
         output_file = util.ensure_path(output_file)
-        if output_file.is_file():
-            if not output_file.parents[0].exists():
-                output_file.parents[0].mkdir(parents=True)
-                _mkdir_info = True
-            else:
-                _log_exist = True
-                output_file = None
+        if output_file.exists():
+            _log_exist = True
+        if not output_file.parents[0].exists():
+            output_file.parents[0].mkdir(parents=True)
 
     def setup_printer(
         nlp: "Language", stdout: IO = sys.stdout, stderr: IO = sys.stderr
@@ -57,11 +51,12 @@ def console_logger(
         write = lambda text: print(text, file=stdout, flush=True)
         msg = Printer(no_print=True)
 
-        if _mkdir_info:
-            write(msg.info(f"Created directory {output_file.parents[0]}"))
+        nonlocal output_file
+
         if _log_exist:
             write(msg.warn(f"The log file {output_file} already exists."))
-        if output_file:
+            output_file = None
+        elif output_file:
             write(msg.info(f"Saving logs to {output_file}"))
 
         # ensure that only trainable components are logged
