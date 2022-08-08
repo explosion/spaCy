@@ -1608,19 +1608,20 @@ cdef class Doc:
                 Doc.set_extension(attr)
             self._.set(attr, doc_json["_"][attr])
 
-        if doc_json.get("user_data", {}):
-            for token_attr in doc_json["user_data"]["tokens"]:
-                token_start = doc_json["user_data"]["tokens"][token_attr]["token_start"]
-                value = doc_json["user_data"]["tokens"][token_attr]["value"]
+        if doc_json.get("underscore_token", {}):
+            for token_attr in doc_json["underscore_token"]:
+                token_start = doc_json["underscore_token"][token_attr]["token_start"]
+                value = doc_json["underscore_token"][token_attr]["value"]
 
                 if not Token.has_extension(token_attr):
                     Token.set_extension(token_attr)
                 self[token_start]._.set(token_attr, value)
-
-            for span_attr in doc_json["user_data"]["spans"]:
-                token_start = doc_json["user_data"]["spans"][span_attr]["token_start"]
-                token_end = doc_json["user_data"]["spans"][span_attr]["token_end"]
-                value = doc_json["user_data"]["spans"][span_attr]["value"]
+                
+        if doc_json.get("underscore_span", {}):
+            for span_attr in doc_json["underscore_span"]:
+                token_start = doc_json["underscore_span"][span_attr]["token_start"]
+                token_end = doc_json["underscore_span"][span_attr]["token_end"]
+                value = doc_json["underscore_span"][span_attr]["value"]
 
                 if not Span.has_extension(span_attr):
                     Span.set_extension(span_attr)
@@ -1671,9 +1672,10 @@ cdef class Doc:
 
         if underscore:
             user_keys = set()
-            data["_"] = {}
             if self.user_data:
-                data["user_data"] = {"spans":{}, "tokens":{}}
+                data["_"] = {}
+                data["underscore_token"] = {}
+                data["underscore_span"] = {}
                 for data_key in self.user_data:
                     if type(data_key) == tuple and len(data_key) >= 4 and data_key[0] == "._.":
                         attr = data_key[1]
@@ -1689,12 +1691,12 @@ cdef class Doc:
                                 data["_"][attr] = value
                             # Check if token attribute
                             elif end is None:
-                                if attr not in data["user_data"]["tokens"]:
-                                    data["user_data"]["tokens"][attr] = {"token_start": start, "token_end": end, "value":value}
+                                if attr not in data["underscore_token"]:
+                                    data["underscore_token"][attr] = {"token_start": start, "token_end": end, "value":value}
                             # Else span attribute
                             else:
-                                if attr not in data["user_data"]["spans"]:
-                                    data["user_data"]["spans"][attr] = {"token_start": start, "token_end": end, "value":value}
+                                if attr not in data["underscore_span"]:
+                                    data["underscore_span"][attr] = {"token_start": start, "token_end": end, "value":value}
 
             for attr in underscore:
                 if attr not in user_keys:
