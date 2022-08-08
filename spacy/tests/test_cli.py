@@ -1,8 +1,8 @@
 import os
 import math
-from random import sample
-from typing import Counter
+from typing import Counter, Iterable, Tuple, List
 
+import numpy
 import pytest
 import srsly
 from click import NoSuchOption
@@ -26,19 +26,23 @@ from spacy.cli.init_config import RECOMMENDATIONS, init_config, fill_config
 from spacy.cli.package import get_third_party_dependencies
 from spacy.cli.package import _is_permitted_package_name
 from spacy.cli.validate import get_model_pkgs
+from spacy.cli.find_threshold import find_threshold
 from spacy.lang.en import English
 from spacy.lang.nl import Dutch
 from spacy.language import Language
 from spacy.schemas import ProjectConfigSchema, RecommendationSchema, validate
-from spacy.tokens import Doc
+from spacy.tokens import Doc, DocBin
 from spacy.tokens.span import Span
 from spacy.training import Example, docs_to_json, offsets_to_biluo_tags
 from spacy.training.converters import conll_ner_to_docs, conllu_to_docs
 from spacy.training.converters import iob_to_docs
+from spacy.pipeline import TextCategorizer, Pipe
 from spacy.util import ENV_VARS, get_minor_version, load_model_from_config, load_config
 
-from ..cli.init_pipeline import _init_labels
-from .util import make_tempdir
+# from ..cli.init_pipeline import _init_labels
+# from .util import make_tempdir
+from spacy.cli.init_pipeline import _init_labels
+from spacy.tests.util import make_tempdir
 
 
 @pytest.mark.issue(4665)
@@ -855,3 +859,123 @@ def test_span_length_freq_dist_output_must_be_correct():
     span_freqs = _get_spans_length_freq_dist(sample_span_lengths, threshold)
     assert sum(span_freqs.values()) >= threshold
     assert list(span_freqs.keys()) == [3, 1, 4, 5, 2]
+
+
+def test_cli_find_threshold(capsys):
+    def make_get_examples_multi_label(_nlp: Language) -> List[Example]:
+        return [
+            Example.from_dict(_nlp.make_doc(t[0]), t[1])
+            for t in [
+                (
+                    "I'm angry and confused",
+                    {"cats": {"ANGRY": 1.0, "CONFUSED": 1.0, "HAPPY": 0.0}},
+                ),
+                (
+                    "I'm confused but happy",
+                    {"cats": {"ANGRY": 0.0, "CONFUSED": 1.0, "HAPPY": 1.0}},
+                ),
+            ]
+        ]
+
+    def init_nlp(
+        component_factory_names: Tuple[str] = (),
+    ) -> Tuple[Language, List[Example]]:
+        _nlp = English()
+
+        textcat: TextCategorizer = _nlp.add_pipe(factory_name="textcat_multilabel", name="tc_multi")  # type: ignore
+        textcat.add_label("ANGRY")
+        textcat.add_label("CONFUSED")
+        textcat.add_label("HAPPY")
+        for cfn in component_factory_names:
+            comp = _nlp.add_pipe(cfn)
+            if isinstance(comp, TextCategorizer):
+                comp.add_label("dummy")
+
+        _nlp.initialize()
+
+        _examples = make_get_examples_multi_label(_nlp)
+        for i in range(5):
+            _nlp.update(_examples)
+
+        return _nlp, _examples
+
+    with make_tempdir() as docs_dir:
+        # Check whether find_threshold() identifies lowest threshold above 0 as (first) ideal threshold, as this matches
+        # the current model behavior with the examples above. This can break once the model behavior changes and serves
+        # mostly as a smoke test.
+        nlp, examples = init_nlp()
+        DocBin(docs=[example.reference for example in examples]).to_disk(
+            docs_dir / "docs"
+        )
+        with make_tempdir() as nlp_dir:
+            nlp.to_disk(nlp_dir)
+            assert (
+                find_threshold(nlp_dir, docs_dir / "docs", verbose=False)[0]
+                == numpy.linspace(0, 1, 10)[1]
+            )
+
+        # Specifying name of non-MultiLabel_TextCategorizer component should fail.
+        nlp, _ = init_nlp(("sentencizer",))
+        with make_tempdir() as nlp_dir:
+            nlp.to_disk(nlp_dir)
+            with pytest.raises(SystemExit) as error:
+                find_threshold(nlp_dir, docs_dir / "docs", pipe_name="sentencizer")
+            assert error.value.code == 1
+
+        # Having multiple textcat_multilabel components without specifying the name should fail.
+        nlp, _ = init_nlp(("textcat_multilabel",))
+        with make_tempdir() as nlp_dir:
+            nlp.to_disk(nlp_dir)
+            with pytest.raises(SystemExit) as error:
+                find_threshold(nlp_dir, docs_dir / "docs")
+            assert error.value.code == 1
+
+        # Having multiple textcat_multilabel components should work when specifying the name.
+        nlp, _ = init_nlp(("textcat_multilabel",))
+        with make_tempdir() as nlp_dir:
+            nlp.to_disk(nlp_dir)
+            assert (
+                find_threshold(
+                    nlp_dir, docs_dir / "docs", pipe_name="tc_multi", verbose=False
+                )[0]
+                == numpy.linspace(0, 1, 10)[1]
+            )
+
+        # Specifying the name of an non-existing pipe should fail.
+        nlp, _ = init_nlp()
+        with make_tempdir() as nlp_dir:
+            nlp.to_disk(nlp_dir)
+            with pytest.raises(SystemExit) as error:
+                find_threshold(nlp_dir, docs_dir / "docs", pipe_name="_")
+            assert error.value.code == 1
+
+        # Using a pipe with no textcat components should fail.
+        nlp = English()
+        with make_tempdir() as nlp_dir:
+            nlp.to_disk(nlp_dir)
+            with pytest.raises(SystemExit) as error:
+                find_threshold(nlp_dir, docs_dir / "docs")
+            assert error.value.code == 1
+
+        # Specifying scores not in range 0 <= x <= 1 should fail.
+        nlp, _ = init_nlp()
+        DocBin(
+            docs=[
+                Example.from_dict(nlp.make_doc(t[0]), t[1]).reference
+                for t in [
+                    (
+                        "I'm angry and confused",
+                        {"cats": {"ANGRY": 1.0, "CONFUSED": 2.0, "HAPPY": 0.0}},
+                    ),
+                    (
+                        "I'm confused but happy",
+                        {"cats": {"ANGRY": 0.0, "CONFUSED": 1.0, "HAPPY": 1.0}},
+                    ),
+                ]
+            ]
+        ).to_disk(docs_dir / "docs")
+        with make_tempdir() as nlp_dir:
+            nlp.to_disk(nlp_dir)
+            with pytest.raises(SystemExit) as error:
+                find_threshold(nlp_dir, docs_dir / "docs")
+            assert error.value.code == 1

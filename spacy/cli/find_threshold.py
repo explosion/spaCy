@@ -1,6 +1,6 @@
 from pathlib import Path
 import logging
-from typing import Optional
+from typing import Optional, Tuple, Union
 
 import numpy
 import wasabi.tables
@@ -57,23 +57,26 @@ def find_threshold_cli(
 
 
 def find_threshold(
-    model_path: Path,
-    doc_path: Path,
+    model_path: Union[str, Path],
+    doc_path: Union[str, Path],
     *,
     average: str = _DEFAULTS["average"],
     pipe_name: Optional[str] = _DEFAULTS["pipe_name"],
     n_trials: int = _DEFAULTS["n_trials"],
     beta: float = _DEFAULTS["beta"],
-) -> None:
+    verbose: bool = True,
+) -> Tuple[float, float]:
     """
     Runs prediction trials for `textcat` models with varying tresholds to maximize the specified metric.
-    model_path (Path): Path to file with trained model.
-    doc_path (Path): Path to file with DocBin with docs to use for threshold search.
+    model_path (Union[str, Path]): Path to file with trained model.
+    doc_path (Union[str, Path]): Path to file with DocBin with docs to use for threshold search.
     average (str): How to average F-scores across labels. One of ('micro', 'macro').
     pipe_name (Optional[str]): Name of pipe to examine thresholds for. If None, pipe of type MultiLabel_TextCategorizer
         is seleted. If there are multiple, an error is raised.
     n_trials (int): Number of trials to determine optimal thresholds
     beta (float): Beta for F1 calculation. Ignored if different metric is used.
+    verbose (bool): Whether to print non-error-related output to stdout.
+    RETURNS (Tuple[float, float]): Best found threshold with corresponding F-score.
     """
 
     nlp = util.load_model(model_path)
@@ -90,10 +93,13 @@ def find_threshold(
         if pipe_name and _pipe_name == pipe_name:
             if not isinstance(_pipe, MultiLabel_TextCategorizer):
                 wasabi.msg.fail(
-                    "Specified component {component} is not of type `MultiLabel_TextCategorizer`.",
+                    "Specified component '{component}' is not of type `MultiLabel_TextCategorizer`.".format(
+                        component=pipe_name
+                    ),
                     exits=1,
                 )
             pipe = _pipe
+            print(pipe_name, _pipe_name, pipe.labels)
             break
         elif pipe_name is None:
             if isinstance(_pipe, MultiLabel_TextCategorizer):
@@ -116,10 +122,11 @@ def find_threshold(
             exits=1,
         )
 
-    print(
-        f"Searching threshold with the best {average} F-score for pipe '{selected_pipe_name}' with {n_trials} trials"
-        f" and beta = {beta}."
-    )
+    if verbose:
+        print(
+            f"Searching threshold with the best {average} F-score for component '{selected_pipe_name}' with {n_trials} "
+            f"trials and beta = {beta}."
+        )
 
     thresholds = numpy.linspace(0, 1, n_trials)
     ref_pos_counts = {label: 0 for label in pipe.labels}
@@ -146,13 +153,15 @@ def find_threshold(
         # Collect count stats per threshold value and label.
         for threshold in thresholds:
             for label, score in pred_doc.cats.items():
+                if label not in pipe.labels:
+                    continue
                 label_value = int(score >= threshold)
                 if label_value == ref_doc.cats[label] == 1:
                     pred_pos_counts[threshold][True][label] += 1
                 elif label_value == 1 and ref_doc.cats[label] == 0:
                     pred_pos_counts[threshold][False][label] += 1
 
-    # Compute f_scores.
+    # Compute F-scores.
     for threshold in thresholds:
         for label in ref_pos_counts:
             n_pos_preds = (
@@ -188,20 +197,21 @@ def find_threshold(
             ) / len(ref_pos_counts)
 
     best_threshold = max(f_scores, key=f_scores.get)
-    print(
-        f"Best threshold: {round(best_threshold, ndigits=4)} with F-score of {f_scores[best_threshold]}."
-    )
-    print(
-        wasabi.tables.table(
-            data=[
-                (threshold, label, f_score)
-                for threshold, label_f_scores in f_scores_per_label.items()
-                for label, f_score in label_f_scores.items()
-            ],
-            header=["Threshold", "Label", "F-Score"],
-        ),
-        wasabi.tables.table(
-            data=[(threshold, f_score) for threshold, f_score in f_scores.items()],
-            header=["Threshold", f"F-Score ({average})"],
-        ),
-    )
+    if verbose:
+        print(
+            f"Best threshold: {round(best_threshold, ndigits=4)} with F-score of {f_scores[best_threshold]}.",
+            wasabi.tables.table(
+                data=[
+                    (threshold, label, f_score)
+                    for threshold, label_f_scores in f_scores_per_label.items()
+                    for label, f_score in label_f_scores.items()
+                ],
+                header=["Threshold", "Label", "F-Score"],
+            ),
+            wasabi.tables.table(
+                data=[(threshold, f_score) for threshold, f_score in f_scores.items()],
+                header=["Threshold", f"F-Score ({average})"],
+            ),
+        )
+
+    return best_threshold, f_scores[best_threshold]
