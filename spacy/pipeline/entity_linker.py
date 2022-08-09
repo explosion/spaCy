@@ -120,7 +120,7 @@ def make_entity_linker(
     """
 
     if not model.attrs.get("include_span_maker", False):
-        # The only differences in arguments here are that use_gold_ents is not available and threshold isn't available.
+        # The only difference in arguments here is that use_gold_ents and threshold aren't available.
         return EntityLinker_v1(
             nlp.vocab,
             model,
