@@ -1,14 +1,13 @@
 from pathlib import Path
 import logging
-from typing import Optional, Tuple, Union, Dict, cast
+from typing import Optional, Tuple, Union
 
 import numpy
 import wasabi.tables
 
-from pipeline import Pipe
 from ._util import app, Arg, Opt
 from .. import util
-from ..pipeline import MultiLabel_TextCategorizer
+from ..pipeline import MultiLabel_TextCategorizer, Pipe
 from ..tokens import DocBin
 
 _DEFAULTS = {
