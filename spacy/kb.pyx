@@ -1,5 +1,5 @@
 # cython: infer_types=True, profile=True
-from typing import Iterable, Callable, Dict, Any, Union, cast
+from typing import Iterable, Callable, Dict, Any, Union
 
 import srsly
 from preshed.maps cimport PreshMap

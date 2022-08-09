@@ -8,9 +8,9 @@ from pathlib import Path
 from typing import Iterable, Tuple, Union
 from cymem.cymem cimport Pool
 
-from spacy import Errors
 from .tokens import Span
 from .util import SimpleFrozenList
+from .errors import Errors
 
 
 cdef class Candidate:
