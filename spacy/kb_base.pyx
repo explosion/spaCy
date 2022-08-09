@@ -1,9 +1,5 @@
 # cython: infer_types=True, profile=True
 
-# todo
-#   - submit PR
-#   - add tests (w/ dummy class)
-#   - update docs
 from pathlib import Path
 from typing import Iterable, Tuple, Union
 from cymem.cymem cimport Pool
