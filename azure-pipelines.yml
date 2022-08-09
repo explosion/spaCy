@@ -32,7 +32,7 @@ jobs:
           versionSpec: "3.7"
       - script: |
           pip install flake8==3.9.2
-          python -m flake8 spacy --count --select=E901,E999,F821,F822,F823 --show-source --statistics
+          python -m flake8 spacy --count --select=E901,E999,F821,F822,F823,W605 --show-source --statistics
         displayName: "flake8"
 
   - job: "Test"
