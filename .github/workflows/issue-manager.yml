@@ -26,7 +26,7 @@ jobs:
                 "remove_label_on_comment": true,
                 "remove_label_on_close": true
               },
-              "needs-more-info": {
+              "more-info-needed": {
                 "delay": "P7D",
                 "message": "This issue has been automatically closed because there has been no response to a request for more information from the original author. With only the information that is currently in the issue, there's not enough information to take action. If you're the original author, feel free to reopen the issue if you have or find the answers needed to investigate further.",
                 "remove_label_on_comment": true,
