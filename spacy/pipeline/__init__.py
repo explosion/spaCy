@@ -3,7 +3,7 @@ from .dep_parser import DependencyParser
 from .edit_tree_lemmatizer import EditTreeLemmatizer
 from .entity_linker import EntityLinker
 from .ner import EntityRecognizer
-from .entityruler import EntityRuler
+from .entity_ruler import EntityRuler
 from .lemmatizer import Lemmatizer
 from .morphologizer import Morphologizer
 from .pipe import Pipe
