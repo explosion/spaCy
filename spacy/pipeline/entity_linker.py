@@ -284,7 +284,7 @@ class EntityLinker(TrainablePipe):
             returns a representative sample of gold-standard Example objects.
         nlp (Language): The current nlp object the component is part of.
         kb_loader (Callable[[Vocab], BaseKnowledgeBase]): A function that creates a BaseKnowledgeBase from a Vocab
-            instance. Note that providing this argument, will overwrite all data accumulated in the current KB.
+            instance. Note that providing this argument will overwrite all data accumulated in the current KB.
             Use this only when loading a KB as-such from file.
 
         DOCS: https://spacy.io/api/entitylinker#initialize
