@@ -235,7 +235,6 @@ cdef class KnowledgeBase(BaseKnowledgeBase):
         Return candidate entities for an alias. Each candidate defines the entity, the original alias,
         and the prior probability of that alias resolving to that entity.
         If the alias is not known in the KB, and empty list is returned.
-        This particular function is optimized to work with the built-in KB functionality.
         """
         cdef hash_t alias_hash = self.vocab.strings[alias]
         if not alias_hash in self._alias_index:

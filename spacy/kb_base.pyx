@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Iterable, Tuple, Union
 from cymem.cymem cimport Pool
 
+from spacy import Errors
 from .tokens import Span
 from .util import SimpleFrozenList
 
@@ -114,7 +115,9 @@ cdef class BaseKnowledgeBase:
         mention (Union[Span, str]): Mention for which to get candidates.
         RETURNS (Iterable[Candidate]): Identified candidates.
         """
-        raise NotImplementedError
+        raise NotImplementedError(
+            Errors.E1045.format(parent="KnowledgeBase", method="get_candidates", name=self.__name__)
+        )
 
     def get_vectors(self, entities: Iterable[str]) -> Iterable[Iterable[float]]:
         """
@@ -130,20 +133,26 @@ cdef class BaseKnowledgeBase:
         entity (str): Entity name/ID.
         RETURNS (Iterable[float]): Vector for specified entity.
         """
-        raise NotImplementedError
+        raise NotImplementedError(
+            Errors.E1045.format(parent="KnowledgeBase", method="get_vector", name=self.__name__)
+        )
 
     def to_bytes(self, **kwargs) -> bytes:
         """Serialize the current state to a binary string.
         RETURNS (bytes): Current state as binary string.
         """
-        raise NotImplementedError
+        raise NotImplementedError(
+            Errors.E1045.format(parent="KnowledgeBase", method="to_bytes", name=self.__name__)
+        )
 
     def from_bytes(self, bytes_data: bytes, *, exclude: Tuple[str] = tuple()):
         """Load state from a binary string.
         bytes_data (bytes): KB state.
         exclude (Tuple[str]): Properties to exclude when restoring KB.
         """
-        raise NotImplementedError
+        raise NotImplementedError(
+            Errors.E1045.format(parent="KnowledgeBase", method="from_bytes", name=self.__name__)
+        )
 
     def to_disk(self, path: Union[str, Path], exclude: Iterable[str] = SimpleFrozenList()) -> None:
         """
@@ -151,7 +160,9 @@ cdef class BaseKnowledgeBase:
         path (Union[str, Path]): Target file path.
         exclude (Iterable[str]): List of components to exclude.
         """
-        raise NotImplementedError
+        raise NotImplementedError(
+            Errors.E1045.format(parent="KnowledgeBase", method="to_disk", name=self.__name__)
+        )
 
     def from_disk(self, path: Union[str, Path], exclude: Iterable[str] = SimpleFrozenList()) -> None:
         """
@@ -159,4 +170,6 @@ cdef class BaseKnowledgeBase:
         path (Union[str, Path]): Target file path.
         exclude (Iterable[str]): List of components to exclude.
         """
-        raise NotImplementedError
+        raise NotImplementedError(
+            Errors.E1045.format(parent="KnowledgeBase", method="from_disk", name=self.__name__)
+        )
