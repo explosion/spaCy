@@ -100,7 +100,7 @@ cdef class BaseKnowledgeBase:
         """
         Return candidate entities for specified texts. Each candidate defines the entity, the original alias,
         and the prior probability of that alias resolving to that entity.
-        If the no candidate is found for a given text, an empty list is returned.
+        If no candidate is found for a given text, an empty list is returned.
         mentions (Union[Iterable[Span], Iterable[str]]): Mentions for which to get candidates.
         RETURNS (Iterable[Iterable[Candidate]]): Identified candidates.
         """
