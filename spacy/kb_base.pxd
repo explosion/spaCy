@@ -22,4 +22,4 @@ cdef class Candidate:
 cdef class BaseKnowledgeBase:
     cdef Pool mem
     cdef readonly Vocab vocab
-    cdef int64_t _entity_vector_length
+    cdef readonly int64_t entity_vector_length

@@ -1,5 +1,5 @@
 # cython: infer_types=True, profile=True
-from typing import Iterator, Iterable, Callable, Dict, Any, Union, cast
+from typing import Iterable, Callable, Dict, Any, Union, cast
 
 import srsly
 from preshed.maps cimport PreshMap
@@ -227,10 +227,10 @@ cdef class KnowledgeBase(BaseKnowledgeBase):
             alias_entry.probs = probs
             self._aliases_table[alias_index] = alias_entry
 
-    def get_candidates(self, mention: Union[Span, str]) -> Iterator[Candidate]:
+    def get_candidates(self, mention: Union[Span, str]) -> Iterable[Candidate]:
         return self.get_alias_candidates(mention.text if isinstance(mention, Span) else mention)  # type: ignore
 
-    def get_alias_candidates(self, str alias) -> Iterator[Candidate]:
+    def get_alias_candidates(self, str alias) -> Iterable[Candidate]:
         """
         Return candidate entities for an alias. Each candidate defines the entity, the original alias,
         and the prior probability of that alias resolving to that entity.
@@ -459,7 +459,7 @@ cdef class KnowledgeBase(BaseKnowledgeBase):
 
         self._initialize_entities(nr_entities)
         self._initialize_vectors(nr_entities)
-        self._entity_vector_length = entity_vector_length
+        self.entity_vector_length = entity_vector_length
 
         # STEP 1: load entity vectors
         cdef int i = 0

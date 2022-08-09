@@ -5,7 +5,7 @@
 #   - add tests (w/ dummy class)
 #   - update docs
 from pathlib import Path
-from typing import Iterable, Tuple, Iterator, Union
+from typing import Iterable, Tuple, Union
 from cymem.cymem cimport Pool
 
 from .tokens import Span
@@ -62,22 +62,22 @@ cdef class Candidate:
         return self.prior_prob
 
 
-def get_candidates_batch(kb: BaseKnowledgeBase, mentions: Iterable[Union[Span, str]]) -> Iterable[Iterator[Candidate]]:
+def get_candidates_batch(kb: BaseKnowledgeBase, mentions: Iterable[Union[Span, str]]) -> Iterable[Iterable[Candidate]]:
     """
     Return candidate entities for the given mentions and fetching appropriate entries from the index.
     kb (BaseKnowledgeBase): Knowledge base to query.
     mention (Iterable[Union[Span, str]]): Entity mentions for which to identify candidates.
-    RETURNS (Iterable[Iterator[Candidate]]): Identified candidates.
+    RETURNS (Iterable[Iterable[Candidate]]): Identified candidates.
     """
     return kb.get_candidates_batch(mentions)
 
 
-def get_candidates(kb: BaseKnowledgeBase, mention: Union[Span, str]) -> Iterator[Candidate]:
+def get_candidates(kb: BaseKnowledgeBase, mention: Union[Span, str]) -> Iterable[Candidate]:
     """
     Return candidate entities for a given mention and fetching appropriate entries from the index.
     kb (BaseKnowledgeBase): Knowledge base to query.
     mention (Union[Span, str]): Entity mention for which to identify candidates.
-    RETURNS (Iterator[Candidate]): Identified candidates.
+    RETURNS (Iterable[Candidate]): Identified candidates.
     """
     return kb.get_candidates(mention)
 
@@ -93,32 +93,26 @@ cdef class BaseKnowledgeBase:
     def __init__(self, vocab: Vocab, entity_vector_length: int):
         """Create a KnowledgeBase."""
         self.vocab = vocab
-        self._entity_vector_length = entity_vector_length
+        self.entity_vector_length = entity_vector_length
         self.mem = Pool()
 
-    property entity_vector_length:
-        def __get__(self):
-            return self._entity_vector_length
-        def __set__(self, int value):
-            self._entity_vector_length = value
-
-    def get_candidates_batch(self, mentions: Union[Iterable[Span], Iterable[str]]) -> Iterable[Iterator[Candidate]]:
+    def get_candidates_batch(self, mentions: Union[Iterable[Span], Iterable[str]]) -> Iterable[Iterable[Candidate]]:
         """
         Return candidate entities for specified texts. Each candidate defines the entity, the original alias,
         and the prior probability of that alias resolving to that entity.
         If the no candidate is found for a given text, an empty list is returned.
         mentions (Union[Iterable[Span], Iterable[str]]): Mentions for which to get candidates.
-        RETURNS (Iterable[Iterator[Candidate]]): Identified candidates.
+        RETURNS (Iterable[Iterable[Candidate]]): Identified candidates.
         """
         return [self.get_candidates(span) for span in mentions]
 
-    def get_candidates(self, mention: Union[Span, str]) -> Iterator[Candidate]:
+    def get_candidates(self, mention: Union[Span, str]) -> Iterable[Candidate]:
         """
         Return candidate entities for specified text. Each candidate defines the entity, the original alias,
         and the prior probability of that alias resolving to that entity.
         If the no candidate is found for a given text, an empty list is returned.
         mention (Union[Span, str]): Mention for which to get candidates.
-        RETURNS (Iterator[Candidate]): Identified candidates.
+        RETURNS (Iterable[Candidate]): Identified candidates.
         """
         raise NotImplementedError
 
@@ -126,7 +120,7 @@ cdef class BaseKnowledgeBase:
         """
         Return vectors for entities.
         entity (str): Entity name/ID.
-        RETURNS (Iterable[List[float]]): Vectors for specified entities.
+        RETURNS (Iterable[Iterable[float]]): Vectors for specified entities.
         """
         return [self.get_vector(entity) for entity in entities]
 

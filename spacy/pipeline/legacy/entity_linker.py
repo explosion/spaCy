@@ -1,7 +1,7 @@
 # This file is present to provide a prior version of the EntityLinker component
 # for backwards compatability. For details see #9669.
 
-from typing import Optional, Iterable, Callable, Dict, Union, List, Any, Iterator
+from typing import Optional, Iterable, Callable, Dict, Union, List, Any
 from thinc.types import Floats2d
 from pathlib import Path
 from itertools import islice
@@ -51,7 +51,7 @@ class EntityLinker_v1(TrainablePipe):
         incl_prior: bool,
         incl_context: bool,
         entity_vector_length: int,
-        get_candidates: Callable[[BaseKnowledgeBase, Span], Iterator[Candidate]],
+        get_candidates: Callable[[BaseKnowledgeBase, Span], Iterable[Candidate]],
         overwrite: bool = BACKWARD_OVERWRITE,
         scorer: Optional[Callable] = entity_linker_score,
     ) -> None:

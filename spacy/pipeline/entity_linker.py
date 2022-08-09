@@ -1,4 +1,4 @@
-from typing import Optional, Iterable, Callable, Dict, Union, List, Any, Iterator, Type
+from typing import Optional, Iterable, Callable, Dict, Union, List, Any, Type
 from thinc.types import Floats2d
 from pathlib import Path
 from itertools import islice
@@ -67,7 +67,6 @@ DEFAULT_NEL_MODEL = Config().from_str(default_model_config)["model"]
         "use_gold_ents": True,
         "candidates_batch_size": 1,
         "threshold": None,
-        "kb_type": {"@misc": "spacy.KBType.v1"},
     },
     default_score_weights={
         "nel_micro_f": 1.0,
@@ -86,17 +85,16 @@ def make_entity_linker(
     incl_context: bool,
     entity_vector_length: int,
     get_candidates: Callable[
-        [BaseKnowledgeBase, Union[Span, str]], Iterator[Candidate]
+        [BaseKnowledgeBase, Union[Span, str]], Iterable[Candidate]
     ],
     get_candidates_batch: Callable[
-        [BaseKnowledgeBase, Iterable[Union[Span, str]]], Iterable[Iterator[Candidate]]
+        [BaseKnowledgeBase, Iterable[Union[Span, str]]], Iterable[Iterable[Candidate]]
     ],
     overwrite: bool,
     scorer: Optional[Callable],
     use_gold_ents: bool,
     candidates_batch_size: int,
     threshold: Optional[float] = None,
-    kb_type: Type[BaseKnowledgeBase],
 ):
     """Construct an EntityLinker component.
 
@@ -108,10 +106,10 @@ def make_entity_linker(
     incl_prior (bool): Whether or not to include prior probabilities from the KB in the model.
     incl_context (bool): Whether or not to include the local context in the model.
     entity_vector_length (int): Size of encoding vectors in the KB.
-    get_candidates (Callable[[BaseKnowledgeBase, Union[Span, str]], Iterator[Candidate]]): Function that
+    get_candidates (Callable[[BaseKnowledgeBase, Union[Span, str]], Iterable[Candidate]]): Function that
         produces a list of candidates, given a certain knowledge base and a textual mention.
     get_candidates_batch (
-        Callable[[BaseKnowledgeBase, Iterable[Union[Span, str]]], Iterable[Iterator[Candidate]]], Iterable[Candidate]]
+        Callable[[BaseKnowledgeBase, Iterable[Union[Span, str]]], Iterable[Iterable[Candidate]]], Iterable[Candidate]]
         ): Function that produces a list of candidates, given a certain knowledge base and several textual mentions.
     scorer (Optional[Callable]): The scoring method.
     use_gold_ents (bool): Whether to copy entities from gold docs or not. If false, another
@@ -119,7 +117,6 @@ def make_entity_linker(
     candidates_batch_size (int): Size of batches for entity candidate generation.
     threshold (Optional[float]): Confidence threshold for entity predictions. If confidence is below the threshold,
         prediction is discarded. If None, predictions are not filtered by any threshold.
-    kb_type (Type[BaseKnowledgeBase]): KB type.
     """
 
     if not model.attrs.get("include_span_maker", False):
@@ -153,7 +150,6 @@ def make_entity_linker(
         use_gold_ents=use_gold_ents,
         candidates_batch_size=candidates_batch_size,
         threshold=threshold,
-        kb_type=kb_type,
     )
 
 
@@ -185,17 +181,16 @@ class EntityLinker(TrainablePipe):
         incl_prior: bool,
         incl_context: bool,
         entity_vector_length: int,
-        get_candidates: Callable[[BaseKnowledgeBase, Span], Iterator[Candidate]],
+        get_candidates: Callable[[BaseKnowledgeBase, Span], Iterable[Candidate]],
         get_candidates_batch: Callable[
             [BaseKnowledgeBase, Iterable[Union[Span, str]]],
-            Iterable[Iterator[Candidate]],
+            Iterable[Iterable[Candidate]],
         ],
         overwrite: bool = BACKWARD_OVERWRITE,
         scorer: Optional[Callable] = entity_linker_score,
         use_gold_ents: bool,
         candidates_batch_size: int,
         threshold: Optional[float] = None,
-        kb_type: Type[BaseKnowledgeBase],
     ) -> None:
         """Initialize an entity linker.
 
@@ -211,7 +206,7 @@ class EntityLinker(TrainablePipe):
         get_candidates (Callable[[BaseKnowledgeBase, Span], Iterable[Candidate]]): Function that
             produces a list of candidates, given a certain knowledge base and a textual mention.
         get_candidates_batch (
-            Callable[[BaseKnowledgeBase, Iterable[Union[Span, str]]], Iterable[Iterator[Candidate]]],
+            Callable[[BaseKnowledgeBase, Iterable[Union[Span, str]]], Iterable[Iterable[Candidate]]],
             Iterable[Candidate]]
             ): Function that produces a list of candidates, given a certain knowledge base and several textual mentions.
         scorer (Optional[Callable]): The scoring method. Defaults to Scorer.score_links.
@@ -220,7 +215,6 @@ class EntityLinker(TrainablePipe):
         candidates_batch_size (int): Size of batches for entity candidate generation.
         threshold (Optional[float]): Confidence threshold for entity predictions. If confidence is below the
             threshold, prediction is discarded. If None, predictions are not filtered by any threshold.
-        get_kb_type (Callable[[], Type[BaseKnowledgeBase]): Returns KB type.
         DOCS: https://spacy.io/api/entitylinker#init
         """
 
@@ -242,12 +236,11 @@ class EntityLinker(TrainablePipe):
         self.incl_context = incl_context
         self.get_candidates = get_candidates
         self.get_candidates_batch = get_candidates_batch
-        self.kb_type = kb_type
         self.cfg: Dict[str, Any] = {"overwrite": overwrite}
         self.distance = CosineDistance(normalize=False)
         # how many neighbour sentences to take into account
         # create an empty KB by default
-        self.kb = empty_kb(entity_vector_length)(self.vocab, self.kb_type)
+        self.kb = empty_kb(entity_vector_length)(self.vocab)
         self.scorer = scorer
         self.use_gold_ents = use_gold_ents
         self.candidates_batch_size = candidates_batch_size
@@ -268,11 +261,7 @@ class EntityLinker(TrainablePipe):
         if not callable(kb_loader):
             raise ValueError(Errors.E885.format(arg_type=type(kb_loader)))
 
-        # Support backwards compatibility for custom loaders.
-        try:
-            self.kb = kb_loader(self.vocab, self.kb_type)  # type: ignore
-        except TypeError:
-            self.kb = kb_loader(self.vocab)  # type: ignore
+        self.kb = kb_loader(self.vocab)  # type: ignore
 
     def validate_kb(self) -> None:
         # Raise an error if the knowledge base is not initialized.
@@ -345,8 +334,6 @@ class EntityLinker(TrainablePipe):
 
         for eg in examples:
             for ent in eg.predicted.ents:
-                # todo Do we want batching here too? I'm assuming that in most cases this finds a learnable example soon
-                #  anyway - and stops afterwards - so fetching candidates for the entire batch is maybe not faster.
                 candidates = list(self.get_candidates(self.kb, ent))
                 if candidates:
                     return True
