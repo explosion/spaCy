@@ -42,10 +42,10 @@ DEFAULT_NEL_MODEL = Config().from_str(default_model_config)["model"]
 
 
 """
-    [initialize.components.entity_linker.kb_loader]
-    @misc = "spacy.CustomKB.v1"
-    entity_vector_length = 342
-    custom_field = 666
+[initialize.components.entity_linker.kb_loader]
+@misc = "spacy.CustomKB.v1"
+entity_vector_length = 342
+custom_field = 666
 """
 
 
@@ -120,7 +120,7 @@ def make_entity_linker(
     """
 
     if not model.attrs.get("include_span_maker", False):
-        # The only differences in arguments here are that use_gold_ents is not available and threshold isn't available.
+        # The only difference in arguments here is that use_gold_ents and threshold aren't available.
         return EntityLinker_v1(
             nlp.vocab,
             model,
@@ -284,7 +284,7 @@ class EntityLinker(TrainablePipe):
             returns a representative sample of gold-standard Example objects.
         nlp (Language): The current nlp object the component is part of.
         kb_loader (Callable[[Vocab], BaseKnowledgeBase]): A function that creates a BaseKnowledgeBase from a Vocab
-            instance. Note that providing this argument, will overwrite all data accumulated in the current KB.
+            instance. Note that providing this argument will overwrite all data accumulated in the current KB.
             Use this only when loading a KB as-such from file.
 
         DOCS: https://spacy.io/api/entitylinker#initialize

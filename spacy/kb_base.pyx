@@ -17,7 +17,7 @@ cdef class Candidate:
     """A `Candidate` object refers to a textual mention (`alias`) that may or may not be resolved
     to a specific `entity` from a Knowledge Base. This will be used as input for the entity linking
     algorithm which will disambiguate the various candidates to the correct one.
-    Each candidate (alias, entity) pair is assigned to a certain prior probability.
+    Each candidate (alias, entity) pair is assigned a certain prior probability.
 
     DOCS: https://spacy.io/api/kb/#candidate_init
     """
@@ -101,7 +101,7 @@ cdef class BaseKnowledgeBase:
         """
         Return candidate entities for specified texts. Each candidate defines the entity, the original alias,
         and the prior probability of that alias resolving to that entity.
-        If the no candidate is found for a given text, an empty list is returned.
+        If no candidate is found for a given text, an empty list is returned.
         mentions (Union[Iterable[Span], Iterable[str]]): Mentions for which to get candidates.
         RETURNS (Iterable[Iterable[Candidate]]): Identified candidates.
         """
