@@ -876,7 +876,7 @@ def test_cli_find_threshold(capsys):
         ]
 
     def init_nlp(
-        component_factory_names: Tuple[str] = (),
+        component_factory_names: Tuple[str, ...] = (),
     ) -> Tuple[Language, List[Example]]:
         _nlp = English()
 
