@@ -42,10 +42,10 @@ DEFAULT_NEL_MODEL = Config().from_str(default_model_config)["model"]
 
 
 """
-    [initialize.components.entity_linker.kb_loader]
-    @misc = "spacy.CustomKB.v1"
-    entity_vector_length = 342
-    custom_field = 666
+[initialize.components.entity_linker.kb_loader]
+@misc = "spacy.CustomKB.v1"
+entity_vector_length = 342
+custom_field = 666
 """
 
 
