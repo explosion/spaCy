@@ -39,12 +39,12 @@ Predictions will be saved to `Doc.spans` as [`SpanGroup`s](/api/spangroup).
 
 Input token spans will be read in using an input prefix, by default
 `"coref_head_clusters"`, and output spans will be saved using an output prefix
-(default `"coref_clusters"`) plus a serial number starting from zero. The
+(default `"coref_clusters"`) plus a serial number starting from one. The
 prefixes are configurable.
 
-| Location                                          | Value                                       |
-| ------------------------------------------------- | ------------------------------------------- |
-| `Doc.spans[output_prefix + "_" + cluster_number]` | One group of predicted spans. ~~SpanGroup~~ |
+| Location                                          | Value                                                                     |
+| ------------------------------------------------- | ------------------------------------------------------------------------- |
+| `Doc.spans[output_prefix + "_" + cluster_number]` | One group of predicted spans. Cluster number starts from 1. ~~SpanGroup~~ |
 
 ## Config and implementation {#config}
 

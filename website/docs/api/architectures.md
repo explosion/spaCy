@@ -11,6 +11,7 @@ menu:
   - ['Text Classification', 'textcat']
   - ['Span Classification', 'spancat']
   - ['Entity Linking', 'entitylinker']
+  - ['Coreference', 'coref-architectures']
 ---
 
 A **model architecture** is a function that wires up a
@@ -923,7 +924,7 @@ plausible [`Candidate`](/api/kb/#candidate) objects. The default
 `CandidateGenerator` uses the text of a mention to find its potential aliases in
 the `KnowledgeBase`. Note that this function is case-dependent.
 
-## Coreference Architectures {#coref-architectures tag="experimental" new="3.4"}
+## Coreference {#coref-architectures tag="experimental" new="3.4"}
 
 A [`CoreferenceResolver`](/api/coref) component identifies tokens that refer to
 the same entity. A [`SpanResolver`](/api/span-resolver) component infers spans

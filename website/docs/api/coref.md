@@ -28,7 +28,7 @@ using `factory = "coref"` in your [training config](/usage/training#config) or
 
 A `CoreferenceResolver` component groups tokens into clusters that refer to the
 same thing. Clusters are represented as SpanGroups that start with a prefix
-(`coref_clusters_` by default).
+(`coref_clusters` by default).
 
 A `CoreferenceResolver` component can be paired with a
 [`SpanPredictor`](/api/spanpredictor) to expand single tokens to spans.
@@ -39,12 +39,12 @@ Predictions will be saved to `Doc.spans` as a [`SpanGroup`](/api/spangroup). The
 span key will be a prefix plus a serial number referring to the coreference
 cluster, starting from zero.
 
-The span key prefix defaults to `"coreference_clusters"`, but can be passed as a
+The span key prefix defaults to `"coref_clusters"`, but can be passed as a
 parameter.
 
-| Location                                   | Value                                                                     |
-| ------------------------------------------ | ------------------------------------------------------------------------- |
-| `Doc.spans[prefix + "_" + cluster_number]` | One coreference cluster, represented as single-token spans. ~~SpanGroup~~ |
+| Location                                   | Value                                                                                                   |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
+| `Doc.spans[prefix + "_" + cluster_number]` | One coreference cluster, represented as single-token spans. Cluster numbers start from 1. ~~SpanGroup~~ |
 
 ## Config and implementation {#config}
 
