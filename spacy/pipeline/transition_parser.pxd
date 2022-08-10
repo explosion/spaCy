@@ -12,6 +12,7 @@ cdef class Parser(TrainablePipe):
     cdef public object _rehearsal_model
     cdef readonly TransitionSystem moves
     cdef public object _multitasks
+    cdef object _cpu_ops
 
     cdef void _parseC(self, CBlas cblas, StateC** states,
             WeightsC weights, SizesC sizes) nogil

@@ -67,7 +67,7 @@ TPL_SPANS = """
 """
 
 TPL_SPAN = """
-<span style="font-weight: bold; display: inline-block; position: relative;">
+<span style="font-weight: bold; display: inline-block; position: relative; height: {total_height}px;">
     {text}
     {span_slices}
     {span_starts}

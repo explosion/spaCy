@@ -607,7 +607,8 @@ cdef class Doc:
         if self.vocab.vectors.n_keys == 0:
             warnings.warn(Warnings.W007.format(obj="Doc"))
         if self.vector_norm == 0 or other.vector_norm == 0:
-            warnings.warn(Warnings.W008.format(obj="Doc"))
+            if not self.has_vector or not other.has_vector:
+                warnings.warn(Warnings.W008.format(obj="Doc"))
             return 0.0
         vector = self.vector
         xp = get_array_module(vector)
@@ -627,7 +628,7 @@ cdef class Doc:
         if "has_vector" in self.user_hooks:
             return self.user_hooks["has_vector"](self)
         elif self.vocab.vectors.size:
-            return True
+            return any(token.has_vector for token in self)
         elif self.tensor.size:
             return True
         else:

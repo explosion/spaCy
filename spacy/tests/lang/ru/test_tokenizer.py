@@ -1,3 +1,4 @@
+from string import punctuation
 import pytest
 
 
@@ -122,3 +123,36 @@ def test_ru_tokenizer_splits_bracket_period(ru_tokenizer):
     text = "(Раз, два, три, проверка)."
     tokens = ru_tokenizer(text)
     assert tokens[len(tokens) - 1].text == "."
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "рекоменду́я подда́ть жару́. Самого́ Баргамота",
+        "РЕКОМЕНДУ́Я ПОДДА́ТЬ ЖАРУ́. САМОГО́ БАРГАМОТА",
+        "рекоменду̍я подда̍ть жару̍.Самого̍ Баргамота",
+        "рекоменду̍я подда̍ть жару̍.'Самого̍ Баргамота",
+        "рекоменду̍я подда̍ть жару̍,самого̍ Баргамота",
+        "рекоменду̍я подда̍ть жару̍:самого̍ Баргамота",
+        "рекоменду̍я подда̍ть жару̍. самого̍ Баргамота",
+        "рекоменду̍я подда̍ть жару̍, самого̍ Баргамота",
+        "рекоменду̍я подда̍ть жару̍: самого̍ Баргамота",
+        "рекоменду̍я подда̍ть жару̍-самого̍ Баргамота",
+    ],
+)
+def test_ru_tokenizer_handles_final_diacritics(ru_tokenizer, text):
+    tokens = ru_tokenizer(text)
+    assert tokens[2].text in ("жару́", "ЖАРУ́", "жару̍")
+    assert tokens[3].text in punctuation
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "РЕКОМЕНДУ́Я ПОДДА́ТЬ ЖАРУ́.САМОГО́ БАРГАМОТА",
+        "рекоменду̍я подда̍ть жару́.самого́ Баргамота",
+    ],
+)
+def test_ru_tokenizer_handles_final_diacritic_and_period(ru_tokenizer, text):
+    tokens = ru_tokenizer(text)
+    assert tokens[2].text.lower() == "жару́.самого́"
