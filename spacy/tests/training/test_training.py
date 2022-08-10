@@ -679,6 +679,31 @@ def test_projectivize(en_tokenizer):
     assert proj_heads == [3, 2, 3, 3, 3]
     assert nonproj_heads == [3, 2, 3, 3, 2]
 
+    # Test single token documents
+    doc = en_tokenizer("Conrail")
+    heads = [0]
+    deps = ["dep"]
+    example = Example.from_dict(doc, {"heads": heads, "deps": deps})
+    proj_heads, proj_labels = example.get_aligned_parse(projectivize=True)
+    assert proj_heads == heads
+    assert proj_labels == deps
+
+    # Test documents with no alignments
+    doc_a = Doc(
+        doc.vocab, words=["Double-Jointed"], spaces=[False], deps=["ROOT"], heads=[0]
+    )
+    doc_b = Doc(
+        doc.vocab,
+        words=["Double", "-", "Jointed"],
+        spaces=[True, True, True],
+        deps=["amod", "punct", "ROOT"],
+        heads=[2, 2, 2],
+    )
+    example = Example(doc_a, doc_b)
+    proj_heads, proj_deps = example.get_aligned_parse(projectivize=True)
+    assert proj_heads == [None]
+    assert proj_deps == [None]
+
 
 def test_iob_to_biluo():
     good_iob = ["O", "O", "B-LOC", "I-LOC", "O", "B-PERSON"]
