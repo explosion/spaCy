@@ -317,7 +317,7 @@ For use with the `manual=True` argument in `displacy.render`.
 | `options`   | NER-specific visualisation options. ~~Dict[str, Any]~~              |
 | **RETURNS** | Generated entities keyed by text (original text) and ents. ~~dict~~ |
 
-### displacy.parse_spans {#displacy.parse_ents tag="method" new="2"}
+### displacy.parse_spans {#displacy.parse_spans tag="method" new="2"}
 
 Generate spans in `[{start_token: i, end_token: i, label: 'label'}]` format.
 For use with the `manual=True` argument in `displacy.render`.
