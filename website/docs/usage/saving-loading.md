@@ -195,7 +195,7 @@ the data to and from a JSON file.
 >
 > To see custom serialization methods in action, check out the new
 > [`EntityRuler`](/api/entityruler) component and its
-> [source](%%GITHUB_SPACY/spacy/pipeline/entityruler.py). Patterns added to the
+> [source](%%GITHUB_SPACY/spacy/pipeline/entity_ruler.py). Patterns added to the
 > component will be saved to a `.jsonl` file if the pipeline is serialized to
 > disk, and to a bytestring if the pipeline is serialized to bytes. This allows
 > saving out a pipeline with a rule-based entity recognizer and including all

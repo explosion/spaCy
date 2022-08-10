@@ -1,7 +1,7 @@
 ---
 title: AttributeRuler
 tag: class
-source: spacy/pipeline/attributeruler.py
+source: spacy/pipeline/attribute_ruler.py
 new: 3
 teaser: 'Pipeline component for rule-based token attribute assignment'
 api_string_name: attribute_ruler
@@ -34,7 +34,7 @@ how the component should be configured. You can override its settings via the
 | `validate` | Whether patterns should be validated (passed to the `Matcher`). Defaults to `False`. ~~bool~~ |
 
 ```python
-%%GITHUB_SPACY/spacy/pipeline/attributeruler.py
+%%GITHUB_SPACY/spacy/pipeline/attribute_ruler.py
 ```
 
 ## AttributeRuler.\_\_init\_\_ {#init tag="method"}
