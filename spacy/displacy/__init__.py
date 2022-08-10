@@ -120,15 +120,14 @@ def app(environ, start_response):
     return [res]
 
 
-def parse_deps(orig_doc: Doc, options: Dict[str, Any] = {}) -> Dict[str, Any]:
+def parse_deps(doc: Doc, options: Dict[str, Any] = {}) -> Dict[str, Any]:
     """Generate dependency parse in {'words': [], 'arcs': []} format.
 
     doc (Doc): Document do parse.
+    options (Dict[str, Any]): Dependency parse specific visualisation options.
     RETURNS (dict): Generated dependency parse keyed by words and arcs.
     """
-    doc = Doc(orig_doc.vocab).from_bytes(
-        orig_doc.to_bytes(exclude=["user_data", "user_hooks"])
-    )
+    doc = Doc(doc.vocab).from_bytes(doc.to_bytes(exclude=["user_data", "user_hooks"]))
     if not doc.has_annotation("DEP"):
         warnings.warn(Warnings.W005)
     if options.get("collapse_phrases", False):
@@ -180,7 +179,7 @@ def parse_deps(orig_doc: Doc, options: Dict[str, Any] = {}) -> Dict[str, Any]:
                     "dir": "right",
                 }
             )
-    return {"words": words, "arcs": arcs, "settings": get_doc_settings(orig_doc)}
+    return {"words": words, "arcs": arcs, "settings": get_doc_settings(doc)}
 
 
 def parse_ents(doc: Doc, options: Dict[str, Any] = {}) -> Dict[str, Any]:
@@ -209,7 +208,7 @@ def parse_ents(doc: Doc, options: Dict[str, Any] = {}) -> Dict[str, Any]:
 
 
 def parse_spans(doc: Doc, options: Dict[str, Any] = {}) -> Dict[str, Any]:
-    """Generate spans in [{start: i, end: i, label: 'label'}] format.
+    """Generate spans in [{start_token: i, end_token: i, label: 'label'}] format.
 
     doc (Doc): Document to parse.
     options (Dict[str, any]): Span-specific visualisation options.
