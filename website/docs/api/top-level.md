@@ -329,8 +329,9 @@ For use with the `manual=True` argument in `displacy.render`.
 > from spacy import displacy
 > nlp = spacy.load("en_core_web_sm")
 > doc = nlp("But Google is starting from behind.")
-> ents_parse = displacy.parse_ents(doc)
-> html = displacy.render(ents_parse, style="ent", manual=True)
+> doc.spans['orgs'] = [doc[1:2]]
+> ents_parse = displacy.parse_spans(doc, options={"spans_key" : "orgs"})
+> html = displacy.render(ents_parse, style="span", manual=True)
 > ```
 
 | Name        | Description                                                         |
