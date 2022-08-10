@@ -349,8 +349,15 @@ functions for converting `Doc` objects to displaCy's format for use with `manual
 [`displacy.parse_ents`](/api/top-level#displacy.parse_ents), 
 and [`displacy.parse_spans`](/api/top-level#displacy.parse_spans).
 
+> #### Example with parse function
+>
+> ```python
+> doc = nlp("But Google is starting from behind.")
+> ex = displacy.parse_ents(doc)
+> html = displacy.render(ex, style="ent", manual=True)
+> ```
 
-> #### Example
+> #### Example with raw data
 >
 > ```python
 > ex = [{"text": "But Google is starting from behind.",
@@ -358,6 +365,7 @@ and [`displacy.parse_spans`](/api/top-level#displacy.parse_spans).
 >        "title": None}]
 > html = displacy.render(ex, style="ent", manual=True)
 > ```
+
 
 ```python
 ### DEP input
