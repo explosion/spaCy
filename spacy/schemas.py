@@ -518,7 +518,7 @@ class DocJSONSchema(BaseModel):
         None, title="Any custom data stored in the document's _ attribute"
     )
     underscore_token: Optional[Dict[StrictStr, Any]] = Field(
-        None, title="Any custom data stored in the tokens's _ attribute"
+        None, title="Any custom data stored in the token's _ attribute"
     )
     underscore_span: Optional[Dict[StrictStr, Any]] = Field(
         None, title="Any custom data stored in the span's _ attribute"
