@@ -125,7 +125,7 @@ def console_logger(
                 "score": float(info["score"]),
             }
             if output_file:
-                with (output_file).open("a") as file_:
+                with (output_file).open("a") as file_:  # type: ignore
                     file_.write(srsly.json_dumps(log_data) + "\n")
 
             if progress is not None:
