@@ -47,7 +47,7 @@ def test_ko_tokenizer_pos(ko_tokenizer, text, expected_pos):
     assert pos == expected_pos.split()
 
 
-def test_ko_empty_doc(ko_tokenizer):
+def test_ko_tokenizer_empty_doc(ko_tokenizer):
     tokens = ko_tokenizer("")
     assert len(tokens) == 0
 
@@ -85,7 +85,7 @@ def test_ko_tokenizer_natto_pos(ko_tokenizer_natto, text, expected_pos):
     assert pos == expected_pos.split()
 
 
-def test_ko_empty_doc(ko_tokenizer_natto):
+def test_ko_tokenizer_natto_empty_doc(ko_tokenizer_natto):
     tokens = ko_tokenizer_natto("")
     assert len(tokens) == 0
 
