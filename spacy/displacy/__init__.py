@@ -120,19 +120,21 @@ def app(environ, start_response):
     return [res]
 
 
-def parse_deps(doc: Doc, options: Dict[str, Any] = {}) -> Dict[str, Any]:
+def parse_deps(orig_doc: Doc, options: Dict[str, Any] = {}) -> Dict[str, Any]:
     """Generate dependency parse in {'words': [], 'arcs': []} format.
 
-    doc (Doc): Document do parse.
+    orig_doc (Doc): Document to parse.
     options (Dict[str, Any]): Dependency parse specific visualisation options.
     RETURNS (dict): Generated dependency parse keyed by words and arcs.
     """
-    doc = Doc(doc.vocab).from_bytes(doc.to_bytes(exclude=["user_data", "user_hooks"]))
-    if not doc.has_annotation("DEP"):
+    orig_doc = Doc(orig_doc.vocab).from_bytes(
+        orig_doc.to_bytes(exclude=["user_data", "user_hooks"])
+    )
+    if not orig_doc.has_annotation("DEP"):
         warnings.warn(Warnings.W005)
     if options.get("collapse_phrases", False):
-        with doc.retokenize() as retokenizer:
-            for np in list(doc.noun_chunks):
+        with orig_doc.retokenize() as retokenizer:
+            for np in list(orig_doc.noun_chunks):
                 attrs = {
                     "tag": np.root.tag_,
                     "lemma": np.root.lemma_,
@@ -141,16 +143,16 @@ def parse_deps(doc: Doc, options: Dict[str, Any] = {}) -> Dict[str, Any]:
                 retokenizer.merge(np, attrs=attrs)  # type: ignore[arg-type]
     if options.get("collapse_punct", True):
         spans = []
-        for word in doc[:-1]:
+        for word in orig_doc[:-1]:
             if word.is_punct or not word.nbor(1).is_punct:
                 continue
             start = word.i
             end = word.i + 1
-            while end < len(doc) and doc[end].is_punct:
+            while end < len(orig_doc) and orig_doc[end].is_punct:
                 end += 1
-            span = doc[start:end]
+            span = orig_doc[start:end]
             spans.append((span, word.tag_, word.lemma_, word.ent_type_))
-        with doc.retokenize() as retokenizer:
+        with orig_doc.retokenize() as retokenizer:
             for span, tag, lemma, ent_type in spans:
                 attrs = {"tag": tag, "lemma": lemma, "ent_type": ent_type}
                 retokenizer.merge(span, attrs=attrs)  # type: ignore[arg-type]
@@ -162,10 +164,10 @@ def parse_deps(doc: Doc, options: Dict[str, Any] = {}) -> Dict[str, Any]:
             "tag": w.tag_ if fine_grained else w.pos_,
             "lemma": w.lemma_ if add_lemma else None,
         }
-        for w in doc
+        for w in orig_doc
     ]
     arcs = []
-    for word in doc:
+    for word in orig_doc:
         if word.i < word.head.i:
             arcs.append(
                 {"start": word.i, "end": word.head.i, "label": word.dep_, "dir": "left"}
@@ -179,7 +181,7 @@ def parse_deps(doc: Doc, options: Dict[str, Any] = {}) -> Dict[str, Any]:
                     "dir": "right",
                 }
             )
-    return {"words": words, "arcs": arcs, "settings": get_doc_settings(doc)}
+    return {"words": words, "arcs": arcs, "settings": get_doc_settings(orig_doc)}
 
 
 def parse_ents(doc: Doc, options: Dict[str, Any] = {}) -> Dict[str, Any]:

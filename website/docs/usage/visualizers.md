@@ -403,12 +403,14 @@ and [`displacy.parse_spans`](/api/top-level#displacy.parse_spans).
 ```
 
 ```python
-### SPANS input with knowledge base links
+### SPANS input
 {
-    "text": "But Google is starting from behind.",
-    "spans": [{"start": 4, "end": 10, "start_token": 0, "end_token": 1, "label": "ORG", "kb_id": "Q95", "kb_url": "https://www.wikidata.org/entity/Q95"}],
-    "title": None,
-    "tokens": ["But", "Google", "is", "starting", "from", "behind", "."]
+    "text": "Welcome to the Bank of China.",
+    "spans": [
+        {"start_token": 3, "end_token": 6, "label": "ORG"},
+        {"start_token": 5, "end_token": 6, "label": "GPE"},
+    ],
+    "tokens": ["Welcome", "to", "the", "Bank", "of", "China", "."],
 }
 ```
 
