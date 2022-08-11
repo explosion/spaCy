@@ -39,11 +39,11 @@ def console_logger(
     """
     _log_exist = False
     if output_file:
-        output_file = util.ensure_path(output_file)
-        if output_file.exists():
+        output_file = util.ensure_path(output_file)  # type: ignore
+        if output_file.exists():  # type: ignore
             _log_exist = True
-        if not output_file.parents[0].exists():
-            output_file.parents[0].mkdir(parents=True)
+        if not output_file.parents[0].exists():  # type: ignore
+            output_file.parents[0].mkdir(parents=True)  # type: ignore
 
     def setup_printer(
         nlp: "Language", stdout: IO = sys.stdout, stderr: IO = sys.stderr
