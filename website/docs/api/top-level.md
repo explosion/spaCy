@@ -291,7 +291,7 @@ For use with the `manual=True` argument in `displacy.render`.
 
 | Name        | Description                                                         |
 | ----------- | ------------------------------------------------------------------- |
-| `doc`       | Doc to parse dependencies. ~~Doc~~                                  |
+| `orig_doc`  | Doc to parse dependencies. ~~Doc~~                                  |
 | `options`   | Dependency parse specific visualisation options. ~~Dict[str, Any]~~ |
 | **RETURNS** | Generated dependency parse keyed by words and arcs. ~~dict~~        |
 
