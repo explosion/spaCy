@@ -207,7 +207,7 @@ class TokenPatternOperatorSimple(str, Enum):
 
 
 class TokenPatternOperatorMinMax(ConstrainedStr):
-    regex = re.compile("^({\d+}|{\d+,\d*}|{\d*,\d+})$")
+    regex = re.compile(r"^({\d+}|{\d+,\d*}|{\d*,\d+})$")
 
 
 TokenPatternOperator = Union[TokenPatternOperatorSimple, TokenPatternOperatorMinMax]
