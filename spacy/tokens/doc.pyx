@@ -1696,7 +1696,7 @@ cdef class Doc:
                             # Else span attribute
                             else:
                                 if attr not in data["underscore_span"]:
-                                    data["underscore_span"][attr] = {"token_start": start, "token_end": end, "value":value}
+                                    data["underscore_span"][attr] = {"token_start": start, "token_end": end, "value": value}
 
             for attr in underscore:
                 if attr not in user_keys:
