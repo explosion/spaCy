@@ -45,7 +45,6 @@ steps:
 
   - script: |
       ${{ parameters.prefix }} python -m pip install -U -r requirements.txt
-      ${{ parameters.prefix }} python -m pip install mecab-ko
     displayName: "Install test requirements"
 
   - script: |
