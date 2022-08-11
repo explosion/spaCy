@@ -87,7 +87,7 @@ class Korean(Language):
     Defaults = KoreanDefaults
 
 
-def try_mecab_import() -> None:
+def try_mecab_import():
     try:
         import mecab_ko as MeCab
 
