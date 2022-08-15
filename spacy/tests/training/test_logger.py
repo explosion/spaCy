@@ -22,7 +22,7 @@ def info():
     }
 
 
-def test_console_logger_v2(nlp, info):
+def test_console_logger(nlp, info):
     console_logger = loggers.console_logger(
         progress_bar=True, console_output=True, output_file=None
     )
