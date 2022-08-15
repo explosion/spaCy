@@ -871,12 +871,12 @@ class _SetPredicate:
         else:
             value = get_token_attr_for_matcher(token.c, self.attr)
 
-        value_type_mismatch = False
+        unexpected_value_type = False
         if self.predicate in ("IN", "NOT_IN"):
             if isinstance(value, (str, int)):
                 value = get_string_id(value)
             else:
-                value_type_mismatch = True
+                unexpected_value_type = True
         elif self.predicate in ("IS_SUBSET", "IS_SUPERSET", "INTERSECTS"):
             # ensure that all values are enclosed in a set
             if self.attr == MORPH:
@@ -884,15 +884,15 @@ class _SetPredicate:
                     # break up MORPH into individual Feat=Val values
                     value = set((get_string_id(v) for v in MorphAnalysis.from_id(self.vocab, value)))
                 else:
-                    value_type_mismatch = True
+                    unexpected_value_type = True
             elif isinstance(value, Iterable):
                 value = set(get_string_id(v) for v in value)
             elif isinstance(value, (str, int)):
                 value = set((get_string_id(value),))
             else:
-                value_type_mismatch = True
+                unexpected_value_type = True
 
-        if value_type_mismatch:
+        if unexpected_value_type:
             return self._emit_value_type_warning(value)
         elif self.predicate == "IN":
             return value in self.value
