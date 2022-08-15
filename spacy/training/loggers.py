@@ -30,7 +30,7 @@ def setup_table(
 def console_logger(
     progress_bar: bool = False,
     console_output: bool = True,
-    output_file: Optional[Union[str, Path]] = None,  # type: ignore
+    output_file: Optional[Union[str, Path]] = None,
 ):
     """The ConsoleLogger.v2 prints out training logs in the console and/or saves them to a jsonl file.
     progress_bar (bool): Whether the logger should print the progress bar.
