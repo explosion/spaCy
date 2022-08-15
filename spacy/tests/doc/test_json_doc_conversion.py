@@ -101,7 +101,7 @@ def test_doc_to_json(doc):
     assert json_doc["ents"][0]["start"] == 2  # character offset!
     assert json_doc["ents"][0]["end"] == 3  # character offset!
     assert json_doc["ents"][0]["label"] == "ORG"
-    assert not schemas.validate(schemas.DocJSONSchema, json_doc)
+    assert len(schemas.validate(schemas.DocJSONSchema, json_doc)) == 0
     assert srsly.json_loads(srsly.json_dumps(json_doc)) == json_doc
 
 
@@ -115,7 +115,7 @@ def test_doc_to_json_underscore(doc):
     assert "_" in json_doc
     assert json_doc["_"]["json_test1"] == "hello world"
     assert json_doc["_"]["json_test2"] == [1, 2, 3]
-    assert not schemas.validate(schemas.DocJSONSchema, json_doc)
+    assert len(schemas.validate(schemas.DocJSONSchema, json_doc)) == 0
     assert srsly.json_loads(srsly.json_dumps(json_doc)) == json_doc
 
 
@@ -141,7 +141,7 @@ def test_doc_to_json_with_token_span_attributes(doc):
     assert "underscore_span" in json_doc
     assert json_doc["underscore_token"]["token_test"]["value"] == 117
     assert json_doc["underscore_span"]["span_test"]["value"] == "span_attribute"
-    assert not schemas.validate(schemas.DocJSONSchema, json_doc)
+    assert len(schemas.validate(schemas.DocJSONSchema, json_doc)) == 0
     assert srsly.json_loads(srsly.json_dumps(json_doc)) == json_doc
 
 
@@ -163,7 +163,7 @@ def test_doc_to_json_with_custom_user_data(doc):
     assert "underscore_span" in json_doc
     assert json_doc["underscore_token"]["token_test"]["value"] == 117
     assert json_doc["underscore_span"]["span_test"]["value"] == "span_attribute"
-    assert not schemas.validate(schemas.DocJSONSchema, json_doc)
+    assert len(schemas.validate(schemas.DocJSONSchema, json_doc)) == 0
     assert srsly.json_loads(srsly.json_dumps(json_doc)) == json_doc
 
 
@@ -183,7 +183,7 @@ def test_doc_to_json_with_token_span_same_identifier(doc):
     assert "underscore_span" in json_doc
     assert json_doc["underscore_token"]["my_ext"]["value"] == 117
     assert json_doc["underscore_span"]["my_ext"]["value"] == "span_attribute"
-    assert not schemas.validate(schemas.DocJSONSchema, json_doc)
+    assert len(schemas.validate(schemas.DocJSONSchema, json_doc)) == 0
     assert srsly.json_loads(srsly.json_dumps(json_doc)) == json_doc
 
 
@@ -199,7 +199,7 @@ def test_doc_to_json_with_token_attributes_missing(doc):
     assert "underscore_span" in json_doc
     assert json_doc["underscore_span"]["span_test"]["value"] == "span_attribute"
     assert "token_test" not in json_doc["underscore_token"]
-    assert not schemas.validate(schemas.DocJSONSchema, json_doc)
+    assert len(schemas.validate(schemas.DocJSONSchema, json_doc)) == 0
 
 
 def test_doc_to_json_underscore_error_attr(doc):
@@ -225,7 +225,7 @@ def test_doc_to_json_span(doc):
     assert len(json_doc["spans"]) == 1
     assert len(json_doc["spans"]["test"]) == 2
     assert json_doc["spans"]["test"][0]["start"] == 0
-    assert not schemas.validate(schemas.DocJSONSchema, json_doc)
+    assert len(schemas.validate(schemas.DocJSONSchema, json_doc)) == 0
 
 
 def test_json_to_doc(doc):
