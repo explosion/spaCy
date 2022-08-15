@@ -17,7 +17,7 @@ api_trainable: true
 
 <Infobox title="Important note" variant="warning">
 
-This component not yet integrated into spaCy core, and is available via the
+This component is not yet integrated into spaCy core, and is available via the
 extension package
 [`spacy-experimental`](https://github.com/explosion/spacy-transformers). It
 exposes the component via entry points, so if you have the package installed,
