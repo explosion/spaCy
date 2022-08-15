@@ -28,11 +28,10 @@ will work out-of-the-box.
 
 </Infobox>
 
-A `SpanResolver` component takes in tokens (represented as `Span`s of length
-
-1. and resolves them into `Span`s of arbitrary length. The initial use case is
-   as a post-processing step on word-level [coreference resolution](/api/coref).
-   The input and output keys used to store `Span`s are configurable.
+A `SpanResolver` component takes in tokens (represented as `Span`s of length 1)
+and resolves them into `Span`s of arbitrary length. The initial use case is as a
+post-processing step on word-level [coreference resolution](/api/coref). The
+input and output keys used to store `Span`s are configurable.
 
 ## Assigned Attributes {#assigned-attributes}
 
