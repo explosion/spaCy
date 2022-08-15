@@ -19,9 +19,10 @@ api_trainable: true
 
 This component not yet integrated into spaCy core, and is available via the
 extension package
-[`spacy-experimental`](https://github.com/explosion/spacy-transformers). It
-exposes the component via entry points, so if you have the package installed,
-using `factory = "span_resolver"` in your
+[`spacy-experimental`](https://github.com/explosion/spacy-transformers) starting
+in version 0.6.0. It exposes the component via
+[entry points](/usage/saving-loading/#entry-points), so if you have the package
+installed, using `factory = "span_resolver"` in your
 [training config](/usage/training#config) or `nlp.add_pipe("span_resolver")`
 will work out-of-the-box.
 
@@ -52,8 +53,8 @@ The default config is defined by the pipeline component factory and describes
 how the component should be configured. You can override its settings via the
 `config` argument on [`nlp.add_pipe`](/api/language#add_pipe) or in your
 [`config.cfg` for training](/usage/training#config). See the
-[model architectures](/api/architectures) documentation for details on the
-architectures and their arguments and hyperparameters.
+[model architectures](/api/architectures#coref-architectures) documentation for
+details on the architectures and their arguments and hyperparameters.
 
 > #### Example
 >
@@ -71,10 +72,6 @@ architectures and their arguments and hyperparameters.
 | `model`         | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. Defaults to [SpanResolver](/api/architectures#SpanResolver). ~~Model~~ |
 | `input_prefix`  | The prefix to use for input `SpanGroup`s. Defaults to `coref_head_clusters`. ~~str~~                                                                   |
 | `output_prefix` | The prefix for predicted `SpanGroup`s. Defaults to `coref_clusters`. ~~str~~                                                                           |
-
-```python
-%%GITHUB_SPACY/spacy/pipeline/span_resolver.py
-```
 
 ## SpanResolver.\_\_init\_\_ {#init tag="method"}
 

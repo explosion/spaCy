@@ -19,10 +19,12 @@ api_trainable: true
 
 This component is not yet integrated into spaCy core, and is available via the
 extension package
-[`spacy-experimental`](https://github.com/explosion/spacy-transformers). It
-exposes the component via entry points, so if you have the package installed,
-using `factory = "coref"` in your [training config](/usage/training#config) or
-`nlp.add_pipe("coref")` will work out-of-the-box.
+[`spacy-experimental`](https://github.com/explosion/spacy-transformers) starting
+in version 0.6.0. It exposes the component via
+[entry points](/usage/saving-loading/#entry-points), so if you have the package
+installed, using `factory = "coref"` in your
+[training config](/usage/training#config) or `nlp.add_pipe("coref")` will work
+out-of-the-box.
 
 </Infobox>
 
@@ -31,7 +33,7 @@ same thing. Clusters are represented as SpanGroups that start with a prefix
 (`coref_clusters` by default).
 
 A `CoreferenceResolver` component can be paired with a
-[`SpanPredictor`](/api/spanpredictor) to expand single tokens to spans.
+[`SpanResolver`](/api/span-resolver) to expand single tokens to spans.
 
 ## Assigned Attributes {#assigned-attributes}
 
@@ -52,8 +54,8 @@ The default config is defined by the pipeline component factory and describes
 how the component should be configured. You can override its settings via the
 `config` argument on [`nlp.add_pipe`](/api/language#add_pipe) or in your
 [`config.cfg` for training](/usage/training#config). See the
-[model architectures](/api/architectures) documentation for details on the
-architectures and their arguments and hyperparameters.
+[model architectures](/api/architectures#coref-architectures) documentation for
+details on the architectures and their arguments and hyperparameters.
 
 > #### Example
 >
@@ -70,10 +72,6 @@ architectures and their arguments and hyperparameters.
 | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
 | `model`               | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. Defaults to [Coref](/api/architectures#Coref). ~~Model~~ |
 | `span_cluster_prefix` | The prefix for the keys for clusters saved to `doc.spans`. Defaults to `coref_clusters`. ~~str~~                                         |
-
-```python
-%%GITHUB_SPACY/spacy/pipeline/coref.py
-```
 
 ## CoreferenceResolver.\_\_init\_\_ {#init tag="method"}
 
