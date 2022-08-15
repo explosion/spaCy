@@ -1,5 +1,5 @@
 # cython: infer_types=True, cython: profile=True
-from typing import List
+from typing import List, Iterable
 
 from libcpp.vector cimport vector
 from libc.stdint cimport int32_t, int8_t
@@ -867,21 +867,34 @@ class _SetPredicate:
 
     def __call__(self, Token token):
         if self.is_extension:
-            value = get_string_id(token._.get(self.attr))
+            value = token._.get(self.attr)
         else:
             value = get_token_attr_for_matcher(token.c, self.attr)
 
-        if self.predicate in ("IS_SUBSET", "IS_SUPERSET", "INTERSECTS"):
-            if self.attr == MORPH:
-                # break up MORPH into individual Feat=Val values
-                value = set(get_string_id(v) for v in MorphAnalysis.from_id(self.vocab, value))
+        value_type_mismatch = False
+        if self.predicate in ("IN", "NOT_IN"):
+            if isinstance(value, (str, int)):
+                value = get_string_id(value)
             else:
-                # treat a single value as a list
-                if isinstance(value, (str, int)):
-                    value = set([get_string_id(value)])
+                value_type_mismatch = True
+        elif self.predicate in ("IS_SUBSET", "IS_SUPERSET", "INTERSECTS"):
+            # ensure that all values are enclosed in a set
+            if self.attr == MORPH:
+                if isinstance(value, int):
+                    # break up MORPH into individual Feat=Val values
+                    value = set((get_string_id(v) for v in MorphAnalysis.from_id(self.vocab, value)))
                 else:
-                    value = set(get_string_id(v) for v in value)
-        if self.predicate == "IN":
+                    value_type_mismatch = True
+            elif isinstance(value, Iterable):
+                value = set(get_string_id(v) for v in value)
+            elif isinstance(value, (str, int)):
+                value = set((get_string_id(value),))
+            else:
+                value_type_mismatch = True
+
+        if value_type_mismatch:
+            return self._emit_value_type_warning(value)
+        elif self.predicate == "IN":
             return value in self.value
         elif self.predicate == "NOT_IN":
             return value not in self.value
@@ -891,6 +904,10 @@ class _SetPredicate:
             return value >= self.value
         elif self.predicate == "INTERSECTS":
             return bool(value & self.value)
+
+    def _emit_value_type_warning(self, value):
+        warnings.warn(Warnings.W123.format(predicate=self.predicate, attr_type=type(value)))
+        return False
 
     def __repr__(self):
         return repr(("SetPredicate", self.i, self.attr, self.value, self.predicate))

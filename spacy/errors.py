@@ -212,6 +212,8 @@ class Warnings(metaclass=ErrorsWithCodes):
     W121 = ("Attempting to trace non-existent method '{method}' in pipe '{pipe}'")
     W122 = ("Couldn't trace method '{method}' in pipe '{pipe}'. This can happen if the pipe class "
             "is a Cython extension type.")
+    W123 = ("Attempting to apply matcher set predicate '{predicate}' "
+            "to attribute of unexpected type '{attr_type}'.")
 
 
 class Errors(metaclass=ErrorsWithCodes):
