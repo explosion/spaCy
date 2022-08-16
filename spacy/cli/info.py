@@ -43,10 +43,11 @@ def info(
     if not exclude:
         exclude = []
     if url:
-        if not model:
+        if model is not None:
+            title = f"Download info for pipeline '{model}'"
+            data = info_model_url(model)
+        else:
             msg.fail("--url option requires a pipeline name", exits=1)
-        title = f"Download info for pipeline '{model}'"
-        data = info_model_url(model)
     elif model:
         title = f"Info about pipeline '{model}'"
         data = info_model(model, silent=silent)
