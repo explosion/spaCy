@@ -1,5 +1,5 @@
-import os.path
 from typing import Optional, List, Dict, Sequence, Any, Iterable, Tuple
+import os.path
 from pathlib import Path
 
 import pkg_resources
