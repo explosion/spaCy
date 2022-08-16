@@ -339,7 +339,7 @@ def _validate_requirements(requirements: List[str]) -> Tuple[bool, bool]:
 
     if len(failed_pkgs):
         msg.warn(
-            f"The following requirements could not be validated:\n{failed_pkgs}.",
+            f"The following requirements were not found:\n{failed_pkgs}.",
             "Make sure your Python environment is set up correctly and you installed all requirements specified in "
             "your project's requirements.txt.",
         )
