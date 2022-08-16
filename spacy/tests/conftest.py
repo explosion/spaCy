@@ -1,5 +1,7 @@
 import pytest
 from spacy.util import get_lang_class
+import functools
+import inspect
 
 
 def pytest_addoption(parser):
@@ -39,6 +41,21 @@ def pytest_runtest_setup(item):
                 pytest.skip(f"not referencing specified issues: {issue_nos}")
         else:
             pytest.skip("not referencing any issues")
+
+
+# Decorator for Cython-built tests
+# https://shwina.github.io/cython-testing/
+def cytest(func):
+    """
+    Wraps `func` in a plain Python function.
+    """
+
+    @functools.wraps(func)
+    def wrapped(*args, **kwargs):
+        bound = inspect.signature(func).bind(*args, **kwargs)
+        return func(*bound.args, **bound.kwargs)
+
+    return wrapped
 
 
 # Fixtures for language tokenizers (languages sorted alphabetically)
