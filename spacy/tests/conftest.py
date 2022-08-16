@@ -2,6 +2,9 @@ import pytest
 from spacy.util import get_lang_class
 import functools
 import inspect
+import importlib
+import sys
+from types import ModuleType
 
 
 def pytest_addoption(parser):
@@ -56,6 +59,18 @@ def cytest(func):
         return func(*bound.args, **bound.kwargs)
 
     return wrapped
+
+
+def register_cython_tests(cython_mod_name: str, test_mod_name: str):
+    """
+    Registers all callables with name `test_*` in Cython module `cython_mod_name`
+    as attributes in module `test_mod_name`, making them discoverable by pytest.
+    """
+    cython_mod = importlib.import_module(cython_mod_name)
+    for name in dir(cython_mod):
+        item = getattr(cython_mod, name)
+        if callable(item) and name.startswith("test_"):
+            setattr(sys.modules[test_mod_name], name, item)
 
 
 # Fixtures for language tokenizers (languages sorted alphabetically)
