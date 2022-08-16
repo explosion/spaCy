@@ -3,14 +3,13 @@
 cimport numpy as np
 import numpy
 from cpython.ref cimport PyObject, Py_XDECREF
-from thinc.extra.search cimport Beam
-from thinc.extra.search import MaxViolation
-from thinc.extra.search cimport MaxViolation
 
 from ...typedefs cimport hash_t, class_t
 from .transition_system cimport TransitionSystem, Transition
 from ...errors import Errors
 from .batch cimport Batch
+from .search cimport Beam, MaxViolation
+from .search import MaxViolation
 from .stateclass cimport StateC, StateClass
 
 
