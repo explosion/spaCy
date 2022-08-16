@@ -268,8 +268,7 @@ cdef class Vocab:
         cdef int i
         tokens = <TokenC*>self.mem.alloc(len(substrings) + 1, sizeof(TokenC))
         for i, props in enumerate(substrings):
-            props = intify_attrs(props, strings_map=self.strings,
-                                 _do_deprecated=True)
+            props = intify_attrs(props, strings_map=self.strings)
             token = &tokens[i]
             # Set the special tokens up to have arbitrary attributes
             lex = <LexemeC*>self.get_by_orth(self.mem, props[ORTH])
