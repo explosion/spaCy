@@ -893,7 +893,8 @@ class _SetPredicate:
                 unexpected_value_type = True
 
         if unexpected_value_type:
-            return self._emit_value_type_warning(value)
+            warnings.warn(Warnings.W123.format(predicate=self.predicate, attr_type=type(value)))
+            return False
         elif self.predicate == "IN":
             return value in self.value
         elif self.predicate == "NOT_IN":
@@ -904,10 +905,6 @@ class _SetPredicate:
             return value >= self.value
         elif self.predicate == "INTERSECTS":
             return bool(value & self.value)
-
-    def _emit_value_type_warning(self, value):
-        warnings.warn(Warnings.W123.format(predicate=self.predicate, attr_type=type(value)))
-        return False
 
     def __repr__(self):
         return repr(("SetPredicate", self.i, self.attr, self.value, self.predicate))
