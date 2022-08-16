@@ -346,7 +346,7 @@ def _validate_requirements(requirements: List[str]) -> Tuple[bool, bool]:
     if len(conflicting_pkgs_msgs):
         msg.warn(
             f"The following depencency conflicts were detected:\n{conflicting_pkgs_msgs}",
-            "Make sure your Python environment is set up correctly. Ensure whether your project's "
+            "Make sure your Python environment is set up correctly. Ensure that your project's "
             "requirements.txt specifies the correct versions for all dependencies.",
         )
 
