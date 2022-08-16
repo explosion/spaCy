@@ -46,6 +46,8 @@ def info(
         if model is not None:
             title = f"Download info for pipeline '{model}'"
             data = info_model_url(model)
+            print(data["download_url"])
+            return data
         else:
             msg.fail("--url option requires a pipeline name", exits=1)
     elif model:
