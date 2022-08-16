@@ -5,6 +5,7 @@ from wasabi import Printer, MarkdownRenderer
 import srsly
 
 from ._util import app, Arg, Opt, string_to_list
+from .download import get_model_filename, get_latest_version
 from .. import util
 from .. import about
 
@@ -16,17 +17,18 @@ def info_cli(
     markdown: bool = Opt(False, "--markdown", "-md", help="Generate Markdown for GitHub issues"),
     silent: bool = Opt(False, "--silent", "-s", "-S", help="Don't print anything (just return)"),
     exclude: str = Opt("labels", "--exclude", "-e", help="Comma-separated keys to exclude from the print-out"),
+    url: bool = Opt(False, "--url", "-u", help="Print the pipeline download URL"),
     # fmt: on
 ):
     """
     Print info about spaCy installation. If a pipeline is specified as an argument,
     print its meta information. Flag --markdown prints details in Markdown for easy
-    copy-pasting to GitHub issues.
+    copy-pasting to GitHub issues. Flag --url prints the download URL of the pipeline.
 
     DOCS: https://spacy.io/api/cli#info
     """
     exclude = string_to_list(exclude)
-    info(model, markdown=markdown, silent=silent, exclude=exclude)
+    info(model, markdown=markdown, silent=silent, exclude=exclude, url=url)
 
 
 def info(
@@ -35,11 +37,17 @@ def info(
     markdown: bool = False,
     silent: bool = True,
     exclude: Optional[List[str]] = None,
+    url: bool = False,
 ) -> Union[str, dict]:
     msg = Printer(no_print=silent, pretty=not silent)
     if not exclude:
         exclude = []
-    if model:
+    if url:
+        if not model:
+            msg.fail("--url option requires a pipeline name", exits=1)
+        title = f"Download info for pipeline '{model}'"
+        data = info_model_url(model)
+    elif model:
         title = f"Info about pipeline '{model}'"
         data = info_model(model, silent=silent)
     else:
@@ -102,6 +110,15 @@ def info_model(model: str, *, silent: bool = True) -> Dict[str, Any]:
     return {
         k: v for k, v in meta.items() if k not in ("accuracy", "performance", "speed")
     }
+
+
+def info_model_url(model: str) -> Dict[str, Any]:
+    """Return the download URL for the latest version of a pipeline."""
+    version = get_latest_version(model)
+
+    filename = get_model_filename(model, version)
+    download_url = about.__download_url__ + "/" + filename
+    return {"download_url": download_url}
 
 
 def get_markdown(

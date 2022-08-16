@@ -20,7 +20,6 @@ def download_cli(
     model: str = Arg(..., help="Name of pipeline package to download"),
     direct: bool = Opt(False, "--direct", "-d", "-D", help="Force direct download of name + version"),
     sdist: bool = Opt(False, "--sdist", "-S", help="Download sdist (.tar.gz) archive instead of pre-built binary wheel"),
-    dry_run: bool = Opt(False, "--dry-run", "-n", help="Print the URL of the file to download without downloading it")
     # fmt: on
 ):
     """
@@ -30,20 +29,16 @@ def download_cli(
     additional arguments provided to this command will be passed to `pip install`
     on package installation.
 
-    If the --dry-run flag is set, the URL of the pipeline to download will be
-    printed, but nothing will actually be downloaded.
-
     DOCS: https://spacy.io/api/cli#download
     AVAILABLE PACKAGES: https://spacy.io/models
     """
-    download(model, direct, sdist, dry_run, *ctx.args)
+    download(model, direct, sdist, *ctx.args)
 
 
 def download(
     model: str,
     direct: bool = False,
     sdist: bool = False,
-    dry_run: bool = False,
     *pip_args,
 ) -> None:
     if (
@@ -59,8 +54,6 @@ def download(
             "dependencies, you'll have to install them manually."
         )
         pip_args = pip_args + ("--no-deps",)
-    suffix = SDIST_SUFFIX if sdist else WHEEL_SUFFIX
-    dl_tpl = "{m}-{v}/{m}-{v}{s}#egg={m}=={v}"
     if direct:
         components = model.split("-")
         model_name = "".join(components[:-1])
@@ -76,17 +69,20 @@ def download(
         compatibility = get_compatibility()
         version = get_version(model_name, compatibility)
 
-    filename = dl_tpl.format(m=model_name, v=version, s=suffix)
-    download_url = about.__download_url__ + "/" + filename
-    if dry_run:
-        msg.good(f"The download URL for {model} is:", download_url)
-        return
+    filename = get_model_filename(model_name, version, sdist)
 
     download_model(filename, pip_args)
     msg.good(
         "Download and installation successful",
         f"You can now load the package via spacy.load('{model_name}')",
     )
+
+
+def get_model_filename(model_name: str, version: str, sdist: bool = False) -> str:
+    dl_tpl = "{m}-{v}/{m}-{v}{s}#egg={m}=={v}"
+    suffix = SDIST_SUFFIX if sdist else WHEEL_SUFFIX
+    filename = dl_tpl.format(m=model_name, v=version, s=suffix)
+    return filename
 
 
 def get_compatibility() -> dict:
@@ -115,6 +111,11 @@ def get_version(model: str, comp: dict) -> str:
             exits=1,
         )
     return comp[model][0]
+
+
+def get_latest_version(model: str) -> str:
+    comp = get_compatibility()
+    return get_version(model, comp)
 
 
 def download_model(
