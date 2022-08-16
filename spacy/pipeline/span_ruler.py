@@ -11,7 +11,7 @@ from ..language import Language
 from ..errors import Errors, Warnings
 from ..util import ensure_path, SimpleFrozenList, registry
 from ..tokens import Doc, Span
-from ..scorer import Scorer
+from ..scorer import Scorer, get_ner_prf
 from ..matcher import Matcher, PhraseMatcher
 from .. import util
 
@@ -20,7 +20,7 @@ DEFAULT_SPANS_KEY = "ruler"
 
 
 @Language.factory(
-    "future_entity_ruler",
+    "entity_ruler",
     assigns=["doc.ents"],
     default_config={
         "phrase_matcher_attr": None,
@@ -61,6 +61,15 @@ def make_entity_ruler(
         overwrite=False,
         scorer=scorer,
     )
+
+
+def entity_ruler_score(examples, **kwargs):
+    return get_ner_prf(examples)
+
+
+@registry.scorers("spacy.entity_ruler_scorer.v1")
+def make_entity_ruler_scorer():
+    return entity_ruler_score
 
 
 @Language.factory(
