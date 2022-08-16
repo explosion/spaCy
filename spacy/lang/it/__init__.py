@@ -1,7 +1,6 @@
 from typing import Optional, Callable
 from thinc.api import Model
 
-from .stop_words import STOP_WORDS
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .punctuation import TOKENIZER_PREFIXES, TOKENIZER_INFIXES
 from ...language import Language, BaseDefaults
@@ -13,7 +12,6 @@ class ItalianDefaults(BaseDefaults):
     tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     prefixes = TOKENIZER_PREFIXES
     infixes = TOKENIZER_INFIXES
-    stop_words = STOP_WORDS
     syntax_iterators = SYNTAX_ITERATORS
 
 

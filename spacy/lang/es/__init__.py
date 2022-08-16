@@ -1,7 +1,6 @@
 from typing import Optional, Callable
 from thinc.api import Model
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
-from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
 from .lemmatizer import SpanishLemmatizer
 from .syntax_iterators import SYNTAX_ITERATORS
@@ -15,7 +14,6 @@ class SpanishDefaults(BaseDefaults):
     suffixes = TOKENIZER_SUFFIXES
     lex_attr_getters = LEX_ATTRS
     syntax_iterators = SYNTAX_ITERATORS
-    stop_words = STOP_WORDS
 
 
 class Spanish(Language):

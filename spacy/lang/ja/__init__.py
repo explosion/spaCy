@@ -5,7 +5,6 @@ from collections import namedtuple
 from thinc.api import Model
 import re
 
-from .stop_words import STOP_WORDS
 from .syntax_iterators import SYNTAX_ITERATORS
 from .tag_map import TAG_MAP
 from .tag_orth_map import TAG_ORTH_MAP
@@ -184,7 +183,6 @@ class JapaneseTokenizer(DummyTokenizer):
 
 class JapaneseDefaults(BaseDefaults):
     config = load_config_from_str(DEFAULT_CONFIG)
-    stop_words = STOP_WORDS
     syntax_iterators = SYNTAX_ITERATORS
     writing_system = {"direction": "ltr", "has_case": False, "has_letters": False}
 

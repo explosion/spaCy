@@ -548,7 +548,7 @@ Another way of getting involved is to help us improve the
 [language data](/usage/linguistic-features#language-data) – especially if you
 happen to speak one of the languages currently in
 [alpha support](/usage/models#languages). Even adding simple tokenizer
-exceptions, stop words or lemmatizer data can make a big difference. It will
+exceptions or lexical attribute settings can make a big difference. It will
 also make it easier for us to provide a trained pipeline for the language in the
 future. Submitting a test that documents a bug or performance issue, or covers
 functionality that's especially important for your application is also very

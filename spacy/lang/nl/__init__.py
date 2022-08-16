@@ -6,7 +6,6 @@ from .lemmatizer import DutchLemmatizer
 from .lex_attrs import LEX_ATTRS
 from .punctuation import TOKENIZER_PREFIXES, TOKENIZER_INFIXES
 from .punctuation import TOKENIZER_SUFFIXES
-from .stop_words import STOP_WORDS
 from .syntax_iterators import SYNTAX_ITERATORS
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from ...language import Language, BaseDefaults
@@ -19,7 +18,6 @@ class DutchDefaults(BaseDefaults):
     suffixes = TOKENIZER_SUFFIXES
     lex_attr_getters = LEX_ATTRS
     syntax_iterators = SYNTAX_ITERATORS
-    stop_words = STOP_WORDS
 
 
 class Dutch(Language):

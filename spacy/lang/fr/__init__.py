@@ -5,7 +5,6 @@ from thinc.api import Model
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS, TOKEN_MATCH
 from .punctuation import TOKENIZER_PREFIXES, TOKENIZER_INFIXES
 from .punctuation import TOKENIZER_SUFFIXES
-from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
 from .syntax_iterators import SYNTAX_ITERATORS
 from .lemmatizer import FrenchLemmatizer
@@ -20,7 +19,6 @@ class FrenchDefaults(BaseDefaults):
     token_match = TOKEN_MATCH
     lex_attr_getters = LEX_ATTRS
     syntax_iterators = SYNTAX_ITERATORS
-    stop_words = STOP_WORDS
 
 
 class French(Language):

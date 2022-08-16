@@ -1,5 +1,4 @@
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
-from .stop_words import STOP_WORDS
 from .punctuation import TOKENIZER_PREFIXES, TOKENIZER_INFIXES
 from .punctuation import TOKENIZER_SUFFIXES
 from .lex_attrs import LEX_ATTRS
@@ -16,7 +15,6 @@ class RomanianDefaults(BaseDefaults):
     suffixes = TOKENIZER_SUFFIXES
     infixes = TOKENIZER_INFIXES
     lex_attr_getters = LEX_ATTRS
-    stop_words = STOP_WORDS
 
 
 class Romanian(Language):

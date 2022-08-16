@@ -1,4 +1,3 @@
-from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
 from .punctuation import TOKENIZER_INFIXES
 from ...language import Language, BaseDefaults
@@ -6,7 +5,6 @@ from ...language import Language, BaseDefaults
 
 class SetswanaDefaults(BaseDefaults):
     infixes = TOKENIZER_INFIXES
-    stop_words = STOP_WORDS
     lex_attr_getters = LEX_ATTRS
 
 

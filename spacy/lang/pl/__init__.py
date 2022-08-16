@@ -4,7 +4,6 @@ from thinc.api import Model
 
 from .punctuation import TOKENIZER_PREFIXES, TOKENIZER_INFIXES
 from .punctuation import TOKENIZER_SUFFIXES
-from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
 from .lemmatizer import PolishLemmatizer
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
@@ -22,7 +21,6 @@ class PolishDefaults(BaseDefaults):
     infixes = TOKENIZER_INFIXES
     suffixes = TOKENIZER_SUFFIXES
     lex_attr_getters = LEX_ATTRS
-    stop_words = STOP_WORDS
 
 
 class Polish(Language):

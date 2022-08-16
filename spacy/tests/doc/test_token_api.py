@@ -43,7 +43,6 @@ def test_doc_token_api_flags(en_tokenizer):
     assert tokens[0].check_flag(IS_TITLE)
     assert tokens[1].check_flag(IS_LOWER)
     assert tokens[3].check_flag(IS_PUNCT)
-    assert tokens[2].check_flag(IS_STOP)
     assert not tokens[5].check_flag(IS_STOP)
     # TODO: Test more of these, esp. if a bug is found
 

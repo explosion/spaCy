@@ -161,14 +161,6 @@ def test_issue3277(es_tokenizer):
     assert doc[9].text == "\u2013"
 
 
-@pytest.mark.parametrize("word", ["don't", "don’t", "I'd", "I’d"])
-@pytest.mark.issue(3521)
-def test_issue3521(en_tokenizer, word):
-    tok = en_tokenizer(word)[1]
-    # 'not' and 'would' should be stopwords, also in their abbreviated forms
-    assert tok.is_stop
-
-
 @pytest.mark.issue(10699)
 @pytest.mark.parametrize("text", ["theses", "thisre"])
 def test_issue10699(en_tokenizer, text):

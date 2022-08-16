@@ -1,9 +1,8 @@
-from .stop_words import STOP_WORDS
 from ...language import Language, BaseDefaults
 
 
 class AfrikaansDefaults(BaseDefaults):
-    stop_words = STOP_WORDS
+    pass
 
 
 class Afrikaans(Language):

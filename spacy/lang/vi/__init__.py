@@ -4,7 +4,6 @@ import re
 import srsly
 import string
 
-from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
 from ...language import Language, BaseDefaults
 from ...tokens import Doc
@@ -157,7 +156,6 @@ class VietnameseTokenizer(DummyTokenizer):
 class VietnameseDefaults(BaseDefaults):
     config = load_config_from_str(DEFAULT_CONFIG)
     lex_attr_getters = LEX_ATTRS
-    stop_words = STOP_WORDS
 
 
 class Vietnamese(Language):

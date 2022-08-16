@@ -1,7 +1,6 @@
 from typing import Optional, Callable
 from thinc.api import Model
 from .lemmatizer import MacedonianLemmatizer
-from .stop_words import STOP_WORDS
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .lex_attrs import LEX_ATTRS
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
@@ -21,7 +20,6 @@ class MacedonianDefaults(BaseDefaults):
 
     # Merge base exceptions and custom tokenizer exceptions
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
-    stop_words = STOP_WORDS
 
     @classmethod
     def create_lemmatizer(cls, nlp=None, lookups=None):

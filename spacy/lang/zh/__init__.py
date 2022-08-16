@@ -13,7 +13,6 @@ from ...training import validate_examples, Example
 from ...util import DummyTokenizer, registry, load_config_from_str
 from ...vocab import Vocab
 from .lex_attrs import LEX_ATTRS
-from .stop_words import STOP_WORDS
 from ... import util
 
 
@@ -286,7 +285,6 @@ class ChineseTokenizer(DummyTokenizer):
 class ChineseDefaults(BaseDefaults):
     config = load_config_from_str(DEFAULT_CONFIG)
     lex_attr_getters = LEX_ATTRS
-    stop_words = STOP_WORDS
     writing_system = {"direction": "ltr", "has_case": False, "has_letters": False}
 
 
