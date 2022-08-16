@@ -4,7 +4,6 @@ import functools
 import inspect
 import importlib
 import sys
-from types import ModuleType
 
 
 def pytest_addoption(parser):
