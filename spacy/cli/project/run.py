@@ -1,3 +1,4 @@
+import os.path
 from typing import Optional, List, Dict, Sequence, Any, Iterable, Tuple
 from pathlib import Path
 
@@ -74,8 +75,10 @@ def project_run(
     workflows = config.get("workflows", {})
     validate_subcommand(list(commands.keys()), list(workflows.keys()), subcommand)
 
-    with (project_dir / "requirements.txt").open() as requirements_file:
-        _validate_requirements([req.replace("\n", "") for req in requirements_file])
+    req_path = project_dir / "requirements.txt"
+    if os.path.exists(req_path):
+        with (project_dir / "requirements.txt").open() as requirements_file:
+            _validate_requirements([req.replace("\n", "") for req in requirements_file])
 
     if subcommand in workflows:
         msg.info(f"Running workflow '{subcommand}'")
@@ -324,15 +327,15 @@ def _validate_requirements(requirements: List[str]) -> Tuple[bool, bool]:
     """
 
     failed_pkgs: List[str] = []
-    conflicting_pkgs: List[str] = []
+    conflicting_pkgs_msgs: List[str] = []
 
     for req in requirements:
         try:
             pkg_resources.require(req)
         except pkg_resources.DistributionNotFound:
             failed_pkgs.append(req)
-        except pkg_resources.VersionConflict:
-            conflicting_pkgs.append(req)
+        except pkg_resources.VersionConflict as vc:
+            conflicting_pkgs_msgs.append(vc.report())
 
     if len(failed_pkgs):
         msg.warn(
@@ -340,11 +343,11 @@ def _validate_requirements(requirements: List[str]) -> Tuple[bool, bool]:
             "Make sure your Python environment is set up correctly and you installed all requirements specified in "
             "your project's requirements.txt.",
         )
-    if len(conflicting_pkgs):
+    if len(conflicting_pkgs_msgs):
         msg.warn(
-            f"The following depencency conflicts were detected:\n{conflicting_pkgs}",
+            f"The following depencency conflicts were detected:\n{conflicting_pkgs_msgs}",
             "Make sure your Python environment is set up correctly. Ensure whether your project's "
             "requirements.txt specifies the correct versions for all dependencies.",
         )
 
-    return len(failed_pkgs) > 0, len(conflicting_pkgs) > 0
+    return len(failed_pkgs) > 0, len(conflicting_pkgs_msgs) > 0
