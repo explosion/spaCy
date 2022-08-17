@@ -3,7 +3,7 @@ cimport cython
 from libc.string cimport memcpy
 from libcpp.set cimport set
 from libc.stdint cimport uint32_t
-from murmurhash.mrmr cimport hash64, hash32
+from murmurhash.mrmr cimport hash64
 
 import srsly
 
@@ -60,9 +60,6 @@ cpdef hash_t hash_string(str string) except 0:
 cdef hash_t hash_utf8(char* utf8_string, int length) nogil:
     return hash64(utf8_string, length, 1)
 
-
-cdef uint32_t hash32_utf8(char* utf8_string, int length) nogil:
-    return hash32(utf8_string, length, 1)
 
 
 cdef str decode_Utf8Str(const Utf8Str* string):
