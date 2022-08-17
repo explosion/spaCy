@@ -52,12 +52,17 @@ def console_logger(
         msg = Printer(no_print=True)
 
         nonlocal output_file
-
+        output_stream = None
         if _log_exist:
-            write(msg.warn(f"The log file {output_file} already exists."))
+            write(
+                msg.warn(
+                    f"Saving logs is disabled because {output_file} already exists."
+                )
+            )
             output_file = None
         elif output_file:
             write(msg.info(f"Saving logs to {output_file}"))
+            output_stream = open(output_file, "w")
 
         # ensure that only trainable components are logged
         logged_pipes = [
@@ -124,9 +129,9 @@ def console_logger(
                 "scores": log_scores,
                 "score": float(info["score"]),
             }
-            if output_file:
-                with (output_file).open("a") as file_:  # type: ignore
-                    file_.write(srsly.json_dumps(log_data) + "\n")
+
+            if output_stream:
+                output_stream.write(srsly.json_dumps(log_data) + "\n")
 
             if progress is not None:
                 progress.close()
@@ -144,7 +149,7 @@ def console_logger(
                     progress.set_description(f"Epoch {info['epoch']+1}")
 
         def finalize() -> None:
-            pass
+            output_stream.close()
 
         return log_step, finalize
 
