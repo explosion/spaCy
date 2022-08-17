@@ -271,11 +271,11 @@ def test_language_pipe_error_handler_input_as_tuples(en_vocab, n_process):
             ("TEXT 666", 666),
         ]
         with pytest.raises(ValueError):
-            list(nlp.pipe(texts, as_tuples=True))
+            list(nlp.pipe_as_tuples(texts))
         nlp.set_error_handler(warn_error)
         logger = logging.getLogger("spacy")
         with mock.patch.object(logger, "warning") as mock_warning:
-            tuples = list(nlp.pipe(texts, as_tuples=True, n_process=n_process))
+            tuples = list(nlp.pipe_as_tuples(texts, n_process=n_process))
             # HACK/TODO? the warnings in child processes don't seem to be
             # detected by the mock logger
             if n_process == 1:
@@ -285,6 +285,18 @@ def test_language_pipe_error_handler_input_as_tuples(en_vocab, n_process):
             assert (tuples[0][0].text, tuples[0][1]) == ("TEXT 111", 111)
             assert (tuples[1][0].text, tuples[1][1]) == ("TEXT 333", 333)
             assert (tuples[2][0].text, tuples[2][1]) == ("TEXT 666", 666)
+
+
+def test_language_previous_pipe_as_tuples_error(nlp):
+    texts = [
+        ("TEXT 111", 111),
+        ("TEXT 222", 222),
+        ("TEXT 333", 333),
+        ("TEXT 342", 342),
+        ("TEXT 666", 666),
+    ]
+    with pytest.raises(ValueError, match="nlp.pipe_as_tuples"):
+        list(nlp.pipe(texts, as_tuples=True))
 
 
 @pytest.mark.parametrize("n_process", [1, 2])

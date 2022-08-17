@@ -1470,51 +1470,20 @@ class Language:
                 except StopIteration:
                     pass
 
-    @overload
     def pipe(
         self,
         texts: Iterable[Union[str, Doc]],
         *,
-        as_tuples: Literal[False] = ...,
-        batch_size: Optional[int] = ...,
-        disable: Iterable[str] = ...,
-        component_cfg: Optional[Dict[str, Dict[str, Any]]] = ...,
-        n_process: int = ...,
-    ) -> Iterator[Doc]:
-        ...
-
-    @overload
-    def pipe(  # noqa: F811
-        self,
-        texts: Iterable[Tuple[Union[str, Doc], _AnyContext]],
-        *,
-        as_tuples: Literal[True] = ...,
-        batch_size: Optional[int] = ...,
-        disable: Iterable[str] = ...,
-        component_cfg: Optional[Dict[str, Dict[str, Any]]] = ...,
-        n_process: int = ...,
-    ) -> Iterator[Tuple[Doc, _AnyContext]]:
-        ...
-
-    def pipe(  # noqa: F811
-        self,
-        texts: Union[
-            Iterable[Union[str, Doc]], Iterable[Tuple[Union[str, Doc], _AnyContext]]
-        ],
-        *,
-        as_tuples: bool = False,
         batch_size: Optional[int] = None,
         disable: Iterable[str] = SimpleFrozenList(),
         component_cfg: Optional[Dict[str, Dict[str, Any]]] = None,
         n_process: int = 1,
-    ) -> Union[Iterator[Doc], Iterator[Tuple[Doc, _AnyContext]]]:
+        as_tuples: Optional[bool] = None, # deprecated
+    ) -> Iterator[Doc]:
         """Process texts as a stream, and yield `Doc` objects in order.
 
         texts (Iterable[Union[str, Doc]]): A sequence of texts or docs to
             process.
-        as_tuples (bool): If set to True, inputs should be a sequence of
-            (text, context) tuples. Output will then be a sequence of
-            (doc, context) tuples. Defaults to False.
         batch_size (Optional[int]): The number of texts to buffer.
         disable (List[str]): Names of the pipeline components to disable.
         component_cfg (Dict[str, Dict]): An optional dictionary with extra keyword
@@ -1524,25 +1493,8 @@ class Language:
 
         DOCS: https://spacy.io/api/language#pipe
         """
-        if as_tuples:
-            texts = cast(Iterable[Tuple[Union[str, Doc], _AnyContext]], texts)
-            docs_with_contexts = (
-                self._ensure_doc_with_context(text, context) for text, context in texts
-            )
-            docs = self.pipe(
-                docs_with_contexts,
-                batch_size=batch_size,
-                disable=disable,
-                n_process=n_process,
-                component_cfg=component_cfg,
-            )
-            for doc in docs:
-                context = doc._context
-                doc._context = None
-                yield (doc, context)
-            return
-
-        texts = cast(Iterable[Union[str, Doc]], texts)
+        if as_tuples is not None:
+            raise ValueError(Errors.E300)
 
         # Set argument defaults
         if n_process == -1:
@@ -1582,6 +1534,31 @@ class Language:
                 docs = pipe(docs)
         for doc in docs:
             yield doc
+
+    def pipe_as_tuples(
+        self,
+        texts: Iterable[Tuple[Union[str, Doc], _AnyContext]],
+        *,
+        batch_size: Optional[int] = None,
+        disable: Iterable[str] = SimpleFrozenList(),
+        component_cfg: Optional[Dict[str, Dict[str, Any]]] = None,
+        n_process: int = 1,
+    ) -> Iterator[Tuple[Doc, _AnyContext]]:
+        docs_with_contexts = (
+            self._ensure_doc_with_context(text, context) for text, context in texts
+        )
+        docs = self.pipe(
+            docs_with_contexts,
+            batch_size=batch_size,
+            disable=disable,
+            n_process=n_process,
+            component_cfg=component_cfg,
+        )
+        for doc in docs:
+            context = doc._context
+            doc._context = None
+            yield (doc, context)
+        return
 
     def _has_gpu_model(self, disable: Iterable[str]):
         for name, proc in self.pipeline:

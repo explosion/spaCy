@@ -191,16 +191,42 @@ more efficient than processing texts one-by-one.
 >     assert doc.has_annotation("DEP")
 > ```
 
-| Name                                       | Description                                                                                                                                                         |
-| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `texts`                                    | A sequence of strings. ~~Iterable[str]~~                                                                                                                            |
-| _keyword-only_                             |                                                                                                                                                                     |
-| `as_tuples`                                | If set to `True`, inputs should be a sequence of `(text, context)` tuples. Output will then be a sequence of `(doc, context)` tuples. Defaults to `False`. ~~bool~~ |
-| `batch_size`                               | The number of texts to buffer. ~~Optional[int]~~                                                                                                                    |
-| `disable`                                  | Names of pipeline components to [disable](/usage/processing-pipelines#disabling). ~~List[str]~~                                                                     |
-| `component_cfg`                            | Optional dictionary of keyword arguments for components, keyed by component names. Defaults to `None`. ~~Optional[Dict[str, Dict[str, Any]]]~~                      |
-| `n_process` <Tag variant="new">2.2.2</Tag> | Number of processors to use. Defaults to `1`. ~~int~~                                                                                                               |
-| **YIELDS**                                 | Documents in the order of the original text. ~~Doc~~                                                                                                                |
+| Name                                       | Description                                                                                                                                    |
+| ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `texts`                                    | A sequence of strings. ~~Iterable[str]~~                                                                                                       |
+| _keyword-only_                             |                                                                                                                                                |
+| `batch_size`                               | The number of texts to buffer. ~~Optional[int]~~                                                                                               |
+| `disable`                                  | Names of pipeline components to [disable](/usage/processing-pipelines#disabling). ~~List[str]~~                                                |
+| `component_cfg`                            | Optional dictionary of keyword arguments for components, keyed by component names. Defaults to `None`. ~~Optional[Dict[str, Dict[str, Any]]]~~ |
+| `n_process` <Tag variant="new">2.2.2</Tag> | Number of processors to use. Defaults to `1`. ~~int~~                                                                                          |
+| **YIELDS**                                 | Documents in the order of the original text. ~~Doc~~                                                                                           |
+
+## Language.pipe_as_tuples {#pipe_as_tuples tag="method"}
+
+Process `(text, context)` tuples as a stream, and yield `(Doc, context)` tuples
+in order. This is usually more efficient than processing texts one-by-one.
+
+> #### Example
+>
+> ```python
+> texts = [
+>     ("One document.", {"id": 1}),
+>     "...",
+>     ("Lots of documents", {"id": 1000}),
+> ]
+> for doc, context in nlp.pipe_as_tuples(texts, batch_size=50):
+>     assert doc.has_annotation("DEP")
+> ```
+
+| Name                                       | Description                                                                                                                                    |
+| ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `texts`                                    | A sequence of strings. ~~Iterable[Tuple(str, Any)]~~                                                                                           |
+| _keyword-only_                             |                                                                                                                                                |
+| `batch_size`                               | The number of texts to buffer. ~~Optional[int]~~                                                                                               |
+| `disable`                                  | Names of pipeline components to [disable](/usage/processing-pipelines#disabling). ~~List[str]~~                                                |
+| `component_cfg`                            | Optional dictionary of keyword arguments for components, keyed by component names. Defaults to `None`. ~~Optional[Dict[str, Dict[str, Any]]]~~ |
+| `n_process` <Tag variant="new">2.2.2</Tag> | Number of processors to use. Defaults to `1`. ~~int~~                                                                                          |
+| **YIELDS**                                 | Documents in the order of the original text. ~~Tuple(Doc, Any)~~                                                                               |
 
 ## Language.set_error_handler {#set_error_handler tag="method" new="3"}
 

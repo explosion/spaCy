@@ -539,6 +539,10 @@ class Errors(metaclass=ErrorsWithCodes):
             "issue tracker: http://github.com/explosion/spaCy/issues")
     E202 = ("Unsupported {name} mode '{mode}'. Supported modes: {modes}.")
 
+    # New errors added in v4.x
+    E300 = ("nlp.pipe(text_tuples, as_tuples=True) has been replaced with:\n"
+            "nlp.pipe_as_tuples(text_tuples)")
+
     # New errors added in v3.x
     E854 = ("Unable to set doc.ents. Check that the 'ents_filter' does not "
             "permit overlapping spans.")

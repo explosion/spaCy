@@ -91,11 +91,12 @@ have to call `list()` on it first:
 
 </Infobox>
 
-You can use the `as_tuples` option to pass additional context along with each
-doc when using [`nlp.pipe`](/api/language#pipe). If `as_tuples` is `True`, then
-the input should be a sequence of `(text, context)` tuples and the output will
-be a sequence of `(doc, context)` tuples. For example, you can pass metadata in
-the context and save it in a [custom attribute](#custom-components-attributes):
+You can use the [`nlp.pipe_as_tuples`](/api/language#pipe_as_tuples) method to
+pass additional context along with each doc when using the functionality of
+[`nlp.pipe`](/api/language#pipe). The input should be a sequence of
+`(text, context)` tuples and the output will be a sequence of `(doc, context)`
+tuples. For example, you can pass metadata in the context and save it in a
+[custom attribute](#custom-components-attributes):
 
 ```python
 ### {executable="true"}
@@ -111,7 +112,7 @@ text_tuples = [
 ]
 
 nlp = spacy.load("en_core_web_sm")
-doc_tuples = nlp.pipe(text_tuples, as_tuples=True)
+doc_tuples = nlp.pipe_as_tuples(text_tuples)
 
 docs = []
 for doc, context in doc_tuples:
