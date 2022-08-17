@@ -39,7 +39,7 @@ def get_string_id(key):
             return symbol
         else:
             chars = key.encode("utf8")
-            return hash_utf8(chars, len(chars))
+            return _hash_utf8(chars, len(chars))
     elif _try_coerce_to_hash(key, &str_hash):
         # Coerce the integral key to the expected primitive hash type.
         # This ensures that custom/overloaded "primitive" data types
@@ -54,15 +54,15 @@ def get_string_id(key):
 
 cpdef hash_t hash_string(str string) except 0:
     chars = string.encode("utf8")
-    return hash_utf8(chars, len(chars))
+    return _hash_utf8(chars, len(chars))
 
 
-cdef hash_t hash_utf8(char* utf8_string, int length) nogil:
+cdef hash_t _hash_utf8(char* utf8_string, int length) nogil:
     return hash64(utf8_string, length, 1)
 
 
 
-cdef str decode_Utf8Str(const Utf8Str* string):
+cdef str _decode_Utf8Str(const Utf8Str* string):
     cdef int i, length
     if string.s[0] < sizeof(string.s) and string.s[0] != 0:
         return string.s[1:string.s[0]+1].decode("utf8")
@@ -140,7 +140,7 @@ cdef class StringStore:
             else:
                 return hash_string(string_or_id)
         elif isinstance(string_or_id, bytes):
-            return hash_utf8(string_or_id, len(string_or_id))
+            return _hash_utf8(string_or_id, len(string_or_id))
         elif _try_coerce_to_hash(string_or_id, &str_hash):
             if str_hash == 0:
                 return ""
@@ -155,7 +155,7 @@ cdef class StringStore:
         if utf8str is NULL:
             raise KeyError(Errors.E018.format(hash_value=string_or_id))
         else:
-            return decode_Utf8Str(utf8str)
+            return _decode_Utf8Str(utf8str)
 
     def as_int(self, key):
         """If key is an int, return it; otherwise, get the int value."""
@@ -183,12 +183,12 @@ cdef class StringStore:
                 return SYMBOLS_BY_STR[string]
 
             string = string.encode("utf8")
-            str_hash = hash_utf8(string, len(string))
+            str_hash = _hash_utf8(string, len(string))
             self._intern_utf8(string, len(string), &str_hash)
         elif isinstance(string, bytes):
             if string in SYMBOLS_BY_STR:
                 return SYMBOLS_BY_STR[string]
-            str_hash = hash_utf8(string, len(string))
+            str_hash = _hash_utf8(string, len(string))
             self._intern_utf8(string, len(string), &str_hash)
         else:
             raise TypeError(Errors.E017.format(value_type=type(string)))
@@ -235,7 +235,7 @@ cdef class StringStore:
         for i in range(self.keys.size()):
             key = self.keys[i]
             utf8str = <Utf8Str*>self._map.get(key)
-            yield decode_Utf8Str(utf8str)
+            yield _decode_Utf8Str(utf8str)
         # TODO: Iterate OOV here?
 
     def __reduce__(self):
@@ -304,7 +304,7 @@ cdef class StringStore:
     cdef const Utf8Str* _intern_utf8(self, char* utf8_string, int length, hash_t* precalculated_hash):
         # TODO: This function's API/behaviour is an unholy mess...
         # 0 means missing, but we don't bother offsetting the index.
-        cdef hash_t key = precalculated_hash[0] if precalculated_hash is not NULL else hash_utf8(utf8_string, length)
+        cdef hash_t key = precalculated_hash[0] if precalculated_hash is not NULL else _hash_utf8(utf8_string, length)
         cdef Utf8Str* value = <Utf8Str*>self._map.get(key)
         if value is not NULL:
             return value
