@@ -149,7 +149,8 @@ def console_logger(
                     progress.set_description(f"Epoch {info['epoch']+1}")
 
         def finalize() -> None:
-            output_stream.close()
+            if output_stream:
+                output_stream.close()
 
         return log_step, finalize
 
