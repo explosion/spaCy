@@ -12,13 +12,13 @@ import contextlib
 
 import srsly
 from thinc.api import set_dropout_rate, CupyOps, get_array_module
-from thinc.extra.search cimport Beam
 from thinc.types import Ints1d
 import numpy.random
 import numpy
 import warnings
 
 from ._parser_internals.stateclass cimport StateC, StateClass
+from ._parser_internals.search cimport Beam
 from ..tokens.doc cimport Doc
 from .trainable_pipe import TrainablePipe
 from ._parser_internals cimport _beam_utils
