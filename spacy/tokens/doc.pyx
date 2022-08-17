@@ -808,27 +808,33 @@ cdef class Doc:
                     self.c[i].ent_iob = 1
                 self.c[i].ent_type = span.label
                 self.c[i].ent_kb_id = span.kb_id
-                # for backwards compatibility in v3, only set ent_id from
-                # span.id if it's set, otherwise don't override
-                self.c[i].ent_id = span.id if span.id else self.c[i].ent_id
+                self.c[i].ent_id = span.id
         for span in blocked:
             for i in range(span.start, span.end):
                 self.c[i].ent_iob = 3
                 self.c[i].ent_type = 0
+                self.c[i].ent_kb_id = 0
+                self.c[i].ent_id = 0
         for span in missing:
             for i in range(span.start, span.end):
                 self.c[i].ent_iob = 0
                 self.c[i].ent_type = 0
+                self.c[i].ent_kb_id = 0
+                self.c[i].ent_id = 0
         for span in outside:
             for i in range(span.start, span.end):
                 self.c[i].ent_iob = 2
                 self.c[i].ent_type = 0
+                self.c[i].ent_kb_id = 0
+                self.c[i].ent_id = 0
 
         # Set tokens outside of all provided spans
         if default != SetEntsDefault.unmodified:
             for i in range(self.length):
                 if i not in seen_tokens:
                     self.c[i].ent_type = 0
+                    self.c[i].ent_kb_id = 0
+                    self.c[i].ent_id = 0
                     if default == SetEntsDefault.outside:
                         self.c[i].ent_iob = 2
                     elif default == SetEntsDefault.missing:

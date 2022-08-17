@@ -1367,14 +1367,14 @@ patterns = [{"label": "ORG", "pattern": "Apple", "id": "apple"},
 ruler.add_patterns(patterns)
 
 doc1 = nlp("Apple is opening its first big office in San Francisco.")
-print([(ent.text, ent.label_, ent.ent_id_) for ent in doc1.ents])
+print([(ent.text, ent.label_, ent.id_) for ent in doc1.ents])
 
 doc2 = nlp("Apple is opening its first big office in San Fran.")
-print([(ent.text, ent.label_, ent.ent_id_) for ent in doc2.ents])
+print([(ent.text, ent.label_, ent.id_) for ent in doc2.ents])
 ```
 
 If the `id` attribute is included in the [`EntityRuler`](/api/entityruler)
-patterns, the `ent_id_` property of the matched entity is set to the `id` given
+patterns, the `id_` property of the matched entity is set to the `id` given
 in the patterns. So in the example above it's easy to identify that "San
 Francisco" and "San Fran" are both the same entity.
 
