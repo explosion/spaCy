@@ -582,7 +582,7 @@ cdef class Tokenizer:
         substrings (iterable): A sequence of dicts, where each dict describes
             a token and its attributes.
         """
-        attrs = [intify_attrs(spec, _do_deprecated=True) for spec in substrings]
+        attrs = [intify_attrs(spec) for spec in substrings]
         orth = "".join([spec[ORTH] for spec in attrs])
         if chunk != orth:
             raise ValueError(Errors.E997.format(chunk=chunk, orth=orth, token_attrs=substrings))
@@ -650,7 +650,7 @@ cdef class Tokenizer:
             url_match = re.compile("a^").match
         special_cases = {}
         for orth, special_tokens in self.rules.items():
-            special_cases[orth] = [intify_attrs(special_token, strings_map=self.vocab.strings, _do_deprecated=True) for special_token in special_tokens]
+            special_cases[orth] = [intify_attrs(special_token, strings_map=self.vocab.strings) for special_token in special_tokens]
         tokens = []
         for substring in text.split():
             suffixes = []
