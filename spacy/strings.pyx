@@ -14,13 +14,7 @@ from .symbols import NAMES as SYMBOLS_BY_INT
 from .errors import Errors
 from . import util
 
-# Not particularly elegant, but this is faster than `isinstance(key, numbers.Integral)`
-cdef inline bint _try_coerce_to_hash(object key, hash_t* out_hash):
-    try:
-        out_hash[0] = key
-        return True
-    except:
-        return False
+
 
 def get_string_id(key):
     """Get a string ID, handling the reserved symbols correctly. If the key is
@@ -38,7 +32,7 @@ def get_string_id(key):
         if symbol is not None:
             return symbol
         else:
-            chars = key.encode("utf8")
+            chars = key.encode('utf-8')
             return _hash_utf8(chars, len(chars))
     elif _try_coerce_to_hash(key, &str_hash):
         # Coerce the integral key to the expected primitive hash type.
@@ -53,55 +47,8 @@ def get_string_id(key):
 
 
 cpdef hash_t hash_string(str string) except 0:
-    chars = string.encode("utf8")
+    chars = string.encode('utf-8')
     return _hash_utf8(chars, len(chars))
-
-
-cdef hash_t _hash_utf8(char* utf8_string, int length) nogil:
-    return hash64(utf8_string, length, 1)
-
-
-
-cdef str _decode_Utf8Str(const Utf8Str* string):
-    cdef int i, length
-    if string.s[0] < sizeof(string.s) and string.s[0] != 0:
-        return string.s[1:string.s[0]+1].decode("utf8")
-    elif string.p[0] < 255:
-        return string.p[1:string.p[0]+1].decode("utf8")
-    else:
-        i = 0
-        length = 0
-        while string.p[i] == 255:
-            i += 1
-            length += 255
-        length += string.p[i]
-        i += 1
-        return string.p[i:length + i].decode("utf8")
-
-
-cdef Utf8Str* _allocate(Pool mem, const unsigned char* chars, uint32_t length) except *:
-    cdef int n_length_bytes
-    cdef int i
-    cdef Utf8Str* string = <Utf8Str*>mem.alloc(1, sizeof(Utf8Str))
-    cdef uint32_t ulength = length
-    if length < sizeof(string.s):
-        string.s[0] = <unsigned char>length
-        memcpy(&string.s[1], chars, length)
-        return string
-    elif length < 255:
-        string.p = <unsigned char*>mem.alloc(length + 1, sizeof(unsigned char))
-        string.p[0] = length
-        memcpy(&string.p[1], chars, length)
-        return string
-    else:
-        i = 0
-        n_length_bytes = (length // 255) + 1
-        string.p = <unsigned char*>mem.alloc(length + n_length_bytes, sizeof(unsigned char))
-        for i in range(n_length_bytes-1):
-            string.p[i] = 255
-        string.p[n_length_bytes-1] = length % 255
-        memcpy(&string.p[n_length_bytes], chars, length)
-        return string
 
 
 cdef class StringStore:
@@ -182,7 +129,7 @@ cdef class StringStore:
             if string in SYMBOLS_BY_STR:
                 return SYMBOLS_BY_STR[string]
 
-            string = string.encode("utf8")
+            string = string.encode('utf-8')
             str_hash = _hash_utf8(string, len(string))
             self._intern_utf8(string, len(string), &str_hash)
         elif isinstance(string, bytes):
@@ -297,7 +244,7 @@ cdef class StringStore:
 
     cdef const Utf8Str* intern_unicode(self, str py_string):
         # 0 means missing, but we don't bother offsetting the index.
-        cdef bytes byte_string = py_string.encode("utf8")
+        cdef bytes byte_string = py_string.encode('utf-8')
         return self._intern_utf8(byte_string, len(byte_string), NULL)
 
     @cython.final
@@ -312,3 +259,58 @@ cdef class StringStore:
         self._map.set(key, value)
         self.keys.push_back(key)
         return value
+
+
+cdef hash_t _hash_utf8(char* utf8_string, int length) nogil:
+    return hash64(utf8_string, length, 1)
+
+
+cdef str _decode_Utf8Str(const Utf8Str* string):
+    cdef int i, length
+    if string.s[0] < sizeof(string.s) and string.s[0] != 0:
+        return string.s[1:string.s[0]+1].decode('utf-8')
+    elif string.p[0] < 255:
+        return string.p[1:string.p[0]+1].decode('utf-8')
+    else:
+        i = 0
+        length = 0
+        while string.p[i] == 255:
+            i += 1
+            length += 255
+        length += string.p[i]
+        i += 1
+        return string.p[i:length + i].decode('utf-8')
+
+
+# Not particularly elegant, but this is faster than `isinstance(key, numbers.Integral)`
+cdef inline bint _try_coerce_to_hash(object key, hash_t* out_hash):
+    try:
+        out_hash[0] = key
+        return True
+    except:
+        return False
+
+
+cdef Utf8Str* _allocate(Pool mem, const unsigned char* chars, uint32_t length) except *:
+    cdef int n_length_bytes
+    cdef int i
+    cdef Utf8Str* string = <Utf8Str*>mem.alloc(1, sizeof(Utf8Str))
+    cdef uint32_t ulength = length
+    if length < sizeof(string.s):
+        string.s[0] = <unsigned char>length
+        memcpy(&string.s[1], chars, length)
+        return string
+    elif length < 255:
+        string.p = <unsigned char*>mem.alloc(length + 1, sizeof(unsigned char))
+        string.p[0] = length
+        memcpy(&string.p[1], chars, length)
+        return string
+    else:
+        i = 0
+        n_length_bytes = (length // 255) + 1
+        string.p = <unsigned char*>mem.alloc(length + n_length_bytes, sizeof(unsigned char))
+        for i in range(n_length_bytes-1):
+            string.p[i] = 255
+        string.p[n_length_bytes-1] = length % 255
+        memcpy(&string.p[n_length_bytes], chars, length)
+        return string

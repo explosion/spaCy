@@ -9,10 +9,6 @@ from .typedefs cimport attr_t, hash_t
 
 
 cpdef hash_t hash_string(str string) except 0
-cdef hash_t hash_utf8(char* utf8_string, int length) nogil
-
-cdef str decode_Utf8Str(const Utf8Str* string)
-
 
 ctypedef union Utf8Str:
     unsigned char[8] s
