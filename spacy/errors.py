@@ -16,8 +16,8 @@ def setup_default_warnings():
     filter_warning("ignore", error_msg="numpy.dtype size changed")  # noqa
     filter_warning("ignore", error_msg="numpy.ufunc size changed")  # noqa
 
-    # warn about entity_ruler & matcher having no patterns only once
-    for pipe in ["matcher", "entity_ruler"]:
+    # warn about entity_ruler, span_ruler & matcher having no patterns only once
+    for pipe in ["matcher", "entity_ruler", "span_ruler"]:
         filter_warning("once", error_msg=Warnings.W036.format(name=pipe))
 
     # warn once about lemmatizer without required POS
