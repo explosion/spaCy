@@ -42,8 +42,7 @@ def get_string_id(key):
         # whose comparison operators can incur a significant overhead).
         return str_hash
     else:
-        # TODO: Raise an error instead
-        return key
+        raise KeyError(Errors.E1400.format(key_type=type(key)))
 
 
 cpdef hash_t hash_string(str string) except 0:
@@ -96,8 +95,7 @@ cdef class StringStore:
             else:
                 utf8str = <Utf8Str*>self._map.get(str_hash)
         else:
-            # TODO: Raise an error instead
-            utf8str = <Utf8Str*>self._map.get(string_or_id)
+            raise KeyError(Errors.E1400.format(key_type=type(key)))
 
         if utf8str is NULL:
             raise KeyError(Errors.E018.format(hash_value=string_or_id))
@@ -164,8 +162,7 @@ cdef class StringStore:
         elif _try_coerce_to_hash(string_or_id, &str_hash):
             pass
         else:
-            # TODO: Raise an error instead
-            return self._map.get(string_or_id) is not NULL
+            raise KeyError(Errors.E1400.format(key_type=type(string_or_id)))
 
         if str_hash < len(SYMBOLS_BY_INT):
             return True
