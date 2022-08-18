@@ -7,7 +7,7 @@ import random
 from thinc.api import CosineDistance, Model, Optimizer, Config
 from thinc.api import set_dropout_rate
 
-from ..kb_base import BaseKnowledgeBase, Candidate
+from ..kb import KnowledgeBase, Candidate
 from ..ml import empty_kb
 from ..tokens import Doc, Span
 from .pipe import deserialize_config
@@ -84,11 +84,9 @@ def make_entity_linker(
     incl_prior: bool,
     incl_context: bool,
     entity_vector_length: int,
-    get_candidates: Callable[
-        [BaseKnowledgeBase, Union[Span, str]], Iterable[Candidate]
-    ],
+    get_candidates: Callable[[KnowledgeBase, Union[Span, str]], Iterable[Candidate]],
     get_candidates_batch: Callable[
-        [BaseKnowledgeBase, Iterable[Union[Span, str]]], Iterable[Iterable[Candidate]]
+        [KnowledgeBase, Iterable[Union[Span, str]]], Iterable[Iterable[Candidate]]
     ],
     overwrite: bool,
     scorer: Optional[Callable],
@@ -106,10 +104,10 @@ def make_entity_linker(
     incl_prior (bool): Whether or not to include prior probabilities from the KB in the model.
     incl_context (bool): Whether or not to include the local context in the model.
     entity_vector_length (int): Size of encoding vectors in the KB.
-    get_candidates (Callable[[BaseKnowledgeBase, Union[Span, str]], Iterable[Candidate]]): Function that
+    get_candidates (Callable[[KnowledgeBase, Union[Span, str]], Iterable[Candidate]]): Function that
         produces a list of candidates, given a certain knowledge base and a textual mention.
     get_candidates_batch (
-        Callable[[BaseKnowledgeBase, Iterable[Union[Span, str]]], Iterable[Iterable[Candidate]]], Iterable[Candidate]]
+        Callable[[KnowledgeBase, Iterable[Union[Span, str]]], Iterable[Iterable[Candidate]]], Iterable[Candidate]]
         ): Function that produces a list of candidates, given a certain knowledge base and several textual mentions.
     scorer (Optional[Callable]): The scoring method.
     use_gold_ents (bool): Whether to copy entities from gold docs or not. If false, another
@@ -181,10 +179,9 @@ class EntityLinker(TrainablePipe):
         incl_prior: bool,
         incl_context: bool,
         entity_vector_length: int,
-        get_candidates: Callable[[BaseKnowledgeBase, Span], Iterable[Candidate]],
+        get_candidates: Callable[[KnowledgeBase, Span], Iterable[Candidate]],
         get_candidates_batch: Callable[
-            [BaseKnowledgeBase, Iterable[Union[Span, str]]],
-            Iterable[Iterable[Candidate]],
+            [KnowledgeBase, Iterable[Union[Span, str]]], Iterable[Iterable[Candidate]]
         ],
         overwrite: bool = BACKWARD_OVERWRITE,
         scorer: Optional[Callable] = entity_linker_score,
@@ -203,10 +200,10 @@ class EntityLinker(TrainablePipe):
         incl_prior (bool): Whether or not to include prior probabilities from the KB in the model.
         incl_context (bool): Whether or not to include the local context in the model.
         entity_vector_length (int): Size of encoding vectors in the KB.
-        get_candidates (Callable[[BaseKnowledgeBase, Span], Iterable[Candidate]]): Function that
+        get_candidates (Callable[[KnowledgeBase, Span], Iterable[Candidate]]): Function that
             produces a list of candidates, given a certain knowledge base and a textual mention.
         get_candidates_batch (
-            Callable[[BaseKnowledgeBase, Iterable[Union[Span, str]]], Iterable[Iterable[Candidate]]],
+            Callable[[KnowledgeBase, Iterable[Union[Span, str]]], Iterable[Iterable[Candidate]]],
             Iterable[Candidate]]
             ): Function that produces a list of candidates, given a certain knowledge base and several textual mentions.
         scorer (Optional[Callable]): The scoring method. Defaults to Scorer.score_links.
@@ -252,8 +249,8 @@ class EntityLinker(TrainablePipe):
     def set_kb(
         self,
         kb_loader: Union[
-            Callable[[Vocab, Type[BaseKnowledgeBase]], BaseKnowledgeBase],
-            Callable[[Vocab], BaseKnowledgeBase],
+            Callable[[Vocab, Type[KnowledgeBase]], KnowledgeBase],
+            Callable[[Vocab], KnowledgeBase],
         ],
     ):
         """Define the KB of this pipe by providing a function that will
@@ -275,7 +272,7 @@ class EntityLinker(TrainablePipe):
         get_examples: Callable[[], Iterable[Example]],
         *,
         nlp: Optional[Language] = None,
-        kb_loader: Optional[Callable[[Vocab], BaseKnowledgeBase]] = None,
+        kb_loader: Optional[Callable[[Vocab], KnowledgeBase]] = None,
     ):
         """Initialize the pipe for training, using a representative set
         of data examples.
@@ -283,7 +280,7 @@ class EntityLinker(TrainablePipe):
         get_examples (Callable[[], Iterable[Example]]): Function that
             returns a representative sample of gold-standard Example objects.
         nlp (Language): The current nlp object the component is part of.
-        kb_loader (Callable[[Vocab], BaseKnowledgeBase]): A function that creates a BaseKnowledgeBase from a Vocab
+        kb_loader (Callable[[Vocab], KnowledgeBase]): A function that creates a KnowledgeBase from a Vocab
             instance. Note that providing this argument will overwrite all data accumulated in the current KB.
             Use this only when loading a KB as-such from file.
 

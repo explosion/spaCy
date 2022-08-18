@@ -707,9 +707,9 @@ class Errors(metaclass=ErrorsWithCodes):
             "`nlp.enable_pipe` instead.")
     E927 = ("Can't write to frozen list Maybe you're trying to modify a computed "
             "property or default function argument?")
-    E928 = ("A KnowledgeBase can only be serialized to/from from a directory, "
+    E928 = ("A InMemoryLookupKB can only be serialized to/from from a directory, "
             "but the provided argument {loc} points to a file.")
-    E929 = ("Couldn't read KnowledgeBase from {loc}. The path does not seem to exist.")
+    E929 = ("Couldn't read InMemoryLookupKB from {loc}. The path does not seem to exist.")
     E930 = ("Received invalid get_examples callback in `{method}`. "
             "Expected function that returns an iterable of Example objects but "
             "got: {obj}")
