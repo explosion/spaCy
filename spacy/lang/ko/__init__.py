@@ -18,22 +18,23 @@ DEFAULT_CONFIG = """
 
 [nlp.tokenizer]
 @tokenizers = "spacy.ko.KoreanTokenizer"
+mecab_args = ""
 """
 
 
 @registry.tokenizers("spacy.ko.KoreanTokenizer")
-def create_tokenizer():
+def create_tokenizer(mecab_args: str):
     def korean_tokenizer_factory(nlp):
-        return KoreanTokenizer(nlp.vocab)
+        return KoreanTokenizer(nlp.vocab, mecab_args=mecab_args)
 
     return korean_tokenizer_factory
 
 
 class KoreanTokenizer(DummyTokenizer):
-    def __init__(self, vocab: Vocab):
+    def __init__(self, vocab: Vocab, *, mecab_args: str = ""):
         self.vocab = vocab
         mecab = try_mecab_import()
-        self.mecab_tokenizer = mecab.Tagger()
+        self.mecab_tokenizer = mecab.Tagger(mecab_args)
 
     def __reduce__(self):
         return KoreanTokenizer, (self.vocab,)
@@ -126,7 +127,7 @@ class KoreanNattoTokenizer(DummyTokenizer):
         return self._mecab_tokenizer
 
     def __reduce__(self):
-        return KoreanTokenizer, (self.vocab,)
+        return KoreanNattoTokenizer, (self.vocab,)
 
     def __call__(self, text: str) -> Doc:
         dtokens = list(self.detailed_tokens(text))
