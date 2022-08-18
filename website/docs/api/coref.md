@@ -2,7 +2,6 @@
 title: CoreferenceResolver
 tag: class,experimental
 source: spacy-experimental/coref/coref_component.py
-new: 3.4
 teaser: 'Pipeline component for word-level coreference resolution'
 api_base_class: /api/pipe
 api_string_name: coref

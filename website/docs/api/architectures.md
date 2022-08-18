@@ -924,7 +924,7 @@ plausible [`Candidate`](/api/kb/#candidate) objects. The default
 `CandidateGenerator` uses the text of a mention to find its potential aliases in
 the `KnowledgeBase`. Note that this function is case-dependent.
 
-## Coreference {#coref-architectures tag="experimental" new="3.4"}
+## Coreference {#coref-architectures tag="experimental"}
 
 A [`CoreferenceResolver`](/api/coref) component identifies tokens that refer to
 the same entity. A [`SpanResolver`](/api/span-resolver) component infers spans

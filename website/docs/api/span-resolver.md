@@ -2,7 +2,6 @@
 title: SpanResolver
 tag: class,experimental
 source: spacy-experimental/coref/span_resolver_component.py
-new: 3.4
 teaser: 'Pipeline component for resolving tokens into spans'
 api_base_class: /api/pipe
 api_string_name: span_resolver
