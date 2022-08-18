@@ -191,6 +191,8 @@ def load_model(name: str) -> "Language":
     ...
 ```
 
+Note that we typically put the `from typing` import statements on the first line(s) of the Python module.
+
 ## Structuring logic
 
 ### Positional and keyword arguments
