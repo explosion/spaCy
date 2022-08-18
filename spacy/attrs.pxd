@@ -15,14 +15,14 @@ cdef enum attr_id_t:
     LIKE_NUM
     LIKE_EMAIL
     IS_STOP
-    FLAG13
     IS_BRACKET
     IS_QUOTE
     IS_LEFT_PUNCT
     IS_RIGHT_PUNCT
     IS_CURRENCY
 
-    FLAG19 = 19
+    FLAG18 = 18
+    FLAG19
     FLAG20
     FLAG21
     FLAG22
