@@ -17,7 +17,7 @@ def info_cli(
     markdown: bool = Opt(False, "--markdown", "-md", help="Generate Markdown for GitHub issues"),
     silent: bool = Opt(False, "--silent", "-s", "-S", help="Don't print anything (just return)"),
     exclude: str = Opt("labels", "--exclude", "-e", help="Comma-separated keys to exclude from the print-out"),
-    url: bool = Opt(False, "--url", "-u", help="Print the pipeline download URL"),
+    url: bool = Opt(False, "--url", "-u", help="Print the URL to download the pipeline from"),
     # fmt: on
 ):
     """
