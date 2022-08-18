@@ -467,10 +467,20 @@
             "code": "uk",
             "name": "Ukrainian",
             "has_examples": true,
+            "models": [
+                "uk_core_news_sm",
+                "uk_core_news_md",
+                "uk_core_news_lg",
+                "uk_core_news_trf"
+            ],
             "dependencies": [
                 {
                     "name": "pymorphy2",
                     "url": "https://github.com/kmike/pymorphy2"
+                },
+                {
+                    "name": "pymorphy2-dicts-uk",
+                    "url": "https://github.com/kmike/pymorphy2-dicts/"
                 }
             ]
         },
