@@ -8,6 +8,7 @@ from .strings cimport StringStore
 from .tokens.doc cimport Doc
 from .vocab cimport Vocab, LexemesOrTokens, _Cached
 from .matcher.phrasematcher cimport PhraseMatcher
+from libcpp cimport bool
 
 
 cdef class Tokenizer:
