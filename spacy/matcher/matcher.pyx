@@ -893,7 +893,6 @@ class _SetPredicate:
                 unexpected_value_type = True
 
         if unexpected_value_type:
-            warnings.warn(Warnings.W123.format(predicate=self.predicate, attr_type=type(value)))
             return False
         elif self.predicate == "IN":
             return value in self.value
