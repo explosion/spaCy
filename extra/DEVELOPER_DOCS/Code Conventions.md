@@ -277,7 +277,7 @@ If you have to use `try`/`except`, make sure to only include what's **absolutely
 
 ### Numeric comparisons
 
-For numeric comparisons, as a general rule we always use `<` and `>=` and avoid the usage of `<=` and `>`. This is to ensure we consistely
+For numeric comparisons, as a general rule we always use `<` and `>=` and avoid the usage of `<=` and `>`. This is to ensure we consistently
 apply inclusive lower bounds and exclusive upper bounds, helping to prevent off-by-one errors.
 
 One exception to this rule is the ternary case. With a chain like
