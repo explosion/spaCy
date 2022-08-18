@@ -128,10 +128,10 @@ cdef class Tokenizer:
 
     property faster_heuristics:
         def __get__(self):
-            return bool(self._faster_heuristics)
+            return self._faster_heuristics
 
         def __set__(self, faster_heuristics):
-            self._faster_heuristics = bool(faster_heuristics)
+            self._faster_heuristics = faster_heuristics
             self._reload_special_cases()
 
     def __reduce__(self):
