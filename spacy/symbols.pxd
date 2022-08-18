@@ -12,6 +12,7 @@ cdef enum symbol_t:
     LIKE_NUM
     LIKE_EMAIL
     IS_STOP
+    FLAG13
     IS_BRACKET
     IS_QUOTE
     IS_LEFT_PUNCT
