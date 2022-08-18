@@ -275,6 +275,24 @@ If you have to use `try`/`except`, make sure to only include what's **absolutely
 +     return [v.strip() for v in value.split(",")]
 ```
 
+### Numeric comparisons
+
+For numeric comparisons, as a general rule we always use `<` and `>=` and avoid the usage of `<=` and `>`. This is to ensure we consistely 
+apply inclusive lower bounds and exclusive upper bounds, helping to prevent off-by-one errors.
+
+One exception to this rule is the ternary case. With a chain like
+```python
+if value >= 0 and value < max:
+    ...
+```
+it's also fine to rewrite this as
+
+```python
+if 0 <= value < max:
+    ...
+```
+even though this requires the usage of the `<=` operator.
+
 ### Iteration and comprehensions
 
 We generally avoid using built-in functions like `filter` or `map` in favor of list or generator comprehensions.
