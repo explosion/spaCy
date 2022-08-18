@@ -18,6 +18,7 @@ def info_cli(
     silent: bool = Opt(False, "--silent", "-s", "-S", help="Don't print anything (just return)"),
     exclude: str = Opt("labels", "--exclude", "-e", help="Comma-separated keys to exclude from the print-out"),
     url: bool = Opt(False, "--url", "-u", help="Print the URL to download the pipeline from"),
+    requirements: bool = Opt(False, "--requirements", "-r", help="Print requirements info for a pipeline"),
     # fmt: on
 ):
     """
@@ -28,7 +29,14 @@ def info_cli(
     DOCS: https://spacy.io/api/cli#info
     """
     exclude = string_to_list(exclude)
-    info(model, markdown=markdown, silent=silent, exclude=exclude, url=url)
+    info(
+        model,
+        markdown=markdown,
+        silent=silent,
+        exclude=exclude,
+        url=url,
+        requirements=requirements,
+    )
 
 
 def info(
@@ -38,16 +46,24 @@ def info(
     silent: bool = True,
     exclude: Optional[List[str]] = None,
     url: bool = False,
+    requirements: bool = False,
 ) -> Union[str, dict]:
     msg = Printer(no_print=silent, pretty=not silent)
     if not exclude:
         exclude = []
     if url:
+        # TODO should we check that requirements and url are not used together?
         if model is not None:
             title = f"Download info for pipeline '{model}'"
             data = info_model_url(model)
             print(data["download_url"])
             return data
+        else:
+            msg.fail("--url option requires a pipeline name", exits=1)
+    elif requirements:
+        if model is not None:
+            title = f"Requirements info for pipeline '{model}'"
+            data = info_model_requirements(model)
         else:
             msg.fail("--url option requires a pipeline name", exits=1)
     elif model:
@@ -121,7 +137,54 @@ def info_model_url(model: str) -> Dict[str, Any]:
 
     filename = get_model_filename(model, version)
     download_url = about.__download_url__ + "/" + filename
-    return {"download_url": download_url}
+    release_tpl = "https://github.com/explosion/spacy-models/releases/tag/{m}-{v}"
+    release_url = release_tpl.format(m=model, v=version)
+    return {"download_url": download_url, "release_url": release_url}
+
+
+def info_model_requirements(model: str) -> Dict[str, Any]:
+    """Return formatted requirements statements for the pipeline."""
+    url_info = info_model_url(model)
+
+    url = url_info["download_url"]
+    release_url = url_info["release_url"]
+
+    # TODO pick one approach or the other. This is more like other commands and
+    # cleaner but the output is hard to read.
+
+    setup_cfg = f"""install_requires =
+        {model} @ {url}"""
+
+    poetry = f'{model} = {{ url = "{url}" }}'
+
+    requirements = {
+        "Release info page": release_url,
+        "setup.cfg": setup_cfg,
+        "poetry": poetry,
+    }
+
+    # This seems prefereable
+    requirements = f"""
+
+    Release info page:
+
+    {release_url}
+
+    setup.cfg:
+
+    install_requires =
+        {model} @ {url}
+
+    poetry:
+
+    {model} = {{ url = "{url}" }}
+    """
+
+    # Using an empty key prints an indented block, preserving formatting.
+    return {"": requirements}
+
+    # use following line if using the dict
+    # return requirements
 
 
 def get_markdown(
