@@ -285,7 +285,7 @@ One exception to this rule is the ternary case. With a chain like
 if value >= 0 and value < max:
     ...
 ```
-it's also fine to rewrite this as
+it's fine to rewrite this to the shorter form
 
 ```python
 if 0 <= value < max:
