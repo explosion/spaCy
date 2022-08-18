@@ -72,7 +72,6 @@ def unpickle_vocab(
     sstore: StringStore,
     vectors: Any,
     morphology: Any,
-    _unused_object: Any,
     lex_attr_getters: Any,
     lookups: Any,
     get_noun_chunks: Any,
