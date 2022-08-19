@@ -31,7 +31,7 @@ MOD_NAMES = [
     "spacy.vocab",
     "spacy.attrs",
     "spacy.kb",
-    "spacy.kb_inmemorylookup",
+    "spacy.kb_in_memory_lookup",
     "spacy.ml.parser_model",
     "spacy.morphology",
     "spacy.pipeline.dep_parser",
