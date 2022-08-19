@@ -22,7 +22,7 @@ from ..attrs cimport ID, attr_id_t, NULL_ATTR, ORTH, POS, TAG, DEP, LEMMA, MORPH
 
 from ..schemas import validate_token_pattern
 from ..errors import Errors, MatchPatternError, Warnings
-from ..strings import get_string_id
+from ..strings cimport get_string_id
 from ..attrs import IDS
 
 

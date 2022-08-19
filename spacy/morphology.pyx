@@ -7,7 +7,7 @@ from libcpp.memory cimport shared_ptr
 
 from .errors import Warnings
 from . import symbols
-from .strings import get_string_id
+from .strings cimport get_string_id
 
 
 cdef class Morphology:
