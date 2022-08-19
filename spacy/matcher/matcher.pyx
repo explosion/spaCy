@@ -885,10 +885,10 @@ class _SetPredicate:
                     value = set((get_string_id(v) for v in MorphAnalysis.from_id(self.vocab, value)))
                 else:
                     unexpected_value_type = True
-            elif isinstance(value, Iterable):
-                value = set(get_string_id(v) for v in value)
             elif isinstance(value, (str, int)):
                 value = set((get_string_id(value),))
+            elif isinstance(value, Iterable) and all(isinstance(v, (str, int)) for v in value):
+                value = set(get_string_id(v) for v in value)
             else:
                 unexpected_value_type = True
 
