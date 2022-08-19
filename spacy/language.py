@@ -465,6 +465,8 @@ class Language:
         """
         if not isinstance(name, str):
             raise ValueError(Errors.E963.format(decorator="factory"))
+        if "." in name:
+            raise ValueError(Errors.E853.format(name=name))
         if not isinstance(default_config, dict):
             err = Errors.E962.format(
                 style="default config", name=name, cfg_type=type(default_config)
@@ -543,8 +545,11 @@ class Language:
 
         DOCS: https://spacy.io/api/language#component
         """
-        if name is not None and not isinstance(name, str):
-            raise ValueError(Errors.E963.format(decorator="component"))
+        if name is not None:
+            if not isinstance(name, str):
+                raise ValueError(Errors.E963.format(decorator="component"))
+            if "." in name:
+                raise ValueError(Errors.E853.format(name=name))
         component_name = name if name is not None else util.get_object_name(func)
 
         def add_component(component_func: "Pipe") -> Callable:
