@@ -540,6 +540,8 @@ class Errors(metaclass=ErrorsWithCodes):
     E202 = ("Unsupported {name} mode '{mode}'. Supported modes: {modes}.")
 
     # New errors added in v3.x
+    E853 = ("Unsupported component factory name '{name}'. The character '.' is "
+            "not permitted in factory names.")
     E854 = ("Unable to set doc.ents. Check that the 'ents_filter' does not "
             "permit overlapping spans.")
     E855 = ("Invalid {obj}: {obj} is not from the same doc.")
