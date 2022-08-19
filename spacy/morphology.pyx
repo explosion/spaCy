@@ -7,6 +7,7 @@ from libcpp.memory cimport shared_ptr
 
 from .errors import Warnings
 from . import symbols
+from .strings import get_string_id
 
 
 cdef class Morphology:
@@ -27,7 +28,7 @@ cdef class Morphology:
         self.strings = strings
 
     def __reduce__(self):
-        tags = set([self.get(self.strings[s]) for s in self.strings])
+        tags = set([self.get(key) for key, _ in self.strings.items()])
         tags -= set([""])
         return (unpickle_morphology, (self.strings, sorted(tags)), None, None)
 
@@ -99,7 +100,7 @@ cdef class Morphology:
             if features == "":
                 features = self.EMPTY_MORPH
 
-            tag_hash = self.strings[features]
+            tag_hash = get_string_id(features)
             tag = self._lookup_tag(tag_hash)
             if tag:
                 return deref(tag).key
