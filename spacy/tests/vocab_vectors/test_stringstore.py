@@ -31,7 +31,7 @@ def test_stringstore_from_api_docs(stringstore):
     assert stringstore["banana"] == banana_hash
 
 
-@pytest.mark.parametrize("text1,text2,text3", [(b"Hello", b"goodbye", b"hello")])
+@pytest.mark.parametrize("text1,text2,text3", [("Hello", "goodbye", "hello")])
 def test_stringstore_save_bytes(stringstore, text1, text2, text3):
     key = stringstore.add(text1)
     assert stringstore[text1] == key
@@ -47,19 +47,19 @@ def test_stringstore_save_unicode(stringstore, text1, text2, text3):
     assert stringstore[text3] != key
 
 
-@pytest.mark.parametrize("text", [b"A"])
+@pytest.mark.parametrize("text", ["A"])
 def test_stringstore_retrieve_id(stringstore, text):
     key = stringstore.add(text)
     assert len(stringstore) == 1
-    assert stringstore[key] == text.decode("utf8")
+    assert stringstore[key] == text
     with pytest.raises(KeyError):
         stringstore[20000]
 
 
-@pytest.mark.parametrize("text1,text2", [(b"0123456789", b"A")])
+@pytest.mark.parametrize("text1,text2", [("0123456789", "A")])
 def test_stringstore_med_string(stringstore, text1, text2):
     store = stringstore.add(text1)
-    assert stringstore[store] == text1.decode("utf8")
+    assert stringstore[store] == text1
     stringstore.add(text2)
     assert stringstore[text1] == store
 
