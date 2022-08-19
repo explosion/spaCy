@@ -142,7 +142,7 @@ def info_model_url(model: str) -> Dict[str, Any]:
     return {"download_url": download_url, "release_url": release_url}
 
 
-def info_model_requirements(model: str) -> Dict[str, Any]:
+def info_model_requirements(model: str, preformat=True) -> Dict[str, Any]:
     """Return formatted requirements statements for the pipeline."""
     url_info = info_model_url(model)
 
@@ -152,39 +152,39 @@ def info_model_requirements(model: str) -> Dict[str, Any]:
     # TODO pick one approach or the other. This is more like other commands and
     # cleaner but the output is hard to read.
 
-    setup_cfg = f"""install_requires =
-        {model} @ {url}"""
+    if  preformat:
 
-    poetry = f'{model} = {{ url = "{url}" }}'
+        # This seems prefereable
+        requirements = {"requirements": f"""
 
-    requirements = {
-        "Release info page": release_url,
-        "setup.cfg": setup_cfg,
-        "poetry": poetry,
-    }
+        Release info page:
 
-    # This seems prefereable
-    requirements = f"""
+        {release_url}
 
-    Release info page:
+        setup.cfg:
 
-    {release_url}
+        install_requires =
+            {model} @ {url}
 
-    setup.cfg:
+        poetry:
 
-    install_requires =
-        {model} @ {url}
+        {model} = {{ url = "{url}" }}
+        """
+        }
 
-    poetry:
+    else:
+        setup_cfg = f"""install_requires =
+            {model} @ {url}"""
 
-    {model} = {{ url = "{url}" }}
-    """
+        poetry = f'{model} = {{ url = "{url}" }}'
 
-    # Using an empty key prints an indented block, preserving formatting.
-    return {"": requirements}
+        requirements = {
+            "Release info page": release_url,
+            "setup.cfg": setup_cfg,
+            "poetry": poetry,
+        }
 
-    # use following line if using the dict
-    # return requirements
+    return requirements
 
 
 def get_markdown(
