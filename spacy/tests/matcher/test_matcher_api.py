@@ -118,6 +118,54 @@ def test_matcher_match_multi(matcher):
     ]
 
 
+def test_matcher_match_fuzz_all(en_vocab):
+    rules = {
+        "JS": [[{"ORTH": "JavaScript"}]],
+        "GoogleNow": [[{"ORTH": "Google"}, {"ORTH": "Now"}]],
+        "Java": [[{"LOWER": "java"}]],
+    }
+    matcher = Matcher(en_vocab, fuzzy=80)
+    for key, patterns in rules.items():
+        matcher.add(key, patterns)
+
+    words = ["I", "like", "Goggle", "Noww", "and", "Jav", "best"]
+    doc = Doc(matcher.vocab, words=words)
+    assert matcher(doc) == [
+        (doc.vocab.strings["GoogleNow"], 2, 4),
+        (doc.vocab.strings["Java"], 5, 6),
+    ]
+
+def test_matcher_match_fuzz_some(en_vocab):
+    rules = {
+        "JS": [[{"ORTH": "JavaScript"}]],
+        "GoogleNow": [[{"ORTH": "Google"}, {"ORTH": "Now"}]],
+        "Java": [[{"LOWER": "java"}]],
+    }
+    matcher = Matcher(en_vocab, fuzzy=85)
+    for key, patterns in rules.items():
+        matcher.add(key, patterns)
+
+    words = ["I", "like", "Goggle", "Noww", "and", "Jav", "best"]
+    doc = Doc(matcher.vocab, words=words)
+    assert matcher(doc) == [
+        (doc.vocab.strings["Java"], 5, 6),
+    ]
+
+def test_matcher_match_fuzz_none(en_vocab):
+    rules = {
+        "JS": [[{"ORTH": "JavaScript"}]],
+        "GoogleNow": [[{"ORTH": "Google"}, {"ORTH": "Now"}]],
+        "Java": [[{"LOWER": "java"}]],
+    }
+    matcher = Matcher(en_vocab, fuzzy=90)
+    for key, patterns in rules.items():
+        matcher.add(key, patterns)
+
+    words = ["I", "like", "Goggle", "Noww", "and", "Jav", "best"]
+    doc = Doc(matcher.vocab, words=words)
+    assert matcher(doc) == []
+
+
 def test_matcher_empty_dict(en_vocab):
     """Test matcher allows empty token specs, meaning match on any token."""
     matcher = Matcher(en_vocab)
