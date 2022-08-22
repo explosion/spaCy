@@ -23,4 +23,4 @@ cdef class StringStore:
 
 
 cpdef hash_t hash_string(object string) except -1
-cpdef hash_t get_string_id(object string_or_int) except -1
+cpdef hash_t get_string_id(object string_or_hash) except -1
