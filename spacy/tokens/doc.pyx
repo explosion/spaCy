@@ -972,18 +972,22 @@ cdef class Doc:
             raise KeyError(Errors.E983.format(dict="IDS", key=msg, keys=keys)) from None
         # Make an array from the attributes --- otherwise our inner loop is
         # Python dict iteration.
-        cdef np.ndarray attr_ids = numpy.asarray(py_attr_ids, dtype=numpy.uint64)
-        output = numpy.ndarray(shape=(self.length, len(attr_ids)), dtype=numpy.uint64)
+        cdef Pool mem = Pool()
+        cdef attr_id_t* c_attr_ids
+        if len(py_attr_ids) > 0:
+            c_attr_ids = <attr_id_t*>mem.alloc(len(py_attr_ids), sizeof(attr_id_t))
+            for i in range(len(py_attr_ids)):
+                c_attr_ids[i] = py_attr_ids[i]
+        output = numpy.ndarray(shape=(self.length, len(py_attr_ids)), dtype=numpy.uint64)
         c_output = <attr_t*>output.data
-        c_attr_ids = <attr_id_t*>attr_ids.data
         cdef TokenC* token
-        cdef int nr_attr = attr_ids.shape[0]
+        cdef int nr_attr = len(py_attr_ids)
         for i in range(self.length):
             token = &self.c[i]
             for j in range(nr_attr):
                 c_output[i*nr_attr + j] = get_token_attr(token, c_attr_ids[j])
         # Handle 1d case
-        return output if len(attr_ids) >= 2 else output.reshape((self.length,))
+        return output if len(py_attr_ids) >= 2 else output.reshape((self.length,))
 
     def count_by(self, attr_id_t attr_id, exclude=None, object counts=None):
         """Count the frequencies of a given attribute. Produces a dict of
