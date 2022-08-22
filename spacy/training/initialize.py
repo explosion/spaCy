@@ -337,3 +337,5 @@ def ensure_shape(vectors_loc):
         # store all the results in a list in memory
         lines2 = open_file(vectors_loc)
         yield from lines2
+        lines2.close()
+    lines.close()
