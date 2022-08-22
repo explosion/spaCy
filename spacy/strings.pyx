@@ -43,7 +43,7 @@ cdef class StringStore:
         if isinstance(string_or_hash, str):
             return self.add(string_or_hash)
         else:
-            return self._retrieve_interned_str(string_or_hash)
+            return self._get_interned_str(string_or_hash)
 
     def __contains__(self, string_or_hash: Union[str, int]) -> bool:
         """Check whether a string or a hash is in the store.
@@ -112,7 +112,7 @@ cdef class StringStore:
         if isinstance(string_or_hash, str):
             return string_or_hash
         else:
-            return self._retrieve_interned_str(string_or_hash)
+            return self._get_interned_str(string_or_hash)
 
     def items(self) -> Tuple[int, str]:
         """Iterate over the stored strings and their hashes in order.
@@ -179,7 +179,7 @@ cdef class StringStore:
         for string in strings:
             self.add(string)
 
-    def _retrieve_interned_str(self, hash_value: int) -> str:
+    def _get_interned_str(self, hash_value: int) -> str:
         cdef hash_t str_hash
         if not _try_coerce_to_hash(hash_value, &str_hash):
             raise TypeError(Errors.E4000.format(expected_types="'str','int'", received_type=type(hash_value)))
@@ -259,7 +259,7 @@ cpdef hash_t hash_string(object string) except -1:
     if len(string) == 0:
         return 0
 
-    symbol = SYMBOLS_BY_STR.get(string, None)
+    symbol = SYMBOLS_BY_STR.get(string)
     if symbol is not None:
         return symbol
 
