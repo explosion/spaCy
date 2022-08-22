@@ -8,7 +8,6 @@ from preshed.maps cimport PreshMap
 cimport cython
 
 import re
-import warnings
 
 from .tokens.doc cimport Doc
 from .strings cimport hash_string
@@ -16,9 +15,9 @@ from .lexeme cimport EMPTY_LEXEME
 
 from .attrs import intify_attrs
 from .symbols import ORTH, NORM
-from .errors import Errors, Warnings
+from .errors import Errors
 from . import util
-from .util import registry, get_words_and_spaces
+from .util import get_words_and_spaces
 from .attrs import intify_attrs
 from .symbols import ORTH
 from .scorer import Scorer
@@ -128,10 +127,10 @@ cdef class Tokenizer:
 
     property faster_heuristics:
         def __get__(self):
-            return bool(self._faster_heuristics)
+            return self._faster_heuristics
 
         def __set__(self, faster_heuristics):
-            self._faster_heuristics = bool(faster_heuristics)
+            self._faster_heuristics = faster_heuristics
             self._reload_special_cases()
 
     def __reduce__(self):
