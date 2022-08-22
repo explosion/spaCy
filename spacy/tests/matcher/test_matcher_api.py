@@ -370,11 +370,13 @@ def test_matcher_intersect_value_operator(en_vocab):
 
     # INTERSECTS returns False if the value isn't a str or int
     matcher = Matcher(en_vocab)
-    pattern = [{"_": {"ext": {"INTERSECTS": ["A", "C"]}}}]
+    pattern = [{"_": {"ext": {"INTERSECTS": ["Abx", "C"]}}}]
     matcher.add("M", [pattern])
     doc = Doc(en_vocab, words=["a", "b", "c"])
-    doc[0]._.ext = [["A"], "B"]
+    doc[0]._.ext = [["Abx"], "B"]
     assert len(matcher(doc)) == 0
+    doc[0]._.ext = ["Abx", "B"]
+    assert len(matcher(doc)) == 1
 
     # INTERSECTS with an empty pattern list matches nothing
     matcher = Matcher(en_vocab)
