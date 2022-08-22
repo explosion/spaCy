@@ -31,12 +31,25 @@ def test_stringstore_from_api_docs(stringstore):
     assert stringstore["banana"] == banana_hash
 
 
-@pytest.mark.parametrize("text1,text2,text3", [("Hello", "goodbye", "hello")])
-def test_stringstore_save_bytes(stringstore, text1, text2, text3):
-    key = stringstore.add(text1)
-    assert stringstore[text1] == key
-    assert stringstore[text2] != key
-    assert stringstore[text3] != key
+@pytest.mark.parametrize(
+    "val_bytes,val_float,val_list,val_text,val_hash",
+    [(b"Hello", 1.1, ["abc"], "apple", 8566208034543834098)],
+)
+def test_stringstore_type_checking(
+    stringstore, val_bytes, val_float, val_list, val_text, val_hash
+):
+    with pytest.raises(TypeError):
+        assert stringstore[val_bytes]
+
+    with pytest.raises(TypeError):
+        stringstore.add(val_float)
+
+    with pytest.raises(TypeError):
+        assert val_list not in stringstore
+
+    key = stringstore.add(val_text)
+    assert val_hash == key
+    assert stringstore[val_hash] == val_text
 
 
 @pytest.mark.parametrize("text1,text2,text3", [("Hello", "goodbye", "hello")])
