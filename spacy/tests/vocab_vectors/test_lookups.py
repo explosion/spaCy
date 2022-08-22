@@ -1,6 +1,6 @@
 import pytest
 from spacy.lookups import Lookups, Table
-from spacy.strings import get_string_id  # type: ignore
+from spacy.strings import get_string_id
 from spacy.vocab import Vocab
 
 from ..util import make_tempdir

@@ -6,7 +6,7 @@ from collections import OrderedDict
 
 from .errors import Errors
 from .util import SimpleFrozenDict, ensure_path, registry, load_language_data
-from .strings import get_string_id  # type: ignore
+from .strings import get_string_id
 
 
 UNSET = object()
