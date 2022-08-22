@@ -12,7 +12,7 @@ from ..compat import copy_reg
 from ..attrs import SPACY, ORTH, intify_attr, IDS
 from ..errors import Errors
 from ..util import ensure_path, SimpleFrozenList
-from ._dict_proxies import SpanGroups
+from .span_groups import SpanGroups
 
 # fmt: off
 ALL_ATTRS = ("ORTH", "NORM", "TAG", "HEAD", "DEP", "ENT_IOB", "ENT_TYPE", "ENT_KB_ID", "ENT_ID", "LEMMA", "MORPH", "POS", "SENT_START")
