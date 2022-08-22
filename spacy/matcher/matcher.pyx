@@ -10,6 +10,7 @@ from murmurhash.mrmr cimport hash64
 import re
 import srsly
 import warnings
+from rapidfuzz import fuzz_cpp
 
 from ..typedefs cimport attr_t
 from ..structs cimport TokenC
@@ -19,6 +20,7 @@ from ..tokens.span cimport Span
 from ..tokens.token cimport Token
 from ..tokens.morphanalysis cimport MorphAnalysis
 from ..attrs cimport ID, attr_id_t, NULL_ATTR, ORTH, POS, TAG, DEP, LEMMA, MORPH, ENT_IOB
+from ..attrs cimport LOWER, NORM
 
 from ..schemas import validate_token_pattern
 from ..errors import Errors, MatchPatternError, Warnings
@@ -36,7 +38,7 @@ cdef class Matcher:
     USAGE: https://spacy.io/usage/rule-based-matching
     """
 
-    def __init__(self, vocab, validate=True):
+    def __init__(self, vocab, validate=True, fuzzy=None):
         """Create the Matcher.
 
         vocab (Vocab): The vocabulary object, which must be shared with the
@@ -51,6 +53,7 @@ cdef class Matcher:
         self.vocab = vocab
         self.mem = Pool()
         self.validate = validate
+        self.fuzzy = fuzzy if fuzzy is not None else 0
 
     def __reduce__(self):
         data = (self.vocab, self._patterns, self._callbacks)
@@ -253,7 +256,8 @@ cdef class Matcher:
             matches = []
         else:
             matches = find_matches(&self.patterns[0], self.patterns.size(), doclike, length,
-                                    extensions=self._extensions, predicates=self._extra_predicates, with_alignments=with_alignments)
+                                    extensions=self._extensions, predicates=self._extra_predicates,
+                                    with_alignments=with_alignments, fuzzy=self.fuzzy)
         final_matches = []
         pairs_by_id = {}
         # For each key, either add all matches, or only the filtered,
@@ -334,7 +338,7 @@ def unpickle_matcher(vocab, patterns, callbacks):
     return matcher
 
 
-cdef find_matches(TokenPatternC** patterns, int n, object doclike, int length, extensions=None, predicates=tuple(), bint with_alignments=0):
+cdef find_matches(TokenPatternC** patterns, int n, object doclike, int length, extensions=None, predicates=tuple(), bint with_alignments=0, float fuzzy=0):
     """Find matches in a doc, with a compiled array of patterns. Matches are
     returned as a list of (id, start, end) tuples or (id, start, end, alignments) tuples (if with_alignments != 0)
 
@@ -379,7 +383,7 @@ cdef find_matches(TokenPatternC** patterns, int n, object doclike, int length, e
         if with_alignments != 0:
             align_states.resize(states.size())
         transition_states(states, matches, align_states, align_matches, predicate_cache,
-            doclike[i], extra_attr_values, predicates, with_alignments)
+            doclike[i], extra_attr_values, predicates, with_alignments, fuzzy)
         extra_attr_values += nr_extra_attr
         predicate_cache += len(predicates)
     # Handle matches that end in 0-width patterns
@@ -408,7 +412,7 @@ cdef find_matches(TokenPatternC** patterns, int n, object doclike, int length, e
 cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& matches,
                             vector[vector[MatchAlignmentC]]& align_states, vector[vector[MatchAlignmentC]]& align_matches,
                             int8_t* cached_py_predicates,
-        Token token, const attr_t* extra_attrs, py_predicates, bint with_alignments) except *:
+        Token token, const attr_t* extra_attrs, py_predicates, bint with_alignments, float fuzzy) except *:
     cdef int q = 0
     cdef vector[PatternStateC] new_states
     cdef vector[vector[MatchAlignmentC]] align_new_states
@@ -417,8 +421,8 @@ cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& match
         if states[i].pattern.nr_py >= 1:
             update_predicate_cache(cached_py_predicates,
                 states[i].pattern, token, py_predicates)
-        action = get_action(states[i], token.c, extra_attrs,
-                            cached_py_predicates)
+        action = get_action(states[i], token, extra_attrs,
+                            cached_py_predicates, fuzzy)
         if action == REJECT:
             continue
         # Keep only a subset of states (the active ones). Index q is the
@@ -454,8 +458,8 @@ cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& match
             if states[q].pattern.nr_py != 0:
                 update_predicate_cache(cached_py_predicates,
                     states[q].pattern, token, py_predicates)
-            action = get_action(states[q], token.c, extra_attrs,
-                                cached_py_predicates)
+            action = get_action(states[q], token, extra_attrs,
+                                cached_py_predicates, fuzzy)
         # Update alignment before the transition of current state
         if with_alignments != 0:
             align_states[q].push_back(MatchAlignmentC(states[q].pattern.token_idx, states[q].length))
@@ -566,8 +570,8 @@ cdef void finish_states(vector[MatchC]& matches, vector[PatternStateC]& states,
 
 
 cdef action_t get_action(PatternStateC state,
-        const TokenC* token, const attr_t* extra_attrs,
-        const int8_t* predicate_matches) nogil:
+        Token token, const attr_t* extra_attrs,
+        const int8_t* predicate_matches, float fuzzy) nogil:
     """We need to consider:
     a) Does the token match the specification? [Yes, No]
     b) What's the quantifier? [1, 0+, ?]
@@ -626,7 +630,7 @@ cdef action_t get_action(PatternStateC state,
     Problem: If a quantifier is matching, we're adding a lot of open partials
     """
     cdef int8_t is_match
-    is_match = get_is_match(state, token, extra_attrs, predicate_matches)
+    is_match = get_is_match(state, token, extra_attrs, predicate_matches, fuzzy)
     quantifier = get_quantifier(state)
     is_final = get_is_final(state)
     if quantifier == ZERO:
@@ -678,16 +682,24 @@ cdef action_t get_action(PatternStateC state,
 
 
 cdef int8_t get_is_match(PatternStateC state,
-        const TokenC* token, const attr_t* extra_attrs,
-        const int8_t* predicate_matches) nogil:
+        Token token, const attr_t* extra_attrs,
+        const int8_t* predicate_matches, float fuzzy) nogil:
     for i in range(state.pattern.nr_py):
         if predicate_matches[state.pattern.py_predicates[i]] == -1:
             return 0
     spec = state.pattern
     if spec.nr_attr > 0:
         for attr in spec.attrs[:spec.nr_attr]:
-            if get_token_attr_for_matcher(token, attr.attr) != attr.value:
-                return 0
+            token_attr_value = get_token_attr_for_matcher(token.c, attr.attr)
+            if token_attr_value != attr.value:
+                if fuzzy != 0 and (attr.attr == ORTH or attr.attr == LEMMA
+                                   or attr.attr == LOWER or attr.attr == NORM):
+                    with gil:
+                        if fuzz_cpp.ratio(token.vocab.strings[token_attr_value],
+                                          token.vocab.strings[attr.value]) < fuzzy:
+                            return 0
+                else:
+                    return 0
     for i in range(spec.nr_extra_attr):
         if spec.extra_attrs[i].value != extra_attrs[spec.extra_attrs[i].index]:
             return 0
