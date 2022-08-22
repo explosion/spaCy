@@ -535,8 +535,7 @@ class Errors(metaclass=ErrorsWithCodes):
     E198 = ("Unable to return {n} most similar vectors for the current vectors "
             "table, which contains {n_rows} vectors.")
     E199 = ("Unable to merge 0-length span at `doc[{start}:{end}]`.")
-    E200 = ("Can't yet set {attr} from Span. Vote for this feature on the "
-            "issue tracker: http://github.com/explosion/spaCy/issues")
+    E200 = ("Can't set {attr} from Span.")
     E202 = ("Unsupported {name} mode '{mode}'. Supported modes: {modes}.")
 
     # New errors added in v3.x
