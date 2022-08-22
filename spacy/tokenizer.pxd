@@ -8,7 +8,6 @@ from .strings cimport StringStore
 from .tokens.doc cimport Doc
 from .vocab cimport Vocab, LexemesOrTokens, _Cached
 from .matcher.phrasematcher cimport PhraseMatcher
-from libcpp cimport bool
 
 
 cdef class Tokenizer:
@@ -24,7 +23,7 @@ cdef class Tokenizer:
     cdef object _infix_finditer
     cdef object _rules
     cdef PhraseMatcher _special_matcher
-    cdef bool _faster_heuristics
+    cdef bint _faster_heuristics
 
     cdef Doc _tokenize_affixes(self, str string, bint with_special_cases)
     cdef int _apply_special_cases(self, Doc doc) except -1
