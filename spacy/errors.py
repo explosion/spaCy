@@ -213,6 +213,10 @@ class Warnings(metaclass=ErrorsWithCodes):
     W122 = ("Couldn't trace method '{method}' in pipe '{pipe}'. This can happen if the pipe class "
             "is a Cython extension type.")
 
+    W4000 = ("Symbols not found in DocBin/.spacy archive. Doc attributes and "
+             "values may not be loaded correctly.")
+    W4001 = ("Symbols have changed unexpectedly. This is likely a bug in "
+             "spaCy, so feel free to open an issue.")
 
 class Errors(metaclass=ErrorsWithCodes):
     E001 = ("No component '{name}' found in pipeline. Available names: {opts}")
