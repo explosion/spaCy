@@ -1048,6 +1048,10 @@ def test_no_gold_ents(patterns):
     for eg in train_examples:
         eg.predicted = ruler(eg.predicted)
 
+    # Entity ruler is no longer needed (initialization below wipes out the
+    # patterns and causes warnings)
+    nlp.remove_pipe("entity_ruler")
+
     def create_kb(vocab):
         # create artificial KB
         mykb = KnowledgeBase(vocab, entity_vector_length=vector_length)
