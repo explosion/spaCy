@@ -982,11 +982,10 @@ cdef class Doc:
         output = numpy.ndarray(shape=(self.length, n_attrs), dtype=numpy.uint64)
         c_output = <attr_t*>output.data
         cdef TokenC* token
-        cdef int nr_attr = len(py_attr_ids)
         for i in range(self.length):
             token = &self.c[i]
-            for j in range(nr_attr):
-                c_output[i*nr_attr + j] = get_token_attr(token, c_attr_ids[j])
+            for j in range(n_attrs):
+                c_output[i*n_attrs + j] = get_token_attr(token, c_attr_ids[j])
         # Handle 1d case
         return output if n_attrs >= 2 else output.reshape((self.length,))
 
