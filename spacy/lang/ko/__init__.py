@@ -64,7 +64,7 @@ class KoreanTokenizer(DummyTokenizer):
             features = expr.split("/")[0].split(",")
             tag = features[0]
             lemma = "*"
-            if len(features) >= 7:
+            if len(features) >= 8:
                 lemma = features[7]
             if lemma == "*":
                 lemma = surface
