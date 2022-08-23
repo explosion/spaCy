@@ -266,6 +266,11 @@
             "has_examples": true
         },
         {
+            "code": "lg",
+            "name": "Luganda",
+            "has_examples": true
+        },
+        {
             "code": "lij",
             "name": "Ligurian",
             "example": "Sta chì a l'é unna fraxe.",
