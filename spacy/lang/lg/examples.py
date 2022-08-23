@@ -7,7 +7,7 @@ Example sentences to test spaCy and its language models.
 
 sentences = [
     "Mpa ebyafaayo ku byalo Nakatu ne Nkajja",
-    "Okuyita Ttembo  kitegeeza kugwa ddalu",
+    "Okuyita Ttembo kitegeeza kugwa ddalu",
     "Ekifumu kino kyali kya mulimu ki?",
     "Ekkovu we liyise wayitibwa mukululo",
     "Akola mulimu ki oguvaamu ssente?",
