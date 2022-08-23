@@ -6,7 +6,7 @@ from numpy.testing import assert_equal
 from spacy import registry, util
 from spacy.attrs import ENT_KB_ID
 from spacy.compat import pickle
-from spacy.kb_in_memory_lookup import Candidate, InMemoryLookupKB, get_candidates
+from spacy.kb.kb_in_memory import Candidate, InMemoryLookupKB, get_candidates
 from spacy.lang.en import English
 from spacy.ml import load_kb
 from spacy.pipeline import EntityLinker
@@ -59,7 +59,7 @@ def test_issue4674():
 @pytest.mark.issue(6730)
 def test_issue6730(en_vocab):
     """Ensure that the KB does not accept empty strings, but otherwise IO works fine."""
-    from spacy.kb_in_memory_lookup import InMemoryLookupKB
+    from spacy.kb.kb_in_memory import InMemoryLookupKB
 
     kb = InMemoryLookupKB(en_vocab, entity_vector_length=3)
     kb.add_entity(entity="1", freq=148, entity_vector=[1, 2, 3])

@@ -4,8 +4,8 @@ from libcpp.vector cimport vector
 from libc.stdint cimport int32_t, int64_t
 from libc.stdio cimport FILE
 
-from .typedefs cimport hash_t
-from .structs cimport KBEntryC, AliasC
+from ..typedefs cimport hash_t
+from ..structs cimport KBEntryC, AliasC
 from .kb cimport KnowledgeBase
 
 ctypedef vector[KBEntryC] entry_vec

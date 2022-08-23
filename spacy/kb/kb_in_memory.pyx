@@ -11,12 +11,12 @@ from libcpp.vector cimport vector
 from pathlib import Path
 import warnings
 
-from .tokens import Span
-from .typedefs cimport hash_t
-from .errors import Errors, Warnings
-from . import util
-from .util import SimpleFrozenList, ensure_path
-from .vocab cimport Vocab
+from ..tokens import Span
+from ..typedefs cimport hash_t
+from ..errors import Errors, Warnings
+from .. import util
+from ..util import SimpleFrozenList, ensure_path
+from ..vocab cimport Vocab
 from .kb cimport KnowledgeBase, Candidate as _Candidate
 from .kb import get_candidates as _get_candidates
 

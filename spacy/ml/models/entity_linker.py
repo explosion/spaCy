@@ -7,7 +7,7 @@ from thinc.api import Model, Maxout, Linear, tuplify, Ragged
 from ...util import registry
 from ...kb import KnowledgeBase
 from ...kb import Candidate, get_candidates, get_candidates_batch
-from ...kb_in_memory_lookup import InMemoryLookupKB
+from ...kb import InMemoryLookupKB
 from ...vocab import Vocab
 from ...tokens import Span, Doc
 from ..extract_spans import extract_spans

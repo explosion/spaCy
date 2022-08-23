@@ -4,10 +4,9 @@ from cymem.cymem cimport Pool
 from libcpp.vector cimport vector
 from libc.stdint cimport int64_t
 
-from .vocab cimport Vocab
-from .typedefs cimport hash_t
+from ..vocab cimport Vocab
+from ..typedefs cimport hash_t
 from .kb cimport KnowledgeBase
-
 
 # Object used by the Entity Linker that summarizes one entity-alias candidate combination.
 cdef class Candidate:

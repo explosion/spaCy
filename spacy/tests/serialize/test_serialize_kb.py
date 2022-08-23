@@ -2,7 +2,7 @@ from typing import Callable
 
 from spacy import util
 from spacy.util import ensure_path, registry, load_model_from_config
-from spacy.kb_in_memory_lookup import InMemoryLookupKB
+from spacy.kb.kb_in_memory import InMemoryLookupKB
 from spacy.vocab import Vocab
 from thinc.api import Config
 
