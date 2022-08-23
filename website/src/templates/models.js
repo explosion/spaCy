@@ -114,7 +114,11 @@ function formatVectors(data) {
     if (!data) return 'n/a'
     if (Object.values(data).every(n => n === 0)) return 'context vectors only'
     const { keys, vectors, width } = data
-    return `${abbrNum(keys)} keys, ${abbrNum(vectors)} unique vectors (${width} dimensions)`
+    if (keys >= 0) {
+        return `${abbrNum(keys)} keys, ${abbrNum(vectors)} unique vectors (${width} dimensions)`
+    } else {
+        return `${abbrNum(vectors)} floret vectors (${width} dimensions)`
+    }
 }
 
 function formatAccuracy(data, lang) {

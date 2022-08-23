@@ -191,6 +191,8 @@ def load_model(name: str) -> "Language":
     ...
 ```
 
+Note that we typically put the `from typing` import statements on the first line(s) of the Python module.
+
 ## Structuring logic
 
 ### Positional and keyword arguments
@@ -274,6 +276,27 @@ If you have to use `try`/`except`, make sure to only include what's **absolutely
 + def split_string(value: str) -> List[str]:
 +     return [v.strip() for v in value.split(",")]
 ```
+
+### Numeric comparisons
+
+For numeric comparisons, as a general rule we always use `<` and `>=` and avoid the usage of `<=` and `>`. This is to ensure we consistently
+apply inclusive lower bounds and exclusive upper bounds, helping to prevent off-by-one errors.
+
+One exception to this rule is the ternary case. With a chain like
+
+```python
+if value >= 0 and value < max:
+    ...
+```
+
+it's fine to rewrite this to the shorter form
+
+```python
+if 0 <= value < max:
+    ...
+```
+
+even though this requires the usage of the `<=` operator.
 
 ### Iteration and comprehensions
 
@@ -451,7 +474,7 @@ spaCy uses the [`pytest`](http://doc.pytest.org/) framework for testing. Tests f
 
 When adding tests, make sure to use descriptive names and only test for one behavior at a time. Tests should be grouped into modules dedicated to the same type of functionality and some test modules are organized as directories of test files related to the same larger area of the library, e.g. `matcher` or `tokenizer`.
 
-Regression tests are tests that refer to bugs reported in specific issues. They should live in the relevant module of the test suite, named according to the issue number (e.g., `test_issue1234.py`), and [marked](https://docs.pytest.org/en/6.2.x/example/markers.html#working-with-custom-markers) appropriately (e.g. `@pytest.mark.issue(1234)`). This system allows us to relate tests for specific bugs back to the original reported issue, which is especially useful if we introduce a regression and a previously passing regression tests suddenly fails again. When fixing a bug, it's often useful to create a regression test for it first. 
+Regression tests are tests that refer to bugs reported in specific issues. They should live in the relevant module of the test suite, named according to the issue number (e.g., `test_issue1234.py`), and [marked](https://docs.pytest.org/en/6.2.x/example/markers.html#working-with-custom-markers) appropriately (e.g. `@pytest.mark.issue(1234)`). This system allows us to relate tests for specific bugs back to the original reported issue, which is especially useful if we introduce a regression and a previously passing regression tests suddenly fails again. When fixing a bug, it's often useful to create a regression test for it first.
 
 The test suite also provides [fixtures](https://github.com/explosion/spaCy/blob/master/spacy/tests/conftest.py) for different language tokenizers that can be used as function arguments of the same name and will be passed in automatically. Those should only be used for tests related to those specific languages. We also have [test utility functions](https://github.com/explosion/spaCy/blob/master/spacy/tests/util.py) for common operations, like creating a temporary file.
 
