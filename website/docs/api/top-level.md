@@ -275,8 +275,8 @@ Render a dependency parse tree or named entity visualization.
 
 ### displacy.parse_deps {#displacy.parse_deps tag="method" new="2"}
 
-Generate dependency parse in `{'words': [], 'arcs': []}` format.
-For use with the `manual=True` argument in `displacy.render`.
+Generate dependency parse in `{'words': [], 'arcs': []}` format. For use with
+the `manual=True` argument in `displacy.render`.
 
 > #### Example
 >
@@ -297,8 +297,8 @@ For use with the `manual=True` argument in `displacy.render`.
 
 ### displacy.parse_ents {#displacy.parse_ents tag="method" new="2"}
 
-Generate named entities in `[{start: i, end: i, label: 'label'}]` format.
-For use with the `manual=True` argument in `displacy.render`.
+Generate named entities in `[{start: i, end: i, label: 'label'}]` format. For
+use with the `manual=True` argument in `displacy.render`.
 
 > #### Example
 >
@@ -319,8 +319,8 @@ For use with the `manual=True` argument in `displacy.render`.
 
 ### displacy.parse_spans {#displacy.parse_spans tag="method" new="2"}
 
-Generate spans in `[{start_token: i, end_token: i, label: 'label'}]` format.
-For use with the `manual=True` argument in `displacy.render`.
+Generate spans in `[{start_token: i, end_token: i, label: 'label'}]` format. For
+use with the `manual=True` argument in `displacy.render`.
 
 > #### Example
 >
@@ -505,7 +505,7 @@ finished. To log each training step, a
 and the accuracy scores on the development set.
 
 The built-in, default logger is the ConsoleLogger, which prints results to the
-console in tabular format. The
+console in tabular format and saves them to a `jsonl` file. The
 [spacy-loggers](https://github.com/explosion/spacy-loggers) package, included as
 a dependency of spaCy, enables other loggers, such as one that sends results to
 a [Weights & Biases](https://www.wandb.com/) dashboard.
@@ -513,16 +513,20 @@ a [Weights & Biases](https://www.wandb.com/) dashboard.
 Instead of using one of the built-in loggers, you can
 [implement your own](/usage/training#custom-logging).
 
-#### spacy.ConsoleLogger.v1 {#ConsoleLogger tag="registered function"}
+#### spacy.ConsoleLogger.v2 {#ConsoleLogger tag="registered function"}
 
 > #### Example config
 >
 > ```ini
 > [training.logger]
-> @loggers = "spacy.ConsoleLogger.v1"
+> @loggers = "spacy.ConsoleLogger.v2"
+> progress_bar = true
+> console_output = true
+> output_file = "training_log.jsonl"
 > ```
 
-Writes the results of a training step to the console in a tabular format.
+Writes the results of a training step to the console in a tabular format and
+saves them to a `jsonl` file.
 
 <Accordion title="Example console output" spaced>
 
@@ -536,6 +540,7 @@ $ python -m spacy train config.cfg
 ℹ Pipeline: ['tok2vec', 'tagger']
 ℹ Start training
 ℹ Training. Initial learn rate: 0.0
+ℹ Saving results to training_log.jsonl
 
 E     #        LOSS TOK2VEC   LOSS TAGGER   TAG_ACC   SCORE
 ---   ------   ------------   -----------   -------   ------
@@ -558,6 +563,12 @@ Note that the cumulative loss keeps increasing within one epoch, but should
 start decreasing across epochs.
 
  </Accordion>
+
+| Name             | Description                                                           |
+| ---------------- | --------------------------------------------------------------------- |
+| `progress_bar`   | Whether the logger should print the progress bar ~~bool~~             |
+| `console_output` | Whether the logger should print the logs on the console. ~~bool~~     |
+| `output_file`    | The file to save the training logs to. ~~Optional[Union[str, Path]]~~ |
 
 ## Readers {#readers}
 

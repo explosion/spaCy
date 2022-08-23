@@ -61,8 +61,8 @@ def console_logger(
             )
             output_file = None
         elif output_file:
-            write(msg.info(f"Saving logs to {output_file}"))
-            output_stream = open(output_file, "w")
+            write(msg.info(f"Saving results to {output_file}"))
+            output_stream = open(output_file, "w", encoding="utf-8")
 
         # ensure that only trainable components are logged
         logged_pipes = [
