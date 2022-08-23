@@ -1602,13 +1602,30 @@ cdef class Doc:
                 ents.append(char_span)
             self.ents = ents
 
-        # Add custom attributes. Note that only Doc extensions are currently considered, Token and Span extensions are
-        # not yet supported.
+        # Add custom attributes for the whole Doc object.
         for attr in doc_json.get("_", {}):
             if not Doc.has_extension(attr):
                 Doc.set_extension(attr)
             self._.set(attr, doc_json["_"][attr])
 
+        if doc_json.get("underscore_token", {}):
+            for token_attr in doc_json["underscore_token"]:
+                token_start = doc_json["underscore_token"][token_attr]["token_start"]
+                value = doc_json["underscore_token"][token_attr]["value"]
+
+                if not Token.has_extension(token_attr):
+                    Token.set_extension(token_attr)
+                self[token_start]._.set(token_attr, value)
+                
+        if doc_json.get("underscore_span", {}):
+            for span_attr in doc_json["underscore_span"]:
+                token_start = doc_json["underscore_span"][span_attr]["token_start"]
+                token_end = doc_json["underscore_span"][span_attr]["token_end"]
+                value = doc_json["underscore_span"][span_attr]["value"]
+
+                if not Span.has_extension(span_attr):
+                    Span.set_extension(span_attr)
+                self[token_start:token_end]._.set(span_attr, value)
         return self
 
     def to_json(self, underscore=None):
@@ -1650,20 +1667,40 @@ cdef class Doc:
             for span_group in self.spans:
                 data["spans"][span_group] = []
                 for span in self.spans[span_group]:
-                    span_data = {
-                        "start": span.start_char, "end": span.end_char, "label": span.label_, "kb_id": span.kb_id_
-                    }
+                    span_data = {"start": span.start_char, "end": span.end_char, "label": span.label_, "kb_id": span.kb_id_}
                     data["spans"][span_group].append(span_data)
 
         if underscore:
-            data["_"] = {}
+            user_keys = set()
+            if self.user_data:
+                data["_"] = {}
+                data["underscore_token"] = {}
+                data["underscore_span"] = {}
+                for data_key in self.user_data:
+                    if type(data_key) == tuple and len(data_key) >= 4 and data_key[0] == "._.":
+                        attr = data_key[1]
+                        start = data_key[2]
+                        end = data_key[3]
+                        if attr in underscore:
+                            user_keys.add(attr)
+                            value = self.user_data[data_key]
+                            if not srsly.is_json_serializable(value):
+                                raise ValueError(Errors.E107.format(attr=attr, value=repr(value)))
+                            # Check if doc attribute
+                            if start is None:
+                                data["_"][attr] = value
+                            # Check if token attribute
+                            elif end is None:
+                                if attr not in data["underscore_token"]:
+                                    data["underscore_token"][attr] = {"token_start": start, "value": value}
+                            # Else span attribute
+                            else:
+                                if attr not in data["underscore_span"]:
+                                    data["underscore_span"][attr] = {"token_start": start, "token_end": end, "value": value}
+
             for attr in underscore:
-                if not self.has_extension(attr):
+                if attr not in user_keys:
                     raise ValueError(Errors.E106.format(attr=attr, opts=underscore))
-                value = self._.get(attr)
-                if not srsly.is_json_serializable(value):
-                    raise ValueError(Errors.E107.format(attr=attr, value=repr(value)))
-                data["_"][attr] = value
         return data
 
     def to_utf8_array(self, int nr_char=-1):
