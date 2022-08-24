@@ -97,7 +97,7 @@ NAMES = [key for key, value in sorted(IDS.items(), key=lambda item: item[1])]
 locals().update(IDS)
 
 
-def intify_attrs(stringy_attrs, strings_map=None, _do_deprecated=False):
+def intify_attrs(stringy_attrs, strings_map=None):
     """
     Normalize a dictionary of attributes, converting them to ints.
 
@@ -109,75 +109,6 @@ def intify_attrs(stringy_attrs, strings_map=None, _do_deprecated=False):
         converted to ints.
     """
     inty_attrs = {}
-    if _do_deprecated:
-        if "F" in stringy_attrs:
-            stringy_attrs["ORTH"] = stringy_attrs.pop("F")
-        if "L" in stringy_attrs:
-            stringy_attrs["LEMMA"] = stringy_attrs.pop("L")
-        if "pos" in stringy_attrs:
-            stringy_attrs["TAG"] = stringy_attrs.pop("pos")
-        if "morph" in stringy_attrs:
-            morphs = stringy_attrs.pop("morph")
-        if "number" in stringy_attrs:
-            stringy_attrs.pop("number")
-        if "tenspect" in stringy_attrs:
-            stringy_attrs.pop("tenspect")
-        morph_keys = [
-            "PunctType",
-            "PunctSide",
-            "Other",
-            "Degree",
-            "AdvType",
-            "Number",
-            "VerbForm",
-            "PronType",
-            "Aspect",
-            "Tense",
-            "PartType",
-            "Poss",
-            "Hyph",
-            "ConjType",
-            "NumType",
-            "Foreign",
-            "VerbType",
-            "NounType",
-            "Gender",
-            "Mood",
-            "Negative",
-            "Tense",
-            "Voice",
-            "Abbr",
-            "Derivation",
-            "Echo",
-            "Foreign",
-            "NameType",
-            "NounType",
-            "NumForm",
-            "NumValue",
-            "PartType",
-            "Polite",
-            "StyleVariant",
-            "PronType",
-            "AdjType",
-            "Person",
-            "Variant",
-            "AdpType",
-            "Reflex",
-            "Negative",
-            "Mood",
-            "Aspect",
-            "Case",
-            "Polarity",
-            "PrepCase",
-            "Animacy",  # U20
-        ]
-        for key in morph_keys:
-            if key in stringy_attrs:
-                stringy_attrs.pop(key)
-            elif key.lower() in stringy_attrs:
-                stringy_attrs.pop(key.lower())
-            elif key.upper() in stringy_attrs:
-                stringy_attrs.pop(key.upper())
     for name, value in stringy_attrs.items():
         int_key = intify_attr(name)
         if int_key is not None:

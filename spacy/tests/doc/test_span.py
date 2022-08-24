@@ -4,7 +4,7 @@ from numpy.testing import assert_array_equal
 
 from spacy.attrs import ORTH, LENGTH
 from spacy.lang.en import English
-from spacy.tokens import Doc, Span, Token
+from spacy.tokens import Doc, Span, SpanGroup, Token
 from spacy.vocab import Vocab
 from spacy.util import filter_spans
 from thinc.api import get_current_ops
@@ -161,6 +161,18 @@ def test_char_span(doc, i_sent, i, j, text):
         assert not span
     else:
         assert span.text == text
+
+
+@pytest.mark.issue(9556)
+def test_modify_span_group(doc):
+    group = SpanGroup(doc, spans=doc.ents)
+    for span in group:
+        span.start = 0
+        span.label = doc.vocab.strings["TEST"]
+
+    # Span changes must be reflected in the span group
+    assert group[0].start == 0
+    assert group[0].label == doc.vocab.strings["TEST"]
 
 
 def test_spans_sent_spans(doc):
@@ -680,3 +692,23 @@ def test_span_group_copy(doc):
     assert len(doc.spans["test"]) == 3
     # check that the copy spans were not modified and this is an isolated doc
     assert len(doc_copy.spans["test"]) == 2
+
+
+@pytest.mark.issue(11113)
+def test_span_ent_id(en_tokenizer):
+    doc = en_tokenizer("a b c d")
+    doc.ents = [Span(doc, 1, 3, label="A", span_id="ID0")]
+    span = doc.ents[0]
+    assert doc[1].ent_id_ == "ID0"
+
+    # setting Span.id sets Token.ent_id
+    span.id_ = "ID1"
+    doc.ents = [span]
+    assert doc.ents[0].ent_id_ == "ID1"
+    assert doc[1].ent_id_ == "ID1"
+
+    # Span.ent_id is an alias of Span.id
+    span.ent_id_ = "ID2"
+    doc.ents = [span]
+    assert doc.ents[0].ent_id_ == "ID2"
+    assert doc[1].ent_id_ == "ID2"

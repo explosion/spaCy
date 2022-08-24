@@ -123,6 +123,7 @@ cdef class Parser(TrainablePipe):
 
         self._rehearsal_model = None
         self.scorer = scorer
+        self._cpu_ops = get_ops("cpu") if isinstance(self.model.ops, CupyOps) else self.model.ops
 
     def __getnewargs_ex__(self):
         """This allows pickling the Parser and its keyword-only init arguments"""
@@ -262,12 +263,7 @@ cdef class Parser(TrainablePipe):
     def greedy_parse(self, docs, drop=0.):
         cdef vector[StateC*] states
         cdef StateClass state
-        ops = self.model.ops
-        cdef CBlas cblas
-        if isinstance(ops, CupyOps):
-            cblas = NUMPY_OPS.cblas()
-        else:
-            cblas = ops.cblas()
+        cdef CBlas cblas = self._cpu_ops.cblas()
         self._ensure_labels_are_added(docs)
         set_dropout_rate(self.model, drop)
         batch = self.moves.init_batch(docs)

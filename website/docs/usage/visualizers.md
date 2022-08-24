@@ -198,12 +198,12 @@ import DisplacySpanHtml from 'images/displacy-span.html'
 
 The span visualizer lets you customize the following `options`:
 
-| Argument | Description                                                                                                                                             |
-|-----------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `spans_key`       | Which spans key to render spans from. Default is `"sc"`. ~~str~~                                                                                                   |
+| Argument          | Description                                                                                                                                                                               |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `spans_key`       | Which spans key to render spans from. Default is `"sc"`. ~~str~~                                                                                                                          |
 | `templates`       | Dictionary containing the keys `"span"`, `"slice"`, and `"start"`. These dictate how the overall span, a span slice, and the starting token will be rendered. ~~Optional[Dict[str, str]~~ |
-| `kb_url_template` | Optional template to construct the KB url for the entity to link to. Expects a python f-string format with single field to fill in ~~Optional[str]~~                    |
-| `colors`          | Color overrides. Entity types should be mapped to color names or values. ~~Dict[str, str]~~ |
+| `kb_url_template` | Optional template to construct the KB url for the entity to link to. Expects a python f-string format with single field to fill in ~~Optional[str]~~                                      |
+| `colors`          | Color overrides. Entity types should be mapped to color names or values. ~~Dict[str, str]~~                                                                                               |
 
 Because spans can be stored across different keys in `doc.spans`, you need to specify
 which one displaCy should use with `spans_key` (`sc` is the default). 
@@ -343,9 +343,21 @@ want to visualize output from other libraries, like [NLTK](http://www.nltk.org)
 or
 [SyntaxNet](https://github.com/tensorflow/models/tree/master/research/syntaxnet).
 If you set `manual=True` on either `render()` or `serve()`, you can pass in data
-in displaCy's format as a dictionary (instead of `Doc` objects).
+in displaCy's format as a dictionary (instead of `Doc` objects). There are helper 
+functions for converting `Doc` objects to displaCy's format for use with `manual=True`: 
+[`displacy.parse_deps`](/api/top-level#displacy.parse_deps), 
+[`displacy.parse_ents`](/api/top-level#displacy.parse_ents), 
+and [`displacy.parse_spans`](/api/top-level#displacy.parse_spans).
 
-> #### Example
+> #### Example with parse function
+>
+> ```python
+> doc = nlp("But Google is starting from behind.")
+> ex = displacy.parse_ents(doc)
+> html = displacy.render(ex, style="ent", manual=True)
+> ```
+
+> #### Example with raw data
 >
 > ```python
 > ex = [{"text": "But Google is starting from behind.",
@@ -353,6 +365,7 @@ in displaCy's format as a dictionary (instead of `Doc` objects).
 >        "title": None}]
 > html = displacy.render(ex, style="ent", manual=True)
 > ```
+
 
 ```python
 ### DEP input
@@ -386,6 +399,18 @@ in displaCy's format as a dictionary (instead of `Doc` objects).
     "text": "But Google is starting from behind.",
     "ents": [{"start": 4, "end": 10, "label": "ORG", "kb_id": "Q95", "kb_url": "https://www.wikidata.org/entity/Q95"}],
     "title": None
+}
+```
+
+```python
+### SPANS input
+{
+    "text": "Welcome to the Bank of China.",
+    "spans": [
+        {"start_token": 3, "end_token": 6, "label": "ORG"},
+        {"start_token": 5, "end_token": 6, "label": "GPE"},
+    ],
+    "tokens": ["Welcome", "to", "the", "Bank", "of", "China", "."],
 }
 ```
 
