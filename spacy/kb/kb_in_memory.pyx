@@ -29,7 +29,7 @@ cdef class InMemoryLookupKB(KnowledgeBase):
     """
 
     def __init__(self, Vocab vocab, entity_vector_length):
-        """Create a InMemoryLookupKB."""
+        """Create an InMemoryLookupKB."""
         super().__init__(vocab, entity_vector_length)
         self._entry_index = PreshMap()
         self._alias_index = PreshMap()
