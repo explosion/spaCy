@@ -19,7 +19,7 @@ cdef class KnowledgeBase:
     """
 
     def __init__(self, vocab: Vocab, entity_vector_length: int):
-        """Create a InMemoryLookupKB."""
+        """Create a KnowledgeBase."""
         self.vocab = vocab
         self.entity_vector_length = entity_vector_length
         self.mem = Pool()
@@ -43,7 +43,7 @@ cdef class KnowledgeBase:
         RETURNS (Iterable[Candidate]): Identified candidates.
         """
         raise NotImplementedError(
-            Errors.E1045.format(parent="InMemoryLookupKB", method="get_candidates", name=self.__name__)
+            Errors.E1045.format(parent="KnowledgeBase", method="get_candidates", name=self.__name__)
         )
 
     def get_vectors(self, entities: Iterable[str]) -> Iterable[Iterable[float]]:
@@ -61,7 +61,7 @@ cdef class KnowledgeBase:
         RETURNS (Iterable[float]): Vector for specified entity.
         """
         raise NotImplementedError(
-            Errors.E1045.format(parent="InMemoryLookupKB", method="get_vector", name=self.__name__)
+            Errors.E1045.format(parent="KnowledgeBase", method="get_vector", name=self.__name__)
         )
 
     def to_bytes(self, **kwargs) -> bytes:
@@ -69,7 +69,7 @@ cdef class KnowledgeBase:
         RETURNS (bytes): Current state as binary string.
         """
         raise NotImplementedError(
-            Errors.E1045.format(parent="InMemoryLookupKB", method="to_bytes", name=self.__name__)
+            Errors.E1045.format(parent="KnowledgeBase", method="to_bytes", name=self.__name__)
         )
 
     def from_bytes(self, bytes_data: bytes, *, exclude: Tuple[str] = tuple()):
@@ -78,25 +78,25 @@ cdef class KnowledgeBase:
         exclude (Tuple[str]): Properties to exclude when restoring KB.
         """
         raise NotImplementedError(
-            Errors.E1045.format(parent="InMemoryLookupKB", method="from_bytes", name=self.__name__)
+            Errors.E1045.format(parent="KnowledgeBase", method="from_bytes", name=self.__name__)
         )
 
     def to_disk(self, path: Union[str, Path], exclude: Iterable[str] = SimpleFrozenList()) -> None:
         """
-        Write InMemoryLookupKB content to disk.
+        Write KnowledgeBase content to disk.
         path (Union[str, Path]): Target file path.
         exclude (Iterable[str]): List of components to exclude.
         """
         raise NotImplementedError(
-            Errors.E1045.format(parent="InMemoryLookupKB", method="to_disk", name=self.__name__)
+            Errors.E1045.format(parent="KnowledgeBase", method="to_disk", name=self.__name__)
         )
 
     def from_disk(self, path: Union[str, Path], exclude: Iterable[str] = SimpleFrozenList()) -> None:
         """
-        Load InMemoryLookupKB content from disk.
+        Load KnowledgeBase content from disk.
         path (Union[str, Path]): Target file path.
         exclude (Iterable[str]): List of components to exclude.
         """
         raise NotImplementedError(
-            Errors.E1045.format(parent="InMemoryLookupKB", method="from_disk", name=self.__name__)
+            Errors.E1045.format(parent="KnowledgeBase", method="from_disk", name=self.__name__)
         )

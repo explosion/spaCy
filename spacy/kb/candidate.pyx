@@ -1,8 +1,8 @@
 # cython: infer_types=True, profile=True
 
-from typing import Iterable
+from typing import Iterable, Union
 from .kb cimport KnowledgeBase
-
+from ..tokens import Span
 
 cdef class Candidate:
     """A `Candidate` object refers to a textual mention (`alias`) that may or may not be resolved
@@ -54,7 +54,7 @@ cdef class Candidate:
         return self.prior_prob
 
 
-def get_candidates(kb: KnowledgeBase, mention) -> Iterable[Candidate]:
+def get_candidates(kb: KnowledgeBase, mention: Union[Span, str]) -> Iterable[Candidate]:
     """
     Return candidate entities for a given mention and fetching appropriate entries from the index.
     kb (KnowledgeBase): Knowledge base to query.
@@ -64,7 +64,7 @@ def get_candidates(kb: KnowledgeBase, mention) -> Iterable[Candidate]:
     return kb.get_candidates(mention)
 
 
-def get_candidates_batch(kb: KnowledgeBase, mentions) -> Iterable[Iterable[Candidate]]:
+def get_candidates_batch(kb: KnowledgeBase, mentions: Iterable[Union[Span, str]]) -> Iterable[Iterable[Candidate]]:
     """
     Return candidate entities for the given mentions and fetching appropriate entries from the index.
     kb (KnowledgeBase): Knowledge base to query.
