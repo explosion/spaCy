@@ -157,6 +157,7 @@ def validate_token_pattern(obj: list) -> List[str]:
 
 class TokenPatternString(BaseModel):
     REGEX: Optional[StrictStr] = Field(None, alias="regex")
+    FUZZY: Optional[StrictStr] = Field(None, alias="fuzzy")
     IN: Optional[List[StrictStr]] = Field(None, alias="in")
     NOT_IN: Optional[List[StrictStr]] = Field(None, alias="not_in")
     IS_SUBSET: Optional[List[StrictStr]] = Field(None, alias="is_subset")
@@ -176,6 +177,7 @@ class TokenPatternString(BaseModel):
 
 class TokenPatternNumber(BaseModel):
     REGEX: Optional[StrictStr] = Field(None, alias="regex")
+    FUZZY: Optional[StrictStr] = Field(None, alias="fuzzy")
     IN: Optional[List[StrictInt]] = Field(None, alias="in")
     NOT_IN: Optional[List[StrictInt]] = Field(None, alias="not_in")
     IS_SUBSET: Optional[List[StrictInt]] = Field(None, alias="is_subset")

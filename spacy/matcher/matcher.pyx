@@ -131,7 +131,7 @@ cdef class Matcher:
         for pattern in patterns:
             try:
                 specs = _preprocess_pattern(pattern, self.vocab,
-                    self._extensions, self._extra_predicates)
+                    self._extensions, self._extra_predicates, self.fuzzy)
                 self.patterns.push_back(init_pattern(self.mem, key, specs))
                 for spec in specs:
                     for attr, _ in spec[1]:
@@ -766,7 +766,7 @@ cdef attr_t get_ent_id(const TokenPatternC* pattern) nogil:
     return id_attr.value
 
 
-def _preprocess_pattern(token_specs, vocab, extensions_table, extra_predicates):
+def _preprocess_pattern(token_specs, vocab, extensions_table, extra_predicates, fuzzy):
     """This function interprets the pattern, converting the various bits of
     syntactic sugar before we compile it into a struct with init_pattern.
 
@@ -793,7 +793,7 @@ def _preprocess_pattern(token_specs, vocab, extensions_table, extra_predicates):
         ops = _get_operators(spec)
         attr_values = _get_attr_values(spec, string_store)
         extensions = _get_extensions(spec, string_store, extensions_table)
-        predicates = _get_extra_predicates(spec, extra_predicates, vocab)
+        predicates = _get_extra_predicates(spec, extra_predicates, vocab, fuzzy)
         for op in ops:
             tokens.append((op, list(attr_values), list(extensions), list(predicates), token_idx))
     return tokens
@@ -838,10 +838,32 @@ def _get_attr_values(spec, string_store):
 # These predicate helper classes are used to match the REGEX, IN, >= etc
 # extensions to the matcher introduced in #3173.
 
+class _FuzzyPredicate:
+    operators = ("FUZZY",)
+
+    def __init__(self, i, attr, value, predicate, is_extension=False, vocab=None, fuzzy=None):
+        self.i = i
+        self.attr = attr
+        self.value = value
+        self.predicate = predicate
+        self.is_extension = is_extension
+        self.fuzzy = fuzzy
+        self.key = (attr, self.predicate, srsly.json_dumps(value, sort_keys=True))
+        if self.predicate not in self.operators:
+            raise ValueError(Errors.E126.format(good=self.operators, bad=self.predicate))
+
+    def __call__(self, Token token):
+        if self.is_extension:
+            value = token._.get(self.attr)
+        else:
+            value = token.vocab.strings[get_token_attr_for_matcher(token.c, self.attr)]
+        return bool(fuzz_cpp.ratio(self.value, value) >= self.fuzzy)
+
+
 class _RegexPredicate:
     operators = ("REGEX",)
 
-    def __init__(self, i, attr, value, predicate, is_extension=False, vocab=None):
+    def __init__(self, i, attr, value, predicate, is_extension=False, vocab=None, fuzzy=None):
         self.i = i
         self.attr = attr
         self.value = re.compile(value)
@@ -862,7 +884,7 @@ class _RegexPredicate:
 class _SetPredicate:
     operators = ("IN", "NOT_IN", "IS_SUBSET", "IS_SUPERSET", "INTERSECTS")
 
-    def __init__(self, i, attr, value, predicate, is_extension=False, vocab=None):
+    def __init__(self, i, attr, value, predicate, is_extension=False, vocab=None, fuzzy=None):
         self.i = i
         self.attr = attr
         self.vocab = vocab
@@ -894,9 +916,9 @@ class _SetPredicate:
                 else:
                     value = set(get_string_id(v) for v in value)
         if self.predicate == "IN":
-            return value in self.value
+            return value in self.value # handle fuzzy
         elif self.predicate == "NOT_IN":
-            return value not in self.value
+            return value not in self.value # handle fuzzy
         elif self.predicate == "IS_SUBSET":
             return value <= self.value
         elif self.predicate == "IS_SUPERSET":
@@ -940,8 +962,9 @@ class _ComparisonPredicate:
             return value < self.value
 
 
-def _get_extra_predicates(spec, extra_predicates, vocab):
+def _get_extra_predicates(spec, extra_predicates, vocab, fuzzy):
     predicate_types = {
+        "FUZZY": _FuzzyPredicate,
         "REGEX": _RegexPredicate,
         "IN": _SetPredicate,
         "NOT_IN": _SetPredicate,
@@ -975,7 +998,7 @@ def _get_extra_predicates(spec, extra_predicates, vocab):
             value_with_upper_keys = {k.upper(): v for k, v in value.items()}
             for type_, cls in predicate_types.items():
                 if type_ in value_with_upper_keys:
-                    predicate = cls(len(extra_predicates), attr, value_with_upper_keys[type_], type_, vocab=vocab)
+                    predicate = cls(len(extra_predicates), attr, value_with_upper_keys[type_], type_, vocab=vocab, fuzzy=fuzzy)
                     # Don't create a redundant predicates.
                     # This helps with efficiency, as we're caching the results.
                     if predicate.key in seen_predicates:
