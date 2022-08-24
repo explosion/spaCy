@@ -19,6 +19,7 @@ pydantic>=1.7.4,!=1.8,!=1.8.1,<1.10.0
 jinja2
 langcodes>=3.2.0,<4.0.0
 rapidfuzz>=2.4.0,<3.0.0
+rapidfuzz_capi>=1.0.5,<2.0.0
 # Official Python utilities
 setuptools
 packaging>=20.0

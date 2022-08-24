@@ -11,6 +11,7 @@ from Cython.Build import cythonize
 from Cython.Compiler import Options
 import os
 import subprocess
+import rapidfuzz_capi
 
 
 ROOT = Path(__file__).parent
@@ -202,6 +203,7 @@ def setup_package():
 
     include_dirs = [
         numpy.get_include(),
+        rapidfuzz_capi.get_include(),
         get_python_inc(plat_specific=True),
     ]
     ext_modules = []
