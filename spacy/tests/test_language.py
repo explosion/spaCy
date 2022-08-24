@@ -659,3 +659,14 @@ def test_multiprocessing_gpu_warning(nlp2, texts):
             # Trigger multi-processing.
             for _ in docs:
                 pass
+
+
+def test_dot_in_factory_names(nlp):
+    Language.component("my_evil_component", func=evil_component)
+    nlp.add_pipe("my_evil_component")
+
+    with pytest.raises(ValueError, match="not permitted"):
+        Language.component("my.evil.component.v1", func=evil_component)
+
+    with pytest.raises(ValueError, match="not permitted"):
+        Language.factory("my.evil.component.v1", func=evil_component)

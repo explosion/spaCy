@@ -1,4 +1,5 @@
 import pytest
+import warnings
 import srsly
 from mock import Mock
 
@@ -344,13 +345,13 @@ def test_phrase_matcher_validation(en_vocab):
         matcher.add("TEST1", [doc1])
     with pytest.warns(UserWarning):
         matcher.add("TEST2", [doc2])
-    with pytest.warns(None) as record:
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
         matcher.add("TEST3", [doc3])
-        assert not record.list
     matcher = PhraseMatcher(en_vocab, attr="POS", validate=True)
-    with pytest.warns(None) as record:
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
         matcher.add("TEST4", [doc2])
-        assert not record.list
 
 
 def test_attr_validation(en_vocab):
