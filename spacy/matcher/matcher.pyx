@@ -110,9 +110,9 @@ cdef class Matcher:
         """
         errors = {}
         if on_match is not None and not hasattr(on_match, "__call__"):
-            raise ValueError(Errors.E171.format(arg_type=type(on_match)))
-        if patterns is None or not isinstance(patterns, List):  # old API
-            raise ValueError(Errors.E948.format(arg_type=type(patterns)))
+            raise ValueError(Errors.E171.format(name="Matcher", arg_type=type(on_match)))
+        if patterns is None or not isinstance(patterns, List):
+            raise ValueError(Errors.E948.format(name="Matcher", arg_type=type(patterns)))
         if greedy is not None and greedy not in ["FIRST", "LONGEST"]:
             raise ValueError(Errors.E947.format(expected=["FIRST", "LONGEST"], arg=greedy))
         for i, pattern in enumerate(patterns):

@@ -165,9 +165,9 @@ cdef class DependencyMatcher:
         on_match (callable): Optional callback executed on match.
         """
         if on_match is not None and not hasattr(on_match, "__call__"):
-            raise ValueError(Errors.E171.format(arg_type=type(on_match)))
-        if patterns is None or not isinstance(patterns, List):  # old API
-            raise ValueError(Errors.E948.format(arg_type=type(patterns)))
+            raise ValueError(Errors.E171.format(name="DependencyMatcher", arg_type=type(on_match)))
+        if patterns is None or not isinstance(patterns, List):
+            raise ValueError(Errors.E948.format(name="DependencyMatcher", arg_type=type(patterns)))
         for pattern in patterns:
             if len(pattern) == 0:
                 raise ValueError(Errors.E012.format(key=key))

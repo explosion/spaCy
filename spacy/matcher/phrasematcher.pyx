@@ -1,4 +1,5 @@
 # cython: infer_types=True, profile=True
+from typing import List
 from libc.stdint cimport uintptr_t
 from preshed.maps cimport map_init, map_set, map_get, map_clear, map_iter
 
@@ -155,26 +156,24 @@ cdef class PhraseMatcher:
         del self._callbacks[key]
         del self._docs[key]
 
-    def add(self, key, docs, *_docs, on_match=None):
+    def add(self, key, docs, *, on_match=None):
         """Add a match-rule to the phrase-matcher. A match-rule consists of: an ID
-        key, an on_match callback, and one or more patterns.
-
-        Since spaCy v2.2.2, PhraseMatcher.add takes a list of patterns as the
-        second argument, with the on_match callback as an optional keyword
-        argument.
+        key, a list of one or more patterns, and (optionally) an on_match callback.
 
         key (str): The match ID.
         docs (list): List of `Doc` objects representing match patterns.
         on_match (callable): Callback executed on match.
-        *_docs (Doc): For backwards compatibility: list of patterns to add
-            as variable arguments. Will be ignored if a list of patterns is
-            provided as the second argument.
 
         DOCS: https://spacy.io/api/phrasematcher#add
         """
-        if docs is None or hasattr(docs, "__call__"):  # old API
-            on_match = docs
-            docs = _docs
+        # TODO we should need only one of the first two checks here
+        if docs and isinstance(docs, Doc):
+            raise ValueError(Errors.E179.format(key=key))
+        # XXX This fails in deserialization because docs are a set
+        if docs is None or not isinstance(docs, List):
+            raise ValueError(Errors.E948.format(name="PhraseMatcher", arg_type=type(docs)))
+        if on_match is not None and not hasattr(on_match, "__call__"):
+            raise ValueError(Errors.E171.format(name="PhraseMatcher", arg_type=type(on_match)))
 
         _ = self.vocab[key]
         self._callbacks[key] = on_match
@@ -184,8 +183,6 @@ cdef class PhraseMatcher:
         cdef MapStruct* internal_node
         cdef void* result
 
-        if isinstance(docs, Doc):
-            raise ValueError(Errors.E179.format(key=key))
         for doc in docs:
             if len(doc) == 0:
                 continue
@@ -345,6 +342,8 @@ def unpickle_matcher(vocab, docs, callbacks, attr):
     matcher = PhraseMatcher(vocab, attr=attr)
     for key, specs in docs.items():
         callback = callbacks.get(key, None)
+        # TODO is this correct?
+        specs = list(specs)
         matcher.add(key, specs, on_match=callback)
     return matcher
 
