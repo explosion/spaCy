@@ -95,7 +95,7 @@ def make_spancat(
     spans_key (str): Key of the doc.spans dict to save the spans under. During
         initialization and training, the component will look for spans on the
         reference document under the same key.
-    negative_weight (optional[float]): Multiplier for the loss terms.
+    negative_weight (Optional[float]): Multiplier for the loss terms.
         Can be used to down weigh the negative samples if there are too many.
     allow_overlap (Optional[bool]): If True the data is assumed to
         contain overlapping spans.
@@ -133,9 +133,11 @@ class Ranges:
         return False
 
 
+# TODO: Documentation
 class SpanCategorizerExclusive(TrainablePipe):
     """Pipeline component to label spans of text.
-    DOCS: https://spacy.io/api/spancategorizer
+
+    DOCS: https://spacy.io/api/spancategorizerexclusive
     """
 
     def __init__(
@@ -159,14 +161,15 @@ class SpanCategorizerExclusive(TrainablePipe):
             During initialization and training, the component will look for
             spans on the reference document under the same key. Defaults to
             `"spans"`.
-        negative_weight (optional[float]): Multiplier for the loss terms.
+        negative_weight (Optional[float]): Multiplier for the loss terms.
             Can be used to down weigh the negative samples if there are too many.
         scorer (Optional[Callable]): The scoring method. Defaults to
+            Scorer.score_spans for the Doc.spans[spans_key] with overlapping
+            spans allowed.
         allow_overlap (Optional[bool]): If True the data is assumed to
-            contains overlapping spans.
-        Scorer.score_spans for the Doc.spans[spans_key] with overlapping
-        spans allowed.
-        DOCS: https://spacy.io/api/spancategorizer#init
+            contain overlapping spans.
+
+        DOCS: https://spacy.io/api/spancategorizerexclusive#init
         """
         self.cfg = {
             "labels": [],
@@ -190,9 +193,11 @@ class SpanCategorizerExclusive(TrainablePipe):
 
     def add_label(self, label: str) -> int:
         """Add a new label to the pipe.
+
         label (str): The label to add.
         RETURNS (int): 0 if label is already present, otherwise 1.
-        DOCS: https://spacy.io/api/spancategorizer#add_label
+
+        DOCS: https://spacy.io/api/spancategorizerexclusive#add_label
         """
         if not isinstance(label, str):
             raise ValueError(Errors.E187)
@@ -206,14 +211,16 @@ class SpanCategorizerExclusive(TrainablePipe):
     @property
     def labels(self) -> Tuple[str]:
         """RETURNS (Tuple[str]): The labels currently added to the component.
-        DOCS: https://spacy.io/api/spancategorizer#labels
+
+        DOCS: https://spacy.io/api/spancategorizerexclusive#labels
         """
         return tuple(self.cfg["labels"])  # type: ignore
 
     @property
     def label_data(self) -> List[str]:
         """RETURNS (List[str]): Information about the component's labels.
-        DOCS: https://spacy.io/api/spancategorizer#label_data
+
+        DOCS: https://spacy.io/api/spancategorizerexclusive#label_data
         """
         return list(self.labels)
 
@@ -233,9 +240,11 @@ class SpanCategorizerExclusive(TrainablePipe):
 
     def predict(self, docs: Iterable[Doc]):
         """Apply the pipeline's model to a batch of docs, without modifying them.
+
         docs (Iterable[Doc]): The documents to predict.
         RETURNS: The models prediction for each document.
-        DOCS: https://spacy.io/api/spancategorizer#predict
+
+        DOCS: https://spacy.io/api/spancategorizerexclusive#predict
         """
         indices = self.suggester(docs, ops=self.model.ops)
         scores = self.model.predict((docs, indices))  # type: ignore
@@ -246,10 +255,12 @@ class SpanCategorizerExclusive(TrainablePipe):
     ) -> None:
         """Use the spancat suggester to add a list of span candidates to a
         list of docs. Intended to be used for debugging purposes.
+
         docs (Iterable[Doc]): The documents to modify.
         candidates_key (str): Key of the Doc.spans dict to save the
             candidate spans under.
-        DOCS: https://spacy.io/api/spancategorizer#set_candidates
+
+        DOCS: https://spacy.io/api/spancategorizerexclusive#set_candidates
         """
         suggester_output = self.suggester(docs, ops=self.model.ops)
 
@@ -260,9 +271,11 @@ class SpanCategorizerExclusive(TrainablePipe):
 
     def set_annotations(self, docs: Iterable[Doc], indices_scores) -> None:
         """Modify a batch of Doc objects, using pre-computed scores.
+
         docs (Iterable[Doc]): The documents to modify.
         scores: The scores to set, produced by SpanCategorizer.predict.
-        DOCS: https://spacy.io/api/spancategorizer#set_annotations
+
+        DOCS: https://spacy.io/api/spancategorizerexclusive#set_annotations
         """
         allow_overlap = self.cfg["allow_overlap"]
         labels = self.labels
@@ -290,12 +303,14 @@ class SpanCategorizerExclusive(TrainablePipe):
         """Learn from a batch of documents and gold-standard information,
         updating the pipe's model. Delegates to predict and get_loss.
         examples (Iterable[Example]): A batch of Example objects.
+
         drop (float): The dropout rate.
         sgd (thinc.api.Optimizer): The optimizer.
         losses (Dict[str, float]): Optional record of the loss during training.
             Updated using the component name as the key.
         RETURNS (Dict[str, float]): The updated losses dictionary.
-        DOCS: https://spacy.io/api/spancategorizer#update
+
+        DOCS: https://spacy.io/api/spancategorizerexclusive#update
         """
         if losses is None:
             losses = {}
@@ -323,10 +338,12 @@ class SpanCategorizerExclusive(TrainablePipe):
     ) -> Tuple[float, float]:
         """Find the loss and gradient of loss for the batch of documents and
         their predicted scores.
+
         examples (Iterable[Examples]): The batch of examples.
         spans_scores: Scores representing the model's predictions.
         RETURNS (Tuple[float, float]): The loss and the gradient.
-        DOCS: https://spacy.io/api/spancategorizer#get_loss
+
+        DOCS: https://spacy.io/api/spancategorizerexclusive#get_loss
         """
         spans, scores = spans_scores
         spans = Ragged(
