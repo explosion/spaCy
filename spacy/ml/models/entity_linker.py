@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Optional, Callable, Iterable, List, Tuple, Iterator, Union
+from typing import Optional, Callable, Iterable, List, Tuple, Union
 from thinc.types import Floats2d
 from thinc.api import chain, list2ragged, reduce_mean, residual
 from thinc.api import Model, Maxout, Linear, tuplify, Ragged
@@ -81,7 +81,7 @@ def span_maker_forward(model, docs: List[Doc], is_train) -> Tuple[Ragged, Callab
 @registry.misc("spacy.KBFromFile.v1")
 def load_kb(
     kb_path: Path,
-) -> Callable[[Vocab], InMemoryLookupKB]:
+) -> Callable[[Vocab], KnowledgeBase]:
     def kb_from_file(vocab: Vocab):
         kb = InMemoryLookupKB(vocab, entity_vector_length=1)
         kb.from_disk(kb_path)
@@ -93,7 +93,7 @@ def load_kb(
 @registry.misc("spacy.EmptyKB.v1")
 def empty_kb(
     entity_vector_length: int,
-) -> Callable[[Vocab], InMemoryLookupKB]:
+) -> Callable[[Vocab], KnowledgeBase]:
     def empty_kb_factory(vocab: Vocab):
         return InMemoryLookupKB(vocab=vocab, entity_vector_length=entity_vector_length)
 
@@ -102,13 +102,13 @@ def empty_kb(
 
 @registry.misc("spacy.CandidateGenerator.v1")
 def create_candidates() -> Callable[
-    [KnowledgeBase, Union[Span, str]], Iterator[Candidate]
+    [KnowledgeBase, Union[Span, str]], Iterable[Candidate]
 ]:
     return get_candidates
 
 
 @registry.misc("spacy.CandidateBatchGenerator.v1")
 def create_candidates_batch() -> Callable[
-    [KnowledgeBase, Iterable[Union[Span, str]]], Iterable[Iterator[Candidate]]
+    [KnowledgeBase, Iterable[Union[Span, str]]], Iterable[Iterable[Candidate]]
 ]:
     return get_candidates_batch

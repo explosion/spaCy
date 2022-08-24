@@ -1,4 +1,4 @@
-from typing import Optional, Iterable, Callable, Dict, Union, List, Any, Type
+from typing import Optional, Iterable, Callable, Dict, Union, List, Any
 from thinc.types import Floats2d
 from pathlib import Path
 from itertools import islice
@@ -246,13 +246,7 @@ class EntityLinker(TrainablePipe):
         if candidates_batch_size < 1:
             raise ValueError(Errors.E1044)
 
-    def set_kb(
-        self,
-        kb_loader: Union[
-            Callable[[Vocab, Type[KnowledgeBase]], KnowledgeBase],
-            Callable[[Vocab], KnowledgeBase],
-        ],
-    ):
+    def set_kb(self, kb_loader: Callable[[Vocab], KnowledgeBase]):
         """Define the KB of this pipe by providing a function that will
         create it using this object's vocab."""
         if not callable(kb_loader):
