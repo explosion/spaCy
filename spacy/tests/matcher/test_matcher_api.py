@@ -166,6 +166,22 @@ def test_matcher_match_fuzz_none(en_vocab):
     assert matcher(doc) == []
 
 
+def test_matcher_match_fuzz_pred(en_vocab):
+    rules = {
+        "JS": [[{"ORTH": {"FUZZY": "JavaScript"}}]],
+        "GoogleNow": [[{"ORTH": {"FUZZY": "Google"}}, {"ORTH": "Now"}]],
+        "Java": [[{"LOWER": "java"}]],
+    }
+    matcher = Matcher(en_vocab, fuzzy=80)
+    for key, patterns in rules.items():
+        matcher.add(key, patterns)
+
+    words = ["I", "like", "Goggle", "Now", "and", "JavaScrpt", "best"]
+    doc = Doc(matcher.vocab, words=words)
+    assert matcher(doc) == []
+
+
+
 def test_matcher_empty_dict(en_vocab):
     """Test matcher allows empty token specs, meaning match on any token."""
     matcher = Matcher(en_vocab)
