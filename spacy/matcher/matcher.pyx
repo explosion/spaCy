@@ -879,11 +879,8 @@ class _SetPredicate:
         elif self.predicate in ("IS_SUBSET", "IS_SUPERSET", "INTERSECTS"):
             # ensure that all values are enclosed in a set
             if self.attr == MORPH:
-                if isinstance(value, int):
-                    # break up MORPH into individual Feat=Val values
-                    value = set((get_string_id(v) for v in MorphAnalysis.from_id(self.vocab, value)))
-                else:
-                    return False
+                # break up MORPH into individual Feat=Val values
+                value = set(get_string_id(v) for v in MorphAnalysis.from_id(self.vocab, value))
             elif isinstance(value, (str, int)):
                 value = set((get_string_id(value),))
             elif isinstance(value, Iterable) and all(isinstance(v, (str, int)) for v in value):
