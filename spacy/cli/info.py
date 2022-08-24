@@ -19,13 +19,16 @@ def info_cli(
     markdown: bool = Opt(False, "--markdown", "-md", help="Generate Markdown for GitHub issues"),
     silent: bool = Opt(False, "--silent", "-s", "-S", help="Don't print anything (just return)"),
     exclude: str = Opt("labels", "--exclude", "-e", help="Comma-separated keys to exclude from the print-out"),
-    url: bool = Opt(False, "--url", "-u", help="Print the URL to download the most recent version of the pipeline"),
+    url: bool = Opt(False, "--url", "-u", help="Print the URL to download the most recent compatible version of the pipeline"),
     # fmt: on
 ):
     """
     Print info about spaCy installation. If a pipeline is specified as an argument,
     print its meta information. Flag --markdown prints details in Markdown for easy
-    copy-pasting to GitHub issues. Flag --url prints the download URL of the pipeline.
+    copy-pasting to GitHub issues.
+
+    Flag --url prints only the download URL of the most recent comptaible
+    version of the pipeline.
 
     DOCS: https://spacy.io/api/cli#info
     """
