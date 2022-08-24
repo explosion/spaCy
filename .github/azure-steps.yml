@@ -54,12 +54,12 @@ steps:
     condition: eq(${{ parameters.gpu }}, true)
 
   - script: |
-      ${{ parameters.prefix }} python -m pytest --pyargs spacy
+      ${{ parameters.prefix }} python -m pytest --pyargs spacy -W error
     displayName: "Run CPU tests"
     condition: eq(${{ parameters.gpu }}, false)
 
   - script: |
-      ${{ parameters.prefix }} python -m pytest --pyargs spacy -p spacy.tests.enable_gpu
+      ${{ parameters.prefix }} python -m pytest --pyargs spacy -W error -p spacy.tests.enable_gpu
     displayName: "Run GPU tests"
     condition: eq(${{ parameters.gpu }}, true)
 

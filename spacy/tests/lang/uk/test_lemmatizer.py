@@ -1,4 +1,8 @@
+import pytest
 from spacy.tokens import Doc
+
+
+pytestmark = pytest.mark.filterwarnings("ignore::DeprecationWarning")
 
 
 def test_uk_lemmatizer(uk_lemmatizer):

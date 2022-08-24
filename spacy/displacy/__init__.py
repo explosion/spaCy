@@ -123,7 +123,8 @@ def app(environ, start_response):
 def parse_deps(orig_doc: Doc, options: Dict[str, Any] = {}) -> Dict[str, Any]:
     """Generate dependency parse in {'words': [], 'arcs': []} format.
 
-    doc (Doc): Document do parse.
+    orig_doc (Doc): Document to parse.
+    options (Dict[str, Any]): Dependency parse specific visualisation options.
     RETURNS (dict): Generated dependency parse keyed by words and arcs.
     """
     doc = Doc(orig_doc.vocab).from_bytes(
@@ -209,7 +210,7 @@ def parse_ents(doc: Doc, options: Dict[str, Any] = {}) -> Dict[str, Any]:
 
 
 def parse_spans(doc: Doc, options: Dict[str, Any] = {}) -> Dict[str, Any]:
-    """Generate spans in [{start: i, end: i, label: 'label'}] format.
+    """Generate spans in [{start_token: i, end_token: i, label: 'label'}] format.
 
     doc (Doc): Document to parse.
     options (Dict[str, any]): Span-specific visualisation options.
