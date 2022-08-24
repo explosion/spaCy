@@ -27,7 +27,7 @@ def info_cli(
     print its meta information. Flag --markdown prints details in Markdown for easy
     copy-pasting to GitHub issues.
 
-    Flag --url prints only the download URL of the most recent comptaible
+    Flag --url prints only the download URL of the most recent compatible
     version of the pipeline.
 
     DOCS: https://spacy.io/api/cli#info
