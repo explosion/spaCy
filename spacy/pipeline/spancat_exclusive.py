@@ -69,5 +69,10 @@ class Suggester(Protocol):
         "scorer": {"@scorers": "spacy.spancat_scorer.v1"},
     },
 )
-def make_spancat():
+def make_spancat(
+    nlp: Language,
+    name: str,
+    suggester: Suggester,
+    model: Model[Tuple[List[Doc], Ragged], Floats2d],
+):
     pass
