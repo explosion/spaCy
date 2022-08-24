@@ -240,7 +240,7 @@ browser. Will run a simple web server.
 | Name      | Description                                                                                                                                                       |
 | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `docs`    | Document(s) or span(s) to visualize. ~~Union[Iterable[Union[Doc, Span]], Doc, Span]~~                                                                             |
-| `style`   | Visualization style, `"dep"`, `"ent"` or `"span"` <Tag variant="new">3.3</Tag>. Defaults to `"dep"`. ~~str~~                                                                                             |
+| `style`   | Visualization style, `"dep"`, `"ent"` or `"span"` <Tag variant="new">3.3</Tag>. Defaults to `"dep"`. ~~str~~                                                      |
 | `page`    | Render markup as full HTML page. Defaults to `True`. ~~bool~~                                                                                                     |
 | `minify`  | Minify HTML markup. Defaults to `False`. ~~bool~~                                                                                                                 |
 | `options` | [Visualizer-specific options](#displacy_options), e.g. colors. ~~Dict[str, Any]~~                                                                                 |
@@ -265,13 +265,80 @@ Render a dependency parse tree or named entity visualization.
 | Name        | Description                                                                                                                                                                            |
 | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `docs`      | Document(s) or span(s) to visualize. ~~Union[Iterable[Union[Doc, Span, dict]], Doc, Span, dict]~~                                                                                      |
-| `style`     | Visualization style,`"dep"`, `"ent"` or `"span"` <Tag variant="new">3.3</Tag>. Defaults to `"dep"`. ~~str~~                                                                                                                  |
+| `style`     | Visualization style, `"dep"`, `"ent"` or `"span"` <Tag variant="new">3.3</Tag>. Defaults to `"dep"`. ~~str~~                                                                           |
 | `page`      | Render markup as full HTML page. Defaults to `True`. ~~bool~~                                                                                                                          |
 | `minify`    | Minify HTML markup. Defaults to `False`. ~~bool~~                                                                                                                                      |
 | `options`   | [Visualizer-specific options](#displacy_options), e.g. colors. ~~Dict[str, Any]~~                                                                                                      |
 | `manual`    | Don't parse `Doc` and instead expect a dict or list of dicts. [See here](/usage/visualizers#manual-usage) for formats and examples. Defaults to `False`. ~~bool~~                      |
 | `jupyter`   | Explicitly enable or disable "[Jupyter](http://jupyter.org/) mode" to return markup ready to be rendered in a notebook. Detected automatically if `None` (default). ~~Optional[bool]~~ |
 | **RETURNS** | The rendered HTML markup. ~~str~~                                                                                                                                                      |
+
+### displacy.parse_deps {#displacy.parse_deps tag="method" new="2"}
+
+Generate dependency parse in `{'words': [], 'arcs': []}` format.
+For use with the `manual=True` argument in `displacy.render`.
+
+> #### Example
+>
+> ```python
+> import spacy
+> from spacy import displacy
+> nlp = spacy.load("en_core_web_sm")
+> doc = nlp("This is a sentence.")
+> deps_parse = displacy.parse_deps(doc)
+> html = displacy.render(deps_parse, style="dep", manual=True)
+> ```
+
+| Name        | Description                                                         |
+| ----------- | ------------------------------------------------------------------- |
+| `orig_doc`  | Doc to parse dependencies. ~~Doc~~                                  |
+| `options`   | Dependency parse specific visualisation options. ~~Dict[str, Any]~~ |
+| **RETURNS** | Generated dependency parse keyed by words and arcs. ~~dict~~        |
+
+### displacy.parse_ents {#displacy.parse_ents tag="method" new="2"}
+
+Generate named entities in `[{start: i, end: i, label: 'label'}]` format.
+For use with the `manual=True` argument in `displacy.render`.
+
+> #### Example
+>
+> ```python
+> import spacy
+> from spacy import displacy
+> nlp = spacy.load("en_core_web_sm")
+> doc = nlp("But Google is starting from behind.")
+> ents_parse = displacy.parse_ents(doc)
+> html = displacy.render(ents_parse, style="ent", manual=True)
+> ```
+
+| Name        | Description                                                         |
+| ----------- | ------------------------------------------------------------------- |
+| `doc`       | Doc to parse entities. ~~Doc~~                                      |
+| `options`   | NER-specific visualisation options. ~~Dict[str, Any]~~              |
+| **RETURNS** | Generated entities keyed by text (original text) and ents. ~~dict~~ |
+
+### displacy.parse_spans {#displacy.parse_spans tag="method" new="2"}
+
+Generate spans in `[{start_token: i, end_token: i, label: 'label'}]` format.
+For use with the `manual=True` argument in `displacy.render`.
+
+> #### Example
+>
+> ```python
+> import spacy
+> from spacy import displacy
+> nlp = spacy.load("en_core_web_sm")
+> doc = nlp("But Google is starting from behind.")
+> doc.spans['orgs'] = [doc[1:2]]
+> ents_parse = displacy.parse_spans(doc, options={"spans_key" : "orgs"})
+> html = displacy.render(ents_parse, style="span", manual=True)
+> ```
+
+| Name        | Description                                                         |
+| ----------- | ------------------------------------------------------------------- |
+| `doc`       | Doc to parse entities. ~~Doc~~                                      |
+| `options`   | Span-specific visualisation options. ~~Dict[str, Any]~~             |
+| **RETURNS** | Generated entities keyed by text (original text) and ents. ~~dict~~ |
 
 ### Visualizer options {#displacy_options}
 

@@ -3,7 +3,7 @@ from ..punctuation import TOKENIZER_INFIXES as BASE_TOKENIZER_INFIXES
 
 
 _infixes = (
-    ["·", "ㆍ", "\(", "\)"]
+    ["·", "ㆍ", r"\(", r"\)"]
     + [r"(?<=[0-9])~(?=[0-9-])"]
     + LIST_QUOTES
     + BASE_TOKENIZER_INFIXES

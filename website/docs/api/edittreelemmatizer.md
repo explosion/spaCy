@@ -141,10 +141,10 @@ and [`pipe`](/api/edittreelemmatizer#pipe) delegate to the
 ## EditTreeLemmatizer.initialize {#initialize tag="method" new="3"}
 
 Initialize the component for training. `get_examples` should be a function that
-returns an iterable of [`Example`](/api/example) objects. The data examples are
-used to **initialize the model** of the component and can either be the full
-training data or a representative sample. Initialization includes validating the
-network,
+returns an iterable of [`Example`](/api/example) objects. **At least one example
+should be supplied.** The data examples are used to **initialize the model** of
+the component and can either be the full training data or a representative
+sample. Initialization includes validating the network,
 [inferring missing shapes](https://thinc.ai/docs/usage-models#validation) and
 setting up the label scheme based on the data. This method is typically called
 by [`Language.initialize`](/api/language#initialize) and lets you customize
@@ -156,7 +156,7 @@ config.
 >
 > ```python
 > lemmatizer = nlp.add_pipe("trainable_lemmatizer", name="lemmatizer")
-> lemmatizer.initialize(lambda: [], nlp=nlp)
+> lemmatizer.initialize(lambda: examples, nlp=nlp)
 > ```
 >
 > ```ini
@@ -170,7 +170,7 @@ config.
 
 | Name           | Description                                                                                                                                                                                                                                                                                                                                                                                                |
 | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `get_examples` | Function that returns gold-standard annotations in the form of [`Example`](/api/example) objects. ~~Callable[[], Iterable[Example]]~~                                                                                                                                                                                                                                                                      |
+| `get_examples` | Function that returns gold-standard annotations in the form of [`Example`](/api/example) objects. Must contain at least one `Example`. ~~Callable[[], Iterable[Example]]~~                                                                                                                                                                                                                                 |
 | _keyword-only_ |                                                                                                                                                                                                                                                                                                                                                                                                            |
 | `nlp`          | The current `nlp` object. Defaults to `None`. ~~Optional[Language]~~                                                                                                                                                                                                                                                                                                                                       |
 | `labels`       | The label information to add to the component, as provided by the [`label_data`](#label_data) property after initialization. To generate a reusable JSON file from your data, you should run the [`init labels`](/api/cli#init-labels) command. If no labels are provided, the `get_examples` callback is used to extract the labels from the data, which may be a lot slower. ~~Optional[Iterable[str]]~~ |
