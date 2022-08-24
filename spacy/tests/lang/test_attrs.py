@@ -26,14 +26,6 @@ def test_attrs_idempotence(text):
     assert intify_attrs(int_attrs) == {LEMMA: 10, IS_ALPHA: True}
 
 
-@pytest.mark.parametrize("text", ["dog"])
-def test_attrs_do_deprecated(text):
-    int_attrs = intify_attrs(
-        {"F": text, "is_alpha": True}, strings_map={text: 10}, _do_deprecated=True
-    )
-    assert int_attrs == {ORTH: 10, IS_ALPHA: True}
-
-
 def test_attrs_ent_iob_intify():
     int_attrs = intify_attrs({"ENT_IOB": ""})
     assert int_attrs == {ENT_IOB: 0}

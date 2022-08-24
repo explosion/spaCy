@@ -16,8 +16,8 @@ def setup_default_warnings():
     filter_warning("ignore", error_msg="numpy.dtype size changed")  # noqa
     filter_warning("ignore", error_msg="numpy.ufunc size changed")  # noqa
 
-    # warn about entity_ruler & matcher having no patterns only once
-    for pipe in ["matcher", "entity_ruler"]:
+    # warn about entity_ruler, span_ruler & matcher having no patterns only once
+    for pipe in ["matcher", "entity_ruler", "span_ruler"]:
         filter_warning("once", error_msg=Warnings.W036.format(name=pipe))
 
     # warn once about lemmatizer without required POS
@@ -389,7 +389,7 @@ class Errors(metaclass=ErrorsWithCodes):
             "consider using doc.spans instead.")
     E106 = ("Can't find `doc._.{attr}` attribute specified in the underscore "
             "settings: {opts}")
-    E107 = ("Value of `doc._.{attr}` is not JSON-serializable: {value}")
+    E107 = ("Value of custom attribute `{attr}` is not JSON-serializable: {value}")
     E109 = ("Component '{name}' could not be run. Did you forget to "
             "call `initialize()`?")
     E110 = ("Invalid displaCy render wrapper. Expected callable, got: {obj}")
@@ -535,11 +535,12 @@ class Errors(metaclass=ErrorsWithCodes):
     E198 = ("Unable to return {n} most similar vectors for the current vectors "
             "table, which contains {n_rows} vectors.")
     E199 = ("Unable to merge 0-length span at `doc[{start}:{end}]`.")
-    E200 = ("Can't yet set {attr} from Span. Vote for this feature on the "
-            "issue tracker: http://github.com/explosion/spaCy/issues")
+    E200 = ("Can't set {attr} from Span.")
     E202 = ("Unsupported {name} mode '{mode}'. Supported modes: {modes}.")
 
     # New errors added in v3.x
+    E853 = ("Unsupported component factory name '{name}'. The character '.' is "
+            "not permitted in factory names.")
     E854 = ("Unable to set doc.ents. Check that the 'ents_filter' does not "
             "permit overlapping spans.")
     E855 = ("Invalid {obj}: {obj} is not from the same doc.")
