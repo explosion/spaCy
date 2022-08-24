@@ -1,7 +1,7 @@
 from typing import Optional, Dict, Any, Union, List
 from pathlib import Path
 from wasabi import msg, table
-from thinc.config import Config
+from thinc.api import Config
 from thinc.config import VARIABLE_RE
 import typer
 

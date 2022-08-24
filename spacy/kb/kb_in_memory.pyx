@@ -17,12 +17,8 @@ from ..errors import Errors, Warnings
 from .. import util
 from ..util import SimpleFrozenList, ensure_path
 from ..vocab cimport Vocab
-from .kb cimport KnowledgeBase, Candidate as _Candidate
-from .kb import get_candidates as _get_candidates
-
-# For backwards compatibility.
-Candidate = _Candidate
-get_candidates = _get_candidates
+from .kb cimport KnowledgeBase
+from .candidate import Candidate as Candidate
 
 
 cdef class InMemoryLookupKB(KnowledgeBase):

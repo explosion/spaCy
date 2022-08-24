@@ -6,7 +6,7 @@ from numpy.testing import assert_equal
 from spacy import registry, util
 from spacy.attrs import ENT_KB_ID
 from spacy.compat import pickle
-from spacy.kb.kb_in_memory import Candidate, InMemoryLookupKB, get_candidates
+from spacy.kb import Candidate, InMemoryLookupKB, get_candidates
 from spacy.lang.en import English
 from spacy.ml import load_kb
 from spacy.pipeline import EntityLinker
