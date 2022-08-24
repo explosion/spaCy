@@ -166,12 +166,12 @@ cdef class PhraseMatcher:
 
         DOCS: https://spacy.io/api/phrasematcher#add
         """
-        # TODO we should need only one of the first two checks here
+        # NOTE: in normal usage, `docs` will be a List of Docs. However, it can
+        # also be of type Set[Tuple[attr_t]], which is the type used for
+        # internal storage of patterns. This is used in deserialization, for
+        # example.
         if docs and isinstance(docs, Doc):
             raise ValueError(Errors.E179.format(key=key))
-        # XXX This fails in deserialization because docs are a set
-        if docs is None or not isinstance(docs, List):
-            raise ValueError(Errors.E948.format(name="PhraseMatcher", arg_type=type(docs)))
         if on_match is not None and not hasattr(on_match, "__call__"):
             raise ValueError(Errors.E171.format(name="PhraseMatcher", arg_type=type(on_match)))
 
@@ -207,6 +207,7 @@ cdef class PhraseMatcher:
                     warnings.warn(Warnings.W012.format(key=key, attr=string_attr))
                 keyword = self._convert_to_array(doc)
             else:
+                # The doc here should be a Sequence of attr_ts. This is used when deserializing.
                 keyword = doc
             self._docs[key].add(tuple(keyword))
 
@@ -342,8 +343,6 @@ def unpickle_matcher(vocab, docs, callbacks, attr):
     matcher = PhraseMatcher(vocab, attr=attr)
     for key, specs in docs.items():
         callback = callbacks.get(key, None)
-        # TODO is this correct?
-        specs = list(specs)
         matcher.add(key, specs, on_match=callback)
     return matcher
 
