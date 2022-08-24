@@ -303,7 +303,7 @@ def _process_worker_status_messages(
             for other_cmd_info in (c for c in cmd_infos if c.state.name == "running"):
                 try:
                     os.kill(cast(int, other_cmd_info.pid), SIGTERM)
-                except: # different errors on different OS
+                except ProcessLookupError:
                     # the subprocess the main process is trying to kill could already
                     # have completed, and the message from the worker process notifying
                     # the main process about this could still be in the queue
