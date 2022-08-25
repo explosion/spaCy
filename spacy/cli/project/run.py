@@ -326,28 +326,23 @@ def _validate_requirements(requirements: List[str]) -> Tuple[bool, bool]:
         exist.
     """
 
-    failed_pkgs: List[str] = []
+    failed_pkgs_msgs: List[str] = []
     conflicting_pkgs_msgs: List[str] = []
 
     for req in requirements:
         try:
             pkg_resources.require(req)
-        except pkg_resources.DistributionNotFound:
-            failed_pkgs.append(req)
+        except pkg_resources.DistributionNotFound as dnf:
+            failed_pkgs_msgs.append(dnf.report())
         except pkg_resources.VersionConflict as vc:
             conflicting_pkgs_msgs.append(vc.report())
 
-    if len(failed_pkgs):
+    if len(failed_pkgs_msgs) or len(conflicting_pkgs_msgs):
         msg.warn(
-            f"The following requirements were not found:\n{failed_pkgs}.",
-            "Make sure your Python environment is set up correctly and you installed all requirements specified in "
-            "your project's requirements.txt.",
-        )
-    if len(conflicting_pkgs_msgs):
-        msg.warn(
-            f"The following dependency conflicts were detected:\n{conflicting_pkgs_msgs}",
-            "Make sure your Python environment is set up correctly. Ensure that your project's "
-            "requirements.txt specifies the correct versions for all dependencies.",
+            title="Missing requirements or requirement conflicts detected. Make sure your Python environment is set up "
+            "correctly and you installed all requirements specified in your project's requirements.txt. "
+            "Affected:",
+            text=f"{failed_pkgs_msgs + conflicting_pkgs_msgs}",
         )
 
-    return len(failed_pkgs) > 0, len(conflicting_pkgs_msgs) > 0
+    return len(failed_pkgs_msgs) > 0, len(conflicting_pkgs_msgs) > 0
