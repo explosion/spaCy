@@ -13,7 +13,7 @@ from ..tokens import Doc, Span, SpanGroup
 from ..training import Example, validate_examples
 from ..util import registry
 from ..vocab import Vocab
-from .spancat import spancat_score
+from .spancat import spancat_score, build_ngram_suggester
 from .trainable_pipe import TrainablePipe
 
 
