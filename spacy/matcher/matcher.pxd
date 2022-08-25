@@ -72,6 +72,7 @@ cdef class Matcher:
     cdef readonly Vocab vocab
     cdef public object validate
     cdef public object fuzzy
+    cdef public object fuzzy_attrs
     cdef public object _patterns
     cdef public object _callbacks
     cdef public object _filter
