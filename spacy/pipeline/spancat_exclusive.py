@@ -83,7 +83,7 @@ def make_spancat(
 ) -> "SpanCategorizerExclusive":
     """Create a SpanCategorizerExclusive component. The span categorizer consists of two
     parts: a suggester function that proposes candidate spans, and a labeller
-    model that predicts one or more labels for each span.
+    model that predicts a single label for each span.
 
     suggester (Callable[[Iterable[Doc], Optional[Ops]], Ragged]): A function that suggests spans.
         Spans are returned as a ragged array with two integer columns, for the
