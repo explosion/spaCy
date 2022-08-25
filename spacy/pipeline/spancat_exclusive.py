@@ -18,9 +18,9 @@ from .trainable_pipe import TrainablePipe
 
 
 @registry.layers("spacy.Softmax.v1")
-def build_linear_logistic(nO=None, nI=None) -> Model[Floats2d, Floats2d]:
-    """An output layer for multi-label classification. It uses a linear layer
-    followed by a logistic activation.
+def build_softmax(nO=None, nI=None) -> Model[Floats2d, Floats2d]:
+    """
+    An output layer for softmax classification.
     """
     return Softmax_v2(nI=nI, nO=nO)
 
@@ -376,12 +376,10 @@ class SpanCategorizerExclusive(TrainablePipe):
             offset += spans.lengths[i]
         target = self.model.ops.asarray(target, dtype="f")  # type: ignore
         negative_samples = numpy.nonzero(negative_spans)[0]
-        breakpoint()
         target[negative_samples, self._negative_label] = 1.0
         d_scores = scores - target
         neg_weight = self.cfg["negative_weight"]
-        if neg_weight != 1.0:
-            d_scores[negative_samples] *= neg_weight
+        d_scores[negative_samples] *= neg_weight
         loss = float((d_scores**2).sum())
         return loss, d_scores
 
