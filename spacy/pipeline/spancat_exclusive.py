@@ -27,7 +27,7 @@ def build_linear_logistic(nO=None, nI=None) -> Model[Floats2d, Floats2d]:
 
 spancat_exclusive_default_config = """
 [model]
-@architectures = "spacy.SpanCategorizerExclusive.v1"
+@architectures = "spacy.SpanCategorizer.v1"
 scorer = {"@layers": "spacy.Softmax.v1"}
 
 [model.reducer]
