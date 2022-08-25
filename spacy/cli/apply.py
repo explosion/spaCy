@@ -72,8 +72,8 @@ def _stream_data(
                     sys.exit()
 
 
-@app.command("annotate")
-def annotate_cli(
+@app.command("apply")
+def apply_cli(
     # fmt: off
     model: str = Arg(..., help="Model name or path"),
     data_path: Path = Arg(..., help=path_help, exists=True),
@@ -84,7 +84,7 @@ def annotate_cli(
     n_process: int = Opt(1, "--n-process", "-n", help="Number of processors to use")
 ):
     """
-    Run a trained pipeline over documents.
+    Apply a trained pipeline to documents to get predictions.
     Expects a loadable spaCy pipeline and some data as input.
     The input can be provided multiple formats. It can be a .spacy
     file, a single text file with one document per line or a directory
@@ -94,10 +94,10 @@ def annotate_cli(
     """
     import_code(code_path)
     setup_gpu(use_gpu)
-    annotate(data_path, output, model, batch_size, n_process)
+    apply(data_path, output, model, batch_size, n_process)
 
 
-def annotate(
+def apply(
     data_path: Path,
     output: Path,
     model: str,
