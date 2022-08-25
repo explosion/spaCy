@@ -94,13 +94,15 @@ def annotate_cli(
     """
     import_code(code_path)
     setup_gpu(use_gpu)
-    annotate(data_path, output, model)
+    annotate(data_path, output, model, batch_size, n_process)
 
 
 def annotate(
     data_path: Path,
     output: Path,
-    model: str
+    model: str,
+    batch_size: int,
+    n_process: int
 ):
     data_path = util.ensure_path(data_path)
     output_path = util.ensure_path(output)
@@ -110,7 +112,8 @@ def annotate(
     msg.good(f"Loaded model {model}")
     vocab = nlp.vocab
     docbin = DocBin()
-    for doc in tqdm.tqdm(nlp.pipe(_stream_data(data_path, vocab))):
+    datagen = _stream_data(data_path, vocab)
+    for doc in tqdm.tqdm(nlp.pipe(datagen, batch_size=batch_size, n_process=n_process)):
         docbin.add(doc)
     if output_path.is_dir():
         output_path = output_path / "predictions.spacy"
