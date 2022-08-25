@@ -64,7 +64,7 @@ matched:
 > ```
 
 | OP      | Description                                                            |
-|---------|------------------------------------------------------------------------|
+| ------- | ---------------------------------------------------------------------- |
 | `!`     | Negate the pattern, by requiring it to match exactly 0 times.          |
 | `?`     | Make the pattern optional, by allowing it to match 0 or 1 times.       |
 | `+`     | Require the pattern to match 1 or more times.                          |
@@ -203,20 +203,6 @@ will be overwritten.
 > doc = nlp("HELLO WORLD on Google Maps.")
 > matches = matcher(doc)
 > ```
-
-<Infobox title="Changed in v3.0" variant="warning">
-
-As of spaCy v3.0, `Matcher.add` takes a list of patterns as the second argument
-(instead of a variable number of arguments). The `on_match` callback becomes an
-optional keyword argument.
-
-```diff
-patterns = [[{"TEXT": "Google"}, {"TEXT": "Now"}], [{"TEXT": "GoogleNow"}]]
-- matcher.add("GoogleNow", on_match, *patterns)
-+ matcher.add("GoogleNow", patterns, on_match=on_match)
-```
-
-</Infobox>
 
 | Name                                | Description                                                                                                                                                |
 | ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
