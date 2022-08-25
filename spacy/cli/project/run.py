@@ -343,6 +343,6 @@ def _validate_requirements(requirements: List[str]) -> Tuple[bool, bool]:
             "correctly and you installed all requirements specified in your project's requirements.txt: "
         )
         for pgk_msg in failed_pkgs_msgs + conflicting_pkgs_msgs:
-            print(pgk_msg)
+            msg.text(pgk_msg)
 
     return len(failed_pkgs_msgs) > 0, len(conflicting_pkgs_msgs) > 0
