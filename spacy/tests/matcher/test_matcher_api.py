@@ -6,15 +6,16 @@ from spacy.tokens import Doc, Token, Span
 from ..doc.test_underscore import clean_underscore  # noqa: F401
 
 
+matcher_rules = {
+    "JS": [[{"ORTH": "JavaScript"}]],
+    "GoogleNow": [[{"ORTH": "Google"}, {"ORTH": "Now"}]],
+    "Java": [[{"LOWER": "java"}]],
+}
+
 @pytest.fixture
 def matcher(en_vocab):
-    rules = {
-        "JS": [[{"ORTH": "JavaScript"}]],
-        "GoogleNow": [[{"ORTH": "Google"}, {"ORTH": "Now"}]],
-        "Java": [[{"LOWER": "java"}]],
-    }
     matcher = Matcher(en_vocab)
-    for key, patterns in rules.items():
+    for key, patterns in matcher_rules.items():
         matcher.add(key, patterns)
     return matcher
 
@@ -118,57 +119,58 @@ def test_matcher_match_multi(matcher):
     ]
 
 
+# fuzzy matches on specific attributes
+
 def test_matcher_match_fuzz_all(en_vocab):
-    rules = {
-        "JS": [[{"ORTH": "JavaScript"}]],
-        "GoogleNow": [[{"ORTH": "Google"}, {"ORTH": "Now"}]],
-        "Java": [[{"LOWER": "java"}]],
-    }
-    matcher = Matcher(en_vocab, fuzzy=80)
-    for key, patterns in rules.items():
+    matcher = Matcher(en_vocab, fuzzy=80, fuzzy_attrs=["ORTH", "LOWER"])
+    for key, patterns in matcher_rules.items():
         matcher.add(key, patterns)
 
-    words = ["I", "like", "Goggle", "Noww", "and", "Jav", "best"]
+    words = ["I", "like", "Goggle", "Now", "and", "Jav", "but", "not", "JvvaScrpt"]
     doc = Doc(matcher.vocab, words=words)
     assert matcher(doc) == [
         (doc.vocab.strings["GoogleNow"], 2, 4),
         (doc.vocab.strings["Java"], 5, 6),
+        (doc.vocab.strings["JS"], 8, 9),
+    ]
+
+def test_matcher_match_fuzz_all_lower(en_vocab):
+    matcher = Matcher(en_vocab, fuzzy=80, fuzzy_attrs=["LOWER"])
+    for key, patterns in matcher_rules.items():
+        matcher.add(key, patterns)
+
+    words = ["I", "like", "Goggle", "Now", "and", "Jav", "but", "not", "JvvaScrpt"]
+    doc = Doc(matcher.vocab, words=words)
+    assert matcher(doc) == [
+        (doc.vocab.strings["Java"], 5, 6),
     ]
 
 def test_matcher_match_fuzz_some(en_vocab):
-    rules = {
-        "JS": [[{"ORTH": "JavaScript"}]],
-        "GoogleNow": [[{"ORTH": "Google"}, {"ORTH": "Now"}]],
-        "Java": [[{"LOWER": "java"}]],
-    }
-    matcher = Matcher(en_vocab, fuzzy=85)
-    for key, patterns in rules.items():
+    matcher = Matcher(en_vocab, fuzzy=85, fuzzy_attrs=["ORTH", "LOWER"])
+    for key, patterns in matcher_rules.items():
         matcher.add(key, patterns)
 
-    words = ["I", "like", "Goggle", "Noww", "and", "Jav", "best"]
+    words = ["I", "like", "Goggle", "Now", "and", "Jav", "but", "not", "JvvaScrpt"]
     doc = Doc(matcher.vocab, words=words)
     assert matcher(doc) == [
         (doc.vocab.strings["Java"], 5, 6),
     ]
 
 def test_matcher_match_fuzz_none(en_vocab):
-    rules = {
-        "JS": [[{"ORTH": "JavaScript"}]],
-        "GoogleNow": [[{"ORTH": "Google"}, {"ORTH": "Now"}]],
-        "Java": [[{"LOWER": "java"}]],
-    }
-    matcher = Matcher(en_vocab, fuzzy=90)
-    for key, patterns in rules.items():
+    matcher = Matcher(en_vocab, fuzzy=90, fuzzy_attrs=["ORTH", "LOWER"])
+    for key, patterns in matcher_rules.items():
         matcher.add(key, patterns)
 
-    words = ["I", "like", "Goggle", "Noww", "and", "Jav", "best"]
+    words = ["I", "like", "Goggle", "Now", "and", "Jav", "but", "not", "JvvaScrpt"]
     doc = Doc(matcher.vocab, words=words)
     assert matcher(doc) == []
 
 
-def test_matcher_match_fuzz_pred(en_vocab):
+# fuzzy matches on specific tokens
+
+def test_matcher_match_fuzz_pred1(en_vocab):
     rules = {
-        "JS": [[{"ORTH": {"FUZZY": "JavaScript"}}]],
+        "JS": [[{"ORTH": "JavaScript"}]],
         "GoogleNow": [[{"ORTH": {"FUZZY": "Google"}}, {"ORTH": "Now"}]],
         "Java": [[{"LOWER": "java"}]],
     }
@@ -176,10 +178,45 @@ def test_matcher_match_fuzz_pred(en_vocab):
     for key, patterns in rules.items():
         matcher.add(key, patterns)
 
-    words = ["I", "like", "Goggle", "Now", "and", "JavaScrpt", "best"]
+    words = ["I", "like", "Goggle", "Now", "and", "Jav", "but", "not", "JvvaScrpt"]
     doc = Doc(matcher.vocab, words=words)
-    assert matcher(doc) == []
+    assert matcher(doc) == [
+        (doc.vocab.strings["GoogleNow"], 2, 4),
+    ]
 
+def test_matcher_match_fuzz_pred2(en_vocab):
+    rules = {
+        "JS": [[{"ORTH": "JavaScript"}]],
+        "GoogleNow": [[{"ORTH": "Google"}, {"ORTH": "Now"}]],
+        "Java": [[{"LOWER": {"FUZZY": "java"}}]],
+    }
+    matcher = Matcher(en_vocab, fuzzy=80)
+    for key, patterns in rules.items():
+        matcher.add(key, patterns)
+
+    words = ["I", "like", "Goggle", "Now", "and", "Jav", "but", "not", "JvvaScrpt"]
+    doc = Doc(matcher.vocab, words=words)
+    assert matcher(doc) == [
+        (doc.vocab.strings["Java"], 5, 6),
+    ]
+
+def test_matcher_match_fuzz_preds(en_vocab):
+    rules = {
+        "JS": [[{"ORTH": {"FUZZY": "JavaScript"}}]],
+        "GoogleNow": [[{"ORTH": {"FUZZY": "Google"}}, {"ORTH": "Now"}]],
+        "Java": [[{"LOWER": {"FUZZY": "java"}}]],
+    }
+    matcher = Matcher(en_vocab, fuzzy=80)
+    for key, patterns in rules.items():
+        matcher.add(key, patterns)
+
+    words = ["I", "like", "Goggle", "Now", "and", "Jav", "but", "not", "JvvaScrpt"]
+    doc = Doc(matcher.vocab, words=words)
+    assert matcher(doc) == [
+        (doc.vocab.strings["GoogleNow"], 2, 4),
+        (doc.vocab.strings["Java"], 5, 6),
+        (doc.vocab.strings["JS"], 8, 9),
+    ]
 
 
 def test_matcher_empty_dict(en_vocab):
