@@ -340,8 +340,9 @@ def _validate_requirements(requirements: List[str]) -> Tuple[bool, bool]:
     if len(failed_pkgs_msgs) or len(conflicting_pkgs_msgs):
         msg.warn(
             title="Missing requirements or requirement conflicts detected. Make sure your Python environment is set up "
-            "correctly and you installed all requirements specified in your project's requirements.txt: ",
-            text=f"{failed_pkgs_msgs + conflicting_pkgs_msgs}",
+            "correctly and you installed all requirements specified in your project's requirements.txt: "
         )
+        for pgk_msg in failed_pkgs_msgs + conflicting_pkgs_msgs:
+            print(pgk_msg)
 
     return len(failed_pkgs_msgs) > 0, len(conflicting_pkgs_msgs) > 0
