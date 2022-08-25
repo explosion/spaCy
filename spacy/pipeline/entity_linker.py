@@ -84,9 +84,9 @@ def make_entity_linker(
     incl_prior: bool,
     incl_context: bool,
     entity_vector_length: int,
-    get_candidates: Callable[[KnowledgeBase, Union[Span, str]], Iterable[Candidate]],
+    get_candidates: Callable[[KnowledgeBase, Span], Iterable[Candidate]],
     get_candidates_batch: Callable[
-        [KnowledgeBase, Iterable[Union[Span, str]]], Iterable[Iterable[Candidate]]
+        [KnowledgeBase, Iterable[Span]], Iterable[Iterable[Candidate]]
     ],
     overwrite: bool,
     scorer: Optional[Callable],
@@ -104,10 +104,10 @@ def make_entity_linker(
     incl_prior (bool): Whether or not to include prior probabilities from the KB in the model.
     incl_context (bool): Whether or not to include the local context in the model.
     entity_vector_length (int): Size of encoding vectors in the KB.
-    get_candidates (Callable[[KnowledgeBase, Union[Span, str]], Iterable[Candidate]]): Function that
+    get_candidates (Callable[[KnowledgeBase, Span], Iterable[Candidate]]): Function that
         produces a list of candidates, given a certain knowledge base and a textual mention.
     get_candidates_batch (
-        Callable[[KnowledgeBase, Iterable[Union[Span, str]]], Iterable[Iterable[Candidate]]], Iterable[Candidate]]
+        Callable[[KnowledgeBase, Iterable[Span]], Iterable[Iterable[Candidate]]], Iterable[Candidate]]
         ): Function that produces a list of candidates, given a certain knowledge base and several textual mentions.
     scorer (Optional[Callable]): The scoring method.
     use_gold_ents (bool): Whether to copy entities from gold docs or not. If false, another
@@ -181,7 +181,7 @@ class EntityLinker(TrainablePipe):
         entity_vector_length: int,
         get_candidates: Callable[[KnowledgeBase, Span], Iterable[Candidate]],
         get_candidates_batch: Callable[
-            [KnowledgeBase, Iterable[Union[Span, str]]], Iterable[Iterable[Candidate]]
+            [KnowledgeBase, Iterable[Span]], Iterable[Iterable[Candidate]]
         ],
         overwrite: bool = BACKWARD_OVERWRITE,
         scorer: Optional[Callable] = entity_linker_score,
@@ -203,7 +203,7 @@ class EntityLinker(TrainablePipe):
         get_candidates (Callable[[KnowledgeBase, Span], Iterable[Candidate]]): Function that
             produces a list of candidates, given a certain knowledge base and a textual mention.
         get_candidates_batch (
-            Callable[[KnowledgeBase, Iterable[Union[Span, str]]], Iterable[Iterable[Candidate]]],
+            Callable[[KnowledgeBase, Iterable[Span]], Iterable[Iterable[Candidate]]],
             Iterable[Candidate]]
             ): Function that produces a list of candidates, given a certain knowledge base and several textual mentions.
         scorer (Optional[Callable]): The scoring method. Defaults to Scorer.score_links.

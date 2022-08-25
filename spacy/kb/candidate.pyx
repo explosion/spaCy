@@ -54,21 +54,21 @@ cdef class Candidate:
         return self.prior_prob
 
 
-def get_candidates(kb: KnowledgeBase, mention: Union[Span, str]) -> Iterable[Candidate]:
+def get_candidates(kb: KnowledgeBase, mention: Span) -> Iterable[Candidate]:
     """
     Return candidate entities for a given mention and fetching appropriate entries from the index.
     kb (KnowledgeBase): Knowledge base to query.
-    mention (Union[Span, str]): Entity mention for which to identify candidates.
+    mention (Span): Entity mention for which to identify candidates.
     RETURNS (Iterable[Candidate]): Identified candidates.
     """
     return kb.get_candidates(mention)
 
 
-def get_candidates_batch(kb: KnowledgeBase, mentions: Iterable[Union[Span, str]]) -> Iterable[Iterable[Candidate]]:
+def get_candidates_batch(kb: KnowledgeBase, mentions: Iterable[Span]) -> Iterable[Iterable[Candidate]]:
     """
     Return candidate entities for the given mentions and fetching appropriate entries from the index.
     kb (KnowledgeBase): Knowledge base to query.
-    mention (Iterable[Union[Span, str]]): Entity mentions for which to identify candidates.
+    mention (Iterable[Span]): Entity mentions for which to identify candidates.
     RETURNS (Iterable[Iterable[Candidate]]): Identified candidates.
     """
     return kb.get_candidates_batch(mentions)

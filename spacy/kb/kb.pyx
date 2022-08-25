@@ -34,12 +34,12 @@ cdef class KnowledgeBase:
         """
         return [self.get_candidates(span) for span in mentions]
 
-    def get_candidates(self, mention: Union[Span, str]) -> Iterable[Candidate]:
+    def get_candidates(self, mention: Span) -> Iterable[Candidate]:
         """
         Return candidate entities for specified text. Each candidate defines the entity, the original alias,
         and the prior probability of that alias resolving to that entity.
         If the no candidate is found for a given text, an empty list is returned.
-        mention (Union[Span, str]): Mention for which to get candidates.
+        mention (Span): Mention for which to get candidates.
         RETURNS (Iterable[Candidate]): Identified candidates.
         """
         raise NotImplementedError(
