@@ -19,7 +19,7 @@ class RussianLemmatizer(Lemmatizer):
         model: Optional[Model],
         name: str = "lemmatizer",
         *,
-        mode: str = "pymorphy2",
+        mode: str = "pymorphy3",
         overwrite: bool = False,
         scorer: Optional[Callable] = lemmatizer_score,
     ) -> None:
@@ -30,6 +30,16 @@ class RussianLemmatizer(Lemmatizer):
                 raise ImportError(
                     "The Russian lemmatizer mode 'pymorphy2' requires the "
                     "pymorphy2 library. Install it with: pip install pymorphy2"
+                ) from None
+            if getattr(self, "_morph", None) is None:
+                self._morph = MorphAnalyzer()
+        elif mode == "pymorphy3":
+            try:
+                from pymorphy3 import MorphAnalyzer
+            except ImportError:
+                raise ImportError(
+                    "The Russian lemmatizer mode 'pymorphy3' requires the "
+                    "pymorphy3 library. Install it with: pip install pymorphy3"
                 ) from None
             if getattr(self, "_morph", None) is None:
                 self._morph = MorphAnalyzer()
@@ -103,6 +113,9 @@ class RussianLemmatizer(Lemmatizer):
         if len(analyses) == 1:
             return [analyses[0].normal_form]
         return [string]
+
+    def pymorphy3_lemmatize(self, token: Token) -> List[str]:
+        return self.pymorphy2_lemmatize(token)
 
 
 def oc2ud(oc_tag: str) -> Tuple[str, Dict[str, str]]:

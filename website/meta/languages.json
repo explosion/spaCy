@@ -374,8 +374,8 @@
             "has_examples": true,
             "dependencies": [
                 {
-                    "name": "pymorphy2",
-                    "url": "https://github.com/kmike/pymorphy2"
+                    "name": "pymorphy3",
+                    "url": "https://github.com/no-plagiarism/pymorphy3"
                 }
             ],
             "models": [
@@ -480,12 +480,12 @@
             ],
             "dependencies": [
                 {
-                    "name": "pymorphy2",
-                    "url": "https://github.com/kmike/pymorphy2"
+                    "name": "pymorphy3",
+                    "url": "https://github.com/no-plagiarism/pymorphy3"
                 },
                 {
-                    "name": "pymorphy2-dicts-uk",
-                    "url": "https://github.com/kmike/pymorphy2-dicts/"
+                    "name": "pymorphy3-dicts-uk",
+                    "url": "https://github.com/no-plagiarism/pymorphy3-dicts"
                 }
             ]
         },
