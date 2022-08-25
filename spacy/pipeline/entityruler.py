@@ -26,9 +26,9 @@ PatternType = Dict[str, Union[str, List[Dict[str, Any]]]]
         "phrase_matcher_attr": None,
         "validate": False,
         "overwrite_ents": False,
+        "fuzzy": 0.0,
         "ent_id_sep": DEFAULT_ENT_ID_SEP,
         "scorer": {"@scorers": "spacy.entity_ruler_scorer.v1"},
-        "fuzzy": None,
     },
     default_score_weights={
         "ents_f": 1.0,
@@ -43,9 +43,9 @@ def make_entity_ruler(
     phrase_matcher_attr: Optional[Union[int, str]],
     validate: bool,
     overwrite_ents: bool,
+    fuzzy: float,
     ent_id_sep: str,
     scorer: Optional[Callable],
-    fuzzy: Optional[float],
 ):
     return EntityRuler(
         nlp,
@@ -53,9 +53,9 @@ def make_entity_ruler(
         phrase_matcher_attr=phrase_matcher_attr,
         validate=validate,
         overwrite_ents=overwrite_ents,
+        fuzzy=fuzzy,
         ent_id_sep=ent_id_sep,
         scorer=scorer,
-        fuzzy=fuzzy,
     )
 
 
@@ -87,10 +87,10 @@ class EntityRuler(Pipe):
         phrase_matcher_attr: Optional[Union[int, str]] = None,
         validate: bool = False,
         overwrite_ents: bool = False,
+        fuzzy: float = 0,
         ent_id_sep: str = DEFAULT_ENT_ID_SEP,
         patterns: Optional[List[PatternType]] = None,
         scorer: Optional[Callable] = entity_ruler_score,
-        fuzzy: float = None,
     ) -> None:
         """Initialize the entity ruler. If patterns are supplied here, they
         need to be a list of dictionaries with a `"label"` and `"pattern"`
@@ -122,7 +122,8 @@ class EntityRuler(Pipe):
         self.token_patterns = defaultdict(list)  # type: ignore
         self.phrase_patterns = defaultdict(list)  # type: ignore
         self._validate = validate
-        self.matcher = Matcher(nlp.vocab, validate=validate, fuzzy=fuzzy)
+        self.fuzzy = fuzzy
+        self.matcher = Matcher(nlp.vocab, validate=validate, fuzzy=self.fuzzy)
         self.phrase_matcher_attr = phrase_matcher_attr
         self.phrase_matcher = PhraseMatcher(
             nlp.vocab, attr=self.phrase_matcher_attr, validate=validate
@@ -132,7 +133,6 @@ class EntityRuler(Pipe):
         if patterns is not None:
             self.add_patterns(patterns)
         self.scorer = scorer
-        self.fuzzy = fuzzy
 
     def __len__(self) -> int:
         """The number of all patterns added to the entity ruler."""
