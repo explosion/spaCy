@@ -169,7 +169,7 @@ class KoreanNattoTokenizer(DummyTokenizer):
             return MeCab
         except ImportError:
             raise ImportError(
-                'The Korean tokenizer ("spacy.ko.KoreanTokenizer") requires '
+                'The Korean Natto tokenizer ("spacy.ko.KoreanNattoTokenizer") requires '
                 "[mecab-ko](https://bitbucket.org/eunjeon/mecab-ko/src/master/README.md), "
                 "[mecab-ko-dic](https://bitbucket.org/eunjeon/mecab-ko-dic), "
                 "and [natto-py](https://github.com/buruzaemon/natto-py)"
