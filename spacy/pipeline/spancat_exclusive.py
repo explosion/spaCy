@@ -79,9 +79,9 @@ def make_spancat(
     spans_key: str,
     scorer: Optional[Callable],
     negative_weight: float = 1.0,
-    allow_overlap: Optional[bool] = True,
+    allow_overlap: bool = True,
 ) -> "SpanCategorizerExclusive":
-    """Create a SpanCategorizer component. The span categorizer consists of two
+    """Create a SpanCategorizerExclusive component. The span categorizer consists of two
     parts: a suggester function that proposes candidate spans, and a labeller
     model that predicts one or more labels for each span.
 
@@ -97,7 +97,7 @@ def make_spancat(
         reference document under the same key.
     negative_weight (float): Multiplier for the loss terms.
         Can be used to down weigh the negative samples if there are too many.
-    allow_overlap (Optional[bool]): If True the data is assumed to
+    allow_overlap (bool): If True the data is assumed to
         contain overlapping spans.
     """
     return SpanCategorizerExclusive(
@@ -148,8 +148,8 @@ class SpanCategorizerExclusive(TrainablePipe):
         *,
         spans_key: str = "spans",
         negative_weight: float = 1.0,
+        allow_overlap: bool = True,
         scorer: Optional[Callable] = spancat_score,
-        allow_overlap: Optional[bool] = True,
     ) -> None:
         """Initialize the span categorizer.
         vocab (Vocab): The shared vocabulary.
@@ -162,11 +162,11 @@ class SpanCategorizerExclusive(TrainablePipe):
             `"spans"`.
         negative_weight (float): Multiplier for the loss terms.
             Can be used to down weigh the negative samples if there are too many.
+        allow_overlap (bool): If True the data is assumed to
+            contain overlapping spans.
         scorer (Optional[Callable]): The scoring method. Defaults to
             Scorer.score_spans for the Doc.spans[spans_key] with overlapping
             spans allowed.
-        allow_overlap (Optional[bool]): If True the data is assumed to
-            contain overlapping spans.
 
         DOCS: https://spacy.io/api/spancategorizerexclusive#init
         """
@@ -376,6 +376,7 @@ class SpanCategorizerExclusive(TrainablePipe):
             offset += spans.lengths[i]
         target = self.model.ops.asarray(target, dtype="f")  # type: ignore
         negative_samples = numpy.nonzero(negative_spans)[0]
+        breakpoint()
         target[negative_samples, self._negative_label] = 1.0
         d_scores = scores - target
         neg_weight = self.cfg["negative_weight"]
