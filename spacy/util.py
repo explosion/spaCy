@@ -937,12 +937,12 @@ def replace_model_node(model: Model, target: Model, replacement: Model) -> None:
 
 
 def split_command(command: str) -> List[str]:
-    """Split a string command using shlex. Handles platform compatibility.
+    """Split a string command using shlex.
 
     command (str) : The command to split
     RETURNS (List[str]): The split command.
     """
-    return shlex.split(command, posix=not is_windows)
+    return shlex.split(command, posix=True)
 
 
 def join_command(command: List[str]) -> str:
@@ -981,8 +981,9 @@ def run_command(
         cmd_list = command
         cmd_str = " ".join(command)
     try:
+        cmd_to_run = cmd_str if is_windows else cmd_list
         ret = subprocess.run(
-            cmd_list,
+            cmd_to_run,
             env=os.environ.copy(),
             input=stdin,
             encoding="utf8",

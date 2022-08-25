@@ -36,6 +36,7 @@ from spacy.training import Example, docs_to_json, offsets_to_biluo_tags
 from spacy.training.converters import conll_ner_to_docs, conllu_to_docs
 from spacy.training.converters import iob_to_docs
 from spacy.util import ENV_VARS, get_minor_version, load_model_from_config, load_config
+from spacy.util import run_command
 
 from ..cli.init_pipeline import _init_labels
 from .util import make_tempdir
@@ -855,3 +856,9 @@ def test_span_length_freq_dist_output_must_be_correct():
     span_freqs = _get_spans_length_freq_dist(sample_span_lengths, threshold)
     assert sum(span_freqs.values()) >= threshold
     assert list(span_freqs.keys()) == [3, 1, 4, 5, 2]
+
+
+def test_shell_quoting():
+    # simple quoted shell commands should run on any platform
+    ret = run_command('bash -c "echo ok"')
+    assert ret.returncode == 0
