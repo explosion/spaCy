@@ -121,16 +121,15 @@ def console_logger(
                 + ["{0:.2f}".format(float(info["score"]))]
             )
 
-            # Write to log file per log_step
-            log_data = {
-                "epoch": info["epoch"],
-                "step": info["step"],
-                "losses": log_losses,
-                "scores": log_scores,
-                "score": float(info["score"]),
-            }
-
             if output_stream:
+                # Write to log file per log_step
+                log_data = {
+                    "epoch": info["epoch"],
+                    "step": info["step"],
+                    "losses": log_losses,
+                    "scores": log_scores,
+                    "score": float(info["score"]),
+                }
                 output_stream.write(srsly.json_dumps(log_data) + "\n")
 
             if progress is not None:
