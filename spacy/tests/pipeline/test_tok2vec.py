@@ -262,6 +262,38 @@ def test_tok2vec_listener_overfitting():
         assert doc2[3].tag_ == "N"
 
 
+def test_tok2vec_frozen_overfitting():
+    orig_config = Config().from_str(cfg_string)
+    nlp = util.load_model_from_config(orig_config, auto_fill=True, validate=True)
+    train_examples = []
+    for t in TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
+    optimizer = nlp.initialize(get_examples=lambda: train_examples)
+
+    for i in range(100):
+        losses = {}
+        nlp.update(train_examples, sgd=optimizer, losses=losses, exclude=["tok2vec"], annotates=["tok2vec"])
+    assert losses["tagger"] < 0.0001
+
+    # test the trained model
+    test_text = "I like blue eggs"
+    doc = nlp(test_text)
+    assert doc[0].tag_ == "N"
+    assert doc[1].tag_ == "V"
+    assert doc[2].tag_ == "J"
+    assert doc[3].tag_ == "N"
+
+    # Also test the results are still the same after IO
+    with make_tempdir() as tmp_dir:
+        nlp.to_disk(tmp_dir)
+        nlp2 = util.load_model_from_path(tmp_dir)
+        doc2 = nlp2(test_text)
+        assert doc2[0].tag_ == "N"
+        assert doc2[1].tag_ == "V"
+        assert doc2[2].tag_ == "J"
+        assert doc2[3].tag_ == "N"
+
+
 def test_replace_listeners():
     orig_config = Config().from_str(cfg_string)
     nlp = util.load_model_from_config(orig_config, auto_fill=True, validate=True)
