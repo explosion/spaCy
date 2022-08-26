@@ -72,10 +72,10 @@ class CatalanLemmatizer(Lemmatizer):
                         oov_forms.append(form)
         if not forms:
             forms.extend(oov_forms)
-        if not forms and string in lookup_table.keys():
-            forms.append(self.lookup_lemmatize(token)[0])
+
+        # use lookups, which fall back to the token itself
         if not forms:
-            forms.append(string)
+            forms.append(self.lookup_lemmatize(token)[0])
         forms = list(dict.fromkeys(forms))
         self.cache[cache_key] = forms
         return forms
