@@ -241,17 +241,17 @@ cdef class SpanGroup:
     cdef void push_back(self, SpanC span) nogil:
         self.c.push_back(span)
 
-    def copy(self, new_doc: Optional["Doc"] = None)  -> SpanGroup:
+    def copy(self, doc: Optional["Doc"] = None)  -> SpanGroup:
         """Clones the span group.
 
         RETURNS (SpanGroup): A copy of the span group.
 
         DOCS: https://spacy.io/api/spangroup#copy
         """
-        if new_doc is None:
-            new_doc = self.doc
+        if doc is None:
+            doc = self.doc
         return SpanGroup(
-            new_doc,
+            doc,
             name=self.name,
             attrs=deepcopy(self.attrs),
             spans=list(self),
