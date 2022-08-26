@@ -244,6 +244,7 @@ cdef class SpanGroup:
     def copy(self, doc: Optional["Doc"] = None)  -> SpanGroup:
         """Clones the span group.
 
+        doc (Doc): New reference document to which the copy is bound.
         RETURNS (SpanGroup): A copy of the span group.
 
         DOCS: https://spacy.io/api/spangroup#copy
