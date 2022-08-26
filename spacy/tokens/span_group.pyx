@@ -241,7 +241,7 @@ cdef class SpanGroup:
     cdef void push_back(self, SpanC span) nogil:
         self.c.push_back(span)
 
-    def copy(self, *, new_doc=None)  -> SpanGroup:
+    def copy(self, new_doc: Optional["Doc"] = None)  -> SpanGroup:
         """Clones the span group.
 
         RETURNS (SpanGroup): A copy of the span group.
