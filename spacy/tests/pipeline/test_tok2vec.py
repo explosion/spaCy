@@ -231,6 +231,7 @@ def test_tok2vec_listener_callback():
 
 
 def test_tok2vec_listener_overfitting():
+    """ Test that a pipeline with a listener properly overfits, even if 'tok2vec' is in the annotating components """
     orig_config = Config().from_str(cfg_string)
     nlp = util.load_model_from_config(orig_config, auto_fill=True, validate=True)
     train_examples = []
