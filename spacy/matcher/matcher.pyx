@@ -20,7 +20,6 @@ from ..tokens.span cimport Span
 from ..tokens.token cimport Token
 from ..tokens.morphanalysis cimport MorphAnalysis
 from ..attrs cimport ID, attr_id_t, NULL_ATTR, ORTH, POS, TAG, DEP, LEMMA, MORPH, ENT_IOB
-from ..attrs cimport LOWER, NORM
 
 from ..schemas import validate_token_pattern
 from ..errors import Errors, MatchPatternError, Warnings
@@ -258,8 +257,7 @@ cdef class Matcher:
             matches = []
         else:
             matches = find_matches(&self.patterns[0], self.patterns.size(), doclike, length,
-                                    extensions=self._extensions, predicates=self._extra_predicates,
-                                    with_alignments=with_alignments,
+                                    extensions=self._extensions, predicates=self._extra_predicates, with_alignments=with_alignments,
                                     fuzzy=self.fuzzy, fuzzy_attrs=self.fuzzy_attrs)
         final_matches = []
         pairs_by_id = {}
@@ -341,7 +339,8 @@ def unpickle_matcher(vocab, patterns, callbacks):
     return matcher
 
 
-cdef find_matches(TokenPatternC** patterns, int n, object doclike, int length, extensions=None, predicates=tuple(), bint with_alignments=0, float fuzzy=0, list fuzzy_attrs=[]):
+cdef find_matches(TokenPatternC** patterns, int n, object doclike, int length, extensions=None, predicates=tuple(), bint with_alignments=0,
+                  float fuzzy=0, list fuzzy_attrs=[]):
     """Find matches in a doc, with a compiled array of patterns. Matches are
     returned as a list of (id, start, end) tuples or (id, start, end, alignments) tuples (if with_alignments != 0)
 
