@@ -264,6 +264,7 @@ def test_tok2vec_listener_overfitting():
 
 
 def test_tok2vec_frozen_overfitting():
+    """ Test that a pipeline with a frozen tok2vec can still overfit (but the tok2vec needs to be annotating!) """
     orig_config = Config().from_str(cfg_string)
     nlp = util.load_model_from_config(orig_config, auto_fill=True, validate=True)
     train_examples = []
