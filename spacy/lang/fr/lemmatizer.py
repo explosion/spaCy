@@ -81,7 +81,7 @@ class FrenchLemmatizer(Lemmatizer):
 
         # use lookups, which fall back to the token itself
         if not forms:
-            forms.append(lookup_table.get(token, [token])[0])
+            forms.append(lookup_table.get(string, [string])[0])
         forms = list(dict.fromkeys(forms))
         self.cache[cache_key] = forms
         return forms
