@@ -26,6 +26,7 @@ from spacy.cli.init_config import RECOMMENDATIONS, init_config, fill_config
 from spacy.cli.package import get_third_party_dependencies
 from spacy.cli.package import _is_permitted_package_name
 from spacy.cli.validate import get_model_pkgs
+from spacy.compat import is_windows
 from spacy.lang.en import English
 from spacy.lang.nl import Dutch
 from spacy.language import Language
@@ -858,7 +859,31 @@ def test_span_length_freq_dist_output_must_be_correct():
     assert list(span_freqs.keys()) == [3, 1, 4, 5, 2]
 
 
-def test_shell_quoting():
+def test_shell_quoting(tmp_path):
     # simple quoted shell commands should run on any platform
-    ret = run_command('bash -c "echo ok"')
-    assert ret.returncode == 0
+    # because mkdir is one of the few cross-platform commands,
+    # we'll work in a temp dir (pytest global fixture)
+    cwd = os.getcwd()
+    os.chdir(tmp_path)
+    try:
+        ret = run_command('mkdir "a b"')
+        assert ret.returncode == 0
+
+        # If things are working correctly, "a b"/c and "a b/c" should evaluate
+        # to the same directory. If they are working incorrectly, these could
+        # be treated differently.
+
+        # the slash here also works as a directory separator on Windows,
+        # for these commands at least.
+        ret = run_command('mkdir "a b"/c')
+        assert ret.returncode == 0
+        ls_cmd = "dir" if is_windows else "ls"
+        ret = run_command(f'{ls_cmd} "a b/c"')
+        assert ret.returncode == 0
+        # since this is a temp dir, we don't have to delete it explicitly
+    except:
+        # we failed, so make sure the test fails.
+        raise
+    finally:
+        # restore the original cwd so other tests are unaffected
+        os.chdir(cwd)
