@@ -239,7 +239,7 @@ def hsb_tokenizer():
 
 @pytest.fixture(scope="session")
 def ko_tokenizer():
-    pytest.importorskip("natto")
+    pytest.importorskip("mecab_ko")
     return get_lang_class("ko")().tokenizer
 
 
@@ -249,6 +249,20 @@ def ko_tokenizer_tokenizer():
         "nlp": {
             "tokenizer": {
                 "@tokenizers": "spacy.Tokenizer.v1",
+            }
+        }
+    }
+    nlp = get_lang_class("ko").from_config(config)
+    return nlp.tokenizer
+
+
+@pytest.fixture(scope="session")
+def ko_tokenizer_natto():
+    pytest.importorskip("natto")
+    config = {
+        "nlp": {
+            "tokenizer": {
+                "@tokenizers": "spacy.KoreanNattoTokenizer.v1",
             }
         }
     }
