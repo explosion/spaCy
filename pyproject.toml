@@ -8,7 +8,6 @@ requires = [
     "thinc>=8.1.0,<8.2.0",
     "pathy",
     "numpy>=1.15.0",
-    "rapidfuzz>=2.4.0,<3.0.0",
     "rapidfuzz_capi>=1.0.5,<2.0.0",
 ]
 build-backend = "setuptools.build_meta"
