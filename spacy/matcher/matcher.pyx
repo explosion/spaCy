@@ -10,7 +10,7 @@ from murmurhash.mrmr cimport hash64
 import re
 import srsly
 import warnings
-from rapidfuzz.distance import Levenshtein
+from polyleven import levenshtein
 
 from ..typedefs cimport attr_t
 from ..structs cimport TokenC
@@ -846,7 +846,7 @@ class _FuzzyPredicate:
             value = token._.get(self.attr)
         else:
             value = token.vocab.strings[get_token_attr_for_matcher(token.c, self.attr)]
-        return bool(Levenshtein.distance(self.value, value) <= self.distance)
+        return bool(levenshtein(self.value, value) <= self.distance)
 
 
 class _RegexPredicate:
@@ -914,8 +914,8 @@ class _SetPredicate:
                 return True
             elif self.distance:
                 for v in self.value:
-                    if Levenshtein.distance(self.vocab.strings[value],
-                                            self.vocab.strings[v]) <= self.distance:
+                    if levenshtein(self.vocab.strings[value],
+                                   self.vocab.strings[v]) <= self.distance:
                         return True
             return False
         elif self.predicate == "NOT_IN":
@@ -923,8 +923,8 @@ class _SetPredicate:
                 return False
             elif self.distance:
                 for v in self.value:
-                    if Levenshtein.distance(self.vocab.strings[value],
-                                            self.vocab.strings[v]) <= self.distance:
+                    if levenshtein(self.vocab.strings[value],
+                                   self.vocab.strings[v]) <= self.distance:
                         return False
             return True
         elif self.predicate == "IS_SUBSET":
