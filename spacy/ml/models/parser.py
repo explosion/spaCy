@@ -5,7 +5,7 @@ from thinc.types import Floats2d
 from ...errors import Errors
 from ...compat import Literal
 from ...util import registry
-from ..precomputable_affine import PrecomputableAffine
+from .._precomputable_affine import PrecomputableAffine
 from ..tb_framework import TransitionModel
 from ...tokens import Doc
 
