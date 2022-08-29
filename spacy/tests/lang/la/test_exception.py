@@ -1,17 +1,5 @@
 import pytest
 
-
-@pytest.mark.parametrize(
-    "text,lemma",
-    [
-        ("Kal.", "Kalends"),
-    ],
-)
-def test_la_tokenizer_handles_abbr(la_tokenizer, text, lemma):
-    tokens = la_tokenizer(text)
-    assert len(tokens) == 1
-
-
 def test_la_tokenizer_handles_exc_in_text(la_tokenizer):
     text = "scio te omnia facturum, ut nobiscum quam primum sis"
     tokens = la_tokenizer(text)

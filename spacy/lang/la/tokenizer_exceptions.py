@@ -19,9 +19,11 @@ for orth in [
     'T.', 'Ti.', 'V.', 'Vol.', 'Vop.', 'U.', 'Uol.', 'Uop.',
 
     'Ian.', 'Febr.', 'Mart.', 'Apr.', 'Mai.', 'Iun.', 'Iul.', 'Aug.', 'Sept.', 'Oct.', 'Nov.', 'Nou.', 
-    'Dec.', 'Kal.', 'Non.', 'Id.', 'A.D.', 
+    'Dec.',
+    
+    'Non.', 'Id.', 'A.D.', 
 
-    'Coll.', 'Cos.', 'Ord.', 'Pl..', 'S.C.', 'Suff.', 'Trib.',
+    'Coll.', 'Cos.', 'Ord.', 'Pl.', 'S.C.', 'Suff.', 'Trib.',
 ]:
     _exc[orth] = [{ORTH: orth}]
 
