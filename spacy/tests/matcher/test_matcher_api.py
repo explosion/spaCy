@@ -218,6 +218,50 @@ def test_matcher_match_fuzz_preds(en_vocab):
         (doc.vocab.strings["JS"], 8, 9),
     ]
 
+def test_matcher_match_fuzz_pred_in_set(en_vocab):
+    rules = {
+        "GoogleNow": [[{"ORTH": {"FUZZY": {"IN": ["Google", "No"]}}, "OP": "+"}]]
+    }
+    matcher = Matcher(en_vocab, fuzzy=80)
+    for key, patterns in rules.items():
+        matcher.add(key, patterns, greedy="LONGEST")
+
+    words = ["I", "like", "Goggle", "Now"]
+    doc = Doc(matcher.vocab, words=words)
+    assert matcher(doc) == [
+        (doc.vocab.strings["GoogleNow"], 2, 4),
+    ]
+
+def test_matcher_match_fuzz_pred_not_in_set(en_vocab):
+    rules = {
+        "GoogleNow": [[{"ORTH": {"FUZZY": {"NOT_IN": ["Google", "No"]}}, "OP": "+"}]],
+    }
+    matcher = Matcher(en_vocab, fuzzy=80)
+    for key, patterns in rules.items():
+        matcher.add(key, patterns, greedy="LONGEST")
+
+    words = ["I", "like", "Goggle", "Now"]
+    doc = Doc(matcher.vocab, words=words)
+    assert matcher(doc) == [
+        (doc.vocab.strings["GoogleNow"], 0, 2),
+    ]
+
+def test_matcher_match_fuzz_pred_in_set_with_exclude(en_vocab):
+    rules = {
+        "GoogleNow": [[{"ORTH": {"FUZZY": {"IN": ["Google", "No"]},
+                                 "NOT_IN": ["Goggle"]},
+                        "OP": "+"}]]
+    }
+    matcher = Matcher(en_vocab, fuzzy=80)
+    for key, patterns in rules.items():
+        matcher.add(key, patterns, greedy="LONGEST")
+
+    words = ["I", "like", "Goggle", "Now"]
+    doc = Doc(matcher.vocab, words=words)
+    assert matcher(doc) == [
+        (doc.vocab.strings["GoogleNow"], 3, 4),
+    ]
+
 
 def test_matcher_empty_dict(en_vocab):
     """Test matcher allows empty token specs, meaning match on any token."""
