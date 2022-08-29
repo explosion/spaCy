@@ -354,7 +354,6 @@ cdef find_matches(TokenPatternC** patterns, int n, object doclike, int length, e
     cdef PatternStateC state
     cdef int i, j, nr_extra_attr
     cdef Pool mem = Pool()
-
     output = []
     if length == 0:
         # avoid any processing or mem alloc if the document is empty
@@ -419,7 +418,7 @@ cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& match
         if states[i].pattern.nr_py >= 1:
             update_predicate_cache(cached_py_predicates,
                 states[i].pattern, token, py_predicates)
-        action = get_action(states[i], token, extra_attrs,
+        action = get_action(states[i], token.c, extra_attrs,
                             cached_py_predicates)
         if action == REJECT:
             continue
@@ -456,7 +455,7 @@ cdef void transition_states(vector[PatternStateC]& states, vector[MatchC]& match
             if states[q].pattern.nr_py != 0:
                 update_predicate_cache(cached_py_predicates,
                     states[q].pattern, token, py_predicates)
-            action = get_action(states[q], token, extra_attrs,
+            action = get_action(states[q], token.c, extra_attrs,
                                 cached_py_predicates)
         # Update alignment before the transition of current state
         if with_alignments != 0:
@@ -568,7 +567,7 @@ cdef void finish_states(vector[MatchC]& matches, vector[PatternStateC]& states,
 
 
 cdef action_t get_action(PatternStateC state,
-        Token token, const attr_t* extra_attrs,
+        const TokenC* token, const attr_t* extra_attrs,
         const int8_t* predicate_matches) nogil:
     """We need to consider:
     a) Does the token match the specification? [Yes, No]
@@ -680,7 +679,7 @@ cdef action_t get_action(PatternStateC state,
 
 
 cdef int8_t get_is_match(PatternStateC state,
-        Token token, const attr_t* extra_attrs,
+        const TokenC* token, const attr_t* extra_attrs,
         const int8_t* predicate_matches) nogil:
     for i in range(state.pattern.nr_py):
         if predicate_matches[state.pattern.py_predicates[i]] == -1:
@@ -688,8 +687,7 @@ cdef int8_t get_is_match(PatternStateC state,
     spec = state.pattern
     if spec.nr_attr > 0:
         for attr in spec.attrs[:spec.nr_attr]:
-            token_attr_value = get_token_attr_for_matcher(token.c, attr.attr)
-            if token_attr_value != attr.value:
+            if get_token_attr_for_matcher(token, attr.attr) != attr.value:
                 return 0
     for i in range(spec.nr_extra_attr):
         if spec.extra_attrs[i].value != extra_attrs[spec.extra_attrs[i].index]:
@@ -1007,7 +1005,6 @@ def _get_extra_predicates(spec, extra_predicates, vocab):
             if attr.upper() == "TEXT":
                 attr = "ORTH"
             attr = IDS.get(attr.upper())
-
         if isinstance(value, dict):
             output.extend(_get_extra_predicates_dict(attr, value, vocab, predicate_types,
                                                      extra_predicates, seen_predicates))
