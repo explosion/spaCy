@@ -352,19 +352,6 @@ cdef class TrainablePipe(Pipe):
     def store_activations(self):
         return self._store_activations
 
-    def set_store_activations(self, activations):
-        known_activations = self.activations
-        if isinstance(activations, list):
-            self._store_activations = []
-            for activation in activations:
-                if activation in known_activations:
-                    self._store_activations.append(activation)
-                else:
-                    warnings.warn(Warnings.W400.format(activation=activation, pipe_name=self.name))
-        elif isinstance(activations, bool):
-            if activations:
-                self._store_activations = list(known_activations)
-            else:
-                self._store_activations = []
-        else:
-            raise ValueError(Errors.E1400)
+    @store_activations.setter
+    def store_activations(self, store_activations: bool):
+        self._store_activations = store_activations

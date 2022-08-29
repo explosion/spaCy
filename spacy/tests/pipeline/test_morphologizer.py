@@ -211,17 +211,11 @@ def test_store_activations():
     nlp.initialize(get_examples=lambda: train_examples)
 
     doc = nlp("This is a test.")
-    assert len(list(doc.activations["morphologizer"].keys())) == 0
+    assert "morphologizer" not in doc.activations
 
-    morphologizer.set_store_activations(True)
+    morphologizer.store_activations = True
     doc = nlp("This is a test.")
     assert "morphologizer" in doc.activations
     assert set(doc.activations["morphologizer"].keys()) == {"guesses", "probs"}
     assert doc.activations["morphologizer"]["probs"].shape == (5, 6)
     assert doc.activations["morphologizer"]["guesses"].shape == (5,)
-
-    morphologizer.set_store_activations(["probs"])
-    doc = nlp("This is a test.")
-    assert "morphologizer" in doc.activations
-    assert set(doc.activations["morphologizer"].keys()) == {"probs"}
-    assert doc.activations["morphologizer"]["probs"].shape == (5, 6)

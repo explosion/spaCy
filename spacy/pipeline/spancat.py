@@ -120,7 +120,7 @@ def make_spancat(
     scorer: Optional[Callable],
     threshold: float,
     max_positive: Optional[int],
-    store_activations: Union[bool, List[str]],
+    store_activations: bool,
 ) -> "SpanCategorizer":
     """Create a SpanCategorizer component. The span categorizer consists of two
     parts: a suggester function that proposes candidate spans, and a labeller
@@ -141,8 +141,7 @@ def make_spancat(
         0.5.
     max_positive (Optional[int]): Maximum number of labels to consider positive
         per span. Defaults to None, indicating no limit.
-    store_activations (Union[bool, List[str]]): Model activations to store in
-        Doc when annotating. supported activations are: "indices" and "scores".
+        store_activations (bool): store model activations in Doc when annotating.
     """
     return SpanCategorizer(
         nlp.vocab,
@@ -192,7 +191,7 @@ class SpanCategorizer(TrainablePipe):
         threshold: float = 0.5,
         max_positive: Optional[int] = None,
         scorer: Optional[Callable] = spancat_score,
-        store_activations: Union[bool, List[str]] = False,
+        store_activations: bool = False,
     ) -> None:
         """Initialize the span categorizer.
         vocab (Vocab): The shared vocabulary.
@@ -225,7 +224,7 @@ class SpanCategorizer(TrainablePipe):
         self.model = model
         self.name = name
         self.scorer = scorer
-        self.set_store_activations(store_activations)
+        self.store_activations = store_activations
 
     @property
     def key(self) -> str:
@@ -317,10 +316,9 @@ class SpanCategorizer(TrainablePipe):
         offset = 0
         for i, doc in enumerate(docs):
             indices_i = indices[i].dataXd
-            doc.activations[self.name] = {}
-            if "indices" in self.store_activations:
+            if self.store_activations:
+                doc.activations[self.name] = {}
                 doc.activations[self.name]["indices"] = indices_i
-            if "scores" in self.store_activations:
                 doc.activations[self.name]["scores"] = scores[
                     offset : offset + indices.lengths[i]
                 ]

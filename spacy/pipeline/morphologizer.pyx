@@ -69,7 +69,7 @@ def make_morphologizer(
     overwrite: bool,
     extend: bool,
     scorer: Optional[Callable],
-    store_activations: Union[bool, List[str]],
+    store_activations: bool,
 ):
     return Morphologizer(nlp.vocab, model, name, overwrite=overwrite, extend=extend, scorer=scorer,
                          store_activations=store_activations)
@@ -104,7 +104,7 @@ class Morphologizer(Tagger):
         overwrite: bool = BACKWARD_OVERWRITE,
         extend: bool = BACKWARD_EXTEND,
         scorer: Optional[Callable] = morphologizer_score,
-        store_activations: Union[bool, List[str]] = False,
+        store_activations: bool = False,
     ):
         """Initialize a morphologizer.
 
@@ -115,8 +115,7 @@ class Morphologizer(Tagger):
         scorer (Optional[Callable]): The scoring method. Defaults to
             Scorer.score_token_attr for the attributes "pos" and "morph" and
             Scorer.score_token_attr_per_feat for the attribute "morph".
-        store_activations (Union[bool, List[str]]): Model activations to store in
-            Doc when annotating. supported activations are: "probs" and "guesses".
+        store_activations (bool): store model activations in Doc when annotating.
 
         DOCS: https://spacy.io/api/morphologizer#init
         """
@@ -136,7 +135,7 @@ class Morphologizer(Tagger):
         }
         self.cfg = dict(sorted(cfg.items()))
         self.scorer = scorer
-        self.set_store_activations(store_activations)
+        self.store_activations = store_activations
 
     @property
     def labels(self):
@@ -250,9 +249,10 @@ class Morphologizer(Tagger):
         # to allocate a compatible container out of the iterable.
         labels = tuple(self.labels)
         for i, doc in enumerate(docs):
-            doc.activations[self.name] = {}
-            for activation in self.store_activations:
-                doc.activations[self.name][activation] = activations[activation][i]
+            if self.store_activations:
+                doc.activations[self.name] = {}
+                for act_name, acts in activations.items():
+                    doc.activations[self.name][act_name] = acts[i]
             doc_tag_ids = batch_tag_ids[i]
             if hasattr(doc_tag_ids, "get"):
                 doc_tag_ids = doc_tag_ids.get()

@@ -85,7 +85,7 @@ def make_entity_linker(
     scorer: Optional[Callable],
     use_gold_ents: bool,
     threshold: Optional[float] = None,
-    store_activations: Union[bool, List[str]],
+    store_activations: bool,
 ):
     """Construct an EntityLinker component.
 
@@ -104,8 +104,7 @@ def make_entity_linker(
         component must provide entity annotations.
     threshold (Optional[float]): Confidence threshold for entity predictions. If confidence is below the threshold,
         prediction is discarded. If None, predictions are not filtered by any threshold.
-    store_activations (Union[bool, List[str]]): Model activations to store in
-        Doc when annotating. supported activations are: "ents" and "scores".
+    store_activations (bool): store model activations in Doc when annotating.
     """
 
     if not model.attrs.get("include_span_maker", False):
@@ -174,7 +173,7 @@ class EntityLinker(TrainablePipe):
         scorer: Optional[Callable] = entity_linker_score,
         use_gold_ents: bool,
         threshold: Optional[float] = None,
-        store_activations: Union[bool, List[str]] = False,
+        store_activations: bool = False,
     ) -> None:
         """Initialize an entity linker.
 
@@ -223,7 +222,7 @@ class EntityLinker(TrainablePipe):
         self.scorer = scorer
         self.use_gold_ents = use_gold_ents
         self.threshold = threshold
-        self.set_store_activations(store_activations)
+        self.store_activations = store_activations
 
     def set_kb(self, kb_loader: Callable[[Vocab], KnowledgeBase]):
         """Define the KB of this pipe by providing a function that will
@@ -551,12 +550,13 @@ class EntityLinker(TrainablePipe):
         i = 0
         overwrite = self.cfg["overwrite"]
         for j, doc in enumerate(docs):
-            doc.activations[self.name] = {}
-            for activation in self.store_activations:
-                # We only copy activations that are Ragged.
-                doc.activations[self.name][activation] = cast(
-                    Ragged, activations[activation][j]
-                )
+            if self.store_activations:
+                doc.activations[self.name] = {}
+                for act_name, acts in activations.items():
+                    if act_name != "kb_ids":
+                        # We only copy activations that are Ragged.
+                        doc.activations[self.name][act_name] = cast(Ragged, acts[j])
+
             for ent in doc.ents:
                 kb_id = kb_ids[i]
                 i += 1
@@ -668,7 +668,7 @@ class EntityLinker(TrainablePipe):
         doc_scores: List[Floats1d],
         doc_ents: List[Ints1d],
     ):
-        if len(self.store_activations) == 0:
+        if not self.store_activations:
             return
         ops = self.model.ops
         lengths = ops.asarray1i([s.shape[0] for s in doc_scores])
@@ -683,7 +683,7 @@ class EntityLinker(TrainablePipe):
         scores: Sequence[float],
         ents: Sequence[int],
     ):
-        if len(self.store_activations) == 0:
+        if not self.store_activations:
             return
         ops = self.model.ops
         doc_scores.append(ops.asarray1f(scores))

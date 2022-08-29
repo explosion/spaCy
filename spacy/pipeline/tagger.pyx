@@ -61,7 +61,7 @@ def make_tagger(
     overwrite: bool,
     scorer: Optional[Callable],
     neg_prefix: str,
-    store_activations: Union[bool, List[str]],
+    store_activations: bool,
 ):
     """Construct a part-of-speech tagger component.
 
@@ -97,7 +97,7 @@ class Tagger(TrainablePipe):
         overwrite=BACKWARD_OVERWRITE,
         scorer=tagger_score,
         neg_prefix="!",
-        store_activations: Union[bool, List[str]] = False,
+        store_activations: bool = False,
     ):
         """Initialize a part-of-speech tagger.
 
@@ -107,8 +107,7 @@ class Tagger(TrainablePipe):
             losses during training.
         scorer (Optional[Callable]): The scoring method. Defaults to
             Scorer.score_token_attr for the attribute "tag".
-        store_activations (Union[bool, List[str]]): Model activations to store in
-            Doc when annotating. supported activations are: "probs" and "guesses".
+        store_activations (bool): store model activations in Doc when annotating.
 
         DOCS: https://spacy.io/api/tagger#init
         """
@@ -119,7 +118,7 @@ class Tagger(TrainablePipe):
         cfg = {"labels": [], "overwrite": overwrite, "neg_prefix": neg_prefix}
         self.cfg = dict(sorted(cfg.items()))
         self.scorer = scorer
-        self.set_store_activations(store_activations)
+        self.store_activations = store_activations
 
     @property
     def labels(self):
@@ -183,9 +182,10 @@ class Tagger(TrainablePipe):
         cdef bint overwrite = self.cfg["overwrite"]
         labels = self.labels
         for i, doc in enumerate(docs):
-            doc.activations[self.name] = {}
-            for activation in self.store_activations:
-                doc.activations[self.name][activation] = activations[activation][i]
+            if self.store_activations:
+                doc.activations[self.name] = {}
+                for act_name, acts in activations.items():
+                    doc.activations[self.name][act_name] = acts[i]
             doc_tag_ids = batch_tag_ids[i]
             if hasattr(doc_tag_ids, "get"):
                 doc_tag_ids = doc_tag_ids.get()

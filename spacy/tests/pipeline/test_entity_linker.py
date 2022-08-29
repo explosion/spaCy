@@ -1225,9 +1225,9 @@ def test_store_activations():
     ruler.add_patterns(patterns)
 
     doc = nlp("Russ Cochran was a publisher")
-    assert len(doc.activations["entity_linker"].keys()) == 0
+    assert "entity_linker" not in doc.activations
 
-    entity_linker.set_store_activations(True)
+    entity_linker.store_activations = True
     doc = nlp("Russ Cochran was a publisher")
     assert set(doc.activations["entity_linker"].keys()) == {"ents", "scores"}
     ents = doc.activations["entity_linker"]["ents"]
@@ -1235,15 +1235,6 @@ def test_store_activations():
     assert ents.data.shape == (2, 1)
     assert ents.data.dtype == "uint64"
     assert ents.lengths.shape == (1,)
-    scores = doc.activations["entity_linker"]["scores"]
-    assert isinstance(scores, Ragged)
-    assert scores.data.shape == (2, 1)
-    assert scores.data.dtype == "float32"
-    assert scores.lengths.shape == (1,)
-
-    entity_linker.set_store_activations(["scores"])
-    doc = nlp("Russ Cochran was a publisher")
-    assert set(doc.activations["entity_linker"].keys()) == {"scores"}
     scores = doc.activations["entity_linker"]["scores"]
     assert isinstance(scores, Ragged)
     assert scores.data.shape == (2, 1)

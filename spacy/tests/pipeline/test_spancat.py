@@ -432,15 +432,10 @@ def test_store_activations():
     assert set(spancat.labels) == {"LOC", "PERSON"}
 
     doc = nlp("This is a test.")
-    assert len(list(doc.activations["spancat"].keys())) == 0
+    assert "spancat" not in doc.activations
 
-    spancat.set_store_activations(True)
+    spancat.store_activations = True
     doc = nlp("This is a test.")
     assert set(doc.activations["spancat"].keys()) == {"indices", "scores"}
     assert doc.activations["spancat"]["indices"].shape == (12, 2)
-    assert doc.activations["spancat"]["scores"].shape == (12, nO)
-
-    spancat.set_store_activations(["scores"])
-    doc = nlp("This is a test.")
-    assert set(doc.activations["spancat"].keys()) == {"scores"}
     assert doc.activations["spancat"]["scores"].shape == (12, nO)

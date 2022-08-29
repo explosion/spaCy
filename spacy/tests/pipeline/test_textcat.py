@@ -886,14 +886,9 @@ def test_store_activations():
     nO = textcat.model.get_dim("nO")
 
     doc = nlp("This is a test.")
-    assert len(list(doc.activations["textcat"].keys())) == 0
+    assert "textcat" not in doc.activations
 
-    textcat.set_store_activations(True)
-    doc = nlp("This is a test.")
-    assert list(doc.activations["textcat"].keys()) == ["probs"]
-    assert doc.activations["textcat"]["probs"].shape == (nO,)
-
-    textcat.set_store_activations(["probs"])
+    textcat.store_activations = True
     doc = nlp("This is a test.")
     assert list(doc.activations["textcat"].keys()) == ["probs"]
     assert doc.activations["textcat"]["probs"].shape == (nO,)
@@ -911,14 +906,9 @@ def test_store_activations_multi():
     nO = textcat.model.get_dim("nO")
 
     doc = nlp("This is a test.")
-    assert len(list(doc.activations["textcat_multilabel"].keys())) == 0
+    assert "textcat_multilabel" not in doc.activations
 
-    textcat.set_store_activations(True)
-    doc = nlp("This is a test.")
-    assert list(doc.activations["textcat_multilabel"].keys()) == ["probs"]
-    assert doc.activations["textcat_multilabel"]["probs"].shape == (nO,)
-
-    textcat.set_store_activations(["probs"])
+    textcat.store_activations = True
     doc = nlp("This is a test.")
     assert list(doc.activations["textcat_multilabel"].keys()) == ["probs"]
     assert doc.activations["textcat_multilabel"]["probs"].shape == (nO,)

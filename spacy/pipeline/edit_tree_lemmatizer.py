@@ -65,7 +65,7 @@ def make_edit_tree_lemmatizer(
     overwrite: bool,
     top_k: int,
     scorer: Optional[Callable],
-    store_activations: Union[bool, List[str]],
+    store_activations: bool,
 ):
     """Construct an EditTreeLemmatizer component."""
     return EditTreeLemmatizer(
@@ -97,7 +97,7 @@ class EditTreeLemmatizer(TrainablePipe):
         overwrite: bool = False,
         top_k: int = 1,
         scorer: Optional[Callable] = lemmatizer_score,
-        store_activations: Union[bool, List[str]] = False,
+        store_activations: bool = False,
     ):
         """
         Construct an edit tree lemmatizer.
@@ -109,8 +109,7 @@ class EditTreeLemmatizer(TrainablePipe):
             frequency in the training data.
         overwrite (bool): overwrite existing lemma annotations.
         top_k (int): try to apply at most the k most probable edit trees.
-        store_activations (Union[bool, List[str]]): Model activations to store in
-            Doc when annotating. supported activations are: "probs" and "guesses".
+        store_activations (bool): store model activations in Doc when annotating.
         """
         self.vocab = vocab
         self.model = model
@@ -125,7 +124,7 @@ class EditTreeLemmatizer(TrainablePipe):
 
         self.cfg: Dict[str, Any] = {"labels": []}
         self.scorer = scorer
-        self.set_store_activations(store_activations)
+        self.store_activations = store_activations
 
     def get_loss(
         self, examples: Iterable[Example], scores: List[Floats2d]
@@ -202,9 +201,10 @@ class EditTreeLemmatizer(TrainablePipe):
     def set_annotations(self, docs: Iterable[Doc], activations: ActivationsT):
         batch_tree_ids = activations["guesses"]
         for i, doc in enumerate(docs):
-            doc.activations[self.name] = {}
-            for activation in self.store_activations:
-                doc.activations[self.name][activation] = activations[activation][i]
+            if self.store_activations:
+                doc.activations[self.name] = {}
+                for act_name, acts in activations.items():
+                    doc.activations[self.name][act_name] = acts[i]
             doc_tree_ids = batch_tree_ids[i]
             if hasattr(doc_tree_ids, "get"):
                 doc_tree_ids = doc_tree_ids.get()

@@ -52,7 +52,7 @@ def make_senter(nlp: Language,
                 model: Model,
                 overwrite: bool,
                 scorer: Optional[Callable],
-                store_activations: Union[bool, List[str]]):
+                store_activations: bool):
     return SentenceRecognizer(nlp.vocab, model, name, overwrite=overwrite, scorer=scorer, store_activations=store_activations)
 
 
@@ -83,7 +83,7 @@ class SentenceRecognizer(Tagger):
         *,
         overwrite=BACKWARD_OVERWRITE,
         scorer=senter_score,
-        store_activations: Union[bool, List[str]] = False,
+        store_activations: bool = False,
     ):
         """Initialize a sentence recognizer.
 
@@ -93,8 +93,7 @@ class SentenceRecognizer(Tagger):
             losses during training.
         scorer (Optional[Callable]): The scoring method. Defaults to
             Scorer.score_spans for the attribute "sents".
-        store_activations (Union[bool, List[str]]): Model activations to store in
-            Doc when annotating. supported activations are: "probs" and "guesses".
+        store_activations (bool): store model activations in Doc when annotating.
 
         DOCS: https://spacy.io/api/sentencerecognizer#init
         """
@@ -104,7 +103,7 @@ class SentenceRecognizer(Tagger):
         self._rehearsal_model = None
         self.cfg = {"overwrite": overwrite}
         self.scorer = scorer
-        self.set_store_activations(store_activations)
+        self.store_activations = store_activations
 
     @property
     def labels(self):
@@ -136,9 +135,10 @@ class SentenceRecognizer(Tagger):
         cdef Doc doc
         cdef bint overwrite = self.cfg["overwrite"]
         for i, doc in enumerate(docs):
-            doc.activations[self.name] = {}
-            for activation in self.store_activations:
-                doc.activations[self.name][activation] = activations[activation][i]
+            if self.store_activations:
+                doc.activations[self.name] = {}
+                for act_name, acts in activations.items():
+                    doc.activations[self.name][act_name] = acts[i]
             doc_tag_ids = batch_tag_ids[i]
             if hasattr(doc_tag_ids, "get"):
                 doc_tag_ids = doc_tag_ids.get()

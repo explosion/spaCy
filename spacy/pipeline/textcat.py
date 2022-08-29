@@ -97,7 +97,7 @@ def make_textcat(
     model: Model[List[Doc], List[Floats2d]],
     threshold: float,
     scorer: Optional[Callable],
-    store_activations: Union[bool, List[str]],
+    store_activations: bool,
 ) -> "TextCategorizer":
     """Create a TextCategorizer component. The text categorizer predicts categories
     over a whole document. It can learn one or more labels, and the labels are considered
@@ -107,8 +107,7 @@ def make_textcat(
         scores for each category.
     threshold (float): Cutoff to consider a prediction "positive".
     scorer (Optional[Callable]): The scoring method.
-    store_activations (Union[bool, List[str]]): Model activations to store in
-        Doc when annotating. supported activations is: "probs".
+    store_activations (bool): store model activations in Doc when annotating.
     """
     return TextCategorizer(
         nlp.vocab,
@@ -148,7 +147,7 @@ class TextCategorizer(TrainablePipe):
         *,
         threshold: float,
         scorer: Optional[Callable] = textcat_score,
-        store_activations: Union[bool, List[str]] = False,
+        store_activations: bool = False,
     ) -> None:
         """Initialize a text categorizer for single-label classification.
 
@@ -169,7 +168,7 @@ class TextCategorizer(TrainablePipe):
         cfg = {"labels": [], "threshold": threshold, "positive_label": None}
         self.cfg = dict(cfg)
         self.scorer = scorer
-        self.set_store_activations(store_activations)
+        self.store_activations = store_activations
 
     @property
     def support_missing_values(self):
@@ -224,8 +223,8 @@ class TextCategorizer(TrainablePipe):
         """
         probs = activations["probs"]
         for i, doc in enumerate(docs):
-            doc.activations[self.name] = {}
-            if "probs" in self.store_activations:
+            if self.store_activations:
+                doc.activations[self.name] = {}
                 doc.activations[self.name]["probs"] = probs[i]
             for j, label in enumerate(self.labels):
                 doc.cats[label] = float(probs[i, j])
