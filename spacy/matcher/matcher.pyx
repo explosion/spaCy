@@ -880,7 +880,7 @@ class _FuzzyPredicate:
             value = token._.get(self.attr)
         else:
             value = token.vocab.strings[get_token_attr_for_matcher(token.c, self.attr)]
-        return bool(fuzz_cpp.ratio(self.value, value) >= self.fuzzy)
+        return bool(self.fuzzy and fuzz_cpp.ratio(self.value, value) >= self.fuzzy)
 
 
 class _RegexPredicate:
@@ -1006,7 +1006,6 @@ class _ComparisonPredicate:
 
 def _get_extra_predicates(spec, extra_predicates, vocab, fuzzy, fuzzy_attrs):
     predicate_types = {
-        "FUZZY": _FuzzyPredicate,
         "REGEX": _RegexPredicate,
         "IN": _SetPredicate,
         "NOT_IN": _SetPredicate,
@@ -1019,6 +1018,7 @@ def _get_extra_predicates(spec, extra_predicates, vocab, fuzzy, fuzzy_attrs):
         "<=": _ComparisonPredicate,
         ">": _ComparisonPredicate,
         "<": _ComparisonPredicate,
+        "FUZZY": _FuzzyPredicate,
     }
     seen_predicates = {pred.key: pred.i for pred in extra_predicates}
     output = []
@@ -1037,39 +1037,40 @@ def _get_extra_predicates(spec, extra_predicates, vocab, fuzzy, fuzzy_attrs):
             attr = IDS.get(attr.upper())
 
         if isinstance(value, dict):
-            output.extend(_get_extra_predicates_helper(attr, value, vocab, fuzzy, fuzzy_attrs,
-                                                       predicate_types,
-                                                       extra_predicates, seen_predicates))
+            fuzzy_match = attr in fuzzy_attrs # fuzzy match enabled for this attr
+            output.extend(_get_extra_predicates_dict(attr, value, vocab, fuzzy, fuzzy_match,
+                                                     predicate_types,
+                                                     extra_predicates, seen_predicates))
     return output
 
 
-def _get_extra_predicates_helper(attr, value, vocab, fuzzy, fuzzy_attrs,
-                                 predicate_types, extra_predicates, seen_predicates):
+def _get_extra_predicates_dict(attr, value_dict, vocab, fuzzy, fuzzy_match,
+                               predicate_types, extra_predicates, seen_predicates):
     output = []
-    processed = False #TODO: not working as intended
-    value_with_upper_keys = {k.upper(): v for k, v in value.items()}
-    for type_, cls in predicate_types.items(): #TODO: switch this loop
-        if type_ in value_with_upper_keys:
-            if type_ == 'FUZZY' and isinstance(value_with_upper_keys[type_], dict):
+    for type_, value in value_dict.items():
+        if type_ == 'FUZZY':
+            fuzzy_match = True # explicit fuzzy match
+            if isinstance(value, dict):
                 # add predicates inside fuzzy operator
-                output.extend(_get_extra_predicates_helper(attr, value_with_upper_keys[type_],
-                                                           vocab, fuzzy, fuzzy_attrs,
-                                                           predicate_types,
-                                                           extra_predicates, seen_predicates))
-            else:
-                predicate = cls(len(extra_predicates), attr, value_with_upper_keys[type_], type_,
-                                vocab=vocab, fuzzy=fuzzy)###??? if attr in fuzzy_attrs else 0)
-                # Don't create a redundant predicates.
-                # This helps with efficiency, as we're caching the results.
-                if predicate.key in seen_predicates:
-                    output.append(seen_predicates[predicate.key])
-                else:
-                    extra_predicates.append(predicate)
-                    output.append(predicate.i)
-                    seen_predicates[predicate.key] = predicate.i
-            processed = True
-    if not processed:
-        warnings.warn(Warnings.W035.format(pattern=value))
+                output.extend(_get_extra_predicates_dict(attr, value, vocab, fuzzy, fuzzy_match,
+                                                         predicate_types,
+                                                         extra_predicates, seen_predicates))
+                continue
+        cls = predicate_types.get(type_.upper())
+        if cls is None:
+            warnings.warn(Warnings.W035.format(pattern=value_dict))
+            # ignore unrecongized predicate type
+            continue
+        predicate = cls(len(extra_predicates), attr, value, type_, vocab=vocab,
+                        fuzzy=fuzzy if fuzzy_match else 0)
+        # Don't create a redundant predicates.
+        # This helps with efficiency, as we're caching the results.
+        if predicate.key in seen_predicates:
+            output.append(seen_predicates[predicate.key])
+        else:
+            extra_predicates.append(predicate)
+            output.append(predicate.i)
+            seen_predicates[predicate.key] = predicate.i
     return output
 
 
