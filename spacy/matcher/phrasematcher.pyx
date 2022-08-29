@@ -158,7 +158,26 @@ cdef class PhraseMatcher:
         del self._docs[key]
 
 
+    def _add_from_arrays(self, key, specs, on_match=None):
+        """Add a preprocessed list of specs, with an optional callback.
+
+        key (str): The match ID.
+        specs (sequence): A sequence of sequences of hashes to match.
+        on_match (callable): Callback executed on match.
+
+        Used in unpickling.
+        """
+        self._callbacks[key] = on_match
+        for spec in specs:
+            self._add_from_array(key, spec)
+
+
     def _add_from_array(self, key, keyword):
+        """Add a preprocessed Doc to the internal match list.
+
+        key (str): The match ID.
+        keyword (Sequence): List of hashes to match.
+        """
         self._docs[key].add(tuple(keyword))
 
         current_node = self.c_map
@@ -347,9 +366,7 @@ def unpickle_matcher(vocab, docs, callbacks, attr):
     matcher = PhraseMatcher(vocab, attr=attr)
     for key, specs in docs.items():
         callback = callbacks.get(key, None)
-        matcher._callbacks[key] = callback
-        for spec in specs:
-            matcher._add_from_array(key, spec)
+        matcher._add_from_arrays(key, specs, callback)
     return matcher
 
 
