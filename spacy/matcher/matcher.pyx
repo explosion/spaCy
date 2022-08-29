@@ -1048,6 +1048,7 @@ def _get_extra_predicates_dict(attr, value_dict, vocab, fuzzy, fuzzy_match,
                                predicate_types, extra_predicates, seen_predicates):
     output = []
     for type_, value in value_dict.items():
+        type_ = type_.upper()
         if type_ == 'FUZZY':
             fuzzy_match = True # explicit fuzzy match
             if isinstance(value, dict):
@@ -1056,10 +1057,10 @@ def _get_extra_predicates_dict(attr, value_dict, vocab, fuzzy, fuzzy_match,
                                                          predicate_types,
                                                          extra_predicates, seen_predicates))
                 continue
-        cls = predicate_types.get(type_.upper())
+        cls = predicate_types.get(type_)
         if cls is None:
             warnings.warn(Warnings.W035.format(pattern=value_dict))
-            # ignore unrecongized predicate type
+            # ignore unrecognized predicate type
             continue
         predicate = cls(len(extra_predicates), attr, value, type_, vocab=vocab,
                         fuzzy=fuzzy if fuzzy_match else 0)
