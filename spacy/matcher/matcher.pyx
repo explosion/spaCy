@@ -816,7 +816,7 @@ def _preprocess_pattern(token_specs, vocab, extensions_table, extra_predicates,
         ops = _get_operators(spec)
         attr_values = _get_attr_values(spec, string_store)
         extensions = _get_extensions(spec, string_store, extensions_table)
-        predicates = _get_extra_predicates(spec, extra_predicates, vocab, fuzzy)
+        predicates = _get_extra_predicates(spec, extra_predicates, vocab, fuzzy, fuzzy_attrs)
         for op in ops:
             tokens.append((op, list(attr_values), list(extensions), list(predicates), token_idx))
     return tokens
@@ -915,9 +915,14 @@ class _SetPredicate:
             # normalize morph strings
             self.value = set(self.vocab.morphology.add(v) for v in value)
         else:
-            self.value = set(get_string_id(v) for v in value)
+            if fuzzy:
+                # add to string store
+                self.value = set(self.vocab.strings.add(v) for v in value)
+            else:
+                self.value = set(get_string_id(v) for v in value)
         self.predicate = predicate
         self.is_extension = is_extension
+        self.fuzzy = fuzzy
         self.key = (attr, self.predicate, srsly.json_dumps(value, sort_keys=True))
         if self.predicate not in self.operators:
             raise ValueError(Errors.E126.format(good=self.operators, bad=self.predicate))
@@ -939,9 +944,23 @@ class _SetPredicate:
                 else:
                     value = set(get_string_id(v) for v in value)
         if self.predicate == "IN":
-            return value in self.value # TODO: handle fuzzy
+            if value in self.value:
+                return True
+            elif self.fuzzy:
+                for v in self.value:
+                    if fuzz_cpp.ratio(self.vocab.strings[value],
+                                      self.vocab.strings[v]) >= self.fuzzy:
+                        return True
+            return False
         elif self.predicate == "NOT_IN":
-            return value not in self.value # TODO: handle fuzzy
+            if value in self.value:
+                return False
+            elif self.fuzzy:
+                for v in self.value:
+                    if fuzz_cpp.ratio(self.vocab.strings[value],
+                                      self.vocab.strings[v]) >= self.fuzzy:
+                        return False
+            return True
         elif self.predicate == "IS_SUBSET":
             return value <= self.value
         elif self.predicate == "IS_SUPERSET":
@@ -985,7 +1004,7 @@ class _ComparisonPredicate:
             return value < self.value
 
 
-def _get_extra_predicates(spec, extra_predicates, vocab, fuzzy):
+def _get_extra_predicates(spec, extra_predicates, vocab, fuzzy, fuzzy_attrs):
     predicate_types = {
         "FUZZY": _FuzzyPredicate,
         "REGEX": _RegexPredicate,
@@ -1016,23 +1035,41 @@ def _get_extra_predicates(spec, extra_predicates, vocab, fuzzy):
             if attr.upper() == "TEXT":
                 attr = "ORTH"
             attr = IDS.get(attr.upper())
+
         if isinstance(value, dict):
-            processed = False
-            value_with_upper_keys = {k.upper(): v for k, v in value.items()}
-            for type_, cls in predicate_types.items():
-                if type_ in value_with_upper_keys:
-                    predicate = cls(len(extra_predicates), attr, value_with_upper_keys[type_], type_, vocab=vocab, fuzzy=fuzzy)
-                    # Don't create a redundant predicates.
-                    # This helps with efficiency, as we're caching the results.
-                    if predicate.key in seen_predicates:
-                        output.append(seen_predicates[predicate.key])
-                    else:
-                        extra_predicates.append(predicate)
-                        output.append(predicate.i)
-                        seen_predicates[predicate.key] = predicate.i
-                    processed = True
-            if not processed:
-                warnings.warn(Warnings.W035.format(pattern=value))
+            output.extend(_get_extra_predicates_helper(attr, value, vocab, fuzzy, fuzzy_attrs,
+                                                       predicate_types,
+                                                       extra_predicates, seen_predicates))
+    return output
+
+
+def _get_extra_predicates_helper(attr, value, vocab, fuzzy, fuzzy_attrs,
+                                 predicate_types, extra_predicates, seen_predicates):
+    output = []
+    processed = False #TODO: not working as intended
+    value_with_upper_keys = {k.upper(): v for k, v in value.items()}
+    for type_, cls in predicate_types.items(): #TODO: switch this loop
+        if type_ in value_with_upper_keys:
+            if type_ == 'FUZZY' and isinstance(value_with_upper_keys[type_], dict):
+                # add predicates inside fuzzy operator
+                output.extend(_get_extra_predicates_helper(attr, value_with_upper_keys[type_],
+                                                           vocab, fuzzy, fuzzy_attrs,
+                                                           predicate_types,
+                                                           extra_predicates, seen_predicates))
+            else:
+                predicate = cls(len(extra_predicates), attr, value_with_upper_keys[type_], type_,
+                                vocab=vocab, fuzzy=fuzzy)###??? if attr in fuzzy_attrs else 0)
+                # Don't create a redundant predicates.
+                # This helps with efficiency, as we're caching the results.
+                if predicate.key in seen_predicates:
+                    output.append(seen_predicates[predicate.key])
+                else:
+                    extra_predicates.append(predicate)
+                    output.append(predicate.i)
+                    seen_predicates[predicate.key] = predicate.i
+            processed = True
+    if not processed:
+        warnings.warn(Warnings.W035.format(pattern=value))
     return output
 
 
