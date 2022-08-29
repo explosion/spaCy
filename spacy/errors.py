@@ -940,6 +940,9 @@ class Errors(metaclass=ErrorsWithCodes):
     E1043 = ("Expected None or a value in range [{range_start}, {range_end}] for entity linker threshold, but got "
              "{value}.")
 
+    # v4 error strings
+    E4000 = ("Expected a Doc as input, but got: '{type}'")
+
 
 # Deprecated model shortcuts, only used in errors and warnings
 OLD_MODEL_SHORTCUTS = {

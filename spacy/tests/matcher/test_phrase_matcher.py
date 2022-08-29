@@ -445,6 +445,13 @@ def test_phrase_matcher_deprecated(en_vocab):
         assert "spaCy v3.0" in str(record.list[0].message)
 
 
+def test_phrase_matcher_non_doc(en_vocab):
+    matcher = PhraseMatcher(en_vocab)
+    doc = Doc(en_vocab, words=["hello", "world"])
+    with pytest.raises(ValueError):
+        matcher.add("TEST", [doc, "junk"])
+
+
 @pytest.mark.parametrize("attr", ["SENT_START", "IS_SENT_START"])
 def test_phrase_matcher_sent_start(en_vocab, attr):
     _ = PhraseMatcher(en_vocab, attr=attr)  # noqa: F841

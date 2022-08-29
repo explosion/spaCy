@@ -158,47 +158,40 @@ cdef class PhraseMatcher:
         del self._docs[key]
 
 
-    def _add_from_arrays(self, key, specs, on_match=None):
+    def _add_from_arrays(self, key, specs, *, on_match=None):
         """Add a preprocessed list of specs, with an optional callback.
 
         key (str): The match ID.
         specs (sequence): A sequence of sequences of hashes to match.
         on_match (callable): Callback executed on match.
-
-        Used in unpickling.
         """
+        cdef MapStruct* current_node
+        cdef MapStruct* internal_node
+        cdef void* result
+
         self._callbacks[key] = on_match
         for spec in specs:
-            self._add_from_array(key, spec)
+            self._docs[key].add(tuple(spec))
 
-
-    def _add_from_array(self, key, keyword):
-        """Add a preprocessed Doc to the internal match list.
-
-        key (str): The match ID.
-        keyword (Sequence): List of hashes to match.
-        """
-        self._docs[key].add(tuple(keyword))
-
-        current_node = self.c_map
-        for token in keyword:
-            if token == self._terminal_hash:
-                warnings.warn(Warnings.W021)
-                break
-            result = <MapStruct*>map_get(current_node, token)
+            current_node = self.c_map
+            for token in spec:
+                if token == self._terminal_hash:
+                    warnings.warn(Warnings.W021)
+                    break
+                result = <MapStruct*>map_get(current_node, token)
+                if not result:
+                    internal_node = <MapStruct*>self.mem.alloc(1, sizeof(MapStruct))
+                    map_init(self.mem, internal_node, 8)
+                    map_set(self.mem, current_node, token, internal_node)
+                    result = internal_node
+                current_node = <MapStruct*>result
+            result = <MapStruct*>map_get(current_node, self._terminal_hash)
             if not result:
                 internal_node = <MapStruct*>self.mem.alloc(1, sizeof(MapStruct))
                 map_init(self.mem, internal_node, 8)
-                map_set(self.mem, current_node, token, internal_node)
+                map_set(self.mem, current_node, self._terminal_hash, internal_node)
                 result = internal_node
-            current_node = <MapStruct*>result
-        result = <MapStruct*>map_get(current_node, self._terminal_hash)
-        if not result:
-            internal_node = <MapStruct*>self.mem.alloc(1, sizeof(MapStruct))
-            map_init(self.mem, internal_node, 8)
-            map_set(self.mem, current_node, self._terminal_hash, internal_node)
-            result = internal_node
-        map_set(self.mem, <MapStruct*>result, self.vocab.strings[key], NULL)
+            map_set(self.mem, <MapStruct*>result, self.vocab.strings[key], NULL)
 
 
     def add(self, key, docs, *, on_match=None):
@@ -208,6 +201,8 @@ cdef class PhraseMatcher:
         key (str): The match ID.
         docs (list): List of `Doc` objects representing match patterns.
         on_match (callable): Callback executed on match.
+
+        If any of the input Docs are invalid, no internal state will be updated.
 
         DOCS: https://spacy.io/api/phrasematcher#add
         """
@@ -219,40 +214,35 @@ cdef class PhraseMatcher:
             raise ValueError(Errors.E171.format(name="PhraseMatcher", arg_type=type(on_match)))
 
         _ = self.vocab[key]
-        self._callbacks[key] = on_match
-
-        cdef MapStruct* current_node
-        cdef MapStruct* internal_node
-        cdef void* result
+        specs = []
 
         for doc in docs:
             if len(doc) == 0:
                 continue
-            if isinstance(doc, Doc):
-                attrs = (TAG, POS, MORPH, LEMMA, DEP)
-                has_annotation = {attr: doc.has_annotation(attr) for attr in attrs}
-                for attr in attrs:
-                    if self.attr == attr and not has_annotation[attr]:
-                        if attr == TAG:
-                            pipe = "tagger"
-                        elif attr in (POS, MORPH):
-                            pipe = "morphologizer or tagger+attribute_ruler"
-                        elif attr == LEMMA:
-                            pipe = "lemmatizer"
-                        elif attr == DEP:
-                            pipe = "parser"
-                        error_msg = Errors.E155.format(pipe=pipe, attr=self.vocab.strings.as_string(attr))
-                        raise ValueError(error_msg)
-                if self._validate and any(has_annotation.values()) \
-                        and self.attr not in attrs:
-                    string_attr = self.vocab.strings[self.attr]
-                    warnings.warn(Warnings.W012.format(key=key, attr=string_attr))
-                keyword = self._convert_to_array(doc)
-            else:
-                # The doc here should be a Sequence of attr_ts. This is used when unpickling.
-                keyword = doc
+            if not isinstance(doc, Doc):
+                raise ValueError(Errors.E4000.format(type=type(doc)))
 
-            self._add_from_array(key, keyword)
+            attrs = (TAG, POS, MORPH, LEMMA, DEP)
+            has_annotation = {attr: doc.has_annotation(attr) for attr in attrs}
+            for attr in attrs:
+                if self.attr == attr and not has_annotation[attr]:
+                    if attr == TAG:
+                        pipe = "tagger"
+                    elif attr in (POS, MORPH):
+                        pipe = "morphologizer or tagger+attribute_ruler"
+                    elif attr == LEMMA:
+                        pipe = "lemmatizer"
+                    elif attr == DEP:
+                        pipe = "parser"
+                    error_msg = Errors.E155.format(pipe=pipe, attr=self.vocab.strings.as_string(attr))
+                    raise ValueError(error_msg)
+            if self._validate and any(has_annotation.values()) \
+                    and self.attr not in attrs:
+                string_attr = self.vocab.strings[self.attr]
+                warnings.warn(Warnings.W012.format(key=key, attr=string_attr))
+            specs.append(self._convert_to_array(doc))
+
+        self._add_from_arrays(key, specs, on_match=on_match)
 
     def __call__(self, object doclike, *, as_spans=False):
         """Find all sequences matching the supplied patterns on the `Doc`.
@@ -366,7 +356,7 @@ def unpickle_matcher(vocab, docs, callbacks, attr):
     matcher = PhraseMatcher(vocab, attr=attr)
     for key, specs in docs.items():
         callback = callbacks.get(key, None)
-        matcher._add_from_arrays(key, specs, callback)
+        matcher._add_from_arrays(key, specs, on_match=callback)
     return matcher
 
 
