@@ -345,10 +345,6 @@ cdef class TrainablePipe(Pipe):
         return self
 
     @property
-    def activations(self):
-        raise NotImplementedError(Errors.E931.format(parent="TrainablePipe", method="activations", name=self.name))
-
-    @property
     def store_activations(self):
         return self._store_activations
 

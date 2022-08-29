@@ -656,10 +656,6 @@ class EntityLinker(TrainablePipe):
     def add_label(self, label):
         raise NotImplementedError
 
-    @property
-    def activations(self):
-        return ["ents", "scores"]
-
     def _add_doc_activations(
         self,
         *,

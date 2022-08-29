@@ -205,7 +205,3 @@ class SentenceRecognizer(Tagger):
 
     def add_label(self, label, values=None):
         raise NotImplementedError
-
-    @property
-    def activations(self):
-        return ["probs", "guesses"]

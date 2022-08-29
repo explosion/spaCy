@@ -416,7 +416,3 @@ class TextCategorizer(TrainablePipe):
         for ex in examples:
             if list(ex.reference.cats.values()).count(1.0) > 1:
                 raise ValueError(Errors.E895.format(value=ex.reference.cats))
-
-    @property
-    def activations(self):
-        return ["probs"]

@@ -493,7 +493,3 @@ class SpanCategorizer(TrainablePipe):
                     spans.append(Span(doc, start, end, label=labels[j]))
 
         return spans
-
-    @property
-    def activations(self):
-        return ["indices", "scores"]

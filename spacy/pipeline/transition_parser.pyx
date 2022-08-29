@@ -666,9 +666,3 @@ cdef class Parser(TrainablePipe):
                 if state.is_final():
                     break
         return states, golds, max_length
-
-    @property
-    def activations(self):
-        # We currently do not have access to the state ids or probabilities
-        # after parsing. TODO: the parser refactor does provide some history.
-        return []

@@ -339,7 +339,3 @@ class Tagger(TrainablePipe):
         self.cfg["labels"].append(label)
         self.vocab.strings.add(label)
         return 1
-
-    @property
-    def activations(self):
-        return ["probs", "guesses"]

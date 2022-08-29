@@ -394,7 +394,3 @@ class EditTreeLemmatizer(TrainablePipe):
             self.tree2label[tree_id] = len(self.cfg["labels"])
             self.cfg["labels"].append(tree_id)
         return self.tree2label[tree_id]
-
-    @property
-    def activations(self):
-        return ["probs", "guesses"]
