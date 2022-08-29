@@ -5,7 +5,7 @@ from thinc.types import Floats1d, Floats2d, Ints2d
 from .span import Span
 from .token import Token
 from .span_groups import SpanGroups
-from .retokenize import Retokenizer
+from .retokenizer import Retokenizer
 from ..lexeme import Lexeme
 from ..vocab import Vocab
 from .underscore import Underscore

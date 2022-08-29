@@ -35,7 +35,7 @@ from .. import util
 from .. import parts_of_speech
 from .. import schemas
 from .underscore import Underscore, get_ext_args
-from .retokenize import Retokenizer
+from .retokenizer import Retokenizer
 from .doc_bin import ALL_ATTRS as DOCBIN_ALL_ATTRS
 from ..util import get_words_and_spaces
 
