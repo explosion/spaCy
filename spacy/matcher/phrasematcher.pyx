@@ -167,9 +167,9 @@ cdef class PhraseMatcher:
         """
         # NOTE: in normal usage, `docs` will be a List of Docs. However, it can
         # also be of type Set[Tuple[attr_t]], which is the type used for
-        # internal storage of patterns. This is used in deserialization, for
+        # internal storage of patterns. This is used in unpickling, for
         # example.
-        if docs and isinstance(docs, Doc):
+        if isinstance(docs, Doc):
             raise ValueError(Errors.E179.format(key=key))
         if on_match is not None and not hasattr(on_match, "__call__"):
             raise ValueError(Errors.E171.format(name="PhraseMatcher", arg_type=type(on_match)))
@@ -206,7 +206,7 @@ cdef class PhraseMatcher:
                     warnings.warn(Warnings.W012.format(key=key, attr=string_attr))
                 keyword = self._convert_to_array(doc)
             else:
-                # The doc here should be a Sequence of attr_ts. This is used when deserializing.
+                # The doc here should be a Sequence of attr_ts. This is used when unpickling.
                 keyword = doc
             self._docs[key].add(tuple(keyword))
 
