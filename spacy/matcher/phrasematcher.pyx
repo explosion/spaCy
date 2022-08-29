@@ -1,4 +1,6 @@
 # cython: infer_types=True, profile=True
+from typing import List
+from collections import defaultdict
 from libc.stdint cimport uintptr_t
 from preshed.maps cimport map_init, map_set, map_get, map_clear, map_iter
 
@@ -39,7 +41,7 @@ cdef class PhraseMatcher:
         """
         self.vocab = vocab
         self._callbacks = {}
-        self._docs = {}
+        self._docs = defaultdict(set)
         self._validate = validate
 
         self.mem = Pool()
@@ -155,6 +157,31 @@ cdef class PhraseMatcher:
         del self._callbacks[key]
         del self._docs[key]
 
+
+    def _add_from_array(self, key, keyword):
+        self._docs[key].add(tuple(keyword))
+
+        current_node = self.c_map
+        for token in keyword:
+            if token == self._terminal_hash:
+                warnings.warn(Warnings.W021)
+                break
+            result = <MapStruct*>map_get(current_node, token)
+            if not result:
+                internal_node = <MapStruct*>self.mem.alloc(1, sizeof(MapStruct))
+                map_init(self.mem, internal_node, 8)
+                map_set(self.mem, current_node, token, internal_node)
+                result = internal_node
+            current_node = <MapStruct*>result
+        result = <MapStruct*>map_get(current_node, self._terminal_hash)
+        if not result:
+            internal_node = <MapStruct*>self.mem.alloc(1, sizeof(MapStruct))
+            map_init(self.mem, internal_node, 8)
+            map_set(self.mem, current_node, self._terminal_hash, internal_node)
+            result = internal_node
+        map_set(self.mem, <MapStruct*>result, self.vocab.strings[key], NULL)
+
+
     def add(self, key, docs, *, on_match=None):
         """Add a match-rule to the phrase-matcher. A match-rule consists of: an ID
         key, a list of one or more patterns, and (optionally) an on_match callback.
@@ -165,18 +192,15 @@ cdef class PhraseMatcher:
 
         DOCS: https://spacy.io/api/phrasematcher#add
         """
-        # NOTE: in normal usage, `docs` will be a List of Docs. However, it can
-        # also be of type Set[Tuple[attr_t]], which is the type used for
-        # internal storage of patterns. This is used in unpickling, for
-        # example.
         if isinstance(docs, Doc):
             raise ValueError(Errors.E179.format(key=key))
+        if docs is None or not isinstance(docs, List):
+            raise ValueError(Errors.E948.format(name="PhraseMatcher", arg_type=type(docs)))
         if on_match is not None and not hasattr(on_match, "__call__"):
             raise ValueError(Errors.E171.format(name="PhraseMatcher", arg_type=type(on_match)))
 
         _ = self.vocab[key]
         self._callbacks[key] = on_match
-        self._docs.setdefault(key, set())
 
         cdef MapStruct* current_node
         cdef MapStruct* internal_node
@@ -208,27 +232,8 @@ cdef class PhraseMatcher:
             else:
                 # The doc here should be a Sequence of attr_ts. This is used when unpickling.
                 keyword = doc
-            self._docs[key].add(tuple(keyword))
 
-            current_node = self.c_map
-            for token in keyword:
-                if token == self._terminal_hash:
-                    warnings.warn(Warnings.W021)
-                    break
-                result = <MapStruct*>map_get(current_node, token)
-                if not result:
-                    internal_node = <MapStruct*>self.mem.alloc(1, sizeof(MapStruct))
-                    map_init(self.mem, internal_node, 8)
-                    map_set(self.mem, current_node, token, internal_node)
-                    result = internal_node
-                current_node = <MapStruct*>result
-            result = <MapStruct*>map_get(current_node, self._terminal_hash)
-            if not result:
-                internal_node = <MapStruct*>self.mem.alloc(1, sizeof(MapStruct))
-                map_init(self.mem, internal_node, 8)
-                map_set(self.mem, current_node, self._terminal_hash, internal_node)
-                result = internal_node
-            map_set(self.mem, <MapStruct*>result, self.vocab.strings[key], NULL)
+            self._add_from_array(key, keyword)
 
     def __call__(self, object doclike, *, as_spans=False):
         """Find all sequences matching the supplied patterns on the `Doc`.
@@ -342,7 +347,9 @@ def unpickle_matcher(vocab, docs, callbacks, attr):
     matcher = PhraseMatcher(vocab, attr=attr)
     for key, specs in docs.items():
         callback = callbacks.get(key, None)
-        matcher.add(key, specs, on_match=callback)
+        matcher._callbacks[key] = callback
+        for spec in specs:
+            matcher._add_from_array(key, spec)
     return matcher
 
 
