@@ -708,7 +708,7 @@ cdef int8_t get_is_match(PatternStateC state,
         for attr in spec.attrs[:spec.nr_attr]:
             token_attr_value = get_token_attr_for_matcher(token.c, attr.attr)
             if token_attr_value != attr.value:
-                if fuzzy != 0: # and n_fuzzy_attrs > 0:
+                if fuzzy:
                     fuzzy_match = False
                     for i in range(n_fuzzy_attrs):
                         if attr.attr == fuzzy_attrs[i]:
