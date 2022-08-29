@@ -26,7 +26,6 @@ PatternType = Dict[str, Union[str, List[Dict[str, Any]]]]
         "phrase_matcher_attr": None,
         "validate": False,
         "overwrite_ents": False,
-        "fuzzy": 0.0,
         "ent_id_sep": DEFAULT_ENT_ID_SEP,
         "scorer": {"@scorers": "spacy.entity_ruler_scorer.v1"},
     },
@@ -43,7 +42,6 @@ def make_entity_ruler(
     phrase_matcher_attr: Optional[Union[int, str]],
     validate: bool,
     overwrite_ents: bool,
-    fuzzy: float,
     ent_id_sep: str,
     scorer: Optional[Callable],
 ):
@@ -53,7 +51,6 @@ def make_entity_ruler(
         phrase_matcher_attr=phrase_matcher_attr,
         validate=validate,
         overwrite_ents=overwrite_ents,
-        fuzzy=fuzzy,
         ent_id_sep=ent_id_sep,
         scorer=scorer,
     )
@@ -87,7 +84,6 @@ class EntityRuler(Pipe):
         phrase_matcher_attr: Optional[Union[int, str]] = None,
         validate: bool = False,
         overwrite_ents: bool = False,
-        fuzzy: float = 0,
         ent_id_sep: str = DEFAULT_ENT_ID_SEP,
         patterns: Optional[List[PatternType]] = None,
         scorer: Optional[Callable] = entity_ruler_score,
@@ -122,8 +118,7 @@ class EntityRuler(Pipe):
         self.token_patterns = defaultdict(list)  # type: ignore
         self.phrase_patterns = defaultdict(list)  # type: ignore
         self._validate = validate
-        self.fuzzy = fuzzy
-        self.matcher = Matcher(nlp.vocab, validate=validate, fuzzy=self.fuzzy)
+        self.matcher = Matcher(nlp.vocab, validate=validate)
         self.phrase_matcher_attr = phrase_matcher_attr
         self.phrase_matcher = PhraseMatcher(
             nlp.vocab, attr=self.phrase_matcher_attr, validate=validate
@@ -343,7 +338,7 @@ class EntityRuler(Pipe):
         self.token_patterns = defaultdict(list)
         self.phrase_patterns = defaultdict(list)
         self._ent_ids = defaultdict(tuple)
-        self.matcher = Matcher(self.nlp.vocab, validate=self._validate, fuzzy=self.fuzzy)
+        self.matcher = Matcher(self.nlp.vocab, validate=self._validate)
         self.phrase_matcher = PhraseMatcher(
             self.nlp.vocab, attr=self.phrase_matcher_attr, validate=self._validate
         )
