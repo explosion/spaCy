@@ -60,7 +60,7 @@ MOD_NAMES = [
     "spacy.tokens.span_group",
     "spacy.tokens.graph",
     "spacy.tokens.morphanalysis",
-    "spacy.tokens.retokenize",
+    "spacy.tokens.retokenizer",
     "spacy.matcher.matcher",
     "spacy.matcher.phrasematcher",
     "spacy.matcher.dependencymatcher",
