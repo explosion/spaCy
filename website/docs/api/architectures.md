@@ -919,6 +919,6 @@ A function that reads an existing `KnowledgeBase` from file.
 
 A function that takes as input a [`KnowledgeBase`](/api/kb) and a
 [`Span`](/api/span) object denoting a named entity, and returns a list of
-plausible [`Candidate`](/api/kb/#candidate) objects. The default
+plausible [`Candidate`](/api/candidate) objects. The default
 `CandidateGenerator` uses the text of a mention to find its potential
 aliases in the `KnowledgeBase`. Note that this function is case-dependent.
