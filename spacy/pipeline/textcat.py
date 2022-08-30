@@ -14,6 +14,9 @@ from ..util import registry
 from ..vocab import Vocab
 
 
+ActivationsT = Dict[str, Floats2d]
+
+
 single_label_default_config = """
 [model]
 @architectures = "spacy.TextCatEnsemble.v2"
@@ -193,7 +196,7 @@ class TextCategorizer(TrainablePipe):
         """
         return self.labels  # type: ignore[return-value]
 
-    def predict(self, docs: Iterable[Doc]):
+    def predict(self, docs: Iterable[Doc]) -> ActivationsT:
         """Apply the pipeline's model to a batch of docs, without modifying them.
 
         docs (Iterable[Doc]): The documents to predict.
@@ -211,9 +214,7 @@ class TextCategorizer(TrainablePipe):
         scores = self.model.ops.asarray(scores)
         return {"probs": scores}
 
-    def set_annotations(
-        self, docs: Iterable[Doc], activations: Dict[str, Floats2d]
-    ) -> None:
+    def set_annotations(self, docs: Iterable[Doc], activations: ActivationsT) -> None:
         """Modify a batch of Doc objects, using pre-computed scores.
 
         docs (Iterable[Doc]): The documents to modify.

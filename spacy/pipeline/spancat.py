@@ -17,6 +17,9 @@ from ..errors import Errors
 from ..util import registry
 
 
+ActivationsT = Dict[str, Union[Floats2d, Ragged]]
+
+
 spancat_default_config = """
 [model]
 @architectures = "spacy.SpanCategorizer.v1"
@@ -267,7 +270,7 @@ class SpanCategorizer(TrainablePipe):
         """
         return list(self.labels)
 
-    def predict(self, docs: Iterable[Doc]):
+    def predict(self, docs: Iterable[Doc]) -> ActivationsT:
         """Apply the pipeline's model to a batch of docs, without modifying them.
 
         docs (Iterable[Doc]): The documents to predict.
@@ -297,13 +300,11 @@ class SpanCategorizer(TrainablePipe):
             for index in candidates.dataXd:
                 doc.spans[candidates_key].append(doc[index[0] : index[1]])
 
-    def set_annotations(
-        self, docs: Iterable[Doc], activations: Dict[str, Union[Floats2d, Ragged]]
-    ) -> None:
+    def set_annotations(self, docs: Iterable[Doc], activations: ActivationsT) -> None:
         """Modify a batch of Doc objects, using pre-computed scores.
 
         docs (Iterable[Doc]): The documents to modify.
-        scores: The scores to set, produced by SpanCategorizer.predict.
+        activations: ActivationsT: The activations, produced by SpanCategorizer.predict.
 
         DOCS: https://spacy.io/api/spancategorizer#set_annotations
         """

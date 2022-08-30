@@ -8,7 +8,7 @@ from thinc.types import Floats2d, Ints1d
 
 from ..tokens.doc cimport Doc
 
-from .tagger import Tagger
+from .tagger import ActivationsT, Tagger
 from ..language import Language
 from ..errors import Errors
 from ..scorer import Scorer
@@ -121,11 +121,11 @@ class SentenceRecognizer(Tagger):
     def label_data(self):
         return None
 
-    def set_annotations(self, docs: Iterable[Doc], activations: Dict[str, Union[List[Floats2d], List[Ints1d]]]):
+    def set_annotations(self, docs: Iterable[Doc], activations: ActivationsT):
         """Modify a batch of documents, using pre-computed scores.
 
         docs (Iterable[Doc]): The documents to modify.
-        activations (Dict): The activations used for setting annotations, produced by SentenceRecognizer.predict.
+        activations (ActivationsT): The activations used for setting annotations, produced by SentenceRecognizer.predict.
 
         DOCS: https://spacy.io/api/sentencerecognizer#set_annotations
         """

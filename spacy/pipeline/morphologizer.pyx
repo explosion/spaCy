@@ -14,7 +14,7 @@ from ..symbols import POS
 from ..language import Language
 from ..errors import Errors
 from .pipe import deserialize_config
-from .tagger import Tagger
+from .tagger import ActivationsT, Tagger
 from .. import util
 from ..scorer import Scorer
 from ..training import validate_examples, validate_get_examples
@@ -229,11 +229,11 @@ class Morphologizer(Tagger):
         assert len(label_sample) > 0, Errors.E923.format(name=self.name)
         self.model.initialize(X=doc_sample, Y=label_sample)
 
-    def set_annotations(self, docs: Iterable[Doc], activations: Dict[str, Union[Floats2d, Ints1d]]):
+    def set_annotations(self, docs: Iterable[Doc], activations: ActivationsT):
         """Modify a batch of documents, using pre-computed scores.
 
         docs (Iterable[Doc]): The documents to modify.
-        activations (Dict): The activations used for setting annotations, produced by Morphologizer.predict.
+        activations (ActivationsT): The activations used for setting annotations, produced by Morphologizer.predict.
 
         DOCS: https://spacy.io/api/morphologizer#set_annotations
         """

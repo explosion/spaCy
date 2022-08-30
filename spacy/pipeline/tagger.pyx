@@ -22,6 +22,9 @@ from ..training import validate_examples, validate_get_examples
 from ..util import registry
 from .. import util
 
+
+ActivationsT = Dict[str, Union[List[Floats2d], List[Ints1d]]]
+
 # See #9050
 BACKWARD_OVERWRITE = False
 
@@ -137,7 +140,7 @@ class Tagger(TrainablePipe):
         """Data about the labels currently added to the component."""
         return tuple(self.cfg["labels"])
 
-    def predict(self, docs):
+    def predict(self, docs) -> ActivationsT:
         """Apply the pipeline's model to a batch of docs, without modifying them.
 
         docs (Iterable[Doc]): The documents to predict.
@@ -166,11 +169,11 @@ class Tagger(TrainablePipe):
             guesses.append(doc_guesses)
         return guesses
 
-    def set_annotations(self, docs: Iterable[Doc], activations: Dict[str, Union[List[Floats2d], List[Ints1d]]]):
+    def set_annotations(self, docs: Iterable[Doc], activations: ActivationsT):
         """Modify a batch of documents, using pre-computed scores.
 
         docs (Iterable[Doc]): The documents to modify.
-        activations (Dict): The activations used for setting annotations, produced by Tagger.predict.
+        activations (ActivationsT): The activations used for setting annotations, produced by Tagger.predict.
 
         DOCS: https://spacy.io/api/tagger#set_annotations
         """
