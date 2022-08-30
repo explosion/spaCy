@@ -255,10 +255,10 @@ Return a copy of the span group.
 > new_group = doc.spans["errors"].copy()
 > ```
 
-| Name        | Description                                                                                                     |
-| ----------- | --------------------------------------------------------------------------------------------------------------- |
-| `doc`       | New reference document to which the copy is bound. Defaults to `None`. ~~Optional[Doc]~~                        |
-| **RETURNS** | A copy of the `SpanGroup` object, bound to either its original reference document or the new one. ~~SpanGroup~~ |
+| Name        | Description                                                                                        |
+| ----------- | -------------------------------------------------------------------------------------------------- |
+| `doc`       | The document to which the copy is bound. Defaults to `None` for the current doc. ~~Optional[Doc]~~ |
+| **RETURNS** | A copy of the `SpanGroup` object. ~~SpanGroup~~                                                    |
 
 ## SpanGroup.to_bytes {#to_bytes tag="method"}
 
