@@ -8,7 +8,6 @@ cimport numpy as np
 from thinc.api import Model, normal_init, chain, list2array, Linear
 from thinc.api import uniform_init, glorot_uniform_init, zero_init
 from thinc.api import NumpyOps
-from thinc.backends.linalg cimport Vec, VecVec
 from thinc.backends.cblas cimport CBlas, saxpy, sgemm
 from thinc.types import Floats1d, Floats2d, Floats3d, Floats4d
 from thinc.types import Ints1d, Ints2d
@@ -512,11 +511,10 @@ cdef void _predict_states(CBlas cblas, ActivationsC* A, float* scores, StateC** 
     memset(A.unmaxed, 0, n.states * n.hiddens * n.pieces * sizeof(float))
     _sum_state_features(cblas, A.unmaxed, W.feat_weights, A.token_ids, n)
     for i in range(n.states):
-        VecVec.add_i(&A.unmaxed[i*n.hiddens*n.pieces],
-            W.feat_bias, 1., n.hiddens * n.pieces)
+        saxpy(cblas)(n.hiddens * n.pieces, 1., W.feat_bias, 1, &A.unmaxed[i*n.hiddens*n.pieces], 1)
         for j in range(n.hiddens):
             index = i * n.hiddens * n.pieces + j * n.pieces
-            which = Vec.arg_max(&A.unmaxed[index], n.pieces)
+            which = _arg_max(&A.unmaxed[index], n.pieces)
             A.hiddens[i*n.hiddens + j] = A.unmaxed[index + which]
     if W.hidden_weights == NULL:
         memcpy(scores, A.hiddens, n.states * n.classes * sizeof(float))
@@ -528,7 +526,7 @@ cdef void _predict_states(CBlas cblas, ActivationsC* A, float* scores, StateC** 
                       0.0, scores, n.classes)
         # Add bias
         for i in range(n.states):
-            VecVec.add_i(&scores[i*n.classes], W.hidden_bias, 1., n.classes)
+            saxpy(cblas)(n.classes, 1., W.hidden_bias, 1, &scores[i*n.classes], 1)
     # Set unseen classes to minimum value
     i = 0
     min_ = scores[0]
@@ -561,3 +559,15 @@ cdef void _sum_state_features(CBlas cblas, float* output,
                 feature = &cached[idx]
             saxpy(cblas)(O, one, <const float*>feature, 1, &output[b*O], 1)
         token_ids += F
+
+cdef inline int _arg_max(const float* scores, const int n_classes) nogil:
+    if n_classes == 2:
+        return 0 if scores[0] > scores[1] else 1
+    cdef int i
+    cdef int best = 0
+    cdef float mode = scores[0]
+    for i in range(1, n_classes):
+        if scores[i] > mode:
+            mode = scores[i]
+            best = i
+    return best
