@@ -1,8 +1,8 @@
 from ...attrs import LIKE_NUM
 import re
 
-# cf. Goyvaerts/Levithan 2009
-roman_numerals_compile = re.compile(r'(?i)^(?=[MDCLXVI])M*D?C{0,4}L?X{0,4}V?I{0,4}$')
+# cf. Goyvaerts/Levithan 2009; case-insensitive, allow 4
+roman_numerals_compile = re.compile(r'(?i)^(?=[MDCLXVI])M*(C[MD]|D?C{0,4})(X[CL]|L?X{0,4})(I[XV]|V?I{0,4})$')
 
 _num_words = set(
     """
