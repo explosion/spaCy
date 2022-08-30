@@ -1,5 +1,6 @@
-from spacy.tokens import Doc
 import pytest
+from spacy.tokens import Doc
+from spacy.util import filter_spans
 
 
 @pytest.fixture
@@ -207,3 +208,18 @@ def test_chunking(nl_sample, nl_reference_chunking):
     """
     chunks = [s.text.lower() for s in nl_sample.noun_chunks]
     assert chunks == nl_reference_chunking
+
+
+@pytest.mark.issue(10846)
+def test_no_overlapping_chunks(nl_vocab):
+    # fmt: off
+    doc = Doc(
+        nl_vocab,
+        words=["Dit", "programma", "wordt", "beschouwd", "als", "'s", "werelds", "eerste", "computerprogramma"],
+        deps=["det", "nsubj:pass", "aux:pass", "ROOT", "mark", "det", "fixed", "amod", "xcomp"],
+        heads=[1, 3, 3, 3, 8, 8, 5, 8, 3],
+        pos=["DET", "NOUN", "AUX", "VERB", "SCONJ", "DET", "NOUN", "ADJ", "NOUN"],
+    )
+    # fmt: on
+    chunks = list(doc.noun_chunks)
+    assert filter_spans(chunks) == chunks

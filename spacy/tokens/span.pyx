@@ -802,28 +802,18 @@ cdef class Span:
 
     property id:
         def __get__(self):
-            cdef SpanC* span_c = self.span_c()
-            return span_c.id
+            return self.span_c().id
 
         def __set__(self, attr_t id):
-            cdef SpanC* span_c = self.span_c()
-            span_c.id = id
+            self.span_c().id = id
 
     property ent_id:
-        """RETURNS (uint64): The entity ID."""
+        """Alias for the span's ID."""
         def __get__(self):
-            return self.root.ent_id
+            return self.id
 
-        def __set__(self, hash_t key):
-            raise NotImplementedError(Errors.E200.format(attr="ent_id"))
-
-    property ent_id_:
-        """RETURNS (str): The (string) entity ID."""
-        def __get__(self):
-            return self.root.ent_id_
-
-        def __set__(self, str key):
-            raise NotImplementedError(Errors.E200.format(attr="ent_id_"))
+        def __set__(self, attr_t ent_id):
+            self.id = ent_id
 
     @property
     def orth_(self):
@@ -839,7 +829,7 @@ cdef class Span:
         return "".join([t.lemma_ + t.whitespace_ for t in self]).strip()
 
     property label_:
-        """RETURNS (str): The span's label."""
+        """The span's label."""
         def __get__(self):
             return self.doc.vocab.strings[self.label]
 
@@ -847,7 +837,7 @@ cdef class Span:
             self.label = self.doc.vocab.strings.add(label_)
 
     property kb_id_:
-        """RETURNS (str): The span's KB ID."""
+        """The span's KB ID."""
         def __get__(self):
             return self.doc.vocab.strings[self.kb_id]
 
@@ -855,12 +845,21 @@ cdef class Span:
             self.kb_id = self.doc.vocab.strings.add(kb_id_)
 
     property id_:
-        """RETURNS (str): The span's ID."""
+        """The span's ID."""
         def __get__(self):
             return self.doc.vocab.strings[self.id]
 
         def __set__(self, str id_):
             self.id = self.doc.vocab.strings.add(id_)
+
+    property ent_id_:
+        """Alias for the span's ID."""
+        def __get__(self):
+            return self.id_
+
+        def __set__(self, str ent_id_):
+            self.id_ = ent_id_
+
 
 
 cdef int _count_words_to_root(const TokenC* token, int sent_length) except -1:
