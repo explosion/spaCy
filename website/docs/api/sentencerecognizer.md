@@ -44,7 +44,7 @@ architectures and their arguments and hyperparameters.
 | `model`                                  | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. Defaults to [Tagger](/api/architectures#Tagger). ~~Model[List[Doc], List[Floats2d]]~~ |
 | `overwrite` <Tag variant="new">3.2</Tag> | Whether existing annotation is overwritten. Defaults to `False`. ~~bool~~                                                                                             |
 | `scorer` <Tag variant="new">3.2</Tag>    | The scoring method. Defaults to [`Scorer.score_spans`](/api/scorer#score_spans) for the attribute `"sents"`. ~~Optional[Callable]~~                                   |
-| `save_activations`                       | Save activations in `Doc` when annotating. Supported activations are `"probs"` and `"guesses"`. ~~Union[bool, list[str]]~~                                            |
+| `save_activations`                       | Save activations in `Doc` when annotating. Saved activations are `"probs"` and `"guesses"`. ~~Union[bool, list[str]]~~                                                |
 
 ```python
 %%GITHUB_SPACY/spacy/pipeline/senter.pyx

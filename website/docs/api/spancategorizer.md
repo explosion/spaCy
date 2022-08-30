@@ -60,7 +60,7 @@ architectures and their arguments and hyperparameters.
 | `threshold`        | Minimum probability to consider a prediction positive. Spans with a positive prediction will be saved on the Doc. Defaults to `0.5`. ~~float~~                                                                                                                                                          |
 | `max_positive`     | Maximum number of labels to consider positive per span. Defaults to `None`, indicating no limit. ~~Optional[int]~~                                                                                                                                                                                      |
 | `scorer`           | The scoring method. Defaults to [`Scorer.score_spans`](/api/scorer#score_spans) for `Doc.spans[spans_key]` with overlapping spans allowed. ~~Optional[Callable]~~                                                                                                                                       |
-| `save_activations` | Save activations in `Doc` when annotating. Supported activations are `"indices"` and `"scores"`. ~~Union[bool, list[str]]~~                                                                                                                                                                             |
+| `save_activations` | Save activations in `Doc` when annotating. Saved activations are `"indices"` and `"scores"`. ~~Union[bool, list[str]]~~                                                                                                                                                                                 |
 
 ```python
 %%GITHUB_SPACY/spacy/pipeline/spancat.py
