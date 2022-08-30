@@ -110,7 +110,7 @@ def build_ngram_range_suggester(min_size: int, max_size: int) -> Suggester:
         "model": DEFAULT_SPANCAT_MODEL,
         "suggester": {"@misc": "spacy.ngram_suggester.v1", "sizes": [1, 2, 3]},
         "scorer": {"@scorers": "spacy.spancat_scorer.v1"},
-        "store_activations": False,
+        "save_activations": False,
     },
     default_score_weights={"spans_sc_f": 1.0, "spans_sc_p": 0.0, "spans_sc_r": 0.0},
 )
@@ -123,7 +123,7 @@ def make_spancat(
     scorer: Optional[Callable],
     threshold: float,
     max_positive: Optional[int],
-    store_activations: bool,
+    save_activations: bool,
 ) -> "SpanCategorizer":
     """Create a SpanCategorizer component. The span categorizer consists of two
     parts: a suggester function that proposes candidate spans, and a labeller
@@ -144,7 +144,7 @@ def make_spancat(
         0.5.
     max_positive (Optional[int]): Maximum number of labels to consider positive
         per span. Defaults to None, indicating no limit.
-        store_activations (bool): store model activations in Doc when annotating.
+        save_activations (bool): save model activations in Doc when annotating.
     """
     return SpanCategorizer(
         nlp.vocab,
@@ -155,7 +155,7 @@ def make_spancat(
         max_positive=max_positive,
         name=name,
         scorer=scorer,
-        store_activations=store_activations,
+        save_activations=save_activations,
     )
 
 
@@ -194,7 +194,7 @@ class SpanCategorizer(TrainablePipe):
         threshold: float = 0.5,
         max_positive: Optional[int] = None,
         scorer: Optional[Callable] = spancat_score,
-        store_activations: bool = False,
+        save_activations: bool = False,
     ) -> None:
         """Initialize the span categorizer.
         vocab (Vocab): The shared vocabulary.
@@ -227,7 +227,7 @@ class SpanCategorizer(TrainablePipe):
         self.model = model
         self.name = name
         self.scorer = scorer
-        self.store_activations = store_activations
+        self.save_activations = save_activations
 
     @property
     def key(self) -> str:
@@ -317,7 +317,7 @@ class SpanCategorizer(TrainablePipe):
         offset = 0
         for i, doc in enumerate(docs):
             indices_i = indices[i].dataXd
-            if self.store_activations:
+            if self.save_activations:
                 doc.activations[self.name] = {}
                 doc.activations[self.name]["indices"] = indices_i
                 doc.activations[self.name]["scores"] = scores[

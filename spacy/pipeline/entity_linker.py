@@ -62,7 +62,7 @@ DEFAULT_NEL_MODEL = Config().from_str(default_model_config)["model"]
         "scorer": {"@scorers": "spacy.entity_linker_scorer.v1"},
         "use_gold_ents": True,
         "threshold": None,
-        "store_activations": False,
+        "save_activations": False,
     },
     default_score_weights={
         "nel_micro_f": 1.0,
@@ -85,7 +85,7 @@ def make_entity_linker(
     scorer: Optional[Callable],
     use_gold_ents: bool,
     threshold: Optional[float] = None,
-    store_activations: bool,
+    save_activations: bool,
 ):
     """Construct an EntityLinker component.
 
@@ -104,7 +104,7 @@ def make_entity_linker(
         component must provide entity annotations.
     threshold (Optional[float]): Confidence threshold for entity predictions. If confidence is below the threshold,
         prediction is discarded. If None, predictions are not filtered by any threshold.
-    store_activations (bool): store model activations in Doc when annotating.
+    save_activations (bool): save model activations in Doc when annotating.
     """
 
     if not model.attrs.get("include_span_maker", False):
@@ -136,7 +136,7 @@ def make_entity_linker(
         scorer=scorer,
         use_gold_ents=use_gold_ents,
         threshold=threshold,
-        store_activations=store_activations,
+        save_activations=save_activations,
     )
 
 
@@ -173,7 +173,7 @@ class EntityLinker(TrainablePipe):
         scorer: Optional[Callable] = entity_linker_score,
         use_gold_ents: bool,
         threshold: Optional[float] = None,
-        store_activations: bool = False,
+        save_activations: bool = False,
     ) -> None:
         """Initialize an entity linker.
 
@@ -222,7 +222,7 @@ class EntityLinker(TrainablePipe):
         self.scorer = scorer
         self.use_gold_ents = use_gold_ents
         self.threshold = threshold
-        self.store_activations = store_activations
+        self.save_activations = save_activations
 
     def set_kb(self, kb_loader: Callable[[Vocab], KnowledgeBase]):
         """Define the KB of this pipe by providing a function that will
@@ -550,7 +550,7 @@ class EntityLinker(TrainablePipe):
         i = 0
         overwrite = self.cfg["overwrite"]
         for j, doc in enumerate(docs):
-            if self.store_activations:
+            if self.save_activations:
                 doc.activations[self.name] = {}
                 for act_name, acts in activations.items():
                     if act_name != "kb_ids":
@@ -664,7 +664,7 @@ class EntityLinker(TrainablePipe):
         doc_scores: List[Floats1d],
         doc_ents: List[Ints1d],
     ):
-        if not self.store_activations:
+        if not self.save_activations:
             return
         ops = self.model.ops
         lengths = ops.asarray1i([s.shape[0] for s in doc_scores])
@@ -679,7 +679,7 @@ class EntityLinker(TrainablePipe):
         scores: Sequence[float],
         ents: Sequence[int],
     ):
-        if not self.store_activations:
+        if not self.save_activations:
             return
         ops = self.model.ops
         doc_scores.append(ops.asarray1f(scores))

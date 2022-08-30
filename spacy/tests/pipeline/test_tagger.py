@@ -213,7 +213,7 @@ def test_overfitting_IO():
     assert doc3[0].tag_ != "N"
 
 
-def test_store_activations():
+def test_save_activations():
     # Simple test to try and quickly overfit the tagger - ensuring the ML models work correctly
     nlp = English()
     tagger = cast(TrainablePipe, nlp.add_pipe("tagger"))
@@ -225,7 +225,7 @@ def test_store_activations():
     doc = nlp("This is a test.")
     assert "tagger" not in doc.activations
 
-    tagger.store_activations = True
+    tagger.save_activations = True
     doc = nlp("This is a test.")
     assert "tagger" in doc.activations
     assert set(doc.activations["tagger"].keys()) == {"guesses", "probs"}

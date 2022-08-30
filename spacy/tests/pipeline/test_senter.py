@@ -105,7 +105,7 @@ def test_overfitting_IO():
     assert "senter" not in nlp.pipe_labels
 
 
-def test_store_activations():
+def test_save_activations():
     # Simple test to try and quickly overfit the senter - ensuring the ML models work correctly
     nlp = English()
     senter = cast(TrainablePipe, nlp.add_pipe("senter"))
@@ -120,7 +120,7 @@ def test_store_activations():
     doc = nlp("This is a test.")
     assert "senter" not in doc.activations
 
-    senter.store_activations = True
+    senter.save_activations = True
     doc = nlp("This is a test.")
     assert "senter" in doc.activations
     assert set(doc.activations["senter"].keys()) == {"guesses", "probs"}

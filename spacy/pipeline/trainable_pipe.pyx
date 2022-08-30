@@ -345,9 +345,9 @@ cdef class TrainablePipe(Pipe):
         return self
 
     @property
-    def store_activations(self):
-        return self._store_activations
+    def save_activations(self):
+        return self._save_activations
 
-    @store_activations.setter
-    def store_activations(self, store_activations: bool):
-        self._store_activations = store_activations
+    @save_activations.setter
+    def save_activations(self, save_activations: bool):
+        self._save_activations = save_activations

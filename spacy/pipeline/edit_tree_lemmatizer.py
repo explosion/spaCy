@@ -52,7 +52,7 @@ DEFAULT_EDIT_TREE_LEMMATIZER_MODEL = Config().from_str(default_model_config)["mo
         "overwrite": False,
         "top_k": 1,
         "scorer": {"@scorers": "spacy.lemmatizer_scorer.v1"},
-        "store_activations": False,
+        "save_activations": False,
     },
     default_score_weights={"lemma_acc": 1.0},
 )
@@ -65,7 +65,7 @@ def make_edit_tree_lemmatizer(
     overwrite: bool,
     top_k: int,
     scorer: Optional[Callable],
-    store_activations: bool,
+    save_activations: bool,
 ):
     """Construct an EditTreeLemmatizer component."""
     return EditTreeLemmatizer(
@@ -77,7 +77,7 @@ def make_edit_tree_lemmatizer(
         overwrite=overwrite,
         top_k=top_k,
         scorer=scorer,
-        store_activations=store_activations,
+        save_activations=save_activations,
     )
 
 
@@ -97,7 +97,7 @@ class EditTreeLemmatizer(TrainablePipe):
         overwrite: bool = False,
         top_k: int = 1,
         scorer: Optional[Callable] = lemmatizer_score,
-        store_activations: bool = False,
+        save_activations: bool = False,
     ):
         """
         Construct an edit tree lemmatizer.
@@ -109,7 +109,7 @@ class EditTreeLemmatizer(TrainablePipe):
             frequency in the training data.
         overwrite (bool): overwrite existing lemma annotations.
         top_k (int): try to apply at most the k most probable edit trees.
-        store_activations (bool): store model activations in Doc when annotating.
+        save_activations (bool): save model activations in Doc when annotating.
         """
         self.vocab = vocab
         self.model = model
@@ -124,7 +124,7 @@ class EditTreeLemmatizer(TrainablePipe):
 
         self.cfg: Dict[str, Any] = {"labels": []}
         self.scorer = scorer
-        self.store_activations = store_activations
+        self.save_activations = save_activations
 
     def get_loss(
         self, examples: Iterable[Example], scores: List[Floats2d]
@@ -201,7 +201,7 @@ class EditTreeLemmatizer(TrainablePipe):
     def set_annotations(self, docs: Iterable[Doc], activations: ActivationsT):
         batch_tree_ids = activations["guesses"]
         for i, doc in enumerate(docs):
-            if self.store_activations:
+            if self.save_activations:
                 doc.activations[self.name] = {}
                 for act_name, acts in activations.items():
                     doc.activations[self.name][act_name] = acts[i]

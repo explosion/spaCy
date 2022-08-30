@@ -78,7 +78,7 @@ subword_features = true
         "threshold": 0.5,
         "model": DEFAULT_SINGLE_TEXTCAT_MODEL,
         "scorer": {"@scorers": "spacy.textcat_scorer.v1"},
-        "store_activations": False,
+        "save_activations": False,
     },
     default_score_weights={
         "cats_score": 1.0,
@@ -100,7 +100,7 @@ def make_textcat(
     model: Model[List[Doc], List[Floats2d]],
     threshold: float,
     scorer: Optional[Callable],
-    store_activations: bool,
+    save_activations: bool,
 ) -> "TextCategorizer":
     """Create a TextCategorizer component. The text categorizer predicts categories
     over a whole document. It can learn one or more labels, and the labels are considered
@@ -110,7 +110,7 @@ def make_textcat(
         scores for each category.
     threshold (float): Cutoff to consider a prediction "positive".
     scorer (Optional[Callable]): The scoring method.
-    store_activations (bool): store model activations in Doc when annotating.
+    save_activations (bool): save model activations in Doc when annotating.
     """
     return TextCategorizer(
         nlp.vocab,
@@ -118,7 +118,7 @@ def make_textcat(
         name,
         threshold=threshold,
         scorer=scorer,
-        store_activations=store_activations,
+        save_activations=save_activations,
     )
 
 
@@ -150,7 +150,7 @@ class TextCategorizer(TrainablePipe):
         *,
         threshold: float,
         scorer: Optional[Callable] = textcat_score,
-        store_activations: bool = False,
+        save_activations: bool = False,
     ) -> None:
         """Initialize a text categorizer for single-label classification.
 
@@ -171,7 +171,7 @@ class TextCategorizer(TrainablePipe):
         cfg = {"labels": [], "threshold": threshold, "positive_label": None}
         self.cfg = dict(cfg)
         self.scorer = scorer
-        self.store_activations = store_activations
+        self.save_activations = save_activations
 
     @property
     def support_missing_values(self):
@@ -224,7 +224,7 @@ class TextCategorizer(TrainablePipe):
         """
         probs = activations["probs"]
         for i, doc in enumerate(docs):
-            if self.store_activations:
+            if self.save_activations:
                 doc.activations[self.name] = {}
                 doc.activations[self.name]["probs"] = probs[i]
             for j, label in enumerate(self.labels):

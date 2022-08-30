@@ -421,7 +421,7 @@ def test_set_candidates():
     assert docs[0].spans["candidates"][4].text == "Just a"
 
 
-def test_store_activations():
+def test_save_activations():
     # Simple test to try and quickly overfit the spancat component - ensuring the ML models work correctly
     nlp = English()
     spancat = nlp.add_pipe("spancat", config={"spans_key": SPAN_KEY})
@@ -434,7 +434,7 @@ def test_store_activations():
     doc = nlp("This is a test.")
     assert "spancat" not in doc.activations
 
-    spancat.store_activations = True
+    spancat.save_activations = True
     doc = nlp("This is a test.")
     assert set(doc.activations["spancat"].keys()) == {"indices", "scores"}
     assert doc.activations["spancat"]["indices"].shape == (12, 2)

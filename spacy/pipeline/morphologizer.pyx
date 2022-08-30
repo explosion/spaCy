@@ -58,7 +58,7 @@ DEFAULT_MORPH_MODEL = Config().from_str(default_model_config)["model"]
         "overwrite": True,
         "extend": False,
         "scorer": {"@scorers": "spacy.morphologizer_scorer.v1"},
-        "store_activations": False
+        "save_activations": False
     },
     default_score_weights={"pos_acc": 0.5, "morph_acc": 0.5, "morph_per_feat": None},
 )
@@ -69,10 +69,10 @@ def make_morphologizer(
     overwrite: bool,
     extend: bool,
     scorer: Optional[Callable],
-    store_activations: bool,
+    save_activations: bool,
 ):
     return Morphologizer(nlp.vocab, model, name, overwrite=overwrite, extend=extend, scorer=scorer,
-                         store_activations=store_activations)
+                         save_activations=save_activations)
 
 
 def morphologizer_score(examples, **kwargs):
@@ -104,7 +104,7 @@ class Morphologizer(Tagger):
         overwrite: bool = BACKWARD_OVERWRITE,
         extend: bool = BACKWARD_EXTEND,
         scorer: Optional[Callable] = morphologizer_score,
-        store_activations: bool = False,
+        save_activations: bool = False,
     ):
         """Initialize a morphologizer.
 
@@ -115,7 +115,7 @@ class Morphologizer(Tagger):
         scorer (Optional[Callable]): The scoring method. Defaults to
             Scorer.score_token_attr for the attributes "pos" and "morph" and
             Scorer.score_token_attr_per_feat for the attribute "morph".
-        store_activations (bool): store model activations in Doc when annotating.
+        save_activations (bool): save model activations in Doc when annotating.
 
         DOCS: https://spacy.io/api/morphologizer#init
         """
@@ -135,7 +135,7 @@ class Morphologizer(Tagger):
         }
         self.cfg = dict(sorted(cfg.items()))
         self.scorer = scorer
-        self.store_activations = store_activations
+        self.save_activations = save_activations
 
     @property
     def labels(self):
@@ -249,7 +249,7 @@ class Morphologizer(Tagger):
         # to allocate a compatible container out of the iterable.
         labels = tuple(self.labels)
         for i, doc in enumerate(docs):
-            if self.store_activations:
+            if self.save_activations:
                 doc.activations[self.name] = {}
                 for act_name, acts in activations.items():
                     doc.activations[self.name][act_name] = acts[i]

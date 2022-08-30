@@ -43,7 +43,7 @@ DEFAULT_SENTER_MODEL = Config().from_str(default_model_config)["model"]
         "model": DEFAULT_SENTER_MODEL,
         "overwrite": False,
         "scorer": {"@scorers": "spacy.senter_scorer.v1"},
-        "store_activations": False
+        "save_activations": False
     },
     default_score_weights={"sents_f": 1.0, "sents_p": 0.0, "sents_r": 0.0},
 )
@@ -52,8 +52,8 @@ def make_senter(nlp: Language,
                 model: Model,
                 overwrite: bool,
                 scorer: Optional[Callable],
-                store_activations: bool):
-    return SentenceRecognizer(nlp.vocab, model, name, overwrite=overwrite, scorer=scorer, store_activations=store_activations)
+                save_activations: bool):
+    return SentenceRecognizer(nlp.vocab, model, name, overwrite=overwrite, scorer=scorer, save_activations=save_activations)
 
 
 def senter_score(examples, **kwargs):
@@ -83,7 +83,7 @@ class SentenceRecognizer(Tagger):
         *,
         overwrite=BACKWARD_OVERWRITE,
         scorer=senter_score,
-        store_activations: bool = False,
+        save_activations: bool = False,
     ):
         """Initialize a sentence recognizer.
 
@@ -93,7 +93,7 @@ class SentenceRecognizer(Tagger):
             losses during training.
         scorer (Optional[Callable]): The scoring method. Defaults to
             Scorer.score_spans for the attribute "sents".
-        store_activations (bool): store model activations in Doc when annotating.
+        save_activations (bool): save model activations in Doc when annotating.
 
         DOCS: https://spacy.io/api/sentencerecognizer#init
         """
@@ -103,7 +103,7 @@ class SentenceRecognizer(Tagger):
         self._rehearsal_model = None
         self.cfg = {"overwrite": overwrite}
         self.scorer = scorer
-        self.store_activations = store_activations
+        self.save_activations = save_activations
 
     @property
     def labels(self):
@@ -135,7 +135,7 @@ class SentenceRecognizer(Tagger):
         cdef Doc doc
         cdef bint overwrite = self.cfg["overwrite"]
         for i, doc in enumerate(docs):
-            if self.store_activations:
+            if self.save_activations:
                 doc.activations[self.name] = {}
                 for act_name, acts in activations.items():
                     doc.activations[self.name][act_name] = acts[i]

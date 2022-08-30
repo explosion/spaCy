@@ -1179,7 +1179,7 @@ def test_threshold(meet_threshold: bool, config: Dict[str, Any]):
     assert doc.ents[0].kb_id_ == entity_id if meet_threshold else EntityLinker.NIL
 
 
-def test_store_activations():
+def test_save_activations():
     nlp = English()
     vector_length = 3
     assert "Q2146908" not in nlp.vocab.strings
@@ -1231,7 +1231,7 @@ def test_store_activations():
     doc = nlp("Russ Cochran was a publisher")
     assert "entity_linker" not in doc.activations
 
-    entity_linker.store_activations = True
+    entity_linker.save_activations = True
     doc = nlp("Russ Cochran was a publisher")
     assert set(doc.activations["entity_linker"].keys()) == {"ents", "scores"}
     ents = doc.activations["entity_linker"]["ents"]

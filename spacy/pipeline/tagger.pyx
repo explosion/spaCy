@@ -53,7 +53,7 @@ DEFAULT_TAGGER_MODEL = Config().from_str(default_model_config)["model"]
         "overwrite": False,
         "scorer": {"@scorers": "spacy.tagger_scorer.v1"},
         "neg_prefix": "!",
-        "store_activations": False,
+        "save_activations": False,
     },
     default_score_weights={"tag_acc": 1.0},
 )
@@ -64,7 +64,7 @@ def make_tagger(
     overwrite: bool,
     scorer: Optional[Callable],
     neg_prefix: str,
-    store_activations: bool,
+    save_activations: bool,
 ):
     """Construct a part-of-speech tagger component.
 
@@ -74,7 +74,7 @@ def make_tagger(
         with the rows summing to 1).
     """
     return Tagger(nlp.vocab, model, name, overwrite=overwrite, scorer=scorer, neg_prefix=neg_prefix,
-                  store_activations=store_activations)
+                  save_activations=save_activations)
 
 
 def tagger_score(examples, **kwargs):
@@ -100,7 +100,7 @@ class Tagger(TrainablePipe):
         overwrite=BACKWARD_OVERWRITE,
         scorer=tagger_score,
         neg_prefix="!",
-        store_activations: bool = False,
+        save_activations: bool = False,
     ):
         """Initialize a part-of-speech tagger.
 
@@ -110,7 +110,7 @@ class Tagger(TrainablePipe):
             losses during training.
         scorer (Optional[Callable]): The scoring method. Defaults to
             Scorer.score_token_attr for the attribute "tag".
-        store_activations (bool): store model activations in Doc when annotating.
+        save_activations (bool): save model activations in Doc when annotating.
 
         DOCS: https://spacy.io/api/tagger#init
         """
@@ -121,7 +121,7 @@ class Tagger(TrainablePipe):
         cfg = {"labels": [], "overwrite": overwrite, "neg_prefix": neg_prefix}
         self.cfg = dict(sorted(cfg.items()))
         self.scorer = scorer
-        self.store_activations = store_activations
+        self.save_activations = save_activations
 
     @property
     def labels(self):
@@ -185,7 +185,7 @@ class Tagger(TrainablePipe):
         cdef bint overwrite = self.cfg["overwrite"]
         labels = self.labels
         for i, doc in enumerate(docs):
-            if self.store_activations:
+            if self.save_activations:
                 doc.activations[self.name] = {}
                 for act_name, acts in activations.items():
                     doc.activations[self.name][act_name] = acts[i]

@@ -201,7 +201,7 @@ def test_overfitting_IO():
     assert [t.pos_ for t in doc] == gold_pos_tags
 
 
-def test_store_activations():
+def test_save_activations():
     # Simple test to try and quickly overfit the morphologizer - ensuring the ML models work correctly
     nlp = English()
     morphologizer = cast(TrainablePipe, nlp.add_pipe("morphologizer"))
@@ -213,7 +213,7 @@ def test_store_activations():
     doc = nlp("This is a test.")
     assert "morphologizer" not in doc.activations
 
-    morphologizer.store_activations = True
+    morphologizer.save_activations = True
     doc = nlp("This is a test.")
     assert "morphologizer" in doc.activations
     assert set(doc.activations["morphologizer"].keys()) == {"guesses", "probs"}

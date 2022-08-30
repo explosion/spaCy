@@ -874,7 +874,7 @@ def test_textcat_multi_threshold():
     assert scores["cats_f_per_type"]["POSITIVE"]["r"] == 1.0
 
 
-def test_store_activations():
+def test_save_activations():
     fix_random_seed(0)
     nlp = English()
     textcat = cast(TrainablePipe, nlp.add_pipe("textcat"))
@@ -888,13 +888,13 @@ def test_store_activations():
     doc = nlp("This is a test.")
     assert "textcat" not in doc.activations
 
-    textcat.store_activations = True
+    textcat.save_activations = True
     doc = nlp("This is a test.")
     assert list(doc.activations["textcat"].keys()) == ["probs"]
     assert doc.activations["textcat"]["probs"].shape == (nO,)
 
 
-def test_store_activations_multi():
+def test_save_activations_multi():
     fix_random_seed(0)
     nlp = English()
     textcat = cast(TrainablePipe, nlp.add_pipe("textcat_multilabel"))
@@ -908,7 +908,7 @@ def test_store_activations_multi():
     doc = nlp("This is a test.")
     assert "textcat_multilabel" not in doc.activations
 
-    textcat.store_activations = True
+    textcat.save_activations = True
     doc = nlp("This is a test.")
     assert list(doc.activations["textcat_multilabel"].keys()) == ["probs"]
     assert doc.activations["textcat_multilabel"]["probs"].shape == (nO,)

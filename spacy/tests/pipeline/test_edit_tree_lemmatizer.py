@@ -282,7 +282,7 @@ def test_empty_strings():
     assert no_change == empty
 
 
-def test_store_activations():
+def test_save_activations():
     nlp = English()
     lemmatizer = cast(TrainablePipe, nlp.add_pipe("trainable_lemmatizer"))
     lemmatizer.min_tree_freq = 1
@@ -295,7 +295,7 @@ def test_store_activations():
     doc = nlp("This is a test.")
     assert "trainable_lemmatizer" not in doc.activations
 
-    lemmatizer.store_activations = True
+    lemmatizer.save_activations = True
     doc = nlp("This is a test.")
     assert list(doc.activations["trainable_lemmatizer"].keys()) == ["probs", "guesses"]
     assert doc.activations["trainable_lemmatizer"]["probs"].shape == (5, nO)
