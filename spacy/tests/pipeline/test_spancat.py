@@ -426,7 +426,7 @@ def test_save_activations():
     nlp = English()
     spancat = nlp.add_pipe("spancat", config={"spans_key": SPAN_KEY})
     train_examples = make_examples(nlp)
-    optimizer = nlp.initialize(get_examples=lambda: train_examples)
+    nlp.initialize(get_examples=lambda: train_examples)
     nO = spancat.model.get_dim("nO")
     assert nO == 2
     assert set(spancat.labels) == {"LOC", "PERSON"}

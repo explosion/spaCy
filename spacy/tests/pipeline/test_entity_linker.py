@@ -1212,11 +1212,7 @@ def test_save_activations():
     assert "Q2146908" in entity_linker.kb.vocab.strings
 
     # initialize the NEL pipe
-    optimizer = nlp.initialize(get_examples=lambda: train_examples)
-
-    for i in range(2):
-        losses = {}
-        nlp.update(train_examples, sgd=optimizer, losses=losses)
+    nlp.initialize(get_examples=lambda: train_examples)
 
     nO = entity_linker.model.get_dim("nO")
 
