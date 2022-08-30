@@ -2039,7 +2039,7 @@ class Language:
     def _resolve_component_status(
         disable: Union[str, Iterable[str]],
         enable: Union[str, Iterable[str]],
-        pipe_names: Collection[str],
+        pipe_names: Iterable[str],
     ) -> Tuple[str, ...]:
         """Derives whether (1) `disable` and `enable` values are consistent and (2)
         resolves those to a single set of disabled components. Raises an error in
