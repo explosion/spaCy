@@ -1711,12 +1711,12 @@ class Language:
 
         config (Dict[str, Any] / Config): The loaded config.
         vocab (Vocab): A Vocab object. If True, a vocab is created.
-        disable (Union[str, Iterable[str]]): Names of pipeline components to disable.
+        disable (Union[str, Iterable[str]]): Name(s) of pipeline component(s) to disable.
             Disabled pipes will be loaded but they won't be run unless you
             explicitly enable them by calling nlp.enable_pipe.
-        enable (Union[str, Iterable[str]]): Names of pipeline components to enable. All other
+        enable (Union[str, Iterable[str]]): Name(s) of pipeline component(s) to enable. All other
             pipes will be disabled (and can be enabled using `nlp.enable_pipe`).
-        exclude (Union[str, Iterable[str]]): Names of pipeline components to exclude.
+        exclude (Union[str, Iterable[str]]): Name(s) of pipeline component(s) to exclude.
             Excluded components won't be loaded.
         meta (Dict[str, Any]): Meta overrides for nlp.meta.
         auto_fill (bool): Automatically fill in missing values in config based
