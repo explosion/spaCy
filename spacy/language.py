@@ -1727,11 +1727,11 @@ class Language:
 
         DOCS: https://spacy.io/api/language#from_config
         """
-        if disable is not None and isinstance(disable, str):
+        if isinstance(disable, str):
             disable = [disable]
-        if enable is not None and isinstance(enable, str):
+        if isinstance(enable, str):
             enable = [enable]
-        if exclude is not None and isinstance(exclude, str):
+        if isinstance(exclude, str):
             exclude = [exclude]
         if auto_fill:
             config = Config(
