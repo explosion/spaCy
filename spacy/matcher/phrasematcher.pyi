@@ -20,6 +20,15 @@ class PhraseMatcher:
             Callable[[Matcher, Doc, int, List[Tuple[Any, ...]]], Any]
         ] = ...,
     ) -> None: ...
+    def _add_from_arrays(
+        self,
+        key: str,
+        specs: List[List[int]],
+        *,
+        on_match: Optional[
+            Callable[[Matcher, Doc, int, List[Tuple[Any, ...]]], Any]
+        ] = ...,
+    ) -> None: ...
     def remove(self, key: str) -> None: ...
     @overload
     def __call__(

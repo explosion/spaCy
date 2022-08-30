@@ -614,7 +614,7 @@ cdef class Tokenizer:
         self._rules[string] = substrings
         self._flush_cache()
         if not self.faster_heuristics or self.find_prefix(string) or self.find_infix(string) or self.find_suffix(string) or " " in string:
-            self._special_matcher.add(string, None, self._tokenize_affixes(string, False))
+            self._special_matcher.add(string, [self._tokenize_affixes(string, False)])
 
     def _reload_special_cases(self):
         self._flush_cache()
