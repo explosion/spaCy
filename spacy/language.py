@@ -1063,7 +1063,7 @@ class Language:
         """
         if enable is None and disable is None:
             raise ValueError(Errors.E991)
-        if disable is not None and isinstance(disable, str):
+        if isinstance(disable, str):
             disable = [disable]
         if enable is not None:
             if isinstance(enable, str):
@@ -2053,7 +2053,7 @@ class Language:
                                    specified includes and excludes.
         """
 
-        if disable is not None and isinstance(disable, str):
+        if isinstance(disable, str):
             disable = [disable]
         to_disable = disable
 
