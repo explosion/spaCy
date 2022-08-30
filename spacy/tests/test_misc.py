@@ -10,7 +10,7 @@ from spacy.ml._precomputable_affine import _backprop_precomputable_affine_paddin
 from spacy.util import dot_to_object, SimpleFrozenList, import_file
 from spacy.util import to_ternary_int
 from thinc.api import Config, Optimizer, ConfigValidationError
-from thinc.api import set_current_ops
+from thinc.api import get_current_ops, set_current_ops, NumpyOps, CupyOps, MPSOps
 from thinc.compat import has_cupy_gpu, has_torch_mps_gpu
 from spacy.training.batchers import minibatch_by_words
 from spacy.lang.en import English
@@ -19,7 +19,6 @@ from spacy.language import DEFAULT_CONFIG_PATH
 from spacy.schemas import ConfigSchemaTraining, TokenPattern, TokenPatternSchema
 from pydantic import ValidationError
 
-from thinc.api import get_current_ops, NumpyOps, CupyOps, MPSOps
 
 from .util import get_random_doc, make_tempdir
 
