@@ -202,7 +202,6 @@ def test_overfitting_IO():
 
 
 def test_save_activations():
-    # Simple test to try and quickly overfit the morphologizer - ensuring the ML models work correctly
     nlp = English()
     morphologizer = cast(TrainablePipe, nlp.add_pipe("morphologizer"))
     train_examples = []
