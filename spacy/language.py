@@ -1698,9 +1698,9 @@ class Language:
         config: Union[Dict[str, Any], Config] = {},
         *,
         vocab: Union[Vocab, bool] = True,
-        disable: Iterable[str] = SimpleFrozenList(),
-        enable: Iterable[str] = SimpleFrozenList(),
-        exclude: Iterable[str] = SimpleFrozenList(),
+        disable: Union[str, Iterable[str]] = SimpleFrozenList(),
+        enable: Union[str, Iterable[str]] = SimpleFrozenList(),
+        exclude: Union[str, Iterable[str]] = SimpleFrozenList(),
         meta: Dict[str, Any] = SimpleFrozenDict(),
         auto_fill: bool = True,
         validate: bool = True,
@@ -1711,12 +1711,12 @@ class Language:
 
         config (Dict[str, Any] / Config): The loaded config.
         vocab (Vocab): A Vocab object. If True, a vocab is created.
-        disable (Iterable[str]): Names of pipeline components to disable.
+        disable (Union[str, Iterable[str]]): Names of pipeline components to disable.
             Disabled pipes will be loaded but they won't be run unless you
             explicitly enable them by calling nlp.enable_pipe.
-        enable (Iterable[str]): Names of pipeline components to enable. All other
+        enable (Union[str, Iterable[str]]): Names of pipeline components to enable. All other
             pipes will be disabled (and can be enabled using `nlp.enable_pipe`).
-        exclude (Iterable[str]): Names of pipeline components to exclude.
+        exclude (Union[str, Iterable[str]]): Names of pipeline components to exclude.
             Excluded components won't be loaded.
         meta (Dict[str, Any]): Meta overrides for nlp.meta.
         auto_fill (bool): Automatically fill in missing values in config based
@@ -1727,6 +1727,12 @@ class Language:
 
         DOCS: https://spacy.io/api/language#from_config
         """
+        if disable is not None and isinstance(disable, str):
+            disable = [disable]
+        if enable is not None and isinstance(enable, str):
+            enable = [enable]
+        if exclude is not None and isinstance(exclude, str):
+            exclude = [exclude]
         if auto_fill:
             config = Config(
                 cls.default_config, section_order=CONFIG_SECTION_ORDER

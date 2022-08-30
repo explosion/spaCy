@@ -638,8 +638,9 @@ def test_load_disable_enable() -> None:
         assert single_str not in nlp.component_names
 
         nlp = spacy.load(tmp_dir, disable=single_str)
-        assert single_str not in nlp.component_names
-        assert nlp._disabled == [single_str]
+        assert single_str in nlp.component_names
+        assert single_str not in nlp.pipe_names
+        assert nlp._disabled == {single_str}
         assert nlp.disabled == [single_str]
 
         # Testing consistent enable/disable combination.
