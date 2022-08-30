@@ -12,6 +12,7 @@ from ...typedefs cimport weight_t, attr_t
 from ...tokens.doc cimport Doc
 from ...structs cimport TokenC
 from .stateclass cimport StateClass
+from ._parser_utils cimport arg_max_if_valid
 
 from ...errors import Errors
 from ... import util
@@ -320,11 +321,3 @@ cdef void c_transition_batch(TransitionSystem moves, StateC** states, const floa
             states[i].history.push_back(guess)
     free(is_valid)
 
-
-cdef int arg_max_if_valid(const weight_t* scores, const int* is_valid, int n) nogil:
-    cdef int best = -1
-    for i in range(n):
-        if is_valid[i] >= 1:
-            if best == -1 or scores[i] > scores[best]:
-                best = i
-    return best

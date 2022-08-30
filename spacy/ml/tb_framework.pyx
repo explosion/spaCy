@@ -15,6 +15,7 @@ from thinc.types import Ints1d, Ints2d
 from ..errors import Errors
 from ..pipeline._parser_internals import _beam_utils
 from ..pipeline._parser_internals.batch import GreedyBatch
+from ..pipeline._parser_internals._parser_utils cimport arg_max
 from ..pipeline._parser_internals.transition_system cimport c_transition_batch, c_apply_actions
 from ..pipeline._parser_internals.transition_system cimport TransitionSystem
 from ..pipeline._parser_internals.stateclass cimport StateC, StateClass
@@ -514,7 +515,7 @@ cdef void _predict_states(CBlas cblas, ActivationsC* A, float* scores, StateC** 
         saxpy(cblas)(n.hiddens * n.pieces, 1., W.feat_bias, 1, &A.unmaxed[i*n.hiddens*n.pieces], 1)
         for j in range(n.hiddens):
             index = i * n.hiddens * n.pieces + j * n.pieces
-            which = _arg_max(&A.unmaxed[index], n.pieces)
+            which = arg_max(&A.unmaxed[index], n.pieces)
             A.hiddens[i*n.hiddens + j] = A.unmaxed[index + which]
     if W.hidden_weights == NULL:
         memcpy(scores, A.hiddens, n.states * n.classes * sizeof(float))
@@ -560,14 +561,3 @@ cdef void _sum_state_features(CBlas cblas, float* output,
             saxpy(cblas)(O, one, <const float*>feature, 1, &output[b*O], 1)
         token_ids += F
 
-cdef inline int _arg_max(const float* scores, const int n_classes) nogil:
-    if n_classes == 2:
-        return 0 if scores[0] > scores[1] else 1
-    cdef int i
-    cdef int best = 0
-    cdef float mode = scores[0]
-    for i in range(1, n_classes):
-        if scores[i] > mode:
-            mode = scores[i]
-            best = i
-    return best
