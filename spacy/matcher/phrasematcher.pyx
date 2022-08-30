@@ -162,7 +162,7 @@ cdef class PhraseMatcher:
         """Add a preprocessed list of specs, with an optional callback.
 
         key (str): The match ID.
-        specs (sequence): A sequence of sequences of hashes to match.
+        specs (List[List[int]]): A list of lists of hashes to match.
         on_match (callable): Callback executed on match.
         """
         cdef MapStruct* current_node
