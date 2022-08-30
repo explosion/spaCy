@@ -76,9 +76,9 @@ def project_run(
     validate_subcommand(list(commands.keys()), list(workflows.keys()), subcommand)
 
     req_path = project_dir / "requirements.txt"
-    if os.path.exists(req_path):
+    if config.get("check_requirements", True) and os.path.exists(req_path):
         with req_path.open() as requirements_file:
-            _validate_requirements([req.replace("\n", "") for req in requirements_file])
+            _check_requirements([req.replace("\n", "") for req in requirements_file])
 
     if subcommand in workflows:
         msg.info(f"Running workflow '{subcommand}'")
@@ -319,7 +319,7 @@ def get_fileinfo(project_dir: Path, paths: List[str]) -> List[Dict[str, Optional
     return data
 
 
-def _validate_requirements(requirements: List[str]) -> Tuple[bool, bool]:
+def _check_requirements(requirements: List[str]) -> Tuple[bool, bool]:
     """Checks whether requirements are installed and free of version conflicts.
     requirements (List[str]): List of requirements.
     RETURNS (Tuple[bool, bool]): Whether (1) any packages couldn't be imported, (2) any packages with version conflicts

@@ -148,6 +148,13 @@ skipped. You can also set `--force` to force re-running a command, or `--dry` to
 perform a "dry run" and see what would happen (without actually running the
 script).
 
+By default `spacy projects run` checks your installed dependencies to verify
+that your environment is properly set up and aligns with the project's
+`requirement.txt`, if there is one. If missing or conflicting dependencies are
+detected, a corresponding warning is displayed. If you'd like to disable the
+dependency check, set `check_requirements: False` in your project's
+`project.yml`.
+
 ### 4. Run a workflow {#run-workfow}
 
 > #### project.yml
@@ -226,10 +233,11 @@ pipelines.
 ```yaml
 %%GITHUB_PROJECTS/pipelines/tagger_parser_ud/project.yml
 ```
+
 > #### Tip: Overriding variables on the CLI
 >
-> If you want to override one or more variables on the CLI and are not already specifying a
-> project directory, you need to add `.` as a placeholder:
+> If you want to override one or more variables on the CLI and are not already
+> specifying a project directory, you need to add `.` as a placeholder:
 >
 > ```
 > python -m spacy project run test . --vars.foo bar
@@ -239,7 +247,7 @@ pipelines.
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `title`         | An optional project title used in `--help` message and [auto-generated docs](#custom-docs).                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | `description`   | An optional project description used in [auto-generated docs](#custom-docs).                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| `vars`          | A dictionary of variables that can be referenced in paths, URLs and scripts and overriden on the CLI, just like [`config.cfg` variables](/usage/training#config-interpolation). For example, `${vars.name}` will use the value of the variable `name`. Variables need to be defined in the section `vars`, but can be a nested dict, so you're able to reference `${vars.model.name}`.                                                                                                                                                |
+| `vars`          | A dictionary of variables that can be referenced in paths, URLs and scripts and overriden on the CLI, just like [`config.cfg` variables](/usage/training#config-interpolation). For example, `${vars.name}` will use the value of the variable `name`. Variables need to be defined in the section `vars`, but can be a nested dict, so you're able to reference `${vars.model.name}`.                                                                                                                       |
 | `env`           | A dictionary of variables, mapped to the names of environment variables that will be read in when running the project. For example, `${env.name}` will use the value of the environment variable defined as `name`.                                                                                                                                                                                                                                                                                          |
 | `directories`   | An optional list of [directories](#project-files) that should be created in the project for assets, training outputs, metrics etc. spaCy will make sure that these directories always exist.                                                                                                                                                                                                                                                                                                                 |
 | `assets`        | A list of assets that can be fetched with the [`project assets`](/api/cli#project-assets) command. `url` defines a URL or local path, `dest` is the destination file relative to the project directory, and an optional `checksum` ensures that an error is raised if the file's checksum doesn't match. Instead of `url`, you can also provide a `git` block with the keys `repo`, `branch` and `path`, to download from a Git repo.                                                                        |
