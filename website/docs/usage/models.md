@@ -365,14 +365,29 @@ pipeline package can be found.
 To download a trained pipeline directly using
 [pip](https://pypi.python.org/pypi/pip), point `pip install` to the URL or local
 path of the wheel file or archive. Installing the wheel is usually more
-efficient. To find the direct link to a package, head over to the
-[releases](https://github.com/explosion/spacy-models/releases), right click on
-the archive link and copy it to your clipboard.
+efficient.
+
+> #### How to Find Download URLs {#download-urls}
+>
+> Pretrained pipeline distributions are hosted on
+> [Github Releases](https://github.com/explosion/spacy-models/releases), and you
+> can find download links there, as well as on the model page. You can also get download URLs directly
+> from the command line by using `spacy info` with the `--url` flag, which may be useful for automation.
+>
+> ```bash
+> spacy info en_core_web_sm --url
+> ```
+>
+> This command will print the download URL for the latest version of a pipeline
+> compatible with the version of spaCy you're using. Note that in order to look up the compatability information an Internet connection is required.
 
 ```bash
 # With external URL
 $ pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.0.0/en_core_web_sm-3.0.0-py3-none-any.whl
 $ pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.0.0/en_core_web_sm-3.0.0.tar.gz
+
+# Using spacy info to get the external URL
+$ pip install $(spacy info en_core_web_sm --url)
 
 # With local file
 $ pip install /Users/you/en_core_web_sm-3.0.0-py3-none-any.whl
@@ -515,8 +530,8 @@ Because pipeline packages are valid Python packages, you can add them to your
 application's `requirements.txt`. If you're running your own internal PyPi
 installation, you can upload the pipeline packages there. pip's
 [requirements file format](https://pip.pypa.io/en/latest/reference/pip_install/#requirements-file-format)
-supports both package names to download via a PyPi server, as well as direct
-URLs.
+supports both package names to download via a PyPi server, as well as [direct
+URLs](#download-urls).
 
 ```text
 ### requirements.txt
