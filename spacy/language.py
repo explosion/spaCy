@@ -2037,14 +2037,16 @@ class Language:
 
     @staticmethod
     def _resolve_component_status(
-        disable: Iterable[str], enable: Iterable[str], pipe_names: Collection[str]
+        disable: Union[str, Iterable[str]],
+        enable: Union[str, Iterable[str]],
+        pipe_names: Collection[str],
     ) -> Tuple[str, ...]:
         """Derives whether (1) `disable` and `enable` values are consistent and (2)
         resolves those to a single set of disabled components. Raises an error in
         case of inconsistency.
 
-        disable (Iterable[str]): Names of components or serialization fields to disable.
-        enable (Iterable[str]): Names of pipeline components to enable.
+        disable (Union[str, Iterable[str]]): Name(s) of component(s) or serialization fields to disable.
+        enable (Union[str, Iterable[str]]): Name(s) of pipeline component(s) to enable.
         pipe_names (Iterable[str]): Names of all pipeline components.
 
         RETURNS (Tuple[str, ...]): Names of components to exclude from pipeline w.r.t.
@@ -2056,6 +2058,8 @@ class Language:
         to_disable = disable
 
         if enable:
+            if isinstance(enable, str):
+                enable = [enable]
             to_disable = [
                 pipe_name for pipe_name in pipe_names if pipe_name not in enable
             ]
