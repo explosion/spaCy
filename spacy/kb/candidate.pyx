@@ -1,6 +1,6 @@
 # cython: infer_types=True, profile=True
 
-from typing import Iterable, Union
+from typing import Iterable
 from .kb cimport KnowledgeBase
 from ..tokens import Span
 

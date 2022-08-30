@@ -6,7 +6,7 @@ from numpy.testing import assert_equal
 from spacy import registry, util
 from spacy.attrs import ENT_KB_ID
 from spacy.compat import pickle
-from spacy.kb import Candidate, InMemoryLookupKB, get_candidates
+from spacy.kb import Candidate, InMemoryLookupKB, get_candidates, KnowledgeBase
 from spacy.lang.en import English
 from spacy.ml import load_kb
 from spacy.pipeline import EntityLinker
@@ -1129,6 +1129,12 @@ def test_tokenization_mismatch():
 
     nlp.add_pipe("sentencizer", first=True)
     nlp.evaluate(train_examples)
+
+
+def test_abstract_kb_instantiation():
+    """Test whether instantiation of abstract KB base class fails."""
+    with pytest.raises(TypeError):
+        KnowledgeBase(None, 3)
 
 
 # fmt: off

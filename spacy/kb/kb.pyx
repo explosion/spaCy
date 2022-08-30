@@ -20,16 +20,22 @@ cdef class KnowledgeBase:
 
     def __init__(self, vocab: Vocab, entity_vector_length: int):
         """Create a KnowledgeBase."""
+        # Make sure abstract KB is not instantiated.
+        if self.__class__ == KnowledgeBase:
+            raise TypeError(
+                Errors.E1046.format(cls_name=self.__class__.__name__)
+            )
+
         self.vocab = vocab
         self.entity_vector_length = entity_vector_length
         self.mem = Pool()
 
-    def get_candidates_batch(self, mentions: Union[Iterable[Span], Iterable[str]]) -> Iterable[Iterable[Candidate]]:
+    def get_candidates_batch(self, mentions: Iterable[Span]) -> Iterable[Iterable[Candidate]]:
         """
         Return candidate entities for specified texts. Each candidate defines the entity, the original alias,
         and the prior probability of that alias resolving to that entity.
         If no candidate is found for a given text, an empty list is returned.
-        mentions (Union[Iterable[Span], Iterable[str]]): Mentions for which to get candidates.
+        mentions (Iterable[Span]): Mentions for which to get candidates.
         RETURNS (Iterable[Iterable[Candidate]]): Identified candidates.
         """
         return [self.get_candidates(span) for span in mentions]
