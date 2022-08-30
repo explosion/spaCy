@@ -1,21 +1,16 @@
 from pathlib import Path
 import logging
-from typing import Optional, Tuple, Union
+from typing import Optional, Tuple
 
 import numpy
 import wasabi.tables
 
-from ._util import app, Arg, Opt
+from ._util import app, Arg, Opt, import_code, setup_gpu
 from .. import util
 from ..pipeline import MultiLabel_TextCategorizer, Pipe
 from ..tokens import DocBin
 
-_DEFAULTS = {
-    "average": "micro",
-    "pipe_name": None,
-    "n_trials": 10,
-    "beta": 1,
-}
+_DEFAULTS = {"average": "micro", "n_trials": 10, "beta": 1, "use_gpu": -1}
 
 
 @app.command(
@@ -24,62 +19,73 @@ _DEFAULTS = {
 )
 def find_threshold_cli(
     # fmt: off
-    model_path: Path = Arg(..., help="Path to model file", exists=True, allow_dash=True),
-    doc_path: Path = Arg(..., help="Path to doc bin file", exists=True, allow_dash=True),
+    model: str = Arg(..., help="Model name or path"),
+    data_path: Path = Arg(..., help="Location of binary evaluation data in .spacy format", exists=True),
+    pipe_name: str = Opt(..., "--pipe_name", "-p", help="Name of pipe to examine thresholds for"),
     average: str = Arg(_DEFAULTS["average"], help="How to aggregate F-scores over labels. One of ('micro', 'macro')", exists=True, allow_dash=True),
-    pipe_name: Optional[str] = Opt(_DEFAULTS["pipe_name"], "--pipe_name", "-p", help="Name of pipe to examine thresholds for"),
     n_trials: int = Opt(_DEFAULTS["n_trials"], "--n_trials", "-n", help="Number of trials to determine optimal thresholds"),
     beta: float = Opt(_DEFAULTS["beta"], "--beta", help="Beta for F1 calculation. Ignored if different metric is used"),
-    verbose: bool = Opt(False, "--verbose", "-V", "-VV", help="Display more information for debugging purposes"),
+    code_path: Optional[Path] = Opt(None, "--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
+    use_gpu: int = Opt(_DEFAULTS["use_gpu"], "--gpu-id", "-g", help="GPU ID or -1 for CPU"),
+    verbose: bool = Opt(False, "--silent", "-V", "-VV", help="Display more information for debugging purposes"),
     # fmt: on
 ):
     """
     Runs prediction trials for `textcat` models with varying tresholds to maximize the specified metric from CLI.
-    model_path (Path): Path to file with trained model.
-    doc_path (Path): Path to file with DocBin with docs to use for threshold search.
+    model (Path): Path to file with trained model.
+    data_path (Path): Path to file with DocBin with docs to use for threshold search.
+    pipe_name (str): Name of pipe to examine thresholds for.
     average (str): How to average F-scores across labels. One of ('micro', 'macro').
-    pipe_name (Optional[str]): Name of pipe to examine thresholds for. If None, pipe of type MultiLabel_TextCategorizer
-        is seleted. If there are multiple, an error is raised.
     n_trials (int): Number of trials to determine optimal thresholds
-    beta (float): Beta for F1 calculation. Ignored if different metric is used.
-    verbose (bool): Display more information for debugging purposes
+    beta (float): Beta for F1 calculation.
+    code_path (Optional[Path]): Path to Python file with additional code (registered functions) to be imported.
+    use_gpu (int): GPU ID or -1 for CPU.
+    silent (bool): Display more information for debugging purposes
     """
 
     util.logger.setLevel(logging.DEBUG if verbose else logging.INFO)
+    import_code(code_path)
     find_threshold(
-        model_path,
-        doc_path,
-        average=average,
+        model,
+        data_path,
         pipe_name=pipe_name,
+        average=average,
         n_trials=n_trials,
         beta=beta,
+        use_gpu=use_gpu,
+        silent=False,
     )
 
 
 def find_threshold(
-    model_path: Union[str, Path],
-    doc_path: Union[str, Path],
+    model: str,
+    data_path: Path,
     *,
+    pipe_name: str,  # type: ignore
     average: str = _DEFAULTS["average"],  # type: ignore
-    pipe_name: Optional[str] = _DEFAULTS["pipe_name"],  # type: ignore
     n_trials: int = _DEFAULTS["n_trials"],  # type: ignore
-    beta: float = _DEFAULTS["beta"],  # type: ignore
-    verbose: bool = True,
+    beta: float = _DEFAULTS["beta"],  # type: ignore,
+    use_gpu: int = _DEFAULTS["use_gpu"],
+    silent: bool = True,
 ) -> Tuple[float, float]:
     """
     Runs prediction trials for `textcat` models with varying tresholds to maximize the specified metric.
-    model_path (Union[str, Path]): Path to file with trained model.
-    doc_path (Union[str, Path]): Path to file with DocBin with docs to use for threshold search.
+    model (Union[str, Path]): Path to file with trained model.
+    data_path (Union[str, Path]): Path to file with DocBin with docs to use for threshold search.
+    pipe_name (str): Name of pipe to examine thresholds for.
     average (str): How to average F-scores across labels. One of ('micro', 'macro').
-    pipe_name (Optional[str]): Name of pipe to examine thresholds for. If None, pipe of type MultiLabel_TextCategorizer
-        is seleted. If there are multiple, an error is raised.
-    n_trials (int): Number of trials to determine optimal thresholds
-    beta (float): Beta for F1 calculation. Ignored if different metric is used.
-    verbose (bool): Whether to print non-error-related output to stdout.
+    n_trials (int): Number of trials to determine optimal thresholds.
+    beta (float): Beta for F1 calculation.
+    use_gpu (int): GPU ID or -1 for CPU.
+    silent (bool): Whether to print non-error-related output to stdout.
     RETURNS (Tuple[float, float]): Best found threshold with corresponding F-score.
     """
 
-    nlp = util.load_model(model_path)
+    setup_gpu(use_gpu, silent=silent)
+    data_path = util.ensure_path(data_path)
+    if not data_path.exists():
+        wasabi.msg.fail("Evaluation data not found", data_path, exits=1)
+    nlp = util.load_model(model)
     pipe: Optional[Pipe] = None
     selected_pipe_name: Optional[str] = pipe_name
 
@@ -90,7 +96,9 @@ def find_threshold(
         )
 
     for _pipe_name, _pipe in nlp.pipeline:
-        if pipe_name and _pipe_name == pipe_name:
+        # todo instead of instance check, assert _pipe has a .threshold arg
+        #   won't work, actually. e.g. spancat doesn't .threshold.
+        if _pipe_name == pipe_name:
             if not isinstance(_pipe, MultiLabel_TextCategorizer):
                 wasabi.msg.fail(
                     "Specified component '{component}' is not of type `MultiLabel_TextCategorizer`.".format(
@@ -100,36 +108,22 @@ def find_threshold(
                 )
             pipe = _pipe
             break
-        elif pipe_name is None:
-            if isinstance(_pipe, MultiLabel_TextCategorizer):
-                if pipe:
-                    wasabi.msg.fail(
-                        "Multiple components of type `MultiLabel_TextCategorizer` exist in pipeline. Specify name of "
-                        "component to evaluate.",
-                        exits=1,
-                    )
-                pipe = _pipe
-                selected_pipe_name = _pipe_name
 
     if pipe is None:
-        if pipe_name:
-            wasabi.msg.fail(
-                f"No component with name {pipe_name} found in pipeline.", exits=1
-            )
         wasabi.msg.fail(
-            "No component of type `MultiLabel_TextCategorizer` found in pipeline.",
-            exits=1,
+            f"No component with name {pipe_name} found in pipeline.", exits=1
         )
     # This is purely for MyPy. Type checking is done in loop above already.
     assert isinstance(pipe, MultiLabel_TextCategorizer)
 
-    if verbose:
+    if silent:
         print(
             f"Searching threshold with the best {average} F-score for component '{selected_pipe_name}' with {n_trials} "
             f"trials and beta = {beta}."
         )
 
     thresholds = numpy.linspace(0, 1, n_trials)
+    # todo use Scorer.score_cats. possibly to be extended?
     ref_pos_counts = {label: 0 for label in pipe.labels}
     pred_pos_counts = {
         t: {True: ref_pos_counts.copy(), False: ref_pos_counts.copy()}
@@ -140,7 +134,7 @@ def find_threshold(
 
     # Count true/false positives for provided docs.
     doc_bin = DocBin()
-    doc_bin.from_disk(doc_path)
+    doc_bin.from_disk(data_path)
     for ref_doc in doc_bin.get_docs(nlp.vocab):
         for label, score in ref_doc.cats.items():
             if score not in (0, 1):
@@ -198,7 +192,7 @@ def find_threshold(
             ) / len(ref_pos_counts)
 
     best_threshold = max(f_scores.keys(), key=(lambda key: f_scores[key]))
-    if verbose:
+    if silent:
         print(
             f"Best threshold: {round(best_threshold, ndigits=4)} with F-score of {f_scores[best_threshold]}.",
             wasabi.tables.table(
