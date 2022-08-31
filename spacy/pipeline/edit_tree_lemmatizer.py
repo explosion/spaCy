@@ -165,12 +165,12 @@ class EditTreeLemmatizer(TrainablePipe):
                 self.model.ops.alloc((0, n_labels), dtype="i") for doc in docs
             ]
             assert len(guesses) == n_docs
-            return {"probs": scores, "guesses": guesses}
+            return {"probabilities": scores, "tree_ids": guesses}
         scores = self.model.predict(docs)
         assert len(scores) == n_docs
         guesses = self._scores2guesses(docs, scores)
         assert len(guesses) == n_docs
-        return {"probs": scores, "guesses": guesses}
+        return {"probabilities": scores, "tree_ids": guesses}
 
     def _scores2guesses(self, docs, scores):
         guesses = []
@@ -199,7 +199,7 @@ class EditTreeLemmatizer(TrainablePipe):
         return guesses
 
     def set_annotations(self, docs: Iterable[Doc], activations: ActivationsT):
-        batch_tree_ids = activations["guesses"]
+        batch_tree_ids = activations["tree_ids"]
         for i, doc in enumerate(docs):
             if self.save_activations:
                 doc.activations[self.name] = {}

@@ -123,6 +123,6 @@ def test_save_activations():
     senter.save_activations = True
     doc = nlp("This is a test.")
     assert "senter" in doc.activations
-    assert set(doc.activations["senter"].keys()) == {"guesses", "probs"}
-    assert doc.activations["senter"]["probs"].shape == (5, nO)
-    assert doc.activations["senter"]["guesses"].shape == (5,)
+    assert set(doc.activations["senter"].keys()) == {"label_ids", "probabilities"}
+    assert doc.activations["senter"]["probabilities"].shape == (5, nO)
+    assert doc.activations["senter"]["label_ids"].shape == (5,)

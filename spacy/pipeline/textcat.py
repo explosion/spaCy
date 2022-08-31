@@ -209,10 +209,10 @@ class TextCategorizer(TrainablePipe):
             tensors = [doc.tensor for doc in docs]
             xp = self.model.ops.xp
             scores = xp.zeros((len(list(docs)), len(self.labels)))
-            return {"probs": scores}
+            return {"probabilities": scores}
         scores = self.model.predict(docs)
         scores = self.model.ops.asarray(scores)
-        return {"probs": scores}
+        return {"probabilities": scores}
 
     def set_annotations(self, docs: Iterable[Doc], activations: ActivationsT) -> None:
         """Modify a batch of Doc objects, using pre-computed scores.
@@ -222,11 +222,11 @@ class TextCategorizer(TrainablePipe):
 
         DOCS: https://spacy.io/api/textcategorizer#set_annotations
         """
-        probs = activations["probs"]
+        probs = activations["probabilities"]
         for i, doc in enumerate(docs):
             if self.save_activations:
                 doc.activations[self.name] = {}
-                doc.activations[self.name]["probs"] = probs[i]
+                doc.activations[self.name]["probabilities"] = probs[i]
             for j, label in enumerate(self.labels):
                 doc.cats[label] = float(probs[i, j])
 

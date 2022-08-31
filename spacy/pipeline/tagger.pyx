@@ -153,12 +153,12 @@ class Tagger(TrainablePipe):
             n_labels = len(self.labels)
             guesses = [self.model.ops.alloc((0, n_labels)) for doc in docs]
             assert len(guesses) == len(docs)
-            return {"probs": guesses, "guesses": guesses}
+            return {"probabilities": guesses, "label_ids": guesses}
         scores = self.model.predict(docs)
         assert len(scores) == len(docs), (len(scores), len(docs))
         guesses = self._scores2guesses(scores)
         assert len(guesses) == len(docs)
-        return {"probs": scores, "guesses": guesses}
+        return {"probabilities": scores, "label_ids": guesses}
 
     def _scores2guesses(self, scores):
         guesses = []
@@ -177,7 +177,7 @@ class Tagger(TrainablePipe):
 
         DOCS: https://spacy.io/api/tagger#set_annotations
         """
-        batch_tag_ids = activations["guesses"]
+        batch_tag_ids = activations["label_ids"]
         if isinstance(docs, Doc):
             docs = [docs]
         cdef Doc doc

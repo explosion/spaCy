@@ -215,6 +215,9 @@ def test_save_activations():
     morphologizer.save_activations = True
     doc = nlp("This is a test.")
     assert "morphologizer" in doc.activations
-    assert set(doc.activations["morphologizer"].keys()) == {"guesses", "probs"}
-    assert doc.activations["morphologizer"]["probs"].shape == (5, 6)
-    assert doc.activations["morphologizer"]["guesses"].shape == (5,)
+    assert set(doc.activations["morphologizer"].keys()) == {
+        "label_ids",
+        "probabilities",
+    }
+    assert doc.activations["morphologizer"]["probabilities"].shape == (5, 6)
+    assert doc.activations["morphologizer"]["label_ids"].shape == (5,)

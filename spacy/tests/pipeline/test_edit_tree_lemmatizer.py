@@ -297,6 +297,9 @@ def test_save_activations():
 
     lemmatizer.save_activations = True
     doc = nlp("This is a test.")
-    assert list(doc.activations["trainable_lemmatizer"].keys()) == ["probs", "guesses"]
-    assert doc.activations["trainable_lemmatizer"]["probs"].shape == (5, nO)
-    assert doc.activations["trainable_lemmatizer"]["guesses"].shape == (5,)
+    assert list(doc.activations["trainable_lemmatizer"].keys()) == [
+        "probabilities",
+        "tree_ids",
+    ]
+    assert doc.activations["trainable_lemmatizer"]["probabilities"].shape == (5, nO)
+    assert doc.activations["trainable_lemmatizer"]["tree_ids"].shape == (5,)

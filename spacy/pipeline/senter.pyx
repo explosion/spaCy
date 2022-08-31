@@ -129,7 +129,7 @@ class SentenceRecognizer(Tagger):
 
         DOCS: https://spacy.io/api/sentencerecognizer#set_annotations
         """
-        batch_tag_ids = activations["guesses"]
+        batch_tag_ids = activations["label_ids"]
         if isinstance(docs, Doc):
             docs = [docs]
         cdef Doc doc

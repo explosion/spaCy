@@ -228,9 +228,9 @@ def test_save_activations():
     tagger.save_activations = True
     doc = nlp("This is a test.")
     assert "tagger" in doc.activations
-    assert set(doc.activations["tagger"].keys()) == {"guesses", "probs"}
-    assert doc.activations["tagger"]["probs"].shape == (5, len(TAGS))
-    assert doc.activations["tagger"]["guesses"].shape == (5,)
+    assert set(doc.activations["tagger"].keys()) == {"label_ids", "probabilities"}
+    assert doc.activations["tagger"]["probabilities"].shape == (5, len(TAGS))
+    assert doc.activations["tagger"]["label_ids"].shape == (5,)
 
 
 def test_tagger_requires_labels():

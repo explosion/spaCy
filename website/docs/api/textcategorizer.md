@@ -125,7 +125,7 @@ shortcut for this and instantiate the component using its string name and
 | _keyword-only_                                  |                                                                                                                                  |
 | `threshold`                                     | Cutoff to consider a prediction "positive", relevant when printing accuracy results. ~~float~~                                   |
 | `scorer`                                        | The scoring method. Defaults to [`Scorer.score_cats`](/api/scorer#score_cats) for the attribute `"cats"`. ~~Optional[Callable]~~ |
-| `save_activations` <Tag variant="new">4.0</Tag> | Save activations in `Doc` when annotating. The supported activations is `"probs"`. ~~Union[bool, list[str]]~~                    |
+| `save_activations` <Tag variant="new">4.0</Tag> | Save activations in `Doc` when annotating. The supported activations is `"probabilities"`. ~~Union[bool, list[str]]~~            |
 
 ## TextCategorizer.\_\_call\_\_ {#call tag="method"}
 

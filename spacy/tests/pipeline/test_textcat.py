@@ -286,7 +286,7 @@ def test_issue9904():
     nlp.initialize(get_examples)
 
     examples = get_examples()
-    scores = textcat.predict([eg.predicted for eg in examples])["probs"]
+    scores = textcat.predict([eg.predicted for eg in examples])["probabilities"]
 
     loss = textcat.get_loss(examples, scores)[0]
     loss_double_bs = textcat.get_loss(examples * 2, scores.repeat(2, axis=0))[0]
@@ -890,8 +890,8 @@ def test_save_activations():
 
     textcat.save_activations = True
     doc = nlp("This is a test.")
-    assert list(doc.activations["textcat"].keys()) == ["probs"]
-    assert doc.activations["textcat"]["probs"].shape == (nO,)
+    assert list(doc.activations["textcat"].keys()) == ["probabilities"]
+    assert doc.activations["textcat"]["probabilities"].shape == (nO,)
 
 
 def test_save_activations_multi():
@@ -910,5 +910,5 @@ def test_save_activations_multi():
 
     textcat.save_activations = True
     doc = nlp("This is a test.")
-    assert list(doc.activations["textcat_multilabel"].keys()) == ["probs"]
-    assert doc.activations["textcat_multilabel"]["probs"].shape == (nO,)
+    assert list(doc.activations["textcat_multilabel"].keys()) == ["probabilities"]
+    assert doc.activations["textcat_multilabel"]["probabilities"].shape == (nO,)
