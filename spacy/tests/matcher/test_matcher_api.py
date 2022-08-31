@@ -492,10 +492,10 @@ def test_matcher_extension_in_set_predicate(en_vocab):
     pattern = [{"_": {"ext": {"IN": ["A", "C"]}}}]
     matcher.add("M", [pattern])
     doc = Doc(en_vocab, words=["a", "b", "c"])
-    doc[0]._.ext = ["A", "B"]
 
     # The IN predicate expects an exact match between the
-    # extension value and one of the patterns.
+    # extension value and one of the pattern's.
+    doc[0]._.ext = ["A", "B"]
     assert len(matcher(doc)) == 0
 
     doc[0]._.ext = ["A"]
