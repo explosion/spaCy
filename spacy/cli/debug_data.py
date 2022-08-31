@@ -684,9 +684,6 @@ def debug_data(
         # values in the component.
         model_labels = _get_labels_from_trainable_lemmatizer(nlp)
 
-        # from IPython import embed
-
-        # embed()
         msg.info(
             f"{len(label_list)} label(s) in train data (created from trees.add and trees.tree_to_str)"
         )
@@ -1019,10 +1016,6 @@ def _get_labels_from_trainable_lemmatizer(nlp: Language) -> Set[str]:
         pipe = nlp.get_pipe(pipe_name)
         for tree_id in range(len(pipe.trees)):
             labels.add(pipe.trees.tree_to_str(tree_id))
-        print("Component Len", len(pipe.trees))
-        # from IPython import embed
-
-        # embed()
     return labels
 
 
