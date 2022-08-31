@@ -76,7 +76,7 @@ const MODEL_META = {
     benchmark_ner: 'NER accuracy',
     benchmark_speed: 'Speed',
     compat: 'Latest compatible package version for your spaCy installation',
-    download_url: 'Download URL for the pipeline',
+    download_link: 'Download link for the pipeline',
 }
 
 const LABEL_SCHEME_META = {
@@ -135,7 +135,7 @@ function formatAccuracy(data, lang) {
         .filter(item => item)
 }
 
-function formatDownloadUrl(lang, name, version) {
+function formatDownloadLink(lang, name, version) {
   const fullName = `${lang}_${name}-${version}`
   const filename = `${fullName}-py3-none-any.whl`
   const url = `https://github.com/explosion/spacy-models/releases/download/${fullName}/${filename}`
@@ -158,7 +158,7 @@ function formatModelMeta(data) {
         labels: isEmptyObj(data.labels) ? null : data.labels,
         vectors: formatVectors(data.vectors),
         accuracy: formatAccuracy(data.performance, data.lang),
-        download_url: formatDownloadUrl(data.lang, data.name, data.version),
+        download_link: formatDownloadLink(data.lang, data.name, data.version),
     }
 }
 
@@ -249,7 +249,7 @@ const Model = ({
         { label: 'Components', content: components, help: MODEL_META.components },
         { label: 'Pipeline', content: pipeline, help: MODEL_META.pipeline },
         { label: 'Vectors', content: meta.vectors, help: MODEL_META.vecs },
-        { label: 'Package URL', content: meta.download_url, help: MODEL_META.download_url },
+        { label: 'Download Link', content: meta.download_link, help: MODEL_META.download_link },
         { label: 'Sources', content: sources, help: MODEL_META.sources },
         { label: 'Author', content: author },
         { label: 'License', content: license },
