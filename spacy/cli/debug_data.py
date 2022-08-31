@@ -766,7 +766,6 @@ def _compile_gold(
         "texts": set(),
         "lemmatizer_trees": set(),
         "lemmatizer_trees_full": set(),
-        "lemmatizer_total": 0,
     }
     trees = EditTrees(nlp.vocab.strings)
     for eg in examples:
