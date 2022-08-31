@@ -2,7 +2,7 @@ import tqdm
 import sys
 
 from ._util import app, Arg, Opt, setup_gpu, import_code
-from typing import Optional, Generator
+from typing import Optional, Generator, Union
 from pathlib import Path
 from wasabi import msg
 
@@ -26,7 +26,7 @@ gold_help = "Use gold preprocessing provided in the .spacy files"
 def _stream_data(
     data_path: Path,
     vocab: Vocab
-) -> Generator[Doc, None, None]:
+) -> Generator[Union[str, Doc], None, None]:
     """
     Load data which is either in a single file
     in .spacy or plain text format or multiple
@@ -77,7 +77,7 @@ def apply_cli(
     # fmt: off
     model: str = Arg(..., help="Model name or path"),
     data_path: Path = Arg(..., help=path_help, exists=True),
-    output: Optional[Path] = Arg(..., help=out_help, dir_okay=False),
+    output: Path = Arg(..., help=out_help, dir_okay=False),
     code_path: Optional[Path] = Opt(None, "--code", "-c", help=code_help),
     use_gpu: int = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU"),
     batch_size: int = Opt(1, "--batch-size", "-b", help="Batch size"),
