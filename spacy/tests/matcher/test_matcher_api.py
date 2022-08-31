@@ -368,7 +368,7 @@ def test_matcher_intersect_value_operator(en_vocab):
     doc[0]._.ext = ["A", "B"]
     assert len(matcher(doc)) == 1
 
-    # INTERSECTS returns False if the value isn't a str or int
+    # INTERSECTS matches nothing for iterables that aren't all str or int
     matcher = Matcher(en_vocab)
     pattern = [{"_": {"ext": {"INTERSECTS": ["Abx", "C"]}}}]
     matcher.add("M", [pattern])
@@ -495,7 +495,7 @@ def test_matcher_extension_in_set_predicate(en_vocab):
     doc[0]._.ext = ["A", "B"]
 
     # The IN predicate expects an exact match between the
-    # extension value and one of the pattern's.
+    # extension value and one of the patterns.
     assert len(matcher(doc)) == 0
 
     doc[0]._.ext = ["A"]
