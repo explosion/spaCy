@@ -371,15 +371,17 @@ efficient.
 >
 > Pretrained pipeline distributions are hosted on
 > [Github Releases](https://github.com/explosion/spacy-models/releases), and you
-> can find download links there, as well as on the model page. You can also get URLs directly
-> from the command line by using `spacy info` with the `--url` flag, which may be useful for automation.
+> can find download links there, as well as on the model page. You can also get
+> URLs directly from the command line by using `spacy info` with the `--url`
+> flag, which may be useful for automation.
 >
 > ```bash
 > spacy info en_core_web_sm --url
 > ```
 >
 > This command will print the URL for the latest version of a pipeline
-> compatible with the version of spaCy you're using. Note that in order to look up the compatability information an Internet connection is required.
+> compatible with the version of spaCy you're using. Note that in order to look
+> up the compatibility information an internet connection is required.
 
 ```bash
 # With external URL
@@ -530,8 +532,8 @@ Because pipeline packages are valid Python packages, you can add them to your
 application's `requirements.txt`. If you're running your own internal PyPi
 installation, you can upload the pipeline packages there. pip's
 [requirements file format](https://pip.pypa.io/en/latest/reference/pip_install/#requirements-file-format)
-supports both package names to download via a PyPi server, as well as [direct
-URLs](#download-urls).
+supports both package names to download via a PyPi server, as well as
+[direct URLs](#pipeline-urls).
 
 ```text
 ### requirements.txt
