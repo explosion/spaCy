@@ -249,7 +249,7 @@ const Model = ({
         { label: 'Components', content: components, help: MODEL_META.components },
         { label: 'Pipeline', content: pipeline, help: MODEL_META.pipeline },
         { label: 'Vectors', content: meta.vectors, help: MODEL_META.vecs },
-        { label: 'Download URL', content: meta.download_url, help: MODEL_META.download_url },
+        { label: 'Package URL', content: meta.download_url, help: MODEL_META.download_url },
         { label: 'Sources', content: sources, help: MODEL_META.sources },
         { label: 'Author', content: author },
         { label: 'License', content: license },

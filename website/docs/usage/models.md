@@ -367,18 +367,18 @@ To download a trained pipeline directly using
 path of the wheel file or archive. Installing the wheel is usually more
 efficient.
 
-> #### How to Find Download URLs {#download-urls}
+> #### Pipeline Package URLs {#pipeline-urls}
 >
 > Pretrained pipeline distributions are hosted on
 > [Github Releases](https://github.com/explosion/spacy-models/releases), and you
-> can find download links there, as well as on the model page. You can also get download URLs directly
+> can find download links there, as well as on the model page. You can also get URLs directly
 > from the command line by using `spacy info` with the `--url` flag, which may be useful for automation.
 >
 > ```bash
 > spacy info en_core_web_sm --url
 > ```
 >
-> This command will print the download URL for the latest version of a pipeline
+> This command will print the URL for the latest version of a pipeline
 > compatible with the version of spaCy you're using. Note that in order to look up the compatability information an Internet connection is required.
 
 ```bash
