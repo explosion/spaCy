@@ -16,6 +16,7 @@ from ..schemas import ConfigSchemaTraining
 from ..pipeline._parser_internals import nonproj
 from ..pipeline._parser_internals.nonproj import DELIMITER
 from ..pipeline import Morphologizer, SpanCategorizer
+from ..pipeline._edit_tree_internals.edit_trees import EditTrees
 from ..morphology import Morphology
 from ..language import Language
 from ..util import registry, resolve_dot_names
@@ -670,6 +671,41 @@ def debug_data(
                 f"Found {gold_train_data['n_cycles']} projectivized train sentence(s) with cycles"
             )
 
+    if "trainable_lemmatizer" in factory_names:
+        msg.divider("Trainable Lemmatizer")
+        # NOTE: label_list is the string version of the trees
+        label_list: Set[str] = gold_train_data["lemmatizer_trees"]
+
+        # NOTE: label_list_full is the set of strigified trees from
+        # iterating through all trees after all lemmas have been added
+        label_list_full: Set[str] = gold_train_data["lemmatizer_trees_full"]
+
+        # NOTE: model_labels is the tree IDs from iterating through the tree_id
+        # values in the component.
+        model_labels = _get_labels_from_trainable_lemmatizer(nlp)
+
+        # from IPython import embed
+
+        # embed()
+        msg.info(
+            f"{len(label_list)} label(s) in train data (created from trees.add and trees.tree_to_str)"
+        )
+        msg.info(
+            f"{len(label_list_full)} label(s) in train data (from iterating through tree_id)"
+        )
+        msg.info(
+            f"{len(model_labels)} label(s) in component (from iterating through tree_id on component.trees"
+        )
+
+        labels = set(label_list)
+        missing_labels = model_labels - labels
+
+        if missing_labels:
+            msg.warn(
+                f"{len(missing_labels)} label(s) in model (component.tree)"
+                " and not present in the train data (trees.add and trees.tree_to_str)."
+            )
+
     msg.divider("Summary")
     good_counts = msg.counts[MESSAGES.GOOD]
     warn_counts = msg.counts[MESSAGES.WARN]
@@ -731,7 +767,11 @@ def _compile_gold(
         "n_cats_multilabel": 0,
         "n_cats_bad_values": 0,
         "texts": set(),
+        "lemmatizer_trees": set(),
+        "lemmatizer_trees_full": set(),
+        "lemmatizer_total": 0,
     }
+    trees = EditTrees(nlp.vocab.strings)
     for eg in examples:
         gold = eg.reference
         doc = eg.predicted
@@ -861,6 +901,20 @@ def _compile_gold(
                 data["n_nonproj"] += 1
             if nonproj.contains_cycle(aligned_heads):
                 data["n_cycles"] += 1
+        if "trainable_lemmatizer" in factory_names:
+            # NOTE: From EditTreeLemmatizer._labels_from_data
+            for token in eg.reference:
+                if token.lemma != 0:
+                    tree_id = trees.add(token.text, token.lemma_)
+                    tree_str = trees.tree_to_str(tree_id)
+                    data["lemmatizer_trees"].add(tree_str)
+    if "trainable_lemmatizer" in factory_names:
+        # After the edittree is built, let's try and capture all the
+        # string trees in that structure
+        all_trees = set()
+        for tree_id in range(len(trees)):
+            all_trees.add(trees.tree_to_str(tree_id))
+        data["lemmatizer_trees_full"] = all_trees
     return data
 
 
@@ -951,6 +1005,24 @@ def _get_labels_from_spancat(nlp: Language) -> Dict[str, Set[str]]:
         if pipe.key not in labels:
             labels[pipe.key] = set()
         labels[pipe.key].update(pipe.labels)
+    return labels
+
+
+def _get_labels_from_trainable_lemmatizer(nlp: Language) -> Set[str]:
+    pipe_names = [
+        pipe_name
+        for pipe_name in nlp.pipe_names
+        if nlp.get_pipe_meta(pipe_name).factory == "trainable_lemmatizer"
+    ]
+    labels: Set[str] = set()
+    for pipe_name in pipe_names:
+        pipe = nlp.get_pipe(pipe_name)
+        for tree_id in range(len(pipe.trees)):
+            labels.add(pipe.trees.tree_to_str(tree_id))
+        print("Component Len", len(pipe.trees))
+        # from IPython import embed
+
+        # embed()
     return labels
 
 
