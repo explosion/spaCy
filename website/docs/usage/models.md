@@ -531,20 +531,15 @@ should be specifying them directly.
 Because pipeline packages are valid Python packages, you can add them to your
 application's `requirements.txt`. If you're running your own internal PyPi
 installation, you can upload the pipeline packages there. pip's
-[requirements file format](https://pip.pypa.io/en/latest/reference/pip_install/#requirements-file-format)
+[requirements file format](https://pip.pypa.io/en/latest/reference/requirements-file-format/)
 supports both package names to download via a PyPi server, as well as
 [direct URLs](#pipeline-urls).
 
 ```text
 ### requirements.txt
 spacy>=3.0.0,<4.0.0
-https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.0.0/en_core_web_sm-3.0.0.tar.gz#egg=en_core_web_sm
+en_core_web_sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.4.0/en_core_web_sm-3.4.0-py3-none-any.whl
 ```
-
-Specifying `#egg=` with the package name tells pip which package to expect from
-the download URL. This way, the package won't be re-downloaded and overwritten
-if it's already installed - just like when you're downloading a package from
-PyPi.
 
 All pipeline packages are versioned and specify their spaCy dependency. This
 ensures cross-compatibility and lets you specify exact version requirements for
