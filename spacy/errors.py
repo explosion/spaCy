@@ -943,7 +943,8 @@ class Errors(metaclass=ErrorsWithCodes):
     E1045 = ("Encountered {parent} subclass without `{parent}.{method}` "
              "method in '{name}'. If you want to use this method, make "
              "sure it's overwritten on the subclass.")
-    E1046 = ("{cls_name} is an abstract class and cannot be instantiated.")
+    E1046 = ("{cls_name} is an abstract class and cannot be instantiated. If you are looking for spaCy's default "
+             "knowledge base, use `InMemoryLookupKB`.")
 
 
 # Deprecated model shortcuts, only used in errors and warnings
