@@ -156,3 +156,9 @@ Restore the state of the knowledge base from a given directory. Note that the
 | `loc`       | A path to a directory. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
 | `exclude`   | List of components to exclude. ~~Iterable[str]~~                                                |
 | **RETURNS** | The modified `KnowledgeBase` object. ~~KnowledgeBase~~                                          |
+
+## Candidate {#candidate tag="class"}
+
+A `Candidate` object refers to a textual mention (alias) that may or may not be
+resolved to a specific entity from a `KnowledgeBase`. See the dedicated
+[page on `Candidate`](/api/candidate).
