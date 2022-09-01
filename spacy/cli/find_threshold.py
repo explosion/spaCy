@@ -7,6 +7,8 @@ from typing import Optional, Tuple, Any, Dict, List
 import numpy
 import wasabi.tables
 
+from ..pipeline import TrainablePipe, Pipe
+from ..errors import Errors
 from ..training import Corpus
 from ._util import app, Arg, Opt, import_code, setup_gpu
 from .. import util
@@ -47,7 +49,7 @@ def find_threshold_cli(
     threshold_key (str): Key of threshold attribute in component's configuration.
     scores_key (str): Name of score to metric to optimize.
     n_trials (int): Number of trials to determine optimal thresholds
-    beta (float): Beta for F1 calculation.
+    beta (float): Beta for F-score calculation.
     code_path (Optional[Path]): Path to Python file with additional code (registered functions) to be imported.
     use_gpu (int): GPU ID or -1 for CPU.
     gold_preproc (bool): Whether to use gold preprocessing. Gold preprocessing helps the annotations align to the
@@ -79,10 +81,10 @@ def find_threshold(
     threshold_key: str,
     scores_key: str,
     *,
-    n_trials: int = _DEFAULTS["n_trials"],
-    beta: float = _DEFAULTS["beta"],
-    use_gpu: int = _DEFAULTS["use_gpu"],
-    gold_preproc: bool = _DEFAULTS["gold_preproc"],
+    n_trials: int = _DEFAULTS["n_trials"],  # type: ignore
+    beta: float = _DEFAULTS["beta"],  # type: ignore
+    use_gpu: int = _DEFAULTS["use_gpu"],  # type: ignore
+    gold_preproc: bool = _DEFAULTS["gold_preproc"],  # type: ignore
     silent: bool = True,
 ) -> Tuple[float, float]:
     """
@@ -93,7 +95,7 @@ def find_threshold(
     threshold_key (str): Key of threshold attribute in component's configuration.
     scores_key (str): Name of score to metric to optimize.
     n_trials (int): Number of trials to determine optimal thresholds.
-    beta (float): Beta for F1 calculation.
+    beta (float): Beta for F-score calculation.
     use_gpu (int): GPU ID or -1 for CPU.
     gold_preproc (bool): Whether to use gold preprocessing. Gold preprocessing helps the annotations align to the
         tokenization, and may result in sequences of more consistent length. However, it may reduce runtime accuracy due
@@ -108,10 +110,13 @@ def find_threshold(
         wasabi.msg.fail("Evaluation data not found", data_path, exits=1)
     nlp = util.load_model(model)
 
+    pipe: Optional[Pipe] = None
     try:
         pipe = nlp.get_pipe(pipe_name)
     except KeyError as err:
         wasabi.msg.fail(title=str(err), exits=1)
+    if not isinstance(pipe, TrainablePipe):
+        raise TypeError(Errors.E1044)
 
     if not silent:
         wasabi.msg.info(
@@ -140,7 +145,9 @@ def find_threshold(
     scores: Dict[float, float] = {}
     for threshold in numpy.linspace(0, 1, n_trials):
         pipe.cfg = set_nested_item(pipe.cfg, config_keys, threshold)
-        scores[threshold] = nlp.evaluate(dev_dataset)[scores_key]
+        scores[threshold] = nlp.evaluate(dev_dataset, scorer_cfg={"beta": beta})[
+            scores_key
+        ]
         if not (
             isinstance(scores[threshold], float) or isinstance(scores[threshold], int)
         ):
