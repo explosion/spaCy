@@ -494,7 +494,7 @@ def test_matcher_extension_in_set_predicate(en_vocab):
     doc = Doc(en_vocab, words=["a", "b", "c"])
 
     # The IN predicate expects an exact match between the
-    # extension value and one of the pattern's.
+    # extension value and one of the pattern's values.
     doc[0]._.ext = ["A", "B"]
     assert len(matcher(doc)) == 0
 
