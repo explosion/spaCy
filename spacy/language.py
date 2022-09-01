@@ -1028,8 +1028,8 @@ class Language:
                 raise ValueError(Errors.E109.format(name=name)) from e
             except Exception as e:
                 error_handler(name, proc, [doc], e)
-            if doc is None:
-                raise ValueError(Errors.E005.format(name=name))
+            if not isinstance(doc, Doc):
+                raise ValueError(Errors.E005.format(name=name, returned_type=type(doc)))
         return doc
 
     def disable_pipes(self, *names) -> "DisabledPipes":
