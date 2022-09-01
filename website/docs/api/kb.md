@@ -9,14 +9,22 @@ new: 2.2
 ---
 
 The `KnowledgeBase` object is an abstract class providing a method to generate
-[`Candidate`](/api/candidate) objects, which are plausible external identifiers
-given a certain textual mention. Each such `Candidate` holds information from
-the relevant KB entities, such as its frequency in text and possible aliases.
-Each entity in the knowledge base also has a pretrained entity vector of a fixed
-size.
+[`Candidate`](/api/kb#candidate) objects, which are plausible external
+identifiers given a certain textual mention. Each such `Candidate` holds
+information from the relevant KB entities, such as its frequency in text and
+possible aliases. Each entity in the knowledge base also has a pretrained entity
+vector of a fixed size.
 
 Beyond that, `KnowledgeBase` classes have to implement a number of utility
 functions called by the [`EntityLinker`](/api/entitylinker) component.
+
+<Infobox variant="warning">
+
+This class was not abstract up to spaCy version 3.5. The `KnowledgeBase`
+implementation up to that point is available as `InMemoryLookupKB` from 3.5
+onwards.
+
+</Infobox>
 
 ## KnowledgeBase.\_\_init\_\_ {#init tag="method"}
 
@@ -42,10 +50,18 @@ classes should call `__init__()` to set up some necessary attributes.
 | `vocab`                | The shared vocabulary. ~~Vocab~~                 |
 | `entity_vector_length` | Length of the fixed-size entity vectors. ~~int~~ |
 
+## KnowledgeBase.entity_vector_length {#entity_vector_length tag="property"}
+
+The length of the fixed-size entity vectors in the knowledge base.
+
+| Name        | Description                                      |
+| ----------- | ------------------------------------------------ |
+| **RETURNS** | Length of the fixed-size entity vectors. ~~int~~ |
+
 ## KnowledgeBase.get_candidates {#get_candidates tag="method"}
 
 Given a certain textual mention as input, retrieve a list of candidate entities
-of type [`Candidate`](/api/candidate).
+of type [`Candidate`](/api/kb#candidate).
 
 > #### Example
 >
@@ -160,5 +176,40 @@ Restore the state of the knowledge base from a given directory. Note that the
 ## Candidate {#candidate tag="class"}
 
 A `Candidate` object refers to a textual mention (alias) that may or may not be
-resolved to a specific entity from a `KnowledgeBase`. See the dedicated
-[page on `Candidate`](/api/candidate).
+resolved to a specific entity from a `KnowledgeBase`. This will be used as input
+for the entity linking algorithm which will disambiguate the various candidates
+to the correct one. Each candidate `(alias, entity)` pair is assigned to a
+certain prior probability.
+
+### Candidate.\_\_init\_\_ {#candidate-init tag="method"}
+
+Construct a `Candidate` object. Usually this constructor is not called directly,
+but instead these objects are returned by the `get_candidates` method of the
+[`entity_linker`](/api/entitylinker) pipe.
+
+> #### Example
+>
+> ```python
+> from spacy.kb import Candidate
+> candidate = Candidate(kb, entity_hash, entity_freq, entity_vector, alias_hash, prior_prob)
+> ```
+
+| Name          | Description                                                               |
+| ------------- | ------------------------------------------------------------------------- |
+| `kb`          | The knowledge base that defined this candidate. ~~KnowledgeBase~~         |
+| `entity_hash` | The hash of the entity's KB ID. ~~int~~                                   |
+| `entity_freq` | The entity frequency as recorded in the KB. ~~float~~                     |
+| `alias_hash`  | The hash of the textual mention or alias. ~~int~~                         |
+| `prior_prob`  | The prior probability of the `alias` referring to the `entity`. ~~float~~ |
+
+## Candidate attributes {#candidate-attributes}
+
+| Name            | Description                                                              |
+| --------------- | ------------------------------------------------------------------------ |
+| `entity`        | The entity's unique KB identifier. ~~int~~                               |
+| `entity_`       | The entity's unique KB identifier. ~~str~~                               |
+| `alias`         | The alias or textual mention. ~~int~~                                    |
+| `alias_`        | The alias or textual mention. ~~str~~                                    |
+| `prior_prob`    | The prior probability of the `alias` referring to the `entity`. ~~long~~ |
+| `entity_freq`   | The frequency of the entity in a typical corpus. ~~long~~                |
+| `entity_vector` | The pretrained vector of the entity. ~~numpy.ndarray~~                   |

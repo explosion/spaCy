@@ -1,17 +1,17 @@
 ---
 title: InMemoryLookupKB
 teaser:
-  An implementation of the KnowledgeBase interface. Stores all information
-  in-memory.
+  The default implementation of the KnowledgeBase interface. Stores all
+  information in-memory.
 tag: class
 source: spacy/kb/kb_in_memory.pyx
-new: 3.4
+new: 3.5
 ---
 
 The `InMemoryLookupKB` class inherits from [`KnowledgeBase`](/api/kb) and
 implements all of its methods. It stores all KB data in-memory and generates
-[`Candidate`](/api/candidate) objects by exactly matching mentions with entity
-names. It's highly optimized for both a low memory footprint and speed of
+[`Candidate`](/api/kb#candidate) objects by exactly matching mentions with
+entity names. It's highly optimized for both a low memory footprint and speed of
 retrieval.
 
 ## InMemoryLookupKB.\_\_init\_\_ {#init tag="method"}
@@ -155,7 +155,7 @@ Get a list of all aliases in the knowledge base.
 ## InMemoryLookupKB.get_candidates {#get_candidates tag="method"}
 
 Given a certain textual mention as input, retrieve a list of candidate entities
-of type [`Candidate`](/api/candidate). Wraps
+of type [`Candidate`](/api/kb#candidate). Wraps
 [`get_alias_candidates()`](/api/kb_in_memory#get_alias_candidates).
 
 > #### Example
@@ -201,7 +201,7 @@ to you.
 ## InMemoryLookupKB.get_alias_candidates {#get_alias_candidates tag="method"}
 
 Given a certain textual mention as input, retrieve a list of candidate entities
-of type [`Candidate`](/api/candidate).
+of type [`Candidate`](/api/kb#candidate).
 
 > #### Example
 >
