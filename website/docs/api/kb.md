@@ -103,6 +103,22 @@ to you.
 | `mentions`  | The textual mention or alias. ~~Iterable[Span]~~                                             |
 | **RETURNS** | An iterable of iterable with relevant `Candidate` objects. ~~Iterable[Iterable[Candidate]]~~ |
 
+## KnowledgeBase.get_alias_candidates {#get_alias_candidates tag="method"}
+
+<Infobox variant="warning">
+This method is _not_ available from spaCy 3.5 onwards.
+</Infobox>
+
+From spaCy 3.5 on `KnowledgeBase` is an abstract class (with
+[`InMemoryLookupKB`](/api/kb_in_memory) being a drop-in replacement) to allow
+more flexibility in customizing knowledge bases. Some of its methods were moved
+to [`InMemoryLookupKB`](/api/kb_in_memory) during this refactoring, one of those
+being `get_alias_candidates()`. This method is now available as
+[`InMemoryLookupKB.get_alias_candidates()`](/api/kb_in_memory#get_alias_candidates).
+Note: [`InMemoryLookupKB.get_candidates()`](/api/kb_in_memory#get_candidates)
+defaults to
+[`InMemoryLookupKB.get_alias_candidates()`](/api/kb_in_memory#get_alias_candidates).
+
 ## KnowledgeBase.get_vector {#get_vector tag="method"}
 
 Given a certain entity ID, retrieve its pretrained entity vector.
