@@ -1,4 +1,5 @@
 import functools
+from functools import partial
 import operator
 from pathlib import Path
 import logging
@@ -115,8 +116,12 @@ def find_threshold(
         pipe = nlp.get_pipe(pipe_name)
     except KeyError as err:
         wasabi.msg.fail(title=str(err), exits=1)
+
     if not isinstance(pipe, TrainablePipe):
         raise TypeError(Errors.E1044)
+    if not hasattr(pipe, "scorer"):
+        raise AttributeError(Errors.E1045)
+    setattr(pipe, "scorer", partial(pipe.scorer.func, beta=beta))
 
     if not silent:
         wasabi.msg.info(
@@ -145,9 +150,7 @@ def find_threshold(
     scores: Dict[float, float] = {}
     for threshold in numpy.linspace(0, 1, n_trials):
         pipe.cfg = set_nested_item(pipe.cfg, config_keys, threshold)
-        scores[threshold] = nlp.evaluate(dev_dataset, scorer_cfg={"beta": beta})[
-            scores_key
-        ]
+        scores[threshold] = nlp.evaluate(dev_dataset)[scores_key]
         if not (
             isinstance(scores[threshold], float) or isinstance(scores[threshold], int)
         ):

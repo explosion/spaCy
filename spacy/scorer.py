@@ -102,7 +102,7 @@ class ROCAUCScore:
 class Scorer:
     """Compute evaluation scores."""
 
-    BETA = 1
+    BETA = 1.0
 
     def __init__(
         self,
@@ -336,6 +336,7 @@ class Scorer:
         has_annotation: Optional[Callable[[Doc], bool]] = None,
         labeled: bool = True,
         allow_overlap: bool = False,
+        beta: float = 1.0,
         **cfg,
     ) -> Dict[str, Any]:
         """Returns PRF scores for labeled spans.
@@ -353,12 +354,12 @@ class Scorer:
             equal if their start and end match, irrespective of their label.
         allow_overlap (bool): Whether or not to allow overlapping spans.
             If set to 'False', the alignment will automatically resolve conflicts.
+        beta (float): Beta coefficient for F-score calculation. Defaults to 1.0.
         RETURNS (Dict[str, Any]): A dictionary containing the PRF scores under
             the keys attr_p/r/f and the per-type PRF scores under attr_per_type.
 
         DOCS: https://spacy.io/api/scorer#score_spans
         """
-        beta = cfg.get("beta", Scorer.BETA)
         score = PRFScore(beta=beta)
         score_per_type = dict()
         for example in examples:
@@ -439,6 +440,7 @@ class Scorer:
         multi_label: bool = True,
         positive_label: Optional[str] = None,
         threshold: Optional[float] = None,
+        beta: float = 1.0,
         **cfg,
     ) -> Dict[str, Any]:
         """Returns PRF and ROC AUC scores for a doc-level attribute with a
@@ -458,6 +460,7 @@ class Scorer:
         threshold (float): Cutoff to consider a prediction "positive". Defaults
             to 0.5 for multi-label, and 0.0 (i.e. whatever's highest scoring)
             otherwise.
+        beta (float): Beta coefficient for F-score calculation.
         RETURNS (Dict[str, Any]): A dictionary containing the scores, with
             inapplicable scores as None:
             for all:
@@ -475,7 +478,6 @@ class Scorer:
 
         DOCS: https://spacy.io/api/scorer#score_cats
         """
-        beta = cfg.get("beta", Scorer.BETA)
         if threshold is None:
             threshold = 0.5 if multi_label else 0.0
         f_per_type = {label: PRFScore(beta=beta) for label in labels}

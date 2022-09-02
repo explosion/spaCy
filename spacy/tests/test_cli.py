@@ -928,12 +928,12 @@ def test_cli_find_threshold(capsys):
                     pipe_name="tc_multi",
                     threshold_key="threshold",
                     scores_key="cats_macro_f",
-                    silent=True,
+                    silent=False,
                 )[0]
                 == numpy.linspace(0, 1, 10)[1]
             )
 
-        # Specifying name of non-MultiLabel_TextCategorizer component should fail.
+        # Test with spancat.
         nlp, _ = init_nlp((("spancat", {}),))
         with make_tempdir() as nlp_dir:
             nlp.to_disk(nlp_dir)
