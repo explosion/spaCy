@@ -965,6 +965,9 @@ def run_command(
     RETURNS (Optional[CompletedProcess]): The process object.
     """
     if isinstance(command, str):
+        # On Windows, it's possible for the split here to be different from what
+        # will actually be used for execution, but it will *usually* be correct,
+        # and is only used in debugging output if a command failed.
         cmd_list = shlex.split(command, posix=True)
         cmd_str = command
     else:
