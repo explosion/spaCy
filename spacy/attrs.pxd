@@ -1,98 +1,49 @@
-# Reserve 64 values for flag features
 from . cimport symbols
 
 cdef enum attr_id_t:
-    NULL_ATTR
-    IS_ALPHA
-    IS_ASCII
-    IS_DIGIT
-    IS_LOWER
-    IS_PUNCT
-    IS_SPACE
-    IS_TITLE
-    IS_UPPER
-    LIKE_URL
-    LIKE_NUM
-    LIKE_EMAIL
-    IS_STOP
-    IS_OOV_DEPRECATED
-    IS_BRACKET
-    IS_QUOTE
-    IS_LEFT_PUNCT
-    IS_RIGHT_PUNCT
-    IS_CURRENCY
+    NULL_ATTR = 0
+    IS_ALPHA = symbols.IS_ALPHA
+    IS_ASCII = symbols.IS_ASCII
+    IS_DIGIT = symbols.IS_DIGIT
+    IS_LOWER = symbols.IS_LOWER
+    IS_PUNCT = symbols.IS_PUNCT
+    IS_SPACE = symbols.IS_SPACE
+    IS_TITLE = symbols.IS_TITLE
+    IS_UPPER = symbols.IS_UPPER
+    LIKE_URL = symbols.LIKE_URL
+    LIKE_NUM = symbols.LIKE_NUM
+    LIKE_EMAIL = symbols.LIKE_EMAIL
+    IS_STOP = symbols.IS_STOP
+    IS_BRACKET = symbols.IS_BRACKET
+    IS_QUOTE = symbols.IS_QUOTE
+    IS_LEFT_PUNCT = symbols.IS_LEFT_PUNCT
+    IS_RIGHT_PUNCT = symbols.IS_RIGHT_PUNCT
+    IS_CURRENCY = symbols.IS_CURRENCY
 
-    FLAG19 = 19
-    FLAG20
-    FLAG21
-    FLAG22
-    FLAG23
-    FLAG24
-    FLAG25
-    FLAG26
-    FLAG27
-    FLAG28
-    FLAG29
-    FLAG30
-    FLAG31
-    FLAG32
-    FLAG33
-    FLAG34
-    FLAG35
-    FLAG36
-    FLAG37
-    FLAG38
-    FLAG39
-    FLAG40
-    FLAG41
-    FLAG42
-    FLAG43
-    FLAG44
-    FLAG45
-    FLAG46
-    FLAG47
-    FLAG48
-    FLAG49
-    FLAG50
-    FLAG51
-    FLAG52
-    FLAG53
-    FLAG54
-    FLAG55
-    FLAG56
-    FLAG57
-    FLAG58
-    FLAG59
-    FLAG60
-    FLAG61
-    FLAG62
-    FLAG63
+    ID = symbols.ID
+    ORTH = symbols.ORTH
+    LOWER = symbols.LOWER
+    NORM = symbols.NORM
+    SHAPE = symbols.SHAPE
+    PREFIX = symbols.PREFIX
+    SUFFIX = symbols.SUFFIX
 
-    ID
-    ORTH
-    LOWER
-    NORM
-    SHAPE
-    PREFIX
-    SUFFIX
+    LENGTH = symbols.LENGTH
+    CLUSTER = symbols.CLUSTER
+    LEMMA = symbols.LEMMA
+    POS = symbols.POS
+    TAG = symbols.TAG
+    DEP = symbols.DEP
+    ENT_IOB = symbols.ENT_IOB
+    ENT_TYPE = symbols.ENT_TYPE
+    HEAD = symbols.HEAD
+    SENT_START = symbols.SENT_START
+    SPACY = symbols.SPACY
+    PROB = symbols.PROB
 
-    LENGTH
-    CLUSTER
-    LEMMA
-    POS
-    TAG
-    DEP
-    ENT_IOB
-    ENT_TYPE
-    HEAD
-    SENT_START
-    SPACY
-    PROB
-
-    LANG
+    LANG = symbols.LANG
     ENT_KB_ID = symbols.ENT_KB_ID
-    MORPH
+    MORPH = symbols.MORPH
     ENT_ID = symbols.ENT_ID
 
-    IDX
-    SENT_END
+    IDX = symbols.IDX

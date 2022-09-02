@@ -147,7 +147,7 @@ cdef class StringStore:
         elif _try_coerce_to_hash(string_or_id, &str_hash):
             if str_hash == 0:
                 return ""
-            elif str_hash < len(SYMBOLS_BY_INT):
+            elif str_hash in SYMBOLS_BY_INT:
                 return SYMBOLS_BY_INT[str_hash]
             else:
                 utf8str = <Utf8Str*>self._map.get(str_hash)
@@ -223,7 +223,7 @@ cdef class StringStore:
             # TODO: Raise an error instead
             return self._map.get(string_or_id) is not NULL
 
-        if str_hash < len(SYMBOLS_BY_INT):
+        if str_hash in SYMBOLS_BY_INT:
             return True
         else:
             return self._map.get(str_hash) is not NULL

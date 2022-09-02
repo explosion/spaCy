@@ -974,22 +974,26 @@ cdef class Doc:
             py_attr_ids = [(IDS[id_.upper()] if hasattr(id_, "upper") else id_)
                        for id_ in py_attr_ids]
         except KeyError as msg:
-            keys = [k for k in IDS.keys() if not k.startswith("FLAG")]
+            keys = list(IDS.keys())
             raise KeyError(Errors.E983.format(dict="IDS", key=msg, keys=keys)) from None
         # Make an array from the attributes --- otherwise our inner loop is
         # Python dict iteration.
-        cdef np.ndarray attr_ids = numpy.asarray(py_attr_ids, dtype="i")
-        output = numpy.ndarray(shape=(self.length, len(attr_ids)), dtype=numpy.uint64)
+        cdef Pool mem = Pool()
+        cdef int n_attrs = len(py_attr_ids)
+        cdef attr_id_t* c_attr_ids
+        if n_attrs > 0:
+            c_attr_ids = <attr_id_t*>mem.alloc(n_attrs, sizeof(attr_id_t))
+            for i, attr_id in enumerate(py_attr_ids):
+                c_attr_ids[i] = attr_id
+        output = numpy.ndarray(shape=(self.length, n_attrs), dtype=numpy.uint64)
         c_output = <attr_t*>output.data
-        c_attr_ids = <attr_id_t*>attr_ids.data
         cdef TokenC* token
-        cdef int nr_attr = attr_ids.shape[0]
         for i in range(self.length):
             token = &self.c[i]
-            for j in range(nr_attr):
-                c_output[i*nr_attr + j] = get_token_attr(token, c_attr_ids[j])
+            for j in range(n_attrs):
+                c_output[i*n_attrs + j] = get_token_attr(token, c_attr_ids[j])
         # Handle 1d case
-        return output if len(attr_ids) >= 2 else output.reshape((self.length,))
+        return output if n_attrs >= 2 else output.reshape((self.length,))
 
     def count_by(self, attr_id_t attr_id, exclude=None, object counts=None):
         """Count the frequencies of a given attribute. Produces a dict of

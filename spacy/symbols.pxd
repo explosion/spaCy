@@ -1,5 +1,6 @@
+# DO NOT EDIT! The symbols are frozen as of spaCy v3.0.0.
 cdef enum symbol_t:
-    NIL
+    NIL = 0
     IS_ALPHA
     IS_ASCII
     IS_DIGIT
@@ -65,7 +66,7 @@ cdef enum symbol_t:
     FLAG62
     FLAG63
 
-    ID
+    ID = 64
     ORTH
     LOWER
     NORM
@@ -385,7 +386,7 @@ cdef enum symbol_t:
     DEPRECATED275
     DEPRECATED276
 
-    PERSON
+    PERSON = 380
     NORP
     FACILITY
     ORG
@@ -405,7 +406,7 @@ cdef enum symbol_t:
     ORDINAL
     CARDINAL
 
-    acomp
+    acomp = 398
     advcl
     advmod
     agent
@@ -458,12 +459,12 @@ cdef enum symbol_t:
     rcmod
     root
     xcomp
-
     acl
 
-    ENT_KB_ID
+    ENT_KB_ID = 452
     MORPH
     ENT_ID
 
     IDX
-    _
+    _ = 456
+    # DO NOT ADD ANY NEW SYMBOLS!

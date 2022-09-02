@@ -144,7 +144,7 @@ def validate_init_settings(
 
 def validate_token_pattern(obj: list) -> List[str]:
     # Try to convert non-string keys (e.g. {ORTH: "foo"} -> {"ORTH": "foo"})
-    get_key = lambda k: NAMES[k] if isinstance(k, int) and k < len(NAMES) else k
+    get_key = lambda k: NAMES[k] if isinstance(k, int) and k in NAMES else k
     if isinstance(obj, list):
         converted = []
         for pattern in obj:
