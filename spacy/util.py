@@ -974,7 +974,7 @@ def run_command(
         cmd_list = command
         cmd_str = " ".join(command)
     try:
-        cmd_to_run = cmd_str if is_windows else cmd_list
+        cmd_to_run = command if is_windows else cmd_list
         ret = subprocess.run(
             cmd_to_run,
             env=os.environ.copy(),
