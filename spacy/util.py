@@ -974,7 +974,11 @@ def run_command(
         cmd_list = command
         # As above, this will usually but not always be correct on Windows, but
         # is only used for debugging purposes.
-        cmd_str = shlex.join(command)
+        if hasattr(shlex, "join"):
+            cmd_str = shlex.join(command)
+        else:
+            # shlex.join is more correct, but is only available in 3.8+
+            cmd_str = " ".join(command)
     try:
         cmd_to_run = command if is_windows else cmd_list
         ret = subprocess.run(
