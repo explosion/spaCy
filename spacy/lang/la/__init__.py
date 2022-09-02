@@ -6,7 +6,7 @@ from .lex_attrs import LEX_ATTRS
 
 class LatinDefaults(BaseDefaults):
     tokenizer_exceptions = TOKENIZER_EXCEPTIONS
-    stop_words = STOP_WORDS    
+    stop_words = STOP_WORDS
     lex_attr_getters = LEX_ATTRS
 
 
