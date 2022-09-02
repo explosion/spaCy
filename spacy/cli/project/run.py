@@ -3,6 +3,7 @@ from pathlib import Path
 from wasabi import msg
 from wasabi.util import locale_escape
 import sys
+import shlex
 import srsly
 import typer
 
