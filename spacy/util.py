@@ -975,7 +975,7 @@ def run_command(
         # As above, this will usually but not always be correct on Windows, but
         # is only used for debugging purposes.
         if hasattr(shlex, "join"):
-            cmd_str = shlex.join(command) # type: ignore
+            cmd_str = shlex.join(command)  # type: ignore
         else:
             # shlex.join is more correct, but is only available in 3.8+
             cmd_str = " ".join(command)
