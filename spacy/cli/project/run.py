@@ -8,7 +8,8 @@ import typer
 
 from ... import about
 from ...git_info import GIT_VERSION
-from ...util import working_dir, run_command, split_command, is_cwd, join_command
+from ...compat import is_windows
+from ...util import working_dir, run_command, is_cwd, join_command
 from ...util import SimpleFrozenList, is_minor_version_match, ENV_VARS
 from ...util import check_bool_env_var, SimpleFrozenDict
 from .._util import PROJECT_FILE, PROJECT_LOCK, load_project_config, get_hash
@@ -157,7 +158,7 @@ def run_commands(
 
     commands (List[str]): The string commands.
     silent (bool): Don't print the commands.
-    dry (bool): Perform a dry run and don't execut anything.
+    dry (bool): Perform a dry run and don't execute anything.
     capture (bool): Whether to capture the output and errors of individual commands.
         If False, the stdout and stderr will not be redirected, and if there's an error,
         sys.exit will be called with the return code. You should use capture=False
@@ -165,20 +166,27 @@ def run_commands(
         when you want to run the command more like a function.
     """
     for c in commands:
-        command = split_command(c)
-        # Not sure if this is needed or a good idea. Motivation: users may often
-        # use commands in their config that reference "python" and we want to
-        # make sure that it's always executing the same Python that spaCy is
-        # executed with and the pip in the same env, not some other Python/pip.
-        # Also ensures cross-compatibility if user 1 writes "python3" (because
-        # that's how it's set up on their system), and user 2 without the
-        # shortcut tries to re-run the command.
-        if len(command) and command[0] in ("python", "python3"):
-            command[0] = sys.executable
-        elif len(command) and command[0] in ("pip", "pip3"):
-            command = [sys.executable, "-m", "pip", *command[1:]]
-        if not silent:
-            print(f"Running command: {join_command(command)}")
+        if is_windows:
+            # On Windows we don't rewrite the command because there's no
+            # reliable way to split and reassemble it
+            if not silent:
+                print(f"Running command: {c}")
+        else:
+            command = shlex.split(c, posix=True)
+            # Not sure if this is needed or a good idea. Motivation: users may often
+            # use commands in their config that reference "python" and we want to
+            # make sure that it's always executing the same Python that spaCy is
+            # executed with and the pip in the same env, not some other Python/pip.
+            # Also ensures cross-compatibility if user 1 writes "python3" (because
+            # that's how it's set up on their system), and user 2 without the
+            # shortcut tries to re-run the command.
+            if len(command) and command[0] in ("python", "python3"):
+                command[0] = sys.executable
+            elif len(command) and command[0] in ("pip", "pip3"):
+                command = [sys.executable, "-m", "pip", *command[1:]]
+            if not silent:
+                print(f"Running command: {join_command(command)}")
+
         if not dry:
             run_command(command, capture=capture)
 

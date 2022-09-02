@@ -936,15 +936,6 @@ def replace_model_node(model: Model, target: Model, replacement: Model) -> None:
                 node.set_ref(ref_name, replacement)
 
 
-def split_command(command: str) -> List[str]:
-    """Split a string command using shlex.
-
-    command (str) : The command to split
-    RETURNS (List[str]): The split command.
-    """
-    return shlex.split(command, posix=True)
-
-
 def join_command(command: List[str]) -> str:
     """Join a command using shlex. shlex.join is only available for Python 3.8+,
     so we're using a workaround here.
@@ -964,8 +955,7 @@ def run_command(
     """Run a command on the command line as a subprocess. If the subprocess
     returns a non-zero exit code, a system exit is performed.
 
-    command (str / List[str]): The command. If provided as a string, the
-        string will be split using shlex.split.
+    command (str / List[str]): The command to run.
     stdin (Optional[Any]): stdin to read from or None.
     capture (bool): Whether to capture the output and errors. If False,
         the stdout and stderr will not be redirected, and if there's an error,
@@ -975,7 +965,7 @@ def run_command(
     RETURNS (Optional[CompletedProcess]): The process object.
     """
     if isinstance(command, str):
-        cmd_list = split_command(command)
+        cmd_list = shlex.split(command, posix=True)
         cmd_str = command
     else:
         cmd_list = command
