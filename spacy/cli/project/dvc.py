@@ -7,7 +7,7 @@ from wasabi import msg
 
 from .._util import PROJECT_FILE, load_project_config, get_hash, project_cli
 from .._util import Arg, Opt, NAME, COMMAND
-from ...util import working_dir, split_command, join_command, run_command
+from ...util import working_dir, join_command, run_command
 from ...util import SimpleFrozenList
 
 
@@ -144,12 +144,11 @@ def run_dvc_commands(
         command-line setting while avoiding lots of nested conditionals.
     """
     for c in commands:
-        command = split_command(c)
-        dvc_command = ["dvc", *command]
+        dvc_command = "dvc " + c
         # Add the flags if they are set to True
         for flag, is_active in flags.items():
             if is_active:
-                dvc_command.append(flag)
+                dvc_command += " " + flag
         run_command(dvc_command)
 
 
