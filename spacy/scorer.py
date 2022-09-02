@@ -102,8 +102,6 @@ class ROCAUCScore:
 class Scorer:
     """Compute evaluation scores."""
 
-    BETA = 1.0
-
     def __init__(
         self,
         nlp: Optional["Language"] = None,
@@ -152,9 +150,8 @@ class Scorer:
 
         DOCS: https://spacy.io/api/scorer#score_tokenization
         """
-        beta = cfg.get("beta", Scorer.BETA)
-        acc_score = PRFScore(beta=beta)
-        prf_score = PRFScore(beta=beta)
+        acc_score = PRFScore()
+        prf_score = PRFScore()
         for example in examples:
             gold_doc = example.reference
             pred_doc = example.predicted
@@ -214,7 +211,7 @@ class Scorer:
 
         DOCS: https://spacy.io/api/scorer#score_token_attr
         """
-        tag_score = PRFScore(beta=cfg.get("beta", Scorer.BETA))
+        tag_score = PRFScore()
         for example in examples:
             gold_doc = example.reference
             pred_doc = example.predicted
@@ -265,8 +262,7 @@ class Scorer:
             key attr_micro_p/r/f and the per-feat PRF scores under
             attr_per_feat.
         """
-        beta = cfg.get("beta", Scorer.BETA)
-        micro_score = PRFScore(beta=beta)
+        micro_score = PRFScore()
         per_feat = {}
         for example in examples:
             pred_doc = example.predicted
@@ -281,7 +277,7 @@ class Scorer:
                     for feat in morph.split(Morphology.FEATURE_SEP):
                         field, values = feat.split(Morphology.FIELD_SEP)
                         if field not in per_feat:
-                            per_feat[field] = PRFScore(beta=beta)
+                            per_feat[field] = PRFScore()
                         if field not in gold_per_feat:
                             gold_per_feat[field] = set()
                         gold_per_feat[field].add((gold_i, feat))
@@ -303,7 +299,7 @@ class Scorer:
                             for feat in morph.split(Morphology.FEATURE_SEP):
                                 field, values = feat.split(Morphology.FIELD_SEP)
                                 if field not in per_feat:
-                                    per_feat[field] = PRFScore(beta=beta)
+                                    per_feat[field] = PRFScore()
                                 if field not in pred_per_feat:
                                     pred_per_feat[field] = set()
                                 pred_per_feat[field].add((gold_i, feat))
@@ -336,7 +332,6 @@ class Scorer:
         has_annotation: Optional[Callable[[Doc], bool]] = None,
         labeled: bool = True,
         allow_overlap: bool = False,
-        beta: float = 1.0,
         **cfg,
     ) -> Dict[str, Any]:
         """Returns PRF scores for labeled spans.
@@ -354,13 +349,12 @@ class Scorer:
             equal if their start and end match, irrespective of their label.
         allow_overlap (bool): Whether or not to allow overlapping spans.
             If set to 'False', the alignment will automatically resolve conflicts.
-        beta (float): Beta coefficient for F-score calculation. Defaults to 1.0.
         RETURNS (Dict[str, Any]): A dictionary containing the PRF scores under
             the keys attr_p/r/f and the per-type PRF scores under attr_per_type.
 
         DOCS: https://spacy.io/api/scorer#score_spans
         """
-        score = PRFScore(beta=beta)
+        score = PRFScore()
         score_per_type = dict()
         for example in examples:
             pred_doc = example.predicted
@@ -379,7 +373,7 @@ class Scorer:
             gold_per_type: Dict[str, Set] = {label: set() for label in labels}
             for label in labels:
                 if label not in score_per_type:
-                    score_per_type[label] = PRFScore(beta=beta)
+                    score_per_type[label] = PRFScore()
             # Find all predidate labels, for all and per type
             gold_spans = set()
             pred_spans = set()
@@ -440,7 +434,6 @@ class Scorer:
         multi_label: bool = True,
         positive_label: Optional[str] = None,
         threshold: Optional[float] = None,
-        beta: float = 1.0,
         **cfg,
     ) -> Dict[str, Any]:
         """Returns PRF and ROC AUC scores for a doc-level attribute with a
@@ -460,7 +453,6 @@ class Scorer:
         threshold (float): Cutoff to consider a prediction "positive". Defaults
             to 0.5 for multi-label, and 0.0 (i.e. whatever's highest scoring)
             otherwise.
-        beta (float): Beta coefficient for F-score calculation.
         RETURNS (Dict[str, Any]): A dictionary containing the scores, with
             inapplicable scores as None:
             for all:
@@ -480,7 +472,7 @@ class Scorer:
         """
         if threshold is None:
             threshold = 0.5 if multi_label else 0.0
-        f_per_type = {label: PRFScore(beta=beta) for label in labels}
+        f_per_type = {label: PRFScore() for label in labels}
         auc_per_type = {label: ROCAUCScore() for label in labels}
         labels = set(labels)
         if labels:
@@ -528,7 +520,7 @@ class Scorer:
                 pred_label, pred_score = max(pred_cats.items(), key=lambda it: it[1])
                 if pred_score >= threshold:
                     f_per_type[pred_label].fp += 1
-        micro_prf = PRFScore(beta=beta)
+        micro_prf = PRFScore()
         for label_prf in f_per_type.values():
             micro_prf.tp += label_prf.tp
             micro_prf.fn += label_prf.fn
@@ -585,7 +577,6 @@ class Scorer:
 
         DOCS: https://spacy.io/api/scorer#score_links
         """
-        beta = cfg.get("beta", Scorer.BETA)
         f_per_type = {}
         for example in examples:
             gold_ent_by_offset = {}
@@ -599,7 +590,7 @@ class Scorer:
                 if gold_span is not None:
                     label = gold_span.label_
                     if label not in f_per_type:
-                        f_per_type[label] = PRFScore(beta=beta)
+                        f_per_type[label] = PRFScore()
                     gold = gold_span.kb_id_
                     # only evaluating entities that overlap between gold and pred,
                     # to disentangle the performance of the NEL from the NER
@@ -618,7 +609,7 @@ class Scorer:
                             # a wrong prediction (e.g. Q42 != Q3) counts as both a FP as well as a FN
                             f_per_type[label].fp += 1
                             f_per_type[label].fn += 1
-        micro_prf = PRFScore(beta=beta)
+        micro_prf = PRFScore()
         for label_prf in f_per_type.values():
             micro_prf.tp += label_prf.tp
             micro_prf.fn += label_prf.fn
@@ -673,9 +664,8 @@ class Scorer:
 
         DOCS: https://spacy.io/api/scorer#score_deps
         """
-        beta = cfg.get("beta", Scorer.BETA)
-        unlabelled = PRFScore(beta=beta)
-        labelled = PRFScore(beta=beta)
+        unlabelled = PRFScore()
+        labelled = PRFScore()
         labelled_per_dep = dict()
         missing_indices = set()
         for example in examples:
@@ -691,7 +681,7 @@ class Scorer:
                     if dep not in ignore_labels:
                         gold_deps.add((gold_i, head.i, dep))
                         if dep not in labelled_per_dep:
-                            labelled_per_dep[dep] = PRFScore(beta=beta)
+                            labelled_per_dep[dep] = PRFScore()
                         if dep not in gold_deps_per_dep:
                             gold_deps_per_dep[dep] = set()
                         gold_deps_per_dep[dep].add((gold_i, head.i, dep))
@@ -722,7 +712,7 @@ class Scorer:
                         else:
                             pred_deps.add((gold_i, gold_head, dep))
                             if dep not in labelled_per_dep:
-                                labelled_per_dep[dep] = PRFScore(beta=beta)
+                                labelled_per_dep[dep] = PRFScore()
                             if dep not in pred_deps_per_dep:
                                 pred_deps_per_dep[dep] = set()
                             pred_deps_per_dep[dep].add((gold_i, gold_head, dep))
@@ -753,7 +743,6 @@ class Scorer:
 def get_ner_prf(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
     """Compute micro-PRF and per-entity PRF scores for a sequence of examples."""
     score_per_type = defaultdict(PRFScore)
-    beta = kwargs.get("beta", Scorer.BETA)
     for eg in examples:
         if not eg.y.has_annotation("ENT_IOB"):
             continue
@@ -761,7 +750,7 @@ def get_ner_prf(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
         align_x2y = eg.alignment.x2y
         for pred_ent in eg.x.ents:
             if pred_ent.label_ not in score_per_type:
-                score_per_type[pred_ent.label_] = PRFScore(beta=beta)
+                score_per_type[pred_ent.label_] = PRFScore()
             indices = align_x2y[pred_ent.start : pred_ent.end]
             if len(indices):
                 g_span = eg.y[indices[0] : indices[-1] + 1]
@@ -777,7 +766,7 @@ def get_ner_prf(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
                         score_per_type[pred_ent.label_].fp += 1
         for label, start, end in golds:
             score_per_type[label].fn += 1
-    totals = PRFScore(beta=beta)
+    totals = PRFScore()
     for prf in score_per_type.values():
         totals += prf
     if len(totals) > 0:

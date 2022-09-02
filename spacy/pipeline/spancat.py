@@ -1,8 +1,7 @@
-from functools import partial
-from typing import List, Dict, Callable, Tuple, Optional, Iterable, Any, cast
+from typing import List, Dict, Callable, Tuple, Optional, Iterable, Any
 from thinc.api import Config, Model, get_current_ops, set_dropout_rate, Ops
 from thinc.api import Optimizer
-from thinc.types import Ragged, Ints2d, Floats2d, Ints1d
+from thinc.types import Ragged, Ints2d, Floats2d
 
 import numpy
 
@@ -166,8 +165,8 @@ def spancat_score(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
 
 
 @registry.scorers("spacy.spancat_scorer.v1")
-def make_spancat_scorer(beta: float = 1.0):
-    return partial(spancat_score, beta=beta)
+def make_spancat_scorer():
+    return spancat_score
 
 
 class SpanCategorizer(TrainablePipe):

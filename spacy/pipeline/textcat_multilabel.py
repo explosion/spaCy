@@ -1,4 +1,3 @@
-from functools import partial
 from typing import Iterable, Optional, Dict, List, Callable, Any
 from thinc.types import Floats2d
 from thinc.api import Model, Config
@@ -122,8 +121,8 @@ def textcat_multilabel_score(examples: Iterable[Example], **kwargs) -> Dict[str,
 
 
 @registry.scorers("spacy.textcat_multilabel_scorer.v1")
-def make_textcat_multilabel_scorer(beta: float = 1.0):
-    return partial(textcat_multilabel_score, beta=beta)
+def make_textcat_multilabel_scorer():
+    return textcat_multilabel_score
 
 
 class MultiLabel_TextCategorizer(TextCategorizer):
