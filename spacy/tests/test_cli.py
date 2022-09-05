@@ -36,7 +36,7 @@ from spacy.tokens.span import Span
 from spacy.training import Example, docs_to_json, offsets_to_biluo_tags
 from spacy.training.converters import conll_ner_to_docs, conllu_to_docs
 from spacy.training.converters import iob_to_docs
-from spacy.pipeline import TextCategorizer, Pipe, SpanCategorizer
+from spacy.pipeline import TextCategorizer
 from spacy.util import ENV_VARS, get_minor_version, load_model_from_config, load_config
 
 from ..cli.init_pipeline import _init_labels
@@ -860,6 +860,8 @@ def test_span_length_freq_dist_output_must_be_correct():
 
 
 def test_cli_find_threshold(capsys):
+    thresholds = numpy.linspace(0, 1, 10)
+
     def make_examples(_nlp: Language) -> List[Example]:
         docs: List[Example] = []
 
@@ -921,33 +923,35 @@ def test_cli_find_threshold(capsys):
         )
         with make_tempdir() as nlp_dir:
             nlp.to_disk(nlp_dir)
-            assert (
-                find_threshold(
-                    model=nlp_dir,
-                    data_path=docs_dir / "docs.spacy",
-                    pipe_name="tc_multi",
-                    threshold_key="threshold",
-                    scores_key="cats_macro_f",
-                    silent=False,
-                )[0]
-                == numpy.linspace(0, 1, 10)[1]
+            res = find_threshold(
+                model=nlp_dir,
+                data_path=docs_dir / "docs.spacy",
+                pipe_name="tc_multi",
+                threshold_key="threshold",
+                scores_key="cats_macro_f",
+                silent=False,
             )
+            assert res[0] != thresholds[0]
+            assert thresholds[0] < res[0] < thresholds[9]
+            assert res[1] == 1.0
+            assert res[2][1.0] == 0.0
 
         # Test with spancat.
         nlp, _ = init_nlp((("spancat", {}),))
         with make_tempdir() as nlp_dir:
             nlp.to_disk(nlp_dir)
-            assert (
-                find_threshold(
-                    model=nlp_dir,
-                    data_path=docs_dir / "docs.spacy",
-                    pipe_name="spancat",
-                    threshold_key="threshold",
-                    scores_key="spans_sc_f",
-                    silent=True,
-                )[0]
-                == numpy.linspace(0, 1, 10)[1]
+            res = find_threshold(
+                model=nlp_dir,
+                data_path=docs_dir / "docs.spacy",
+                pipe_name="spancat",
+                threshold_key="threshold",
+                scores_key="spans_sc_f",
+                silent=True,
             )
+            assert res[0] != thresholds[0]
+            assert thresholds[0] < res[0] < thresholds[8]
+            assert res[1] == 1.0
+            assert res[2][1.0] == 0.0
 
         # Having multiple textcat_multilabel components should work, since the name has to be specified.
         nlp, _ = init_nlp((("textcat_multilabel", {}),))

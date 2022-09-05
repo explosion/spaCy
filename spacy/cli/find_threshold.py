@@ -6,7 +6,6 @@ from typing import Optional, Tuple, Any, Dict, List
 
 import numpy
 import wasabi.tables
-from confection import Config
 
 from ..pipeline import TrainablePipe, Pipe
 from ..errors import Errors
@@ -87,7 +86,7 @@ def find_threshold(
     use_gpu: int = _DEFAULTS["use_gpu"],  # type: ignore
     gold_preproc: bool = _DEFAULTS["gold_preproc"],  # type: ignore
     silent: bool = True,
-) -> Tuple[float, float]:
+) -> Tuple[float, float, Dict[float, float]]:
     """
     Runs prediction trials for `textcat` models with varying tresholds to maximize the specified metric.
     model (Union[str, Path]): Path to file with trained model.
@@ -102,7 +101,8 @@ def find_threshold(
         tokenization, and may result in sequences of more consistent length. However, it may reduce runtime accuracy due
         to train/test skew.
     silent (bool): Whether to print non-error-related output to stdout.
-    RETURNS (Tuple[float, float]): Best found threshold with corresponding F-score.
+    RETURNS (Tuple[float, float, Dict[float, float]]): Best found threshold, the corresponding score, scores for all
+        evaluated thresholds.
     """
 
     setup_gpu(use_gpu, silent=silent)
@@ -138,18 +138,39 @@ def find_threshold(
     ) -> Dict[str, Any]:
         """Set item in nested dictionary. Adapated from https://stackoverflow.com/a/54138200.
         config (Dict[str, Any]): Configuration dictionary.
-        keys (List[Any]):
+        keys (List[Any]): Path to value to set.
         value (float): Value to set.
         RETURNS (Dict[str, Any]): Updated dictionary.
         """
         functools.reduce(operator.getitem, keys[:-1], config)[keys[-1]] = value
         return config
 
+    def filter_config(config: Dict[str, Any], keys: List[str]) -> Dict[str, Any]:
+        """Filters provided config dictionary so that only the specified keys path remains.
+        config (Dict[str, Any]): Configuration dictionary.
+        keys (List[Any]): Path to value to set.
+        RETURNS (Dict[str, Any]): Filtered dictionary.
+        """
+        return {
+            keys[0]: filter_config(config[keys[0]], keys[1:])
+            if len(keys) > 1
+            else config[keys[0]]
+        }
+
     # Evaluate with varying threshold values.
     scores: Dict[float, float] = {}
+    config_keys_full = ["components", pipe_name, *config_keys]
     for threshold in numpy.linspace(0, 1, n_trials):
-        pipe.cfg = set_nested_item(pipe.cfg, config_keys, threshold)
-        nlp._pipe_configs[pipe_name] = Config(pipe.cfg)
+        # Reload pipeline with overrides specifying the new threshold.
+        nlp = util.load_model(
+            model,
+            config=set_nested_item(
+                filter_config(nlp.config, config_keys_full).copy(),
+                config_keys_full,
+                threshold,
+            ),
+        )
+        nlp.get_pipe(pipe_name).cfg = set_nested_item(pipe.cfg, config_keys, threshold)
         scores[threshold] = nlp.evaluate(dev_dataset)[scores_key]
         if not (
             isinstance(scores[threshold], float) or isinstance(scores[threshold], int)
@@ -170,4 +191,4 @@ def find_threshold(
             ),
         )
 
-    return best_threshold, scores[best_threshold]
+    return best_threshold, scores[best_threshold], scores
