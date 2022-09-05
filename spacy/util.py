@@ -1639,7 +1639,7 @@ def check_bool_env_var(env_var: str) -> bool:
 
 def _pipe(
     docs: Iterable["Doc"],
-    proc: "Pipe",
+    proc: Callable,
     name: str,
     default_error_handler: Callable[[str, "Pipe", List["Doc"], Exception], NoReturn],
     kwargs: Mapping[str, Any],

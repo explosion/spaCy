@@ -1,6 +1,6 @@
 from typing import Iterator, Optional, Any, Dict, Callable, Iterable, Collection
 from typing import Union, Tuple, List, Set, Pattern, Sequence
-from typing import NoReturn, TYPE_CHECKING, TypeVar, cast, overload
+from typing import NoReturn, TypeVar, cast, overload
 
 from dataclasses import dataclass
 import random
@@ -40,10 +40,6 @@ from . import util
 from . import about
 from .lookups import load_lookups
 from .compat import Literal
-
-
-if TYPE_CHECKING:
-    from .pipeline import Pipe  # noqa: F401
 
 
 # This is the base config will all settings (training etc.)
@@ -180,7 +176,7 @@ class Language:
         self.vocab: Vocab = vocab
         if self.lang is None:
             self.lang = self.vocab.lang
-        self._components: List[Tuple[str, "Pipe"]] = []
+        self._components: List[Tuple[str, Callable]] = []
         self._disabled: Set[str] = set()
         self.max_length = max_length
         # Create the default tokenizer from the default config
@@ -302,7 +298,7 @@ class Language:
         return SimpleFrozenList(names)
 
     @property
-    def components(self) -> List[Tuple[str, "Pipe"]]:
+    def components(self) -> List[Tuple[str, Callable]]:
         """Get all (name, component) tuples in the pipeline, including the
         currently disabled components.
         """
@@ -321,12 +317,12 @@ class Language:
         return SimpleFrozenList(names, error=Errors.E926.format(attr="component_names"))
 
     @property
-    def pipeline(self) -> List[Tuple[str, "Pipe"]]:
+    def pipeline(self) -> List[Tuple[str, Callable]]:
         """The processing pipeline consisting of (name, component) tuples. The
         components are called on the Doc in order as it passes through the
         pipeline.
 
-        RETURNS (List[Tuple[str, Pipe]]): The pipeline.
+        RETURNS (List[Tuple[str, Callable]]): The pipeline.
         """
         pipes = [(n, p) for n, p in self._components if n not in self._disabled]
         return SimpleFrozenList(pipes, error=Errors.E926.format(attr="pipeline"))
@@ -526,7 +522,7 @@ class Language:
         assigns: Iterable[str] = SimpleFrozenList(),
         requires: Iterable[str] = SimpleFrozenList(),
         retokenizes: bool = False,
-        func: Optional["Pipe"] = None,
+        func: Optional[Callable] = None,
     ) -> Callable[..., Any]:
         """Register a new pipeline component. Can be used for stateless function
         components that don't require a separate factory. Can be used as a
@@ -552,11 +548,11 @@ class Language:
                 raise ValueError(Errors.E853.format(name=name))
         component_name = name if name is not None else util.get_object_name(func)
 
-        def add_component(component_func: "Pipe") -> Callable:
+        def add_component(component_func: Callable) -> Callable:
             if isinstance(func, type):  # function is a class
                 raise ValueError(Errors.E965.format(name=component_name))
 
-            def factory_func(nlp, name: str) -> "Pipe":
+            def factory_func(nlp, name: str) -> Callable:
                 return component_func
 
             internal_name = cls.get_factory_name(name)
@@ -606,7 +602,7 @@ class Language:
             print_pipe_analysis(analysis, keys=keys)
         return analysis
 
-    def get_pipe(self, name: str) -> "Pipe":
+    def get_pipe(self, name: str) -> Callable:
         """Get a pipeline component for a given component name.
 
         name (str): Name of pipeline component to get.
@@ -627,7 +623,7 @@ class Language:
         config: Dict[str, Any] = SimpleFrozenDict(),
         raw_config: Optional[Config] = None,
         validate: bool = True,
-    ) -> "Pipe":
+    ) -> Callable:
         """Create a pipeline component. Mostly used internally. To create and
         add a component to the pipeline, you can use nlp.add_pipe.
 
@@ -639,7 +635,7 @@ class Language:
         raw_config (Optional[Config]): Internals: the non-interpolated config.
         validate (bool): Whether to validate the component config against the
             arguments and types expected by the factory.
-        RETURNS (Pipe): The pipeline component.
+        RETURNS (Callable): The pipeline component.
 
         DOCS: https://spacy.io/api/language#create_pipe
         """
@@ -694,7 +690,7 @@ class Language:
 
     def create_pipe_from_source(
         self, source_name: str, source: "Language", *, name: str
-    ) -> Tuple["Pipe", str]:
+    ) -> Tuple[Callable, str]:
         """Create a pipeline component by copying it from an existing model.
 
         source_name (str): Name of the component in the source pipeline.
@@ -745,7 +741,7 @@ class Language:
         config: Dict[str, Any] = SimpleFrozenDict(),
         raw_config: Optional[Config] = None,
         validate: bool = True,
-    ) -> "Pipe":
+    ) -> Callable:
         """Add a component to the processing pipeline. Valid components are
         callables that take a `Doc` object, modify it and return it. Only one
         of before/after/first/last can be set. Default behaviour is "last".
@@ -768,7 +764,7 @@ class Language:
         raw_config (Optional[Config]): Internals: the non-interpolated config.
         validate (bool): Whether to validate the component config against the
             arguments and types expected by the factory.
-        RETURNS (Pipe): The pipeline component.
+        RETURNS (Callable): The pipeline component.
 
         DOCS: https://spacy.io/api/language#add_pipe
         """
@@ -882,7 +878,7 @@ class Language:
         *,
         config: Dict[str, Any] = SimpleFrozenDict(),
         validate: bool = True,
-    ) -> "Pipe":
+    ) -> Callable:
         """Replace a component in the pipeline.
 
         name (str): Name of the component to replace.
@@ -891,7 +887,7 @@ class Language:
             component. Will be merged with default config, if available.
         validate (bool): Whether to validate the component config against the
             arguments and types expected by the factory.
-        RETURNS (Pipe): The new pipeline component.
+        RETURNS (Callable): The new pipeline component.
 
         DOCS: https://spacy.io/api/language#replace_pipe
         """
@@ -943,7 +939,7 @@ class Language:
             init_cfg = self._config["initialize"]["components"].pop(old_name)
             self._config["initialize"]["components"][new_name] = init_cfg
 
-    def remove_pipe(self, name: str) -> Tuple[str, "Pipe"]:
+    def remove_pipe(self, name: str) -> Tuple[str, Callable]:
         """Remove a component from the pipeline.
 
         name (str): Name of the component to remove.
@@ -1362,12 +1358,12 @@ class Language:
 
     def set_error_handler(
         self,
-        error_handler: Callable[[str, "Pipe", List[Doc], Exception], NoReturn],
+        error_handler: Callable[[str, Callable, List[Doc], Exception], NoReturn],
     ):
         """Set an error handler object for all the components in the pipeline that implement
         a set_error_handler function.
 
-        error_handler (Callable[[str, Pipe, List[Doc], Exception], NoReturn]):
+        error_handler (Callable[[str, Callable, List[Doc], Exception], NoReturn]):
             Function that deals with a failing batch of documents. This callable function should take in
             the component's name, the component itself, the offending batch of documents, and the exception
             that was thrown.
@@ -2247,7 +2243,7 @@ def _apply_pipes(
 
     ensure_doc (Callable[[Union[str, Doc]], Doc]): Function to create Doc from text
         or raise an error if the input is neither a Doc nor a string.
-    pipes (Iterable[Pipe]): The components to apply.
+    pipes (Iterable[Callable]): The components to apply.
     receiver (multiprocessing.Connection): Pipe to receive text. Usually
         created by `multiprocessing.Pipe()`
     sender (multiprocessing.Connection): Pipe to send doc. Usually created by
