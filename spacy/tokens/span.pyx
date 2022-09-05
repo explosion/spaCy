@@ -218,11 +218,10 @@ cdef class Span:
         cdef SpanC* span_c = self.span_c()
         """Custom extension attributes registered via `set_extension`."""
         return Underscore(Underscore.span_extensions, self,
-                          start=span_c.start_char, end=span_c.end_char)
+                          start=span_c.start_char, end=span_c.end_char, label=self.label, kb_id=self.kb_id, span_id=self.id)
 
     def as_doc(self, *, bint copy_user_data=False, array_head=None, array=None):
         """Create a `Doc` object with a copy of the `Span`'s data.
-
         copy_user_data (bool): Whether or not to copy the original doc's user data.
         array_head (tuple): `Doc` array attrs, can be passed in to speed up computation.
         array (ndarray): `Doc` as array, can be passed in to speed up computation.
@@ -791,21 +790,42 @@ cdef class Span:
             return self.span_c().label
 
         def __set__(self, attr_t label):
-            self.span_c().label = label
+            if label != self.span_c().label :
+                old_label = self.span_c().label
+                self.span_c().label = label
+                new = Underscore(Underscore.span_extensions, self, start=self.span_c().start_char, end=self.span_c().end_char, label = self.label, kb_id = self.kb_id, span_id=self.id)
+                old = Underscore(Underscore.span_extensions, self, start=self.span_c().start_char, end=self.span_c().end_char, label=old_label, kb_id=self.kb_id, span_id=self.id)
+                Underscore._replace_keys(old, new)
+            else:
+                self.span_c().label = label
 
     property kb_id:
         def __get__(self):
             return self.span_c().kb_id
 
         def __set__(self, attr_t kb_id):
-            self.span_c().kb_id = kb_id
+            if kb_id != self.span_c().kb_id :
+                old_kb_id = self.span_c().kb_id
+                self.span_c().kb_id = kb_id
+                new = Underscore(Underscore.span_extensions, self, start=self.span_c().start_char, end=self.span_c().end_char, label=self.label, kb_id=self.kb_id, span_id=self.id)
+                old = Underscore(Underscore.span_extensions, self, start=self.span_c().start_char, end=self.span_c().end_char, label=self.label, kb_id=old_kb_id, span_id=self.id)
+                Underscore._replace_keys(old, new)
+            else:
+                self.span_c().kb_id = kb_id
 
     property id:
         def __get__(self):
             return self.span_c().id
 
         def __set__(self, attr_t id):
-            self.span_c().id = id
+            if id != self.span_c().id :
+                old_id = self.span_c().id
+                self.span_c().id = id
+                new = Underscore(Underscore.span_extensions, self, start=self.span_c().start_char, end=self.span_c().end_char, label=self.label, kb_id=self.kb_id, span_id=self.id)
+                old = Underscore(Underscore.span_extensions, self, start=self.span_c().start_char, end=self.span_c().end_char, label=self.label, kb_id=self.kb_id, span_id=old_id)
+                Underscore._replace_keys(old, new)
+            else:
+                self.span_c().id = id
 
     property ent_id:
         """Alias for the span's ID."""
