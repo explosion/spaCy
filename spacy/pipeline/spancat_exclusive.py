@@ -2,33 +2,24 @@ from dataclasses import dataclass
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, cast
 
 import numpy
-from thinc.api import Config, Model, Ops, Optimizer, Softmax_v2
-from thinc.api import get_current_ops, set_dropout_rate
-from thinc.types import Floats2d, Ints1d, Ints2d, Ragged
+from thinc.api import Config, Model, Ops, Optimizer
+from thinc.api import set_dropout_rate
+from thinc.types import Floats2d, Ints2d, Ragged
 
 from ..compat import Protocol, runtime_checkable
 from ..errors import Errors
 from ..language import Language
 from ..tokens import Doc, Span, SpanGroup
 from ..training import Example, validate_examples
-from ..util import registry
 from ..vocab import Vocab
 from .spancat import spancat_score, build_ngram_suggester
 from .trainable_pipe import TrainablePipe
 
 
-@registry.layers("spacy.Softmax.v1")
-def build_softmax(nO=None, nI=None) -> Model[Floats2d, Floats2d]:
-    """
-    An output layer for softmax classification.
-    """
-    return Softmax_v2(nI=nI, nO=nO)
-
-
 spancat_exclusive_default_config = """
 [model]
 @architectures = "spacy.SpanCategorizer.v1"
-scorer = {"@layers": "spacy.Softmax.v1"}
+scorer = {"@layers": "Softmax.v2"}
 
 [model.reducer]
 @layers = spacy.mean_max_reducer.v1
