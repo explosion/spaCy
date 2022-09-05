@@ -9,8 +9,13 @@ api_trainable: false
 <Infobox title="New in v4" variant="warning">
 
 As of spaCy v4, there is no separate `EntityRuler` class. The entity ruler is
-implemented as a special case of the `SpanRuler` component. See the
-[`SpanRuler`](/api/spanruler) API docs for the full API.
+implemented as a special case of the `SpanRuler` component.
+
+See the [migration guide](#migrating) below for differences between the v3
+`EntityRuler` and v4 `SpanRuler` implementations of the `entity_ruler`
+component.
+
+See the [`SpanRuler`](/api/spanruler) API docs for the full API.
 
 </Infobox>
 
@@ -68,3 +73,52 @@ how the component should be configured. You can override its settings via the
 | `overwrite_ents`      | If existing entities are present, e.g. entities added by the model, overwrite them by matches if necessary. Defaults to `False`. ~~bool~~                                                     |
 | `ent_id_sep`          | Separator used internally for entity IDs. Defaults to `"\|\|"`. ~~str~~                                                                                                                       |
 | `scorer`              | The scoring method. Defaults to [`spacy.scorer.get_ner_prf`](/api/scorer#get_ner_prf). ~~Optional[Callable]~~                                                                                 |
+
+## Migrating from v3 {#migrating}
+
+### Loading patterns
+
+Unlike the v3 `EntityRuler`, the `SpanRuler` cannot load patterns on
+initialization with `SpanRuler(patterns=patterns)` or directly from a JSONL file
+path with `SpanRuler.from_disk(jsonl_path)`. Patterns should be loaded from the
+JSONL file separately and then added through
+[`SpanRuler.initialize`](/api/spanruler#initialize]) or
+[`SpanRuler.add_patterns`](/api/spanruler#add_patterns).
+
+```diff
+ ruler = nlp.get_pipe("entity_ruler")
+- ruler.from_disk("patterns.jsonl")
++ import srsly
++ patterns = srsly.read_jsonl("patterns.jsonl")
++ ruler.add_patterns(patterns)
+```
+
+### Saving patterns
+
+`SpanRuler.to_disk` always saves the full component data to a directory and does
+not include an option to save the patterns to a single JSONL file.
+
+```diff
+ ruler = nlp.get_pipe("entity_ruler")
+- ruler.to_disk("patterns.jsonl")
++ import srsly
++ srsly.write_jsonl("patterns.jsonl", ruler.patterns)
+```
+
+### Accessing token and phrase patterns
+
+The separate token patterns and phrase patterns are no longer accessible under
+`ruler.token_patterns` or `ruler.phrase_patterns`. You can access the combined
+patterns in their original format using the property
+[`SpanRuler.patterns`](/api/spanruler#patterns).
+
+### Removing patterns by ID
+
+[`SpanRuler.remove`](/api/spanruler#remove) removes by label rather than ID. To
+remove by ID, use [`SpanRuler.remove_by_id`](/api/spanruler#remove_by_id):
+
+```diff
+ ruler = nlp.get_pipe("entity_ruler")
+- ruler.remove("id")
++ ruler.remove_by_id("id")
+```
