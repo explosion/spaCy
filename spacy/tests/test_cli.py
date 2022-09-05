@@ -929,7 +929,7 @@ def test_cli_find_threshold(capsys):
                 pipe_name="tc_multi",
                 threshold_key="threshold",
                 scores_key="cats_macro_f",
-                silent=False,
+                silent=True,
             )
             assert res[0] != thresholds[0]
             assert thresholds[0] < res[0] < thresholds[9]
@@ -950,7 +950,7 @@ def test_cli_find_threshold(capsys):
             )
             assert res[0] != thresholds[0]
             assert thresholds[0] < res[0] < thresholds[8]
-            assert res[1] == 1.0
+            assert res[1] >= 0.6
             assert res[2][1.0] == 0.0
 
         # Having multiple textcat_multilabel components should work, since the name has to be specified.
