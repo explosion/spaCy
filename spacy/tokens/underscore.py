@@ -98,10 +98,31 @@ class Underscore:
     def has(self, name: str) -> bool:
         return name in self._extensions
 
-    def _get_key(self, name: str) -> Tuple[str, str, Optional[int], Optional[int]]:
-        if hasattr(self, "_label") :
-            return ("._.", name, self._start, self._end, self._label, self._kb_id, self._span_id)
-        else :
+    def _get_key(
+        self, name: str
+    ) -> Union[
+        Tuple[str, str, Optional[int], Optional[int]],
+        Tuple[
+            str,
+            str,
+            Optional[int],
+            Optional[int],
+            Optional[Union[str, int]],
+            Optional[Union[str, int]],
+            Optional[Union[str, int]],
+        ],
+    ]:
+        if hasattr(self, "_label"):
+            return (
+                "._.",
+                name,
+                self._start,
+                self._end,
+                self._label,
+                self._kb_id,
+                self._span_id,
+            )
+        else:
             return ("._.", name, self._start, self._end)
 
     @staticmethod
@@ -110,11 +131,13 @@ class Underscore:
         This function is called by Span when its kb_id or label are re-assigned.
         It checks if any user_data is stored for this span and replaces the keys
         """
-        for name in old_underscore._extensions :
+        for name in old_underscore._extensions:
             old_key = old_underscore._get_key(name)
             new_key = new_underscore._get_key(name)
             if old_key in old_underscore._doc.user_data and old_key != new_key:
-                old_underscore._doc.user_data[new_key] = old_underscore._doc.user_data.pop(old_key)
+                old_underscore._doc.user_data[
+                    new_key
+                ] = old_underscore._doc.user_data.pop(old_key)
 
     @classmethod
     def get_state(cls) -> Tuple[Dict[Any, Any], Dict[Any, Any], Dict[Any, Any]]:
