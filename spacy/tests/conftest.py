@@ -256,6 +256,11 @@ def ko_tokenizer_tokenizer():
     return nlp.tokenizer
 
 
+@pytest.fixture(scope="module")
+def la_tokenizer():
+    return get_lang_class("la")().tokenizer
+
+
 @pytest.fixture(scope="session")
 def lb_tokenizer():
     return get_lang_class("lb")().tokenizer

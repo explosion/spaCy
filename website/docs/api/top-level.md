@@ -45,16 +45,16 @@ specified separately using the new `exclude` keyword argument.
 > nlp = spacy.load("en_core_web_sm", exclude=["parser", "tagger"])
 > ```
 
-| Name                                 | Description                                                                                                                                                                                                                                    |
-| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`                               | Pipeline to load, i.e. package name or path. ~~Union[str, Path]~~                                                                                                                                                                              |
-| _keyword-only_                       |                                                                                                                                                                                                                                                |
-| `vocab`                              | Optional shared vocab to pass in on initialization. If `True` (default), a new `Vocab` object will be created. ~~Union[Vocab, bool]~~                                                                                                          |
-| `disable`                            | Names of pipeline components to [disable](/usage/processing-pipelines#disabling). Disabled pipes will be loaded but they won't be run unless you explicitly enable them by calling [nlp.enable_pipe](/api/language#enable_pipe). ~~List[str]~~ |
-| `enable`                             | Names of pipeline components to [enable](/usage/processing-pipelines#disabling). All other pipes will be disabled. ~~List[str]~~                                                                                                               |
-| `exclude` <Tag variant="new">3</Tag> | Names of pipeline components to [exclude](/usage/processing-pipelines#disabling). Excluded components won't be loaded. ~~List[str]~~                                                                                                           |
-| `config` <Tag variant="new">3</Tag>  | Optional config overrides, either as nested dict or dict keyed by section value in dot notation, e.g. `"components.name.value"`. ~~Union[Dict[str, Any], Config]~~                                                                             |
-| **RETURNS**                          | A `Language` object with the loaded pipeline. ~~Language~~                                                                                                                                                                                     |
+| Name                                  | Description                                                                                                                                                                                                                                                        |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `name`                                | Pipeline to load, i.e. package name or path. ~~Union[str, Path]~~                                                                                                                                                                                                  |
+| _keyword-only_                        |                                                                                                                                                                                                                                                                    |
+| `vocab`                               | Optional shared vocab to pass in on initialization. If `True` (default), a new `Vocab` object will be created. ~~Union[Vocab, bool]~~                                                                                                                              |
+| `disable`                             | Name(s) of pipeline component(s) to [disable](/usage/processing-pipelines#disabling). Disabled pipes will be loaded but they won't be run unless you explicitly enable them by calling [nlp.enable_pipe](/api/language#enable_pipe). ~~Union[str, Iterable[str]]~~ |
+| `enable` <Tag variant="new">3.4</Tag> | Name(s) of pipeline component(s) to [enable](/usage/processing-pipelines#disabling). All other pipes will be disabled. ~~Union[str, Iterable[str]]~~                                                                                                               |
+| `exclude` <Tag variant="new">3</Tag>  | Name(s) of pipeline component(s) to [exclude](/usage/processing-pipelines#disabling). Excluded components won't be loaded. ~~Union[str, Iterable[str]]~~                                                                                                           |
+| `config` <Tag variant="new">3</Tag>   | Optional config overrides, either as nested dict or dict keyed by section value in dot notation, e.g. `"components.name.value"`. ~~Union[Dict[str, Any], Config]~~                                                                                                 |
+| **RETURNS**                           | A `Language` object with the loaded pipeline. ~~Language~~                                                                                                                                                                                                         |
 
 Essentially, `spacy.load()` is a convenience wrapper that reads the pipeline's
 [`config.cfg`](/api/data-formats#config), uses the language and pipeline
@@ -275,8 +275,8 @@ Render a dependency parse tree or named entity visualization.
 
 ### displacy.parse_deps {#displacy.parse_deps tag="method" new="2"}
 
-Generate dependency parse in `{'words': [], 'arcs': []}` format.
-For use with the `manual=True` argument in `displacy.render`.
+Generate dependency parse in `{'words': [], 'arcs': []}` format. For use with
+the `manual=True` argument in `displacy.render`.
 
 > #### Example
 >
@@ -297,8 +297,8 @@ For use with the `manual=True` argument in `displacy.render`.
 
 ### displacy.parse_ents {#displacy.parse_ents tag="method" new="2"}
 
-Generate named entities in `[{start: i, end: i, label: 'label'}]` format.
-For use with the `manual=True` argument in `displacy.render`.
+Generate named entities in `[{start: i, end: i, label: 'label'}]` format. For
+use with the `manual=True` argument in `displacy.render`.
 
 > #### Example
 >
@@ -319,8 +319,8 @@ For use with the `manual=True` argument in `displacy.render`.
 
 ### displacy.parse_spans {#displacy.parse_spans tag="method" new="2"}
 
-Generate spans in `[{start_token: i, end_token: i, label: 'label'}]` format.
-For use with the `manual=True` argument in `displacy.render`.
+Generate spans in `[{start_token: i, end_token: i, label: 'label'}]` format. For
+use with the `manual=True` argument in `displacy.render`.
 
 > #### Example
 >
@@ -451,7 +451,7 @@ factories.
 | Registry name     | Description                                                                                                                                                                                                                                        |
 | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `architectures`   | Registry for functions that create [model architectures](/api/architectures). Can be used to register custom model architectures and reference them in the `config.cfg`.                                                                           |
-| `augmenters`      | Registry for functions that create [data augmentation](#augmenters) callbacks for corpora and other training data iterators.                                                                                                                       |
+| `augmenters`      | Registry for functions that create [data augmentation](#augmenters) callbacks for corpora and other training data iterators.                                                                                                                       |
 | `batchers`        | Registry for training and evaluation [data batchers](#batchers).                                                                                                                                                                                   |
 | `callbacks`       | Registry for custom callbacks to [modify the `nlp` object](/usage/training#custom-code-nlp-callbacks) before training.                                                                                                                             |
 | `displacy_colors` | Registry for custom color scheme for the [`displacy` NER visualizer](/usage/visualizers). Automatically reads from [entry points](/usage/saving-loading#entry-points).                                                                             |
@@ -505,7 +505,7 @@ finished. To log each training step, a
 and the accuracy scores on the development set.
 
 The built-in, default logger is the ConsoleLogger, which prints results to the
-console in tabular format. The
+console in tabular format and saves them to a `jsonl` file. The
 [spacy-loggers](https://github.com/explosion/spacy-loggers) package, included as
 a dependency of spaCy, enables other loggers, such as one that sends results to
 a [Weights & Biases](https://www.wandb.com/) dashboard.
@@ -513,16 +513,20 @@ a [Weights & Biases](https://www.wandb.com/) dashboard.
 Instead of using one of the built-in loggers, you can
 [implement your own](/usage/training#custom-logging).
 
-#### spacy.ConsoleLogger.v1 {#ConsoleLogger tag="registered function"}
+#### spacy.ConsoleLogger.v2 {#ConsoleLogger tag="registered function"}
 
 > #### Example config
 >
 > ```ini
 > [training.logger]
-> @loggers = "spacy.ConsoleLogger.v1"
+> @loggers = "spacy.ConsoleLogger.v2"
+> progress_bar = true
+> console_output = true
+> output_file = "training_log.jsonl"
 > ```
 
-Writes the results of a training step to the console in a tabular format.
+Writes the results of a training step to the console in a tabular format and
+saves them to a `jsonl` file.
 
 <Accordion title="Example console output" spaced>
 
@@ -536,28 +540,35 @@ $ python -m spacy train config.cfg
 ℹ Pipeline: ['tok2vec', 'tagger']
 ℹ Start training
 ℹ Training. Initial learn rate: 0.0
+ℹ Saving results to training_log.jsonl
 
 E     #        LOSS TOK2VEC   LOSS TAGGER   TAG_ACC   SCORE
 ---   ------   ------------   -----------   -------   ------
-  1        0           0.00         86.20      0.22     0.00
-  1      200           3.08      18968.78     34.00     0.34
-  1      400          31.81      22539.06     33.64     0.34
-  1      600          92.13      22794.91     43.80     0.44
-  1      800         183.62      21541.39     56.05     0.56
-  1     1000         352.49      25461.82     65.15     0.65
-  1     1200         422.87      23708.82     71.84     0.72
-  1     1400         601.92      24994.79     76.57     0.77
-  1     1600         662.57      22268.02     80.20     0.80
-  1     1800        1101.50      28413.77     82.56     0.83
-  1     2000        1253.43      28736.36     85.00     0.85
-  1     2200        1411.02      28237.53     87.42     0.87
-  1     2400        1605.35      28439.95     88.70     0.89
+  0        0           0.00         86.20      0.22     0.00
+  0      200           3.08      18968.78     34.00     0.34
+  0      400          31.81      22539.06     33.64     0.34
+  0      600          92.13      22794.91     43.80     0.44
+  0      800         183.62      21541.39     56.05     0.56
+  0     1000         352.49      25461.82     65.15     0.65
+  0     1200         422.87      23708.82     71.84     0.72
+  0     1400         601.92      24994.79     76.57     0.77
+  0     1600         662.57      22268.02     80.20     0.80
+  0     1800        1101.50      28413.77     82.56     0.83
+  0     2000        1253.43      28736.36     85.00     0.85
+  0     2200        1411.02      28237.53     87.42     0.87
+  0     2400        1605.35      28439.95     88.70     0.89
 ```
 
 Note that the cumulative loss keeps increasing within one epoch, but should
 start decreasing across epochs.
 
  </Accordion>
+
+| Name             | Description                                                           |
+| ---------------- | --------------------------------------------------------------------- |
+| `progress_bar`   | Whether the logger should print the progress bar ~~bool~~             |
+| `console_output` | Whether the logger should print the logs on the console. ~~bool~~     |
+| `output_file`    | The file to save the training logs to. ~~Optional[Union[str, Path]]~~ |
 
 ## Readers {#readers}
 
@@ -1038,15 +1049,16 @@ and create a `Language` object. The model data will then be loaded in via
 > nlp = util.load_model("/path/to/data")
 > ```
 
-| Name                                 | Description                                                                                                                                                                                                                                      |
-| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `name`                               | Package name or path. ~~str~~                                                                                                                                                                                                                    |
-| _keyword-only_                       |                                                                                                                                                                                                                                                  |
-| `vocab`                              | Optional shared vocab to pass in on initialization. If `True` (default), a new `Vocab` object will be created. ~~Union[Vocab, bool]~~                                                                                                            |
-| `disable`                            | Names of pipeline components to [disable](/usage/processing-pipelines#disabling). Disabled pipes will be loaded but they won't be run unless you explicitly enable them by calling [`nlp.enable_pipe`](/api/language#enable_pipe). ~~List[str]~~ |
-| `exclude` <Tag variant="new">3</Tag> | Names of pipeline components to [exclude](/usage/processing-pipelines#disabling). Excluded components won't be loaded. ~~List[str]~~                                                                                                             |
-| `config` <Tag variant="new">3</Tag>  | Config overrides as nested dict or flat dict keyed by section values in dot notation, e.g. `"nlp.pipeline"`. ~~Union[Dict[str, Any], Config]~~                                                                                                   |
-| **RETURNS**                          | `Language` class with the loaded pipeline. ~~Language~~                                                                                                                                                                                          |
+| Name                                  | Description                                                                                                                                                                                                                                                          |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`                                | Package name or path. ~~str~~                                                                                                                                                                                                                                        |
+| _keyword-only_                        |                                                                                                                                                                                                                                                                      |
+| `vocab`                               | Optional shared vocab to pass in on initialization. If `True` (default), a new `Vocab` object will be created. ~~Union[Vocab, bool]~~                                                                                                                                |
+| `disable`                             | Name(s) of pipeline component(s) to [disable](/usage/processing-pipelines#disabling). Disabled pipes will be loaded but they won't be run unless you explicitly enable them by calling [`nlp.enable_pipe`](/api/language#enable_pipe). ~~Union[str, Iterable[str]]~~ |
+| `enable` <Tag variant="new">3.4</Tag> | Name(s) of pipeline component(s) to [enable](/usage/processing-pipelines#disabling). All other pipes will be disabled, but can be enabled again using [`nlp.enable_pipe`](/api/language#enable_pipe). ~~Union[str, Iterable[str]]~~                                  |
+| `exclude`                             | Name(s) of pipeline component(s) to [exclude](/usage/processing-pipelines#disabling). Excluded components won't be loaded. ~~Union[str, Iterable[str]]~~                                                                                                             |
+| `config` <Tag variant="new">3</Tag>   | Config overrides as nested dict or flat dict keyed by section values in dot notation, e.g. `"nlp.pipeline"`. ~~Union[Dict[str, Any], Config]~~                                                                                                                       |
+| **RETURNS**                           | `Language` class with the loaded pipeline. ~~Language~~                                                                                                                                                                                                              |
 
 ### util.load_model_from_init_py {#util.load_model_from_init_py tag="function" new="2"}
 
@@ -1062,15 +1074,16 @@ A helper function to use in the `load()` method of a pipeline package's
 >     return load_model_from_init_py(__file__, **overrides)
 > ```
 
-| Name                                 | Description                                                                                                                                                                                                                                    |
-| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `init_file`                          | Path to package's `__init__.py`, i.e. `__file__`. ~~Union[str, Path]~~                                                                                                                                                                         |
-| _keyword-only_                       |                                                                                                                                                                                                                                                |
-| `vocab` <Tag variant="new">3</Tag>   | Optional shared vocab to pass in on initialization. If `True` (default), a new `Vocab` object will be created. ~~Union[Vocab, bool]~~                                                                                                          |
-| `disable`                            | Names of pipeline components to [disable](/usage/processing-pipelines#disabling). Disabled pipes will be loaded but they won't be run unless you explicitly enable them by calling [nlp.enable_pipe](/api/language#enable_pipe). ~~List[str]~~ |
-| `exclude` <Tag variant="new">3</Tag> | Names of pipeline components to [exclude](/usage/processing-pipelines#disabling). Excluded components won't be loaded. ~~List[str]~~                                                                                                           |
-| `config` <Tag variant="new">3</Tag>  | Config overrides as nested dict or flat dict keyed by section values in dot notation, e.g. `"nlp.pipeline"`. ~~Union[Dict[str, Any], Config]~~                                                                                                 |
-| **RETURNS**                          | `Language` class with the loaded pipeline. ~~Language~~                                                                                                                                                                                        |
+| Name                                  | Description                                                                                                                                                                                                                                                          |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `init_file`                           | Path to package's `__init__.py`, i.e. `__file__`. ~~Union[str, Path]~~                                                                                                                                                                                               |
+| _keyword-only_                        |                                                                                                                                                                                                                                                                      |
+| `vocab` <Tag variant="new">3</Tag>    | Optional shared vocab to pass in on initialization. If `True` (default), a new `Vocab` object will be created. ~~Union[Vocab, bool]~~                                                                                                                                |
+| `disable`                             | Name(s) of pipeline component(s) to [disable](/usage/processing-pipelines#disabling). Disabled pipes will be loaded but they won't be run unless you explicitly enable them by calling [`nlp.enable_pipe`](/api/language#enable_pipe). ~~Union[str, Iterable[str]]~~ |
+| `enable` <Tag variant="new">3.4</Tag> | Name(s) of pipeline component(s) to [enable](/usage/processing-pipelines#disabling). All other pipes will be disabled, but can be enabled again using [`nlp.enable_pipe`](/api/language#enable_pipe). ~~Union[str, Iterable[str]]~~                                  |
+| `exclude` <Tag variant="new">3</Tag>  | Name(s) of pipeline component(s) to [exclude](/usage/processing-pipelines#disabling). Excluded components won't be loaded. ~~Union[str, Iterable[str]]~~                                                                                                             |
+| `config` <Tag variant="new">3</Tag>   | Config overrides as nested dict or flat dict keyed by section values in dot notation, e.g. `"nlp.pipeline"`. ~~Union[Dict[str, Any], Config]~~                                                                                                                       |
+| **RETURNS**                           | `Language` class with the loaded pipeline. ~~Language~~                                                                                                                                                                                                              |
 
 ### util.load_config {#util.load_config tag="function" new="3"}
 
