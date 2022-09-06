@@ -25,51 +25,50 @@ gold_help = "Use gold preprocessing provided in the .spacy files"
 
 def _stream_data(
     data_path: Path,
-    vocab: Vocab
+    vocab: Vocab,
+    suffix: Optional[str] = None
 ) -> Generator[Union[str, Doc], None, None]:
     """
     Load data which is either in a single file
     in .spacy or plain text format or multiple
-    text files in a directory.
+    text files in a directory. If a directory
+    is provided skip subdirectories and undecodeable
+    files.
     """
-    # XXX I know that we have it in the developer guidelines
-    # to don't try/except, but I thought its appropriate here.
-    # because we are not sure exactly what input we are getting.
     if not data_path.is_dir():
         # Yield from DocBin.
-        try:
+        if data_path.suffix == ".spacy":
             docbin = DocBin().from_disk(data_path)
             for doc in docbin.get_docs(vocab):
                 yield doc
-        # Yield from text file.
-        except ValueError:
+        # Yield from text file
+        else:
             try:
                 with open(data_path, 'r') as fin:
                     for line in fin:
                         yield line
-            except UnicodeDecodeError:
-                print(
-                    f"file {data_path} does not seem "
-                    "to be a plain text file"
+            except UnicodeDecodeError as e:
+                print(e)
+                msg.warn(
+                    f"{data_path} could not be decoded.",
+                    exits=True
                 )
-                sys.exit()
     else:
         # Yield per one file in directory
         for path in data_path.iterdir():
             if path.is_dir():
-                raise ValueError(
-                    "All files should be text files."
-                )
-            with open(path, 'r') as fin:
-                try:
-                    text = fin.read()
-                    yield text
-                except UnicodeDecodeError:
-                    print(
-                        f"file {path} does not seem "
-                        "to be a plain text file"
-                    )
-                    sys.exit()
+                msg.warn(f"Skipping directory {path}")
+            elif suffix is not None and path.suffix != suffix:
+                print(suffix, path.suffix)
+                msg.warn(f"Skipping file {path}")
+            else:
+                with open(path, 'r') as fin:
+                    try:
+                        text = fin.read()
+                        yield text
+                    except UnicodeDecodeError as e:
+                        msg.warn(f"Skipping file {path}")
+                        print(e)
 
 
 @app.command("apply")
@@ -79,9 +78,10 @@ def apply_cli(
     data_path: Path = Arg(..., help=path_help, exists=True),
     output: Path = Arg(..., help=out_help, dir_okay=False),
     code_path: Optional[Path] = Opt(None, "--code", "-c", help=code_help),
-    use_gpu: int = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU"),
-    batch_size: int = Opt(1, "--batch-size", "-b", help="Batch size"),
-    n_process: int = Opt(1, "--n-process", "-n", help="Number of processors to use")
+    use_gpu: Optional[int] = Opt(-1, "--gpu-id", "-g", help="GPU ID or -1 for CPU."),
+    batch_size: Optional[int] = Opt(1, "--batch-size", "-b", help="Batch size."),
+    n_process: Optional[int] = Opt(1, "--n-process", "-n", help="number of processors to use."),
+    suffix: Optional[str] = Opt(None, "--suffix", "-n", help="Only read files with file.suffix.")
 ):
     """
     Apply a trained pipeline to documents to get predictions.
@@ -92,9 +92,12 @@ def apply_cli(
 
     DOCS: https://spacy.io/api/cli#tba
     """
+    if suffix is not None:
+        if not suffix.startswith("."):
+            suffix = "." + suffix
     import_code(code_path)
     setup_gpu(use_gpu)
-    apply(data_path, output, model, batch_size, n_process)
+    apply(data_path, output, model, batch_size, n_process, suffix)
 
 
 def apply(
@@ -102,7 +105,8 @@ def apply(
     output: Path,
     model: str,
     batch_size: int,
-    n_process: int
+    n_process: int,
+    suffix: Optional[str]
 ):
     data_path = util.ensure_path(data_path)
     output_path = util.ensure_path(output)
@@ -112,7 +116,7 @@ def apply(
     msg.good(f"Loaded model {model}")
     vocab = nlp.vocab
     docbin = DocBin()
-    datagen = _stream_data(data_path, vocab)
+    datagen = _stream_data(data_path, vocab, suffix)
     for doc in tqdm.tqdm(nlp.pipe(datagen, batch_size=batch_size, n_process=n_process)):
         docbin.add(doc)
     if output_path.is_dir():
