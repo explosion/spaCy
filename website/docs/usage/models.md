@@ -268,17 +268,48 @@ used for training the current [Japanese pipelines](/models/ja).
 
 ### Korean language support {#korean}
 
-> #### mecab-ko tokenizer
+There are currently three built-in options for Korean tokenization, two based on
+[mecab-ko](https://bitbucket.org/eunjeon/mecab-ko/src/master/README.md) and one
+using the rule-based tokenizer.
+
+> #### Default mecab-ko tokenizer
 >
 > ```python
+> # uses mecab-ko-dic
 > nlp = spacy.blank("ko")
+>
+> # with custom mecab args
+> mecab_args = "-d /path/to/dicdir -u /path/to/userdic"
+> config = {"nlp": {"tokenizer": {"mecab_args": mecab_args}}}
+> nlp = spacy.blank("ko", config=config)
 > ```
 
-The default MeCab-based Korean tokenizer requires:
+The default MeCab-based Korean tokenizer requires the python package
+[`mecab-ko`](https://pypi.org/project/mecab-ko/) and no further system
+requirements.
+
+The `natto-py` MeCab-based tokenizer (the previous default for spaCy v3.4 and
+earlier) is available as `spacy.KoreanNattoTokenizer.v1`. It requires:
 
 - [mecab-ko](https://bitbucket.org/eunjeon/mecab-ko/src/master/README.md)
 - [mecab-ko-dic](https://bitbucket.org/eunjeon/mecab-ko-dic)
 - [natto-py](https://github.com/buruzaemon/natto-py)
+
+To use this tokenizer, edit `[nlp.tokenizer]` in your config:
+
+> #### natto-py MeCab-ko tokenizer
+>
+> ```python
+> config = {"nlp": {"tokenizer": {"@tokenizers": "spacy.KoreanNattoTokenizer.v1"}}}
+> nlp = spacy.blank("ko", config=config)
+> ```
+
+```ini
+### config.cfg
+[nlp]
+lang = "ko"
+tokenizer = {"@tokenizers" = "spacy.KoreanNattoTokenizer.v1"}
+```
 
 For some Korean datasets and tasks, the
 [rule-based tokenizer](/usage/linguistic-features#tokenization) is better-suited

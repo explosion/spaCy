@@ -8,7 +8,6 @@ from preshed.maps cimport PreshMap
 cimport cython
 
 import re
-import warnings
 
 from .tokens.doc cimport Doc
 from .strings cimport hash_string
@@ -16,9 +15,9 @@ from .lexeme cimport EMPTY_LEXEME
 
 from .attrs import intify_attrs
 from .symbols import ORTH, NORM
-from .errors import Errors, Warnings
+from .errors import Errors
 from . import util
-from .util import registry, get_words_and_spaces
+from .util import get_words_and_spaces
 from .attrs import intify_attrs
 from .symbols import ORTH
 from .scorer import Scorer
@@ -128,10 +127,10 @@ cdef class Tokenizer:
 
     property faster_heuristics:
         def __get__(self):
-            return bool(self._faster_heuristics)
+            return self._faster_heuristics
 
         def __set__(self, faster_heuristics):
-            self._faster_heuristics = bool(faster_heuristics)
+            self._faster_heuristics = faster_heuristics
             self._reload_special_cases()
 
     def __reduce__(self):
@@ -582,7 +581,7 @@ cdef class Tokenizer:
         substrings (iterable): A sequence of dicts, where each dict describes
             a token and its attributes.
         """
-        attrs = [intify_attrs(spec, _do_deprecated=True) for spec in substrings]
+        attrs = [intify_attrs(spec) for spec in substrings]
         orth = "".join([spec[ORTH] for spec in attrs])
         if chunk != orth:
             raise ValueError(Errors.E997.format(chunk=chunk, orth=orth, token_attrs=substrings))
@@ -615,7 +614,7 @@ cdef class Tokenizer:
         self._rules[string] = substrings
         self._flush_cache()
         if not self.faster_heuristics or self.find_prefix(string) or self.find_infix(string) or self.find_suffix(string) or " " in string:
-            self._special_matcher.add(string, None, self._tokenize_affixes(string, False))
+            self._special_matcher.add(string, [self._tokenize_affixes(string, False)])
 
     def _reload_special_cases(self):
         self._flush_cache()
@@ -650,7 +649,7 @@ cdef class Tokenizer:
             url_match = re.compile("a^").match
         special_cases = {}
         for orth, special_tokens in self.rules.items():
-            special_cases[orth] = [intify_attrs(special_token, strings_map=self.vocab.strings, _do_deprecated=True) for special_token in special_tokens]
+            special_cases[orth] = [intify_attrs(special_token, strings_map=self.vocab.strings) for special_token in special_tokens]
         tokens = []
         for substring in text.split():
             suffixes = []
