@@ -52,7 +52,7 @@ cdef class StringStore:
         RETURNS (bool): Whether the store contains the string.
         """
         cdef hash_t str_hash = get_string_id(string_or_hash)
-        if str_hash < len(SYMBOLS_BY_INT):
+        if str_hash in SYMBOLS_BY_INT:
             return True
         else:
             return self.key_map.get(str_hash) is not NULL
@@ -183,13 +183,15 @@ cdef class StringStore:
     def _get_interned_str(self, hash_value: int) -> str:
         cdef hash_t str_hash
         if not _try_coerce_to_hash(hash_value, &str_hash):
-            raise TypeError(Errors.E4000.format(expected_types="'str','int'", received_type=type(hash_value)))
+            raise TypeError(Errors.E4001.format(expected_types="'str','int'", received_type=type(hash_value)))
 
         # Handle reserved symbols and empty strings correctly.
         if str_hash == 0:
             return ""
-        elif str_hash < len(SYMBOLS_BY_INT):
-            return SYMBOLS_BY_INT[str_hash]
+
+        symbol = SYMBOLS_BY_INT.get(str_hash)
+        if symbol is not None:
+            return symbol
 
         utf8str = <Utf8Str*>self.key_map.get(str_hash)
         if utf8str is NULL:
@@ -254,7 +256,7 @@ cdef class StringStore:
 
 cpdef hash_t hash_string(object string) except -1:
     if not isinstance(string, str):
-        raise TypeError(Errors.E4000.format(expected_types="'str'", received_type=type(string)))
+        raise TypeError(Errors.E4001.format(expected_types="'str'", received_type=type(string)))
 
     # Handle reserved symbols and empty strings correctly.
     if len(string) == 0:
@@ -282,7 +284,7 @@ cpdef hash_t get_string_id(object string_or_hash) except -1:
             # whose comparison operators can incur a significant overhead).
             return str_hash
         else:
-            raise TypeError(Errors.E4000.format(expected_types="'str','int'", received_type=type(string_or_hash)))
+            raise TypeError(Errors.E4001.format(expected_types="'str','int'", received_type=type(string_or_hash)))
 
 
 # Not particularly elegant, but this is faster than `isinstance(key, numbers.Integral)`
