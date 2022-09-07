@@ -29,7 +29,7 @@ These are repos that can be used by spaCy but aren&#39;t part of a default insta
 - [spacy-lookups-data](https://github.com/explosion/spacy-lookups-data): A repository of linguistic data, such as lemmas, that takes up a lot of disk space. Originally created to reduce the size of the spaCy core library. This is mainly useful if you want the data included but aren&#39;t using a pretrained pipeline; for the affected languages, the relevant data is included in pretrained pipelines directly.
 - [coreferee](https://github.com/explosion/coreferee): Coreference resolution for English, French, German and Polish, optimised for limited training data and easily extensible for further languages. Used as a spaCy pipeline component.
 - [spacy-stanza](https://github.com/explosion/spacy-stanza): This is a wrapper that allows the use of Stanford&#39;s Stanza library in spaCy. 
-- [spacy-streamlit](https://github.com/explosion/spacy-streamlit): A wrapper for the Streamlit dashboard building library to help with integrating displaCy.
+- [spacy-streamlit](https://github.com/explosion/spacy-streamlit): A wrapper for the Streamlit dashboard building library to help with integrating [displaCy](https://spacy.io/api/top-level/#displacy).
 - [spacymoji](https://github.com/explosion/spacymoji): A library to add extra support for emoji to spaCy, such as including character names.
 - [thinc-apple-ops](https://github.com/explosion/thinc-apple-ops): A special backend for OSX that uses Apple&#39;s native libraries for improved performance.
 - [os-signpost](https://github.com/explosion/os-signpost): A Python package that allows you to use the `OSSignposter` API in OSX for performance analysis.
