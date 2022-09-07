@@ -106,6 +106,8 @@ class Lemmatizer(Pipe):
             self.lemmatize = self.lookup_lemmatize
         elif self.mode == "rule":
             self.lemmatize = self.rule_lemmatize
+        elif self.mode == "rule_lower":
+            self.lemmatize = self.rule_lower_lemmatize
         else:
             mode_attr = f"{self.mode}_lemmatize"
             if not hasattr(self, mode_attr):
@@ -193,14 +195,7 @@ class Lemmatizer(Pipe):
             result = [result]
         return result
 
-    def rule_lemmatize(self, token: Token) -> List[str]:
-        """Lemmatize using a rule-based approach.
-
-        token (Token): The token to lemmatize.
-        RETURNS (list): The available lemmas for the string.
-
-        DOCS: https://spacy.io/api/lemmatizer#rule_lemmatize
-        """
+    def __rule_lemmatize__(self, token: Token, tolower: bool = False):
         cache_key = (token.orth, token.pos, token.morph.key)  # type: ignore[attr-defined]
         if cache_key in self.cache:
             return self.cache[cache_key]
@@ -223,7 +218,7 @@ class Lemmatizer(Pipe):
                 rules_table.get(univ_pos),
             )
         ):
-            if univ_pos == "propn":
+            if not tolower and univ_pos == "propn":
                 return [string]
             else:
                 return [string.lower()]
@@ -259,6 +254,22 @@ class Lemmatizer(Pipe):
             forms.append(orig)
         self.cache[cache_key] = forms
         return forms
+    
+    def rule_lemmatize(self, token: Token) -> List[str]:
+        """Lemmatize using a rule-based approach.
+        token (Token): The token to lemmatize.
+        RETURNS (list): The available lemmas for the string.
+        DOCS: https://spacy.io/api/lemmatizer#rule_lemmatize
+        """
+        return self.__rule_lemmatize__(token)
+    
+    def rule_lower_lemmatize(self, token: Token) -> List[str]:
+        """Lemmatize using a special approach that lowercases the whole text
+        token (Token): The token to lemmatize.
+        RETURNS (list): The available lemmas for the string.
+        DOCS: https://spacy.io/api/lemmatizer#rule_lower_lemmatize
+        """
+        return self.__rule_lemmatize__(token, tolower=True)
 
     def is_base_form(self, token: Token) -> bool:
         """Check whether the token is a base form that does not need further
