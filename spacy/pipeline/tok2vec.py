@@ -289,8 +289,7 @@ def forward(model: Tok2VecListener, inputs, is_train: bool):
             outputs = []
             for doc in inputs:
                 if doc.tensor.size == 0:
-                    # TODO move to errors.py
-                    raise ValueError("If the embedding layer is not updated during training, include it in 'annotating components'")
+                    raise ValueError(Errors.E203.format(name="tok2vec"))
                 else:
                     outputs.append(doc.tensor)
             return outputs, _empty_backprop

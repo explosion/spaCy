@@ -538,6 +538,8 @@ class Errors(metaclass=ErrorsWithCodes):
     E199 = ("Unable to merge 0-length span at `doc[{start}:{end}]`.")
     E200 = ("Can't set {attr} from Span.")
     E202 = ("Unsupported {name} mode '{mode}'. Supported modes: {modes}.")
+    E203 = ("If the {name} embedding layer is not updated "
+            "during training, make sure to include it in 'annotating components'")
 
     # New errors added in v3.x
     E853 = ("Unsupported component factory name '{name}'. The character '.' is "
