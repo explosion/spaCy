@@ -58,7 +58,7 @@ DEFAULT_MORPH_MODEL = Config().from_str(default_model_config)["model"]
         "overwrite": True,
         "extend": False,
         "scorer": {"@scorers": "spacy.morphologizer_scorer.v1"},
-        "save_activations": False
+        "save_activations": False,
     },
     default_score_weights={"pos_acc": 0.5, "morph_acc": 0.5, "morph_per_feat": None},
 )

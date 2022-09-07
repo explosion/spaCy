@@ -43,7 +43,7 @@ DEFAULT_SENTER_MODEL = Config().from_str(default_model_config)["model"]
         "model": DEFAULT_SENTER_MODEL,
         "overwrite": False,
         "scorer": {"@scorers": "spacy.senter_scorer.v1"},
-        "save_activations": False
+        "save_activations": False,
     },
     default_score_weights={"sents_f": 1.0, "sents_p": 0.0, "sents_r": 0.0},
 )
