@@ -88,8 +88,7 @@ cdef class StringStore:
         if string in SYMBOLS_BY_STR:
             return SYMBOLS_BY_STR[string]
         else:
-            raise TypeError(Errors.E017.format(value_type=type(string)))
-        return str_hash
+            return self._intern_str(string)
 
     def as_int(self, string_or_hash: Union[str, int]) -> str:
         """If a hash value is passed as the input, return it as-is. If the input
