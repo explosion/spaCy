@@ -248,6 +248,59 @@ added to an existing vectors table. See more details in
 
 ## Loggers {#loggers}
 
+These functions are available from `@spacy.registry.loggers`.
+
+### spacy.ConsoleLogger.v1 {#ConsoleLogger_v1}
+
+> #### Example config
+>
+> ```ini
+> [training.logger]
+> @loggers = "spacy.ConsoleLogger.v1"
+> progress_bar = true
+> ```
+
+Writes the results of a training step to the console in a tabular format.
+
+<Accordion title="Example console output" spaced>
+
+```cli
+$ python -m spacy train config.cfg
+```
+
+```
+ℹ Using CPU
+ℹ Loading config and nlp from: config.cfg
+ℹ Pipeline: ['tok2vec', 'tagger']
+ℹ Start training
+ℹ Training. Initial learn rate: 0.0
+
+E     #        LOSS TOK2VEC   LOSS TAGGER   TAG_ACC   SCORE
+---   ------   ------------   -----------   -------   ------
+  0        0           0.00         86.20      0.22     0.00
+  0      200           3.08      18968.78     34.00     0.34
+  0      400          31.81      22539.06     33.64     0.34
+  0      600          92.13      22794.91     43.80     0.44
+  0      800         183.62      21541.39     56.05     0.56
+  0     1000         352.49      25461.82     65.15     0.65
+  0     1200         422.87      23708.82     71.84     0.72
+  0     1400         601.92      24994.79     76.57     0.77
+  0     1600         662.57      22268.02     80.20     0.80
+  0     1800        1101.50      28413.77     82.56     0.83
+  0     2000        1253.43      28736.36     85.00     0.85
+  0     2200        1411.02      28237.53     87.42     0.87
+  0     2400        1605.35      28439.95     88.70     0.89
+```
+
+Note that the cumulative loss keeps increasing within one epoch, but should
+start decreasing across epochs.
+
+ </Accordion>
+
+| Name           | Description                                               |
+| -------------- | --------------------------------------------------------- |
+| `progress_bar` | Whether the logger should print the progress bar ~~bool~~ |
+
 Logging utilities for spaCy are implemented in the
 [`spacy-loggers`](https://github.com/explosion/spacy-loggers) repo, and the
 functions are typically available from `@spacy.registry.loggers`.

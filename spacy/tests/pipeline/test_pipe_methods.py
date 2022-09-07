@@ -618,6 +618,7 @@ def test_load_disable_enable() -> None:
         base_nlp.to_disk(tmp_dir)
         to_disable = ["parser", "tagger"]
         to_enable = ["tagger", "parser"]
+        single_str = "tagger"
 
         # Setting only `disable`.
         nlp = spacy.load(tmp_dir, disable=to_disable)
@@ -631,6 +632,16 @@ def test_load_disable_enable() -> None:
                 for comp_name in nlp.component_names
             ]
         )
+
+        # Loading with a string representing one component
+        nlp = spacy.load(tmp_dir, exclude=single_str)
+        assert single_str not in nlp.component_names
+
+        nlp = spacy.load(tmp_dir, disable=single_str)
+        assert single_str in nlp.component_names
+        assert single_str not in nlp.pipe_names
+        assert nlp._disabled == {single_str}
+        assert nlp.disabled == [single_str]
 
         # Testing consistent enable/disable combination.
         nlp = spacy.load(
