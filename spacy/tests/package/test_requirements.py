@@ -17,6 +17,7 @@ def test_build_dependencies():
         "types-dataclasses",
         "types-mock",
         "types-requests",
+        "types-setuptools",
     ]
     # ignore language-specific packages that shouldn't be installed by all
     libs_ignore_setup = [

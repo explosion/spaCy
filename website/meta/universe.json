@@ -1192,7 +1192,7 @@
             "slogan": "Fast, flexible and transparent sentiment analysis",
             "description": "Asent is a rule-based sentiment analysis library for Python made using spaCy. It is inspired by VADER, but uses a more modular ruleset, that allows the user to change e.g. the method for finding negations. Furthermore it includes visualisers to visualize the model predictions, making the model easily interpretable.",
             "github": "kennethenevoldsen/asent",
-            "pip": "aseny",
+            "pip": "asent",
             "code_example": [
                 "import spacy",
                 "import asent",
