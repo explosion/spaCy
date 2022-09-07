@@ -404,7 +404,10 @@ def git_checkout(
             if not is_subpath_of(tmp_dir, source_path):
                 err = f"'{subpath}' is a path outside of the cloned repository."
                 msg.fail(err, repo, exits=1)
-            shutil.copytree(str(source_path), str(dest))
+            if source_path.is_dir():
+                shutil.copytree(str(source_path), str(dest))
+            else:
+                shutil.copy(str(source_path), str(dest))
         except FileNotFoundError:
             err = f"Can't clone {subpath}. Make sure the directory exists in the repo (branch '{branch}')"
             msg.fail(err, repo, exits=1)
@@ -573,3 +576,26 @@ def setup_gpu(use_gpu: int, silent=None) -> None:
         local_msg.info("Using CPU")
         if gpu_is_available():
             local_msg.info("To switch to GPU 0, use the option: --gpu-id 0")
+
+
+def walk_directory(path: Path, suffix: str) -> List[Path]:
+    if not path.is_dir():
+        return [path]
+    paths = [path]
+    locs = []
+    seen = set()
+    for path in paths:
+        if str(path) in seen:
+            continue
+        seen.add(str(path))
+        if path.parts[-1].startswith("."):
+            continue
+        elif path.is_dir():
+            paths.extend(path.iterdir())
+        elif not path.parts[-1].endswith(suffix):
+            continue
+        else:
+            locs.append(path)
+    # It's good to sort these, in case the ordering messes up cache.
+    locs.sort()
+    return locs

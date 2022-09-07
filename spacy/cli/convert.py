@@ -1,4 +1,4 @@
-from typing import Callable, Iterable, Mapping, Optional, Any, List, Union
+from typing import Callable, Iterable, Mapping, Optional, Any, Union
 from enum import Enum
 from pathlib import Path
 from wasabi import Printer
@@ -7,7 +7,7 @@ import re
 import sys
 import itertools
 
-from ._util import app, Arg, Opt
+from ._util import app, Arg, Opt, walk_directory
 from ..training import docs_to_json
 from ..tokens import Doc, DocBin
 from ..training.converters import iob_to_docs, conll_ner_to_docs, json_to_docs
@@ -187,33 +187,6 @@ def autodetect_ner_format(input_data: str) -> Optional[str]:
     if format_guesses["ner"] == 0 and format_guesses["iob"] > 0:
         return "iob"
     return None
-
-
-def walk_directory(path: Path, converter: str) -> List[Path]:
-    if not path.is_dir():
-        return [path]
-    paths = [path]
-    locs = []
-    seen = set()
-    for path in paths:
-        if str(path) in seen:
-            continue
-        seen.add(str(path))
-        if path.parts[-1].startswith("."):
-            continue
-        elif path.is_dir():
-            paths.extend(path.iterdir())
-        elif converter == "json" and not path.parts[-1].endswith("json"):
-            continue
-        elif converter == "conll" and not path.parts[-1].endswith("conll"):
-            continue
-        elif converter == "iob" and not path.parts[-1].endswith("iob"):
-            continue
-        else:
-            locs.append(path)
-    # It's good to sort these, in case the ordering messes up cache.
-    locs.sort()
-    return locs
 
 
 def verify_cli_args(
