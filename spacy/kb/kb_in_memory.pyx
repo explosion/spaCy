@@ -22,7 +22,7 @@ from .candidate import Candidate as Candidate
 
 
 cdef class InMemoryLookupKB(KnowledgeBase):
-    """A `InMemoryLookupKB` instance stores unique identifiers for entities and their textual aliases,
+    """An `InMemoryLookupKB` instance stores unique identifiers for entities and their textual aliases,
     to support entity linking of named entities to real-world concepts.
 
     DOCS: https://spacy.io/api/kb_in_memory
