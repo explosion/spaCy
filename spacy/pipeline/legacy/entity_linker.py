@@ -114,7 +114,7 @@ class EntityLinker_v1(TrainablePipe):
         get_examples (Callable[[], Iterable[Example]]): Function that
             returns a representative sample of gold-standard Example objects.
         nlp (Language): The current nlp object the component is part of.
-        kb_loader (Callable[[Vocab], KnowledgeBase]): A function that creates a InMemoryLookupKB from a Vocab instance.
+        kb_loader (Callable[[Vocab], KnowledgeBase]): A function that creates an InMemoryLookupKB from a Vocab instance.
             Note that providing this argument, will overwrite all data accumulated in the current KB.
             Use this only when loading a KB as-such from file.
 
