@@ -936,16 +936,6 @@ def replace_model_node(model: Model, target: Model, replacement: Model) -> None:
                 node.set_ref(ref_name, replacement)
 
 
-def join_command(command: List[str]) -> str:
-    """Join a command using shlex. shlex.join is only available for Python 3.8+,
-    so we're using a workaround here.
-
-    command (List[str]): The command to join.
-    RETURNS (str): The joined command
-    """
-    return " ".join(shlex.quote(cmd) for cmd in command)
-
-
 def run_command(
     command: Union[str, List[str]],
     *,

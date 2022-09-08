@@ -7,7 +7,7 @@ from wasabi import msg
 
 from .._util import PROJECT_FILE, load_project_config, get_hash, project_cli
 from .._util import Arg, Opt, NAME, COMMAND
-from ...util import working_dir, join_command, run_command
+from ...util import working_dir, run_command
 from ...util import SimpleFrozenList
 
 
@@ -122,7 +122,7 @@ def update_dvc_config(
         if command.get("no_skip"):
             dvc_cmd.append("--always-changed")
         full_cmd = [*dvc_cmd, *deps_cmd, *outputs_cmd, *outputs_nc_cmd, *project_cmd]
-        dvc_commands.append(join_command(full_cmd))
+        dvc_commands.append(full_cmd)
     with working_dir(path):
         dvc_flags = {"--verbose": verbose, "--quiet": silent}
         run_dvc_commands(dvc_commands, flags=dvc_flags)
@@ -134,21 +134,20 @@ def update_dvc_config(
 
 
 def run_dvc_commands(
-    commands: Iterable[str] = SimpleFrozenList(), flags: Dict[str, bool] = {}
+    commands: Iterable[List[str]] = SimpleFrozenList(), flags: Dict[str, bool] = {}
 ) -> None:
     """Run a sequence of DVC commands in a subprocess, in order.
 
-    commands (List[str]): The string commands without the leading "dvc".
+    commands (List[List[str]]): The string commands without the leading "dvc".
     flags (Dict[str, bool]): Conditional flags to be added to command. Makes it
         easier to pass flags like --quiet that depend on a variable or
         command-line setting while avoiding lots of nested conditionals.
     """
     for c in commands:
-        dvc_command = "dvc " + c
+        dvc_command = ["dvc", *c]
         # Add the flags if they are set to True
         for flag, is_active in flags.items():
-            if is_active:
-                dvc_command += " " + flag
+            dvc_command.append(flag)
         run_command(dvc_command)
 
 
