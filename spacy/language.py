@@ -1,4 +1,4 @@
-from typing import Iterator, Optional, Any, Dict, Callable, Iterable, Collection
+from typing import Iterator, Optional, Any, Dict, Callable, Iterable
 from typing import Union, Tuple, List, Set, Pattern, Sequence
 from typing import NoReturn, TYPE_CHECKING, TypeVar, cast, overload
 
@@ -10,6 +10,8 @@ from contextlib import contextmanager
 from copy import deepcopy
 from pathlib import Path
 import warnings
+
+import wasabi
 from thinc.api import get_current_ops, Config, CupyOps, Optimizer
 import srsly
 import multiprocessing as mp
@@ -1727,12 +1729,6 @@ class Language:
 
         DOCS: https://spacy.io/api/language#from_config
         """
-        if isinstance(disable, str):
-            disable = [disable]
-        if isinstance(enable, str):
-            enable = [enable]
-        if isinstance(exclude, str):
-            exclude = [exclude]
         if auto_fill:
             config = Config(
                 cls.default_config, section_order=CONFIG_SECTION_ORDER
@@ -1877,9 +1873,35 @@ class Language:
             nlp.vocab.from_bytes(vocab_b)
 
         # Resolve disabled/enabled settings.
+        def fetch_pipes_status(
+            value: Optional[Union[str, Iterable[str]]], key: str
+        ) -> Iterable[str]:
+            """Fetch value for `enable` or `disable` w.r.t. the specified config and passed arguments passed to
+            .load(). If both arguments and config specified values for this field, the passed arguments take precedence
+            and a warning is printed.
+            value (Optional[Union[str, Iterable[str]]]): Passed value for `enable` or `disable`.
+            key (str): Key for field in config (either "enabled" or "disabled").
+            RETURN (Iterable[str]):
+            """
+            # We assume that no argument was passed if the value is the default value of an empty SimpleFrozenList.
+            if isinstance(value, SimpleFrozenList) and len(value) == 0:
+                return config["nlp"].get(key, [])
+            else:
+                value = [value] if isinstance(value, str) else value
+                if len(config["nlp"].get(key, [])):
+                    wasabi.msg.warn(
+                        title=f"'{key}' in config is being overwritten",
+                        text=f"Argument {key[:-1]} with value {value} is used instead of the in the config defined "
+                        f"value of {config['nlp'][key]}. Be aware that this might affect other components in your "
+                        f"pipeline.",
+                    )
+                return value
+
+        if isinstance(exclude, str):
+            exclude = [exclude]
         disabled_pipes = cls._resolve_component_status(
-            [*config["nlp"]["disabled"], *disable],
-            [*config["nlp"].get("enabled", []), *enable],
+            fetch_pipes_status(disable, "disabled"),
+            fetch_pipes_status(enable, "enabled"),
             config["nlp"]["pipeline"],
         )
         nlp._disabled = set(p for p in disabled_pipes if p not in exclude)
@@ -2064,14 +2086,7 @@ class Language:
                 pipe_name for pipe_name in pipe_names if pipe_name not in enable
             ]
             if disable and disable != to_disable:
-                raise ValueError(
-                    Errors.E1042.format(
-                        arg1="enable",
-                        arg2="disable",
-                        arg1_values=enable,
-                        arg2_values=disable,
-                    )
-                )
+                raise ValueError(Errors.E1042.format(enable=enable, disable=disable))
 
         return tuple(to_disable)
 

@@ -937,8 +937,9 @@ class Errors(metaclass=ErrorsWithCodes):
     E1040 = ("Doc.from_json requires all tokens to have the same attributes. "
              "Some tokens do not contain annotation for: {partial_attrs}")
     E1041 = ("Expected a string, Doc, or bytes as input, but got: {type}")
-    E1042 = ("Function was called with `{arg1}`={arg1_values} and "
-             "`{arg2}`={arg2_values} but these arguments are conflicting.")
+    E1042 = ("`enable={enable}` and `disable={disable}` are inconsistent with each other.\nIf you only passed "
+             "one of `enable` or `disable`, the other argument is specified in your pipeline's configuration.\nIn that "
+             "case pass an empty list for the previously not specified argument to avoid this error.")
     E1043 = ("Expected None or a value in range [{range_start}, {range_end}] for entity linker threshold, but got "
              "{value}.")
 
