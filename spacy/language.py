@@ -1874,7 +1874,7 @@ class Language:
 
         # Resolve disabled/enabled settings.
         def fetch_pipes_status(
-            value: Optional[Union[str, Iterable[str]]], key: str
+            value: Union[str, Iterable[str]], key: str
         ) -> Iterable[str]:
             """Fetch value for `enable` or `disable` w.r.t. the specified config and passed arguments passed to
             .load(). If both arguments and config specified values for this field, the passed arguments take precedence
