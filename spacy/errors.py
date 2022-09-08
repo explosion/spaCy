@@ -709,9 +709,9 @@ class Errors(metaclass=ErrorsWithCodes):
             "`nlp.enable_pipe` instead.")
     E927 = ("Can't write to frozen list Maybe you're trying to modify a computed "
             "property or default function argument?")
-    E928 = ("A KnowledgeBase can only be serialized to/from from a directory, "
+    E928 = ("An InMemoryLookupKB can only be serialized to/from from a directory, "
             "but the provided argument {loc} points to a file.")
-    E929 = ("Couldn't read KnowledgeBase from {loc}. The path does not seem to exist.")
+    E929 = ("Couldn't read InMemoryLookupKB from {loc}. The path does not seem to exist.")
     E930 = ("Received invalid get_examples callback in `{method}`. "
             "Expected function that returns an iterable of Example objects but "
             "got: {obj}")
@@ -941,6 +941,12 @@ class Errors(metaclass=ErrorsWithCodes):
              "`{arg2}`={arg2_values} but these arguments are conflicting.")
     E1043 = ("Expected None or a value in range [{range_start}, {range_end}] for entity linker threshold, but got "
              "{value}.")
+    E1044 = ("Expected `candidates_batch_size` to be >= 1, but got: {value}")
+    E1045 = ("Encountered {parent} subclass without `{parent}.{method}` "
+             "method in '{name}'. If you want to use this method, make "
+             "sure it's overwritten on the subclass.")
+    E1046 = ("{cls_name} is an abstract class and cannot be instantiated. If you are looking for spaCy's default "
+             "knowledge base, use `InMemoryLookupKB`.")
 
 
 # Deprecated model shortcuts, only used in errors and warnings
