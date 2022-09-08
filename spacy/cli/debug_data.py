@@ -1007,21 +1007,6 @@ def _get_labels_from_spancat(nlp: Language) -> Dict[str, Set[str]]:
     return labels
 
 
-def _get_labels_from_trainable_lemmatizer(nlp: Language) -> Set[str]:
-    pipe_names = [
-        pipe_name
-        for pipe_name in nlp.pipe_names
-        if nlp.get_pipe_meta(pipe_name).factory == "trainable_lemmatizer"
-    ]
-    labels: Set[str] = set()
-    for pipe_name in pipe_names:
-        pipe = nlp.get_pipe(pipe_name)
-        # This gets lemmatization trees and no partial subtrees
-        for tree_id in pipe.tree2label.keys():
-            labels.add(pipe.trees.tree_to_str(tree_id))
-    return labels
-
-
 def _gmean(l: List) -> float:
     """Compute geometric mean of a list"""
     return math.exp(math.fsum(math.log(i) for i in l) / len(l))
