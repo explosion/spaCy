@@ -1872,7 +1872,6 @@ class Language:
         if vocab_b is not None:
             nlp.vocab.from_bytes(vocab_b)
 
-        # Resolve disabled/enabled settings.
         def fetch_pipes_status(
             value: Union[str, Iterable[str]], key: str
         ) -> Iterable[str]:
@@ -1897,6 +1896,7 @@ class Language:
                     )
                 return value
 
+        # Resolve disabled/enabled settings.
         if isinstance(exclude, str):
             exclude = [exclude]
         disabled_pipes = cls._resolve_component_status(
