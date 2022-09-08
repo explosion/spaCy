@@ -1,72 +1,55 @@
 import re
+import pkg_resources
 from pathlib import Path
+
+from .setup import INSTALL_REQUIRES
 
 
 def test_build_dependencies():
     # Check that library requirements are pinned exactly the same across different setup files.
-    # TODO: correct checks for numpy rather than ignoring
     libs_ignore_requirements = [
-        "pytest",
-        "pytest-timeout",
-        "mock",
+        "black",
+        "cython",
         "flake8",
         "hypothesis",
-        "pre-commit",
-        "black",
+        "ml-datasets",
+        "mock",
         "mypy",
+        "numpy",  # added dynamically to setup
+        "pre-commit",
+        "pytest",
+        "pytest-timeout",
         "types-dataclasses",
         "types-mock",
         "types-requests",
         "types-setuptools",
     ]
-    # ignore language-specific packages that shouldn't be installed by all
-    libs_ignore_setup = [
-        "fugashi",
-        "natto-py",
-        "pythainlp",
-        "sudachipy",
-        "sudachidict_core",
-        "spacy-pkuseg",
-        "thinc-apple-ops",
-    ]
 
-    # check requirements.txt
+    # load requirements.txt
     req_dict = {}
 
     root_dir = Path(__file__).parent
     req_file = root_dir / "requirements.txt"
     with req_file.open() as f:
-        lines = f.readlines()
-        for line in lines:
-            line = line.strip()
-            if not line.startswith("#"):
-                lib, v = _parse_req(line)
-                if lib and lib not in libs_ignore_requirements:
-                    req_dict[lib] = v
-    # check setup.cfg and compare to requirements.txt
+        for r in pkg_resources.parse_requirements(f):
+            if r.key not in libs_ignore_requirements:
+                req_dict[r.key] = r
+    # check setup.py and compare to requirements.txt
     # also fails when there are missing or additional libs
-    setup_file = root_dir / "setup.cfg"
-    with setup_file.open() as f:
-        lines = f.readlines()
-
     setup_keys = set()
-    for line in lines:
-        line = line.strip()
-        if not line.startswith("#"):
-            lib, v = _parse_req(line)
-            if lib and not lib.startswith("cupy") and lib not in libs_ignore_setup:
-                req_v = req_dict.get(lib, None)
-                assert (
-                    req_v is not None
-                ), "{} in setup.cfg but not in requirements.txt".format(lib)
-                assert (lib + v) == (lib + req_v), (
-                    "{} has different version in setup.cfg and in requirements.txt: "
-                    "{} and {} respectively".format(lib, v, req_v)
-                )
-                setup_keys.add(lib)
-    assert sorted(setup_keys) == sorted(
-        req_dict.keys()
-    )  # if fail: requirements.txt contains a lib not in setup.cfg
+    for setup_req in pkg_resources.parse_requirements(INSTALL_REQUIRES):
+        lib = setup_req.key
+        req_req = req_dict.get(lib, None)
+        assert req_req is not None, "{} in setup.py but not in requirements.txt".format(
+            lib
+        )
+        assert req_req == setup_req, (
+            "{} has different version in setup.py and in requirements.txt: "
+            "{} and {} respectively".format(lib, setup_req, req_req)
+        )
+        setup_keys.add(lib)
+    # if fail: requirements.txt contains a lib not in setup.py
+    assert setup_keys == set(req_dict.keys())
 
     # check pyproject.toml and compare the versions of the libs to requirements.txt
     # does not fail when there are missing or additional libs
@@ -78,10 +61,11 @@ def test_build_dependencies():
         if not line.startswith("#"):
             lib, v = _parse_req(line)
             if lib and lib not in libs_ignore_requirements:
-                req_v = req_dict.get(lib, None)
-                assert (lib + v) == (lib + req_v), (
+                pyproject_req = pkg_resources.Requirement.parse(line)
+                req_req = req_dict.get(lib, None)
+                assert req_req == pyproject_req, (
                     "{} has different version in pyproject.toml and in requirements.txt: "
-                    "{} and {} respectively".format(lib, v, req_v)
+                    "{} and {} respectively".format(lib, pyproject_req, req_req)
                 )
 
 

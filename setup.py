@@ -22,6 +22,32 @@ PACKAGE_ROOT = ROOT / "spacy"
 Options.docstrings = True
 
 PACKAGES = find_packages()
+MIN_NUMPY_VERSION = "1.15.0"
+INSTALL_REQUIRES = [
+    # Our libraries
+    "spacy-legacy>=3.0.10,<3.1.0",
+    "spacy-loggers>=1.0.0,<2.0.0",
+    "murmurhash>=0.28.0,<1.1.0",
+    "cymem>=2.0.2,<2.1.0",
+    "preshed>=3.0.2,<3.1.0",
+    "thinc>=8.1.0,<8.2.0",
+    "wasabi>=0.9.1,<1.1.0",
+    "srsly>=2.4.3,<3.0.0",
+    "catalogue>=2.0.6,<2.1.0",
+    # Third-party dependencies
+    # numpy will be added dynamically below
+    "typer>=0.3.0,<0.5.0",
+    "pathy>=0.3.5",
+    "tqdm>=4.38.0,<5.0.0",
+    "requests>=2.13.0,<3.0.0",
+    "pydantic>=1.7.4,!=1.8,!=1.8.1,<1.10.0",
+    "langcodes>=3.2.0,<4.0.0",
+    "jinja2",
+    # Official Python utilities
+    "setuptools",
+    "packaging>=20.0",
+    'typing_extensions>=3.7.4.1,<4.2.0; python_version < "3.8"',
+]
 MOD_NAMES = [
     "spacy.training.alignment_array",
     "spacy.training.example",
@@ -80,7 +106,7 @@ COMPILER_DIRECTIVES = {
 }
 # Files to copy into the package that are otherwise not included
 COPY_FILES = {
-    ROOT / "setup.cfg": PACKAGE_ROOT / "tests" / "package",
+    ROOT / "setup.py": PACKAGE_ROOT / "tests" / "package",
     ROOT / "pyproject.toml": PACKAGE_ROOT / "tests" / "package",
     ROOT / "requirements.txt": PACKAGE_ROOT / "tests" / "package",
 }
@@ -200,6 +226,13 @@ def setup_package():
             shutil.copy(str(copy_file), str(target_dir))
             print(f"Copied {copy_file} -> {target_dir}")
 
+    install_requires = list(INSTALL_REQUIRES)
+    try:
+        min_numpy_version = numpy.__version__
+    except Exception:
+        min_numpy_version = MIN_NUMPY_VERSION
+    install_requires.append(f"numpy>={min_numpy_version}")
+
     include_dirs = [
         numpy.get_include(),
         get_python_inc(plat_specific=True),
@@ -222,6 +255,7 @@ def setup_package():
         name="spacy",
         packages=PACKAGES,
         version=about["__version__"],
+        install_requires=install_requires,
         ext_modules=ext_modules,
         cmdclass={"build_ext": build_ext_subclass},
         package_data={"": ["*.pyx", "*.pxd", "*.pxi"]},
