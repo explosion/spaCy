@@ -676,17 +676,19 @@ def debug_data(
         trees_train: Set[str] = gold_train_data["lemmatizer_trees"]
         trees_dev: Set[str] = gold_dev_data["lemmatizer_trees"]
 
-        # This is necessary context if someone is attempting to interpret whether the
+        # This is necessary context when someone is attempting to interpret whether the
         # number of trees exclusively in the dev set is meaningful.
         msg.info(f"{len(trees_train)} lemmatizer trees generated from training data.")
         msg.info(f"{len(trees_dev)} lemmatizer trees generated from dev data.")
+
         dev_not_train = trees_dev - trees_train
         if len(dev_not_train) != 0:
             msg.warn(
                 f"{len(dev_not_train)} lemmatizer trees were found exclusively in the dev data."
             )
         else:
-            # Would we ever expect this case? It seems like it would be pretty rare.
+            # Would we ever expect this case? It seems like it would be pretty rare,
+            # and we might actually want a warning?
             msg.good("All trees in dev data present in training data.")
 
         if gold_train_data["n_low_cardinality_lemmas"] > 0:
@@ -694,14 +696,14 @@ def debug_data(
                 f"{gold_train_data['n_low_cardinality_lemmas']} docs with 1 or 0 unique lemmas."
             )
         else:
-            msg.good("Training docs have sufficient unique lemmas")
+            msg.good("All training docs meet lemma uniqueness requirements.")
 
         if gold_train_data["n_low_cardinality_lemmas"] > 0:
             msg.warn(
                 f"{gold_dev_data['n_low_cardinality_lemmas']} docs with 1 or 0 unique lemmas."
             )
         else:
-            msg.good("Dev docs have sufficient unique lemmas")
+            msg.good("All dev docs meet lemma uniqueness requirements.")
 
     msg.divider("Summary")
     good_counts = msg.counts[MESSAGES.GOOD]
