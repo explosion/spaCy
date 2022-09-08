@@ -106,7 +106,7 @@ def test_overfitting_IO():
 
 
 def test_save_activations():
-    # Simple test to try and quickly overfit the senter - ensuring the ML models work correctly
+    # Test if activations are correctly added to Doc when requested.
     nlp = English()
     senter = cast(TrainablePipe, nlp.add_pipe("senter"))
 

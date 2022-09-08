@@ -214,7 +214,7 @@ def test_overfitting_IO():
 
 
 def test_save_activations():
-    # Simple test to try and quickly overfit the tagger - ensuring the ML models work correctly
+    # Test if activations are correctly added to Doc when requested.
     nlp = English()
     tagger = cast(TrainablePipe, nlp.add_pipe("tagger"))
     train_examples = []

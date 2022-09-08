@@ -422,7 +422,7 @@ def test_set_candidates():
 
 
 def test_save_activations():
-    # Simple test to try and quickly overfit the spancat component - ensuring the ML models work correctly
+    # Test if activations are correctly added to Doc when requested.
     nlp = English()
     spancat = nlp.add_pipe("spancat", config={"spans_key": SPAN_KEY})
     train_examples = make_examples(nlp)
