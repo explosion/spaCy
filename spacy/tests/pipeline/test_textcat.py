@@ -875,7 +875,6 @@ def test_textcat_multi_threshold():
 
 
 def test_save_activations():
-    fix_random_seed(0)
     nlp = English()
     textcat = cast(TrainablePipe, nlp.add_pipe("textcat"))
 
@@ -895,7 +894,6 @@ def test_save_activations():
 
 
 def test_save_activations_multi():
-    fix_random_seed(0)
     nlp = English()
     textcat = cast(TrainablePipe, nlp.add_pipe("textcat_multilabel"))
 
