@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict, Sequence, Any, Iterable
+from typing import Optional, List, Dict, Sequence, Any, Iterable, Union
 from pathlib import Path
 from wasabi import msg
 from wasabi.util import locale_escape
@@ -167,6 +167,7 @@ def run_commands(
         when you want to run the command more like a function.
     """
     for c in commands:
+        command: Union[str, List[str]]
         if is_windows:
             # On Windows we don't rewrite the command because there's no
             # reliable way to split and reassemble it
