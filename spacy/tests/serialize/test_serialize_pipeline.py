@@ -404,7 +404,8 @@ def test_serialize_pipeline_disable_enable():
     assert nlp3.component_names == ["ner", "tagger"]
     with make_tempdir() as d:
         nlp3.to_disk(d)
-        nlp4 = spacy.load(d, disable=["ner"])
+        with pytest.warns(UserWarning):
+            nlp4 = spacy.load(d, disable=["ner"])
     assert nlp4.pipe_names == ["tagger"]
     assert nlp4.component_names == ["ner", "tagger"]
     assert nlp4.disabled == ["ner"]
