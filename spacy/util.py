@@ -954,23 +954,36 @@ def run_command(
         when you want to run the command more like a function.
     RETURNS (Optional[CompletedProcess]): The process object.
     """
-    if isinstance(command, str):
-        # On Windows, it's possible for the split here to be different from what
-        # will actually be used for execution, but it will *usually* be correct,
-        # and is only used in debugging output if a command failed.
-        cmd_list = shlex.split(command, posix=True)
-        cmd_str = command
+
+    # The actual command to execute
+    cmd_to_run = None
+    # these are used for debugging
+    cmd_str = None
+    tool = None
+
+    if is_windows:
+        # On Windows we can pass a list or string. In this case we'll just pass
+        # what we're given.
+        cmd_to_run = command
+        if isinstance(command, str):
+            cmd_str = command
+        else:  # list
+            # TODO list2cmdline is an intentionally undocumented internal Python
+            # function, check if we want to use this.
+            cmd_str = subprocess.list2cmdline(command)
+            tool = command[0]
     else:
-        cmd_list = command
-        # As above, this will usually but not always be correct on Windows, but
-        # is only used for debugging purposes.
-        if hasattr(shlex, "join"):
-            cmd_str = shlex.join(command)  # type: ignore
-        else:
-            # shlex.join is more correct, but is only available in 3.8+
-            cmd_str = " ".join(command)
+        # on Posix systems we should pass a list of strings
+        if isinstance(command, str):
+            cmd_str = command
+            cmd_to_run = shlex.split(command, posix=True)
+            tool = cmd_to_run[0]
+        else:  # list
+            cmd_to_run = command
+            tool = command[0]
+            # This is the same as shlex.join, added in Py 3.8
+            cmd_str = " ".join(shlex.quote(arg) for arg in command)
     try:
-        cmd_to_run = command if is_windows else cmd_list
         ret = subprocess.run(
             cmd_to_run,
             env=os.environ.copy(),
@@ -983,9 +996,17 @@ def run_command(
     except FileNotFoundError:
         # Indicates the *command* wasn't found, it's an error before the command
         # is run.
+
+        if tool is None:
+            # On Windows we may be unable to get the executable name.
+            tool_check = ""
+        else:
+            tool_check = f" Do you have {tool} installed?"
+
         raise FileNotFoundError(
-            Errors.E970.format(str_command=cmd_str, tool=cmd_list[0])
+            Errors.E970.format(str_command=cmd_str, msg=tool_check)
         ) from None
+
     if ret.returncode != 0 and capture:
         message = f"Error running command:\n\n{cmd_str}\n\n"
         message += f"Subprocess exited with status {ret.returncode}"
