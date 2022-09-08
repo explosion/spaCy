@@ -311,8 +311,9 @@ class SpanCategorizer(TrainablePipe):
         labels = self.labels
 
         indices = activations["indices"]
+        scores = activations["scores"]
         assert isinstance(indices, Ragged)
-        scores = cast(Floats2d, activations["scores"])
+        assert isinstance(scores, Floats2d)
 
         offset = 0
         for i, doc in enumerate(docs):
