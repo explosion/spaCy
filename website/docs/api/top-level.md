@@ -887,7 +887,7 @@ backprop passes.
 | `backprop_color` | Color identifier for backpropagation passes. Defaults to `-1`. ~~int~~                                                       |
 | **CREATES**      | A function that takes the current `nlp` and wraps forward/backprop passes in NVTX ranges. ~~Callable[[Language], Language]~~ |
 
-### spacy.models_and_pipes_with_nvtx_range.v1 {#models_and_pipes_with_nvtx_range tag="registered function"}
+### spacy.models_and_pipes_with_nvtx_range.v1 {#models_and_pipes_with_nvtx_range tag="registered function" new="3.4"}
 
 > #### Example config
 >
