@@ -1896,9 +1896,9 @@ class Language:
                     )
                 return value
 
-        # Resolve disabled/enabled settings.
         if isinstance(exclude, str):
             exclude = [exclude]
+        # Resolve disabled/enabled settings.
         disabled_pipes = cls._resolve_component_status(
             fetch_pipes_status(disable, "disabled"),
             fetch_pipes_status(enable, "enabled"),
