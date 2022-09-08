@@ -11,7 +11,6 @@ from copy import deepcopy
 from pathlib import Path
 import warnings
 
-import wasabi
 from thinc.api import get_current_ops, Config, CupyOps, Optimizer
 import srsly
 import multiprocessing as mp
@@ -1888,11 +1887,12 @@ class Language:
             else:
                 value = [value] if isinstance(value, str) else value
                 if len(config["nlp"].get(key, [])):
-                    wasabi.msg.warn(
-                        title=f"'{key}' in config is being overwritten",
-                        text=f"Argument {key[:-1]} with value {value} is used instead of the in the config defined "
-                        f"value of {config['nlp'][key]}. Be aware that this might affect other components in your "
-                        f"pipeline.",
+                    warnings.warn(
+                        Warnings.W123.format(
+                            arg=key[:-1],
+                            arg_value=value,
+                            config_value=config["nlp"][key],
+                        )
                     )
                 return value
 

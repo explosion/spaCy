@@ -623,12 +623,13 @@ def test_issue11443():
         # Expected to succeed without warning due to the lack of a conflicting config option.
         spacy.load(tmp_dir, enable=["tagger"])
         # Expected to succeed with a warning, as disable=[] should override the config setting.
-        spacy.load(
-            tmp_dir,
-            enable=["tagger"],
-            disable=[],
-            config={"nlp": {"disabled": ["senter"]}},
-        )
+        with pytest.warns(UserWarning):
+            spacy.load(
+                tmp_dir,
+                enable=["tagger"],
+                disable=[],
+                config={"nlp": {"disabled": ["senter"]}},
+            )
 
 
 def test_load_disable_enable():
