@@ -9,6 +9,7 @@ from ..attrs cimport attr_id_t
 
 cdef attr_t get_token_attr(const TokenC* token, attr_id_t feat_name) nogil
 cdef attr_t get_token_attr_for_matcher(const TokenC* token, attr_id_t feat_name) nogil
+cdef np.ndarray init_array(int num_tokens, int length)
 
 
 ctypedef const LexemeC* const_Lexeme_ptr
@@ -69,3 +70,4 @@ cdef class Doc:
     cdef int push_back(self, LexemeOrToken lex_or_tok, bint has_space) except -1
 
     cpdef np.ndarray to_array(self, object features)
+

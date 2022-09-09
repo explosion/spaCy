@@ -94,6 +94,12 @@ cdef attr_t get_token_attr_for_matcher(const TokenC* token, attr_id_t feat_name)
         return get_token_attr(token, feat_name)
 
 
+cdef np.ndarray init_array(int num_tokens, int length):
+    cdef np.ndarray output = numpy.zeros((num_tokens, length), dtype='uint8')
+    output.fill(255)
+    return output
+
+
 class SetEntsDefault(str, Enum):
     blocked = "blocked"
     missing = "missing"
@@ -1733,6 +1739,42 @@ cdef class Doc:
                     end_idx -= 1
                     j += 1
         return output
+
+    def get_suffixes(self, int min_length, int max_length, special_chars:str, int sc_min_length, int sc_max_length):
+        """
+        TODO
+        """
+        byte_strings = [token.orth_.encode('utf8') for token in self]
+        special_chars_enc = special_chars.encode('utf8')
+        cdef num_tokens = len(byte_strings)
+        outputs = []        
+        for length in range(min_length, max_length+1):
+            outputs.append(init_array(num_tokens, length))
+        for length in range(sc_min_length, sc_max_length+1):
+            outputs.append(init_array(num_tokens, length))
+        
+        cdef int token_i, sc_char_i, idx
+        cdef bytes byte_string
+        cdef unsigned char utf8_char
+        cdef num_normal_arr = 1 + max_length - min_length
+        cdef num_sc_arr = 1 + sc_max_length - sc_min_length
+        for token_i, byte_string in enumerate(byte_strings):
+            sc_char_i = 0
+            idx = 0
+            while (idx < max_length or sc_char_i < sc_max_length) and idx < len(byte_string):
+                this_char = <unsigned char>byte_string[len(byte_string) - (1 + idx)]
+                for normal_arr_i in range(num_normal_arr - 1, -1, -1):
+                    if idx >= normal_arr_i + min_length:
+                        break
+                    outputs[normal_arr_i][token_i, idx] = this_char
+                if this_char in special_chars_enc:
+                    for sc_arr_i in range(num_sc_arr - 1, -1, -1):
+                        if sc_char_i >= sc_arr_i + sc_min_length:
+                            break
+                        outputs[sc_arr_i + num_normal_arr][token_i, sc_char_i] = this_char
+                    sc_char_i += 1
+                idx += 1
+        return outputs
 
     @staticmethod
     def _get_array_attrs():
