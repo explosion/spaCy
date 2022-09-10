@@ -81,6 +81,6 @@
         "url": "https://github.com/explosion/spaCy/issues"
     },
     "engines": {
-        "node": "10"
+        "node": "16"
     }
 }
