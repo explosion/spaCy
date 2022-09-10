@@ -79,5 +79,8 @@
     },
     "bugs": {
         "url": "https://github.com/explosion/spaCy/issues"
+    },
+    "engines": {
+        "node": "10"
     }
 }

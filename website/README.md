@@ -527,14 +527,13 @@ sit amet dignissim justo congue.
 
 ## Setup and installation {#setup}
 
-Before running the setup, make sure your versions of
-[Node](https://nodejs.org/en/) and [npm](https://www.npmjs.com/) are up to date.
-Node v10.15 or later is required.
-
 ```bash
 # Clone the repository
 git clone https://github.com/explosion/spaCy
 cd spaCy/website
+
+# Switch to the correct Node version
+nvm use
 
 # Install Gatsby's command-line tool
 npm install --global gatsby-cli
