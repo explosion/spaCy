@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react'
 
 import Icon from './icon'
-import classes from '../styles/copy.module.sass'
+import * as classes from '../styles/copy.module.sass'
 
 export function copyToClipboard(ref, callback) {
     const isClient = typeof window !== 'undefined'

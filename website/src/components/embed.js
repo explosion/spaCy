@@ -7,7 +7,7 @@ import Button from './button'
 import { InlineCode } from './code'
 import { markdownToReact } from './util'
 
-import classes from '../styles/embed.module.sass'
+import * as classes from '../styles/embed.module.sass'
 
 const YouTube = ({ id, ratio = '16x9', className }) => {
     const embedClassNames = classNames(classes.root, classes.responsive, className, {

@@ -3,7 +3,7 @@ import PropTypes from 'prop-types'
 import classNames from 'classnames'
 import { navigate } from 'gatsby'
 
-import classes from '../styles/dropdown.module.sass'
+import * as classes from '../styles/dropdown.module.sass'
 
 export default function Dropdown({ defaultValue, className, onChange, children }) {
     const defaultOnChange = ({ target }) => {

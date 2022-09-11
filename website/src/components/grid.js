@@ -2,7 +2,7 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import classNames from 'classnames'
 
-import classes from '../styles/grid.module.sass'
+import * as classes from '../styles/grid.module.sass'
 
 export default function Grid({
     cols = 1,

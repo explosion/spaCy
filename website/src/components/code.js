@@ -11,7 +11,7 @@ import CUSTOM_TYPES from '../../meta/type-annotations.json'
 import { isString, htmlToReact } from './util'
 import Link, { OptionalLink } from './link'
 import GitHubCode from './github'
-import classes from '../styles/code.module.sass'
+import * as classes from '../styles/code.module.sass'
 
 const WRAP_THRESHOLD = 30
 const CLI_GROUPS = ['init', 'debug', 'project', 'ray', 'huggingface-hub']

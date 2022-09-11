@@ -5,7 +5,7 @@ import Icon from './icon'
 import Link from './link'
 import { Label } from './typography'
 
-import classes from '../styles/readnext.module.sass'
+import * as classes from '../styles/readnext.module.sass'
 
 export default function ReadNext({ title, to }) {
     return (

@@ -7,7 +7,7 @@ import patternGreen from '../images/pattern_green.jpg'
 import patternPurple from '../images/pattern_purple.jpg'
 import patternNightly from '../images/pattern_nightly.jpg'
 import patternLegacy from '../images/pattern_legacy.jpg'
-import classes from '../styles/main.module.sass'
+import * as classes from '../styles/main.module.sass'
 
 const patterns = {
     blue: patternBlue,

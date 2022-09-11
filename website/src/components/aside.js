@@ -1,7 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 
-import classes from '../styles/aside.module.sass'
+import * as classes from '../styles/aside.module.sass'
 
 export default function Aside({ title, children }) {
     return (

@@ -4,7 +4,7 @@ import classNames from 'classnames'
 
 import { isString } from './util'
 import Icon from './icon'
-import classes from '../styles/tag.module.sass'
+import * as classes from '../styles/tag.module.sass'
 
 const MIN_VERSION = 3
 

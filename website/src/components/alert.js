@@ -3,7 +3,7 @@ import PropTypes from 'prop-types'
 import classNames from 'classnames'
 
 import Icon from './icon'
-import classes from '../styles/alert.module.sass'
+import * as classes from '../styles/alert.module.sass'
 
 export default function Alert({ title, icon, variant, closeOnClick = true, children }) {
     const [visible, setVisible] = useState(true)

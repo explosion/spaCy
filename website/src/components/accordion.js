@@ -3,7 +3,7 @@ import PropTypes from 'prop-types'
 import classNames from 'classnames'
 
 import Link from './link'
-import classes from '../styles/accordion.module.sass'
+import * as classes from '../styles/accordion.module.sass'
 
 export default function Accordion({ title, id, expanded = false, spaced = false, children }) {
     const [isExpanded, setIsExpanded] = useState(true)

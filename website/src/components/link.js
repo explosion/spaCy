@@ -4,7 +4,7 @@ import { Link as GatsbyLink } from 'gatsby'
 import classNames from 'classnames'
 
 import Icon from './icon'
-import classes from '../styles/link.module.sass'
+import * as classes from '../styles/link.module.sass'
 import { isString, isImage } from './util'
 
 const internalRegex = /(http(s?)):\/\/(prodi.gy|spacy.io|irl.spacy.io|explosion.ai|course.spacy.io)/gi

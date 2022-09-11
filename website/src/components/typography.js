@@ -6,7 +6,7 @@ import Tag from './tag'
 import Button from './button'
 import Icon from './icon'
 import { isString, github, headingTextClassName } from './util'
-import classes from '../styles/typography.module.sass'
+import * as classes from '../styles/typography.module.sass'
 
 export const H1 = ({ Component = 'h1', className, ...props }) => (
     <Headline

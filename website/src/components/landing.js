@@ -14,7 +14,7 @@ import Button from './button'
 import CodeBlock from './code'
 import { H1, H2, H3 } from './typography'
 import Link from './link'
-import classes from '../styles/landing.module.sass'
+import * as classes from '../styles/landing.module.sass'
 
 function getPattern(nightly, legacy) {
     if (nightly) return { pattern: patternNightly, overlay: overlayNightly }

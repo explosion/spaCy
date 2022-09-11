@@ -1,7 +1,7 @@
 import React from 'react'
 import classNames from 'classnames'
 
-import classes from '../styles/list.module.sass'
+import * as classes from '../styles/list.module.sass'
 import { replaceEmoji } from './icon'
 
 export const Ol = props => <ol className={classes.ol} {...props} />

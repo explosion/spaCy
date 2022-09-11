@@ -5,7 +5,7 @@ import highlightCode from 'gatsby-remark-prismjs/highlight-code.js'
 
 import Icon from './icon'
 import Link from './link'
-import classes from '../styles/code.module.sass'
+import * as classes from '../styles/code.module.sass'
 
 const defaultErrorMsg = `Can't fetch code example from GitHub :(
 

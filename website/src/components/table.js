@@ -3,7 +3,7 @@ import classNames from 'classnames'
 
 import { replaceEmoji } from './icon'
 import { isString } from './util'
-import classes from '../styles/table.module.sass'
+import * as classes from '../styles/table.module.sass'
 
 const FOOT_ROW_REGEX = /^(RETURNS|YIELDS|CREATES|PRINTS|EXECUTES|UPLOADS|DOWNLOADS)/
 

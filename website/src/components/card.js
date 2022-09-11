@@ -4,7 +4,7 @@ import classNames from 'classnames'
 
 import Link from './link'
 import { H5 } from './typography'
-import classes from '../styles/card.module.sass'
+import * as classes from '../styles/card.module.sass'
 
 export default function Card({ title, to, image, header, small, onClick, children }) {
     return (

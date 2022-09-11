@@ -9,7 +9,7 @@ import { InlineCode } from './code'
 import { H1, Label, InlineList, Help } from './typography'
 import Icon from './icon'
 
-import classes from '../styles/title.module.sass'
+import * as classes from '../styles/title.module.sass'
 
 const MetaItem = ({ label, url, children, help }) => (
     <span>

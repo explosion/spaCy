@@ -7,7 +7,7 @@ import Section from './section'
 import Icon from './icon'
 import { H2 } from './typography'
 import { copyToClipboard } from './copy'
-import classes from '../styles/quickstart.module.sass'
+import * as classes from '../styles/quickstart.module.sass'
 
 function getNewChecked(optionId, checkedForId, multiple) {
     if (!multiple) return [optionId]

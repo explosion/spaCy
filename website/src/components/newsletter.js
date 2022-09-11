@@ -1,7 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 
-import classes from '../styles/newsletter.module.sass'
+import * as classes from '../styles/newsletter.module.sass'
 
 export default function Newsletter({ user, id, list }) {
     const action = `//${user}.list-manage.com/subscribe/post?u=${id}&amp;id=${list}`

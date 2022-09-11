@@ -4,7 +4,7 @@ import classNames from 'classnames'
 import { useInView } from 'react-intersection-observer'
 import { window } from 'browser-monads'
 
-import classes from '../styles/section.module.sass'
+import * as classes from '../styles/section.module.sass'
 
 export default function Section({ id, className, ...props }) {
     const sectionClassNames = classNames(classes.root, className)

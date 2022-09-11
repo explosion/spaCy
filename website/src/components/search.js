@@ -3,7 +3,7 @@ import PropTypes from 'prop-types'
 import { window } from 'browser-monads'
 
 import Icon from './icon'
-import classes from '../styles/search.module.sass'
+import * as classes from '../styles/search.module.sass'
 
 export default function Search({ id = 'docsearch', placeholder = 'Search docs', settings = {} }) {
     const { apiKey, indexName, appId } = settings

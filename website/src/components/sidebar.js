@@ -6,7 +6,7 @@ import { window } from 'browser-monads'
 import Link from './link'
 import Tag from './tag'
 import Dropdown from './dropdown'
-import classes from '../styles/sidebar.module.sass'
+import * as classes from '../styles/sidebar.module.sass'
 
 function getActiveHeading(items, slug) {
     if (/^\/?universe/.test(slug)) return 'Universe'

@@ -3,7 +3,7 @@ import PropTypes from 'prop-types'
 import classNames from 'classnames'
 
 import Icon from './icon'
-import classes from '../styles/infobox.module.sass'
+import * as classes from '../styles/infobox.module.sass'
 
 export default function Infobox({
     title,

@@ -8,7 +8,7 @@ import Icon from './icon'
 import Dropdown from './dropdown'
 import { github } from './util'
 import Logo from '-!svg-react-loader!../images/logo.svg'
-import classes from '../styles/navigation.module.sass'
+import * as classes from '../styles/navigation.module.sass'
 
 const NavigationDropdown = ({ items = [], section }) => {
     const active = items.find(({ text }) => text.toLowerCase() === section)

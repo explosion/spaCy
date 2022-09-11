@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { document, window } from 'browser-monads'
 
-import classes from '../styles/progress.module.sass'
+import * as classes from '../styles/progress.module.sass'
 
 function getOffset() {
     const height = Math.max(

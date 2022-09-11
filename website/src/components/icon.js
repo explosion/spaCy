@@ -26,7 +26,7 @@ import DownloadIcon from '-!svg-react-loader!../images/icons/download.svg'
 import PackageIcon from '-!svg-react-loader!../images/icons/package.svg'
 
 import { isString } from './util'
-import classes from '../styles/icon.module.sass'
+import * as classes from '../styles/icon.module.sass'
 
 const icons = {
     github: GitHubIcon,
