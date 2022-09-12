@@ -6,7 +6,7 @@
     height: 0
 
 @each $ratio1, $ratio2 in (16, 9), (4, 3)
-    &.ratio#{$ratio1}x#{$ratio2}
+    .ratio#{$ratio1}x#{$ratio2}
         padding-bottom: (100% * $ratio2 / $ratio1)
 
 .iframe
