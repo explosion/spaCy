@@ -1,6 +1,6 @@
 import pytest
 from spacy.morphology import Morphology
-from spacy.strings import StringStore, get_string_id  # type: ignore
+from spacy.strings import StringStore, get_string_id
 
 
 @pytest.fixture
