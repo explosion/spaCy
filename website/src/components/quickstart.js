@@ -152,10 +152,7 @@ const Quickstart = ({
                                                     type={optionType}
                                                     className={classNames(
                                                         classes.input,
-                                                        classes[optionType],
-                                                        {
-                                                            [classes.long]: options.length >= 4,
-                                                        }
+                                                        classes[optionType]
                                                     )}
                                                     name={id}
                                                     id={`quickstart-${option.id}`}
@@ -167,11 +164,7 @@ const Quickstart = ({
                                                     htmlFor={`quickstart-${option.id}`}
                                                 >
                                                     {option.title}
-                                                    {option.meta && (
-                                                        <span className={classes.meta}>
-                                                            {option.meta}
-                                                        </span>
-                                                    )}
+                                                    {option.meta && <span>{option.meta}</span>}
                                                     {option.help && (
                                                         <span
                                                             data-tooltip={option.help}
