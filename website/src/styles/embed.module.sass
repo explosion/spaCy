@@ -1,3 +1,5 @@
+@use 'sass:math'
+
 .root
     margin-bottom: var(--spacing-md)
 
@@ -7,7 +9,7 @@
 
 @each $ratio1, $ratio2 in (16, 9), (4, 3)
     .ratio#{$ratio1}x#{$ratio2}
-        padding-bottom: (100% * $ratio2 / $ratio1)
+        padding-bottom: (100% * math.div($ratio2, $ratio1))
 
 .iframe
     position: absolute

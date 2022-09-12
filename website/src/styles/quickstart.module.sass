@@ -1,3 +1,4 @@
+@use 'sass:math'
 @import base
 
 .root
@@ -82,7 +83,7 @@
         vertical-align: middle
         margin-right: 0.5rem
         cursor: pointer
-        border-radius: $size / 4
+        border-radius: math.div($size, 4)
         background: var(--color-back)
         position: relative
         top: -1px
