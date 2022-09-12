@@ -15,7 +15,6 @@ from .. import util
 _DEFAULTS = {
     "average": "micro",
     "n_trials": 10,
-    "beta": 1,
     "use_gpu": -1,
     "gold_preproc": False,
 }
@@ -33,7 +32,6 @@ def find_threshold_cli(
     threshold_key: str = Arg(..., help="Key of threshold attribute in component's configuration"),
     scores_key: str = Arg(..., help="Name of score to metric to optimize"),
     n_trials: int = Opt(_DEFAULTS["n_trials"], "--n_trials", "-n", help="Number of trials to determine optimal thresholds"),
-    beta: float = Opt(_DEFAULTS["beta"], "--beta", help="Beta for F1 calculation. Ignored if different metric is used"),
     code_path: Optional[Path] = Opt(None, "--code", "-c", help="Path to Python file with additional code (registered functions) to be imported"),
     use_gpu: int = Opt(_DEFAULTS["use_gpu"], "--gpu-id", "-g", help="GPU ID or -1 for CPU"),
     gold_preproc: bool = Opt(_DEFAULTS["gold_preproc"], "--gold-preproc", "-G", help="Use gold preprocessing"),
@@ -48,7 +46,6 @@ def find_threshold_cli(
     threshold_key (str): Key of threshold attribute in component's configuration.
     scores_key (str): Name of score to metric to optimize.
     n_trials (int): Number of trials to determine optimal thresholds
-    beta (float): Beta for F-score calculation.
     code_path (Optional[Path]): Path to Python file with additional code (registered functions) to be imported.
     use_gpu (int): GPU ID or -1 for CPU.
     gold_preproc (bool): Whether to use gold preprocessing. Gold preprocessing helps the annotations align to the
@@ -66,7 +63,6 @@ def find_threshold_cli(
         threshold_key=threshold_key,
         scores_key=scores_key,
         n_trials=n_trials,
-        beta=beta,
         use_gpu=use_gpu,
         gold_preproc=gold_preproc,
         silent=False,
@@ -81,7 +77,6 @@ def find_threshold(
     scores_key: str,
     *,
     n_trials: int = _DEFAULTS["n_trials"],  # type: ignore
-    beta: float = _DEFAULTS["beta"],  # type: ignore
     use_gpu: int = _DEFAULTS["use_gpu"],  # type: ignore
     gold_preproc: bool = _DEFAULTS["gold_preproc"],  # type: ignore
     silent: bool = True,
@@ -94,7 +89,6 @@ def find_threshold(
     threshold_key (str): Key of threshold attribute in component's configuration.
     scores_key (str): Name of score to metric to optimize.
     n_trials (int): Number of trials to determine optimal thresholds.
-    beta (float): Beta for F-score calculation.
     use_gpu (int): GPU ID or -1 for CPU.
     gold_preproc (bool): Whether to use gold preprocessing. Gold preprocessing helps the annotations align to the
         tokenization, and may result in sequences of more consistent length. However, it may reduce runtime accuracy due
@@ -121,7 +115,7 @@ def find_threshold(
     if not silent:
         wasabi.msg.info(
             title=f"Optimizing for {scores_key} for component '{pipe_name}' with {n_trials} "
-            f"trials and beta = {beta}."
+            f"trials."
         )
 
     # Load evaluation corpus.

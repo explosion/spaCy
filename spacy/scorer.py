@@ -21,13 +21,10 @@ MISSING_VALUES = frozenset([None, 0, ""])
 class PRFScore:
     """A precision / recall / F score."""
 
-    def __init__(
-        self, *, tp: int = 0, fp: int = 0, fn: int = 0, beta: float = 1
-    ) -> None:
+    def __init__(self, *, tp: int = 0, fp: int = 0, fn: int = 0) -> None:
         self.tp = tp
         self.fp = fp
         self.fn = fn
-        self.beta = beta
 
     def __len__(self) -> int:
         return self.tp + self.fp + self.fn
@@ -39,12 +36,10 @@ class PRFScore:
         return self
 
     def __add__(self, other):
-        assert self.beta == other.beta
         return PRFScore(
             tp=self.tp + other.tp,
             fp=self.fp + other.fp,
             fn=self.fn + other.fn,
-            beta=self.beta,
         )
 
     def score_set(self, cand: set, gold: set) -> None:
@@ -64,7 +59,7 @@ class PRFScore:
     def fscore(self) -> float:
         p = self.precision
         r = self.recall
-        return (1 + self.beta**2) * ((p * r) / ((self.beta**2 * p) + r + 1e-100))
+        return 2 * ((p * r) / (p + r + 1e-100))
 
     def to_dict(self) -> Dict[str, float]:
         return {"p": self.precision, "r": self.recall, "f": self.fscore}
