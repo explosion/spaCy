@@ -212,8 +212,8 @@ class Warnings(metaclass=ErrorsWithCodes):
     W121 = ("Attempting to trace non-existent method '{method}' in pipe '{pipe}'")
     W122 = ("Couldn't trace method '{method}' in pipe '{pipe}'. This can happen if the pipe class "
             "is a Cython extension type.")
-    W123 = ("Argument {arg} with value {arg_value} is used instead of the in the config defined value of "
-            "{config_value}. Be aware that this might affect other components in your pipeline.")
+    W123 = ("Argument {arg} with value {arg_value} is used instead of {config_value} as specified in the config. Be "
+            "aware that this might affect other components in your pipeline.")
 
 
 class Errors(metaclass=ErrorsWithCodes):
