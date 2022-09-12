@@ -9,7 +9,7 @@ const DEFAULT_PLATFORM = 'x86'
 const DEFAULT_MODELS = ['en']
 const DEFAULT_OPT = 'efficiency'
 const DEFAULT_HARDWARE = 'cpu'
-const DEFAULT_CUDA = 'cuda-wheel'
+const DEFAULT_CUDA = 'cuda-autodetect'
 const CUDA = {
     '8.0': 'cuda80',
     '9.0': 'cuda90',
@@ -17,7 +17,7 @@ const CUDA = {
     '9.2': 'cuda92',
     '10.0': 'cuda100',
     '10.1': 'cuda101',
-    '10.2, CUDA 11.0+': 'cuda-wheel',
+    '10.2, 11.0+': 'cuda-autodetect',
 }
 const LANG_EXTRAS = ['ja'] // only for languages with models
 
