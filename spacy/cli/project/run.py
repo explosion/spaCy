@@ -53,10 +53,9 @@ def project_run(
     dry: bool = False,
     capture: bool = False,
 ) -> None:
-    """Run a named script defined in the project.yml. If the script is part
-    of the default pipeline (defined in the "run" section), DVC is used to
-    execute the command, so it can determine whether to rerun it. It then
-    calls into "exec" to execute it.
+    """Run a named script defined in the project.yml. If the script is a
+    command rather than a workflow, it is checked against the project lock file
+    to see if it should be re-run.
 
     project_dir (Path): Path to project directory.
     subcommand (str): Name of command to run.
