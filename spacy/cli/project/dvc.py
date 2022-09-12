@@ -105,6 +105,14 @@ def update_dvc_config(
         dvc_config_path.unlink()
     dvc_commands = []
     config_commands = {cmd["name"]: cmd for cmd in config.get("commands", [])}
+
+    # some flags that apply to every command
+    flags = []
+    if verbose:
+        flags.append("--verbose")
+    if silent:
+        flags.append("--quiet")
+
     for name in workflows[workflow]:
         command = config_commands[name]
         deps = command.get("deps", [])
@@ -118,39 +126,21 @@ def update_dvc_config(
         deps_cmd = [c for cl in [["-d", p] for p in deps] for c in cl]
         outputs_cmd = [c for cl in [["-o", p] for p in outputs] for c in cl]
         outputs_nc_cmd = [c for cl in [["-O", p] for p in outputs_no_cache] for c in cl]
-        dvc_cmd = ["run", "-n", name, "-w", str(path), "--no-exec"]
+
+        dvc_cmd = ["run", *flags, "-n", name, "-w", str(path), "--no-exec"]
         if command.get("no_skip"):
             dvc_cmd.append("--always-changed")
         full_cmd = [*dvc_cmd, *deps_cmd, *outputs_cmd, *outputs_nc_cmd, *project_cmd]
         dvc_commands.append(join_command(full_cmd))
     with working_dir(path):
-        dvc_flags = {"--verbose": verbose, "--quiet": silent}
-        run_dvc_commands(dvc_commands, flags=dvc_flags)
+        for c in dvc_commands:
+            dvc_command = ["dvc", *c]
+            run_command(dvc_command)
     with dvc_config_path.open("r+", encoding="utf8") as f:
         content = f.read()
         f.seek(0, 0)
         f.write(f"# {config_hash}\n{DVC_CONFIG_COMMENT}\n{content}")
     return True
-
-
-def run_dvc_commands(
-    commands: Iterable[str] = SimpleFrozenList(), flags: Dict[str, bool] = {}
-) -> None:
-    """Run a sequence of DVC commands in a subprocess, in order.
-
-    commands (List[str]): The string commands without the leading "dvc".
-    flags (Dict[str, bool]): Conditional flags to be added to command. Makes it
-        easier to pass flags like --quiet that depend on a variable or
-        command-line setting while avoiding lots of nested conditionals.
-    """
-    for c in commands:
-        command = split_command(c)
-        dvc_command = ["dvc", *command]
-        # Add the flags if they are set to True
-        for flag, is_active in flags.items():
-            if is_active:
-                dvc_command.append(flag)
-        run_command(dvc_command)
 
 
 def check_workflows(workflows: List[str], workflow: Optional[str] = None) -> None:
