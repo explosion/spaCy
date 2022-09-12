@@ -92,19 +92,19 @@ Iterate over the strings in the store, in order.
 
 ## StringStore.items {#iter tag="method" new="4"}
 
-Iterate over the hash-string pairs in the store, in order.
+Iterate over the string-hash pairs in the store, in order.
 
 > #### Example
 >
 > ```python
 > stringstore = StringStore(["apple", "orange"])
 > all_strings = list(stringstore.items())
-> assert all_strings == [(8566208034543834098, "apple"), (2208928596161743350, "orange")]
+> assert all_strings == [("apple", 8566208034543834098), ("orange", 2208928596161743350)]
 > ```
 
-| Name       | Description                                     |
-| ---------- | ----------------------------------------------- |
-| **YIELDS** | A hash-string in the store. ~~Tuple[int, str]~~ |
+| Name       | Description                                          |
+| ---------- | ---------------------------------------------------- |
+| **YIELDS** | A string-hash pair in the store. ~~Tuple[str, int]~~ |
 
 ## StringStore.add {#add tag="method"}
 

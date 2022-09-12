@@ -62,7 +62,7 @@ cdef class StringStore:
 
         YIELDS (str): A string in the store.
         """
-        for _, string in self.items():
+        for string, _ in self.items():
             yield string
 
     def __reduce__(self):
@@ -117,14 +117,14 @@ cdef class StringStore:
     def items(self) -> Tuple[int, str]:
         """Iterate over the stored strings and their hashes in order.
 
-        YIELDS (int, str): A hash, string pair.
+        YIELDS (str, int): A string, hash pair.
         """
         cdef int i
         cdef hash_t key
         for i in range(self.keys.size()):
             key = self.keys[i]
             utf8str = <Utf8Str*>self.key_map.get(key)
-            yield (key, self._decode_str_repr(utf8str))
+            yield (self._decode_str_repr(utf8str), key)
 
     def to_disk(self, path):
         """Save the current state to a directory.
