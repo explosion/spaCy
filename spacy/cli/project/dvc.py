@@ -147,7 +147,8 @@ def run_dvc_commands(
         dvc_command = ["dvc", *c]
         # Add the flags if they are set to True
         for flag, is_active in flags.items():
-            dvc_command.append(flag)
+            if is_active:
+                dvc_command.append(flag)
         run_command(dvc_command)
 
 
