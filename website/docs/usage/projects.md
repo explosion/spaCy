@@ -150,7 +150,7 @@ script).
 
 By default `spacy projects run` checks your installed dependencies to verify
 that your environment is properly set up and aligns with the project's
-`requirement.txt`, if there is one. If missing or conflicting dependencies are
+`requirements.txt`, if there is one. If missing or conflicting dependencies are
 detected, a corresponding warning is displayed. If you'd like to disable the
 dependency check, set `check_requirements: False` in your project's
 `project.yml`.
