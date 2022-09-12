@@ -23,11 +23,11 @@ both documents.
 > ```python
 > from spacy.tokens import Doc
 > from spacy.training import Example
->
-> words = ["hello", "world", "!"]
-> spaces = [True, False, False]
-> predicted = Doc(nlp.vocab, words=words, spaces=spaces)
-> reference = parse_gold_doc(my_data)
+> pred_words = ["Apply", "some", "sunscreen", "unless", "you", "can", "not"]
+> gold_words = ["Apply", "some", "sun", "screen", "unless", "you", "cannot"]
+> gold_tags = ["VERB", "DET", "NOUN", "NOUN", "SCONJ", "PRON", "VERB"]
+> predicted = Doc(nlp.vocab, words=pred_words)
+> reference = Doc(nlp.vocab, words=gold_words, tags=gold_tags)
 > example = Example(predicted, reference)
 > ```
 
