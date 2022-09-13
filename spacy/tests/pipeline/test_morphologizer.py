@@ -1,3 +1,4 @@
+from typing import cast
 import pytest
 from numpy.testing import assert_equal
 
@@ -7,6 +8,7 @@ from spacy.lang.en import English
 from spacy.language import Language
 from spacy.tests.util import make_tempdir
 from spacy.morphology import Morphology
+from spacy.pipeline import TrainablePipe
 from spacy.attrs import MORPH
 from spacy.tokens import Doc
 
@@ -197,3 +199,25 @@ def test_overfitting_IO():
     gold_pos_tags = ["NOUN", "NOUN", "NOUN", "NOUN"]
     assert [str(t.morph) for t in doc] == gold_morphs
     assert [t.pos_ for t in doc] == gold_pos_tags
+
+
+def test_save_activations():
+    nlp = English()
+    morphologizer = cast(TrainablePipe, nlp.add_pipe("morphologizer"))
+    train_examples = []
+    for inst in TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(inst[0]), inst[1]))
+    nlp.initialize(get_examples=lambda: train_examples)
+
+    doc = nlp("This is a test.")
+    assert "morphologizer" not in doc.activations
+
+    morphologizer.save_activations = True
+    doc = nlp("This is a test.")
+    assert "morphologizer" in doc.activations
+    assert set(doc.activations["morphologizer"].keys()) == {
+        "label_ids",
+        "probabilities",
+    }
+    assert doc.activations["morphologizer"]["probabilities"].shape == (5, 6)
+    assert doc.activations["morphologizer"]["label_ids"].shape == (5,)

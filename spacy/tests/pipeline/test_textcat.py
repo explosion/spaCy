@@ -1,3 +1,4 @@
+from typing import cast
 import random
 
 import numpy.random
@@ -11,7 +12,7 @@ from spacy import util
 from spacy.cli.evaluate import print_prf_per_type, print_textcats_auc_per_cat
 from spacy.lang.en import English
 from spacy.language import Language
-from spacy.pipeline import TextCategorizer
+from spacy.pipeline import TextCategorizer, TrainablePipe
 from spacy.pipeline.textcat import single_label_bow_config
 from spacy.pipeline.textcat import single_label_cnn_config
 from spacy.pipeline.textcat import single_label_default_config
@@ -285,7 +286,7 @@ def test_issue9904():
     nlp.initialize(get_examples)
 
     examples = get_examples()
-    scores = textcat.predict([eg.predicted for eg in examples])
+    scores = textcat.predict([eg.predicted for eg in examples])["probabilities"]
 
     loss = textcat.get_loss(examples, scores)[0]
     loss_double_bs = textcat.get_loss(examples * 2, scores.repeat(2, axis=0))[0]
@@ -871,3 +872,41 @@ def test_textcat_multi_threshold():
 
     scores = nlp.evaluate(train_examples, scorer_cfg={"threshold": 0})
     assert scores["cats_f_per_type"]["POSITIVE"]["r"] == 1.0
+
+
+def test_save_activations():
+    nlp = English()
+    textcat = cast(TrainablePipe, nlp.add_pipe("textcat"))
+
+    train_examples = []
+    for text, annotations in TRAIN_DATA_SINGLE_LABEL:
+        train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
+    nlp.initialize(get_examples=lambda: train_examples)
+    nO = textcat.model.get_dim("nO")
+
+    doc = nlp("This is a test.")
+    assert "textcat" not in doc.activations
+
+    textcat.save_activations = True
+    doc = nlp("This is a test.")
+    assert list(doc.activations["textcat"].keys()) == ["probabilities"]
+    assert doc.activations["textcat"]["probabilities"].shape == (nO,)
+
+
+def test_save_activations_multi():
+    nlp = English()
+    textcat = cast(TrainablePipe, nlp.add_pipe("textcat_multilabel"))
+
+    train_examples = []
+    for text, annotations in TRAIN_DATA_MULTI_LABEL:
+        train_examples.append(Example.from_dict(nlp.make_doc(text), annotations))
+    nlp.initialize(get_examples=lambda: train_examples)
+    nO = textcat.model.get_dim("nO")
+
+    doc = nlp("This is a test.")
+    assert "textcat_multilabel" not in doc.activations
+
+    textcat.save_activations = True
+    doc = nlp("This is a test.")
+    assert list(doc.activations["textcat_multilabel"].keys()) == ["probabilities"]
+    assert doc.activations["textcat_multilabel"]["probabilities"].shape == (nO,)
