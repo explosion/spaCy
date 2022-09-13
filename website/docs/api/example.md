@@ -286,10 +286,12 @@ Calculate alignment tables between two tokenizations.
 
 ### Alignment attributes {#alignment-attributes"}
 
-Alignment attributes are managed using the `AlignmentArray`, which is a simplified version of Thinc's [Ragged](https://thinc.ai/docs/api-types#ragged) type that only supports the `data` and `length` attributes. 
+Alignment attributes are managed using the `AlignmentArray`, which is a
+simplified version of Thinc's [Ragged](https://thinc.ai/docs/api-types#ragged)
+type that only supports the `data` and `length` attributes.
 
-| Name  | Description                                                           |
-| ----- | --------------------------------------------------------------------- |
+| Name  | Description                                                                           |
+| ----- | ------------------------------------------------------------------------------------- |
 | `x2y` | The `AlignmentArray` object holding the alignment from `x` to `y`. ~~AlignmentArray~~ |
 | `y2x` | The `AlignmentArray` object holding the alignment from `y` to `x`. ~~AlignmentArray~~ |
 
@@ -311,10 +313,10 @@ tokenizations add up to the same string. For example, you'll be able to align
 > spacy_tokens = ["obama", "'s", "podcast"]
 > alignment = Alignment.from_strings(bert_tokens, spacy_tokens)
 > a2b = alignment.x2y
-> assert list(a2b.dataXd) == [0, 1, 1, 2]
+> assert list(a2b.data) == [0, 1, 1, 2]
 > ```
 >
-> If `a2b.dataXd[1] == a2b.dataXd[2] == 1`, that means that `A[1]` (`"'"`) and
+> If `a2b.data[1] == a2b.data[2] == 1`, that means that `A[1]` (`"'"`) and
 > `A[2]` (`"s"`) both align to `B[1]` (`"'s"`).
 
 ### Alignment.from_strings {#classmethod tag="function"}

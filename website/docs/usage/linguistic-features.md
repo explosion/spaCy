@@ -1435,8 +1435,8 @@ above:
   input: `"i"`, `"listened"`, `"to"` and `"obama"`.
 - The value of `x2y.data[6]` is `5`, which means that `other_tokens[6]`
   (`"podcasts"`) aligns to `spacy_tokens[5]` (also `"podcasts"`).
-- `x2y.data[4]` and `x2y.data[5]` are both `4`, which means that both tokens
-  4 and 5 of `other_tokens` (`"'"` and `"s"`) align to token 4 of `spacy_tokens`
+- `x2y.data[4]` and `x2y.data[5]` are both `4`, which means that both tokens 4
+  and 5 of `other_tokens` (`"'"` and `"s"`) align to token 4 of `spacy_tokens`
   (`"'s"`).
 
 <Infobox title="Important note" variant="warning">
