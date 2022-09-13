@@ -286,10 +286,12 @@ Calculate alignment tables between two tokenizations.
 
 ### Alignment attributes {#alignment-attributes"}
 
+Alignment attributes are managed using the `AlignmentArray`, which is a simplified version of Thinc's [Ragged](https://thinc.ai/docs/api-types#ragged) type that only supports the `data` and `length` attributes. 
+
 | Name  | Description                                                           |
 | ----- | --------------------------------------------------------------------- |
-| `x2y` | The `Ragged` object holding the alignment from `x` to `y`. ~~Ragged~~ |
-| `y2x` | The `Ragged` object holding the alignment from `y` to `x`. ~~Ragged~~ |
+| `x2y` | The `AlignmentArray` object holding the alignment from `x` to `y`. ~~AlignmentArray~~ |
+| `y2x` | The `AlignmentArray` object holding the alignment from `y` to `x`. ~~AlignmentArray~~ |
 
 <Infobox title="Important note" variant="warning">
 
