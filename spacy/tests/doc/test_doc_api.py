@@ -975,3 +975,40 @@ def test_doc_spans_setdefault(en_tokenizer):
     assert len(doc.spans["key2"]) == 1
     doc.spans.setdefault("key3", default=SpanGroup(doc, spans=[doc[0:1], doc[1:2]]))
     assert len(doc.spans["key3"]) == 2
+
+
+def test_get_affixes_good_case(en_tokenizer):
+    doc = en_tokenizer("spaCy✨ and Prodigy")
+    prefixes = doc.get_affixes(False, 1, 5, "", 2, 3)
+    suffixes = doc.get_affixes(True, 2, 6, "xx✨rP", 2, 3)
+    assert prefixes[0][3, 3, 6] == suffixes[0][3, 3, 6]
+    assert prefixes[0][3, 3, 7] == suffixes[0][3, 3, 7]
+    assert prefixes[0][3, 3, 4] == suffixes[0][3, 3, 8]
+    assert prefixes[0][3, 3, 5] == suffixes[0][3, 3, 9]
+    assert (prefixes[0][0, :, 2:] == 0).all()
+    assert not (suffixes[0][0, :, 2:] == 0).all()
+    assert (suffixes[0][0, :, 4:] == 0).all()
+    assert (prefixes[0][1, :, 4:] == 0).all()
+    assert (prefixes[0][:, 1, 2:] == 0).all()
+    assert not (suffixes[0][1, :, 4:] == 0).all()
+    assert (suffixes[0][1, :, 6:] == 0).all()
+    assert prefixes[0][0][0][0] == 0
+    assert prefixes[0][0][1][0] != 0
+    assert (prefixes[1] == 0).all()
+    assert (suffixes[1][0][0] == 0).all()
+    assert suffixes[1][0][1].tolist() == [39, 40, 0, 0]
+    assert suffixes[1][0][3].tolist() == [0, 114, 0, 80]
+
+
+def test_get_affixes_4_byte_normal_char(en_tokenizer):
+    doc = en_tokenizer("and𐌞")
+    suffixes = doc.get_affixes(True, 2, 6, "a", 1, 2)
+    assert (suffixes[0][:, 0, 2] == 216).all()
+    assert suffixes[0][3, 0, 9] == 97
+    assert suffixes[1][0, 0, 1] == 97
+
+
+def test_get_affixes_4_byte_special_char(en_tokenizer):
+    doc = en_tokenizer("and𐌞")
+    with pytest.raises(ValueError):
+        doc.get_affixes(True, 2, 6, "𐌞", 2, 3)

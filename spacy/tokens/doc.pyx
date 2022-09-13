@@ -1743,6 +1743,8 @@ cdef class Doc:
 
         special_chars_enc = special_chars.encode('utf-16BE')
         cdef int sc_test_len = len(special_chars)
+        if sc_test_len * 2 != len(special_chars_enc):
+            raise ValueError(Errors.E1044)
 
         cdef np.ndarray[np.uint8_t, ndim=3] outputs = numpy.zeros(
             (len_end - len_start, num_tokens, (len_end - 1) * 2), dtype="uint8")
