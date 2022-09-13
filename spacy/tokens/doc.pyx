@@ -1738,47 +1738,44 @@ cdef class Doc:
         """
         TODO
         """
-        byte_strings = [token.orth_.encode('utf-16BE') for token in self]
-        cdef int num_tokens = len(byte_strings)
-
-        special_chars_enc = special_chars.encode('utf-16BE')
-        cdef int sc_test_len = len(special_chars)
-        if sc_test_len * 2 != len(special_chars_enc):
-            raise ValueError(Errors.E1044)
-
-        cdef np.ndarray[np.uint8_t, ndim=3] outputs = numpy.zeros(
-            (len_end - len_start, num_tokens, (len_end - 1) * 2), dtype="uint8")
-        cdef np.ndarray[np.uint8_t, ndim=3] sc_outputs = numpy.zeros(
-            (sc_len_end - sc_len_start, num_tokens, (sc_len_end - 1) * 2), dtype="uint8")
-
         cdef bytes byte_string
-        cdef char this_char_part, next_char_part, this_test_char_part, next_test_char_part
-        cdef int len_byte_string, idx, sc_char_idx, sc_test_idx, this_len, this_sc_len
+        cdef np.uint16_t this_char
+        cdef int idx, len_byte_string, sc_char_idx, sc_test_idx, this_len, this_sc_len
 
-        for token_idx, byte_string in enumerate(byte_strings):
+        cdef int num_tokens = len(self)
+        cdef bytes sc_enc = special_chars.lower().encode("utf-16BE")
+        cdef int sc_test_len = len(special_chars)
+        if sc_test_len * 2 != len(sc_enc):
+            raise ValueError(Errors.E1044)
+        cdef np.ndarray[np.uint16_t, ndim=1] scs = numpy.empty((sc_test_len,), dtype="uint16")
+        for idx in range(sc_test_len):
+             scs[idx] = (sc_enc[idx*2] << 8) + sc_enc[idx * 2 + 1]
+
+        cdef np.ndarray[np.uint16_t, ndim=3] outputs = numpy.zeros(
+            (len_end - len_start, num_tokens, len_end - 1), dtype="uint16")
+        cdef np.ndarray[np.uint16_t, ndim=3] sc_outputs = numpy.zeros(
+            (sc_len_end - sc_len_start, num_tokens, sc_len_end - 1), dtype="uint16")
+
+        for token_idx in range(num_tokens):
+            byte_string = self[token_idx].lower_.encode("utf-16BE")
             idx = 0
             sc_char_idx = 0
             len_byte_string = len(byte_string)
 
             while (idx < len_end - 1 or sc_char_idx < sc_len_end - 1) and idx * 2 < len_byte_string:
                 char_first_byte_idx = len_byte_string - 2 * (idx + 1) if suffs_not_prefs else idx * 2
-                this_char_part = byte_string[char_first_byte_idx]
-                next_char_part = byte_string[char_first_byte_idx + 1]
+                this_char = (byte_string[char_first_byte_idx] << 8) + byte_string[char_first_byte_idx + 1]
                 for this_len in range(len_end-1, len_start-1, -1):
                     if idx >= this_len:
                         break
-                    outputs[this_len - len_start, token_idx, idx * 2] = this_char_part
-                    outputs[this_len - len_start, token_idx, idx * 2 + 1] = next_char_part
+                    outputs[this_len - len_start, token_idx, idx] = this_char
                 sc_test_idx = 0
                 while sc_test_len > sc_test_idx:
-                    this_test_char_part = special_chars_enc[sc_test_idx*2]
-                    next_test_char_part = special_chars_enc[sc_test_idx*2 + 1]
-                    if this_char_part == this_test_char_part and next_char_part == next_test_char_part:
+                    if this_char == scs[sc_test_idx]:
                         for this_sc_len in range(sc_len_end-1, sc_len_start-1, -1):
                             if sc_char_idx >= this_sc_len:
                                 break
-                            sc_outputs[this_sc_len - sc_len_start, token_idx, sc_char_idx * 2] = this_char_part
-                            sc_outputs[this_sc_len - sc_len_start, token_idx, sc_char_idx * 2 + 1] = next_char_part
+                            sc_outputs[this_sc_len - sc_len_start, token_idx, sc_char_idx] = this_char
                         sc_char_idx += 1
                         break
                     sc_test_idx += 1
