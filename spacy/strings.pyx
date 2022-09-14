@@ -57,7 +57,7 @@ cdef class StringStore:
         else:
             return self._map.get(str_hash) is not NULL
 
-    def __iter__(self) -> str:
+    def __iter__(self) -> Iterable[str]:
         """Iterate over the strings in the store in insertion order.
 
         YIELDS (str): A string in the store.
@@ -113,7 +113,7 @@ cdef class StringStore:
         else:
             return self._get_interned_str(string_or_hash)
 
-    def items(self) -> Tuple[int, str]:
+    def items(self) -> Iterable[Tuple[str, int]]:
         """Iterate over the stored strings and their hashes in insertion order.
 
         YIELDS (str, int): A string, hash pair.
@@ -129,7 +129,7 @@ cdef class StringStore:
             utf8str = <Utf8Str*>self._map.get(key)
             yield (self._decode_str_repr(utf8str), key)
 
-    def keys(self) -> str:
+    def keys(self) -> Iterable[str]:
         """Iterate over the stored strings in insertion order.
 
         YIELDS (str): A string in the store.
@@ -137,7 +137,7 @@ cdef class StringStore:
         for string, _ in self.items():
             yield string
 
-    def values(self) -> int:
+    def values(self) -> Iterable[int]:
         """Iterate over the stored strings hashes in insertion order.
 
         YIELDS (int): A string hash in the store.
