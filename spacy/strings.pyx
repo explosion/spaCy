@@ -113,7 +113,7 @@ cdef class StringStore:
         else:
             return self._get_interned_str(string_or_hash)
 
-    def items(self) -> Iterable[Tuple[str, int]]:
+    def items(self) -> Collection[Tuple[str, int]]:
         """Iterate over the stored strings and their hashes in insertion order.
 
         RETURNS: An iterable collection of string-hash pairs.
@@ -125,9 +125,9 @@ cdef class StringStore:
         def as_pairs(string: str, str_hash: int) -> Tuple[str, int]:
             return (string, str_hash)
 
-        return iter(self._transform_to_list(as_pairs))
+        return self._transform_to_list(as_pairs)
 
-    def keys(self) -> Iterable[str]:
+    def keys(self) -> Collection[str]:
         """Iterate over the stored strings in insertion order.
 
         RETURNS: An iterable collection of strings.
@@ -135,9 +135,9 @@ cdef class StringStore:
         def as_strings(string: str, str_hash: int) -> str:
             return string
 
-        return iter(self._transform_to_list(as_strings))
+        return self._transform_to_list(as_strings)
 
-    def values(self) -> Iterable[int]:
+    def values(self) -> Collection[int]:
         """Iterate over the stored strings hashes in insertion order.
 
         RETURNS: An iterable collection of string hashs.
@@ -145,7 +145,7 @@ cdef class StringStore:
         def as_hashes(string: str, str_hash: int) -> int:
             return str_hash
 
-        return iter(self._transform_to_list(as_hashes))
+        return self._transform_to_list(as_hashes)
 
     def to_disk(self, path):
         """Save the current state to a directory.
