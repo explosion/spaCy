@@ -988,9 +988,7 @@ def _get_kl_divergence(p: Counter, q: Counter) -> float:
 
 def _format_number(number: Union[int, float], ndigits: int = 2) -> str:
     if isinstance(number, float):
-        return "{:.2f}".format(number, 2)
-    elif isinstance(number, int):
-        return str(number)
+        return f"{number:.{ndigits}f}"
     else:
         return str(number)
 
