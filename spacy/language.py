@@ -1871,13 +1871,19 @@ class Language:
         if vocab_b is not None:
             nlp.vocab.from_bytes(vocab_b)
 
-        def fetch_pipes_status(
-            value: Union[str, Iterable[str]], key: str
-        ) -> Iterable[str]:
+        # Resolve disabled/enabled settings.
+        if isinstance(disable, str):
+            disable = [disable]
+        if isinstance(enable, str):
+            enable = [enable]
+        if isinstance(exclude, str):
+            exclude = [exclude]
+
+        def fetch_pipes_status(value: Iterable[str], key: str) -> Iterable[str]:
             """Fetch value for `enable` or `disable` w.r.t. the specified config and passed arguments passed to
             .load(). If both arguments and config specified values for this field, the passed arguments take precedence
             and a warning is printed.
-            value (Optional[Union[str, Iterable[str]]]): Passed value for `enable` or `disable`.
+            value (Iterable[str]): Passed value for `enable` or `disable`.
             key (str): Key for field in config (either "enabled" or "disabled").
             RETURN (Iterable[str]):
             """
@@ -1885,7 +1891,6 @@ class Language:
             if isinstance(value, SimpleFrozenList) and len(value) == 0:
                 return config["nlp"].get(key, [])
             else:
-                value = [value] if isinstance(value, str) else value
                 if len(config["nlp"].get(key, [])):
                     warnings.warn(
                         Warnings.W123.format(
@@ -1896,9 +1901,6 @@ class Language:
                     )
                 return value
 
-        if isinstance(exclude, str):
-            exclude = [exclude]
-        # Resolve disabled/enabled settings.
         disabled_pipes = cls._resolve_component_status(
             fetch_pipes_status(disable, "disabled"),
             fetch_pipes_status(enable, "enabled"),
