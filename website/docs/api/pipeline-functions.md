@@ -169,7 +169,9 @@ in version 0.6.0. It exposes the component via
 [entry points](/usage/saving-loading/#entry-points), so if you have the package
 installed, using `factory = "span_cleaner"` in your
 [training config](/usage/training#config) or `nlp.add_pipe("span_cleaner")` will
-work out-of-the-box. </Infobox>
+work out-of-the-box.
+
+</Infobox>
 
 > #### Example
 >
@@ -183,4 +185,4 @@ work out-of-the-box. </Infobox>
 | Setting     | Description                                                                                                               |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------- |
 | `prefix`    | A prefix to check `SpanGroup` keys for. Any matching groups will be removed. Defaults to `"coref_head_clusters"`. ~~str~~ |
-| **RETURNS** | The modified `Doc` with the modified attributes. ~~Doc~~                                                                  |
+| **RETURNS** | The modified `Doc` with any matching spans removed. ~~Doc~~                                                               |
