@@ -9,6 +9,7 @@ from ..attrs cimport attr_id_t
 
 cdef attr_t get_token_attr(const TokenC* token, attr_id_t feat_name) nogil
 cdef attr_t get_token_attr_for_matcher(const TokenC* token, attr_id_t feat_name) nogil
+cdef const unsigned char[:] get_utf16_memoryview(str unicode_string, bint check_2_bytes)
 
 
 ctypedef const LexemeC* const_Lexeme_ptr
