@@ -1755,6 +1755,7 @@ cdef class Doc:
             token_attrs = [t.orth_ for t in self]
         else:
             token_attrs = [t.lower_ for t in self]
+            special_chars = special_chars.lower()
         cdef unsigned int sc_len = len(special_chars)
         cdef const unsigned char[:] sc_bytes = get_utf16_memoryview(special_chars, True)
         cdef np.ndarray[np.uint16_t, ndim=1] scs = numpy.ndarray((sc_len,), buffer=sc_bytes, dtype="uint16")

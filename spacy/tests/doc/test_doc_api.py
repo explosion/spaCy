@@ -983,7 +983,7 @@ def test_doc_spans_setdefault(en_tokenizer):
 def test_get_affixes_good_case(en_tokenizer, case_sensitive):
     doc = en_tokenizer("spaCy✨ and Prodigy")
     prefixes = doc.get_affixes(False, case_sensitive, 1, 5, "", 2, 3)
-    suffixes = doc.get_affixes(True, case_sensitive, 2, 6, "xx✨rp", 2, 3)
+    suffixes = doc.get_affixes(True, case_sensitive, 2, 6, "xx✨rP", 2, 3)
     assert prefixes[0][3, 3, 3] == suffixes[0][3, 3, 3]
     assert prefixes[0][3, 3, 2] == suffixes[0][3, 3, 4]
     assert (prefixes[0][0, :, 1:] == 0).all()
@@ -995,9 +995,15 @@ def test_get_affixes_good_case(en_tokenizer, case_sensitive):
     assert (suffixes[0][1, :, 3:] == 0).all()
     assert suffixes[1][0][1].tolist() == [10024, 0]
     if case_sensitive:
+        assert suffixes[1][0][3].tolist() == [114, 80]
+    else:
+        assert suffixes[1][0][3].tolist() == [114, 112]
+    suffixes = doc.get_affixes(True, case_sensitive, 2, 6, "xx✨rp", 2, 3)
+    if case_sensitive:
         assert suffixes[1][0][3].tolist() == [114, 0]
     else:
         assert suffixes[1][0][3].tolist() == [114, 112]
+    
 
 
 def test_get_affixes_4_byte_normal_char(en_tokenizer):
