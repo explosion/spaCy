@@ -286,7 +286,7 @@ Calculate alignment tables between two tokenizations.
 
 ### Alignment attributes {#alignment-attributes"}
 
-Alignment attributes are managed using the `AlignmentArray`, which is a
+Alignment attributes are managed using `AlignmentArray`, which is a
 simplified version of Thinc's [Ragged](https://thinc.ai/docs/api-types#ragged)
 type that only supports the `data` and `length` attributes.
 
