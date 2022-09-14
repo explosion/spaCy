@@ -118,6 +118,10 @@ cdef class StringStore:
 
         YIELDS (str, int): A string, hash pair.
         """
+        # Even though we internally store the hashes as keys and the strings as
+        # values, we invert the order in the public API to keep it consistent with
+        # the implementation of the `__iter__` method (where we wish to iterate over
+        # the strings in the store).
         cdef int i
         cdef hash_t key
         for i in range(self._keys.size()):
