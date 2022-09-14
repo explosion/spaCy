@@ -27,7 +27,7 @@ cdef class StringStore:
         strings (iterable): A sequence of unicode strings to add to the store.
         """
         self.mem = Pool()
-        self.key_map = PreshMap()
+        self._map = PreshMap()
         if strings is not None:
             for string in strings:
                 self.add(string)
@@ -55,15 +55,14 @@ cdef class StringStore:
         if str_hash in SYMBOLS_BY_INT:
             return True
         else:
-            return self.key_map.get(str_hash) is not NULL
+            return self._map.get(str_hash) is not NULL
 
     def __iter__(self) -> str:
-        """Iterate over the strings in the store, in order.
+        """Iterate over the strings in the store in insertion order.
 
         YIELDS (str): A string in the store.
         """
-        for string, _ in self.items():
-            yield string
+        return self.keys()
 
     def __reduce__(self):
         strings = list(self)
@@ -74,7 +73,7 @@ cdef class StringStore:
 
         RETURNS (int): The number of strings in the store.
         """
-        return self.keys.size()
+        return self._keys.size()
 
     def add(self, string: str) -> int:
         """Add a string to the StringStore.
@@ -115,15 +114,15 @@ cdef class StringStore:
             return self._get_interned_str(string_or_hash)
 
     def items(self) -> Tuple[int, str]:
-        """Iterate over the stored strings and their hashes in order.
+        """Iterate over the stored strings and their hashes in insertion order.
 
         YIELDS (str, int): A string, hash pair.
         """
         cdef int i
         cdef hash_t key
-        for i in range(self.keys.size()):
-            key = self.keys[i]
-            utf8str = <Utf8Str*>self.key_map.get(key)
+        for i in range(self._keys.size()):
+            key = self._keys[i]
+            utf8str = <Utf8Str*>self._map.get(key)
             yield (self._decode_str_repr(utf8str), key)
 
     def to_disk(self, path):
@@ -174,8 +173,8 @@ cdef class StringStore:
 
     def _reset_and_load(self, strings):
         self.mem = Pool()
-        self.key_map = PreshMap()
-        self.keys.clear()
+        self._map = PreshMap()
+        self._keys.clear()
         for string in strings:
             self.add(string)
 
@@ -192,7 +191,7 @@ cdef class StringStore:
         if symbol is not None:
             return symbol
 
-        utf8str = <Utf8Str*>self.key_map.get(str_hash)
+        utf8str = <Utf8Str*>self._map.get(str_hash)
         if utf8str is NULL:
             raise KeyError(Errors.E018.format(hash_value=str_hash))
         else:
@@ -203,13 +202,13 @@ cdef class StringStore:
         # 0 means missing, but we don't bother offsetting the index.
         chars = string.encode('utf-8')
         cdef hash_t key = hash64(<unsigned char*>chars, len(chars), 1)
-        cdef Utf8Str* value = <Utf8Str*>self.key_map.get(key)
+        cdef Utf8Str* value = <Utf8Str*>self._map.get(key)
         if value is not NULL:
             return key
 
         value = self._allocate_str_repr(<unsigned char*>chars, len(chars))
-        self.key_map.set(key, value)
-        self.keys.push_back(key)
+        self._map.set(key, value)
+        self._keys.push_back(key)
         return key
 
     cdef Utf8Str* _allocate_str_repr(self, const unsigned char* chars, uint32_t length) except *:

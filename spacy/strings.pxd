@@ -14,8 +14,8 @@ ctypedef union Utf8Str:
 
 cdef class StringStore:
     cdef Pool mem
-    cdef vector[hash_t] keys
-    cdef PreshMap key_map
+    cdef vector[hash_t] _keys
+    cdef PreshMap _map
 
     cdef hash_t _intern_str(self, str string)
     cdef Utf8Str* _allocate_str_repr(self, const unsigned char* chars, uint32_t length) except *
