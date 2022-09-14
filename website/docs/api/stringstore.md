@@ -76,7 +76,7 @@ Check whether a string or a hash is in the store.
 
 ## StringStore.\_\_iter\_\_ {#iter tag="method"}
 
-Iterate over the strings in the store, in order.
+Iterate over the stored strings in insertion order.
 
 > #### Example
 >
@@ -92,19 +92,51 @@ Iterate over the strings in the store, in order.
 
 ## StringStore.items {#iter tag="method" new="4"}
 
-Iterate over the string-hash pairs in the store, in order.
+Iterate over the stored string-hash pairs in insertion order.
 
 > #### Example
 >
 > ```python
 > stringstore = StringStore(["apple", "orange"])
-> all_strings = list(stringstore.items())
-> assert all_strings == [("apple", 8566208034543834098), ("orange", 2208928596161743350)]
+> all_strings_and_hashes = list(stringstore.items())
+> assert all_strings_and_hashes == [("apple", 8566208034543834098), ("orange", 2208928596161743350)]
 > ```
 
 | Name       | Description                                          |
 | ---------- | ---------------------------------------------------- |
 | **YIELDS** | A string-hash pair in the store. ~~Tuple[str, int]~~ |
+
+## StringStore.keys {#iter tag="method" new="4"}
+
+Iterate over the stored strings in insertion order.
+
+> #### Example
+>
+> ```python
+> stringstore = StringStore(["apple", "orange"])
+> all_strings = list(stringstore.keys())
+> assert all_strings == ["apple", "orange"]
+> ```
+
+| Name       | Description                    |
+| ---------- | ------------------------------ |
+| **YIELDS** | A string in the store. ~~str~~ |
+
+## StringStore.values {#iter tag="method" new="4"}
+
+Iterate over the stored string hashes in insertion order.
+
+> #### Example
+>
+> ```python
+> stringstore = StringStore(["apple", "orange"])
+> all_hashes = list(stringstore.values())
+> assert all_hashes == [8566208034543834098, 2208928596161743350]
+> ```
+
+| Name       | Description                         |
+| ---------- | ----------------------------------- |
+| **YIELDS** | A string hash in the store. ~~int~~ |
 
 ## StringStore.add {#add tag="method"}
 

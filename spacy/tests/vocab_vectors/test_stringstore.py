@@ -24,11 +24,14 @@ def test_stringstore_from_api_docs(stringstore):
     stringstore.add("orange")
     all_strings = [s for s in stringstore]
     assert all_strings == ["apple", "orange"]
+    assert all_strings == list(stringstore.keys())
     all_strings_and_hashes = list(stringstore.items())
     assert all_strings_and_hashes == [
         ("apple", 8566208034543834098),
         ("orange", 2208928596161743350),
     ]
+    all_hashes = list(stringstore.values())
+    assert all_hashes == [8566208034543834098, 2208928596161743350]
     banana_hash = stringstore.add("banana")
     assert len(stringstore) == 3
     assert banana_hash == 2525716904149915114

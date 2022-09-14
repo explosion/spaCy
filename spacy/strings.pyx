@@ -125,6 +125,22 @@ cdef class StringStore:
             utf8str = <Utf8Str*>self._map.get(key)
             yield (self._decode_str_repr(utf8str), key)
 
+    def keys(self) -> str:
+        """Iterate over the stored strings in insertion order.
+
+        YIELDS (str): A string in the store.
+        """
+        for string, _ in self.items():
+            yield string
+
+    def values(self) -> int:
+        """Iterate over the stored strings hashes in insertion order.
+
+        YIELDS (int): A string hash in the store.
+        """
+        for _, str_hash in self.items():
+            yield str_hash
+
     def to_disk(self, path):
         """Save the current state to a directory.
 
