@@ -849,7 +849,7 @@ class _FuzzyPredicate:
             value = token.vocab.strings[get_token_attr_for_matcher(token.c, self.attr)]
         if self.value == value:
             return True
-        elif self.distance and token.is_oov:
+        elif self.distance and token.is_oov and not token.is_space:
             return bool(levenshtein(self.value, value) <= self.distance)
         return False
 
@@ -924,7 +924,7 @@ class _SetPredicate:
         if self.predicate == "IN":
             if value in self.value:
                 return True
-            elif self.distance and token.is_oov:
+            elif self.distance and token.is_oov and not token.is_space:
                 for v in self.value:
                     if levenshtein(self.vocab.strings[value],
                                    self.vocab.strings[v]) <= self.distance:
@@ -933,7 +933,7 @@ class _SetPredicate:
         elif self.predicate == "NOT_IN":
             if value in self.value:
                 return False
-            elif self.distance and token.is_oov:
+            elif self.distance and token.is_oov and not token.is_space:
                 for v in self.value:
                     if levenshtein(self.vocab.strings[value],
                                    self.vocab.strings[v]) <= self.distance:
