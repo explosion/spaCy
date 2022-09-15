@@ -27,10 +27,11 @@ installed, using `factory = "experimental_span_resolver"` in your
 
 </Infobox>
 
-A `SpanResolver` component takes in tokens (represented as `Span` objects of length 1)
-and resolves them into `Span` objects of arbitrary length. The initial use case is as a
-post-processing step on word-level [coreference resolution](/api/coref). The
-input and output keys used to store `Span` objects are configurable.
+A `SpanResolver` component takes in tokens (represented as `Span` objects of
+length 1) and resolves them into `Span` objects of arbitrary length. The initial
+use case is as a post-processing step on word-level
+[coreference resolution](/api/coref). The input and output keys used to store
+`Span` objects are configurable.
 
 ## Assigned Attributes {#assigned-attributes}
 
