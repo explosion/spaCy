@@ -989,16 +989,16 @@ The `Coref` model architecture is a Thinc `Model`.
 > pooling = {"@layers":"reduce_mean.v1"}
 > ```
 
-The `SpanResolver` model architecture is a Thinc `Model`.
+The `SpanResolver` model architecture is a Thinc `Model`. Note that
+`MentionClusters` is `List[List[Tuple[int, int]]]`.
 
-| Name                      | Description                                                                                                                   |
-| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `tok2vec`                 | The [`tok2vec`](#tok2vec) layer of the model. ~~Model~~                                                                       |
-| `distance_embedding_size` | A representation of the distance between two candidates. ~~int~~                                                              |
-| `dropout`                 | The dropout to use internally. Unlike some Thinc models, this has separate dropout for the internal PyTorch layers. ~~float~~ |
-| `hidden_size`             | Size of the main internal layers. ~~int~~                                                                                     |
-| `conv_channels`           | The number of channels in the internal CNN. ~~int~~                                                                           |
-| `window_size`             | The number of neighboring tokens to consider in the internal CNN. `1` means consider one token on each side. ~~int~~          |
-| `max_distance`            | The longest possible length of a predicted span. ~~int~~                                                                      |
-| `prefix`                  | The prefix that indicates spans to use for input data. ~~string~~                                                             |
-| **CREATES**               | The model using the architecture. ~~Model[List[Doc], TupleFloats2d]~~                                                         |
+| Name                      | Description                                                                                                          |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `tok2vec`                 | The [`tok2vec`](#tok2vec) layer of the model. ~~Model~~                                                              |
+| `hidden_size`             | Size of the main internal layers. ~~int~~                                                                            |
+| `distance_embedding_size` | A representation of the distance between two candidates. ~~int~~                                                     |
+| `conv_channels`           | The number of channels in the internal CNN. ~~int~~                                                                  |
+| `window_size`             | The number of neighboring tokens to consider in the internal CNN. `1` means consider one token on each side. ~~int~~ |
+| `max_distance`            | The longest possible length of a predicted span. ~~int~~                                                             |
+| `prefix`                  | The prefix that indicates spans to use for input data. ~~string~~                                                    |
+| **CREATES**               | The model using the architecture. ~~Model[List[Doc], List[MentionClusters]]~~                                        |

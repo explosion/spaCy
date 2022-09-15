@@ -21,9 +21,9 @@ extension package
 [`spacy-experimental`](https://github.com/explosion/spacy-transformers) starting
 in version 0.6.0. It exposes the component via
 [entry points](/usage/saving-loading/#entry-points), so if you have the package
-installed, using `factory = "span_resolver"` in your
-[training config](/usage/training#config) or `nlp.add_pipe("span_resolver")`
-will work out-of-the-box.
+installed, using `factory = "experimental_span_resolver"` in your
+[training config](/usage/training#config) or
+`nlp.add_pipe("experimental_span_resolver")` will work out-of-the-box.
 
 </Infobox>
 
@@ -57,12 +57,14 @@ details on the architectures and their arguments and hyperparameters.
 > #### Example
 >
 > ```python
-> from spacy.pipeline.span_resolver import DEFAULT_span_resolver_MODEL
+> from spacy_experimental.coref.span_resolver_component import DEFAULT_SPAN_RESOLVER_MODEL
+> from spacy_experimental.coref.coref_util import DEFAULT_CLUSTER_PREFIX, DEFAULT_CLUSTER_HEAD_PREFIX
 > config={
->     "model": DEFAULT_span_resolver_MODEL,
->     "span_cluster_prefix": DEFAULT_CLUSTER_PREFIX,
+>     "model": DEFAULT_SPAN_RESOLVER_MODEL,
+>     "input_prefix": DEFAULT_CLUSTER_HEAD_PREFIX,
+>     "output_prefix": DEFAULT_CLUSTER_PREFIX,
 > },
-> nlp.add_pipe("span_resolver", config=config)
+> nlp.add_pipe("experimental_span_resolver", config=config)
 > ```
 
 | Setting         | Description                                                                                                                                            |
@@ -77,14 +79,14 @@ details on the architectures and their arguments and hyperparameters.
 >
 > ```python
 > # Construction via add_pipe with default model
-> span_resolver = nlp.add_pipe("span_resolver")
+> span_resolver = nlp.add_pipe("experimental_span_resolver")
 >
 > # Construction via add_pipe with custom model
 > config = {"model": {"@architectures": "my_span_resolver.v1"}}
-> span_resolver = nlp.add_pipe("span_resolver", config=config)
+> span_resolver = nlp.add_pipe("experimental_span_resolver", config=config)
 >
 > # Construction from class
-> from spacy.pipeline import SpanResolver
+> from spacy_experimental.coref.span_resolver_component import SpanResolver
 > span_resolver = SpanResolver(nlp.vocab, model)
 > ```
 
@@ -113,7 +115,7 @@ and [`set_annotations`](#set_annotations) methods.
 >
 > ```python
 > doc = nlp("This is a sentence.")
-> span_resolver = nlp.add_pipe("span_resolver")
+> span_resolver = nlp.add_pipe("experimental_span_resolver")
 > # This usually happens under the hood
 > processed = span_resolver(doc)
 > ```
@@ -135,7 +137,7 @@ applied to the `Doc` in order. Both [`__call__`](/api/span-resolver#call) and
 > #### Example
 >
 > ```python
-> span_resolver = nlp.add_pipe("span_resolver")
+> span_resolver = nlp.add_pipe("experimental_span_resolver")
 > for doc in span_resolver.pipe(docs, batch_size=50):
 >     pass
 > ```
@@ -161,7 +163,7 @@ by [`Language.initialize`](/api/language#initialize).
 > #### Example
 >
 > ```python
-> span_resolver = nlp.add_pipe("span_resolver")
+> span_resolver = nlp.add_pipe("experimental_span_resolver")
 > span_resolver.initialize(lambda: examples, nlp=nlp)
 > ```
 
@@ -182,7 +184,7 @@ correspond to token indices.
 > #### Example
 >
 > ```python
-> span_resolver = nlp.add_pipe("span_resolver")
+> span_resolver = nlp.add_pipe("experimental_span_resolver")
 > spans = span_resolver.predict([doc1, doc2])
 > ```
 
@@ -199,7 +201,7 @@ Modify a batch of documents, saving predictions using the output prefix in
 > #### Example
 >
 > ```python
-> span_resolver = nlp.add_pipe("span_resolver")
+> span_resolver = nlp.add_pipe("experimental_span_resolver")
 > spans = span_resolver.predict([doc1, doc2])
 > span_resolver.set_annotations([doc1, doc2], spans)
 > ```
@@ -217,7 +219,7 @@ Learn from a batch of [`Example`](/api/example) objects. Delegates to
 > #### Example
 >
 > ```python
-> span_resolver = nlp.add_pipe("span_resolver")
+> span_resolver = nlp.add_pipe("experimental_span_resolver")
 > optimizer = nlp.initialize()
 > losses = span_resolver.update(examples, sgd=optimizer)
 > ```
@@ -238,7 +240,7 @@ Create an optimizer for the pipeline component.
 > #### Example
 >
 > ```python
-> span_resolver = nlp.add_pipe("span_resolver")
+> span_resolver = nlp.add_pipe("experimental_span_resolver")
 > optimizer = span_resolver.create_optimizer()
 > ```
 
@@ -254,7 +256,7 @@ context, the original parameters are restored.
 > #### Example
 >
 > ```python
-> span_resolver = nlp.add_pipe("span_resolver")
+> span_resolver = nlp.add_pipe("experimental_span_resolver")
 > with span_resolver.use_params(optimizer.averages):
 >     span_resolver.to_disk("/best_model")
 > ```
@@ -270,7 +272,7 @@ Serialize the pipe to disk.
 > #### Example
 >
 > ```python
-> span_resolver = nlp.add_pipe("span_resolver")
+> span_resolver = nlp.add_pipe("experimental_span_resolver")
 > span_resolver.to_disk("/path/to/span_resolver")
 > ```
 
@@ -287,7 +289,7 @@ Load the pipe from disk. Modifies the object in place and returns it.
 > #### Example
 >
 > ```python
-> span_resolver = nlp.add_pipe("span_resolver")
+> span_resolver = nlp.add_pipe("experimental_span_resolver")
 > span_resolver.from_disk("/path/to/span_resolver")
 > ```
 
@@ -303,7 +305,7 @@ Load the pipe from disk. Modifies the object in place and returns it.
 > #### Example
 >
 > ```python
-> span_resolver = nlp.add_pipe("span_resolver")
+> span_resolver = nlp.add_pipe("experimental_span_resolver")
 > span_resolver_bytes = span_resolver.to_bytes()
 > ```
 
@@ -323,7 +325,7 @@ Load the pipe from a bytestring. Modifies the object in place and returns it.
 >
 > ```python
 > span_resolver_bytes = span_resolver.to_bytes()
-> span_resolver = nlp.add_pipe("span_resolver")
+> span_resolver = nlp.add_pipe("experimental_span_resolver")
 > span_resolver.from_bytes(span_resolver_bytes)
 > ```
 

@@ -21,9 +21,9 @@ extension package
 [`spacy-experimental`](https://github.com/explosion/spacy-transformers) starting
 in version 0.6.0. It exposes the component via
 [entry points](/usage/saving-loading/#entry-points), so if you have the package
-installed, using `factory = "coref"` in your
-[training config](/usage/training#config) or `nlp.add_pipe("coref")` will work
-out-of-the-box.
+installed, using `factory = "experimental_coref"` in your
+[training config](/usage/training#config) or
+`nlp.add_pipe("experimental_coref")` will work out-of-the-box.
 
 </Infobox>
 
@@ -59,12 +59,13 @@ details on the architectures and their arguments and hyperparameters.
 > #### Example
 >
 > ```python
-> from spacy.pipeline.coref import DEFAULT_COREF_MODEL
+> from spacy_experimental.coref.coref_component import DEFAULT_COREF_MODEL
+> from spacy_experimental.coref.coref_util import DEFAULT_CLUSTER_PREFIX
 > config={
 >     "model": DEFAULT_COREF_MODEL,
 >     "span_cluster_prefix": DEFAULT_CLUSTER_PREFIX,
 > },
-> nlp.add_pipe("coref", config=config)
+> nlp.add_pipe("experimental_coref", config=config)
 > ```
 
 | Setting               | Description                                                                                                                              |
@@ -78,14 +79,14 @@ details on the architectures and their arguments and hyperparameters.
 >
 > ```python
 > # Construction via add_pipe with default model
-> coref = nlp.add_pipe("coref")
+> coref = nlp.add_pipe("experimental_coref")
 >
 > # Construction via add_pipe with custom model
 > config = {"model": {"@architectures": "my_coref.v1"}}
-> coref = nlp.add_pipe("coref", config=config)
+> coref = nlp.add_pipe("experimental_coref", config=config)
 >
 > # Construction from class
-> from spacy.pipeline import CoreferenceResolver
+> from spacy_experimental.coref.coref_component import CoreferenceResolver
 > coref = CoreferenceResolver(nlp.vocab, model)
 > ```
 
@@ -114,7 +115,7 @@ and all pipeline components are applied to the `Doc` in order. Both
 >
 > ```python
 > doc = nlp("This is a sentence.")
-> coref = nlp.add_pipe("coref")
+> coref = nlp.add_pipe("experimental_coref")
 > # This usually happens under the hood
 > processed = coref(doc)
 > ```
@@ -135,7 +136,7 @@ applied to the `Doc` in order. Both [`__call__`](/api/coref#call) and
 > #### Example
 >
 > ```python
-> coref = nlp.add_pipe("coref")
+> coref = nlp.add_pipe("experimental_coref")
 > for doc in coref.pipe(docs, batch_size=50):
 >     pass
 > ```
@@ -161,7 +162,7 @@ by [`Language.initialize`](/api/language#initialize).
 > #### Example
 >
 > ```python
-> coref = nlp.add_pipe("coref")
+> coref = nlp.add_pipe("experimental_coref")
 > coref.initialize(lambda: examples, nlp=nlp)
 > ```
 
@@ -182,7 +183,7 @@ to token indices.
 > #### Example
 >
 > ```python
-> coref = nlp.add_pipe("coref")
+> coref = nlp.add_pipe("experimental_coref")
 > clusters = coref.predict([doc1, doc2])
 > ```
 
@@ -198,7 +199,7 @@ Modify a batch of documents, saving coreference clusters in `Doc.spans`.
 > #### Example
 >
 > ```python
-> coref = nlp.add_pipe("coref")
+> coref = nlp.add_pipe("experimental_coref")
 > clusters = coref.predict([doc1, doc2])
 > coref.set_annotations([doc1, doc2], clusters)
 > ```
@@ -216,7 +217,7 @@ Learn from a batch of [`Example`](/api/example) objects. Delegates to
 > #### Example
 >
 > ```python
-> coref = nlp.add_pipe("coref")
+> coref = nlp.add_pipe("experimental_coref")
 > optimizer = nlp.initialize()
 > losses = coref.update(examples, sgd=optimizer)
 > ```
@@ -237,7 +238,7 @@ Create an optimizer for the pipeline component.
 > #### Example
 >
 > ```python
-> coref = nlp.add_pipe("coref")
+> coref = nlp.add_pipe("experimental_coref")
 > optimizer = coref.create_optimizer()
 > ```
 
@@ -253,7 +254,7 @@ context, the original parameters are restored.
 > #### Example
 >
 > ```python
-> coref = nlp.add_pipe("coref")
+> coref = nlp.add_pipe("experimental_coref")
 > with coref.use_params(optimizer.averages):
 >     coref.to_disk("/best_model")
 > ```
@@ -269,7 +270,7 @@ Serialize the pipe to disk.
 > #### Example
 >
 > ```python
-> coref = nlp.add_pipe("coref")
+> coref = nlp.add_pipe("experimental_coref")
 > coref.to_disk("/path/to/coref")
 > ```
 
@@ -286,7 +287,7 @@ Load the pipe from disk. Modifies the object in place and returns it.
 > #### Example
 >
 > ```python
-> coref = nlp.add_pipe("coref")
+> coref = nlp.add_pipe("experimental_coref")
 > coref.from_disk("/path/to/coref")
 > ```
 
@@ -302,7 +303,7 @@ Load the pipe from disk. Modifies the object in place and returns it.
 > #### Example
 >
 > ```python
-> coref = nlp.add_pipe("coref")
+> coref = nlp.add_pipe("experimental_coref")
 > coref_bytes = coref.to_bytes()
 > ```
 
@@ -322,7 +323,7 @@ Load the pipe from a bytestring. Modifies the object in place and returns it.
 >
 > ```python
 > coref_bytes = coref.to_bytes()
-> coref = nlp.add_pipe("coref")
+> coref = nlp.add_pipe("experimental_coref")
 > coref.from_bytes(coref_bytes)
 > ```
 
