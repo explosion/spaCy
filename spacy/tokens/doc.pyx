@@ -292,7 +292,7 @@ cdef class Doc:
                     sent_starts[i] = 1
                 elif sent_starts[i] is False:
                     sent_starts[i] = -1
-                elif sent_starts[i] is None or sent_starts[i] not in [-1, 1]:
+                elif sent_starts[i] is None or sent_starts[i] not in [-1, 0, 1]:
                     sent_starts[i] = 0
         if pos is not None:
             for pp in set(pos):
