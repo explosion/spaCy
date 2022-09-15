@@ -98,13 +98,13 @@ Iterate over the stored string-hash pairs in insertion order.
 >
 > ```python
 > stringstore = StringStore(["apple", "orange"])
-> all_strings_and_hashes = list(stringstore.items())
+> all_strings_and_hashes = stringstore.items()
 > assert all_strings_and_hashes == [("apple", 8566208034543834098), ("orange", 2208928596161743350)]
 > ```
 
-| Name        | Description                                                                  |
-| ----------- | ---------------------------------------------------------------------------- |
-| **RETURNS** | An iterable collection of string-hash pairs. ~~Collection[Tuple[str, int]]~~ |
+| Name        | Description                                            |
+| ----------- | ------------------------------------------------------ |
+| **RETURNS** | A list of string-hash pairs. ~~List[Tuple[str, int]]~~ |
 
 ## StringStore.keys {#iter tag="method" new="4"}
 
@@ -114,13 +114,13 @@ Iterate over the stored strings in insertion order.
 >
 > ```python
 > stringstore = StringStore(["apple", "orange"])
-> all_strings = list(stringstore.keys())
+> all_strings = stringstore.keys()
 > assert all_strings == ["apple", "orange"]
 > ```
 
-| Name        | Description                                            |
-| ----------- | ------------------------------------------------------ |
-| **RETURNS** | An iterable collection of strings. ~~Collection[str]~~ |
+| Name        | Description                      |
+| ----------- | -------------------------------- |
+| **RETURNS** | A list of strings. ~~List[str]~~ |
 
 ## StringStore.values {#iter tag="method" new="4"}
 
@@ -130,13 +130,13 @@ Iterate over the stored string hashes in insertion order.
 >
 > ```python
 > stringstore = StringStore(["apple", "orange"])
-> all_hashes = list(stringstore.values())
+> all_hashes = stringstore.values()
 > assert all_hashes == [8566208034543834098, 2208928596161743350]
 > ```
 
-| Name        | Description                                                  |
-| ----------- | ------------------------------------------------------------ |
-| **RETURNS** | An iterable collection of string hashes. ~~Collection[int]~~ |
+| Name        | Description                            |
+| ----------- | -------------------------------------- |
+| **RETURNS** | A list of string hashes. ~~List[int]~~ |
 
 ## StringStore.add {#add tag="method"}
 

@@ -1,5 +1,5 @@
 # cython: infer_types=True
-from typing import Optional, Union, Iterable, Tuple, Callable, Any, Collection
+from typing import Optional, Union, Iterable, Tuple, Callable, Any, List
 cimport cython
 from libc.string cimport memcpy
 from libcpp.set cimport set
@@ -113,39 +113,45 @@ cdef class StringStore:
         else:
             return self._get_interned_str(string_or_hash)
 
-    def items(self) -> Collection[Tuple[str, int]]:
+    def items(self) -> List[Tuple[str, int]]:
         """Iterate over the stored strings and their hashes in insertion order.
 
-        RETURNS: An iterable collection of string-hash pairs.
+        RETURNS: A list of string-hash pairs.
         """
         # Even though we internally store the hashes as keys and the strings as
         # values, we invert the order in the public API to keep it consistent with
         # the implementation of the `__iter__` method (where we wish to iterate over
         # the strings in the store).
-        def as_pairs(string: str, str_hash: int) -> Tuple[str, int]:
-            return (string, str_hash)
+        cdef int i
+        pairs = [None] * self._keys.size()
+        for i in range(self._keys.size()):
+            str_hash = self._keys[i]
+            utf8str = <Utf8Str*>self._map.get(str_hash)
+            pairs[i] = (self._decode_str_repr(utf8str), str_hash)
+        return pairs
 
-        return self._transform_to_list(as_pairs)
-
-    def keys(self) -> Collection[str]:
+    def keys(self) -> List[str]:
         """Iterate over the stored strings in insertion order.
 
-        RETURNS: An iterable collection of strings.
+        RETURNS: A list of strings.
         """
-        def as_strings(string: str, str_hash: int) -> str:
-            return string
+        cdef int i
+        strings = [None] * self._keys.size()
+        for i in range(self._keys.size()):
+            utf8str = <Utf8Str*>self._map.get(self._keys[i])
+            strings[i] = self._decode_str_repr(utf8str)
+        return strings
 
-        return self._transform_to_list(as_strings)
-
-    def values(self) -> Collection[int]:
+    def values(self) -> List[int]:
         """Iterate over the stored strings hashes in insertion order.
 
-        RETURNS: An iterable collection of string hashs.
+        RETURNS: A list of string hashs.
         """
-        def as_hashes(string: str, str_hash: int) -> int:
-            return str_hash
-
-        return self._transform_to_list(as_hashes)
+        cdef int i
+        hashes = [None] * self._keys.size()
+        for i in range(self._keys.size()):
+            hashes[i] = self._keys[i]
+        return hashes
 
     def to_disk(self, path):
         """Save the current state to a directory.
@@ -192,22 +198,6 @@ cdef class StringStore:
         for word in prev:
             self.add(word)
         return self
-
-    def _transform_to_list(self, function: Callable[[str, int], Any]) -> Collection[Any]:
-        """Applies a function to every element in the store in
-        insertion order and returns the results as a sized collection.
-
-        function (Callable): A function that accepts a string and its hash.
-        RETURNS (Collection): A collection of new objects.
-        """
-        cdef int i
-        cdef hash_t key
-        transformed_elements = [None] * self._keys.size()
-        for i in range(self._keys.size()):
-            str_hash = self._keys[i]
-            utf8str = <Utf8Str*>self._map.get(str_hash)
-            transformed_elements[i] = function(self._decode_str_repr(utf8str), str_hash)
-        return transformed_elements
 
     def _reset_and_load(self, strings):
         self.mem = Pool()
