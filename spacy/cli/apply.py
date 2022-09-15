@@ -30,7 +30,6 @@ def _stream_docbin(path: Path, vocab: Vocab) -> Iterable[Doc]:
     """
     Stream Doc objects from DocBin.
     """
-    input(path)
     docbin = DocBin().from_disk(path)
     for doc in docbin.get_docs(vocab):
         yield doc
@@ -61,7 +60,6 @@ def _maybe_read_text(path: Path) -> Union[str, None]:
             return text
         except UnicodeDecodeError as e:
             msg.warn(f"Skipping file {path}")
-            print(e)
             return None
 
 
