@@ -606,7 +606,7 @@ def test_update_with_annotates():
 
 
 @pytest.mark.issue(11443)
-def test_issue11443():
+def test_enable_disable_conflict_with_config():
     """Test conflict between enable/disable w.r.t. `nlp.disabled` set in the config."""
     nlp = English()
     nlp.add_pipe("tagger")

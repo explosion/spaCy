@@ -25,7 +25,7 @@ from .pipe_analysis import validate_attrs, analyze_pipes, print_pipe_analysis
 from .training import Example, validate_examples
 from .training.initialize import init_vocab, init_tok2vec
 from .scorer import Scorer
-from .util import registry, SimpleFrozenList, _pipe, raise_error
+from .util import registry, SimpleFrozenList, _pipe, raise_error, DEFAULT_PIPES_STATUS
 from .util import SimpleFrozenDict, combine_score_weights, CONFIG_SECTION_ORDER
 from .util import warn_if_jupyter_cupy
 from .lang.tokenizer_exceptions import URL_MATCH, BASE_EXCEPTIONS
@@ -1699,9 +1699,9 @@ class Language:
         config: Union[Dict[str, Any], Config] = {},
         *,
         vocab: Union[Vocab, bool] = True,
-        disable: Union[str, Iterable[str]] = SimpleFrozenList(),
-        enable: Union[str, Iterable[str]] = SimpleFrozenList(),
-        exclude: Union[str, Iterable[str]] = SimpleFrozenList(),
+        disable: Union[str, Iterable[str]] = None,
+        enable: Union[str, Iterable[str]] = DEFAULT_PIPES_STATUS,
+        exclude: Union[str, Iterable[str]] = DEFAULT_PIPES_STATUS,
         meta: Dict[str, Any] = SimpleFrozenDict(),
         auto_fill: bool = True,
         validate: bool = True,
@@ -1887,8 +1887,8 @@ class Language:
             key (str): Key for field in config (either "enabled" or "disabled").
             RETURN (Iterable[str]):
             """
-            # We assume that no argument was passed if the value is the default value of an empty SimpleFrozenList.
-            if isinstance(value, SimpleFrozenList) and len(value) == 0:
+            # We assume that no argument was passed if the value is the specified default value.
+            if id(value) == id(DEFAULT_PIPES_STATUS):
                 return config["nlp"].get(key, [])
             else:
                 if len(config["nlp"].get(key, [])):
