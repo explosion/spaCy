@@ -578,7 +578,7 @@ def setup_gpu(use_gpu: int, silent=None) -> None:
             local_msg.info("To switch to GPU 0, use the option: --gpu-id 0")
 
 
-def walk_directory(path: Path, suffix: str) -> List[Path]:
+def walk_directory(path: Path, suffix: Optional[str] = None) -> List[Path]:
     if not path.is_dir():
         return [path]
     paths = [path]
@@ -592,7 +592,7 @@ def walk_directory(path: Path, suffix: str) -> List[Path]:
             continue
         elif path.is_dir():
             paths.extend(path.iterdir())
-        elif not path.parts[-1].endswith(suffix):
+        elif suffix is not None and not path.parts[-1].endswith(suffix):
             continue
         else:
             locs.append(path)
