@@ -10,7 +10,6 @@ from murmurhash.mrmr cimport hash64
 import re
 import srsly
 import warnings
-from polyleven import levenshtein
 
 from ..typedefs cimport attr_t
 from ..structs cimport TokenC
@@ -25,6 +24,8 @@ from ..schemas import validate_token_pattern
 from ..errors import Errors, MatchPatternError, Warnings
 from ..strings import get_string_id
 from ..attrs import IDS
+
+from .levenshtein import levenshtein
 
 
 DEF PADDING = 5
