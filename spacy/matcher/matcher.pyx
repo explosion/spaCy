@@ -850,7 +850,7 @@ class _FuzzyPredicate:
         if self.value == value:
             return True
         elif self.distance and token.is_oov and not token.is_space:
-            return bool(levenshtein(self.value, value) <= self.distance)
+            return bool(levenshtein(self.value, value) <= min(self.distance, len(token.text)-1))
         return False
 
 
@@ -927,7 +927,7 @@ class _SetPredicate:
             elif self.distance and token.is_oov and not token.is_space:
                 for v in self.value:
                     if levenshtein(self.vocab.strings[value],
-                                   self.vocab.strings[v]) <= self.distance:
+                                   self.vocab.strings[v]) <= min(self.distance, len(token.text)-1):
                         return True
             return False
         elif self.predicate == "NOT_IN":
@@ -936,7 +936,7 @@ class _SetPredicate:
             elif self.distance and token.is_oov and not token.is_space:
                 for v in self.value:
                     if levenshtein(self.vocab.strings[value],
-                                   self.vocab.strings[v]) <= self.distance:
+                                   self.vocab.strings[v]) <= min(self.distance, len(token.text)-1):
                         return False
             return True
         elif self.predicate == "IS_SUBSET":
