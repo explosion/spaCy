@@ -285,14 +285,15 @@ cdef class Doc:
             heads = [0] * len(deps)
         if heads and not deps:
             raise ValueError(Errors.E1017)
+        _sent_starts: Optional[List[int]] = [] if sent_starts is not None else None
         if sent_starts is not None:
             for i in range(len(sent_starts)):
-                if sent_starts[i] is True:
-                    sent_starts[i] = 1
-                elif sent_starts[i] is False:
-                    sent_starts[i] = -1
-                elif sent_starts[i] is None or sent_starts[i] not in [-1, 0, 1]:
-                    sent_starts[i] = 0
+                if sent_starts[i] is True or sent_starts[i] == 1:
+                    _sent_starts.append(1)
+                elif sent_starts[i] is False or sent_starts[i] == -1:
+                    _sent_starts.append(-1)
+                else:
+                    _sent_starts.append(0)
         if pos is not None:
             for pp in set(pos):
                 if pp not in parts_of_speech.IDS:
@@ -300,12 +301,11 @@ cdef class Doc:
         ent_iobs = None
         ent_types = None
         if ents is not None:
+            ents = [ent if ent != "" else None for ent in ents]
             iob_strings = Token.iob_strings()
             # make valid IOB2 out of IOB1 or IOB2
             for i, ent in enumerate(ents):
-                if ent is "":
-                    ents[i] = None
-                elif ent is not None and not isinstance(ent, str):
+                if ent is not None and not isinstance(ent, str):
                     raise ValueError(Errors.E177.format(tag=ent))
                 if i < len(ents) - 1:
                     # OI -> OB
@@ -338,14 +338,14 @@ cdef class Doc:
                     ent_types.append(ent_type)
         headings = []
         values = []
-        annotations = [pos, heads, deps, lemmas, tags, morphs, sent_starts, ent_iobs, ent_types]
+        annotations = [pos, heads, deps, lemmas, tags, morphs, _sent_starts, ent_iobs, ent_types]
         possible_headings = [POS, HEAD, DEP, LEMMA, TAG, MORPH, SENT_START, ENT_IOB, ENT_TYPE]
         for a, annot in enumerate(annotations):
             if annot is not None:
                 if len(annot) != len(words):
                     raise ValueError(Errors.E189)
                 headings.append(possible_headings[a])
-                if annot is not heads and annot is not sent_starts and annot is not ent_iobs:
+                if annot is not heads and annot is not _sent_starts and annot is not ent_iobs:
                     values.extend(annot)
         for value in values:
             if value is not None:
@@ -358,7 +358,7 @@ cdef class Doc:
             j = 0
             for annot in annotations:
                 if annot:
-                    if annot is heads or annot is sent_starts or annot is ent_iobs:
+                    if annot is heads or annot is _sent_starts or annot is ent_iobs:
                         for i in range(len(words)):
                             if attrs.ndim == 1:
                                 attrs[i] = annot[i]
