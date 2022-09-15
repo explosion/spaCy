@@ -1699,7 +1699,7 @@ class Language:
         config: Union[Dict[str, Any], Config] = {},
         *,
         vocab: Union[Vocab, bool] = True,
-        disable: Union[str, Iterable[str]] = None,
+        disable: Union[str, Iterable[str]] = DEFAULT_PIPES_STATUS,
         enable: Union[str, Iterable[str]] = DEFAULT_PIPES_STATUS,
         exclude: Union[str, Iterable[str]] = DEFAULT_PIPES_STATUS,
         meta: Dict[str, Any] = SimpleFrozenDict(),
