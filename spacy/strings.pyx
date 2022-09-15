@@ -1,5 +1,5 @@
 # cython: infer_types=True
-from typing import Optional, Union, Iterable, Tuple, Callable, Any, List
+from typing import Optional, Union, Iterable, Tuple, Callable, Any, List, Iterator
 cimport cython
 from libc.string cimport memcpy
 from libcpp.set cimport set
@@ -57,7 +57,7 @@ cdef class StringStore:
         else:
             return self._map.get(str_hash) is not NULL
 
-    def __iter__(self) -> Iterable[str]:
+    def __iter__(self) -> Iterator[str]:
         """Iterate over the strings in the store in insertion order.
 
         RETURNS: An iterable collection of strings.
