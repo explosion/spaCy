@@ -939,7 +939,7 @@ with only token-level clusters is acceptable.
 > ```ini
 >
 > [model]
-> @architectures = "spacy.Coref.v1"
+> @architectures = "spacy-experimental.Coref.v1"
 > distance_embedding_size = 20
 > dropout = 0.3
 > hidden_size = 1024
@@ -974,7 +974,7 @@ The `Coref` model architecture is a Thinc `Model`.
 > ```ini
 >
 > [model]
-> @architectures = "spacy.SpanResolver.v1"
+> @architectures = "spacy-experimental.SpanResolver.v1"
 > hidden_size = 1024
 > distance_embedding_size = 64
 > conv_channels = 4
