@@ -984,34 +984,28 @@ def test_get_affixes_good_case(en_tokenizer, case_sensitive):
     doc = en_tokenizer("spaCy✨ and Prodigy")
     prefixes = doc.get_affixes(False, case_sensitive, 1, 5, "", 2, 3)
     suffixes = doc.get_affixes(True, case_sensitive, 2, 6, "xx✨rP", 2, 3)
-    assert prefixes[0][3, 3, 3] == suffixes[0][3, 3, 3]
-    assert prefixes[0][3, 3, 2] == suffixes[0][3, 3, 4]
-    assert (prefixes[0][0, :, 1:] == 0).all()
-    assert not (suffixes[0][0, :, 1:] == 0).all()
-    assert (suffixes[0][0, :, 2:] == 0).all()
-    assert (prefixes[0][1, :, 2:] == 0).all()
-    assert (prefixes[0][:, 1, 1:] == 0).all()
-    assert not (suffixes[0][1, :, 2:] == 0).all()
-    assert (suffixes[0][1, :, 3:] == 0).all()
-    assert suffixes[1][0][1].tolist() == [10024, 0]
+    assert prefixes[3][3, 3] == suffixes[3][3, 3]
+    assert prefixes[3][3, 2] == suffixes[3][3, 4]
+    assert suffixes[4][1].tolist() == [10024, 0]
     if case_sensitive:
-        assert suffixes[1][0][3].tolist() == [114, 80]
+        assert suffixes[4][3].tolist() == [114, 80]
     else:
-        assert suffixes[1][0][3].tolist() == [114, 112]
+        assert suffixes[4][3].tolist() == [114, 112]
     suffixes = doc.get_affixes(True, case_sensitive, 2, 6, "xx✨rp", 2, 3)
     if case_sensitive:
-        assert suffixes[1][0][3].tolist() == [114, 0]
+        assert suffixes[4][3].tolist() == [114, 0]
     else:
-        assert suffixes[1][0][3].tolist() == [114, 112]
+        assert suffixes[4][3].tolist() == [114, 112]
     
 
 
 def test_get_affixes_4_byte_normal_char(en_tokenizer):
     doc = en_tokenizer("and𐌞")
     suffixes = doc.get_affixes(True, False, 2, 6, "a", 1, 2)
-    assert (suffixes[0][:, 0, 1] == 55296).all()
-    assert suffixes[0][3, 0, 4] == 97
-    assert suffixes[1][0, 0, 0] == 97
+    for i in range(0, 4):
+        assert suffixes[i][0, 1] == 55296
+    assert suffixes[3][0, 4] == 97
+    assert suffixes[4][0, 0] == 97
 
 
 def test_get_affixes_4_byte_special_char(en_tokenizer):
