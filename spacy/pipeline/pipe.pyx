@@ -1,4 +1,4 @@
-# cython: infer_types=True, profile=True
+# cython: infer_types=True, profile=True, binding=True
 from typing import Optional, Tuple, Iterable, Iterator, Callable, Union, Dict
 import srsly
 import warnings
