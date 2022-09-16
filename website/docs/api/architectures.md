@@ -932,7 +932,7 @@ from single tokens. Together these components can be used to reproduce
 traditional coreference models. You can also omit the `SpanResolver` if working
 with only token-level clusters is acceptable.
 
-### spacy.Coref.v1 {#Coref tag="experimental"}
+### spacy-experimental.Coref.v1 {#Coref tag="experimental"}
 
 > #### Example Config
 >
@@ -967,7 +967,7 @@ The `Coref` model architecture is a Thinc `Model`.
 | `antecedent_batch_size`   | Internal batch size. ~~int~~                                                                                                                                                             |
 | **CREATES**               | The model using the architecture. ~~Model[List[Doc], Floats2d]~~                                                                                                                         |
 
-### spacy.SpanResolver.v1 {#SpanResolver tag="experimental"}
+### spacy-experimental.SpanResolver.v1 {#SpanResolver tag="experimental"}
 
 > #### Example Config
 >
