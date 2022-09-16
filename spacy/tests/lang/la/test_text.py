@@ -1,6 +1,7 @@
 import pytest
 from spacy.lang.la.lex_attrs import like_num
 
+
 @pytest.mark.parametrize(
     "text,match",
     [
@@ -13,7 +14,7 @@ from spacy.lang.la.lex_attrs import like_num
         ("ix", True),
         ("MMXXII", True),
         ("0", True),
-        ("1", True),        
+        ("1", True),
         ("quattuor", True),
         ("decem", True),
         ("tertius", True),
@@ -26,6 +27,7 @@ def test_lex_attrs_like_number(la_tokenizer, text, match):
     tokens = la_tokenizer(text)
     assert len(tokens) == 1
     assert tokens[0].like_num == match
+
 
 @pytest.mark.parametrize("word", ["quinque"])
 def test_la_lex_attrs_capitals(word):

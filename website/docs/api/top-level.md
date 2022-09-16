@@ -887,6 +887,27 @@ backprop passes.
 | `backprop_color` | Color identifier for backpropagation passes. Defaults to `-1`. ~~int~~                                                       |
 | **CREATES**      | A function that takes the current `nlp` and wraps forward/backprop passes in NVTX ranges. ~~Callable[[Language], Language]~~ |
 
+### spacy.models_and_pipes_with_nvtx_range.v1 {#models_and_pipes_with_nvtx_range tag="registered function" new="3.4"}
+
+> #### Example config
+>
+> ```ini
+> [nlp]
+> after_pipeline_creation = {"@callbacks":"spacy.models_and_pipes_with_nvtx_range.v1"}
+> ```
+
+Recursively wrap both the models and methods of each pipe using
+[NVTX](https://nvidia.github.io/NVTX/) range markers. By default, the following
+methods are wrapped: `pipe`, `predict`, `set_annotations`, `update`, `rehearse`,
+`get_loss`, `initialize`, `begin_update`, `finish_update`, `update`.
+
+| Name                        | Description                                                                                                                                                     |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `forward_color`             | Color identifier for model forward passes. Defaults to `-1`. ~~int~~                                                                                            |
+| `backprop_color`            | Color identifier for model backpropagation passes. Defaults to `-1`. ~~int~~                                                                                    |
+| `additional_pipe_functions` | Additional pipeline methods to wrap. Keys are pipeline names and values are lists of method identifiers. Defaults to `None`. ~~Optional[Dict[str, List[str]]]~~ |
+| **CREATES**                 | A function that takes the current `nlp` and wraps pipe models and methods in NVTX ranges. ~~Callable[[Language], Language]~~                                    |
+
 ## Training data and alignment {#gold source="spacy/training"}
 
 ### training.offsets_to_biluo_tags {#offsets_to_biluo_tags tag="function"}
