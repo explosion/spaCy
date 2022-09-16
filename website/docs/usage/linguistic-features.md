@@ -11,8 +11,8 @@ menu:
   - ['Tokenization', 'tokenization']
   - ['Merging & Splitting', 'retokenization']
   - ['Sentence Segmentation', 'sbd']
-  - ['Vectors & Similarity', 'vectors-similarity']
   - ['Mappings & Exceptions', 'mappings-exceptions']
+  - ['Vectors & Similarity', 'vectors-similarity']
   - ['Language Data', 'language-data']
 ---
 
@@ -1422,9 +1422,9 @@ other_tokens = ["i", "listened", "to", "obama", "'", "s", "podcasts", "."]
 spacy_tokens = ["i", "listened", "to", "obama", "'s", "podcasts", "."]
 align = Alignment.from_strings(other_tokens, spacy_tokens)
 print(f"a -> b, lengths: {align.x2y.lengths}")  # array([1, 1, 1, 1, 1, 1, 1, 1])
-print(f"a -> b, mapping: {align.x2y.dataXd}")  # array([0, 1, 2, 3, 4, 4, 5, 6]) : two tokens both refer to "'s"
+print(f"a -> b, mapping: {align.x2y.data}")  # array([0, 1, 2, 3, 4, 4, 5, 6]) : two tokens both refer to "'s"
 print(f"b -> a, lengths: {align.y2x.lengths}")  # array([1, 1, 1, 1, 2, 1, 1])   : the token "'s" refers to two tokens
-print(f"b -> a, mappings: {align.y2x.dataXd}")  # array([0, 1, 2, 3, 4, 5, 6, 7])
+print(f"b -> a, mappings: {align.y2x.data}")  # array([0, 1, 2, 3, 4, 5, 6, 7])
 ```
 
 Here are some insights from the alignment information generated in the example
@@ -1433,10 +1433,10 @@ above:
 - The one-to-one mappings for the first four tokens are identical, which means
   they map to each other. This makes sense because they're also identical in the
   input: `"i"`, `"listened"`, `"to"` and `"obama"`.
-- The value of `x2y.dataXd[6]` is `5`, which means that `other_tokens[6]`
+- The value of `x2y.data[6]` is `5`, which means that `other_tokens[6]`
   (`"podcasts"`) aligns to `spacy_tokens[5]` (also `"podcasts"`).
-- `x2y.dataXd[4]` and `x2y.dataXd[5]` are both `4`, which means that both tokens
-  4 and 5 of `other_tokens` (`"'"` and `"s"`) align to token 4 of `spacy_tokens`
+- `x2y.data[4]` and `x2y.data[5]` are both `4`, which means that both tokens 4
+  and 5 of `other_tokens` (`"'"` and `"s"`) align to token 4 of `spacy_tokens`
   (`"'s"`).
 
 <Infobox title="Important note" variant="warning">

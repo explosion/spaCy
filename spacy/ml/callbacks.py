@@ -89,11 +89,14 @@ def pipes_with_nvtx_range(
                 types.MethodType(nvtx_range_wrapper_for_pipe_method, pipe), func
             )
 
-            # Try to preserve the original function signature.
+            # We need to preserve the original function signature so that
+            # the original parameters are passed to pydantic for validation downstream.
             try:
                 wrapped_func.__signature__ = inspect.signature(func)  # type: ignore
             except:
-                pass
+                # Can fail for Cython methods that do not have bindings.
+                warnings.warn(Warnings.W122.format(method=name, pipe=pipe.name))
+                continue
 
             try:
                 setattr(

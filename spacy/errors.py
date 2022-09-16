@@ -16,8 +16,8 @@ def setup_default_warnings():
     filter_warning("ignore", error_msg="numpy.dtype size changed")  # noqa
     filter_warning("ignore", error_msg="numpy.ufunc size changed")  # noqa
 
-    # warn about entity_ruler & matcher having no patterns only once
-    for pipe in ["matcher", "entity_ruler"]:
+    # warn about entity_ruler, span_ruler & matcher having no patterns only once
+    for pipe in ["matcher", "entity_ruler", "span_ruler"]:
         filter_warning("once", error_msg=Warnings.W036.format(name=pipe))
 
     # warn once about lemmatizer without required POS
@@ -230,8 +230,9 @@ class Errors(metaclass=ErrorsWithCodes):
             "initialized component.")
     E004 = ("Can't set up pipeline component: a factory for '{name}' already "
             "exists. Existing factory: {func}. New factory: {new_func}")
-    E005 = ("Pipeline component '{name}' returned None. If you're using a "
-            "custom component, maybe you forgot to return the processed Doc?")
+    E005 = ("Pipeline component '{name}' returned {returned_type} instead of a "
+            "Doc. If you're using a custom component, maybe you forgot to "
+            "return the processed Doc?")
     E006 = ("Invalid constraints for adding pipeline component. You can only "
             "set one of the following: before (component name or index), "
             "after (component name or index), first (True) or last (True). "
@@ -389,7 +390,7 @@ class Errors(metaclass=ErrorsWithCodes):
             "consider using doc.spans instead.")
     E106 = ("Can't find `doc._.{attr}` attribute specified in the underscore "
             "settings: {opts}")
-    E107 = ("Value of `doc._.{attr}` is not JSON-serializable: {value}")
+    E107 = ("Value of custom attribute `{attr}` is not JSON-serializable: {value}")
     E109 = ("Component '{name}' could not be run. Did you forget to "
             "call `initialize()`?")
     E110 = ("Invalid displaCy render wrapper. Expected callable, got: {obj}")
@@ -535,11 +536,12 @@ class Errors(metaclass=ErrorsWithCodes):
     E198 = ("Unable to return {n} most similar vectors for the current vectors "
             "table, which contains {n_rows} vectors.")
     E199 = ("Unable to merge 0-length span at `doc[{start}:{end}]`.")
-    E200 = ("Can't yet set {attr} from Span. Vote for this feature on the "
-            "issue tracker: http://github.com/explosion/spaCy/issues")
+    E200 = ("Can't set {attr} from Span.")
     E202 = ("Unsupported {name} mode '{mode}'. Supported modes: {modes}.")
 
     # New errors added in v3.x
+    E853 = ("Unsupported component factory name '{name}'. The character '.' is "
+            "not permitted in factory names.")
     E854 = ("Unable to set doc.ents. Check that the 'ents_filter' does not "
             "permit overlapping spans.")
     E855 = ("Invalid {obj}: {obj} is not from the same doc.")
@@ -705,7 +707,7 @@ class Errors(metaclass=ErrorsWithCodes):
             "need to modify the pipeline, use the built-in methods like "
             "`nlp.add_pipe`, `nlp.remove_pipe`, `nlp.disable_pipe` or "
             "`nlp.enable_pipe` instead.")
-    E927 = ("Can't write to frozen list Maybe you're trying to modify a computed "
+    E927 = ("Can't write to frozen list. Maybe you're trying to modify a computed "
             "property or default function argument?")
     E928 = ("A KnowledgeBase can only be serialized to/from from a directory, "
             "but the provided argument {loc} points to a file.")

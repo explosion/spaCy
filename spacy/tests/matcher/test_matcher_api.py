@@ -368,6 +368,16 @@ def test_matcher_intersect_value_operator(en_vocab):
     doc[0]._.ext = ["A", "B"]
     assert len(matcher(doc)) == 1
 
+    # INTERSECTS matches nothing for iterables that aren't all str or int
+    matcher = Matcher(en_vocab)
+    pattern = [{"_": {"ext": {"INTERSECTS": ["Abx", "C"]}}}]
+    matcher.add("M", [pattern])
+    doc = Doc(en_vocab, words=["a", "b", "c"])
+    doc[0]._.ext = [["Abx"], "B"]
+    assert len(matcher(doc)) == 0
+    doc[0]._.ext = ["Abx", "B"]
+    assert len(matcher(doc)) == 1
+
     # INTERSECTS with an empty pattern list matches nothing
     matcher = Matcher(en_vocab)
     pattern = [{"_": {"ext": {"INTERSECTS": []}}}]
@@ -476,14 +486,22 @@ def test_matcher_extension_set_membership(en_vocab):
     assert len(matches) == 0
 
 
-@pytest.mark.xfail(reason="IN predicate must handle sequence values in extensions")
 def test_matcher_extension_in_set_predicate(en_vocab):
     matcher = Matcher(en_vocab)
     Token.set_extension("ext", default=[])
     pattern = [{"_": {"ext": {"IN": ["A", "C"]}}}]
     matcher.add("M", [pattern])
     doc = Doc(en_vocab, words=["a", "b", "c"])
+
+    # The IN predicate expects an exact match between the
+    # extension value and one of the pattern's values.
     doc[0]._.ext = ["A", "B"]
+    assert len(matcher(doc)) == 0
+
+    doc[0]._.ext = ["A"]
+    assert len(matcher(doc)) == 0
+
+    doc[0]._.ext = "A"
     assert len(matcher(doc)) == 1
 
 
