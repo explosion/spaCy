@@ -148,7 +148,7 @@ skipped. You can also set `--force` to force re-running a command, or `--dry` to
 perform a "dry run" and see what would happen (without actually running the
 script).
 
-By default `spacy projects run` checks your installed dependencies to verify
+Since spaCy v3.4.2, `spacy projects run` checks your installed dependencies to verify
 that your environment is properly set up and aligns with the project's
 `requirements.txt`, if there is one. If missing or conflicting dependencies are
 detected, a corresponding warning is displayed. If you'd like to disable the
