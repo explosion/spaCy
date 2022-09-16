@@ -1,3 +1,4 @@
+from typing import cast
 import pytest
 from numpy.testing import assert_equal
 from spacy.attrs import SENT_START
@@ -6,6 +7,7 @@ from spacy import util
 from spacy.training import Example
 from spacy.lang.en import English
 from spacy.language import Language
+from spacy.pipeline import TrainablePipe
 from spacy.tests.util import make_tempdir
 
 
@@ -101,3 +103,26 @@ def test_overfitting_IO():
     # test internal pipe labels vs. Language.pipe_labels with hidden labels
     assert nlp.get_pipe("senter").labels == ("I", "S")
     assert "senter" not in nlp.pipe_labels
+
+
+def test_save_activations():
+    # Test if activations are correctly added to Doc when requested.
+    nlp = English()
+    senter = cast(TrainablePipe, nlp.add_pipe("senter"))
+
+    train_examples = []
+    for t in TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
+
+    nlp.initialize(get_examples=lambda: train_examples)
+    nO = senter.model.get_dim("nO")
+
+    doc = nlp("This is a test.")
+    assert "senter" not in doc.activations
+
+    senter.save_activations = True
+    doc = nlp("This is a test.")
+    assert "senter" in doc.activations
+    assert set(doc.activations["senter"].keys()) == {"label_ids", "probabilities"}
+    assert doc.activations["senter"]["probabilities"].shape == (5, nO)
+    assert doc.activations["senter"]["label_ids"].shape == (5,)

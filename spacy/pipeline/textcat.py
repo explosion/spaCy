@@ -1,4 +1,4 @@
-from typing import Iterable, Tuple, Optional, Dict, List, Callable, Any
+from typing import Iterable, Tuple, Optional, Dict, List, Callable, Any, Union
 from thinc.api import get_array_module, Model, Optimizer, set_dropout_rate, Config
 from thinc.types import Floats2d
 import numpy
@@ -12,6 +12,9 @@ from ..scorer import Scorer
 from ..tokens import Doc
 from ..util import registry
 from ..vocab import Vocab
+
+
+ActivationsT = Dict[str, Floats2d]
 
 
 single_label_default_config = """
@@ -75,6 +78,7 @@ subword_features = true
         "threshold": 0.5,
         "model": DEFAULT_SINGLE_TEXTCAT_MODEL,
         "scorer": {"@scorers": "spacy.textcat_scorer.v1"},
+        "save_activations": False,
     },
     default_score_weights={
         "cats_score": 1.0,
@@ -96,6 +100,7 @@ def make_textcat(
     model: Model[List[Doc], List[Floats2d]],
     threshold: float,
     scorer: Optional[Callable],
+    save_activations: bool,
 ) -> "TextCategorizer":
     """Create a TextCategorizer component. The text categorizer predicts categories
     over a whole document. It can learn one or more labels, and the labels are considered
@@ -105,8 +110,16 @@ def make_textcat(
         scores for each category.
     threshold (float): Cutoff to consider a prediction "positive".
     scorer (Optional[Callable]): The scoring method.
+    save_activations (bool): save model activations in Doc when annotating.
     """
-    return TextCategorizer(nlp.vocab, model, name, threshold=threshold, scorer=scorer)
+    return TextCategorizer(
+        nlp.vocab,
+        model,
+        name,
+        threshold=threshold,
+        scorer=scorer,
+        save_activations=save_activations,
+    )
 
 
 def textcat_score(examples: Iterable[Example], **kwargs) -> Dict[str, Any]:
@@ -137,6 +150,7 @@ class TextCategorizer(TrainablePipe):
         *,
         threshold: float,
         scorer: Optional[Callable] = textcat_score,
+        save_activations: bool = False,
     ) -> None:
         """Initialize a text categorizer for single-label classification.
 
@@ -157,6 +171,7 @@ class TextCategorizer(TrainablePipe):
         cfg = {"labels": [], "threshold": threshold, "positive_label": None}
         self.cfg = dict(cfg)
         self.scorer = scorer
+        self.save_activations = save_activations
 
     @property
     def support_missing_values(self):
@@ -181,7 +196,7 @@ class TextCategorizer(TrainablePipe):
         """
         return self.labels  # type: ignore[return-value]
 
-    def predict(self, docs: Iterable[Doc]):
+    def predict(self, docs: Iterable[Doc]) -> ActivationsT:
         """Apply the pipeline's model to a batch of docs, without modifying them.
 
         docs (Iterable[Doc]): The documents to predict.
@@ -194,12 +209,12 @@ class TextCategorizer(TrainablePipe):
             tensors = [doc.tensor for doc in docs]
             xp = self.model.ops.xp
             scores = xp.zeros((len(list(docs)), len(self.labels)))
-            return scores
+            return {"probabilities": scores}
         scores = self.model.predict(docs)
         scores = self.model.ops.asarray(scores)
-        return scores
+        return {"probabilities": scores}
 
-    def set_annotations(self, docs: Iterable[Doc], scores) -> None:
+    def set_annotations(self, docs: Iterable[Doc], activations: ActivationsT) -> None:
         """Modify a batch of Doc objects, using pre-computed scores.
 
         docs (Iterable[Doc]): The documents to modify.
@@ -207,9 +222,13 @@ class TextCategorizer(TrainablePipe):
 
         DOCS: https://spacy.io/api/textcategorizer#set_annotations
         """
+        probs = activations["probabilities"]
         for i, doc in enumerate(docs):
+            if self.save_activations:
+                doc.activations[self.name] = {}
+                doc.activations[self.name]["probabilities"] = probs[i]
             for j, label in enumerate(self.labels):
-                doc.cats[label] = float(scores[i, j])
+                doc.cats[label] = float(probs[i, j])
 
     def update(
         self,

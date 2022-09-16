@@ -245,6 +245,7 @@ cdef class Doc:
         self.length = 0
         self.sentiment = 0.0
         self.cats = {}
+        self.activations = {}
         self.user_hooks = {}
         self.user_token_hooks = {}
         self.user_span_hooks = {}
