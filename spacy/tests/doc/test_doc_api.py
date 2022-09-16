@@ -2,6 +2,7 @@ import weakref
 
 import numpy
 from numpy.testing import assert_array_equal
+import murmurhash.mrmr
 import pytest
 import warnings
 from thinc.api import NumpyOps, get_current_ops
@@ -976,39 +977,70 @@ def test_doc_spans_setdefault(en_tokenizer):
     doc.spans.setdefault("key3", default=SpanGroup(doc, spans=[doc[0:1], doc[1:2]]))
     assert len(doc.spans["key3"]) == 2
 
-
 @pytest.mark.parametrize(
     "case_sensitive", [True, False]
 )
-def test_get_affixes_good_case(en_tokenizer, case_sensitive):
+def test_get_affix_hashes_good_case(en_tokenizer, case_sensitive):
+
+    def _get_unsigned_64_bit_hash(input:str) -> int:
+        if not case_sensitive:
+            input = input.lower()
+        return numpy.asarray([murmurhash.mrmr.hash(input)]).astype("uint64")[0] 
+
     doc = en_tokenizer("spaCy✨ and Prodigy")
-    prefixes = doc.get_affixes(False, case_sensitive, 1, 5, "", 2, 3)
-    suffixes = doc.get_affixes(True, case_sensitive, 2, 6, "xx✨rP", 2, 3)
-    assert prefixes[3][3, 3] == suffixes[3][3, 3]
-    assert prefixes[3][3, 2] == suffixes[3][3, 4]
-    assert suffixes[4][1].tolist() == [10024, 0]
+    prefixes = doc.get_affix_hashes(False, case_sensitive, 1, 5, "", 2, 3)
+    suffixes = doc.get_affix_hashes(True, case_sensitive, 2, 6, "xx✨rP", 1, 3)
+    assert prefixes[0][0] == _get_unsigned_64_bit_hash("s")
+    assert prefixes[0][1] == _get_unsigned_64_bit_hash("sp")
+    assert prefixes[0][2] == _get_unsigned_64_bit_hash("spa")
+    assert prefixes[0][3] == _get_unsigned_64_bit_hash("spaC")
+    assert prefixes[0][4] == _get_unsigned_64_bit_hash("  ")
+    assert prefixes[1][0] == _get_unsigned_64_bit_hash("✨")
+    assert prefixes[1][1] == _get_unsigned_64_bit_hash("✨")
+    assert prefixes[1][2] == _get_unsigned_64_bit_hash("✨")
+    assert prefixes[1][3] == _get_unsigned_64_bit_hash("✨")
+    assert prefixes[1][4] == _get_unsigned_64_bit_hash("  ")
+    assert prefixes[2][0] == _get_unsigned_64_bit_hash("a")
+    assert prefixes[2][1] == _get_unsigned_64_bit_hash("an")
+    assert prefixes[2][2] == _get_unsigned_64_bit_hash("and")
+    assert prefixes[2][3] == _get_unsigned_64_bit_hash("and")
+    assert prefixes[2][4] == _get_unsigned_64_bit_hash("  ")
+    assert prefixes[3][0] == _get_unsigned_64_bit_hash("P")
+    assert prefixes[3][1] == _get_unsigned_64_bit_hash("Pr")
+    assert prefixes[3][2] == _get_unsigned_64_bit_hash("Pro")
+    assert prefixes[3][3] == _get_unsigned_64_bit_hash("Prod")
+    assert prefixes[3][4] == _get_unsigned_64_bit_hash("  ")
+
+    assert suffixes[0][0] == _get_unsigned_64_bit_hash("yC")
+    assert suffixes[0][1] == _get_unsigned_64_bit_hash("yCa")
+    assert suffixes[0][2] == _get_unsigned_64_bit_hash("yCap")
+    assert suffixes[0][3] == _get_unsigned_64_bit_hash("yCaps")
+    assert suffixes[0][4] == _get_unsigned_64_bit_hash(" ")
+    assert suffixes[0][5] == _get_unsigned_64_bit_hash("  ")
+    assert suffixes[1][0] == _get_unsigned_64_bit_hash("✨")
+    assert suffixes[1][1] == _get_unsigned_64_bit_hash("✨")
+    assert suffixes[1][2] == _get_unsigned_64_bit_hash("✨")
+    assert suffixes[1][3] == _get_unsigned_64_bit_hash("✨")
+    assert suffixes[1][4] == _get_unsigned_64_bit_hash("✨")
+    assert suffixes[1][5] == _get_unsigned_64_bit_hash("✨ ")
+    assert suffixes[2][0] == _get_unsigned_64_bit_hash("dn")
+    assert suffixes[2][1] == _get_unsigned_64_bit_hash("dna")
+    assert suffixes[2][2] == _get_unsigned_64_bit_hash("dna")
+    assert suffixes[2][3] == _get_unsigned_64_bit_hash("dna")
+    assert suffixes[2][4] == _get_unsigned_64_bit_hash(" ")
+    assert suffixes[2][5] == _get_unsigned_64_bit_hash("  ")
+    assert suffixes[3][0] == _get_unsigned_64_bit_hash("yg")
+    assert suffixes[3][1] == _get_unsigned_64_bit_hash("ygi")
+    assert suffixes[3][2] == _get_unsigned_64_bit_hash("ygid")
+    assert suffixes[3][3] == _get_unsigned_64_bit_hash("ygido")
+    assert suffixes[3][4] == _get_unsigned_64_bit_hash("r")
+
     if case_sensitive:
-        assert suffixes[4][3].tolist() == [114, 80]
+        assert suffixes[3][5] == _get_unsigned_64_bit_hash("rP")
     else:
-        assert suffixes[4][3].tolist() == [114, 112]
-    suffixes = doc.get_affixes(True, case_sensitive, 2, 6, "xx✨rp", 2, 3)
-    if case_sensitive:
-        assert suffixes[4][3].tolist() == [114, 0]
-    else:
-        assert suffixes[4][3].tolist() == [114, 112]
-    
+        assert suffixes[3][5] == _get_unsigned_64_bit_hash("r ")
 
-
-def test_get_affixes_4_byte_normal_char(en_tokenizer):
-    doc = en_tokenizer("and𐌞")
-    suffixes = doc.get_affixes(True, False, 2, 6, "a", 1, 2)
-    for i in range(0, 4):
-        assert suffixes[i][0, 1] == 55296
-    assert suffixes[3][0, 4] == 97
-    assert suffixes[4][0, 0] == 97
-
-
-def test_get_affixes_4_byte_special_char(en_tokenizer):
-    doc = en_tokenizer("and𐌞")
-    with pytest.raises(ValueError):
-        doc.get_affixes(True, False, 2, 6, "𐌞", 2, 3)
+    # check values are the same cross-platform
+    assert prefixes[0][3] == 18446744072456113490 if case_sensitive else 18446744071614199016
+    assert suffixes[1][0] == 910783208
+    assert suffixes[2][5] == 1696457176
