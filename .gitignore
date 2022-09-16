@@ -24,6 +24,7 @@ quickstart-training-generator.js
 cythonize.json
 spacy/*.html
 *.cpp
+*.c
 *.so
 
 # Vim / VSCode / editors

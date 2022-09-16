@@ -758,7 +758,7 @@ and [`dvc repro`](https://dvc.org/doc/command-reference/repro) to reproduce the
 workflow or individual commands.
 
 ```cli
-$ python -m spacy project dvc [workflow_name]
+$ python -m spacy project dvc [project_dir] [workflow_name]
 ```
 
 <Infobox title="Important note for multiple workflows" variant="warning">
