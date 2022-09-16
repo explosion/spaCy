@@ -83,24 +83,17 @@ def test_issue2396(en_vocab):
 
 
 @pytest.mark.issue(11499)
-def test_issue11499(en_vocab):
-    print(en_vocab.strings[0])
+def test_init_args_unmodified(en_vocab):
     words = ["A", "sentence"]
-    spaces = [True, False]
-    heads = [1, None]
-    deps = [None, None]
-    ents = ["B-TYPE1", "I-TYPE2"]
+    ents = ["B-TYPE1", ""]
     sent_starts = [True, False]
     Doc(
         vocab=en_vocab,
         words=words,
-        spaces=spaces,
-        heads=heads,
-        deps=deps,
         ents=ents,
         sent_starts=sent_starts,
     )
-    assert ents == ["B-TYPE1", "I-TYPE2"]
+    assert ents == ["B-TYPE1", ""]
     assert sent_starts == [True, False]
 
 
