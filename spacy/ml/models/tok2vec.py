@@ -1,4 +1,5 @@
 from typing import Optional, List, Union, cast
+from spacy.ml.affixextractor import AffixExtractor
 from thinc.types import Floats2d, Ints2d, Ragged, Ints1d
 from thinc.api import chain, clone, concatenate, with_array, with_padded
 from thinc.api import Model, noop, list2ragged, ragged2list, HashEmbed
@@ -178,6 +179,150 @@ def MultiHashEmbed(
     else:
         model = chain(
             FeatureExtractor(list(attrs)),
+            cast(Model[List[Ints2d], Ragged], list2ragged()),
+            with_array(concatenate(*embeddings)),
+            max_out,
+            ragged2list(),
+        )
+    return model
+
+def process_affix_config_group(
+    label: str,
+    start_len: Optional[int],
+    end_len: Optional[int],
+    rows: Optional[List[int]],
+    scs: Optional[str],
+    is_sc: bool,
+) -> List[int]:
+    if start_len is not None or end_len is not None or rows is not None:
+        if start_len is None or end_len is None or rows is None:
+            raise ValueError(Errors.E1045.format(label=label))
+        if start_len < 0 or end_len < start_len + 1:
+            raise ValueError(Errors.E1045.format(label=label))
+        if is_sc and scs is None:
+            raise ValueError(Errors.E1045.format(label=label))
+        if scs is not None and scs != scs.lower():
+            raise ValueError(Errors.E1044.format(label=label))
+        if len(rows) != end_len - start_len:
+            raise ValueError(Errors.E1045.format(label=label))
+    elif scs is not None:
+        raise ValueError(Errors.E1045.format(label=label))
+    return rows if rows is not None else []
+
+@registry.architectures("spacy.AffixMultiHashEmbed.v1")
+def AffixMultiHashEmbed(
+    width: int,
+    attrs: List[Union[str, int]],
+    rows: List[int],
+    include_static_vectors: bool,
+    *,
+    affix_case_sensitive: bool,
+    suffix_start_len: Optional[int] = None,
+    suffix_end_len: Optional[int] = None,
+    suffix_rows: Optional[List[int]] = None,
+    suffix_scs: Optional[str] = None,
+    suffix_sc_start_len: Optional[int] = None,
+    suffix_sc_end_len: Optional[int] = None,
+    suffix_sc_rows: Optional[List[int]] = None,
+    prefix_start_len: Optional[int] = None,
+    prefix_end_len: Optional[int] = None,
+    prefix_rows: Optional[List[int]] = None,
+    prefix_scs: Optional[str] = None,
+    prefix_sc_start_len: Optional[int] = None,
+    prefix_sc_end_len: Optional[int] = None,
+    prefix_sc_rows: Optional[List[int]] = None,
+) -> Model[List[Doc], List[Floats2d]]:
+
+    """
+    TODO
+    """
+
+
+    if len(rows) != len(attrs):
+        raise ValueError(f"Mismatched lengths: {len(rows)} vs {len(attrs)}")
+
+    rows.extend(
+        process_affix_config_group(
+            "prefix", prefix_start_len, prefix_end_len, prefix_rows, None, False
+        )
+    )
+    rows.extend(
+        process_affix_config_group(
+            "prefix_sc",
+            prefix_sc_start_len,
+            prefix_sc_end_len,
+            prefix_sc_rows,
+            prefix_scs,
+            True,
+        )
+    )
+    rows.extend(
+        process_affix_config_group(
+            "suffix", suffix_start_len, suffix_end_len, suffix_rows, None, False
+        )
+    )
+    rows.extend(
+        process_affix_config_group(
+            "suffix_sc",
+            suffix_sc_start_len,
+            suffix_sc_end_len,
+            suffix_sc_rows,
+            suffix_scs,
+            True,
+        )
+    )
+
+    embeddings = [
+        HashEmbed(width, row, column=i, seed=i + 7, dropout=0.0)
+        for i, row in enumerate(rows)
+    ]
+    concat_size = width * (len(embeddings) + include_static_vectors)
+    max_out: Model[Ragged, Ragged] = with_array(
+        Maxout(width, concat_size, nP=3, dropout=0.0, normalize=True)
+    )
+    extractors = [FeatureExtractor(attrs)]
+    if prefix_start_len is not None or prefix_sc_start_len is not None:
+        extractors.append(
+            AffixExtractor(
+                suffs_not_prefs=False,
+                case_sensitive=affix_case_sensitive,
+                len_start=prefix_start_len,
+                len_end=prefix_end_len,
+                special_chars=prefix_scs,
+                sc_len_start=prefix_sc_start_len,
+                sc_len_end=prefix_sc_end_len,
+            )
+        )
+    if suffix_start_len is not None or suffix_sc_start_len is not None:
+        extractors.append(
+            AffixExtractor(
+                suffs_not_prefs=True,
+                case_sensitive=affix_case_sensitive,
+                len_start=suffix_start_len,
+                len_end=suffix_end_len,
+                special_chars=suffix_scs,
+                sc_len_start=suffix_sc_start_len,
+                sc_len_end=suffix_sc_end_len,
+            )
+        )
+
+    if include_static_vectors:
+        feature_extractor: Model[List[Doc], Ragged] = chain(
+            concatenate(*extractors),
+            cast(Model[List[Ints2d], Ragged], list2ragged()),
+            with_array(concatenate(*embeddings)),
+        )
+        model = chain(
+            concatenate(
+                feature_extractor,
+                StaticVectors(width, dropout=0.0),
+            ),
+            max_out,
+            ragged2list(),
+        )
+    else:
+        model = chain(
+            concatenate(*extractors),
             cast(Model[List[Ints2d], Ragged], list2ragged()),
             with_array(concatenate(*embeddings)),
             max_out,

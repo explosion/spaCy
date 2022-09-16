@@ -1735,7 +1735,7 @@ cdef class Doc:
                     j += 1
         return output
 
-    def get_affix_hashes(self, bint suffs_not_prefs, bint lower_not_orth, unsigned int len_start, unsigned int len_end, 
+    def get_affix_hashes(self, bint suffs_not_prefs, bint case_sensitive, unsigned int len_start, unsigned int len_end, 
         str special_chars, unsigned int sc_len_start, unsigned int sc_len_end):
         """
         TODO
@@ -1746,7 +1746,7 @@ cdef class Doc:
         cdef np.ndarray[np.int64_t, ndim=2] output = numpy.empty((num_tokens, num_norm_hashes + num_spec_hashes), dtype="int64")
 
         for token_index in range(num_tokens):
-            token_string = self[token_index].orth_ if lower_not_orth else self[token_index].lower_
+            token_string = self[token_index].orth_ if case_sensitive else self[token_index].lower_
             if suffs_not_prefs:
                 token_string = token_string[::-1]
 
