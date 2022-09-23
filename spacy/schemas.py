@@ -162,6 +162,7 @@ class TokenPatternString(BaseModel):
     IS_SUBSET: Optional[List[StrictStr]] = Field(None, alias="is_subset")
     IS_SUPERSET: Optional[List[StrictStr]] = Field(None, alias="is_superset")
     INTERSECTS: Optional[List[StrictStr]] = Field(None, alias="intersects")
+    FUZZY: Union[StrictStr, "TokenPatternString"] = Field(None, alias="fuzzy")
     FUZZY1: Union[StrictStr, "TokenPatternString"] = Field(None, alias="fuzzy1")
     FUZZY2: Union[StrictStr, "TokenPatternString"] = Field(None, alias="fuzzy2")
     FUZZY3: Union[StrictStr, "TokenPatternString"] = Field(None, alias="fuzzy3")

@@ -205,6 +205,18 @@ cdef class Matcher:
                 else:
                     yield doc
 
+    @staticmethod
+    def fuzzy_match(s1: str, s2: str, distance: int, token: Token) -> bool:
+        if token.is_oov: # (TODO: param?)
+            threshold = min(len(s1), len(s2)) - 1 # max edit distance
+            if distance: # FUZZYn operators
+                threshold = min(distance, threshold)
+            else: # FUZZY operator
+                threshold = min(5, threshold - 1) # default fuzziness (TODO: param?)
+            if threshold > 0:
+                return levenshtein(s1, s2) <= threshold
+        return False
+
     def __call__(self, object doclike, *, as_spans=False, allow_missing=False, with_alignments=False):
         """Find all token sequences matching the supplied pattern.
 
@@ -829,7 +841,7 @@ def _get_attr_values(spec, string_store):
 # extensions to the matcher introduced in #3173.
 
 class _FuzzyPredicate:
-    operators = ("FUZZY1", "FUZZY2", "FUZZY3", "FUZZY4", "FUZZY5")
+    operators = ("FUZZY", "FUZZY1", "FUZZY2", "FUZZY3", "FUZZY4", "FUZZY5")
 
     def __init__(self, i, attr, value, predicate, is_extension=False, vocab=None, distance=None):
         self.i = i
@@ -840,7 +852,8 @@ class _FuzzyPredicate:
         self.key = (attr, self.predicate, srsly.json_dumps(value, sort_keys=True))
         if self.predicate not in self.operators:
             raise ValueError(Errors.E126.format(good=self.operators, bad=self.predicate))
-        self.distance = int(self.predicate[len('FUZZY'):]) # number after prefix
+        self.distance = self.predicate[len('FUZZY'):] # number after prefix
+        self.distance = int(self.distance) if self.distance else 0
 
     def __call__(self, Token token):
         if self.is_extension:
@@ -849,9 +862,7 @@ class _FuzzyPredicate:
             value = token.vocab.strings[get_token_attr_for_matcher(token.c, self.attr)]
         if self.value == value:
             return True
-        elif self.distance and token.is_oov:
-            return bool(levenshtein(value, self.value) <= min(self.distance, min(len(value), len(self.value))-1))
-        return False
+        return Matcher.fuzzy_match(value, self.value, self.distance, token)
 
 
 class _RegexPredicate:
@@ -887,7 +898,7 @@ class _SetPredicate:
             # normalize morph strings
             self.value = set(self.vocab.morphology.add(v) for v in value)
         else:
-            if self.distance:
+            if self.distance is not None:
                 # add to string store
                 self.value = set(self.vocab.strings.add(v) for v in value)
             else:
@@ -924,21 +935,19 @@ class _SetPredicate:
         if self.predicate == "IN":
             if value in self.value:
                 return True
-            elif self.distance and token.is_oov:
+            elif self.distance is not None:
                 s1 = self.vocab.strings[value]
                 for v in self.value:
-                    s2 = self.vocab.strings[v]
-                    if levenshtein(s1, s2) <= min(self.distance, min(len(s1), len(s2))-1):
+                    if Matcher.fuzzy_match(s1, self.vocab.strings[v], self.distance, token):
                         return True
             return False
         elif self.predicate == "NOT_IN":
             if value in self.value:
                 return False
-            elif self.distance and token.is_oov:
+            elif self.distance is not None:
                 s1 = self.vocab.strings[value]
                 for v in self.value:
-                    s2 = self.vocab.strings[v]
-                    if levenshtein(s1, s2) <= min(self.distance, min(len(s1), len(s2))-1):
+                    if Matcher.fuzzy_match(s1, self.vocab.strings[v], self.distance, token):
                         return False
             return True
         elif self.predicate == "IS_SUBSET":
@@ -998,6 +1007,7 @@ def _get_extra_predicates(spec, extra_predicates, vocab):
         "<=": _ComparisonPredicate,
         ">": _ComparisonPredicate,
         "<": _ComparisonPredicate,
+        "FUZZY": _FuzzyPredicate,
         "FUZZY1": _FuzzyPredicate,
         "FUZZY2": _FuzzyPredicate,
         "FUZZY3": _FuzzyPredicate,
@@ -1036,7 +1046,8 @@ def _get_extra_predicates_dict(attr, value_dict, vocab, predicate_types,
             # ignore unrecognized predicate type
             continue
         elif cls == _FuzzyPredicate:
-            distance = int(type_[len("FUZZY"):]) # number after prefix
+            distance = type_[len("FUZZY"):] # number after prefix
+            distance = int(distance) if distance else 0
             if isinstance(value, dict):
                 # add predicates inside fuzzy operator
                 output.extend(_get_extra_predicates_dict(attr, value, vocab, predicate_types,
