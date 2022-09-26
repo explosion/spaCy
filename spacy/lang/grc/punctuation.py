@@ -4,9 +4,7 @@ from ..char_classes import CONCAT_QUOTES
 
 _prefixes = (
     [
-        "〈",
         "†",
-        "⟦",
         "⸏",
     ]
     + LIST_PUNCT
@@ -22,9 +20,7 @@ _suffixes = (
     + LIST_QUOTES
     + LIST_ICONS
     + [
-        "〉",
         "†",
-        "⟧",
         "⸎",
         r"(?<=[\u1F00-\u1FFF\u0370-\u03FF])[\-\.⸏]",
     ]
