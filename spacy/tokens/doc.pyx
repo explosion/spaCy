@@ -217,9 +217,9 @@ cdef class Doc:
             head in the doc. Defaults to None.
         deps (Optional[List[str]]): A list of unicode strings, of the same
             length as words, to assign as token.dep. Defaults to None.
-        sent_starts (Optional[List[Union[bool, None]]]): A list of values, of
-            the same length as words, to assign as token.is_sent_start. Will be
-            overridden by heads if heads is provided. Defaults to None.
+        sent_starts (Optional[List[Union[bool, int, None]]]): A list of values, 
+            of the same length as words, to assign as token.is_sent_start. Will 
+            be overridden by heads if heads is provided. Defaults to None.
         ents (Optional[List[str]]): A list of unicode strings, of the same
             length as words, as IOB tags to assign as token.ent_iob and
             token.ent_type. Defaults to None.
@@ -285,6 +285,7 @@ cdef class Doc:
             heads = [0] * len(deps)
         if heads and not deps:
             raise ValueError(Errors.E1017)
+        sent_starts = list(sent_starts) if sent_starts is not None else None
         if sent_starts is not None:
             for i in range(len(sent_starts)):
                 if sent_starts[i] is True:
@@ -300,12 +301,11 @@ cdef class Doc:
         ent_iobs = None
         ent_types = None
         if ents is not None:
+            ents = [ent if ent != "" else None for ent in ents]
             iob_strings = Token.iob_strings()
             # make valid IOB2 out of IOB1 or IOB2
             for i, ent in enumerate(ents):
-                if ent is "":
-                    ents[i] = None
-                elif ent is not None and not isinstance(ent, str):
+                if ent is not None and not isinstance(ent, str):
                     raise ValueError(Errors.E177.format(tag=ent))
                 if i < len(ents) - 1:
                     # OI -> OB
