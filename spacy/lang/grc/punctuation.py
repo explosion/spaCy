@@ -37,7 +37,7 @@ _infixes = (
         r"(?<=[{a}]),(?=[{a}])".format(a=ALPHA),
         r"(?<=[{a}0-9])(?:{h})(?=[{a}])".format(a=ALPHA, h=HYPHENS),
         r"(?<=[{a}0-9])[:<>=/](?=[{a}])".format(a=ALPHA),
-        r"(?<=[\u1F00-\u1FFF-\u0370-\u03FF])—",
+        r"(?<=[\u1F00-\u1FFF\u0370-\u03FF])—",
     ]
 )
 
