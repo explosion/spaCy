@@ -3984,7 +3984,21 @@
             },
             "category": ["pipeline"],
             "tags": ["interpretation", "ja"]
+        },
+        {
+            "id": "spacy-partial-tagger",
+            "title": "spaCy - Partial Tagger",
+            "slogan": "Sequence Tagger for Partially Annotated Dataset in spaCy",
+            "description": "This is a library to build a CRF tagger with a partially annotated dataset in spaCy. You can build your own tagger only from dictionary.",
+            "github": "doccano/spacy-partial-tagger",
+            "pip": "spacy-partial-tagger",
+            "category": ["pipeline", "training"],
+            "author": "Yasufumi Taniguchi",
+            "author_links": {
+                "github": "yasufumy"
+            }
         }
+
     ],
 
     "categories": [
