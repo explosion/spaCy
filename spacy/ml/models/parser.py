@@ -1,8 +1,9 @@
 from typing import Optional, List, Tuple, Any
 from thinc.types import Floats2d
 from thinc.api import Model
+import warnings
 
-from ...errors import Errors
+from ...errors import Errors, Warnings
 from ...compat import Literal
 from ...util import registry
 from ..tb_framework import TransitionModel
@@ -10,6 +11,29 @@ from ...tokens.doc import Doc
 
 TransitionSystem = Any  # TODO
 State = Any  # TODO
+
+
+@registry.architectures.register("spacy.TransitionBasedParser.v2")
+def transition_parser_v2(
+    tok2vec: Model[List[Doc], List[Floats2d]],
+    state_type: Literal["parser", "ner"],
+    extra_state_tokens: bool,
+    hidden_width: int,
+    maxout_pieces: int,
+    use_upper: bool,
+    nO: Optional[int] = None,
+) -> Model:
+    if not use_upper:
+        warnings.warn(Warnings.W400)
+
+    return build_tb_parser_model(
+        tok2vec,
+        state_type,
+        extra_state_tokens,
+        hidden_width,
+        maxout_pieces,
+        nO=nO,
+    )
 
 
 @registry.architectures.register("spacy.TransitionBasedParser.v3")

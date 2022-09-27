@@ -213,6 +213,8 @@ class Warnings(metaclass=ErrorsWithCodes):
     W122 = ("Couldn't trace method '{method}' in pipe '{pipe}'. This can happen if the pipe class "
             "is a Cython extension type.")
 
+    W400 = ("`use_upper=False` is ignored, the upper layer is always enabled")
+
 
 class Errors(metaclass=ErrorsWithCodes):
     E001 = ("No component '{name}' found in pipeline. Available names: {opts}")
