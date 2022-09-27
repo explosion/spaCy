@@ -1,4 +1,4 @@
-from typing import Iterator, Optional, Any, Dict, Callable, Iterable, Collection
+from typing import Iterator, Optional, Any, Dict, Callable, Iterable
 from typing import Union, Tuple, List, Set, Pattern, Sequence
 from typing import NoReturn, TYPE_CHECKING, TypeVar, cast, overload
 
@@ -10,6 +10,7 @@ from contextlib import contextmanager
 from copy import deepcopy
 from pathlib import Path
 import warnings
+
 from thinc.api import get_current_ops, Config, CupyOps, Optimizer
 import srsly
 import multiprocessing as mp
@@ -24,7 +25,7 @@ from .pipe_analysis import validate_attrs, analyze_pipes, print_pipe_analysis
 from .training import Example, validate_examples
 from .training.initialize import init_vocab, init_tok2vec
 from .scorer import Scorer
-from .util import registry, SimpleFrozenList, _pipe, raise_error
+from .util import registry, SimpleFrozenList, _pipe, raise_error, _DEFAULT_EMPTY_PIPES
 from .util import SimpleFrozenDict, combine_score_weights, CONFIG_SECTION_ORDER
 from .util import warn_if_jupyter_cupy
 from .lang.tokenizer_exceptions import URL_MATCH, BASE_EXCEPTIONS
@@ -1698,9 +1699,9 @@ class Language:
         config: Union[Dict[str, Any], Config] = {},
         *,
         vocab: Union[Vocab, bool] = True,
-        disable: Union[str, Iterable[str]] = SimpleFrozenList(),
-        enable: Union[str, Iterable[str]] = SimpleFrozenList(),
-        exclude: Union[str, Iterable[str]] = SimpleFrozenList(),
+        disable: Union[str, Iterable[str]] = _DEFAULT_EMPTY_PIPES,
+        enable: Union[str, Iterable[str]] = _DEFAULT_EMPTY_PIPES,
+        exclude: Union[str, Iterable[str]] = _DEFAULT_EMPTY_PIPES,
         meta: Dict[str, Any] = SimpleFrozenDict(),
         auto_fill: bool = True,
         validate: bool = True,
@@ -1727,12 +1728,6 @@ class Language:
 
         DOCS: https://spacy.io/api/language#from_config
         """
-        if isinstance(disable, str):
-            disable = [disable]
-        if isinstance(enable, str):
-            enable = [enable]
-        if isinstance(exclude, str):
-            exclude = [exclude]
         if auto_fill:
             config = Config(
                 cls.default_config, section_order=CONFIG_SECTION_ORDER
@@ -1877,9 +1872,38 @@ class Language:
             nlp.vocab.from_bytes(vocab_b)
 
         # Resolve disabled/enabled settings.
+        if isinstance(disable, str):
+            disable = [disable]
+        if isinstance(enable, str):
+            enable = [enable]
+        if isinstance(exclude, str):
+            exclude = [exclude]
+
+        def fetch_pipes_status(value: Iterable[str], key: str) -> Iterable[str]:
+            """Fetch value for `enable` or `disable` w.r.t. the specified config and passed arguments passed to
+            .load(). If both arguments and config specified values for this field, the passed arguments take precedence
+            and a warning is printed.
+            value (Iterable[str]): Passed value for `enable` or `disable`.
+            key (str): Key for field in config (either "enabled" or "disabled").
+            RETURN (Iterable[str]):
+            """
+            # We assume that no argument was passed if the value is the specified default value.
+            if id(value) == id(_DEFAULT_EMPTY_PIPES):
+                return config["nlp"].get(key, [])
+            else:
+                if len(config["nlp"].get(key, [])):
+                    warnings.warn(
+                        Warnings.W123.format(
+                            arg=key[:-1],
+                            arg_value=value,
+                            config_value=config["nlp"][key],
+                        )
+                    )
+                return value
+
         disabled_pipes = cls._resolve_component_status(
-            [*config["nlp"]["disabled"], *disable],
-            [*config["nlp"].get("enabled", []), *enable],
+            fetch_pipes_status(disable, "disabled"),
+            fetch_pipes_status(enable, "enabled"),
             config["nlp"]["pipeline"],
         )
         nlp._disabled = set(p for p in disabled_pipes if p not in exclude)
@@ -2064,14 +2088,7 @@ class Language:
                 pipe_name for pipe_name in pipe_names if pipe_name not in enable
             ]
             if disable and disable != to_disable:
-                raise ValueError(
-                    Errors.E1042.format(
-                        arg1="enable",
-                        arg2="disable",
-                        arg1_values=enable,
-                        arg2_values=disable,
-                    )
-                )
+                raise ValueError(Errors.E1042.format(enable=enable, disable=disable))
 
         return tuple(to_disable)
 
