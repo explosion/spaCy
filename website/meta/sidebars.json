@@ -94,6 +94,7 @@
                 "label": "Pipeline",
                 "items": [
                     { "text": "AttributeRuler", "url": "/api/attributeruler" },
+                    { "text": "CoreferenceResolver", "url": "/api/coref" },
                     { "text": "DependencyParser", "url": "/api/dependencyparser" },
                     { "text": "EditTreeLemmatizer", "url": "/api/edittreelemmatizer" },
                     { "text": "EntityLinker", "url": "/api/entitylinker" },
@@ -104,6 +105,7 @@
                     { "text": "SentenceRecognizer", "url": "/api/sentencerecognizer" },
                     { "text": "Sentencizer", "url": "/api/sentencizer" },
                     { "text": "SpanCategorizer", "url": "/api/spancategorizer" },
+                    { "text": "SpanResolver", "url": "/api/span-resolver" },
                     { "text": "SpanRuler", "url": "/api/spanruler" },
                     { "text": "Tagger", "url": "/api/tagger" },
                     { "text": "TextCategorizer", "url": "/api/textcategorizer" },
