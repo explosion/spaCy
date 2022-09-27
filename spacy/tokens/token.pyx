@@ -22,6 +22,7 @@ from .. import parts_of_speech
 from ..errors import Errors, Warnings
 from ..attrs import IOB_STRINGS
 from .underscore import Underscore, get_ext_args
+from cython.operator cimport dereference as deref
 
 
 cdef class Token:
@@ -206,7 +207,8 @@ cdef class Token:
         if self.vocab.vectors.n_keys == 0:
             warnings.warn(Warnings.W007.format(obj="Token"))
         if self.vector_norm == 0 or other.vector_norm == 0:
-            warnings.warn(Warnings.W008.format(obj="Token"))
+            if not self.has_vector or not other.has_vector:
+                warnings.warn(Warnings.W008.format(obj="Token"))
             return 0.0
         vector = self.vector
         xp = get_array_module(vector)
@@ -230,7 +232,7 @@ cdef class Token:
             # Check that the morph has the same vocab
             if self.vocab != morph.vocab:
                 raise ValueError(Errors.E1013)
-            self.c.morph = morph.c.key
+            self.c.morph = deref(morph.c).key
 
     def set_morph(self, features):
         cdef hash_t key

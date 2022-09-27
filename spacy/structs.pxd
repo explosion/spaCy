@@ -58,14 +58,6 @@ cdef struct TokenC:
     hash_t ent_id
 
 
-cdef struct MorphAnalysisC:
-    hash_t key
-    int length
-
-    attr_t* fields
-    attr_t* features
-
-
 # Internal struct, for storage and disambiguation of entities.
 cdef struct KBEntryC:
 

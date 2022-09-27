@@ -692,3 +692,23 @@ def test_span_group_copy(doc):
     assert len(doc.spans["test"]) == 3
     # check that the copy spans were not modified and this is an isolated doc
     assert len(doc_copy.spans["test"]) == 2
+
+
+@pytest.mark.issue(11113)
+def test_span_ent_id(en_tokenizer):
+    doc = en_tokenizer("a b c d")
+    doc.ents = [Span(doc, 1, 3, label="A", span_id="ID0")]
+    span = doc.ents[0]
+    assert doc[1].ent_id_ == "ID0"
+
+    # setting Span.id sets Token.ent_id
+    span.id_ = "ID1"
+    doc.ents = [span]
+    assert doc.ents[0].ent_id_ == "ID1"
+    assert doc[1].ent_id_ == "ID1"
+
+    # Span.ent_id is an alias of Span.id
+    span.ent_id_ = "ID2"
+    doc.ents = [span]
+    assert doc.ents[0].ent_id_ == "ID2"
+    assert doc[1].ent_id_ == "ID2"

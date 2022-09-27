@@ -3,12 +3,13 @@ from typing import Iterable, TypeVar, TYPE_CHECKING
 from .compat import Literal
 from enum import Enum
 from pydantic import BaseModel, Field, ValidationError, validator, create_model
-from pydantic import StrictStr, StrictInt, StrictFloat, StrictBool
+from pydantic import StrictStr, StrictInt, StrictFloat, StrictBool, ConstrainedStr
 from pydantic.main import ModelMetaclass
 from thinc.api import Optimizer, ConfigValidationError, Model
 from thinc.config import Promise
 from collections import defaultdict
 import inspect
+import re
 
 from .attrs import NAMES
 from .lookups import Lookups
@@ -143,7 +144,7 @@ def validate_init_settings(
 
 def validate_token_pattern(obj: list) -> List[str]:
     # Try to convert non-string keys (e.g. {ORTH: "foo"} -> {"ORTH": "foo"})
-    get_key = lambda k: NAMES[k] if isinstance(k, int) and k < len(NAMES) else k
+    get_key = lambda k: NAMES[k] if isinstance(k, int) and k in NAMES else k
     if isinstance(obj, list):
         converted = []
         for pattern in obj:
@@ -198,13 +199,18 @@ class TokenPatternNumber(BaseModel):
         return v
 
 
-class TokenPatternOperator(str, Enum):
+class TokenPatternOperatorSimple(str, Enum):
     plus: StrictStr = StrictStr("+")
-    start: StrictStr = StrictStr("*")
+    star: StrictStr = StrictStr("*")
     question: StrictStr = StrictStr("?")
     exclamation: StrictStr = StrictStr("!")
 
 
+class TokenPatternOperatorMinMax(ConstrainedStr):
+    regex = re.compile(r"^({\d+}|{\d+,\d*}|{\d*,\d+})$")
+
+
+TokenPatternOperator = Union[TokenPatternOperatorSimple, TokenPatternOperatorMinMax]
 StringValue = Union[TokenPatternString, StrictStr]
 NumberValue = Union[TokenPatternNumber, StrictInt, StrictFloat]
 UnderscoreValue = Union[
@@ -508,6 +514,14 @@ class DocJSONSchema(BaseModel):
     tokens: List[Dict[StrictStr, Union[StrictStr, StrictInt]]] = Field(
         ..., title="Token information - ID, start, annotations"
     )
-    _: Optional[Dict[StrictStr, Any]] = Field(
-        None, title="Any custom data stored in the document's _ attribute"
+    underscore_doc: Optional[Dict[StrictStr, Any]] = Field(
+        None,
+        title="Any custom data stored in the document's _ attribute",
+        alias="_",
+    )
+    underscore_token: Optional[Dict[StrictStr, Dict[StrictStr, Any]]] = Field(
+        None, title="Any custom data stored in the token's _ attribute"
+    )
+    underscore_span: Optional[Dict[StrictStr, Dict[StrictStr, Any]]] = Field(
+        None, title="Any custom data stored in the span's _ attribute"
     )

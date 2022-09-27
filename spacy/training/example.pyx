@@ -8,7 +8,7 @@ from ..tokens.span import Span
 from ..attrs import IDS
 from .alignment import Alignment
 from .iob_utils import biluo_to_iob, offsets_to_biluo_tags, doc_to_biluo_tags
-from .iob_utils import biluo_tags_to_spans
+from .iob_utils import biluo_tags_to_spans, remove_bilu_prefix
 from ..errors import Errors, Warnings
 from ..pipeline._parser_internals import nonproj
 from ..tokens.token cimport MISSING_DEP
@@ -248,9 +248,9 @@ cdef class Example:
         # Fetch all aligned gold token incides.
         if c2g_single_toks.shape == cand_to_gold.lengths.shape:
             # This the most likely case.
-            gold_i = cand_to_gold[:].squeeze()
+            gold_i = cand_to_gold[:]
         else:
-            gold_i = numpy.vectorize(lambda x: cand_to_gold[int(x)][0])(c2g_single_toks).squeeze()
+            gold_i = numpy.vectorize(lambda x: cand_to_gold[int(x)][0], otypes='i')(c2g_single_toks)
 
         # Fetch indices of all gold heads for the aligned gold tokens.
         heads = numpy.asarray(heads, dtype='i')
@@ -260,7 +260,7 @@ cdef class Example:
         # gold tokens (and are aligned to a single candidate token).
         g2c_len_heads = gold_to_cand.lengths[gold_head_i]
         g2c_len_heads = numpy.where(g2c_len_heads == 1)[0]
-        g2c_i = numpy.vectorize(lambda x: gold_to_cand[int(x)][0])(gold_head_i[g2c_len_heads]).squeeze()
+        g2c_i = numpy.vectorize(lambda x: gold_to_cand[int(x)][0], otypes='i')(gold_head_i[g2c_len_heads]).squeeze()
 
         # Update head/dep alignments with the above.
         aligned_heads = numpy.full((self.x.length), None)
@@ -360,6 +360,7 @@ cdef class Example:
             "doc_annotation": {
                 "cats": dict(self.reference.cats),
                 "entities": doc_to_biluo_tags(self.reference),
+                "spans": self._spans_to_dict(),
                 "links": self._links_to_dict()
             },
             "token_annotation": {
@@ -374,6 +375,18 @@ cdef class Example:
                 "SENT_START": [int(bool(t.is_sent_start)) for t in self.reference]
             }
         }
+
+    def _spans_to_dict(self):
+        span_dict = {}
+        for key in self.reference.spans:
+            span_tuples = []
+            for span in self.reference.spans[key]: 
+                span_tuple = (span.start_char, span.end_char, span.label_, span.kb_id_)
+                span_tuples.append(span_tuple)
+            span_dict[key] = span_tuples
+
+        return span_dict
+
 
     def _links_to_dict(self):
         links = {}
@@ -595,7 +608,7 @@ def _parse_ner_tags(biluo_or_offsets, vocab, words, spaces):
         else:
             ent_iobs.append(iob_tag.split("-")[0])
             if iob_tag.startswith("I") or iob_tag.startswith("B"):
-                ent_types.append(iob_tag.split("-", 1)[1])
+                ent_types.append(remove_bilu_prefix(iob_tag))
             else:
                 ent_types.append("")
     return ent_iobs, ent_types

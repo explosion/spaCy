@@ -1,9 +1,9 @@
 # cython: infer_types=True, profile=True, binding=True
-from typing import Callable, Optional
+from typing import Callable, Dict, Iterable, List, Optional, Union
 import numpy
 import srsly
 from thinc.api import Model, set_dropout_rate, SequenceCategoricalCrossentropy, Config
-from thinc.types import Floats2d
+from thinc.types import Floats2d, Ints1d
 import warnings
 from itertools import islice
 
@@ -21,6 +21,9 @@ from ..scorer import Scorer
 from ..training import validate_examples, validate_get_examples
 from ..util import registry
 from .. import util
+
+
+ActivationsT = Dict[str, Union[List[Floats2d], List[Ints1d]]]
 
 # See #9050
 BACKWARD_OVERWRITE = False
@@ -45,7 +48,13 @@ DEFAULT_TAGGER_MODEL = Config().from_str(default_model_config)["model"]
 @Language.factory(
     "tagger",
     assigns=["token.tag"],
-    default_config={"model": DEFAULT_TAGGER_MODEL, "overwrite": False, "scorer": {"@scorers": "spacy.tagger_scorer.v1"}, "neg_prefix": "!"},
+    default_config={
+        "model": DEFAULT_TAGGER_MODEL,
+        "overwrite": False,
+        "scorer": {"@scorers": "spacy.tagger_scorer.v1"},
+        "neg_prefix": "!",
+        "save_activations": False,
+    },
     default_score_weights={"tag_acc": 1.0},
 )
 def make_tagger(
@@ -55,6 +64,7 @@ def make_tagger(
     overwrite: bool,
     scorer: Optional[Callable],
     neg_prefix: str,
+    save_activations: bool,
 ):
     """Construct a part-of-speech tagger component.
 
@@ -63,7 +73,8 @@ def make_tagger(
         in size, and be normalized as probabilities (all scores between 0 and 1,
         with the rows summing to 1).
     """
-    return Tagger(nlp.vocab, model, name, overwrite=overwrite, scorer=scorer, neg_prefix=neg_prefix)
+    return Tagger(nlp.vocab, model, name, overwrite=overwrite, scorer=scorer, neg_prefix=neg_prefix,
+                  save_activations=save_activations)
 
 
 def tagger_score(examples, **kwargs):
@@ -89,6 +100,7 @@ class Tagger(TrainablePipe):
         overwrite=BACKWARD_OVERWRITE,
         scorer=tagger_score,
         neg_prefix="!",
+        save_activations: bool = False,
     ):
         """Initialize a part-of-speech tagger.
 
@@ -98,6 +110,7 @@ class Tagger(TrainablePipe):
             losses during training.
         scorer (Optional[Callable]): The scoring method. Defaults to
             Scorer.score_token_attr for the attribute "tag".
+        save_activations (bool): save model activations in Doc when annotating.
 
         DOCS: https://spacy.io/api/tagger#init
         """
@@ -108,6 +121,7 @@ class Tagger(TrainablePipe):
         cfg = {"labels": [], "overwrite": overwrite, "neg_prefix": neg_prefix}
         self.cfg = dict(sorted(cfg.items()))
         self.scorer = scorer
+        self.save_activations = save_activations
 
     @property
     def labels(self):
@@ -126,7 +140,7 @@ class Tagger(TrainablePipe):
         """Data about the labels currently added to the component."""
         return tuple(self.cfg["labels"])
 
-    def predict(self, docs):
+    def predict(self, docs) -> ActivationsT:
         """Apply the pipeline's model to a batch of docs, without modifying them.
 
         docs (Iterable[Doc]): The documents to predict.
@@ -139,12 +153,12 @@ class Tagger(TrainablePipe):
             n_labels = len(self.labels)
             guesses = [self.model.ops.alloc((0, n_labels)) for doc in docs]
             assert len(guesses) == len(docs)
-            return guesses
+            return {"probabilities": guesses, "label_ids": guesses}
         scores = self.model.predict(docs)
         assert len(scores) == len(docs), (len(scores), len(docs))
         guesses = self._scores2guesses(scores)
         assert len(guesses) == len(docs)
-        return guesses
+        return {"probabilities": scores, "label_ids": guesses}
 
     def _scores2guesses(self, scores):
         guesses = []
@@ -155,14 +169,15 @@ class Tagger(TrainablePipe):
             guesses.append(doc_guesses)
         return guesses
 
-    def set_annotations(self, docs, batch_tag_ids):
+    def set_annotations(self, docs: Iterable[Doc], activations: ActivationsT):
         """Modify a batch of documents, using pre-computed scores.
 
         docs (Iterable[Doc]): The documents to modify.
-        batch_tag_ids: The IDs to set, produced by Tagger.predict.
+        activations (ActivationsT): The activations used for setting annotations, produced by Tagger.predict.
 
         DOCS: https://spacy.io/api/tagger#set_annotations
         """
+        batch_tag_ids = activations["label_ids"]
         if isinstance(docs, Doc):
             docs = [docs]
         cdef Doc doc
@@ -170,6 +185,10 @@ class Tagger(TrainablePipe):
         cdef bint overwrite = self.cfg["overwrite"]
         labels = self.labels
         for i, doc in enumerate(docs):
+            if self.save_activations:
+                doc.activations[self.name] = {}
+                for act_name, acts in activations.items():
+                    doc.activations[self.name][act_name] = acts[i]
             doc_tag_ids = batch_tag_ids[i]
             if hasattr(doc_tag_ids, "get"):
                 doc_tag_ids = doc_tag_ids.get()

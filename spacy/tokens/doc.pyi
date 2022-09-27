@@ -1,11 +1,11 @@
 from typing import Callable, Protocol, Iterable, Iterator, Optional
 from typing import Union, Tuple, List, Dict, Any, overload
 from cymem.cymem import Pool
-from thinc.types import Floats1d, Floats2d, Ints2d
+from thinc.types import ArrayXd, Floats1d, Floats2d, Ints2d, Ragged
 from .span import Span
 from .token import Token
-from ._dict_proxies import SpanGroups
-from ._retokenize import Retokenizer
+from .span_groups import SpanGroups
+from .retokenizer import Retokenizer
 from ..lexeme import Lexeme
 from ..vocab import Vocab
 from .underscore import Underscore
@@ -22,6 +22,7 @@ class Doc:
     max_length: int
     length: int
     sentiment: float
+    activations: Dict[str, Dict[str, Union[ArrayXd, Ragged]]]
     cats: Dict[str, float]
     user_hooks: Dict[str, Callable[..., Any]]
     user_token_hooks: Dict[str, Callable[..., Any]]

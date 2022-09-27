@@ -1,7 +1,8 @@
-from typing import Callable, Iterable
+from typing import Callable, Iterable, Dict, Any, cast
 
 import pytest
 from numpy.testing import assert_equal
+from thinc.types import Ragged
 
 from spacy import registry, util
 from spacy.attrs import ENT_KB_ID
@@ -9,7 +10,7 @@ from spacy.compat import pickle
 from spacy.kb import Candidate, KnowledgeBase, get_candidates
 from spacy.lang.en import English
 from spacy.ml import load_kb
-from spacy.pipeline import EntityLinker
+from spacy.pipeline import EntityLinker, TrainablePipe
 from spacy.pipeline.legacy import EntityLinker_v1
 from spacy.pipeline.tok2vec import DEFAULT_TOK2VEC_MODEL
 from spacy.scorer import Scorer
@@ -207,7 +208,7 @@ def test_no_entities():
     nlp.add_pipe("sentencizer", first=True)
 
     # this will run the pipeline on the examples and shouldn't crash
-    results = nlp.evaluate(train_examples)
+    nlp.evaluate(train_examples)
 
 
 def test_partial_links():
@@ -1048,6 +1049,10 @@ def test_no_gold_ents(patterns):
     for eg in train_examples:
         eg.predicted = ruler(eg.predicted)
 
+    # Entity ruler is no longer needed (initialization below wipes out the
+    # patterns and causes warnings)
+    nlp.remove_pipe("entity_ruler")
+
     def create_kb(vocab):
         # create artificial KB
         mykb = KnowledgeBase(vocab, entity_vector_length=vector_length)
@@ -1063,7 +1068,7 @@ def test_no_gold_ents(patterns):
         "entity_linker", config={"use_gold_ents": False}, last=True
     )
     entity_linker.set_kb(create_kb)
-    assert entity_linker.use_gold_ents == False
+    assert entity_linker.use_gold_ents is False
 
     optimizer = nlp.initialize(get_examples=lambda: train_examples)
     for i in range(2):
@@ -1074,7 +1079,7 @@ def test_no_gold_ents(patterns):
     nlp.add_pipe("sentencizer", first=True)
 
     # this will run the pipeline on the examples and shouldn't crash
-    results = nlp.evaluate(train_examples)
+    nlp.evaluate(train_examples)
 
 
 @pytest.mark.issue(9575)
@@ -1114,4 +1119,124 @@ def test_tokenization_mismatch():
         nlp.update(train_examples, sgd=optimizer, losses=losses)
 
     nlp.add_pipe("sentencizer", first=True)
-    results = nlp.evaluate(train_examples)
+    nlp.evaluate(train_examples)
+
+
+# fmt: off
+@pytest.mark.parametrize(
+    "meet_threshold,config",
+    [
+        (False, {"@architectures": "spacy.EntityLinker.v2", "tok2vec": DEFAULT_TOK2VEC_MODEL}),
+        (True, {"@architectures": "spacy.EntityLinker.v2", "tok2vec": DEFAULT_TOK2VEC_MODEL}),
+    ],
+)
+# fmt: on
+def test_threshold(meet_threshold: bool, config: Dict[str, Any]):
+    """Tests abstention threshold.
+    meet_threshold (bool): Whether to configure NEL setup so that confidence threshold is met.
+    config (Dict[str, Any]): NEL architecture config.
+    """
+    nlp = English()
+    nlp.add_pipe("sentencizer")
+    text = "Mahler's Symphony No. 8 was beautiful."
+    entities = [(0, 6, "PERSON")]
+    links = {(0, 6): {"Q7304": 1.0}}
+    sent_starts = [1, -1, 0, 0, 0, 0, 0, 0, 0]
+    entity_id = "Q7304"
+    doc = nlp(text)
+    train_examples = [
+        Example.from_dict(
+            doc, {"entities": entities, "links": links, "sent_starts": sent_starts}
+        )
+    ]
+
+    def create_kb(vocab):
+        # create artificial KB
+        mykb = KnowledgeBase(vocab, entity_vector_length=3)
+        mykb.add_entity(entity=entity_id, freq=12, entity_vector=[6, -4, 3])
+        mykb.add_alias(
+            alias="Mahler",
+            entities=[entity_id],
+            probabilities=[1 if meet_threshold else 0.01],
+        )
+        return mykb
+
+    # Create the Entity Linker component and add it to the pipeline
+    entity_linker = nlp.add_pipe(
+        "entity_linker",
+        last=True,
+        config={"threshold": 0.99, "model": config},
+    )
+    entity_linker.set_kb(create_kb)  # type: ignore
+    nlp.initialize(get_examples=lambda: train_examples)
+
+    # Add a custom rule-based component to mimick NER
+    ruler = nlp.add_pipe("entity_ruler", before="entity_linker")
+    ruler.add_patterns([{"label": "PERSON", "pattern": [{"LOWER": "mahler"}]}])  # type: ignore
+    doc = nlp(text)
+
+    assert len(doc.ents) == 1
+    assert doc.ents[0].kb_id_ == entity_id if meet_threshold else EntityLinker.NIL
+
+
+def test_save_activations():
+    nlp = English()
+    vector_length = 3
+    assert "Q2146908" not in nlp.vocab.strings
+
+    # Convert the texts to docs to make sure we have doc.ents set for the training examples
+    train_examples = []
+    for text, annotation in TRAIN_DATA:
+        doc = nlp(text)
+        train_examples.append(Example.from_dict(doc, annotation))
+
+    def create_kb(vocab):
+        # create artificial KB - assign same prior weight to the two russ cochran's
+        # Q2146908 (Russ Cochran): American golfer
+        # Q7381115 (Russ Cochran): publisher
+        mykb = KnowledgeBase(vocab, entity_vector_length=vector_length)
+        mykb.add_entity(entity="Q2146908", freq=12, entity_vector=[6, -4, 3])
+        mykb.add_entity(entity="Q7381115", freq=12, entity_vector=[9, 1, -7])
+        mykb.add_alias(
+            alias="Russ Cochran",
+            entities=["Q2146908", "Q7381115"],
+            probabilities=[0.5, 0.5],
+        )
+        return mykb
+
+    # Create the Entity Linker component and add it to the pipeline
+    entity_linker = cast(TrainablePipe, nlp.add_pipe("entity_linker", last=True))
+    assert isinstance(entity_linker, EntityLinker)
+    entity_linker.set_kb(create_kb)
+    assert "Q2146908" in entity_linker.vocab.strings
+    assert "Q2146908" in entity_linker.kb.vocab.strings
+
+    # initialize the NEL pipe
+    nlp.initialize(get_examples=lambda: train_examples)
+
+    nO = entity_linker.model.get_dim("nO")
+
+    nlp.add_pipe("sentencizer", first=True)
+    patterns = [
+        {"label": "PERSON", "pattern": [{"LOWER": "russ"}, {"LOWER": "cochran"}]},
+        {"label": "ORG", "pattern": [{"LOWER": "ec"}, {"LOWER": "comics"}]},
+    ]
+    ruler = nlp.add_pipe("entity_ruler", before="entity_linker")
+    ruler.add_patterns(patterns)
+
+    doc = nlp("Russ Cochran was a publisher")
+    assert "entity_linker" not in doc.activations
+
+    entity_linker.save_activations = True
+    doc = nlp("Russ Cochran was a publisher")
+    assert set(doc.activations["entity_linker"].keys()) == {"ents", "scores"}
+    ents = doc.activations["entity_linker"]["ents"]
+    assert isinstance(ents, Ragged)
+    assert ents.data.shape == (2, 1)
+    assert ents.data.dtype == "uint64"
+    assert ents.lengths.shape == (1,)
+    scores = doc.activations["entity_linker"]["scores"]
+    assert isinstance(scores, Ragged)
+    assert scores.data.shape == (2, 1)
+    assert scores.data.dtype == "float32"
+    assert scores.lengths.shape == (1,)

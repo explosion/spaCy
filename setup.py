@@ -61,7 +61,7 @@ MOD_NAMES = [
     "spacy.tokens.span_group",
     "spacy.tokens.graph",
     "spacy.tokens.morphanalysis",
-    "spacy.tokens._retokenize",
+    "spacy.tokens.retokenizer",
     "spacy.matcher.matcher",
     "spacy.matcher.phrasematcher",
     "spacy.matcher.dependencymatcher",
@@ -128,6 +128,8 @@ class build_ext_options:
 
 class build_ext_subclass(build_ext, build_ext_options):
     def build_extensions(self):
+        if self.parallel is None and os.environ.get("SPACY_NUM_BUILD_JOBS") is not None:
+            self.parallel = int(os.environ.get("SPACY_NUM_BUILD_JOBS"))
         build_ext_options.build_options(self)
         build_ext.build_extensions(self)
 

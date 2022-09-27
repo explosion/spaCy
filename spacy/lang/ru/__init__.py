@@ -5,6 +5,8 @@ from .stop_words import STOP_WORDS
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .lex_attrs import LEX_ATTRS
 from .lemmatizer import RussianLemmatizer
+from ..punctuation import COMBINING_DIACRITICS_TOKENIZER_INFIXES
+from ..punctuation import COMBINING_DIACRITICS_TOKENIZER_SUFFIXES
 from ...language import Language, BaseDefaults
 
 
@@ -12,6 +14,8 @@ class RussianDefaults(BaseDefaults):
     tokenizer_exceptions = TOKENIZER_EXCEPTIONS
     lex_attr_getters = LEX_ATTRS
     stop_words = STOP_WORDS
+    suffixes = COMBINING_DIACRITICS_TOKENIZER_SUFFIXES
+    infixes = COMBINING_DIACRITICS_TOKENIZER_INFIXES
 
 
 class Russian(Language):
@@ -24,7 +28,7 @@ class Russian(Language):
     assigns=["token.lemma"],
     default_config={
         "model": None,
-        "mode": "pymorphy2",
+        "mode": "pymorphy3",
         "overwrite": False,
         "scorer": {"@scorers": "spacy.lemmatizer_scorer.v1"},
     },

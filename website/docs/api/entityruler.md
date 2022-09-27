@@ -1,7 +1,7 @@
 ---
 title: EntityRuler
 tag: class
-source: spacy/pipeline/entityruler.py
+source: spacy/pipeline/entity_ruler.py
 new: 2.1
 teaser: 'Pipeline component for rule-based named entity recognition'
 api_string_name: entity_ruler
@@ -64,7 +64,7 @@ how the component should be configured. You can override its settings via the
 | `scorer`              | The scoring method. Defaults to [`spacy.scorer.get_ner_prf`](/api/scorer#get_ner_prf). ~~Optional[Callable]~~                                                                                 |
 
 ```python
-%%GITHUB_SPACY/spacy/pipeline/entityruler.py
+%%GITHUB_SPACY/spacy/pipeline/entity_ruler.py
 ```
 
 ## EntityRuler.\_\_init\_\_ {#init tag="method"}

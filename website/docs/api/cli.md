@@ -77,14 +77,15 @@ $ python -m spacy info [--markdown] [--silent] [--exclude]
 $ python -m spacy info [model] [--markdown] [--silent] [--exclude]
 ```
 
-| Name                                             | Description                                                                                   |
-| ------------------------------------------------ | --------------------------------------------------------------------------------------------- |
-| `model`                                          | A trained pipeline, i.e. package name or path (optional). ~~Optional[str] \(option)~~         |
-| `--markdown`, `-md`                              | Print information as Markdown. ~~bool (flag)~~                                                |
-| `--silent`, `-s` <Tag variant="new">2.0.12</Tag> | Don't print anything, just return the values. ~~bool (flag)~~                                 |
-| `--exclude`, `-e`                                | Comma-separated keys to exclude from the print-out. Defaults to `"labels"`. ~~Optional[str]~~ |
-| `--help`, `-h`                                   | Show help message and available arguments. ~~bool (flag)~~                                    |
-| **PRINTS**                                       | Information about your spaCy installation.                                                    |
+| Name                                             | Description                                                                                                             |
+| ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
+| `model`                                          | A trained pipeline, i.e. package name or path (optional). ~~Optional[str] \(option)~~                                   |
+| `--markdown`, `-md`                              | Print information as Markdown. ~~bool (flag)~~                                                                          |
+| `--silent`, `-s` <Tag variant="new">2.0.12</Tag> | Don't print anything, just return the values. ~~bool (flag)~~                                                           |
+| `--exclude`, `-e`                                | Comma-separated keys to exclude from the print-out. Defaults to `"labels"`. ~~Optional[str]~~                           |
+| `--url`, `-u` <Tag variant="new">3.5.0</Tag>     | Print the URL to download the most recent compatible version of the pipeline. Requires a pipeline name. ~~bool (flag)~~ |
+| `--help`, `-h`                                   | Show help message and available arguments. ~~bool (flag)~~                                                              |
+| **PRINTS**                                       | Information about your spaCy installation.                                                                              |
 
 ## validate {#validate new="2" tag="command"}
 

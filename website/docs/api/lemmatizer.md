@@ -70,7 +70,7 @@ lemmatizer is available. The lemmatizer modes `rule` and `pos_lookup` require
 [`token.pos`](/api/token) from a previous pipeline component (see example
 pipeline configurations in the
 [pretrained pipeline design details](/models#design-cnn)) or rely on third-party
-libraries (`pymorphy2`).
+libraries (`pymorphy3`).
 
 | Language | Default Mode |
 | -------- | ------------ |
@@ -86,9 +86,9 @@ libraries (`pymorphy2`).
 | `nb`     | `rule`       |
 | `nl`     | `rule`       |
 | `pl`     | `pos_lookup` |
-| `ru`     | `pymorphy2`  |
+| `ru`     | `pymorphy3`  |
 | `sv`     | `rule`       |
-| `uk`     | `pymorphy2`  |
+| `uk`     | `pymorphy3`  |
 
 ```python
 %%GITHUB_SPACY/spacy/pipeline/lemmatizer.py
@@ -118,7 +118,7 @@ shortcut for this and instantiate the component using its string name and
 | `name`         | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~ |
 | _keyword-only_ |                                                                                                     |
 | mode           | The lemmatizer mode, e.g. `"lookup"` or `"rule"`. Defaults to `"lookup"`. ~~str~~                   |
-| overwrite      | Whether to overwrite existing lemmas. ~~bool~                                                       |
+| overwrite      | Whether to overwrite existing lemmas. ~~bool~~                                                      |
 
 ## Lemmatizer.\_\_call\_\_ {#call tag="method"}
 

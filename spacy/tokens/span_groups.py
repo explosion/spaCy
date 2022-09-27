@@ -42,7 +42,8 @@ class SpanGroups(UserDict):
     def copy(self, doc: Optional["Doc"] = None) -> "SpanGroups":
         if doc is None:
             doc = self._ensure_doc()
-        return SpanGroups(doc).from_bytes(self.to_bytes())
+        data_copy = ((k, v.copy(doc=doc)) for k, v in self.items())
+        return SpanGroups(doc, items=data_copy)
 
     def setdefault(self, key, default=None):
         if not isinstance(default, SpanGroup):

@@ -19,7 +19,7 @@ import warnings
 
 from .span cimport Span
 from .token cimport MISSING_DEP
-from ._dict_proxies import SpanGroups
+from .span_groups import SpanGroups
 from .token cimport Token
 from ..lexeme cimport Lexeme, EMPTY_LEXEME
 from ..typedefs cimport attr_t, flags_t
@@ -35,8 +35,8 @@ from .. import util
 from .. import parts_of_speech
 from .. import schemas
 from .underscore import Underscore, get_ext_args
-from ._retokenize import Retokenizer
-from ._serialize import ALL_ATTRS as DOCBIN_ALL_ATTRS
+from .retokenizer import Retokenizer
+from .doc_bin import ALL_ATTRS as DOCBIN_ALL_ATTRS
 from ..util import get_words_and_spaces
 
 DEF PADDING = 5
@@ -245,6 +245,7 @@ cdef class Doc:
         self.length = 0
         self.sentiment = 0.0
         self.cats = {}
+        self.activations = {}
         self.user_hooks = {}
         self.user_token_hooks = {}
         self.user_span_hooks = {}
@@ -607,7 +608,8 @@ cdef class Doc:
         if self.vocab.vectors.n_keys == 0:
             warnings.warn(Warnings.W007.format(obj="Doc"))
         if self.vector_norm == 0 or other.vector_norm == 0:
-            warnings.warn(Warnings.W008.format(obj="Doc"))
+            if not self.has_vector or not other.has_vector:
+                warnings.warn(Warnings.W008.format(obj="Doc"))
             return 0.0
         vector = self.vector
         xp = get_array_module(vector)
@@ -627,7 +629,7 @@ cdef class Doc:
         if "has_vector" in self.user_hooks:
             return self.user_hooks["has_vector"](self)
         elif self.vocab.vectors.size:
-            return True
+            return any(token.has_vector for token in self)
         elif self.tensor.size:
             return True
         else:
@@ -807,27 +809,33 @@ cdef class Doc:
                     self.c[i].ent_iob = 1
                 self.c[i].ent_type = span.label
                 self.c[i].ent_kb_id = span.kb_id
-                # for backwards compatibility in v3, only set ent_id from
-                # span.id if it's set, otherwise don't override
-                self.c[i].ent_id = span.id if span.id else self.c[i].ent_id
+                self.c[i].ent_id = span.id
         for span in blocked:
             for i in range(span.start, span.end):
                 self.c[i].ent_iob = 3
                 self.c[i].ent_type = 0
+                self.c[i].ent_kb_id = 0
+                self.c[i].ent_id = 0
         for span in missing:
             for i in range(span.start, span.end):
                 self.c[i].ent_iob = 0
                 self.c[i].ent_type = 0
+                self.c[i].ent_kb_id = 0
+                self.c[i].ent_id = 0
         for span in outside:
             for i in range(span.start, span.end):
                 self.c[i].ent_iob = 2
                 self.c[i].ent_type = 0
+                self.c[i].ent_kb_id = 0
+                self.c[i].ent_id = 0
 
         # Set tokens outside of all provided spans
         if default != SetEntsDefault.unmodified:
             for i in range(self.length):
                 if i not in seen_tokens:
                     self.c[i].ent_type = 0
+                    self.c[i].ent_kb_id = 0
+                    self.c[i].ent_id = 0
                     if default == SetEntsDefault.outside:
                         self.c[i].ent_iob = 2
                     elif default == SetEntsDefault.missing:
@@ -967,22 +975,26 @@ cdef class Doc:
             py_attr_ids = [(IDS[id_.upper()] if hasattr(id_, "upper") else id_)
                        for id_ in py_attr_ids]
         except KeyError as msg:
-            keys = [k for k in IDS.keys() if not k.startswith("FLAG")]
+            keys = list(IDS.keys())
             raise KeyError(Errors.E983.format(dict="IDS", key=msg, keys=keys)) from None
         # Make an array from the attributes --- otherwise our inner loop is
         # Python dict iteration.
-        cdef np.ndarray attr_ids = numpy.asarray(py_attr_ids, dtype="i")
-        output = numpy.ndarray(shape=(self.length, len(attr_ids)), dtype=numpy.uint64)
+        cdef Pool mem = Pool()
+        cdef int n_attrs = len(py_attr_ids)
+        cdef attr_id_t* c_attr_ids
+        if n_attrs > 0:
+            c_attr_ids = <attr_id_t*>mem.alloc(n_attrs, sizeof(attr_id_t))
+            for i, attr_id in enumerate(py_attr_ids):
+                c_attr_ids[i] = attr_id
+        output = numpy.ndarray(shape=(self.length, n_attrs), dtype=numpy.uint64)
         c_output = <attr_t*>output.data
-        c_attr_ids = <attr_id_t*>attr_ids.data
         cdef TokenC* token
-        cdef int nr_attr = attr_ids.shape[0]
         for i in range(self.length):
             token = &self.c[i]
-            for j in range(nr_attr):
-                c_output[i*nr_attr + j] = get_token_attr(token, c_attr_ids[j])
+            for j in range(n_attrs):
+                c_output[i*n_attrs + j] = get_token_attr(token, c_attr_ids[j])
         # Handle 1d case
-        return output if len(attr_ids) >= 2 else output.reshape((self.length,))
+        return output if n_attrs >= 2 else output.reshape((self.length,))
 
     def count_by(self, attr_id_t attr_id, exclude=None, object counts=None):
         """Count the frequencies of a given attribute. Produces a dict of
@@ -1601,13 +1613,30 @@ cdef class Doc:
                 ents.append(char_span)
             self.ents = ents
 
-        # Add custom attributes. Note that only Doc extensions are currently considered, Token and Span extensions are
-        # not yet supported.
+        # Add custom attributes for the whole Doc object.
         for attr in doc_json.get("_", {}):
             if not Doc.has_extension(attr):
                 Doc.set_extension(attr)
             self._.set(attr, doc_json["_"][attr])
 
+        if doc_json.get("underscore_token", {}):
+            for token_attr in doc_json["underscore_token"]:
+                token_start = doc_json["underscore_token"][token_attr]["token_start"]
+                value = doc_json["underscore_token"][token_attr]["value"]
+
+                if not Token.has_extension(token_attr):
+                    Token.set_extension(token_attr)
+                self[token_start]._.set(token_attr, value)
+                
+        if doc_json.get("underscore_span", {}):
+            for span_attr in doc_json["underscore_span"]:
+                token_start = doc_json["underscore_span"][span_attr]["token_start"]
+                token_end = doc_json["underscore_span"][span_attr]["token_end"]
+                value = doc_json["underscore_span"][span_attr]["value"]
+
+                if not Span.has_extension(span_attr):
+                    Span.set_extension(span_attr)
+                self[token_start:token_end]._.set(span_attr, value)
         return self
 
     def to_json(self, underscore=None):
@@ -1649,20 +1678,40 @@ cdef class Doc:
             for span_group in self.spans:
                 data["spans"][span_group] = []
                 for span in self.spans[span_group]:
-                    span_data = {
-                        "start": span.start_char, "end": span.end_char, "label": span.label_, "kb_id": span.kb_id_
-                    }
+                    span_data = {"start": span.start_char, "end": span.end_char, "label": span.label_, "kb_id": span.kb_id_}
                     data["spans"][span_group].append(span_data)
 
         if underscore:
-            data["_"] = {}
+            user_keys = set()
+            if self.user_data:
+                data["_"] = {}
+                data["underscore_token"] = {}
+                data["underscore_span"] = {}
+                for data_key in self.user_data:
+                    if type(data_key) == tuple and len(data_key) >= 4 and data_key[0] == "._.":
+                        attr = data_key[1]
+                        start = data_key[2]
+                        end = data_key[3]
+                        if attr in underscore:
+                            user_keys.add(attr)
+                            value = self.user_data[data_key]
+                            if not srsly.is_json_serializable(value):
+                                raise ValueError(Errors.E107.format(attr=attr, value=repr(value)))
+                            # Check if doc attribute
+                            if start is None:
+                                data["_"][attr] = value
+                            # Check if token attribute
+                            elif end is None:
+                                if attr not in data["underscore_token"]:
+                                    data["underscore_token"][attr] = {"token_start": start, "value": value}
+                            # Else span attribute
+                            else:
+                                if attr not in data["underscore_span"]:
+                                    data["underscore_span"][attr] = {"token_start": start, "token_end": end, "value": value}
+
             for attr in underscore:
-                if not self.has_extension(attr):
+                if attr not in user_keys:
                     raise ValueError(Errors.E106.format(attr=attr, opts=underscore))
-                value = self._.get(attr)
-                if not srsly.is_json_serializable(value):
-                    raise ValueError(Errors.E107.format(attr=attr, value=repr(value)))
-                data["_"][attr] = value
         return data
 
     def to_utf8_array(self, int nr_char=-1):

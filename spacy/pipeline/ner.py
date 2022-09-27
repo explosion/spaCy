@@ -6,11 +6,11 @@ from thinc.api import Model, Config
 from ._parser_internals.transition_system import TransitionSystem
 from .transition_parser import Parser
 from ._parser_internals.ner import BiluoPushDown
-
 from ..language import Language
 from ..scorer import get_ner_prf, PRFScore
 from ..training import validate_examples
 from ..util import registry
+from ..training import remove_bilu_prefix
 
 
 default_model_config = """
@@ -252,11 +252,8 @@ class EntityRecognizer(Parser):
     def labels(self):
         # Get the labels from the model by looking at the available moves, e.g.
         # B-PERSON, I-PERSON, L-PERSON, U-PERSON
-        labels = set(
-            move.split("-")[1]
-            for move in self.move_names
-            if move[0] in ("B", "I", "L", "U")
-        )
+        labels = set(remove_bilu_prefix(move) for move in self.move_names
+                     if move[0] in ("B", "I", "L", "U"))
         return tuple(sorted(labels))
 
     def scored_ents(self, beams):

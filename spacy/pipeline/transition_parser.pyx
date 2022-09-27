@@ -11,7 +11,9 @@ import random
 import contextlib
 
 import srsly
-from thinc.api import set_dropout_rate, CupyOps, get_array_module
+from thinc.api import get_ops, set_dropout_rate, CupyOps, NumpyOps
+from thinc.api import get_array_module
+from thinc.extra.search cimport Beam
 from thinc.types import Ints1d
 import numpy.random
 import numpy
@@ -20,7 +22,7 @@ import warnings
 from ._parser_internals.stateclass cimport StateC, StateClass
 from ._parser_internals.search cimport Beam
 from ..tokens.doc cimport Doc
-from .trainable_pipe import TrainablePipe
+from .trainable_pipe cimport TrainablePipe
 from ._parser_internals cimport _beam_utils
 from ._parser_internals import _beam_utils
 from ..vocab cimport Vocab
@@ -32,7 +34,10 @@ from ..errors import Errors, Warnings
 from .. import util
 
 
-class Parser(TrainablePipe):
+NUMPY_OPS = NumpyOps()
+
+
+cdef class Parser(TrainablePipe):
     """
     Base class of the DependencyParser and EntityRecognizer.
     """
@@ -122,6 +127,7 @@ class Parser(TrainablePipe):
 
         self._rehearsal_model = None
         self.scorer = scorer
+        self._cpu_ops = get_ops("cpu") if isinstance(self.model.ops, CupyOps) else self.model.ops
 
     def __getnewargs_ex__(self):
         """This allows pickling the Parser and its keyword-only init arguments"""

@@ -7,11 +7,11 @@ import re
 from ... import about
 from ...util import ensure_path
 from .._util import project_cli, Arg, Opt, COMMAND, PROJECT_FILE
-from .._util import git_checkout, get_git_version
+from .._util import git_checkout, get_git_version, git_repo_branch_exists
 
 DEFAULT_REPO = about.__projects__
 DEFAULT_PROJECTS_BRANCH = about.__projects_branch__
-DEFAULT_BRANCH = "master"
+DEFAULT_BRANCHES = ["main", "master"]
 
 
 @project_cli.command("clone")
@@ -20,7 +20,7 @@ def project_clone_cli(
     name: str = Arg(..., help="The name of the template to clone"),
     dest: Optional[Path] = Arg(None, help="Where to clone the project. Defaults to current working directory", exists=False),
     repo: str = Opt(DEFAULT_REPO, "--repo", "-r", help="The repository to clone from"),
-    branch: Optional[str] = Opt(None, "--branch", "-b", help="The branch to clone from"),
+    branch: Optional[str] = Opt(None, "--branch", "-b", help=f"The branch to clone from. If not provided, will attempt {', '.join(DEFAULT_BRANCHES)}"),
     sparse_checkout: bool = Opt(False, "--sparse", "-S", help="Use sparse Git checkout to only check out and clone the files needed. Requires Git v22.2+.")
     # fmt: on
 ):
@@ -33,9 +33,25 @@ def project_clone_cli(
     """
     if dest is None:
         dest = Path.cwd() / Path(name).parts[-1]
+    if repo == DEFAULT_REPO and branch is None:
+        branch = DEFAULT_PROJECTS_BRANCH
+
     if branch is None:
-        # If it's a user repo, we want to default to other branch
-        branch = DEFAULT_PROJECTS_BRANCH if repo == DEFAULT_REPO else DEFAULT_BRANCH
+        for default_branch in DEFAULT_BRANCHES:
+            if git_repo_branch_exists(repo, default_branch):
+                branch = default_branch
+                break
+        if branch is None:
+            default_branches_msg = ", ".join(f"'{b}'" for b in DEFAULT_BRANCHES)
+            msg.fail(
+                "No branch provided and attempted default "
+                f"branches {default_branches_msg} do not exist.",
+                exits=1,
+            )
+    else:
+        if not git_repo_branch_exists(repo, branch):
+            msg.fail(f"repo: {repo} (branch: {branch}) does not exist.", exits=1)
+    assert isinstance(branch, str)
     project_clone(name, dest, repo=repo, branch=branch, sparse_checkout=sparse_checkout)
 
 
@@ -61,9 +77,9 @@ def project_clone(
     try:
         git_checkout(repo, name, dest, branch=branch, sparse=sparse_checkout)
     except subprocess.CalledProcessError:
-        err = f"Could not clone '{name}' from repo '{repo_name}'"
+        err = f"Could not clone '{name}' from repo '{repo_name}' (branch '{branch}')"
         msg.fail(err, exits=1)
-    msg.good(f"Cloned '{name}' from {repo_name}", project_dir)
+    msg.good(f"Cloned '{name}' from '{repo_name}' (branch '{branch}')", project_dir)
     if not (project_dir / PROJECT_FILE).exists():
         msg.warn(f"No {PROJECT_FILE} found in directory")
     else:

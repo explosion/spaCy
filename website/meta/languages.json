@@ -162,7 +162,12 @@
         {
             "code": "hr",
             "name": "Croatian",
-            "has_examples": true
+            "has_examples": true,
+            "models": [
+                "hr_core_news_sm",
+                "hr_core_news_md",
+                "hr_core_news_lg"
+            ]
         },
         {
             "code": "hsb",
@@ -258,6 +263,11 @@
         {
             "code": "lb",
             "name": "Luxembourgish",
+            "has_examples": true
+        },
+        {
+            "code": "lg",
+            "name": "Luganda",
             "has_examples": true
         },
         {
@@ -364,8 +374,8 @@
             "has_examples": true,
             "dependencies": [
                 {
-                    "name": "pymorphy2",
-                    "url": "https://github.com/kmike/pymorphy2"
+                    "name": "pymorphy3",
+                    "url": "https://github.com/no-plagiarism/pymorphy3"
                 }
             ],
             "models": [
@@ -462,10 +472,20 @@
             "code": "uk",
             "name": "Ukrainian",
             "has_examples": true,
+            "models": [
+                "uk_core_news_sm",
+                "uk_core_news_md",
+                "uk_core_news_lg",
+                "uk_core_news_trf"
+            ],
             "dependencies": [
                 {
-                    "name": "pymorphy2",
-                    "url": "https://github.com/kmike/pymorphy2"
+                    "name": "pymorphy3",
+                    "url": "https://github.com/no-plagiarism/pymorphy3"
+                },
+                {
+                    "name": "pymorphy3-dicts-uk",
+                    "url": "https://github.com/no-plagiarism/pymorphy3-dicts"
                 }
             ]
         },

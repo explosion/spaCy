@@ -59,15 +59,20 @@ matched:
 > [
 >   {"POS": "ADJ", "OP": "*"},
 >   {"POS": "NOUN", "OP": "+"}
+>   {"POS": "PROPN", "OP": "{2}"}
 > ]
 > ```
 
-| OP  | Description                                                      |
-| --- | ---------------------------------------------------------------- |
-| `!` | Negate the pattern, by requiring it to match exactly 0 times.    |
-| `?` | Make the pattern optional, by allowing it to match 0 or 1 times. |
-| `+` | Require the pattern to match 1 or more times.                    |
-| `*` | Allow the pattern to match 0 or more times.                      |
+| OP      | Description                                                            |
+| ------- | ---------------------------------------------------------------------- |
+| `!`     | Negate the pattern, by requiring it to match exactly 0 times.          |
+| `?`     | Make the pattern optional, by allowing it to match 0 or 1 times.       |
+| `+`     | Require the pattern to match 1 or more times.                          |
+| `*`     | Allow the pattern to match 0 or more times.                            |
+| `{n}`   | Require the pattern to match exactly _n_ times.                        |
+| `{n,m}` | Require the pattern to match at least _n_ but not more than _m_ times. |
+| `{n,}`  | Require the pattern to match at least _n_ times.                       |
+| `{,m}`  | Require the pattern to match at most _m_ times.                        |
 
 Token patterns can also map to a **dictionary of properties** instead of a
 single value to indicate whether the expected value is a member of a list or how
@@ -194,24 +199,10 @@ will be overwritten.
 >    [{"LOWER": "hello"}, {"LOWER": "world"}],
 >    [{"ORTH": "Google"}, {"ORTH": "Maps"}]
 > ]
-> matcher.add("TEST_PATTERNS", patterns)
+> matcher.add("TEST_PATTERNS", patterns, on_match=on_match)
 > doc = nlp("HELLO WORLD on Google Maps.")
 > matches = matcher(doc)
 > ```
-
-<Infobox title="Changed in v3.0" variant="warning">
-
-As of spaCy v3.0, `Matcher.add` takes a list of patterns as the second argument
-(instead of a variable number of arguments). The `on_match` callback becomes an
-optional keyword argument.
-
-```diff
-patterns = [[{"TEXT": "Google"}, {"TEXT": "Now"}], [{"TEXT": "GoogleNow"}]]
-- matcher.add("GoogleNow", on_match, *patterns)
-+ matcher.add("GoogleNow", patterns, on_match=on_match)
-```
-
-</Infobox>
 
 | Name                                | Description                                                                                                                                                |
 | ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |

@@ -586,7 +586,7 @@ consists of either two or three subnetworks:
   run once for each batch.
 - **lower**: Construct a feature-specific vector for each `(token, feature)`
   pair. This is also run once for each batch. Constructing the state
-  representation is then simply a matter of summing the component features and
+  representation is then a matter of summing the component features and
   applying the non-linearity.
 - **upper** (optional): A feed-forward network that predicts scores from the
   state representation. If not present, the output from the lower model is used
@@ -619,7 +619,7 @@ consists of either two or three subnetworks:
 > ```
 
 Build a tagger model, using a provided token-to-vector component. The tagger
-model simply adds a linear layer with softmax activation to predict scores given
+model adds a linear layer with softmax activation to predict scores given
 the token vectors.
 
 | Name        | Description                                                                                |
@@ -911,5 +911,5 @@ A function that reads an existing `KnowledgeBase` from file.
 A function that takes as input a [`KnowledgeBase`](/api/kb) and a
 [`Span`](/api/span) object denoting a named entity, and returns a list of
 plausible [`Candidate`](/api/kb/#candidate) objects. The default
-`CandidateGenerator` simply uses the text of a mention to find its potential
+`CandidateGenerator` uses the text of a mention to find its potential
 aliases in the `KnowledgeBase`. Note that this function is case-dependent.

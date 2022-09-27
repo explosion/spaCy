@@ -195,7 +195,7 @@ the data to and from a JSON file.
 >
 > To see custom serialization methods in action, check out the new
 > [`EntityRuler`](/api/entityruler) component and its
-> [source](%%GITHUB_SPACY/spacy/pipeline/entityruler.py). Patterns added to the
+> [source](%%GITHUB_SPACY/spacy/pipeline/entity_ruler.py). Patterns added to the
 > component will be saved to a `.jsonl` file if the pipeline is serialized to
 > disk, and to a bytestring if the pipeline is serialized to bytes. This allows
 > saving out a pipeline with a rule-based entity recognizer and including all
@@ -203,11 +203,14 @@ the data to and from a JSON file.
 
 ```python
 ### {highlight="16-23,25-30"}
+import json
+from spacy import Language
 from spacy.util import ensure_path
 
 @Language.factory("my_component")
 class CustomComponent:
-    def __init__(self):
+    def __init__(self, nlp: Language, name: str = "my_component"):
+        self.name = name
         self.data = []
 
     def __call__(self, doc):
@@ -231,7 +234,7 @@ class CustomComponent:
         # This will receive the directory path + /my_component
         data_path = path / "data.json"
         with data_path.open("r", encoding="utf8") as f:
-            self.data = json.loads(f)
+            self.data = json.load(f)
         return self
 ```
 

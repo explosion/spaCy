@@ -374,12 +374,16 @@ punctuation marks, or specify optional tokens. Note that there are no nested or
 scoped quantifiers – instead, you can build those behaviors with `on_match`
 callbacks.
 
-| OP  | Description                                                      |
-| --- | ---------------------------------------------------------------- |
-| `!` | Negate the pattern, by requiring it to match exactly 0 times.    |
-| `?` | Make the pattern optional, by allowing it to match 0 or 1 times. |
-| `+` | Require the pattern to match 1 or more times.                    |
-| `*` | Allow the pattern to match zero or more times.                   |
+| OP      | Description                                                            |
+|---------|------------------------------------------------------------------------|
+| `!`     | Negate the pattern, by requiring it to match exactly 0 times.          |
+| `?`     | Make the pattern optional, by allowing it to match 0 or 1 times.       |
+| `+`     | Require the pattern to match 1 or more times.                          |
+| `*`     | Allow the pattern to match zero or more times.                         |
+| `{n}`   | Require the pattern to match exactly _n_ times.                        |
+| `{n,m}` | Require the pattern to match at least _n_ but not more than _m_ times. |
+| `{n,}`  | Require the pattern to match at least _n_ times.                       |
+| `{,m}`  | Require the pattern to match at most _m_ times.                        |
 
 > #### Example
 >
@@ -1363,14 +1367,14 @@ patterns = [{"label": "ORG", "pattern": "Apple", "id": "apple"},
 ruler.add_patterns(patterns)
 
 doc1 = nlp("Apple is opening its first big office in San Francisco.")
-print([(ent.text, ent.label_, ent.ent_id_) for ent in doc1.ents])
+print([(ent.text, ent.label_, ent.id_) for ent in doc1.ents])
 
 doc2 = nlp("Apple is opening its first big office in San Fran.")
-print([(ent.text, ent.label_, ent.ent_id_) for ent in doc2.ents])
+print([(ent.text, ent.label_, ent.id_) for ent in doc2.ents])
 ```
 
 If the `id` attribute is included in the [`EntityRuler`](/api/entityruler)
-patterns, the `ent_id_` property of the matched entity is set to the `id` given
+patterns, the `id_` property of the matched entity is set to the `id` given
 in the patterns. So in the example above it's easy to identify that "San
 Francisco" and "San Fran" are both the same entity.
 

@@ -268,8 +268,7 @@ cdef class Vocab:
         cdef int i
         tokens = <TokenC*>self.mem.alloc(len(substrings) + 1, sizeof(TokenC))
         for i, props in enumerate(substrings):
-            props = intify_attrs(props, strings_map=self.strings,
-                                 _do_deprecated=True)
+            props = intify_attrs(props, strings_map=self.strings)
             token = &tokens[i]
             # Set the special tokens up to have arbitrary attributes
             lex = <LexemeC*>self.get_by_orth(self.mem, props[ORTH])
@@ -559,21 +558,18 @@ def pickle_vocab(vocab):
     sstore = vocab.strings
     vectors = vocab.vectors
     morph = vocab.morphology
-    _unused_object = vocab._unused_object
     lex_attr_getters = srsly.pickle_dumps(vocab.lex_attr_getters)
     lookups = vocab.lookups
     get_noun_chunks = vocab.get_noun_chunks
     return (unpickle_vocab,
-            (sstore, vectors, morph, _unused_object, lex_attr_getters, lookups, get_noun_chunks))
+            (sstore, vectors, morph, lex_attr_getters, lookups, get_noun_chunks))
 
 
-def unpickle_vocab(sstore, vectors, morphology, _unused_object,
-                   lex_attr_getters, lookups, get_noun_chunks):
+def unpickle_vocab(sstore, vectors, morphology, lex_attr_getters, lookups, get_noun_chunks):
     cdef Vocab vocab = Vocab()
     vocab.vectors = vectors
     vocab.strings = sstore
     vocab.morphology = morphology
-    vocab._unused_object = _unused_object
     vocab.lex_attr_getters = srsly.pickle_loads(lex_attr_getters)
     vocab.lookups = lookups
     vocab.get_noun_chunks = get_noun_chunks

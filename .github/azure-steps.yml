@@ -41,7 +41,7 @@ steps:
 
   - bash: |
       ${{ parameters.prefix }} SDIST=$(python -c "import os;print(os.listdir('./dist')[-1])" 2>&1)
-      ${{ parameters.prefix }} python -m pip install dist/$SDIST
+      ${{ parameters.prefix }} SPACY_NUM_BUILD_JOBS=2 python -m pip install dist/$SDIST
     displayName: "Install from sdist"
 
   - script: |
@@ -55,12 +55,12 @@ steps:
     condition: eq(${{ parameters.gpu }}, true)
 
   - script: |
-      ${{ parameters.prefix }} python -m pytest --pyargs spacy
+      ${{ parameters.prefix }} python -m pytest --pyargs spacy -W error
     displayName: "Run CPU tests"
     condition: eq(${{ parameters.gpu }}, false)
 
   - script: |
-      ${{ parameters.prefix }} python -m pytest --pyargs spacy -p spacy.tests.enable_gpu
+      ${{ parameters.prefix }} python -m pytest --pyargs spacy -W error -p spacy.tests.enable_gpu
     displayName: "Run GPU tests"
     condition: eq(${{ parameters.gpu }}, true)
 
@@ -114,7 +114,7 @@ steps:
     condition: eq(variables['python_version'], '3.8')
 
   - script: |
-      ${{ parameters.prefix }} python -m pip install thinc-apple-ops
+      ${{ parameters.prefix }} python -m pip install --pre thinc-apple-ops
       ${{ parameters.prefix }} python -m pytest --pyargs spacy
     displayName: "Run CPU tests with thinc-apple-ops"
-    condition: and(startsWith(variables['imageName'], 'macos'), eq(variables['python.version'], '3.9'))
+    condition: and(startsWith(variables['imageName'], 'macos'), eq(variables['python.version'], '3.10'))

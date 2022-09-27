@@ -1,5 +1,5 @@
 # cython: infer_types=True, cython: profile=True
-from typing import List
+from typing import List, Iterable
 
 from libcpp.vector cimport vector
 from libc.stdint cimport int32_t, int8_t
@@ -86,10 +86,14 @@ cdef class Matcher:
         is a dictionary mapping attribute IDs to values, and optionally a
         quantifier operator under the key "op". The available quantifiers are:
 
-        '!': Negate the pattern, by requiring it to match exactly 0 times.
-        '?': Make the pattern optional, by allowing it to match 0 or 1 times.
-        '+': Require the pattern to match 1 or more times.
-        '*': Allow the pattern to zero or more times.
+        '!':      Negate the pattern, by requiring it to match exactly 0 times.
+        '?':      Make the pattern optional, by allowing it to match 0 or 1 times.
+        '+':      Require the pattern to match 1 or more times.
+        '*':      Allow the pattern to zero or more times.
+        '{n}':    Require the pattern to match exactly _n_ times.
+        '{n,m}':  Require the pattern to match at least _n_ but not more than _m_ times.
+        '{n,}':   Require the pattern to match at least _n_ times.
+        '{,m}':   Require the pattern to match at most _m_ times.
 
         The + and * operators return all possible matches (not just the greedy
         ones). However, the "greedy" argument can filter the final matches
@@ -106,9 +110,9 @@ cdef class Matcher:
         """
         errors = {}
         if on_match is not None and not hasattr(on_match, "__call__"):
-            raise ValueError(Errors.E171.format(arg_type=type(on_match)))
-        if patterns is None or not isinstance(patterns, List):  # old API
-            raise ValueError(Errors.E948.format(arg_type=type(patterns)))
+            raise ValueError(Errors.E171.format(name="Matcher", arg_type=type(on_match)))
+        if patterns is None or not isinstance(patterns, List):
+            raise ValueError(Errors.E948.format(name="Matcher", arg_type=type(patterns)))
         if greedy is not None and greedy not in ["FIRST", "LONGEST"]:
             raise ValueError(Errors.E947.format(expected=["FIRST", "LONGEST"], arg=greedy))
         for i, pattern in enumerate(patterns):
@@ -864,20 +868,27 @@ class _SetPredicate:
 
     def __call__(self, Token token):
         if self.is_extension:
-            value = get_string_id(token._.get(self.attr))
+            value = token._.get(self.attr)
         else:
             value = get_token_attr_for_matcher(token.c, self.attr)
 
-        if self.predicate in ("IS_SUBSET", "IS_SUPERSET", "INTERSECTS"):
+        if self.predicate in ("IN", "NOT_IN"):
+            if isinstance(value, (str, int)):
+                value = get_string_id(value)
+            else:
+                return False
+        elif self.predicate in ("IS_SUBSET", "IS_SUPERSET", "INTERSECTS"):
+            # ensure that all values are enclosed in a set
             if self.attr == MORPH:
                 # break up MORPH into individual Feat=Val values
                 value = set(get_string_id(v) for v in MorphAnalysis.from_id(self.vocab, value))
+            elif isinstance(value, (str, int)):
+                value = set((get_string_id(value),))
+            elif isinstance(value, Iterable) and all(isinstance(v, (str, int)) for v in value):
+                value = set(get_string_id(v) for v in value)
             else:
-                # treat a single value as a list
-                if isinstance(value, (str, int)):
-                    value = set([get_string_id(value)])
-                else:
-                    value = set(get_string_id(v) for v in value)
+                return False
+
         if self.predicate == "IN":
             return value in self.value
         elif self.predicate == "NOT_IN":
@@ -1005,8 +1016,29 @@ def _get_operators(spec):
         return (ONE,)
     elif spec["OP"] in lookup:
         return lookup[spec["OP"]]
+    #Min_max {n,m}
+    elif spec["OP"].startswith("{") and spec["OP"].endswith("}"):
+        # {n}  --> {n,n}  exactly n                 ONE,(n)
+        # {n,m}--> {n,m}  min of n, max of m        ONE,(n),ZERO_ONE,(m)
+        # {,m} --> {0,m}  min of zero, max of m     ZERO_ONE,(m)
+        # {n,} --> {n,∞} min of n, max of inf       ONE,(n),ZERO_PLUS
+
+        min_max = spec["OP"][1:-1]
+        min_max = min_max if "," in min_max else f"{min_max},{min_max}"
+        n, m = min_max.split(",")
+
+        #1. Either n or m is a blank string and the other is numeric -->isdigit
+        #2. Both are numeric and n <= m
+        if (not n.isdecimal() and not m.isdecimal()) or (n.isdecimal() and m.isdecimal() and int(n) > int(m)):
+            keys = ", ".join(lookup.keys()) + ", {n}, {n,m}, {n,}, {,m} where n and m are integers and n <= m "
+            raise ValueError(Errors.E011.format(op=spec["OP"], opts=keys))
+
+        # if n is empty string, zero would be used
+        head = tuple(ONE for __ in range(int(n or 0)))
+        tail = tuple(ZERO_ONE for __ in range(int(m) - int(n or 0))) if m else (ZERO_PLUS,)
+        return head + tail
     else:
-        keys = ", ".join(lookup.keys())
+        keys = ", ".join(lookup.keys()) + ", {n}, {n,m}, {n,}, {,m} where n and m are integers and n <= m "
         raise ValueError(Errors.E011.format(op=spec["OP"], opts=keys))
 
 

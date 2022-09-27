@@ -39,11 +39,12 @@ architectures and their arguments and hyperparameters.
 > nlp.add_pipe("senter", config=config)
 > ```
 
-| Setting                                  | Description                                                                                                                                                           |
-| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `model`                                  | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. Defaults to [Tagger](/api/architectures#Tagger). ~~Model[List[Doc], List[Floats2d]]~~ |
-| `overwrite` <Tag variant="new">3.2</Tag> | Whether existing annotation is overwritten. Defaults to `False`. ~~bool~~                                                                                             |
-| `scorer` <Tag variant="new">3.2</Tag>    | The scoring method. Defaults to [`Scorer.score_spans`](/api/scorer#score_spans) for the attribute `"sents"`. ~~Optional[Callable]~~                                   |
+| Setting                                         | Description                                                                                                                                                           |
+| ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `model`                                         | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. Defaults to [Tagger](/api/architectures#Tagger). ~~Model[List[Doc], List[Floats2d]]~~ |
+| `overwrite` <Tag variant="new">3.2</Tag>        | Whether existing annotation is overwritten. Defaults to `False`. ~~bool~~                                                                                             |
+| `scorer` <Tag variant="new">3.2</Tag>           | The scoring method. Defaults to [`Scorer.score_spans`](/api/scorer#score_spans) for the attribute `"sents"`. ~~Optional[Callable]~~                                   |
+| `save_activations` <Tag variant="new">4.0</Tag> | Save activations in `Doc` when annotating. Saved activations are `"probabilities"` and `"label_ids"`. ~~Union[bool, list[str]]~~                                      |
 
 ```python
 %%GITHUB_SPACY/spacy/pipeline/senter.pyx
@@ -132,10 +133,10 @@ and [`pipe`](/api/sentencerecognizer#pipe) delegate to the
 ## SentenceRecognizer.initialize {#initialize tag="method"}
 
 Initialize the component for training. `get_examples` should be a function that
-returns an iterable of [`Example`](/api/example) objects. The data examples are
-used to **initialize the model** of the component and can either be the full
-training data or a representative sample. Initialization includes validating the
-network,
+returns an iterable of [`Example`](/api/example) objects. **At least one example
+should be supplied.** The data examples are used to **initialize the model** of
+the component and can either be the full training data or a representative
+sample. Initialization includes validating the network,
 [inferring missing shapes](https://thinc.ai/docs/usage-models#validation) and
 setting up the label scheme based on the data. This method is typically called
 by [`Language.initialize`](/api/language#initialize).
@@ -144,14 +145,14 @@ by [`Language.initialize`](/api/language#initialize).
 >
 > ```python
 > senter = nlp.add_pipe("senter")
-> senter.initialize(lambda: [], nlp=nlp)
+> senter.initialize(lambda: examples, nlp=nlp)
 > ```
 
-| Name           | Description                                                                                                                           |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `get_examples` | Function that returns gold-standard annotations in the form of [`Example`](/api/example) objects. ~~Callable[[], Iterable[Example]]~~ |
-| _keyword-only_ |                                                                                                                                       |
-| `nlp`          | The current `nlp` object. Defaults to `None`. ~~Optional[Language]~~                                                                  |
+| Name           | Description                                                                                                                                                                |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `get_examples` | Function that returns gold-standard annotations in the form of [`Example`](/api/example) objects. Must contain at least one `Example`. ~~Callable[[], Iterable[Example]]~~ |
+| _keyword-only_ |                                                                                                                                                                            |
+| `nlp`          | The current `nlp` object. Defaults to `None`. ~~Optional[Language]~~                                                                                                       |
 
 ## SentenceRecognizer.predict {#predict tag="method"}
 
