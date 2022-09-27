@@ -9,7 +9,7 @@ import typer
 import math
 
 from ._util import app, Arg, Opt, show_validation_error, parse_config_overrides
-from ._util import import_code, debug_cli
+from ._util import import_code, debug_cli, _format_number
 from ..training import Example, remove_bilu_prefix
 from ..training.initialize import get_sourced_components
 from ..schemas import ConfigSchemaTraining
@@ -984,13 +984,6 @@ def _get_kl_divergence(p: Counter, q: Counter) -> float:
     for word, p_word in p.items():
         total += p_word * math.log(p_word / q[word])
     return total
-
-
-def _format_number(number: Union[int, float], ndigits: int = 2) -> str:
-    if isinstance(number, float):
-        return f"{number:.{ndigits}f}"
-    else:
-        return str(number)
 
 
 def _format_span_row(span_data: List[Dict], labels: List[str]) -> List[Any]:
