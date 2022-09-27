@@ -18,7 +18,7 @@ api_trainable: true
 
 This component is not yet integrated into spaCy core, and is available via the
 extension package
-[`spacy-experimental`](https://github.com/explosion/spacy-transformers) starting
+[`spacy-experimental`](https://github.com/explosion/spacy-experimental) starting
 in version 0.6.0. It exposes the component via
 [entry points](/usage/saving-loading/#entry-points), so if you have the package
 installed, using `factory = "experimental_coref"` in your
