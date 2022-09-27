@@ -394,16 +394,16 @@ def get_module_path(module: ModuleType) -> Path:
 
 
 # Default value for passed enable/disable values.
-DEFAULT_PIPES_STATUS = SimpleFrozenList()
+_DEFAULT_EMPTY_PIPES = SimpleFrozenList()
 
 
 def load_model(
     name: Union[str, Path],
     *,
     vocab: Union["Vocab", bool] = True,
-    disable: Union[str, Iterable[str]] = DEFAULT_PIPES_STATUS,
-    enable: Union[str, Iterable[str]] = DEFAULT_PIPES_STATUS,
-    exclude: Union[str, Iterable[str]] = DEFAULT_PIPES_STATUS,
+    disable: Union[str, Iterable[str]] = _DEFAULT_EMPTY_PIPES,
+    enable: Union[str, Iterable[str]] = _DEFAULT_EMPTY_PIPES,
+    exclude: Union[str, Iterable[str]] = _DEFAULT_EMPTY_PIPES,
     config: Union[Dict[str, Any], Config] = SimpleFrozenDict(),
 ) -> "Language":
     """Load a model from a package or data path.
@@ -473,9 +473,9 @@ def load_model_from_path(
     *,
     meta: Optional[Dict[str, Any]] = None,
     vocab: Union["Vocab", bool] = True,
-    disable: Union[str, Iterable[str]] = DEFAULT_PIPES_STATUS,
-    enable: Union[str, Iterable[str]] = DEFAULT_PIPES_STATUS,
-    exclude: Union[str, Iterable[str]] = DEFAULT_PIPES_STATUS,
+    disable: Union[str, Iterable[str]] = _DEFAULT_EMPTY_PIPES,
+    enable: Union[str, Iterable[str]] = _DEFAULT_EMPTY_PIPES,
+    exclude: Union[str, Iterable[str]] = _DEFAULT_EMPTY_PIPES,
     config: Union[Dict[str, Any], Config] = SimpleFrozenDict(),
 ) -> "Language":
     """Load a model from a data directory path. Creates Language class with
@@ -519,9 +519,9 @@ def load_model_from_config(
     *,
     meta: Dict[str, Any] = SimpleFrozenDict(),
     vocab: Union["Vocab", bool] = True,
-    disable: Union[str, Iterable[str]] = DEFAULT_PIPES_STATUS,
-    enable: Union[str, Iterable[str]] = DEFAULT_PIPES_STATUS,
-    exclude: Union[str, Iterable[str]] = DEFAULT_PIPES_STATUS,
+    disable: Union[str, Iterable[str]] = _DEFAULT_EMPTY_PIPES,
+    enable: Union[str, Iterable[str]] = _DEFAULT_EMPTY_PIPES,
+    exclude: Union[str, Iterable[str]] = _DEFAULT_EMPTY_PIPES,
     auto_fill: bool = False,
     validate: bool = True,
 ) -> "Language":
