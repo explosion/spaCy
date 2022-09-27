@@ -37,7 +37,7 @@ from .. import util
 NUMPY_OPS = NumpyOps()
 
 
-cdef class Parser(TrainablePipe):
+class Parser(TrainablePipe):
     """
     Base class of the DependencyParser and EntityRecognizer.
     """
