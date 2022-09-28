@@ -63,17 +63,18 @@ spaCy loads a model under the hood based on its
 > nlp = Language.from_config(config)
 > ```
 
-| Name           | Description                                                                                                                                                                                                                                      |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `config`       | The loaded config. ~~Union[Dict[str, Any], Config]~~                                                                                                                                                                                             |
-| _keyword-only_ |                                                                                                                                                                                                                                                  |
-| `vocab`        | A `Vocab` object. If `True`, a vocab is created using the default language data settings. ~~Vocab~~                                                                                                                                              |
-| `disable`      | Names of pipeline components to [disable](/usage/processing-pipelines#disabling). Disabled pipes will be loaded but they won't be run unless you explicitly enable them by calling [`nlp.enable_pipe`](/api/language#enable_pipe). ~~List[str]~~ |
-| `exclude`      | Names of pipeline components to [exclude](/usage/processing-pipelines#disabling). Excluded components won't be loaded. ~~List[str]~~                                                                                                             |
-| `meta`         | [Meta data](/api/data-formats#meta) overrides. ~~Dict[str, Any]~~                                                                                                                                                                                |
-| `auto_fill`    | Whether to automatically fill in missing values in the config, based on defaults and function argument annotations. Defaults to `True`. ~~bool~~                                                                                                 |
-| `validate`     | Whether to validate the component config and arguments against the types expected by the factory. Defaults to `True`. ~~bool~~                                                                                                                   |
-| **RETURNS**    | The initialized object. ~~Language~~                                                                                                                                                                                                             |
+| Name                                  | Description                                                                                                                                                                                                                                                          |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `config`                              | The loaded config. ~~Union[Dict[str, Any], Config]~~                                                                                                                                                                                                                 |
+| _keyword-only_                        |                                                                                                                                                                                                                                                                      |
+| `vocab`                               | A `Vocab` object. If `True`, a vocab is created using the default language data settings. ~~Vocab~~                                                                                                                                                                  |
+| `disable`                             | Name(s) of pipeline component(s) to [disable](/usage/processing-pipelines#disabling). Disabled pipes will be loaded but they won't be run unless you explicitly enable them by calling [`nlp.enable_pipe`](/api/language#enable_pipe). ~~Union[str, Iterable[str]]~~ |
+| `enable` <Tag variant="new">3.4</Tag> | Name(s) of pipeline component(s) to [enable](/usage/processing-pipelines#disabling). All other pipes will be disabled, but can be enabled again using [`nlp.enable_pipe`](/api/language#enable_pipe). ~~Union[str, Iterable[str]]~~                                  |
+| `exclude`                             | Name(s) of pipeline component(s) to [exclude](/usage/processing-pipelines#disabling). Excluded components won't be loaded. ~~Union[str, Iterable[str]]~~                                                                                                             |
+| `meta`                                | [Meta data](/api/data-formats#meta) overrides. ~~Dict[str, Any]~~                                                                                                                                                                                                    |
+| `auto_fill`                           | Whether to automatically fill in missing values in the config, based on defaults and function argument annotations. Defaults to `True`. ~~bool~~                                                                                                                     |
+| `validate`                            | Whether to validate the component config and arguments against the types expected by the factory. Defaults to `True`. ~~bool~~                                                                                                                                       |
+| **RETURNS**                           | The initialized object. ~~Language~~                                                                                                                                                                                                                                 |
 
 ## Language.component {#component tag="classmethod" new="3"}
 
@@ -695,8 +696,8 @@ As of spaCy v3.0, the `disable_pipes` method has been renamed to `select_pipes`:
 | Name           | Description                                                                                            |
 | -------------- | ------------------------------------------------------------------------------------------------------ |
 | _keyword-only_ |                                                                                                        |
-| `disable`      | Name(s) of pipeline components to disable. ~~Optional[Union[str, Iterable[str]]]~~                     |
-| `enable`       | Name(s) of pipeline components that will not be disabled. ~~Optional[Union[str, Iterable[str]]]~~      |
+| `disable`      | Name(s) of pipeline component(s) to disable. ~~Optional[Union[str, Iterable[str]]]~~                   |
+| `enable`       | Name(s) of pipeline component(s) that will not be disabled. ~~Optional[Union[str, Iterable[str]]]~~    |
 | **RETURNS**    | The disabled pipes that can be restored by calling the object's `.restore()` method. ~~DisabledPipes~~ |
 
 ## Language.get_factory_meta {#get_factory_meta tag="classmethod" new="3"}

@@ -212,6 +212,8 @@ class Warnings(metaclass=ErrorsWithCodes):
     W121 = ("Attempting to trace non-existent method '{method}' in pipe '{pipe}'")
     W122 = ("Couldn't trace method '{method}' in pipe '{pipe}'. This can happen if the pipe class "
             "is a Cython extension type.")
+    W123 = ("Argument {arg} with value {arg_value} is used instead of {config_value} as specified in the config. Be "
+            "aware that this might affect other components in your pipeline.")
 
 
 class Errors(metaclass=ErrorsWithCodes):
@@ -230,8 +232,9 @@ class Errors(metaclass=ErrorsWithCodes):
             "initialized component.")
     E004 = ("Can't set up pipeline component: a factory for '{name}' already "
             "exists. Existing factory: {func}. New factory: {new_func}")
-    E005 = ("Pipeline component '{name}' returned None. If you're using a "
-            "custom component, maybe you forgot to return the processed Doc?")
+    E005 = ("Pipeline component '{name}' returned {returned_type} instead of a "
+            "Doc. If you're using a custom component, maybe you forgot to "
+            "return the processed Doc?")
     E006 = ("Invalid constraints for adding pipeline component. You can only "
             "set one of the following: before (component name or index), "
             "after (component name or index), first (True) or last (True). "
@@ -706,7 +709,7 @@ class Errors(metaclass=ErrorsWithCodes):
             "need to modify the pipeline, use the built-in methods like "
             "`nlp.add_pipe`, `nlp.remove_pipe`, `nlp.disable_pipe` or "
             "`nlp.enable_pipe` instead.")
-    E927 = ("Can't write to frozen list Maybe you're trying to modify a computed "
+    E927 = ("Can't write to frozen list. Maybe you're trying to modify a computed "
             "property or default function argument?")
     E928 = ("A KnowledgeBase can only be serialized to/from from a directory, "
             "but the provided argument {loc} points to a file.")
@@ -936,8 +939,9 @@ class Errors(metaclass=ErrorsWithCodes):
     E1040 = ("Doc.from_json requires all tokens to have the same attributes. "
              "Some tokens do not contain annotation for: {partial_attrs}")
     E1041 = ("Expected a string, Doc, or bytes as input, but got: {type}")
-    E1042 = ("Function was called with `{arg1}`={arg1_values} and "
-             "`{arg2}`={arg2_values} but these arguments are conflicting.")
+    E1042 = ("`enable={enable}` and `disable={disable}` are inconsistent with each other.\nIf you only passed "
+             "one of `enable` or `disable`, the other argument is specified in your pipeline's configuration.\nIn that "
+             "case pass an empty list for the previously not specified argument to avoid this error.")
     E1043 = ("Expected None or a value in range [{range_start}, {range_end}] for entity linker threshold, but got "
              "{value}.")
 
