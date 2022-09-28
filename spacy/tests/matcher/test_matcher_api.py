@@ -629,6 +629,30 @@ def test_matcher_regex(en_vocab):
     assert len(matches) == 0
 
 
+def test_matcher_regex_set_in(en_vocab):
+    matcher = Matcher(en_vocab)
+    pattern = [{"ORTH": {"REGEX": {"IN": [r"(?:a)", r"(?:an)"]}}}]
+    matcher.add("A_OR_AN", [pattern])
+    doc = Doc(en_vocab, words=["an", "a", "hi"])
+    matches = matcher(doc)
+    assert len(matches) == 2
+    doc = Doc(en_vocab, words=["bye"])
+    matches = matcher(doc)
+    assert len(matches) == 0
+
+
+def test_matcher_regex_set_not_in(en_vocab):
+    matcher = Matcher(en_vocab)
+    pattern = [{"ORTH": {"REGEX": {"NOT_IN": [r"(?:a)", r"(?:an)"]}}}]
+    matcher.add("A_OR_AN", [pattern])
+    doc = Doc(en_vocab, words=["an", "a", "hi"])
+    matches = matcher(doc)
+    assert len(matches) == 1
+    doc = Doc(en_vocab, words=["bye"])
+    matches = matcher(doc)
+    assert len(matches) == 1
+
+
 def test_matcher_regex_shape(en_vocab):
     matcher = Matcher(en_vocab)
     pattern = [{"SHAPE": {"REGEX": r"^[^x]+$"}}]
