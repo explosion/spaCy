@@ -167,12 +167,28 @@ def run_commands(
     """
     for c in commands:
         command: Union[str, List[str]]
+        exe: Optional[str] = None
         if is_windows:
-            # On Windows we don't rewrite the command because there's no
-            # reliable way to split and reassemble it
             command = c
+
+            # Correct Windows splitting is hard, so this only checks for simple
+            # cases. It will work in ordinary cases, but will miss cases where
+            # the command is like:
+            #   "C:\My Programs\python.exe" script.py
+            head, _, tail = c.partition(" ")
+
+            # This doesn't rewrite the command to include sys.executable
+            # because sys.executable might include spaces, quotes, or
+            # something, and need quoting itself. Instead the exe param is used
+            # to directly specify the binary to call.
+            if head in ("python", "python3"):
+                exe = sys.executable
+            if head in ("pip", "pip3"):
+                exe = sys.executable
+                command = "python -m pip " + tail
+
             if not silent:
-                print(f"Running command: {c}")
+                print(f"Running command: {command}")
         else:
             command = shlex.split(c, posix=True)
             # Not sure if this is needed or a good idea. Motivation: users may often
@@ -190,7 +206,7 @@ def run_commands(
                 print(f"Running command: {c}")
 
         if not dry:
-            run_command(command, capture=capture)
+            run_command(command, capture=capture, exe=exe)
 
 
 def validate_subcommand(
