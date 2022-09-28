@@ -2,10 +2,10 @@ from typing import Dict, Any, List, Optional, Tuple, Union, TYPE_CHECKING
 import functools
 import copy
 from ..errors import Errors
+from .span import Span
 
 if TYPE_CHECKING:
     from .doc import Doc
-    from .span import Span
     from .token import Token
 
 
@@ -25,9 +25,9 @@ class Underscore:
         obj: Union["Doc", "Span", "Token"],
         start: Optional[int] = None,
         end: Optional[int] = None,
-        label: Optional[Union[str, int]] = None,
-        kb_id: Optional[Union[str, int]] = None,
-        span_id: Optional[Union[str, int]] = None,
+        label: int = 0,
+        kb_id: int = 0,
+        span_id: int = 0,
     ):
         object.__setattr__(self, "_extensions", extensions)
         object.__setattr__(self, "_obj", obj)
@@ -39,10 +39,7 @@ class Underscore:
         object.__setattr__(self, "_doc", obj.doc)
         object.__setattr__(self, "_start", start)
         object.__setattr__(self, "_end", end)
-        if label is not None or kb_id is not None or span_id is not None:
-            # It is reasonably safe to assume that if label, kb_id and span_id are None,
-            # they were not passed to this function. Span.label and kb_id are
-            # converted to 0 in Span's c-tor and setters if they are None
+        if type(obj) == Span:
             object.__setattr__(self, "_label", label)
             object.__setattr__(self, "_kb_id", kb_id)
             object.__setattr__(self, "_span_id", span_id)
