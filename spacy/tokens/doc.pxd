@@ -8,11 +8,7 @@ from ..attrs cimport attr_id_t
 
 
 cdef attr_t get_token_attr(const TokenC* token, attr_id_t feat_name) nogil
-cdef attr_t get_token_attr_for_matcher(const TokenC* token, attr_id_t feat_name) nogil
-cdef const unsigned char[:] get_utf16_memoryview(str unicode_string, bint check_2_bytes)
-cdef bint check_utf16_char(unsigned short utf16_char, const unsigned char[:] scs)
-cdef void set_scs(const unsigned char[:] searched_string, const unsigned char[:] scs, bytearray working_array, bint suffs_not_prefs)
-    
+cdef attr_t get_token_attr_for_matcher(const TokenC* token, attr_id_t feat_name) nogil    
 
 ctypedef const LexemeC* const_Lexeme_ptr
 ctypedef const TokenC* const_TokenC_ptr
@@ -35,6 +31,15 @@ cdef int token_by_end(const TokenC* tokens, int length, int end_char) except -2
 
 
 cdef int [:,:] _get_lca_matrix(Doc, int start, int end)
+
+
+cdef const unsigned char[:] _get_utf16_memoryview(str unicode_string, bint check_2_bytes)
+
+
+cdef bint _is_utf16_char_in_scs(unsigned short utf16_char, const unsigned char[:] scs)
+
+
+cdef void _set_scs_buffer(const unsigned char[:] searched_string, const unsigned char[:] scs, char* buf, bint suffs_not_prefs)
 
 
 cdef class Doc:

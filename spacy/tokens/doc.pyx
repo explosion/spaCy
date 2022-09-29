@@ -95,48 +95,6 @@ cdef attr_t get_token_attr_for_matcher(const TokenC* token, attr_id_t feat_name)
         return get_token_attr(token, feat_name)
 
     
-cdef const unsigned char[:] get_utf16_memoryview(str unicode_string, bint check_2_bytes):
-    """
-    Returns a memory view of the UTF-16 representation of a string with the default endianness of the platform.
-    Throws a ValueError if *check_2_bytes == True* and one or more characters in the UTF-16 representation
-    occupy four bytes rather than two.
-    """
-    cdef const unsigned char[:] view = unicode_string.encode("UTF-16")[2:] # first two bytes are endianness
-    cdef unsigned int us_len = len(unicode_string), view_len = len(view)
-    if check_2_bytes and us_len * 2 != view_len:
-        raise ValueError(Errors.E1046)
-    return view
-
-cdef bint check_utf16_char(unsigned short utf16_char, const unsigned char[:] scs):
-    cdef unsigned int scs_idx = 0, scs_len = len(scs)
-    while scs_idx < scs_len:
-        if utf16_char == (<unsigned short*> &scs[scs_idx])[0]:
-            return True
-        scs_idx += 2
-    return False
-
-cdef void set_scs(const unsigned char[:] searched_string, const unsigned char[:] scs, bytearray working_array, bint suffs_not_prefs):
-    cdef unsigned int wa_idx = 0, wa_len = len(working_array), ss_len = len(searched_string)
-    cdef unsigned int ss_idx = ss_len - 2 if suffs_not_prefs else 0
-    cdef unsigned short working_utf16_char, SPACE = 32
-
-    while wa_idx < wa_len:
-        working_utf16_char = (<unsigned short*> &searched_string[ss_idx])[0]
-        if check_utf16_char(working_utf16_char, scs):
-            working_array[wa_idx] = working_utf16_char
-            wa_idx += 2
-        if suffs_not_prefs:
-            if ss_idx == 0:
-                break
-            ss_idx -= 2
-        else:
-            ss_idx += 2
-            if ss_idx == ss_len:
-                break
-    
-    while wa_idx < wa_len:
-        working_array[wa_idx] = SPACE
-        wa_idx += 2
 
 
 class SetEntsDefault(str, Enum):
@@ -1779,39 +1737,47 @@ cdef class Doc:
                     j += 1
         return output
 
+
     def get_affix_hashes(self, bint suffs_not_prefs, bint case_sensitive, unsigned int len_start, unsigned int len_end, 
         str special_chars, unsigned int sc_len_start, unsigned int sc_len_end):
         """
         TODO
         """
-        cdef unsigned int token_index, norm_hash_index, spec_hash_index
-        cdef const attr_t* num_token_attr
-        cdef const unsigned char[:] token_string, working_substring, scs = get_utf16_memoryview(special_chars, True)
-        cdef unsigned int num_norm_hashes = len_end - len_start, num_spec_hashes = sc_len_end - sc_len_start, num_tokens = len(self)
-        cdef unsigned int len_token_string
-        cdef np.ndarray[np.int64_t, ndim=2] output = numpy.empty((num_tokens, num_norm_hashes + num_spec_hashes), dtype="int64")
-        cdef bytearray working_scs_buffer = bytearray(sc_len_end * 2)
-        cdef unsigned int working_start, working_len
+        cdef unsigned int tok_ind, norm_hash_ind, spec_hash_ind, len_tok_str, working_start, working_len
+        cdef unsigned int num_norm_hashes = len_end - len_start, num_spec_hashes = sc_len_end - sc_len_start, num_toks = len(self)
+        cdef const unsigned char[:] token_string, scs = _get_utf16_memoryview(special_chars, True)
+        cdef np.ndarray[np.int64_t, ndim=2] output = numpy.empty((num_toks, num_norm_hashes + num_spec_hashes), dtype="int64")
+        cdef bytes scs_buffer_bytes = bytes(b"\x20" * sc_len_end) # spaces
+        cdef char* scs_buffer = scs_buffer_bytes
+        cdef attr_t tok_num_attr
+        cdef str str_token_attr
+        cdef np.int64_t last_hash
 
-        for token_index in range(num_tokens):
-            num_token_attr = &self.c[token_index].lex.orth if case_sensitive else &self.c[token_index].lex.lower
-            token_string = get_utf16_memoryview(self.vocab.strings[num_token_attr[0]], False)
-            if not suffs_not_prefs:
-                len_token_string = len(token_string)
+        for tok_ind in range(num_toks):
+            tok_num_attr = self.c[tok_ind].lex.orth if case_sensitive else self.c[tok_ind].lex.lower
+            str_token_attr = self.vocab.strings[tok_num_attr]
+            token_string = _get_utf16_memoryview(str_token_attr, False)
+            len_tok_str = len(token_string)
 
-            for norm_hash_index in range(num_norm_hashes):
+            for norm_hash_ind in range(num_norm_hashes):
+                working_len = (len_start + norm_hash_ind) * 2
+                if working_len > len_tok_str:
+                    output[tok_ind, norm_hash_ind] = last_hash
+                    break
                 if suffs_not_prefs:
                     working_start = 0
-                    working_len = (len_start + norm_hash_index) * 2
                 else:
-                    working_len = (len_start + norm_hash_index) * 2
-                    working_start = len_token_string - working_len
-                output[token_index, norm_hash_index] = hash32(<char*> &token_string[working_start], working_len, 0)
+                    working_start = len_tok_str - working_len
+                    if working_start < 0:
+                        output[tok_ind, norm_hash_ind] = last_hash
+                        break
+                last_hash = hash32(<void*> &token_string[working_start], working_len, 0)
+                output[tok_ind, norm_hash_ind] = last_hash
 
-            set_scs(token_string, scs, working_scs_buffer, suffs_not_prefs)
-            for spec_hash_index in range(num_spec_hashes):
-                working_len = (sc_len_start + spec_hash_index) * 2
-                output[token_index, num_norm_hashes + spec_hash_index] = hash32(<char*> &working_scs_buffer[0], working_len, 0)
+            _set_scs_buffer(token_string, scs, scs_buffer, suffs_not_prefs)
+            for spec_hash_ind in range(num_spec_hashes):
+                working_len = (sc_len_start + spec_hash_ind) * 2
+                output[tok_ind, num_norm_hashes + spec_hash_ind] = hash32(scs_buffer, working_len, 0)
 
         return output.astype("uint64", casting="unsafe", copy=False)
 
@@ -1996,6 +1962,59 @@ cdef int [:,:] _get_lca_matrix(Doc doc, int start, int end):
     return lca_matrix
 
 
+cdef const unsigned char[:] _get_utf16_memoryview(str unicode_string, const bint check_2_bytes):
+    """
+    Return a memory view of the UTF-16 representation of a string with the default endianness of the platform.
+    Throw a ValueError if *check_2_bytes == True* and one or more characters in the UTF-16 representation
+    occupy four bytes rather than two.
+    """
+    cdef const unsigned char[:] view = unicode_string.encode("UTF-16")
+    view = view[2:] # first two bytes express endianness
+    cdef unsigned int unicode_len, view_len
+    if check_2_bytes:
+        unicode_len = len(unicode_string)
+        view_len = len(view)
+        if unicode_len * 2 != view_len:
+            raise ValueError(Errors.E1046)
+    return view
+
+
+cdef bint _is_utf16_char_in_scs(const unsigned short utf16_char, const unsigned char[:] scs):
+    cdef unsigned int scs_idx = 0, scs_len = len(scs)
+    while scs_idx < scs_len:
+        if utf16_char == (<unsigned short*> &scs[scs_idx])[0]:
+            return True
+        scs_idx += 2
+    return False
+
+
+cdef void _set_scs_buffer(const unsigned char[:] searched_string, const unsigned char[:] scs, char* buf, const bint suffs_not_prefs):
+    """ Pick the UFT-16 characters from *searched_string* that are also in *scs* and writes them in order to *buf*.
+        If *suffs_not_prefs*, the search starts from the end of *searched_string* rather than from the beginning.
+    """
+    cdef unsigned int buf_len = len(buf), buf_idx = 0 
+    cdef unsigned int ss_len = len(searched_string), ss_idx = ss_len - 2 if suffs_not_prefs else 0
+    cdef unsigned short working_utf16_char, SPACE = 32
+
+    while buf_idx < buf_len:
+        working_utf16_char = (<unsigned short*> &searched_string[ss_idx])[0]
+        if _is_utf16_char_in_scs(working_utf16_char, scs):
+            buf[buf_idx] = working_utf16_char
+            buf_idx += 2
+        if suffs_not_prefs:
+            if ss_idx == 0:
+                break
+            ss_idx -= 2
+        else:
+            ss_idx += 2
+            if ss_idx == ss_len:
+                break
+    
+    while buf_idx < buf_len:
+        buf[buf_idx] = SPACE
+        buf_idx += 2
+
+
 def pickle_doc(doc):
     bytes_data = doc.to_bytes(exclude=["vocab", "user_data", "user_hooks"])
     hooks_and_data = (doc.user_data, doc.user_hooks, doc.user_span_hooks,
@@ -2048,3 +2067,4 @@ def get_entity_info(ent_info):
     else:
         ent_id, ent_kb_id, ent_type, start, end = ent_info
     return ent_type, ent_kb_id, start, end, ent_id
+
