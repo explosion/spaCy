@@ -41,8 +41,8 @@
                 ")",
                 "nlp.add_pipe('zshot', config=nlp_config, last=True)",
                 "",
-                "text = 'International Business Machines Corporation (IBM) is an American multinational technology corporation' \",
-                "       ' headquartered in Armonk, New York, with operations in over 171 countries.'",
+                "text = 'International Business Machines Corporation (IBM) is an American multinational technology corporation' \\",
+                "        ' headquartered in Armonk, New York, with operations in over 171 countries.'",
                 "",
                 "doc = nlp(text)",
                 "displacy.serve(doc, style='ent')"
