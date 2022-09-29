@@ -944,7 +944,7 @@ def run_command(
     *,
     stdin: Optional[Any] = None,
     capture: bool = False,
-    exe: str = None,
+    exe: Optional[str] = None,
 ) -> subprocess.CompletedProcess:
     """Run a command on the command line as a subprocess. If the subprocess
     returns a non-zero exit code, a system exit is performed.
