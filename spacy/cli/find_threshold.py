@@ -13,7 +13,6 @@ from ._util import app, Arg, Opt, import_code, setup_gpu
 from .. import util
 
 _DEFAULTS = {
-    "average": "micro",
     "n_trials": 10,
     "use_gpu": -1,
     "gold_preproc": False,

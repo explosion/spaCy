@@ -889,8 +889,8 @@ def test_cli_find_threshold(capsys):
     def init_nlp(
         components: Tuple[Tuple[str, Dict[str, Any]], ...] = ()
     ) -> Tuple[Language, List[Example]]:
-        _nlp = English()
-        textcat: TextCategorizer = _nlp.add_pipe(  # type: ignore
+        new_nlp = English()
+        textcat: TextCategorizer = new_nlp.add_pipe(  # type: ignore
             factory_name="textcat_multilabel",
             name="tc_multi",
             config={"threshold": 0.9},
@@ -901,17 +901,17 @@ def test_cli_find_threshold(capsys):
 
         # Append additional components to pipeline.
         for cfn, comp_config in components:
-            comp = _nlp.add_pipe(cfn, config=comp_config)
+            comp = new_nlp.add_pipe(cfn, config=comp_config)
             if isinstance(comp, TextCategorizer):
                 for label in textcat_labels:
                     comp.add_label(label)
 
-        _examples = make_examples(_nlp)
-        _nlp.initialize(get_examples=lambda: _examples)
+        new_examples = make_examples(new_nlp)
+        new_nlp.initialize(get_examples=lambda: new_examples)
         for i in range(5):
-            _nlp.update(_examples)
+            new_nlp.update(new_examples)
 
-        return _nlp, _examples
+        return new_nlp, new_examples
 
     with make_tempdir() as docs_dir:
         # Check whether find_threshold() identifies lowest threshold above 0 as (first) ideal threshold, as this matches
