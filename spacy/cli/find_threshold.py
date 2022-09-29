@@ -167,9 +167,7 @@ def find_threshold(
             )
 
         scores[threshold] = nlp.evaluate(dev_dataset)[scores_key]
-        if not isinstance(scores[threshold], float) and not isinstance(
-            scores[threshold], int
-        ):
+        if not isinstance(scores[threshold], (float, int)):
             wasabi.msg.fail(
                 f"Returned score for key '{scores_key}' is not numeric. Threshold optimization only works for numeric "
                 f"scores.",
