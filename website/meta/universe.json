@@ -32,7 +32,7 @@
                 "        Entity(name='Acetamide',",
                 "               description='Acetamide (systematic name: ethanamide) is an organic compound with the formula CH3CONH2. It is the simplest amide derived from acetic acid. It finds some use as a plasticizer and as an industrial solvent.'),",
                 "        Entity(name='Armonk',",
-                "               description='Armonk is a hamlet and census-designated place (CDP) in the town of North Castle, located in Westchester County, New York, United States.'),"
+                "               description='Armonk is a hamlet and census-designated place (CDP) in the town of North Castle, located in Westchester County, New York, United States.'),",
                 "        Entity(name='Acetic Acid',",
                 "               description='Acetic acid, systematically named ethanoic acid, is an acidic, colourless liquid and organic compound with the chemical formula CH3COOH'),",
                 "        Entity(name='Industrial solvent',",
