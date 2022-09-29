@@ -36,7 +36,6 @@ from spacy.tokens.span import Span
 from spacy.training import Example, docs_to_json, offsets_to_biluo_tags
 from spacy.training.converters import conll_ner_to_docs, conllu_to_docs
 from spacy.training.converters import iob_to_docs
-from spacy.pipeline import TextCategorizer
 from spacy.util import ENV_VARS, get_minor_version, load_model_from_config, load_config
 
 from ..cli.init_pipeline import _init_labels
@@ -890,21 +889,15 @@ def test_cli_find_threshold(capsys):
         components: Tuple[Tuple[str, Dict[str, Any]], ...] = ()
     ) -> Tuple[Language, List[Example]]:
         new_nlp = English()
-        textcat: TextCategorizer = new_nlp.add_pipe(  # type: ignore
+        new_nlp.add_pipe(  # type: ignore
             factory_name="textcat_multilabel",
             name="tc_multi",
             config={"threshold": 0.9},
         )
-        textcat_labels = ("ANGRY", "CONFUSED", "HAPPY")
-        for label in textcat_labels:
-            textcat.add_label(label)
 
         # Append additional components to pipeline.
         for cfn, comp_config in components:
-            comp = new_nlp.add_pipe(cfn, config=comp_config)
-            if isinstance(comp, TextCategorizer):
-                for label in textcat_labels:
-                    comp.add_label(label)
+            new_nlp.add_pipe(cfn, config=comp_config)
 
         new_examples = make_examples(new_nlp)
         new_nlp.initialize(get_examples=lambda: new_examples)
