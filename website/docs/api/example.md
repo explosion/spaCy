@@ -23,11 +23,13 @@ both documents.
 > ```python
 > from spacy.tokens import Doc
 > from spacy.training import Example
->
-> words = ["hello", "world", "!"]
-> spaces = [True, False, False]
-> predicted = Doc(nlp.vocab, words=words, spaces=spaces)
-> reference = parse_gold_doc(my_data)
+> pred_words = ["Apply", "some", "sunscreen"]
+> pred_spaces = [True, True, False]
+> gold_words = ["Apply", "some", "sun", "screen"]
+> gold_spaces = [True, True, False, False]
+> gold_tags = ["VERB", "DET", "NOUN", "NOUN"]
+> predicted = Doc(nlp.vocab, words=pred_words, spaces=pred_spaces)
+> reference = Doc(nlp.vocab, words=gold_words, spaces=gold_spaces, tags=gold_tags)
 > example = Example(predicted, reference)
 > ```
 
@@ -286,10 +288,14 @@ Calculate alignment tables between two tokenizations.
 
 ### Alignment attributes {#alignment-attributes"}
 
-| Name  | Description                                                           |
-| ----- | --------------------------------------------------------------------- |
-| `x2y` | The `Ragged` object holding the alignment from `x` to `y`. ~~Ragged~~ |
-| `y2x` | The `Ragged` object holding the alignment from `y` to `x`. ~~Ragged~~ |
+Alignment attributes are managed using `AlignmentArray`, which is a
+simplified version of Thinc's [Ragged](https://thinc.ai/docs/api-types#ragged)
+type that only supports the `data` and `length` attributes.
+
+| Name  | Description                                                                           |
+| ----- | ------------------------------------------------------------------------------------- |
+| `x2y` | The `AlignmentArray` object holding the alignment from `x` to `y`. ~~AlignmentArray~~ |
+| `y2x` | The `AlignmentArray` object holding the alignment from `y` to `x`. ~~AlignmentArray~~ |
 
 <Infobox title="Important note" variant="warning">
 
@@ -309,10 +315,10 @@ tokenizations add up to the same string. For example, you'll be able to align
 > spacy_tokens = ["obama", "'s", "podcast"]
 > alignment = Alignment.from_strings(bert_tokens, spacy_tokens)
 > a2b = alignment.x2y
-> assert list(a2b.dataXd) == [0, 1, 1, 2]
+> assert list(a2b.data) == [0, 1, 1, 2]
 > ```
 >
-> If `a2b.dataXd[1] == a2b.dataXd[2] == 1`, that means that `A[1]` (`"'"`) and
+> If `a2b.data[1] == a2b.data[2] == 1`, that means that `A[1]` (`"'"`) and
 > `A[2]` (`"s"`) both align to `B[1]` (`"'s"`).
 
 ### Alignment.from_strings {#classmethod tag="function"}
