@@ -176,7 +176,6 @@ def run_commands(
     """
     for c in commands:
         command: Union[str, List[str]]
-        exe: Optional[str] = None
         if is_windows:
             command = c
 
@@ -184,17 +183,18 @@ def run_commands(
             # cases. It will work in ordinary cases, but will miss cases where
             # the command is like:
             #   "C:\My Programs\python.exe" script.py
+            # In a "missed" case the command will simply be executed unchanged.
             head, _, tail = c.partition(" ")
 
-            # This doesn't rewrite the command to include sys.executable
-            # because sys.executable might include spaces, quotes, or
-            # something, and need quoting itself. Instead the exe param is used
-            # to directly specify the binary to call.
+            # Actual Windows quoting is more complicated, but simpler quoting
+            # rules are used for the first argument in command invocations.
+            #
+            # https://learn.microsoft.com/en-us/cpp/c-language/parsing-c-command-line-arguments
+            quoted_exe = f'"{sys.executable}"'
             if head in ("python", "python3"):
-                exe = sys.executable
+                command = f"{quoted_exe} {tail}"
             if head in ("pip", "pip3"):
-                exe = sys.executable
-                command = "python -m pip " + tail
+                command = f"{quoted_exe} -m pip {tail}"
 
             if not silent:
                 print(f"Running command: {command}")
@@ -215,7 +215,7 @@ def run_commands(
                 print(f"Running command: {c}")
 
         if not dry:
-            run_command(command, capture=capture, exe=exe)
+            run_command(command, capture=capture)
 
 
 def validate_subcommand(

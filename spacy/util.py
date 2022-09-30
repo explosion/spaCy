@@ -944,7 +944,6 @@ def run_command(
     *,
     stdin: Optional[Any] = None,
     capture: bool = False,
-    exe: Optional[str] = None,
 ) -> subprocess.CompletedProcess:
     """Run a command on the command line as a subprocess. If the subprocess
     returns a non-zero exit code, a system exit is performed.
@@ -956,8 +955,6 @@ def run_command(
         sys.exit will be called with the return code. You should use capture=False
         when you want to turn over execution to the command, and capture=True
         when you want to run the command more like a function.
-    exe (Optional[str]): Path to Python executable to use. Passed separately
-        from the command on Windows to avoid quoting issues.
     RETURNS (Optional[CompletedProcess]): The process object.
     """
 
@@ -996,7 +993,6 @@ def run_command(
             input=stdin,
             encoding="utf8",
             check=False,
-            executable=exe,
             stdout=subprocess.PIPE if capture else None,
             stderr=subprocess.STDOUT if capture else None,
         )
