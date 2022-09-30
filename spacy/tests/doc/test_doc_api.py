@@ -2,7 +2,7 @@ import weakref
 
 import numpy
 from numpy.testing import assert_array_equal
-import murmurhash.mrmr
+from murmurhash.mrmr import hash
 import pytest
 import warnings
 from thinc.api import NumpyOps, get_current_ops
@@ -982,65 +982,69 @@ def test_doc_spans_setdefault(en_tokenizer):
 )
 def test_get_affix_hashes_good_case(en_tokenizer, case_sensitive):
 
-    def _get_unsigned_64_bit_hash(input:str) -> int:
+    def _get_unsigned_32_bit_hash(input:str) -> int:
         if not case_sensitive:
             input = input.lower()
-        return numpy.asarray([murmurhash.mrmr.hash(input)]).astype("uint64")[0] 
+        working_hash = hash(input.encode("UTF-16")[2:])
+        if working_hash < 0:
+            working_hash = working_hash + (2<<31)
+        return working_hash
 
     doc = en_tokenizer("spaCy✨ and Prodigy")
     prefixes = doc.get_affix_hashes(False, case_sensitive, 1, 5, "", 2, 3)
     suffixes = doc.get_affix_hashes(True, case_sensitive, 2, 6, "xx✨rP", 1, 3)
-    assert prefixes[0][0] == _get_unsigned_64_bit_hash("s")
-    assert prefixes[0][1] == _get_unsigned_64_bit_hash("sp")
-    assert prefixes[0][2] == _get_unsigned_64_bit_hash("spa")
-    assert prefixes[0][3] == _get_unsigned_64_bit_hash("spaC")
-    assert prefixes[0][4] == _get_unsigned_64_bit_hash("  ")
-    assert prefixes[1][0] == _get_unsigned_64_bit_hash("✨")
-    assert prefixes[1][1] == _get_unsigned_64_bit_hash("✨")
-    assert prefixes[1][2] == _get_unsigned_64_bit_hash("✨")
-    assert prefixes[1][3] == _get_unsigned_64_bit_hash("✨")
-    assert prefixes[1][4] == _get_unsigned_64_bit_hash("  ")
-    assert prefixes[2][0] == _get_unsigned_64_bit_hash("a")
-    assert prefixes[2][1] == _get_unsigned_64_bit_hash("an")
-    assert prefixes[2][2] == _get_unsigned_64_bit_hash("and")
-    assert prefixes[2][3] == _get_unsigned_64_bit_hash("and")
-    assert prefixes[2][4] == _get_unsigned_64_bit_hash("  ")
-    assert prefixes[3][0] == _get_unsigned_64_bit_hash("P")
-    assert prefixes[3][1] == _get_unsigned_64_bit_hash("Pr")
-    assert prefixes[3][2] == _get_unsigned_64_bit_hash("Pro")
-    assert prefixes[3][3] == _get_unsigned_64_bit_hash("Prod")
-    assert prefixes[3][4] == _get_unsigned_64_bit_hash("  ")
+    assert prefixes[0][0] == _get_unsigned_32_bit_hash("s")
+    assert prefixes[0][1] == _get_unsigned_32_bit_hash("sp")
+    assert prefixes[0][2] == _get_unsigned_32_bit_hash("spa")
+    assert prefixes[0][3] == _get_unsigned_32_bit_hash("spaC")
+    assert prefixes[0][4] == _get_unsigned_32_bit_hash("  ")
+    assert prefixes[1][0] == _get_unsigned_32_bit_hash("✨")
+    assert prefixes[1][1] == _get_unsigned_32_bit_hash("✨")
+    assert prefixes[1][2] == _get_unsigned_32_bit_hash("✨")
+    assert prefixes[1][3] == _get_unsigned_32_bit_hash("✨")
+    assert prefixes[1][4] == _get_unsigned_32_bit_hash("  ")
+    assert prefixes[2][0] == _get_unsigned_32_bit_hash("a")
+    assert prefixes[2][1] == _get_unsigned_32_bit_hash("an")
+    assert prefixes[2][2] == _get_unsigned_32_bit_hash("and")
+    assert prefixes[2][3] == _get_unsigned_32_bit_hash("and")
+    assert prefixes[2][4] == _get_unsigned_32_bit_hash("  ")
+    assert prefixes[3][0] == _get_unsigned_32_bit_hash("P")
+    assert prefixes[3][1] == _get_unsigned_32_bit_hash("Pr")
+    assert prefixes[3][2] == _get_unsigned_32_bit_hash("Pro")
+    assert prefixes[3][3] == _get_unsigned_32_bit_hash("Prod")
+    assert prefixes[3][4] == _get_unsigned_32_bit_hash("  ")
 
-    assert suffixes[0][0] == _get_unsigned_64_bit_hash("yC")
-    assert suffixes[0][1] == _get_unsigned_64_bit_hash("yCa")
-    assert suffixes[0][2] == _get_unsigned_64_bit_hash("yCap")
-    assert suffixes[0][3] == _get_unsigned_64_bit_hash("yCaps")
-    assert suffixes[0][4] == _get_unsigned_64_bit_hash(" ")
-    assert suffixes[0][5] == _get_unsigned_64_bit_hash("  ")
-    assert suffixes[1][0] == _get_unsigned_64_bit_hash("✨")
-    assert suffixes[1][1] == _get_unsigned_64_bit_hash("✨")
-    assert suffixes[1][2] == _get_unsigned_64_bit_hash("✨")
-    assert suffixes[1][3] == _get_unsigned_64_bit_hash("✨")
-    assert suffixes[1][4] == _get_unsigned_64_bit_hash("✨")
-    assert suffixes[1][5] == _get_unsigned_64_bit_hash("✨ ")
-    assert suffixes[2][0] == _get_unsigned_64_bit_hash("dn")
-    assert suffixes[2][1] == _get_unsigned_64_bit_hash("dna")
-    assert suffixes[2][2] == _get_unsigned_64_bit_hash("dna")
-    assert suffixes[2][3] == _get_unsigned_64_bit_hash("dna")
-    assert suffixes[2][4] == _get_unsigned_64_bit_hash(" ")
-    assert suffixes[2][5] == _get_unsigned_64_bit_hash("  ")
-    assert suffixes[3][0] == _get_unsigned_64_bit_hash("yg")
-    assert suffixes[3][1] == _get_unsigned_64_bit_hash("ygi")
-    assert suffixes[3][2] == _get_unsigned_64_bit_hash("ygid")
-    assert suffixes[3][3] == _get_unsigned_64_bit_hash("ygido")
-    assert suffixes[3][4] == _get_unsigned_64_bit_hash("r")
+    assert suffixes[0][0] == _get_unsigned_32_bit_hash("Cy")
+    assert suffixes[0][1] == _get_unsigned_32_bit_hash("aCy")
+    assert suffixes[0][2] == _get_unsigned_32_bit_hash("paCy")
+    assert suffixes[0][3] == _get_unsigned_32_bit_hash("spaCy")
+    assert suffixes[0][4] == _get_unsigned_32_bit_hash(" ")
+    assert suffixes[0][5] == _get_unsigned_32_bit_hash("  ")
+    assert suffixes[1][0] == _get_unsigned_32_bit_hash("✨")
+    assert suffixes[1][1] == _get_unsigned_32_bit_hash("✨")
+    assert suffixes[1][2] == _get_unsigned_32_bit_hash("✨")
+    assert suffixes[1][3] == _get_unsigned_32_bit_hash("✨")
+    assert suffixes[1][4] == _get_unsigned_32_bit_hash("✨")
+    assert suffixes[1][5] == _get_unsigned_32_bit_hash("✨ ")
+    assert suffixes[2][0] == _get_unsigned_32_bit_hash("nd")
+    assert suffixes[2][1] == _get_unsigned_32_bit_hash("and")
+    assert suffixes[2][2] == _get_unsigned_32_bit_hash("and")
+    assert suffixes[2][3] == _get_unsigned_32_bit_hash("and")
+    assert suffixes[2][4] == _get_unsigned_32_bit_hash(" ")
+    assert suffixes[2][5] == _get_unsigned_32_bit_hash("  ")
+    assert suffixes[3][0] == _get_unsigned_32_bit_hash("gy")
+    assert suffixes[3][1] == _get_unsigned_32_bit_hash("igy")
+    assert suffixes[3][2] == _get_unsigned_32_bit_hash("digy")
+    assert suffixes[3][3] == _get_unsigned_32_bit_hash("odigy")
+    assert suffixes[3][4] == _get_unsigned_32_bit_hash("r")
 
     if case_sensitive:
-        assert suffixes[3][5] == _get_unsigned_64_bit_hash("rP")
+        assert suffixes[3][5] == _get_unsigned_32_bit_hash("rP")
     else:
-        assert suffixes[3][5] == _get_unsigned_64_bit_hash("r ")
+        assert suffixes[3][5] == _get_unsigned_32_bit_hash("r ")
 
     # check values are the same cross-platform
     assert prefixes[0][3] == 18446744072456113490 if case_sensitive else 18446744071614199016
-    assert suffixes[1][0] == 910783208
-    assert suffixes[2][5] == 1696457176
+    assert suffixes[1][0] == 3425774424
+    assert suffixes[2][5] == 3076404432
+

@@ -1745,41 +1745,35 @@ cdef class Doc:
         """
         cdef unsigned int tok_ind, norm_hash_ind, spec_hash_ind, len_tok_str, working_start, working_len
         cdef unsigned int num_norm_hashes = len_end - len_start, num_spec_hashes = sc_len_end - sc_len_start, num_toks = len(self)
-        cdef const unsigned char[:] token_string, scs = _get_utf16_memoryview(special_chars, True)
+        cdef const unsigned char[:] tok_str, scs = _get_utf16_memoryview(special_chars, True)
         cdef np.ndarray[np.int64_t, ndim=2] output = numpy.empty((num_toks, num_norm_hashes + num_spec_hashes), dtype="int64")
-        cdef bytes scs_buffer_bytes = bytes(b"\x20" * sc_len_end) # spaces
+        cdef bytes scs_buffer_bytes = (bytes(" " * sc_len_end, "UTF-16"))[2:] # first two bytes express endianness and are not relevant here
         cdef char* scs_buffer = scs_buffer_bytes
-        cdef attr_t tok_num_attr
-        cdef str str_token_attr
-        cdef np.int64_t last_hash
+        cdef attr_t num_tok_attr
+        cdef str str_tok_attr
 
         for tok_ind in range(num_toks):
-            tok_num_attr = self.c[tok_ind].lex.orth if case_sensitive else self.c[tok_ind].lex.lower
-            str_token_attr = self.vocab.strings[tok_num_attr]
-            token_string = _get_utf16_memoryview(str_token_attr, False)
-            len_tok_str = len(token_string)
+            num_tok_attr = self.c[tok_ind].lex.orth if case_sensitive else self.c[tok_ind].lex.lower
+            str_tok_attr = self.vocab.strings[num_tok_attr]
+            tok_str = _get_utf16_memoryview(str_tok_attr, False)
+            len_tok_str = len(tok_str)
 
             for norm_hash_ind in range(num_norm_hashes):
                 working_len = (len_start + norm_hash_ind) * 2
                 if working_len > len_tok_str:
-                    output[tok_ind, norm_hash_ind] = last_hash
-                    break
+                    working_len = len_tok_str
                 if suffs_not_prefs:
-                    working_start = 0
-                else:
                     working_start = len_tok_str - working_len
-                    if working_start < 0:
-                        output[tok_ind, norm_hash_ind] = last_hash
-                        break
-                last_hash = hash32(<void*> &token_string[working_start], working_len, 0)
-                output[tok_ind, norm_hash_ind] = last_hash
+                else:
+                    working_start = 0
+                output[tok_ind, norm_hash_ind] = hash32(<void*> &tok_str[working_start], working_len, 0)
 
-            _set_scs_buffer(token_string, scs, scs_buffer, suffs_not_prefs)
+            _set_scs_buffer(tok_str, scs, scs_buffer, suffs_not_prefs)
             for spec_hash_ind in range(num_spec_hashes):
                 working_len = (sc_len_start + spec_hash_ind) * 2
                 output[tok_ind, num_norm_hashes + spec_hash_ind] = hash32(scs_buffer, working_len, 0)
 
-        return output.astype("uint64", casting="unsafe", copy=False)
+        return output
 
     @staticmethod
     def _get_array_attrs():
@@ -1999,7 +1993,7 @@ cdef void _set_scs_buffer(const unsigned char[:] searched_string, const unsigned
     while buf_idx < buf_len:
         working_utf16_char = (<unsigned short*> &searched_string[ss_idx])[0]
         if _is_utf16_char_in_scs(working_utf16_char, scs):
-            buf[buf_idx] = working_utf16_char
+            memcpy(buf, &working_utf16_char, 2)
             buf_idx += 2
         if suffs_not_prefs:
             if ss_idx == 0:
@@ -2011,9 +2005,8 @@ cdef void _set_scs_buffer(const unsigned char[:] searched_string, const unsigned
                 break
     
     while buf_idx < buf_len:
-        buf[buf_idx] = SPACE
+        memcpy(buf, &SPACE, 2)
         buf_idx += 2
-
 
 def pickle_doc(doc):
     bytes_data = doc.to_bytes(exclude=["vocab", "user_data", "user_hooks"])
