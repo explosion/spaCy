@@ -370,7 +370,8 @@ class SpanCategorizerExclusive(TrainablePipe):
         target[negative_samples, self._negative_label] = 1.0  # type: ignore
         d_scores = scores - target
         neg_weight = cast(float, self.cfg["negative_weight"])
-        d_scores[negative_samples] *= neg_weight
+        if neg_weight != 1.0:
+            d_scores[negative_samples] *= neg_weight
         loss = float((d_scores**2).sum())
         return loss, d_scores
 
