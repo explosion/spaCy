@@ -27,7 +27,7 @@ steps:
 
   - script: python -m mypy spacy
     displayName: 'Run mypy'
-    condition: ne(variables['python_version'], '3.10')
+    condition: ne(variables['python_version'], '3.6')
 
   - task: DeleteFiles@1
     inputs:

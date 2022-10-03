@@ -271,4 +271,3 @@ zh:
     accuracy:
       name: bert-base-chinese
       size_factor: 3
-  has_letters: false
