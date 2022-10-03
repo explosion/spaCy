@@ -1214,7 +1214,7 @@ def test_save_activations():
         # create artificial KB - assign same prior weight to the two russ cochran's
         # Q2146908 (Russ Cochran): American golfer
         # Q7381115 (Russ Cochran): publisher
-        mykb = KnowledgeBase(vocab, entity_vector_length=vector_length)
+        mykb = InMemoryLookupKB(vocab, entity_vector_length=vector_length)
         mykb.add_entity(entity="Q2146908", freq=12, entity_vector=[6, -4, 3])
         mykb.add_entity(entity="Q7381115", freq=12, entity_vector=[9, 1, -7])
         mykb.add_alias(
