@@ -78,7 +78,9 @@ operates on a `Doc` and gives you access to the matched tokens **in context**.
 | Name                                             | Description                                                                                        |
 | ------------------------------------------------ | -------------------------------------------------------------------------------------------------- |
 | [`Corpus`](/api/corpus)                          | Class for managing annotated corpora for training and evaluation data.                             |
-| [`KnowledgeBase`](/api/kb)                       | Storage for entities and aliases of a knowledge base for entity linking.                           |
+| [`KnowledgeBase`](/api/kb)                       | Abstract base class for storage and retrieval of data for entity linking.                          |
+| [`InMemoryLookupKB`](/api/kb_in_memory)          | Implementation of `KnowledgeBase` storing all data in memory.                                      |
+| [`Candidate`](/api/kb#candidate)                 | Object associating a textual mention with a specific entity contained in a `KnowledgeBase`.        |
 | [`Lookups`](/api/lookups)                        | Container for convenient access to large lookup tables and dictionaries.                           |
 | [`MorphAnalysis`](/api/morphology#morphanalysis) | A morphological analysis.                                                                          |
 | [`Morphology`](/api/morphology)                  | Store morphological analyses and map them to and from hash values.                                 |

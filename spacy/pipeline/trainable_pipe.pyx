@@ -1,4 +1,4 @@
-# cython: infer_types=True, profile=True
+# cython: infer_types=True, profile=True, binding=True
 from typing import Iterable, Iterator, Optional, Dict, Tuple, Callable
 import srsly
 from thinc.api import set_dropout_rate, Model, Optimizer

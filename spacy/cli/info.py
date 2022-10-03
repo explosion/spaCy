@@ -147,6 +147,7 @@ def info_installed_model_url(model: str) -> Optional[str]:
         # something else, like no file or invalid JSON
         return None
 
+
 def info_model_url(model: str) -> Dict[str, Any]:
     """Return the download URL for the latest version of a pipeline."""
     version = get_latest_version(model)
