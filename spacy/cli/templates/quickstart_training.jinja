@@ -271,13 +271,8 @@ factory = "tok2vec"
 [components.tok2vec.model.embed]
 @architectures = "spacy.MultiHashEmbed.v2"
 width = ${components.tok2vec.model.encode.width}
-{% if has_letters -%}
 attrs = ["NORM", "PREFIX", "SUFFIX", "SHAPE"]
-rows = [5000, 2500, 2500, 2500]
-{% else -%}
-attrs = ["ORTH", "SHAPE"]
-rows = [5000, 2500]
-{% endif -%}
+rows = [5000, 1000, 2500, 2500]
 include_static_vectors = {{ "true" if optimize == "accuracy" else "false" }}
 
 [components.tok2vec.model.encode]

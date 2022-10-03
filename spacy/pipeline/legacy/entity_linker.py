@@ -68,8 +68,7 @@ class EntityLinker_v1(TrainablePipe):
         entity_vector_length (int): Size of encoding vectors in the KB.
         get_candidates (Callable[[KnowledgeBase, Span], Iterable[Candidate]]): Function that
             produces a list of candidates, given a certain knowledge base and a textual mention.
-        scorer (Optional[Callable]): The scoring method. Defaults to
-            Scorer.score_links.
+        scorer (Optional[Callable]): The scoring method. Defaults to Scorer.score_links.
         DOCS: https://spacy.io/api/entitylinker#init
         """
         self.vocab = vocab
@@ -115,7 +114,7 @@ class EntityLinker_v1(TrainablePipe):
         get_examples (Callable[[], Iterable[Example]]): Function that
             returns a representative sample of gold-standard Example objects.
         nlp (Language): The current nlp object the component is part of.
-        kb_loader (Callable[[Vocab], KnowledgeBase]): A function that creates a KnowledgeBase from a Vocab instance.
+        kb_loader (Callable[[Vocab], KnowledgeBase]): A function that creates an InMemoryLookupKB from a Vocab instance.
             Note that providing this argument, will overwrite all data accumulated in the current KB.
             Use this only when loading a KB as-such from file.
 
