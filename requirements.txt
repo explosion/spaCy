@@ -37,3 +37,4 @@ types-setuptools>=57.0.0
 types-requests
 types-setuptools>=57.0.0
 black>=22.0,<23.0
+
