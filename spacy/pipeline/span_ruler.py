@@ -126,7 +126,7 @@ def prioritize_new_ents_filter(
 ) -> List[Span]:
     """Merge entities and spans into one list without overlaps by allowing
     spans to overwrite any entities that they overlap with. Intended to
-    replicate the overwrite_ents=True behavior from the EntityRuler.
+    replicate the overwrite_ents=True behavior from the v3 EntityRuler.
 
     entities (Iterable[Span]): The entities, already filtered for overlaps.
     spans (Iterable[Span]): The spans to merge, may contain overlaps.
@@ -157,7 +157,7 @@ def prioritize_existing_ents_filter(
 ) -> List[Span]:
     """Merge entities and spans into one list without overlaps by prioritizing
     existing entities. Intended to replicate the overwrite_ents=False behavior
-    from the EntityRuler.
+    from the v3 EntityRuler.
 
     entities (Iterable[Span]): The entities, already filtered for overlaps.
     spans (Iterable[Span]): The spans to merge, may contain overlaps.

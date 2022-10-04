@@ -116,7 +116,7 @@ def test_issue_3526_4(en_vocab):
 
 @pytest.mark.issue(4042)
 def test_issue4042():
-    """Test that serialization of an EntityRuler before NER works fine."""
+    """Test that serialization of an entity_ruler before NER works fine."""
     nlp = English()
     # add ner pipe
     ner = nlp.add_pipe("ner")

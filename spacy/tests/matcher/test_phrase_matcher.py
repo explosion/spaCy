@@ -87,8 +87,8 @@ def test_issue4373():
 
 @pytest.mark.issue(4651)
 def test_issue4651_with_phrase_matcher_attr():
-    """Test that the EntityRuler PhraseMatcher is deserialized correctly using
-    the method from_disk when the EntityRuler argument phrase_matcher_attr is
+    """Test that the entity_ruler PhraseMatcher is deserialized correctly using
+    the method from_disk when the entity_ruler argument phrase_matcher_attr is
     specified.
     """
     text = "Spacy is a python library for nlp"

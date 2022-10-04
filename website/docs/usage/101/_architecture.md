@@ -41,25 +41,27 @@ components for different language processing tasks and also allows adding
 
 ![The processing pipeline](../../images/pipeline.svg)
 
-| Name                                            | Description                                                                                 |
-| ----------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| [`AttributeRuler`](/api/attributeruler)         | Set token attributes using matcher rules.                                                   |
-| [`DependencyParser`](/api/dependencyparser)     | Predict syntactic dependencies.                                                             |
-| [`EditTreeLemmatizer`](/api/edittreelemmatizer) | Predict base forms of words.                                                                |
-| [`EntityLinker`](/api/entitylinker)             | Disambiguate named entities to nodes in a knowledge base.                                   |
-| [`EntityRecognizer`](/api/entityrecognizer)     | Predict named entities, e.g. persons or products.                                           |
-| [`EntityRuler`](/api/entityruler)               | Add entity spans to the `Doc` using token-based rules or exact phrase matches.              |
-| [`Lemmatizer`](/api/lemmatizer)                 | Determine the base forms of words using rules and lookups.                                  |
-| [`Morphologizer`](/api/morphologizer)           | Predict morphological features and coarse-grained part-of-speech tags.                      |
-| [`SentenceRecognizer`](/api/sentencerecognizer) | Predict sentence boundaries.                                                                |
-| [`Sentencizer`](/api/sentencizer)               | Implement rule-based sentence boundary detection that doesn't require the dependency parse. |
-| [`Tagger`](/api/tagger)                         | Predict part-of-speech tags.                                                                |
-| [`TextCategorizer`](/api/textcategorizer)       | Predict categories or labels over the whole document.                                       |
-| [`Tok2Vec`](/api/tok2vec)                       | Apply a "token-to-vector" model and set its outputs.                                        |
-| [`Tokenizer`](/api/tokenizer)                   | Segment raw text and create `Doc` objects from the words.                                   |
-| [`TrainablePipe`](/api/pipe)                    | Class that all trainable pipeline components inherit from.                                  |
-| [`Transformer`](/api/transformer)               | Use a transformer model and set its outputs.                                                |
-| [Other functions](/api/pipeline-functions)      | Automatically apply something to the `Doc`, e.g. to merge spans of tokens.                  |
+| Component name         | Component class                                      | Description                                                                                 |
+| ---------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `attribute_ruler`      | [`AttributeRuler`](/api/attributeruler)              | Set token attributes using matcher rules.                                                   |
+| `entity_linker`        | [`EntityLinker`](/api/entitylinker)                  | Disambiguate named entities to nodes in a knowledge base.                                   |
+| `entity_ruler`         | [`SpanRuler`](/api/spanruler)                        | Add entity spans to the `Doc` using token-based rules or exact phrase matches.              |
+| `lemmatizer`           | [`Lemmatizer`](/api/lemmatizer)                      | Determine the base forms of words using rules and lookups.                                  |
+| `morphologizer`        | [`Morphologizer`](/api/morphologizer)                | Predict morphological features and coarse-grained part-of-speech tags.                      |
+| `ner`                  | [`EntityRecognizer`](/api/entityrecognizer)          | Predict named entities, e.g. persons or products.                                           |
+| `parser`               | [`DependencyParser`](/api/dependencyparser)          | Predict syntactic dependencies.                                                             |
+| `senter`               | [`SentenceRecognizer`](/api/sentencerecognizer)      | Predict sentence boundaries.                                                                |
+| `sentencizer`          | [`Sentencizer`](/api/sentencizer)                    | Implement rule-based sentence boundary detection that doesn't require the dependency parse. |
+| `span_ruler`           | [`SpanRuler`](/api/spanruler)                        | Add spans to the `Doc` using token-based rules or exact phrase matches.                     |
+| `tagger`               | [`Tagger`](/api/tagger)                              | Predict part-of-speech tags.                                                                |
+| `textcat`              | [`TextCategorizer`](/api/textcategorizer)            | Predict exactly one category or label over a whole document.                                |
+| `textcat_multilabel`   | [`MultiLabel_TextCategorizer`](/api/textcategorizer) | Predict 0, 1 or more categories or labels over a whole document.                            |
+| `tok2vec`              | [`Tok2Vec`](/api/tok2vec)                            | Apply a "token-to-vector" model and set its outputs.                                        |
+| `tokenizer`            | [`Tokenizer`](/api/tokenizer)                        | Segment raw text and create `Doc` objects from the words.                                   |
+| `trainable_lemmatizer` | [`EditTreeLemmatizer`](/api/edittreelemmatizer)      | Predict base forms of words.                                                                |
+| `transformer`          | [`Transformer`](/api/transformer)                    | Use a transformer model and set its outputs.                                                |
+| -                      | [`TrainablePipe`](/api/pipe)                         | Class that all trainable pipeline components inherit from.                                  |
+| -                      | [Other functions](/api/pipeline-functions)           | Automatically apply something to the `Doc`, e.g. to merge spans of tokens.                  |
 
 ### Matchers {#architecture-matchers}
 
