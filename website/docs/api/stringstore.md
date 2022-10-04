@@ -69,10 +69,10 @@ Check whether a string or a hash is in the store.
 > assert not "cherry" in stringstore
 > ```
 
-| Name        | Description                                             |
-| ----------- | ------------------------------------------------------- |
-| `string`    | The string or hash to check. ~~Union[str, int]~~        |
-| **RETURNS** | Whether the store contains the string or hash. ~~bool~~ |
+| Name             | Description                                             |
+| ---------------- | ------------------------------------------------------- |
+| `string_or_hash` | The string or hash to check. ~~Union[str, int]~~        |
+| **RETURNS**      | Whether the store contains the string or hash. ~~bool~~ |
 
 ## StringStore.\_\_iter\_\_ {#iter tag="method"}
 

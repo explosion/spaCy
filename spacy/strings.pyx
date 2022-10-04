@@ -21,7 +21,7 @@ cdef class StringStore:
 
     DOCS: https://spacy.io/api/stringstore
     """
-    def __init__(self, strings: Optional[Iterable[str]]=None):
+    def __init__(self, strings: Optional[Iterable[str]] = None):
         """Create the StringStore.
 
         strings (iterable): A sequence of unicode strings to add to the store.
@@ -37,8 +37,8 @@ cdef class StringStore:
         is passed as the input, add it to the store and return
         its hash.
 
-        string_or_hash (str, int): The hash value to lookup or the string to store.
-        RETURNS (str, int): The stored string or the hash of the newly added string.
+        string_or_hash (int / str): The hash value to lookup or the string to store.
+        RETURNS (str / int): The stored string or the hash of the newly added string.
         """
         if isinstance(string_or_hash, str):
             return self.add(string_or_hash)
@@ -48,7 +48,7 @@ cdef class StringStore:
     def __contains__(self, string_or_hash: Union[str, int]) -> bool:
         """Check whether a string or a hash is in the store.
 
-        string (str, int): The string/hash to check.
+        string (str / int): The string/hash to check.
         RETURNS (bool): Whether the store contains the string.
         """
         cdef hash_t str_hash = get_string_id(string_or_hash)
@@ -93,7 +93,7 @@ cdef class StringStore:
         """If a hash value is passed as the input, return it as-is. If the input
         is a string, return its corresponding hash.
 
-        string_or_hash (str, int): The string to hash or a hash value.
+        string_or_hash (str / int): The string to hash or a hash value.
         RETURNS (int): The hash of the string or the input hash value.
         """
         if isinstance(string_or_hash, int):
@@ -105,7 +105,7 @@ cdef class StringStore:
         """If a string is passed as the input, return it as-is. If the input
         is a hash value, return its corresponding string.
 
-        string_or_hash (str, int): The hash value to lookup or a string.
+        string_or_hash (str / int): The hash value to lookup or a string.
         RETURNS (str): The stored string or the input string.
         """
         if isinstance(string_or_hash, str):
@@ -209,7 +209,7 @@ cdef class StringStore:
     def _get_interned_str(self, hash_value: int) -> str:
         cdef hash_t str_hash
         if not _try_coerce_to_hash(hash_value, &str_hash):
-            raise TypeError(Errors.E4001.format(expected_types="'str','int'", received_type=type(hash_value)))
+            raise TypeError(Errors.E4001.format(expected_types="'int'", received_type=type(hash_value)))
 
         # Handle reserved symbols and empty strings correctly.
         if str_hash == 0:
