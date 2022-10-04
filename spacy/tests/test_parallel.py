@@ -222,12 +222,12 @@ def test_project_run_multiprocessing_failure(failing_command: str):
         with make_tempdir() as d:
 
             pscript = """
-    import sys
-    from time import sleep
+import sys
+from time import sleep
 
-    _, sleep_secs, rc = sys.argv
-    sleep(int(sleep_secs))
-    sys.exit(int(rc))
+_, sleep_secs, rc = sys.argv
+sleep(int(sleep_secs))
+sys.exit(int(rc))
             """
 
             pscript_loc = os.sep.join((str(d), "pscript.py"))
@@ -271,8 +271,6 @@ def test_project_run_multiprocessing_failure(failing_command: str):
             assert (
                 time_taken < 15
             ), "Test took {time_taken}, subprocess seems not to have been terminated"
-    except PermissionError: # occurs on Windows in the CI because the terminated subprocess still has
-                            # a handle on the temporary directory
+    except PermissionError:  # occurs on Windows in the CI because the terminated subprocess still has
+        # a handle on the temporary directory
         pass
-
-
