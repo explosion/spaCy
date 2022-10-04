@@ -239,7 +239,7 @@ def hsb_tokenizer():
 
 @pytest.fixture(scope="session")
 def ko_tokenizer():
-    pytest.importorskip("natto")
+    pytest.importorskip("mecab_ko")
     return get_lang_class("ko")().tokenizer
 
 
@@ -256,9 +256,33 @@ def ko_tokenizer_tokenizer():
     return nlp.tokenizer
 
 
+@pytest.fixture(scope="module")
+def la_tokenizer():
+    return get_lang_class("la")().tokenizer
+
+
+@pytest.fixture(scope="session")
+def ko_tokenizer_natto():
+    pytest.importorskip("natto")
+    config = {
+        "nlp": {
+            "tokenizer": {
+                "@tokenizers": "spacy.KoreanNattoTokenizer.v1",
+            }
+        }
+    }
+    nlp = get_lang_class("ko").from_config(config)
+    return nlp.tokenizer
+
+
 @pytest.fixture(scope="session")
 def lb_tokenizer():
     return get_lang_class("lb")().tokenizer
+
+
+@pytest.fixture(scope="session")
+def lg_tokenizer():
+    return get_lang_class("lg")().tokenizer
 
 
 @pytest.fixture(scope="session")
@@ -323,13 +347,13 @@ def ro_tokenizer():
 
 @pytest.fixture(scope="session")
 def ru_tokenizer():
-    pytest.importorskip("pymorphy2")
+    pytest.importorskip("pymorphy3")
     return get_lang_class("ru")().tokenizer
 
 
 @pytest.fixture
 def ru_lemmatizer():
-    pytest.importorskip("pymorphy2")
+    pytest.importorskip("pymorphy3")
     return get_lang_class("ru")().add_pipe("lemmatizer")
 
 
@@ -401,14 +425,14 @@ def ky_tokenizer():
 
 @pytest.fixture(scope="session")
 def uk_tokenizer():
-    pytest.importorskip("pymorphy2")
+    pytest.importorskip("pymorphy3")
     return get_lang_class("uk")().tokenizer
 
 
 @pytest.fixture
 def uk_lemmatizer():
-    pytest.importorskip("pymorphy2")
-    pytest.importorskip("pymorphy2_dicts_uk")
+    pytest.importorskip("pymorphy3")
+    pytest.importorskip("pymorphy3_dicts_uk")
     return get_lang_class("uk")().add_pipe("lemmatizer")
 
 

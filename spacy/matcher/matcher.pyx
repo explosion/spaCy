@@ -1,5 +1,5 @@
 # cython: infer_types=True, cython: profile=True
-from typing import List
+from typing import List, Iterable
 
 from libcpp.vector cimport vector
 from libc.stdint cimport int32_t, int8_t
@@ -110,9 +110,9 @@ cdef class Matcher:
         """
         errors = {}
         if on_match is not None and not hasattr(on_match, "__call__"):
-            raise ValueError(Errors.E171.format(arg_type=type(on_match)))
-        if patterns is None or not isinstance(patterns, List):  # old API
-            raise ValueError(Errors.E948.format(arg_type=type(patterns)))
+            raise ValueError(Errors.E171.format(name="Matcher", arg_type=type(on_match)))
+        if patterns is None or not isinstance(patterns, List):
+            raise ValueError(Errors.E948.format(name="Matcher", arg_type=type(patterns)))
         if greedy is not None and greedy not in ["FIRST", "LONGEST"]:
             raise ValueError(Errors.E947.format(expected=["FIRST", "LONGEST"], arg=greedy))
         for i, pattern in enumerate(patterns):
@@ -868,20 +868,27 @@ class _SetPredicate:
 
     def __call__(self, Token token):
         if self.is_extension:
-            value = get_string_id(token._.get(self.attr))
+            value = token._.get(self.attr)
         else:
             value = get_token_attr_for_matcher(token.c, self.attr)
 
-        if self.predicate in ("IS_SUBSET", "IS_SUPERSET", "INTERSECTS"):
+        if self.predicate in ("IN", "NOT_IN"):
+            if isinstance(value, (str, int)):
+                value = get_string_id(value)
+            else:
+                return False
+        elif self.predicate in ("IS_SUBSET", "IS_SUPERSET", "INTERSECTS"):
+            # ensure that all values are enclosed in a set
             if self.attr == MORPH:
                 # break up MORPH into individual Feat=Val values
                 value = set(get_string_id(v) for v in MorphAnalysis.from_id(self.vocab, value))
+            elif isinstance(value, (str, int)):
+                value = set((get_string_id(value),))
+            elif isinstance(value, Iterable) and all(isinstance(v, (str, int)) for v in value):
+                value = set(get_string_id(v) for v in value)
             else:
-                # treat a single value as a list
-                if isinstance(value, (str, int)):
-                    value = set([get_string_id(value)])
-                else:
-                    value = set(get_string_id(v) for v in value)
+                return False
+
         if self.predicate == "IN":
             return value in self.value
         elif self.predicate == "NOT_IN":

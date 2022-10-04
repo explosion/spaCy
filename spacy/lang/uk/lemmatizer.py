@@ -14,7 +14,7 @@ class UkrainianLemmatizer(RussianLemmatizer):
         model: Optional[Model],
         name: str = "lemmatizer",
         *,
-        mode: str = "pymorphy2",
+        mode: str = "pymorphy3",
         overwrite: bool = False,
         scorer: Optional[Callable] = lemmatizer_score,
     ) -> None:
@@ -26,6 +26,17 @@ class UkrainianLemmatizer(RussianLemmatizer):
                     "The Ukrainian lemmatizer mode 'pymorphy2' requires the "
                     "pymorphy2 library and dictionaries. Install them with: "
                     "pip install pymorphy2 pymorphy2-dicts-uk"
+                ) from None
+            if getattr(self, "_morph", None) is None:
+                self._morph = MorphAnalyzer(lang="uk")
+        elif mode == "pymorphy3":
+            try:
+                from pymorphy3 import MorphAnalyzer
+            except ImportError:
+                raise ImportError(
+                    "The Ukrainian lemmatizer mode 'pymorphy3' requires the "
+                    "pymorphy3 library and dictionaries. Install them with: "
+                    "pip install pymorphy3 pymorphy3-dicts-uk"
                 ) from None
             if getattr(self, "_morph", None) is None:
                 self._morph = MorphAnalyzer(lang="uk")

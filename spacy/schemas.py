@@ -144,7 +144,7 @@ def validate_init_settings(
 
 def validate_token_pattern(obj: list) -> List[str]:
     # Try to convert non-string keys (e.g. {ORTH: "foo"} -> {"ORTH": "foo"})
-    get_key = lambda k: NAMES[k] if isinstance(k, int) and k < len(NAMES) else k
+    get_key = lambda k: NAMES[k] if isinstance(k, int) and k in NAMES else k
     if isinstance(obj, list):
         converted = []
         for pattern in obj:
@@ -207,7 +207,7 @@ class TokenPatternOperatorSimple(str, Enum):
 
 
 class TokenPatternOperatorMinMax(ConstrainedStr):
-    regex = re.compile("^({\d+}|{\d+,\d*}|{\d*,\d+})$")
+    regex = re.compile(r"^({\d+}|{\d+,\d*}|{\d*,\d+})$")
 
 
 TokenPatternOperator = Union[TokenPatternOperatorSimple, TokenPatternOperatorMinMax]
@@ -514,6 +514,14 @@ class DocJSONSchema(BaseModel):
     tokens: List[Dict[StrictStr, Union[StrictStr, StrictInt]]] = Field(
         ..., title="Token information - ID, start, annotations"
     )
-    _: Optional[Dict[StrictStr, Any]] = Field(
-        None, title="Any custom data stored in the document's _ attribute"
+    underscore_doc: Optional[Dict[StrictStr, Any]] = Field(
+        None,
+        title="Any custom data stored in the document's _ attribute",
+        alias="_",
+    )
+    underscore_token: Optional[Dict[StrictStr, Dict[StrictStr, Any]]] = Field(
+        None, title="Any custom data stored in the token's _ attribute"
+    )
+    underscore_span: Optional[Dict[StrictStr, Dict[StrictStr, Any]]] = Field(
+        None, title="Any custom data stored in the span's _ attribute"
     )

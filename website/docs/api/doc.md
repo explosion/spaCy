@@ -31,21 +31,21 @@ Construct a `Doc` object. The most common way to get a `Doc` object is via the
 > doc = Doc(nlp.vocab, words=words, spaces=spaces)
 > ```
 
-| Name                                     | Description                                                                                                                                                                                        |
-| ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `vocab`                                  | A storage container for lexical types. ~~Vocab~~                                                                                                                                                   |
-| `words`                                  | A list of strings or integer hash values to add to the document as words. ~~Optional[List[Union[str,int]]]~~                                                                                       |
-| `spaces`                                 | A list of boolean values indicating whether each word has a subsequent space. Must have the same length as `words`, if specified. Defaults to a sequence of `True`. ~~Optional[List[bool]]~~       |
-| _keyword-only_                           |                                                                                                                                                                                                    |
-| `user\_data`                             | Optional extra data to attach to the Doc. ~~Dict~~                                                                                                                                                 |
-| `tags` <Tag variant="new">3</Tag>        | A list of strings, of the same length as `words`, to assign as `token.tag` for each word. Defaults to `None`. ~~Optional[List[str]]~~                                                              |
-| `pos` <Tag variant="new">3</Tag>         | A list of strings, of the same length as `words`, to assign as `token.pos` for each word. Defaults to `None`. ~~Optional[List[str]]~~                                                              |
-| `morphs` <Tag variant="new">3</Tag>      | A list of strings, of the same length as `words`, to assign as `token.morph` for each word. Defaults to `None`. ~~Optional[List[str]]~~                                                            |
-| `lemmas` <Tag variant="new">3</Tag>      | A list of strings, of the same length as `words`, to assign as `token.lemma` for each word. Defaults to `None`. ~~Optional[List[str]]~~                                                            |
-| `heads` <Tag variant="new">3</Tag>       | A list of values, of the same length as `words`, to assign as the head for each word. Head indices are the absolute position of the head in the `Doc`. Defaults to `None`. ~~Optional[List[int]]~~ |
-| `deps` <Tag variant="new">3</Tag>        | A list of strings, of the same length as `words`, to assign as `token.dep` for each word. Defaults to `None`. ~~Optional[List[str]]~~                                                              |
-| `sent_starts` <Tag variant="new">3</Tag> | A list of values, of the same length as `words`, to assign as `token.is_sent_start`. Will be overridden by heads if `heads` is provided. Defaults to `None`. ~~Optional[List[Optional[bool]]]~~    |
-| `ents` <Tag variant="new">3</Tag>        | A list of strings, of the same length of `words`, to assign the token-based IOB tag. Defaults to `None`. ~~Optional[List[str]]~~                                                                   |
+| Name                                     | Description                                                                                                                                                                                             |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vocab`                                  | A storage container for lexical types. ~~Vocab~~                                                                                                                                                        |
+| `words`                                  | A list of strings or integer hash values to add to the document as words. ~~Optional[List[Union[str,int]]]~~                                                                                            |
+| `spaces`                                 | A list of boolean values indicating whether each word has a subsequent space. Must have the same length as `words`, if specified. Defaults to a sequence of `True`. ~~Optional[List[bool]]~~            |
+| _keyword-only_                           |                                                                                                                                                                                                         |
+| `user\_data`                             | Optional extra data to attach to the Doc. ~~Dict~~                                                                                                                                                      |
+| `tags` <Tag variant="new">3</Tag>        | A list of strings, of the same length as `words`, to assign as `token.tag` for each word. Defaults to `None`. ~~Optional[List[str]]~~                                                                   |
+| `pos` <Tag variant="new">3</Tag>         | A list of strings, of the same length as `words`, to assign as `token.pos` for each word. Defaults to `None`. ~~Optional[List[str]]~~                                                                   |
+| `morphs` <Tag variant="new">3</Tag>      | A list of strings, of the same length as `words`, to assign as `token.morph` for each word. Defaults to `None`. ~~Optional[List[str]]~~                                                                 |
+| `lemmas` <Tag variant="new">3</Tag>      | A list of strings, of the same length as `words`, to assign as `token.lemma` for each word. Defaults to `None`. ~~Optional[List[str]]~~                                                                 |
+| `heads` <Tag variant="new">3</Tag>       | A list of values, of the same length as `words`, to assign as the head for each word. Head indices are the absolute position of the head in the `Doc`. Defaults to `None`. ~~Optional[List[int]]~~      |
+| `deps` <Tag variant="new">3</Tag>        | A list of strings, of the same length as `words`, to assign as `token.dep` for each word. Defaults to `None`. ~~Optional[List[str]]~~                                                                   |
+| `sent_starts` <Tag variant="new">3</Tag> | A list of values, of the same length as `words`, to assign as `token.is_sent_start`. Will be overridden by heads if `heads` is provided. Defaults to `None`. ~~Optional[List[Union[bool, int, None]]]~~ |
+| `ents` <Tag variant="new">3</Tag>        | A list of strings, of the same length of `words`, to assign the token-based IOB tag. Defaults to `None`. ~~Optional[List[str]]~~                                                                        |
 
 ## Doc.\_\_getitem\_\_ {#getitem tag="method"}
 
@@ -751,22 +751,23 @@ The L2 norm of the document's vector representation.
 
 ## Attributes {#attributes}
 
-| Name                                 | Description                                                                                                                         |
-| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `text`                               | A string representation of the document text. ~~str~~                                                                               |
-| `text_with_ws`                       | An alias of `Doc.text`, provided for duck-type compatibility with `Span` and `Token`. ~~str~~                                       |
-| `mem`                                | The document's local memory heap, for all C data it owns. ~~cymem.Pool~~                                                            |
-| `vocab`                              | The store of lexical types. ~~Vocab~~                                                                                               |
-| `tensor` <Tag variant="new">2</Tag>  | Container for dense vector representations. ~~numpy.ndarray~~                                                                       |
-| `user_data`                          | A generic storage area, for user custom data. ~~Dict[str, Any]~~                                                                    |
-| `lang` <Tag variant="new">2.1</Tag>  | Language of the document's vocabulary. ~~int~~                                                                                      |
-| `lang_` <Tag variant="new">2.1</Tag> | Language of the document's vocabulary. ~~str~~                                                                                      |
-| `sentiment`                          | The document's positivity/negativity score, if available. ~~float~~                                                                 |
-| `user_hooks`                         | A dictionary that allows customization of the `Doc`'s properties. ~~Dict[str, Callable]~~                                           |
-| `user_token_hooks`                   | A dictionary that allows customization of properties of `Token` children. ~~Dict[str, Callable]~~                                   |
-| `user_span_hooks`                    | A dictionary that allows customization of properties of `Span` children. ~~Dict[str, Callable]~~                                    |
-| `has_unknown_spaces`                 | Whether the document was constructed without known spacing between tokens (typically when created from gold tokenization). ~~bool~~ |
-| `_`                                  | User space for adding custom [attribute extensions](/usage/processing-pipelines#custom-components-attributes). ~~Underscore~~       |
+| Name                                       | Description                                                                                                                                    |
+| ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `text`                                     | A string representation of the document text. ~~str~~                                                                                          |
+| `text_with_ws`                             | An alias of `Doc.text`, provided for duck-type compatibility with `Span` and `Token`. ~~str~~                                                  |
+| `mem`                                      | The document's local memory heap, for all C data it owns. ~~cymem.Pool~~                                                                       |
+| `vocab`                                    | The store of lexical types. ~~Vocab~~                                                                                                          |
+| `tensor` <Tag variant="new">2</Tag>        | Container for dense vector representations. ~~numpy.ndarray~~                                                                                  |
+| `user_data`                                | A generic storage area, for user custom data. ~~Dict[str, Any]~~                                                                               |
+| `lang` <Tag variant="new">2.1</Tag>        | Language of the document's vocabulary. ~~int~~                                                                                                 |
+| `lang_` <Tag variant="new">2.1</Tag>       | Language of the document's vocabulary. ~~str~~                                                                                                 |
+| `sentiment`                                | The document's positivity/negativity score, if available. ~~float~~                                                                            |
+| `user_hooks`                               | A dictionary that allows customization of the `Doc`'s properties. ~~Dict[str, Callable]~~                                                      |
+| `user_token_hooks`                         | A dictionary that allows customization of properties of `Token` children. ~~Dict[str, Callable]~~                                              |
+| `user_span_hooks`                          | A dictionary that allows customization of properties of `Span` children. ~~Dict[str, Callable]~~                                               |
+| `has_unknown_spaces`                       | Whether the document was constructed without known spacing between tokens (typically when created from gold tokenization). ~~bool~~            |
+| `_`                                        | User space for adding custom [attribute extensions](/usage/processing-pipelines#custom-components-attributes). ~~Underscore~~                  |
+| `activations` <Tag variant="new">4.0</Tag> | A dictionary of activations per trainable pipe (available when the `save_activations` option of a pipe is enabled). ~~Dict[str, Option[Any]]~~ |
 
 ## Serialization fields {#serialization-fields}
 

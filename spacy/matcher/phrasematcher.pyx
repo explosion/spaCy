@@ -1,4 +1,6 @@
 # cython: infer_types=True, profile=True
+from typing import List
+from collections import defaultdict
 from libc.stdint cimport uintptr_t
 from preshed.maps cimport map_init, map_set, map_get, map_clear, map_iter
 
@@ -39,7 +41,7 @@ cdef class PhraseMatcher:
         """
         self.vocab = vocab
         self._callbacks = {}
-        self._docs = {}
+        self._docs = defaultdict(set)
         self._validate = validate
 
         self.mem = Pool()
@@ -155,66 +157,24 @@ cdef class PhraseMatcher:
         del self._callbacks[key]
         del self._docs[key]
 
-    def add(self, key, docs, *_docs, on_match=None):
-        """Add a match-rule to the phrase-matcher. A match-rule consists of: an ID
-        key, an on_match callback, and one or more patterns.
 
-        Since spaCy v2.2.2, PhraseMatcher.add takes a list of patterns as the
-        second argument, with the on_match callback as an optional keyword
-        argument.
+    def _add_from_arrays(self, key, specs, *, on_match=None):
+        """Add a preprocessed list of specs, with an optional callback.
 
         key (str): The match ID.
-        docs (list): List of `Doc` objects representing match patterns.
+        specs (List[List[int]]): A list of lists of hashes to match.
         on_match (callable): Callback executed on match.
-        *_docs (Doc): For backwards compatibility: list of patterns to add
-            as variable arguments. Will be ignored if a list of patterns is
-            provided as the second argument.
-
-        DOCS: https://spacy.io/api/phrasematcher#add
         """
-        if docs is None or hasattr(docs, "__call__"):  # old API
-            on_match = docs
-            docs = _docs
-
-        _ = self.vocab[key]
-        self._callbacks[key] = on_match
-        self._docs.setdefault(key, set())
-
         cdef MapStruct* current_node
         cdef MapStruct* internal_node
         cdef void* result
 
-        if isinstance(docs, Doc):
-            raise ValueError(Errors.E179.format(key=key))
-        for doc in docs:
-            if len(doc) == 0:
-                continue
-            if isinstance(doc, Doc):
-                attrs = (TAG, POS, MORPH, LEMMA, DEP)
-                has_annotation = {attr: doc.has_annotation(attr) for attr in attrs}
-                for attr in attrs:
-                    if self.attr == attr and not has_annotation[attr]:
-                        if attr == TAG:
-                            pipe = "tagger"
-                        elif attr in (POS, MORPH):
-                            pipe = "morphologizer or tagger+attribute_ruler"
-                        elif attr == LEMMA:
-                            pipe = "lemmatizer"
-                        elif attr == DEP:
-                            pipe = "parser"
-                        error_msg = Errors.E155.format(pipe=pipe, attr=self.vocab.strings.as_string(attr))
-                        raise ValueError(error_msg)
-                if self._validate and any(has_annotation.values()) \
-                        and self.attr not in attrs:
-                    string_attr = self.vocab.strings[self.attr]
-                    warnings.warn(Warnings.W012.format(key=key, attr=string_attr))
-                keyword = self._convert_to_array(doc)
-            else:
-                keyword = doc
-            self._docs[key].add(tuple(keyword))
+        self._callbacks[key] = on_match
+        for spec in specs:
+            self._docs[key].add(tuple(spec))
 
             current_node = self.c_map
-            for token in keyword:
+            for token in spec:
                 if token == self._terminal_hash:
                     warnings.warn(Warnings.W021)
                     break
@@ -232,6 +192,57 @@ cdef class PhraseMatcher:
                 map_set(self.mem, current_node, self._terminal_hash, internal_node)
                 result = internal_node
             map_set(self.mem, <MapStruct*>result, self.vocab.strings[key], NULL)
+
+
+    def add(self, key, docs, *, on_match=None):
+        """Add a match-rule to the phrase-matcher. A match-rule consists of: an ID
+        key, a list of one or more patterns, and (optionally) an on_match callback.
+
+        key (str): The match ID.
+        docs (list): List of `Doc` objects representing match patterns.
+        on_match (callable): Callback executed on match.
+
+        If any of the input Docs are invalid, no internal state will be updated.
+
+        DOCS: https://spacy.io/api/phrasematcher#add
+        """
+        if isinstance(docs, Doc):
+            raise ValueError(Errors.E179.format(key=key))
+        if docs is None or not isinstance(docs, List):
+            raise ValueError(Errors.E948.format(name="PhraseMatcher", arg_type=type(docs)))
+        if on_match is not None and not hasattr(on_match, "__call__"):
+            raise ValueError(Errors.E171.format(name="PhraseMatcher", arg_type=type(on_match)))
+
+        _ = self.vocab[key]
+        specs = []
+
+        for doc in docs:
+            if len(doc) == 0:
+                continue
+            if not isinstance(doc, Doc):
+                raise ValueError(Errors.E4000.format(type=type(doc)))
+
+            attrs = (TAG, POS, MORPH, LEMMA, DEP)
+            has_annotation = {attr: doc.has_annotation(attr) for attr in attrs}
+            for attr in attrs:
+                if self.attr == attr and not has_annotation[attr]:
+                    if attr == TAG:
+                        pipe = "tagger"
+                    elif attr in (POS, MORPH):
+                        pipe = "morphologizer or tagger+attribute_ruler"
+                    elif attr == LEMMA:
+                        pipe = "lemmatizer"
+                    elif attr == DEP:
+                        pipe = "parser"
+                    error_msg = Errors.E155.format(pipe=pipe, attr=self.vocab.strings.as_string(attr))
+                    raise ValueError(error_msg)
+            if self._validate and any(has_annotation.values()) \
+                    and self.attr not in attrs:
+                string_attr = self.vocab.strings[self.attr]
+                warnings.warn(Warnings.W012.format(key=key, attr=string_attr))
+            specs.append(self._convert_to_array(doc))
+
+        self._add_from_arrays(key, specs, on_match=on_match)
 
     def __call__(self, object doclike, *, as_spans=False):
         """Find all sequences matching the supplied patterns on the `Doc`.
@@ -345,7 +356,7 @@ def unpickle_matcher(vocab, docs, callbacks, attr):
     matcher = PhraseMatcher(vocab, attr=attr)
     for key, specs in docs.items():
         callback = callbacks.get(key, None)
-        matcher.add(key, specs, on_match=callback)
+        matcher._add_from_arrays(key, specs, on_match=callback)
     return matcher
 
 

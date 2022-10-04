@@ -42,12 +42,13 @@ architectures and their arguments and hyperparameters.
 > nlp.add_pipe("morphologizer", config=config)
 > ```
 
-| Setting                                  | Description                                                                                                                                                                                                                                                            |
-| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `model`                                  | The model to use. Defaults to [Tagger](/api/architectures#Tagger). ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                                                                |
-| `overwrite` <Tag variant="new">3.2</Tag> | Whether the values of existing features are overwritten. Defaults to `True`. ~~bool~~                                                                                                                                                                                  |
-| `extend` <Tag variant="new">3.2</Tag>    | Whether existing feature types (whose values may or may not be overwritten depending on `overwrite`) are preserved. Defaults to `False`. ~~bool~~                                                                                                                      |
-| `scorer` <Tag variant="new">3.2</Tag>    | The scoring method. Defaults to [`Scorer.score_token_attr`](/api/scorer#score_token_attr) for the attributes `"pos"` and `"morph"` and [`Scorer.score_token_attr_per_feat`](/api/scorer#score_token_attr_per_feat) for the attribute `"morph"`. ~~Optional[Callable]~~ |
+| Setting                                         | Description                                                                                                                                                                                                                                                            |
+| ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `model`                                         | The model to use. Defaults to [Tagger](/api/architectures#Tagger). ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                                                                |
+| `overwrite` <Tag variant="new">3.2</Tag>        | Whether the values of existing features are overwritten. Defaults to `True`. ~~bool~~                                                                                                                                                                                  |
+| `extend` <Tag variant="new">3.2</Tag>           | Whether existing feature types (whose values may or may not be overwritten depending on `overwrite`) are preserved. Defaults to `False`. ~~bool~~                                                                                                                      |
+| `scorer` <Tag variant="new">3.2</Tag>           | The scoring method. Defaults to [`Scorer.score_token_attr`](/api/scorer#score_token_attr) for the attributes `"pos"` and `"morph"` and [`Scorer.score_token_attr_per_feat`](/api/scorer#score_token_attr_per_feat) for the attribute `"morph"`. ~~Optional[Callable]~~ |
+| `save_activations` <Tag variant="new">4.0</Tag> | Save activations in `Doc` when annotating. Saved activations are `"probabilities"` and `"label_ids"`. ~~Union[bool, list[str]]~~                                                                                                                                       |
 
 ```python
 %%GITHUB_SPACY/spacy/pipeline/morphologizer.pyx
@@ -147,10 +148,10 @@ applied to the `Doc` in order. Both [`__call__`](/api/morphologizer#call) and
 ## Morphologizer.initialize {#initialize tag="method"}
 
 Initialize the component for training. `get_examples` should be a function that
-returns an iterable of [`Example`](/api/example) objects. The data examples are
-used to **initialize the model** of the component and can either be the full
-training data or a representative sample. Initialization includes validating the
-network,
+returns an iterable of [`Example`](/api/example) objects. **At least one example
+should be supplied.** The data examples are used to **initialize the model** of
+the component and can either be the full training data or a representative
+sample. Initialization includes validating the network,
 [inferring missing shapes](https://thinc.ai/docs/usage-models#validation) and
 setting up the label scheme based on the data. This method is typically called
 by [`Language.initialize`](/api/language#initialize) and lets you customize
@@ -162,7 +163,7 @@ config.
 >
 > ```python
 > morphologizer = nlp.add_pipe("morphologizer")
-> morphologizer.initialize(lambda: [], nlp=nlp)
+> morphologizer.initialize(lambda: examples, nlp=nlp)
 > ```
 >
 > ```ini
@@ -176,7 +177,7 @@ config.
 
 | Name           | Description                                                                                                                                                                                                                                                                                                                                                                                       |
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `get_examples` | Function that returns gold-standard annotations in the form of [`Example`](/api/example) objects. ~~Callable[[], Iterable[Example]]~~                                                                                                                                                                                                                                                             |
+| `get_examples` | Function that returns gold-standard annotations in the form of [`Example`](/api/example) objects. Must contain at least one `Example`. ~~Callable[[], Iterable[Example]]~~                                                                                                                                                                                                                        |
 | _keyword-only_ |                                                                                                                                                                                                                                                                                                                                                                                                   |
 | `nlp`          | The current `nlp` object. Defaults to `None`. ~~Optional[Language]~~                                                                                                                                                                                                                                                                                                                              |
 | `labels`       | The label information to add to the component, as provided by the [`label_data`](#label_data) property after initialization. To generate a reusable JSON file from your data, you should run the [`init labels`](/api/cli#init-labels) command. If no labels are provided, the `get_examples` callback is used to extract the labels from the data, which may be a lot slower. ~~Optional[dict]~~ |
@@ -399,8 +400,8 @@ coarse-grained POS as the feature `POS`.
 > assert "Mood=Ind|POS=VERB|Tense=Past|VerbForm=Fin" in morphologizer.labels
 > ```
 
-| Name        | Description                                            |
-| ----------- | ------------------------------------------------------ |
+| Name        | Description                                               |
+| ----------- | --------------------------------------------------------- |
 | **RETURNS** | The labels added to the component. ~~Iterable[str, ...]~~ |
 
 ## Morphologizer.label_data {#label_data tag="property" new="3"}

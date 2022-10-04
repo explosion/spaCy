@@ -1,3 +1,4 @@
+from typing import cast
 import pytest
 from numpy.testing import assert_equal
 from spacy.attrs import TAG
@@ -6,6 +7,7 @@ from spacy import util
 from spacy.training import Example
 from spacy.lang.en import English
 from spacy.language import Language
+from spacy.pipeline import TrainablePipe
 from thinc.api import compounding
 
 from ..util import make_tempdir
@@ -209,6 +211,26 @@ def test_overfitting_IO():
     # test the "untrained" tag
     doc3 = nlp(test_text)
     assert doc3[0].tag_ != "N"
+
+
+def test_save_activations():
+    # Test if activations are correctly added to Doc when requested.
+    nlp = English()
+    tagger = cast(TrainablePipe, nlp.add_pipe("tagger"))
+    train_examples = []
+    for t in TRAIN_DATA:
+        train_examples.append(Example.from_dict(nlp.make_doc(t[0]), t[1]))
+    nlp.initialize(get_examples=lambda: train_examples)
+
+    doc = nlp("This is a test.")
+    assert "tagger" not in doc.activations
+
+    tagger.save_activations = True
+    doc = nlp("This is a test.")
+    assert "tagger" in doc.activations
+    assert set(doc.activations["tagger"].keys()) == {"label_ids", "probabilities"}
+    assert doc.activations["tagger"]["probabilities"].shape == (5, len(TAGS))
+    assert doc.activations["tagger"]["label_ids"].shape == (5,)
 
 
 def test_tagger_requires_labels():

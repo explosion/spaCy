@@ -7,7 +7,7 @@ import numpy as np
 
 import srsly
 from thinc.api import Config, Model, SequenceCategoricalCrossentropy
-from thinc.types import Floats2d, Ints1d, Ints2d
+from thinc.types import ArrayXd, Floats2d, Ints1d
 
 from ._edit_tree_internals.edit_trees import EditTrees
 from ._edit_tree_internals.schemas import validate_edit_tree
@@ -19,6 +19,9 @@ from ..tokens import Doc
 from ..training import Example, validate_examples, validate_get_examples
 from ..vocab import Vocab
 from .. import util
+
+
+ActivationsT = Dict[str, Union[List[Floats2d], List[Ints1d]]]
 
 
 default_model_config = """
@@ -49,6 +52,7 @@ DEFAULT_EDIT_TREE_LEMMATIZER_MODEL = Config().from_str(default_model_config)["mo
         "overwrite": False,
         "top_k": 1,
         "scorer": {"@scorers": "spacy.lemmatizer_scorer.v1"},
+        "save_activations": False,
     },
     default_score_weights={"lemma_acc": 1.0},
 )
@@ -61,6 +65,7 @@ def make_edit_tree_lemmatizer(
     overwrite: bool,
     top_k: int,
     scorer: Optional[Callable],
+    save_activations: bool,
 ):
     """Construct an EditTreeLemmatizer component."""
     return EditTreeLemmatizer(
@@ -72,6 +77,7 @@ def make_edit_tree_lemmatizer(
         overwrite=overwrite,
         top_k=top_k,
         scorer=scorer,
+        save_activations=save_activations,
     )
 
 
@@ -91,6 +97,7 @@ class EditTreeLemmatizer(TrainablePipe):
         overwrite: bool = False,
         top_k: int = 1,
         scorer: Optional[Callable] = lemmatizer_score,
+        save_activations: bool = False,
     ):
         """
         Construct an edit tree lemmatizer.
@@ -102,6 +109,7 @@ class EditTreeLemmatizer(TrainablePipe):
             frequency in the training data.
         overwrite (bool): overwrite existing lemma annotations.
         top_k (int): try to apply at most the k most probable edit trees.
+        save_activations (bool): save model activations in Doc when annotating.
         """
         self.vocab = vocab
         self.model = model
@@ -116,6 +124,7 @@ class EditTreeLemmatizer(TrainablePipe):
 
         self.cfg: Dict[str, Any] = {"labels": []}
         self.scorer = scorer
+        self.save_activations = save_activations
 
     def get_loss(
         self, examples: Iterable[Example], scores: List[Floats2d]
@@ -144,21 +153,24 @@ class EditTreeLemmatizer(TrainablePipe):
 
         return float(loss), d_scores
 
-    def predict(self, docs: Iterable[Doc]) -> List[Ints2d]:
+    def predict(self, docs: Iterable[Doc]) -> ActivationsT:
         n_docs = len(list(docs))
         if not any(len(doc) for doc in docs):
             # Handle cases where there are no tokens in any docs.
             n_labels = len(self.cfg["labels"])
-            guesses: List[Ints2d] = [
+            guesses: List[Ints1d] = [
+                self.model.ops.alloc((0,), dtype="i") for doc in docs
+            ]
+            scores: List[Floats2d] = [
                 self.model.ops.alloc((0, n_labels), dtype="i") for doc in docs
             ]
             assert len(guesses) == n_docs
-            return guesses
+            return {"probabilities": scores, "tree_ids": guesses}
         scores = self.model.predict(docs)
         assert len(scores) == n_docs
         guesses = self._scores2guesses(docs, scores)
         assert len(guesses) == n_docs
-        return guesses
+        return {"probabilities": scores, "tree_ids": guesses}
 
     def _scores2guesses(self, docs, scores):
         guesses = []
@@ -186,8 +198,13 @@ class EditTreeLemmatizer(TrainablePipe):
 
         return guesses
 
-    def set_annotations(self, docs: Iterable[Doc], batch_tree_ids):
+    def set_annotations(self, docs: Iterable[Doc], activations: ActivationsT):
+        batch_tree_ids = activations["tree_ids"]
         for i, doc in enumerate(docs):
+            if self.save_activations:
+                doc.activations[self.name] = {}
+                for act_name, acts in activations.items():
+                    doc.activations[self.name][act_name] = acts[i]
             doc_tree_ids = batch_tree_ids[i]
             if hasattr(doc_tree_ids, "get"):
                 doc_tree_ids = doc_tree_ids.get()

@@ -53,11 +53,16 @@ class FrenchLemmatizer(Lemmatizer):
         rules = rules_table.get(univ_pos, [])
         string = string.lower()
         forms = []
+        # first try lookup in table based on upos
         if string in index:
             forms.append(string)
             self.cache[cache_key] = forms
             return forms
+
+        # then add anything in the exceptions table
         forms.extend(exceptions.get(string, []))
+
+        # if nothing found yet, use the rules
         oov_forms = []
         if not forms:
             for old, new in rules:
@@ -69,12 +74,14 @@ class FrenchLemmatizer(Lemmatizer):
                         forms.append(form)
                     else:
                         oov_forms.append(form)
+
+        # if still nothing, add the oov forms from rules
         if not forms:
             forms.extend(oov_forms)
-        if not forms and string in lookup_table.keys():
-            forms.append(self.lookup_lemmatize(token)[0])
+
+        # use lookups, which fall back to the token itself
         if not forms:
-            forms.append(string)
+            forms.append(lookup_table.get(string, [string])[0])
         forms = list(dict.fromkeys(forms))
         self.cache[cache_key] = forms
         return forms

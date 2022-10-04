@@ -40,12 +40,13 @@ architectures and their arguments and hyperparameters.
 > nlp.add_pipe("tagger", config=config)
 > ```
 
-| Setting                                     | Description                                                                                                                                                                                                                                                                                            |
-| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `model`                                     | A model instance that predicts the tag probabilities. The output vectors should match the number of tags in size, and be normalized as probabilities (all scores between 0 and 1, with the rows summing to `1`). Defaults to [Tagger](/api/architectures#Tagger). ~~Model[List[Doc], List[Floats2d]]~~ |
-| `overwrite` <Tag variant="new">3.2</Tag>    | Whether existing annotation is overwritten. Defaults to `False`. ~~bool~~                                                                                                                                                                                                                              |
-| `scorer` <Tag variant="new">3.2</Tag>       | The scoring method. Defaults to [`Scorer.score_token_attr`](/api/scorer#score_token_attr) for the attribute `"tag"`. ~~Optional[Callable]~~                                                                                                                                                            |
-| `neg_prefix` <Tag variant="new">3.2.1</Tag> | The prefix used to specify incorrect tags while training. The tagger will learn not to predict exactly this tag. Defaults to `!`. ~~str~~                                                                                                                                                              |
+| Setting                                         | Description                                                                                                                                                                                                                                                                                            |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `model`                                         | A model instance that predicts the tag probabilities. The output vectors should match the number of tags in size, and be normalized as probabilities (all scores between 0 and 1, with the rows summing to `1`). Defaults to [Tagger](/api/architectures#Tagger). ~~Model[List[Doc], List[Floats2d]]~~ |
+| `overwrite` <Tag variant="new">3.2</Tag>        | Whether existing annotation is overwritten. Defaults to `False`. ~~bool~~                                                                                                                                                                                                                              |
+| `scorer` <Tag variant="new">3.2</Tag>           | The scoring method. Defaults to [`Scorer.score_token_attr`](/api/scorer#score_token_attr) for the attribute `"tag"`. ~~Optional[Callable]~~                                                                                                                                                            |
+| `neg_prefix` <Tag variant="new">3.2.1</Tag>     | The prefix used to specify incorrect tags while training. The tagger will learn not to predict exactly this tag. Defaults to `!`. ~~str~~                                                                                                                                                              |
+| `save_activations` <Tag variant="new">4.0</Tag> | Save activations in `Doc` when annotating. Saved activations are `"probabilities"` and `"label_ids"`. ~~Union[bool, list[str]]~~                                                                                                                                                                       |
 
 ```python
 %%GITHUB_SPACY/spacy/pipeline/tagger.pyx
@@ -130,10 +131,10 @@ applied to the `Doc` in order. Both [`__call__`](/api/tagger#call) and
 ## Tagger.initialize {#initialize tag="method" new="3"}
 
 Initialize the component for training. `get_examples` should be a function that
-returns an iterable of [`Example`](/api/example) objects. The data examples are
-used to **initialize the model** of the component and can either be the full
-training data or a representative sample. Initialization includes validating the
-network,
+returns an iterable of [`Example`](/api/example) objects. **At least one example
+should be supplied.** The data examples are used to **initialize the model** of
+the component and can either be the full training data or a representative
+sample. Initialization includes validating the network,
 [inferring missing shapes](https://thinc.ai/docs/usage-models#validation) and
 setting up the label scheme based on the data. This method is typically called
 by [`Language.initialize`](/api/language#initialize) and lets you customize
@@ -151,7 +152,7 @@ This method was previously called `begin_training`.
 >
 > ```python
 > tagger = nlp.add_pipe("tagger")
-> tagger.initialize(lambda: [], nlp=nlp)
+> tagger.initialize(lambda: examples, nlp=nlp)
 > ```
 >
 > ```ini
@@ -165,7 +166,7 @@ This method was previously called `begin_training`.
 
 | Name           | Description                                                                                                                                                                                                                                                                                                                                                                                                |
 | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `get_examples` | Function that returns gold-standard annotations in the form of [`Example`](/api/example) objects. ~~Callable[[], Iterable[Example]]~~                                                                                                                                                                                                                                                                      |
+| `get_examples` | Function that returns gold-standard annotations in the form of [`Example`](/api/example) objects. Must contain at least one `Example`. ~~Callable[[], Iterable[Example]]~~                                                                                                                                                                                                                                 |
 | _keyword-only_ |                                                                                                                                                                                                                                                                                                                                                                                                            |
 | `nlp`          | The current `nlp` object. Defaults to `None`. ~~Optional[Language]~~                                                                                                                                                                                                                                                                                                                                       |
 | `labels`       | The label information to add to the component, as provided by the [`label_data`](#label_data) property after initialization. To generate a reusable JSON file from your data, you should run the [`init labels`](/api/cli#init-labels) command. If no labels are provided, the `get_examples` callback is used to extract the labels from the data, which may be a lot slower. ~~Optional[Iterable[str]]~~ |

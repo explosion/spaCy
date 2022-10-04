@@ -573,3 +573,12 @@ def setup_gpu(use_gpu: int, silent=None) -> None:
         local_msg.info("Using CPU")
         if gpu_is_available():
             local_msg.info("To switch to GPU 0, use the option: --gpu-id 0")
+
+
+def _format_number(number: Union[int, float], ndigits: int = 2) -> str:
+    """Formats a number (float or int) rounding to `ndigits`, without truncating trailing 0s,
+    as happens with `round(number, ndigits)`"""
+    if isinstance(number, float):
+        return f"{number:.{ndigits}f}"
+    else:
+        return str(number)

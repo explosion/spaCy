@@ -1,4 +1,5 @@
 import pytest
+import warnings
 import srsly
 from mock import Mock
 
@@ -198,28 +199,6 @@ def test_phrase_matcher_contains(en_vocab):
     assert "TEST2" not in matcher
 
 
-def test_phrase_matcher_add_new_api(en_vocab):
-    doc = Doc(en_vocab, words=["a", "b"])
-    patterns = [Doc(en_vocab, words=["a"]), Doc(en_vocab, words=["a", "b"])]
-    matcher = PhraseMatcher(en_vocab)
-    matcher.add("OLD_API", None, *patterns)
-    assert len(matcher(doc)) == 2
-    matcher = PhraseMatcher(en_vocab)
-    on_match = Mock()
-    matcher.add("OLD_API_CALLBACK", on_match, *patterns)
-    assert len(matcher(doc)) == 2
-    assert on_match.call_count == 2
-    # New API: add(key: str, patterns: List[List[dict]], on_match: Callable)
-    matcher = PhraseMatcher(en_vocab)
-    matcher.add("NEW_API", patterns)
-    assert len(matcher(doc)) == 2
-    matcher = PhraseMatcher(en_vocab)
-    on_match = Mock()
-    matcher.add("NEW_API_CALLBACK", patterns, on_match=on_match)
-    assert len(matcher(doc)) == 2
-    assert on_match.call_count == 2
-
-
 def test_phrase_matcher_repeated_add(en_vocab):
     matcher = PhraseMatcher(en_vocab)
     # match ID only gets added once
@@ -345,13 +324,13 @@ def test_phrase_matcher_validation(en_vocab):
         matcher.add("TEST1", [doc1])
     with pytest.warns(UserWarning):
         matcher.add("TEST2", [doc2])
-    with pytest.warns(None) as record:
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
         matcher.add("TEST3", [doc3])
-        assert not record.list
     matcher = PhraseMatcher(en_vocab, attr="POS", validate=True)
-    with pytest.warns(None) as record:
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
         matcher.add("TEST4", [doc2])
-        assert not record.list
 
 
 def test_attr_validation(en_vocab):
@@ -466,6 +445,13 @@ def test_phrase_matcher_deprecated(en_vocab):
             pass
         assert record.list
         assert "spaCy v3.0" in str(record.list[0].message)
+
+
+def test_phrase_matcher_non_doc(en_vocab):
+    matcher = PhraseMatcher(en_vocab)
+    doc = Doc(en_vocab, words=["hello", "world"])
+    with pytest.raises(ValueError):
+        matcher.add("TEST", [doc, "junk"])
 
 
 @pytest.mark.parametrize("attr", ["SENT_START", "IS_SENT_START"])
