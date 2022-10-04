@@ -40,6 +40,7 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Tuple[int, int, int]]:
     span_label = doc.vocab.strings.add("NP")
 
     # Only NOUNS and PRONOUNS matter
+    end_span = -1
     for i, word in enumerate(filter(lambda x: x.pos in [PRON, NOUN], doclike)):
         # For NOUNS
         # Pick children from syntactic parse (only those with certain dependencies)
@@ -58,15 +59,17 @@ def noun_chunks(doclike: Union[Doc, Span]) -> Iterator[Tuple[int, int, int]]:
             children_i = [c.i for c in children] + [word.i]
 
             start_span = min(children_i)
-            end_span = max(children_i) + 1
-            yield start_span, end_span, span_label
+            if start_span >= end_span:
+                end_span = max(children_i) + 1
+                yield start_span, end_span, span_label
 
         # PRONOUNS only if it is the subject of a verb
         elif word.pos == PRON:
             if word.dep in pronoun_deps:
                 start_span = word.i
-                end_span = word.i + 1
-                yield start_span, end_span, span_label
+                if start_span >= end_span:
+                    end_span = word.i + 1
+                    yield start_span, end_span, span_label
 
 
 SYNTAX_ITERATORS = {"noun_chunks": noun_chunks}

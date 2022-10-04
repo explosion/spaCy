@@ -1,4 +1,4 @@
-from typing import Iterator, Optional, Any, Dict, Callable, Iterable, Collection
+from typing import Iterator, Optional, Any, Dict, Callable, Iterable
 from typing import Union, Tuple, List, Set, Pattern, Sequence
 from typing import NoReturn, TYPE_CHECKING, TypeVar, cast, overload
 
@@ -10,6 +10,7 @@ from contextlib import contextmanager
 from copy import deepcopy
 from pathlib import Path
 import warnings
+
 from thinc.api import get_current_ops, Config, CupyOps, Optimizer
 import srsly
 import multiprocessing as mp
@@ -24,7 +25,7 @@ from .pipe_analysis import validate_attrs, analyze_pipes, print_pipe_analysis
 from .training import Example, validate_examples
 from .training.initialize import init_vocab, init_tok2vec
 from .scorer import Scorer
-from .util import registry, SimpleFrozenList, _pipe, raise_error
+from .util import registry, SimpleFrozenList, _pipe, raise_error, _DEFAULT_EMPTY_PIPES
 from .util import SimpleFrozenDict, combine_score_weights, CONFIG_SECTION_ORDER
 from .util import warn_if_jupyter_cupy
 from .lang.tokenizer_exceptions import URL_MATCH, BASE_EXCEPTIONS
@@ -465,6 +466,8 @@ class Language:
         """
         if not isinstance(name, str):
             raise ValueError(Errors.E963.format(decorator="factory"))
+        if "." in name:
+            raise ValueError(Errors.E853.format(name=name))
         if not isinstance(default_config, dict):
             err = Errors.E962.format(
                 style="default config", name=name, cfg_type=type(default_config)
@@ -543,8 +546,11 @@ class Language:
 
         DOCS: https://spacy.io/api/language#component
         """
-        if name is not None and not isinstance(name, str):
-            raise ValueError(Errors.E963.format(decorator="component"))
+        if name is not None:
+            if not isinstance(name, str):
+                raise ValueError(Errors.E963.format(decorator="component"))
+            if "." in name:
+                raise ValueError(Errors.E853.format(name=name))
         component_name = name if name is not None else util.get_object_name(func)
 
         def add_component(component_func: "Pipe") -> Callable:
@@ -1023,8 +1029,8 @@ class Language:
                 raise ValueError(Errors.E109.format(name=name)) from e
             except Exception as e:
                 error_handler(name, proc, [doc], e)
-            if doc is None:
-                raise ValueError(Errors.E005.format(name=name))
+            if not isinstance(doc, Doc):
+                raise ValueError(Errors.E005.format(name=name, returned_type=type(doc)))
         return doc
 
     def disable_pipes(self, *names) -> "DisabledPipes":
@@ -1058,7 +1064,7 @@ class Language:
         """
         if enable is None and disable is None:
             raise ValueError(Errors.E991)
-        if disable is not None and isinstance(disable, str):
+        if isinstance(disable, str):
             disable = [disable]
         if enable is not None:
             if isinstance(enable, str):
@@ -1693,9 +1699,9 @@ class Language:
         config: Union[Dict[str, Any], Config] = {},
         *,
         vocab: Union[Vocab, bool] = True,
-        disable: Iterable[str] = SimpleFrozenList(),
-        enable: Iterable[str] = SimpleFrozenList(),
-        exclude: Iterable[str] = SimpleFrozenList(),
+        disable: Union[str, Iterable[str]] = _DEFAULT_EMPTY_PIPES,
+        enable: Union[str, Iterable[str]] = _DEFAULT_EMPTY_PIPES,
+        exclude: Union[str, Iterable[str]] = _DEFAULT_EMPTY_PIPES,
         meta: Dict[str, Any] = SimpleFrozenDict(),
         auto_fill: bool = True,
         validate: bool = True,
@@ -1706,12 +1712,12 @@ class Language:
 
         config (Dict[str, Any] / Config): The loaded config.
         vocab (Vocab): A Vocab object. If True, a vocab is created.
-        disable (Iterable[str]): Names of pipeline components to disable.
+        disable (Union[str, Iterable[str]]): Name(s) of pipeline component(s) to disable.
             Disabled pipes will be loaded but they won't be run unless you
             explicitly enable them by calling nlp.enable_pipe.
-        enable (Iterable[str]): Names of pipeline components to enable. All other
+        enable (Union[str, Iterable[str]]): Name(s) of pipeline component(s) to enable. All other
             pipes will be disabled (and can be enabled using `nlp.enable_pipe`).
-        exclude (Iterable[str]): Names of pipeline components to exclude.
+        exclude (Union[str, Iterable[str]]): Name(s) of pipeline component(s) to exclude.
             Excluded components won't be loaded.
         meta (Dict[str, Any]): Meta overrides for nlp.meta.
         auto_fill (bool): Automatically fill in missing values in config based
@@ -1866,9 +1872,38 @@ class Language:
             nlp.vocab.from_bytes(vocab_b)
 
         # Resolve disabled/enabled settings.
+        if isinstance(disable, str):
+            disable = [disable]
+        if isinstance(enable, str):
+            enable = [enable]
+        if isinstance(exclude, str):
+            exclude = [exclude]
+
+        def fetch_pipes_status(value: Iterable[str], key: str) -> Iterable[str]:
+            """Fetch value for `enable` or `disable` w.r.t. the specified config and passed arguments passed to
+            .load(). If both arguments and config specified values for this field, the passed arguments take precedence
+            and a warning is printed.
+            value (Iterable[str]): Passed value for `enable` or `disable`.
+            key (str): Key for field in config (either "enabled" or "disabled").
+            RETURN (Iterable[str]):
+            """
+            # We assume that no argument was passed if the value is the specified default value.
+            if id(value) == id(_DEFAULT_EMPTY_PIPES):
+                return config["nlp"].get(key, [])
+            else:
+                if len(config["nlp"].get(key, [])):
+                    warnings.warn(
+                        Warnings.W123.format(
+                            arg=key[:-1],
+                            arg_value=value,
+                            config_value=config["nlp"][key],
+                        )
+                    )
+                return value
+
         disabled_pipes = cls._resolve_component_status(
-            [*config["nlp"]["disabled"], *disable],
-            [*config["nlp"].get("enabled", []), *enable],
+            fetch_pipes_status(disable, "disabled"),
+            fetch_pipes_status(enable, "enabled"),
             config["nlp"]["pipeline"],
         )
         nlp._disabled = set(p for p in disabled_pipes if p not in exclude)
@@ -2026,37 +2061,34 @@ class Language:
 
     @staticmethod
     def _resolve_component_status(
-        disable: Iterable[str], enable: Iterable[str], pipe_names: Collection[str]
+        disable: Union[str, Iterable[str]],
+        enable: Union[str, Iterable[str]],
+        pipe_names: Iterable[str],
     ) -> Tuple[str, ...]:
         """Derives whether (1) `disable` and `enable` values are consistent and (2)
         resolves those to a single set of disabled components. Raises an error in
         case of inconsistency.
 
-        disable (Iterable[str]): Names of components or serialization fields to disable.
-        enable (Iterable[str]): Names of pipeline components to enable.
+        disable (Union[str, Iterable[str]]): Name(s) of component(s) or serialization fields to disable.
+        enable (Union[str, Iterable[str]]): Name(s) of pipeline component(s) to enable.
         pipe_names (Iterable[str]): Names of all pipeline components.
 
         RETURNS (Tuple[str, ...]): Names of components to exclude from pipeline w.r.t.
                                    specified includes and excludes.
         """
 
-        if disable is not None and isinstance(disable, str):
+        if isinstance(disable, str):
             disable = [disable]
         to_disable = disable
 
         if enable:
+            if isinstance(enable, str):
+                enable = [enable]
             to_disable = [
                 pipe_name for pipe_name in pipe_names if pipe_name not in enable
             ]
             if disable and disable != to_disable:
-                raise ValueError(
-                    Errors.E1042.format(
-                        arg1="enable",
-                        arg2="disable",
-                        arg1_values=enable,
-                        arg2_values=disable,
-                    )
-                )
+                raise ValueError(Errors.E1042.format(enable=enable, disable=disable))
 
         return tuple(to_disable)
 

@@ -605,10 +605,35 @@ def test_update_with_annotates():
             assert results[component] == ""
 
 
-def test_load_disable_enable() -> None:
-    """
-    Tests spacy.load() with dis-/enabling components.
-    """
+@pytest.mark.issue(11443)
+def test_enable_disable_conflict_with_config():
+    """Test conflict between enable/disable w.r.t. `nlp.disabled` set in the config."""
+    nlp = English()
+    nlp.add_pipe("tagger")
+    nlp.add_pipe("senter")
+    nlp.add_pipe("sentencizer")
+
+    with make_tempdir() as tmp_dir:
+        nlp.to_disk(tmp_dir)
+        # Expected to fail, as config and arguments conflict.
+        with pytest.raises(ValueError):
+            spacy.load(
+                tmp_dir, enable=["tagger"], config={"nlp": {"disabled": ["senter"]}}
+            )
+        # Expected to succeed without warning due to the lack of a conflicting config option.
+        spacy.load(tmp_dir, enable=["tagger"])
+        # Expected to succeed with a warning, as disable=[] should override the config setting.
+        with pytest.warns(UserWarning):
+            spacy.load(
+                tmp_dir,
+                enable=["tagger"],
+                disable=[],
+                config={"nlp": {"disabled": ["senter"]}},
+            )
+
+
+def test_load_disable_enable():
+    """Tests spacy.load() with dis-/enabling components."""
 
     base_nlp = English()
     for pipe in ("sentencizer", "tagger", "parser"):
@@ -618,6 +643,7 @@ def test_load_disable_enable() -> None:
         base_nlp.to_disk(tmp_dir)
         to_disable = ["parser", "tagger"]
         to_enable = ["tagger", "parser"]
+        single_str = "tagger"
 
         # Setting only `disable`.
         nlp = spacy.load(tmp_dir, disable=to_disable)
@@ -631,6 +657,16 @@ def test_load_disable_enable() -> None:
                 for comp_name in nlp.component_names
             ]
         )
+
+        # Loading with a string representing one component
+        nlp = spacy.load(tmp_dir, exclude=single_str)
+        assert single_str not in nlp.component_names
+
+        nlp = spacy.load(tmp_dir, disable=single_str)
+        assert single_str in nlp.component_names
+        assert single_str not in nlp.pipe_names
+        assert nlp._disabled == {single_str}
+        assert nlp.disabled == [single_str]
 
         # Testing consistent enable/disable combination.
         nlp = spacy.load(

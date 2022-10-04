@@ -270,3 +270,62 @@ Compute micro-PRF and per-entity PRF scores.
 | Name       | Description                                                                                                         |
 | ---------- | ------------------------------------------------------------------------------------------------------------------- |
 | `examples` | The `Example` objects holding both the predictions and the correct gold-standard annotations. ~~Iterable[Example]~~ |
+
+## score_coref_clusters {#score_coref_clusters tag="experimental"}
+
+Returns LEA ([Moosavi and Strube, 2016](https://aclanthology.org/P16-1060/)) PRF
+scores for coreference clusters.
+
+<Infobox title="Important note" variant="warning">
+
+Note this scoring function is not yet included in spaCy core - for details, see
+the [CoreferenceResolver](/api/coref) docs.
+
+</Infobox>
+
+> #### Example
+>
+> ```python
+> scores = score_coref_clusters(
+>     examples,
+>     span_cluster_prefix="coref_clusters",
+> )
+> print(scores["coref_f"])
+> ```
+
+| Name                  | Description                                                                                                         |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `examples`            | The `Example` objects holding both the predictions and the correct gold-standard annotations. ~~Iterable[Example]~~ |
+| _keyword-only_        |                                                                                                                     |
+| `span_cluster_prefix` | The prefix used for spans representing coreference clusters. ~~str~~                                                |
+| **RETURNS**           | A dictionary containing the scores. ~~Dict[str, Optional[float]]~~                                                  |
+
+## score_span_predictions {#score_span_predictions tag="experimental"}
+
+Return accuracy for reconstructions of spans from single tokens. Only exactly
+correct predictions are counted as correct, there is no partial credit for near
+answers. Used by the [SpanResolver](/api/span-resolver).
+
+<Infobox title="Important note" variant="warning">
+
+Note this scoring function is not yet included in spaCy core - for details, see
+the [SpanResolver](/api/span-resolver) docs.
+
+</Infobox>
+
+> #### Example
+>
+> ```python
+> scores = score_span_predictions(
+>     examples,
+>     output_prefix="coref_clusters",
+> )
+> print(scores["span_coref_clusters_accuracy"])
+> ```
+
+| Name            | Description                                                                                                         |
+| --------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `examples`      | The `Example` objects holding both the predictions and the correct gold-standard annotations. ~~Iterable[Example]~~ |
+| _keyword-only_  |                                                                                                                     |
+| `output_prefix` | The prefix used for spans representing the final predicted spans. ~~str~~                                           |
+| **RETURNS**     | A dictionary containing the scores. ~~Dict[str, Optional[float]]~~                                                  |

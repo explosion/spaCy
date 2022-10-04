@@ -205,6 +205,17 @@ def setup_package():
         get_python_inc(plat_specific=True),
     ]
     ext_modules = []
+    ext_modules.append(
+        Extension(
+            "spacy.matcher.levenshtein",
+            [
+                "spacy/matcher/levenshtein.pyx",
+                "spacy/matcher/polyleven.c",
+            ],
+            language="c",
+            include_dirs=include_dirs,
+        )
+    )
     for name in MOD_NAMES:
         mod_path = name.replace(".", "/") + ".pyx"
         ext = Extension(

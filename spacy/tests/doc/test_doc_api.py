@@ -3,6 +3,7 @@ import weakref
 import numpy
 from numpy.testing import assert_array_equal
 import pytest
+import warnings
 from thinc.api import NumpyOps, get_current_ops
 
 from spacy.attrs import DEP, ENT_IOB, ENT_TYPE, HEAD, IS_ALPHA, MORPH, POS
@@ -79,6 +80,21 @@ def test_issue2396(en_vocab):
     span = doc[:]
     assert (doc.get_lca_matrix() == matrix).all()
     assert (span.get_lca_matrix() == matrix).all()
+
+
+@pytest.mark.issue(11499)
+def test_init_args_unmodified(en_vocab):
+    words = ["A", "sentence"]
+    ents = ["B-TYPE1", ""]
+    sent_starts = [True, False]
+    Doc(
+        vocab=en_vocab,
+        words=words,
+        ents=ents,
+        sent_starts=sent_starts,
+    )
+    assert ents == ["B-TYPE1", ""]
+    assert sent_starts == [True, False]
 
 
 @pytest.mark.parametrize("text", ["-0.23", "+123,456", "±1"])
@@ -529,9 +545,9 @@ def test_doc_from_array_sent_starts(en_vocab):
     # no warning using default attrs
     attrs = doc._get_array_attrs()
     arr = doc.to_array(attrs)
-    with pytest.warns(None) as record:
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
         new_doc.from_array(attrs, arr)
-        assert len(record) == 0
     # only SENT_START uses SENT_START
     attrs = [SENT_START]
     arr = doc.to_array(attrs)

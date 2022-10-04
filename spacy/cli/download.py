@@ -7,6 +7,7 @@ import typer
 from ._util import app, Arg, Opt, WHEEL_SUFFIX, SDIST_SUFFIX
 from .. import about
 from ..util import is_package, get_minor_version, run_command
+from ..util import is_prerelease_version
 from ..errors import OLD_MODEL_SHORTCUTS
 
 
@@ -19,7 +20,7 @@ def download_cli(
     ctx: typer.Context,
     model: str = Arg(..., help="Name of pipeline package to download"),
     direct: bool = Opt(False, "--direct", "-d", "-D", help="Force direct download of name + version"),
-    sdist: bool = Opt(False, "--sdist", "-S", help="Download sdist (.tar.gz) archive instead of pre-built binary wheel")
+    sdist: bool = Opt(False, "--sdist", "-S", help="Download sdist (.tar.gz) archive instead of pre-built binary wheel"),
     # fmt: on
 ):
     """
@@ -35,7 +36,12 @@ def download_cli(
     download(model, direct, sdist, *ctx.args)
 
 
-def download(model: str, direct: bool = False, sdist: bool = False, *pip_args) -> None:
+def download(
+    model: str,
+    direct: bool = False,
+    sdist: bool = False,
+    *pip_args,
+) -> None:
     if (
         not (is_package("spacy") or is_package("spacy-nightly"))
         and "--no-deps" not in pip_args
@@ -49,13 +55,10 @@ def download(model: str, direct: bool = False, sdist: bool = False, *pip_args) -
             "dependencies, you'll have to install them manually."
         )
         pip_args = pip_args + ("--no-deps",)
-    suffix = SDIST_SUFFIX if sdist else WHEEL_SUFFIX
-    dl_tpl = "{m}-{v}/{m}-{v}{s}#egg={m}=={v}"
     if direct:
         components = model.split("-")
         model_name = "".join(components[:-1])
         version = components[-1]
-        download_model(dl_tpl.format(m=model_name, v=version, s=suffix), pip_args)
     else:
         model_name = model
         if model in OLD_MODEL_SHORTCUTS:
@@ -66,15 +69,31 @@ def download(model: str, direct: bool = False, sdist: bool = False, *pip_args) -
             model_name = OLD_MODEL_SHORTCUTS[model]
         compatibility = get_compatibility()
         version = get_version(model_name, compatibility)
-        download_model(dl_tpl.format(m=model_name, v=version, s=suffix), pip_args)
+
+    filename = get_model_filename(model_name, version, sdist)
+
+    download_model(filename, pip_args)
     msg.good(
         "Download and installation successful",
         f"You can now load the package via spacy.load('{model_name}')",
     )
 
 
+def get_model_filename(model_name: str, version: str, sdist: bool = False) -> str:
+    dl_tpl = "{m}-{v}/{m}-{v}{s}"
+    egg_tpl = "#egg={m}=={v}"
+    suffix = SDIST_SUFFIX if sdist else WHEEL_SUFFIX
+    filename = dl_tpl.format(m=model_name, v=version, s=suffix)
+    if sdist:
+        filename += egg_tpl.format(m=model_name, v=version)
+    return filename
+
+
 def get_compatibility() -> dict:
-    version = get_minor_version(about.__version__)
+    if is_prerelease_version(about.__version__):
+        version: Optional[str] = about.__version__
+    else:
+        version = get_minor_version(about.__version__)
     r = requests.get(about.__compatibility__)
     if r.status_code != 200:
         msg.fail(
@@ -99,6 +118,11 @@ def get_version(model: str, comp: dict) -> str:
             exits=1,
         )
     return comp[model][0]
+
+
+def get_latest_version(model: str) -> str:
+    comp = get_compatibility()
+    return get_version(model, comp)
 
 
 def download_model(

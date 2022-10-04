@@ -1,6 +1,97 @@
 {
     "resources": [
         {
+            "id": "Zshot",
+            "title": "Zshot",
+            "slogan": "Zero and Few shot named entity & relationships recognition",
+            "github": "ibm/zshot",
+            "pip": "zshot",
+            "code_example": [
+                "import spacy",
+                "from zshot import PipelineConfig, displacy",
+                "from zshot.linker import LinkerRegen",
+                "from zshot.mentions_extractor import MentionsExtractorSpacy",
+                "from zshot.utils.data_models import Entity",
+                "",
+                "nlp = spacy.load('en_core_web_sm')",
+                "# zero shot definition of entities",
+                "nlp_config = PipelineConfig(",
+                "    mentions_extractor=MentionsExtractorSpacy(),",
+                "    linker=LinkerRegen(),",
+                "    entities=[",
+                "        Entity(name='Paris',",
+                "               description='Paris is located in northern central France, in a north-bending arc of the river Seine'),",
+                "        Entity(name='IBM',",
+                "               description='International Business Machines Corporation (IBM) is an American multinational technology corporation headquartered in Armonk, New York'),",
+                "        Entity(name='New York', description='New York is a city in U.S. state'),",
+                "        Entity(name='Florida', description='southeasternmost U.S. state'),",
+                "        Entity(name='American',",
+                "              description='American, something of, from, or related to the United States of America, commonly known as the United States or America'),",
+                "        Entity(name='Chemical formula',",
+                "               description='In chemistry, a chemical formula is a way of presenting information about the chemical proportions of atoms that constitute a particular chemical compound or molecul'),",
+                "        Entity(name='Acetamide',",
+                "               description='Acetamide (systematic name: ethanamide) is an organic compound with the formula CH3CONH2. It is the simplest amide derived from acetic acid. It finds some use as a plasticizer and as an industrial solvent.'),",
+                "        Entity(name='Armonk',",
+                "               description='Armonk is a hamlet and census-designated place (CDP) in the town of North Castle, located in Westchester County, New York, United States.'),",
+                "        Entity(name='Acetic Acid',",
+                "               description='Acetic acid, systematically named ethanoic acid, is an acidic, colourless liquid and organic compound with the chemical formula CH3COOH'),",
+                "        Entity(name='Industrial solvent',",
+                "               description='Acetamide (systematic name: ethanamide) is an organic compound with the formula CH3CONH2. It is the simplest amide derived from acetic acid. It finds some use as a plasticizer and as an industrial solvent.'),",
+                "    ]",
+                ")",
+                "nlp.add_pipe('zshot', config=nlp_config, last=True)",
+                "",
+                "text = 'International Business Machines Corporation (IBM) is an American multinational technology corporation' \\",
+                "        ' headquartered in Armonk, New York, with operations in over 171 countries.'",
+                "",
+                "doc = nlp(text)",
+                "displacy.serve(doc, style='ent')"
+            ],
+            "thumb": "https://ibm.github.io/zshot/img/graph.png",
+            "url": "https://ibm.github.io/zshot/",
+            "author": "IBM Research",
+            "author_links": {
+                "github": "ibm",
+                "twitter": "IBMResearch",
+                "website": "https://research.ibm.com/labs/ireland/"
+            },
+            "category": ["scientific", "models", "research"]
+        },
+        {
+            "id": "concepcy",
+            "title": "concepCy",
+            "slogan": "A multilingual knowledge graph in spaCy",
+            "description": "A spaCy wrapper for ConceptNet, a freely-available semantic network designed to help computers understand the meaning of words.",
+            "github": "JulesBelveze/concepcy",
+            "pip": "concepcy",
+            "code_example": [
+                "import spacy",
+                "import concepcy",
+                "",
+                "nlp = spacy.load('en_core_web_sm')",
+                "# Using default concepCy configuration",
+                "nlp.add_pipe('concepcy')",
+                "",
+                "doc = nlp('WHO is a lovely company')",
+                "",
+                "# Access all the 'RelatedTo' relations from the Doc",
+                "for word, relations in doc._.relatedto.items():",
+                "    print(f'Word: {word}\n{relations}')",
+                "",
+                "# Access the 'RelatedTo' relations word by word",
+                "for token in doc:",
+                "    print(f'Word: {token}\n{token._.relatedto}')"
+            ],
+            "category": ["pipeline"],
+            "image": "https://github.com/JulesBelveze/concepcy/blob/main/figures/concepcy.png",
+            "tags": ["semantic", "ConceptNet"],
+            "author": "Jules Belveze",
+            "author_links": {
+                "github": "JulesBelveze",
+                "website": "https://www.linkedin.com/in/jules-belveze/"
+            }
+        },
+        {
             "id": "spacyfishing",
             "title": "spaCy fishing",
             "slogan": "Named entity disambiguation and linking on Wikidata in spaCy with Entity-Fishing.",
@@ -22,6 +113,7 @@
                 "## Set parameter `extra_info` to `True` and check also span._.description, span._.src_description, span._.normal_term, span._.other_ids"
             ],
             "category": ["models", "pipeline"],
+            "image": "https://raw.githubusercontent.com/Lucaterre/spacyfishing/main/docs/spacyfishing-logo-resized.png",
             "tags": ["NER", "NEL"],
             "author": "Lucas Terriel",
             "author_links": {
@@ -1157,7 +1249,7 @@
             "slogan": "Fast, flexible and transparent sentiment analysis",
             "description": "Asent is a rule-based sentiment analysis library for Python made using spaCy. It is inspired by VADER, but uses a more modular ruleset, that allows the user to change e.g. the method for finding negations. Furthermore it includes visualisers to visualize the model predictions, making the model easily interpretable.",
             "github": "kennethenevoldsen/asent",
-            "pip": "aseny",
+            "pip": "asent",
             "code_example": [
                 "import spacy",
                 "import asent",
@@ -2603,7 +2695,7 @@
                 "    Add the courgette, garlic, red peppers and oregano and cook for 2–3 minutes.",
                 "    Later, add some oranges and chickens.\"\"\"",
                 "",
-                "# use any model that has internal spacy embeddings", 
+                "# use any model that has internal spacy embeddings",
                 "nlp = spacy.load('en_core_web_lg')",
                 "nlp.add_pipe(\"concise_concepts\", ",
                 "    config={\"data\": data}",
@@ -2649,7 +2741,7 @@
                 "    At that location, Nissin was founded.",
                 "    Many students survived by eating these noodles, but they don't even know him.\"\"\"",
                 "",
-                "# use any model that has internal spacy embeddings", 
+                "# use any model that has internal spacy embeddings",
                 "nlp = spacy.load('en_core_web_sm')",
                 "nlp.add_pipe(",
                 "    \"xx_coref\", config={\"chunk_size\": 2500, \"chunk_overlap\": 2, \"device\": 0})",
@@ -2832,7 +2924,7 @@
                 "doc = nlp(\"AE died in Princeton in 1955.\")",
                 "",
                 "print(doc._.clauses)",
-                "# Output:",       
+                "# Output:",
                 "# <SV, AE, died, None, None, None, [in Princeton, in 1955]>",
                 "",
                 "propositions = doc._.clauses[0].to_propositions(as_text=True)",
@@ -3598,7 +3690,7 @@
                 "",
                 "#Lexico Semantic (LxSem) Features",
                 "TTRF = LingFeat.TTRF_() #Type Token Ratio Features",
-                "VarF = LingFeat.VarF_() #Noun/Verb/Adj/Adv Variation Features", 
+                "VarF = LingFeat.VarF_() #Noun/Verb/Adj/Adv Variation Features",
                 "PsyF = LingFeat.PsyF_() #Psycholinguistic Difficulty of Words (AoA Kuperman)",
                 "WoLF = LingFeat.WorF_() #Word Familiarity from Frequency Count (SubtlexUS)",
                 "",
@@ -3934,7 +4026,36 @@
             },
             "category": ["biomedical", "scientific", "research", "pipeline"],
             "tags": ["clinical"]
+        },
+        {
+            "id": "sent-pattern",
+            "title": "English Interpretation Sentence Pattern",
+            "slogan": "English interpretation for accurate translation from English to Japanese",
+            "description": "This package categorizes English sentences into one of five basic sentence patterns and identifies the subject, verb, object, and other components. The five basic sentence patterns are based on C. T. Onions's Advanced English Syntax and are frequently used when teaching English in Japan.",
+            "github": "lll-lll-lll-lll/sent-pattern",
+            "pip": "sent-pattern",
+            "author": "Shunpei Nakayama",
+            "author_links": {
+                "twitter": "ExZ79575296",
+                "github": "lll-lll-lll-lll"
+            },
+            "category": ["pipeline"],
+            "tags": ["interpretation", "ja"]
+        },
+        {
+            "id": "spacy-partial-tagger",
+            "title": "spaCy - Partial Tagger",
+            "slogan": "Sequence Tagger for Partially Annotated Dataset in spaCy",
+            "description": "This is a library to build a CRF tagger with a partially annotated dataset in spaCy. You can build your own tagger only from dictionary.",
+            "github": "doccano/spacy-partial-tagger",
+            "pip": "spacy-partial-tagger",
+            "category": ["pipeline", "training"],
+            "author": "Yasufumi Taniguchi",
+            "author_links": {
+                "github": "yasufumy"
+            }
         }
+
     ],
 
     "categories": [
