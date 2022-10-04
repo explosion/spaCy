@@ -266,6 +266,9 @@ sys.exit(int(rc))
             assert rc_e.value.code == 15
         else:
             assert rc_e.value.code == 1
+        time_taken = time() - start < 15
         assert (
-            time() - start < 15
-        ), "Test took too long, subprocess seems not to have been terminated"
+            time_taken < 15
+        ), "Test took {time_taken}, subprocess seems not to have been terminated"
+
+
