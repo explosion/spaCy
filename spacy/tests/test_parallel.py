@@ -1,5 +1,7 @@
 import os
 from time import time
+from tempfile import TemporaryDirectory
+from pathlib import Path
 import pytest
 import srsly
 from spacy.cli._util import load_project_config
@@ -218,10 +220,10 @@ def test_project_run_multiprocessing_failure(failing_command: str):
     with a non-zero return code, the other two commands after several seconds with
     zero return codes. Measuring the execution length for the whole group shows
     whether or not the sleeping processes were successfully terminated."""
-    try:
-        with make_tempdir() as d:
+    with TemporaryDirectory(ignore_cleanup_errors=True) as d: # avoid errors in Windows CI
+        dirpath = Path(d)
 
-            pscript = """
+        pscript = """
 import sys
 from time import sleep
 
@@ -230,47 +232,44 @@ sleep(int(sleep_secs))
 sys.exit(int(rc))
             """
 
-            pscript_loc = os.sep.join((str(d), "pscript.py"))
-            with open(pscript_loc, "w") as pscript_file:
-                pscript_file.write(pscript)
-            os.chmod(pscript_loc, 0o777)
-            project = {
-                "commands": [
-                    {
-                        "name": "commandA",
-                        "script": [" ".join(("python", pscript_loc, "25", "0"))],
-                    },
-                    {
-                        "name": "commandB",
-                        "script": [" ".join((failing_command, pscript_loc, "0", "1"))],
-                    },
-                    {
-                        "name": "commandC",
-                        "script": [" ".join(("python", pscript_loc, "20", "0"))],
-                    },
-                ],
-                "workflows": {
-                    "all": [
-                        {"parallel": ["commandA", "commandB", "commandC"]},
-                        "commandC",
-                    ]
+        pscript_loc = os.sep.join((str(d), "pscript.py"))
+        with open(pscript_loc, "w") as pscript_file:
+            pscript_file.write(pscript)
+        os.chmod(pscript_loc, 0o777)
+        project = {
+            "commands": [
+                {
+                    "name": "commandA",
+                    "script": [" ".join(("python", pscript_loc, "25", "0"))],
                 },
-            }
-            srsly.write_yaml(d / "project.yml", project)
-            load_project_config(d)
-            start = time()
-            with pytest.raises(SystemExit) as rc_e:
-                project_run(d, "all")
-            if os.name == "nt":
-                # because in Windows the terminated process has rc=15 rather than rc=-15,
-                # 15 is the highest rc rather than 1.
-                assert rc_e.value.code == 15
-            else:
-                assert rc_e.value.code == 1
-            time_taken = time() - start
-            assert (
-                time_taken < 15
-            ), "Test took {time_taken}, subprocess seems not to have been terminated"
-    except PermissionError:  # occurs on Windows in the CI because the terminated subprocess still has
-        # a handle on the temporary directory
-        pass
+                {
+                    "name": "commandB",
+                    "script": [" ".join((failing_command, pscript_loc, "0", "1"))],
+                },
+                {
+                    "name": "commandC",
+                    "script": [" ".join(("python", pscript_loc, "20", "0"))],
+                },
+            ],
+            "workflows": {
+                "all": [
+                    {"parallel": ["commandA", "commandB", "commandC"]},
+                    "commandC",
+                ]
+            },
+        }
+        srsly.write_yaml(dirpath / "project.yml", project)
+        load_project_config(dirpath)
+        start = time()
+        with pytest.raises(SystemExit) as rc_e:
+            project_run(dirpath, "all")
+        if os.name == "nt":
+            # because in Windows the terminated process has rc=15 rather than rc=-15,
+            # 15 is the highest rc rather than 1.
+            assert rc_e.value.code == 15
+        else:
+            assert rc_e.value.code == 1
+        time_taken = time() - start
+        assert (
+            time_taken < 15
+        ), "Test took {time_taken}, subprocess seems not to have been terminated"
