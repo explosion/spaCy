@@ -94,8 +94,6 @@ cdef attr_t get_token_attr_for_matcher(const TokenC* token, attr_id_t feat_name)
     else:
         return get_token_attr(token, feat_name)
 
-    
-
 
 class SetEntsDefault(str, Enum):
     blocked = "blocked"
