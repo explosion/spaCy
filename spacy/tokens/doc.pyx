@@ -1749,6 +1749,7 @@ cdef class Doc:
         cdef np.ndarray[np.int64_t, ndim=2] output = numpy.empty((num_toks, num_norm_hashes + num_spec_hashes), dtype="int64")
         cdef bytes scs_buffer_bytes = (bytes(" " * sc_len_end, "UTF-16"))[2:] # first two bytes express endianness and are not relevant here
         cdef char* scs_buffer = scs_buffer_bytes
+        cdef unsigned int buf_len = len(scs_buffer_bytes)
         cdef attr_t num_tok_attr
         cdef str str_tok_attr
 
@@ -1768,7 +1769,7 @@ cdef class Doc:
                     working_start = 0
                 output[tok_ind, norm_hash_ind] = hash32(<void*> &tok_str[working_start], working_len, 0)
 
-            _set_scs_buffer(tok_str, scs, scs_buffer, suffs_not_prefs)
+            _set_scs_buffer(tok_str, len_tok_str, scs, scs_buffer, buf_len, suffs_not_prefs)
             for spec_hash_ind in range(num_spec_hashes):
                 working_len = (sc_len_start + spec_hash_ind) * 2
                 output[tok_ind, num_norm_hashes + spec_hash_ind] = hash32(scs_buffer, working_len, 0)
@@ -1982,18 +1983,24 @@ cdef bint _is_utf16_char_in_scs(const unsigned short utf16_char, const unsigned 
     return False
 
 
-cdef void _set_scs_buffer(const unsigned char[:] searched_string, const unsigned char[:] scs, char* buf, const bint suffs_not_prefs):
+cdef void _set_scs_buffer(
+    const unsigned char[:] searched_string,
+    const unsigned int ss_len,
+    const unsigned char[:] scs, 
+    char* buf, 
+    const unsigned int buf_len, 
+    const bint suffs_not_prefs
+):
     """ Pick the UFT-16 characters from *searched_string* that are also in *scs* and writes them in order to *buf*.
         If *suffs_not_prefs*, the search starts from the end of *searched_string* rather than from the beginning.
     """
-    cdef unsigned int buf_len = len(buf), buf_idx = 0 
-    cdef unsigned int ss_len = len(searched_string), ss_idx = ss_len - 2 if suffs_not_prefs else 0
+    cdef unsigned int buf_idx = 0, ss_idx = ss_len - 2 if suffs_not_prefs else 0
     cdef unsigned short working_utf16_char, SPACE = 32
 
     while buf_idx < buf_len:
         working_utf16_char = (<unsigned short*> &searched_string[ss_idx])[0]
         if _is_utf16_char_in_scs(working_utf16_char, scs):
-            memcpy(buf, &working_utf16_char, 2)
+            memcpy(buf + buf_idx, &working_utf16_char, 2)
             buf_idx += 2
         if suffs_not_prefs:
             if ss_idx == 0:
@@ -2005,7 +2012,7 @@ cdef void _set_scs_buffer(const unsigned char[:] searched_string, const unsigned
                 break
     
     while buf_idx < buf_len:
-        memcpy(buf, &SPACE, 2)
+        memcpy(buf + buf_idx, &SPACE, 2)
         buf_idx += 2
 
 def pickle_doc(doc):

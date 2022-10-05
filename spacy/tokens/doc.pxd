@@ -39,7 +39,14 @@ cdef const unsigned char[:] _get_utf16_memoryview(str unicode_string, bint check
 cdef bint _is_utf16_char_in_scs(unsigned short utf16_char, const unsigned char[:] scs)
 
 
-cdef void _set_scs_buffer(const unsigned char[:] searched_string, const unsigned char[:] scs, char* buf, bint suffs_not_prefs)
+cdef void _set_scs_buffer(
+    const unsigned char[:] searched_string, 
+    const unsigned int ss_len, 
+    const unsigned char[:] scs, 
+    char* buf, 
+    const unsigned int buf_len, 
+    const bint suffs_not_prefs
+)
 
 
 cdef class Doc:
