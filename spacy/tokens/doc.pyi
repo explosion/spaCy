@@ -174,7 +174,15 @@ class Doc:
         self, doc_json: Dict[str, Any] = ..., validate: bool = False
     ) -> Doc: ...
     def to_utf8_array(self, nr_char: int = ...) -> Ints2d: ...
+    def get_character_combination_hashes(
+        self, 
+        *
+        case_sensitive: bool, 
+        suffs_not_prefs: bool, 
+        affix_lengths: List[int], 
+        search_chars: str, 
+        search_lengths: List[int]
+    ): ...
     @staticmethod
     def _get_array_attrs() -> Tuple[Any]: ...
-    def get_affix_hashes(self, suffs_not_prefs: bool, case_sensitive: bool, len_start: int, len_end: int, 
-        special_chars: str, sc_len_start: int, sc_len_end: int) -> Ints2d: ...
+   

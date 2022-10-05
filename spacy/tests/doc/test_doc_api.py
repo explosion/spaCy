@@ -986,37 +986,41 @@ def _get_unsigned_32_bit_hash(input: str) -> int:
 
 
 @pytest.mark.parametrize("case_sensitive", [True, False])
-def test_get_affix_hashes_good_case(en_tokenizer, case_sensitive):
+def test_get_character_combination_hashes_good_case(en_tokenizer, case_sensitive):
 
     doc = en_tokenizer("spaCy✨ and Prodigy")
-    prefixes = doc.get_affix_hashes(False, case_sensitive, 1, 5, "", 2, 3)
-    suffixes = doc.get_affix_hashes(True, case_sensitive, 2, 6, "xx✨rp", 1, 3)
+    prefixes = doc.get_character_combination_hashes(case_sensitive=case_sensitive,
+    suffs_not_prefs=False,
+    affix_lengths=[1, 4, 3], 
+    search_chars="",
+    search_lengths=[2])
+    suffixes = doc.get_character_combination_hashes(case_sensitive=case_sensitive,
+    suffs_not_prefs=True, 
+    affix_lengths=[2, 3, 4, 5], 
+    search_chars="xx✨rp", 
+    search_lengths=[2, 1])
     assert prefixes[0][0] == _get_unsigned_32_bit_hash("s")
-    assert prefixes[0][1] == _get_unsigned_32_bit_hash("sp")
-    assert prefixes[0][2] == _get_unsigned_32_bit_hash("spa")
-    assert prefixes[0][3] == _get_unsigned_32_bit_hash(
+    assert prefixes[0][1] == _get_unsigned_32_bit_hash(
         "spaC" if case_sensitive else "spac"
     )
-    assert prefixes[0][4] == _get_unsigned_32_bit_hash("  ")
+    assert prefixes[0][2] == _get_unsigned_32_bit_hash("spa")
+    assert prefixes[0][3] == _get_unsigned_32_bit_hash("  ")
     assert prefixes[1][0] == _get_unsigned_32_bit_hash("✨")
     assert prefixes[1][1] == _get_unsigned_32_bit_hash("✨")
     assert prefixes[1][2] == _get_unsigned_32_bit_hash("✨")
-    assert prefixes[1][3] == _get_unsigned_32_bit_hash("✨")
-    assert prefixes[1][4] == _get_unsigned_32_bit_hash("  ")
+    assert prefixes[1][3] == _get_unsigned_32_bit_hash("  ")
     assert prefixes[2][0] == _get_unsigned_32_bit_hash("a")
-    assert prefixes[2][1] == _get_unsigned_32_bit_hash("an")
+    assert prefixes[2][1] == _get_unsigned_32_bit_hash("and")
     assert prefixes[2][2] == _get_unsigned_32_bit_hash("and")
-    assert prefixes[2][3] == _get_unsigned_32_bit_hash("and")
-    assert prefixes[2][4] == _get_unsigned_32_bit_hash("  ")
+    assert prefixes[2][3] == _get_unsigned_32_bit_hash("  ")
     assert prefixes[3][0] == _get_unsigned_32_bit_hash("P" if case_sensitive else "p")
-    assert prefixes[3][1] == _get_unsigned_32_bit_hash("Pr" if case_sensitive else "pr")
+    assert prefixes[3][1] == _get_unsigned_32_bit_hash(
+        "Prod" if case_sensitive else "prod"
+    )
     assert prefixes[3][2] == _get_unsigned_32_bit_hash(
         "Pro" if case_sensitive else "pro"
     )
-    assert prefixes[3][3] == _get_unsigned_32_bit_hash(
-        "Prod" if case_sensitive else "prod"
-    )
-    assert prefixes[3][4] == _get_unsigned_32_bit_hash("  ")
+    assert prefixes[3][3] == _get_unsigned_32_bit_hash("  ")
 
     assert suffixes[0][0] == _get_unsigned_32_bit_hash("Cy" if case_sensitive else "cy")
     assert suffixes[0][1] == _get_unsigned_32_bit_hash(
@@ -1028,48 +1032,58 @@ def test_get_affix_hashes_good_case(en_tokenizer, case_sensitive):
     assert suffixes[0][3] == _get_unsigned_32_bit_hash(
         "spaCy" if case_sensitive else "spacy"
     )
-    assert suffixes[0][4] == _get_unsigned_32_bit_hash("p")
-    assert suffixes[0][5] == _get_unsigned_32_bit_hash("p ")
+    assert suffixes[0][4] == _get_unsigned_32_bit_hash("p ")
+    assert suffixes[0][5] == _get_unsigned_32_bit_hash("p")
     assert suffixes[1][0] == _get_unsigned_32_bit_hash("✨")
     assert suffixes[1][1] == _get_unsigned_32_bit_hash("✨")
     assert suffixes[1][2] == _get_unsigned_32_bit_hash("✨")
     assert suffixes[1][3] == _get_unsigned_32_bit_hash("✨")
-    assert suffixes[1][4] == _get_unsigned_32_bit_hash("✨")
-    assert suffixes[1][5] == _get_unsigned_32_bit_hash("✨ ")
+    assert suffixes[1][4] == _get_unsigned_32_bit_hash("✨ ")
+    assert suffixes[1][5] == _get_unsigned_32_bit_hash("✨")
     assert suffixes[2][0] == _get_unsigned_32_bit_hash("nd")
     assert suffixes[2][1] == _get_unsigned_32_bit_hash("and")
     assert suffixes[2][2] == _get_unsigned_32_bit_hash("and")
     assert suffixes[2][3] == _get_unsigned_32_bit_hash("and")
-    assert suffixes[2][4] == _get_unsigned_32_bit_hash(" ")
-    assert suffixes[2][5] == _get_unsigned_32_bit_hash("  ")
+    assert suffixes[2][4] == _get_unsigned_32_bit_hash("  ")
+    assert suffixes[2][5] == _get_unsigned_32_bit_hash(" ")
     assert suffixes[3][0] == _get_unsigned_32_bit_hash("gy")
     assert suffixes[3][1] == _get_unsigned_32_bit_hash("igy")
     assert suffixes[3][2] == _get_unsigned_32_bit_hash("digy")
     assert suffixes[3][3] == _get_unsigned_32_bit_hash("odigy")
-    assert suffixes[3][4] == _get_unsigned_32_bit_hash("r")
+    assert suffixes[3][5] == _get_unsigned_32_bit_hash("r")
 
     if case_sensitive:
-        assert suffixes[3][5] == _get_unsigned_32_bit_hash("r ")
+        assert suffixes[3][4] == _get_unsigned_32_bit_hash("r ")
     else:
-        assert suffixes[3][5] == _get_unsigned_32_bit_hash("rp")
+        assert suffixes[3][4] == _get_unsigned_32_bit_hash("rp")
 
     # check values are the same cross-platform
-    assert prefixes[0][3] == 753329845 if case_sensitive else 18446744071614199016
+    assert prefixes[0][1] == 753329845 if case_sensitive else 18446744071614199016
     assert suffixes[1][0] == 3425774424
-    assert suffixes[2][5] == 3076404432
+    assert suffixes[2][4] == 3076404432
 
 
-def test_get_affix_hashes_4_byte_char_at_end(en_tokenizer):
+def test_get_character_combination_hashes_4_byte_char_at_end(en_tokenizer):
     doc = en_tokenizer("and𐌞")
-    suffixes = doc.get_affix_hashes(True, True, 1, 4, "a", 1, 2)
+    suffixes = doc.get_character_combination_hashes(
+        case_sensitive=True, 
+        suffs_not_prefs=True, 
+        affix_lengths=[1, 2, 3], 
+        search_chars="a", 
+        search_lengths=[1])
     assert suffixes[0][1] == _get_unsigned_32_bit_hash("𐌞")
     assert suffixes[0][2] == _get_unsigned_32_bit_hash("d𐌞")
     assert suffixes[0][3] == _get_unsigned_32_bit_hash("a")
 
 
-def test_get_affix_hashes_4_byte_char_in_middle(en_tokenizer):
+def test_get_character_combination_hashes_4_byte_char_in_middle(en_tokenizer):
     doc = en_tokenizer("and𐌞a")
-    suffixes = doc.get_affix_hashes(True, False, 1, 5, "a", 1, 3)
+    suffixes = doc.get_character_combination_hashes(
+        case_sensitive=False, 
+        suffs_not_prefs=True,
+        affix_lengths=[1, 2, 3, 4], 
+        search_chars="a", 
+        search_lengths=[1, 2])
     assert suffixes[0][0] == _get_unsigned_32_bit_hash("a")
     assert suffixes[0][2] == _get_unsigned_32_bit_hash("𐌞a")
     assert suffixes[0][3] == _get_unsigned_32_bit_hash("d𐌞a")
@@ -1077,7 +1091,19 @@ def test_get_affix_hashes_4_byte_char_in_middle(en_tokenizer):
     assert suffixes[0][5] == _get_unsigned_32_bit_hash("aa")
 
 
-def test_get_affixes_4_byte_special_char(en_tokenizer):
+def test_get_character_combination_hashes_4_byte_special_char(en_tokenizer):
     doc = en_tokenizer("and𐌞")
     with pytest.raises(ValueError):
-        doc.get_affix_hashes(True, True, 2, 6, "𐌞", 2, 3)
+        doc.get_character_combination_hashes(case_sensitive=True, 
+        suffs_not_prefs=True, 
+        affix_lengths=[2, 3, 4, 5], 
+        search_chars="𐌞", 
+        search_lengths=[2])
+
+def test_character_combination_hashes_empty_lengths(en_tokenizer):
+    doc = en_tokenizer("and𐌞")
+    assert doc.get_character_combination_hashes(case_sensitive=True, 
+        suffs_not_prefs=True, 
+        affix_lengths=[], 
+        search_chars="", 
+        search_lengths=[]).shape == (1, 0)

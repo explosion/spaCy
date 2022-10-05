@@ -33,19 +33,24 @@ cdef int token_by_end(const TokenC* tokens, int length, int end_char) except -2
 cdef int [:,:] _get_lca_matrix(Doc, int start, int end)
 
 
-cdef const unsigned char[:] _get_utf16_memoryview(str unicode_string, bint check_2_bytes)
+cdef const unsigned char[:] _get_utf16_memoryview(str unicode_string, const bint check_2_bytes)
 
 
-cdef bint _is_utf16_char_in_scs(unsigned short utf16_char, const unsigned char[:] scs)
+cdef bint _is_searched_char_in_search_chars_v(
+    const unsigned short searched_char, 
+    const unsigned char[:] search_chars_v,
+    const unsigned int search_chars_v_len)
 
 
-cdef void _set_scs_buffer(
-    const unsigned char[:] searched_string, 
-    const unsigned int ss_len, 
-    const unsigned char[:] scs, 
-    char* buf, 
-    const unsigned int buf_len, 
-    const bint suffs_not_prefs
+cdef void _set_found_char_buf(
+    const bint suffs_not_prefs,
+    const unsigned char[:] searched_string_v,
+    const unsigned int searched_string_len,
+    const unsigned char[:] search_chars_v,
+    const unsigned int search_chars_v_len,
+    char* found_char_buf, 
+    const unsigned int found_char_buf_len, 
+    
 )
 
 
