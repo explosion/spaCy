@@ -2118,4 +2118,3 @@ def get_entity_info(ent_info):
     else:
         ent_id, ent_kb_id, ent_type, start, end = ent_info
     return ent_type, ent_kb_id, start, end, ent_id
-
