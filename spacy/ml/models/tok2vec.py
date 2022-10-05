@@ -274,7 +274,7 @@ def AffixMultiHashEmbed(
     )
 
     embeddings = [  # type:ignore
-        HashEmbed(width, row, column=i, seed=i + 7, dropout=0.0)
+        HashEmbed(width, row, column=i, seed=i + 7, dropout=0.0) # type: ignore
         for i, row in enumerate(rows)
     ]
     concat_size = width * (len(embeddings) + include_static_vectors)
