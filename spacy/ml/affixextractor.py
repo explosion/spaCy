@@ -42,20 +42,20 @@ def forward(
     sc_len_start: int = model.attrs["sc_len_start"]
     sc_len_end: int = model.attrs["sc_len_end"]
     features: List[Ints2d] = []
-    for doc in docs:
-        features.append(
-            model.ops.asarray2i(
-                doc.get_affix_hashes(
-                    suffs_not_prefs,
-                    case_sensitive,
-                    len_start,
-                    len_end,
-                    special_chars,
-                    sc_len_start,
-                    sc_len_end,
-                )
-            )
-        )
+#    for doc in docs:
+#        features.append(
+#           model.ops.asarray2i(
+#                doc.get_affix_hashes(
+#                    suffs_not_prefs,
+#                    case_sensitive,
+#                    len_start,
+#                   len_end,
+#                    special_chars,
+#                    sc_len_start,
+#                    sc_len_end,
+#                )
+#            )
+ #       )
 
     backprop: Callable[[List[Ints2d]], List] = lambda d_features: []
     return features, backprop
