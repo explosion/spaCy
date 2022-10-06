@@ -188,7 +188,7 @@ def MultiHashEmbed(
     return model
 
 
-def verify_rich_config_group(
+def _verify_rich_config_group(
     label: str,
     lengths: Optional[List[int]],
     rows: Optional[List[int]],
@@ -233,18 +233,97 @@ def RichMultiHashEmbed(
     suff_search_lengths: Optional[List[int]] = None,
     suff_search_rows: Optional[List[int]] = None,
 ) -> Model[List[Doc], List[Floats2d]]:
-
     """
-    TODO
+    Construct an embedding layer with the features of `MultiHashEmbed` (see above)
+    plus more detailed features extracted from various positions in each token string.
+    The fixed-length `PREFIX` and `SUFFIX` features used in `MultiHashEmbed`
+    are sometimes not rich enough when working with languages with complex morphology,
+    and this layer allows the specification of multiple prefixes and suffixes
+    of any lengths.
+
+    Additionally, it is possible to use as features the results of character
+    searches of specified lengths. A list of search characters is specified; the
+    characters in each word are examined in order starting at the beginning or at
+    the end; and each character that matches one of the search characters is added,
+    in order, to the string to be used as a feature. The search continues until
+    either the search result string is full or the whole word has been examined.
+    This is useful because many languages exhibit morphological alternations where
+    one letter or letters regularly alternate with another letter or letters
+    depending on the presence of some other letter before or after it, e.g. German
+    plural nouns where the final two vowels are `ä-e` regularly correspond to
+    singular lemmas where the `e` is no longer present and the `ä` has become `a`.
+    For most languages, searching is likely to be useful starting at the end
+    (`suff_*`), but the ability to search from the beginning (`pref_*`) is also
+    offered for completeness. Search characters should consist of all characters
+    that regularly alternate with other characters in the language in question or
+    whose presence before or after characters that would otherwise alternate
+    prevents the alternation from occurring, e.g. an `ä` in a German plural noun does
+    not become `a` if it is the third or fourth vowel from the end of the word.
+
+    Internally, the model converts each token string to UTF-16 and assumes that each
+    character from the string occupies two bytes. This assumption holds for all 
+    characters in the Basic Multilingual Plane, which encompasses all characters that 
+    are ever likely to be of interest when extracting features. There are, however,
+    characters like emojis that are in the Extended Multilingual Plane and occupy
+    four bytes, although importantly neither of the two byte pairs that make up such
+    a representation can be a valid two-byte character in its own right. The
+    following considerations apply to the processing of four-byte characters:
+
+    - An exceptional four-byte character within a text consisting mostly of two-byte
+      characters will probably be ignored by the neural network accepting the
+      embedding layer as not matching any of the learned features.
+    - If anyone did want to train a model for a language like Lycian that is
+      generally written in four-byte characters, prefix and suffix features can
+      still be extracted, but the length specifications should all be doubled, i.e.
+      `[2,4,6]` to extract one-, two- and three-character affixes. In such a
+      situation length specifications that are odd numbers would serve no useful
+      purpose since they would refer to half-characters.
+    - Four-byte characters are not accepted within search character specification
+      strings and lead to an error being thrown.
+
+    width (int): The output width. Also used as the width of the embedding tables.
+        Recommended values are between 64 and 300.
+    attrs (list of attr IDs): The token attributes to embed. A separate
+        embedding table will be constructed for each attribute.
+    rows (List[int]): The number of rows in the embedding tables. Must have the
+        same length as attrs.
+    include_static_vectors (bool): Whether to also use static word vectors.
+        Requires a vectors table to be loaded in the Doc objects' vocab.
+    case_sensitive (bool): Whether lower-case and upper-case letters should be 
+        distinguished when generating the character combinations to use as features.
+    pref_lengths (Optional[List[int]]): The lengths of prefixes to use as features 
+        for each word, e.g. for the word `spaCy`: 
+        `[1, 3]` would lead to `s` and `spa` being used as features.
+    pref_rows (Optional[List[int]]): The number of rows for each of `pref_lengths`.
+    pref_search_chars (Optional[str]): A string containing characters to search for 
+        starting from the beginning of each word. May not contain characters that 
+        occupy four bytes in UTF-16; if `case_sensitive==True`, may not contain 
+        upper-case letters.
+    pref_search_lengths (Optional[List[int]]): The lengths of search result strings 
+        to use as features, where the searches start from the beginning of each word.
+    pref_search_rows (Optional[List[int]]): The number of rows for each of 
+        `pref_search_lengths`.
+    suff_lengths (Optional[List[int]]): The lengths of suffixes to use as features 
+        for each word, e.g. for the word `spaCy`: 
+        `[1, 3]` would lead to `y` and `aCy` being used as features.
+    suff_rows (Optional[List[int]]): The number of rows for each of `suff_lengths`.
+    suff_search_chars (Optional[str]): A string containing characters to search for 
+        starting from the end of each word. May not contain characters that 
+        occupy four bytes in UTF-16; if `case_sensitive==True`, may not contain 
+        upper-case letters.
+    suff_search_lengths (Optional[List[int]]): The lengths of search result strings 
+        to use as features, where the searches start from the end of each word.
+    suff_search_rows (Optional[List[int]]): The number of rows for each of 
+        `suff_search_lengths`.
     """
 
     if len(rows) != len(attrs):
         raise ValueError(f"Mismatched lengths: {len(rows)} vs {len(attrs)}")
 
-    verify_rich_config_group(
+    _verify_rich_config_group(
         "prefix", pref_lengths, pref_rows, None, False, case_sensitive
     )
-    verify_rich_config_group(
+    _verify_rich_config_group(
         "prefix search",
         pref_search_lengths,
         pref_search_rows,
@@ -252,10 +331,10 @@ def RichMultiHashEmbed(
         True,
         case_sensitive,
     )
-    verify_rich_config_group(
+    _verify_rich_config_group(
         "suffix", suff_lengths, suff_rows, None, False, case_sensitive
     )
-    verify_rich_config_group(
+    _verify_rich_config_group(
         "suffix search",
         suff_search_lengths,
         suff_search_rows,
