@@ -169,6 +169,95 @@ updated).
 | `include_static_vectors` | Whether to also use static word vectors. Requires a vectors table to be loaded in the [`Doc`](/api/doc) objects' vocab. ~~bool~~                                                                                                                                                                                                                                                                                                                   |
 | **CREATES**              | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                                                                                                                                                                                                                                                                             |
 
+### spacy.RichMultiHashEmbed.v1 {#RichMultiHashEmbed}
+
+> #### Example config
+>
+> ```ini
+> [model]
+> @architectures = "spacy.RichMultiHashEmbed.v1"
+> width = 64
+> attrs = ["LOWER","SHAPE"]
+> rows = [2000,1000]
+> include_static_vectors = "False"
+> case_sensitive = "False"
+> pref_lengths = [2, 3, 5]
+> pref_rows = [2000,2000,2000]
+> suff_lengths = [2, 3, 4, 5]
+> suff_rows = [2000,2000,2000,2000]
+> suff_search_chars = "aeiouäöüyß"
+> suff_search_lengths = [2, 3]
+> suff_search_rows = [2000,2000]
+> ```
+
+Construct an embedding layer with the features of
+[MultiHashEmbed](#spacymultihashembedv2-multihashembed) plus more detailed
+features extracted from various positions in each token string. The fixed-length
+`PREFIX` and `SUFFIX` features used in
+[MultiHashEmbed](#spacymultihashembedv2-multihashembed) are sometimes not rich
+enough when working with languages with complex morphology, and this layer
+allows the specification of multiple prefixes and suffixes of any lengths.
+
+Additionally, it is possible to hash the results of character searches of
+specified lengths. A list of search characters is specified; the characters in
+each word are examined in order starting at the beginning or at the end, and
+each character that matches one of the search characters is added in order to
+the string to be hashed. The search continues until either the search result
+string is full or the whole word has been examined. This feature is useful
+because many languages exhibit morphological alternations where one letter or
+letters regularly alternate with another letter or letters depending on the
+presence of some other letter before or after it, e.g. German plural nouns where
+the final two vowels are `ä-e` regularly correspond to singular lemmas where the
+`e` is no longer present and the `ä` has become `a`. For most languages,
+searching is likely to be useful starting at the end (`suff_*`), but the ability
+to search from the beginning (`pref_*`) is also offered for completeness. Search
+characters should consist of all characters that regularly alternate with other
+characters in the language in question or whose presence before or after
+characters that would otherwise alternate prevents the alternation from
+occuring, e.g. an `ä` in a German plural noun does not become `a` if it the
+third or fourth vowel from the end of the word.
+
+Internally, the model converts each token string to
+[UTF-16](https://www.ietf.org/rfc/rfc2781.txt) and assumes that each character
+from the string occupies two bytes. This assumption holds for all characters in
+the Basic Multilingual Plane, which encompasses all characters that are ever
+likely to be of interest when extracting features. There are, however,
+characters like emojis that are in the Extended Multilingual Plane and occupy
+four bytes, although importantly neither of the two byte pairs that make up such
+a representation can be a valid two-byte character in its own right. The
+following considerations apply to the processing of four-byte characters:
+
+- An exceptional four-byte character within a text consisting mostly of two-byte
+  characters will probably be ignored by the neural network accepting the
+  embedding layer as not matching any of the learned features.
+- If anyone did want to train a model for a language like Lycian that is
+  generally written in four-byte characters, prefix and suffix features can
+  still be extracted, but the length specifications should all be doubled, i.e.
+  `[2,4,6]` to extract one-, two- and three-character affixes. In such a
+  situation length specifications that are odd numbers would serve no useful
+  purpose since they would refer to half-characters.
+- Four-byte characters are not accepted within search character specification
+  strings and lead to an error being thrown.
+
+| Name                     | Description                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `width`                  | The output width. Also used as the width of the embedding tables. Recommended values are between `64` and `300`. If static vectors are included, a learned linear layer is used to map the vectors to the specified width before concatenating it with the other embedding outputs. A single maxout layer is then used to reduce the concatenated vectors to the final width. ~~int~~                                                              |
+| `attrs`                  | The token attributes to embed. A separate embedding table will be constructed for each attribute. ~~List[Union[int, str]]~~                                                                                                                                                                                                                                                                                                                        |
+| `rows`                   | The number of rows for each embedding tables. Can be low, due to the hashing trick. Recommended values are between `1000` and `10000`. The layer needs surprisingly few rows, due to its use of the hashing trick. Generally between 2000 and 10000 rows is sufficient, even for very large vocabularies. A number of rows must be specified for each table, so the `rows` list must be of the same length as the `attrs` parameter. ~~List[int]~~ |
+| `include_static_vectors` | Whether to also use static word vectors. Requires a vectors table to be loaded in the [`Doc`](/api/doc) objects' vocab. ~~bool~~                                                                                                                                                                                                                                                                                                                   |
+| `case_sensitive`         | Whether lower-case and upper-case letters should be distinguished when generating the character combinations to hash. ~~bool~~                                                                                                                                                                                                                                                                                                                     |
+| `pref_lengths`           | The lengths of prefixes to hash for each word, e.g. for the word `spaCy`: `[1, 3]` would lead to hashes being generated for `s` and `spa`. ~~Optional[List[int]~~                                                                                                                                                                                                                                                                                  |
+| `pref_rows`              | The number of rows for each of `pref_lengths`. ~~Optional[List[int]~~                                                                                                                                                                                                                                                                                                                                                                              |
+| `pref_search_chars`      | A string containing characters to search for starting from the beginning of each word. May not contain characters that occupy four bytes in UTF-16; if `case_sensitive==True`, may not contain upper-case letters. ~~Optional[str]~~                                                                                                                                                                                                               |
+| `pref_search_lengths`    | The lengths of search result strings to hash, where the searches start from the beginning of each word. ~~Optional[List[int]]~~                                                                                                                                                                                                                                                                                                                    |
+| `pref_search_rows`       | The number of rows for each of `pref_search_lengths`. ~~Optional[List[int]~~                                                                                                                                                                                                                                                                                                                                                                       |
+| `suff_lengths`           | The lengths of suffixes to hash for each word, e.g. for the word `spaCy`: `[1, 3]` would lead to hashes being generated for `y` and `aCy`. ~~Optional[List[int]~~                                                                                                                                                                                                                                                                                  |
+| `suff_rows`              | The number of rows for each of `suff_lengths`. ~~Optional[List[int]~~                                                                                                                                                                                                                                                                                                                                                                              |
+| `suff_search_chars`      | A string containing characters to search for starting from the end of each word. May not contain characters that occupy four bytes in UTF-16; if `case_sensitive==True`, may not contain upper-case letters. ~~Optional[str]~~                                                                                                                                                                                                                     |
+| `suff_search_lengths`    | The lengths of search result strings to hash, where the searches start from the end of each word. ~~Optional[List[int]]~~                                                                                                                                                                                                                                                                                                                          |
+| `suff_search_rows`       | The number of rows for each of `suff_search_lengths`. ~~Optional[List[int]~~                                                                                                                                                                                                                                                                                                                                                                       |
+| **CREATES**              | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                                                                                                                                                                                                                                                                             |
+
 ### spacy.CharacterEmbed.v2 {#CharacterEmbed}
 
 > #### Example config
@@ -587,8 +676,8 @@ consists of either two or three subnetworks:
   run once for each batch.
 - **lower**: Construct a feature-specific vector for each `(token, feature)`
   pair. This is also run once for each batch. Constructing the state
-  representation is then a matter of summing the component features and
-  applying the non-linearity.
+  representation is then a matter of summing the component features and applying
+  the non-linearity.
 - **upper** (optional): A feed-forward network that predicts scores from the
   state representation. If not present, the output from the lower model is used
   as action scores directly.
@@ -628,8 +717,8 @@ same signature, but the `use_upper` argument was `True` by default.
 > ```
 
 Build a tagger model, using a provided token-to-vector component. The tagger
-model adds a linear layer with softmax activation to predict scores given
-the token vectors.
+model adds a linear layer with softmax activation to predict scores given the
+token vectors.
 
 | Name        | Description                                                                                |
 | ----------- | ------------------------------------------------------------------------------------------ |
@@ -920,5 +1009,5 @@ A function that reads an existing `KnowledgeBase` from file.
 A function that takes as input a [`KnowledgeBase`](/api/kb) and a
 [`Span`](/api/span) object denoting a named entity, and returns a list of
 plausible [`Candidate`](/api/kb/#candidate) objects. The default
-`CandidateGenerator` uses the text of a mention to find its potential
-aliases in the `KnowledgeBase`. Note that this function is case-dependent.
+`CandidateGenerator` uses the text of a mention to find its potential aliases in
+the `KnowledgeBase`. Note that this function is case-dependent.

@@ -1,6 +1,7 @@
+from encodings import search_function
 from typing import Optional, List, Union, cast
-from spacy.ml.affixextractor import AffixExtractor
-from thinc.types import Floats2d, Ints2d, Ragged, Ints1d
+from spacy.ml.richfeatureextractor import RichFeatureExtractor
+from thinc.types import Floats2d, Ints2d, Ragged
 from thinc.api import chain, clone, concatenate, with_array, with_padded
 from thinc.api import Model, noop, list2ragged, ragged2list, HashEmbed
 from thinc.api import expand_window, residual, Maxout, Mish, PyTorchLSTM
@@ -187,52 +188,50 @@ def MultiHashEmbed(
     return model
 
 
-def process_affix_config_group(
+def verify_rich_config_group(
     label: str,
-    start_len: Optional[int],
-    end_len: Optional[int],
+    lengths: Optional[List[int]],
     rows: Optional[List[int]],
-    scs: Optional[str],
-    is_sc: bool,
-) -> List[int]:
-    if start_len is not None or end_len is not None or rows is not None:
-        if start_len is None or end_len is None or rows is None:
+    search_chars: Optional[str],
+    is_search_char_group: bool,
+    case_sensitive: bool,
+) -> None:
+    if lengths is not None or rows is not None:
+        if is_search_char_group and (search_chars is None or len(search_chars) == 0):
             raise ValueError(Errors.E1045.format(label=label))
-        if start_len < 0 or end_len < start_len + 1:
+        if lengths is None or rows is None:
             raise ValueError(Errors.E1045.format(label=label))
-        if is_sc and scs is None:
+        if len(lengths) != len(rows):
             raise ValueError(Errors.E1045.format(label=label))
-        if scs is not None and scs != scs.lower():
+        if any([length < 1 for length in lengths]):
+            raise ValueError(Errors.E1045.format(label=label))
+        if (
+            not case_sensitive
+            and search_chars is not None
+            and search_chars != search_chars.lower()
+        ):
             raise ValueError(Errors.E1044.format(label=label))
-        if len(rows) != end_len - start_len:
-            raise ValueError(Errors.E1045.format(label=label))
-    elif scs is not None:
+    elif search_chars is not None:
         raise ValueError(Errors.E1045.format(label=label))
-    return rows if rows is not None else []
 
 
-@registry.architectures("spacy.AffixMultiHashEmbed.v1")
-def AffixMultiHashEmbed(
+@registry.architectures("spacy.RichMultiHashEmbed.v1")
+def RichMultiHashEmbed(
     width: int,
     attrs: List[Union[str, int]],
     rows: List[int],
     include_static_vectors: bool,
-    *,
-    affix_case_sensitive: bool,
-    suffix_start_len: Optional[int] = None,
-    suffix_end_len: Optional[int] = None,
-    suffix_rows: Optional[List[int]] = None,
-    suffix_scs: Optional[str] = None,
-    suffix_sc_start_len: Optional[int] = None,
-    suffix_sc_end_len: Optional[int] = None,
-    suffix_sc_rows: Optional[List[int]] = None,
-    prefix_start_len: Optional[int] = None,
-    prefix_end_len: Optional[int] = None,
-    prefix_rows: Optional[List[int]] = None,
-    prefix_scs: Optional[str] = None,
-    prefix_sc_start_len: Optional[int] = None,
-    prefix_sc_end_len: Optional[int] = None,
-    prefix_sc_rows: Optional[List[int]] = None,
+    case_sensitive: bool,
+    pref_lengths: Optional[List[int]] = None,
+    pref_rows: Optional[List[int]] = None,
+    pref_search_chars: Optional[str] = None,
+    pref_search_lengths: Optional[List[int]] = None,
+    pref_search_rows: Optional[List[int]] = None,
+    suff_lengths: Optional[List[int]] = None,
+    suff_rows: Optional[List[int]] = None,
+    suff_search_chars: Optional[str] = None,
+    suff_search_lengths: Optional[List[int]] = None,
+    suff_search_rows: Optional[List[int]] = None,
 ) -> Model[List[Doc], List[Floats2d]]:
 
     """
@@ -242,74 +241,62 @@ def AffixMultiHashEmbed(
     if len(rows) != len(attrs):
         raise ValueError(f"Mismatched lengths: {len(rows)} vs {len(attrs)}")
 
-    rows.extend(
-        process_affix_config_group(
-            "prefix", prefix_start_len, prefix_end_len, prefix_rows, None, False
-        )
+    verify_rich_config_group(
+        "prefix", pref_lengths, pref_rows, None, False, case_sensitive
     )
-    rows.extend(
-        process_affix_config_group(
-            "prefix_sc",
-            prefix_sc_start_len,
-            prefix_sc_end_len,
-            prefix_sc_rows,
-            prefix_scs,
-            True,
-        )
+    verify_rich_config_group(
+        "prefix search",
+        pref_search_lengths,
+        pref_search_rows,
+        pref_search_chars,
+        True,
+        case_sensitive,
     )
-    rows.extend(
-        process_affix_config_group(
-            "suffix", suffix_start_len, suffix_end_len, suffix_rows, None, False
-        )
+    verify_rich_config_group(
+        "suffix", suff_lengths, suff_rows, None, False, case_sensitive
     )
-    rows.extend(
-        process_affix_config_group(
-            "suffix_sc",
-            suffix_sc_start_len,
-            suffix_sc_end_len,
-            suffix_sc_rows,
-            suffix_scs,
-            True,
-        )
+    verify_rich_config_group(
+        "suffix search",
+        suff_search_lengths,
+        suff_search_rows,
+        suff_search_chars,
+        True,
+        case_sensitive,
     )
 
-    embeddings = [  # type:ignore
-        HashEmbed(width, row, column=i, seed=i + 7, dropout=0.0) # type: ignore
+    if pref_rows is not None:
+        rows.extend(pref_rows)
+    if pref_search_rows is not None:
+        rows.extend(pref_search_rows)
+    if suff_rows is not None:
+        rows.extend(suff_rows)
+    if suff_search_rows is not None:
+        rows.extend(suff_search_rows)
+
+    embeddings: List[Model[Ints2d, Floats2d]] = [
+        HashEmbed(width, row, column=i, seed=i + 7, dropout=0.0)
         for i, row in enumerate(rows)
     ]
     concat_size = width * (len(embeddings) + include_static_vectors)
     max_out: Model[Ragged, Ragged] = with_array(
         Maxout(width, concat_size, nP=3, dropout=0.0, normalize=True)
     )
-    extractors = [FeatureExtractor(attrs)]
-    if prefix_start_len is not None or prefix_sc_start_len is not None:
-        extractors.append(
-            AffixExtractor(
-                suffs_not_prefs=False,
-                case_sensitive=affix_case_sensitive,
-                len_start=prefix_start_len,
-                len_end=prefix_end_len,
-                special_chars=prefix_scs,
-                sc_len_start=prefix_sc_start_len,
-                sc_len_end=prefix_sc_end_len,
-            )
-        )
-    if suffix_start_len is not None or suffix_sc_start_len is not None:
-        extractors.append(
-            AffixExtractor(
-                suffs_not_prefs=True,
-                case_sensitive=affix_case_sensitive,
-                len_start=suffix_start_len,
-                len_end=suffix_end_len,
-                special_chars=suffix_scs,
-                sc_len_start=suffix_sc_start_len,
-                sc_len_end=suffix_sc_end_len,
-            )
-        )
+    extractors = concatenate(
+        FeatureExtractor(attrs),
+        RichFeatureExtractor(
+            case_sensitive=case_sensitive,
+            pref_lengths=pref_lengths,
+            pref_search_chars=pref_search_chars,
+            pref_search_lengths=pref_search_lengths,
+            suff_lengths=suff_lengths,
+            suff_search_chars=suff_search_chars,
+            suff_search_lengths=suff_search_lengths,
+        ),
+    )
 
-    if include_static_vectors: 
-        feature_extractor: Model[List[Doc], Ragged] = chain( # type: ignore
-            concatenate(*extractors),
+    if include_static_vectors:
+        feature_extractor: Model[List[Doc], Ragged] = chain(
+            extractors,
             cast(Model[List[Ints2d], Ragged], list2ragged()),
             with_array(concatenate(*embeddings)),
         )
@@ -322,8 +309,8 @@ def AffixMultiHashEmbed(
             ragged2list(),
         )
     else:
-        model = chain( # type: ignore
-            concatenate(*extractors),
+        model = chain(
+            extractors,
             cast(Model[List[Ints2d], Ragged], list2ragged()),
             with_array(concatenate(*embeddings)),
             max_out,
