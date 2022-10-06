@@ -164,6 +164,9 @@ examples, see the
 Apply the pipeline to some text. The text can span multiple sentences, and can
 contain arbitrary whitespace. Alignment into the original string is preserved.
 
+Instead of text, a `Doc` can be passed as input, in which case tokenization is
+skipped, but the rest of the pipeline is run.
+
 > #### Example
 >
 > ```python
@@ -173,7 +176,7 @@ contain arbitrary whitespace. Alignment into the original string is preserved.
 
 | Name            | Description                                                                                                                                    |
 | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `text`          | The text to be processed. ~~str~~                                                                                                              |
+| `text`          | The text to be processed, or a Doc. ~~Union[str, Doc]~~                                                                                        |
 | _keyword-only_  |                                                                                                                                                |
 | `disable`       | Names of pipeline components to [disable](/usage/processing-pipelines#disabling). ~~List[str]~~                                                |
 | `component_cfg` | Optional dictionary of keyword arguments for components, keyed by component names. Defaults to `None`. ~~Optional[Dict[str, Dict[str, Any]]]~~ |
@@ -183,6 +186,9 @@ contain arbitrary whitespace. Alignment into the original string is preserved.
 
 Process texts as a stream, and yield `Doc` objects in order. This is usually
 more efficient than processing texts one-by-one.
+
+Instead of text, a `Doc` object can be passed as input. In this case
+tokenization is skipped but the rest of the pipeline is run.
 
 > #### Example
 >
@@ -194,7 +200,7 @@ more efficient than processing texts one-by-one.
 
 | Name                                       | Description                                                                                                                                                         |
 | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `texts`                                    | A sequence of strings. ~~Iterable[str]~~                                                                                                                            |
+| `texts`                                    | A sequence of strings (or `Doc` objects). ~~Iterable[Union[str, Doc]]~~                                                                                             |
 | _keyword-only_                             |                                                                                                                                                                     |
 | `as_tuples`                                | If set to `True`, inputs should be a sequence of `(text, context)` tuples. Output will then be a sequence of `(doc, context)` tuples. Defaults to `False`. ~~bool~~ |
 | `batch_size`                               | The number of texts to buffer. ~~Optional[int]~~                                                                                                                    |
