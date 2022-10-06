@@ -1769,19 +1769,20 @@ cdef class Doc:
         [hash("gy"), hash("digy"), hash("rodigy"), hash("y"), hash("y ")]]
 
         UTF-16 is used to encode the token texts, as this results in two-byte representations for all characters that are realistically
-        likely to occur in normal spaCy documents. UTF-16 can also contain four-byte representations, but neither of the byte pairs in 
-        a four-byte representation is ever valid in its own right as a two-byte representation. in the rare case that a four-byte 
-        representation occurs in a string being analysed, each of its two-byte pairs is treated as a separate character, while a four-byte
-        representation in *search_chars* is not supported and results in a ValueError(E1046).
+        interesting in learning features from words. UTF-16 can also contain four-byte representations, but neither of the byte pairs in 
+        a four-byte representation is ever valid in its own right as a two-byte representation. In the rare case that a four-byte 
+        representation occurs in a string being analysed, each of its two-byte pairs is treated as a separate character. A four-byte
+        representation in *search_chars*, on the other hand, is not supported and results in a ValueError(E1046).
         """
+
         cdef const unsigned char[:] search_chars_v = _get_utf16_memoryview(search_chars, True)
         cdef unsigned int longest_search_length = max(search_lengths) if len(search_lengths) > 0 else 0         
         cdef bytes found_char_buf_bytes = (bytes(" " * longest_search_length, "UTF-16"))[2:] # first two bytes express endianness
         cdef char* found_char_buf = found_char_buf_bytes
         cdef unsigned int search_chars_v_len = len(search_chars_v), found_char_buf_len = len(found_char_buf_bytes)
         
-        cdef unsigned int num_toks = len(self), num_norm_hashes = len(affix_lengths), num_spec_hashes = len(search_lengths)
-        cdef np.ndarray[np.int64_t, ndim=2] hashes = numpy.empty((num_toks, num_norm_hashes + num_spec_hashes), dtype="int64")
+        cdef unsigned int num_toks = len(self), num_norm_hashes = len(affix_lengths), num_search_hashes = len(search_lengths)
+        cdef np.ndarray[np.int64_t, ndim=2] hashes = numpy.empty((num_toks, num_norm_hashes + num_search_hashes), dtype="int64")
 
         cdef const unsigned char[:] tok_str_v
         cdef unsigned int tok_idx, tok_str_v_len, hash_idx, affix_start, hash_len
@@ -1798,10 +1799,7 @@ cdef class Doc:
                 hash_len = affix_lengths[hash_idx] * 2
                 if hash_len > tok_str_v_len:
                     hash_len = tok_str_v_len
-                if suffs_not_prefs:
-                    affix_start = tok_str_v_len - hash_len
-                else:
-                    affix_start = 0
+                affix_start = tok_str_v_len - hash_len if suffs_not_prefs else 0
                 hashes[tok_idx, hash_idx] = hash32(<void*> &tok_str_v[affix_start], hash_len, 0)
 
             _set_found_char_buf(
@@ -1814,7 +1812,7 @@ cdef class Doc:
                 found_char_buf_len, 
             )
             
-            for hash_idx in range(num_norm_hashes, num_norm_hashes + num_spec_hashes):
+            for hash_idx in range(num_norm_hashes, num_norm_hashes + num_search_hashes):
                 hash_len = search_lengths[hash_idx - num_norm_hashes] * 2
                 hashes[tok_idx, hash_idx] = hash32(found_char_buf, hash_len, 0)
 
@@ -2005,7 +2003,7 @@ cdef const unsigned char[:] _get_utf16_memoryview(str unicode_string, const bint
     """
     Return a memory view of the UTF-16 representation of a string with the default endianness of the platform.
     Throw a ValueError if *check_2_bytes == True* and one or more characters in the UTF-16 representation
-    occupy four bytes rather than two.
+    occupies four bytes rather than two.
     """
     cdef const unsigned char[:] view = unicode_string.encode("UTF-16")
     view = view[2:] # first two bytes express endianness
@@ -2063,6 +2061,7 @@ cdef void _set_found_char_buf(
     while found_char_buf_idx < found_char_buf_len:
         memcpy(found_char_buf + found_char_buf_idx, &SPACE, 2)
         found_char_buf_idx += 2
+
 
 def pickle_doc(doc):
     bytes_data = doc.to_bytes(exclude=["vocab", "user_data", "user_hooks"])

@@ -39,7 +39,8 @@ cdef const unsigned char[:] _get_utf16_memoryview(str unicode_string, const bint
 cdef bint _is_searched_char_in_search_chars_v(
     const unsigned short searched_char, 
     const unsigned char[:] search_chars_v,
-    const unsigned int search_chars_v_len)
+    const unsigned int search_chars_v_len,
+)
 
 
 cdef void _set_found_char_buf(
@@ -50,7 +51,6 @@ cdef void _set_found_char_buf(
     const unsigned int search_chars_v_len,
     char* found_char_buf, 
     const unsigned int found_char_buf_len, 
-    
 )
 
 

@@ -176,11 +176,12 @@ class Doc:
     def to_utf8_array(self, nr_char: int = ...) -> Ints2d: ...
     def get_character_combination_hashes(
         self,
-        *case_sensitive: bool,
+        *,
+        case_sensitive: bool,
         suffs_not_prefs: bool,
         affix_lengths: List[int],
         search_chars: str,
         search_lengths: List[int]
-    ): ...
+    ) -> Ints2d: ...
     @staticmethod
     def _get_array_attrs() -> Tuple[Any]: ...
