@@ -1750,7 +1750,7 @@ cdef class Doc:
             derived from the string (text/orth) of each token.
         
         case_sensitive: if *True*, the lower-case version of each token string is used as the basis for generating hashes. Note that
-            if *case_sensitive==False*, any upper-case characters in *search_chars* will never be found in token strings.
+            if *case_sensitive==False*, upper-case characters in *search_chars* will not be found in token strings.
         suffs_not_prefs: if *True*, affixes are suffixes, and searching are from the end of each token; 
             if *False*, affixes are prefixes, and searching is from the start of each token.
         affix_lengths: an integer list specifying the lengths of affixes to be hashed. For example, if *affix_lengths==[2, 3]*,
@@ -1769,7 +1769,7 @@ cdef class Doc:
         [hash("gy"), hash("digy"), hash("rodigy"), hash("y"), hash("y ")]]
 
         UTF-16 is used to encode the token texts, as this results in two-byte representations for all characters that are realistically
-        interesting in learning features from words. UTF-16 can also contain four-byte representations, but neither of the byte pairs in 
+        interesting when learning features from words. UTF-16 can also contain four-byte representations, but neither of the byte pairs in 
         a four-byte representation is ever valid in its own right as a two-byte representation. In the rare case that a four-byte 
         representation occurs in a string being analysed, each of its two-byte pairs is treated as a separate character. A four-byte
         representation in *search_chars*, on the other hand, is not supported and results in a ValueError(E1046).
@@ -1785,7 +1785,7 @@ cdef class Doc:
         cdef np.ndarray[np.int64_t, ndim=2] hashes = numpy.empty((num_toks, num_norm_hashes + num_search_hashes), dtype="int64")
 
         cdef const unsigned char[:] tok_str_v
-        cdef unsigned int tok_idx, tok_str_v_len, hash_idx, affix_start, hash_len
+        cdef unsigned int tok_idx, tok_str_v_len, hash_idx, affix_start, char_comb_len
         cdef attr_t num_tok_attr
         cdef str str_tok_attr
         
@@ -1796,11 +1796,11 @@ cdef class Doc:
             tok_str_v_len = len(tok_str_v)
 
             for hash_idx in range(num_norm_hashes):
-                hash_len = affix_lengths[hash_idx] * 2
-                if hash_len > tok_str_v_len:
-                    hash_len = tok_str_v_len
-                affix_start = tok_str_v_len - hash_len if suffs_not_prefs else 0
-                hashes[tok_idx, hash_idx] = hash32(<void*> &tok_str_v[affix_start], hash_len, 0)
+                char_comb_len = affix_lengths[hash_idx] * 2
+                if char_comb_len > tok_str_v_len:
+                    char_comb_len = tok_str_v_len
+                affix_start = tok_str_v_len - char_comb_len if suffs_not_prefs else 0
+                hashes[tok_idx, hash_idx] = hash32(<void*> &tok_str_v[affix_start], char_comb_len, 0)
 
             _set_found_char_buf(
                 suffs_not_prefs,
@@ -1813,8 +1813,8 @@ cdef class Doc:
             )
             
             for hash_idx in range(num_norm_hashes, num_norm_hashes + num_search_hashes):
-                hash_len = search_lengths[hash_idx - num_norm_hashes] * 2
-                hashes[tok_idx, hash_idx] = hash32(found_char_buf, hash_len, 0)
+                char_comb_len = search_lengths[hash_idx - num_norm_hashes] * 2
+                hashes[tok_idx, hash_idx] = hash32(found_char_buf, char_comb_len, 0)
 
         return hashes
 
@@ -2039,7 +2039,7 @@ cdef void _set_found_char_buf(
     const unsigned int found_char_buf_len, 
 ):
     """ Pick the UTF-16 characters from *searched_string_v* that are also in *search_chars_v* and writes them in order to *found_char_buf*.
-        If *suffs_not_prefs*, the search starts from the end of *searched_string* rather than from the beginning.
+        If *suffs_not_prefs*, the search starts from the end of *searched_string_v* rather than from the beginning.
     """
     cdef unsigned int found_char_buf_idx = 0, searched_string_idx = searched_string_v_len - 2 if suffs_not_prefs else 0
     cdef unsigned short searched_char, SPACE = 32
@@ -2050,12 +2050,12 @@ cdef void _set_found_char_buf(
             memcpy(found_char_buf + found_char_buf_idx, &searched_char, 2)
             found_char_buf_idx += 2
         if suffs_not_prefs:
-            if searched_string_idx == 0:
+            if searched_string_idx <= 0:
                 break
             searched_string_idx -= 2
         else:
             searched_string_idx += 2
-            if searched_string_idx == searched_string_v_len:
+            if searched_string_idx >= searched_string_v_len:
                 break
     
     while found_char_buf_idx < found_char_buf_len:
