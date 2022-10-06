@@ -941,9 +941,9 @@ class Errors(metaclass=ErrorsWithCodes):
              "`{arg2}`={arg2_values} but these arguments are conflicting.")
     E1043 = ("Expected None or a value in range [{range_start}, {range_end}] for entity linker threshold, but got "
              "{value}.")
-    E1044 = ("Special characters definition for '{label}' may not contain upper-case chars where case_sensitive==False.")
-    E1045 = ("Invalid affix group config '{label}'.")
-    E1046 = ("Special characters definition may not contain characters that occupy four bytes in UTF-16.")
+    E1044 = ("Search characters for '{label}' may not contain upper-case chars where case_sensitive==False.")
+    E1045 = ("Invalid rich group config '{label}'.")
+    E1046 = ("Search characters may not contain characters that occupy four bytes in UTF-16.")
 
 
 # Deprecated model shortcuts, only used in errors and warnings
