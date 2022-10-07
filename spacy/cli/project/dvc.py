@@ -147,7 +147,7 @@ def update_dvc_config(
 
     with working_dir(path):
         for c in dvc_commands:
-            dvc_command = ["dvc", *c]
+            dvc_command = "dvc " + c
             run_command(dvc_command)
     with dvc_config_path.open("r+", encoding="utf8") as f:
         content = f.read()
