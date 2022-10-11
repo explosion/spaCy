@@ -1,7 +1,6 @@
 from typing import cast, Any, Callable, Dict, Iterable, List, Optional
-from typing import Sequence, Tuple, Union
+from typing import Tuple
 from collections import Counter
-from copy import deepcopy
 from itertools import islice
 import numpy as np
 
@@ -150,7 +149,7 @@ class EditTreeLemmatizer(TrainablePipe):
             # Handle cases where there are no tokens in any docs.
             n_labels = len(self.cfg["labels"])
             guesses: List[Ints2d] = [
-                self.model.ops.alloc((0, n_labels), dtype="i") for doc in docs
+                self.model.ops.alloc2i(0, n_labels, dtype="i") for _ in docs
             ]
             assert len(guesses) == n_docs
             return guesses
