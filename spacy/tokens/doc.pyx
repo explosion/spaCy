@@ -1612,18 +1612,18 @@ cdef class Doc:
             for token_attr in doc_json["underscore_token"]:
                 if not Token.has_extension(token_attr):
                     Token.set_extension(token_attr)
-                for token in doc_json["underscore_token"][token_attr]:
-                    token_start = token_by_char(self.c, self.length, token["token_start"])
-                    value = token["value"]
-                    self[token_start]._.set(token_attr, value)
+                for token_data in doc_json["underscore_token"][token_attr]:
+                    start = token_by_char(self.c, self.length, token_data["start"])
+                    value = token_data["value"]
+                    self[start]._.set(token_attr, value)
                 
         if doc_json.get("underscore_span", {}):
             for span_attr in doc_json["underscore_span"]:
                 if not Span.has_extension(span_attr):
                     Span.set_extension(span_attr)
-                for span in doc_json["underscore_span"][span_attr]:
-                    value = span["value"]
-                    self.char_span(span["token_start"],span["token_end"])._.set(span_attr, value)
+                for span_data in doc_json["underscore_span"][span_attr]:
+                    value = span_data["value"]
+                    self.char_span(span_data["start"], span_data["end"])._.set(span_attr, value)
         return self
 
     def to_json(self, underscore=None):
@@ -1691,12 +1691,12 @@ cdef class Doc:
                             elif end is None:
                                 if attr not in data["underscore_token"]:
                                     data["underscore_token"][attr] = []
-                                data["underscore_token"][attr].append({"token_start": start, "value": value})
+                                data["underscore_token"][attr].append({"start": start, "value": value})
                             # Else span attribute
                             else:
                                 if attr not in data["underscore_span"]:
                                     data["underscore_span"][attr] = []
-                                data["underscore_span"][attr].append({"token_start": start, "token_end": end, "value": value})
+                                data["underscore_span"][attr].append({"start": start, "end": end, "value": value})
 
             for attr in underscore:
                 if attr not in user_keys:
