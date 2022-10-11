@@ -54,7 +54,7 @@ DEFAULT_EDIT_TREE_LEMMATIZER_MODEL = Config().from_str(default_model_config)["mo
 def make_edit_tree_lemmatizer(
     nlp: Language,
     name: str,
-    model: Model,
+    model: Model[List[Doc], List[Floats2d]],
     backoff: Optional[str],
     min_tree_freq: int,
     overwrite: bool,
@@ -82,7 +82,7 @@ class EditTreeLemmatizer(TrainablePipe):
     def __init__(
         self,
         vocab: Vocab,
-        model: Model,
+        model: Model[List[Doc], List[Floats2d]],
         name: str = "trainable_lemmatizer",
         *,
         backoff: Optional[str] = "orth",
