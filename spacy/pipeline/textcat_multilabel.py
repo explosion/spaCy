@@ -96,8 +96,8 @@ def make_multilabel_textcat(
     model: Model[List[Doc], List[Floats2d]],
     threshold: float,
     scorer: Optional[Callable],
-) -> "TextCategorizer":
-    """Create a TextCategorizer component. The text categorizer predicts categories
+) -> "MultiLabel_TextCategorizer":
+    """Create a MultiLabel_TextCategorizer component. The text categorizer predicts categories
     over a whole document. It can learn one or more labels, and the labels are considered
     to be non-mutually exclusive, which means that there can be zero or more labels
     per doc).
