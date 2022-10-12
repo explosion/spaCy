@@ -22,5 +22,5 @@ class RussianLemmatizer(PyMorhpy2Lemmatizer):
         scorer: Optional[Callable] = lemmatizer_score,
     ) -> None:
         super().__init__(
-            vocab, model, lang="ru", name=name, mode=mode, overwrite=overwrite, scorer=scorer,
+            vocab, model, "ru", name=name, mode=mode, overwrite=overwrite, scorer=scorer,
         )

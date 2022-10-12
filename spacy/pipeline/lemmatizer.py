@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict, Any, Callable, Iterable, Union, Tuple, Literal
+from typing import Optional, List, Dict, Any, Callable, Iterable, Union, Tuple
 from thinc.api import Model
 from pathlib import Path
 
@@ -346,7 +346,7 @@ class PyMorhpy2Lemmatizer(Lemmatizer):
         self,
         vocab: Vocab,
         model: Optional[Model],
-        lang: Literal["ru", "uk"],
+        lang: str, 
         name: str = "lemmatizer",
         *,
         mode: str = "pymorphy2",
