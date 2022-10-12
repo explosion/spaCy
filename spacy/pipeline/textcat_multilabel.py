@@ -96,8 +96,8 @@ def make_multilabel_textcat(
     model: Model[List[Doc], List[Floats2d]],
     threshold: float,
     scorer: Optional[Callable],
-) -> "TextCategorizer":
-    """Create a TextCategorizer component. The text categorizer predicts categories
+) -> "MultiLabel_TextCategorizer":
+    """Create a MultiLabel_TextCategorizer component. The text categorizer predicts categories
     over a whole document. It can learn one or more labels, and the labels are considered
     to be non-mutually exclusive, which means that there can be zero or more labels
     per doc).
@@ -105,6 +105,7 @@ def make_multilabel_textcat(
     model (Model[List[Doc], List[Floats2d]]): A model instance that predicts
         scores for each category.
     threshold (float): Cutoff to consider a prediction "positive".
+    scorer (Optional[Callable]): The scoring method.
     """
     return MultiLabel_TextCategorizer(
         nlp.vocab, model, name, threshold=threshold, scorer=scorer
@@ -147,6 +148,7 @@ class MultiLabel_TextCategorizer(TextCategorizer):
         name (str): The component instance name, used to add entries to the
             losses during training.
         threshold (float): Cutoff to consider a prediction "positive".
+        scorer (Optional[Callable]): The scoring method.
 
         DOCS: https://spacy.io/api/textcategorizer#init
         """
