@@ -2,12 +2,11 @@ from typing import Optional, Callable
 
 from thinc.api import Model
 
-from ..ru.lemmatizer import RussianLemmatizer
-from ...pipeline.lemmatizer import lemmatizer_score
+from ...pipeline.lemmatizer import lemmatizer_score, PyMorhpy2Lemmatizer
 from ...vocab import Vocab
 
 
-class UkrainianLemmatizer(RussianLemmatizer):
+class UkrainianLemmatizer(PyMorhpy2Lemmatizer):
     def __init__(
         self,
         vocab: Vocab,
@@ -18,17 +17,6 @@ class UkrainianLemmatizer(RussianLemmatizer):
         overwrite: bool = False,
         scorer: Optional[Callable] = lemmatizer_score,
     ) -> None:
-        if mode == "pymorphy2":
-            try:
-                from pymorphy2 import MorphAnalyzer
-            except ImportError:
-                raise ImportError(
-                    "The Ukrainian lemmatizer mode 'pymorphy2' requires the "
-                    "pymorphy2 library and dictionaries. Install them with: "
-                    "pip install pymorphy2 pymorphy2-dicts-uk"
-                ) from None
-            if getattr(self, "_morph", None) is None:
-                self._morph = MorphAnalyzer(lang="uk")
         super().__init__(
-            vocab, model, name, mode=mode, overwrite=overwrite, scorer=scorer
+            vocab, model, lang="uk", name=name, mode=mode, overwrite=overwrite, scorer=scorer, 
         )
