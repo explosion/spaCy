@@ -377,6 +377,7 @@ class PyMorhpy2Lemmatizer(Lemmatizer):
             return [PUNCT_RULES.get(string, string)]
         if univ_pos not in ("ADJ", "DET", "NOUN", "NUM", "PRON", "PROPN", "VERB"):
             # Skip unchangeable pos
+            return self.pymorphy2_lookup_lemmatize(token)
             return [string.lower()]
         analyses = self._morph.parse(string)
         filtered_analyses = []
@@ -432,8 +433,11 @@ class PyMorhpy2Lemmatizer(Lemmatizer):
     def pymorphy2_lookup_lemmatize(self, token: Token) -> List[str]:
         string = token.text
         analyses = self._morph.parse(string)
-        if len(analyses) == 1:
-            return [analyses[0].normal_form]
+        # often multiple forms would derive from the same normal form
+        # thus check _unique_ normal forms
+        normal_forms = set([an.normal_form for an in analyses])
+        if len(normal_forms) == 1:
+            return [next(iter(normal_forms))]
         return [string]
 
 
