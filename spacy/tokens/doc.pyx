@@ -42,6 +42,11 @@ from ..util import get_words_and_spaces
 
 DEF PADDING = 5
 
+cdef extern from *:
+    Py_UCS4 PyUnicode_READ(int kind, void *data, int index)
+    void* PyUnicode_DATA(void* o)
+    int PyUnicode_KIND(void *data)
+    Py_UCS4 Py_UNICODE_TOLOWER(Py_UCS4 ch)
 
 cdef int bounds_check(int i, int length, int padding) except -1:
     if (i + padding) < 0:
@@ -1751,7 +1756,7 @@ cdef class Doc:
         Returns a 2D NumPy array where the rows represent tokens and the columns represent hashes of various character combinations 
             derived from the string (text/orth) of each token.
         
-        case_sensitive: if *True*, the lower-case version of each token string is used as the basis for generating hashes. Note that
+        case_sensitive: if *False*, the lower-case version of each token string is used as the basis for generating hashes. Note that
             if *case_sensitive==False*, upper-case characters in *search_chars* will not be found in token strings.
         pref_lengths: an integer list specifying the lengths of prefixes to be hashed. For example, if *pref_lengths==[2, 3]*, 
             the prefixes hashed for "spaCy" would be "sp" and "spa".
@@ -1772,13 +1777,35 @@ cdef class Doc:
         [[hash("sp"), [hash("Cy"), hash("paCy"), hash("spaCy"), hash("y"), hash("yC")],
         [hash("an"), hash("nd"), hash("and", hash("and"), hash(" "), hash("  "))],
         [hash("Pr") ,hash("gy"), hash("digy"), hash("rodigy"), hash("y"), hash("y ")]]
-
-        UTF-16 is used to encode the token texts, as this results in two-byte representations for all characters that are realistically
-        interesting when learning features from words. UTF-16 can also contain four-byte representations, but neither of the byte pairs in 
-        a four-byte representation is ever valid in its own right as a two-byte representation. In the rare case that a four-byte 
-        representation occurs in a string being analysed, each of its two-byte pairs is treated as a separate character. A four-byte
-        representation in *search_chars*, on the other hand, is not supported and results in a ValueError(E1046).
         """
+
+
+        cdef int longest_pref = max(pref_lengths) if len(pref_lengths) > 0 else 0
+        cdef int longest_suff = max(suff_lengths) if len(suff_lengths) > 0 else 0
+        cdef Py_UCS4* affix_buf = <Py_UCS4*>self.mem.alloc(4, longest_pref + longest_suff)
+
+        cdef void* text_ptr = <void*> self.text
+        cdef void* text_data_ptr = <void*> PyUnicode_DATA(text_ptr) # todo change to const void
+        cdef unsigned int unicode_byte_width = PyUnicode_KIND(text_ptr), num_toks = len(self), tok_idx, token_idx, token_len
+
+        cdef TokenC token_c
+        cdef str working_str
+
+        for tok_idx in range(num_toks):
+            token_c = self.c[tok_idx]
+            token_idx = token_c.idx
+            token_len = token_c.lex.length
+            _populate_affix_buf(
+                text_data_ptr, 
+                unicode_byte_width, 
+                token_idx, 
+                token_len, 
+                affix_buf, 
+                longest_pref, 
+                longest_suff, 
+                not case_sensitive
+            )
+
 
         cdef const unsigned char[:] pref_search_chars_v = _get_utf16_memoryview(pref_search_chars, True)
         cdef const unsigned char[:] suff_search_chars_v = _get_utf16_memoryview(suff_search_chars, True)
@@ -1788,13 +1815,13 @@ cdef class Doc:
         cdef unsigned int pref_search_chars_v_len = len(pref_search_chars_v), suff_search_chars_v_len = len(suff_search_chars_v), 
         cdef unsigned int found_char_buf_len = len(found_char_buf_bytes)
         
-        cdef unsigned int num_toks = len(self), num_pref_norm_hashes = len(pref_lengths), num_suff_norm_hashes = len(suff_lengths)
+        cdef unsigned int num_pref_norm_hashes = len(pref_lengths), num_suff_norm_hashes = len(suff_lengths)
         cdef unsigned int num_pref_search_hashes = len(pref_search_lengths)
         cdef unsigned int num_suff_search_hashes = len(suff_search_lengths)
         cdef np.ndarray[np.int64_t, ndim=2] hashes = numpy.empty((num_toks, num_pref_norm_hashes + num_suff_norm_hashes + num_pref_search_hashes + num_suff_norm_hashes), dtype="int64")
 
         cdef const unsigned char[:] tok_str_v
-        cdef unsigned int tok_idx, tok_str_v_len, hash_idx, affix_start, char_comb_len
+        cdef unsigned int tok_str_v_len, hash_idx, affix_start, char_comb_len
         cdef attr_t num_tok_attr
         cdef str str_tok_attr
         
@@ -2026,6 +2053,60 @@ cdef int [:,:] _get_lca_matrix(Doc doc, int start, int end):
                 lca_matrix[j, k] = lca - start
                 lca_matrix[k, j] = lca - start
     return lca_matrix
+
+
+cdef void _populate_affix_buf(
+    const void* str_data_ptr,
+    const unsigned int unicode_byte_width,
+    const int word_idx, 
+    const int word_len,
+    Py_UCS4* affix_buf, 
+    const int pref_length, 
+    const int suff_length,
+    const bint to_lower
+):
+    """ Populate a buffer of length p+s with the first p and the last s characters of a word within a string.
+        If the word is shorter than p and/or s, the empty character positions in the middle are filled with zeros.
+
+        str_data_ptr: a pointer to the raw data in the containing string, which must be in canonical 
+            Unicode form (see PEP 393).
+        unicode_byte_width: the number of bytes occupied by each character in the containing string.
+        word_idx: the index of the first character of the word within the containing string.
+        word_len: the length of the word.
+        affix_buf: the buffer to populate.
+        pref_length: the length of the prefix.
+        suff_length: the length of the suffix.
+        to_lower: if *True*, any upper case characters in either affix are converted to lower case.
+    """
+    cdef int affix_buf_idx = 0, buf_size = pref_length + suff_length, in_word_idx
+    cdef Py_UCS4 working_wchar
+
+    while affix_buf_idx < pref_length and affix_buf_idx < word_len:
+        working_wchar = PyUnicode_READ(unicode_byte_width, str_data_ptr, idx)
+        if to_lower:
+            working_wchar = Py_UNICODE_TOLOWER(working_wchar)
+        memcpy(affix_buf + affix_buf_idx, &working_wchar, 4)
+        affix_buf_idx += 1
+
+    while (affix_buf_idx < buf_size - suff_length) or (affix_buf_idx < buf_size - word_len):
+        # fill out the empty middle part of the buffer with zeros
+        affix_buf[affix_buf_idx] = 0
+        affix_buf_idx += 1
+
+    while affix_buf_idx < buf_size:
+        in_word_idx = affix_buf_idx + word_len - buf_size
+        # for suffixes we have to track the in-word index separately from the in-buffer index
+        if in_word_idx < pref_length:
+            # we've already retrieved this character as part of the prefix, so copy it from there
+            # as that's quicker than retrieving it from the input string a second time
+            memcpy(affix_buf + affix_buf_idx, affix_buf + in_word_idx, 4)
+        else:
+           working_wchar = PyUnicode_READ(unicode_byte_width, str_data_ptr, word_idx + in_word_idx)
+            if to_lower:
+                working_wchar = Py_UNICODE_TOLOWER(working_wchar)
+            memcpy(affix_buf + affix_buf_idx, &working_wchar, 4)
+        affix_buf_idx += 1
+
 
 
 cdef const unsigned char[:] _get_utf16_memoryview(str unicode_string, const bint check_2_bytes):

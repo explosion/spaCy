@@ -33,6 +33,17 @@ cdef int token_by_end(const TokenC* tokens, int length, int end_char) except -2
 cdef int [:,:] _get_lca_matrix(Doc, int start, int end)
 
 
+cdef void _populate_affix_buf(
+    const void* str_data_ptr,
+    const unsigned int unicode_byte_width,
+    const int word_idx, 
+    const int word_len,
+    Py_UCS4* affix_buf, 
+    const int pref_length, 
+    const int suff_length,
+    const bint to_lower
+)
+
 cdef const unsigned char[:] _get_utf16_memoryview(str unicode_string, const bint check_2_bytes)
 
 
