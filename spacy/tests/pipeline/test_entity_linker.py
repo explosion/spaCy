@@ -9,6 +9,7 @@ from spacy.compat import pickle
 from spacy.kb import Candidate, KnowledgeBase, get_candidates
 from spacy.lang.en import English
 from spacy.ml import load_kb
+from spacy.ml.models.entity_linker import build_span_maker
 from spacy.pipeline import EntityLinker
 from spacy.pipeline.legacy import EntityLinker_v1
 from spacy.pipeline.tok2vec import DEFAULT_TOK2VEC_MODEL
@@ -1176,3 +1177,18 @@ def test_threshold(meet_threshold: bool, config: Dict[str, Any]):
 
     assert len(doc.ents) == 1
     assert doc.ents[0].kb_id_ == entity_id if meet_threshold else EntityLinker.NIL
+
+
+def test_span_maker_forward_with_empty():
+    """The forward pass of the span maker may have a doc with no entities."""
+    nlp = English()
+    doc1 = nlp("a b c")
+    ent = doc1[0:1]
+    ent.label_ = "X"
+    doc1.ents = [ent]
+    # no entities
+    doc2 = nlp("x y z")
+
+    # just to get a model
+    span_maker = build_span_maker()
+    span_maker([doc1, doc2], False)

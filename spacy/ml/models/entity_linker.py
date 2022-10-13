@@ -1,6 +1,6 @@
 from pathlib import Path
 from typing import Optional, Callable, Iterable, List, Tuple
-from thinc.types import Floats2d
+from thinc.types import Floats2d, Ints2d
 from thinc.api import chain, clone, list2ragged, reduce_mean, residual
 from thinc.api import Model, Maxout, Linear, noop, tuplify, Ragged
 
@@ -20,7 +20,7 @@ def build_nel_encoder(
         token_width = tok2vec.maybe_get_dim("nO")
         output_layer = Linear(nO=nO, nI=token_width)
         model = (
-            ((tok2vec >> list2ragged()) & build_span_maker())
+            ((tok2vec >> list2ragged()) & (build_span_maker() >> list2ragged()))
             >> extract_spans()
             >> reduce_mean()
             >> residual(Maxout(nO=token_width, nI=token_width, nP=2, dropout=0.0))  # type: ignore
@@ -39,7 +39,9 @@ def build_span_maker(n_sents: int = 0) -> Model:
     return model
 
 
-def span_maker_forward(model, docs: List[Doc], is_train) -> Tuple[Ragged, Callable]:
+def span_maker_forward(
+    model, docs: List[Doc], is_train
+) -> Tuple[List[Ints2d], Callable]:
     ops = model.ops
     n_sents = model.attrs["n_sents"]
     candidates = []
@@ -70,11 +72,8 @@ def span_maker_forward(model, docs: List[Doc], is_train) -> Tuple[Ragged, Callab
             cands.append((start_token, end_token))
 
         candidates.append(ops.asarray2i(cands))
-    candlens = ops.asarray1i([len(cands) for cands in candidates])
-    candidates = ops.xp.concatenate(candidates)
-    outputs = Ragged(candidates, candlens)
     # because this is just rearranging docs, the backprop does nothing
-    return outputs, lambda x: []
+    return candidates, lambda x: []
 
 
 @registry.misc("spacy.KBFromFile.v1")
