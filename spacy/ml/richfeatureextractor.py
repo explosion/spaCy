@@ -52,21 +52,16 @@ def forward(
     suff_search_lengths: List[int] = model.attrs["suff_search_lengths"]
     features: List[Ints2d] = []
     for doc in docs:
-        prefix_hashes = doc.get_character_combination_hashes(
+        hashes = doc.get_character_combination_hashes(
             case_sensitive=case_sensitive,
-            suffs_not_prefs=False,
-            affix_lengths=pref_lengths,
-            search_chars=pref_search_chars,
-            search_lengths=pref_search_lengths,
+            pref_lengths=pref_lengths,
+            suff_lengths=suff_lengths,
+            pref_search_chars=pref_search_chars,
+            pref_search_lengths=pref_search_lengths,
+            suff_search_chars=suff_search_chars,
+            suff_search_lengths=suff_search_lengths,
         )
-        suffix_hashes = doc.get_character_combination_hashes(
-            case_sensitive=case_sensitive,
-            suffs_not_prefs=True,
-            affix_lengths=suff_lengths,
-            search_chars=suff_search_chars,
-            search_lengths=suff_search_lengths,
-        )
-        features.append(ops.asarray2i(ops.xp.hstack([prefix_hashes, suffix_hashes])))
+        features.append(ops.asarray2i(hashes))
 
     backprop: Callable[[List[Ints2d]], List] = lambda d_features: []
     return features, backprop

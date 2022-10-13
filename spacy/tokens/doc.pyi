@@ -178,10 +178,12 @@ class Doc:
         self,
         *,
         case_sensitive: bool,
-        suffs_not_prefs: bool,
-        affix_lengths: List[int],
-        search_chars: str,
-        search_lengths: List[int]
+        pref_lengths: List[int],
+        suff_lengths: List[int],
+        pref_search_chars: str,
+        pref_search_lengths: List[int],
+        suff_search_chars: str,
+        suff_search_lengths: List[int]
     ) -> Ints2d: ...
     @staticmethod
     def _get_array_attrs() -> Tuple[Any]: ...

@@ -1740,10 +1740,12 @@ cdef class Doc:
         self, 
         *,
         bint case_sensitive, 
-        bint suffs_not_prefs, 
-        affix_lengths: List[int], 
-        str search_chars, 
-        search_lengths: List[int]
+        pref_lengths: List[int], 
+        suff_lengths: List[int], 
+        str pref_search_chars, 
+        pref_search_lengths: List[int],
+        str suff_search_chars, 
+        suff_search_lengths: List[int]
     ):
         """
         Returns a 2D NumPy array where the rows represent tokens and the columns represent hashes of various character combinations 
@@ -1751,22 +1753,25 @@ cdef class Doc:
         
         case_sensitive: if *True*, the lower-case version of each token string is used as the basis for generating hashes. Note that
             if *case_sensitive==False*, upper-case characters in *search_chars* will not be found in token strings.
-        suffs_not_prefs: if *True*, affixes are suffixes, and searching are from the end of each token; 
-            if *False*, affixes are prefixes, and searching is from the start of each token.
-        affix_lengths: an integer list specifying the lengths of affixes to be hashed. For example, if *affix_lengths==[2, 3]*,
-            *suffs_not_prefs==True* and *case_sensitive==True*, the suffixes hashed for "spaCy" would be "Cy" and "aCy".
-        search_chars: a string containing characters to search for within each token, starting at the beginning or end depending on the
-            value of *suffs_not_prefs*.
-        search_lengths: an integer list specifying the lengths of search results to be hashed. For example if *search_lengths==[1, 2]*,
-            *search_chars=="aC", *suffs_not_prefs==True* and *case_sensitive==True*, the searched strings hashed for "spaCy" would be
-            "C" and "Ca".
+        pref_lengths: an integer list specifying the lengths of prefixes to be hashed. For example, if *pref_lengths==[2, 3]*, 
+            the prefixes hashed for "spaCy" would be "sp" and "spa".
+        suff_lengths: an integer list specifying the lengths of suffixes to be hashed. For example, if *suff_lengths==[2, 3]* and
+            *case_sensitive == True*, the suffixes hashed for "spaCy" would be "Cy" and "aCy".
+        pref_search_chars: a string containing characters to search for within each token, starting at the beginning.
+        pref_search_lengths: an integer list specifying the lengths of search results to be hashed. For example if 
+            *pref_search_lengths==[1, 2]*, *pref_search_chars=="aC" and *case_sensitive==False*, the searched strings hashed for 
+            "spaCy" would be "a" and "ac".
+        suff_search_chars: a string containing characters to search for within each token, starting at the end.
+        suff_search_lengths: an integer list specifying the lengths of search results to be hashed. For example if 
+            *suff_search_lengths==[1, 2]*, *suff_search_chars=="aC" and *case_sensitive==False*, the searched strings hashed for 
+            "spaCy" would be "c" and "ca".
         
         For a document with tokens ["spaCy", "and", "Prodigy"], the NumPy array returned by 
-        *get_affix_hashes(True, True, [2, 4, 6], "yC", [1, 2])* would correspond to
+        *get_character_combination_hashes(True, [2], [2, 4, 6], "yC", [1], [2])* would correspond to
 
-        [[hash("Cy"), hash("paCy"), hash("spaCy"), hash("y"), hash("yC")],
-        [hash("nd"), hash("and", hash("and"), hash(" "), hash("  "))],
-        [hash("gy"), hash("digy"), hash("rodigy"), hash("y"), hash("y ")]]
+        [[hash("sp"), [hash("Cy"), hash("paCy"), hash("spaCy"), hash("y"), hash("yC")],
+        [hash("an"), hash("nd"), hash("and", hash("and"), hash(" "), hash("  "))],
+        [hash("Pr") ,hash("gy"), hash("digy"), hash("rodigy"), hash("y"), hash("y ")]]
 
         UTF-16 is used to encode the token texts, as this results in two-byte representations for all characters that are realistically
         interesting when learning features from words. UTF-16 can also contain four-byte representations, but neither of the byte pairs in 
@@ -1775,14 +1780,18 @@ cdef class Doc:
         representation in *search_chars*, on the other hand, is not supported and results in a ValueError(E1046).
         """
 
-        cdef const unsigned char[:] search_chars_v = _get_utf16_memoryview(search_chars, True)
-        cdef unsigned int longest_search_length = max(search_lengths) if len(search_lengths) > 0 else 0         
+        cdef const unsigned char[:] pref_search_chars_v = _get_utf16_memoryview(pref_search_chars, True)
+        cdef const unsigned char[:] suff_search_chars_v = _get_utf16_memoryview(suff_search_chars, True)
+        cdef unsigned int longest_search_length = max(pref_search_lengths + suff_search_lengths) if len(pref_search_lengths + suff_search_lengths) > 0 else 0         
         cdef bytes found_char_buf_bytes = (bytes(" " * longest_search_length, "UTF-16"))[2:] # first two bytes express endianness
         cdef char* found_char_buf = found_char_buf_bytes
-        cdef unsigned int search_chars_v_len = len(search_chars_v), found_char_buf_len = len(found_char_buf_bytes)
+        cdef unsigned int pref_search_chars_v_len = len(pref_search_chars_v), suff_search_chars_v_len = len(suff_search_chars_v), 
+        cdef unsigned int found_char_buf_len = len(found_char_buf_bytes)
         
-        cdef unsigned int num_toks = len(self), num_norm_hashes = len(affix_lengths), num_search_hashes = len(search_lengths)
-        cdef np.ndarray[np.int64_t, ndim=2] hashes = numpy.empty((num_toks, num_norm_hashes + num_search_hashes), dtype="int64")
+        cdef unsigned int num_toks = len(self), num_pref_norm_hashes = len(pref_lengths), num_suff_norm_hashes = len(suff_lengths)
+        cdef unsigned int num_pref_search_hashes = len(pref_search_lengths)
+        cdef unsigned int num_suff_search_hashes = len(suff_search_lengths)
+        cdef np.ndarray[np.int64_t, ndim=2] hashes = numpy.empty((num_toks, num_pref_norm_hashes + num_suff_norm_hashes + num_pref_search_hashes + num_suff_norm_hashes), dtype="int64")
 
         cdef const unsigned char[:] tok_str_v
         cdef unsigned int tok_idx, tok_str_v_len, hash_idx, affix_start, char_comb_len
@@ -1795,25 +1804,45 @@ cdef class Doc:
             tok_str_v = _get_utf16_memoryview(str_tok_attr, False)
             tok_str_v_len = len(tok_str_v)
 
-            for hash_idx in range(num_norm_hashes):
-                char_comb_len = affix_lengths[hash_idx] * 2
+            for hash_idx in range(num_pref_norm_hashes):
+                char_comb_len = pref_lengths[hash_idx] * 2
                 if char_comb_len > tok_str_v_len:
                     char_comb_len = tok_str_v_len
-                affix_start = tok_str_v_len - char_comb_len if suffs_not_prefs else 0
+                hashes[tok_idx, hash_idx] = hash32(<void*> &tok_str_v[0], char_comb_len, 0)
+
+            for hash_idx in range(num_pref_norm_hashes, num_pref_norm_hashes + num_suff_norm_hashes):
+                char_comb_len = suff_lengths[hash_idx - num_pref_norm_hashes] * 2
+                if char_comb_len > tok_str_v_len:
+                    char_comb_len = tok_str_v_len
+                affix_start = tok_str_v_len - char_comb_len
                 hashes[tok_idx, hash_idx] = hash32(<void*> &tok_str_v[affix_start], char_comb_len, 0)
 
             _set_found_char_buf(
-                suffs_not_prefs,
+                False,
                 tok_str_v, 
                 tok_str_v_len, 
-                search_chars_v, 
-                search_chars_v_len, 
+                pref_search_chars_v, 
+                pref_search_chars_v_len, 
                 found_char_buf, 
                 found_char_buf_len, 
             )
             
-            for hash_idx in range(num_norm_hashes, num_norm_hashes + num_search_hashes):
-                char_comb_len = search_lengths[hash_idx - num_norm_hashes] * 2
+            for hash_idx in range(num_pref_norm_hashes + num_suff_norm_hashes, num_pref_norm_hashes + num_suff_norm_hashes + num_pref_search_hashes):
+                char_comb_len = pref_search_lengths[hash_idx - (num_pref_norm_hashes + num_suff_norm_hashes)] * 2
+                hashes[tok_idx, hash_idx] = hash32(found_char_buf, char_comb_len, 0)
+
+            _set_found_char_buf(
+                True,
+                tok_str_v, 
+                tok_str_v_len, 
+                suff_search_chars_v, 
+                suff_search_chars_v_len, 
+                found_char_buf, 
+                found_char_buf_len, 
+            )
+
+            for hash_idx in range(num_pref_norm_hashes + num_suff_norm_hashes + num_pref_search_hashes, num_pref_norm_hashes + num_suff_norm_hashes + num_pref_search_hashes + num_suff_search_hashes):
+                char_comb_len = suff_search_lengths[hash_idx - (num_pref_norm_hashes + num_suff_norm_hashes + num_pref_search_hashes)] * 2
                 hashes[tok_idx, hash_idx] = hash32(found_char_buf, char_comb_len, 0)
 
         return hashes
