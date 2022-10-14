@@ -206,15 +206,14 @@ cdef class Matcher:
                     yield doc
 
     @staticmethod
-    def fuzzy_match(s1: str, s2: str, distance: int, token: Token) -> bool:
-        if token.is_oov: # (TODO: param?)
-            threshold = min(len(s1), len(s2)) - 1 # max edit distance
-            if distance: # FUZZYn operators
-                threshold = min(distance, threshold)
-            else: # FUZZY operator
-                threshold = min(5, threshold - 1) # default fuzziness (TODO: param?)
-            if threshold > 0:
-                return levenshtein(s1, s2) <= threshold
+    def fuzzy_match(s1: str, s2: str, distance: int) -> bool:
+        min_length = min(len(s1), len(s2))
+        if distance: # FUZZYn operators with explicit distance
+            threshold = min(distance, min_length - 1)
+        else: # FUZZY operator with default distance
+            threshold = min(5, min_length - 2)
+        if threshold > 0:
+            return levenshtein(s1, s2) <= threshold
         return False
 
     def __call__(self, object doclike, *, as_spans=False, allow_missing=False, with_alignments=False):
@@ -863,7 +862,7 @@ class _FuzzyPredicate:
             value = token.vocab.strings[get_token_attr_for_matcher(token.c, self.attr)]
         if self.value == value:
             return True
-        return Matcher.fuzzy_match(value, self.value, self.fuzzy, token)
+        return Matcher.fuzzy_match(value, self.value, self.fuzzy)
 
 
 class _RegexPredicate:
@@ -946,7 +945,7 @@ class _SetPredicate:
                 return True
             elif self.fuzzy is not None:
                 value = self.vocab.strings[value]
-                return any(Matcher.fuzzy_match(value, self.vocab.strings[v], self.fuzzy, token)
+                return any(Matcher.fuzzy_match(value, self.vocab.strings[v], self.fuzzy)
                            for v in self.value)
             else:
                 return False
@@ -958,7 +957,7 @@ class _SetPredicate:
                 return False
             elif self.fuzzy is not None:
                 value = self.vocab.strings[value]
-                return not any(Matcher.fuzzy_match(value, self.vocab.strings[v], self.fuzzy, token)
+                return not any(Matcher.fuzzy_match(value, self.vocab.strings[v], self.fuzzy)
                                for v in self.value)
             else:
                 return True
