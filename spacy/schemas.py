@@ -508,9 +508,9 @@ class DocJSONSchema(BaseModel):
         None, title="Indices of sentences' start and end indices"
     )
     text: StrictStr = Field(..., title="Document text")
-    spans: Optional[Dict[StrictStr, List[Dict[StrictStr, Union[StrictStr, StrictInt]]]]] = Field(
-        None, title="Span information - end/start indices, label, KB ID"
-    )
+    spans: Optional[
+        Dict[StrictStr, List[Dict[StrictStr, Union[StrictStr, StrictInt]]]]
+    ] = Field(None, title="Span information - end/start indices, label, KB ID")
     tokens: List[Dict[StrictStr, Union[StrictStr, StrictInt]]] = Field(
         ..., title="Token information - ID, start, annotations"
     )
