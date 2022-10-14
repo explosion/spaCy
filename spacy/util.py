@@ -1764,6 +1764,9 @@ def get_byte_arrays_for_search_chars(
     If *case_sensitive==False*, the lower- or uppercase counterparts of any characters that
     have case are added to the search byte arrays, and both the original character and its
     other-cased counterpart map to the lower-case version in the finding byte array.
+
+    All encodings are little-endian regardless of architecture, as this is what is expected by the 
+    murmurhash library used downstream.
     """
 
     def encode(ch: str, width: int) -> bytes:
