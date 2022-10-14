@@ -136,10 +136,7 @@ def test_get_byte_arrays_for_search_chars_width_4_case_sensitive():
     assert w2_finding == _correct_endianness(
         b"b\x00\x00\x00f\x00\x00\x00w\x00\x00\x00\xc9\x00\x00\x00\xe9\x00\x00\x00"
     )
-    assert (
-        w4_search
-        == w4_finding
-        == _correct_endianness(
-            b"\x1e\x03\x01\x00b\x00\x00\x00f\x00\x00\x00w\x00\x00\x00\xc9\x00\x00\x00\xe9\x00\x00\x00"
-        )
+    assert w4_search == w4_finding
+    assert w4_finding == _correct_endianness(
+        b"\x1e\x03\x01\x00b\x00\x00\x00f\x00\x00\x00w\x00\x00\x00\xc9\x00\x00\x00\xe9\x00\x00\x00"
     )
