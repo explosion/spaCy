@@ -2082,7 +2082,7 @@ cdef void _populate_affix_buf(
     cdef Py_UCS4 working_wchar
 
     while affix_buf_idx < pref_length and affix_buf_idx < word_len:
-        working_wchar = PyUnicode_READ(unicode_byte_width, str_data_ptr, idx)
+        working_wchar = PyUnicode_READ(unicode_byte_width, str_data_ptr, in_word_idx)
         if to_lower:
             working_wchar = Py_UNICODE_TOLOWER(working_wchar)
         memcpy(affix_buf + affix_buf_idx, &working_wchar, 4)
@@ -2101,8 +2101,8 @@ cdef void _populate_affix_buf(
             # as that's quicker than retrieving it from the input string a second time
             memcpy(affix_buf + affix_buf_idx, affix_buf + in_word_idx, 4)
         else:
-           working_wchar = PyUnicode_READ(unicode_byte_width, str_data_ptr, word_idx + in_word_idx)
-           if to_lower:
+            working_wchar = PyUnicode_READ(unicode_byte_width, str_data_ptr, word_idx + in_word_idx)
+            if to_lower:
                 working_wchar = Py_UNICODE_TOLOWER(working_wchar)
             memcpy(affix_buf + affix_buf_idx, &working_wchar, 4)
         affix_buf_idx += 1
