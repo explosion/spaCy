@@ -2102,7 +2102,7 @@ cdef void _populate_affix_buf(
             memcpy(affix_buf + affix_buf_idx, affix_buf + in_word_idx, 4)
         else:
            working_wchar = PyUnicode_READ(unicode_byte_width, str_data_ptr, word_idx + in_word_idx)
-            if to_lower:
+           if to_lower:
                 working_wchar = Py_UNICODE_TOLOWER(working_wchar)
             memcpy(affix_buf + affix_buf_idx, &working_wchar, 4)
         affix_buf_idx += 1
