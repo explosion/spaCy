@@ -1772,9 +1772,9 @@ def get_byte_arrays_for_search_chars(
         int: the width of the character encoding to use
         """
         if width == 4:
-            return ch.encode("UTF-32")[width:]  # remove byte order mark
+            return ch.encode("UTF-32LE")
         elif width == 2:
-            return ch.encode("UTF-16")[width:]  # remove byte order mark
+            return ch.encode("UTF-16LE")
         else:
             return ch.encode("UTF-8")
 
