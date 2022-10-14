@@ -148,9 +148,7 @@ class EditTreeLemmatizer(TrainablePipe):
         if not any(len(doc) for doc in docs):
             # Handle cases where there are no tokens in any docs.
             n_labels = len(self.cfg["labels"])
-            guesses: List[Ints2d] = [
-                self.model.ops.alloc2i(0, n_labels) for _ in docs
-            ]
+            guesses: List[Ints2d] = [self.model.ops.alloc2i(0, n_labels) for _ in docs]
             assert len(guesses) == n_docs
             return guesses
         scores = self.model.predict(docs)
