@@ -162,12 +162,12 @@ class TokenPatternString(BaseModel):
     IS_SUBSET: Optional[List[StrictStr]] = Field(None, alias="is_subset")
     IS_SUPERSET: Optional[List[StrictStr]] = Field(None, alias="is_superset")
     INTERSECTS: Optional[List[StrictStr]] = Field(None, alias="intersects")
-    FUZZY: Union[StrictStr, "TokenPatternString"] = Field(None, alias="fuzzy")
-    FUZZY1: Union[StrictStr, "TokenPatternString"] = Field(None, alias="fuzzy1")
-    FUZZY2: Union[StrictStr, "TokenPatternString"] = Field(None, alias="fuzzy2")
-    FUZZY3: Union[StrictStr, "TokenPatternString"] = Field(None, alias="fuzzy3")
-    FUZZY4: Union[StrictStr, "TokenPatternString"] = Field(None, alias="fuzzy4")
-    FUZZY5: Union[StrictStr, "TokenPatternString"] = Field(None, alias="fuzzy5")
+    FUZZY: Optional[Union[StrictStr, "TokenPatternString"]] = Field(None, alias="fuzzy")
+    FUZZY1: Optional[Union[StrictStr, "TokenPatternString"]] = Field(None, alias="fuzzy1")
+    FUZZY2: Optional[Union[StrictStr, "TokenPatternString"]] = Field(None, alias="fuzzy2")
+    FUZZY3: Optional[Union[StrictStr, "TokenPatternString"]] = Field(None, alias="fuzzy3")
+    FUZZY4: Optional[Union[StrictStr, "TokenPatternString"]] = Field(None, alias="fuzzy4")
+    FUZZY5: Optional[Union[StrictStr, "TokenPatternString"]] = Field(None, alias="fuzzy5")
 
     class Config:
         extra = "forbid"
