@@ -702,7 +702,11 @@ TRAIN_DATA = [
     ("Russ Cochran was a member of University of Kentucky's golf team.",
         {"links": {(0, 12): {"Q7381115": 0.0, "Q2146908": 1.0}},
          "entities": [(0, 12, "PERSON"), (43, 51, "LOC")],
-         "sent_starts": [1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]})
+         "sent_starts": [1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}),
+    # having a blank instance shouldn't break things
+    ("The weather is nice today.",
+        {"links": {}, "entities": [],
+         "sent_starts": [1, -1, 0, 0, 0, 0]})
 ]
 GOLD_entities = ["Q2146908", "Q7381115", "Q7381115", "Q2146908"]
 # fmt: on
