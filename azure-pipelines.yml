@@ -21,7 +21,7 @@ jobs:
 # defined in .flake8 and overwrites the selected codes.
 - job: 'Validate'
   pool:
-    vmImage: 'ubuntu-18.04'
+    vmImage: 'ubuntu-latest'
   steps:
   - task: UsePythonVersion@0
     inputs:
@@ -35,50 +35,37 @@ jobs:
   dependsOn: 'Validate'
   strategy:
     matrix:
-      Python35Linux:
-        imageName: 'ubuntu-18.04'
-        python.version: '3.5'
-        os: linux
-      Python35Windows:
-        imageName: 'vs2017-win2016'
-        python.version: '3.5'
-# Test on one OS per python 3.6/3.7/3.8 to speed up CI
+# Test on one OS per python 3.6/3.7/3.8/3.9 to speed up CI
       Python36Linux:
-        imageName: 'ubuntu-18.04'
+        imageName: 'ubuntu-latest'
         python.version: '3.6'
-#      Python36Windows:
-#        imageName: 'vs2017-win2016'
-#        python.version: '3.6'
-#      Python36Mac:
-#        imageName: 'macos-10.14'
-#        python.version: '3.6'
-#      Python37Linux:
-#        imageName: 'ubuntu-18.04'
-#        python.version: '3.7'
       Python37Windows:
-        imageName: 'vs2017-win2016'
+        imageName: 'windows-latest'
         python.version: '3.7'
-#      Python37Mac:
-#        imageName: 'macos-10.14'
-#        python.version: '3.7'
-#      Python38Linux:
-#        imageName: 'ubuntu-18.04'
-#        python.version: '3.8'
-#      Python38Windows:
-#        imageName: 'vs2017-win2016'
-#        python.version: '3.8'
       Python38Mac:
-        imageName: 'macos-10.14'
+        imageName: 'macos-latest'
         python.version: '3.8'
       Python39Linux:
-        imageName: 'ubuntu-18.04'
+        imageName: 'ubuntu-latest'
         python.version: '3.9'
-      Python39Windows:
-        imageName: 'vs2017-win2016'
-        python.version: '3.9'
-      Python39Mac:
-        imageName: 'macos-10.14'
-        python.version: '3.9'
+      Python310Linux:
+        imageName: 'ubuntu-latest'
+        python.version: '3.10'
+      Python310Windows:
+        imageName: 'windows-latest'
+        python.version: '3.10'
+      Python310Mac:
+        imageName: 'macos-latest'
+        python.version: '3.10'
+      Python311Linux:
+        imageName: 'ubuntu-latest'
+        python.version: '3.11.0-rc.2'
+      Python311Windows:
+        imageName: 'windows-latest'
+        python.version: '3.11.0-rc.2'
+      Python311Mac:
+        imageName: 'macos-latest'
+        python.version: '3.11.0-rc.2'
     maxParallel: 4
   pool:
     vmImage: $(imageName)
@@ -88,17 +75,13 @@ jobs:
     inputs:
       versionSpec: '$(python.version)'
       architecture: 'x64'
+      allowUnstable: true
 
   - script: python -m pip install -U pip setuptools
     displayName: 'Update pip'
 
-  - script: pip install -r requirements.txt --prefer-binary
-    displayName: 'Install dependencies (python 3.5: prefer binary)'
-    condition: eq(variables['python.version'], '3.5')
-
   - script: pip install -r requirements.txt
     displayName: 'Install dependencies'
-    condition: not(eq(variables['python.version'], '3.5'))
 
   - script: |
       python setup.py build_ext --inplace -j 2
@@ -117,18 +100,11 @@ jobs:
 
   - bash: |
       SDIST=$(python -c "import os;print(os.listdir('./dist')[-1])" 2>&1)
-      pip install dist/$SDIST --prefer-binary
-    displayName: 'Install from sdist (python 3.5: prefer binary)'
-    condition: eq(variables['python.version'], '3.5')
-
-  - bash: |
-      SDIST=$(python -c "import os;print(os.listdir('./dist')[-1])" 2>&1)
       pip install dist/$SDIST
     displayName: 'Install from sdist'
-    condition: not(eq(variables['python.version'], '3.5'))
 
   - script: |
-      pip install -r requirements.txt --prefer-binary
+      pip install -r requirements.txt
       python -m pytest --pyargs spacy
     displayName: 'Run tests'
 
@@ -136,4 +112,4 @@ jobs:
       python -m spacy download en_core_web_sm
       python -c "import spacy; nlp=spacy.load('en_core_web_sm'); doc=nlp('test')"
     displayName: 'Test download CLI'
-    condition: and(eq(variables['python.version'], '3.9'), eq(variables['imageName'], 'ubuntu-18.04'))
+    condition: eq(variables['python.version'], '3.9')
