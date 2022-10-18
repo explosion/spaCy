@@ -56,7 +56,6 @@ steps:
     condition: eq(${{ parameters.gpu }}, true)
 
   - script: |
-      ${{ parameters.prefix }} python -m pip install srsly==2.4.5.dev1
       ${{ parameters.prefix }} python -m pytest --pyargs spacy -W error
     displayName: "Run CPU tests"
     condition: eq(${{ parameters.gpu }}, false)
@@ -69,7 +68,6 @@ steps:
   - script: |
       python -m spacy download ca_core_news_sm
       python -m spacy download ca_core_news_md
-      python -m pip install srsly==2.4.5.dev1
       python -c "import spacy; nlp=spacy.load('ca_core_news_sm'); doc=nlp('test')"
     displayName: 'Test download CLI'
     condition: eq(variables['python_version'], '3.8')
