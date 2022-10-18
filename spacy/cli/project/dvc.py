@@ -110,9 +110,6 @@ def update_dvc_config(
     config_commands = {cmd["name"]: cmd for cmd in config.get("commands", [])}
 
     # some flags that apply to every command
-    if verbose and quiet:
-        # don't allow contradictions
-        msg.fail("Can't set both --verbose and --quiet", exits=1)
     flags = []
     if verbose:
         flags.append("--verbose")
