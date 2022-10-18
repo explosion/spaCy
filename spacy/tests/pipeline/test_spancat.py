@@ -1,7 +1,7 @@
 import pytest
 import numpy
 from numpy.testing import assert_array_equal, assert_almost_equal
-from thinc.api import get_current_ops, Ragged
+from thinc.api import get_current_ops, Ragged, fix_random_seed
 
 from spacy import util
 from spacy.lang.en import English
@@ -9,7 +9,7 @@ from spacy.language import Language
 from spacy.tokens import SpanGroup
 from spacy.tokens.span_groups import SpanGroups
 from spacy.training import Example
-from spacy.util import fix_random_seed, registry, make_tempdir
+from spacy.util import registry, make_tempdir
 
 OPS = get_current_ops()
 
