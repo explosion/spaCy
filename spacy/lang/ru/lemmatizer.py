@@ -23,7 +23,7 @@ class RussianLemmatizer(Lemmatizer):
         overwrite: bool = False,
         scorer: Optional[Callable] = lemmatizer_score,
     ) -> None:
-        if mode == "pymorphy2":
+        if mode in {"pymorphy2", "pymorphy2_lookup"}:
             try:
                 from pymorphy2 import MorphAnalyzer
             except ImportError:

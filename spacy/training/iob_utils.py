@@ -60,6 +60,14 @@ def doc_to_biluo_tags(doc: Doc, missing: str = "O"):
     )
 
 
+def _doc_to_biluo_tags_with_partial(doc: Doc) -> List[str]:
+    ents = doc_to_biluo_tags(doc, missing="-")
+    for i, token in enumerate(doc):
+        if token.ent_iob == 2:
+            ents[i] = "O"
+    return ents
+
+
 def offsets_to_biluo_tags(
     doc: Doc, entities: Iterable[Tuple[int, int, Union[str, int]]], missing: str = "O"
 ) -> List[str]:

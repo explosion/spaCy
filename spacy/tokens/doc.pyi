@@ -72,7 +72,7 @@ class Doc:
         lemmas: Optional[List[str]] = ...,
         heads: Optional[List[int]] = ...,
         deps: Optional[List[str]] = ...,
-        sent_starts: Optional[List[Union[bool, None]]] = ...,
+        sent_starts: Optional[List[Union[bool, int, None]]] = ...,
         ents: Optional[List[str]] = ...,
     ) -> None: ...
     @property
