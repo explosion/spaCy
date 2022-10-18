@@ -1,4 +1,4 @@
-from typing import Callable, Iterable, Dict, Any
+from typing import Callable, Iterable, Dict, Any, Generator
 
 import pytest
 from numpy.testing import assert_equal
@@ -497,11 +497,14 @@ def test_el_pipe_configuration(nlp):
     assert doc[1].ent_kb_id_ == ""
     assert doc[2].ent_kb_id_ == "Q2"
 
+    # Replace the pipe with a new one with with a different candidate generator.
+
     def get_lowercased_candidates(kb, span):
         return kb.get_alias_candidates(span.text.lower())
 
-    def get_lowercased_candidates_batch(kb, spans):
-        return [get_lowercased_candidates(kb, span) for span in spans]
+    def get_lowercased_candidates_all(kb, spans_per_doc):
+        for doc_spans in spans_per_doc:
+            yield [get_lowercased_candidates(kb, span) for span in doc_spans]
 
     @registry.misc("spacy.LowercaseCandidateGenerator.v1")
     def create_candidates() -> Callable[
@@ -509,29 +512,39 @@ def test_el_pipe_configuration(nlp):
     ]:
         return get_lowercased_candidates
 
-    @registry.misc("spacy.LowercaseCandidateBatchGenerator.v1")
+    @registry.misc("spacy.LowercaseCandidateAllGenerator.v1")
     def create_candidates_batch() -> Callable[
-        [InMemoryLookupKB, Iterable["Span"]], Iterable[Iterable[Candidate]]
+        [InMemoryLookupKB, Generator[Iterable["Span"], None, None]],
+        Generator[Iterable[Iterable[Candidate]], None, None]
     ]:
-        return get_lowercased_candidates_batch
+        return get_lowercased_candidates_all
 
-    # replace the pipe with a new one with with a different candidate generator
-    entity_linker = nlp.replace_pipe(
-        "entity_linker",
-        "entity_linker",
-        config={
-            "incl_context": False,
-            "get_candidates": {"@misc": "spacy.LowercaseCandidateGenerator.v1"},
-            "get_candidates_batch": {
-                "@misc": "spacy.LowercaseCandidateBatchGenerator.v1"
+    def test_reconfigured_el(candidates_doc_mode: bool, doc_text: str) -> None:
+        """Test reconfigured EL for correct results.
+        candidates_doc_mode (bool): candidates_doc_mode in pipe config.
+        doc_text (str): Text to infer.
+        """
+        _entity_linker = nlp.replace_pipe(
+            "entity_linker",
+            "entity_linker",
+            config={
+                "incl_context": False,
+                "candidates_doc_mode": candidates_doc_mode,
+                "get_candidates": {"@misc": "spacy.LowercaseCandidateGenerator.v1"},
+                "get_candidates_all": {
+                    "@misc": "spacy.LowercaseCandidateAllGenerator.v1"
+                },
             },
-        },
-    )
-    entity_linker.set_kb(create_kb)
-    doc = nlp(text)
-    assert doc[0].ent_kb_id_ == "Q2"
-    assert doc[1].ent_kb_id_ == ""
-    assert doc[2].ent_kb_id_ == "Q2"
+        )
+        _entity_linker.set_kb(create_kb)
+        _doc = nlp(doc_text)
+        assert _doc[0].ent_kb_id_ == "Q2"
+        assert _doc[1].ent_kb_id_ == ""
+        assert _doc[2].ent_kb_id_ == "Q2"
+
+    # Test individual and doc-wise candidate generation.
+    test_reconfigured_el(False, text)
+    test_reconfigured_el(True, text)
 
 
 def test_nel_nsents(nlp):
@@ -668,6 +681,7 @@ def test_preserving_links_asdoc(nlp):
         for s_ent in sent_doc.ents:
             if s_ent.text == orig_text:
                 assert s_ent.kb_id_ == orig_kb_id
+
 
 
 def test_preserving_links_ents(nlp):

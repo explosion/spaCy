@@ -1,12 +1,12 @@
 from pathlib import Path
-from typing import Optional, Callable, Iterable, List, Tuple
+from typing import Optional, Callable, Iterable, List, Tuple, Generator
 from thinc.types import Floats2d
 from thinc.api import chain, list2ragged, reduce_mean, residual
 from thinc.api import Model, Maxout, Linear, tuplify, Ragged
 
 from ...util import registry
 from ...kb import KnowledgeBase, InMemoryLookupKB
-from ...kb import Candidate, get_candidates, get_candidates_batch
+from ...kb import Candidate, get_candidates, get_candidates_all
 from ...vocab import Vocab
 from ...tokens import Span, Doc
 from ..extract_spans import extract_spans
@@ -105,8 +105,8 @@ def create_candidates() -> Callable[[KnowledgeBase, Span], Iterable[Candidate]]:
     return get_candidates
 
 
-@registry.misc("spacy.CandidateBatchGenerator.v1")
-def create_candidates_batch() -> Callable[
-    [KnowledgeBase, Iterable[Span]], Iterable[Iterable[Candidate]]
+@registry.misc("spacy.CandidateAllGenerator.v1")
+def create_candidates_all() -> Callable[
+    [KnowledgeBase, Generator[Iterable[Span], None, None]], Generator[Iterable[Iterable[Candidate]], None, None]
 ]:
-    return get_candidates_batch
+    return get_candidates_all

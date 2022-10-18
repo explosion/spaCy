@@ -1,7 +1,7 @@
 # cython: infer_types=True, profile=True
 
 from pathlib import Path
-from typing import Iterable, Tuple, Union
+from typing import Iterable, Tuple, Union, Generator
 from cymem.cymem cimport Pool
 
 from .candidate import Candidate
@@ -23,22 +23,24 @@ cdef class KnowledgeBase:
         # Make sure abstract KB is not instantiated.
         if self.__class__ == KnowledgeBase:
             raise TypeError(
-                Errors.E1046.format(cls_name=self.__class__.__name__)
+                Errors.E1045.format(cls_name=self.__class__.__name__)
             )
 
         self.vocab = vocab
         self.entity_vector_length = entity_vector_length
         self.mem = Pool()
 
-    def get_candidates_batch(self, mentions: Iterable[Span]) -> Iterable[Iterable[Candidate]]:
+    def get_candidates_all(self, mentions: Generator[Iterable[Span]]) -> Generator[Iterable[Iterable[Candidate]]]:
         """
         Return candidate entities for specified texts. Each candidate defines the entity, the original alias,
         and the prior probability of that alias resolving to that entity.
         If no candidate is found for a given text, an empty list is returned.
-        mentions (Iterable[Span]): Mentions for which to get candidates.
-        RETURNS (Iterable[Iterable[Candidate]]): Identified candidates.
+        mentions (Generator[Iterable[Span]]): Mentions per documents for which to get candidates.
+        RETURNS (Generator[Iterable[Iterable[Candidate]]]): Identified candidates per document.
         """
-        return [self.get_candidates(span) for span in mentions]
+
+        for doc_mentions in mentions:
+            yield [self.get_candidates(span) for span in doc_mentions]
 
     def get_candidates(self, mention: Span) -> Iterable[Candidate]:
         """
@@ -49,7 +51,7 @@ cdef class KnowledgeBase:
         RETURNS (Iterable[Candidate]): Identified candidates.
         """
         raise NotImplementedError(
-            Errors.E1045.format(parent="KnowledgeBase", method="get_candidates", name=self.__name__)
+            Errors.E1044.format(parent="KnowledgeBase", method="get_candidates", name=self.__name__)
         )
 
     def get_vectors(self, entities: Iterable[str]) -> Iterable[Iterable[float]]:
@@ -67,7 +69,7 @@ cdef class KnowledgeBase:
         RETURNS (Iterable[float]): Vector for specified entity.
         """
         raise NotImplementedError(
-            Errors.E1045.format(parent="KnowledgeBase", method="get_vector", name=self.__name__)
+            Errors.E1044.format(parent="KnowledgeBase", method="get_vector", name=self.__name__)
         )
 
     def to_bytes(self, **kwargs) -> bytes:
@@ -75,7 +77,7 @@ cdef class KnowledgeBase:
         RETURNS (bytes): Current state as binary string.
         """
         raise NotImplementedError(
-            Errors.E1045.format(parent="KnowledgeBase", method="to_bytes", name=self.__name__)
+            Errors.E1044.format(parent="KnowledgeBase", method="to_bytes", name=self.__name__)
         )
 
     def from_bytes(self, bytes_data: bytes, *, exclude: Tuple[str] = tuple()):
@@ -84,7 +86,7 @@ cdef class KnowledgeBase:
         exclude (Tuple[str]): Properties to exclude when restoring KB.
         """
         raise NotImplementedError(
-            Errors.E1045.format(parent="KnowledgeBase", method="from_bytes", name=self.__name__)
+            Errors.E1044.format(parent="KnowledgeBase", method="from_bytes", name=self.__name__)
         )
 
     def to_disk(self, path: Union[str, Path], exclude: Iterable[str] = SimpleFrozenList()) -> None:
@@ -94,7 +96,7 @@ cdef class KnowledgeBase:
         exclude (Iterable[str]): List of components to exclude.
         """
         raise NotImplementedError(
-            Errors.E1045.format(parent="KnowledgeBase", method="to_disk", name=self.__name__)
+            Errors.E1044.format(parent="KnowledgeBase", method="to_disk", name=self.__name__)
         )
 
     def from_disk(self, path: Union[str, Path], exclude: Iterable[str] = SimpleFrozenList()) -> None:
@@ -104,5 +106,5 @@ cdef class KnowledgeBase:
         exclude (Iterable[str]): List of components to exclude.
         """
         raise NotImplementedError(
-            Errors.E1045.format(parent="KnowledgeBase", method="from_disk", name=self.__name__)
+            Errors.E1044.format(parent="KnowledgeBase", method="from_disk", name=self.__name__)
         )
