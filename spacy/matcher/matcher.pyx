@@ -1065,13 +1065,13 @@ def _get_extra_predicates_dict(attr, value_dict, vocab, predicate_types,
                                                          regex=True))
                 continue
         elif cls == _FuzzyPredicate:
-            fuzzy = type_[len("FUZZY"):] # number after prefix
-            fuzzy = int(fuzzy) if fuzzy else 0
+            fuzz = type_[len("FUZZY"):] # number after prefix
+            fuzz = int(fuzz) if fuzz else 0
             if isinstance(value, dict):
                 # add predicates inside fuzzy operator
                 output.extend(_get_extra_predicates_dict(attr, value, vocab, predicate_types,
                                                          extra_predicates, seen_predicates,
-                                                         fuzzy=fuzzy))
+                                                         fuzzy=fuzz))
                 continue
         predicate = cls(len(extra_predicates), attr, value, type_, vocab=vocab,
                         regex=regex, fuzzy=fuzzy)

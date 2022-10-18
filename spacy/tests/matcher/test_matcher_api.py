@@ -214,6 +214,22 @@ def test_matcher_match_fuzzy_set3(en_vocab):
         (doc.vocab.strings["GoogleNow"], 3, 4),
     ]
 
+def test_matcher_match_fuzzy_set4(en_vocab):
+    rules = {
+        "QUESTION": [[{"ORTH": {"FUZZY": {"IN": ["what"]},
+                                "NOT_IN": ["that"]}},
+                      {"ORTH": "do"}]]
+    }
+    matcher = Matcher(en_vocab)
+    for key, patterns in rules.items():
+        matcher.add(key, patterns, greedy="LONGEST")
+
+    words = ["what", "do", "you", "want"]
+    doc = Doc(matcher.vocab, words=words)
+    assert matcher(doc) == [
+        (doc.vocab.strings["QUESTION"], 0, 2),
+    ]
+
 
 def test_matcher_match_fuzzyn1(en_vocab):
     rules = {
