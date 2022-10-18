@@ -107,6 +107,7 @@ def create_candidates() -> Callable[[KnowledgeBase, Span], Iterable[Candidate]]:
 
 @registry.misc("spacy.CandidateAllGenerator.v1")
 def create_candidates_all() -> Callable[
-    [KnowledgeBase, Generator[Iterable[Span], None, None]], Generator[Iterable[Iterable[Candidate]], None, None]
+    [KnowledgeBase, Generator[Iterable[Span], None, None]],
+    Generator[Iterable[Iterable[Candidate]], None, None],
 ]:
     return get_candidates_all

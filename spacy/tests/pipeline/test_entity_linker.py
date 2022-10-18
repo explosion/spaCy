@@ -515,7 +515,7 @@ def test_el_pipe_configuration(nlp):
     @registry.misc("spacy.LowercaseCandidateAllGenerator.v1")
     def create_candidates_batch() -> Callable[
         [InMemoryLookupKB, Generator[Iterable["Span"], None, None]],
-        Generator[Iterable[Iterable[Candidate]], None, None]
+        Generator[Iterable[Iterable[Candidate]], None, None],
     ]:
         return get_lowercased_candidates_all
 
@@ -681,7 +681,6 @@ def test_preserving_links_asdoc(nlp):
         for s_ent in sent_doc.ents:
             if s_ent.text == orig_text:
                 assert s_ent.kb_id_ == orig_kb_id
-
 
 
 def test_preserving_links_ents(nlp):

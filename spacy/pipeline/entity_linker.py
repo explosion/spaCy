@@ -79,7 +79,7 @@ def make_entity_linker(
     get_candidates: Callable[[KnowledgeBase, Span], Iterable[Candidate]],
     get_candidates_all: Callable[
         [KnowledgeBase, Generator[Iterable[Span], None, None]],
-        Generator[Iterable[Iterable[Candidate]], None, None]
+        Generator[Iterable[Iterable[Candidate]], None, None],
     ],
     overwrite: bool,
     scorer: Optional[Callable],
@@ -180,7 +180,7 @@ class EntityLinker(TrainablePipe):
         get_candidates: Callable[[KnowledgeBase, Span], Iterable[Candidate]],
         get_candidates_all: Callable[
             [KnowledgeBase, Generator[Iterable[Span], None, None]],
-            Generator[Iterable[Iterable[Candidate]], None, None]
+            Generator[Iterable[Iterable[Candidate]], None, None],
         ],
         overwrite: bool = BACKWARD_OVERWRITE,
         scorer: Optional[Callable] = entity_linker_score,
@@ -456,19 +456,28 @@ class EntityLinker(TrainablePipe):
                 for idx in range(len(doc.ents))
                 if doc.ents[idx].label_ not in self.labels_discard
             ]
-            for doc in docs if len(doc.ents)
+            for doc in docs
+            if len(doc.ents)
         )
         # Call candidate generator.
         if self.candidates_doc_mode:
             all_ent_cands = self.get_candidates_all(
                 self.kb,
-                ([doc.ents[idx] for idx in next(valid_ent_idx_per_doc)] for doc in docs if len(doc.ents))
+                (
+                    [doc.ents[idx] for idx in next(valid_ent_idx_per_doc)]
+                    for doc in docs
+                    if len(doc.ents)
+                ),
             )
         else:
             # Alternative: collect entities the old-fashioned way - by retrieving entities individually.
             all_ent_cands = (
-                [self.get_candidates(self.kb, doc.ents[idx]) for idx in next(valid_ent_idx_per_doc)]
-                for doc in docs if len(doc.ents)
+                [
+                    self.get_candidates(self.kb, doc.ents[idx])
+                    for idx in next(valid_ent_idx_per_doc)
+                ]
+                for doc in docs
+                if len(doc.ents)
             )
 
         for doc_idx, doc in enumerate(docs):
@@ -485,9 +494,7 @@ class EntityLinker(TrainablePipe):
                 if self.incl_context:
                     # get n_neighbour sentences, clipped to the length of the document
                     start_sentence = max(0, sent_index - self.n_sents)
-                    end_sentence = min(
-                        len(sentences) - 1, sent_index + self.n_sents
-                    )
+                    end_sentence = min(len(sentences) - 1, sent_index + self.n_sents)
                     start_token = sentences[start_sentence].start
                     end_token = sentences[end_sentence].end
                     sent_doc = doc[start_token:end_token].as_doc()
@@ -536,8 +543,7 @@ class EntityLinker(TrainablePipe):
                             scores = prior_probs + sims - (prior_probs * sims)
                         final_kb_ids.append(
                             candidates[scores.argmax().item()].entity_
-                            if self.threshold is None
-                            or scores.max() >= self.threshold
+                            if self.threshold is None or scores.max() >= self.threshold
                             else EntityLinker.NIL
                         )
 
