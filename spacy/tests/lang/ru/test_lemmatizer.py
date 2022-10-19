@@ -78,3 +78,17 @@ def test_ru_lemmatizer_punct(ru_lemmatizer):
     assert ru_lemmatizer.pymorphy2_lemmatize(doc[0]) == ['"']
     doc = Doc(ru_lemmatizer.vocab, words=["»"], pos=["PUNCT"])
     assert ru_lemmatizer.pymorphy2_lemmatize(doc[0]) == ['"']
+
+
+def test_ru_doc_lookup_lemmatization(ru_lookup_lemmatizer):
+    words = ["мама", "мыла", "раму"]
+    pos = ["NOUN", "VERB", "NOUN"]
+    morphs = [
+        "Animacy=Anim|Case=Nom|Gender=Fem|Number=Sing",
+        "Aspect=Imp|Gender=Fem|Mood=Ind|Number=Sing|Tense=Past|VerbForm=Fin|Voice=Act",
+        "Animacy=Anim|Case=Acc|Gender=Fem|Number=Sing",
+    ]
+    doc = Doc(ru_lookup_lemmatizer.vocab, words=words, pos=pos, morphs=morphs)
+    doc = ru_lookup_lemmatizer(doc)
+    lemmas = [token.lemma_ for token in doc]
+    assert lemmas == ["мама", "мыла", "раму"]
