@@ -1672,14 +1672,13 @@ cdef class Doc:
                 data["_"] = {}
                 data["underscore_token"] = {}
                 data["underscore_span"] = {}
-                for data_key in self.user_data:
+                for data_key, value in self.user_data.copy().items():
                     if type(data_key) == tuple and len(data_key) >= 4 and data_key[0] == "._.":
                         attr = data_key[1]
                         start = data_key[2]
                         end = data_key[3]
                         if attr in underscore:
                             user_keys.add(attr)
-                            value = self.user_data[data_key]
                             if not srsly.is_json_serializable(value):
                                 raise ValueError(Errors.E107.format(attr=attr, value=repr(value)))
                             # Check if doc attribute
