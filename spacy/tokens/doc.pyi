@@ -181,9 +181,13 @@ class Doc:
         pref_lengths: List[int],
         suff_lengths: List[int],
         pref_search_chars: str,
+        pref_ref_chars: str,
+        pref_search_char_length: int,
         pref_search_lengths: List[int],
         suff_search_chars: str,
-        suff_search_lengths: List[int]
+        suff_ref_chars: str,
+        suff_search_char_length: int,
+        suff_search_lengths: List[int],
     ) -> Ints2d: ...
     @staticmethod
     def _get_array_attrs() -> Tuple[Any]: ...

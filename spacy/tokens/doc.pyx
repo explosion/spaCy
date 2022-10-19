@@ -3,7 +3,7 @@ from typing import Set, List
 
 cimport cython
 cimport numpy as np
-from libc.string cimport memcpy
+from libc.string cimport memcpy, memcmp, memset
 from libc.math cimport sqrt
 from libc.stdint cimport int32_t, uint64_t
 
@@ -41,12 +41,6 @@ from ._serialize import ALL_ATTRS as DOCBIN_ALL_ATTRS
 from ..util import get_words_and_spaces
 
 DEF PADDING = 5
-
-cdef extern from *:
-    Py_UCS4 PyUnicode_READ(int kind, void *data, int index)
-    void* PyUnicode_DATA(void* o)
-    int PyUnicode_KIND(void *data)
-    Py_UCS4 Py_UNICODE_TOLOWER(Py_UCS4 ch)
 
 cdef int bounds_check(int i, int length, int padding) except -1:
     if (i + padding) < 0:
@@ -109,6 +103,16 @@ class SetEntsDefault(str, Enum):
     @classmethod
     def values(cls):
         return list(cls.__members__.keys())
+
+
+cdef extern from "unicodeobject.h":
+    Py_UCS4 PyUnicode_READ(int kind, void *data, int index)
+    void* PyUnicode_DATA(void* o)
+    void PyUnicode_READY(void * o)
+    int PyUnicode_KIND(void *data)
+    int PyUnicode_IS_COMPACT(void *data)
+
+    Py_UCS4 Py_UNICODE_TOLOWER(Py_UCS4 ch)
 
 
 cdef class Doc:
@@ -1742,33 +1746,37 @@ cdef class Doc:
 
 
     def get_character_combination_hashes(
-        self, 
+        self,
         *,
-        bint case_sensitive, 
+        bint cs, 
         pref_lengths: List[int], 
         suff_lengths: List[int], 
-        str pref_search_chars, 
+        char* pref_search,
+        char* pref_ref,
+        int pref_s_char_l,
         pref_search_lengths: List[int],
-        str suff_search_chars, 
-        suff_search_lengths: List[int]
+        char* suff_search,
+        char* suff_ref,
+        int suff_s_char_l,
+        suff_search_lengths: List[int],
     ):
         """
         Returns a 2D NumPy array where the rows represent tokens and the columns represent hashes of various character combinations 
             derived from the string (text/orth) of each token.
         
-        case_sensitive: if *False*, the lower-case version of each token string is used as the basis for generating hashes. Note that
-            if *case_sensitive==False*, upper-case characters in *search_chars* will not be found in token strings.
+        cs: if *False*, the lower-case version of each token string is used as the basis for generating hashes. Note that
+            if *cs==False*, upper-case characters in *search_chars* will not be found in token strings.
         pref_lengths: an integer list specifying the lengths of prefixes to be hashed. For example, if *pref_lengths==[2, 3]*, 
             the prefixes hashed for "spaCy" would be "sp" and "spa".
         suff_lengths: an integer list specifying the lengths of suffixes to be hashed. For example, if *suff_lengths==[2, 3]* and
             *case_sensitive == True*, the suffixes hashed for "spaCy" would be "Cy" and "aCy".
         pref_search_chars: a string containing characters to search for within each token, starting at the beginning.
         pref_search_lengths: an integer list specifying the lengths of search results to be hashed. For example if 
-            *pref_search_lengths==[1, 2]*, *pref_search_chars=="aC" and *case_sensitive==False*, the searched strings hashed for 
+            *pref_search_lengths==[1, 2]*, *pref_search_chars=="aC" and *cs==False*, the searched strings hashed for 
             "spaCy" would be "a" and "ac".
         suff_search_chars: a string containing characters to search for within each token, starting at the end.
         suff_search_lengths: an integer list specifying the lengths of search results to be hashed. For example if 
-            *suff_search_lengths==[1, 2]*, *suff_search_chars=="aC" and *case_sensitive==False*, the searched strings hashed for 
+            *suff_search_lengths==[1, 2]*, *suff_search_chars=="aC" and *cs==False*, the searched strings hashed for 
             "spaCy" would be "c" and "ca".
         
         For a document with tokens ["spaCy", "and", "Prodigy"], the NumPy array returned by 
@@ -1779,99 +1787,61 @@ cdef class Doc:
         [hash("Pr") ,hash("gy"), hash("digy"), hash("rodigy"), hash("y"), hash("y ")]]
         """
 
+        cdef int max_pref_l = max(pref_lengths) if len(pref_lengths) > 0 else 0
+        cdef int max_suff_l = max(suff_lengths) if len(suff_lengths) > 0 else 0
+        cdef int aff_buf_l  = max_pref_l + max_suff_l
+        cdef int max_s_pref_l = max(pref_search_lengths) if len(pref_search_lengths) > 0 else 0
+        cdef int max_s_suff_l = max(suff_search_lengths) if len(suff_search_lengths) > 0 else 0
 
-        cdef int longest_pref = max(pref_lengths) if len(pref_lengths) > 0 else 0
-        cdef int longest_suff = max(suff_lengths) if len(suff_lengths) > 0 else 0
-        cdef Py_UCS4* affix_buf = <Py_UCS4*>self.mem.alloc(4, longest_pref + longest_suff)
-
-        cdef void* text_ptr = <void*> self.text
-        cdef void* text_data_ptr = <void*> PyUnicode_DATA(text_ptr) # todo change to const void
-        cdef unsigned int unicode_byte_width = PyUnicode_KIND(text_ptr), num_toks = len(self), tok_idx, token_idx, token_len
-
-        cdef TokenC token_c
-        cdef str working_str
-
-        for tok_idx in range(num_toks):
-            token_c = self.c[tok_idx]
-            token_idx = token_c.idx
-            token_len = token_c.lex.length
-            _populate_affix_buf(
-                text_data_ptr, 
-                unicode_byte_width, 
-                token_idx, 
-                token_len, 
-                affix_buf, 
-                longest_pref, 
-                longest_suff, 
-                not case_sensitive
-            )
-
-
-        cdef const unsigned char[:] pref_search_chars_v = _get_utf16_memoryview(pref_search_chars, True)
-        cdef const unsigned char[:] suff_search_chars_v = _get_utf16_memoryview(suff_search_chars, True)
-        cdef unsigned int longest_search_length = max(pref_search_lengths + suff_search_lengths) if len(pref_search_lengths + suff_search_lengths) > 0 else 0         
-        cdef bytes found_char_buf_bytes = (bytes(" " * longest_search_length, "UTF-16"))[2:] # first two bytes express endianness
-        cdef char* found_char_buf = found_char_buf_bytes
-        cdef unsigned int pref_search_chars_v_len = len(pref_search_chars_v), suff_search_chars_v_len = len(suff_search_chars_v), 
-        cdef unsigned int found_char_buf_len = len(found_char_buf_bytes)
+        cdef Py_UCS4* aff_buf = <Py_UCS4*>self.mem.alloc(4, aff_buf_l)
+        cdef Py_UCS4* pref_s_buf = <Py_UCS4*>pref_search
+        cdef Py_UCS4* pref_r_buf = <Py_UCS4*>pref_ref
+        cdef Py_UCS4* pref_f_buf = <Py_UCS4*>self.mem.alloc(4, max_s_pref_l)
+        cdef Py_UCS4* suff_s_buf = <Py_UCS4*>suff_search
+        cdef Py_UCS4* suff_r_buf = <Py_UCS4*>suff_ref
+        cdef Py_UCS4* suff_f_buf = <Py_UCS4*>self.mem.alloc(4, max_s_suff_l)
         
-        cdef unsigned int num_pref_norm_hashes = len(pref_lengths), num_suff_norm_hashes = len(suff_lengths)
-        cdef unsigned int num_pref_search_hashes = len(pref_search_lengths)
-        cdef unsigned int num_suff_search_hashes = len(suff_search_lengths)
-        cdef np.ndarray[np.int64_t, ndim=2] hashes = numpy.empty((num_toks, num_pref_norm_hashes + num_suff_norm_hashes + num_pref_search_hashes + num_suff_norm_hashes), dtype="int64")
+        cdef bytes encoded_text = self.text.encode("utf-32le")
+        cdef char* intermediate_text = encoded_text
+        cdef Py_UCS4* text_buf = <Py_UCS4*> intermediate_text
 
-        cdef const unsigned char[:] tok_str_v
-        cdef unsigned int tok_str_v_len, hash_idx, affix_start, char_comb_len
-        cdef attr_t num_tok_attr
-        cdef str str_tok_attr
+        cdef unsigned int num_toks = len(self), aff_len
+        cdef unsigned int h_pref_n = len(pref_lengths)
+        cdef unsigned int h_suff_n = len(suff_lengths), h_suff_end_idx = len(pref_lengths) + len(suff_lengths)
+        cdef unsigned int h_pref_s_n = len(pref_search_lengths), h_pref_s_end_idx = h_suff_end_idx + h_pref_s_n
+        cdef unsigned int h_suff_s_n = len(suff_search_lengths), h_suff_s_end_idx = h_pref_s_end_idx + h_suff_s_n
+        cdef np.ndarray[np.int64_t, ndim=2] hashes = numpy.empty((num_toks, h_suff_s_end_idx), dtype="int64")
         
-        for tok_idx in range(num_toks):
-            num_tok_attr = self.c[tok_idx].lex.orth if case_sensitive else self.c[tok_idx].lex.lower
-            str_tok_attr = self.vocab.strings[num_tok_attr]
-            tok_str_v = _get_utf16_memoryview(str_tok_attr, False)
-            tok_str_v_len = len(tok_str_v)
+        cdef TokenC tok_c
 
-            for hash_idx in range(num_pref_norm_hashes):
-                char_comb_len = pref_lengths[hash_idx] * 2
-                if char_comb_len > tok_str_v_len:
-                    char_comb_len = tok_str_v_len
-                hashes[tok_idx, hash_idx] = hash32(<void*> &tok_str_v[0], char_comb_len, 0)
-
-            for hash_idx in range(num_pref_norm_hashes, num_pref_norm_hashes + num_suff_norm_hashes):
-                char_comb_len = suff_lengths[hash_idx - num_pref_norm_hashes] * 2
-                if char_comb_len > tok_str_v_len:
-                    char_comb_len = tok_str_v_len
-                affix_start = tok_str_v_len - char_comb_len
-                hashes[tok_idx, hash_idx] = hash32(<void*> &tok_str_v[affix_start], char_comb_len, 0)
-
-            _set_found_char_buf(
-                False,
-                tok_str_v, 
-                tok_str_v_len, 
-                pref_search_chars_v, 
-                pref_search_chars_v_len, 
-                found_char_buf, 
-                found_char_buf_len, 
-            )
+        for tok_i in range(num_toks):
+            tok_c = self.c[tok_i]
+            tok_idx = tok_c.idx
+            tok_len = tok_c.lex.length
             
-            for hash_idx in range(num_pref_norm_hashes + num_suff_norm_hashes, num_pref_norm_hashes + num_suff_norm_hashes + num_pref_search_hashes):
-                char_comb_len = pref_search_lengths[hash_idx - (num_pref_norm_hashes + num_suff_norm_hashes)] * 2
-                hashes[tok_idx, hash_idx] = hash32(found_char_buf, char_comb_len, 0)
+            _populate_aff_buf(text_buf, tok_idx, tok_len, aff_buf, max_pref_l, max_suff_l, not cs)
+            _populate_search_buf(text_buf, tok_idx, tok_len, pref_s_buf, pref_r_buf, pref_s_char_l, pref_f_buf, max_s_pref_l, False)
+            _populate_search_buf(text_buf, tok_idx, tok_len, suff_s_buf, suff_r_buf, suff_s_char_l, suff_f_buf, max_s_suff_l, True)
+            
+            for hash_idx in range(h_pref_n):
+                aff_len = pref_lengths[hash_idx]
+                hashes[tok_i, hash_idx] = hash32(aff_buf, aff_len * 4, 0)
 
-            _set_found_char_buf(
-                True,
-                tok_str_v, 
-                tok_str_v_len, 
-                suff_search_chars_v, 
-                suff_search_chars_v_len, 
-                found_char_buf, 
-                found_char_buf_len, 
-            )
+            for hash_idx in range(h_pref_n, h_suff_end_idx):
+                aff_len = suff_lengths[hash_idx - h_pref_n]
+                hashes[tok_i, hash_idx] = hash32(aff_buf + aff_buf_l - aff_len, aff_len * 4, 0)
+                
+            for hash_idx in range(h_suff_end_idx, h_pref_s_end_idx):
+                aff_len = pref_search_lengths[hash_idx - h_suff_end_idx]
+                hashes[tok_i, hash_idx] = hash32(pref_f_buf, aff_len * 4, 0)
 
-            for hash_idx in range(num_pref_norm_hashes + num_suff_norm_hashes + num_pref_search_hashes, num_pref_norm_hashes + num_suff_norm_hashes + num_pref_search_hashes + num_suff_search_hashes):
-                char_comb_len = suff_search_lengths[hash_idx - (num_pref_norm_hashes + num_suff_norm_hashes + num_pref_search_hashes)] * 2
-                hashes[tok_idx, hash_idx] = hash32(found_char_buf, char_comb_len, 0)
+            for hash_idx in range(h_pref_s_end_idx, h_suff_s_end_idx):
+                aff_len = suff_search_lengths[hash_idx - h_pref_s_end_idx]
+                hashes[tok_i, hash_idx] = hash32(suff_f_buf, aff_len * 4, 0)
 
+        self.mem.free(aff_buf)
+        self.mem.free(pref_f_buf)
+        self.mem.free(suff_f_buf)
         return hashes
 
     @staticmethod
@@ -2055,12 +2025,11 @@ cdef int [:,:] _get_lca_matrix(Doc doc, int start, int end):
     return lca_matrix
 
 
-cdef void _populate_affix_buf(
-    const void* str_data_ptr,
-    const unsigned int unicode_byte_width,
-    const int word_idx, 
-    const int word_len,
-    Py_UCS4* affix_buf, 
+cdef void _populate_aff_buf(
+    const Py_UCS4* text_buf,
+    const int tok_idx, 
+    const int tok_len,
+    Py_UCS4* aff_buf, 
     const int pref_length, 
     const int suff_length,
     const bint to_lower
@@ -2070,107 +2039,75 @@ cdef void _populate_affix_buf(
 
         str_data_ptr: a pointer to the raw data in the containing string, which must be in canonical 
             Unicode form (see PEP 393).
-        unicode_byte_width: the number of bytes occupied by each character in the containing string.
+        kind: the number of bytes occupied by each character in the containing string.
         word_idx: the index of the first character of the word within the containing string.
         word_len: the length of the word.
-        affix_buf: the buffer to populate.
+        aff_buf: the buffer to populate.
         pref_length: the length of the prefix.
         suff_length: the length of the suffix.
         to_lower: if *True*, any upper case characters in either affix are converted to lower case.
     """
-    cdef int affix_buf_idx = 0, buf_size = pref_length + suff_length, in_word_idx
-    cdef Py_UCS4 working_wchar
+    cdef int aff_buf_idx = 0, buf_size = pref_length + suff_length, in_word_idx
+    
+    while aff_buf_idx < pref_length and aff_buf_idx < tok_len:
 
-    while affix_buf_idx < pref_length and affix_buf_idx < word_len:
-        working_wchar = PyUnicode_READ(unicode_byte_width, str_data_ptr, in_word_idx)
+        memcpy(aff_buf + aff_buf_idx, text_buf + tok_idx + aff_buf_idx, 4)
         if to_lower:
-            working_wchar = Py_UNICODE_TOLOWER(working_wchar)
-        memcpy(affix_buf + affix_buf_idx, &working_wchar, 4)
-        affix_buf_idx += 1
+            aff_buf[aff_buf_idx] = Py_UNICODE_TOLOWER(aff_buf[aff_buf_idx])
+        aff_buf_idx += 1
 
-    while (affix_buf_idx < buf_size - suff_length) or (affix_buf_idx < buf_size - word_len):
+    if aff_buf_idx < buf_size - tok_len:
         # fill out the empty middle part of the buffer with zeros
-        affix_buf[affix_buf_idx] = 0
-        affix_buf_idx += 1
+        memset(aff_buf, 0, buf_size - suff_length - aff_buf_idx)
 
-    while affix_buf_idx < buf_size:
-        in_word_idx = affix_buf_idx + word_len - buf_size
+    while aff_buf_idx < buf_size:
+        in_word_idx = aff_buf_idx + tok_len - buf_size
         # for suffixes we have to track the in-word index separately from the in-buffer index
         if in_word_idx < pref_length:
             # we've already retrieved this character as part of the prefix, so copy it from there
             # as that's quicker than retrieving it from the input string a second time
-            memcpy(affix_buf + affix_buf_idx, affix_buf + in_word_idx, 4)
+            memcpy(aff_buf + aff_buf_idx, aff_buf + in_word_idx, 4)
         else:
-            working_wchar = PyUnicode_READ(unicode_byte_width, str_data_ptr, word_idx + in_word_idx)
+            memcpy(aff_buf + aff_buf_idx, text_buf + tok_idx + in_word_idx, 4)
             if to_lower:
-                working_wchar = Py_UNICODE_TOLOWER(working_wchar)
-            memcpy(affix_buf + affix_buf_idx, &working_wchar, 4)
-        affix_buf_idx += 1
+                aff_buf[aff_buf_idx] = Py_UNICODE_TOLOWER(aff_buf[aff_buf_idx])
+        aff_buf_idx += 1
 
-
-
-cdef const unsigned char[:] _get_utf16_memoryview(str unicode_string, const bint check_2_bytes):
-    """
-    Return a memory view of the UTF-16 representation of a string with the default endianness of the platform.
-    Throw a ValueError if *check_2_bytes == True* and one or more characters in the UTF-16 representation
-    occupies four bytes rather than two.
-    """
-    cdef const unsigned char[:] view = unicode_string.encode("UTF-16")
-    view = view[2:] # first two bytes express endianness
-    cdef unsigned int unicode_len, view_len
-    if check_2_bytes:
-        unicode_len = len(unicode_string)
-        view_len = len(view)
-        if unicode_len * 2 != view_len:
-            raise ValueError(Errors.E1046)
-    return view
-
-
-cdef bint _is_searched_char_in_search_chars_v(
-    const unsigned short searched_char, 
-    const unsigned char[:] search_chars_v,
-    const unsigned int search_chars_v_len
+cdef void _populate_search_buf(
+    const Py_UCS4* text_buf,
+    const int tok_idx, 
+    const int tok_len, 
+    Py_UCS4* search_buf, 
+    Py_UCS4* ref_buf,
+    const int search_buf_len, 
+    Py_UCS4* finding_buf, 
+    const int finding_buf_len, 
+    bint suffs_not_prefs
 ):
-    cdef unsigned int search_chars_v_idx = 0
-    while search_chars_v_idx < search_chars_v_len:
-        if searched_char == (<unsigned short*> &search_chars_v[search_chars_v_idx])[0]:
-            return True
-        search_chars_v_idx += 2
-    return False
+    cdef unsigned int finding_buf_idx = 0, text_string_idx = tok_idx + (tok_len - 1) if suffs_not_prefs else tok_idx
+    cdef unsigned int search_buf_idx
+    cdef int cmp_res
 
-
-cdef void _set_found_char_buf(
-    const bint suffs_not_prefs,
-    const unsigned char[:] searched_string_v,
-    const unsigned int searched_string_v_len,
-    const unsigned char[:] search_chars_v,
-    const unsigned int search_chars_v_len,
-    char* found_char_buf, 
-    const unsigned int found_char_buf_len, 
-):
-    """ Pick the UTF-16 characters from *searched_string_v* that are also in *search_chars_v* and writes them in order to *found_char_buf*.
-        If *suffs_not_prefs*, the search starts from the end of *searched_string_v* rather than from the beginning.
-    """
-    cdef unsigned int found_char_buf_idx = 0, searched_string_idx = searched_string_v_len - 2 if suffs_not_prefs else 0
-    cdef unsigned short searched_char, SPACE = 32
-
-    while found_char_buf_idx < found_char_buf_len:
-        searched_char = (<unsigned short*> &searched_string_v[searched_string_idx])[0]
-        if _is_searched_char_in_search_chars_v(searched_char, search_chars_v, search_chars_v_len):
-            memcpy(found_char_buf + found_char_buf_idx, &searched_char, 2)
-            found_char_buf_idx += 2
-        if suffs_not_prefs:
-            if searched_string_idx <= 0:
+    while finding_buf_idx < finding_buf_len:
+        for search_buf_idx in range (search_buf_len):
+            cmp_res = memcmp(search_buf + search_buf_idx, text_buf + text_string_idx, 4)
+            if cmp_res == 0:
+                memcpy(finding_buf + finding_buf_idx, ref_buf + search_buf_idx, 4)
+                finding_buf_idx += 1
+            if cmp_res >= 0:
                 break
-            searched_string_idx -= 2
+        if suffs_not_prefs:
+            if text_string_idx <= tok_idx:
+                break
+            text_string_idx -= 1
         else:
-            searched_string_idx += 2
-            if searched_string_idx >= searched_string_v_len:
+            text_string_idx += 1
+            if text_string_idx >= tok_idx + tok_len:
                 break
     
-    while found_char_buf_idx < found_char_buf_len:
-        memcpy(found_char_buf + found_char_buf_idx, &SPACE, 2)
-        found_char_buf_idx += 2
+    if finding_buf_idx < finding_buf_len:
+        memset(finding_buf + finding_buf_idx, 0, finding_buf_len - finding_buf_idx)
+        
 
 
 def pickle_doc(doc):

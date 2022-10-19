@@ -33,35 +33,26 @@ cdef int token_by_end(const TokenC* tokens, int length, int end_char) except -2
 cdef int [:,:] _get_lca_matrix(Doc, int start, int end)
 
 
-cdef void _populate_affix_buf(
-    const void* str_data_ptr,
-    const unsigned int unicode_byte_width,
-    const int word_idx, 
-    const int word_len,
-    Py_UCS4* affix_buf, 
+cdef void _populate_aff_buf(
+    const Py_UCS4* text_buf,
+    const int tok_idx, 
+    const int tok_len,
+    Py_UCS4* aff_buf, 
     const int pref_length, 
     const int suff_length,
     const bint to_lower
 )
 
-cdef const unsigned char[:] _get_utf16_memoryview(str unicode_string, const bint check_2_bytes)
-
-
-cdef bint _is_searched_char_in_search_chars_v(
-    const unsigned short searched_char, 
-    const unsigned char[:] search_chars_v,
-    const unsigned int search_chars_v_len,
-)
-
-
-cdef void _set_found_char_buf(
-    const bint suffs_not_prefs,
-    const unsigned char[:] searched_string_v,
-    const unsigned int searched_string_len,
-    const unsigned char[:] search_chars_v,
-    const unsigned int search_chars_v_len,
-    char* found_char_buf, 
-    const unsigned int found_char_buf_len, 
+cdef void _populate_search_buf(
+    const Py_UCS4* text_buf,
+    const int tok_idx, 
+    const int tok_len, 
+    Py_UCS4* search_buf, 
+    Py_UCS4* ref_buf,
+    const int search_buf_len, 
+    Py_UCS4* finding_buf, 
+    const int finding_buf_len, 
+    bint suffs_not_prefs
 )
 
 
