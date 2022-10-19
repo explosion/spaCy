@@ -199,10 +199,9 @@ def test_doc_to_json_with_token_attributes_missing(doc):
     doc[0]._.token_test = 117
     json_doc = doc.to_json(underscore=["span_test"])
 
-    assert "underscore_token" in json_doc
     assert "underscore_span" in json_doc
     assert json_doc["underscore_span"]["span_test"][0]["value"] == "span_attribute"
-    assert "token_test" not in json_doc["underscore_token"]
+    assert "underscore_token" not in json_doc
     assert len(schemas.validate(schemas.DocJSONSchema, json_doc)) == 0
 
 

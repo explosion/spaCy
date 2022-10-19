@@ -1669,9 +1669,6 @@ cdef class Doc:
         if underscore:
             user_keys = set()
             if self.user_data:
-                data["_"] = {}
-                data["underscore_token"] = {}
-                data["underscore_span"] = {}
                 for data_key, value in self.user_data.copy().items():
                     if type(data_key) == tuple and len(data_key) >= 4 and data_key[0] == "._.":
                         attr = data_key[1]
@@ -1683,14 +1680,20 @@ cdef class Doc:
                                 raise ValueError(Errors.E107.format(attr=attr, value=repr(value)))
                             # Check if doc attribute
                             if start is None:
+                                if "_" not in data:
+                                    data["_"] = {}
                                 data["_"][attr] = value
                             # Check if token attribute
                             elif end is None:
+                                if "underscore_token" not in data:
+                                    data["underscore_token"] = {}
                                 if attr not in data["underscore_token"]:
                                     data["underscore_token"][attr] = []
                                 data["underscore_token"][attr].append({"start": start, "value": value})
                             # Else span attribute
                             else:
+                                if "underscore_span" not in data:
+                                    data["underscore_span"] = {}
                                 if attr not in data["underscore_span"]:
                                     data["underscore_span"][attr] = []
                                 data["underscore_span"][attr].append({"start": start, "end": end, "value": value})
