@@ -139,7 +139,7 @@ def write_git_info_py(filename="spacy/git_info.py"):
         try:
             out = _minimal_ext_cmd(["git", "rev-parse", "--short", "HEAD"])
             git_version = out.strip().decode("ascii")
-        except:
+        except Exception:
             pass
     elif os.path.exists(filename):
         # must be a source distribution, use existing version file
@@ -147,7 +147,7 @@ def write_git_info_py(filename="spacy/git_info.py"):
             a = open(filename, "r")
             lines = a.readlines()
             git_version = lines[-1].split('"')[1]
-        except:
+        except Exception:
             pass
         finally:
             a.close()
@@ -168,7 +168,7 @@ GIT_VERSION = "%(git_version)s"
 def clean(path):
     for path in path.glob("**/*"):
         if path.is_file() and path.suffix in (".so", ".cpp"):
-            print(f"Deleting {path.name}")
+            print("Deleting", path.name)
             path.unlink()
 
 
@@ -209,7 +209,7 @@ def setup_package():
         ext_modules=ext_modules,
         cmdclass={"build_ext": build_ext_subclass},
         include_dirs=include_dirs,
-        package_data={"": ["*.pyx", "*.pxd", "*.pxi", "*.cpp"]},
+        package_data={"": ["*.pyx", "*.pxd", "*.pxi"]},
     )
 
 
