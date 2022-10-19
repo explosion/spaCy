@@ -1608,22 +1608,20 @@ cdef class Doc:
                 Doc.set_extension(attr)
             self._.set(attr, doc_json["_"][attr])
 
-        if doc_json.get("underscore_token", {}):
-            for token_attr in doc_json["underscore_token"]:
-                if not Token.has_extension(token_attr):
-                    Token.set_extension(token_attr)
-                for token_data in doc_json["underscore_token"][token_attr]:
-                    start = token_by_char(self.c, self.length, token_data["start"])
-                    value = token_data["value"]
-                    self[start]._.set(token_attr, value)
+        for token_attr in doc_json.get("underscore_token", {}):
+            if not Token.has_extension(token_attr):
+                Token.set_extension(token_attr)
+            for token_data in doc_json["underscore_token"][token_attr]:
+                start = token_by_char(self.c, self.length, token_data["start"])
+                value = token_data["value"]
+                self[start]._.set(token_attr, value)
                 
-        if doc_json.get("underscore_span", {}):
-            for span_attr in doc_json["underscore_span"]:
-                if not Span.has_extension(span_attr):
-                    Span.set_extension(span_attr)
-                for span_data in doc_json["underscore_span"][span_attr]:
-                    value = span_data["value"]
-                    self.char_span(span_data["start"], span_data["end"])._.set(span_attr, value)
+        for span_attr in doc_json.get("underscore_span", {}):
+            if not Span.has_extension(span_attr):
+                Span.set_extension(span_attr)
+            for span_data in doc_json["underscore_span"][span_attr]:
+                value = span_data["value"]
+                self.char_span(span_data["start"], span_data["end"])._.set(span_attr, value)
         return self
 
     def to_json(self, underscore=None):
