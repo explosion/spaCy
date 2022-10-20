@@ -1,4 +1,14 @@
-from typing import Optional, Iterable, Callable, Dict, Union, List, Any, Generator
+from typing import (
+    Optional,
+    Iterable,
+    Callable,
+    Dict,
+    Union,
+    List,
+    Any,
+    Generator,
+    Iterator,
+)
 from thinc.types import Floats2d
 from pathlib import Path
 from itertools import islice
@@ -79,7 +89,7 @@ def make_entity_linker(
     get_candidates: Callable[[KnowledgeBase, Span], Iterable[Candidate]],
     get_candidates_all: Callable[
         [KnowledgeBase, Generator[Iterable[Span], None, None]],
-        Generator[Iterable[Iterable[Candidate]], None, None],
+        Iterator[Iterable[Iterable[Candidate]]],
     ],
     overwrite: bool,
     scorer: Optional[Callable],
@@ -102,7 +112,7 @@ def make_entity_linker(
     get_candidates_all (
         Callable[
             [KnowledgeBase, Generator[Iterable[Span], None, None]],
-            Generator[Iterable[Iterable[Candidate]], None, None]
+            Iterator[Iterable[Iterable[Candidate]]]
         ]): Function that produces a list of candidates per document, given a certain knowledge base and several textual
         documents with textual mentions.
     scorer (Optional[Callable]): The scoring method.
@@ -180,7 +190,7 @@ class EntityLinker(TrainablePipe):
         get_candidates: Callable[[KnowledgeBase, Span], Iterable[Candidate]],
         get_candidates_all: Callable[
             [KnowledgeBase, Generator[Iterable[Span], None, None]],
-            Generator[Iterable[Iterable[Candidate]], None, None],
+            Iterator[Iterable[Iterable[Candidate]]],
         ],
         overwrite: bool = BACKWARD_OVERWRITE,
         scorer: Optional[Callable] = entity_linker_score,
@@ -204,7 +214,7 @@ class EntityLinker(TrainablePipe):
         get_candidates_all (
             Callable[
                 [KnowledgeBase, Generator[Iterable[Span], None, None]],
-                Generator[Iterable[Iterable[Candidate]], None, None]
+                Iterator[Iterable[Iterable[Candidate]]]
             ]): Function that produces a list of candidates per document, given a certain knowledge base and several textual
             documents with textual mentions.
         scorer (Optional[Callable]): The scoring method. Defaults to Scorer.score_links.

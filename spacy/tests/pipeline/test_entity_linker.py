@@ -1,4 +1,4 @@
-from typing import Callable, Iterable, Dict, Any, Generator
+from typing import Callable, Iterable, Dict, Any, Generator, Iterator
 
 import pytest
 from numpy.testing import assert_equal
@@ -515,7 +515,7 @@ def test_el_pipe_configuration(nlp):
     @registry.misc("spacy.LowercaseCandidateAllGenerator.v1")
     def create_candidates_batch() -> Callable[
         [InMemoryLookupKB, Generator[Iterable["Span"], None, None]],
-        Generator[Iterable[Iterable[Candidate]], None, None],
+        Iterator[Iterable[Iterable[Candidate]]],
     ]:
         return get_lowercased_candidates_all
 

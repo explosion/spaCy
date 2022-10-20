@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Optional, Callable, Iterable, List, Tuple, Generator
+from typing import Optional, Callable, Iterable, List, Tuple, Generator, Iterator
 from thinc.types import Floats2d
 from thinc.api import chain, list2ragged, reduce_mean, residual
 from thinc.api import Model, Maxout, Linear, tuplify, Ragged
@@ -108,6 +108,6 @@ def create_candidates() -> Callable[[KnowledgeBase, Span], Iterable[Candidate]]:
 @registry.misc("spacy.CandidateAllGenerator.v1")
 def create_candidates_all() -> Callable[
     [KnowledgeBase, Generator[Iterable[Span], None, None]],
-    Generator[Iterable[Iterable[Candidate]], None, None],
+    Iterator[Iterable[Iterable[Candidate]]],
 ]:
     return get_candidates_all

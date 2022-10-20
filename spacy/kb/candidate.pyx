@@ -1,6 +1,6 @@
 # cython: infer_types=True, profile=True
 
-from typing import Iterable, Generator
+from typing import Iterable, Generator, Iterator
 from .kb cimport KnowledgeBase
 from ..tokens import Span
 
@@ -66,7 +66,7 @@ def get_candidates(kb: KnowledgeBase, mention: Span) -> Iterable[Candidate]:
 
 def get_candidates_all(
     kb: KnowledgeBase, mentions: Generator[Iterable[Span], None, None]
-) -> Generator[Iterable[Iterable[Candidate]], None, None]:
+) -> Iterator[Iterable[Iterable[Candidate]]]:
     """
     Return candidate entities for the given mentions and fetching appropriate entries from the index.
     kb (KnowledgeBase): Knowledge base to query.
