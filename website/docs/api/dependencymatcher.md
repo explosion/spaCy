@@ -62,7 +62,7 @@ of relations, see the usage guide on
 
 </Infobox>
 
-### Operators
+### Operators {#operators}
 
 The following operators are supported by the `DependencyMatcher`, most of which
 come directly from
@@ -82,6 +82,11 @@ come directly from
 | `A $- B`  | `B` is a left immediate sibling of `A`, i.e. `A` and `B` have the same parent and `A.i == B.i + 1`.                  |
 | `A $++ B` | `B` is a right sibling of `A`, i.e. `A` and `B` have the same parent and `A.i < B.i`.                                |
 | `A $-- B` | `B` is a left sibling of `A`, i.e. `A` and `B` have the same parent and `A.i > B.i`.                                 |
+| `A >++ B` | `B` is a right child of `A`, i.e. `A` is a parent of `B` and `A.i < B.i` _(not in Semgrex)_.                         |
+| `A >-- B` | `B` is a left child of `A`, i.e. `A` is a parent of `B` and `A.i > B.i` _(not in Semgrex)_.                          |
+| `A <++ B` | `B` is a right parent of `A`, i.e. `A` is a child of `B` and `A.i < B.i` _(not in Semgrex)_.                         |
+| `A <-- B` | `B` is a left parent of `A`, i.e. `A` is a child of `B` and `A.i > B.i` _(not in Semgrex)_.                          |
+
 
 ## DependencyMatcher.\_\_init\_\_ {#init tag="method"}
 

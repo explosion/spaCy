@@ -659,3 +659,36 @@ def test_multiprocessing_gpu_warning(nlp2, texts):
             # Trigger multi-processing.
             for _ in docs:
                 pass
+
+
+def test_dot_in_factory_names(nlp):
+    Language.component("my_evil_component", func=evil_component)
+    nlp.add_pipe("my_evil_component")
+
+    with pytest.raises(ValueError, match="not permitted"):
+        Language.component("my.evil.component.v1", func=evil_component)
+
+    with pytest.raises(ValueError, match="not permitted"):
+        Language.factory("my.evil.component.v1", func=evil_component)
+
+
+def test_component_return():
+    """Test that an error is raised if components return a type other than a
+    doc."""
+    nlp = English()
+
+    @Language.component("test_component_good_pipe")
+    def good_pipe(doc):
+        return doc
+
+    nlp.add_pipe("test_component_good_pipe")
+    nlp("text")
+    nlp.remove_pipe("test_component_good_pipe")
+
+    @Language.component("test_component_bad_pipe")
+    def bad_pipe(doc):
+        return doc.text
+
+    nlp.add_pipe("test_component_bad_pipe")
+    with pytest.raises(ValueError, match="instead of a Doc"):
+        nlp("text")
