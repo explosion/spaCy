@@ -82,6 +82,21 @@ def test_issue2396(en_vocab):
     assert (span.get_lca_matrix() == matrix).all()
 
 
+@pytest.mark.issue(11499)
+def test_init_args_unmodified(en_vocab):
+    words = ["A", "sentence"]
+    ents = ["B-TYPE1", ""]
+    sent_starts = [True, False]
+    Doc(
+        vocab=en_vocab,
+        words=words,
+        ents=ents,
+        sent_starts=sent_starts,
+    )
+    assert ents == ["B-TYPE1", ""]
+    assert sent_starts == [True, False]
+
+
 @pytest.mark.parametrize("text", ["-0.23", "+123,456", "±1"])
 @pytest.mark.parametrize("lang_cls", [English, MultiLanguage])
 @pytest.mark.issue(2782)
