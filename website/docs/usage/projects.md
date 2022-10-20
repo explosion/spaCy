@@ -251,14 +251,14 @@ pipelines.
 > interpolation, just like values in `vars`. Here's an example `env` dict that
 > makes `$PATH` available as `ENV_PATH`:
 >
-> ```
+> ```yaml
 > env:
 >   ENV_PATH: PATH
 > ```
 >
 > This can be used in a project command like so:
 >
-> ```
+> ```yaml
 >   - name: "echo-path"
 >     script:
 >       - "echo ${env.ENV_PATH}"
