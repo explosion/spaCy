@@ -1,6 +1,47 @@
 {
     "resources": [
         {
+            "id": "spacy-cleaner",
+            "title": "spacy-cleaner",
+            "slogan": "Easily clean text with spaCy!",
+            "description": "**spacy-cleaner** utilises spaCy `Language` models to replace, remove, and \n  mutate spaCy tokens. Cleaning actions available are:\n\n* Remove/replace stopwords.\n* Remove/replace punctuation.\n* Remove/replace numbers.\n* Remove/replace emails.\n* Remove/replace URLs.\n* Perform lemmatisation.\n\nSee our [docs](https://ce11an.github.io/spacy-cleaner/) for more information.",
+            "github": "Ce11an/spacy-cleaner",
+            "pip": "spacy-cleaner",
+            "code_example": [
+                "import spacy",
+                "import spacy_cleaner",
+                "from spacy_cleaner.processing import removers, replacers, mutators",
+                "",
+                "model = spacy.load(\"en_core_web_sm\")",
+                "pipeline = spacy_cleaner.Pipeline(",
+                "    model,",
+                "    removers.remove_stopword_token,",
+                "    replacers.replace_punctuation_token,",
+                "    mutators.mutate_lemma_token,",
+                ")",
+                "",
+                "texts = [\"Hello, my name is Cellan! I love to swim!\"]",
+                "",
+                "pipeline.clean(texts)",
+                "# ['hello _IS_PUNCT_ Cellan _IS_PUNCT_ love swim _IS_PUNCT_']"
+            ],
+            "code_language": "python",
+            "url": "https://ce11an.github.io/spacy-cleaner/",
+            "image": "https://raw.githubusercontent.com/Ce11an/spacy-cleaner/main/docs/assets/images/spacemen.png",
+            "author": "Cellan Hall",
+            "author_links": {
+                "twitter": "Ce11an",
+                "github": "Ce11an",
+                "website": "https://www.linkedin.com/in/cellan-hall/"
+            },
+            "category": [
+                "extension"
+            ],
+            "tags": [
+                "text-processing"
+            ]
+        },
+        {
             "id": "Zshot",
             "title": "Zshot",
             "slogan": "Zero and Few shot named entity & relationships recognition",
