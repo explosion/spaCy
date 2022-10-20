@@ -4,7 +4,7 @@
             "id": "spacy-cleaner",
             "title": "spacy-cleaner",
             "slogan": "Easily clean text with spaCy!",
-            "description": "**spacy-cleaner** utilises `spaCy` `Language` models to replace, remove, and \n  mutate `spaCy` tokens. Cleaning actions available are:\n\n* Remove/replace stopwords.\n* Remove/replace punctuation.\n* Remove/replace numbers.\n* Remove/replace emails.\n* Remove/replace URLs.\n* Perform lemmatisation.\n\nSee our [docs](https://ce11an.github.io/spacy-cleaner/) for more information.",
+            "description": "**spacy-cleaner** utilises spaCy `Language` models to replace, remove, and \n  mutate spaCy tokens. Cleaning actions available are:\n\n* Remove/replace stopwords.\n* Remove/replace punctuation.\n* Remove/replace numbers.\n* Remove/replace emails.\n* Remove/replace URLs.\n* Perform lemmatisation.\n\nSee our [docs](https://ce11an.github.io/spacy-cleaner/) for more information.",
             "github": "Ce11an/spacy-cleaner",
             "pip": "spacy-cleaner",
             "code_example": [
@@ -16,14 +16,14 @@
                 "pipeline = spacy_cleaner.Pipeline(",
                 "    model,",
                 "    removers.remove_stopword_token,",
-                "    replace.replace_punctuation_token,",
+                "    replacers.replace_punctuation_token,",
                 "    mutators.mutate_lemma_token,",
                 ")",
                 "",
                 "texts = [\"Hello, my name is Cellan! I love to swim!\"]",
                 "",
                 "pipeline.clean(texts)",
-                "# [\"Hello _IS_PUNCT_ Cellan _IS_PUNCT_ love swim _IS_PUNCT_\"]"
+                "# ['hello _IS_PUNCT_ Cellan _IS_PUNCT_ love swim _IS_PUNCT_']"
             ],
             "code_language": "python",
             "url": "https://ce11an.github.io/spacy-cleaner/",
