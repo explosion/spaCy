@@ -14,7 +14,7 @@ from spacy.lang.xx import MultiLanguage
 from spacy.language import Language
 from spacy.lexeme import Lexeme
 from spacy.tokens import Doc, Span, SpanGroup, Token
-from spacy.util import get_byte_arrays_for_search_chars
+from spacy.util import get_arrays_for_search_chars
 from spacy.vocab import Vocab
 
 from .test_underscore import clean_underscore  # noqa: F401
@@ -1004,21 +1004,22 @@ def _get_unsigned_32_bit_hash(input: str) -> int:
 
 @pytest.mark.parametrize("case_sensitive", [True, False])
 def test_get_character_combination_hashes_good_case(en_tokenizer, case_sensitive):
-
     doc = en_tokenizer("spaCy✨ and Prodigy")
-    suff_search, suff_ref = get_byte_arrays_for_search_chars("xx✨rp", case_sensitive)
+    ops = get_current_ops()
+    pref_search, pref_lookup = get_arrays_for_search_chars("Rp", case_sensitive)
+    suff_search, suff_lookup = get_arrays_for_search_chars("xx✨rp", case_sensitive)
     hashes = doc.get_character_combination_hashes(
         cs=case_sensitive,
-        pref_lengths=[1, 4, 3],
-        suff_lengths=[2, 3, 4, 5],
-        pref_search=bytes(),
-        pref_ref=bytes(),
-        pref_s_char_l = 0,
-        pref_search_lengths=[2],
-        suff_search=suff_search,
-        suff_ref=suff_ref,
-        suff_s_char_l=5 if case_sensitive else 9,
-        suff_search_lengths=[2,1],
+        p_lengths=ops.asarray1i([1, 4, 3]),
+        s_lengths=ops.asarray1i([2, 3, 4, 5]),
+        ps_search=pref_search,
+        ps_lookup=pref_lookup,
+        ps_l=2 if case_sensitive else 4,
+        ps_lengths=ops.asarray1i([2]),
+        ss_search=suff_search,
+        ss_lookup=suff_lookup,
+        ss_l=5 if case_sensitive else 9,
+        ss_lengths=ops.asarray1i([2, 1]),
     )
 
     assert hashes[0][0] == _get_unsigned_32_bit_hash("s")
@@ -1035,7 +1036,7 @@ def test_get_character_combination_hashes_good_case(en_tokenizer, case_sensitive
         "spaCy" if case_sensitive else "spacy"
     )
 
-    assert hashes[0][7] == _get_unsigned_32_bit_hash("  ")
+    assert hashes[0][7] == _get_unsigned_32_bit_hash("p ")
     assert hashes[0][8] == _get_unsigned_32_bit_hash("p ")
     assert hashes[0][9] == _get_unsigned_32_bit_hash("p")
     assert hashes[1][0] == _get_unsigned_32_bit_hash("✨")
@@ -1067,7 +1068,7 @@ def test_get_character_combination_hashes_good_case(en_tokenizer, case_sensitive
     assert hashes[3][4] == _get_unsigned_32_bit_hash("igy")
     assert hashes[3][5] == _get_unsigned_32_bit_hash("digy")
     assert hashes[3][6] == _get_unsigned_32_bit_hash("odigy")
-    assert hashes[3][7] == _get_unsigned_32_bit_hash("  ")
+    assert hashes[3][7] == _get_unsigned_32_bit_hash("  " if case_sensitive else "pr")
 
     assert hashes[3][9] == _get_unsigned_32_bit_hash("r")
 
@@ -1077,73 +1078,93 @@ def test_get_character_combination_hashes_good_case(en_tokenizer, case_sensitive
         assert hashes[3][8] == _get_unsigned_32_bit_hash("rp")
 
     # check values are the same cross-platform
-    assert hashes[0][1] == 753329845 if case_sensitive else 18446744071614199016
-    assert hashes[1][3] == 3425774424
-    assert hashes[2][8] == 3076404432
+    if case_sensitive:
+        assert hashes[0][1] == 3712103410
+    else:
+        assert hashes[0][1] == 307339932
+    assert hashes[1][3] == 2414314354
+    assert hashes[2][8] == 1669671676
 
 
-def test_get_character_combination_hashes_4_byte_char_at_end(en_tokenizer):
-    doc = en_tokenizer("and𐌞")
-    suff_search, suff_ref = get_byte_arrays_for_search_chars("a", True)
+def test_get_character_combination_hashes_good_case_partial(en_tokenizer):
+    doc = en_tokenizer("spaCy✨ and Prodigy")
+    ops = get_current_ops()
+    pref_search, pref_lookup = get_arrays_for_search_chars("rp", False)
     hashes = doc.get_character_combination_hashes(
-        cs=True,
-        pref_lengths=[],
-        suff_lengths=[1, 2, 3],
-        pref_search=bytes(),
-        pref_ref=bytes(),
-        pref_s_char_l = 0,
-        pref_search_lengths=[],
-        suff_search=suff_search,
-        suff_ref=suff_ref,
-        suff_s_char_l=1,
-        suff_search_lengths=[1],
+        cs=False,
+        p_lengths=ops.asarray1i([]),
+        s_lengths=ops.asarray1i([2, 3, 4, 5]),
+        ps_search=pref_search,
+        ps_lookup=pref_lookup,
+        ps_l=4,
+        ps_lengths=ops.asarray1i([2]),
+        ss_search=bytes(),
+        ss_lookup=bytes(),
+        ss_l=0,
+        ss_lengths=ops.asarray1i([]),
     )
-    assert hashes[0][0] == _get_unsigned_32_bit_hash("𐌞")
-    assert hashes[0][1] == _get_unsigned_32_bit_hash("d𐌞")
-    assert hashes[0][2] == _get_unsigned_32_bit_hash("nd𐌞")
-    assert hashes[0][3] == _get_unsigned_32_bit_hash("a")
+
+    assert hashes[0][0] == _get_unsigned_32_bit_hash("cy")
+    assert hashes[0][1] == _get_unsigned_32_bit_hash("acy")
+    assert hashes[0][2] == _get_unsigned_32_bit_hash("pacy")
+    assert hashes[0][3] == _get_unsigned_32_bit_hash("spacy")
+    assert hashes[0][4] == _get_unsigned_32_bit_hash("p ")
+    assert hashes[1][0] == _get_unsigned_32_bit_hash(" ✨")
+    assert hashes[1][1] == _get_unsigned_32_bit_hash("  ✨")
+    assert hashes[1][2] == _get_unsigned_32_bit_hash("   ✨")
+    assert hashes[1][3] == _get_unsigned_32_bit_hash("    ✨")
+    assert hashes[1][4] == _get_unsigned_32_bit_hash("  ")
+    assert hashes[2][0] == _get_unsigned_32_bit_hash("nd")
+    assert hashes[2][1] == _get_unsigned_32_bit_hash("and")
+    assert hashes[2][2] == _get_unsigned_32_bit_hash(" and")
+    assert hashes[2][3] == _get_unsigned_32_bit_hash("  and")
+    assert hashes[2][4] == _get_unsigned_32_bit_hash("  ")
+    assert hashes[3][0] == _get_unsigned_32_bit_hash("gy")
+    assert hashes[3][1] == _get_unsigned_32_bit_hash("igy")
+    assert hashes[3][2] == _get_unsigned_32_bit_hash("digy")
+    assert hashes[3][3] == _get_unsigned_32_bit_hash("odigy")
+    assert hashes[3][4] == _get_unsigned_32_bit_hash("pr")
 
 
-def test_get_character_combination_hashes_4_byte_char_in_middle(en_tokenizer):
-    doc = en_tokenizer("and𐌞a")
-    hashes = doc.get_character_combination_hashes(
-        case_sensitive=False,
-        pref_lengths=[],
-        suff_lengths=[1, 2, 3, 4],
-        pref_search_chars="",
-        pref_search_lengths=[],
-        suff_search_chars="a",
-        suff_search_lengths=[1, 2],
-    )
-    assert hashes[0][0] == _get_unsigned_32_bit_hash("a")
-    assert hashes[0][2] == _get_unsigned_32_bit_hash("𐌞a")
-    assert hashes[0][3] == _get_unsigned_32_bit_hash("d𐌞a")
-    assert hashes[0][4] == _get_unsigned_32_bit_hash("a")
-    assert hashes[0][5] == _get_unsigned_32_bit_hash("aa")
 
 
-def test_get_character_combination_hashes_4_byte_special_char(en_tokenizer):
-    doc = en_tokenizer("and𐌞")
-    with pytest.raises(ValueError):
-        doc.get_character_combination_hashes(
-            case_sensitive=True,
-            pref_lengths=[],
-            suff_lengths=[2, 3, 4, 5],
-            pref_search_chars="",
-            pref_search_lengths=[],
-            suff_search_chars="𐌞",
-            suff_search_lengths=[2],
-        )
+def test_get_character_combination_hashes_copying_in_middle(en_tokenizer):
+    doc = en_tokenizer("sp𐌞Cé")
+    ops = get_current_ops()
+
+    for p_length in range(1, 8):
+        for s_length in range(1, 8):
+            hashes = doc.get_character_combination_hashes(
+                cs=False,
+                p_lengths=ops.asarray1i([p_length]),
+                s_lengths=ops.asarray1i([s_length]),
+                ps_search=bytes(),
+                ps_lookup=bytes(),
+                ps_l=0,
+                ps_lengths=ops.asarray1i([]),
+                ss_search=bytes(),
+                ss_lookup=bytes(),
+                ss_l=0,
+                ss_lengths=ops.asarray1i([]),
+            )
+
+            assert hashes[0][0] == _get_unsigned_32_bit_hash("sp𐌞cé   "[:p_length])
+            assert hashes[0][1] == _get_unsigned_32_bit_hash("   sp𐌞cé"[8 - s_length :])
 
 
 def test_character_combination_hashes_empty_lengths(en_tokenizer):
     doc = en_tokenizer("and𐌞")
-    assert doc.get_character_combination_hashes(
-        case_sensitive=True,
-        pref_lengths=[],
-        suff_lengths=[],
-        pref_search_chars="",
-        pref_search_lengths=[],
-        suff_search_chars="",
-        suff_search_lengths=[],
+    ops = get_current_ops()
+    hashes = doc.get_character_combination_hashes(
+        cs=True,
+        p_lengths=ops.asarray1i([]),
+        s_lengths=ops.asarray1i([]),
+        ps_search=bytes(),
+        ps_lookup=bytes(),
+        ps_l=0,
+        ps_lengths=ops.asarray1i([]),
+        ss_search=bytes(),
+        ss_lookup=bytes(),
+        ss_l=0,
+        ss_lengths=ops.asarray1i([]),
     ).shape == (1, 0)

@@ -260,27 +260,6 @@ def RichMultiHashEmbed(
     prevents the alternation from occurring, e.g. an `ä` in a German plural noun does
     not become `a` if it is the third or fourth vowel from the end of the word.
 
-    Internally, the model converts each token string to UTF-16 and assumes that each
-    character from the string occupies two bytes. This assumption holds for all 
-    characters in the Basic Multilingual Plane, which encompasses all characters that 
-    are ever likely to be of interest when extracting features. There are, however,
-    characters like emojis that are in the Extended Multilingual Plane and occupy
-    four bytes, although importantly neither of the two byte pairs that make up such
-    a representation can be a valid two-byte character in its own right. The
-    following considerations apply to the processing of four-byte characters:
-
-    - An exceptional four-byte character within a text consisting mostly of two-byte
-      characters will probably be ignored by the neural network accepting the
-      embedding layer as not matching any of the learned features.
-    - If anyone did want to train a model for a language like Lycian that is
-      generally written in four-byte characters, prefix and suffix features can
-      still be extracted, but the length specifications should all be doubled, i.e.
-      `[2,4,6]` to extract one-, two- and three-character affixes. In such a
-      situation length specifications that are odd numbers would serve no useful
-      purpose since they would refer to half-characters.
-    - Four-byte characters are not accepted within search character specification
-      strings and lead to an error being thrown.
-
     width (int): The output width. Also used as the width of the embedding tables.
         Recommended values are between 64 and 300.
     attrs (list of attr IDs): The token attributes to embed. A separate

@@ -1,7 +1,7 @@
 from typing import Callable, Protocol, Iterable, Iterator, Optional
 from typing import Union, Tuple, List, Dict, Any, overload
 from cymem.cymem import Pool
-from thinc.types import Floats1d, Floats2d, Ints2d
+from thinc.types import Floats1d, Floats2d, Ints1d, Ints2d
 from .span import Span
 from .token import Token
 from ._dict_proxies import SpanGroups
@@ -177,17 +177,17 @@ class Doc:
     def get_character_combination_hashes(
         self,
         *,
-        case_sensitive: bool,
-        pref_lengths: List[int],
-        suff_lengths: List[int],
+        cs: bool,
+        pref_lengths: Ints1d,
+        suff_lengths: Ints1d,
         pref_search_chars: str,
-        pref_ref_chars: str,
+        pref_lookup_chars: str,
         pref_search_char_length: int,
-        pref_search_lengths: List[int],
+        pref_search_lengths: Ints1d,
         suff_search_chars: str,
-        suff_ref_chars: str,
+        suff_lookup_chars: str,
         suff_search_char_length: int,
-        suff_search_lengths: List[int],
+        suff_search_lengths: Ints1d,
     ) -> Ints2d: ...
     @staticmethod
     def _get_array_attrs() -> Tuple[Any]: ...

@@ -946,7 +946,6 @@ class Errors(metaclass=ErrorsWithCodes):
              "{value}.")
     E1044 = ("Search characters for '{label}' may not contain upper-case chars where case_sensitive==False.")
     E1045 = ("Invalid rich group config '{label}'.")
-    E1046 = ("Search characters may not contain characters that occupy four bytes in UTF-16.")
 
 
 # Deprecated model shortcuts, only used in errors and warnings

@@ -1737,7 +1737,7 @@ def all_equal(iterable):
     return next(g, True) and not next(g, False)
 
 
-def get_byte_arrays_for_search_chars(
+def get_arrays_for_search_chars(
     search_chars: str, case_sensitive: bool
 ) -> Tuple[bytes, bytes]:
     """
@@ -1746,14 +1746,14 @@ def get_byte_arrays_for_search_chars(
     for search characters. The encoding is little-endian regardless of architecture, as 
     this is what is expected by the murmurhash library used downstream.
 
-    Alongside the "search byte array" against which words from document texts are compared
-    is the "ref byte array". When a character from the search byte array is matched,
-    the character at the corresponding position in the ref byte array is added to the
-    byte sequence of the configured length that is then hashed. This enables case-sensitivity
+    Alongside the "search array" against which words from document texts are compared
+    is the "lookup array". When a character from the search array is matched,
+    the character at the corresponding position in the lookup array is added to the
+    sequence that then goes on to be hashed. This enables case-sensitivity
     to be handled without converting the case of the words being searched: if 
     *case_sensitive==False*, the lower- or uppercase counterparts of any characters that
-    have case are added to the search byte arrays, and both the original character and its
-    other-cased counterpart map to the lower-case version in the ref byte array.
+    have case are added to the search array, and both the original character and its
+    other-cased counterpart map to the lower-case version in the lookup array.
     """
 
     def encode(ch: str) -> bytes:
@@ -1762,8 +1762,8 @@ def get_byte_arrays_for_search_chars(
         """
         return ch.encode("UTF-32LE")
  
-    def add_to_byte_arrays(
-        search: List[bytes], ref: List[bytes], ch: str
+    def add_to_arrays(
+        search: List[bytes], lookup: List[bytes], ch: str
     ) -> None:
         """Add the byte representations of *ch* to the two byte array lists.
         """
@@ -1771,36 +1771,36 @@ def get_byte_arrays_for_search_chars(
         if not case_sensitive and ch.islower():
             if this_char_bytes not in search:
                 search.append(this_char_bytes)
-                ref.append(this_char_bytes)
+                lookup.append(this_char_bytes)
             upper_char_bytes = encode(ch.upper())
             if upper_char_bytes not in search:
                 search.append(upper_char_bytes)
-                ref.append(this_char_bytes)
+                lookup.append(this_char_bytes)
         elif not case_sensitive and ch.isupper():
             lower_char_bytes = encode(ch.lower())
             if this_char_bytes not in search:
                 search.append(this_char_bytes)
-                ref.append(lower_char_bytes)
+                lookup.append(lower_char_bytes)
             if lower_char_bytes not in search:
                 search.append(lower_char_bytes)
-                ref.append(lower_char_bytes)
+                lookup.append(lower_char_bytes)
         elif this_char_bytes not in search:
             search.append(this_char_bytes)
-            ref.append(this_char_bytes)
+            lookup.append(this_char_bytes)
 
     def get_ordered_raw_bytes(
-        search: List[bytes], ref: List[bytes]
+        search: List[bytes], lookup: List[bytes]
     ) -> Tuple[bytes, bytes]:
         """Flatten the two lists, ordering both by the entries in *search*
         using the native endianness of the platform.
         """
         num_search = [list(entry) for entry in search]
         search = [entry for _, entry in sorted(zip(num_search, search))]
-        ref = [entry for _, entry in sorted(zip(num_search, ref))]
-        return b"".join(search), b"".join(ref)
+        lookup = [entry for _, entry in sorted(zip(num_search, lookup))]
+        return b"".join(search), b"".join(lookup)
 
     search: List[bytes] = []
-    ref: List[bytes] = []
+    lookup: List[bytes] = []
     for ch in search_chars:
-        add_to_byte_arrays(search, ref, ch)
-    return get_ordered_raw_bytes(search, ref)
+        add_to_arrays(search, lookup, ch)
+    return get_ordered_raw_bytes(search, lookup)

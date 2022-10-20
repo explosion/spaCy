@@ -1,7 +1,7 @@
 from typing import List, Optional, Callable, Tuple
-from ..util import get_byte_arrays_for_search_chars
-from thinc.types import Ints2d
-from thinc.api import Model, registry
+from ..util import get_arrays_for_search_chars
+from thinc.types import Ints1d, Ints2d
+from thinc.api import Model, registry, get_current_ops
 
 from ..tokens import Doc
 
@@ -17,33 +17,46 @@ def RichFeatureExtractor(
     suff_search_chars: Optional[str] = None,
     suff_search_lengths: Optional[List[int]] = None,
 ) -> Model[List[Doc], List[Ints2d]]:
+    ops = get_current_ops()
     if pref_search_chars is not None:
-        pref_search, pref_ref = get_byte_arrays_for_search_chars(pref_search_chars, case_sensitive)
+        pref_search, pref_lookup = get_arrays_for_search_chars(
+            pref_search_chars, case_sensitive
+        )
     else:
-        pref_search, pref_ref = bytes(), bytes()
+        pref_search, pref_lookup = bytes(), bytes()
     if suff_search_chars is not None:
-        suff_search, suff_ref = get_byte_arrays_for_search_chars(suff_search_chars, case_sensitive)
+        suff_search, suff_lookup = get_arrays_for_search_chars(
+            suff_search_chars, case_sensitive
+        )
     else:
-        suff_search, suff_ref = bytes(), bytes()
+        suff_search, suff_lookup = bytes(), bytes()
     return Model(
         "extract_character_combination_hashes",
         forward,
         attrs={
             "case_sensitive": case_sensitive,
-            "pref_lengths": pref_lengths if pref_lengths is not None else [],
-            "suff_lengths": suff_lengths if suff_lengths is not None else [],
+            "pref_lengths": ops.asarray1i(pref_lengths)
+            if pref_lengths is not None
+            else ops.asarray1i([]),
+            "suff_lengths": ops.asarray1i(suff_lengths)
+            if suff_lengths is not None
+            else ops.asarray1i([]),
             "pref_search": pref_search,
-            "pref_ref": pref_ref,
-            "pref_s_char_l": len(pref_search) / 4 if pref_search_chars is not None else 0,
-            "pref_search_lengths": pref_search_lengths
+            "pref_lookup": pref_lookup,
+            "pref_search_char_len": len(pref_search) / 4
+            if pref_search_chars is not None
+            else 0,
+            "pref_search_lengths": ops.asarray1i(pref_search_lengths)
             if pref_search_lengths is not None
-            else [],
+            else ops.asarray1i([]),
             "suff_search": suff_search,
-            "suff_ref": suff_ref,
-            "suff_s_char_l": len(suff_search) / 4 if suff_search_chars is not None else 0,
-            "suff_search_lengths": suff_search_lengths
+            "suff_lookup": suff_lookup,
+            "suff_search_char_len": len(suff_search) / 4
+            if suff_search_chars is not None
+            else 0,
+            "suff_search_lengths": ops.asarray1i(suff_search_lengths)
             if suff_search_lengths is not None
-            else [],
+            else ops.asarray1i([]),
         },
     )
 
@@ -53,30 +66,30 @@ def forward(
 ) -> Tuple[List[Ints2d], Callable]:
     ops = model.ops
     case_sensitive: bool = model.attrs["case_sensitive"]
-    pref_lengths: List[int] = model.attrs["pref_lengths"]
-    suff_lengths: List[int] = model.attrs["suff_lengths"]
+    pref_lengths: Ints1d = model.attrs["pref_lengths"]
+    suff_lengths: Ints1d = model.attrs["suff_lengths"]
     pref_search: bytes = model.attrs["pref_search"]
-    pref_ref: bytes = model.attrs["pref_ref"]
-    pref_s_char_l: int = model.attr["pref_s_char_l"]
-    pref_search_lengths: List[int] = model.attrs["pref_search_lengths"]
+    pref_lookup: bytes = model.attrs["pref_lookup"]
+    pref_search_char_len: int = model.attrs["pref_search_char_len"]
+    pref_search_lengths: Ints1d = model.attrs["pref_search_lengths"]
     suff_search: bytes = model.attrs["suff_search"]
-    suff_ref: bytes = model.attrs["suff_ref"]
-    suff_s_char_l: int = model.attr["suff_s_char_l"]
-    suff_search_lengths: List[int] = model.attrs["suff_search_lengths"]
+    suff_lookup: bytes = model.attrs["suff_lookup"]
+    suff_search_char_len: int = model.attrs["suff_search_char_len"]
+    suff_search_lengths: Ints1d = model.attrs["suff_search_lengths"]
     features: List[Ints2d] = []
     for doc in docs:
         hashes = doc.get_character_combination_hashes(
-            case_sensitive=case_sensitive,
-            pref_lengths=pref_lengths,
-            suff_lengths=suff_lengths,
-            pref_search=pref_search,
-            pref_ref=pref_ref,
-            pref_s_char_l=pref_s_char_l,
-            pref_search_lengths=pref_search_lengths,
-            suff_search=suff_search,
-            suff_ref=suff_ref,
-            suff_s_char_l=suff_s_char_l,
-            suff_search_lengths=suff_search_lengths,
+            cs=case_sensitive,
+            p_lengths=pref_lengths,
+            s_lengths=suff_lengths,
+            ps_search=pref_search,
+            ps_lookup=pref_lookup,
+            ps_l=pref_search_char_len,
+            ps_lengths=pref_search_lengths,
+            ss_search=suff_search,
+            ss_lookup=suff_lookup,
+            ss_l=suff_search_char_len,
+            ss_lengths=suff_search_lengths,
         )
         features.append(ops.asarray2i(hashes))
 
