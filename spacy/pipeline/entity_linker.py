@@ -476,7 +476,7 @@ class EntityLinker(TrainablePipe):
                 (
                     [doc.ents[idx] for idx in next(valid_ent_idx_per_doc)]
                     for doc in docs
-                    if len(doc.ents)
+                    if len(docs) and len(doc.ents)
                 ),
             )
         else:
@@ -487,11 +487,11 @@ class EntityLinker(TrainablePipe):
                     for idx in next(valid_ent_idx_per_doc)
                 ]
                 for doc in docs
-                if len(doc.ents)
+                if len(docs) and len(doc.ents)
             )
 
         for doc_idx, doc in enumerate(docs):
-            if len(doc) == 0:
+            if len(doc) == 0 or len(doc.ents) == 0:
                 continue
             sentences = [s for s in doc.sents]
             doc_ent_cands = list(next(all_ent_cands)) if len(doc.ents) else []
