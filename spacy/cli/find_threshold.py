@@ -109,7 +109,7 @@ def find_threshold(
     except KeyError as err:
         wasabi.msg.fail(title=str(err), exits=1)
     if not hasattr(pipe, "scorer"):
-        raise AttributeError(Errors.E1048)
+        raise AttributeError(Errors.E1047)
 
     if not silent:
         wasabi.msg.info(

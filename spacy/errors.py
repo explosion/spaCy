@@ -952,8 +952,7 @@ class Errors(metaclass=ErrorsWithCodes):
              "sure it's overwritten on the subclass.")
     E1046 = ("{cls_name} is an abstract class and cannot be instantiated. If you are looking for spaCy's default "
              "knowledge base, use `InMemoryLookupKB`.")
-    E1047 = ("`find_threshold()` only supports components of type `TrainablePipe`.")
-    E1048 = ("`find_threshold()` only supports components with a `scorer` attribute.")
+    E1047 = ("`find_threshold()` only supports components with a `scorer` attribute.")
 
 
 # Deprecated model shortcuts, only used in errors and warnings
