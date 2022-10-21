@@ -26,7 +26,7 @@ class PRFScore:
         *,
         tp: int = 0,
         fp: int = 0,
-        fn: int = 0
+        fn: int = 0,
     ) -> None:
         self.tp = tp
         self.fp = fp
@@ -43,7 +43,7 @@ class PRFScore:
 
     def __add__(self, other):
         return PRFScore(
-            tp=self.tp + other.tp, fp=self.fp + other.fp, fn=self.fn + other.fn,
+            tp=self.tp + other.tp, fp=self.fp + other.fp, fn=self.fn + other.fn
         )
 
     def score_set(self, cand: set, gold: set) -> None:
