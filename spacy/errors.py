@@ -952,8 +952,7 @@ class Errors(metaclass=ErrorsWithCodes):
              "sure it's overwritten on the subclass.")
     E1046 = ("{cls_name} is an abstract class and cannot be instantiated. If you are looking for spaCy's default "
              "knowledge base, use `InMemoryLookupKB`.")
-    E1047 = ("Search characters for '{label}' may not contain upper-case chars where case_sensitive==False.")
-    E1048 = ("Invalid rich group config '{label}'.")
+    E1047 = ("Invalid rich group config '{label}'.")
 
 
 # Deprecated model shortcuts, only used in errors and warnings

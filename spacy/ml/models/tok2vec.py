@@ -198,21 +198,15 @@ def _verify_rich_config_group(
 ) -> None:
     if lengths is not None or rows is not None:
         if is_search_char_group and (search_chars is None or len(search_chars) == 0):
-            raise ValueError(Errors.E1045.format(label=label))
+            raise ValueError(Errors.E1047.format(label=label))
         if lengths is None or rows is None:
-            raise ValueError(Errors.E1045.format(label=label))
+            raise ValueError(Errors.E1047.format(label=label))
         if len(lengths) != len(rows):
-            raise ValueError(Errors.E1045.format(label=label))
+            raise ValueError(Errors.E1047.format(label=label))
         if any([length < 1 for length in lengths]):
-            raise ValueError(Errors.E1045.format(label=label))
-        if (
-            not case_sensitive
-            and search_chars is not None
-            and search_chars != search_chars.lower()
-        ):
-            raise ValueError(Errors.E1044.format(label=label))
+            raise ValueError(Errors.E1047.format(label=label))
     elif search_chars is not None:
-        raise ValueError(Errors.E1045.format(label=label))
+        raise ValueError(Errors.E1047.format(label=label))
 
 
 @registry.architectures("spacy.RichMultiHashEmbed.v1")
