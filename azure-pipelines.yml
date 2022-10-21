@@ -85,6 +85,15 @@ jobs:
         Python310Mac:
           imageName: "macos-latest"
           python.version: "3.10"
+        Python311Linux:
+          imageName: 'ubuntu-latest'
+          python.version: '3.11.0-rc.2'
+        Python311Windows:
+          imageName: 'windows-latest'
+          python.version: '3.11.0-rc.2'
+        Python311Mac:
+          imageName: 'macos-latest'
+          python.version: '3.11.0-rc.2'
       maxParallel: 4
     pool:
       vmImage: $(imageName)

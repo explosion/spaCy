@@ -1,7 +1,6 @@
-from typing import cast, Any, Callable, Dict, Iterable, List, Optional
-from typing import Sequence, Tuple, Union
+from typing import cast, Any, Callable, Dict, Iterable, List, Optional, Union
+from typing import Tuple
 from collections import Counter
-from copy import deepcopy
 from itertools import islice
 import numpy as np
 

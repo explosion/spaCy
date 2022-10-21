@@ -21,9 +21,9 @@ Create the knowledge base.
 > #### Example
 >
 > ```python
-> from spacy.kb import KnowledgeBase
+> from spacy.kb import InMemoryLookupKB
 > vocab = nlp.vocab
-> kb = KnowledgeBase(vocab=vocab, entity_vector_length=64)
+> kb = InMemoryLookupKB(vocab=vocab, entity_vector_length=64)
 > ```
 
 | Name                   | Description                                      |
