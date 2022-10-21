@@ -1755,10 +1755,11 @@ cdef class Doc:
             derived from the raw text of each token.
 
         Generally:
-            p_ variables relate to prefixes (affixes starting at the beginning of the word)
-            s_ variables relate to suffixes (affixes starting at the end of the word)
-            ps_ variables relate to searches starting at the beginning of the word
-            ss_ variables relate to searches starting at the end of the word
+
+        p_ variables relate to prefixes (affixes starting at the beginning of the word)
+        s_ variables relate to suffixes (affixes starting at the end of the word)
+        ps_ variables relate to searches starting at the beginning of the word
+        ss_ variables relate to searches starting at the end of the word
         
         cs: if *False*, hashes are generated based on the lower-case version of each token.
         p_lengths: an Ints1d specifying the lengths of prefixes to be hashed. For example, if *p_lengths==[2, 3]*, 
@@ -1770,7 +1771,7 @@ cdef class Doc:
             the corresponding position in *ps_search* is matched. Having separate search and lookup arrays enables
             case-insensitivity to be handled efficiently.
         ps_search_l: the number of characters in *ps_search* and hence also in *ps_lookup*
-        ps_lengths: an Ints1d specifying the lengths of search results to be hashed. For example if 
+        ps_lengths: an Ints1d specifying the lengths of search results (from the beginning) to be hashed. For example, if 
             *ps_lengths==[1, 2]*, *ps_search=="aC" and *cs==False*, the searched strings hashed for 
             "spaCy" would be "a" and "ac".
         ss_search: a byte array containing characters to search for within each token, starting at the end.
@@ -1778,12 +1779,13 @@ cdef class Doc:
             the corresponding position in *ss_search* is matched. Having separate search and lookup arrays enables
             case-insensitivity to be handled efficiently.
         ss_l: the number of characters in *ss_search* and hence also in *ss_lookup*
-        ss_lengths: an integer list specifying the lengths of search results to be hashed. For example if 
-            *suff_search_lengths==[1, 2]*, *suff_search_chars=="aC" and *cs==False*, the searched strings hashed for 
+        ss_lengths: an integer list specifying the lengths of search results (from the end) to be hashed. For example, if 
+            *ss_lengths==[1, 2]*, *ss_search=="aC" and *cs==False*, the searched strings hashed for 
             "spaCy" would be "c" and "ca".
         
         For a document with tokens ["spaCy", "and", "Prodigy"], the NumPy array returned by 
-        *get_character_combination_hashes(True, [2], [2, 4, 6], "", "", 0, [], "yC", "yC", 2, [1, 2])* would correspond to
+        *get_character_combination_hashes(True, [2], [2, 4, 6], "", "", 0, [], "yC", "yC", 2, [1, 2])* 
+        would correspond to
 
         [[hash("sp"), [hash("Cy"), hash("paCy"), hash(" spaCy"), hash("y"), hash("yC")],
         [hash("an"), hash("nd"), hash(" and", hash("   and"), hash(" "), hash("  "))],
@@ -1812,18 +1814,18 @@ cdef class Doc:
         # Define / allocate buffer (pr/sr: result buffers)
         cdef int aff_buf_l  = p_max_l + s_max_l
         cdef Py_UCS4* aff_buf = <Py_UCS4*> self.mem.alloc(aff_buf_l, sizeof(Py_UCS4))
-        cdef Py_UCS4* ps_buf = <Py_UCS4*> ps_search
-        cdef Py_UCS4* pl_buf = <Py_UCS4*> ps_lookup
-        cdef Py_UCS4* pr_buf = <Py_UCS4*> self.mem.alloc(ps_max_l, sizeof(Py_UCS4))
-        cdef Py_UCS4* ss_buf = <Py_UCS4*> ss_search
-        cdef Py_UCS4* sl_buf = <Py_UCS4*> ss_lookup
-        cdef Py_UCS4* sr_buf = <Py_UCS4*> self.mem.alloc(ss_max_l, sizeof(Py_UCS4))
+        cdef Py_UCS4* ps_s_buf = <Py_UCS4*> ps_search
+        cdef Py_UCS4* ps_l_buf = <Py_UCS4*> ps_lookup
+        cdef Py_UCS4* ps_r_buf = <Py_UCS4*> self.mem.alloc(ps_max_l, sizeof(Py_UCS4))
+        cdef Py_UCS4* ss_s_buf = <Py_UCS4*> ss_search
+        cdef Py_UCS4* ss_l_buf = <Py_UCS4*> ss_lookup
+        cdef Py_UCS4* ss_r_buf = <Py_UCS4*> self.mem.alloc(ss_max_l, sizeof(Py_UCS4))
         
         # Define memory views on length arrays
-        cdef int[:] p_v = p_lengths
-        cdef int[:] s_v = s_lengths
-        cdef int[:] ps_v = ps_lengths
-        cdef int[:] ss_v = ss_lengths
+        cdef int[:] p_lengths_v = p_lengths
+        cdef int[:] s_lengths_v = s_lengths
+        cdef int[:] ps_lengths_v = ps_lengths
+        cdef int[:] ss_lengths_v = ss_lengths
 
         # Define working variables
         cdef TokenC tok_c
@@ -1838,27 +1840,27 @@ cdef class Doc:
                 _set_affixes(text_buf, tok_idx, tok_len, aff_buf, p_max_l, s_max_l, not cs)
                 
                 for hash_idx in range(p_h_num):
-                    hashes[tok_i, hash_idx] = hash32(aff_buf, p_v[hash_idx] * sizeof(Py_UCS4), 0)
+                    hashes[tok_i, hash_idx] = hash32(aff_buf, p_lengths_v[hash_idx] * sizeof(Py_UCS4), 0)
             
                 for hash_idx in range(p_h_num, s_h_end):
-                    aff_len = s_v[hash_idx - p_h_num]
+                    aff_len = s_lengths_v[hash_idx - p_h_num]
                     hashes[tok_i, hash_idx] = hash32(aff_buf + aff_buf_l - aff_len, aff_len * sizeof(Py_UCS4), 0)
                 
             if ps_h_num > 0:
-                _search_for_chars(text_buf, tok_idx, tok_len, ps_buf, pl_buf, ps_l, pr_buf, ps_max_l, False)
+                _search_for_chars(text_buf, tok_idx, tok_len, ps_s_buf, ps_l_buf, ps_l, ps_r_buf, ps_max_l, False)
                 for hash_idx in range(s_h_end, ps_h_end):
-                    aff_len = ps_v[hash_idx - s_h_end]
-                    hashes[tok_i, hash_idx] = hash32(pr_buf, aff_len * sizeof(Py_UCS4), 0)
+                    aff_len = ps_lengths_v[hash_idx - s_h_end]
+                    hashes[tok_i, hash_idx] = hash32(ps_r_buf, aff_len * sizeof(Py_UCS4), 0)
 
             if ss_h_num > 0:
-                _search_for_chars(text_buf, tok_idx, tok_len, ss_buf, sl_buf, ss_l, sr_buf, ss_max_l, True)
+                _search_for_chars(text_buf, tok_idx, tok_len, ss_s_buf, ss_l_buf, ss_l, ss_r_buf, ss_max_l, True)
                 for hash_idx in range(ps_h_end, ss_h_end):
-                    aff_len = ss_v[hash_idx - ps_h_end]
-                    hashes[tok_i, hash_idx] = hash32(sr_buf, aff_len * sizeof(Py_UCS4), 0)
+                    aff_len = ss_lengths_v[hash_idx - ps_h_end]
+                    hashes[tok_i, hash_idx] = hash32(ss_r_buf, aff_len * sizeof(Py_UCS4), 0)
 
         self.mem.free(aff_buf)
-        self.mem.free(pr_buf)
-        self.mem.free(sr_buf)
+        self.mem.free(ps_r_buf)
+        self.mem.free(ss_r_buf)
         return hashes
 
     @staticmethod
@@ -2051,8 +2053,9 @@ cdef void _copy_chars(
     """Copies *length* Py_UCS4 characters from *source* to *target*. If *to_lower==True*, converts
     any upper-case characters to lower case within the target buffer.
     """
-    memcpy(target, source, length * sizeof(Py_UCS4))
     cdef int idx
+
+    memcpy(target, source, length * sizeof(Py_UCS4))
     if to_lower:
         for idx in range(length):
             if Py_UNICODE_ISUPPER(target[idx]):
@@ -2089,15 +2092,18 @@ cdef void _set_affixes(
     if tok_len < pref_len:
         memset(aff_buf + aff_buf_idx, 0, sizeof(Py_UCS4) * (pref_len - tok_len))
         aff_buf_idx = aff_buf_len - suff_len
+
     if tok_len < suff_len:
         memset(aff_buf + aff_buf_idx, 0, sizeof(Py_UCS4) * (suff_len - tok_len))
         aff_buf_idx = aff_buf_len - tok_len
 
     if suff_len > 0:
+        # in_word_idx: the index within the token where the suffix starts
         in_word_idx = aff_buf_idx + tok_len - aff_buf_len
         if in_word_idx < pref_len:
             memcpy(aff_buf + aff_buf_idx, aff_buf + in_word_idx, sizeof(Py_UCS4) * (filled_pref_len - in_word_idx))
             aff_buf_idx += filled_pref_len - in_word_idx
+            in_word_idx = aff_buf_idx + tok_len - aff_buf_len
         if aff_buf_idx < aff_buf_len:
             _copy_chars(aff_buf + aff_buf_idx, text_buf + tok_idx + in_word_idx, aff_buf_len - aff_buf_idx, to_lower)
 
@@ -2112,7 +2118,7 @@ cdef void _search_for_chars(
     Py_UCS4* result_buf, 
     const int result_buf_len, 
     bint suffs_not_prefs
-):
+) nogil:
     """ Search a word within a string for characters within *search_buf*, starting at the beginning or
         end depending on the value of *suffs_not_prefs*. Wherever a character from *search_buf* matches,
         the corresponding character from *lookup_buf* is added to *result_buf*.

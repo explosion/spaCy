@@ -11,9 +11,9 @@ def RichFeatureExtractor(
     *,
     case_sensitive: bool,
     pref_lengths: Optional[List[int]] = None,
+    suff_lengths: Optional[List[int]] = None,
     pref_search_chars: Optional[str] = None,
     pref_search_lengths: Optional[List[int]] = None,
-    suff_lengths: Optional[List[int]] = None,
     suff_search_chars: Optional[str] = None,
     suff_search_lengths: Optional[List[int]] = None,
 ) -> Model[List[Doc], List[Ints2d]]:

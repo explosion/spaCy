@@ -1791,8 +1791,7 @@ def get_arrays_for_search_chars(
     def get_ordered_raw_bytes(
         search: List[bytes], lookup: List[bytes]
     ) -> Tuple[bytes, bytes]:
-        """Flatten the two lists, ordering both by the entries in *search*
-        using the native endianness of the platform.
+        """Flatten the two lists, ordering both by the entries in *search*.
         """
         num_search = [list(entry) for entry in search]
         search = [entry for _, entry in sorted(zip(num_search, search))]

@@ -67,7 +67,7 @@ cdef void _search_for_chars(
     Py_UCS4* result_buf, 
     const int result_buf_len, 
     bint suffs_not_prefs
-)
+) nogil
 
 
 cdef class Doc:
