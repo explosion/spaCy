@@ -19,7 +19,7 @@ multi_label_default_config = """
 @architectures = "spacy.TextCatEnsemble.v2"
 
 [model.tok2vec]
-@architectures = "spacy.Tok2Vec.v1"
+@architectures = "spacy.Tok2Vec.v2"
 
 [model.tok2vec.embed]
 @architectures = "spacy.MultiHashEmbed.v2"
@@ -29,7 +29,7 @@ attrs = ["ORTH", "LOWER", "PREFIX", "SUFFIX", "SHAPE", "ID"]
 include_static_vectors = false
 
 [model.tok2vec.encode]
-@architectures = "spacy.MaxoutWindowEncoder.v1"
+@architectures = "spacy.MaxoutWindowEncoder.v2"
 width = ${model.tok2vec.embed.width}
 window_size = 1
 maxout_pieces = 3
@@ -98,7 +98,7 @@ def make_multilabel_textcat(
     threshold: float,
     scorer: Optional[Callable],
     save_activations: bool,
-) -> "TextCategorizer":
+) -> "MultiLabel_TextCategorizer":
     """Create a TextCategorizer component. The text categorizer predicts categories
     over a whole document. It can learn one or more labels, and the labels are considered
     to be non-mutually exclusive, which means that there can be zero or more labels
@@ -107,6 +107,7 @@ def make_multilabel_textcat(
     model (Model[List[Doc], List[Floats2d]]): A model instance that predicts
         scores for each category.
     threshold (float): Cutoff to consider a prediction "positive".
+    scorer (Optional[Callable]): The scoring method.
     """
     return MultiLabel_TextCategorizer(
         nlp.vocab,
@@ -155,7 +156,11 @@ class MultiLabel_TextCategorizer(TextCategorizer):
         name (str): The component instance name, used to add entries to the
             losses during training.
         threshold (float): Cutoff to consider a prediction "positive".
+<<<<<<< HEAD
         save_activations (bool): save model activations in Doc when annotating.
+=======
+        scorer (Optional[Callable]): The scoring method.
+>>>>>>> upstream/master
 
         DOCS: https://spacy.io/api/textcategorizer#init
         """
