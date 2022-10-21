@@ -181,12 +181,12 @@ class TokenPatternNumber(BaseModel):
     IS_SUBSET: Optional[List[StrictInt]] = Field(None, alias="is_subset")
     IS_SUPERSET: Optional[List[StrictInt]] = Field(None, alias="is_superset")
     INTERSECTS: Optional[List[StrictInt]] = Field(None, alias="intersects")
-    EQ: Union[StrictInt, StrictFloat] = Field(None, alias="==")
-    NEQ: Union[StrictInt, StrictFloat] = Field(None, alias="!=")
-    GEQ: Union[StrictInt, StrictFloat] = Field(None, alias=">=")
-    LEQ: Union[StrictInt, StrictFloat] = Field(None, alias="<=")
-    GT: Union[StrictInt, StrictFloat] = Field(None, alias=">")
-    LT: Union[StrictInt, StrictFloat] = Field(None, alias="<")
+    EQ: Optional[Union[StrictInt, StrictFloat]] = Field(None, alias="==")
+    NEQ: Optional[Union[StrictInt, StrictFloat]] = Field(None, alias="!=")
+    GEQ: Optional[Union[StrictInt, StrictFloat]] = Field(None, alias=">=")
+    LEQ: Optional[Union[StrictInt, StrictFloat]] = Field(None, alias="<=")
+    GT: Optional[Union[StrictInt, StrictFloat]] = Field(None, alias=">")
+    LT: Optional[Union[StrictInt, StrictFloat]] = Field(None, alias="<")
 
     class Config:
         extra = "forbid"
@@ -207,7 +207,7 @@ class TokenPatternOperatorSimple(str, Enum):
 
 
 class TokenPatternOperatorMinMax(ConstrainedStr):
-    regex = re.compile("^({\d+}|{\d+,\d*}|{\d*,\d+})$")
+    regex = re.compile(r"^({\d+}|{\d+,\d*}|{\d*,\d+})$")
 
 
 TokenPatternOperator = Union[TokenPatternOperatorSimple, TokenPatternOperatorMinMax]
@@ -430,7 +430,7 @@ class ProjectConfigAssetURL(BaseModel):
     # fmt: off
     dest: StrictStr = Field(..., title="Destination of downloaded asset")
     url: Optional[StrictStr] = Field(None, title="URL of asset")
-    checksum: str = Field(None, title="MD5 hash of file", regex=r"([a-fA-F\d]{32})")
+    checksum: Optional[str] = Field(None, title="MD5 hash of file", regex=r"([a-fA-F\d]{32})")
     description: StrictStr = Field("", title="Description of asset")
     # fmt: on
 
@@ -438,7 +438,7 @@ class ProjectConfigAssetURL(BaseModel):
 class ProjectConfigAssetGit(BaseModel):
     # fmt: off
     git: ProjectConfigAssetGitItem = Field(..., title="Git repo information")
-    checksum: str = Field(None, title="MD5 hash of file", regex=r"([a-fA-F\d]{32})")
+    checksum: Optional[str] = Field(None, title="MD5 hash of file", regex=r"([a-fA-F\d]{32})")
     description: Optional[StrictStr] = Field(None, title="Description of asset")
     # fmt: on
 
@@ -508,12 +508,20 @@ class DocJSONSchema(BaseModel):
         None, title="Indices of sentences' start and end indices"
     )
     text: StrictStr = Field(..., title="Document text")
-    spans: Dict[StrictStr, List[Dict[StrictStr, Union[StrictStr, StrictInt]]]] = Field(
-        None, title="Span information - end/start indices, label, KB ID"
-    )
+    spans: Optional[
+        Dict[StrictStr, List[Dict[StrictStr, Union[StrictStr, StrictInt]]]]
+    ] = Field(None, title="Span information - end/start indices, label, KB ID")
     tokens: List[Dict[StrictStr, Union[StrictStr, StrictInt]]] = Field(
         ..., title="Token information - ID, start, annotations"
     )
-    _: Optional[Dict[StrictStr, Any]] = Field(
-        None, title="Any custom data stored in the document's _ attribute"
+    underscore_doc: Optional[Dict[StrictStr, Any]] = Field(
+        None,
+        title="Any custom data stored in the document's _ attribute",
+        alias="_",
+    )
+    underscore_token: Optional[Dict[StrictStr, List[Dict[StrictStr, Any]]]] = Field(
+        None, title="Any custom data stored in the token's _ attribute"
+    )
+    underscore_span: Optional[Dict[StrictStr, List[Dict[StrictStr, Any]]]] = Field(
+        None, title="Any custom data stored in the span's _ attribute"
     )

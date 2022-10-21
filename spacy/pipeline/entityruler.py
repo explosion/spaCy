@@ -1,6 +1,5 @@
-import warnings
 from typing import Optional, Union, List, Dict, Tuple, Iterable, Any, Callable, Sequence
-from typing import cast
+import warnings
 from collections import defaultdict
 from pathlib import Path
 import srsly
@@ -317,7 +316,7 @@ class EntityRuler(Pipe):
                     phrase_pattern["id"] = ent_id
                 phrase_patterns.append(phrase_pattern)
             for entry in token_patterns + phrase_patterns:  # type: ignore[operator]
-                label = entry["label"]
+                label = entry["label"]  # type: ignore
                 if "id" in entry:
                     ent_label = label
                     label = self._create_label(label, entry["id"])
