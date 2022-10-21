@@ -15,7 +15,7 @@ pathy>=0.3.5
 numpy>=1.15.0
 requests>=2.13.0,<3.0.0
 tqdm>=4.38.0,<5.0.0
-pydantic>=1.7.4,!=1.8,!=1.8.1,<1.10.0
+pydantic>=1.7.4,!=1.8,!=1.8.1,<1.11.0
 jinja2
 langcodes>=3.2.0,<4.0.0
 # Official Python utilities
