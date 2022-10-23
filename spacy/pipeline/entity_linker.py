@@ -467,7 +467,7 @@ class EntityLinker(TrainablePipe):
                 if doc.ents[idx].label_ not in self.labels_discard
             ]
             for doc in docs
-            if len(doc.ents)
+            if len(doc) and len(doc.ents)
         )
         # Call candidate generator.
         if self.candidates_doc_mode:
@@ -476,7 +476,7 @@ class EntityLinker(TrainablePipe):
                 (
                     [doc.ents[idx] for idx in next(valid_ent_idx_per_doc)]
                     for doc in docs
-                    if len(docs) and len(doc.ents)
+                    if len(doc) and len(doc.ents)
                 ),
             )
         else:
@@ -487,7 +487,7 @@ class EntityLinker(TrainablePipe):
                     for idx in next(valid_ent_idx_per_doc)
                 ]
                 for doc in docs
-                if len(docs) and len(doc.ents)
+                if len(doc) and len(doc.ents)
             )
 
         for doc_idx, doc in enumerate(docs):
