@@ -72,7 +72,7 @@ subword_features = true
     "textcat",
     assigns=["doc.cats"],
     default_config={
-        "threshold": 0.5,
+        "threshold": 0.0,
         "model": DEFAULT_SINGLE_TEXTCAT_MODEL,
         "scorer": {"@scorers": "spacy.textcat_scorer.v1"},
     },

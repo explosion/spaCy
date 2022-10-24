@@ -446,7 +446,7 @@ class Scorer:
         labels (Iterable[str]): The set of possible labels. Defaults to [].
         multi_label (bool): Whether the attribute allows multiple labels.
             Defaults to True. When set to False (exclusive labels), missing
-            gold labels are interpreted as 0.0.
+            gold labels are interpreted as 0.0 and the threshold is set to 0.0.
         positive_label (str): The positive label for a binary task with
             exclusive classes. Defaults to None.
         threshold (float): Cutoff to consider a prediction "positive". Defaults
@@ -471,6 +471,8 @@ class Scorer:
         """
         if threshold is None:
             threshold = 0.5 if multi_label else 0.0
+        if not multi_label:
+            threshold = 0.0
         f_per_type = {label: PRFScore() for label in labels}
         auc_per_type = {label: ROCAUCScore() for label in labels}
         labels = set(labels)
