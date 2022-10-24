@@ -10,6 +10,7 @@ steps:
     inputs:
       versionSpec: ${{ parameters.python_version }}
       architecture: ${{ parameters.architecture }}
+      allowUnstable: true
 
   - bash: |
       echo "##vso[task.setvariable variable=python_version]${{ parameters.python_version }}"

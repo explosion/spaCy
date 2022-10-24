@@ -14,7 +14,8 @@ entities) to unique identifiers, grounding the named entities into the "real
 world". It requires a `KnowledgeBase`, as well as a function to generate
 plausible candidates from that `KnowledgeBase` given a certain textual mention,
 and a machine learning model to pick the right candidate, given the local
-context of the mention.
+context of the mention. `EntityLinker` defaults to using the
+[`InMemoryLookupKB`](/api/kb_in_memory) implementation.
 
 ## Assigned Attributes {#assigned-attributes}
 
@@ -170,7 +171,7 @@ with the current vocab.
 >
 > ```python
 > def create_kb(vocab):
->     kb = KnowledgeBase(vocab, entity_vector_length=128)
+>     kb = InMemoryLookupKB(vocab, entity_vector_length=128)
 >     kb.add_entity(...)
 >     kb.add_alias(...)
 >     return kb
