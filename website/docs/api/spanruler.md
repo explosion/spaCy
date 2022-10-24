@@ -13,6 +13,17 @@ The span ruler lets you add spans to [`Doc.spans`](/api/doc#spans) and/or
 usage examples, see the docs on
 [rule-based span matching](/usage/rule-based-matching#spanruler).
 
+<Infobox title="Replacement of the EntityRuler" variant="warning">
+
+As of spaCy v4, there is no separate `EntityRuler` class. The entity ruler is
+implemented as a special case of the `SpanRuler` component.
+
+See the [migration guide](/api/entityruler#migrating) for differences between
+the v3 `EntityRuler` and v4 `SpanRuler` implementations of the `entity_ruler`
+component.
+
+</Infobox>
+
 ## Assigned Attributes {#assigned-attributes}
 
 Matches will be saved to `Doc.spans[spans_key]` as a

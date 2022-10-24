@@ -87,14 +87,15 @@ def test_issue4373():
 
 @pytest.mark.issue(4651)
 def test_issue4651_with_phrase_matcher_attr():
-    """Test that the EntityRuler PhraseMatcher is deserialized correctly using
-    the method from_disk when the EntityRuler argument phrase_matcher_attr is
+    """Test that the entity_ruler PhraseMatcher is deserialized correctly using
+    the method from_disk when the entity_ruler argument phrase_matcher_attr is
     specified.
     """
     text = "Spacy is a python library for nlp"
     nlp = English()
     patterns = [{"label": "PYTHON_LIB", "pattern": "spacy", "id": "spaCy"}]
-    ruler = nlp.add_pipe("entity_ruler", config={"phrase_matcher_attr": "LOWER"})
+    config = {"phrase_matcher_attr": "LOWER"}
+    ruler = nlp.add_pipe("entity_ruler", config=config)
     ruler.add_patterns(patterns)
     doc = nlp(text)
     res = [(ent.text, ent.label_, ent.ent_id_) for ent in doc.ents]
@@ -102,7 +103,7 @@ def test_issue4651_with_phrase_matcher_attr():
     with make_tempdir() as d:
         file_path = d / "entityruler"
         ruler.to_disk(file_path)
-        nlp_reloaded.add_pipe("entity_ruler").from_disk(file_path)
+        nlp_reloaded.add_pipe("entity_ruler", config=config).from_disk(file_path)
     doc_reloaded = nlp_reloaded(text)
     res_reloaded = [(ent.text, ent.label_, ent.ent_id_) for ent in doc_reloaded.ents]
     assert res == res_reloaded

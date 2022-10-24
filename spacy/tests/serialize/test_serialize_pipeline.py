@@ -8,7 +8,7 @@ import spacy
 from spacy import Vocab, load, registry
 from spacy.lang.en import English
 from spacy.language import Language
-from spacy.pipeline import DependencyParser, EntityRecognizer, EntityRuler
+from spacy.pipeline import DependencyParser, EntityRecognizer
 from spacy.pipeline import SentenceRecognizer, Tagger, TextCategorizer
 from spacy.pipeline import TrainablePipe
 from spacy.pipeline.dep_parser import DEFAULT_PARSER_MODEL
@@ -85,58 +85,17 @@ def test_issue_3526_1(en_vocab):
         {"label": "TECH_ORG", "pattern": "Apple", "id": "a1"},
     ]
     nlp = Language(vocab=en_vocab)
-    ruler = EntityRuler(nlp, patterns=patterns, overwrite_ents=True)
+    ruler = nlp.add_pipe("entity_ruler", config={"overwrite_ents": True})
+    ruler.add_patterns(patterns)
     ruler_bytes = ruler.to_bytes()
     assert len(ruler) == len(patterns)
     assert len(ruler.labels) == 4
-    assert ruler.overwrite
-    new_ruler = EntityRuler(nlp)
+    new_ruler = nlp.add_pipe(
+        "entity_ruler", name="new_ruler", config={"overwrite_ents": True}
+    )
     new_ruler = new_ruler.from_bytes(ruler_bytes)
     assert len(new_ruler) == len(ruler)
     assert len(new_ruler.labels) == 4
-    assert new_ruler.overwrite == ruler.overwrite
-    assert new_ruler.ent_id_sep == ruler.ent_id_sep
-
-
-@pytest.mark.issue(3526)
-def test_issue_3526_2(en_vocab):
-    patterns = [
-        {"label": "HELLO", "pattern": "hello world"},
-        {"label": "BYE", "pattern": [{"LOWER": "bye"}, {"LOWER": "bye"}]},
-        {"label": "HELLO", "pattern": [{"ORTH": "HELLO"}]},
-        {"label": "COMPLEX", "pattern": [{"ORTH": "foo", "OP": "*"}]},
-        {"label": "TECH_ORG", "pattern": "Apple", "id": "a1"},
-    ]
-    nlp = Language(vocab=en_vocab)
-    ruler = EntityRuler(nlp, patterns=patterns, overwrite_ents=True)
-    bytes_old_style = srsly.msgpack_dumps(ruler.patterns)
-    new_ruler = EntityRuler(nlp)
-    new_ruler = new_ruler.from_bytes(bytes_old_style)
-    assert len(new_ruler) == len(ruler)
-    for pattern in ruler.patterns:
-        assert pattern in new_ruler.patterns
-    assert new_ruler.overwrite is not ruler.overwrite
-
-
-@pytest.mark.issue(3526)
-def test_issue_3526_3(en_vocab):
-    patterns = [
-        {"label": "HELLO", "pattern": "hello world"},
-        {"label": "BYE", "pattern": [{"LOWER": "bye"}, {"LOWER": "bye"}]},
-        {"label": "HELLO", "pattern": [{"ORTH": "HELLO"}]},
-        {"label": "COMPLEX", "pattern": [{"ORTH": "foo", "OP": "*"}]},
-        {"label": "TECH_ORG", "pattern": "Apple", "id": "a1"},
-    ]
-    nlp = Language(vocab=en_vocab)
-    ruler = EntityRuler(nlp, patterns=patterns, overwrite_ents=True)
-    with make_tempdir() as tmpdir:
-        out_file = tmpdir / "entity_ruler"
-        srsly.write_jsonl(out_file.with_suffix(".jsonl"), ruler.patterns)
-        new_ruler = EntityRuler(nlp).from_disk(out_file)
-        for pattern in ruler.patterns:
-            assert pattern in new_ruler.patterns
-        assert len(new_ruler) == len(ruler)
-        assert new_ruler.overwrite is not ruler.overwrite
 
 
 @pytest.mark.issue(3526)
@@ -150,16 +109,14 @@ def test_issue_3526_4(en_vocab):
         nlp.to_disk(tmpdir)
         ruler = nlp.get_pipe("entity_ruler")
         assert ruler.patterns == [{"label": "ORG", "pattern": "Apple"}]
-        assert ruler.overwrite is True
         nlp2 = load(tmpdir)
         new_ruler = nlp2.get_pipe("entity_ruler")
         assert new_ruler.patterns == [{"label": "ORG", "pattern": "Apple"}]
-        assert new_ruler.overwrite is True
 
 
 @pytest.mark.issue(4042)
 def test_issue4042():
-    """Test that serialization of an EntityRuler before NER works fine."""
+    """Test that serialization of an entity_ruler before NER works fine."""
     nlp = English()
     # add ner pipe
     ner = nlp.add_pipe("ner")

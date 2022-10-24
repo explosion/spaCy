@@ -375,7 +375,7 @@ scoped quantifiers – instead, you can build those behaviors with `on_match`
 callbacks.
 
 | OP      | Description                                                            |
-|---------|------------------------------------------------------------------------|
+| ------- | ---------------------------------------------------------------------- |
 | `!`     | Negate the pattern, by requiring it to match exactly 0 times.          |
 | `?`     | Make the pattern optional, by allowing it to match 0 or 1 times.       |
 | `+`     | Require the pattern to match 1 or more times.                          |
@@ -471,7 +471,7 @@ matches = matcher(doc)
 ```
 
 A very similar logic has been implemented in the built-in
-[`EntityRuler`](/api/entityruler) by the way. It also takes care of handling
+[`entity_ruler`](/api/entityruler) by the way. It also takes care of handling
 overlapping matches, which you would otherwise have to take care of yourself.
 
 > #### Tip: Visualizing matches
@@ -1270,7 +1270,7 @@ of patterns such as `{}` that match any token in the sentence.
 
 ## Rule-based entity recognition {#entityruler new="2.1"}
 
-The [`EntityRuler`](/api/entityruler) is a component that lets you add named
+The [`entity_ruler`](/api/entityruler) is a component that lets you add named
 entities based on pattern dictionaries, which makes it easy to combine
 rule-based and statistical named entity recognition for even more powerful
 pipelines.
@@ -1295,13 +1295,12 @@ pattern. The entity ruler accepts two types of patterns:
 
 ### Using the entity ruler {#entityruler-usage}
 
-The [`EntityRuler`](/api/entityruler) is a pipeline component that's typically
-added via [`nlp.add_pipe`](/api/language#add_pipe). When the `nlp` object is
-called on a text, it will find matches in the `doc` and add them as entities to
-the `doc.ents`, using the specified pattern label as the entity label. If any
-matches were to overlap, the pattern matching most tokens takes priority. If
-they also happen to be equally long, then the match occurring first in the `Doc`
-is chosen.
+The `entity_ruler` is a pipeline component that's typically added via
+[`nlp.add_pipe`](/api/language#add_pipe). When the `nlp` object is called on a
+text, it will find matches in the `doc` and add them as entities to `doc.ents`,
+using the specified pattern label as the entity label. If any matches were to
+overlap, the pattern matching most tokens takes priority. If they also happen to
+be equally long, then the match occurring first in the `Doc` is chosen.
 
 ```python
 ### {executable="true"}
@@ -1339,7 +1338,7 @@ doc = nlp("MyCorp Inc. is a company in the U.S.")
 print([(ent.text, ent.label_) for ent in doc.ents])
 ```
 
-#### Validating and debugging EntityRuler patterns {#entityruler-pattern-validation new="2.1.8"}
+#### Validating and debugging entity ruler patterns {#entityruler-pattern-validation new="2.1.8"}
 
 The entity ruler can validate patterns against a JSON schema with the config
 setting `"validate"`. See details under
@@ -1351,9 +1350,9 @@ ruler = nlp.add_pipe("entity_ruler", config={"validate": True})
 
 ### Adding IDs to patterns {#entityruler-ent-ids new="2.2.2"}
 
-The [`EntityRuler`](/api/entityruler) can also accept an `id` attribute for each
-pattern. Using the `id` attribute allows multiple patterns to be associated with
-the same entity.
+The [`entity_ruler`](/api/entityruler) can also accept an `id` attribute for
+each pattern. Using the `id` attribute allows multiple patterns to be associated
+with the same entity.
 
 ```python
 ### {executable="true"}
@@ -1373,10 +1372,10 @@ doc2 = nlp("Apple is opening its first big office in San Fran.")
 print([(ent.text, ent.label_, ent.id_) for ent in doc2.ents])
 ```
 
-If the `id` attribute is included in the [`EntityRuler`](/api/entityruler)
-patterns, the `id_` property of the matched entity is set to the `id` given
-in the patterns. So in the example above it's easy to identify that "San
-Francisco" and "San Fran" are both the same entity.
+If the `id` attribute is included in the [`entity_ruler`](/api/entityruler)
+patterns, the `id_` property of the matched entity is set to the `id` given in
+the patterns. So in the example above it's easy to identify that "San Francisco"
+and "San Fran" are both the same entity.
 
 ### Using pattern files {#entityruler-files}
 
@@ -1400,13 +1399,13 @@ new_ruler = nlp.add_pipe("entity_ruler").from_disk("./patterns.jsonl")
 
 If you're using the [Prodigy](https://prodi.gy) annotation tool, you might
 recognize these pattern files from bootstrapping your named entity and text
-classification labelling. The patterns for the `EntityRuler` follow the same
+classification labelling. The patterns for the `entity_ruler` follow the same
 syntax, so you can use your existing Prodigy pattern files in spaCy, and vice
 versa.
 
 </Infobox>
 
-When you save out an `nlp` object that has an `EntityRuler` added to its
+When you save out an `nlp` object that has an `entity_ruler` added to its
 pipeline, its patterns are automatically exported to the pipeline directory:
 
 ```python
@@ -1429,9 +1428,9 @@ rules included!
 
 When using a large amount of **phrase patterns** (roughly > 10000) it's useful
 to understand how the `add_patterns` function of the entity ruler works. For
-each **phrase pattern**, the EntityRuler calls the nlp object to construct a doc
-object. This happens in case you try to add the EntityRuler at the end of an
-existing pipeline with, for example, a POS tagger and want to extract matches
+each **phrase pattern**, the entity ruler calls the nlp object to construct a
+doc object. This happens in case you try to add the entity ruler at the end of
+an existing pipeline with, for example, a POS tagger and want to extract matches
 based on the pattern's POS signature. In this case you would pass a config value
 of `"phrase_matcher_attr": "POS"` for the entity ruler.
 

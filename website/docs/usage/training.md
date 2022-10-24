@@ -424,7 +424,7 @@ your components during training, and the most common scenarios are:
 2. Update an existing **trained component** with more examples.
 3. Include an existing trained component without updating it.
 4. Include a non-trainable component, like a rule-based
-   [`EntityRuler`](/api/entityruler) or [`Sentencizer`](/api/sentencizer), or a
+   [`SpanRuler`](/api/spanruler) or [`Sentencizer`](/api/sentencizer), or a
    fully [custom component](/usage/processing-pipelines#custom-components).
 
 If a component block defines a `factory`, spaCy will look it up in the
