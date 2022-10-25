@@ -72,7 +72,7 @@ subword_features = true
     "textcat",
     assigns=["doc.cats"],
     default_config={
-        "threshold": 0.0,
+        "threshold": None,
         "model": DEFAULT_SINGLE_TEXTCAT_MODEL,
         "scorer": {"@scorers": "spacy.textcat_scorer.v1"},
     },
@@ -94,7 +94,7 @@ def make_textcat(
     nlp: Language,
     name: str,
     model: Model[List[Doc], List[Floats2d]],
-    threshold: float,
+    threshold: Optional[float],
     scorer: Optional[Callable],
 ) -> "TextCategorizer":
     """Create a TextCategorizer component. The text categorizer predicts categories
@@ -135,7 +135,7 @@ class TextCategorizer(TrainablePipe):
         model: Model,
         name: str = "textcat",
         *,
-        threshold: float,
+        threshold: Optional[float],
         scorer: Optional[Callable] = textcat_score,
     ) -> None:
         """Initialize a text categorizer for single-label classification.
@@ -144,7 +144,8 @@ class TextCategorizer(TrainablePipe):
         model (thinc.api.Model): The Thinc Model powering the pipeline component.
         name (str): The component instance name, used to add entries to the
             losses during training.
-        threshold (float): Cutoff to consider a prediction "positive".
+        threshold (Optional[float]): Unused, not needed for single-label
+            (exclusive classes) classification.
         scorer (Optional[Callable]): The scoring method. Defaults to
                 Scorer.score_cats for the attribute "cats".
 
