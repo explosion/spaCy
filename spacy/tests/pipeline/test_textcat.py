@@ -823,7 +823,7 @@ def test_textcat_loss(multi_label: bool, expected_loss: float):
     assert loss == expected_loss
 
 
-def test_textcat_threshold():
+def test_textcat_multilabel_threshold():
     # Ensure the scorer can be called with a different threshold
     nlp = English()
     nlp.add_pipe("textcat_multilabel")
