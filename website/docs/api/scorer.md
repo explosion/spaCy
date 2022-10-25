@@ -238,7 +238,7 @@ The reported `{attr}_score` depends on the classification properties:
 | labels           | The set of possible labels. Defaults to `[]`. ~~Iterable[str]~~                                                                                                                                    |
 | `multi_label`    | Whether the attribute allows multiple labels. Defaults to `True`. When set to `False` (exclusive labels), missing gold labels are interpreted as `0.0` and the threshold is set to `0.0`. ~~bool~~ |
 | `positive_label` | The positive label for a binary task with exclusive classes. Defaults to `None`. ~~Optional[str]~~                                                                                                 |
-| `threshold`      | Cutoff to consider a prediction "positive". Defaults to 0.5 for multi-label, and `0.0` (i.e. whatever's highest scoring) otherwise. ~~float~~                                                      |
+| `threshold`      | Cutoff to consider a prediction "positive". Defaults to `0.5` for multi-label, and `0.0` (i.e. whatever's highest scoring) otherwise. ~~float~~                                                    |
 | **RETURNS**      | A dictionary containing the scores, with inapplicable scores as `None`. ~~Dict[str, Optional[float]]~~                                                                                             |
 
 ## Scorer.score_links {#score_links tag="staticmethod" new="3"}
