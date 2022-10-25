@@ -72,7 +72,7 @@ subword_features = true
     "textcat",
     assigns=["doc.cats"],
     default_config={
-        "threshold": None,
+        "threshold": 0.0,
         "model": DEFAULT_SINGLE_TEXTCAT_MODEL,
         "scorer": {"@scorers": "spacy.textcat_scorer.v1"},
     },
@@ -94,7 +94,7 @@ def make_textcat(
     nlp: Language,
     name: str,
     model: Model[List[Doc], List[Floats2d]],
-    threshold: Optional[float],
+    threshold: float,
     scorer: Optional[Callable],
 ) -> "TextCategorizer":
     """Create a TextCategorizer component. The text categorizer predicts categories
@@ -135,7 +135,7 @@ class TextCategorizer(TrainablePipe):
         model: Model,
         name: str = "textcat",
         *,
-        threshold: Optional[float],
+        threshold: float,
         scorer: Optional[Callable] = textcat_score,
     ) -> None:
         """Initialize a text categorizer for single-label classification.
