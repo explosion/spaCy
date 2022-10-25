@@ -144,8 +144,8 @@ class TextCategorizer(TrainablePipe):
         model (thinc.api.Model): The Thinc Model powering the pipeline component.
         name (str): The component instance name, used to add entries to the
             losses during training.
-        threshold (Optional[float]): Unused, not needed for single-label
-            (exclusive classes) classification.
+        threshold (float): Unused, not needed for single-label (exclusive
+            classes) classification.
         scorer (Optional[Callable]): The scoring method. Defaults to
                 Scorer.score_cats for the attribute "cats".
 
