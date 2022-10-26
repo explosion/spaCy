@@ -596,3 +596,12 @@ def walk_directory(path: Path, suffix: Optional[str] = None) -> List[Path]:
     # It's good to sort these, in case the ordering messes up cache.
     locs.sort()
     return locs
+
+
+def _format_number(number: Union[int, float], ndigits: int = 2) -> str:
+    """Formats a number (float or int) rounding to `ndigits`, without truncating trailing 0s,
+    as happens with `round(number, ndigits)`"""
+    if isinstance(number, float):
+        return f"{number:.{ndigits}f}"
+    else:
+        return str(number)

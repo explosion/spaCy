@@ -217,9 +217,9 @@ cdef class Doc:
             head in the doc. Defaults to None.
         deps (Optional[List[str]]): A list of unicode strings, of the same
             length as words, to assign as token.dep. Defaults to None.
-        sent_starts (Optional[List[Union[bool, None]]]): A list of values, of
-            the same length as words, to assign as token.is_sent_start. Will be
-            overridden by heads if heads is provided. Defaults to None.
+        sent_starts (Optional[List[Union[bool, int, None]]]): A list of values, 
+            of the same length as words, to assign as token.is_sent_start. Will 
+            be overridden by heads if heads is provided. Defaults to None.
         ents (Optional[List[str]]): A list of unicode strings, of the same
             length as words, as IOB tags to assign as token.ent_iob and
             token.ent_type. Defaults to None.
@@ -285,6 +285,7 @@ cdef class Doc:
             heads = [0] * len(deps)
         if heads and not deps:
             raise ValueError(Errors.E1017)
+        sent_starts = list(sent_starts) if sent_starts is not None else None
         if sent_starts is not None:
             for i in range(len(sent_starts)):
                 if sent_starts[i] is True:
@@ -300,12 +301,11 @@ cdef class Doc:
         ent_iobs = None
         ent_types = None
         if ents is not None:
+            ents = [ent if ent != "" else None for ent in ents]
             iob_strings = Token.iob_strings()
             # make valid IOB2 out of IOB1 or IOB2
             for i, ent in enumerate(ents):
-                if ent is "":
-                    ents[i] = None
-                elif ent is not None and not isinstance(ent, str):
+                if ent is not None and not isinstance(ent, str):
                     raise ValueError(Errors.E177.format(tag=ent))
                 if i < len(ents) - 1:
                     # OI -> OB
@@ -1608,24 +1608,20 @@ cdef class Doc:
                 Doc.set_extension(attr)
             self._.set(attr, doc_json["_"][attr])
 
-        if doc_json.get("underscore_token", {}):
-            for token_attr in doc_json["underscore_token"]:
-                token_start = doc_json["underscore_token"][token_attr]["token_start"]
-                value = doc_json["underscore_token"][token_attr]["value"]
-
-                if not Token.has_extension(token_attr):
-                    Token.set_extension(token_attr)
-                self[token_start]._.set(token_attr, value)
+        for token_attr in doc_json.get("underscore_token", {}):
+            if not Token.has_extension(token_attr):
+                Token.set_extension(token_attr)
+            for token_data in doc_json["underscore_token"][token_attr]:
+                start = token_by_char(self.c, self.length, token_data["start"])
+                value = token_data["value"]
+                self[start]._.set(token_attr, value)
                 
-        if doc_json.get("underscore_span", {}):
-            for span_attr in doc_json["underscore_span"]:
-                token_start = doc_json["underscore_span"][span_attr]["token_start"]
-                token_end = doc_json["underscore_span"][span_attr]["token_end"]
-                value = doc_json["underscore_span"][span_attr]["value"]
-
-                if not Span.has_extension(span_attr):
-                    Span.set_extension(span_attr)
-                self[token_start:token_end]._.set(span_attr, value)
+        for span_attr in doc_json.get("underscore_span", {}):
+            if not Span.has_extension(span_attr):
+                Span.set_extension(span_attr)
+            for span_data in doc_json["underscore_span"][span_attr]:
+                value = span_data["value"]
+                self.char_span(span_data["start"], span_data["end"])._.set(span_attr, value)
         return self
 
     def to_json(self, underscore=None):
@@ -1673,30 +1669,34 @@ cdef class Doc:
         if underscore:
             user_keys = set()
             if self.user_data:
-                data["_"] = {}
-                data["underscore_token"] = {}
-                data["underscore_span"] = {}
-                for data_key in self.user_data:
+                for data_key, value in self.user_data.copy().items():
                     if type(data_key) == tuple and len(data_key) >= 4 and data_key[0] == "._.":
                         attr = data_key[1]
                         start = data_key[2]
                         end = data_key[3]
                         if attr in underscore:
                             user_keys.add(attr)
-                            value = self.user_data[data_key]
                             if not srsly.is_json_serializable(value):
                                 raise ValueError(Errors.E107.format(attr=attr, value=repr(value)))
                             # Check if doc attribute
                             if start is None:
+                                if "_" not in data:
+                                    data["_"] = {}
                                 data["_"][attr] = value
                             # Check if token attribute
                             elif end is None:
+                                if "underscore_token" not in data:
+                                    data["underscore_token"] = {}
                                 if attr not in data["underscore_token"]:
-                                    data["underscore_token"][attr] = {"token_start": start, "value": value}
+                                    data["underscore_token"][attr] = []
+                                data["underscore_token"][attr].append({"start": start, "value": value})
                             # Else span attribute
                             else:
+                                if "underscore_span" not in data:
+                                    data["underscore_span"] = {}
                                 if attr not in data["underscore_span"]:
-                                    data["underscore_span"][attr] = {"token_start": start, "token_end": end, "value": value}
+                                    data["underscore_span"][attr] = []
+                                data["underscore_span"][attr].append({"start": start, "end": end, "value": value})
 
             for attr in underscore:
                 if attr not in user_keys:

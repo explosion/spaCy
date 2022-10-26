@@ -8,7 +8,7 @@ be used in real products.
 
 spaCy comes with
 [pretrained pipelines](https://spacy.io/models) and
-currently supports tokenization and training for **60+ languages**. It features
+currently supports tokenization and training for **70+ languages**. It features
 state-of-the-art speed and **neural network models** for tagging,
 parsing, **named entity recognition**, **text classification** and more,
 multi-task learning with pretrained **transformers** like BERT, as well as a
@@ -16,7 +16,7 @@ production-ready [**training system**](https://spacy.io/usage/training) and easy
 model packaging, deployment and workflow management. spaCy is commercial
 open-source software, released under the MIT license.
 
-💫 **Version 3.4.0 out now!**
+💫 **Version 3.4 out now!**
 [Check out the release notes here.](https://github.com/explosion/spaCy/releases)
 
 [![Azure Pipelines](https://img.shields.io/azure-devops/build/explosion-ai/public/8/master.svg?logo=azure-pipelines&style=flat-square&label=build)](https://dev.azure.com/explosion-ai/public/_build?definitionId=8)
@@ -79,7 +79,7 @@ more people can benefit from it.
 
 ## Features
 
-- Support for **60+ languages**
+- Support for **70+ languages**
 - **Trained pipelines** for different languages and tasks
 - Multi-task learning with pretrained **transformers** like BERT
 - Support for pretrained **word vectors** and embeddings
