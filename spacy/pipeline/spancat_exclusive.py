@@ -26,7 +26,7 @@ scorer = {"@layers": "Softmax.v2"}
 hidden_size = 128
 
 [model.tok2vec]
-@architectures = "spacy.Tok2Vec.v1"
+@architectures = "spacy.Tok2Vec.v2"
 [model.tok2vec.embed]
 @architectures = "spacy.MultiHashEmbed.v1"
 width = 96
@@ -35,7 +35,7 @@ attrs = ["ORTH", "PREFIX", "SUFFIX", "SHAPE"]
 include_static_vectors = false
 
 [model.tok2vec.encode]
-@architectures = "spacy.MaxoutWindowEncoder.v1"
+@architectures = "spacy.MaxoutWindowEncoder.v2"
 width = ${model.tok2vec.embed.width}
 window_size = 1
 maxout_pieces = 3
