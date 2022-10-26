@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, cast
+from typing import Callable, Dict, Iterable, List, Optional, Tuple, cast
 
 import numpy
 from thinc.api import Config, Model, Ops, Optimizer
