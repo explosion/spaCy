@@ -23,9 +23,9 @@ jobs:
           today=$(date '+%Y-%m-%d %H:%M:%S')
           yesterday=$(date -d "yesterday" '+%Y-%m-%d %H:%M:%S')
           if git log --after="$yesterday" --before="$today" | grep commit ; then
-            echo "::set-output name=run_tests::true"
+            echo run_tests=true >> $GITHUB_OUTPUT
           else
-            echo "::set-output name=run_tests::false"
+            echo run_tests=false >> $GITHUB_OUTPUT
           fi
 
       - name: Trigger buildkite build
