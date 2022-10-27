@@ -1738,9 +1738,7 @@ def all_equal(iterable):
 
 
 def require_annotation(
-    annotations: Sequence[Union[str, int]],
-    *,
-    require_complete: Sequence[bool] = None
+    annotations: Sequence[Union[str, int]], *, require_complete: Sequence[bool] = None
 ) -> Callable:
     """
     To be used as a decorator for functions whose first argument
@@ -1788,7 +1786,9 @@ def require_annotation(
                         msg += " (complete)"
                 else:
                     msg = ""
-                    for i, (attr, complete) in enumerate(zip(annotations, require_complete)):
+                    for i, (attr, complete) in enumerate(
+                        zip(annotations, require_complete)
+                    ):
                         if i != 0:
                             msg += " "
                         msg += str(attr)
@@ -1803,5 +1803,7 @@ def require_annotation(
                 )
             else:
                 return func(doclike, *args, **kwargs)
+
         return func_with_require
+
     return require_annotation_decorator
