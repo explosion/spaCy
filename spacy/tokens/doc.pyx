@@ -1790,10 +1790,10 @@ cdef class Doc:
         hashes = numpy.empty((num_toks, ss_h_end), dtype="int64")
 
         # Determine the maximum possible lengths of the affixes to work out how big the buffers need to be
-        cdef int p_max_l = max(p_lengths) if p_h_num > 0 else 0
-        cdef int s_max_l = max(s_lengths) if s_h_num > 0 else 0
-        cdef int ps_max_l = max(ps_lengths) if ps_h_num > 0 else 0
-        cdef int ss_max_l = max(ss_lengths) if ss_h_num > 0 else 0
+        cdef int p_max_l = p_lengths[-1] if p_h_num > 0 else 0
+        cdef int s_max_l = s_lengths[-1] if s_h_num > 0 else 0
+        cdef int ps_max_l = ps_lengths[-1] if ps_h_num > 0 else 0
+        cdef int ss_max_l = ss_lengths[-1] if ss_h_num > 0 else 0
 
         # Define / allocate buffers
         cdef int aff_l  = p_max_l + s_max_l
