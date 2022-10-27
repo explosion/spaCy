@@ -1,5 +1,6 @@
 from encodings import search_function
 from typing import Optional, List, Union, cast
+import warnings
 from spacy.ml.richfeatureextractor import RichFeatureExtractor
 from thinc.types import Floats2d, Ints2d, Ragged
 from thinc.api import chain, clone, concatenate, with_array, with_padded
@@ -8,7 +9,7 @@ from thinc.api import expand_window, residual, Maxout, Mish, PyTorchLSTM
 
 from ...tokens import Doc
 from ...util import registry
-from ...errors import Errors
+from ...errors import Errors, Warnings
 from ...ml import _character_embed
 from ..staticvectors import StaticVectors
 from ..featureextractor import FeatureExtractor
@@ -207,6 +208,8 @@ def _verify_rich_config_group(
             raise ValueError(Errors.E1047.format(label=label))
     elif search_chars is not None:
         raise ValueError(Errors.E1047.format(label=label))
+    if lengths is not None and max(lengths) > 63:
+        raise ValueError(Errors.E1048.format(label=label))
 
 
 @registry.architectures("spacy.RichMultiHashEmbed.v1")
@@ -246,13 +249,13 @@ def RichMultiHashEmbed(
     depending on the presence of some other letter before or after it, e.g. German
     plural nouns where the final two vowels are `ä-e` regularly correspond to
     singular lemmas where the `e` is no longer present and the `ä` has become `a`.
-    For most languages used with spaCy, searching is likely to be useful starting 
-    at the end (`suff_*`), but the ability to search from the beginning (`pref_*`) 
-    is also offered for completeness. Search characters should consist of all 
-    characters that regularly alternate with other characters in the language in 
-    question or whose presence before or after characters that would otherwise 
-    alternate prevents the alternation from occurring, e.g. an `ä` in a German 
-    plural noun does not become `a` if it is the third or fourth vowel from the 
+    For most languages used with spaCy, searching is likely to be useful starting
+    at the end (`suff_*`), but the ability to search from the beginning (`pref_*`)
+    is also offered for completeness. Search characters should consist of all
+    characters that regularly alternate with other characters in the language in
+    question or whose presence before or after characters that would otherwise
+    alternate prevents the alternation from occurring, e.g. an `ä` in a German
+    plural noun does not become `a` if it is the third or fourth vowel from the
     end of the word.
 
     width (int): The output width. Also used as the width of the embedding tables.
@@ -263,27 +266,27 @@ def RichMultiHashEmbed(
         same length as attrs.
     include_static_vectors (bool): Whether to also use static word vectors.
         Requires a vectors table to be loaded in the Doc objects' vocab.
-    case_sensitive (bool): Whether lower-case and upper-case letters should be 
+    case_sensitive (bool): Whether lower-case and upper-case letters should be
         distinguished when generating the character combinations to use as features.
-    pref_lengths (Optional[List[int]]): The lengths of prefixes to use as features 
-        for each word, e.g. for the word `spaCy`: 
+    pref_lengths (Optional[List[int]]): The lengths of prefixes to use as features
+        for each word, e.g. for the word `spaCy`:
         `[1, 3]` would lead to `s` and `spa` being used as features.
     pref_rows (Optional[List[int]]): The number of rows for each of `pref_lengths`.
-    suff_lengths (Optional[List[int]]): The lengths of suffixes to use as features 
-        for each word, e.g. for the word `spaCy`: 
+    suff_lengths (Optional[List[int]]): The lengths of suffixes to use as features
+        for each word, e.g. for the word `spaCy`:
         `[1, 3]` would lead to `y` and `aCy` being used as features.
     suff_rows (Optional[List[int]]): The number of rows for each of `suff_lengths`.
-    pref_search_chars (Optional[str]): A string containing characters to search for 
+    pref_search_chars (Optional[str]): A string containing characters to search for
         starting from the beginning of each word.
-    pref_search_lengths (Optional[List[int]]): The lengths of search result strings 
+    pref_search_lengths (Optional[List[int]]): The lengths of search result strings
         to use as features, where the searches start from the beginning of each word.
-    pref_search_rows (Optional[List[int]]): The number of rows for each of 
+    pref_search_rows (Optional[List[int]]): The number of rows for each of
         `pref_search_lengths`.
-    suff_search_chars (Optional[str]): A string containing characters to search for 
+    suff_search_chars (Optional[str]): A string containing characters to search for
         starting from the end of each word.
-    suff_search_lengths (Optional[List[int]]): The lengths of search result strings 
+    suff_search_lengths (Optional[List[int]]): The lengths of search result strings
         to use as features, where the searches start from the end of each word.
-    suff_search_rows (Optional[List[int]]): The number of rows for each of 
+    suff_search_rows (Optional[List[int]]): The number of rows for each of
         `suff_search_lengths`.
     """
 
@@ -312,6 +315,9 @@ def RichMultiHashEmbed(
         True,
         case_sensitive,
     )
+
+    if "PREFIX" in attrs or "SUFFIX" in attrs:
+        warnings.warn(Warnings.W124)
 
     if pref_rows is not None:
         rows.extend(pref_rows)

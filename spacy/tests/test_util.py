@@ -1,55 +1,57 @@
 import spacy
+import pytest
 
 
-def test_get_arrays_for_search_chars_width_2_not_case_sensitive():
-    (
-        search,
-        lookup,
-    ) = spacy.util.get_arrays_for_search_chars("bféwfw", False)
-    assert (
-        lookup
-        == b"b\x00\x00\x00f\x00\x00\x00w\x00\x00\x00b\x00\x00\x00f\x00\x00\x00w\x00\x00\x00\xe9\x00\x00\x00\xe9\x00\x00\x00"
-    )
+@pytest.mark.parametrize("case_sensitive", [True, False])
+def test_get_search_char_byte_arrays_1_width_only(case_sensitive):
+    sc1, sc2, sc3, sc4 = spacy.util.get_search_char_byte_arrays("zzaaEP", case_sensitive)
+    if case_sensitive:
+        assert sc1 == b"EPaz" 
+    else:
+        assert sc1 == b"aepz"
+    assert sc2 == b""
+    assert sc3 == b""
+    assert sc4 == b""
 
-    assert (
-        search
-        == b"B\x00\x00\x00F\x00\x00\x00W\x00\x00\x00b\x00\x00\x00f\x00\x00\x00w\x00\x00\x00\xc9\x00\x00\x00\xe9\x00\x00\x00"
-    )
+@pytest.mark.parametrize("case_sensitive", [True, False])
+def test_get_search_char_byte_arrays_4_width_only(case_sensitive):
+    sc1, sc2, sc3, sc4 = spacy.util.get_search_char_byte_arrays("𐌞", case_sensitive)
+    assert sc1 == b""
+    assert sc2 == b""
+    assert sc3 == b""
+    assert sc4 == "𐌞".encode("utf-8")
 
+@pytest.mark.parametrize("case_sensitive", [True, False])
+def test_get_search_char_byte_arrays_all_widths(case_sensitive):
+    sc1, sc2, sc3, sc4 = spacy.util.get_search_char_byte_arrays("𐌞Éabé—B𐌞", case_sensitive)
+    if case_sensitive:
+        assert sc1 == b"Bab"
+        assert sc2 == "Éé".encode("utf-8")
+    else:
+        assert sc1 == b"ab"
+        assert sc2 == "é".encode("utf-8")
+    assert sc3 == "—".encode("utf-8")
+    assert sc4 == "𐌞".encode("utf-8")
 
-def test_get_arrays_for_search_chars_width_2_case_sensitive():
-    (
-        search,
-        lookup,
-    ) = spacy.util.get_arrays_for_search_chars("bféwfw", True)
-    assert (
-        lookup == search == b"b\x00\x00\x00f\x00\x00\x00w\x00\x00\x00\xe9\x00\x00\x00"
-    )
+@pytest.mark.parametrize("case_sensitive", [True, False])
+def test_turkish_i_with_dot(case_sensitive):
+    sc1, sc2, sc3, sc4 = spacy.util.get_search_char_byte_arrays("İ", case_sensitive)
+    if case_sensitive:
+        assert sc2 == "İ".encode("utf-8")
+        assert sc1 == sc3 == sc4 == b""
+    else:
+        assert sc1 == b"i"
+        assert sc2 == b"\xcc\x87"
+        assert sc3 == sc4 == b""
 
-
-def test_get_arrays_for_search_chars_width_4_not_case_sensitive():
-    (
-        search,
-        lookup,
-    ) = spacy.util.get_arrays_for_search_chars("bfé𐌞wf𐌞wÉ", False)
-    assert (
-        search
-        == b"\x1e\x03\x01\x00B\x00\x00\x00F\x00\x00\x00W\x00\x00\x00b\x00\x00\x00f\x00\x00\x00w\x00\x00\x00\xc9\x00\x00\x00\xe9\x00\x00\x00"
-    )
-
-    assert (
-        lookup
-        == b"\x1e\x03\x01\x00b\x00\x00\x00f\x00\x00\x00w\x00\x00\x00b\x00\x00\x00f\x00\x00\x00w\x00\x00\x00\xe9\x00\x00\x00\xe9\x00\x00\x00"
-    )
-
-
-def test_get_arrays_for_search_chars_width_4_case_sensitive():
-    (
-        search,
-        lookup,
-    ) = spacy.util.get_arrays_for_search_chars("bfé𐌞wf𐌞wÉ", True)
-    assert search == lookup
-    assert (
-        lookup
-        == b"\x1e\x03\x01\x00b\x00\x00\x00f\x00\x00\x00w\x00\x00\x00\xc9\x00\x00\x00\xe9\x00\x00\x00"
-    )
+@pytest.mark.parametrize("case_sensitive", [True, False])
+def test_turkish_i_with_dot_and_normal_i(case_sensitive):
+    sc1, sc2, sc3, sc4 = spacy.util.get_search_char_byte_arrays("İI", case_sensitive)
+    if case_sensitive:
+        assert sc1 == b"I"
+        assert sc2 == "İ".encode("utf-8")
+        assert sc3 == sc4 == b""
+    else:
+        assert sc1 == b"i"
+        assert sc2 == b"\xcc\x87"
+        assert sc3 == sc4 == b""

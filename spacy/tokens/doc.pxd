@@ -38,34 +38,22 @@ cdef int token_by_end(const TokenC* tokens, int length, int end_char) except -2
 cdef int [:,:] _get_lca_matrix(Doc, int start, int end)
 
 
-cdef void _copy_chars(
-    Py_UCS4* target,
-    const Py_UCS4* source,
-    const int length,
-    const bint to_lower
-)
-
-
-cdef void _set_affixes(
-    const Py_UCS4* text_buf,
-    const int tok_idx, 
-    const int tok_len,
-    Py_UCS4* aff_buf, 
+cdef void _set_affix_lengths(
+    const unsigned char[:] text_buf,
+    char* aff_len_buf, 
     const int pref_len, 
     const int suff_len,
-    const bint to_lower
-)
+) nogil
 
 
-cdef void _search_for_chars(
-    const Py_UCS4* text_buf,
-    const int tok_idx, 
-    const int tok_len, 
-    Py_UCS4* search_buf, 
-    Py_UCS4* lookup_buf,
-    const int search_buf_len, 
-    Py_UCS4* result_buf, 
-    const int result_buf_len, 
+cdef bint _search_for_chars(
+    const unsigned char[:] tok_str,
+    const unsigned char[:] s_1byte_ch,
+    const unsigned char[:] s_2byte_ch,
+    const unsigned char[:] s_3byte_ch,
+    const unsigned char[:] s_4byte_ch,
+    unsigned char* res_buf,
+    unsigned char* len_buf,
     bint suffs_not_prefs
 ) nogil
 

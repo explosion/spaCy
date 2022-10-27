@@ -214,6 +214,8 @@ class Warnings(metaclass=ErrorsWithCodes):
             "is a Cython extension type.")
     W123 = ("Argument {arg} with value {arg_value} is used instead of {config_value} as specified in the config. Be "
             "aware that this might affect other components in your pipeline.")
+    W124 = ("Using the features PREFIX and/or SUFFIX in a RichFeatureExtractor configuration may lead to the same "
+            "information being fed forward twice if prefixes and suffixes of corresponding lengths are specified.")    
 
 
 class Errors(metaclass=ErrorsWithCodes):
@@ -953,6 +955,8 @@ class Errors(metaclass=ErrorsWithCodes):
     E1046 = ("{cls_name} is an abstract class and cannot be instantiated. If you are looking for spaCy's default "
              "knowledge base, use `InMemoryLookupKB`.")
     E1047 = ("Invalid rich group config '{label}'.")
+    E1048 = ("Length > 63 in rich group config '{label}.")
+    E1049 = ("Error splitting UTF-8 byte string into separate characters.")
 
 
 # Deprecated model shortcuts, only used in errors and warnings

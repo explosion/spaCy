@@ -126,7 +126,7 @@ class Doc:
         blocked: Optional[List[Span]] = ...,
         missing: Optional[List[Span]] = ...,
         outside: Optional[List[Span]] = ...,
-        default: str = ...
+        default: str = ...,
     ) -> None: ...
     @property
     def noun_chunks(self) -> Iterator[Span]: ...
@@ -178,16 +178,18 @@ class Doc:
         self,
         *,
         cs: bool,
-        pref_lengths: Ints1d,
-        suff_lengths: Ints1d,
-        pref_search_chars: str,
-        pref_lookup_chars: str,
-        pref_search_char_length: int,
-        pref_search_lengths: Ints1d,
-        suff_search_chars: str,
-        suff_lookup_chars: str,
-        suff_search_char_length: int,
-        suff_search_lengths: Ints1d,
+        p_lengths: Ints1d,
+        s_lengths: Ints1d,
+        ps_1byte_ch: bytes,
+        ps_2byte_ch: bytes,
+        ps_3byte_ch: bytes,
+        ps_4byte_ch: bytes,
+        ps_lengths: Ints1d,
+        ss_1byte_ch: bytes,
+        ss_2byte_ch: bytes,
+        ss_3byte_ch: bytes,
+        ss_4byte_ch: bytes,
+        ss_lengths: Ints1d,
     ) -> Ints2d: ...
     @staticmethod
     def _get_array_attrs() -> Tuple[Any]: ...

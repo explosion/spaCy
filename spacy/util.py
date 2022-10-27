@@ -1737,69 +1737,42 @@ def all_equal(iterable):
     return next(g, True) and not next(g, False)
 
 
-def get_arrays_for_search_chars(
+def get_search_char_byte_arrays(
     search_chars: str, case_sensitive: bool
-) -> Tuple[bytes, bytes]:
+) -> Tuple[bytes, bytes, bytes, bytes]:
     """
-    This function supports the rich feature extractor. It returns search byte arrays with
-    4-byte character width that are used for comparison when searching document texts 
-    for search characters. The encoding is little-endian regardless of architecture, as 
-    this is what is expected by the murmurhash library used downstream.
-
-    Alongside the "search array" against which words from document texts are compared
-    is the "lookup array". When a character from the search array is matched,
-    the character at the corresponding position in the lookup array is added to the
-    sequence that then goes on to be hashed. This enables case-sensitivity
-    to be handled without converting the case of the words being searched: if 
-    *case_sensitive==False*, the lower- or uppercase counterparts of any characters that
-    have case are added to the search array, and both the original character and its
-    other-cased counterpart map to the lower-case version in the lookup array.
+    This function supports the rich feature extractor. It splits the UTF-8 representation
+    of *search_chars* into separate byte arrays containing 1-, 2-, 3-, and 4-byte
+    characters respectively. Any duplicates in *search_chars* are removed, and *search_chars*
+    is converted to lower case if *case_sensitive==False*.
     """
 
-    def encode(ch: str) -> bytes:
-        """
-        ch: a single character
-        """
-        return ch.encode("UTF-32LE")
- 
-    def add_to_arrays(
-        search: List[bytes], lookup: List[bytes], ch: str
-    ) -> None:
-        """Add the byte representations of *ch* to the two byte array lists.
-        """
-        this_char_bytes = encode(ch)
-        if not case_sensitive and ch.islower():
-            if this_char_bytes not in search:
-                search.append(this_char_bytes)
-                lookup.append(this_char_bytes)
-            upper_char_bytes = encode(ch.upper())
-            if upper_char_bytes not in search:
-                search.append(upper_char_bytes)
-                lookup.append(this_char_bytes)
-        elif not case_sensitive and ch.isupper():
-            lower_char_bytes = encode(ch.lower())
-            if this_char_bytes not in search:
-                search.append(this_char_bytes)
-                lookup.append(lower_char_bytes)
-            if lower_char_bytes not in search:
-                search.append(lower_char_bytes)
-                lookup.append(lower_char_bytes)
-        elif this_char_bytes not in search:
-            search.append(this_char_bytes)
-            lookup.append(this_char_bytes)
-
-    def get_ordered_raw_bytes(
-        search: List[bytes], lookup: List[bytes]
-    ) -> Tuple[bytes, bytes]:
-        """Flatten the two lists, ordering both by the entries in *search*.
-        """
-        num_search = [list(entry) for entry in search]
-        search = [entry for _, entry in sorted(zip(num_search, search))]
-        lookup = [entry for _, entry in sorted(zip(num_search, lookup))]
-        return b"".join(search), b"".join(lookup)
-
-    search: List[bytes] = []
-    lookup: List[bytes] = []
-    for ch in search_chars:
-        add_to_arrays(search, lookup, ch)
-    return get_ordered_raw_bytes(search, lookup)
+    sc1 = bytearray()
+    sc2 = bytearray()
+    sc3 = bytearray()
+    sc4 = bytearray()
+    if not case_sensitive:
+        search_chars = search_chars.lower()
+    ordered_search_chars = "".join(sorted(set(search_chars)))
+    encoded_search_char_bytes = ordered_search_chars.encode("UTF-8")
+    working_start = 0
+    for idx in range(len(encoded_search_char_bytes) + 1):
+        if idx == 0:
+            continue
+        if (
+            idx == len(encoded_search_char_bytes)
+            or encoded_search_char_bytes[idx] & 0xC0 != 0x80  # not continuation byte
+        ):
+            char_length = idx - working_start
+            if char_length == 1:
+                sc1.extend(encoded_search_char_bytes[working_start:idx])
+            elif char_length == 2:
+                sc2.extend(encoded_search_char_bytes[working_start:idx])
+            elif char_length == 3:
+                sc3.extend(encoded_search_char_bytes[working_start:idx])
+            elif char_length == 4:
+                sc4.extend(encoded_search_char_bytes[working_start:idx])
+            else:
+                raise RuntimeError(Errors.E1049)
+            working_start = idx
+    return bytes(sc1), bytes(sc2), bytes(sc3), bytes(sc4)
