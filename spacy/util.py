@@ -1774,6 +1774,7 @@ def require_annotation(
 
     def require_annotation_decorator(func: Callable) -> Callable:
         def func_with_require(doclike, *args, **kwargs) -> Any:
+            require_complete: Sequence[bool]
             missing = []
             # Check for missing annotations
             for attr, complete in zip(annotations, require_complete):
