@@ -952,6 +952,7 @@ class Errors(metaclass=ErrorsWithCodes):
              "sure it's overwritten on the subclass.")
     E1046 = ("{cls_name} is an abstract class and cannot be instantiated. If you are looking for spaCy's default "
              "knowledge base, use `InMemoryLookupKB`.")
+    E1047 = ("The function `{name}` requires annotations {annotations} to be set, but did not find {missing}.")
 
 
 # Deprecated model shortcuts, only used in errors and warnings

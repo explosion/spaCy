@@ -1,5 +1,5 @@
 from typing import List, Mapping, NoReturn, Union, Dict, Any, Set, cast
-from typing import Optional, Iterable, Callable, Tuple, Type
+from typing import Optional, Iterable, Callable, Tuple, Type, Sequence
 from typing import Iterator, Pattern, Generator, TYPE_CHECKING
 from types import ModuleType
 import os
@@ -1735,3 +1735,72 @@ def all_equal(iterable):
     (or if the input is an empty sequence), False otherwise."""
     g = itertools.groupby(iterable)
     return next(g, True) and not next(g, False)
+
+
+def require_annotation(
+    annotations: Sequence[Union[str, int]],
+    *,
+    require_complete: Sequence[bool] = None
+) -> Callable:
+    """
+    To be used as a decorator for functions whose first argument
+    is a Doc or a Span. For example:
+
+    @require_annotation(["POS"])
+    def extract_pos(doc: Doc):
+        return [token.pos_ for token in doc]
+
+    Here we check if the input Doc has "POS" annotation and
+    otherwise we raise an informative error.
+
+    annotations: Sequence[Union[str, int]]
+        The annotations to check for e.g.: "DEP", "POS".
+    require_complete: Sequence[bool]
+        For each annotation only consider that it fullfils
+        the requirement if all tokens are annotated. Otherwise
+        partial annotation is accepted.
+    """
+    # Check input.
+    if require_complete is None:
+        require_complete = [False for _ in range(len(annotations))]
+    else:
+        if len(require_complete) != len(annotations):
+            raise ValueError(
+                "Have to provide the same number of values for "
+                "`annotations` and `require_complete`, but found "
+                f"{len(annotations)} values for `annotations` "
+                f"and {len(require_complete)} values for `require_complete"
+            )
+
+    def require_annotation_decorator(func: Callable) -> Callable:
+        def func_with_require(doclike, *args, **kwargs) -> Any:
+            missing = []
+            # Check for missing annotations
+            for attr, complete in zip(annotations, require_complete):
+                if not doclike.doc.has_annotation(attr, require_complete=complete):
+                    missing.append(attr)
+            # Build error message and raise error.
+            if missing:
+                if len(annotations) == 1:
+                    msg = "{}".format(annotations[0])
+                    if require_complete[0]:
+                        msg += " (complete)"
+                else:
+                    msg = ""
+                    for i, (attr, complete) in enumerate(zip(annotations, require_complete)):
+                        if i != 0:
+                            msg += " "
+                        msg += str(attr)
+                        if complete:
+                            msg += " (complete)"
+                        if i != len(annotations) - 1:
+                            msg += ","
+                raise ValueError(
+                    Errors.E1047.format(
+                        name=func.__name__, annotations=msg, missing=missing
+                    )
+                )
+            else:
+                return func(doclike, *args, **kwargs)
+        return func_with_require
+    return require_annotation_decorator

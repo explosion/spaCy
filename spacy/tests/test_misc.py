@@ -1,14 +1,17 @@
 import pytest
 import os
 import ctypes
+import spacy
+from typing import Union
 from pathlib import Path
 from spacy.about import __version__ as spacy_version
 from spacy import util
 from spacy import prefer_gpu, require_gpu, require_cpu
+from spacy.tokens import Doc, Span
 from spacy.ml._precomputable_affine import PrecomputableAffine
 from spacy.ml._precomputable_affine import _backprop_precomputable_affine_padding
 from spacy.util import dot_to_object, SimpleFrozenList, import_file
-from spacy.util import to_ternary_int
+from spacy.util import to_ternary_int, require_annotation
 from thinc.api import Config, Optimizer, ConfigValidationError
 from thinc.api import get_current_ops, set_current_ops, NumpyOps, CupyOps, MPSOps
 from thinc.compat import has_cupy_gpu, has_torch_mps_gpu
@@ -434,3 +437,75 @@ def test_to_ternary_int():
     assert to_ternary_int(-10) == -1
     assert to_ternary_int("string") == -1
     assert to_ternary_int([0, "string"]) == -1
+
+
+def test_require_annotations():
+
+    @require_annotation([])
+    def func_none(doc) -> bool:
+        return True
+
+    @require_annotation(["TAG"])
+    def func_tag(doc) -> bool:
+        return True
+
+    @require_annotation(["ENT_IOB"])
+    def func_ner(doc) -> bool:
+        return True
+
+    @require_annotation(["TAG"], require_complete=[True])
+    def func_tag_complete(doc) -> bool:
+        return True
+
+    @require_annotation(["ENT_IOB"])
+    def func_ner_complete(doc, require_complete=[True]) -> bool:
+        return True
+
+    @require_annotation(["TAG", "ENT_IOB"])
+    def func_tag_ner(doc) -> bool:
+        return True
+
+    @require_annotation(
+        ["TAG", "ENT_IOB"], require_complete=[False, True]
+    )
+    def func_tag_nercomplete(doc):
+        return True
+
+    @require_annotation(
+        ["TAG", "ENT_IOB"], require_complete=[True, False]
+    )
+    def func_tagcomplete_ner(doc):
+        return True
+
+    text = "Bob is a person for sure."
+    nlp = spacy.blank("en")
+    blank = nlp(text)
+    tagger = nlp.add_pipe("tagger")
+    tagger.add_label("A")
+    nlp.initialize()
+    tagged = nlp(text)
+    tagged_partial = nlp(text)
+    tagged_partial[-1].tag_ = ""
+    ner = nlp.add_pipe("ner")
+    ner.add_label("CHEESE")
+    nlp.initialize()
+    tagged_nered = nlp(text)
+    nlp.remove_pipe("tagger")
+    nered = nlp(text)
+    tagged_partial_nered = nlp(tagged_partial)
+
+    assert func_none(blank)
+    assert func_none(tagged)
+    assert func_tag(tagged)
+    assert func_ner(nered)
+    assert func_tag_complete(tagged)
+    assert func_ner_complete(nered)
+    assert func_tag_ner(tagged_nered)
+    with pytest.raises(ValueError, match=r"[E1047]"):
+        func_tag(blank)
+    with pytest.raises(ValueError, match=r"[E1047]"):
+        func_tag_complete(tagged_partial)
+    with pytest.raises(ValueError, match=r"[E1047]"):
+        func_tagcomplete_ner(tagged_partial_nered)
+    with pytest.raises(ValueError, match=r"Have to provide the same number"):
+        require_annotation(["TAG", "NER"], require_complete=[True])
