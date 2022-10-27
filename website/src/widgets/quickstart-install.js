@@ -201,7 +201,13 @@ const QuickstartInstall = ({ id, title }) => {
                             {nightly ? ' --pre' : ''}
                         </QS>
                         <QS package="conda">conda install -c conda-forge spacy</QS>
-                        <QS package="conda" hardware="gpu">
+                        <QS package="conda" hardware="gpu" os="windows">
+                            conda install -c conda-forge cupy
+                        </QS>
+                        <QS package="conda" hardware="gpu" os="linux">
+                            conda install -c conda-forge cupy
+                        </QS>
+                        <QS package="conda" hardware="gpu" os="mac" platform="x86">
                             conda install -c conda-forge cupy
                         </QS>
                         <QS package="conda" config="train">
