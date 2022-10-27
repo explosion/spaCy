@@ -208,7 +208,7 @@ def _verify_rich_config_group(
             raise ValueError(Errors.E1047.format(label=label))
     elif search_chars is not None:
         raise ValueError(Errors.E1047.format(label=label))
-    if lengths is not None and max(lengths) > 63:
+    if lengths is not None and max(lengths) > 31:
         raise ValueError(Errors.E1048.format(label=label))
 
 
