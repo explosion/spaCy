@@ -494,7 +494,7 @@ class EntityLinker(TrainablePipe):
             if len(doc) == 0 or len(doc.ents) == 0:
                 continue
             sentences = [s for s in doc.sents]
-            doc_ent_cands = list(next(all_ent_cands)) if len(doc.ents) else []
+            doc_ent_cands = list(next(all_ent_cands))
 
             # Looping over candidate entities for this doc. (TODO: rewrite)
             for ent_cand_idx, ent in enumerate(doc.ents):

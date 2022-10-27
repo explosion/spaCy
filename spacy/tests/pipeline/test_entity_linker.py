@@ -179,7 +179,7 @@ def test_no_entities():
             {
                 "sent_starts": [1, 0, 0, 0, 0],
             },
-        )
+        ),
     ]
     nlp = English()
     vector_length = 3
@@ -1209,3 +1209,65 @@ def test_threshold(meet_threshold: bool, config: Dict[str, Any]):
 
     assert len(doc.ents) == 1
     assert doc.ents[0].kb_id_ == entity_id if meet_threshold else EntityLinker.NIL
+
+
+def test_nel_candidate_processing():
+    """Test that NEL handles candidate streams correctly in a set of documents with & without entities as well as empty
+    documents.
+    """
+    train_data = [
+        (
+            "The sky over New York is blue.",
+            {
+                "sent_starts": [1, 0, 0, 0, 0, 0, 0, 0],
+            },
+        ),
+        (
+            "They visited New York.",
+            {
+                "sent_starts": [1, 0, 0, 0, 0],
+            },
+        ),
+        # (
+        #     "",
+        #     {}
+        # ),
+        # (
+        #     "New York is a city.",
+        #     {
+        #         "sent_starts": [1, 0, 0, 0, 0, 0],
+        #     }
+        # ),
+    ]
+
+    nlp = English()
+    # Add a custom rule-based component to mimick NER
+    ruler = nlp.add_pipe("entity_ruler", last=True)
+    ruler.add_patterns([{"label": "GPE", "pattern": [{"LOWER": "new york"}]}])  # type: ignore
+
+    vector_length = 3
+    train_examples = []
+    for text, annotation in train_data:
+        doc = nlp(text)
+        train_examples.append(Example.from_dict(doc, annotation))
+
+    def create_kb(vocab):
+        # create artificial KB
+        mykb = InMemoryLookupKB(vocab, entity_vector_length=vector_length)
+        mykb.add_entity(entity="Q60", freq=12, entity_vector=[1, 2, 3])
+        mykb.add_alias("New York", ["Q60"], [0.9])
+        return mykb
+
+    # Create and train the Entity Linker
+    entity_linker = nlp.add_pipe("entity_linker", last=True)
+    entity_linker.set_kb(create_kb)
+    optimizer = nlp.initialize(get_examples=lambda: train_examples)
+    for i in range(2):
+        losses = {}
+        nlp.update(train_examples, sgd=optimizer, losses=losses)
+
+    # adding additional components that are required for the entity_linker
+    nlp.add_pipe("sentencizer", first=True)
+
+    # this will run the pipeline on the examples and shouldn't crash
+    nlp.evaluate(train_examples)
