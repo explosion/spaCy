@@ -160,7 +160,7 @@ const QuickstartInstall = ({ id, title }) => {
                         showDropdown={showDropdown}
                     >
                         <QS os="mac" hardware="gpu" platform="arm">
-                            # Note M1 GPU support is experimental, see <a href="https://github.com/explosion/thinc/issues/792">this issue</a>
+                            # Note M1 GPU support is experimental, see <a href="https://github.com/explosion/thinc/issues/792">Thinc issue #792</a>
                         </QS>
                         <QS package="pip" config="venv">
                             python -m venv .env
