@@ -195,7 +195,6 @@ def _verify_rich_config_group(
     rows: Optional[List[int]],
     search_chars: Optional[str],
     is_search_char_group: bool,
-    case_sensitive: bool,
 ) -> None:
     if lengths is not None or rows is not None:
         if is_search_char_group and (search_chars is None or len(search_chars) == 0):
@@ -208,8 +207,11 @@ def _verify_rich_config_group(
             raise ValueError(Errors.E1047.format(label=label))
     elif search_chars is not None:
         raise ValueError(Errors.E1047.format(label=label))
-    if lengths is not None and max(lengths) > 31:
-        raise ValueError(Errors.E1048.format(label=label))
+    if lengths is not None:
+        if lengths[-1] > 31:
+            raise ValueError(Errors.E1048.format(label=label))
+        if len(lengths) != len(set(lengths)) or lengths != sorted(lengths):
+            raise ValueError(Errors.E1049.format(label=label))
 
 
 @registry.architectures("spacy.RichMultiHashEmbed.v1")
@@ -258,6 +260,8 @@ def RichMultiHashEmbed(
     plural noun does not become `a` if it is the third or fourth vowel from the
     end of the word.
 
+    All lengths must be specified in ascending order.
+
     width (int): The output width. Also used as the width of the embedding tables.
         Recommended values are between 64 and 300.
     attrs (list of attr IDs): The token attributes to embed. A separate
@@ -293,19 +297,14 @@ def RichMultiHashEmbed(
     if len(rows) != len(attrs):
         raise ValueError(f"Mismatched lengths: {len(rows)} vs {len(attrs)}")
 
-    _verify_rich_config_group(
-        "prefix", pref_lengths, pref_rows, None, False, case_sensitive
-    )
-    _verify_rich_config_group(
-        "suffix", suff_lengths, suff_rows, None, False, case_sensitive
-    )
+    _verify_rich_config_group("prefix", pref_lengths, pref_rows, None, False)
+    _verify_rich_config_group("suffix", suff_lengths, suff_rows, None, False)
     _verify_rich_config_group(
         "prefix search",
         pref_search_lengths,
         pref_search_rows,
         pref_search_chars,
         True,
-        case_sensitive,
     )
     _verify_rich_config_group(
         "suffix search",
@@ -313,7 +312,6 @@ def RichMultiHashEmbed(
         suff_search_rows,
         suff_search_chars,
         True,
-        case_sensitive,
     )
 
     if "PREFIX" in attrs or "SUFFIX" in attrs:

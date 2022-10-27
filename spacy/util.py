@@ -1773,6 +1773,6 @@ def get_search_char_byte_arrays(
             elif char_length == 4:
                 sc4.extend(encoded_search_char_bytes[working_start:idx])
             else:
-                raise RuntimeError(Errors.E1049)
+                raise RuntimeError(Errors.E1050)
             working_start = idx
     return bytes(sc1), bytes(sc2), bytes(sc3), bytes(sc4)

@@ -956,7 +956,8 @@ class Errors(metaclass=ErrorsWithCodes):
              "knowledge base, use `InMemoryLookupKB`.")
     E1047 = ("Invalid rich group config '{label}'.")
     E1048 = ("Length > 31 in rich group config '{label}.")
-    E1049 = ("Error splitting UTF-8 byte string into separate characters.")
+    E1049 = ("Rich group config {label} specifies lengths that are not in ascending order.")
+    E1050 = ("Error splitting UTF-8 byte string into separate characters.")
 
 
 # Deprecated model shortcuts, only used in errors and warnings
