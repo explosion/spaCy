@@ -1217,39 +1217,35 @@ def test_nel_candidate_processing():
     """
     train_data = [
         (
-            "The sky over New York is blue.",
+            "The sky is blue.",
             {
-                "sent_starts": [1, 0, 0, 0, 0, 0, 0, 0],
+                "sent_starts": [1, 0, 0, 0, 0],
             },
         ),
         (
             "They visited New York.",
             {
                 "sent_starts": [1, 0, 0, 0, 0],
+                "entities": [(13, 21, "GPE")],
             },
         ),
-        # (
-        #     "",
-        #     {}
-        # ),
-        # (
-        #     "New York is a city.",
-        #     {
-        #         "sent_starts": [1, 0, 0, 0, 0, 0],
-        #     }
-        # ),
+        ("", {}),
+        (
+            "New York is a city.",
+            {
+                "sent_starts": [1, 0, 0, 0, 0, 0],
+                "entities": [(0, 8, "GPE")],
+            },
+        ),
     ]
 
     nlp = English()
-    # Add a custom rule-based component to mimick NER
-    ruler = nlp.add_pipe("entity_ruler", last=True)
-    ruler.add_patterns([{"label": "GPE", "pattern": [{"LOWER": "new york"}]}])  # type: ignore
+    nlp.add_pipe("sentencizer")
 
     vector_length = 3
     train_examples = []
     for text, annotation in train_data:
-        doc = nlp(text)
-        train_examples.append(Example.from_dict(doc, annotation))
+        train_examples.append(Example.from_dict(nlp(text), annotation))
 
     def create_kb(vocab):
         # create artificial KB
@@ -1266,8 +1262,9 @@ def test_nel_candidate_processing():
         losses = {}
         nlp.update(train_examples, sgd=optimizer, losses=losses)
 
-    # adding additional components that are required for the entity_linker
-    nlp.add_pipe("sentencizer", first=True)
+    # Add a custom rule-based component to mimick NER
+    ruler = nlp.add_pipe("entity_ruler", before="entity_linker")
+    ruler.add_patterns([{"label": "GPE", "pattern": [{"LOWER": "new york"}]}])  # type: ignore
 
     # this will run the pipeline on the examples and shouldn't crash
     nlp.evaluate(train_examples)
