@@ -7,7 +7,7 @@ from typing import Optional, Tuple, Any, Dict, List
 import numpy
 import wasabi.tables
 
-from pipeline import TextCategorizer, MultiLabel_TextCategorizer
+from ..pipeline import TextCategorizer, MultiLabel_TextCategorizer
 from ..errors import Errors
 from ..training import Corpus
 from ._util import app, Arg, Opt, import_code, setup_gpu
