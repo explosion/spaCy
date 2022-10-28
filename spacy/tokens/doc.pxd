@@ -43,7 +43,7 @@ cdef void _set_affix_lengths(
     unsigned char* aff_l_buf, 
     const int pref_l, 
     const int suff_l,
-)
+) nogil
 
 
 cdef void _search_for_chars(
@@ -56,7 +56,7 @@ cdef void _search_for_chars(
     int max_res_l,
     unsigned char* l_buf,
     bint suffs_not_prefs
-)
+) nogil
 
 
 cdef class Doc:
