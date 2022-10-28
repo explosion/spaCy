@@ -1,8 +1,7 @@
 # cython: infer_types=True, profile=True
-from typing import Iterator, Iterable, Callable, Dict, Any
+from typing import Iterable, Callable, Dict, Any, Union
 
 import srsly
-from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
 from cpython.exc cimport PyErr_SetFromErrno
 from libc.stdio cimport fopen, fclose, fread, fwrite, feof, fseek
@@ -12,85 +11,28 @@ from libcpp.vector cimport vector
 from pathlib import Path
 import warnings
 
-from .typedefs cimport hash_t
-from .errors import Errors, Warnings
-from . import util
-from .util import SimpleFrozenList, ensure_path
-
-cdef class Candidate:
-    """A `Candidate` object refers to a textual mention (`alias`) that may or may not be resolved
-    to a specific `entity` from a Knowledge Base. This will be used as input for the entity linking
-    algorithm which will disambiguate the various candidates to the correct one.
-    Each candidate (alias, entity) pair is assigned to a certain prior probability.
-
-    DOCS: https://spacy.io/api/kb/#candidate_init
-    """
-
-    def __init__(self, KnowledgeBase kb, entity_hash, entity_freq, entity_vector, alias_hash, prior_prob):
-        self.kb = kb
-        self.entity_hash = entity_hash
-        self.entity_freq = entity_freq
-        self.entity_vector = entity_vector
-        self.alias_hash = alias_hash
-        self.prior_prob = prior_prob
-
-    @property
-    def entity(self):
-        """RETURNS (uint64): hash of the entity's KB ID/name"""
-        return self.entity_hash
-
-    @property
-    def entity_(self):
-        """RETURNS (str): ID/name of this entity in the KB"""
-        return self.kb.vocab.strings[self.entity_hash]
-
-    @property
-    def alias(self):
-        """RETURNS (uint64): hash of the alias"""
-        return self.alias_hash
-
-    @property
-    def alias_(self):
-        """RETURNS (str): ID of the original alias"""
-        return self.kb.vocab.strings[self.alias_hash]
-
-    @property
-    def entity_freq(self):
-        return self.entity_freq
-
-    @property
-    def entity_vector(self):
-        return self.entity_vector
-
-    @property
-    def prior_prob(self):
-        return self.prior_prob
+from ..tokens import Span
+from ..typedefs cimport hash_t
+from ..errors import Errors, Warnings
+from .. import util
+from ..util import SimpleFrozenList, ensure_path
+from ..vocab cimport Vocab
+from .kb cimport KnowledgeBase
+from .candidate import Candidate as Candidate
 
 
-def get_candidates(KnowledgeBase kb, span) -> Iterator[Candidate]:
-    """
-    Return candidate entities for a given span by using the text of the span as the alias
-    and fetching appropriate entries from the index.
-    This particular function is optimized to work with the built-in KB functionality,
-    but any other custom candidate generation method can be used in combination with the KB as well.
-    """
-    return kb.get_alias_candidates(span.text)
-
-
-cdef class KnowledgeBase:
-    """A `KnowledgeBase` instance stores unique identifiers for entities and their textual aliases,
+cdef class InMemoryLookupKB(KnowledgeBase):
+    """An `InMemoryLookupKB` instance stores unique identifiers for entities and their textual aliases,
     to support entity linking of named entities to real-world concepts.
 
-    DOCS: https://spacy.io/api/kb
+    DOCS: https://spacy.io/api/kb_in_memory
     """
 
     def __init__(self, Vocab vocab, entity_vector_length):
-        """Create a KnowledgeBase."""
-        self.mem = Pool()
-        self.entity_vector_length = entity_vector_length
+        """Create an InMemoryLookupKB."""
+        super().__init__(vocab, entity_vector_length)
         self._entry_index = PreshMap()
         self._alias_index = PreshMap()
-        self.vocab = vocab
         self._create_empty_vectors(dummy_hash=self.vocab.strings[""])
 
     def _initialize_entities(self, int64_t nr_entities):
@@ -103,11 +45,6 @@ cdef class KnowledgeBase:
     def _initialize_aliases(self, int64_t nr_aliases):
         self._alias_index = PreshMap(nr_aliases + 1)
         self._aliases_table = alias_vec(nr_aliases + 1)
-
-    @property
-    def entity_vector_length(self):
-        """RETURNS (uint64): length of the entity vectors"""
-        return self.entity_vector_length
 
     def __len__(self):
         return self.get_size_entities()
@@ -286,7 +223,10 @@ cdef class KnowledgeBase:
             alias_entry.probs = probs
             self._aliases_table[alias_index] = alias_entry
 
-    def get_alias_candidates(self, str alias) -> Iterator[Candidate]:
+    def get_candidates(self, mention: Span) -> Iterable[Candidate]:
+        return self.get_alias_candidates(mention.text)  # type: ignore
+
+    def get_alias_candidates(self, str alias) -> Iterable[Candidate]:
         """
         Return candidate entities for an alias. Each candidate defines the entity, the original alias,
         and the prior probability of that alias resolving to that entity.

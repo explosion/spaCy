@@ -480,7 +480,7 @@ as-is. They are also excluded when calling
 > parse. So the evaluation results should always reflect what your pipeline will
 > produce at runtime. If you want a frozen component to run (without updating)
 > during training as well, so that downstream components can use its
-> **predictions**, you can add it to the list of
+> **predictions**, you should add it to the list of
 > [`annotating_components`](/usage/training#annotating-components).
 
 ```ini
