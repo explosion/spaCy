@@ -1736,7 +1736,7 @@ cdef class Doc:
         return output
 
 
-    def np.ndarray get_character_combination_hashes(self,
+    def get_character_combination_hashes(self,
         *,
         const bint cs, 
         np.ndarray p_lengths, 
@@ -1751,7 +1751,7 @@ cdef class Doc:
         const unsigned char[:] ss_3byte_ch,
         const unsigned char[:] ss_4byte_ch,
         np.ndarray ss_lengths,
-    ) nogil:
+    ):
         """
         Returns a 2D NumPy array where the rows represent tokens and the columns represent hashes of various character combinations 
             derived from the raw text of each token.
@@ -1797,11 +1797,11 @@ cdef class Doc:
 
         # Define / allocate buffers
         cdef int aff_l  = p_max_l + s_max_l
-        cdef char* aff_len_buf = self.mem.alloc(aff_l, 1)
-        cdef char* ps_res_buf = self.mem.alloc(ps_max_l, 4)
-        cdef char* ps_len_buf = self.mem.alloc(ps_max_l, 1)
-        cdef char* ss_res_buf = self.mem.alloc(ss_max_l, 4)
-        cdef char* ss_len_buf = self.mem.alloc(ss_max_l, 1)
+        cdef unsigned char* aff_l_buf = <unsigned char*> self.mem.alloc(aff_l, 1)
+        cdef unsigned char* ps_res_buf = <unsigned char*> self.mem.alloc(ps_max_l, 4)
+        cdef unsigned char* ps_l_buf = <unsigned char*> self.mem.alloc(ps_max_l, 1)
+        cdef unsigned char* ss_res_buf = <unsigned char*> self.mem.alloc(ss_max_l, 4)
+        cdef unsigned char* ss_l_buf = <unsigned char*> self.mem.alloc(ss_max_l, 1)
         
         # Define memory views on length arrays
         cdef int[:] p_lengths_v = p_lengths
@@ -1812,7 +1812,7 @@ cdef class Doc:
         # Define working variables
         cdef TokenC tok_c
         cdef int tok_i, offset
-        cdef uint64_t hash_val
+        cdef uint64_t hash_val = 0
         cdef attr_t num_tok_attr
         cdef const unsigned char[:] tok_str
 
@@ -1822,43 +1822,44 @@ cdef class Doc:
             tok_str = self.vocab.strings.utf8_view(num_tok_attr)
             
             if aff_l > 0:
-                _set_affix_lengths(tok_str, aff_len_buf, p_max_l, s_max_l)
+                _set_affix_lengths(tok_str, aff_l_buf, p_max_l, s_max_l)
+
                 for hash_idx in range(p_h_num):
-                    offset = aff_len_buf[p_lengths_v[hash_idx]]
+                    offset = aff_l_buf[p_lengths_v[hash_idx] - 1]
                     if offset > 0:
                         hash_val = hash32(<void*> &tok_str[0], offset, 0)
                     hashes[tok_i, hash_idx] = hash_val
             
                 for hash_idx in range(p_h_num, s_h_end):
-                    offset = s_lengths_v[hash_idx - p_h_num]
+                    offset = aff_l_buf[s_lengths_v[hash_idx - p_h_num] + p_max_l - 1]
                     if offset > 0:
                         hash_val = hash32(<void*> &tok_str[len(tok_str) - offset], offset, 0)
                     hashes[tok_i, hash_idx] = hash_val
 
             if ps_h_num > 0:
-                _search_for_chars(tok_str, ps_1byte_ch, ps_2byte_ch, ps_3byte_ch, ps_4byte_ch, ps_res_buf, ps_max_l, ps_res_len, False)
+                _search_for_chars(tok_str, ps_1byte_ch, ps_2byte_ch, ps_3byte_ch, ps_4byte_ch, ps_res_buf, ps_max_l, ps_l_buf, False)
                 hash_val = 0
                 for hash_idx in range(s_h_end, ps_h_end):
-                    offset = ps_lengths_v[hash_idx - s_h_end]
+                    offset = ps_l_buf[ps_lengths_v[hash_idx - s_h_end] - 1]
                     if offset > 0:
                         hash_val = hash32(ps_res_buf, offset, 0)
                     hashes[tok_i, hash_idx] = hash_val
 
             if ss_h_num > 0:
-                _search_for_chars(tok_str, ss_1byte_ch, ss_2byte_ch, ss_3byte_ch, ss_4byte_ch, ss_res_buf, ss_max_l, ss_res_len, True)
+                _search_for_chars(tok_str, ss_1byte_ch, ss_2byte_ch, ss_3byte_ch, ss_4byte_ch, ss_res_buf, ss_max_l, ss_l_buf, True)
                 hash_val = 0
                 for hash_idx in range(ps_h_end, ss_h_end):
-                    offset = ss_lengths_v[hash_idx - ps_h_end]
+                    offset = ss_l_buf[ss_lengths_v[hash_idx - ps_h_end] - 1]
                     if offset > 0:
                         hash_val = hash32(ss_res_buf, offset, 0)
                     hashes[tok_i, hash_idx] = hash_val
             
 
-        self.mem.free(aff_len_buf)
+        self.mem.free(aff_l_buf)
         self.mem.free(ps_res_buf)
-        self.mem.free(ps_len_buf)
+        self.mem.free(ps_l_buf)
         self.mem.free(ss_res_buf)
-        self.mem.free(ss_len_buf)
+        self.mem.free(ss_l_buf)
         return hashes
 
     @staticmethod
@@ -2044,46 +2045,45 @@ cdef int [:,:] _get_lca_matrix(Doc doc, int start, int end):
 
 cdef void _set_affix_lengths(
     const unsigned char[:] tok_str,
-    unsigned char* aff_len_buf, 
-    const int pref_len, 
-    const int suff_len,
-) nogil:
-    """ TODO : Populate *len_buf*, which has length *pref_len+suff_len* with the byte lengths of the first *pref_len* and the last 
-        *suff_len* characters within *tok_str*. If the word is shorter than pref and/or suff, the empty lengths in the middle are 
-        filled with zeros.
+    unsigned char* aff_l_buf, 
+    const int pref_l, 
+    const int suff_l,
+):
+    """ Populate *aff_l_buf*, which has length *pref_l+suff_l* with the byte lengths of the first *pref_l* and the last 
+        *suff_l* characters within *tok_str*. Lengths that are greater than the character length of the whole word are 
+        populated with the byte length of the whole word.
 
         tok_str: a memoryview of a UTF-8 representation of a string.
-        len_buf: a buffer of length *pref_len+suff_len* in which to store the lengths. The calling code ensures that lengths
+        aff_l_buf: a buffer of length *pref_l+suff_l* in which to store the lengths. The calling code ensures that lengths
             greater than 255 cannot occur.
-        pref_len: the number of characters to process at the beginning of the word.
-        suff_len: the number of characters to process at the end of the word.
+        pref_l: the number of characters to process at the beginning of the word.
+        suff_l: the number of characters to process at the end of the word.
     """
-    cdef int tok_str_idx = 0, aff_len_buf_idx = 0, tok_str_len = len(tok_str)
+    cdef int tok_str_idx = 1, aff_l_buf_idx = 0, tok_str_l = len(tok_str)
 
-    while aff_len_buf_idx < pref_len:
-        if (tok_str[tok_str_idx] & 0xc0) != 0x80: # not a continuation character
-            aff_len_buf[aff_len_buf_idx] = tok_str_idx + 1
-            aff_len_buf_idx += 1
+    while aff_l_buf_idx < pref_l:
+        if tok_str_idx == len(tok_str) or ((tok_str[tok_str_idx] & 0xc0) != 0x80): # not a continuation character
+            aff_l_buf[aff_l_buf_idx] = tok_str_idx
+            aff_l_buf_idx += 1
         tok_str_idx += 1
-        if tok_str_idx == len(tok_str):
+        if tok_str_idx > len(tok_str):
             break
 
-    if aff_len_buf_idx < pref_len:
-        memset(aff_len_buf + aff_len_buf_idx, 0, pref_len - aff_len_buf_idx)
-        aff_len_buf_idx = pref_len
+    if aff_l_buf_idx < pref_l:
+        memset(aff_l_buf + aff_l_buf_idx, aff_l_buf[aff_l_buf_idx - 1], pref_l - aff_l_buf_idx)
+        aff_l_buf_idx = pref_l
 
-    tok_str_idx = 1
-    while aff_len_buf_idx < pref_len + suff_len:
+    tok_str_idx = tok_str_l - 1
+    while aff_l_buf_idx < pref_l + suff_l:
         if (tok_str[tok_str_idx] & 0xc0) != 0x80: # not a continuation character
-            aff_len_buf[aff_len_buf_idx] = tok_str_len - tok_str_idx
-            aff_len_buf_idx += 1
-        tok_str_idx += 1
-        if tok_str_idx > tok_str_len:
+            aff_l_buf[aff_l_buf_idx] = tok_str_l - tok_str_idx
+            aff_l_buf_idx += 1
+        tok_str_idx -= 1
+        if tok_str_idx < 0:
             break
 
-    if aff_len_buf_idx < pref_len + suff_len:
-        memset(aff_len_buf + aff_len_buf_idx, 0, suff_len - aff_len_buf_idx)
-
+    if aff_l_buf_idx < pref_l + suff_l:
+        memset(aff_l_buf + aff_l_buf_idx, aff_l_buf[aff_l_buf_idx - 1], pref_l + suff_l - aff_l_buf_idx)
 
 cdef void _search_for_chars(
     const unsigned char[:] tok_str,
@@ -2093,31 +2093,33 @@ cdef void _search_for_chars(
     const unsigned char[:] s_4byte_ch,
     unsigned char* res_buf,
     int max_res_l,
-    unsigned char* len_buf,
+    unsigned char* l_buf,
     bint suffs_not_prefs
-) nogil:
+):
     """ Search *tok_str* within a string for characters within the *s_<n>byte_ch> buffers, starting at the 
         beginning or end depending on the value of *suffs_not_prefs*. Wherever a character matches,
-        it is added to *res_buf* and the byte length up to that point is added to *len_buf*.
+        it is added to *res_buf* and the byte length up to that point is added to *len_buf*. When nothing
+        more is found, the remainder of *len_buf* is populated wth the byte length from the last result,
+        which may be *0* if the search was not successful.
 
         tok_str: a memoryview of a UTF-8 representation of a string.
         s_<n>byte_ch: a byte array containing in order n-byte-wide characters to search for.
         res_buf: the buffer in which to place the search results.
         max_res_l: the maximum number of found characters to place in *res_buf*.
-        len_buf: a buffer of length *max_res_l* in which to store the byte lengths. 
+        l_buf: a buffer of length *max_res_l* in which to store the byte lengths.
             The calling code ensures that lengths greater than 255 cannot occur. 
         suffs_not_prefs: if *True*, searching starts from the end of the word; if *False*, from the beginning.
     """
-    cdef int tok_str_len = len(tok_str), search_char_idx = 0, res_buf_idx = 0, len_buf_idx = 0
-    cdef int last_tok_str_idx = tok_str_len if suffs_not_prefs else 0
-    cdef int this_tok_str_idx = tok_str_len - 1 if suffs_not_prefs else 1
-    cdef int ch_wdth, tok_start_idx 
-    cdef char[:] search_chars
+    cdef int tok_str_l = len(tok_str), search_char_idx = 0, res_buf_idx = 0, l_buf_idx = 0, ch_wdth, tok_start_idx
+    cdef const unsigned char[:] search_chars
+
+    cdef int last_tok_str_idx = tok_str_l if suffs_not_prefs else 0
+    cdef int this_tok_str_idx = tok_str_l - 1 if suffs_not_prefs else 1
     
     while True:
         if (
-            this_tok_str_idx == tok_str_len or 
-            (tok_str[this_tok_str_idx] & 0xc0) != 0x80 # not continuation character
+            this_tok_str_idx == tok_str_l or 
+            (tok_str[this_tok_str_idx] & 0xc0) != 0x80 # not continuation character, always applies to [0].
         ):
             ch_wdth = abs(this_tok_str_idx - last_tok_str_idx)
             if ch_wdth == 1:
@@ -2129,16 +2131,17 @@ cdef void _search_for_chars(
             else:
                 search_chars = s_4byte_ch
             tok_start_idx = this_tok_str_idx if suffs_not_prefs else last_tok_str_idx
+
             for search_char_idx in range(0, len(search_chars), ch_wdth):
-                cmp_result = memcmp(tok_str + tok_start_idx, search_chars + search_char_idx, ch_wdth)
+                cmp_result = memcmp(&tok_str[tok_start_idx], &search_chars[search_char_idx], ch_wdth)
                 if cmp_result == 0:
-                    memcpy(res_buf + res_buf_idx, search_chars + search_char_idx, ch_wdth)
+                    memcpy(res_buf + res_buf_idx, &search_chars[search_char_idx], ch_wdth)
                     res_buf_idx += ch_wdth
-                    len_buf[len_buf_idx] = res_buf_idx
-                    len_buf_idx += 1
-                    if len_buf_idx == max_res_l:
+                    l_buf[l_buf_idx] = res_buf_idx
+                    l_buf_idx += 1
+                    if l_buf_idx == max_res_l:
                         return
-                if cmp_result >= 0: 
+                if cmp_result <= 0: 
                     break
             last_tok_str_idx = this_tok_str_idx
         if suffs_not_prefs:
@@ -2147,48 +2150,11 @@ cdef void _search_for_chars(
                 break
         else:
             this_tok_str_idx += 1
-            if this_tok_str_idx >= tok_str_len:
+            if this_tok_str_idx > tok_str_l:
                 break    
 
-    # fill in unused characters in the length buffer with 0
-    memset(res_buf + res_buf_idx, 0, max_res_l - res_buf_idx)
-
-            
-            
-
-            
-
-
-
-
-
-
-    cdef int result_buf_idx = 0, text_string_idx = tok_idx + (tok_len - 1) if suffs_not_prefs else tok_idx
-    cdef int search_buf_idx
-    cdef int cmp_result
-
-    while result_buf_idx < result_buf_len:
-        for search_buf_idx in range (search_buf_len):
-            cmp_result = memcmp(search_buf + search_buf_idx, text_buf + text_string_idx, sizeof(Py_UCS4))
-            if cmp_result == 0:
-                memcpy(result_buf + result_buf_idx, lookup_buf + search_buf_idx, sizeof(Py_UCS4))
-                result_buf_idx += 1
-            if cmp_result >= 0: 
-                break
-        if suffs_not_prefs:
-            if text_string_idx <= tok_idx:
-                break
-            text_string_idx -= 1
-        else:
-            text_string_idx += 1
-            if text_string_idx >= tok_idx + tok_len:
-                break
-    
-    # fill in any unused characters in the result buffer with zeros
-    if result_buf_idx < result_buf_len:
-        memset(result_buf + result_buf_idx, 0, (result_buf_len - result_buf_idx) * sizeof(Py_UCS4))
-    
-    return result_buf_idx > 0
+    # fill in unused characters in the length buffer
+    memset(l_buf + l_buf_idx, res_buf_idx, max_res_l - l_buf_idx)
         
 
 def pickle_doc(doc):

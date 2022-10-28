@@ -320,7 +320,7 @@ cdef class StringStore:
         if hash_val == 0:
             return ""
         elif hash_val < len(SYMBOLS_BY_INT):
-            return SYMBOLS_BY_INT[hash_val]
+            return SYMBOLS_BY_INT[hash_val].encode("utf-8")
         cdef Utf8Str* string = <Utf8Str*>self._map.get(hash_val)
         cdef int i, length
         if string.s[0] < sizeof(string.s) and string.s[0] != 0:
