@@ -112,7 +112,7 @@ def find_threshold(
     if not hasattr(pipe, "scorer"):
         raise AttributeError(Errors.E1045)
 
-    if isinstance(pipe, TextCategorizer):
+    if type(pipe) == TextCategorizer:
         wasabi.msg.warn(
             "The `textcat` component doesn't use a threshold as it's not applicable to the concept of "
             "exclusive classes. All thresholds will yield the same results."
