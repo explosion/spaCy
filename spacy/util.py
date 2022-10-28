@@ -1738,7 +1738,7 @@ def all_equal(iterable):
 
 
 def require_annotation(
-    annotations: Sequence[Union[str, int]], *, require_complete: Sequence[bool] = None
+    annotations: Sequence[Union[str, int]], *, require_complete: Sequence[bool] = []
 ) -> Callable:
     """
     To be used as a decorator for functions whose first argument
@@ -1759,7 +1759,7 @@ def require_annotation(
         partial annotation is accepted.
     """
     # Check input.
-    if require_complete is None:
+    if not require_complete:
         require_complete = [False for _ in range(len(annotations))]
     else:
         if len(require_complete) != len(annotations):
@@ -1772,7 +1772,6 @@ def require_annotation(
 
     def require_annotation_decorator(func: Callable) -> Callable:
         def func_with_require(doclike, *args, **kwargs) -> Any:
-            require_complete: Sequence[bool]
             missing = []
             # Check for missing annotations
             for attr, complete in zip(annotations, require_complete):
