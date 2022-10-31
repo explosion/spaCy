@@ -777,6 +777,8 @@ whitespace, making them easy to match as well.
 from spacy.lang.en import English
 from spacy.matcher import Matcher
 
+Doc.set_extension("sentiment", default=0.0)
+
 nlp = English()  # We only want the tokenizer, so no need to load a pipeline
 matcher = Matcher(nlp.vocab)
 
@@ -791,9 +793,9 @@ neg_patterns = [[{"ORTH": emoji}] for emoji in neg_emoji]
 def label_sentiment(matcher, doc, i, matches):
     match_id, start, end = matches[i]
     if doc.vocab.strings[match_id] == "HAPPY":  # Don't forget to get string!
-        doc.sentiment += 0.1  # Add 0.1 for positive sentiment
+        doc._.sentiment += 0.1  # Add 0.1 for positive sentiment
     elif doc.vocab.strings[match_id] == "SAD":
-        doc.sentiment -= 0.1  # Subtract 0.1 for negative sentiment
+        doc._.sentiment -= 0.1  # Subtract 0.1 for negative sentiment
 
 matcher.add("HAPPY", pos_patterns, on_match=label_sentiment)  # Add positive pattern
 matcher.add("SAD", neg_patterns, on_match=label_sentiment)  # Add negative pattern
@@ -826,13 +828,14 @@ from emojipedia import Emojipedia  # Installation: pip install emojipedia
 from spacy.tokens import Span  # Get the global Span object
 
 Span.set_extension("emoji_desc", default=None)  # Register the custom attribute
+Doc.set_extension("sentiment", default=0.0)
 
 def label_sentiment(matcher, doc, i, matches):
     match_id, start, end = matches[i]
     if doc.vocab.strings[match_id] == "HAPPY":  # Don't forget to get string!
-        doc.sentiment += 0.1  # Add 0.1 for positive sentiment
+        doc._.sentiment += 0.1  # Add 0.1 for positive sentiment
     elif doc.vocab.strings[match_id] == "SAD":
-        doc.sentiment -= 0.1  # Subtract 0.1 for negative sentiment
+        doc._.sentiment -= 0.1  # Subtract 0.1 for negative sentiment
     span = doc[start:end]
     emoji = Emojipedia.search(span[0].text)  # Get data for emoji
     span._.emoji_desc = emoji.title  # Assign emoji description

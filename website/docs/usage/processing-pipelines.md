@@ -1400,7 +1400,7 @@ separation and makes it easier to ensure backwards compatibility. For example,
 if you've implemented your own `.coref` property and spaCy claims it one day,
 it'll break your code. Similarly, just by looking at the code, you'll
 immediately know what's built-in and what's custom – for example,
-`doc.sentiment` is spaCy, while `doc._.sent_score` isn't.
+`doc.lang` is spaCy, while `doc._.language` isn't.
 
 </Accordion>
 

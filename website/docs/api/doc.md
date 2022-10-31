@@ -761,7 +761,6 @@ The L2 norm of the document's vector representation.
 | `user_data`                                | A generic storage area, for user custom data. ~~Dict[str, Any]~~                                                                               |
 | `lang` <Tag variant="new">2.1</Tag>        | Language of the document's vocabulary. ~~int~~                                                                                                 |
 | `lang_` <Tag variant="new">2.1</Tag>       | Language of the document's vocabulary. ~~str~~                                                                                                 |
-| `sentiment`                                | The document's positivity/negativity score, if available. ~~float~~                                                                            |
 | `user_hooks`                               | A dictionary that allows customization of the `Doc`'s properties. ~~Dict[str, Callable]~~                                                      |
 | `user_token_hooks`                         | A dictionary that allows customization of properties of `Token` children. ~~Dict[str, Callable]~~                                              |
 | `user_span_hooks`                          | A dictionary that allows customization of properties of `Span` children. ~~Dict[str, Callable]~~                                               |
@@ -785,7 +784,6 @@ serialization by passing in the string names via the `exclude` argument.
 | Name               | Description                                   |
 | ------------------ | --------------------------------------------- |
 | `text`             | The value of the `Doc.text` attribute.        |
-| `sentiment`        | The value of the `Doc.sentiment` attribute.   |
 | `tensor`           | The value of the `Doc.tensor` attribute.      |
 | `user_data`        | The value of the `Doc.user_data` dictionary.  |
 | `user_data_keys`   | The keys of the `Doc.user_data` dictionary.   |
