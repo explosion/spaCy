@@ -381,7 +381,7 @@ def test_doc_api_serialize(en_tokenizer, text):
     assert [t.orth for t in tokens] == [t.orth for t in new_tokens]
 
     new_tokens = Doc(tokens.vocab).from_bytes(
-        tokens.to_bytes(exclude=["sentiment"]), exclude=["sentiment"]
+        tokens.to_bytes()
     )
     assert tokens.text == new_tokens.text
     assert [t.text for t in tokens] == [t.text for t in new_tokens]

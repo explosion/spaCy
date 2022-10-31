@@ -10,12 +10,16 @@ Tests for spaCy modules and classes live in their own directories of the same na
 
 ## Table of contents
 
-1. [Running the tests](#running-the-tests)
-2. [Dos and don'ts](#dos-and-donts)
-3. [Parameters](#parameters)
-4. [Fixtures](#fixtures)
-5. [Helpers and utilities](#helpers-and-utilities)
-6. [Contributing to the tests](#contributing-to-the-tests)
+- [spaCy tests](#spacy-tests)
+  - [Table of contents](#table-of-contents)
+  - [Running the tests](#running-the-tests)
+  - [Dos and don'ts](#dos-and-donts)
+  - [Parameters](#parameters)
+  - [Fixtures](#fixtures)
+  - [Helpers and utilities](#helpers-and-utilities)
+    - [Constructing a `Doc` object manually](#constructing-a-doc-object-manually)
+    - [Other utilities](#other-utilities)
+  - [Contributing to the tests](#contributing-to-the-tests)
 
 ## Running the tests
 
@@ -40,7 +44,7 @@ py.test spacy/tests/tokenizer/test_exceptions.py::test_tokenizer_handles_emoji #
 
 To keep the behavior of the tests consistent and predictable, we try to follow a few basic conventions:
 
-- **Test names** should follow a pattern of `test_[module]_[tested behaviour]`. For example: `test_tokenizer_keeps_email` or `test_spans_override_sentiment`.
+- **Test names** should follow a pattern of `test_[module]_[tested behaviour]`. For example: `test_tokenizer_keeps_email`.
 - If you're testing for a bug reported in a specific issue, always create a **regression test**. Regression tests should be named `test_issue[ISSUE NUMBER]` and live in the [`regression`](regression) directory.
 - Only use `@pytest.mark.xfail` for tests that **should pass, but currently fail**. To test for desired negative behavior, use `assert not` in your test.
 - Very **extensive tests** that take a long time to run should be marked with `@pytest.mark.slow`. If your slow test is testing important behavior, consider adding an additional simpler version.
