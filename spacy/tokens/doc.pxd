@@ -38,25 +38,50 @@ cdef int token_by_end(const TokenC* tokens, int length, int end_char) except -2
 cdef int [:,:] _get_lca_matrix(Doc, int start, int end)
 
 
-cdef void _set_affix_lengths(
+cdef void _set_prefix_lengths(
     const unsigned char* tok_str,
-    unsigned char* aff_l_buf, 
-    const int pref_l, 
-    const int suff_l,
+    const int tok_str_l,
+    unsigned char* pref_l_buf,
+    const int p_max_l, 
 ) nogil
+
+
+cdef void _set_suffix_lengths(
+    const unsigned char* tok_str,
+    const int tok_str_l,
+    unsigned char* suff_l_buf,
+    const int s_max_l, 
+)
 
 
 cdef void _search_for_chars(
     const unsigned char* tok_str,
+    const int tok_str_l,
     const unsigned char* s_1byte_ch,
+    const int s_1byte_ch_l,
     const unsigned char* s_2byte_ch,
+    const int s_2byte_ch_l,
     const unsigned char* s_3byte_ch,
+    const int s_3byte_ch_l,
     const unsigned char* s_4byte_ch,
+    const int s_4byte_ch_l,
     unsigned char* res_buf,
     int max_res_l,
     unsigned char* l_buf,
     bint suffs_not_prefs
 ) nogil
+
+
+
+cdef int _write_hashes(
+    const unsigned char* res_buf,
+    const unsigned char* aff_l_buf,
+    const unsigned char* offset_buf,
+    const int end_idx,
+    np.ndarray[np.int64_t, ndim=2] hashes,
+    const int tok_i,
+    const int start_hash_idx,
+)  
 
 
 cdef class Doc:
