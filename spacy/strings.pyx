@@ -316,9 +316,9 @@ cdef class StringStore:
         self.keys.push_back(key)
         return value
 
-    cdef const unsigned char[:] utf8_view(self, attr_t hash_val):
+    cdef const unsigned char* utf8_ptr(self, attr_t hash_val):
         if hash_val == 0:
-            return ""
+            return "".encode("utf-8")
         elif hash_val < len(SYMBOLS_BY_INT):
             return SYMBOLS_BY_INT[hash_val].encode("utf-8")
         cdef Utf8Str* string = <Utf8Str*>self._map.get(hash_val)

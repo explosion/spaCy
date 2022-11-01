@@ -39,7 +39,7 @@ cdef int [:,:] _get_lca_matrix(Doc, int start, int end)
 
 
 cdef void _set_affix_lengths(
-    const unsigned char[:] tok_str,
+    const unsigned char* tok_str,
     unsigned char* aff_l_buf, 
     const int pref_l, 
     const int suff_l,
@@ -47,11 +47,11 @@ cdef void _set_affix_lengths(
 
 
 cdef void _search_for_chars(
-    const unsigned char[:] tok_str,
-    const unsigned char[:] s_1byte_ch,
-    const unsigned char[:] s_2byte_ch,
-    const unsigned char[:] s_3byte_ch,
-    const unsigned char[:] s_4byte_ch,
+    const unsigned char* tok_str,
+    const unsigned char* s_1byte_ch,
+    const unsigned char* s_2byte_ch,
+    const unsigned char* s_3byte_ch,
+    const unsigned char* s_4byte_ch,
     unsigned char* res_buf,
     int max_res_l,
     unsigned char* l_buf,

@@ -178,18 +178,18 @@ class Doc:
         self,
         *,
         cs: bool,
-        p_lengths: Ints1d,
-        s_lengths: Ints1d,
+        p_lengths: bytes,
+        s_lengths: bytes,
         ps_1byte_ch: bytes,
         ps_2byte_ch: bytes,
         ps_3byte_ch: bytes,
         ps_4byte_ch: bytes,
-        ps_lengths: Ints1d,
+        ps_lengths: bytes,
         ss_1byte_ch: bytes,
         ss_2byte_ch: bytes,
         ss_3byte_ch: bytes,
         ss_4byte_ch: bytes,
-        ss_lengths: Ints1d,
+        ss_lengths: bytes,
     ) -> Ints2d: ...
     @staticmethod
     def _get_array_attrs() -> Tuple[Any]: ...

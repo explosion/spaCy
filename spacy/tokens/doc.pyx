@@ -4,7 +4,7 @@ from typing import Set, List
 cimport cython
 cimport numpy as np
 from cpython cimport array
-from libc.string cimport memcpy, memcmp, memset
+from libc.string cimport memcpy, memcmp, memset, strlen
 from libc.math cimport sqrt
 from libc.stdint cimport int32_t, uint64_t
 
@@ -1739,18 +1739,18 @@ cdef class Doc:
     def get_character_combination_hashes(self,
         *,
         const bint cs, 
-        int[:] p_lengths, 
-        int[:] s_lengths,
-        const unsigned char[:] ps_1byte_ch,
-        const unsigned char[:] ps_2byte_ch,
-        const unsigned char[:] ps_3byte_ch,
-        const unsigned char[:] ps_4byte_ch,
-        int[:] ps_lengths,
-        const unsigned char[:] ss_1byte_ch,
-        const unsigned char[:] ss_2byte_ch,
-        const unsigned char[:] ss_3byte_ch,
-        const unsigned char[:] ss_4byte_ch,
-        int[:] ss_lengths,
+        const unsigned char* p_lengths, 
+        const unsigned char* s_lengths,
+        const unsigned char* ps_1byte_ch,
+        const unsigned char* ps_2byte_ch,
+        const unsigned char* ps_3byte_ch,
+        const unsigned char* ps_4byte_ch,
+        const unsigned char* ps_lengths,
+        const unsigned char* ss_1byte_ch,
+        const unsigned char* ss_2byte_ch,
+        const unsigned char* ss_3byte_ch,
+        const unsigned char* ss_4byte_ch,
+        const unsigned char* ss_lengths,
     ):
         """
         Returns a 2D NumPy array where the rows represent tokens and the columns represent hashes of various character combinations 
@@ -1764,28 +1764,28 @@ cdef class Doc:
         ss_ variables relate to searches starting at the end of the word
         
         cs: if *False*, hashes are generated based on the lower-case version of each token.
-        p_lengths: an Ints1d specifying the lengths of prefixes to be hashed in ascending order. For example, 
-            if *p_lengths==[2, 3]*, the prefixes hashed for "spaCy" would be "sp" and "spa".
-        s_lengths: an Ints1d specifying the lengths of suffixes to be hashed in ascending order. For example, 
-            if *s_lengths==[2, 3]* and *cs == True*, the suffixes hashed for "spaCy" would be "Cy" and "aCy".
+        p_lengths: an array of single-byte values specifying the lengths of prefixes to be hashed in ascending order. 
+            For example, if *p_lengths==[2, 3]*, the prefixes hashed for "spaCy" would be "sp" and "spa".
+        s_lengths: an array of single-byte values specifying the lengths of suffixes to be hashed in ascending order. 
+            For example, if *s_lengths==[2, 3]* and *cs == True*, the suffixes hashed for "spaCy" would be "Cy" and "aCy".
         ps_<n>byte_ch: a byte array containing in order n-byte-wide characters to search for within each token, 
             starting at the beginning.
-        ps_lengths: an Ints1d specifying the lengths of search results (from the beginning) to be hashed in ascending order. 
-            For example, if *ps_lengths==[1, 2]*, *ps_search=="aC" and *cs==False*, the searched strings hashed for 
-            "spaCy" would be "a" and "ac".
+        ps_lengths: an array of single-byte values specifying the lengths of search results (from the beginning) to be hashed 
+            in ascending order. For example, if *ps_lengths==[1, 2]*, *ps_search=="aC" and *cs==False*, the searched strings 
+            hashed for "spaCy" would be "a" and "ac".
         ss_<n>byte_ch: a byte array containing in order n-byte-wide characters to search for within each token, 
             starting at the end.
-        ss_lengths: an integer list specifying the lengths of search results (from the end) to be hashed in ascending order. 
-            For example, if *ss_lengths==[1, 2]*, *ss_search=="aC" and *cs==False*, the searched strings hashed for 
-            "spaCy" would be "c" and "ca".
+        ss_lengths: an array of single-byte values specifying the lengths of search results (from the end) to be hashed
+             in ascending order. For example, if *ss_lengths==[1, 2]*, *ss_search=="aC" and *cs==False*, the searched strings 
+             hashed for "spaCy" would be "c" and "ca".
         """
 
         # Define the result array and work out what is used for what in axis 1
         cdef int num_toks = len(self)
-        cdef int p_h_num = len(p_lengths)
-        cdef int s_h_num = len(s_lengths), s_h_end = p_h_num + s_h_num
-        cdef int ps_h_num = len(ps_lengths), ps_h_end = s_h_end + ps_h_num
-        cdef int ss_h_num = len(ss_lengths), ss_h_end = ps_h_end + ss_h_num
+        cdef int p_h_num = strlen(<char*> p_lengths)
+        cdef int s_h_num = strlen(<char*> s_lengths), s_h_end = p_h_num + s_h_num
+        cdef int ps_h_num = strlen(<char*> ps_lengths), ps_h_end = s_h_end + ps_h_num
+        cdef int ss_h_num = strlen(<char*> ss_lengths), ss_h_end = ps_h_end + ss_h_num
         cdef np.ndarray[np.int64_t, ndim=2] hashes
         hashes = numpy.empty((num_toks, ss_h_end), dtype="int64")
 
@@ -1804,35 +1804,29 @@ cdef class Doc:
         cdef unsigned char* ss_res_buf = <unsigned char*> mem.alloc(ss_max_l, 4)
         cdef unsigned char* ss_l_buf = <unsigned char*> mem.alloc(ss_max_l, 1)
         
-        # Define memory views on length arrays
-        cdef int[:] p_lengths_v = p_lengths
-        cdef int[:] s_lengths_v = s_lengths
-        cdef int[:] ps_lengths_v = ps_lengths
-        cdef int[:] ss_lengths_v = ss_lengths
-
         # Define working variables
         cdef TokenC tok_c
         cdef int tok_i, offset
         cdef uint64_t hash_val = 0
         cdef attr_t num_tok_attr
-        cdef const unsigned char[:] tok_str
+        cdef const unsigned char* tok_str
 
         for tok_i in range(num_toks):
             tok_c = self.c[tok_i]
             num_tok_attr = tok_c.lex.orth if cs else tok_c.lex.lower
-            tok_str = self.vocab.strings.utf8_view(num_tok_attr)
+            tok_str = self.vocab.strings.utf8_ptr(num_tok_attr)
             
             if aff_l > 0:
                 _set_affix_lengths(tok_str, aff_l_buf, p_max_l, s_max_l)
 
                 for hash_idx in range(p_h_num):
-                    offset = aff_l_buf[p_lengths_v[hash_idx] - 1]
+                    offset = aff_l_buf[p_lengths[hash_idx] - 1]
                     if offset > 0:
                         hash_val = hash32(<void*> &tok_str[0], offset, 0)
                     hashes[tok_i, hash_idx] = hash_val
             
                 for hash_idx in range(p_h_num, s_h_end):
-                    offset = aff_l_buf[s_lengths_v[hash_idx - p_h_num] + p_max_l - 1]
+                    offset = aff_l_buf[s_lengths[hash_idx - p_h_num] + p_max_l - 1]
                     if offset > 0:
                         hash_val = hash32(<void*> &tok_str[len(tok_str) - offset], offset, 0)
                     hashes[tok_i, hash_idx] = hash_val
@@ -1841,7 +1835,7 @@ cdef class Doc:
                 _search_for_chars(tok_str, ps_1byte_ch, ps_2byte_ch, ps_3byte_ch, ps_4byte_ch, ps_res_buf, ps_max_l, ps_l_buf, False)
                 hash_val = 0
                 for hash_idx in range(s_h_end, ps_h_end):
-                    offset = ps_l_buf[ps_lengths_v[hash_idx - s_h_end] - 1]
+                    offset = ps_l_buf[ps_lengths[hash_idx - s_h_end] - 1]
                     if offset > 0:
                         hash_val = hash32(ps_res_buf, offset, 0)
                     hashes[tok_i, hash_idx] = hash_val
@@ -1850,7 +1844,7 @@ cdef class Doc:
                 _search_for_chars(tok_str, ss_1byte_ch, ss_2byte_ch, ss_3byte_ch, ss_4byte_ch, ss_res_buf, ss_max_l, ss_l_buf, True)
                 hash_val = 0
                 for hash_idx in range(ps_h_end, ss_h_end):
-                    offset = ss_l_buf[ss_lengths_v[hash_idx - ps_h_end] - 1]
+                    offset = ss_l_buf[ss_lengths[hash_idx - ps_h_end] - 1]
                     if offset > 0:
                         hash_val = hash32(ss_res_buf, offset, 0)
                     hashes[tok_i, hash_idx] = hash_val
@@ -2039,7 +2033,7 @@ cdef int [:,:] _get_lca_matrix(Doc doc, int start, int end):
 
 @cython.boundscheck(False)  # Deactivate bounds checking
 cdef void _set_affix_lengths(
-    const unsigned char[:] tok_str,
+    const unsigned char* tok_str,
     unsigned char* aff_l_buf, 
     const int pref_l, 
     const int suff_l,
@@ -2054,14 +2048,17 @@ cdef void _set_affix_lengths(
         pref_l: the number of characters to process at the beginning of the word.
         suff_l: the number of characters to process at the end of the word.
     """
-    cdef int tok_str_idx = 1, aff_l_buf_idx = 0, tok_str_l = len(tok_str)
+    cdef int tok_str_idx = 1, aff_l_buf_idx = 0, tok_str_l = strlen(<char*> tok_str)
 
     while aff_l_buf_idx < pref_l:
-        if tok_str_idx == len(tok_str) or ((tok_str[tok_str_idx] & 0xc0) != 0x80): # not a continuation character
+        if (tok_str_idx == strlen(<char*> tok_str) 
+            or 
+            ((tok_str[tok_str_idx] & 0xc0) != 0x80  # not a continuation character
+        ):
             aff_l_buf[aff_l_buf_idx] = tok_str_idx
             aff_l_buf_idx += 1
         tok_str_idx += 1
-        if tok_str_idx > len(tok_str):
+        if tok_str_idx > tok_str_l:
             break
 
     if aff_l_buf_idx < pref_l:
@@ -2082,11 +2079,11 @@ cdef void _set_affix_lengths(
 
 @cython.boundscheck(False)  # Deactivate bounds checking
 cdef void _search_for_chars(
-    const unsigned char[:] tok_str,
-    const unsigned char[:] s_1byte_ch,
-    const unsigned char[:] s_2byte_ch,
-    const unsigned char[:] s_3byte_ch,
-    const unsigned char[:] s_4byte_ch,
+    const unsigned char* tok_str,
+    const unsigned char* s_1byte_ch,
+    const unsigned char* s_2byte_ch,
+    const unsigned char* s_3byte_ch,
+    const unsigned char* s_4byte_ch,
     unsigned char* res_buf,
     int max_res_l,
     unsigned char* l_buf,
@@ -2106,9 +2103,9 @@ cdef void _search_for_chars(
             The calling code ensures that lengths greater than 255 cannot occur. 
         suffs_not_prefs: if *True*, searching starts from the end of the word; if *False*, from the beginning.
     """
-    cdef int tok_str_l = len(tok_str), res_buf_idx = 0, l_buf_idx = 0, ch_wdth, tok_start_idx, search_char_idx
+    cdef int tok_str_l = strlen(<char*> tok_str), res_buf_idx = 0, l_buf_idx = 0, ch_wdth, tok_start_idx, search_char_idx
     cdef int search_chars_l
-    cdef const unsigned char[:] search_chars
+    cdef const unsigned char* search_chars
 
     cdef int last_tok_str_idx = tok_str_l if suffs_not_prefs else 0
     cdef int this_tok_str_idx = tok_str_l - 1 if suffs_not_prefs else 1
@@ -2130,7 +2127,7 @@ cdef void _search_for_chars(
                 search_chars = s_3byte_ch
             else:
                 search_chars = s_4byte_ch
-            search_chars_l = len(search_chars)
+            search_chars_l = strlen(<char*> search_chars)
             tok_start_idx = this_tok_str_idx if suffs_not_prefs else last_tok_str_idx
 
             search_char_idx = 0

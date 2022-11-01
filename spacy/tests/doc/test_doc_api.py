@@ -1004,23 +1004,22 @@ def _get_unsigned_32_bit_hash(input: str) -> int:
 @pytest.mark.parametrize("case_sensitive", [True, False])
 def test_get_character_combination_hashes_good_case(en_tokenizer, case_sensitive):
     doc = en_tokenizer("spaCy✨ and Prodigy")
-    ops = get_current_ops()
     ps1, ps2, ps3, ps4 = get_search_char_byte_arrays("Rp", case_sensitive)
     ss1, ss2, ss3, ss4 = get_search_char_byte_arrays("xx✨rp", case_sensitive)
     hashes = doc.get_character_combination_hashes(
         cs=case_sensitive,
-        p_lengths=ops.asarray1i([1, 3, 4]),
-        s_lengths=ops.asarray1i([2, 3, 4, 5]),
+        p_lengths=bytes((1, 3, 4,)),
+        s_lengths=bytes((2, 3, 4, 5,)),
         ps_1byte_ch=ps1,
         ps_2byte_ch=ps2,
         ps_3byte_ch=ps3,
         ps_4byte_ch=ps4,
-        ps_lengths=ops.asarray1i([2]),
+        ps_lengths=bytes((2,)),
         ss_1byte_ch=ss1,
         ss_2byte_ch=ss2,
         ss_3byte_ch=ss3,
         ss_4byte_ch=ss4,
-        ss_lengths=ops.asarray1i([1, 2]),
+        ss_lengths=bytes((1, 2,)),
     )
 
     assert hashes[0][0] == _get_unsigned_32_bit_hash("s")
@@ -1089,22 +1088,21 @@ def test_get_character_combination_hashes_good_case(en_tokenizer, case_sensitive
 
 def test_get_character_combination_hashes_good_case_partial(en_tokenizer):
     doc = en_tokenizer("spaCy✨ and Prodigy")
-    ops = get_current_ops()
     ps1, ps2, ps3, ps4 = get_search_char_byte_arrays("rp", False)
     hashes = doc.get_character_combination_hashes(
         cs=False,
-        p_lengths=ops.asarray1i([]),
-        s_lengths=ops.asarray1i([2, 3, 4, 5]),
+        p_lengths=bytes(),
+        s_lengths=bytes((2,3,4,5,)),
         ps_1byte_ch=ps1,
         ps_2byte_ch=ps2,
         ps_3byte_ch=ps3,
         ps_4byte_ch=ps4,
-        ps_lengths=ops.asarray1i([2]),
+        ps_lengths=bytes((2,)),
         ss_1byte_ch=bytes(),
         ss_2byte_ch=bytes(),
         ss_3byte_ch=bytes(),
         ss_4byte_ch=bytes(),
-        ss_lengths=ops.asarray1i([]),
+        ss_lengths=bytes(),
     )
     
     
@@ -1132,25 +1130,24 @@ def test_get_character_combination_hashes_good_case_partial(en_tokenizer):
 
 def test_get_character_combination_hashes_copying_in_middle(en_tokenizer):
     doc = en_tokenizer("sp𐌞Cé")
-    ops = get_current_ops()
 
     for p_length in range(1, 8):
         for s_length in range(1, 8):
             
             hashes = doc.get_character_combination_hashes(
                 cs=False,
-                p_lengths=ops.asarray1i([p_length]),
-                s_lengths=ops.asarray1i([s_length]),
+                p_lengths=bytes((p_length,)),
+                s_lengths=bytes((s_length,)),
                 ps_1byte_ch=bytes(),
                 ps_2byte_ch=bytes(),
                 ps_3byte_ch=bytes(),
                 ps_4byte_ch=bytes(),
-                ps_lengths=ops.asarray1i([]),
+                ps_lengths=bytes(),
                 ss_1byte_ch=bytes(),
                 ss_2byte_ch=bytes(),
                 ss_3byte_ch=bytes(),
                 ss_4byte_ch=bytes(),
-                ss_lengths=ops.asarray1i([]),
+                ss_lengths=bytes(),
             )
 
             assert hashes[0][0] == _get_unsigned_32_bit_hash("sp𐌞cé"[:p_length])
@@ -1160,22 +1157,21 @@ def test_get_character_combination_hashes_copying_in_middle(en_tokenizer):
 @pytest.mark.parametrize("case_sensitive", [True, False])
 def test_get_character_combination_hashes_turkish_i_with_dot(en_tokenizer, case_sensitive):
     doc = en_tokenizer("İ".lower() + "İ")
-    ops = get_current_ops()
     s1, s2, s3, s4 = get_search_char_byte_arrays("İ", case_sensitive)
     hashes = doc.get_character_combination_hashes(
         cs=case_sensitive,
-        p_lengths=ops.asarray1i([1, 2, 3, 4]),
-        s_lengths=ops.asarray1i([1, 2, 3, 4]),
+        p_lengths=bytes((1,2,3,4,)),
+        s_lengths=bytes((1,2,3,4,)),
         ps_1byte_ch=s1,
         ps_2byte_ch=s2,
         ps_3byte_ch=s3,
         ps_4byte_ch=s4,
-        ps_lengths=ops.asarray1i([1, 2, 3, 4]),
+        ps_lengths=bytes((1,2,3,4,)),
         ss_1byte_ch=s1,
         ss_2byte_ch=s2,
         ss_3byte_ch=s3,
         ss_4byte_ch=s4,
-        ss_lengths=ops.asarray1i([1, 2, 3, 4]),
+        ss_lengths=bytes((1,2,3,4,)),
     )
 
     COMBINING_DOT_ABOVE = b"\xcc\x87".decode("UTF-8")
@@ -1219,22 +1215,21 @@ def test_get_character_combination_hashes_string_store_spec_cases(en_tokenizer, 
     assert len(long_word) > 255
     doc = en_tokenizer(' '.join((symbol, short_word, normal_word, long_word)))
     assert len(doc) == 4
-    ops = get_current_ops()
     ps1, ps2, ps3, ps4 = get_search_char_byte_arrays("E", case_sensitive)
     hashes = doc.get_character_combination_hashes(
         cs=case_sensitive,
-        p_lengths=ops.asarray1i([2]),
-        s_lengths=ops.asarray1i([2]),
+        p_lengths=bytes((2,)),
+        s_lengths=bytes((2,)),
         ps_1byte_ch=ps1,
         ps_2byte_ch=ps2,
         ps_3byte_ch=ps3,
         ps_4byte_ch=ps4,
-        ps_lengths=ops.asarray1i([2]),
+        ps_lengths=bytes((2,)),
         ss_1byte_ch=bytes(),
         ss_2byte_ch=bytes(),
         ss_3byte_ch=bytes(),
         ss_4byte_ch=bytes(),
-        ss_lengths=ops.asarray1i([]),
+        ss_lengths=bytes(),
     )
     assert hashes[0][0] == _get_unsigned_32_bit_hash("FL" if case_sensitive else "fl")
     assert hashes[0][1] == _get_unsigned_32_bit_hash("19")
@@ -1255,19 +1250,18 @@ def test_get_character_combination_hashes_string_store_spec_cases(en_tokenizer, 
 
 def test_character_combination_hashes_empty_lengths(en_tokenizer):
     doc = en_tokenizer("and𐌞")
-    ops = get_current_ops()
-    hashes = doc.get_character_combination_hashes(
+    assert doc.get_character_combination_hashes(
         cs=True,
-        p_lengths=ops.asarray1i([]),
-        s_lengths=ops.asarray1i([]),
+        p_lengths=bytes(),
+        s_lengths=bytes(),
         ps_1byte_ch=bytes(),
         ps_2byte_ch=bytes(),
         ps_3byte_ch=bytes(),
         ps_4byte_ch=bytes(),
-        ps_lengths=ops.asarray1i([]),
+        ps_lengths=bytes(),
         ss_1byte_ch=bytes(),
         ss_2byte_ch=bytes(),
         ss_3byte_ch=bytes(),
         ss_4byte_ch=bytes(),
-        ss_lengths=ops.asarray1i([]),
+        ss_lengths=bytes(),
     ).shape == (1, 0)

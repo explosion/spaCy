@@ -43,26 +43,26 @@ def RichFeatureExtractor(
         forward,
         attrs={
             "case_sensitive": case_sensitive,
-            "pref_lengths": ops.asarray1i(pref_lengths)
+            "pref_lengths": bytes(pref_lengths)
             if pref_lengths is not None
-            else ops.asarray1i([]),
-            "suff_lengths": ops.asarray1i(suff_lengths)
+            else bytes(),
+            "suff_lengths": bytes(suff_lengths)
             if suff_lengths is not None
-            else ops.asarray1i([]),
+            else bytes(),
             "pref_search_1_byte": ps_1byte_ch,
             "pref_search_2_bytes": ps_2byte_ch,
             "pref_search_3_bytes": ps_3byte_ch,
             "pref_search_4_bytes": ps_4byte_ch,
-            "pref_search_lengths": ops.asarray1i(pref_search_lengths)
+            "pref_search_lengths": bytes(pref_search_lengths)
             if pref_search_lengths is not None
-            else ops.asarray1i([]),
+            else bytes(),
             "suff_search_1_byte": ss_1byte_ch,
             "suff_search_2_bytes": ss_2byte_ch,
             "suff_search_3_bytes": ss_3byte_ch,
             "suff_search_4_bytes": ss_4byte_ch,
-            "suff_search_lengths": ops.asarray1i(suff_search_lengths)
+            "suff_search_lengths": bytes(suff_search_lengths)
             if suff_search_lengths is not None
-            else ops.asarray1i([]),
+            else bytes(),
         },
     )
 
@@ -72,18 +72,18 @@ def forward(
 ) -> Tuple[List[Ints2d], Callable]:
     ops = model.ops
     case_sensitive: bool = model.attrs["case_sensitive"]
-    pref_lengths: Ints1d = model.attrs["pref_lengths"]
-    suff_lengths: Ints1d = model.attrs["suff_lengths"]
+    pref_lengths: bytes = model.attrs["pref_lengths"]
+    suff_lengths: bytes = model.attrs["suff_lengths"]
     ps_1byte_ch: bytes = model.attrs["pref_search_1_byte"]
     ps_2byte_ch: bytes = model.attrs["pref_search_2_bytes"]
     ps_3byte_ch: bytes = model.attrs["pref_search_3_bytes"]
     ps_4byte_ch: bytes = model.attrs["pref_search_4_bytes"]
-    pref_search_lengths: Ints1d = model.attrs["pref_search_lengths"]
+    pref_search_lengths: bytes = model.attrs["pref_search_lengths"]
     ss_1byte_ch: bytes = model.attrs["pref_search_1_byte"]
     ss_2byte_ch: bytes = model.attrs["pref_search_2_bytes"]
     ss_3byte_ch: bytes = model.attrs["pref_search_3_bytes"]
     ss_4byte_ch: bytes = model.attrs["pref_search_4_bytes"]
-    suff_search_lengths: Ints1d = model.attrs["suff_search_lengths"]
+    suff_search_lengths: bytes = model.attrs["suff_search_lengths"]
     features: List[Ints2d] = []
     for doc in docs:
         hashes = doc.get_character_combination_hashes(
