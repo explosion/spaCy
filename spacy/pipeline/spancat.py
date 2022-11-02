@@ -260,6 +260,11 @@ class SpanCategorizer(TrainablePipe):
         """
         return list(self.labels)
 
+    @property
+    def _n_labels(self) -> int:
+        """RETURNS (int): Number of labels."""
+        return len(self.labels)
+
     def predict(self, docs: Iterable[Doc]):
         """Apply the pipeline's model to a batch of docs, without modifying them.
 
@@ -432,7 +437,7 @@ class SpanCategorizer(TrainablePipe):
         if subbatch:
             docs = [eg.x for eg in subbatch]
             spans = build_ngram_suggester(sizes=[1])(docs)
-            Y = self.model.ops.alloc2f(spans.dataXd.shape[0], len(self.labels))
+            Y = self.model.ops.alloc2f(spans.dataXd.shape[0], self._n_labels)
             self.model.initialize(X=(docs, spans), Y=Y)
         else:
             self.model.initialize()
