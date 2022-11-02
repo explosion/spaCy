@@ -6,7 +6,7 @@ cimport numpy as np
 from cpython cimport array
 from libc.string cimport memcpy, memcmp, memset, strlen
 from libc.math cimport sqrt
-from libc.stdint cimport int32_t, uint64_t
+from libc.stdint cimport int32_t, uint64_t, uint32_t
 
 import copy
 from collections import Counter, defaultdict
@@ -17,7 +17,6 @@ import srsly
 from thinc.api import get_array_module, get_current_ops
 from thinc.util import copy_array
 import warnings
-from murmurhash.mrmr cimport hash32
 
 from .span cimport Span
 from .token cimport MISSING_DEP
@@ -1809,15 +1808,15 @@ cdef class Doc:
         cdef unsigned char* ss_res_buf = <unsigned char*> mem.alloc(ss_max_l, 4)
         cdef unsigned char* ss_l_buf = <unsigned char*> mem.alloc(ss_max_l, 1)
         cdef int doc_l = self.length, total_hashes = doc_l * hashes_per_tok 
-        cdef np.int64_t* hashes_ptr = <np.int64_t*> mem.alloc(
-            total_hashes, sizeof(np.int64_t))
+        cdef np.uint32_t* hashes_ptr = <np.uint32_t*> mem.alloc(
+            total_hashes, sizeof(np.uint32_t))
          
         # Define working variables
         cdef TokenC tok_c
         cdef int hash_idx, tok_i, tok_str_l
         cdef attr_t num_tok_attr
         cdef const unsigned char* tok_str
-        cdef np.int64_t* w_hashes_ptr = hashes_ptr
+        cdef np.uint32_t* w_hashes_ptr = hashes_ptr
         
         for tok_i in range(doc_l):
             tok_c = self.c[tok_i]
@@ -1843,9 +1842,9 @@ cdef class Doc:
                     ss_3byte_ch, ss_3byte_ch_l, ss_4byte_ch, ss_4byte_ch_l, ss_res_buf, ss_max_l, ss_l_buf, True)
                 w_hashes_ptr += _write_hashes(ss_res_buf, ss_lengths, ss_l_buf, 0, w_hashes_ptr)
         
-        cdef np.ndarray[np.int64_t, ndim=2] hashes = numpy.empty(
-            (doc_l, hashes_per_tok), dtype="int64")
-        memcpy(hashes.data, hashes_ptr, total_hashes * sizeof(np.int64_t))
+        cdef np.ndarray[np.uint32_t, ndim=2] hashes = numpy.empty(
+            (doc_l, hashes_per_tok), dtype="uint32")
+        memcpy(hashes.data, hashes_ptr, total_hashes * sizeof(np.uint32_t))
         return hashes
 
 
@@ -2029,6 +2028,7 @@ cdef int [:,:] _get_lca_matrix(Doc doc, int start, int end):
                 lca_matrix[k, j] = lca - start
     return lca_matrix
 
+
 @cython.boundscheck(False)  # Deactivate bounds checking
 cdef void _set_prefix_lengths(
     const unsigned char* tok_str,
@@ -2182,12 +2182,37 @@ cdef void _search_for_chars(
         
 
 @cython.boundscheck(False)  # Deactivate bounds checking
+cdef uint32_t fnv1a_hash(
+    const unsigned char* ptr, 
+    const int length
+) nogil:
+    """ Returns the FNV-1a hash for a sequence of bytes.
+        The behaviour of this method has been verified against several pieces 
+        of data from http://www.isthe.com/chongo/src/fnv/test_fnv.c.
+    """
+    cdef uint32_t hash_val = 0x811c9dc5
+    cdef int offset = 0
+    
+    while offset < length:
+        hash_val ^= ptr[offset]
+        hash_val *= 0x01000193
+        offset += 1
+
+    return hash_val
+
+
+def get_fnv1a_hash(input: bytes):
+    """ Python method to facilitate testing *fnv1a_hash*. """
+    return fnv1a_hash(input, len(input))
+    
+
+@cython.boundscheck(False)  # Deactivate bounds checking
 cdef int _write_hashes(
     const unsigned char* res_buf,
     const unsigned char* aff_l_buf,
     const unsigned char* offset_buf,
     const int end_idx,
-    np.int64_t* hashes_ptr,
+    np.uint32_t* hashes_ptr,
 ) nogil:    
     """ Write hashes for a token/rich property group combination.
 
@@ -2208,9 +2233,9 @@ cdef int _write_hashes(
         offset = offset_buf[aff_l - 1]
         if offset > 0:
             if end_idx != 0:
-                hash_val = hash32(<void*> (res_buf + end_idx - offset), offset, 0)
+                hash_val = fnv1a_hash(res_buf + end_idx - offset, offset)
             else:
-                hash_val = hash32(<void*> res_buf, offset, 0)
+                hash_val = fnv1a_hash(res_buf, offset)
         hashes_ptr[hash_idx] = hash_val
         hash_idx += 1
 

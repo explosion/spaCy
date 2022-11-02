@@ -6,6 +6,8 @@ from ..structs cimport TokenC, LexemeC, SpanC
 from ..typedefs cimport attr_t
 from ..attrs cimport attr_id_t
 
+from libc.stdint cimport uint32_t
+
 
 cdef attr_t get_token_attr(const TokenC* token, attr_id_t feat_name) nogil
 cdef attr_t get_token_attr_for_matcher(const TokenC* token, attr_id_t feat_name) nogil    
@@ -72,12 +74,18 @@ cdef void _search_for_chars(
 ) nogil
 
 
+cdef uint32_t fnv1a_hash(
+    const unsigned char* ptr, 
+    const int length
+) nogil
+
+
 cdef int _write_hashes(
     const unsigned char* res_buf,
     const unsigned char* aff_l_buf,
     const unsigned char* offset_buf,
     const int end_idx,
-    np.int64_t* hashes_ptr,
+    np.uint32_t* hashes_ptr,
 ) nogil 
 
 
