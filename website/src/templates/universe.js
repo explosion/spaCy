@@ -1,6 +1,5 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { StaticQuery, graphql } from 'gatsby'
 
 import Card from '../components/card'
 import Link from '../components/link'
@@ -18,6 +17,9 @@ import Footer from '../components/footer'
 import { H3, H5, Label, InlineList } from '../components/typography'
 import { YouTube, SoundCloud, Iframe } from '../components/embed'
 import { github, markdownToReact } from '../components/util'
+
+import { nightly, legacy } from '../../meta/dynamicMeta'
+import universe from '../../meta/universe.json'
 
 function getSlug(data) {
     if (data.isCategory) return `/universe/category/${data.id}`
@@ -333,73 +335,18 @@ const Project = ({ data, components }) => (
     </>
 )
 
-const Universe = ({ pageContext, location, mdxComponents }) => (
-    <StaticQuery
-        query={query}
-        render={data => {
-            const { universe, nightly, legacy } = data.site.siteMetadata
-            const theme = nightly ? 'nightly' : legacy ? 'legacy' : pageContext.theme
-            return (
-                <UniverseContent
-                    content={universe.resources}
-                    categories={universe.categories}
-                    pageContext={pageContext}
-                    location={location}
-                    mdxComponents={mdxComponents}
-                    theme={theme}
-                />
-            )
-        }}
-    />
-)
+const Universe = ({ pageContext, location, mdxComponents }) => {
+    const theme = nightly ? 'nightly' : legacy ? 'legacy' : pageContext.theme
+    return (
+        <UniverseContent
+            content={universe.resources}
+            categories={universe.categories}
+            pageContext={pageContext}
+            location={location}
+            mdxComponents={mdxComponents}
+            theme={theme}
+        />
+    )
+}
 
 export default Universe
-
-const query = graphql`
-    query UniverseQuery {
-        site {
-            siteMetadata {
-                nightly
-                legacy
-                universe {
-                    resources {
-                        type
-                        id
-                        title
-                        slogan
-                        url
-                        github
-                        description
-                        spacy_version
-                        pip
-                        cran
-                        category
-                        thumb
-                        image
-                        cover
-                        code_example
-                        code_language
-                        youtube
-                        soundcloud
-                        iframe
-                        iframe_height
-                        author
-                        author_links {
-                            twitter
-                            github
-                            website
-                        }
-                    }
-                    categories {
-                        label
-                        items {
-                            id
-                            title
-                            description
-                        }
-                    }
-                }
-            }
-        }
-    }
-`

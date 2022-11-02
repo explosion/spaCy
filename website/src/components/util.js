@@ -3,10 +3,11 @@ import { Parser as HtmlToReactParser } from 'html-to-react'
 import remark from 'remark'
 import remark2react from 'remark-react'
 import siteMetadata from '../../meta/site.json'
+import { domain } from '../../meta/dynamicMeta'
 
 const htmlToReactParser = new HtmlToReactParser()
 
-const isNightly = siteMetadata.nightlyBranches.includes(siteMetadata.domain)
+const isNightly = siteMetadata.nightlyBranches.includes(domain)
 export const DEFAULT_BRANCH = isNightly ? 'develop' : 'master'
 export const repo = siteMetadata.repo
 export const modelsRepo = siteMetadata.modelsRepo

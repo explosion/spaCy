@@ -1,6 +1,5 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { StaticQuery, graphql } from 'gatsby'
 
 import {
     LandingHeader,
@@ -19,13 +18,15 @@ import { Ul, Li } from '../components/list'
 import Button from '../components/button'
 import Link from '../components/link'
 
-import QuickstartTraining from './quickstart-training'
-import Project from './project'
-import Features from './features'
+import QuickstartTraining from '../widgets/quickstart-training'
+import Project from '../widgets/project'
+import Features from '../widgets/features'
+import Layout from '../components/layout'
 import courseImage from '../../docs/images/course.jpg'
 import prodigyImage from '../../docs/images/prodigy_overview.jpg'
 import projectsImage from '../../docs/images/projects.png'
 import tailoredPipelinesImage from '../../docs/images/spacy-tailored-pipelines_wide.png'
+import { nightly, legacy } from '../../meta/dynamicMeta'
 
 import Benchmarks from 'usage/_benchmarks-models.md'
 
@@ -56,8 +57,7 @@ for entity in doc.ents:
 `
 }
 
-const Languages = ({ data }) => {
-    const { nightly, legacy } = data
+const Landing = () => {
     const codeExample = getCodeExample(nightly)
     return (
         <>
@@ -289,31 +289,4 @@ const Languages = ({ data }) => {
     )
 }
 
-Languages.propTypes = {
-    data: PropTypes.shape({
-        repo: PropTypes.string,
-        languages: PropTypes.arrayOf(
-            PropTypes.shape({
-                models: PropTypes.arrayOf(PropTypes.string),
-            })
-        ),
-    }),
-}
-
-const PageLanding = () => (
-    <StaticQuery query={landingQuery} render={({ site }) => <Languages data={site.siteMetadata} />} />
-)
-
-export default PageLanding
-
-const landingQuery = graphql`
-    query LandingQuery {
-        site {
-            siteMetadata {
-                nightly
-                legacy
-                repo
-            }
-        }
-    }
-`
+export default Landing

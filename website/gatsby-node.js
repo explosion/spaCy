@@ -4,6 +4,9 @@ const { createFilePath } = require('gatsby-source-filesystem')
 const DEFAULT_TEMPLATE = path.resolve('./src/templates/index.js')
 const BASE_PATH = 'docs'
 const PAGE_EXTENSIONS = ['.md', '.mdx']
+const siteMetadata = require('./meta/site.json')
+const universe = require('./meta/universe.json')
+const models = require('./meta/languages.json')
 
 function replacePath(pagePath) {
     return pagePath === `/` ? pagePath : pagePath.replace(/\/$/, ``)
@@ -26,37 +29,6 @@ exports.createPages = ({ graphql, actions }) => {
             graphql(
                 `
                     {
-                        site {
-                            siteMetadata {
-                                sections {
-                                    id
-                                    title
-                                    theme
-                                }
-                                languages {
-                                    code
-                                    name
-                                    models
-                                    example
-                                    has_examples
-                                }
-                                universe {
-                                    resources {
-                                        id
-                                        title
-                                        slogan
-                                    }
-                                    categories {
-                                        label
-                                        items {
-                                            id
-                                            title
-                                            description
-                                        }
-                                    }
-                                }
-                            }
-                        }
                         allFile(filter: { ext: { in: [".md", ".mdx"] } }) {
                             edges {
                                 node {
@@ -107,8 +79,10 @@ exports.createPages = ({ graphql, actions }) => {
                     reject(result.errors)
                 }
 
-                const sectionData = result.data.site.siteMetadata.sections
-                const sections = Object.assign({}, ...sectionData.map(s => ({ [s.id]: s })))
+                const sections = Object.assign(
+                    {},
+                    ...siteMetadata.sections.map(s => ({ [s.id]: s }))
+                )
 
                 /* Regular pages */
 
@@ -183,8 +157,8 @@ exports.createPages = ({ graphql, actions }) => {
                     },
                 })
 
-                const universe = result.data.site.siteMetadata.universe.resources
-                universe.forEach(page => {
+                const universeResources = universe.resources
+                universeResources.forEach(page => {
                     const slug = `/universe/project/${page.id}`
 
                     createPage({
@@ -202,8 +176,11 @@ exports.createPages = ({ graphql, actions }) => {
                     })
                 })
 
-                const universeCategories = result.data.site.siteMetadata.universe.categories
-                const categories = [].concat.apply([], universeCategories.map(cat => cat.items))
+                const universeCategories = universe.categories
+                const categories = [].concat.apply(
+                    [],
+                    universeCategories.map(cat => cat.items)
+                )
                 categories.forEach(page => {
                     const slug = `/universe/category/${page.id}`
 
@@ -224,7 +201,7 @@ exports.createPages = ({ graphql, actions }) => {
 
                 /* Models */
 
-                const langs = result.data.site.siteMetadata.languages
+                const langs = models.languages
                 const modelLangs = langs.filter(({ models }) => models && models.length)
                 modelLangs.forEach(({ code, name, models, example, has_examples }, i) => {
                     const slug = `/models/${code}`

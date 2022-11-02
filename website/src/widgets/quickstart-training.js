@@ -1,5 +1,4 @@
 import React, { useState } from 'react'
-import { StaticQuery, graphql } from 'gatsby'
 import highlightCode from 'gatsby-remark-prismjs/highlight-code.js'
 
 import { Quickstart } from '../components/quickstart'
@@ -22,6 +21,8 @@ const COMPONENTS = [
 const COMMENT = `# This is an auto-generated partial config. To use it with 'spacy train'
 # you can run spacy init fill-config to auto-fill all default settings:
 # python -m spacy init fill-config ./base_config.cfg ./config.cfg`
+
+import models from '../../meta/languages.json'
 
 const DATA = [
     {
@@ -111,54 +112,32 @@ export default function QuickstartTraining({ id, title, download = 'base_config.
         .split('\n')
         .map(line => (line.startsWith('#') ? `<span class="token comment">${line}</span>` : line))
         .join('\n')
+
+    let data = DATA
+    data[0].dropdown = models.languages
+        .map(({ name, code }) => ({
+            id: code,
+            title: name,
+        }))
+        .sort((a, b) => a.title.localeCompare(b.title))
+    if (!_components.includes('textcat')) {
+        data = data.map(field => (field.id === 'textcat' ? { ...field, hidden: true } : field))
+    }
     return (
-        <StaticQuery
-            query={query}
-            render={({ site }) => {
-                let data = DATA
-                const langs = site.siteMetadata.languages
-                data[0].dropdown = langs
-                    .map(({ name, code }) => ({
-                        id: code,
-                        title: name,
-                    }))
-                    .sort((a, b) => a.title.localeCompare(b.title))
-                if (!_components.includes('textcat')) {
-                    data = data.map(field =>
-                        field.id === 'textcat' ? { ...field, hidden: true } : field
-                    )
-                }
-                return (
-                    <Quickstart
-                        id="quickstart-widget"
-                        Container="div"
-                        download={download}
-                        rawContent={rawContent}
-                        data={data}
-                        title={title}
-                        id={id}
-                        setters={setters}
-                        hidePrompts
-                        small
-                        codeLang="ini"
-                    >
-                        {htmlToReact(displayContent)}
-                    </Quickstart>
-                )
-            }}
-        />
+        <Quickstart
+            id="quickstart-widget"
+            Container="div"
+            download={download}
+            rawContent={rawContent}
+            data={data}
+            title={title}
+            id={id}
+            setters={setters}
+            hidePrompts
+            small
+            codeLang="ini"
+        >
+            {htmlToReact(displayContent)}
+        </Quickstart>
     )
 }
-
-const query = graphql`
-    query QuickstartTrainingQuery {
-        site {
-            siteMetadata {
-                languages {
-                    code
-                    name
-                }
-            }
-        }
-    }
-`

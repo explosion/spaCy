@@ -13,16 +13,11 @@ const codeBlocksPlugin = require('./src/plugins/remark-code-blocks.js')
 
 // Import metadata
 const site = require('./meta/site.json')
-const sidebars = require('./meta/sidebars.json')
-const models = require('./meta/languages.json')
-const universe = require('./meta/universe.json')
+const { domain, nightly: isNightly, legacy: isLegacy } = site
+const { siteUrl } = require('./meta/dynamicMeta')
 
 const DEFAULT_TEMPLATE = path.resolve('./src/templates/index.js')
 
-const domain = process.env.BRANCH || site.domain
-const siteUrl = `https://${domain}`
-const isNightly = site.nightlyBranches.includes(domain)
-const isLegacy = site.legacy || !!+process.env.SPACY_LEGACY
 const favicon = `src/images/icon${isNightly ? '_nightly' : isLegacy ? '_legacy' : ''}.png`
 const branch = isNightly ? 'develop' : 'master'
 
@@ -34,30 +29,11 @@ const replacements = {
     SPACY_PKG_FLAGS: isNightly ? ' --pre' : '',
 }
 
-/**
- * Compute the overall total counts of models and languages
- */
-function getCounts(langs = []) {
-    return {
-        langs: langs.length,
-        modelLangs: langs.filter(({ models }) => models && !!models.length).length,
-        models: langs.map(({ models }) => (models ? models.length : 0)).reduce((a, b) => a + b, 0),
-    }
-}
-
 module.exports = {
     siteMetadata: {
         ...site,
-        sidebars,
-        ...models,
-        counts: getCounts(models.languages),
-        universe,
-        nightly: isNightly,
-        legacy: isLegacy,
-        binderBranch: domain,
         siteUrl,
     },
-
     plugins: [
         {
             resolve: `gatsby-plugin-sass`,
