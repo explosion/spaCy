@@ -367,7 +367,7 @@ const Model = ({
                                 const labelNames = labels[pipe] || []
                                 const help = LABEL_SCHEME_META[pipe]
                                 return (
-                                    <Tr key={`${name}-${pipe}`} evenodd={false} key={pipe}>
+                                    <Tr evenodd={false} key={pipe}>
                                         <Td style={{ width: '20%' }}>
                                             <Label>
                                                 {pipe} {help && <Help>{help}</Help>}
