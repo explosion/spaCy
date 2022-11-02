@@ -86,6 +86,9 @@ def make_spancat(
     spans_key (str): Key of the doc.spans dict to save the spans under. During
         initialization and training, the component will look for spans on the
         reference document under the same key.
+    scorer (Optional[Callable]): The scoring method. Defaults to
+        Scorer.score_spans for the Doc.spans[spans_key] with overlapping
+        spans allowed.
     negative_weight (float): Multiplier for the loss terms.
         Can be used to down weigh the negative samples if there are too many.
     allow_overlap (bool): If True the data is assumed to
