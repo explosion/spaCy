@@ -34,7 +34,7 @@ export default function Accordion({ title, id, expanded = false, spaced = false,
                                     to={`#${id}`}
                                     className={classes.anchor}
                                     hidden
-                                    onClick={event => event.stopPropagation()}
+                                    onClick={(event) => event.stopPropagation()}
                                 >
                                     &para;
                                 </Link>

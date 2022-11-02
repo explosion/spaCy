@@ -55,10 +55,10 @@ const Languages = () => (
                             </Tr>
                         </thead>
                         <tbody>
-                            {withModels.map(model => (
+                            {withModels.map((model) => (
                                 <Language {...model} key={model.code} />
                             ))}
-                            {withoutModels.map(model => (
+                            {withoutModels.map((model) => (
                                 <Language {...model} key={model.code} />
                             ))}
                         </tbody>

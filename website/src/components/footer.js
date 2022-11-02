@@ -13,7 +13,7 @@ export default function Footer({ wide = false }) {
     return (
         <StaticQuery
             query={query}
-            render={data => {
+            render={(data) => {
                 const { companyUrl, company, footer, newsletter } = data.site.siteMetadata
                 return (
                     <footer className={classes.root}>

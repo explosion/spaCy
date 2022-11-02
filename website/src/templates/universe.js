@@ -28,7 +28,7 @@ function getSlug(data) {
 function filterResources(resources, data) {
     const sorted = resources.sort((a, b) => a.id.localeCompare(b.id))
     if (!data || !data.isCategory) return sorted
-    return sorted.filter(res => (res.category || []).includes(data.id))
+    return sorted.filter((res) => (res.category || []).includes(data.id))
 }
 
 const UniverseContent = ({ content = [], categories, theme, pageContext, mdxComponents }) => {
@@ -142,7 +142,13 @@ const UniverseContent = ({ content = [], categories, theme, pageContext, mdxComp
                         The Universe database is open-source and collected in a simple JSON file.
                         For more details on the formats and available fields, see the documentation.
                         Looking for inspiration your own spaCy plugin or extension? Check out the
-                        <Link to={"https://github.com/explosion/spaCy/discussions/categories/new-features-project-ideas/"} hideIcon ws>
+                        <Link
+                            to={
+                                'https://github.com/explosion/spaCy/discussions/categories/new-features-project-ideas/'
+                            }
+                            hideIcon
+                            ws
+                        >
                             project idea
                         </Link>
                         section in Discussions.
@@ -316,7 +322,7 @@ const Project = ({ data, components }) => (
             {data.category && (
                 <p style={{ marginBottom: 0 }}>
                     <Label>Categories</Label>
-                    {data.category.map(cat => (
+                    {data.category.map((cat) => (
                         <Link to={`/universe/category/${cat}`} key={cat} ws>
                             <InlineCode>{cat}</InlineCode>
                         </Link>
@@ -330,7 +336,7 @@ const Project = ({ data, components }) => (
 const Universe = ({ pageContext, location, mdxComponents }) => (
     <StaticQuery
         query={query}
-        render={data => {
+        render={(data) => {
             const { universe, nightly, legacy } = data.site.siteMetadata
             const theme = nightly ? 'nightly' : legacy ? 'legacy' : pageContext.theme
             return (

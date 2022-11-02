@@ -41,7 +41,7 @@ export default function SEO({
     return (
         <StaticQuery
             query={query}
-            render={data => {
+            render={(data) => {
                 const siteMetadata = data.site.siteMetadata
                 const metaDescription = description || siteMetadata.description
                 const pageTitle = getPageTitle(

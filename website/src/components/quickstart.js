@@ -11,7 +11,7 @@ import classes from '../styles/quickstart.module.sass'
 
 function getNewChecked(optionId, checkedForId, multiple) {
     if (!multiple) return [optionId]
-    if (checkedForId.includes(optionId)) return checkedForId.filter(opt => opt !== optionId)
+    if (checkedForId.includes(optionId)) return checkedForId.filter((opt) => opt !== optionId)
     return [...checkedForId, optionId]
 }
 
@@ -42,12 +42,12 @@ const Quickstart = ({
     const [copySuccess, setCopySuccess] = useState(false)
     const [otherState, setOtherState] = useState({})
     const setOther = (id, value) => setOtherState({ ...otherState, [id]: value })
-    const getRawContent = ref => {
+    const getRawContent = (ref) => {
         if (rawContent !== null) return rawContent
         if (ref.current && ref.current.childNodes) {
             // Select all currently visible nodes (spans and text nodes)
-            const result = [...ref.current.childNodes].filter(el => el.offsetParent !== null)
-            return result.map(el => el.textContent).join('\n')
+            const result = [...ref.current.childNodes].filter((el) => el.offsetParent !== null)
+            return result.map((el) => el.textContent).join('\n')
         }
         return ''
     }
@@ -60,7 +60,7 @@ const Quickstart = ({
     const getCss = (id, checkedOptions) => {
         const checkedForId = checkedOptions[id] || []
         const exclude = checkedForId
-            .map(value => `:not([data-quickstart-${id}="${value}"])`)
+            .map((value) => `:not([data-quickstart-${id}="${value}"])`)
             .join('')
         return `[data-quickstart-results]>[data-quickstart-${id}]${exclude} {display: none}`
     }
@@ -71,7 +71,7 @@ const Quickstart = ({
             const initialChecked = Object.assign(
                 {},
                 ...data.map(({ id, options = [] }) => ({
-                    [id]: options.filter(option => option.checked).map(({ id }) => id),
+                    [id]: options.filter((option) => option.checked).map(({ id }) => id),
                 }))
             )
             const initialStyles = Object.assign(
@@ -127,7 +127,7 @@ const Quickstart = ({
                                     )}
                                 </div>
                                 <div className={classes.fields}>
-                                    {options.map(option => {
+                                    {options.map((option) => {
                                         const optionType = multiple ? 'checkbox' : 'radio'
                                         const checkedForId = checked[id] || []
                                         return (
@@ -291,7 +291,7 @@ const QS = ({ children, prompt = 'bash', divider = false, comment = false, ...pr
     })
     const attrs = Object.assign(
         {},
-        ...Object.keys(props).map(key => ({
+        ...Object.keys(props).map((key) => ({
             [`data-quickstart-${key}`]: props[key],
         }))
     )

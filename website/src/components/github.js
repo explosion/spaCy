@@ -27,11 +27,11 @@ const GitHubCode = ({ url, lang, errorMsg = defaultErrorMsg, className }) => {
         if (!initialized) {
             setCode(null)
             fetch(rawUrl)
-                .then(res => res.text().then(text => ({ text, ok: res.ok })))
+                .then((res) => res.text().then((text) => ({ text, ok: res.ok })))
                 .then(({ text, ok }) => {
                     setCode(ok ? text : errorMsg)
                 })
-                .catch(err => {
+                .catch((err) => {
                     setCode(errorMsg)
                     console.error(err)
                 })
