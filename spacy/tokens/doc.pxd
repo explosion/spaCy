@@ -51,7 +51,7 @@ cdef void _set_suffix_lengths(
     const int tok_str_l,
     unsigned char* suff_l_buf,
     const int s_max_l, 
-)
+) nogil
 
 
 cdef void _search_for_chars(
@@ -72,16 +72,13 @@ cdef void _search_for_chars(
 ) nogil
 
 
-
 cdef int _write_hashes(
     const unsigned char* res_buf,
     const unsigned char* aff_l_buf,
     const unsigned char* offset_buf,
     const int end_idx,
-    np.ndarray[np.int64_t, ndim=2] hashes,
-    const int tok_i,
-    const int start_hash_idx,
-)  
+    np.int64_t* hashes_ptr,
+) nogil 
 
 
 cdef class Doc:

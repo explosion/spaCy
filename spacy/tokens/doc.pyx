@@ -1735,7 +1735,7 @@ cdef class Doc:
                     j += 1
         return output
 
-    #@cython.boundscheck(False)  # Deactivate bounds checking
+    @cython.boundscheck(False)  # Deactivate bounds checking
     def get_character_combination_hashes(self,
         *,
         const bint cs, 
@@ -1763,6 +1763,7 @@ cdef class Doc:
         const int ss_4byte_ch_l,
         const unsigned char* ss_lengths,
         const int ss_max_l,
+        const int hashes_per_tok
     ):
         """
         Returns a 2D NumPy array where the rows represent tokens and the columns represent hashes of various character combinations 
@@ -1796,11 +1797,9 @@ cdef class Doc:
              in ascending order. For example, if *ss_lengths==[1, 2]*, *ss_search=="aC" and *cs==False*, the searched strings 
              hashed for "spaCy" would be "c" and "ca".
         ss_max_l: the value of *ss_lengths[-1]*, or *0* if *ss_lengths==None*. Passed in for speed.
+        hashes_per_tok: the total number of hashes produced for each token. Passed in for speed.
         """
 
-        cdef np.ndarray[np.int64_t, ndim=2] hashes = numpy.empty(
-            (self.length, p_max_l + s_max_l + ps_max_l + ss_max_l), dtype="int64")
-        
         # Define / allocate buffers
         cdef Pool mem = Pool()
         cdef unsigned char* pref_l_buf = <unsigned char*> mem.alloc(p_max_l, 1)
@@ -1809,39 +1808,46 @@ cdef class Doc:
         cdef unsigned char* ps_l_buf = <unsigned char*> mem.alloc(ps_max_l, 1)
         cdef unsigned char* ss_res_buf = <unsigned char*> mem.alloc(ss_max_l, 4)
         cdef unsigned char* ss_l_buf = <unsigned char*> mem.alloc(ss_max_l, 1)
-        
+        cdef int doc_l = self.length, total_hashes = doc_l * hashes_per_tok 
+        cdef np.int64_t* hashes_ptr = <np.int64_t*> mem.alloc(
+            total_hashes, sizeof(np.int64_t))
+         
         # Define working variables
         cdef TokenC tok_c
         cdef int hash_idx, tok_i, tok_str_l
         cdef attr_t num_tok_attr
         cdef const unsigned char* tok_str
-
-        for tok_i in range(self.length):
+        cdef np.int64_t* w_hashes_ptr = hashes_ptr
+        
+        for tok_i in range(doc_l):
             tok_c = self.c[tok_i]
             num_tok_attr = tok_c.lex.orth if cs else tok_c.lex.lower
             tok_str = self.vocab.strings.utf8_ptr(num_tok_attr)
             tok_str_l = strlen(<char*> tok_str)
-            hash_idx = 0
             
             if p_max_l > 0:
                 _set_prefix_lengths(tok_str, tok_str_l, pref_l_buf, p_max_l)
-                hash_idx = _write_hashes(tok_str, p_lengths, pref_l_buf, 0, hashes, tok_i, 0)
+                w_hashes_ptr += _write_hashes(tok_str, p_lengths, pref_l_buf, 0, w_hashes_ptr)
 
             if s_max_l > 0:
                 _set_suffix_lengths(tok_str, tok_str_l, suff_l_buf, s_max_l)
-                hash_idx = _write_hashes(tok_str, s_lengths, suff_l_buf, tok_str_l, hashes, tok_i, hash_idx)
+                w_hashes_ptr += _write_hashes(tok_str, s_lengths, suff_l_buf, tok_str_l, w_hashes_ptr)
             
             if ps_max_l > 0:
                 _search_for_chars(tok_str, tok_str_l, ps_1byte_ch, ps_1byte_ch_l, ps_2byte_ch, ps_2byte_ch_l, 
                     ps_3byte_ch, ps_3byte_ch_l, ps_4byte_ch, ps_4byte_ch_l, ps_res_buf, ps_max_l, ps_l_buf, False)
-                hash_idx = _write_hashes(ps_res_buf, ps_lengths, ps_l_buf, 0, hashes, tok_i, hash_idx)
+                w_hashes_ptr += _write_hashes(ps_res_buf, ps_lengths, ps_l_buf, 0, w_hashes_ptr)
 
             if ss_max_l > 0:
                 _search_for_chars(tok_str, tok_str_l, ss_1byte_ch, ss_1byte_ch_l, ss_2byte_ch, ss_2byte_ch_l, 
                     ss_3byte_ch, ss_3byte_ch_l, ss_4byte_ch, ss_4byte_ch_l, ss_res_buf, ss_max_l, ss_l_buf, True)
-                _write_hashes(ss_res_buf, ss_lengths, ss_l_buf, 0, hashes, tok_i, hash_idx)
-            
+                w_hashes_ptr += _write_hashes(ss_res_buf, ss_lengths, ss_l_buf, 0, w_hashes_ptr)
+        
+        cdef np.ndarray[np.int64_t, ndim=2] hashes = numpy.empty(
+            (doc_l, hashes_per_tok), dtype="int64")
+        memcpy(hashes.data, hashes_ptr, total_hashes * sizeof(np.int64_t))
         return hashes
+
 
     @staticmethod
     def _get_array_attrs():
@@ -2023,7 +2029,7 @@ cdef int [:,:] _get_lca_matrix(Doc doc, int start, int end):
                 lca_matrix[k, j] = lca - start
     return lca_matrix
 
-#@cython.boundscheck(False)  # Deactivate bounds checking
+@cython.boundscheck(False)  # Deactivate bounds checking
 cdef void _set_prefix_lengths(
     const unsigned char* tok_str,
     const int tok_str_l,
@@ -2056,13 +2062,13 @@ cdef void _set_prefix_lengths(
         memset(pref_l_buf + pref_l_buf_idx, pref_l_buf[pref_l_buf_idx - 1], p_max_l - pref_l_buf_idx)
 
 
-#@cython.boundscheck(False)  # Deactivate bounds checking
+@cython.boundscheck(False)  # Deactivate bounds checking
 cdef void _set_suffix_lengths(
     const unsigned char* tok_str,
     const int tok_str_l,
     unsigned char* suff_l_buf,
     const int s_max_l, 
-):
+) nogil:
     """ Populate *suff_l_buf*, which has length *suff_l*, with the byte lengths of the last *suff_l* characters within *tok_str*. 
         Lengths that are greater than the character length of the whole word are populated with the byte length of the whole word.
 
@@ -2086,7 +2092,7 @@ cdef void _set_suffix_lengths(
         memset(suff_l_buf + suff_l_buf_idx, suff_l_buf[suff_l_buf_idx - 1], s_max_l - suff_l_buf_idx)
 
 
-#@cython.boundscheck(False)  # Deactivate bounds checking
+@cython.boundscheck(False)  # Deactivate bounds checking
 cdef void _search_for_chars(
     const unsigned char* tok_str,
     const int tok_str_l,
@@ -2175,15 +2181,14 @@ cdef void _search_for_chars(
     memset(l_buf + l_buf_idx, res_buf_idx, max_res_l - l_buf_idx)
         
 
+@cython.boundscheck(False)  # Deactivate bounds checking
 cdef int _write_hashes(
     const unsigned char* res_buf,
     const unsigned char* aff_l_buf,
     const unsigned char* offset_buf,
     const int end_idx,
-    np.ndarray[np.int64_t, ndim=2] hashes,
-    const int tok_i,
-    const int start_hash_idx,
-):    
+    np.int64_t* hashes_ptr,
+) nogil:    
     """ Write hashes for a token/rich property group combination.
 
     res_buf: the string from which to generate the hash values.
@@ -2191,24 +2196,22 @@ cdef int _write_hashes(
     offset_buf: one-byte lengths specifying the byte offset of each character within *res_buf*.
     end_idx: if not *0*, the offset within *res_buf* that should end each affix being hashed;
         if *0*, affixes start at the beginning of *res_buf* rather than ending at the end.
-    hashes: the 2D Numpy array in which the hashes are stored.
-    tok_i: the index of axis 0 of *hashes* to write to.
-    start_hash_idx: the index of axis 1 of *hashes* at which to start writing.
+    hashes_ptr: a pointer starting from which the new hashes should be written.
     """
 
-    cdef int offset, aff_l, hash_val = 0, hash_idx = start_hash_idx
+    cdef int offset, aff_l, hash_val = 0, hash_idx = 0
     
     while True:
-        aff_l = aff_l_buf[hash_idx - start_hash_idx]
+        aff_l = aff_l_buf[hash_idx]
         if aff_l == 0:
             return hash_idx     
         offset = offset_buf[aff_l - 1]
         if offset > 0:
             if end_idx != 0:
-                hash_val = hash32(<void*> res_buf + end_idx - offset, offset, 0)
+                hash_val = hash32(<void*> (res_buf + end_idx - offset), offset, 0)
             else:
                 hash_val = hash32(<void*> res_buf, offset, 0)
-        hashes[tok_i, hash_idx] = hash_val
+        hashes_ptr[hash_idx] = hash_val
         hash_idx += 1
 
 
