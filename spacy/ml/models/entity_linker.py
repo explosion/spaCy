@@ -71,11 +71,10 @@ def span_maker_forward(model, docs: List[Doc], is_train) -> Tuple[Ragged, Callab
             cands.append((start_token, end_token))
 
         candidates.append(ops.asarray2i(cands))
-    candlens = ops.asarray1i([len(cands) for cands in candidates])
-    candidates = ops.xp.concatenate(candidates)
-    outputs = Ragged(candidates, candlens)
+    lengths = model.ops.asarray1i([len(cands) for cands in candidates])
+    out = Ragged(model.ops.flatten(candidates), lengths)
     # because this is just rearranging docs, the backprop does nothing
-    return outputs, lambda x: []
+    return out, lambda x: []
 
 
 @registry.misc("spacy.KBFromFile.v1")

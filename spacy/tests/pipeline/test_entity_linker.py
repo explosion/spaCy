@@ -10,6 +10,7 @@ from spacy.compat import pickle
 from spacy.kb import Candidate, InMemoryLookupKB, get_candidates, KnowledgeBase
 from spacy.lang.en import English
 from spacy.ml import load_kb
+from spacy.ml.models.entity_linker import build_span_maker
 from spacy.pipeline import EntityLinker, TrainablePipe
 from spacy.pipeline.legacy import EntityLinker_v1
 from spacy.pipeline.tok2vec import DEFAULT_TOK2VEC_MODEL
@@ -716,7 +717,11 @@ TRAIN_DATA = [
     ("Russ Cochran was a member of University of Kentucky's golf team.",
         {"links": {(0, 12): {"Q7381115": 0.0, "Q2146908": 1.0}},
          "entities": [(0, 12, "PERSON"), (43, 51, "LOC")],
-         "sent_starts": [1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]})
+         "sent_starts": [1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}),
+    # having a blank instance shouldn't break things
+    ("The weather is nice today.",
+        {"links": {}, "entities": [],
+         "sent_starts": [1, -1, 0, 0, 0, 0]})
 ]
 GOLD_entities = ["Q2146908", "Q7381115", "Q7381115", "Q2146908"]
 # fmt: on
@@ -1260,3 +1265,18 @@ def test_save_activations():
     assert scores.data.shape == (2, 1)
     assert scores.data.dtype == "float32"
     assert scores.lengths.shape == (1,)
+
+
+def test_span_maker_forward_with_empty():
+    """The forward pass of the span maker may have a doc with no entities."""
+    nlp = English()
+    doc1 = nlp("a b c")
+    ent = doc1[0:1]
+    ent.label_ = "X"
+    doc1.ents = [ent]
+    # no entities
+    doc2 = nlp("x y z")
+
+    # just to get a model
+    span_maker = build_span_maker()
+    span_maker([doc1, doc2], False)
