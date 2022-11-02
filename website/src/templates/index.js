@@ -1,6 +1,5 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { graphql } from 'gatsby'
 import { MDXProvider } from '@mdx-js/tag'
 import { withMDXScope } from 'gatsby-mdx/context'
 import useOnlineStatus from '@rehooks/online-status'
@@ -34,6 +33,9 @@ import Alert from '../components/alert'
 import Search from '../components/search'
 import Project from '../widgets/project'
 import { Integration, IntegrationLogo } from '../widgets/integration'
+
+import siteMetadata from '../../meta/site.json'
+import { nightly, legacy } from '../../meta/dynamicMeta'
 
 const mdxComponents = {
     a: Link,
@@ -167,9 +169,8 @@ class Layout extends React.Component {
         const { data, pageContext, location, children } = this.props
         const { file, site = {} } = data || {}
         const mdx = file ? file.childMdx : null
-        const meta = site.siteMetadata || {}
         const { title, section, sectionTitle, teaser, theme = 'blue', searchExclude } = pageContext
-        const uiTheme = meta.nightly ? 'nightly' : meta.legacy ? 'legacy' : theme
+        const uiTheme = nightly ? 'nightly' : legacy ? 'legacy' : theme
         const bodyClass = classNames(`theme-${uiTheme}`, { 'search-exclude': !!searchExclude })
         const isDocs = ['usage', 'models', 'api', 'styleguide'].includes(section)
         const content = !mdx ? null : (
@@ -182,19 +183,19 @@ class Layout extends React.Component {
             <>
                 <SEO
                     title={title}
-                    description={teaser || meta.description}
+                    description={teaser || siteMetadata.description}
                     section={section}
                     sectionTitle={sectionTitle}
                     bodyClass={bodyClass}
-                    nightly={meta.nightly}
+                    nightly={nightly}
                 />
-                <AlertSpace nightly={meta.nightly} legacy={meta.legacy} />
+                <AlertSpace nightly={nightly} legacy={legacy} />
                 <Navigation
-                    title={meta.title}
-                    items={meta.navigation}
+                    title={siteMetadata.title}
+                    items={siteMetadata.navigation}
                     section={section}
-                    search={<Search settings={meta.docSearch} />}
-                    alert={meta.nightly ? null : navAlert}
+                    search={<Search settings={siteMetadata.docSearch} />}
+                    alert={nightly ? null : navAlert}
                 >
                     <Progress key={location.href} />
                 </Navigation>
@@ -219,33 +220,3 @@ class Layout extends React.Component {
 }
 
 export default withMDXScope(Layout)
-
-export const pageQuery = graphql`
-    query ($slug: String!) {
-        site {
-            siteMetadata {
-                nightly
-                legacy
-                title
-                description
-                navigation {
-                    text
-                    url
-                }
-                docSearch {
-                    apiKey
-                    indexName
-                    appId
-                }
-            }
-        }
-        file(fields: { slug: { eq: $slug } }) {
-            childMdx {
-                code {
-                    scope
-                    body
-                }
-            }
-        }
-    }
-`
