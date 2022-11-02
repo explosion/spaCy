@@ -196,7 +196,7 @@ class Layout extends React.Component {
                     search={<Search settings={meta.docSearch} />}
                     alert={meta.nightly ? null : navAlert}
                 >
-                    <Progress key={location.href} />
+                    <Progress />
                 </Navigation>
                 {isDocs ? (
                     <Docs pageContext={pageContext}>{content}</Docs>
