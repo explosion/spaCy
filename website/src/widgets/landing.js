@@ -56,7 +56,7 @@ for entity in doc.ents:
 `
 }
 
-const Landing = ({ data }) => {
+const Languages = ({ data }) => {
     const { nightly, legacy } = data
     const codeExample = getCodeExample(nightly)
     return (
@@ -289,7 +289,7 @@ const Landing = ({ data }) => {
     )
 }
 
-Landing.propTypes = {
+Languages.propTypes = {
     data: PropTypes.shape({
         repo: PropTypes.string,
         languages: PropTypes.arrayOf(
@@ -301,7 +301,7 @@ Landing.propTypes = {
 }
 
 const PageLanding = () => (
-    <StaticQuery query={landingQuery} render={({ site }) => <Landing data={site.siteMetadata} />} />
+    <StaticQuery query={landingQuery} render={({ site }) => <Languages data={site.siteMetadata} />} />
 )
 
 export default PageLanding
