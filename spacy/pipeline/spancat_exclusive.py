@@ -130,7 +130,7 @@ class Ranges:
 class Exclusive_SpanCategorizer(SpanCategorizer):
     """Pipeline component to label non-overlapping spans of text.
 
-    DOCS: https://spacy.io/api/spancategorizerexclusive
+    DOCS: https://spacy.io/api/spancatcategorizer
     """
 
     def __init__(
@@ -162,7 +162,7 @@ class Exclusive_SpanCategorizer(SpanCategorizer):
             Scorer.score_spans for the Doc.spans[spans_key] with overlapping
             spans allowed.
 
-        DOCS: https://spacy.io/api/spancategorizerexclusive#init
+        DOCS: https://spacy.io/api/spancatcategorizer#init
         """
         self.cfg = {
             "labels": [],
@@ -197,7 +197,7 @@ class Exclusive_SpanCategorizer(SpanCategorizer):
         docs (Iterable[Doc]): The documents to modify.
         scores: The scores to set, produced by SpanCategorizerExclusive.predict.
 
-        DOCS: https://spacy.io/api/spancategorizerexclusive#set_annotations
+        DOCS: https://spacy.io/api/spancatcategorizer#set_annotations
         """
         allow_overlap = cast(bool, self.cfg["allow_overlap"])
         labels = self.labels
@@ -224,7 +224,7 @@ class Exclusive_SpanCategorizer(SpanCategorizer):
         spans_scores: Scores representing the model's predictions.
         RETURNS (Tuple[float, float]): The loss and the gradient.
 
-        DOCS: https://spacy.io/api/spancategorizerexclusive#get_loss
+        DOCS: https://spacy.io/api/spancatcategorizer#get_loss
         """
         spans, scores = spans_scores
         spans = Ragged(
