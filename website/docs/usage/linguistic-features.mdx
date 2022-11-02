@@ -28,7 +28,7 @@ annotations.
 
 ## Part-of-speech tagging {#pos-tagging model="tagger, parser"}
 
-import PosDeps101 from 'usage/101/\_pos-deps.mdx'
+import PosDeps101 from 'usage/101/_pos-deps.mdx'
 
 <PosDeps101 />
 
@@ -300,7 +300,11 @@ for token in doc:
 
 import DisplaCyLong2Html from 'images/displacy-long2.html'
 
-<Iframe title="displaCy visualization of dependencies and entities 2" html={DisplaCyLong2Html} height={450} />
+<Iframe
+  title="displaCy visualization of dependencies and entities 2"
+  html={DisplaCyLong2Html}
+  height={450}
+/>
 
 Because the syntactic relations form a tree, every word has **exactly one
 head**. You can therefore iterate over the arcs in the tree by iterating over
@@ -536,7 +540,7 @@ with new examples.
 
 ### Named Entity Recognition 101 {#named-entities-101}
 
-import NER101 from 'usage/101/\_named-entities.mdx'
+import NER101 from 'usage/101/_named-entities.mdx'
 
 <NER101 />
 
@@ -730,7 +734,11 @@ displacy.serve(doc, style="ent")
 
 import DisplacyEntHtml from 'images/displacy-ent2.html'
 
-<Iframe title="displaCy visualizer for entities" html={DisplacyEntHtml} height={180} />
+<Iframe
+  title="displaCy visualizer for entities"
+  html={DisplacyEntHtml}
+  height={180}
+/>
 
 ## Entity Linking {#entity-linking}
 
@@ -785,7 +793,7 @@ during tokenization. This is kind of a core principle of spaCy's `Doc` object:
 
 </Infobox>
 
-import Tokenization101 from 'usage/101/\_tokenization.mdx'
+import Tokenization101 from 'usage/101/_tokenization.mdx'
 
 <Tokenization101 />
 
@@ -1868,7 +1876,7 @@ initialized before training. See the
 
 ## Word vectors and semantic similarity {#vectors-similarity}
 
-import Vectors101 from 'usage/101/\_vectors-similarity.mdx'
+import Vectors101 from 'usage/101/_vectors-similarity.mdx'
 
 <Vectors101 />
 
@@ -1998,7 +2006,7 @@ for word, vector in vector_data.items():
 
 ## Language Data {#language-data}
 
-import LanguageData101 from 'usage/101/\_language-data.mdx'
+import LanguageData101 from 'usage/101/_language-data.mdx'
 
 <LanguageData101 />
 

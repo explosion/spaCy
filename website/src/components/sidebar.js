@@ -87,7 +87,7 @@ export default function Sidebar({ items = [], pageMenu = [], slug }) {
                                 </Link>
                                 {active && !!currentMenu.length && (
                                     <ul className={classes.crumbs}>
-                                        {currentMenu.map(crumb => {
+                                        {currentMenu.map((crumb) => {
                                             const currentActive = activeSection || currentMenu[0].id
                                             const crumbClassNames = classNames(classes.crumb, {
                                                 [classes.crumbActive]: currentActive === crumb.id,

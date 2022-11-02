@@ -19,7 +19,7 @@ function remarkCodeBlocks(userOptions = {}) {
     const options = Object.assign({}, defaultOptions, userOptions)
 
     function transformer(tree) {
-        visit(tree, 'code', node => {
+        visit(tree, 'code', (node) => {
             if (node.value) {
                 const langName = node.lang || 'none'
                 const lang = options.languageAliases[langName] || langName

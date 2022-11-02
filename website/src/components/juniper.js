@@ -14,7 +14,7 @@ export default class Juniper extends React.Component {
     state = { kernel: null, renderers: null, fromStorage: null }
 
     componentDidMount() {
-        const renderers = standardRendererFactories.filter(factory =>
+        const renderers = standardRendererFactories.filter((factory) =>
             factory.mimeTypes.includes('text/latex') ? window.MathJax : true
         )
 
@@ -52,7 +52,7 @@ export default class Juniper extends React.Component {
         this.log(() => console.info('building', { binderUrl }))
         return new Promise((resolve, reject) => {
             const es = new EventSource(binderUrl)
-            es.onerror = err => {
+            es.onerror = (err) => {
                 es.close()
                 this.log(() => console.error('failed'))
                 reject(new Error(err))
@@ -92,7 +92,7 @@ export default class Juniper extends React.Component {
             window.localStorage.setItem(this.props.storageKey, json)
         }
         const serverSettings = ServerConnection.makeSettings(settings)
-        return Kernel.startNew({ type: this.props.kernelType, serverSettings }).then(kernel => {
+        return Kernel.startNew({ type: this.props.kernelType, serverSettings }).then((kernel) => {
             this.log(() => console.info('ready'))
             return kernel
         })
@@ -116,7 +116,7 @@ export default class Juniper extends React.Component {
         }
         if (this.props.useBinder) {
             return this.requestBinder(this.props.repo, this.props.branch, this.props.url).then(
-                settings => this.requestKernel(settings)
+                (settings) => this.requestKernel(settings)
             )
         }
         return this.requestKernel(this.props.serverSettings)
@@ -173,12 +173,8 @@ export default class Juniper extends React.Component {
             name: 'stdout',
             text: `${action} Docker container on ${url}...`,
         })
-        new Promise((resolve, reject) =>
-            this.getKernel()
-                .then(resolve)
-                .catch(reject)
-        )
-            .then(kernel => {
+        new Promise((resolve, reject) => this.getKernel().then(resolve).catch(reject))
+            .then((kernel) => {
                 this.setState({ kernel })
                 this.renderResponse(outputArea, code)
             })
@@ -203,7 +199,7 @@ export default class Juniper extends React.Component {
             <div className={this.props.classNames.cell}>
                 <div
                     className={this.props.classNames.input}
-                    ref={x => {
+                    ref={(x) => {
                         this.inputRef = x
                     }}
                 />
@@ -211,7 +207,7 @@ export default class Juniper extends React.Component {
                     {this.props.msgButton}
                 </button>
                 <div
-                    ref={x => {
+                    ref={(x) => {
                         this.outputRef = x
                     }}
                     className={this.props.classNames.output}
