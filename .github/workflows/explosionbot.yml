@@ -8,14 +8,14 @@ on:
 
 jobs:
   explosion-bot:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     steps:
       - name: Dump GitHub context
         env:
           GITHUB_CONTEXT: ${{ toJson(github) }}
         run: echo "$GITHUB_CONTEXT"
-      - uses: actions/checkout@v1
-      - uses: actions/setup-python@v1
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
       - name: Install and run explosion-bot
         run: |
           pip install git+https://${{ secrets.EXPLOSIONBOT_TOKEN }}@github.com/explosion/explosion-bot
