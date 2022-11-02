@@ -152,7 +152,7 @@ def train_while_improving(
     max_steps: int,
     exclude: List[str],
     annotating_components: List[str],
-    before_update: Optional[Callable[[Language, int], None]],
+    before_update: Optional[Callable[["Language", int], None]],
 ):
     """Train until an evaluation stops improving. Works as a generator,
     with each iteration yielding a tuple `(batch, info, is_best_checkpoint)`,
