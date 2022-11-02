@@ -43,7 +43,7 @@ const QuickstartInstall = ({ id, title }) => {
     const modelExtras = train ? selectedModels.filter(m => LANG_EXTRAS.includes(m)) : []
     const apple = os === 'mac' && platform === 'arm'
     const pipExtras = [
-        (hardware === 'gpu' && (platform !== 'arm' || os === 'linux')) && cuda,
+        hardware === 'gpu' && (platform !== 'arm' || os === 'linux') && cuda,
         train && 'transformers',
         train && 'lookups',
         apple && 'apple',
@@ -220,7 +220,8 @@ const QuickstartInstall = ({ id, title }) => {
                         <QS package="source">cd spaCy</QS>
                         <QS package="source">pip install -r requirements.txt</QS>
                         <QS package="source">
-                            pip install --no-build-isolation --editable {train || hardware == 'gpu' ? `'.[${pipExtras}]'` : '.'}
+                            pip install --no-build-isolation --editable{' '}
+                            {train || hardware == 'gpu' ? `'.[${pipExtras}]'` : '.'}
                         </QS>
                         <QS config="train" package="conda" comment prompt={false}>
                             # packages only available via pip

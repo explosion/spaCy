@@ -123,7 +123,7 @@ function formatVectors(data) {
 }
 
 function formatAccuracy(data, lang) {
-    const exclude = (lang !== "ja") ? ['speed'] : ['speed', 'morph_acc']
+    const exclude = lang !== 'ja' ? ['speed'] : ['speed', 'morph_acc']
     if (!data) return []
     return Object.keys(data)
         .map(label => {
@@ -140,10 +140,14 @@ function formatAccuracy(data, lang) {
 }
 
 function formatDownloadLink(lang, name, version) {
-  const fullName = `${lang}_${name}-${version}`
-  const filename = `${fullName}-py3-none-any.whl`
-  const url = `https://github.com/explosion/spacy-models/releases/download/${fullName}/${filename}`
-  return <Link to={url} hideIcon>{filename}</Link>
+    const fullName = `${lang}_${name}-${version}`
+    const filename = `${fullName}-py3-none-any.whl`
+    const url = `https://github.com/explosion/spacy-models/releases/download/${fullName}/${filename}`
+    return (
+        <Link to={url} hideIcon>
+            {filename}
+        </Link>
+    )
 }
 
 function formatModelMeta(data) {
@@ -210,7 +214,8 @@ const Model = ({
     const [isError, setIsError] = useState(true)
     const [meta, setMeta] = useState({})
     const { type, genre, size } = getModelComponents(name)
-    const display_type = type === 'core' && (size === 'sm' || size === 'trf') ? 'core_no_vectors' : type
+    const display_type =
+        type === 'core' && (size === 'sm' || size === 'trf') ? 'core_no_vectors' : type
     const version = useMemo(() => getLatestVersion(name, compatibility, prereleases), [
         name,
         compatibility,
