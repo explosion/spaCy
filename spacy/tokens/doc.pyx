@@ -2115,14 +2115,15 @@ cdef void _search_for_chars(
         more is found, the remainder of *len_buf* is populated wth the byte length from the last result,
         which may be *0* if the search was not successful.
 
-        tok_str: a memoryview of a UTF-8 representation of a string.
+        tok_str: a UTF-8 representation of a string.
         tok_str_l: the length of *tok_str*.
         s_<n>byte_ch: a byte array containing in order n-byte-wide characters to search for.
         res_buf: the buffer in which to place the search results.
         max_res_l: the maximum number of found characters to place in *res_buf*.
         l_buf: a buffer of length *max_res_l* in which to store the byte lengths.
             The calling code ensures that lengths greater than 255 cannot occur. 
-        suffs_not_prefs: if *True*, searching starts from the end of the word; if *False*, from the beginning.
+        suffs_not_prefs: if *True*, searching starts from the end of the word; 
+            if *False*, from the beginning.
     """
     cdef int res_buf_idx = 0, l_buf_idx = 0, ch_wdth, tok_start_idx, search_char_idx
     cdef int search_chars_l
@@ -2179,26 +2180,6 @@ cdef void _search_for_chars(
 
     # fill in unused characters in the length buffer
     memset(l_buf + l_buf_idx, res_buf_idx, max_res_l - l_buf_idx)
-        
-
-@cython.boundscheck(False)  # Deactivate bounds checking
-cdef uint32_t fnv1a_hash(
-    const unsigned char* ptr, 
-    const int length
-) nogil:
-    """ Returns the FNV-1a hash for a sequence of bytes.
-        The behaviour of this method has been verified against several pieces 
-        of data from http://www.isthe.com/chongo/src/fnv/test_fnv.c.
-    """
-    cdef uint32_t hash_val = 0x811c9dc5
-    cdef int offset = 0
-    
-    while offset < length:
-        hash_val ^= ptr[offset]
-        hash_val *= 0x01000193
-        offset += 1
-
-    return hash_val
 
 
 def get_fnv1a_hash(input: bytes):
@@ -2218,31 +2199,36 @@ cdef int _write_hashes(
     const unsigned char* res_buf,
     const unsigned char* aff_l_buf,
     const unsigned char* offset_buf,
-    const int end_idx,
+    const int res_buf_l,
     np.uint32_t* hashes_ptr,
 ) nogil:    
-    """ Write hashes for a token/rich property group combination.
+    """ Write FNV1A hashes for a token/rich property group combination.
 
     res_buf: the string from which to generate the hash values.
     aff_l_buf: one-byte lengths describing how many characters to hash.
     offset_buf: one-byte lengths specifying the byte offset of each character within *res_buf*.
-    end_idx: if not *0*, the offset within *res_buf* that should end each affix being hashed;
-        if *0*, affixes start at the beginning of *res_buf* rather than ending at the end.
+    res_buf_l: if affixes should start at the end of *res_buf*, the length of *res_buf*;
+        if affixes should start at the beginning of *res_buf*, *0*.
     hashes_ptr: a pointer starting from which the new hashes should be written.
+
+    Returns: the number of hashes written.
     """
 
-    cdef int offset, aff_l, hash_val = 0, hash_idx = 0
+    cdef int last_offset = 0, hash_idx = 0, offset, aff_l
+    cdef uint32_t hash_val = 0x811c9dc5 
     
     while True:
         aff_l = aff_l_buf[hash_idx]
         if aff_l == 0:
             return hash_idx     
         offset = offset_buf[aff_l - 1]
-        if offset > 0:
-            if end_idx != 0:
-                hash_val = fnv1a_hash(res_buf + end_idx - offset, offset)
+        while last_offset < offset:
+            if end_idx > 0:
+                hash_val ^= res_buf[end_idx - last_offset]
             else:
-                hash_val = fnv1a_hash(res_buf, offset)
+                hash_val ^= res_buf[last_offset]
+            hash_val *= 0x01000193
+            last_offset += 1
         hashes_ptr[hash_idx] = hash_val
         hash_idx += 1
 

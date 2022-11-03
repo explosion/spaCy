@@ -74,17 +74,11 @@ cdef void _search_for_chars(
 ) nogil
 
 
-cdef uint32_t fnv1a_hash(
-    const unsigned char* ptr, 
-    const int length
-) nogil
-
-
 cdef int _write_hashes(
     const unsigned char* res_buf,
     const unsigned char* aff_l_buf,
     const unsigned char* offset_buf,
-    const int end_idx,
+    const int res_buf_l,
     np.uint32_t* hashes_ptr,
 ) nogil 
 
