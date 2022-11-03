@@ -1,9 +1,6 @@
 parameters:
   python_version: ''
-  architecture: ''
-  prefix: ''
-  gpu: false
-  num_build_jobs: 1
+  architecture: 'x64'
 
 steps:
   - task: UsePythonVersion@0
@@ -16,52 +13,76 @@ steps:
     displayName: 'Set variables'
 
   - script: |
-      ${{ parameters.prefix }} python -m pip install -U pip setuptools
-      ${{ parameters.prefix }} python -m pip install -U -r requirements.txt
+      python -m pip install -U build pip setuptools
+      python -m pip install -U -r requirements.txt
     displayName: "Install dependencies"
 
   - script: |
-      ${{ parameters.prefix }} python setup.py build_ext --inplace -j ${{ parameters.num_build_jobs }}
-      ${{ parameters.prefix }} python setup.py sdist --formats=gztar
-    displayName: "Compile and build sdist"
+      python -m build --sdist
+    displayName: "Build sdist"
 
   - task: DeleteFiles@1
     inputs:
       contents: "spacy"
     displayName: "Delete source directory"
 
+  - task: DeleteFiles@1
+    inputs:
+      contents: "*.egg-info"
+    displayName: "Delete egg-info directory"
+
   - script: |
-      ${{ parameters.prefix }} python -m pip freeze --exclude torch --exclude cupy-cuda110 > installed.txt
-      ${{ parameters.prefix }} python -m pip uninstall -y -r installed.txt
+      python -m pip freeze > installed.txt
+      python -m pip uninstall -y -r installed.txt
     displayName: "Uninstall all packages"
 
   - bash: |
-      ${{ parameters.prefix }} SDIST=$(python -c "import os;print(os.listdir('./dist')[-1])" 2>&1)
-      ${{ parameters.prefix }} python -m pip install dist/$SDIST
+      SDIST=$(python -c "import os;print(os.listdir('./dist')[-1])" 2>&1)
+      python -m pip install dist/$SDIST
     displayName: "Install from sdist"
 
   - script: |
-      ${{ parameters.prefix }} python -m pip install -U -r requirements.txt
+      python -W error -c "import spacy"
+    displayName: "Test import"
+
+  - script: |
+      python -m spacy download es_core_news_sm
+      python -c "import spacy; nlp=spacy.load('es_core_news_sm'); doc=nlp('test')"
+    displayName: 'Test download CLI'
+    condition: eq(variables['python_version'], '3.8')
+
+  - script: |
+      python -m spacy convert extra/example_data/ner_example_data/ner-token-per-line-conll2003.json .
+    displayName: 'Test convert CLI'
+    condition: eq(variables['python_version'], '3.8')
+
+  - script: |
+      python -m spacy init config -p ner -l es ner.cfg
+      python -m spacy debug config ner.cfg --paths.train ner-token-per-line-conll2003.spacy --paths.dev ner-token-per-line-conll2003.spacy
+    displayName: 'Test debug config CLI'
+    condition: eq(variables['python_version'], '3.8')
+
+  - script: |
+      # will have errors due to sparse data, check for summary in output
+      python -m spacy debug data ner.cfg --paths.train ner-token-per-line-conll2003.spacy --paths.dev ner-token-per-line-conll2003.spacy | grep -q Summary
+    displayName: 'Test debug data CLI'
+    condition: eq(variables['python_version'], '3.8')
+
+  - script: |
+      python -m spacy train ner.cfg --paths.train ner-token-per-line-conll2003.spacy --paths.dev ner-token-per-line-conll2003.spacy --training.max_steps 10 --gpu-id -1
+    displayName: 'Test train CLI'
+    condition: eq(variables['python_version'], '3.8')
+
+  - script: |
+      python -c "import spacy; config = spacy.util.load_config('ner.cfg'); config['components']['ner'] = {'source': 'es_core_news_sm'}; config.to_disk('ner_source_sm.cfg')"
+      PYTHONWARNINGS="error,ignore::DeprecationWarning" python -m spacy assemble ner_source_sm.cfg output_dir
+    displayName: 'Test assemble CLI'
+    condition: eq(variables['python_version'], '3.8')
+
+  - script: |
+      python -m pip install -U -r requirements.txt
     displayName: "Install test requirements"
 
   - script: |
-      ${{ parameters.prefix }} python -m pip install -U cupy-cuda110 -f https://github.com/cupy/cupy/releases/v9.0.0
-      ${{ parameters.prefix }} python -m pip install "torch==1.7.1+cu110" -f https://download.pytorch.org/whl/torch_stable.html
-    displayName: "Install GPU requirements"
-    condition: eq(${{ parameters.gpu }}, true)
-
-  - script: |
-      ${{ parameters.prefix }} python -m pytest --pyargs spacy
+      python -m pytest --pyargs spacy -W error
     displayName: "Run CPU tests"
-    condition: eq(${{ parameters.gpu }}, false)
-
-  - script: |
-      ${{ parameters.prefix }} python -m pytest --pyargs spacy -p spacy.tests.enable_gpu
-    displayName: "Run GPU tests"
-    condition: eq(${{ parameters.gpu }}, true)
-
-  - script: |
-      python -m spacy download en_core_web_sm
-      python -c "import spacy; nlp=spacy.load('en_core_web_sm'); doc=nlp('test')"
-    displayName: 'Test download CLI'
-    condition: eq(variables['python_version'], '3.8')
