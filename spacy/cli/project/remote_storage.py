@@ -10,6 +10,7 @@ from .._util import get_hash, get_checksum, download_file, ensure_pathy
 from ...util import make_tempdir, get_minor_version, ENV_VARS, check_bool_env_var
 from ...git_info import GIT_VERSION
 from ... import about
+from ...errors import Errors
 
 if TYPE_CHECKING:
     from pathy import Pathy  # noqa: F401
