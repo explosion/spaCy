@@ -101,20 +101,3 @@ jobs:
       - template: .github/azure-steps.yml
         parameters:
           python_version: '$(python.version)'
-          architecture: 'x64'
-
-#  - job: "TestGPU"
-#    dependsOn: "Validate"
-#    strategy:
-#      matrix:
-#        Python38LinuxX64_GPU:
-#          python.version: '3.8'
-#    pool:
-#      name: "LinuxX64_GPU"
-#    steps:
-#      - template: .github/azure-steps.yml
-#        parameters:
-#          python_version: '$(python.version)'
-#          architecture: 'x64'
-#          gpu: true
-#          num_build_jobs: 24
