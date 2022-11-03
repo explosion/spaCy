@@ -1830,7 +1830,7 @@ cdef class Doc:
 
             if s_max_l > 0:
                 _set_suffix_lengths(tok_str, tok_str_l, suff_l_buf, s_max_l)
-                w_hashes_ptr += _write_hashes(tok_str, s_lengths, suff_l_buf, tok_str_l, w_hashes_ptr)
+                w_hashes_ptr += _write_hashes(tok_str, s_lengths, suff_l_buf, tok_str_l - 1, w_hashes_ptr)
             
             if ps_max_l > 0:
                 _search_for_chars(tok_str, tok_str_l, ps_1byte_ch, ps_1byte_ch_l, ps_2byte_ch, ps_2byte_ch_l, 
@@ -2199,7 +2199,7 @@ cdef int _write_hashes(
     const unsigned char* res_buf,
     const unsigned char* aff_l_buf,
     const unsigned char* offset_buf,
-    const int res_buf_l,
+    const int res_buf_last,
     np.uint32_t* hashes_ptr,
 ) nogil:    
     """ Write FNV1A hashes for a token/rich property group combination.
@@ -2207,8 +2207,8 @@ cdef int _write_hashes(
     res_buf: the string from which to generate the hash values.
     aff_l_buf: one-byte lengths describing how many characters to hash.
     offset_buf: one-byte lengths specifying the byte offset of each character within *res_buf*.
-    res_buf_l: if affixes should start at the end of *res_buf*, the length of *res_buf*;
-        if affixes should start at the beginning of *res_buf*, *0*.
+    res_buf_last: if affixes should start at the end of *res_buf*, the offset of the last byte in
+         *res_buf*; if affixes should start at the beginning of *res_buf*, *0*.
     hashes_ptr: a pointer starting from which the new hashes should be written.
 
     Returns: the number of hashes written.
@@ -2223,8 +2223,8 @@ cdef int _write_hashes(
             return hash_idx     
         offset = offset_buf[aff_l - 1]
         while last_offset < offset:
-            if end_idx > 0:
-                hash_val ^= res_buf[end_idx - last_offset]
+            if res_buf_last > 0:
+                hash_val ^= res_buf[res_buf_last - last_offset]
             else:
                 hash_val ^= res_buf[last_offset]
             hash_val *= 0x01000193

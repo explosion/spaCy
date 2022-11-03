@@ -78,9 +78,9 @@ cdef int _write_hashes(
     const unsigned char* res_buf,
     const unsigned char* aff_l_buf,
     const unsigned char* offset_buf,
-    const int res_buf_l,
+    const int res_buf_last,
     np.uint32_t* hashes_ptr,
-) nogil 
+) nogil
 
 
 cdef class Doc:
