@@ -60,6 +60,11 @@ steps:
     condition: eq(variables['python_version'], '3.8')
 
   - script: |
+      python -W error -c "import ca_core_news_sm; nlp = ca_core_news_sm.load(); doc=nlp('test')"
+    displayName: 'Test no warnings on load (#11713)'
+    condition: eq(variables['python_version'], '3.8')
+
+  - script: |
       python -m spacy convert extra/example_data/ner_example_data/ner-token-per-line-conll2003.json .
     displayName: 'Test convert CLI'
     condition: eq(variables['python_version'], '3.8')
