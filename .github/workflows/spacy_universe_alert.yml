@@ -17,8 +17,8 @@ jobs:
         run: |
           echo "$GITHUB_CONTEXT"
 
-      - uses: actions/checkout@v1
-      - uses: actions/setup-python@v1
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
       - name: Install Bernadette app dependency and send an alert
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
