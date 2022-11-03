@@ -199,6 +199,8 @@ def _verify_rich_config_group(
     if lengths is not None or rows is not None:
         if is_search_char_group and (search_chars is None or len(search_chars) == 0):
             raise ValueError(Errors.E1047.format(label=label))
+        if len(search_chars) > 63:
+            raise ValueError(Errors.E1048.format(label=label))
         if lengths is None or rows is None:
             raise ValueError(Errors.E1047.format(label=label))
         if len(lengths) != len(rows):
@@ -208,7 +210,7 @@ def _verify_rich_config_group(
     elif search_chars is not None:
         raise ValueError(Errors.E1047.format(label=label))
     if lengths is not None:
-        if lengths[-1] > 31:
+        if lengths[-1] > 63:
             raise ValueError(Errors.E1048.format(label=label))
         if len(lengths) != len(set(lengths)) or lengths != sorted(lengths):
             raise ValueError(Errors.E1049.format(label=label))

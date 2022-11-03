@@ -955,7 +955,7 @@ class Errors(metaclass=ErrorsWithCodes):
     E1046 = ("{cls_name} is an abstract class and cannot be instantiated. If you are looking for spaCy's default "
              "knowledge base, use `InMemoryLookupKB`.")
     E1047 = ("Invalid rich group config '{label}'.")
-    E1048 = ("Length > 31 in rich group config '{label}.")
+    E1048 = ("Length > 63 in rich group config '{label}.")
     E1049 = ("Rich group config {label} specifies lengths that are not in ascending order.")
     E1050 = ("Error splitting UTF-8 byte string into separate characters.")
 

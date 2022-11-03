@@ -43,34 +43,28 @@ cdef int [:,:] _get_lca_matrix(Doc, int start, int end)
 cdef void _set_prefix_lengths(
     const unsigned char* tok_str,
     const int tok_str_l,
-    unsigned char* pref_l_buf,
     const int p_max_l, 
+    unsigned char* pref_l_buf,
 ) nogil
 
 
 cdef void _set_suffix_lengths(
     const unsigned char* tok_str,
     const int tok_str_l,
-    unsigned char* suff_l_buf,
     const int s_max_l, 
+    unsigned char* suff_l_buf,
 ) nogil
 
 
 cdef void _search_for_chars(
     const unsigned char* tok_str,
     const int tok_str_l,
-    const unsigned char* s_1byte_ch,
-    const int s_1byte_ch_l,
-    const unsigned char* s_2byte_ch,
-    const int s_2byte_ch_l,
-    const unsigned char* s_3byte_ch,
-    const int s_3byte_ch_l,
-    const unsigned char* s_4byte_ch,
-    const int s_4byte_ch_l,
+    const unsigned char* search_chars,
+    const unsigned char* width_offsets,
+    const int max_res_l,
+    const bint suffs_not_prefs,
     unsigned char* res_buf,
-    int max_res_l,
     unsigned char* l_buf,
-    bint suffs_not_prefs
 ) nogil
 
 

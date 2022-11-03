@@ -1757,10 +1757,10 @@ def get_search_char_byte_arrays(
         search_char_string = search_char_string.lower()
     ordered_search_char_string = "".join(sorted(set(search_char_string)))
     search_chars = ordered_search_char_string.encode("UTF-8")
-    width_offsets = [0, -1, -1, -1, -1]
-    working_start = -1
-    working_width = 1
-    for idx in range(len(search_chars) + 1):
+    width_offsets = [-1] * 5
+    working_start = 0
+    working_width = 0
+    for idx in range(1, len(search_chars) + 1):
         if (
             idx == len(search_chars)
             or search_chars[idx] & 0xC0 != 0x80  # not continuation byte
@@ -1769,11 +1769,10 @@ def get_search_char_byte_arrays(
             if this_width > 4 or this_width < working_width:
                 raise RuntimeError(Errors.E1050)
             if this_width > working_width:
-                width_offsets[this_width - 1] = working_start
+                for i in range(working_width, 5):
+                    width_offsets[i] = working_start
                 working_width = this_width
             working_start = idx
-    width_offsets[this_width] = idx
-    for i in range(5):
-        if width_offsets[i] == -1:
-            width_offsets[i] = width_offsets[i - 1]
+    for i in range(this_width, 5):
+        width_offsets[i] = idx
     return search_chars, bytes((width_offsets))

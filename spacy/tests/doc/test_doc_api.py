@@ -3,7 +3,7 @@ from pickle import EMPTY_DICT
 import weakref
 
 import numpy
-import ctypes
+from time import time
 from numpy.testing import assert_array_equal
 from murmurhash.mrmr import hash
 import pytest
@@ -1438,8 +1438,13 @@ def _encode_and_hash(input: str, *, reverse: bool = False) -> int:
 @pytest.mark.parametrize("case_sensitive", [True, False])
 def test_get_character_combination_hashes_good_case(en_tokenizer, case_sensitive):
     doc = en_tokenizer("spaCy✨ and Prodigy")
-    ps1, ps2, ps3, ps4 = get_search_char_byte_arrays("Rp", case_sensitive)
-    ss1, ss2, ss3, ss4 = get_search_char_byte_arrays("xx✨rp", case_sensitive)
+
+    ps_search_chars, ps_width_offsets = get_search_char_byte_arrays(
+        "Rp", case_sensitive
+    )
+    ss_search_chars, ss_width_offsets = get_search_char_byte_arrays(
+        "xx✨rp", case_sensitive
+    )
     hashes = doc.get_character_combination_hashes(
         cs=case_sensitive,
         p_lengths=bytes(
@@ -1449,7 +1454,6 @@ def test_get_character_combination_hashes_good_case(en_tokenizer, case_sensitive
                 4,
             )
         ),
-        p_max_l=4,
         s_lengths=bytes(
             (
                 2,
@@ -1458,35 +1462,18 @@ def test_get_character_combination_hashes_good_case(en_tokenizer, case_sensitive
                 5,
             )
         ),
-        s_max_l=5,
-        ps_1byte_ch=ps1,
-        ps_1byte_ch_l=len(ps1),
-        ps_2byte_ch=ps2,
-        ps_2byte_ch_l=len(ps2),
-        ps_3byte_ch=ps3,
-        ps_3byte_ch_l=len(ps3),
-        ps_4byte_ch=ps4,
-        ps_4byte_ch_l=len(ps4),
+        ps_search_chars=ps_search_chars,
+        ps_width_offsets=ps_width_offsets,
         ps_lengths=bytes((2,)),
-        ps_max_l=2,
-        ss_1byte_ch=ss1,
-        ss_1byte_ch_l=len(ss1),
-        ss_2byte_ch=ss2,
-        ss_2byte_ch_l=len(ss2),
-        ss_3byte_ch=ss3,
-        ss_3byte_ch_l=len(ss3),
-        ss_4byte_ch=ss4,
-        ss_4byte_ch_l=len(ss4),
+        ss_search_chars=ss_search_chars,
+        ss_width_offsets=ss_width_offsets,
         ss_lengths=bytes(
             (
                 1,
                 2,
             )
         ),
-        ss_max_l=2,
-        hashes_per_tok=10,
     )
-
     assert hashes[0][0] == _encode_and_hash("s")
     assert hashes[0][1] == _encode_and_hash("spa")
     assert hashes[0][2] == _encode_and_hash("spaC" if case_sensitive else "spac")
@@ -1494,7 +1481,6 @@ def test_get_character_combination_hashes_good_case(en_tokenizer, case_sensitive
     assert hashes[0][4] == _encode_and_hash("yCa" if case_sensitive else "yca")
     assert hashes[0][5] == _encode_and_hash("yCap" if case_sensitive else "ycap")
     assert hashes[0][6] == _encode_and_hash("yCaps" if case_sensitive else "ycaps")
-
     assert hashes[0][7] == _encode_and_hash("p")
     assert hashes[0][8] == _encode_and_hash("p")
     assert hashes[0][9] == _encode_and_hash("p")
@@ -1539,11 +1525,10 @@ def test_get_character_combination_hashes_good_case(en_tokenizer, case_sensitive
 
 def test_get_character_combination_hashes_good_case_partial(en_tokenizer):
     doc = en_tokenizer("spaCy✨ and Prodigy")
-    ps1, ps2, ps3, ps4 = get_search_char_byte_arrays("rp", False)
+    ps_search_chars, ps_width_offsets = get_search_char_byte_arrays("rp", False)
     hashes = doc.get_character_combination_hashes(
         cs=False,
         p_lengths=bytes(),
-        p_max_l=0,
         s_lengths=bytes(
             (
                 2,
@@ -1552,28 +1537,12 @@ def test_get_character_combination_hashes_good_case_partial(en_tokenizer):
                 5,
             )
         ),
-        s_max_l=5,
-        ps_1byte_ch=ps1,
-        ps_1byte_ch_l=len(ps1),
-        ps_2byte_ch=ps2,
-        ps_2byte_ch_l=len(ps2),
-        ps_3byte_ch=ps3,
-        ps_3byte_ch_l=len(ps3),
-        ps_4byte_ch=ps4,
-        ps_4byte_ch_l=len(ps4),
+        ps_search_chars=ps_search_chars,
+        ps_width_offsets=ps_width_offsets,
         ps_lengths=bytes((2,)),
-        ps_max_l=2,
-        ss_1byte_ch=bytes(),
-        ss_1byte_ch_l=0,
-        ss_2byte_ch=bytes(),
-        ss_2byte_ch_l=0,
-        ss_3byte_ch=bytes(),
-        ss_3byte_ch_l=0,
-        ss_4byte_ch=bytes(),
-        ss_4byte_ch_l=0,
+        ss_search_chars=bytes(),
+        ss_width_offsets=bytes(),
         ss_lengths=bytes(),
-        ss_max_l=0,
-        hashes_per_tok=5,
     )
 
     assert hashes[0][0] == _encode_and_hash("yc")
@@ -1607,30 +1576,13 @@ def test_get_character_combination_hashes_copying_in_middle(en_tokenizer):
             hashes = doc.get_character_combination_hashes(
                 cs=False,
                 p_lengths=bytes((p_length,)),
-                p_max_l=p_length,
                 s_lengths=bytes((s_length,)),
-                s_max_l=s_length,
-                ps_1byte_ch=bytes(),
-                ps_1byte_ch_l=0,
-                ps_2byte_ch=bytes(),
-                ps_2byte_ch_l=0,
-                ps_3byte_ch=bytes(),
-                ps_3byte_ch_l=0,
-                ps_4byte_ch=bytes(),
-                ps_4byte_ch_l=0,
+                ps_search_chars=bytes(),
+                ps_width_offsets=bytes(),
                 ps_lengths=bytes(),
-                ps_max_l=0,
-                ss_1byte_ch=bytes(),
-                ss_1byte_ch_l=0,
-                ss_2byte_ch=bytes(),
-                ss_2byte_ch_l=0,
-                ss_3byte_ch=bytes(),
-                ss_3byte_ch_l=0,
-                ss_4byte_ch=bytes(),
-                ss_4byte_ch_l=0,
+                ss_search_chars=bytes(),
+                ss_width_offsets=bytes(),
                 ss_lengths=bytes(),
-                ss_max_l=0,
-                hashes_per_tok=2,
             )
 
             assert hashes[0][0] == _encode_and_hash("sp𐌞cé"[:p_length])
@@ -1642,7 +1594,7 @@ def test_get_character_combination_hashes_turkish_i_with_dot(
     en_tokenizer, case_sensitive
 ):
     doc = en_tokenizer("İ".lower() + "İ")
-    s1, s2, s3, s4 = get_search_char_byte_arrays("İ", case_sensitive)
+    search_chars, width_offsets = get_search_char_byte_arrays("İ", case_sensitive)
     hashes = doc.get_character_combination_hashes(
         cs=case_sensitive,
         p_lengths=bytes(
@@ -1653,7 +1605,6 @@ def test_get_character_combination_hashes_turkish_i_with_dot(
                 4,
             )
         ),
-        p_max_l=4,
         s_lengths=bytes(
             (
                 1,
@@ -1662,15 +1613,8 @@ def test_get_character_combination_hashes_turkish_i_with_dot(
                 4,
             )
         ),
-        s_max_l=4,
-        ps_1byte_ch=s1,
-        ps_1byte_ch_l=len(s1),
-        ps_2byte_ch=s2,
-        ps_2byte_ch_l=len(s2),
-        ps_3byte_ch=s3,
-        ps_3byte_ch_l=len(s3),
-        ps_4byte_ch=s4,
-        ps_4byte_ch_l=len(s4),
+        ps_search_chars=search_chars,
+        ps_width_offsets=width_offsets,
         ps_lengths=bytes(
             (
                 1,
@@ -1679,15 +1623,8 @@ def test_get_character_combination_hashes_turkish_i_with_dot(
                 4,
             )
         ),
-        ps_max_l=4,
-        ss_1byte_ch=s1,
-        ss_1byte_ch_l=len(s1),
-        ss_2byte_ch=s2,
-        ss_2byte_ch_l=len(s2),
-        ss_3byte_ch=s3,
-        ss_3byte_ch_l=len(s3),
-        ss_4byte_ch=s4,
-        ss_4byte_ch_l=len(s4),
+        ss_search_chars=search_chars,
+        ss_width_offsets=width_offsets,
         ss_lengths=bytes(
             (
                 1,
@@ -1696,8 +1633,6 @@ def test_get_character_combination_hashes_turkish_i_with_dot(
                 4,
             )
         ),
-        ss_max_l=4,
-        hashes_per_tok=16,
     )
 
     COMBINING_DOT_ABOVE = b"\xcc\x87".decode("UTF-8")
@@ -1747,34 +1682,17 @@ def test_get_character_combination_hashes_string_store_spec_cases(
     assert len(long_word) > 255
     doc = en_tokenizer(" ".join((symbol, short_word, normal_word, long_word)))
     assert len(doc) == 4
-    ps1, ps2, ps3, ps4 = get_search_char_byte_arrays("E", case_sensitive)
+    ps_search_chars, ps_width_offsets = get_search_char_byte_arrays("E", case_sensitive)
     hashes = doc.get_character_combination_hashes(
         cs=case_sensitive,
         p_lengths=bytes((2,)),
-        p_max_l=2,
         s_lengths=bytes((2,)),
-        s_max_l=2,
-        ps_1byte_ch=ps1,
-        ps_1byte_ch_l=len(ps1),
-        ps_2byte_ch=ps2,
-        ps_2byte_ch_l=len(ps2),
-        ps_3byte_ch=ps3,
-        ps_3byte_ch_l=len(ps3),
-        ps_4byte_ch=ps4,
-        ps_4byte_ch_l=len(ps4),
+        ps_search_chars=ps_search_chars,
+        ps_width_offsets=ps_width_offsets,
         ps_lengths=bytes((2,)),
-        ps_max_l=2,
-        ss_1byte_ch=bytes(),
-        ss_1byte_ch_l=0,
-        ss_2byte_ch=bytes(),
-        ss_2byte_ch_l=0,
-        ss_3byte_ch=bytes(),
-        ss_3byte_ch_l=0,
-        ss_4byte_ch=bytes(),
-        ss_4byte_ch_l=0,
+        ss_search_chars=bytes(),
+        ss_width_offsets=bytes(),
         ss_lengths=bytes(),
-        ss_max_l=0,
-        hashes_per_tok=3,
     )
     assert hashes[0][0] == _encode_and_hash("FL" if case_sensitive else "fl")
     assert hashes[0][1] == _encode_and_hash("91")
@@ -1799,30 +1717,13 @@ def test_character_combination_hashes_empty_lengths(en_tokenizer):
         doc.get_character_combination_hashes(
             cs=True,
             p_lengths=bytes(),
-            p_max_l=0,
             s_lengths=bytes(),
-            s_max_l=0,
-            ps_1byte_ch=bytes(),
-            ps_1byte_ch_l=0,
-            ps_2byte_ch=bytes(),
-            ps_2byte_ch_l=0,
-            ps_3byte_ch=bytes(),
-            ps_3byte_ch_l=0,
-            ps_4byte_ch=bytes(),
-            ps_4byte_ch_l=0,
+            ps_search_chars=bytes(),
+            ps_width_offsets=bytes(),
             ps_lengths=bytes(),
-            ps_max_l=0,
-            ss_1byte_ch=bytes(),
-            ss_1byte_ch_l=0,
-            ss_2byte_ch=bytes(),
-            ss_2byte_ch_l=0,
-            ss_3byte_ch=bytes(),
-            ss_3byte_ch_l=0,
-            ss_4byte_ch=bytes(),
-            ss_4byte_ch_l=0,
+            ss_search_chars=bytes(),
+            ss_width_offsets=bytes(),
             ss_lengths=bytes(),
-            ss_max_l=0,
-            hashes_per_tok=0,
         ).shape
         == (1, 0)
     )

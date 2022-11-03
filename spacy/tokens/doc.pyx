@@ -1739,30 +1739,13 @@ cdef class Doc:
         *,
         const bint cs, 
         const unsigned char* p_lengths,
-        const int p_max_l,
         const unsigned char* s_lengths,
-        const int s_max_l,
-        const unsigned char* ps_1byte_ch,
-        const int ps_1byte_ch_l,
-        const unsigned char* ps_2byte_ch,
-        const int ps_2byte_ch_l,
-        const unsigned char* ps_3byte_ch,
-        const int ps_3byte_ch_l,
-        const unsigned char* ps_4byte_ch,
-        const int ps_4byte_ch_l,
+        const unsigned char* ps_search_chars,
+        const unsigned char* ps_width_offsets,
         const unsigned char* ps_lengths,
-        const int ps_max_l,
-        const unsigned char* ss_1byte_ch,
-        const int ss_1byte_ch_l,
-        const unsigned char* ss_2byte_ch,
-        const int ss_2byte_ch_l,
-        const unsigned char* ss_3byte_ch,
-        const int ss_3byte_ch_l,
-        const unsigned char* ss_4byte_ch,
-        const int ss_4byte_ch_l,
+        const unsigned char* ss_search_chars,
+        const unsigned char* ss_width_offsets,
         const unsigned char* ss_lengths,
-        const int ss_max_l,
-        const int hashes_per_tok
     ):
         """
         Returns a 2D NumPy array where the rows represent tokens and the columns represent hashes of various character combinations 
@@ -1778,31 +1761,43 @@ cdef class Doc:
         cs: if *False*, hashes are generated based on the lower-case version of each token.
         p_lengths: an array of single-byte values specifying the lengths of prefixes to be hashed in ascending order. 
             For example, if *p_lengths==[2, 3]*, the prefixes hashed for "spaCy" would be "sp" and "spa".
-        p_max_l: the value of *p_lengths[-1]*, or *0* if *p_lengths==None*. Passed in for speed.
         s_lengths: an array of single-byte values specifying the lengths of suffixes to be hashed in ascending order. 
-            For example, if *s_lengths==[2, 3]* and *cs == True*, the suffixes hashed for "spaCy" would be "Cy" and "aCy".
-        s_max_l: the value of *s_lengths[-1]*, or *0* if *s_lengths==None*. Passed in for speed.
-        ps_<n>byte_ch: a byte array containing in order n-byte-wide characters to search for within each token, 
+            For example, if *s_lengths==[2, 3]* and *cs == True*, the suffixes hashed for "spaCy" would be "yC" and "yCa".
+        ps_search_chars: a byte array containing, in numerical order, UTF-8 characters to search for within each token, 
             starting at the beginning.
-        ps_<n>byte_ch_l: the length of *ps_<n>byte_ch*. Passed in for speed.
+        ps_width_offsets: an array of single-byte values [1-char-start, 2-char-start, 3-char-start, 4-char-start, 4-char-end]
+            specifying the offsets within *ps_search_chars* that contain UTF-8 characters with the specified widths.
         ps_lengths: an array of single-byte values specifying the lengths of search results (from the beginning) to be hashed 
             in ascending order. For example, if *ps_lengths==[1, 2]*, *ps_search=="aC" and *cs==False*, the searched strings 
             hashed for "spaCy" would be "a" and "ac".
-        ps_max_l: the value of *ps_lengths[-1]*, or *0* if *ps_lengths==None*. Passed in for speed.
-        ss_<n>byte_ch: a byte array containing in order n-byte-wide characters to search for within each token, 
+        ss_search_chars: a byte array containing, in numerical order, UTF-8 characters to search for within each token, 
             starting at the end.
-        ss_<n>byte_ch_l: the length of *ss_<n>byte_ch*. Passed in for speed.
+        ss_width_offsets: an array of single-byte values [1-char-start, 2-char-start, 3-char-start, 4-char-start, 4-char-end]
+            specifying the offsets within *ss_search_chars* that contain UTF-8 characters with the specified widths.
         ss_lengths: an array of single-byte values specifying the lengths of search results (from the end) to be hashed
              in ascending order. For example, if *ss_lengths==[1, 2]*, *ss_search=="aC" and *cs==False*, the searched strings 
              hashed for "spaCy" would be "c" and "ca".
-        ss_max_l: the value of *ss_lengths[-1]*, or *0* if *ss_lengths==None*. Passed in for speed.
-        hashes_per_tok: the total number of hashes produced for each token. Passed in for speed.
+    
+        Many of the buffers passed into and used by this method contain single-byte numerical values. This takes advantage of 
+        the fact that we are hashing short affixes and searching for small groups of characters; the calling code is responsible
+        lengths being passed in cannot exceed 63 and that *_search_chars buffers are never longer than 255.
         """
 
+        # Work out lengths
+        cdef int p_lengths_l = strlen(<char*> p_lengths)
+        cdef int s_lengths_l = strlen(<char*> s_lengths)
+        cdef int ps_lengths_l = strlen(<char*> ps_lengths)
+        cdef int ss_lengths_l = strlen(<char*> ss_lengths)
+        cdef int hashes_per_tok = p_lengths_l + s_lengths_l + ps_lengths_l + ss_lengths_l
+        cdef int p_max_l = p_lengths[p_lengths_l - 1] if p_lengths_l > 0 else 0
+        cdef int s_max_l = s_lengths[s_lengths_l - 1] if s_lengths_l > 0 else 0
+        cdef int ps_max_l = ps_lengths[ps_lengths_l - 1] if ps_lengths_l > 0 else 0
+        cdef int ss_max_l = ss_lengths[ss_lengths_l - 1] if ss_lengths_l > 0 else 0
+        
         # Define / allocate buffers
         cdef Pool mem = Pool()
         cdef unsigned char* pref_l_buf = <unsigned char*> mem.alloc(p_max_l, 1)
-        cdef unsigned char* suff_l_buf = <unsigned char*> mem.alloc(p_max_l, 1)
+        cdef unsigned char* suff_l_buf = <unsigned char*> mem.alloc(s_max_l, 1)
         cdef unsigned char* ps_res_buf = <unsigned char*> mem.alloc(ps_max_l, 4)
         cdef unsigned char* ps_l_buf = <unsigned char*> mem.alloc(ps_max_l, 1)
         cdef unsigned char* ss_res_buf = <unsigned char*> mem.alloc(ss_max_l, 4)
@@ -1813,7 +1808,7 @@ cdef class Doc:
          
         # Define working variables
         cdef TokenC tok_c
-        cdef int hash_idx, tok_i, tok_str_l
+        cdef int tok_i, tok_str_l
         cdef attr_t num_tok_attr
         cdef const unsigned char* tok_str
         cdef np.uint32_t* w_hashes_ptr = hashes_ptr
@@ -1825,21 +1820,21 @@ cdef class Doc:
             tok_str_l = strlen(<char*> tok_str)
             
             if p_max_l > 0:
-                _set_prefix_lengths(tok_str, tok_str_l, pref_l_buf, p_max_l)
+                _set_prefix_lengths(tok_str, tok_str_l, p_max_l, pref_l_buf)
                 w_hashes_ptr += _write_hashes(tok_str, p_lengths, pref_l_buf, 0, w_hashes_ptr)
 
             if s_max_l > 0:
-                _set_suffix_lengths(tok_str, tok_str_l, suff_l_buf, s_max_l)
+                _set_suffix_lengths(tok_str, tok_str_l, s_max_l, suff_l_buf)
                 w_hashes_ptr += _write_hashes(tok_str, s_lengths, suff_l_buf, tok_str_l - 1, w_hashes_ptr)
             
             if ps_max_l > 0:
-                _search_for_chars(tok_str, tok_str_l, ps_1byte_ch, ps_1byte_ch_l, ps_2byte_ch, ps_2byte_ch_l, 
-                    ps_3byte_ch, ps_3byte_ch_l, ps_4byte_ch, ps_4byte_ch_l, ps_res_buf, ps_max_l, ps_l_buf, False)
+                _search_for_chars(tok_str, tok_str_l, ps_search_chars, ps_width_offsets, 
+                    ps_max_l, False, ps_res_buf, ps_l_buf)
                 w_hashes_ptr += _write_hashes(ps_res_buf, ps_lengths, ps_l_buf, 0, w_hashes_ptr)
 
             if ss_max_l > 0:
-                _search_for_chars(tok_str, tok_str_l, ss_1byte_ch, ss_1byte_ch_l, ss_2byte_ch, ss_2byte_ch_l, 
-                    ss_3byte_ch, ss_3byte_ch_l, ss_4byte_ch, ss_4byte_ch_l, ss_res_buf, ss_max_l, ss_l_buf, True)
+                _search_for_chars(tok_str, tok_str_l, ss_search_chars, ss_width_offsets, 
+                    ss_max_l, True, ss_res_buf, ss_l_buf)
                 w_hashes_ptr += _write_hashes(ss_res_buf, ss_lengths, ss_l_buf, 0, w_hashes_ptr)
         
         cdef np.ndarray[np.uint32_t, ndim=2] hashes = numpy.empty(
@@ -2033,17 +2028,17 @@ cdef int [:,:] _get_lca_matrix(Doc doc, int start, int end):
 cdef void _set_prefix_lengths(
     const unsigned char* tok_str,
     const int tok_str_l,
-    unsigned char* pref_l_buf,
     const int p_max_l, 
+    unsigned char* pref_l_buf,
 ) nogil:
     """ Populate *pref_l_buf*, which has length *pref_l*, with the byte lengths of the first *pref_l* characters within *tok_str*. 
         Lengths that are greater than the character length of the whole word are populated with the byte length of the whole word.
 
         tok_str: a UTF-8 representation of a string.
         tok_str_l: the length of *tok_str*.
+        p_max_l: the number of characters to process at the beginning of the word.
         pref_l_buf: a buffer of length *p_max_l* in which to store the lengths. The calling code ensures that lengths
             greater than 255 cannot occur.
-        p_max_l: the number of characters to process at the beginning of the word.
     """
     cdef int tok_str_idx = 1, pref_l_buf_idx = 0
 
@@ -2066,17 +2061,17 @@ cdef void _set_prefix_lengths(
 cdef void _set_suffix_lengths(
     const unsigned char* tok_str,
     const int tok_str_l,
+    const int s_max_l,
     unsigned char* suff_l_buf,
-    const int s_max_l, 
 ) nogil:
     """ Populate *suff_l_buf*, which has length *suff_l*, with the byte lengths of the last *suff_l* characters within *tok_str*. 
         Lengths that are greater than the character length of the whole word are populated with the byte length of the whole word.
 
         tok_str: a UTF-8 representation of a string.
         tok_str_l: the length of *tok_str*.
+        s_max_l: the number of characters to process at the end of the word.
         suff_l_buf: a buffer of length *s_max_l* in which to store the lengths. The calling code ensures that lengths
             greater than 255 cannot occur.
-        s_max_l: the number of characters to process at the end of the word.
     """
     cdef int tok_str_idx = tok_str_l - 1, suff_l_buf_idx = 0
 
@@ -2096,67 +2091,48 @@ cdef void _set_suffix_lengths(
 cdef void _search_for_chars(
     const unsigned char* tok_str,
     const int tok_str_l,
-    const unsigned char* s_1byte_ch,
-    const int s_1byte_ch_l,
-    const unsigned char* s_2byte_ch,
-    const int s_2byte_ch_l,
-    const unsigned char* s_3byte_ch,
-    const int s_3byte_ch_l,
-    const unsigned char* s_4byte_ch,
-    const int s_4byte_ch_l,
+    const unsigned char* search_chars,
+    const unsigned char* width_offsets,
+    const int max_res_l,
+    const bint suffs_not_prefs,
     unsigned char* res_buf,
-    int max_res_l,
     unsigned char* l_buf,
-    bint suffs_not_prefs
 ) nogil:
-    """ Search *tok_str* within a string for characters within the *s_<n>byte_ch> buffers, starting at the 
+    """ Search *tok_str* within a string for characters within *search_chars*, starting at the 
         beginning or end depending on the value of *suffs_not_prefs*. Wherever a character matches,
-        it is added to *res_buf* and the byte length up to that point is added to *len_buf*. When nothing
-        more is found, the remainder of *len_buf* is populated wth the byte length from the last result,
+        it is added to *res_buf* and the byte length up to that point is added to *l_buf*. When nothing
+        more is found, the remainder of *l_buf* is populated wth the byte length from the last result,
         which may be *0* if the search was not successful.
 
         tok_str: a UTF-8 representation of a string.
         tok_str_l: the length of *tok_str*.
-        s_<n>byte_ch: a byte array containing in order n-byte-wide characters to search for.
-        res_buf: the buffer in which to place the search results.
+        search_chars: a byte array containing, in numerical order, UTF-8 characters to search for within *tok_str*. 
+        width_offsets: an array of single-byte values [1-char-start, 2-char-start, 3-char-start, 4-char-start, 4-char-end]
+            specifying the offsets within *search_chars* that contain UTF-8 characters with the specified widths.
         max_res_l: the maximum number of found characters to place in *res_buf*.
-        l_buf: a buffer of length *max_res_l* in which to store the byte lengths.
-            The calling code ensures that lengths greater than 255 cannot occur. 
         suffs_not_prefs: if *True*, searching starts from the end of the word; 
             if *False*, from the beginning.
+        res_buf: the buffer in which to place the search results.
+        l_buf: a buffer of length *max_res_l* in which to store the byte lengths.
+            The calling code ensures that lengths greater than 255 cannot occur. 
     """
     cdef int res_buf_idx = 0, l_buf_idx = 0, ch_wdth, tok_start_idx, search_char_idx
-    cdef int search_chars_l
-    cdef const unsigned char* search_chars
-
     cdef int last_tok_str_idx = tok_str_l if suffs_not_prefs else 0
     cdef int this_tok_str_idx = tok_str_l - 1 if suffs_not_prefs else 1
     
-    while True:
-        if (
-            this_tok_str_idx == tok_str_l or 
-            (tok_str[this_tok_str_idx] & 0xc0) != 0x80 # not continuation character, always applies to [0].
+    while this_tok_str_idx >= 0 and this_tok_str_idx <= tok_str_l:
+        if ( 
+            (this_tok_str_idx == tok_str_l) or 
+            ((tok_str[this_tok_str_idx] & 0xc0) != 0x80) # not continuation character, always applies to [0].
         ):
             if this_tok_str_idx > last_tok_str_idx:
                 ch_wdth = this_tok_str_idx - last_tok_str_idx
             else:
                 ch_wdth = last_tok_str_idx - this_tok_str_idx
-            if ch_wdth == 1:
-                search_chars = s_1byte_ch
-                search_chars_l = s_1byte_ch_l
-            elif ch_wdth == 2:
-                search_chars = s_2byte_ch
-                search_chars_l = s_2byte_ch_l
-            elif ch_wdth == 3:
-                search_chars = s_3byte_ch
-                search_chars_l = s_3byte_ch_l
-            else:
-                search_chars = s_4byte_ch
-                search_chars_l = s_4byte_ch_l
+            
             tok_start_idx = this_tok_str_idx if suffs_not_prefs else last_tok_str_idx
-
-            search_char_idx = 0
-            while search_char_idx < search_chars_l:
+            search_char_idx = width_offsets[ch_wdth - 1]
+            while search_char_idx < width_offsets[ch_wdth]:
                 cmp_result = memcmp(&tok_str[tok_start_idx], &search_chars[search_char_idx], ch_wdth)
                 if cmp_result == 0:
                     memcpy(res_buf + res_buf_idx, &search_chars[search_char_idx], ch_wdth)
@@ -2171,12 +2147,8 @@ cdef void _search_for_chars(
             last_tok_str_idx = this_tok_str_idx
         if suffs_not_prefs:
             this_tok_str_idx -= 1
-            if this_tok_str_idx < 0:
-                break
         else:
             this_tok_str_idx += 1
-            if this_tok_str_idx > tok_str_l:
-                break    
 
     # fill in unused characters in the length buffer
     memset(l_buf + l_buf_idx, res_buf_idx, max_res_l - l_buf_idx)
