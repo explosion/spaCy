@@ -2116,7 +2116,7 @@ cdef void _search_for_chars(
         l_buf: a buffer of length *max_res_l* in which to store the byte lengths.
             The calling code ensures that lengths greater than 255 cannot occur. 
     """
-    cdef int res_buf_idx = 0, l_buf_idx = 0, ch_wdth, tok_start_idx, search_char_idx
+    cdef int res_buf_idx = 0, l_buf_idx = 0, ch_wdth, tok_start_idx, search_char_idx, end_search_idx
     cdef int last_tok_str_idx = tok_str_l if suffs_not_prefs else 0
     cdef int this_tok_str_idx = tok_str_l - 1 if suffs_not_prefs else 1
     
@@ -2132,7 +2132,8 @@ cdef void _search_for_chars(
             
             tok_start_idx = this_tok_str_idx if suffs_not_prefs else last_tok_str_idx
             search_char_idx = width_offsets[ch_wdth - 1]
-            while search_char_idx < width_offsets[ch_wdth]:
+            end_search_idx = width_offsets[ch_wdth]
+            while search_char_idx < end_search_idx:
                 cmp_result = memcmp(&tok_str[tok_start_idx], &search_chars[search_char_idx], ch_wdth)
                 if cmp_result == 0:
                     memcpy(res_buf + res_buf_idx, &search_chars[search_char_idx], ch_wdth)
