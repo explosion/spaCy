@@ -25,7 +25,8 @@ from ..errors import Errors, MatchPatternError, Warnings
 from ..strings import get_string_id
 from ..attrs import IDS
 
-import fuzzy
+from .levenshtein import levenshtein
+
 
 DEF PADDING = 5
 
@@ -204,6 +205,17 @@ cdef class Matcher:
                 else:
                     yield doc
 
+    @staticmethod
+    def fuzzy_match(input_string: str, rule_string: str, fuzzy: int=-1) -> bool:
+        distance = min(len(input_string), len(rule_string))
+        distance -= 1 # don't allow completely different tokens
+        if fuzzy == -1: # FUZZY operator with unspecified fuzzy
+            fuzzy = 5 # default max fuzzy
+            distance -= 1 # be more restrictive
+        distance = min(fuzzy, distance if distance > 0 else 1)
+        return levenshtein(input_string, rule_string, distance) <= distance
+
+
     def __call__(self, object doclike, *, as_spans=False, allow_missing=False, with_alignments=False):
         """Find all token sequences matching the supplied pattern.
 
@@ -325,7 +337,6 @@ cdef class Matcher:
             return self.vocab.strings.add(key)
         else:
             return key
-
 
 def unpickle_matcher(vocab, patterns, callbacks):
     matcher = Matcher(vocab)
@@ -841,7 +852,7 @@ class _FuzzyPredicate:
         if self.predicate not in self.operators:
             raise ValueError(Errors.E126.format(good=self.operators, bad=self.predicate))
         self.fuzzy = self.predicate[len('FUZZY'):] # number after prefix
-        self.fuzzy = int(self.fuzzy) if self.fuzzy else 0
+        self.fuzzy = int(self.fuzzy) if self.fuzzy else -1
 
     def __call__(self, Token token):
         if self.is_extension:
@@ -850,7 +861,7 @@ class _FuzzyPredicate:
             value = token.vocab.strings[get_token_attr_for_matcher(token.c, self.attr)]
         if self.value == value:
             return True
-        return fuzzy.fuzzy_match(value, self.value, self.fuzzy)
+        return Matcher.fuzzy_match(value, self.value, self.fuzzy)
 
 
 class _RegexPredicate:
@@ -933,7 +944,7 @@ class _SetPredicate:
                 return True
             elif self.fuzzy is not None:
                 value = self.vocab.strings[value]
-                return any(fuzzy.fuzzy_match(value, self.vocab.strings[v], self.fuzzy)
+                return any(Matcher.fuzzy_match(value, self.vocab.strings[v], self.fuzzy)
                            for v in self.value)
             else:
                 return False
@@ -945,7 +956,7 @@ class _SetPredicate:
                 return False
             elif self.fuzzy is not None:
                 value = self.vocab.strings[value]
-                return not any(fuzzy.fuzzy_match(value, self.vocab.strings[v], self.fuzzy)
+                return not any(Matcher.fuzzy_match(value, self.vocab.strings[v], self.fuzzy)
                                for v in self.value)
             else:
                 return True
@@ -1054,7 +1065,7 @@ def _get_extra_predicates_dict(attr, value_dict, vocab, predicate_types,
                 continue
         elif cls == _FuzzyPredicate:
             fuzz = type_[len("FUZZY"):] # number after prefix
-            fuzz = int(fuzz) if fuzz else 0
+            fuzz = int(fuzz) if fuzz else -1
             if isinstance(value, dict):
                 # add predicates inside fuzzy operator
                 output.extend(_get_extra_predicates_dict(attr, value, vocab, predicate_types,
