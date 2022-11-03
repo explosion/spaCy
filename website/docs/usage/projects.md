@@ -194,7 +194,7 @@ project as a DVC repo.
 > ### project.yml
 > remotes:
 >   default: 's3://my-spacy-bucket'
->   local: '/mnt/scratch/cache'
+>   backup: 'gs://backup-spacy-bucket'
 > ```
 
 After training a pipeline, you can optionally use the
@@ -259,9 +259,9 @@ pipelines.
 > This can be used in a project command like so:
 >
 > ```yaml
->   - name: "echo-path"
->     script:
->       - "echo ${env.ENV_PATH}"
+> - name: 'echo-path'
+>   script:
+>     - 'echo ${env.ENV_PATH}'
 > ```
 
 | Section                                             | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
@@ -653,14 +653,13 @@ you may need to install extra dependencies to use certain protocols.
 > #### Example
 >
 > ```cli
-> $ python -m spacy project pull local
+> $ python -m spacy project pull stuff
 > ```
 
 ```yaml
 ### project.yml
 remotes:
   default: 's3://my-spacy-bucket'
-  local: '/mnt/scratch/cache'
   stuff: 'ssh://myserver.example.com/whatever'
 ```
 
