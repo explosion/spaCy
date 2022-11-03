@@ -2202,8 +2202,15 @@ cdef uint32_t fnv1a_hash(
 
 
 def get_fnv1a_hash(input: bytes):
-    """ Python method to facilitate testing *fnv1a_hash*. """
-    return fnv1a_hash(input, len(input))
+    """ Python-callable method to facilitate testing. """
+    cdef uint32_t hash_val = 0x811c9dc5
+    cdef int length = len(input), offset = 0
+
+    while offset < length:
+        hash_val ^= input[offset]
+        hash_val *= 0x01000193
+        offset += 1
+    return hash_val
     
 
 @cython.boundscheck(False)  # Deactivate bounds checking
