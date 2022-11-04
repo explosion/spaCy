@@ -1,4 +1,4 @@
-from typing import Iterable, Optional, Dict, List, Callable, Any
+from typing import Iterable, Optional, Dict, List, Callable, Any, Union
 from thinc.types import Floats2d
 from thinc.api import Model, Config
 
@@ -19,17 +19,17 @@ multi_label_default_config = """
 @architectures = "spacy.TextCatEnsemble.v2"
 
 [model.tok2vec]
-@architectures = "spacy.Tok2Vec.v1"
+@architectures = "spacy.Tok2Vec.v2"
 
 [model.tok2vec.embed]
 @architectures = "spacy.MultiHashEmbed.v2"
 width = 64
-rows = [2000, 2000, 1000, 1000, 1000, 1000]
-attrs = ["ORTH", "LOWER", "PREFIX", "SUFFIX", "SHAPE", "ID"]
+rows = [2000, 2000, 500, 1000, 500]
+attrs = ["NORM", "LOWER", "PREFIX", "SUFFIX", "SHAPE"]
 include_static_vectors = false
 
 [model.tok2vec.encode]
-@architectures = "spacy.MaxoutWindowEncoder.v1"
+@architectures = "spacy.MaxoutWindowEncoder.v2"
 width = ${model.tok2vec.embed.width}
 window_size = 1
 maxout_pieces = 3
@@ -75,6 +75,7 @@ subword_features = true
         "threshold": 0.5,
         "model": DEFAULT_MULTI_TEXTCAT_MODEL,
         "scorer": {"@scorers": "spacy.textcat_multilabel_scorer.v1"},
+        "save_activations": False,
     },
     default_score_weights={
         "cats_score": 1.0,
@@ -96,7 +97,8 @@ def make_multilabel_textcat(
     model: Model[List[Doc], List[Floats2d]],
     threshold: float,
     scorer: Optional[Callable],
-) -> "TextCategorizer":
+    save_activations: bool,
+) -> "MultiLabel_TextCategorizer":
     """Create a TextCategorizer component. The text categorizer predicts categories
     over a whole document. It can learn one or more labels, and the labels are considered
     to be non-mutually exclusive, which means that there can be zero or more labels
@@ -105,9 +107,15 @@ def make_multilabel_textcat(
     model (Model[List[Doc], List[Floats2d]]): A model instance that predicts
         scores for each category.
     threshold (float): Cutoff to consider a prediction "positive".
+    scorer (Optional[Callable]): The scoring method.
     """
     return MultiLabel_TextCategorizer(
-        nlp.vocab, model, name, threshold=threshold, scorer=scorer
+        nlp.vocab,
+        model,
+        name,
+        threshold=threshold,
+        scorer=scorer,
+        save_activations=save_activations,
     )
 
 
@@ -139,6 +147,7 @@ class MultiLabel_TextCategorizer(TextCategorizer):
         *,
         threshold: float,
         scorer: Optional[Callable] = textcat_multilabel_score,
+        save_activations: bool = False,
     ) -> None:
         """Initialize a text categorizer for multi-label classification.
 
@@ -147,6 +156,11 @@ class MultiLabel_TextCategorizer(TextCategorizer):
         name (str): The component instance name, used to add entries to the
             losses during training.
         threshold (float): Cutoff to consider a prediction "positive".
+<<<<<<< HEAD
+        save_activations (bool): save model activations in Doc when annotating.
+=======
+        scorer (Optional[Callable]): The scoring method.
+>>>>>>> upstream/master
 
         DOCS: https://spacy.io/api/textcategorizer#init
         """
@@ -157,6 +171,7 @@ class MultiLabel_TextCategorizer(TextCategorizer):
         cfg = {"labels": [], "threshold": threshold}
         self.cfg = dict(cfg)
         self.scorer = scorer
+        self.save_activations = save_activations
 
     @property
     def support_missing_values(self):

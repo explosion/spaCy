@@ -424,7 +424,7 @@ your components during training, and the most common scenarios are:
 2. Update an existing **trained component** with more examples.
 3. Include an existing trained component without updating it.
 4. Include a non-trainable component, like a rule-based
-   [`EntityRuler`](/api/entityruler) or [`Sentencizer`](/api/sentencizer), or a
+   [`SpanRuler`](/api/spanruler) or [`Sentencizer`](/api/sentencizer), or a
    fully [custom component](/usage/processing-pipelines#custom-components).
 
 If a component block defines a `factory`, spaCy will look it up in the
@@ -480,7 +480,7 @@ as-is. They are also excluded when calling
 > parse. So the evaluation results should always reflect what your pipeline will
 > produce at runtime. If you want a frozen component to run (without updating)
 > during training as well, so that downstream components can use its
-> **predictions**, you can add it to the list of
+> **predictions**, you should add it to the list of
 > [`annotating_components`](/usage/training#annotating-components).
 
 ```ini

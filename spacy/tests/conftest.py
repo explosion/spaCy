@@ -256,6 +256,11 @@ def ko_tokenizer_tokenizer():
     return nlp.tokenizer
 
 
+@pytest.fixture(scope="module")
+def la_tokenizer():
+    return get_lang_class("la")().tokenizer
+
+
 @pytest.fixture(scope="session")
 def ko_tokenizer_natto():
     pytest.importorskip("natto")
@@ -352,6 +357,14 @@ def ru_lemmatizer():
     return get_lang_class("ru")().add_pipe("lemmatizer")
 
 
+@pytest.fixture
+def ru_lookup_lemmatizer():
+    pytest.importorskip("pymorphy2")
+    return get_lang_class("ru")().add_pipe(
+        "lemmatizer", config={"mode": "pymorphy2_lookup"}
+    )
+
+
 @pytest.fixture(scope="session")
 def sa_tokenizer():
     return get_lang_class("sa")().tokenizer
@@ -429,6 +442,15 @@ def uk_lemmatizer():
     pytest.importorskip("pymorphy3")
     pytest.importorskip("pymorphy3_dicts_uk")
     return get_lang_class("uk")().add_pipe("lemmatizer")
+
+
+@pytest.fixture
+def uk_lookup_lemmatizer():
+    pytest.importorskip("pymorphy2")
+    pytest.importorskip("pymorphy2_dicts_uk")
+    return get_lang_class("uk")().add_pipe(
+        "lemmatizer", config={"mode": "pymorphy2_lookup"}
+    )
 
 
 @pytest.fixture(scope="session")

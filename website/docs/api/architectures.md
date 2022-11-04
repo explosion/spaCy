@@ -11,6 +11,7 @@ menu:
   - ['Text Classification', 'textcat']
   - ['Span Classification', 'spancat']
   - ['Entity Linking', 'entitylinker']
+  - ['Coreference', 'coref-architectures']
 ---
 
 A **model architecture** is a function that wires up a
@@ -587,8 +588,8 @@ consists of either two or three subnetworks:
   run once for each batch.
 - **lower**: Construct a feature-specific vector for each `(token, feature)`
   pair. This is also run once for each batch. Constructing the state
-  representation is then a matter of summing the component features and
-  applying the non-linearity.
+  representation is then a matter of summing the component features and applying
+  the non-linearity.
 - **upper** (optional): A feed-forward network that predicts scores from the
   state representation. If not present, the output from the lower model is used
   as action scores directly.
@@ -628,8 +629,8 @@ same signature, but the `use_upper` argument was `True` by default.
 > ```
 
 Build a tagger model, using a provided token-to-vector component. The tagger
-model adds a linear layer with softmax activation to predict scores given
-the token vectors.
+model adds a linear layer with softmax activation to predict scores given the
+token vectors.
 
 | Name        | Description                                                                                |
 | ----------- | ------------------------------------------------------------------------------------------ |
@@ -920,5 +921,84 @@ A function that reads an existing `KnowledgeBase` from file.
 A function that takes as input a [`KnowledgeBase`](/api/kb) and a
 [`Span`](/api/span) object denoting a named entity, and returns a list of
 plausible [`Candidate`](/api/kb/#candidate) objects. The default
-`CandidateGenerator` uses the text of a mention to find its potential
-aliases in the `KnowledgeBase`. Note that this function is case-dependent.
+`CandidateGenerator` uses the text of a mention to find its potential aliases in
+the `KnowledgeBase`. Note that this function is case-dependent.
+
+## Coreference {#coref-architectures tag="experimental"}
+
+A [`CoreferenceResolver`](/api/coref) component identifies tokens that refer to
+the same entity. A [`SpanResolver`](/api/span-resolver) component infers spans
+from single tokens. Together these components can be used to reproduce
+traditional coreference models. You can also omit the `SpanResolver` if working
+with only token-level clusters is acceptable.
+
+### spacy-experimental.Coref.v1 {#Coref tag="experimental"}
+
+> #### Example Config
+>
+> ```ini
+>
+> [model]
+> @architectures = "spacy-experimental.Coref.v1"
+> distance_embedding_size = 20
+> dropout = 0.3
+> hidden_size = 1024
+> depth = 2
+> antecedent_limit = 50
+> antecedent_batch_size = 512
+>
+> [model.tok2vec]
+> @architectures = "spacy-transformers.TransformerListener.v1"
+> grad_factor = 1.0
+> upstream = "transformer"
+> pooling = {"@layers":"reduce_mean.v1"}
+> ```
+
+The `Coref` model architecture is a Thinc `Model`.
+
+| Name                      | Description                                                                                                                                                                              |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tok2vec`                 | The [`tok2vec`](#tok2vec) layer of the model. ~~Model~~                                                                                                                                  |
+| `distance_embedding_size` | A representation of the distance between candidates. ~~int~~                                                                                                                             |
+| `dropout`                 | The dropout to use internally. Unlike some Thinc models, this has separate dropout for the internal PyTorch layers. ~~float~~                                                            |
+| `hidden_size`             | Size of the main internal layers. ~~int~~                                                                                                                                                |
+| `depth`                   | Depth of the internal network. ~~int~~                                                                                                                                                   |
+| `antecedent_limit`        | How many candidate antecedents to keep after rough scoring. This has a significant effect on memory usage. Typical values would be 50 to 200, or higher for very long documents. ~~int~~ |
+| `antecedent_batch_size`   | Internal batch size. ~~int~~                                                                                                                                                             |
+| **CREATES**               | The model using the architecture. ~~Model[List[Doc], Floats2d]~~                                                                                                                         |
+
+### spacy-experimental.SpanResolver.v1 {#SpanResolver tag="experimental"}
+
+> #### Example Config
+>
+> ```ini
+>
+> [model]
+> @architectures = "spacy-experimental.SpanResolver.v1"
+> hidden_size = 1024
+> distance_embedding_size = 64
+> conv_channels = 4
+> window_size = 1
+> max_distance = 128
+> prefix = "coref_head_clusters"
+>
+> [model.tok2vec]
+> @architectures = "spacy-transformers.TransformerListener.v1"
+> grad_factor = 1.0
+> upstream = "transformer"
+> pooling = {"@layers":"reduce_mean.v1"}
+> ```
+
+The `SpanResolver` model architecture is a Thinc `Model`. Note that
+`MentionClusters` is `List[List[Tuple[int, int]]]`.
+
+| Name                      | Description                                                                                                          |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `tok2vec`                 | The [`tok2vec`](#tok2vec) layer of the model. ~~Model~~                                                              |
+| `hidden_size`             | Size of the main internal layers. ~~int~~                                                                            |
+| `distance_embedding_size` | A representation of the distance between two candidates. ~~int~~                                                     |
+| `conv_channels`           | The number of channels in the internal CNN. ~~int~~                                                                  |
+| `window_size`             | The number of neighboring tokens to consider in the internal CNN. `1` means consider one token on each side. ~~int~~ |
+| `max_distance`            | The longest possible length of a predicted span. ~~int~~                                                             |
+| `prefix`                  | The prefix that indicates spans to use for input data. ~~string~~                                                    |
+| **CREATES**               | The model using the architecture. ~~Model[List[Doc], List[MentionClusters]]~~                                        |

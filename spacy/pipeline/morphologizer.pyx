@@ -1,7 +1,8 @@
 # cython: infer_types=True, profile=True, binding=True
-from typing import Optional, Union, Dict, Callable
+from typing import Callable, Dict, Iterable, List, Optional, Union
 import srsly
 from thinc.api import SequenceCategoricalCrossentropy, Model, Config
+from thinc.types import Floats2d, Ints1d
 from itertools import islice
 
 from ..tokens.doc cimport Doc
@@ -13,7 +14,7 @@ from ..symbols import POS
 from ..language import Language
 from ..errors import Errors
 from .pipe import deserialize_config
-from .tagger import Tagger
+from .tagger import ActivationsT, Tagger
 from .. import util
 from ..scorer import Scorer
 from ..training import validate_examples, validate_get_examples
@@ -52,7 +53,13 @@ DEFAULT_MORPH_MODEL = Config().from_str(default_model_config)["model"]
 @Language.factory(
     "morphologizer",
     assigns=["token.morph", "token.pos"],
-    default_config={"model": DEFAULT_MORPH_MODEL, "overwrite": True, "extend": False, "scorer": {"@scorers": "spacy.morphologizer_scorer.v1"}},
+    default_config={
+        "model": DEFAULT_MORPH_MODEL,
+        "overwrite": True,
+        "extend": False,
+        "scorer": {"@scorers": "spacy.morphologizer_scorer.v1"},
+        "save_activations": False,
+    },
     default_score_weights={"pos_acc": 0.5, "morph_acc": 0.5, "morph_per_feat": None},
 )
 def make_morphologizer(
@@ -62,8 +69,10 @@ def make_morphologizer(
     overwrite: bool,
     extend: bool,
     scorer: Optional[Callable],
+    save_activations: bool,
 ):
-    return Morphologizer(nlp.vocab, model, name, overwrite=overwrite, extend=extend, scorer=scorer)
+    return Morphologizer(nlp.vocab, model, name, overwrite=overwrite, extend=extend, scorer=scorer,
+                         save_activations=save_activations)
 
 
 def morphologizer_score(examples, **kwargs):
@@ -95,6 +104,7 @@ class Morphologizer(Tagger):
         overwrite: bool = BACKWARD_OVERWRITE,
         extend: bool = BACKWARD_EXTEND,
         scorer: Optional[Callable] = morphologizer_score,
+        save_activations: bool = False,
     ):
         """Initialize a morphologizer.
 
@@ -105,6 +115,7 @@ class Morphologizer(Tagger):
         scorer (Optional[Callable]): The scoring method. Defaults to
             Scorer.score_token_attr for the attributes "pos" and "morph" and
             Scorer.score_token_attr_per_feat for the attribute "morph".
+        save_activations (bool): save model activations in Doc when annotating.
 
         DOCS: https://spacy.io/api/morphologizer#init
         """
@@ -124,6 +135,7 @@ class Morphologizer(Tagger):
         }
         self.cfg = dict(sorted(cfg.items()))
         self.scorer = scorer
+        self.save_activations = save_activations
 
     @property
     def labels(self):
@@ -217,14 +229,15 @@ class Morphologizer(Tagger):
         assert len(label_sample) > 0, Errors.E923.format(name=self.name)
         self.model.initialize(X=doc_sample, Y=label_sample)
 
-    def set_annotations(self, docs, batch_tag_ids):
+    def set_annotations(self, docs: Iterable[Doc], activations: ActivationsT):
         """Modify a batch of documents, using pre-computed scores.
 
         docs (Iterable[Doc]): The documents to modify.
-        batch_tag_ids: The IDs to set, produced by Morphologizer.predict.
+        activations (ActivationsT): The activations used for setting annotations, produced by Morphologizer.predict.
 
         DOCS: https://spacy.io/api/morphologizer#set_annotations
         """
+        batch_tag_ids = activations["label_ids"]
         if isinstance(docs, Doc):
             docs = [docs]
         cdef Doc doc
@@ -236,6 +249,10 @@ class Morphologizer(Tagger):
         # to allocate a compatible container out of the iterable.
         labels = tuple(self.labels)
         for i, doc in enumerate(docs):
+            if self.save_activations:
+                doc.activations[self.name] = {}
+                for act_name, acts in activations.items():
+                    doc.activations[self.name][act_name] = acts[i]
             doc_tag_ids = batch_tag_ids[i]
             if hasattr(doc_tag_ids, "get"):
                 doc_tag_ids = doc_tag_ids.get()

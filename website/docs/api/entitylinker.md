@@ -14,7 +14,8 @@ entities) to unique identifiers, grounding the named entities into the "real
 world". It requires a `KnowledgeBase`, as well as a function to generate
 plausible candidates from that `KnowledgeBase` given a certain textual mention,
 and a machine learning model to pick the right candidate, given the local
-context of the mention.
+context of the mention. `EntityLinker` defaults to using the
+[`InMemoryLookupKB`](/api/kb_in_memory) implementation.
 
 ## Assigned Attributes {#assigned-attributes}
 
@@ -52,19 +53,20 @@ architectures and their arguments and hyperparameters.
 > nlp.add_pipe("entity_linker", config=config)
 > ```
 
-| Setting                                  | Description                                                                                                                                                                                                                                                                                 |
-| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `labels_discard`                         | NER labels that will automatically get a "NIL" prediction. Defaults to `[]`. ~~Iterable[str]~~                                                                                                                                                                                              |
-| `n_sents`                                | The number of neighbouring sentences to take into account. Defaults to 0. ~~int~~                                                                                                                                                                                                           |
-| `incl_prior`                             | Whether or not to include prior probabilities from the KB in the model. Defaults to `True`. ~~bool~~                                                                                                                                                                                        |
-| `incl_context`                           | Whether or not to include the local context in the model. Defaults to `True`. ~~bool~~                                                                                                                                                                                                      |
-| `model`                                  | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. Defaults to [EntityLinker](/api/architectures#EntityLinker). ~~Model~~                                                                                                                                      |
-| `entity_vector_length`                   | Size of encoding vectors in the KB. Defaults to `64`. ~~int~~                                                                                                                                                                                                                               |
-| `use_gold_ents`                          | Whether to copy entities from the gold docs or not. Defaults to `True`. If `False`, entities must be set in the training data or by an annotating component in the pipeline. ~~int~~                                                                                                        |
-| `get_candidates`                         | Function that generates plausible candidates for a given `Span` object. Defaults to [CandidateGenerator](/api/architectures#CandidateGenerator), a function looking up exact, case-dependent aliases in the KB. ~~Callable[[KnowledgeBase, Span], Iterable[Candidate]]~~                    |
-| `overwrite` <Tag variant="new">3.2</Tag> | Whether existing annotation is overwritten. Defaults to `True`. ~~bool~~                                                                                                                                                                                                                    |
-| `scorer` <Tag variant="new">3.2</Tag>    | The scoring method. Defaults to [`Scorer.score_links`](/api/scorer#score_links). ~~Optional[Callable]~~                                                                                                                                                                                     |
-| `threshold` <Tag variant="new">3.4</Tag> | Confidence threshold for entity predictions. The default of `None` implies that all predictions are accepted, otherwise those with a score beneath the treshold are discarded. If there are no predictions with scores above the threshold, the linked entity is `NIL`. ~~Optional[float]~~ |
+| Setting                                         | Description                                                                                                                                                                                                                                                                                 |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `labels_discard`                                | NER labels that will automatically get a "NIL" prediction. Defaults to `[]`. ~~Iterable[str]~~                                                                                                                                                                                              |
+| `n_sents`                                       | The number of neighbouring sentences to take into account. Defaults to 0. ~~int~~                                                                                                                                                                                                           |
+| `incl_prior`                                    | Whether or not to include prior probabilities from the KB in the model. Defaults to `True`. ~~bool~~                                                                                                                                                                                        |
+| `incl_context`                                  | Whether or not to include the local context in the model. Defaults to `True`. ~~bool~~                                                                                                                                                                                                      |
+| `model`                                         | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. Defaults to [EntityLinker](/api/architectures#EntityLinker). ~~Model~~                                                                                                                                      |
+| `entity_vector_length`                          | Size of encoding vectors in the KB. Defaults to `64`. ~~int~~                                                                                                                                                                                                                               |
+| `use_gold_ents`                                 | Whether to copy entities from the gold docs or not. Defaults to `True`. If `False`, entities must be set in the training data or by an annotating component in the pipeline. ~~int~~                                                                                                        |
+| `get_candidates`                                | Function that generates plausible candidates for a given `Span` object. Defaults to [CandidateGenerator](/api/architectures#CandidateGenerator), a function looking up exact, case-dependent aliases in the KB. ~~Callable[[KnowledgeBase, Span], Iterable[Candidate]]~~                    |
+| `overwrite` <Tag variant="new">3.2</Tag>        | Whether existing annotation is overwritten. Defaults to `True`. ~~bool~~                                                                                                                                                                                                                    |
+| `scorer` <Tag variant="new">3.2</Tag>           | The scoring method. Defaults to [`Scorer.score_links`](/api/scorer#score_links). ~~Optional[Callable]~~                                                                                                                                                                                     |
+| `save_activations` <Tag variant="new">4.0</Tag> | Save activations in `Doc` when annotating. Saved activations are `"ents"` and `"scores"`. ~~Union[bool, list[str]]~~                                                                                                                                                                        |
+| `threshold` <Tag variant="new">3.4</Tag>        | Confidence threshold for entity predictions. The default of `None` implies that all predictions are accepted, otherwise those with a score beneath the treshold are discarded. If there are no predictions with scores above the threshold, the linked entity is `NIL`. ~~Optional[float]~~ |
 
 ```python
 %%GITHUB_SPACY/spacy/pipeline/entity_linker.py
@@ -170,7 +172,7 @@ with the current vocab.
 >
 > ```python
 > def create_kb(vocab):
->     kb = KnowledgeBase(vocab, entity_vector_length=128)
+>     kb = InMemoryLookupKB(vocab, entity_vector_length=128)
 >     kb.add_entity(...)
 >     kb.add_alias(...)
 >     return kb

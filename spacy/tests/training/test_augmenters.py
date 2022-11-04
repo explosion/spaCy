@@ -31,7 +31,7 @@ def doc(nlp):
     words = ["Sarah", "'s", "sister", "flew", "to", "Silicon", "Valley", "via", "London", "."]
     tags = ["NNP", "POS", "NN", "VBD", "IN", "NNP", "NNP", "IN", "NNP", "."]
     pos = ["PROPN", "PART", "NOUN", "VERB", "ADP", "PROPN", "PROPN", "ADP", "PROPN", "PUNCT"]
-    ents = ["B-PERSON", "I-PERSON", "O", "O", "O", "B-LOC", "I-LOC", "O", "B-GPE", "O"]
+    ents = ["B-PERSON", "I-PERSON", "O", "", "O", "B-LOC", "I-LOC", "O", "B-GPE", "O"]
     cats = {"TRAVEL": 1.0, "BAKING": 0.0}
     # fmt: on
     doc = Doc(nlp.vocab, words=words, tags=tags, pos=pos, ents=ents)
@@ -106,6 +106,7 @@ def test_lowercase_augmenter(nlp, doc):
     assert [(e.start, e.end, e.label) for e in eg.reference.ents] == ents
     for ref_ent, orig_ent in zip(eg.reference.ents, doc.ents):
         assert ref_ent.text == orig_ent.text.lower()
+    assert [t.ent_iob for t in doc] == [t.ent_iob for t in eg.reference]
     assert [t.pos_ for t in eg.reference] == [t.pos_ for t in doc]
 
     # check that augmentation works when lowercasing leads to different
@@ -166,7 +167,7 @@ def test_make_whitespace_variant(nlp):
     lemmas = ["they", "fly", "to", "New", "York", "City", ".", "\n", "then", "they", "drive", "to", "Washington", ",", "D.C."]
     heads = [1, 1, 1, 4, 5, 2, 1, 10, 10, 10, 10, 10, 11, 12, 12]
     deps = ["nsubj", "ROOT", "prep", "compound", "compound", "pobj", "punct", "dep", "advmod", "nsubj", "ROOT", "prep", "pobj", "punct", "appos"]
-    ents = ["O", "O", "O", "B-GPE", "I-GPE", "I-GPE", "O", "O", "O", "O", "O", "O", "B-GPE", "O", "B-GPE"]
+    ents = ["O", "", "O", "B-GPE", "I-GPE", "I-GPE", "O", "O", "O", "O", "O", "O", "B-GPE", "O", "B-GPE"]
     # fmt: on
     doc = Doc(
         nlp.vocab,
@@ -215,6 +216,8 @@ def test_make_whitespace_variant(nlp):
             assert mod_ex2.reference[j].head.i == j - 1
         # entities are well-formed
         assert len(doc.ents) == len(mod_ex.reference.ents)
+        # there is one token with missing entity information
+        assert any(t.ent_iob == 0 for t in mod_ex.reference)
         for ent in mod_ex.reference.ents:
             assert not ent[0].is_space
             assert not ent[-1].is_space

@@ -39,11 +39,12 @@ architectures and their arguments and hyperparameters.
 > nlp.add_pipe("senter", config=config)
 > ```
 
-| Setting                                  | Description                                                                                                                                                           |
-| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `model`                                  | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. Defaults to [Tagger](/api/architectures#Tagger). ~~Model[List[Doc], List[Floats2d]]~~ |
-| `overwrite` <Tag variant="new">3.2</Tag> | Whether existing annotation is overwritten. Defaults to `False`. ~~bool~~                                                                                             |
-| `scorer` <Tag variant="new">3.2</Tag>    | The scoring method. Defaults to [`Scorer.score_spans`](/api/scorer#score_spans) for the attribute `"sents"`. ~~Optional[Callable]~~                                   |
+| Setting                                         | Description                                                                                                                                                           |
+| ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `model`                                         | The [`Model`](https://thinc.ai/docs/api-model) powering the pipeline component. Defaults to [Tagger](/api/architectures#Tagger). ~~Model[List[Doc], List[Floats2d]]~~ |
+| `overwrite` <Tag variant="new">3.2</Tag>        | Whether existing annotation is overwritten. Defaults to `False`. ~~bool~~                                                                                             |
+| `scorer` <Tag variant="new">3.2</Tag>           | The scoring method. Defaults to [`Scorer.score_spans`](/api/scorer#score_spans) for the attribute `"sents"`. ~~Optional[Callable]~~                                   |
+| `save_activations` <Tag variant="new">4.0</Tag> | Save activations in `Doc` when annotating. Saved activations are `"probabilities"` and `"label_ids"`. ~~Union[bool, list[str]]~~                                      |
 
 ```python
 %%GITHUB_SPACY/spacy/pipeline/senter.pyx
