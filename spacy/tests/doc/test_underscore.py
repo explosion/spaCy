@@ -348,3 +348,118 @@ def test_underscore_for_unique_span(en_tokenizer):
     # Assert extensions with original key
     assert doc.user_data[("._.", "doc_extension", None, None)] == "doc extension"
     assert doc.user_data[("._.", "token_extension", 0, None)] == "token extension"
+
+def test_underscore_for_unique_span_from_docs(en_tokenizer):
+    """Test that spans in the user_data keep the same data structure"""
+    Span.set_extension(name="span_extension", default=None)
+    Token.set_extension(name="token_extension", default=None)
+
+    # Initialize doc
+    text_1 = "Hello, world!"
+    doc_1 = en_tokenizer(text_1)
+    span_1a = Span(doc_1, 0, 2, "SPAN_1a")
+    span_1b = Span(doc_1, 0, 2, "SPAN_1b")
+
+    text_2 = "This is a test."
+    doc_2 = en_tokenizer(text_2)
+    span_2a = Span(doc_2, 0, 3, "SPAN_2a")
+
+    # Set custom extensions
+    doc_1[0]._.token_extension = "token_1"
+    doc_2[1]._.token_extension = "token_2"
+    span_1a._.span_extension = "span_1a extension"
+    span_1b._.span_extension = "span_1b extension"
+    span_2a._.span_extension = "span_2a extension"
+
+    doc = Doc.from_docs([doc_1,doc_2])
+    # Assert extensions
+    assert (
+        doc_1.user_data[
+            (
+                "._.",
+                "span_extension",
+                span_1a.start_char,
+                span_1a.end_char,
+                span_1a.label,
+                span_1a.kb_id,
+                span_1a.id,
+            )
+        ]
+        == "span_1a extension"
+    )
+
+    assert (
+        doc_1.user_data[
+            (
+                "._.",
+                "span_extension",
+                span_1b.start_char,
+                span_1b.end_char,
+                span_1b.label,
+                span_1b.kb_id,
+                span_1b.id,
+            )
+        ]
+        == "span_1b extension"
+    )
+
+    assert (
+        doc_2.user_data[
+            (
+                "._.",
+                "span_extension",
+                span_2a.start_char,
+                span_2a.end_char,
+                span_2a.label,
+                span_2a.kb_id,
+                span_2a.id,
+            )
+        ]
+        == "span_2a extension"
+    )
+
+    # Check merged doc
+    assert (
+        doc.user_data[
+            (
+                "._.",
+                "span_extension",
+                span_1a.start_char,
+                span_1a.end_char,
+                span_1a.label,
+                span_1a.kb_id,
+                span_1a.id,
+            )
+        ]
+        == "span_1a extension"
+    )
+
+    assert (
+        doc.user_data[
+            (
+                "._.",
+                "span_extension",
+                span_1b.start_char,
+                span_1b.end_char,
+                span_1b.label,
+                span_1b.kb_id,
+                span_1b.id,
+            )
+        ]
+        == "span_1b extension"
+    )
+
+    assert (
+        doc.user_data[
+            (
+                "._.",
+                "span_extension",
+                span_2a.start_char + len(doc_1.text) + 1,
+                span_2a.end_char + len(doc_1.text) + 1,
+                span_2a.label,
+                span_2a.kb_id,
+                span_2a.id,
+            )
+        ]
+        == "span_2a extension"
+    )

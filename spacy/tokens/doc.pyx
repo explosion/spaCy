@@ -1178,13 +1178,22 @@ cdef class Doc:
 
             if "user_data" not in exclude:
                 for key, value in doc.user_data.items():
-                    if isinstance(key, tuple) and len(key) == 4 and key[0] == "._.":
-                        data_type, name, start, end = key
+                    if isinstance(key, tuple) and len(key) >= 4 and key[0] == "._.":
+                        data_type = key[0]
+                        name = key[1]
+                        start = key[2]
+                        end = key[3]
                         if start is not None or end is not None:
                             start += char_offset
                             if end is not None:
                                 end += char_offset
-                            concat_user_data[(data_type, name, start, end)] = copy.copy(value)
+                                _label = key[4]
+                                _kb_id = key[5]
+                                _span_id = key[6]
+                                concat_user_data[(data_type, name, start, end, _label, _kb_id, _span_id)] = copy.copy(value)
+                            else:
+                                concat_user_data[(data_type, name, start, end)] = copy.copy(value)
+
                         else:
                             warnings.warn(Warnings.W101.format(name=name))
                     else:
