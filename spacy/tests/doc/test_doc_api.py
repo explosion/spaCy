@@ -1,4 +1,3 @@
-from audioop import reverse
 from pickle import EMPTY_DICT
 import weakref
 
