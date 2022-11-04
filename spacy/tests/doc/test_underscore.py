@@ -350,7 +350,7 @@ def test_underscore_for_unique_span(en_tokenizer):
     assert doc.user_data[("._.", "token_extension", 0, None)] == "token extension"
 
 def test_underscore_for_unique_span_from_docs(en_tokenizer):
-    """Test that spans in the user_data keep the same data structure"""
+    """Test that spans in the user_data keep the same data structure when using Doc.from_docs"""
     Span.set_extension(name="span_extension", default=None)
     Token.set_extension(name="token_extension", default=None)
 
@@ -462,4 +462,52 @@ def test_underscore_for_unique_span_from_docs(en_tokenizer):
             )
         ]
         == "span_2a extension"
+    )
+
+def test_underscore_for_unique_span_as_span(en_tokenizer):
+    """Test that spans in the user_data keep the same data structure when using Span.as_doc"""
+    Span.set_extension(name="span_extension", default=None)
+
+    # Initialize doc
+    text = "Hello, world!"
+    doc = en_tokenizer(text)
+    span_1 = Span(doc, 0, 2, "SPAN_1")
+    span_2 = Span(doc, 0, 2, "SPAN_2")
+
+    # Set custom extensions
+    span_1._.span_extension = "span_1 extension"
+    span_2._.span_extension = "span_2 extension"
+
+    span_doc = span_1.as_doc(copy_user_data=True)
+
+    # Assert extensions
+    assert (
+        span_doc.user_data[
+            (
+                "._.",
+                "span_extension",
+                span_1.start_char,
+                span_1.end_char,
+                span_1.label,
+                span_1.kb_id,
+                span_1.id,
+            )
+        ]
+        == "span_1 extension"
+    )
+
+        # Assert extensions
+    assert (
+        span_doc.user_data[
+            (
+                "._.",
+                "span_extension",
+                span_2.start_char,
+                span_2.end_char,
+                span_2.label,
+                span_2.kb_id,
+                span_2.id,
+            )
+        ]
+        == "span_2 extension"
     )
