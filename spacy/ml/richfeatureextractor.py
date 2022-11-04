@@ -2,7 +2,7 @@ from typing import List, Optional, Callable, Tuple
 from spacy.util import get_search_char_byte_arrays
 
 # from ..util import get_arrays_for_search_chars
-from thinc.types import Ints1d, Ints2d
+from thinc.types import Ints2d
 from thinc.api import Model, registry, get_current_ops
 
 from ..tokens import Doc
@@ -21,46 +21,35 @@ def RichFeatureExtractor(
 ) -> Model[List[Doc], List[Ints2d]]:
     ops = get_current_ops()
     if pref_search_chars is not None:
-        (
-            ps_1byte_ch,
-            ps_2byte_ch,
-            ps_3byte_ch,
-            ps_4byte_ch,
-        ) = get_search_char_byte_arrays(pref_search_chars, case_sensitive)
+        ps_search_chars, ps_width_offsets = get_search_char_byte_arrays(pref_search_chars, case_sensitive)
     else:
-        ps_1byte_ch = ps_2byte_ch = ps_3byte_ch = ps_4byte_ch = bytes()
+        ps_search_chars = bytes()
+        ps_width_offsets = bytes()
     if suff_search_chars is not None:
-        (
-            ss_1byte_ch,
-            ss_2byte_ch,
-            ss_3byte_ch,
-            ss_4byte_ch,
-        ) = get_search_char_byte_arrays(suff_search_chars, case_sensitive)
+        
+        ss_search_chars, ss_width_offsets = get_search_char_byte_arrays(suff_search_chars, case_sensitive)
     else:
-        ss_1byte_ch = ss_2byte_ch = ss_3byte_ch = ss_4byte_ch = bytes()
+        ss_search_chars = bytes()
+        ss_width_offsets = bytes()
     return Model(
         "extract_character_combination_hashes",
         forward,
         attrs={
             "case_sensitive": case_sensitive,
-            "pref_lengths": bytes(pref_lengths)
+            "p_lengths": bytes(pref_lengths)
             if pref_lengths is not None
             else bytes(),
-            "suff_lengths": bytes(suff_lengths)
+            "s_lengths": bytes(suff_lengths)
             if suff_lengths is not None
             else bytes(),
-            "pref_search_1_byte": ps_1byte_ch,
-            "pref_search_2_bytes": ps_2byte_ch,
-            "pref_search_3_bytes": ps_3byte_ch,
-            "pref_search_4_bytes": ps_4byte_ch,
-            "pref_search_lengths": bytes(pref_search_lengths)
+            "ps_search_chars": ps_search_chars,
+            "ps_width_offsets": ps_width_offsets,
+            "ps_lengths": bytes(pref_search_lengths)
             if pref_search_lengths is not None
             else bytes(),
-            "suff_search_1_byte": ss_1byte_ch,
-            "suff_search_2_bytes": ss_2byte_ch,
-            "suff_search_3_bytes": ss_3byte_ch,
-            "suff_search_4_bytes": ss_4byte_ch,
-            "suff_search_lengths": bytes(suff_search_lengths)
+            "ss_search_chars": ss_search_chars,
+            "ss_width_offsets": ss_width_offsets,
+            "ss_lengths": bytes(suff_search_lengths)
             if suff_search_lengths is not None
             else bytes(),
         },
@@ -72,36 +61,28 @@ def forward(
 ) -> Tuple[List[Ints2d], Callable]:
     ops = model.ops
     case_sensitive: bool = model.attrs["case_sensitive"]
-    pref_lengths: bytes = model.attrs["pref_lengths"]
-    suff_lengths: bytes = model.attrs["suff_lengths"]
-    ps_1byte_ch: bytes = model.attrs["pref_search_1_byte"]
-    ps_2byte_ch: bytes = model.attrs["pref_search_2_bytes"]
-    ps_3byte_ch: bytes = model.attrs["pref_search_3_bytes"]
-    ps_4byte_ch: bytes = model.attrs["pref_search_4_bytes"]
-    pref_search_lengths: bytes = model.attrs["pref_search_lengths"]
-    ss_1byte_ch: bytes = model.attrs["pref_search_1_byte"]
-    ss_2byte_ch: bytes = model.attrs["pref_search_2_bytes"]
-    ss_3byte_ch: bytes = model.attrs["pref_search_3_bytes"]
-    ss_4byte_ch: bytes = model.attrs["pref_search_4_bytes"]
-    suff_search_lengths: bytes = model.attrs["suff_search_lengths"]
+    p_lengths: bytes = model.attrs["p_lengths"]
+    s_lengths: bytes = model.attrs["s_lengths"]
+    ps_search_chars: bytes = model.attrs["ps_search_chars"]
+    ps_width_offsets: bytes = model.attrs["ps_width_offsets"]
+    ps_lengths: bytes = model.attrs["ps_lengths"]
+    ss_search_chars: bytes = model.attrs["ss_search_chars"]
+    ss_width_offsets: bytes = model.attrs["ss_width_offsets"]
+    ss_lengths: bytes = model.attrs["ss_lengths"]
     features: List[Ints2d] = []
     for doc in docs:
         hashes = doc.get_character_combination_hashes(
             cs=case_sensitive,
-            p_lengths=pref_lengths,
-            s_lengths=suff_lengths,
-            ps_1byte_ch=ps_1byte_ch,
-            ps_2byte_ch=ps_2byte_ch,
-            ps_3byte_ch=ps_3byte_ch,
-            ps_4byte_ch=ps_4byte_ch,
-            ps_lengths=pref_search_lengths,
-            ss_1byte_ch=ss_1byte_ch,
-            ss_2byte_ch=ss_2byte_ch,
-            ss_3byte_ch=ss_3byte_ch,
-            ss_4byte_ch=ss_4byte_ch,
-            ss_lengths=suff_search_lengths,
+            p_lengths=p_lengths,
+            s_lengths=s_lengths,
+            ps_search_chars=ps_search_chars,
+            ps_width_offsets=ps_width_offsets,
+            ps_lengths=ps_lengths,
+            ss_search_chars=ss_search_chars,
+            ss_width_offsets=ss_width_offsets,
+            ss_lengths=ss_lengths,
         )
-        features.append(ops.asarray2i(hashes))
+        features.append(ops.asarray2i(hashes, dtype="uint64"))
 
     backprop: Callable[[List[Ints2d]], List] = lambda d_features: []
     return features, backprop

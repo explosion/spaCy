@@ -199,7 +199,7 @@ def _verify_rich_config_group(
     if lengths is not None or rows is not None:
         if is_search_char_group and (search_chars is None or len(search_chars) == 0):
             raise ValueError(Errors.E1047.format(label=label))
-        if len(search_chars) > 63:
+        if search_chars is not None and len(search_chars) > 63:
             raise ValueError(Errors.E1048.format(label=label))
         if lengths is None or rows is None:
             raise ValueError(Errors.E1047.format(label=label))
@@ -261,6 +261,12 @@ def RichMultiHashEmbed(
     alternate prevents the alternation from occurring, e.g. an `ä` in a German
     plural noun does not become `a` if it is the third or fourth vowel from the
     end of the word.
+
+    There are a few rare situations where a graphical character is expressed as
+    more than one UTF-8 character, e.g. *i* when representing the lower-case form
+    of the Turkish letter *İ*. Such situations are supported, but the lengths of
+    prefixes, suffixes and character search results may need to be increased
+    accordingly.
 
     All lengths must be specified in ascending order.
 

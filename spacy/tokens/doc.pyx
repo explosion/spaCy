@@ -1803,15 +1803,15 @@ cdef class Doc:
         cdef unsigned char* ss_res_buf = <unsigned char*> mem.alloc(ss_max_l, 4)
         cdef unsigned char* ss_l_buf = <unsigned char*> mem.alloc(ss_max_l, 1)
         cdef int doc_l = self.length, total_hashes = doc_l * hashes_per_tok 
-        cdef np.uint32_t* hashes_ptr = <np.uint32_t*> mem.alloc(
-            total_hashes, sizeof(np.uint32_t))
+        cdef np.uint64_t* hashes_ptr = <np.uint64_t*> mem.alloc(
+            total_hashes, sizeof(np.uint64_t))
          
         # Define working variables
         cdef TokenC tok_c
         cdef int tok_i, tok_str_l
         cdef attr_t num_tok_attr
         cdef const unsigned char* tok_str
-        cdef np.uint32_t* w_hashes_ptr = hashes_ptr
+        cdef np.uint64_t* w_hashes_ptr = hashes_ptr
         
         for tok_i in range(doc_l):
             tok_c = self.c[tok_i]
@@ -1837,9 +1837,9 @@ cdef class Doc:
                     ss_max_l, True, ss_res_buf, ss_l_buf)
                 w_hashes_ptr += _write_hashes(ss_res_buf, ss_lengths, ss_l_buf, 0, w_hashes_ptr)
         
-        cdef np.ndarray[np.uint32_t, ndim=2] hashes = numpy.empty(
-            (doc_l, hashes_per_tok), dtype="uint32")
-        memcpy(hashes.data, hashes_ptr, total_hashes * sizeof(np.uint32_t))
+        cdef np.ndarray[np.uint64_t, ndim=2] hashes = numpy.empty(
+            (doc_l, hashes_per_tok), dtype="uint64")
+        memcpy(hashes.data, hashes_ptr, total_hashes * sizeof(np.uint64_t))
         return hashes
 
 
@@ -2173,7 +2173,7 @@ cdef int _write_hashes(
     const unsigned char* aff_l_buf,
     const unsigned char* offset_buf,
     const int res_buf_last,
-    np.uint32_t* hashes_ptr,
+    np.uint64_t* hashes_ptr,
 ) nogil:    
     """ Write FNV1A hashes for a token/rich property group combination.
 
