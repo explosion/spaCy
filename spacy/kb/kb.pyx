@@ -1,7 +1,7 @@
 # cython: infer_types=True, profile=True
 
 from pathlib import Path
-from typing import Iterable, Tuple, Union, Generator
+from typing import Iterable, Tuple, Union, Iterator
 from cymem.cymem cimport Pool
 
 from .candidate import Candidate
@@ -30,7 +30,7 @@ cdef class KnowledgeBase:
         self.entity_vector_length = entity_vector_length
         self.mem = Pool()
 
-    def get_candidates_all(self, mentions: Generator[Iterable[Span]]) -> Generator[Iterable[Iterable[Candidate]]]:
+    def get_candidates_all(self, mentions: Iterator[Iterable[Span]]) -> Iterator[Iterable[Iterable[Candidate]]]:
         """
         Return candidate entities for specified texts. Each candidate defines the entity, the original alias,
         and the prior probability of that alias resolving to that entity.
