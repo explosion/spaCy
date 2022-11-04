@@ -183,7 +183,7 @@ updated).
 > include_static_vectors = "False"
 > case_sensitive = "False"
 > pref_lengths = [2, 3, 5]
-> pref_rows = [10000, 10000,10000]
+> pref_rows = [10000,10000,10000]
 > suff_lengths = [2, 3, 4, 5]
 > suff_rows = [10000,10000,10000,10000]
 > suff_search_chars = "aeiouäöüß"
