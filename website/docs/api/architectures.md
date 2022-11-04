@@ -219,6 +219,13 @@ alternate prevents the alternation from occurring, e.g. an `ä` in a German
 plural noun does not become `a` if it is the third or fourth vowel from the end
 of the word.
 
+There are a few rare situations where a graphical character is expressed as more
+than one UTF-8 character, e.g. _i_ when representing the lower-case form of the
+Turkish letter _İ_. Such situations are supported, but the lengths of prefixes,
+suffixes and character search results may need to be increased accordingly.
+
+All lengths must be specified in ascending order.
+
 | Name                     | Description                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `width`                  | The output width. Also used as the width of the embedding tables. Recommended values are between `64` and `300`. If static vectors are included, a learned linear layer is used to map the vectors to the specified width before concatenating it with the other embedding outputs. A single maxout layer is then used to reduce the concatenated vectors to the final width. ~~int~~                                                              |

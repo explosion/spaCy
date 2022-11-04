@@ -6,7 +6,7 @@ cimport numpy as np
 from cpython cimport array
 from libc.string cimport memcpy, memcmp, memset, strlen
 from libc.math cimport sqrt
-from libc.stdint cimport int32_t, uint64_t, uint32_t
+from libc.stdint cimport int32_t, uint64_t
 
 import copy
 from collections import Counter, defaultdict
@@ -1779,8 +1779,9 @@ cdef class Doc:
              hashed for "spaCy" would be "c" and "ca".
     
         Many of the buffers passed into and used by this method contain single-byte numerical values. This takes advantage of 
-        the fact that we are hashing short affixes and searching for small groups of characters; the calling code is responsible
-        lengths being passed in cannot exceed 63 and that *_search_chars buffers are never longer than 255.
+        the fact that we are hashing short affixes and searching for small groups of characters. The calling code is responsible
+        for ensuring that lengths being passed in cannot exceed 63 and hence that resulting values with a maximum of four-byte 
+        character widths can never exceed 255.
         """
 
         # Work out lengths
@@ -2155,14 +2156,17 @@ cdef void _search_for_chars(
     memset(l_buf + l_buf_idx, res_buf_idx, max_res_l - l_buf_idx)
 
 
+cdef uint64_t FNV1A_OFFSET_BASIS = 0xcbf29ce484222325
+cdef uint64_t FNV1A_PRIME = 0x00000100000001B3
+
 def get_fnv1a_hash(input: bytes):
     """ Python-callable method to facilitate testing. """
-    cdef uint32_t hash_val = 0x811c9dc5
+    cdef uint64_t hash_val = FNV1A_OFFSET_BASIS
     cdef int length = len(input), offset = 0
 
     while offset < length:
         hash_val ^= input[offset]
-        hash_val *= 0x01000193
+        hash_val *= FNV1A_PRIME
         offset += 1
     return hash_val
     
@@ -2175,7 +2179,7 @@ cdef int _write_hashes(
     const int res_buf_last,
     np.uint64_t* hashes_ptr,
 ) nogil:    
-    """ Write FNV1A hashes for a token/rich property group combination.
+    """ Write 64-bit FNV1A hashes for a token/rich property group combination.
 
     res_buf: the string from which to generate the hash values.
     aff_l_buf: one-byte lengths describing how many characters to hash.
@@ -2188,7 +2192,7 @@ cdef int _write_hashes(
     """
 
     cdef int last_offset = 0, hash_idx = 0, offset, aff_l
-    cdef uint32_t hash_val = 0x811c9dc5 
+    cdef uint64_t hash_val = FNV1A_OFFSET_BASIS
     
     while True:
         aff_l = aff_l_buf[hash_idx]
@@ -2200,7 +2204,7 @@ cdef int _write_hashes(
                 hash_val ^= res_buf[res_buf_last - last_offset]
             else:
                 hash_val ^= res_buf[last_offset]
-            hash_val *= 0x01000193
+            hash_val *= FNV1A_PRIME
             last_offset += 1
         hashes_ptr[hash_idx] = hash_val
         hash_idx += 1
