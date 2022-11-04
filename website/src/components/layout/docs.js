@@ -3,19 +3,19 @@ import PropTypes from 'prop-types'
 
 import Models from './models'
 
-import ReadNext from '../components/readnext'
-import Button from '../components/button'
-import Grid from '../components/grid'
-import Title from '../components/title'
-import Footer from '../components/footer'
-import Sidebar from '../components/sidebar'
-import Main from '../components/main'
-import { getCurrentSource, github } from '../components/util'
+import ReadNext from '../readnext'
+import Button from '../button'
+import Grid from '../grid'
+import Title from '../title'
+import Footer from '../footer'
+import Sidebar from '../sidebar'
+import Main from '../main'
+import { getCurrentSource, github } from '../util'
 
-import siteMetadata from '../../meta/site.json'
-import sidebars from '../../meta/sidebars.json'
-import models from '../../meta/languages.json'
-import { nightly, legacy } from '../../meta/dynamicMeta'
+import siteMetadata from '../../../meta/site.json'
+import sidebars from '../../../meta/sidebars.json'
+import models from '../../../meta/languages.json'
+import { nightly, legacy } from '../../../meta/dynamicMeta'
 
 const Docs = ({ pageContext, children }) => {
     const {

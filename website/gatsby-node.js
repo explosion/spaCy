@@ -1,7 +1,7 @@
 const path = require('path')
 const { createFilePath } = require('gatsby-source-filesystem')
 
-const DEFAULT_TEMPLATE = path.resolve('./src/templates/index.js')
+const DEFAULT_TEMPLATE = path.resolve('./src/components/layout/index.js')
 const BASE_PATH = 'docs'
 const PAGE_EXTENSIONS = ['.md', '.mdx']
 const siteMetadata = require('./meta/site.json')

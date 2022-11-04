@@ -1,7 +1,7 @@
 import React from 'react'
 import { window } from 'browser-monads'
 
-import Template from '../templates/index'
+import Layout from '../components/layout/index'
 import { LandingHeader, LandingTitle } from '../components/landing'
 import Button from '../components/button'
 import { nightly, legacy } from '../../meta/dynamicMeta'

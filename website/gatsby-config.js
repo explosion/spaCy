@@ -16,7 +16,7 @@ const site = require('./meta/site.json')
 const { domain, nightly: isNightly, legacy: isLegacy } = site
 const { siteUrl } = require('./meta/dynamicMeta')
 
-const DEFAULT_TEMPLATE = path.resolve('./src/templates/index.js')
+const DEFAULT_TEMPLATE = path.resolve('./src/components/layout/index.js')
 
 const favicon = `src/images/icon${isNightly ? '_nightly' : isLegacy ? '_legacy' : ''}.png`
 const branch = isNightly ? 'develop' : 'master'
