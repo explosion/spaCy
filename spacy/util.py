@@ -1,4 +1,3 @@
-from turtle import width
 from typing import List, Mapping, NoReturn, Union, Dict, Any, Set, cast
 from typing import Optional, Iterable, Callable, Tuple, Type
 from typing import Iterator, Pattern, Generator, TYPE_CHECKING
