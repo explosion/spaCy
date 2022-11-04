@@ -23,7 +23,7 @@ from ..util import is_compatible_version, SimpleFrozenDict, ENV_VARS
 from .. import about
 
 if TYPE_CHECKING:
-    from pathy import Pathy  # noqa: F401
+    from cloudpathlib import CloudPath  # noqa: F401
 
 
 SDIST_SUFFIX = ".tar.gz"
@@ -331,21 +331,25 @@ def import_code(code_path: Optional[Union[Path, str]]) -> None:
             msg.fail(f"Couldn't load Python code: {code_path}", e, exits=1)
 
 
-def upload_file(src: Path, dest: Union[str, "Pathy"]) -> None:
+def upload_file(src: Path, dest: Union[str, Path, "CloudPath"]) -> None:
     """Upload a file.
 
     src (Path): The source path.
     url (str): The destination URL to upload to.
     """
-    import smart_open
+    # Create parent directories for local paths
+    if isinstance(dest, Path):
+        if not dest.parent.exists():
+            dest.parent.mkdir(parents=True)
 
-    dest = str(dest)
-    with smart_open.open(dest, mode="wb") as output_file:
+    with dest.open(mode="wb") as output_file:
         with src.open(mode="rb") as input_file:
             output_file.write(input_file.read())
 
 
-def download_file(src: Union[str, "Pathy"], dest: Path, *, force: bool = False) -> None:
+def download_file(
+    src: Union[str, Path, "CloudPath"], dest: Path, *, force: bool = False
+) -> None:
     """Download a file using smart_open.
 
     url (str): The URL of the file.
@@ -353,22 +357,19 @@ def download_file(src: Union[str, "Pathy"], dest: Path, *, force: bool = False) 
     force (bool): Whether to force download even if file exists.
         If False, the download will be skipped.
     """
-    import smart_open
-
     if dest.exists() and not force:
         return None
-    src = str(src)
-    with smart_open.open(src, mode="rb", ignore_ext=True) as input_file:
+    with src.open(mode="rb") as input_file:
         with dest.open(mode="wb") as output_file:
             shutil.copyfileobj(input_file, output_file)
 
 
 def ensure_pathy(path):
-    """Temporary helper to prevent importing Pathy globally (which can cause
+    """Temporary helper to prevent importing globally (which can cause
     slow and annoying Google Cloud warning)."""
-    from pathy import Pathy  # noqa: F811
+    from cloudpathlib import AnyPath  # noqa: F811
 
-    return Pathy(path)
+    return AnyPath(path)
 
 
 def git_checkout(
