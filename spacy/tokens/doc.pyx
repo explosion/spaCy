@@ -1782,8 +1782,11 @@ cdef class Doc:
         the fact that we are hashing short affixes and searching for small groups of characters. The calling code is responsible
         for ensuring that lengths being passed in cannot exceed 63 and hence that resulting values with a maximum of four-byte 
         character widths can never exceed 255.
-        """
 
+        Note that this method performs no data validation itself as it expects the calling code will already have done so, and
+        that the behaviour of the code may be erratic if the supplied parameters do not conform to expectations.
+        """
+        
         # Work out lengths
         cdef int p_lengths_l = strlen(<char*> p_lengths)
         cdef int s_lengths_l = strlen(<char*> s_lengths)

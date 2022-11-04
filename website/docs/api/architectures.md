@@ -177,18 +177,18 @@ updated).
 > ```ini
 > [model]
 > @architectures = "spacy.RichMultiHashEmbed.v1"
-> width = 64
-> attrs = ["LOWER","SHAPE"]
-> rows = [2000,1000]
+> width = ${components.tok2vec.model.encode:width}
+> attrs = ["LOWER","SHAPE","SPACY"]
+> rows = [5000,2500,50]
 > include_static_vectors = "False"
 > case_sensitive = "False"
 > pref_lengths = [2, 3, 5]
-> pref_rows = [2000,2000,2000]
+> pref_rows = [10000, 10000, 10000]
 > suff_lengths = [2, 3, 4, 5]
-> suff_rows = [2000,2000,2000,2000]
-> suff_search_chars = "aeiouäöüyß"
+> suff_rows = [10000, 10000,10000,10000]
+> suff_search_chars = "aeiouäöüß"
 > suff_search_lengths = [2, 3]
-> suff_search_rows = [2000,2000]
+> suff_search_rows = [10000,10000]
 > ```
 
 Construct an embedding layer with the features of
