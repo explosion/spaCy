@@ -159,6 +159,9 @@ const QuickstartInstall = ({ id, title }) => {
                         setters={setters}
                         showDropdown={showDropdown}
                     >
+                        <QS os="mac" hardware="gpu" platform="arm">
+                            # Note M1 GPU support is experimental, see <a href="https://github.com/explosion/thinc/issues/792">Thinc issue #792</a>
+                        </QS>
                         <QS package="pip" config="venv">
                             python -m venv .env
                         </QS>
@@ -198,7 +201,13 @@ const QuickstartInstall = ({ id, title }) => {
                             {nightly ? ' --pre' : ''}
                         </QS>
                         <QS package="conda">conda install -c conda-forge spacy</QS>
-                        <QS package="conda" hardware="gpu">
+                        <QS package="conda" hardware="gpu" os="windows">
+                            conda install -c conda-forge cupy
+                        </QS>
+                        <QS package="conda" hardware="gpu" os="linux">
+                            conda install -c conda-forge cupy
+                        </QS>
+                        <QS package="conda" hardware="gpu" os="mac" platform="x86">
                             conda install -c conda-forge cupy
                         </QS>
                         <QS package="conda" config="train">

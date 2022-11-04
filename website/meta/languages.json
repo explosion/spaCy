@@ -5,9 +5,19 @@
             "name": "Afrikaans"
         },
         {
+            "code": "am",
+            "name": "Amharic",
+            "has_examples": true
+        },
+        {
             "code": "ar",
             "name": "Arabic",
             "example": "هذه جملة",
+            "has_examples": true
+        },
+        {
+            "code": "az",
+            "name": "Azerbaijani",
             "has_examples": true
         },
         {
@@ -65,7 +75,7 @@
         {
             "code": "dsb",
             "name": "Lower Sorbian",
-	    "has_examples": true
+            "has_examples": true
         },
         {
             "code": "el",
@@ -143,6 +153,11 @@
             "name": "Irish"
         },
         {
+            "code": "grc",
+            "name": "Ancient Greek",
+            "has_examples": true
+        },
+        {
             "code": "gu",
             "name": "Gujarati",
             "has_examples": true
@@ -172,7 +187,7 @@
         {
             "code": "hsb",
             "name": "Upper Sorbian",
-	    "has_examples": true
+            "has_examples": true
         },
         {
             "code": "hu",
@@ -259,6 +274,10 @@
             "name": "Kyrgyz",
             "example": "Адамга эң кыйыны — күн сайын адам болуу",
             "has_examples": true
+        },
+        {
+            "code": "la",
+            "name": "Latin"
         },
         {
             "code": "lb",
@@ -446,6 +465,11 @@
                 }
             ],
             "example": "นี่คือประโยค",
+            "has_examples": true
+        },
+        {
+            "code": "ti",
+            "name": "Tigrinya",
             "has_examples": true
         },
         {

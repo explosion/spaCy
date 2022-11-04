@@ -229,16 +229,17 @@ The reported `{attr}_score` depends on the classification properties:
 > print(scores["cats_macro_auc"])
 > ```
 
-| Name             | Description                                                                                                                                        |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `examples`       | The `Example` objects holding both the predictions and the correct gold-standard annotations. ~~Iterable[Example]~~                                |
-| `attr`           | The attribute to score. ~~str~~                                                                                                                    |
-| _keyword-only_   |                                                                                                                                                    |
-| `getter`         | Defaults to `getattr`. If provided, `getter(doc, attr)` should return the cats for an individual `Doc`. ~~Callable[[Doc, str], Dict[str, float]]~~ |
-| labels           | The set of possible labels. Defaults to `[]`. ~~Iterable[str]~~                                                                                    |
-| `multi_label`    | Whether the attribute allows multiple labels. Defaults to `True`. ~~bool~~                                                                         |
-| `positive_label` | The positive label for a binary task with exclusive classes. Defaults to `None`. ~~Optional[str]~~                                                 |
-| **RETURNS**      | A dictionary containing the scores, with inapplicable scores as `None`. ~~Dict[str, Optional[float]]~~                                             |
+| Name             | Description                                                                                                                                                                                        |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `examples`       | The `Example` objects holding both the predictions and the correct gold-standard annotations. ~~Iterable[Example]~~                                                                                |
+| `attr`           | The attribute to score. ~~str~~                                                                                                                                                                    |
+| _keyword-only_   |                                                                                                                                                                                                    |
+| `getter`         | Defaults to `getattr`. If provided, `getter(doc, attr)` should return the cats for an individual `Doc`. ~~Callable[[Doc, str], Dict[str, float]]~~                                                 |
+| labels           | The set of possible labels. Defaults to `[]`. ~~Iterable[str]~~                                                                                                                                    |
+| `multi_label`    | Whether the attribute allows multiple labels. Defaults to `True`. When set to `False` (exclusive labels), missing gold labels are interpreted as `0.0` and the threshold is set to `0.0`. ~~bool~~ |
+| `positive_label` | The positive label for a binary task with exclusive classes. Defaults to `None`. ~~Optional[str]~~                                                                                                 |
+| `threshold`      | Cutoff to consider a prediction "positive". Defaults to `0.5` for multi-label, and `0.0` (i.e. whatever's highest scoring) otherwise. ~~float~~                                                    |
+| **RETURNS**      | A dictionary containing the scores, with inapplicable scores as `None`. ~~Dict[str, Optional[float]]~~                                                                                             |
 
 ## Scorer.score_links {#score_links tag="staticmethod" new="3"}
 
