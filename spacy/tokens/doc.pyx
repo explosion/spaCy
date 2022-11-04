@@ -1632,7 +1632,11 @@ cdef class Doc:
                 Span.set_extension(span_attr)
             for span_data in doc_json["underscore_span"][span_attr]:
                 value = span_data["value"]
-                self.char_span(span_data["start"], span_data["end"])._.set(span_attr, value)
+                span = self.char_span(span_data["start"], span_data["end"])
+                span.label = span_data["label"]
+                span.kb_id = span_data["kb_id"]
+                span.id = span_data["id"]
+                span._.set(span_attr, value)
         return self
 
     def to_json(self, underscore=None):
@@ -1703,11 +1707,14 @@ cdef class Doc:
                                 data["underscore_token"][attr].append({"start": start, "value": value})
                             # Else span attribute
                             else:
+                                _label = data_key[4]
+                                _kb_id = data_key[5]
+                                _span_id = data_key[6]
                                 if "underscore_span" not in data:
                                     data["underscore_span"] = {}
                                 if attr not in data["underscore_span"]:
                                     data["underscore_span"][attr] = []
-                                data["underscore_span"][attr].append({"start": start, "end": end, "value": value})
+                                data["underscore_span"][attr].append({"start": start, "end": end, "value": value, "label": _label, "kb_id": _kb_id, "id":_span_id})
 
             for attr in underscore:
                 if attr not in user_keys:
