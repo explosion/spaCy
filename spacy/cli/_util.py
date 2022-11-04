@@ -337,6 +337,8 @@ def upload_file(src: Path, dest: Union[str, Path, "CloudPath"]) -> None:
     src (Path): The source path.
     url (str): The destination URL to upload to.
     """
+    dest = ensure_pathy(dest)
+
     # Create parent directories for local paths
     if isinstance(dest, Path):
         if not dest.parent.exists():
@@ -357,6 +359,8 @@ def download_file(
     force (bool): Whether to force download even if file exists.
         If False, the download will be skipped.
     """
+    src = ensure_pathy(src)
+
     if dest.exists() and not force:
         return None
     with src.open(mode="rb") as input_file:
