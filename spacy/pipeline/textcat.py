@@ -155,7 +155,11 @@ class TextCategorizer(TrainablePipe):
         self.model = model
         self.name = name
         self._rehearsal_model = None
-        cfg: Dict[str, Any] = {"labels": [], "threshold": threshold, "positive_label": None}
+        cfg: Dict[str, Any] = {
+            "labels": [],
+            "threshold": threshold,
+            "positive_label": None,
+        }
         self.cfg = dict(cfg)
         self.scorer = scorer
 
