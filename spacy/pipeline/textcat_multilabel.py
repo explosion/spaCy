@@ -192,6 +192,12 @@ class MultiLabel_TextCategorizer(TextCategorizer):
             for label in labels:
                 self.add_label(label)
         subbatch = list(islice(get_examples(), 10))
+
+        # check that annotation values are valid
+        for eg in subbatch:
+            for val in eg.reference.cats.values():
+                if not (val == 1.0 or val == 0.0):
+                    raise ValueError(Errors.E852.format(val=val))
         doc_sample = [eg.reference for eg in subbatch]
         label_sample, _ = self._examples_to_truth(subbatch)
         self._require_labels()

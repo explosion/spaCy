@@ -403,3 +403,6 @@ class TextCategorizer(TrainablePipe):
         for ex in examples:
             if list(ex.reference.cats.values()).count(1.0) > 1:
                 raise ValueError(Errors.E895.format(value=ex.reference.cats))
+            for val in ex.reference.cats.values():
+                if not (val == 1.0 or val == 0.0):
+                    raise ValueError(Errors.E852.format(val=val))
