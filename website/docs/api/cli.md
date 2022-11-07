@@ -474,8 +474,7 @@ report span characteristics such as the average span length and the span (or
 span boundary) distinctiveness. The distinctiveness measure shows how different
 the tokens are with respect to the rest of the corpus using the KL-divergence of
 the token distributions. To learn more, you can check out Papay et al.'s work on
-[*Dissecting Span Identification Tasks with Performance Prediction* (EMNLP
-2020)](https://aclanthology.org/2020.emnlp-main.396/).
+[_Dissecting Span Identification Tasks with Performance Prediction_ (EMNLP 2020)](https://aclanthology.org/2020.emnlp-main.396/).
 
 </Infobox>
 
@@ -1352,12 +1351,13 @@ If the contents are different, the new version of the file is uploaded. Deleting
 obsolete files is left up to you.
 
 Remotes can be defined in the `remotes` section of the
-[`project.yml`](/usage/projects#project-yml). Under the hood, spaCy uses the
-[`smart-open`](https://github.com/RaRe-Technologies/smart_open) library to
-communicate with the remote storages, so you can use any protocol that
-`smart-open` supports, including [S3](https://aws.amazon.com/s3/),
-[Google Cloud Storage](https://cloud.google.com/storage), SSH and more, although
-you may need to install extra dependencies to use certain protocols.
+[`project.yml`](/usage/projects#project-yml). Under the hood, spaCy uses
+[`Pathy`](https://github.com/justindujardin/pathy) to communicate with the
+remote storages, so you can use any protocol that `Pathy` supports, including
+[S3](https://aws.amazon.com/s3/),
+[Google Cloud Storage](https://cloud.google.com/storage), and the local
+filesystem, although you may need to install extra dependencies to use certain
+protocols.
 
 ```cli
 $ python -m spacy project push [remote] [project_dir]
@@ -1396,12 +1396,13 @@ outputs, so if you change the config back, you'll be able to fetch back the
 result.
 
 Remotes can be defined in the `remotes` section of the
-[`project.yml`](/usage/projects#project-yml). Under the hood, spaCy uses the
-[`smart-open`](https://github.com/RaRe-Technologies/smart_open) library to
-communicate with the remote storages, so you can use any protocol that
-`smart-open` supports, including [S3](https://aws.amazon.com/s3/),
-[Google Cloud Storage](https://cloud.google.com/storage), SSH and more, although
-you may need to install extra dependencies to use certain protocols.
+[`project.yml`](/usage/projects#project-yml). Under the hood, spaCy uses
+[`Pathy`](https://github.com/justindujardin/pathy) to communicate with the
+remote storages, so you can use any protocol that `Pathy` supports, including
+[S3](https://aws.amazon.com/s3/),
+[Google Cloud Storage](https://cloud.google.com/storage), and the local
+filesystem, although you may need to install extra dependencies to use certain
+protocols.
 
 ```cli
 $ python -m spacy project pull [remote] [project_dir]

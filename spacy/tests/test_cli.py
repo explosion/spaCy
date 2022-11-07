@@ -25,6 +25,7 @@ from spacy.cli.download import get_compatibility, get_version
 from spacy.cli.init_config import RECOMMENDATIONS, init_config, fill_config
 from spacy.cli.package import get_third_party_dependencies
 from spacy.cli.package import _is_permitted_package_name
+from spacy.cli.project.remote_storage import RemoteStorage
 from spacy.cli.validate import get_model_pkgs
 from spacy.lang.en import English
 from spacy.lang.nl import Dutch
@@ -855,3 +856,42 @@ def test_span_length_freq_dist_output_must_be_correct():
     span_freqs = _get_spans_length_freq_dist(sample_span_lengths, threshold)
     assert sum(span_freqs.values()) >= threshold
     assert list(span_freqs.keys()) == [3, 1, 4, 5, 2]
+
+
+def test_local_remote_storage():
+    with make_tempdir() as d:
+        filename = "a.txt"
+        content = "a"
+
+        loc_file = d / "root" / filename
+        loc_file.parent.mkdir(parents=True)
+        with loc_file.open(mode="w") as file_:
+            file_.write(content)
+
+        # push to remote storage
+        remote = RemoteStorage(d / "root", str(d / "remote"))
+        remote.push(filename, "aaaa", "bbbb")
+
+        # retrieve with full hashes
+        loc_file.unlink()
+        remote.pull(filename, command_hash="aaaa", content_hash="bbbb")
+        with loc_file.open(mode="r") as file_:
+            assert file_.read() == content
+
+        # retrieve with command hash
+        loc_file.unlink()
+        remote.pull(filename, command_hash="aaaa")
+        with loc_file.open(mode="r") as file_:
+            assert file_.read() == content
+
+        # retrieve with content hash
+        loc_file.unlink()
+        remote.pull(filename, content_hash="bbbb")
+        with loc_file.open(mode="r") as file_:
+            assert file_.read() == content
+
+        # retrieve with no hashes
+        loc_file.unlink()
+        remote.pull(filename)
+        with loc_file.open(mode="r") as file_:
+            assert file_.read() == content

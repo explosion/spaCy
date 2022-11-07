@@ -6,13 +6,14 @@ import urllib.parse
 import tarfile
 from pathlib import Path
 
-from .._util import get_hash, get_checksum, download_file, ensure_pathy
-from ...util import make_tempdir, get_minor_version, ENV_VARS, check_bool_env_var
+from .._util import get_hash, get_checksum, upload_file, download_file
+from .._util import ensure_pathy, make_tempdir, _file_exists
+from ...util import get_minor_version, ENV_VARS, check_bool_env_var
 from ...git_info import GIT_VERSION
 from ... import about
 
 if TYPE_CHECKING:
-    from pathy import Pathy  # noqa: F401
+    from pathy import FluidPath  # noqa: F401
 
 
 class RemoteStorage:
@@ -27,7 +28,7 @@ class RemoteStorage:
         self.url = ensure_pathy(url)
         self.compression = compression
 
-    def push(self, path: Path, command_hash: str, content_hash: str) -> "Pathy":
+    def push(self, path: Path, command_hash: str, content_hash: str) -> "FluidPath":
         """Compress a file or directory within a project and upload it to a remote
         storage. If an object exists at the full URL, nothing is done.
 
@@ -40,7 +41,7 @@ class RemoteStorage:
         if not loc.exists():
             raise IOError(f"Cannot push {loc}: does not exist.")
         url = self.make_url(path, command_hash, content_hash)
-        if url.exists():
+        if _file_exists(url):
             return url
         tmp: Path
         with make_tempdir() as tmp:
@@ -48,9 +49,7 @@ class RemoteStorage:
             mode_string = f"w:{self.compression}" if self.compression else "w"
             with tarfile.open(tar_loc, mode=mode_string) as tar_file:
                 tar_file.add(str(loc), arcname=str(path))
-            with tar_loc.open(mode="rb") as input_file:
-                with url.open(mode="wb") as output_file:
-                    output_file.write(input_file.read())
+            upload_file(tar_loc, url)
         return url
 
     def pull(
@@ -59,7 +58,7 @@ class RemoteStorage:
         *,
         command_hash: Optional[str] = None,
         content_hash: Optional[str] = None,
-    ) -> Optional["Pathy"]:
+    ) -> Optional["FluidPath"]:
         """Retrieve a file from the remote cache. If the file already exists,
         nothing is done.
 
@@ -93,7 +92,7 @@ class RemoteStorage:
         *,
         command_hash: Optional[str] = None,
         content_hash: Optional[str] = None,
-    ) -> Optional["Pathy"]:
+    ) -> Optional["FluidPath"]:
         """Find the best matching version of a file within the storage,
         or `None` if no match can be found. If both the creation and content hash
         are specified, only exact matches will be returned. Otherwise, the most
@@ -102,16 +101,19 @@ class RemoteStorage:
         name = self.encode_name(str(path))
         if command_hash is not None and content_hash is not None:
             url = self.make_url(path, command_hash, content_hash)
-            urls = [url] if url.exists() else []
+            urls = [url] if _file_exists(url) else []
         elif command_hash is not None:
             urls = list((self.url / name / command_hash).iterdir())
         else:
-            urls = list((self.url / name).iterdir())
+            urls = []
+            for command_hash_dir in (self.url / name).iterdir():
+                urls.extend(command_hash_dir.iterdir())
             if content_hash is not None:
                 urls = [url for url in urls if url.parts[-1] == content_hash]
+        # TODO: URLs should be sorted by last modified
         return urls[-1] if urls else None
 
-    def make_url(self, path: Path, command_hash: str, content_hash: str) -> "Pathy":
+    def make_url(self, path: Path, command_hash: str, content_hash: str) -> "FluidPath":
         """Construct a URL from a subpath, a creation hash and a content hash."""
         return self.url / self.encode_name(str(path)) / command_hash / content_hash
 
