@@ -359,11 +359,12 @@ def download_file(
     force (bool): Whether to force download even if file exists.
         If False, the download will be skipped.
     """
-    src = ensure_pathy(src)
+    import smart_open
 
     if dest.exists() and not force:
         return None
-    with src.open(mode="rb") as input_file:
+    src = str(src)
+    with smart_open.open(src, mode="rb", compression="disable") as input_file:
         with dest.open(mode="wb") as output_file:
             shutil.copyfileobj(input_file, output_file)
 
