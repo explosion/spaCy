@@ -53,7 +53,7 @@ def project_run(
     force: bool = False,
     dry: bool = False,
     capture: bool = False,
-    skip_check_requirements: bool = False,
+    skip_requirements_check: bool = False,
 ) -> None:
     """Run a named script defined in the project.yml. If the script is part
     of the default pipeline (defined in the "run" section), DVC is used to
@@ -70,7 +70,7 @@ def project_run(
         sys.exit will be called with the return code. You should use capture=False
         when you want to turn over execution to the command, and capture=True
         when you want to run the command more like a function.
-    skip_check_requirements (bool): Whether to skip the requirements check.
+    skip_requirements_check (bool): Whether to skip the requirements check.
     """
     config = load_project_config(project_dir, overrides=overrides)
     commands = {cmd["name"]: cmd for cmd in config.get("commands", [])}
@@ -78,7 +78,7 @@ def project_run(
     validate_subcommand(list(commands.keys()), list(workflows.keys()), subcommand)
 
     req_path = project_dir / "requirements.txt"
-    if not skip_check_requirements:
+    if not skip_requirements_check:
         if config.get("check_requirements", True) and os.path.exists(req_path):
             with req_path.open() as requirements_file:
                 _check_requirements([req.replace("\n", "") for req in requirements_file])
@@ -93,7 +93,7 @@ def project_run(
                 force=force,
                 dry=dry,
                 capture=capture,
-                skip_check_requirements=True,
+                skip_requirements_check=True,
             )
     else:
         cmd = commands[subcommand]
