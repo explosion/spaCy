@@ -85,6 +85,9 @@ class RemoteStorage:
                 with tarfile.open(tar_loc, mode=mode_string) as tar_file:
                     # This requires that the path is added correctly, relative
                     # to root. This is how we set things up in push()
+
+                    # Disallow paths outside the current directory for the tar
+                    # file (CVE-2007-4559, directory traversal vulnerability)
                     def is_within_directory(directory, target):
                         abs_directory = os.path.abspath(directory)
                         abs_target = os.path.abspath(target)
