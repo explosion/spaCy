@@ -861,70 +861,39 @@ def test_span_length_freq_dist_output_must_be_correct():
 def test_local_remote_storage():
     with make_tempdir() as d:
         filename = "a.txt"
-        content = "older context"
 
-        loc_file = d / "root" / filename
-        loc_file.parent.mkdir(parents=True)
-        with loc_file.open(mode="w") as file_:
-            file_.write(content)
+        for content_hash in ("aaaa", "bbbb", "cccc"):
+            content = f"{content_hash} content"
+            loc_file = d / "root" / filename
+            if not loc_file.parent.exists():
+                loc_file.parent.mkdir(parents=True)
+            with loc_file.open(mode="w") as file_:
+                file_.write(content)
 
-        # push first version to remote storage
-        remote = RemoteStorage(d / "root", str(d / "remote"))
-        remote.push(filename, "aaaa", "aaaa")
+            # push first version to remote storage
+            remote = RemoteStorage(d / "root", str(d / "remote"))
+            remote.push(filename, "aaaa", content_hash)
 
-        # retrieve with full hashes
-        loc_file.unlink()
-        remote.pull(filename, command_hash="aaaa", content_hash="aaaa")
-        with loc_file.open(mode="r") as file_:
-            assert file_.read() == content
+            # retrieve with full hashes
+            loc_file.unlink()
+            remote.pull(filename, command_hash="aaaa", content_hash=content_hash)
+            with loc_file.open(mode="r") as file_:
+                assert file_.read() == content
 
-        # retrieve with command hash
-        loc_file.unlink()
-        remote.pull(filename, command_hash="aaaa")
-        with loc_file.open(mode="r") as file_:
-            assert file_.read() == content
+            # retrieve with command hash
+            loc_file.unlink()
+            remote.pull(filename, command_hash="aaaa")
+            with loc_file.open(mode="r") as file_:
+                assert file_.read() == content
 
-        # retrieve with content hash
-        loc_file.unlink()
-        remote.pull(filename, content_hash="aaaa")
-        with loc_file.open(mode="r") as file_:
-            assert file_.read() == content
+            # retrieve with content hash
+            loc_file.unlink()
+            remote.pull(filename, content_hash=content_hash)
+            with loc_file.open(mode="r") as file_:
+                assert file_.read() == content
 
-        # retrieve with no hashes
-        loc_file.unlink()
-        remote.pull(filename)
-        with loc_file.open(mode="r") as file_:
-            assert file_.read() == content
-
-        # push second version to remote storage
-        content = "newer content"
-        with loc_file.open(mode="w") as file_:
-            file_.write(content)
-        remote.push(filename, "aaaa", "bbbb")
-        assert (d / "remote" / filename / "aaaa" / "bbbb").stat().st_mtime > (
-            d / "remote" / filename / "aaaa" / "aaaa"
-        ).stat().st_mtime
-
-        # retrieve with full hashes
-        loc_file.unlink()
-        remote.pull(filename, command_hash="aaaa", content_hash="bbbb")
-        with loc_file.open(mode="r") as file_:
-            assert file_.read() == content
-
-        # retrieve with command hash
-        loc_file.unlink()
-        remote.pull(filename, command_hash="aaaa")
-        with loc_file.open(mode="r") as file_:
-            assert file_.read() == content
-
-        # retrieve with content hash
-        loc_file.unlink()
-        remote.pull(filename, content_hash="bbbb")
-        with loc_file.open(mode="r") as file_:
-            assert file_.read() == content
-
-        # retrieve with no hashes
-        loc_file.unlink()
-        remote.pull(filename)
-        with loc_file.open(mode="r") as file_:
-            assert file_.read() == content
+            # retrieve with no hashes
+            loc_file.unlink()
+            remote.pull(filename)
+            with loc_file.open(mode="r") as file_:
+                assert file_.read() == content
