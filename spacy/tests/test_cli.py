@@ -861,18 +861,43 @@ def test_span_length_freq_dist_output_must_be_correct():
 def test_local_remote_storage():
     with make_tempdir() as d:
         filename = "a.txt"
-        content = "newer context"
+        content = "older context"
 
         loc_file = d / "root" / filename
         loc_file.parent.mkdir(parents=True)
         with loc_file.open(mode="w") as file_:
-            file_.write("older content")
+            file_.write(content)
 
         # push first version to remote storage
         remote = RemoteStorage(d / "root", str(d / "remote"))
         remote.push(filename, "aaaa", "aaaa")
 
+        # retrieve with full hashes
+        loc_file.unlink()
+        remote.pull(filename, command_hash="aaaa", content_hash="aaaa")
+        with loc_file.open(mode="r") as file_:
+            assert file_.read() == content
+
+        # retrieve with command hash
+        loc_file.unlink()
+        remote.pull(filename, command_hash="aaaa")
+        with loc_file.open(mode="r") as file_:
+            assert file_.read() == content
+
+        # retrieve with content hash
+        loc_file.unlink()
+        remote.pull(filename, content_hash="aaaa")
+        with loc_file.open(mode="r") as file_:
+            assert file_.read() == content
+
+        # retrieve with no hashes
+        loc_file.unlink()
+        remote.pull(filename)
+        with loc_file.open(mode="r") as file_:
+            assert file_.read() == content
+
         # push second version to remote storage
+        content = "newer content"
         with loc_file.open(mode="w") as file_:
             file_.write(content)
         remote.push(filename, "aaaa", "bbbb")
