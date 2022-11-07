@@ -45,7 +45,7 @@ def _stream_jsonl(path: Path) -> Iterable[str]:
     for entry in srsly.read_jsonl(path):
         if "text" not in entry:
             raise ValueError(
-                "JSONL files have to contain 'text' field."
+                f"{path} does not contain the required 'text' field."
             )
         else:
             yield entry["text"]

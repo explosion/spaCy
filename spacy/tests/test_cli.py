@@ -1,8 +1,8 @@
 import os
 import math
-from random import sample
 from typing import Counter
 
+import spacy
 import pytest
 import srsly
 from click import NoSuchOption
@@ -26,11 +26,12 @@ from spacy.cli.init_config import RECOMMENDATIONS, init_config, fill_config
 from spacy.cli.package import get_third_party_dependencies
 from spacy.cli.package import _is_permitted_package_name
 from spacy.cli.validate import get_model_pkgs
+from spacy.cli.apply import apply
 from spacy.lang.en import English
 from spacy.lang.nl import Dutch
 from spacy.language import Language
 from spacy.schemas import ProjectConfigSchema, RecommendationSchema, validate
-from spacy.tokens import Doc
+from spacy.tokens import Doc, DocBin
 from spacy.tokens.span import Span
 from spacy.training import Example, docs_to_json, offsets_to_biluo_tags
 from spacy.training.converters import conll_ner_to_docs, conllu_to_docs
@@ -855,3 +856,68 @@ def test_span_length_freq_dist_output_must_be_correct():
     span_freqs = _get_spans_length_freq_dist(sample_span_lengths, threshold)
     assert sum(span_freqs.values()) >= threshold
     assert list(span_freqs.keys()) == [3, 1, 4, 5, 2]
+
+
+def test_applycli_empty_dir():
+    with make_tempdir() as data_path:
+        output = os.path.join(data_path, "test.spacy")
+        apply(data_path, output, "blank:en", 1, 1)
+
+
+def test_applycli_docbin():
+    with make_tempdir() as data_path:
+        output = data_path / "testout.spacy"
+        nlp = spacy.blank("en")
+        doc = nlp("testing apply cli.")
+        # test empty DocBin case
+        docbin = DocBin()
+        docbin.to_disk(data_path / "testin.spacy")
+        apply(data_path, output, "blank:en", 1, 1)
+        docbin.add(doc)
+        docbin.to_disk(data_path / "testin.spacy")
+        apply(data_path, output, "blank:en", 1, 1)
+
+
+def test_applycli_jsonl():
+    with make_tempdir() as data_path:
+        output = data_path / "testout.spacy"
+        data = [{"text": "Testing apply cli.", "key": 234}]
+        srsly.write_jsonl(data_path / "test.jsonl", data)
+        apply(data_path, output, "blank:en", 1, 1)
+        data = [{"key": 234}]
+        srsly.write_jsonl(data_path / "test2.jsonl", data)
+        # test no "text" field case
+        with pytest.raises(ValueError, match="test2.jsonl"):
+            apply(data_path, output, "blank:en", 1, 1)
+
+
+def test_applycli_txt():
+    with make_tempdir() as data_path:
+        output = data_path / "testout.spacy"
+        data = [{"text": "Testing apply cli.", "key": 234}]
+        srsly.write_jsonl(data_path / "test.jsonl", data)
+        apply(data_path, output, "blank:en", 1, 1)
+        data = [{"key": 234}]
+        srsly.write_jsonl(data_path / "test2.jsonl", data)
+        with pytest.raises(ValueError, match="test2.jsonl"):
+            apply(data_path, output, "blank:en", 1, 1)
+
+
+def test_applycli_mixed():
+    with make_tempdir() as data_path:
+        output = data_path / "testout.spacy"
+        text = "Testing apply cli"
+        nlp = spacy.blank("en")
+        doc = nlp(text)
+        jsonl_data = [{"text": text}]
+        srsly.write_jsonl(data_path / "test.jsonl", jsonl_data)
+        docbin = DocBin()
+        docbin.add(doc)
+        docbin.to_disk(data_path / "testin.spacy")
+        with open(data_path / "test.txt", "w") as ftest:
+            ftest.write(text)
+        apply(data_path, output, "blank:en", 1, 1)
+        result = list(DocBin().from_disk(output).get_docs(nlp.vocab))
+        assert len(result) == 3
+        for doc in result:
+            assert doc.text == text
