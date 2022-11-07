@@ -615,7 +615,7 @@ def test_enable_disable_conflict_with_config():
 
     with make_tempdir() as tmp_dir:
         nlp.to_disk(tmp_dir)
-        # Expected to succeed, as config and arguments conflict.
+        # Expected to succeed, as config and arguments do not conflict.
         assert spacy.load(
             tmp_dir, enable=["tagger"], config={"nlp": {"disabled": ["senter"]}}
         ).disabled == ["senter", "sentencizer"]
