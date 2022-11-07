@@ -4,7 +4,7 @@ import site
 import hashlib
 import urllib.parse
 import tarfile
-import warnings
+from wasabi import msg
 from pathlib import Path
 
 from .._util import get_hash, get_checksum, upload_file, download_file
@@ -30,7 +30,9 @@ class RemoteStorage:
         self.url = ensure_pathy(url)
         self.compression = compression
 
-    def push(self, path: Path, command_hash: str, content_hash: str) -> Union[Path, "CloudPath"]:
+    def push(
+        self, path: Path, command_hash: str, content_hash: str
+    ) -> Union[Path, "CloudPath"]:
         """Compress a file or directory within a project and upload it to a remote
         storage. If an object exists at the full URL, nothing is done.
 
@@ -128,17 +130,19 @@ class RemoteStorage:
                 urls.extend(sub_dir.iterdir())
             if content_hash is not None:
                 urls = [url for url in urls if url.parts[-1] == content_hash]
-        if len(urls) > 1:
+        if len(urls) >= 2:
             try:
                 urls.sort(key=lambda x: x.stat().st_mtime)  # type: ignore
             except Exception:
-                warnings.warn(
+                msg.warn(
                     "Unable to sort remote files by last modified. The file(s) "
                     "pulled from the cache may not be the most recent."
                 )
         return urls[-1] if urls else None
 
-    def make_url(self, path: Path, command_hash: str, content_hash: str) -> Union[Path, "CloudPath"]:
+    def make_url(
+        self, path: Path, command_hash: str, content_hash: str
+    ) -> Union[Path, "CloudPath"]:
         """Construct a URL from a subpath, a creation hash and a content hash."""
         return self.url / self.encode_name(str(path)) / command_hash / content_hash
 
