@@ -81,7 +81,7 @@ def project_run(
     if not skip_requirements_check:
         if config.get("check_requirements", True) and os.path.exists(req_path):
             with req_path.open() as requirements_file:
-                _check_requirements([req.replace("\n", "") for req in requirements_file])
+                _check_requirements([req.strip() for req in requirements_file])
 
     if subcommand in workflows:
         msg.info(f"Running workflow '{subcommand}'")
