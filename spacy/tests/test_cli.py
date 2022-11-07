@@ -860,7 +860,7 @@ def test_span_length_freq_dist_output_must_be_correct():
 
 def test_applycli_empty_dir():
     with make_tempdir() as data_path:
-        output = os.path.join(data_path / "test.spacy")
+        output = data_path / "test.spacy"
         apply(data_path, output, "blank:en", 1, 1)
 
 
