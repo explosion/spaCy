@@ -2080,7 +2080,7 @@ class Language:
                 *disable,
             }
             # If any pipe to be enabled is in to_disable, the specification is inconsistent.
-            if any([pipe_to_enable in to_disable for pipe_to_enable in enable]):
+            if len(set(enable) & to_disable):
                 raise ValueError(Errors.E1042.format(enable=enable, disable=disable))
 
         return tuple(to_disable)
