@@ -544,6 +544,8 @@ class Errors(metaclass=ErrorsWithCodes):
             "during training, make sure to include it in 'annotating components'")
 
     # New errors added in v3.x
+    E852 = ("The tar file pulled from the remote attempted an unsafe path "
+            "traversal.")
     E853 = ("Unsupported component factory name '{name}'. The character '.' is "
             "not permitted in factory names.")
     E854 = ("Unable to set doc.ents. Check that the 'ents_filter' does not "
