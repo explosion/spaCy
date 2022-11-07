@@ -860,7 +860,7 @@ def test_span_length_freq_dist_output_must_be_correct():
 
 def test_applycli_empty_dir():
     with make_tempdir() as data_path:
-        output = os.path.join(data_path, "test.spacy")
+        output = os.path.join(data_path / "test.spacy")
         apply(data_path, output, "blank:en", 1, 1)
 
 
@@ -917,6 +917,7 @@ def test_applycli_mixed():
         with open(data_path / "test.txt", "w") as ftest:
             ftest.write(text)
         apply(data_path, output, "blank:en", 1, 1)
+        # Check whether it worked
         result = list(DocBin().from_disk(output).get_docs(nlp.vocab))
         assert len(result) == 3
         for doc in result:
