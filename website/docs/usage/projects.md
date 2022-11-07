@@ -259,9 +259,9 @@ pipelines.
 > This can be used in a project command like so:
 >
 > ```yaml
->   - name: "echo-path"
->     script:
->       - "echo ${env.ENV_PATH}"
+> - name: 'echo-path'
+>   script:
+>     - 'echo ${env.ENV_PATH}'
 > ```
 
 | Section                                             | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
@@ -644,11 +644,11 @@ locally.
 You can list one or more remotes in the `remotes` section of your
 [`project.yml`](#project-yml) by mapping a string name to the URL of the
 storage. Under the hood, spaCy uses the
-[`smart-open`](https://github.com/RaRe-Technologies/smart_open) library to
+[`cloudpathlib`](https://github.com/drivendataorg/cloudpathlib/) library to
 communicate with the remote storages, so you can use any protocol that
-`smart-open` supports, including [S3](https://aws.amazon.com/s3/),
-[Google Cloud Storage](https://cloud.google.com/storage), SSH and more, although
-you may need to install extra dependencies to use certain protocols.
+`cloudpathlib` supports, including [S3](https://aws.amazon.com/s3/),
+[Google Cloud Storage](https://cloud.google.com/storage) and more, although you
+may need to install extra dependencies to use certain protocols.
 
 > #### Example
 >
