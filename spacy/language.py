@@ -1879,31 +1879,22 @@ class Language:
         if isinstance(exclude, str):
             exclude = [exclude]
 
-        def fetch_pipes_status(value: Iterable[str], key: str) -> Iterable[str]:
-            """Fetch value for `enable` or `disable` w.r.t. the specified config and passed arguments passed to
-            .load(). If both arguments and config specified values for this field, the passed arguments take precedence
-            and a warning is printed.
-            value (Iterable[str]): Passed value for `enable` or `disable`.
-            key (str): Key for field in config (either "enabled" or "disabled").
-            RETURN (Iterable[str]):
-            """
-            # We assume that no argument was passed if the value is the specified default value.
-            if id(value) == id(_DEFAULT_EMPTY_PIPES):
-                return config["nlp"].get(key, [])
-            else:
-                if len(config["nlp"].get(key, [])):
-                    warnings.warn(
-                        Warnings.W123.format(
-                            arg=key[:-1],
-                            arg_value=value,
-                            config_value=config["nlp"][key],
-                        )
+        # `enable` should not be merged with `enabled` (the opposite is true for `disable`/`disabled`). If the config
+        # specifies values for `enabled` not included in `enable`, emit warning.
+        if id(enable) != id(_DEFAULT_EMPTY_PIPES):
+            enabled = config["nlp"].get("enabled", [])
+            if len(enabled) and not set(enabled).issubset(enable):
+                warnings.warn(
+                    Warnings.W123.format(
+                        enable=enable,
+                        enabled=enabled,
                     )
-                return value
+                )
 
+        # Ensure sets of disabled/enabled pipe names are not contradictory.
         disabled_pipes = cls._resolve_component_status(
-            fetch_pipes_status(disable, "disabled"),
-            fetch_pipes_status(enable, "enabled"),
+            list({*disable, *config["nlp"].get("disabled", [])}),
+            enable,
             config["nlp"]["pipeline"],
         )
         nlp._disabled = set(p for p in disabled_pipes if p not in exclude)
@@ -2084,10 +2075,12 @@ class Language:
         if enable:
             if isinstance(enable, str):
                 enable = [enable]
-            to_disable = [
-                pipe_name for pipe_name in pipe_names if pipe_name not in enable
-            ]
-            if disable and disable != to_disable:
+            to_disable = {
+                *[pipe_name for pipe_name in pipe_names if pipe_name not in enable],
+                *disable,
+            }
+            # If any pipe to be enabled is in to_disable, the specification is inconsistent.
+            if len(set(enable) & to_disable):
                 raise ValueError(Errors.E1042.format(enable=enable, disable=disable))
 
         return tuple(to_disable)
