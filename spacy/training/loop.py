@@ -202,7 +202,7 @@ def train_while_improving(
     start_time = timer()
     for step, (epoch, batch) in enumerate(train_data):
         if before_update:
-            before_update_args = {"current_step": step}
+            before_update_args = {"step": step, "epoch": epoch}
             before_update(nlp, before_update_args)
         dropout = next(dropouts)  # type: ignore
         for subbatch in subdivide_batch(batch, accumulate_gradient):
