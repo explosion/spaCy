@@ -1,5 +1,6 @@
 import os
 import math
+import pkg_resources
 from random import sample
 from typing import Counter
 
@@ -25,6 +26,7 @@ from spacy.cli.download import get_compatibility, get_version
 from spacy.cli.init_config import RECOMMENDATIONS, init_config, fill_config
 from spacy.cli.package import get_third_party_dependencies
 from spacy.cli.package import _is_permitted_package_name
+from spacy.cli.project.run import _check_requirements
 from spacy.cli.validate import get_model_pkgs
 from spacy.lang.en import English
 from spacy.lang.nl import Dutch
@@ -855,3 +857,42 @@ def test_span_length_freq_dist_output_must_be_correct():
     span_freqs = _get_spans_length_freq_dist(sample_span_lengths, threshold)
     assert sum(span_freqs.values()) >= threshold
     assert list(span_freqs.keys()) == [3, 1, 4, 5, 2]
+
+
+@pytest.mark.parametrize(
+    "reqs,output",
+    [
+        [
+            """
+            spacy
+
+            # comment
+
+            thinc""",
+            (False, False),
+        ],
+        [
+            """# comment
+            --some-flag
+            spacy""",
+            (False, False),
+        ],
+        [
+            """# comment
+            --some-flag
+            spacy; python_version >= '3.6'""",
+            (False, False),
+        ],
+        [
+            """# comment
+             spacyunknowndoesnotexist12345""",
+            (True, False),
+        ],
+    ],
+)
+def test_project_check_requirements(reqs, output):
+    # excessive guard against unlikely package name
+    try:
+        pkg_resources.require("spacyunknowndoesnotexist12345")
+    except pkg_resources.DistributionNotFound:
+        assert output == _check_requirements([req.strip() for req in reqs.split("\n")])
