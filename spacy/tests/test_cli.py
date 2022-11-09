@@ -859,33 +859,40 @@ def test_span_length_freq_dist_output_must_be_correct():
     assert list(span_freqs.keys()) == [3, 1, 4, 5, 2]
 
 
-def test_project_check_requirements():
-    reqs = """
-    spacy
+@pytest.mark.parametrize(
+    "reqs,output",
+    [
+        [
+            """
+            spacy
 
-    # comment
+            # comment
 
-    thinc"""
-    output = _check_requirements([req.strip() for req in reqs.split("\n")])
-    assert output == (False, False)
-
-    reqs = """# comment
-    --some-flag
-    spacy"""
-    output = _check_requirements([req.strip() for req in reqs.split("\n")])
-    assert output == (False, False)
-
-    reqs = """# comment
-    --some-flag
-    spacy; python_version >= '3.6'"""
-    output = _check_requirements([req.strip() for req in reqs.split("\n")])
-    assert output == (False, False)
-
+            thinc""",
+            (False, False),
+        ],
+        [
+            """# comment
+            --some-flag
+            spacy""",
+            (False, False),
+        ],
+        [
+            """# comment
+            --some-flag
+            spacy; python_version >= '3.6'""",
+            (False, False),
+        ],
+        [
+            """# comment
+             spacyunknowndoesnotexist12345""",
+            (True, False),
+        ],
+    ],
+)
+def test_project_check_requirements(reqs, output):
     # excessive guard against unlikely package name
     try:
         pkg_resources.require("spacyunknowndoesnotexist12345")
     except pkg_resources.DistributionNotFound:
-        reqs = """# comment
-        spacyunknowndoesnotexist12345"""
-        output = _check_requirements([req.strip() for req in reqs.split("\n")])
-        assert output == (True, False)
+        assert output == _check_requirements([req.strip() for req in reqs.split("\n")])
