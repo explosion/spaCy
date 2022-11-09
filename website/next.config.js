@@ -1,7 +1,9 @@
+const withMDX = require("@next/mdx")();
+
 /** @type {import('next').NextConfig} */
-const nextConfig = {
+const nextConfig = withMDX({
   reactStrictMode: true,
   swcMinify: true,
-}
+});
 
-module.exports = nextConfig
+module.exports = nextConfig;
