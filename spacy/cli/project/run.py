@@ -344,9 +344,8 @@ def _check_requirements(requirements: List[str]) -> Tuple[bool, bool]:
             conflicting_pkgs_msgs.append(vc.report())
         except Exception:
             msg.warn(f"Unable to check requirement: {req} "
-                     "Check that the requirement is formatted according to PEP "
-                     "440, in particular that URLs are formatted as "
-                     "'package_name @ URL'")
+                     "Checks are currently limited to requirement specifiers "
+                     "(PEP 508)")
 
     if len(failed_pkgs_msgs) or len(conflicting_pkgs_msgs):
         msg.warn(
