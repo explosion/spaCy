@@ -32,9 +32,9 @@ cdef class KnowledgeBase:
 
     def get_candidates_all(self, mentions: Iterator[Iterable[Span]]) -> Iterator[Iterable[Iterable[Candidate]]]:
         """
-        Return candidate entities for specified texts. Each candidate defines the entity, the original alias,
+        Return candidate entities for specified mentions. Each candidate defines the entity, the original alias,
         and the prior probability of that alias resolving to that entity.
-        If no candidate is found for a given text, an empty list is returned.
+        If no candidate is found for a given mentions, an empty list is returned.
         mentions (Generator[Iterable[Span]]): Mentions per documents for which to get candidates.
         RETURNS (Generator[Iterable[Iterable[Candidate]]]): Identified candidates per document.
         """
