@@ -126,7 +126,7 @@ class Doc:
         blocked: Optional[List[Span]] = ...,
         missing: Optional[List[Span]] = ...,
         outside: Optional[List[Span]] = ...,
-        default: str = ...
+        default: str = ...,
     ) -> None: ...
     @property
     def noun_chunks(self) -> Iterator[Span]: ...
@@ -177,7 +177,7 @@ class Doc:
     def get_character_combination_hashes(
         self,
         *,
-        cs: bool, 
+        cs: bool,
         p_lengths: bytes,
         s_lengths: bytes,
         ps_search_chars: bytes,
@@ -187,6 +187,5 @@ class Doc:
         ss_width_offsets: bytes,
         ss_lengths: bytes,
     ) -> Ints2d: ...
-
     @staticmethod
     def _get_array_attrs() -> Tuple[Any]: ...
