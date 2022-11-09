@@ -253,7 +253,7 @@ def RichMultiHashEmbed(
     depending on the presence of some other letter before or after it, e.g. German
     plural nouns where the final two vowels are `ä-e` regularly correspond to
     singular lemmas where the `e` is no longer present and the `ä` has become `a`,
-    e.g. `die Bäche` (plural) vs `der Bach` (singular).
+    e.g. `die Bäche` (plural) vs. `der Bach` (singular).
 
     For most languages used with spaCy, searching is likely to be useful starting
     at the end (`suff_*`), but the ability to search from the beginning (`pref_*`)
