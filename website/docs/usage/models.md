@@ -83,9 +83,9 @@ import Languages from 'widgets/languages.js'
 
 spaCy also supports pipelines trained on more than one language. This is
 especially useful for named entity recognition. The language ID used for
-multi-language or language-neutral pipelines is `xx`. The language class, a
+multi-language or language-neutral pipelines is `mul`. The language class, a
 generic subclass containing only the base language data, can be found in
-[`lang/xx`](%%GITHUB_SPACY/spacy/lang/xx).
+[`lang/mul`](%%GITHUB_SPACY/spacy/lang/mul).
 
 To train a pipeline using the neutral multi-language class, you can set
 `lang = "mul"` in your [training config](/usage/training#config). You can also
