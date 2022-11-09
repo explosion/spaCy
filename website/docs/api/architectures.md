@@ -205,11 +205,13 @@ characters in each word are examined in order starting at the beginning or at
 the end; and each character that matches one of the search characters is added,
 in order, to the string to be used as a feature. The search continues until
 either the search result string is full or the whole word has been examined.
-This is useful because many languages exhibit morphological alternations where
+This is useful because some languages exhibit morphological alternations where
 one letter or letters regularly alternate with another letter or letters
 depending on the presence of some other letter before or after it, e.g. German
 plural nouns where the final two vowels are `ä-e` regularly correspond to
-singular lemmas where the `e` is no longer present and the `ä` has become `a`.
+singular lemmas where the `e` is no longer present and the `ä` has become `a`,
+e.g. `die Bäche` (plural) vs. `der Bach` (singular).
+
 For most languages used with spaCy, searching is likely to be useful starting at
 the end (`suff_*`), but the ability to search from the beginning (`pref_*`) is
 also offered for completeness. Search characters should consist of all
@@ -224,7 +226,7 @@ than one UTF-8 character, e.g. _i_ when representing the lower-case form of the
 Turkish letter _İ_. Such situations are supported, but the lengths of prefixes,
 suffixes and character search results may need to be increased accordingly.
 
-All lengths must be specified in ascending order.
+All arrays specifying lengths must be in ascending order.
 
 | Name                     | Description                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -235,7 +237,7 @@ All lengths must be specified in ascending order.
 | `case_sensitive`         | Whether lower-case and upper-case letters should be distinguished when generating the character combinations to use as features. ~~bool~~                                                                                                                                                                                                                                                                                                          |
 | `pref_lengths`           | The lengths of prefixes to use as features for each word, e.g. for the word `spaCy`: `[1, 3]` would lead to `s` and `spa` being used as features. ~~Optional[List[int]~~                                                                                                                                                                                                                                                                           |
 | `pref_rows`              | The number of rows for each of `pref_lengths`. ~~Optional[List[int]~~                                                                                                                                                                                                                                                                                                                                                                              |
-| `suff_lengths`           | The lengths of suffixes to use as features for each word, e.g. for the word `spaCy`: `[1, 3]` would lead to `y` and `aCy` being used as features. ~~Optional[List[int]~~                                                                                                                                                                                                                                                                           |
+| `suff_lengths`           | The lengths of suffixes to use as features for each word, e.g. for the word `spaCy`: `[1, 3]` would lead to `y` and `yCa` being used as features. ~~Optional[List[int]~~                                                                                                                                                                                                                                                                           |
 | `suff_rows`              | The number of rows for each of `suff_lengths`. ~~Optional[List[int]~~                                                                                                                                                                                                                                                                                                                                                                              |
 | `pref_search_chars`      | A string containing characters to search for starting from the beginning of each word. ~~Optional[str]~~                                                                                                                                                                                                                                                                                                                                           |
 | `pref_search_lengths`    | The lengths of search result strings to use as features, where the searches start from the beginning of each word. ~~Optional[List[int]]~~                                                                                                                                                                                                                                                                                                         |

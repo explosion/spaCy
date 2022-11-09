@@ -6,8 +6,6 @@ from ..structs cimport TokenC, LexemeC, SpanC
 from ..typedefs cimport attr_t
 from ..attrs cimport attr_id_t
 
-from libc.stdint cimport uint32_t
-
 
 cdef attr_t get_token_attr(const TokenC* token, attr_id_t feat_name) nogil
 cdef attr_t get_token_attr_for_matcher(const TokenC* token, attr_id_t feat_name) nogil    
@@ -19,10 +17,6 @@ ctypedef fused LexemeOrToken:
     const_Lexeme_ptr
     const_TokenC_ptr
 
-
-cdef extern from "unicodeobject.h":
-    bint Py_UNICODE_ISUPPER(Py_UCS4 ch)
-    Py_UCS4 Py_UNICODE_TOLOWER(Py_UCS4 ch)
 
 
 cdef int set_children_from_heads(TokenC* tokens, int start, int end) except -1

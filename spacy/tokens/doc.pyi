@@ -1,7 +1,7 @@
 from typing import Callable, Protocol, Iterable, Iterator, Optional
 from typing import Union, Tuple, List, Dict, Any, overload
 from cymem.cymem import Pool
-from thinc.types import Floats1d, Floats2d, Ints1d, Ints2d
+from thinc.types import Floats1d, Floats2d, Ints2d
 from .span import Span
 from .token import Token
 from ._dict_proxies import SpanGroups
@@ -126,7 +126,7 @@ class Doc:
         blocked: Optional[List[Span]] = ...,
         missing: Optional[List[Span]] = ...,
         outside: Optional[List[Span]] = ...,
-        default: str = ...,
+        default: str = ...
     ) -> None: ...
     @property
     def noun_chunks(self) -> Iterator[Span]: ...
@@ -190,6 +190,3 @@ class Doc:
 
     @staticmethod
     def _get_array_attrs() -> Tuple[Any]: ...
-
-def get_fnv1a_hash(input: bytes) -> int: ...
-

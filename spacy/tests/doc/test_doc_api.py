@@ -16,7 +16,6 @@ from spacy.lang.xx import MultiLanguage
 from spacy.language import Language
 from spacy.lexeme import Lexeme
 from spacy.tokens import Doc, Span, SpanGroup, Token
-from spacy.tokens.doc import get_fnv1a_hash
 from spacy.util import get_search_char_byte_arrays
 from spacy.vocab import Vocab
 
@@ -998,18 +997,32 @@ def test_doc_spans_setdefault(en_tokenizer):
 
 
 EMPTY_HASH_VALUE = 0xCBF29CE484222325
+FNV1A_OFFSET_BASIS = 0xCBF29CE484222325
+FNV1A_PRIME = 0x00000100000001B3
+
+
+def _get_fnv1a_hash(input: bytes) -> int:
+    hash_val = FNV1A_OFFSET_BASIS
+    length = len(input)
+    offset = 0
+
+    while offset < length:
+        hash_val ^= input[offset]
+        hash_val *= FNV1A_PRIME
+        hash_val %= 2**64
+        offset += 1
+    return hash_val
 
 
 def test_fnv1a_hash():
     """Checks the conformity of the 64-bit FNV1A implementation with
     http://www.isthe.com/chongo/src/fnv/test_fnv.c.
-    The method called here is only used in testing; in production
-    code, the hashing is performed in a fashion that is interweaved
-    with other logic. The conformity of the production code is
-    demonstrated by the character combination hash tests, where
-    hashes produced by the production code are tested for equality
-    against hashes produced by the test code.
-    s"""
+    The method called here, _get_fnv1a_hash(), is only used in testing; 
+    in production code, the hashing is performed in a fashion that is interweaved
+    with other logic. The conformity of the production code is demonstrated by the 
+    character combination hash tests, where hashes produced by the production code 
+    are tested for equality against hashes produced by _get_fnv1a_hash().
+    """
     INPUTS = [
         b"",
         b"a",
@@ -1424,14 +1437,14 @@ def test_fnv1a_hash():
 
     assert len(INPUTS) == len(OUTPUTS)
     for i in range(len(INPUTS)):
-        assert get_fnv1a_hash(INPUTS[i]) == OUTPUTS[i]
+        assert _get_fnv1a_hash(INPUTS[i]) == OUTPUTS[i]
 
 
 def _encode_and_hash(input: str, *, reverse: bool = False) -> int:
     encoded_input = input.encode("UTF-8")
     if reverse:
         encoded_input = encoded_input[::-1]
-    return get_fnv1a_hash(encoded_input)
+    return _get_fnv1a_hash(encoded_input)
 
 
 @pytest.mark.parametrize("case_sensitive", [True, False])
@@ -1566,7 +1579,7 @@ def test_get_character_combination_hashes_good_case_partial(en_tokenizer):
     assert hashes[3][4] == _encode_and_hash("pr")
 
 
-def test_get_character_combination_hashes_copying_in_middle(en_tokenizer):
+def test_get_character_combination_hashes_various_lengths(en_tokenizer):
     doc = en_tokenizer("sp𐌞Cé")
 
     for p_length in range(1, 8):

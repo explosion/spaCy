@@ -248,11 +248,13 @@ def RichMultiHashEmbed(
     the end; and each character that matches one of the search characters is added,
     in order, to the string to be used as a feature. The search continues until
     either the search result string is full or the whole word has been examined.
-    This is useful because many languages exhibit morphological alternations where
+    This is useful because some languages exhibit morphological alternations where
     one letter or letters regularly alternate with another letter or letters
     depending on the presence of some other letter before or after it, e.g. German
     plural nouns where the final two vowels are `ä-e` regularly correspond to
-    singular lemmas where the `e` is no longer present and the `ä` has become `a`.
+    singular lemmas where the `e` is no longer present and the `ä` has become `a`,
+    e.g. `die Bäche` (plural) vs `der Bach` (singular).
+
     For most languages used with spaCy, searching is likely to be useful starting
     at the end (`suff_*`), but the ability to search from the beginning (`pref_*`)
     is also offered for completeness. Search characters should consist of all
@@ -268,7 +270,7 @@ def RichMultiHashEmbed(
     prefixes, suffixes and character search results may need to be increased
     accordingly.
 
-    All lengths must be specified in ascending order.
+    All arrays specifying lengths must be in ascending order.
 
     width (int): The output width. Also used as the width of the embedding tables.
         Recommended values are between 64 and 300.
@@ -286,7 +288,7 @@ def RichMultiHashEmbed(
     pref_rows (Optional[List[int]]): The number of rows for each of `pref_lengths`.
     suff_lengths (Optional[List[int]]): The lengths of suffixes to use as features
         for each word, e.g. for the word `spaCy`:
-        `[1, 3]` would lead to `y` and `aCy` being used as features.
+        `[1, 3]` would lead to `y` and `yCa` being used as features.
     suff_rows (Optional[List[int]]): The number of rows for each of `suff_lengths`.
     pref_search_chars (Optional[str]): A string containing characters to search for
         starting from the beginning of each word.

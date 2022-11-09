@@ -1,11 +1,8 @@
 from typing import List, Optional, Callable, Tuple
-from spacy.util import get_search_char_byte_arrays
-
-# from ..util import get_arrays_for_search_chars
 from thinc.types import Ints2d
 from thinc.api import Model, registry, get_current_ops
-
 from ..tokens import Doc
+from ..util import get_search_char_byte_arrays
 
 
 @registry.layers("spacy.RichFeatureExtractor.v1")
@@ -21,13 +18,17 @@ def RichFeatureExtractor(
 ) -> Model[List[Doc], List[Ints2d]]:
     ops = get_current_ops()
     if pref_search_chars is not None:
-        ps_search_chars, ps_width_offsets = get_search_char_byte_arrays(pref_search_chars, case_sensitive)
+        ps_search_chars, ps_width_offsets = get_search_char_byte_arrays(
+            pref_search_chars, case_sensitive
+        )
     else:
         ps_search_chars = bytes()
         ps_width_offsets = bytes()
     if suff_search_chars is not None:
-        
-        ss_search_chars, ss_width_offsets = get_search_char_byte_arrays(suff_search_chars, case_sensitive)
+
+        ss_search_chars, ss_width_offsets = get_search_char_byte_arrays(
+            suff_search_chars, case_sensitive
+        )
     else:
         ss_search_chars = bytes()
         ss_width_offsets = bytes()
@@ -36,12 +37,8 @@ def RichFeatureExtractor(
         forward,
         attrs={
             "case_sensitive": case_sensitive,
-            "p_lengths": bytes(pref_lengths)
-            if pref_lengths is not None
-            else bytes(),
-            "s_lengths": bytes(suff_lengths)
-            if suff_lengths is not None
-            else bytes(),
+            "p_lengths": bytes(pref_lengths) if pref_lengths is not None else bytes(),
+            "s_lengths": bytes(suff_lengths) if suff_lengths is not None else bytes(),
             "ps_search_chars": ps_search_chars,
             "ps_width_offsets": ps_width_offsets,
             "ps_lengths": bytes(pref_search_lengths)

@@ -3,7 +3,6 @@ from typing import Set, List
 
 cimport cython
 cimport numpy as np
-from cpython cimport array
 from libc.string cimport memcpy, memcmp, memset, strlen
 from libc.math cimport sqrt
 from libc.stdint cimport int32_t, uint64_t
@@ -955,7 +954,7 @@ cdef class Doc:
         cdef int i, j
         cdef attr_id_t feature
         cdef np.ndarray[attr_t, ndim=2] output
-        # Handle scalar/list inputs of cdef np.strings/ints for py_attr_ids
+        # Handle scalar/list inputs of strings/ints for py_attr_ids
         # See also #3064
         if isinstance(py_attr_ids, str):
             # Handle inputs like doc.to_array('ORTH')
@@ -1780,7 +1779,7 @@ cdef class Doc:
     
         Many of the buffers passed into and used by this method contain single-byte numerical values. This takes advantage of 
         the fact that we are hashing short affixes and searching for small groups of characters. The calling code is responsible
-        for ensuring that lengths being passed in cannot exceed 63 and hence that resulting values with a maximum of four-byte 
+        for ensuring that lengths being passed in cannot exceed 63 and hence that resulting values with maximally four-byte 
         character widths can never exceed 255.
 
         Note that this method performs no data validation itself as it expects the calling code will already have done so, and
@@ -2117,7 +2116,7 @@ cdef void _search_for_chars(
         suffs_not_prefs: if *True*, searching starts from the end of the word; 
             if *False*, from the beginning.
         res_buf: the buffer in which to place the search results.
-        l_buf: a buffer of length *max_res_l* in which to store the byte lengths.
+        l_buf: a buffer of length *max_res_l* in which to store the end byte offsets of the found characters.
             The calling code ensures that lengths greater than 255 cannot occur. 
     """
     cdef int res_buf_idx = 0, l_buf_idx = 0, ch_wdth, tok_start_idx, search_char_idx, end_search_idx
@@ -2162,17 +2161,6 @@ cdef void _search_for_chars(
 cdef uint64_t FNV1A_OFFSET_BASIS = 0xcbf29ce484222325
 cdef uint64_t FNV1A_PRIME = 0x00000100000001B3
 
-def get_fnv1a_hash(input: bytes):
-    """ Python-callable method to facilitate testing. """
-    cdef uint64_t hash_val = FNV1A_OFFSET_BASIS
-    cdef int length = len(input), offset = 0
-
-    while offset < length:
-        hash_val ^= input[offset]
-        hash_val *= FNV1A_PRIME
-        offset += 1
-    return hash_val
-    
 
 @cython.boundscheck(False)  # Deactivate bounds checking
 cdef int _write_hashes(

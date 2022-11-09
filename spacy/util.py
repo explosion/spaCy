@@ -1741,14 +1741,15 @@ def get_search_char_byte_arrays(
     search_char_string: str, case_sensitive: bool
 ) -> Tuple[bytes, bytes]:
     """
-    This function supports the rich feature extractor. It orders the characters in
-    *search_char_string*, removing any duplicates, encodes them with UTF-8, and
-    returns the result together with a byte array containing the offsets where the
-    characters of various byte lengths start within the result, i.e.
+    This function supports *RichMultiHashEmbed*. It orders the characters in
+    *search_char_string*, removing any duplicates, encodes them as UTF-8, and
+    returns the result bufer together with a byte array containing the offsets
+    where the characters of various byte lengths start within the result buffer,
+    i.e.
 
     <1-byte-start>, <2-byte-start>, <3-byte-start>, <4-byte-start>, <4-byte-end>.
 
-    If the string does not contain any characters of length *n*,
+    If the result buffer does not contain any characters of length *n*,
     <n_byte_start> == <n+1_byte_start>.
     """
 
