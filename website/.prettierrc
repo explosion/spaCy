@@ -1,0 +1,37 @@
+{
+    "semi": false,
+    "singleQuote": true,
+    "trailingComma": "es5",
+    "tabWidth": 4,
+    "printWidth": 100,
+    "overrides": [
+        {
+            "files": "*.sass",
+            "options": {
+                "printWidth": 999
+            }
+        },
+        {
+            "files": "*.mdx",
+            "options": {
+                "tabWidth": 2,
+                "printWidth": 80,
+                "proseWrap": "always"
+            }
+        },
+        {
+            "files": ["package.json", "package-lock.json"],
+            "options": {
+                "tabWidth": 4,
+                "printWidth": 80,
+                "proseWrap": "always"
+            }
+        },
+        {
+            "files": "*.html",
+            "options": {
+                "htmlWhitespaceSensitivity": "strict"
+            }
+        }
+    ]
+}
