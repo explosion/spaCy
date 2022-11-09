@@ -1,0 +1,127 @@
+# spaCy
+spacy/data/
+corpora/
+/models/
+keys/
+*.json.gz
+
+# Tests
+spacy/tests/package/setup.cfg
+spacy/tests/package/pyproject.toml
+spacy/tests/package/requirements.txt
+
+# Website
+website/.cache/
+website/public/
+website/node_modules
+website/.npm
+website/logs
+*.log
+npm-debug.log*
+quickstart-training-generator.js
+
+# Cython / C extensions
+cythonize.json
+spacy/*.html
+*.cpp
+*.c
+*.so
+
+# Vim / VSCode / editors
+*.swp
+*.sw*
+Profile.prof
+.vscode
+.sass-cache
+
+# Python
+.Python
+.python-version
+__pycache__/
+.pytest_cache
+*.py[cod]
+.env/
+.env*
+.~env/
+.venv
+env3.6/
+venv/
+env3.*/
+.dev
+.denv
+.pypyenv
+.pytest_cache/
+.mypy_cache/
+.hypothesis/
+
+# Distribution / packaging
+env/
+build/
+develop-eggs/
+dist/
+eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheelhouse/
+*.egg-info/
+pip-wheel-metadata/
+Pipfile.lock
+.installed.cfg
+*.egg
+.eggs
+MANIFEST
+spacy/git_info.py
+
+# Temporary files
+*.~*
+tmp/
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.cache
+nosetests.xml
+coverage.xml
+
+# Translations
+*.mo
+
+# Mr Developer
+.mr.developer.cfg
+.project
+.pydevproject
+
+# Rope
+.ropeproject
+
+# Django stuff:
+*.log
+*.pot
+
+# Windows
+*.bat
+Thumbs.db
+Desktop.ini
+
+# Mac OS X
+*.DS_Store
+
+# Komodo project files
+*.komodoproject
+
+# Other
+*.tgz
+
+# Pycharm project files
+*.idea
+
+# IPython
+.ipynb_checkpoints/
