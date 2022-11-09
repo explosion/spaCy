@@ -34,7 +34,7 @@ cdef class KnowledgeBase:
         """
         Return candidate entities for specified mentions. Each candidate defines the entity, the original alias,
         and the prior probability of that alias resolving to that entity.
-        If no candidate is found for a given mentions, an empty list is returned.
+        If no candidate is found for a given mention, an empty list is returned.
         mentions (Generator[Iterable[Span]]): Mentions per documents for which to get candidates.
         RETURNS (Generator[Iterable[Iterable[Candidate]]]): Identified candidates per document.
         """
