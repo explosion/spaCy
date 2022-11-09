@@ -74,11 +74,11 @@ import Languages from 'widgets/languages.js'
 
 > ```python
 > # Standard import
-> from spacy.lang.xx import MultiLanguage
+> from spacy.lang.mul import MultiLanguage
 > nlp = MultiLanguage()
 >
 > # With lazy-loading
-> nlp = spacy.blank("xx")
+> nlp = spacy.blank("mul")
 > ```
 
 spaCy also supports pipelines trained on more than one language. This is
@@ -88,9 +88,9 @@ generic subclass containing only the base language data, can be found in
 [`lang/xx`](%%GITHUB_SPACY/spacy/lang/xx).
 
 To train a pipeline using the neutral multi-language class, you can set
-`lang = "xx"` in your [training config](/usage/training#config). You can also
+`lang = "mul"` in your [training config](/usage/training#config). You can also
 import the `MultiLanguage` class directly, or call
-[`spacy.blank("xx")`](/api/top-level#spacy.blank) for lazy-loading.
+[`spacy.blank("mul")`](/api/top-level#spacy.blank) for lazy-loading.
 
 ### Chinese language support {#chinese new="2.3"}
 

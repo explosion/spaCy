@@ -207,7 +207,7 @@
             "has_examples": true
         },
         {
-            "code": "is",
+            "code": "isl",
             "name": "Icelandic"
         },
         {
@@ -530,7 +530,7 @@
             ]
         },
         {
-            "code": "xx",
+            "code": "mul",
             "name": "Multi-language",
             "models": [
                 "xx_ent_wiki_sm",

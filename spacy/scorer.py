@@ -104,7 +104,7 @@ class Scorer:
     def __init__(
         self,
         nlp: Optional["Language"] = None,
-        default_lang: str = "xx",
+        default_lang: str = "mul",
         default_pipeline: Iterable[str] = DEFAULT_PIPELINE,
         **cfg,
     ) -> None:
