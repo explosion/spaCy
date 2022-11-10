@@ -33,11 +33,11 @@ export function github(filepath, branch = DEFAULT_BRANCH) {
 /**
  * Get the source of a file in the documentation based on its slug
  * @param {string} slug - The slug, e.g. /api/doc.
- * @param {boolean} [isIndex] - Whether the page is an index, e.g. /api/index.md
+ * @param {boolean} [isIndex] - Whether the page is an index, e.g. /api/index.mdx
  * @param {string} [branch] - Optional branch on GitHub. Defaults to master.
  */
 export function getCurrentSource(slug, isIndex = false, branch = DEFAULT_BRANCH) {
-    const ext = isIndex ? '/index.md' : '.md'
+    const ext = isIndex ? '/index.mdx' : '.mdx'
     return github(`website/docs${slug}${ext}`, branch)
 }
 
