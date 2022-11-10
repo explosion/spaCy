@@ -317,23 +317,17 @@ cdef class StringStore:
         return value
 
     @cython.boundscheck(False)  # Deactivate bounds checking
-    cdef const unsigned char* utf8_ptr(self, const attr_t hash_val):
-        if hash_val == 0:
-            return b""
-        elif hash_val < len(SYMBOLS_BY_INT):
-            return SYMBOLS_BY_INT[hash_val].encode("utf-8")
+    cdef (const unsigned char*, int) utf8_ptr(self, const attr_t hash_val):
+        # Returns a pointer to the UTF-8 string together with its length in bytes.
+        # This method presumes the calling code has already checked that *hash_val*
+        # is not 0 and does not refer to a member of *SYMBOLS_BY_INT*.
         cdef Utf8Str* string = <Utf8Str*>self._map.get(hash_val)
         if string.s[0] < sizeof(string.s) and string.s[0] != 0:
-            return string.s[1:string.s[0]+1]
-        elif string.p[0] < 255:
-            return string.p[1:string.p[0]+1]
-        cdef int i, length
-        i = 0
-        length = 0
+            return &string.s[1], string.s[0]
+        cdef length=0, i=0
         while string.p[i] == 255:
             i += 1
             length += 255
         length += string.p[i]
-        i += 1
-        return string.p[i:length + i]
+        return &string.p[i + 1], length
         

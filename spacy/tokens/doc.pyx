@@ -21,6 +21,7 @@ from .span cimport Span
 from .token cimport MISSING_DEP
 from ._dict_proxies import SpanGroups
 from .token cimport Token
+from ..symbols import NAMES as SYMBOLS_BY_INT
 from ..lexeme cimport Lexeme, EMPTY_LEXEME
 from ..typedefs cimport attr_t, flags_t
 from ..attrs cimport attr_id_t
@@ -1820,17 +1821,25 @@ cdef class Doc:
          
         # Define working variables
         cdef TokenC tok_c
-        cdef int tok_i, tok_str_l
+        cdef int tok_i, tok_str_l, working_store_i
         cdef attr_t num_tok_attr
+        cdef bytes tok_str_bytes
         cdef const unsigned char* tok_str
         cdef np.uint64_t* w_hashes_ptr = hashes_ptr
         
         for tok_i in range(doc_l):
             tok_c = self.c[tok_i]
             num_tok_attr = tok_c.lex.orth if cs else tok_c.lex.lower
-            tok_str = self.vocab.strings.utf8_ptr(num_tok_attr)
-            tok_str_l = strlen(<char*> tok_str)
-            
+            if num_tok_attr < len(SYMBOLS_BY_INT): # hardly ever happens
+                if num_tok_attr == 0:
+                    tok_str_bytes = b""
+                else:
+                    tok_str_bytes = SYMBOLS_BY_INT[num_tok_attr].encode("UTF-8")
+                tok_str = tok_str_bytes
+                tok_str_l = len(tok_str_bytes)
+            else:
+                tok_str, tok_str_l = self.vocab.strings.utf8_ptr(num_tok_attr)
+
             if p_max_l > 0:
                 _set_prefix_lengths(tok_str, tok_str_l, p_max_l, pref_l_buf)
                 w_hashes_ptr += _write_hashes(tok_str, p_lengths, pref_l_buf, 0, w_hashes_ptr)
@@ -2055,13 +2064,13 @@ cdef void _set_prefix_lengths(
     cdef int tok_str_idx = 1, pref_l_buf_idx = 0
 
     while pref_l_buf_idx < p_max_l:
-        if (tok_str[tok_str_idx] == 0 # end of string 
+        if (tok_str_idx >= tok_str_l 
             or 
             ((tok_str[tok_str_idx] & 0xc0) != 0x80)  # not a continuation character
         ):
             pref_l_buf[pref_l_buf_idx] = tok_str_idx
             pref_l_buf_idx += 1
-        if tok_str[tok_str_idx] == 0: # end of string
+        if tok_str_idx >= tok_str_l:
             break
         tok_str_idx += 1
 

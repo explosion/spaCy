@@ -27,4 +27,4 @@ cdef class StringStore:
 
     cdef const Utf8Str* intern_unicode(self, str py_string)
     cdef const Utf8Str* _intern_utf8(self, char* utf8_string, int length, hash_t* precalculated_hash)
-    cdef const unsigned char* utf8_ptr(self, attr_t hash_val)
+    cdef (const unsigned char*, int) utf8_ptr(self, const attr_t hash_val)
