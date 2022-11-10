@@ -43,7 +43,7 @@ class InitValues:
 def init_config_cli(
     # fmt: off
     output_file: Path = Arg(..., help="File to save the config to or - for stdout (will only output config and no additional logging info)", allow_dash=True),
-    lang: str = Opt(InitValues.lang, "--lang", "-l", help="Two-letter code of the language to use"),
+    lang: str = Opt(InitValues.lang, "--lang", "-l", help="Code of the language to use"),
     pipeline: str = Opt(",".join(InitValues.pipeline), "--pipeline", "-p", help="Comma-separated names of trainable pipeline components to include (without 'tok2vec' or 'transformer')"),
     optimize: Optimizations = Opt(InitValues.optimize, "--optimize", "-o", help="Whether to optimize for efficiency (faster inference, smaller model, lower memory consumption) or higher accuracy (potentially larger and slower model). This will impact the choice of architecture, pretrained weights and related hyperparameters."),
     gpu: bool = Opt(InitValues.gpu, "--gpu", "-G", help="Whether the model can run on GPU. This will impact the choice of architecture, pretrained weights and related hyperparameters."),
@@ -67,6 +67,7 @@ def init_config_cli(
             "The provided output file already exists. To force overwriting the config file, set the --force or -F flag.",
             exits=1,
         )
+    lang = util.find_matching_language(lang)
     config = init_config(
         lang=lang,
         pipeline=pipeline,

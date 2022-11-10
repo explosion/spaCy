@@ -214,6 +214,8 @@ class Warnings(metaclass=ErrorsWithCodes):
             "is a Cython extension type.")
     W123 = ("Argument {arg} with value {arg_value} is used instead of {config_value} as specified in the config. Be "
             "aware that this might affect other components in your pipeline.")
+# New warnings added in v4.x
+    W124 = ("Language code {lang} has been renamed to {renamed_lang} in spaCy v4")
 
 
 class Errors(metaclass=ErrorsWithCodes):

@@ -19,6 +19,7 @@ from catalogue import RegistryError, Registry
 import langcodes
 import sys
 import warnings
+from .errors import Warnings
 from packaging.specifiers import SpecifierSet, InvalidSpecifier
 from packaging.version import Version, InvalidVersion
 from packaging.requirements import Requirement
@@ -282,6 +283,7 @@ def find_matching_language(lang: str) -> Optional[str]:
     import spacy.lang  # noqa: F401
 
     if lang == "xx":
+        warnings.warn(Warnings.W124.format(lang=lang, renamed_lang="mul"))
         return "mul"
 
     # Find out which language modules we have
