@@ -1821,7 +1821,7 @@ cdef class Doc:
          
         # Define working variables
         cdef TokenC tok_c
-        cdef int tok_i, tok_str_l, working_store_i
+        cdef int tok_i, tok_str_l
         cdef attr_t num_tok_attr
         cdef bytes tok_str_bytes
         cdef const unsigned char* tok_str
