@@ -28,7 +28,7 @@ import projectsImage from '../../docs/images/projects.png'
 import tailoredPipelinesImage from '../../docs/images/spacy-tailored-pipelines_wide.png'
 import { nightly, legacy } from '../../meta/dynamicMeta'
 
-import Benchmarks from 'usage/_benchmarks-models.md'
+import Benchmarks from '../../docs/usage/_benchmarks-models.mdx'
 
 function getCodeExample(nightly) {
     return `# pip install -U ${nightly ? 'spacy-nightly --pre' : 'spacy'}
