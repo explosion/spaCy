@@ -543,7 +543,6 @@ def test_spacy_blank():
     assert nlp.config["training"]["dropout"] == 0.2
     assert nlp.meta["name"] == "my_custom_model"
 
-@pytest.mark.filterwarnings("ignore:\\[W124")
 @pytest.mark.parametrize(
     "lang,target",
     [
@@ -567,9 +566,12 @@ def test_language_matching(lang, target):
     Test that we can look up languages by equivalent or nearly-equivalent
     language codes.
     """
-    assert find_matching_language(lang) == target
+    if target is None:
+        assert find_matching_language(lang) == target
+    else:
+        with pytest.warns(UserWarning):
+            assert find_matching_language(lang) == target
 
-@pytest.mark.filterwarnings("ignore:\\[W124")
 @pytest.mark.parametrize(
     "lang,target",
     [
@@ -580,7 +582,6 @@ def test_language_matching(lang, target):
         ("mo", "ro"),
         ("is", "isl"),
         ("xx", "mul"),
-        ("mul", "mul"),
         ("no", "nb"),
         ("pt-BR", "pt"),
         ("zh-Hans", "zh"),
@@ -591,8 +592,13 @@ def test_blank_languages(lang, target):
     Test that we can get spacy.blank in various languages, including codes
     that are defined to be equivalent or that match by CLDR language matching.
     """
-    nlp = spacy.blank(lang)
-    assert nlp.lang == target
+    if lang == "en":
+        nlp = spacy.blank(lang)
+        assert nlp.lang == target
+    else:
+        with pytest.warns(UserWarning):
+            nlp = spacy.blank(lang)
+            assert nlp.lang == target
 
 
 @pytest.mark.parametrize("value", [False, None, ["x", "y"], Language, Vocab])
