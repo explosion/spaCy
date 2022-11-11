@@ -957,6 +957,9 @@ class Errors(metaclass=ErrorsWithCodes):
     E4000 = ("Expected a Doc as input, but got: '{type}'")
     E4001 = ("Expected input to be one of the following types: ({expected_types}), "
              "but got '{received_type}'")
+    E4002 = ("Language code defined in config ({bad_lang_code}) does not match "
+            "language code of current Language subclass {lang} ({lang_code}) because it was renamed in v4. "
+            "Please change your current defined language code from ({bad_lang_code}) to ({lang_code}).")
 
 
 # Deprecated model shortcuts, only used in errors and warnings
