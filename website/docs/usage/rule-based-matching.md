@@ -1792,7 +1792,7 @@ the entity `Span` – for example `._.orgs` or `._.prev_orgs` and
 > [`Doc.retokenize`](/api/doc#retokenize) context manager:
 >
 > ```python
-> with doc.retokenize() as retokenize:
+> with doc.retokenize() as retokenizer:
 >   for ent in doc.ents:
 >       retokenizer.merge(ent)
 > ```

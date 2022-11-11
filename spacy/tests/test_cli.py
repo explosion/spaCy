@@ -1,6 +1,8 @@
 import os
 import math
-from typing import Counter, Tuple, List, Dict, Any
+from collections import Counter
+from typing import Tuple, List, Dict, Any
+import pkg_resources
 
 import numpy
 import pytest
@@ -25,6 +27,7 @@ from spacy.cli.download import get_compatibility, get_version
 from spacy.cli.init_config import RECOMMENDATIONS, init_config, fill_config
 from spacy.cli.package import get_third_party_dependencies
 from spacy.cli.package import _is_permitted_package_name
+from spacy.cli.project.run import _check_requirements
 from spacy.cli.validate import get_model_pkgs
 from spacy.cli.find_threshold import find_threshold
 from spacy.lang.en import English
@@ -973,3 +976,42 @@ def test_cli_find_threshold(capsys):
                     silent=True,
                 )
             assert error.value.code == 1
+
+
+@pytest.mark.parametrize(
+    "reqs,output",
+    [
+        [
+            """
+            spacy
+
+            # comment
+
+            thinc""",
+            (False, False),
+        ],
+        [
+            """# comment
+            --some-flag
+            spacy""",
+            (False, False),
+        ],
+        [
+            """# comment
+            --some-flag
+            spacy; python_version >= '3.6'""",
+            (False, False),
+        ],
+        [
+            """# comment
+             spacyunknowndoesnotexist12345""",
+            (True, False),
+        ],
+    ],
+)
+def test_project_check_requirements(reqs, output):
+    # excessive guard against unlikely package name
+    try:
+        pkg_resources.require("spacyunknowndoesnotexist12345")
+    except pkg_resources.DistributionNotFound:
+        assert output == _check_requirements([req.strip() for req in reqs.split("\n")])
