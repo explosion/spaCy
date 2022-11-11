@@ -543,7 +543,7 @@ def test_spacy_blank():
     assert nlp.config["training"]["dropout"] == 0.2
     assert nlp.meta["name"] == "my_custom_model"
 
-
+@pytest.mark.filterwarnings("ignore:\\[W124")
 @pytest.mark.parametrize(
     "lang,target",
     [
