@@ -990,3 +990,10 @@ def test_doc_spans_setdefault(en_tokenizer):
     assert len(doc.spans["key2"]) == 1
     doc.spans.setdefault("key3", default=SpanGroup(doc, spans=[doc[0:1], doc[1:2]]))
     assert len(doc.spans["key3"]) == 2
+
+def test_doc_from_disk_v3():
+    """Test if docs created in v3.x work with '.from_disk' without throwing errors. This doc includes the sentiment attribute which is removed in v4"""
+    doc = Doc(Vocab()).from_disk("./data/doc_sentiment_v3.4.2")
+    assert doc.text == "This is a happy sentence."
+    with pytest.raises(AttributeError):
+        doc.sentiment == 1.0
