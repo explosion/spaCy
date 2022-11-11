@@ -1815,9 +1815,10 @@ cdef class Doc:
         cdef unsigned char* ps_l_buf = <unsigned char*> mem.alloc(ps_max_l, 1)
         cdef unsigned char* ss_res_buf = <unsigned char*> mem.alloc(ss_max_l, 4)
         cdef unsigned char* ss_l_buf = <unsigned char*> mem.alloc(ss_max_l, 1)
-        cdef int doc_l = self.length, total_hashes = doc_l * hashes_per_tok 
-        cdef np.uint64_t* hashes_ptr = <np.uint64_t*> mem.alloc(
-            total_hashes, sizeof(np.uint64_t))
+        cdef int doc_l = self.length
+        cdef np.ndarray[np.uint64_t, ndim=2] hashes = numpy.empty(
+            (doc_l, hashes_per_tok), dtype="uint64")
+        cdef np.uint64_t* hashes_ptr = <np.uint64_t*> hashes.data
          
         # Define working variables
         cdef TokenC tok_c
@@ -1825,7 +1826,6 @@ cdef class Doc:
         cdef attr_t num_tok_attr
         cdef bytes tok_str_bytes
         cdef const unsigned char* tok_str
-        cdef np.uint64_t* w_hashes_ptr = hashes_ptr
         
         for tok_i in range(doc_l):
             tok_c = self.c[tok_i]
@@ -1842,25 +1842,22 @@ cdef class Doc:
 
             if p_max_l > 0:
                 _set_prefix_lengths(tok_str, tok_str_l, p_max_l, pref_l_buf)
-                w_hashes_ptr += _write_hashes(tok_str, p_lengths, pref_l_buf, 0, w_hashes_ptr)
+                hashes_ptr += _write_hashes(tok_str, p_lengths, pref_l_buf, 0, hashes_ptr)
 
             if s_max_l > 0:
                 _set_suffix_lengths(tok_str, tok_str_l, s_max_l, suff_l_buf)
-                w_hashes_ptr += _write_hashes(tok_str, s_lengths, suff_l_buf, tok_str_l - 1, w_hashes_ptr)
+                hashes_ptr += _write_hashes(tok_str, s_lengths, suff_l_buf, tok_str_l - 1, hashes_ptr)
             
             if ps_max_l > 0:
                 _search_for_chars(tok_str, tok_str_l, ps_search_chars, ps_width_offsets, 
                     ps_max_l, False, ps_res_buf, ps_l_buf)
-                w_hashes_ptr += _write_hashes(ps_res_buf, ps_lengths, ps_l_buf, 0, w_hashes_ptr)
+                hashes_ptr += _write_hashes(ps_res_buf, ps_lengths, ps_l_buf, 0, hashes_ptr)
 
             if ss_max_l > 0:
                 _search_for_chars(tok_str, tok_str_l, ss_search_chars, ss_width_offsets, 
                     ss_max_l, True, ss_res_buf, ss_l_buf)
-                w_hashes_ptr += _write_hashes(ss_res_buf, ss_lengths, ss_l_buf, 0, w_hashes_ptr)
+                hashes_ptr += _write_hashes(ss_res_buf, ss_lengths, ss_l_buf, 0, hashes_ptr)
         
-        cdef np.ndarray[np.uint64_t, ndim=2] hashes = numpy.empty(
-            (doc_l, hashes_per_tok), dtype="uint64")
-        memcpy(hashes.data, hashes_ptr, total_hashes * sizeof(np.uint64_t))
         return hashes
 
 
