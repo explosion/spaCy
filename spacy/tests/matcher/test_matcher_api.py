@@ -241,57 +241,26 @@ def test_matcher_match_fuzzy_set4(en_vocab):
     ]
 
 
-def test_matcher_match_fuzzyn1(en_vocab):
-    rules = {
-        "JS": [[{"ORTH": "JavaScript"}]],
-        "GoogleNow": [[{"ORTH": {"FUZZY1": "Google"}}, {"ORTH": "Now"}]],
-        "Java": [[{"LOWER": "java"}]],
-    }
+@pytest.mark.parametrize("fuzzyn", range(1, 6))
+def test_matcher_match_fuzzyn(en_vocab, fuzzyn):
     matcher = Matcher(en_vocab)
-    for key, patterns in rules.items():
-        matcher.add(key, patterns)
+    matcher.add("GoogleNow", [[{"ORTH": {f"FUZZY{fuzzyn}": "GoogleNow"}}]])
+    # words with increasing edit distance
+    words = ["GoogleNow" + "a" * i for i in range(0, 6)]
+    doc = Doc(en_vocab, words)
+    assert len(matcher(doc)) == fuzzyn + 1
 
-    words = ["They", "like", "Goggle", "Now", "and", "Jav", "but", "not", "JvvaScrpt"]
-    doc = Doc(matcher.vocab, words=words)
-    assert matcher(doc) == [
-        (doc.vocab.strings["GoogleNow"], 2, 4),
+    # words with increasing edit distance of different edit types
+    words = [
+        "GoogleNow",
+        "GoogleNuw",
+        "GoogleNuew",
+        "GoogleNoweee",
+        "GiggleNuw3",
+        "gouggle5New",
     ]
-
-
-def test_matcher_match_fuzzyn2(en_vocab):
-    rules = {
-        "JS": [[{"ORTH": "JavaScript"}]],
-        "GoogleNow": [[{"ORTH": "Google"}, {"ORTH": "Now"}]],
-        "Java": [[{"LOWER": {"FUZZY1": "java"}}]],
-    }
-    matcher = Matcher(en_vocab)
-    for key, patterns in rules.items():
-        matcher.add(key, patterns)
-
-    words = ["They", "like", "Goggle", "Now", "and", "Jav", "but", "not", "JvvaScrpt"]
-    doc = Doc(matcher.vocab, words=words)
-    assert matcher(doc) == [
-        (doc.vocab.strings["Java"], 5, 6),
-    ]
-
-
-def test_matcher_match_fuzzyn3(en_vocab):
-    rules = {
-        "JS": [[{"ORTH": {"FUZZY2": "JavaScript"}}]],
-        "GoogleNow": [[{"ORTH": {"FUZZY1": "Google"}}, {"ORTH": "Now"}]],
-        "Java": [[{"LOWER": {"FUZZY1": "java"}}]],
-    }
-    matcher = Matcher(en_vocab)
-    for key, patterns in rules.items():
-        matcher.add(key, patterns)
-
-    words = ["They", "like", "Goggle", "Now", "and", "Jav", "but", "not", "JvvaScrpt"]
-    doc = Doc(matcher.vocab, words=words)
-    assert matcher(doc) == [
-        (doc.vocab.strings["GoogleNow"], 2, 4),
-        (doc.vocab.strings["Java"], 5, 6),
-        (doc.vocab.strings["JS"], 8, 9),
-    ]
+    doc = Doc(en_vocab, words)
+    assert len(matcher(doc)) == fuzzyn + 1
 
 
 def test_matcher_match_fuzzyn_set1(en_vocab):
