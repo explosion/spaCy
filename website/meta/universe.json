@@ -1,5 +1,31 @@
 {
     "resources": [
+         {
+            "id": "grecy",
+            "title": "greCy",
+            "slogan": "Ancient Greek pipelines for spaCy",
+            "description": "greCy offers state-of-the-art pipelines for ancient Greek NLP. The repository makes language models available in various sizes, some of them containing floret word vectors and a BERT transformer layer.",
+            "github": "jmyerston/greCy",
+            "code_example": [
+                "import spacy",
+                "#After installing the grc_ud_proiel_trf wheel package from the greCy repository",
+                "",
+                "nlp = spacy.load('grc_ud_proiel_trf')",
+                "doc = nlp('δοκῶ μοι περὶ ὧν πυνθάνεσθε οὐκ ἀμελέτητος εἶναι.')",
+                "",
+                "for token in doc:",
+                "   print(token.text, token.norm_, token.lemma_, token.pos_, token.tag_)"
+            ],
+            "code_language": "python",
+            "author": "Jacobo Myerston",
+            "author_links": {
+                "twitter": "@jcbmyrstn",
+                "github": "jmyerston",
+                "website": "https://huggingface.co/spaces/Jacobo/syntax"
+            },
+            "category": ["pipeline", "research"],
+            "tags": ["ancient Greek"]
+        },
         {
             "id": "spacy-cleaner",
             "title": "spacy-cleaner",
