@@ -205,17 +205,6 @@ cdef class Matcher:
                 else:
                     yield doc
 
-    @staticmethod
-    def fuzzy_match(input_string: str, rule_string: str, fuzzy: int=-1) -> bool:
-        distance = min(len(input_string), len(rule_string))
-        distance -= 1 # don't allow completely different tokens
-        if fuzzy == -1: # FUZZY operator with unspecified fuzzy
-            fuzzy = 5 # default max fuzzy
-            distance -= 1 # be more restrictive
-        distance = min(fuzzy, distance if distance > 0 else 1)
-        return levenshtein(input_string, rule_string, distance) <= distance
-
-
     def __call__(self, object doclike, *, as_spans=False, allow_missing=False, with_alignments=False):
         """Find all token sequences matching the supplied pattern.
 
@@ -862,7 +851,7 @@ class _FuzzyPredicate:
             value = token.vocab.strings[get_token_attr_for_matcher(token.c, self.attr)]
         if self.value == value:
             return True
-        return Matcher.fuzzy_match(value, self.value, self.fuzzy)
+        return fuzzy_match(value, self.value, self.fuzzy)
 
 
 class _RegexPredicate:
@@ -945,7 +934,7 @@ class _SetPredicate:
                 return True
             elif self.fuzzy is not None:
                 value = self.vocab.strings[value]
-                return any(Matcher.fuzzy_match(value, self.vocab.strings[v], self.fuzzy)
+                return any(fuzzy_match(value, self.vocab.strings[v], self.fuzzy)
                            for v in self.value)
             else:
                 return False
@@ -957,7 +946,7 @@ class _SetPredicate:
                 return False
             elif self.fuzzy is not None:
                 value = self.vocab.strings[value]
-                return not any(Matcher.fuzzy_match(value, self.vocab.strings[v], self.fuzzy)
+                return not any(fuzzy_match(value, self.vocab.strings[v], self.fuzzy)
                                for v in self.value)
             else:
                 return True
@@ -1156,3 +1145,13 @@ def _get_extensions(spec, string_store, name2index):
             name2index[name] = len(name2index)
         attr_values.append((name2index[name], value))
     return attr_values
+
+
+def fuzzy_match(input_string: str, rule_string: str, fuzzy: int=-1) -> bool:
+    distance = min(len(input_string), len(rule_string))
+    distance -= 1 # don't allow completely different tokens
+    if fuzzy == -1: # FUZZY operator with unspecified fuzzy
+        fuzzy = 5 # default max fuzzy
+        distance -= 1 # be more restrictive
+    distance = min(fuzzy, distance if distance > 0 else 1)
+    return levenshtein(input_string, rule_string, distance) <= distance
