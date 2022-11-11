@@ -67,7 +67,6 @@ def init_config_cli(
             "The provided output file already exists. To force overwriting the config file, set the --force or -F flag.",
             exits=1,
         )
-    lang = util.find_matching_language(lang)
     config = init_config(
         lang=lang,
         pipeline=pipeline,

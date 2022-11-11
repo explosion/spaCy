@@ -215,7 +215,7 @@ class Warnings(metaclass=ErrorsWithCodes):
     W123 = ("Argument {arg} with value {arg_value} is used instead of {config_value} as specified in the config. Be "
             "aware that this might affect other components in your pipeline.")
 # New warnings added in v4.x
-    W124 = ("Language code {lang} has been renamed to {renamed_lang} in spaCy v4")
+    W124 = ("Language code '{lang}' was not found and replaced with '{renamed_lang}'. Language codes like 'xx' and 'is' were renamed to 'mul' and 'isl' in v4.")
 
 
 class Errors(metaclass=ErrorsWithCodes):
