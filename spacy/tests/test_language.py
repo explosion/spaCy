@@ -569,7 +569,7 @@ def test_language_matching(lang, target):
     """
     assert find_matching_language(lang) == target
 
-
+@pytest.mark.filterwarnings("ignore:\\[W124")
 @pytest.mark.parametrize(
     "lang,target",
     [
