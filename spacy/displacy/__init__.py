@@ -80,7 +80,7 @@ def serve(
     minify: bool = False,
     options: Dict[str, Any] = {},
     manual: bool = False,
-    port: int = 5000,
+    port: int = 5002,
     host: str = "0.0.0.0",
 ) -> None:
     """Serve displaCy visualisation.
