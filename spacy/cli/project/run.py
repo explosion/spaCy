@@ -343,9 +343,11 @@ def _check_requirements(requirements: List[str]) -> Tuple[bool, bool]:
         except pkg_resources.VersionConflict as vc:
             conflicting_pkgs_msgs.append(vc.report())
         except Exception:
-            msg.warn(f"Unable to check requirement: {req} "
-                     "Checks are currently limited to requirement specifiers "
-                     "(PEP 508)")
+            msg.warn(
+                f"Unable to check requirement: {req} "
+                "Checks are currently limited to requirement specifiers "
+                "(PEP 508)"
+            )
 
     if len(failed_pkgs_msgs) or len(conflicting_pkgs_msgs):
         msg.warn(
