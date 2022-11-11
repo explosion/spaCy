@@ -193,7 +193,7 @@ def find_threshold(
     best_threshold = max(scores.keys(), key=(lambda key: scores[key]))
 
     # If all scores are identical, emit warning.
-    if all([score == scores[thresholds[0]] for score in scores.values()]):
+    if len(set(scores.values())) == 1:
         wasabi.msg.warn(
             title="All scores are identical. Verify that all settings are correct.",
             text=""
