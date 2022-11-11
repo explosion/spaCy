@@ -832,7 +832,7 @@ class _FuzzyPredicate:
     operators = ("FUZZY", "FUZZY1", "FUZZY2", "FUZZY3", "FUZZY4", "FUZZY5")
 
     def __init__(self, i, attr, value, predicate, is_extension=False, vocab=None,
-                 regex=None, fuzzy=None):
+                 regex=False, fuzzy=None):
         self.i = i
         self.attr = attr
         self.value = value
@@ -858,7 +858,7 @@ class _RegexPredicate:
     operators = ("REGEX",)
 
     def __init__(self, i, attr, value, predicate, is_extension=False, vocab=None,
-                 regex=None, fuzzy=None):
+                 regex=False, fuzzy=None):
         self.i = i
         self.attr = attr
         self.value = re.compile(value)
@@ -880,7 +880,7 @@ class _SetPredicate:
     operators = ("IN", "NOT_IN", "IS_SUBSET", "IS_SUPERSET", "INTERSECTS")
 
     def __init__(self, i, attr, value, predicate, is_extension=False, vocab=None,
-                 regex=None, fuzzy=None):
+                 regex=False, fuzzy=None):
         self.i = i
         self.attr = attr
         self.vocab = vocab
@@ -965,7 +965,7 @@ class _ComparisonPredicate:
     operators = ("==", "!=", ">=", "<=", ">", "<")
 
     def __init__(self, i, attr, value, predicate, is_extension=False, vocab=None,
-                 regex=None, fuzzy=None):
+                 regex=False, fuzzy=None):
         self.i = i
         self.attr = attr
         self.value = value
@@ -1037,7 +1037,7 @@ def _get_extra_predicates(spec, extra_predicates, vocab):
 
 
 def _get_extra_predicates_dict(attr, value_dict, vocab, predicate_types,
-                               extra_predicates, seen_predicates, regex=None, fuzzy=None):
+                               extra_predicates, seen_predicates, regex=False, fuzzy=None):
     output = []
     for type_, value in value_dict.items():
         type_ = type_.upper()
