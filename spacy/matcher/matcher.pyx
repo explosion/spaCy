@@ -338,6 +338,7 @@ cdef class Matcher:
         else:
             return key
 
+
 def unpickle_matcher(vocab, patterns, callbacks):
     matcher = Matcher(vocab)
     for key, pattern in patterns.items():
