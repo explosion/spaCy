@@ -245,7 +245,7 @@ browser. Will run a simple web server.
 | `minify`  | Minify HTML markup. Defaults to `False`. ~~bool~~                                                                                                                 |
 | `options` | [Visualizer-specific options](#displacy_options), e.g. colors. ~~Dict[str, Any]~~                                                                                 |
 | `manual`  | Don't parse `Doc` and instead expect a dict or list of dicts. [See here](/usage/visualizers#manual-usage) for formats and examples. Defaults to `False`. ~~bool~~ |
-| `port`    | Port to serve visualization. Defaults to `5000`. ~~int~~                                                                                                          |
+| `port`    | Port to serve visualization. Defaults to `5002`. ~~int~~                                                                                                          |
 | `host`    | Host to serve visualization. Defaults to `"0.0.0.0"`. ~~str~~                                                                                                     |
 
 ### displacy.render {#displacy.render tag="method" new="2"}
