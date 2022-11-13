@@ -1,11 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { MDXProvider } from '@mdx-js/tag'
-import { withMDXScope } from 'gatsby-mdx/context'
 import useOnlineStatus from '@rehooks/online-status'
 import classNames from 'classnames'
-
-import MDXRenderer from './mdx-renderer'
 
 // Templates
 import Docs from './docs'
@@ -73,13 +69,6 @@ class Layout extends React.Component {
     }
 
     static propTypes = {
-        data: PropTypes.shape({
-            mdx: PropTypes.shape({
-                code: PropTypes.shape({
-                    body: PropTypes.string.isRequired,
-                }).isRequired,
-            }),
-        }).isRequired,
         scope: PropTypes.object.isRequired,
         pageContext: PropTypes.shape({
             title: PropTypes.string,
@@ -106,18 +95,11 @@ class Layout extends React.Component {
     }
 
     render() {
-        const { data, pageContext, location, children } = this.props
-        const { file, site = {} } = data || {}
-        const mdx = file ? file.childMdx : null
+        const { pageContext, location, children } = this.props
         const { title, section, sectionTitle, teaser, theme = 'blue', searchExclude } = pageContext
         const uiTheme = nightly ? 'nightly' : legacy ? 'legacy' : theme
         const bodyClass = classNames(`theme-${uiTheme}`, { 'search-exclude': !!searchExclude })
         const isDocs = ['usage', 'models', 'api', 'styleguide'].includes(section)
-        const content = !mdx ? null : (
-            <MDXProvider components={remarkComponents}>
-                <MDXRenderer scope={this.state.scope}>{mdx.code.body}</MDXRenderer>
-            </MDXProvider>
-        )
 
         return (
             <>
@@ -150,7 +132,6 @@ class Layout extends React.Component {
                 ) : (
                     <div>
                         {children}
-                        {content}
                         <Footer wide />
                     </div>
                 )}
@@ -159,4 +140,4 @@ class Layout extends React.Component {
     }
 }
 
-export default withMDXScope(Layout)
+export default Layout
