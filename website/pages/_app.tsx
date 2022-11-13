@@ -1,3 +1,4 @@
+import '../src/styles/layout.sass'
 import type { AppProps } from 'next/app'
 import { MDXProvider } from '@mdx-js/react'
 import mdxComponents from '../components/mdxComponents'
