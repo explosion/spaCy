@@ -13,73 +13,13 @@ import Progress from '../progress'
 import Footer from '../footer'
 import SEO from '../seo'
 import Link from '../link'
-import Section, { Hr } from '../section'
-import { Table, Tr, Th, Tx, Td } from '../table'
-import { Pre, Code, InlineCode, TypeAnnotation } from '../code'
-import { Ol, Ul, Li } from '../list'
-import { H2, H3, H4, H5, P, Abbr, Help } from '../typography'
-import Accordion from '../accordion'
-import Infobox from '../infobox'
-import Aside from '../aside'
-import Button from '../button'
-import Tag from '../tag'
-import Grid from '../grid'
-import { YouTube, SoundCloud, Iframe, Image, GoogleSheet } from '../embed'
+import { InlineCode } from '../code'
 import Alert from '../alert'
 import Search from '../search'
-import Project from '../../widgets/project'
-import { Integration, IntegrationLogo } from '../../widgets/integration'
 
 import siteMetadata from '../../../meta/site.json'
 import { nightly, legacy } from '../../../meta/dynamicMeta'
-
-const mdxComponents = {
-    a: Link,
-    p: P,
-    pre: Pre,
-    code: Code,
-    inlineCode: InlineCode,
-    del: TypeAnnotation,
-    table: Table,
-    img: Image,
-    tr: Tr,
-    th: Th,
-    td: Td,
-    ol: Ol,
-    ul: Ul,
-    li: Li,
-    h2: H2,
-    h3: H3,
-    h4: H4,
-    h5: H5,
-    blockquote: Aside,
-    section: Section,
-    wrapper: ({ children }) => children,
-    hr: Hr,
-}
-
-const scopeComponents = {
-    Infobox,
-    Table,
-    Tr,
-    Tx,
-    Th,
-    Td,
-    Help,
-    Button,
-    YouTube,
-    SoundCloud,
-    Iframe,
-    GoogleSheet,
-    Abbr,
-    Tag,
-    Accordion,
-    Grid,
-    InlineCode,
-    Project,
-    Integration,
-    IntegrationLogo,
-}
+import { remarkComponents } from '../../markdown'
 
 const AlertSpace = ({ nightly, legacy }) => {
     const isOnline = useOnlineStatus()
@@ -158,7 +98,7 @@ class Layout extends React.Component {
         // NB: Compiling the scope here instead of in render() is super
         // important! Otherwise, it triggers unnecessary rerenders of ALL
         // consumers (e.g. mdx elements), even on anchor navigation!
-        this.state = { scope: { ...scopeComponents, ...props.scope } }
+        this.state = { scope: { ...remarkComponents, ...props.scope } }
     }
 
     render() {
@@ -170,7 +110,7 @@ class Layout extends React.Component {
         const bodyClass = classNames(`theme-${uiTheme}`, { 'search-exclude': !!searchExclude })
         const isDocs = ['usage', 'models', 'api', 'styleguide'].includes(section)
         const content = !mdx ? null : (
-            <MDXProvider components={mdxComponents}>
+            <MDXProvider components={remarkComponents}>
                 <MDXRenderer scope={this.state.scope}>{mdx.code.body}</MDXRenderer>
             </MDXProvider>
         )
