@@ -12,7 +12,7 @@ import { Li, Ol, Ul } from './components/list'
 import Section, { Hr } from './components/section'
 import { Table, Td, Th, Tr, Tx } from './components/table'
 import Tag from './components/tag'
-import { Abbr, H2, H3, H4, H5, Help, Paragraph } from './components/typography'
+import { Abbr, H2, H3, H4, H5, Help } from './components/typography'
 import { Integration, IntegrationLogo } from './widgets/integration'
 import Project from './widgets/project'
 
@@ -20,7 +20,6 @@ export const remarkComponents = {
     createElement: React.createElement,
     components: {
         a: Link,
-        p: Paragraph,
         pre: Pre,
         // code: Code,
         code: InlineCode,
