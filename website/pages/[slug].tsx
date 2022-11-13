@@ -4,6 +4,7 @@ import fs from 'fs'
 import { MDXRemote, MDXRemoteSerializeResult } from 'next-mdx-remote'
 import path from 'path'
 import Layout from '../components/layout'
+import remarkPlugins from '../plugins/index.mjs'
 
 type PropsPage = {
     mdx: MDXRemoteSerializeResult
@@ -43,7 +44,12 @@ export const getStaticProps: GetStaticProps<PropsPage, ParsedUrlQuery> = async (
             slug: args.params.slug,
             mdx: await serialize(
                 fs.readFileSync(path.join('docs', args.params.slug + '.mdx'), 'utf-8'),
-                { parseFrontmatter: true }
+                {
+                    parseFrontmatter: true,
+                    mdxOptions: {
+                        remarkPlugins,
+                    },
+                }
             ),
         },
     }
