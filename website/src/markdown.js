@@ -12,9 +12,10 @@ import { Li, Ol, Ul } from './components/list'
 import Section, { Hr } from './components/section'
 import { Table, Td, Th, Tr, Tx } from './components/table'
 import Tag from './components/tag'
-import { Abbr, H2, H3, H4, H5, Help } from './components/typography'
+import { Abbr, H2, H3, H4, H5, Label, Help } from './components/typography'
 import { Integration, IntegrationLogo } from './widgets/integration'
 import Project from './widgets/project'
+import { Logos, Colors, Patterns } from './widgets/styleguide'
 
 export const remarkComponents = {
     createElement: React.createElement,
@@ -62,5 +63,10 @@ export const remarkComponents = {
         project: Project,
         integration: Integration,
         integrationlogo: IntegrationLogo,
+
+        Label,
+        Logos,
+        Colors,
+        Patterns,
     },
 }
