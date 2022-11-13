@@ -1,10 +1,10 @@
 import type { AppProps } from 'next/app'
 import { MDXProvider } from '@mdx-js/react'
-import mdxComponents from '../components/mdxComponents'
+import { remarkComponents } from '../src/remark'
 
 export default function App({ Component, pageProps }: AppProps) {
     return (
-        <MDXProvider components={mdxComponents}>
+        <MDXProvider components={remarkComponents}>
             <Component {...pageProps} />
         </MDXProvider>
     )
