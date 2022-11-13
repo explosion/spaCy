@@ -25,6 +25,7 @@
     "prop-types": "^15.8.1",
     "react": "18.2.0",
     "react-dom": "18.2.0",
+    "remark-gfm": "^3.0.1",
     "sass": "^1.56.1",
     "typescript": "4.8.4"
   },
