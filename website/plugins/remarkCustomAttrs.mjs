@@ -1,3 +1,17 @@
+const parseAttribute = (expression) => {
+    if (expression.type !== 'AssignmentExpression' || !expression.left || !expression.right) {
+        return
+    }
+
+    const { left, right } = expression
+
+    if (left.type !== 'Identifier' || right.type !== 'Literal' || !left.name || !right.value) {
+        return
+    }
+
+    return { type: 'mdxJsxAttribute', name: left.name, value: right.value }
+}
+
 const parseAstTree = (markdownAST) => {
     markdownAST.children.map((node, index) => {
         if (node.type !== 'heading' || !node.children || node.children < 2) {
@@ -24,48 +38,24 @@ const parseAstTree = (markdownAST) => {
 
         const estreeBodyFirstNode = estree.body[0]
 
-        if (
-            estreeBodyFirstNode.type !== 'ExpressionStatement' ||
-            !estreeBodyFirstNode.expression ||
-            estreeBodyFirstNode.expression.type !== 'SequenceExpression'
-        ) {
+        if (estreeBodyFirstNode.type !== 'ExpressionStatement' || !estreeBodyFirstNode.expression) {
             return
         }
 
-        const sequenceExpression = estreeBodyFirstNode.expression
+        const statement = estreeBodyFirstNode.expression
 
-        if (!sequenceExpression.expressions) {
-            return
-        }
-
-        const attributes = sequenceExpression.expressions.map((expression) => {
-            if (
-                expression.type !== 'AssignmentExpression' ||
-                !expression.left ||
-                !expression.right
-            ) {
-                return
-            }
-
-            const { left, right } = expression
-
-            if (
-                left.type !== 'Identifier' ||
-                right.type !== 'Literal' ||
-                !left.name ||
-                !right.value
-            ) {
-                return
-            }
-
-            return { type: 'mdxJsxAttribute', name: left.name, value: right.value }
-        })
+        const attributeExpressions = [
+            ...(statement.type === 'SequenceExpression' && statement.expressions
+                ? statement.expressions
+                : []),
+            ...(statement.type === 'AssignmentExpression' ? [statement] : []),
+        ]
 
         // This replaces the markdown heading with a JSX element
         markdownAST.children[index] = {
             type: 'mdxJsxFlowElement',
             name: `h${node.depth}`,
-            attributes,
+            attributes: attributeExpressions.map(parseAttribute),
             children: [node.children[0]],
         }
     })
