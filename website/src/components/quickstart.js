@@ -117,10 +117,10 @@ const Quickstart = ({
                         const dropdownGetter = showDropdown[id] || (() => true)
                         return hidden ? null : (
                             <div key={id} data-quickstart-group={id} className={classes['group']}>
-                                <style data-quickstart-style={id} scoped>
+                                {/* <style data-quickstart-style={id} scoped>
                                     {styles[id] ||
                                         `[data-quickstart-results]>[data-quickstart-${id}] { display: none }`}
-                                </style>
+                                </style> */}
                                 <div className={classes['legend']}>
                                     {title}
                                     {help && (

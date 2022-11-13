@@ -81,6 +81,9 @@ const QuickstartInstall = ({ id, title, description, children }) => {
             copy={false}
         >
             {languages.map(({ code, models, example }) => {
+                if (!models) {
+                    return
+                }
                 const pkg = efficiency ? models[0] : models[models.length - 1]
                 const exampleText = example || 'No text available yet'
                 return lang !== code ? null : (

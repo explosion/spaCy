@@ -1,7 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import classNames from 'classnames'
-import { navigate } from 'gatsby'
+// import { navigate } from 'gatsby'
 
 import * as classes from '../styles/dropdown.module.sass'
 
@@ -11,7 +11,7 @@ export default function Dropdown({ defaultValue, className, onChange, children }
         if (isExternal) {
             window.location.href = target.value
         } else {
-            navigate(target.value)
+            // navigate(target.value)
         }
     }
     return (

@@ -318,7 +318,7 @@ const Model = ({
                 </tbody>
             </Table>
             {meta.notes & <MarkdownToReact markdown={meta.notes} />}
-            {hasInteractiveCode && (
+            {/* {hasInteractiveCode && (
                 <CodeBlock title="Try out the model" lang="python" executable={true}>
                     {[
                         `import spacy`,
@@ -331,7 +331,7 @@ const Model = ({
                         `    print(token.text, token.pos_, token.dep_)`,
                     ].join('\n')}
                 </CodeBlock>
-            )}
+            )} */}
             {meta.accuracy && (
                 <Accordion id={`${name}-accuracy`} title="Accuracy Evaluation">
                     <Table>

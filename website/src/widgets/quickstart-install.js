@@ -216,6 +216,9 @@ const QuickstartInstall = ({ id, title }) => {
             </QS>
 
             {languages.map(({ code, models: modelOptions }) => {
+                if (!modelOptions) {
+                    return
+                }
                 const pkg = modelOptions[efficiency ? 0 : modelOptions.length - 1]
                 return (
                     <QS models={code} key={code}>

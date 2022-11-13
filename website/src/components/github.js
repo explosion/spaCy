@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import PropTypes from 'prop-types'
 import classNames from 'classnames'
-import highlightCode from 'gatsby-remark-prismjs/highlight-code.js'
+// import highlightCode from 'gatsby-remark-prismjs/highlight-code.js'
 
 import Icon from './icon'
 import Link from './link'
@@ -39,7 +39,11 @@ const GitHubCode = ({ url, lang, errorMsg = defaultErrorMsg, className }) => {
         }
     }, [initialized, rawUrl, errorMsg])
 
-    const highlighted = lang === 'none' || !code ? code : highlightCode(lang, code)
+    const highlighted =
+        lang === 'none' || !code
+            ? code
+            : // highlightCode(lang, code)
+              null
 
     return (
         <>

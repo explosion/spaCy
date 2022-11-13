@@ -1,5 +1,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
+// import { graphql } from 'gatsby'
 import useOnlineStatus from '@rehooks/online-status'
 import classNames from 'classnames'
 

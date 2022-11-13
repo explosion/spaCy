@@ -1,9 +1,9 @@
 import React, { Fragment } from 'react'
 import PropTypes from 'prop-types'
 import classNames from 'classnames'
-import highlightCode from 'gatsby-remark-prismjs/highlight-code.js'
-import 'prismjs-bibtex'
-import rangeParser from 'parse-numeric-range'
+// import highlightCode from 'gatsby-remark-prismjs/highlight-code.js'
+// import 'prismjs-bibtex'
+// import rangeParser from 'parse-numeric-range'
 import { window } from 'browser-monads'
 
 import CUSTOM_TYPES from '../../meta/type-annotations.json'
@@ -69,7 +69,11 @@ export const TypeAnnotation = ({ lang = 'python', link = true, children }) => {
     const code = Array.isArray(children) ? children.join('') : children || ''
     const [rawText, meta] = code.split(/(?= \(.+\)$)/)
     const rawStr = rawText.replace(/\./g, TMP_DOT)
-    const rawHtml = lang === 'none' || !code ? code : highlightCode(lang, rawStr)
+    const rawHtml =
+        lang === 'none' || !code
+            ? code
+            : // highlightCode(lang, rawStr)
+              ''
     const html = rawHtml.replace(new RegExp(TMP_DOT, 'g'), '.').replace(/\n/g, ' ')
     const result = htmlToReact(html)
     const elements = Array.isArray(result) ? result : [result]
@@ -159,7 +163,8 @@ function convertLine(line, i) {
             </Fragment>
         )
     }
-    const htmlLine = replacePrompt(highlightCode('bash', line), '$')
+    const htmlLine = line
+    // replacePrompt(highlightCode('bash', line), '$')
     return htmlToReact(htmlLine)
 }
 
@@ -190,9 +195,9 @@ function formatCode(html, lang, prompt) {
         .split('\n')
         .map((line, i) => {
             let newLine = prompt ? replacePrompt(line, prompt, i === 0) : line
-            if (lang === 'diff' && !line.startsWith('<')) {
-                newLine = highlightCode('python', line)
-            }
+            // if (lang === 'diff' && !line.startsWith('<')) {
+            //     newLine = highlightCode('python', line)
+            // }
             return newLine
         })
         .join('\n')
@@ -219,26 +224,26 @@ export class Code extends React.Component {
         children: PropTypes.node,
     }
 
-    updateJuniper() {
-        if (this.state.Juniper == null && window.Juniper !== null) {
-            this.setState({ Juniper: window.Juniper })
-        }
-    }
+    // updateJuniper() {
+    //     if (this.state.Juniper == null && window.Juniper !== null) {
+    //         this.setState({ Juniper: window.Juniper })
+    //     }
+    // }
 
-    componentDidMount() {
-        this.updateJuniper()
-    }
+    // componentDidMount() {
+    //     this.updateJuniper()
+    // }
 
-    componentDidUpdate() {
-        this.updateJuniper()
-    }
+    // componentDidUpdate() {
+    //     this.updateJuniper()
+    // }
 
     render() {
         const { lang, title, executable, github, prompt, wrap, highlight, className, children } =
             this.props
-        const codeClassNames = classNames(classes['code'], className, `language-${lang}`, {
-            [classes['wrap']]: !!highlight || !!wrap || lang === 'cli',
-            [classes['cli']]: lang === 'cli',
+        const codeClassNames = classNames(classes.code, className, `language-${lang}`, {
+            [classes.wrap]: !!highlight || !!wrap || lang === 'cli',
+            [classes.cli]: lang === 'cli',
         })
         const ghClassNames = classNames(codeClassNames, classes['max-height'])
         const { Juniper } = this.state
@@ -255,10 +260,11 @@ export class Code extends React.Component {
         }
 
         const codeText = Array.isArray(children) ? children.join('') : children || ''
-        const highlightRange = highlight ? rangeParser.parse(highlight).filter((n) => n > 0) : []
+        // const highlightRange = highlight ? rangeParser.parse(highlight).filter((n) => n > 0) : []
         const rawHtml = ['none', 'cli'].includes(lang)
             ? codeText
-            : highlightCode(lang, codeText, highlightRange)
+            : // highlightCode(lang, codeText, highlightRange)
+              codeText
         const html = formatCode(rawHtml, lang, prompt)
         return (
             <>

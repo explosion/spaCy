@@ -7,23 +7,23 @@ import * as classes from '../styles/search.module.sass'
 
 export default function Search({ id = 'docsearch', placeholder = 'Search docs', settings = {} }) {
     const { apiKey, indexName, appId } = settings
-    if (!apiKey && !indexName) return null
     const [initialized, setInitialized] = useState(false)
     useEffect(() => {
         if (!initialized) {
             setInitialized(true)
-            window.docsearch({
-                appId,
-                apiKey,
-                indexName,
-                inputSelector: `#${id}`,
-                debug: false,
-            })
+            // window.docsearch({
+            //     appId,
+            //     apiKey,
+            //     indexName,
+            //     inputSelector: `#${id}`,
+            //     debug: false,
+            // })
         }
     }, [initialized, apiKey, indexName, id])
+    if (!apiKey && !indexName) return null
     return (
         <form className={classes.root}>
-            <label htmlFor={id} className={classes.icon}>
+            {/* <label htmlFor={id} className={classes.icon}>
                 <Icon name="search" width={20} />
             </label>
             <input
@@ -32,7 +32,7 @@ export default function Search({ id = 'docsearch', placeholder = 'Search docs', 
                 type="search"
                 placeholder={placeholder}
                 aria-label={placeholder}
-            />
+            /> */}
         </form>
     )
 }

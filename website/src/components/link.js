@@ -1,6 +1,6 @@
 import React, { Fragment } from 'react'
 import PropTypes from 'prop-types'
-import { Link as GatsbyLink } from 'gatsby'
+// import { Link as GatsbyLink } from 'gatsby'
 import classNames from 'classnames'
 
 import Icon from './icon'
