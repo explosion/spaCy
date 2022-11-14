@@ -26,9 +26,9 @@ part of the [training config](/usage/training#custom-functions). Also see the
 usage documentation on
 [layers and model architectures](/usage/layers-architectures).
 
-## Tok2Vec architectures {#tok2vec-arch source="spacy/ml/models/tok2vec.py"}
+## Tok2Vec architectures {id="tok2vec-arch",source="spacy/ml/models/tok2vec.py"}
 
-### spacy.Tok2Vec.v2 {#Tok2Vec}
+### spacy.Tok2Vec.v2 {id="Tok2Vec"}
 
 > #### Example config
 >
@@ -56,7 +56,7 @@ blog post for background.
 | `encode`    | Encode context into the embeddings, using an architecture such as a CNN, BiLSTM or transformer. For example, [MaxoutWindowEncoder](/api/architectures#MaxoutWindowEncoder). ~~Model[List[Floats2d], List[Floats2d]]~~            |
 | **CREATES** | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                                                           |
 
-### spacy.HashEmbedCNN.v2 {#HashEmbedCNN}
+### spacy.HashEmbedCNN.v2 {id="HashEmbedCNN"}
 
 > #### Example Config
 >
@@ -89,7 +89,7 @@ consisting of a CNN and a layer-normalized maxout activation function.
 | `pretrained_vectors` | Whether to also use static vectors. ~~bool~~                                                                                                                                                                                                                                  |
 | **CREATES**          | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                                                                                                        |
 
-### spacy.Tok2VecListener.v1 {#Tok2VecListener}
+### spacy.Tok2VecListener.v1 {id="Tok2VecListener"}
 
 > #### Example config
 >
@@ -139,7 +139,7 @@ the `Tok2Vec` component.
 | `upstream`  | A string to identify the "upstream" `Tok2Vec` component to communicate with. By default, the upstream name is the wildcard string `"*"`, but you could also specify the name of the `Tok2Vec` component. You'll almost never have multiple upstream `Tok2Vec` components, so the wildcard string will almost always be fine. ~~str~~ |
 | **CREATES** | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                                                                                                                                                               |
 
-### spacy.MultiHashEmbed.v2 {#MultiHashEmbed}
+### spacy.MultiHashEmbed.v2 {id="MultiHashEmbed"}
 
 > #### Example config
 >
@@ -170,7 +170,7 @@ updated).
 | `include_static_vectors` | Whether to also use static word vectors. Requires a vectors table to be loaded in the [`Doc`](/api/doc) objects' vocab. ~~bool~~                                                                                                                                                                                                                                                                                                                   |
 | **CREATES**              | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                                                                                                                                                                                                                                                                             |
 
-### spacy.CharacterEmbed.v2 {#CharacterEmbed}
+### spacy.CharacterEmbed.v2 {id="CharacterEmbed"}
 
 > #### Example config
 >
@@ -207,7 +207,7 @@ network to construct a single vector to represent the information.
 | `nC`        | The number of UTF-8 bytes to embed per word. Recommended values are between `3` and `8`, although it may depend on the length of words in the language. ~~int~~ |
 | **CREATES** | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                                                                                          |
 
-### spacy.MaxoutWindowEncoder.v2 {#MaxoutWindowEncoder}
+### spacy.MaxoutWindowEncoder.v2 {id="MaxoutWindowEncoder"}
 
 > #### Example config
 >
@@ -231,7 +231,7 @@ and residual connections.
 | `depth`         | The number of convolutional layers. Recommended value is `4`. ~~int~~                                                                                                                                          |
 | **CREATES**     | The model using the architecture. ~~Model[List[Floats2d], List[Floats2d]]~~                                                                                                                                    |
 
-### spacy.MishWindowEncoder.v2 {#MishWindowEncoder}
+### spacy.MishWindowEncoder.v2 {id="MishWindowEncoder"}
 
 > #### Example config
 >
@@ -254,7 +254,7 @@ and residual connections.
 | `depth`       | The number of convolutional layers. Recommended value is `4`. ~~int~~                                                                                                                                          |
 | **CREATES**   | The model using the architecture. ~~Model[List[Floats2d], List[Floats2d]]~~                                                                                                                                    |
 
-### spacy.TorchBiLSTMEncoder.v1 {#TorchBiLSTMEncoder}
+### spacy.TorchBiLSTMEncoder.v1 {id="TorchBiLSTMEncoder"}
 
 > #### Example config
 >
@@ -276,7 +276,7 @@ Encode context using bidirectional LSTM layers. Requires
 | `dropout`   | Creates a Dropout layer on the outputs of each LSTM layer except the last layer. Set to 0.0 to disable this functionality. ~~float~~                                                                           |
 | **CREATES** | The model using the architecture. ~~Model[List[Floats2d], List[Floats2d]]~~                                                                                                                                    |
 
-### spacy.StaticVectors.v2 {#StaticVectors}
+### spacy.StaticVectors.v2 {id="StaticVectors"}
 
 > #### Example config
 >
@@ -306,7 +306,7 @@ mapped to a zero vector. See the documentation on
 | `key_attr`  | Defaults to `"ORTH"`. ~~str~~                                                                                                                                                                                           |
 | **CREATES** | The model using the architecture. ~~Model[List[Doc], Ragged]~~                                                                                                                                                          |
 
-### spacy.FeatureExtractor.v1 {#FeatureExtractor}
+### spacy.FeatureExtractor.v1 {id="FeatureExtractor"}
 
 > #### Example config
 >
@@ -324,7 +324,7 @@ of feature names to extract, which should refer to token attributes.
 | `columns`   | The token attributes to extract. ~~List[Union[int, str]]~~               |
 | **CREATES** | The created feature extraction layer. ~~Model[List[Doc], List[Ints2d]]~~ |
 
-## Transformer architectures {#transformers source="github.com/explosion/spacy-transformers/blob/master/spacy_transformers/architectures.py"}
+## Transformer architectures {id="transformers",source="github.com/explosion/spacy-transformers/blob/master/spacy_transformers/architectures.py"}
 
 The following architectures are provided by the package
 [`spacy-transformers`](https://github.com/explosion/spacy-transformers). See the
@@ -341,7 +341,7 @@ for details and system requirements.
 
 </Infobox>
 
-### spacy-transformers.TransformerModel.v3 {#TransformerModel}
+### spacy-transformers.TransformerModel.v3 {id="TransformerModel"}
 
 > #### Example Config
 >
@@ -404,7 +404,7 @@ The other arguments are shared between all versions.
 
 </Accordion>
 
-### spacy-transformers.TransformerListener.v1 {#TransformerListener}
+### spacy-transformers.TransformerListener.v1 {id="TransformerListener"}
 
 > #### Example Config
 >
@@ -434,7 +434,7 @@ a single token vector given zero or more wordpiece vectors.
 | `upstream`    | A string to identify the "upstream" `Transformer` component to communicate with. By default, the upstream name is the wildcard string `"*"`, but you could also specify the name of the `Transformer` component. You'll almost never have multiple upstream `Transformer` components, so the wildcard string will almost always be fine. ~~str~~ |
 | **CREATES**   | The model using the architecture. ~~Model[List[Doc], List[Floats2d]]~~                                                                                                                                                                                                                                                                           |
 
-### spacy-transformers.Tok2VecTransformer.v3 {#Tok2VecTransformer}
+### spacy-transformers.Tok2VecTransformer.v3 {id="Tok2VecTransformer"}
 
 > #### Example Config
 >
@@ -481,7 +481,7 @@ The other arguments are shared between all versions.
 
 </Accordion>
 
-## Pretraining architectures {#pretrain source="spacy/ml/models/multi_task.py"}
+## Pretraining architectures {id="pretrain",source="spacy/ml/models/multi_task.py"}
 
 The spacy `pretrain` command lets you initialize a `Tok2Vec` layer in your
 pipeline with information from raw text. To this end, additional layers are
@@ -494,7 +494,7 @@ BERT.
 For more information, see the section on
 [pretraining](/usage/embeddings-transformers#pretraining).
 
-### spacy.PretrainVectors.v1 {#pretrain_vectors}
+### spacy.PretrainVectors.v1 {id="pretrain_vectors"}
 
 > #### Example config
 >
@@ -525,7 +525,7 @@ vectors.
 | `loss`          | The loss function can be either "cosine" or "L2". We typically recommend to use "cosine". ~~~str~~                                                        |
 | **CREATES**     | A callable function that can create the Model, given the `vocab` of the pipeline and the `tok2vec` layer to pretrain. ~~Callable[[Vocab, Model], Model]~~ |
 
-### spacy.PretrainCharacters.v1 {#pretrain_chars}
+### spacy.PretrainCharacters.v1 {id="pretrain_chars"}
 
 > #### Example config
 >
@@ -551,9 +551,9 @@ for a Tok2Vec layer.
 | `n_characters`  | The window of characters - e.g. if `n_characters = 2`, the model will try to predict the first two and last two characters of the word. ~~int~~           |
 | **CREATES**     | A callable function that can create the Model, given the `vocab` of the pipeline and the `tok2vec` layer to pretrain. ~~Callable[[Vocab, Model], Model]~~ |
 
-## Parser & NER architectures {#parser}
+## Parser & NER architectures {id="parser"}
 
-### spacy.TransitionBasedParser.v2 {#TransitionBasedParser source="spacy/ml/models/parser.py"}
+### spacy.TransitionBasedParser.v2 {id="TransitionBasedParser",source="spacy/ml/models/parser.py"}
 
 > #### Example Config
 >
@@ -612,9 +612,9 @@ same signature, but the `use_upper` argument was `True` by default.
 
 </Accordion>
 
-## Tagging architectures {#tagger source="spacy/ml/models/tagger.py"}
+## Tagging architectures {id="tagger",source="spacy/ml/models/tagger.py"}
 
-### spacy.Tagger.v2 {#Tagger}
+### spacy.Tagger.v2 {id="Tagger"}
 
 > #### Example Config
 >
@@ -648,7 +648,7 @@ The other arguments are shared between all versions.
 
 </Accordion>
 
-## Text classification architectures {#textcat source="spacy/ml/models/textcat.py"}
+## Text classification architectures {id="textcat",source="spacy/ml/models/textcat.py"}
 
 A text classification architecture needs to take a [`Doc`](/api/doc) as input,
 and produce a score for each potential label class. Textcat challenges can be
@@ -672,7 +672,7 @@ single-label use-cases where `exclusive_classes = true`, while the
 
 </Infobox>
 
-### spacy.TextCatEnsemble.v2 {#TextCatEnsemble}
+### spacy.TextCatEnsemble.v2 {id="TextCatEnsemble"}
 
 > #### Example Config
 >
@@ -737,7 +737,7 @@ but used an internal `tok2vec` instead of taking it as argument:
 
 </Accordion>
 
-### spacy.TextCatCNN.v2 {#TextCatCNN}
+### spacy.TextCatCNN.v2 {id="TextCatCNN"}
 
 > #### Example Config
 >
@@ -777,7 +777,7 @@ after training.
 
 </Accordion>
 
-### spacy.TextCatBOW.v2 {#TextCatBOW}
+### spacy.TextCatBOW.v2 {id="TextCatBOW"}
 
 > #### Example Config
 >
@@ -809,9 +809,9 @@ after training.
 
 </Accordion>
 
-## Span classification architectures {#spancat source="spacy/ml/models/spancat.py"}
+## Span classification architectures {id="spancat",source="spacy/ml/models/spancat.py"}
 
-### spacy.SpanCategorizer.v1 {#SpanCategorizer}
+### spacy.SpanCategorizer.v1 {id="SpanCategorizer"}
 
 > #### Example Config
 >
@@ -848,7 +848,7 @@ single vector, and a scorer model to map the vectors to probabilities.
 | `scorer`    | The scorer model. ~~Model[Floats2d, Floats2d]~~                                 |
 | **CREATES** | The model using the architecture. ~~Model[Tuple[List[Doc], Ragged], Floats2d]~~ |
 
-### spacy.mean_max_reducer.v1 {#mean_max_reducer}
+### spacy.mean_max_reducer.v1 {id="mean_max_reducer"}
 
 Reduce sequences by concatenating their mean and max pooled vectors, and then
 combine the concatenated vectors with a hidden layer.
@@ -857,7 +857,7 @@ combine the concatenated vectors with a hidden layer.
 | ------------- | ------------------------------------- |
 | `hidden_size` | The size of the hidden layer. ~~int~~ |
 
-## Entity linking architectures {#entitylinker source="spacy/ml/models/entity_linker.py"}
+## Entity linking architectures {id="entitylinker",source="spacy/ml/models/entity_linker.py"}
 
 An [`EntityLinker`](/api/entitylinker) component disambiguates textual mentions
 (tagged as named entities) to unique identifiers, grounding the named entities
@@ -870,7 +870,7 @@ into the "real world". This requires 3 main components:
 - A machine learning [`Model`](https://thinc.ai/docs/api-model) that picks the
   most plausible ID from the set of candidates.
 
-### spacy.EntityLinker.v2 {#EntityLinker}
+### spacy.EntityLinker.v2 {id="EntityLinker"}
 
 > #### Example Config
 >
@@ -899,7 +899,7 @@ The `EntityLinker` model architecture is a Thinc `Model` with a
 | `nO`        | Output dimension, determined by the length of the vectors encoding each entity in the KB. If the `nO` dimension is not set, the entity linking component will set it when `initialize` is called. ~~Optional[int]~~ |
 | **CREATES** | The model using the architecture. ~~Model[List[Doc], Floats2d]~~                                                                                                                                                    |
 
-### spacy.EmptyKB.v1 {#EmptyKB}
+### spacy.EmptyKB.v1 {id="EmptyKB"}
 
 A function that creates an empty `KnowledgeBase` from a [`Vocab`](/api/vocab)
 instance. This is the default when a new entity linker component is created.
@@ -908,7 +908,7 @@ instance. This is the default when a new entity linker component is created.
 | ---------------------- | ----------------------------------------------------------------------------------- |
 | `entity_vector_length` | The length of the vectors encoding each entity in the KB. Defaults to `64`. ~~int~~ |
 
-### spacy.KBFromFile.v1 {#KBFromFile}
+### spacy.KBFromFile.v1 {id="KBFromFile"}
 
 A function that reads an existing `KnowledgeBase` from file.
 
@@ -916,7 +916,7 @@ A function that reads an existing `KnowledgeBase` from file.
 | --------- | -------------------------------------------------------- |
 | `kb_path` | The location of the KB that was stored to file. ~~Path~~ |
 
-### spacy.CandidateGenerator.v1 {#CandidateGenerator}
+### spacy.CandidateGenerator.v1 {id="CandidateGenerator"}
 
 A function that takes as input a [`KnowledgeBase`](/api/kb) and a
 [`Span`](/api/span) object denoting a named entity, and returns a list of
@@ -924,7 +924,7 @@ plausible [`Candidate`](/api/kb/#candidate) objects. The default
 `CandidateGenerator` uses the text of a mention to find its potential aliases in
 the `KnowledgeBase`. Note that this function is case-dependent.
 
-## Coreference {#coref-architectures tag="experimental"}
+## Coreference {id="coref-architectures",tag="experimental"}
 
 A [`CoreferenceResolver`](/api/coref) component identifies tokens that refer to
 the same entity. A [`SpanResolver`](/api/span-resolver) component infers spans
@@ -932,7 +932,7 @@ from single tokens. Together these components can be used to reproduce
 traditional coreference models. You can also omit the `SpanResolver` if working
 with only token-level clusters is acceptable.
 
-### spacy-experimental.Coref.v1 {#Coref tag="experimental"}
+### spacy-experimental.Coref.v1 {id="Coref",tag="experimental"}
 
 > #### Example Config
 >
@@ -967,7 +967,7 @@ The `Coref` model architecture is a Thinc `Model`.
 | `antecedent_batch_size`   | Internal batch size. ~~int~~                                                                                                                                                             |
 | **CREATES**               | The model using the architecture. ~~Model[List[Doc], Floats2d]~~                                                                                                                         |
 
-### spacy-experimental.SpanResolver.v1 {#SpanResolver tag="experimental"}
+### spacy-experimental.SpanResolver.v1 {id="SpanResolver",tag="experimental"}
 
 > #### Example Config
 >

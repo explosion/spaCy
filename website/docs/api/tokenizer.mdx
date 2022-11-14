@@ -20,7 +20,7 @@ The tokenizer is typically created automatically when a
 like punctuation and special case rules from the
 [`Language.Defaults`](/api/language#defaults) provided by the language subclass.
 
-## Tokenizer.\_\_init\_\_ {#init tag="method"}
+## Tokenizer.\_\_init\_\_ {id="init",tag="method"}
 
 Create a `Tokenizer` to create `Doc` objects given unicode text. For examples of
 how to construct a custom tokenizer with different tokenization rules, see the
@@ -55,7 +55,7 @@ how to construct a custom tokenizer with different tokenization rules, see the
 | `url_match`                                        | A function matching the signature of `re.compile(string).match` to find token matches after considering prefixes and suffixes. ~~Optional[Callable[[str], Optional[Match]]]~~ |
 | `faster_heuristics` <Tag variant="new">3.3.0</Tag> | Whether to restrict the final `Matcher`-based pass for rules to those containing affixes or space. Defaults to `True`. ~~bool~~                                               |
 
-## Tokenizer.\_\_call\_\_ {#call tag="method"}
+## Tokenizer.\_\_call\_\_ {id="call",tag="method"}
 
 Tokenize a string.
 
@@ -71,7 +71,7 @@ Tokenize a string.
 | `string`    | The string to tokenize. ~~str~~                 |
 | **RETURNS** | A container for linguistic annotations. ~~Doc~~ |
 
-## Tokenizer.pipe {#pipe tag="method"}
+## Tokenizer.pipe {id="pipe",tag="method"}
 
 Tokenize a stream of texts.
 
@@ -89,7 +89,7 @@ Tokenize a stream of texts.
 | `batch_size` | The number of texts to accumulate in an internal buffer. Defaults to `1000`. ~~int~~ |
 | **YIELDS**   | The tokenized `Doc` objects, in order. ~~Doc~~                                       |
 
-## Tokenizer.find_infix {#find_infix tag="method"}
+## Tokenizer.find_infix {id="find_infix",tag="method"}
 
 Find internal split points of the string.
 
@@ -98,7 +98,7 @@ Find internal split points of the string.
 | `string`    | The string to split. ~~str~~                                                                                                                                       |
 | **RETURNS** | A list of `re.MatchObject` objects that have `.start()` and `.end()` methods, denoting the placement of internal segment separators, e.g. hyphens. ~~List[Match]~~ |
 
-## Tokenizer.find_prefix {#find_prefix tag="method"}
+## Tokenizer.find_prefix {id="find_prefix",tag="method"}
 
 Find the length of a prefix that should be segmented from the string, or `None`
 if no prefix rules match.
@@ -108,7 +108,7 @@ if no prefix rules match.
 | `string`    | The string to segment. ~~str~~                                           |
 | **RETURNS** | The length of the prefix if present, otherwise `None`. ~~Optional[int]~~ |
 
-## Tokenizer.find_suffix {#find_suffix tag="method"}
+## Tokenizer.find_suffix {id="find_suffix",tag="method"}
 
 Find the length of a suffix that should be segmented from the string, or `None`
 if no suffix rules match.
@@ -118,7 +118,7 @@ if no suffix rules match.
 | `string`    | The string to segment. ~~str~~                                           |
 | **RETURNS** | The length of the suffix if present, otherwise `None`. ~~Optional[int]~~ |
 
-## Tokenizer.add_special_case {#add_special_case tag="method"}
+## Tokenizer.add_special_case {id="add_special_case",tag="method"}
 
 Add a special-case tokenization rule. This mechanism is also used to add custom
 tokenizer exceptions to the language data. See the usage guide on the
@@ -139,7 +139,7 @@ details and examples.
 | `string`      | The string to specially tokenize. ~~str~~                                                                                                                                                             |
 | `token_attrs` | A sequence of dicts, where each dict describes a token and its attributes. The `ORTH` fields of the attributes must exactly match the string when they are concatenated. ~~Iterable[Dict[int, str]]~~ |
 
-## Tokenizer.explain {#explain tag="method"}
+## Tokenizer.explain {id="explain",tag="method"}
 
 Tokenize a string with a slow debugging tokenizer that provides information
 about which tokenizer rule or pattern was matched for each token. The tokens
@@ -158,7 +158,7 @@ produced are identical to `Tokenizer.__call__` except for whitespace tokens.
 | `string`    | The string to tokenize with the debugging tokenizer. ~~str~~                 |
 | **RETURNS** | A list of `(pattern_string, token_string)` tuples. ~~List[Tuple[str, str]]~~ |
 
-## Tokenizer.to_disk {#to_disk tag="method"}
+## Tokenizer.to_disk {id="to_disk",tag="method"}
 
 Serialize the tokenizer to disk.
 
@@ -175,7 +175,7 @@ Serialize the tokenizer to disk.
 | _keyword-only_ |                                                                                                                                            |
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~                                                |
 
-## Tokenizer.from_disk {#from_disk tag="method"}
+## Tokenizer.from_disk {id="from_disk",tag="method"}
 
 Load the tokenizer from disk. Modifies the object in place and returns it.
 
@@ -193,7 +193,7 @@ Load the tokenizer from disk. Modifies the object in place and returns it.
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~     |
 | **RETURNS**    | The modified `Tokenizer` object. ~~Tokenizer~~                                                  |
 
-## Tokenizer.to_bytes {#to_bytes tag="method"}
+## Tokenizer.to_bytes {id="to_bytes",tag="method"}
 
 > #### Example
 >
@@ -210,7 +210,7 @@ Serialize the tokenizer to a bytestring.
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
 | **RETURNS**    | The serialized form of the `Tokenizer` object. ~~bytes~~                                    |
 
-## Tokenizer.from_bytes {#from_bytes tag="method"}
+## Tokenizer.from_bytes {id="from_bytes",tag="method"}
 
 Load the tokenizer from a bytestring. Modifies the object in place and returns
 it.
@@ -230,7 +230,7 @@ it.
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
 | **RETURNS**    | The `Tokenizer` object. ~~Tokenizer~~                                                       |
 
-## Attributes {#attributes}
+## Attributes {id="attributes"}
 
 | Name             | Description                                                                                                                                                                   |
 | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -241,7 +241,7 @@ it.
 | `token_match`    | A function matching the signature of `re.compile(string).match` to find token matches. Returns an `re.MatchObject` or `None`. ~~Optional[Callable[[str], Optional[Match]]]~~  |
 | `rules`          | A dictionary of tokenizer exceptions and special cases. ~~Optional[Dict[str, List[Dict[int, str]]]]~~                                                                         |
 
-## Serialization fields {#serialization-fields}
+## Serialization fields {id="serialization-fields"}
 
 During serialization, spaCy will export several data fields used to restore
 different aspects of the object. If needed, you can exclude them from

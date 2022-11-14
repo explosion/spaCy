@@ -8,7 +8,7 @@ menu:
   - ['Migrating from v2.x', 'migrating']
 ---
 
-## Summary {#summary hidden="true"}
+## Summary {id="summary",hidden="true"}
 
 > #### 📖 Looking for the old docs?
 >
@@ -53,7 +53,7 @@ to clone and adapt best-practice projects for your own use cases.
 
 </Grid>
 
-## New Features {#features}
+## New Features {id="features"}
 
 This section contains an overview of the most important **new features and
 improvements**. The [API docs](/api) include additional deprecation notes. New
@@ -70,7 +70,7 @@ tag <Tag variant="new">3</Tag>.
 
 </Grid>
 
-### Transformer-based pipelines {#features-transformers}
+### Transformer-based pipelines {id="features-transformers"}
 
 > #### Example
 >
@@ -92,7 +92,7 @@ import Benchmarks from 'usage/_benchmarks-models.mdx'
 
 <Benchmarks />
 
-#### New trained transformer-based pipelines {#features-transformers-pipelines}
+#### New trained transformer-based pipelines {id="features-transformers-pipelines"}
 
 > #### Notes on model capabilities
 >
@@ -128,7 +128,7 @@ import Benchmarks from 'usage/_benchmarks-models.mdx'
 
 </Infobox>
 
-### New training workflow and config system {#features-training}
+### New training workflow and config system {id="features-training"}
 
 > #### Example
 >
@@ -173,7 +173,7 @@ architectures.
 
 </Infobox>
 
-### Custom models using any framework {#features-custom-models}
+### Custom models using any framework {id="features-custom-models"}
 
 > #### Example
 >
@@ -213,7 +213,7 @@ freely combine implementations from different frameworks into a single model.
 
 </Infobox>
 
-### Manage end-to-end workflows with projects {#features-projects}
+### Manage end-to-end workflows with projects {id="features-projects"}
 
 > #### Example
 >
@@ -262,7 +262,7 @@ treebank.
 
 </Project>
 
-### Parallel and distributed training with Ray {#features-parallel-training}
+### Parallel and distributed training with Ray {id="features-parallel-training"}
 
 > #### Example
 >
@@ -295,7 +295,7 @@ parallel training.
 
 </Infobox>
 
-### New built-in pipeline components {#features-pipeline-components}
+### New built-in pipeline components {id="features-pipeline-components"}
 
 spaCy v3.0 includes several new trainable and rule-based components that you can
 add to your pipeline and customize for your use case:
@@ -326,7 +326,7 @@ add to your pipeline and customize for your use case:
 
 </Infobox>
 
-### New and improved pipeline component APIs {#features-components}
+### New and improved pipeline component APIs {id="features-components"}
 
 > #### Example
 >
@@ -363,7 +363,7 @@ aren't set.
 
 </Infobox>
 
-### Dependency matching {#features-dep-matcher}
+### Dependency matching {id="features-dep-matcher"}
 
 > #### Example
 >
@@ -398,7 +398,7 @@ dictionaries**, with each dictionary describing a **token to match** and its
 
 </Infobox>
 
-### Type hints and type-based data validation {#features-types}
+### Type hints and type-based data validation {id="features-types"}
 
 > #### Example
 >
@@ -442,7 +442,7 @@ your config and see validation errors if the argument values don't match.
 
 </Infobox>
 
-### New methods, attributes and commands {#new-methods}
+### New methods, attributes and commands {id="new-methods"}
 
 The following methods, attributes and commands are new in spaCy v3.0.
 
@@ -472,7 +472,7 @@ The following methods, attributes and commands are new in spaCy v3.0.
 | [`project`](/api/cli#project)                                                                                                   | Suite of CLI commands for cloning, running and managing [spaCy projects](/usage/projects).                                                                                                       |
 | [`ray`](/api/cli#ray)                                                                                                           | Suite of CLI commands for parallel training with [Ray](https://ray.io/), provided by the [`spacy-ray`](https://github.com/explosion/spacy-ray) extension package.                                |
 
-### New and updated documentation {#new-docs}
+### New and updated documentation {id="new-docs"}
 
 <Grid cols={2} gutterBottom={false}>
 
@@ -522,7 +522,7 @@ format for documenting argument and return types.
 
 </Infobox>
 
-## Backwards Incompatibilities {#incompat}
+## Backwards Incompatibilities {id="incompat"}
 
 As always, we've tried to keep the breaking changes to a minimum and focus on
 changes that were necessary to support the new features, fix problems or improve
@@ -536,7 +536,7 @@ Note that spaCy v3.0 now requires **Python 3.6+**.
 
 </Infobox>
 
-### API changes {#incompat-api}
+### API changes {id="incompat-api"}
 
 - Pipeline package symlinks, the `link` command and shortcut names are now
   deprecated. There can be many [different trained pipelines](/models) and not
@@ -586,7 +586,7 @@ Note that spaCy v3.0 now requires **Python 3.6+**.
   document. To perform multi-label classification, use the new
   `textcat_multilabel` component instead.
 
-### Removed or renamed API {#incompat-removed}
+### Removed or renamed API {id="incompat-removed"}
 
 | Removed                                                                                      | Replacement                                                                                                                                                                                                              |
 | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -621,9 +621,9 @@ them.
 | `verbose` argument on [`Language.evaluate`](/api/language#evaluate)                                                     | logging (`DEBUG`)                                                                                                                                          |
 | `SentenceSegmenter` hook, `SimilarityHook`                                                                              | [user hooks](/usage/processing-pipelines#custom-components-user-hooks), [`Sentencizer`](/api/sentencizer), [`SentenceRecognizer`](/api/sentencerecognizer) |
 
-## Migrating from v2.x {#migrating}
+## Migrating from v2.x {id="migrating"}
 
-### Downloading and loading trained pipelines {#migrating-downloading-models}
+### Downloading and loading trained pipelines {id="migrating-downloading-models"}
 
 Symlinks and shortcuts like `en` have been deprecated for a while, and are now
 not supported anymore. There are [many different trained pipelines](/models)
@@ -641,7 +641,7 @@ download and load a package, you should always use its full name – for instanc
 + nlp = spacy.load("en_core_web_sm")
 ```
 
-### Custom pipeline components and factories {#migrating-pipeline-components}
+### Custom pipeline components and factories {id="migrating-pipeline-components"}
 
 Custom pipeline components now have to be registered explicitly using the
 [`@Language.component`](/api/language#component) or
@@ -706,7 +706,7 @@ component back in from its string name. You won't have to write to
 - Language.factories["my_component"] = lambda nlp, **cfg: MyComponent(nlp)
 ```
 
-#### Adding components to the pipeline {#migrating-add-pipe}
+#### Adding components to the pipeline {id="migrating-add-pipe"}
 
 The [`nlp.add_pipe`](/api/language#add_pipe) method now takes the **string
 name** of the component factory instead of a callable component. This allows
@@ -755,7 +755,7 @@ nlp = spacy.blank("en")
 + nlp.add_pipe("ner", source=source_nlp)
 ```
 
-#### Configuring pipeline components with settings {#migrating-configure-pipe}
+#### Configuring pipeline components with settings {id="migrating-configure-pipe"}
 
 Because pipeline components are now added using their string names, you won't
 have to instantiate the [component classes](/api/#architecture-pipeline)
@@ -797,7 +797,7 @@ tagger = nlp.add_pipe("tagger", config=config)
 
 </Infobox>
 
-### Adding match patterns {#migrating-matcher}
+### Adding match patterns {id="migrating-matcher"}
 
 The [`Matcher.add`](/api/matcher#add),
 [`PhraseMatcher.add`](/api/phrasematcher#add) and
@@ -819,7 +819,7 @@ patterns = [nlp("health care reform"), nlp("healthcare reform")]
 + matcher.add("HEALTH", patterns, on_match=on_match)
 ```
 
-### Migrating attributes in tokenizer exceptions {#migrating-tokenizer-exceptions}
+### Migrating attributes in tokenizer exceptions {id="migrating-tokenizer-exceptions"}
 
 Tokenizer exceptions are now only allowed to set `ORTH` and `NORM` values as
 part of the token attributes. Exceptions for other attributes such as `TAG` and
@@ -833,7 +833,7 @@ nlp = spacy.blank("en")
 + ruler.add(patterns=[[{"ORTH": "n't"}]], attrs={"LEMMA": "not"})
 ```
 
-### Migrating tag maps and morph rules {#migrating-training-mappings-exceptions}
+### Migrating tag maps and morph rules {id="migrating-training-mappings-exceptions"}
 
 Instead of defining a `tag_map` and `morph_rules` in the language data, spaCy
 v3.0 now manages mappings and exceptions with a separate and more flexible
@@ -886,7 +886,7 @@ nlp = spacy.blank("en")
 + ruler.load_from_tag_map(YOUR_TAG_MAP)
 ```
 
-### Migrating Doc flags {#migrating-doc-flags}
+### Migrating Doc flags {id="migrating-doc-flags"}
 
 The [`Doc`](/api/doc) flags `Doc.is_tagged`, `Doc.is_parsed`, `Doc.is_nered` and
 `Doc.is_sentenced` are deprecated in v3.0 and replaced by
@@ -906,7 +906,7 @@ doc = nlp(text)
 + doc.has_annotation("ENT_IOB")
 ```
 
-### Training pipelines and models {#migrating-training}
+### Training pipelines and models {id="migrating-training"}
 
 To train your pipelines, you should now pretty much always use the
 [`spacy train`](/api/cli#train) CLI. You shouldn't have to put together your own
@@ -918,7 +918,7 @@ architectures to use. The `--code` argument lets you pass in code containing
 reference in your config. To get started, check out the
 [quickstart widget](/usage/training#quickstart).
 
-#### Binary .spacy training data format {#migrating-training-format}
+#### Binary .spacy training data format {id="migrating-training-format"}
 
 spaCy v3.0 uses a new
 [binary training data format](/api/data-formats#binary-training) created by
@@ -933,7 +933,7 @@ command, which outputs `.spacy` files:
 $ python -m spacy convert ./training.json ./output
 ```
 
-#### Training config {#migrating-training-config}
+#### Training config {id="migrating-training-config"}
 
 The easiest way to get started with a training config is to use the
 [`init config`](/api/cli#init-config) command or the
@@ -1014,7 +1014,7 @@ package. However, to make it easier for others to replicate your training setup,
 you can choose to package the initialization callbacks with the pipeline package
 or to publish them separately.
 
-#### Training via the Python API {#migrating-training-python}
+#### Training via the Python API {id="migrating-training-python"}
 
 For most use cases, you **shouldn't** have to write your own training scripts
 anymore. Instead, you can use [`spacy train`](/api/cli#train) with a
@@ -1083,7 +1083,7 @@ setting up the label scheme.
 + nlp.initialize(lambda: examples)
 ```
 
-#### Packaging trained pipelines {#migrating-training-packaging}
+#### Packaging trained pipelines {id="migrating-training-packaging"}
 
 The [`spacy package`](/api/cli#package) command now automatically builds the
 installable `.tar.gz` sdist of the Python package, so you don't have to run this
@@ -1098,7 +1098,7 @@ python -m spacy package ./output ./packages
 - python setup.py sdist
 ```
 
-#### Data utilities and gold module {#migrating-gold}
+#### Data utilities and gold module {id="migrating-gold"}
 
 The `spacy.gold` module has been renamed to `spacy.training` and the conversion
 utilities now follow the naming format of `x_to_y`. This mostly affects
@@ -1113,7 +1113,7 @@ change your names and imports:
 + from spacy.training import offsets_to_biluo_tags, biluo_tags_to_offsets, biluo_tags_to_spans
 ```
 
-#### Migration notes for plugin maintainers {#migrating-plugins}
+#### Migration notes for plugin maintainers {id="migrating-plugins"}
 
 Thanks to everyone who's been contributing to the spaCy ecosystem by developing
 and maintaining one of the many awesome [plugins and extensions](/universe).
@@ -1181,7 +1181,7 @@ package isn't imported.
 
 </Infobox>
 
-#### Using GPUs in Jupyter notebooks {#jupyter-notebook-gpu}
+#### Using GPUs in Jupyter notebooks {id="jupyter-notebook-gpu"}
 
 In Jupyter notebooks, run [`prefer_gpu`](/api/top-level#spacy.prefer_gpu),
 [`require_gpu`](/api/top-level#spacy.require_gpu) or

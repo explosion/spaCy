@@ -13,9 +13,9 @@ menu:
   - ['Utility Functions', 'util']
 ---
 
-## spaCy {#spacy hidden="true"}
+## spaCy {id="spacy",hidden="true"}
 
-### spacy.load {#spacy.load tag="function"}
+### spacy.load {id="spacy.load",tag="function"}
 
 Load a pipeline using the name of an installed
 [package](/usage/saving-loading#models), a string path or a `Path`-like object.
@@ -31,7 +31,7 @@ information to construct the `Language` class. The data will be loaded in via
 
 As of v3.0, the `disable` keyword argument specifies components to load but
 disable, instead of components to not load at all. Those components can now be
-specified separately using the new `exclude` keyword argument.
+specified separately using the,new `exclude` keyword argument.
 
 </Infobox>
 
@@ -70,7 +70,7 @@ for name in pipeline:
 nlp.from_disk(data_path)               # 4. Load in the binary data
 ```
 
-### spacy.blank {#spacy.blank tag="function" new="2"}
+### spacy.blank {id="spacy.blank",tag="function",new="2"}
 
 Create a blank pipeline of a given language class. This function is the twin of
 `spacy.load()`.
@@ -86,12 +86,12 @@ Create a blank pipeline of a given language class. This function is the twin of
 | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `name`                              | [IETF language tag](https://www.w3.org/International/articles/language-tags/), such as 'en', of the language class to load. ~~str~~                                |
 | _keyword-only_                      |                                                                                                                                                                    |
-| `vocab`                             | Optional shared vocab to pass in on initialization. If `True` (default), a new `Vocab` object will be created. ~~Union[Vocab, bool]~~                              |
+| `vocab`                             | Optional shared vocab to pass in on initialization. If `True` (default), a,new `Vocab` object will be created. ~~Union[Vocab, bool]~~                              |
 | `config` <Tag variant="new">3</Tag> | Optional config overrides, either as nested dict or dict keyed by section value in dot notation, e.g. `"components.name.value"`. ~~Union[Dict[str, Any], Config]~~ |
 | `meta`                              | Optional meta overrides for [`nlp.meta`](/api/language#meta). ~~Dict[str, Any]~~                                                                                   |
 | **RETURNS**                         | An empty `Language` object of the appropriate subclass. ~~Language~~                                                                                               |
 
-### spacy.info {#spacy.info tag="function"}
+### spacy.info {id="spacy.info",tag="function"}
 
 The same as the [`info` command](/api/cli#info). Pretty-print information about
 your installation, installed pipelines and local setup from within spaCy.
@@ -111,7 +111,7 @@ your installation, installed pipelines and local setup from within spaCy.
 | `markdown`     | Print information as Markdown. ~~bool~~                                      |
 | `silent`       | Don't print anything, just return. ~~bool~~                                  |
 
-### spacy.explain {#spacy.explain tag="function"}
+### spacy.explain {id="spacy.explain",tag="function"}
 
 Get a description for a given POS tag, dependency label or entity type. For a
 list of available terms, see [`glossary.py`](%%GITHUB_SPACY/spacy/glossary.py).
@@ -134,7 +134,7 @@ list of available terms, see [`glossary.py`](%%GITHUB_SPACY/spacy/glossary.py).
 | `term`      | Term to explain. ~~str~~                                                   |
 | **RETURNS** | The explanation, or `None` if not found in the glossary. ~~Optional[str]~~ |
 
-### spacy.prefer_gpu {#spacy.prefer_gpu tag="function" new="2.0.14"}
+### spacy.prefer_gpu {id="spacy.prefer_gpu",tag="function",new="2.0.14"}
 
 Allocate data and perform operations on [GPU](/usage/#gpu), if available. If
 data has already been allocated on CPU, it will not be moved. Ideally, this
@@ -162,7 +162,7 @@ ensure that the model is loaded on the correct device. See
 | `gpu_id`    | Device index to select. Defaults to `0`. ~~int~~ |
 | **RETURNS** | Whether the GPU was activated. ~~bool~~          |
 
-### spacy.require_gpu {#spacy.require_gpu tag="function" new="2.0.14"}
+### spacy.require_gpu {id="spacy.require_gpu",tag="function",new="2.0.14"}
 
 Allocate data and perform operations on [GPU](/usage/#gpu). Will raise an error
 if no GPU is available. If data has already been allocated on CPU, it will not
@@ -190,7 +190,7 @@ ensure that the model is loaded on the correct device. See
 | `gpu_id`    | Device index to select. Defaults to `0`. ~~int~~ |
 | **RETURNS** | `True` ~~bool~~                                  |
 
-### spacy.require_cpu {#spacy.require_cpu tag="function" new="3.0.0"}
+### spacy.require_cpu {id="spacy.require_cpu",tag="function",new="3.0.0"}
 
 Allocate data and perform operations on CPU. If data has already been allocated
 on GPU, it will not be moved. Ideally, this function should be called right
@@ -216,12 +216,12 @@ ensure that the model is loaded on the correct device. See
 | ----------- | --------------- |
 | **RETURNS** | `True` ~~bool~~ |
 
-## displaCy {#displacy source="spacy/displacy"}
+## displaCy {id="displacy",source="spacy/displacy"}
 
 As of v2.0, spaCy comes with a built-in visualization suite. For more info and
 examples, see the usage guide on [visualizing spaCy](/usage/visualizers).
 
-### displacy.serve {#displacy.serve tag="method" new="2"}
+### displacy.serve {id="displacy.serve",tag="method",new="2"}
 
 Serve a dependency parse tree or named entity visualization to view it in your
 browser. Will run a simple web server.
@@ -248,7 +248,7 @@ browser. Will run a simple web server.
 | `port`    | Port to serve visualization. Defaults to `5000`. ~~int~~                                                                                                          |
 | `host`    | Host to serve visualization. Defaults to `"0.0.0.0"`. ~~str~~                                                                                                     |
 
-### displacy.render {#displacy.render tag="method" new="2"}
+### displacy.render {id="displacy.render",tag="method",new="2"}
 
 Render a dependency parse tree or named entity visualization.
 
@@ -273,7 +273,7 @@ Render a dependency parse tree or named entity visualization.
 | `jupyter`   | Explicitly enable or disable "[Jupyter](http://jupyter.org/) mode" to return markup ready to be rendered in a notebook. Detected automatically if `None` (default). ~~Optional[bool]~~ |
 | **RETURNS** | The rendered HTML markup. ~~str~~                                                                                                                                                      |
 
-### displacy.parse_deps {#displacy.parse_deps tag="method" new="2"}
+### displacy.parse_deps {id="displacy.parse_deps",tag="method",new="2"}
 
 Generate dependency parse in `{'words': [], 'arcs': []}` format. For use with
 the `manual=True` argument in `displacy.render`.
@@ -295,7 +295,7 @@ the `manual=True` argument in `displacy.render`.
 | `options`   | Dependency parse specific visualisation options. ~~Dict[str, Any]~~ |
 | **RETURNS** | Generated dependency parse keyed by words and arcs. ~~dict~~        |
 
-### displacy.parse_ents {#displacy.parse_ents tag="method" new="2"}
+### displacy.parse_ents {id="displacy.parse_ents",tag="method",new="2"}
 
 Generate named entities in `[{start: i, end: i, label: 'label'}]` format. For
 use with the `manual=True` argument in `displacy.render`.
@@ -317,7 +317,7 @@ use with the `manual=True` argument in `displacy.render`.
 | `options`   | NER-specific visualisation options. ~~Dict[str, Any]~~              |
 | **RETURNS** | Generated entities keyed by text (original text) and ents. ~~dict~~ |
 
-### displacy.parse_spans {#displacy.parse_spans tag="method" new="2"}
+### displacy.parse_spans {id="displacy.parse_spans",tag="method",new="2"}
 
 Generate spans in `[{start_token: i, end_token: i, label: 'label'}]` format. For
 use with the `manual=True` argument in `displacy.render`.
@@ -340,12 +340,12 @@ use with the `manual=True` argument in `displacy.render`.
 | `options`   | Span-specific visualisation options. ~~Dict[str, Any]~~             |
 | **RETURNS** | Generated entities keyed by text (original text) and ents. ~~dict~~ |
 
-### Visualizer options {#displacy_options}
+### Visualizer options {id="displacy_options"}
 
 The `options` argument lets you specify additional settings for each visualizer.
 If a setting is not present in the options, the default value will be used.
 
-#### Dependency Visualizer options {#options-dep}
+#### Dependency Visualizer options {id="options-dep"}
 
 > #### Example
 >
@@ -371,7 +371,7 @@ If a setting is not present in the options, the default value will be used.
 | `word_spacing`     | Vertical spacing between words and arcs in px. Defaults to `45`. ~~int~~                                                                     |
 | `distance`         | Distance between words in px. Defaults to `175` in regular mode and `150` in compact mode. ~~int~~                                           |
 
-#### Named Entity Visualizer options {#displacy_options-ent}
+#### Named Entity Visualizer options {id="displacy_options-ent"}
 
 > #### Example
 >
@@ -388,7 +388,7 @@ If a setting is not present in the options, the default value will be used.
 | `template`                                       | Optional template to overwrite the HTML used to render entity spans. Should be a format string and can use `{bg}`, `{text}` and `{label}`. See [`templates.py`](%%GITHUB_SPACY/spacy/displacy/templates.py) for examples. ~~Optional[str]~~ |
 | `kb_url_template` <Tag variant="new">3.2.1</Tag> | Optional template to construct the KB url for the entity to link to. Expects a python f-string format with single field to fill in. ~~Optional[str]~~                                                                                       |
 
-#### Span Visualizer options {#displacy_options-span}
+#### Span Visualizer options {id="displacy_options-span"}
 
 > #### Example
 >
@@ -419,7 +419,7 @@ span. If you wish to link an entity to their URL then consider using the
 should redirect you to their Wikidata page, in this case
 `https://www.wikidata.org/wiki/Q95`.
 
-## registry {#registry source="spacy/util.py" new="3"}
+## registry {id="registry",source="spacy/util.py",new="3"}
 
 spaCy's function registry extends
 [Thinc's `registry`](https://thinc.ai/docs/api-config#registry) and allows you
@@ -469,7 +469,7 @@ factories.
 | `scorers`         | Registry for functions that create scoring methods for user with the [`Scorer`](/api/scorer). Scoring methods are called with `Iterable[Example]` and arbitrary `\*\*kwargs` and return scores as `Dict[str, Any]`.                                |
 | `tokenizers`      | Registry for tokenizer factories. Registered functions should return a callback that receives the `nlp` object and returns a [`Tokenizer`](/api/tokenizer) or a custom callable.                                                                   |
 
-### spacy-transformers registry {#registry-transformers}
+### spacy-transformers registry {id="registry-transformers"}
 
 The following registries are added by the
 [`spacy-transformers`](https://github.com/explosion/spacy-transformers) package.
@@ -494,7 +494,7 @@ See the [`Transformer`](/api/transformer) API reference and
 | [`span_getters`](/api/transformer#span_getters)             | Registry for functions that take a batch of `Doc` objects and return a list of `Span` objects to process by the transformer, e.g. sentences.                                                                                                      |
 | [`annotation_setters`](/api/transformer#annotation_setters) | Registry for functions that create annotation setters. Annotation setters are functions that take a batch of `Doc` objects and a [`FullTransformerBatch`](/api/transformer#fulltransformerbatch) and can set additional annotations on the `Doc`. |
 
-## Loggers {#loggers source="spacy/training/loggers.py" new="3"}
+## Loggers {id="loggers",source="spacy/training/loggers.py",new="3"}
 
 A logger records the training results. When a logger is created, two functions
 are returned: one for logging the information for each training step, and a
@@ -513,7 +513,7 @@ a [Weights & Biases](https://www.wandb.com/) dashboard.
 Instead of using one of the built-in loggers, you can
 [implement your own](/usage/training#custom-logging).
 
-#### spacy.ConsoleLogger.v2 {#ConsoleLogger tag="registered function"}
+#### spacy.ConsoleLogger.v2 {id="ConsoleLogger",tag="registered function"}
 
 > #### Example config
 >
@@ -570,9 +570,9 @@ start decreasing across epochs.
 | `console_output` | Whether the logger should print the logs on the console. ~~bool~~     |
 | `output_file`    | The file to save the training logs to. ~~Optional[Union[str, Path]]~~ |
 
-## Readers {#readers}
+## Readers {id="readers"}
 
-### File readers {#file-readers source="github.com/explosion/srsly" new="3"}
+### File readers {id="file-readers",source="github.com/explosion/srsly",new="3"}
 
 The following file readers are provided by our serialization library
 [`srsly`](https://github.com/explosion/srsly). All registered functions take one
@@ -602,7 +602,7 @@ blocks that are **not executed at runtime** – for example, in `[training]` and
 
 </Infobox>
 
-#### spacy.read_labels.v1 {#read_labels tag="registered function"}
+#### spacy.read_labels.v1 {id="read_labels",tag="registered function"}
 
 Read a JSON-formatted labels file generated with
 [`init labels`](/api/cli#init-labels). Typically used in the
@@ -628,7 +628,7 @@ label sets.
 | `require`   | Whether to require the file to exist. If set to `False` and the labels file doesn't exist, the loader will return `None` and the `initialize` method will extract the labels from the data. Defaults to `False`. ~~bool~~ |
 | **CREATES** | The list of labels. ~~List[str]~~                                                                                                                                                                                         |
 
-### Corpus readers {#corpus-readers source="spacy/training/corpus.py" new="3"}
+### Corpus readers {id="corpus-readers",source="spacy/training/corpus.py",new="3"}
 
 Corpus readers are registered functions that load data and return a function
 that takes the current `nlp` object and yields [`Example`](/api/example) objects
@@ -638,7 +638,7 @@ with your own registered function in the
 [`@readers` registry](/api/top-level#registry) to customize the data loading and
 streaming.
 
-#### spacy.Corpus.v1 {#corpus tag="registered function"}
+#### spacy.Corpus.v1 {id="corpus",tag="registered function"}
 
 The `Corpus` reader manages annotated corpora and can be used for training and
 development datasets in the [DocBin](/api/docbin) (`.spacy`) format. Also see
@@ -667,7 +667,7 @@ the [`Corpus`](/api/corpus) class.
 | `augmenter`    | Apply some simply data augmentation, where we replace tokens with variations. This is especially useful for punctuation and case replacement, to help generalize beyond corpora that don't have smart-quotes, or only have smart quotes, etc. Defaults to `None`. ~~Optional[Callable]~~ |
 | **CREATES**    | The corpus reader. ~~Corpus~~                                                                                                                                                                                                                                                            |
 
-#### spacy.JsonlCorpus.v1 {#jsonlcorpus tag="registered function"}
+#### spacy.JsonlCorpus.v1 {id="jsonlcorpus",tag="registered function"}
 
 Create [`Example`](/api/example) objects from a JSONL (newline-delimited JSON)
 file of texts keyed by `"text"`. Can be used to read the raw text corpus for
@@ -690,13 +690,13 @@ JSONL file. Also see the [`JsonlCorpus`](/api/corpus#jsonlcorpus) class.
 
 | Name         | Description                                                                                                                      |
 | ------------ | -------------------------------------------------------------------------------------------------------------------------------- |
-| `path`       | The directory or filename to read from. Expects newline-delimited JSON with a key `"text"` for each record. ~~Union[str, Path]~~ |
+| `path`       | The directory or filename to read from. Expects,newline-delimited JSON with a key `"text"` for each record. ~~Union[str, Path]~~ |
 | `min_length` | Minimum document length (in tokens). Shorter documents will be skipped. Defaults to `0`, which indicates no limit. ~~int~~       |
 | `max_length` | Maximum document length (in tokens). Longer documents will be skipped. Defaults to `0`, which indicates no limit. ~~int~~        |
 | `limit`      | Limit corpus to a subset of examples, e.g. for debugging. Defaults to `0` for no limit. ~~int~~                                  |
 | **CREATES**  | The corpus reader. ~~JsonlCorpus~~                                                                                               |
 
-## Batchers {#batchers source="spacy/training/batchers.py" new="3"}
+## Batchers {id="batchers",source="spacy/training/batchers.py",new="3"}
 
 A data batcher implements a batching strategy that essentially turns a stream of
 items into a stream of batches, with each batch consisting of one item or a list
@@ -710,7 +710,7 @@ Instead of using one of the built-in batchers listed here, you can also
 [implement your own](/usage/training#custom-code-readers-batchers), which may or
 may not use a custom schedule.
 
-### spacy.batch_by_words.v1 {#batch_by_words tag="registered function"}
+### spacy.batch_by_words.v1 {id="batch_by_words",tag="registered function"}
 
 Create minibatches of roughly a given number of words. If any examples are
 longer than the specified batch length, they will appear in a batch by
@@ -738,7 +738,7 @@ themselves, or be discarded if `discard_oversize` is set to `True`. The argument
 | `get_length`       | Optional function that receives a sequence item and returns its length. Defaults to the built-in `len()` if not set. ~~Optional[Callable[[Any], int]]~~                                 |
 | **CREATES**        | The batcher that takes an iterable of items and returns batches. ~~Callable[[Iterable[Any]], Iterable[List[Any]]]~~                                                                     |
 
-### spacy.batch_by_sequence.v1 {#batch_by_sequence tag="registered function"}
+### spacy.batch_by_sequence.v1 {id="batch_by_sequence",tag="registered function"}
 
 > #### Example config
 >
@@ -757,7 +757,7 @@ Create a batcher that creates batches of the specified size.
 | `get_length` | Optional function that receives a sequence item and returns its length. Defaults to the built-in `len()` if not set. ~~Optional[Callable[[Any], int]]~~                                 |
 | **CREATES**  | The batcher that takes an iterable of items and returns batches. ~~Callable[[Iterable[Any]], Iterable[List[Any]]]~~                                                                     |
 
-### spacy.batch_by_padded.v1 {#batch_by_padded tag="registered function"}
+### spacy.batch_by_padded.v1 {id="batch_by_padded",tag="registered function"}
 
 > #### Example config
 >
@@ -783,7 +783,7 @@ sequences in the batch.
 | `get_length`       | Optional function that receives a sequence item and returns its length. Defaults to the built-in `len()` if not set. ~~Optional[Callable[[Any], int]]~~                                                                                     |
 | **CREATES**        | The batcher that takes an iterable of items and returns batches. ~~Callable[[Iterable[Any]], Iterable[List[Any]]]~~                                                                                                                         |
 
-## Augmenters {#augmenters source="spacy/training/augment.py" new="3"}
+## Augmenters {id="augmenters",source="spacy/training/augment.py",new="3"}
 
 Data augmentation is the process of applying small modifications to the training
 data. It can be especially useful for punctuation and case replacement – for
@@ -792,7 +792,7 @@ variations using regular quotes, or to make the model less sensitive to
 capitalization by including a mix of capitalized and lowercase examples. See the
 [usage guide](/usage/training#data-augmentation) for details and examples.
 
-### spacy.orth_variants.v1 {#orth_variants tag="registered function"}
+### spacy.orth_variants.v1 {id="orth_variants",tag="registered function"}
 
 > #### Example config
 >
@@ -819,7 +819,7 @@ beyond corpora that don't have smart quotes, or only have smart quotes etc.
 | `orth_variants` | A dictionary containing the single and paired orth variants. Typically loaded from a JSON file. See [`en_orth_variants.json`](https://github.com/explosion/spacy-lookups-data/blob/master/spacy_lookups_data/data/en_orth_variants.json) for an example. ~~Dict[str, Dict[List[Union[str, List[str]]]]]~~ |
 | **CREATES**     | A function that takes the current `nlp` object and an [`Example`](/api/example) and yields augmented `Example` objects. ~~Callable[[Language, Example], Iterator[Example]]~~                                                                                                                              |
 
-### spacy.lower_case.v1 {#lower_case tag="registered function"}
+### spacy.lower_case.v1 {id="lower_case",tag="registered function"}
 
 > #### Example config
 >
@@ -838,12 +838,12 @@ useful for making the model less sensitive to capitalization.
 | `level`     | The percentage of texts that will be augmented. ~~float~~                                                                                                                    |
 | **CREATES** | A function that takes the current `nlp` object and an [`Example`](/api/example) and yields augmented `Example` objects. ~~Callable[[Language, Example], Iterator[Example]]~~ |
 
-## Callbacks {#callbacks source="spacy/training/callbacks.py" new="3"}
+## Callbacks {id="callbacks",source="spacy/training/callbacks.py",new="3"}
 
 The config supports [callbacks](/usage/training#custom-code-nlp-callbacks) at
 several points in the lifecycle that can be used modify the `nlp` object.
 
-### spacy.copy_from_base_model.v1 {#copy_from_base_model tag="registered function"}
+### spacy.copy_from_base_model.v1 {id="copy_from_base_model",tag="registered function"}
 
 > #### Example config
 >
@@ -867,7 +867,7 @@ from the specified model. Intended for use in `[initialize.before_init]`.
 | `vocab`     | The pipeline to copy the vocab from. The vocab includes the lookups and vectors. Defaults to `None`. ~~Optional[str]~~  |
 | **CREATES** | A function that takes the current `nlp` object and modifies its `tokenizer` and `vocab`. ~~Callable[[Language], None]~~ |
 
-### spacy.models_with_nvtx_range.v1 {#models_with_nvtx_range tag="registered function"}
+### spacy.models_with_nvtx_range.v1 {id="models_with_nvtx_range",tag="registered function"}
 
 > #### Example config
 >
@@ -887,7 +887,7 @@ backprop passes.
 | `backprop_color` | Color identifier for backpropagation passes. Defaults to `-1`. ~~int~~                                                       |
 | **CREATES**      | A function that takes the current `nlp` and wraps forward/backprop passes in NVTX ranges. ~~Callable[[Language], Language]~~ |
 
-### spacy.models_and_pipes_with_nvtx_range.v1 {#models_and_pipes_with_nvtx_range tag="registered function" new="3.4"}
+### spacy.models_and_pipes_with_nvtx_range.v1 {id="models_and_pipes_with_nvtx_range",tag="registered function",new="3.4"}
 
 > #### Example config
 >
@@ -908,9 +908,9 @@ methods are wrapped: `pipe`, `predict`, `set_annotations`, `update`, `rehearse`,
 | `additional_pipe_functions` | Additional pipeline methods to wrap. Keys are pipeline names and values are lists of method identifiers. Defaults to `None`. ~~Optional[Dict[str, List[str]]]~~ |
 | **CREATES**                 | A function that takes the current `nlp` and wraps pipe models and methods in NVTX ranges. ~~Callable[[Language], Language]~~                                    |
 
-## Training data and alignment {#gold source="spacy/training"}
+## Training data and alignment {id="gold",source="spacy/training"}
 
-### training.offsets_to_biluo_tags {#offsets_to_biluo_tags tag="function"}
+### training.offsets_to_biluo_tags {id="offsets_to_biluo_tags",tag="function"}
 
 Encode labelled spans into per-token tags, using the
 [BILUO scheme](/usage/linguistic-features#accessing-ner) (Begin, In, Last, Unit,
@@ -947,7 +947,7 @@ This method was previously available as `spacy.gold.biluo_tags_from_offsets`.
 | `missing`   | The label used for missing values, e.g. if tokenization doesn't align with the entity offsets. Defaults to `"O"`. ~~str~~                                                                  |
 | **RETURNS** | A list of strings, describing the [BILUO](/usage/linguistic-features#accessing-ner) tags. ~~List[str]~~                                                                                    |
 
-### training.biluo_tags_to_offsets {#biluo_tags_to_offsets tag="function"}
+### training.biluo_tags_to_offsets {id="biluo_tags_to_offsets",tag="function"}
 
 Encode per-token tags following the
 [BILUO scheme](/usage/linguistic-features#accessing-ner) into entity offsets.
@@ -975,7 +975,7 @@ This method was previously available as `spacy.gold.offsets_from_biluo_tags`.
 | `tags`      | A sequence of [BILUO](/usage/linguistic-features#accessing-ner) tags with each tag describing one token. Each tag string will be of the form of either `""`, `"O"` or `"{action}-{label}"`, where action is one of `"B"`, `"I"`, `"L"`, `"U"`. ~~List[str]~~ |
 | **RETURNS** | A sequence of `(start, end, label)` triples. `start` and `end` will be character-offset integers denoting the slice into the original string. ~~List[Tuple[int, int, str]]~~                                                                                 |
 
-### training.biluo_tags_to_spans {#biluo_tags_to_spans tag="function" new="2.1"}
+### training.biluo_tags_to_spans {id="biluo_tags_to_spans",tag="function",new="2.1"}
 
 Encode per-token tags following the
 [BILUO scheme](/usage/linguistic-features#accessing-ner) into
@@ -1004,7 +1004,7 @@ This method was previously available as `spacy.gold.spans_from_biluo_tags`.
 | `tags`      | A sequence of [BILUO](/usage/linguistic-features#accessing-ner) tags with each tag describing one token. Each tag string will be of the form of either `""`, `"O"` or `"{action}-{label}"`, where action is one of `"B"`, `"I"`, `"L"`, `"U"`. ~~List[str]~~ |
 | **RETURNS** | A sequence of `Span` objects with added entity labels. ~~List[Span]~~                                                                                                                                                                                        |
 
-## Utility functions {#util source="spacy/util.py"}
+## Utility functions {id="util",source="spacy/util.py"}
 
 spaCy comes with a small collection of utility functions located in
 [`spacy/util.py`](%%GITHUB_SPACY/spacy/util.py). Because utility functions are
@@ -1014,7 +1014,7 @@ use and we'll try to ensure backwards compatibility. However, we recommend
 having additional tests in place if your application depends on any of spaCy's
 utilities.
 
-### util.get_lang_class {#util.get_lang_class tag="function"}
+### util.get_lang_class {id="util.get_lang_class",tag="function"}
 
 Import and load a `Language` class. Allows lazy-loading
 [language data](/usage/linguistic-features#language-data) and importing
@@ -1035,7 +1035,7 @@ custom language class, you can register it using the
 | `lang`      | Two-letter language code, e.g. `"en"`. ~~str~~ |
 | **RETURNS** | The respective subclass. ~~Language~~          |
 
-### util.lang_class_is_loaded {#util.lang_class_is_loaded tag="function" new="2.1"}
+### util.lang_class_is_loaded {id="util.lang_class_is_loaded",tag="function",new="2.1"}
 
 Check whether a `Language` subclass is already loaded. `Language` subclasses are
 loaded lazily to avoid expensive setup code associated with the language data.
@@ -1053,7 +1053,7 @@ loaded lazily to avoid expensive setup code associated with the language data.
 | `name`      | Two-letter language code, e.g. `"en"`. ~~str~~ |
 | **RETURNS** | Whether the class has been loaded. ~~bool~~    |
 
-### util.load_model {#util.load_model tag="function" new="2"}
+### util.load_model {id="util.load_model",tag="function",new="2"}
 
 Load a pipeline from a package or data path. If called with a string name, spaCy
 will assume the pipeline is a Python package and import and call its `load()`
@@ -1074,14 +1074,14 @@ and create a `Language` object. The model data will then be loaded in via
 | ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `name`                                | Package name or path. ~~str~~                                                                                                                                                                                                                                        |
 | _keyword-only_                        |                                                                                                                                                                                                                                                                      |
-| `vocab`                               | Optional shared vocab to pass in on initialization. If `True` (default), a new `Vocab` object will be created. ~~Union[Vocab, bool]~~                                                                                                                                |
+| `vocab`                               | Optional shared vocab to pass in on initialization. If `True` (default), a,new `Vocab` object will be created. ~~Union[Vocab, bool]~~                                                                                                                                |
 | `disable`                             | Name(s) of pipeline component(s) to [disable](/usage/processing-pipelines#disabling). Disabled pipes will be loaded but they won't be run unless you explicitly enable them by calling [`nlp.enable_pipe`](/api/language#enable_pipe). ~~Union[str, Iterable[str]]~~ |
 | `enable` <Tag variant="new">3.4</Tag> | Name(s) of pipeline component(s) to [enable](/usage/processing-pipelines#disabling). All other pipes will be disabled, but can be enabled again using [`nlp.enable_pipe`](/api/language#enable_pipe). ~~Union[str, Iterable[str]]~~                                  |
 | `exclude`                             | Name(s) of pipeline component(s) to [exclude](/usage/processing-pipelines#disabling). Excluded components won't be loaded. ~~Union[str, Iterable[str]]~~                                                                                                             |
 | `config` <Tag variant="new">3</Tag>   | Config overrides as nested dict or flat dict keyed by section values in dot notation, e.g. `"nlp.pipeline"`. ~~Union[Dict[str, Any], Config]~~                                                                                                                       |
 | **RETURNS**                           | `Language` class with the loaded pipeline. ~~Language~~                                                                                                                                                                                                              |
 
-### util.load_model_from_init_py {#util.load_model_from_init_py tag="function" new="2"}
+### util.load_model_from_init_py {id="util.load_model_from_init_py",tag="function",new="2"}
 
 A helper function to use in the `load()` method of a pipeline package's
 [`__init__.py`](https://github.com/explosion/spacy-models/tree/master/template/model/xx_model_name/__init__.py).
@@ -1099,14 +1099,14 @@ A helper function to use in the `load()` method of a pipeline package's
 | ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `init_file`                           | Path to package's `__init__.py`, i.e. `__file__`. ~~Union[str, Path]~~                                                                                                                                                                                               |
 | _keyword-only_                        |                                                                                                                                                                                                                                                                      |
-| `vocab` <Tag variant="new">3</Tag>    | Optional shared vocab to pass in on initialization. If `True` (default), a new `Vocab` object will be created. ~~Union[Vocab, bool]~~                                                                                                                                |
+| `vocab` <Tag variant="new">3</Tag>    | Optional shared vocab to pass in on initialization. If `True` (default), a,new `Vocab` object will be created. ~~Union[Vocab, bool]~~                                                                                                                                |
 | `disable`                             | Name(s) of pipeline component(s) to [disable](/usage/processing-pipelines#disabling). Disabled pipes will be loaded but they won't be run unless you explicitly enable them by calling [`nlp.enable_pipe`](/api/language#enable_pipe). ~~Union[str, Iterable[str]]~~ |
 | `enable` <Tag variant="new">3.4</Tag> | Name(s) of pipeline component(s) to [enable](/usage/processing-pipelines#disabling). All other pipes will be disabled, but can be enabled again using [`nlp.enable_pipe`](/api/language#enable_pipe). ~~Union[str, Iterable[str]]~~                                  |
 | `exclude` <Tag variant="new">3</Tag>  | Name(s) of pipeline component(s) to [exclude](/usage/processing-pipelines#disabling). Excluded components won't be loaded. ~~Union[str, Iterable[str]]~~                                                                                                             |
 | `config` <Tag variant="new">3</Tag>   | Config overrides as nested dict or flat dict keyed by section values in dot notation, e.g. `"nlp.pipeline"`. ~~Union[Dict[str, Any], Config]~~                                                                                                                       |
 | **RETURNS**                           | `Language` class with the loaded pipeline. ~~Language~~                                                                                                                                                                                                              |
 
-### util.load_config {#util.load_config tag="function" new="3"}
+### util.load_config {id="util.load_config",tag="function",new="3"}
 
 Load a pipeline's [`config.cfg`](/api/data-formats#config) from a file path. The
 config typically includes details about the components and how they're created,
@@ -1126,7 +1126,7 @@ as well as all training settings and hyperparameters.
 | `interpolate` | Whether to interpolate the config and replace variables like `${paths.train}` with their values. Defaults to `False`. ~~bool~~                                              |
 | **RETURNS**   | The pipeline's config. ~~Config~~                                                                                                                                           |
 
-### util.load_meta {#util.load_meta tag="function" new="3"}
+### util.load_meta {id="util.load_meta",tag="function",new="3"}
 
 Get a pipeline's [`meta.json`](/api/data-formats#meta) from a file path and
 validate its contents. The meta typically includes details about author,
@@ -1143,7 +1143,7 @@ licensing, data sources and version.
 | `path`      | Path to the pipeline's `meta.json`. ~~Union[str, Path]~~ |
 | **RETURNS** | The pipeline's meta data. ~~Dict[str, Any]~~             |
 
-### util.get_installed_models {#util.get_installed_models tag="function" new="3"}
+### util.get_installed_models {id="util.get_installed_models",tag="function",new="3"}
 
 List all pipeline packages installed in the current environment. This will
 include any spaCy pipeline that was packaged with
@@ -1161,7 +1161,7 @@ object.
 | ----------- | ------------------------------------------------------------------------------------- |
 | **RETURNS** | The string names of the pipelines installed in the current environment. ~~List[str]~~ |
 
-### util.is_package {#util.is_package tag="function"}
+### util.is_package {id="util.is_package",tag="function"}
 
 Check if string maps to a package installed via pip. Mainly used to validate
 [pipeline packages](/usage/models).
@@ -1178,7 +1178,7 @@ Check if string maps to a package installed via pip. Mainly used to validate
 | `name`      | Name of package. ~~str~~                              |
 | **RETURNS** | `True` if installed package, `False` if not. ~~bool~~ |
 
-### util.get_package_path {#util.get_package_path tag="function" new="2"}
+### util.get_package_path {id="util.get_package_path",tag="function",new="2"}
 
 Get path to an installed package. Mainly used to resolve the location of
 [pipeline packages](/usage/models). Currently imports the package to find its
@@ -1196,7 +1196,7 @@ path.
 | `package_name` | Name of installed package. ~~str~~           |
 | **RETURNS**    | Path to pipeline package directory. ~~Path~~ |
 
-### util.is_in_jupyter {#util.is_in_jupyter tag="function" new="2"}
+### util.is_in_jupyter {id="util.is_in_jupyter",tag="function",new="2"}
 
 Check if user is running spaCy from a [Jupyter](https://jupyter.org) notebook by
 detecting the IPython kernel. Mainly used for the
@@ -1215,7 +1215,7 @@ detecting the IPython kernel. Mainly used for the
 | ----------- | ---------------------------------------------- |
 | **RETURNS** | `True` if in Jupyter, `False` if not. ~~bool~~ |
 
-### util.compile_prefix_regex {#util.compile_prefix_regex tag="function"}
+### util.compile_prefix_regex {id="util.compile_prefix_regex",tag="function"}
 
 Compile a sequence of prefix rules into a regex object.
 
@@ -1232,7 +1232,7 @@ Compile a sequence of prefix rules into a regex object.
 | `entries`   | The prefix rules, e.g. [`lang.punctuation.TOKENIZER_PREFIXES`](%%GITHUB_SPACY/spacy/lang/punctuation.py). ~~Iterable[Union[str, Pattern]]~~ |
 | **RETURNS** | The regex object to be used for [`Tokenizer.prefix_search`](/api/tokenizer#attributes). ~~Pattern~~                                         |
 
-### util.compile_suffix_regex {#util.compile_suffix_regex tag="function"}
+### util.compile_suffix_regex {id="util.compile_suffix_regex",tag="function"}
 
 Compile a sequence of suffix rules into a regex object.
 
@@ -1249,7 +1249,7 @@ Compile a sequence of suffix rules into a regex object.
 | `entries`   | The suffix rules, e.g. [`lang.punctuation.TOKENIZER_SUFFIXES`](%%GITHUB_SPACY/spacy/lang/punctuation.py). ~~Iterable[Union[str, Pattern]]~~ |
 | **RETURNS** | The regex object to be used for [`Tokenizer.suffix_search`](/api/tokenizer#attributes). ~~Pattern~~                                         |
 
-### util.compile_infix_regex {#util.compile_infix_regex tag="function"}
+### util.compile_infix_regex {id="util.compile_infix_regex",tag="function"}
 
 Compile a sequence of infix rules into a regex object.
 
@@ -1266,7 +1266,7 @@ Compile a sequence of infix rules into a regex object.
 | `entries`   | The infix rules, e.g. [`lang.punctuation.TOKENIZER_INFIXES`](%%GITHUB_SPACY/spacy/lang/punctuation.py). ~~Iterable[Union[str, Pattern]]~~ |
 | **RETURNS** | The regex object to be used for [`Tokenizer.infix_finditer`](/api/tokenizer#attributes). ~~Pattern~~                                      |
 
-### util.minibatch {#util.minibatch tag="function" new="2"}
+### util.minibatch {id="util.minibatch",tag="function",new="2"}
 
 Iterate over batches of items. `size` may be an iterator, so that batch-size can
 vary on each step.
@@ -1285,7 +1285,7 @@ vary on each step.
 | `size`     | The batch size(s). ~~Union[int, Sequence[int]]~~ |
 | **YIELDS** | The batches.                                     |
 
-### util.filter_spans {#util.filter_spans tag="function" new="2.1.4"}
+### util.filter_spans {id="util.filter_spans",tag="function",new="2.1.4"}
 
 Filter a sequence of [`Span`](/api/span) objects and remove duplicates or
 overlaps. Useful for creating named entities (where one token can only be part
@@ -1306,7 +1306,7 @@ of one entity) or when merging spans with
 | `spans`     | The spans to filter. ~~Iterable[Span]~~ |
 | **RETURNS** | The filtered spans. ~~List[Span]~~      |
 
-### util.get_words_and_spaces {#get_words_and_spaces tag="function" new="3"}
+### util.get_words_and_spaces {id="get_words_and_spaces",tag="function",new="3"}
 
 Given a list of words and a text, reconstruct the original tokens and return a
 list of words and spaces that can be used to create a [`Doc`](/api/doc#init).

@@ -10,7 +10,7 @@ The `Vocab` object provides a lookup table that allows you to access
 [`StringStore`](/api/stringstore). It also owns underlying C-data that is shared
 between `Doc` objects.
 
-## Vocab.\_\_init\_\_ {#init tag="method"}
+## Vocab.\_\_init\_\_ {id="init",tag="method"}
 
 Create the vocabulary.
 
@@ -31,7 +31,7 @@ Create the vocabulary.
 | `writing_system`   | A dictionary describing the language's writing system. Typically provided by [`Language.Defaults`](/api/language#defaults). ~~Dict[str, Any]~~                          |
 | `get_noun_chunks`  | A function that yields base noun phrases used for [`Doc.noun_chunks`](/api/doc#noun_chunks). ~~Optional[Callable[[Union[Doc, Span], Iterator[Tuple[int, int, int]]]]]~~ |
 
-## Vocab.\_\_len\_\_ {#len tag="method"}
+## Vocab.\_\_len\_\_ {id="len",tag="method"}
 
 Get the current number of lexemes in the vocabulary.
 
@@ -46,7 +46,7 @@ Get the current number of lexemes in the vocabulary.
 | ----------- | ------------------------------------------------ |
 | **RETURNS** | The number of lexemes in the vocabulary. ~~int~~ |
 
-## Vocab.\_\_getitem\_\_ {#getitem tag="method"}
+## Vocab.\_\_getitem\_\_ {id="getitem",tag="method"}
 
 Retrieve a lexeme, given an int ID or a string. If a previously unseen string is
 given, a new lexeme is created and stored.
@@ -63,7 +63,7 @@ given, a new lexeme is created and stored.
 | `id_or_string` | The hash value of a word, or its string. ~~Union[int, str]~~ |
 | **RETURNS**    | The lexeme indicated by the given ID. ~~Lexeme~~             |
 
-## Vocab.\_\_iter\_\_ {#iter tag="method"}
+## Vocab.\_\_iter\_\_ {id="iter",tag="method"}
 
 Iterate over the lexemes in the vocabulary.
 
@@ -77,7 +77,7 @@ Iterate over the lexemes in the vocabulary.
 | ---------- | -------------------------------------- |
 | **YIELDS** | An entry in the vocabulary. ~~Lexeme~~ |
 
-## Vocab.\_\_contains\_\_ {#contains tag="method"}
+## Vocab.\_\_contains\_\_ {id="contains",tag="method"}
 
 Check whether the string has an entry in the vocabulary. To get the ID for a
 given string, you need to look it up in
@@ -97,7 +97,7 @@ given string, you need to look it up in
 | `string`    | The ID string. ~~str~~                                      |
 | **RETURNS** | Whether the string has an entry in the vocabulary. ~~bool~~ |
 
-## Vocab.add_flag {#add_flag tag="method"}
+## Vocab.add_flag {id="add_flag",tag="method"}
 
 Set a new boolean flag to words in the vocabulary. The `flag_getter` function
 will be called over the words currently in the vocab, and then applied to new
@@ -122,7 +122,7 @@ using `token.check_flag(flag_id)`.
 | `flag_id`     | An integer between `1` and `63` (inclusive), specifying the bit at which the flag will be stored. If `-1`, the lowest available bit will be chosen. ~~int~~ |
 | **RETURNS**   | The integer ID by which the flag value can be checked. ~~int~~                                                                                              |
 
-## Vocab.reset_vectors {#reset_vectors tag="method" new="2"}
+## Vocab.reset_vectors {id="reset_vectors",tag="method",new="2"}
 
 Drop the current vector table. Because all vectors must be the same width, you
 have to call this to change the size of the vectors. Only one of the `width` and
@@ -140,7 +140,7 @@ have to call this to change the size of the vectors. Only one of the `width` and
 | `width`        | The new width. ~~int~~ |
 | `shape`        | The new shape. ~~int~~ |
 
-## Vocab.prune_vectors {#prune_vectors tag="method" new="2"}
+## Vocab.prune_vectors {id="prune_vectors",tag="method",new="2"}
 
 Reduce the current vector table to `nr_row` unique entries. Words mapped to the
 discarded vectors will be remapped to the closest vector among those remaining.
@@ -165,7 +165,7 @@ cosines are calculated in minibatches to reduce memory usage.
 | `batch_size` | Batch of vectors for calculating the similarities. Larger batch sizes might be faster, while temporarily requiring more memory. ~~int~~                                                                                      |
 | **RETURNS**  | A dictionary keyed by removed words mapped to `(string, score)` tuples, where `string` is the entry the removed word was mapped to, and `score` the similarity score between the two words. ~~Dict[str, Tuple[str, float]]~~ |
 
-## Vocab.deduplicate_vectors {#deduplicate_vectors tag="method" new="3.3"}
+## Vocab.deduplicate_vectors {id="deduplicate_vectors",tag="method",new="3.3"}
 
 > #### Example
 >
@@ -176,7 +176,7 @@ cosines are calculated in minibatches to reduce memory usage.
 Remove any duplicate rows from the current vector table, maintaining the
 mappings for all words in the vectors.
 
-## Vocab.get_vector {#get_vector tag="method" new="2"}
+## Vocab.get_vector {id="get_vector",tag="method",new="2"}
 
 Retrieve a vector for a word in the vocabulary. Words can be looked up by string
 or hash value. If the current vectors do not contain an entry for the word, a
@@ -194,7 +194,7 @@ or hash value. If the current vectors do not contain an entry for the word, a
 | `orth`      | The hash value of a word, or its unicode string. ~~Union[int, str]~~                                                   |
 | **RETURNS** | A word vector. Size and shape are determined by the `Vocab.vectors` instance. ~~numpy.ndarray[ndim=1, dtype=float32]~~ |
 
-## Vocab.set_vector {#set_vector tag="method" new="2"}
+## Vocab.set_vector {id="set_vector",tag="method",new="2"}
 
 Set a vector for a word in the vocabulary. Words can be referenced by string or
 hash value.
@@ -210,7 +210,7 @@ hash value.
 | `orth`   | The hash value of a word, or its unicode string. ~~Union[int, str]~~ |
 | `vector` | The vector to set. ~~numpy.ndarray[ndim=1, dtype=float32]~~          |
 
-## Vocab.has_vector {#has_vector tag="method" new="2"}
+## Vocab.has_vector {id="has_vector",tag="method",new="2"}
 
 Check whether a word has a vector. Returns `False` if no vectors are loaded.
 Words can be looked up by string or hash value.
@@ -227,7 +227,7 @@ Words can be looked up by string or hash value.
 | `orth`      | The hash value of a word, or its unicode string. ~~Union[int, str]~~ |
 | **RETURNS** | Whether the word has a vector. ~~bool~~                              |
 
-## Vocab.to_disk {#to_disk tag="method" new="2"}
+## Vocab.to_disk {id="to_disk",tag="method",new="2"}
 
 Save the current state to a directory.
 
@@ -243,7 +243,7 @@ Save the current state to a directory.
 | _keyword-only_ |                                                                                                                                            |
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~                                                |
 
-## Vocab.from_disk {#from_disk tag="method" new="2"}
+## Vocab.from_disk {id="from_disk",tag="method",new="2"}
 
 Loads state from a directory. Modifies the object in place and returns it.
 
@@ -261,7 +261,7 @@ Loads state from a directory. Modifies the object in place and returns it.
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~     |
 | **RETURNS**    | The modified `Vocab` object. ~~Vocab~~                                                          |
 
-## Vocab.to_bytes {#to_bytes tag="method"}
+## Vocab.to_bytes {id="to_bytes",tag="method"}
 
 Serialize the current state to a binary string.
 
@@ -277,7 +277,7 @@ Serialize the current state to a binary string.
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
 | **RETURNS**    | The serialized form of the `Vocab` object. ~~Vocab~~                                        |
 
-## Vocab.from_bytes {#from_bytes tag="method"}
+## Vocab.from_bytes {id="from_bytes",tag="method"}
 
 Load state from a binary string.
 
@@ -297,7 +297,7 @@ Load state from a binary string.
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
 | **RETURNS**    | The `Vocab` object. ~~Vocab~~                                                               |
 
-## Attributes {#attributes}
+## Attributes {id="attributes"}
 
 > #### Example
 >
@@ -317,7 +317,7 @@ Load state from a binary string.
 | `writing_system`                               | A dict with information about the language's writing system. ~~Dict[str, Any]~~                                                                                        |
 | `get_noun_chunks` <Tag variant="new">3.0</Tag> | A function that yields base noun phrases used for [`Doc.noun_chunks`](/ap/doc#noun_chunks). ~~Optional[Callable[[Union[Doc, Span], Iterator[Tuple[int, int, int]]]]]~~ |
 
-## Serialization fields {#serialization-fields}
+## Serialization fields {id="serialization-fields"}
 
 During serialization, spaCy will export several data fields used to restore
 different aspects of the object. If needed, you can exclude them from

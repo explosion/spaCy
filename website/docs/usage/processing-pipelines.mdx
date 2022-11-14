@@ -16,7 +16,7 @@ import Pipelines101 from 'usage/101/_pipelines.mdx'
 
 <Pipelines101 />
 
-## Processing text {#processing}
+## Processing text {id="processing"}
 
 When you call `nlp` on a text, spaCy will **tokenize** it and then **call each
 component** on the `Doc`, in order. It then returns the processed `Doc` that you
@@ -122,7 +122,7 @@ for doc in docs:
     print(f"{doc._.text_id}: {doc.text}")
 ```
 
-### Multiprocessing {#multiprocessing}
+### Multiprocessing {id="multiprocessing"}
 
 spaCy includes built-in support for multiprocessing with
 [`nlp.pipe`](/api/language#pipe) using the `n_process` option:
@@ -170,7 +170,7 @@ the number of threads before loading any models using
 
 </Infobox>
 
-## Pipelines and built-in components {#pipelines}
+## Pipelines and built-in components {id="pipelines"}
 
 spaCy makes it very easy to create your own pipelines consisting of reusable
 components – this includes spaCy's default tagger, parser and entity recognizer,
@@ -286,7 +286,7 @@ print(nlp.pipe_names)
 # ['tok2vec', 'tagger', 'parser', 'ner', 'attribute_ruler', 'lemmatizer']
 ```
 
-### Built-in pipeline components {#built-in}
+### Built-in pipeline components {id="built-in"}
 
 spaCy ships with several built-in pipeline components that are registered with
 string names. This means that you can initialize them by calling
@@ -321,7 +321,7 @@ available pipeline components and component functions.
 | `tok2vec`              | [`Tok2Vec`](/api/tok2vec)                            | Assign token-to-vector embeddings.                                                        |
 | `transformer`          | [`Transformer`](/api/transformer)                    | Assign the tokens and outputs of a transformer model.                                     |
 
-### Disabling, excluding and modifying components {#disabling}
+### Disabling, excluding and modifying components {id="disabling"}
 
 If you don't need a particular component of the pipeline – for example, the
 tagger or the parser, you can **disable or exclude** it. This can sometimes make
@@ -461,7 +461,7 @@ run as part of the pipeline.
 | `nlp.component_names` | All component names, including disabled components.              |
 | `nlp.disabled`        | Names of components that are currently disabled.                 |
 
-### Sourcing components from existing pipelines {#sourced-components new="3"}
+### Sourcing components from existing pipelines {id="sourced-components",new="3"}
 
 Pipeline components that are independent can also be reused across pipelines.
 Instead of adding a new blank component, you can also copy an existing component
@@ -518,7 +518,7 @@ nlp.add_pipe("ner", source=source_nlp)
 print(nlp.pipe_names)
 ```
 
-### Analyzing pipeline components {#analysis new="3"}
+### Analyzing pipeline components {id="analysis",new="3"}
 
 The [`nlp.analyze_pipes`](/api/language#analyze_pipes) method analyzes the
 components in the current pipeline and outputs information about them like the
@@ -610,7 +610,7 @@ doesn't, the pipeline analysis won't catch that.
 
 </Infobox>
 
-## Creating custom pipeline components {#custom-components}
+## Creating custom pipeline components {id="custom-components"}
 
 A pipeline component is a function that receives a `Doc` object, modifies it and
 returns it – for example, by using the current weights to make a prediction and
@@ -679,7 +679,7 @@ your custom components, and make sure they can be saved and loaded.
 
 </Infobox>
 
-### Examples: Simple stateless pipeline components {#custom-components-simple}
+### Examples: Simple stateless pipeline components {id="custom-components-simple"}
 
 The following component receives the `Doc` in the pipeline and prints some
 information about it: the number of tokens, the part-of-speech tags of the
@@ -758,7 +758,7 @@ for sent in doc.sents:
     print(sent.text)
 ```
 
-### Component factories and stateful components {#custom-components-factories}
+### Component factories and stateful components {id="custom-components-factories"}
 
 Component factories are callables that take settings and return a **pipeline
 component function**. This is useful if your component is stateful and if you
@@ -838,7 +838,7 @@ make your factory a separate function. That's also how spaCy does it internally.
 
 </Accordion>
 
-### Language-specific factories {#factories-language new="3"}
+### Language-specific factories {id="factories-language",new="3"}
 
 There are many use cases where you might want your pipeline components to be
 language-specific. Sometimes this requires entirely different implementation per
@@ -896,7 +896,7 @@ available, falls back to looking up the regular factory name.
 
 </Infobox>
 
-### Example: Stateful component with settings {#example-stateful-components}
+### Example: Stateful component with settings {id="example-stateful-components"}
 
 This example shows a **stateful** pipeline component for handling acronyms:
 based on a dictionary, it will detect acronyms and their expanded forms in both
@@ -965,7 +965,7 @@ doc = nlp("LOL, be right back")
 print(doc._.acronyms)
 ```
 
-## Initializing and serializing component data {#component-data}
+## Initializing and serializing component data {id="component-data"}
 
 Many stateful components depend on **data resources** like dictionaries and
 lookup tables that should ideally be **configurable**. For example, it makes
@@ -996,7 +996,7 @@ that if a component saves out its config and settings, the
 since that's the config the component was created with. It will also fail if the
 data is not JSON-serializable.
 
-### Option 1: Using a registered function {#component-data-function}
+### Option 1: Using a registered function {id="component-data-function"}
 
 <Infobox>
 
@@ -1065,7 +1065,7 @@ the name. Registered functions can also take **arguments**, by the way, that can
 be defined in the config as well – you can read more about this in the docs on
 [training with custom code](/usage/training#custom-code).
 
-### Option 2: Save data with the pipeline and load it in once on initialization {#component-data-initialization}
+### Option 2: Save data with the pipeline and load it in once on initialization {id="component-data-initialization"}
 
 <Infobox>
 
@@ -1197,7 +1197,7 @@ object is saved to disk, which will run the component's `to_disk` method. When
 the pipeline is loaded back into spaCy later to use it, the `from_disk` method
 will load the data back in.
 
-## Python type hints and validation {#type-hints new="3"}
+## Python type hints and validation {id="type-hints",new="3"}
 
 spaCy's configs are powered by our machine learning library Thinc's
 [configuration system](https://thinc.ai/docs/usage-config), which supports
@@ -1267,7 +1267,7 @@ nlp.add_pipe("debug", config={"log_level": "DEBUG"})
 doc = nlp("This is a text...")
 ```
 
-## Trainable components {#trainable-components new="3"}
+## Trainable components {id="trainable-components",new="3"}
 
 spaCy's [`TrainablePipe`](/api/pipe) class helps you implement your own
 trainable components that have their own model instance, make predictions over
@@ -1384,7 +1384,7 @@ into your spaCy pipeline, see the usage guide on
 
 </Infobox>
 
-## Extension attributes {#custom-components-attributes new="2"}
+## Extension attributes {id="custom-components-attributes",new="2"}
 
 spaCy allows you to set any custom attributes and methods on the `Doc`, `Span`
 and `Token`, which become available as `Doc._`, `Span._` and `Token._` – for
@@ -1495,7 +1495,7 @@ Once you've registered your custom attribute, you can also use the built-in
 especially useful it you want to pass in a string instead of calling
 `doc._.my_attr`.
 
-### Example: Pipeline component for GPE entities and country meta data via a REST API {#component-example3}
+### Example: Pipeline component for GPE entities and country meta data via a REST API {id="component-example3"}
 
 This example shows the implementation of a pipeline component that fetches
 country meta data via the [REST Countries API](https://restcountries.com), sets
@@ -1571,7 +1571,7 @@ mistakes or foreign-language versions, you could also implement a
 `like_country`-style getter function that makes a request to the search API
 endpoint and returns the best-matching result.
 
-### User hooks {#custom-components-user-hooks}
+### User hooks {id="custom-components-user-hooks"}
 
 While it's generally recommended to use the `Doc._`, `Span._` and `Token._`
 proxies to add your own custom attributes, spaCy offers a few exceptions to
@@ -1627,7 +1627,7 @@ def create_similarity_component(nlp, name, index: int):
     return SimilarityModel(name, index)
 ```
 
-## Developing plugins and wrappers {#plugins}
+## Developing plugins and wrappers {id="plugins"}
 
 We're very excited about all the new possibilities for community extensions and
 plugins in spaCy, and we can't wait to see what you build with it! To get you
@@ -1635,7 +1635,7 @@ started, here are a few tips, tricks and best
 practices. [See here](/universe/?category=pipeline) for examples of other spaCy
 extensions.
 
-### Usage ideas {#custom-components-usage-ideas}
+### Usage ideas {id="custom-components-usage-ideas"}
 
 - **Adding new features and hooking in models.** For example, a sentiment
   analysis model, or your preferred solution for lemmatization or sentiment
@@ -1651,7 +1651,7 @@ extensions.
   exports relevant information about the current state of the processed
   document, and insert it at any point of your pipeline.
 
-### Best practices {#custom-components-best-practices}
+### Best practices {id="custom-components-best-practices"}
 
 Extensions can claim their own `._` namespace and exist as standalone packages.
 If you're developing a tool or library and want to make it easy for others to
@@ -1739,7 +1739,7 @@ function that takes a `Doc`, modifies it and returns it.
   to help people find it. If you post it on Twitter, feel free to tag
   [@spacy_io](https://twitter.com/spacy_io) so we can check it out.
 
-### Wrapping other models and libraries {#wrapping-models-libraries}
+### Wrapping other models and libraries {id="wrapping-models-libraries"}
 
 Let's say you have a custom entity recognizer that takes a list of strings and
 returns their [BILUO tags](/usage/linguistic-features#accessing-ner). Given an

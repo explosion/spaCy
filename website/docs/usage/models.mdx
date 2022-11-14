@@ -60,7 +60,7 @@ yields the same result as generating it using `spacy.blank()`. In both cases the
 default configuration for the chosen language is loaded, and no pretrained
 components will be available.
 
-## Language support {#languages}
+## Language support {id="languages"}
 
 spaCy currently provides support for the following languages. You can help by
 improving the existing [language data](/usage/linguistic-features#language-data)
@@ -74,7 +74,7 @@ import Languages from 'widgets/languages.js'
 
 <Languages />
 
-### Multi-language support {#multi-language new="2"}
+### Multi-language support {id="multi-language",new="2"}
 
 > ```python
 > # Standard import
@@ -96,7 +96,7 @@ To train a pipeline using the neutral multi-language class, you can set
 import the `MultiLanguage` class directly, or call
 [`spacy.blank("xx")`](/api/top-level#spacy.blank) for lazy-loading.
 
-### Chinese language support {#chinese new="2.3"}
+### Chinese language support {id="chinese",new="2.3"}
 
 The Chinese language class supports three word segmentation options, `char`,
 `jieba` and `pkuseg`.
@@ -231,7 +231,7 @@ nlp.tokenizer.initialize(pkuseg_model="/path/to/pkuseg_model")
 
 </Accordion>
 
-### Japanese language support {#japanese new=2.3}
+### Japanese language support {id="japanese",version="2.3"}
 
 > #### Manual setup
 >
@@ -270,7 +270,7 @@ used for training the current [Japanese pipelines](/models/ja).
 
 </Infobox>
 
-### Korean language support {#korean}
+### Korean language support {id="korean"}
 
 > #### mecab-ko tokenizer
 >
@@ -309,7 +309,7 @@ additional dependencies are required.
 
 </Infobox>
 
-## Installing and using trained pipelines {#download}
+## Installing and using trained pipelines {id="download"}
 
 The easiest way to download a trained pipeline is via spaCy's
 [`download`](/api/cli#download) command. It takes care of finding the
@@ -364,14 +364,14 @@ pipeline package can be found.
 !python -m spacy download en_core_web_sm
 ```
 
-### Installation via pip {#download-pip}
+### Installation via pip {id="download-pip"}
 
 To download a trained pipeline directly using
 [pip](https://pypi.python.org/pypi/pip), point `pip install` to the URL or local
 path of the wheel file or archive. Installing the wheel is usually more
 efficient.
 
-> #### Pipeline Package URLs {#pipeline-urls}
+> #### Pipeline Package URLs {id="pipeline-urls"}
 >
 > Pretrained pipeline distributions are hosted on
 > [Github Releases](https://github.com/explosion/spacy-models/releases), and you
@@ -411,7 +411,7 @@ You can also add the direct download link to your application's
 `requirements.txt`. For more details, see the section on
 [working with pipeline packages in production](#production).
 
-### Manual download and installation {#download-manual}
+### Manual download and installation {id="download-manual"}
 
 In some cases, you might prefer downloading the data manually, for example to
 place it into a custom directory. You can download the package via your browser
@@ -436,7 +436,7 @@ pipeline data.
 You can place the **pipeline package directory** anywhere on your local file
 system.
 
-### Installation from Python {#download-python}
+### Installation from Python {id="download-python"}
 
 Since the [`spacy download`](/api/cli#download) command installs the pipeline as
 a **Python package**, we always recommend running it from the command line, just
@@ -457,7 +457,7 @@ import spacy
 spacy.cli.download("en_core_web_sm")
 ```
 
-### Using trained pipelines with spaCy {#usage}
+### Using trained pipelines with spaCy {id="usage"}
 
 To load a pipeline package, use [`spacy.load`](/api/top-level#spacy.load) with
 the package name or a path to the data directory:
@@ -491,7 +491,7 @@ exposes the pipeline's meta data as the attribute `meta`. For example,
 
 </Infobox>
 
-### Importing pipeline packages as modules {#usage-import}
+### Importing pipeline packages as modules {id="usage-import"}
 
 If you've installed a trained pipeline via [`spacy download`](/api/cli#download)
 or directly via pip, you can also `import` it and then call its `load()` method
@@ -514,7 +514,7 @@ as your code will raise an `ImportError` immediately, instead of failing
 somewhere down the line when calling `spacy.load()`. For more details, see the
 section on [working with pipeline packages in production](#production).
 
-## Using trained pipelines in production {#production}
+## Using trained pipelines in production {id="production"}
 
 If your application depends on one or more trained pipeline packages, you'll
 usually want to integrate them into your continuous integration workflow and
@@ -523,7 +523,7 @@ and loading pipeline packages, the underlying functionality is entirely based on
 native Python packaging. This allows your application to handle a spaCy pipeline
 like any other package dependency.
 
-### Downloading and requiring package dependencies {#models-download}
+### Downloading and requiring package dependencies {id="models-download"}
 
 spaCy's built-in [`download`](/api/cli#download) command is mostly intended as a
 convenient, interactive wrapper. It performs compatibility checks and prints
@@ -551,7 +551,7 @@ each pipeline. If you've [trained](/usage/training) your own pipeline, you can
 use the [`spacy package`](/api/cli#package) command to generate the required
 meta data and turn it into a loadable package.
 
-### Loading and testing pipeline packages {#models-loading}
+### Loading and testing pipeline packages {id="models-loading"}
 
 Pipeline packages are regular Python packages, so you can also import them as a
 package using Python's native `import` syntax, and then call the `load` method

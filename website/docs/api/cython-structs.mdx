@@ -7,7 +7,7 @@ menu:
   - ['LexemeC', 'lexemec']
 ---
 
-## TokenC {#tokenc tag="C struct" source="spacy/structs.pxd"}
+## TokenC {id="tokenc",tag="C struct",source="spacy/structs.pxd"}
 
 Cython data container for the `Token` object.
 
@@ -39,7 +39,7 @@ Cython data container for the `Token` object.
 | `ent_type`   | Named entity type. ~~attr_t (uint64_t)~~                                                                                                                                                                                                                                                                                                    |
 | `ent_id`     | ID of the entity the token is an instance of, if any. Currently not used, but potentially for coreference resolution. ~~attr_t (uint64_t)~~                                                                                                                                                                                                 |
 
-### Token.get_struct_attr {#token_get_struct_attr tag="staticmethod, nogil" source="spacy/tokens/token.pxd"}
+### Token.get_struct_attr {id="token_get_struct_attr",tag="staticmethod, nogil",source="spacy/tokens/token.pxd"}
 
 Get the value of an attribute from the `TokenC` struct by attribute ID.
 
@@ -58,7 +58,7 @@ Get the value of an attribute from the `TokenC` struct by attribute ID.
 | `feat_name` | The ID of the attribute to look up. The attributes are enumerated in `spacy.typedefs`. ~~attr_id_t~~ |
 | **RETURNS** | The value of the attribute. ~~attr_t (uint64_t)~~                                                    |
 
-### Token.set_struct_attr {#token_set_struct_attr tag="staticmethod, nogil" source="spacy/tokens/token.pxd"}
+### Token.set_struct_attr {id="token_set_struct_attr",tag="staticmethod, nogil",source="spacy/tokens/token.pxd"}
 
 Set the value of an attribute of the `TokenC` struct by attribute ID.
 
@@ -78,7 +78,7 @@ Set the value of an attribute of the `TokenC` struct by attribute ID.
 | `feat_name` | The ID of the attribute to look up. The attributes are enumerated in `spacy.typedefs`. ~~attr_id_t~~ |
 | `value`     | The value to set. ~~attr_t (uint64_t)~~                                                              |
 
-### token_by_start {#token_by_start tag="function" source="spacy/tokens/doc.pxd"}
+### token_by_start {id="token_by_start",tag="function",source="spacy/tokens/doc.pxd"}
 
 Find a token in a `TokenC*` array by the offset of its first character.
 
@@ -100,7 +100,7 @@ Find a token in a `TokenC*` array by the offset of its first character.
 | `start_char` | The start index to search for. ~~int~~                            |
 | **RETURNS**  | The index of the token in the array or `-1` if not found. ~~int~~ |
 
-### token_by_end {#token_by_end tag="function" source="spacy/tokens/doc.pxd"}
+### token_by_end {id="token_by_end",tag="function",source="spacy/tokens/doc.pxd"}
 
 Find a token in a `TokenC*` array by the offset of its final character.
 
@@ -122,7 +122,7 @@ Find a token in a `TokenC*` array by the offset of its final character.
 | `end_char`  | The end index to search for. ~~int~~                              |
 | **RETURNS** | The index of the token in the array or `-1` if not found. ~~int~~ |
 
-### set_children_from_heads {#set_children_from_heads tag="function" source="spacy/tokens/doc.pxd"}
+### set_children_from_heads {id="set_children_from_heads",tag="function",source="spacy/tokens/doc.pxd"}
 
 Set attributes that allow lookup of syntactic children on a `TokenC*` array.
 This function must be called after making changes to the `TokenC.head`
@@ -148,7 +148,7 @@ attribute, in order to make the parse tree navigation consistent.
 | `tokens` | A `TokenC*` array. ~~const TokenC\*~~      |
 | `length` | The number of tokens in the array. ~~int~~ |
 
-## LexemeC {#lexemec tag="C struct" source="spacy/structs.pxd"}
+## LexemeC {id="lexemec",tag="C struct",source="spacy/structs.pxd"}
 
 Struct holding information about a lexical type. `LexemeC` structs are usually
 owned by the `Vocab`, and accessed through a read-only pointer on the `TokenC`
@@ -172,7 +172,7 @@ struct.
 | `prefix` | Length-N substring from the start of the lexeme. Defaults to `N=1`. ~~attr_t (uint64_t)~~                                                        |
 | `suffix` | Length-N substring from the end of the lexeme. Defaults to `N=3`. ~~attr_t (uint64_t)~~                                                          |
 
-### Lexeme.get_struct_attr {#lexeme_get_struct_attr tag="staticmethod, nogil" source="spacy/lexeme.pxd"}
+### Lexeme.get_struct_attr {id="lexeme_get_struct_attr",tag="staticmethod, nogil",source="spacy/lexeme.pxd"}
 
 Get the value of an attribute from the `LexemeC` struct by attribute ID.
 
@@ -192,7 +192,7 @@ Get the value of an attribute from the `LexemeC` struct by attribute ID.
 | `feat_name` | The ID of the attribute to look up. The attributes are enumerated in `spacy.typedefs`. ~~attr_id_t~~ |
 | **RETURNS** | The value of the attribute. ~~attr_t (uint64_t)~~                                                    |
 
-### Lexeme.set_struct_attr {#lexeme_set_struct_attr tag="staticmethod, nogil" source="spacy/lexeme.pxd"}
+### Lexeme.set_struct_attr {id="lexeme_set_struct_attr",tag="staticmethod, nogil",source="spacy/lexeme.pxd"}
 
 Set the value of an attribute of the `LexemeC` struct by attribute ID.
 
@@ -212,7 +212,7 @@ Set the value of an attribute of the `LexemeC` struct by attribute ID.
 | `feat_name` | The ID of the attribute to look up. The attributes are enumerated in `spacy.typedefs`. ~~attr_id_t~~ |
 | `value`     | The value to set. ~~attr_t (uint64_t)~~                                                              |
 
-### Lexeme.c_check_flag {#lexeme_c_check_flag tag="staticmethod, nogil" source="spacy/lexeme.pxd"}
+### Lexeme.c_check_flag {id="lexeme_c_check_flag",tag="staticmethod, nogil",source="spacy/lexeme.pxd"}
 
 Check the value of a binary flag attribute.
 
@@ -232,7 +232,7 @@ Check the value of a binary flag attribute.
 | `flag_id`   | The ID of the flag to look up. The flag IDs are enumerated in `spacy.typedefs`. ~~attr_id_t~~ |
 | **RETURNS** | The boolean value of the flag. ~~bint~~                                                       |
 
-### Lexeme.c_set_flag {#lexeme_c_set_flag tag="staticmethod, nogil" source="spacy/lexeme.pxd"}
+### Lexeme.c_set_flag {id="lexeme_c_set_flag",tag="staticmethod, nogil",source="spacy/lexeme.pxd"}
 
 Set the value of a binary flag attribute.
 

@@ -6,7 +6,7 @@ menu:
   - ['Conventions', 'conventions']
 ---
 
-## Overview {#overview hidden="true"}
+## Overview {id="overview",hidden="true"}
 
 > #### What's Cython?
 >
@@ -37,7 +37,7 @@ class holds a [`LexemeC`](/api/cython-structs#lexemec) struct, at `Lexeme.c`.
 This lets you shed the Python container, and pass a pointer to the underlying
 data into C-level functions.
 
-## Conventions {#conventions}
+## Conventions {id="conventions"}
 
 spaCy's core data structures are implemented as [Cython](http://cython.org/)
 `cdef` classes. Memory is managed through the

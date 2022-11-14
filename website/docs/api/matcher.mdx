@@ -13,7 +13,7 @@ tokens in context. For in-depth examples and workflows for combining rules and
 statistical models, see the [usage guide](/usage/rule-based-matching) on
 rule-based matching.
 
-## Pattern format {#patterns}
+## Pattern format {id="patterns"}
 
 > ```json
 > ### Example
@@ -95,7 +95,7 @@ it compares to another value.
 | `INTERSECTS`               | Attribute value (for `MORPH` or custom list attribute) has a non-empty intersection with a list. ~~Any~~ |
 | `==`, `>=`, `<=`, `>`, `<` | Attribute value is equal, greater or equal, smaller or equal, greater or smaller. ~~Union[int, float]~~  |
 
-## Matcher.\_\_init\_\_ {#init tag="method"}
+## Matcher.\_\_init\_\_ {id="init",tag="method"}
 
 Create the rule-based `Matcher`. If `validate=True` is set, all patterns added
 to the matcher will be validated against a JSON schema and a `MatchPatternError`
@@ -114,7 +114,7 @@ string where an integer is expected) or unexpected property names.
 | `vocab`    | The vocabulary object, which must be shared with the documents the matcher will operate on. ~~Vocab~~ |
 | `validate` | Validate all patterns added to this matcher. ~~bool~~                                                 |
 
-## Matcher.\_\_call\_\_ {#call tag="method"}
+## Matcher.\_\_call\_\_ {id="call",tag="method"}
 
 Find all token sequences matching the supplied patterns on the `Doc` or `Span`.
 
@@ -143,7 +143,7 @@ the match.
 | `with_alignments` <Tag variant="new">3.0.6</Tag> | Return match alignment information as part of the match tuple as `List[int]` with the same length as the matched span. Each entry denotes the corresponding index of the token in the pattern. If `as_spans` is set to `True`, this setting is ignored. Defaults to `False`. ~~bool~~                    |
 | **RETURNS**                                      | A list of `(match_id, start, end)` tuples, describing the matches. A match tuple describes a span `doc[start:end`]. The `match_id` is the ID of the added match pattern. If `as_spans` is set to `True`, a list of `Span` objects is returned instead. ~~Union[List[Tuple[int, int, int]], List[Span]]~~ |
 
-## Matcher.\_\_len\_\_ {#len tag="method" new="2"}
+## Matcher.\_\_len\_\_ {id="len",tag="method",new="2"}
 
 Get the number of rules added to the matcher. Note that this only returns the
 number of rules (identical with the number of IDs), not the number of individual
@@ -162,7 +162,7 @@ patterns.
 | ----------- | ---------------------------- |
 | **RETURNS** | The number of rules. ~~int~~ |
 
-## Matcher.\_\_contains\_\_ {#contains tag="method" new="2"}
+## Matcher.\_\_contains\_\_ {id="contains",tag="method",new="2"}
 
 Check whether the matcher contains rules for a match ID.
 
@@ -180,7 +180,7 @@ Check whether the matcher contains rules for a match ID.
 | `key`       | The match ID. ~~str~~                                          |
 | **RETURNS** | Whether the matcher contains rules for this match ID. ~~bool~~ |
 
-## Matcher.add {#add tag="method" new="2"}
+## Matcher.add {id="add",tag="method",new="2"}
 
 Add a rule to the matcher, consisting of an ID key, one or more patterns, and an
 optional callback function to act on the matches. The callback function will
@@ -226,7 +226,7 @@ patterns = [[{"TEXT": "Google"}, {"TEXT": "Now"}], [{"TEXT": "GoogleNow"}]]
 | `on_match`                          | Callback function to act on matches. Takes the arguments `matcher`, `doc`, `i` and `matches`. ~~Optional[Callable[[Matcher, Doc, int, List[tuple], Any]]~~ |
 | `greedy` <Tag variant="new">3</Tag> | Optional filter for greedy matches. Can either be `"FIRST"` or `"LONGEST"`. ~~Optional[str]~~                                                              |
 
-## Matcher.remove {#remove tag="method" new="2"}
+## Matcher.remove {id="remove",tag="method",new="2"}
 
 Remove a rule from the matcher. A `KeyError` is raised if the match ID does not
 exist.
@@ -244,7 +244,7 @@ exist.
 | ----- | --------------------------------- |
 | `key` | The ID of the match rule. ~~str~~ |
 
-## Matcher.get {#get tag="method" new="2"}
+## Matcher.get {id="get",tag="method",new="2"}
 
 Retrieve the pattern stored for a key. Returns the rule as an
 `(on_match, patterns)` tuple containing the callback and available patterns.
