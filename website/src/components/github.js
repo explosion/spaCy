@@ -16,7 +16,7 @@ or a report on the issue tracker. Thanks!`
 const GitHubCode = ({ url, lang, errorMsg = defaultErrorMsg, className }) => {
     const [initialized, setInitialized] = useState(false)
     const [code, setCode] = useState(errorMsg)
-    const codeClassNames = classNames(classes.code, classes.maxHeight, className)
+    const codeClassNames = classNames(classes.code, classes['max-height'], className)
 
     const rawUrl = url
         .replace('github.com', 'raw.githubusercontent.com')
@@ -46,7 +46,9 @@ const GitHubCode = ({ url, lang, errorMsg = defaultErrorMsg, className }) => {
             <header className={classes.header}>
                 <Link to={url} hidden>
                     <Icon name="github" width={16} inline />
-                    <code className={classNames(classes.inlineCode, classes.inlineCodeDark)}>
+                    <code
+                        className={classNames(classes['inline-code'], classes['inline-code-dark'])}
+                    >
                         {rawUrl.split('.com/')[1]}
                     </code>
                 </Link>

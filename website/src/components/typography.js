@@ -58,8 +58,8 @@ export const Label = ({ className, ...props }) => (
 )
 
 export const InlineList = ({ Component = 'p', gutterBottom = true, className, children }) => {
-    const listClassNames = classNames(classes.inlineList, className, {
-        [classes.noGutter]: !gutterBottom,
+    const listClassNames = classNames(classes['inline-list'], className, {
+        [classes['no-gutter']]: !gutterBottom,
     })
     return <Component className={listClassNames}>{children}</Component>
 }

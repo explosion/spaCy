@@ -24,12 +24,12 @@ export default (props) => (
 )
 
 export const Pre = (props) => {
-    return <pre className={classes.pre}>{props.children}</pre>
+    return <pre className={classes['pre']}>{props.children}</pre>
 }
 
 export const InlineCode = ({ wrap = false, className, children, ...props }) => {
-    const codeClassNames = classNames(classes.inlineCode, className, {
-        [classes.wrap]: wrap || (isString(children) && children.length >= WRAP_THRESHOLD),
+    const codeClassNames = classNames(classes['inline-code'], className, {
+        [classes['wrap']]: wrap || (isString(children) && children.length >= WRAP_THRESHOLD),
     })
     return (
         <code className={codeClassNames} {...props}>
@@ -76,10 +76,10 @@ export const TypeAnnotation = ({ lang = 'python', link = true, children }) => {
     const annotClassNames = classNames(
         'type-annotation',
         `language-${lang}`,
-        classes.inlineCode,
-        classes.typeAnnotation,
+        classes['inline-code'],
+        classes['type-annotation'],
         {
-            [classes.wrap]: code.length >= WRAP_THRESHOLD,
+            [classes['wrap']]: code.length >= WRAP_THRESHOLD,
         }
     )
     return (
@@ -87,7 +87,7 @@ export const TypeAnnotation = ({ lang = 'python', link = true, children }) => {
             {elements.map((el, i) => (
                 <Fragment key={i}>{linkType(el, !!link)}</Fragment>
             ))}
-            {meta && <span className={classes.typeAnnotationMeta}>{meta}</span>}
+            {meta && <span className={classes['type-annotation-meta']}>{meta}</span>}
         </code>
     )
 }
@@ -132,7 +132,7 @@ function convertLine(line, i) {
         })
         return (
             <Fragment key={line}>
-                <span data-prompt={i === 0 ? '$' : null} className={classes.cliArgSubtle}>
+                <span data-prompt={i === 0 ? '$' : null} className={classes['cli-arg-subtle']}>
                     python -m
                 </span>{' '}
                 <span>spacy</span>{' '}
@@ -140,9 +140,9 @@ function convertLine(line, i) {
                     const isCmd = j === 0
                     const url = isCmd ? `/api/cli#${item.replace(' ', '-')}` : null
                     const isAbstract = isString(item) && /^\[(.+)\]$/.test(item)
-                    const itemClassNames = classNames(classes.cliArg, {
-                        [classes.cliArgHighlight]: isCmd,
-                        [classes.cliArgEmphasis]: isAbstract,
+                    const itemClassNames = classNames(classes['cli-arg'], {
+                        [classes['cli-arg-highlight']]: isCmd,
+                        [classes['cli-arg-emphasis']]: isAbstract,
                     })
                     const text = isAbstract ? item.slice(1, -1) : item
                     return (
@@ -236,11 +236,11 @@ export class Code extends React.Component {
     render() {
         const { lang, title, executable, github, prompt, wrap, highlight, className, children } =
             this.props
-        const codeClassNames = classNames(classes.code, className, `language-${lang}`, {
-            [classes.wrap]: !!highlight || !!wrap || lang === 'cli',
-            [classes.cli]: lang === 'cli',
+        const codeClassNames = classNames(classes['code'], className, `language-${lang}`, {
+            [classes['wrap']]: !!highlight || !!wrap || lang === 'cli',
+            [classes['cli']]: lang === 'cli',
         })
-        const ghClassNames = classNames(codeClassNames, classes.maxHeight)
+        const ghClassNames = classNames(codeClassNames, classes['max-height'])
         const { Juniper } = this.state
 
         if (github) {
@@ -262,7 +262,7 @@ export class Code extends React.Component {
         const html = formatCode(rawHtml, lang, prompt)
         return (
             <>
-                {title && <h4 className={classes.title}>{title}</h4>}
+                {title && <h4 className={classes['title']}>{title}</h4>}
                 <code className={codeClassNames}>{html}</code>
             </>
         )
@@ -273,10 +273,10 @@ const JuniperWrapper = ({ Juniper, title, lang, children }) => {
     const { binderUrl, binderVersion } = siteMetadata
     const juniperTitle = title || 'Editable Code'
     return (
-        <div className={classes.juniperWrapper}>
-            <h4 className={classes.juniperTitle}>
+        <div className={classes['juniper-wrapper']}>
+            <h4 className={classes['juniper-title']}>
                 {juniperTitle}
-                <span className={classes.juniperMeta}>
+                <span className={classes['juniper-meta']}>
                     spaCy v{binderVersion} &middot; Python 3 &middot; via{' '}
                     <Link to="https://mybinder.org/" hidden>
                         Binder
@@ -289,10 +289,10 @@ const JuniperWrapper = ({ Juniper, title, lang, children }) => {
                 branch={binderBranch}
                 lang={lang}
                 classNames={{
-                    cell: classes.juniperCell,
-                    input: classes.juniperInput,
-                    button: classes.juniperButton,
-                    output: classes.juniperOutput,
+                    cell: classes['juniper-cell'],
+                    input: classes['juniper-input'],
+                    button: classes['juniper-button'],
+                    output: classes['juniper-output'],
                 }}
             >
                 {children}
