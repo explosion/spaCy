@@ -1147,11 +1147,11 @@ def _get_extensions(spec, string_store, name2index):
     return attr_values
 
 
-def fuzzy_match(input_string: str, rule_string: str, fuzzy: int=-1) -> bool:
-    distance = min(len(input_string), len(rule_string))
+def fuzzy_match(s1: str, s2: str, fuzzy: int=-1) -> bool:
+    distance = min(len(s1), len(s2))
     distance -= 1 # don't allow completely different tokens
     if fuzzy == -1: # FUZZY operator with unspecified fuzzy
         fuzzy = 5 # default max fuzzy
         distance -= 1 # be more restrictive
     distance = min(fuzzy, distance if distance > 0 else 1)
-    return levenshtein(input_string, rule_string, distance) <= distance
+    return levenshtein(s1, s2, distance) <= distance

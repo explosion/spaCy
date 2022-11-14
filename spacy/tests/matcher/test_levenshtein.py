@@ -71,3 +71,4 @@ def test_levenshtein(dist, a, b):
 )
 def test_fuzzy_match(a, b, fuzzy, expected):
     assert fuzzy_match(a, b, fuzzy) == expected
+    assert fuzzy_match(b, a, fuzzy) == expected
