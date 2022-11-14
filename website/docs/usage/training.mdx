@@ -23,7 +23,7 @@ import Training101 from 'usage/101/_training.md'
 
 <Infobox title="Tip: Try the Prodigy annotation tool">
 
-[![Prodigy: Radically efficient machine teaching](../images/prodigy.jpg)](https://prodi.gy)
+[![Prodigy: Radically efficient machine teaching](/images/prodigy.jpg)](https://prodi.gy)
 
 If you need to label a lot of data, check out [Prodigy](https://prodi.gy), a
 new, active learning-powered annotation tool we've developed. Prodigy is fast
@@ -222,7 +222,7 @@ config is available as [`nlp.config`](/api/language#config) and it includes all
 information about the pipeline, as well as the settings used to train and
 initialize it.
 
-![Illustration of pipeline lifecycle](../images/lifecycle.svg)
+![Illustration of pipeline lifecycle](/images/lifecycle.svg)
 
 At runtime spaCy will only use the `[nlp]` and `[components]` blocks of the
 config and load all data, including tokenization rules, model weights and other
@@ -1120,7 +1120,7 @@ because the component settings required for training (load data from an external
 file) wouldn't match the component settings required at runtime (load what's
 included with the saved `nlp` object and don't depend on external file).
 
-![Illustration of pipeline lifecycle](../images/lifecycle.svg)
+![Illustration of pipeline lifecycle](/images/lifecycle.svg)
 
 <Infobox title="How components save and load data" emoji="📖">
 
@@ -1623,7 +1623,7 @@ each worker is given ownership of a subset of the parameter arrays. Every
 parameter array is owned by exactly one worker, and the workers are given a
 mapping so they know which worker owns which parameter.
 
-![Illustration of setup](../images/spacy-ray.svg)
+![Illustration of setup](/images/spacy-ray.svg)
 
 As training proceeds, every worker will be computing gradients for **all** of
 the model parameters. When they compute gradients for parameters they don't own,

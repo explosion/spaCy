@@ -208,7 +208,7 @@ you need to describe fields like this.
 
 <Infobox title="Tip: Try the interactive matcher explorer">
 
-[![Matcher demo](../images/matcher-demo.jpg)](https://explosion.ai/demos/matcher)
+[![Matcher demo](/images/matcher-demo.jpg)](https://explosion.ai/demos/matcher)
 
 The [Matcher Explorer](https://explosion.ai/demos/matcher) lets you test the
 rule-based `Matcher` by creating token patterns interactively and running them
@@ -1211,7 +1211,7 @@ each new token needs to be linked to an existing token on its left. As for
 `founded` in this example, a token may be linked to more than one token on its
 right:
 
-![Dependency matcher pattern](../images/dep-match-diagram.svg)
+![Dependency matcher pattern](/images/dep-match-diagram.svg)
 
 The full pattern comes together as shown in the example below:
 
@@ -1752,7 +1752,7 @@ print([(ent.text, ent.label_) for ent in doc.ents])
 > - `VBD`: Verb, past tense.
 > - `IN`: Conjunction, subordinating or preposition.
 
-![Visualization of dependency parse](../images/displacy-model-rules.svg "[`spacy.displacy`](/api/top-level#displacy) visualization with `options={'fine_grained': True}` to output the fine-grained part-of-speech tags, i.e. `Token.tag_`")
+![Visualization of dependency parse](/images/displacy-model-rules.svg "[`spacy.displacy`](/api/top-level#displacy) visualization with `options={'fine_grained': True}` to output the fine-grained part-of-speech tags, i.e. `Token.tag_`")
 
 In this example, "worked" is the root of the sentence and is a past tense verb.
 Its subject is "Alex Smith", the person who worked. "at Acme Corp Inc." is a
@@ -1835,7 +1835,7 @@ notice that our current logic fails and doesn't correctly detect the company as
 a past organization. That's because the root is a participle and the tense
 information is in the attached auxiliary "was":
 
-![Visualization of dependency parse](../images/displacy-model-rules2.svg)
+![Visualization of dependency parse](/images/displacy-model-rules2.svg)
 
 To solve this, we can adjust the rules to also check for the above construction:
 
