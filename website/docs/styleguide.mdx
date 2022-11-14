@@ -614,21 +614,16 @@ In addition to the native markdown elements, you can use the components
   - ❌ The [`Span`](/api/span) and [`Token`](/api/token) objects are views of a
     [`Doc`](/api/doc). [`Span.as_doc`](/api/span#as_doc) creates a
     [`Doc`](/api/doc) object from a [`Span`](/api/span).
-
-* Other things we format as code are: references to trained pipeline packages
+- Other things we format as code are: references to trained pipeline packages
   like `en_core_web_sm` or file names like `code.py` or `meta.json`.
-
   - ✅ After training, the `config.cfg` is saved to disk.
-
-* [Type annotations](#type-annotations) are a special type of code formatting,
+- [Type annotations](#type-annotations) are a special type of code formatting,
   expressed by wrapping the text in `~~` instead of backticks. The result looks
   like this: ~~List[Doc]~~. All references to known types will be linked
   automatically.
-
   - ✅ The model has the input type ~~List[Doc]~~ and it outputs a
     ~~List[Array2d]~~.
-
-* We try to keep links meaningful but short.
+- We try to keep links meaningful but short.
   - ✅ For details, see the usage guide on
     [training with custom code](/usage/training#custom-code).
   - ❌ For details, see
