@@ -85,7 +85,7 @@ difficult to swap components or retrain parts of the pipeline. Multi-task
 learning can affect your accuracy (either positively or negatively), and may
 require some retuning of your hyper-parameters.
 
-![Pipeline components using a shared embedding component vs. independent embedding layers](../images/tok2vec.svg)
+![Pipeline components using a shared embedding component vs. independent embedding layers](/images/tok2vec.svg)
 
 | Shared                                                                                      | Independent                                                             |
 | ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
@@ -99,7 +99,7 @@ components by adding a [`Transformer`](/api/transformer) or
 later in the pipeline can "connect" to it by including a **listener layer** like
 [Tok2VecListener](/api/architectures#Tok2VecListener) within their model.
 
-![Pipeline components listening to shared embedding component](../images/tok2vec-listener.svg)
+![Pipeline components listening to shared embedding component](/images/tok2vec-listener.svg)
 
 At the beginning of training, the [`Tok2Vec`](/api/tok2vec) component will grab
 a reference to the relevant listener layers in the rest of your pipeline. When
@@ -249,7 +249,7 @@ the standard way, like any other spaCy pipeline. Instead of using the
 transformers as subnetworks directly, you can also use them via the
 [`Transformer`](/api/transformer) pipeline component.
 
-![The processing pipeline with the transformer component](../images/pipeline_transformer.svg)
+![The processing pipeline with the transformer component](/images/pipeline_transformer.svg)
 
 The `Transformer` component sets the
 [`Doc._.trf_data`](/api/transformer#custom_attributes) extension attribute,
