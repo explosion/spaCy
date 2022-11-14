@@ -51,7 +51,7 @@ width = 512
 classes = 16
 ```
 
-## Type signatures {#type-sigs}
+## Type signatures {id="type-sigs"}
 
 > #### Example
 >
@@ -115,7 +115,7 @@ code.
 
 </Accordion>
 
-## Swapping model architectures {#swap-architectures}
+## Swapping model architectures {id="swap-architectures"}
 
 If no model is specified for the [`TextCategorizer`](/api/textcategorizer), the
 [TextCatEnsemble](/api/architectures#TextCatEnsemble) architecture is used by
@@ -180,7 +180,7 @@ For details on all pre-defined architectures shipped with spaCy and how to
 configure them, check out the [model architectures](/api/architectures)
 documentation.
 
-### Defining sublayers {#sublayers}
+### Defining sublayers {id="sublayers"}
 
 Model architecture functions often accept **sublayers as arguments**, so that
 you can try **substituting a different layer** into the network. Depending on
@@ -237,7 +237,7 @@ a transformer. And if you want to define your own solution, all you need to do
 is register a ~~Model[List[Doc], List[Floats2d]]~~ architecture function, and
 you'll be able to try it out in any of the spaCy components. ​
 
-## Wrapping PyTorch, TensorFlow and other frameworks {#frameworks}
+## Wrapping PyTorch, TensorFlow and other frameworks {id="frameworks"}
 
 Thinc allows you to [wrap models](https://thinc.ai/docs/usage-frameworks)
 written in other machine learning frameworks like PyTorch, TensorFlow and MXNet
@@ -300,7 +300,7 @@ layers, and "native" Thinc layers to do fiddly input and output transformations
 and add on task-specific "heads", as efficiency is less of a consideration for
 those parts of the network.
 
-### Using wrapped models {#frameworks-usage}
+### Using wrapped models {id="frameworks-usage"}
 
 To use our custom model including the PyTorch subnetwork, all we need to do is
 register the architecture using the
@@ -384,7 +384,7 @@ sitting in the other library's pool.
 gpu_allocator = "pytorch"
 ```
 
-## Custom models with Thinc {#thinc}
+## Custom models with Thinc {id="thinc"}
 
 Of course it's also possible to define the `Model` from the previous section
 entirely in Thinc. The Thinc documentation provides details on the
@@ -418,7 +418,7 @@ the PyTorch layers are defined, where `in_features` precedes `out_features`.
 
 </Infobox>
 
-### Shape inference in Thinc {#thinc-shape-inference}
+### Shape inference in Thinc {id="thinc-shape-inference"}
 
 It is **not** strictly necessary to define all the input and output dimensions
 for each layer, as Thinc can perform
@@ -479,7 +479,7 @@ data. In this case, `X` is typically a ~~List[Doc]~~, while `Y` is typically a
 functionality is triggered when [`nlp.initialize`](/api/language#initialize) is
 called.
 
-### Dropout and normalization in Thinc {#thinc-dropout-norm}
+### Dropout and normalization in Thinc {id="thinc-dropout-norm"}
 
 Many of the available Thinc [layers](https://thinc.ai/docs/api-layers) allow you
 to define a `dropout` argument that will result in "chaining" an additional
@@ -500,7 +500,7 @@ with Model.define_operators({">>": chain}):
     model.initialize(X=input_sample, Y=output_sample)
 ```
 
-## Create new trainable components {#components}
+## Create new trainable components {id="components"}
 
 In addition to [swapping out](#swap-architectures) layers in existing
 components, you can also implement an entirely new,
@@ -518,7 +518,7 @@ overview of the `TrainablePipe` methods used by
 
 </Infobox>
 
-### Example: Entity relation extraction component {#component-rel}
+### Example: Entity relation extraction component {id="component-rel"}
 
 This section outlines an example use-case of implementing a **novel relation
 extraction component** from scratch. We'll implement a binary relation
@@ -548,7 +548,7 @@ two major steps required:
 
 <YouTube id="8HL-Ap5_Axo"></YouTube>
 
-#### Step 1: Implementing the Model {#component-rel-model}
+#### Step 1: Implementing the Model {id="component-rel-model"}
 
 We need to implement a [`Model`](https://thinc.ai/docs/api-model) that takes a
 **list of documents** (~~List[Doc]~~) as input, and outputs a **two-dimensional
@@ -748,7 +748,7 @@ This function is added to the [`@misc` registry](/api/top-level#registry) so we
 can refer to it from the config, and easily swap it out for any other candidate
 generation function.
 
-#### Intermezzo: define how to store the relations data {#component-rel-attribute}
+#### Intermezzo: define how to store the relations data {id="component-rel-attribute"}
 
 > #### Example output
 >
@@ -779,7 +779,7 @@ from spacy.tokens import Doc
 Doc.set_extension("rel", default={})
 ```
 
-#### Step 2: Implementing the pipeline component {#component-rel-pipe}
+#### Step 2: Implementing the pipeline component {id="component-rel-pipe"}
 
 To use our new relation extraction model as part of a custom
 [trainable component](/usage/processing-pipelines#trainable-components), we

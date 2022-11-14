@@ -14,7 +14,7 @@ It requires a pretrained [`DependencyParser`](/api/parser) or other component
 that sets the `Token.dep` and `Token.head` attributes. See the
 [usage guide](/usage/rule-based-matching#dependencymatcher) for examples.
 
-## Pattern format {#patterns}
+## Pattern format {id="patterns"}
 
 > ```python
 > ### Example
@@ -62,7 +62,7 @@ of relations, see the usage guide on
 
 </Infobox>
 
-### Operators {#operators}
+### Operators {id="operators"}
 
 The following operators are supported by the `DependencyMatcher`, most of which
 come directly from
@@ -87,7 +87,7 @@ come directly from
 | `A <++ B` | `B` is a right parent of `A`, i.e. `A` is a child of `B` and `A.i < B.i` _(not in Semgrex)_.                         |
 | `A <-- B` | `B` is a left parent of `A`, i.e. `A` is a child of `B` and `A.i > B.i` _(not in Semgrex)_.                          |
 
-## DependencyMatcher.\_\_init\_\_ {#init tag="method"}
+## DependencyMatcher.\_\_init\_\_ {id="init",tag="method"}
 
 Create a `DependencyMatcher`.
 
@@ -104,7 +104,7 @@ Create a `DependencyMatcher`.
 | _keyword-only_ |                                                                                                       |
 | `validate`     | Validate all patterns added to this matcher. ~~bool~~                                                 |
 
-## DependencyMatcher.\_\call\_\_ {#call tag="method"}
+## DependencyMatcher.\_\call\_\_ {id="call",tag="method"}
 
 Find all tokens matching the supplied patterns on the `Doc` or `Span`.
 
@@ -126,7 +126,7 @@ Find all tokens matching the supplied patterns on the `Doc` or `Span`.
 | `doclike`   | The `Doc` or `Span` to match over. ~~Union[Doc, Span]~~                                                                                                                                                                                                                                                                               |
 | **RETURNS** | A list of `(match_id, token_ids)` tuples, describing the matches. The `match_id` is the ID of the match pattern and `token_ids` is a list of token indices matched by the pattern, where the position of each token in the list corresponds to the position of the node specification in the pattern. ~~List[Tuple[int, List[int]]]~~ |
 
-## DependencyMatcher.\_\_len\_\_ {#len tag="method"}
+## DependencyMatcher.\_\_len\_\_ {id="len",tag="method"}
 
 Get the number of rules added to the dependency matcher. Note that this only
 returns the number of rules (identical with the number of IDs), not the number
@@ -147,7 +147,7 @@ of individual patterns.
 | ----------- | ---------------------------- |
 | **RETURNS** | The number of rules. ~~int~~ |
 
-## DependencyMatcher.\_\_contains\_\_ {#contains tag="method"}
+## DependencyMatcher.\_\_contains\_\_ {id="contains",tag="method"}
 
 Check whether the matcher contains rules for a match ID.
 
@@ -165,7 +165,7 @@ Check whether the matcher contains rules for a match ID.
 | `key`       | The match ID. ~~str~~                                          |
 | **RETURNS** | Whether the matcher contains rules for this match ID. ~~bool~~ |
 
-## DependencyMatcher.add {#add tag="method"}
+## DependencyMatcher.add {id="add",tag="method"}
 
 Add a rule to the matcher, consisting of an ID key, one or more patterns, and an
 optional callback function to act on the matches. The callback function will
@@ -190,7 +190,7 @@ will be overwritten.
 | _keyword-only_ |                                                                                                                                                                      |
 | `on_match`     | Callback function to act on matches. Takes the arguments `matcher`, `doc`, `i` and `matches`. ~~Optional[Callable[[DependencyMatcher, Doc, int, List[Tuple], Any]]~~ |
 
-## DependencyMatcher.get {#get tag="method"}
+## DependencyMatcher.get {id="get",tag="method"}
 
 Retrieve the pattern stored for a key. Returns the rule as an
 `(on_match, patterns)` tuple containing the callback and available patterns.
@@ -207,7 +207,7 @@ Retrieve the pattern stored for a key. Returns the rule as an
 | `key`       | The ID of the match rule. ~~str~~                                                                           |
 | **RETURNS** | The rule, as an `(on_match, patterns)` tuple. ~~Tuple[Optional[Callable], List[List[Union[Dict, Tuple]]]]~~ |
 
-## DependencyMatcher.remove {#remove tag="method"}
+## DependencyMatcher.remove {id="remove",tag="method"}
 
 Remove a rule from the dependency matcher. A `KeyError` is raised if the match
 ID does not exist.

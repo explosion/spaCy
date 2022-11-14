@@ -15,7 +15,7 @@ the tagger or parser that are called on a document in order. You can also add
 your own processing pipeline components that take a `Doc` object, modify it and
 return it.
 
-## Language.\_\_init\_\_ {#init tag="method"}
+## Language.\_\_init\_\_ {id="init",tag="method"}
 
 Initialize a `Language` object. Note that the `meta` is only used for meta
 information in [`Language.meta`](/api/language#meta) and not to configure the
@@ -44,7 +44,7 @@ information in [`Language.meta`](/api/language#meta) and not to configure the
 | `create_tokenizer` | Optional function that receives the `nlp` object and returns a tokenizer. ~~Callable[[Language], Callable[[str], Doc]]~~ |
 | `batch_size`       | Default batch size for [`pipe`](#pipe) and [`evaluate`](#evaluate). Defaults to `1000`. ~~int~~                          |
 
-## Language.from_config {#from_config tag="classmethod" new="3"}
+## Language.from_config {id="from_config",tag="classmethod",new="3"}
 
 Create a `Language` object from a loaded config. Will set up the tokenizer and
 language data, add pipeline components based on the pipeline and add pipeline
@@ -76,7 +76,7 @@ spaCy loads a model under the hood based on its
 | `validate`                            | Whether to validate the component config and arguments against the types expected by the factory. Defaults to `True`. ~~bool~~                                                                                                                                                                                     |
 | **RETURNS**                           | The initialized object. ~~Language~~                                                                                                                                                                                                                                                                               |
 
-## Language.component {#component tag="classmethod" new="3"}
+## Language.component {id="component",tag="classmethod",new="3"}
 
 Register a custom pipeline component under a given name. This allows
 initializing the component by name using
@@ -112,7 +112,7 @@ decorator. For more details and examples, see the
 | `retokenizes`  | Whether the component changes tokenization. Used for [pipe analysis](/usage/processing-pipelines#analysis). ~~bool~~                                               |
 | `func`         | Optional function if not used as a decorator. ~~Optional[Callable[[Doc], Doc]]~~                                                                                   |
 
-## Language.factory {#factory tag="classmethod"}
+## Language.factory {id="factory",tag="classmethod"}
 
 Register a custom pipeline component factory under a given name. This allows
 initializing the component by name using
@@ -159,7 +159,7 @@ examples, see the
 | `default_score_weights` | The scores to report during training, and their default weight towards the final score used to select the best model. Weights should sum to `1.0` per component and will be combined and normalized for the whole pipeline. If a weight is set to `None`, the score will not be logged or weighted. ~~Dict[str, Optional[float]]~~ |
 | `func`                  | Optional function if not used as a decorator. ~~Optional[Callable[[...], Callable[[Doc], Doc]]]~~                                                                                                                                                                                                                                  |
 
-## Language.\_\_call\_\_ {#call tag="method"}
+## Language.\_\_call\_\_ {id="call",tag="method"}
 
 Apply the pipeline to some text. The text can span multiple sentences, and can
 contain arbitrary whitespace. Alignment into the original string is preserved.
@@ -182,7 +182,7 @@ skipped, but the rest of the pipeline is run.
 | `component_cfg` | Optional dictionary of keyword arguments for components, keyed by component names. Defaults to `None`. ~~Optional[Dict[str, Dict[str, Any]]]~~ |
 | **RETURNS**     | A container for accessing the annotations. ~~Doc~~                                                                                             |
 
-## Language.pipe {#pipe tag="method"}
+## Language.pipe {id="pipe",tag="method"}
 
 Process texts as a stream, and yield `Doc` objects in order. This is usually
 more efficient than processing texts one-by-one.
@@ -209,7 +209,7 @@ tokenization is skipped but the rest of the pipeline is run.
 | `n_process`     | Number of processors to use. Defaults to `1`. ~~int~~                                                                                                               |
 | **YIELDS**      | Documents in the order of the original text. ~~Doc~~                                                                                                                |
 
-## Language.set_error_handler {#set_error_handler tag="method" new="3"}
+## Language.set_error_handler {id="set_error_handler",tag="method",new="3"}
 
 Define a callback that will be invoked when an error is thrown during processing
 of one or more documents. Specifically, this function will call
@@ -231,7 +231,7 @@ being processed, and the original error.
 | --------------- | -------------------------------------------------------------------------------------------------------------- |
 | `error_handler` | A function that performs custom error handling. ~~Callable[[str, Callable[[Doc], Doc], List[Doc], Exception]~~ |
 
-## Language.initialize {#initialize tag="method" new="3"}
+## Language.initialize {id="initialize",tag="method",new="3"}
 
 Initialize the pipeline for training and return an
 [`Optimizer`](https://thinc.ai/docs/api-optimizers). Under the hood, it uses the
@@ -282,7 +282,7 @@ objects.
 | `sgd`          | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~                                            |
 | **RETURNS**    | The optimizer. ~~Optimizer~~                                                                                                                             |
 
-## Language.resume_training {#resume_training tag="method,experimental" new="3"}
+## Language.resume_training {id="resume_training",tag="method,experimental",new="3"}
 
 Continue training a trained pipeline. Create and return an optimizer, and
 initialize "rehearsal" for any pipeline component that has a `rehearse` method.
@@ -304,7 +304,7 @@ a batch of [Example](/api/example) objects.
 | `sgd`          | An optimizer. Will be created via [`create_optimizer`](#create_optimizer) if not set. ~~Optional[Optimizer]~~ |
 | **RETURNS**    | The optimizer. ~~Optimizer~~                                                                                  |
 
-## Language.update {#update tag="method"}
+## Language.update {id="update",tag="method"}
 
 Update the models in the pipeline.
 
@@ -342,7 +342,7 @@ and custom registered functions if needed. See the
 | `component_cfg` | Optional dictionary of keyword arguments for components, keyed by component names. Defaults to `None`. ~~Optional[Dict[str, Dict[str, Any]]]~~ |
 | **RETURNS**     | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                                          |
 
-## Language.rehearse {#rehearse tag="method,experimental" new="3"}
+## Language.rehearse {id="rehearse",tag="method,experimental",new="3"}
 
 Perform a "rehearsal" update from a batch of data. Rehearsal updates teach the
 current model to make predictions similar to an initial model, to try to address
@@ -364,7 +364,7 @@ the "catastrophic forgetting" problem. This feature is experimental.
 | `losses`       | Dictionary to update with the loss, keyed by pipeline component. ~~Optional[Dict[str, float]]~~               |
 | **RETURNS**    | The updated `losses` dictionary. ~~Dict[str, float]~~                                                         |
 
-## Language.evaluate {#evaluate tag="method"}
+## Language.evaluate {id="evaluate",tag="method"}
 
 Evaluate a pipeline's components.
 
@@ -392,7 +392,7 @@ objects instead of tuples of `Doc` and `GoldParse` objects.
 | `scorer_cfg`    | Optional dictionary of keyword arguments for the `Scorer`. Defaults to `None`. ~~Optional[Dict[str, Any]]~~                                    |
 | **RETURNS**     | A dictionary of evaluation scores. ~~Dict[str, Union[float, Dict[str, float]]]~~                                                               |
 
-## Language.use_params {#use_params tag="contextmanager, method"}
+## Language.use_params {id="use_params",tag="contextmanager, method"}
 
 Replace weights of models in the pipeline with those provided in the params
 dictionary. Can be used as a context manager, in which case, models go back to
@@ -409,7 +409,7 @@ their original weights after the block.
 | -------- | ------------------------------------------------------ |
 | `params` | A dictionary of parameters keyed by model ID. ~~dict~~ |
 
-## Language.add_pipe {#add_pipe tag="method" new="2"}
+## Language.add_pipe {id="add_pipe",tag="method",new="2"}
 
 Add a component to the processing pipeline. Expects a name that maps to a
 component factory registered using
@@ -458,7 +458,7 @@ component, adds it to the pipeline and returns it.
 | `validate` <Tag variant="new">3</Tag> | Whether to validate the component config and arguments against the types expected by the factory. Defaults to `True`. ~~bool~~                                                                                                                                                           |
 | **RETURNS**                           | The pipeline component. ~~Callable[[Doc], Doc]~~                                                                                                                                                                                                                                         |
 
-## Language.create_pipe {#create_pipe tag="method" new="2"}
+## Language.create_pipe {id="create_pipe",tag="method",new="2"}
 
 Create a pipeline component from a factory.
 
@@ -487,7 +487,7 @@ To create a component and add it to the pipeline, you should always use
 | `validate` <Tag variant="new">3</Tag> | Whether to validate the component config and arguments against the types expected by the factory. Defaults to `True`. ~~bool~~                                              |
 | **RETURNS**                           | The pipeline component. ~~Callable[[Doc], Doc]~~                                                                                                                            |
 
-## Language.has_factory {#has_factory tag="classmethod" new="3"}
+## Language.has_factory {id="has_factory",tag="classmethod",new="3"}
 
 Check whether a factory name is registered on the `Language` class or subclass.
 Will check for
@@ -514,7 +514,7 @@ the `Language` base class, available to all subclasses.
 | `name`      | Name of the pipeline factory to check. ~~str~~                      |
 | **RETURNS** | Whether a factory of that name is registered on the class. ~~bool~~ |
 
-## Language.has_pipe {#has_pipe tag="method" new="2"}
+## Language.has_pipe {id="has_pipe",tag="method",new="2"}
 
 Check whether a component is present in the pipeline. Equivalent to
 `name in nlp.pipe_names`.
@@ -536,7 +536,7 @@ Check whether a component is present in the pipeline. Equivalent to
 | `name`      | Name of the pipeline component to check. ~~str~~                  |
 | **RETURNS** | Whether a component of that name exists in the pipeline. ~~bool~~ |
 
-## Language.get_pipe {#get_pipe tag="method" new="2"}
+## Language.get_pipe {id="get_pipe",tag="method",new="2"}
 
 Get a pipeline component for a given component name.
 
@@ -552,7 +552,7 @@ Get a pipeline component for a given component name.
 | `name`      | Name of the pipeline component to get. ~~str~~   |
 | **RETURNS** | The pipeline component. ~~Callable[[Doc], Doc]~~ |
 
-## Language.replace_pipe {#replace_pipe tag="method" new="2"}
+## Language.replace_pipe {id="replace_pipe",tag="method",new="2"}
 
 Replace a component in the pipeline and return the new component.
 
@@ -580,7 +580,7 @@ and instead expects the **name of a component factory** registered using
 | `validate` <Tag variant="new">3</Tag> | Whether to validate the component config and arguments against the types expected by the factory. Defaults to `True`. ~~bool~~                                     |
 | **RETURNS**                           | The new pipeline component. ~~Callable[[Doc], Doc]~~                                                                                                               |
 
-## Language.rename_pipe {#rename_pipe tag="method" new="2"}
+## Language.rename_pipe {id="rename_pipe",tag="method",new="2"}
 
 Rename a component in the pipeline. Useful to create custom names for
 pre-defined and pre-loaded components. To change the default name of a component
@@ -598,7 +598,7 @@ added to the pipeline, you can also use the `name` argument on
 | `old_name` | Name of the component to rename. ~~str~~ |
 | `new_name` | New name of the component. ~~str~~       |
 
-## Language.remove_pipe {#remove_pipe tag="method" new="2"}
+## Language.remove_pipe {id="remove_pipe",tag="method",new="2"}
 
 Remove a component from the pipeline. Returns the removed component name and
 component function.
@@ -615,7 +615,7 @@ component function.
 | `name`      | Name of the component to remove. ~~str~~                                                   |
 | **RETURNS** | A `(name, component)` tuple of the removed component. ~~Tuple[str, Callable[[Doc], Doc]]~~ |
 
-## Language.disable_pipe {#disable_pipe tag="method" new="3"}
+## Language.disable_pipe {id="disable_pipe",tag="method",new="3"}
 
 Temporarily disable a pipeline component so it's not run as part of the
 pipeline. Disabled components are listed in
@@ -641,7 +641,7 @@ does nothing.
 | ------ | ----------------------------------------- |
 | `name` | Name of the component to disable. ~~str~~ |
 
-## Language.enable_pipe {#enable_pipe tag="method" new="3"}
+## Language.enable_pipe {id="enable_pipe",tag="method",new="3"}
 
 Enable a previously disabled component (e.g. via
 [`Language.disable_pipes`](/api/language#disable_pipes)) so it's run as part of
@@ -663,7 +663,7 @@ already enabled, this method does nothing.
 | ------ | ---------------------------------------- |
 | `name` | Name of the component to enable. ~~str~~ |
 
-## Language.select_pipes {#select_pipes tag="contextmanager, method" new="3"}
+## Language.select_pipes {id="select_pipes",tag="contextmanager, method",new="3"}
 
 Disable one or more pipeline components. If used as a context manager, the
 pipeline will be restored to the initial state at the end of the block.
@@ -706,7 +706,7 @@ As of spaCy v3.0, the `disable_pipes` method has been renamed to `select_pipes`:
 | `enable`       | Name(s) of pipeline component(s) that will not be disabled. ~~Optional[Union[str, Iterable[str]]]~~    |
 | **RETURNS**    | The disabled pipes that can be restored by calling the object's `.restore()` method. ~~DisabledPipes~~ |
 
-## Language.get_factory_meta {#get_factory_meta tag="classmethod" new="3"}
+## Language.get_factory_meta {id="get_factory_meta",tag="classmethod",new="3"}
 
 Get the factory meta information for a given pipeline component name. Expects
 the name of the component **factory**. The factory meta is an instance of the
@@ -728,7 +728,7 @@ information about the component and its default provided by the
 | `name`      | The factory name. ~~str~~         |
 | **RETURNS** | The factory meta. ~~FactoryMeta~~ |
 
-## Language.get_pipe_meta {#get_pipe_meta tag="method" new="3"}
+## Language.get_pipe_meta {id="get_pipe_meta",tag="method",new="3"}
 
 Get the factory meta information for a given pipeline component name. Expects
 the name of the component **instance** in the pipeline. The factory meta is an
@@ -751,7 +751,7 @@ contains the information about the component and its default provided by the
 | `name`      | The pipeline component name. ~~str~~ |
 | **RETURNS** | The factory meta. ~~FactoryMeta~~    |
 
-## Language.analyze_pipes {#analyze_pipes tag="method" new="3"}
+## Language.analyze_pipes {id="analyze_pipes",tag="method",new="3"}
 
 Analyze the current pipeline components and show a summary of the attributes
 they assign and require, and the scores they set. The data is based on the
@@ -840,7 +840,7 @@ token.ent_iob, token.ent_type
 | `pretty`       | Pretty-print the results as a table. Defaults to `False`. ~~bool~~                                                                                                                                                                          |
 | **RETURNS**    | Dictionary containing the pipe analysis, keyed by `"summary"` (component meta by pipe), `"problems"` (attribute names by pipe) and `"attrs"` (pipes that assign and require an attribute, keyed by attribute). ~~Optional[Dict[str, Any]]~~ |
 
-## Language.replace_listeners {#replace_listeners tag="method" new="3"}
+## Language.replace_listeners {id="replace_listeners",tag="method",new="3"}
 
 Find [listener layers](/usage/embeddings-transformers#embedding-layers)
 (connecting to a shared token-to-vector embedding component) of a given pipeline
@@ -885,7 +885,7 @@ when loading a config with
 | `pipe_name`    | Name of pipeline component to replace listeners for. ~~str~~                                                                                                                                                                                                                                                                                                                                                                           |
 | `listeners`    | The paths to the listeners, relative to the component config, e.g. `["model.tok2vec"]`. Typically, implementations will only connect to one tok2vec component, `model.tok2vec`, but in theory, custom models can use multiple listeners. The value here can either be an empty list to not replace any listeners, or a _complete_ list of the paths to all listener layers used by the model that should be replaced.~~Iterable[str]~~ |
 
-## Language.meta {#meta tag="property"}
+## Language.meta {id="meta",tag="property"}
 
 Meta data for the `Language` class, including name, version, data sources,
 license, author information and more. If a trained pipeline is loaded, this
@@ -911,7 +911,7 @@ information is expressed in the [`config.cfg`](/api/data-formats#config).
 | ----------- | --------------------------------- |
 | **RETURNS** | The meta data. ~~Dict[str, Any]~~ |
 
-## Language.config {#config tag="property" new="3"}
+## Language.config {id="config",tag="property",new="3"}
 
 Export a trainable [`config.cfg`](/api/data-formats#config) for the current
 `nlp` object. Includes the current pipeline, all configs used to create the
@@ -932,7 +932,7 @@ subclass of the built-in `dict`. It supports the additional methods `to_disk`
 | ----------- | ---------------------- |
 | **RETURNS** | The config. ~~Config~~ |
 
-## Language.to_disk {#to_disk tag="method" new="2"}
+## Language.to_disk {id="to_disk",tag="method",new="2"}
 
 Save the current state to a directory. Under the hood, this method delegates to
 the `to_disk` methods of the individual pipeline components, if available. This
@@ -951,7 +951,7 @@ will be saved to disk.
 | _keyword-only_ |                                                                                                                                            |
 | `exclude`      | Names of pipeline components or [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~                                |
 
-## Language.from_disk {#from_disk tag="method" new="2"}
+## Language.from_disk {id="from_disk",tag="method",new="2"}
 
 Loads state from a directory, including all data that was saved with the
 `Language` object. Modifies the object in place and returns it.
@@ -984,7 +984,7 @@ you want to load a serialized pipeline from a directory, you should use
 | `exclude`      | Names of pipeline components or [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
 | **RETURNS**    | The modified `Language` object. ~~Language~~                                                                |
 
-## Language.to_bytes {#to_bytes tag="method"}
+## Language.to_bytes {id="to_bytes",tag="method"}
 
 Serialize the current state to a binary string.
 
@@ -1000,7 +1000,7 @@ Serialize the current state to a binary string.
 | `exclude`      | Names of pipeline components or [serialization fields](#serialization-fields) to exclude. ~~iterable~~ |
 | **RETURNS**    | The serialized form of the `Language` object. ~~bytes~~                                                |
 
-## Language.from_bytes {#from_bytes tag="method"}
+## Language.from_bytes {id="from_bytes",tag="method"}
 
 Load state from a binary string. Note that this method is commonly used via the
 subclasses like `English` or `German` to make language-specific functionality
@@ -1028,7 +1028,7 @@ details.
 | `exclude`      | Names of pipeline components or [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
 | **RETURNS**    | The `Language` object. ~~Language~~                                                                         |
 
-## Attributes {#attributes}
+## Attributes {id="attributes"}
 
 | Name                                         | Description                                                                                                                                    |
 | -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -1046,7 +1046,7 @@ details.
 | `disabled` <Tag variant="new">3</Tag>        | Names of components that are currently disabled and don't run as part of the pipeline. ~~List[str]~~                                           |
 | `path`                                       | Path to the pipeline data directory, if a pipeline is loaded from a path or package. Otherwise `None`. ~~Optional[Path]~~                      |
 
-## Class attributes {#class-attributes}
+## Class attributes {id="class-attributes"}
 
 | Name             | Description                                                                                                                                                                       |
 | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -1054,7 +1054,7 @@ details.
 | `lang`           | [IETF language tag](https://www.w3.org/International/articles/language-tags/), such as 'en' for English. ~~str~~                                                                  |
 | `default_config` | Base [config](/usage/training#config) to use for [Language.config](/api/language#config). Defaults to [`default_config.cfg`](%%GITHUB_SPACY/spacy/default_config.cfg). ~~Config~~ |
 
-## Defaults {#defaults}
+## Defaults {id="defaults"}
 
 The following attributes can be set on the `Language.Defaults` class to
 customize the default language data:
@@ -1097,7 +1097,7 @@ customize the default language data:
 | `writing_system`                  | Information about the language's writing system, available via `Vocab.writing_system`. Defaults to: `{"direction": "ltr", "has_case": True, "has_letters": True}.`.<br />**Example:** [`zh/__init__.py`](%%GITHUB_SPACY/spacy/lang/zh/__init__.py) ~~Dict[str, Any]~~                                            |
 | `config`                          | Default [config](/usage/training#config) added to `nlp.config`. This can include references to custom tokenizers or lemmatizers.<br />**Example:** [`zh/__init__.py`](%%GITHUB_SPACY/spacy/lang/zh/__init__.py) ~~Config~~                                                                                       |
 
-## Serialization fields {#serialization-fields}
+## Serialization fields {id="serialization-fields"}
 
 During serialization, spaCy will export several data fields used to restore
 different aspects of the object. If needed, you can exclude them from
@@ -1117,7 +1117,7 @@ serialization by passing in the string names via the `exclude` argument.
 | `meta`      | The meta data, available as [`Language.meta`](/api/language#meta). |
 | ...         | String names of pipeline components, e.g. `"ner"`.                 |
 
-## FactoryMeta {#factorymeta new="3" tag="dataclass"}
+## FactoryMeta {id="factorymeta",new="3",tag="dataclass"}
 
 The `FactoryMeta` contains the information about the component and its default
 provided by the [`@Language.component`](/api/language#component) or

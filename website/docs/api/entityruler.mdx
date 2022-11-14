@@ -15,7 +15,7 @@ used on its own to implement a purely rule-based entity recognition system. For
 usage examples, see the docs on
 [rule-based entity recognition](/usage/rule-based-matching#entityruler).
 
-## Assigned Attributes {#assigned-attributes}
+## Assigned Attributes {id="assigned-attributes"}
 
 This component assigns predictions basically the same way as the
 [`EntityRecognizer`](/api/entityrecognizer).
@@ -36,7 +36,7 @@ non-overlapping, or an error will be thrown.
 | `Token.ent_type`  | The label part of the named entity tag (hash). ~~int~~            |
 | `Token.ent_type_` | The label part of the named entity tag. ~~str~~                   |
 
-## Config and implementation {#config}
+## Config and implementation {id="config"}
 
 The default config is defined by the pipeline component factory and describes
 how the component should be configured. You can override its settings via the
@@ -67,7 +67,7 @@ how the component should be configured. You can override its settings via the
 %%GITHUB_SPACY/spacy/pipeline/entityruler.py
 ```
 
-## EntityRuler.\_\_init\_\_ {#init tag="method"}
+## EntityRuler.\_\_init\_\_ {id="init",tag="method"}
 
 Initialize the entity ruler. If patterns are supplied here, they need to be a
 list of dictionaries with a `"label"` and `"pattern"` key. A pattern can either
@@ -96,7 +96,7 @@ be a token pattern (list) or a phrase pattern (string). For example:
 | `ent_id_sep`                      | Separator used internally for entity IDs. Defaults to `"\|\|"`. ~~str~~                                                                                                                                                               |
 | `patterns`                        | Optional patterns to load in on initialization. ~~Optional[List[Dict[str, Union[str, List[dict]]]]]~~                                                                                                                                 |
 
-## EntityRuler.initialize {#initialize tag="method" new="3"}
+## EntityRuler.initialize {id="initialize",tag="method",new="3"}
 
 Initialize the component with data and used before training to load in rules
 from a [pattern file](/usage/rule-based-matching/#entityruler-files). This
@@ -128,7 +128,7 @@ config.
 | `nlp`          | The current `nlp` object. Defaults to `None`. ~~Optional[Language]~~                                                                                                 |
 | `patterns`     | The list of patterns. Defaults to `None`. ~~Optional[Sequence[Dict[str, Union[str, List[Dict[str, Any]]]]]]~~                                                        |
 
-## EntityRuler.\_\len\_\_ {#len tag="method"}
+## EntityRuler.\_\len\_\_ {id="len",tag="method"}
 
 The number of all patterns added to the entity ruler.
 
@@ -145,7 +145,7 @@ The number of all patterns added to the entity ruler.
 | ----------- | ------------------------------- |
 | **RETURNS** | The number of patterns. ~~int~~ |
 
-## EntityRuler.\_\_contains\_\_ {#contains tag="method"}
+## EntityRuler.\_\_contains\_\_ {id="contains",tag="method"}
 
 Whether a label is present in the patterns.
 
@@ -163,7 +163,7 @@ Whether a label is present in the patterns.
 | `label`     | The label to check. ~~str~~                           |
 | **RETURNS** | Whether the entity ruler contains the label. ~~bool~~ |
 
-## EntityRuler.\_\_call\_\_ {#call tag="method"}
+## EntityRuler.\_\_call\_\_ {id="call",tag="method"}
 
 Find matches in the `Doc` and add them to the `doc.ents`. Typically, this
 happens automatically after the component has been added to the pipeline using
@@ -189,7 +189,7 @@ is chosen.
 | `doc`       | The `Doc` object to process, e.g. the `Doc` in the pipeline. ~~Doc~~ |
 | **RETURNS** | The modified `Doc` with added entities, if available. ~~Doc~~        |
 
-## EntityRuler.add_patterns {#add_patterns tag="method"}
+## EntityRuler.add_patterns {id="add_patterns",tag="method"}
 
 Add patterns to the entity ruler. A pattern can either be a token pattern (list
 of dicts) or a phrase pattern (string). For more details, see the usage guide on
@@ -210,7 +210,7 @@ of dicts) or a phrase pattern (string). For more details, see the usage guide on
 | ---------- | ---------------------------------------------------------------- |
 | `patterns` | The patterns to add. ~~List[Dict[str, Union[str, List[dict]]]]~~ |
 
-## EntityRuler.remove {#remove tag="method" new="3.2.1"}
+## EntityRuler.remove {id="remove",tag="method",new="3.2.1"}
 
 Remove a pattern by its ID from the entity ruler. A `ValueError` is raised if
 the ID does not exist.
@@ -228,7 +228,7 @@ the ID does not exist.
 | ---- | ----------------------------------- |
 | `id` | The ID of the pattern rule. ~~str~~ |
 
-## EntityRuler.to_disk {#to_disk tag="method"}
+## EntityRuler.to_disk {id="to_disk",tag="method"}
 
 Save the entity ruler patterns to a directory. The patterns will be saved as
 newline-delimited JSON (JSONL). If a file with the suffix `.jsonl` is provided,
@@ -247,7 +247,7 @@ only the patterns are saved as JSONL. If a directory name is provided, a
 | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `path` | A path to a JSONL file or directory, which will be created if it doesn't exist. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
 
-## EntityRuler.from_disk {#from_disk tag="method"}
+## EntityRuler.from_disk {id="from_disk",tag="method"}
 
 Load the entity ruler from a path. Expects either a file containing
 newline-delimited JSON (JSONL) with one entry per line, or a directory
@@ -267,7 +267,7 @@ configuration.
 | `path`      | A path to a JSONL file or directory. Paths may be either strings or `Path`-like objects. ~~Union[str, Path]~~ |
 | **RETURNS** | The modified `EntityRuler` object. ~~EntityRuler~~                                                            |
 
-## EntityRuler.to_bytes {#to_bytes tag="method"}
+## EntityRuler.to_bytes {id="to_bytes",tag="method"}
 
 Serialize the entity ruler patterns to a bytestring.
 
@@ -282,7 +282,7 @@ Serialize the entity ruler patterns to a bytestring.
 | ----------- | ---------------------------------- |
 | **RETURNS** | The serialized patterns. ~~bytes~~ |
 
-## EntityRuler.from_bytes {#from_bytes tag="method"}
+## EntityRuler.from_bytes {id="from_bytes",tag="method"}
 
 Load the pipe from a bytestring. Modifies the object in place and returns it.
 
@@ -299,7 +299,7 @@ Load the pipe from a bytestring. Modifies the object in place and returns it.
 | `bytes_data` | The bytestring to load. ~~bytes~~                  |
 | **RETURNS**  | The modified `EntityRuler` object. ~~EntityRuler~~ |
 
-## EntityRuler.labels {#labels tag="property"}
+## EntityRuler.labels {id="labels",tag="property"}
 
 All labels present in the match patterns.
 
@@ -307,7 +307,7 @@ All labels present in the match patterns.
 | ----------- | -------------------------------------- |
 | **RETURNS** | The string labels. ~~Tuple[str, ...]~~ |
 
-## EntityRuler.ent_ids {#ent_ids tag="property" new="2.2.2"}
+## EntityRuler.ent_ids {id="ent_ids",tag="property",new="2.2.2"}
 
 All entity IDs present in the `id` properties of the match patterns.
 
@@ -315,7 +315,7 @@ All entity IDs present in the `id` properties of the match patterns.
 | ----------- | ----------------------------------- |
 | **RETURNS** | The string IDs. ~~Tuple[str, ...]~~ |
 
-## EntityRuler.patterns {#patterns tag="property"}
+## EntityRuler.patterns {id="patterns",tag="property"}
 
 Get all patterns that were added to the entity ruler.
 
@@ -323,7 +323,7 @@ Get all patterns that were added to the entity ruler.
 | ----------- | ---------------------------------------------------------------------------------------- |
 | **RETURNS** | The original patterns, one dictionary per pattern. ~~List[Dict[str, Union[str, dict]]]~~ |
 
-## Attributes {#attributes}
+## Attributes {id="attributes"}
 
 | Name              | Description                                                                                                           |
 | ----------------- | --------------------------------------------------------------------------------------------------------------------- |

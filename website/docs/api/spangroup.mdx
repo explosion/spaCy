@@ -13,7 +13,7 @@ into a `SpanGroup` object for you automatically on assignment. `SpanGroup`
 objects behave similar to `list`s, so you can append `Span` objects to them or
 access a member at a given index.
 
-## SpanGroup.\_\_init\_\_ {#init tag="method"}
+## SpanGroup.\_\_init\_\_ {id="init",tag="method"}
 
 Create a `SpanGroup`.
 
@@ -42,7 +42,7 @@ Create a `SpanGroup`.
 | `attrs`        | Optional JSON-serializable attributes to attach to the span group. ~~Dict[str, Any]~~                                                                |
 | `spans`        | The spans to add to the span group. ~~Iterable[Span]~~                                                                                               |
 
-## SpanGroup.doc {#doc tag="property"}
+## SpanGroup.doc {id="doc",tag="property"}
 
 The [`Doc`](/api/doc) object the span group is referring to.
 
@@ -68,7 +68,7 @@ the scope of your function.
 | ----------- | ------------------------------- |
 | **RETURNS** | The reference document. ~~Doc~~ |
 
-## SpanGroup.has_overlap {#has_overlap tag="property"}
+## SpanGroup.has_overlap {id="has_overlap",tag="property"}
 
 Check whether the span group contains overlapping spans.
 
@@ -86,7 +86,7 @@ Check whether the span group contains overlapping spans.
 | ----------- | -------------------------------------------------- |
 | **RETURNS** | Whether the span group contains overlaps. ~~bool~~ |
 
-## SpanGroup.\_\_len\_\_ {#len tag="method"}
+## SpanGroup.\_\_len\_\_ {id="len",tag="method"}
 
 Get the number of spans in the group.
 
@@ -102,7 +102,7 @@ Get the number of spans in the group.
 | ----------- | ----------------------------------------- |
 | **RETURNS** | The number of spans in the group. ~~int~~ |
 
-## SpanGroup.\_\_getitem\_\_ {#getitem tag="method"}
+## SpanGroup.\_\_getitem\_\_ {id="getitem",tag="method"}
 
 Get a span from the group. Note that a copy of the span is returned, so if any
 changes are made to this span, they are not reflected in the corresponding
@@ -125,7 +125,7 @@ changes to be reflected in the span group.
 | `i`         | The item index. ~~int~~               |
 | **RETURNS** | The span at the given index. ~~Span~~ |
 
-## SpanGroup.\_\_setitem\_\_ {#setitem tag="method", new="3.3"}
+## SpanGroup.\_\_setitem\_\_ {id="setitem",tag="method", new="3.3"}
 
 Set a span in the span group.
 
@@ -144,7 +144,7 @@ Set a span in the span group.
 | `i`    | The item index. ~~int~~ |
 | `span` | The new value. ~~Span~~ |
 
-## SpanGroup.\_\_delitem\_\_ {#delitem tag="method", new="3.3"}
+## SpanGroup.\_\_delitem\_\_ {id="delitem",tag="method", new="3.3"}
 
 Delete a span from the span group.
 
@@ -161,7 +161,7 @@ Delete a span from the span group.
 | ---- | ----------------------- |
 | `i`  | The item index. ~~int~~ |
 
-## SpanGroup.\_\_add\_\_ {#add tag="method", new="3.3"}
+## SpanGroup.\_\_add\_\_ {id="add",tag="method", new="3.3"}
 
 Concatenate the current span group with another span group and return the result
 in a new span group. Any `attrs` from the first span group will have precedence
@@ -182,7 +182,7 @@ over `attrs` in the second.
 | `other`     | The span group or spans to concatenate. ~~Union[SpanGroup, Iterable[Span]]~~ |
 | **RETURNS** | The new span group. ~~SpanGroup~~                                            |
 
-## SpanGroup.\_\_iadd\_\_ {#iadd tag="method", new="3.3"}
+## SpanGroup.\_\_iadd\_\_ {id="iadd",tag="method", new="3.3"}
 
 Append an iterable of spans or the content of a span group to the current span
 group. Any `attrs` in the other span group will be added for keys that are not
@@ -202,7 +202,7 @@ already present in the current span group.
 | `other`     | The span group or spans to append. ~~Union[SpanGroup, Iterable[Span]]~~ |
 | **RETURNS** | The span group. ~~SpanGroup~~                                           |
 
-## SpanGroup.append {#append tag="method"}
+## SpanGroup.append {id="append",tag="method"}
 
 Add a [`Span`](/api/span) object to the group. The span must refer to the same
 [`Doc`](/api/doc) object as the span group.
@@ -220,7 +220,7 @@ Add a [`Span`](/api/span) object to the group. The span must refer to the same
 | ------ | ---------------------------- |
 | `span` | The span to append. ~~Span~~ |
 
-## SpanGroup.extend {#extend tag="method"}
+## SpanGroup.extend {id="extend",tag="method"}
 
 Add multiple [`Span`](/api/span) objects or contents of another `SpanGroup` to
 the group. All spans must refer to the same [`Doc`](/api/doc) object as the span
@@ -241,7 +241,7 @@ group.
 | ------- | -------------------------------------------------------- |
 | `spans` | The spans to add. ~~Union[SpanGroup, Iterable["Span"]]~~ |
 
-## SpanGroup.copy {#copy tag="method", new="3.3"}
+## SpanGroup.copy {id="copy",tag="method", new="3.3"}
 
 Return a copy of the span group.
 
@@ -260,7 +260,7 @@ Return a copy of the span group.
 | `doc`       | The document to which the copy is bound. Defaults to `None` for the current doc. ~~Optional[Doc]~~ |
 | **RETURNS** | A copy of the `SpanGroup` object. ~~SpanGroup~~                                                    |
 
-## SpanGroup.to_bytes {#to_bytes tag="method"}
+## SpanGroup.to_bytes {id="to_bytes",tag="method"}
 
 Serialize the span group to a bytestring.
 
@@ -276,7 +276,7 @@ Serialize the span group to a bytestring.
 | ----------- | ------------------------------------- |
 | **RETURNS** | The serialized `SpanGroup`. ~~bytes~~ |
 
-## SpanGroup.from_bytes {#from_bytes tag="method"}
+## SpanGroup.from_bytes {id="from_bytes",tag="method"}
 
 Load the span group from a bytestring. Modifies the object in place and returns
 it.

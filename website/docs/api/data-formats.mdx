@@ -14,7 +14,7 @@ vocabulary data. For an overview of label schemes used by the models, see the
 [models directory](/models). Each trained pipeline documents the label schemes
 used in its components, depending on the data it was trained on.
 
-## Training config {#config new="3"}
+## Training config {id="config",new="3"}
 
 Config files define the training process and pipeline and can be passed to
 [`spacy train`](/api/cli#train). They use
@@ -52,7 +52,7 @@ your config and check that it's valid, you can run the
 
 </Infobox>
 
-### nlp {#config-nlp tag="section"}
+### nlp {id="config-nlp",tag="section"}
 
 > #### Example
 >
@@ -83,7 +83,7 @@ Defines the `nlp` object, its tokenizer and
 | `tokenizer`               | The tokenizer to use. Defaults to [`Tokenizer`](/api/tokenizer). ~~Callable[[str], Doc]~~                                                                                                                                                                                                               |
 | `batch_size`              | Default batch size for [`Language.pipe`](/api/language#pipe) and [`Language.evaluate`](/api/language#evaluate). ~~int~~                                                                                                                                                                                 |
 
-### components {#config-components tag="section"}
+### components {id="config-components",tag="section"}
 
 > #### Example
 >
@@ -106,7 +106,7 @@ function to use to create component) or a `source` (name of path of trained
 pipeline to copy components from). See the docs on
 [defining pipeline components](/usage/training#config-components) for details.
 
-### paths, system {#config-variables tag="variables"}
+### paths, system {id="config-variables",tag="variables"}
 
 These sections define variables that can be referenced across the other sections
 as variables. For example `${paths.train}` uses the value of `train` defined in
@@ -120,7 +120,7 @@ that you don't want to hard-code in your config file.
 $ python -m spacy train config.cfg --paths.train ./corpus/train.spacy
 ```
 
-### corpora {#config-corpora tag="section"}
+### corpora {id="config-corpora",tag="section"}
 
 > #### Example
 >
@@ -176,7 +176,7 @@ single corpus once and then divide it up into `train` and `dev` partitions.
 | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `corpora` | A dictionary keyed by string names, mapped to corpus functions that receive the current `nlp` object and return an iterator of [`Example`](/api/example) objects. ~~Dict[str, Callable[[Language], Iterator[Example]]]~~ |
 
-### training {#config-training tag="section"}
+### training {id="config-training",tag="section"}
 
 This section defines settings and controls for the training and evaluation
 process that are used when you run [`spacy train`](/api/cli#train).
@@ -202,7 +202,7 @@ process that are used when you run [`spacy train`](/api/cli#train).
 | `seed`                                               | The random seed. Defaults to variable `${system.seed}`. ~~int~~                                                                                                                                                                                                                                                                     |
 | `train_corpus`                                       | Dot notation of the config location defining the train corpus. Defaults to `corpora.train`. ~~str~~                                                                                                                                                                                                                                 |
 
-### pretraining {#config-pretraining tag="section,optional"}
+### pretraining {id="config-pretraining",tag="section,optional"}
 
 This section is optional and defines settings and controls for
 [language model pretraining](/usage/embeddings-transformers#pretraining). It's
@@ -220,7 +220,7 @@ used when you run [`spacy pretrain`](/api/cli#pretrain).
 | `component`    | Component name to identify the layer with the model to pretrain. Defaults to `"tok2vec"`. ~~str~~                                                                                                            |
 | `layer`        | The specific layer of the model to pretrain. If empty, the whole model will be used. ~~str~~                                                                                                                 |
 
-### initialize {#config-initialize tag="section"}
+### initialize {id="config-initialize",tag="section"}
 
 This config block lets you define resources for **initializing the pipeline**.
 It's used by [`Language.initialize`](/api/language#initialize) and typically
@@ -255,9 +255,9 @@ Also see the usage guides on the
 | `vectors`      | Name or path of pipeline containing pretrained word vectors to use, e.g. created with [`init vectors`](/api/cli#init-vectors). Defaults to `null`. ~~Optional[str]~~                                                                                                                                                                                                                                           |
 | `vocab_data`   | Path to JSONL-formatted [vocabulary file](/api/data-formats#vocab-jsonl) to initialize vocabulary. ~~Optional[str]~~                                                                                                                                                                                                                                                                                           |
 
-## Training data {#training}
+## Training data {id="training"}
 
-### Binary training format {#binary-training new="3"}
+### Binary training format {id="binary-training",new="3"}
 
 > #### Example
 >
@@ -288,7 +288,7 @@ Note that while this is the format used to save training data, you do not have
 to understand the internal details to use it or create training data. See the
 section on [preparing training data](/usage/training#training-data).
 
-### JSON training format {#json-input tag="deprecated"}
+### JSON training format {id="json-input",tag="deprecated"}
 
 <Infobox variant="warning" title="Changed in v3.0">
 
@@ -357,7 +357,7 @@ https://github.com/explosion/spaCy/blob/v2.3.x/examples/training/training-data.j
 
 </Accordion>
 
-### Annotation format for creating training examples {#dict-input}
+### Annotation format for creating training examples {id="dict-input"}
 
 An [`Example`](/api/example) object holds the information for one training
 instance. It stores two [`Doc`](/api/doc) objects: one for holding the
@@ -466,7 +466,7 @@ gold_dict = {"entities": [(0, 12, "PERSON")],
 example = Example.from_dict(doc, gold_dict)
 ```
 
-## Lexical data for vocabulary {#vocab-jsonl new="2"}
+## Lexical data for vocabulary {id="vocab-jsonl",new="2"}
 
 This data file can be provided via the `vocab_data` setting in the
 `[initialize]` block of the training config to pre-define the lexical data to
@@ -526,7 +526,7 @@ Here's an example of the 20 most frequent lexemes in the English training data:
 %%GITHUB_SPACY/extra/example_data/vocab-data.jsonl
 ```
 
-## Pipeline meta {#meta}
+## Pipeline meta {id="meta"}
 
 The pipeline meta is available as the file `meta.json` and exported
 automatically when you save an `nlp` object to disk. Its contents are available

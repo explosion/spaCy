@@ -44,7 +44,7 @@ package also adds the function registries [`@span_getters`](#span_getters) and
 functions. For more details, see the
 [usage documentation](/usage/embeddings-transformers).
 
-## Assigned Attributes {#assigned-attributes}
+## Assigned Attributes {id="assigned-attributes"}
 
 The component sets the following
 [custom extension attribute](/usage/processing-pipeline#custom-components-attributes):
@@ -53,7 +53,7 @@ The component sets the following
 | ---------------- | ------------------------------------------------------------------------ |
 | `Doc._.trf_data` | Transformer tokens and outputs for the `Doc` object. ~~TransformerData~~ |
 
-## Config and implementation {#config}
+## Config and implementation {id="config"}
 
 The default config is defined by the pipeline component factory and describes
 how the component should be configured. You can override its settings via the
@@ -81,7 +81,7 @@ on the transformer architectures and their arguments and hyperparameters.
 https://github.com/explosion/spacy-transformers/blob/master/spacy_transformers/pipeline_component.py
 ```
 
-## Transformer.\_\_init\_\_ {#init tag="method"}
+## Transformer.\_\_init\_\_ {id="init",tag="method"}
 
 > #### Example
 >
@@ -124,7 +124,7 @@ component using its string name and [`nlp.add_pipe`](/api/language#create_pipe).
 | `name`                  | String name of the component instance. Used to add entries to the `losses` during training. ~~str~~                                                                                                                                                                                     |
 | `max_batch_items`       | Maximum size of a padded batch. Defaults to `128*32`. ~~int~~                                                                                                                                                                                                                           |
 
-## Transformer.\_\_call\_\_ {#call tag="method"}
+## Transformer.\_\_call\_\_ {id="call",tag="method"}
 
 Apply the pipe to one document. The document is modified in place, and returned.
 This usually happens under the hood when the `nlp` object is called on a text
@@ -147,7 +147,7 @@ to the [`predict`](/api/transformer#predict) and
 | `doc`       | The document to process. ~~Doc~~ |
 | **RETURNS** | The processed document. ~~Doc~~  |
 
-## Transformer.pipe {#pipe tag="method"}
+## Transformer.pipe {id="pipe",tag="method"}
 
 Apply the pipe to a stream of documents. This usually happens under the hood
 when the `nlp` object is called on a text and all pipeline components are
@@ -171,7 +171,7 @@ applied to the `Doc` in order. Both [`__call__`](/api/transformer#call) and
 | `batch_size`   | The number of documents to buffer. Defaults to `128`. ~~int~~ |
 | **YIELDS**     | The processed documents in order. ~~Doc~~                     |
 
-## Transformer.initialize {#initialize tag="method"}
+## Transformer.initialize {id="initialize",tag="method"}
 
 Initialize the component for training and return an
 [`Optimizer`](https://thinc.ai/docs/api-optimizers). `get_examples` should be a
@@ -196,7 +196,7 @@ by [`Language.initialize`](/api/language#initialize).
 | _keyword-only_ |                                                                                                                                                                            |
 | `nlp`          | The current `nlp` object. Defaults to `None`. ~~Optional[Language]~~                                                                                                       |
 
-## Transformer.predict {#predict tag="method"}
+## Transformer.predict {id="predict",tag="method"}
 
 Apply the component's model to a batch of [`Doc`](/api/doc) objects without
 modifying them.
@@ -213,7 +213,7 @@ modifying them.
 | `docs`      | The documents to predict. ~~Iterable[Doc]~~ |
 | **RETURNS** | The model's prediction for each document.   |
 
-## Transformer.set_annotations {#set_annotations tag="method"}
+## Transformer.set_annotations {id="set_annotations",tag="method"}
 
 Assign the extracted features to the `Doc` objects. By default, the
 [`TransformerData`](/api/transformer#transformerdata) object is written to the
@@ -233,7 +233,7 @@ callback is then called, if provided.
 | `docs`   | The documents to modify. ~~Iterable[Doc]~~            |
 | `scores` | The scores to set, produced by `Transformer.predict`. |
 
-## Transformer.update {#update tag="method"}
+## Transformer.update {id="update",tag="method"}
 
 Prepare for an update to the transformer. Like the [`Tok2Vec`](/api/tok2vec)
 component, the `Transformer` component is unusual in that it does not receive
@@ -266,7 +266,7 @@ and call the optimizer, while the others simply increment the gradients.
 | `losses`       | Optional record of the loss during training. Updated using the component name as the key. ~~Optional[Dict[str, float]]~~                                                         |
 | **RETURNS**    | The updated `losses` dictionary. ~~Dict[str, float]~~                                                                                                                            |
 
-## Transformer.create_optimizer {#create_optimizer tag="method"}
+## Transformer.create_optimizer {id="create_optimizer",tag="method"}
 
 Create an optimizer for the pipeline component.
 
@@ -281,7 +281,7 @@ Create an optimizer for the pipeline component.
 | ----------- | ---------------------------- |
 | **RETURNS** | The optimizer. ~~Optimizer~~ |
 
-## Transformer.use_params {#use_params tag="method, contextmanager"}
+## Transformer.use_params {id="use_params",tag="method, contextmanager"}
 
 Modify the pipe's model to use the given parameter values. At the end of the
 context, the original parameters are restored.
@@ -298,7 +298,7 @@ context, the original parameters are restored.
 | -------- | -------------------------------------------------- |
 | `params` | The parameter values to use in the model. ~~dict~~ |
 
-## Transformer.to_disk {#to_disk tag="method"}
+## Transformer.to_disk {id="to_disk",tag="method"}
 
 Serialize the pipe to disk.
 
@@ -315,7 +315,7 @@ Serialize the pipe to disk.
 | _keyword-only_ |                                                                                                                                            |
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~                                                |
 
-## Transformer.from_disk {#from_disk tag="method"}
+## Transformer.from_disk {id="from_disk",tag="method"}
 
 Load the pipe from disk. Modifies the object in place and returns it.
 
@@ -333,7 +333,7 @@ Load the pipe from disk. Modifies the object in place and returns it.
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~     |
 | **RETURNS**    | The modified `Transformer` object. ~~Transformer~~                                              |
 
-## Transformer.to_bytes {#to_bytes tag="method"}
+## Transformer.to_bytes {id="to_bytes",tag="method"}
 
 > #### Example
 >
@@ -350,7 +350,7 @@ Serialize the pipe to a bytestring.
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
 | **RETURNS**    | The serialized form of the `Transformer` object. ~~bytes~~                                  |
 
-## Transformer.from_bytes {#from_bytes tag="method"}
+## Transformer.from_bytes {id="from_bytes",tag="method"}
 
 Load the pipe from a bytestring. Modifies the object in place and returns it.
 
@@ -369,7 +369,7 @@ Load the pipe from a bytestring. Modifies the object in place and returns it.
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
 | **RETURNS**    | The `Transformer` object. ~~Transformer~~                                                   |
 
-## Serialization fields {#serialization-fields}
+## Serialization fields {id="serialization-fields"}
 
 During serialization, spaCy will export several data fields used to restore
 different aspects of the object. If needed, you can exclude them from
@@ -387,7 +387,7 @@ serialization by passing in the string names via the `exclude` argument.
 | `cfg`   | The config file. You usually don't want to exclude this.       |
 | `model` | The binary model data. You usually don't want to exclude this. |
 
-## TransformerData {#transformerdata tag="dataclass"}
+## TransformerData {id="transformerdata",tag="dataclass"}
 
 Transformer tokens and outputs for one `Doc` object. The transformer models
 return tensors that refer to a whole padded batch of documents. These tensors
@@ -405,7 +405,7 @@ by this class. Instances of this class are typically assigned to the
 | `align`        | Alignment from the `Doc`'s tokenization to the wordpieces. This is a ragged array, where `align.lengths[i]` indicates the number of wordpiece tokens that token `i` aligns against. The actual indices are provided at `align[i].dataXd`. ~~Ragged~~                                                                                 |
 | `width`        | The width of the last hidden layer. ~~int~~                                                                                                                                                                                                                                                                                          |
 
-### TransformerData.empty {#transformerdata-emoty tag="classmethod"}
+### TransformerData.empty {id="transformerdata-emoty",tag="classmethod"}
 
 Create an empty `TransformerData` container.
 
@@ -425,7 +425,7 @@ model.
 
 </Accordion>
 
-## FullTransformerBatch {#fulltransformerbatch tag="dataclass"}
+## FullTransformerBatch {id="fulltransformerbatch",tag="dataclass"}
 
 Holds a batch of input and output objects for a transformer model. The data can
 then be split to a list of [`TransformerData`](/api/transformer#transformerdata)
@@ -440,7 +440,7 @@ objects to associate the outputs to each [`Doc`](/api/doc) in the batch.
 | `align`        | Alignment from the spaCy tokenization to the wordpieces. This is a ragged array, where `align.lengths[i]` indicates the number of wordpiece tokens that token `i` aligns against. The actual indices are provided at `align[i].dataXd`. ~~Ragged~~                                                                                                                                                                                                                                       |
 | `doc_data`     | The outputs, split per `Doc` object. ~~List[TransformerData]~~                                                                                                                                                                                                                                                                                                                                                                                                                           |
 
-### FullTransformerBatch.unsplit_by_doc {#fulltransformerbatch-unsplit_by_doc tag="method"}
+### FullTransformerBatch.unsplit_by_doc {id="fulltransformerbatch-unsplit_by_doc",tag="method"}
 
 Return a new `FullTransformerBatch` from a split batch of activations, using the
 current object's spans, tokens and alignment. This is used during the backward
@@ -452,7 +452,7 @@ model.
 | `arrays`    | The split batch of activations. ~~List[List[Floats3d]]~~ |
 | **RETURNS** | The transformer batch. ~~FullTransformerBatch~~          |
 
-### FullTransformerBatch.split_by_doc {#fulltransformerbatch-split_by_doc tag="method"}
+### FullTransformerBatch.split_by_doc {id="fulltransformerbatch-split_by_doc",tag="method"}
 
 Split a `TransformerData` object that represents a batch into a list with one
 `TransformerData` per `Doc`.
@@ -468,7 +468,7 @@ In `spacy-transformers` v1.0, the model output is stored in
 
 </Accordion>
 
-## Span getters {#span_getters source="github.com/explosion/spacy-transformers/blob/master/spacy_transformers/span_getters.py"}
+## Span getters {id="span_getters",source="github.com/explosion/spacy-transformers/blob/master/spacy_transformers/span_getters.py"}
 
 Span getters are functions that take a batch of [`Doc`](/api/doc) objects and
 return a lists of [`Span`](/api/span) objects for each doc to be processed by
@@ -498,7 +498,7 @@ using the `@spacy.registry.span_getters` decorator.
 | `docs`      | A batch of `Doc` objects. ~~Iterable[Doc]~~                   |
 | **RETURNS** | The spans to process by the transformer. ~~List[List[Span]]~~ |
 
-### doc_spans.v1 {#doc_spans tag="registered function"}
+### doc_spans.v1 {id="doc_spans",tag="registered function"}
 
 > #### Example config
 >
@@ -511,7 +511,7 @@ Create a span getter that uses the whole document as its spans. This is the best
 approach if your [`Doc`](/api/doc) objects already refer to relatively short
 texts.
 
-### sent_spans.v1 {#sent_spans tag="registered function"}
+### sent_spans.v1 {id="sent_spans",tag="registered function"}
 
 > #### Example config
 >
@@ -531,7 +531,7 @@ To set sentence boundaries with the `sentencizer` during training, add a
 [`[training.annotating_components]`](/usage/training#annotating-components) to
 have it set the sentence boundaries before the `transformer` component runs.
 
-### strided_spans.v1 {#strided_spans tag="registered function"}
+### strided_spans.v1 {id="strided_spans",tag="registered function"}
 
 > #### Example config
 >
@@ -553,7 +553,7 @@ right context.
 | `window` | The window size. ~~int~~ |
 | `stride` | The stride size. ~~int~~ |
 
-## Annotation setters {#annotation_setters tag="registered functions" source="github.com/explosion/spacy-transformers/blob/master/spacy_transformers/annotation_setters.py"}
+## Annotation setters {id="annotation_setters",tag="registered functions",source="github.com/explosion/spacy-transformers/blob/master/spacy_transformers/annotation_setters.py"}
 
 Annotation setters are functions that take a batch of `Doc` objects and a
 [`FullTransformerBatch`](/api/transformer#fulltransformerbatch) and can set
