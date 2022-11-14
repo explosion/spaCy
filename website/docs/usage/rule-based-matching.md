@@ -776,6 +776,7 @@ whitespace, making them easy to match as well.
 ### {executable="true"}
 from spacy.lang.en import English
 from spacy.matcher import Matcher
+from spacy.tokens import Doc
 
 Doc.set_extension("sentiment", default=0.0)
 
@@ -825,7 +826,7 @@ the emoji span will make it available as `span._.emoji_desc`.
 
 ```python
 from emojipedia import Emojipedia  # Installation: pip install emojipedia
-from spacy.tokens import Span  # Get the global Span object
+from spacy.tokens import Doc, Span  # Get the global Doc and Span object
 
 Span.set_extension("emoji_desc", default=None)  # Register the custom attribute
 Doc.set_extension("sentiment", default=0.0)
