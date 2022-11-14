@@ -10,6 +10,7 @@ from .._util import get_hash, get_checksum, download_file, ensure_pathy
 from ...util import make_tempdir, get_minor_version, ENV_VARS, check_bool_env_var
 from ...git_info import GIT_VERSION
 from ... import about
+from ...errors import Errors
 
 if TYPE_CHECKING:
     from pathy import Pathy  # noqa: F401
@@ -84,7 +85,23 @@ class RemoteStorage:
                 with tarfile.open(tar_loc, mode=mode_string) as tar_file:
                     # This requires that the path is added correctly, relative
                     # to root. This is how we set things up in push()
-                    tar_file.extractall(self.root)
+
+                    # Disallow paths outside the current directory for the tar
+                    # file (CVE-2007-4559, directory traversal vulnerability)
+                    def is_within_directory(directory, target):
+                        abs_directory = os.path.abspath(directory)
+                        abs_target = os.path.abspath(target)
+                        prefix = os.path.commonprefix([abs_directory, abs_target])
+                        return prefix == abs_directory
+
+                    def safe_extract(tar, path):
+                        for member in tar.getmembers():
+                            member_path = os.path.join(path, member.name)
+                            if not is_within_directory(path, member_path):
+                                raise ValueError(Errors.E852)
+                        tar.extractall(path)
+
+                    safe_extract(tar_file, self.root)
         return url
 
     def find(

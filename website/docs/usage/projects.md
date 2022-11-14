@@ -243,6 +243,27 @@ pipelines.
 > python -m spacy project run test . --vars.foo bar
 > ```
 
+> #### Tip: Environment Variables
+>
+> Commands in a project file are not executed in a shell, so they don't have
+> direct access to environment variables. But you can insert environment
+> variables using the `env` dictionary to make values available for
+> interpolation, just like values in `vars`. Here's an example `env` dict that
+> makes `$PATH` available as `ENV_PATH`:
+>
+> ```yaml
+> env:
+>   ENV_PATH: PATH
+> ```
+>
+> This can be used in a project command like so:
+>
+> ```yaml
+>   - name: "echo-path"
+>     script:
+>       - "echo ${env.ENV_PATH}"
+> ```
+
 | Section                                             | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `title`                                             | An optional project title used in `--help` message and [auto-generated docs](#custom-docs).                                                                                                                                                                                                                                                                                                                                                                                                                  |
