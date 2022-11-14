@@ -1,5 +1,129 @@
 {
     "resources": [
+         {
+            "id": "grecy",
+            "title": "greCy",
+            "slogan": "Ancient Greek pipelines for spaCy",
+            "description": "greCy offers state-of-the-art pipelines for ancient Greek NLP. The repository makes language models available in various sizes, some of them containing floret word vectors and a BERT transformer layer.",
+            "github": "jmyerston/greCy",
+            "code_example": [
+                "import spacy",
+                "#After installing the grc_ud_proiel_trf wheel package from the greCy repository",
+                "",
+                "nlp = spacy.load('grc_ud_proiel_trf')",
+                "doc = nlp('δοκῶ μοι περὶ ὧν πυνθάνεσθε οὐκ ἀμελέτητος εἶναι.')",
+                "",
+                "for token in doc:",
+                "   print(token.text, token.norm_, token.lemma_, token.pos_, token.tag_)"
+            ],
+            "code_language": "python",
+            "author": "Jacobo Myerston",
+            "author_links": {
+                "twitter": "@jcbmyrstn",
+                "github": "jmyerston",
+                "website": "https://huggingface.co/spaces/Jacobo/syntax"
+            },
+            "category": ["pipeline", "research"],
+            "tags": ["ancient Greek"]
+        },
+        {
+            "id": "spacy-cleaner",
+            "title": "spacy-cleaner",
+            "slogan": "Easily clean text with spaCy!",
+            "description": "**spacy-cleaner** utilises spaCy `Language` models to replace, remove, and \n  mutate spaCy tokens. Cleaning actions available are:\n\n* Remove/replace stopwords.\n* Remove/replace punctuation.\n* Remove/replace numbers.\n* Remove/replace emails.\n* Remove/replace URLs.\n* Perform lemmatisation.\n\nSee our [docs](https://ce11an.github.io/spacy-cleaner/) for more information.",
+            "github": "Ce11an/spacy-cleaner",
+            "pip": "spacy-cleaner",
+            "code_example": [
+                "import spacy",
+                "import spacy_cleaner",
+                "from spacy_cleaner.processing import removers, replacers, mutators",
+                "",
+                "model = spacy.load(\"en_core_web_sm\")",
+                "pipeline = spacy_cleaner.Pipeline(",
+                "    model,",
+                "    removers.remove_stopword_token,",
+                "    replacers.replace_punctuation_token,",
+                "    mutators.mutate_lemma_token,",
+                ")",
+                "",
+                "texts = [\"Hello, my name is Cellan! I love to swim!\"]",
+                "",
+                "pipeline.clean(texts)",
+                "# ['hello _IS_PUNCT_ Cellan _IS_PUNCT_ love swim _IS_PUNCT_']"
+            ],
+            "code_language": "python",
+            "url": "https://ce11an.github.io/spacy-cleaner/",
+            "image": "https://raw.githubusercontent.com/Ce11an/spacy-cleaner/main/docs/assets/images/spacemen.png",
+            "author": "Cellan Hall",
+            "author_links": {
+                "twitter": "Ce11an",
+                "github": "Ce11an",
+                "website": "https://www.linkedin.com/in/cellan-hall/"
+            },
+            "category": [
+                "extension"
+            ],
+            "tags": [
+                "text-processing"
+            ]
+        },
+        {
+            "id": "Zshot",
+            "title": "Zshot",
+            "slogan": "Zero and Few shot named entity & relationships recognition",
+            "github": "ibm/zshot",
+            "pip": "zshot",
+            "code_example": [
+                "import spacy",
+                "from zshot import PipelineConfig, displacy",
+                "from zshot.linker import LinkerRegen",
+                "from zshot.mentions_extractor import MentionsExtractorSpacy",
+                "from zshot.utils.data_models import Entity",
+                "",
+                "nlp = spacy.load('en_core_web_sm')",
+                "# zero shot definition of entities",
+                "nlp_config = PipelineConfig(",
+                "    mentions_extractor=MentionsExtractorSpacy(),",
+                "    linker=LinkerRegen(),",
+                "    entities=[",
+                "        Entity(name='Paris',",
+                "               description='Paris is located in northern central France, in a north-bending arc of the river Seine'),",
+                "        Entity(name='IBM',",
+                "               description='International Business Machines Corporation (IBM) is an American multinational technology corporation headquartered in Armonk, New York'),",
+                "        Entity(name='New York', description='New York is a city in U.S. state'),",
+                "        Entity(name='Florida', description='southeasternmost U.S. state'),",
+                "        Entity(name='American',",
+                "              description='American, something of, from, or related to the United States of America, commonly known as the United States or America'),",
+                "        Entity(name='Chemical formula',",
+                "               description='In chemistry, a chemical formula is a way of presenting information about the chemical proportions of atoms that constitute a particular chemical compound or molecul'),",
+                "        Entity(name='Acetamide',",
+                "               description='Acetamide (systematic name: ethanamide) is an organic compound with the formula CH3CONH2. It is the simplest amide derived from acetic acid. It finds some use as a plasticizer and as an industrial solvent.'),",
+                "        Entity(name='Armonk',",
+                "               description='Armonk is a hamlet and census-designated place (CDP) in the town of North Castle, located in Westchester County, New York, United States.'),",
+                "        Entity(name='Acetic Acid',",
+                "               description='Acetic acid, systematically named ethanoic acid, is an acidic, colourless liquid and organic compound with the chemical formula CH3COOH'),",
+                "        Entity(name='Industrial solvent',",
+                "               description='Acetamide (systematic name: ethanamide) is an organic compound with the formula CH3CONH2. It is the simplest amide derived from acetic acid. It finds some use as a plasticizer and as an industrial solvent.'),",
+                "    ]",
+                ")",
+                "nlp.add_pipe('zshot', config=nlp_config, last=True)",
+                "",
+                "text = 'International Business Machines Corporation (IBM) is an American multinational technology corporation' \\",
+                "        ' headquartered in Armonk, New York, with operations in over 171 countries.'",
+                "",
+                "doc = nlp(text)",
+                "displacy.serve(doc, style='ent')"
+            ],
+            "thumb": "https://ibm.github.io/zshot/img/graph.png",
+            "url": "https://ibm.github.io/zshot/",
+            "author": "IBM Research",
+            "author_links": {
+                "github": "ibm",
+                "twitter": "IBMResearch",
+                "website": "https://research.ibm.com/labs/ireland/"
+            },
+            "category": ["scientific", "models", "research"]
+        },
         {
             "id": "concepcy",
             "title": "concepCy",
@@ -432,17 +556,6 @@
             "category": ["pipeline"],
             "tags": ["sentiment", "textblob"],
             "spacy_version": 3
-        },
-        {
-            "id": "spacy-ray",
-            "title": "spacy-ray",
-            "slogan": "Parallel and distributed training with spaCy and Ray",
-            "description": "[Ray](https://ray.io/) is a fast and simple framework for building and running **distributed applications**. This very lightweight extension package lets you use Ray for parallel and distributed training with spaCy. If `spacy-ray` is installed in the same environment as spaCy, it will automatically add `spacy ray` commands to your spaCy CLI.",
-            "github": "explosion/spacy-ray",
-            "pip": "spacy-ray",
-            "category": ["training"],
-            "author": "Explosion / Anyscale",
-            "thumb": "https://i.imgur.com/7so6ZpS.png"
         },
         {
             "id": "spacy-sentence-bert",
@@ -2403,20 +2516,20 @@
                 "import spacy",
                 "from spacy_wordnet.wordnet_annotator import WordnetAnnotator ",
                 "",
-                "# Load an spacy model (supported models are \"es\" and \"en\") ",
-                "nlp = spacy.load('en')",
-                "# Spacy 3.x",
-                "nlp.add_pipe(\"spacy_wordnet\", after='tagger', config={'lang': nlp.lang})",
-                "# Spacy 2.x",
+                "# Load a spaCy model (supported languages are \"es\" and \"en\") ",
+                "nlp = spacy.load('en_core_web_sm')",
+                "# spaCy 3.x",
+                "nlp.add_pipe(\"spacy_wordnet\", after='tagger')",
+                "# spaCy 2.x",
                 "# nlp.add_pipe(WordnetAnnotator(nlp.lang), after='tagger')",
                 "token = nlp('prices')[0]",
                 "",
-                "# wordnet object link spacy token with nltk wordnet interface by giving acces to",
+                "# WordNet object links spaCy token with NLTK WordNet interface by giving access to",
                 "# synsets and lemmas ",
                 "token._.wordnet.synsets()",
                 "token._.wordnet.lemmas()",
                 "",
-                "# And automatically tags with wordnet domains",
+                "# And automatically add info about WordNet domains",
                 "token._.wordnet.wordnet_domains()"
             ],
             "author": "recognai",
@@ -3984,7 +4097,21 @@
             },
             "category": ["pipeline"],
             "tags": ["interpretation", "ja"]
+        },
+        {
+            "id": "spacy-partial-tagger",
+            "title": "spaCy - Partial Tagger",
+            "slogan": "Sequence Tagger for Partially Annotated Dataset in spaCy",
+            "description": "This is a library to build a CRF tagger with a partially annotated dataset in spaCy. You can build your own tagger only from dictionary.",
+            "github": "doccano/spacy-partial-tagger",
+            "pip": "spacy-partial-tagger",
+            "category": ["pipeline", "training"],
+            "author": "Yasufumi Taniguchi",
+            "author_links": {
+                "github": "yasufumy"
+            }
         }
+
     ],
 
     "categories": [

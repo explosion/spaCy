@@ -1,4 +1,4 @@
-from typing import Iterator, Optional, Any, Dict, Callable, Iterable, Collection
+from typing import Iterator, Optional, Any, Dict, Callable, Iterable
 from typing import Union, Tuple, List, Set, Pattern, Sequence
 from typing import NoReturn, TYPE_CHECKING, TypeVar, cast, overload
 
@@ -10,6 +10,7 @@ from contextlib import contextmanager
 from copy import deepcopy
 from pathlib import Path
 import warnings
+
 from thinc.api import get_current_ops, Config, CupyOps, Optimizer
 import srsly
 import multiprocessing as mp
@@ -24,7 +25,7 @@ from .pipe_analysis import validate_attrs, analyze_pipes, print_pipe_analysis
 from .training import Example, validate_examples
 from .training.initialize import init_vocab, init_tok2vec
 from .scorer import Scorer
-from .util import registry, SimpleFrozenList, _pipe, raise_error
+from .util import registry, SimpleFrozenList, _pipe, raise_error, _DEFAULT_EMPTY_PIPES
 from .util import SimpleFrozenDict, combine_score_weights, CONFIG_SECTION_ORDER
 from .util import warn_if_jupyter_cupy
 from .lang.tokenizer_exceptions import URL_MATCH, BASE_EXCEPTIONS
@@ -1698,9 +1699,9 @@ class Language:
         config: Union[Dict[str, Any], Config] = {},
         *,
         vocab: Union[Vocab, bool] = True,
-        disable: Union[str, Iterable[str]] = SimpleFrozenList(),
-        enable: Union[str, Iterable[str]] = SimpleFrozenList(),
-        exclude: Union[str, Iterable[str]] = SimpleFrozenList(),
+        disable: Union[str, Iterable[str]] = _DEFAULT_EMPTY_PIPES,
+        enable: Union[str, Iterable[str]] = _DEFAULT_EMPTY_PIPES,
+        exclude: Union[str, Iterable[str]] = _DEFAULT_EMPTY_PIPES,
         meta: Dict[str, Any] = SimpleFrozenDict(),
         auto_fill: bool = True,
         validate: bool = True,
@@ -1727,12 +1728,6 @@ class Language:
 
         DOCS: https://spacy.io/api/language#from_config
         """
-        if isinstance(disable, str):
-            disable = [disable]
-        if isinstance(enable, str):
-            enable = [enable]
-        if isinstance(exclude, str):
-            exclude = [exclude]
         if auto_fill:
             config = Config(
                 cls.default_config, section_order=CONFIG_SECTION_ORDER
@@ -1877,9 +1872,29 @@ class Language:
             nlp.vocab.from_bytes(vocab_b)
 
         # Resolve disabled/enabled settings.
+        if isinstance(disable, str):
+            disable = [disable]
+        if isinstance(enable, str):
+            enable = [enable]
+        if isinstance(exclude, str):
+            exclude = [exclude]
+
+        # `enable` should not be merged with `enabled` (the opposite is true for `disable`/`disabled`). If the config
+        # specifies values for `enabled` not included in `enable`, emit warning.
+        if id(enable) != id(_DEFAULT_EMPTY_PIPES):
+            enabled = config["nlp"].get("enabled", [])
+            if len(enabled) and not set(enabled).issubset(enable):
+                warnings.warn(
+                    Warnings.W123.format(
+                        enable=enable,
+                        enabled=enabled,
+                    )
+                )
+
+        # Ensure sets of disabled/enabled pipe names are not contradictory.
         disabled_pipes = cls._resolve_component_status(
-            [*config["nlp"]["disabled"], *disable],
-            [*config["nlp"].get("enabled", []), *enable],
+            list({*disable, *config["nlp"].get("disabled", [])}),
+            enable,
             config["nlp"]["pipeline"],
         )
         nlp._disabled = set(p for p in disabled_pipes if p not in exclude)
@@ -2060,18 +2075,13 @@ class Language:
         if enable:
             if isinstance(enable, str):
                 enable = [enable]
-            to_disable = [
-                pipe_name for pipe_name in pipe_names if pipe_name not in enable
-            ]
-            if disable and disable != to_disable:
-                raise ValueError(
-                    Errors.E1042.format(
-                        arg1="enable",
-                        arg2="disable",
-                        arg1_values=enable,
-                        arg2_values=disable,
-                    )
-                )
+            to_disable = {
+                *[pipe_name for pipe_name in pipe_names if pipe_name not in enable],
+                *disable,
+            }
+            # If any pipe to be enabled is in to_disable, the specification is inconsistent.
+            if len(set(enable) & to_disable):
+                raise ValueError(Errors.E1042.format(enable=enable, disable=disable))
 
         return tuple(to_disable)
 

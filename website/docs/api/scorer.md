@@ -229,16 +229,17 @@ The reported `{attr}_score` depends on the classification properties:
 > print(scores["cats_macro_auc"])
 > ```
 
-| Name             | Description                                                                                                                                        |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `examples`       | The `Example` objects holding both the predictions and the correct gold-standard annotations. ~~Iterable[Example]~~                                |
-| `attr`           | The attribute to score. ~~str~~                                                                                                                    |
-| _keyword-only_   |                                                                                                                                                    |
-| `getter`         | Defaults to `getattr`. If provided, `getter(doc, attr)` should return the cats for an individual `Doc`. ~~Callable[[Doc, str], Dict[str, float]]~~ |
-| labels           | The set of possible labels. Defaults to `[]`. ~~Iterable[str]~~                                                                                    |
-| `multi_label`    | Whether the attribute allows multiple labels. Defaults to `True`. ~~bool~~                                                                         |
-| `positive_label` | The positive label for a binary task with exclusive classes. Defaults to `None`. ~~Optional[str]~~                                                 |
-| **RETURNS**      | A dictionary containing the scores, with inapplicable scores as `None`. ~~Dict[str, Optional[float]]~~                                             |
+| Name             | Description                                                                                                                                                                                        |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `examples`       | The `Example` objects holding both the predictions and the correct gold-standard annotations. ~~Iterable[Example]~~                                                                                |
+| `attr`           | The attribute to score. ~~str~~                                                                                                                                                                    |
+| _keyword-only_   |                                                                                                                                                                                                    |
+| `getter`         | Defaults to `getattr`. If provided, `getter(doc, attr)` should return the cats for an individual `Doc`. ~~Callable[[Doc, str], Dict[str, float]]~~                                                 |
+| labels           | The set of possible labels. Defaults to `[]`. ~~Iterable[str]~~                                                                                                                                    |
+| `multi_label`    | Whether the attribute allows multiple labels. Defaults to `True`. When set to `False` (exclusive labels), missing gold labels are interpreted as `0.0` and the threshold is set to `0.0`. ~~bool~~ |
+| `positive_label` | The positive label for a binary task with exclusive classes. Defaults to `None`. ~~Optional[str]~~                                                                                                 |
+| `threshold`      | Cutoff to consider a prediction "positive". Defaults to `0.5` for multi-label, and `0.0` (i.e. whatever's highest scoring) otherwise. ~~float~~                                                    |
+| **RETURNS**      | A dictionary containing the scores, with inapplicable scores as `None`. ~~Dict[str, Optional[float]]~~                                                                                             |
 
 ## Scorer.score_links {#score_links tag="staticmethod" new="3"}
 
@@ -270,3 +271,62 @@ Compute micro-PRF and per-entity PRF scores.
 | Name       | Description                                                                                                         |
 | ---------- | ------------------------------------------------------------------------------------------------------------------- |
 | `examples` | The `Example` objects holding both the predictions and the correct gold-standard annotations. ~~Iterable[Example]~~ |
+
+## score_coref_clusters {#score_coref_clusters tag="experimental"}
+
+Returns LEA ([Moosavi and Strube, 2016](https://aclanthology.org/P16-1060/)) PRF
+scores for coreference clusters.
+
+<Infobox title="Important note" variant="warning">
+
+Note this scoring function is not yet included in spaCy core - for details, see
+the [CoreferenceResolver](/api/coref) docs.
+
+</Infobox>
+
+> #### Example
+>
+> ```python
+> scores = score_coref_clusters(
+>     examples,
+>     span_cluster_prefix="coref_clusters",
+> )
+> print(scores["coref_f"])
+> ```
+
+| Name                  | Description                                                                                                         |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `examples`            | The `Example` objects holding both the predictions and the correct gold-standard annotations. ~~Iterable[Example]~~ |
+| _keyword-only_        |                                                                                                                     |
+| `span_cluster_prefix` | The prefix used for spans representing coreference clusters. ~~str~~                                                |
+| **RETURNS**           | A dictionary containing the scores. ~~Dict[str, Optional[float]]~~                                                  |
+
+## score_span_predictions {#score_span_predictions tag="experimental"}
+
+Return accuracy for reconstructions of spans from single tokens. Only exactly
+correct predictions are counted as correct, there is no partial credit for near
+answers. Used by the [SpanResolver](/api/span-resolver).
+
+<Infobox title="Important note" variant="warning">
+
+Note this scoring function is not yet included in spaCy core - for details, see
+the [SpanResolver](/api/span-resolver) docs.
+
+</Infobox>
+
+> #### Example
+>
+> ```python
+> scores = score_span_predictions(
+>     examples,
+>     output_prefix="coref_clusters",
+> )
+> print(scores["span_coref_clusters_accuracy"])
+> ```
+
+| Name            | Description                                                                                                         |
+| --------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `examples`      | The `Example` objects holding both the predictions and the correct gold-standard annotations. ~~Iterable[Example]~~ |
+| _keyword-only_  |                                                                                                                     |
+| `output_prefix` | The prefix used for spans representing the final predicted spans. ~~str~~                                           |
+| **RETURNS**     | A dictionary containing the scores. ~~Dict[str, Optional[float]]~~                                                  |

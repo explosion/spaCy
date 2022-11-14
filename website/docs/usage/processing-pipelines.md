@@ -363,7 +363,8 @@ nlp.enable_pipe("tagger")
 ```
 
 In addition to `disable`, `spacy.load()` also accepts `enable`. If `enable` is
-set, all components except for those in `enable` are disabled.
+set, all components except for those in `enable` are disabled. If `enable` and
+`disable` conflict (i.e. the same component is included in both), an error is raised.
 
 ```python
 # Load the complete pipeline, but disable all components except for tok2vec and tagger

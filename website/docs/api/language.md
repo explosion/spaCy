@@ -63,18 +63,18 @@ spaCy loads a model under the hood based on its
 > nlp = Language.from_config(config)
 > ```
 
-| Name                                  | Description                                                                                                                                                                                                                                                          |
-| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `config`                              | The loaded config. ~~Union[Dict[str, Any], Config]~~                                                                                                                                                                                                                 |
-| _keyword-only_                        |                                                                                                                                                                                                                                                                      |
-| `vocab`                               | A `Vocab` object. If `True`, a vocab is created using the default language data settings. ~~Vocab~~                                                                                                                                                                  |
-| `disable`                             | Name(s) of pipeline component(s) to [disable](/usage/processing-pipelines#disabling). Disabled pipes will be loaded but they won't be run unless you explicitly enable them by calling [`nlp.enable_pipe`](/api/language#enable_pipe). ~~Union[str, Iterable[str]]~~ |
-| `enable` <Tag variant="new">3.4</Tag> | Name(s) of pipeline component(s) to [enable](/usage/processing-pipelines#disabling). All other pipes will be disabled, but can be enabled again using [`nlp.enable_pipe`](/api/language#enable_pipe). ~~Union[str, Iterable[str]]~~                                  |
-| `exclude`                             | Name(s) of pipeline component(s) to [exclude](/usage/processing-pipelines#disabling). Excluded components won't be loaded. ~~Union[str, Iterable[str]]~~                                                                                                             |
-| `meta`                                | [Meta data](/api/data-formats#meta) overrides. ~~Dict[str, Any]~~                                                                                                                                                                                                    |
-| `auto_fill`                           | Whether to automatically fill in missing values in the config, based on defaults and function argument annotations. Defaults to `True`. ~~bool~~                                                                                                                     |
-| `validate`                            | Whether to validate the component config and arguments against the types expected by the factory. Defaults to `True`. ~~bool~~                                                                                                                                       |
-| **RETURNS**                           | The initialized object. ~~Language~~                                                                                                                                                                                                                                 |
+| Name                                  | Description                                                                                                                                                                                                                                                                                                        |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `config`                              | The loaded config. ~~Union[Dict[str, Any], Config]~~                                                                                                                                                                                                                                                               |
+| _keyword-only_                        |                                                                                                                                                                                                                                                                                                                    |
+| `vocab`                               | A `Vocab` object. If `True`, a vocab is created using the default language data settings. ~~Vocab~~                                                                                                                                                                                                                |
+| `disable`                             | Name(s) of pipeline component(s) to [disable](/usage/processing-pipelines#disabling). Disabled pipes will be loaded but they won't be run unless you explicitly enable them by calling [nlp.enable_pipe](/api/language#enable_pipe). Is merged with the config entry `nlp.disabled`. ~~Union[str, Iterable[str]]~~ |
+| `enable` <Tag variant="new">3.4</Tag> | Name(s) of pipeline component(s) to [enable](/usage/processing-pipelines#disabling). All other pipes will be disabled, but can be enabled again using [nlp.enable_pipe](/api/language#enable_pipe). ~~Union[str, Iterable[str]]~~                                                                                  |
+| `exclude`                             | Name(s) of pipeline component(s) to [exclude](/usage/processing-pipelines#disabling). Excluded components won't be loaded. ~~Union[str, Iterable[str]]~~                                                                                                                                                           |
+| `meta`                                | [Meta data](/api/data-formats#meta) overrides. ~~Dict[str, Any]~~                                                                                                                                                                                                                                                  |
+| `auto_fill`                           | Whether to automatically fill in missing values in the config, based on defaults and function argument annotations. Defaults to `True`. ~~bool~~                                                                                                                                                                   |
+| `validate`                            | Whether to validate the component config and arguments against the types expected by the factory. Defaults to `True`. ~~bool~~                                                                                                                                                                                     |
+| **RETURNS**                           | The initialized object. ~~Language~~                                                                                                                                                                                                                                                                               |
 
 ## Language.component {#component tag="classmethod" new="3"}
 
@@ -164,6 +164,9 @@ examples, see the
 Apply the pipeline to some text. The text can span multiple sentences, and can
 contain arbitrary whitespace. Alignment into the original string is preserved.
 
+Instead of text, a `Doc` can be passed as input, in which case tokenization is
+skipped, but the rest of the pipeline is run.
+
 > #### Example
 >
 > ```python
@@ -173,7 +176,7 @@ contain arbitrary whitespace. Alignment into the original string is preserved.
 
 | Name            | Description                                                                                                                                    |
 | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `text`          | The text to be processed. ~~str~~                                                                                                              |
+| `text`          | The text to be processed, or a Doc. ~~Union[str, Doc]~~                                                                                        |
 | _keyword-only_  |                                                                                                                                                |
 | `disable`       | Names of pipeline components to [disable](/usage/processing-pipelines#disabling). ~~List[str]~~                                                |
 | `component_cfg` | Optional dictionary of keyword arguments for components, keyed by component names. Defaults to `None`. ~~Optional[Dict[str, Dict[str, Any]]]~~ |
@@ -184,6 +187,9 @@ contain arbitrary whitespace. Alignment into the original string is preserved.
 Process texts as a stream, and yield `Doc` objects in order. This is usually
 more efficient than processing texts one-by-one.
 
+Instead of text, a `Doc` object can be passed as input. In this case
+tokenization is skipped but the rest of the pipeline is run.
+
 > #### Example
 >
 > ```python
@@ -192,16 +198,16 @@ more efficient than processing texts one-by-one.
 >     assert doc.has_annotation("DEP")
 > ```
 
-| Name                                       | Description                                                                                                                                                         |
-| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `texts`                                    | A sequence of strings. ~~Iterable[str]~~                                                                                                                            |
-| _keyword-only_                             |                                                                                                                                                                     |
-| `as_tuples`                                | If set to `True`, inputs should be a sequence of `(text, context)` tuples. Output will then be a sequence of `(doc, context)` tuples. Defaults to `False`. ~~bool~~ |
-| `batch_size`                               | The number of texts to buffer. ~~Optional[int]~~                                                                                                                    |
-| `disable`                                  | Names of pipeline components to [disable](/usage/processing-pipelines#disabling). ~~List[str]~~                                                                     |
-| `component_cfg`                            | Optional dictionary of keyword arguments for components, keyed by component names. Defaults to `None`. ~~Optional[Dict[str, Dict[str, Any]]]~~                      |
-| `n_process` <Tag variant="new">2.2.2</Tag> | Number of processors to use. Defaults to `1`. ~~int~~                                                                                                               |
-| **YIELDS**                                 | Documents in the order of the original text. ~~Doc~~                                                                                                                |
+| Name            | Description                                                                                                                                                         |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `texts`         | A sequence of strings (or `Doc` objects). ~~Iterable[Union[str, Doc]]~~                                                                                             |
+| _keyword-only_  |                                                                                                                                                                     |
+| `as_tuples`     | If set to `True`, inputs should be a sequence of `(text, context)` tuples. Output will then be a sequence of `(doc, context)` tuples. Defaults to `False`. ~~bool~~ |
+| `batch_size`    | The number of texts to buffer. ~~Optional[int]~~                                                                                                                    |
+| `disable`       | Names of pipeline components to [disable](/usage/processing-pipelines#disabling). ~~List[str]~~                                                                     |
+| `component_cfg` | Optional dictionary of keyword arguments for components, keyed by component names. Defaults to `None`. ~~Optional[Dict[str, Dict[str, Any]]]~~                      |
+| `n_process`     | Number of processors to use. Defaults to `1`. ~~int~~                                                                                                               |
+| **YIELDS**      | Documents in the order of the original text. ~~Doc~~                                                                                                                |
 
 ## Language.set_error_handler {#set_error_handler tag="method" new="3"}
 
@@ -1024,21 +1030,21 @@ details.
 
 ## Attributes {#attributes}
 
-| Name                                          | Description                                                                                                                                    |
-| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `vocab`                                       | A container for the lexical types. ~~Vocab~~                                                                                                   |
-| `tokenizer`                                   | The tokenizer. ~~Tokenizer~~                                                                                                                   |
-| `make_doc`                                    | Callable that takes a string and returns a `Doc`. ~~Callable[[str], Doc]~~                                                                     |
-| `pipeline`                                    | List of `(name, component)` tuples describing the current processing pipeline, in order. ~~List[Tuple[str, Callable[[Doc], Doc]]]~~            |
-| `pipe_names` <Tag variant="new">2</Tag>       | List of pipeline component names, in order. ~~List[str]~~                                                                                      |
-| `pipe_labels` <Tag variant="new">2.2</Tag>    | List of labels set by the pipeline components, if available, keyed by component name. ~~Dict[str, List[str]]~~                                 |
-| `pipe_factories` <Tag variant="new">2.2</Tag> | Dictionary of pipeline component names, mapped to their factory names. ~~Dict[str, str]~~                                                      |
-| `factories`                                   | All available factory functions, keyed by name. ~~Dict[str, Callable[[...], Callable[[Doc], Doc]]]~~                                           |
-| `factory_names` <Tag variant="new">3</Tag>    | List of all available factory names. ~~List[str]~~                                                                                             |
-| `components` <Tag variant="new">3</Tag>       | List of all available `(name, component)` tuples, including components that are currently disabled. ~~List[Tuple[str, Callable[[Doc], Doc]]]~~ |
-| `component_names` <Tag variant="new">3</Tag>  | List of all available component names, including components that are currently disabled. ~~List[str]~~                                         |
-| `disabled` <Tag variant="new">3</Tag>         | Names of components that are currently disabled and don't run as part of the pipeline. ~~List[str]~~                                           |
-| `path` <Tag variant="new">2</Tag>             | Path to the pipeline data directory, if a pipeline is loaded from a path or package. Otherwise `None`. ~~Optional[Path]~~                      |
+| Name                                         | Description                                                                                                                                    |
+| -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vocab`                                      | A container for the lexical types. ~~Vocab~~                                                                                                   |
+| `tokenizer`                                  | The tokenizer. ~~Tokenizer~~                                                                                                                   |
+| `make_doc`                                   | Callable that takes a string and returns a `Doc`. ~~Callable[[str], Doc]~~                                                                     |
+| `pipeline`                                   | List of `(name, component)` tuples describing the current processing pipeline, in order. ~~List[Tuple[str, Callable[[Doc], Doc]]]~~            |
+| `pipe_names`                                 | List of pipeline component names, in order. ~~List[str]~~                                                                                      |
+| `pipe_labels`                                | List of labels set by the pipeline components, if available, keyed by component name. ~~Dict[str, List[str]]~~                                 |
+| `pipe_factories`                             | Dictionary of pipeline component names, mapped to their factory names. ~~Dict[str, str]~~                                                      |
+| `factories`                                  | All available factory functions, keyed by name. ~~Dict[str, Callable[[...], Callable[[Doc], Doc]]]~~                                           |
+| `factory_names` <Tag variant="new">3</Tag>   | List of all available factory names. ~~List[str]~~                                                                                             |
+| `components` <Tag variant="new">3</Tag>      | List of all available `(name, component)` tuples, including components that are currently disabled. ~~List[Tuple[str, Callable[[Doc], Doc]]]~~ |
+| `component_names` <Tag variant="new">3</Tag> | List of all available component names, including components that are currently disabled. ~~List[str]~~                                         |
+| `disabled` <Tag variant="new">3</Tag>        | Names of components that are currently disabled and don't run as part of the pipeline. ~~List[str]~~                                           |
+| `path`                                       | Path to the pipeline data directory, if a pipeline is loaded from a path or package. Otherwise `None`. ~~Optional[Path]~~                      |
 
 ## Class attributes {#class-attributes}
 
