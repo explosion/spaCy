@@ -1,6 +1,6 @@
 import pytest
 from spacy.matcher import levenshtein
-from spacy.matcher.matcher import fuzzy_match
+from spacy.matcher.matcher import _default_fuzzy_match
 
 
 # empty string plus 10 random ASCII, 10 random unicode, and 2 random long tests
@@ -69,6 +69,6 @@ def test_levenshtein(dist, a, b):
         ("abcdefgh", "cdefghijkl", -1, False),  # default equivalent to 5 (max)
     ],
 )
-def test_fuzzy_match(a, b, fuzzy, expected):
-    assert fuzzy_match(a, b, fuzzy) == expected
-    assert fuzzy_match(b, a, fuzzy) == expected
+def test_default_fuzzy_match(a, b, fuzzy, expected):
+    assert _default_fuzzy_match(a, b, fuzzy) == expected
+    assert _default_fuzzy_match(b, a, fuzzy) == expected
