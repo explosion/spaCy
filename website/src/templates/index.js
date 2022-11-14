@@ -95,8 +95,8 @@ class Layout extends React.Component {
     }
 
     render() {
-        const { pageContext, location, children } = this.props
-        const { title, section, sectionTitle, teaser, theme = 'blue', searchExclude } = pageContext
+        const { location, children } = this.props
+        const { title, section, sectionTitle, teaser, theme = 'blue', searchExclude } = this.props
         const uiTheme = nightly ? 'nightly' : legacy ? 'legacy' : theme
         const bodyClass = classNames(`theme-${uiTheme}`, { 'search-exclude': !!searchExclude })
         const isDocs = ['usage', 'models', 'api', 'styleguide'].includes(section)
@@ -122,13 +122,9 @@ class Layout extends React.Component {
                     <Progress />
                 </Navigation>
                 {isDocs ? (
-                    <Docs pageContext={pageContext}>{content}</Docs>
+                    <Docs pageContext={this.props}>{children}</Docs>
                 ) : section === 'universe' ? (
-                    <Universe
-                        pageContext={pageContext}
-                        location={location}
-                        mdxComponents={mdxComponents}
-                    />
+                    <Universe pageContext={this.props} location={location} />
                 ) : (
                     <div>
                         {children}
