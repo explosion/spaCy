@@ -53,7 +53,7 @@ $ python -m spacy download [model] [--direct] [--sdist] [pip_args]
 | `--direct`, `-D`                           | Force direct download of exact package version. ~~bool (flag)~~                                                                                                                                                                           |
 | `--sdist`, `-S` <Tag variant="new">3</Tag> | Download the source package (`.tar.gz` archive) instead of the default pre-built binary wheel. ~~bool (flag)~~                                                                                                                            |
 | `--help`, `-h`                             | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                                                                |
-| pip args <Tag variant="new">2.1</Tag>      | Additional installation options to be passed to `pip install` when installing the pipeline package. For example, `--user` to install to the user home directory or `--no-deps` to not install package dependencies. ~~Any (option/flag)~~ |
+| pip args                                   | Additional installation options to be passed to `pip install` when installing the pipeline package. For example, `--user` to install to the user home directory or `--no-deps` to not install package dependencies. ~~Any (option/flag)~~ |
 | **CREATES**                                | The installed pipeline package in your `site-packages` directory.                                                                                                                                                                         |
 
 ## info {#info tag="command"}
@@ -77,15 +77,15 @@ $ python -m spacy info [--markdown] [--silent] [--exclude]
 $ python -m spacy info [model] [--markdown] [--silent] [--exclude]
 ```
 
-| Name                                             | Description                                                                                                             |
-| ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
-| `model`                                          | A trained pipeline, i.e. package name or path (optional). ~~Optional[str] \(option)~~                                   |
-| `--markdown`, `-md`                              | Print information as Markdown. ~~bool (flag)~~                                                                          |
-| `--silent`, `-s` <Tag variant="new">2.0.12</Tag> | Don't print anything, just return the values. ~~bool (flag)~~                                                           |
-| `--exclude`, `-e`                                | Comma-separated keys to exclude from the print-out. Defaults to `"labels"`. ~~Optional[str]~~                           |
-| `--url`, `-u` <Tag variant="new">3.5.0</Tag>     | Print the URL to download the most recent compatible version of the pipeline. Requires a pipeline name. ~~bool (flag)~~ |
-| `--help`, `-h`                                   | Show help message and available arguments. ~~bool (flag)~~                                                              |
-| **PRINTS**                                       | Information about your spaCy installation.                                                                              |
+| Name                                         | Description                                                                                                             |
+| -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `model`                                      | A trained pipeline, i.e. package name or path (optional). ~~Optional[str] \(option)~~                                   |
+| `--markdown`, `-md`                          | Print information as Markdown. ~~bool (flag)~~                                                                          |
+| `--silent`, `-s`                             | Don't print anything, just return the values. ~~bool (flag)~~                                                           |
+| `--exclude`, `-e`                            | Comma-separated keys to exclude from the print-out. Defaults to `"labels"`. ~~Optional[str]~~                           |
+| `--url`, `-u` <Tag variant="new">3.5.0</Tag> | Print the URL to download the most recent compatible version of the pipeline. Requires a pipeline name. ~~bool (flag)~~ |
+| `--help`, `-h`                               | Show help message and available arguments. ~~bool (flag)~~                                                              |
+| **PRINTS**                                   | Information about your spaCy installation.                                                                              |
 
 ## validate {#validate new="2" tag="command"}
 
@@ -260,22 +260,22 @@ chosen based on the file extension of the input file.
 $ python -m spacy convert [input_file] [output_dir] [--converter] [--file-type] [--n-sents] [--seg-sents] [--base] [--morphology] [--merge-subtokens] [--ner-map] [--lang]
 ```
 
-| Name                                             | Description                                                                                                                               |
-| ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `input_path`                                     | Input file or directory. ~~Path (positional)~~                                                                                            |
-| `output_dir`                                     | Output directory for converted file. Defaults to `"-"`, meaning data will be written to `stdout`. ~~Optional[Path] \(option)~~            |
-| `--converter`, `-c` <Tag variant="new">2</Tag>   | Name of converter to use (see below). ~~str (option)~~                                                                                    |
-| `--file-type`, `-t` <Tag variant="new">2.1</Tag> | Type of file to create. Either `spacy` (default) for binary [`DocBin`](/api/docbin) data or `json` for v2.x JSON format. ~~str (option)~~ |
-| `--n-sents`, `-n`                                | Number of sentences per document. Supported for: `conll`, `conllu`, `iob`, `ner` ~~int (option)~~                                         |
-| `--seg-sents`, `-s` <Tag variant="new">2.2</Tag> | Segment sentences. Supported for: `conll`, `ner` ~~bool (flag)~~                                                                          |
-| `--base`, `-b`, `--model`                        | Trained spaCy pipeline for sentence segmentation to use as base (for `--seg-sents`). ~~Optional[str](option)~~                            |
-| `--morphology`, `-m`                             | Enable appending morphology to tags. Supported for: `conllu` ~~bool (flag)~~                                                              |
-| `--merge-subtokens`, `-T`                        | Merge CoNLL-U subtokens ~~bool (flag)~~                                                                                                   |
-| `--ner-map`, `-nm`                               | NER tag mapping (as JSON-encoded dict of entity types). Supported for: `conllu` ~~Optional[Path](option)~~                                |
-| `--lang`, `-l` <Tag variant="new">2.1</Tag>      | Language code (if tokenizer required). ~~Optional[str] \(option)~~                                                                        |
-| `--concatenate`, `-C`                            | Concatenate output to a single file ~~bool (flag)~~                                                                                       |
-| `--help`, `-h`                                   | Show help message and available arguments. ~~bool (flag)~~                                                                                |
-| **CREATES**                                      | Binary [`DocBin`](/api/docbin) training data that can be used with [`spacy train`](/api/cli#train).                                       |
+| Name                      | Description                                                                                                                               |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `input_path`              | Input file or directory. ~~Path (positional)~~                                                                                            |
+| `output_dir`              | Output directory for converted file. Defaults to `"-"`, meaning data will be written to `stdout`. ~~Optional[Path] \(option)~~            |
+| `--converter`, `-c`       | Name of converter to use (see below). ~~str (option)~~                                                                                    |
+| `--file-type`, `-t`       | Type of file to create. Either `spacy` (default) for binary [`DocBin`](/api/docbin) data or `json` for v2.x JSON format. ~~str (option)~~ |
+| `--n-sents`, `-n`         | Number of sentences per document. Supported for: `conll`, `conllu`, `iob`, `ner` ~~int (option)~~                                         |
+| `--seg-sents`, `-s`       | Segment sentences. Supported for: `conll`, `ner` ~~bool (flag)~~                                                                          |
+| `--base`, `-b`, `--model` | Trained spaCy pipeline for sentence segmentation to use as base (for `--seg-sents`). ~~Optional[str](option)~~                            |
+| `--morphology`, `-m`      | Enable appending morphology to tags. Supported for: `conllu` ~~bool (flag)~~                                                              |
+| `--merge-subtokens`, `-T` | Merge CoNLL-U subtokens ~~bool (flag)~~                                                                                                   |
+| `--ner-map`, `-nm`        | NER tag mapping (as JSON-encoded dict of entity types). Supported for: `conllu` ~~Optional[Path](option)~~                                |
+| `--lang`, `-l`            | Language code (if tokenizer required). ~~Optional[str] \(option)~~                                                                        |
+| `--concatenate`, `-C`     | Concatenate output to a single file ~~bool (flag)~~                                                                                       |
+| `--help`, `-h`            | Show help message and available arguments. ~~bool (flag)~~                                                                                |
+| **CREATES**               | Binary [`DocBin`](/api/docbin) training data that can be used with [`spacy train`](/api/cli#train).                                       |
 
 ### Converters {#converters}
 
@@ -474,8 +474,7 @@ report span characteristics such as the average span length and the span (or
 span boundary) distinctiveness. The distinctiveness measure shows how different
 the tokens are with respect to the rest of the corpus using the KL-divergence of
 the token distributions. To learn more, you can check out Papay et al.'s work on
-[*Dissecting Span Identification Tasks with Performance Prediction* (EMNLP
-2020)](https://aclanthology.org/2020.emnlp-main.396/).
+[*Dissecting Span Identification Tasks with Performance Prediction* (EMNLP 2020)](https://aclanthology.org/2020.emnlp-main.396/).
 
 </Infobox>
 
@@ -1229,19 +1228,19 @@ $ python -m spacy package [input_dir] [output_dir] [--code] [--meta-path] [--cre
 > $ pip install dist/en_pipeline-0.0.0.tar.gz
 > ```
 
-| Name                                             | Description                                                                                                                                                                                                                                                                      |
-| ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `input_dir`                                      | Path to directory containing pipeline data. ~~Path (positional)~~                                                                                                                                                                                                                |
-| `output_dir`                                     | Directory to create package folder in. ~~Path (positional)~~                                                                                                                                                                                                                     |
-| `--code`, `-c` <Tag variant="new">3</Tag>        | Comma-separated paths to Python files to be included in the package and imported in its `__init__.py`. This allows including [registering functions](/usage/training#custom-functions) and [custom components](/usage/processing-pipelines#custom-components). ~~str (option)~~  |
-| `--meta-path`, `-m` <Tag variant="new">2</Tag>   | Path to [`meta.json`](/api/data-formats#meta) file (optional). ~~Optional[Path] \(option)~~                                                                                                                                                                                      |
-| `--create-meta`, `-C` <Tag variant="new">2</Tag> | Create a `meta.json` file on the command line, even if one already exists in the directory. If an existing file is found, its entries will be shown as the defaults in the command line prompt. ~~bool (flag)~~                                                                  |
-| `--build`, `-b` <Tag variant="new">3</Tag>       | Comma-separated artifact formats to build. Can be `sdist` (for a `.tar.gz` archive) and/or `wheel` (for a binary `.whl` file), or `none` if you want to run this step manually. The generated artifacts can be installed by `pip install`. Defaults to `sdist`. ~~str (option)~~ |
-| `--name`, `-n` <Tag variant="new">3</Tag>        | Package name to override in meta. ~~Optional[str] \(option)~~                                                                                                                                                                                                                    |
-| `--version`, `-v` <Tag variant="new">3</Tag>     | Package version to override in meta. Useful when training new versions, as it doesn't require editing the meta template. ~~Optional[str] \(option)~~                                                                                                                             |
-| `--force`, `-f`                                  | Force overwriting of existing folder in output directory. ~~bool (flag)~~                                                                                                                                                                                                        |
-| `--help`, `-h`                                   | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                                                                                                       |
-| **CREATES**                                      | A Python package containing the spaCy pipeline.                                                                                                                                                                                                                                  |
+| Name                                         | Description                                                                                                                                                                                                                                                                      |
+| -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `input_dir`                                  | Path to directory containing pipeline data. ~~Path (positional)~~                                                                                                                                                                                                                |
+| `output_dir`                                 | Directory to create package folder in. ~~Path (positional)~~                                                                                                                                                                                                                     |
+| `--code`, `-c` <Tag variant="new">3</Tag>    | Comma-separated paths to Python files to be included in the package and imported in its `__init__.py`. This allows including [registering functions](/usage/training#custom-functions) and [custom components](/usage/processing-pipelines#custom-components). ~~str (option)~~  |
+| `--meta-path`, `-m`                          | Path to [`meta.json`](/api/data-formats#meta) file (optional). ~~Optional[Path] \(option)~~                                                                                                                                                                                      |
+| `--create-meta`, `-C`                        | Create a `meta.json` file on the command line, even if one already exists in the directory. If an existing file is found, its entries will be shown as the defaults in the command line prompt. ~~bool (flag)~~                                                                  |
+| `--build`, `-b` <Tag variant="new">3</Tag>   | Comma-separated artifact formats to build. Can be `sdist` (for a `.tar.gz` archive) and/or `wheel` (for a binary `.whl` file), or `none` if you want to run this step manually. The generated artifacts can be installed by `pip install`. Defaults to `sdist`. ~~str (option)~~ |
+| `--name`, `-n` <Tag variant="new">3</Tag>    | Package name to override in meta. ~~Optional[str] \(option)~~                                                                                                                                                                                                                    |
+| `--version`, `-v` <Tag variant="new">3</Tag> | Package version to override in meta. Useful when training new versions, as it doesn't require editing the meta template. ~~Optional[str] \(option)~~                                                                                                                             |
+| `--force`, `-f`                              | Force overwriting of existing folder in output directory. ~~bool (flag)~~                                                                                                                                                                                                        |
+| `--help`, `-h`                               | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                                                                                                       |
+| **CREATES**                                  | A Python package containing the spaCy pipeline.                                                                                                                                                                                                                                  |
 
 ## project {#project new="3"}
 
