@@ -1,6 +1,6 @@
 import React, { Fragment } from 'react'
 import PropTypes from 'prop-types'
-import { Link as GatsbyLink } from 'gatsby'
+import NextLink from 'next/link'
 import classNames from 'classnames'
 
 import Icon from './icon'
@@ -58,22 +58,22 @@ export default function Link({
         if ((dest && /^#/.test(dest)) || onClick) {
             return (
                 <Wrapper>
-                    <a href={dest} onClick={onClick} className={linkClassNames}>
+                    <NextLink href={dest} onClick={onClick} className={linkClassNames}>
                         {children}
-                    </a>
+                    </NextLink>
                 </Wrapper>
             )
         }
         return (
             <Wrapper>
-                <GatsbyLink
-                    to={dest}
+                <NextLink
+                    href={dest}
                     className={linkClassNames}
                     activeClassName={activeClassName}
                     {...other}
                 >
                     {content}
-                </GatsbyLink>
+                </NextLink>
             </Wrapper>
         )
     }
@@ -81,9 +81,9 @@ export default function Link({
     const relTarget = isInternal ? {} : { rel: 'noopener nofollow noreferrer', target: '_blank' }
     return (
         <Wrapper>
-            <a href={dest} className={linkClassNames} {...relTarget} {...other}>
+            <NextLink href={dest} className={linkClassNames} {...relTarget} {...other}>
                 {content}
-            </a>
+            </NextLink>
         </Wrapper>
     )
 }
