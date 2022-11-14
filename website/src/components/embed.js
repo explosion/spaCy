@@ -89,7 +89,7 @@ const Image = ({ src, alt, title, ...props }) => {
     // This is only needed for image types that are NOT handled by
     // gatsby-remark-images, i.e. mostly SVGs. The plugin adds formatting
     // and support for captions, so this normalises that behaviour.
-    const linkClassNames = classNames('gatsby-resp-image-link', classes.imageLink)
+    const linkClassNames = classNames('gatsby-resp-image-link', classes['image-link'])
     const markdownComponents = { code: InlineCode, p: Fragment, a: Link }
     return (
         <figure className="gatsby-resp-image-figure">
@@ -111,7 +111,7 @@ const GoogleSheet = ({ id, link, height, button = 'View full table' }) => {
             <iframe
                 title={id}
                 scrolling="no"
-                className={classes.googleSheet}
+                className={classes['google-sheet']}
                 height={height}
                 src={`https://docs.google.com/spreadsheets/d/e/${id}/pubhtml?widget=true&amp;headers=false`}
             />

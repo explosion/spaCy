@@ -9,7 +9,7 @@ export const Ul = (props) => <ul className={classes.ul} {...props} />
 export const Li = ({ children, emoji, ...props }) => {
     const { hasIcon, content } = replaceEmoji(children)
     const liClassNames = classNames(classes.li, {
-        [classes.liIcon]: hasIcon,
+        [classes['li-icon']]: hasIcon,
         [classes.emoji]: emoji,
     })
     return (

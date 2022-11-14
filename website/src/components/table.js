@@ -45,7 +45,7 @@ export const Table = ({ fixed, className, ...props }) => {
 
 export const Th = ({ children, ...props }) => {
     const isRotated = children && !isString(children) && children.type && children.type.name == 'Tx'
-    const thClassNames = classNames(classes.th, { [classes.thRotated]: isRotated })
+    const thClassNames = classNames(classes.th, { [classes['th-rotated']]: isRotated })
     return (
         <th className={thClassNames} {...props}>
             {children}
