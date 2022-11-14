@@ -13,6 +13,7 @@ from ._util import import_code, debug_cli, _format_number
 from ..training import Example, remove_bilu_prefix
 from ..training.initialize import get_sourced_components
 from ..schemas import ConfigSchemaTraining
+from ..pipeline import TrainablePipe
 from ..pipeline._parser_internals import nonproj
 from ..pipeline._parser_internals.nonproj import DELIMITER
 from ..pipeline import Morphologizer, SpanCategorizer
@@ -934,6 +935,7 @@ def _get_labels_from_model(nlp: Language, factory_name: str) -> Set[str]:
     labels: Set[str] = set()
     for pipe_name in pipe_names:
         pipe = nlp.get_pipe(pipe_name)
+        assert isinstance(pipe, TrainablePipe)
         labels.update(pipe.labels)
     return labels
 
