@@ -1439,10 +1439,7 @@ def filter_batch(size: int) -> Callable[[Iterable[Example]], Iterator[List[Examp
     return create_filtered_batches
 ```
 
-<!-- TODO:
-* Custom corpus class
-* Minibatching
--->
+{/* TODO: Custom corpus class, Minibatching */}
 
 ### Data augmentation {id="data-augmentation"}
 
@@ -1483,7 +1480,6 @@ typically loaded from a JSON file. There are two types of orth variant rules:
 `"single"` for single tokens that should be replaced (e.g. hyphens) and
 `"paired"` for pairs of tokens (e.g. quotes).
 
-<!-- prettier-ignore -->
 ```json
 ### orth_variants.json
 {
