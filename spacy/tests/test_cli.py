@@ -3,6 +3,7 @@ import math
 import pkg_resources
 from random import sample
 from typing import Counter
+import time
 
 import pytest
 import srsly
@@ -864,7 +865,11 @@ def test_local_remote_storage():
     with make_tempdir() as d:
         filename = "a.txt"
 
-        for content_hash in ("aaaa", "bbbb", "cccc"):
+        content_hashes = ("aaaa", "cccc", "bbbb")
+        for i, content_hash in enumerate(content_hashes):
+            # make sure that each subsequent file has a later timestamp
+            if i > 0:
+                time.sleep(1)
             content = f"{content_hash} content"
             loc_file = d / "root" / filename
             if not loc_file.parent.exists():
