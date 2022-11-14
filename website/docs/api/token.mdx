@@ -39,7 +39,7 @@ The number of unicode characters in the token, i.e. `token.text`.
 | ----------- | ------------------------------------------------------ |
 | **RETURNS** | The number of unicode characters in the token. ~~int~~ |
 
-## Token.set_extension {id="set_extension",tag="classmethod",new="2"}
+## Token.set_extension {id="set_extension",tag="classmethod",version="2"}
 
 Define a custom attribute on the `Token` which becomes available via `Token._`.
 For details, see the documentation on
@@ -64,7 +64,7 @@ For details, see the documentation on
 | `setter`  | Setter function that takes the `Token` and a value, and modifies the object. Is called when the user writes to the `Token._` attribute. ~~Optional[Callable[[Token, Any], None]]~~ |
 | `force`   | Force overwriting existing attribute. ~~bool~~                                                                                                                                     |
 
-## Token.get_extension {id="get_extension",tag="classmethod",new="2"}
+## Token.get_extension {id="get_extension",tag="classmethod",version="2"}
 
 Look up a previously registered extension by name. Returns a 4-tuple
 `(default, method, getter, setter)` if the extension is registered. Raises a
@@ -84,7 +84,7 @@ Look up a previously registered extension by name. Returns a 4-tuple
 | `name`      | Name of the extension. ~~str~~                                                                                                                     |
 | **RETURNS** | A `(default, method, getter, setter)` tuple of the extension. ~~Tuple[Optional[Any], Optional[Callable], Optional[Callable], Optional[Callable]]~~ |
 
-## Token.has_extension {id="has_extension",tag="classmethod",new="2"}
+## Token.has_extension {id="has_extension",tag="classmethod",version="2"}
 
 Check whether an extension has been registered on the `Token` class.
 
@@ -101,7 +101,7 @@ Check whether an extension has been registered on the `Token` class.
 | `name`      | Name of the extension to check. ~~str~~             |
 | **RETURNS** | Whether the extension has been registered. ~~bool~~ |
 
-## Token.remove_extension {id="remove_extension",tag="classmethod",new="2.0.11"}
+## Token.remove_extension {id="remove_extension",tag="classmethod",version="2.0.11"}
 
 Remove a previously registered extension.
 

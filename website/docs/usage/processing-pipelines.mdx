@@ -459,7 +459,7 @@ run as part of the pipeline.
 | `nlp.component_names` | All component names, including disabled components.              |
 | `nlp.disabled`        | Names of components that are currently disabled.                 |
 
-### Sourcing components from existing pipelines {id="sourced-components",new="3"}
+### Sourcing components from existing pipelines {id="sourced-components",version="3"}
 
 Pipeline components that are independent can also be reused across pipelines.
 Instead of adding a new blank component, you can also copy an existing component
@@ -516,7 +516,7 @@ nlp.add_pipe("ner", source=source_nlp)
 print(nlp.pipe_names)
 ```
 
-### Analyzing pipeline components {id="analysis",new="3"}
+### Analyzing pipeline components {id="analysis",version="3"}
 
 The [`nlp.analyze_pipes`](/api/language#analyze_pipes) method analyzes the
 components in the current pipeline and outputs information about them like the
@@ -836,7 +836,7 @@ make your factory a separate function. That's also how spaCy does it internally.
 
 </Accordion>
 
-### Language-specific factories {id="factories-language",new="3"}
+### Language-specific factories {id="factories-language",version="3"}
 
 There are many use cases where you might want your pipeline components to be
 language-specific. Sometimes this requires entirely different implementation per
@@ -1195,7 +1195,7 @@ object is saved to disk, which will run the component's `to_disk` method. When
 the pipeline is loaded back into spaCy later to use it, the `from_disk` method
 will load the data back in.
 
-## Python type hints and validation {id="type-hints",new="3"}
+## Python type hints and validation {id="type-hints",version="3"}
 
 spaCy's configs are powered by our machine learning library Thinc's
 [configuration system](https://thinc.ai/docs/usage-config), which supports
@@ -1265,7 +1265,7 @@ nlp.add_pipe("debug", config={"log_level": "DEBUG"})
 doc = nlp("This is a text...")
 ```
 
-## Trainable components {id="trainable-components",new="3"}
+## Trainable components {id="trainable-components",version="3"}
 
 spaCy's [`TrainablePipe`](/api/pipe) class helps you implement your own
 trainable components that have their own model instance, make predictions over
@@ -1382,7 +1382,7 @@ into your spaCy pipeline, see the usage guide on
 
 </Infobox>
 
-## Extension attributes {id="custom-components-attributes",new="2"}
+## Extension attributes {id="custom-components-attributes",version="2"}
 
 spaCy allows you to set any custom attributes and methods on the `Doc`, `Span`
 and `Token`, which become available as `Doc._`, `Span._` and `Token._` – for

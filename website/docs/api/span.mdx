@@ -93,7 +93,7 @@ Get the number of tokens in the span.
 | ----------- | ----------------------------------------- |
 | **RETURNS** | The number of tokens in the span. ~~int~~ |
 
-## Span.set_extension {id="set_extension",tag="classmethod",new="2"}
+## Span.set_extension {id="set_extension",tag="classmethod",version="2"}
 
 Define a custom attribute on the `Span` which becomes available via `Span._`.
 For details, see the documentation on
@@ -118,7 +118,7 @@ For details, see the documentation on
 | `setter`  | Setter function that takes the `Span` and a value, and modifies the object. Is called when the user writes to the `Span._` attribute. ~~Optional[Callable[[Span, Any], None]]~~ |
 | `force`   | Force overwriting existing attribute. ~~bool~~                                                                                                                                  |
 
-## Span.get_extension {id="get_extension",tag="classmethod",new="2"}
+## Span.get_extension {id="get_extension",tag="classmethod",version="2"}
 
 Look up a previously registered extension by name. Returns a 4-tuple
 `(default, method, getter, setter)` if the extension is registered. Raises a
@@ -138,7 +138,7 @@ Look up a previously registered extension by name. Returns a 4-tuple
 | `name`      | Name of the extension. ~~str~~                                                                                                                     |
 | **RETURNS** | A `(default, method, getter, setter)` tuple of the extension. ~~Tuple[Optional[Any], Optional[Callable], Optional[Callable], Optional[Callable]]~~ |
 
-## Span.has_extension {id="has_extension",tag="classmethod",new="2"}
+## Span.has_extension {id="has_extension",tag="classmethod",version="2"}
 
 Check whether an extension has been registered on the `Span` class.
 
@@ -155,7 +155,7 @@ Check whether an extension has been registered on the `Span` class.
 | `name`      | Name of the extension to check. ~~str~~             |
 | **RETURNS** | Whether the extension has been registered. ~~bool~~ |
 
-## Span.remove_extension {id="remove_extension",tag="classmethod",new="2.0.12"}
+## Span.remove_extension {id="remove_extension",tag="classmethod",version="2.0.12"}
 
 Remove a previously registered extension.
 
@@ -173,7 +173,7 @@ Remove a previously registered extension.
 | `name`      | Name of the extension. ~~str~~                                                                                                                             |
 | **RETURNS** | A `(default, method, getter, setter)` tuple of the removed extension. ~~Tuple[Optional[Any], Optional[Callable], Optional[Callable], Optional[Callable]]~~ |
 
-## Span.char_span {id="char_span",tag="method",new="2.2.4"}
+## Span.char_span {id="char_span",tag="method",version="2.2.4"}
 
 Create a `Span` object from the slice `span.text[start:end]`. Returns `None` if
 the character indices don't map to a valid span.
@@ -235,7 +235,7 @@ ancestor is found, e.g. if span excludes a necessary ancestor.
 | ----------- | --------------------------------------------------------------------------------------- |
 | **RETURNS** | The lowest common ancestor matrix of the `Span`. ~~numpy.ndarray[ndim=2, dtype=int32]~~ |
 
-## Span.to_array {id="to_array",tag="method",new="2"}
+## Span.to_array {id="to_array",tag="method",version="2"}
 
 Given a list of `M` attribute IDs, export the tokens to a numpy `ndarray` of
 shape `(N, M)`, where `N` is the length of the document. The values will be
@@ -256,7 +256,7 @@ shape `(N, M)`, where `N` is the length of the document. The values will be
 | `attr_ids`  | A list of attributes (int IDs or string names) or a single attribute (int ID or string name). ~~Union[int, str, List[Union[int, str]]]~~ |
 | **RETURNS** | The exported attributes as a numpy array. ~~Union[numpy.ndarray[ndim=2, dtype=uint64], numpy.ndarray[ndim=1, dtype=uint64]]~~            |
 
-## Span.ents {id="ents",tag="property" new="2.0.13",model="ner"}
+## Span.ents {id="ents",tag="property" version="2.0.13",model="ner"}
 
 The named entities that fall completely within the span. Returns a tuple of
 `Span` objects.
@@ -520,7 +520,7 @@ sent = doc[sent.start : max(sent.end, span.end)]
 | ----------- | ------------------------------------------------------- |
 | **RETURNS** | The sentence span that this span is a part of. ~~Span~~ |
 
-## Span.sents {id="sents",tag="property" model="sentences",new="3.2.1"}
+## Span.sents {id="sents",tag="property" model="sentences",version="3.2.1"}
 
 Returns a generator over the sentences the span belongs to. This property is
 only available when [sentence boundaries](/usage/linguistic-features#sbd) have

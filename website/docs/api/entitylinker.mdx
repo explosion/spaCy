@@ -161,7 +161,7 @@ applied to the `Doc` in order. Both [`__call__`](/api/entitylinker#call) and
 | `batch_size`   | The number of documents to buffer. Defaults to `128`. ~~int~~ |
 | **YIELDS**     | The processed documents in order. ~~Doc~~                     |
 
-## EntityLinker.set_kb {id="set_kb",tag="method",new="3"}
+## EntityLinker.set_kb {id="set_kb",tag="method",version="3"}
 
 The `kb_loader` should be a function that takes a `Vocab` instance and creates
 the `KnowledgeBase`, ensuring that the strings of the knowledge base are synced
@@ -183,7 +183,7 @@ with the current vocab.
 | ----------- | ---------------------------------------------------------------------------------------------------------------- |
 | `kb_loader` | Function that creates a [`KnowledgeBase`](/api/kb) from a `Vocab` instance. ~~Callable[[Vocab], KnowledgeBase]~~ |
 
-## EntityLinker.initialize {id="initialize",tag="method",new="3"}
+## EntityLinker.initialize {id="initialize",tag="method",version="3"}
 
 Initialize the component for training. `get_examples` should be a function that
 returns an iterable of [`Example`](/api/example) objects. **At least one example

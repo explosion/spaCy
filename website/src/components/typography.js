@@ -83,7 +83,7 @@ const Headline = ({
     Component,
     id,
     name,
-    new: version,
+    version,
     model,
     tag,
     source,
@@ -136,7 +136,7 @@ const Headline = ({
 Headline.propTypes = {
     Component: PropTypes.oneOfType([PropTypes.element, PropTypes.string]).isRequired,
     id: PropTypes.oneOfType([PropTypes.string, PropTypes.oneOf([false])]),
-    new: PropTypes.string,
+    version: PropTypes.string,
     model: PropTypes.string,
     source: PropTypes.string,
     tag: PropTypes.string,

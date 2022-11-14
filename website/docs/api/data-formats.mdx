@@ -14,7 +14,7 @@ vocabulary data. For an overview of label schemes used by the models, see the
 [models directory](/models). Each trained pipeline documents the label schemes
 used in its components, depending on the data it was trained on.
 
-## Training config {id="config",new="3"}
+## Training config {id="config",version="3"}
 
 Config files define the training process and pipeline and can be passed to
 [`spacy train`](/api/cli#train). They use
@@ -256,7 +256,7 @@ Also see the usage guides on the
 
 ## Training data {id="training"}
 
-### Binary training format {id="binary-training",new="3"}
+### Binary training format {id="binary-training",version="3"}
 
 > #### Example
 >
@@ -465,7 +465,7 @@ gold_dict = {"entities": [(0, 12, "PERSON")],
 example = Example.from_dict(doc, gold_dict)
 ```
 
-## Lexical data for vocabulary {id="vocab-jsonl",new="2"}
+## Lexical data for vocabulary {id="vocab-jsonl",version="2"}
 
 This data file can be provided via the `vocab_data` setting in the
 `[initialize]` block of the training config to pre-define the lexical data to

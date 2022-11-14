@@ -115,7 +115,7 @@ Get the number of tokens in the document.
 | ----------- | --------------------------------------------- |
 | **RETURNS** | The number of tokens in the document. ~~int~~ |
 
-## Doc.set_extension {id="set_extension",tag="classmethod",new="2"}
+## Doc.set_extension {id="set_extension",tag="classmethod",version="2"}
 
 Define a custom attribute on the `Doc` which becomes available via `Doc._`. For
 details, see the documentation on
@@ -140,7 +140,7 @@ details, see the documentation on
 | `setter`  | Setter function that takes the `Doc` and a value, and modifies the object. Is called when the user writes to the `Doc._` attribute. ~~Optional[Callable[[Doc, Any], None]]~~ |
 | `force`   | Force overwriting existing attribute. ~~bool~~                                                                                                                               |
 
-## Doc.get_extension {id="get_extension",tag="classmethod",new="2"}
+## Doc.get_extension {id="get_extension",tag="classmethod",version="2"}
 
 Look up a previously registered extension by name. Returns a 4-tuple
 `(default, method, getter, setter)` if the extension is registered. Raises a
@@ -160,7 +160,7 @@ Look up a previously registered extension by name. Returns a 4-tuple
 | `name`      | Name of the extension. ~~str~~                                                                                                                     |
 | **RETURNS** | A `(default, method, getter, setter)` tuple of the extension. ~~Tuple[Optional[Any], Optional[Callable], Optional[Callable], Optional[Callable]]~~ |
 
-## Doc.has_extension {id="has_extension",tag="classmethod",new="2"}
+## Doc.has_extension {id="has_extension",tag="classmethod",version="2"}
 
 Check whether an extension has been registered on the `Doc` class.
 
@@ -177,7 +177,7 @@ Check whether an extension has been registered on the `Doc` class.
 | `name`      | Name of the extension to check. ~~str~~             |
 | **RETURNS** | Whether the extension has been registered. ~~bool~~ |
 
-## Doc.remove_extension {id="remove_extension",tag="classmethod",new="2.0.12"}
+## Doc.remove_extension {id="remove_extension",tag="classmethod",version="2.0.12"}
 
 Remove a previously registered extension.
 
@@ -195,7 +195,7 @@ Remove a previously registered extension.
 | `name`      | Name of the extension. ~~str~~                                                                                                                             |
 | **RETURNS** | A `(default, method, getter, setter)` tuple of the removed extension. ~~Tuple[Optional[Any], Optional[Callable], Optional[Callable], Optional[Callable]]~~ |
 
-## Doc.char_span {id="char_span",tag="method",new="2"}
+## Doc.char_span {id="char_span",tag="method",version="2"}
 
 Create a `Span` object from the slice `doc.text[start_idx:end_idx]`. Returns
 `None` if the character indices don't map to a valid span using the default
@@ -219,7 +219,7 @@ alignment mode `"strict".
 | `alignment_mode`                     | How character indices snap to token boundaries. Options: `"strict"` (no snapping), `"contract"` (span of all tokens completely within the character span), `"expand"` (span of all tokens at least partially covered by the character span). Defaults to `"strict"`. ~~str~~ |
 | **RETURNS**                          | The newly constructed object or `None`. ~~Optional[Span]~~                                                                                                                                                                                                                   |
 
-## Doc.set_ents {id="set_ents",tag="method",new="3"}
+## Doc.set_ents {id="set_ents",tag="method",version="3"}
 
 Set the named entities in the document.
 
@@ -379,7 +379,7 @@ array of attributes.
 | `exclude`   | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~ |
 | **RETURNS** | The `Doc` itself. ~~Doc~~                                                                   |
 
-## Doc.from_docs {id="from_docs",tag="staticmethod",new="3"}
+## Doc.from_docs {id="from_docs",tag="staticmethod",version="3"}
 
 Concatenate multiple `Doc` objects to form a new one. Raises an error if the
 `Doc` objects do not all share the same `Vocab`.
@@ -408,7 +408,7 @@ Concatenate multiple `Doc` objects to form a new one. Raises an error if the
 | `exclude` <Tag variant="new">3.3</Tag> | String names of Doc attributes to exclude. Supported: `spans`, `tensor`, `user_data`. ~~Iterable[str]~~           |
 | **RETURNS**                            | The new `Doc` object that is containing the other docs or `None`, if `docs` is empty or `None`. ~~Optional[Doc]~~ |
 
-## Doc.to_disk {id="to_disk",tag="method",new="2"}
+## Doc.to_disk {id="to_disk",tag="method",version="2"}
 
 Save the current state to a directory.
 
@@ -424,7 +424,7 @@ Save the current state to a directory.
 | _keyword-only_ |                                                                                                                                            |
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~                                                |
 
-## Doc.from_disk {id="from_disk",tag="method",new="2"}
+## Doc.from_disk {id="from_disk",tag="method",version="2"}
 
 Loads state from a directory. Modifies the object in place and returns it.
 
@@ -498,7 +498,7 @@ deprecated [`JSON training format`](/api/data-formats#json-input).
 | `underscore` | Optional list of string names of custom `Doc` attributes. Attribute values need to be JSON-serializable. Values will be added to an `"_"` key in the data, e.g. `"_": {"foo": "bar"}`. ~~Optional[List[str]]~~ |
 | **RETURNS**  | The data in JSON format. ~~Dict[str, Any]~~                                                                                                                                                                    |
 
-## Doc.from_json {id="from_json",tag="method",new="3.3.1"}
+## Doc.from_json {id="from_json",tag="method",version="3.3.1"}
 
 Deserializes a document from JSON, i.e. generates a document from the provided
 JSON data as generated by [`Doc.to_json()`](/api/doc#to_json).
@@ -520,7 +520,7 @@ JSON data as generated by [`Doc.to_json()`](/api/doc#to_json).
 | `validate`     | Whether to validate the JSON input against the expected schema for detailed debugging. Defaults to `False`. ~~bool~~ |
 | **RETURNS**    | A `Doc` corresponding to the provided JSON. ~~Doc~~                                                                  |
 
-## Doc.retokenize {id="retokenize",tag="contextmanager",new="2.1"}
+## Doc.retokenize {id="retokenize",tag="contextmanager",version="2.1"}
 
 Context manager to handle retokenization of the `Doc`. Modifications to the
 `Doc`'s tokenization are stored, and then made all at once when the context

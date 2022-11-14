@@ -76,7 +76,7 @@ print(token.morph)  # 'Case=Nom|Number=Sing|Person=1|PronType=Prs'
 print(token.morph.get("PronType"))  # ['Prs']
 ```
 
-### Statistical morphology {id="morphologizer",new="3",model="morphologizer"}
+### Statistical morphology {id="morphologizer",version="3",model="morphologizer"}
 
 spaCy's statistical [`Morphologizer`](/api/morphologizer) component assigns the
 morphological features and coarse-grained part-of-speech tags as `Token.morph`
@@ -118,7 +118,7 @@ print(doc[2].morph)  # 'Case=Nom|Person=2|PronType=Prs'
 print(doc[2].pos_)  # 'PRON'
 ```
 
-## Lemmatization {id="lemmatization",model="lemmatizer",new="3"}
+## Lemmatization {id="lemmatization",model="lemmatizer",version="3"}
 
 spaCy provides two pipeline components for lemmatization:
 
@@ -959,7 +959,7 @@ nlp.tokenizer.add_special_case("...gimme...?", [{"ORTH": "...gimme...?"}])
 assert len(nlp("...gimme...?")) == 1
 ```
 
-#### Debugging the tokenizer {id="tokenizer-debug",new="2.2.3"}
+#### Debugging the tokenizer {id="tokenizer-debug",version="2.2.3"}
 
 A working implementation of the pseudo-code above is available for debugging as
 [`nlp.tokenizer.explain(text)`](/api/tokenizer#explain). It returns a list of
@@ -1287,7 +1287,7 @@ tokenizer** it will be using at runtime. See the docs on
 
 </Infobox>
 
-#### Training with custom tokenization {id="custom-tokenizer-training",new="3"}
+#### Training with custom tokenization {id="custom-tokenizer-training",version="3"}
 
 spaCy's [training config](/usage/training#config) describes the settings,
 hyperparameters, pipeline and tokenizer used for constructing and training the
@@ -1456,7 +1456,7 @@ tokenizations add up to the same string. For example, you'll be able to align
 
 </Infobox>
 
-## Merging and splitting {id="retokenization",new="2.1"}
+## Merging and splitting {id="retokenization",version="2.1"}
 
 The [`Doc.retokenize`](/api/doc#retokenize) context manager lets you merge and
 split tokens. Modifications to the tokenization are stored and performed all at
@@ -1709,7 +1709,7 @@ your `Doc` using custom components _before_ it's parsed. Depending on your text,
 this may also improve parse accuracy, since the parser is constrained to predict
 parses consistent with the sentence boundaries.
 
-### Statistical sentence segmenter {id="sbd-senter",model="senter",new="3"}
+### Statistical sentence segmenter {id="sbd-senter",model="senter",version="3"}
 
 The [`SentenceRecognizer`](/api/sentencerecognizer) is a simple statistical
 component that only provides sentence boundaries. Along with being faster and
@@ -1810,7 +1810,7 @@ doc = nlp(text)
 print("After:", [sent.text for sent in doc.sents])
 ```
 
-## Mappings & Exceptions {id="mappings-exceptions",new="3"}
+## Mappings & Exceptions {id="mappings-exceptions",version="3"}
 
 The [`AttributeRuler`](/api/attributeruler) manages **rule-based mappings and
 exceptions** for all token-level attributes. As the number of

@@ -96,7 +96,7 @@ be a token pattern (list) or a phrase pattern (string). For example:
 | `ent_id_sep`                      | Separator used internally for entity IDs. Defaults to `"\|\|"`. ~~str~~                                                                                                                                                               |
 | `patterns`                        | Optional patterns to load in on initialization. ~~Optional[List[Dict[str, Union[str, List[dict]]]]]~~                                                                                                                                 |
 
-## EntityRuler.initialize {id="initialize",tag="method",new="3"}
+## EntityRuler.initialize {id="initialize",tag="method",version="3"}
 
 Initialize the component with data and used before training to load in rules
 from a [pattern file](/usage/rule-based-matching/#entityruler-files). This
@@ -210,7 +210,7 @@ of dicts) or a phrase pattern (string). For more details, see the usage guide on
 | ---------- | ---------------------------------------------------------------- |
 | `patterns` | The patterns to add. ~~List[Dict[str, Union[str, List[dict]]]]~~ |
 
-## EntityRuler.remove {id="remove",tag="method",new="3.2.1"}
+## EntityRuler.remove {id="remove",tag="method",version="3.2.1"}
 
 Remove a pattern by its ID from the entity ruler. A `ValueError` is raised if
 the ID does not exist.
@@ -307,7 +307,7 @@ All labels present in the match patterns.
 | ----------- | -------------------------------------- |
 | **RETURNS** | The string labels. ~~Tuple[str, ...]~~ |
 
-## EntityRuler.ent_ids {id="ent_ids",tag="property",new="2.2.2"}
+## EntityRuler.ent_ids {id="ent_ids",tag="property",version="2.2.2"}
 
 All entity IDs present in the `id` properties of the match patterns.
 
