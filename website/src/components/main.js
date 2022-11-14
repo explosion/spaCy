@@ -31,8 +31,8 @@ export default function Main({
 }) {
     const pattern = patterns[theme]
     const mainClassNames = classNames(classes.root, {
-        [classes.withSidebar]: sidebar,
-        [classes.withAsides]: asides,
+        [classes['with-sidebar']]: sidebar,
+        [classes['with-asides']]: asides,
     })
 
     return (

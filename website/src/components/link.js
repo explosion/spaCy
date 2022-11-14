@@ -44,12 +44,12 @@ export default function Link({
     const linkClassNames = classNames(classes.root, className, {
         [classes.hidden]: hidden,
         [classes.nowrap]: (withIcon && !sourceWithText) || icon === 'network',
-        [classes.withIcon]: withIcon,
+        [classes['with-icon']]: withIcon,
     })
     const Wrapper = ws ? Whitespace : Fragment
     const content = (
         <>
-            {sourceWithText ? <span className={classes.sourceText}>{children}</span> : children}
+            {sourceWithText ? <span className={classes['source-text']}>{children}</span> : children}
             {withIcon && <Icon name={icon} width={16} inline className={classes.icon} />}
         </>
     )

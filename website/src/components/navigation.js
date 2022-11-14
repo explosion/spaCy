@@ -40,7 +40,7 @@ export default function Navigation({ title, items = [], section, search, alert, 
             {!alert ? (
                 logo
             ) : (
-                <span className={classes.hasAlert}>
+                <span className={classes['has-alert']}>
                     {logo} <span className={classes.alert}>{alert}</span>
                 </span>
             )}
@@ -52,7 +52,7 @@ export default function Navigation({ title, items = [], section, search, alert, 
                     {items.map(({ text, url }, i) => {
                         const isActive = section && text.toLowerCase() === section
                         const itemClassNames = classNames(classes.item, {
-                            [classes.isActive]: isActive,
+                            [classes['is-active']]: isActive,
                         })
                         return (
                             <li key={i} className={itemClassNames}>

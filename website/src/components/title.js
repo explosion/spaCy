@@ -37,7 +37,7 @@ export default function Title({
     ...props
 }) {
     const hasApiDetails = Object.values(apiDetails || {}).some((v) => v)
-    const metaIconProps = { className: classes.metaIcon, width: 18 }
+    const metaIconProps = { className: classes['meta-icon'], width: 18 }
     return (
         <header className={classes.root}>
             {(image || source) && (
