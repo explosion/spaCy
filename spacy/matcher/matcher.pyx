@@ -841,8 +841,8 @@ class _FuzzyPredicate:
         self.key = (attr, self.predicate, srsly.json_dumps(value, sort_keys=True))
         if self.predicate not in self.operators:
             raise ValueError(Errors.E126.format(good=self.operators, bad=self.predicate))
-        self.fuzzy = self.predicate[len('FUZZY'):] # number after prefix
-        self.fuzzy = int(self.fuzzy) if self.fuzzy else -1
+        fuzz = self.predicate[len("FUZZY"):] # number after prefix
+        self.fuzzy = int(fuzz) if fuzz else -1
 
     def __call__(self, Token token):
         if self.is_extension:
@@ -1055,12 +1055,12 @@ def _get_extra_predicates_dict(attr, value_dict, vocab, predicate_types,
                 continue
         elif cls == _FuzzyPredicate:
             fuzz = type_[len("FUZZY"):] # number after prefix
-            fuzz = int(fuzz) if fuzz else -1
+            fuzzy = int(fuzz) if fuzz else -1
             if isinstance(value, dict):
                 # add predicates inside fuzzy operator
                 output.extend(_get_extra_predicates_dict(attr, value, vocab, predicate_types,
                                                          extra_predicates, seen_predicates,
-                                                         fuzzy=fuzz))
+                                                         fuzzy=fuzzy))
                 continue
         predicate = cls(len(extra_predicates), attr, value, type_, vocab=vocab,
                         regex=regex, fuzzy=fuzzy)
