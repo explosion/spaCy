@@ -8,7 +8,6 @@ import socialImageUniverse from '../images/social_universe.jpg'
 import socialImageNightly from '../images/social_nightly.jpg'
 import socialImageLegacy from '../images/social_legacy.jpg'
 import siteMetadata from '../../meta/site.json'
-import { siteUrl } from '../../meta/dynamicMeta'
 
 function getPageTitle(title, sitename, slogan, sectionTitle, nightly, legacy) {
     if (sectionTitle && title) {
@@ -48,7 +47,7 @@ export default function SEO({
         nightly,
         legacy
     )
-    const socialImage = siteUrl + getImage(section, nightly, legacy)
+    const socialImage = getImage(section, nightly, legacy).src
     const meta = [
         {
             name: 'description',
