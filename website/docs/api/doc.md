@@ -209,15 +209,15 @@ alignment mode `"strict".
 > assert span.text == "New York"
 > ```
 
-| Name                                 | Description                                                                                                                                                                                                                                                                  |
-| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `start`                              | The index of the first character of the span. ~~int~~                                                                                                                                                                                                                        |
-| `end`                                | The index of the last character after the span. ~~int~~                                                                                                                                                                                                                      |
-| `label`                              | A label to attach to the span, e.g. for named entities. ~~Union[int, str]~~                                                                                                                                                                                                  |
-| `kb_id` <Tag variant="new">2.2</Tag> | An ID from a knowledge base to capture the meaning of a named entity. ~~Union[int, str]~~                                                                                                                                                                                    |
-| `vector`                             | A meaning representation of the span. ~~numpy.ndarray[ndim=1, dtype=float32]~~                                                                                                                                                                                               |
-| `alignment_mode`                     | How character indices snap to token boundaries. Options: `"strict"` (no snapping), `"contract"` (span of all tokens completely within the character span), `"expand"` (span of all tokens at least partially covered by the character span). Defaults to `"strict"`. ~~str~~ |
-| **RETURNS**                          | The newly constructed object or `None`. ~~Optional[Span]~~                                                                                                                                                                                                                   |
+| Name             | Description                                                                                                                                                                                                                                                                  |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `start`          | The index of the first character of the span. ~~int~~                                                                                                                                                                                                                        |
+| `end`            | The index of the last character after the span. ~~int~~                                                                                                                                                                                                                      |
+| `label`          | A label to attach to the span, e.g. for named entities. ~~Union[int, str]~~                                                                                                                                                                                                  |
+| `kb_id`          | An ID from a knowledge base to capture the meaning of a named entity. ~~Union[int, str]~~                                                                                                                                                                                    |
+| `vector`         | A meaning representation of the span. ~~numpy.ndarray[ndim=1, dtype=float32]~~                                                                                                                                                                                               |
+| `alignment_mode` | How character indices snap to token boundaries. Options: `"strict"` (no snapping), `"contract"` (span of all tokens completely within the character span), `"expand"` (span of all tokens at least partially covered by the character span). Defaults to `"strict"`. ~~str~~ |
+| **RETURNS**      | The newly constructed object or `None`. ~~Optional[Span]~~                                                                                                                                                                                                                   |
 
 ## Doc.set_ents {#set_ents tag="method" new="3"}
 
@@ -751,22 +751,22 @@ The L2 norm of the document's vector representation.
 
 ## Attributes {#attributes}
 
-| Name                                 | Description                                                                                                                         |
-| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `text`                               | A string representation of the document text. ~~str~~                                                                               |
-| `text_with_ws`                       | An alias of `Doc.text`, provided for duck-type compatibility with `Span` and `Token`. ~~str~~                                       |
-| `mem`                                | The document's local memory heap, for all C data it owns. ~~cymem.Pool~~                                                            |
-| `vocab`                              | The store of lexical types. ~~Vocab~~                                                                                               |
-| `tensor` <Tag variant="new">2</Tag>  | Container for dense vector representations. ~~numpy.ndarray~~                                                                       |
-| `user_data`                          | A generic storage area, for user custom data. ~~Dict[str, Any]~~                                                                    |
-| `lang` <Tag variant="new">2.1</Tag>  | Language of the document's vocabulary. ~~int~~                                                                                      |
-| `lang_` <Tag variant="new">2.1</Tag> | Language of the document's vocabulary. ~~str~~                                                                                      |
-| `sentiment`                          | The document's positivity/negativity score, if available. ~~float~~                                                                 |
-| `user_hooks`                         | A dictionary that allows customization of the `Doc`'s properties. ~~Dict[str, Callable]~~                                           |
-| `user_token_hooks`                   | A dictionary that allows customization of properties of `Token` children. ~~Dict[str, Callable]~~                                   |
-| `user_span_hooks`                    | A dictionary that allows customization of properties of `Span` children. ~~Dict[str, Callable]~~                                    |
-| `has_unknown_spaces`                 | Whether the document was constructed without known spacing between tokens (typically when created from gold tokenization). ~~bool~~ |
-| `_`                                  | User space for adding custom [attribute extensions](/usage/processing-pipelines#custom-components-attributes). ~~Underscore~~       |
+| Name                 | Description                                                                                                                         |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `text`               | A string representation of the document text. ~~str~~                                                                               |
+| `text_with_ws`       | An alias of `Doc.text`, provided for duck-type compatibility with `Span` and `Token`. ~~str~~                                       |
+| `mem`                | The document's local memory heap, for all C data it owns. ~~cymem.Pool~~                                                            |
+| `vocab`              | The store of lexical types. ~~Vocab~~                                                                                               |
+| `tensor`             | Container for dense vector representations. ~~numpy.ndarray~~                                                                       |
+| `user_data`          | A generic storage area, for user custom data. ~~Dict[str, Any]~~                                                                    |
+| `lang`               | Language of the document's vocabulary. ~~int~~                                                                                      |
+| `lang_`              | Language of the document's vocabulary. ~~str~~                                                                                      |
+| `sentiment`          | The document's positivity/negativity score, if available. ~~float~~                                                                 |
+| `user_hooks`         | A dictionary that allows customization of the `Doc`'s properties. ~~Dict[str, Callable]~~                                           |
+| `user_token_hooks`   | A dictionary that allows customization of properties of `Token` children. ~~Dict[str, Callable]~~                                   |
+| `user_span_hooks`    | A dictionary that allows customization of properties of `Span` children. ~~Dict[str, Callable]~~                                    |
+| `has_unknown_spaces` | Whether the document was constructed without known spacing between tokens (typically when created from gold tokenization). ~~bool~~ |
+| `_`                  | User space for adding custom [attribute extensions](/usage/processing-pipelines#custom-components-attributes). ~~Underscore~~       |
 
 ## Serialization fields {#serialization-fields}
 

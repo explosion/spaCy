@@ -354,22 +354,22 @@ If a setting is not present in the options, the default value will be used.
 > displacy.serve(doc, style="dep", options=options)
 > ```
 
-| Name                                       | Description                                                                                                                                  |
-| ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `fine_grained`                             | Use fine-grained part-of-speech tags (`Token.tag_`) instead of coarse-grained tags (`Token.pos_`). Defaults to `False`. ~~bool~~             |
-| `add_lemma` <Tag variant="new">2.2.4</Tag> | Print the lemmas in a separate row below the token texts. Defaults to `False`. ~~bool~~                                                      |
-| `collapse_punct`                           | Attach punctuation to tokens. Can make the parse more readable, as it prevents long arcs to attach punctuation. Defaults to `True`. ~~bool~~ |
-| `collapse_phrases`                         | Merge noun phrases into one token. Defaults to `False`. ~~bool~~                                                                             |
-| `compact`                                  | "Compact mode" with square arrows that takes up less space. Defaults to `False`. ~~bool~~                                                    |
-| `color`                                    | Text color (HEX, RGB or color names). Defaults to `"#000000"`. ~~str~~                                                                       |
-| `bg`                                       | Background color (HEX, RGB or color names). Defaults to `"#ffffff"`. ~~str~~                                                                 |
-| `font`                                     | Font name or font family for all text. Defaults to `"Arial"`. ~~str~~                                                                        |
-| `offset_x`                                 | Spacing on left side of the SVG in px. Defaults to `50`. ~~int~~                                                                             |
-| `arrow_stroke`                             | Width of arrow path in px. Defaults to `2`. ~~int~~                                                                                          |
-| `arrow_width`                              | Width of arrow head in px. Defaults to `10` in regular mode and `8` in compact mode. ~~int~~                                                 |
-| `arrow_spacing`                            | Spacing between arrows in px to avoid overlaps. Defaults to `20` in regular mode and `12` in compact mode. ~~int~~                           |
-| `word_spacing`                             | Vertical spacing between words and arcs in px. Defaults to `45`. ~~int~~                                                                     |
-| `distance`                                 | Distance between words in px. Defaults to `175` in regular mode and `150` in compact mode. ~~int~~                                           |
+| Name               | Description                                                                                                                                  |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `fine_grained`     | Use fine-grained part-of-speech tags (`Token.tag_`) instead of coarse-grained tags (`Token.pos_`). Defaults to `False`. ~~bool~~             |
+| `add_lemma`        | Print the lemmas in a separate row below the token texts. Defaults to `False`. ~~bool~~                                                      |
+| `collapse_punct`   | Attach punctuation to tokens. Can make the parse more readable, as it prevents long arcs to attach punctuation. Defaults to `True`. ~~bool~~ |
+| `collapse_phrases` | Merge noun phrases into one token. Defaults to `False`. ~~bool~~                                                                             |
+| `compact`          | "Compact mode" with square arrows that takes up less space. Defaults to `False`. ~~bool~~                                                    |
+| `color`            | Text color (HEX, RGB or color names). Defaults to `"#000000"`. ~~str~~                                                                       |
+| `bg`               | Background color (HEX, RGB or color names). Defaults to `"#ffffff"`. ~~str~~                                                                 |
+| `font`             | Font name or font family for all text. Defaults to `"Arial"`. ~~str~~                                                                        |
+| `offset_x`         | Spacing on left side of the SVG in px. Defaults to `50`. ~~int~~                                                                             |
+| `arrow_stroke`     | Width of arrow path in px. Defaults to `2`. ~~int~~                                                                                          |
+| `arrow_width`      | Width of arrow head in px. Defaults to `10` in regular mode and `8` in compact mode. ~~int~~                                                 |
+| `arrow_spacing`    | Spacing between arrows in px to avoid overlaps. Defaults to `20` in regular mode and `12` in compact mode. ~~int~~                           |
+| `word_spacing`     | Vertical spacing between words and arcs in px. Defaults to `45`. ~~int~~                                                                     |
+| `distance`         | Distance between words in px. Defaults to `175` in regular mode and `150` in compact mode. ~~int~~                                           |
 
 #### Named Entity Visualizer options {#displacy_options-ent}
 
@@ -385,7 +385,7 @@ If a setting is not present in the options, the default value will be used.
 | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `ents`                                           | Entity types to highlight or `None` for all types (default). ~~Optional[List[str]]~~                                                                                                                                                        |
 | `colors`                                         | Color overrides. Entity types should be mapped to color names or values. ~~Dict[str, str]~~                                                                                                                                                 |
-| `template` <Tag variant="new">2.2</Tag>          | Optional template to overwrite the HTML used to render entity spans. Should be a format string and can use `{bg}`, `{text}` and `{label}`. See [`templates.py`](%%GITHUB_SPACY/spacy/displacy/templates.py) for examples. ~~Optional[str]~~ |
+| `template`                                       | Optional template to overwrite the HTML used to render entity spans. Should be a format string and can use `{bg}`, `{text}` and `{label}`. See [`templates.py`](%%GITHUB_SPACY/spacy/displacy/templates.py) for examples. ~~Optional[str]~~ |
 | `kb_url_template` <Tag variant="new">3.2.1</Tag> | Optional template to construct the KB url for the entity to link to. Expects a python f-string format with single field to fill in. ~~Optional[str]~~                                                                                       |
 
 #### Span Visualizer options {#displacy_options-span}
