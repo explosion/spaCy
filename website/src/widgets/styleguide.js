@@ -64,7 +64,7 @@ export const Colors = () => (
 export const Patterns = () => {
     const imgStyle = (name) => ({
         height: 125,
-        background: `url(${patterns[name]}) center/150% repeat`,
+        background: `url(${patterns[name].src}) center/150% repeat`,
     })
     const textStyle = { fontSize: 'var(--font-size-xs)', color: 'var(--color-subtle-dark)' }
     const linkStyle = { color: 'var(--color-dark)' }

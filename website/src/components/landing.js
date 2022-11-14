@@ -24,8 +24,8 @@ function getPattern(nightly, legacy) {
 
 export const LandingHeader = ({ nightly, legacy, style = {}, children }) => {
     const { pattern, overlay } = getPattern(nightly, legacy)
-    const wrapperStyle = { backgroundImage: `url(${pattern})` }
-    const contentStyle = { backgroundImage: `url(${overlay})`, ...style }
+    const wrapperStyle = { backgroundImage: `url(${pattern.src})` }
+    const contentStyle = { backgroundImage: `url(${overlay.src})`, ...style }
     return (
         <header className={classes['header']}>
             <div className={classes['header-wrapper']} style={wrapperStyle}>

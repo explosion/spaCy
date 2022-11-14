@@ -39,7 +39,7 @@ export default function Main({
         <main className={mainClassNames}>
             {wrapContent ? <Content Component="article">{children}</Content> : children}
             {asides && (
-                <div className={classes.asides} style={{ backgroundImage: `url(${pattern}` }} />
+                <div className={classes.asides} style={{ backgroundImage: `url(${pattern.src}` }} />
             )}
             {footer}
         </main>

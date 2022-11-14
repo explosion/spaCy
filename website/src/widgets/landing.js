@@ -60,7 +60,7 @@ for entity in doc.ents:
 const Landing = () => {
     const codeExample = getCodeExample(nightly)
     return (
-        <>
+        <Layout>
             <LandingHeader nightly={nightly} legacy={legacy}>
                 <LandingTitle>
                     Industrial-Strength
@@ -112,7 +112,7 @@ const Landing = () => {
                     small
                 >
                     <Link to="https://explosion.ai/spacy-tailored-pipelines" hidden>
-                        <img src={tailoredPipelinesImage} alt="spaCy Tailored Pipelines" />
+                        <img src={tailoredPipelinesImage.src} alt="spaCy Tailored Pipelines" />
                     </Link>
                     <strong>
                         Get a custom spaCy pipeline, tailor-made for your NLP problem by
@@ -158,7 +158,7 @@ const Landing = () => {
                     <Link to="https://prodi.gy" hidden>
                         {/** Update image */}
                         <img
-                            src={prodigyImage}
+                            src={prodigyImage.src}
                             alt="Prodigy: Radically efficient machine teaching"
                         />
                     </Link>
@@ -199,7 +199,7 @@ const Landing = () => {
             <LandingGrid cols={2}>
                 <LandingCol>
                     <Link to="/usage/projects" hidden>
-                        <img src={projectsImage} />
+                        <img src={projectsImage.src} />
                     </Link>
                     <br />
                     <br />
@@ -253,7 +253,7 @@ const Landing = () => {
                 >
                     <Link to="https://course.spacy.io" hidden>
                         <img
-                            src={courseImage}
+                            src={courseImage.src}
                             alt="Advanced NLP with spaCy: A free online course"
                         />
                     </Link>
@@ -285,7 +285,7 @@ const Landing = () => {
                     <Benchmarks />
                 </LandingCol>
             </LandingGrid>
-        </>
+        </Layout>
     )
 }
 
