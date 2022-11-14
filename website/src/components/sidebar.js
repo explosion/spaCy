@@ -68,7 +68,7 @@ export default function Sidebar({ items = [], pageMenu = [], slug }) {
                     <li className={classes['label']}>{section.label}</li>
                     {section.items.map(({ text, url, tag, onClick, menu, isActive }, j) => {
                         const currentMenu = menu || pageMenu || []
-                        const active = isActive || slug === url
+                        const active = isActive || `/${slug}` === url
                         const itemClassNames = classNames(classes['link'], {
                             [classes['is-active']]: active,
                             'is-active': active,
