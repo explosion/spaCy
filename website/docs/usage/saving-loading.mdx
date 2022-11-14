@@ -49,7 +49,7 @@ the language class, creates and adds the pipeline components based on the config
 and _then_ loads in the binary data. You can read more about this process
 [here](/usage/processing-pipelines#pipelines).
 
-## Serializing Doc objects efficiently {id="docs",new="2.2"}
+## Serializing Doc objects efficiently {id="docs",version="2.2"}
 
 If you're working with lots of data, you'll probably need to pass analyses
 between machines, either to use something like [Dask](https://dask.org) or
@@ -292,9 +292,9 @@ custom components to spaCy automatically.
 
 </Infobox>
 
-<!-- ## Initializing components with data {id="initialization",new="3"} -->
+<!-- ## Initializing components with data {id="initialization",version="3"} -->
 
-## Using entry points {id="entry-points",new="2.1"}
+## Using entry points {id="entry-points",version="2.1"}
 
 Entry points let you expose parts of a Python package you write to other Python
 packages. This lets one application easily customize the behavior of another, by
@@ -540,7 +540,7 @@ pipeline packages you [train](/usage/training), which could then specify
 `lang = snk` in their `config.cfg` without spaCy raising an error because the
 language is not available in the core library.
 
-### Custom displaCy colors via entry points {id="entry-points-displacy",new="2.2"}
+### Custom displaCy colors via entry points {id="entry-points-displacy",version="2.2"}
 
 If you're training a named entity recognition model for a custom domain, you may
 end up training different labels that don't have pre-defined colors in the

@@ -3,7 +3,7 @@ title: Vectors
 teaser: Store, save and load word vectors
 tag: class
 source: spacy/vectors.pyx
-new: 2
+version: 2
 ---
 
 Vectors data is kept in the `Vectors.data` attribute, which should be an
@@ -356,7 +356,7 @@ supported for `floret` mode.
 | `sort`         | Whether to sort the entries returned by score. Defaults to `True`. ~~bool~~                                             |
 | **RETURNS**    | The most similar entries as a `(keys, best_rows, scores)` tuple. ~~Tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray]~~ |
 
-## Vectors.get_batch {id="get_batch",tag="method",new="3.2"}
+## Vectors.get_batch {id="get_batch",tag="method",version="3.2"}
 
 Get the vectors for the provided keys efficiently as a batch.
 

@@ -122,7 +122,7 @@ using `token.check_flag(flag_id)`.
 | `flag_id`     | An integer between `1` and `63` (inclusive), specifying the bit at which the flag will be stored. If `-1`, the lowest available bit will be chosen. ~~int~~ |
 | **RETURNS**   | The integer ID by which the flag value can be checked. ~~int~~                                                                                              |
 
-## Vocab.reset_vectors {id="reset_vectors",tag="method",new="2"}
+## Vocab.reset_vectors {id="reset_vectors",tag="method",version="2"}
 
 Drop the current vector table. Because all vectors must be the same width, you
 have to call this to change the size of the vectors. Only one of the `width` and
@@ -140,7 +140,7 @@ have to call this to change the size of the vectors. Only one of the `width` and
 | `width`        | The new width. ~~int~~ |
 | `shape`        | The new shape. ~~int~~ |
 
-## Vocab.prune_vectors {id="prune_vectors",tag="method",new="2"}
+## Vocab.prune_vectors {id="prune_vectors",tag="method",version="2"}
 
 Reduce the current vector table to `nr_row` unique entries. Words mapped to the
 discarded vectors will be remapped to the closest vector among those remaining.
@@ -165,7 +165,7 @@ cosines are calculated in minibatches to reduce memory usage.
 | `batch_size` | Batch of vectors for calculating the similarities. Larger batch sizes might be faster, while temporarily requiring more memory. ~~int~~                                                                                      |
 | **RETURNS**  | A dictionary keyed by removed words mapped to `(string, score)` tuples, where `string` is the entry the removed word was mapped to, and `score` the similarity score between the two words. ~~Dict[str, Tuple[str, float]]~~ |
 
-## Vocab.deduplicate_vectors {id="deduplicate_vectors",tag="method",new="3.3"}
+## Vocab.deduplicate_vectors {id="deduplicate_vectors",tag="method",version="3.3"}
 
 > #### Example
 >
@@ -176,7 +176,7 @@ cosines are calculated in minibatches to reduce memory usage.
 Remove any duplicate rows from the current vector table, maintaining the
 mappings for all words in the vectors.
 
-## Vocab.get_vector {id="get_vector",tag="method",new="2"}
+## Vocab.get_vector {id="get_vector",tag="method",version="2"}
 
 Retrieve a vector for a word in the vocabulary. Words can be looked up by string
 or hash value. If the current vectors do not contain an entry for the word, a
@@ -194,7 +194,7 @@ or hash value. If the current vectors do not contain an entry for the word, a
 | `orth`      | The hash value of a word, or its unicode string. ~~Union[int, str]~~                                                   |
 | **RETURNS** | A word vector. Size and shape are determined by the `Vocab.vectors` instance. ~~numpy.ndarray[ndim=1, dtype=float32]~~ |
 
-## Vocab.set_vector {id="set_vector",tag="method",new="2"}
+## Vocab.set_vector {id="set_vector",tag="method",version="2"}
 
 Set a vector for a word in the vocabulary. Words can be referenced by string or
 hash value.
@@ -210,7 +210,7 @@ hash value.
 | `orth`   | The hash value of a word, or its unicode string. ~~Union[int, str]~~ |
 | `vector` | The vector to set. ~~numpy.ndarray[ndim=1, dtype=float32]~~          |
 
-## Vocab.has_vector {id="has_vector",tag="method",new="2"}
+## Vocab.has_vector {id="has_vector",tag="method",version="2"}
 
 Check whether a word has a vector. Returns `False` if no vectors are loaded.
 Words can be looked up by string or hash value.
@@ -227,7 +227,7 @@ Words can be looked up by string or hash value.
 | `orth`      | The hash value of a word, or its unicode string. ~~Union[int, str]~~ |
 | **RETURNS** | Whether the word has a vector. ~~bool~~                              |
 
-## Vocab.to_disk {id="to_disk",tag="method",new="2"}
+## Vocab.to_disk {id="to_disk",tag="method",version="2"}
 
 Save the current state to a directory.
 
@@ -243,7 +243,7 @@ Save the current state to a directory.
 | _keyword-only_ |                                                                                                                                            |
 | `exclude`      | String names of [serialization fields](#serialization-fields) to exclude. ~~Iterable[str]~~                                                |
 
-## Vocab.from_disk {id="from_disk",tag="method",new="2"}
+## Vocab.from_disk {id="from_disk",tag="method",version="2"}
 
 Loads state from a directory. Modifies the object in place and returns it.
 

@@ -218,7 +218,7 @@ spaCy processes your text – and why your pattern matches, or why it doesn't.
 
 </Infobox>
 
-#### Extended pattern syntax and attributes {id="adding-patterns-attributes-extended",new="2.1"}
+#### Extended pattern syntax and attributes {id="adding-patterns-attributes-extended",version="2.1"}
 
 Instead of mapping to a single value, token patterns can also map to a
 **dictionary of properties**. For example, to specify that the value of a lemma
@@ -251,7 +251,7 @@ following rich comparison attributes are available:
 | `INTERSECTS`               | Attribute value (for `MORPH` or custom list attributes) has a non-empty intersection with a list. ~~Any~~ |
 | `==`, `>=`, `<=`, `>`, `<` | Attribute value is equal, greater or equal, smaller or equal, greater or smaller. ~~Union[int, float]~~   |
 
-#### Regular expressions {id="regex",new="2.1"}
+#### Regular expressions {id="regex",version="2.1"}
 
 In some cases, only matching tokens and token attributes isn't enough – for
 example, you might want to match different spellings of a word, without having
@@ -402,7 +402,7 @@ This quirk in the semantics is corrected in spaCy v2.1.0.
 
 </Infobox>
 
-#### Using wildcard token patterns {id="adding-patterns-wildcard",new="2"}
+#### Using wildcard token patterns {id="adding-patterns-wildcard",version="2"}
 
 While the token attributes offer many options to write highly specific patterns,
 you can also use an empty dictionary, `{}` as a wildcard representing **any
@@ -416,7 +416,7 @@ character, but no whitespace – so you'll know it will be handled as one token.
 [{"ORTH": "User"}, {"ORTH": "name"}, {"ORTH": ":"}, {}]
 ```
 
-#### Validating and debugging patterns {id="pattern-validation",new="2.1"}
+#### Validating and debugging patterns {id="pattern-validation",version="2.1"}
 
 The `Matcher` can validate patterns against a JSON schema with the option
 `validate=True`. This is useful for debugging patterns during development, in
@@ -927,7 +927,7 @@ as a stream.
 
 </Infobox>
 
-### Matching on other token attributes {id="phrasematcher-attrs",new="2.1"}
+### Matching on other token attributes {id="phrasematcher-attrs",version="2.1"}
 
 By default, the `PhraseMatcher` will match on the verbatim token text, e.g.
 `Token.text`. By setting the `attr` argument on initialization, you can change
@@ -991,7 +991,7 @@ to match phrases with the same sequence of punctuation and non-punctuation
 tokens as the pattern. But this can easily get confusing and doesn't have much
 of an advantage over writing one or two token patterns.
 
-## Dependency Matcher {id="dependencymatcher",new="3",model="parser"}
+## Dependency Matcher {id="dependencymatcher",version="3",model="parser"}
 
 The [`DependencyMatcher`](/api/dependencymatcher) lets you match patterns within
 the dependency parse using
@@ -1272,7 +1272,7 @@ of patterns such as `{}` that match any token in the sentence.
 
 </Infobox>
 
-## Rule-based entity recognition {id="entityruler",new="2.1"}
+## Rule-based entity recognition {id="entityruler",version="2.1"}
 
 The [`EntityRuler`](/api/entityruler) is a component that lets you add named
 entities based on pattern dictionaries, which makes it easy to combine
@@ -1343,7 +1343,7 @@ doc = nlp("MyCorp Inc. is a company in the U.S.")
 print([(ent.text, ent.label_) for ent in doc.ents])
 ```
 
-#### Validating and debugging EntityRuler patterns {id="entityruler-pattern-validation",new="2.1.8"}
+#### Validating and debugging EntityRuler patterns {id="entityruler-pattern-validation",version="2.1.8"}
 
 The entity ruler can validate patterns against a JSON schema with the config
 setting `"validate"`. See details under
@@ -1353,7 +1353,7 @@ setting `"validate"`. See details under
 ruler = nlp.add_pipe("entity_ruler", config={"validate": True})
 ```
 
-### Adding IDs to patterns {id="entityruler-ent-ids",new="2.2.2"}
+### Adding IDs to patterns {id="entityruler-ent-ids",version="2.2.2"}
 
 The [`EntityRuler`](/api/entityruler) can also accept an `id` attribute for each
 pattern. Using the `id` attribute allows multiple patterns to be associated with
@@ -1427,7 +1427,7 @@ all pipeline components will be restored and deserialized – including the enti
 ruler. This lets you ship powerful pipeline packages with binary weights _and_
 rules included!
 
-### Using a large number of phrase patterns {id="entityruler-large-phrase-patterns",new="2.2.4"}
+### Using a large number of phrase patterns {id="entityruler-large-phrase-patterns",version="2.2.4"}
 
 <!-- TODO: double-check that this still works if the ruler is added to the pipeline on creation, and include suggestion if needed -->
 
@@ -1455,7 +1455,7 @@ with nlp.select_pipes(enable="tagger"):
     ruler.add_patterns(patterns)
 ```
 
-## Rule-based span matching {id="spanruler",new="3.3.1"}
+## Rule-based span matching {id="spanruler",version="3.3.1"}
 
 The [`SpanRuler`](/api/spanruler) is a generalized version of the entity ruler
 that lets you add spans to `doc.spans` or `doc.ents` based on pattern
