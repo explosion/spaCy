@@ -87,7 +87,7 @@ $ python -m spacy info [model] [--markdown] [--silent] [--exclude]
 | `--help`, `-h`                               | Show help message and available arguments. ~~bool (flag)~~                                                              |
 | **PRINTS**                                   | Information about your spaCy installation.                                                                              |
 
-## validate {id="validate",new="2",tag="command"}
+## validate {id="validate",version="2",tag="command"}
 
 Find all trained pipeline packages installed in the current environment and
 check whether they are compatible with the currently installed version of spaCy.
@@ -110,12 +110,12 @@ $ python -m spacy validate
 | ---------- | -------------------------------------------------------------------- |
 | **PRINTS** | Details about the compatibility of your installed pipeline packages. |
 
-## init {id="init",new="3"}
+## init {id="init",version="3"}
 
 The `spacy init` CLI includes helpful commands for initializing training config
 files and pipeline directories.
 
-### init config {id="init-config",new="3",tag="command"}
+### init config {id="init-config",version="3",tag="command"}
 
 Initialize and save a [`config.cfg` file](/usage/training#config) using the
 **recommended settings** for your use case. It works just like the
@@ -147,7 +147,7 @@ $ python -m spacy init config [output_file] [--lang] [--pipeline] [--optimize] [
 | `--help`, `-h`         | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                                                                                                                                                         |
 | **CREATES**            | The config file for training.                                                                                                                                                                                                                                                                                                      |
 
-### init fill-config {id="init-fill-config",new="3"}
+### init fill-config {id="init-fill-config",version="3"}
 
 Auto-fill a partial [.cfg file](/usage/training#config) with **all default
 values**, e.g. a config generated with the
@@ -183,7 +183,7 @@ $ python -m spacy init fill-config [base_path] [output_file] [--diff]
 | `--help`, `-h`         | Show help message and available arguments. ~~bool (flag)~~                                                                                                                           |
 | **CREATES**            | Complete and auto-filled config file for training.                                                                                                                                   |
 
-### init vectors {id="init-vectors",new="3",tag="command"}
+### init vectors {id="init-vectors",version="3",tag="command"}
 
 Convert [word vectors](/usage/linguistic-features#vectors-similarity) for use
 with spaCy. Will export an `nlp` object that you can use in the
@@ -215,7 +215,7 @@ $ python -m spacy init vectors [lang] [vectors_loc] [output_dir] [--prune] [--tr
 | `--help`, `-h`     | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                                                                                          |
 | **CREATES**        | A spaCy pipeline directory containing the vocab and vectors.                                                                                                                                                                                                        |
 
-### init labels {id="init-labels",new="3",tag="command"}
+### init labels {id="init-labels",version="3",tag="command"}
 
 Generate JSON files for the labels in the data. This helps speed up the training
 process, since spaCy won't have to preprocess the data to extract the labels.
@@ -287,12 +287,12 @@ $ python -m spacy convert [input_file] [output_dir] [--converter] [--file-type] 
 | `ner` / `conll` | NER with IOB/IOB2/BILUO tags, one token per line with columns separated by whitespace. The first column is the token and the final column is the NER tag. Sentences are separated by blank lines and documents are separated by the line `-DOCSTART- -X- O O`. Supports CoNLL 2003 NER format. See [sample data](%%GITHUB_SPACY/extra/example_data/ner_example_data). |
 | `iob`           | NER with IOB/IOB2/BILUO tags, one sentence per line with tokens separated by whitespace and annotation separated by `\|`, either `word\|B-ENT`or`word\|POS\|B-ENT`. See [sample data](%%GITHUB_SPACY/extra/example_data/ner_example_data).                                                                                                                            |
 
-## debug {id="debug",new="3"}
+## debug {id="debug",version="3"}
 
 The `spacy debug` CLI includes helpful commands for debugging and profiling your
 configs, data and implementations.
 
-### debug config {id="debug-config",new="3",tag="command"}
+### debug config {id="debug-config",version="3",tag="command"}
 
 Debug a [`config.cfg` file](/usage/training#config) and show validation errors.
 The command will create all objects in the tree and validate them. Note that
@@ -893,7 +893,7 @@ $ python -m spacy debug profile [model] [inputs] [--n-texts]
 | `--help`, `-h`    | Show help message and available arguments. ~~bool (flag)~~                         |
 | **PRINTS**        | Profiling information for the pipeline.                                            |
 
-### debug model {id="debug-model",new="3",tag="command"}
+### debug model {id="debug-model",version="3",tag="command"}
 
 Debug a Thinc [`Model`](https://thinc.ai/docs/api-model) by running it on a
 sample text and checking how it updates its internal weights and parameters.
@@ -1061,7 +1061,7 @@ $ python -m spacy train [config_path] [--output] [--code] [--verbose] [--gpu-id]
 | overrides         | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--paths.train ./train.spacy`. ~~Any (option/flag)~~                         |
 | **CREATES**       | The final trained pipeline and the best trained pipeline.                                                                                                                                                          |
 
-### Calling the training function from Python {id="train-function",new="3.2"}
+### Calling the training function from Python {id="train-function",version="3.2"}
 
 The training CLI exposes a `train` helper function that lets you run the
 training just like `spacy train`. Usually it's easier to use the command line
@@ -1084,7 +1084,7 @@ directly, but if you need to kick off training from code this is how to do it.
 | `use_gpu`      | Which GPU to use. Defaults to -1 for no GPU. ~~int~~                                                                          |
 | `overrides`    | Values to override config settings. ~~Dict[str, Any]~~                                                                        |
 
-## pretrain {id="pretrain",new="2.1",tag="command,experimental"}
+## pretrain {id="pretrain",version="2.1",tag="command,experimental"}
 
 Pretrain the "token to vector" ([`Tok2vec`](/api/tok2vec)) layer of pipeline
 components on raw text, using an approximate language-modeling objective.
@@ -1132,7 +1132,7 @@ $ python -m spacy pretrain [config_path] [output_dir] [--code] [--resume-path] [
 | overrides               | Config parameters to override. Should be options starting with `--` that correspond to the config section and value to override, e.g. `--training.dropout 0.2`. ~~Any (option/flag)~~                              |
 | **CREATES**             | The pretrained weights that can be used to initialize `spacy train`.                                                                                                                                               |
 
-## evaluate {id="evaluate",new="2",tag="command"}
+## evaluate {id="evaluate",version="2",tag="command"}
 
 Evaluate a trained pipeline. Expects a loadable spaCy pipeline (package name or
 path) and evaluation data in the
@@ -1162,7 +1162,7 @@ $ python -m spacy evaluate [model] [data_path] [--output] [--code] [--gold-prepr
 | `--help`, `-h`                            | Show help message and available arguments. ~~bool (flag)~~                                                                                                                           |
 | **CREATES**                               | Training results and optional metrics and visualizations.                                                                                                                            |
 
-## find-threshold {id="find-threshold",new="3.5",tag="command"}
+## find-threshold {id="find-threshold",version="3.5",tag="command"}
 
 Runs prediction trials for a trained model with varying tresholds to maximize
 the specified metric. The search space for the threshold is traversed linearly
@@ -1281,7 +1281,7 @@ $ python -m spacy package [input_dir] [output_dir] [--code] [--meta-path] [--cre
 | `--help`, `-h`                               | Show help message and available arguments. ~~bool (flag)~~                                                                                                                                                                                                                       |
 | **CREATES**                                  | A Python package containing the spaCy pipeline.                                                                                                                                                                                                                                  |
 
-## project {id="project",new="3"}
+## project {id="project",version="3"}
 
 The `spacy project` CLI includes subcommands for working with
 [spaCy projects](/usage/projects), end-to-end workflows for building and
@@ -1543,7 +1543,7 @@ $ python -m spacy project dvc [project_dir] [workflow] [--force] [--verbose] [--
 | `--help`, `-h`    | Show help message and available arguments. ~~bool (flag)~~                                                    |
 | **CREATES**       | A `dvc.yaml` file in the project directory, based on the steps defined in the given workflow.                 |
 
-## huggingface-hub {id="huggingface-hub",new="3.1"}
+## huggingface-hub {id="huggingface-hub",version="3.1"}
 
 The `spacy huggingface-cli` CLI includes commands for uploading your trained
 spaCy pipelines to the [Hugging Face Hub](https://huggingface.co/).

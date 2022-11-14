@@ -70,7 +70,7 @@ components to the end of the pipeline and after all other components.
 | `doc`       | The `Doc` object to process, e.g. the `Doc` in the pipeline. ~~Doc~~ |
 | **RETURNS** | The modified `Doc` with merged entities. ~~Doc~~                     |
 
-## merge_subtokens {id="merge_subtokens",tag="function",new="2.1"}
+## merge_subtokens {id="merge_subtokens",tag="function",version="2.1"}
 
 Merge subtokens into a single token. Also available via the string name
 `"merge_subtokens"`. As of v2.1, the parser is able to predict "subtokens" that
@@ -110,7 +110,7 @@ end of the pipeline and after all other components.
 | `label`     | The subtoken dependency label. Defaults to `"subtok"`. ~~str~~       |
 | **RETURNS** | The modified `Doc` with merged subtokens. ~~Doc~~                    |
 
-## token_splitter {id="token_splitter",tag="function",new="3.0"}
+## token_splitter {id="token_splitter",tag="function",version="3.0"}
 
 Split tokens longer than a minimum length into shorter tokens. Intended for use
 with transformer pipelines where long spaCy tokens lead to input text that
@@ -132,7 +132,7 @@ exceed the transformer model max length.
 | `split_length` | The length of the split tokens. Defaults to `5`. ~~int~~              |
 | **RETURNS**    | The modified `Doc` with the split tokens. ~~Doc~~                     |
 
-## doc_cleaner {id="doc_cleaner",tag="function",new="3.2.1"}
+## doc_cleaner {id="doc_cleaner",tag="function",version="3.2.1"}
 
 Clean up `Doc` attributes. Intended for use at the end of pipelines with
 `tok2vec` or `transformer` pipeline components that store tensors and other
