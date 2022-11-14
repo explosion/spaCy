@@ -283,7 +283,6 @@ def find_matching_language(lang: str) -> Optional[str]:
     import spacy.lang  # noqa: F401
 
     if lang == "xx":
-        warnings.warn(Warnings.W124.format(lang=lang, renamed_lang="mul"))
         return "mul"
 
     # Find out which language modules we have
@@ -302,8 +301,6 @@ def find_matching_language(lang: str) -> Optional[str]:
     # is labeled that way is probably trying to be distinct from 'zh' and
     # shouldn't automatically match.
     match = langcodes.closest_supported_match(lang, possible_languages, max_distance=9)
-    if match is not None:
-        warnings.warn(Warnings.W124.format(lang=lang, renamed_lang=match))
     return match
 
 
@@ -330,6 +327,8 @@ def get_lang_class(lang: str) -> Type["Language"]:
                 match = None
 
             if match:
+                if match != lang:
+                    warnings.warn(Warnings.W124.format(lang=lang, renamed_lang=match))
                 lang = match
                 module = importlib.import_module(f".lang.{lang}", "spacy")
             else:

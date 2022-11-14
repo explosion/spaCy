@@ -543,6 +543,7 @@ def test_spacy_blank():
     assert nlp.config["training"]["dropout"] == 0.2
     assert nlp.meta["name"] == "my_custom_model"
 
+
 @pytest.mark.parametrize(
     "lang,target",
     [
@@ -566,11 +567,8 @@ def test_language_matching(lang, target):
     Test that we can look up languages by equivalent or nearly-equivalent
     language codes.
     """
-    if target is None:
-        assert find_matching_language(lang) == target
-    else:
-        with pytest.warns(UserWarning):
-            assert find_matching_language(lang) == target
+    assert find_matching_language(lang) == target
+
 
 @pytest.mark.parametrize(
     "lang,target",
