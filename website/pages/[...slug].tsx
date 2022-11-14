@@ -3,7 +3,7 @@ import { serialize } from 'next-mdx-remote/serialize'
 import fs from 'fs'
 import { MDXRemote, MDXRemoteSerializeResult } from 'next-mdx-remote'
 import path from 'path'
-import Layout from '../components/layout'
+import Layout from '../src/components/layout'
 import remarkPlugins from '../plugins/index.mjs'
 
 import recordSection from '../meta/recordSections'
